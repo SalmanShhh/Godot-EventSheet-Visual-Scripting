@@ -2,8 +2,9 @@
 # a group's weight + hotness as "N events · ⟳a · ➜b · ▶c · ⚠d" (child events by trigger tempo class + the
 # RawCode blocks inside), so a COLLAPSED group still tells you what's in it. Pins the counts + pluralisation.
 @tool
-extends RefCounted
 class_name GroupFingerprintTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -38,12 +39,14 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _ev(trigger_id: String) -> EventRow:
 	var event_row: EventRow = EventRow.new()
 	event_row.trigger_id = trigger_id
 	if not trigger_id.is_empty():
 		event_row.trigger_provider_id = "Core"
 	return event_row
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

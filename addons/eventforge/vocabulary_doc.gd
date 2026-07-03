@@ -11,15 +11,17 @@
 # sheet paths are sorted, scanner order is sorted, no timestamps. The Project Doctor
 # keeps a generated doc honest with an advisory staleness note (opt-in: no doc, no note).
 @tool
-extends RefCounted
 class_name EventSheetVocabularyDoc
+extends RefCounted
 
 const DEFAULT_PATH := "res://EVENTSHEETS-VOCABULARY.md"
+
 
 ## Where the doc lives — override with the eventsheets/project/vocabulary_doc_path
 ## project setting.
 static func doc_path() -> String:
 	return str(ProjectSettings.get_setting("eventsheets/project/vocabulary_doc_path", DEFAULT_PATH))
+
 
 ## The full document. Sheets first (every EventSheetResource in the project, packs
 ## included), then hand-written script packs (compiler-generated pack scripts are
@@ -54,6 +56,7 @@ static func generate() -> String:
 	lines.append("")
 	return "\n".join(lines)
 
+
 ## Generates and writes the doc to doc_path(). Returns the path, or "" on failure.
 static func write() -> String:
 	var path: String = doc_path()
@@ -63,6 +66,7 @@ static func write() -> String:
 	file.store_string(generate())
 	file.close()
 	return path
+
 
 ## One sheet's entry: identity line (what it is and where it runs) + its publish surface.
 static func sheet_section(sheet: EventSheetResource, sheet_path: String) -> PackedStringArray:
@@ -84,6 +88,7 @@ static func sheet_section(sheet: EventSheetResource, sheet_path: String) -> Pack
 		lines.append_array(rendered)
 	return lines
 
+
 ## One hand-written script pack's entry. Empty when the script is compiler-generated
 ## (a "# Source:" header — its sheet section covers it) or publishes nothing.
 static func script_pack_section(script_path: String) -> PackedStringArray:
@@ -103,6 +108,7 @@ static func script_pack_section(script_path: String) -> PackedStringArray:
 		lines.append(_flatten_doc_comment(doc_match.get_string(1)))
 	lines.append_array(rendered)
 	return lines
+
 
 ## Parses a script's @ace_* annotated members into the same surface shape
 ## collect_publish_surface returns, so one renderer serves both.
@@ -128,6 +134,7 @@ static func script_pack_surface(source: String) -> Dictionary:
 			"description": _flatten_doc_comment(description_match.get_string(1)) if description_match != null else "",
 		})
 	return surface
+
 
 ## Doc comments continue across lines as "## …"; flatten to one readable line.
 static func _flatten_doc_comment(comment: String) -> String:

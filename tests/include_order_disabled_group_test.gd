@@ -1,11 +1,12 @@
 @tool
-extends RefCounted
 class_name IncludeOrderDisabledGroupTest
+extends RefCounted
 # Two compiler-behaviour fixes, pinned against real generated output:
 #   #4 Include ORDER  — an included (library) sheet's events run BEFORE the root's own events,
 #      matching Construct 3's "include the library at the top" (shared setup initializes first).
 #   #5 Disabled group — a disabled group no longer vanishes silently; it leaves a breadcrumb
 #      comment so the omission is visible in the generated .gd (its events still don't run).
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -65,6 +66,7 @@ static func run() -> bool:
 		not disabled_out.contains("never_runs_one()") and not disabled_out.contains("never_runs_two()"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

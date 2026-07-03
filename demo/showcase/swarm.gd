@@ -7,12 +7,14 @@ var t: float = 0.0
 var __loop_cursor_7647f9_0: int = 0
 var __loop_items_7647f9_0: Array = []
 
+
 func _ready() -> void:
 	var __cols: int = 40
 	for __i: int in range(count):
 		var __dot: Sprite2D = load("res://demo/showcase/dot.tscn").instantiate()
 		__dot.position = Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + float(__i / __cols) * 27.0)
 		add_child(__dot)
+
 
 func _process(delta: float) -> void:
 	t += delta

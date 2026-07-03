@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetRenameRefactor
+extends RefCounted
 # Rename refactoring across the whole sheet model. Two surfaces, bundled because both are "renaming":
 #  - the regex whole-word VARIABLE rename (rename_variable_references + its row / param / template
 #    walkers) which rewrites every embedded GDScript surface (ACE params, code blocks, pick-filter
@@ -16,8 +16,10 @@ var _rename_window: Window = null
 var _rename_edit: LineEdit = null
 var _rename_old_name: String = ""
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Whole-word renames a variable across everything that embeds GDScript text — ACE params, GDScript
 ## blocks (class-level, in-flow, function bodies), and pick-filter expressions — so a rename never
@@ -36,6 +38,7 @@ func rename_variable_references(old_name: String, new_name: String) -> int:
 			var function_rows: Array = (function_resource as EventFunction).events if not (function_resource as EventFunction).events.is_empty() else (function_resource as EventFunction).rows
 			_rename_in_rows(function_rows, regex, new_name, counter)
 	return int(counter.get("count", 0))
+
 
 func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter: Dictionary) -> void:
 	for row: Variant in rows:
@@ -64,6 +67,7 @@ func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter: Dicti
 				event_row.with_node_target = _regex_rename(regex, event_row.with_node_target, new_name, counter)
 			_rename_in_rows(event_row.sub_events, regex, new_name, counter)
 
+
 ## String params hold GDScript expressions / variable references — rename inside them. Baked codegen
 ## templates can embed the variable too, but their {placeholder} tokens must never be touched (they're
 ## param names, not variables).
@@ -75,6 +79,7 @@ func _rename_in_params(ace: Resource, regex: RegEx, new_name: String, counter: D
 	var template: String = str(ace.get("codegen_template"))
 	if not template.is_empty():
 		ace.set("codegen_template", _rename_in_template(template, regex, new_name, counter))
+
 
 ## Renames only OUTSIDE {placeholder} segments of a codegen template.
 func _rename_in_template(template: String, regex: RegEx, new_name: String, counter: Dictionary) -> String:
@@ -94,6 +99,7 @@ func _rename_in_template(template: String, regex: RegEx, new_name: String, count
 		cursor = close + 1
 	return output
 
+
 func _regex_rename(regex: RegEx, text: String, new_name: String, counter: Dictionary) -> String:
 	if text.is_empty():
 		return text
@@ -102,6 +108,7 @@ func _regex_rename(regex: RegEx, text: String, new_name: String, counter: Dictio
 		return text
 	counter["count"] = int(counter.get("count", 0)) + hits
 	return regex.sub(text, new_name, true)
+
 
 ## Opens the "Rename Everywhere" dialog seeded with old_name (the variable context menu's Rename).
 func open(old_name: String) -> void:
@@ -129,10 +136,12 @@ func open(old_name: String) -> void:
 	_rename_edit.grab_focus()
 	_rename_edit.select_all()
 
+
 func _confirm_rename() -> void:
 	var renamed: bool = _perform_symbol_rename(_rename_old_name, _rename_edit.text.strip_edges())
 	if renamed:
 		_rename_window.hide()
+
 
 ## The full rename: validate, undoably rewrite the open sheet, then rewrite + save every project sheet
 ## whose `includes` lists this one (Replace-in-Project contract: closed sheets save directly, the status
@@ -156,6 +165,7 @@ func _perform_symbol_rename(old_name: String, new_name: String) -> bool:
 	_dock._set_status("Renamed %s → %s%s." % [old_name, new_name,
 		" (also in: %s)" % ", ".join(touched) if not touched.is_empty() else ""])
 	return true
+
 
 ## Rewrites + saves every candidate sheet whose `includes` lists the open sheet (closed sheets save
 ## directly — the Replace-in-Project contract).

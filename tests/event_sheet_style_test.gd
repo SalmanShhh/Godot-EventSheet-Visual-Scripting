@@ -1,7 +1,7 @@
 # EventSheet — editor style/resource regression tests
 @tool
-extends RefCounted
 class_name EventSheetStyleTest
+extends RefCounted
 
 const TEST_LONG_CONDITION_PROVIDER := "TestLongCondition"
 const TEST_LONG_ACTION_PROVIDER := "TestLongAction"
@@ -17,6 +17,7 @@ const EXAMPLE_THEME_PATHS := [
 	"res://demo/themes/catppuccin_mocha_theme.tres"
 ]
 const DESIGNER_THEME_MANIFEST_PATH := "res://demo/themes/designer_template_theme_manifest.cfg"
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -302,12 +303,14 @@ static func run() -> bool:
 	dock.free()
 	return passed
 
+
 static func _make_condition(provider_id: String, ace_id: String, params: Dictionary) -> ACECondition:
 	var condition := ACECondition.new()
 	condition.provider_id = provider_id
 	condition.ace_id = ace_id
 	condition.params = params.duplicate(true)
 	return condition
+
 
 static func _make_action(provider_id: String, ace_id: String, params: Dictionary) -> ACEAction:
 	var action := ACEAction.new()
@@ -316,6 +319,7 @@ static func _make_action(provider_id: String, ace_id: String, params: Dictionary
 	action.params = params.duplicate(true)
 	return action
 
+
 static func _find_row_index_by_uid(rows: Array[Dictionary], expected_uid: String) -> int:
 	for index in range(rows.size()):
 		var row_data: EventRowData = rows[index].get("row")
@@ -323,12 +327,14 @@ static func _find_row_index_by_uid(rows: Array[Dictionary], expected_uid: String
 			return index
 	return -1
 
+
 static func _find_row_index_by_text(rows: Array[Dictionary], expected_text: String) -> int:
 	for index in range(rows.size()):
 		var row_data: EventRowData = rows[index].get("row")
 		if row_data != null and _find_span_index_by_text(row_data, expected_text) >= 0:
 			return index
 	return -1
+
 
 static func _rows_are_stacked_without_overlap(viewport: EventSheetViewport, rows: Array[Dictionary], width: float) -> bool:
 	for index in range(rows.size() - 1):
@@ -339,6 +345,7 @@ static func _rows_are_stacked_without_overlap(viewport: EventSheetViewport, rows
 		if next_rect.position.y + 0.01 < current_rect.end.y:
 			return false
 	return true
+
 
 static func _find_span_index_by_kind(row_data: EventRowData, expected_kind: String) -> int:
 	if row_data == null:
@@ -351,6 +358,7 @@ static func _find_span_index_by_kind(row_data: EventRowData, expected_kind: Stri
 			return index
 	return -1
 
+
 static func _find_span_index_by_text(row_data: EventRowData, expected_text: String) -> int:
 	if row_data == null:
 		return -1
@@ -359,6 +367,7 @@ static func _find_span_index_by_text(row_data: EventRowData, expected_text: Stri
 		if span != null and span.text == expected_text:
 			return index
 	return -1
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

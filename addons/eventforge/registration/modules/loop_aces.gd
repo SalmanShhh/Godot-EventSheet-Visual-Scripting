@@ -6,10 +6,11 @@
 # CurrentItem reads the default loop iterator ("item"); rename the iterator and you'd type
 # its name directly instead. Module contract: see ace_factory.gd — ace_ids/templates are API.
 @tool
-extends RefCounted
 class_name EventForgeLoopACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

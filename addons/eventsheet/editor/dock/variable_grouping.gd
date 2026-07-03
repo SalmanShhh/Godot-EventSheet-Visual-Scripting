@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetVariableGrouping
+extends RefCounted
 # Variable "folders": drag one variable onto another and they fold into a shared Inspector group —
 # the Discord-folder gesture — then a small popup opens already select-all'd so typing names the
 # fresh group immediately (Enter confirms; renaming later is a double-click on the group chip, and
@@ -17,10 +17,12 @@ var _rename_popup: PopupPanel = null
 var _rename_field: LineEdit = null
 var _rename_from: String = ""
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
 # ── The pure group model (static → headless-testable) ────────────────────────────────────────────
+
 
 ## The group a variable row belongs to ("" when ungrouped). `scope`/`name` come from the row's span
 ## metadata; tree variables resolve through their LocalVariable resource.
@@ -34,6 +36,7 @@ static func group_of(sheet: EventSheetResource, scope: String, var_name: String,
 		var attributes: Variant = (resource as LocalVariable).attributes
 		return str((attributes as Dictionary).get("group", "")).strip_edges() if attributes is Dictionary else ""
 	return ""
+
 
 ## Writes a variable's group ("" clears it). Returns true when something changed.
 static func set_group(sheet: EventSheetResource, scope: String, var_name: String, resource: Resource, group: String) -> bool:
@@ -64,6 +67,7 @@ static func set_group(sheet: EventSheetResource, scope: String, var_name: String
 		return true
 	return false
 
+
 ## Renames a group across EVERY member — dict globals and tree variables (recursing groups and
 ## sub-events) — so the folder renames as one thing. An empty new name dissolves the folder
 ## (every member ungroups). Returns how many variables changed.
@@ -79,6 +83,7 @@ static func rename_group(sheet: EventSheetResource, old_group: String, new_group
 	changed += _rename_tree_groups(sheet.events, from, new_group)
 	return changed
 
+
 static func _rename_tree_groups(rows: Array, from: String, to: String) -> int:
 	var changed: int = 0
 	for row: Variant in rows:
@@ -92,6 +97,7 @@ static func _rename_tree_groups(rows: Array, from: String, to: String) -> int:
 			var group: EventGroup = row as EventGroup
 			changed += _rename_tree_groups(group.events if not group.events.is_empty() else group.rows, from, to)
 	return changed
+
 
 ## The identity a variable row's spans carry: {scope, name, resource} — resource only for tree vars
 ## (a global row's source_resource is the sheet itself).
@@ -108,6 +114,7 @@ static func row_identity(row_data: EventRowData) -> Dictionary:
 	}
 
 # ── The gestures ──────────────────────────────────────────────────────────────────────────────────
+
 
 ## Drop-onto-variable: fold both into the target's folder (or a fresh "New Group" when the target
 ## has none), then open the naming popup select-all'd — drag, type the name, Enter.
@@ -137,9 +144,11 @@ func on_group_requested(source_row: EventRowData, target_row: EventRowData) -> v
 	if fresh:
 		open_rename_popup(group)  # name the new folder right away, Discord-style
 
+
 ## Double-clicking a group chip renames the folder (empty name ungroups all members).
 func on_rename_requested(group_name: String) -> void:
 	open_rename_popup(group_name)
+
 
 func open_rename_popup(group_name: String) -> void:
 	_rename_from = group_name
@@ -164,6 +173,7 @@ func open_rename_popup(group_name: String) -> void:
 	_rename_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(240, 40)))
 	_rename_field.grab_focus()
 	_rename_field.select_all()
+
 
 func commit_rename() -> void:
 	var new_name: String = _rename_field.text.strip_edges()

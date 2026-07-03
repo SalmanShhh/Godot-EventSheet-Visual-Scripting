@@ -8,6 +8,7 @@ extends SceneTree
 var _frames: int = 0
 var _picker: ACEPickerDialog = null
 
+
 func _init() -> void:
 	root.title = "ACE Picker Preview"
 	root.size = Vector2i(900, 640)
@@ -17,6 +18,7 @@ func _init() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(background)
 	process_frame.connect(_on_frame)
+
 
 func _on_frame() -> void:
 	_frames += 1

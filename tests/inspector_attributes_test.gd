@@ -2,8 +2,9 @@
 # tooltip / group / range / multiline on exported globals; canonical emission order;
 # lossless raw fallback for external files.
 @tool
-extends RefCounted
 class_name InspectorAttributesTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -16,6 +17,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -207,6 +209,7 @@ static func run() -> bool:
 		str(SheetCompiler.compile(clash, "user://eventsheets_t3c.gd").get("warnings")).contains("_process"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

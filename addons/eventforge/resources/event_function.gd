@@ -1,8 +1,8 @@
 # EventForge — EventFunction resource
 # Callable event-sheet function compiled to a GDScript function.
 @tool
-extends Resource
 class_name EventFunction
+extends Resource
 
 @export var enabled: bool = true
 @export var function_name: String = ""

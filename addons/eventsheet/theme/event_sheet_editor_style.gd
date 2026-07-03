@@ -18,8 +18,10 @@ var _last_event_visual_scene: PackedScene = null
 var _last_condition_visual_scene: PackedScene = null
 var _last_action_visual_scene: PackedScene = null
 
+
 func _init() -> void:
 	ensure_defaults()
+
 
 func ensure_defaults() -> void:
 	if event_visual_scene == null:
@@ -77,17 +79,21 @@ func ensure_defaults() -> void:
 		action_style.gap_after = 8
 		action_style.corner_radius = 5
 
+
 func get_event_style() -> EventSheetEventStyle:
 	ensure_defaults()
 	return event_style
+
 
 func get_condition_style() -> EventSheetElementStyle:
 	ensure_defaults()
 	return condition_style
 
+
 func get_action_style() -> EventSheetElementStyle:
 	ensure_defaults()
 	return action_style
+
 
 func _build_event_style_from_scene(scene: PackedScene) -> EventSheetEventStyle:
 	var template: Node = _instantiate_visual_template(scene)
@@ -99,6 +105,7 @@ func _build_event_style_from_scene(scene: PackedScene) -> EventSheetEventStyle:
 		return built_style as EventSheetEventStyle
 	return null
 
+
 func _build_element_style_from_scene(scene: PackedScene) -> EventSheetElementStyle:
 	var template: Node = _instantiate_visual_template(scene)
 	if template == null:
@@ -108,6 +115,7 @@ func _build_element_style_from_scene(scene: PackedScene) -> EventSheetElementSty
 	if built_style is EventSheetElementStyle:
 		return built_style as EventSheetElementStyle
 	return null
+
 
 func _instantiate_visual_template(scene: PackedScene) -> Node:
 	if scene == null:

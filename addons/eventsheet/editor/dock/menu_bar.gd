@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetMenuBar
+extends RefCounted
 # The dock's top toolbar + menu bar: the HFlowContainer that flow-wraps the grouped
 # Sheet/Add/Edit/View/Tools MenuButtons, the high-frequency one-click buttons, the per-sheet
 # theme picker, and the quick-add LineEdit. Construction-only — every menu/button action targets
@@ -12,8 +12,10 @@ class_name EventSheetMenuBar
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Builds the toolbar + menu bar and adds it as the FIRST child of `root` (the workspace
 ## VBox), exactly where the dock used to inline this. Assigns _toolbar/_view_popup/
@@ -262,6 +264,7 @@ func build(root: Node) -> void:
 	)
 	_toolbar.add_child(_quick_add_edit)
 
+
 ## Adds a one-click toolbar button wired to `callable`, with an optional editor icon.
 ## (Moved verbatim from the dock; targets the toolbar passed in rather than a member.)
 func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callable, tooltip: String = "", editor_icon: String = "") -> void:
@@ -276,6 +279,7 @@ func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callab
 			button.icon = editor_theme.get_icon(editor_icon, "EditorIcons")
 	button.pressed.connect(callable)
 	toolbar.add_child(button)
+
 
 func _add_toolbar_separator(toolbar: HFlowContainer) -> void:
 	var sep: VSeparator = VSeparator.new()

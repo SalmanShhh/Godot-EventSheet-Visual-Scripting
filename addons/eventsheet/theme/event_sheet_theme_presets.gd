@@ -12,6 +12,7 @@ const THEME_DIRS: Array[String] = [
 	"res://demo/themes/"
 ]
 
+
 ## Returns [{name: String, path: String}] for every EventSheetEditorStyle theme found,
 ## sorted by display name.
 static func list_presets() -> Array[Dictionary]:
@@ -34,6 +35,7 @@ static func list_presets() -> Array[Dictionary]:
 				presets.append({"name": display_name, "path": full_path})
 	presets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a.get("name", "")) < str(b.get("name", "")))
 	return presets
+
 
 ## Turns "gruvbox_dark_theme.tres" into "Gruvbox Dark".
 static func _humanize(file_name: String) -> String:

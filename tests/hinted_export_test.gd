@@ -3,10 +3,11 @@
 # (export_hint), instead of staying RawCode blocks — so a real tuned script renders as a sheet and
 # round-trips byte-identically. The per-line verify-lift gate rejects any hint we can't reproduce.
 @tool
-extends RefCounted
 class_name HintedExportTest
+extends RefCounted
 
 const SOURCE := "extends Node2D\n\n@export_range(0, 100) var speed: float = 5.0\n@export_file var data_path: String = \"\"\n@export_flags(\"Fire\", \"Water\") var elements: int = 0\n"
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -29,6 +30,7 @@ static func run() -> bool:
 	if rt != SOURCE:
 		print("    SRC<%s>\n    RT <%s>" % [SOURCE, rt])
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

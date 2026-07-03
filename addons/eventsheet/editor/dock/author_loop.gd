@@ -6,10 +6,11 @@
 # window/bench methods hold a dock back-reference for status, ownership and the
 # current sheet.
 @tool
-extends RefCounted
 class_name EventSheetAuthorLoop
+extends RefCounted
 
 var _dock: Control = null
+
 
 func _init(dock: Control) -> void:
 	_dock = dock
@@ -75,6 +76,7 @@ static func collect_publish_surface(sheet: EventSheetResource) -> Dictionary:
 var _publish_preview_window: Window = null
 var _publish_preview_text: RichTextLabel = null
 
+
 ## Shows what THIS sheet publishes — refreshed from the live model on every open, so
 ## renaming a function updates the surface immediately (no compile-and-reopen loop).
 func open_publish_preview() -> void:
@@ -98,6 +100,7 @@ func open_publish_preview() -> void:
 	_publish_preview_text.text = publish_surface_text(collect_publish_surface(_dock._current_sheet))
 	_publish_preview_window.popup_centered()
 
+
 ## Renders a publish surface as readable BBCode (also testable headless).
 static func publish_surface_text(surface: Dictionary) -> String:
 	var sections: PackedStringArray = PackedStringArray()
@@ -118,6 +121,7 @@ static func publish_surface_text(surface: Dictionary) -> String:
 	if sections.is_empty():
 		return "Nothing published yet — expose a function as an ACE, or annotate a signal with @ace_trigger."
 	return "\n".join(sections)
+
 
 ## Markdown sections for a publish surface — shared by the pack README and the project
 ## vocabulary doc (EventSheetVocabularyDoc). `heading` sets the section level so callers
@@ -143,6 +147,7 @@ static func surface_markdown(surface: Dictionary, heading: String = "##") -> Pac
 					ace_line += " - %s" % str(entry.get("description"))
 				lines.append(ace_line)
 	return lines
+
 
 ## The pack README: name/tags/host, properties with attributes, the full ACE surface,
 ## and composition dependencies — generated so shared packs are documented by default.
@@ -172,6 +177,7 @@ static func generate_pack_readme(sheet: EventSheetResource) -> String:
 	lines.append("")
 	return "\n".join(lines)
 
+
 ## One-click behavior attach: compiles the sheet's pair fresh, then parents a Node
 ## named after the sheet's class with the generated script under the host (owner set
 ## so the scene serializes it). A host-class mismatch warns in the message but still
@@ -198,6 +204,7 @@ static func attach_behavior(sheet: EventSheetResource, host: Node) -> Dictionary
 		message += " Note: this behavior expects a %s host — it will warn in the scene." % sheet.host_class
 	return {"ok": true, "message": message}
 
+
 ## Test Bench: one click builds host + behavior scene from the CURRENT sheet and runs
 ## it — verify a behavior without hand-building a scene. The scene builder is the
 ## testable core; running needs the editor.
@@ -212,6 +219,7 @@ func open_test_bench() -> void:
 	if Engine.is_editor_hint() and _dock.is_inside_tree():
 		EditorInterface.play_custom_scene("res://.eventsheets_test_bench.tscn")
 		_dock._set_status("Test Bench running — Live Values shows the behavior's variables if enabled.")
+
 
 ## Builds + saves the bench scene (host of host_class + the compiled behavior child).
 ## Returns "" or the user-facing problem.

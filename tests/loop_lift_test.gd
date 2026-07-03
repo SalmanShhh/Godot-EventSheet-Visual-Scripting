@@ -4,8 +4,9 @@
 # in-flow GDScript cell. Mirrors the existing if/elif/else nesting; the byte-identical recompile gates
 # every match. (No functions move, so the GDScript-backed-sheet append contract is untouched.)
 @tool
-extends RefCounted
 class_name LoopLiftTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -62,6 +63,7 @@ static func run() -> bool:
 
 	return ok
 
+
 ## Walks events + their sub_events, collecting every PickFilter's collection_kind.
 static func _collect_pick_kinds(rows: Array) -> Array:
 	var kinds: Array = []
@@ -73,6 +75,7 @@ static func _collect_pick_kinds(rows: Array) -> Array:
 			kinds.append_array(_collect_pick_kinds((row as EventRow).sub_events))
 	return kinds
 
+
 ## True if any loop header (`for `/`while `) survived as an in-flow RawCode cell instead of a row.
 static func _has_raw_loop_header(rows: Array) -> bool:
 	for row: Variant in rows:
@@ -83,6 +86,7 @@ static func _has_raw_loop_header(rows: Array) -> bool:
 			if _has_raw_loop_header((row as EventRow).sub_events):
 				return true
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

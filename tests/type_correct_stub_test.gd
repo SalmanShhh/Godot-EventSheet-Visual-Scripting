@@ -4,8 +4,9 @@
 # taking every other verb on the sheet down with it. Each return type now stubs with its own default
 # return, and the test's teeth: the full generated script must actually parse (GDScript.reload()).
 @tool
-extends RefCounted
 class_name TypeCorrectStubTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -37,11 +38,13 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _fn(fn_name: String, return_type: int) -> EventFunction:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = fn_name
 	event_function.return_type = return_type
 	return event_function
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -8,12 +8,15 @@
 class_name EventSheetExportIntegrityPlugin
 extends EditorExportPlugin
 
+
 func _get_name() -> String:
 	return "GodotEventSheetsExportIntegrity"
+
 
 func _export_begin(_features: PackedStringArray, _is_debug: bool, _path: String, _flags: int) -> void:
 	var report: Dictionary = recompile_all_sheets()
 	print("[Godot EventSheets] export integrity: %d sheet(s) recompiled, %d failed." % [int(report.get("compiled", 0)), int(report.get("failed", 0))])
+
 
 ## Walks res:// for EventSheetResource .tres files and recompiles each to its existing
 ## pair (the compiler's resolution — never a parallel duplicate next to a builder-shipped
@@ -37,6 +40,7 @@ static func recompile_all_sheets(root: String = "res://") -> Dictionary:
 			(report["failures"] as Array).append(sheet_path)
 			push_error("[Godot EventSheets] sheet failed to compile at export: %s — %s" % [sheet_path, str(result.get("errors", []))])
 	return report
+
 
 static func _find_sheet_paths(root: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()

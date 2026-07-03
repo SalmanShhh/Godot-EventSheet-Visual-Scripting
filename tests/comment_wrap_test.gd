@@ -6,10 +6,11 @@
 # pixels, which zoom scales uniformly). This pins: the pure wrap-count math, and that a long
 # comment row ends up taller than a short one (it actually wrapped through the layout).
 @tool
-extends RefCounted
 class_name CommentWrapTest
+extends RefCounted
 
 const LONG_COMMENT := "Platformer movement: attach under a CharacterBody2D. Run with ui_left/ui_right, call Jump (with coyote time + buffering), and turn on wall slide / wall jump / double jump in the Inspector. Call Jump Released when the player lets go of the jump button for variable jump height."
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -60,6 +61,7 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

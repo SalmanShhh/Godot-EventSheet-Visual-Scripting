@@ -9,8 +9,9 @@
 # is width-bounded. The dialog's OWN built-in message label (AcceptDialog.get_label()) is excluded —
 # the dialog manages and sizes that one itself, so it never balloons.
 @tool
-extends RefCounted
 class_name DialogBalloonTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -56,6 +57,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## Recursively collects the names of autowrap Labels under `dialog` that have NO width bound
 ## (custom_minimum_size.x ~ 0). The dialog's built-in message label is excluded — AcceptDialog
 ## sizes that one to the dialog width itself, so it cannot balloon.
@@ -74,6 +76,7 @@ static func _unbounded_autowrap_labels(dialog: Window) -> Array[String]:
 		for child: Node in node.get_children():
 			stack.push_back(child)
 	return offenders
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

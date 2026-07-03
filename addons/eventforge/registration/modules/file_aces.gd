@@ -9,10 +9,11 @@
 #
 # Path tip (surfaced in the param hints): write to user:// — res:// is READ-ONLY in an exported game.
 @tool
-extends RefCounted
 class_name EventForgeFileACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

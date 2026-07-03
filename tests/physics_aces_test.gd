@@ -4,8 +4,9 @@
 # and the typed local. Compiles each ACE through ActionCodegen, which is what the sheet compiler
 # calls — so a wrong template or a missing param surfaces here before it reaches generated code.
 @tool
-extends RefCounted
 class_name PhysicsAcesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -41,6 +42,7 @@ static func run() -> bool:
 
 	return ok
 
+
 # Compiles ace_id with params and the given host_default through the action codegen (template
 # resolution is shared by actions and expressions), then checks the emitted line.
 static func _emit(ace_id: String, params: Dictionary, host: String, expected: String) -> bool:
@@ -50,6 +52,7 @@ static func _emit(ace_id: String, params: Dictionary, host: String, expected: St
 	action.enabled = true
 	action.params = params
 	return _check(ace_id, ActionCodegen.generate_action(action, "", host), expected)
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

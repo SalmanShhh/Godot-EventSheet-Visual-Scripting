@@ -9,6 +9,7 @@ var _frames: int = 0
 var _dialog: ACEParamsDialog = null
 var _picker: Window = null
 
+
 func _init() -> void:
 	root.title = "Node Picker Preview"
 	root.size = Vector2i(760, 680)
@@ -18,6 +19,7 @@ func _init() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(background)
 	process_frame.connect(_on_frame)
+
 
 func _on_frame() -> void:
 	_frames += 1

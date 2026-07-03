@@ -3,8 +3,9 @@
 # R replaces the selected ACE — each seeding the context state from the SELECTION and reusing the
 # right-click handlers verbatim. The audit asserts every DEFAULTS binding is pairwise-unique.
 @tool
-extends RefCounted
 class_name SingleKeyReflexesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -76,6 +77,7 @@ static func run() -> bool:
 	dock.free()
 	return ok
 
+
 ## The LIVE first EventRow on the dock's current sheet (edits replace resources — never hold refs).
 static func _live_event(dock: EventSheetDock) -> EventRow:
 	for row: Variant in dock.get_current_sheet().events:
@@ -83,9 +85,11 @@ static func _live_event(dock: EventSheetDock) -> EventRow:
 			return row
 	return null
 
+
 static func _live_condition(dock: EventSheetDock) -> ACECondition:
 	var event: EventRow = _live_event(dock)
 	return event.conditions[0] if event != null and event.conditions.size() > 0 else null
+
 
 ## Selects `event`'s flat row (span cleared). False when the row isn't found.
 static func _select_row(view: EventSheetViewport, event: EventRow) -> bool:
@@ -98,6 +102,7 @@ static func _select_row(view: EventSheetViewport, event: EventRow) -> bool:
 			return true
 	return false
 
+
 ## Selects `event`'s condition span (building the lazy spans first). False when not found.
 static func _select_condition(view: EventSheetViewport, event: EventRow) -> bool:
 	if not _select_row(view, event):
@@ -109,6 +114,7 @@ static func _select_condition(view: EventSheetViewport, event: EventRow) -> bool
 			view._selected_span_index = span_index
 			return true
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

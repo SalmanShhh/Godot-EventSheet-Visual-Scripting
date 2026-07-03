@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## "Timer" behavior: attach under any node; Start/Stop ACEs; "On Timer" trigger.
 ## Authored entirely as ACE rows (ZERO RawCode).
 static func build() -> bool:
@@ -77,6 +78,7 @@ static func build() -> bool:
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/timer/timer_behavior")
 
+
 ## Built-in Core ACE rows; templates resolve from the registry at compile time (no baked template).
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
@@ -85,12 +87,14 @@ static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	action.params = params
 	return action
 
+
 static func _cond(ace_id: String, params: Dictionary) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = "Core"
 	condition.ace_id = ace_id
 	condition.params = params
 	return condition
+
 
 static func _param(id: String, type_name: String) -> ACEParam:
 	var param: ACEParam = ACEParam.new()

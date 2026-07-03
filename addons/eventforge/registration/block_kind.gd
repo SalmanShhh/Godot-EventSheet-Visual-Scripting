@@ -24,15 +24,18 @@ var title: String = ""
 ## Add-menu grouping.
 var category: String = "Blocks"
 
+
 ## Field schema: each entry {id: String, label: String, type: Variant.Type, default: Variant}.
 ## Drives BOTH the generic edit dialog and defaults (read values with block.fields.get(id, default)).
 func fields() -> Array[Dictionary]:
 	return []
 
+
 ## Deterministic GDScript lines for this block. MUST be pure: same fields, same bytes - the
 ## round-trip covenant (and the importer's byte-verify) depend on it. Return [] to emit nothing.
 func emit(_block: CustomBlockRow) -> PackedStringArray:
 	return PackedStringArray()
+
 
 ## Try to claim source lines starting at index i. Return {} when the lines are not yours; else
 ## {"fields": Dictionary, "consumed": int} (consumed >= 1) - or, for a RESOURCE kind,
@@ -41,6 +44,7 @@ func emit(_block: CustomBlockRow) -> PackedStringArray:
 ## byte-exactly, so a permissive lift can never corrupt a sheet - it just fails to lift.
 func lift(_lines: PackedStringArray, _i: int) -> Dictionary:
 	return {}
+
 
 ## One-line sheet display, rendered as text spans beside the kind badge.
 func summary(_block: CustomBlockRow) -> String:
@@ -52,29 +56,35 @@ func summary(_block: CustomBlockRow) -> String:
 # depends on, not just an extension point. Saved sheets and dedicated dialogs are untouched;
 # only emit/lift/summary route through the kind.
 
+
 ## Return true for row instances this kind owns (e.g. `entry is EnumRow`). Kinds built on
 ## CustomBlockRow leave this false - the registry resolves those by kind_id instead.
 func handles(_entry: Resource) -> bool:
 	return false
+
 
 ## GDScript lines for ANY instance this kind handles. Resource kinds override this; schema
 ## kinds inherit the CustomBlockRow form so nothing changes for them.
 func emit_lines(entry: Resource) -> PackedStringArray:
 	return emit(entry as CustomBlockRow)
 
+
 ## One-line display for ANY handled instance (resource kinds override; schema kinds delegate).
 func summary_for(entry: Resource) -> String:
 	return summary(entry as CustomBlockRow)
+
 
 ## The source-map kind tag for emitted ranges ("enum", "custom_block", ...) so line-to-row
 ## tooling keeps its vocabulary when a built-in row class migrates onto the registry.
 func source_map_kind() -> String:
 	return "custom_block"
 
+
 ## Whether the generic add surfaces (Add menu, palette, schema dialog) offer this kind.
 ## Resource kinds return false - their row classes have dedicated add/edit flows already.
 func addable() -> bool:
 	return true
+
 
 ## A convenience for lift(): builds the fields Dictionary and verifies emit() reproduces the
 ## consumed lines byte-exactly, returning {} on mismatch. Kinds normally end lift() with this.

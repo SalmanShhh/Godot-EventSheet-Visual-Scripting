@@ -1,11 +1,12 @@
 @tool
-extends RefCounted
 class_name ColorNoAlphaTest
+extends RefCounted
 # A Color variable with the "No alpha" tick compiles to @export_color_no_alpha (a solid RGB swatch in
 # the Inspector) and round-trips STRUCTURALLY — reopening the .gd recovers the no_alpha attribute (so the
 # dialog tick is re-checked + survives editing), not a verbatim hint. Verify-lift-gated like the drawers.
 
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -54,6 +55,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## Compiles a one-variable sheet (an exported tree variable) and returns the generated .gd.
 static func _compile_one(name: String, type_name: String, default_value: Variant, attributes: Dictionary) -> String:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -67,11 +69,13 @@ static func _compile_one(name: String, type_name: String, default_value: Variant
 	sheet.events.append(v)
 	return str(SheetCompiler.compile(sheet).get("output", ""))
 
+
 static func _find_var(sheet: EventSheetResource, name: String) -> LocalVariable:
 	for ev: Variant in sheet.events:
 		if ev is LocalVariable and (ev as LocalVariable).name == name:
 			return ev
 	return null
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -1,8 +1,8 @@
 # EventForge — ACECondition resource
 # Serializable instance of a condition ACE in an event row.
 @tool
-extends Resource
 class_name ACECondition
+extends Resource
 
 @export var provider_id: String = "Core"
 @export var ace_id: String = ""

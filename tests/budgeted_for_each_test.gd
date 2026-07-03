@@ -6,8 +6,9 @@
 # guard, body inside the loop), that it PARSES, the order-by/while/first-N fallback, and that a plain
 # loop is untouched (regression).
 @tool
-extends RefCounted
 class_name BudgetedForEachTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -52,6 +53,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 # Builds an On Process event with one EXPRESSION pick over [10,20,30,40,50] + a print(num) body, then
 # compiles it. count/budget_ms drive frame-spreading; order_by exercises the fallback.
 static func _compile_loop(uid: String, count: int, budget_ms: float, order_by: String) -> String:
@@ -77,6 +79,7 @@ static func _compile_loop(uid: String, count: int, budget_ms: float, order_by: S
 	event.actions.append(act)
 	sheet.events.append(event)
 	return str(SheetCompiler.compile(sheet, "user://es_budgeted_%s.gd" % uid).get("output", ""))
+
 
 # True if compiling a budgeted loop under `trigger` produces the one-shot-trigger footgun warning.
 static func _warns_one_shot(trigger: String) -> bool:
@@ -105,10 +108,12 @@ static func _warns_one_shot(trigger: String) -> bool:
 			return true
 	return false
 
+
 static func _parses(source: String) -> bool:
 	var generated: GDScript = GDScript.new()
 	generated.source_code = source
 	return generated.reload(true) == OK
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

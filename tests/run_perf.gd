@@ -3,8 +3,9 @@
 # can run under `godot --headless --script tests/run_perf.gd` for quick verification
 # during the editor overhaul without the full editor test suite (which opens popups).
 @tool
-extends SceneTree
 class_name EventForgePerfRunner
+extends SceneTree
+
 
 func _init() -> void:
 	var passed: bool = true

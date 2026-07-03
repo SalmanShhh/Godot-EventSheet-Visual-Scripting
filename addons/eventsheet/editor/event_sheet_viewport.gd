@@ -204,6 +204,7 @@ var _box_select_additive: bool = false
 var _box_select_start: Vector2 = Vector2.ZERO
 var _box_select_current: Vector2 = Vector2.ZERO
 
+
 func _init() -> void:
 	_configure_viewport()
 	_row_builder.init(self)
@@ -212,10 +213,12 @@ func _init() -> void:
 	_tooltip_helper.init(self)
 	_empty_state_helper.init(self)
 
+
 func _ready() -> void:
 	_configure_viewport()
 	set_process(true)
 	_refresh_rows()
+
 
 func _process(_delta: float) -> void:
 	var scroll_value: int = _get_scroll_offset()
@@ -228,6 +231,7 @@ func _process(_delta: float) -> void:
 		_update_canvas_min_size()
 		queue_redraw()
 
+
 ## The shared per-sheet view state (created on demand around this view's dictionaries).
 func get_shared_state() -> EventSheetViewState:
 	if _shared_state == null:
@@ -236,6 +240,7 @@ func get_shared_state() -> EventSheetViewState:
 		_shared_state.bookmark_rows = _bookmark_rows
 		_shared_state.row_disabled_state = _row_disabled_state
 	return _shared_state
+
 
 ## Adopts another view's shared state: the dictionaries are taken BY REFERENCE, so a
 ## breakpoint toggled in any pane is instantly true in all of them.
@@ -247,11 +252,13 @@ func adopt_shared_state(state: EventSheetViewState) -> void:
 	_bookmark_rows = state.bookmark_rows
 	_row_disabled_state = state.row_disabled_state
 
+
 func set_sheet(sheet: EventSheetResource) -> void:
 	_sheet = sheet
 	_editor_style = _resolve_editor_style(sheet)
 	_update_layout_style_signature(_get_font_size())
 	_refresh_rows()
+
 
 func set_ace_registry(ace_registry: EventSheetACERegistry) -> void:
 	if ace_registry == null:
@@ -261,15 +268,19 @@ func set_ace_registry(ace_registry: EventSheetACERegistry) -> void:
 	_row_builder._ace_icon_cache.clear()  # icons derive from definitions; a new registry invalidates them
 	_refresh_rows()
 
+
 func get_ace_registry() -> EventSheetACERegistry:
 	return _ace_registry
+
 
 func set_debug_overlay_states(states: Dictionary) -> void:
 	_debug_rows = states.duplicate(true)
 	_refresh_rows()
 
+
 func get_total_row_count() -> int:
 	return _flat_rows.size()
+
 
 ## Returns the x of the condition/action lane divider for a canvas of the given logical
 ## width. Shared by row layout and the pinned column header so they stay aligned.
@@ -282,27 +293,34 @@ func get_lane_divider_x(width: float) -> float:
 		floor(content_width * event_style.condition_lane_ratio)
 	)
 
+
 ## Logical (unzoomed) width of the sheet canvas.
 func get_canvas_logical_width() -> float:
 	return _get_logical_canvas_width()
+
 
 ## Current horizontal scroll offset of the hosting scroll container.
 func get_horizontal_scroll() -> int:
 	var scroll: ScrollContainer = _get_scroll_container()
 	return scroll.scroll_horizontal if scroll != null else 0
 
+
 ## Active event style tokens (for surfaces outside the renderer, e.g. the column header).
 func get_event_style() -> EventSheetEventStyle:
 	return _get_event_style()
 
+
 func get_selected_row_index() -> int:
 	return _selected_row_index
+
 
 func get_flat_rows() -> Array[Dictionary]:
 	return _flat_rows.duplicate(true)
 
+
 func get_selected_row_data() -> EventRowData:
 	return _row_at(_selected_row_index)
+
 
 func get_selected_span() -> SemanticSpan:
 	var row_data: EventRowData = get_selected_row_data()
@@ -311,6 +329,7 @@ func get_selected_span() -> SemanticSpan:
 	if _selected_span_index < 0 or _selected_span_index >= row_data.spans.size():
 		return null
 	return row_data.spans[_selected_span_index]
+
 
 func get_selected_context() -> Dictionary:
 	var row_data: EventRowData = get_selected_row_data()
@@ -323,6 +342,7 @@ func get_selected_context() -> Dictionary:
 		"span": span,
 		"span_metadata": span.metadata if span != null and span.metadata is Dictionary else {}
 	}
+
 
 ## The ACE resource backing the selected span (condition/trigger/action), or null —
 ## drives the Inspector's per-row "Selected ACE" section.
@@ -342,6 +362,7 @@ func get_selected_ace_resource() -> Resource:
 			return (row_resource as EventRow).trigger
 	return null
 
+
 func get_selected_rows() -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
 	for index in _get_selected_row_indices():
@@ -349,6 +370,7 @@ func get_selected_rows() -> Array[EventRowData]:
 		if row_data != null:
 			rows.append(row_data)
 	return rows
+
 
 func get_selected_ace_entries() -> Array:
 	var entries: Array = []
@@ -372,6 +394,7 @@ func get_selected_ace_entries() -> Array:
 				continue
 			entries.append(_build_ace_drag_entry(row_data, kind, ace_index))
 	return entries
+
 
 func get_selected_span_targets() -> Array:
 	var targets: Array = []
@@ -400,6 +423,7 @@ func get_selected_span_targets() -> Array:
 			})
 	return targets
 
+
 func get_editor_state_snapshot() -> Dictionary:
 	return {
 		"focused_lane": _focused_lane,
@@ -411,8 +435,10 @@ func get_editor_state_snapshot() -> Dictionary:
 		"zoom_factor": _zoom_factor
 	}
 
+
 func get_editor_style() -> EventSheetEditorStyle:
 	return _editor_style
+
 
 func _resolve_editor_style(sheet: EventSheetResource) -> EventSheetEditorStyle:
 	if sheet != null and sheet.editor_style is EventSheetEditorStyle:
@@ -425,20 +451,24 @@ func _resolve_editor_style(sheet: EventSheetResource) -> EventSheetEditorStyle:
 	# (no-op outside the editor, keeping tests deterministic).
 	return EventSheetGodotTheme.adapt_to_editor(fallback_style)
 
+
 func _get_event_style() -> EventSheetEventStyle:
 	if _editor_style == null:
 		_editor_style = EventSheetEditorStyle.new()
 	return _editor_style.get_event_style()
+
 
 func _get_condition_style() -> EventSheetElementStyle:
 	if _editor_style == null:
 		_editor_style = EventSheetEditorStyle.new()
 	return _editor_style.get_condition_style()
 
+
 func _get_action_style() -> EventSheetElementStyle:
 	if _editor_style == null:
 		_editor_style = EventSheetEditorStyle.new()
 	return _editor_style.get_action_style()
+
 
 func _has_event_rows() -> bool:
 	for entry in _flat_rows:
@@ -447,11 +477,13 @@ func _has_event_rows() -> bool:
 			return true
 	return false
 
+
 ## True when a logical-space point sits over the draggable conditions/actions lane divider.
 func _is_near_lane_divider(local_position: Vector2) -> bool:
 	if not _has_event_rows():
 		return false
 	return absf(local_position.x - get_lane_divider_x(_get_logical_canvas_width())) <= LANE_DIVIDER_GRAB_TOLERANCE
+
 
 ## Live-resizes the conditions/actions split from a logical X (during a divider drag).
 func _set_lane_ratio_from_x(local_x: float) -> void:
@@ -461,6 +493,7 @@ func _set_lane_ratio_from_x(local_x: float) -> void:
 	_update_layout_style_signature(_get_font_size())
 	_layout_cache.clear()
 	queue_redraw()
+
 
 ## Swaps the active editor style and repaints without rebuilding the row list (cheap). Used
 ## when the dock promotes a default-themed sheet to a concrete style after a divider drag.
@@ -473,11 +506,13 @@ func apply_editor_style(style: EventSheetEditorStyle) -> void:
 	_layout_cache.clear()
 	queue_redraw()
 
+
 func _get_event_line_height(base_font_size: int = FONT_SIZE) -> float:
 	var event_style: EventSheetEventStyle = _get_event_style()
 	var condition_height: float = _get_condition_style().resolve_line_height(base_font_size, event_style.minimum_row_height)
 	var action_height: float = _get_action_style().resolve_line_height(base_font_size, event_style.minimum_row_height)
 	return max(float(event_style.minimum_row_height), max(condition_height, action_height))
+
 
 func _build_element_style_metadata(style: EventSheetElementStyle) -> Dictionary:
 	if style == null:
@@ -497,12 +532,14 @@ func _build_element_style_metadata(style: EventSheetElementStyle) -> Dictionary:
 		"badge_extra_width": style.badge_extra_width
 	}
 
+
 func _get_span_gap(span: SemanticSpan) -> float:
 	if span == null or not (span.metadata is Dictionary):
 		return EventSheetPalette.SPAN_GAP
 	var metadata: Dictionary = span.metadata as Dictionary
 	var fallback_gap: float = CHIP_GAP if bool(metadata.get("chip", false)) else EventSheetPalette.SPAN_GAP
 	return max(float(metadata.get("gap_after", fallback_gap)), 0.0)
+
 
 func _build_layout_style_signature(font_size: int) -> String:
 	var event_style: EventSheetEventStyle = _get_event_style()
@@ -522,8 +559,10 @@ func _build_layout_style_signature(font_size: int) -> String:
 		action_style.gap_after
 	]
 
+
 func _update_layout_style_signature(font_size: int) -> void:
 	_layout_style_signature = _build_layout_style_signature(font_size)
+
 
 func get_row_layout_for_test(row_index: int, width: float = -1.0) -> Dictionary:
 	var resolved_width: float = (
@@ -531,20 +570,26 @@ func get_row_layout_for_test(row_index: int, width: float = -1.0) -> Dictionary:
 	)
 	return _get_or_build_row_layout(row_index, resolved_width, _get_font(), _get_font_size())
 
+
 func set_external_span_edit_handler_enabled(enabled: bool) -> void:
 	_external_span_edit_handler_enabled = enabled
+
 
 func clear_selection() -> void:
 	_clear_selection()
 
+
 func get_zoom_factor() -> float:
 	return _zoom_factor
+
 
 func can_zoom_in() -> bool:
 	return _zoom_factor < MAX_ZOOM_FACTOR
 
+
 func can_zoom_out() -> bool:
 	return _zoom_factor > MIN_ZOOM_FACTOR
+
 
 func set_zoom_factor(value: float) -> void:
 	var clamped_value: float = clampf(value, MIN_ZOOM_FACTOR, MAX_ZOOM_FACTOR)
@@ -554,11 +599,14 @@ func set_zoom_factor(value: float) -> void:
 	_update_canvas_min_size()
 	queue_redraw()
 
+
 func zoom_in(anchor_position: Vector2 = Vector2(-1.0, -1.0)) -> void:
 	_apply_zoom_delta(ZOOM_STEP, anchor_position)
 
+
 func zoom_out(anchor_position: Vector2 = Vector2(-1.0, -1.0)) -> void:
 	_apply_zoom_delta(-ZOOM_STEP, anchor_position)
+
 
 func toggle_row_fold_by_uid(row_uid: String) -> bool:
 	if row_uid.is_empty():
@@ -569,6 +617,7 @@ func toggle_row_fold_by_uid(row_uid: String) -> bool:
 			_toggle_row_fold(index)
 			return true
 	return false
+
 
 func get_visible_row_range() -> Vector2i:
 	if _flat_rows.is_empty():
@@ -585,6 +634,7 @@ func get_visible_row_range() -> Vector2i:
 	if end_index < start_index:
 		end_index = start_index
 	return Vector2i(start_index, end_index)
+
 
 ## Selects (and scrolls to) the row backed by the given resource. Used by reverse
 ## provenance — clicking generated code in the GDScript panel selects its sheet row.
@@ -605,6 +655,7 @@ func select_resource(resource: Resource) -> bool:
 const SLOW_CLICK_MIN_MS := 450   # beyond the OS double-click window
 const SLOW_CLICK_MAX_MS := 1600
 var _slow_click: Dictionary = {"row": -1, "span": -1, "msec": 0}
+
 
 ## Explorer-style slow double-click: a second single click on the SAME editable span,
 ## after the double-click window but within the slow window, begins inline editing
@@ -635,6 +686,7 @@ func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size:
 			return [value_text, occurrence]
 	return []
 
+
 ## Where the span's TEXT begins, in logical coordinates — the renderer indents it past the object
 ## icon and object label prefixes (matching _draw_spans' advances exactly). Shared by the value
 ## hit-test and the Param Hop cursor so their geometry can never drift from the draw.
@@ -648,9 +700,11 @@ func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> floa
 		origin_x += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, _span_draw_font_size(span, font_size)).x
 	return origin_x
 
+
 func _span_draw_font_size(span: SemanticSpan, font_size: int) -> int:
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 	return EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
+
 
 ## Maps a displayed value back to the param that produced it (params are substituted
 ## verbatim into display templates, so str(param) == shown text; equal values
@@ -674,12 +728,15 @@ static func param_id_for_value(ace: Resource, value_text: String, occurrence: in
 # into _param_value_entries; it clears on any selection change or row rebuild (spans are replaced).
 var _param_cursor: Dictionary = {}
 
+
 func param_scope_active() -> bool:
 	return not _param_cursor.is_empty()
+
 
 func exit_param_scope() -> void:
 	_param_cursor = {}
 	queue_redraw()
+
 
 ## Every editable parameter VALUE on a row, in visual order: for each condition/trigger/action span,
 ## each highlighted range that maps back to a real param (template literals that aren't params are
@@ -721,6 +778,7 @@ func _param_value_entries(row_data: EventRowData) -> Array:
 			})
 	return entries
 
+
 ## Enter param scope on the selected row (cursor on its first value). False when the row has none —
 ## the caller falls back to plain inline span editing, so Enter still works on comment/variable rows.
 func enter_param_scope() -> bool:
@@ -730,6 +788,7 @@ func enter_param_scope() -> bool:
 	_param_cursor = {"entry_index": 0}
 	queue_redraw()
 	return true
+
 
 func _param_scope_step(delta: int) -> void:
 	var entries: Array = _param_value_entries(_row_at(_selected_row_index))
@@ -742,12 +801,14 @@ func _param_scope_step(delta: int) -> void:
 	_param_cursor = {"entry_index": index}
 	queue_redraw()
 
+
 func _param_cursor_entry() -> Dictionary:
 	var entries: Array = _param_value_entries(_row_at(_selected_row_index))
 	var index: int = int(_param_cursor.get("entry_index", -1))
 	if index < 0 or index >= entries.size():
 		return {}
 	return entries[index]
+
 
 ## The Enter key, param-scope aware: inside scope it opens the editor on the cursor value; on a row
 ## with values it enters scope; otherwise it falls back to inline span editing. One funnel shared by
@@ -759,6 +820,7 @@ func handle_enter_key() -> bool:
 	if enter_param_scope():
 		return true
 	return begin_edit_selected()
+
 
 ## Opens the shipped one-field editor on the cursor value, anchored at the value's on-screen rect
 ## (keyboard flow — the mouse is nowhere near the value).
@@ -772,6 +834,7 @@ func _open_param_cursor_editor() -> void:
 		str((entry.get("ace").get("params") as Dictionary).get(str(entry.get("param_id")), entry.get("text"))),
 		_param_value_screen_rect(entry)
 	)
+
 
 ## The cursor value's rect in screen coordinates (logical span rect + prefix measurement, zoomed,
 ## offset by the control's screen position). Builds the row layout on demand so span.rect is fresh.
@@ -788,6 +851,7 @@ func _param_value_screen_rect(entry: Dictionary) -> Rect2:
 	# the size information the assertions care about.
 	var origin: Vector2 = get_screen_position() if is_inside_tree() else Vector2.ZERO
 	return Rect2(origin + local.position * zoom, local.size * zoom)
+
 
 func _param_value_logical_rect(row_data: EventRowData, entry: Dictionary, font: Font, font_size: int) -> Rect2:
 	var span_index: int = int(entry.get("span_index", -1))
@@ -806,6 +870,7 @@ func _param_value_logical_rect(row_data: EventRowData, entry: Dictionary, font: 
 	var prefix_width: float = font.get_string_size(span.text.substr(0, start), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	var value_width: float = font.get_string_size(span.text.substr(start, length), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	return Rect2(text_x + prefix_width, span.rect.position.y, value_width, span.rect.size.y)
+
 
 ## The param cursor overlay: a soft accent box around the cursor value plus a muted param-name chip
 ## just below it — blind Tab-cycling with no name would read worse than the params dialog it replaces.
@@ -830,6 +895,7 @@ func _draw_param_cursor(font: Font, font_size: int) -> void:
 	draw_string(font, Vector2(chip.position.x + 5.0, chip.position.y + 2.0 + font.get_ascent(hint_size)), hint,
 		HORIZONTAL_ALIGNMENT_LEFT, -1.0, hint_size, EventSheetPalette.TEXT_MUTED)
 
+
 func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1) -> bool:
 	var now: int = now_msec if now_msec >= 0 else Time.get_ticks_msec()
 	var was_same: bool = int(_slow_click.get("row", -1)) == row_index and int(_slow_click.get("span", -1)) == span_index
@@ -850,6 +916,7 @@ func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1)
 	_begin_edit(row_index, span_index)
 	return true
 
+
 ## Tree-wide search (the find bar's data source): walks the FULL row tree — including
 ## rows hidden inside folded groups — and returns matching source resources in order.
 func search_all(query: String) -> Array[Resource]:
@@ -860,6 +927,7 @@ func search_all(query: String) -> Array[Resource]:
 	for root in _root_rows:
 		_search_row_tree(root, needle, matches)
 	return matches
+
 
 func _search_row_tree(row_data: EventRowData, needle: String, into: Array[Resource]) -> void:
 	if row_data == null:
@@ -875,6 +943,7 @@ func _search_row_tree(row_data: EventRowData, needle: String, into: Array[Resour
 		into.append(row_data.source_resource)
 	for child in row_data.children:
 		_search_row_tree(child, needle, into)
+
 
 ## Selects and scrolls to the row backing `resource`, unfolding any folded ancestor
 ## groups so find can land inside collapsed regions. Returns false when not found.
@@ -899,6 +968,7 @@ func reveal_resource(resource: Resource) -> bool:
 		_refresh_rows()
 	return false
 
+
 func _unfold_path_to(row_data: EventRowData, resource: Resource) -> bool:
 	if row_data == null:
 		return false
@@ -911,6 +981,7 @@ func _unfold_path_to(row_data: EventRowData, resource: Resource) -> bool:
 				_fold_state[row_data.row_uid] = false
 			return true
 	return false
+
 
 ## Flat indices of rows whose visible text (or GDScript block code) contains the query,
 ## case-insensitively — the find bar's data source.
@@ -934,6 +1005,7 @@ func search_rows(query: String) -> Array[int]:
 			matches.append(index)
 	return matches
 
+
 ## Toggles a session bookmark on the selected row (Ctrl+M; F4 / Shift+F4 navigate).
 func toggle_bookmark_selected() -> void:
 	var row_data: EventRowData = _row_at(_selected_row_index)
@@ -945,6 +1017,7 @@ func toggle_bookmark_selected() -> void:
 		_bookmark_rows[row_data.row_uid] = true
 	row_data.bookmark_enabled = _bookmark_rows.has(row_data.row_uid)
 	queue_redraw()
+
 
 ## Selects the next (direction >= 0) or previous bookmarked row, wrapping around.
 ## Returns false when nothing is bookmarked.
@@ -975,6 +1048,7 @@ func jump_to_bookmark(direction: int = 1) -> bool:
 	queue_redraw()
 	return true
 
+
 func ensure_selection_visible() -> void:
 	if _selected_row_index < 0:
 		return
@@ -988,6 +1062,7 @@ func ensure_selection_visible() -> void:
 	elif row_bottom > scroll.scroll_vertical + int(_get_viewport_height()):
 		scroll.scroll_vertical = row_bottom - int(_get_viewport_height())
 
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
 		# Comments wrap to the canvas width, so a real width change means their heights (and
@@ -998,6 +1073,7 @@ func _notification(what: int) -> void:
 			_layout_cache.clear()
 		_update_canvas_min_size()
 		queue_redraw()
+
 
 func _draw() -> void:
 	var zoom: float = max(_zoom_factor, 0.001)
@@ -1039,6 +1115,7 @@ func _draw() -> void:
 	_draw_param_cursor(font, font_size)
 	_draw_drag_ghost(font, font_size)
 
+
 ## The variable-folder bubbles: one rounded outline + soft tint around each run of consecutive
 ## variable rows sharing an Inspector group, so a grouped set reads as ONE visual folder (the
 ## Discord-folder look) instead of rows that merely repeat a chip. Drawn OVER the rows (their
@@ -1058,6 +1135,7 @@ func _draw_variable_group_bubbles(width: float) -> void:
 		var top: float = _get_row_top(start_index)
 		var bottom: float = _get_row_top(end_index) + _get_row_height(end_index)
 		bubble.draw(get_canvas_item(), Rect2(3.0, top + 1.0, width - 6.0, bottom - top - 2.0))
+
 
 ## Event-sheet-style drag ghost: a faint (~0.66 opacity) label of the dragged content following the
 ## cursor while an ACE/row drag has an active target (i.e. after actual mouse motion).
@@ -1086,6 +1164,7 @@ func _draw_drag_ghost(font: Font, font_size: int) -> void:
 		Color(1.0, 1.0, 1.0, 0.66)
 	)
 
+
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		_handle_mouse_motion(event as InputEventMouseMotion)
@@ -1100,6 +1179,7 @@ func _gui_input(event: InputEvent) -> void:
 # can jump somewhere real (e.g. a behaviour-pack verb opens its behaviour as a sheet). Kept as a probe
 # so cells with no jump target keep Ctrl+Click's multi-select meaning.
 var navigation_probe: Callable = Callable()
+
 
 func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	# Ctrl-hover affordance: the hand cursor advertises the Ctrl+Click jump on resolvable cells.
@@ -1143,6 +1223,7 @@ func _handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_drag_target_index = int(hit.get("row_index", -1))
 		_drag_target_mode = _resolve_drop_mode(hit, local_position)
 		queue_redraw()
+
 
 func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	if event.pressed and (event.ctrl_pressed or event.meta_pressed):
@@ -1379,6 +1460,7 @@ func _handle_mouse_button(event: InputEventMouseButton) -> void:
 	_clear_row_drag()
 	queue_redraw()
 
+
 func _begin_box_selection(position: Vector2, additive: bool) -> void:
 	_clear_row_drag()
 	_clear_ace_drag()
@@ -1389,6 +1471,7 @@ func _begin_box_selection(position: Vector2, additive: bool) -> void:
 	if not additive:
 		_clear_selection()
 	queue_redraw()
+
 
 func _complete_box_selection() -> void:
 	if not _box_select_active:
@@ -1404,6 +1487,7 @@ func _complete_box_selection() -> void:
 	_box_select_additive = false
 	queue_redraw()
 
+
 func _draw_box_selection_overlay() -> void:
 	if not _box_select_active:
 		return
@@ -1415,6 +1499,7 @@ func _draw_box_selection_overlay() -> void:
 	selection_outline.a = max(selection_fill.a, 0.9)
 	draw_rect(selection_rect, selection_fill, true)
 	draw_rect(selection_rect, selection_outline, false, 1.0)
+
 
 func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
 	if not additive:
@@ -1475,6 +1560,7 @@ func _apply_box_selection(selection_rect: Rect2, additive: bool) -> void:
 	_sync_row_selection_flags()
 	selection_changed.emit(_row_at(_selected_row_index))
 
+
 func _is_selection_hit(row_index: int, span_index: int) -> bool:
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null:
@@ -1489,6 +1575,7 @@ func _is_selection_hit(row_index: int, span_index: int) -> bool:
 		return true
 	return span_indices.has(span_index)
 
+
 ## True when a hover/press landed on an EVENT row but NOT on one of its ACE cells (span_index < 0) —
 ## the empty band of the condition/action lane below the cells. A press there begins a whole-event
 ## drag (reorder / nest), so this drives the move-cursor affordance AND the "grab here" hover. Pure,
@@ -1496,6 +1583,7 @@ func _is_selection_hit(row_index: int, span_index: int) -> bool:
 ## single-cell rows with no ambiguous empty band.
 static func is_event_drag_zone(row_data: EventRowData, span_index: int) -> bool:
 	return row_data != null and row_data.row_type == EventRowData.RowType.EVENT and span_index < 0
+
 
 func _begin_row_drag(row_index: int) -> void:
 	if row_index < 0:
@@ -1515,6 +1603,7 @@ func _begin_row_drag(row_index: int) -> void:
 		else _row_ghost_label(_row_at(row_index))
 	)
 
+
 ## First meaningful text on a row, used as the drag-ghost label.
 func _row_ghost_label(row_data: EventRowData) -> String:
 	if row_data == null:
@@ -1527,6 +1616,7 @@ func _row_ghost_label(row_data: EventRowData) -> String:
 		return span.text
 	return "Row"
 
+
 func _clear_row_drag() -> void:
 	_drag_row_index = -1
 	_drag_row_indices.clear()
@@ -1534,6 +1624,7 @@ func _clear_row_drag() -> void:
 	_drag_target_mode = "before"
 	_drag_row_copy_mode = false
 	_drag_ghost_label = ""
+
 
 func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
 	if row_index < 0:
@@ -1573,6 +1664,7 @@ func _maybe_begin_ace_drag(hit: Dictionary, row_index: int) -> bool:
 		_drag_ghost_label = kind.capitalize()
 	return true
 
+
 func _clear_ace_drag() -> void:
 	_drag_ace_entries.clear()
 	_drag_ace_target_row_index = -1
@@ -1584,10 +1676,12 @@ func _clear_ace_drag() -> void:
 	_drag_ghost_label = ""
 	_clear_drag_feedback()
 
+
 func _clear_drag_feedback() -> void:
 	_drag_feedback_text = ""
 	_drag_feedback_is_error = false
 	tooltip_text = ""
+
 
 func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
 	_drag_ace_target_row_index = -1
@@ -1641,6 +1735,7 @@ func _update_ace_drag_target(hit: Dictionary, position: Vector2) -> void:
 		tooltip_text = _drag_feedback_text
 	queue_redraw()
 
+
 func _complete_ace_drag() -> bool:
 	if _drag_ace_entries.is_empty():
 		return false
@@ -1662,6 +1757,7 @@ func _complete_ace_drag() -> bool:
 		_drag_ace_copy_mode
 	)
 	return true
+
 
 func _handle_key(event: InputEventKey) -> void:
 	if not event.pressed or event.echo:
@@ -1758,6 +1854,7 @@ func _handle_key(event: InputEventKey) -> void:
 		_begin_edit(_selected_row_index, _selected_span_index)
 		accept_event()
 
+
 func _handle_editing_key(event: InputEventKey) -> void:
 	if event.keycode == KEY_ESCAPE:
 		_cancel_edit()
@@ -1791,6 +1888,7 @@ func _handle_editing_key(event: InputEventKey) -> void:
 			_editing_caret += typed_char.length()
 			queue_redraw()
 			accept_event()
+
 
 func _refresh_rows() -> void:
 	# Spans are rebuilt below; a param cursor into the old spans would dangle.
@@ -1827,6 +1925,7 @@ func _refresh_rows() -> void:
 	_update_canvas_min_size()
 	_layout_cache.clear()
 	queue_redraw()
+
 
 func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	var root_rows: Array[EventRowData] = []
@@ -1872,6 +1971,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 		root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
 	return root_rows
 
+
 ## A synthetic, foldable header that collapses a run of class-scaffolding rows (its children) into one
 ## line. source_resource stays null so selection / delete / drag treat the header as inert (like the
 ## add-event footer); the real RawCodeRows live on as its children and edit exactly as before. Folded by
@@ -1881,11 +1981,13 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Array[EventRowData]) -> EventRowData:
 	return _row_builder._build_scaffolding_strip_row(sheet, scaffold_rows)
 
+
 ## True for the synthetic "Class setup" header built above: a null-source SECTION row whose uid marks it
 ## as the scaffolding strip. Used to keep it inert for selection/delete (it owns no resource of its own —
 ## its children do), while still allowing the fold arrow (which is gated only on `children`).
 func _is_synthetic_scaffolding_strip(row_data: EventRowData) -> bool:
 	return row_data != null and row_data.source_resource == null and row_data.row_uid.begins_with("scaffolding_strip_")
+
 
 ## A clickable footer row that appends a new event into owner_resource (a group or the
 ## sheet). source_resource stays null on purpose so selection/delete/drag paths (which act on
@@ -1893,13 +1995,16 @@ func _is_synthetic_scaffolding_strip(row_data: EventRowData) -> bool:
 func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: String) -> EventRowData:
 	return _row_builder._build_add_event_footer_row(owner_resource, indent, label)
 
+
 func _row_is_add_event_footer(row_data: EventRowData) -> bool:
 	return row_data != null and row_data.row_uid.begins_with("add_event_footer_")
+
 
 ## First Color(...) literal among an ACE's param values (null when none) — drives the
 ## little color swatch drawn after the condition/action text.
 func _first_color_in_params(ace: Resource) -> Variant:
 	return _row_builder._first_color_in_params(ace)
+
 
 ## The param KEY holding that first Color literal ("" when none) — needed to write a picked colour back.
 func _first_color_param_id(ace: Resource) -> String:
@@ -1918,6 +2023,7 @@ var _row_diagnostics: Dictionary = {}
 var _first_diagnostic_uid: String = ""
 # Live event trace: uid set of events that fired in the latest streamed frame (transient highlight).
 var _fired_uids: Dictionary = {}
+
 
 func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 	if entry == null:
@@ -1947,6 +2053,7 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 		row_data.firing = _fired_uids.has((entry as EventRow).event_uid)
 	return row_data
 
+
 ## Paints per-row error markers from EventSheetDiagnostics (each: {uid, message, suggestion}).
 ## Returns the number of distinct flagged rows; re-applied on every rebuild. Replaces the prior
 ## set, so passing [] clears it.
@@ -1967,12 +2074,14 @@ func set_row_diagnostics(diagnostics: Array) -> int:
 	_refresh_rows()
 	return _row_diagnostics.size()
 
+
 func clear_row_diagnostics() -> void:
 	if _row_diagnostics.is_empty():
 		return
 	_row_diagnostics.clear()
 	_first_diagnostic_uid = ""
 	_refresh_rows()
+
 
 ## Live event trace: highlights the rows whose events fired in the latest streamed frame. Updates
 ## the existing rows + redraws (no full rebuild) since it arrives ~every 0.25s during a debug run.
@@ -1985,6 +2094,7 @@ func set_fired_events(uids: PackedStringArray) -> void:
 		if row_data != null and row_data.source_resource is EventRow:
 			row_data.firing = _fired_uids.has((row_data.source_resource as EventRow).event_uid)
 	queue_redraw()
+
 
 ## Reveals (unfolds ancestors) + selects the first flagged row, so a failed compile lands you
 ## straight on the offending event instead of leaving you to hunt. False if nothing is flagged.
@@ -1999,15 +2109,18 @@ func reveal_and_select_first_diagnostic() -> bool:
 			return true
 	return false
 
+
 ## An enum row: rendered like a variable declaration ("enum  State { IDLE, RUN }");
 ## double-click opens the enum dialog.
 func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 	return _row_builder._build_enum_row(enum_row, indent)
 
+
 ## A signal row: rendered like a declaration ("signal  hit(damage: int)"); double-click
 ## opens the signal dialog.
 func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	return _row_builder._build_signal_row(signal_row, indent)
+
 
 ## True when a top-level GDScript block is pure class SCAFFOLDING — the structural boilerplate a
 ## behaviour / custom-node / family sheet always carries (class prelude, `## …` doc + `## @ace_*`
@@ -2031,41 +2144,53 @@ static func is_scaffolding_code(code: String) -> bool:
 		return false  # any other statement is real content → treat the whole block as logic
 	return true
 
+
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
 ## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
 func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	return _row_builder._build_raw_code_row(raw_row, indent)
 
+
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
 func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowData:
 	return _row_builder._build_tree_variable_row(variable, indent)
 
+
 func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	return _row_builder._build_group_row(group, indent)
+
 
 func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 	return _row_builder._build_comment_row(comment_row, indent)
 
+
 func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	return _row_builder._build_event_row(event_row, indent)
+
 
 func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	return _row_builder._build_global_variable_rows(sheet)
 
+
 func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:
 	return _row_builder._build_local_variable_rows(event_row, indent)
+
 
 func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	return _row_builder._build_event_spans(event_row)
 
+
 func _count_event_lines(event_row: EventRow) -> int:
 	return _row_builder._count_event_lines(event_row)
+
 
 func _ensure_event_spans(row_data: EventRowData) -> void:
 	_row_builder._ensure_event_spans(row_data)
 
+
 func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, font_size: int) -> float:
 	return _row_builder._measure_span_width(span, display_text, font, font_size)
+
 
 func _build_action_line_reservations(
 	row_data: EventRowData,
@@ -2095,6 +2220,7 @@ func _build_action_line_reservations(
 		reservations[line_index] = min(current_start, span_x)
 	return reservations
 
+
 func _get_condition_track_start(
 	row_data: EventRowData,
 	default_x: float,
@@ -2104,12 +2230,14 @@ func _get_condition_track_start(
 		return default_x
 	return max(default_x, condition_lane_rect.position.x + float(_get_event_style().condition_lane_padding))
 
+
 func _flatten_row(row_data: EventRowData, parent_row: EventRowData) -> void:
 	_flat_rows.append({"row": row_data, "parent": parent_row})
 	if row_data.folded:
 		return
 	for child in row_data.children:
 		_flatten_row(child, row_data)
+
 
 func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: int) -> Dictionary:
 	var row_data: EventRowData = _row_at(index)
@@ -2371,6 +2499,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
 	_layout_cache.store(key, layout)
 	return layout
 
+
 ## Identity context for the pinned column header: behavior sheets show their host class so
 ## it is always visible what the conditions/actions act on.
 func get_host_context_label() -> String:
@@ -2390,13 +2519,16 @@ var _tooltip_helper: ViewportTooltipHelper = ViewportTooltipHelper.new()
 # ── Empty state (getting-started overlay drawn over a sheet with no authored rows; see ViewportEmptyStateHelper) ──
 var _empty_state_helper: ViewportEmptyStateHelper = ViewportEmptyStateHelper.new()
 
+
 ## Streamed name->value frame (debug runs). Redraws value chips on variable rows.
 func set_live_values(values: Dictionary) -> void:
 	_live_values_helper.set_live_values(values)
 
+
 ## The "= value" chip for a row, or "" (variable rows whose name has a live frame).
 func live_value_chip_for(row_data: EventRowData) -> String:
 	return _live_values_helper.chip_for(row_data)
+
 
 func _update_canvas_min_size() -> void:
 	var zoom: float = max(_zoom_factor, 0.001)
@@ -2411,6 +2543,7 @@ func _update_canvas_min_size() -> void:
 	if size != target_size:
 		set_size(target_size)
 
+
 func _apply_zoom_delta(delta: float, anchor_position: Vector2) -> void:
 	var scroll: ScrollContainer = _get_scroll_container()
 	var old_zoom: float = _zoom_factor
@@ -2424,11 +2557,14 @@ func _apply_zoom_delta(delta: float, anchor_position: Vector2) -> void:
 	scroll.scroll_horizontal = max(int(round(logical_anchor_x * _zoom_factor - anchor_position.x)), 0)
 	scroll.scroll_vertical = max(int(round(logical_anchor_y * _zoom_factor - anchor_position.y)), 0)
 
+
 func _to_logical_position(position: Vector2) -> Vector2:
 	return position / max(_zoom_factor, 0.001)
 
+
 func _get_logical_canvas_width() -> float:
 	return max(max(size.x, _get_scroll_width()), 640.0) / max(_zoom_factor, 0.001)
+
 
 func _select_row(row_index: int, span_index: int = -1) -> void:
 	# The param cursor is bound to the previously selected row's values — moving selection drops it.
@@ -2460,6 +2596,7 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
 	selection_changed.emit(selected_row)
 	queue_redraw()
 
+
 ## Select every row between the selection anchor and target_index (inclusive) — the Shift+click /
 ## Shift+Arrow range gesture. Preserves _selection_anchor_index so the range can grow or shrink
 ## from the same origin, and clears any span-level selection (range selection is whole-row).
@@ -2486,6 +2623,7 @@ func _select_range(target_index: int) -> void:
 	_sync_row_selection_flags()
 	selection_changed.emit(lead_row)
 	queue_redraw()
+
 
 func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 	if row_index < 0:
@@ -2560,6 +2698,7 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 	selection_changed.emit(_row_at(_selected_row_index))
 	queue_redraw()
 
+
 func _clear_selection() -> void:
 	_selected_row_uids.clear()
 	_selected_span_indices.clear()
@@ -2571,14 +2710,17 @@ func _clear_selection() -> void:
 	selection_changed.emit(null)
 	queue_redraw()
 
+
 func _sync_row_selection_flags() -> void:
 	_selection_helper.sync_row_selection_flags(_flat_rows, _selected_row_uids)
+
 
 func _set_hover_state(row_index: int, span_index: int) -> void:
 	_hovered_row_index = row_index
 	_hovered_span_index = span_index
 	_selection_helper.apply_hover_state(_flat_rows, _hovered_row_index)
 	queue_redraw()
+
 
 func _toggle_row_fold(row_index: int) -> void:
 	var row_data: EventRowData = _row_at(row_index)
@@ -2587,6 +2729,7 @@ func _toggle_row_fold(row_index: int) -> void:
 	row_data.folded = not row_data.folded
 	_fold_state[row_data.row_uid] = row_data.folded
 	_refresh_rows()
+
 
 func _begin_edit(row_index: int, span_index: int) -> void:
 	if companion_mode:
@@ -2617,6 +2760,7 @@ func _begin_edit(row_index: int, span_index: int) -> void:
 	_editing_caret = _editing_buffer.length()
 	queue_redraw()
 
+
 func begin_edit_selected() -> bool:
 	if _selected_row_index < 0:
 		return false
@@ -2635,12 +2779,14 @@ func begin_edit_selected() -> bool:
 	_begin_edit(_selected_row_index, resolved_span_index)
 	return _editing_row_index == _selected_row_index and _editing_span_index == resolved_span_index
 
+
 func get_editing_context_for_test() -> Dictionary:
 	return {
 		"row_index": _editing_row_index,
 		"span_index": _editing_span_index,
 		"buffer": _editing_buffer
 	}
+
 
 func _find_first_editable_span(row_data: EventRowData) -> int:
 	for index in range(row_data.spans.size()):
@@ -2651,6 +2797,7 @@ func _find_first_editable_span(row_data: EventRowData) -> int:
 			return index
 	return -1
 
+
 func _span_is_editable(row_data: EventRowData, span_index: int) -> bool:
 	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
 		return false
@@ -2658,6 +2805,7 @@ func _span_is_editable(row_data: EventRowData, span_index: int) -> bool:
 	if span == null or not (span.metadata is Dictionary):
 		return false
 	return bool((span.metadata as Dictionary).get("editable", false))
+
 
 func _commit_edit() -> void:
 	var row_data: EventRowData = _row_at(_editing_row_index)
@@ -2679,12 +2827,14 @@ func _commit_edit() -> void:
 	_editing_caret = 0
 	_refresh_rows()
 
+
 func _cancel_edit() -> void:
 	_editing_row_index = -1
 	_editing_span_index = -1
 	_editing_buffer = ""
 	_editing_caret = 0
 	queue_redraw()
+
 
 func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String) -> void:
 	if not (span.metadata is Dictionary):
@@ -2703,6 +2853,7 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
 		"event_comment":
 			if row_data.source_resource is EventRow:
 				(row_data.source_resource as EventRow).comment = value
+
 
 ## Hovering a condition/action/trigger shows the GDScript it compiles to (the codegen
 ## template with the ACE's parameter values substituted) — the sheet continuously teaches
@@ -2763,16 +2914,19 @@ func _get_tooltip(at_position: Vector2) -> String:
 		return tip
 	return tooltip_text
 
+
 ## Render a hover tooltip's BBCode ([b]/[i]/[color]) when the text carries any — so an ACE/function
 ## description authored with markup reads styled, not as raw tags. Plain descriptions (the common case) and
 ## the GDScript-preview fallback have no markup, so this returns null and Godot uses its default tooltip.
 func _make_custom_tooltip(for_text: String) -> Object:
 	return _tooltip_helper.build_custom_tooltip(for_text)
 
+
 ## Static shim kept for callers that reach in by class name (e.g. tests/gdscript_pairing_test.gd
 ## calls EventSheetViewport.fill_codegen_template(...)). Forwards to the helper's pure implementation.
 static func fill_codegen_template(template: String, params: Dictionary) -> String:
 	return ViewportTooltipHelper.fill_codegen_template(template, params)
+
 
 func _hit_test(position: Vector2) -> Dictionary:
 	var row_index: int = _find_row_index_at_y(position.y)
@@ -2794,6 +2948,7 @@ func _hit_test(position: Vector2) -> Dictionary:
 		_find_condition_span_index
 	)
 
+
 func _maybe_request_ace_edit(hit: Dictionary, row_index: int) -> bool:
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
@@ -2807,6 +2962,7 @@ func _maybe_request_ace_edit(hit: Dictionary, row_index: int) -> bool:
 			ace_edit_requested.emit(row_data, span_index, metadata.duplicate(true))
 			return true
 	return false
+
 
 func _maybe_request_variable_edit(hit: Dictionary, row_index: int) -> bool:
 	var row_data: EventRowData = _row_at(row_index)
@@ -2824,6 +2980,7 @@ func _maybe_request_variable_edit(hit: Dictionary, row_index: int) -> bool:
 		return false
 	variable_edit_requested.emit(row_data, metadata)
 	return true
+
 
 func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 	var row_index: int = int(hit.get("row_index", -1))
@@ -2852,11 +3009,13 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 		return "inside"
 	return "after" if relative_y > row_height * DROP_ZONE_AFTER_THRESHOLD else "before"
 
+
 ## True for any variable row (global dict var or tree LocalVariable) — the grouping gesture's guard.
 func _row_is_variable(row_data: EventRowData) -> bool:
 	return row_data != null and not row_data.spans.is_empty() \
 		and row_data.spans[0].metadata is Dictionary \
 		and str((row_data.spans[0].metadata as Dictionary).get("kind", "")) == "variable"
+
 
 func _resolve_lane_drop_target(row_data: EventRowData, lane: String, position: Vector2) -> Dictionary:
 	var target_kind: String = "action" if lane == "action" else "condition"
@@ -2873,6 +3032,7 @@ func _resolve_lane_drop_target(row_data: EventRowData, lane: String, position: V
 	var last_span: SemanticSpan = row_data.spans[ace_span_indices[ace_span_indices.size() - 1]]
 	var last_ace_index: int = int((last_span.metadata as Dictionary).get("ace_index", -1))
 	return {"ace_index": last_ace_index, "insert_mode": "after"}
+
 
 func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictionary:
 	if row_data == null or lane != "condition":
@@ -2904,36 +3064,45 @@ func _validate_ace_drag_target(row_data: EventRowData, lane: String) -> Dictiona
 		}
 	return {"valid": true}
 
+
 # ── Row metrics: thin delegates to ViewportRowMetrics. Internal callers and tests call these
 # names unchanged (e.g. viewport._get_row_top(i)); the layout itself lives in the helper. ──
 func _rebuild_row_metrics() -> void:
 	_row_metrics_helper.rebuild()
 
+
 func _resolve_row_height(row_data: EventRowData) -> float:
 	return _row_metrics_helper._resolve_row_height(row_data)
+
 
 func _get_row_top(index: int) -> float:
 	return _row_metrics_helper.row_top(index)
 
+
 func _get_row_height(index: int) -> float:
 	return _row_metrics_helper.row_height(index)
 
+
 func _find_row_index_at_y(y: float) -> int:
 	return _row_metrics_helper.row_index_at_y(y)
+
 
 # Static forwarders: tests call these BY CLASS NAME (EventSheetViewport.wrapped_line_count / 
 # EventSheetViewport._row_index_at_y). They forward to the pure statics on ViewportRowMetrics.
 static func wrapped_line_count(text: String, wrap_width: float, font: Font, font_size: int) -> int:
 	return ViewportRowMetrics.wrapped_line_count(text, wrap_width, font, font_size)
 
+
 static func _row_index_at_y(metrics: Array, y: float) -> int:
 	return ViewportRowMetrics._row_index_at_y(metrics, y)
+
 
 func _get_selected_span_count() -> int:
 	var total: int = 0
 	for indices in _selected_span_indices.values():
 		total += (indices as Array).size()
 	return total
+
 
 func _get_selected_row_indices() -> Array[int]:
 	var indices: Array[int] = []
@@ -2942,6 +3111,7 @@ func _get_selected_row_indices() -> Array[int]:
 		if row_data != null and _selected_row_uids.has(row_data.row_uid):
 			indices.append(index)
 	return indices
+
 
 func _collect_descendant_row_uids(row_data: EventRowData) -> Array:
 	var uids: Array = []
@@ -2956,6 +3126,7 @@ func _collect_descendant_row_uids(row_data: EventRowData) -> Array:
 		for grand_child in child.children:
 			stack.append(grand_child)
 	return uids
+
 
 func _get_draggable_ace_entries(
 	row_data: EventRowData,
@@ -2978,6 +3149,7 @@ func _get_draggable_ace_entries(
 					return matching_entries
 	return [_build_ace_drag_entry(row_data, kind, ace_index)]
 
+
 func _build_ace_drag_entry(row_data: EventRowData, kind: String, ace_index: int) -> Dictionary:
 	return {
 		"row_uid": row_data.row_uid if row_data != null else "",
@@ -2990,6 +3162,7 @@ func _build_ace_drag_entry(row_data: EventRowData, kind: String, ace_index: int)
 			ace_index
 		)
 	}
+
 
 func _resolve_ace_resource(source_resource: Resource, kind: String, ace_index: int) -> Resource:
 	if not (source_resource is EventRow) or ace_index < 0:
@@ -3006,8 +3179,10 @@ func _resolve_ace_resource(source_resource: Resource, kind: String, ace_index: i
 				return event_row.actions[ace_index]
 	return null
 
+
 func _find_condition_span_index(row_data: EventRowData, ace_index: int) -> int:
 	return _find_ace_span_index(row_data, "condition", ace_index)
+
 
 func _get_lane_ace_span_indices(row_data: EventRowData, kind: String) -> Array[int]:
 	var span_indices: Array[int] = []
@@ -3024,6 +3199,7 @@ func _get_lane_ace_span_indices(row_data: EventRowData, kind: String) -> Array[i
 			continue
 		span_indices.append(span_index)
 	return span_indices
+
 
 func _build_ace_drag_preview_rect(
 	row_data: EventRowData,
@@ -3047,6 +3223,7 @@ func _build_ace_drag_preview_rect(
 		_get_lane_ace_span_indices,
 		_get_span_gap
 	)
+
 
 func _build_drag_feedback_rect(
 	preview_rect: Rect2,
@@ -3078,6 +3255,7 @@ func _build_drag_feedback_rect(
 	bubble_y = max(bubble_y, lane_rect.position.y + 4.0)
 	return Rect2(Vector2(bubble_x, bubble_y), bubble_size)
 
+
 func _find_ace_span_index(row_data: EventRowData, kind: String, ace_index: int) -> int:
 	if row_data == null:
 		return -1
@@ -3093,15 +3271,18 @@ func _find_ace_span_index(row_data: EventRowData, kind: String, ace_index: int) 
 			return span_index
 	return -1
 
+
 func _row_at(index: int) -> EventRowData:
 	if index < 0 or index >= _flat_rows.size():
 		return null
 	return _flat_rows[index].get("row")
 
+
 func _group_children(group: EventGroup) -> Array[Resource]:
 	if not group.events.is_empty():
 		return group.events
 	return group.rows
+
 
 func _group_name(group: EventGroup) -> String:
 	if not group.name.is_empty():
@@ -3110,26 +3291,33 @@ func _group_name(group: EventGroup) -> String:
 		return group.group_name
 	return "Group"
 
+
 func _object_label_for(provider_id: String, ace_id: String) -> String:
 	return _row_builder._object_label_for(provider_id, ace_id)
+
 
 func _is_function_call_action(action: ACEAction) -> bool:
 	return _row_builder._is_function_call_action(action)
 
+
 func _function_call_label(action: ACEAction) -> String:
 	return _row_builder._function_call_label(action)
+
 
 func _format_condition_descriptor(condition: ACECondition) -> String:
 	return _row_builder._format_condition_descriptor(condition)
 
+
 func _is_trigger_condition(condition: ACECondition) -> bool:
 	return _row_builder._is_trigger_condition(condition)
+
 
 func _entry_is_trigger_like(entry: Dictionary) -> bool:
 	if str(entry.get("kind", "")) == "trigger":
 		return true
 	var ace_resource: Resource = entry.get("ace_resource", null) as Resource
 	return ace_resource is ACECondition and _is_trigger_condition(ace_resource as ACECondition)
+
 
 func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []) -> bool:
 	if event_row == null:
@@ -3147,11 +3335,14 @@ func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []
 			return true
 	return false
 
+
 func _format_action_descriptor(action: ACEAction) -> String:
 	return _row_builder._format_action_descriptor(action)
 
+
 func _format_action_descriptor_base(action: ACEAction) -> String:
 	return _row_builder._format_action_descriptor_base(action)
+
 
 # Static forwarder: value-range extraction is a pure text → ranges helper that now lives on
 # ViewportRowBuilder. Kept here in case anything resolves it by the viewport's class name.
@@ -3165,16 +3356,20 @@ static func _value_ranges_for(text: String) -> Array:
 # test needs no edit. Nothing internal reads this var.
 var _pending_display_bbcode: bool = false
 
+
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
 	_row_builder._pending_display_bbcode = _pending_display_bbcode
 	_pending_display_bbcode = false
 	return _row_builder._make_span(text, span_type, metadata)
 
+
 func _get_variable_metadata_for_row(row_data: EventRowData) -> Dictionary:
 	return _row_builder._get_variable_metadata_for_row(row_data)
 
+
 func _resolve_span_lane(span: SemanticSpan) -> String:
 	return _row_builder._resolve_span_lane(span)
+
 
 func _resolve_lane_for_row(row_data: EventRowData, span_index: int) -> String:
 	if row_data == null:
@@ -3184,6 +3379,7 @@ func _resolve_lane_for_row(row_data: EventRowData, span_index: int) -> String:
 	if span_index >= 0 and span_index < row_data.spans.size():
 		return _resolve_span_lane(row_data.spans[span_index])
 	return _focused_lane
+
 
 func _toggle_breakpoint(row_index: int) -> void:
 	var row_data: EventRowData = _row_at(row_index)
@@ -3199,6 +3395,7 @@ func _toggle_breakpoint(row_index: int) -> void:
 		_breakpoint_rows.erase(row_data.row_uid)
 	queue_redraw()
 
+
 func set_row_disabled(row_uid: String, disabled: bool) -> void:
 	if row_uid.is_empty():
 		return
@@ -3208,6 +3405,7 @@ func set_row_disabled(row_uid: String, disabled: bool) -> void:
 		_row_disabled_state.erase(row_uid)
 	_refresh_rows()
 
+
 func _configure_viewport() -> void:
 	focus_mode = Control.FOCUS_ALL
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -3215,24 +3413,30 @@ func _configure_viewport() -> void:
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
+
 func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
 	if _ace_registry == null:
 		return null
 	return _ace_registry.find_definition(provider_id, ace_id)
 
+
 func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 	return _row_builder._object_icon_for(provider_id, ace_id)
+
 
 func _get_font() -> Font:
 	var font: Font = get_theme_default_font()
 	return font if font != null else ThemeDB.fallback_font
 
+
 func _get_font_size() -> int:
 	var theme_size: int = get_theme_default_font_size()
 	return theme_size if theme_size > 0 else FONT_SIZE
 
+
 func _get_scroll_container() -> ScrollContainer:
 	return get_parent() as ScrollContainer
+
 
 func _get_scroll_offset() -> int:
 	var scroll: ScrollContainer = _get_scroll_container()
@@ -3240,17 +3444,20 @@ func _get_scroll_offset() -> int:
 		return 0
 	return scroll.scroll_vertical
 
+
 func _get_viewport_height() -> float:
 	var scroll: ScrollContainer = _get_scroll_container()
 	if scroll != null and scroll.size.y > 0.0:
 		return scroll.size.y
 	return size.y if size.y > 0.0 else 240.0
 
+
 func _get_scroll_width() -> float:
 	var scroll: ScrollContainer = _get_scroll_container()
 	if scroll != null and scroll.size.x > 0.0:
 		return scroll.size.x
 	return size.x if size.x > 0.0 else 640.0
+
 
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	# A scene-tree node dragged ONTO a condition/action param value → fill that param with the node
@@ -3259,6 +3466,7 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 		return true
 	return not _resolve_dropped_source_objects(data).is_empty() \
 		or not _resolve_dropped_asset_paths(data).is_empty()
+
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# Scene-tree node dropped on a param value: set that param to the node reference (prefers %unique-names
@@ -3291,6 +3499,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 		source_label = (source_objects[0] as Node).name
 	ace_preview_requested.emit(source_label, definitions)
 
+
 ## Scene/audio files in a FileSystem-dock drop payload — the asset kinds an event
 ## can act on directly (spawn / play).
 static func _resolve_dropped_asset_paths(data: Variant) -> PackedStringArray:
@@ -3300,6 +3509,7 @@ static func _resolve_dropped_asset_paths(data: Variant) -> PackedStringArray:
 			if str(file_path).get_extension().to_lower() in ["tscn", "scn", "ogg", "wav", "mp3"]:
 				assets.append(str(file_path))
 	return assets
+
 
 func _resolve_dropped_source_objects(data: Variant) -> Array[Object]:
 	var objects: Array[Object] = []
@@ -3325,6 +3535,7 @@ func _resolve_dropped_source_objects(data: Variant) -> Array[Object]:
 				return objects
 	return objects
 
+
 ## True for a Scene-dock node drag (type "nodes" carrying NodePath/String entries) — as opposed to an
 ## Object-valued "nodes" payload, which is a behaviour-source drag handled by _resolve_dropped_source_objects.
 static func _is_node_path_drag(data: Variant) -> bool:
@@ -3335,6 +3546,7 @@ static func _is_node_path_drag(data: Variant) -> bool:
 		return false
 	var nodes: Variant = payload.get("nodes", [])
 	return nodes is Array and not (nodes as Array).is_empty() and not ((nodes as Array)[0] is Object)
+
 
 ## The {ace, param_id, current} under a logical position when it sits on an editable condition/action param
 ## VALUE, else {}. Shared by double-click-to-edit and the node-drop-onto-param gesture.

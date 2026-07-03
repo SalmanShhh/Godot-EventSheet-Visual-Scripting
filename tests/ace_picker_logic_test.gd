@@ -3,8 +3,9 @@
 # Verifies the event-sheet-style grouping/colour/mode logic of ACEPickerDialog without opening the
 # popup window (which needs a display server). Exercises the pure helpers directly.
 @tool
-extends RefCounted
 class_name ACEPickerLogicTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -154,11 +155,13 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _make_def(ace_type: int) -> ACEDefinition:
 	var definition: ACEDefinition = ACEDefinition.new()
 	definition.ace_type = ace_type
 	definition.provider_id = "Core"
 	return definition
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

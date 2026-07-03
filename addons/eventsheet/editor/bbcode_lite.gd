@@ -8,6 +8,7 @@
 class_name EventSheetBBCodeLite
 extends RefCounted
 
+
 ## Segments: [{ "text": String, "color": Variant (Color or null), "bold": bool, "italic": bool }]
 static func parse(raw_text: String, base_color: Color = Color.WHITE) -> Array[Dictionary]:
 	var segments: Array[Dictionary] = []
@@ -65,6 +66,7 @@ static func parse(raw_text: String, base_color: Color = Color.WHITE) -> Array[Di
 	_flush(segments, buffer, color_stack, bold_depth, italic_depth, base_color)
 	return segments
 
+
 ## True when the text contains anything this parser would style.
 static func has_markup(raw_text: String) -> bool:
 	if not raw_text.contains("["):
@@ -74,12 +76,14 @@ static func has_markup(raw_text: String) -> bool:
 			return true
 	return false
 
+
 ## Plain text with all recognized tags removed (clipboard/snippet-friendly).
 static func strip(raw_text: String) -> String:
 	var plain: String = ""
 	for segment in parse(raw_text):
 		plain += str(segment.get("text", ""))
 	return plain
+
 
 static func _flush(segments: Array[Dictionary], buffer: String, color_stack: Array[Color], bold_depth: int, italic_depth: int, base_color: Color) -> void:
 	if buffer.is_empty():

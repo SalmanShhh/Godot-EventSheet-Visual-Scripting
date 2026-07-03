@@ -6,8 +6,9 @@
 # fell through to the editor's scene tree. Now a gap click resolves to the preceding event. Pins
 # EventSheetViewport._row_index_at_y (static + pure, so no Control instance is needed).
 @tool
-extends RefCounted
 class_name ViewportHitSelectTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -20,6 +21,7 @@ static func run() -> bool:
 	ok = _check("click below the last row selects nothing", EventSheetViewport._row_index_at_y(metrics, 200.0), -1) and ok
 	ok = _check("empty metrics select nothing", EventSheetViewport._row_index_at_y([], 10.0), -1) and ok
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

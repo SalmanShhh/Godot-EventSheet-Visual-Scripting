@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetCustomBlockDialog
+extends RefCounted
 
 # The Custom Block API's generic editor: ONE dialog auto-built from the kind's fields() schema
 # (a LineEdit per String field, a CheckBox per bool, a SpinBox per int/float), so a registered
@@ -11,6 +11,7 @@ class_name EventSheetCustomBlockDialog
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
@@ -19,6 +20,7 @@ var _fields_box: VBoxContainer = null
 var _field_controls: Dictionary = {}   # field id -> Control (rebuilt per open; kinds differ)
 var _target_block: CustomBlockRow = null   # non-null = edit mode
 var _target_kind: EventSheetBlockKind = null
+
 
 ## Add mode: prompt for a new block of this kind, inserted below the selection on OK.
 func open_add(kind_id: String) -> void:
@@ -30,6 +32,7 @@ func open_add(kind_id: String) -> void:
 		return
 	_open(kind, null)
 
+
 ## Edit mode: rewrite an existing block's fields (double-click on the row).
 func open_edit(block_resource: Resource) -> void:
 	var block: CustomBlockRow = block_resource as CustomBlockRow
@@ -40,6 +43,7 @@ func open_edit(block_resource: Resource) -> void:
 		_dock._set_status("This block's kind ('%s') is not registered - its code still compiles, but it needs its pack installed to edit as a form." % block.kind_id, true)
 		return
 	_open(kind, block)
+
 
 func _open(kind: EventSheetBlockKind, block: CustomBlockRow) -> void:
 	_target_kind = kind
@@ -70,6 +74,7 @@ func _open(kind: EventSheetBlockKind, block: CustomBlockRow) -> void:
 		if first != null:
 			first.grab_focus()
 
+
 func _make_field_control(field_type: int, current: Variant) -> Control:
 	match field_type:
 		TYPE_BOOL:
@@ -92,6 +97,7 @@ func _make_field_control(field_type: int, current: Variant) -> Control:
 			)
 			return edit
 
+
 ## Reads the form back into a fields Dictionary per the kind's schema.
 func _collect_fields(kind: EventSheetBlockKind) -> Dictionary:
 	var collected: Dictionary = {}
@@ -106,6 +112,7 @@ func _collect_fields(kind: EventSheetBlockKind) -> Dictionary:
 		elif control is LineEdit:
 			collected[field_id] = (control as LineEdit).text
 	return collected
+
 
 ## One-shot apply (guarded on the kind so confirmed + text_submitted can't double-fire).
 func _apply() -> void:

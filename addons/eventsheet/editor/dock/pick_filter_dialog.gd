@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetPickFilterDialog
+extends RefCounted
 # The pick-filter ("For Each") dialog: authors a per-event loop / picking filter (iterator name,
 # collection kind, Where / Order-by expression fields with live GDScript completion, a presets dropdown,
 # and a commit-time linter that refuses to save an expression that doesn't compile). Everything still
@@ -24,8 +24,10 @@ var _pick_delete_button: Button = null
 var _pick_target_event: EventRow = null
 var _pick_target_index: int = -1
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Opens the pick-filter dialog: pick_index = -1 adds a new filter, >= 0 edits/deletes.
 func open(event_resource: Resource, pick_index: int = -1) -> void:
@@ -49,6 +51,7 @@ func open(event_resource: Resource, pick_index: int = -1) -> void:
 	_pick_delete_button.visible = editing
 	_pick_dialog.title = "Edit Pick Filter (For Each)" if editing else "Add Pick Filter (For Each)"
 	_pick_dialog.popup_centered(Vector2i(520, 300))
+
 
 func _ensure_pick_dialog() -> void:
 	if _pick_dialog != null:
@@ -113,6 +116,7 @@ func _ensure_pick_dialog() -> void:
 	_pick_dialog.confirmed.connect(_on_pick_filter_confirmed)
 	_dock.add_child(_pick_dialog)
 
+
 func _pick_kind_to_option(kind: int) -> int:
 	match kind:
 		PickFilter.CollectionKind.GROUP:
@@ -125,6 +129,8 @@ func _pick_kind_to_option(kind: int) -> int:
 			return 4
 		_:
 			return 2
+
+
 func _pick_option_to_kind(option: int) -> int:
 	match option:
 		0:
@@ -137,6 +143,7 @@ func _pick_option_to_kind(option: int) -> int:
 			return PickFilter.CollectionKind.WHILE
 		_:
 			return PickFilter.CollectionKind.EXPRESSION
+
 
 ## Presets: each fills the pick-filter fields with the matching loop/picking shape
 ## (everything still compiles to plain for/while loops — see _emit_pick_filters).
@@ -194,6 +201,7 @@ func _apply_pick_preset(index: int) -> void:
 			_pick_kind_option.select(0)
 			_pick_predicate_edit.text = "item.global_position.distance_to(get_global_mouse_position()) < 32.0"
 
+
 func _on_pick_filter_confirmed() -> void:
 	if _pick_target_event == null:
 		return
@@ -228,6 +236,7 @@ func _on_pick_filter_confirmed() -> void:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Pick filter saved (compiles as a for-each loop).")
 
+
 ## Returns the first diagnostic message if the pick dialog's collection / where / order-by doesn't
 ## compile (reusing the on-save pick-filter linter), else "". Fail-open: no sheet -> "" (treated as OK).
 func _pick_dialog_first_error() -> String:
@@ -246,6 +255,7 @@ func _pick_dialog_first_error() -> String:
 	EventSheetDiagnostics._check_pick_filters(temp_event, _dock._current_sheet, diags)
 	return "" if diags.is_empty() else str((diags[0] as Dictionary).get("message", "An expression doesn't compile."))
 
+
 func _on_pick_filter_deleted() -> void:
 	if _pick_target_event == null or _pick_target_index < 0:
 		_pick_dialog.hide()
@@ -262,6 +272,7 @@ func _on_pick_filter_deleted() -> void:
 	if changed:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Pick filter removed.")
+
 
 ## Like _add_sheet_type_field, but the input is a single-line CodeEdit with live GDScript completion
 ## (used for the pick-filter Where / Order-by fields, which take iterator-scoped expressions).
@@ -290,6 +301,7 @@ func _add_expression_field(form: VBoxContainer, label_text: String, placeholder:
 	row.add_child(edit)
 	form.add_child(row)
 	return edit
+
 
 ## Completion for the pick-filter Where / Order-by fields: sheet variables / functions / host members
 ## (the shared lint symbol provider the on-save check uses) plus the current For-Each iterator name, so

@@ -6,12 +6,13 @@
 # file and the registration is read from ProjectSettings — so the byte-exact round-trip is unchanged
 # (no double-emit).
 @tool
-extends RefCounted
 class_name GDScriptMetadataRoundtripTest
+extends RefCounted
 
 const TAGGED_SOURCE := "@tool\n## @ace_tags(movement, retro, jam)\n@icon(\"res://icon.svg\")\nclass_name Patrol\nextends CharacterBody2D\n"
 const PROBE_PATH := "res://__eventsheet_metadata_probe.gd"
 const PROBE_AUTOLOAD := "autoload/__EventSheetProbeAutoload"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -63,11 +64,13 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _remove_probe_file() -> void:
 	if FileAccess.file_exists(PROBE_PATH):
 		DirAccess.remove_absolute(PROBE_PATH)
 	if FileAccess.file_exists(PROBE_PATH + ".uid"):
 		DirAccess.remove_absolute(PROBE_PATH + ".uid")
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

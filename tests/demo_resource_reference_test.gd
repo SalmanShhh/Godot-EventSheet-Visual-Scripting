@@ -1,10 +1,11 @@
 # EventForge — demo resource reference regression tests
 @tool
-extends RefCounted
 class_name DemoResourceReferenceTest
+extends RefCounted
 
 const DEMO_SHEET_PATH := "res://demo/sheets/player.tres"
 const INVALID_PARENT_DIR_PATH := "res://../addons/"
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -18,6 +19,7 @@ static func run() -> bool:
 		for index in range(sheet.events.size()):
 			passed = _check_row_scripts(sheet.events[index], "demo row %d" % index) and passed
 	return passed
+
 
 static func _check_row_scripts(entry: Resource, label: String) -> bool:
 	if entry == null:
@@ -42,6 +44,7 @@ static func _check_row_scripts(entry: Resource, label: String) -> bool:
 			group_passed = _check_row_scripts(children[child_index], "%s child %d" % [label, child_index]) and group_passed
 		return group_passed
 	return _check("%s resource script resolves" % label, entry.get_script() != null, true)
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

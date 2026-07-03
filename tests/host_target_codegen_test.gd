@@ -6,8 +6,9 @@
 # and to nothing otherwise — so the SAME descriptor stays byte-identical on a normal sheet and becomes
 # host-targeted in a behavior. Pins both shapes, incl. a negated condition wrapping the host call.
 @tool
-extends RefCounted
 class_name HostTargetCodegenTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -48,6 +49,7 @@ static func run() -> bool:
 	ok = _check("IsOnWall targets the host in a behavior", ConditionCodegen.generate_condition(on_wall, "host"), "host.is_on_wall()") and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

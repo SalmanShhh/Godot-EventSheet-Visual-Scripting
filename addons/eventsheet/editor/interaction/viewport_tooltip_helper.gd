@@ -13,8 +13,10 @@ extends RefCounted
 
 var _viewport: Control = null
 
+
 func init(viewport: Control) -> void:
 	_viewport = viewport
+
 
 ## Render a hover tooltip's BBCode ([b]/[i]/[color]) when the text carries any — so an ACE/function
 ## description authored with markup reads styled, not as raw tags. Plain descriptions (the common case) and
@@ -39,6 +41,7 @@ func build_custom_tooltip(for_text: String) -> Object:
 	panel.add_child(rich)
 	return panel
 
+
 ## The plain-language description for an ACE — from its registered definition (custom/behaviour ACEs) or
 ## its built-in descriptor (filled from the generated descriptions map). "" when none is set.
 func ace_description(provider_id: String, ace_id: String) -> String:
@@ -55,6 +58,7 @@ func ace_description(provider_id: String, ace_id: String) -> String:
 		return prefix + str(descriptor.description)
 	return prefix.strip_edges()
 
+
 ## The description of the Function a Call-Function action targets (the named verb you created), or "".
 func function_call_description(action: ACEAction) -> String:
 	var call_params: Dictionary = action.params if not action.params.is_empty() else action.parameters
@@ -65,6 +69,7 @@ func function_call_description(action: ACEAction) -> String:
 		if function_entry is EventFunction and (function_entry as EventFunction).function_name == function_name:
 			return str((function_entry as EventFunction).description).strip_edges()
 	return ""
+
 
 ## The GDScript snippet an ACE compiles to: its codegen template with parameter values
 ## substituted (definition metadata first, then the base descriptor registry).
@@ -78,6 +83,7 @@ func codegen_preview_for(provider_id: String, ace_id: String, params: Dictionary
 		if descriptor != null:
 			template = descriptor.codegen_template
 	return fill_codegen_template(template, params)
+
 
 static func fill_codegen_template(template: String, params: Dictionary) -> String:
 	if template.strip_edges().is_empty():

@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetQuickPromptDialogs
+extends RefCounted
 
 # The dock's three one-field prompt popups: Extract-to-Function name, Conditional Breakpoint
 # expression, and the Group editor (name + description).
@@ -14,6 +14,7 @@ class_name EventSheetQuickPromptDialogs
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
@@ -21,6 +22,7 @@ func init(dock: Control) -> void:
 var _extract_function_name_dialog: ConfirmationDialog = null
 var _extract_function_name_edit: LineEdit = null
 var _extract_function_callback: Callable = Callable()
+
 
 ## Prompts for the function name, then invokes callback(name). Pre-filled with a unique default (so Enter
 ## just works) but selected - the user is nudged to type a real, meaningful name, because naming the
@@ -54,6 +56,7 @@ func prompt_extract_function_name(callback: Callable) -> void:
 	_extract_function_name_edit.grab_focus()
 	_extract_function_name_edit.select_all()
 
+
 ## One-shot apply: nulls the callback first so the confirmed + text_submitted signals can't double-fire.
 func _apply_extract_function() -> void:
 	if not _extract_function_callback.is_valid():
@@ -69,6 +72,7 @@ func _apply_extract_function() -> void:
 var _breakpoint_condition_dialog: AcceptDialog = null
 var _breakpoint_condition_edit: LineEdit = null
 var _breakpoint_condition_target: EventRow = null
+
 
 ## Visual debugging: a conditional breakpoint. Prompts for a GDScript boolean expression; the
 ## breakpoint then fires only when it is true (compiled as `if <cond>: breakpoint`). Sets and
@@ -96,6 +100,7 @@ func set_breakpoint_condition_requested() -> void:
 	_breakpoint_condition_dialog.popup_centered()
 	_breakpoint_condition_edit.grab_focus()
 
+
 func _apply_breakpoint_condition() -> void:
 	if _breakpoint_condition_target == null:
 		return
@@ -117,6 +122,7 @@ var _group_edit_dialog: ConfirmationDialog = null
 var _group_name_edit: LineEdit = null
 var _group_desc_edit: TextEdit = null
 var _group_edit_target: EventGroup = null
+
 
 ## Group editor popup: edit a group's name and (optional) description together. Replaces the old
 ## inline title edit - the description renders only as a muted second header line once it is
@@ -154,6 +160,7 @@ func on_group_edit_requested(group: EventGroup) -> void:
 	_group_name_edit.grab_focus()
 	_group_name_edit.select_all()
 
+
 ## One-shot apply: nulls the target first so a text-submit + dialog-OK pair can never double-apply.
 func _apply_group_edit() -> void:
 	if _group_edit_target == null:
@@ -161,6 +168,7 @@ func _apply_group_edit() -> void:
 	var target: EventGroup = _group_edit_target
 	_group_edit_target = null
 	apply_group_edit(target, _group_name_edit.text, _group_desc_edit.text)
+
 
 ## Applies a group's name + description undoably. Wraps the pure static mutation so the popup's
 ## Apply and tests share one code path.
@@ -174,6 +182,7 @@ func apply_group_edit(group: EventGroup, new_name: String, new_desc: String) -> 
 	if changed:
 		_dock._mark_dirty("Updated group: %s" % group.group_name)
 	return changed
+
 
 ## Pure mutation: trims + applies a group's name (mirrored to .name + .group_name) and its
 ## description; a blank name falls back to "Group". Static so it is unit-testable without the

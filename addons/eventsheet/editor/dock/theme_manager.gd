@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetThemeManager
+extends RefCounted
 # Owns loading / applying / picking the editor theme style + the theme file dialog + theme editor +
 # the live-reload binding to the active `.tres`. This helper owns:
 #   • the theme service methods — use_default_theme / load_theme_style_from_path / reload_active_theme
@@ -62,13 +62,16 @@ var _active_theme_style: EventSheetEditorStyle = null
 var _theme_editor: EventSheetThemeEditor = null
 var _theme_file_dialog: FileDialog = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## The dock's Godot-feel path (_apply_editor_native_defaults) reads the active style through this
 ## getter to decide whether to derive the "Match Editor" default — the field lives here now.
 func get_active_theme_style() -> EventSheetEditorStyle:
 	return _active_theme_style
+
 
 func use_default_theme() -> bool:
 	if _dock._current_sheet == null or _dock._current_sheet.editor_style == null:
@@ -77,6 +80,7 @@ func use_default_theme() -> bool:
 	_dock._current_sheet.editor_style = null
 	_dock._refresh_after_edit()
 	return true
+
 
 func load_theme_style_from_path(path: String) -> bool:
 	if _dock._current_sheet == null:
@@ -96,6 +100,7 @@ func load_theme_style_from_path(path: String) -> bool:
 	_dock._refresh_after_edit()
 	_dock._mark_dirty("Applied theme: %s." % resolved_path.get_file())
 	return true
+
 
 func reload_active_theme() -> bool:
 	if _dock._current_sheet == null:
@@ -117,6 +122,7 @@ func reload_active_theme() -> bool:
 	_dock._refresh_after_edit()
 	return true
 
+
 func build_theme_file_dialog() -> void:
 	if _theme_file_dialog != null:
 		return
@@ -129,6 +135,7 @@ func build_theme_file_dialog() -> void:
 	_theme_file_dialog.file_selected.connect(_on_theme_file_selected)
 	_dock.add_child(_theme_file_dialog)
 
+
 func _on_load_theme_requested() -> void:
 	if _theme_file_dialog == null:
 		build_theme_file_dialog()
@@ -138,8 +145,10 @@ func _on_load_theme_requested() -> void:
 	_theme_file_dialog.current_dir = _dock._suggest_sheet_directory()
 	_theme_file_dialog.popup_centered(Vector2i(760, 520))
 
+
 func _on_theme_file_selected(path: String) -> void:
 	load_theme_style_from_path(path)
+
 
 func _on_set_default_theme_requested() -> void:
 	if use_default_theme():
@@ -147,11 +156,13 @@ func _on_set_default_theme_requested() -> void:
 	else:
 		_dock._set_status("Default theme already active.", true)
 
+
 func _on_reload_theme_requested() -> void:
 	if reload_active_theme():
 		_dock._set_status("Reloaded active theme.")
 	else:
 		_dock._set_status("Reload theme failed: no active style resource path.", true)
+
 
 ## Populates the toolbar theme switcher with "Default" plus the discovered bundled themes.
 func _populate_theme_picker() -> void:
@@ -167,6 +178,7 @@ func _populate_theme_picker() -> void:
 		_dock._theme_picker.set_item_metadata(_dock._theme_picker.item_count - 1, str(preset.get("path", "")))
 	_refresh_theme_picker_selection()
 
+
 ## Selects the switcher entry matching the current sheet's active theme (Default if none).
 func _refresh_theme_picker_selection() -> void:
 	if _dock._theme_picker == null:
@@ -181,6 +193,7 @@ func _refresh_theme_picker_selection() -> void:
 			break
 	_dock._theme_picker.selected = target_index
 
+
 ## Applies the chosen theme preset (or the built-in default) to the current sheet.
 func _on_theme_preset_selected(index: int) -> void:
 	if _dock._theme_picker == null:
@@ -192,10 +205,12 @@ func _on_theme_preset_selected(index: int) -> void:
 		load_theme_style_from_path(path)
 	_refresh_theme_picker_selection()
 
+
 func _open_theme_editor() -> void:
 	if _theme_editor == null:
 		_theme_editor = EventSheetThemeEditor.new()
 	_theme_editor.open(_dock, _active_theme_style)
+
 
 ## Called by the theme editor's "Apply To Current Sheet": assigns the working style to the
 ## active sheet undoably and repaints.
@@ -212,6 +227,7 @@ func apply_theme_style(style: EventSheetEditorStyle) -> void:
 		_refresh_theme_picker_selection()
 		_dock._mark_dirty("Theme applied from the theme editor.")
 
+
 func _sync_active_theme_binding() -> void:
 	var next_style: EventSheetEditorStyle = (
 		_dock._current_sheet.editor_style
@@ -226,11 +242,13 @@ func _sync_active_theme_binding() -> void:
 	if _active_theme_style != null and not _active_theme_style.changed.is_connected(_on_active_theme_style_changed):
 		_active_theme_style.changed.connect(_on_active_theme_style_changed)
 
+
 func _on_active_theme_style_changed() -> void:
 	if _dock._viewport == null or _dock._current_sheet == null:
 		return
 	_dock._viewport.set_sheet(_dock._current_sheet)
 	_dock._set_status("Theme change detected and reloaded.")
+
 
 ## Called from the dock's _notification(NOTIFICATION_PREDELETE): disconnect the active style's
 ## `changed` signal + null the field (the binding is owned here, so the teardown lives here too).

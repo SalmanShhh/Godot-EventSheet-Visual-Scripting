@@ -5,8 +5,9 @@
 # across the open tabs and reveals it. Pins: the compiler emission (plain + conditional breakpoints,
 # absent on clean sheets), the bridge parse, and the dock's cross-tab find-activate-reveal.
 @tool
-extends RefCounted
 class_name PausedRowTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -63,6 +64,7 @@ static func run() -> bool:
 	dock.free()
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

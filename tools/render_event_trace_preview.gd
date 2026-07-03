@@ -8,6 +8,7 @@ extends SceneTree
 var _frames: int = 0
 var _viewport: EventSheetViewport = null
 
+
 func _init() -> void:
 	root.title = "EventForge Event Trace Preview"
 	root.size = Vector2i(1160, 360)
@@ -40,6 +41,7 @@ func _init() -> void:
 	_viewport.set_fired_events(PackedStringArray(["evt_0", "evt_2"]))
 
 	process_frame.connect(_on_frame)
+
 
 func _on_frame() -> void:
 	_frames += 1

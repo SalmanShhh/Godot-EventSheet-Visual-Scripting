@@ -13,11 +13,13 @@
 #   texture_preview eventsheet:texture_preview           Texture2D / String (path)
 #   curve_editor   eventsheet:curve_editor               Curve
 @tool
-extends EditorInspectorPlugin
 class_name EventSheetAttributeDrawers
+extends EditorInspectorPlugin
+
 
 func _can_handle(_object: Object) -> bool:
 	return true  # cheap: the per-property marker check below does the real filtering
+
 
 func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_type: PropertyHint, hint_string: String, _usage_flags: int, _wide: bool) -> bool:
 	var drawer: Dictionary = parse_drawer_hint(hint_string)
@@ -54,6 +56,7 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			return true
 	return false
 
+
 ## "eventsheet:progress_bar:0:200" -> {drawer:"progress_bar", args:["0","200"], min:0.0, max:200.0}.
 ## Anything not starting with the marker prefix -> {}. Static + UI-free so the headless suite pins the contract.
 static func parse_drawer_hint(hint_string: String) -> Dictionary:
@@ -66,6 +69,7 @@ static func parse_drawer_hint(hint_string: String) -> Dictionary:
 	if parts.size() > 3:
 		parsed["max"] = parts[3].to_float()
 	return parsed
+
 
 ## Best-effort resource-class guard for the TYPE_OBJECT drawers. A generated sheet only ever pairs the marker
 ## with the right resource type (the compiler type-gates emission), but a hand-edited marker could mismatch —
@@ -80,6 +84,7 @@ static func _value_is_kind(object: Object, name: String, type_class: String) -> 
 	return value is Object and (value as Object).is_class(type_class)
 
 # ── EditorProperty wrappers (each embeds a reusable widget and forwards edits) ──
+
 
 ## Numeric progress bar: drag to set; emits an int back for int properties, a float for floats.
 class ProgressBarProperty:
@@ -99,6 +104,7 @@ class ProgressBarProperty:
 	func _update_property() -> void:
 		_bar.set_value(float(get_edited_object().get(get_edited_property())))
 
+
 ## Vector2 dial: drag the handle to set direction + magnitude.
 class VectorDialProperty:
 	extends EditorProperty
@@ -116,6 +122,7 @@ class VectorDialProperty:
 	func _update_property() -> void:
 		_dial.set_value(get_edited_object().get(get_edited_property()))
 
+
 ## Colour swatch row: click a preset (or the picker) to set the colour.
 class SwatchRowProperty:
 	extends EditorProperty
@@ -132,6 +139,7 @@ class SwatchRowProperty:
 
 	func _update_property() -> void:
 		_row.set_value(get_edited_object().get(get_edited_property()))
+
 
 ## Texture preview: a Texture2D resource picker above a live thumbnail.
 class TexturePreviewProperty:
@@ -158,6 +166,7 @@ class TexturePreviewProperty:
 		var value: Variant = get_edited_object().get(get_edited_property())
 		_picker.edited_resource = value as Resource
 		_preview.set_texture(value as Texture2D)
+
 
 ## Curve editor: a Curve resource picker above a live inline render of the curve's shape.
 class CurveEditorProperty:

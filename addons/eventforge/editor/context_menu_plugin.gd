@@ -12,6 +12,7 @@ var open_sheet: Callable = Callable()    # Callable(path: String)
 var attach_sheet: Callable = Callable()  # Callable(node: Node)
 var goto_row: Callable = Callable()      # Callable(script_path: String)
 
+
 func _popup_menu(paths: PackedStringArray) -> void:
 	match slot:
 		EditorContextMenuPlugin.CONTEXT_SLOT_SCENE_TREE:
@@ -30,6 +31,7 @@ func _popup_menu(paths: PackedStringArray) -> void:
 					add_context_menu_item("Go to Sheet Row", _on_goto_row_requested)
 					break
 
+
 ## True when this slot + paths should offer "Open as Event Sheet". Pure + static so the decision is
 ## unit-testable WITHOUT instantiating this editor-only plugin: the script editor always offers it (the
 ## open buffer is a .gd), and the FileSystem offers it whenever any selected path is a .gd or an
@@ -43,6 +45,7 @@ static func should_offer_open_as_sheet(menu_slot: int, paths: PackedStringArray)
 				return true
 	return false
 
+
 ## The editor "Script" glyph for the menu item (a .gd opened as a sheet); null headless / pre-theme.
 static func _open_as_sheet_icon() -> Texture2D:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
@@ -51,14 +54,17 @@ static func _open_as_sheet_icon() -> Texture2D:
 			return editor_theme.get_icon("Script", "EditorIcons")
 	return null
 
+
 func _on_goto_row_requested(targets: Variant) -> void:
 	if goto_row.is_valid() and targets is Array and not (targets as Array).is_empty():
 		var entry: Variant = (targets as Array)[0]
 		goto_row.call((entry as Script).resource_path if entry is Script else str(entry))
 
+
 func _on_attach_requested(targets: Variant) -> void:
 	if attach_sheet.is_valid() and targets is Array and not (targets as Array).is_empty() and (targets as Array)[0] is Node:
 		attach_sheet.call((targets as Array)[0])
+
 
 ## Slot payloads differ (FileSystem sends paths, the script editor sends Script
 ## objects) — resolve both to a path.

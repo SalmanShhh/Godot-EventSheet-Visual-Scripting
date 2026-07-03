@@ -42,8 +42,10 @@ var widget_hint: String = ""
 ## When empty the regular category field is used.
 var category_override: String = ""
 
+
 func get_identifier() -> String:
 	return "%s::%s" % [provider_id, id]
+
 
 func get_search_text() -> String:
 	var tag_text: String = ""
@@ -55,9 +57,11 @@ func get_search_text() -> String:
 		tag_text = " ".join(tag_parts)
 	return "%s %s %s %s %s" % [display_name, category, description, str(metadata.get("source_name", "")), tag_text]
 
+
 ## Returns the category to display in the inspector (respects category_override).
 func get_inspector_category() -> String:
 	return category_override if not category_override.is_empty() else category
+
 
 func format_display(params_dict: Dictionary = {}) -> String:
 	var template: String = str(metadata.get("display_template", display_name))

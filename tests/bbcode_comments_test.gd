@@ -2,8 +2,9 @@
 # [b]/[i]/[color=…] style comment text on the canvas; the RAW text (tags included) stays
 # the editing/serialization truth, so styling can never lose data.
 @tool
-extends RefCounted
 class_name BBCodeCommentsTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -48,6 +49,7 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

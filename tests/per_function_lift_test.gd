@@ -6,8 +6,9 @@
 # byte-verify still gates everything). Pins: the synthetic hairy-then-clean case, byte-identical
 # round-trips with a partial lift, and a census FLOOR across real packs so a regression screams.
 @tool
-extends RefCounted
 class_name PerFunctionLiftTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -77,6 +78,7 @@ static func run() -> bool:
 			pack_sheet.functions.size() >= int(floors[pack]), true) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name GroupRoundtripTest
+extends RefCounted
 # Event groups (EventGroup) survive the .gd round-trip. A grouped sheet compiles to class-scope
 # `## @ace_group(...)` declarations plus a `# @group:<slug>` marker before each member event; opening
 # that .gd back reconstructs the groups (nesting, colour, collapsed state) and re-saves byte-for-byte.
@@ -8,6 +8,7 @@ class_name GroupRoundtripTest
 # rather than corrupting — these assertions pin the happy path.
 
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -55,6 +56,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _event(negated: bool) -> EventRow:
 	var e: EventRow = EventRow.new()
 	e.trigger_provider_id = "Core"
@@ -71,6 +73,7 @@ static func _event(negated: bool) -> EventRow:
 	a.codegen_template = "move_and_slide()"
 	e.actions.append(a)
 	return e
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

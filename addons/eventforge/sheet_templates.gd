@@ -9,16 +9,19 @@
 # Templates are blueprints, not live game code: the Project Doctor and the vocabulary
 # doc skip them (non_template_sheets / is_template_path).
 @tool
-extends RefCounted
 class_name EventSheetTemplates
+extends RefCounted
 
 const DEFAULT_DIR := "res://eventsheet_templates"
+
 
 static func templates_dir() -> String:
 	return str(ProjectSettings.get_setting("eventsheets/project/templates_dir", DEFAULT_DIR)).trim_suffix("/")
 
+
 static func is_template_path(path: String) -> bool:
 	return path.begins_with(templates_dir() + "/")
+
 
 ## Every sheet .tres under the templates dir (recursive), sorted for stable menus.
 static func list_templates() -> PackedStringArray:
@@ -44,6 +47,7 @@ static func list_templates() -> PackedStringArray:
 	templates.sort()
 	return templates
 
+
 ## A deep, path-less copy of a template — adopting it can never mutate the template
 ## (shared sub-resources would otherwise leak edits back into the blueprint).
 static func load_copy(template_path: String) -> EventSheetResource:
@@ -51,6 +55,7 @@ static func load_copy(template_path: String) -> EventSheetResource:
 	if template == null:
 		return null
 	return template.duplicate(true) as EventSheetResource
+
 
 ## Filter for project-health consumers (doctor, vocabulary doc): everything except
 ## templates — blueprints have no generated output, no scene, no live vocabulary.

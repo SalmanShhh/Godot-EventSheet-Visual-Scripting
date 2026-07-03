@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetShortcutsDialog
+extends RefCounted
 # Tools ▸ Keyboard Shortcuts — an editable remapper for the authoring keys (click a binding, then press
 # the new combo). Built on EventSheetShortcuts (per-user persistence); the structural keys from the dock's
 # FIXED_KEYS table are shown read-only. Clashes are flagged inline but allowed (you resolve them by
@@ -13,8 +13,10 @@ var _shortcuts_dialog: AcceptDialog = null
 var _shortcuts_list: VBoxContainer = null
 var _shortcuts_capturing_action: String = ""
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Click a shortcut, then press the new key combination. Built on EventSheetShortcuts (per-user
 ## persistence); the structural keys are shown read-only. Clashes are flagged inline but allowed.
@@ -49,6 +51,7 @@ func open() -> void:
 		_dock.add_child(_shortcuts_dialog)
 	_refresh_shortcuts_editor()
 	_shortcuts_dialog.popup_centered()
+
 
 ## Rebuilds the editor rows from the live bindings — called on open and after every change, so the
 ## displayed keys and conflict flags always reflect EventSheetShortcuts.
@@ -105,6 +108,7 @@ func _refresh_shortcuts_editor() -> void:
 		fixed_row.add_child(fixed_keys_label)
 		_shortcuts_list.add_child(fixed_row)
 
+
 ## Click-to-rebind: the binding button enters "listening" mode; the next real key press is captured
 ## by _shortcut_capture_gui_input (a lone modifier keeps listening; Esc cancels).
 func _begin_shortcut_capture(action: String, capture: Button) -> void:
@@ -114,6 +118,7 @@ func _begin_shortcut_capture(action: String, capture: Button) -> void:
 	capture.text = "Press a key…  (Esc cancels)"
 	capture.modulate = Color(0.6, 0.9, 1.0)
 	capture.grab_focus()
+
 
 func _shortcut_capture_gui_input(event: InputEvent, action: String, capture: Button) -> void:
 	if _shortcuts_capturing_action != action or not (event is InputEventKey):

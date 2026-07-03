@@ -2,10 +2,11 @@
 # Covers EditorParamStore, ACEDefinition exposure fields, ParamDefaultResolver,
 # and ACEGenerator exposure inference.
 @tool
-extends RefCounted
 class_name EditorParamExposureTest
+extends RefCounted
 
 const SAMPLE_SCRIPT := preload("res://tests/fixtures/auto_ace_sample.gd")
+
 
 class FakeEditorUndoRedoManager:
 	extends RefCounted
@@ -77,6 +78,7 @@ class FakeEditorUndoRedoManager:
 			output.pop_back()
 		return output
 
+
 static func run() -> bool:
 	var all_passed: bool = true
 	all_passed = _test_editor_param_store() and all_passed
@@ -89,6 +91,7 @@ static func run() -> bool:
 	return all_passed
 
 # ── EditorParamStore ──────────────────────────────────────────────────────────
+
 
 static func _test_editor_param_store() -> bool:
 	var passed: bool = true
@@ -120,6 +123,7 @@ static func _test_editor_param_store() -> bool:
 
 	return passed
 
+
 static func _test_editor_param_store_round_trip() -> bool:
 	var passed: bool = true
 	var store := EditorParamStore.new()
@@ -139,6 +143,7 @@ static func _test_editor_param_store_round_trip() -> bool:
 	return passed
 
 # ── ACEDefinition exposure fields ─────────────────────────────────────────────
+
 
 static func _test_ace_definition_exposure_fields() -> bool:
 	var passed: bool = true
@@ -160,6 +165,7 @@ static func _test_ace_definition_exposure_fields() -> bool:
 	return passed
 
 # ── ParamDefaultResolver ──────────────────────────────────────────────────────
+
 
 static func _test_param_default_resolver() -> bool:
 	var passed: bool = true
@@ -207,6 +213,7 @@ static func _test_param_default_resolver() -> bool:
 
 # ── ACEGenerator exposure inference ───────────────────────────────────────────
 
+
 static func _test_ace_generator_exposure_inference() -> bool:
 	var passed: bool = true
 	var sample: Node = SAMPLE_SCRIPT.new()
@@ -242,6 +249,7 @@ static func _test_ace_generator_exposure_inference() -> bool:
 	sample.free()
 	return passed
 
+
 static func _test_c3_metadata_contract() -> bool:
 	var passed: bool = true
 	var sample: Node = SAMPLE_SCRIPT.new()
@@ -258,6 +266,7 @@ static func _test_c3_metadata_contract() -> bool:
 	passed = _check("method param carries options metadata array", first_param.has("options"), true) and passed
 	sample.free()
 	return passed
+
 
 static func _test_exposed_node_scope_and_undo() -> bool:
 	var passed: bool = true
@@ -306,6 +315,7 @@ static func _test_exposed_node_scope_and_undo() -> bool:
 	return passed
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

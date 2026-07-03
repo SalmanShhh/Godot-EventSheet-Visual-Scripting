@@ -4,8 +4,8 @@
 # byte-identically. If a change regresses coverage, the raw-block count climbs past the cap (or a
 # structure stops lifting) and this fails — the ratchet only tightens, never silently loosens.
 @tool
-extends RefCounted
 class_name FidelityRatchetTest
+extends RefCounted
 
 const SOURCE := "extends Node2D\n\nvar speed: float = 100.0\nvar active: bool = true\n\nfunc _process(delta: float) -> void:\n\tif active:\n\t\tposition.x += speed\n\tfor enemy in get_tree().get_nodes_in_group(\"foes\"):\n\t\tenemy.set_visible(false)\n\nfunc reset() -> void:\n\tspeed = 0.0\n"
 
@@ -13,6 +13,7 @@ const SOURCE := "extends Node2D\n\nvar speed: float = 100.0\nvar active: bool = 
 # while host_class is also set, for lint/completion). Every actual STATEMENT, loop, condition, variable,
 # and function lifts to a row — so the cap is 1 (the prelude). It may only ever drop, never climb.
 const MAX_RAW_BLOCKS := 1
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -37,6 +38,7 @@ static func run() -> bool:
 		print("    SRC<%s>\n    RT <%s>" % [SOURCE, rt])
 	return ok
 
+
 static func _count(rows: Array, c: Dictionary) -> void:
 	for r: Variant in rows:
 		if r is LocalVariable:
@@ -53,6 +55,7 @@ static func _count(rows: Array, c: Dictionary) -> void:
 			_count(ev.sub_events, c)
 		elif r is RawCodeRow:
 			c["raw"] += 1
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

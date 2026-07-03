@@ -3,8 +3,9 @@
 # attachment). The final block runs the doctor on THIS repository — it doubles as the
 # repo-health gate: every committed generated script must byte-match its sheet.
 @tool
-extends RefCounted
 class_name ProjectDoctorTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -213,11 +214,13 @@ static func run() -> bool:
 	DirAccess.remove_absolute(bus_path)
 	return all_passed
 
+
 static func _has(findings: Array[Dictionary], severity: String, check: String) -> bool:
 	for finding: Dictionary in findings:
 		if str(finding.get("severity")) == severity and str(finding.get("check")) == check:
 			return true
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

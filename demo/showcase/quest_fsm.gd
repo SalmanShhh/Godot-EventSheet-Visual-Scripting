@@ -13,9 +13,11 @@ signal quest_advanced(phase: int)
 @export var tick: int = 0
 var __every_quest: float = 0.0
 
+
 func _ready() -> void:
 	item_collected.connect(_on_item_collected)
 	quest_advanced.connect(_on_quest_advanced)
+
 
 func _process(delta: float) -> void:
 	__every_quest += delta
@@ -37,13 +39,16 @@ func _process(delta: float) -> void:
 	items: %d   log: %d
 	t = %d" % [["OFFERED", "ACTIVE", "COMPLETE"][quest_state], inventory.size(), quest_log.size(), tick]
 
+
 func _on_item_collected(id: String) -> void:
 	$Icon/SpringBehavior.spring_host_scale(1.0)
 	$Icon/SpringBehavior.add_impulse("__scale", 6.0)
 
+
 func _on_quest_advanced(phase: int) -> void:
 	$Icon/TweenBehavior.tween_rotation($Icon.rotation_degrees + 120.0, 0.4)
 	$Icon/SpringBehavior.spring_host_scale(1.6)
+
 
 ## @ace_hidden
 func grant_item(id: String, qty: int) -> void:

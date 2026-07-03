@@ -8,6 +8,7 @@ extends SceneTree
 var _frames: int = 0
 var _viewport: EventSheetViewport = null
 
+
 func _init() -> void:
 	root.title = "EventForge Diagnostics Preview"
 	root.size = Vector2i(1160, 420)
@@ -43,6 +44,7 @@ func _init() -> void:
 	_viewport.set_row_diagnostics(EventSheetDiagnostics.analyze(sheet, null))
 
 	process_frame.connect(_on_frame)
+
 
 func _on_frame() -> void:
 	_frames += 1

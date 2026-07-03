@@ -4,10 +4,11 @@
 # the real drain loop in COUNT mode (deterministic; ms mode is wall-clock and timing-dependent) to prove
 # the budget cap, the per-item On Process Item signal, the On Drained edge, and the queue accounting.
 @tool
-extends RefCounted
 class_name TimeSlicerPackTest
+extends RefCounted
 
 const PACK := "res://eventsheet_addons/time_slicer/time_slicer_behavior.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -56,6 +57,7 @@ static func run() -> bool:
 
 	ts.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -4,8 +4,9 @@
 # event_sheet_editor_test) and asserts the model changes. The raw key dispatch +
 # text-field-focus guard need the editor GUI and are verified by opening the editor.
 @tool
-extends RefCounted
 class_name KeyboardActionsTest
+extends RefCounted
+
 
 # No-op undo manager matching the EditorUndoRedoManager call shape the dock uses
 # (add_do_method(target, method, ...args)). The dock's default plain UndoRedo rejects that
@@ -22,6 +23,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -66,6 +68,7 @@ static func run() -> bool:
 	editor.free()
 	return all_passed
 
+
 static func _build_sheet() -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	var event: EventRow = EventRow.new()
@@ -76,6 +79,7 @@ static func _build_sheet() -> EventSheetResource:
 	sheet.events.append(event)
 	return sheet
 
+
 static func _flat_index_of(viewport: EventSheetViewport, resource: Resource) -> int:
 	var flat: Array[Dictionary] = viewport.get_flat_rows()
 	for i in range(flat.size()):
@@ -83,6 +87,7 @@ static func _flat_index_of(viewport: EventSheetViewport, resource: Resource) -> 
 		if row_data != null and row_data.source_resource == resource:
 			return i
 	return -1
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

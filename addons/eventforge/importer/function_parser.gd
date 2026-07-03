@@ -2,8 +2,9 @@
 # Parses top-level `func name(params) -> ret:` blocks from GDScript source, capturing each
 # function's name, typed params, return type, and verbatim (indented) body text.
 @tool
-extends RefCounted
 class_name FunctionParser
+extends RefCounted
+
 
 func parse(source: String) -> Array:
 	var functions: Array = []
@@ -38,6 +39,7 @@ func parse(source: String) -> Array:
 		})
 		index = cursor
 	return functions
+
 
 func _parse_header(header: String) -> Dictionary:
 	var function_name: String = ""

@@ -20,6 +20,7 @@ const MIN_LINE_HEIGHT_EXTRA := 10
 @export_range(0, 12, 1) var corner_radius: int = 5
 @export_range(0, 32, 1) var badge_extra_width: int = 12
 
+
 func resolve_line_height(base_font_size: int, base_row_height: int) -> float:
 	return max(
 		float(base_row_height),

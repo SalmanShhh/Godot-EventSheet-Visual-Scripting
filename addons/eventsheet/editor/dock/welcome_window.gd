@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetWelcomeWindow
+extends RefCounted
 
 # First-run welcome / onboarding window (Tools ▸ Welcome…).
 #
@@ -17,9 +17,11 @@ class_name EventSheetWelcomeWindow
 var _dock: Control = null
 var _welcome_window: Window = null
 
+
 ## Wires the dock reference used to parent the window + reach the Simple-mode / template callbacks.
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Called by the plugin at startup: first run per project (editor metadata, nothing committed) pops
 ## the welcome; after that it lives in Tools → Welcome….
@@ -32,6 +34,7 @@ func show_if_first_run() -> void:
 	editor_settings.set_project_metadata("eventsheets", "welcomed", true)
 	show()
 
+
 func show() -> void:
 	if _welcome_window == null:
 		_build()
@@ -43,6 +46,7 @@ func show() -> void:
 	if simple_check != null:
 		simple_check.set_pressed_no_signal(_dock._simple_mode)
 	_welcome_window.popup_centered()
+
 
 ## An AcceptDialog so the window sizes itself to the content (the hand-sized Window of the first two
 ## cuts clipped buttons and text at the edges); every label wraps inside a fixed content width.

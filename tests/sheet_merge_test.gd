@@ -3,10 +3,11 @@
 # merge cleanly keyed on row UIDs, identical edits don't conflict, genuine same-row edits
 # are flagged (keeping both versions), and adds/deletes/variables 3-way merge correctly.
 @tool
-extends RefCounted
 class_name SheetMergeTest
+extends RefCounted
 
 const Merge := preload("res://tools/sheet_merge.gd")
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -64,17 +65,20 @@ static func run() -> bool:
 
 	return passed
 
+
 static func _sheet(rows: Array) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	for row: Variant in rows:
 		sheet.events.append(row)
 	return sheet
 
+
 static func _var_sheet(hp_defaults: Dictionary) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	for key: Variant in hp_defaults:
 		sheet.variables[str(key)] = {"type": "int", "default": hp_defaults[key]}
 	return sheet
+
 
 static func _event(uid: String, var_name: String, amount: String) -> EventRow:
 	var row: EventRow = EventRow.new()
@@ -86,6 +90,7 @@ static func _event(uid: String, var_name: String, amount: String) -> EventRow:
 	row.actions.append(action)
 	return row
 
+
 static func _param_of(sheet: EventSheetResource, uid: String) -> String:
 	for row: Variant in sheet.events:
 		if row is EventRow and (row as EventRow).event_uid == uid:
@@ -93,6 +98,7 @@ static func _param_of(sheet: EventSheetResource, uid: String) -> String:
 				if action is ACEAction:
 					return str((action as ACEAction).params.get("amount", ""))
 	return "?"
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

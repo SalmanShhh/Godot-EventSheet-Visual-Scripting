@@ -14,6 +14,7 @@ const RESERVED: PackedStringArray = [
 	"true", "false", "null", "and", "or", "not", "breakpoint", "preload", "PI", "TAU", "INF", "NAN"
 ]
 
+
 ## Best-effort auto-correction toward a valid GDScript identifier ("" = unsalvageable).
 static func sanitize(raw_name: String) -> String:
 	var cleaned: String = ""
@@ -28,6 +29,7 @@ static func sanitize(raw_name: String) -> String:
 	if cleaned[0] >= "0" and cleaned[0] <= "9":
 		cleaned = "_" + cleaned
 	return cleaned
+
 
 ## True for a usable identifier (valid shape AND not a GDScript keyword/constant).
 static func is_valid(name: String) -> bool:

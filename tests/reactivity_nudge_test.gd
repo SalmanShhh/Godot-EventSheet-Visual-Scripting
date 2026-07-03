@@ -7,8 +7,9 @@
 # can't silently rot the nudge), and the deliberate omissions (is_on_floor, input-action polls — no
 # real signal twin) stay omitted so the plugin never suggests a cargo-cult signal.
 @tool
-extends RefCounted
 class_name ReactivityNudgeTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -43,6 +44,7 @@ static func run() -> bool:
 		ACEDescriptor.reactive_alternative("Core", "Print").is_empty(), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

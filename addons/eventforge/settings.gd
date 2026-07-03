@@ -7,8 +7,8 @@
 # Readers keep their get_setting(name, default) form, so tests that reset a setting
 # to null keep working (null erases; the fallback takes over).
 @tool
-extends RefCounted
 class_name EventSheetSettings
+extends RefCounted
 
 const DEFINITIONS: Array[Dictionary] = [
 	{"name": "eventsheets/editor/compile_on_save", "default": true, "type": TYPE_BOOL,
@@ -49,6 +49,7 @@ const DEFINITIONS: Array[Dictionary] = [
 		"hint": PROPERTY_HINT_ENUM, "hint_string": "warn,error,silent",
 		"doc": "Including a sheet tagged deprecated."},
 ]
+
 
 ## Registers every setting (idempotent; call at plugin load). Values equal to the
 ## initial value are never persisted into project.godot.

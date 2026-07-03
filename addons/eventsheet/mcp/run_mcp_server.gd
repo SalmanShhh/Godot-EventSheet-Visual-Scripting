@@ -8,6 +8,7 @@
 @tool
 extends SceneTree
 
+
 func _init() -> void:
 	var server: EventSheetMCPServer = EventSheetMCPServer.new()
 	while true:

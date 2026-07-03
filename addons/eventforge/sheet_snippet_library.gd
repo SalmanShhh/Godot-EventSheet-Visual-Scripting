@@ -7,13 +7,15 @@
 # patterns the same way templates and packs are shared. Insert goes through the
 # normal paste path, so fresh event uids re-bake exactly like a paste.
 @tool
-extends RefCounted
 class_name EventSheetSnippetLibrary
+extends RefCounted
 
 const DEFAULT_DIR := "res://eventsheet_snippets"
 
+
 static func snippets_dir() -> String:
 	return str(ProjectSettings.get_setting("eventsheets/project/snippets_dir", DEFAULT_DIR)).trim_suffix("/")
+
 
 ## Every .txt under the snippets dir (recursive), sorted for stable menus.
 static func list_snippets() -> PackedStringArray:
@@ -39,6 +41,7 @@ static func list_snippets() -> PackedStringArray:
 	snippets.sort()
 	return snippets
 
+
 ## Writes serialized snippet text under the given name; an existing name gets a
 ## -2/-3 suffix (templates rule: never overwrite silently). Returns the path, or "".
 static func save_snippet(snippet_name: String, snippet_text: String) -> String:
@@ -57,6 +60,7 @@ static func save_snippet(snippet_name: String, snippet_text: String) -> String:
 	file.store_string(snippet_text)
 	file.close()
 	return target
+
 
 static func read_snippet(snippet_path: String) -> String:
 	return FileAccess.get_file_as_string(snippet_path)

@@ -8,6 +8,7 @@
 @tool
 extends SceneTree
 
+
 func _init() -> void:
 	var path: String = EventSheetVocabularyDoc.write()
 	if path.is_empty():

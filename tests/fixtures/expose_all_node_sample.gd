@@ -8,17 +8,22 @@ extends Node
 
 signal fired
 
+
 func can_fire() -> bool:
 	return true
+
 
 func fire() -> void:
 	pass
 
+
 func set_rate(rate: float) -> void:
 	pass
 
+
 func ammo_count() -> int:
 	return 0
+
 
 func _private_helper() -> void:
 	pass

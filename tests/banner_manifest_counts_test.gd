@@ -3,8 +3,9 @@
 # both structured rows AND un-lifted `## @ace_*` RawCode. Pins the counts + that _build_manifest_segments
 # drops zero roles and pluralises.
 @tool
-extends RefCounted
 class_name BannerManifestCountsTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -56,11 +57,13 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _sig(name: String, trigger: bool) -> SignalRow:
 	var signal_row: SignalRow = SignalRow.new()
 	signal_row.signal_name = name
 	signal_row.trigger = trigger
 	return signal_row
+
 
 static func _var(name: String, exported: bool) -> LocalVariable:
 	var local_variable: LocalVariable = LocalVariable.new()
@@ -68,11 +71,13 @@ static func _var(name: String, exported: bool) -> LocalVariable:
 	local_variable.exported = exported
 	return local_variable
 
+
 static func _fn(return_type: int, expose: bool) -> EventFunction:
 	var function: EventFunction = EventFunction.new()
 	function.return_type = return_type
 	function.expose_as_ace = expose
 	return function
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

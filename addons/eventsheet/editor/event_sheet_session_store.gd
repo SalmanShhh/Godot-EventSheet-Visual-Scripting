@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetSessionStore
+extends RefCounted
 # Session restore: the open tabs survive an editor restart (user://eventsheets_session.cfg;
 # eventsheets/editor/restore_session, default on). Extracted from event_sheet_dock.gd; the tab/sheet
 # state it reads (_open_tabs, _active_tab_index, _current_sheet) and the load / activate / banner /
@@ -15,8 +15,10 @@ var _dock: Control = null
 # otherwise clobber the saved session before it's read.
 var _session_tracking: bool = false
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Saved-tab paths + the active index. Unsaved sheets (no path) are skipped — there's no file to reopen.
 func persist() -> void:
@@ -43,6 +45,7 @@ func persist() -> void:
 	session.set_value("session", "editable", editable_paths)
 	session.set_value("session", "active", active_in_saved)
 	session.save(SESSION_PATH)
+
 
 ## Reopens last session's tabs (missing files skipped silently — a deleted sheet shouldn't block
 ## startup), then turns persistence on.

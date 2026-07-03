@@ -23,6 +23,7 @@ const _RESERVED: PackedStringArray = [
 	"if", "else", "for", "while", "return", "match", "enum", "signal", "extends", "tool"
 ]
 
+
 ## True when `addon_name` is usable as a GDScript class_name: a plain identifier that isn't a reserved word
 ## and isn't already a registered global class (which would be a duplicate class_name error).
 static func is_valid_class_name(addon_name: String) -> bool:
@@ -43,6 +44,7 @@ static func is_valid_class_name(addon_name: String) -> bool:
 			return false
 	return true
 
+
 ## The folder + file a freshly-scaffolded addon lives in (auto-discovered by the addon scanner).
 static func suggested_path(addon_name: String) -> String:
 	var snake: String = _to_snake_case(addon_name)
@@ -58,6 +60,7 @@ const RECIPES: Array[Dictionary] = [
 	{"id": "stat_pool", "label": "Stat pool — a bounded value (spend · restore · percent)"},
 ]
 
+
 ## Dispatches to the chosen recipe's generator (falls back to the teaching skeleton).
 static func generate_recipe(recipe_id: String, addon_name: String, base_class: String = "Node", category: String = "", description: String = "") -> String:
 	match recipe_id:
@@ -67,6 +70,7 @@ static func generate_recipe(recipe_id: String, addon_name: String, base_class: S
 			return generate_stat_pool(addon_name, base_class, category, description)
 		_:
 			return generate(addon_name, base_class, category, description)
+
 
 ## A complete ability-cooldown behaviour: start it, gate events on readiness, read the remaining
 ## time. Counts down in _process (so a Node-derived base is the natural fit — the dialog defaults
@@ -148,6 +152,7 @@ static func generate_cooldown(addon_name: String, base_class: String = "Node", c
 		"\treturn 1.0 - (_time_left / duration) if duration > 0.0 else 1.0",
 		"",
 	]))
+
 
 ## A complete bounded-stat behaviour (health, mana, stamina, ammo…): spend it, restore it, gate on
 ## empty/full, read the percentage. Every public member carries its picker annotations.
@@ -238,6 +243,7 @@ static func generate_stat_pool(addon_name: String, base_class: String = "Node", 
 		"",
 	]))
 
+
 ## The richly-commented skeleton source. `category` defaults to the addon name; `description` fills the
 ## provider's top doc comment.
 static func generate(addon_name: String, base_class: String = "Node", category: String = "", description: String = "") -> String:
@@ -309,11 +315,13 @@ static func generate(addon_name: String, base_class: String = "Node", category: 
 	lines.append("")
 	return "\n".join(lines)
 
+
 ## Makes a user string safe to drop into a `## @ace_*("...")` doc-comment annotation: a newline would split
 ## the comment line (a parse error on the next line), and a double-quote confuses the analyzer's quote-trim
 ## extraction — so collapse newlines to spaces and quotes to apostrophes.
 static func _sanitize_inline(text: String) -> String:
 	return text.replace("\r", " ").replace("\n", " ").replace("\"", "'").strip_edges()
+
 
 ## PascalCase / mixed → snake_case for the folder + file name. Splits only at a lowercase→Uppercase boundary
 ## (or before the last capital of an acronym that starts a word), so "HUDManager" → "hud_manager",

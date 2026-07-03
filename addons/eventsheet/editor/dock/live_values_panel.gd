@@ -5,10 +5,11 @@
 # send path. The dock forwards its historical field/method names here so the test
 # surface and the plugin wiring are unchanged.
 @tool
-extends RefCounted
 class_name EventSheetLiveValuesPanel
+extends RefCounted
 
 var _dock: Control = null
+
 
 func _init(dock: Control) -> void:
 	_dock = dock
@@ -25,9 +26,11 @@ var _last_values: Dictionary = {}
 var watch_tree: Tree = null
 var watch_input: LineEdit = null
 
+
 ## Wired by the plugin entry point so value edits can flow back to the running game.
 func setdebugger(debugger: EventSheetLiveValuesDebugger) -> void:
 	debugger = debugger
+
 
 ## Toggles live-value streaming for this sheet (debug compiles send variable frames;
 ## the window shows them while the game runs). Recompile + run to start streaming.
@@ -43,6 +46,7 @@ func toggle() -> void:
 		if window != null:
 			window.hide()
 		_dock._set_status("Live Values OFF (recompile to remove the stream).")
+
 
 ## Lazily builds the floating Live Values window the first time it's needed. Named to match
 ## the dock's call site (event_sheet_dock.gd: _ensure_live_values_panel().ensure_window()).
@@ -103,6 +107,7 @@ func ensure_window() -> void:
 	window.add_child(EventSheetPopupUI.margined(live_box))
 	_dock.add_child(window)
 
+
 ## Debugger-plugin sink (wired by the plugin entry point): one values frame -> the
 ## editable tree + inline chips next to variable rows in every pane (rung 3).
 func update_values(values: Dictionary) -> void:
@@ -134,6 +139,7 @@ func update_values(values: Dictionary) -> void:
 			index += 1
 	_refresh_watches(values)
 
+
 ## One value -> one tree row. Dictionaries/Arrays expand into read-only subtrees
 ## (GDevelop's variables-debugger style); scalars stay editable leaves.
 func _fill_live_value_item(item: TreeItem, value: Variant) -> void:
@@ -161,6 +167,7 @@ func _fill_live_value_item(item: TreeItem, value: Variant) -> void:
 		item.set_text(1, str(value))
 		item.set_editable(1, true)
 
+
 ## Adds the input expression to the watch list and re-evaluates against the latest frame.
 func _add_watch_from_input() -> void:
 	if watch_input == null:
@@ -173,6 +180,7 @@ func _add_watch_from_input() -> void:
 	watch_input.clear()
 	_refresh_watches(_last_values)
 
+
 ## Double-click a watch row to remove it.
 func _remove_selected_watch() -> void:
 	if watch_tree == null:
@@ -184,6 +192,7 @@ func _remove_selected_watch() -> void:
 	if expression is String and _watches.has(expression):
 		_watches.erase(expression)
 		_refresh_watches(_last_values)
+
 
 ## Re-evaluates every watch against the latest values frame (editor-side, via Expression).
 func _refresh_watches(values: Dictionary) -> void:
@@ -206,6 +215,7 @@ func _refresh_watches(values: Dictionary) -> void:
 			item.set_text(1, "⚠ %s" % str(verdict.get("error", "error")))
 			item.set_custom_color(1, Color(1.0, 0.5, 0.5))
 
+
 ## Evaluates a watch expression against a streamed values dict (variable name -> value), via
 ## Expression. Returns {ok: true, value: Variant} or {ok: false, error: String}. Pure + static,
 ## so it is unit-testable without a debug session.
@@ -224,6 +234,7 @@ static func evaluate_watch(expression: String, values: Dictionary) -> Dictionary
 	if expr.has_execute_failed():
 		return {"ok": false, "error": expr.get_error_text()}
 	return {"ok": true, "value": result}
+
 
 ## Tree edit -> typed value -> running game (debug session). The event-sheet editable debugger.
 func _on_live_value_edited() -> void:

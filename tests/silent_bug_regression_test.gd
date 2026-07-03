@@ -5,8 +5,9 @@
 # condition silently OPENING the gate, a negated stateful Every-X-Seconds, and charge abilities that
 # only spent one stack per regen cycle.
 @tool
-extends RefCounted
 class_name SilentBugRegressionTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -100,6 +101,7 @@ static func run() -> bool:
 		ab.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -1,8 +1,8 @@
 # EventForge — PickFilter resource
 # Describes an event-sheet-style pick/filter scope for an event.
 @tool
-extends Resource
 class_name PickFilter
+extends Resource
 
 enum CollectionKind {
 	GROUP,

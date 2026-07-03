@@ -15,12 +15,13 @@
 # Module contract: see ace_factory.gd — ace_ids/templates are API (compatibility covenant);
 # this file only changes where the descriptors are AUTHORED.
 @tool
-extends RefCounted
 class_name EventForgeHelperACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
 const CAT := "Helpers"
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

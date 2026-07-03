@@ -3,8 +3,8 @@
 # emitted as-is (the compiler reads ONLY `code` — the editor-UX fields below are never
 # compiled, so they don't affect codegen, byte-exact round-trips, or the no-drift packs).
 @tool
-extends Resource
 class_name RawCodeRow
+extends Resource
 
 @export var enabled: bool = true
 @export_multiline var code: String = ""
@@ -16,6 +16,7 @@ class_name RawCodeRow
 ## structured ACE (e.g. "no matching ACE template"): the "why it stayed code" hint that
 ## turns an opaque wall of blocks into an actionable triage list (surfaced on hover).
 @export var lift_note: String = ""
+
 
 ## Returns the stable row kind identifier.
 func get_row_kind() -> String:

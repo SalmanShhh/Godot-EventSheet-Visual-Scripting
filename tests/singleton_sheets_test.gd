@@ -1,8 +1,9 @@
 # Godot EventSheets — Autoload (Singleton) sheets: a new sheet type compiling to
 # project-wide Nodes whose exposed functions publish ACEs addressed by autoload name.
 @tool
-extends RefCounted
 class_name SingletonSheetsTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -15,6 +16,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -178,6 +180,7 @@ signal kicked"
 	author_editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -3,8 +3,9 @@
 # EditorScript host with the On Editor Run trigger (File > Run); generated tools
 # verify-lift back and recover tool_mode on re-open.
 @tool
-extends RefCounted
 class_name ToolSheetsTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -88,6 +90,7 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

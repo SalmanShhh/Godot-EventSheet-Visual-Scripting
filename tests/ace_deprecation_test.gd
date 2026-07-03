@@ -5,8 +5,9 @@
 # chain: the .deprecated() data model, propagation to ACEDefinition.metadata (adapter for built-ins,
 # generator for custom @ace_deprecated addons), the compile-time warning, and the hover prefix.
 @tool
-extends RefCounted
 class_name AceDeprecationTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -61,6 +62,7 @@ static func run() -> bool:
 	ACERegistry.clear_cache()  # restore: the next access rebuilds fresh, non-deprecated descriptors
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -2,8 +2,9 @@
 # restore-into-editor as an unsaved change) and project-local templates (drop a .tres
 # in the templates dir → New… menu; blueprints skipped by doctor + vocabulary doc).
 @tool
-extends RefCounted
 class_name SheetBackupsTemplatesTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -13,6 +14,7 @@ class NoopUndoManager:
 	func commit_action() -> void: pass
 	func has_undo() -> bool: return false
 	func has_redo() -> bool: return false
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -123,6 +125,7 @@ static func run() -> bool:
 		if FileAccess.file_exists(cleanup_path):
 			DirAccess.remove_absolute(cleanup_path)
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

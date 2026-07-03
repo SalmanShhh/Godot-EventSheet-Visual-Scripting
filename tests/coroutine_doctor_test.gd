@@ -4,8 +4,9 @@
 # a re-firing On Process overlaps itself — the next tick fires while the previous run is still suspended, so
 # the loop double-processes. The Doctor flags it. This drives the detection logic on hand-built events.
 @tool
-extends RefCounted
 class_name CoroutineDoctorTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -35,6 +36,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _event_with_ace(ace_id: String) -> EventRow:
 	var event: EventRow = EventRow.new()
 	event.trigger_id = "OnProcess"
@@ -44,6 +46,7 @@ static func _event_with_ace(ace_id: String) -> EventRow:
 	event.actions.append(act)
 	return event
 
+
 static func _event_with_raw(code: String) -> EventRow:
 	var event: EventRow = EventRow.new()
 	event.trigger_id = "OnProcess"
@@ -51,6 +54,7 @@ static func _event_with_raw(code: String) -> EventRow:
 	raw.code = code
 	event.actions.append(raw)
 	return event
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -11,8 +11,10 @@ extends RefCounted
 
 var _viewport: Control = null
 
+
 func init(viewport: Control) -> void:
 	_viewport = viewport
+
 
 ## True when the sheet has no authored rows — either genuinely empty, or holding only the
 ## trailing "+ Add event…" footer affordance(s). Drives the getting-started empty state so a
@@ -23,6 +25,7 @@ func is_sheet_visually_empty() -> bool:
 		if row_data != null and not _viewport._row_is_add_event_footer(row_data):
 			return false
 	return true
+
 
 ## Calm getting-started state for an empty sheet: one clear heading, one primary call to
 ## action, and a single de-emphasized tip — instead of a dense run-on of shortcuts that

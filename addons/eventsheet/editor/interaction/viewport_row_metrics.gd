@@ -23,8 +23,10 @@ var _row_metrics: Array[Dictionary] = []
 ## width, so when it changes on resize the metrics must be rebuilt (heights change).
 var _metrics_canvas_width: float = -1.0
 
+
 func init(viewport: Control) -> void:
 	_viewport = viewport
+
 
 func rebuild() -> void:
 	_metrics_canvas_width = _viewport._get_logical_canvas_width()
@@ -47,6 +49,7 @@ func rebuild() -> void:
 		top += height
 		if row_data != null:
 			previous_indent = row_data.indent
+
 
 func _resolve_row_height(row_data: EventRowData) -> float:
 	if row_data == null:
@@ -72,6 +75,7 @@ func _resolve_row_height(row_data: EventRowData) -> float:
 		max_line_index = maxi(max_line_index, int(metadata.get("line_index", 0)))
 	return float((max_line_index + 1) * line_height)
 
+
 ## Total height of a comment row once each of its logical lines is wrapped to the row width.
 ## Mirrors the per-span wrapping done in the layout pass, so the reserved height always
 ## matches what is actually drawn (otherwise wrapped text would overlap the next row).
@@ -87,6 +91,7 @@ func _measure_comment_height(row_data: EventRowData) -> float:
 		total_lines += _comment_span_line_count(span, wrap_width, font, font_size)
 	return float(maxi(total_lines, 1)) * line_height
 
+
 ## Where comment text begins on the row (logical/unzoomed px). Kept in sync with the comment
 ## branch of the layout pass so wrapping width, hit-testing, and drawing all agree.
 func _comment_text_origin_x(indent: int) -> float:
@@ -101,11 +106,13 @@ func _comment_text_origin_x(indent: int) -> float:
 		origin_x += badge_column + EventSheetPalette.SPAN_GAP
 	return origin_x
 
+
 ## The pixel width comment text wraps inside: from the comment text origin to the row's right
 ## padding (the same right limit the layout clamps spans to). Floored at MIN_COMMENT_WRAP_WIDTH.
 func _comment_wrap_width(indent: int, width: float) -> float:
 	var right_limit: float = width - EventSheetPalette.ROW_HORIZONTAL_PADDING
 	return max(right_limit - _comment_text_origin_x(indent) - 2.0, _viewport.MIN_COMMENT_WRAP_WIDTH)
+
 
 ## How many visual lines one comment span occupies after wrapping. BBCode-styled lines are
 ## drawn as a single styled run (segment wrapping is not supported), so they stay one line.
@@ -116,6 +123,7 @@ func _comment_span_line_count(span: SemanticSpan, wrap_width: float, font: Font,
 	if not (metadata.get("bbcode_segments", []) as Array).is_empty():
 		return 1
 	return wrapped_line_count(span.text, wrap_width, font, font_size)
+
 
 ## Word-wrapped visual line count for `text` inside `wrap_width` (logical px). Uses the same
 ## TextServer word/grapheme breaking the renderer draws with, so measurement and drawing stay
@@ -132,18 +140,22 @@ static func wrapped_line_count(text: String, wrap_width: float, font: Font, font
 	).y
 	return maxi(1, int(round(wrapped_height / single_line)))
 
+
 func row_top(index: int) -> float:
 	if index < 0 or index >= _row_metrics.size():
 		return float(index * _viewport.ROW_HEIGHT)
 	return float(_row_metrics[index].get("top", float(index * _viewport.ROW_HEIGHT)))
+
 
 func row_height(index: int) -> float:
 	if index < 0 or index >= _row_metrics.size():
 		return float(_viewport.ROW_HEIGHT)
 	return float(_row_metrics[index].get("height", _viewport.ROW_HEIGHT))
 
+
 func row_index_at_y(y: float) -> int:
 	return _row_index_at_y(_row_metrics, y)
+
 
 ## Resolves a vertical position to a row index. A click in the small inter-block GAP before a row
 ## (dead space not covered by any row band, EVENT_BLOCK_GAP) resolves to the PRECEDING event, so
@@ -161,6 +173,7 @@ static func _row_index_at_y(metrics: Array, y: float) -> int:
 			return index
 	return -1
 
+
 ## Total height of all rows (top + height of the last metric), or 0 when there are no rows.
 ## Absorbs the inline `_row_metrics[last]` read `_update_canvas_min_size` used to do.
 func total_height() -> float:
@@ -169,8 +182,10 @@ func total_height() -> float:
 	var last_metric: Dictionary = _row_metrics[_row_metrics.size() - 1]
 	return float(last_metric.get("top", 0.0)) + float(last_metric.get("height", _viewport.ROW_HEIGHT))
 
+
 func is_empty() -> bool:
 	return _row_metrics.is_empty()
+
 
 ## The logical canvas width the metrics were last rebuilt at (the resize guard compares against this).
 func metrics_width() -> float:

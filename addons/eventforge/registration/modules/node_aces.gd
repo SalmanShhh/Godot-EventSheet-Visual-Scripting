@@ -5,10 +5,11 @@
 # the Nodes navigation set in dev_aces (Get Parent / Child / Find Child …) and the Groups set.
 # Each compiles to the exact native call. Grouped under Nodes / Nodes: Picking.
 @tool
-extends RefCounted
 class_name EventForgeNodeACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

@@ -5,8 +5,9 @@
 # regress previously-lifting files. The shipped PlatformerMovement pack doubles as the
 # end-to-end fixture (behavior-mode annotation regeneration incl. $Class templates).
 @tool
-extends RefCounted
 class_name FunctionLiftTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -123,6 +124,7 @@ static func run() -> bool:
 	all_passed = _check("handwritten file stays byte-identical", handwritten_roundtrip == handwritten, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

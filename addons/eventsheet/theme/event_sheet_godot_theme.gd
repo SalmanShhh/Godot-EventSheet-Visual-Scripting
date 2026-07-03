@@ -6,6 +6,7 @@
 class_name EventSheetGodotTheme
 extends RefCounted
 
+
 static func adapt_to_editor(style: EventSheetEditorStyle) -> EventSheetEditorStyle:
 	if style == null or not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
 		return style
@@ -21,6 +22,7 @@ static func adapt_to_editor(style: EventSheetEditorStyle) -> EventSheetEditorSty
 	var accent: Color = theme.get_color("accent_color", "Editor") if theme.has_color("accent_color", "Editor") else Color("#699ce8")
 	var font_color: Color = theme.get_color("font_color", "Editor") if theme.has_color("font_color", "Editor") else Color(0.9, 0.9, 0.9)
 	return apply(style, base, dark_1, dark_2, accent, font_color)
+
 
 ## Pure color-mapping core (no editor access) — derives the sheet's chrome from the five
 ## colors every Godot editor theme hinges on, so the look tracks the user's theme (the

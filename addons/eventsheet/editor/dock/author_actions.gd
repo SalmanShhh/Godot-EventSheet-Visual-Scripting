@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetAuthorActions
+extends RefCounted
 # Surface-level authoring shortcuts driven from the toolbar / menu / context-menu — the quick-add
 # bar's fuzzy match+apply, Run Scene, and Save/Insert row Snippets. This helper owns:
 #   • the quick-add bar's brain: _quick_match (best-ACE fuzzy match of a "type to insert" query,
@@ -44,10 +44,12 @@ class_name EventSheetAuthorActions
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
 # ── Quick-add bar ("type to insert") ──────────────────────────────────────
+
 
 ## Best ACE for a quick-add query. Leading words match a definition (display name / id,
 ## with the picker's synonym phrasing honored); trailing words fill its parameters
@@ -57,6 +59,7 @@ func _quick_match(query: String) -> Dictionary:
 	if ranked.is_empty():
 		return {}
 	return {"definition": (ranked[0] as Dictionary).get("definition"), "params": (ranked[0] as Dictionary).get("params")}
+
 
 ## The ranked quick-add candidates for a query — the same scoring _quick_match uses, kept as a LIST so
 ## the Ghost Row can offer the top matches while the quick-add bar takes the best. Each entry is
@@ -112,6 +115,7 @@ func _quick_match_ranked(query: String, limit: int = 5) -> Array:
 		return int(a["name_length"]) < int(b["name_length"]))
 	return candidates.slice(0, limit)
 
+
 ## Splits a quick-add query's trailing parameter text into positional values, QUOTE-AWARE: a
 ## `"`-opened run stays ONE token with its quotes kept (param values are raw GDScript expressions, so
 ## a string param needs them), while unquoted runs split on spaces. The naive split(" ") mis-filled
@@ -135,6 +139,7 @@ static func tokenize_quick_params(rest: String) -> PackedStringArray:
 	if not current.is_empty():
 		tokens.append(current)
 	return tokens
+
 
 ## Applies the best match: triggers/conditions become a new event; actions append via the
 ## standard apply flow (below the current selection). Returns true when something landed.
@@ -162,6 +167,7 @@ func _quick_add(query: String) -> bool:
 
 # ── Run Scene — sheet → playing game in one click ──────────────────────────
 var _run_scene_menu: PopupMenu = null
+
 
 ## Sheet → playing game in one click: save (compile-on-save keeps the script fresh),
 ## find the scene(s) attaching this sheet's script (the doctor's reverse lookup),
@@ -194,6 +200,7 @@ func _run_from_sheet() -> void:
 		_run_scene_menu.set_item_metadata(_run_scene_menu.item_count - 1, scene_path)
 	_run_scene_menu.popup(Rect2i(Vector2i(_dock.get_global_mouse_position()), Vector2i(0, 0)))
 
+
 ## The script scenes actually attach for this sheet: GDScript-backed sheets ARE their
 ## .gd (review catch: pairing-rule resolution would invent <name>_generated.gd for
 ## them); .tres sheets resolve through the pairing rule.
@@ -201,6 +208,7 @@ func _run_target_script_path() -> String:
 	if _dock._current_sheet != null and not _dock._current_sheet.external_source_path.is_empty():
 		return _dock._current_sheet.external_source_path
 	return EventSheetProjectDoctor.output_path_for(_dock._current_sheet_path)
+
 
 func _play_scene_path(scene_path: String) -> void:
 	if Engine.is_editor_hint() and _dock.is_inside_tree():
@@ -213,6 +221,7 @@ var _snippet_name_window: Window = null
 var _snippet_name_edit: LineEdit = null
 var _snippet_list_window: Window = null
 var _snippet_list: ItemList = null
+
 
 func _open_save_snippet_dialog() -> void:
 	if _dock._top_level_selected_resources().is_empty():
@@ -238,10 +247,12 @@ func _open_save_snippet_dialog() -> void:
 	_snippet_name_window.popup_centered()
 	_snippet_name_edit.grab_focus()
 
+
 func _confirm_save_snippet() -> void:
 	var saved: String = _save_selection_snippet_named(_snippet_name_edit.text.strip_edges())
 	if not saved.is_empty():
 		_snippet_name_window.hide()
+
 
 ## The testable save core: serializes the top-level selection with the SAME serializer
 ## Copy uses and files it in the library. Returns the path, or "" on a problem.
@@ -258,6 +269,7 @@ func _save_selection_snippet_named(snippet_name: String) -> String:
 		EditorInterface.get_resource_filesystem().scan()
 	_dock._set_status("Snippet saved: %s — Insert Snippet… lists it now." % path)
 	return path
+
 
 func _open_insert_snippet() -> void:
 	var snippets: PackedStringArray = EventSheetSnippetLibrary.list_snippets()
@@ -282,6 +294,7 @@ func _open_insert_snippet() -> void:
 		_snippet_list.set_item_metadata(_snippet_list.item_count - 1, snippet_path)
 		_snippet_list.set_item_tooltip(_snippet_list.item_count - 1, snippet_path)
 	_snippet_list_window.popup_centered()
+
 
 ## Insert = the normal snippet paste (fresh uids, missing variables created — the
 ## whole paste contract for free).

@@ -1,7 +1,8 @@
 # EventForge — restarted workspace shell tests
 @tool
-extends RefCounted
 class_name WorkspaceShellTest
+extends RefCounted
+
 
 ## Runs workspace shell tests.
 static func run() -> bool:
@@ -43,6 +44,7 @@ static func run() -> bool:
     ) and all_passed
     editor.free()
     return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
     if actual == expected:

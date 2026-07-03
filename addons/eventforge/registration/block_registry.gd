@@ -11,6 +11,7 @@ extends RefCounted
 static var _kinds: Dictionary = {}
 static var _built_ins_registered: bool = false
 
+
 static func register_kind(kind: EventSheetBlockKind) -> void:
 	if kind == null or kind.kind_id.strip_edges().is_empty():
 		return
@@ -19,9 +20,11 @@ static func register_kind(kind: EventSheetBlockKind) -> void:
 		return
 	_kinds[kind.kind_id] = kind
 
+
 static func get_kind(kind_id: String) -> EventSheetBlockKind:
 	_ensure_built_ins()
 	return _kinds.get(kind_id, null)
+
 
 ## The kind responsible for a row instance: CustomBlockRow resolves by its kind_id; the
 ## plugin's own row classes (EnumRow, ...) resolve through each resource kind's handles().
@@ -35,6 +38,7 @@ static func kind_for(entry: Resource) -> EventSheetBlockKind:
 			return kind
 	return null
 
+
 ## All registered kinds, sorted by kind_id for deterministic menus and lift-probe order.
 static func all_kinds() -> Array[EventSheetBlockKind]:
 	_ensure_built_ins()
@@ -45,6 +49,7 @@ static func all_kinds() -> Array[EventSheetBlockKind]:
 		kinds.append(_kinds[id])
 	return kinds
 
+
 ## The kinds the generic add surfaces (Add menu, palette, schema dialog) may offer - resource
 ## kinds (the plugin's own row classes) are excluded; their classes have dedicated flows.
 static func addable_kinds() -> Array[EventSheetBlockKind]:
@@ -53,6 +58,7 @@ static func addable_kinds() -> Array[EventSheetBlockKind]:
 		if kind.addable():
 			kinds.append(kind)
 	return kinds
+
 
 static func _ensure_built_ins() -> void:
 	if _built_ins_registered:
@@ -63,6 +69,7 @@ static func _ensure_built_ins() -> void:
 	register_kind(EnumBlockKind.new())
 	register_kind(SignalBlockKind.new())
 	rescan_pack_kinds()
+
 
 ## Zero-config pack kinds, mirroring how ACE providers register: any script under
 ## res://eventsheet_addons/ whose base-class chain reaches EventSheetBlockKind is instantiated
@@ -84,6 +91,7 @@ static func rescan_pack_kinds() -> void:
 		if not kind.kind_id.contains("."):
 			push_warning("EventSheets: pack block kind '%s' (%s) should namespace its kind_id as '<pack>.<name>'." % [kind.kind_id, script_path])
 		register_kind(kind)
+
 
 static func _extends_block_kind(script: GDScript) -> bool:
 	var base: Script = script.get_base_script()

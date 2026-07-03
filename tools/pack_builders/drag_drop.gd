@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Drag & Drop behavior (event-sheet parity - event-driven rewrite of the dragndrop behavior).
 ## The author feeds the drag point each tick (virtual cursor, gamepad, touch, AI); this
 ## pack NEVER polls Input.

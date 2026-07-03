@@ -9,6 +9,7 @@
 class_name EventSheetFindReferences
 extends RefCounted
 
+
 ## Whole-symbol references to `symbol` in one sheet: [{kind, count, preview}].
 static func find_in_sheet(sheet: EventSheetResource, symbol: String) -> Array:
 	var results: Array = []
@@ -32,6 +33,7 @@ static func find_in_sheet(sheet: EventSheetResource, symbol: String) -> Array:
 			})
 	return results
 
+
 ## Project-wide references: [{sheet, count, references}] for every sheet that uses `symbol`.
 static func find_in_project(symbol: String) -> Array:
 	var found: Array = []
@@ -46,6 +48,7 @@ static func find_in_project(symbol: String) -> Array:
 		if total > 0:
 			found.append({"sheet": path, "count": total, "references": references})
 	return found
+
 
 ## Where `symbol` is DEFINED in this sheet: {kind, found}. kind ∈ variable / function /
 ## signal / local / "" (not defined here).
@@ -62,6 +65,7 @@ static func find_definition(sheet: EventSheetResource, symbol: String) -> Dictio
 	_scan_definitions(sheet.events, name, definition)
 	return definition
 
+
 ## Validate + count: what a rename of `old_name`→`new_name` would touch, BEFORE applying.
 ## {valid, error, reference_count, references}.
 static func rename_preview(sheet: EventSheetResource, old_name: String, new_name: String) -> Dictionary:
@@ -71,6 +75,7 @@ static func rename_preview(sheet: EventSheetResource, old_name: String, new_name
 	for reference: Dictionary in references:
 		count += int(reference.get("count", 0))
 	return {"valid": error.is_empty(), "error": error, "reference_count": count, "references": references}
+
 
 static func _scan_definitions(rows: Array, name: String, into: Dictionary) -> void:
 	for row: Variant in rows:
@@ -88,6 +93,7 @@ static func _scan_definitions(rows: Array, name: String, into: Dictionary) -> vo
 			_scan_definitions((row as EventGroup).events if not (row as EventGroup).events.is_empty() else (row as EventGroup).rows, name, into)
 		elif row is EventRow:
 			_scan_definitions((row as EventRow).sub_events, name, into)
+
 
 ## Findable text fragments tagged with their surface. Parallels project_find's collector but
 ## keeps the surface kind so references read "in a param" vs "in a comment".
@@ -120,8 +126,10 @@ static func _collect(rows: Array, into: Array) -> void:
 					into.append({"text": (pick as PickFilter).collection_value + " " + (pick as PickFilter).predicate_expression, "kind": "pick"})
 			_collect(event_row.sub_events, into)
 
+
 static func _preview(text: String, at: int) -> String:
 	return text.substr(maxi(at - 18, 0), 62).replace("\n", " ").strip_edges()
+
 
 ## Identifiers are word chars only, but guard against regex metacharacters defensively.
 static func _escape(symbol: String) -> String:

@@ -2,6 +2,7 @@
 class_name ViewportDragPreviewHelper
 extends RefCounted
 
+
 static func build_ace_drag_preview_rect(
 	row_data: EventRowData,
 	lane: String,

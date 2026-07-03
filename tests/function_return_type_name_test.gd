@@ -5,8 +5,9 @@
 # reverse AUTO-LIFT of such a helper stays OFF (a mid-file private helper would reorder the file and
 # fail the byte-verify), so this pins the FORWARD primitive + the drift=0 baseline is unregressed.
 @tool
-extends RefCounted
 class_name FunctionReturnTypeNameTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -53,6 +54,7 @@ static func run() -> bool:
 	ok = _check("the generated function parses with the custom class in scope", script.reload() == OK, true) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

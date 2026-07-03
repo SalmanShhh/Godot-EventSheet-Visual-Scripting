@@ -5,10 +5,11 @@
 # FileAccess / ConfigFile error, and Save Game emits On Save Written only when the write genuinely
 # succeeds. This drives real user:// I/O to prove the round-trip still works and the signal is truthful.
 @tool
-extends RefCounted
 class_name SaveSystemPackTest
+extends RefCounted
 
 const PACK := "res://eventsheet_addons/save_system/save_system_addon.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -36,6 +37,7 @@ static func run() -> bool:
 	ss.delete_slot()  # cleanup the test slot
 	ss.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

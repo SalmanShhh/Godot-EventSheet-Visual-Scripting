@@ -7,6 +7,7 @@ extends SceneTree
 
 var _frames: int = 0
 
+
 func _init() -> void:
 	root.title = "Tier 3 Drawer Widgets"
 	root.size = Vector2i(560, 720)
@@ -62,12 +63,14 @@ func _init() -> void:
 
 	process_frame.connect(_on_frame)
 
+
 func _heading(text: String) -> Label:
 	var label: Label = Label.new()
 	label.text = text
 	label.add_theme_color_override("font_color", Color(0.78, 0.82, 0.9))
 	label.add_theme_font_size_override("font_size", 12)
 	return label
+
 
 func _sample_texture() -> Texture2D:
 	var gradient: Gradient = Gradient.new()
@@ -81,6 +84,7 @@ func _sample_texture() -> Texture2D:
 	grad_tex.fill_to = Vector2(1.0, 1.0)
 	return grad_tex
 
+
 func _sample_curve() -> Curve:
 	var curve: Curve = Curve.new()
 	curve.add_point(Vector2(0.0, 0.0))
@@ -88,6 +92,7 @@ func _sample_curve() -> Curve:
 	curve.add_point(Vector2(1.0, 0.35))
 	curve.bake()
 	return curve
+
 
 func _on_frame() -> void:
 	_frames += 1

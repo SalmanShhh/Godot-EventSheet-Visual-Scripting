@@ -4,8 +4,8 @@
 # Create Resource dialog instead of reading as generic .tres files.
 @tool
 @icon("res://addons/eventsheet/icons/eventsheet.svg")
-extends Resource
 class_name EventSheetResource
+extends Resource
 
 @export var host_class: String = "Node"
 @export var host_node_path: NodePath = NodePath(".")
@@ -91,6 +91,7 @@ class_name EventSheetResource
 ## (the banner's "Edit Events" button) re-enables normal editing. Preview is the safe default
 ## when opening a .gd, so a casual look can never overwrite a hand-written script.
 @export var read_only: bool = false
+
 
 ## The runtime group a Family's instances live in, derived from the class name (e.g. class "Enemy" →
 ## "family_enemy"). One rule over the family iterates this group. Empty when the sheet has no class name

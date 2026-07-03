@@ -11,9 +11,11 @@ extends RefCounted
 const HEADER := "[eventsheet-snippet v1]"
 const FOOTER := "[/eventsheet-snippet]"
 
+
 static func is_snippet_text(text: String) -> bool:
 	var stripped: String = text.strip_edges()
 	return stripped.begins_with(HEADER) and stripped.ends_with(FOOTER)
+
 
 ## Serializes top-level row resources (events/groups/comments/raw blocks/tree variables)
 ## plus the sheet variables they reference, into shareable text.
@@ -30,6 +32,7 @@ static func serialize_rows(resources: Array, sheet: EventSheetResource) -> Strin
 		"providers": _collect_provider_ids(rows)
 	}
 	return "%s\n%s\n%s" % [HEADER, var_to_str(payload), FOOTER]
+
 
 ## Parses snippet text back into {rows: Array[Resource], required_variables: Dictionary,
 ## providers: Array}. Returns an empty Dictionary when the text is not a valid snippet.
@@ -54,6 +57,7 @@ static func deserialize(text: String) -> Dictionary:
 	}
 
 # ── Serialization ────────────────────────────────────────────────────────────
+
 
 static func _row_to_dict(resource: Variant) -> Dictionary:
 	if resource is EventRow:
@@ -109,6 +113,7 @@ static func _row_to_dict(resource: Variant) -> Dictionary:
 		return {"kind": "signal", "name": (resource as SignalRow).signal_name, "params": Array((resource as SignalRow).params), "enabled": (resource as SignalRow).enabled}
 	return {}
 
+
 static func _ace_to_dict(condition: ACECondition) -> Dictionary:
 	return {
 		"provider_id": condition.provider_id,
@@ -118,6 +123,7 @@ static func _ace_to_dict(condition: ACECondition) -> Dictionary:
 		"enabled": condition.enabled,
 		"codegen_template": condition.codegen_template
 	}
+
 
 static func _action_to_dict(action: ACEAction) -> Dictionary:
 	return {
@@ -131,6 +137,7 @@ static func _action_to_dict(action: ACEAction) -> Dictionary:
 		"codegen_template": action.codegen_template
 	}
 
+
 static func _variable_to_dict(local_variable: LocalVariable) -> Dictionary:
 	return {
 		"name": local_variable.name,
@@ -142,6 +149,7 @@ static func _variable_to_dict(local_variable: LocalVariable) -> Dictionary:
 	}
 
 # ── Deserialization (whitelisted kinds only) ─────────────────────────────────
+
 
 static func _dict_to_row(row_data: Dictionary) -> Resource:
 	match str(row_data.get("kind", "")):
@@ -216,6 +224,7 @@ static func _dict_to_row(row_data: Dictionary) -> Resource:
 			return _dict_to_variable(row_data)
 	return null
 
+
 static func _dict_to_condition(data: Dictionary) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = str(data.get("provider_id", "Core"))
@@ -225,6 +234,7 @@ static func _dict_to_condition(data: Dictionary) -> ACECondition:
 	condition.enabled = bool(data.get("enabled", true))
 	condition.codegen_template = str(data.get("codegen_template", ""))
 	return condition
+
 
 static func _dict_to_action(data: Dictionary) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
@@ -237,6 +247,7 @@ static func _dict_to_action(data: Dictionary) -> ACEAction:
 	action.codegen_template = str(data.get("codegen_template", ""))
 	return action
 
+
 static func _dict_to_variable(data: Dictionary) -> LocalVariable:
 	var variable: LocalVariable = LocalVariable.new()
 	variable.name = str(data.get("name", ""))
@@ -248,6 +259,7 @@ static func _dict_to_variable(data: Dictionary) -> LocalVariable:
 	return variable
 
 # ── Dependencies ─────────────────────────────────────────────────────────────
+
 
 ## Sheet variables the snippet's params/templates/code reference (whole-word match), so
 ## paste can auto-create the missing ones in the target sheet.
@@ -266,6 +278,7 @@ static func _collect_required_variables(rows: Array, sheet: EventSheetResource) 
 			var descriptor: Variant = sheet.variables[variable_name]
 			required[name_text] = descriptor.duplicate(true) if descriptor is Dictionary else descriptor
 	return required
+
 
 static func _collect_provider_ids(rows: Array) -> Array:
 	var providers: Dictionary = {}

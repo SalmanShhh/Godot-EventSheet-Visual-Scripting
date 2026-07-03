@@ -6,10 +6,11 @@
 # matches. This pins that contract: missing -> writes; identical -> skips (no-op, content stable);
 # different -> writes the new content.
 @tool
-extends RefCounted
 class_name WriteIfChangedTest
+extends RefCounted
 
 const P: String = "user://eventsheets_write_guard_test.gd"
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -33,9 +34,11 @@ static func run() -> bool:
 	_cleanup()
 	return ok
 
+
 static func _cleanup() -> void:
 	if FileAccess.file_exists(P):
 		DirAccess.remove_absolute(P)
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

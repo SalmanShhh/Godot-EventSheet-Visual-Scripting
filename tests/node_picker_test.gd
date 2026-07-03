@@ -1,8 +1,9 @@
 # Godot EventSheets — Searchable node picker, large-project edition: filter chips,
 # group:/script:/scene: queries, recents, used-in-sheet audit (missing = red).
 @tool
-extends RefCounted
 class_name NodePickerTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -142,6 +143,7 @@ static func run() -> bool:
 	root.free()
 	return all_passed
 
+
 static func _tree_column(tree: Tree, column: int) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	var item: TreeItem = tree.get_root().get_first_child() if tree.get_root() != null else null
@@ -149,6 +151,7 @@ static func _tree_column(tree: Tree, column: int) -> PackedStringArray:
 		out.append(item.get_text(column))
 		item = item.get_next()
 	return out
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -6,10 +6,11 @@
 # needs no per-method @ace_codegen_template / @ace_condition / @ace_name. Private + inherited members
 # stay out.
 @tool
-extends RefCounted
 class_name ExposeAllNodeTest
+extends RefCounted
 
 const SAMPLE := preload("res://tests/fixtures/expose_all_node_sample.gd")
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -46,6 +47,7 @@ static func run() -> bool:
 
 	sample.free()
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

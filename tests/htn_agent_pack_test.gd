@@ -5,10 +5,11 @@
 # (a) the inner classes emit + parse, (b) utility ordering + preconditions still select the right
 # method, and (c) _find_method's null-not-found contract works (it returns null, not a blank method).
 @tool
-extends RefCounted
 class_name HtnAgentPackTest
+extends RefCounted
 
 const PACK := "res://eventsheet_addons/htn_agent/htn_agent_behavior.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -52,6 +53,7 @@ static func run() -> bool:
 
 	ag.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

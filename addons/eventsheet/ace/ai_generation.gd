@@ -16,6 +16,7 @@ extends RefCounted
 ## When set, it replaces the live LLM HTTP call (so the pipeline is deterministically testable).
 static var response_provider: Callable = Callable()
 
+
 ## Builds the grounded prompt: the host class + the sheet's variables so the model references
 ## real symbols, and a firm "GDScript only" instruction so the output lifts cleanly.
 static func build_prompt(description: String, sheet: EventSheetResource) -> String:
@@ -35,6 +36,7 @@ static func build_prompt(description: String, sheet: EventSheetResource) -> Stri
 		"Prefer the sheet's variables and the host node; keep it to a few clear statements."
 	]))
 
+
 ## Runs generated GDScript through the lossless lifter and returns the editable rows it
 ## produces: {rows: [Resource…], error}. (The same conversion MCP apply_snippet uses.)
 static func generate_rows(description: String, sheet: EventSheetResource, gdscript_text: String) -> Dictionary:
@@ -52,10 +54,12 @@ static func generate_rows(description: String, sheet: EventSheetResource, gdscri
 		return {"rows": [], "error": "the generated GDScript produced no events"}
 	return {"rows": rows, "error": ""}
 
+
 ## True when an in-editor LLM call is configured (an API key project setting). When false, the
 ## editor points the user at Project Settings or the MCP server instead of failing silently.
 static func is_live_configured() -> bool:
 	return not str(ProjectSettings.get_setting("eventsheets/ai/api_key", "")).strip_edges().is_empty()
+
 
 ## Resolves a description to GDScript: the injected provider if set, else "" (caller does the
 ## live HTTP call). Kept separate so the grounding stays one place.
@@ -63,6 +67,7 @@ static func resolve_gdscript(description: String, sheet: EventSheetResource) -> 
 	if response_provider.is_valid():
 		return str(response_provider.call(build_prompt(description, sheet)))
 	return ""
+
 
 static func _strip_fences(text: String) -> String:
 	var stripped: String = text.strip_edges()
@@ -73,6 +78,7 @@ static func _strip_fences(text: String) -> String:
 		if stripped.ends_with("```"):
 			stripped = stripped.substr(0, stripped.length() - 3)
 	return stripped.strip_edges()
+
 
 static func _to_strings(values: Array) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()

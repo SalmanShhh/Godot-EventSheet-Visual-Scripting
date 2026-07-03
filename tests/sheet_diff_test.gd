@@ -4,8 +4,9 @@
 # live resource to jump to); saved_path_for resolves external sheets to their own .gd and unsaved
 # sheets to "". A save must never happen as a side effect — the diff compiles to a scratch path only.
 @tool
-extends RefCounted
 class_name SheetDiffTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -99,6 +100,7 @@ static func run() -> bool:
 	authored.free()
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Game-feel in one behavior: trauma-based SCREENSHAKE (the idea behind the scroll behavior's
 ## shake, but additive on the camera's offset/rotation so it composes with Godot's camera follow
 ## instead of fighting it), smooth ZOOM (by percent, focus-onto-a-point, or anchored mouse-wheel
@@ -281,6 +282,7 @@ static func _default(sheet: EventSheetResource, param_id: String, value: String)
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
 			parameter.default_value = value
+
 
 ## Sets the dropdown options[] on the last-appended ACE's parameter (append_function only sets id+type),
 ## so e.g. duration_clock becomes a realtime/gametime picker instead of a free-text field.

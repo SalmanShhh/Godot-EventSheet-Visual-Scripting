@@ -3,8 +3,9 @@
 # Drives the dock's indent/outdent handlers (Tab / Shift+Tab) and asserts events move into
 # and out of EventRow.sub_events correctly. Headless-safe.
 @tool
-extends RefCounted
 class_name SubEventAuthoringTest
+extends RefCounted
+
 
 # No-op undo manager matching the dock's EditorUndoRedoManager call shape.
 class NoopUndoManager:
@@ -18,6 +19,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -59,6 +61,7 @@ static func run() -> bool:
 	editor.free()
 	return all_passed
 
+
 static func _select_resource(viewport: EventSheetViewport, resource: Resource) -> void:
 	var flat: Array[Dictionary] = viewport.get_flat_rows()
 	for i in range(flat.size()):
@@ -66,6 +69,7 @@ static func _select_resource(viewport: EventSheetViewport, resource: Resource) -
 		if row_data != null and row_data.source_resource == resource:
 			viewport._select_row(i)
 			return
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

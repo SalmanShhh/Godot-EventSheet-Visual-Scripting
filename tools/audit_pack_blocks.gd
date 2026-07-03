@@ -12,6 +12,7 @@
 @tool
 extends SceneTree
 
+
 func _init() -> void:
 	var files: Array[String] = []
 	_gather_gd("res://eventsheet_addons", files)
@@ -82,9 +83,11 @@ func _init() -> void:
 		print("[audit] wrote ", ProjectSettings.globalize_path(out_path))
 	quit(0)
 
+
 func _fn_body(fn_v: Variant) -> Array:
 	var fn: EventFunction = fn_v as EventFunction
 	return fn.events if not fn.events.is_empty() else fn.rows
+
 
 ## Heuristic reason a block stayed GDScript, from its own text (why nothing lifted it into rows).
 func _classify(d: Dictionary, _sheet: EventSheetResource) -> String:
@@ -109,6 +112,7 @@ func _classify(d: Dictionary, _sheet: EventSheetResource) -> String:
 		return "numeric_or_expr_kernel"
 	return "other_statements"
 
+
 func _gather_gd(dir_path: String, into: Array[String]) -> void:
 	var dir: DirAccess = DirAccess.open(dir_path)
 	if dir == null:
@@ -124,6 +128,7 @@ func _gather_gd(dir_path: String, into: Array[String]) -> void:
 			into.append(full)
 		name = dir.get_next()
 	dir.list_dir_end()
+
 
 func _collect_raw(rows: Array, location: String, out: Array) -> void:
 	for row: Variant in rows:

@@ -5,10 +5,11 @@
 # class. This loads the COMPILED pack and drives the real cooldown-regen / stack / expiry / tag paths
 # to prove the inner class emits + parses and the behaviour is unchanged.
 @tool
-extends RefCounted
 class_name AbilitiesPackTest
+extends RefCounted
 
 const PACK := "res://eventsheet_addons/abilities/abilities_behavior.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -48,6 +49,7 @@ static func run() -> bool:
 
 	ab.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

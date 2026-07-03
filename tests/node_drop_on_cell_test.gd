@@ -5,8 +5,9 @@
 # the proven double-click-to-edit path (layout-dependent, exercised in the editor); this pins the pure
 # pieces: the drag discriminator and the path→reference conversion.
 @tool
-extends RefCounted
 class_name NodeDropOnCellTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -32,6 +33,7 @@ static func run() -> bool:
 		ACEParamsDialog.drop_data_to_expression({"type": "nodes", "nodes": ["/root/Main/Player"]}), "$Player") and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

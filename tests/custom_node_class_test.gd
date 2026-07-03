@@ -4,8 +4,9 @@
 # making the generated script a real custom node (Create Node dialog, scene tree icon) —
 # the same mechanism as hand-written GDScript. Sheets without a name are unaffected.
 @tool
-extends RefCounted
 class_name CustomNodeClassTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -43,6 +44,7 @@ static func run() -> bool:
 	all_passed = _check("null definition resolves to no icon", ACEPickerDialog.resolve_definition_icon(null) == null, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

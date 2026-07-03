@@ -43,6 +43,7 @@ const PALETTES: Dictionary = {
 	}
 }
 
+
 func _init() -> void:
 	for theme_name: String in PALETTES.keys():
 		var palette: Dictionary = PALETTES[theme_name]
@@ -50,6 +51,7 @@ func _init() -> void:
 		var error: Error = ResourceSaver.save(_build_style(palette), path)
 		print("[build_theme_presets] %s -> %s (%d)" % [theme_name, path, error])
 	quit(0)
+
 
 func _build_style(palette: Dictionary) -> EventSheetEditorStyle:
 	var bg: Color = Color(str(palette.get("bg")))

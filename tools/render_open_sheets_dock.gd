@@ -8,6 +8,7 @@ extends SceneTree
 
 var _frames: int = 0
 
+
 func _init() -> void:
 	root.title = "Open Sheets dock"
 	root.size = Vector2i(264, 468)
@@ -38,6 +39,7 @@ func _init() -> void:
 	pad.add_child(dock)
 
 	process_frame.connect(_on_frame)
+
 
 func _on_frame() -> void:
 	_frames += 1

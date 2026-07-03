@@ -2,8 +2,9 @@
 # meta-packs via compile-time inclusion, governed by ProjectSettings policy knobs.
 # THE INVARIANT: policy gates compiles, it never changes emitted bytes.
 @tool
-extends RefCounted
 class_name AddonCompositionTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,13 +18,16 @@ class NoopUndoManager:
 	func redo() -> void: pass
 	func clear_history() -> void: pass
 
+
 static func _set_policy(key: String, value: Variant) -> void:
 	ProjectSettings.set_setting("eventsheets/addons/%s" % key, value)
+
 
 static func _clear_policies() -> void:
 	for key in ["composition_mode", "max_include_depth", "collision_policy", "include_sources", "deprecated_tag_blocks", "export_bundling", "depth_overflow"]:
 		if ProjectSettings.has_setting("eventsheets/addons/%s" % key):
 			ProjectSettings.set_setting("eventsheets/addons/%s" % key, null)
+
 
 static func _make_base(path: String, tags: PackedStringArray = PackedStringArray()) -> EventSheetResource:
 	var base: EventSheetResource = EventSheetResource.new()
@@ -36,6 +40,7 @@ static func _make_base(path: String, tags: PackedStringArray = PackedStringArray
 	base.functions.append(fn)
 	ResourceSaver.save(base, path)
 	return base
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -220,6 +225,7 @@ static func run() -> bool:
 	_clear_policies()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

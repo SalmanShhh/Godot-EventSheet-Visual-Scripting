@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## "Flash" behavior: toggles host visibility at an interval for a duration.
 ##
 ## Authored entirely as ACE rows - ZERO RawCode - the first bundled pack to prove the
@@ -89,6 +90,7 @@ static func build() -> bool:
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/flash/flash_behavior")
 
+
 ## Builds a built-in Core ACE action row; the codegen template is resolved from the registry at
 ## compile time (no baked template needed for built-ins).
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:
@@ -98,12 +100,14 @@ static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	action.params = params
 	return action
 
+
 static func _cond(ace_id: String, params: Dictionary) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = "Core"
 	condition.ace_id = ace_id
 	condition.params = params
 	return condition
+
 
 static func _param(id: String, type_name: String) -> ACEParam:
 	var param: ACEParam = ACEParam.new()

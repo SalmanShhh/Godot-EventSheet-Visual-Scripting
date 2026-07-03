@@ -1,8 +1,9 @@
 # Godot EventSheets — Visual completeness: multiline comments, per-comment colors,
 # comment ↔ action-cell conversion (the final event-sheet-parity comment features).
 @tool
-extends RefCounted
 class_name VisualCompletenessTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -15,6 +16,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -90,6 +92,7 @@ static func run() -> bool:
 
 	editor.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

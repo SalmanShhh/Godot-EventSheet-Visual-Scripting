@@ -1,8 +1,9 @@
 # EventForge — Action code generation
 # Emits GDScript statements for ACE actions.
 @tool
-extends RefCounted
 class_name ActionCodegen
+extends RefCounted
+
 
 ## Generates one action statement from an ACE action. target_default is an enclosing "With node X:"
 ## scope (see SheetCompiler): when set, it fills the action's "On node" target if the author left it on
@@ -24,6 +25,7 @@ static func generate_action(action: ACEAction, target_default: String = "", host
 	params = _params_with_host(params, host_default, template)
 	return _apply_template(template, params)
 
+
 ## Returns the action's params, with a "With node X:" scope's target folded in when applicable: the
 ## scope is active (target_default set), the template actually has a `{target.}` / `{target}` slot, and
 ## the author left the target on the host (blank, or the "self" default of the group/meta ACEs). An
@@ -41,6 +43,7 @@ static func _params_with_scope_target(action: ACEAction, target_default: String,
 	var injected: Dictionary = params.duplicate()
 	injected["target"] = target_default
 	return injected
+
 
 ## Folds the behavior-mode host accessor into the params for templates using the {host.}/{host}
 ## idiom, so a node-scoped ACE authored in a behavior calls on the parent host (e.g.
@@ -70,6 +73,7 @@ static func _params_with_host(params: Dictionary, host_default: String, template
 ## literal; an unresolved optional `{, key}` or `{key.}` is dropped (matching the old trailing strip).
 static var _template_re: RegEx
 
+
 static func _apply_template(template: String, params: Dictionary) -> String:
 	if _template_re == null:
 		_template_re = RegEx.new()
@@ -95,6 +99,7 @@ static func _apply_template(template: String, params: Dictionary) -> String:
 		cursor = hit.get_end()
 	result += template.substr(cursor)
 	return result
+
 
 ## Returns action params while preserving backwards compatibility with the first PR scaffold.
 static func _get_params(action: ACEAction) -> Dictionary:

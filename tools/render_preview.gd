@@ -8,6 +8,7 @@ extends SceneTree
 var _frames: int = 0
 var _viewport: EventSheetViewport = null
 
+
 func _init() -> void:
 	root.title = "EventForge Render Preview"
 	root.size = Vector2i(1320, 760)
@@ -49,6 +50,7 @@ func _init() -> void:
 
 	process_frame.connect(_on_frame)
 
+
 func _on_frame() -> void:
 	_frames += 1
 	if _frames < 4:
@@ -57,6 +59,7 @@ func _on_frame() -> void:
 	image.save_png("res://_preview.png")
 	print("[render_preview] saved res://_preview.png (%dx%d)" % [image.get_width(), image.get_height()])
 	quit(0)
+
 
 func _build_sheet() -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()

@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Line of Sight behavior (event-sheet parity)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()

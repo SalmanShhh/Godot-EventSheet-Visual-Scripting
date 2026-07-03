@@ -5,8 +5,9 @@
 # @ace_display_template / @ace_codegen_template / @ace_param_hint annotations lift custom
 # ACEs to builtin quality, and baked codegen templates make them genuinely compile.
 @tool
-extends RefCounted
 class_name ACEAddonTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -19,6 +20,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -83,6 +85,7 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

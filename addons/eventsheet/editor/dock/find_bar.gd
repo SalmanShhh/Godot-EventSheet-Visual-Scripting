@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetFindBar
+extends RefCounted
 # The FIND & REPLACE bar cluster. This helper owns:
 #   • the script-editor-style find bar behaviour — Ctrl+F opens it, Enter/F3 steps to the next match,
 #     Shift+F3 the previous, Esc hides it (matches recompute on every step so results never go stale,
@@ -41,8 +41,10 @@ class_name EventSheetFindBar
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Ctrl+F: a script-editor-style find bar (Enter/F3 next, Shift+F3 previous, Esc hides).
 func _show_find_bar() -> void:
@@ -50,6 +52,7 @@ func _show_find_bar() -> void:
 	_dock._find_bar.visible = true
 	_dock._find_edit.grab_focus()
 	_dock._find_edit.select_all()
+
 
 func _ensure_find_bar() -> void:
 	if _dock._find_bar != null:
@@ -91,6 +94,7 @@ func _ensure_find_bar() -> void:
 	_dock._find_bar.add_child(close_button)
 	_dock._toolbar.add_child(_dock._find_bar)
 
+
 func _on_find_text_changed(text: String) -> void:
 	_dock._find_resource_matches = _dock._viewport.search_all(text) if _dock._viewport != null else []
 	_dock._find_cursor = -1
@@ -98,6 +102,7 @@ func _on_find_text_changed(text: String) -> void:
 		_dock._find_count_label.text = "no matches" if not text.strip_edges().is_empty() else ""
 		return
 	_find_step(1)
+
 
 func _find_step(direction: int) -> void:
 	# Matches recompute on every step (results go stale after any edit) and search the
@@ -112,6 +117,7 @@ func _find_step(direction: int) -> void:
 	_dock._find_cursor = wrapi(_dock._find_cursor + direction, 0, _dock._find_resource_matches.size())
 	_dock._find_count_label.text = "%d of %d" % [_dock._find_cursor + 1, _dock._find_resource_matches.size()]
 	_dock._viewport.reveal_resource(_dock._find_resource_matches[_dock._find_cursor])
+
 
 ## Replace All: substitutes the find text across comments, GDScript blocks, string
 ## params, pick-filter expressions, group names/descriptions and match branches —
@@ -137,6 +143,7 @@ func _replace_all_in_sheet() -> void:
 		_dock._mark_dirty("Replaced %d occurrence(s)." % int(counter.get("count", 0)))
 	else:
 		_dock._set_status("No matches for \"%s\"." % find_text)
+
 
 func _replace_in_rows(rows: Array, find_text: String, replace_text: String, counter: Dictionary) -> void:
 	for row: Variant in rows:

@@ -5,10 +5,11 @@
 # and the global class_name line excluded) for banned EventForge*/EventSheet* symbols, and
 # reload() it as a standalone GDScript to confirm it parses without the plugin on the path.
 @tool
-extends RefCounted
 class_name CleanRemovalTest
+extends RefCounted
 
 const BANNED: Array[String] = ["EventForge", "EventSheet", "addons/eventforge", "addons/eventsheet"]
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -46,6 +47,7 @@ static func run() -> bool:
 		passed = _check("%s parses standalone (no plugin on path)" % name, script.reload(true) == OK, true) and passed
 	return passed
 
+
 static func _collect(out: Array[String], root: String, suffix: String) -> void:
 	var dir: DirAccess = DirAccess.open(root)
 	if dir == null:
@@ -61,6 +63,7 @@ static func _collect(out: Array[String], root: String, suffix: String) -> void:
 			out.append(full)
 		entry = dir.get_next()
 	dir.list_dir_end()
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

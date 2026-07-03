@@ -1,8 +1,8 @@
 # EventForge — ACE registry
 # Combines built-in ACE descriptors with runtime registered providers.
 @tool
-extends RefCounted
 class_name ACERegistry
+extends RefCounted
 
 # Built-in descriptors are constant, so they are normalized once and cached.
 # This avoids rebuilding + re-normalizing the entire builtin set on every
@@ -10,6 +10,7 @@ class_name ACERegistry
 # sheets that reference fallback/unknown ACEs).
 static var _builtin_cache: Array[ACEDescriptor] = []
 static var _builtin_index: Dictionary = {}
+
 
 ## Builds the builtin descriptor cache + lookup index once.
 static func _ensure_builtin_cache() -> void:
@@ -26,6 +27,7 @@ static func _ensure_builtin_cache() -> void:
 				push_error("EventForge: duplicate built-in ACE id '%s' — rename one; the later descriptor shadows the earlier in the picker index." % key)
 			_builtin_cache.append(normalized)
 			_builtin_index[key] = normalized
+
 
 ## Returns the set of "provider::ace_id" keys appearing more than once in the given
 ## descriptor list (defaults to the built-in set). A non-empty result means a later
@@ -48,15 +50,18 @@ static func find_duplicate_ids(descriptors: Array = []) -> PackedStringArray:
 			seen[key] = true
 	return dupes
 
+
 ## Clears the builtin cache (call if the builtin set ever changes at runtime).
 static func clear_cache() -> void:
 	_builtin_cache.clear()
 	_builtin_index.clear()
 
+
 ## Returns built-in descriptors (cached).
 static func get_builtin_descriptors() -> Array[ACEDescriptor]:
 	_ensure_builtin_cache()
 	return _builtin_cache.duplicate()
+
 
 ## Returns all descriptors from built-in and runtime providers.
 static func get_all_descriptors() -> Array[ACEDescriptor]:
@@ -72,6 +77,7 @@ static func get_all_descriptors() -> Array[ACEDescriptor]:
 
 	return output
 
+
 ## Returns descriptors for a provider including built-ins and runtime descriptors.
 static func get_provider_descriptors(provider_id: String) -> Array[ACEDescriptor]:
 	var output: Array[ACEDescriptor] = []
@@ -80,6 +86,7 @@ static func get_provider_descriptors(provider_id: String) -> Array[ACEDescriptor
 			output.append(descriptor)
 
 	return output
+
 
 ## Finds a descriptor by provider and ACE ID.
 static func find_descriptor(provider_id: String, ace_id: String) -> ACEDescriptor:
@@ -96,9 +103,11 @@ static func find_descriptor(provider_id: String, ace_id: String) -> ACEDescripto
 				return descriptor
 	return null
 
+
 ## Public adapter for converting custom metadata dictionaries to ACEDescriptor.
 static func normalize_descriptor(entry: Variant) -> ACEDescriptor:
 	return _normalize_descriptor(entry)
+
 
 ## Fetches the EventForgeBridge autoload if available.
 static func _get_bridge() -> Node:
@@ -109,6 +118,7 @@ static func _get_bridge() -> Node:
 		if root != null and root.has_node("EventForgeBridge"):
 			return root.get_node("EventForgeBridge")
 	return null
+
 
 ## Normalizes ACEDescriptor or dictionary metadata into a descriptor.
 static func _normalize_descriptor(entry: Variant) -> ACEDescriptor:
@@ -139,6 +149,7 @@ static func _normalize_descriptor(entry: Variant) -> ACEDescriptor:
 	_apply_descriptor_aliases(descriptor_from_dict)
 	return descriptor_from_dict
 
+
 static func _normalize_ace_type(value: Variant) -> int:
 	if value is int:
 		return int(value)
@@ -152,6 +163,7 @@ static func _normalize_ace_type(value: Variant) -> int:
 			return ACEDescriptor.ACEType.EXPRESSION
 		_:
 			return ACEDescriptor.ACEType.ACTION
+
 
 static func _normalize_params(raw_params: Variant) -> Array[ACEParam]:
 	var output: Array[ACEParam] = []
@@ -195,6 +207,7 @@ static func _normalize_params(raw_params: Variant) -> Array[ACEParam]:
 		output.append(param)
 	return output
 
+
 static func _apply_descriptor_aliases(descriptor: ACEDescriptor) -> void:
 	if descriptor.list_name.is_empty():
 		descriptor.list_name = descriptor.listName
@@ -218,6 +231,7 @@ static func _apply_descriptor_aliases(descriptor: ACEDescriptor) -> void:
 	if descriptor.nodeType.is_empty():
 		descriptor.nodeType = descriptor.node_type
 
+
 static func _apply_param_aliases(param: ACEParam) -> void:
 	if param.display_name.is_empty():
 		param.display_name = param.name
@@ -230,6 +244,7 @@ static func _apply_param_aliases(param: ACEParam) -> void:
 	param.initialValue = resolved_initial
 	if param.type == TYPE_STRING and not param.type_name.is_empty():
 		param.type = _variant_type_from_name(param.type_name)
+
 
 static func _variant_type_from_name(type_name: String) -> int:
 	match type_name.to_lower():

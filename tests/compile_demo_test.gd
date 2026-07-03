@@ -1,14 +1,15 @@
 # EventForge — Compile demo test
 # Golden-file verification for the Phase 1 compiler.
 @tool
-extends RefCounted
 class_name CompileDemoTest
+extends RefCounted
 
 const SHEET_PATH: String = "res://demo/sheets/player.tres"
 const GOLDEN_PATH: String = "res://demo/sheets/player_generated.gd"
 # user:// so the test never writes byproducts into the repo (the committed golden is
 # demo/sheets/player_generated.gd; regenerate it via tools/regenerate_demo_golden.gd).
 const TEST_OUTPUT_PATH: String = "user://player_generated_test_output.gd"
+
 
 ## Runs the demo compile golden-file verification.
 static func run() -> bool:

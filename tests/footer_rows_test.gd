@@ -5,8 +5,9 @@
 # clicking emits add_event_requested with the owner; the dock appends the new event into the
 # owner. Also guards the red ✗ (no-circle) inverted-condition marker.
 @tool
-extends RefCounted
 class_name FooterRowsTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -19,6 +20,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -113,12 +115,14 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _button(at: Vector2, pressed: bool) -> InputEventMouseButton:
 	var event: InputEventMouseButton = InputEventMouseButton.new()
 	event.button_index = MOUSE_BUTTON_LEFT
 	event.pressed = pressed
 	event.position = at
 	return event
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

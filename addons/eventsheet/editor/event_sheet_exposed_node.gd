@@ -29,6 +29,7 @@ var _connected_store: EditorParamStore = null
 ## Cache of (property_name -> {provider_id, ace_id, param_id, type}) built in setup().
 var _prop_map: Dictionary = {}
 
+
 ## Attach the registry and param store, then rebuild the property map.
 func setup(registry: EventSheetACERegistry, param_store: EditorParamStore,
 		sheet: EventSheetResource = null, resolver: ParamDefaultResolver = null) -> void:
@@ -56,6 +57,7 @@ func setup(registry: EventSheetACERegistry, param_store: EditorParamStore,
 		_param_store.overrides_cleared.connect(_on_store_cleared)
 	_rebuild_prop_map()
 	notify_property_list_changed()
+
 
 ## Rebuild the prop_map from all editor_exposed definitions in the registry.
 func _rebuild_prop_map() -> void:
@@ -88,6 +90,7 @@ func _rebuild_prop_map() -> void:
 				"category": definition.get_inspector_category(),
 				"param_meta": param_dict.duplicate(true)
 			}
+
 
 ## Called by Godot's property system to list exposed properties.
 func _get_property_list() -> Array[Dictionary]:
@@ -125,6 +128,7 @@ func _get_property_list() -> Array[Dictionary]:
 		})
 	return result
 
+
 ## Called by Godot's property system to get a property value.
 func _get(property: StringName) -> Variant:
 	var key: String = str(property)
@@ -141,6 +145,7 @@ func _get(property: StringName) -> Variant:
 	var ace_id: String = str(entry.get("ace_id", ""))
 	var param_id: String = str(entry.get("param_id", ""))
 	return _resolver.resolve(provider_id, ace_id, param_id, entry.get("param_meta", {}), null)
+
 
 ## Called by Godot's property system to set a property value.
 func _set(property: StringName, value: Variant) -> bool:
@@ -179,6 +184,7 @@ func _set(property: StringName, value: Variant) -> bool:
 	)
 	return true
 
+
 ## Trigger a full refresh after the registry is hot-reloaded.
 func on_registry_refreshed() -> void:
 	_rebuild_prop_map()
@@ -188,6 +194,7 @@ func on_registry_refreshed() -> void:
 const ROW_PROP_PREFIX := "selected_ace/"
 var _row_target: Resource = null
 var _row_prop_map: Dictionary = {}
+
 
 ## Points the "Selected ACE" inspector section at a condition/trigger/action resource
 ## (null clears it). Param metadata (types, widget hints) comes from the registry
@@ -224,6 +231,7 @@ func set_row_context(target: Resource) -> void:
 				}
 	notify_property_list_changed()
 
+
 ## The prop-map entry behind an inspector property name ({} when unknown). Used by the
 ## inspector plugin to pick widget_hint-specific editors.
 func get_property_entry(property_name: String) -> Dictionary:
@@ -231,16 +239,20 @@ func get_property_entry(property_name: String) -> Dictionary:
 		return _row_prop_map[property_name]
 	return _prop_map.get(property_name, {})
 
+
 func set_undo_redo_manager(undo_redo: Variant) -> void:
 	_undo_redo_adapter.set_manager(undo_redo)
 
+
 func set_undo_redo(undo_redo: Variant) -> void:
 	set_undo_redo_manager(undo_redo)
+
 
 func set_context_sheet(sheet: EventSheetResource) -> void:
 	_sheet = sheet
 	_rebuild_prop_map()
 	notify_property_list_changed()
+
 
 func set_provider_filter(provider_ids: PackedStringArray) -> void:
 	_provider_filter.clear()
@@ -251,15 +263,18 @@ func set_provider_filter(provider_ids: PackedStringArray) -> void:
 	_rebuild_prop_map()
 	notify_property_list_changed()
 
+
 func _set_store_param(provider_id: String, ace_id: String, param_id: String, value: Variant) -> void:
 	if _param_store == null:
 		return
 	_param_store.set_param(provider_id, ace_id, param_id, value)
 
+
 func _clear_store_param(provider_id: String, ace_id: String, param_id: String) -> void:
 	if _param_store == null:
 		return
 	_param_store.clear_param(provider_id, ace_id, param_id)
+
 
 func _compute_active_provider_ids() -> Dictionary:
 	if not _provider_filter.is_empty():
@@ -270,6 +285,7 @@ func _compute_active_provider_ids() -> Dictionary:
 	for event_entry: Variant in _sheet.events:
 		_collect_providers_from_resource(event_entry, active_providers)
 	return active_providers
+
 
 func _collect_providers_from_resource(entry: Variant, providers: Dictionary) -> void:
 	if entry is EventRow:
@@ -290,14 +306,18 @@ func _collect_providers_from_resource(entry: Variant, providers: Dictionary) -> 
 		for child_entry in children:
 			_collect_providers_from_resource(child_entry, providers)
 
+
 func _on_store_changed(_provider_id: String, _ace_id: String, _param_id: String, _value: Variant) -> void:
 	notify_property_list_changed()
+
 
 func _on_store_removed(_provider_id: String, _ace_id: String, _param_id: String) -> void:
 	notify_property_list_changed()
 
+
 func _on_store_cleared() -> void:
 	notify_property_list_changed()
+
 
 static func _make_prop_key(provider_id: String, ace_id: String, param_id: String) -> String:
 	return "%s/%s/%s" % [provider_id, ace_id, param_id]

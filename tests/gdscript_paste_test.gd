@@ -4,8 +4,9 @@
 # stays verbatim GDScript blocks (lossless). Non-code clipboard text is left to the other
 # paste paths.
 @tool
-extends RefCounted
 class_name GDScriptPasteTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -25,6 +26,7 @@ func _process(delta: float) -> void:
 	if is_on_floor():
 		queue_free()
 """
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -68,6 +70,7 @@ static func run() -> bool:
 	editor.free()
 	statements_editor.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

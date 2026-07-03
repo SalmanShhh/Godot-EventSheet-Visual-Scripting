@@ -2,8 +2,9 @@
 # checks (is / typeof), and the @onready var declaration row. These were the highest-frequency
 # raw-block triggers in hand-written behaviours; this pins their templates + emission.
 @tool
-extends RefCounted
 class_name Phase0AuthoringAcesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -27,6 +28,7 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _action(ace_id: String, params: Dictionary, expected: String) -> bool:
 	var a: ACEAction = ACEAction.new()
 	a.provider_id = "Core"
@@ -35,6 +37,7 @@ static func _action(ace_id: String, params: Dictionary, expected: String) -> boo
 	a.params = params
 	return _check(ace_id, ActionCodegen.generate_action(a, "", ""), expected)
 
+
 static func _condition(ace_id: String, params: Dictionary, expected: String) -> bool:
 	var c: ACECondition = ACECondition.new()
 	c.provider_id = "Core"
@@ -42,6 +45,7 @@ static func _condition(ace_id: String, params: Dictionary, expected: String) -> 
 	c.enabled = true
 	c.params = params
 	return _check(ace_id, ConditionCodegen.generate_condition(c, ""), expected)
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

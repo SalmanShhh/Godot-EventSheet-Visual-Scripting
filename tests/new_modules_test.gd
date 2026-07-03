@@ -3,8 +3,9 @@
 # presence + node-type scoping, and end-to-end that the Button trigger resolver arms emit
 # a real signal connection (the one delicate compiler touch-point).
 @tool
-extends RefCounted
 class_name NewModulesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -227,6 +228,7 @@ static func run() -> bool:
 	all_passed = _check("UI Toggle sheet parses", toggled_script.reload() == OK, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

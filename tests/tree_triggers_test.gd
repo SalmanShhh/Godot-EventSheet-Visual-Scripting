@@ -6,8 +6,9 @@
 # compile to a _ready signal connection on the source node with a named handler, carry their args, and
 # round-trip back to the named trigger byte-identically.
 @tool
-extends RefCounted
 class_name TreeTriggersTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -44,6 +45,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## A one-event sheet whose trigger is `trigger_id` from `source_path`, with a raw body so the connection
 ## has something to call. Returns the compiled GDScript.
 static func _compile_tree_trigger(trigger_id: String, source_path: String) -> String:
@@ -58,6 +60,7 @@ static func _compile_tree_trigger(trigger_id: String, source_path: String) -> St
 	event.actions.append(body)
 	sheet.events.append(event)
 	return str(SheetCompiler.compile(sheet, "user://__tree_trigger.gd").get("output", ""))
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -3,8 +3,9 @@
 # by kind. The kind comes straight from which regex alternate matched, so the tint can't disagree with
 # the highlight; the [start, length] prefix stays index-accessible for the value hit-test (backward-compat).
 @tool
-extends RefCounted
 class_name TypedValueTintTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -28,10 +29,12 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _kind(label: String, text: String, expected_kind: String) -> bool:
 	var ranges: Array = ViewportRowBuilder._value_ranges_for(text)
 	var actual: String = str(ranges[0][2]) if ranges.size() > 0 and (ranges[0] as Array).size() >= 3 else "(none)"
 	return _check("%s tints as %s" % [label, expected_kind], actual, expected_kind)
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

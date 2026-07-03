@@ -5,10 +5,11 @@
 # drives the real absorption / decay / death paths to prove (a) the inner class emits + parses and
 # (b) damage absorption, pool decay, and death are byte-for-byte unchanged.
 @tool
-extends RefCounted
 class_name HealthPackTest
+extends RefCounted
 
 const PACK := "res://eventsheet_addons/health/health_behavior.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -48,6 +49,7 @@ static func run() -> bool:
 
 	h.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -9,6 +9,7 @@ extends RefCounted
 
 const ADDON_DIRS: Array[String] = ["res://eventsheet_addons/"]
 
+
 ## All .gd scripts under the addon directories (recursive), sorted for determinism.
 static func list_addon_scripts() -> Array[String]:
 	var scripts: Array[String] = []
@@ -16,6 +17,7 @@ static func list_addon_scripts() -> Array[String]:
 		_collect_scripts(root, scripts)
 	scripts.sort()
 	return scripts
+
 
 static func _collect_scripts(dir_path: String, into: Array[String]) -> void:
 	var dir: DirAccess = DirAccess.open(dir_path)

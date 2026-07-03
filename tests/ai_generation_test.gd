@@ -3,8 +3,9 @@
 # paste uses), markdown-fence stripping, and the injectable response provider — so the whole
 # "describe → events" pipeline is deterministic and testable without a live LLM.
 @tool
-extends RefCounted
 class_name AIGenerationTest
+extends RefCounted
+
 
 static func run() -> bool:
     var passed: bool = true
@@ -36,6 +37,7 @@ static func run() -> bool:
         EventSheetAIGeneration.is_live_configured(), false) and passed
 
     return passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
     if actual == expected:

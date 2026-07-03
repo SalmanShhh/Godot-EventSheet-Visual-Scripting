@@ -9,8 +9,9 @@
 #   - the compatibility covenant stays easy to audit: ace_ids and templates are grep-able
 #     per module, and moving a descriptor between files never changes its identity.
 @tool
-extends RefCounted
 class_name EventForgeACEFactory
+extends RefCounted
+
 
 ## Builds a descriptor. Mirrors EventForgeBuiltinACEs._make_descriptor exactly (incl. the
 ## legacy alias fields) — ace_ids, templates and display text are API (compatibility
@@ -30,6 +31,7 @@ static func make_descriptor(provider_id: String, ace_id: String, display_name: S
 	descriptor.node_type = node_type
 	descriptor.nodeType = node_type
 	return descriptor
+
 
 ## Builds a parameter. `hint` selects the dialog field ("expression" = ƒx button,
 ## "key_capture" = press-a-key, "audio_path" = path + preview ▶, "color", …);
@@ -56,6 +58,7 @@ static func make_param(param_id: String, type_name: String, default_value: Varia
 ## Canonical comparison operators (CompareVar/CompareValues dropdowns).
 const COMPARISON_OPERATORS: Array[String] = ["==", "!=", "<", "<=", ">", ">="]
 
+
 ## InputMap action names (project actions + the ui_* defaults), quoted for templates.
 static func input_action_options() -> Array[String]:
 	var options: Array[String] = []
@@ -68,6 +71,7 @@ static func input_action_options() -> Array[String]:
 		if not options.has(quoted):
 			options.append(quoted)
 	return options
+
 
 ## First custom project action when one exists, else "ui_accept".
 static func default_input_action() -> String:

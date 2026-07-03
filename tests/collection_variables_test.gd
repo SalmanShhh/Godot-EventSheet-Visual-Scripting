@@ -3,8 +3,9 @@
 # canonical literal emission (recursive, escaped, str_to_var-parseable), verify-lift
 # round-trips, and dialog literal validation (live hint + commit guardrail).
 @tool
-extends RefCounted
 class_name CollectionVariablesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -86,6 +87,7 @@ static func run() -> bool:
 		VariableDialog.items_to_collection_literal(PackedStringArray(), false), "[]") and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

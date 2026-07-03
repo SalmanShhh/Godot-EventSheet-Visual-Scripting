@@ -6,8 +6,9 @@
 # compiler-bound signature line, the fold-with-fingerprint default, and — covenant-critical — that the
 # view is a pure READ (opening a real pack still round-trips byte-identically).
 @tool
-extends RefCounted
 class_name DefineBlockRowsTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -81,6 +82,7 @@ static func run() -> bool:
 	dock.free()
 	return ok
 
+
 static func _make_function(fn_name: String, return_type: int, exposed: bool, display: String, category: String) -> EventFunction:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = fn_name
@@ -94,6 +96,7 @@ static func _make_function(fn_name: String, return_type: int, exposed: bool, dis
 	event_function.params.append(param)
 	return event_function
 
+
 static func _find_row_by_uid_prefix(view: EventSheetViewport, prefix: String) -> EventRowData:
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
@@ -101,10 +104,12 @@ static func _find_row_by_uid_prefix(view: EventSheetViewport, prefix: String) ->
 			return row_data
 	return null
 
+
 static func _span_text(row_data: EventRowData, index: int) -> String:
 	if row_data == null or index >= row_data.spans.size():
 		return ""
 	return str(row_data.spans[index].text)
+
 
 static func _row_has_span_text(row_data: EventRowData, needle: String) -> bool:
 	if row_data == null:
@@ -113,6 +118,7 @@ static func _row_has_span_text(row_data: EventRowData, needle: String) -> bool:
 		if str(span.text) == needle:
 			return true
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

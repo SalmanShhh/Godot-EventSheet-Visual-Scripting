@@ -5,8 +5,9 @@
 # asserts its template is the modern form, compiles it, and runs the output through the SAME
 # BANNED_PATTERNS scan the parity test uses — so the helper can never regress to the legacy form.
 @tool
-extends RefCounted
 class_name EmitSignalModernTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -75,6 +76,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _emit(template: String, target: String, signal_name: String, args: String) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
@@ -82,6 +84,7 @@ static func _emit(template: String, target: String, signal_name: String, args: S
 	action.codegen_template = template
 	action.params = {"target": target, "signal": signal_name, "args": args}
 	return action
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

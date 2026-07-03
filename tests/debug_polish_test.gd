@@ -1,8 +1,9 @@
 # Godot EventSheets — Debug & polish: breakpoint UX wiring, Find & Replace, shader/
 # date/platform vocabulary.
 @tool
-extends RefCounted
 class_name DebugPolishTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -15,6 +16,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -121,6 +123,7 @@ static func run() -> bool:
 	all_passed = _check("blank condition emits a bare breakpoint (no guard)", bare_output.contains("if health <= 0:"), false) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -3,8 +3,9 @@
 # GDScript-only extractor, this works on STRUCTURED ACE actions too and preserves them as rows in the
 # function body. Tests the pure static core headlessly.
 @tool
-extends RefCounted
 class_name ExtractToFunctionTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -110,12 +111,14 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _queue_free_action() -> ACEAction:
 	var a: ACEAction = ACEAction.new()
 	a.provider_id = "Core"
 	a.ace_id = "QueueFree"
 	a.codegen_template = "queue_free()"
 	return a
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

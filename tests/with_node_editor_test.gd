@@ -4,8 +4,9 @@
 # renders a "With node  X" chip in the condition lane, the line count accounts for it, and the dialog
 # the chip / "Scope Actions To Node…" menu open writes the target back (and clears it to drop the scope).
 @tool
-extends RefCounted
 class_name WithNodeEditorTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -18,6 +19,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -72,6 +74,7 @@ static func run() -> bool:
 	editor.free()
 	return all_passed
 
+
 ## The rendered row whose source resource is `event` (robust against any leading header rows).
 static func _row_for(viewport: EventSheetViewport, event: EventRow) -> EventRowData:
 	for entry in viewport.get_flat_rows():
@@ -79,6 +82,7 @@ static func _row_for(viewport: EventSheetViewport, event: EventRow) -> EventRowD
 		if row_data != null and row_data.source_resource == event:
 			return row_data
 	return null
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

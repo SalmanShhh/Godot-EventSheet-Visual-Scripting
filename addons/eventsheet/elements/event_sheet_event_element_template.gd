@@ -29,6 +29,7 @@ extends Control
 @export var selection_fill_color: Color = EventSheetPalette.COLOR_SELECTION
 @export var hover_fill_color: Color = EventSheetPalette.COLOR_HOVER
 
+
 func build_event_style() -> EventSheetEventStyle:
 	var style := EventSheetEventStyle.new()
 	style.sheet_background_color = sheet_background_color
@@ -59,11 +60,13 @@ func build_event_style() -> EventSheetEventStyle:
 	style.hover_fill_color = hover_fill_color
 	return style
 
+
 func _color_rect_color(node_name: String) -> Color:
 	var node: Node = find_child(node_name, true, false)
 	if node is ColorRect:
 		return (node as ColorRect).color
 	return Color.WHITE
+
 
 func _label_font_color(node_name: String) -> Color:
 	var node: Node = find_child(node_name, true, false)

@@ -3,8 +3,9 @@
 # Selecting a sub-event must NOT select its parent event; selecting a parent should cascade
 # to its sub-events. Guards the selection scoping.
 @tool
-extends RefCounted
 class_name SubeventSelectionTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -36,6 +37,7 @@ static func run() -> bool:
 	viewport.free()
 	return all_passed
 
+
 static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int:
 	var flat: Array[Dictionary] = viewport.get_flat_rows()
 	for i in range(flat.size()):
@@ -43,6 +45,7 @@ static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int
 		if row_data != null and row_data.source_resource == resource:
 			return i
 	return -1
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

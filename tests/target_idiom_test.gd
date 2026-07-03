@@ -7,8 +7,9 @@
 # correctly SKIPPED a non-prefixable one), the blank-target covenant, retargeting, and that BOTH shapes
 # round-trip through import (the lifter expands {target.} into its two reverse forms).
 @tool
-extends RefCounted
 class_name TargetIdiomTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -48,6 +49,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## Compiles a one-action OnReady sheet (Set Modulate to Color.RED) with the given target and returns the
 ## single emitted statement line (with its leading body tab), so the exact codegen can be asserted.
 static func _compile_modulate(target: String) -> String:
@@ -56,6 +58,7 @@ static func _compile_modulate(target: String) -> String:
 		if line.strip_edges().begins_with("modulate") or line.strip_edges().contains(".modulate"):
 			return line
 	return "(modulate line not found)"
+
 
 static func _compile_modulate_source(target: String) -> String:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -70,6 +73,7 @@ static func _compile_modulate_source(target: String) -> String:
 	event.actions.append(action)
 	sheet.events.append(event)
 	return str(SheetCompiler.compile(sheet, "user://__target_idiom_compiled.gd").get("output", ""))
+
 
 ## Author → compile → import → assert the action lifts back to SetModulate with the right target, then
 ## recompile and confirm the byte-identical round-trip (the lifter's two-form {target.} expansion).
@@ -92,11 +96,13 @@ static func _roundtrip(target: String, running: bool) -> bool:
 	running = _check("[%s] lifted sheet recompiles byte-identically" % label, roundtrip == source, true) and running
 	return running
 
+
 static func _has_param(descriptor: ACEDescriptor, param_id: String) -> bool:
 	for param: ACEParam in descriptor.params:
 		if str(param.id) == param_id:
 			return true
 	return false
+
 
 static func _param_default(descriptor: ACEDescriptor, param_id: String) -> String:
 	for param: ACEParam in descriptor.params:
@@ -104,11 +110,13 @@ static func _param_default(descriptor: ACEDescriptor, param_id: String) -> Strin
 			return str(param.default_value)
 	return "(missing)"
 
+
 static func _param_hint(descriptor: ACEDescriptor, param_id: String) -> String:
 	for param: ACEParam in descriptor.params:
 		if str(param.id) == param_id:
 			return str(param.hint)
 	return "(missing)"
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

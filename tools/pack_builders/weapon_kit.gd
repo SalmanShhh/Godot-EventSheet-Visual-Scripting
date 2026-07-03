@@ -8,6 +8,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true

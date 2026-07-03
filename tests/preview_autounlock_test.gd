@@ -6,11 +6,12 @@
 # _perform_undoable_sheet_edit) now auto-unlocks the preview. Saving keeps its own read-only guard,
 # so a pure view + Ctrl+S is still protected — external_sheet_test pins that contract.
 @tool
-extends RefCounted
 class_name PreviewAutounlockTest
+extends RefCounted
 
 const PROBE := "user://__eventsheet_autounlock_probe.gd"
 const SOURCE := "extends Node\nvar hp: int = 100\nfunc _ready() -> void:\n\tprint(hp)\n"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -33,6 +34,7 @@ static func run() -> bool:
 	if FileAccess.file_exists(PROBE):
 		DirAccess.remove_absolute(PROBE)
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

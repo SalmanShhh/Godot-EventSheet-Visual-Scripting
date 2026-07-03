@@ -5,8 +5,9 @@
 # and the lint/completion helper validates against the sheet's context (host class +
 # sheet symbols). Headless-safe.
 @tool
-extends RefCounted
 class_name InflowGDScriptTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -19,6 +20,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -145,6 +147,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _button(at: Vector2, pressed: bool, double_click: bool) -> InputEventMouseButton:
 	var event: InputEventMouseButton = InputEventMouseButton.new()
 	event.button_index = MOUSE_BUTTON_LEFT
@@ -152,6 +155,7 @@ static func _button(at: Vector2, pressed: bool, double_click: bool) -> InputEven
 	event.double_click = double_click
 	event.position = at
 	return event
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

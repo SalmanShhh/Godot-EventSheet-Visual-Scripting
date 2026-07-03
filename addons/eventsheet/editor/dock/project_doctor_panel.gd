@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetProjectDoctorPanel
+extends RefCounted
 
 # The Project Doctor window (Tools ▸ Project Doctor) — a one-stop health-audit report.
 #
@@ -12,11 +12,13 @@ class_name EventSheetProjectDoctorPanel
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
 var _doctor_window: Window = null
 var _doctor_tree: Tree = null
+
 
 func open() -> void:
 	if _doctor_window == null:
@@ -50,6 +52,7 @@ func open() -> void:
 		_dock.add_child(_doctor_window)
 	_doctor_window.popup_centered()
 	_run_project_doctor()
+
 
 func _run_project_doctor() -> void:
 	_doctor_tree.clear()

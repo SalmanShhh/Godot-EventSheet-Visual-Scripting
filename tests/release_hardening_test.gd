@@ -5,8 +5,9 @@
 # scripts. Theme editor: the reflective token model (enumerate/apply/duplicate/save) is
 # tested headless; the dialog itself is editor chrome over these primitives.
 @tool
-extends RefCounted
 class_name ReleaseHardeningTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -67,6 +68,7 @@ static func run() -> bool:
 		quick.event_style.sheet_background_color, quick_base.darkened(0.25)) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

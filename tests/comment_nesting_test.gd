@@ -3,8 +3,9 @@
 # A comment can sit inside an event as a sub-event (to describe the events beneath it). It
 # renders indented under its parent event, and the context-menu helper appends one.
 @tool
-extends RefCounted
 class_name CommentNestingTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -62,12 +64,14 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _row_for(viewport: EventSheetViewport, resource: Resource) -> EventRowData:
 	for entry in viewport.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
 		if row_data != null and row_data.source_resource == resource:
 			return row_data
 	return null
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

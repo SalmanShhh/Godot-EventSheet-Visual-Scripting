@@ -1,7 +1,8 @@
 # Godot EventSheets — event-sheet System coverage: time/engine, display, text, comparisons
 @tool
-extends RefCounted
 class_name SystemAcesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -52,6 +53,7 @@ static func run() -> bool:
 	generated.source_code = output
 	all_passed = _check("system output parses", generated.reload(true) == OK, true) and all_passed
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

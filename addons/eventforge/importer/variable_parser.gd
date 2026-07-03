@@ -5,8 +5,9 @@
 # `@export_group`/`@export_subgroup` lines that precede a variable are recovered separately, by the
 # importer's `_absorb_tree_variable_group()` (which folds them onto the lifted variable's attributes).
 @tool
-extends RefCounted
 class_name VariableParser
+extends RefCounted
+
 
 func parse(source: String) -> Dictionary:
 	var variables: Dictionary = {}
@@ -64,6 +65,7 @@ func parse(source: String) -> Dictionary:
 			"constant": is_constant
 		}
 	return variables
+
 
 ## Parses a GDScript literal into a typed Variant (primitives round-trip through the
 ## compiler's _to_code_literal; complex expressions are kept as raw strings).

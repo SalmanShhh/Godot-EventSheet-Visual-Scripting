@@ -3,8 +3,9 @@
 # under "Variables: …" groups, direct one-liner codegen (parity-safe), and type-aware
 # variable dropdowns ("variable_reference:Array" offers only Array-typed variables).
 @tool
-extends RefCounted
 class_name CollectionAcesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -74,6 +75,7 @@ static func run() -> bool:
 		dialog._variable_matches_type("scores", "Array") and dialog._variable_matches_type("inventory", "Dictionary"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

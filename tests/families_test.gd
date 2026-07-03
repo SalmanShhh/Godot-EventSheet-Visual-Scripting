@@ -8,8 +8,9 @@
 #   - A family-scoped event (a PickFilter over the family group) compiles to a loop over
 #     get_tree().get_nodes_in_group("family_enemy") — the abstraction's whole point: logic-per-type.
 @tool
-extends RefCounted
 class_name FamiliesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -77,6 +78,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## Compiles a one-class sheet with the given family flag, re-imports it, and returns the recovered flag.
 static func _roundtrip_is_family(class_id: String, flag: bool) -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -86,6 +88,7 @@ static func _roundtrip_is_family(class_id: String, flag: bool) -> bool:
 	var out: String = str(SheetCompiler.compile(sheet, "user://__family_rt.gd").get("output", ""))
 	return GDScriptImporter.new().import_external_source(out).is_family
 
+
 ## A self-contained per-instance action: the codegen_template carries the whole statement (no params),
 ## so it emits verbatim inside the family loop.
 static func _raw_action(statement: String) -> ACEAction:
@@ -94,6 +97,7 @@ static func _raw_action(statement: String) -> ACEAction:
 	action.ace_id = "RawStatement"
 	action.codegen_template = statement
 	return action
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

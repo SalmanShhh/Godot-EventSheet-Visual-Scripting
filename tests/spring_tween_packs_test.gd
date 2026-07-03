@@ -2,8 +2,9 @@
 # and Godot Tweens as a behavior). The spring assert SIMULATES: a stepped spring must
 # converge on its target and fire On Spring Reached.
 @tool
-extends RefCounted
 class_name SpringTweenPacksTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -124,6 +125,7 @@ static func run() -> bool:
 	showcase_root.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

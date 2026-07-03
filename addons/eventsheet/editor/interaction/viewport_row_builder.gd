@@ -31,10 +31,12 @@ extends RefCounted
 
 var _viewport: Control = null
 
+
 func init(viewport: Control) -> void:
 	_viewport = viewport
 
 # ── Non-event row builders ──────────────────────────────────────────────────────────────────────
+
 
 func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Array[EventRowData]) -> EventRowData:
 	var row_data := EventRowData.new()
@@ -65,6 +67,7 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 	]
 	return row_data
 
+
 ## A clickable footer row that appends a new event into owner_resource (a group or the
 ## sheet). source_resource stays null on purpose so selection/delete/drag paths (which act on
 ## the source resource) treat it as inert; the owner travels in span metadata instead.
@@ -88,6 +91,7 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 		)
 	]
 	return row_data
+
 
 ## The sheet's functions as visible rows — one foldable "Published verbs" section whose children are
 ## Define blocks, one per EventFunction. Functions live in `sheet.functions`, a SEPARATE array from
@@ -149,6 +153,7 @@ func _build_published_verbs_rows(sheet: EventSheetResource) -> Array[EventRowDat
 	rows.append(header)
 	return rows
 
+
 ## Which verb kind a function publishes as, by its return type: void does something (Action),
 ## bool answers a question (Condition), any other value is handed out (Expression). This mirrors
 ## the ACE Studio's three cards, so the row badge always matches the card that would edit it.
@@ -158,6 +163,7 @@ static func define_role_for(event_function: EventFunction) -> String:
 	if event_function.return_type == TYPE_BOOL:
 		return "condition"
 	return "expression"
+
 
 ## One Define block: role badge in its ACE-role colour, the friendly published name, a `→ type`
 ## chip for value-returning verbs, the category chip, an "internal" chip when the function is NOT
@@ -232,6 +238,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	row_data.spans = spans
 	return row_data
 
+
 ## First Color(...) literal among an ACE's param values (null when none) — drives the
 ## little color swatch drawn after the condition/action text.
 func _first_color_in_params(ace: Resource) -> Variant:
@@ -245,6 +252,7 @@ func _first_color_in_params(ace: Resource) -> Variant:
 			if parsed is Color:
 				return parsed
 	return null
+
 
 ## An enum row: rendered like a variable declaration ("enum  State { IDLE, RUN }");
 ## double-click opens the enum dialog.
@@ -273,6 +281,7 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 		)
 	]
 	return row_data
+
 
 ## A Custom Block API row: kind badge + the kind's one-line summary, both owned by the
 ## registered EventSheetBlockKind. A block whose kind is unregistered (its pack was removed)
@@ -304,6 +313,7 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 	]
 	return row_data
 
+
 ## A mid-file lifted function's position marker: the function itself is a real EventFunction
 ## (edited via its Define block / the Functions panel); this row just shows WHERE it lives in
 ## the file, muted so it reads as structure rather than content.
@@ -327,6 +337,7 @@ func _build_function_anchor_row(anchor: FunctionAnchorRow, indent: int) -> Event
 		)
 	]
 	return row_data
+
 
 ## A signal row: rendered like a declaration ("signal  hit(damage: int)"); double-click
 ## opens the signal dialog.
@@ -400,6 +411,7 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	]
 	return row_data
 
+
 ## The host class ("" when not a match) if a RawCodeRow is EXACTLY the compiler's generated
 ## host-binding `_enter_tree` — the boilerplate every host-targeting behaviour pack emits to bind
 ## `host = get_parent()`. It carries no authored logic (it's regenerated from the sheet's host), so
@@ -427,6 +439,7 @@ static func host_binding_class(code: String) -> String:
 	if not (lines[3].begins_with("\t\tpush_warning(\"") and lines[3].rstrip(" ").ends_with("parent.\")")):
 		return ""
 	return bind_match.get_string(1)
+
 
 ## True Define-shell info for a RawCodeRow that is PURELY an `## @ace_*` annotation block — the
 ## published-verb header a pack author writes above each exposed func. Opened packs keep these as
@@ -459,12 +472,14 @@ static func define_shell_info(code: String) -> Dictionary:
 		return {}
 	return {"kind": kind, "name": name, "category": category, "line_count": lines.size()}
 
+
 static func _annotation_string_arg(line: String) -> String:
 	var open_quote: int = line.find("\"")
 	var close_quote: int = line.rfind("\"")
 	if open_quote < 0 or close_quote <= open_quote:
 		return ""
 	return line.substr(open_quote + 1, close_quote - open_quote - 1)
+
 
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
 ## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
@@ -590,6 +605,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	row_data.spans = spans
 	return row_data
 
+
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
 func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowData:
 	return _build_variable_row(
@@ -609,6 +625,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 			"row_uid": "variable_tree_%d" % variable.get_instance_id()
 		}
 	)
+
 
 ## A group's chapter fingerprint: "N events · ⟳a · ➜b · ⌨c · ▶d · ⚠e" — its child events
 ## counted by trigger TEMPO class (reusing TriggerResolver.tempo_class_for) plus the RawCode (⚠) blocks
@@ -635,6 +652,7 @@ static func group_fingerprint(group: EventGroup) -> String:
 		parts.append("⚠%d" % int(counts["raw"]))
 	return " · ".join(parts)
 
+
 static func _fingerprint_rows(rows: Array, counts: Dictionary) -> void:
 	for row: Variant in rows:
 		if row is EventRow:
@@ -654,6 +672,7 @@ static func _fingerprint_rows(rows: Array, counts: Dictionary) -> void:
 		elif row is EventGroup:
 			var nested: EventGroup = row as EventGroup
 			_fingerprint_rows(nested.events if not nested.events.is_empty() else nested.rows, counts)
+
 
 func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
@@ -725,6 +744,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 		)
 	return row_data
 
+
 func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var row_data := EventRowData.new()
@@ -763,6 +783,7 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 	row_data.spans = comment_spans
 	return row_data
 
+
 func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent
@@ -785,6 +806,7 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 		if child_row != null:
 			row_data.children.append(child_row)
 	return row_data
+
 
 func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
@@ -828,6 +850,7 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 		)
 	return rows
 
+
 ## An exported global's Inspector group ("" when none/unexported) — the adjacency-sort key above.
 static func _global_variable_group(sheet: EventSheetResource, var_name: String) -> String:
 	var descriptor: Variant = sheet.variables.get(var_name, {})
@@ -837,6 +860,7 @@ static func _global_variable_group(sheet: EventSheetResource, var_name: String) 
 		return ""
 	var attributes: Variant = (descriptor as Dictionary).get("attributes")
 	return str((attributes as Dictionary).get("group", "")).strip_edges() if attributes is Dictionary else ""
+
 
 ## Runs of consecutive variable rows sharing one Inspector group — the bubbles the viewport outlines
 ## around grouped variables so a folder reads as one visual unit. [{start, end, group}] over the flat
@@ -859,6 +883,7 @@ static func variable_group_runs(flat_rows: Array) -> Array:
 		current_group = group
 		run_start = index if not group.is_empty() else -1
 	return runs
+
 
 func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
@@ -883,6 +908,7 @@ func _build_local_variable_rows(event_row: EventRow, indent: int) -> Array[Event
 			)
 		)
 	return rows
+
 
 func _build_variable_row(
 	scope_label: String,
@@ -1002,6 +1028,7 @@ func _build_variable_row(
 
 # ── Event-span assembly (the "model → SemanticSpans" pass) ───────────────────────────────────────
 
+
 ## Sets the tempo glyph + hue on a trigger-badge meta from the event's trigger_id, and returns the glyph.
 ## SIGNAL keeps the shipped green ➜ from the event style — the common case stays
 ## byte-identical; every-tick (⟳) / input (⌨) / once (▶) get their own fill so how OFTEN an event runs
@@ -1026,6 +1053,7 @@ func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, t
 			meta["badge_bg"] = event_style.trigger_badge_background_color
 			meta["badge_fg"] = event_style.trigger_badge_foreground_color
 			return "➜"
+
 
 func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
@@ -1376,6 +1404,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	)
 	return spans
 
+
 ## Cheaply computes how many stacked lines an event row occupies, mirroring the
 ## line-index accounting in _build_event_spans() WITHOUT building any spans. This lets
 ## the whole sheet be measured (row heights/metrics) without the expensive span pass.
@@ -1425,6 +1454,7 @@ func _count_event_lines(event_row: EventRow) -> int:
 		max_action_line = maxi(action_count, _viewport.COMMENT_DEFAULT_LINE_INDEX) + 1
 	return maxi(max_condition_line, max_action_line) + 1
 
+
 ## Builds an event row's spans on demand. Event-row spans are deferred (see
 ## _build_event_row) so large sheets load fast; this is called from the row layout
 ## choke point and selection paths before any span data is read. Idempotent: built
@@ -1437,6 +1467,7 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 		return
 	if row_data.source_resource is EventRow:
 		row_data.spans = _build_event_spans(row_data.source_resource as EventRow)
+
 
 func _append_condition_prefix_spans(
 	spans: Array[SemanticSpan],
@@ -1477,6 +1508,7 @@ func _append_condition_prefix_spans(
 		or_meta["badge_style"] = "or"
 		spans.append(_make_span("OR", SemanticSpan.SpanType.KEYWORD, or_meta))
 
+
 func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, font_size: int) -> float:
 	if span == null:
 		return 0.0
@@ -1503,10 +1535,12 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 
 # ── Descriptor / format / classify (per-ACE display text + trigger/function classification) ───────
 
+
 ## Display text for a pick-filter row: "For each item in group \"enemies\" (first 3)".
 ## Chip text for a "With node X:" scope (the row's actions act on this node).
 func _format_with_node(event_row: EventRow) -> String:
 	return "With node  %s" % event_row.with_node_target.strip_edges()
+
 
 func _format_pick_filter(pick: PickFilter) -> String:
 	var iterator: String = pick.iterator_name.strip_edges()
@@ -1532,6 +1566,7 @@ func _format_pick_filter(pick: PickFilter) -> String:
 		text += " (first %d)" % pick.pick_first_n
 	return text
 
+
 ## Event-sheet-style object label shown before each condition/action (e.g. "System",
 ## "Sprite", "CharacterBody2D"). Core ACEs read as "System"; node-typed ACEs use the class.
 func _object_label_for(provider_id: String, ace_id: String) -> String:
@@ -1548,10 +1583,12 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 		return "System"
 	return provider_id
 
+
 ## A call to a sheet Function — the row IS an abstraction (a named verb), so the renderer marks it "ƒ"
 ## (see _object_label_for) and shows the verb's name instead of "Call name()".
 func _is_function_call_action(action: ACEAction) -> bool:
 	return action != null and (action.provider_id.is_empty() or action.provider_id == "Core") and action.ace_id == "CallFunction"
+
 
 ## The friendly verb name for a function-call action: the target Function's ace_display_name if it set one
 ## (e.g. "Apply Physics"), else its humanized name. Appends the argument list only when the call passes
@@ -1572,6 +1609,7 @@ func _function_call_label(action: ACEAction) -> String:
 	var args: String = str(params_dict.get("args", "")).strip_edges()
 	return "%s(%s)" % [label, args] if not args.is_empty() else label
 
+
 func _format_condition_descriptor(condition: ACECondition) -> String:
 	_pending_display_bbcode = _display_template_has_markup(condition.provider_id, condition.ace_id)
 	var base_text: String = _format_condition_descriptor_base(condition)
@@ -1579,6 +1617,7 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 	if not ace_note.is_empty():
 		return "%s   ⊳ %s" % [base_text, ace_note]
 	return base_text
+
 
 func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
@@ -1590,6 +1629,7 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 		return condition.ace_id
 	return descriptor.format_display(params_dict)
 
+
 func _find_inline_trigger_condition_index(event_row: EventRow) -> int:
 	if event_row == null or event_row.trigger != null or not event_row.trigger_id.is_empty():
 		return -1
@@ -1598,6 +1638,7 @@ func _find_inline_trigger_condition_index(event_row: EventRow) -> int:
 		if _is_trigger_condition(condition):
 			return condition_index
 	return -1
+
 
 func _is_trigger_condition(condition: ACECondition) -> bool:
 	if condition == null:
@@ -1608,6 +1649,7 @@ func _is_trigger_condition(condition: ACECondition) -> bool:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	return descriptor != null and descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER
 
+
 func _format_action_descriptor(action: ACEAction) -> String:
 	_pending_display_bbcode = _display_template_has_markup(action.provider_id, action.ace_id)
 	var base_text: String = _format_action_descriptor_base(action)
@@ -1615,6 +1657,7 @@ func _format_action_descriptor(action: ACEAction) -> String:
 	if not ace_note.is_empty():
 		return "%s   ⊳ %s" % [base_text, ace_note]
 	return base_text
+
 
 func _format_action_descriptor_base(action: ACEAction) -> String:
 	# Function calls read as the named verb (under the "ƒ" chip), not the raw "Call name()" template.
@@ -1647,6 +1690,7 @@ const _FRIENDLY_TRIGGER := {
 	"OnUnhandledInput": "unhandled input arrives",
 }
 
+
 ## The whole event read as ONE plain-English sentence for the hover tooltip — "When <trigger> — if <c1>
 ## and <c2> — do: <a1>, <a2> (+1 more)". Assembled EXCLUSIVELY from the same descriptor strings the cells
 ## draw (the _base formatters, which don't touch the bbcode render flag), so it can NEVER disagree with
@@ -1673,6 +1717,7 @@ func row_sentence(event_row: EventRow) -> String:
 		clauses.append(actions_clause)
 	return " — ".join(clauses)
 
+
 func _sentence_head(event_row: EventRow) -> String:
 	if event_row.else_mode == EventRow.ElseMode.ELSE:
 		return "Else"
@@ -1680,6 +1725,7 @@ func _sentence_head(event_row: EventRow) -> String:
 		return "Else if"
 	var trigger_text: String = _sentence_trigger(event_row)
 	return "When %s" % trigger_text if not trigger_text.is_empty() else ""
+
 
 func _sentence_trigger(event_row: EventRow) -> String:
 	if event_row.trigger != null:
@@ -1690,6 +1736,7 @@ func _sentence_trigger(event_row: EventRow) -> String:
 	if inline_index >= 0 and inline_index < event_row.conditions.size():
 		return _format_condition_descriptor_base(event_row.conditions[inline_index])
 	return ""
+
 
 func _sentence_conditions(event_row: EventRow) -> String:
 	var inline_trigger_index: int = _find_inline_trigger_condition_index(event_row)
@@ -1708,6 +1755,7 @@ func _sentence_conditions(event_row: EventRow) -> String:
 		return ""
 	var joiner: String = " or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and "
 	return joiner.join(texts)
+
 
 func _sentence_actions(event_row: EventRow) -> String:
 	var descriptors: PackedStringArray = PackedStringArray()
@@ -1731,6 +1779,7 @@ func _sentence_actions(event_row: EventRow) -> String:
 		body += ("" if body.is_empty() else ", ") + "then %d %s of code" % [raw_lines, "line" if raw_lines == 1 else "lines"]
 	return "do: %s" % body if not body.is_empty() else ""
 
+
 func _format_variable_value(value: Variant) -> String:
 	if value == null:
 		return "null"
@@ -1739,6 +1788,7 @@ func _format_variable_value(value: Variant) -> String:
 	return str(value)
 
 static var _value_regex: RegEx = null
+
 
 ## Ranges ([start, length, kind]) of parameter-like values inside ACE display text, so the renderer can
 ## highlight them event-sheet-style AND tint by TYPE: kind is "string" (quoted),
@@ -1767,6 +1817,7 @@ static func _value_ranges_for(text: String) -> Array:
 # silently stripped/styled in the cell. PRIVATE to this layer: writers + reader all live here.
 var _pending_display_bbcode: bool = false
 
+
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
 	var span := SemanticSpan.new()
 	span.text = text
@@ -1789,6 +1840,7 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 	_pending_display_bbcode = false
 	return span
 
+
 ## True when an ACE's display TEMPLATE (not the substituted text) carries BBCode markup — the author opted
 ## into styling via @ace_display_template. Built-in/custom descriptors resolve their template the same way
 ## format_display does.
@@ -1798,6 +1850,7 @@ func _display_template_has_markup(provider_id: String, ace_id: String) -> bool:
 		return EventSheetBBCodeLite.has_markup(str(definition.metadata.get("display_template", definition.display_name)))
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
 	return descriptor != null and EventSheetBBCodeLite.has_markup(descriptor.get_display_text())
+
 
 func _get_variable_metadata_for_row(row_data: EventRowData) -> Dictionary:
 	if row_data == null:
@@ -1810,6 +1863,7 @@ func _get_variable_metadata_for_row(row_data: EventRowData) -> Dictionary:
 			return metadata.duplicate(true)
 	return {}
 
+
 func _resolve_span_lane(span: SemanticSpan) -> String:
 	if span == null or not (span.metadata is Dictionary):
 		return "condition"
@@ -1818,6 +1872,7 @@ func _resolve_span_lane(span: SemanticSpan) -> String:
 # Cache: "provider::ace" → Texture2D or null. Spans are rebuilt often; icon resolution
 # (registry lookup + editor-theme/texture fetch) must not run per rebuild per span.
 var _ace_icon_cache: Dictionary = {}
+
 
 ## Icon shown before an ACE's object label in row cells (event sheets show the object's icon next
 ## to its name everywhere). Resolution order matches the picker; Core/System falls back to

@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Simple Abilities behavior (ported + expanded from the Simple Abilities addon for Godot).
 ## A per-instance ability manager: grant/remove abilities by string id, cooldowns, stack charges
 ## with auto-regen, temporary (auto-expiring) abilities, custom data, and tags for bulk ops.

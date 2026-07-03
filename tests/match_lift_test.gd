@@ -3,8 +3,9 @@
 # verbatim branch text — instead of an in-flow GDScript cell. The branch lines are kept verbatim
 # (patterns + bodies are not parsed as ACEs); the byte-identical recompile gates the reconstruction.
 @tool
-extends RefCounted
 class_name MatchLiftTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -37,6 +38,7 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _collect_match_rows(rows: Array) -> Array:
 	var out: Array = []
 	for row: Variant in rows:
@@ -47,6 +49,7 @@ static func _collect_match_rows(rows: Array) -> Array:
 			out.append_array(_collect_match_rows((row as EventRow).sub_events))
 	return out
 
+
 static func _has_raw_match(rows: Array) -> bool:
 	for row: Variant in rows:
 		if row is EventRow:
@@ -56,6 +59,7 @@ static func _has_raw_match(rows: Array) -> bool:
 			if _has_raw_match((row as EventRow).sub_events):
 				return true
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

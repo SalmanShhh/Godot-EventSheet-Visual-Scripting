@@ -12,18 +12,21 @@
 # never silently rewrites a file (and the pre-restore state is itself backed up by
 # the save that follows).
 @tool
-extends RefCounted
 class_name EventSheetBackups
+extends RefCounted
 
 const BACKUPS_ROOT := "user://eventsheet_backups"
 
+
 static func backup_count() -> int:
 	return int(ProjectSettings.get_setting("eventsheets/editor/backup_count", 10))
+
 
 ## One folder per sheet path, flattened so res:// and user:// sheets can't collide.
 static func backup_dir_for(sheet_path: String) -> String:
 	var sanitized: String = sheet_path.replace("://", "_").replace("/", "_").replace(":", "_")
 	return "%s/%s" % [BACKUPS_ROOT, sanitized]
+
 
 ## All backups of a sheet, newest first. Filenames are zero-padded sequence numbers
 ## ("0002.player.tres") so lexicographic order IS age order — timestamps would collide
@@ -44,6 +47,7 @@ static func list_backups(sheet_path: String) -> PackedStringArray:
 	backups.sort()
 	backups.reverse()
 	return backups
+
 
 ## Copies the sheet file's CURRENT bytes into the ring and prunes past backup_count.
 ## Returns the backup path, or "" when disabled or there's nothing to back up yet.

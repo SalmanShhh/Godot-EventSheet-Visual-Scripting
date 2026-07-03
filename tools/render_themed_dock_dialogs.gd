@@ -5,6 +5,7 @@
 @tool
 extends SceneTree
 
+
 class NoopUndoManager:
 	extends RefCounted
 	func create_action(_a = null) -> void: pass
@@ -20,6 +21,7 @@ class NoopUndoManager:
 var _frames: int = 0
 var _ed: EventSheetEditor = null
 
+
 func _init() -> void:
 	root.title = "Themed Dock Dialogs"
 	root.size = Vector2i(720, 640)
@@ -30,11 +32,13 @@ func _init() -> void:
 	root.add_child(bg)
 	process_frame.connect(_on_frame)
 
+
 func _save(window: Window, name: String) -> void:
 	var img: Image = window.get_texture().get_image()
 	img.save_png("res://_themed_%s.png" % name)
 	print("[themed] %s %dx%d" % [name, img.get_width(), img.get_height()])
 	window.hide()
+
 
 func _on_frame() -> void:
 	_frames += 1

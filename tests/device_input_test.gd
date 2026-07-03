@@ -1,8 +1,9 @@
 # Godot EventSheets — Device input vocabulary (Keyboard/Mouse/Gamepad/Touch) +
 # the press-a-key capture workflow + dialog-width hygiene.
 @tool
-extends RefCounted
 class_name DeviceInputTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -116,6 +117,7 @@ static func run() -> bool:
 		str((by_id["PlayAnimation"].params[0] as ACEParam).hint), "animation_reference") and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

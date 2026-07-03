@@ -4,8 +4,9 @@
 # WHOLE-ROW selection (span_index -1, row_index set), which _select_from_click turns into a block
 # selection (and makes Delete act on the block instead of falling through to the scene tree).
 @tool
-extends RefCounted
 class_name ViewportBlockSelectTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -36,6 +37,7 @@ static func run() -> bool:
 	ok = _check("click in the gutter selects the whole row", int(gutter.get("span_index", -99)), -1) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

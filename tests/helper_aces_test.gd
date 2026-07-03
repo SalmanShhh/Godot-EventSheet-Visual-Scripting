@@ -5,8 +5,9 @@
 # exact one-line GDScript they advertise, and stay registered LAST (so the reverse-lifter
 # prefers specific ACEs).
 @tool
-extends RefCounted
 class_name HelperACEsTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -84,6 +85,7 @@ static func run() -> bool:
 	passed = _check("helper output parses as GDScript", generated.reload(true) == OK, true) and passed
 
 	return passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -6,10 +6,11 @@
 # in-flow GDScript (lossless either way). This pins that the body-lift genuinely produces structured
 # ACE rows (not just code cells) AND the whole sheet still round-trips byte-identically.
 @tool
-extends RefCounted
 class_name Gap3BodyLiftTest
+extends RefCounted
 
 const PACK := "res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -36,6 +37,7 @@ static func run() -> bool:
 		DirAccess.remove_absolute("user://__gap3_verify.gd")
 	return all_passed
 
+
 ## Recursively tallies ACEActions (structured) vs RawCodeRows (un-lifted code) across a row list,
 ## descending into event actions and sub-events.
 static func _count_rows(rows: Array, counts: Dictionary) -> void:
@@ -49,6 +51,7 @@ static func _count_rows(rows: Array, counts: Dictionary) -> void:
 			_count_rows((row as EventRow).sub_events, counts)
 		elif row is EventGroup:
 			_count_rows((row as EventGroup).events, counts)
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

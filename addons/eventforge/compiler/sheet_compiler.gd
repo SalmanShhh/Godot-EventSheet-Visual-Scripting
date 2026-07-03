@@ -16,8 +16,8 @@
 # CONTRACTS: parity (plain GDScript, no runtime indirection), lossless round-trips,
 # bake-at-apply (templates), policy-gates-never-bytes (composition).
 @tool
-extends RefCounted
 class_name SheetCompiler
+extends RefCounted
 
 const VERSION: String = "0.9.5"
 
@@ -51,6 +51,7 @@ static var _row_group_path: Dictionary = {}
 # Host-targeting prefix for {host.} ACE templates: "host" inside a behavior sheet (where node-scoped
 # ACEs must call on the parent host, not the behavior Node itself), "" everywhere else. Per-compile.
 static var _behavior_host_default: String = ""
+
 
 ## Compiles an event sheet resource to a GDScript output file.
 ## omit_generated_banner drops the "AUTO-GENERATED / DO NOT EDIT" header — used when the .gd IS the
@@ -487,12 +488,14 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		return result
 	return result
 
+
 ## True when the file at `path` already holds exactly `output` — used to skip no-op rewrites.
 ## Rewriting a byte-identical file bumps its mtime, which makes the Godot editor prompt
 ## "Files have been modified outside Godot" on the next scene open/close — even though the
 ## generated code is byte-stable (the drift audit proves it) and nothing actually changed.
 static func _output_is_current(path: String, output: String) -> bool:
 	return FileAccess.file_exists(path) and FileAccess.get_file_as_string(path) == output
+
 
 ## Writes `output` to `path` only when it differs from what is already on disk, so an unchanged
 ## recompile (sheet save, Attach to Node, Test Bench, export — all funnel through compile()) never
@@ -508,6 +511,7 @@ static func _write_output_if_changed(path: String, output: String) -> bool:
 	file.flush()
 	file.close()
 	return true
+
 
 ## Order-preserving emission for GDScript-backed sheets: rows reproduce the original file
 ## (verbatim blocks + verify-lifted variables) in sheet order; events/groups the user adds
@@ -631,11 +635,13 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		return result
 	return result
 
+
 static func _find_function_by_name(sheet: EventSheetResource, function_name: String) -> EventFunction:
 	for function_entry: Variant in sheet.functions:
 		if function_entry is EventFunction and (function_entry as EventFunction).function_name == function_name:
 			return function_entry
 	return null
+
 
 ## One function block (annotations + typed header + body/stub + its source-map range), shared by
 ## the trailing functions section, the in-place FunctionAnchorRow slots, and the lifter's
@@ -651,6 +657,7 @@ static func _emit_function_block(event_function: EventFunction, sheet: EventShee
 		lines.append(_empty_function_stub(event_function))
 	source_map.append({"uid": str(event_function.get_instance_id()), "start": function_start, "end": lines.size(), "kind": "function"})
 
+
 ## The lifter's per-anchor gate: exactly what _emit_function_block would produce for this
 ## function, as text, with no side effects. A mid-file helper lifts only when this equals the
 ## original source lines byte-for-byte, so anchoring can never change a file.
@@ -659,6 +666,7 @@ static func emit_function_block_text(event_function: EventFunction, sheet: Event
 	var scratch: Dictionary = {"warnings": [], "errors": []}
 	_emit_function_block(event_function, sheet, lines, [], scratch)
 	return "\n".join(lines)
+
 
 ## Instance-backed addon ACEs: baked templates may call through a per-provider member
 ## (`__eventsheet_provider_<Class>.method(...)`). This pass scans the emitted lines for
@@ -684,6 +692,7 @@ static func _shift_source_map(source_map: Array, first_inserted_line: int, count
 		if int((entry as Dictionary).get("end", 0)) >= first_inserted_line:
 			(entry as Dictionary)["end"] = int((entry as Dictionary)["end"]) + count
 
+
 static func _insert_stateful_member_declarations(lines: PackedStringArray, sheet: EventSheetResource, source_map: Array = []) -> void:
 	var members: Array = []
 	_collect_stateful_members(sheet.events, members)
@@ -707,6 +716,7 @@ static func _insert_stateful_member_declarations(lines: PackedStringArray, sheet
 		lines.insert(insert_index + offset, missing[offset])
 	lines.insert(insert_index + missing.size(), "")
 	_shift_source_map(source_map, insert_index + 1, missing.size() + 1)
+
 
 static func _insert_provider_member_declarations(lines: PackedStringArray, result: Dictionary) -> void:
 	var member_regex: RegEx = RegEx.new()
@@ -741,6 +751,7 @@ static func _insert_provider_member_declarations(lines: PackedStringArray, resul
 		lines.insert(insert_index + offset, declarations[offset])
 	_shift_source_map(result.get("source_map", []), insert_index + 1, declarations.size())
 
+
 ## Recursively merges included sheets (see EventSheetResource.includes): variables and
 ## functions skip name collisions with a warning (root wins), rows append in include
 ## order. Compile-time only — included rows never enter the editing model.
@@ -753,6 +764,7 @@ static func _addon_policy(key: String, default_value: Variant) -> Variant:
 	if ProjectSettings.has_setting(setting_name):
 		return ProjectSettings.get_setting(setting_name)
 	return default_value
+
 
 static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_functions: Array, merged_variables: Dictionary, visited: Dictionary, warnings: Array, errors: Array = [], depth: int = 1) -> void:
 	var composition_mode: String = str(_addon_policy("composition_mode", "allowed"))
@@ -819,6 +831,7 @@ static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_fu
 		all_events.append_array(included.events)
 		_merge_includes(included, all_events, all_functions, merged_variables, visited, warnings, errors, depth + 1)
 
+
 ## Counts the EventRows nested anywhere under a row list (recursing groups) — drives the
 ## "N rows omitted" figure in the disabled-group breadcrumb.
 static func _count_event_rows(rows: Array) -> int:
@@ -830,6 +843,7 @@ static func _count_event_rows(rows: Array) -> int:
 			var inner: EventGroup = row as EventGroup
 			total += _count_event_rows(inner.events if not inner.events.is_empty() else inner.rows)
 	return total
+
 
 ## A deterministic, GDScript-safe slug for a group name — NOT the random group_uid (which would make
 ## the emitted markers churn on every save). Lowercase, snake-cased, non-alphanumerics collapsed to a
@@ -854,6 +868,7 @@ static func _group_slug(group_name: String, used: Dictionary) -> String:
 	used[candidate] = true
 	return candidate
 
+
 ## Walks the event tree assigning every EventGroup a deterministic slug (filling _group_slugs) and
 ## appending an ordered {slug, parent, group} record to `decls` (parents before children, so the
 ## importer can rebuild nesting). Recurses into group bodies, mirroring _flatten_trigger_rows' walk.
@@ -867,9 +882,11 @@ static func _collect_groups(rows: Array, decls: Array, used: Dictionary, parent_
 			decls.append({"slug": slug, "parent": parent_slug, "group": group})
 			_collect_groups(group.events if not group.events.is_empty() else group.rows, decls, used, slug)
 
+
 ## True when free text can be written inside a double-quoted annotation field without breaking it.
 static func _group_text_is_safe(text: String) -> bool:
 	return not text.contains("\"") and not text.contains("\n")
+
 
 ## Emits the class-scope `## @ace_group(...)` declaration block (one line per group, parents first).
 ## Only non-default fields are written, and any free-text field with a quote or newline is dropped so
@@ -895,6 +912,7 @@ static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> 
 		if group.runtime_toggleable:
 			parts.append("toggleable=true")
 		lines.append("## @ace_group(%s)" % ", ".join(parts))
+
 
 ## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed (a disabled
 ## group is dropped but leaves a breadcrumb comment — group-disable semantics), and group comments
@@ -939,6 +957,7 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 			deferred_comment_lines.append_array((row as CommentRow).text.split("
 "))
 
+
 ## Signal names declared in class-level GDScript blocks, so self-connections to
 ## block-declared signals validate at compile time.
 static func _scan_declared_signals(raw_blocks: Array) -> Array:
@@ -951,6 +970,7 @@ static func _scan_declared_signals(raw_blocks: Array) -> Array:
 		for regex_match in regex.search_all((entry as RawCodeRow).code):
 			declared.append(regex_match.get_string(1))
 	return declared
+
 
 ## Groups event rows by trigger and emits one handler function per trigger (the standard
 ## trigger sections), plus the `_ready` connections signal-backed triggers need. Shared by
@@ -1076,6 +1096,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		had_body = _emit_event_body(events, lines, source_map, 1, result["warnings"]) or had_body
 		if not had_body:
 			lines.append("\tpass")
+
 
 ## Emits the condition/action body for a list of event rows, appending to lines.
 ## Shared by trigger handlers, sheet functions, and (recursively) sub-events.
@@ -1317,6 +1338,7 @@ static func _emit_event_body(
 		chain_open = emitted_block
 	return had_body
 
+
 ## Emits the `for` loop headers for an event's pick filters and returns the new body depth.
 ## Supported per filter: collection (GROUP → get_nodes_in_group, CHILDREN → get_children,
 ## EXPRESSION/ARRAY → verbatim GDScript iterable), predicate_expression (iterator-scoped
@@ -1410,6 +1432,7 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 		loop_index += 1
 	return body_depth
 
+
 ## Compiles a pick filter's structured conditions into one iterator-scoped boolean guard.
 ## Node-typed conditions are called on the picked instance ({iterator}.<expr>); global
 ## templates (Input.*, variable compares) stay as-is. AND (filter_mode 0) or OR (1).
@@ -1431,6 +1454,7 @@ static func _compile_filter_conditions(pick: PickFilter, iterator: String) -> St
 	var joiner: String = " or " if pick.filter_mode == 1 else " and "
 	return joiner.join(parts)
 
+
 ## The condition's boolean template with params applied, WITHOUT negation (so a node scope
 ## can be inserted before the `not`). Mirrors ConditionCodegen.generate_condition lookup.
 static func _condition_base_expr(condition: ACECondition) -> String:
@@ -1443,6 +1467,7 @@ static func _condition_base_expr(condition: ACECondition) -> String:
 	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	return ActionCodegen._apply_template(template, params)
 
+
 ## True when a condition targets the implicit node (node_type set), so in a pick loop it
 ## must be scoped to the picked instance. Resolves node_type via the registry; a custom/addon
 ## condition carrying ONLY a baked codegen_template with no findable descriptor is treated as
@@ -1451,6 +1476,7 @@ static func _condition_base_expr(condition: ACECondition) -> String:
 static func _condition_is_node_scoped(condition: ACECondition) -> bool:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	return descriptor != null and not descriptor.node_type.strip_edges().is_empty()
+
 
 ## The GDScript iterable a pick filter loops over ("" = unsupported configuration).
 static func _pick_collection_expression(pick: PickFilter) -> String:
@@ -1472,6 +1498,7 @@ static func _pick_collection_expression(pick: PickFilter) -> String:
 			# NODE_PATH_ARRAY / NODE_TREE / CUSTOM: honor an explicit expression, else skip.
 			return value
 
+
 ## Indents a sibling GDScript block's lines for `depth`. Imported code already carries its
 ## own leading tab (function bodies arrive pre-indented for depth 1), while code written in
 ## the block editor is flat — detect which and prepend accordingly so both emit correctly.
@@ -1487,6 +1514,7 @@ static func _indent_raw_lines(code: String, depth: int) -> PackedStringArray:
 	for raw_line: String in raw_lines:
 		output.append(prefix + raw_line if not raw_line.strip_edges().is_empty() else raw_line)
 	return output
+
 
 ## Emits the `@ace_*` annotation block above an exposed sheet function. The annotations are
 ## parsed back by EventSheetSemanticAnalyzer when the compiled script is registered as a
@@ -1540,6 +1568,7 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 		call_prefix = "%s." % sheet.autoload_name.strip_edges()
 	lines.append("## @ace_codegen_template(\"%s%s(%s)\")" % [call_prefix, event_function.function_name, ", ".join(argument_tokens)])
 
+
 ## The stub emitted for a function whose body has no rows yet ("published before implemented").
 ## `pass` only parses for void — a bool/typed function needs a type-correct `return <default>` or the
 ## whole generated script fails to load, taking every OTHER verb on the sheet down with it.
@@ -1568,6 +1597,7 @@ static func _empty_function_stub(event_function: EventFunction) -> String:
 			# it parses; exotic value types can refine this case as they join the dialog's list.
 			return "\treturn null"
 
+
 ## Builds the typed parameter list for a sheet function (e.g. "amount: int, label: String").
 ## "-> void" unless the function declares a Variant.Type return (TYPE_NIL = void).
 static func _function_return_type_name(event_function: EventFunction) -> String:
@@ -1581,6 +1611,7 @@ static func _function_return_type_name(event_function: EventFunction) -> String:
 	if event_function.return_type == TYPE_MAX:
 		return "Variant"
 	return type_string(event_function.return_type)
+
 
 static func _emit_function_params(event_function: EventFunction) -> String:
 	var parts: PackedStringArray = PackedStringArray()
@@ -1606,6 +1637,7 @@ static func _emit_function_params(event_function: EventFunction) -> String:
 			if not clean_name.is_empty():
 				parts.append(clean_name)
 	return ", ".join(parts)
+
 
 ## Emits `@export var` lines from the sheet variables dictionary.
 static func _emit_variables(variables: Dictionary, warnings: Array = [], function_names: Dictionary = {}) -> PackedStringArray:
@@ -1706,6 +1738,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 
 	return lines
 
+
 ## Recursively gathers tree-placed GDScript blocks from the top level and groups (sub-event
 ## raw blocks stay deferred until sub-events compile).
 ## Canonical single-line enum emission ("" when unnamed/empty/disabled). The importer's
@@ -1719,6 +1752,7 @@ static func _emit_enum_line(enum_row: EnumRow) -> String:
 	var emitted: PackedStringArray = kind.emit_lines(enum_row)
 	return "" if emitted.is_empty() else emitted[0]
 
+
 ## Canonical single-line signal emission ("" when unnamed/disabled). The importer's
 ## verify-lift depends on this exact form.
 ## Class description as `## …` doc lines (one per source line; a blank line emits a bare `##`),
@@ -1731,6 +1765,7 @@ static func _class_description_lines(sheet: EventSheetResource) -> PackedStringA
 		out.append("##" if line.is_empty() else "## %s" % line)
 	return out
 
+
 static func _emit_signal_line(signal_row: SignalRow) -> String:
 	# SignalRow is a registered RESOURCE kind on the Custom Block API - like enums, the
 	# built-in's declaration contract dispatches through the registry.
@@ -1739,6 +1774,7 @@ static func _emit_signal_line(signal_row: SignalRow) -> String:
 		return ""
 	var emitted: PackedStringArray = kind.emit_lines(signal_row)
 	return "" if emitted.is_empty() else emitted[0]
+
 
 ## Trigger-ACE annotation lines emitted ABOVE a trigger SignalRow's `signal` declaration, so the
 ## signal publishes as a trigger ACE (a code-free alternative to a hand-written @ace_trigger block).
@@ -1754,6 +1790,7 @@ static func _emit_signal_annotations(signal_row: SignalRow) -> PackedStringArray
 		annotations.append("## @ace_category(\"%s\")" % signal_row.ace_category.strip_edges())
 	return annotations
 
+
 ## Recursively gathers SignalRow rows (top level and inside groups).
 static func _collect_signal_rows(entries: Array, into: Array) -> void:
 	for entry: Variant in entries:
@@ -1762,6 +1799,7 @@ static func _collect_signal_rows(entries: Array, into: Array) -> void:
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_collect_signal_rows(group.events if not group.events.is_empty() else group.rows, into)
+
 
 ## Recursively gathers EnumRow rows (top level and inside groups).
 static func _collect_enum_rows(entries: Array, into: Array) -> void:
@@ -1772,6 +1810,7 @@ static func _collect_enum_rows(entries: Array, into: Array) -> void:
 			var group: EventGroup = entry as EventGroup
 			_collect_enum_rows(group.events if not group.events.is_empty() else group.rows, into)
 
+
 ## Gathers Custom Block API rows (registered non-ACE kinds) from the event tree, group-recursive
 ## like enums/signals so a block inside a group still emits.
 static func _collect_custom_blocks(entries: Array, into: Array) -> void:
@@ -1781,6 +1820,7 @@ static func _collect_custom_blocks(entries: Array, into: Array) -> void:
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_collect_custom_blocks(group.events if not group.events.is_empty() else group.rows, into)
+
 
 ## Gathers stateful-condition member declarations (deduped) from the event tree.
 ## Gathers group-local variables: [{group: name, locals: [LocalVariable…]}] in order.
@@ -1795,6 +1835,7 @@ static func _collect_group_locals(entries: Array, into: Array) -> void:
 			if not locals.is_empty():
 				into.append({"group": group.group_name if not group.group_name.is_empty() else group.name, "locals": locals})
 			_collect_group_locals(group.events if not group.events.is_empty() else group.rows, into)
+
 
 ## Early pass for the flag members of runtime-toggleable groups (nested included).
 static func _collect_runtime_group_members(rows: Array) -> void:
@@ -1812,6 +1853,7 @@ static func _collect_runtime_group_members(rows: Array) -> void:
 					_runtime_group_members.append([guard_name, group.enabled])
 			if group.enabled:
 				_collect_runtime_group_members(group.events if not group.events.is_empty() else group.rows)
+
 
 static func _collect_stateful_members(entries: Array, into: Array) -> void:
 	for entry: Variant in entries:
@@ -1845,12 +1887,14 @@ static func _collect_stateful_members(entries: Array, into: Array) -> void:
 			var group: EventGroup = entry as EventGroup
 			_collect_stateful_members(group.events if not group.events.is_empty() else group.rows, into)
 
+
 ## Substitutes {param} tokens with the row's param values (plain str(), like codegen).
 static func _substitute_params(template: String, params: Dictionary) -> String:
 	var output: String = template
 	for key: Variant in params.keys():
 		output = output.replace("{%s}" % str(key), str(params[key]))
 	return output
+
 
 static func _collect_class_level_raw_rows(entries: Array, into: Array) -> void:
 	for entry: Variant in entries:
@@ -1859,6 +1903,7 @@ static func _collect_class_level_raw_rows(entries: Array, into: Array) -> void:
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_collect_class_level_raw_rows(group.events if not group.events.is_empty() else group.rows, into)
+
 
 ## Recursively gathers tree-placed LocalVariable rows from the event tree (top level, groups
 ## and sub-events) so they can be emitted as class-level declarations.
@@ -1871,6 +1916,7 @@ static func _collect_tree_variables(entries: Array, into: Array) -> void:
 			_collect_tree_variables(group.events if not group.events.is_empty() else group.rows, into)
 		elif entry is EventRow:
 			_collect_tree_variables((entry as EventRow).sub_events, into)
+
 
 ## Walks every trigger / condition / action and adds ONE compile warning per distinct deprecated ACE.
 ## Deprecated ACEs still compile byte-for-byte (the covenant), so this is a nudge toward the replacement,
@@ -1891,6 +1937,7 @@ static func _collect_deprecated_aces(entries: Array, warnings: Array, seen: Dict
 					_warn_if_deprecated((action as ACEAction).provider_id, (action as ACEAction).ace_id, warnings, seen)
 			_collect_deprecated_aces(row.sub_events, warnings, seen)
 
+
 ## Appends a deprecation warning for one ACE if its descriptor is marked deprecated (and not already seen).
 static func _warn_if_deprecated(provider_id: String, ace_id: String, warnings: Array, seen: Dictionary) -> void:
 	if provider_id.strip_edges().is_empty() or ace_id.strip_edges().is_empty():
@@ -1909,6 +1956,7 @@ static func _warn_if_deprecated(provider_id: String, ace_id: String, warnings: A
 	if not detail.is_empty():
 		message += " " + detail
 	warnings.append(message)
+
 
 ## Emits the class-level declaration for one tree-placed variable (const / @export var / var).
 static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
@@ -1957,6 +2005,7 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# round-trip lift can absorb it back onto the variable instead of stranding it as a GDScript block.
 	return _tree_variable_group_prefix(local_var) + var_line
 
+
 ## Tier 3 custom-drawer @export_custom prefix. The `eventsheet:<drawer>`
 ## marker rides an @export_custom hint string; the editor's EventSheetAttributeDrawers plugin recognises it
 ## and swaps in a richer control, while WITHOUT the plugin (or in an exported game) the property degrades to
@@ -1997,6 +2046,7 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			return ""
 	return "@export_custom(PROPERTY_HINT_NONE, \"%s\") " % marker
 
+
 ## @export_group/@export_subgroup lines emitted before an EXPORTED tree variable that carries Inspector
 ## grouping. Empty for non-exported or un-grouped vars (the common case — existing emission stays
 ## byte-identical). Must match _emit_variables' format exactly (the verify-lift compares against it).
@@ -2017,6 +2067,7 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 		prefix += "@export_subgroup(\"%s\")\n" % subgroup
 	return prefix
 
+
 ## Canonical @export_enum prefix ("@export_enum(\"a\", \"b\")") — verify-lift relies on
 ## this exact form.
 static func _export_enum_prefix(options: PackedStringArray) -> String:
@@ -2025,6 +2076,7 @@ static func _export_enum_prefix(options: PackedStringArray) -> String:
 		if not option.strip_edges().is_empty():
 			quoted.append("\"%s\"" % option.strip_edges())
 	return "@export_enum(%s)" % ", ".join(quoted)
+
 
 ## Converts a Variant to a deterministic code literal.
 static func _to_code_literal(value: Variant) -> String:
@@ -2069,6 +2121,7 @@ static func _to_code_literal(value: Variant) -> String:
 			return "Color(%s, %s, %s, %s)" % [_to_code_literal(col.r), _to_code_literal(col.g), _to_code_literal(col.b), _to_code_literal(col.a)]
 		_:
 			return str(value)
+
 
 ## Resolves output path from explicit input or sheet resource path. With no explicit
 ## path the sheet's EXISTING pair wins: the conventional <name>_generated.gd when

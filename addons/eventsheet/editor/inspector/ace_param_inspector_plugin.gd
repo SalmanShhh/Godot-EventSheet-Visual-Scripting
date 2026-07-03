@@ -13,13 +13,16 @@ extends EditorInspectorPlugin
 
 var _param_store: EditorParamStore = null
 
+
 ## Provide the EditorParamStore so the plugin can display current values.
 func set_param_store(store: EditorParamStore) -> void:
 	_param_store = store
 
+
 ## Only handle EventSheetExposedNode objects.
 func _can_handle(object: Object) -> bool:
 	return object is EventSheetExposedNode
+
 
 ## Called before the full property list is built.
 func _parse_begin(object: Object) -> void:
@@ -27,6 +30,7 @@ func _parse_begin(object: Object) -> void:
 		return
 	var label: EditorProperty = _make_info_property("EventSheet ACE Parameters")
 	add_custom_control(label)
+
 
 ## Per-property: substitute a widget_hint-specific editor when the entry asks for one.
 func _parse_property(object: Object, _type: Variant.Type, name: String,
@@ -43,6 +47,7 @@ func _parse_property(object: Object, _type: Variant.Type, name: String,
 	add_property_editor(name, widget)
 	return true
 
+
 ## Which editor class a widget_hint maps to (null = Godot's default). Split from
 ## construction because EditorProperty is editor-only-instantiable: headless tests assert
 ## the mapping; the editor constructs.
@@ -56,6 +61,7 @@ static func widget_class_for_hint(widget_hint: String) -> GDScript:
 			return ExpressionParamProperty
 	return null
 
+
 ## Factory for widget_hint editors (null = use Godot's default).
 static func make_widget_for_hint(widget_hint: String, entry: Dictionary) -> EditorProperty:
 	var widget_class: GDScript = widget_class_for_hint(widget_hint)
@@ -65,6 +71,7 @@ static func make_widget_for_hint(widget_hint: String, entry: Dictionary) -> Edit
 		var bounds: PackedFloat64Array = _parse_range(entry)
 		return SliderParamProperty.new(bounds[0], bounds[1], bounds[2])
 	return widget_class.new()
+
 
 ## Range from param metadata: {"range": "min,max,step"} or hint_string, default 0..100/1.
 static func _parse_range(entry: Dictionary) -> PackedFloat64Array:
@@ -76,6 +83,7 @@ static func _parse_range(entry: Dictionary) -> PackedFloat64Array:
 	return PackedFloat64Array([minimum, maximum, step])
 
 # ── widget_hint editors ───────────────────────────────────────────────────────
+
 
 class SliderParamProperty:
 	extends EditorProperty
@@ -93,6 +101,7 @@ class SliderParamProperty:
 	func _update_property() -> void:
 		slider.set_value_no_signal(float(get_edited_object().get(get_edited_property())))
 
+
 class MultilineParamProperty:
 	extends EditorProperty
 	var text_edit: TextEdit = TextEdit.new()
@@ -109,6 +118,7 @@ class MultilineParamProperty:
 		var value: String = str(get_edited_object().get(get_edited_property()))
 		if text_edit.text != value:
 			text_edit.text = value
+
 
 class ExpressionParamProperty:
 	extends EditorProperty
@@ -130,6 +140,7 @@ class ExpressionParamProperty:
 			line_edit.text = value
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
+
 
 ## Build a simple read-only info label styled as an EditorProperty.
 static func _make_info_property(text: String) -> EditorProperty:

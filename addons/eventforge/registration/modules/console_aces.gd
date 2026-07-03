@@ -12,8 +12,8 @@
 # dev_aces.gd (each round-trips to itself), and the combo lives on verbs whose template is DISTINCT
 # (conditional / debug-only / labeled), which reverse-lift cleanly as themselves.
 @tool
-extends RefCounted
 class_name EventForgeConsoleACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
@@ -29,8 +29,10 @@ const LEVEL_OPTIONS: Array = [
 # The marker that rides a bare Log line so it reverse-lifts back AS the combined verb (see ConsoleLog).
 const LOG_MARKER: String = "  # @ace:Core.ConsoleLog"
 
+
 static func _level_param() -> ACEParam:
 	return F.make_param("level", "String", "print", "As", "Which console stream to write to.", "", LEVEL_OPTIONS)
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetStarterTemplates
+extends RefCounted
 
 # "New from template" starter sheets (the New-Sheet ▾ menu / shortcut / command palette / Welcome).
 #
@@ -14,10 +14,12 @@ class_name EventSheetStarterTemplates
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
 var _template_menu: PopupMenu = null
+
 
 func open_menu() -> void:
 	_build_template_menu_items()
@@ -27,6 +29,7 @@ func open_menu() -> void:
 ## appear the moment a .tres lands in the folder — same zero-config convention as
 ## eventsheet_addons/.
 var _project_template_paths: PackedStringArray = PackedStringArray()
+
 
 func _build_template_menu_items() -> void:
 	if _template_menu == null:
@@ -59,6 +62,7 @@ func _build_template_menu_items() -> void:
 		for index in _project_template_paths.size():
 			_template_menu.add_item(_project_template_paths[index].get_file().get_basename().capitalize(), 100 + index)
 
+
 ## A signal-driven BEHAVIOR COMPONENT starter — the Godot composition idiom modelled by example, so a
 ## newcomer's first copy is NOT a monolithic god-sheet. It compiles to an attachable Node with a typed
 ## `host` accessor (its parent), reacts to the host's body_entered SIGNAL (no per-frame polling), and
@@ -83,6 +87,7 @@ static func _build_behavior_component_starter() -> EventSheetResource:
 	on_ready.actions.append(connect_signal)
 	sheet.events.append(on_ready)
 	return sheet
+
 
 ## A CUSTOM RESOURCE starter - Godot's data-asset idiom modelled by example, so a newcomer's
 ## first resource sheet steers toward its full potential: exported variables ARE the asset's

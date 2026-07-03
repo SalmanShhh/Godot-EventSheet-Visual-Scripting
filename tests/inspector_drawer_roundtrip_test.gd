@@ -7,8 +7,9 @@
 # stray @export_custom block. progress_bar/texture_preview/curve_editor have clean (numeric/null) defaults so
 # they round-trip fully; vector_dial/swatch_row round-trip when the var's own Vector2/Color default does.
 @tool
-extends RefCounted
 class_name InspectorDrawerRoundtripTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -140,6 +141,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _vector_dial_range_persists() -> bool:
 	var dlg: VariableDialog = VariableDialog.new()
 	var parent: Node = Node.new()
@@ -158,6 +160,7 @@ static func _vector_dial_range_persists() -> bool:
 	var ok: bool = str(attrs.get("drawer", "")) == "vector_dial" and range_dict is Dictionary and str((range_dict as Dictionary).get("max", "")) == "150"
 	return _eq("a vector_dial's range (dial max) survives the dialog apply", ok, true)
 
+
 static func _emit_for(type_name: String, default_value: Variant, attributes: Dictionary) -> String:
 	var lv: LocalVariable = LocalVariable.new()
 	lv.name = "v"
@@ -166,6 +169,7 @@ static func _emit_for(type_name: String, default_value: Variant, attributes: Dic
 	lv.exported = true
 	lv.attributes = attributes
 	return SheetCompiler._emit_tree_variable_line(lv)
+
 
 static func _emit_unexported(type_name: String, default_value: Variant, attributes: Dictionary) -> String:
 	var lv: LocalVariable = LocalVariable.new()
@@ -176,11 +180,13 @@ static func _emit_unexported(type_name: String, default_value: Variant, attribut
 	lv.attributes = attributes
 	return SheetCompiler._emit_tree_variable_line(lv)
 
+
 static func _find(sheet: EventSheetResource, var_name: String) -> LocalVariable:
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable and (entry as LocalVariable).name == var_name:
 			return entry as LocalVariable
 	return null
+
 
 static func _roundtrip(label: String, var_line: String, var_name: String, expected_drawer: String) -> bool:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + var_line + "\n")
@@ -192,6 +198,7 @@ static func _roundtrip(label: String, var_line: String, var_name: String, expect
 	var recovered: bool = lv != null and str((lv.attributes as Dictionary).get("drawer", "")) == expected_drawer
 	return _eq("%s round-trips into an editable drawer (no block)" % label, recovered and not has_block, true)
 
+
 static func _type_roundtrip(label: String, var_line: String, var_name: String) -> bool:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + var_line + "\n")
 	var lv: LocalVariable = _find(sheet, var_name)
@@ -202,6 +209,7 @@ static func _type_roundtrip(label: String, var_line: String, var_name: String) -
 	var ok: bool = lv != null and not has_block and SheetCompiler._emit_tree_variable_line(lv) == var_line
 	return _eq("a %s variable round-trips byte-exact (no block)" % label, ok, true)
 
+
 static func _eq(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:
 		print("[PASS] inspector_drawer_roundtrip_test: %s" % label)
@@ -210,6 +218,7 @@ static func _eq(label: String, actual: Variant, expected: Variant) -> bool:
 	print("  expected: %s" % str(expected))
 	print("  actual:   %s" % str(actual))
 	return false
+
 
 static func _starts(label: String, actual: String, prefix: String) -> bool:
 	if actual.begins_with(prefix):

@@ -3,10 +3,11 @@
 # that behaviour AS A SHEET; Core built-ins resolve to nothing (their cells keep multi-select). Pins the
 # class→path map, the per-cell probe, and the end-to-end jump on a real dock.
 @tool
-extends RefCounted
 class_name NavigateTest
+extends RefCounted
 
 const CAR_PATH := "res://eventsheet_addons/car/car_behavior.gd"
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -67,6 +68,7 @@ static func run() -> bool:
 
 	dock.free()
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

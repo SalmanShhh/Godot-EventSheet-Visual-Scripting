@@ -8,8 +8,8 @@
 # (Ctrl+Shift+C ≠ Ctrl+C ≠ C). Structural keys (Tab nesting, Delete, Enter/F2 inline edit, Escape)
 # stay fixed — they're grammar, not preference. Tools ▸ Keyboard Shortcuts is the editor for these.
 @tool
-extends RefCounted
 class_name EventSheetShortcuts
+extends RefCounted
 
 const OVERRIDES_FILE := "user://eventforge_shortcuts.cfg"
 
@@ -74,6 +74,7 @@ const ORDER: Array = [
 	"add_event_chord", "add_condition_chord", "add_action_chord", "add_variable_chord",
 ]
 
+
 static func label_for(action: String) -> String:
 	return str(LABELS.get(action, action.capitalize()))
 
@@ -81,6 +82,7 @@ static func label_for(action: String) -> String:
 # lookups must never touch disk. Loaded once; writes update the cache and the file together.
 static var _overrides: Dictionary = {}
 static var _overrides_loaded: bool = false
+
 
 static func _load_overrides() -> void:
 	if _overrides_loaded:
@@ -96,6 +98,7 @@ static func _load_overrides() -> void:
 	for action: String in config.get_section_keys("shortcuts"):
 		_overrides[action] = str(config.get_value("shortcuts", action, ""))
 
+
 static func _save_overrides() -> void:
 	if not Engine.is_editor_hint():
 		return
@@ -104,11 +107,13 @@ static func _save_overrides() -> void:
 		config.set_value("shortcuts", str(action), str(_overrides[action]))
 	config.save(OVERRIDES_FILE)
 
+
 static func binding_for(action: String) -> String:
 	_load_overrides()
 	if _overrides.has(action):
 		return str(_overrides[action])
 	return str(DEFAULTS.get(action, ""))
+
 
 ## Persist a new binding ("Ctrl+S") for an action. An empty binding clears the shortcut (the action
 ## stays reachable via any alternate binding / menu). Saves the per-user file in the editor.
@@ -120,17 +125,20 @@ static func set_binding(action: String, binding: String) -> void:
 		_overrides[action] = binding
 	_save_overrides()
 
+
 ## Restore one action to its DEFAULTS binding (clears the per-user override).
 static func reset(action: String) -> void:
 	_load_overrides()
 	_overrides.erase(action)
 	_save_overrides()
 
+
 ## Restore every action to its DEFAULTS binding.
 static func reset_all() -> void:
 	_load_overrides()
 	_overrides.clear()
 	_save_overrides()
+
 
 ## "Ctrl+Shift+S" → {keycode, ctrl, shift, alt}. "Cmd"/"Meta" count as Ctrl (the dock treats them as
 ## one modifier, macOS-style).
@@ -148,6 +156,7 @@ static func parse(binding: String) -> Dictionary:
 			_:
 				parsed["keycode"] = OS.find_keycode_from_string(token)
 	return parsed
+
 
 ## InputEventKey → "Ctrl+Shift+S" (the format parse()/matches() expect). Returns "" for a modifier-only
 ## press (Ctrl alone) so the capture UI keeps waiting for a real key.
@@ -167,6 +176,7 @@ static func format_event(event: InputEventKey) -> String:
 	parts.append(key_name)
 	return "+".join(parts)
 
+
 ## Another rebindable action that currently resolves to the same chord as `binding` ("" if none), so
 ## the editor can flag a clash that would make one unreachable (the key handler fires the first match).
 static func conflicting_action(action: String, binding: String) -> String:
@@ -185,6 +195,7 @@ static func conflicting_action(action: String, binding: String) -> String:
 # Parse memo: the key handler probes up to ~18 actions per keystroke; bindings only change when the
 # binding string does, so cache by (action, binding text).
 static var _parse_cache: Dictionary = {}
+
 
 static func matches(event: InputEventKey, action: String) -> bool:
 	var binding: String = binding_for(action)

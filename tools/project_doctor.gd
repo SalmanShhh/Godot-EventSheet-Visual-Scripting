@@ -8,6 +8,7 @@
 @tool
 extends SceneTree
 
+
 func _init() -> void:
 	var report: Dictionary = EventSheetProjectDoctor.run()
 	for finding: Dictionary in (report.get("findings", []) as Array):

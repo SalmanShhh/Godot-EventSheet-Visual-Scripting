@@ -7,8 +7,9 @@
 #    per-provider member call; the compiler declares each used provider ONCE as a plain
 #    owned instance. Output stays free of EventForge classes (parity contract).
 @tool
-extends RefCounted
 class_name RuntimeProviderTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -21,6 +22,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -73,6 +75,7 @@ static func run() -> bool:
 		EventForgeBridgeRuntime.get_registered_provider_scripts().has("res://tests/fixtures/runtime_provider_fixture.gd"), false) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

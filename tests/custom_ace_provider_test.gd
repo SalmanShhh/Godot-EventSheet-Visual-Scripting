@@ -3,10 +3,11 @@
 # Registers a user GDScript as a custom-ACE provider on a sheet and asserts its members
 # surface in the ACE registry the picker reads (and disappear when removed). Headless-safe.
 @tool
-extends RefCounted
 class_name CustomACEProviderTest
+extends RefCounted
 
 const FIXTURE_PATH := "res://tests/fixtures/auto_ace_sample.gd"
+
 
 # No-op undo manager matching the dock's EditorUndoRedoManager call shape (see
 # keyboard_actions_test) so undoable edits run cleanly headlessly.
@@ -21,6 +22,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -61,6 +63,7 @@ static func run() -> bool:
 
 	editor.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

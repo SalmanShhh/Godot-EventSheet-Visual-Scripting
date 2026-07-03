@@ -7,8 +7,9 @@
 # exposed type is re-derived from the return type, so no extra state is stored. Existing packs expose
 # only void functions, so this is byte-identical for them (verified separately by drift=0).
 @tool
-extends RefCounted
 class_name FunctionExposeTypeTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -28,6 +29,7 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _expose_directive(return_type: int) -> String:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -40,8 +42,10 @@ static func _expose_directive(return_type: int) -> String:
 	SheetCompiler._emit_expose_annotations(fn, sheet, lines)
 	return lines[0] if lines.size() > 0 else ""
 
+
 static func _lifts_exposed(directive: String) -> bool:
 	return bool(EventSheetACELifter._parse_annotations(directive).get("expose", false))
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

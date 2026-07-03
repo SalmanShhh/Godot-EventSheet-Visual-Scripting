@@ -4,8 +4,9 @@
 # guards EventSheetViewport.get_lane_divider_x() (the shared alignment contract) and that the
 # header binds and reserves its band. The header's appearance is verified by opening the editor.
 @tool
-extends RefCounted
 class_name ColumnHeaderTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -33,6 +34,7 @@ static func run() -> bool:
 	header.free()
 	viewport.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -1,8 +1,9 @@
 # EventSheet — shared popup UI helpers (consistent dialog look).
 # Verifies the pure factory helpers produce the expected control structure.
 @tool
-extends RefCounted
 class_name PopupUITest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -45,6 +46,7 @@ static func run() -> bool:
 	all_passed = _check("fixed-keys reference lists Find & Replace", flat.contains("Ctrl + F"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

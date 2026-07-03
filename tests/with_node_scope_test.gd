@@ -6,8 +6,9 @@
 # an explicit target the author set is never overridden. Verifies the compile model the user chose
 # (inline per action), inheritance into nested sub-events, and the byte-identical .gd round-trip.
 @tool
-extends RefCounted
 class_name WithNodeScopeTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -45,6 +46,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## OnReady → With node $Enemy → { Set Modulate (blank), Print (host), Set Modulate on $Boss (explicit),
 ## Add To Group (self), and a nested `if on floor` sub-event with Play Animation (inherits the scope) }.
 static func _compile_scope_sheet() -> String:
@@ -73,6 +75,7 @@ static func _compile_scope_sheet() -> String:
 	sheet.events.append(on_ready)
 	return str(SheetCompiler.compile(sheet, "user://__with_node_compiled.gd").get("output", ""))
 
+
 ## A Core action with empty codegen_template, so the compiler resolves the registered (post-processed)
 ## template — exercising the real {target.} node-scoped descriptors.
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:
@@ -81,6 +84,7 @@ static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	action.ace_id = ace_id
 	action.params = params
 	return action
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

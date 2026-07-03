@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetFindReferencesPanel
+extends RefCounted
 # The "Find References" window: whole-symbol uses of a variable / function / signal across EVERY sheet,
 # with jump-to-sheet. Symbol-aware (so `speed` never matches `move_speed`), unlike substring Find.
 # Extracted from event_sheet_dock.gd to keep that file maintainable; this owns its own window / edit /
@@ -12,8 +12,10 @@ var _find_refs_window: Window = null
 var _find_refs_edit: LineEdit = null
 var _find_refs_tree: Tree = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Find References: whole-symbol uses of a variable/function/signal across EVERY sheet, with
 ## jump-to-sheet — symbol-aware (so `speed` never matches `move_speed`), unlike substring Find.
@@ -63,6 +65,7 @@ func open() -> void:
 	if not _find_refs_edit.text.strip_edges().is_empty():
 		_run_find_references()
 
+
 ## Populates the references tree. Returns the total count (so it's headlessly testable).
 func _run_find_references() -> int:
 	_find_refs_tree.clear()
@@ -86,6 +89,7 @@ func _run_find_references() -> int:
 		summary.set_text(1, "no whole-symbol matches")
 	return total
 
+
 func _on_find_reference_activated() -> void:
 	var item: TreeItem = _find_refs_tree.get_selected()
 	if item == null:
@@ -93,6 +97,7 @@ func _on_find_reference_activated() -> void:
 	var path: String = str(item.get_metadata(0)) if item.get_metadata(0) != null else ""
 	if not path.is_empty() and ResourceLoader.exists(path):
 		_dock._load_sheet_from_path(path)
+
 
 ## Seeds the search box from a selected local-variable or signal row (a quick "find this").
 func _selected_symbol_text() -> String:

@@ -9,6 +9,7 @@ var _frames: int = 0
 var _func_dialog: EventSheetFunctionDialog = null
 var _theme_editor: EventSheetThemeEditor = null
 
+
 func _init() -> void:
 	root.title = "Themed Dialogs Preview"
 	root.size = Vector2i(1120, 720)
@@ -19,9 +20,11 @@ func _init() -> void:
 	root.add_child(bg)
 	process_frame.connect(_on_frame)
 
+
 func _parent_if_orphan(window: Window) -> void:
 	if window != null and window.get_parent() == null:
 		root.add_child(window)
+
 
 func _on_frame() -> void:
 	_frames += 1

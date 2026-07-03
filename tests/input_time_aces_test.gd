@@ -3,8 +3,9 @@
 # _unhandled_input lifecycle triggers (compile + verify-lift), and the System: Wait as
 # `await` actions (handlers are implicit coroutines, so await is safe anywhere).
 @tool
-extends RefCounted
 class_name InputTimeAcesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -82,6 +83,7 @@ static func run() -> bool:
 	all_passed = _check("_input round-trips byte-identically", roundtrip == external_source, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

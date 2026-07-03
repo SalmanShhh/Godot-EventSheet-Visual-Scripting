@@ -5,8 +5,9 @@
 # built-in set against a newly-added ACE colliding with an existing id (a live risk now that the
 # behaviour-vocabulary work adds many Core ids), and checks the detector itself with a synthetic pair.
 @tool
-extends RefCounted
 class_name DuplicateAceIdTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -32,6 +33,7 @@ static func run() -> bool:
 	ok = _check("a distinct id is not flagged", detected.has("Core::OtherSample"), false) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

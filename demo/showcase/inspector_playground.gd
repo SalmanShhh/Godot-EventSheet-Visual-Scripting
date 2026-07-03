@@ -23,9 +23,11 @@ extends Node2D
 @export_subgroup("Tuning")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:200") var stat_speed: float = 90.0
 
+
 func _ready() -> void:
 	if body_icon != null:
 		$Emblem.texture = body_icon
+
 
 func _process(delta: float) -> void:
 	var t: float = Time.get_ticks_msec() / 1000.0

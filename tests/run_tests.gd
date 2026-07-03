@@ -4,8 +4,8 @@
 # mutate shared state — remove generated files, toggle the plugin) are forced to run LAST so they
 # cannot disturb earlier tests. Runs in headless Godot and exits with a status code.
 @tool
-extends SceneTree
 class_name EventForgeTestRunner
+extends SceneTree
 
 const TESTS_DIR := "res://tests/"
 
@@ -18,6 +18,7 @@ const DEFERRED_LAST: Array[String] = [
 	"workspace_shell_test.gd",
 	"perf_smoke_test.gd",
 ]
+
 
 func _init() -> void:
 	var passed: bool = true
@@ -38,6 +39,7 @@ func _init() -> void:
 		push_error("Some tests failed.")
 		quit(1)
 
+
 ## Test .gd files in a stable order: sorted alphabetically, with the shared-state DEFERRED_LAST tests
 ## appended last (in their listed order, not alphabetical). run_tests.gd excludes itself; the
 ## tests/fixtures/ subfolder is excluded automatically (get_files_at is non-recursive).
@@ -56,6 +58,7 @@ func _test_files() -> PackedStringArray:
 		if deferred.has(deferred_file):
 			files.append(deferred_file)
 	return files
+
 
 ## True when the loaded script declares a run method (the test contract: static func run() -> bool).
 func _has_static_run(script: GDScript) -> bool:

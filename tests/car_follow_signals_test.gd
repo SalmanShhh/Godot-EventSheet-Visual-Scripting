@@ -6,11 +6,12 @@
 # @export designer knob — it's internal state driven by Start/Stop Following, so it's now un-exported.
 # Full motion needs a live host + physics, so this asserts the signals compiled in + the export flip.
 @tool
-extends RefCounted
 class_name CarFollowSignalsTest
+extends RefCounted
 
 const CAR := "res://eventsheet_addons/car/car_behavior.gd"
 const FOLLOW := "res://eventsheet_addons/follow/follow_behavior.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -35,6 +36,7 @@ static func run() -> bool:
 	all_passed = _check("'following' is no longer @export", not follow_src.contains("@export var following"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

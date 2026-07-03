@@ -5,8 +5,9 @@
 # what the label promises, and the dispatch + dialog wiring (index-stable RECIPES, unknown id falls
 # back to the skeleton).
 @tool
-extends RefCounted
 class_name RecipeScaffoldTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -64,6 +65,7 @@ static func run() -> bool:
 	dock.free()
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

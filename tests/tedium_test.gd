@@ -3,8 +3,9 @@
 # Grows a block per slice: True Rename + create-variable quick-fix, snippets,
 # bulk multi-select ops, session restore, canvas drops, attach/run loop closers.
 @tool
-extends RefCounted
 class_name TediumTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -14,6 +15,7 @@ class NoopUndoManager:
 	func commit_action() -> void: pass
 	func has_undo() -> bool: return false
 	func has_redo() -> bool: return false
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -316,6 +318,7 @@ static func run() -> bool:
 	run_editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

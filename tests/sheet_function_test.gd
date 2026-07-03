@@ -3,10 +3,11 @@
 # Verifies that EventFunction resources compile to GDScript methods and that the built-in
 # "Call Function" action emits a call. Headless-safe (compiler only).
 @tool
-extends RefCounted
 class_name SheetFunctionTest
+extends RefCounted
 
 const OUTPUT_PATH := "user://eventforge_sheet_function_test.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -61,6 +62,7 @@ static func run() -> bool:
 		ActionCodegen.generate_action(call_no_args), "reset()") and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

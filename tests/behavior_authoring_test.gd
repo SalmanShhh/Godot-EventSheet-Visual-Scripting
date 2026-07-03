@@ -5,8 +5,9 @@
 # compiled .gd into eventsheet_addons/ and the behavior's ACEs publish). The identity UX
 # (banner, tab badges, host-aware header, Sheet Type dialog) makes the sheet type visible.
 @tool
-extends RefCounted
 class_name BehaviorAuthoringTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -19,6 +20,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -105,6 +107,7 @@ static func run() -> bool:
 	second_editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

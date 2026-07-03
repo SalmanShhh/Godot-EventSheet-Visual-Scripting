@@ -1,7 +1,7 @@
 # EventSheet — docs artifact regression checks
 @tool
-extends RefCounted
 class_name DocsIntegrityTest
+extends RefCounted
 
 const REQUIRED_DOCS := {
 	"res://docs/EVENTSHEET_THEME_EDITABILITY.md": [
@@ -65,6 +65,7 @@ const REQUIRED_DOCS := {
 	],
 }
 
+
 static func run() -> bool:
 	var passed: bool = true
 	for doc_path in REQUIRED_DOCS.keys():
@@ -76,6 +77,7 @@ static func run() -> bool:
 		for needle in REQUIRED_DOCS[doc_path]:
 			passed = _check("doc content marker (%s): %s" % [doc_path.get_file(), needle], content.contains(needle), true) and passed
 	return passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

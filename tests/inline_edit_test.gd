@@ -4,8 +4,9 @@
 # group editor popup (name + description) via group_edit_requested, NOT an inline title field —
 # so a group's description (rendered only once non-empty) is always reachable.
 @tool
-extends RefCounted
 class_name InlineEditTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -58,10 +59,12 @@ static func run() -> bool:
 	viewport.free()
 	return all_passed
 
+
 static func _double_click(viewport: EventSheetViewport, at: Vector2) -> void:
 	viewport._handle_mouse_button(_button(at, true, false))
 	viewport._handle_mouse_button(_button(at, false, false))
 	viewport._handle_mouse_button(_button(at, true, true))
+
 
 static func _button(at: Vector2, pressed: bool, double_click: bool) -> InputEventMouseButton:
 	var event: InputEventMouseButton = InputEventMouseButton.new()
@@ -71,6 +74,7 @@ static func _button(at: Vector2, pressed: bool, double_click: bool) -> InputEven
 	event.position = at
 	return event
 
+
 static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int:
 	var flat: Array[Dictionary] = viewport.get_flat_rows()
 	for i in range(flat.size()):
@@ -78,6 +82,7 @@ static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int
 		if row_data != null and row_data.source_resource == resource:
 			return i
 	return -1
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

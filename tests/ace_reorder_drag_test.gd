@@ -4,8 +4,9 @@
 # the top condition onto the lower half of the bottom condition reorders them (the insert
 # position must be decided by the vertical cursor position, since cells stack vertically).
 @tool
-extends RefCounted
 class_name ACEReorderDragTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -18,6 +19,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -59,6 +61,7 @@ static func run() -> bool:
 	editor.free()
 	return all_passed
 
+
 static func _cell_rect(row_data: EventRowData, ace_index: int) -> Rect2:
 	for span in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
@@ -68,6 +71,7 @@ static func _cell_rect(row_data: EventRowData, ace_index: int) -> Rect2:
 			return span.rect
 	return Rect2()
 
+
 static func _button(at: Vector2, pressed: bool) -> InputEventMouseButton:
 	var event: InputEventMouseButton = InputEventMouseButton.new()
 	event.button_index = MOUSE_BUTTON_LEFT
@@ -75,10 +79,12 @@ static func _button(at: Vector2, pressed: bool) -> InputEventMouseButton:
 	event.position = at
 	return event
 
+
 static func _motion(at: Vector2) -> InputEventMouseMotion:
 	var event: InputEventMouseMotion = InputEventMouseMotion.new()
 	event.position = at
 	return event
+
 
 static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int:
 	var flat: Array[Dictionary] = viewport.get_flat_rows()
@@ -87,6 +93,7 @@ static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int
 		if row_data != null and row_data.source_resource == resource:
 			return i
 	return -1
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

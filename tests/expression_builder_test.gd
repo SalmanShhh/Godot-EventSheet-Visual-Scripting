@@ -1,10 +1,11 @@
 @tool
-extends RefCounted
 class_name ExpressionBuilderTest
+extends RefCounted
 # The "Insert Expression" window's operator palette and its tree results both insert at the caret of
 # the expression field via _insert_into_expression_target(). That field is always a CodeEdit, but the
 # old insert path only handled LineEdit — so picking a result (or, now, an operator) silently did
 # nothing. These pin the shared helper for both the CodeEdit (the real case) and a LineEdit fallback.
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -67,9 +68,11 @@ static func run() -> bool:
 	host2.free()
 	return all_passed
 
+
 ## Recursively true when the tree contains an item whose column-0 text equals `text`.
 static func _tree_has_item(tree: Tree, text: String) -> bool:
 	return tree != null and _walk_item(tree.get_root(), text)
+
 
 static func _walk_item(item: TreeItem, text: String) -> bool:
 	if item == null:
@@ -80,6 +83,7 @@ static func _walk_item(item: TreeItem, text: String) -> bool:
 			return true
 		child = child.get_next()
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

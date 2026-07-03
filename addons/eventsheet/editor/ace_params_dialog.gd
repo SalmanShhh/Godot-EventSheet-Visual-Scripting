@@ -58,6 +58,7 @@ var _lint_context_provider: Callable = Callable()
 var _node_picker: ACEParamsNodePicker = ACEParamsNodePicker.new()
 var _expression_picker: ACEParamsExpressionPicker = ACEParamsExpressionPicker.new()
 
+
 ## Initialise and attach the dialog to parent_node. Must be called before open().
 ## registry powers the Insert Expression picker; variable_names_provider returns the
 ## current sheet variable names (Callable -> PackedStringArray/Array).
@@ -106,12 +107,15 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry = null, vari
 	form_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(form_card)
 
+
 func set_registry(registry: EventSheetACERegistry) -> void:
 	_registry = registry
+
 
 ## Open the parameter form for the given ACEDefinition.
 func open(definition: ACEDefinition, context: Dictionary) -> void:
 	open_with_values(definition, context, {})
+
 
 func open_with_values(definition: ACEDefinition, context: Dictionary, initial_values: Dictionary) -> void:
 	if _dialog == null:
@@ -143,6 +147,7 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 ## Rebuilds the parameter rows. Separated from open() so it can be exercised without
 ## popping the window (which requires a display server).
 var _single_param_form: bool = false
+
 
 func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 	_fields.clear()
@@ -176,6 +181,7 @@ func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 		_add_param_row(parameter as Dictionary, initial_values)
 
 	_hint.text = _build_hint_text()
+
 
 func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	var key: String = str(param_dict.get("id", ""))
@@ -219,6 +225,7 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 ## registered in _fields[key]; the returned Control is what gets added to the row.
 var _hint_factories: Dictionary = {}
 
+
 func _ensure_hint_factories() -> void:
 	if _hint_factories.is_empty():
 		_hint_factories = {
@@ -229,6 +236,7 @@ func _ensure_hint_factories() -> void:
 			"method_reference": _create_method_reference_field,
 			"property_reference": _create_property_reference_field,
 		}
+
 
 func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: String, hint: String) -> Control:
 	var field_type: int = int(param_dict.get("type", TYPE_NIL))
@@ -286,6 +294,7 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 	_fields[key] = edit
 	return edit
 
+
 func _create_options_field(key: String, options: Array, default_value: Variant) -> OptionButton:
 	var dropdown: OptionButton = OptionButton.new()
 	for option_entry in options:
@@ -306,6 +315,7 @@ func _create_options_field(key: String, options: Array, default_value: Variant) 
 			dropdown.select(index)
 	_fields[key] = dropdown
 	return dropdown
+
 
 ## Editable autocomplete combo (event-sheet-style "Combo" with free text): a LineEdit the
 ## user types into, plus a ▾ button whose popup lists the behavior-declared suggestions
@@ -363,6 +373,7 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 	_fields[key] = edit
 	return row
 
+
 ## Fills `popup` with the suggestions whose text contains `filter_text` (case-insensitive;
 ## empty filter shows all). Each item's id is its index into the FULL list, so a pick maps
 ## back correctly even when filtered. Pure enough to unit-test directly.
@@ -379,6 +390,7 @@ func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStringArra
 		popup.add_item("(no match — keep typing)", -1)
 		popup.set_item_disabled(popup.item_count - 1, true)
 
+
 ## hint may carry a required base type ("variable_reference:Array") — the dropdown then
 ## offers only variables of that container type (Variant/untyped always qualify).
 ## Reflection pickers for the Helper ACEs' method/property params: an editable suggest-combo
@@ -387,13 +399,16 @@ func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStringArra
 func _create_method_reference_field(key: String, default_value: Variant) -> Control:
 	return _create_autocomplete_field(key, reflected_members(_host_class_for_context(), "method"), default_value)
 
+
 func _create_property_reference_field(key: String, default_value: Variant) -> Control:
 	return _create_autocomplete_field(key, reflected_members(_host_class_for_context(), "property"), default_value)
+
 
 ## The sheet's host class (or Node) — the default Call Method / Set Property target (`self`).
 func _host_class_for_context() -> String:
 	var sheet: EventSheetResource = (_lint_context_provider.call() as EventSheetResource) if _lint_context_provider.is_valid() else null
 	return sheet.host_class if sheet != null and not sheet.host_class.strip_edges().is_empty() else "Node"
+
 
 ## Public method / property names declared on a class (reflected from ClassDB, sorted, no
 ## private `_`-prefixed members). Static + pure, so it is unit-testable without a dialog.
@@ -413,6 +428,7 @@ static func reflected_members(host_class: String, kind: String) -> Array:
 				names.append(member)
 	names.sort()
 	return names
+
 
 func _create_variable_reference_field(key: String, default_value: Variant, hint: String = VARIABLE_REFERENCE_HINT) -> Control:
 	var required_type: String = hint.get_slice(":", 1) if hint.contains(":") else ""
@@ -440,6 +456,7 @@ func _create_variable_reference_field(key: String, default_value: Variant, hint:
 	_fields[key] = dropdown
 	return dropdown
 
+
 ## True when the sheet variable's declared type starts with `required` (so "Array" also
 ## matches "Array[int]"); untyped/Variant variables always qualify.
 func _variable_matches_type(variable_name: String, required: String) -> bool:
@@ -455,6 +472,7 @@ func _variable_matches_type(variable_name: String, required: String) -> bool:
 	if type_name.is_empty() or type_name == "Variant":
 		return true
 	return type_name.begins_with(required)
+
 
 ## Event-sheet-style object-signal picker: a dropdown of the host class's signals plus signals
 ## declared in the sheet's GDScript blocks (raw names — OnSignal connects them directly).
@@ -486,6 +504,7 @@ func _create_signal_reference_field(key: String, default_value: Variant, quoted:
 	_fields[key] = dropdown
 	return dropdown
 
+
 ## Host-class signals (ClassDB) + `signal x` declarations in the sheet's class-level
 ## GDScript blocks, sorted and deduplicated.
 func _signal_options() -> Array[String]:
@@ -513,6 +532,7 @@ func _signal_options() -> Array[String]:
 	names.sort()
 	return names
 
+
 ## Sheet-enum-driven dropdown (hint "enum:State"): options are the enum's members as
 ## State.MEMBER values — the Combo backed by a real enum.
 func _create_enum_reference_field(key: String, default_value: Variant, enum_name: String) -> Control:
@@ -532,6 +552,7 @@ func _create_enum_reference_field(key: String, default_value: Variant, enum_name
 		return fallback
 	return _create_options_field(key, member_options, default_value)
 
+
 ## Color picker param (hint "color" or a Color-typed param). The value round-trips as a
 ## canonical Color(r, g, b, a) literal so the sheet can show a swatch next to the text.
 func _create_color_field(key: String, default_value: Variant) -> Control:
@@ -542,16 +563,19 @@ func _create_color_field(key: String, default_value: Variant) -> Control:
 	_fields[key] = picker
 	return picker
 
+
 func _can_drop_on_expression(_position: Vector2, data: Variant) -> bool:
 	if not (data is Dictionary):
 		return false
 	var kind: String = str((data as Dictionary).get("type", ""))
 	return kind == "files" or kind == "nodes"
 
+
 func _drop_on_expression(_position: Vector2, data: Variant, edit: CodeEdit) -> void:
 	var snippet: String = drop_data_to_expression(data)
 	if not snippet.is_empty():
 		edit.insert_text_at_caret(snippet)
+
 
 ## Converts an editor drag payload to GDScript: FileSystem files become quoted res://
 ## paths; Scene-dock nodes become $Path references (relative to the edited scene root).
@@ -581,12 +605,14 @@ static func drop_data_to_expression(data: Variant) -> String:
 			return _best_node_reference(scene_root, relative)
 	return ""
 
+
 ## $Name for identifier-safe paths, $"Path/To Node" otherwise.
 static func _node_reference(relative_path: String) -> String:
 	var identifier_regex: RegEx = RegEx.new()
 	if identifier_regex.compile("^[A-Za-z_][A-Za-z0-9_]*$") == OK and identifier_regex.search(relative_path) != null:
 		return "$%s" % relative_path
 	return "$\"%s\"" % relative_path
+
 
 ## The shortest robust reference for a picked node — Godot's answer to deep, node-heavy objects. When the
 ## node carries a scene-unique name (owner-scoped to this scene), returns "%Name": a flat handle that
@@ -599,6 +625,7 @@ static func _best_node_reference(scene_root: Node, relative_path: String) -> Str
 		if node != null and node.unique_name_in_owner and (node.owner == scene_root or node == scene_root):
 			return "%" + str(node.name)
 	return _node_reference(relative_path)
+
 
 ## Audio params: a path field plus a ▶ button that previews the sound in the editor
 ## (loads the stream into a throwaway player under the dialog; ■ stops it).
@@ -616,6 +643,7 @@ func _build_path_field_base(key: String, default_value: Variant) -> Dictionary:
 		(_dialog as AcceptDialog).register_text_enter(path_edit)
 	_fields[key] = path_edit
 	return {"container": container, "edit": path_edit}
+
 
 func _create_audio_path_field(key: String, default_value: Variant) -> Control:
 	var base: Dictionary = _build_path_field_base(key, default_value)
@@ -652,6 +680,7 @@ func _create_audio_path_field(key: String, default_value: Variant) -> Control:
 
 var _preview_player: AudioStreamPlayer = null
 
+
 ## Scene params: a path field plus a Browse… button (editor file dialog filtered to
 ## scenes); the chosen path inserts quoted, ready for load()/Spawn Scene At.
 func _create_scene_path_field(key: String, default_value: Variant) -> Control:
@@ -670,6 +699,7 @@ func _create_scene_path_field(key: String, default_value: Variant) -> Control:
 var _scene_file_dialog: EditorFileDialog = null
 var _scene_browse_target: LineEdit = null
 
+
 func _browse_for_scene(path_edit: LineEdit) -> void:
 	if not Engine.is_editor_hint():
 		return
@@ -686,12 +716,14 @@ func _browse_for_scene(path_edit: LineEdit) -> void:
 	_scene_browse_target = path_edit
 	_scene_file_dialog.popup_file_dialog()
 
+
 ## Drops onto plain LineEdit fields: files become quoted paths, nodes $Refs (reuses
 ## the expression-field converter so the two can never disagree).
 func _drop_on_line_edit(_position: Vector2, data: Variant, edit: LineEdit) -> void:
 	var snippet: String = drop_data_to_expression(data)
 	if not snippet.is_empty() and is_instance_valid(edit):
 		edit.text = snippet
+
 
 ## The single source of truth for "value as a GDScript string literal".
 static func format_quoted_literal(value: String) -> String:
@@ -701,6 +733,7 @@ static func format_quoted_literal(value: String) -> String:
 ## AnimationPlayer in the edited scene, plus a free-text fallback for names that only
 ## exist at runtime. Selections insert quoted.
 var animation_scene_root_override: Node = null  # tests inject a tree here
+
 
 func _create_animation_field(key: String, default_value: Variant) -> Control:
 	var container: HBoxContainer = HBoxContainer.new()
@@ -730,6 +763,7 @@ func _create_animation_field(key: String, default_value: Variant) -> Control:
 	_fields[key] = name_edit
 	return container
 
+
 ## Every animation name on every AnimationPlayer under root (sorted, deduped) —
 ## static + UI-free so the headless suite can pin it.
 static func animation_options_from(root: Node) -> PackedStringArray:
@@ -749,6 +783,7 @@ static func animation_options_from(root: Node) -> PackedStringArray:
 		names.append(str(unique_name))
 	names.sort()
 	return names
+
 
 ## The press-a-key workflow: a button that captures the next key press (storing the
 ## KEY_* constant), plus a fallback dropdown for keys that can't be detected.
@@ -782,6 +817,7 @@ func _create_key_capture_field(key: String, default_value: Variant) -> Control:
 	_fields[key] = capture
 	return container
 
+
 ## Physical keycode -> KEY_* constant name (KEY_F8, KEY_PAGEUP, KEY_SPACE…).
 static func key_constant_for(keycode: int) -> String:
 	var key_name: String = OS.get_keycode_string(keycode)
@@ -791,8 +827,10 @@ static func key_constant_for(keycode: int) -> String:
 		return "KEY_KP_%s" % key_name.substr(3).to_upper().replace(" ", "")
 	return "KEY_%s" % key_name.to_upper().replace(" ", "")
 
+
 static func color_to_literal(value: Color) -> String:
 	return "Color(%s, %s, %s, %s)" % [String.num(value.r, 3), String.num(value.g, 3), String.num(value.b, 3), String.num(value.a, 3)]
+
 
 func _create_expression_field(key: String, default_value: Variant) -> Control:
 	var container: HBoxContainer = HBoxContainer.new()
@@ -848,40 +886,49 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 # (ACEParamsDialog.node_matches_query, .extract_sheet_node_references, .scan_scene_files,
 # ._node_is_uniqueable) keep working unchanged.
 
+
 func _open_node_picker(key: String) -> void:
 	_node_picker._open_node_picker(key)
+
 
 ## Builds the picker UI lazily — delegate kept for tests that drive it headlessly.
 func _ensure_node_picker_ui() -> void:
 	_node_picker._ensure_node_picker_ui()
 
+
 ## Population delegate kept for tests that drive an explicit tree.
 func _populate_node_picker_from_root(scene_root: Node) -> void:
 	_node_picker._populate_node_picker_from_root(scene_root)
 
+
 ## Selection-changed delegate kept for tests.
 func _on_node_picker_selection_changed() -> void:
 	_node_picker._on_node_picker_selection_changed()
+
 
 ## Query matching with the group:/script: prefixes (plain = name/class/path).
 ## Static delegate — reached as ACEParamsDialog.node_matches_query by tests/tools.
 static func node_matches_query(node: Node, relative_path: String, query: String) -> bool:
 	return ACEParamsNodePicker.node_matches_query(node, relative_path, query)
 
+
 ## Every $Name / $"Path" reference the sheet makes (params, blocks, pick filters).
 ## Static delegate — reached as ACEParamsDialog.extract_sheet_node_references by tests/tools.
 static func extract_sheet_node_references(sheet: EventSheetResource) -> PackedStringArray:
 	return ACEParamsNodePicker.extract_sheet_node_references(sheet)
+
 
 ## Cross-scene search: regex-scans .tscn node headers under res://.
 ## Static delegate — reached as ACEParamsDialog.scan_scene_files by tests/tools.
 static func scan_scene_files(query: String, base_dir: String = "res://") -> Array:
 	return ACEParamsNodePicker.scan_scene_files(query, base_dir)
 
+
 ## True when the node at relative_path can be made scene-unique. Pure → unit-testable.
 ## Static delegate — reached as ACEParamsDialog._node_is_uniqueable by tests.
 static func _node_is_uniqueable(scene_root: Node, relative_path: String) -> bool:
 	return ACEParamsNodePicker._node_is_uniqueable(scene_root, relative_path)
+
 
 ## Stops any in-flight audio preview (called when the dialog hides — a preview must
 ## never outlive the dialog that started it).
@@ -889,6 +936,7 @@ func _stop_audio_preview() -> void:
 	if _preview_player != null and is_instance_valid(_preview_player):
 		_preview_player.queue_free()
 	_preview_player = null
+
 
 ## Depth-first: the first tree item carrying metadata — a real result row, skipping non-selectable
 ## group folders and empty-state placeholders. Lets Enter in the sub-picker search boxes commit the
@@ -906,6 +954,7 @@ func _first_metadata_row(item: TreeItem) -> TreeItem:
 		child = child.get_next()
 	return null
 
+
 ## Literal node-path references in an expression that can be checked against a scene: bare `$Name`,
 ## `$"Quoted/Path"`, and `get_node("Path")`. Unique-name (`%Name`) refs are handled separately by
 ## unique_names_in_expression(); dynamic get_node(expr) is not statically resolvable and is skipped.
@@ -921,6 +970,7 @@ static func node_references_in_expression(expression: String) -> PackedStringArr
 	for hit: RegExMatch in get_node_re.search_all(expression):
 		references.append(hit.get_string(1))
 	return references
+
 
 ## Unique-name references (Godot 4's `%Name` — the stable, refactor-proof way to reach a node, like an
 ## event-sheet object name): bare `%Name` and `%"Quoted Name"`. A `%` that sits INSIDE a string literal is
@@ -939,6 +989,7 @@ static func unique_names_in_expression(expression: String) -> PackedStringArray:
 		names.append(hit.get_string(1))
 	return names
 
+
 ## Whether `index` falls inside a "…" string literal (odd number of double-quotes before it). Cheap
 ## heuristic — enough to tell a `%d` format specifier from a real `%Name` node reference.
 static func _is_inside_string_literal(text: String, index: int) -> bool:
@@ -948,6 +999,7 @@ static func _is_inside_string_literal(text: String, index: int) -> bool:
 			quotes += 1
 	return quotes % 2 == 1
 
+
 ## True when a trailing `%` is the modulo / string-format operator (preceded by a value: an
 ## identifier, number, `)`, `]`, or a closing quote) rather than the start of a `%Name` reference.
 static func _looks_like_modulo(before_caret: String) -> bool:
@@ -956,6 +1008,7 @@ static func _looks_like_modulo(before_caret: String) -> bool:
 		return false
 	var last: String = stem.substr(stem.length() - 1)
 	return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_)]\"'".contains(last)
+
 
 ## The first node reference in `expression` that does NOT resolve in `scene_root`, or "" when every
 ## reference resolves (or there are none / no scene to check). Checks both `$path`/get_node refs (via
@@ -978,6 +1031,7 @@ static func unresolved_node_reference(expression: String, scene_root: Node) -> S
 				return "%" + name
 	return ""
 
+
 ## Every node under `scene_root` as a relative path (Player, UI, UI/Score, …), capped, for `$` node
 ## autocomplete. Depth-first so siblings stay grouped under their parent.
 static func scene_node_paths(scene_root: Node, limit: int = 200) -> PackedStringArray:
@@ -986,12 +1040,14 @@ static func scene_node_paths(scene_root: Node, limit: int = 200) -> PackedString
 		_collect_node_paths(scene_root, scene_root, paths, limit)
 	return paths
 
+
 static func _collect_node_paths(node: Node, scene_root: Node, paths: PackedStringArray, limit: int) -> void:
 	for child: Node in node.get_children():
 		if paths.size() >= limit:
 			return
 		paths.append(str(scene_root.get_path_to(child)))
 		_collect_node_paths(child, scene_root, paths, limit)
+
 
 ## The unique names (`%Name`) reachable from anywhere in `scene_root`: nodes flagged
 ## unique_name_in_owner whose owner is the scene root (owner-scoped — an instanced sub-scene's own
@@ -1001,6 +1057,7 @@ static func scene_unique_names(scene_root: Node, limit: int = 200) -> PackedStri
 	if scene_root != null:
 		_collect_unique_names(scene_root, scene_root, names, limit)
 	return names
+
 
 static func _collect_unique_names(node: Node, scene_root: Node, names: PackedStringArray, limit: int) -> void:
 	for child: Node in node.get_children():
@@ -1013,10 +1070,12 @@ static func _collect_unique_names(node: Node, scene_root: Node, names: PackedStr
 ## The scene to validate node paths against: a test-injected tree, else the edited scene (editor only).
 var node_validation_scene_override: Node = null  # tests inject a tree here
 
+
 func _validation_scene_root() -> Node:
 	if node_validation_scene_override != null:
 		return node_validation_scene_override
 	return EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
+
 
 ## Live expression validation: compile-checks the field against the sheet context
 ## (variables, host members) and tints the text red when it would not compile. The lint
@@ -1057,9 +1116,11 @@ func _validate_expression_field(edit: Control) -> void:
 		_update_quickfix_button(edit, undeclared)
 		_update_didyoumean_button(edit, undeclared, suggestion)
 
+
 ## Wires the sheet-context source for expression validation (returns EventSheetResource).
 func set_lint_context_provider(provider: Callable) -> void:
 	_lint_context_provider = provider
+
 
 ## Opens the editor's built-in class reference for a native class. Returns the help
 ## topic (testable headless, where there's no editor to open it in).
@@ -1077,6 +1138,7 @@ static func open_class_docs(docs_class: String) -> String:
 var _variable_creator: Callable = Callable()
 var _quickfix_buttons: Dictionary = {}
 var _didyoumean_buttons: Dictionary = {}
+
 
 ## The closest name the sheet already knows (variable / tree var / sheet function / host
 ## member) to an unknown identifier, within a small edit distance — powers the "Did you
@@ -1108,6 +1170,7 @@ static func closest_known_identifier(identifier: String, sheet: EventSheetResour
 			best = candidate
 	return best
 
+
 ## Levenshtein distance (small strings — identifiers), used only by closest_known_identifier.
 static func _edit_distance(a: String, b: String) -> int:
 	var n: int = a.length()
@@ -1128,8 +1191,10 @@ static func _edit_distance(a: String, b: String) -> int:
 		previous = current
 	return previous[m]
 
+
 func set_variable_creator(creator: Callable) -> void:
 	_variable_creator = creator
+
 
 ## The probable culprit when an expression fails lint: the first plain identifier the
 ## sheet context can't account for. The engine never exposes its parse-error text to
@@ -1174,6 +1239,7 @@ static func undeclared_identifier_in_expression(expression: String, sheet: Event
 		return ident
 	return ""
 
+
 func _update_quickfix_button(edit: Control, identifier: String) -> void:
 	var button: Button = _quickfix_buttons.get(edit) as Button
 	if identifier.is_empty() or not _variable_creator.is_valid():
@@ -1193,12 +1259,14 @@ func _update_quickfix_button(edit: Control, identifier: String) -> void:
 	button.set_meta("identifier", identifier)
 	button.visible = true
 
+
 func _on_quickfix_pressed(edit: Control) -> void:
 	var button: Button = _quickfix_buttons.get(edit) as Button
 	if button == null or not _variable_creator.is_valid():
 		return
 	if bool(_variable_creator.call(str(button.get_meta("identifier", "")))):
 		_validate_expression_field(edit)
+
 
 ## "Did you mean …?" typo quick-fix: a one-click button that swaps the unknown identifier
 ## for the closest name the sheet knows, then re-validates. Distinct from the create-var
@@ -1223,6 +1291,7 @@ func _update_didyoumean_button(edit: Control, identifier: String, suggestion: St
 	button.set_meta("suggestion", suggestion)
 	button.visible = true
 
+
 func _on_didyoumean_pressed(edit: Control) -> void:
 	var button: Button = _didyoumean_buttons.get(edit) as Button
 	if button == null:
@@ -1235,6 +1304,7 @@ func _on_didyoumean_pressed(edit: Control) -> void:
 	var replaced: String = RegEx.create_from_string("\\b%s\\b" % RegEx.create_from_string("[^A-Za-z0-9_]").sub(identifier, "", true)).sub(str(edit.get("text")), suggestion, true)
 	edit.set("text", replaced)
 	_validate_expression_field(edit)
+
 
 ## Fills the completion popup with sheet variables/functions + host members (same source
 ## as the GDScript-block editor, so the vocabulary matches everywhere).
@@ -1262,6 +1332,7 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 			edit.add_code_completion_option(CodeEdit.KIND_NODE_PATH, "%" + unique_name, unique_name)
 	edit.update_code_completion_options(true)
 	edit.set_code_hint(EventSheetGDScriptLint.signature_hint(before_caret, sheet))
+
 
 ## Extract the typed value from a registered field node.
 ## "Vector2(0, 0)" → ["0", "0"]; "Vector3(1, 2, 3)" → ["1", "2", "3"]; [] otherwise.
@@ -1292,6 +1363,7 @@ static func vector_literal_parts(value: String) -> PackedStringArray:
 	parts.append(current.strip_edges())
 	return parts if parts.size() == dims else PackedStringArray()
 
+
 ## Per-axis fields composing back to "VectorN(x, y[, z])" on extract.
 func _create_vector_field(key: String, parts: PackedStringArray) -> Control:
 	var container: HBoxContainer = HBoxContainer.new()
@@ -1312,6 +1384,7 @@ func _create_vector_field(key: String, parts: PackedStringArray) -> Control:
 	container.set_meta("vector_axis_edits", axis_edits)
 	_fields[key] = container
 	return container
+
 
 func _extract_value(field: Control) -> Variant:
 	if field is CheckBox:
@@ -1348,6 +1421,7 @@ func _extract_value(field: Control) -> Variant:
 ", " ").strip_edges()
 	return ""
 
+
 ## First expression field whose text fails the compile-check (null = all valid). The
 ## commit guardrail: invalid GDScript never reaches the sheet.
 func _first_invalid_expression() -> Control:
@@ -1360,6 +1434,7 @@ func _first_invalid_expression() -> Control:
 			return field
 	return null
 
+
 ## The first expression field with a STRUCTURAL syntax error (unbalanced brackets / unterminated string),
 ## or null. Context-free, so it catches malformed code even when the symbol-aware lint can't run (an
 ## unhealthy lint context) — the always-on backstop that closes _first_invalid_expression's skip path.
@@ -1369,6 +1444,7 @@ func _first_structural_error_field() -> Control:
 		if field is CodeEdit and not EventSheetGDScriptLint.structural_syntax_error(str(field.get("text"))).is_empty():
 			return field
 	return null
+
 
 ## The expression field that should block Apply, with its message, or {} when clear. Structural errors
 ## (always wrong, no context needed) take priority over the symbol-aware lint and run unconditionally.
@@ -1381,6 +1457,7 @@ func _blocking_expression_field() -> Dictionary:
 		return {"field": invalid_field, "message": "✗ An expression doesn't compile — fix it before applying."}
 	return {}
 
+
 ## True unless the lint scratch ITSELF is broken (a sheet variable shadowing a host
 ## member makes the scratch unparseable, so every expression "fails" and the OK
 ## guardrail would lock the user out — verified by linting a bare literal).
@@ -1389,6 +1466,7 @@ func _lint_context_healthy() -> bool:
 		return true
 	var baseline_sheet: EventSheetResource = _lint_context_provider.call() as EventSheetResource
 	return bool(EventSheetGDScriptLint.lint_expression("0", baseline_sheet).get("ok", true))
+
 
 func _on_confirmed() -> void:
 	if _definition == null or _apply_blocked:
@@ -1406,6 +1484,7 @@ func _on_confirmed() -> void:
 		return
 	_commit(false)
 
+
 ## Shared apply path for OK and "Apply & Add Another". When chaining, the context
 ## carries chain_add so the dock reopens the picker in the same append mode; the
 ## values are remembered either way.
@@ -1420,6 +1499,7 @@ func _commit(chain: bool) -> void:
 	params_confirmed.emit(_definition, values, context)
 	_definition = null
 	_context.clear()
+
 
 func _on_custom_action(action: StringName) -> void:
 	if str(action) == BACK_ACTION:
@@ -1441,6 +1521,7 @@ func _on_custom_action(action: StringName) -> void:
 		_commit(true)
 		_close()
 
+
 func _set_back_visible(visible: bool) -> void:
 	if _back_button != null:
 		_back_button.visible = visible
@@ -1451,29 +1532,36 @@ func _set_back_visible(visible: bool) -> void:
 # button's .bind, and the by-class-name static calls (ACEParamsDialog.member_expression_fragment,
 # .variable_member_fragment) keep working unchanged.
 
+
 func _open_expression_picker(target_key: String) -> void:
 	_expression_picker._open_expression_picker(target_key)
+
 
 ## Builds the Insert-Expression window lazily — delegate kept for tests that drive it headlessly.
 func _ensure_expression_window() -> void:
 	_expression_picker._ensure_expression_window()
 
+
 ## Rebuilds the expression tree — delegate kept for tests.
 func _refresh_expression_tree() -> void:
 	_expression_picker._refresh_expression_tree()
+
 
 ## Inserts a snippet at the caret of the expression field — delegate kept for tests.
 func _insert_into_expression_target(snippet: String) -> void:
 	_expression_picker._insert_into_expression_target(snippet)
 
+
 ## The code template inserted for an expression definition — delegate kept for tests.
 func _expression_template(definition: ACEDefinition) -> String:
 	return _expression_picker._expression_template(definition)
+
 
 ## The insert fragment for a reflected member (`name()` / `name`). Static + pure.
 ## Static delegate — reached as ACEParamsDialog.member_expression_fragment by tests.
 static func member_expression_fragment(member: String, is_method: bool) -> String:
 	return ACEParamsExpressionPicker.member_expression_fragment(member, is_method)
+
 
 ## The insert fragment for a member reached THROUGH a variable (`enemy.health`). Static + pure.
 ## Static delegate — reached as ACEParamsDialog.variable_member_fragment by tests.
@@ -1481,6 +1569,7 @@ static func variable_member_fragment(var_name: String, member: String, is_method
 	return ACEParamsExpressionPicker.variable_member_fragment(var_name, member, is_method)
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
+
 
 func _resolve_variable_names() -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
@@ -1494,9 +1583,11 @@ func _resolve_variable_names() -> PackedStringArray:
 			names.append(str(entry))
 	return names
 
+
 func _came_from_picker() -> bool:
 	# The dock sets from_picker when this dialog is opened from a picker selection.
 	return bool(_context.get("from_picker", false))
+
 
 ## Whether Back can return to a picker: the add flow (from_picker) OR a row edit, which opens in a
 ## replace_* mode the picker understands — so editing an action/expression can also go back to swap
@@ -1506,13 +1597,16 @@ func _can_return_to_picker() -> bool:
 		return true
 	return str(_context.get("mode", "")) in ["replace_condition", "replace_action", "replace_trigger"]
 
+
 func _close() -> void:
 	if _dialog != null:
 		_dialog.hide()
 
+
 func _is_reedit_flow() -> bool:
 	var mode: String = str(_context.get("mode", ""))
 	return mode.begins_with("replace")
+
 
 func _build_hint_text() -> String:
 	if _apply_blocked:
@@ -1535,6 +1629,7 @@ func _build_hint_text() -> String:
 		"Existing values were loaded for quick re-editing." if _is_reedit_flow() else ""
 	]
 
+
 func _focus_first_field() -> void:
 	for key in _fields.keys():
 		# Skip entries whose widget was already freed (the dialog can close before this
@@ -1545,6 +1640,7 @@ func _focus_first_field() -> void:
 		if field != null and field.visible and not (field is LineEdit and not (field as LineEdit).editable):
 			field.grab_focus()
 			return
+
 
 static func _parse_bool(value: Variant) -> bool:
 	return str(value).to_lower() in ["true", "1", "yes"]

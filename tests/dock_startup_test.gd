@@ -5,8 +5,9 @@
 # _ready) — two demos. setup(null) is now idempotent: it seeds a single starting sheet only when no
 # tab exists yet, so the plugin's defensive second call is a harmless no-op.
 @tool
-extends RefCounted
 class_name DockStartupTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -28,6 +29,7 @@ static func run() -> bool:
 
 	dock.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

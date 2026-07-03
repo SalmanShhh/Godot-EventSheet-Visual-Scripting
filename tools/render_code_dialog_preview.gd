@@ -8,6 +8,7 @@ extends SceneTree
 var _frames: int = 0
 var _dock: EventSheetDock = null
 
+
 func _init() -> void:
 	root.title = "Edit GDScript Block Preview"
 	root.size = Vector2i(1100, 900)
@@ -20,6 +21,7 @@ func _init() -> void:
 	_dock.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(_dock)
 	process_frame.connect(_on_frame)
+
 
 func _on_frame() -> void:
 	_frames += 1

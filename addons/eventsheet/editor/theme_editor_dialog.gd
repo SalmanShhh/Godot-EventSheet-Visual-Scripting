@@ -20,6 +20,7 @@ var _quick_base: ColorPickerButton = null
 var _quick_accent: ColorPickerButton = null
 var _quick_font: ColorPickerButton = null
 
+
 ## Opens the theme editor seeded from the dock's active style (or defaults).
 func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
 	_dock = dock
@@ -27,6 +28,7 @@ func open(dock: Control, base_style: EventSheetEditorStyle) -> void:
 	_ensure_dialog()
 	_preview_viewport.set_sheet(build_sample_sheet(_working_style))
 	_dialog.popup_centered(Vector2i(1080, 620))
+
 
 ## Deep-duplicates a style so live edits never touch the original resource.
 static func duplicate_style(base_style: EventSheetEditorStyle) -> EventSheetEditorStyle:
@@ -38,6 +40,7 @@ static func duplicate_style(base_style: EventSheetEditorStyle) -> EventSheetEdit
 	if style.action_style == null:
 		style.action_style = EventSheetElementStyle.new()
 	return style
+
 
 ## The sample sheet shown in the preview: one of everything the theme touches.
 static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResource:
@@ -114,6 +117,7 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	sheet.events.append(disabled_event)
 	return sheet
 
+
 ## Exported tokens of a style resource that the form can edit (Color/float/int/bool).
 static func editable_tokens(style_resource: Resource) -> Array[Dictionary]:
 	var tokens: Array[Dictionary] = []
@@ -127,12 +131,14 @@ static func editable_tokens(style_resource: Resource) -> Array[Dictionary]:
 			tokens.append({"name": str(property_info.get("name")), "type": token_type})
 	return tokens
 
+
 ## Writes one token and reports whether the value actually changed.
 static func apply_token(style_resource: Resource, token_name: String, value: Variant) -> bool:
 	if style_resource == null or style_resource.get(token_name) == value:
 		return false
 	style_resource.set(token_name, value)
 	return true
+
 
 func _ensure_dialog() -> void:
 	if _dialog != null:
@@ -184,6 +190,7 @@ func _ensure_dialog() -> void:
 	_dialog.add_child(split)
 	_dock.add_child(_dialog)
 
+
 ## Quick Style — three colours drive the whole palette (base tone, accent, text). One
 ## button regenerates every colour token via EventSheetGodotTheme.apply, so re-skinning is
 ## "pick a colour, click Generate" instead of tuning thirty fields by hand.
@@ -208,6 +215,7 @@ func _build_quick_style(form: VBoxContainer) -> void:
 	quick_box.add_child(buttons)
 	form.add_child(EventSheetPopupUI.titled_card("Quick Style — recolour everything at once", quick_box))
 
+
 ## One labelled colour picker, returned so Quick Style can read it back on Generate.
 func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Color) -> ColorPickerButton:
 	var row: HBoxContainer = HBoxContainer.new()
@@ -222,6 +230,7 @@ func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Co
 	form.add_child(row)
 	return picker
 
+
 ## Derives the two dark tones from the base, regenerates the whole sheet palette, and
 ## refreshes the detail form + live preview.
 func _generate_quick_style() -> void:
@@ -233,6 +242,7 @@ func _generate_quick_style() -> void:
 	if _preview_viewport != null:
 		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
 
+
 ## Restores the bundled default look — a clean starting point.
 func _reset_to_default() -> void:
 	_working_style = duplicate_style(null)
@@ -241,6 +251,7 @@ func _reset_to_default() -> void:
 	_rebuild_detail_form()
 	if _preview_viewport != null:
 		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
+
 
 ## (Re)builds the reflective per-token form into _detail_form, clearing any prior fields so
 ## the spinboxes/pickers always reflect the current (possibly just-regenerated) style.
@@ -254,6 +265,7 @@ func _rebuild_detail_form() -> void:
 	_build_section(_detail_form, "Sheet & rows (event style)", _working_style.event_style)
 	_build_section(_detail_form, "Condition cells", _working_style.condition_style)
 	_build_section(_detail_form, "Action cells", _working_style.action_style)
+
 
 ## One labeled control per editable token, reflectively.
 func _build_section(form: VBoxContainer, title: String, style_resource: Resource) -> void:
@@ -290,13 +302,16 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 		section_box.add_child(row)
 	form.add_child(EventSheetPopupUI.titled_card(title, section_box))
 
+
 func _on_token_edited(style_resource: Resource, token_name: String, value: Variant) -> void:
 	if apply_token(style_resource, token_name, value) and _preview_viewport != null:
 		_preview_viewport.queue_redraw()
 
+
 func _apply_to_sheet() -> void:
 	if _dock != null and _dock.has_method("apply_theme_style"):
 		_dock.call("apply_theme_style", _working_style.duplicate(true))
+
 
 func _open_save_dialog() -> void:
 	if _save_dialog == null:
@@ -308,6 +323,7 @@ func _open_save_dialog() -> void:
 		_save_dialog.file_selected.connect(save_preset)
 		_dialog.add_child(_save_dialog)
 	_save_dialog.popup_centered(Vector2i(720, 480))
+
 
 ## Saves the working style as a shareable preset .tres. Returns OK on success.
 func save_preset(path: String) -> Error:

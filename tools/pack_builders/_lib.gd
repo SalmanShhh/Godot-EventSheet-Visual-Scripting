@@ -8,6 +8,7 @@
 # generated pack stays self-contained - removing the editor never dangles its @icon (clean_removal_test).
 const BEHAVIOR_ICON := "res://eventsheet_addons/behavior.svg"
 
+
 static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: String = BEHAVIOR_ICON) -> bool:
 	# Behaviour icon: every pack shows a recognizable EventForge behaviour icon in Godot's Create New
 	# Node dialog (emitted as `@icon` before class_name) and the sheet banner. A builder can pass its
@@ -55,6 +56,7 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	print("[build_sample_behaviors] built %s (.gd), warnings: %s" % [base_path.get_file(), compile_result.get("warnings")])
 	return true
 
+
 ## Walks the sheet and assigns each EventRow/EventGroup a uid derived from its structural
 ## path, so the same builder always produces the same uids (byte-stable regeneration).
 static func _assign_stable_uids(sheet: EventSheetResource) -> void:
@@ -63,6 +65,7 @@ static func _assign_stable_uids(sheet: EventSheetResource) -> void:
 	for function_resource: Variant in sheet.functions:
 		if function_resource is EventFunction:
 			_assign_uids_in_list((function_resource as EventFunction).events, class_seed + "/fn/" + (function_resource as EventFunction).function_name)
+
 
 static func _assign_uids_in_list(rows: Array, path_prefix: String) -> void:
 	var index: int = 0
@@ -76,9 +79,11 @@ static func _assign_uids_in_list(rows: Array, path_prefix: String) -> void:
 			_assign_uids_in_list((row as EventGroup).events, row_path)
 		index += 1
 
+
 ## A short, stable, hex uid (matches the 6-hex-char format EventRow mints) from a seed.
 static func _stable_uid(seed_text: String) -> String:
 	return seed_text.sha256_text().substr(0, 6)
+
 
 ## Shared shape for the spring/tween builders: one exposed-as-ACE function.
 static func append_function(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> void:
@@ -97,6 +102,7 @@ static func append_function(sheet: EventSheetResource, function_name: String, di
 	body_row.code = body
 	event_function.events.append(body_row)
 	sheet.functions.append(event_function)
+
 
 ## _append_function, but returning the function for return-type tweaks.
 static func exposed_function(function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> EventFunction:

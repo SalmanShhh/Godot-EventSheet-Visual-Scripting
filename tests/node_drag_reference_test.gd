@@ -5,8 +5,9 @@
 # the dragged node carries one — the same flat handle the node picker hands back — instead of a brittle
 # $path. Pins the drag→reference conversion + the %Name preference.
 @tool
-extends RefCounted
 class_name NodeDragReferenceTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -37,6 +38,7 @@ static func run() -> bool:
 		ACEParamsDialog._node_reference("My Node"), "$\"My Node\"") and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

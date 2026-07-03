@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetCommentAndScopeDialogs
+extends RefCounted
 
 # Comment editing, "With node X:" action scoping, and comment <-> action-cell conversion.
 #
@@ -15,6 +15,7 @@ class_name EventSheetCommentAndScopeDialogs
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
@@ -22,6 +23,7 @@ var _comment_dialog: ConfirmationDialog = null
 var _comment_text_edit: TextEdit = null
 var _comment_color_button: ColorPickerButton = null
 var _comment_dialog_target: CommentRow = null
+
 
 ## Dialog editor for comments: multiline comment rows, action-cell comments, and the row
 ## context menu's "Edit Comment…". Single-line comment rows keep inline editing.
@@ -35,6 +37,7 @@ func open_comment_dialog(comment_resource: Resource) -> void:
 	_comment_color_button.color = comment_row.custom_color
 	_comment_dialog.popup_centered(Vector2i(560, 320))
 	_comment_text_edit.grab_focus()
+
 
 func _ensure_comment_dialog() -> void:
 	if _comment_dialog != null:
@@ -57,6 +60,7 @@ func _ensure_comment_dialog() -> void:
 	_comment_dialog.confirmed.connect(_on_comment_dialog_confirmed)
 	_dock.add_child(_comment_dialog)
 
+
 func _on_comment_dialog_confirmed() -> void:
 	if _comment_dialog_target == null:
 		return
@@ -77,6 +81,7 @@ var _with_node_dialog: ConfirmationDialog = null
 var _with_node_target_edit: LineEdit = null
 var _with_node_dialog_target: EventRow = null
 
+
 ## Opens the editor for a row's "With node X:" scope. The target is a node expression ($Enemy,
 ## get_node("…"), a variable); blank removes the scope so the row's actions act on the host again.
 func open_with_node_dialog(event_resource: Resource) -> void:
@@ -89,6 +94,7 @@ func open_with_node_dialog(event_resource: Resource) -> void:
 	_with_node_dialog.popup_centered(Vector2i(460, 160))
 	_with_node_target_edit.grab_focus()
 	_with_node_target_edit.select_all()
+
 
 func _ensure_with_node_dialog() -> void:
 	if _with_node_dialog != null:
@@ -111,6 +117,7 @@ func _ensure_with_node_dialog() -> void:
 	_with_node_dialog.confirmed.connect(_on_with_node_dialog_confirmed)
 	_dock.add_child(_with_node_dialog)
 
+
 func _on_with_node_dialog_confirmed() -> void:
 	if _with_node_dialog_target == null:
 		return
@@ -125,6 +132,7 @@ func _on_with_node_dialog_confirmed() -> void:
 		_dock._mark_dirty("Scoped actions to %s." % (new_target if not new_target.is_empty() else "this node (host)"))
 
 # ── Comment ↔ action-cell conversion ─────────────────────────────────────────
+
 
 ## Finds the array + index holding `target` among sheet rows (recursing into groups and
 ## sub-events). Returns {} when not found.
@@ -144,6 +152,7 @@ func _locate_row_container(rows: Array, target: Resource) -> Dictionary:
 				return found_in_group
 	return {}
 
+
 ## Finds the EventRow whose actions contain `target` (action-cell comments/blocks).
 func _locate_owning_event(rows: Array, target: Resource) -> EventRow:
 	for row: Variant in rows:
@@ -158,6 +167,7 @@ func _locate_owning_event(rows: Array, target: Resource) -> EventRow:
 			if found != null:
 				return found
 	return null
+
 
 ## Comment row → action-cell comment of the nearest EventRow ABOVE it (the "comment in
 ## the actions"). The reverse of detach_comment_to_row.
@@ -185,6 +195,7 @@ func attach_comment_to_event_above(comment_row: CommentRow) -> void:
 	if changed:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Comment attached to the event above (action note).")
+
 
 ## Action-cell comment → standalone comment row directly below its event.
 func detach_comment_to_row(comment_row: CommentRow) -> void:

@@ -4,8 +4,9 @@
 # the dock's GDScript panel shows the generated script and highlights the selected row's
 # lines. Headless-safe (the panel is plain Controls; nothing pops up).
 @tool
-extends RefCounted
 class_name ProvenanceTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -18,6 +19,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -99,12 +101,14 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _entry_for(source_map: Array, resource: Resource) -> Dictionary:
 	var uid: String = str(resource.get_instance_id())
 	for entry in source_map:
 		if entry is Dictionary and str((entry as Dictionary).get("uid", "")) == uid:
 			return entry
 	return {}
+
 
 static func _lines_slice(output_lines: PackedStringArray, entry: Dictionary) -> String:
 	var start_line: int = int(entry.get("start", 0))
@@ -114,6 +118,7 @@ static func _lines_slice(output_lines: PackedStringArray, entry: Dictionary) -> 
 		if line_number >= 1 and line_number <= output_lines.size():
 			slice += output_lines[line_number - 1] + "\n"
 	return slice
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

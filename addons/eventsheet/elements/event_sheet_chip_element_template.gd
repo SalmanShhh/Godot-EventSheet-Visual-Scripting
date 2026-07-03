@@ -14,6 +14,7 @@ extends Button
 @export var badge_text_color: Color = Color(0.82, 0.87, 0.95, 1.0)
 @export var font_size_delta: int = 0
 
+
 func build_element_style() -> EventSheetElementStyle:
 	var style := EventSheetElementStyle.new()
 	var normal_box: StyleBoxFlat = _resolve_flat_stylebox("normal")
@@ -31,6 +32,7 @@ func build_element_style() -> EventSheetElementStyle:
 	style.corner_radius = normal_box.corner_radius_top_left
 	style.badge_extra_width = badge_extra_width
 	return style
+
 
 func _resolve_flat_stylebox(style_name: String) -> StyleBoxFlat:
 	var resolved: StyleBox = get_theme_stylebox(style_name)

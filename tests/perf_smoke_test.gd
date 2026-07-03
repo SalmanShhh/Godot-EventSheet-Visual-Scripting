@@ -9,13 +9,14 @@
 #   3. The visible draw window stays bounded by viewport height (visible-range
 #      culling), so per-frame paint cost does not scale with total row count.
 @tool
-extends RefCounted
 class_name PerfSmokeTest
+extends RefCounted
 
 const EVENT_COUNT := 10000
 const NEST_EVERY := 25           # every Nth root event nests two sub-events
 const SETUP_BUDGET_MS := 15000   # generous; catches O(n^2), not micro-regressions
 const MAX_VISIBLE_WINDOW := 400  # culled draw window must be far below EVENT_COUNT
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -54,6 +55,7 @@ static func run() -> bool:
 	editor.free()
 	return all_passed
 
+
 ## Builds a large in-memory EventSheet for stress/perf testing.
 ## Each event carries a trigger, two conditions and two actions; every NEST_EVERY-th
 ## event nests two sub-events to exercise the flatten/indent path.
@@ -69,6 +71,7 @@ static func _build_large_sheet(count: int) -> EventSheetResource:
 		events.append(row)
 	sheet.events = events
 	return sheet
+
 
 static func _build_event_row(value_seed: int) -> EventRow:
 	var row: EventRow = EventRow.new()
@@ -90,6 +93,7 @@ static func _build_event_row(value_seed: int) -> EventRow:
 	row.actions.append(act_a)
 	row.actions.append(act_b)
 	return row
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

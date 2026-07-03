@@ -8,8 +8,9 @@
 # verify-lift (anything that doesn't reproduce exactly stays a verbatim RawCodeRow — the lossless rule
 # always wins).
 @tool
-extends RefCounted
 class_name GDScriptImporter
+extends RefCounted
+
 
 func import_script(script_path: String) -> EventSheetResource:
 	if not FileAccess.file_exists(script_path):
@@ -24,6 +25,7 @@ func import_script(script_path: String) -> EventSheetResource:
 ## verbatim as GDScript block rows. Saving an untouched file therefore reproduces it
 ## exactly (guarded by golden round-trip tests).
 
+
 func import_external(script_path: String) -> EventSheetResource:
 	if not FileAccess.file_exists(script_path):
 		return null
@@ -31,6 +33,7 @@ func import_external(script_path: String) -> EventSheetResource:
 	sheet.external_source_path = script_path
 	_recover_autoload_identity(sheet, script_path)
 	return sheet
+
 
 ## A .gd registered in the project's [autoload] section IS an autoload sheet — recover that identity
 ## from ProjectSettings (the single source of truth) so opening the .gd round-trips autoload_mode +
@@ -49,6 +52,7 @@ static func _recover_autoload_identity(sheet: EventSheetResource, script_path: S
 			sheet.autoload_name = setting_name.trim_prefix("autoload/")
 			return
 
+
 ## Whether an [autoload] target points at script_path. Handles both res:// values and uid:// values
 ## (Godot 4.4+ frequently stores autoloads by UID once a .uid sidecar exists) by resolving the uid.
 static func _autoload_target_matches(target: String, script_path: String) -> bool:
@@ -59,6 +63,7 @@ static func _autoload_target_matches(target: String, script_path: String) -> boo
 		if uid != ResourceUID.INVALID_ID and ResourceUID.has_id(uid):
 			return ResourceUID.get_id_path(uid) == script_path
 	return false
+
 
 func import_external_source(source: String) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -190,6 +195,7 @@ func import_external_source(source: String) -> EventSheetResource:
 	EventSheetACELifter.attempt_lift(sheet, source)
 	return sheet
 
+
 ## Lifts a top-level variable declaration to an ordered tree-variable row, but ONLY when the
 ## compiler's canonical emission reproduces the source line exactly (the verify-lift rule);
 ## otherwise the line stays verbatim in a block row and nothing is lost.
@@ -225,6 +231,7 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	_extract_placeholder(lifted, line)
 	return lifted
 
+
 ## @export_color_no_alpha round-trip: pull the bare hint into the structured `no_alpha` attribute so a
 ## reopened Color shows the dialog's "No alpha" tick instead of a verbatim hint. Verify-gated like the
 ## drawer recovery — if the structured re-emission doesn't reproduce the line exactly, revert.
@@ -241,6 +248,7 @@ func _extract_color_no_alpha(lifted: LocalVariable, line: String) -> void:
 		lifted.export_hint = saved_hint
 		lifted.attributes = saved_attrs
 
+
 ## @export_exp_easing round-trip: bare hint → structured `exp_easing` attribute (the float easing tick).
 func _extract_exp_easing(lifted: LocalVariable, line: String) -> void:
 	if lifted.export_hint.strip_edges() != "@export_exp_easing":
@@ -254,6 +262,7 @@ func _extract_exp_easing(lifted: LocalVariable, line: String) -> void:
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
 		lifted.export_hint = saved_hint
 		lifted.attributes = saved_attrs
+
 
 ## @export_placeholder("hint") round-trip: pull the quoted hint text into the structured `placeholder`
 ## attribute (the dialog's Placeholder field). Verify-gated like the others.
@@ -270,6 +279,7 @@ func _extract_placeholder(lifted: LocalVariable, line: String) -> void:
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
 		lifted.export_hint = saved_hint
 		lifted.attributes = saved_attrs
+
 
 ## Tier 3 round-trip: if the lifted variable's export_hint is a custom-drawer marker
 ## (`@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>…")`), pull it into structured
@@ -301,6 +311,7 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
 		lifted.export_hint = saved_hint
 		lifted.attributes = saved_attrs
+
 
 ## When a tree variable lifts, pull a directly-preceding @export_group / @export_subgroup off the pending
 ## block onto the variable's attributes — but only if the variable's canonical re-emission then reproduces
@@ -355,6 +366,7 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	for _removed: int in range(meta_count):
 		pending.remove_at(pending.size() - 1)
 
+
 ## The text inside the first "..." pair on a line ("" if none).
 func _extract_first_quoted(line: String) -> String:
 	var open_quote: int = line.find("\"")
@@ -364,6 +376,7 @@ func _extract_first_quoted(line: String) -> String:
 	if close_quote < 0:
 		return ""
 	return line.substr(open_quote + 1, close_quote - open_quote - 1)
+
 
 ## Probes every registered Custom Block API kind at this line. Each claim is byte-verify-gated
 ## by the kind itself (EventSheetBlockKind.verified_claim): re-emission must reproduce the
@@ -384,6 +397,7 @@ func _try_lift_custom_block(lines: PackedStringArray, index: int) -> Dictionary:
 		return {"row": block_row, "consumed": maxi(1, int(claim.get("consumed", 1)))}
 	return {}
 
+
 ## Lifts a canonical single-line enum (`enum Name { A, B = 4 }`) to an EnumRow when the
 ## compiler's emission reproduces the line exactly (the verify-lift rule); multi-line or
 ## otherwise-formatted enums stay verbatim blocks.
@@ -395,6 +409,7 @@ func _try_lift_enum(line: String) -> EnumRow:
 		return null
 	var claim: Dictionary = kind.lift(PackedStringArray([line]), 0)
 	return claim.get("resource", null) as EnumRow if not claim.is_empty() else null
+
 
 ## Lifts a canonical signal declaration to a SignalRow when re-emission reproduces the
 ## line exactly (the verify-lift rule); other formats stay verbatim blocks.
@@ -408,6 +423,7 @@ func _try_lift_signal(line: String) -> SignalRow:
 		return null
 	var claim: Dictionary = kind.lift(PackedStringArray([line]), 0)
 	return claim.get("resource", null) as SignalRow if not claim.is_empty() else null
+
 
 ## When a signal lifts, pull a directly-preceding `## @ace_trigger` (+ optional `## @ace_name` /
 ## `## @ace_category`) block off the pending lines onto the SignalRow — the reverse of the compiler's
@@ -461,6 +477,7 @@ func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedString
 	for _removed: int in range(pending.size() - run_start):
 		pending.remove_at(pending.size() - 1)
 
+
 func _flush_pending(pending: PackedStringArray, sheet: EventSheetResource) -> void:
 	if pending.is_empty():
 		return
@@ -468,6 +485,7 @@ func _flush_pending(pending: PackedStringArray, sheet: EventSheetResource) -> vo
 	block.code = "\n".join(pending)
 	sheet.events.append(block)
 	pending.clear()
+
 
 func import_source(source: String) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -479,12 +497,14 @@ func import_source(source: String) -> EventSheetResource:
 		sheet.functions.append(_build_function(function_data as Dictionary))
 	return sheet
 
+
 func _parse_host_class(source: String) -> String:
 	for raw_line: String in source.split("\n"):
 		var line: String = raw_line.strip_edges()
 		if line.begins_with("extends "):
 			return line.substr("extends ".length()).strip_edges()
 	return "Node"
+
 
 func _build_function(function_data: Dictionary) -> EventFunction:
 	var event_function: EventFunction = EventFunction.new()

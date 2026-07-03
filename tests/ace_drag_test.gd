@@ -4,8 +4,9 @@
 # action) and asserts reordering within an event and moving across events. The raw mouse
 # drag is in the viewport and is verified by using the editor; this guards the move logic.
 @tool
-extends RefCounted
 class_name ACEDragTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -18,6 +19,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -68,12 +70,14 @@ static func run() -> bool:
 	editor.free()
 	return all_passed
 
+
 static func _find_row(viewport: EventSheetViewport, resource: Resource) -> EventRowData:
 	for entry in viewport.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
 		if row_data != null and row_data.source_resource == resource:
 			return row_data
 	return null
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

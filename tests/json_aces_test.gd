@@ -6,10 +6,11 @@
 # round-trips a value through JSON text and a file on disk (catching any silent runtime error a
 # string-only check would miss). The 5 moved ACEs keep their ace_ids + templates (the covenant).
 @tool
-extends RefCounted
 class_name JsonAcesTest
+extends RefCounted
 
 const TEST_FILE := "user://__json_aces_test.json"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -61,6 +62,7 @@ static func run() -> bool:
 	DirAccess.remove_absolute(TEST_FILE)
 	return all_passed
 
+
 ## ACEAction built from the registered template, baking a unique id into the apply-time {uid} token
 ## the way the dock does (JsonSaveFile uses __json_{uid} for its guarded, handle-closing multi-line write).
 static func _action(ace_id: String, by_id: Dictionary, params: Dictionary) -> ACEAction:
@@ -70,6 +72,7 @@ static func _action(ace_id: String, by_id: Dictionary, params: Dictionary) -> AC
 	action.codegen_template = str(by_id[ace_id].codegen_template).replace("{uid}", str(abs(action.get_instance_id())))
 	action.params = params
 	return action
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -7,8 +7,9 @@
 #    `<source>.<signal>.connect(<handler>)` lines (self and other nodes; custom
 #    "signal:<name>" triggers use their baked trigger_args signature).
 @tool
-extends RefCounted
 class_name BehaviorFoundationsTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -21,6 +22,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -125,12 +127,14 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _action(template: String) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Test"
 	action.ace_id = template
 	action.codegen_template = template
 	return action
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

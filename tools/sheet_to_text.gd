@@ -5,6 +5,7 @@
 @tool
 extends SceneTree
 
+
 func _init() -> void:
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	if args.is_empty():

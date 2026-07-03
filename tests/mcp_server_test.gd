@@ -2,8 +2,9 @@
 # JSON-RPC handshake, tool listing, and every tool's happy/error path — driven through
 # handle_message (the stdio transport in run_mcp_server.gd is a thin loop on top).
 @tool
-extends RefCounted
 class_name McpServerTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -107,12 +108,14 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _call_raw(server: EventSheetMCPServer, tool_name: String, arguments: Dictionary) -> Dictionary:
 	var response: Dictionary = server.handle_message({
 		"jsonrpc": "2.0", "id": 99, "method": "tools/call",
 		"params": {"name": tool_name, "arguments": arguments}
 	})
 	return response.get("result", {})
+
 
 static func _call_tool(server: EventSheetMCPServer, tool_name: String, arguments: Dictionary) -> Dictionary:
 	var result: Dictionary = _call_raw(server, tool_name, arguments)
@@ -121,6 +124,7 @@ static func _call_tool(server: EventSheetMCPServer, tool_name: String, arguments
 		return {}
 	var parsed: Variant = JSON.parse_string(str((content[0] as Dictionary).get("text", "")))
 	return parsed if parsed is Dictionary else {}
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -5,8 +5,9 @@
 # a real pack). The classifier is strict: any real code line, a missing kind marker, or a missing
 # @ace_name falls back to plain GDScript-block rendering.
 @tool
-extends RefCounted
 class_name RawShellRenderTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -88,6 +89,7 @@ static func run() -> bool:
 
 	dock.free()
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetClipboard
+extends RefCounted
 # The CLIPBOARD / COPY-PASTE cluster. This helper owns:
 #   • Copy — an ACE (condition/action/trigger) or the selected row(s). Row copies are written in two
 #     forms at once: the internal `_clipboard` (rich, same-session pastes) and a portable text snippet
@@ -46,12 +46,14 @@ class_name EventSheetClipboard
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
 # The internal clipboard: rich, same-session copies of a row/condition/action/trigger. No external
 # reader — this helper is the only owner (grep-confirmed before the move).
 var _clipboard: Dictionary = {}
+
 
 func _on_copy_requested() -> void:
 	var context: Dictionary = _dock._active_view().get_selected_context()
@@ -86,6 +88,7 @@ func _on_copy_requested() -> void:
 	_clipboard = {"type": "row", "payload": selected_resource.duplicate(true)}
 	_dock._set_status("Copied %d row(s) — shareable snippet placed on the clipboard." % top_level.size())
 
+
 ## Top-most selected row resources: children of a selected ancestor are skipped because
 ## they already travel inside their parent's serialized form.
 func _top_level_selected_resources() -> Array:
@@ -105,6 +108,7 @@ func _top_level_selected_resources() -> Array:
 		if not has_selected_ancestor:
 			top_level.append(resource)
 	return top_level
+
 
 func _on_paste_requested() -> void:
 	# Paste priority: portable snippets (in-app copies refresh them too) → raw GDScript
@@ -153,6 +157,7 @@ func _on_paste_requested() -> void:
 	else:
 		_dock._mark_dirty(str(result.get("label", "Pasted.")))
 
+
 ## Pastes a shareable snippet from text (see EventSheetSnippet). Returns false when the
 ## text is not a snippet so the caller falls back to the internal clipboard. Pasted events
 ## get fresh UIDs; sheet variables the snippet references are created when missing (never
@@ -191,10 +196,12 @@ func _paste_snippet_text(text: String) -> bool:
 		_dock._mark_dirty("Pasted snippet: %d row(s), %d variable(s) created.%s" % [rows.size(), int(counters["variables_created"]), provider_note])
 	return true
 
+
 ## Appends an in-flow GDScript block to the right-clicked event's actions (event-sheet-style inline
 ## scripting: statements emitted inside the event body).
 func _add_gdscript_action_to_context_row() -> void:
 	_add_gdscript_action_to_event(_dock._context_row.source_resource if _dock._context_row != null else null)
+
 
 ## C3-style "drop to code here": appends an in-flow GDScript block to the event's actions and opens
 ## the code editor on it straight away (C3 opens its script block for editing on add). The block runs
@@ -228,6 +235,7 @@ func _add_gdscript_action_to_event(target: Variant) -> void:
 	if added != null and _dock.is_inside_tree():
 		_dock._on_viewport_raw_code_edit_requested(added, true)
 
+
 ## The last in-flow RawCodeRow action on the event whose stable uid matches — the block just appended
 ## (the append put it last). Recurses sub-events + groups so a nested event's block is found too.
 static func _find_appended_raw(row: Variant, event_uid: String) -> RawCodeRow:
@@ -251,6 +259,7 @@ static func _find_appended_raw(row: Variant, event_uid: String) -> RawCodeRow:
 			return sub_found
 	return null
 
+
 ## Returns true when the clipboard text reads like GDScript (conservative: a paste that is
 ## not code must fall through to the internal clipboard untouched).
 static func _looks_like_gdscript(text: String) -> bool:
@@ -258,6 +267,7 @@ static func _looks_like_gdscript(text: String) -> bool:
 	if code_line.compile("(?m)^(func |var |@export|@onready|signal |extends |class_name |if .*:|for .*:|while .*:|match .*:)") != OK:
 		return false
 	return code_line.search(text) != null
+
 
 ## Pastes raw GDScript copied from anywhere, converted through the same pipeline that
 ## opens .gd files as sheets: the lossless rule keeps every line (unrecognized code stays

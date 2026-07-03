@@ -5,10 +5,11 @@
 # templates — single-property ACEs are canonical). node_a/node_b are NodePath expressions.
 # Module contract: see ace_factory.gd — ace_ids/templates are API (covenant).
 @tool
-extends RefCounted
 class_name EventForgePhysicsACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

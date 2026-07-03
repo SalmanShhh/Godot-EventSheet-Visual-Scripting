@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Virtual Cursor behavior (event-sheet parity - ported from the virtual_cursor addon).
 ## Input-agnostic controllable cursor on a CharacterBody2D; drives the Drag N Drop pack.
 static func build() -> bool:

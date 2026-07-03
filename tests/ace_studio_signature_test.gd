@@ -2,8 +2,9 @@
 # builds the exact generated func header from the SAME compiler formatters the codegen uses, so the
 # preview can never disagree with what actually ships (the Godot-dev trust surface).
 @tool
-extends RefCounted
 class_name ACEStudioSignatureTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -40,6 +41,7 @@ static func run() -> bool:
 		compiler_line) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

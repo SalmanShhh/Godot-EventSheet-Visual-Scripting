@@ -4,8 +4,9 @@
 # ordered list the compiler walks). This is what makes a behaviour read like an event sheet.
 # The per-event byte-identical gate guarantees the shipped GDScript never changes.
 @tool
-extends RefCounted
 class_name EventBodyLiftTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -60,6 +61,7 @@ static func run() -> bool:
 	ok = _check("second pass is a no-op", EventSheetACELifter.lift_event_bodies(sheet), 0) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

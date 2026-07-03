@@ -6,8 +6,9 @@
 # fails here, so authors can't ship an undescribed ACE. It also pins that the registry exposes the
 # description, the viewport resolves it for hover, and a Call-Function row shows the function's own.
 @tool
-extends RefCounted
 class_name AceDescriptionsTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -48,6 +49,7 @@ static func run() -> bool:
 	viewport.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

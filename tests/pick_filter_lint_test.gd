@@ -5,8 +5,9 @@
 # (so a GROUP name isn't read as bare GDScript) and the predicate/order-by stub the loop iterator (so a
 # valid `item.field` resolves, but a typo'd identifier still flags).
 @tool
-extends RefCounted
 class_name PickFilterLintTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -23,6 +24,7 @@ static func run() -> bool:
 	all_passed = _check("bad order-by flags", _has_diag(_sheet(PickFilter.CollectionKind.EXPRESSION, "[1, 2, 3]", "n", "", "nope.x")), true) and all_passed
 
 	return all_passed
+
 
 static func _sheet(kind: int, collection: String, iterator: String, predicate: String, order_by: String) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -41,8 +43,10 @@ static func _sheet(kind: int, collection: String, iterator: String, predicate: S
 	sheet.events.append(event)
 	return sheet
 
+
 static func _has_diag(sheet: EventSheetResource) -> bool:
 	return EventSheetDiagnostics.analyze(sheet, null).size() >= 1
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

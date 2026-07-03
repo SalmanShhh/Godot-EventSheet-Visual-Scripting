@@ -7,8 +7,8 @@
 # the registry, both proof kinds (Preload Resource, Region marker), the whole-file round-trip,
 # the verify-gate rejecting near-misses, and undo-snapshot duplication.
 @tool
-extends RefCounted
 class_name CustomBlockTest
+extends RefCounted
 
 const BLOCK_SOURCE := """extends Node
 
@@ -21,6 +21,7 @@ func take_hit(damage: int) -> void:
 
 #endregion
 """
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -168,6 +169,7 @@ static func run() -> bool:
 	dock.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

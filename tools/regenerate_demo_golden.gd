@@ -5,6 +5,7 @@
 @tool
 extends SceneTree
 
+
 func _init() -> void:
 	var sheet: EventSheetResource = load("res://demo/sheets/player.tres") as EventSheetResource
 	if sheet == null:

@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetIncludeManager
+extends RefCounted
 # The "Manage Includes" window: browse / add / remove / reorder a sheet's included library sheets, with
 # a live read-only preview of what each contributes (events / functions / variables). Every change is
 # undoable. Extracted from event_sheet_dock.gd to keep that file maintainable; this owns all its own
@@ -13,8 +13,10 @@ var _include_list: ItemList = null
 var _include_preview: RichTextLabel = null
 var _include_preview_viewport: EventSheetViewport = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Manage Includes: browse/add/remove/reorder the sheet's included library sheets, with a live
 ## preview of what each contributes (events/functions/variables). Every change is undoable.
@@ -26,6 +28,7 @@ func open() -> void:
 		_build_include_manager()
 	_refresh_include_list()
 	_include_manager_window.popup_centered(Vector2i(720, 480))
+
 
 func _build_include_manager() -> void:
 	_include_manager_window = Window.new()
@@ -77,6 +80,7 @@ func _build_include_manager() -> void:
 	_include_manager_window.add_child(split)
 	_dock.add_child(_include_manager_window)
 
+
 func _open_selected_include_source() -> void:
 	var selected: PackedInt32Array = _include_list.get_selected_items()
 	if selected.is_empty():
@@ -85,6 +89,7 @@ func _open_selected_include_source() -> void:
 	if ResourceLoader.exists(path):
 		_include_manager_window.hide()
 		_dock._load_sheet_from_path(path)
+
 
 func _refresh_include_list() -> void:
 	if _include_list == null:
@@ -98,6 +103,7 @@ func _refresh_include_list() -> void:
 		_include_list.add_item(label)
 		_include_list.set_item_metadata(_include_list.item_count - 1, path)
 	_refresh_include_preview()
+
 
 func _refresh_include_preview() -> void:
 	if _include_preview == null:
@@ -124,6 +130,7 @@ func _refresh_include_preview() -> void:
 	if _include_preview_viewport != null and included != null:
 		_include_preview_viewport.set_sheet(included)  # read-only provenance view
 
+
 func _include_add_requested() -> void:
 	var dialog: FileDialog = FileDialog.new()
 	dialog.title = "Add Include Sheet"
@@ -136,6 +143,7 @@ func _include_add_requested() -> void:
 	dialog.canceled.connect(func() -> void: dialog.queue_free())
 	_dock.add_child(dialog)
 	dialog.popup_centered(Vector2i(820, 560))
+
 
 func _add_include(path: String) -> void:
 	if _dock._current_sheet.includes.has(path):
@@ -150,6 +158,7 @@ func _add_include(path: String) -> void:
 		_dock._mark_dirty("Added include %s." % path.get_file())
 	_refresh_include_list()
 
+
 func _include_remove_selected() -> void:
 	var selected: PackedInt32Array = _include_list.get_selected_items()
 	if selected.is_empty():
@@ -160,6 +169,7 @@ func _include_remove_selected() -> void:
 		return true):
 		_dock._mark_dirty("Removed include %s." % path.get_file())
 	_refresh_include_list()
+
 
 func _include_move(delta: int) -> void:
 	var selected: PackedInt32Array = _include_list.get_selected_items()
@@ -178,6 +188,7 @@ func _include_move(delta: int) -> void:
 	_refresh_include_list()
 	_include_list.select(to_index)
 	_refresh_include_preview()
+
 
 func _string_list(values: Array) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()

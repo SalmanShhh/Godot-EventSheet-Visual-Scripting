@@ -5,8 +5,9 @@
 # confirming with nothing changed is a no-op (an accidental open-and-OK on a reverse-lifted helper
 # must not dirty the sheet or clear its annotation-suppression flag).
 @tool
-extends RefCounted
 class_name FunctionEditDialogTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -96,11 +97,13 @@ static func run() -> bool:
 	dock.free()
 	return ok
 
+
 static func _live_fn(dock: EventSheetDock, fn_name: String) -> EventFunction:
 	for entry: Variant in dock.get_current_sheet().functions:
 		if entry is EventFunction and (entry as EventFunction).function_name == fn_name:
 			return entry as EventFunction
 	return null
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

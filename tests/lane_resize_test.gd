@@ -4,8 +4,9 @@
 # conditions/actions split ratio changed live and was persisted onto the sheet's editor
 # style (a default-themed sheet is promoted to a concrete style).
 @tool
-extends RefCounted
 class_name LaneResizeTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -50,6 +51,7 @@ static func run() -> bool:
 	editor.free()
 	return all_passed
 
+
 static func _button(x: float, y: float, pressed: bool) -> InputEventMouseButton:
 	var event: InputEventMouseButton = InputEventMouseButton.new()
 	event.button_index = MOUSE_BUTTON_LEFT
@@ -57,10 +59,12 @@ static func _button(x: float, y: float, pressed: bool) -> InputEventMouseButton:
 	event.position = Vector2(x, y)
 	return event
 
+
 static func _motion(x: float, y: float) -> InputEventMouseMotion:
 	var event: InputEventMouseMotion = InputEventMouseMotion.new()
 	event.position = Vector2(x, y)
 	return event
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

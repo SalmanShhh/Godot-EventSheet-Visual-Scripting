@@ -4,8 +4,9 @@
 # their exposure; private helpers stay un-exposed (their leading comment relocates into the body);
 # `return <expr>` bodies de-code to Return Value rows.
 @tool
-extends RefCounted
 class_name FunctionDeclarationLiftTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -71,6 +72,7 @@ static func run() -> bool:
 	ok = _check("output declares the function", str(result.get("output", "")).contains("func is_moving() -> bool:"), true) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

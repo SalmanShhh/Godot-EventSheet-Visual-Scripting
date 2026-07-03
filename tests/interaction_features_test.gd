@@ -5,8 +5,9 @@
 #   - A TRIGGER can't be inverted (no "not On X"); the menu disables Invert for triggers — and the
 #     compiler never read trigger.negated, so the old enabled-for-triggers item was a silent no-op.
 @tool
-extends RefCounted
 class_name InteractionFeaturesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -67,6 +68,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## A trivial always-emittable condition: codegen_template carries the whole expression (no params).
 static func _compare_condition(var_name: String) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
@@ -74,6 +76,7 @@ static func _compare_condition(var_name: String) -> ACECondition:
 	condition.ace_id = "CompareVar"
 	condition.codegen_template = "%s > 0" % var_name
 	return condition
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

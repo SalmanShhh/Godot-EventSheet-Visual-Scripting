@@ -3,8 +3,9 @@
 # GDScript-block editor; external (GDScript-backed) sheets detect disk changes by mtime
 # and reload on demand (the prompt itself is editor chrome over these primitives).
 @tool
-extends RefCounted
 class_name FxCompletionWatchTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -69,6 +71,7 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

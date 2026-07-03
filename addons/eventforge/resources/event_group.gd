@@ -1,8 +1,8 @@
 # EventForge — EventGroup resource
 # Organisational row that groups related event rows.
 @tool
-extends Resource
 class_name EventGroup
+extends Resource
 
 static var _uid_counter: int = 0
 
@@ -28,13 +28,16 @@ static var _uid_counter: int = 0
 ## machines at RUNTIME. Off (default) keeps groups zero-cost compile-time organization.
 @export var runtime_toggleable: bool = false
 
+
 func _init() -> void:
 	if group_uid.is_empty():
 		group_uid = _generate_short_uid()
 
+
 ## Returns the stable row kind identifier.
 func get_row_kind() -> String:
 	return "group"
+
 
 ## Returns effective collapsed state across collapsed/expanded aliases.
 func is_collapsed() -> bool:
@@ -42,10 +45,12 @@ func is_collapsed() -> bool:
 		return true
 	return not expanded
 
+
 ## Sets collapsed state while keeping expanded alias in sync.
 func set_collapsed_state(value: bool) -> void:
 	collapsed = value
 	expanded = not value
+
 
 ## Generates a short UID with a deterministic fallback counter.
 static func _generate_short_uid() -> String:

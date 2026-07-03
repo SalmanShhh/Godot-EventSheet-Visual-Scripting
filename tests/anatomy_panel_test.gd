@@ -6,8 +6,9 @@
 # dock wiring (refresh on tab activate; entry click reveals the row), and that the census never
 # writes (an opened pack still round-trips byte-identically after a census).
 @tool
-extends RefCounted
 class_name AnatomyPanelTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -99,17 +100,20 @@ static func run() -> bool:
 	dock.free()
 	return ok
 
+
 static func _by_id(organs: Array) -> Dictionary:
 	var by_id: Dictionary = {}
 	for organ: Dictionary in organs:
 		by_id[str(organ.get("id"))] = organ.get("entries")
 	return by_id
 
+
 static func _labels(entries: Variant) -> Array:
 	var labels: Array = []
 	for entry: Dictionary in (entries as Array):
 		labels.append(str(entry.get("label")))
 	return labels
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -1,8 +1,9 @@
 # EventForge — the unsaved-close guard. Closing a tab with unsaved edits must not silently drop
 # work: a dirty tab arms a 3-way Save / Discard / Cancel dialog, a clean tab closes immediately.
 @tool
-extends RefCounted
 class_name UnsavedCloseTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -50,6 +51,7 @@ static func run() -> bool:
 
 	dock.free()
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -6,13 +6,15 @@
 # keeps thin delegates; this class holds a back-reference for dock services
 # (status line, current sheet, find bar, the undoable per-sheet replace).
 @tool
-extends RefCounted
 class_name EventSheetProjectFind
+extends RefCounted
 
 var _dock: Control = null
 
+
 func _init(dock: Control) -> void:
 	_dock = dock
+
 
 func open(initial_query: String = "") -> void:
 	_open_project_find(initial_query)
@@ -21,6 +23,7 @@ var _project_find_window: Window = null
 var _project_find_edit: LineEdit = null
 var _project_replace_edit: LineEdit = null
 var _project_find_results: Tree = null
+
 
 func _open_project_find(initial_query: String = "") -> void:
 	if _project_find_window == null:
@@ -74,6 +77,7 @@ func _open_project_find(initial_query: String = "") -> void:
 	if not initial_query.is_empty():
 		_run_project_find()
 
+
 ## Every .tres EventSheetResource under res:// (skips .godot and addons internals).
 static func list_project_sheets() -> PackedStringArray:
 	var sheet_paths: PackedStringArray = PackedStringArray()
@@ -98,6 +102,7 @@ static func list_project_sheets() -> PackedStringArray:
 			entry = directory.get_next()
 	return sheet_paths
 
+
 ## Text matches in one sheet's editable surfaces: [{preview}] (same surfaces Replace
 ## All covers, so find and replace can never disagree).
 static func find_in_sheet(sheet: EventSheetResource, needle: String) -> Array:
@@ -115,6 +120,7 @@ static func find_in_sheet(sheet: EventSheetResource, needle: String) -> Array:
 			var at: int = haystack.to_lower().find(lowered)
 			matches.append({"preview": haystack.substr(maxi(at - 18, 0), needle.length() + 44).replace("\n", " ")})
 	return matches
+
 
 static func _collect_findable_text(rows: Array, into: Array) -> void:
 	for row: Variant in rows:
@@ -142,6 +148,7 @@ static func _collect_findable_text(rows: Array, into: Array) -> void:
 					into.append((pick as PickFilter).collection_value + " " + (pick as PickFilter).predicate_expression)
 			_collect_findable_text(event_row.sub_events, into)
 
+
 func _run_project_find() -> void:
 	var needle: String = _project_find_edit.text
 	_project_find_results.clear()
@@ -162,6 +169,7 @@ func _run_project_find() -> void:
 			total += 1
 	_dock._set_status("Find in Project: %d match(es) for \"%s\"." % [total, needle])
 
+
 func _on_project_find_activated() -> void:
 	var selected: TreeItem = _project_find_results.get_selected()
 	if selected == null:
@@ -173,6 +181,7 @@ func _on_project_find_activated() -> void:
 		_dock._ensure_find_bar()
 		_dock._find_edit.text = _project_find_edit.text
 	_project_find_window.hide()
+
 
 ## Replace across every project sheet (undo covers only the OPEN sheet — closed sheets
 ## save directly; the status names every touched file so nothing changes silently).

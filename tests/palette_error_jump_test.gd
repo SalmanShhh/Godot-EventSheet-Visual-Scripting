@@ -5,8 +5,9 @@
 # and non-script text fail closed), the mode dispatch (an error line wins over command fuzzing), and
 # the end-to-end jump on a real pack.
 @tool
-extends RefCounted
 class_name PaletteErrorJumpTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -61,6 +62,7 @@ static func run() -> bool:
 
 	dock.free()
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -5,10 +5,11 @@
 # are Vector2i expressions (the ƒx field serves them). Targets TileMapLayer (the legacy
 # TileMap node uses a layer-index arg these omit). Module contract: see ace_factory.gd.
 @tool
-extends RefCounted
 class_name EventForgeTileMapACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

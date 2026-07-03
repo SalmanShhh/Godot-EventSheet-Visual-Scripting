@@ -5,8 +5,9 @@
 # hit-tests to whole-event (span_index < 0) while the cell itself still hits its ACE, and that a drag
 # begun in the band moves the row.
 @tool
-extends RefCounted
 class_name EventDragZoneTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -61,6 +62,7 @@ static func run() -> bool:
 
 	view.free()
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

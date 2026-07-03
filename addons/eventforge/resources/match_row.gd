@@ -4,8 +4,8 @@
 # syntax — enum members complete in patterns). Compiles in-flow inside the event body;
 # the dialog lint-gates the whole construct before commit.
 @tool
-extends Resource
 class_name MatchRow
+extends Resource
 
 @export var enabled: bool = true
 ## The matched expression (plain GDScript, fx-validated).
@@ -17,6 +17,7 @@ class_name MatchRow
 ##       pass
 @export_multiline var branches_text: String = "_:
 	pass"
+
 
 ## Returns the stable row kind identifier.
 func get_row_kind() -> String:

@@ -1,8 +1,9 @@
 # Godot EventSheets — UX polish slice: C/A/E reflexes, picker recents, onboarding
 # watermark, inline live-value chips, bookmarks panel, find→split.
 @tool
-extends RefCounted
 class_name UxPolishTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -15,6 +16,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -206,6 +208,7 @@ static func run() -> bool:
 	cos_editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

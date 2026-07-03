@@ -2,8 +2,9 @@
 # Proves whole-symbol matching (\bname\b) so `speed` finds the variable `speed` but never
 # `move_speed`, that definitions resolve, and that the rename preview counts what it'll touch.
 @tool
-extends RefCounted
 class_name FindReferencesTest
+extends RefCounted
+
 
 static func run() -> bool:
     var passed: bool = true
@@ -53,6 +54,7 @@ static func run() -> bool:
     passed = _check("rename preview validates the new name", bool(preview.get("valid", false)), true) and passed
 
     return passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
     if actual == expected:

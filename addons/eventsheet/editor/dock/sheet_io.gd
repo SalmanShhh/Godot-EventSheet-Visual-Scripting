@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetSheetIO
+extends RefCounted
 # The sheet FILE-IO subsystem: opening a sheet from disk and every write-back path (Save,
 # Save As, Export Generated GDScript, Save-as-.gd). Extracted from event_sheet_dock.gd to keep
 # that file maintainable. The tab cluster, mutation funnel, and UI refreshers STAY on the dock —
@@ -16,8 +16,10 @@ class_name EventSheetSheetIO
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 func _load_sheet_from_path(path: String) -> void:
 	var resolved_path: String = path.strip_edges()
@@ -56,6 +58,7 @@ func _load_sheet_from_path(path: String) -> void:
 		return
 	_dock._set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
 
+
 ## Compiles a GDScript-backed sheet to its .gd source. Returns whether the compile succeeded (and
 ## sets a failure status when it does not). Shared by Save and "Open in Godot" so the latter can
 ## refuse to open a stale source when the sheet doesn't currently compile.
@@ -68,6 +71,7 @@ func _save_backed_sheet() -> bool:
 	_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
 	_dock._refresh_title_strip()
 	return true
+
 
 func _on_save_requested() -> void:
 	if _dock._current_sheet == null:
@@ -125,6 +129,7 @@ func _on_save_requested() -> void:
 	else:
 		_dock._set_status("Save failed (error %d)." % err, true)
 
+
 func _on_save_as_requested() -> void:
 	if _dock._current_sheet == null:
 		_dock._set_status("Nothing to save.", true)
@@ -142,6 +147,7 @@ func _on_save_as_requested() -> void:
 	dialog.canceled.connect(func() -> void: dialog.queue_free())
 	_dock.add_child(dialog)
 	dialog.popup_centered(Vector2i(860, 580))
+
 
 func _export_gdscript_requested() -> void:
 	if _dock._current_sheet == null:
@@ -161,12 +167,14 @@ func _export_gdscript_requested() -> void:
 	_dock.add_child(dialog)
 	dialog.popup_centered(Vector2i(860, 580))
 
+
 func _exported_script_basename() -> String:
 	if _dock._current_sheet != null and not _dock._current_sheet.custom_class_name.strip_edges().is_empty():
 		return _dock._current_sheet.custom_class_name.to_snake_case()
 	if not _dock._current_sheet_path.is_empty():
 		return _dock._current_sheet_path.get_file().get_basename()
 	return "event_sheet"
+
 
 func _write_exported_gdscript(path: String) -> void:
 	var target: String = path if path.get_extension() == "gd" else path + ".gd"
@@ -176,6 +184,7 @@ func _write_exported_gdscript(path: String) -> void:
 		_dock._set_status("Export failed: %s" % str(errors[0]), true)
 		return
 	_dock._set_status("Exported standalone GDScript to %s — no plugin dependency." % target.get_file())
+
 
 func _save_sheet_to_path(path: String) -> void:
 	if _dock._current_sheet == null:
@@ -204,6 +213,7 @@ func _save_sheet_to_path(path: String) -> void:
 			_dock._set_status("Saved as: %s" % resolved_path.get_file())
 	else:
 		_dock._set_status("Save failed (error %d)." % err, true)
+
 
 ## Saves the sheet as a plain .gd (no .tres): compiles it to that path, then re-opens the .gd as the
 ## GDScript-backed source of truth, so the file IS the sheet and future edits round-trip through it.
@@ -236,6 +246,7 @@ func _save_sheet_as_gdscript(path: String) -> bool:
 	_dock._set_status("Saved as GDScript: %s — the .gd is now the source of truth." % path.get_file())
 	return true
 
+
 func _suggest_sheet_filename() -> String:
 	var candidate_path: String = _dock._current_sheet_path
 	if candidate_path.is_empty() and _dock._current_sheet != null:
@@ -247,6 +258,7 @@ func _suggest_sheet_filename() -> String:
 		file_name += ".gd"
 	return file_name
 
+
 ## Returns the preferred directory for open/save dialogs, defaulting to res://.
 func _suggest_sheet_directory() -> String:
 	var candidate_path: String = _dock._current_sheet_path
@@ -257,6 +269,7 @@ func _suggest_sheet_directory() -> String:
 		return "res://"
 	return directory
 
+
 ## Builds the initial save path shown in the Save As dialog.
 func _build_initial_save_path() -> String:
 	var candidate_path: String = _dock._current_sheet_path
@@ -265,6 +278,7 @@ func _build_initial_save_path() -> String:
 	if candidate_path.is_empty():
 		return "res://%s" % _suggest_sheet_filename()
 	return _normalize_sheet_save_path(candidate_path)
+
 
 ## Ensures save paths always include a valid filename and EventSheet resource extension.
 func _normalize_sheet_save_path(path: String) -> String:

@@ -1,8 +1,9 @@
 # EventForge — VariableRowFormat format_summary tests
 # Validates that format_summary produces correct display strings for all common types.
 @tool
-extends RefCounted
 class_name VariableRowFormatTest
+extends RefCounted
+
 
 ## Runs all format_summary test cases. Returns true if all pass.
 static func run() -> bool:
@@ -69,6 +70,7 @@ static func run() -> bool:
 	) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: String, expected: String) -> bool:
 	if actual == expected:

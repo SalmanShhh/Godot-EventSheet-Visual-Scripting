@@ -4,8 +4,8 @@
 # plugin performs must have a matching remove_* so disabling the plugin leaves no orphan
 # autoload, inspector/export/debugger plugin, or context menu behind.
 @tool
-extends RefCounted
 class_name PluginTeardownTest
+extends RefCounted
 
 const PLUGIN_PATH: String = "res://addons/eventforge/plugin.gd"
 
@@ -17,6 +17,7 @@ const LIFECYCLE: Array[String] = [
 	"export_plugin",
 	"debugger_plugin",
 ]
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -33,6 +34,7 @@ static func run() -> bool:
 	passed = _check("the main-screen editor is freed in _exit_tree",
 		source.contains("get_editor_main_screen") and (source.contains("queue_free()") or source.contains(".free()")), true) and passed
 	return passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

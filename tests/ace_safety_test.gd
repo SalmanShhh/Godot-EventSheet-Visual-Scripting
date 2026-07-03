@@ -7,8 +7,9 @@
 # form, so a future edit can't quietly reintroduce the hazard. Pairs with builtin_ace_compile_test
 # (which proves they parse) — this proves the specific runtime guards are present.
 @tool
-extends RefCounted
 class_name ACESafetyTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -46,11 +47,14 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _tmpl(by_id: Dictionary, ace_id: String) -> String:
 	return str(by_id[ace_id].codegen_template) if by_id.has(ace_id) else ""
 
+
 static func _node_type(by_id: Dictionary, ace_id: String) -> String:
 	return str(by_id[ace_id].node_type) if by_id.has(ace_id) else ""
+
 
 static func _param_default(by_id: Dictionary, ace_id: String, param_id: String) -> String:
 	if not by_id.has(ace_id):
@@ -59,6 +63,7 @@ static func _param_default(by_id: Dictionary, ace_id: String, param_id: String) 
 		if p.id == param_id:
 			return str(p.default_value)
 	return ""
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

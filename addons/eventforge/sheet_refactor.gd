@@ -12,8 +12,9 @@
 # a variable named "value" must not rewrite a `{value}` placeholder (covenant:
 # refactors rewrite sheet model text, never baked machinery).
 @tool
-extends RefCounted
 class_name EventSheetRefactor
+extends RefCounted
+
 
 ## "" when the rename is allowed, else the user-facing problem.
 static func validate_new_name(sheet: EventSheetResource, old_name: String, new_name: String) -> String:
@@ -27,6 +28,7 @@ static func validate_new_name(sheet: EventSheetResource, old_name: String, new_n
 		if function_entry is EventFunction and (function_entry as EventFunction).function_name == new_name:
 			return "A function named \"%s\" already exists." % new_name
 	return ""
+
 
 ## Renames a variable or function across the sheet. Returns the replacement count
 ## (0 = the symbol appears nowhere, including as a declaration).
@@ -58,6 +60,7 @@ static func rename_symbol(sheet: EventSheetResource, old_name: String, new_name:
 			_rename_in_dictionary(descriptor, regex, new_name, counter)
 	_rename_in_rows(sheet.events, regex, new_name, counter)
 	return int(counter["count"])
+
 
 static func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter: Dictionary) -> void:
 	for row: Variant in rows:
@@ -93,6 +96,7 @@ static func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter
 					(pick as PickFilter).predicate_expression = _rename_text((pick as PickFilter).predicate_expression, regex, new_name, counter)
 			_rename_in_rows(event.sub_events, regex, new_name, counter)
 
+
 ## Rewrites String values in place (recursing into nested Dictionaries — variable
 ## attributes live one level down).
 static func _rename_in_dictionary(values: Dictionary, regex: RegEx, new_name: String, counter: Dictionary) -> void:
@@ -102,6 +106,7 @@ static func _rename_in_dictionary(values: Dictionary, regex: RegEx, new_name: St
 			values[key] = _rename_text(value, regex, new_name, counter)
 		elif value is Dictionary:
 			_rename_in_dictionary(value, regex, new_name, counter)
+
 
 static func _rename_text(text: String, regex: RegEx, new_name: String, counter: Dictionary) -> String:
 	var matches: int = regex.search_all(text).size()

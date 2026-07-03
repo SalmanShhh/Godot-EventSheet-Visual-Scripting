@@ -2,11 +2,12 @@
 # lift report made it keep the previously-opened sheet's counts after a tab switch ("9 event(s)" car
 # showing timer's "1 event(s)"); the banner now recomputes from the active sheet on every refresh.
 @tool
-extends RefCounted
 class_name PreviewBannerTabTest
+extends RefCounted
 
 const CAR := "res://eventsheet_addons/car/car_behavior.gd"
 const TIMER := "res://eventsheet_addons/timer/timer_behavior.gd"
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -37,6 +38,7 @@ static func run() -> bool:
 
 	dock.free()
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

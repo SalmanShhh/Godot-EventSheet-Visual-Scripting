@@ -1,7 +1,8 @@
 # EventForge — Plugin workspace behavior tests
 @tool
-extends RefCounted
 class_name PluginWorkspaceTest
+extends RefCounted
+
 
 ## Runs basic plugin helper checks for EventSheet workspace handling.
 static func run() -> bool:
@@ -21,6 +22,7 @@ static func run() -> bool:
 	) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

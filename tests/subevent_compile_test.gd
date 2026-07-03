@@ -5,8 +5,9 @@
 # block whose body emits nothing gets `pass` (always-valid GDScript). Mirrors the visual
 # event-sheet event-flow semantics — see _emit_event_body's doc comment for the full rules.
 @tool
-extends RefCounted
 class_name SubeventCompileTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -99,11 +100,13 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _condition(provider: String, ace_id: String) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = provider
 	condition.ace_id = ace_id
 	return condition
+
 
 static func _condition_with_template(template: String) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
@@ -112,12 +115,14 @@ static func _condition_with_template(template: String) -> ACECondition:
 	condition.codegen_template = template
 	return condition
 
+
 static func _action(template: String) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Test"
 	action.ace_id = template
 	action.codegen_template = template
 	return action
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

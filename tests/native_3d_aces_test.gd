@@ -2,8 +2,9 @@
 # Node3D/CharacterBody3D/RigidBody3D/Camera3D groups + the Input Vector expression;
 # Tween/visibility/math/scene-flow ACEs are already dimension-agnostic.
 @tool
-extends RefCounted
 class_name Native3DAcesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -61,6 +62,7 @@ static func run() -> bool:
 	all_passed = _check("3D output parses", generated.reload(true) == OK, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -5,8 +5,9 @@
 # alone. A hover description with markup gets a rich (BBCode) tooltip; plain text uses the default.
 # R3: variable rows no longer show a scope pill ("local"/"global") — it confused users.
 @tool
-extends RefCounted
 class_name BBCodeAndPillTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -47,6 +48,7 @@ static func run() -> bool:
 	viewport.free()
 	return all_passed
 
+
 ## True when any row carries a scope-pill badge span (text "local"/"global"/"tree").
 static func _has_scope_pill(rows: Array) -> bool:
 	for row: Variant in rows:
@@ -57,6 +59,7 @@ static func _has_scope_pill(rows: Array) -> bool:
 			if str((span as SemanticSpan).text) in ["local", "global", "tree"] and bool(meta.get("badge", false)):
 				return true
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

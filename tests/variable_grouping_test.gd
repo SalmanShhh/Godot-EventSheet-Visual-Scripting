@@ -5,8 +5,9 @@
 # run as one visual unit — variable_group_runs is the (pure) geometry the bubble draw uses. All edits
 # ride the undo funnel, whose commit REPLACES resources: every assertion re-reads the LIVE sheet.
 @tool
-extends RefCounted
 class_name VariableGroupingTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -93,6 +94,7 @@ static func run() -> bool:
 	dock.free()
 	return ok
 
+
 static func _variable_row(view: EventSheetViewport, var_name: String) -> EventRowData:
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
@@ -100,6 +102,7 @@ static func _variable_row(view: EventSheetViewport, var_name: String) -> EventRo
 				and str((row_data.spans[0].metadata as Dictionary).get("variable_name", "")) == var_name:
 			return row_data
 	return null
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

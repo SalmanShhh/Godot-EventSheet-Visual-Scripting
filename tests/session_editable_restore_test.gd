@@ -5,11 +5,12 @@
 # back LOCKED on every restart — friction, especially now that .gd is the default format. The session
 # now records which sheets were unlocked and restores that state.
 @tool
-extends RefCounted
 class_name SessionEditableRestoreTest
+extends RefCounted
 
 const PROBE := "user://__eventsheet_session_probe.gd"
 const SESSION := "user://eventsheets_session.cfg"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -55,6 +56,7 @@ static func run() -> bool:
 	elif FileAccess.file_exists(SESSION):
 		DirAccess.remove_absolute(SESSION)
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -3,8 +3,9 @@
 # and "Run only when" guard expressions wrap the function body in an `if`. _apply_function_data
 # builds the EventFunction; the compiler emits the default arg + the guard.
 @tool
-extends RefCounted
 class_name FunctionDialogTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -67,6 +68,7 @@ static func run() -> bool:
 	dock.free()
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

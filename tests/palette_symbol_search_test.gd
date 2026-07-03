@@ -2,8 +2,9 @@
 # sheet's named symbols (functions ƒ, signals ➜, tree variables @), incl. ones nested in groups, and
 # filter_symbols fuzzy-matches them by bare name — so Ctrl+P @ jumps to any symbol in the active sheet.
 @tool
-extends RefCounted
 class_name PaletteSymbolSearchTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -32,20 +33,24 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _fn(name: String) -> EventFunction:
 	var function: EventFunction = EventFunction.new()
 	function.function_name = name
 	return function
+
 
 static func _sig(name: String) -> SignalRow:
 	var signal_row: SignalRow = SignalRow.new()
 	signal_row.signal_name = name
 	return signal_row
 
+
 static func _var(name: String) -> LocalVariable:
 	var local_variable: LocalVariable = LocalVariable.new()
 	local_variable.name = name
 	return local_variable
+
 
 static func _title_of(symbols: Array, name: String) -> String:
 	for symbol: Dictionary in symbols:
@@ -53,11 +58,13 @@ static func _title_of(symbols: Array, name: String) -> String:
 			return str(symbol.get("title", ""))
 	return "(none)"
 
+
 static func _has_name(symbols: Array, name: String) -> bool:
 	for symbol: Dictionary in symbols:
 		if str(symbol.get("name", "")) == name:
 			return true
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

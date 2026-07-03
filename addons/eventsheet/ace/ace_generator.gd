@@ -25,6 +25,7 @@ var _analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
 ## owned-instance default — so a behavior needs no per-method @ace_codegen_template.
 var _expose_all_mode: String = ""
 
+
 func generate_from_object(target: Object) -> Array[ACEDefinition]:
 	var output: Array[ACEDefinition] = []
 	if target == null:
@@ -85,6 +86,7 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
 			definition.metadata["tags"] = provider_tags.duplicate()
 	return output
 
+
 ## Applies the @ace_display_template / @ace_codegen_template overrides onto a definition's
 ## metadata (the picker/rows read display_template; codegen + tooltips read codegen_template).
 static func _apply_template_overrides(definition: ACEDefinition, overrides: Dictionary) -> void:
@@ -95,6 +97,7 @@ static func _apply_template_overrides(definition: ACEDefinition, overrides: Dict
 	if not codegen_template.is_empty():
 		definition.metadata["codegen_template"] = codegen_template
 	_parameterize_node_target(definition)
+
 
 ## Behavior-pack ACEs author their codegen as "$<Node>.method()" — the conventional behavior-node
 ## path. To let a sheet target the SAME behavior wherever it actually lives (e.g. $Player/WeaponKit,
@@ -145,6 +148,7 @@ static func _parameterize_node_target(definition: ACEDefinition) -> void:
 	reordered.append_array(definition.parameters)
 	definition.parameters = reordered
 
+
 ## Carries an addon's `## @ace_deprecated("…")` into the definition's metadata, matching how a built-in's
 ## .deprecated() flows via the adapter — so the picker hides it and the hover flags it, while the ACE keeps
 ## compiling in sheets that already use it (the compatibility covenant).
@@ -158,6 +162,7 @@ static func _apply_deprecation_metadata(definition: ACEDefinition, overrides: Di
 	if not message.is_empty():
 		note += " " + message
 	definition.metadata["deprecation_note"] = note
+
 
 func _build_signal_definition(provider_id: String, signal_name: String, signal_info: Dictionary, overrides: Dictionary) -> ACEDefinition:
 	var definition := ACEDefinition.new()
@@ -182,6 +187,7 @@ func _build_signal_definition(provider_id: String, signal_name: String, signal_i
 	definition.editor_exposed = false
 	_apply_template_overrides(definition, overrides)
 	return definition
+
 
 func _build_property_definitions(provider_id: String, property_name: String, property_info: Dictionary, overrides: Dictionary) -> Array[ACEDefinition]:
 	var output: Array[ACEDefinition] = []
@@ -222,6 +228,7 @@ func _build_property_definitions(provider_id: String, property_name: String, pro
 		output.append(_build_property_action_definition(provider_id, property_name, display_name, category, "subtract", "Subtract From %s" % display_name, TYPE_NIL, "amount"))
 	return output
 
+
 func _build_property_action_definition(provider_id: String, property_name: String, display_name: String, category: String, prefix: String, action_name: String, return_type: int, parameter_name: String = "value") -> ACEDefinition:
 	var definition := ACEDefinition.new()
 	definition.provider_id = provider_id
@@ -247,6 +254,7 @@ func _build_property_action_definition(provider_id: String, property_name: Strin
 		"display_template": "%s {%s}" % [action_name, parameter_name]
 	}
 	return definition
+
 
 func _build_method_definition(provider_id: String, method_name: String, method_info: Dictionary, overrides: Dictionary) -> ACEDefinition:
 	var parameter_definitions: Array = _build_parameter_definitions(method_info.get("args", []), overrides)
@@ -293,6 +301,7 @@ func _build_method_definition(provider_id: String, method_name: String, method_i
 	_apply_template_overrides(definition, overrides)
 	return definition
 
+
 func _resolve_method_ace_type(return_type: int, overrides: Dictionary) -> int:
 	var forced_ace_type: int = int(overrides.get("forced_ace_type", -1))
 	if forced_ace_type >= 0:
@@ -302,6 +311,7 @@ func _resolve_method_ace_type(return_type: int, overrides: Dictionary) -> int:
 	if return_type == TYPE_NIL:
 		return ACEDefinition.ACEType.ACTION
 	return ACEDefinition.ACEType.EXPRESSION
+
 
 func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {}) -> Array:
 	var output: Array = []
@@ -344,6 +354,7 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
 		})
 	return output
 
+
 func _build_method_display_template(display_name: String, parameters: Array) -> String:
 	if parameters.is_empty():
 		return display_name
@@ -351,6 +362,7 @@ func _build_method_display_template(display_name: String, parameters: Array) -> 
 	for parameter_definition in parameters:
 		parts.append("{%s}" % str(parameter_definition.get("id", "value")))
 	return " ".join(parts)
+
 
 func _default_value_for_type(value_type: int) -> String:
 	match value_type:
@@ -363,6 +375,7 @@ func _default_value_for_type(value_type: int) -> String:
 		_:
 			return ""
 
+
 func _icon_for_ace_type(ace_type: int) -> String:
 	match ace_type:
 		ACEDefinition.ACEType.CONDITION:
@@ -373,6 +386,7 @@ func _icon_for_ace_type(ace_type: int) -> String:
 			return "trigger"
 		_:
 			return "action"
+
 
 ## Returns true when a method ACE is eligible for editor parameter exposure.
 ## Conditions and actions with all-primitive parameters are exposable.
@@ -392,8 +406,10 @@ func _method_is_exposable(ace_type: int, return_type: int, params: Array) -> boo
 			return false
 	return true
 
+
 func _property_is_exposable(property_type: int) -> bool:
 	return property_type in PRIMITIVE_TYPES
+
 
 ## Infer a PropertyHint for the given Variant type.
 ## Callers can pass a "property_hint" override in the overrides dict
@@ -411,9 +427,11 @@ func _infer_property_hint(value_type: int, overrides: Dictionary) -> int:
 		_:
 			return PROPERTY_HINT_NONE
 
+
 func _string_override(overrides: Dictionary, key: String, default_value: String) -> String:
 	var resolved: String = str(overrides.get(key, ""))
 	return resolved if not resolved.is_empty() else default_value
+
 
 func _normalize_options_to_key_label(raw_options: Variant) -> Array:
 	var output: Array = []
@@ -439,6 +457,7 @@ func _normalize_options_to_key_label(raw_options: Variant) -> Array:
 			continue
 		output.append({"key": scalar, "label": scalar})
 	return output
+
 
 ## Autocomplete suggestions are a flat list of insert-verbatim strings (an editable combo,
 ## not a key/label dropdown). Mirrors _normalize_options_to_key_label's tolerance.

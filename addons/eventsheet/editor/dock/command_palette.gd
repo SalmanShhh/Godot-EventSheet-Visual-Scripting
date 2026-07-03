@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetCommandPalette
+extends RefCounted
 # The Command Palette (Ctrl+P): keyboard-first access to every dock action — the affordance power
 # users reach for first. The command list + fuzzy filter are pure/testable (filter_commands is static
 # so tests can score titles without a live window); the popup is the GUI shell built lazily. Every
@@ -15,8 +15,10 @@ var _command_palette_search: LineEdit = null
 var _command_palette_list: ItemList = null
 var _command_palette_matches: Array = []
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Every command the palette can run: {title, run}. Kept in one place so the palette,
 ## (future) menus, and tests share the same source of truth.
@@ -50,6 +52,7 @@ func _command_palette_commands() -> Array[Dictionary]:
 		commands.append({"title": "Add %s…" % kind.title, "run": func() -> void: _dock._open_custom_block_add(kind_id)})
 	return commands
 
+
 ## Pure fuzzy filter (testable): returns the commands whose title matches `query` as a
 ## prefix > substring > subsequence, best first. Empty query returns everything in order.
 static func filter_commands(commands: Array, query: String) -> Array:
@@ -71,6 +74,7 @@ static func filter_commands(commands: Array, query: String) -> Array:
 		result.append(entry["cmd"])
 	return result
 
+
 static func _command_match_score(title: String, q: String) -> int:
 	if title.begins_with(q):
 		return 0
@@ -89,6 +93,7 @@ static func _command_match_score(title: String, q: String) -> int:
 		if not found:
 			return -1
 	return 2
+
 
 ## Pure fuzzy filter over project sheet PATHS for the `#` mode: returns [{title, path}]
 ## whose file name matches `query` (the leading `#` already stripped) as prefix > substring > subsequence,
@@ -110,6 +115,7 @@ static func filter_sheets(sheet_paths: PackedStringArray, query: String) -> Arra
 		result.append({"title": str(entry["title"]), "path": str(entry["path"])})
 	return result
 
+
 ## The `#` mode's palette entries: every matching project sheet as a {title, run} that opens it.
 func _sheet_matches(query: String) -> Array:
 	var matches: Array = []
@@ -119,6 +125,7 @@ func _sheet_matches(query: String) -> Array:
 			_dock._navigate.record_current()  # a palette jump is history too — Alt+Left returns
 			_dock._navigate.open_or_focus(path)})
 	return matches
+
 
 ## Every named symbol in a sheet — exposed functions (ƒ), signals (➜), and tree variables (@) — as
 ## [{title, name, resource}]. `name` is the bare identifier (fuzzy-match target); `title` carries the
@@ -134,6 +141,7 @@ static func collect_symbols(sheet: EventSheetResource) -> Array:
 	_collect_symbol_rows(sheet.events, symbols)
 	return symbols
 
+
 static func _collect_symbol_rows(rows: Array, symbols: Array) -> void:
 	for row: Variant in rows:
 		if row is SignalRow and not (row as SignalRow).signal_name.strip_edges().is_empty():
@@ -143,6 +151,7 @@ static func _collect_symbol_rows(rows: Array, symbols: Array) -> void:
 		elif row is EventGroup:
 			var group: EventGroup = row as EventGroup
 			_collect_symbol_rows(group.events if not group.events.is_empty() else group.rows, symbols)
+
 
 ## Pure fuzzy filter over collected symbols by their `name` (prefix > substring > subsequence), best
 ## first, name-sorted. Empty query = all in collection order. Static → testable.
@@ -165,6 +174,7 @@ static func filter_symbols(symbols: Array, query: String) -> Array:
 		result.append(entry["sym"])
 	return result
 
+
 ## The `@` mode's palette entries: matching symbols in the active sheet as {title, run} that reveal them.
 func _symbol_matches(query: String) -> Array:
 	var matches: Array = []
@@ -176,6 +186,7 @@ func _symbol_matches(query: String) -> Array:
 				view.reveal_resource(resource)})
 	return matches
 
+
 func _open_command_palette() -> void:
 	if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
 		return
@@ -185,6 +196,7 @@ func _open_command_palette() -> void:
 	_refresh_command_palette("")
 	_command_palette_window.popup_centered(Vector2i(520, 420))
 	_command_palette_search.grab_focus()
+
 
 func _build_command_palette_window() -> void:
 	_command_palette_window = Window.new()
@@ -211,6 +223,7 @@ func _build_command_palette_window() -> void:
 	box.add_child(_command_palette_list)
 	_dock.add_child(_command_palette_window)
 
+
 ## A script location in pasted text — "res://path.gd:42" anywhere inside it, so a whole error or
 ## stack-trace line copied from the Output panel works verbatim. {path, line} or {} when the text
 ## carries no script location. Static + pure (testable without a window).
@@ -223,6 +236,7 @@ static func parse_error_location(text: String) -> Dictionary:
 		return {}
 	return {"path": found.get_string(1), "line": int(found.get_string(2))}
 
+
 ## The error-jump entry: opens the located .gd AS A SHEET and selects the row that emitted the line
 ## (the line↔row mapper) — a runtime error pastes straight back onto the event that caused it.
 func _error_jump_matches(location: Dictionary) -> Array:
@@ -232,6 +246,7 @@ func _error_jump_matches(location: Dictionary) -> Array:
 		_dock._navigate.record_current()  # an error jump is history too — Alt+Left returns
 		_dock._navigate.open_or_focus(path)
 		_dock.goto_generated_line(line)}]
+
 
 func _refresh_command_palette(query: String) -> void:
 	# Prefix modes: `#` opens any project sheet, `@` jumps to a symbol in the ACTIVE sheet
@@ -254,6 +269,7 @@ func _refresh_command_palette(query: String) -> void:
 	if _command_palette_list.item_count > 0:
 		_command_palette_list.select(0)
 
+
 func _on_command_palette_search_input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not (event as InputEventKey).pressed:
 		return
@@ -269,6 +285,7 @@ func _on_command_palette_search_input(event: InputEvent) -> void:
 		KEY_UP:
 			_move_command_palette_selection(-1)
 
+
 func _move_command_palette_selection(delta: int) -> void:
 	if _command_palette_list == null or _command_palette_list.item_count == 0:
 		return
@@ -277,6 +294,7 @@ func _move_command_palette_selection(delta: int) -> void:
 	var next: int = clampi(current + delta, 0, _command_palette_list.item_count - 1)
 	_command_palette_list.select(next)
 	_command_palette_list.ensure_current_is_visible()
+
 
 func _run_command_palette_index(index: int) -> void:
 	if index < 0 or index >= _command_palette_matches.size():

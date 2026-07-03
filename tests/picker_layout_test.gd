@@ -5,8 +5,9 @@
 # populating the tree does NOT error — a missed column-1 setter (set_text/custom_color/selectable(1,…))
 # would crash on a single-column Tree, so the populate step is the real regression guard.
 @tool
-extends RefCounted
 class_name PickerLayoutTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -35,6 +36,7 @@ static func run() -> bool:
 
 	parent.free()
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

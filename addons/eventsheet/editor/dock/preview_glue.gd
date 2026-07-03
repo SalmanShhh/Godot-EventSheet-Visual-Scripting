@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetPreviewGlue
+extends RefCounted
 # The .gd-PREVIEW / OPEN-IN-GODOT / LIFT-REPORT cluster. This helper owns:
 #   • the read-only .gd-preview banner — the plain-language strip shown when a sheet is opened as a
 #     read-only .gd (a lifted GDScript view), with its "Edit Events" unlock and "Open in Godot
@@ -41,12 +41,14 @@ class_name EventSheetPreviewGlue
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
 # ── Lift report: what lifted to events and why each block stayed code ─────────────────────
 var _lift_report_window: Window = null
 var _lift_report_tree: Tree = null
+
 
 ## Builds the read-only preview banner: a clear, plain-language strip with REAL buttons so a
 ## first-time user knows exactly what is happening and what to do next. Hidden by default.
@@ -80,6 +82,7 @@ func build_preview_banner() -> PanelContainer:
 	row.add_child(script_button)
 	return panel
 
+
 ## Shows/updates the preview banner: visible only while previewing a .gd read-only, with the
 ## source name + a plain-language lift-fidelity summary (events lifted vs. code kept verbatim).
 func _refresh_preview_banner() -> void:
@@ -98,6 +101,7 @@ func _refresh_preview_banner() -> void:
 	var report: Array[Dictionary] = EventSheetLiftReport.for_sheet(_dock._current_sheet)
 	_dock._preview_label.text = "👁  Viewing %s as a sheet — just start editing to change it here, or \"Open in Godot Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(report)]
 
+
 ## "Edit Events": turn the preview into a normal GDScript-backed sheet (Save then compiles
 ## back to the .gd). The banner flips to a plain warning so the consequence stays obvious.
 func _on_preview_edit_requested() -> void:
@@ -112,11 +116,13 @@ func _on_preview_edit_requested() -> void:
 		source_name = "this sheet"
 	_dock._set_status("Now editing %s — Save (Ctrl+S) saves your changes to the file, or use Save As… to keep a separate copy." % source_name)
 
+
 ## "Open in Godot Script Editor": hand the .gd to Godot's own script editor for direct code edits.
 func _on_preview_open_in_script_editor() -> void:
 	if _dock._current_sheet == null or _dock._current_sheet.external_source_path.is_empty():
 		return
 	_open_gdscript_path_in_godot(_dock._current_sheet.external_source_path)
+
 
 ## Hands a Script resource to Godot's own script editor — the shared glue behind every "Open in
 ## Godot" action. Guarded: a no-op (with a status note) outside the editor or when edit_script is
@@ -134,6 +140,7 @@ func _edit_script_in_godot(script: Script, line: int = -1) -> bool:
 		editor_interface.call("set_main_screen_editor", "Script")
 	return true
 
+
 ## Opens an existing res:// .gd in Godot's script editor (provider scripts, a backed sheet's source).
 func _open_gdscript_path_in_godot(path: String, line: int = -1) -> bool:
 	if path.is_empty() or not FileAccess.file_exists(path):
@@ -144,6 +151,7 @@ func _open_gdscript_path_in_godot(path: String, line: int = -1) -> bool:
 		_dock._set_status("%s could not be opened as a GDScript." % path.get_file(), true)
 		return false
 	return _edit_script_in_godot(script as Script, line)
+
 
 ## "Open in Godot" for the GDScript block in the popup. A block in a code-backed (.gd) sheet IS part
 ## of a real file: apply the popup text, compile the sheet back to its .gd, and open that source —
@@ -172,6 +180,7 @@ func _open_raw_code_block_in_godot() -> void:
 	if _open_gdscript_path_in_godot(source_path):
 		_dock._set_status("Saved and opened %s in Godot — the sheet reloads your edits when you come back." % source_path.get_file())
 
+
 ## "Open in Godot" for the generated GDScript. A code-backed sheet's source IS its generated output —
 ## open the real .gd. A non-backed (.tres) sheet has no source file (and the generated text often
 ## declares a class_name, which can't safely be written to a throwaway), so point the user at Save
@@ -182,6 +191,7 @@ func _open_generated_in_godot() -> void:
 		return
 	_open_gdscript_path_in_godot(_dock._current_sheet.external_source_path)
 
+
 ## "Open in Godot" for the selected custom-ACE provider script (a real res:// .gd).
 func _on_provider_open_in_godot_pressed() -> void:
 	if _dock._provider_list == null:
@@ -191,6 +201,7 @@ func _on_provider_open_in_godot_pressed() -> void:
 		_dock._set_status("Select a provider script first, then Open in Godot.", true)
 		return
 	_open_gdscript_path_in_godot(_dock._provider_list.get_item_text(selected[0]))
+
 
 func _open_lift_report() -> void:
 	var report: Array[Dictionary] = EventSheetLiftReport.for_sheet(_dock._current_sheet)

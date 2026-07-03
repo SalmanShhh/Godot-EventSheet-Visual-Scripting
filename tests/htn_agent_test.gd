@@ -3,10 +3,11 @@
 # decomposition picks the highest-utility APPLICABLE method (with preconditions), executes
 # the plan task-by-task with the right triggers, and fails cleanly when nothing applies.
 @tool
-extends RefCounted
 class_name HTNAgentTest
+extends RefCounted
 
 const PACK := "res://eventsheet_addons/htn_agent/htn_agent_behavior.gd"
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -62,6 +63,7 @@ static func run() -> bool:
 
 	agent.free()
 	return passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Top-down 8-direction movement, authored entirely as ACE rows (ZERO RawCode) - the new behaviour
 ## physics vocabulary in action: a typed input-vector local, Set Velocity, and Move And Slide, all
 ## host-targeted via {host.}. The movement behaviour the user asked to be code-free.
@@ -42,6 +43,7 @@ static func build() -> bool:
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/eight_direction/eight_direction_movement_behavior")
 
+
 ## Built-in Core ACE rows; templates resolve from the registry at compile time (no baked template).
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
@@ -50,12 +52,14 @@ static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	action.params = params
 	return action
 
+
 static func _cond(ace_id: String, params: Dictionary) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = "Core"
 	condition.ace_id = ace_id
 	condition.params = params
 	return condition
+
 
 static func _param(id: String, type_name: String) -> ACEParam:
 	var param: ACEParam = ACEParam.new()

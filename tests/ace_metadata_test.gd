@@ -1,7 +1,8 @@
 # EventForge — ACE metadata normalization tests
 @tool
-extends RefCounted
 class_name ACEMetadataTest
+extends RefCounted
+
 
 ## Runs ACE metadata normalization checks.
 static func run() -> bool:
@@ -86,6 +87,7 @@ static func run() -> bool:
 		all_passed = _check("SetVar node_type is empty", set_var.node_type, "") and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

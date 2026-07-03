@@ -5,8 +5,9 @@
 # un-versioned filenames so it survives future showcase refreshes (regenerate the demos
 # with tools/build_examples.gd).
 @tool
-extends RefCounted
 class_name ShowcaseExamplesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -116,6 +117,7 @@ static func run() -> bool:
 
 	return passed
 
+
 static func _check_sheet(label: String, path: String, required: Array) -> bool:
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(path)
 	var ok: bool = _check("%s opens as a sheet" % label, sheet is EventSheetResource, true)
@@ -142,6 +144,7 @@ static func _check_sheet(label: String, path: String, required: Array) -> bool:
 		ok = _check("%s output contains: %s" % [label, token], output.contains(token), true) and ok
 	return ok
 
+
 static func _check_scene(label: String, path: String, node_names: Array) -> bool:
 	var scene: PackedScene = load(path) as PackedScene
 	if scene == null:
@@ -153,6 +156,7 @@ static func _check_scene(label: String, path: String, node_names: Array) -> bool
 	if root != null:
 		root.free()
 	return _check(label, ok, true)
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -3,8 +3,9 @@
 # pennants. Includes: other sheets' variables/rows/functions merge at compile (root wins
 # collisions, cycles skip with warnings) — included rows never enter the editing model.
 @tool
-extends RefCounted
 class_name BookmarksIncludesTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -107,6 +109,7 @@ static func run() -> bool:
 		bool(missing_result.get("success", false)) and str(missing_result.get("warnings", [])).contains("not found"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

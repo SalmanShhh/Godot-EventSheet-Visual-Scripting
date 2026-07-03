@@ -7,8 +7,9 @@
 # changes to be explainable). For event-sheet users learning Godot, every unlifted block
 # is a lesson; for Godot devs it's trust through transparency.
 @tool
-extends RefCounted
 class_name EventSheetLiftReport
+extends RefCounted
+
 
 ## One entry per top-level row/function: {kind: "event"|"function"|"code"|"comment",
 ## label, reason} — reason is "" for lifted structure.
@@ -35,6 +36,7 @@ static func for_sheet(sheet: EventSheetResource) -> Array[Dictionary]:
 			entries.append({"kind": "function", "label": "FUNCTION %s" % (function_entry as EventFunction).function_name, "reason": ""})
 	return entries
 
+
 ## The closest-ACE explanation for a block that stayed code. The boundary is the
 ## curriculum: each reason names the structured way to say the same thing.
 static func reason_for(code: String) -> String:
@@ -57,11 +59,13 @@ static func reason_for(code: String) -> String:
 		return "Custom function with no lift shape — sheet functions (exposed as ACEs) cover this."
 	return "No matching ACE template — stays honest GDScript (lossless either way)."
 
+
 static func _label_for(code: String) -> String:
 	for line: String in code.split("\n"):
 		if not line.strip_edges().is_empty():
 			return line.strip_edges().left(60)
 	return "(blank block)"
+
 
 ## "4 events, 1 function, 2 code blocks" — the status-line form.
 static func summary(entries: Array[Dictionary]) -> String:

@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Saves the editable sheet (.tres) and the compiled addon script (.gd) side by side.
 ## Sine behavior (event-sheet parity)
 static func build() -> bool:

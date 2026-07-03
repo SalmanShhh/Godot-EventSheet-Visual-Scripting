@@ -4,8 +4,9 @@
 # inclusive, while preserving the anchor so the range can grow OR shrink from the same origin.
 # Guards _select_range and its anchor bookkeeping.
 @tool
-extends RefCounted
 class_name RangeSelectionTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -49,6 +50,7 @@ static func run() -> bool:
 	viewport.free()
 	return all_passed
 
+
 static func _selected_count(viewport: EventSheetViewport) -> int:
 	var count: int = 0
 	for entry: Dictionary in viewport.get_flat_rows():
@@ -57,6 +59,7 @@ static func _selected_count(viewport: EventSheetViewport) -> int:
 			count += 1
 	return count
 
+
 static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int:
 	var flat: Array[Dictionary] = viewport.get_flat_rows()
 	for i in range(flat.size()):
@@ -64,6 +67,7 @@ static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int
 		if row_data != null and row_data.source_resource == resource:
 			return i
 	return -1
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

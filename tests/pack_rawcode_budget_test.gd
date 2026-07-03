@@ -6,8 +6,8 @@
 # packs (spring / juice / sine integrators) keep a documented non-zero budget until converted, per the
 # spec's honest criterion (continuous math kernels read better as GDScript).
 @tool
-extends RefCounted
 class_name PackRawcodeBudgetTest
+extends RefCounted
 
 const BUDGETS := {
 	"res://eventsheet_addons/flash/flash_behavior.gd": 0,
@@ -16,6 +16,7 @@ const BUDGETS := {
 	"res://eventsheet_addons/state_machine/state_machine_behavior.gd": 0,
 	"res://eventsheet_addons/move_to/move_to_behavior.gd": 0,
 }
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -41,6 +42,7 @@ static func run() -> bool:
 		ok = _check("%s logic within RawCode budget %d (has %d)" % [path.get_file(), budget, count], count <= budget, true) and ok
 	return ok
 
+
 ## Counts RawCodeRow rows reachable from a row list: top-level, nested sub-events, and in-flow actions.
 static func _count_rawcode(rows: Array) -> int:
 	var count: int = 0
@@ -51,6 +53,7 @@ static func _count_rawcode(rows: Array) -> int:
 			count += _count_rawcode((row as EventRow).sub_events)
 			count += _count_rawcode((row as EventRow).actions)
 	return count
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

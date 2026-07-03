@@ -3,8 +3,9 @@
 # Editor glue (EventSheetContextMenu) is never instantiated headless — the
 # EditorDebuggerPlugin lesson; cores are tested here, glue by the editor smoke.
 @tool
-extends RefCounted
 class_name GodotWorkflowTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -14,6 +15,7 @@ class NoopUndoManager:
 	func commit_action() -> void: pass
 	func has_undo() -> bool: return false
 	func has_redo() -> bool: return false
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -575,12 +577,14 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _menu_labels(menu: PopupMenu) -> PackedStringArray:
 	var labels: PackedStringArray = PackedStringArray()
 	for i in range(menu.item_count):
 		if not menu.is_item_separator(i):
 			labels.append(menu.get_item_text(i))
 	return labels
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

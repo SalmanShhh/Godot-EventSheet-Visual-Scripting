@@ -1,12 +1,13 @@
 # EventForge — Runtime bridge autoload
 # Runtime-safe provider registry for ACE descriptors.
 @tool
-extends Node
 class_name EventForgeBridgeRuntime
+extends Node
 
 signal providers_changed
 
 var _providers: Dictionary = {}
+
 
 ## Registers a provider and its descriptors.
 func register_provider(provider: Object, descriptors: Array) -> void:
@@ -26,10 +27,12 @@ func register_provider(provider: Object, descriptors: Array) -> void:
 	_providers[provider_id] = descriptors.duplicate()
 	emit_signal("providers_changed")
 
+
 ## Unregisters a provider by ID.
 func unregister_provider(provider_id: String) -> void:
 	if _providers.erase(provider_id):
 		emit_signal("providers_changed")
+
 
 ## Returns all descriptors currently registered by all providers.
 func get_all_descriptors() -> Array:
@@ -39,6 +42,7 @@ func get_all_descriptors() -> Array:
 		for entry: Variant in entries:
 			output.append(entry)
 	return output
+
 
 ## Returns descriptors filtered by ACE type.
 func get_descriptors_by_type(ace_type: int) -> Array:
@@ -55,11 +59,13 @@ func get_descriptors_by_type(ace_type: int) -> Array:
 # (instance-backed addon ACEs own a direct instance of the addon class).
 static var _registered_provider_scripts: PackedStringArray = PackedStringArray()
 
+
 ## Registers a GDScript file as an ACE provider, exactly as if it lived in
 ## res://eventsheet_addons/ (class_name = provider name, @ace_* annotations honored).
 func register_script_as_provider(script_path: String) -> void:
 	register_provider_script(script_path)
 	emit_signal("providers_changed")
+
 
 static func register_provider_script(script_path: String) -> void:
 	var resolved: String = script_path.strip_edges()
@@ -67,10 +73,12 @@ static func register_provider_script(script_path: String) -> void:
 		return
 	_registered_provider_scripts.append(resolved)
 
+
 static func unregister_provider_script(script_path: String) -> void:
 	var index: int = _registered_provider_scripts.find(script_path.strip_edges())
 	if index >= 0:
 		_registered_provider_scripts.remove_at(index)
+
 
 static func get_registered_provider_scripts() -> PackedStringArray:
 	return _registered_provider_scripts.duplicate()

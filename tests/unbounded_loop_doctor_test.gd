@@ -4,8 +4,9 @@
 # can hitch the game. The Doctor flags the PATTERN. This drives the detection logic directly on hand-built
 # events (the public check loads sheets from disk; the core logic is what matters here).
 @tool
-extends RefCounted
 class_name UnboundedLoopDoctorTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -40,6 +41,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _loop_event(spread_count: int, spread_ms: float, first_n: int, action_count: int) -> EventRow:
 	var event: EventRow = EventRow.new()
 	event.trigger_id = "OnProcess"
@@ -55,6 +57,7 @@ static func _loop_event(spread_count: int, spread_ms: float, first_n: int, actio
 	for _i in action_count:
 		event.actions.append(RawCodeRow.new())
 	return event
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

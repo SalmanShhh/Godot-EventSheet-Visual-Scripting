@@ -4,8 +4,9 @@
 # re-scanned. An earlier iterative replace() pass corrupted such values (e.g. "{a}-{b}" with a="{b}"
 # produced "X-X"). Also guards the optional `{, key}` comma idiom and unknown-placeholder behavior.
 @tool
-extends RefCounted
 class_name TemplateSubstitutionTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -28,6 +29,7 @@ static func run() -> bool:
 	all_passed = _check("repeated key substituted at each site",
 		ActionCodegen._apply_template("{t}.x = {t}.y", {"t": "node"}), "node.x = node.y") and all_passed
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

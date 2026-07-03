@@ -6,8 +6,8 @@
 # (call()/Callable/plugin classes) and keeps static typing where the compiler knows types.
 # If a future feature trips this test, fix the codegen — do not relax the assertions.
 @tool
-extends RefCounted
 class_name CodegenParityTest
+extends RefCounted
 
 ## Substrings that must never appear in generated output: each one would mean runtime
 ## indirection or a plugin dependency, breaking parity with hand-written GDScript.
@@ -23,6 +23,7 @@ const BANNED_PATTERNS: Array[String] = [
 	"ACEDefinition",
 	"emit_signal(\""
 ]
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -85,6 +86,7 @@ static func run() -> bool:
 	all_passed = _check("no stray await (only flagged actions await)", code_body.contains("await "), false) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

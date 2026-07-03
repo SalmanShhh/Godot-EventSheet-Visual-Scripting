@@ -6,8 +6,9 @@
 # pack, that each raw row's mapped first line equals its code's first line — and that the realign is
 # map-only (bytes unchanged, drift still 0).
 @tool
-extends RefCounted
 class_name ExternalSourceMapTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -66,6 +67,7 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _all_pack_scripts() -> PackedStringArray:
 	var scripts: PackedStringArray = PackedStringArray()
 	var root: String = "res://eventsheet_addons"
@@ -80,6 +82,7 @@ static func _all_pack_scripts() -> PackedStringArray:
 				if file.ends_with(".gd") and not file.ends_with(".uid"):
 					scripts.append("%s/%s/%s" % [root, folder, file])
 	return scripts
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

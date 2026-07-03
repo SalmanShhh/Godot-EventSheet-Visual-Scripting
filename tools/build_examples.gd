@@ -10,6 +10,7 @@ extends SceneTree
 
 const PackLib := preload("res://tools/pack_builders/_lib.gd")
 
+
 func _init() -> void:
 	var all_ok: bool = true
 	all_ok = _build_carousel() and all_ok
@@ -23,6 +24,7 @@ func _init() -> void:
 	quit(0 if all_ok else 1)
 
 # ── shared helpers ───────────────────────────────────────────────────────────
+
 
 ## A 48x48 soft-cornered white sprite texture, built in-tool so no example depends on
 ## res://icon.svg existing.
@@ -40,6 +42,7 @@ func _make_texture() -> ImageTexture:
 				img.set_pixel(x, y, Color(1, 1, 1, 0.55))
 	return ImageTexture.create_from_image(img)
 
+
 func _condition(provider: String, ace_id: String, template: String, params: Dictionary,
 		member_decl: String = "", prelude: String = "", on_true: String = "") -> ACECondition:
 	var c: ACECondition = ACECondition.new()
@@ -52,6 +55,7 @@ func _condition(provider: String, ace_id: String, template: String, params: Dict
 	c.codegen_on_true = on_true
 	return c
 
+
 func _action(provider: String, ace_id: String, template: String, params: Dictionary) -> ACEAction:
 	var a: ACEAction = ACEAction.new()
 	a.provider_id = provider
@@ -60,10 +64,12 @@ func _action(provider: String, ace_id: String, template: String, params: Diction
 	a.params = params
 	return a
 
+
 func _raw(code: String) -> RawCodeRow:
 	var r: RawCodeRow = RawCodeRow.new()
 	r.code = code
 	return r
+
 
 func _every(uid: String, seconds: String) -> ACECondition:
 	var member: String = "var __every_%s: float = 0.0" % uid
@@ -76,6 +82,7 @@ func _every(uid: String, seconds: String) -> ACECondition:
 		"__every_%s = fmod(__every_%s, maxf(%s, 0.001))" % [uid, uid, seconds]
 	)
 
+
 func _attach_behavior(parent: Node, node_name: String, path: String, root: Node, props: Dictionary = {}) -> Node:
 	var node: Node = (load(path) as GDScript).new()
 	node.name = node_name
@@ -84,6 +91,7 @@ func _attach_behavior(parent: Node, node_name: String, path: String, root: Node,
 	for key: String in props.keys():
 		node.set(key, props[key])
 	return node
+
 
 ## Compile sheet straight to a banner-less .gd (no .tres) — the .gd IS the showcase sheet, hand-editable.
 func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) -> bool:
@@ -110,6 +118,7 @@ func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) ->
 		gd_path.get_file(), str(success), str(result.get("warnings", [])), str(result.get("errors", []))])
 	return success
 
+
 func _save_scene(root: Node, path: String) -> bool:
 	var packed: PackedScene = PackedScene.new()
 	var pack_err: Error = packed.pack(root)
@@ -123,6 +132,7 @@ const SPRING := "res://eventsheet_addons/spring/spring_behavior.gd"
 const TWEEN := "res://eventsheet_addons/tween/tween_behavior.gd"
 const SINE := "res://eventsheet_addons/sine/sine_behavior.gd"
 const FLASH := "res://eventsheet_addons/flash/flash_behavior.gd"
+
 
 func _build_carousel() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -264,6 +274,7 @@ const BULLET := "res://eventsheet_addons/bullet/bullet_behavior.gd"
 const PLATFORMER := "res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd"
 const WEAPON_KIT := "res://eventsheet_addons/weapon_kit/weapon_kit_behavior.gd"
 
+
 func _build_starfall() -> bool:
 	# Star sub-scene (group-tagged falling sprite, BulletBehavior provides the fall).
 	var tex: ImageTexture = _make_texture()
@@ -400,6 +411,7 @@ func _build_starfall() -> bool:
 
 # ── 3. Quest & Inventory FSM (software-logic systems demo) ───────────────────
 
+
 func _local_var(var_name: String, type_id: int, type_name: String, default_value: Variant) -> LocalVariable:
 	var lv: LocalVariable = LocalVariable.new()
 	lv.name = var_name
@@ -408,6 +420,7 @@ func _local_var(var_name: String, type_id: int, type_name: String, default_value
 	lv.default_value = default_value
 	lv.exported = true
 	return lv
+
 
 func _build_quest_fsm() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -514,6 +527,7 @@ func _build_quest_fsm() -> bool:
 	return _save_scene(root, "res://demo/showcase/quest_fsm.tscn")
 
 # ── 4. Platformer-Shooter (two new behavior packs working together) ──────────
+
 
 func _build_platformer_shooter() -> bool:
 	var tex: ImageTexture = _make_texture()
@@ -668,6 +682,7 @@ func _build_platformer_shooter() -> bool:
 
 # ── 5. Swarm — frame-spreading crowd (Budgeted For Each) ─────────────────────
 
+
 func _build_swarm() -> bool:
 	# Dot sub-scene: a small group-tagged sprite the sheet spawns by the hundreds.
 	var tex: ImageTexture = _make_texture()
@@ -736,6 +751,7 @@ func _build_swarm() -> bool:
 	label.text = "800 sprites   ·   Budgeted For Each: 90/frame   ·   60 FPS"
 	root.add_child(label); label.owner = root
 	return _save_scene(root, "res://demo/showcase/swarm.tscn")
+
 
 # ── 6. Family Arena (the Families trio: horizontal abstraction) ───────────────
 # Demonstrates a FAMILY end-to-end: an `Enemy` Sprite2D whose instances auto-join the family_enemy
@@ -834,6 +850,7 @@ func _build_family_arena() -> bool:
 	label.text = "18 Enemies · one family For Each moves them all"
 	root.add_child(label); label.owner = root
 	return _save_scene(root, "res://demo/showcase/family_arena.tscn")
+
 
 # ── 7. Inspector Playground (Tier 3 custom drawers + @export grouping) ────────
 # Shows off the Custom Inspector features: every exported variable uses a different drawer (direction dial,

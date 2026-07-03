@@ -12,10 +12,11 @@
 # scratch file and are compared as text (contrast tools/audit_addons.gd, which repairs
 # pack outputs in place while reporting drift).
 @tool
-extends RefCounted
 class_name EventSheetProjectDoctor
+extends RefCounted
 
 const SCRATCH_PATH := "user://eventsheets_doctor_scratch.gd"
+
 
 ## Full audit over every sheet in the project. Returns
 ## {findings: Array[Dictionary{severity, check, path, message}], errors, warnings, infos}.
@@ -47,6 +48,7 @@ static func run() -> Dictionary:
 		"infos": int(counts["info"]),
 	}
 
+
 ## The script a sheet is expected to pair with — the compiler's own resolution
 ## (existing <name>_generated.gd, else the pack builder's header-verified sibling
 ## <name>.gd, else the <name>_generated.gd a save WOULD create), so the doctor,
@@ -59,6 +61,7 @@ static func output_path_for(sheet_path: String) -> String:
 	if sheet == null:
 		return sheet_path.get_basename() + "_generated.gd"
 	return SheetCompiler._resolve_output_path(sheet, "")
+
 
 ## Every committed output must be exactly what its sheet compiles to today — the same
 ## byte-identity contract pack goldens pin, generalized to every sheet in the project.
@@ -81,6 +84,7 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 			_add(findings, "error", "stale-output", sheet_path,
 				"%s is stale — re-save the sheet (or re-run the pack builder) to refresh it." % output_path.get_file())
 	DirAccess.remove_absolute(SCRATCH_PATH)
+
 
 ## Debug residue: a sheet saved with a debug-emit toggle ON compiles debug instrumentation INTO its
 ## committed script — `breakpoint` statements (which HALT the running game into the debugger), the
@@ -106,6 +110,7 @@ static func check_debug_residue(sheet_paths: PackedStringArray, findings: Array[
 			_add(findings, "warning", "debug-residue", sheet_path,
 				"Debug instrumentation (%s) is compiled into the committed script — turn it off (Debug menu) and re-save before shipping." % ", ".join(flags))
 
+
 ## Clears every debug-emit toggle on a sheet — the data half of the Doctor panel's "strip + resave" fix
 ## (the caller re-saves, which recompiles the residue out). Returns true only if something was on, so the
 ## caller re-saves only when needed.
@@ -117,6 +122,7 @@ static func strip_debug_flags(sheet: EventSheetResource) -> bool:
 	sheet.emit_live_values = false
 	sheet.emit_event_trace = false
 	return was_on
+
 
 ## Autoload sheets only run when project.godot points their singleton name at the
 ## compiled script (the dock's Tools → Register Autoload does this in one click).
@@ -137,6 +143,7 @@ static func check_autoload_registration(sheet_paths: PackedStringArray, findings
 		elif str(ProjectSettings.get_setting(key)).trim_prefix("*") != expected:
 			_add(findings, "warning", "autoload", sheet_path,
 				"Autoload \"%s\" points at %s, but this sheet compiles to %s." % [sheet.autoload_name, str(ProjectSettings.get_setting(key)).trim_prefix("*"), expected])
+
 
 ## Reverse scene lookup: a compiled sheet nothing instances is usually a forgotten
 ## attach. Skips autoload sheets (registered, not attached) and published packs
@@ -166,6 +173,7 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 			_add(findings, "info", "scene-attachment", sheet_path,
 				"%s is attached to no scene — fine if it's instanced from code or used as a class." % output_path.get_file())
 
+
 ## The sheet a generated script belongs to — the inverse of output_path_for.
 ## Trusts the script's "# Source:" header first (exact), then sibling naming
 ## verified through the pairing rule. "" when the script isn't sheet-generated.
@@ -185,6 +193,7 @@ static func sheet_for_script(script_path: String) -> String:
 		return script_path
 	return ""
 
+
 ## Every scene that references a script path — the reverse lookup the attachment
 ## check and the dock's Run Scene share (sorted for stable pick menus).
 static func scenes_attaching(script_path: String) -> PackedStringArray:
@@ -194,6 +203,7 @@ static func scenes_attaching(script_path: String) -> PackedStringArray:
 			matches.append(scene_path)
 	matches.sort()
 	return matches
+
 
 ## Private (non-exported) variables nothing references are dead vocabulary. Exported
 ## variables are skipped (they're set per-instance in the Inspector); usage is searched
@@ -228,6 +238,7 @@ static func check_unused_variables(sheet_paths: PackedStringArray, findings: Arr
 			if RegEx.create_from_string("\\b%s\\b" % str(variable_name)).search(corpus) == null:
 				_add(findings, "info", "unused-variable", sheet_path,
 					"Private variable \"%s\" is never referenced — dead vocabulary?" % str(variable_name))
+
 
 ## The same global declared across several sheets is N copies of one truth; Godot's answer is a single
 ## autoload (a Game State singleton). Advisory: lists the sheets sharing a name and points at the
@@ -270,8 +281,10 @@ static func check_duplicated_globals(sheet_paths: PackedStringArray, findings: A
 ## one host is fine). Skips behavior + autoload sheets (a coordinator IS a valid choice). Info-tier.
 const DEFAULT_FANOUT_THRESHOLD := 6
 
+
 static func _fanout_threshold() -> int:
 	return int(ProjectSettings.get_setting("eventsheets/doctor/fanout_threshold", DEFAULT_FANOUT_THRESHOLD))
+
 
 static func check_fanout_god_sheets(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
@@ -299,8 +312,10 @@ static func check_fanout_god_sheets(sheet_paths: PackedStringArray, findings: Ar
 ## REPEAT kinds; threshold via eventsheets/doctor/loop_cost_threshold (default 3).
 const DEFAULT_LOOP_COST_THRESHOLD := 3
 
+
 static func _loop_cost_threshold() -> int:
 	return int(ProjectSettings.get_setting("eventsheets/doctor/loop_cost_threshold", DEFAULT_LOOP_COST_THRESHOLD))
+
 
 static func check_unbounded_loops(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var threshold: int = _loop_cost_threshold()
@@ -314,8 +329,10 @@ static func check_unbounded_loops(sheet_paths: PackedStringArray, findings: Arra
 			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
 				_scan_unbounded_loops(entry as EventRow, sheet_path, threshold, findings)
 
+
 static func _is_per_frame_trigger(trigger_id: String) -> bool:
 	return trigger_id == "OnProcess" or trigger_id == "OnPhysicsProcess"
+
 
 ## Walks an event + its sub-events for unbounded, unbudgeted For Each loops with >= threshold actions.
 static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold: int, findings: Array[Dictionary]) -> void:
@@ -341,6 +358,7 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 ## does not await, so it is intentionally absent).
 const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget"]
 
+
 ## Flags a coroutine action (await / Wait / budget-yield) under a per-frame trigger: the next tick fires
 ## while the previous run may still be suspended, so the handler overlaps itself and double-processes.
 static func check_coroutine_in_per_frame_trigger(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
@@ -353,6 +371,7 @@ static func check_coroutine_in_per_frame_trigger(sheet_paths: PackedStringArray,
 		for entry: Variant in sheet.events:
 			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
 				_scan_coroutine_misuse(entry as EventRow, sheet_path, findings)
+
 
 static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings: Array[Dictionary]) -> void:
 	for action: Variant in event.actions:
@@ -368,6 +387,7 @@ static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings
 	for sub: Variant in event.sub_events:
 		if sub is EventRow:
 			_scan_coroutine_misuse(sub as EventRow, sheet_path, findings)
+
 
 ## Walks a sheet's rows collecting DISTINCT external node references (normalised: $path / %unique,
 ## get_node folds into $path), from With-node scopes, ACE param values and raw GDScript. self/host,
@@ -390,6 +410,7 @@ static func _collect_external_targets(rows: Array, targets: Dictionary) -> void:
 						_note_node_refs(str(value), targets)
 			_collect_external_targets(event.sub_events, targets)
 
+
 static func _note_node_refs(text: String, targets: Dictionary) -> void:
 	if text.strip_edges().is_empty():
 		return
@@ -398,6 +419,7 @@ static func _note_node_refs(text: String, targets: Dictionary) -> void:
 			targets["$" + reference] = true
 	for unique_name: String in ACEParamsDialog.unique_names_in_expression(text):
 		targets["%" + unique_name] = true
+
 
 ## Packs no sheet, scene or autoload references are removal candidates — advisory,
 ## because a pack is also legitimately used from hand-written GDScript only.
@@ -432,6 +454,7 @@ static func check_unused_packs(sheet_paths: PackedStringArray, findings: Array[D
 		_add(findings, "info", "unused-pack", script_path,
 			"Pack class %s is referenced by no sheet, scene or autoload — fine if you call it from hand-written GDScript." % pack_class)
 
+
 ## The class whose members a sheet's variables actually share a script with:
 ## behavior/autoload sheets compile to Node components (host members live behind
 ## `host.`), everything else extends the host class directly.
@@ -441,6 +464,7 @@ static func variable_scope_class(sheet: EventSheetResource) -> String:
 	if sheet.behavior_mode or sheet.autoload_mode:
 		return "Node"
 	return sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node"
+
 
 ## "" when the name is free, else the class whose member it shadows. A shadowing
 ## variable (e.g. `velocity` on a CharacterBody2D sheet) makes the generated script
@@ -457,6 +481,7 @@ static func shadowed_member_class(sheet: EventSheetResource, variable_name: Stri
 			return scope_class
 	return ""
 
+
 ## Variables shadowing host members break the generated script at load (duplicate
 ## member) — error tier: the game cannot run until the variable is renamed.
 static func check_shadowed_variables(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
@@ -470,6 +495,7 @@ static func check_shadowed_variables(sheet_paths: PackedStringArray, findings: A
 				_add(findings, "error", "shadowed-variable", sheet_path,
 					"Variable \"%s\" shadows a %s member — the generated script can't load. Rename Everywhere… fixes every reference." % [str(variable_name), owner_class])
 
+
 ## A generated vocabulary doc is a promise to the team — once one exists, the doctor
 ## notes when it no longer matches what the project actually publishes. Opt-in by
 ## design: no doc, no note.
@@ -480,6 +506,7 @@ static func check_vocabulary_doc(findings: Array[Dictionary]) -> void:
 	if FileAccess.get_file_as_string(path) != EventSheetVocabularyDoc.generate():
 		_add(findings, "info", "vocabulary-doc", path,
 			"Vocabulary doc is stale — regenerate via Tools → Vocabulary Doc… or tools/vocabulary_doc.gd.")
+
 
 ## Everything in a sheet that can REFERENCE vocabulary: raw code, ACE param values and
 ## baked templates, pick filters, trigger args, local-variable defaults. Comments are
@@ -492,6 +519,7 @@ static func _sheet_usage_text(sheet: EventSheetResource) -> String:
 			var event_function: EventFunction = function_entry
 			_collect_usage_text(event_function.events if not event_function.events.is_empty() else event_function.rows, chunks)
 	return "\n".join(chunks)
+
 
 static func _collect_usage_text(rows: Array, into: PackedStringArray) -> void:
 	for row: Variant in rows:
@@ -517,6 +545,7 @@ static func _collect_usage_text(rows: Array, into: PackedStringArray) -> void:
 					into.append((pick as PickFilter).collection_value + " " + (pick as PickFilter).predicate_expression)
 			_collect_usage_text(event.sub_events, into)
 
+
 static func _list_files_with_extension(extension: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	var pending: PackedStringArray = PackedStringArray(["res://"])
@@ -538,6 +567,7 @@ static func _list_files_with_extension(extension: String) -> PackedStringArray:
 			entry = directory.get_next()
 		directory.list_dir_end()
 	return found
+
 
 static func _add(findings: Array[Dictionary], severity: String, check: String, path: String, message: String) -> void:
 	findings.append({"severity": severity, "check": check, "path": path, "message": message})

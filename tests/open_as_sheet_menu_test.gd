@@ -5,8 +5,9 @@
 # non-sheet files don't, and the script editor always offers it. Static-only — never instantiates the
 # editor-glue plugin (which the editor owns).
 @tool
-extends RefCounted
 class_name OpenAsSheetMenuTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -25,6 +26,7 @@ static func run() -> bool:
 		EventSheetContextMenu.should_offer_open_as_sheet(script_slot, PackedStringArray()), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

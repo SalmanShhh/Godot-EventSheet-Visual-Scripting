@@ -3,8 +3,9 @@
 # signature hints for the innermost call, and the event-sheet-style quick-add bar (synonym matcher
 # + positional params + apply).
 @tool
-extends RefCounted
 class_name IntellisenseTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -18,11 +19,13 @@ class NoopUndoManager:
 	func redo() -> void: pass
 	func clear_history() -> void: pass
 
+
 static func _labels(candidates: Array[Dictionary]) -> Array[String]:
 	var labels: Array[String] = []
 	for candidate in candidates:
 		labels.append(str(candidate.get("label", "")))
 	return labels
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -84,6 +87,7 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

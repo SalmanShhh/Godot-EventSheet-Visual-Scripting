@@ -3,8 +3,9 @@
 # script-declared signals), and signal params get a picker: host-class signals + signals
 # declared in the sheet's GDScript blocks, offered as a dropdown instead of typed text.
 @tool
-extends RefCounted
 class_name SignalAutocompleteTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -58,6 +59,7 @@ static func run() -> bool:
 	quoted_field.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

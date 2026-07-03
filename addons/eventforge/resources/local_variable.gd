@@ -1,8 +1,8 @@
 # EventForge — LocalVariable resource
 # Describes a scoped local variable declaration.
 @tool
-extends Resource
 class_name LocalVariable
+extends Resource
 
 @export var name: String = ""
 @export var type: int = TYPE_NIL
@@ -33,6 +33,7 @@ class_name LocalVariable
 ## variable round-trips its grouping losslessly (the importer absorbs the group lines onto this dict, and
 ## _emit_tree_variable_line re-emits them) instead of degrading into a stray @export_group GDScript block.
 @export var attributes: Dictionary = {}
+
 
 ## Stable row-kind identifier so the compiler/editor can treat tree-placed variables uniformly.
 func get_row_kind() -> String:

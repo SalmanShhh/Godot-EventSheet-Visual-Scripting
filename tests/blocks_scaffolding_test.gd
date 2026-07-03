@@ -7,8 +7,9 @@
 #     foldable, folded-by-default strip whose children are the real rows (view-state only — codegen
 #     untouched). A single scaffolding row, or logic up top, is left inline.
 @tool
-extends RefCounted
 class_name BlocksScaffoldingTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -77,10 +78,12 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _raw(code: String) -> RawCodeRow:
 	var row: RawCodeRow = RawCodeRow.new()
 	row.code = code
 	return row
+
 
 ## The first synthetic scaffolding-strip header among the built root rows, or null.
 static func _first_strip(rows: Array) -> EventRowData:
@@ -88,6 +91,7 @@ static func _first_strip(rows: Array) -> EventRowData:
 		if row is EventRowData and (row as EventRowData).row_uid.begins_with("scaffolding_strip_"):
 			return row
 	return null
+
 
 ## True when some top-level row is a RawCodeRow whose source code contains `needle` (i.e. it was left
 ## inline rather than collapsed into the strip).
@@ -97,6 +101,7 @@ static func _has_raw_row_with(rows: Array, needle: String) -> bool:
 				and ((row as EventRowData).source_resource as RawCodeRow).code.contains(needle):
 			return true
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

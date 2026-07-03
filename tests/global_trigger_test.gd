@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name GlobalTriggerTest
+extends RefCounted
 # Triggers can connect a signal on a GLOBAL source — get_tree() ("@tree") or get_window() ("@window") —
 # not just self / an autoload / a node path. This powers On Post Tick (SceneTree.process_frame, after
 # every node's _process this frame), its physics sibling, and On Close Requested (the window's X). Each
@@ -8,6 +8,7 @@ class_name GlobalTriggerTest
 # byte-exact (lifted or, worst case, verbatim — the lossless rule holds either way).
 
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -32,6 +33,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## Compiles a one-row sheet: <trigger_id> firing a single print, returns the generated .gd.
 static func _compile_trigger(trigger_id: String) -> String:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -47,6 +49,7 @@ static func _compile_trigger(trigger_id: String) -> String:
 	row.actions.append(act)
 	sheet.events.append(row)
 	return str(SheetCompiler.compile(sheet).get("output", ""))
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

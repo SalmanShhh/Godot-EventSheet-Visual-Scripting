@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Minimal state machine, authored entirely as ACE rows (ZERO RawCode) - including the Is In State
 ## CONDITION, now a bool-returning sheet function (the three-way function expose: bool -> condition).
 ## On State Changed is a trigger SignalRow.
@@ -56,6 +57,7 @@ static func build() -> bool:
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/state_machine/state_machine_behavior")
 
+
 ## Built-in Core ACE rows; templates resolve from the registry at compile time (no baked template).
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
@@ -64,12 +66,14 @@ static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	action.params = params
 	return action
 
+
 static func _cond(ace_id: String, params: Dictionary) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = "Core"
 	condition.ace_id = ace_id
 	condition.params = params
 	return condition
+
 
 static func _param(id: String, type_name: String) -> ACEParam:
 	var param: ACEParam = ACEParam.new()

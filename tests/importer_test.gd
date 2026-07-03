@@ -4,8 +4,8 @@
 # functions with bodies preserved as RawCodeRow) and verifies a structural round-trip back
 # through the compiler. ACE-level body parsing is future work. Headless-safe.
 @tool
-extends RefCounted
 class_name ImporterTest
+extends RefCounted
 
 const SOURCE_LINES: Array = [
 	"extends CharacterBody2D",
@@ -20,6 +20,7 @@ const SOURCE_LINES: Array = [
 	"func do_thing(amount: int) -> void:",
 	"\thealth += amount",
 ]
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -49,6 +50,7 @@ static func run() -> bool:
 	all_passed = _check("round-trip: do_thing func", compiled.contains("func do_thing(amount: int) -> void:"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

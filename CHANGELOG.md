@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed - the whole codebase follows the GDScript style guide, gated
+
+- **495 hand-written scripts swept to the official GDScript style guide**: `class_name` now
+  precedes `extends` everywhere (362 files), and every top-level function/class is surrounded
+  by two blank lines (480 files reflowed, multiline-string aware so test fixtures with
+  column-0 `func` inside `"""` strings were untouched). A new suite test
+  (`tests/style_guide_test.gd`) enforces header order, the two-blank-line rule, and snake_case
+  naming on every run, so compliance cannot silently regress. Documented deviations: four
+  public-API resource properties keep their legacy camelCase names (renaming breaks saved
+  `.tres` files and the pack-author compatibility covenant), and compiler OUTPUT keeps its
+  single-blank-line contract (changing it would churn every golden fixture and user resave).
+
 ### Added - script intent: custom resources + editor tools are first-class destinations
 
 - **The New menu now asks what you are making.** Starters group under intent sections -

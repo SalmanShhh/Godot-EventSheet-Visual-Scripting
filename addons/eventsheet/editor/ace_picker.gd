@@ -43,10 +43,12 @@ const _SIMPLE_MODE_DENYLIST := {
 	"Core::PrintRich": true,
 }
 
+
 static func favorite_ids() -> PackedStringArray:
 	if ProjectSettings.has_setting(FAVORITES_SETTING):
 		return PackedStringArray(ProjectSettings.get_setting(FAVORITES_SETTING))
 	return PackedStringArray()
+
 
 static func toggle_favorite(provider_id: String, ace_id: String) -> bool:
 	var favorites: PackedStringArray = favorite_ids()
@@ -60,6 +62,7 @@ static func toggle_favorite(provider_id: String, ace_id: String) -> bool:
 	if Engine.is_editor_hint():
 		ProjectSettings.save()
 	return existing < 0
+
 
 ## True when `query`'s characters appear in order inside `text` (case/space-insensitive)
 ## — the power user's "stt" reflex from event-sheet/GDevelop pickers.
@@ -76,6 +79,7 @@ static func fuzzy_match(query: String, text: String) -> bool:
 		position += 1
 	return true
 
+
 ## Records a use (newest first, deduped, capped) — drives the ★ Recent picker section, and survives
 ## an editor restart (persisted to the per-user recents file).
 static func note_recent(provider_id: String, ace_id: String) -> void:
@@ -89,10 +93,12 @@ static func note_recent(provider_id: String, ace_id: String) -> void:
 		_recent_ace_ids.resize(RECENT_ACES_CAP)
 	_save_recents()
 
+
 ## One recents entry per project, keyed by a hash of the project path, so a single editor's recents
 ## file never leaks ACEs between projects.
 static func _recents_project_key() -> String:
 	return ProjectSettings.globalize_path("res://").sha1_text()
+
 
 ## Hydrates this project's recents from the user:// file once per session (a no-op afterwards, and
 ## outside the editor where persistence is meaningless — keeps the headless suite side-effect-free).
@@ -108,6 +114,7 @@ static func load_recents() -> void:
 	var stored: Variant = config.get_value("recents", _recents_project_key(), PackedStringArray())
 	if stored is PackedStringArray:
 		_recent_ace_ids = stored
+
 
 static func _save_recents() -> void:
 	if not Engine.is_editor_hint():
@@ -150,6 +157,7 @@ var _selected_definition: ACEDefinition = null
 var _hint: Label = null
 var _context: Dictionary = {}
 var _registry: EventSheetACERegistry = null
+
 
 ## Initialise and attach the picker window to parent_node.
 ## Must be called before open().
@@ -287,12 +295,15 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 ## Provider returning true when Simple Mode is on (wired by the dock) — gates the denylist below.
 var _simple_mode_provider: Callable = Callable()
 
+
 func set_simple_mode_provider(provider: Callable) -> void:
 	_simple_mode_provider = provider
+
 
 ## Update the registry used for searching (e.g. after a hot-reload).
 func set_registry(registry: EventSheetACERegistry) -> void:
 	_registry = registry
+
 
 ## Open the picker for the given mode.
 ## Selects + reveals the entry for an ace id — the double-click-to-replace flow
@@ -317,6 +328,7 @@ func preselect(ace_id: String) -> void:
 			return
 		stack.push_back(item.get_next())
 		stack.push_back(item.get_first_child())
+
 
 ## mode: "new_event" | "new_condition_event" | "new_sub_condition_event" | "append_condition"
 ##       | "append_action" | "replace_condition" | "replace_action" | "replace_trigger"
@@ -354,6 +366,7 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	if _context.has("preselect_ace_id"):
 		call_deferred("preselect", str(_context.get("preselect_ace_id")))
 
+
 func _title_for_mode(mode: String, signals_only: bool) -> String:
 	if signals_only:
 		return "Add Event"
@@ -374,6 +387,7 @@ func _title_for_mode(mode: String, signals_only: bool) -> String:
 			return "Replace Action"
 		_:
 			return "Add Event"
+
 
 func _build_hint_text(mode: String, signals_only: bool) -> String:
 	if signals_only:
@@ -447,6 +461,7 @@ const SEARCH_SYNONYMS := {
 	"playback time": "playback position",
 }
 
+
 static func _c3_synonym_queries(query: String) -> Array[String]:
 	var lowered: String = query.to_lower().strip_edges()
 	var extra: Array[String] = []
@@ -458,6 +473,7 @@ static func _c3_synonym_queries(query: String) -> Array[String]:
 			if not extra.has(mapped):
 				extra.append(mapped)
 	return extra
+
 
 func _refresh_tree() -> void:
 	if _tree == null or _registry == null:
@@ -550,6 +566,7 @@ func _refresh_tree() -> void:
 		empty_item.set_selectable(0, false)
 		empty_item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
 
+
 func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> TreeItem:
 	var group_item: TreeItem = _tree.create_item(root)
 	group_item.set_text(0, group_key)
@@ -563,6 +580,7 @@ func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> 
 	group_item.set_custom_color(0, _group_color_for(group_key, is_node_type))
 	group_item.set_selectable(0, false)
 	return group_item
+
 
 ## Resolves (creating as needed) the tree item a row hangs under. Categories using the
 ## "Parent: Sub" separator nest one level — the parent folder is shared with any flat ACEs
@@ -588,6 +606,7 @@ func _resolve_group_item(root: TreeItem, group_nodes: Dictionary, group_key: Str
 	group_nodes[group_key] = sub_item
 	return sub_item
 
+
 ## A nested sub-category folder ("Array" inside "Variables"): same non-selectable folder
 ## styling as a top-level group, parented under its category instead of the tree root.
 func _make_sub_group_item(parent_item: TreeItem, child_label: String) -> TreeItem:
@@ -596,6 +615,7 @@ func _make_sub_group_item(parent_item: TreeItem, child_label: String) -> TreeIte
 	sub_item.set_custom_color(0, _group_color_for(child_label, false))
 	sub_item.set_selectable(0, false)
 	return sub_item
+
 
 ## Splits a "Parent: Sub" category into [parent, child] (both stripped). Returns an empty
 ## array when there is no sub-category separator, so the category renders as a flat group.
@@ -609,6 +629,7 @@ static func split_subcategory(group_key: String) -> PackedStringArray:
 	if parent_name.is_empty() or child_name.is_empty():
 		return PackedStringArray()
 	return PackedStringArray([parent_name, child_name])
+
 
 ## Resolves an ACE's icon, in event-sheet-familiarity order: an explicit `res://` texture from the
 ## addon's @ace_icon annotation → the node type's editor class icon → a member-kind editor
@@ -638,6 +659,7 @@ static func resolve_definition_icon(definition: ACEDefinition) -> Texture2D:
 			return editor_icon("MemberConstant")
 	return null
 
+
 ## Fetches a named editor-theme icon ("EditorIcons" — class icons and member glyphs).
 ## Null outside the editor or when the name is unknown, so callers degrade gracefully.
 static func editor_icon(icon_name: String) -> Texture2D:
@@ -651,14 +673,17 @@ static func editor_icon(icon_name: String) -> Texture2D:
 		return null
 	return theme.get_icon(icon_name, "EditorIcons")
 
+
 func _category_of(definition: ACEDefinition) -> String:
 	var category: String = definition.category.strip_edges()
 	return category if not category.is_empty() else "General"
+
 
 func _item_label(definition: ACEDefinition) -> String:
 	if definition.provider_id.is_empty() or definition.provider_id == "Core":
 		return definition.display_name
 	return "%s  ·  %s" % [definition.display_name, definition.provider_id]
+
 
 func _item_tooltip(definition: ACEDefinition) -> String:
 	var body: String = definition.description if not definition.description.is_empty() else definition.display_name
@@ -669,6 +694,7 @@ func _item_tooltip(definition: ACEDefinition) -> String:
 	if not note.is_empty():
 		tip += "\n" + note
 	return tip
+
 
 func _ace_type_label(ace_type: int) -> String:
 	match ace_type:
@@ -681,11 +707,13 @@ func _ace_type_label(ace_type: int) -> String:
 		_:
 			return "Action"
 
+
 func _group_color_for(_group_key: String, _is_node_type: bool) -> Color:
 	# Muted, uniform category headers (Create-New-Node style): the node-type distinction is carried by
 	# each section's class icon, so a quiet divider colour reads cleaner than the old bright per-kind
 	# amber/teal/blue/purple. Theme-driven in the editor, with a neutral fallback when headless.
 	return _muted_header_color()
+
 
 ## The editor's muted "disabled font" colour for quiet category dividers / de-emphasized codegen;
 ## GROUP_COLOR_NEUTRAL when there is no editor theme (headless tests, non-editor runtime).
@@ -707,14 +735,17 @@ const FEATURED := {
 	"Core/CallFunction": true, "Core/SpawnSceneFull": true,
 }
 
+
 func _is_featured(definition: ACEDefinition) -> bool:
 	return definition != null and FEATURED.has("%s/%s" % [definition.provider_id, definition.id])
+
 
 ## The editor's bold font for featured rows; null when there is no editor theme (headless / fallback).
 func _bold_font() -> Font:
 	if _tree != null:
 		return _tree.get_theme_font("bold", "EditorFonts")
 	return null
+
 
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
 	if definition == null:
@@ -750,6 +781,7 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 		_:
 			return definition.ace_type in [ACEDefinition.ACEType.TRIGGER, ACEDefinition.ACEType.CONDITION, ACEDefinition.ACEType.ACTION]
 
+
 ## Event-sheet-style bottom info pane: selecting an entry shows its description AND the exact
 ## GDScript it will generate — the picker doubles as a teaching surface.
 func _on_item_selected_for_info() -> void:
@@ -762,6 +794,7 @@ func _on_item_selected_for_info() -> void:
 		if _recent_list != null:
 			_recent_list.deselect_all()
 	_on_definition_selected(definition)
+
 
 ## Right-click pins/unpins the entry under the cursor as a ⭐ Favorite.
 ## Keyboard bridge out of the search box: Down hands focus to the result tree (its native arrow
@@ -784,6 +817,7 @@ func _on_search_gui_input(input_event: InputEvent) -> void:
 	elif key_event.keycode == KEY_ESCAPE:
 		close()
 		_search.accept_event()
+
 
 func _on_tree_gui_input(input_event: InputEvent) -> void:
 	# Escape closes the picker from the tree too (parity with the search box), so a keyboard user
@@ -810,6 +844,7 @@ func _on_tree_gui_input(input_event: InputEvent) -> void:
 		_favorite_button.set_pressed_no_signal(pinned)
 	_refresh_side_panes()
 
+
 ## Enter in the search box applies the first concrete match — type-and-Enter, no mouse.
 ## Depth-first so sub-category folders (root → parent → sub → entry) are reached too.
 ## Picker speed: pre-select the first concrete ACE so the description panel + Add button
@@ -822,11 +857,13 @@ func _select_first_match() -> void:
 		best.select(0)
 		_tree.scroll_to_item(best)
 
+
 func _activate_first_match() -> void:
 	var best: TreeItem = _best_match_item()
 	if best != null:
 		best.select(0)
 		_on_item_activated()
+
 
 ## Depth-first search for the first tree item carrying an ACEDefinition (a real ACE row),
 ## descending through group / sub-group folders (which carry no metadata of their own).
@@ -842,6 +879,7 @@ func _first_definition_item(item: TreeItem) -> TreeItem:
 			return nested
 		child = child.get_next()
 	return null
+
 
 ## The type-and-Enter target: the highest RELEVANCE-scored row for the current query, not merely the
 ## first row in tree order (which, under category grouping, can bury the obvious match — typing "hide"
@@ -880,12 +918,14 @@ func _best_match_item() -> TreeItem:
 				return twin_item
 	return best if best != null else first
 
+
 ## The reactive trigger id that replaces a polling condition (from the shared ACEDescriptor.REACTS_TO
 ## map), or "" if the condition has no clean signal twin.
 static func _reactive_twin_id(definition: ACEDefinition) -> String:
 	if definition == null:
 		return ""
 	return str(ACEDescriptor.reactive_alternative(definition.provider_id, definition.id).get("trigger_id", ""))
+
 
 ## True when the picker should pre-select a condition's reactive twin instead of the condition: it has
 ## a twin AND the user did not type the condition's exact display name — so an explicit pick of the
@@ -894,6 +934,7 @@ static func _prefer_reactive_twin(query: String, definition: ACEDefinition) -> b
 	if definition == null or _reactive_twin_id(definition).is_empty():
 		return false
 	return query.to_lower().strip_edges() != definition.display_name.to_lower().strip_edges()
+
 
 ## The tree item whose definition matches provider+id (the surfaced reactive twin), or null.
 func _find_definition_item(provider_id: String, ace_id: String) -> TreeItem:
@@ -910,6 +951,7 @@ func _find_definition_item(provider_id: String, ace_id: String) -> TreeItem:
 			stack.push_back(child)
 			child = child.get_next()
 	return null
+
 
 ## Relevance score of a definition against a search query (higher = better), so type-and-Enter targets
 ## the best match. Tiers: exact display name > name prefix > a name word starting with the query >
@@ -938,6 +980,7 @@ static func _score_match(query: String, definition: ACEDefinition) -> int:
 		score -= mini(name.length(), 99)
 	return score
 
+
 ## True when any whitespace-separated word of `text` begins with `prefix` (a word-start match).
 static func _word_starts_with(text: String, prefix: String) -> bool:
 	for word: String in text.split(" ", false):
@@ -945,9 +988,11 @@ static func _word_starts_with(text: String, prefix: String) -> bool:
 			return true
 	return false
 
+
 func _on_item_activated() -> void:
 	var item: TreeItem = _tree.get_selected()
 	_commit_definition(item.get_metadata(0) as ACEDefinition if item != null else null)
+
 
 ## A compact single-column Tree for the ⭐ Favorites / ★ Recent side panes (Create-Node style).
 func _make_side_tree() -> Tree:
@@ -963,6 +1008,7 @@ func _make_side_tree() -> Tree:
 	tree.item_activated.connect(_on_side_item_activated.bind(tree))
 	return tree
 
+
 ## A side pane's body — its title label stacked above the list — as one VBox to drop into a
 ## panel_section() card, so each of Favorites / Recent reads as a self-contained titled panel.
 func _titled_pane(title: Label, list: Tree) -> VBoxContainer:
@@ -973,6 +1019,7 @@ func _titled_pane(title: Label, list: Tree) -> VBoxContainer:
 	box.add_child(list)
 	return box
 
+
 ## Fills the Favorites + Recent panes from the persisted lists, filtered to the current mode.
 func _refresh_side_panes() -> void:
 	if _favorites_list == null or _recent_list == null or _registry == null:
@@ -981,6 +1028,7 @@ func _refresh_side_panes() -> void:
 	var signals_only: bool = bool(_context.get("signals_only", false))
 	_populate_side_pane(_favorites_list, favorite_ids(), mode, signals_only)
 	_populate_side_pane(_recent_list, _recent_ace_ids, mode, signals_only)
+
 
 func _populate_side_pane(tree: Tree, keys: PackedStringArray, mode: String, signals_only: bool) -> void:
 	tree.clear()
@@ -1003,6 +1051,7 @@ func _populate_side_pane(tree: Tree, keys: PackedStringArray, mode: String, sign
 			item.set_metadata(0, candidate)
 			break
 
+
 func _on_side_item_selected(tree: Tree) -> void:
 	var item: TreeItem = tree.get_selected()
 	var definition: ACEDefinition = item.get_metadata(0) as ACEDefinition if item != null else null
@@ -1016,9 +1065,11 @@ func _on_side_item_selected(tree: Tree) -> void:
 		other.deselect_all()
 	_on_definition_selected(definition)
 
+
 func _on_side_item_activated(tree: Tree) -> void:
 	var item: TreeItem = tree.get_selected()
 	_commit_definition(item.get_metadata(0) as ACEDefinition if item != null else null)
+
 
 ## Unified selection: the highlighted ACE (tree or side pane) drives the description panel, the
 ## ⭐ button state, and what Add / Enter will insert.
@@ -1030,8 +1081,10 @@ func _on_definition_selected(definition: ACEDefinition) -> void:
 	if _favorite_button != null:
 		_favorite_button.set_pressed_no_signal(definition != null and _is_favorite(definition))
 
+
 func _is_favorite(definition: ACEDefinition) -> bool:
 	return favorite_ids().has("%s/%s" % [definition.provider_id, definition.id])
+
 
 ## Create-Node-style description panel: name, type + category, what it does, and its codegen.
 func _update_info_panel(definition: ACEDefinition) -> void:
@@ -1054,6 +1107,7 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 		body += "\n[color=#e0b050]💡 Reactive alternative: [b]%s[/b] — reacts once when it happens, instead of checking every frame.[/color]" % str(reactive.get("trigger_name", ""))
 	_info_label.text = body
 
+
 func _on_favorite_button_pressed() -> void:
 	if _selected_definition == null:
 		_favorite_button.set_pressed_no_signal(false)
@@ -1062,8 +1116,10 @@ func _on_favorite_button_pressed() -> void:
 	_favorite_button.set_pressed_no_signal(pinned)
 	_refresh_side_panes()
 
+
 func _on_add_button_pressed() -> void:
 	_commit_definition(_selected_definition)
+
 
 ## Single commit path for the tree, the side panes, and the Add button.
 func _commit_definition(definition: ACEDefinition) -> void:
@@ -1073,13 +1129,16 @@ func _commit_definition(definition: ACEDefinition) -> void:
 	note_recent(definition.provider_id, definition.id)
 	ace_selected.emit(definition, _context.duplicate(true))
 
+
 func close() -> void:
 	if _window == null:
 		return
 	_window.hide()
 
+
 func is_open() -> bool:
 	return _window != null and _window.visible
+
 
 func get_popup_rect() -> Rect2:
 	if _window == null:

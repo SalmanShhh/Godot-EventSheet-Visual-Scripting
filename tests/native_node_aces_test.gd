@@ -3,8 +3,9 @@
 # wrapping NATIVE Godot features (the engine maintains the implementation, we maintain
 # vocabulary — the compatibility covenant's lane 1). Event-sheet names + search synonyms.
 @tool
-extends RefCounted
 class_name NativeNodeAcesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -81,6 +82,7 @@ static func run() -> bool:
 	all_passed = _check("'choose' is searchable", choose_queries.has("choose"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

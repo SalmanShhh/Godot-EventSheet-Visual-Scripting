@@ -5,8 +5,9 @@
 # or row rebuild clears the cursor (the spans it pointed into are replaced). Rows without values keep
 # their old Enter (inline span edit) — the fallback that stops the two Enters from fighting.
 @tool
-extends RefCounted
 class_name ParamHopTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -78,6 +79,7 @@ static func run() -> bool:
 	dock.free()
 	return ok
 
+
 static func _select_resource(view: EventSheetViewport, resource: Resource) -> void:
 	for index: int in range(view.get_flat_rows().size()):
 		var row_data: EventRowData = view.get_flat_rows()[index].get("row")
@@ -85,17 +87,20 @@ static func _select_resource(view: EventSheetViewport, resource: Resource) -> vo
 			view._select_row(index)
 			return
 
+
 static func _live_event(dock: EventSheetDock) -> EventRow:
 	for row: Variant in dock.get_current_sheet().events:
 		if row is EventRow:
 			return row
 	return null
 
+
 static func _live_comment(dock: EventSheetDock) -> CommentRow:
 	for row: Variant in dock.get_current_sheet().events:
 		if row is CommentRow:
 			return row
 	return null
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

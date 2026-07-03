@@ -11,6 +11,7 @@ extends RefCounted
 ## $Node completion. Defaults to the editor's edited scene when inside the editor.
 static var scene_root_provider: Callable = Callable()
 
+
 ## Compile-checks `code`. in_flow=true validates statements (wrapped in a function body, as
 ## emitted inside an event); false validates class-level code (helper funcs, vars, signals).
 ## Returns {"ok": bool, "error": String}.
@@ -24,12 +25,14 @@ static func lint(code: String, in_flow: bool, sheet: EventSheetResource) -> Dict
 		return {"ok": true, "error": ""}
 	return {"ok": false, "error": "Does not compile (parse/analyze failed — see Output for details)."}
 
+
 ## Validates a ƒx field as a plain GDScript expression against the sheet context (sheet
 ## variables, host members, the behavior `host` accessor). Empty text is valid.
 static func lint_expression(expression: String, sheet: EventSheetResource) -> Dictionary:
 	if expression.strip_edges().is_empty():
 		return {"ok": true, "error": ""}
 	return lint("var __expression_check__ = (%s)" % expression.strip_edges(), true, sheet)
+
 
 ## A purely STRUCTURAL GDScript syntax error in `code` — unbalanced ()/[]/{}, a mismatched bracket, or an
 ## unterminated string — or "" when structurally sound. These are ALWAYS errors regardless of whether the
@@ -106,6 +109,7 @@ static func structural_syntax_error(code: String) -> String:
 		return "Unclosed \"%s\" from line %d — add its closing bracket." % [openers[openers.size() - 1], open_lines[open_lines.size() - 1]]
 	return ""
 
+
 ## The scratch script used for linting: host-class extends + sheet symbol stubs + the code.
 static func build_scratch_source(code: String, in_flow: bool, sheet: EventSheetResource) -> String:
 	var lines: PackedStringArray = PackedStringArray()
@@ -137,6 +141,7 @@ static func build_scratch_source(code: String, in_flow: bool, sheet: EventSheetR
 			lines.append(code_line)
 	return "\n".join(lines)
 
+
 ## Context-aware completion: when the text before the caret ends in `<identifier>.`, the
 ## resolved type's members are offered (dot-context); otherwise the flat sheet/host
 ## candidates. This is the single choke point both the block editor and ƒx fields use.
@@ -147,6 +152,7 @@ static func completion_for_context(text_before_caret: String, sheet: EventSheetR
 		if dot_match != null:
 			return dot_completion_candidates(dot_match.get_string(1), sheet)
 	return completion_candidates(sheet)
+
 
 ## Members of the type the dotted token resolves to:
 ## - `host` (behavior sheets) → the declared host class
@@ -226,6 +232,7 @@ static func dot_completion_candidates(token: String, sheet: EventSheetResource) 
 				_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, member)
 	return candidates
 
+
 ## Curated method names for the Variant collection types (which ClassDB does not expose).
 static func _builtin_collection_members(type_name: String) -> PackedStringArray:
 	if type_name == "Dictionary":
@@ -237,6 +244,7 @@ static func _builtin_collection_members(type_name: String) -> PackedStringArray:
 			"is_empty", "has", "find", "count", "front", "back", "slice", "duplicate",
 			"reverse", "sort", "shuffle", "fill", "resize", "max", "min", "pick_random"])
 	return PackedStringArray()
+
 
 ## Signature hint for the innermost unclosed call before the caret ("" = none): sheet
 ## functions show their declared params, host/dotted-class methods come from ClassDB.
@@ -269,6 +277,7 @@ static func signature_hint(text_before_caret: String, sheet: EventSheetResource)
 			return "%s(%s)" % [function_name, ", ".join(arg_parts)]
 	return ""
 
+
 ## The scene root for $-completion: the injected provider (tests), else the editor's
 ## edited scene, else null (headless/runtime).
 static func _resolve_scene_root() -> Node:
@@ -278,12 +287,14 @@ static func _resolve_scene_root() -> Node:
 		return EditorInterface.get_edited_scene_root()
 	return null
 
+
 ## Path of a registered global script class (class_name), "" when unknown.
 static func _global_class_path(global_class: String) -> String:
 	for entry in ProjectSettings.get_global_class_list():
 		if str((entry as Dictionary).get("class", "")) == global_class:
 			return str((entry as Dictionary).get("path", ""))
 	return ""
+
 
 static func _add_class_members(candidates: Array[Dictionary], seen: Dictionary, member_class: String) -> void:
 	if not ClassDB.class_exists(member_class):
@@ -300,6 +311,7 @@ static func _add_class_members(candidates: Array[Dictionary], seen: Dictionary, 
 		var signal_name: String = str(signal_info.get("name", ""))
 		if not signal_name.is_empty():
 			_add_candidate(candidates, seen, CodeEdit.KIND_SIGNAL, signal_name)
+
 
 ## Completion candidates for the block editor: sheet variables, sheet functions, and the
 ## host class's properties/methods. [{kind: CodeEdit.CodeCompletionKind, label: String}]
@@ -332,11 +344,13 @@ static func completion_candidates(sheet: EventSheetResource) -> Array[Dictionary
 				_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, method_name)
 	return candidates
 
+
 static func _add_candidate(candidates: Array[Dictionary], seen: Dictionary, kind: int, label: String) -> void:
 	if seen.has(label):
 		return
 	seen[label] = true
 	candidates.append({"kind": kind, "label": label})
+
 
 ## Sheet-declared enums (top level and inside groups), enabled only.
 static func _sheet_enums(sheet: EventSheetResource) -> Array[EnumRow]:
@@ -345,6 +359,7 @@ static func _sheet_enums(sheet: EventSheetResource) -> Array[EnumRow]:
 		_collect_sheet_enums(sheet.events, enums)
 	return enums
 
+
 static func _collect_sheet_enums(entries: Array, into: Array[EnumRow]) -> void:
 	for entry in entries:
 		if entry is EnumRow and (entry as EnumRow).enabled:
@@ -352,6 +367,7 @@ static func _collect_sheet_enums(entries: Array, into: Array[EnumRow]) -> void:
 		elif entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
 			_collect_sheet_enums(group.events if not group.events.is_empty() else group.rows, into)
+
 
 static func _sheet_variable_names(sheet: EventSheetResource) -> Array[String]:
 	var names: Array[String] = []
@@ -369,6 +385,7 @@ static func _sheet_variable_names(sheet: EventSheetResource) -> Array[String]:
 			names.append((entry as LocalVariable).name)
 	names.sort()
 	return names
+
 
 static func _sheet_function_names(sheet: EventSheetResource) -> Array[String]:
 	var names: Array[String] = []

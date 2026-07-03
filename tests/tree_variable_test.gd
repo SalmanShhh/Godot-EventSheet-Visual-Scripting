@@ -4,8 +4,9 @@
 # as variable rows, can be inserted below a row via the context menu, move with the normal
 # row drag, and compile to class-level declarations honouring the export/const flags.
 @tool
-extends RefCounted
 class_name TreeVariableTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -18,6 +19,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -77,8 +79,10 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _compile(sheet: EventSheetResource) -> String:
 	return str(SheetCompiler.compile(sheet, "user://eventforge_tree_var.gd").get("output", ""))
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

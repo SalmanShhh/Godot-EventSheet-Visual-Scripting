@@ -5,8 +5,9 @@
 # it re-emits verbatim (byte-verify gated). Pins: the emitter branch, the importer detection over a
 # real pack, that a genuine String literal is NOT mis-flagged, and drift=0.
 @tool
-extends RefCounted
 class_name ExpressionDefaultVarTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -59,6 +60,7 @@ static func run() -> bool:
 	ok = _check("juice round-trips byte-identically", reemitted == source, true) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

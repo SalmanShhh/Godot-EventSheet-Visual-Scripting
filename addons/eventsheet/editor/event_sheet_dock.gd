@@ -189,6 +189,7 @@ var _view_popup: PopupMenu = null
 # Command palette (Ctrl+P): keyboard-first access to every dock action — list + fuzzy filter +
 # popup shell live on _command_palette (dock/command_palette.gd); the action targets stay here.
 
+
 func _init() -> void:
 	if not _undo_redo_adapter.has_manager():
 		_undo_redo_adapter.set_manager(UndoRedo.new())
@@ -212,6 +213,7 @@ func _init() -> void:
 	_build_ui()
 
 var _editor_dialogs_initialized: bool = false
+
 
 # Initializes the picker/params/variable dialogs and wires their signals + providers.
 # Idempotent (guarded by _editor_dialogs_initialized) and safe to run detached: it only
@@ -281,6 +283,7 @@ func _ensure_editor_dialogs_initialized() -> void:
 					sheet_enums.append({"name": (row as EnumRow).enum_name, "members": (row as EnumRow).members})
 		return sheet_enums)
 
+
 func _ready() -> void:
 	_build_ui()
 	_ensure_editor_dialogs_initialized()
@@ -298,6 +301,7 @@ func _ready() -> void:
 			_viewport.set_debug_overlay_states({})
 		setup(_current_sheet)
 
+
 func setup(sheet: EventSheetResource = null) -> void:
 	_build_ui()
 	_ensure_editor_dialogs_initialized()
@@ -310,6 +314,7 @@ func setup(sheet: EventSheetResource = null) -> void:
 	var target_path: String = sheet.resource_path if sheet != null else ""
 	_open_sheet_in_tab(target_sheet, target_path)
 
+
 ## Opens a sheet in a tab — activating its existing tab if already open, else adding one.
 func _open_sheet_in_tab(sheet: EventSheetResource, path: String) -> void:
 	for i in range(_open_tabs.size()):
@@ -319,6 +324,7 @@ func _open_sheet_in_tab(sheet: EventSheetResource, path: String) -> void:
 	_sync_active_tab_state()
 	_open_tabs.append({"sheet": sheet, "path": path, "dirty": false})
 	_activate_tab(_open_tabs.size() - 1)
+
 
 ## Makes the tab at index active, loading its sheet into the shared viewport.
 func _activate_tab(index: int) -> void:
@@ -355,11 +361,13 @@ func _activate_tab(index: int) -> void:
 	_set_status("Loaded: %s" % label)
 	_persist_session()
 
+
 ## Persists the live active-tab state (_current_sheet/path/dirty) back into _open_tabs.
 func _sync_active_tab_state() -> void:
 	if _active_tab_index < 0 or _active_tab_index >= _open_tabs.size():
 		return
 	_open_tabs[_active_tab_index] = {"sheet": _current_sheet, "path": _current_sheet_path, "dirty": _dirty}
+
 
 ## Closes the tab at index, activating a neighbour (or a fresh demo sheet when none remain).
 func _close_tab(index: int) -> void:
@@ -374,6 +382,7 @@ func _close_tab(index: int) -> void:
 		return
 	_activate_tab(mini(index, _open_tabs.size() - 1))
 
+
 func _refresh_tab_bar() -> void:
 	if _tab_bar == null:
 		return
@@ -387,6 +396,7 @@ func _refresh_tab_bar() -> void:
 	_suppress_tab_signal = false
 	open_tabs_changed.emit()
 
+
 func _update_active_tab_title() -> void:
 	if _tab_bar == null or _active_tab_index < 0 or _active_tab_index >= _tab_bar.get_tab_count():
 		return
@@ -394,6 +404,7 @@ func _update_active_tab_title() -> void:
 	_tab_bar.set_tab_title(_active_tab_index, _format_tab_title(_current_sheet, _current_sheet_path, _dirty))
 	_suppress_tab_signal = false
 	open_tabs_changed.emit()
+
 
 ## Push a just-closed sheet's path onto the recently-closed MRU (deduped, capped). Unsaved /
 ## empty paths are skipped — there's nothing to reopen.
@@ -404,6 +415,7 @@ func _remember_closed_path(path: String) -> void:
 	_recent_closed_paths.push_front(path)
 	while _recent_closed_paths.size() > 12:
 		_recent_closed_paths.pop_back()
+
 
 ## ── Open Sheets dock API (a left editor dock; see open_sheets_dock.gd) ───────────────
 ## A read-only snapshot of the tab strip: each open tab's display title / path / dirty flag,
@@ -426,6 +438,7 @@ func get_open_sheets_state() -> Dictionary:
 			recent.append(p2)
 	return {"open": open, "active": _active_tab_index, "recent": recent}
 
+
 ## Switch to an open tab by index (Open Sheets dock click). A one-click reselect of the
 ## already-active sheet must re-focus, not reload — reloading clears the viewport and wipes
 ## the sheet's undo/redo history, so swallow the no-op here (the dock allows reselect).
@@ -433,6 +446,7 @@ func activate_open_tab(index: int) -> void:
 	if index == _active_tab_index:
 		return
 	_activate_tab(index)
+
 
 ## Reopen a recently-closed sheet by path (Open Sheets dock click). Drops it from the MRU
 ## first — _load_sheet_from_path opens or re-focuses it as a tab.
@@ -445,6 +459,7 @@ func reopen_sheet_path(path: String) -> void:
 	open_tabs_changed.emit()
 	_load_sheet_from_path(path)
 
+
 func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> String:
 	var title: String = _format_sheet_title(sheet, path)
 	# Sheet-type badges: ⚙ behavior, ◆ custom node (event-sheet users expect typed tabs).
@@ -454,9 +469,11 @@ func _format_tab_title(sheet: EventSheetResource, path: String, dirty: bool) -> 
 		title = "◆ " + title
 	return ("● " + title) if dirty else title
 
+
 func _on_tab_selected(index: int) -> void:
 	if not _suppress_tab_signal:
 		_activate_tab(index)
+
 
 func _on_tab_close_pressed(index: int) -> void:
 	if _suppress_tab_signal:
@@ -476,6 +493,7 @@ func _on_tab_close_pressed(index: int) -> void:
 var _unsaved_close_dialog: ConfirmationDialog = null
 var _pending_close_index: int = -1
 
+
 func _ensure_unsaved_close_dialog() -> void:
 	if _unsaved_close_dialog != null:
 		return
@@ -489,12 +507,14 @@ func _ensure_unsaved_close_dialog() -> void:
 	_unsaved_close_dialog.custom_action.connect(_on_unsaved_close_action)
 	add_child(_unsaved_close_dialog)
 
+
 ## Discard (the OK button): close the tab, losing its unsaved edits.
 func _on_unsaved_close_discard() -> void:
 	var index: int = _pending_close_index
 	_pending_close_index = -1
 	if index >= 0:
 		_close_tab(index)
+
 
 ## Save (the custom button): activate the target tab, save it, and close only if the save succeeded
 ## (a failed compile leaves the tab open with its error in the status bar, so nothing is lost).
@@ -512,6 +532,7 @@ func _on_unsaved_close_action(action: StringName) -> void:
 	if not _dirty:
 		_close_tab(index)
 
+
 ## Whether any open tab has unsaved changes (for an editor-level "discard all?" prompt).
 func has_unsaved_tabs() -> bool:
 	for tab: Dictionary in _open_tabs:
@@ -519,17 +540,21 @@ func has_unsaved_tabs() -> bool:
 			return true
 	return false
 
+
 ## Number of open sheet tabs.
 func get_open_tab_count() -> int:
 	return _open_tabs.size()
+
 
 ## Index of the active tab (-1 when none).
 func get_active_tab_index() -> int:
 	return _active_tab_index
 
+
 ## Activates a tab by index (public entry point for tab navigation).
 func activate_tab(index: int) -> void:
 	_activate_tab(index)
+
 
 ## Whether the tab at index has unsaved changes.
 func is_tab_dirty(index: int) -> bool:
@@ -537,20 +562,26 @@ func is_tab_dirty(index: int) -> bool:
 		return false
 	return bool(_open_tabs[index].get("dirty", false))
 
+
 func get_viewport_control() -> EventSheetViewport:
 	return _viewport
+
 
 func get_ace_registry() -> EventSheetACERegistry:
 	return _ace_registry
 
+
 func get_current_sheet() -> EventSheetResource:
 	return _current_sheet
+
 
 func get_editor_param_store() -> EditorParamStore:
 	return _editor_param_store
 
+
 func get_exposed_node() -> EventSheetExposedNode:
 	return _exposed_node
+
 
 # ── Editor theme (load/apply/pick style + file dialog + theme editor + live-reload binding)
 # → dock/theme_manager.gd. The dock keeps thin delegates (same names/signatures) for the tests
@@ -559,11 +590,14 @@ func get_exposed_node() -> EventSheetExposedNode:
 func use_default_theme() -> bool:  # event_sheet_style_test
 	return _theme_manager.use_default_theme()
 
+
 func load_theme_style_from_path(path: String) -> bool:  # event_sheet_style_test
 	return _theme_manager.load_theme_style_from_path(path)
 
+
 func reload_active_theme() -> bool:  # event_sheet_style_test
 	return _theme_manager.reload_active_theme()
+
 
 func set_undo_redo_manager(undo_redo: Variant) -> void:
 	if undo_redo == null:
@@ -574,9 +608,11 @@ func set_undo_redo_manager(undo_redo: Variant) -> void:
 	if not _exposed_node.row_param_changed.is_connected(_on_exposed_row_param_changed):
 		_exposed_node.row_param_changed.connect(_on_exposed_row_param_changed)
 
+
 func set_auto_ace_sources(sources: Array[Object]) -> void:
 	_manual_ace_sources = sources.duplicate()
 	_refresh_ace_registry()
+
 
 ## Registers a GDScript file as a custom-ACE provider on the current sheet. Its annotated
 ## methods/signals/exported properties then appear in the ACE picker.
@@ -602,6 +638,7 @@ func add_ace_provider_script(path: String) -> bool:
 		_mark_dirty("Added ACE provider: %s" % clean_path.get_file())
 	return changed
 
+
 ## Removes a registered custom-ACE provider script from the current sheet.
 func remove_ace_provider_script(path: String) -> bool:
 	if not _ensure_sheet_for_editing():
@@ -618,6 +655,7 @@ func remove_ace_provider_script(path: String) -> bool:
 		_mark_dirty("Removed ACE provider: %s" % path.get_file())
 	return changed
 
+
 func get_ace_provider_scripts() -> PackedStringArray:
 	var output: PackedStringArray = PackedStringArray()
 	if _current_sheet == null:
@@ -626,12 +664,14 @@ func get_ace_provider_scripts() -> PackedStringArray:
 		output.append(str(path))
 	return output
 
+
 func _on_manage_ace_providers_requested() -> void:
 	if not _ensure_sheet_for_editing():
 		return
 	_build_provider_dialog()
 	_refresh_provider_list()
 	_provider_dialog.popup_centered(Vector2i(560, 420))
+
 
 func _build_provider_dialog() -> void:
 	if _provider_dialog != null:
@@ -685,6 +725,7 @@ func _build_provider_dialog() -> void:
 	_provider_file_dialog.file_selected.connect(_on_provider_file_selected)
 	_provider_dialog.add_child(_provider_file_dialog)
 
+
 func _refresh_provider_list() -> void:
 	if _provider_list == null:
 		return
@@ -692,12 +733,15 @@ func _refresh_provider_list() -> void:
 	for path in get_ace_provider_scripts():
 		_provider_list.add_item(path)
 
+
 func _on_provider_add_pressed() -> void:
 	if _provider_file_dialog != null:
 		_provider_file_dialog.popup_centered(Vector2i(720, 520))
 
+
 func _on_provider_file_selected(path: String) -> void:
 	add_ace_provider_script(path)
+
 
 func _on_provider_remove_pressed() -> void:
 	if _provider_list == null:
@@ -706,6 +750,7 @@ func _on_provider_remove_pressed() -> void:
 	if selected.is_empty():
 		return
 	remove_ace_provider_script(_provider_list.get_item_text(selected[0]))
+
 
 func _build_ui() -> void:
 	if _toolbar != null:
@@ -913,6 +958,7 @@ func _build_ui() -> void:
 	_build_preview_window()
 	_build_theme_file_dialog()
 
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
 		# Disconnect the active theme style's `changed` signal + null the field. The live-reload
@@ -937,16 +983,20 @@ func _notification(what: int) -> void:
 # dock because it's written from several load/save sites here; the watcher reads/writes it through us.
 var _external_mtime: int = 0
 
+
 ## True when the active GDScript-backed sheet's file changed on disk since open/save.
 func _external_sheet_changed_on_disk() -> bool:
 	return _external_watcher.sheet_changed_on_disk()
+
 
 ## Re-imports the active external sheet from disk (fresh lossless import + ACE lift).
 func _reload_external_sheet() -> void:
 	_external_watcher.reload_external_sheet()
 
+
 func _prompt_external_reload_if_changed() -> void:
 	_external_watcher.prompt_external_reload_if_changed()
+
 
 func _build_preview_window() -> void:
 	if _preview_window != null:
@@ -979,8 +1029,10 @@ func _build_preview_window() -> void:
 	_preview_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(_preview_list)
 
+
 func _build_theme_file_dialog() -> void:  # called by _build_ui() — theme file dialog now in dock/theme_manager.gd
 	_theme_manager.build_theme_file_dialog()
+
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not (event is InputEventKey):
@@ -1072,6 +1124,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if _viewport != null and _viewport.begin_edit_selected():
 			accept_event()
 
+
 ## True when a text-input control owns keyboard focus (so authoring shortcuts are paused).
 func _text_field_has_focus() -> bool:
 	var view: Viewport = get_viewport()
@@ -1079,6 +1132,7 @@ func _text_field_has_focus() -> bool:
 		return false
 	var focus_owner: Control = view.gui_get_focus_owner()
 	return focus_owner is LineEdit or focus_owner is TextEdit or focus_owner is SpinBox
+
 
 ## Closes the ACE picker when the user clicks anywhere outside the popup rect.
 func _gui_input(event: InputEvent) -> void:
@@ -1092,6 +1146,7 @@ func _gui_input(event: InputEvent) -> void:
 	if _ace_picker.get_popup_rect().has_point(get_global_mouse_position()):
 		return
 	_ace_picker.close()
+
 
 func _on_open_requested() -> void:
 	var dialog: FileDialog = FileDialog.new()
@@ -1108,26 +1163,33 @@ func _on_open_requested() -> void:
 	add_child(dialog)
 	dialog.popup_centered(Vector2i(860, 580))
 
+
 # Theme delegates → dock/theme_manager.gd. menu_bar.gd's View menu drives _on_load_theme_requested /
 # _on_reload_theme_requested; the toolbar picker connects _on_theme_preset_selected + calls
 # _populate_theme_picker / _refresh_theme_picker_selection back through the dock.
 func _on_load_theme_requested() -> void:  # menu_bar.gd View menu
 	_theme_manager._on_load_theme_requested()
 
+
 func _on_set_default_theme_requested() -> void:
 	_theme_manager._on_set_default_theme_requested()
+
 
 func _on_reload_theme_requested() -> void:  # menu_bar.gd View menu
 	_theme_manager._on_reload_theme_requested()
 
+
 func _populate_theme_picker() -> void:  # menu_bar.gd (after building the toolbar theme picker)
 	_theme_manager._populate_theme_picker()
+
 
 func _refresh_theme_picker_selection() -> void:
 	_theme_manager._refresh_theme_picker_selection()
 
+
 func _on_theme_preset_selected(index: int) -> void:  # menu_bar.gd theme-picker item_selected
 	_theme_manager._on_theme_preset_selected(index)
+
 
 # Sheet FILE-IO delegates → dock/sheet_io.gd (EventSheetSheetIO). Bodies live there; the dock keeps
 # these thin forwarders so external callers (plugin.gd, the dock/ helpers, menu_bar, command_palette)
@@ -1136,17 +1198,21 @@ func _on_theme_preset_selected(index: int) -> void:  # menu_bar.gd theme-picker 
 func _load_sheet_from_path(path: String) -> void:
 	_sheet_io._load_sheet_from_path(path)
 
+
 ## Compiles a GDScript-backed sheet to its .gd source. Returns whether the compile succeeded (and
 ## sets a failure status when it does not). Shared by Save and "Open in Godot" so the latter can
 ## refuse to open a stale source when the sheet doesn't currently compile.
 func _save_backed_sheet() -> bool:
 	return _sheet_io._save_backed_sheet()
 
+
 func _on_save_requested() -> void:
 	_sheet_io._on_save_requested()
 
+
 func _on_save_as_requested() -> void:
 	_sheet_io._on_save_as_requested()
+
 
 ## "Eject" affordance: writes the sheet's compiled, standalone GDScript to a file the user
 ## chooses. The output depends on no EventForge/EventSheet class (parity covenant), so this
@@ -1168,6 +1234,7 @@ func _toggle_mcp_server(view_popup: PopupMenu) -> void:
 	if view_popup != null:
 		view_popup.set_item_checked(view_popup.get_item_index(12), enabled)
 	_set_status("MCP server (AI tools) is now %s." % ("ON" if enabled else "OFF"))
+
 
 ## Extract Selection to Include: moves the selected top-level events into a NEW library sheet
 ## and wires the current sheet to include it — copy-paste becomes modularization in one step.
@@ -1192,6 +1259,7 @@ func _extract_to_include_requested() -> void:
 	add_child(dialog)
 	dialog.popup_centered(Vector2i(860, 580))
 
+
 ## The selection's TOP-LEVEL source rows (extraction operates on whole top-level events).
 func _selected_top_level_rows() -> Array[Resource]:
 	var rows: Array[Resource] = []
@@ -1200,6 +1268,7 @@ func _selected_top_level_rows() -> Array[Resource]:
 		if resource != null and _current_sheet.events.has(resource) and not rows.has(resource):
 			rows.append(resource)
 	return rows
+
 
 func _do_extract_to_include(path: String, rows: Array[Resource]) -> void:
 	var target: String = path if path.get_extension() == "tres" else path + ".tres"
@@ -1226,6 +1295,7 @@ func _do_extract_to_include(path: String, rows: Array[Resource]) -> void:
 	)
 	if changed:
 		_mark_dirty("Extracted %d row(s) into %s (now included)." % [rows.size(), target.get_file()])
+
 
 ## The first event-SCOPED identifier (an event-local variable or a For-Each iterator name) referenced by
 ## the given actions, or "" if none. An extracted function is a SEPARATE method, so it can't see these —
@@ -1257,6 +1327,7 @@ static func _scope_capture_offender(event: EventRow, actions: Array) -> String:
 		if word.compile("\\b" + name + "\\b") == OK and word.search(text) != null:
 			return name
 	return ""
+
 
 ## Extracts the given actions of an event into a new NAMED, reusable Function (exposed as an ACE) and
 ## replaces them with a single Call — turning a pile of statement-level rows into one named CONCEPT (the
@@ -1317,6 +1388,7 @@ static func extract_actions_to_function(sheet: EventSheetResource, event: EventR
 	event.actions.insert(clampi(insert_at, 0, event.actions.size()), call_action)
 	return function
 
+
 ## Turns arbitrary entered text into a valid snake_case GDScript identifier — so a user typing
 ## "Apply Physics" yields the method `apply_physics` (while ace_display_name keeps the readable text).
 static func _sanitize_function_name(raw: String) -> String:
@@ -1332,6 +1404,7 @@ static func _sanitize_function_name(raw: String) -> String:
 	if cleaned[0] >= "0" and cleaned[0] <= "9":
 		cleaned = "_" + cleaned
 	return cleaned
+
 
 ## True when `candidate` can't be the extracted method's name — because it's a GDScript reserved word, an
 ## existing sheet function, or a method ALREADY on the host/base class. Each of those would emit a .gd
@@ -1350,6 +1423,7 @@ static func _function_name_is_taken(sheet: EventSheetResource, candidate: String
 		return true
 	return false
 
+
 ## A function name that is valid AND free (not reserved, not an existing function, not a host method) —
 ## extracted_action, apply_physics_2, queue_free_2, func_2, …
 static func _unique_extracted_function_name(sheet: EventSheetResource, base: String) -> String:
@@ -1359,6 +1433,7 @@ static func _unique_extracted_function_name(sheet: EventSheetResource, base: Str
 	while _function_name_is_taken(sheet, "%s_%d" % [base, suffix]):
 		suffix += 1
 	return "%s_%d" % [base, suffix]
+
 
 ## Right-click action: extract the event's actions into a NAMED reusable Function (the "create
 ## abstraction" gesture). Reachable from an action's menu or the event row menu. Extracts ALL of the
@@ -1387,34 +1462,43 @@ func _extract_to_function_requested() -> void:
 			_mark_dirty("Extracted %d action(s) into a reusable Function — now callable as an ACE (Functions)." % to_extract.size())
 	)
 
+
 # ── Quick prompt popups (Extract-to-Function name / Conditional Breakpoint / Group editor) → dock/quick_prompt_dialogs.gd ──
 # Thin delegates so context menus, viewport signals, and tests keep calling the dock unchanged.
 func _prompt_extract_function_name(callback: Callable) -> void:
 	_quick_prompts.prompt_extract_function_name(callback)
 
+
 func _set_breakpoint_condition_requested() -> void:
 	_quick_prompts.set_breakpoint_condition_requested()
+
 
 ## Find References (whole-symbol uses across every sheet, with jump-to-sheet) — see EventSheetFindReferencesPanel.
 func _find_references_requested() -> void:
 	_find_refs.open()
 
+
 ## Generate Events from a Description (AI) → dock/ai_generate_window.gd ──
 func _open_ai_generate() -> void:  # Edit menu
 	_ai.open()
+
 
 ## Manage Includes (browse/add/remove/reorder included library sheets) — see EventSheetIncludeManager.
 func _open_include_manager() -> void:
 	_includes.open()
 
+
 func _export_gdscript_requested() -> void:
 	_sheet_io._export_gdscript_requested()
+
 
 func _write_exported_gdscript(path: String) -> void:
 	_sheet_io._write_exported_gdscript(path)
 
+
 func _save_sheet_to_path(path: String) -> void:
 	_sheet_io._save_sheet_to_path(path)
+
 
 ## Saves the sheet as a plain .gd (no .tres): compiles it to that path, then re-opens the .gd as the
 ## GDScript-backed source of truth, so the file IS the sheet and future edits round-trip through it.
@@ -1422,15 +1506,18 @@ func _save_sheet_to_path(path: String) -> void:
 func _save_sheet_as_gdscript(path: String) -> bool:
 	return _sheet_io._save_sheet_as_gdscript(path)
 
+
 func _on_add_event_requested() -> void:
 	if not _ensure_sheet_for_editing():
 		return
 	_ace_picker.open("new_event", false, _active_view().get_selected_context().get("source_resource", null))
 
+
 func _on_add_signal_event_requested() -> void:
 	if not _ensure_sheet_for_editing():
 		return
 	_ace_picker.open("new_event", true, _active_view().get_selected_context().get("source_resource", null))
+
 
 func _on_add_condition_requested() -> void:
 	if not _ensure_sheet_for_editing():
@@ -1441,10 +1528,12 @@ func _on_add_condition_requested() -> void:
 		return
 	_ace_picker.open("new_condition_event", false, selected_resource)
 
+
 func _on_add_action_requested() -> void:
 	if not _ensure_selected_event():
 		return
 	_ace_picker.open("append_action", false, _active_view().get_selected_context().get("source_resource", null))
+
 
 func _on_add_comment_requested() -> void:
 	if not _ensure_sheet_for_editing():
@@ -1457,6 +1546,7 @@ func _on_add_comment_requested() -> void:
 	)
 	if changed:
 		_mark_dirty("Added comment.")
+
 
 func _on_add_group_requested() -> void:
 	if not _ensure_sheet_for_editing():
@@ -1475,6 +1565,7 @@ func _on_add_group_requested() -> void:
 		# just triggered for you. Deferred so it runs after the viewport rebuilds.
 		call_deferred("_begin_group_rename", group)
 
+
 ## Selects a group and opens its editor popup (used right after Add Group so the user can name it
 ## immediately, and on double-click / slow-click / Enter of an existing group header).
 func _begin_group_rename(group: EventGroup) -> void:
@@ -1483,15 +1574,19 @@ func _begin_group_rename(group: EventGroup) -> void:
 		view.select_resource(group)
 	_on_group_edit_requested(group)
 
+
 # Group editor popup → dock/quick_prompt_dialogs.gd; delegates keep signal wiring + tests stable.
 func _on_group_edit_requested(group: EventGroup) -> void:
 	_quick_prompts.on_group_edit_requested(group)
 
+
 func apply_group_edit(group: EventGroup, new_name: String, new_desc: String) -> bool:
 	return _quick_prompts.apply_group_edit(group, new_name, new_desc)
 
+
 static func set_group_fields(group: EventGroup, new_name: String, new_desc: String) -> String:
 	return EventSheetQuickPromptDialogs.set_group_fields(group, new_name, new_desc)
+
 
 func _on_duplicate_requested() -> void:
 	if not _ensure_sheet_for_editing():
@@ -1518,12 +1613,14 @@ func _on_duplicate_requested() -> void:
 ## matches the re-bake regex `__[a-z_]+_([0-9a-f]{8})`.
 static var _minted_uid_tokens: Dictionary = {}
 
+
 static func _fresh_uid_token() -> String:
 	var token: String = "%08x" % randi()
 	while _minted_uid_tokens.has(token):
 		token = "%08x" % randi()
 	_minted_uid_tokens[token] = true
 	return token
+
 
 func _assign_fresh_event_uids(row: EventRow) -> void:
 	row.event_uid = EventRow._generate_short_uid()
@@ -1561,17 +1658,20 @@ func _assign_fresh_event_uids(row: EventRow) -> void:
 		if sub_event is EventRow:
 			_assign_fresh_event_uids(sub_event as EventRow)
 
+
 func _on_zoom_in_requested() -> void:
 	if _viewport == null:
 		return
 	_viewport.zoom_in()
 	_set_status("Zoom: %d%%" % int(round(_viewport.get_zoom_factor() * 100.0)))
 
+
 func _on_zoom_out_requested() -> void:
 	if _viewport == null:
 		return
 	_viewport.zoom_out()
 	_set_status("Zoom: %d%%" % int(round(_viewport.get_zoom_factor() * 100.0)))
+
 
 # ── Clipboard / copy-paste → dock/clipboard.gd ──────────────────────────────────────
 # The copy/paste cluster (internal clipboard + portable snippets + raw-GDScript paste) lives in
@@ -1584,22 +1684,34 @@ func _on_zoom_out_requested() -> void:
 # interleaved right after this block) stay on the dock, just below.
 func _on_copy_requested() -> void:  # menu_bar Edit menu + event_sheet_editor_test
 	_clipboard_glue._on_copy_requested()
+
+
 func _top_level_selected_resources() -> Array:  # author_actions + bulk row ops
 	return _clipboard_glue._top_level_selected_resources()
+
+
 func _on_paste_requested() -> void:  # menu_bar Edit menu + event_sheet_editor_test
 	_clipboard_glue._on_paste_requested()
+
+
 func _paste_snippet_text(text: String) -> bool:  # author_actions _insert_snippet_path + snippet_share_test
 	return _clipboard_glue._paste_snippet_text(text)
+
+
 func _add_gdscript_action_to_context_row() -> void:  # row context menu + inflow_gdscript_test
 	_clipboard_glue._add_gdscript_action_to_context_row()
+
+
 func _paste_gdscript_text(text: String) -> bool:  # paste flow + gdscript_paste_test
 	return _clipboard_glue._paste_gdscript_text(text)
+
 
 func _ensure_sheet_for_editing() -> bool:
 	if _current_sheet != null:
 		return true
 	_set_status("Create or open an EventSheet first.", true)
 	return false
+
 
 func _ensure_selected_event() -> bool:
 	if not _ensure_sheet_for_editing():
@@ -1610,12 +1722,14 @@ func _ensure_selected_event() -> bool:
 	_set_status("Select an event row first.", true)
 	return false
 
+
 ## The selected event (or the event owning a selected condition/action), for actions that need a
 ## target event without a right-click context — the toolbar/menu "Add Code (GDScript)" path.
 func _selected_event_for_action() -> EventRow:
 	var context: Dictionary = _active_view().get_selected_context()
 	var selected: Resource = context.get("source_resource", null)
 	return selected as EventRow if selected is EventRow else null
+
 
 ## Toolbar/menu "Add Code (GDScript)": C3-style script action on the selected event.
 func _on_add_gdscript_action_requested() -> void:
@@ -1630,100 +1744,132 @@ func _on_add_gdscript_action_requested() -> void:
 # _group_children_array), multi_view_manager (connects _on_viewport_ace_picker_requested /
 # _on_viewport_ace_edit_requested by name), and the tests all resolve unchanged.
 
+
 func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> void:
 	_ace_apply._on_ace_picker_selected(definition, context)
+
 
 func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionary) -> void:
 	_ace_apply._on_ace_params_back_requested(definition, context)
 
+
 func _unlock_preview_for_edit() -> void:
 	_ace_apply._unlock_preview_for_edit()
+
 
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
 	_ace_apply._on_viewport_ace_picker_requested(row_data, lane)
 
+
 func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary) -> void:
 	_ace_apply._on_viewport_ace_edit_requested(row_data, span_index, metadata)
+
 
 func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
 	_ace_apply._on_ace_params_confirmed(definition, values, context)
 
+
 func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, context: Dictionary) -> void:
 	_ace_apply._apply_ace_definition(definition, params, context)
+
 
 func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> void:
 	_ace_apply._bake_trigger_signature(event_row, definition)
 
+
 func _create_condition_from_definition(definition: ACEDefinition, params: Dictionary) -> ACECondition:
 	return _ace_apply._create_condition_from_definition(definition, params)
+
 
 func _create_action_from_definition(definition: ACEDefinition, params: Dictionary) -> ACEAction:
 	return _ace_apply._create_action_from_definition(definition, params)
 
+
 func _baked_template_for(definition: ACEDefinition) -> String:
 	return _ace_apply._baked_template_for(definition)
+
 
 func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:
 	return _ace_apply._resolve_definition_params(definition, row_params)
 
+
 func _insert_row_below_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
 	_ace_apply._insert_row_below_selection(row_resource, explicit_selected_resource)
+
 
 func _find_resource_location(target: Resource) -> Dictionary:
 	return _ace_apply._find_resource_location(target)
 
+
 func _find_resource_location_in_array(target: Resource, container: Array) -> Dictionary:
 	return _ace_apply._find_resource_location_in_array(target, container)
+
 
 func _group_children_array(group: EventGroup) -> Array:
 	return _ace_apply._group_children_array(group)
 
+
 func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String = "before", copy_mode: bool = false) -> void:
 	_ace_apply._on_row_drop_requested(source_row, target_row, drop_mode, copy_mode)
+
 
 func _on_rows_drop_requested(source_rows: Array, target_row: EventRowData, drop_mode: String = "before", copy_mode: bool = false) -> void:
 	_ace_apply._on_rows_drop_requested(source_rows, target_row, drop_mode, copy_mode)
 
+
 func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool = false) -> void:
 	_ace_apply._move_rows(source_rows, target_row, drop_mode, copy_mode)
+
 
 func _on_viewport_ace_drop_requested(source_entries: Array, target_row: EventRowData, target_lane: String, target_ace_index: int, insert_mode: String, copy_mode: bool = false) -> void:
 	_ace_apply._on_viewport_ace_drop_requested(source_entries, target_row, target_lane, target_ace_index, insert_mode, copy_mode)
 
+
 func _normalize_ace_drag_entries(source_entries: Array, lane: String) -> Array:
 	return _ace_apply._normalize_ace_drag_entries(source_entries, lane)
+
 
 func _remove_drag_entry_from_source(entry: Dictionary) -> void:
 	_ace_apply._remove_drag_entry_from_source(entry)
 
+
 func _drag_entry_is_trigger_like(entry: Dictionary) -> bool:
 	return _ace_apply._drag_entry_is_trigger_like(entry)
+
 
 func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []) -> bool:
 	return _ace_apply._event_has_trigger_like(event_row, excluded_resources)
 
+
 func _is_trigger_condition(condition: ACECondition) -> bool:
 	return _ace_apply._is_trigger_condition(condition)
+
 
 func _event_ace_array(event_row: EventRow, lane: String) -> Array:
 	return _ace_apply._event_ace_array(event_row, lane)
 
+
 func _resolve_event_ace_resource(event_row: EventRow, lane: String, ace_index: int) -> Resource:
 	return _ace_apply._resolve_event_ace_resource(event_row, lane, ace_index)
+
 
 func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefinition]) -> void:
 	_ace_apply._on_ace_preview_requested(source_label, definitions)
 
+
 func _ace_type_label(ace_type: int) -> String:
 	return _ace_apply._ace_type_label(ace_type)
 
+
 func _on_viewport_drag_status_requested(message: String, is_error: bool) -> void:
 	_ace_apply._on_viewport_drag_status_requested(message, is_error)
+
 
 ## Returns the best available EventSheet file name suggestion for save dialogs.
 ## Returns the preferred directory for open/save dialogs, defaulting to res:// (open + theme dialogs).
 func _suggest_sheet_directory() -> String:
 	return _sheet_io._suggest_sheet_directory()
+
 
 ## Ensures save paths always include a valid filename and EventSheet resource extension.
 func _normalize_sheet_save_path(path: String) -> String:
@@ -1749,6 +1895,7 @@ var _code_source_map: Array = []
 var _code_panel_highlight: Vector2i = Vector2i(-1, -1)
 const CODE_PANEL_HIGHLIGHT_COLOR := Color(0.35, 0.55, 0.95, 0.18)
 
+
 ## ── Open Sheets panel (the left in-workspace pane) ──────────────────────────────────────
 ## Push the current open-tab snapshot into the panel (on every open_tabs_changed + on build).
 func _refresh_open_sheets_panel() -> void:
@@ -1756,6 +1903,7 @@ func _refresh_open_sheets_panel() -> void:
 		return
 	var state: Dictionary = get_open_sheets_state()
 	_open_sheets_panel.set_state(state.get("open", []), int(state.get("active", -1)), state.get("recent", []))
+
 
 ## View ▸ Open Sheets Panel: show/hide the whole left pane (remembered per project).
 func _toggle_open_sheets_panel(view_popup: PopupMenu) -> void:
@@ -1766,10 +1914,12 @@ func _toggle_open_sheets_panel(view_popup: PopupMenu) -> void:
 		view_popup.set_item_checked(view_popup.get_item_index(13), _open_sheets_panel.visible)
 	_save_open_sheets_panel_prefs()
 
+
 ## The panel collapsed to / expanded from a strip: snap the split divider to match, and remember it.
 func _refresh_anatomy_panel() -> void:
 	if _anatomy_panel != null:
 		_anatomy_panel.refresh(_current_sheet)
+
 
 func _on_open_sheets_panel_collapsed(collapsed: bool) -> void:
 	if _workspace_body != null:
@@ -1781,6 +1931,7 @@ func _on_open_sheets_panel_collapsed(collapsed: bool) -> void:
 		_functions_panel.visible = not collapsed
 	_save_open_sheets_panel_prefs()
 
+
 ## Per-project editor metadata for the panel's shown/collapsed state (survives editor restarts).
 func _read_open_sheets_panel_prefs() -> Dictionary:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
@@ -1789,6 +1940,7 @@ func _read_open_sheets_panel_prefs() -> Dictionary:
 			return meta
 	return {}
 
+
 func _save_open_sheets_panel_prefs() -> void:
 	if not (Engine.is_editor_hint() and Engine.has_singleton("EditorInterface")):
 		return
@@ -1796,6 +1948,7 @@ func _save_open_sheets_panel_prefs() -> void:
 		"shown": _open_sheets_panel != null and _open_sheets_panel.visible,
 		"collapsed": _open_sheets_panel != null and _open_sheets_panel.is_collapsed(),
 	})
+
 
 ## Apply the remembered shown/collapsed state when the workspace is built.
 func _apply_open_sheets_panel_prefs() -> void:
@@ -1810,6 +1963,7 @@ func _apply_open_sheets_panel_prefs() -> void:
 		_functions_panel.visible = not bool(prefs.get("collapsed", false))
 	_refresh_open_sheets_panel()
 
+
 func _toggle_code_panel() -> void:
 	_ensure_code_panel()
 	_side_panel.visible = not _side_panel.visible
@@ -1819,8 +1973,10 @@ func _toggle_code_panel() -> void:
 	if _side_panel.visible:
 		_refresh_code_panel()
 
+
 func is_code_panel_visible() -> bool:
 	return _side_panel != null and _side_panel.visible
+
 
 ## Builds the panel lazily on first toggle: wraps the sheet scroll in an HSplitContainer
 ## (so the default tree stays untouched until the user asks for the panel) and adds the
@@ -1890,6 +2046,7 @@ func _ensure_code_panel() -> void:
 	_split.add_child(_side_panel)
 	_split.split_offset = int(size.x * 0.6) if size.x > 0.0 else 600
 
+
 ## Adopts the editor's code-editor look on a CodeEdit (the GDScript panel): the same
 ## monospace code font + size the script editor uses, plus the built-in minimap and
 ## current-line highlight — so the panel reads as part of Godot, not a foreign box.
@@ -1905,6 +2062,7 @@ func _apply_editor_code_settings(code_edit: CodeEdit) -> void:
 		code_edit.add_theme_font_override("font", editor_theme.get_font("source", "EditorFonts"))
 		if editor_theme.has_font_size("source_size", "EditorFonts"):
 			code_edit.add_theme_font_size_override("font_size", editor_theme.get_font_size("source_size", "EditorFonts"))
+
 
 ## Recompiles the current sheet into the panel (text + source map) and re-highlights.
 func _refresh_code_panel() -> void:
@@ -1922,6 +2080,7 @@ func _refresh_code_panel() -> void:
 	_code_panel_highlight = Vector2i(-1, -1)
 	_update_code_panel_highlight()
 
+
 ## Repopulates the Functions overview list from the active sheet (signature + an ✦ for ACE-exposed
 ## functions). Cheap; runs whenever the side panel refreshes (i.e. on any edit while it's open).
 func _refresh_functions_list() -> void:
@@ -1937,6 +2096,7 @@ func _refresh_functions_list() -> void:
 	if _functions_panel != null:
 		_functions_panel.set_count(count)  # the collapsed header still tells the sheet's weight
 
+
 ## "name(a, b)" plus a trailing ✦ when the function is exposed as an ACE (a reusable action/condition/
 ## expression in other sheets) — the at-a-glance signature shown in the Functions list.
 func _format_function_signature(function: EventFunction) -> String:
@@ -1947,6 +2107,7 @@ func _format_function_signature(function: EventFunction) -> String:
 	var signature: String = "%s(%s)" % [function.function_name, ", ".join(param_ids)]
 	return (signature + "  ✦") if function.expose_as_ace else signature
 
+
 ## Right-click a function to delete it (the list is otherwise read-only — editing is via the rows).
 func _on_functions_list_item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
 	if mouse_button_index != MOUSE_BUTTON_RIGHT or _functions_menu == null:
@@ -1956,9 +2117,11 @@ func _on_functions_list_item_clicked(index: int, at_position: Vector2, mouse_but
 	_functions_menu.reset_size()
 	_functions_menu.popup()
 
+
 func _on_functions_menu_id_pressed(id: int) -> void:
 	if id == 0:
 		_delete_selected_function()
+
 
 ## Removes the selected function from the sheet (undoable) and refreshes the list + preview.
 func _delete_selected_function() -> void:
@@ -1982,6 +2145,7 @@ func _delete_selected_function() -> void:
 		_mark_dirty("Deleted function %s()." % removed_name)
 		_refresh_functions_list()
 
+
 ## Highlights the generated lines for the currently selected sheet row and scrolls to them.
 func _update_code_panel_highlight() -> void:
 	if _code_edit == null or _side_panel == null or not _side_panel.visible:
@@ -2004,6 +2168,7 @@ func _update_code_panel_highlight() -> void:
 	_code_edit.set_caret_line(start_line)
 	_code_panel_highlight = Vector2i(start_line, end_line)
 
+
 ## Reverse provenance: clicking a line of generated code selects the sheet row that
 ## produced it. Reacts only to mouse releases (never caret moves), so the forward
 ## direction — selection setting the caret in _update_code_panel_highlight — cannot loop.
@@ -2015,6 +2180,7 @@ func _on_code_panel_gui_input(event: InputEvent) -> void:
 		return
 	# The click already moved the caret; source maps are 1-based.
 	_select_sheet_row_for_code_line(_code_edit.get_caret_line() + 1)
+
 
 ## The script editor's "Go to Sheet Row": shows the GDScript panel, refreshes the
 ## source map and selects the row that emitted the given 1-based generated line —
@@ -2028,6 +2194,7 @@ func goto_generated_line(line: int) -> void:
 	if _code_edit != null and line > 0:
 		_code_edit.set_caret_line(maxi(line - 1, 0))
 	_select_sheet_row_for_code_line(line)
+
 
 ## Most-specific-first line→row lookup (the shared mapper), walking outward until something
 ## selects — inner entries may reference resources without rows of their own (e.g. an in-flow
@@ -2044,6 +2211,7 @@ func _select_sheet_row_for_code_line(line: int) -> void:
 		if _viewport.select_resource(resource) or _viewport.reveal_resource(resource):
 			_update_code_panel_highlight()
 			return
+
 
 ## Double-clicking a GDScript block opens a CodeEdit dialog with compile-check linting and
 ## sheet-symbol completion. in_flow blocks live inside an event's actions (statements);
@@ -2064,6 +2232,7 @@ func _on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool)
 	_validate_raw_code()
 	_raw_code_dialog.popup_centered(Vector2i(680, 460))
 	_raw_code_edit.grab_focus()
+
 
 func _ensure_raw_code_dialog() -> void:
 	if _raw_code_dialog != null:
@@ -2112,6 +2281,7 @@ func _ensure_raw_code_dialog() -> void:
 			_open_raw_code_block_in_godot())
 	add_child(_raw_code_dialog)
 
+
 ## Compile-checks the dialog's code against the sheet context (host class + sheet symbols).
 func _validate_raw_code() -> void:
 	if _raw_code_edit == null or _raw_code_lint_label == null:
@@ -2134,6 +2304,7 @@ func _validate_raw_code() -> void:
 		_raw_code_lint_label.text = "✗ %s" % str(lint_result.get("error", "Does not compile."))
 		_raw_code_lint_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
 
+
 ## Supplies sheet variables/functions and host-class members as completion candidates.
 func _populate_raw_code_completion() -> void:
 	if _raw_code_edit == null:
@@ -2145,9 +2316,11 @@ func _populate_raw_code_completion() -> void:
 	_raw_code_edit.update_code_completion_options(true)
 	_raw_code_edit.set_code_hint(EventSheetGDScriptLint.signature_hint(_text_before_caret(_raw_code_edit), _current_sheet))
 
+
 ## The current line's text up to the caret (what context completion/hints parse).
 static func _text_before_caret(edit: CodeEdit) -> String:
 	return edit.get_line(edit.get_caret_line()).substr(0, edit.get_caret_column())
+
 
 func _on_raw_code_dialog_confirmed() -> void:
 	if _raw_code_target == null:
@@ -2172,6 +2345,7 @@ func _on_raw_code_dialog_confirmed() -> void:
 		_refresh_after_edit()
 		_mark_dirty("Updated GDScript block.")
 
+
 # ── Visual theme editor → dock/theme_manager.gd ────────────────────────────────
 # menu_bar.gd's View menu opens the editor; theme_editor_dialog.gd's "Apply To Current Sheet" reaches
 # apply_theme_style via _dock.has_method("apply_theme_style") + _dock.call("apply_theme_style", …), so
@@ -2179,10 +2353,12 @@ func _on_raw_code_dialog_confirmed() -> void:
 func _open_theme_editor() -> void:  # menu_bar.gd View menu
 	_theme_manager._open_theme_editor()
 
+
 func apply_theme_style(style: EventSheetEditorStyle) -> void:  # theme_editor_dialog.gd Apply-To-Current-Sheet
 	_theme_manager.apply_theme_style(style)
 
 # ── Inspector per-row param edits ───────────────────────────────────
+
 
 ## The Inspector's "Selected ACE" section delegates writes here: the dock owns the
 ## undoable sheet edit and the viewport refresh.
@@ -2199,63 +2375,104 @@ func _on_exposed_row_param_changed(target: Resource, param_id: String, value: Va
 		_refresh_after_edit()
 		_mark_dirty("Parameter updated from the Inspector.")
 
+
 # ── Enum / Signal / Match row editors → dock/struct_row_dialogs.gd ──
 func _open_enum_dialog(enum_resource: Resource) -> void:  # viewport enum_edit_requested
 	_struct_rows.open_enum_dialog(enum_resource)
 
+
 func _open_signal_dialog(signal_resource: Resource) -> void:  # viewport signal_edit_requested
 	_struct_rows.open_signal_dialog(signal_resource)
+
 
 # Custom Block API rows (dock/custom_block_dialog.gd): edit on double-click, add from the Add menu.
 func _open_custom_block_dialog(block_resource: Resource) -> void:  # viewport custom_block_edit_requested
 	_custom_block_dialog.open_edit(block_resource)
 
+
 func _open_custom_block_add(kind_id: String) -> void:  # Add menu
 	_custom_block_dialog.open_add(kind_id)
+
 
 func _open_match_dialog(match_resource: Resource) -> void:  # viewport match_edit_requested
 	_struct_rows.open_match_dialog(match_resource)
 
+
 # ── Rename refactoring (variable rename engine + "Rename Everywhere" dialog) → event_sheet_rename_refactor.gd ──
 func _rename_variable_references(old_name: String, new_name: String) -> int:  # variables tree (2 sites)
 	return _rename.rename_variable_references(old_name, new_name)
+
+
 func _open_rename_dialog(old_name: String) -> void:  # variable context menu
 	_rename.open(old_name)
+
+
 func _rename_in_includers(old_name: String, new_name: String, candidate_paths: PackedStringArray) -> PackedStringArray:  # tedium_test
 	return _rename.rename_in_includers(old_name, new_name, candidate_paths)
+
 
 # ── Variables manager (global/local/tree variable authoring + usage scan) → dock/variables_manager.gd ──
 # Thin delegates preserve the original public names/signatures so callers and tests don't change.
 static func _tree_group_attributes(source: Dictionary) -> Dictionary:  # variable_group_roundtrip_test (static, by class name)
 	return EventSheetVariablesManager._tree_group_attributes(source)
+
+
 func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary = {}, is_constant: bool = false, exported: bool = true, combo_options: PackedStringArray = PackedStringArray(), attributes: Dictionary = {}) -> void:  # _variable_dlg.variable_confirmed
 	_variables._on_variable_dialog_confirmed(var_name, type_name, default_value, scope, context, is_constant, exported, combo_options, attributes)
+
+
 func _on_add_global_variable_requested() -> void:
 	_variables._on_add_global_variable_requested()
+
+
 func _on_add_local_variable_requested() -> void:
 	_variables._on_add_local_variable_requested()
+
+
 func _add_tree_variable_below_context_row() -> void:
 	_variables._add_tree_variable_below_context_row()
+
+
 func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dictionary) -> void:
 	_variables._on_viewport_variable_edit_requested(row_data, metadata)
+
+
 func _on_variable_context_menu_id_pressed(id: int) -> void:
 	_variables._on_variable_context_menu_id_pressed(id)
+
+
 func _create_variable_quickfix(variable_name: String) -> bool:
 	return _variables._create_variable_quickfix(variable_name)
+
+
 func _collect_sheet_variable_names() -> PackedStringArray:
 	return _variables._collect_sheet_variable_names()
+
+
 func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dictionary) -> Dictionary:
 	return _variables._context_variable_entry_from_metadata(row_data, metadata)
+
+
 func _toggle_context_variable_constant() -> void:
 	_variables._toggle_context_variable_constant()
+
+
 func _convert_variable_scope(entry: Dictionary, target_scope: String, target_event_uid: String = "") -> bool:
 	return _variables._convert_variable_scope(entry, target_scope, target_event_uid)
+
+
 func _on_global_variable_activated(index: int) -> void:
 	_variables._on_global_variable_activated(index)
+
+
 func _on_local_variable_activated(index: int) -> void:
 	_variables._on_local_variable_activated(index)
+
+
 func _refresh_variable_panel() -> void:
 	_variables._refresh_variable_panel()
+
+
 func _edit_context_variable() -> void:
 	_variables._edit_context_variable()
 
@@ -2268,24 +2485,32 @@ func _edit_context_variable() -> void:
 # changes; falls back to the primary.
 var _active_viewport_ref: EventSheetViewport = null
 
+
 func _active_view() -> EventSheetViewport:
 	if _active_viewport_ref != null and is_instance_valid(_active_viewport_ref):
 		return _active_viewport_ref
 	return _viewport
+
 
 # ── Command palette (Ctrl+P): list + fuzzy filter + popup shell → dock/command_palette.gd ──
 # Thin delegates preserve the original names/signatures so the shortcut caller and tests don't change.
 # filter_commands is static-by-class-name (tests call EventSheetDock.filter_commands); it forwards to the helper's static.
 static func filter_commands(commands: Array, query: String) -> Array:  # event_sheet_editor_test (static, by class name)
 	return EventSheetCommandPalette.filter_commands(commands, query)
+
+
 func _command_palette_commands() -> Array[Dictionary]:  # event_sheet_editor_test
 	return _command_palette._command_palette_commands()
+
+
 func _open_command_palette() -> void:  # Ctrl+P shortcut (_gui_input)
 	_command_palette._open_command_palette()
+
 
 ## True when beginner-friendly Simple mode is active (advanced/code menu entries hidden).
 func is_simple_mode() -> bool:
 	return _simple_mode
+
 
 ## Toggle/set Simple mode: persists the choice per-project, updates the View-menu check,
 ## and rebuilds the context menus so the next right-click reflects the new surface.
@@ -2301,12 +2526,14 @@ func set_simple_mode(enabled: bool) -> void:
 			_view_popup.set_item_checked(idx, enabled)
 	_set_status("Simple mode ON — advanced entries hidden." if enabled else "Expert mode — all entries shown.")
 
+
 func _load_simple_mode_preference() -> void:
 	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
 		return
 	var settings: EditorSettings = EditorInterface.get_editor_settings()
 	if settings != null:
 		_simple_mode = bool(settings.get_project_metadata("eventsheets", "simple_mode", false))
+
 
 ## Declutter toggle: show/hide the trailing "+ Add event…" affordance rows across every
 ## live view, and reflect the new state in the View menu checkbox.
@@ -2324,17 +2551,23 @@ func _toggle_add_event_rows(view_popup: PopupMenu) -> void:
 			view_popup.set_item_checked(idx, show_rows)
 	_set_status("Add-event rows shown." if show_rows else "Add-event rows hidden for a cleaner sheet.")
 
+
 # Split-view delegates → dock/multi_view_manager.gd (split widgets + lifecycle live there).
 func _toggle_split_view() -> void:
 	_multi_view._toggle_split_view()
+
+
 func _connect_view_signals(view: EventSheetViewport) -> void:  # also reused by the detached pane below
 	_multi_view._connect_view_signals(view)
+
+
 func _open_row_in_split(row_data: EventRowData) -> void:
 	_multi_view._open_row_in_split(row_data)
 
 # ── Multi-view P2: detached window (a pane on another monitor) ────────────────────────
 var _detached_window: Window = null
 var _detached_viewport: EventSheetViewport = null
+
 
 ## Toggles a floating OS window hosting another full-editing pane over the same sheet —
 ## drag it to a second monitor while debugging. Same shared state + refresh bus as the
@@ -2367,6 +2600,7 @@ func _toggle_detached_view() -> void:
 		_detached_window.popup_centered(Vector2i(960, 640))
 	_set_status("Detached view opened — drag it anywhere; both panes edit the same sheet.")
 
+
 func _close_detached_view() -> void:
 	if _detached_window == null:
 		return
@@ -2380,6 +2614,7 @@ func _close_detached_view() -> void:
 var _linked_views: bool = false
 var _mirroring_selection: bool = false
 
+
 ## Toggles follow-selection: selecting a row in one pane scrolls/selects it in the
 ## others — e.g. keep the split zoomed out as an overview and click rows to focus them
 ## in the detail pane.
@@ -2387,14 +2622,20 @@ func _toggle_linked_views() -> void:
 	_linked_views = not _linked_views
 	_set_status("Linked panes: selection now follows across views." if _linked_views else "Panes unlinked.")
 
+
 # Split-view delegates → dock/multi_view_manager.gd. _mirror_selection reads the dock's
 # linked/mirroring flags (kept above) and is also called from the primary pane's _build_ui lambda.
 func _mirror_selection(from_view: EventSheetViewport, row_data: EventRowData) -> void:
 	_multi_view._mirror_selection(from_view, row_data)
+
+
 func _close_split_view() -> void:
 	_multi_view._close_split_view()
+
+
 func _sync_split_sheet() -> void:
 	_multi_view._sync_split_sheet()
+
 
 # ── Export as Addon Pack (coverage Phase C) → dock/export_pack.gd ─────────────────────
 # (Body lives in the helper; this delegate keeps the name the menu_bar Sheet menu (id 6), the
@@ -2413,6 +2654,7 @@ var _find_cursor: int = -1
 # ── Live Values panel — extracted to dock/live_values_panel.gd ───────────────────────
 var _live_values_panel: EventSheetLiveValuesPanel = null
 
+
 func _ensure_live_values_panel() -> EventSheetLiveValuesPanel:
 	if _live_values_panel == null:
 		_live_values_panel = EventSheetLiveValuesPanel.new(self)
@@ -2426,17 +2668,22 @@ var _live_values_label: RichTextLabel:
 var _live_values_window: Window:
 	get: return _ensure_live_values_panel().window
 
+
 func set_live_values_debugger(debugger: EventSheetLiveValuesDebugger) -> void:
 	_ensure_live_values_panel().debugger = debugger
+
 
 func _toggle_live_values() -> void:
 	_ensure_live_values_panel().toggle()
 
+
 func _ensure_live_values_window() -> void:
 	_ensure_live_values_panel().ensure_window()
 
+
 func update_live_values(values: Dictionary) -> void:
 	_ensure_live_values_panel().update_values(values)
+
 
 ## Paused-at-row sink (wired by the plugin): the running game announced it is pausing at a sheet
 ## breakpoint — find that event across the open tabs (by its stable event_uid), switch to its tab
@@ -2457,6 +2704,7 @@ func reveal_paused_row(uid: String) -> void:
 		_set_status("⏸ Paused at this row (sheet breakpoint).")
 		return
 
+
 static func _find_event_by_uid(rows: Array, uid: String) -> EventRow:
 	for row: Variant in rows:
 		if row is EventRow:
@@ -2472,11 +2720,13 @@ static func _find_event_by_uid(rows: Array, uid: String) -> EventRow:
 				return found
 	return null
 
+
 ## Live event-trace sink (wired by the plugin): highlight the firing rows in every pane.
 func update_fired_events(uids: PackedStringArray) -> void:
 	for pane: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if pane != null:
 			pane.set_fired_events(uids)
+
 
 ## Tools ▸ Event Trace — highlights the rows whose events fire during a debug run (rung 3). It
 ## rides the Live Values stream, so it turns that on too. Recompile + run to start.
@@ -2493,21 +2743,27 @@ func _toggle_event_trace() -> void:
 				pane.set_fired_events(PackedStringArray())
 		_set_status("Event Trace OFF (recompile to remove the instrumentation).")
 
+
 # ── Single-param inline editing (double-click value / colour swatch / node drop) → dock/inline_param_editor.gd ──
 func _on_param_value_edit_requested(ace: Resource, param_id: String, current_text: String) -> void:  # viewport param_value_edit_requested
 	_inline_params.on_param_value_edit_requested(ace, param_id, current_text)
 
+
 func _on_color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color) -> void:  # viewport color_swatch_edit_requested
 	_inline_params.on_color_swatch_edit_requested(ace, param_id, current_color)
 
+
 func _on_param_node_drop_requested(ace: Resource, param_id: String, node_reference: String) -> void:  # viewport param_node_drop_requested
 	_inline_params.on_param_node_drop_requested(ace, param_id, node_reference)
+
+
 ## Toggles debug compiles: gutter breakpoints (F9) emit real `breakpoint` statements.
 func _toggle_breakpoint_emission() -> void:
 	if _current_sheet == null:
 		return
 	_current_sheet.emit_breakpoints = not _current_sheet.emit_breakpoints
 	_set_status("Debug compile ON: breakpointed events emit `breakpoint` (recompile to apply)." if _current_sheet.emit_breakpoints else "Debug compile OFF: breakpoints render only.")
+
 
 # ── Find & Replace bar → dock/find_bar.gd ───────────────────────────────────────────
 # The Ctrl+F find bar + Replace-All-across-the-sheet cluster lives in EventSheetFindBar. The
@@ -2519,14 +2775,24 @@ func _toggle_breakpoint_emission() -> void:
 # _dock._replace_in_rows / _dock._replace_all_in_sheet) and the tests resolve unchanged.
 func _show_find_bar() -> void:  # _viewport.find_requested + multi_view_manager
 	_find_bar_glue._show_find_bar()
+
+
 func _ensure_find_bar() -> void:  # project_find + tests
 	_find_bar_glue._ensure_find_bar()
+
+
 func _on_find_text_changed(text: String) -> void:  # _find_edit.text_changed + godot_feel_test
 	_find_bar_glue._on_find_text_changed(text)
+
+
 func _find_step(direction: int) -> void:  # multi_view find_step_requested + tests
 	_find_bar_glue._find_step(direction)
+
+
 func _replace_all_in_sheet() -> void:  # Replace All button + project_find + tests
 	_find_bar_glue._replace_all_in_sheet()
+
+
 func _replace_in_rows(rows: Array, find_text: String, replace_text: String, counter: Dictionary) -> void:  # project_find + with_node_editor_test
 	_find_bar_glue._replace_in_rows(rows, find_text, replace_text, counter)
 
@@ -2534,6 +2800,7 @@ func _replace_in_rows(rows: Array, find_text: String, replace_text: String, coun
 var _group_color_popup: PopupPanel = null
 var _group_color_picker: ColorPickerButton = null
 var _group_color_target: EventGroup = null
+
 
 ## Opt-in runtime toggling: the group compiles a guard member that Set Group Active
 ## flips at runtime (feature flags, debug switches). Off = zero-cost organization.
@@ -2550,6 +2817,7 @@ func _toggle_group_runtime() -> void:
 	if changed:
 		_refresh_after_edit()
 		_mark_dirty("Group \"%s\" is %s — Set Group Active targets \"%s\"." % [group.group_name, "runtime-toggleable" if group.runtime_toggleable else "compile-time only again", group.group_name.to_snake_case()])
+
 
 ## Event-sheet-style group colors: tint the selected group's accent/background (clear = theme).
 func _open_group_color_picker() -> void:
@@ -2577,6 +2845,7 @@ func _open_group_color_picker() -> void:
 	_group_color_picker.color = target.custom_color if target.custom_color.a > 0.0 else Color(0.55, 0.45, 0.85, 1.0)
 	_group_color_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(220, 42)))
 
+
 func _apply_group_color(value: Color) -> void:
 	if _group_color_target == null:
 		return
@@ -2593,6 +2862,7 @@ func _apply_group_color(value: Color) -> void:
 
 # ── Autoload (Singleton) sheets ───────────────────────────────────────────────────────
 
+
 ## One click: compile the autoload sheet and register the generated script in
 ## ProjectSettings. Guarded: needs the type, a name, a saved sheet, and a free slot.
 func _register_autoload() -> void:
@@ -2604,6 +2874,7 @@ func _register_autoload() -> void:
 		_set_status("Registered autoload \"%s\" — every sheet (and script) can call it now." % _current_sheet.autoload_name)
 	else:
 		_set_status(problem, true)
+
 
 ## The testable core: compiles next to the sheet and writes the autoload entry.
 ## Returns "" on success or the user-facing problem.
@@ -2629,25 +2900,32 @@ func _register_autoload_entry(sheet: EventSheetResource, sheet_path: String) -> 
 # ── Addon-author loop — extracted to dock/author_loop.gd ─────────────────────────────
 var _author_loop: EventSheetAuthorLoop = null
 
+
 func _ensure_author_loop() -> EventSheetAuthorLoop:
 	if _author_loop == null:
 		_author_loop = EventSheetAuthorLoop.new(self)
 	return _author_loop
 
+
 func _collect_publish_surface(sheet: EventSheetResource) -> Dictionary:
 	return EventSheetAuthorLoop.collect_publish_surface(sheet)
+
 
 static func publish_surface_text(surface: Dictionary) -> String:
 	return EventSheetAuthorLoop.publish_surface_text(surface)
 
+
 func _generate_pack_readme(sheet: EventSheetResource) -> String:
 	return EventSheetAuthorLoop.generate_pack_readme(sheet)
+
 
 func _open_publish_preview() -> void:
 	_ensure_author_loop().open_publish_preview()
 
+
 func _open_test_bench() -> void:
 	_ensure_author_loop().open_test_bench()
+
 
 func _build_test_bench(sheet: EventSheetResource, scene_path: String) -> String:
 	return _ensure_author_loop().build_test_bench(sheet, scene_path)
@@ -2657,14 +2935,18 @@ func _build_test_bench(sheet: EventSheetResource, scene_path: String) -> String:
 # public/test surface stable.)
 var _project_find: EventSheetProjectFind = null
 
+
 func _open_project_find(initial_query: String = "") -> void:
 	if _project_find == null:
 		_project_find = EventSheetProjectFind.new(self)
 	_project_find.open(initial_query)
 
+
 # ── Project Doctor — health-audit window → dock/project_doctor_panel.gd ──
 func _open_project_doctor() -> void:  # Tools menu (id 7)
 	_doctor.open()
+
+
 ## Runs EventSheetDiagnostics over the current sheet, paints per-row error markers on the active
 ## view, and jumps to the first flagged row. Returns the flagged-row count. The "error → row"
 ## deep-link: a bad ƒx expression or GDScript block lands you ON the offending row, not a status
@@ -2684,6 +2966,7 @@ func _run_diagnostics() -> int:
 	if _identity_banner != null:
 		_identity_banner.set_health(count)
 	return count
+
 
 ## Tools ▸ Check Sheet for Errors — run diagnostics on demand and report.
 func _run_diagnostics_action() -> void:
@@ -2716,9 +2999,11 @@ const FIXED_KEYS: Array = [
 	["Esc", "Close a popup / cancel an edit"],
 ]
 
+
 # ── Keyboard Shortcuts editor (Tools menu; FIXED_KEYS above stays here) → event_sheet_shortcuts_dialog.gd ──
 func _open_shortcuts_help() -> void:
 	_shortcuts.open()
+
 
 ## Writes the always-current project vocabulary reference (EventSheetVocabularyDoc) —
 ## the answer to "what can I say in this project?" as one committed markdown file.
@@ -2734,6 +3019,7 @@ func _generate_vocabulary_doc() -> void:
 # ── Sheet backups — the save-time ring (core in EventSheetBackups) ────────────────────
 var _backups_window: Window = null
 var _backups_list: ItemList = null
+
 
 func _open_sheet_backups() -> void:
 	if _current_sheet == null or _current_sheet_path.is_empty():
@@ -2770,12 +3056,14 @@ func _open_sheet_backups() -> void:
 		_backups_list.set_item_disabled(0, true)
 	_backups_window.popup_centered()
 
+
 func _on_restore_backup_pressed() -> void:
 	var selected: PackedInt32Array = _backups_list.get_selected_items()
 	if selected.is_empty() or _backups_list.get_item_metadata(selected[0]) == null:
 		return
 	_restore_backup_path(str(_backups_list.get_item_metadata(selected[0])))
 	_backups_window.hide()
+
 
 ## Restores a backup INTO the editor as an unsaved change: every storage property of
 ## the backup is copied onto the open sheet (same object — tabs, viewport and code
@@ -2796,6 +3084,7 @@ func _restore_backup_path(backup_path: String) -> void:
 	_refresh_after_edit()
 	_refresh_title_strip()
 	_set_status("Backup restored into the editor (unsaved) — Save to keep it, reopen the sheet to discard.")
+
 
 ## Writes a deep copy of the current sheet into the project templates dir (never
 ## overwrites — an existing name gets a -2/-3 suffix). It joins the New… menu
@@ -2820,11 +3109,14 @@ func _save_as_project_template() -> void:
 		EditorInterface.get_resource_filesystem().scan()
 	_set_status("Template saved: %s — it's in the New… menu now." % target)
 
+
 static func list_project_sheets() -> PackedStringArray:
 	return EventSheetProjectFind.list_project_sheets()
 
+
 static func find_in_sheet(sheet: EventSheetResource, needle: String) -> Array:
 	return EventSheetProjectFind.find_in_sheet(sheet, needle)
+
 
 ## Find-bar "Open in Split" → dock/multi_view_manager.gd (jumps the split pane to the current match).
 func _open_match_in_split() -> void:
@@ -2832,6 +3124,7 @@ func _open_match_in_split() -> void:
 
 # ── Bookmarks panel — extracted to dock/bookmarks_panel.gd ───────────────────────────
 var _bookmarks_panel: EventSheetBookmarksPanel = null
+
 
 func _ensure_bookmarks_panel() -> EventSheetBookmarksPanel:
 	if _bookmarks_panel == null:
@@ -2846,11 +3139,14 @@ var _bookmarks_list: ItemList:
 	get: return _ensure_bookmarks_panel().list
 	set(value): _ensure_bookmarks_panel().list = value
 
+
 func _open_bookmarks_panel() -> void:
 	_ensure_bookmarks_panel().open()
 
+
 func _refresh_bookmarks_list() -> void:
 	_ensure_bookmarks_panel().refresh()
+
 
 ## Ctrl+/: toggles the selected rows' enabled state (the sheet's "comment out").
 func _toggle_selected_rows_enabled() -> void:
@@ -2871,6 +3167,7 @@ func _toggle_selected_rows_enabled() -> void:
 		_refresh_after_edit()
 		_mark_dirty("Toggled %d row(s)." % targets.size())
 
+
 ## Alt+Up/Down: moves the selected row past its flat neighbor (reuses the drag machinery).
 func _move_selected_row(direction: int) -> void:
 	if _viewport == null:
@@ -2886,6 +3183,7 @@ func _move_selected_row(direction: int) -> void:
 	if target_row == null or target_row.source_resource == null:
 		return
 	_move_rows([row_data], target_row, "before" if direction < 0 else "after")
+
 
 ## Editor-native defaults: inherit the user's editor theme + display scale when no
 ## explicit sheet theme was chosen (presets/per-sheet themes still override).
@@ -2911,14 +3209,18 @@ func _apply_editor_native_defaults(apply_zoom: bool = true) -> void:
 # closure calls the _quick_add delegate below). The match+apply brain delegates to _author_actions.
 var _quick_add_edit: LineEdit = null
 
+
 func _quick_match(query: String) -> Dictionary:  # intellisense_test
 	return _author_actions._quick_match(query)
+
 
 func _quick_add(query: String) -> bool:  # menu_bar.gd quick-add closure + intellisense_test
 	return _author_actions._quick_add(query)
 
+
 func _quick_match_ranked(query: String, limit: int = 5) -> Array:  # dock/ghost_row.gd suggestion list
 	return _author_actions._quick_match_ranked(query, limit)
+
 
 # The E/C/A single keys open the Ghost Row (type-a-sentence add at the selected row, zero dialogs);
 # the toolbar buttons + the Ctrl chords keep the classic full pickers, and Ctrl+Enter inside the ghost
@@ -2926,28 +3228,36 @@ func _quick_match_ranked(query: String, limit: int = 5) -> Array:  # dock/ghost_
 func _open_ghost_event() -> void:
 	_ghost_row.open("event")
 
+
 func _open_ghost_condition() -> void:
 	_ghost_row.open("condition")
 
+
 func _open_ghost_action() -> void:
 	_ghost_row.open("action")
+
 
 # ── Pick-filter dialog ("for each" picking) → dock/pick_filter_dialog.gd ──
 func _open_pick_filter_dialog(event_resource: Resource, pick_index: int = -1) -> void:  # viewport/view pick_filter_edit_requested + row menu
 	_pick.open(event_resource, pick_index)
 
+
 # ── Comment + With-node dialogs + comment<->action conversion → dock/comment_and_scope_dialogs.gd ──
 func _open_comment_dialog(comment_resource: Resource) -> void:  # viewport comment_edit_requested + row menu
 	_comments.open_comment_dialog(comment_resource)
 
+
 func _open_with_node_dialog(event_resource: Resource) -> void:  # viewport with_node_edit_requested
 	_comments.open_with_node_dialog(event_resource)
+
 
 func _attach_comment_to_event_above(comment_row: CommentRow) -> void:  # row context menu
 	_comments.attach_comment_to_event_above(comment_row)
 
+
 func _detach_comment_to_row(comment_row: CommentRow) -> void:  # action-cell context menu
 	_comments.detach_comment_to_row(comment_row)
+
 
 # ── Sheet Type dialog (what the sheet compiles into) → dock/sheet_type_dialog.gd ──
 # The dialog shell lives in the helper; the field-builders below (_add_sheet_type_field is shared with the
@@ -2955,6 +3265,7 @@ func _detach_comment_to_row(comment_row: CommentRow) -> void:  # action-cell con
 # tool / singleton tests) stay here, so only the dialog's _ensure / widget reach-ins were repointed.
 func _open_sheet_type_dialog() -> void:  # Sheet menu / identity-banner edit / Tools menu
 	_sheet_type.open()
+
 
 func _add_sheet_type_field(form: VBoxContainer, label_text: String, placeholder: String) -> LineEdit:
 	var row: HBoxContainer = HBoxContainer.new()
@@ -2968,6 +3279,7 @@ func _add_sheet_type_field(form: VBoxContainer, label_text: String, placeholder:
 	row.add_child(edit)
 	form.add_child(row)
 	return edit
+
 
 ## Like _add_sheet_type_field, but a small multi-line TextEdit — used for the class description,
 ## which compiles to a `##` doc comment (Godot's Create Node tooltip supports multiple lines).
@@ -2986,6 +3298,7 @@ func _add_sheet_type_multiline_field(form: VBoxContainer, label_text: String, pl
 	row.add_child(edit)
 	form.add_child(row)
 	return edit
+
 
 ## Applies the chosen sheet type (0 = plain, 1 = custom node, 2 = behavior) undoably and
 ## refreshes every identity surface (banner, tab badge, header, lint context). `family_enabled` marks
@@ -3049,6 +3362,7 @@ func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_p
 		_refresh_tab_bar()
 		_mark_dirty("Sheet type updated.")
 
+
 ## Footer "Add event…" rows: opens the event picker; the new event is appended into the
 ## clicked footer's owner (a group, or the sheet end).
 func _on_viewport_add_event_requested(owner_resource: Resource) -> void:
@@ -3060,6 +3374,7 @@ func _on_viewport_add_event_requested(owner_resource: Resource) -> void:
 		null,
 		{"mode": "new_condition_event", "insert_into": owner_resource}
 	)
+
 
 ## Persists a lane-divider resize. A default-themed sheet is promoted to a concrete editor
 ## style so the ratio saves with the sheet; an already-styled sheet is edited in place.
@@ -3075,6 +3390,7 @@ func _on_viewport_lane_ratio_changed(ratio: float) -> void:
 	else:
 		_current_sheet.editor_style.get_event_style().condition_lane_ratio = ratio
 	_mark_dirty("Resized conditions/actions lane to %d%%." % int(round(ratio * 100.0)))
+
 
 func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2) -> void:
 	_context_row = row_data
@@ -3098,6 +3414,7 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 	_build_row_context_menu(row_data)
 	_show_popup_menu(_row_context_menu, global_position)
 
+
 # Row context menu + its Insert ▸ / More ▸ submenus are built by EventSheetContextMenus
 # (dock/context_menus.gd). Thin delegates: the viewport row-menu site + tests still call
 # _build_row_context_menu / _build_row_more_submenu on the dock by name. _build_row_insert_submenu
@@ -3105,8 +3422,10 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 func _build_row_context_menu(row_data: EventRowData) -> void:
 	_context_menus._build_row_context_menu(row_data)
 
+
 func _build_row_more_submenu(is_event: bool) -> void:
 	_context_menus._build_row_more_submenu(is_event)
+
 
 func _on_viewport_empty_space_double_clicked() -> void:
 	if not _ensure_sheet_for_editing():
@@ -3120,11 +3439,13 @@ func _on_viewport_empty_space_double_clicked() -> void:
 		_viewport.clear_selection()
 	_on_add_event_requested()
 
+
 func _on_viewport_empty_space_context_menu_requested(global_position: Vector2) -> void:
 	_context_row = null
 	_context_hit = {}
 	_variables._context_variable = {}
 	_show_popup_menu(_empty_space_context_menu, global_position)
+
 
 func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 	match id:
@@ -3139,6 +3460,7 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 		EMPTY_MENU_INSERT_SNIPPET:
 			_open_insert_snippet()
 
+
 # Context-menu popup + per-click configuration live in EventSheetContextMenus (dock/context_menus.gd).
 # Thin delegates: the viewport context-menu sites + tests still call _show_popup_menu / _configure_context_menu
 # on the dock by name. _configure_context_menu reads live dock state (_context_row, _context_hit,
@@ -3146,8 +3468,10 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
 	_context_menus._show_popup_menu(menu, global_position)
 
+
 func _configure_context_menu(menu: PopupMenu) -> void:
 	_context_menus._configure_context_menu(menu)
+
 
 func _on_condition_context_menu_id_pressed(id: int) -> void:
 	if _context_row == null or not (_context_row.source_resource is EventRow):
@@ -3172,6 +3496,7 @@ func _on_condition_context_menu_id_pressed(id: int) -> void:
 			_toggle_context_ace_enabled()
 		CONDITION_MENU_DELETE:
 			_delete_context_ace()
+
 
 func _on_action_context_menu_id_pressed(id: int) -> void:
 	if _context_row == null or not (_context_row.source_resource is EventRow):
@@ -3203,6 +3528,7 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 			_delete_context_ace()
 		ACTION_MENU_EXTRACT_FN:
 			_extract_to_function_requested()
+
 
 func _on_row_context_menu_id_pressed(id: int) -> void:
 	if _context_row == null:
@@ -3334,16 +3660,20 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
 			else:
 				_set_status("Select a group to edit its description.", true)
 
+
 # ── Bulk operations on the multi-selection — bodies in EventSheetRowEditOps (dock/row_edit_ops.gd).
 # Thin delegates: the toolbar bulk actions + tedium_test call these on the dock by name.
 func _bulk_set_enabled_on(targets: Array) -> void:
 	_row_edit_ops._bulk_set_enabled_on(targets)
 
+
 func _bulk_duplicate_rows(targets: Array) -> void:
 	_row_edit_ops._bulk_duplicate_rows(targets)
 
+
 func _bulk_group_rows(targets: Array) -> String:
 	return _row_edit_ops._bulk_group_rows(targets)
+
 
 ## Fresh uids on a duplicated row tree (groups recurse; EventRows re-bake stateful
 ## member uids — the paste contract).
@@ -3358,6 +3688,7 @@ func _refresh_clone_uids(resource: Resource) -> void:
 
 # ── Asset drops with intent (the drag-into-layout reflex, grafted onto events):
 # a scene dropped on an event row spawns, a sound plays — pre-filled, undoable. ───────
+
 
 func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -> void:
 	if not (target_event is EventRow):
@@ -3375,6 +3706,7 @@ func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -
 		return int(counters["added"]) > 0)
 	if changed:
 		_mark_dirty("Added %d pre-filled action(s) from the dropped asset(s)." % int(counters["added"]))
+
 
 ## The pre-filled action for one dropped asset: scenes spawn (Spawn Scene At), sounds
 ## play (Play Sound) — the builtin descriptor's template baked exactly like a picker
@@ -3415,26 +3747,34 @@ func _action_for_asset(asset_path: String) -> ACEAction:
 # build_preview_banner() constructs the panel and assigns them back, so _refresh_title_strip + the
 # tests keep reading them by name.
 
+
 func _refresh_preview_banner() -> void:
 	_preview_glue._refresh_preview_banner()
+
 
 func _on_preview_edit_requested() -> void:
 	_preview_glue._on_preview_edit_requested()
 
+
 func _open_gdscript_path_in_godot(path: String, line: int = -1) -> bool:
 	return _preview_glue._open_gdscript_path_in_godot(path, line)
+
 
 func _open_raw_code_block_in_godot() -> void:
 	_preview_glue._open_raw_code_block_in_godot()
 
+
 func _open_generated_in_godot() -> void:
 	_preview_glue._open_generated_in_godot()
+
 
 func _on_provider_open_in_godot_pressed() -> void:
 	_preview_glue._on_provider_open_in_godot_pressed()
 
+
 func _open_lift_report() -> void:
 	_preview_glue._open_lift_report()
+
 
 # ── Sheet functions: the Add ▾ → Function… dialog glue → dock/function_dialog.gd ─────
 # (Bodies live in EventSheetFunctionDialogGlue; these delegates keep the names reached from
@@ -3443,18 +3783,22 @@ func _open_lift_report() -> void:
 func _open_function_dialog() -> void:
 	_function_dialog_glue._open_function_dialog()
 
+
 func _apply_function_data(data: Dictionary) -> void:
 	_function_dialog_glue._apply_function_data(data)
+
 
 # ── Welcome (Tools → Welcome…) — the window lives in dock/welcome_window.gd ──
 func show_welcome_if_first_run() -> void:  # plugin calls this at editor startup (first run pops it)
 	_welcome.show_if_first_run()
+
 
 func show_welcome() -> void:  # Tools menu (id 13) + command palette ("Open Welcome")
 	_welcome.show()
 
 # ── Loop closers: attach the behavior where you're looking, run the scene that
 # uses this sheet (core lookups are headless; playing needs the editor) ───────────────
+
 
 func _attach_behavior_to_selection() -> void:
 	if not Engine.is_editor_hint() or not is_inside_tree():
@@ -3465,18 +3809,24 @@ func _attach_behavior_to_selection() -> void:
 		EditorInterface.mark_scene_as_unsaved()
 	_set_status(str(result.get("message", "")), not bool(result.get("ok", false)))
 
+
 # ── Run Scene ("sheet → playing game") — bodies in EventSheetAuthorActions (dock/author_actions.gd) ──
 func _run_from_sheet() -> void:  # command_palette.gd + menu_bar.gd Run-Scene button + tedium_test
 	_author_actions._run_from_sheet()
 
+
 func _run_target_script_path() -> String:  # godot_workflow_test
 	return _author_actions._run_target_script_path()
+
 
 # ── Session restore (open tabs survive an editor restart) → event_sheet_session_store.gd ──
 func _persist_session() -> void:  # startup, tab edits, "Edit Events" unlock + session tests
 	_session.persist()
+
+
 func _restore_session() -> void:  # called once on setup
 	_session.restore()
+
 
 # ── Row snippets (Save Selection / Insert) — bodies in EventSheetAuthorActions
 # (dock/author_actions.gd). _insert_snippet_path reaches _paste_snippet_text (which STAYS on the
@@ -3484,14 +3834,18 @@ func _restore_session() -> void:  # called once on setup
 func _open_save_snippet_dialog() -> void:  # in-file row context-menu dispatcher
 	_author_actions._open_save_snippet_dialog()
 
+
 func _save_selection_snippet_named(snippet_name: String) -> String:  # testable save core
 	return _author_actions._save_selection_snippet_named(snippet_name)
+
 
 func _open_insert_snippet() -> void:  # in-file context-menu dispatchers
 	_author_actions._open_insert_snippet()
 
+
 func _insert_snippet_path(snippet_path: String) -> void:  # tedium_test
 	_author_actions._insert_snippet_path(snippet_path)
+
 
 # ── Context-driven row/ACE edit ops — bodies in EventSheetRowEditOps (dock/row_edit_ops.gd).
 # The four dispatchers below (_on_*_context_menu_id_pressed) call these by bare name, context_menus.gd
@@ -3502,47 +3856,62 @@ func _insert_snippet_path(snippet_path: String) -> void:  # tedium_test
 func _delete_context_ace() -> void:
 	_row_edit_ops._delete_context_ace()
 
+
 func _toggle_context_condition_inversion() -> void:
 	_row_edit_ops._toggle_context_condition_inversion()
+
 
 func _context_ace_resource(lane: String) -> Resource:
 	return _row_edit_ops._context_ace_resource(lane)
 
+
 func _context_ace_is_disabled() -> bool:
 	return _row_edit_ops._context_ace_is_disabled()
+
 
 func _toggle_context_ace_enabled() -> void:
 	_row_edit_ops._toggle_context_ace_enabled()
 
+
 func _toggle_selected_enabled() -> void:
 	_row_edit_ops._toggle_selected_enabled()
+
 
 func _context_row_is_disabled() -> bool:
 	return _row_edit_ops._context_row_is_disabled()
 
+
 func _toggle_context_row_enabled() -> void:
 	_row_edit_ops._toggle_context_row_enabled()
+
 
 func _toggle_context_condition_block() -> void:
 	_row_edit_ops._toggle_context_condition_block()
 
+
 func _set_context_else_mode(mode: int) -> void:
 	_row_edit_ops._set_context_else_mode(mode)
+
 
 func _toggle_context_group_fold() -> void:
 	_row_edit_ops._toggle_context_group_fold()
 
+
 func _delete_selected_content() -> void:
 	_row_edit_ops._delete_selected_content()
+
 
 func _delete_selected_rows() -> void:
 	_row_edit_ops._delete_selected_rows()
 
+
 func _insert_child_event_for_context_row() -> void:
 	_row_edit_ops._insert_child_event_for_context_row()
 
+
 func _insert_child_comment_for_context_row() -> void:
 	_row_edit_ops._insert_child_comment_for_context_row()
+
 
 # ── Single-key reflexes: B blank sub-event · I invert · R replace ─────────────
 ## Seeds the context-menu state (_context_row/_context_hit) from the CURRENT selection, so the
@@ -3559,12 +3928,14 @@ func _seed_context_from_selection() -> bool:
 	_context_hit = {"span_index": int(context.get("span_index", -1)), "span_metadata": context.get("span_metadata", {})}
 	return true
 
+
 ## B — add a blank sub-event under the selected event (the context menu's Add Sub-Event, keyed).
 func _on_add_blank_subevent_key() -> void:
 	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
 		_set_status("Select an event first — B adds a blank sub-event under it.", true)
 		return
 	_insert_child_event_for_context_row()
+
 
 ## I — invert the selected condition (click its cell, then press I; compiles as `not (…)`).
 func _on_invert_condition_key() -> void:
@@ -3578,6 +3949,7 @@ func _on_invert_condition_key() -> void:
 		_set_status("Select a condition cell first — I inverts it.", true)
 		return
 	_toggle_context_condition_inversion()
+
 
 ## R — replace the selected trigger / condition / action via the picker, pre-selected on the current
 ## ACE and keeping params whose ids match (the context menu's Replace, keyed).
@@ -3594,17 +3966,22 @@ func _on_replace_ace_key() -> void:
 		replace_context["preselect_ace_id"] = replace_def.id
 	_ace_picker.open(str(replace_context.get("mode", "replace_condition")), false, _context_row.source_resource, replace_context)
 
+
 func _open_sub_condition_picker_for_context_row() -> void:
 	_row_edit_ops._open_sub_condition_picker_for_context_row()
+
 
 func _indent_selected_event() -> bool:
 	return _row_edit_ops._indent_selected_event()
 
+
 func _outdent_selected_event() -> bool:
 	return _row_edit_ops._outdent_selected_event()
 
+
 func _insert_context_row_below(resource_entry: Resource, message: String) -> void:
 	_row_edit_ops._insert_context_row_below(resource_entry, message)
+
 
 func _context_condition_is_negated() -> bool:
 	return _row_edit_ops._context_condition_is_negated()
@@ -3613,6 +3990,7 @@ func _context_condition_is_negated() -> bool:
 var _ace_comment_dialog: ConfirmationDialog = null
 var _ace_comment_edit: LineEdit = null
 var _ace_comment_target: Resource = null
+
 
 ## Event-sheet-style per-condition/action note: shown dimmed after the ACE text in the sheet.
 func _open_ace_comment_dialog(target: Resource) -> void:
@@ -3634,6 +4012,7 @@ func _open_ace_comment_dialog(target: Resource) -> void:
 	_ace_comment_edit.text = str(target.get("comment"))
 	_ace_comment_dialog.popup_centered(Vector2i(420, 110))
 
+
 func _on_ace_comment_confirmed() -> void:
 	if _ace_comment_target == null:
 		return
@@ -3647,15 +4026,18 @@ func _on_ace_comment_confirmed() -> void:
 		_refresh_after_edit()
 		_mark_dirty("ACE comment saved.")
 
+
 # ── Starter templates ("new from template") — menu + sheet construction in dock/starter_templates.gd ──
 func _open_template_menu() -> void:  # New-Sheet shortcut (id 0) + command palette + Welcome button
 	_starter.open_menu()
+
 
 func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	_refresh_variable_panel()
 	_update_code_panel_highlight()
 	if _exposed_node != null and _viewport != null:
 		_exposed_node.set_row_context(_active_view().get_selected_ace_resource())
+
 
 func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String, old_value: String, new_value: String) -> void:
 	if row_data == null or row_data.source_resource == null:
@@ -3687,6 +4069,7 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 	if updated:
 		_mark_dirty("Updated row text.")
 
+
 func _collect_event_row_options() -> Array[Dictionary]:
 	var options: Array[Dictionary] = []
 	if _current_sheet == null:
@@ -3702,6 +4085,7 @@ func _collect_event_row_options() -> Array[Dictionary]:
 		)
 	return options
 
+
 func _collect_event_rows_recursive(resources: Array, output: Array[EventRow]) -> void:
 	for resource_entry in resources:
 		if resource_entry is EventRow:
@@ -3709,6 +4093,7 @@ func _collect_event_rows_recursive(resources: Array, output: Array[EventRow]) ->
 			_collect_event_rows_recursive((resource_entry as EventRow).sub_events, output)
 		elif resource_entry is EventGroup:
 			_collect_event_rows_recursive(_group_children_array(resource_entry as EventGroup), output)
+
 
 func _format_event_target_label(event_row: EventRow) -> String:
 	if event_row == null:
@@ -3722,6 +4107,7 @@ func _format_event_target_label(event_row: EventRow) -> String:
 		label += " — %s" % event_row.trigger.ace_id
 	return label
 
+
 func _find_event_row_by_uid(event_uid: String) -> EventRow:
 	if _current_sheet == null or event_uid.is_empty():
 		return null
@@ -3731,6 +4117,7 @@ func _find_event_row_by_uid(event_uid: String) -> EventRow:
 		if event_row.event_uid == event_uid:
 			return event_row
 	return null
+
 
 func _type_from_name(type_name: String) -> int:
 	match type_name:
@@ -3745,8 +4132,10 @@ func _type_from_name(type_name: String) -> int:
 		_:
 			return TYPE_NIL
 
+
 func _event_row_uses_or_mode(event_row: EventRow) -> bool:
 	return event_row != null and event_row.condition_mode == EventRow.ConditionMode.OR
+
 
 func _event_rows_use_or_mode(event_rows: Array[EventRow]) -> bool:
 	if event_rows.is_empty():
@@ -3755,6 +4144,7 @@ func _event_rows_use_or_mode(event_rows: Array[EventRow]) -> bool:
 		if not _event_row_uses_or_mode(event_row):
 			return false
 	return true
+
 
 func _get_selected_rows_from_context() -> Array[EventRowData]:
 	if _viewport == null:
@@ -3771,12 +4161,14 @@ func _get_selected_rows_from_context() -> Array[EventRowData]:
 			return selected_rows
 	return [_context_row]
 
+
 func _get_selected_event_rows_from_context() -> Array[EventRow]:
 	var event_rows: Array[EventRow] = []
 	for row_data in _get_selected_rows_from_context():
 		if row_data != null and row_data.source_resource is EventRow:
 			event_rows.append(row_data.source_resource as EventRow)
 	return event_rows
+
 
 func _build_ace_edit_context(event_row: EventRow, span_index: int, metadata: Dictionary) -> Dictionary:
 	if event_row == null:
@@ -3820,10 +4212,12 @@ func _build_ace_edit_context(event_row: EventRow, span_index: int, metadata: Dic
 		"kind": kind
 	}
 
+
 func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
 	if _ace_registry == null:
 		return null
 	return _ace_registry.find_definition(provider_id, ace_id)
+
 
 func _find_first_event_row_resource() -> EventRow:
 	if _viewport == null:
@@ -3834,6 +4228,7 @@ func _find_first_event_row_resource() -> EventRow:
 			return row_data.source_resource as EventRow
 	return null
 
+
 func _select_first_event_row() -> void:
 	if _viewport == null:
 		return
@@ -3843,6 +4238,7 @@ func _select_first_event_row() -> void:
 		if row_data != null and row_data.source_resource is EventRow:
 			_viewport._select_row(row_index)
 			return
+
 
 func _refresh_after_edit() -> void:
 	if _viewport == null:
@@ -3856,16 +4252,19 @@ func _refresh_after_edit() -> void:
 	_refresh_anatomy_panel()
 	_refresh_functions_list()
 
+
 # Live-reload binding to the active theme .tres → dock/theme_manager.gd. Called from _activate_tab /
 # _refresh_after_edit (via _theme_manager._sync_active_theme_binding directly); the delegate stays for
 # any external caller reaching the original name.
 func _sync_active_theme_binding() -> void:
 	_theme_manager._sync_active_theme_binding()
 
+
 func _mark_dirty(message: String) -> void:
 	_dirty = true
 	_refresh_title_strip()
 	_set_status("%s%s" % [message, " *" if _dirty else ""])
+
 
 func _set_status(text: String, is_error: bool = false) -> void:
 	if _status_label == null:
@@ -3876,6 +4275,7 @@ func _set_status(text: String, is_error: bool = false) -> void:
 	_status_label.text = ("⚠  %s" % text) if is_error else text
 	_status_label.tooltip_text = text
 	_status_label.modulate = Color(1.0, 0.48, 0.48) if is_error else Color(1.0, 1.0, 1.0)
+
 
 func _refresh_title_strip() -> void:
 	# Keep the active tab's persisted state and tab title in sync with the live state.
@@ -3890,6 +4290,7 @@ func _refresh_title_strip() -> void:
 		_identity_banner.update_from_sheet(_current_sheet)
 	_refresh_preview_banner()
 
+
 static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String) -> String:
 	if sheet == null:
 		return "No Sheet Loaded"
@@ -3897,6 +4298,7 @@ static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String
 	if resolved_path.is_empty():
 		return "Untitled EventSheet"
 	return resolved_path.get_file().get_basename()
+
 
 static func _format_sheet_path_hint(sheet: EventSheetResource, explicit_path: String) -> String:
 	if sheet == null:
@@ -3906,12 +4308,14 @@ static func _format_sheet_path_hint(sheet: EventSheetResource, explicit_path: St
 		return "Unsaved (in-memory)"
 	return resolved_path
 
+
 static func _resolve_sheet_path(sheet: EventSheetResource, explicit_path: String) -> String:
 	if sheet == null:
 		return explicit_path
 	if not explicit_path.is_empty():
 		return explicit_path
 	return sheet.resource_path
+
 
 func _refresh_ace_registry() -> void:
 	if _ace_registry == null:
@@ -3936,6 +4340,7 @@ func _refresh_ace_registry() -> void:
 	_ace_picker.set_registry(_ace_registry)
 	_refresh_exposed_node()
 
+
 ## Instantiates the current sheet's registered provider scripts into reflectable sources.
 func _build_sheet_ace_sources() -> Array[Object]:
 	var sources: Array[Object] = []
@@ -3946,6 +4351,7 @@ func _build_sheet_ace_sources() -> Array[Object]:
 		if instance != null:
 			sources.append(instance)
 	return sources
+
 
 ## Instantiates every scanned zero-config addon script (res://eventsheet_addons/), skipping
 ## paths the sheet already registers explicitly.
@@ -4000,6 +4406,7 @@ func _build_addon_ace_sources() -> Array[Object]:
 			sources.append(instance)
 	return sources
 
+
 ## Loads and instantiates a provider script (Node/Resource/RefCounted) for reflection.
 ## Returns null when the path is not an instantiable script.
 func _instantiate_provider_script(path: String) -> Object:
@@ -4014,6 +4421,7 @@ func _instantiate_provider_script(path: String) -> Object:
 	var instance: Variant = script.new()
 	return instance if instance is Object else null
 
+
 func _build_default_ace_sources() -> Array[Object]:
 	var demo_script: Script = load("res://addons/eventsheet/runtime/demo_gameplay_actor.gd")
 	if demo_script == null or not demo_script.can_instantiate():
@@ -4022,6 +4430,7 @@ func _build_default_ace_sources() -> Array[Object]:
 	if demo_source is Object:
 		return [demo_source]
 	return []
+
 
 func _build_demo_sheet() -> EventSheetResource:
 	var sheet := EventSheetResource.new()
@@ -4051,6 +4460,7 @@ func _build_demo_sheet() -> EventSheetResource:
 
 	return sheet
 
+
 func _make_action(provider_id: String, ace_id: String, params: Dictionary) -> ACEAction:
 	var action := ACEAction.new()
 	action.provider_id = provider_id
@@ -4058,11 +4468,13 @@ func _make_action(provider_id: String, ace_id: String, params: Dictionary) -> AC
 	action.params = params.duplicate(true)
 	return action
 
+
 func _release_ace_sources() -> void:
 	for source_object in _ace_sources:
 		if source_object is Node:
 			(source_object as Node).free()
 	_ace_sources.clear()
+
 
 func _refresh_exposed_node() -> void:
 	if _exposed_node == null:
@@ -4071,11 +4483,13 @@ func _refresh_exposed_node() -> void:
 	_exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
 	_exposed_node.on_registry_refreshed()
 
+
 func _on_undo_requested() -> void:
 	if not _undo_redo_adapter.has_undo():
 		_set_status("Nothing to undo.", true)
 		return
 	_undo_redo_adapter.undo()
+
 
 func _on_redo_requested() -> void:
 	if not _undo_redo_adapter.has_redo():
@@ -4083,10 +4497,12 @@ func _on_redo_requested() -> void:
 		return
 	_undo_redo_adapter.redo()
 
+
 func _capture_sheet_snapshot() -> EventSheetResource:
 	if _current_sheet == null:
 		return null
 	return _current_sheet.duplicate(true)
+
 
 func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 	if snapshot == null:
@@ -4096,6 +4512,7 @@ func _restore_sheet_snapshot(snapshot: EventSheetResource) -> void:
 		_current_sheet.take_over_path(_current_sheet_path)
 	_refresh_after_edit()
 	_mark_dirty("Applied undo/redo.")
+
 
 func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> bool:
 	if _current_sheet == null or not operation.is_valid():
@@ -4120,8 +4537,10 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable) -> b
 	_undo_redo_adapter.commit_action()
 	return true
 
+
 func _clear_undo_history() -> void:
 	_undo_redo_adapter.clear_history()
+
 
 func _resource_contains_descendant(source: Resource, candidate: Resource) -> bool:
 	if source == null or candidate == null:

@@ -7,8 +7,9 @@
 #   2. The param dialog blocks Apply on a structural error EVEN when the symbol-aware lint can't run.
 #   3. configure_code_editor() turns on auto-close brackets/quotes so they're rarely typed wrong at all.
 @tool
-extends RefCounted
 class_name SyntaxGuardrailsTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -72,6 +73,7 @@ static func run() -> bool:
 	dock.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

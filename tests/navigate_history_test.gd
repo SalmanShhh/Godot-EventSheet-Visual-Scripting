@@ -3,11 +3,12 @@
 # forward branch, unsaved sheets are skipped, and vanished files are dropped rather than wedging the
 # walk. Driven headlessly on a real dock across two real pack sheets.
 @tool
-extends RefCounted
 class_name NavigateHistoryTest
+extends RefCounted
 
 const CAR := "res://eventsheet_addons/car/car_behavior.gd"
 const TIMER := "res://eventsheet_addons/timer/timer_behavior.gd"
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -52,6 +53,7 @@ static func run() -> bool:
 
 	dock.free()
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

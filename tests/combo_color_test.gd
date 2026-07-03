@@ -3,8 +3,9 @@
 # verify-lift back; @ace_param_options gives addon params dropdowns; "enum:Name" hints
 # drive sheet-enum dropdowns; color params get a picker and a swatch in the sheet text.
 @tool
-extends RefCounted
 class_name ComboColorTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -102,6 +103,7 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

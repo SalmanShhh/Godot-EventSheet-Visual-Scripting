@@ -10,6 +10,7 @@
 class_name EventSheetIncludes
 extends RefCounted
 
+
 ## What an included sheet contributes, for the manager preview:
 ## {valid, error, class, events, functions: [name…], variables: [name…]}.
 static func summarize(include_path: String) -> Dictionary:
@@ -41,6 +42,7 @@ static func summarize(include_path: String) -> Dictionary:
 		"variables": variables
 	}
 
+
 ## Returns true if adding `candidate` to `sheet.includes` would create an include cycle
 ## (the candidate, directly or transitively, already includes this sheet's path).
 static func would_create_cycle(sheet_path: String, candidate: String, visited: Dictionary = {}) -> bool:
@@ -56,6 +58,7 @@ static func would_create_cycle(sheet_path: String, candidate: String, visited: D
 		if would_create_cycle(sheet_path, nested, visited):
 			return true
 	return false
+
 
 ## Moves `rows` out of `source` into a NEW library EventSheetResource and adds `new_path` to
 ## source.includes. Returns {library, error}. The caller saves the library .tres at new_path
@@ -81,6 +84,7 @@ static func extract_to_include(source: EventSheetResource, rows: Array, new_path
 	if not source.includes.has(new_path):
 		source.includes.append(new_path)
 	return {"library": library, "error": ""}
+
 
 ## Resolves the sheet's includes (transitively) into what each contributes — the backbone of
 ## include PROVENANCE in the editor: [{include, class, events: [Resource…], functions: [name…],
@@ -110,6 +114,7 @@ static func included_rows(sheet: EventSheetResource, visited: Dictionary = {}) -
 		})
 		result.append_array(included_rows(included, visited))  # transitive includes
 	return result
+
 
 static func _count_rows(rows: Array) -> int:
 	var total: int = rows.size()

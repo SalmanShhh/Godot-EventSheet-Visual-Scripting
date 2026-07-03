@@ -2,6 +2,7 @@
 class_name ViewportHitTestHelper
 extends RefCounted
 
+
 static func hit_test_row(
 	position: Vector2,
 	row_index: int,

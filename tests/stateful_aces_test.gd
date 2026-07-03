@@ -3,8 +3,9 @@
 # Spawn Scene At is a multi-line template with a baked-uid local. Both keep the parity
 # contract: plain members, plain statements, zero indirection.
 @tool
-extends RefCounted
 class_name StatefulAcesTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -137,6 +139,7 @@ static func run() -> bool:
 		str(or_warnings).contains("rebase"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

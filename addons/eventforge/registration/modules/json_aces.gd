@@ -10,10 +10,11 @@
 # ace_ids AND codegen templates (the compatibility covenant) — only their picker category changed
 # from "Variables: JSON" to "JSON". Path hints nudge user:// (res:// is read-only when exported).
 @tool
-extends RefCounted
 class_name EventForgeJsonACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

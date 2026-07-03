@@ -4,8 +4,9 @@
 # verbatim at class level), codegen tooltip previews, the picker search synonyms, and the
 # new semantic theme tokens.
 @tool
-extends RefCounted
 class_name GDScriptPairingTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -94,6 +95,7 @@ static func run() -> bool:
 	all_passed = _check("value highlight token exists", style.value_highlight_color, EventSheetPalette.COLOR_VALUE) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

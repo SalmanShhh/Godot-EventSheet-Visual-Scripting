@@ -2,8 +2,9 @@
 # Covers summarize() (what an included sheet contributes, for the manager preview) and
 # extract_to_include() (move selected rows into a new library sheet + wire the include).
 @tool
-extends RefCounted
 class_name SheetIncludesTest
+extends RefCounted
+
 
 static func run() -> bool:
     var passed: bool = true
@@ -71,6 +72,7 @@ static func run() -> bool:
         EventSheetIncludes.would_create_cycle("res://a.tres", "res://a.tres"), true) and passed
 
     return passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
     if actual == expected:

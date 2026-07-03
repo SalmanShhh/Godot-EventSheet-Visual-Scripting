@@ -5,8 +5,9 @@
 # specific ACE always wins; the byte-identical recompile gates correctness. (No functions move, so the
 # GDScript-backed-sheet append contract is untouched — this is independent of the Phase-1 fork.)
 @tool
-extends RefCounted
 class_name StatementLiftTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -49,6 +50,7 @@ static func run() -> bool:
 		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, roundtrip])
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

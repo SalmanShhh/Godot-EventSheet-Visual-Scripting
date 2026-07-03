@@ -5,6 +5,7 @@ extends Node2D
 @export var score: int = 0
 var __every_ps_spawn: float = 0.0
 
+
 func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed(&"ui_up"):
 		$Player/PlatformerMovement.jump()
@@ -36,6 +37,7 @@ func _physics_process(delta: float) -> void:
 	for __node in get_tree().get_nodes_in_group("shots") + get_tree().get_nodes_in_group("targets"):
 		if __node.global_position.x < -60.0 or __node.global_position.x > 1300.0:
 			__node.queue_free()
+
 
 func _process(delta: float) -> void:
 	$Hud.text = "Score %d    Ammo %d/%d    %s" % [score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, ("RELOADING..." if $Player/WeaponKit.is_reloading() else "A/D move   Up jump   hold Space fire")]

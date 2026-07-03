@@ -3,8 +3,9 @@
 # and the importer recovers it from there. Round-trips byte-identically; absence never false-matches
 # the host-member doc or signal annotations (which a blank line separates from `extends`).
 @tool
-extends RefCounted
 class_name ClassDescriptionRoundtripTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -43,6 +44,7 @@ static func run() -> bool:
 		plain_compiled.contains("extends Node2D\n## One liner.\n"), true) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

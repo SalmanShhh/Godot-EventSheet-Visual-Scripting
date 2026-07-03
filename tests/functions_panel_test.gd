@@ -4,8 +4,9 @@
 # function shows its signature (✦ = exposed as an ACE), right-click deletes one, and the collapsed
 # header still carries the count so the sheet's weight reads without expanding.
 @tool
-extends RefCounted
 class_name FunctionsPanelTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -53,6 +54,7 @@ static func run() -> bool:
 
 	dock.free()
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

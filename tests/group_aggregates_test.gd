@@ -8,10 +8,11 @@
 # reduce is exercised against a literal array (the novel part); get_nodes_in_group is stock Godot API.
 # Min/Max are checked on an empty array so the no-members case yields the +/-INF sentinel, never a crash.
 @tool
-extends RefCounted
 class_name GroupAggregatesTest
+extends RefCounted
 
 const GROUP_CALL := "get_tree().get_nodes_in_group({group})"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -47,6 +48,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## A bare object whose script exposes a numeric `health`, so the reduce can read __n.health.
 static func _make_enemy(health_value: float) -> Object:
 	var script: GDScript = GDScript.new()
@@ -55,6 +57,7 @@ static func _make_enemy(health_value: float) -> Object:
 	var enemy: Object = script.new()
 	enemy.set("health", health_value)
 	return enemy
+
 
 ## Runs ace_id's reduce body against a literal array by swapping the get_nodes_in_group call for the
 ## passed-in node list. Exercises the exact reduce lambda the template ships, without needing a tree.
@@ -65,6 +68,7 @@ static func _reduce_value(by_id: Dictionary, ace_id: String, nodes: Array) -> Va
 	if script.reload() != OK:
 		return null
 	return script.new().call("compute", nodes)
+
 
 ## Compiles a sheet that assigns each aggregate expression to a member var in _ready; true if the
 ## generated GDScript reloads cleanly (no run needed — this only proves the templates are valid).
@@ -90,9 +94,11 @@ static func _compiles(by_id: Dictionary) -> bool:
 	script.source_code = output
 	return script.reload() == OK
 
+
 ## The registered expression for ace_id with a group + a `health` property substituted in.
 static func _expr(by_id: Dictionary, ace_id: String) -> String:
 	return str(by_id[ace_id].codegen_template).replace("{group}", "\"enemies\"").replace("{property}", "health")
+
 
 ## A SetVar action assigning a raw expression to a member variable (as the dock would apply it).
 static func _set_var(var_name: String, value_expr: String) -> ACEAction:
@@ -102,6 +108,7 @@ static func _set_var(var_name: String, value_expr: String) -> ACEAction:
 	action.codegen_template = "{var_name} = {value}"
 	action.params = {"var_name": var_name, "value": value_expr}
 	return action
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

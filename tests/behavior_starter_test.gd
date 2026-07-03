@@ -6,8 +6,9 @@
 # `host` accessor), that REACTS to the host's body_entered signal (no per-frame polling) and EMITS its
 # own. This verifies the starter is exactly that shape and compiles to valid GDScript.
 @tool
-extends RefCounted
 class_name BehaviorStarterTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -30,6 +31,7 @@ static func run() -> bool:
 	all_passed = _check("the starter compiles to valid GDScript", generated.reload(true) == OK, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -4,8 +4,9 @@
 # action. The renderer marks it with a "ƒ" object chip and shows the verb's friendly name ("Apply Physics")
 # instead of the generic "System → Call apply_physics()". This pins that legibility treatment.
 @tool
-extends RefCounted
 class_name FunctionVerbRenderingTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -45,6 +46,7 @@ static func run() -> bool:
 	viewport.free()
 	return all_passed
 
+
 static func _call_action(fn_name: String, args: String) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
@@ -52,6 +54,7 @@ static func _call_action(fn_name: String, args: String) -> ACEAction:
 	action.codegen_template = "{function_name}({args})"
 	action.params = {"function_name": fn_name, "args": args}
 	return action
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

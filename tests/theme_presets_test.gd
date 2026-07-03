@@ -3,8 +3,9 @@
 # Verifies the toolbar theme switcher's preset discovery (EventSheetThemePresets) and that
 # the column-header theme tokens exist on EventSheetEventStyle. Headless-safe (file I/O only).
 @tool
-extends RefCounted
 class_name ThemePresetsTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -35,6 +36,7 @@ static func run() -> bool:
 		all_passed = _check("bundled theme resolves an event style", first != null and first.get_event_style() is EventSheetEventStyle, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

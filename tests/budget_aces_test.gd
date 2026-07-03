@@ -5,8 +5,9 @@
 # coroutine). This asserts they register with the right await templates AND that a one-shot handler
 # using them compiles to a valid coroutine.
 @tool
-extends RefCounted
 class_name BudgetAcesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -49,6 +50,7 @@ static func run() -> bool:
 	all_passed = _check("budget output parses (handler is a valid coroutine)", generated.reload(true) == OK, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

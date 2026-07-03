@@ -4,11 +4,12 @@
 # adding a module is just dropping a file (no edit here). See ace_factory.gd for the module contract;
 # ace_ids/templates are API (compatibility covenant: hide with @ace_hidden, never rename).
 @tool
-extends RefCounted
 class_name EventForgeBuiltinACEs
+extends RefCounted
 
 const COMPARISON_OPERATORS: Array[String] = EventForgeACEFactory.COMPARISON_OPERATORS
 const MODULES_DIR := "res://addons/eventforge/registration/modules/"
+
 
 ## Every built-in descriptor, auto-discovered from registration/modules/. Drop a module file there
 ## (a script with `static func get_descriptors() -> Array[ACEDescriptor]`) and its ACEs register on
@@ -38,6 +39,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 ## a member operation, so it can never be safely prefixed with another node.
 const _STATEMENT_KEYWORDS: PackedStringArray = ["if", "elif", "else", "for", "while", "var", "const", "return", "match", "await", "pass", "break", "continue"]
 
+
 ## In place: if `descriptor` is a host-only node-scoped ACE whose template is a simple member operation,
 ## prepend the optional-prefix `{target.}` to each line and append an optional "On node" target param.
 ## Left blank the descriptor compiles exactly as before (acting on the host); set it and the whole
@@ -66,6 +68,7 @@ static func _make_node_scoped_targetable(descriptor: ACEDescriptor) -> void:
 	descriptor.codegen_template = "\n".join(out)
 	descriptor.params.append(EventForgeACEFactory.make_param("target", "String", "", "On node", "Act on another node instead of this one. Leave blank for this node, or pick a node / type a path like $Enemy or get_node(\"UI/Score\").", "expression"))
 
+
 ## True when every non-blank template line is a simple member operation that survives a `<node>.` prefix
 ## — a method call or an assignment whose right-hand side does not read the assigned member back. Lines
 ## leading with a statement keyword, `@`, `$`, `%` or a non-identifier are rejected (the spawn-a-new-node
@@ -85,6 +88,7 @@ static func _is_target_prefixable(template: String) -> bool:
 		if not _assignment_rhs_is_target_safe(trimmed):
 			return false
 	return true
+
 
 ## For an assignment line, true when the assigned member is not read back on the right-hand side
 ## (ignoring `{param}` placeholders, which are values, not the host member, so `value = {value}` is
@@ -108,6 +112,7 @@ static func _assignment_rhs_is_target_safe(line: String) -> bool:
 	word_re.compile("\\b" + member + "\\b")
 	return word_re.search(rhs) == null
 
+
 ## The module .gd files in a stable order: sorted alphabetically, with helper_aces.gd appended last.
 static func _module_files() -> PackedStringArray:
 	var files: PackedStringArray = PackedStringArray()
@@ -123,6 +128,7 @@ static func _module_files() -> PackedStringArray:
 	files.append_array(helpers)
 	return files
 
+
 ## True when the loaded script declares a get_descriptors method (the module contract).
 static func _has_get_descriptors(script: GDScript) -> bool:
 	for method_info: Dictionary in script.get_script_method_list():
@@ -132,14 +138,18 @@ static func _has_get_descriptors(script: GDScript) -> bool:
 
 # ── Legacy helper API (kept for external callers; the modules use the factory) ──
 
+
 static func _input_action_options() -> Array[String]:
 	return EventForgeACEFactory.input_action_options()
+
 
 static func _default_input_action() -> String:
 	return EventForgeACEFactory.default_input_action()
 
+
 static func _make_descriptor(provider_id: String, ace_id: String, display_name: String, ace_type: int, codegen_template: String, signal_name: String = "", params: Array[ACEParam] = [], category: String = "", display_text: String = "", node_type: String = "") -> ACEDescriptor:
 	return EventForgeACEFactory.make_descriptor(provider_id, ace_id, display_name, ace_type, codegen_template, signal_name, params, category, display_text, node_type)
+
 
 static func _make_param(param_id: String, type_name: String, default_value: Variant = "", display_name: String = "", description: String = "", hint: String = "", options: Array[String] = []) -> ACEParam:
 	return EventForgeACEFactory.make_param(param_id, type_name, default_value, display_name, description, hint, options)

@@ -3,8 +3,9 @@
 # quoted paths, scene nodes -> $Path), and scene-tree-aware $-completion (the open
 # scene's actual children complete with their script members and signals).
 @tool
-extends RefCounted
 class_name PhaseCAffordancesTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -89,6 +91,7 @@ static func run() -> bool:
 	scene_root.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

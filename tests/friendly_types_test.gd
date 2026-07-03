@@ -1,10 +1,11 @@
 @tool
-extends RefCounted
 class_name FriendlyTypesTest
+extends RefCounted
 # The variable dialog shows friendly type labels (Number / Text / Yes-No) that map to real Godot
 # types, with a "Whole numbers only" tick splitting int vs float. The STORED type stays a real Godot
 # type (so the .gd round-trip is unchanged) — only the dialog's display is friendlier. These pin the
 # display ↔ stored-type mapping in both directions.
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -38,6 +39,7 @@ static func run() -> bool:
 
 	host.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -5,8 +5,9 @@
 # compile-check as expressions against the sheet context. ACE cells carry object icons
 # (resolved like the picker; cached per provider::ace).
 @tool
-extends RefCounted
 class_name PairingPolishTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -19,6 +20,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -117,6 +119,7 @@ static func run() -> bool:
 	editor.free()
 	icon_editor.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

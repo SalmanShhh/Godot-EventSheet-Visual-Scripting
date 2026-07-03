@@ -5,8 +5,8 @@
 # advice), and the two new script destinations work end to end - a Custom Resource sheet
 # compiles to a .tres-able class, an Editor Tool starter compiles to an @tool EditorScript.
 @tool
-extends RefCounted
 class_name ScriptIntentTest
+extends RefCounted
 
 
 static func run() -> bool:

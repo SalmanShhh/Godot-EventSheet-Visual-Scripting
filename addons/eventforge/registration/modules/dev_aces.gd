@@ -6,10 +6,11 @@
 # get_parent()), so picking one keeps logic as an editable row instead of a raw block — and means
 # common dev chores never force a drop to GDScript. Grouped under Debug / Groups / Metadata / Nodes.
 @tool
-extends RefCounted
 class_name EventForgeDevACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

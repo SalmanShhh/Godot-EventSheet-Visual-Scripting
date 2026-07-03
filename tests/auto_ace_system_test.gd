@@ -1,9 +1,10 @@
 # EventForge — integrated auto ACE system tests
 @tool
-extends RefCounted
 class_name AutoACESystemTest
+extends RefCounted
 
 const SAMPLE_SCRIPT := preload("res://tests/fixtures/auto_ace_sample.gd")
+
 
 static func run() -> bool:
     var all_passed: bool = true
@@ -48,11 +49,13 @@ static func run() -> bool:
     sample.free()
     return all_passed
 
+
 static func _contains_definition(definitions: Array[ACEDefinition], definition_id: String) -> bool:
     for definition: ACEDefinition in definitions:
         if definition != null and definition.id == definition_id:
             return true
     return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
     if actual == expected:

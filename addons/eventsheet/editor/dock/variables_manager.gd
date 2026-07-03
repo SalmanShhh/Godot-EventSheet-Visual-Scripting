@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetVariablesManager
+extends RefCounted
 # All sheet-VARIABLE authoring: the add/edit/convert/toggle-const flows for global, local (event-scoped),
 # and tree-placed variables; the variable dialog confirm handler that commits them (with name guardrails
 # + reference renaming); the variable context menu's edit/convert/const actions; the create-variable
@@ -26,13 +26,16 @@ var _local_variable_entries: Array[Dictionary] = []
 var _global_var_list: ItemList = null
 var _local_var_list: ItemList = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 func _on_add_global_variable_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
 	_dock._variable_dlg.open("global")
+
 
 func _on_add_local_variable_requested() -> void:
 	if not _dock._ensure_sheet_for_editing():
@@ -43,6 +46,7 @@ func _on_add_local_variable_requested() -> void:
 		_dock._select_first_event_row()
 		context["selected_resource"] = target_event
 	_dock._variable_dlg.open_for_edit("local", context, "", "int", "", false, "Create Variable")
+
 
 ## Opens the variable dialog to add a tree-placed variable directly below the right-clicked
 ## row (so variables can sit between/above/under events like comments do).
@@ -56,6 +60,7 @@ func _add_tree_variable_below_context_row() -> void:
 		"tree", {"insert_below": _dock._context_row.source_resource}, "", "int", "0", false, "Add Variable", false, false
 	)
 
+
 ## Returns the sheet's variable names for variable-reference parameter dropdowns.
 func _collect_sheet_variable_names() -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
@@ -66,12 +71,14 @@ func _collect_sheet_variable_names() -> PackedStringArray:
 	names.sort()
 	return names
 
+
 func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dictionary) -> void:
 	_context_variable = _context_variable_entry_from_metadata(row_data, metadata)
 	if _context_variable.is_empty():
 		_dock._set_status("Select a valid variable before editing.", true)
 		return
 	_edit_context_variable()
+
 
 func _on_variable_context_menu_id_pressed(id: int) -> void:
 	if _context_variable.is_empty():
@@ -86,6 +93,7 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 		_dock.VARIABLE_MENU_TOGGLE_CONST:
 			_toggle_context_variable_constant()
 
+
 ## The create-variable quick-fix behind the params dialog's "+ var" button: declares
 ## the identifier as a float (the "number" default — retype via Edit Variable) so
 ## the expression lints clean without leaving the dialog.
@@ -95,6 +103,7 @@ func _create_variable_quickfix(variable_name: String) -> bool:
 	return _dock._perform_undoable_sheet_edit("Create variable %s" % variable_name, func() -> bool:
 		_dock._current_sheet.variables[variable_name] = {"type": "float", "default": 0.0, "exported": true}
 		return true)
+
 
 ## The Inspector attributes a tree-placed LocalVariable round-trips (tooltip + group/subgroup + a Tier 3
 ## drawer with its bounds) — the subset the tree-var emission supports. Keeps a reopened variable editable:
@@ -112,6 +121,7 @@ static func _tree_group_attributes(source: Dictionary) -> Dictionary:
 	if result.has("drawer") and source.get("range") is Dictionary and not (source.get("range") as Dictionary).is_empty():
 		result["range"] = (source.get("range") as Dictionary).duplicate()
 	return result
+
 
 func _on_variable_dialog_confirmed(
 	var_name: String,
@@ -234,6 +244,7 @@ func _on_variable_dialog_confirmed(
 		if scope == "local" and not (selected is EventRow):
 			_dock._select_first_event_row()
 
+
 func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dictionary) -> Dictionary:
 	if row_data == null or metadata.is_empty() or _dock._current_sheet == null:
 		return {}
@@ -293,6 +304,7 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 		"index": index
 	}
 
+
 func _resolve_local_variable(event_row: EventRow, var_name: String, index: int = -1) -> LocalVariable:
 	if event_row == null:
 		return null
@@ -304,6 +316,7 @@ func _resolve_local_variable(event_row: EventRow, var_name: String, index: int =
 		if local_var is LocalVariable and (local_var as LocalVariable).name == var_name:
 			return local_var as LocalVariable
 	return null
+
 
 func _edit_context_variable() -> void:
 	if _context_variable.is_empty():
@@ -360,6 +373,7 @@ func _edit_context_variable() -> void:
 		bool(_context_variable.get("exported", _context_variable.get("exposed", true)))
 	)
 
+
 func _convert_context_variable_scope() -> void:
 	if _context_variable.is_empty():
 		return
@@ -370,6 +384,7 @@ func _convert_context_variable_scope() -> void:
 	var converted: bool = _convert_variable_scope(_context_variable, "global")
 	if not converted:
 		_dock._set_status("Could not convert variable to global scope.", true)
+
 
 func _toggle_context_variable_constant() -> void:
 	if _context_variable.is_empty():
@@ -398,6 +413,7 @@ func _toggle_context_variable_constant() -> void:
 	if changed:
 		_dock._mark_dirty("%s variable %s as constant." % ["Marked" if new_constant else "Unmarked", var_name])
 		_context_variable["is_constant"] = new_constant
+
 
 func _prompt_convert_global_variable_to_local(entry: Dictionary) -> void:
 	if _dock._current_sheet == null:
@@ -435,6 +451,7 @@ func _prompt_convert_global_variable_to_local(entry: Dictionary) -> void:
 	dialog.close_requested.connect(func() -> void: dialog.queue_free())
 	_dock.add_child(dialog)
 	dialog.popup_centered(Vector2i(460, 180))
+
 
 func _convert_variable_scope(entry: Dictionary, target_scope: String, target_event_uid: String = "") -> bool:
 	if _dock._current_sheet == null or entry.is_empty():
@@ -491,8 +508,10 @@ func _convert_variable_scope(entry: Dictionary, target_scope: String, target_eve
 		_dock._mark_dirty("Converted variable %s to %s scope." % [var_name, target_scope])
 	return converted
 
+
 func _variable_type_supports_const(type_name: String) -> bool:
 	return type_name != "Variant"
+
 
 func _on_global_variable_activated(index: int) -> void:
 	if index < 0 or index >= _global_variable_entries.size():
@@ -510,6 +529,7 @@ func _on_global_variable_activated(index: int) -> void:
 		bool(entry.get("const", false)),
 		bool(entry.get("exported", entry.get("exposed", true)))
 	)
+
 
 func _on_local_variable_activated(index: int) -> void:
 	if index < 0 or index >= _local_variable_entries.size():
@@ -533,21 +553,25 @@ func _on_local_variable_activated(index: int) -> void:
 		bool(entry.get("const", false))
 	)
 
+
 func _is_global_variable_in_use(var_name: String) -> bool:
 	if _dock._current_sheet == null or var_name.is_empty():
 		return false
 	return _resource_array_uses_variable(_dock._current_sheet.events, var_name)
+
 
 func _is_local_variable_in_use(var_name: String, selected_resource: Resource) -> bool:
 	if var_name.is_empty() or not (selected_resource is EventRow):
 		return false
 	return _event_row_uses_variable(selected_resource as EventRow, var_name)
 
+
 func _resource_array_uses_variable(resources: Array, var_name: String) -> bool:
 	for resource_entry in resources:
 		if _resource_uses_variable(resource_entry, var_name):
 			return true
 	return false
+
 
 func _resource_uses_variable(resource_entry: Resource, var_name: String) -> bool:
 	if resource_entry == null:
@@ -557,6 +581,7 @@ func _resource_uses_variable(resource_entry: Resource, var_name: String) -> bool
 	if resource_entry is EventGroup:
 		return _resource_array_uses_variable(_dock._group_children_array(resource_entry as EventGroup), var_name)
 	return false
+
 
 func _event_row_uses_variable(event_row: EventRow, var_name: String) -> bool:
 	if event_row == null:
@@ -570,6 +595,7 @@ func _event_row_uses_variable(event_row: EventRow, var_name: String) -> bool:
 		if _ace_entry_uses_variable(action_entry, var_name):
 			return true
 	return _resource_array_uses_variable(event_row.sub_events, var_name)
+
 
 func _ace_entry_uses_variable(entry: Resource, var_name: String) -> bool:
 	if entry == null:
@@ -588,6 +614,7 @@ func _ace_entry_uses_variable(entry: Resource, var_name: String) -> bool:
 		return _dictionary_uses_variable(action_params, var_name, 0)
 	return false
 
+
 func _dictionary_uses_variable(values: Dictionary, var_name: String, depth: int) -> bool:
 	if depth >= VARIABLE_USAGE_MAX_DEPTH or var_name.is_empty() or values.is_empty():
 		return false
@@ -603,6 +630,7 @@ func _dictionary_uses_variable(values: Dictionary, var_name: String, depth: int)
 		elif str(value) == var_name:
 			return true
 	return false
+
 
 func _refresh_variable_panel() -> void:
 	_global_variable_entries.clear()

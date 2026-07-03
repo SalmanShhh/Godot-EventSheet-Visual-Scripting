@@ -1,10 +1,11 @@
 @tool
-extends RefCounted
 class_name OpenSheetsDockTest
+extends RefCounted
 # The Open Sheets dock (open_sheets_dock.gd) + its EventSheetDock model API. Pins: the list
 # renders open + recently-closed sheets, the filter narrows by name OR path, a click maps
 # back to the right tab index / path via item metadata, and the model snapshot excludes
 # still-open sheets from "recently closed" (so the dock never offers to "reopen" what's open).
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -119,12 +121,15 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _meta(list: ItemList, row: int) -> Dictionary:
 	var m: Variant = list.get_item_metadata(row)
 	return m if typeof(m) == TYPE_DICTIONARY else {}
 
+
 static func _meta_index(list: ItemList, row: int) -> int:
 	return int(_meta(list, row).get("index", -1))
+
 
 static func _count_kind(list: ItemList, kind: String) -> int:
 	var n: int = 0
@@ -133,6 +138,7 @@ static func _count_kind(list: ItemList, kind: String) -> int:
 			n += 1
 	return n
 
+
 static func _find_open_row(list: ItemList, tab_index: int) -> int:
 	for r in range(list.item_count):
 		var m: Dictionary = _meta(list, r)
@@ -140,17 +146,20 @@ static func _find_open_row(list: ItemList, tab_index: int) -> int:
 			return r
 	return -1
 
+
 static func _find_recent_row(list: ItemList) -> int:
 	for r in range(list.item_count):
 		if str(_meta(list, r).get("kind", "")) == "recent":
 			return r
 	return -1
 
+
 static func _first_unselectable_text(list: ItemList) -> String:
 	for r in range(list.item_count):
 		if not list.is_item_selectable(r):
 			return list.get_item_text(r)
 	return ""
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

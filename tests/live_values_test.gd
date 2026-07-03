@@ -2,8 +2,9 @@
 # variables over EngineDebugger; the editor's Live Values window shows them. Normal
 # compiles never carry the stream (covenant intact).
 @tool
-extends RefCounted
 class_name LiveValuesTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -16,6 +17,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -263,6 +265,7 @@ static func run() -> bool:
 	fire_viewport.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

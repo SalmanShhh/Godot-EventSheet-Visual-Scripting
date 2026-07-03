@@ -3,8 +3,9 @@
 # `"`-quoted run as ONE token (quotes included — param values are raw GDScript expressions). The naive
 # split(" ") mis-filled `play "jump land"` as two params. Pins the tokenizer + the _quick_match e2e.
 @tool
-extends RefCounted
 class_name QuickAddTokenizerTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -48,10 +50,12 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _tokens(label: String, text: String, expected: Array) -> bool:
 	var actual: PackedStringArray = EventSheetAuthorActions.tokenize_quick_params(text)
 	var expected_packed: PackedStringArray = PackedStringArray(expected)
 	return _check(label, actual, expected_packed)
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetMultiViewManager
+extends RefCounted
 # Multi-view: the "split view" subsystem — a second pane over the SAME sheet (VSCode-style),
 # for debugging / reading / comparing distant regions. Breakpoints/bookmarks/disabled state are
 # shared by reference; scroll/zoom/selection/folds are per-pane. Owns the split widgets and the
@@ -19,8 +19,10 @@ var _split_container: HSplitContainer = null
 var _split_scroll: ScrollContainer = null
 var _split_viewport: EventSheetViewport = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Toggles a second, read/navigate-only pane over the SAME sheet (debugging, reading,
 ## comparing distant regions). Breakpoints/bookmarks/disabled state are shared by
@@ -56,6 +58,7 @@ func _toggle_split_view() -> void:
 	_connect_view_signals(_split_viewport)
 	_split_viewport.set_sheet(_dock._current_sheet)
 	_dock._set_status("Split view: the right pane navigates independently (editing happens in the left pane).")
+
 
 ## Wires a secondary pane for FULL editing: the dock's handlers are payload-driven
 ## (signals carry the row/resource), so the same set serves any number of panes;
@@ -93,6 +96,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
 	view.context_menu_requested.connect(_dock._on_viewport_context_menu_requested)
 	view.raw_code_edit_requested.connect(_dock._on_viewport_raw_code_edit_requested)
 
+
 ## "Open in Split": pins the given row in the other pane (opens the split if needed).
 func _open_row_in_split(row_data: EventRowData) -> void:
 	if row_data == null:
@@ -113,6 +117,7 @@ func _open_row_in_split(row_data: EventRowData) -> void:
 		_split_viewport._fold_state.clear()
 		_split_viewport.set_sheet(_dock._current_sheet)
 
+
 ## Mirrors a selection into every OTHER pane (guarded against recursion). Reads the dock's
 ## linked/mirroring flags (shared by all panes) and iterates the primary + split + detached panes.
 func _mirror_selection(from_view: EventSheetViewport, row_data: EventRowData) -> void:
@@ -131,6 +136,7 @@ func _mirror_selection(from_view: EventSheetViewport, row_data: EventRowData) ->
 				break
 	_dock._mirroring_selection = false
 
+
 func _close_split_view() -> void:
 	if _split_container == null:
 		return
@@ -147,12 +153,14 @@ func _close_split_view() -> void:
 	_split_scroll = null
 	_split_viewport = null
 
+
 ## Keeps every secondary pane on the current sheet after edits/opens (the refresh bus).
 func _sync_split_sheet() -> void:
 	if _split_viewport != null:
 		_split_viewport.set_sheet(_dock._current_sheet)
 	if _dock._detached_viewport != null:
 		_dock._detached_viewport.set_sheet(_dock._current_sheet)
+
 
 ## Find-bar "Open in Split": jumps the split pane to the current match (opening the
 ## split if needed) — marrying search and multi-view.

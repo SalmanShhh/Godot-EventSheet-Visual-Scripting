@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetContextMenus
+extends RefCounted
 # The dock's right-click context menus: the static condition/action/variable/empty-space PopupMenus
 # built once, plus the row menu (rebuilt per right-click to show only what applies to the clicked
 # row type + selection) and its Insert ▸ / More ▸ submenus. Construction + per-click configuration
@@ -15,8 +15,10 @@ class_name EventSheetContextMenus
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Builds every right-click context menu once and assigns each back onto the dock (the members
 ## the dock + tests read by name). The row menu + its Insert/More submenus are created empty here;
@@ -90,6 +92,7 @@ func build_all() -> void:
 	_dock._empty_space_context_menu.id_pressed.connect(_dock._on_empty_space_context_menu_id_pressed)
 	_dock.add_child(_dock._empty_space_context_menu)
 
+
 ## Rebuilds the row context menu for the clicked row: only the items that apply to its
 ## type (event / group / comment) at the top, universal clipboard/lifecycle next, and
 ## the rest folded into Insert ▸ / More ▸ submenus — replacing the old flat ~30-item
@@ -143,6 +146,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	menu.add_separator()
 	menu.add_item("Delete", _dock.ROW_MENU_DELETE)
 
+
 ## The Insert ▸ submenu — insert a sibling row of any type below the clicked one.
 func _build_row_insert_submenu() -> void:
 	var m: PopupMenu = _dock._row_insert_submenu
@@ -158,6 +162,7 @@ func _build_row_insert_submenu() -> void:
 	m.add_item("GDScript Block", _dock.ROW_MENU_ADD_GDSCRIPT_BELOW)
 	m.add_item("Signal Handler", _dock.ROW_MENU_ADD_SIGNAL)
 	m.add_item("Enum", _dock.ROW_MENU_ADD_ENUM)
+
 
 ## The More ▸ submenu — advanced authoring (events only) + navigation + snippets.
 func _build_row_more_submenu(is_event: bool) -> void:
@@ -183,12 +188,14 @@ func _build_row_more_submenu(is_event: bool) -> void:
 	m.add_item("Save Selection as Snippet…", _dock.ROW_MENU_SAVE_SNIPPET)
 	m.add_item("Insert Snippet…", _dock.ROW_MENU_INSERT_SNIPPET)
 
+
 func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
 	if menu == null:
 		return
 	_configure_context_menu(menu)
 	menu.reset_size()
 	menu.popup(Rect2i(Vector2i(global_position), Vector2i.ONE))
+
 
 func _configure_context_menu(menu: PopupMenu) -> void:
 	if menu == _dock._condition_context_menu:

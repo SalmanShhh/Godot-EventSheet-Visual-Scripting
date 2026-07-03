@@ -35,6 +35,7 @@ var _open: Array = []
 var _recent: Array = []
 var _active: int = -1
 
+
 func _init() -> void:
 	name = "Open Sheets"
 	custom_minimum_size = Vector2(_EXPANDED_WIDTH, 140.0)
@@ -77,6 +78,7 @@ func _init() -> void:
 	_list.item_selected.connect(_on_item_chosen)  # one click switches — that's the whole point
 	_body.add_child(_list)
 
+
 ## Collapse the panel to a thin strip (just the ▸ button) or restore it. Keeps the panel in
 ## place but reclaims its width; the View-menu toggle removes it entirely.
 func set_collapsed(collapsed: bool) -> void:
@@ -88,8 +90,10 @@ func set_collapsed(collapsed: bool) -> void:
 	_collapse_button.tooltip_text = "Expand the Open Sheets panel" if collapsed else "Collapse the panel to a strip"
 	collapse_toggled.emit(collapsed)
 
+
 func is_collapsed() -> bool:
 	return _collapsed
+
 
 ## Replace the view with a fresh snapshot from EventSheetDock.get_open_sheets_state().
 ## `open` is [{title, path, dirty}], `active` the active index, `recent` a list of paths.
@@ -98,6 +102,7 @@ func set_state(open: Array, active: int, recent: Array) -> void:
 	_active = active
 	_recent = recent
 	_render()
+
 
 ## Rebuild the ItemList from the cached state, honouring the filter. Each actionable row
 ## carries metadata so a selection maps back to a tab index (open) or a path (recent) even
@@ -145,11 +150,13 @@ func _render() -> void:
 			_list.set_item_metadata(ridx, {"kind": "recent", "path": path3})
 			_list.set_item_custom_fg_color(ridx, _MUTED)
 
+
 ## A row matches when the filter is blank or is a case-insensitive substring of its title or path.
 static func _matches(needle: String, title: String, path: String) -> bool:
 	if needle.is_empty():
 		return true
 	return title.to_lower().contains(needle) or path.to_lower().contains(needle)
+
 
 func _on_item_chosen(idx: int) -> void:
 	if _list == null or idx < 0 or idx >= _list.item_count:

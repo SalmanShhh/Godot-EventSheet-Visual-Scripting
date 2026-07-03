@@ -6,8 +6,8 @@
 # `value_changed` signal; display-only widgets just take a value. None of this ships in generated game code —
 # the drawers are an editor-only nicety, so the parity covenant is untouched.
 @tool
-extends RefCounted
 class_name EventSheetDrawerWidgets
+extends RefCounted
 
 ## A shared, game-flavoured palette for the swatch-row drawer (and its preview).
 const SWATCH_PRESETS: Array[Color] = [
@@ -15,6 +15,7 @@ const SWATCH_PRESETS: Array[Color] = [
 	Color("#f4d03f"), Color("#52c46a"), Color("#3aa6e0"), Color("#5566e0"),
 	Color("#9b51e0"), Color("#e055a8"),
 ]
+
 
 # ── Progress bar (int/float) ────────────────────────────────────────────────
 ## A read-and-write bar: click/drag along it to set the value within [min, max].
@@ -70,6 +71,7 @@ class DrawerProgressBar:
 		if event is InputEventMouseMotion:
 			return ((event as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT) != 0
 		return false
+
 
 # ── Vector2 direction dial ──────────────────────────────────────────────────
 ## A draggable dial: the handle's offset from centre IS the vector (Godot Y-down), scaled so a handle at the
@@ -129,6 +131,7 @@ class DrawerVectorDial:
 			value_changed.emit(_value)
 			accept_event()
 
+
 # ── Colour swatch row ───────────────────────────────────────────────────────
 ## A row of palette presets plus a full picker — click a swatch (or pick) to set the colour fast.
 class DrawerSwatchRow:
@@ -184,6 +187,7 @@ class DrawerSwatchRow:
 		_value = c
 		value_changed.emit(c)
 
+
 # ── Texture / sprite preview ────────────────────────────────────────────────
 ## A read-friendly thumbnail of a Texture2D (or a texture path). Display-only: the EditorProperty wrapper
 ## adds the actual picker above it; the dialog preview just shows a placeholder frame.
@@ -221,6 +225,7 @@ class DrawerTexturePreview:
 			var font: Font = ThemeDB.fallback_font
 			draw_string(font, Vector2(4.0, size.y * 0.5 + 4.0), "(no texture)", HORIZONTAL_ALIGNMENT_CENTER, size.x - 8.0, 10, Color(1, 1, 1, 0.45))
 		draw_rect(rect, Color(1, 1, 1, 0.18), false, 1.0)
+
 
 # ── Curve preview ───────────────────────────────────────────────────────────
 ## Renders a Curve's shape inline (read-friendly). Display-only: the EditorProperty wrapper adds the resource

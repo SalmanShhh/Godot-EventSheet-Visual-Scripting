@@ -3,8 +3,8 @@
 # badge says HOW OFTEN it runs. Pins the mapping + exhaustiveness: every id resolve_trigger recognises
 # classifies to a known class, and any unknown id falls to signal (the honest default).
 @tool
-extends RefCounted
 class_name TriggerTempoTest
+extends RefCounted
 
 # The full id census of TriggerResolver.resolve_trigger, grouped by expected tempo. Kept in lock-step
 # with resolve_trigger's match (both live in trigger_resolver.gd) — a new trigger id must land here too.
@@ -16,6 +16,7 @@ const SIGNAL := [
 	"OnAnimationFinished", "OnButtonPressed", "OnButtonToggled", "OnParticlesFinished", "OnTreeEntered",
 	"OnTreeExiting", "OnTreeExited", "OnRenamed", "OnChildEnteredTree", "OnSignal",
 ]
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -45,6 +46,7 @@ static func run() -> bool:
 	ok = _check("every census id maps to a known tempo class", all_known, true) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -5,8 +5,8 @@
 # run_mcp_server.gd — this class is transport-free so tests drive handle_message
 # directly.
 @tool
-extends RefCounted
 class_name EventSheetMCPServer
+extends RefCounted
 
 const PROTOCOL_VERSION := "2024-11-05"
 
@@ -22,12 +22,14 @@ static var enabled_override: Variant = null
 var _registry_editor: EventSheetEditor = null
 var _registry: EventSheetACERegistry = null
 
+
 ## Whether the server is currently allowed to serve tools. Live (re-read each call) so the
 ## editor toggle takes effect without the AI client reconnecting.
 static func is_enabled() -> bool:
 	if enabled_override != null:
 		return bool(enabled_override)
 	return not FileAccess.file_exists(DISABLED_MARKER)
+
 
 ## Handles one JSON-RPC message. Returns the response Dictionary, or null for
 ## notifications (which never get responses).
@@ -61,6 +63,7 @@ func handle_message(message: Dictionary) -> Variant:
 		return _error(message, -32601, "Method not found: %s" % method)
 	return null
 
+
 func _handle_tool_call(message: Dictionary) -> Dictionary:
 	var params: Dictionary = message.get("params", {}) if message.get("params") is Dictionary else {}
 	var arguments: Dictionary = params.get("arguments", {}) if params.get("arguments") is Dictionary else {}
@@ -91,11 +94,13 @@ func _handle_tool_call(message: Dictionary) -> Dictionary:
 
 # ── Tools ─────────────────────────────────────────────────────────────────────
 
+
 ## Every .tres event sheet in the project (header pre-filter, skips addons/.godot).
 func _tool_list_sheets() -> Dictionary:
 	var sheets: Array = []
 	_scan_for_sheets("res://", sheets)
 	return {"sheets": sheets}
+
 
 func _scan_for_sheets(directory_path: String, into: Array) -> void:
 	var directory: DirAccess = DirAccess.open(directory_path)
@@ -115,6 +120,7 @@ func _scan_for_sheets(directory_path: String, into: Array) -> void:
 		entry = directory.get_next()
 	directory.list_dir_end()
 
+
 ## Structured JSON view of a sheet (.tres, or a GDScript-backed sheet via any .gd path).
 func _tool_read_sheet(arguments: Dictionary) -> Dictionary:
 	var sheet: EventSheetResource = _load_sheet(str(arguments.get("path", "")))
@@ -131,6 +137,7 @@ func _tool_read_sheet(arguments: Dictionary) -> Dictionary:
 		"rows": _serialize_rows(sheet.events)
 	}
 
+
 func _serialize_functions(functions: Array) -> Array:
 	var serialized: Array = []
 	for entry: Variant in functions:
@@ -146,6 +153,7 @@ func _serialize_functions(functions: Array) -> Array:
 				"exposed": event_function.expose_as_ace
 			})
 	return serialized
+
 
 func _serialize_rows(rows: Array) -> Array:
 	var serialized: Array = []
@@ -190,6 +198,7 @@ func _serialize_rows(rows: Array) -> Array:
 			serialized.append({"kind": "gdscript", "code": (row as RawCodeRow).code})
 	return serialized
 
+
 func _serialize_ace(ace: Resource) -> Dictionary:
 	return {
 		"kind": "ace",
@@ -198,6 +207,7 @@ func _serialize_ace(ace: Resource) -> Dictionary:
 		"params": ace.get("params"),
 		"codegen_template": str(ace.get("codegen_template"))
 	}
+
 
 ## The full ACE vocabulary (builtins + zero-config addons), optionally filtered.
 ## Composition-policy enforcement over MCP: when the
@@ -213,6 +223,7 @@ func _policy_allows_definition(definition: ACEDefinition) -> bool:
 	var required_tag: String = include_sources.trim_prefix("tagged:").strip_edges()
 	var definition_tags: Array = definition.metadata.get("tags", []) if definition.metadata.get("tags") is Array else []
 	return definition_tags.has(required_tag)
+
 
 func _tool_list_aces(arguments: Dictionary) -> Dictionary:
 	_ensure_registry()
@@ -249,6 +260,7 @@ func _tool_list_aces(arguments: Dictionary) -> Dictionary:
 		})
 	return {"aces": aces, "count": aces.size()}
 
+
 ## Compiles a sheet. Dry-run by default (output returned, nothing overwritten);
 ## write_output=true writes to the sheet's real output path.
 func _tool_compile_sheet(arguments: Dictionary) -> Dictionary:
@@ -267,6 +279,7 @@ func _tool_compile_sheet(arguments: Dictionary) -> Dictionary:
 		"output": str(result.get("output", ""))
 	}
 
+
 ## Compile-checks a GDScript block/expression against an optional sheet's context.
 func _tool_lint_block(arguments: Dictionary) -> Dictionary:
 	var sheet: EventSheetResource = null
@@ -278,6 +291,7 @@ func _tool_lint_block(arguments: Dictionary) -> Dictionary:
 		sheet
 	)
 	return {"ok": bool(verdict.get("ok", false)), "problem": str(verdict.get("error", ""))}
+
 
 ## Appends rows to a .tres sheet from snippet text OR plain GDScript (auto-converted via
 ## the same lossless lift pipeline the editor's paste uses). dry_run previews row kinds.
@@ -315,6 +329,7 @@ func _tool_apply_snippet(arguments: Dictionary) -> Dictionary:
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 ## Loads a sheet from a .tres resource or any .gd file (GDScript-backed, read-only here).
 func _load_sheet(path: String) -> EventSheetResource:
 	if path.is_empty() or not FileAccess.file_exists(path):
@@ -325,6 +340,7 @@ func _load_sheet(path: String) -> EventSheetResource:
 	# serve stale sheets after the user edits them in the editor.
 	return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
 
+
 ## The ACE registry, bootstrapped exactly like the editor (builtins + zero-config addons).
 func _ensure_registry() -> void:
 	if _registry != null:
@@ -332,6 +348,7 @@ func _ensure_registry() -> void:
 	_registry_editor = EventSheetEditor.new()
 	_registry_editor.setup(EventSheetResource.new())
 	_registry = _registry_editor._ace_registry
+
 
 func _tool_descriptors() -> Array:
 	return [
@@ -367,8 +384,10 @@ func _tool_descriptors() -> Array:
 		}
 	]
 
+
 func _result(message: Dictionary, result: Variant) -> Dictionary:
 	return {"jsonrpc": "2.0", "id": message.get("id"), "result": result}
+
 
 func _error(message: Dictionary, code: int, error_text: String) -> Dictionary:
 	return {"jsonrpc": "2.0", "id": message.get("id"), "error": {"code": code, "message": error_text}}

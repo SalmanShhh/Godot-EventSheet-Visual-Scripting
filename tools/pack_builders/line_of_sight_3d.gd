@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Line of Sight 3D behavior (event-sheet parity, Node3D host)
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()

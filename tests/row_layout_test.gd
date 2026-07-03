@@ -4,8 +4,9 @@
 # every span stacked at the same X (badge text overlapping the name). This guards that the
 # spans of single-line rows are positioned left-to-right without horizontal overlap.
 @tool
-extends RefCounted
 class_name RowLayoutTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -60,6 +61,7 @@ static func run() -> bool:
 	all_passed = _check("a group row was laid out", saw_group, true) and all_passed
 	viewport.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

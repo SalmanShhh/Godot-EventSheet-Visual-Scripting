@@ -12,6 +12,7 @@
 class_name EventSheetDiagnostics
 extends RefCounted
 
+
 ## Returns [{ "uid": String, "message": String, "suggestion": String }], one per offending row.
 ## uid = str(resource.get_instance_id()). `registry` is optional: without it, ƒx expression
 ## params are skipped (inline GDScript blocks are still linted), keeping the pass usable in
@@ -26,6 +27,7 @@ static func analyze(sheet: EventSheetResource, registry: EventSheetACERegistry =
 			_scan_entries((function_resource as EventFunction).events, sheet, registry, diagnostics)
 	return diagnostics
 
+
 static func _scan_entries(entries: Array, sheet: EventSheetResource, registry: EventSheetACERegistry, diagnostics: Array) -> void:
 	for entry in entries:
 		if entry is EventGroup:
@@ -38,6 +40,7 @@ static func _scan_entries(entries: Array, sheet: EventSheetResource, registry: E
 		elif entry is EventRow:
 			_check_event(entry as EventRow, sheet, registry, diagnostics)
 
+
 static func _check_event(event: EventRow, sheet: EventSheetResource, registry: EventSheetACERegistry, diagnostics: Array) -> void:
 	for condition in event.conditions:
 		if condition is ACECondition:
@@ -49,6 +52,7 @@ static func _check_event(event: EventRow, sheet: EventSheetResource, registry: E
 			_check_ace(action, event, "Action", sheet, registry, diagnostics)
 	_check_pick_filters(event, sheet, diagnostics)
 	_scan_entries(event.sub_events, sheet, registry, diagnostics)
+
 
 ## Lints a For Each (pick filter): the collection expression (wrapped per kind, so a GROUP name isn't
 ## linted as bare GDScript) and the predicate / order-by (the loop iterator is stubbed so a valid
@@ -78,10 +82,12 @@ static func _check_pick_filters(event: EventRow, sheet: EventSheetResource, diag
 				diagnostics.append(_make(event, "For Each: an expression doesn't compile (%s)." % expr, _suggest(expr, sheet)))
 				return
 
+
 static func _check_raw(raw: RawCodeRow, in_flow: bool, sheet: EventSheetResource, diagnostics: Array) -> void:
 	var verdict: Dictionary = EventSheetGDScriptLint.lint(raw.code, in_flow, sheet)
 	if not bool(verdict.get("ok", true)):
 		diagnostics.append(_make(raw, "GDScript block doesn't compile: %s" % str(verdict.get("error", "")), ""))
+
 
 ## A local variable whose name shadows a host-class member breaks the generated script (the
 ## member is hidden / duplicated). The variable dialog blocks this at creation; flagging it here
@@ -92,6 +98,7 @@ static func _check_local_var(local: LocalVariable, sheet: EventSheetResource, di
 	var owner: String = EventSheetProjectDoctor.shadowed_member_class(sheet, local.name)
 	if not owner.is_empty():
 		diagnostics.append(_make(local, "Variable \"%s\" shadows a %s member — rename it." % [local.name, owner], ""))
+
 
 ## Lints an ACE's ƒx (expression-hinted) params. Flags the OWNING event row (ACEs render as
 ## spans inside it), with the first offending param's detail + a "did you mean?" for a bare
@@ -121,6 +128,7 @@ static func _check_ace(ace: Resource, owner: EventRow, kind: String, sheet: Even
 			diagnostics.append(_make(owner, "%s \"%s\": the %s expression doesn't compile (%s)." % [kind, str(definition.display_name), param_id, value.strip_edges()], _suggest(value, sheet)))
 			return
 
+
 ## "Did you mean …?" for a ƒx value that is a single bare identifier (a typo'd variable or
 ## function name); "" otherwise. Reuses the picker's closest-known-identifier matcher.
 static func _suggest(expression: String, sheet: EventSheetResource) -> String:
@@ -130,6 +138,7 @@ static func _suggest(expression: String, sheet: EventSheetResource) -> String:
 		return ""
 	var closest: String = ACEParamsDialog.closest_known_identifier(token, sheet)
 	return ("Did you mean \"%s\"?" % closest) if not closest.is_empty() else ""
+
 
 static func _make(resource: Object, message: String, suggestion: String) -> Dictionary:
 	return {"uid": str(resource.get_instance_id()), "message": message, "suggestion": suggestion}

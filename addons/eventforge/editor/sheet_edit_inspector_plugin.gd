@@ -9,8 +9,10 @@ extends EditorInspectorPlugin
 
 var open_sheet: Callable = Callable()  # Callable(sheet_path: String)
 
+
 func _can_handle(object: Object) -> bool:
 	return not sheet_path_for(object).is_empty()
+
 
 func _parse_begin(object: Object) -> void:
 	var sheet_path: String = sheet_path_for(object)
@@ -28,6 +30,7 @@ func _parse_begin(object: Object) -> void:
 # _can_handle fires on every Inspector refresh; sheet_for_script reads files, so
 # results are memoized by script path + mtime (review catch).
 static var _pairing_cache: Dictionary = {}
+
 
 ## The sheet behind this object's attached script, or "" (which also means
 ## "don't handle").

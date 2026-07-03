@@ -1,8 +1,8 @@
 # EventForge — Plugin entry point
 # Registers the EventForge editor plugin and runtime bridge autoload.
 @tool
-extends EditorPlugin
 class_name EventForgePlugin
+extends EditorPlugin
 
 const BRIDGE_NAME: String = "EventForgeBridge"
 const BRIDGE_PATH: String = "res://addons/eventforge/runtime/eventforge_bridge.gd"
@@ -17,22 +17,27 @@ var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
 
+
 ## Returns the display name of the plugin.
 func _get_plugin_name() -> String:
 	return "EventSheet"
+
 
 ## EventSheet is exposed as a dedicated main editor workspace.
 func _has_main_screen() -> bool:
 	return true
 
+
 ## Returns the icon shown in the top editor workspace strip.
 func _get_plugin_icon() -> Texture2D:
 	return get_editor_interface().get_editor_theme().get_icon("Node", "EditorIcons")
+
 
 ## Controls visibility for the workspace surface when selected in top tabs.
 func _make_visible(visible: bool) -> void:
 	if _event_sheet_editor != null:
 		_event_sheet_editor.visible = visible
+
 
 ## Checks whether the selected object can be edited by this plugin.
 func _handles(object: Object) -> bool:
@@ -41,6 +46,7 @@ func _handles(object: Object) -> bool:
 	# Auto-preview toggle (OFF by default): when on, selecting a sheet-liftable .gd routes here so it
 	# opens as a read-only EVENTS preview instead of the script editor. Limited to liftable game scripts.
 	return _auto_preview_gd_enabled() and object is Script and EventSheetWorkflow.is_openable_as_sheet((object as Script).resource_path)
+
 
 ## Loads the selected EventSheet (or, with the toggle on, a .gd) into the workspace editor.
 func _edit(object: Object) -> void:
@@ -56,13 +62,16 @@ func _edit(object: Object) -> void:
 		# Auto-preview path: open the selected script's file as a read-only events preview.
 		_open_sheet_in_workspace((object as Script).resource_path)
 
+
 ## True when the "auto-preview a selected .gd as events" project setting is enabled.
 static func _auto_preview_gd_enabled() -> bool:
 	return bool(ProjectSettings.get_setting("eventsheets/editor/auto_preview_gd_on_select", false))
 
+
 ## Shared object guard used by plugin handlers and tests.
 static func is_event_sheet_resource(object: Object) -> bool:
 	return object is EventSheetResource
+
 
 ## Switches to the EventSheet workspace and loads a sheet (.tres or GDScript-backed
 ## .gd) — the landing point for every native entry (context menus, Inspector button).
@@ -71,6 +80,7 @@ func _open_sheet_in_workspace(path: String) -> void:
 		return
 	get_editor_interface().set_main_screen_editor(_get_plugin_name())
 	_event_sheet_editor.call("_load_sheet_from_path", path)
+
 
 ## The script editor's "Go to Sheet Row": carries the caret line into the sheet's
 ## reverse provenance — errors and stack traces land on rows, not generated code.
@@ -85,6 +95,7 @@ func _goto_sheet_row_from_script(script_path: String) -> void:
 	_open_sheet_in_workspace(sheet_path)
 	if _event_sheet_editor != null and _event_sheet_editor.has_method("goto_generated_line"):
 		_event_sheet_editor.call("goto_generated_line", line)
+
 
 ## The Scene dock's "Attach Event Sheet": create beside the scene, compile, attach,
 ## then drop the user straight into the sheet.
@@ -101,6 +112,7 @@ func _attach_sheet_to_node(node: Node) -> void:
 	else:
 		push_warning("[Godot EventSheets] %s" % str(result.get("message")))
 
+
 ## The newest showcase scene under demo/showcase (review catch: hardcoding the
 ## versioned filename meant every showcase refresh had to edit the plugin).
 static func _find_showcase_scene() -> String:
@@ -116,6 +128,7 @@ static func _find_showcase_scene() -> String:
 		entry = dir.get_next()
 	dir.list_dir_end()
 	return "res://demo/showcase/%s" % newest if not newest.is_empty() else ""
+
 
 ## Registers plugin services when the plugin is enabled.
 func _enter_tree() -> void:
@@ -195,12 +208,14 @@ func _enter_tree() -> void:
 		print("[Godot EventSheets] plugin loaded (editor panel unavailable)")
 	_maybe_show_welcome()
 
+
 # ── First-run welcome: the 60-second hook. The window lives on the dock (it owns
 # every other window, fixes the unmargined first cut, and Tools → Welcome… can
 # reopen it any time); the plugin only triggers the first-run check.
 func _maybe_show_welcome() -> void:
 	if _event_sheet_editor != null and _event_sheet_editor.has_method("show_welcome_if_first_run"):
 		_event_sheet_editor.call("show_welcome_if_first_run")
+
 
 ## Unregisters plugin services when the plugin is disabled.
 func _exit_tree() -> void:

@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Simple Health behavior (event-sheet parity - ported from the Simple Health addon).
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()

@@ -4,8 +4,8 @@
 # as a keyword-badged row, and feeds the signal pickers (On Signal / Emit Signal) and
 # trigger connection validation.
 @tool
-extends Resource
 class_name SignalRow
+extends Resource
 
 @export var enabled: bool = true
 @export var signal_name: String = "my_signal"
@@ -20,6 +20,7 @@ class_name SignalRow
 @export var ace_name: String = ""
 ## Optional picker category for the trigger ACE (`## @ace_category`).
 @export var ace_category: String = ""
+
 
 ## Returns the stable row kind identifier.
 func get_row_kind() -> String:

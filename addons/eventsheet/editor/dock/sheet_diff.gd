@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetSheetDiff
+extends RefCounted
 # "What changed since the last save?" — in EVENT language, not text lines.
 #
 # Compiles the CURRENT sheet to a scratch path (never the real file — compile writes its output, and
@@ -19,8 +19,10 @@ var _list: ItemList = null
 var _summary_label: Label = null
 var _entries: Array = []
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## The changed region between two line arrays after common prefix/suffix trimming:
 ## {old_start, old_end, new_start, new_end} — 1-based inclusive; {} when identical.
@@ -42,6 +44,7 @@ static func changed_region(old_lines: PackedStringArray, new_lines: PackedString
 		"new_start": prefix + 1,
 		"new_end": new_lines.size() - suffix,
 	}
+
 
 ## The event-language summary: which rows the changed region touches (deduped, in order, each with a
 ## label from its first emitted line) plus the disk-only lines a save would remove. Static + pure over
@@ -78,6 +81,7 @@ static func summarize(output: String, source_map: Array, disk_text: String) -> D
 			removed.append(text)
 	return {"identical": false, "rows": rows, "removed_lines": removed}
 
+
 ## The saved file this sheet's compile targets — the diff's "old" side. "" when never saved.
 static func saved_path_for(sheet: EventSheetResource) -> String:
 	if sheet == null:
@@ -87,6 +91,7 @@ static func saved_path_for(sheet: EventSheetResource) -> String:
 	if sheet.resource_path.is_empty():
 		return ""
 	return SheetCompiler._resolve_output_path(sheet, "")
+
 
 ## Sheet ▸ What Changed…: compute + show. The current sheet compiles to a SCRATCH path (a diff must
 ## never write the real file); the real file is only read.
@@ -118,6 +123,7 @@ func open() -> void:
 		"" if removed.is_empty() else " · %d line%s removed" % [removed.size(), "" if removed.size() == 1 else "s"]]
 	if _dialog.is_inside_tree():
 		_dialog.popup_centered(Vector2i(560, 380))
+
 
 func _ensure_dialog() -> void:
 	if _dialog != null:

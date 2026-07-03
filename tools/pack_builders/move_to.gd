@@ -3,6 +3,7 @@
 
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
+
 ## Move To behavior (event-sheet parity), authored entirely as ACE rows (ZERO RawCode): glides through a
 ## waypoint queue and fires On Arrived at the final stop. The per-step position math
 ## (move_toward / angle / distance_to) lives in ACE expression params - the visual event-sheet model - so there is
@@ -83,6 +84,7 @@ static func build() -> bool:
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/move_to/move_to_behavior")
 
+
 static func _exposed(fn_name: String, display: String, desc: String, params: Array) -> EventFunction:
 	var fn: EventFunction = EventFunction.new()
 	fn.function_name = fn_name
@@ -94,6 +96,7 @@ static func _exposed(fn_name: String, display: String, desc: String, params: Arr
 		fn.params.append(_param(str(pair[0]), str(pair[1])))
 	return fn
 
+
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"
@@ -101,12 +104,14 @@ static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	action.params = params
 	return action
 
+
 static func _cond(ace_id: String, params: Dictionary) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = "Core"
 	condition.ace_id = ace_id
 	condition.params = params
 	return condition
+
 
 static func _param(id: String, type_name: String) -> ACEParam:
 	var param: ACEParam = ACEParam.new()

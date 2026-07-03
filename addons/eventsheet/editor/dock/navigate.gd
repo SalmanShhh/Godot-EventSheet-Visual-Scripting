@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetNavigate
+extends RefCounted
 # Ctrl+Click go-to-definition. Every zero-config addon ACE already carries its own address — its
 # provider_id IS the addon script's class_name (that's how the scanner registers it) — so Ctrl+Clicking
 # a behaviour-pack verb in a consumer sheet opens THAT BEHAVIOUR AS A SHEET: the jump the script editor
@@ -17,12 +17,15 @@ var _dock: Control = null
 var _class_script_cache: Dictionary = {}
 var _cache_built: bool = false
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## The viewport's per-cell probe: true when Ctrl+Clicking this span jumps somewhere real.
 func can_navigate(row_data: EventRowData, metadata: Dictionary) -> bool:
 	return not resolve_target(row_data, metadata).is_empty()
+
 
 ## Where a cell's ACE leads: {"kind": "sheet", "path", "provider"} for an addon-backed verb, {} when
 ## there is nowhere meaningful to go (built-ins, non-ACE spans).
@@ -48,6 +51,7 @@ func resolve_target(row_data: EventRowData, metadata: Dictionary) -> Dictionary:
 		return {}
 	return {"kind": "sheet", "path": path, "provider": provider}
 
+
 ## The jump: open the defining behaviour script AS A SHEET (the lossless .gd-as-events open),
 ## remembering where you came from so Alt+Left walks straight back.
 func navigate(row_data: EventRowData, _span_index: int, metadata: Dictionary) -> void:
@@ -66,6 +70,7 @@ func navigate(row_data: EventRowData, _span_index: int, metadata: Dictionary) ->
 var _back_stack: PackedStringArray = PackedStringArray()
 var _forward_stack: PackedStringArray = PackedStringArray()
 
+
 ## Remember the current sheet before jumping somewhere else. Call this before any history-worthy load
 ## (Ctrl+Click, the palette's sheet search); skips unsaved sheets and de-dupes consecutive entries.
 func record_current() -> void:
@@ -77,11 +82,14 @@ func record_current() -> void:
 	_back_stack.append(current)
 	_forward_stack.clear()
 
+
 func go_back() -> void:
 	_history_step(_back_stack, _forward_stack, "Nothing to go back to yet — Ctrl+Click a verb or open a sheet first.")
 
+
 func go_forward() -> void:
 	_history_step(_forward_stack, _back_stack, "Nothing ahead — Alt+Left goes back first.")
+
 
 ## Pops from one stack onto the other and loads the popped sheet (skipping entries whose file has
 ## vanished since, so a renamed pack never wedges the history).
@@ -98,6 +106,7 @@ func _history_step(from_stack: PackedStringArray, to_stack: PackedStringArray, e
 		return
 	_dock._set_status(empty_message, true)
 
+
 ## Opens a sheet by path — RE-FOCUSING its tab when that file is already open instead of importing a
 ## duplicate copy. The tab store dedupes by sheet OBJECT, and every .gd load imports a fresh resource,
 ## so without this every Back/Forward (or repeated Ctrl+Click) would stack duplicate tabs.
@@ -110,11 +119,13 @@ func open_or_focus(path: String) -> void:
 			return
 	_dock._load_sheet_from_path(path)
 
+
 func _current_history_path() -> String:
 	var sheet: EventSheetResource = _dock.get_current_sheet()
 	if sheet != null and not sheet.external_source_path.is_empty():
 		return sheet.external_source_path
 	return str(_dock._current_sheet_path)
+
 
 ## class_name → script path over the addon folders. A script's class_name is a single top-of-file
 ## declaration, so a cheap line scan resolves it without loading the script.

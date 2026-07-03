@@ -14,10 +14,11 @@
 # Sound params use hint "audio_path": the params dialog shows a ▶ preview button so you
 # can hear the file before applying (see ACEParamsDialog._create_audio_path_field).
 @tool
-extends RefCounted
 class_name EventForgeAudioACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetStructRowDialogs
+extends RefCounted
 
 # Three small structural-row editors that share the same shape: Enum (name + members),
 # Signal (name + params), and Match (expression + GDScript match branches, lint-gated).
@@ -14,6 +14,7 @@ class_name EventSheetStructRowDialogs
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
@@ -22,6 +23,7 @@ var _enum_dialog: ConfirmationDialog = null
 var _enum_name_edit: LineEdit = null
 var _enum_members_edit: TextEdit = null
 var _enum_target: EnumRow = null
+
 
 ## Opens the enum editor for an EnumRow (double-click or "Add Enum Below").
 func open_enum_dialog(enum_resource: Resource) -> void:
@@ -34,6 +36,7 @@ func open_enum_dialog(enum_resource: Resource) -> void:
 	_enum_members_edit.text = "
 ".join(enum_row.members)
 	_enum_dialog.popup_centered(Vector2i(420, 300))
+
 
 func _ensure_enum_dialog() -> void:
 	if _enum_dialog != null:
@@ -52,6 +55,7 @@ func _ensure_enum_dialog() -> void:
 	_enum_dialog.add_child(EventSheetPopupUI.margined(form))
 	_enum_dialog.confirmed.connect(_on_enum_dialog_confirmed)
 	_dock.add_child(_enum_dialog)
+
 
 func _on_enum_dialog_confirmed() -> void:
 	if _enum_target == null:
@@ -97,6 +101,7 @@ var _match_branches_edit: TextEdit = null
 var _match_hint: Label = null
 var _match_target: MatchRow = null
 
+
 ## Opens the signal editor (double-click or "Add Signal Below").
 func open_signal_dialog(signal_resource: Resource) -> void:
 	var signal_row: SignalRow = signal_resource as SignalRow
@@ -107,6 +112,7 @@ func open_signal_dialog(signal_resource: Resource) -> void:
 	_signal_name_edit.text = signal_row.signal_name
 	_signal_params_edit.text = "\n".join(signal_row.params)
 	_signal_dialog.popup_centered(Vector2i(420, 280))
+
 
 func _ensure_signal_dialog() -> void:
 	if _signal_dialog != null:
@@ -125,6 +131,7 @@ func _ensure_signal_dialog() -> void:
 	_signal_dialog.add_child(EventSheetPopupUI.margined(form))
 	_signal_dialog.confirmed.connect(_on_signal_dialog_confirmed)
 	_dock.add_child(_signal_dialog)
+
 
 func _on_signal_dialog_confirmed() -> void:
 	if _signal_target == null:
@@ -155,6 +162,7 @@ func _on_signal_dialog_confirmed() -> void:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Signal updated (it now appears in the On/Emit Signal pickers).")
 
+
 ## Opens the match editor (double-click a match cell or "Add Match To Actions…").
 func open_match_dialog(match_resource: Resource) -> void:
 	var match_row: MatchRow = match_resource as MatchRow
@@ -166,6 +174,7 @@ func open_match_dialog(match_resource: Resource) -> void:
 	_match_branches_edit.text = match_row.branches_text
 	_match_hint.text = ""
 	_match_dialog.popup_centered(Vector2i(520, 380))
+
 
 func _ensure_match_dialog() -> void:
 	if _match_dialog != null:
@@ -186,6 +195,7 @@ func _ensure_match_dialog() -> void:
 	_match_dialog.add_child(EventSheetPopupUI.margined(form))
 	_match_dialog.confirmed.connect(_on_match_dialog_confirmed)
 	_dock.add_child(_match_dialog)
+
 
 func _on_match_dialog_confirmed() -> void:
 	if _match_target == null:

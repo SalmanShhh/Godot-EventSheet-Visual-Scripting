@@ -4,8 +4,9 @@
 # the annotations back inline, so the whole thing round-trips byte-identically. The reverse of
 # signal_row_lift_test (which pins the pack-BUILD path); this pins the user-OPEN path.
 @tool
-extends RefCounted
 class_name SignalOpenAbsorbTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -64,11 +65,13 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _find_signal(sheet: EventSheetResource, name: String) -> SignalRow:
 	for row: Variant in sheet.events:
 		if row is SignalRow and (row as SignalRow).signal_name == name:
 			return row
 	return null
+
 
 static func _count_raw_containing(sheet: EventSheetResource, needle: String) -> int:
 	var count: int = 0
@@ -76,6 +79,7 @@ static func _count_raw_containing(sheet: EventSheetResource, needle: String) -> 
 		if row is RawCodeRow and (row as RawCodeRow).code.contains(needle):
 			count += 1
 	return count
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

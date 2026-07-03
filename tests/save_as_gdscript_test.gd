@@ -5,10 +5,11 @@
 # Open gives), so the .gd IS the sheet and future edits round-trip through it. .tres/.res stay
 # available. This pins the save-path defaults and the compile->reopen mechanism.
 @tool
-extends RefCounted
 class_name SaveAsGDScriptTest
+extends RefCounted
 
 const PROBE_PATH := "res://__eventsheet_save_gd_probe.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -60,10 +61,12 @@ static func run() -> bool:
 	dock.free()
 	return all_passed
 
+
 static func _remove_probe() -> void:
 	for suffix: String in ["", ".uid", ".import"]:
 		if FileAccess.file_exists(PROBE_PATH + suffix):
 			DirAccess.remove_absolute(PROBE_PATH + suffix)
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

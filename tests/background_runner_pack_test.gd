@@ -4,14 +4,16 @@
 # when it finishes. This loads the COMPILED pack, runs a pure static function off-thread, and polls until
 # the result comes back — proving the add_task / Mutex-guarded result / main-thread emit round-trip works.
 @tool
-extends RefCounted
 class_name BackgroundRunnerPackTest
+extends RefCounted
 
 const PACK := "res://eventsheet_addons/background_runner/background_runner_behavior.gd"
+
 
 # A PURE worker function: no scene-tree, no Node access — exactly what may run off-thread.
 static func _square(n: int) -> int:
 	return n * n
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -40,6 +42,7 @@ static func run() -> bool:
 
 	runner.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

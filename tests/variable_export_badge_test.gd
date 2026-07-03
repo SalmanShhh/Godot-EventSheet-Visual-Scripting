@@ -4,8 +4,9 @@
 # obvious at a glance — while scrolling a sheet — which variables show in the Inspector vs. stay internal.
 # The badge tracks the same default the compiler uses (exported unless explicitly false).
 @tool
-extends RefCounted
 class_name VariableExportBadgeTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -26,6 +27,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## True when the variable row named `var_name` carries an "@export" badge span.
 static func _row_has_export_badge(rows: Array, var_name: String) -> bool:
 	for row: Variant in rows:
@@ -43,6 +45,7 @@ static func _row_has_export_badge(rows: Array, var_name: String) -> bool:
 		if is_target:
 			return has_badge
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

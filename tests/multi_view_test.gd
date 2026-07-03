@@ -3,8 +3,9 @@
 # is shared by reference, edits refresh both panes through the refresh bus, the
 # companion pane never starts inline edits, and closing the split restores the layout.
 @tool
-extends RefCounted
 class_name MultiViewTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -122,6 +124,7 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

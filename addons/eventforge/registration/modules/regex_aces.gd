@@ -9,16 +9,19 @@
 # verbs are NULL-SAFE: search_all returns [] on no match, so First Match / Capture Group fall back to
 # "" instead of crashing on a miss (unlike a bare .search(...).get_string()).
 @tool
-extends RefCounted
 class_name EventForgeRegexACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func _pattern_param() -> ACEParam:
 	return F.make_param("pattern", "String", "\"[0-9]+\"", "Pattern", "The regular expression to match, in Godot RegEx syntax.", "expression")
 
+
 static func _text_param() -> ACEParam:
 	return F.make_param("text", "String", "\"score: 42\"", "Text", "The text to search.", "expression")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

@@ -19,6 +19,7 @@ extends SceneTree
 
 const TextDump := preload("res://addons/eventforge/sheet_text_dump.gd")
 
+
 func _init() -> void:
 	var args: PackedStringArray = _driver_args()
 	if args.size() < 3:
@@ -49,6 +50,7 @@ func _init() -> void:
 		print("[sheet_merge] %d conflict(s) kept for review: %s" % [conflicts.size(), ", ".join(PackedStringArray(conflicts))])
 		quit(1)
 
+
 ## Args after the `--` separator (git passes the temp file paths there via the .sh wrapper).
 func _driver_args() -> PackedStringArray:
 	var all: PackedStringArray = OS.get_cmdline_user_args()
@@ -63,6 +65,7 @@ func _driver_args() -> PackedStringArray:
 				seen = true
 	return all
 
+
 func _load_sheet(path: String) -> EventSheetResource:
 	if path.is_empty() or not FileAccess.file_exists(path):
 		return null
@@ -71,6 +74,7 @@ func _load_sheet(path: String) -> EventSheetResource:
 	return resource as EventSheetResource
 
 # ── Testable merge core ────────────────────────────────────────────────────────────────
+
 
 ## Three-way merges three sheets. Returns {"sheet": EventSheetResource, "conflicts": Array}.
 ## Pure (no file I/O) so it can be unit-tested with in-memory sheets.
@@ -85,6 +89,7 @@ static func merge_sheets(ancestor: EventSheetResource, ours: EventSheetResource,
 	merged.functions = _merge_functions(ancestor.functions, ours.functions, theirs.functions, conflicts)
 	return {"sheet": merged, "conflicts": conflicts}
 
+
 ## A scalar that changed on only one side takes that side; changed-on-both (differently) is
 ## a conflict and keeps OURS (recorded so the caller can flag it).
 static func _merge_scalar(ancestor: Variant, ours: Variant, theirs: Variant, label: String, conflicts: Array) -> Variant:
@@ -96,6 +101,7 @@ static func _merge_scalar(ancestor: Variant, ours: Variant, theirs: Variant, lab
 		return ours
 	conflicts.append(label)
 	return ours
+
 
 ## Union of includes preserving ours' order, then theirs' additions. Removal on one side is
 ## honoured when the other side didn't re-add it.
@@ -113,6 +119,7 @@ static func _merge_string_list(ancestor: Array, ours: Array, theirs: Array) -> A
 		if not ancestor.has(value) and not result.has(value):
 			result.append(value)
 	return result
+
 
 ## Per-key 3-way merge of the variables dictionary.
 static func _merge_variables(ancestor: Dictionary, ours: Dictionary, theirs: Dictionary, conflicts: Array) -> Dictionary:
@@ -146,6 +153,7 @@ static func _merge_variables(ancestor: Dictionary, ours: Dictionary, theirs: Dic
 				result[key] = their_value
 	return result
 
+
 ## Functions match by name (3-way on the function's text signature).
 static func _merge_functions(ancestor: Array, ours: Array, theirs: Array, conflicts: Array) -> Array[Resource]:
 	var anc: Dictionary = _function_map(ancestor)
@@ -178,6 +186,7 @@ static func _merge_functions(ancestor: Array, ours: Array, theirs: Array, confli
 			if not our_map.has(name) and not anc.has(name):
 				result.append(entry)
 	return result
+
 
 ## The heart of it: 3-way merge the top-level rows keyed on UID (events/groups) or content
 ## (uid-less rows). Order = ours' order, with theirs' additions appended.
@@ -226,6 +235,7 @@ static func _merge_rows(ancestor: Array, ours: Array, theirs: Array, conflicts: 
 			result.append(row)  # theirs added it
 	return result
 
+
 static func _row_map(rows: Array) -> Dictionary:
 	var map: Dictionary = {}
 	for row: Variant in rows:
@@ -233,12 +243,14 @@ static func _row_map(rows: Array) -> Dictionary:
 			map[_row_key(row)] = row
 	return map
 
+
 static func _function_map(functions: Array) -> Dictionary:
 	var map: Dictionary = {}
 	for entry: Variant in functions:
 		if entry is EventFunction:
 			map[(entry as EventFunction).function_name] = entry
 	return map
+
 
 ## Stable identity: events/groups by their UID, uid-less rows by their content (so an edit
 ## to a comment reads as remove+add — acceptable for the rare comment-vs-comment case).
@@ -249,6 +261,7 @@ static func _row_key(row: Variant) -> String:
 		return "group:" + (row as EventGroup).group_uid
 	return "content:" + _row_sig(row)
 
+
 ## A row's content fingerprint: its readable text dump (deterministic, order-preserving).
 static func _row_sig(row: Variant) -> String:
 	if not (row is Resource):
@@ -256,6 +269,7 @@ static func _row_sig(row: Variant) -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	TextDump._dump_rows([row], lines, 0)
 	return "\n".join(lines)
+
 
 static func _function_sig(entry: Variant) -> String:
 	if not (entry is EventFunction):
@@ -266,12 +280,14 @@ static func _function_sig(entry: Variant) -> String:
 	TextDump._dump_rows(event_function.events if not event_function.events.is_empty() else event_function.rows, lines, 1)
 	return "\n".join(lines)
 
+
 static func _function_param_names(event_function: EventFunction) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
 	for param: Variant in event_function.params:
 		if param is ACEParam:
 			names.append((param as ACEParam).id)
 	return names
+
 
 static func _conflict_marker(side: String) -> CommentRow:
 	var comment: CommentRow = CommentRow.new()

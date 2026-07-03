@@ -5,8 +5,9 @@
 # Guards: re-importing a pack .gd and recompiling reproduces it byte-for-byte (the lossless round-trip /
 # no-drift gate), the scripts load as real classes (GDScript interop), and the ACEs resolve with templates.
 @tool
-extends RefCounted
 class_name SampleBehaviorPackTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -46,6 +47,7 @@ const PACKS: Array[String] = [
 	"res://eventsheet_addons/htn_agent/htn_agent_behavior",
 	"res://eventsheet_addons/abilities/abilities_behavior"
 ]
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -125,6 +127,7 @@ static func run() -> bool:
 	all_passed = _check("pack code lints in behavior context", bool(lint_result.get("ok", false)), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

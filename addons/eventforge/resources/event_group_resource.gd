@@ -1,8 +1,8 @@
 # EventForge — EventGroupResource resource
 # Reusable event group resource that can be inlined into event sheets.
 @tool
-extends Resource
 class_name EventGroupResource
+extends Resource
 
 static var _uid_counter: int = 0
 
@@ -17,9 +17,11 @@ static var _uid_counter: int = 0
 @export var rows: Array[Resource] = [] # Backwards-compatible alias.
 @export var group_uid: String = ""
 
+
 func _init() -> void:
 	if group_uid.is_empty():
 		group_uid = _generate_short_uid()
+
 
 ## Generates a short UID with a deterministic fallback counter.
 static func _generate_short_uid() -> String:

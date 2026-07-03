@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetACEApply
+extends RefCounted
 # The ACE-APPLICATION + row/ACE DRAG-DROP subsystem. This helper owns turning a picked
 # ACEDefinition + its params + a picker/edit context into concrete sheet mutations —
 # condition/action/trigger baking and insertion — plus the row and ACE drag-and-drop
@@ -30,10 +30,12 @@ class_name EventSheetACEApply
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
 # ── ACE picker signal handler ────────────────────────────────────────────────
+
 
 func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> void:
 	if definition.parameters.is_empty():
@@ -42,6 +44,7 @@ func _on_ace_picker_selected(definition: ACEDefinition, context: Dictionary) -> 
 	var initial_values: Dictionary = context.get("existing_params", {})
 	context["from_picker"] = true
 	_dock._ace_params.open_with_values(definition, context, initial_values)
+
 
 ## Re-opens the ACE picker when the params dialog requests Back.
 func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionary) -> void:
@@ -54,6 +57,7 @@ func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionar
 		context["preselect_ace_id"] = definition.id
 	_dock._ace_picker.open(mode, signals_only, selected_resource, context)
 
+
 ## A .gd opens as a read-only preview, but the FIRST intentional edit unlocks it automatically — no
 ## "click Edit Events" wall (that extra click is the friction now that .gd is the default format).
 ## Pure viewing stays protected: Save keeps its own read-only guard, so a casual look + Ctrl+S can
@@ -61,6 +65,7 @@ func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionar
 func _unlock_preview_for_edit() -> void:
 	if _dock._current_sheet != null and _dock._current_sheet.read_only:
 		_dock._on_preview_edit_requested()
+
 
 func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> void:
 	_unlock_preview_for_edit()
@@ -71,6 +76,7 @@ func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> 
 			_dock._ace_picker.open("append_action", false, row_data.source_resource)
 		_:
 			_dock._ace_picker.open("append_condition", false, row_data.source_resource)
+
 
 func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary) -> void:
 	if row_data == null or not (row_data.source_resource is EventRow):
@@ -101,6 +107,7 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 
 # ── ACE params dialog signal handler ────────────────────────────────────────
 
+
 func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
 	_apply_ace_definition(definition, values, context)
 	# "Apply & Add Another": reopen the picker in the same append mode so the next
@@ -110,6 +117,7 @@ func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, con
 		var selected_resource: Resource = context.get("selected_resource", null)
 		if mode in ["append_condition", "append_action"] and selected_resource is EventRow:
 			_dock._ace_picker.open(mode, false, selected_resource, {})
+
 
 func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, context: Dictionary) -> void:
 	if definition == null:
@@ -205,6 +213,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 	if changed:
 		_dock._mark_dirty(str(message.get("text", "Applied ACE.")))
 
+
 ## Bakes a trigger definition's identity + argument signature onto the event row, so the
 ## compiler can group it, generate a connectable handler (`func _on_<signal>(args)`), and
 ## emit the `_ready` connection — all without registry access at compile time. Fixes the
@@ -229,6 +238,7 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 		parts.append(param_id if param_type == TYPE_NIL else "%s: %s" % [param_id, type_string(param_type)])
 	event_row.trigger_args = ", ".join(parts)
 
+
 func _create_condition_from_definition(definition: ACEDefinition, params: Dictionary) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = definition.provider_id
@@ -247,6 +257,7 @@ func _create_condition_from_definition(definition: ACEDefinition, params: Dictio
 		condition.codegen_template = condition.codegen_template.replace("{uid}", stateful_uid)
 	return condition
 
+
 func _create_action_from_definition(definition: ACEDefinition, params: Dictionary) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = definition.provider_id
@@ -258,6 +269,7 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
 	if action.codegen_template.contains("{uid}"):
 		action.codegen_template = action.codegen_template.replace("{uid}", _dock._fresh_uid_token())
 	return action
+
 
 ## The codegen template baked onto applied ACEs. Explicit @ace_codegen_template wins; addon
 ## METHODS without one become **instance-backed**: the call targets a per-provider member
@@ -281,8 +293,10 @@ func _baked_template_for(definition: ACEDefinition) -> String:
 			argument_tokens.append("{%s}" % str((parameter as Dictionary).get("id", "")))
 	return "__eventsheet_provider_%s.%s(%s)" % [definition.provider_id, method_name, ", ".join(argument_tokens)]
 
+
 func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:
 	return _dock._param_resolver.resolve_all(definition, row_params if row_params != null else {})
+
 
 func _insert_row_below_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
 	if _dock._current_sheet == null or row_resource == null:
@@ -296,8 +310,10 @@ func _insert_row_below_selection(row_resource: Resource, explicit_selected_resou
 	var index: int = int(location.get("index", container.size() - 1))
 	container.insert(index + 1, row_resource)
 
+
 func _find_resource_location(target: Resource) -> Dictionary:
 	return _find_resource_location_in_array(target, _dock._current_sheet.events)
+
 
 func _find_resource_location_in_array(target: Resource, container: Array) -> Dictionary:
 	for index in range(container.size()):
@@ -315,15 +331,18 @@ func _find_resource_location_in_array(target: Resource, container: Array) -> Dic
 				return nested_event
 	return {}
 
+
 func _group_children_array(group: EventGroup) -> Array:
 	if not group.events.is_empty():
 		return group.events
 	return group.rows
 
+
 func _on_row_drop_requested(source_row: EventRowData, target_row: EventRowData, drop_mode: String = "before", copy_mode: bool = false) -> void:
 	if source_row == null:
 		return
 	_move_rows([source_row], target_row, drop_mode, copy_mode)
+
 
 func _on_rows_drop_requested(
 	source_rows: Array,
@@ -332,6 +351,7 @@ func _on_rows_drop_requested(
 	copy_mode: bool = false
 ) -> void:
 	_move_rows(source_rows, target_row, drop_mode, copy_mode)
+
 
 func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String, copy_mode: bool = false) -> void:
 	if target_row == null or _dock._current_sheet == null or source_rows.is_empty():
@@ -391,6 +411,7 @@ func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String,
 	)
 	if moved:
 		_dock._mark_dirty("Copied row via drag and drop." if copy_mode else "Moved row via drag and drop.")
+
 
 func _on_viewport_ace_drop_requested(
 	source_entries: Array,
@@ -472,6 +493,7 @@ func _on_viewport_ace_drop_requested(
 	if moved:
 		_dock._mark_dirty("Copied ACE via drag and drop." if copy_mode else "Moved ACE via drag and drop.")
 
+
 func _normalize_ace_drag_entries(source_entries: Array, lane: String) -> Array:
 	var normalized: Array = []
 	for entry in source_entries:
@@ -497,6 +519,7 @@ func _normalize_ace_drag_entries(source_entries: Array, lane: String) -> Array:
 		})
 	return normalized
 
+
 func _remove_drag_entry_from_source(entry: Dictionary) -> void:
 	var source_event: EventRow = entry.get("event_row", null) as EventRow
 	if source_event == null:
@@ -514,11 +537,13 @@ func _remove_drag_entry_from_source(entry: Dictionary) -> void:
 			if ace_index >= 0 and ace_index < source_event.actions.size():
 				source_event.actions.remove_at(ace_index)
 
+
 func _drag_entry_is_trigger_like(entry: Dictionary) -> bool:
 	if str(entry.get("kind", "")) == "trigger":
 		return true
 	var resource: Resource = entry.get("resource", null) as Resource
 	return resource is ACECondition and _is_trigger_condition(resource as ACECondition)
+
 
 func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []) -> bool:
 	if event_row == null:
@@ -536,6 +561,7 @@ func _event_has_trigger_like(event_row: EventRow, excluded_resources: Array = []
 			return true
 	return false
 
+
 func _is_trigger_condition(condition: ACECondition) -> bool:
 	if condition == null:
 		return false
@@ -545,10 +571,12 @@ func _is_trigger_condition(condition: ACECondition) -> bool:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	return descriptor != null and descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER
 
+
 func _event_ace_array(event_row: EventRow, lane: String) -> Array:
 	if lane == "condition":
 		return event_row.conditions
 	return event_row.actions
+
 
 func _resolve_event_ace_resource(event_row: EventRow, lane: String, ace_index: int) -> Resource:
 	if event_row == null or ace_index < 0:
@@ -559,6 +587,7 @@ func _resolve_event_ace_resource(event_row: EventRow, lane: String, ace_index: i
 	if ace_index < ace_array.size() and ace_array[ace_index] is Resource:
 		return ace_array[ace_index]
 	return null
+
 
 func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefinition]) -> void:
 	if _dock._preview_window == null or _dock._preview_list == null:
@@ -572,6 +601,7 @@ func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefin
 		_dock._preview_list.add_item("No actions or conditions were found on the dropped node.")
 	_dock._preview_window.popup_centered(Vector2i(560, 320))
 
+
 func _ace_type_label(ace_type: int) -> String:
 	match ace_type:
 		ACEDefinition.ACEType.CONDITION:
@@ -582,6 +612,7 @@ func _ace_type_label(ace_type: int) -> String:
 			return "Expression"
 		_:
 			return "Action"
+
 
 func _on_viewport_drag_status_requested(message: String, is_error: bool) -> void:
 	_dock._set_status(message, is_error)

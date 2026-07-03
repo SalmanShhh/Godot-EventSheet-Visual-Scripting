@@ -1,7 +1,8 @@
 # EventForge — restarted event sheet viewport architecture tests
 @tool
-extends RefCounted
 class_name EventSheetEditorTest
+extends RefCounted
+
 
 class FakeEditorUndoRedoManager:
     extends RefCounted
@@ -78,6 +79,7 @@ class FakeEditorUndoRedoManager:
         while not output.is_empty() and output[output.size() - 1] == null:
             output.pop_back()
         return output
+
 
 ## Runs EventSheetEditor architecture tests.
 static func run() -> bool:
@@ -1608,11 +1610,13 @@ static func run() -> bool:
     editor.free()
     return all_passed
 
+
 static func _row_contains_text(row_data: EventRowData, expected_text: String) -> bool:
     for span: SemanticSpan in row_data.spans:
         if span != null and span.text == expected_text:
             return true
     return false
+
 
 static func _rows_contain_text(rows: Array[Dictionary], expected_text: String) -> bool:
     for row_entry: Dictionary in rows:
@@ -1621,12 +1625,14 @@ static func _rows_contain_text(rows: Array[Dictionary], expected_text: String) -
             return true
     return false
 
+
 static func _rows_have_debug_state(rows: Array[Dictionary]) -> bool:
     for row_entry: Dictionary in rows:
         var row_data: EventRowData = row_entry.get("row")
         if row_data != null and not row_data.debug_state.is_empty():
             return true
     return false
+
 
 static func _row_has_lane(row_data: EventRowData, expected_lane: String) -> bool:
     for span in row_data.spans:
@@ -1635,6 +1641,7 @@ static func _row_has_lane(row_data: EventRowData, expected_lane: String) -> bool
         if str((span.metadata as Dictionary).get("lane", "")) == expected_lane:
             return true
     return false
+
 
 static func _find_span_index_by_kind(row_data: EventRowData, expected_kind: String) -> int:
     if row_data == null:
@@ -1647,6 +1654,7 @@ static func _find_span_index_by_kind(row_data: EventRowData, expected_kind: Stri
             return index
     return -1
 
+
 static func _find_last_span_index_by_kind(row_data: EventRowData, expected_kind: String) -> int:
     if row_data == null:
         return -1
@@ -1657,6 +1665,7 @@ static func _find_last_span_index_by_kind(row_data: EventRowData, expected_kind:
         if str((span.metadata as Dictionary).get("kind", "")) == expected_kind:
             return index
     return -1
+
 
 static func _find_nth_span_index_by_kind(
     row_data: EventRowData,
@@ -1677,6 +1686,7 @@ static func _find_nth_span_index_by_kind(
         current_occurrence += 1
     return -1
 
+
 static func _find_span_index_by_text(row_data: EventRowData, expected_text: String) -> int:
     if row_data == null:
         return -1
@@ -1685,6 +1695,7 @@ static func _find_span_index_by_text(row_data: EventRowData, expected_text: Stri
         if span != null and span.text == expected_text:
             return index
     return -1
+
 
 static func _find_last_span_index_by_text(row_data: EventRowData, expected_text: String) -> int:
     if row_data == null:
@@ -1695,6 +1706,7 @@ static func _find_last_span_index_by_text(row_data: EventRowData, expected_text:
             return index
     return -1
 
+
 static func _count_span_text(row_data: EventRowData, expected_text: String) -> int:
     if row_data == null:
         return 0
@@ -1703,6 +1715,7 @@ static func _count_span_text(row_data: EventRowData, expected_text: String) -> i
         if span != null and span.text == expected_text:
             total += 1
     return total
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
     if actual == expected:

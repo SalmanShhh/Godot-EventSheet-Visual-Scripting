@@ -44,6 +44,7 @@ const SPAN_SELECT_OUTLINE_ALPHA := 0.95
 const SPAN_HOVER_OUTLINE_LIGHTEN := 0.28
 const SPAN_HOVER_OUTLINE_ALPHA := 0.82
 
+
 ## Event-sheet-style insert marker: arrowheads at both ends of a thin drop line so the insert point
 ## reads instantly (mirrors the tree-insert-mark).
 func _draw_insert_marker_arrows(control: Control, line_rect: Rect2, color: Color) -> void:
@@ -59,6 +60,7 @@ func _draw_insert_marker_arrows(control: Control, line_rect: Rect2, color: Color
 		Vector2(line_rect.end.x - arrow, mid_y),
 		Vector2(line_rect.end.x, mid_y + arrow)
 	]), color)
+
 
 ## Draws ACE text with its parameter values highlighted (event-sheet-style): plain segments use the
 ## base colour, value segments (numbers / quoted strings / booleans, precomputed at span
@@ -110,6 +112,7 @@ func _draw_text_with_values(
 	if not tail.is_empty() and x < limit:
 		_draw_text(control, Vector2(x, baseline.y), tail, limit - x, font, font_size, base_color)
 
+
 ## Draws text crisply under the viewport's zoom: the canvas transform scales geometry, but
 ## glyphs scaled that way blur (zoom in) or alias (zoom out). This rasterizes the text at its
 ## final physical pixel size in identity space instead, then restores the zoom transform.
@@ -140,6 +143,7 @@ func _draw_text(
 ## (scaling width too) so wrap points stay identical and glyphs stay crisp.
 const COMMENT_BREAK_FLAGS := TextServer.BREAK_WORD_BOUND | TextServer.BREAK_GRAPHEME_BOUND
 
+
 func _draw_multiline_text(
 	control: Control,
 	baseline: Vector2,
@@ -160,6 +164,7 @@ func _draw_multiline_text(
 	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	control.draw_multiline_string(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width, physical_size, -1, color, COMMENT_BREAK_FLAGS)
 	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
+
 
 func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
 	var row_rect: Rect2 = layout.get("row_rect", Rect2())
@@ -300,6 +305,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	if not debug_text.is_empty():
 		_draw_debug_overlay(control, row_rect, font, font_size, debug_text)
 
+
 func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int) -> void:
 	if gutter_rect.size == Vector2.ZERO:
 		return
@@ -322,6 +328,7 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 			Vector2(flag_x, flag_y + 4.0)
 		]), EventSheetPalette.COLOR_BOOKMARK)
 
+
 func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int) -> void:
 	for level: int in range(depth):
 		var guide_x: float = row_rect.position.x + EventSheetPalette.GUTTER_WIDTH + float(level * INDENT_WIDTH) + 2.0
@@ -332,6 +339,7 @@ func _draw_indent_guides(control: Control, row_rect: Rect2, depth: int) -> void:
 			1.0,
 			true
 		)
+
 
 func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible: bool) -> void:
 	if not visible or fold_rect.size == Vector2.ZERO:
@@ -361,10 +369,12 @@ func _draw_fold_arrow(control: Control, fold_rect: Rect2, folded: bool, visible:
 			true
 		)
 
+
 func _draw_row_outline(control: Control, row_rect: Rect2, base_color: Color, lighten: float, alpha: float) -> void:
 	var outline: Color = base_color.lightened(lighten)
 	outline.a = alpha
 	control.draw_rect(row_rect.grow(-0.5), outline, false, 1.0)
+
 
 func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2, alternating: bool, event_style: EventSheetEventStyle = null, group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)) -> void:
 	var bg: Color = EventSheetPalette.COLOR_GROUP_BG_ALT if alternating else EventSheetPalette.COLOR_GROUP_BG
@@ -383,6 +393,7 @@ func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2,
 	if fold_rect.size != Vector2.ZERO:
 		control.draw_rect(fold_rect.grow(1.0), fold_bg, true)
 
+
 func _draw_icon(control: Control, icon_rect: Rect2, row_data: EventRowData) -> void:
 	if icon_rect.size == Vector2.ZERO:
 		return
@@ -395,6 +406,7 @@ func _draw_icon(control: Control, icon_rect: Rect2, row_data: EventRowData) -> v
 		EventRowData.RowType.SECTION:
 			color = TEXT_MUTED
 	control.draw_rect(icon_rect, color, true)
+
 
 func _draw_spans(
 	control: Control,
@@ -586,6 +598,7 @@ func _draw_spans(
 				true
 			)
 
+
 func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
 	# Flat event-sheet/GDevelop-style cell: a subtle rectangular fill, no border or rounded corners.
 	var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
@@ -595,6 +608,7 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary)
 # code cell reads as "this is code" without the saturated blue that fought the editor theme.
 const CODE_CELL_BG := Color(0.62, 0.64, 0.68, 0.05)
 const CODE_CELL_STRIPE := Color(0.56, 0.58, 0.63, 0.38)
+
 
 ## Groups consecutive multi-line block spans (block_lines>1, starting at block_line 0)
 ## into one visual cell. Returns {"unions": {span_index: Rect2}, "heads":
@@ -623,6 +637,7 @@ static func resolve_block_groups(spans: Array) -> Dictionary:
 		scan_index += 1
 	return {"unions": unions, "heads": heads}
 
+
 ## One merged cell for a multi-line block. In-flow GDScript additionally gets a code
 ## stripe + cool tint, so "this cell is code" reads at a glance (user call: it must be
 ## visually obvious when an action is just GDScript).
@@ -634,10 +649,12 @@ func _draw_block_cell(control: Control, rect: Rect2, metadata: Dictionary) -> vo
 	var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
 	control.draw_rect(rect, bg, true)
 
+
 ## Flat, clearly-visible hover for a single condition/action cell: a neutral light tint over
 ## just that cell (distinct from the accent-coloured selection), so it reads as "this cell".
 func _draw_cell_hover(control: Control, rect: Rect2, tint: Color) -> void:
 	control.draw_rect(rect, tint, true)
+
 
 func _draw_chip_selected_span(
 	control: Control,
@@ -651,6 +668,7 @@ func _draw_chip_selected_span(
 	var fill: Color = Color(accent.r, accent.g, accent.b, 0.16 if multi_select else 0.22)
 	control.draw_rect(span.rect, fill, true)
 	control.draw_rect(Rect2(span.rect.position.x, span.rect.position.y, 2.0, span.rect.size.y), accent, true)
+
 
 func _draw_drag_feedback(
 	control: Control,
@@ -685,6 +703,8 @@ func _draw_drag_feedback(
 		max(font_size - 1, 10),
 		Color(1.0, 1.0, 1.0, 0.96)
 	)
+
+
 func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_size: int, metadata: Dictionary) -> void:
 	var badge_rect: Rect2 = span.rect
 	var badge_bg: Color = metadata.get("badge_bg", EventSheetPalette.COLOR_LANE_DIVIDER)
@@ -724,6 +744,7 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 		badge_fg
 	)
 
+
 func _draw_debug_overlay(control: Control, row_rect: Rect2, font: Font, font_size: int, debug_text: String) -> void:
 	var badge_width: float = font.get_string_size(debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x + 10.0
 	var badge_rect := Rect2(row_rect.end.x - badge_width - 8.0, row_rect.position.y + 5.0, badge_width, row_rect.size.y - 10.0)
@@ -731,6 +752,7 @@ func _draw_debug_overlay(control: Control, row_rect: Rect2, font: Font, font_siz
 	control.draw_rect(badge_rect, EventSheetPalette.COLOR_DEBUG, true)
 	var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
 	_draw_text(control, Vector2(badge_rect.position.x + 5.0, baseline_y), debug_text, -1.0, font, font_size - 1, EventSheetPalette.COLOR_DEBUG_TEXT)
+
 
 func _get_span_color(span_type: int, event_style: EventSheetEventStyle = null) -> Color:
 	match span_type:

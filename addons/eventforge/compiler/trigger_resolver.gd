@@ -5,13 +5,15 @@
 # triggers from reflection providers use the "signal:<name>" id convention, with their
 # argument signature baked onto the event as `trigger_args` at apply time.
 @tool
-extends RefCounted
 class_name TriggerResolver
+extends RefCounted
+
 
 ## Returns a stable trigger-group key. The source path is part of the key because the same
 ## signal from different source nodes needs different handlers.
 static func get_trigger_key(event: EventRow) -> String:
 	return "%s::%s::%s" % [event.trigger_provider_id, event.trigger_id, event.trigger_source_path]
+
 
 ## Resolves trigger metadata for code generation:
 ## - function_name/args: the handler signature to emit
@@ -95,6 +97,7 @@ const TEMPO_INPUT := "input"            # ⌨ an input event
 const TEMPO_ONCE := "once"              # ▶ runs once (setup)
 const TEMPO_SIGNAL := "signal"          # ➜ reacts to a signal — the honest default
 
+
 ## Classifies a trigger id into its tempo class. Every-tick = per-frame lifecycle + the post-tick twins;
 ## input = the input handlers; once = _ready / editor-run; everything else — signal-backed triggers,
 ## "signal:<name>" custom signals, and any UNKNOWN id — is a signal (the honest default, matching the
@@ -110,11 +113,14 @@ static func tempo_class_for(trigger_id: String) -> String:
 		_:
 			return TEMPO_SIGNAL
 
+
 static func _lifecycle(function_name: String, args: String) -> Dictionary:
 	return {"function_name": function_name, "args": args, "signal_name": "", "source_path": ""}
 
+
 static func _signal_backed(function_name: String, args: String, signal_name: String, source_path: String) -> Dictionary:
 	return {"function_name": function_name, "args": args, "signal_name": signal_name, "source_path": source_path}
+
 
 ## "" → "" (self keeps the classic handler names); "Platform" → "_platform";
 ## "Enemies/Boss" → "_enemies_boss" — a safe identifier fragment for handler names.

@@ -5,8 +5,9 @@
 # CLASS anywhere in the subtree, so you target it by type instead — no path, no code. This pins their
 # registration + that they compile to the right find_children() call (incl. param substitution).
 @tool
-extends RefCounted
 class_name NodeTypeAcesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -102,12 +103,14 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _is(by_id: Dictionary, ace_id: String, ace_type: int) -> bool:
 	if not by_id.has(ace_id):
 		return false
 	var descriptor: ACEDescriptor = by_id[ace_id] as ACEDescriptor
 	return descriptor.ace_type == ace_type and descriptor.category == "Nodes: Picking" \
 		and descriptor.codegen_template.contains("find_children(\"*\", {type}, true, false)")
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

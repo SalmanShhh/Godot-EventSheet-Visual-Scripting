@@ -15,8 +15,8 @@
 # Triggers are skipped (they name a signal, they have no inline template). Nothing is dropped
 # silently: every skip is printed.
 @tool
-extends RefCounted
 class_name BuiltinACECompileTest
+extends RefCounted
 
 ## Correct ACEs that cannot compile in ISOLATION — they need surrounding context this harness
 ## intentionally does not build: a loop (break/continue), a return-typed function (return X),
@@ -28,6 +28,7 @@ const NOT_STANDALONE: Array[String] = [
 	"EveryXSeconds", "AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
 ]
+
 
 static func run() -> bool:
 	var descriptors: Array[ACEDescriptor] = EventForgeBuiltinACEs.get_descriptors()
@@ -66,6 +67,7 @@ static func run() -> bool:
 
 	return _check("every auto-fillable built-in ACE compiles in its host", failures.is_empty(), true)
 
+
 ## Builds a params dict that fills each placeholder with a value of the param's type that
 ## compiles. Returns {"skip": true, ...} when a param has only a bare placeholder the user must
 ## supply (e.g. a function name) with no compilable stand-in, so the ACE is reported, not mis-tested.
@@ -94,6 +96,7 @@ static func _fill_params(d: ACEDescriptor) -> Dictionary:
 				return {"skip": true, "reason": "bare placeholder for '%s'" % p.id}
 	params["uid"] = "0"                              # per-row unique id the compiler injects
 	return {"params": params}
+
 
 ## Wraps the substituted template in its host class so host methods/properties resolve. Scaffold
 ## members stand in for the run context a real sheet provides: an untyped `v` for a sheet variable
@@ -128,6 +131,7 @@ static func _wrap(d: ACEDescriptor, params: Dictionary) -> String:
 	scaffold += "func __sink(_a: Variant) -> void:\n\tpass\n"
 	return "@tool\nextends %s\n%sfunc __t() -> void:\n%s" % [host, scaffold, body]
 
+
 ## True when the host class (incl. inherited members) already exposes a property or method with
 ## this name, so the scaffold can skip declaring a colliding stand-in (e.g. Label.text).
 static func _host_has_member(host: String, member: String) -> bool:
@@ -139,6 +143,7 @@ static func _host_has_member(host: String, member: String) -> bool:
 		if str(prop.get("name", "")) == member:
 			return true
 	return false
+
 
 ## A compilable literal of the given declared type, or "" when there is no obvious stand-in.
 static func _value_for_type(type_name: String) -> String:
@@ -155,6 +160,7 @@ static func _value_for_type(type_name: String) -> String:
 		"Color": return "Color.WHITE"
 	return ""
 
+
 static func _type_name(ace_type: int) -> String:
 	match ace_type:
 		ACEDescriptor.ACEType.CONDITION: return "CONDITION"
@@ -162,6 +168,7 @@ static func _type_name(ace_type: int) -> String:
 		ACEDescriptor.ACEType.ACTION: return "ACTION"
 		ACEDescriptor.ACEType.TRIGGER: return "TRIGGER"
 	return "?"
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

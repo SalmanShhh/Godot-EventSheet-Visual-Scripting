@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetFunctionDialogGlue
+extends RefCounted
 # The Add-sheet-Function dialog glue (Add ▾ → Function…).
 #
 # Owns the lazy construction + wiring of the sheet-function dialog and its apply-to-sheet:
@@ -39,17 +39,20 @@ class_name EventSheetFunctionDialogGlue
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
 # ── Sheet functions: the dialog with the expanding param list (Add ▾ → Function…) ────
 var _function_dialog: EventSheetFunctionDialog = null
 
+
 func _open_function_dialog() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
 	_ensure_dialog()
 	_function_dialog.open()
+
 
 ## Double-clicking a Define block on the canvas edits that verb in the same dialog (edit mode:
 ## pre-filled fields, the apply updates the existing function instead of appending a new one).
@@ -58,6 +61,7 @@ func _open_function_dialog_for(event_function: Resource) -> void:
 		return
 	_ensure_dialog()
 	_function_dialog.open_for_edit(event_function as EventFunction)
+
 
 func _ensure_dialog() -> void:
 	if _function_dialog != null:
@@ -74,6 +78,7 @@ func _ensure_dialog() -> void:
 					taken.append((function_entry as EventFunction).function_name)
 		return taken)
 	_function_dialog.function_confirmed.connect(_apply_function_data)
+
 
 ## Creates the EventFunction from validated dialog data (undoable). The body is
 ## authored as rows afterwards; CallFunction and the publish surface pick it up.
@@ -114,6 +119,7 @@ func _apply_function_data(data: Dictionary) -> void:
 		return true)
 	if changed:
 		_dock._mark_dirty("Added function %s()." % str(data.get("name")))
+
 
 ## Updates an existing function in place (undoable). The target is found by its ORIGINAL name in the
 ## LIVE sheet — never by a held object reference, because the undo funnel's commit restores a duplicated
@@ -163,6 +169,7 @@ func _apply_function_edit(data: Dictionary) -> void:
 		return true)
 	if changed:
 		_dock._mark_dirty("Edited function %s()." % str(data.get("name")))
+
 
 ## One comparable string per (name, type, description, expose, display, category, params) tuple —
 ## the "did the dialog actually change anything" check above.

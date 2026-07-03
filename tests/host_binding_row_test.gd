@@ -4,10 +4,11 @@
 # exact-shape classifier (a hand-modified _enter_tree stays a real block), the collapsed rendering
 # over a real pack, and — covenant-critical — the byte round-trip is untouched (pure view).
 @tool
-extends RefCounted
 class_name HostBindingRowTest
+extends RefCounted
 
 const CANONICAL := "func _enter_tree() -> void:\n\thost = get_parent() as Node2D\n\tif host == null:\n\t\tpush_warning(\"SimpleHealthBehavior behavior requires a Node2D parent.\")"
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -52,6 +53,7 @@ static func run() -> bool:
 	dock.free()
 	return ok
 
+
 static func _has_enter_tree_block(view: EventSheetViewport) -> bool:
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
@@ -62,6 +64,7 @@ static func _has_enter_tree_block(view: EventSheetViewport) -> bool:
 			if str(span.text).begins_with("func _enter_tree"):
 				return true
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

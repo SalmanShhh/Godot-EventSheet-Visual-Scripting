@@ -5,12 +5,13 @@
 # generated skeleton must be VALID GDScript for every base class offered — a scaffold that doesn't parse is
 # worse than none. This pins name validation, the path, the content, and that parse for all bases.
 @tool
-extends RefCounted
 class_name BehaviourAddonScaffoldTest
+extends RefCounted
 
 # preload (not the global class_name) so the test parses even before a project re-import registers the
 # freshly-added EventSheetBehaviourAddonScaffold in the global class cache.
 const Scaffold := preload("res://addons/eventsheet/editor/behaviour_addon_scaffold.gd")
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -67,6 +68,7 @@ static func run() -> bool:
 	all_passed = _check("embedded double-quotes are neutralised in the annotation", dirty.contains("Has 'quotes'"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

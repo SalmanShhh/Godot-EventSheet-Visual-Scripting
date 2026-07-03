@@ -15,6 +15,7 @@ const CATEGORY_KEYWORDS := {
 	"AI": ["ai", "think", "state", "patrol", "chase"]
 }
 
+
 static func infer_category(symbol_name: String, ace_type: int, return_type: int = TYPE_NIL, parameter_types: Array = []) -> String:
 	if ace_type == ACEDefinition.ACEType.TRIGGER:
 		return "Signals"

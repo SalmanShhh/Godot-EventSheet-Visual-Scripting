@@ -3,8 +3,9 @@
 # keyword-badged Trigger row and feeds the On Signal / Emit Signal pickers — and a bare zero-arg
 # `signal_name.emit()` in an event body reverse-lifts to an Emit Signal action row.
 @tool
-extends RefCounted
 class_name SignalRowLiftTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -67,6 +68,7 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _has_emit_signal(row: EventRow) -> bool:
 	for action: Variant in row.actions:
 		if action is ACEAction and (action as ACEAction).ace_id == "EmitSignal":
@@ -75,6 +77,7 @@ static func _has_emit_signal(row: EventRow) -> bool:
 		if sub is EventRow and _has_emit_signal(sub as EventRow):
 			return true
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

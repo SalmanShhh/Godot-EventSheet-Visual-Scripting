@@ -3,8 +3,9 @@
 # dialog and the sheet banner show it), and opening the generated .gd recovers the icon back into the
 # field. The icon ships WITH the packs (eventsheet_addons/), so a behaviour stays self-contained.
 @tool
-extends RefCounted
 class_name IconRoundtripTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -37,6 +38,7 @@ static func run() -> bool:
 		print("    SRC<%s>\n    RT <%s>" % [source, rt])
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

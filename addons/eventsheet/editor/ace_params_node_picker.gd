@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name ACEParamsNodePicker
+extends RefCounted
 # The "Pick Node" dialog opened by the 🔍 button next to an expression field — a large-project
 # scene-node search that hands a node reference back into the field. Extracted from
 # ace_params_dialog.gd to keep that file maintainable; it owns all its own widgets and reaches the
@@ -43,8 +43,10 @@ const NODE_PICKER_CHIP_CLASSES: Dictionary = {
 const NODE_PICKER_RECENTS_CAP := 8
 const NODE_PICKER_SCENE_SCAN_CAP := 200
 
+
 func init(host: ACEParamsDialog) -> void:
 	_host = host
+
 
 func _open_node_picker(key: String) -> void:
 	_node_picker_target_key = key
@@ -53,6 +55,7 @@ func _open_node_picker(key: String) -> void:
 	_node_picker_window.get_ok_button().disabled = true
 	_node_picker_window.popup_centered(Vector2i(520, 560))
 	_node_picker_search.grab_focus()
+
 
 ## Builds the picker UI lazily (separate from _open so headless tests can drive it).
 func _ensure_node_picker_ui() -> void:
@@ -121,9 +124,11 @@ func _ensure_node_picker_ui() -> void:
 		_node_picker_window.add_child(EventSheetPopupUI.margined(box))
 		_host._dialog.add_child(_node_picker_window)
 
+
 func _populate_node_picker() -> void:
 	var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
 	_populate_node_picker_from_root(scene_root)
+
 
 ## Population factored from the editor entry point so tests can drive an explicit tree.
 func _populate_node_picker_from_root(scene_root: Node) -> void:
@@ -167,6 +172,7 @@ func _populate_node_picker_from_root(scene_root: Node) -> void:
 				recent_item.set_metadata(0, recent)
 	_append_node_picker_rows(scene_root, scene_root, root_item, query)
 
+
 func _append_node_picker_rows(node: Node, scene_root: Node, parent_item: TreeItem, query: String) -> void:
 	var relative: String = str(scene_root.get_path_to(node))
 	if _chip_filter_allows(node) and node_matches_query(node, relative, query):
@@ -180,6 +186,7 @@ func _append_node_picker_rows(node: Node, scene_root: Node, parent_item: TreeIte
 	for child: Node in node.get_children():
 		_append_node_picker_rows(child, scene_root, parent_item, query)
 
+
 ## True when no chip is active, or the node inherits any active chip's base classes.
 func _chip_filter_allows(node: Node) -> bool:
 	var any_active: bool = false
@@ -192,6 +199,7 @@ func _chip_filter_allows(node: Node) -> bool:
 			if node.is_class(base_class):
 				return true
 	return not any_active
+
 
 ## Query matching with the group:/script: prefixes (plain = name/class/path).
 static func node_matches_query(node: Node, relative_path: String, query: String) -> bool:
@@ -211,6 +219,7 @@ static func node_matches_query(node: Node, relative_path: String, query: String)
 		or node.get_class().to_lower().contains(lowered) \
 		or relative_path.to_lower().contains(lowered)
 
+
 ## Every $Name / $"Path" reference the sheet makes (params, blocks, pick filters).
 static func extract_sheet_node_references(sheet: EventSheetResource) -> PackedStringArray:
 	var references: PackedStringArray = PackedStringArray()
@@ -229,6 +238,7 @@ static func extract_sheet_node_references(sheet: EventSheetResource) -> PackedSt
 			if not references.has(reference):
 				references.append(reference)
 	return references
+
 
 static func _collect_reference_haystacks(rows: Array, into: PackedStringArray) -> void:
 	for row: Variant in rows:
@@ -253,6 +263,7 @@ static func _collect_reference_haystacks(rows: Array, into: PackedStringArray) -
 					into.append((pick as PickFilter).collection_value)
 					into.append((pick as PickFilter).predicate_expression)
 			_collect_reference_haystacks(event_row.sub_events, into)
+
 
 ## Cross-scene search: regex-scans .tscn node headers (text format) under res://.
 ## Returns [{file, node, class}] capped at NODE_PICKER_SCENE_SCAN_CAP.
@@ -289,12 +300,14 @@ static func scan_scene_files(query: String, base_dir: String = "res://") -> Arra
 			entry = directory.get_next()
 	return hits
 
+
 ## Enter in the node-picker search box commits the first matching node.
 func _activate_first_node_picker_match() -> void:
 	var first: TreeItem = _host._first_metadata_row(_node_picker_tree.get_root()) if _node_picker_tree != null else null
 	if first != null:
 		first.select(0)
 		_on_node_picker_activated()
+
 
 ## Enables the "Use Node" button only when a row that carries a node reference is highlighted, so the
 ## confirm action can never commit an empty/heading row.
@@ -306,6 +319,7 @@ func _on_node_picker_selection_changed() -> void:
 		var meta: Variant = selected.get_metadata(0) if selected != null else null
 		var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
 		_node_picker_unique_button.disabled = meta == null or not _node_is_uniqueable(scene_root, str(meta))
+
 
 func _on_node_picker_activated() -> void:
 	var selected: TreeItem = _node_picker_tree.get_selected()
@@ -332,9 +346,11 @@ func _on_node_picker_activated() -> void:
 		(field as LineEdit).insert_text_at_caret(reference)
 	_node_picker_window.hide()
 
+
 func _on_node_picker_custom_action(action: StringName) -> void:
 	if str(action) == "make_unique":
 		_make_picked_node_unique()
+
 
 ## Marks the picked node scene-unique (undoable) and hands back %Name — so ANY deep node, not just
 ## pre-marked ones, becomes a flat path-free handle in one click, without leaving the sheet for the scene
@@ -368,6 +384,7 @@ func _make_picked_node_unique() -> void:
 	elif field is LineEdit:
 		(field as LineEdit).insert_text_at_caret(reference)
 	_node_picker_window.hide()
+
 
 ## True when the node at relative_path can be made scene-unique: it exists, isn't the scene root or a
 ## cross-scene entry, is owned by this scene, and isn't already unique. Pure → unit-testable.

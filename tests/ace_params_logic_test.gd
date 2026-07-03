@@ -4,8 +4,9 @@
 # variable-name resolution, back/re-edit flags, and hint text. The dialog form itself needs
 # a display server and is verified by opening the editor.
 @tool
-extends RefCounted
 class_name ACEParamsLogicTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -161,6 +162,7 @@ static func run() -> bool:
 	empty_tree.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -48,6 +48,7 @@ var _rows: Array = []            # [{header: bool, organ, title, count, accent} 
 var _folded: Dictionary = {}     # organ id -> true (session view state)
 var _hover_index: int = -1
 
+
 func _init() -> void:
 	name = "Anatomy"
 	custom_minimum_size = Vector2(180.0, 120.0)
@@ -69,6 +70,7 @@ func _init() -> void:
 		_hover_index = -1
 		_canvas.queue_redraw())
 	_scroll.add_child(_canvas)
+
 
 ## Rebuilds the organ list from the sheet (called by the workspace on tab switch + after edits).
 func refresh(sheet: EventSheetResource) -> void:
@@ -96,11 +98,13 @@ func refresh(sheet: EventSheetResource) -> void:
 	_canvas.custom_minimum_size = Vector2(0.0, _row_offset(_rows.size()))
 	_canvas.queue_redraw()
 
+
 func _row_offset(index: int) -> float:
 	var y: float = 0.0
 	for row_index: int in range(mini(index, _rows.size())):
 		y += _HEADER_HEIGHT if bool((_rows[row_index] as Dictionary).get("header")) else _ENTRY_HEIGHT
 	return y
+
 
 func _row_index_at(y: float) -> int:
 	var cursor: float = 0.0
@@ -109,6 +113,7 @@ func _row_index_at(y: float) -> int:
 		if y < cursor:
 			return index
 	return -1
+
 
 ## The panel's whole render: organ headers (accent title · count · underline) and entry rows drawn
 ## with the Define-block pill language. Small lists — a full redraw is cheap.
@@ -140,6 +145,7 @@ func _draw_rows() -> void:
 			_canvas.draw_string(font, Vector2(30.0, y + 14.0), str(row.get("label")), HORIZONTAL_ALIGNMENT_LEFT, width - 34.0, 11, label_color)
 		y += height
 
+
 func _on_canvas_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		var hover: int = _row_index_at((event as InputEventMouseMotion).position.y)
@@ -162,6 +168,7 @@ func _on_canvas_input(event: InputEvent) -> void:
 	elif (event as InputEventMouseButton).double_click and row.get("resource") is Resource:
 		reveal_requested.emit(row.get("resource"))
 
+
 ## Re-derives the visible rows after a fold toggle without re-running the census: rebuild from the
 ## header rows we already have is not possible (entries were dropped), so ask the workspace model.
 func _refresh_from_rows() -> void:
@@ -172,6 +179,7 @@ func _refresh_from_rows() -> void:
 var _last_sheet: EventSheetResource = null
 
 # ── The census (static → headless-testable) ──────────────────────────────────────────────────────
+
 
 ## The seven organs, ordered, as [{id, title, entries: [{label, resource?}]}] — static + pure so the
 ## census is unit-testable without a panel. `resource` is present when the entry has a canvas row to
@@ -220,6 +228,7 @@ static func collect_anatomy(sheet: EventSheetResource) -> Array:
 		{"id": "expressions", "title": "Expressions", "entries": organs["expressions"]},
 		{"id": "uses", "title": "Uses", "entries": organs["uses"]},
 	]
+
 
 static func _collect_row(row: Variant, organs: Dictionary, providers: Dictionary) -> void:
 	if row is EventGroup:

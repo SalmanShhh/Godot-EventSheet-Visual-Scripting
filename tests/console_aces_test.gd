@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name ConsoleAcesTest
+extends RefCounted
 # The Console module's "As" dropdown shows a friendly label (Message / Warning / Error) but inserts
 # the matching Godot call (print / push_warning / push_error). This pins the friendly-label combo
 # infrastructure end to end — the factory keeps {key,label} dict options, the adapter carries the
@@ -11,6 +11,7 @@ const ConsoleACEs := preload("res://addons/eventforge/registration/modules/conso
 const Adapter := preload("res://addons/eventsheet/ace/ace_adapter.gd")
 const ActionCodegenLib := preload("res://addons/eventforge/compiler/action_codegen.gd")
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -74,6 +75,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## Builds a one-row sheet (OnProcess trigger + a single action with a baked template) for round-trip checks.
 static func _sheet_with_action(ace_id: String, template: String, params: Dictionary) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -90,6 +92,7 @@ static func _sheet_with_action(ace_id: String, template: String, params: Diction
 	sheet.events.append(row)
 	return sheet
 
+
 ## Recursively finds the first action with this ace_id across event rows, their sub-events, and groups.
 static func _find_action(rows: Array, ace_id: String) -> ACEAction:
 	for r: Variant in rows:
@@ -105,6 +108,7 @@ static func _find_action(rows: Array, ace_id: String) -> ACEAction:
 			if inside != null:
 				return inside
 	return null
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

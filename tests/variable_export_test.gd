@@ -3,8 +3,9 @@
 # A global variable marked exported compiles to `@export var` (readable outside the script);
 # a private one compiles to a plain `var`. Guards the toggle's effect on codegen.
 @tool
-extends RefCounted
 class_name VariableExportTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -22,6 +23,7 @@ static func run() -> bool:
 		private_output.contains("var health: int = 100") and not private_output.contains("@export var health"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

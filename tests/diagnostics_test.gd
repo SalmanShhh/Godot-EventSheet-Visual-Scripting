@@ -4,8 +4,9 @@
 # params are flagged on the offending resource (so the editor can jump to + mark the row), and
 # clean sheets stay quiet. Pure/headless — no display server needed.
 @tool
-extends RefCounted
 class_name DiagnosticsTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -78,6 +79,7 @@ static func run() -> bool:
 	all_passed = _check("a non-shadowing local variable is clean", EventSheetDiagnostics.analyze(shadow_sheet, null).is_empty(), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

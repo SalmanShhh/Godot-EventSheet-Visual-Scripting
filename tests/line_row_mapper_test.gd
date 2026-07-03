@@ -5,8 +5,9 @@
 # actual output text, not just the map), and out-of-range / stale lookups fail closed. This is the
 # shared core for the GDScript panel's click-to-select and the coming error→row / paused-at-row links.
 @tool
-extends RefCounted
 class_name LineRowMapperTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -113,6 +114,7 @@ static func run() -> bool:
 		EventSheetLineRowMapper.range_for_resource(source_map, null), Vector2i(-1, -1)) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

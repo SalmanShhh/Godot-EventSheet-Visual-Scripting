@@ -4,8 +4,9 @@
 # ids, custom ones become "signal:<name>" with baked trigger_args; the connects themselves
 # are skipped (emission regenerates them). Byte-identical verification still gates it all.
 @tool
-extends RefCounted
 class_name SignalLiftTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -122,12 +123,14 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _action(template: String) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Test"
 	action.ace_id = template
 	action.codegen_template = template
 	return action
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

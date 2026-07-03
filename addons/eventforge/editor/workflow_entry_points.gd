@@ -5,8 +5,9 @@
 # Event Sheet" and the Inspector's "Edit Event Sheet" button. The editor glue
 # (EventSheetContextMenu, EventSheetEditButtonPlugin, plugin.gd) stays thin.
 @tool
-extends RefCounted
 class_name EventSheetWorkflow
+extends RefCounted
+
 
 ## The "Attach Script" reflex for sheets: creates a sheet whose host_class matches
 ## the node, saves it beside the scene (suffix, never overwrite), compiles its pair
@@ -38,6 +39,7 @@ static func create_sheet_for_node(node: Node, directory: String) -> Dictionary:
 		return {"ok": false, "message": "The new sheet didn't compile: %s" % str(compile_result.get("errors")), "sheet_path": sheet_path}
 	node.set_script(load(SheetCompiler._resolve_output_path(saved, "")))
 	return {"ok": true, "message": "Event sheet attached to %s — it opens in the EventSheet workspace." % node.name, "sheet_path": sheet_path}
+
 
 ## What the "Open as Event Sheet" context entries accept: sheet .tres files and any
 ## .gd (GDScript-backed sheets open arbitrary scripts losslessly).

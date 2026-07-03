@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetRowEditOps
+extends RefCounted
 # The CONTEXT-DRIVEN ROW / ACE EDIT-OPS subsystem. This helper owns the operations that MUTATE
 # rows and ACEs in response to the right-click context menu and the multi-selection: enable/disable
 # (per-ACE, per-row, whole-selection), delete (ACE spans, rows, selection), indent / outdent, Else /
@@ -44,10 +44,12 @@ class_name EventSheetRowEditOps
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
 
 # ── Bulk operations on the multi-selection (one undo action each) ─────────────────────
+
 
 ## Disables every selected row that can be disabled — or re-enables them all when the
 ## first one is already off (uniform result, never a mixed toggle).
@@ -64,6 +66,7 @@ func _bulk_set_enabled_on(targets: Array) -> void:
 		return true)
 	if changed:
 		_dock._mark_dirty("%s %d row(s)." % ["Enabled" if make_enabled else "Disabled", rows.size()])
+
 
 ## Duplicates every selected row in place (each copy lands right under its source,
 ## event uids re-baked so stateful conditions never share accumulators).
@@ -84,6 +87,7 @@ func _bulk_duplicate_rows(targets: Array) -> void:
 		return any)
 	if changed:
 		_dock._mark_dirty("Duplicated %d row(s)." % targets.size())
+
 
 ## Wraps a same-parent selection in a fresh group (selection order preserved).
 ## Returns "" or the user-facing problem — mixed-parent selections are refused
@@ -118,6 +122,7 @@ func _bulk_group_rows(targets: Array) -> String:
 
 # ── Context-menu ACE edit ops (the right-clicked condition/action/trigger) ─────────────
 
+
 func _delete_context_ace() -> void:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):
 		return
@@ -144,6 +149,7 @@ func _delete_context_ace() -> void:
 	if deleted:
 		_dock._mark_dirty("Deleted ACE.")
 
+
 func _toggle_context_condition_inversion() -> void:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):
 		return
@@ -163,6 +169,7 @@ func _toggle_context_condition_inversion() -> void:
 	if toggled:
 		_dock._mark_dirty("Updated condition inversion.")
 
+
 ## The ACE resource the context menu was opened on (condition/trigger/action lanes).
 func _context_ace_resource(lane: String) -> Resource:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):
@@ -175,6 +182,7 @@ func _context_ace_resource(lane: String) -> Resource:
 			return event_row.trigger
 		return event_row.conditions[ace_index] if ace_index >= 0 and ace_index < event_row.conditions.size() else null
 	return event_row.actions[ace_index] if ace_index >= 0 and ace_index < event_row.actions.size() else null
+
 
 func _context_ace_is_disabled() -> bool:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):
@@ -191,6 +199,7 @@ func _context_ace_is_disabled() -> bool:
 		"action":
 			return ace_index >= 0 and ace_index < event_row.actions.size() and event_row.actions[ace_index] is ACEAction and not ((event_row.actions[ace_index] as ACEAction).enabled)
 	return false
+
 
 func _toggle_context_ace_enabled() -> void:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):
@@ -218,6 +227,7 @@ func _toggle_context_ace_enabled() -> void:
 	)
 	if changed:
 		_dock._mark_dirty("Updated ACE enabled state.")
+
 
 ## Disables (or re-enables) everything currently selected at once: individual conditions /
 ## actions when ACE spans are selected, otherwise the selected rows (events/groups/comments).
@@ -255,6 +265,7 @@ func _toggle_selected_enabled() -> void:
 	if changed:
 		_dock._mark_dirty("%s selection." % ("Enabled" if new_enabled else "Disabled"))
 
+
 func _ace_target_enabled(target: Dictionary) -> bool:
 	var event_row: EventRow = target.get("source_resource", null) as EventRow
 	if event_row == null:
@@ -268,6 +279,7 @@ func _ace_target_enabled(target: Dictionary) -> bool:
 		"action":
 			return ace_index < 0 or ace_index >= event_row.actions.size() or not (event_row.actions[ace_index] is ACEAction) or (event_row.actions[ace_index] as ACEAction).enabled
 	return true
+
 
 func _set_ace_target_enabled(target: Dictionary, enabled: bool) -> bool:
 	var event_row: EventRow = target.get("source_resource", null) as EventRow
@@ -289,6 +301,7 @@ func _set_ace_target_enabled(target: Dictionary, enabled: bool) -> bool:
 				return true
 	return false
 
+
 func _row_data_resource_enabled(row_data: EventRowData) -> bool:
 	if row_data == null or row_data.source_resource == null:
 		return true
@@ -300,6 +313,7 @@ func _row_data_resource_enabled(row_data: EventRowData) -> bool:
 	if resource is CommentRow:
 		return (resource as CommentRow).enabled
 	return true
+
 
 func _set_row_data_resource_enabled(row_data: EventRowData, enabled: bool) -> bool:
 	if row_data == null or row_data.source_resource == null:
@@ -316,6 +330,7 @@ func _set_row_data_resource_enabled(row_data: EventRowData, enabled: bool) -> bo
 		return true
 	return false
 
+
 func _context_row_is_disabled() -> bool:
 	if _dock._context_row == null or _dock._context_row.source_resource == null:
 		return false
@@ -326,6 +341,7 @@ func _context_row_is_disabled() -> bool:
 	if _dock._context_row.source_resource is CommentRow:
 		return not (_dock._context_row.source_resource as CommentRow).enabled
 	return false
+
 
 func _toggle_context_row_enabled() -> void:
 	if _dock._context_row == null or _dock._context_row.source_resource == null:
@@ -348,6 +364,7 @@ func _toggle_context_row_enabled() -> void:
 	if changed:
 		_dock._mark_dirty("Updated row enabled state.")
 
+
 func _toggle_context_condition_block() -> void:
 	var selected_events: Array[EventRow] = _dock._get_selected_event_rows_from_context()
 	if selected_events.is_empty():
@@ -364,6 +381,7 @@ func _toggle_context_condition_block() -> void:
 	)
 	if toggled:
 		_dock._mark_dirty("Updated condition block.")
+
 
 ## Sets (or toggles off) Else / Else-If chaining on the selected events. They compile to
 ## `else:` / `elif:` chained onto the previous sibling's `if` (sheet_compiler ~873) and the
@@ -386,6 +404,7 @@ func _set_context_else_mode(mode: int) -> void:
 	if changed:
 		_dock._mark_dirty("Updated Else mode.")
 
+
 func _toggle_context_group_fold() -> void:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventGroup):
 		return
@@ -393,6 +412,7 @@ func _toggle_context_group_fold() -> void:
 	context_group.set_collapsed_state(not context_group.is_collapsed())
 	_dock._viewport.toggle_row_fold_by_uid(_dock._context_row.row_uid)
 	_dock._mark_dirty("Updated group fold state.")
+
 
 func _delete_context_row() -> void:
 	if _dock._context_row == null or _dock._context_row.source_resource == null:
@@ -412,10 +432,12 @@ func _delete_context_row() -> void:
 	if deleted:
 		_dock._mark_dirty("Deleted row.")
 
+
 func _delete_selected_content() -> void:
 	if _delete_selected_spans():
 		return
 	_delete_selected_rows()
+
 
 func _delete_selected_spans() -> bool:
 	if _dock._viewport == null:
@@ -464,6 +486,7 @@ func _delete_selected_spans() -> bool:
 	_dock._mark_dirty("Deleted ACE.")
 	return true
 
+
 func _delete_selected_rows() -> void:
 	var selected_rows: Array[EventRowData] = _dock._get_selected_rows_from_context()
 	if selected_rows.is_empty():
@@ -507,6 +530,7 @@ func _delete_selected_rows() -> void:
 		_dock._viewport.clear_selection()
 		_dock._mark_dirty("Deleted row.")
 
+
 func _insert_child_event_for_context_row() -> void:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):
 		return
@@ -516,6 +540,7 @@ func _insert_child_event_for_context_row() -> void:
 	)
 	if changed:
 		_dock._mark_dirty("Added sub-event.")
+
 
 ## Nests a comment inside the right-clicked event (as a sub-event), so it can describe the
 ## events beneath it. Comments are the one non-event row allowed as a sub-event.
@@ -533,10 +558,12 @@ func _insert_child_comment_for_context_row() -> void:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Added comment sub-event.")
 
+
 func _open_sub_condition_picker_for_context_row() -> void:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):
 		return
 	_dock._ace_picker.open("new_sub_condition_event", false, _dock._context_row.source_resource)
+
 
 ## The currently selected EventRow resource, or null when the selection is not an event.
 func _selected_event_resource() -> EventRow:
@@ -544,6 +571,7 @@ func _selected_event_resource() -> EventRow:
 		return null
 	var resource: Variant = _dock._active_view().get_selected_context().get("source_resource", null)
 	return resource as EventRow if resource is EventRow else null
+
 
 ## Nests the selected event under the event directly above it (its preceding sibling),
 ## moving it into that event's sub_events. Returns true when the move happened.
@@ -571,6 +599,7 @@ func _indent_selected_event() -> bool:
 	if changed:
 		_dock._mark_dirty("Nested event under the one above.")
 	return changed
+
 
 ## Un-nests the selected sub-event, moving it out to its parent's container just after the
 ## parent. Returns true when the move happened.
@@ -600,12 +629,14 @@ func _outdent_selected_event() -> bool:
 		_dock._mark_dirty("Un-nested event to the parent level.")
 	return changed
 
+
 ## Finds the EventRow whose sub_events directly contains target.
 ## Returns {found: bool, parent: EventRow|null} (parent is null at root/group level).
 func _find_parent_event(target: Resource) -> Dictionary:
 	if _dock._current_sheet == null:
 		return {"found": false, "parent": null}
 	return _find_parent_event_recursive(target, _dock._current_sheet.events, null)
+
 
 func _find_parent_event_recursive(target: Resource, container: Array, parent: EventRow) -> Dictionary:
 	for entry in container:
@@ -621,6 +652,7 @@ func _find_parent_event_recursive(target: Resource, container: Array, parent: Ev
 				return nested
 	return {"found": false, "parent": null}
 
+
 func _insert_context_row_below(resource_entry: Resource, message: String) -> void:
 	if resource_entry == null or _dock._context_row == null:
 		return
@@ -633,8 +665,10 @@ func _insert_context_row_below(resource_entry: Resource, message: String) -> voi
 
 # ── Support helpers (used only by the ops above + context_menus.gd) ───────────────────
 
+
 func _resource_sort_key(resource_entry: Resource) -> int:
 	return _find_row_index_for_resource(resource_entry)
+
 
 func _find_row_index_for_resource(resource_entry: Resource) -> int:
 	if _dock._viewport == null or resource_entry == null:
@@ -645,6 +679,7 @@ func _find_row_index_for_resource(resource_entry: Resource) -> int:
 		if row_data != null and row_data.source_resource == resource_entry:
 			return index
 	return -1
+
 
 func _context_condition_is_negated() -> bool:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):

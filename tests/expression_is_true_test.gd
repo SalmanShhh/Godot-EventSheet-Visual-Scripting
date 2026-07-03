@@ -5,8 +5,9 @@
 # raw GDScript block. Pins: the descriptor is registered, compiles into a bare `if {expr}:` head, and
 # inverts to `not (...)`.
 @tool
-extends RefCounted
 class_name ExpressionIsTrueTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -51,6 +52,7 @@ static func run() -> bool:
 	ok = _check("negated wraps not (...)", out2.contains("not ($Player/WeaponKit.can_fire())"), true) and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

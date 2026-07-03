@@ -19,6 +19,7 @@ var _header_button: Button = null
 var _count: int = 0
 var _expanded: bool = false
 
+
 func _init() -> void:
 	name = "Functions"
 	custom_minimum_size = Vector2(180.0, 0.0)
@@ -46,6 +47,7 @@ func _init() -> void:
 	add_child(list)
 	set_expanded(bool(_read_prefs().get("expanded", false)))
 
+
 ## Expanding gives the list rail space (it competes with Open Sheets / Anatomy); collapsing shrinks
 ## the panel back to its one-line header.
 func set_expanded(expanded: bool) -> void:
@@ -55,8 +57,10 @@ func set_expanded(expanded: bool) -> void:
 	_refresh_header()
 	_save_prefs()
 
+
 func is_expanded() -> bool:
 	return _expanded
+
 
 ## The dock pushes the function count after every refresh so the collapsed header still tells the
 ## sheet's weight ("▸ Functions · 12") without expanding.
@@ -64,8 +68,10 @@ func set_count(count: int) -> void:
 	_count = count
 	_refresh_header()
 
+
 func _refresh_header() -> void:
 	_header_button.text = "%s Functions · %d" % ["▾" if _expanded else "▸", _count]
+
 
 func _read_prefs() -> Dictionary:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
@@ -73,6 +79,7 @@ func _read_prefs() -> Dictionary:
 		if meta is Dictionary:
 			return meta
 	return {}
+
 
 func _save_prefs() -> void:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):

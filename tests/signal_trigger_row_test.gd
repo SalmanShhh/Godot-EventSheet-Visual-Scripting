@@ -3,8 +3,9 @@
 # (non-trigger) signal emits exactly as before — no annotation lines — so existing signals are
 # byte-identical. Pins _emit_signal_annotations + _emit_signal_line (both static).
 @tool
-extends RefCounted
 class_name SignalTriggerRowTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -33,6 +34,7 @@ static func run() -> bool:
 	ok = _check("plain signal line unchanged", SheetCompiler._emit_signal_line(plain), "signal died(amount: int)") and ok
 
 	return ok
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

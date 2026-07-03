@@ -4,6 +4,7 @@
 @tool
 extends SceneTree
 
+
 func _init() -> void:
 	var paths: PackedStringArray = PackedStringArray()
 	for dir_path in ["res://demo/themes", "res://addons/eventsheet/themes"]:

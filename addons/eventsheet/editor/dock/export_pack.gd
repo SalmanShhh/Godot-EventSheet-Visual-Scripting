@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetExportPack
+extends RefCounted
 # Export as Addon Pack (coverage Phase C).
 #
 # Exports the current behavior sheet as a reusable addon pack: writes the pack directory
@@ -25,8 +25,10 @@ class_name EventSheetExportPack
 
 var _dock: Control = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## One-click addon publishing: writes the current behavior sheet (+ compiled script) into
 ## eventsheet_addons/<class_snake>/ where the zero-config scanner publishes its ACEs

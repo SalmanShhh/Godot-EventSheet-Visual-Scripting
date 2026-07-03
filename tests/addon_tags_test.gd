@@ -3,8 +3,9 @@
 # every ACE the provider publishes: searchable in the picker, exposed over MCP, and
 # emitted/recovered through the generated script.
 @tool
-extends RefCounted
 class_name AddonTagsTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -93,6 +95,7 @@ extends Node
 		(payload as Dictionary).get("aces", [])[0].has("tags"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

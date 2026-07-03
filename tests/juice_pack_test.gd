@@ -5,10 +5,11 @@
 # Shake still accrues + decays trauma, and the camera/host effects no-op instead of crashing. The
 # visual side (actual offset/zoom/scale tweens) is verified in-editor, not here.
 @tool
-extends RefCounted
 class_name JuicePackTest
+extends RefCounted
 
 const PACK := "res://eventsheet_addons/juice/juice_behavior.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -74,6 +75,7 @@ static func run() -> bool:
 
 	behavior.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

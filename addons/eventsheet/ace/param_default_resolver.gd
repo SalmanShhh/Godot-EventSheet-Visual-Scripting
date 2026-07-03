@@ -10,9 +10,11 @@ extends RefCounted
 
 var _param_store: EditorParamStore = null
 
+
 ## Attach an EditorParamStore.  May be null (store level is skipped).
 func set_param_store(store: EditorParamStore) -> void:
 	_param_store = store
+
 
 ## Resolve the effective value for one parameter.
 ##
@@ -36,6 +38,7 @@ func resolve(provider_id: String, ace_id: String, param_id: String,
 	# 4. Type zero-value fallback.
 	return _zero_value(int(param_meta.get("type", TYPE_NIL)))
 
+
 ## Resolve all parameters for a definition at once.
 ## row_params is a Dictionary of already-stored per-row values; missing keys fall
 ## through to the lower priority levels.
@@ -52,6 +55,7 @@ func resolve_all(definition: ACEDefinition, row_params: Dictionary) -> Dictionar
 		var row_val: Variant = row_params[param_id] if row_params.has(param_id) else null
 		output[param_id] = resolve(definition.provider_id, definition.id, param_id, param_dict, row_val)
 	return output
+
 
 static func _zero_value(value_type: int) -> Variant:
 	match value_type:

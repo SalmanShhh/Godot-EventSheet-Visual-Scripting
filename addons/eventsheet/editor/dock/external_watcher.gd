@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetExternalWatcher
+extends RefCounted
 
 # Watches the active GDScript-backed sheet's file on disk and offers to reload when it diverges
 # from what the editor last opened/saved. Extracted from event_sheet_dock.gd so the dock stays
@@ -15,8 +15,10 @@ class_name EventSheetExternalWatcher
 var _dock: Control = null
 var _external_reload_dialog: ConfirmationDialog = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## True when the active GDScript-backed sheet's file changed on disk since open/save.
 func sheet_changed_on_disk() -> bool:
@@ -25,12 +27,14 @@ func sheet_changed_on_disk() -> bool:
 	var disk_mtime: int = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
 	return disk_mtime != 0 and _dock._external_mtime != 0 and disk_mtime != _dock._external_mtime
 
+
 ## Re-imports the active external sheet from disk (fresh lossless import + ACE lift).
 func reload_external_sheet() -> void:
 	if _dock._current_sheet == null or _dock._current_sheet.external_source_path.is_empty():
 		return
 	_dock._load_sheet_from_path(_dock._current_sheet.external_source_path)
 	_dock._set_status("Reloaded from disk: %s" % _dock._current_sheet_path.get_file())
+
 
 func prompt_external_reload_if_changed() -> void:
 	if not sheet_changed_on_disk():

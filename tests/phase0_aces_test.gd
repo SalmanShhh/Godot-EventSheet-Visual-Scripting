@@ -2,8 +2,9 @@
 # Pick-Filter conditions (iterator-scoped, AND/OR). Else/Else-If chaining is already
 # covered by language_gaps_test; this adds the new authoring surfaces.
 @tool
-extends RefCounted
 class_name Phase0ACEsTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -74,6 +75,7 @@ static func run() -> bool:
 	all_passed = _check("compiled pick-filter sheet parses", script.reload() == OK, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

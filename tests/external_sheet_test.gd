@@ -6,8 +6,8 @@
 # verbatim as ordered block rows. Hand-written helper functions reverse-lift to un-exposed sheet
 # functions (Phase 1); events added later land in the events section (standard sheet layout).
 @tool
-extends RefCounted
 class_name ExternalSheetTest
+extends RefCounted
 
 ## Deliberately hostile sample: prelude annotations, comments, a canonical (liftable) var,
 ## non-canonical vars (inferred type / unusual spacing), signal, enum, const, non-void
@@ -34,6 +34,7 @@ func reset(to_full: bool = true) -> void:
 	if to_full:
 		hp = MAX_HP
 """
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -126,6 +127,7 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

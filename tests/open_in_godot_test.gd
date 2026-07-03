@@ -10,8 +10,9 @@
 # This pins: a .tres block/generated never mutates state or writes files, and the three affordances
 # are wired.
 @tool
-extends RefCounted
 class_name OpenInGodotTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -49,6 +50,7 @@ static func run() -> bool:
 	dock.free()
 	return all_passed
 
+
 ## Walks WITH internal children (get_children(true)) so it sees AcceptDialog's dialog-managed
 ## buttons (OK/Cancel and add_button() buttons live under an internal HBox excluded by default).
 static func _find_button(root: Node, text: String) -> Button:
@@ -60,6 +62,7 @@ static func _find_button(root: Node, text: String) -> Button:
 		for child: Node in node.get_children(true):
 			stack.push_back(child)
 	return null
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -17,6 +17,7 @@ const FALLBACK_DIVIDER_COLOR := Color("#2f3641")
 var _viewport: EventSheetViewport = null
 var _last_signature: String = ""
 
+
 ## Binds the header to the viewport whose lane geometry it mirrors.
 func setup(viewport: EventSheetViewport) -> void:
 	_viewport = viewport
@@ -25,6 +26,7 @@ func setup(viewport: EventSheetViewport) -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process(true)
 	queue_redraw()
+
 
 func _process(_delta: float) -> void:
 	if _viewport == null:
@@ -41,6 +43,7 @@ func _process(_delta: float) -> void:
 	if signature != _last_signature:
 		_last_signature = signature
 		queue_redraw()
+
 
 func _draw() -> void:
 	var width: float = size.x

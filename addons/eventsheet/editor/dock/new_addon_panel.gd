@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetNewAddonPanel
+extends RefCounted
 
 # New Behaviour Addon scaffold dialog (Sheet ▸ New Behaviour Addon…).
 #
@@ -29,9 +29,11 @@ var _desc_edit: LineEdit = null
 var _path_label: Label = null
 var _status_label: Label = null
 
+
 ## Wires the dock reference used to parent the dialog and to call back after a create.
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Opens the dialog fresh (clears the fields), building it lazily on first use.
 func open() -> void:
@@ -46,6 +48,7 @@ func open() -> void:
 		# takes seven lines at this width.
 		_dialog.popup_centered(Vector2i(560, 640))
 		_name_edit.grab_focus()
+
 
 func _build_dialog() -> void:
 	if _dialog != null:
@@ -134,6 +137,7 @@ func _build_dialog() -> void:
 
 	_dialog.add_child(EventSheetPopupUI.margined(content))
 
+
 func _refresh_preview() -> void:
 	if _path_label == null:
 		return
@@ -144,6 +148,7 @@ func _refresh_preview() -> void:
 		_path_label.text = "Will be created at: %s" % BehaviourAddonScaffold.suggested_path(addon_name)
 	if _status_label != null:
 		_status_label.text = ""
+
 
 func _on_create() -> void:
 	var addon_name: String = _name_edit.text.strip_edges()

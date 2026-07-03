@@ -5,8 +5,9 @@
 # so the event body can use them — like the reflected signal:<name> triggers already could. Empty = a
 # no-argument handler (the prior behavior). Uses a source node path so the connect isn't self-validated.
 @tool
-extends RefCounted
 class_name OnSignalArgsTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -26,6 +27,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 static func _compile_on_signal(source: String, signal_name: String, args: String, body: String) -> String:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node"
@@ -41,10 +43,12 @@ static func _compile_on_signal(source: String, signal_name: String, args: String
 	sheet.events.append(event)
 	return str(SheetCompiler.compile(sheet, "user://on_signal_args.gd").get("output", ""))
 
+
 static func _parses(source: String) -> bool:
 	var generated: GDScript = GDScript.new()
 	generated.source_code = source
 	return generated.reload(true) == OK
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

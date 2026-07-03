@@ -17,8 +17,8 @@
 # `_usable_option` / `_value_type_option` OptionButtons remain the backing model (hidden) so
 # build_function_data() and the unit tests that drive them by index are unchanged.
 @tool
-extends RefCounted
 class_name EventSheetFunctionDialog
+extends RefCounted
 
 signal function_confirmed(data: Dictionary)
 
@@ -70,6 +70,7 @@ var _preview_name: Label = null
 var _preview_chips: HBoxContainer = null
 var _preview_sub: Label = null
 var _preview_signature: Label = null
+
 
 func init_dialog(parent_node: Node) -> void:
 	if _dialog != null:
@@ -171,9 +172,11 @@ func init_dialog(parent_node: Node) -> void:
 	form.add_child(_problem_label)
 	_select_usable(0)
 
+
 ## Names already taken on the sheet (functions + variables) — duplicates are refused.
 func set_taken_names_provider(provider: Callable) -> void:
 	_taken_names_provider = provider
+
 
 func open() -> void:
 	_original_name = ""
@@ -194,6 +197,7 @@ func open() -> void:
 	if _dialog.is_inside_tree():
 		_dialog.popup_centered()
 		_name_edit.grab_focus()
+
 
 ## Opens the dialog pre-filled from an existing function (edit mode) — the sheet's Define blocks
 ## double-click into here. The verb-kind card is derived from the return type exactly the way the
@@ -226,6 +230,7 @@ func open_for_edit(event_function: EventFunction) -> void:
 	_expose_category_edit.text = event_function.ace_category
 	_refresh_studio()
 
+
 ## queue_free alone leaves children in the tree until end of frame, so a prefill added right after
 ## would coexist with the stale rows and collect_params() would read both — detach immediately.
 func _clear_rows(box: Container) -> void:
@@ -234,6 +239,7 @@ func _clear_rows(box: Container) -> void:
 		child.queue_free()
 
 # ── The "what kind of verb" cards ────────────────────────────────────────────────────────────────
+
 
 ## The three plain-language verb-kind cards, index-aligned to USABLE_AS. Each is a focusable, clickable
 ## card that drives the hidden _usable_option; _refresh_usable_cards() paints the selected one.
@@ -287,6 +293,7 @@ func _build_verb_kind_section() -> Control:
 	box.add_child(cards_row)
 	return box
 
+
 ## Paints the selected card (accent border + tint + bright title) and dims the rest; called on every
 ## selection change. Selecting also updates the hidden model, the value-type visibility, and the preview.
 func _select_usable(index: int) -> void:
@@ -294,6 +301,7 @@ func _select_usable(index: int) -> void:
 	_refresh_usable_cards()
 	_sync_value_type_visibility()
 	_refresh_studio()
+
 
 func _refresh_usable_cards() -> void:
 	var selected: int = maxi(_usable_option.selected, 0)
@@ -305,6 +313,7 @@ func _refresh_usable_cards() -> void:
 		var is_selected: bool = index == selected
 		panel.add_theme_stylebox_override("panel", _card_stylebox(accent, is_selected))
 		title.add_theme_color_override("font_color", accent if is_selected else EventSheetPalette.TEXT_SECONDARY)
+
 
 ## Selected = a 2px accent border over an accent-tinted fill; unselected = the neutral inset panel.
 func _card_stylebox(accent: Color, selected: bool) -> StyleBoxFlat:
@@ -318,6 +327,7 @@ func _card_stylebox(accent: Color, selected: bool) -> StyleBoxFlat:
 	return box
 
 # ── The live picker preview + "Ships as:" ────────────────────────────────────────────────────────
+
 
 func _build_preview_card() -> Control:
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
@@ -350,6 +360,7 @@ func _build_preview_card() -> Control:
 	ships_box.add_child(_preview_signature)
 	content.add_child(EventSheetPopupUI.panel_section(ships_box))
 	return EventSheetPopupUI.titled_card("This is what other people will see", content)
+
 
 ## Rebuilds the preview + signature from the current dialog state — called on every keystroke / choice.
 ## Uses raw (unvalidated) fields so it shows a live "if published" identity while the name is still
@@ -385,6 +396,7 @@ func _refresh_studio() -> void:
 		signature_name = "new_verb"
 	_preview_signature.text = format_signature(signature_name, _return_type_for_kind(kind), params)
 
+
 ## A pill Label with a rounded coloured background — the shared badge/chip look.
 func _pill(text: String, bg: Color, fg: Color, font_size: int = 11) -> Label:
 	var label: Label = Label.new()
@@ -393,6 +405,7 @@ func _pill(text: String, bg: Color, fg: Color, font_size: int = 11) -> Label:
 	_style_pill(label, bg, fg)
 	label.text = text
 	return label
+
 
 func _style_pill(label: Label, bg: Color, fg: Color) -> void:
 	var box: StyleBoxFlat = StyleBoxFlat.new()
@@ -405,6 +418,7 @@ func _style_pill(label: Label, bg: Color, fg: Color) -> void:
 	label.add_theme_stylebox_override("normal", box)
 	label.add_theme_color_override("font_color", fg)
 
+
 func _role_accent(kind: String) -> Color:
 	match kind:
 		"condition":
@@ -413,6 +427,7 @@ func _role_accent(kind: String) -> Color:
 			return EventSheetPalette.COLOR_EXPRESSION
 		_:
 			return EventSheetPalette.COLOR_ACTION
+
 
 ## The role badge {label, bg, fg} for the preview pill.
 func _role_pill_style(kind: String) -> Dictionary:
@@ -424,6 +439,7 @@ func _role_pill_style(kind: String) -> Dictionary:
 		_:
 			return {"label": "Action", "bg": EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, "fg": EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG}
 
+
 func _return_type_for_kind(kind: String) -> int:
 	match kind:
 		"condition":
@@ -432,6 +448,7 @@ func _return_type_for_kind(kind: String) -> int:
 			return int(VALUE_TYPES[maxi(_value_type_option.selected, 0)].get("type"))
 		_:
 			return TYPE_NIL
+
 
 ## The exact generated `func` signature for a verb — built from a transient EventFunction run through
 ## the COMPILER's own static formatters (_emit_function_params / _function_return_type_name), so the
@@ -452,13 +469,16 @@ static func format_signature(function_name: String, return_type: int, params: Ar
 		SheetCompiler._function_return_type_name(event_function),
 	]
 
+
 ## The value-type sub-row only matters for "A value" (Action = void, Condition = bool).
 func _sync_value_type_visibility() -> void:
 	if _value_type_row != null:
 		_value_type_row.visible = _usable_kind() == "expression"
 
+
 func _usable_kind() -> String:
 	return str(USABLE_AS[maxi(_usable_option.selected, 0)].get("kind"))
+
 
 ## One expanding row per parameter: name · type · default · description · remove. Field edits refresh
 ## the live preview so the picker entry + signature track what's being typed. The optional trailing
@@ -503,6 +523,7 @@ func add_param_row(suggested_name: String = "", type_name_value: String = "", de
 	_params_box.add_child(row)
 	_refresh_studio()
 
+
 ## One row per guard condition: a boolean expression + remove.
 func add_guard_row(expression: String = "") -> void:
 	var row: HBoxContainer = HBoxContainer.new()
@@ -521,6 +542,7 @@ func add_guard_row(expression: String = "") -> void:
 	row.add_child(remove_button)
 	_guards_box.add_child(row)
 
+
 func _next_param_name() -> String:
 	var taken: Dictionary = {}
 	for entry: Dictionary in collect_params():
@@ -529,6 +551,7 @@ func _next_param_name() -> String:
 	while taken.has("param_%d" % index):
 		index += 1
 	return "param_%d" % index
+
 
 ## The current param rows as [{id, type_name, default, description}] (names snake_cased + de-duplicated).
 func collect_params() -> Array[Dictionary]:
@@ -550,6 +573,7 @@ func collect_params() -> Array[Dictionary]:
 		})
 	return params
 
+
 ## The current guard expressions (non-empty, in order).
 func collect_guards() -> PackedStringArray:
 	var guards: PackedStringArray = PackedStringArray()
@@ -561,6 +585,7 @@ func collect_guards() -> PackedStringArray:
 			guards.append(expression)
 	return guards
 
+
 func _on_confirmed() -> void:
 	var data: Dictionary = build_function_data()
 	if not str(data.get("problem", "")).is_empty():
@@ -570,6 +595,7 @@ func _on_confirmed() -> void:
 			_dialog.call_deferred("popup_centered")
 		return
 	function_confirmed.emit(data)
+
 
 ## Validated dialog state → {name, return_type, params, guards, description, expose,
 ## ace_display_name, ace_category} or {problem}. Auto-corrections: names snake_case, display

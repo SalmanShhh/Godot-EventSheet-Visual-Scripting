@@ -2,8 +2,9 @@
 # Ordered picking (pick nearest/highest), Repeat/While loop kinds, function return types
 # (+ Return actions), group-local variables, and real breakpoints (gated emission).
 @tool
-extends RefCounted
 class_name LanguageGapsTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -16,6 +17,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -208,6 +210,7 @@ static func run() -> bool:
 		or_guard_output.contains("if __group_combat_active and (is_on_floor() or is_on_wall()):"), true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

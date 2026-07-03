@@ -6,8 +6,9 @@
 # model order preserved, no timestamps or volatile ids — identical sheets must dump
 # identical text.
 @tool
-extends RefCounted
 class_name EventSheetTextDump
+extends RefCounted
+
 
 static func dump(sheet: EventSheetResource) -> String:
 	if sheet == null:
@@ -33,6 +34,7 @@ static func dump(sheet: EventSheetResource) -> String:
 			lines.append("FUNCTION %s(%s)%s" % [event_function.function_name, ", ".join(_param_names(event_function)), " [ACE: %s]" % event_function.ace_display_name if event_function.expose_as_ace else ""])
 			_dump_rows(event_function.events if not event_function.events.is_empty() else event_function.rows, lines, 1)
 	return "\n".join(lines) + "\n"
+
 
 static func _dump_rows(rows: Array, lines: PackedStringArray, depth: int) -> void:
 	var pad: String = "  ".repeat(depth)
@@ -69,6 +71,7 @@ static func _dump_rows(rows: Array, lines: PackedStringArray, depth: int) -> voi
 					lines.append("%s  # %s" % [pad, (action as CommentRow).text.replace("\n", " / ")])
 			_dump_rows(event.sub_events, lines, depth + 1)
 
+
 static func _params_text(params: Dictionary) -> String:
 	if params.is_empty():
 		return ""
@@ -78,6 +81,7 @@ static func _params_text(params: Dictionary) -> String:
 	for key: Variant in keys:
 		parts.append("%s=%s" % [str(key), str(params[key])])
 	return "{%s}" % ", ".join(parts)
+
 
 static func _param_names(event_function: EventFunction) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()

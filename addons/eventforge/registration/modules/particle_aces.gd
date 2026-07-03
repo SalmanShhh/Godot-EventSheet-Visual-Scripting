@@ -6,10 +6,11 @@
 # classes, so the picker scopes by node_type — CPU gets its own ace_id where it differs.
 # Module contract: see ace_factory.gd — ace_ids/templates are API (covenant).
 @tool
-extends RefCounted
 class_name EventForgeParticleACEs
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []

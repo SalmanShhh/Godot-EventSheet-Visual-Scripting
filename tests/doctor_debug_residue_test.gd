@@ -3,8 +3,9 @@
 # the byte-identity check passes on it (the residue is in sync). This pins: the hazard is real, the check
 # flags it, and strip_debug_flags + recompile removes it.
 @tool
-extends RefCounted
 class_name DoctorDebugResidueTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -62,12 +63,14 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _residue_count(findings: Array[Dictionary]) -> int:
 	var count: int = 0
 	for finding: Dictionary in findings:
 		if str(finding.get("check")) == "debug-residue":
 			count += 1
 	return count
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

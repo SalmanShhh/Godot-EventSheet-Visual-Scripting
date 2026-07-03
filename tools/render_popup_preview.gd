@@ -7,6 +7,7 @@ extends SceneTree
 var _frames: int = 0
 var _dialog: ConfirmationDialog = null
 
+
 func _init() -> void:
 	root.title = "Popup Preview"
 	root.size = Vector2i(540, 320)
@@ -16,6 +17,7 @@ func _init() -> void:
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.add_child(bg)
 	process_frame.connect(_on_frame)
+
 
 func _on_frame() -> void:
 	_frames += 1

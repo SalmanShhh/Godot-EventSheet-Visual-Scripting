@@ -4,8 +4,9 @@
 # parens/brackets/braces or a string literal does NOT fragment the term (the naive split produced
 # garbage rows like "f(a" + "b)"). The byte-identical recompile gates every reconstruction.
 @tool
-extends RefCounted
 class_name ConditionFallbackTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -15,6 +16,7 @@ static func run() -> bool:
 	ok = _case("negated compound stays one term", "if not (a and b):\n\tfoo()", 1, true) and ok
 	ok = _case("dict literal then top-level and", "if {\"k\": 1} and ok:\n\tfoo()", 2, false) and ok
 	return ok
+
 
 static func _case(label: String, body: String, expected_conds: int, expect_negated: bool) -> bool:
 	var ok: bool = true
@@ -45,6 +47,7 @@ static func _case(label: String, body: String, expected_conds: int, expect_negat
 		print("    SRC<%s>\n    RT <%s>" % [source, rt])
 	return ok
 
+
 static func _conds(rows: Array) -> Array:
 	var out: Array = []
 	for r: Variant in rows:
@@ -54,6 +57,7 @@ static func _conds(rows: Array) -> Array:
 					out.append(c)
 			out.append_array(_conds((r as EventRow).sub_events))
 	return out
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

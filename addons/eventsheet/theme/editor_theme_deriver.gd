@@ -8,6 +8,7 @@
 class_name EventSheetEditorThemeDeriver
 extends RefCounted
 
+
 ## Builds a style from a base/accent pair (the two colors Godot themes hinge on).
 static func derive(base_color: Color, accent_color: Color) -> EventSheetEditorStyle:
 	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
@@ -28,6 +29,7 @@ static func derive(base_color: Color, accent_color: Color) -> EventSheetEditorSt
 	event_style.behavior_accent_color = accent_color
 	style.event_style = event_style
 	return style
+
 
 ## The editor-derived default (null outside the editor, e.g. headless tests/games).
 static func derive_from_editor() -> EventSheetEditorStyle:

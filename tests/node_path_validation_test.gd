@@ -6,8 +6,9 @@
 # expression, warning when one does not resolve in the edited scene (a typo), and listing the scene's
 # node paths for the `$` autocomplete. The amber-tint wiring itself is exercised by the editor smoke.
 @tool
-extends RefCounted
 class_name NodePathValidationTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -71,6 +72,7 @@ static func run() -> bool:
 
 	root.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

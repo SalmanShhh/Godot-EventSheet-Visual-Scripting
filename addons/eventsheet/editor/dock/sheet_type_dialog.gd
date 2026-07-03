@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetSheetTypeDialog
+extends RefCounted
 # The "Sheet Type" dialog: a discoverable alternative to the Inspector fields for choosing what a sheet
 # compiles into (plain event sheet / custom node / behavior / editor tool / autoload) and its identity,
 # behaviour toggles, and composition (tags / includes / uses / requires / autoload). Extracted from
@@ -24,8 +24,10 @@ var _sheet_type_uses_edit: LineEdit = null
 var _sheet_type_requires_edit: LineEdit = null
 var _sheet_type_autoload_edit: LineEdit = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 func open() -> void:
 	if not _dock._ensure_sheet_for_editing():
@@ -56,6 +58,7 @@ func open() -> void:
 	_sheet_type_requires_edit.text = ", ".join(PackedStringArray(_dock._current_sheet.requires_behaviors))
 	_sheet_type_autoload_edit.text = _dock._current_sheet.autoload_name
 	_sheet_type_dialog.popup_centered(Vector2i(460, 300))
+
 
 func _ensure_sheet_type_dialog() -> void:
 	if _sheet_type_dialog != null:
@@ -102,6 +105,7 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_dialog.add_child(EventSheetPopupUI.margined(form))
 	_sheet_type_dialog.confirmed.connect(_on_sheet_type_confirmed)
 	_dock.add_child(_sheet_type_dialog)
+
 
 func _on_sheet_type_confirmed() -> void:
 	_dock._apply_sheet_type_settings(

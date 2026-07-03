@@ -18,6 +18,7 @@ var _index: int = 0
 var _frames: int = 0
 var _dlg: VariableDialog = null
 
+
 func _init() -> void:
 	root.title = "Variable Dialog — drawer gallery"
 	root.size = Vector2i(620, 680)
@@ -31,6 +32,7 @@ func _init() -> void:
 	_dlg.set_sheet_provider(func() -> Variant: return null)
 	process_frame.connect(_on_frame)
 
+
 func _open(spec: Dictionary) -> void:
 	var attrs: Dictionary = {"drawer": spec["drawer"]}
 	if not (spec["range"] as Dictionary).is_empty():
@@ -43,6 +45,7 @@ func _open(spec: Dictionary) -> void:
 		"Variable — %s drawer" % str(spec["drawer"]), false, true
 	)
 
+
 func _default_for(type_name: String) -> Variant:
 	match type_name:
 		"int":
@@ -53,6 +56,7 @@ func _default_for(type_name: String) -> Variant:
 			return Color.WHITE
 		_:
 			return null
+
 
 func _on_frame() -> void:
 	_frames += 1

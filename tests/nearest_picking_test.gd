@@ -5,11 +5,12 @@
 # reduce() idiom (Godot 4 Array has NO min_by/max_by). The LoS packs gain a "Nearest Visible In Group"
 # that additionally requires an unobstructed raycast — the occlusion-correct single pick.
 @tool
-extends RefCounted
 class_name NearestPickingTest
+extends RefCounted
 
 const LOS_PACK := "res://eventsheet_addons/line_of_sight/line_of_sight_behavior.gd"
 const LOS3D_PACK := "res://eventsheet_addons/line_of_sight_3d/line_of_sight_3d_behavior.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -59,6 +60,7 @@ static func run() -> bool:
 		b3d.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

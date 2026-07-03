@@ -7,8 +7,8 @@
 # individually (the compiler's re-emission must reproduce the row's bytes), so a helper the
 # emitter can't reproduce stays a raw block and the file still lifts everything else.
 @tool
-extends RefCounted
 class_name MidFileFunctionLiftTest
+extends RefCounted
 
 ## The `if true:` block after the helper is deliberately unliftable at top level, so the helper
 ## can never be part of a trailing run - only the anchor path can claim it.
@@ -35,6 +35,7 @@ func  weird_gap(value: float) -> float:
 if true:
 	pass
 """
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -99,6 +100,7 @@ static func run() -> bool:
 	view.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

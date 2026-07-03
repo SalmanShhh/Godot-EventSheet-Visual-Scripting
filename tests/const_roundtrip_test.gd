@@ -1,12 +1,13 @@
 @tool
-extends RefCounted
 class_name ConstRoundtripTest
+extends RefCounted
 # A constant tree-variable compiles to `const NAME: T = v` and — when that .gd is reopened — lifts back
 # into a first-class constant variable (is_constant true → the green "const" pill + dialog-editable),
 # not a verbatim GDScript block. Byte-verify-gated: a const line whose canonical re-emission doesn't
 # match the source stays verbatim, so this can never corrupt the round-trip.
 
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -40,6 +41,7 @@ static func run() -> bool:
 	all_passed = _check("re-save is byte-identical (drift=0)", recompiled == output, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

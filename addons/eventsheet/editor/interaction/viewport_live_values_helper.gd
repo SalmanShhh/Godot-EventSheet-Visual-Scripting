@@ -11,13 +11,16 @@ extends RefCounted
 var _viewport: Control = null
 var _live_values: Dictionary = {}
 
+
 func init(viewport: Control) -> void:
 	_viewport = viewport
+
 
 ## Streamed name->value frame (debug runs). Redraws value chips on variable rows.
 func set_live_values(values: Dictionary) -> void:
 	_live_values = values
 	_viewport.queue_redraw()
+
 
 ## The "= value" chip for a row, or "" (variable rows whose name has a live frame).
 func chip_for(row_data: EventRowData) -> String:
@@ -33,6 +36,7 @@ func chip_for(row_data: EventRowData) -> String:
 	if variable_name.is_empty() or not _live_values.has(variable_name):
 		return ""
 	return "= %s" % str(_live_values[variable_name])
+
 
 ## Draws "= value" after a variable row's text when a live frame carries its name. Called from the
 ## viewport's _draw, so draw_string is proxied through _viewport (the owning CanvasItem).

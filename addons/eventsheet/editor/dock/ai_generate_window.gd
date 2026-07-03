@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetAIGenerateWindow
+extends RefCounted
 # "Generate Events from a Description": a plain-English prompt -> grounded GDScript (an LLM) -> losslessly
 # lifted into editable events. The provider is injected in tests; live it makes a configured HTTP call to
 # the endpoint in Project Settings (eventsheets/ai/*). Extracted from event_sheet_dock.gd to keep that
@@ -11,8 +11,10 @@ var _dock: Control = null
 var _ai_window: Window = null
 var _ai_prompt_edit: TextEdit = null
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Generate from Description: plain-English prompt → grounded GDScript (an LLM) → losslessly
 ## lifted into editable events. Injected provider in tests; a configured HTTP call live.
@@ -48,6 +50,7 @@ func open() -> void:
 	_ai_window.popup_centered()
 	_ai_prompt_edit.grab_focus()
 
+
 func _ai_generate_clicked() -> void:
 	var description: String = _ai_prompt_edit.text.strip_edges()
 	if description.is_empty():
@@ -60,6 +63,7 @@ func _ai_generate_clicked() -> void:
 		_dock._set_status("Set eventsheets/ai/api_key (+ endpoint, model) in Project Settings to generate in-editor — or use the MCP server.", true)
 		return
 	_ai_request_live(description)
+
 
 ## Lifts generated GDScript into events and appends them undoably. Returns rows added (testable).
 func _apply_ai_gdscript(gdscript_text: String) -> int:
@@ -77,6 +81,7 @@ func _apply_ai_gdscript(gdscript_text: String) -> int:
 		if _ai_window != null:
 			_ai_window.hide()
 	return rows.size()
+
 
 func _ai_request_live(description: String) -> void:
 	var key: String = str(ProjectSettings.get_setting("eventsheets/ai/api_key", "")).strip_edges()
@@ -99,6 +104,7 @@ func _ai_request_live(description: String) -> void:
 	})
 	_dock._set_status("Generating from your description…")
 	http.request(endpoint, headers, HTTPClient.METHOD_POST, payload)
+
 
 func _on_ai_live_response(code: int, body: PackedByteArray) -> void:
 	if code != 200:

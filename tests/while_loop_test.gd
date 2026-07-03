@@ -3,8 +3,9 @@
 # "While (condition)" / "Repeat N times". This pins that a While loop compiles to `while <expr>:`
 # wrapping the event body — the loop construct that was the last gap for fully code-free authoring.
 @tool
-extends RefCounted
 class_name WhileLoopTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -19,6 +20,7 @@ static func run() -> bool:
 	ok = _check("Repeat loop compiles to a `for … in range(5):` header", repeat_out.contains("in range(5):"), true) and ok
 
 	return ok
+
 
 static func _compile_loop(kind: int, collection_value: String, iterator_name: String) -> String:
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -39,6 +41,7 @@ static func _compile_loop(kind: int, collection_value: String, iterator_name: St
 	event.actions.append(action)
 	sheet.events.append(event)
 	return str(SheetCompiler.compile(sheet).get("output", ""))
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -2,6 +2,7 @@
 class_name EventSheetSemanticAnalyzer
 extends RefCounted
 
+
 func parse_source_metadata(script: Script) -> Dictionary:
 	var metadata := {
 		"class_name": "",
@@ -87,6 +88,7 @@ func parse_source_metadata(script: Script) -> Dictionary:
 			pending_export = false
 	return metadata
 
+
 func get_provider_id(target: Object, source_metadata: Dictionary) -> String:
 	var class_name_text: String = str(source_metadata.get("class_name", ""))
 	if not class_name_text.is_empty():
@@ -96,8 +98,10 @@ func get_provider_id(target: Object, source_metadata: Dictionary) -> String:
 		return script.resource_path.get_file().get_basename().capitalize()
 	return target.get_class()
 
+
 func build_property_display_name(name: String) -> String:
 	return _humanize_identifier(name)
+
 
 func build_method_display_name(name: String, ace_type: int) -> String:
 	var normalized: String = name
@@ -107,8 +111,10 @@ func build_method_display_name(name: String, ace_type: int) -> String:
 		normalized = normalized.trim_prefix("get_")
 	return _humanize_identifier(normalized)
 
+
 func build_trigger_display_name(signal_name: String) -> String:
 	return "On %s" % _humanize_identifier(signal_name)
+
 
 func _build_overrides(directives: Array[String], exported: bool = false) -> Dictionary:
 	var overrides := {
@@ -195,6 +201,7 @@ func _build_overrides(directives: Array[String], exported: bool = false) -> Dict
 				overrides["param_hints"] = param_hints
 	return overrides
 
+
 func _extract_annotation_value(text: String) -> String:
 	var open_index: int = text.find("(")
 	var close_index: int = text.rfind(")")
@@ -205,6 +212,7 @@ func _extract_annotation_value(text: String) -> String:
 		return parts[1].strip_edges().trim_prefix("\"").trim_suffix("\"")
 	return ""
 
+
 func _parse_signal_name(line: String) -> String:
 	var rest: String = line.trim_prefix("signal ").strip_edges()
 	var delimiter_index: int = rest.find("(")
@@ -212,12 +220,14 @@ func _parse_signal_name(line: String) -> String:
 		delimiter_index = rest.length()
 	return rest.substr(0, delimiter_index).strip_edges()
 
+
 func _parse_func_name(line: String) -> String:
 	var rest: String = line.trim_prefix("func ").strip_edges()
 	var delimiter_index: int = rest.find("(")
 	if delimiter_index == -1:
 		delimiter_index = rest.length()
 	return rest.substr(0, delimiter_index).strip_edges()
+
 
 func _parse_var_name(line: String) -> String:
 	var var_index: int = line.find("var ")
@@ -230,6 +240,7 @@ func _parse_var_name(line: String) -> String:
 			rest = rest.substr(0, separator_index)
 			break
 	return rest.strip_edges()
+
 
 func _humanize_identifier(text: String) -> String:
 	if text.is_empty():

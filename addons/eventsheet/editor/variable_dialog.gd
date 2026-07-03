@@ -98,6 +98,7 @@ const TYPE_HINTS: Dictionary = {
 	"Variant": "Any type — untyped (advanced; prefer a specific type when you can).",
 }
 
+
 ## Initialise and attach the dialog to parent_node.
 ## Must be called before open().
 func init_dialog(parent_node: Node) -> void:
@@ -361,6 +362,7 @@ func init_dialog(parent_node: Node) -> void:
 	_type_help.modulate = Color(0.82, 0.82, 0.82, 0.82)
 	form.add_child(_type_help)
 
+
 ## A 130px-label + expanding-field row, matching the main form's columns, so the optional
 ## Inspector fields line up with Name/Type/Default above instead of running full-width.
 ## ── Friendly type mapping (display ↔ stored Godot type) ──────────────────────
@@ -380,6 +382,7 @@ func _selected_stored_type() -> String:
 			return "bool"
 		_:
 			return label
+
 
 ## Selects the dropdown entry (+ the Whole-numbers tick) that stores `type_name` — the reverse of
 ## _selected_stored_type, used to prefill the dialog when editing an existing variable.
@@ -404,6 +407,7 @@ func _select_stored_type(type_name: String) -> void:
 			break
 	_refresh_whole_numbers_row()
 
+
 ## Shows the "Whole numbers only" tick only while the friendly "Number" type is selected.
 func _refresh_whole_numbers_row() -> void:
 	if _whole_numbers_row == null:
@@ -411,14 +415,17 @@ func _refresh_whole_numbers_row() -> void:
 	var label: String = _type_option.get_item_text(_type_option.selected) if _type_option != null and _type_option.selected >= 0 else ""
 	_whole_numbers_row.visible = label == "Number"
 
+
 ## ── Structured data editor (Array/Dictionary "Edit items…") ──────────────────
 ## True when the chosen type is a collection, so the structured items editor applies.
 func _selected_type_is_collection() -> bool:
 	return _selected_stored_type().begins_with("Array") or _selected_stored_type().begins_with("Dictionary")
 
+
 func _refresh_items_button() -> void:
 	if _items_button != null:
 		_items_button.visible = _selected_type_is_collection()
+
 
 ## Edit an Array/Dictionary's items one per line (Array: a value per line; Dictionary a
 ## "key: value" per line) instead of typing a cramped literal. Round-trips through the
@@ -432,6 +439,7 @@ func _open_items_editor() -> void:
 	_items_window.title = "Edit Dictionary Items" if is_dict else "Edit Array Items"
 	_items_window.popup_centered(Vector2i(420, 360))
 	_items_edit.grab_focus()
+
 
 func _build_items_window() -> void:
 	_items_window = Window.new()
@@ -461,6 +469,7 @@ func _build_items_window() -> void:
 	buttons.add_child(apply_button)
 	box.add_child(buttons)
 
+
 func _apply_items_editor() -> void:
 	var is_dict: bool = _selected_stored_type().begins_with("Dictionary")
 	var items: PackedStringArray = PackedStringArray()
@@ -470,6 +479,7 @@ func _apply_items_editor() -> void:
 	_default_edit.text = items_to_collection_literal(items, is_dict)
 	_refresh_default_hint()
 	_items_window.hide()
+
 
 ## Splits an Array/Dictionary literal into its top-level entries (bracket- + string-aware):
 ## '[1, [2, 3], "a,b"]' -> ['1', '[2, 3]', '"a,b"']. Pure + static, so it is unit-testable.
@@ -511,6 +521,7 @@ static func collection_literal_items(literal: String) -> PackedStringArray:
 		items.append(current.strip_edges())
 	return items
 
+
 ## Wraps item expressions back into an Array literal ("[a, b]") or Dictionary literal
 ## ("{k: v, …}"). Empty -> "[]" / "{}".
 static func items_to_collection_literal(items: PackedStringArray, is_dictionary: bool) -> String:
@@ -519,11 +530,13 @@ static func items_to_collection_literal(items: PackedStringArray, is_dictionary:
 	var joined: String = ", ".join(items)
 	return ("{%s}" % joined) if is_dictionary else ("[%s]" % joined)
 
+
 ## Open the dialog for the given scope ("global" or "local").
 func open(scope: String) -> void:
 	# A new variable is internal script state by DEFAULT (a plain private var) — the user opts into
 	# "Designer-tweakable (@export)" deliberately, instead of every global leaking onto the Inspector.
 	open_for_edit(scope, {}, "", "int", "", false, "Create Variable", false, false)
+
 
 ## Inspector attributes (range, group, show-if…) only mean anything on an @export var, so their
 ## disclosure shows only when "Designer-tweakable" is on (and the variable can export). With it off the
@@ -545,6 +558,7 @@ func _update_attr_gating() -> void:
 			_attr_advanced_toggle.text = "▸" + _attr_advanced_toggle.text.substr(1)
 			if _attr_advanced_section != null:
 				_attr_advanced_section.visible = false
+
 
 func open_for_edit(
 	scope: String,
@@ -635,9 +649,11 @@ func open_for_edit(
 		_name_edit.grab_focus()
 		_name_edit.select_all()
 
+
 func _close() -> void:
 	if _dialog != null:
 		_dialog.hide()
+
 
 func _on_confirmed() -> void:
 	var var_name: String = _name_edit.text.strip_edges()
@@ -750,11 +766,13 @@ func _on_confirmed() -> void:
 		attributes["drawer"] = drawer_kind
 	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes)
 
+
 ## Returns the trimmed text from the name field.
 func get_last_name_text() -> String:
 	if _name_edit == null:
 		return ""
 	return _name_edit.text.strip_edges()
+
 
 ## Parses the comma-separated combo options text ("a, b, c").
 static func parse_options(raw: String) -> PackedStringArray:
@@ -763,6 +781,7 @@ static func parse_options(raw: String) -> PackedStringArray:
 		if not entry.strip_edges().is_empty():
 			options.append(entry.strip_edges())
 	return options
+
 
 ## The text shown in the Default field for a value — the inverse of _parse_default, and the pair MUST
 ## round-trip. Containers and the value types (Vector2/Color) use the canonical GDScript literal so
@@ -775,6 +794,7 @@ static func _default_display_text(value: Variant) -> String:
 	if value is Array or value is Dictionary or value is Vector2 or value is Color:
 		return SheetCompiler._to_code_literal(value)
 	return str(value)
+
 
 static func _parse_default(type_name: String, raw: String) -> Variant:
 	var value: String = raw.strip_edges()
@@ -816,8 +836,10 @@ static func _parse_default(type_name: String, raw: String) -> Variant:
 		_:
 			return value
 
+
 static func is_collection_type(type_name: String) -> bool:
 	return type_name.begins_with("Array") or type_name.begins_with("Dictionary")
+
 
 ## Validates a default-value text against the chosen type ({ok, error}). Collections must
 ## be GDScript literals of the right container kind; typed containers (Array[T] /
@@ -849,6 +871,7 @@ static func validate_default(type_name: String, raw: String) -> Dictionary:
 				return {"ok": false, "error": "Element %s is not %s (declared %s)." % [str(element), element_type, type_name]}
 	return {"ok": true, "error": ""}
 
+
 ## Live ✓/✗ hint under the default field while typing collection literals.
 ## Show fields only when they can apply (user call: don't throw everything at once):
 ## combo options are String-only, range/clamp/drawer are numeric, multiline is String.
@@ -876,6 +899,7 @@ func _refresh_contextual_rows() -> void:
 	_refresh_drawer_preview()
 	_refresh_clamp_gate()
 
+
 ## The single drawer kind a variable type can host (or "" — most types host no drawer).
 static func _drawer_kind_for_type(type_name: String) -> String:
 	match type_name:
@@ -890,6 +914,7 @@ static func _drawer_kind_for_type(type_name: String) -> String:
 		"Curve":
 			return "curve_editor"
 	return ""
+
 
 ## Human label for the drawer option entry.
 static func _drawer_label_for_kind(kind: String) -> String:
@@ -908,12 +933,14 @@ static func _drawer_label_for_kind(kind: String) -> String:
 			return "Curve preview"
 	return ""
 
+
 ## The drawer kind currently chosen in the dialog ("" = Default field).
 func _selected_drawer_kind() -> String:
 	if _attr_drawer_option == null or _attr_drawer_option.selected <= 0:
 		return ""
 	var meta: Variant = _attr_drawer_option.get_item_metadata(_attr_drawer_option.selected)
 	return str(meta) if meta != null else ""
+
 
 ## Rebuilds the drawer OptionButton to offer Default + (when the type hosts one) its single drawer, preserving
 ## the current choice when the kind is unchanged so a refresh doesn't silently reset the user's selection.
@@ -932,6 +959,7 @@ func _rebuild_drawer_options(kind: String) -> void:
 		(show_row as Control).visible = not kind.is_empty()
 	_attr_drawer_option.select(1 if (not kind.is_empty() and previous == kind) else 0)
 
+
 ## Forgiving Range parse, shared by the apply (_on_confirmed) and the preview (_parse_range_bounds) so they
 ## never disagree: 1 part = max (min 0, step 1); 2 = min, max (step 1); 3 = min, max, step. Returns {} (an
 ## error) only for 0 or >3 parts, or a blank max. The drawer/marker reads only min & max.
@@ -948,6 +976,7 @@ static func _parse_range_parts(parts: PackedStringArray) -> Dictionary:
 			return {} if trimmed[1].is_empty() else {"min": trimmed[0] if not trimmed[0].is_empty() else "0", "max": trimmed[1], "step": trimmed[2] if not trimmed[2].is_empty() else "1"}
 	return {}
 
+
 ## {min, max} (as floats) parsed from the Range field — drives the progress_bar / dial bounds in the preview,
 ## using the SAME forgiving rule as the apply so a 1-part "150" reads as max 150 in both.
 func _parse_range_bounds() -> Dictionary:
@@ -958,10 +987,12 @@ func _parse_range_bounds() -> Dictionary:
 		return {"min": 0.0, "max": 100.0}
 	return {"min": str(parsed.get("min", "0")).to_float(), "max": str(parsed.get("max", "100")).to_float()}
 
+
 ## Compact display of a numeric bound: drop a trailing ".0" so 150.0 reads "150", but keep 1.5 as "1.5".
 static func _format_bound(value: float) -> String:
 	# 0.001 is a cosmetic "close enough to whole" tolerance — display-only, never used for storage or compares.
 	return str(int(round(value))) if absf(value - round(value)) < 0.001 else str(value)
+
 
 ## Pre-validate the Clamp↔Range dependency: Clamp needs a min+max to
 ## clamp to, so disable the checkbox (with a hint) until a valid Range is entered — making the dependency
@@ -976,6 +1007,7 @@ func _refresh_clamp_gate() -> void:
 	else:
 		_attr_clamp_check.set_pressed_no_signal(false)
 		_attr_clamp_check.tooltip_text = "Enter a Range (a max, or min, max) above first — Clamp keeps the value inside it."
+
 
 ## Rebuilds the live preview to show the actual drawer widget (display-only) at a representative value.
 func _refresh_drawer_preview() -> void:
@@ -1006,6 +1038,7 @@ func _refresh_drawer_preview() -> void:
 	if widget != null:
 		_drawer_preview_box.add_child(widget)
 
+
 ## Instantiates a reusable drawer widget for the preview, sized/valued so the user sees what it looks like.
 func _make_drawer_preview_widget(kind: String) -> Control:
 	var bounds: Dictionary = _parse_range_bounds()
@@ -1034,11 +1067,13 @@ func _make_drawer_preview_widget(kind: String) -> Control:
 			return cw
 	return null
 
+
 ## Wires the sheet-enum source for the one-click combo fill (returns
 ## Array[Dictionary{name, members}]).
 ## The dock injects the active sheet so the name field can check host-member shadowing.
 func set_sheet_provider(provider: Callable) -> void:
 	_sheet_provider = provider
+
 
 ## Owner class if `var_name` shadows a host-class member (method/signal/constant/property),
 ## else "". Drives the live name warning + the confirm-time block.
@@ -1049,6 +1084,7 @@ func _shadow_owner(var_name: String) -> String:
 	if sheet == null:
 		return ""
 	return EventSheetProjectDoctor.shadowed_member_class(sheet, var_name.strip_edges())
+
 
 ## Live feedback: shows/hides the shadow warning as the user types the name.
 func _refresh_name_warning() -> void:
@@ -1061,8 +1097,10 @@ func _refresh_name_warning() -> void:
 		_name_warning.visible = true
 		_name_warning.text = "⚠ \"%s\" shadows a %s member — rename to avoid a clash." % [_name_edit.text.strip_edges(), owner]
 
+
 func set_enum_provider(provider: Callable) -> void:
 	_enum_provider = provider
+
 
 func _populate_enum_fill_menu() -> void:
 	var popup: PopupMenu = _enum_fill_menu.get_popup()
@@ -1078,6 +1116,7 @@ func _populate_enum_fill_menu() -> void:
 			members.append(str(member).get_slice("=", 0).strip_edges())
 		popup.add_item(str((entry as Dictionary).get("name", "")))
 		popup.set_item_metadata(popup.item_count - 1, ", ".join(members))
+
 
 func _refresh_default_hint() -> void:
 	if _default_help == null or _type_option == null or _default_edit == null:
@@ -1096,6 +1135,7 @@ func _refresh_default_hint() -> void:
 	_default_help.visible = true
 	_default_help.text = "✓ literal OK" if bool(verdict.get("ok", false)) else "✗ %s" % str(verdict.get("error", ""))
 
+
 func _refresh_const_ui() -> void:
 	if _const_check == null or _const_help == null or _type_option == null:
 		return
@@ -1106,6 +1146,7 @@ func _refresh_const_ui() -> void:
 		_const_check.button_pressed = false
 	_const_help.visible = not supports_const
 	_const_help.text = "Const is unavailable for Variant variables."
+
 
 func _supports_constant(type_name: String) -> bool:
 	return type_name != "Variant"

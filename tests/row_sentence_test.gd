@@ -3,8 +3,9 @@
 # raw-code actions summarised honestly as "then N lines of code". Pins the structure (trigger lead / if /
 # do / else / negation / truncation / raw count) without asserting exact ACE phrasing (that would be brittle).
 @tool
-extends RefCounted
 class_name RowSentenceTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -58,11 +59,13 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _act(id: String) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Test"
 	action.ace_id = id
 	return action
+
 
 static func _cond(id: String, negated: bool) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
@@ -70,6 +73,7 @@ static func _cond(id: String, negated: bool) -> ACECondition:
 	condition.ace_id = id
 	condition.negated = negated
 	return condition
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

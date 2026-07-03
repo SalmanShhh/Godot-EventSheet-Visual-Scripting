@@ -6,8 +6,9 @@
 # (gated by the verify-lift rule, so it's byte-safe). This pins that a grouped var reopens as a clean grouped
 # variable, the group/subgroup are recovered, and re-emission reproduces the exact source.
 @tool
-extends RefCounted
 class_name VariableGroupRoundtripTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -95,6 +96,7 @@ static func run() -> bool:
 		EventSheetDock._tree_group_attributes({"range": {"min": "0"}}), {}) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

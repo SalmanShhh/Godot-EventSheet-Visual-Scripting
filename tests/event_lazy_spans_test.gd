@@ -9,8 +9,9 @@
 #      builds them, and the built span count is non-trivial.
 # Headless-safe (no popups / display-server calls).
 @tool
-extends RefCounted
 class_name EventLazySpansTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -70,6 +71,7 @@ static func run() -> bool:
 	viewport.free()
 	return all_passed
 
+
 static func _build_cases() -> Array:
 	var cases: Array = []
 	cases.append({"name": "empty (every tick)", "row": _make_row("", 0, 0, "")})
@@ -86,6 +88,7 @@ static func _build_cases() -> Array:
 	cases.append({"name": "OR conditions negated", "row": _make_or_row()})
 	return cases
 
+
 static func _make_row(trigger_id: String, condition_count: int, action_count: int, comment: String) -> EventRow:
 	var row: EventRow = EventRow.new()
 	row.trigger_id = trigger_id
@@ -100,22 +103,26 @@ static func _make_row(trigger_id: String, condition_count: int, action_count: in
 		row.actions.append(action)
 	return row
 
+
 static func _make_trigger_resource_row(condition_count: int, action_count: int) -> EventRow:
 	var row: EventRow = _make_row("", condition_count, action_count, "")
 	row.trigger = ACECondition.new()
 	row.trigger.ace_id = "explicit_trigger"
 	return row
 
+
 static func _make_else_row(else_mode: int, condition_count: int, action_count: int) -> EventRow:
 	var row: EventRow = _make_row("", condition_count, action_count, "")
 	row.else_mode = else_mode
 	return row
+
 
 static func _make_or_row() -> EventRow:
 	var row: EventRow = _make_row("", 3, 1, "")
 	row.condition_mode = EventRow.ConditionMode.OR
 	(row.conditions[1] as ACECondition).negated = true
 	return row
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

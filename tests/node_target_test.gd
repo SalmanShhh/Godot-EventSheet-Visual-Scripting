@@ -7,8 +7,9 @@
 # back to "on_node" so the node path and the method arg never collide; non-bare prefixes ($"Quoted",
 # %Unique, multi-segment $A/B) stay verbatim; triggers are never targeted.
 @tool
-extends RefCounted
 class_name NodeTargetTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -46,12 +47,14 @@ static func run() -> bool:
 
 	return ok
 
+
 static func _def(template: String, params: Array) -> ACEDefinition:
 	var d: ACEDefinition = ACEDefinition.new()
 	d.ace_type = ACEDefinition.ACEType.ACTION
 	d.metadata = {"codegen_template": template}
 	d.parameters = params
 	return d
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

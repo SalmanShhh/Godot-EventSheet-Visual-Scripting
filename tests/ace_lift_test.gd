@@ -6,8 +6,9 @@
 # and ONLY kept when recompiling reproduces the source byte-for-byte; otherwise everything
 # stays verbatim block rows (the lossless rule).
 @tool
-extends RefCounted
 class_name ACELiftTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -106,6 +107,7 @@ static func run() -> bool:
 	all_passed = _check("unlifted files keep the byte-identical contract", helper_roundtrip == helper_source, true) and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

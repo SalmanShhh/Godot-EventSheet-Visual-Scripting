@@ -17,6 +17,7 @@ const LABEL_MIN_WIDTH := 120.0
 ## width makes that pass wrap at a sane width while the label still wraps wider at runtime.
 const HINT_WRAP_WIDTH := 360.0
 
+
 ## Hardens a CodeEdit against the most common user syntax errors: auto-CLOSES brackets and quotes (typing
 ## "(" inserts "()" with the caret inside, '"' inserts ""), so an unbalanced pair is hard to leave behind,
 ## and matching brackets highlight. Applied to every EDITABLE code field — the ƒx expression boxes and the
@@ -28,6 +29,7 @@ static func configure_code_editor(edit: CodeEdit) -> void:
 	edit.auto_brace_completion_enabled = true
 	edit.auto_brace_completion_highlight_matching = true
 	edit.auto_brace_completion_pairs = {"(": ")", "[": "]", "{": "}", "\"": "\"", "'": "'"}
+
 
 ## An aligned "Label   [field]" row — the consistent form layout for the plugin's dialogs. The
 ## label takes a fixed leading width so stacked rows align; the field expands to fill the rest.
@@ -43,11 +45,13 @@ static func form_row(label_text: String, field: Control, label_min_width: float 
 	row.add_child(field)
 	return row
 
+
 ## A standard form VBox (consistent row separation) to hold form_row()s + helper labels.
 static func form_box() -> VBoxContainer:
 	var box: VBoxContainer = VBoxContainer.new()
 	box.add_theme_constant_override("separation", ROW_SEPARATION)
 	return box
+
 
 ## Wraps content in a standard-margin container for a dialog/window body, so every popup has the
 ## same breathing room as the editor's own dialogs.
@@ -59,6 +63,7 @@ static func margined(content: Control, margin: int = CONTENT_MARGIN) -> MarginCo
 	box.add_theme_constant_override("margin_bottom", margin)
 	box.add_child(content)
 	return box
+
 
 ## A muted helper/hint label (the small explanatory text under a field). The autowrap is WIDTH-BOUNDED
 ## (wrap_width) so it never balloons a content-sized dialog — see HINT_WRAP_WIDTH. Pass a smaller
@@ -74,6 +79,7 @@ static func hint_label(text: String, wrap_width: float = HINT_WRAP_WIDTH) -> Lab
 ## Inner padding (px) baked into a panel_section()'s background, so its contents don't touch the edges.
 const PANEL_SECTION_PAD := 6.0
 
+
 ## Wraps `content` in a filled "inset card" — a PanelContainer whose background sits a touch darker than
 ## the dialog, with a hairline border + rounded corners (Godot's Create-New-Node side-pane look), so a
 ## section reads as a distinct sunken panel instead of floating on the dialog background. Use it to give
@@ -86,6 +92,7 @@ static func panel_section(content: Control, pad: float = PANEL_SECTION_PAD) -> P
 	panel.add_theme_stylebox_override("panel", style)
 	panel.add_child(content)
 	return panel
+
 
 ## A section-title label for grouping a dialog into legible blocks — full opacity, a touch larger,
 ## tinted with the editor's accent so a section reads as a heading rather than just another form row.
@@ -104,6 +111,7 @@ static func section_header(text: String) -> Label:
 	label.add_theme_color_override("font_color", accent)
 	return label
 
+
 ## A titled inset card — a section_header above panel_section(content). The standard "labelled section"
 ## block, so every dialog groups its content into the same legible, themed panels instead of a flat
 ## wall of rows. The caller still sets the returned panel's size flags if it should expand.
@@ -113,6 +121,7 @@ static func titled_card(title: String, content: Control, pad: float = PANEL_SECT
 	box.add_child(section_header(title))
 	box.add_child(content)
 	return panel_section(box, pad)
+
 
 ## The StyleBoxFlat behind panel_section() (and any card that wants the matching look): a filled inset
 ## with a subtle border + 4px corners. Editor-theme-aware — the fill comes from the editor's `dark_color_2`

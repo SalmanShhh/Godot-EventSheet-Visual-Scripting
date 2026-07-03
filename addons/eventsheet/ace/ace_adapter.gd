@@ -2,6 +2,7 @@
 class_name EventSheetACEAdapter
 extends RefCounted
 
+
 static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefinition:
 	var definition := ACEDefinition.new()
 	definition.provider_id = descriptor.provider_id
@@ -31,6 +32,7 @@ static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefiniti
 	}
 	return definition
 
+
 static func _map_ace_type(ace_type: int) -> int:
 	match ace_type:
 		ACEDescriptor.ACEType.CONDITION:
@@ -41,6 +43,7 @@ static func _map_ace_type(ace_type: int) -> int:
 			return ACEDefinition.ACEType.TRIGGER
 		_:
 			return ACEDefinition.ACEType.ACTION
+
 
 static func _map_params(params: Array[ACEParam]) -> Array:
 	var output: Array = []

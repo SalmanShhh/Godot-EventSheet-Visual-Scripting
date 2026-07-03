@@ -3,8 +3,9 @@
 # Adding a condition must never overwrite an existing trigger (e.g. "Every tick"); and
 # conditions must be deletable, including down to zero conditions.
 @tool
-extends RefCounted
 class_name ConditionEditTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -56,6 +58,7 @@ static func run() -> bool:
 	editor.free()
 	return all_passed
 
+
 static func _def(ace_id: String, ace_type: int) -> ACEDefinition:
 	var definition: ACEDefinition = ACEDefinition.new()
 	definition.provider_id = "Core"
@@ -63,12 +66,14 @@ static func _def(ace_id: String, ace_type: int) -> ACEDefinition:
 	definition.ace_type = ace_type
 	return definition
 
+
 static func _row_for(viewport: EventSheetViewport, resource: Resource) -> EventRowData:
 	for entry in viewport.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
 		if row_data != null and row_data.source_resource == resource:
 			return row_data
 	return null
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

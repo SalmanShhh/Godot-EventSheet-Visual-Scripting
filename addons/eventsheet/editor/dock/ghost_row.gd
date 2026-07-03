@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetGhostRow
+extends RefCounted
 # The zero-dialog add: pressing E / C / A materialises a small type-a-sentence popup at the selected
 # row instead of the full picker window. Type "heal 5" or "every tick" — the quick-add brain scores it
 # live and the list shows the top matches with their filled parameters; Enter applies the highlighted
@@ -20,8 +20,10 @@ var _list: ItemList = null
 var _candidates: Array = []      # the ranked {definition, params, score} entries backing the list
 var _origin: String = "action"   # which add key opened it: "event" / "condition" / "action"
 
+
 func init(dock: Control) -> void:
 	_dock = dock
+
 
 ## Opens the ghost row for the add-kind that summoned it. In a headless run the popup can't show, so
 ## this only resets the query state — the match/apply flow stays fully drivable by tests.
@@ -36,6 +38,7 @@ func open(origin: String) -> void:
 		return
 	_popup.popup(Rect2i(_anchor_position(), Vector2i(0, 0)))
 	_edit.grab_focus()
+
 
 func _ensure_popup() -> void:
 	if _popup != null:
@@ -64,6 +67,7 @@ func _ensure_popup() -> void:
 	_popup.add_child(box)
 	_dock.add_child(_popup)
 
+
 ## Keyboard on the query field: ↑/↓ steer the suggestion list without leaving the text, Ctrl+Enter
 ## opens the full picker (Esc already closes any PopupPanel).
 func _on_edit_input(event: InputEvent) -> void:
@@ -80,12 +84,14 @@ func _on_edit_input(event: InputEvent) -> void:
 		_move_selection(-1)
 		_edit.accept_event()
 
+
 func _move_selection(delta: int) -> void:
 	if _list == null or _list.item_count == 0:
 		return
 	var selected: PackedInt32Array = _list.get_selected_items()
 	var current: int = selected[0] if selected.size() > 0 else 0
 	_list.select(clampi(current + delta, 0, _list.item_count - 1))
+
 
 ## Rebuilds the suggestion list from the ranked quick-add candidates for the current query text.
 func _refresh(query: String) -> void:
@@ -107,6 +113,7 @@ func _refresh(query: String) -> void:
 		_list.add_item("%s  %s%s" % [glyph, definition.display_name, summary])
 	if _list.item_count > 0:
 		_list.select(0)
+
 
 ## Applies the highlighted candidate straight onto the sheet: a trigger/condition becomes a new
 ## conditioned event, an action appends to the selected event — the same apply flow the quick-add bar
@@ -144,6 +151,7 @@ func _apply_selected() -> void:
 # Kept as a member so tests can assert the continuation target without a window.
 var _last_follow_up: Dictionary = {}
 
+
 ## Post-insert continuation: when the sentence left parameters unfilled ("heal" with no amount), the
 ## one-field param editor opens straight onto the first of them — pre-filled with the resolved default
 ## and select-all'd — so `A → heal ⏎ → 5 ⏎` completes with zero dialogs. A fully-specified sentence
@@ -170,6 +178,7 @@ func _continue_into_params(definition: ACEDefinition, filled: Dictionary) -> voi
 		_dock._inline_params.on_param_value_edit_requested(ace, param_id, str((ace.get("params") as Dictionary).get(param_id, "")))
 		return
 
+
 ## Locates the LIVE just-applied ACE. The apply runs through the undo funnel, whose commit restores a
 ## duplicated snapshot — the resources it created are replaced — so the only reliable handle is a
 ## reverse walk of the live sheet for the newest ACE with this definition's id. {row, ace} or {}.
@@ -182,6 +191,7 @@ func _find_applied_ace(definition: ACEDefinition) -> Dictionary:
 		if not found.is_empty():
 			return found
 	return {}
+
 
 func _find_in_row(row: Variant, ace_id: String) -> Dictionary:
 	if row is EventGroup:
@@ -208,6 +218,7 @@ func _find_in_row(row: Variant, ace_id: String) -> Dictionary:
 		return {"row": event_row, "ace": event_row.trigger}
 	return {}
 
+
 ## Ctrl+Enter — the browsable catalog is one keystroke away; which picker opens follows the add-kind
 ## that summoned the ghost row.
 func _open_full_picker() -> void:
@@ -220,6 +231,7 @@ func _open_full_picker() -> void:
 			_dock._on_add_condition_requested()
 		_:
 			_dock._on_add_action_requested()
+
 
 ## Just under the selected row (zoom-aware), so the suggestions appear where the new row will land;
 ## falls back to the mouse when nothing is selected.

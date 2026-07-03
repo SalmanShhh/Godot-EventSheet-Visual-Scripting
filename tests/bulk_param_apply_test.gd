@@ -5,8 +5,9 @@
 # and params untouched), the live re-fetch discipline (the undo funnel replaces resources on commit),
 # the no-change no-op, and the hint that advertises the gesture only when several rows are selected.
 @tool
-extends RefCounted
 class_name BulkParamApplyTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -84,6 +85,7 @@ static func run() -> bool:
 	dock.free()
 	return ok
 
+
 static func _heal_event(amount: String) -> EventRow:
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = "Core"
@@ -95,12 +97,14 @@ static func _heal_event(amount: String) -> EventRow:
 	event.actions.append(heal)
 	return event
 
+
 static func _live_events(dock: EventSheetDock) -> Array:
 	var events: Array = []
 	for row: Variant in dock.get_current_sheet().events:
 		if row is EventRow:
 			events.append(row)
 	return events
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -4,8 +4,9 @@
 # reuses its tab, per-tab dirty state is independent, and closing activates a neighbour.
 # Headless-safe.
 @tool
-extends RefCounted
 class_name MultiTabTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -49,6 +50,7 @@ static func run() -> bool:
 
 	editor.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

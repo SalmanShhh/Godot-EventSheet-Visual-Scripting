@@ -16,8 +16,8 @@
 # trigger functions is considered (EventForge's own layout); files with other layouts
 # simply keep their blocks.
 @tool
-extends RefCounted
 class_name EventSheetACELifter
+extends RefCounted
 
 ## Lifecycle handlers reversible from the header alone (signal handlers reverse via the
 ## `_ready` connection map — see _parse_connections/_lift_function).
@@ -29,6 +29,7 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _unhandled_input(event: InputEvent) -> void:": "OnUnhandledInput",
 	"func _run() -> void:": "OnEditorRun"
 }
+
 
 ## Attempts the lift on an imported external sheet. Mutates sheet.events only when the
 ## byte-identical round-trip verifies; otherwise leaves the sheet untouched.
@@ -242,6 +243,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 		boundary.code = boundary_code
 	return _retry_or_fail(sheet, source, lift_functions)
 
+
 ## Godot engine virtual callbacks by header name - excluded from the mid-file anchor lift (they
 ## are structural boilerplate, not vocabulary; several are regenerated from sheet metadata).
 static func _is_engine_virtual_header(header: String) -> bool:
@@ -257,12 +259,14 @@ static func _is_engine_virtual_header(header: String) -> bool:
 		"_integrate_forces", "_physics_process_internal",
 	]
 
+
 ## The two-pass fallback: a failed full lift retries event-only before giving up, so the
 ## function/comment upgrades can never regress what already lifted before them.
 static func _retry_or_fail(sheet: EventSheetResource, source: String, lift_functions: bool) -> bool:
 	if lift_functions:
 		return attempt_lift(sheet, source, false)
 	return false
+
 
 ## Removes the cosmetic event-group marker lines (`## @ace_group(…)` declarations and `# @group:<slug>`
 ## row tags) so the lift's byte-verify compares only the runtime-bearing code. Stripping nothing when a
@@ -275,6 +279,7 @@ static func _strip_group_markers(text: String) -> String:
 			continue
 		kept.append(line)
 	return "\n".join(kept)
+
 
 ## Recovers every `## @ace_group(uid="…", name="…", parent?, description?, color?, collapsed?,
 ## toggleable?)` declaration from the source into a {slug → fields} registry, the reverse of the
@@ -290,6 +295,7 @@ static func _recover_group_declarations(source: String) -> Dictionary:
 		if not slug.is_empty():
 			registry[slug] = fields
 	return registry
+
 
 ## Parses an @ace_group field list (`uid="x", name="y", collapsed=true`) into a typed dict: quoted
 ## values become Strings, bare true/false become bools. Tolerant of order + missing optional fields.
@@ -308,6 +314,7 @@ static func _parse_group_fields(inner: String) -> Dictionary:
 		else:
 			fields[key] = raw.substr(1, raw.length() - 2)  # strip the surrounding quotes
 	return fields
+
 
 ## Rebuilds EventGroup resources from the flat lifted event list using the recovered `## @ace_group`
 ## registry — the reverse of the compiler dissolving groups into the trigger sections. Each EventRow
@@ -358,6 +365,7 @@ static func _reconstruct_groups(events: Array, registry: Dictionary) -> Array:
 			chain_slug = parent_slug
 	return output
 
+
 ## Build-time de-coding for behaviour packs: replaces each sheet function's single-RawCode body with
 ## lifted ACE rows (the same reverse grammar that opens a .gd as events), kept ONLY when the whole
 ## sheet still recompiles BYTE-IDENTICALLY — a PER-FUNCTION gate, so one un-liftable body never reverts
@@ -407,12 +415,14 @@ static func lift_function_bodies(sheet: EventSheetResource) -> int:
 				fn.events = []
 	return converted
 
+
 static func _to_resource_array(rows: Array) -> Array[Resource]:
 	var out: Array[Resource] = []
 	for r: Variant in rows:
 		if r is Resource:
 			out.append(r as Resource)
 	return out
+
 
 ## Build-time de-coding for EVENT bodies — the sibling of lift_function_bodies, for sheet.events.
 ## An event whose body is a single verbatim RawCode block (e.g. a behaviour's OnProcess /
@@ -457,6 +467,7 @@ static func lift_event_bodies(sheet: EventSheetResource) -> int:
 			row.sub_events = backup_subs
 	return converted
 
+
 ## Converts hand-written `## @ace_trigger` (+ @ace_name / @ace_category) `signal X` declaration blocks
 ## inside top-level RawCode rows into SignalRow rows, so a behaviour's trigger signals read as
 ## keyword-badged Trigger rows (and feed the On Signal / Emit Signal pickers + autocomplete) instead
@@ -491,6 +502,7 @@ static func lift_signal_declarations(sheet: EventSheetResource, byte_gated: bool
 			sheet.events = backup  # reorder/spacing changed — keep the verbatim block (round-trip safe)
 			return 0
 	return lifted_total
+
 
 ## Splits one RawCode block into [SignalRow…, remainder RawCode]: each leading `## @ace_trigger`
 ## signal group becomes a trigger SignalRow; everything else stays a single verbatim block (its
@@ -541,6 +553,7 @@ static func _split_signal_declarations(raw: RawCodeRow) -> Dictionary:
 		out.append(remainder_row)
 	return {"rows": out, "count": count}
 
+
 ## Pulls the quoted argument out of an annotation line, e.g. `## @ace_name("On Jumped")` → `On Jumped`.
 ## Returns "" when the key is absent or unquoted.
 static func _extract_annotation_arg(line: String, key: String) -> String:
@@ -553,6 +566,7 @@ static func _extract_annotation_arg(line: String, key: String) -> String:
 	if end == -1:
 		return ""
 	return line.substr(start, end - start)
+
 
 ## Parses a `signal name` / `signal name(a, b: int)` declaration into {name, params}.
 static func _parse_signal_line(line: String) -> Dictionary:
@@ -567,6 +581,7 @@ static func _parse_signal_line(line: String) -> Dictionary:
 				params.append(piece.strip_edges())
 		return {"name": name, "params": params}
 	return {"name": rest, "params": params}
+
 
 ## Converts hand-written `func` declarations inside top-level RawCode rows into EventFunction rows,
 ## reusing the importer's _lift_sheet_function (so a `## @ace_*` block exposes the function as an
@@ -607,6 +622,7 @@ static func lift_function_declarations(sheet: EventSheetResource, byte_gated: bo
 			sheet.functions = backup_functions
 			return 0
 	return harvested.size()
+
 
 ## Splits one RawCode block into [EventFunction…, remainder RawCode]: each `func …:` block (with its
 ## preceding `## @ace_*` annotations) becomes an EventFunction; a plain `#` comment above an
@@ -667,6 +683,7 @@ static func _split_function_declarations(raw: RawCodeRow) -> Dictionary:
 		out["remainder"] = remainder_row
 	return out
 
+
 ## Collects EventRows whose body is exactly one verbatim RawCode block (the un-converted shape:
 ## a single RawCodeRow action and no sub-events). Recurses through sub-events and groups so a
 ## nested single-block tick lifts too.
@@ -680,6 +697,7 @@ static func _collect_single_block_event_rows(events: Array, into: Array[EventRow
 				_collect_single_block_event_rows(row.sub_events, into)
 		elif item is EventGroup:
 			_collect_single_block_event_rows((item as EventGroup).events, into)
+
 
 ## Classifies a trailing-run row: "func", "annotations" (## @ace block), "blank",
 ## "comments" (top-level # lines), or "other" (breaks the run).
@@ -705,12 +723,14 @@ static func _run_row_kind(code: String, lift_functions: bool) -> String:
 		return "comments"
 	return "other"
 
+
 ## True when the header is a signal handler present in the `_ready` connection map.
 static func _is_connected_handler(header: String, connections: Dictionary) -> bool:
 	var header_regex: RegEx = RegEx.new()
 	header_regex.compile("^func ([A-Za-z_][A-Za-z0-9_]*)")
 	var header_match: RegExMatch = header_regex.search(header)
 	return header_match != null and connections.has(header_match.get_string(1))
+
 
 ## Reverse of _emit_expose_annotations: parses a `## @ace_*` block into EventFunction
 ## exposure fields. {} = unrecognized shape (lift falls back).
@@ -741,6 +761,7 @@ static func _parse_annotations(code: String) -> Dictionary:
 		else:
 			return {}
 	return fields if recognized else {}
+
 
 ## A non-trigger function → EventFunction (sheet function), body parsed with the same
 ## grammar as event bodies (events without triggers). {} fields come from the preceding
@@ -824,6 +845,7 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 	"child_entered_tree": "OnChildEnteredTree"
 }
 
+
 ## Parses `_ready`'s leading connect lines into {handler_name: {signal, source}}.
 ## Shapes (exactly what _emit_grouped_trigger_functions emits):
 ##   	body_entered.connect(_on_body_entered)
@@ -842,6 +864,7 @@ static func _parse_connections(ready_lines: PackedStringArray) -> Dictionary:
 			"source": regex_match.get_string(1)
 		}
 	return connections
+
 
 ## One trigger function → {ok: bool, events: Array}. Recognizes lifecycle headers and —
 ## via the `_ready` connection map — signal handlers, which lift to signal-trigger events
@@ -888,6 +911,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		if _is_plain_collector(event as EventRow) and (event as EventRow).actions.is_empty():
 			return {"ok": false}
 	return {"ok": true, "events": events}
+
 
 ## Recursive body grammar (the reverse of _emit_event_body): at each depth,
 ## `if <conds>:` opens a conditioned row, an adjacent `elif <conds>:`/`else:` chains
@@ -1037,6 +1061,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 	_flush_raw(current, pending_raw)
 	return {"ok": true, "rows": rows, "next": index}
 
+
 ## Folds a parsed block body into its event: a leading plain collector's statements
 ## become the event's actions, every conditioned/chained row becomes a sub-event.
 ## False when the shape can't survive emission (actions emit BEFORE sub-events, so
@@ -1055,11 +1080,13 @@ static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
 		cursor += 1
 	return true
 
+
 ## A "plain collector" holds only the loose statements between blocks — no conditions, no loop
 ## wrapper, no else-chain. A pick_filter-bearing loop row is NOT plain (its body belongs in
 ## sub_events, and its wrapper must survive _adopt_block_body / the _lift_function empty-row drop).
 static func _is_plain_collector(event: EventRow) -> bool:
 	return event != null and event.conditions.is_empty() and event.pick_filters.is_empty() and event.else_mode == EventRow.ElseMode.NONE
+
 
 ## Builds the PickFilter for a `for`/`while` header (already stripped to this depth, trailing `:`).
 ## `while EXPR:` → WHILE (no loop variable). `for X in EXPR:` → REPEAT when EXPR is a pure
@@ -1085,6 +1112,7 @@ static func _loop_pick_filter(rest: String, is_while: bool) -> PickFilter:
 		pick.collection_value = collection
 	return pick
 
+
 ## True only when EXPR is exactly a `range(...)` call whose opening paren closes at the final
 ## character, so it round-trips through REPEAT. `range(5) + 1` is NOT pure (stays EXPRESSION).
 static func _is_pure_range(expr: String) -> bool:
@@ -1103,9 +1131,11 @@ static func _is_pure_range(expr: String) -> bool:
 				return i == expr.length() - 1
 	return false
 
+
 ## True for a `_ready` body line that is a regenerated signal connection.
 static func _is_connect_line(line: String) -> bool:
 	return line.begins_with("\t") and line.ends_with(")") and line.contains(".connect(")
+
 
 static func _make_event(trigger_id: String, trigger_provider: String = "Core", trigger_args: String = "", trigger_source: String = "") -> EventRow:
 	var event: EventRow = EventRow.new()
@@ -1114,6 +1144,7 @@ static func _make_event(trigger_id: String, trigger_provider: String = "Core", t
 	event.trigger_args = trigger_args
 	event.trigger_source_path = trigger_source
 	return event
+
 
 ## Splits a joined condition on TOP-LEVEL " and " only — ignoring " and " inside (), [], {} or a
 ## string literal — so a compound term like `f(a and b)`, `x == "a and b"`, or `not (a and b)` stays
@@ -1153,6 +1184,7 @@ static func _split_top_level_and(expression: String) -> PackedStringArray:
 	parts.append(expression.substr(start))
 	return parts
 
+
 ## Splits a joined condition expression on top-level " and " and reverse-matches every term
 ## (supporting `not (...)` negation). All terms must match or the lift fails — though the generic
 ## Expression Is True condition (bare {expr}) catches any term no specific ACE claims.
@@ -1174,6 +1206,7 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		event.conditions.append(condition)
 	return true
 
+
 ## Action line → ACEAction when a template matches; otherwise queued as raw GDScript so the
 ## event still lifts (in-flow blocks re-emit verbatim at the body indent).
 static func _consume_action_line(event: EventRow, line: String, _depth: int, pending_raw: PackedStringArray, reverse_entries: Array) -> void:
@@ -1188,6 +1221,7 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	action.params = matched.get("params", {})
 	event.actions.append(action)
 
+
 static func _flush_raw(event: EventRow, pending_raw: PackedStringArray) -> void:
 	if pending_raw.is_empty() or event == null:
 		return
@@ -1199,6 +1233,7 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray) -> void:
 	block.lift_note = "no matching ACE template"
 	event.actions.append(block)
 	pending_raw.clear()
+
 
 ## Reverse index over builtin descriptors: template → anchored regex with named captures.
 static func _build_reverse_entries() -> Array:
@@ -1247,6 +1282,7 @@ static func _build_reverse_entries() -> Array:
 	entries.sort_custom(func(a, b): return a["literal_len"] > b["literal_len"] if a["literal_len"] != b["literal_len"] else a["order"] < b["order"])
 	return entries
 
+
 static func _match_entry(line: String, reverse_entries: Array, kind: String) -> Dictionary:
 	for entry: Variant in reverse_entries:
 		if str((entry as Dictionary).get("kind", "")) != kind:
@@ -1260,6 +1296,7 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String) -> 
 			params[group_name] = regex_match.get_string(group_name)
 		return {"provider": (entry as Dictionary).get("provider"), "ace_id": (entry as Dictionary).get("ace_id"), "params": params}
 	return {}
+
 
 ## Expands an optional-prefix template `{name.}foo` into the two shapes it can compile to, so both
 ## round-trip: the blank-target form (`foo`) and the set-target form (`{name}.foo`, where `{name}`
@@ -1275,6 +1312,7 @@ static func _optional_prefix_variants(template: String) -> Array:
 	var placeholder: String = hit.get_string(0)  # e.g. "{target.}"
 	var capture_name: String = hit.get_string(1)  # e.g. "target"
 	return [template.replace(placeholder, ""), template.replace(placeholder, "{%s}." % capture_name)]
+
 
 ## "{amount}" placeholders become lazy named captures; everything else matches literally.
 static func _template_to_regex(template: String) -> RegEx:
@@ -1301,6 +1339,7 @@ static func _template_to_regex(template: String) -> RegEx:
 	pattern += "$"
 	var regex: RegEx = RegEx.new()
 	return regex if regex.compile(pattern) == OK else null
+
 
 static func _escape_regex(text: String) -> String:
 	var escaped: String = ""

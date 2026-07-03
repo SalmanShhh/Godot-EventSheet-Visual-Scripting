@@ -4,6 +4,7 @@
 @tool
 extends SceneTree
 
+
 func _init() -> void:
 	var packs_dir: DirAccess = DirAccess.open("res://eventsheet_addons")
 	packs_dir.list_dir_begin()
@@ -37,6 +38,7 @@ func _init() -> void:
 		DirAccess.remove_absolute(verify_path)
 	print("audited=%d drifted=%d" % [audited, drifted])
 	quit()
+
 
 ## The single sheet script a pack folder ships (e.g. spring_behavior.gd, save_system_addon.gd). Skips
 ## .gd.uid (ends with .uid, not .gd) and any non-script files.

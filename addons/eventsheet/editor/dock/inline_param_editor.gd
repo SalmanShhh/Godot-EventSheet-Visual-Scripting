@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name EventSheetInlineParamEditor
+extends RefCounted
 
 # The fastest editing gestures — no dialog. Double-click a highlighted parameter value to edit it in
 # a one-field popup at the mouse; click a colour-swatch cell to drop a ColorPicker right there
@@ -11,6 +11,7 @@ class_name EventSheetInlineParamEditor
 # wrapper plus refresh / dirty feedback.
 
 var _dock: Control = null
+
 
 func init(dock: Control) -> void:
 	_dock = dock
@@ -24,6 +25,7 @@ var _color_swatch_popup: PopupPanel = null
 var _color_swatch_picker: ColorPicker = null
 var _color_swatch_target: Resource = null
 var _color_swatch_key: String = ""
+
 
 ## Double-clicking a highlighted value opens this one-field editor at the mouse. Keyboard flows
 ## (the Param Hop's Enter) pass the value's screen rect instead, so the popup lands under the value
@@ -66,6 +68,7 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 	_param_edit_field.grab_focus()
 	_param_edit_field.select_all()
 
+
 ## Ctrl+Enter = the bulk commit (Enter alone commits just this row via text_submitted).
 func _on_param_field_input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not (event as InputEventKey).pressed:
@@ -74,6 +77,7 @@ func _on_param_field_input(event: InputEvent) -> void:
 	if key.keycode in [KEY_ENTER, KEY_KP_ENTER] and (key.ctrl_pressed or key.meta_pressed):
 		_commit_inline_param_edit(true)
 		_param_edit_field.accept_event()
+
 
 func _commit_inline_param_edit(apply_to_all_selected: bool = false) -> void:
 	if _param_edit_target == null or _param_edit_key.is_empty():
@@ -115,6 +119,7 @@ func _commit_inline_param_edit(apply_to_all_selected: bool = false) -> void:
 			note = "Set %s on %d matching verbs." % [key, int(updated["count"])]
 		_dock._mark_dirty(note)
 
+
 ## Every ACE across the selected rows that is the SAME verb as the edited one (matching provider+id)
 ## and carries the edited param — the bulk-apply target set. Walks each selected row's trigger,
 ## conditions, actions, and sub-events (and group children, when a group is selected). The edited
@@ -124,6 +129,7 @@ func _collect_matching_aces(edited: Resource, param_id: String) -> Array:
 	for resource: Variant in _dock._top_level_selected_resources():
 		_collect_matching_in(resource, edited, param_id, matches)
 	return matches
+
 
 func _collect_matching_in(resource: Variant, edited: Resource, param_id: String, matches: Array) -> void:
 	if resource is EventGroup:
@@ -151,6 +157,7 @@ func _collect_matching_in(resource: Variant, edited: Resource, param_id: String,
 	for sub_event: Variant in event_row.sub_events:
 		_collect_matching_in(sub_event, edited, param_id, matches)
 
+
 ## Clicking a cell's colour swatch opens a ColorPicker right there (no params dialog), inline.
 ## The pick is committed once, when the popup closes — so dragging the picker is one clean undo step, not
 ## one per colour change.
@@ -170,6 +177,7 @@ func on_color_swatch_edit_requested(ace: Resource, param_id: String, current_col
 	_color_swatch_popup.reset_size()
 	_color_swatch_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), _color_swatch_popup.size))
 
+
 func _commit_color_swatch_edit(new_color: Color) -> void:
 	if _color_swatch_target == null or _color_swatch_key.is_empty():
 		return
@@ -186,6 +194,7 @@ func _commit_color_swatch_edit(new_color: Color) -> void:
 	if changed:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Colour updated.")
+
 
 ## A scene node was dropped onto a condition/action param value — set that param to the node reference
 ## (e.g. %Player), undoable. The deep-node-friendly gesture: drag from the Scene dock, no dialog.

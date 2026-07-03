@@ -3,8 +3,9 @@
 # candidate straight onto the sheet. Headless: the popup can't show, but open() still resets state and
 # _refresh/_apply_selected drive the whole match→apply flow, so this pins it end to end.
 @tool
-extends RefCounted
 class_name GhostRowTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -85,12 +86,14 @@ static func run() -> bool:
 	dock.free()
 	return ok
 
+
 static func _count_event_rows(sheet: EventSheetResource) -> int:
 	var count: int = 0
 	for row: Variant in sheet.events:
 		if row is EventRow:
 			count += 1
 	return count
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

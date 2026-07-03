@@ -1,8 +1,9 @@
 # EventForge — Condition code generation
 # Emits GDScript boolean expressions for ACE conditions.
 @tool
-extends RefCounted
 class_name ConditionCodegen
+extends RefCounted
+
 
 ## Generates one condition expression from an ACE condition.
 static func generate_condition(condition: ACECondition, host_default: String = "") -> String:

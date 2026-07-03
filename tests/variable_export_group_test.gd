@@ -5,8 +5,9 @@
 # the row shows the group name as a chip (so grouping is legible in the sheet), and the group attribute
 # compiles to @export_group(...).
 @tool
-extends RefCounted
 class_name VariableExportGroupTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -43,6 +44,7 @@ static func run() -> bool:
 
 	return all_passed
 
+
 ## True when the variable row named `var_name` carries a badge span with text `chip_text`.
 static func _row_has_chip(rows: Array, var_name: String, chip_text: String) -> bool:
 	for row: Variant in rows:
@@ -60,6 +62,7 @@ static func _row_has_chip(rows: Array, var_name: String, chip_text: String) -> b
 		if is_target:
 			return has_chip
 	return false
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

@@ -1,8 +1,8 @@
 # EventForge — ACEDescriptor resource
 # Defines a registerable trigger, condition, action, or expression.
 @tool
-extends Resource
 class_name ACEDescriptor
+extends Resource
 
 enum ACEType {
 	TRIGGER,
@@ -60,10 +60,12 @@ const REACTS_TO: Dictionary = {
 	"Core::IsButtonPressed": {"trigger_id": "OnButtonPressed", "trigger_name": "On Pressed"},
 }
 
+
 ## The reactive trigger that replaces a polling condition, or {} if none. The single lookup the picker
 ## tip — and later the Project Doctor / inline hint — all read, so the nudge is defined once.
 static func reactive_alternative(provider_id: String, ace_id: String) -> Dictionary:
 	return REACTS_TO.get("%s::%s" % [provider_id, ace_id], {})
+
 
 ## Returns the display label used in ACE pickers.
 func get_list_name() -> String:
@@ -75,6 +77,7 @@ func get_list_name() -> String:
 		return display_name
 	return ace_id
 
+
 ## Returns the template used for human-friendly summaries.
 func get_display_text() -> String:
 	if not display_text.is_empty():
@@ -83,6 +86,7 @@ func get_display_text() -> String:
 		return displayText
 	return get_list_name()
 
+
 ## Sets the plain-language description and returns self, so a module authors help INLINE, right next to the
 ## descriptor: `F.make_descriptor(...).described("What it does, in friendly English.")`. This keeps every
 ## ACE's help in its own file — the same self-contained way custom addons use `## @ace_description(...)` —
@@ -90,6 +94,7 @@ func get_display_text() -> String:
 func described(text: String) -> ACEDescriptor:
 	description = text
 	return self
+
 
 ## Marks this ACE deprecated and returns self, so it chains after make_descriptor like .described():
 ## `F.make_descriptor(...).deprecated("Use Move Toward instead", "Core::MoveToward")`. The ACE keeps
@@ -101,6 +106,7 @@ func deprecated(message: String = "", replacement: String = "") -> ACEDescriptor
 	deprecation_message = message
 	replacement_ace_id = replacement
 	return self
+
 
 ## A one-line "[Deprecated] …" note for hover/tooltips, or "" when not deprecated. Defined once here so the
 ## picker, the viewport hover, and any future Project-Doctor hint all phrase it identically.
@@ -116,6 +122,7 @@ func deprecation_note() -> String:
 		note += " Use %s instead." % replacement_ace_id.strip_edges()
 	return note
 
+
 ## Returns params dictionary pre-populated from descriptor defaults.
 func build_default_params() -> Dictionary:
 	var output: Dictionary = {}
@@ -129,6 +136,7 @@ func build_default_params() -> Dictionary:
 			continue
 		output[key] = param.get_initial_value()
 	return output
+
 
 ## Formats display_text/list_name with values from params.
 func format_display(params_dict: Dictionary) -> String:

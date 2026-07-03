@@ -35,6 +35,7 @@ var _health_known: bool = false
 var _health_count: int = 0
 var _health_sheet: EventSheetResource = null
 
+
 ## The health chip {text, color} for the banner's right end: the calm "works" signal (green
 ## ✓) or the flag count (amber ⚠). Static → testable.
 static func health_chip(issue_count: int) -> Dictionary:
@@ -42,12 +43,14 @@ static func health_chip(issue_count: int) -> Dictionary:
 		return {"text": "✓ no issues", "color": EventSheetPalette.COLOR_HEALTH_OK}
 	return {"text": "⚠ %d flagged" % issue_count, "color": EventSheetPalette.COLOR_HEALTH_WARN}
 
+
 ## Pushes the last diagnostics result to the health chip. Called from the dock's _run_diagnostics only
 ## (save-time / on-demand), so the chip never triggers a recompile on its own.
 func set_health(issue_count: int) -> void:
 	_health_known = true
 	_health_count = issue_count
 	queue_redraw()
+
 
 ## The published-API census behind the manifest pills: trigger signals, exposed functions split by
 ## return type (void→action, bool→condition, else→expression), and exported "knob" variables — counted
@@ -74,6 +77,7 @@ static func manifest_for(sheet: EventSheetResource) -> Dictionary:
 			counts["knobs"] += 1
 	return counts
 
+
 static func _census_rows(rows: Array, counts: Dictionary) -> void:
 	for row: Variant in rows:
 		if row is SignalRow:
@@ -92,6 +96,7 @@ static func _census_rows(rows: Array, counts: Dictionary) -> void:
 		elif row is EventGroup:
 			var group: EventGroup = row as EventGroup
 			_census_rows(group.events if not group.events.is_empty() else group.rows, counts)
+
 
 ## Builds the ordered non-zero manifest pill segments [{text, color}] from a census — a role with a
 ## zero count is dropped so the band stays calm. Static so the layout is testable.
@@ -114,12 +119,14 @@ static func _build_manifest_segments(counts: Dictionary) -> Array:
 		segments.append({"text": "@ %d knob%s" % [knobs, "" if knobs == 1 else "s"], "color": _MANIFEST_KNOBS})
 	return segments
 
+
 func setup(viewport: EventSheetViewport) -> void:
 	_viewport = viewport
 	name = "SheetIdentityBanner"
 	custom_minimum_size = Vector2(0.0, BANNER_HEIGHT)
 	tooltip_text = "Click to edit the sheet type (name, icon, host class)."
 	visible = false
+
 
 ## Refreshes the banner from the sheet; hides itself for plain event sheets.
 func update_from_sheet(sheet: EventSheetResource) -> void:
@@ -164,10 +171,12 @@ func update_from_sheet(sheet: EventSheetResource) -> void:
 	visible = true
 	queue_redraw()
 
+
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 		edit_requested.emit()
 		accept_event()
+
 
 func _draw() -> void:
 	if _viewport == null:

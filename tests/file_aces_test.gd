@@ -5,10 +5,11 @@
 # COMPILE to valid GDScript and actually round-trip on disk (a wrong static method would compile fine
 # as a string but fail silently at runtime, so this runs the generated code).
 @tool
-extends RefCounted
 class_name FileAcesTest
+extends RefCounted
 
 const TEST_DIR := "user://__fileace_test"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -56,6 +57,7 @@ static func run() -> bool:
 	_cleanup()
 	return all_passed
 
+
 ## ACEAction with the registered template, baking {uid} -> the given token (distinct per multi-line
 ## ACE so the `var __file_<uid>` locals never collide), exactly as the dock does at apply time.
 static func _action(ace_id: String, by_id: Dictionary, params: Dictionary, uid: String) -> ACEAction:
@@ -66,10 +68,12 @@ static func _action(ace_id: String, by_id: Dictionary, params: Dictionary, uid: 
 	action.params = params
 	return action
 
+
 static func _cleanup() -> void:
 	DirAccess.remove_absolute(TEST_DIR + "/a.txt")
 	DirAccess.remove_absolute(TEST_DIR + "/b.json")
 	DirAccess.remove_absolute(TEST_DIR)
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

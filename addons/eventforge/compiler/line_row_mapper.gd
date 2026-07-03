@@ -14,6 +14,7 @@
 class_name EventSheetLineRowMapper
 extends RefCounted
 
+
 ## All source-map entries whose range contains the 1-based line, MOST SPECIFIC FIRST (smallest range
 ## wins, so an in-flow block beats its event and an event beats its trigger function).
 static func entries_for_line(source_map: Array, line: int) -> Array:
@@ -30,6 +31,7 @@ static func entries_for_line(source_map: Array, line: int) -> Array:
 	)
 	return containing
 
+
 ## The most specific LIVE resource whose emission contains the line (null when every containing
 ## entry's resource has been freed — e.g. a stale map after the undo funnel replaced the sheet).
 static func resource_for_line(source_map: Array, line: int) -> Resource:
@@ -38,6 +40,7 @@ static func resource_for_line(source_map: Array, line: int) -> Resource:
 		if resource != null:
 			return resource
 	return null
+
 
 ## The 1-based (start, end) line range the resource emitted, or (-1, -1) when it isn't in the map
 ## (not compiled, or the map is from an older compile of different resources).

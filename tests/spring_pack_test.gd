@@ -5,10 +5,11 @@
 # drives the real integrator to prove (a) the inner classes emit + parse inside a single-file pack, and
 # (b) the spring still settles to its target with zero residual velocity — i.e. behavior is unchanged.
 @tool
-extends RefCounted
 class_name SpringPackTest
+extends RefCounted
 
 const PACK := "res://eventsheet_addons/spring/spring_behavior.gd"
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -45,6 +46,7 @@ static func run() -> bool:
 
 	behavior.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

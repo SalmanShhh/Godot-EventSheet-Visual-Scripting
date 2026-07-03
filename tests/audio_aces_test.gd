@@ -1,8 +1,9 @@
 # Godot EventSheets — Audio module (event-sheet Audio addon, the Godot way) + the module
 # contract (factory-built vocabularies concatenated into the builtin registry).
 @tool
-extends RefCounted
 class_name AudioAcesTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -67,6 +68,7 @@ static func run() -> bool:
 		ACEParamsDialog._node_reference("UI/Health Bar"), "$\"UI/Health Bar\"") and all_passed
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

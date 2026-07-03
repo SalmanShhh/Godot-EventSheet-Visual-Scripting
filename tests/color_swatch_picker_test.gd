@@ -5,8 +5,9 @@
 # click path depends on: finding WHICH param holds the colour, and that the picked colour round-trips
 # losslessly through color_to_literal (what the dock writes back).
 @tool
-extends RefCounted
 class_name ColorSwatchPickerTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -37,6 +38,7 @@ static func run() -> bool:
 
 	viewport.free()
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

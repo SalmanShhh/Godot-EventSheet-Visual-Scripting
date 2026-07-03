@@ -2,6 +2,7 @@
 class_name ViewportSelectionHelper
 extends RefCounted
 
+
 static func build_single_selection(
 	flat_rows: Array,
 	row_index: int,
@@ -48,12 +49,14 @@ static func build_single_selection(
 		"focused_lane": resolved_focused_lane
 	}
 
+
 static func sync_row_selection_flags(flat_rows: Array, selected_row_uids: Dictionary) -> void:
 	for entry in flat_rows:
 		var row_data: EventRowData = entry.get("row")
 		if row_data == null:
 			continue
 		row_data.selected = selected_row_uids.has(row_data.row_uid)
+
 
 static func apply_hover_state(flat_rows: Array, hovered_row_index: int) -> void:
 	for index in range(flat_rows.size()):

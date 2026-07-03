@@ -1,6 +1,6 @@
 @tool
-extends RefCounted
 class_name ACEParamsExpressionPicker
+extends RefCounted
 # The "Insert Expression" picker opened by the ƒx button next to an expression field — a visual
 # expression builder. Lists EXPRESSION-type ACEs (grouped), the host object's reflected
 # properties/methods, and the sheet's own variables (with member chaining while searching), plus an
@@ -24,8 +24,10 @@ var _expression_tree: Tree = null
 var _expression_search: LineEdit = null
 var _expression_target_key: String = ""
 
+
 func init(host: ACEParamsDialog) -> void:
 	_host = host
+
 
 func _open_expression_picker(target_key: String) -> void:
 	_expression_target_key = target_key
@@ -34,6 +36,7 @@ func _open_expression_picker(target_key: String) -> void:
 	_expression_window.get_ok_button().disabled = true
 	_expression_window.popup_centered(Vector2i(560, 460))
 	_expression_search.grab_focus()
+
 
 func _ensure_expression_window() -> void:
 	if _expression_window != null:
@@ -96,6 +99,7 @@ func _ensure_expression_window() -> void:
 	expr_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(expr_card)
 
+
 func _refresh_expression_tree() -> void:
 	if _expression_tree == null or _host._registry == null:
 		return
@@ -129,6 +133,7 @@ func _refresh_expression_tree() -> void:
 	# members of any class-backed variable (enemy.health) so reflection isn't limited to the host.
 	_add_sheet_variable_expressions(root, query)
 
+
 ## Adds a reflected-members group to the expression picker; methods insert as `name()`,
 ## properties as `name`. Honors the search query (case-insensitive substring filter).
 func _add_member_expression_group(root: TreeItem, label: String, members: Array, is_method: bool, query: String) -> void:
@@ -149,15 +154,18 @@ func _add_member_expression_group(root: TreeItem, label: String, members: Array,
 		item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
 		item.set_metadata(0, fragment)
 
+
 ## The insert fragment for a reflected member: `name()` for a method, `name` for a
 ## property. Static + pure, so it is unit-testable without a dialog.
 static func member_expression_fragment(member: String, is_method: bool) -> String:
 	return (member + "()") if is_method else member
 
+
 ## The insert fragment for a member reached THROUGH a variable: `enemy.health` / `enemy.move()`.
 ## Static + pure, so it is unit-testable without a dialog.
 static func variable_member_fragment(var_name: String, member: String, is_method: bool) -> String:
 	return var_name + "." + member_expression_fragment(member, is_method)
+
 
 ## Lists the sheet's own variables as one-click leaves (insert `name`), and — while searching — the
 ## members of any variable whose declared type is a reflectable class, so `enemy.health` is one pick.
@@ -200,6 +208,7 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 			continue
 		_add_variable_member_group(root, str(var_name), vtype, lowered)
 
+
 ## A per-variable group of `varname.member` fragments (properties, then methods), filtered by the query.
 func _add_variable_member_group(root: TreeItem, var_name: String, var_type: String, lowered_query: String) -> void:
 	var group_item: TreeItem = null
@@ -219,6 +228,7 @@ func _add_variable_member_group(root: TreeItem, var_name: String, var_type: Stri
 			item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
 			item.set_metadata(0, fragment)
 
+
 ## Enter in the expression-picker search box commits the first matching expression.
 func _activate_first_expression_match() -> void:
 	var first: TreeItem = _host._first_metadata_row(_expression_tree.get_root()) if _expression_tree != null else null
@@ -226,11 +236,13 @@ func _activate_first_expression_match() -> void:
 		first.select(0)
 		_on_expression_activated()
 
+
 ## Enables the "Insert" button only when a real expression row is highlighted.
 func _on_expression_selection_changed() -> void:
 	var selected: TreeItem = _expression_tree.get_selected() if _expression_tree != null else null
 	if _expression_window != null:
 		_expression_window.get_ok_button().disabled = selected == null or selected.get_metadata(0) == null
+
 
 func _on_expression_activated() -> void:
 	var item: TreeItem = _expression_tree.get_selected()
@@ -250,6 +262,7 @@ func _on_expression_activated() -> void:
 	# expression field is always a CodeEdit — so picking a result silently did nothing. This fixes it.
 	_insert_into_expression_target(insert_text)
 
+
 ## Inserts a snippet at the caret of the expression field that opened the picker (the CodeEdit for
 ## _expression_target_key) and re-validates it. Shared by the tree results and the operator palette.
 func _insert_into_expression_target(snippet: String) -> void:
@@ -260,6 +273,7 @@ func _insert_into_expression_target(snippet: String) -> void:
 	elif target is LineEdit:
 		(target as LineEdit).insert_text_at_caret(snippet)
 		_host._validate_expression_field(target as Control)
+
 
 ## Returns the code template inserted for an expression definition (with default params).
 func _expression_template(definition: ACEDefinition) -> String:

@@ -8,10 +8,11 @@
 #  (2) The new Array / Dictionary / Vector / String Helper ACEs register with the exact
 #      direct GDScript one-liners they advertise (parity covenant).
 @tool
-extends RefCounted
 class_name ACEAutocompleteTest
+extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
+
 
 static func run() -> bool:
 	var passed: bool = true
@@ -90,6 +91,7 @@ static func run() -> bool:
 			descriptor != null and descriptor.codegen_template == spec[1], true) and passed
 
 	return passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

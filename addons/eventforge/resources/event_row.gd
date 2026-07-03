@@ -1,8 +1,8 @@
 # EventForge — EventRow resource
 # Serializable event row with trigger, conditions, actions, and child rows.
 @tool
-extends Resource
 class_name EventRow
+extends Resource
 
 enum ElseMode {
 	NONE,
@@ -51,18 +51,22 @@ static var _uid_counter: int = 0
 ## the host (the target is inlined per action: $Enemy.play()). Empty = a normal host-scoped row.
 @export var with_node_target: String = ""
 
+
 ## True when this row is purely a "With node X:" scope: it carries a target but no trigger and no
 ## conditions, so the editor renders it as a scope block rather than a conditioned event.
 func is_with_node_scope() -> bool:
 	return not with_node_target.strip_edges().is_empty() and trigger_id.is_empty() and conditions.is_empty()
 
+
 func _init() -> void:
 	if event_uid.is_empty():
 		event_uid = _generate_short_uid()
 
+
 ## Returns the stable row kind identifier.
 func get_row_kind() -> String:
 	return "event"
+
 
 ## Generates a short UID with a deterministic fallback counter.
 static func _generate_short_uid() -> String:

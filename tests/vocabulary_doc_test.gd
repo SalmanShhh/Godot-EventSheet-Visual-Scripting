@@ -2,8 +2,9 @@
 # everything the project's sheets and packs publish, deterministic by contract, kept
 # honest by the Project Doctor's opt-in staleness note.
 @tool
-extends RefCounted
 class_name VocabularyDocTest
+extends RefCounted
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -85,6 +86,7 @@ static func run() -> bool:
 	DirAccess.remove_absolute("user://vocab_doc_test.md")
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

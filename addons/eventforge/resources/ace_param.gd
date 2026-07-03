@@ -14,8 +14,8 @@
 #   String params with hint = "expression"
 #                             → text field with expression picker button
 @tool
-extends Resource
 class_name ACEParam
+extends Resource
 
 @export var id: String = ""
 @export var name: String = "" # Backwards-compatible alias for early Phase 1 code.
@@ -45,6 +45,7 @@ class_name ACEParam
 ## Use "expression" to show an expression picker button beside text input.
 @export var hint: String = ""
 
+
 ## Returns the best available display name for picker/inspector UI.
 func get_param_name() -> String:
 	if not display_name.is_empty():
@@ -53,11 +54,13 @@ func get_param_name() -> String:
 		return name
 	return id
 
+
 ## Returns the best available parameter description.
 func get_param_description() -> String:
 	if not description.is_empty():
 		return description
 	return desc
+
 
 ## Returns the best available default/initial value.
 func get_initial_value() -> Variant:

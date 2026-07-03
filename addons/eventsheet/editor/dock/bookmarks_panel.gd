@@ -4,16 +4,18 @@
 # from the primary pane's shared view state; activating one reveals it. The dock
 # forwards its historical field names (settable — tests construct the window).
 @tool
-extends RefCounted
 class_name EventSheetBookmarksPanel
+extends RefCounted
 
 var _dock: Control = null
+
 
 func _init(dock: Control) -> void:
 	_dock = dock
 
 var window: Window = null
 var list: ItemList = null
+
 
 ## Lists every bookmarked row; activating one reveals it (Ctrl+B marks rows).
 func open() -> void:
@@ -38,6 +40,7 @@ func open() -> void:
 		_dock.add_child(window)
 	refresh()
 	window.popup_centered()
+
 
 ## Fills the bookmarks list from the primary pane (popup-free; testable headless).
 func refresh() -> void:

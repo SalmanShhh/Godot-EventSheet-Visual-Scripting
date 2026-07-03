@@ -4,8 +4,8 @@
 # viewport adopts these dictionaries by reference (Godot Dictionaries are shared), while
 # per-view state (scroll, zoom, selection, folds, inline edits) stays on the viewport.
 @tool
-extends RefCounted
 class_name EventSheetViewState
+extends RefCounted
 
 var breakpoint_rows: Dictionary = {}
 var bookmark_rows: Dictionary = {}

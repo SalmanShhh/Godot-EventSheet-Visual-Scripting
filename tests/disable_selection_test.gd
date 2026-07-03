@@ -3,8 +3,9 @@
 # Toggling enabled state acts on the whole current selection: selecting two conditions and
 # toggling disables both; toggling again re-enables them.
 @tool
-extends RefCounted
 class_name DisableSelectionTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -17,6 +18,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -64,6 +66,7 @@ static func run() -> bool:
 	editor.free()
 	return all_passed
 
+
 static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int:
 	var flat: Array[Dictionary] = viewport.get_flat_rows()
 	for i in range(flat.size()):
@@ -71,6 +74,7 @@ static func _flat_index(viewport: EventSheetViewport, resource: Resource) -> int
 		if row_data != null and row_data.source_resource == resource:
 			return i
 	return -1
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:

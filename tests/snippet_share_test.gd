@@ -6,8 +6,9 @@
 # serialize/deserialize and the dock's _paste_snippet_text directly so no OS clipboard is
 # needed (headless-safe).
 @tool
-extends RefCounted
 class_name SnippetShareTest
+extends RefCounted
+
 
 class NoopUndoManager:
 	extends RefCounted
@@ -20,6 +21,7 @@ class NoopUndoManager:
 	func undo() -> void: pass
 	func redo() -> void: pass
 	func clear_history() -> void: pass
+
 
 static func run() -> bool:
 	var all_passed: bool = true
@@ -114,6 +116,7 @@ static func run() -> bool:
 	editor.free()
 
 	return all_passed
+
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	if actual == expected:
