@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "EightDirectionMovement"
+	sheet.addon_category = "Eight Direction"
 	sheet.variables = {"move_speed": {"type": "float", "default": 200.0, "exported": true}}
 
 	var about: CommentRow = CommentRow.new()

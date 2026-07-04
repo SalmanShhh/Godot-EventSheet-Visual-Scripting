@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "CarBehavior"
+	sheet.addon_category = "Car"
 	sheet.variables = {
 		"max_speed": {"type": "float", "default": 400.0, "exported": true},
 		"acceleration": {"type": "float", "default": 300.0, "exported": true},
@@ -28,12 +29,10 @@ static func build() -> bool:
 	signal_block.code = "\n".join(PackedStringArray([
 		"## @ace_trigger",
 		"## @ace_name(\"On Drift Started\")",
-		"## @ace_category(\"Car\")",
 		"signal drift_started",
 		"",
 		"## @ace_trigger",
 		"## @ace_name(\"On Drift Recovered\")",
-		"## @ace_category(\"Car\")",
 		"signal drift_recovered"
 	]))
 	sheet.events.append(signal_block)

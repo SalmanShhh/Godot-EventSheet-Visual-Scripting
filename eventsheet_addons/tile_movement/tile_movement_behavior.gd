@@ -1,3 +1,4 @@
+## @ace_category("Tile Movement")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name TileMovementBehavior
 extends Node
@@ -12,7 +13,6 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Step Finished")
-## @ace_category("Tile Movement")
 signal step_finished
 
 @export var default_controls: bool = true

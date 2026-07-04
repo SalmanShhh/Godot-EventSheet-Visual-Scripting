@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "Sine3DBehavior"
+	sheet.addon_category = "Sine 3D"
 	sheet.variables = {
 		"movement": {"type": "String", "default": "y", "exported": true, "options": ["x", "y", "z", "rotation-y"]},
 		"wave": {"type": "String", "default": "sine", "exported": true, "options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"]},

@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "TileMovementBehavior"
+	sheet.addon_category = "Tile Movement"
 	sheet.variables = {
 		"tile_size": {"type": "float", "default": 64.0, "exported": true},
 		"move_time": {"type": "float", "default": 0.15, "exported": true},
@@ -30,7 +31,6 @@ static func build() -> bool:
 	signal_block.code = "\n".join(PackedStringArray([
 		"## @ace_trigger",
 		"## @ace_name(\"On Step Finished\")",
-		"## @ace_category(\"Tile Movement\")",
 		"signal step_finished"
 	]))
 	sheet.events.append(signal_block)

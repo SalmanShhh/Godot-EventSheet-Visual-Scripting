@@ -1,3 +1,4 @@
+## @ace_category("Car")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name CarBehavior
 extends Node
@@ -12,11 +13,9 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Drift Started")
-## @ace_category("Car")
 signal drift_started
 ## @ace_trigger
 ## @ace_name("On Drift Recovered")
-## @ace_category("Car")
 signal drift_recovered
 
 var _drifting: bool = false

@@ -1,3 +1,4 @@
+## @ace_category("Line Of Sight 3D")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name LOS3DBehavior
 extends Node
@@ -16,7 +17,6 @@ func _enter_tree() -> void:
 
 ## @ace_expression
 ## @ace_name("Nearest Visible In Group")
-## @ace_category("Line Of Sight 3D")
 ## @ace_codegen_template("$LOS3DBehavior.nearest_visible_in_group({group})")
 ## The closest group member this node can actually SEE (range + cone + raycast) - scans every
 ## candidate and skips occluded ones, so a nearer-but-blocked enemy can't shadow a visible farther
@@ -38,7 +38,6 @@ func _process(delta: float) -> void:
 
 ## @ace_condition
 ## @ace_name("Has Line Of Sight To")
-## @ace_category("Line Of Sight 3D")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$LOS3DBehavior.has_los_to({point})")
 func has_los_to(point: Vector3) -> bool:
@@ -53,7 +52,6 @@ func has_los_to(point: Vector3) -> bool:
 
 ## @ace_condition
 ## @ace_name("Has LOS Between")
-## @ace_category("Line Of Sight 3D")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$LOS3DBehavior.has_los_between({from_point}, {to_point})")
 func has_los_between(from_point: Vector3, to_point: Vector3) -> bool:

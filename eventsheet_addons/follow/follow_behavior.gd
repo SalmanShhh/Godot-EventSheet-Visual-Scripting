@@ -1,3 +1,4 @@
+## @ace_category("Follow")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name FollowBehavior
 extends Node
@@ -12,7 +13,6 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Reached Target")
-## @ace_category("Follow")
 signal reached_target
 
 var _reached: bool = false

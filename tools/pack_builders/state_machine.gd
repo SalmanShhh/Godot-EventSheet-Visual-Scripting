@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "StateMachineBehavior"
+	sheet.addon_category = "State Machine"
 	sheet.variables = {"state": {"type": "String", "default": "idle", "exported": true}}
 	var about: CommentRow = CommentRow.new()
 	about.text = "State machine behavior: Set State / Is In State from any sheet; On State Changed fires with (previous, next)."

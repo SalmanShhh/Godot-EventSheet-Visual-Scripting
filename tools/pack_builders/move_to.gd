@@ -13,6 +13,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "MoveToBehavior"
+	sheet.addon_category = "Move To"
 	sheet.variables = {
 		"max_speed": {"type": "float", "default": 200.0, "exported": true},
 		"rotate_toward_motion": {"type": "bool", "default": false, "exported": true},

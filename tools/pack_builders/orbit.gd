@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "OrbitBehavior"
+	sheet.addon_category = "Orbit"
 	sheet.variables = {
 		"primary_radius": {"type": "float", "default": 100.0, "exported": true},
 		"secondary_radius": {"type": "float", "default": 0.0, "exported": true},

@@ -17,6 +17,7 @@ static func build() -> bool:
 	# CanvasItem is the shared base of Node2D and Control, so Squash & Stretch works on sprites AND UI.
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "JuiceBehavior"
+	sheet.addon_category = "Juice"
 	sheet.addon_tags = PackedStringArray(["camera", "juice"])
 	var about: CommentRow = CommentRow.new()
 	about.text = "Game feel, batteries included: screenshake, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Zoom; Squash & Stretch animates the node it's attached to."
@@ -72,22 +73,18 @@ static func build() -> bool:
 		"",
 		"## @ace_trigger",
 		"## @ace_name(\"On Shake Stopped\")",
-		"## @ace_category(\"Juice\")",
 		"signal shake_stopped()",
 		"",
 		"## @ace_trigger",
 		"## @ace_name(\"On Zoom Finished\")",
-		"## @ace_category(\"Juice\")",
 		"signal zoom_finished()",
 		"",
 		"## @ace_trigger",
 		"## @ace_name(\"On Squash Finished\")",
-		"## @ace_category(\"Juice\")",
 		"signal squash_finished()",
 		"",
 		"## @ace_trigger",
 		"## @ace_name(\"On Slowmo Finished\")",
-		"## @ace_category(\"Juice\")",
 		"signal slowmo_finished()",
 		"",
 		"## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D -",
@@ -114,13 +111,11 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Shaking\")",
-		"## @ace_category(\"Juice\")",
 		"func is_shaking() -> bool:",
 		"\treturn trauma > 0.0",
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Trauma\")",
-		"## @ace_category(\"Juice\")",
 		"func current_trauma() -> float:",
 		"\treturn trauma",
 		"",

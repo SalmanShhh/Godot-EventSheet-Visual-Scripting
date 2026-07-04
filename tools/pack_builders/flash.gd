@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "FlashBehavior"
+	sheet.addon_category = "Flash"
 	sheet.variables = {
 		"interval": {"type": "float", "default": 0.1, "exported": true},
 		"remaining": {"type": "float", "default": 0.0, "exported": false},

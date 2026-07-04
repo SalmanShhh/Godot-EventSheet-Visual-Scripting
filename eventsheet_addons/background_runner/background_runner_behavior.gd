@@ -1,4 +1,5 @@
 ## @ace_tags(performance, threading)
+## @ace_category("Background")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name BackgroundRunner
 extends Node
@@ -13,7 +14,6 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Done")
-## @ace_category("Background")
 signal done(result: Variant)
 
 # In-flight tasks as [task_id, call_id]; results keyed by call_id, written off-thread under _mutex.
@@ -65,7 +65,6 @@ func run_batch_in_background(items: Array, work: Callable) -> void:
 
 ## @ace_condition
 ## @ace_name("Is Running")
-## @ace_category("Background")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$BackgroundRunner.is_running()")
 func is_running() -> bool:
@@ -73,7 +72,6 @@ func is_running() -> bool:
 
 ## @ace_expression
 ## @ace_name("Tasks Running")
-## @ace_category("Background")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$BackgroundRunner.tasks_running()")
 func tasks_running() -> int:

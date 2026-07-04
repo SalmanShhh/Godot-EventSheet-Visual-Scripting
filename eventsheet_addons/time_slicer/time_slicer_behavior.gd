@@ -1,4 +1,5 @@
 ## @ace_tags(performance, scheduling)
+## @ace_category("Time Slicer")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name TimeSlicerBehavior
 extends Node
@@ -13,11 +14,9 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Process Item")
-## @ace_category("Time Slicer")
 signal process_item(item: Variant)
 ## @ace_trigger
 ## @ace_name("On Drained")
-## @ace_category("Time Slicer")
 signal drained
 
 var _last_count: int = 0
@@ -111,7 +110,6 @@ func resume_slicer() -> void:
 
 ## @ace_condition
 ## @ace_name("Is Busy")
-## @ace_category("Time Slicer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.is_busy()")
 func is_busy() -> bool:
@@ -119,7 +117,6 @@ func is_busy() -> bool:
 
 ## @ace_expression
 ## @ace_name("Items Remaining")
-## @ace_category("Time Slicer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.items_remaining()")
 func items_remaining() -> int:
@@ -127,7 +124,6 @@ func items_remaining() -> int:
 
 ## @ace_expression
 ## @ace_name("Last Frame Item Count")
-## @ace_category("Time Slicer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.last_frame_item_count()")
 func last_frame_item_count() -> int:

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed - every pack teaches the class-level category default (one picker group per pack)
+
+- **All 28 builder-backed packs migrated** to `sheet.addon_category` - the class-level
+  `## @ace_category("...")` default weapon_kit pioneered - and their redundant
+  per-member category lines were stripped from the authored blocks. Every shipped pack
+  now demonstrates the current terse authoring style instead of the verbose one.
+- **The vocabulary was characterization-gated at scale**: all 844 published definitions
+  were dumped before and after - zero added, zero removed, zero name/type/codegen
+  changes. The only diffs are 384 deliberate category moves: members that previously
+  fell into inferred generic groups ("Gameplay" and friends) now join their pack's one
+  tidy picker group, C3-behavior style.
+
 ### Fixed - the picker's codegen line is never blank for a working ACE
 
 - Instance-backed reflected methods bake their owned-instance call at APPLY time, so the

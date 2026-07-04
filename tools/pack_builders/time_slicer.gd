@@ -15,6 +15,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "TimeSlicerBehavior"
+	sheet.addon_category = "Time Slicer"
 	sheet.addon_tags = PackedStringArray(["performance", "scheduling"])
 	sheet.variables = {
 		"frame_budget_ms": {"type": "float", "default": 4.0, "exported": true,
@@ -33,30 +34,25 @@ static func build() -> bool:
 	block.code = "\n".join(PackedStringArray([
 		"## @ace_trigger",
 		"## @ace_name(\"On Process Item\")",
-		"## @ace_category(\"Time Slicer\")",
 		"signal process_item(item: Variant)",
 		"",
 		"## @ace_trigger",
 		"## @ace_name(\"On Drained\")",
-		"## @ace_category(\"Time Slicer\")",
 		"signal drained",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Busy\")",
-		"## @ace_category(\"Time Slicer\")",
 		"## @ace_codegen_template(\"$TimeSlicerBehavior.is_busy()\")",
 		"func is_busy() -> bool:",
 		"\treturn not _queue.is_empty()",
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Items Remaining\")",
-		"## @ace_category(\"Time Slicer\")",
 		"func items_remaining() -> int:",
 		"\treturn _queue.size()",
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Last Frame Item Count\")",
-		"## @ace_category(\"Time Slicer\")",
 		"func last_frame_item_count() -> int:",
 		"\treturn _last_count"
 	]))

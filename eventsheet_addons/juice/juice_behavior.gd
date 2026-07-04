@@ -1,4 +1,5 @@
 ## @ace_tags(camera, juice)
+## @ace_category("Juice")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name JuiceBehavior
 extends Node
@@ -13,19 +14,15 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Shake Stopped")
-## @ace_category("Juice")
 signal shake_stopped
 ## @ace_trigger
 ## @ace_name("On Zoom Finished")
-## @ace_category("Juice")
 signal zoom_finished
 ## @ace_trigger
 ## @ace_name("On Squash Finished")
-## @ace_category("Juice")
 signal squash_finished
 ## @ace_trigger
 ## @ace_name("On Slowmo Finished")
-## @ace_category("Juice")
 signal slowmo_finished
 
 # --- Designer knobs (tune the FEEL in the Inspector) ---
@@ -302,7 +299,6 @@ func _zoom_anchored_step(f: float) -> void:
 
 ## @ace_condition
 ## @ace_name("Is Shaking")
-## @ace_category("Juice")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$JuiceBehavior.is_shaking()")
 func is_shaking() -> bool:
@@ -310,7 +306,6 @@ func is_shaking() -> bool:
 
 ## @ace_expression
 ## @ace_name("Trauma")
-## @ace_category("Juice")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$JuiceBehavior.current_trauma()")
 func current_trauma() -> float:

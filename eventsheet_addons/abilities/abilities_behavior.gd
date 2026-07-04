@@ -1,3 +1,4 @@
+## @ace_category("Abilities")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name SimpleAbilitiesBehavior
 extends Node
@@ -12,31 +13,24 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Ability Activated")
-## @ace_category("Abilities")
 signal on_ability_activated
 ## @ace_trigger
 ## @ace_name("On Ability Ready")
-## @ace_category("Abilities")
 signal on_ability_ready
 ## @ace_trigger
 ## @ace_name("On Ability Created")
-## @ace_category("Abilities")
 signal on_ability_created
 ## @ace_trigger
 ## @ace_name("On Ability Removed")
-## @ace_category("Abilities")
 signal on_ability_removed
 ## @ace_trigger
 ## @ace_name("On Stack Consumed")
-## @ace_category("Abilities")
 signal on_stack_consumed
 ## @ace_trigger
 ## @ace_name("On Stack Gained")
-## @ace_category("Abilities")
 signal on_stack_gained
 ## @ace_trigger
 ## @ace_name("On Max Stacks Reached")
-## @ace_category("Abilities")
 signal on_max_stacks_reached
 
 var abilities: Dictionary = {}
@@ -395,7 +389,6 @@ func set_cooldown_multiplier(multiplier: float) -> void:
 
 ## @ace_condition
 ## @ace_name("Has Ability")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.has_ability({id})")
 func has_ability(id: String) -> bool:
@@ -403,7 +396,6 @@ func has_ability(id: String) -> bool:
 
 ## @ace_condition
 ## @ace_name("Is Ability Ready")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.is_ready({id})")
 func is_ready(id: String) -> bool:
@@ -414,7 +406,6 @@ func is_ready(id: String) -> bool:
 
 ## @ace_condition
 ## @ace_name("Is Ability Active")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.is_active({id})")
 func is_active(id: String) -> bool:
@@ -422,7 +413,6 @@ func is_active(id: String) -> bool:
 
 ## @ace_condition
 ## @ace_name("Is Ability Enabled")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.is_enabled({id})")
 func is_enabled(id: String) -> bool:
@@ -430,7 +420,6 @@ func is_enabled(id: String) -> bool:
 
 ## @ace_condition
 ## @ace_name("Has Stacks Available")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.has_stacks({id})")
 func has_stacks(id: String) -> bool:
@@ -438,7 +427,6 @@ func has_stacks(id: String) -> bool:
 
 ## @ace_condition
 ## @ace_name("Ability Has Tag")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.ability_has_tag({id}, {tag})")
 func ability_has_tag(id: String, tag: String) -> bool:
@@ -446,7 +434,6 @@ func ability_has_tag(id: String, tag: String) -> bool:
 
 ## @ace_condition
 ## @ace_name("Current Ability Is")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.current_ability_is({id})")
 func current_ability_is(id: String) -> bool:
@@ -454,7 +441,6 @@ func current_ability_is(id: String) -> bool:
 
 ## @ace_expression
 ## @ace_name("Current Ability ID")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.current_ability()")
 func current_ability() -> String:
@@ -462,7 +448,6 @@ func current_ability() -> String:
 
 ## @ace_expression
 ## @ace_name("Cooldown Remaining")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_cooldown_remaining({id})")
 func get_cooldown_remaining(id: String) -> float:
@@ -470,7 +455,6 @@ func get_cooldown_remaining(id: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Cooldown Progress")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_cooldown_progress({id})")
 func get_cooldown_progress(id: String) -> float:
@@ -480,7 +464,6 @@ func get_cooldown_progress(id: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Stacks")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_stacks({id})")
 func get_stacks(id: String) -> int:
@@ -488,7 +471,6 @@ func get_stacks(id: String) -> int:
 
 ## @ace_expression
 ## @ace_name("Max Stacks")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_max_stacks({id})")
 func get_max_stacks(id: String) -> int:
@@ -496,7 +478,6 @@ func get_max_stacks(id: String) -> int:
 
 ## @ace_expression
 ## @ace_name("Stack Cooldown Remaining")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_stack_cooldown_remaining({id})")
 func get_stack_cooldown_remaining(id: String) -> float:
@@ -504,7 +485,6 @@ func get_stack_cooldown_remaining(id: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Stack Progress")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_stack_progress({id})")
 func get_stack_progress(id: String) -> float:
@@ -512,7 +492,6 @@ func get_stack_progress(id: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Expiration Time")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_expiration_time({id})")
 func get_expiration_time(id: String) -> float:
@@ -520,7 +499,6 @@ func get_expiration_time(id: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Expiration Progress")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_expiration_progress({id})")
 func get_expiration_progress(id: String) -> float:
@@ -530,7 +508,6 @@ func get_expiration_progress(id: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Max Expiration Time")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_max_expiration_time({id})")
 func get_max_expiration_time(id: String) -> float:
@@ -538,7 +515,6 @@ func get_max_expiration_time(id: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Ability Count")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ability_count()")
 func get_ability_count() -> int:
@@ -546,7 +522,6 @@ func get_ability_count() -> int:
 
 ## @ace_expression
 ## @ace_name("List Active Abilities")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.list_active_abilities()")
 func list_active_abilities() -> String:
@@ -554,7 +529,6 @@ func list_active_abilities() -> String:
 
 ## @ace_expression
 ## @ace_name("Ready Abilities")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ready_abilities()")
 func get_ready_abilities() -> String:
@@ -566,7 +540,6 @@ func get_ready_abilities() -> String:
 
 ## @ace_expression
 ## @ace_name("Ability Data")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ability_data({id}, {key})")
 func get_ability_data(id: String, key: String) -> String:
@@ -576,7 +549,6 @@ func get_ability_data(id: String, key: String) -> String:
 
 ## @ace_expression
 ## @ace_name("Count Abilities By Tag")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.count_abilities_by_tag({tag})")
 func count_abilities_by_tag(tag: String) -> int:
@@ -584,7 +556,6 @@ func count_abilities_by_tag(tag: String) -> int:
 
 ## @ace_expression
 ## @ace_name("Ability By Tag Index")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ability_by_tag_index({tag}, {index})")
 func get_ability_by_tag_index(tag: String, index: int) -> String:
@@ -593,7 +564,6 @@ func get_ability_by_tag_index(tag: String, index: int) -> String:
 
 ## @ace_expression
 ## @ace_name("List Abilities By Tag")
-## @ace_category("Abilities")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.list_abilities_by_tag({tag})")
 func list_abilities_by_tag(tag: String) -> String:

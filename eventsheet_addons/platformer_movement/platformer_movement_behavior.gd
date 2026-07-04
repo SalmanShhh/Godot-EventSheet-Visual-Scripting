@@ -1,4 +1,5 @@
 ## @ace_tags(movement, platformer)
+## @ace_category("Platformer")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name PlatformerMovement
 extends Node
@@ -13,19 +14,15 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Jumped")
-## @ace_category("Platformer")
 signal jumped
 ## @ace_trigger
 ## @ace_name("On Landed")
-## @ace_category("Platformer")
 signal landed
 ## @ace_trigger
 ## @ace_name("On Double Jumped")
-## @ace_category("Platformer")
 signal double_jumped
 ## @ace_trigger
 ## @ace_name("On Wall Jumped")
-## @ace_category("Platformer")
 signal wall_jumped
 
 var _air_time: float = 0.0
@@ -157,7 +154,6 @@ func reset_jumps() -> void:
 
 ## @ace_condition
 ## @ace_name("Is Moving")
-## @ace_category("Platformer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_moving()")
 func is_moving() -> bool:
@@ -165,7 +161,6 @@ func is_moving() -> bool:
 
 ## @ace_condition
 ## @ace_name("Is Jumping")
-## @ace_category("Platformer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_jumping()")
 func is_jumping() -> bool:
@@ -173,7 +168,6 @@ func is_jumping() -> bool:
 
 ## @ace_condition
 ## @ace_name("Is Falling")
-## @ace_category("Platformer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_falling()")
 func is_falling() -> bool:
@@ -181,7 +175,6 @@ func is_falling() -> bool:
 
 ## @ace_condition
 ## @ace_name("Is Wall Sliding")
-## @ace_category("Platformer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_wall_sliding()")
 func is_wall_sliding() -> bool:
@@ -189,7 +182,6 @@ func is_wall_sliding() -> bool:
 
 ## @ace_condition
 ## @ace_name("Can Jump")
-## @ace_category("Platformer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.can_jump()")
 func can_jump() -> bool:
@@ -199,7 +191,6 @@ func can_jump() -> bool:
 
 ## @ace_expression
 ## @ace_name("Jumps Remaining")
-## @ace_category("Platformer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.jumps_remaining()")
 func jumps_remaining() -> int:
@@ -207,7 +198,6 @@ func jumps_remaining() -> int:
 
 ## @ace_expression
 ## @ace_name("Air Time")
-## @ace_category("Platformer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.air_time()")
 func air_time() -> float:
@@ -215,7 +205,6 @@ func air_time() -> float:
 
 ## @ace_expression
 ## @ace_name("Facing Direction")
-## @ace_category("Platformer")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerMovement.facing_direction()")
 func facing_direction() -> int:

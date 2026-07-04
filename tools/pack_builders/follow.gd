@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "FollowBehavior"
+	sheet.addon_category = "Follow"
 	sheet.variables = {
 		"target_path": {"type": "String", "default": "", "exported": true},
 		"mode": {"type": "String", "default": "smooth", "exported": true, "options": ["smooth", "delayed"]},
@@ -28,7 +29,6 @@ static func build() -> bool:
 	signal_block.code = "\n".join(PackedStringArray([
 		"## @ace_trigger",
 		"## @ace_name(\"On Reached Target\")",
-		"## @ace_category(\"Follow\")",
 		"signal reached_target"
 	]))
 	sheet.events.append(signal_block)

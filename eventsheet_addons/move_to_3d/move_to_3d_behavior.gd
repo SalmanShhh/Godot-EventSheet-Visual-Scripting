@@ -1,3 +1,4 @@
+## @ace_category("Move To 3D")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name MoveTo3DBehavior
 extends Node
@@ -12,7 +13,6 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Arrived (3D)")
-## @ace_category("Move To 3D")
 signal arrived
 
 @export var max_speed: float = 5.0

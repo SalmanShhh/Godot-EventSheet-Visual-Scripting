@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "SpringBehavior"
+	sheet.addon_category = "Spring"
 	sheet.addon_tags = PackedStringArray(["motion", "juice"])
 	sheet.variables = {
 		"default_stiffness": {"type": "float", "default": 170.0, "exported": true,
@@ -77,17 +78,14 @@ static func build() -> bool:
 		"",
 		"## @ace_trigger",
 		"## @ace_name(\"On Spring Reached\")",
-		"## @ace_category(\"Spring\")",
 		"signal spring_reached(spring_name: String)",
 		"",
 		"## @ace_trigger",
 		"## @ace_name(\"On Spring Started\")",
-		"## @ace_category(\"Spring\")",
 		"signal spring_started(spring_name: String)",
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Color Value\")",
-		"## @ace_category(\"Spring\")",
 		"func color_value(spring_name: String) -> Color:",
 		"\tif not color_springs.has(spring_name):",
 		"\t\treturn Color.WHITE",
@@ -95,14 +93,12 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Springing\")",
-		"## @ace_category(\"Spring\")",
 		"## @ace_codegen_template(\"$SpringBehavior.is_springing({spring_name})\")",
 		"func is_springing(spring_name: String) -> bool:",
 		"\treturn springs.has(spring_name) and (springs[spring_name] as SpringEntry).active",
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Spring Value\")",
-		"## @ace_category(\"Spring\")",
 		"func spring_value(spring_name: String) -> float:",
 		"\tif not springs.has(spring_name):",
 		"\t\treturn 0.0",
@@ -110,7 +106,6 @@ static func build() -> bool:
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Spring Velocity\")",
-		"## @ace_category(\"Spring\")",
 		"func spring_velocity(spring_name: String) -> float:",
 		"\tif not springs.has(spring_name):",
 		"\t\treturn 0.0",
@@ -118,7 +113,6 @@ static func build() -> bool:
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Spring Progress\")",
-		"## @ace_category(\"Spring\")",
 		"func spring_progress(spring_name: String) -> float:",
 		"\tif not springs.has(spring_name):",
 		"\t\treturn 1.0",

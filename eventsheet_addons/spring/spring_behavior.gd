@@ -1,4 +1,5 @@
 ## @ace_tags(motion, juice)
+## @ace_category("Spring")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name SpringBehavior
 extends Node
@@ -13,11 +14,9 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Spring Reached")
-## @ace_category("Spring")
 signal spring_reached(spring_name: String)
 ## @ace_trigger
 ## @ace_name("On Spring Started")
-## @ace_category("Spring")
 signal spring_started(spring_name: String)
 
 var color_springs: Dictionary = {}
@@ -310,7 +309,6 @@ func reset_springs() -> void:
 
 ## @ace_expression
 ## @ace_name("Color Value")
-## @ace_category("Spring")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.color_value({spring_name})")
 func color_value(spring_name: String) -> Color:
@@ -320,7 +318,6 @@ func color_value(spring_name: String) -> Color:
 
 ## @ace_condition
 ## @ace_name("Is Springing")
-## @ace_category("Spring")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.is_springing({spring_name})")
 func is_springing(spring_name: String) -> bool:
@@ -328,7 +325,6 @@ func is_springing(spring_name: String) -> bool:
 
 ## @ace_expression
 ## @ace_name("Spring Value")
-## @ace_category("Spring")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_value({spring_name})")
 func spring_value(spring_name: String) -> float:
@@ -338,7 +334,6 @@ func spring_value(spring_name: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Spring Velocity")
-## @ace_category("Spring")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_velocity({spring_name})")
 func spring_velocity(spring_name: String) -> float:
@@ -348,7 +343,6 @@ func spring_velocity(spring_name: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Spring Progress")
-## @ace_category("Spring")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_progress({spring_name})")
 func spring_progress(spring_name: String) -> float:

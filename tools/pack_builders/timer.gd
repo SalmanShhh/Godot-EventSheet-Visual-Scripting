@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "TimerBehavior"
+	sheet.addon_category = "Timer"
 	sheet.variables = {
 		"duration": {"type": "float", "default": 1.0, "exported": true},
 		"repeating": {"type": "bool", "default": false, "exported": true},

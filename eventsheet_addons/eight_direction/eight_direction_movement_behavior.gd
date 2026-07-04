@@ -1,3 +1,4 @@
+## @ace_category("Eight Direction")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name EightDirectionMovement
 extends Node

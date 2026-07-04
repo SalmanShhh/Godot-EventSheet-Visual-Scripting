@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "TweenBehavior"
+	sheet.addon_category = "Tween"
 	sheet.addon_tags = PackedStringArray(["motion", "juice"])
 	sheet.variables = {
 		"default_duration": {"type": "float", "default": 0.3, "exported": true,
@@ -28,12 +29,10 @@ static func build() -> bool:
 	block.code = "\n".join(PackedStringArray([
 		"## @ace_trigger",
 		"## @ace_name(\"On Tween Finished\")",
-		"## @ace_category(\"Tween\")",
 		"signal tween_finished",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Tweening\")",
-		"## @ace_category(\"Tween\")",
 		"## @ace_codegen_template(\"$TweenBehavior.is_tweening()\")",
 		"func is_tweening() -> bool:",
 		"\treturn _active_tween != null and _active_tween.is_running()",

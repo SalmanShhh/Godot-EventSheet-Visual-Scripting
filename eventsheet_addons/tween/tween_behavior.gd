@@ -1,4 +1,5 @@
 ## @ace_tags(motion, juice)
+## @ace_category("Tween")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name TweenBehavior
 extends Node
@@ -13,7 +14,6 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Tween Finished")
-## @ace_category("Tween")
 signal tween_finished
 
 ## Seconds used when a tween call passes 0.
@@ -81,7 +81,6 @@ func stop_tweens() -> void:
 
 ## @ace_condition
 ## @ace_name("Is Tweening")
-## @ace_category("Tween")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TweenBehavior.is_tweening()")
 func is_tweening() -> bool:

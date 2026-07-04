@@ -1,3 +1,4 @@
+## @ace_category("Flash")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name FlashBehavior
 extends Node

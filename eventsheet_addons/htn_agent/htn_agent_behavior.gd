@@ -1,4 +1,5 @@
 ## @ace_tags(ai, planning)
+## @ace_category("HTN")
 @icon("res://eventsheet_addons/behavior.svg")
 class_name HTNAgent
 extends Node
@@ -13,15 +14,12 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Task Started")
-## @ace_category("HTN")
 signal task_started(task_name: String)
 ## @ace_trigger
 ## @ace_name("On Plan Complete")
-## @ace_category("HTN")
 signal plan_complete
 ## @ace_trigger
 ## @ace_name("On Plan Failed")
-## @ace_category("HTN")
 signal plan_failed
 
 ## Mark Failed re-plans from the root instead of giving up.
@@ -212,7 +210,6 @@ func invalidate_plan() -> void:
 
 ## @ace_condition
 ## @ace_name("Has Plan")
-## @ace_category("HTN")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$HTNAgent.has_plan()")
 func has_plan() -> bool:
@@ -220,7 +217,6 @@ func has_plan() -> bool:
 
 ## @ace_condition
 ## @ace_name("Current Task Is")
-## @ace_category("HTN")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$HTNAgent.current_task_is({task_name})")
 func current_task_is(task_name: String) -> bool:
@@ -228,7 +224,6 @@ func current_task_is(task_name: String) -> bool:
 
 ## @ace_expression
 ## @ace_name("Current Task")
-## @ace_category("HTN")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$HTNAgent.current_task()")
 func current_task() -> String:
@@ -236,7 +231,6 @@ func current_task() -> String:
 
 ## @ace_expression
 ## @ace_name("Plan Length")
-## @ace_category("HTN")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$HTNAgent.plan_length()")
 func plan_length() -> int:
@@ -244,7 +238,6 @@ func plan_length() -> int:
 
 ## @ace_expression
 ## @ace_name("World Value")
-## @ace_category("HTN")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$HTNAgent.world_value({key})")
 func world_value(key: String) -> Variant:
