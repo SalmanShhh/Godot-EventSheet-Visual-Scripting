@@ -61,6 +61,8 @@ static func run() -> bool:
 	ok = _check("Uses lists the outside provider, never Core", _labels(organs["uses"]), ["SimpleHealthBehavior"]) and ok
 	ok = _check("trigger entry carries its resource (click-to-jump)",
 		(organs["triggers"] as Array)[0].get("resource") == jumped, true) and ok
+	ok = _check("Uses entry carries its provider (double-click opens the behaviour as a sheet)",
+		str((organs["uses"] as Array)[0].get("provider", "")), "SimpleHealthBehavior") and ok
 
 	# ── The census over a REAL opened pack (annotation shells feed the same organs) ──
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock

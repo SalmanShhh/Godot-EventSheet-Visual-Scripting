@@ -19,6 +19,10 @@ extends VBoxContainer
 ## The user double-clicked an entry - the workspace reveals that resource's row on the canvas.
 signal reveal_requested(resource: Resource)
 
+## The user double-clicked a Uses entry - the workspace opens that provider's behaviour
+## AS A SHEET (the same jump as Ctrl+Click on one of its verbs).
+signal open_provider_requested(provider_id: String)
+
 const _ORGAN_ACCENTS: Dictionary = {
 	"properties": EventSheetPalette.TEXT_SECONDARY,
 	"state": EventSheetPalette.TEXT_SECONDARY,
@@ -94,6 +98,7 @@ func refresh(sheet: EventSheetResource) -> void:
 				"organ": organ_id,
 				"label": str(entry.get("label")),
 				"resource": entry.get("resource") if entry.get("resource") is Resource else null,
+				"provider": str(entry.get("provider", "")),
 			})
 	_canvas.custom_minimum_size = Vector2(0.0, _row_offset(_rows.size()))
 	_canvas.queue_redraw()
@@ -167,6 +172,9 @@ func _on_canvas_input(event: InputEvent) -> void:
 		_refresh_from_rows()
 	elif (event as InputEventMouseButton).double_click and row.get("resource") is Resource:
 		reveal_requested.emit(row.get("resource"))
+	elif (event as InputEventMouseButton).double_click and not str(row.get("provider", "")).is_empty():
+		# Uses entries have no canvas row - the jump goes to the provider's own sheet.
+		open_provider_requested.emit(str(row.get("provider")))
 
 
 ## Re-derives the visible rows after a fold toggle without re-running the census: rebuild from the
@@ -218,7 +226,8 @@ static func collect_anatomy(sheet: EventSheetResource) -> Array:
 		var provider_names: Array = providers.keys()
 		provider_names.sort()
 		for provider: Variant in provider_names:
-			(organs["uses"] as Array).append({"label": str(provider)})
+			# `provider` makes the entry a JUMP: double-click opens the behaviour as a sheet.
+			(organs["uses"] as Array).append({"label": str(provider), "provider": str(provider)})
 	return [
 		{"id": "properties", "title": "Properties", "entries": organs["properties"]},
 		{"id": "state", "title": "State", "entries": organs["state"]},

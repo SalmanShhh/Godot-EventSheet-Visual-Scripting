@@ -133,6 +133,16 @@ func build_ui() -> void:
 		var view: EventSheetViewport = _dock._active_view()
 		if view != null:
 			view.reveal_resource(resource))
+	# Uses entries jump to the provider's own sheet - the same go-to-definition as
+	# Ctrl+Click on one of its verbs, so Alt+Left walks straight back.
+	_dock._anatomy_panel.open_provider_requested.connect(func(provider_id: String) -> void:
+		var provider_path: String = _dock._navigate._script_path_for_class(provider_id)
+		if provider_path.is_empty():
+			_dock._set_status("No script found for provider %s." % provider_id, true)
+			return
+		_dock._navigate.record_current()
+		_dock._navigate.open_or_focus(provider_path)
+		_dock._set_status("Opened %s - a behaviour this sheet uses (Alt+Left jumps back)." % provider_path.get_file()))
 	var left_rail: VBoxContainer = VBoxContainer.new()
 	left_rail.name = "EventSheetLeftRail"
 	left_rail.add_theme_constant_override("separation", 8)

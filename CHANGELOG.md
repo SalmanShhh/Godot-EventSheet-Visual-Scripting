@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added - the Anatomy panel's Uses entries jump to the behaviour
+
+- Double-clicking a Uses entry opens that provider's script AS A SHEET - the same
+  go-to-definition as Ctrl+Click on one of its verbs, with Alt+Left walking straight
+  back. The last organ of the panel is now clickable like the rest. Pinned in
+  tests/anatomy_panel_test.gd.
+
 ### Added - un-teach: taught verbs are managed where providers live
 
 - The Manage ACE Providers dialog now also lists scripts taught project-wide (marked
