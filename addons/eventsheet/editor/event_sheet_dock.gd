@@ -161,7 +161,8 @@ var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # rig
 var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
 var _ui_builder: EventSheetDockUIBuilder = EventSheetDockUIBuilder.new()
-var _input_dispatch: EventSheetDockInputDispatch = EventSheetDockInputDispatch.new()  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
+var _input_dispatch: EventSheetDockInputDispatch = EventSheetDockInputDispatch.new()
+var _code_panel_glue: EventSheetCodePanelGlue = EventSheetCodePanelGlue.new()  # code/provenance + open-sheets panel behavior (dock/code_panel_glue.gd)  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
 var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
@@ -206,6 +207,7 @@ func _init() -> void:
 	# editor before _ready. init() only stores _dock, so wiring it here (and again in the cluster) is safe.
 	_ui_builder.init(self)
 	_input_dispatch.init(self)
+	_code_panel_glue.init(self)
 	_ace_apply.init(self)
 	# Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning — tests exercise ops like
 	# _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.
@@ -1502,82 +1504,44 @@ var _code_panel_highlight: Vector2i = Vector2i(-1, -1)
 const CODE_PANEL_HIGHLIGHT_COLOR := Color(0.35, 0.55, 0.95, 0.18)
 
 
-## ── Open Sheets panel (the left in-workspace pane) ──────────────────────────────────────
-## Push the current open-tab snapshot into the panel (on every open_tabs_changed + on build).
 func _refresh_open_sheets_panel() -> void:
-	if _open_sheets_panel == null:
-		return
-	var state: Dictionary = get_open_sheets_state()
-	_open_sheets_panel.set_state(state.get("open", []), int(state.get("active", -1)), state.get("recent", []))
+	_code_panel_glue.refresh_open_sheets_panel()
 
 
-## View ▸ Open Sheets Panel: show/hide the whole left pane (remembered per project).
+
 func _toggle_open_sheets_panel(view_popup: PopupMenu) -> void:
-	if _open_sheets_panel == null:
-		return
-	_open_sheets_panel.visible = not _open_sheets_panel.visible
-	if view_popup != null:
-		view_popup.set_item_checked(view_popup.get_item_index(13), _open_sheets_panel.visible)
-	_save_open_sheets_panel_prefs()
+	_code_panel_glue.toggle_open_sheets_panel(view_popup)
 
 
-## The panel collapsed to / expanded from a strip: snap the split divider to match, and remember it.
+
 func _refresh_anatomy_panel() -> void:
-	if _anatomy_panel != null:
-		_anatomy_panel.refresh(_current_sheet)
+	_code_panel_glue.refresh_anatomy_panel()
+
 
 
 func _on_open_sheets_panel_collapsed(collapsed: bool) -> void:
-	if _workspace_body != null:
-		_workspace_body.split_offset = 26 if collapsed else 200
-	# The whole left rail narrows to the strip — the Functions/Anatomy panels can't fit, so they follow.
-	if _anatomy_panel != null:
-		_anatomy_panel.visible = not collapsed
-	if _functions_panel != null:
-		_functions_panel.visible = not collapsed
-	_save_open_sheets_panel_prefs()
+	_code_panel_glue.on_open_sheets_panel_collapsed(collapsed)
 
 
-## Per-project editor metadata for the panel's shown/collapsed state (survives editor restarts).
+
 func _read_open_sheets_panel_prefs() -> Dictionary:
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		var meta: Variant = EditorInterface.get_editor_settings().get_project_metadata("eventsheets", _OPEN_SHEETS_PANEL_META, {})
-		if meta is Dictionary:
-			return meta
-	return {}
+	return _code_panel_glue.read_open_sheets_panel_prefs()
+
 
 
 func _save_open_sheets_panel_prefs() -> void:
-	if not (Engine.is_editor_hint() and Engine.has_singleton("EditorInterface")):
-		return
-	EditorInterface.get_editor_settings().set_project_metadata("eventsheets", _OPEN_SHEETS_PANEL_META, {
-		"shown": _open_sheets_panel != null and _open_sheets_panel.visible,
-		"collapsed": _open_sheets_panel != null and _open_sheets_panel.is_collapsed(),
-	})
+	_code_panel_glue.save_open_sheets_panel_prefs()
 
 
-## Apply the remembered shown/collapsed state when the workspace is built.
+
 func _apply_open_sheets_panel_prefs() -> void:
-	if _open_sheets_panel == null:
-		return
-	var prefs: Dictionary = _read_open_sheets_panel_prefs()
-	_open_sheets_panel.visible = bool(prefs.get("shown", true))
-	_open_sheets_panel.set_collapsed(bool(prefs.get("collapsed", false)))
-	if _anatomy_panel != null:
-		_anatomy_panel.visible = not bool(prefs.get("collapsed", false))
-	if _functions_panel != null:
-		_functions_panel.visible = not bool(prefs.get("collapsed", false))
-	_refresh_open_sheets_panel()
+	_code_panel_glue.apply_open_sheets_panel_prefs()
+
 
 
 func _toggle_code_panel() -> void:
-	_ensure_code_panel()
-	_side_panel.visible = not _side_panel.visible
-	_split.dragger_visibility = (
-		SplitContainer.DRAGGER_VISIBLE if _side_panel.visible else SplitContainer.DRAGGER_HIDDEN_COLLAPSED
-	)
-	if _side_panel.visible:
-		_refresh_code_panel()
+	_code_panel_glue.toggle_code_panel()
+
 
 
 func is_code_panel_visible() -> bool:
@@ -1589,191 +1553,64 @@ func _ensure_code_panel() -> void:
 
 
 
-## Adopts the editor's code-editor look on a CodeEdit (the GDScript panel): the same
-## monospace code font + size the script editor uses, plus the built-in minimap and
-## current-line highlight — so the panel reads as part of Godot, not a foreign box.
-## No-op headless (no editor theme/settings).
 func _apply_editor_code_settings(code_edit: CodeEdit) -> void:
-	code_edit.minimap_draw = true
-	code_edit.highlight_current_line = true
-	code_edit.draw_tabs = true
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return
-	var editor_theme: Theme = EditorInterface.get_editor_theme()
-	if editor_theme != null and editor_theme.has_font("source", "EditorFonts"):
-		code_edit.add_theme_font_override("font", editor_theme.get_font("source", "EditorFonts"))
-		if editor_theme.has_font_size("source_size", "EditorFonts"):
-			code_edit.add_theme_font_size_override("font_size", editor_theme.get_font_size("source_size", "EditorFonts"))
+	_code_panel_glue.apply_editor_code_settings(code_edit)
 
 
-## Recompiles the current sheet into the panel (text + source map) and re-highlights.
+
 func _refresh_code_panel() -> void:
-	if _code_edit == null or _side_panel == null or not _side_panel.visible:
-		return
-	_refresh_functions_list()
-	if _current_sheet == null:
-		_code_edit.text = ""
-		_code_source_map = []
-		_code_panel_highlight = Vector2i(-1, -1)
-		return
-	var compile_result: Dictionary = SheetCompiler.compile(_current_sheet, "user://eventforge_code_panel_preview.gd")
-	_code_edit.text = str(compile_result.get("output", ""))
-	_code_source_map = compile_result.get("source_map", [])
-	_code_panel_highlight = Vector2i(-1, -1)
-	_update_code_panel_highlight()
+	_code_panel_glue.refresh_code_panel()
 
 
-## Repopulates the Functions overview list from the active sheet (signature + an ✦ for ACE-exposed
-## functions). Cheap; runs whenever the side panel refreshes (i.e. on any edit while it's open).
+
 func _refresh_functions_list() -> void:
-	if _functions_list == null:
-		return
-	_functions_list.clear()
-	var count: int = 0
-	if _current_sheet != null:
-		for function_resource: Variant in _current_sheet.functions:
-			if function_resource is EventFunction:
-				_functions_list.add_item(_format_function_signature(function_resource as EventFunction))
-				count += 1
-	if _functions_panel != null:
-		_functions_panel.set_count(count)  # the collapsed header still tells the sheet's weight
+	_code_panel_glue.refresh_functions_list()
 
 
-## "name(a, b)" plus a trailing ✦ when the function is exposed as an ACE (a reusable action/condition/
-## expression in other sheets) — the at-a-glance signature shown in the Functions list.
+
 func _format_function_signature(function: EventFunction) -> String:
-	var param_ids: PackedStringArray = PackedStringArray()
-	for param_variant: Variant in function.params:
-		if param_variant is ACEParam:
-			param_ids.append((param_variant as ACEParam).id)
-	var signature: String = "%s(%s)" % [function.function_name, ", ".join(param_ids)]
-	return (signature + "  ✦") if function.expose_as_ace else signature
+	return _code_panel_glue.format_function_signature(function)
 
 
-## Right-click a function to delete it (the list is otherwise read-only — editing is via the rows).
+
 func _on_functions_list_item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
-	if mouse_button_index != MOUSE_BUTTON_RIGHT or _functions_menu == null:
-		return
-	_functions_list.select(index)
-	_functions_menu.position = Vector2i(_functions_list.get_screen_position() + at_position)
-	_functions_menu.reset_size()
-	_functions_menu.popup()
+	_code_panel_glue.on_functions_list_item_clicked(index, at_position, mouse_button_index)
+
 
 
 func _on_functions_menu_id_pressed(id: int) -> void:
-	if id == 0:
-		_delete_selected_function()
+	_code_panel_glue.on_functions_menu_id_pressed(id)
 
 
-## Removes the selected function from the sheet (undoable) and refreshes the list + preview.
+
 func _delete_selected_function() -> void:
-	if _current_sheet == null or _functions_list == null:
-		return
-	var selected: PackedInt32Array = _functions_list.get_selected_items()
-	if selected.is_empty():
-		return
-	var index: int = selected[0]
-	if index < 0 or index >= _current_sheet.functions.size():
-		return
-	var removed_name: String = ""
-	if _current_sheet.functions[index] is EventFunction:
-		removed_name = (_current_sheet.functions[index] as EventFunction).function_name
-	var changed: bool = _perform_undoable_sheet_edit("Delete Function", func() -> bool:
-		if index < _current_sheet.functions.size():
-			_current_sheet.functions.remove_at(index)
-			return true
-		return false)
-	if changed:
-		_mark_dirty("Deleted function %s()." % removed_name)
-		_refresh_functions_list()
+	_code_panel_glue.delete_selected_function()
 
 
-## Highlights the generated lines for the currently selected sheet row and scrolls to them.
+
 func _update_code_panel_highlight() -> void:
-	if _code_edit == null or _side_panel == null or not _side_panel.visible:
-		return
-	if _code_panel_highlight.x >= 0:
-		for line in range(_code_panel_highlight.x, _code_panel_highlight.y + 1):
-			if line < _code_edit.get_line_count():
-				_code_edit.set_line_background_color(line, Color(0, 0, 0, 0))
-	_code_panel_highlight = Vector2i(-1, -1)
-	var selected: Resource = _active_view().get_selected_context().get("source_resource", null) if _viewport != null else null
-	if selected == null:
-		return
-	var emitted: Vector2i = EventSheetLineRowMapper.range_for_resource(_code_source_map, selected)
-	var start_line: int = emitted.x - 1
-	var end_line: int = mini(emitted.y - 1, _code_edit.get_line_count() - 1)
-	if start_line < 0 or end_line < start_line:
-		return
-	for line in range(start_line, end_line + 1):
-		_code_edit.set_line_background_color(line, CODE_PANEL_HIGHLIGHT_COLOR)
-	_code_edit.set_caret_line(start_line)
-	_code_panel_highlight = Vector2i(start_line, end_line)
+	_code_panel_glue.update_code_panel_highlight()
 
 
-## Reverse provenance: clicking a line of generated code selects the sheet row that
-## produced it. Reacts only to mouse releases (never caret moves), so the forward
-## direction — selection setting the caret in _update_code_panel_highlight — cannot loop.
+
 func _on_code_panel_gui_input(event: InputEvent) -> void:
-	if not (event is InputEventMouseButton):
-		return
-	var mouse: InputEventMouseButton = event as InputEventMouseButton
-	if mouse.button_index != MOUSE_BUTTON_LEFT or mouse.pressed:
-		return
-	# The click already moved the caret; source maps are 1-based.
-	_select_sheet_row_for_code_line(_code_edit.get_caret_line() + 1)
+	_code_panel_glue.on_code_panel_gui_input(event)
 
 
-## The script editor's "Go to Sheet Row": shows the GDScript panel, refreshes the
-## source map and selects the row that emitted the given 1-based generated line —
-## errors and stack traces land on rows, not on generated code.
+
 func goto_generated_line(line: int) -> void:
-	_ensure_code_panel()
-	if not _side_panel.visible:
-		_toggle_code_panel()
-	else:
-		_refresh_code_panel()
-	if _code_edit != null and line > 0:
-		_code_edit.set_caret_line(maxi(line - 1, 0))
-	_select_sheet_row_for_code_line(line)
+	_code_panel_glue.goto_generated_line(line)
 
 
-## Most-specific-first line→row lookup (the shared mapper), walking outward until something
-## selects — inner entries may reference resources without rows of their own (e.g. an in-flow
-## block inside an event's actions).
+
 func _select_sheet_row_for_code_line(line: int) -> void:
-	if _viewport == null:
-		return
-	for entry: Variant in EventSheetLineRowMapper.entries_for_line(_code_source_map, line):
-		var resource: Resource = instance_from_id(int(str((entry as Dictionary).get("uid", "0")))) as Resource
-		if resource == null:
-			continue
-		# reveal_resource falls back where plain selection can't reach: a lifted function's Define
-		# block lives inside the folded "Published verbs" section, and reveal unfolds ancestors.
-		if _viewport.select_resource(resource) or _viewport.reveal_resource(resource):
-			_update_code_panel_highlight()
-			return
+	_code_panel_glue.select_sheet_row_for_code_line(line)
 
 
-## Double-clicking a GDScript block opens a CodeEdit dialog with compile-check linting and
-## sheet-symbol completion. in_flow blocks live inside an event's actions (statements);
-## class-level blocks are tree rows (helper functions, @onready vars, signals…).
+
 func _on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool) -> void:
-	var raw_row: RawCodeRow = raw_resource as RawCodeRow
-	if raw_row == null:
-		return
-	_ensure_raw_code_dialog()
-	_raw_code_target = raw_row
-	_raw_code_in_flow = in_flow
-	_raw_code_hint.text = (
-		"Runs inside this event, right after its conditions pass — full GDScript, with the sheet's variables and host in scope. Written verbatim into the .gd."
-		if in_flow
-		else "Top-level GDScript — helper functions, @onready vars, signals… anything no ACE covers. Written verbatim into the .gd and callable from your events."
-	)
-	_raw_code_edit.text = raw_row.code
-	_validate_raw_code()
-	_raw_code_dialog.popup_centered(Vector2i(680, 460))
-	_raw_code_edit.grab_focus()
+	_code_panel_glue.on_viewport_raw_code_edit_requested(raw_resource, in_flow)
+
 
 
 func _ensure_raw_code_dialog() -> void:
@@ -1781,39 +1618,14 @@ func _ensure_raw_code_dialog() -> void:
 
 
 
-## Compile-checks the dialog's code against the sheet context (host class + sheet symbols).
 func _validate_raw_code() -> void:
-	if _raw_code_edit == null or _raw_code_lint_label == null:
-		return
-	# Live hard-block: a STRUCTURAL error (unbalanced brackets / unterminated string) disables Save
-	# immediately — always wrong, so it can never lock the user out on a lint false positive (a runtime-only
-	# symbol). Semantic lint errors keep Save enabled but are caught on confirm (which re-opens the dialog).
-	var structural: String = EventSheetGDScriptLint.structural_syntax_error(_raw_code_edit.text)
-	if _raw_code_dialog != null:
-		_raw_code_dialog.get_ok_button().disabled = not structural.is_empty()
-	if not structural.is_empty():
-		_raw_code_lint_label.text = "✗ %s" % structural
-		_raw_code_lint_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
-		return
-	var lint_result: Dictionary = EventSheetGDScriptLint.lint(_raw_code_edit.text, _raw_code_in_flow, _current_sheet)
-	if bool(lint_result.get("ok", true)):
-		_raw_code_lint_label.text = "✓ Compiles"
-		_raw_code_lint_label.add_theme_color_override("font_color", Color(0.55, 0.85, 0.6))
-	else:
-		_raw_code_lint_label.text = "✗ %s" % str(lint_result.get("error", "Does not compile."))
-		_raw_code_lint_label.add_theme_color_override("font_color", Color(0.95, 0.5, 0.5))
+	_code_panel_glue.validate_raw_code()
 
 
-## Supplies sheet variables/functions and host-class members as completion candidates.
+
 func _populate_raw_code_completion() -> void:
-	if _raw_code_edit == null:
-		return
-	# Context-aware: `host.` / typed-variable. / $Behavior. offer that type's members.
-	for candidate: Dictionary in EventSheetGDScriptLint.completion_for_context(_text_before_caret(_raw_code_edit), _current_sheet):
-		var label: String = str(candidate.get("label", ""))
-		_raw_code_edit.add_code_completion_option(int(candidate.get("kind", CodeEdit.KIND_PLAIN_TEXT)), label, label)
-	_raw_code_edit.update_code_completion_options(true)
-	_raw_code_edit.set_code_hint(EventSheetGDScriptLint.signature_hint(_text_before_caret(_raw_code_edit), _current_sheet))
+	_code_panel_glue.populate_raw_code_completion()
+
 
 
 ## The current line's text up to the caret (what context completion/hints parse).
@@ -1822,27 +1634,8 @@ static func _text_before_caret(edit: CodeEdit) -> String:
 
 
 func _on_raw_code_dialog_confirmed() -> void:
-	if _raw_code_target == null:
-		return
-	var target: RawCodeRow = _raw_code_target
-	# Guardrail: broken GDScript never commits — the dialog reopens with the text intact.
-	var commit_lint: Dictionary = EventSheetGDScriptLint.lint(_raw_code_edit.text, _raw_code_in_flow, _current_sheet)
-	if not bool(commit_lint.get("ok", true)):
-		_set_status("GDScript block not saved: fix the error first (or Cancel to discard).", true)
-		if is_inside_tree():
-			_raw_code_dialog.call_deferred("popup_centered", Vector2i(680, 420))
-		return
-	_raw_code_target = null
-	var new_code: String = _raw_code_edit.text
-	var changed: bool = _perform_undoable_sheet_edit("Edit GDScript Block", func() -> bool:
-		if target.code == new_code:
-			return false
-		target.code = new_code
-		return true
-	)
-	if changed:
-		_refresh_after_edit()
-		_mark_dirty("Updated GDScript block.")
+	_code_panel_glue.on_raw_code_dialog_confirmed()
+
 
 
 # ── Visual theme editor → dock/theme_manager.gd ────────────────────────────────

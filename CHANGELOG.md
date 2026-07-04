@@ -4,13 +4,16 @@
 
 ### Changed - mega-file breakdown: five new commented subsystem modules
 
-- **The viewport sheds three subsystems** (3,752 -> 3,164 lines): folding + region fold
+- **The viewport sheds four subsystems** (3,752 -> 2,753 lines, UNDER 3k): folding + region fold
   persistence (`interaction/viewport_folding.gd`), the 260-line per-row geometry pass
   (`interaction/viewport_layout_builder.gd`), and the box-selection + row/ACE drag gestures
-  (`interaction/viewport_drag.gd`).
-- **The dock sheds two** (4,624 -> 3,951 lines): the five UI construction passes
-  (`dock/dock_ui_builder.gd`) and the input dispatch layer - row-menu routing, workspace
-  shortcuts, Surround with Region (`dock/dock_input_dispatch.gd`).
+  (`interaction/viewport_drag.gd`), and the four input handlers behind _gui_input
+  (`interaction/viewport_input.gd`).
+- **The dock sheds three** (4,624 -> 3,744 lines): the five UI construction passes
+  (`dock/dock_ui_builder.gd`), the input dispatch layer - row-menu routing, workspace
+  shortcuts, Surround with Region (`dock/dock_input_dispatch.gd`), and the side-panel
+  glue - provenance highlighting, the Functions list, the raw-GDScript dialog flow, the
+  Open Sheets panel prefs (`dock/code_panel_glue.gd`).
 - Every move is VERBATIM behind the established `_dock.`/`_viewport.` back-reference with
   one-line delegates keeping all call sites (and tests) untouched; each new module opens
   with a header explaining what lives there and why state stays on the host. Suite green
