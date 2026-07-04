@@ -28,7 +28,9 @@ static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefiniti
 		# adding typed fields to ACEDefinition. A blank note means "not deprecated".
 		"deprecated": descriptor.is_deprecated,
 		"deprecation_note": descriptor.deprecation_note(),
-		"replacement_ace_id": descriptor.replacement_ace_id
+		"replacement_ace_id": descriptor.replacement_ace_id,
+		# Featured (the everyday-verb highlight) rides the same metadata channel.
+		"featured": descriptor.is_featured
 	}
 	return definition
 

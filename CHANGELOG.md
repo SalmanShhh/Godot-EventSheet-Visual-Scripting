@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - featured verbs: the picker leads with intentions
+
+- **The curated featured list grew from statements to intentions**: Wait, Every X
+  Seconds, Play Sound, Play Animation, Destroy, Emit Signal, and Move Toward join the
+  everyday set - featured verbs render bold and float to the top of their category,
+  so a fresh sheet's picker reads like a verb menu, not an API listing. The curation
+  lives in one visible const, typo-gated by a test against the live registry.
+- **Addons can feature their hero verbs**: `.featured()` chains on a built-in
+  descriptor and `## @ace_featured` annotates an addon member - both flow through
+  definition metadata to the same highlight. Reserve it: featuring everything
+  features nothing.
+- The bold now synthesizes outside a themed editor too (embolden fallback), and the
+  highlight is objectively pinned (featured tree rows carry the bold font, plain rows
+  none) in tests/featured_aces_test.gd.
+
 ### Added - Teach a Verb: your project's vocabulary grows as you build
 
 - **Sheet > Teach a Verb - Share Published Verbs** makes a sheet's exposed ƒ functions

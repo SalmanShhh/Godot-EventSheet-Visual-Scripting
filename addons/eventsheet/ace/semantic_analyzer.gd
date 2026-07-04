@@ -25,6 +25,7 @@ const KNOWN_ANNOTATIONS := {
 	"@ace_param": true,
 	"@ace_tags": true,
 	"@ace_expose_all": true,
+	"@ace_featured": true,
 	"@ace_family": true,
 	"@ace_family_member": true,
 	"@ace_family_var": true,
@@ -261,6 +262,7 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 	var overrides := {
 		"exported": exported,
 		"hidden": false,
+		"featured": false,
 		"deprecated": false,
 		"deprecation_message": "",
 		"category": "",
@@ -277,6 +279,10 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 				doc_lines.append(directive)
 			"@ace_hidden":
 				overrides["hidden"] = true
+			"@ace_featured":
+				# The everyday-verb highlight: the picker renders this member bold and
+				# floats it to the top of its category. Reserve for a pack's hero verbs.
+				overrides["featured"] = true
 			"@ace_deprecated":
 				# `## @ace_deprecated("Use knock_back() instead")` - the ACE keeps working (existing sheets
 				# compile) but is hidden from the picker and flagged on hover, mirroring built-in .deprecated().

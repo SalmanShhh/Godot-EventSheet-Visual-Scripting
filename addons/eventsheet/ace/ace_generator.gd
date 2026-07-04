@@ -172,9 +172,15 @@ static func _parameterize_node_target(definition: ACEDefinition) -> void:
 
 ## Carries an addon's `## @ace_deprecated("…")` into the definition's metadata, matching how a built-in's
 ## .deprecated() flows via the adapter - so the picker hides it and the hover flags it, while the ACE keeps
-## compiling in sheets that already use it (the compatibility covenant).
+## compiling in sheets that already use it (the compatibility covenant). Also carries the
+## `## @ace_featured` highlight (a built-in's .featured() twin): the picker renders
+## featured verbs bold and floats them to the top of their category.
 static func _apply_deprecation_metadata(definition: ACEDefinition, overrides: Dictionary) -> void:
-	if definition == null or not bool(overrides.get("deprecated", false)):
+	if definition == null:
+		return
+	if bool(overrides.get("featured", false)):
+		definition.metadata["featured"] = true
+	if not bool(overrides.get("deprecated", false)):
 		return
 	definition.metadata["deprecated"] = true
 	var message: String = str(overrides.get("deprecation_message", "")).strip_edges()

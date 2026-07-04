@@ -749,24 +749,40 @@ func _muted_header_color() -> Color:
 	return GROUP_COLOR_NEUTRAL
 
 ## The everyday "featured" verbs (event-sheet-style highlight): rendered bold and floated to the top of their
-## group so the common picks stand out. Curated default; keys are "provider_id/ace_id".
+## group so the common picks stand out. THE curated Core list lives here in one glance
+## (keys are "provider_id/ace_id"; featured_aces_test typo-gates every key against the
+## live registry). It leads with INTENTIONS - wait, spawn, destroy, play, move - not
+## statements. Addons feature their own hero verbs via `.featured()` (module style) or
+## `## @ace_featured` (annotation style), which arrive through definition metadata.
 const FEATURED := {
 	"Core/OnReady": true, "Core/OnProcess": true, "Core/OnPhysicsProcess": true,
 	"Core/IsActionPressed": true, "Core/CompareVar": true, "Core/CompareValues": true,
 	"Core/SetVar": true, "Core/AddVar": true, "Core/PrintLog": true,
 	"Core/CallFunction": true, "Core/SpawnSceneFull": true,
+	"Core/Wait": true, "Core/EveryXSeconds": true, "Core/PlaySound": true,
+	"Core/PlayAnimationInObject": true, "Core/QueueFree": true,
+	"Core/EmitSignal": true, "Core/MoveTowardValue": true,
 }
 
 
 func _is_featured(definition: ACEDefinition) -> bool:
-	return definition != null and FEATURED.has("%s/%s" % [definition.provider_id, definition.id])
+	if definition == null:
+		return false
+	if bool(definition.metadata.get("featured", false)):
+		return true
+	return FEATURED.has("%s/%s" % [definition.provider_id, definition.id])
 
 
-## The editor's bold font for featured rows; null when there is no editor theme (headless / fallback).
+## The bold font for featured rows: the editor theme's when hosted, else a synthesized
+## embolden of the fallback font - so the highlight reads everywhere, not only inside
+## a themed editor.
 func _bold_font() -> Font:
-	if _tree != null:
+	if _tree != null and _tree.has_theme_font("bold", "EditorFonts"):
 		return _tree.get_theme_font("bold", "EditorFonts")
-	return null
+	var variation: FontVariation = FontVariation.new()
+	variation.base_font = ThemeDB.fallback_font
+	variation.variation_embolden = 0.7
+	return variation
 
 
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:

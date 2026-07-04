@@ -296,6 +296,7 @@ space-separated (`@ace_category(Combat)` and `@ace_category Combat` both work).
 | Annotation | Effect |
 |------------|--------|
 | `@ace_hidden` | Hide this member from the picker entirely. |
+| `@ace_featured` | Highlight this member as an everyday verb: bold, floated to the top of its picker category. Reserve it for your pack's hero verbs - featuring everything features nothing. |
 | `@ace_name(Text)` | Override the display name. |
 | `@ace_category(Text)` | Put the ACE in this picker category. |
 | `@ace_description(Text)` | The tooltip and help text. |

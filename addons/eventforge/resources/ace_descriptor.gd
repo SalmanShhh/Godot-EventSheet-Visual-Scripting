@@ -43,6 +43,9 @@ var codegen_on_true: String = ""
 @export var is_deprecated: bool = false
 @export var deprecation_message: String = ""
 @export var replacement_ace_id: String = ""
+## Featured everyday verb: the picker renders it bold and floats it to the top of its
+## category (the event-sheet "highlight"). Set inline via `.featured()`.
+@export var is_featured: bool = false
 
 ## Curated poll -> signal-twin map (the shared "reactivity" datum): the handful of polling CONDITIONS
 ## that have a clean reactive trigger, so the editor can nudge "react to a signal instead of checking
@@ -93,6 +96,15 @@ func get_display_text() -> String:
 ## so behaviour packs are easy to author, integrate, and update without touching any central registry.
 func described(text: String) -> ACEDescriptor:
 	description = text
+	return self
+
+
+## Marks this ACE as a FEATURED everyday verb and returns self, so it chains like
+## .described(): `F.make_descriptor(...).featured()`. The picker renders featured verbs
+## bold and floats them to the top of their category. Reserve it for a pack's hero
+## verbs - featuring everything features nothing.
+func featured() -> ACEDescriptor:
+	is_featured = true
 	return self
 
 
