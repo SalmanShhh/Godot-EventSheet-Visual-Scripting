@@ -16,7 +16,9 @@
 
 - **Editable color + description per region** (the fence's edit dialog gains a color picker
   and a description field, group-style): the label and the bubble outline wear the region's
-  color, and the description reads inline on the opener row. Styled openers round-trip via
+  color, and the description reads inline on the opener row. Region rows carry NO kind pill -
+  the fold arrow, the colored label, the bubble, and the description say what the row is, and
+  the closing fence reads as a dim "end of <name>" marker. Styled openers round-trip via
   an `## @ace_region(#color, "description")` marker line above the fence - byte-gated, and
   a plain `#region` line stays byte-identical to what it always was.
 - **Groups and every block kind nest inside regions**: whatever sits between the fences

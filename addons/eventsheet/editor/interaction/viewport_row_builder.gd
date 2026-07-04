@@ -70,7 +70,11 @@ func _pair_region_fences(rows: Array[EventRowData]) -> Array[EventRowData]:
 				region_children.append(collected_row)
 			# The closing fence rides as the LAST child: hidden while folded, still
 			# a real selectable row (its CustomBlockRow is untouched) when open.
+			# Once its opener is known, its marker names the range it closes.
 			_bump_indent(row_data, 1)
+			var opener_label: String = str(((opener.source_resource as CustomBlockRow).fields as Dictionary).get("label", "")).strip_edges()
+			if not opener_label.is_empty() and not row_data.spans.is_empty():
+				row_data.spans[0].text = "end of %s" % opener_label
 			region_children.append(row_data)
 			opener.children = region_children
 			opener.folded = bool(_viewport._fold_state.get(opener.row_uid, false))
@@ -375,14 +379,38 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 	row_data.disabled = not block.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
 	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(block.kind_id)
+	# Regions carry NO kind pill: the fold arrow, the colored label, the bubble
+	# outline, and the inline description already say what the row is. The label
+	# wears the region's own color (shared with the bubble), defaulting to the
+	# behavior accent so region headers always stand apart from comments.
+	if block.kind_id == "region":
+		var region_color: String = str(block.fields.get("color", "")).strip_edges()
+		var accent: Color = Color.html(region_color) if Color.html_is_valid(region_color) else event_style.behavior_accent_color
+		if bool(block.fields.get("is_end", false)):
+			# The closing fence is plumbing: one dim marker line. The pairing pass
+			# refines this to "end of <label>" once its opener is known.
+			row_data.spans = [_make_span(
+				"end region",
+				SemanticSpan.SpanType.VALUE,
+				{"kind": "custom_block_row", "text_color": Color(1.0, 1.0, 1.0, 0.4)}
+			)]
+			return row_data
+		var region_label: String = str(block.fields.get("label", "")).strip_edges()
+		row_data.spans = [_make_span(
+			region_label if not region_label.is_empty() else "(unnamed region)",
+			SemanticSpan.SpanType.VALUE,
+			{"kind": "custom_block_row", "text_color": accent}
+		)]
+		var region_description: String = str(block.fields.get("description", "")).strip_edges()
+		if not region_description.is_empty():
+			row_data.spans.append(_make_span(
+				region_description,
+				SemanticSpan.SpanType.VALUE,
+				{"text_color": Color(1.0, 1.0, 1.0, 0.55)}
+			))
+		return row_data
 	var badge_text: String = kind.title if kind != null else "block"
 	var summary_text: String = kind.summary(block) if kind != null else block.kind_id
-	# A region opener wears its own color (label + bubble share it) and shows its
-	# description inline, group-style, so a styled region reads at a glance.
-	var label_color: Color = event_style.object_label_color
-	var region_color: String = str(block.fields.get("color", "")).strip_edges() if block.kind_id == "region" else ""
-	if Color.html_is_valid(region_color):
-		label_color = Color.html(region_color)
 	row_data.spans = [
 		_make_span(
 			badge_text,
@@ -392,16 +420,9 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 		_make_span(
 			summary_text,
 			SemanticSpan.SpanType.VALUE,
-			{"kind": "custom_block_row", "text_color": label_color}
+			{"kind": "custom_block_row", "text_color": event_style.object_label_color}
 		)
 	]
-	var region_description: String = str(block.fields.get("description", "")).strip_edges() if block.kind_id == "region" else ""
-	if not region_description.is_empty() and not bool(block.fields.get("is_end", false)):
-		row_data.spans.append(_make_span(
-			region_description,
-			SemanticSpan.SpanType.VALUE,
-			{"text_color": Color(1.0, 1.0, 1.0, 0.55)}
-		))
 	return row_data
 
 
