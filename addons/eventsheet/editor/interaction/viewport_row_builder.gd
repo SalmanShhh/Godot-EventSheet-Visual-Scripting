@@ -30,6 +30,10 @@ extends RefCounted
 # without a live viewport; the viewport keeps a static forwarder for any class-name caller.
 
 var _viewport: Control = null
+# Per-build occurrence counters ("label" -> count) giving every paired region a STABLE
+# fold key ("label#n") that survives sessions - row uids are instance-based and cannot
+# (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
+var _region_occurrences: Dictionary = {}
 
 
 func init(viewport: Control) -> void:
@@ -47,13 +51,18 @@ func init(viewport: Control) -> void:
 ## nest inside regions and inside groups. Unbalanced fences never pair and stay
 ## flat rows - the region block kind's wart-not-error contract holds in the view.
 func _pair_region_fences(rows: Array[EventRowData]) -> Array[EventRowData]:
+	_region_occurrences.clear()
+	return _pair_region_fences_walk(rows)
+
+
+func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 	var output: Array[EventRowData] = []
 	var stack: Array[Dictionary] = []
 	for row_data: EventRowData in rows:
 		# Pair inside pre-built child lists first (groups); a region row's own
 		# children were assembled by an inner frame below, never re-walked.
 		if not row_data.children.is_empty() and not _is_region_row(row_data):
-			row_data.children = _pair_region_fences(row_data.children)
+			row_data.children = _pair_region_fences_walk(row_data.children)
 		if _is_region_row(row_data) and not _region_row_is_end(row_data):
 			stack.append({"opener": row_data, "collected": [] as Array[EventRowData]})
 			continue
@@ -77,7 +86,13 @@ func _pair_region_fences(rows: Array[EventRowData]) -> Array[EventRowData]:
 				row_data.spans[0].text = "end of %s" % opener_label
 			region_children.append(row_data)
 			opener.children = region_children
-			opener.folded = bool(_viewport._fold_state.get(opener.row_uid, false))
+			# Session fold state (row-uid keyed) wins; the persisted layer (stable
+			# label#occurrence keys) seeds the default so folds survive reopen.
+			var occurrence: int = int(_region_occurrences.get(opener_label, 0))
+			_region_occurrences[opener_label] = occurrence + 1
+			var fold_key: String = "%s#%d" % [opener_label, occurrence]
+			opener.set_meta("region_fold_key", fold_key)
+			opener.folded = bool(_viewport._fold_state.get(opener.row_uid, bool(_viewport.persisted_region_folds.get(fold_key, false))))
 			if opener.folded:
 				var hidden_count: int = region_children.size() - 1
 				opener.spans.append(_make_span(

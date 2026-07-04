@@ -145,6 +145,29 @@ static func run() -> bool:
 	ok = _check("surround inserts opener + closer around the row",
 		str(wrapped_kinds), str([false, "alpha", true, "beta"])) and ok
 
+	# ── Fold persistence: stable "label#occurrence" keys seed folds across sessions ──
+	var persist_sheet: EventSheetResource = _sheet_with([
+		_region("Combat", false), _comment("a"), _region("", true),
+		_region("Combat", false), _comment("b"), _region("", true)
+	])
+	var fresh_viewport: EventSheetViewport = EventSheetViewport.new()
+	fresh_viewport.persisted_region_folds = {"Combat#1": true}
+	var persisted_rows: Array = _region_rows_in(fresh_viewport._build_rows_from_sheet(persist_sheet))
+	ok = _check("duplicate labels get distinct occurrence keys",
+		str(persisted_rows[0].get_meta("region_fold_key")) != str(persisted_rows[1].get_meta("region_fold_key")), true) and ok
+	ok = _check("a persisted fold seeds only its own region",
+		[bool(persisted_rows[0].folded), bool(persisted_rows[1].folded)], [false, true]) and ok
+	# Session state (row-uid keyed) outranks the persisted layer.
+	fresh_viewport._fold_state[persisted_rows[1].row_uid] = false
+	persisted_rows = _region_rows_in(fresh_viewport._build_rows_from_sheet(persist_sheet))
+	ok = _check("session fold state outranks the persisted seed", bool(persisted_rows[1].folded), false) and ok
+	# The snapshot stores only folded regions, by their stable key.
+	fresh_viewport._fold_state.clear()
+	fresh_viewport.set_sheet(persist_sheet)
+	ok = _check("the snapshot names folded regions by stable key",
+		str(fresh_viewport.region_fold_snapshot()), str({"Combat#1": true})) and ok
+	fresh_viewport.free()
+
 	dock.free()
 	viewport.free()
 	return ok

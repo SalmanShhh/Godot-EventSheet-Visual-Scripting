@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added - region folds survive reopen (editor state, never the bytes)
+
+- **Fold state persists per project**: folded regions are remembered across editor sessions
+  in per-project editor metadata, keyed by the sheet's path and a stable "label#occurrence"
+  region key - the `.gd` never changes by a byte (a fold is editor state, not code). Only
+  folded regions are stored, session fold state still wins within a session, and an all-open
+  sheet stores nothing. Pinned in `region_folding_test`.
+
 ### Added - region fold commands: Fold All, bracket shortcuts, Surround with Region
 
 - **Command Palette**: Fold All Regions, Unfold All Regions, and Fold/Unfold Everything

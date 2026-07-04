@@ -255,9 +255,73 @@ func adopt_shared_state(state: EventSheetViewState) -> void:
 
 func set_sheet(sheet: EventSheetResource) -> void:
 	_sheet = sheet
+	_load_persisted_region_folds()
 	_editor_style = _resolve_editor_style(sheet)
 	_update_layout_style_signature(_get_font_size())
 	_refresh_rows()
+
+
+# ── Region fold persistence (editor state, NEVER the sheet's bytes) ────────────────────────────
+# Folds are editor state, so they live in per-project editor metadata keyed by the
+# sheet's path and the region's stable "label#occurrence" key - a fold survives
+# closing and reopening the project without the .gd changing by a single byte.
+# Guarded to the editor: headless runs (tests) seed persisted_region_folds directly.
+
+## stable region key ("label#n") -> true, seeding fold defaults at pairing time.
+## Session fold state (_fold_state, row-uid keyed) always wins over this layer.
+var persisted_region_folds: Dictionary = {}
+
+
+func _sheet_persist_key() -> String:
+	if _sheet == null:
+		return ""
+	var sheet_path: String = str(_sheet.external_source_path)
+	if sheet_path.is_empty():
+		sheet_path = _sheet.resource_path
+	return sheet_path
+
+
+func _load_persisted_region_folds() -> void:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return
+	var settings: EditorSettings = EditorInterface.get_editor_settings()
+	var sheet_key: String = _sheet_persist_key()
+	if settings == null or sheet_key.is_empty():
+		return
+	var all_folds: Dictionary = settings.get_project_metadata("eventsheets", "region_folds", {})
+	persisted_region_folds = all_folds.get(sheet_key, {})
+
+
+func _persist_region_folds() -> void:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return
+	var settings: EditorSettings = EditorInterface.get_editor_settings()
+	var sheet_key: String = _sheet_persist_key()
+	if settings == null or sheet_key.is_empty():
+		return
+	var all_folds: Dictionary = settings.get_project_metadata("eventsheets", "region_folds", {})
+	var snapshot: Dictionary = region_fold_snapshot()
+	if snapshot.is_empty():
+		all_folds.erase(sheet_key)
+	else:
+		all_folds[sheet_key] = snapshot
+	settings.set_project_metadata("eventsheets", "region_folds", all_folds)
+	persisted_region_folds = snapshot
+
+
+## The regions currently folded, by stable key - only folded entries are stored
+## (open is the default), so an all-open sheet stores nothing at all.
+func region_fold_snapshot() -> Dictionary:
+	var snapshot: Dictionary = {}
+	_collect_region_folds(_root_rows, snapshot)
+	return snapshot
+
+
+func _collect_region_folds(rows: Array[EventRowData], snapshot: Dictionary) -> void:
+	for row_data: EventRowData in rows:
+		if row_data.folded and row_data.has_meta("region_fold_key"):
+			snapshot[str(row_data.get_meta("region_fold_key"))] = true
+		_collect_region_folds(row_data.children, snapshot)
 
 
 func set_ace_registry(ace_registry: EventSheetACERegistry) -> void:
@@ -1184,6 +1248,7 @@ func _draw_region_bubbles(width: float) -> void:
 func set_region_folds(folded: bool, include_groups: bool = false) -> void:
 	_set_folds_in(_root_rows, folded, include_groups)
 	_refresh_rows()
+	_persist_region_folds()
 
 
 func _set_folds_in(rows: Array[EventRowData], folded: bool, include_groups: bool) -> void:
@@ -1899,6 +1964,7 @@ func _handle_key(event: InputEventKey) -> void:
 			_fold_state[fold_region.row_uid] = true
 			_select_row(fold_region_index, -1)
 			_refresh_rows()
+			_persist_region_folds()
 			accept_event()
 	elif event.keycode == KEY_BRACKETRIGHT and event.ctrl_pressed and event.shift_pressed:
 		# Ctrl+Shift+] unfolds the selected/containing region.
@@ -1908,6 +1974,7 @@ func _handle_key(event: InputEventKey) -> void:
 			unfold_region.folded = false
 			_fold_state[unfold_region.row_uid] = false
 			_refresh_rows()
+			_persist_region_folds()
 			accept_event()
 	elif event.keycode == KEY_LEFT and not event.alt_pressed:
 		# Plain Left folds; Alt+Left is the dock's jump-history Back and must pass through.
@@ -2844,6 +2911,8 @@ func _toggle_row_fold(row_index: int) -> void:
 	row_data.folded = not row_data.folded
 	_fold_state[row_data.row_uid] = row_data.folded
 	_refresh_rows()
+	if _row_builder._is_region_row(row_data):
+		_persist_region_folds()
 
 
 func _begin_edit(row_index: int, span_index: int) -> void:
