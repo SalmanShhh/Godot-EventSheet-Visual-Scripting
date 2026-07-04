@@ -130,9 +130,53 @@ func parse_source_metadata(script: Script) -> Dictionary:
 		if not stripped.begins_with("@"):
 			pending_directives.clear()
 			pending_export = false
+	_merge_registrar_metadata(script, metadata)
 	_apply_class_defaults(metadata)
 	_warn_unknown_annotations(script.resource_path, metadata)
 	return metadata
+
+
+## Providers may also register through the typed hook
+## `static func _eventforge_register(reg: EventForgeRegistrar) -> void` - real code,
+## so the script editor autocompletes the vocabulary and typos are compile errors.
+## The hook's output merges ONTO the comment dialect field by field (explicit
+## registrar calls win), BEFORE class defaults fill the gaps, so both dialects flow
+## through one pipeline and stay definition-equivalent.
+func _merge_registrar_metadata(script: Script, metadata: Dictionary) -> void:
+	var has_hook: bool = false
+	for method_info in script.get_script_method_list():
+		if str(method_info.get("name", "")) == "_eventforge_register":
+			has_hook = true
+			break
+	if not has_hook:
+		return
+	var registrar := EventForgeRegistrar.new()
+	script.call("_eventforge_register", registrar)
+	if not registrar.pack_category_value.is_empty() and str(metadata.get("default_category", "")).is_empty():
+		metadata["default_category"] = registrar.pack_category_value
+	if not registrar.pack_icon_value.is_empty() and str(metadata.get("default_icon", "")).is_empty():
+		metadata["default_icon"] = registrar.pack_icon_value
+	for tag in registrar.pack_tags:
+		if not (metadata["tags"] as Array).has(tag):
+			(metadata["tags"] as Array).append(tag)
+	for member_name in registrar.members:
+		var entry: Dictionary = registrar.members[member_name]
+		var section: String = str(entry.get("section", "methods"))
+		var section_dict: Dictionary = metadata.get(section, {})
+		var base: Dictionary = section_dict.get(member_name, _build_overrides([], section == "properties", metadata))
+		var registrar_overrides: Dictionary = entry.get("overrides", {})
+		for key in registrar_overrides:
+			if key in ["param_hints", "param_options", "param_autocomplete", "param_descriptions"]:
+				# Param channels merge per param so a registrar call can refine one
+				# parameter without erasing comment annotations on the others.
+				var merged: Dictionary = base.get(key, {})
+				for param_name in (registrar_overrides[key] as Dictionary):
+					merged[param_name] = (registrar_overrides[key] as Dictionary)[param_name]
+				base[key] = merged
+			else:
+				base[key] = registrar_overrides[key]
+		section_dict[member_name] = base
+		metadata[section] = section_dict
 
 
 ## Members without their own category/icon inherit the class-level defaults

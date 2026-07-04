@@ -238,6 +238,37 @@ func fire() -> void:
 
 That is a complete, fully-described, categorized action: two doc lines and the func.
 
+### Prefer autocomplete? The typed registrar
+
+Comments cannot autocomplete in the script editor - real code can. A provider may declare a
+static hook instead of (or alongside) comment annotations:
+
+```gdscript
+static func _eventforge_register(reg: EventForgeRegistrar) -> void:
+	reg.pack_category("Health")
+	reg.action("heal").name("Heal") \
+		.description("Restores health by an amount.") \
+		.template("health += {amount}") \
+		.param("amount", {"hint": EventForgeRegistrar.EXPRESSION})
+```
+
+Every method is typed, so the editor completes the whole vocabulary, hints argument types,
+and a typo is a compile error instead of an ignored comment. Registrar calls annotate
+EXISTING members (they do not create members) and merge onto comment annotations field by
+field - explicit registrar calls win, and both dialects produce identical definitions
+(test-pinned). The member verbs are `action` / `condition` / `expression` / `trigger` /
+`property` / `member` (no forced type); each returns a chainable builder with `name`,
+`category`, `description`, `icon`, `template`, `display`, `hidden`, `deprecated`, and
+`param(name, {"hint": ..., "options": [...], "autocomplete": [...], "desc": ...})`.
+Pack-level: `pack_category`, `pack_icon`, `tags`.
+
+Two more ways to skip typing the dialect from memory:
+
+- **Right-click any ACE in the picker** - "Copy annotation stub" / "Copy registrar snippet"
+  puts a paste-ready, fully-annotated stub for that exact ACE on the clipboard.
+- **The New Script dialog** offers an "EventForge ACE Provider" template (from
+  `script_templates/`) whose skeleton walks the terse dialect.
+
 ### Annotations: refine the automatic mapping
 
 Put `##` doc-comment lines with `@ace_*` directives directly above a member to override what

@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - the terse provider dialect, part 3: the typed registrar + authoring aids
+
+- **`static func _eventforge_register(reg: EventForgeRegistrar)`**: a fluent, fully typed
+  alternative to the comment dialect - the script editor autocompletes the whole vocabulary
+  and a typo is a compile error. Registrar calls annotate existing members, merge onto
+  comment annotations field by field, and produce definitions identical to the comment
+  dialect (equivalence pinned member-for-member across twin fixtures).
+- **Copy-ready stubs**: right-click any ACE in the picker for "Copy annotation stub" or
+  "Copy registrar snippet" - a paste-ready, fully-annotated skeleton of that exact ACE
+  (params, hints, options, and the typed func/signal line included).
+- **New Script template**: the script dialog gains an "EventForge ACE Provider" template
+  whose skeleton teaches the terse dialect.
+
 ### Added - the terse provider dialect, part 2: one-line params + convention widgets
 
 - **`@ace_param(name, hint: expression, options: a|b, desc: "text")`**: everything about one

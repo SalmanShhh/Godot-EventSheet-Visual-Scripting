@@ -154,6 +154,8 @@ var _recent_list: Tree = null
 var _favorite_button: Button = null
 var _add_button: Button = null
 var _selected_definition: ACEDefinition = null
+var _tree_context_menu: PopupMenu = null
+var _tree_context_definition: ACEDefinition = null
 var _hint: Label = null
 var _context: Dictionary = {}
 var _registry: EventSheetACERegistry = null
@@ -837,12 +839,46 @@ func _on_tree_gui_input(input_event: InputEvent) -> void:
 	var definition: ACEDefinition = clicked.get_metadata(0) as ACEDefinition if clicked != null else null
 	if definition == null:
 		return
-	var pinned: bool = toggle_favorite(definition.provider_id, definition.id)
-	if _info_label != null:
-		_info_label.text = ("⭐ Pinned %s to Favorites" if pinned else "Unpinned %s from Favorites") % definition.display_name
-	if _favorite_button != null and _selected_definition == definition:
-		_favorite_button.set_pressed_no_signal(pinned)
-	_refresh_side_panes()
+	_open_tree_context_menu(definition)
+
+
+## Right-click menu on a result row: the favorite toggle plus copy-ready authoring
+## stubs, so an author can learn either provider dialect from any existing ACE
+## (paste the stub into a provider script and edit).
+func _open_tree_context_menu(definition: ACEDefinition) -> void:
+	if _tree_context_menu == null:
+		_tree_context_menu = PopupMenu.new()
+		_window.add_child(_tree_context_menu)
+		_tree_context_menu.id_pressed.connect(_on_tree_context_menu_pressed)
+	_tree_context_definition = definition
+	_tree_context_menu.clear()
+	_tree_context_menu.add_item("Pin / Unpin Favorite", 0)
+	_tree_context_menu.add_separator()
+	_tree_context_menu.add_item("Copy annotation stub", 1)
+	_tree_context_menu.add_item("Copy registrar snippet", 2)
+	_tree_context_menu.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i.ZERO))
+
+
+func _on_tree_context_menu_pressed(item_id: int) -> void:
+	var definition: ACEDefinition = _tree_context_definition
+	if definition == null:
+		return
+	match item_id:
+		0:
+			var pinned: bool = toggle_favorite(definition.provider_id, definition.id)
+			if _info_label != null:
+				_info_label.text = ("⭐ Pinned %s to Favorites" if pinned else "Unpinned %s from Favorites") % definition.display_name
+			if _favorite_button != null and _selected_definition == definition:
+				_favorite_button.set_pressed_no_signal(pinned)
+			_refresh_side_panes()
+		1:
+			DisplayServer.clipboard_set(EventSheetACEAnnotationStub.comment_stub(definition))
+			if _info_label != null:
+				_info_label.text = "Copied the ## @ace_* stub for %s - paste it into a provider script." % definition.display_name
+		2:
+			DisplayServer.clipboard_set(EventSheetACEAnnotationStub.registrar_stub(definition))
+			if _info_label != null:
+				_info_label.text = "Copied the registrar snippet for %s - paste it into a provider script." % definition.display_name
 
 
 ## Enter in the search box applies the first concrete match — type-and-Enter, no mouse.
