@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Changed - every user guide restyled to one house structure; the Custom Block API gets a real guide
+
+- **`docs/CUSTOM-BLOCKS-GUIDE.md`**: the Custom Block API's dedicated user guide - intro + TOC,
+  scenarios-first, the full kind-contract reference table, schema-vs-resource kinds, the free
+  add/edit UX, the byte-gate safety chapter, built-in kinds reference, seven worked use cases,
+  a headless testing recipe, and tips. The internal spec file is retired; the ACEs guide's
+  blocks chapter is now a pointer.
+- **All nine user guides restyled to the same shape** (recipes, C3 migration, using-with-code,
+  code-free behaviours, performance, MCP server, glossary, uninstall, version control): an
+  intro paragraph, a linked Table of Contents, a scenarios-first opener, tables for reference
+  material, and a derived Tips and Common Mistakes section - with every audited factual claim,
+  command, and code example preserved verbatim.
+- **`CLAUDE.md`** added: operational guidance for AI-assisted sessions (commands, verification
+  traps, standing contracts, house rules); AGENTS.md's stale indentation-split claim fixed
+  (the whole plugin is tabs, suite-enforced).
+
+
 ### Fixed - a silent block-registry init bug + cache hardening (from the dedicated hunt)
 
 - **A rescan-first registry touch silently lost the built-in block kinds** (enum, signal,

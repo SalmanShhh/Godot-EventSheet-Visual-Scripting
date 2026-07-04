@@ -1,11 +1,34 @@
 # Construct 3 → Godot EventSheets Migration Guide
 
-A working map from C3 concepts and vocabulary to their Godot EventSheets equivalents.
-The golden rule: **everything compiles to plain GDScript** - when this table doesn't
-cover something, the GDScript way *is* the EventSheets way (drop a GDScript block in the
-event flow, or write the expression directly - `ƒx` fields are plain GDScript).
+A working map from C3 concepts and vocabulary to their Godot EventSheets equivalents: what each C3 term becomes here, which behaviors have bundled twins, and the one habit worth relearning (reacting instead of polling). The golden rule underneath every table: **everything compiles to plain GDScript** - when a table doesn't cover something, the GDScript way *is* the EventSheets way (drop a GDScript block in the event flow, or write the expression directly - **ƒx** fields are plain GDScript).
 
-## Concepts
+## Table of Contents
+
+1. [Scenarios Where This Guide Helps](#1-scenarios-where-this-guide-helps)
+2. [The Concept Map](#2-the-concept-map)
+3. [Common System Vocabulary](#3-common-system-vocabulary)
+4. [Polling vs Reacting - The Biggest Shift from C3](#4-polling-vs-reacting---the-biggest-shift-from-c3)
+5. [Data Plugins (Dictionary, Array, JSON, XML)](#5-data-plugins-dictionary-array-json-xml)
+6. [Behaviors and Plugins - The Three Lanes](#6-behaviors-and-plugins---the-three-lanes)
+7. [Habits That Transfer Directly](#7-habits-that-transfer-directly)
+8. [Habits to Relearn (the Godot Way Is Better Here)](#8-habits-to-relearn-the-godot-way-is-better-here)
+9. [Importing C3 Projects Directly - A Permanent Non-Goal](#9-importing-c3-projects-directly---a-permanent-non-goal)
+10. [Tips and Common Mistakes](#10-tips-and-common-mistakes)
+
+---
+
+## 1. Scenarios Where This Guide Helps
+
+- **You're porting a C3 game by hand.** Migration is a sheet-by-sheet rebuild (faster than it sounds, because the grammar is the same), and every table here is a lookup for "what is X called now?"
+- **You keep typing C3 words into the picker.** Good - keep doing that. The picker's search understands C3 phrasing ("every tick", "on created", "spawn") via synonym aliases, so type what you know and the Godot equivalent surfaces.
+- **You leaned on a C3 behavior and want its twin.** 31 behavior packs are bundled, including faithful ports of custom C3 addons (Drag & Drop, Virtual Cursor, Health, HTN planner and more) - see [the three lanes](#6-behaviors-and-plugins---the-three-lanes).
+- **Your events all start with "Every tick".** The single biggest mental shift from C3 is reacting to signals instead of polling; [section 4](#4-polling-vs-reacting---the-biggest-shift-from-c3) gives you the rule of thumb.
+- **You relied on the Dictionary / Array / JSON data plugins.** They're first-class variable types here, with their own picker groups - no addon needed.
+- **You're waiting for a `.c3p` importer.** Don't - it's a deliberate, permanent non-goal, and [section 9](#9-importing-c3-projects-directly---a-permanent-non-goal) explains why and what the supported path is.
+
+---
+
+## 2. The Concept Map
 
 | Construct 3 | Godot EventSheets |
 |---|---|
@@ -29,11 +52,13 @@ event flow, or write the expression directly - `ƒx` fields are plain GDScript).
 | Timer behavior | **TimerBehavior pack** (Start/Stop Timer, On Timer) - or a Timer node + `On Timeout` |
 | Flash / Tween behaviors | **FlashBehavior pack** (Flash, On Flash Finished); tweens via a GDScript block (`create_tween()…`) |
 
-## Common System vocabulary
+---
+
+## 3. Common System Vocabulary
 
 | Construct 3 | Godot EventSheets / generated GDScript |
 |---|---|
-| Every tick | `On Process` trigger (`_process(delta)`) - but if you're checking for an *event* (a collision, a timer ending, a key press), prefer the matching **signal** trigger instead; see [Polling vs reacting](#polling-vs-reacting--the-biggest-shift-from-c3) |
+| Every tick | `On Process` trigger (`_process(delta)`) - but if you're checking for an *event* (a collision, a timer ending, a key press), prefer the matching **signal** trigger instead; see [Polling vs reacting](#4-polling-vs-reacting---the-biggest-shift-from-c3) |
 | On start of layout | `On Ready` trigger (`_ready()`) |
 | Compare variable | Expression condition, e.g. `health < 50` (plain GDScript) |
 | Set variable / Add to | `Set Variable` / `Add To Variable` actions, or `health += 10` in ƒx |
@@ -51,7 +76,9 @@ event flow, or write the expression directly - `ƒx` fields are plain GDScript).
 The picker's search understands C3 phrasing ("every tick", "on created", "spawn"…) via
 synonym aliases, so type what you know and the Godot equivalent surfaces.
 
-## Polling vs reacting - the biggest shift from C3
+---
+
+## 4. Polling vs Reacting - The Biggest Shift from C3
 
 In Construct 3 the bread-and-butter pattern is **"every tick, check if X"** - one big event sheet
 asking questions 60 times a second. Godot can do exactly that (`On Process` + a condition), but its
@@ -86,7 +113,9 @@ or touches physics (velocity, `move_and_slide`, raycasts), put it in **On Physic
 on a fixed timestep so physics stays stable. Visual-only, UI, and non-physics logic belong in **On
 Process** (every rendered frame). When in doubt for *movement*, choose Physics Process.
 
-## Data plugins (Dictionary / Array / JSON / XML)
+---
+
+## 5. Data Plugins (Dictionary, Array, JSON, XML)
 
 | Construct 3 | Godot EventSheets |
 | --- | --- |
@@ -98,9 +127,15 @@ Process** (every rendered frame). When in doubt for *movement*, choose Physics P
 Everything in these groups compiles to a single direct GDScript line (the tooltip shows
 it), and anything not covered is one ƒx expression away.
 
-## Behaviors & plugins → the three lanes
+---
 
-**Lane 1 - Godot already owns it** (the picker wraps the native feature):
+## 6. Behaviors and Plugins - The Three Lanes
+
+Every C3 behavior or plugin lands in one of three lanes: Godot already owns it, a portable pack ships it, or you use the Godot feature directly.
+
+### Lane 1 - Godot already owns it
+
+The picker wraps the native feature:
 
 | Construct 3 | Godot EventSheets |
 | --- | --- |
@@ -120,7 +155,9 @@ it), and anything not covered is one ƒx expression away.
 | Timeline (keyframe animation) | **AnimationPlayer** + **AnimationTree** vocabulary (play, travel to state, set blend params, is playing) |
 | Persist behavior | the **Save System** pack (save / load game state), or Godot's `ConfigFile` / `ResourceSaver` directly |
 
-**Lane 2 - portable behaviors** ship as event-sheet packs - **31 are bundled**:
+### Lane 2 - portable behaviors ship as event-sheet packs
+
+**31 are bundled**:
 Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,
 Follow, Car, Tile Movement, Line of Sight (2D & 3D)** (Follow now emits On Reached Target, Car On
 Drift Started / Recovered), the motion packs (**Spring**, **Tween**, and **Juice** for camera/game-feel -
@@ -144,11 +181,15 @@ whole family of nodes (family-scoped) - see the **Family Arena** showcase. Under
 machinery: put nodes in a group (`add_to_group`), pick them with the group pick filter, and attach
 shared behavior packs for shared ACEs - so you can also drop to that lower level directly.
 
-**Lane 3 - use the Godot feature directly**: Multiplayer (high-level multiplayer API),
+### Lane 3 - use the Godot feature directly
+
+Multiplayer (high-level multiplayer API),
 Drawing Canvas (`_draw`), 3D plugins (Godot 3D), Binary Data (`PackedByteArray`),
 i18n (Godot translations).
 
-## Habits that transfer directly
+---
+
+## 7. Habits That Transfer Directly
 
 - Double-click empty space to add an event; right-click for context actions.
 - Drag conditions/actions to reorder; drag events onto events to nest sub-events.
@@ -157,7 +198,9 @@ i18n (Godot translations).
 - Behaviors are added to objects (here: child nodes via the Create Node dialog) and
   configured per-instance in the Inspector.
 
-## Habits to relearn (the Godot way is better here)
+---
+
+## 8. Habits to Relearn (the Godot Way Is Better Here)
 
 - **There is no runtime**: your sheet *is* GDScript after compiling. Read the generated
   script in the GDScript panel - selection highlights both ways. Performance equals
@@ -173,7 +216,9 @@ i18n (Godot translations).
 - **Scenes replace layouts** and instancing replaces "create object by name" - spawn via
   `preload("res://enemy.tscn").instantiate()` in a block or action.
 
-## Importing C3 projects directly - a permanent non-goal
+---
+
+## 9. Importing C3 Projects Directly - A Permanent Non-Goal
 
 There is deliberately **no `.c3p` / C3-clipboard importer**, and there won't be one:
 Construct's internal event JSON is proprietary and unversioned - it churns with C3
@@ -184,3 +229,17 @@ The supported migration path is the one this guide documents: the **vocabulary m
 (C3 phrases work in the picker), **behaviors with C3-parity capabilities**, and
 **text snippets** for moving events between EventSheets projects. Porting a project is
 a sheet-by-sheet rebuild - faster than it sounds, because the grammar is the same.
+
+---
+
+## 10. Tips and Common Mistakes
+
+- **The polling reflex is the #1 imported habit.** Reaching for `On Process` to check for something that *happens at a moment* (a collision, a timer ending, a key press) re-checks 60 times a second for an event Godot already signals. Use the signal trigger; the picker surfaces it first when a polling condition has a signal twin.
+- **But don't contort continuous values into signals.** Camera follow, per-frame smoothing, reading the movement axis, `is_on_floor()` (Godot deliberately has no "landed" signal) are genuinely per-frame work - `On Process` is their correct, idiomatic home.
+- **Movement goes in On Physics Process, not On Process.** Anything touching velocity, `move_and_slide`, or raycasts belongs on the fixed timestep so physics stays stable. When in doubt for movement, choose Physics Process.
+- **There is no separate expression language.** Every ƒx field is plain GDScript - don't hunt for a C3-style expression dictionary; if you can write it in GDScript, it works in the field.
+- **Solid / Jump-thru are scene setup, not events.** They map to Godot collision layers and one-way collision shapes configured on the scene, so don't look for them in the picker.
+- **XML is intentionally unsupported.** Godot has no XML writer/XPath; migrate that data to JSON (the **Variables: JSON** group covers parse, stringify, and file save/load).
+- **Don't wait for a `.c3p` importer.** It's a permanent non-goal (proprietary, unversioned C3 internals); the supported path is the vocabulary map, the parity behavior packs, and text snippets.
+- **Most "pick" logic becomes explicit addressing** (paths, groups, signals) - but check **Nearest Node In Group** / **Furthest Node In Group** / **Nearest Visible In Group** before writing a loop; the common auto-targeting case needs none.
+- **Paste GDScript, get events.** Pasting plain GDScript that contains trigger functions converts to events automatically - handy when moving logic from tutorials or existing scripts.

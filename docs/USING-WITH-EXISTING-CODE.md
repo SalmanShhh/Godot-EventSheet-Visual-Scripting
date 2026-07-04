@@ -8,7 +8,32 @@ The reason it works is one design rule: **a sheet compiles to plain, idiomatic G
 dependency on the plugin.** Delete EventForge and your generated `.gd` files still run. So a sheet and your
 existing code are just GDScript talking to GDScript - there's no runtime bridge to wire up.
 
-There are four things you'll want to do. Each is covered below with the exact code it compiles to.
+## Table of Contents
+
+1. [Scenarios Where This Page Helps](#1-scenarios-where-this-page-helps)
+2. [The Interop Map](#2-the-interop-map)
+3. [Call Your Existing Code from a Sheet](#3-call-your-existing-code-from-a-sheet)
+4. [React to a Signal Your Existing Code Emits](#4-react-to-a-signal-your-existing-code-emits)
+5. [Putting a Sheet on a Node - Two Modes](#5-putting-a-sheet-on-a-node---two-modes)
+6. [Call a Sheet from Your Existing Code](#6-call-a-sheet-from-your-existing-code)
+7. [Adopting an Existing Project: Reverse-Lift](#7-adopting-an-existing-project-reverse-lift)
+8. [When to Wrap Existing Code in Your Own ACEs](#8-when-to-wrap-existing-code-in-your-own-aces)
+9. [Tips and Common Mistakes](#9-tips-and-common-mistakes)
+
+---
+
+## 1. Scenarios Where This Page Helps
+
+- **You have an autoload-heavy project** (score manager, event bus, save system) and want sheets to call it all without writing wrappers.
+- **A node already has a hand-written script** and you want sheet-driven logic on it anyway - behavior mode composes instead of replacing.
+- **Your code emits signals** and a sheet should react to them by name, with no changes on the emitting side.
+- **Your GDScript needs to call INTO a sheet** - read its exports, call its functions, await its signals like any class.
+- **You are migrating an existing codebase** and want your current `.gd` files to open as editable sheets (reverse-lift), not be rewritten.
+- **One system gets reached constantly** and deserves first-class vocabulary - the last section covers when wrapping pays off.
+
+## 2. The Interop Map
+
+Each row is covered below with the exact code it compiles to.
 
 | You want to… | How | No ACE needed? |
 | --- | --- | --- |
@@ -19,7 +44,7 @@ There are four things you'll want to do. Each is covered below with the exact co
 
 ---
 
-## 1. Call your existing code from a sheet
+## 3. Call Your Existing Code from a Sheet
 
 ### Expressions are literally GDScript
 
@@ -78,7 +103,7 @@ GlobalUtils.ping(self)
 
 ---
 
-## 2. React to a signal your existing code emits
+## 4. React to a Signal Your Existing Code Emits
 
 Triggers are how a sheet *reacts*. To react to your own code, use the signal triggers - they connect by
 name, with no need for the emitter to know anything about EventSheets.
@@ -118,7 +143,7 @@ name, with no need for the emitter to know anything about EventSheets.
 
 ---
 
-## 3. Putting a sheet on a node - two modes
+## 5. Putting a Sheet on a Node - Two Modes
 
 This is the one place the answer is "it depends," because of a hard Godot rule: **a node can have only one
 script.**
@@ -159,7 +184,7 @@ once the behavior is in the tree - calls before that warn rather than act.)
 
 ---
 
-## 4. Call a sheet from your existing code
+## 6. Call a Sheet from Your Existing Code
 
 The parity contract works in your favor here too. Because the generated script contains **no plugin symbols**
 (it's enforced by a test that scans for any `EventForge`/`EventSheet` reference), your hand-written GDScript
@@ -180,7 +205,7 @@ overwritten on recompile; the sheet is the source of truth.)
 
 ---
 
-## Adopting an existing project: reverse-lift
+## 7. Adopting an Existing Project: Reverse-Lift
 
 You're not limited to writing new sheets. **Reverse-lift** opens an existing `.gd` file *as* a sheet (or you
 paste GDScript and get events back), so you can bring code you already have into the visual editor and keep
@@ -190,20 +215,7 @@ losslessly.
 
 ---
 
-## The honest limitations
-
-Interop is broad, but it isn't magic - here's the candid list so nothing surprises you:
-
-- **Raw expressions and *Call Method* are stringly and not type-checked at compile time.** A misspelled
-  method, property, autoload, class, node path, or signal name compiles cleanly and only fails when the
-  generated script loads or runs. The editor has an *advisory* lint, but it doesn't block. You don't get
-  autocomplete-grade safety on an existing API you reach this way.
-- **Signal connections to other nodes aren't validated** against the engine's known signals - wrong
-  path/name is a runtime failure. (Only signals on `self` are checked and skipped-with-warning if missing.)
-- **An already-scripted node needs behavior mode** (a child node), not a plain sheet - see section 3.
-- **Cross-scene signal wiring** wants an autoload bus; `get_node("…")` connections are relative to the host.
-
-## When to wrap existing code in your own ACEs (optional)
+## 8. When to Wrap Existing Code in Your Own ACEs
 
 You never *need* to - the escape hatches above cover everything. But if you find yourself reaching for the
 same existing system constantly (your inventory, your dialogue manager), it's worth authoring a **behavior
@@ -216,3 +228,21 @@ upgrade for ergonomics, not a requirement for interop.
 or drop the file in `res://eventsheet_addons/`). Every public method/signal becomes a node-targeted ACE
 with **zero per-member annotations** - see the [Custom ACEs Guide](CUSTOM-ACES-GUIDE.md#5-path-1-auto-ace-provider-scripts).
 For a stateless helper (scoring, inventory math) use plain `## @ace_expose_all` (the owned-instance form).
+
+
+## 9. Tips and Common Mistakes
+
+Interop is broad, but it isn't magic - here's the candid list so nothing surprises you:
+
+- **Raw expressions and *Call Method* are stringly and not type-checked at compile time.** A misspelled
+  method, property, autoload, class, node path, or signal name compiles cleanly and only fails when the
+  generated script loads or runs. The editor has an *advisory* lint, but it doesn't block. You don't get
+  autocomplete-grade safety on an existing API you reach this way.
+- **Signal connections to other nodes aren't validated** against the engine's known signals - wrong
+  path/name is a runtime failure. (Only signals on `self` are checked and skipped-with-warning if missing.)
+- **An already-scripted node needs behavior mode** (a child node), not a plain sheet - see section 5.
+- **Cross-scene signal wiring** wants an autoload bus; `get_node("…")` connections are relative to the host.
+- **The generic *On Signal* handler doesn't bind the signal's arguments** - use a reflected `signal:NAME`
+  trigger when you need the typed parameters.
+- **`host` binds in `_enter_tree`** - a behavior's calls before it enters the tree warn rather than act.
+- **Don't hand-edit the generated `.gd`** - it's overwritten on recompile; the sheet is the source of truth.

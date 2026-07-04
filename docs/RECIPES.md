@@ -1,17 +1,50 @@
-# Recipes - build something, end to end
+# Recipes - Build Something, End to End
 
-Short, concrete walkthroughs. Each assumes the plugin is enabled and you've opened the
-**EventSheet** tab. New to the vocabulary? Keep the [glossary](GLOSSARY.md) open. Coming from
-Construct 3? The [migration guide](C3-MIGRATION-GUIDE.md) maps every concept.
+Short, concrete walkthroughs that each build one real thing - a platformer character, a health system, an auto-attacking shooter with game feel - and show the exact GDScript it compiles to. Each recipe assumes the plugin is enabled and you've opened the **EventSheet** tab. New to the vocabulary? Keep the [glossary](GLOSSARY.md) open. Coming from Construct 3? The [migration guide](C3-MIGRATION-GUIDE.md) maps every concept.
 
-The golden loop for all of these: **New sheet (a `.gd`) → set the host class → add events (pick
+## Table of Contents
+
+1. [Scenarios Where These Recipes Help](#1-scenarios-where-these-recipes-help)
+2. [The Golden Loop](#2-the-golden-loop)
+3. [Hello, Jump - A Platformer Character in Minutes](#3-hello-jump---a-platformer-character-in-minutes)
+4. [Health and Damage](#4-health-and-damage)
+5. [A Pickup Counter](#5-a-pickup-counter)
+6. [Debugging 101](#6-debugging-101)
+7. [Author Your Own Behavior and ACEs](#7-author-your-own-behavior-and-aces)
+8. [Helper ACEs That Save a Code Drop](#8-helper-aces-that-save-a-code-drop)
+9. [Coordinating Many Nodes - With Node, Groups and Aggregates](#9-coordinating-many-nodes---with-node-groups-and-aggregates)
+10. [Building the Godot Way - A Steering Tour](#10-building-the-godot-way---a-steering-tour)
+11. [Auto-Attack with Game Feel - Picking, Line of Sight and the Juice Pack](#11-auto-attack-with-game-feel---picking-line-of-sight-and-the-juice-pack)
+12. [Crowds Without the Hitch - Frame-Spreading](#12-crowds-without-the-hitch---frame-spreading)
+13. [The Game-Feel Toolkit - Hit-Stop, Screenshake, Squash and Punch-Zoom](#13-the-game-feel-toolkit---hit-stop-screenshake-squash-and-punch-zoom)
+14. [Designer Knobs - First-Class Variables and Inspector Drawers](#14-designer-knobs---first-class-variables-and-inspector-drawers)
+15. [Reuse and Scale - Extract-to-Function and Families](#15-reuse-and-scale---extract-to-function-and-families)
+16. [Tips and Common Mistakes](#16-tips-and-common-mistakes)
+
+---
+
+## 1. Scenarios Where These Recipes Help
+
+- **Your first sheet, a blank editor.** [Hello, Jump](#3-hello-jump---a-platformer-character-in-minutes) gets a playable platformer character moving in minutes, pack or from scratch.
+- **The classic game-loop pieces.** Health and damage, pickups and a score HUD - recipes [4](#4-health-and-damage) and [5](#5-a-pickup-counter) cover the staples every game needs.
+- **Something misbehaves and you're about to add `print()`.** [Debugging 101](#6-debugging-101) shows the built-in lint, breakpoints, Live Values + Watch, and Event Trace instead.
+- **You keep re-typing the same rows.** [Extract-to-Function and Families](#15-reuse-and-scale---extract-to-function-and-families) turn repetition into named, reusable abstractions; [recipe 7](#7-author-your-own-behavior-and-aces) turns your logic into a shareable pack.
+- **Hits don't *land*.** The [game-feel toolkit](#13-the-game-feel-toolkit---hit-stop-screenshake-squash-and-punch-zoom) layers hit-stop, trauma screenshake, squash & stretch, and punch-zoom, all fire-and-forget.
+- **The game stutters under crowds.** [Frame-spreading](#12-crowds-without-the-hitch---frame-spreading) spreads heavy work across frames with a budget - three tools, easiest first.
+- **You want to build the Godot way, not the polling way.** The [steering tour](#10-building-the-godot-way---a-steering-tour) walks every nudge: signals over polling, autoloads, behavior components.
+
+---
+
+## 2. The Golden Loop
+
+Every recipe below rides the same loop: **New sheet (a `.gd`) → set the host class → add events (pick
 Conditions + Actions) → save → set the `.gd` as your node's script → Run.** A sheet *is* just
 GDScript now (no `.tres` needed) - so "Open in Godot" edits the same file in the script editor, and
 any `.gd` auto-previews as an event sheet.
 
 ---
 
-## 1. Hello, Jump - a platformer character in minutes
+## 3. Hello, Jump - A Platformer Character in Minutes
 
 The fast path is the bundled **Platformer** behavior pack (coyote time, jump buffering, variable
 jump height, wall jump - all the juice).
@@ -29,7 +62,7 @@ from input; *Is on floor* + *jump pressed* → set `velocity.y`; *On Process* �
 
 ---
 
-## 2. Health & damage
+## 4. Health and Damage
 
 Use the **Health** pack for HP, damage absorption, decaying shield **pools**, and
 On Damaged / On Death triggers - or roll your own with a variable.
@@ -42,7 +75,7 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 
 ---
 
-## 3. A pickup counter
+## 5. A Pickup Counter
 
 1. Global **Variable** `score : int = 0`.
 2. Give coins an `Area2D` in the `"coins"` group.
@@ -52,9 +85,9 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 
 ---
 
-## 4. Debugging 101
+## 6. Debugging 101
 
-When something misbehaves, you have three tools - no `print()` required.
+When something misbehaves, you have four tools - no `print()` required.
 
 - **Check the sheet first.** Tools ▸ **Check Sheet for Errors** lints every ƒx expression and
   GDScript block; a bad one gets a **red marker on its row** and the editor jumps to it (hover the
@@ -72,7 +105,7 @@ When something misbehaves, you have three tools - no `print()` required.
 
 ---
 
-## 5. Author your own behavior / ACEs
+## 7. Author Your Own Behavior and ACEs
 
 No JSON, no boilerplate. Every bundled behaviour pack is a single `.gd` file that compiles with
 **zero GDScript blocks** - you can author yours the same way. Start from **Sheet ▸ New Behaviour
@@ -89,22 +122,7 @@ Two routes:
 
 ---
 
-## 6. Common pitfalls (and what the editor does about them)
-
-- **Naming a variable after a host member.** Calling a variable `position` on a `Node2D` sheet
-  shadows the node's own `position` - the generated script won't load. The **variable dialog now
-  warns + blocks** this as you type, and **Rename Everywhere…** fixes existing references safely.
-- **A ƒx expression that doesn't compile.** You'll see the red row marker (recipe 4). The ƒx field
-  also has live validation + autocomplete as you type.
-- **"It compiled but nothing happens."** Check the script is actually **attached** to the node
-  (Tools ▸ Attach to Selected Node) and the **host class** matches the node type.
-- **Editing the `.gd` in Godot's script editor.** Go ahead - a sheet *is* its `.gd`, so your edits
-  round-trip back to events (function bodies, `if/else`, loops, and `match` all de-code into rows);
-  re-open it as a sheet to keep editing visually. (Only the *output* of a legacy `.tres`-sourced sheet
-  is overwritten on recompile - there, edit the sheet, not the output. For verbatim code that should
-  stay untouched, a **GDScript block** row is still emitted as-is and round-trips.)
-
-## 7. Helper ACEs that save a code drop
+## 8. Helper ACEs That Save a Code Drop
 
 The picker has a row for most things you'd otherwise hand-write. A few that come up constantly:
 
@@ -126,7 +144,7 @@ row instead of a raw block.
 
 ---
 
-## 8. Coordinating many nodes - `With node`, groups & aggregates
+## 9. Coordinating Many Nodes - With Node, Groups and Aggregates
 
 A boss enrages: flash it, then sound the retreat if the wave it commands is nearly dead. One event,
 three Godot idioms - react to a **signal**, scope to a **node**, query a **group** with no loop.
@@ -164,7 +182,7 @@ two group queries, all as editable rows.
 
 ---
 
-## 9. Building the Godot way - a steering tour
+## 10. Building the Godot Way - A Steering Tour
 
 The plugin actively *nudges* a Construct user toward Godot idioms (signals over polling, small
 scenes-as-components, the Inspector, one source of truth) - always as suggestions with the old path one
@@ -224,7 +242,7 @@ all still compile and work. The plugin just makes the Godot way the *easy defaul
 
 ---
 
-## 10. Auto-attack with game feel - picking, Line of Sight & the Juice pack
+## 11. Auto-Attack with Game Feel - Picking, Line of Sight and the Juice Pack
 
 A top-down shooter that auto-fires at the closest enemy it can actually *see*, and makes every hit land:
 the screen kicks, the kill drops into slow motion, and the player squashes on recoil. Every piece here
@@ -272,7 +290,7 @@ camera, and a handful of fire-and-forget juice calls. Want it bouncier or snappi
 
 ---
 
-## 11. Crowds without the hitch - frame-spreading
+## 12. Crowds Without the Hitch - Frame-Spreading
 
 A wave of 800 enemies all recomputing their AI on one frame, a big level streaming in, a navmesh baking -
 do it all in a single frame and the game **stutters**. The fix is to spread the work across frames within a
@@ -344,7 +362,7 @@ $NavRegion.navigation_polygon = result
 
 ---
 
-## 12. The game-feel toolkit - hit-stop, screenshake, squash & punch-zoom
+## 13. The Game-Feel Toolkit - Hit-Stop, Screenshake, Squash and Punch-Zoom
 
 *Game feel* is the difference between a hit that registers and one that *lands*. The **Juice** behavior packs
 the whole toolkit into fire-and-forget actions: attach it as a child (its camera effects **auto-find the
@@ -360,7 +378,7 @@ for `hold` seconds, then eases back (fade curves are Inspector knobs; it emits *
 $JuiceBehavior.slowmo(0.05, 0.08, "realtime")   # an 80 ms freeze on a big hit
 ```
 
-**Screenshake (trauma-based).** *Shake* `amount` (0–1) adds **trauma**; the shake is trauma-*squared* (small
+**Screenshake (trauma-based).** *Shake* `amount` (0-1) adds **trauma**; the shake is trauma-*squared* (small
 = subtle, big = violent), **decays on its own**, and **stacks** - a burst of hits builds a bigger shake. Fire
 it on every hit and forget it:
 
@@ -398,7 +416,7 @@ func _on_big_hit() -> void:
 
 ---
 
-## 13. Designer knobs - first-class variables & Inspector drawers
+## 14. Designer Knobs - First-Class Variables and Inspector Drawers
 
 Turn a variable into a tunable knob your designers see in the Inspector, with a **live widget** for
 its type - no custom editor code.
@@ -420,7 +438,7 @@ Advanced knobs when a variable actually uses them; first run also offers a **Sim
 
 ---
 
-## 14. Reuse & scale - Extract-to-Function & Families
+## 15. Reuse and Scale - Extract-to-Function and Families
 
 Two ways to stop repeating yourself.
 
@@ -430,6 +448,36 @@ Two ways to stop repeating yourself.
 - **Families.** When the same logic should run across *many* objects, set **Sheet Type → Family**:
   the sheet's events iterate over a whole **family** of nodes (family-scoped), so one sheet drives the
   group. The **Family Arena** showcase (`demo/showcase/family_arena.tscn`) shows it end to end.
+
+---
+
+## 16. Tips and Common Mistakes
+
+- **Naming a variable after a host member.** Calling a variable `position` on a `Node2D` sheet
+  shadows the node's own `position` - the generated script won't load. The **variable dialog now
+  warns + blocks** this as you type, and **Rename Everywhere…** fixes existing references safely.
+- **A ƒx expression that doesn't compile.** You'll see the red row marker (recipe 6). The ƒx field
+  also has live validation + autocomplete as you type.
+- **"It compiled but nothing happens."** Check the script is actually **attached** to the node
+  (Tools ▸ Attach to Selected Node) and the **host class** matches the node type.
+- **Editing the `.gd` in Godot's script editor.** Go ahead - a sheet *is* its `.gd`, so your edits
+  round-trip back to events (function bodies, `if/else`, loops, and `match` all de-code into rows);
+  re-open it as a sheet to keep editing visually. (Only the *output* of a legacy `.tres`-sourced sheet
+  is overwritten on recompile - there, edit the sheet, not the output. For verbatim code that should
+  stay untouched, a **GDScript block** row is still emitted as-is and round-trips.)
+- **Run In Background needs a pure callable.** No scene-tree or node access inside it - it runs off
+  the main thread. Compute off-thread, then apply the result in the On Done handler (main thread).
+- **A Budgeted For Each only advances when re-entered.** Drive it from **On Process** - that's what
+  resumes the pass each frame. It works over a snapshot taken once per pass and skips anything freed
+  mid-pass.
+- **Event Trace rides the Live Values stream.** If the cyan fire markers never appear, turn on
+  Tools ▸ Live Values too.
+- **For true hit-stop, set the Slowmo clock to realtime.** Otherwise the hold duration is itself
+  slowed by the time scale.
+- **Don't wire the Juice camera.** Its camera effects auto-find the active camera; attach the
+  behavior and call the actions.
+- **A long sheet is not automatically a bad sheet.** The Project Doctor's fan-out advisory flags by
+  **node count, never row count** - a long, focused state machine on one host is fine.
 
 ---
 

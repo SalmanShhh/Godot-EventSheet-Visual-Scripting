@@ -1,7 +1,8 @@
 # Glossary - Construct 3 ↔ Godot ↔ Godot EventSheets
 
-A one-page Rosetta Stone. If you come from **Construct 3**, read the left column. If you come
-from **Godot**, read the middle. The right column is what the thing is called *here*.
+A one-page Rosetta Stone. If you come from **Construct 3**, read the left column. If you come from **Godot**, read the middle. The right column is what the thing is called *here*. A short table of EventSheets-only terms follows the main one.
+
+## The Rosetta Table
 
 | Construct 3 | Godot | Godot EventSheets | Notes |
 | --- | --- | --- | --- |
@@ -24,29 +25,18 @@ from **Godot**, read the middle. The right column is what the thing is called *h
 | System expressions (`int()`, `random()`…) | GDScript / `@GlobalScope` | **System / Math ACEs** | Plus a **Helpers** set (Set/Get Property, Call Method, Run GDScript) for anything not covered. |
 | Debugger | Remote debugger | **Breakpoints + Live Values** | F9 breakpoints (now **conditional**), editable Live Values, and **Tools ▸ Check Sheet for Errors**. |
 
-## A few EventSheets-only terms
+## EventSheets-Only Terms
 
-- **Host class** - the node type a sheet runs on (set in the Sheet Type dialog). It decides which
-  members your ƒx expressions can reach.
-- **Compile** - turn the sheet into its `.gd` output. Happens on save (compile-on-save) and on
-  export, so a stale script can never ship.
-- **Parity contract** - the generated code is plain, idiomatic GDScript with **no runtime
-  dependency** on the plugin and no performance difference from hand-written code (test-enforced).
-- **ACE picker** - the Create-Node-style dialog you add Conditions/Actions/Triggers from
-  (Favorites + Recent panes, a description panel, search with C3 synonyms).
-- **Reverse-lift** - opening a `.gd` file *as* a sheet, or pasting GDScript, and getting events back.
-  The importer de-codes function bodies, `if/elif/else`, `for`/`while`/`repeat` loops, and `match`
-  into structured rows - lossless and editable both ways.
-- **Family** - a sheet declared as a Family, so its events iterate over a whole family of nodes
-  (family-scoped iteration). See the **Family Arena** showcase.
-- **Extract-to-Function** - turn a selection of actions into a named, reusable function in place;
-  calls then render as a first-class **ƒ** verb.
-- **Inspector drawer** - a live widget for a typed exported variable: a progress bar (int/float),
-  a direction **dial** (Vector2), a colour **swatch** row (Color), a **texture preview** (Texture2D),
-  or an inline **curve** (Curve). Authored via a per-type picker with a live preview; see the
-  **Inspector Playground** showcase. Degrades to a plain field without the editor plugin (parity-clean).
-- **Simple Mode** - a beginner-friendly audience setting (offered on first run) that trims the
-  options and vocabulary shown, so a newcomer isn't handed the full registry at once.
+| Term | Meaning |
+| --- | --- |
+| **Host class** | The node type a sheet runs on (set in the Sheet Type dialog). It decides which members your ƒx expressions can reach. |
+| **Compile** | Turn the sheet into its `.gd` output. Happens on save (compile-on-save) and on export, so a stale script can never ship. |
+| **Parity contract** | The generated code is plain, idiomatic GDScript with **no runtime dependency** on the plugin and no performance difference from hand-written code (test-enforced). |
+| **ACE picker** | The Create-Node-style dialog you add Conditions/Actions/Triggers from (Favorites + Recent panes, a description panel, search with C3 synonyms). |
+| **Reverse-lift** | Opening a `.gd` file *as* a sheet, or pasting GDScript, and getting events back. The importer de-codes function bodies, `if/elif/else`, `for`/`while`/`repeat` loops, and `match` into structured rows - lossless and editable both ways. |
+| **Family** | A sheet declared as a Family, so its events iterate over a whole family of nodes (family-scoped iteration). See the **Family Arena** showcase. |
+| **Extract-to-Function** | Turn a selection of actions into a named, reusable function in place; calls then render as a first-class **ƒ** verb. |
+| **Inspector drawer** | A live widget for a typed exported variable: a progress bar (int/float), a direction **dial** (Vector2), a colour **swatch** row (Color), a **texture preview** (Texture2D), or an inline **curve** (Curve). Authored via a per-type picker with a live preview; see the **Inspector Playground** showcase. Degrades to a plain field without the editor plugin (parity-clean). |
+| **Simple Mode** | A beginner-friendly audience setting (offered on first run) that trims the options and vocabulary shown, so a newcomer isn't handed the full registry at once. |
 
-See also the [C3 migration guide](C3-MIGRATION-GUIDE.md) (every C3 plugin/behavior mapped) and the
-[recipes](RECIPES.md) (build something end to end).
+See also the [C3 migration guide](C3-MIGRATION-GUIDE.md) (every C3 plugin/behavior mapped) and the [recipes](RECIPES.md) (build something end to end).
