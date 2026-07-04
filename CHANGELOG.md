@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - Extract to Function turns captured locals into parameters
+
+- Extracting actions that use an event-scoped name no longer refuses outright. The
+  capture plan is per-name: For-Each iterators always become typed parameters (the
+  loop stays behind, the call passes the live value); a local whose `var` declaration
+  travels WITH the extraction needs nothing; a local declared in a KEPT action becomes
+  a parameter. Only a name declared nowhere visible still refuses - always-valid
+  generated GDScript remains the load-bearing invariant, and the parameterized output
+  is parse-verified in the test. The status message names any new parameters so the
+  signature is no surprise.
+
 ### Changed - Extract to Function honours a partial selection
 
 - Multi-select a run of an event's action cells and Extract All Actions to Function

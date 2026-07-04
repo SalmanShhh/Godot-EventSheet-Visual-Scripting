@@ -102,12 +102,69 @@ static func run() -> bool:
 	sc_action.code = "print(speed)"
 	sc_event.actions.append(sc_action)
 	sc_sheet.events.append(sc_event)
-	all_passed = _check("extract is refused when an action captures an event-local var",
+	# A referenced local declared NOWHERE visible still refuses - the output could not parse.
+	all_passed = _check("extract refuses a local declared nowhere visible",
 		EventSheetDock.extract_actions_to_function(sc_sheet, sc_event, sc_event.actions.duplicate(), "use_speed") == null, true) and all_passed
+
+	# A local DECLARED in a KEPT action becomes a real typed parameter; the call passes it,
+	# and the whole output parses.
+	var cp_sheet: EventSheetResource = EventSheetResource.new()
+	var cp_event: EventRow = EventRow.new()
+	cp_event.trigger_provider_id = "Core"
+	cp_event.trigger_id = "OnReady"
+	var cp_local: LocalVariable = LocalVariable.new()
+	cp_local.name = "speed"
+	cp_local.type_name = "float"
+	cp_event.local_variables.append(cp_local)
+	var declaring: RawCodeRow = RawCodeRow.new()
+	declaring.code = "var speed: float = 4.5"
+	cp_event.actions.append(declaring)
+	var using: RawCodeRow = RawCodeRow.new()
+	using.code = "print(speed)"
+	cp_event.actions.append(using)
+	cp_sheet.events.append(cp_event)
+	var cp_fn: EventFunction = EventSheetDock.extract_actions_to_function(cp_sheet, cp_event, [using], "use_speed")
+	all_passed = _check("a kept-declared local becomes a typed parameter",
+		cp_fn != null and cp_fn.params.size() == 1
+		and (cp_fn.params[0] as ACEParam).id == "speed"
+		and (cp_fn.params[0] as ACEParam).type_name == "float", true) and all_passed
+	all_passed = _check("the call passes the live value",
+		str((cp_event.actions[1] as ACEAction).params.get("args", "")), "speed") and all_passed
+	var cp_output: String = str(SheetCompiler.compile(cp_sheet, "user://extract_captured.gd").get("output", ""))
+	var cp_parse: GDScript = GDScript.new()
+	cp_parse.source_code = cp_output
+	all_passed = _check("the parameterized extraction compiles to parseable GDScript", cp_parse.reload() == OK, true) and all_passed
+
+	# A local whose declaration TRAVELS WITH the extraction needs no parameter at all.
+	var tv_sheet: EventSheetResource = EventSheetResource.new()
+	var tv_event: EventRow = EventRow.new()
+	tv_event.trigger_provider_id = "Core"
+	tv_event.trigger_id = "OnReady"
+	var tv_local: LocalVariable = LocalVariable.new()
+	tv_local.name = "speed"
+	tv_local.type_name = "float"
+	tv_event.local_variables.append(tv_local)
+	var tv_block: RawCodeRow = RawCodeRow.new()
+	tv_block.code = "var speed: float = 4.5\nprint(speed)"
+	tv_event.actions.append(tv_block)
+	tv_sheet.events.append(tv_event)
+	var tv_fn: EventFunction = EventSheetDock.extract_actions_to_function(tv_sheet, tv_event, tv_event.actions.duplicate(), "self contained")
+	all_passed = _check("a declaration travelling with the extraction needs no parameter",
+		tv_fn != null and tv_fn.params.is_empty(), true) and all_passed
 	# A whole-word match only: "speedometer" must NOT be mistaken for the local "speed".
-	sc_action.code = "print(speedometer)"
-	all_passed = _check("scope check is whole-word (speedometer != speed)",
-		EventSheetDock.extract_actions_to_function(sc_sheet, sc_event, sc_event.actions.duplicate(), "use_speed") != null, true) and all_passed
+	var sw_sheet: EventSheetResource = EventSheetResource.new()
+	var sw_event: EventRow = EventRow.new()
+	var sw_local: LocalVariable = LocalVariable.new()
+	sw_local.name = "speed"
+	sw_local.type_name = "float"
+	sw_event.local_variables.append(sw_local)
+	var sw_action: RawCodeRow = RawCodeRow.new()
+	sw_action.code = "print(speedometer)"
+	sw_event.actions.append(sw_action)
+	sw_sheet.events.append(sw_event)
+	var sw_fn: EventFunction = EventSheetDock.extract_actions_to_function(sw_sheet, sw_event, sw_event.actions.duplicate(), "use_speed")
+	all_passed = _check("scope check is whole-word (speedometer != speed, no parameter)",
+		sw_fn != null and sw_fn.params.is_empty(), true) and all_passed
 
 	# ── Partial extraction: a contiguous subset becomes the verb, the rest stays put ──
 	var ps_sheet: EventSheetResource = EventSheetResource.new()

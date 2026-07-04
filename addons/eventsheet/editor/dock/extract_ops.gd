@@ -40,11 +40,14 @@ static func extract_actions_to_function(sheet: EventSheetResource, event: EventR
 			ordered.append(action)
 	if ordered.is_empty():
 		return null
-	# Refuse if any action references an event-SCOPED name (a local variable or For-Each iterator): the
-	# extracted function is a separate method that can't see those, so extracting would emit a .gd that
-	# won't parse. The dock checks this first to show WHICH name; this guard makes the core safe too.
-	if not _scope_capture_offender(event, ordered).is_empty():
+	# Event-SCOPED names the actions reference become real typed PARAMETERS where sound
+	# (iterators; locals declared in kept actions) - the function receives the live
+	# values instead of refusing. A local declared nowhere visible still refuses: the
+	# output could not parse, and always-valid .gd is the load-bearing invariant.
+	var plan: Dictionary = _capture_plan(event, ordered)
+	if not str(plan.get("refused", "")).is_empty():
 		return null
+	var captures: Array = plan.get("params", [])
 	var insert_at: int = event.actions.find(ordered[0])
 	var function_name: String = EventSheetDock._unique_extracted_function_name(sheet, EventSheetDock._sanitize_function_name(raw_name))
 	var display_name: String = raw_name.strip_edges()
@@ -54,6 +57,13 @@ static func extract_actions_to_function(sheet: EventSheetResource, event: EventR
 	function.ace_display_name = display_name if not display_name.is_empty() else function_name.capitalize()
 	function.ace_category = "Functions"
 	function.description = "Extracted from an event - reusable as an ACE."
+	var argument_names: PackedStringArray = PackedStringArray()
+	for capture: Dictionary in captures:
+		var parameter: ACEParam = ACEParam.new()
+		parameter.id = str(capture.get("name"))
+		parameter.type_name = str(capture.get("type")) if _PARAM_SAFE_TYPES.has(str(capture.get("type"))) else "Variant"
+		function.params.append(parameter)
+		argument_names.append(str(capture.get("name")))
 	# Function body: one trigger-less, condition-less event holding the extracted actions in order. A
 	# condition-less event emits its actions directly (no `if` wrapper), so structured AND raw actions
 	# both survive - and the function renders showing those same rows.
@@ -71,7 +81,8 @@ static func extract_actions_to_function(sheet: EventSheetResource, event: EventR
 	call_action.provider_id = "Core"
 	call_action.ace_id = "CallFunction"
 	call_action.codegen_template = "{function_name}({args})"
-	call_action.params = {"function_name": function_name, "args": ""}
+	# Captured scope values ride along as call arguments, matching the params above.
+	call_action.params = {"function_name": function_name, "args": ", ".join(argument_names)}
 	event.actions.insert(clampi(insert_at, 0, event.actions.size()), call_action)
 	return function
 
@@ -81,16 +92,29 @@ static func extract_actions_to_function(sheet: EventSheetResource, event: EventR
 ## extracting an action that uses one would emit a script that won't parse. The dock refuses with this
 ## name (a clear message) instead of silently producing a broken .gd. Whole-word match so "speed" doesn't
 ## trip on "speedometer". Scans GDScript blocks, ACE param/template text, and a Match action's subject.
-static func _scope_capture_offender(event: EventRow, actions: Array) -> String:
-	var scoped: PackedStringArray = PackedStringArray()
+## Event-scope names (locals + For-Each iterators) the given actions actually reference,
+## in declaration order, as [{name, type, kind: "local"|"iterator"}].
+static func _scope_captures(event: EventRow, actions: Array) -> Array:
+	var scoped: Array = []
 	for local_entry: Variant in event.local_variables:
 		if local_entry is LocalVariable and not (local_entry as LocalVariable).name.strip_edges().is_empty():
-			scoped.append((local_entry as LocalVariable).name.strip_edges())
+			scoped.append({"name": (local_entry as LocalVariable).name.strip_edges(), "type": (local_entry as LocalVariable).type_name.strip_edges(), "kind": "local"})
 	for filter_entry: Variant in event.pick_filters:
 		if filter_entry is PickFilter and not (filter_entry as PickFilter).iterator_name.strip_edges().is_empty():
-			scoped.append((filter_entry as PickFilter).iterator_name.strip_edges())
+			scoped.append({"name": (filter_entry as PickFilter).iterator_name.strip_edges(), "type": "Variant", "kind": "iterator"})
 	if scoped.is_empty():
-		return ""
+		return []
+	var text: String = _actions_text(actions)
+	var captures: Array = []
+	for entry: Dictionary in scoped:
+		var word: RegEx = RegEx.new()
+		if word.compile("\\b" + str(entry.get("name")) + "\\b") == OK and word.search(text) != null:
+			captures.append(entry)
+	return captures
+
+
+## The searchable text of a run of actions: raw code, baked templates, and param values.
+static func _actions_text(actions: Array) -> String:
 	var text: String = ""
 	for action: Variant in actions:
 		if action is RawCodeRow:
@@ -101,11 +125,52 @@ static func _scope_capture_offender(event: EventRow, actions: Array) -> String:
 				text += "\n" + str(value)
 		elif action is MatchRow:
 			text += "\n" + (action as MatchRow).match_expression
-	for name: String in scoped:
-		var word: RegEx = RegEx.new()
-		if word.compile("\\b" + name + "\\b") == OK and word.search(text) != null:
-			return name
-	return ""
+	return text
+
+
+## What happens to each referenced event-scope name when these actions leave the event:
+## For-Each iterators always become PARAMETERS (the loop construct stays behind); a
+## local whose `var` declaration is INSIDE the extracted code travels with it (nothing
+## to do); a local declared in a KEPT action becomes a parameter (the call passes the
+## live value); a referenced local declared nowhere visible REFUSES - the output could
+## not parse. Returns {params: [{name, type, kind}], refused: String}.
+static func _capture_plan(event: EventRow, ordered: Array) -> Dictionary:
+	var params: Array = []
+	var refused: String = ""
+	var extracted_text: String = _actions_text(ordered)
+	var kept: Array = []
+	for action: Variant in event.actions:
+		if not ordered.has(action):
+			kept.append(action)
+	var kept_text: String = _actions_text(kept)
+	for capture: Dictionary in _scope_captures(event, ordered):
+		var name: String = str(capture.get("name"))
+		if str(capture.get("kind")) == "iterator":
+			params.append(capture)
+			continue
+		var declares: RegEx = RegEx.new()
+		if declares.compile("\\bvar\\s+" + name + "\\b") != OK:
+			continue
+		if declares.search(extracted_text) != null:
+			continue
+		if declares.search(kept_text) != null:
+			params.append(capture)
+		else:
+			refused = name
+			break
+	return {"params": params, "refused": refused}
+
+
+## Kept for callers that only need a yes/no: the first scope name that would make the
+## extraction refuse (declared nowhere the function could reach), or "".
+static func _scope_capture_offender(event: EventRow, actions: Array) -> String:
+	return str(_capture_plan(event, actions).get("refused", ""))
+
+
+## The GDScript types a captured local may carry into a parameter annotation; anything
+## else (friendly labels, custom classes) emits bare, which the emitter renders as an
+## untyped param - always-valid output beats a wrong annotation.
+const _PARAM_SAFE_TYPES := ["int", "float", "String", "bool", "Vector2", "Vector3", "Color", "Array", "Dictionary", "NodePath", "StringName"]
 
 
 ## Right-click action: extract the event's actions into a NAMED reusable Function (the "create
@@ -135,18 +200,25 @@ func extract_to_function_requested() -> void:
 		for action_index: Variant in selected_indices:
 			subset.append(event.actions[int(action_index)])
 		to_extract = subset
-	# Refuse (with the offending name) rather than silently emit a script that won't parse.
-	var captured: String = _scope_capture_offender(event, to_extract)
-	if not captured.is_empty():
-		_dock._set_status("Can't extract: these actions use \"%s\", which lives in this event's scope (a local variable or loop iterator) - a function can't see it. Move it to a sheet variable first, then extract." % captured, true)
+	# Event-scoped names the actions use become PARAMETERS where sound (the call passes
+	# the live values) - tell the user which, so the new signature is no surprise. A
+	# local declared nowhere the function could reach still refuses, with the fix named.
+	var request_plan: Dictionary = _capture_plan(event, to_extract)
+	var refused_name: String = str(request_plan.get("refused", ""))
+	if not refused_name.is_empty():
+		_dock._set_status("Can't extract: these actions use \"%s\" but nothing visible declares it - the function couldn't compile. Declare it in a kept action or make it a sheet variable, then extract." % refused_name, true)
 		return
+	var capture_names: PackedStringArray = PackedStringArray()
+	for capture: Dictionary in (request_plan.get("params", []) as Array):
+		capture_names.append(str(capture.get("name")))
 	prompt_extract_function_name(func(entered_name: String) -> void:
 		var changed: bool = _dock._perform_undoable_sheet_edit("Extract to Function", func() -> bool:
 			return extract_actions_to_function(_dock._current_sheet, event, to_extract, entered_name) != null
 		)
 		if changed:
 			_dock._refresh_functions_list()
-			_dock._mark_dirty("Extracted %d action(s) into a reusable Function - now callable as an ACE (Functions)." % to_extract.size())
+			var note: String = "" if capture_names.is_empty() else " Event-scoped %s became parameter(s) - the call passes the live value(s)." % ", ".join(capture_names)
+			_dock._mark_dirty("Extracted %d action(s) into a reusable Function - now callable as an ACE (Functions).%s" % [to_extract.size(), note])
 	)
 
 
