@@ -29,6 +29,7 @@ const KNOWN_ANNOTATIONS := {
 	"@ace_family_member": true,
 	"@ace_family_var": true,
 	"@ace_group": true,
+	"@ace_region": true,
 	"@ace_includes": true,
 	"@ace_uses": true
 }

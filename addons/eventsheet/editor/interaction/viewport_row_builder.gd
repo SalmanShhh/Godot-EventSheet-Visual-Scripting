@@ -377,6 +377,12 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 	var kind: EventSheetBlockKind = EventSheetBlockRegistry.get_kind(block.kind_id)
 	var badge_text: String = kind.title if kind != null else "block"
 	var summary_text: String = kind.summary(block) if kind != null else block.kind_id
+	# A region opener wears its own color (label + bubble share it) and shows its
+	# description inline, group-style, so a styled region reads at a glance.
+	var label_color: Color = event_style.object_label_color
+	var region_color: String = str(block.fields.get("color", "")).strip_edges() if block.kind_id == "region" else ""
+	if Color.html_is_valid(region_color):
+		label_color = Color.html(region_color)
 	row_data.spans = [
 		_make_span(
 			badge_text,
@@ -386,9 +392,16 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 		_make_span(
 			summary_text,
 			SemanticSpan.SpanType.VALUE,
-			{"kind": "custom_block_row", "text_color": event_style.object_label_color}
+			{"kind": "custom_block_row", "text_color": label_color}
 		)
 	]
+	var region_description: String = str(block.fields.get("description", "")).strip_edges() if block.kind_id == "region" else ""
+	if not region_description.is_empty() and not bool(block.fields.get("is_end", false)):
+		row_data.spans.append(_make_span(
+			region_description,
+			SemanticSpan.SpanType.VALUE,
+			{"text_color": Color(1.0, 1.0, 1.0, 0.55)}
+		))
 	return row_data
 
 

@@ -291,19 +291,38 @@ class RegionBlockKind extends EventSheetBlockKind:
 	func fields() -> Array[Dictionary]:
 		return [
 			{"id": "label", "label": "Region name", "type": TYPE_STRING, "default": ""},
+			{"id": "description", "label": "Description", "type": TYPE_STRING, "default": ""},
+			{"id": "color", "label": "Bubble color", "type": TYPE_COLOR, "default": ""},
 			{"id": "is_end", "label": "Closing fence (#endregion)", "type": TYPE_BOOL, "default": false},
 		]
 
+	# A styled opener (color and/or description set) emits an `## @ace_region(...)`
+	# marker line ABOVE the fence - metadata-as-attributes, so the .gd stays plain
+	# and an unstyled `#region` line stays byte-identical to what it always was.
 	func emit(block: CustomBlockRow) -> PackedStringArray:
 		if bool(block.fields.get("is_end", false)):
 			return PackedStringArray(["#endregion"])
 		var label: String = str(block.fields.get("label", "")).strip_edges()
-		return PackedStringArray(["#region %s" % label if not label.is_empty() else "#region"])
+		var fence: String = "#region %s" % label if not label.is_empty() else "#region"
+		var marker: String = _style_marker(block)
+		if marker.is_empty():
+			return PackedStringArray([fence])
+		return PackedStringArray([marker, fence])
 
 	func lift(lines: PackedStringArray, i: int) -> Dictionary:
 		var line: String = lines[i]
 		if line == "#endregion":
 			return verified_claim({"label": "", "is_end": true}, lines, i, 1)
+		# A style marker directly above a fence lifts WITH it (two lines, one row).
+		# Emission canonicalizes the marker (color first, then the quoted description),
+		# so a hand-written variant that re-emits differently fails the byte gate and
+		# stays raw - degrade, never corrupt.
+		if line.begins_with("## @ace_region(") and i + 1 < lines.size() \
+				and (lines[i + 1] == "#region" or lines[i + 1].begins_with("#region ")):
+			var styled: Dictionary = _parse_style_marker(line)
+			styled["label"] = lines[i + 1].substr(8) if lines[i + 1].begins_with("#region ") else ""
+			styled["is_end"] = false
+			return verified_claim(styled, lines, i, 2)
 		if line == "#region":
 			return verified_claim({"label": "", "is_end": false}, lines, i, 1)
 		if line.begins_with("#region "):
@@ -315,3 +334,45 @@ class RegionBlockKind extends EventSheetBlockKind:
 			return "end"
 		var label: String = str(block.fields.get("label", "")).strip_edges()
 		return label if not label.is_empty() else "(unnamed)"
+
+	static func _style_marker(block: CustomBlockRow) -> String:
+		var color: String = str(block.fields.get("color", "")).strip_edges()
+		var description: String = str(block.fields.get("description", "")).strip_edges()
+		if color.is_empty() and description.is_empty():
+			return ""
+		var parts: PackedStringArray = []
+		if not color.is_empty():
+			parts.append(color)
+		if not description.is_empty():
+			# The marker must stay one parseable line; inner double quotes soften.
+			parts.append("\"%s\"" % description.replace("\"", "'"))
+		return "## @ace_region(%s)" % ", ".join(parts)
+
+	## Tokens inside the parens, by shape: `#...` = color, `"..."` = description.
+	static func _parse_style_marker(line: String) -> Dictionary:
+		var parsed: Dictionary = {"color": "", "description": ""}
+		var open_index: int = line.find("(")
+		var close_index: int = line.rfind(")")
+		if open_index == -1 or close_index <= open_index:
+			return parsed
+		var payload: String = line.substr(open_index + 1, close_index - open_index - 1)
+		var in_quotes: bool = false
+		var current: String = ""
+		var tokens: Array[String] = []
+		for char_index in range(payload.length()):
+			var character: String = payload.substr(char_index, 1)
+			if character == "\"":
+				in_quotes = not in_quotes
+			if character == "," and not in_quotes:
+				tokens.append(current)
+				current = ""
+				continue
+			current += character
+		tokens.append(current)
+		for token: String in tokens:
+			var trimmed: String = token.strip_edges()
+			if trimmed.begins_with("#"):
+				parsed["color"] = trimmed
+			elif trimmed.begins_with("\"") and trimmed.ends_with("\"") and trimmed.length() >= 2:
+				parsed["description"] = trimmed.substr(1, trimmed.length() - 2)
+		return parsed

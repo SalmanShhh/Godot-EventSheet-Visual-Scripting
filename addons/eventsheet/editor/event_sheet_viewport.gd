@@ -1144,7 +1144,13 @@ func _draw_variable_group_bubbles(width: float) -> void:
 ## Nested regions draw nested bubbles (each opener draws its own), and the left edge
 ## insets with the opener's indent so a region inside a group hugs its lane.
 func _draw_region_bubbles(width: float) -> void:
-	var bubble: StyleBoxFlat = null
+	# While a row/ACE drag is live, the range the pointer would drop INTO glows so
+	# "this lands inside the region" is visible before the drop.
+	var drag_target: int = -1
+	if _drag_row_index >= 0 and _drag_target_index >= 0:
+		drag_target = _drag_target_index
+	elif not _drag_ace_entries.is_empty() and _drag_ace_target_row_index >= 0:
+		drag_target = _drag_ace_target_row_index
 	for index in range(_flat_rows.size()):
 		var row_data: EventRowData = _flat_rows[index].get("row")
 		if row_data == null or row_data.folded or row_data.children.is_empty():
@@ -1154,17 +1160,18 @@ func _draw_region_bubbles(width: float) -> void:
 		var last_index: int = index + _visible_descendant_count(row_data)
 		if last_index <= index or last_index >= _flat_rows.size():
 			continue
-		if bubble == null:
-			bubble = StyleBoxFlat.new()
-			bubble.bg_color = Color(0.0, 0.0, 0.0, 0.0)
-			bubble.border_color = Color(
-				_get_event_style().behavior_accent_color.r,
-				_get_event_style().behavior_accent_color.g,
-				_get_event_style().behavior_accent_color.b,
-				0.65
-			)
-			bubble.set_border_width_all(1)
-			bubble.set_corner_radius_all(7)
+		# The region's own color wins (editable via the fence's edit dialog);
+		# the theme's behavior accent is the default.
+		var accent: Color = _get_event_style().behavior_accent_color
+		var custom_color: String = str(((row_data.source_resource as CustomBlockRow).fields as Dictionary).get("color", "")).strip_edges()
+		if Color.html_is_valid(custom_color):
+			accent = Color.html(custom_color)
+		var glowing: bool = drag_target > index and drag_target <= last_index + 1
+		var bubble: StyleBoxFlat = StyleBoxFlat.new()
+		bubble.bg_color = Color(accent.r, accent.g, accent.b, 0.07) if glowing else Color(0.0, 0.0, 0.0, 0.0)
+		bubble.border_color = Color(accent.r, accent.g, accent.b, 1.0 if glowing else 0.65)
+		bubble.set_border_width_all(2 if glowing else 1)
+		bubble.set_corner_radius_all(7)
 		var left: float = 3.0 + float(row_data.indent * INDENT_WIDTH)
 		var top: float = _get_row_top(index)
 		var bottom: float = _get_row_top(last_index) + _get_row_height(last_index)

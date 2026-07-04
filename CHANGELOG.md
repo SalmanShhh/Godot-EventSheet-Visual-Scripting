@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - regions grow up: color, description, drag-in glow, and everything nests
+
+- **Editable color + description per region** (the fence's edit dialog gains a color picker
+  and a description field, group-style): the label and the bubble outline wear the region's
+  color, and the description reads inline on the opener row. Styled openers round-trip via
+  an `## @ace_region(#color, "description")` marker line above the fence - byte-gated, and
+  a plain `#region` line stays byte-identical to what it always was.
+- **Groups and every block kind nest inside regions**: whatever sits between the fences
+  (groups, enums, signals, preloads, variables, notes) folds with the range.
+- **Drag-in glow**: while dragging any event or code row, the region range the drop would
+  land inside brightens its bubble (thicker border + faint fill), so "this goes in the
+  region" is visible before you let go.
+
 ### Added - collapsible regions: #region fences fold like the script editor
 
 - **Matched `#region` / `#endregion` fence rows now pair into foldable ranges**: the rows

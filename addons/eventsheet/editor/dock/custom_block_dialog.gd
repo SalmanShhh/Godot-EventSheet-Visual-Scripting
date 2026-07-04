@@ -88,6 +88,24 @@ func _make_field_control(field_type: int, current: Variant) -> Control:
 			spin.allow_lesser = true
 			spin.value = float(current) if current != null else 0.0
 			return spin
+		TYPE_COLOR:
+			# Colors store as "#rrggbb" STRINGS in the fields dict (JSON-friendly,
+			# emit-friendly); an unchecked "Tint" box means no color at all ("").
+			var color_row: HBoxContainer = HBoxContainer.new()
+			var use_check: CheckBox = CheckBox.new()
+			use_check.text = "Tint"
+			var picker: ColorPickerButton = ColorPickerButton.new()
+			picker.custom_minimum_size = Vector2(64.0, 0.0)
+			var current_text: String = str(current).strip_edges() if current != null else ""
+			use_check.button_pressed = Color.html_is_valid(current_text)
+			picker.color = Color.html(current_text) if Color.html_is_valid(current_text) else Color(0.54, 0.48, 0.85)
+			picker.disabled = not use_check.button_pressed
+			use_check.toggled.connect(func(on: bool) -> void: picker.disabled = not on)
+			color_row.add_child(use_check)
+			color_row.add_child(picker)
+			color_row.set_meta("use_check", use_check)
+			color_row.set_meta("picker", picker)
+			return color_row
 		_:
 			var edit: LineEdit = LineEdit.new()
 			edit.text = str(current) if current != null else ""
@@ -111,6 +129,10 @@ func _collect_fields(kind: EventSheetBlockKind) -> Dictionary:
 			collected[field_id] = int(numeric) if int(field.get("type", TYPE_STRING)) == TYPE_INT else numeric
 		elif control is LineEdit:
 			collected[field_id] = (control as LineEdit).text
+		elif control is HBoxContainer and (control as HBoxContainer).has_meta("picker"):
+			var use_check: CheckBox = (control as HBoxContainer).get_meta("use_check")
+			var picker: ColorPickerButton = (control as HBoxContainer).get_meta("picker")
+			collected[field_id] = ("#" + picker.color.to_html(picker.color.a < 1.0)) if use_check.button_pressed else ""
 	return collected
 
 

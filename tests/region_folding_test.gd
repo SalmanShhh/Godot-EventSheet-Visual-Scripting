@@ -22,7 +22,7 @@ static func run() -> bool:
 		_region("", true),
 		_comment("outside the region")
 	])
-	var compiled_before: String = str(SheetCompiler.compile(sheet).get("source", ""))
+	var compiled_before: String = str(SheetCompiler.compile(sheet).get("output", ""))
 	var rows: Array = viewport._build_rows_from_sheet(sheet)
 	var openers: Array = _region_rows_in(rows)
 	ok = _check("one region row at top level (the opener)", openers.size(), 1) and ok
@@ -39,7 +39,7 @@ static func run() -> bool:
 
 	# ── Pairing is view-only: the model compiles byte-identically after building ──
 	ok = _check("row building never touches the model bytes",
-		str(SheetCompiler.compile(sheet).get("source", "")) == compiled_before, true) and ok
+		str(SheetCompiler.compile(sheet).get("output", "")) == compiled_before, true) and ok
 
 	# ── Folding: the seeded fold state hides the range in the flat list ──
 	if opener != null:
@@ -61,8 +61,70 @@ static func run() -> bool:
 	ok = _check("an unclosed opener unwinds flat", lone_opener.children.is_empty(), true) and ok
 	ok = _check("its would-be children stay at top level", _last_comment_text_in(lone_open), "collected then unwound") and ok
 
+	# ── Styled regions: color + description ride an @ace_region marker, byte-gated ──
+	var styled_block: CustomBlockRow = _region("Combat", false)
+	styled_block.fields["color"] = "#ff8844"
+	styled_block.fields["description"] = "Damage and healing"
+	var styled_sheet: EventSheetResource = _sheet_with([styled_block, _comment("inside"), _region("", true)])
+	var styled_source: String = str(SheetCompiler.compile(styled_sheet).get("output", ""))
+	ok = _check("styled opener emits the marker + fence pair",
+		styled_source.contains("## @ace_region(#ff8844, \"Damage and healing\")\n#region Combat"), true) and ok
+	# Opened as a .gd (the external path), a styled fence lifts as ONE region row and
+	# the untouched sheet reproduces the file byte-identically - the lossless covenant.
+	var external_source: String = "extends Node\n\n## @ace_region(#ff8844, \"Damage and healing\")\n#region Combat\n# inside\n#endregion\n"
+	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
+	reimported.external_source_path = "user://styled_region.gd"
+	var relifted: Array = _region_blocks_in(reimported)
+	ok = _check("styled fence lifts back as ONE region row", relifted.size(), 2) and ok
+	if relifted.size() == 2:
+		var opener_block: CustomBlockRow = relifted[0]
+		ok = _check("color survives the round-trip", str(opener_block.fields.get("color", "")), "#ff8844") and ok
+		ok = _check("description survives the round-trip", str(opener_block.fields.get("description", "")), "Damage and healing") and ok
+	ok = _check("styled round-trip is byte-identical",
+		str(SheetCompiler.compile(reimported, "user://styled_region.gd").get("output", "")) == external_source, true) and ok
+
+	# A hand-written marker in a non-canonical shape fails the byte gate and stays raw.
+	var near_miss: EventSheetResource = GDScriptImporter.new().import_external_source(
+		"extends Node\n\n## @ace_region(\"desc first\", #ffffff)\n#region Odd\n#endregion\n")
+	ok = _check("non-canonical markers never lift as styled regions",
+		_region_blocks_with_color(near_miss).is_empty(), true) and ok
+
+	# ── Groups and every block kind pair into regions like any other row ──
+	var group := EventGroup.new()
+	group.group_name = "Inner Group"
+	var enum_row := EnumRow.new()
+	var mixed_sheet: EventSheetResource = _sheet_with([
+		_region("Everything", false),
+		group,
+		enum_row,
+		_comment("plain comment"),
+		_region("", true)
+	])
+	var mixed_rows: Array = viewport._build_rows_from_sheet(mixed_sheet)
+	var mixed_opener: EventRowData = _region_rows_in(mixed_rows)[0]
+	ok = _check("a group nests inside a region", mixed_opener.children.size(), 4) and ok
+	if mixed_opener.children.size() == 4:
+		ok = _check("the group row is the region's child", mixed_opener.children[0].source_resource is EventGroup, true) and ok
+		ok = _check("an enum block is the region's child", mixed_opener.children[1].source_resource is EnumRow, true) and ok
+
 	viewport.free()
 	return ok
+
+
+static func _region_blocks_in(sheet: EventSheetResource) -> Array:
+	var output: Array = []
+	for entry: Resource in sheet.events:
+		if entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "region":
+			output.append(entry)
+	return output
+
+
+static func _region_blocks_with_color(sheet: EventSheetResource) -> Array:
+	var output: Array = []
+	for entry: Resource in _region_blocks_in(sheet):
+		if not str((entry as CustomBlockRow).fields.get("color", "")).is_empty():
+			output.append(entry)
+	return output
 
 
 static func _sheet_with(entries: Array) -> EventSheetResource:
