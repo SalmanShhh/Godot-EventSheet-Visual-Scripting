@@ -131,7 +131,8 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 | `v0.9.5` - **Code-Free Authoring & First-Class Variables**: `.gd`-default sheets, zero-block packs, `@export` variables + drawers, addon-author loop | ✅ shipped |
 | `v0.10.0` - **The In-Sheet Authoring Update**: ACE Studio, per-function shell-lift (mid-file + custom-return helpers anchored in place), Anatomy panel, Ghost Row / Param Hop / bulk retune, error→row + paused-at-row, sheet diff, variable folders + subgroups, the Custom Block API, script-intent UX (custom resources + editor tools), full inspector-export coverage | ✅ shipped |
 | `v0.11.0` - **The Structure & Vocabulary Update**: collapsible colored regions, Look Gallery + Inspector preview, localisation vocabulary, any-node reflection, terse providers (all 31 packs migrated + audit-gated), the abstraction levers (Extract/Teach/featured/compression cue), the public `EventSheets` API | ✅ shipped |
-| _Roadmap_ - Menu/HUD pack + UI starter, 2D overlap queries, scene-transition + dialogue packs, community feedback | 🗺 planned |
+| `v0.12` - **The Inspector Designer**: design a whole Inspector visually (live mock, drag to reorder/group, decor), min-max sliders, editable table drawers for arrays, required fields + inline validation - Custom Resources as the hero | 🗺 next |
+| _Roadmap_ - Menu/HUD pack + UI starter, scene-transition + dialogue packs, community feedback | 🗺 planned |
 
 ## Project layout
 
