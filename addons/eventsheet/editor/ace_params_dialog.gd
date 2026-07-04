@@ -286,13 +286,51 @@ func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: Stri
 		spin.value = float(default_value)
 		_fields[key] = spin
 		return spin
+	# Plain string params get the globe: toggled on, the value ships wrapped in
+	# tr("...") so Godot's own POT extraction and TranslationServer pick it up at
+	# runtime - localisation the Godot way, with zero plugin runtime. An incoming
+	# value already wrapped in tr(...) unwraps into the field with the globe lit.
 	var edit: LineEdit = LineEdit.new()
-	edit.text = str(default_value)
+	var unwrapped: Dictionary = translatable_parts(str(default_value))
+	edit.text = str(unwrapped.get("text", str(default_value)))
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# Keyboard flow: Enter in any plain field presses OK (type, Enter, done).
 	if _dialog is AcceptDialog:
 		(_dialog as AcceptDialog).register_text_enter(edit)
 	_fields[key] = edit
-	return edit
+	if field_type != TYPE_STRING and not (default_value is String):
+		return edit
+	var globe: Button = Button.new()
+	globe.toggle_mode = true
+	globe.flat = true
+	globe.text = "🌐"
+	globe.tooltip_text = "Translatable: ships as tr(\"…\") so Godot's localisation\n(POT generation + TranslationServer) translates it at runtime."
+	globe.button_pressed = bool(unwrapped.get("translatable", false))
+	# Quiet until lit: most params are not player-facing text, so the affordance
+	# whispers (dim, flat) and only reads solid once the value is translatable.
+	globe.modulate = Color(1.0, 1.0, 1.0, 1.0 if globe.button_pressed else 0.4)
+	globe.toggled.connect(func(on: bool) -> void:
+		globe.modulate = Color(1.0, 1.0, 1.0, 1.0 if on else 0.4))
+	edit.set_meta("translatable_toggle", globe)
+	var string_row: HBoxContainer = HBoxContainer.new()
+	string_row.add_child(edit)
+	string_row.add_child(globe)
+	return string_row
+
+
+## Splits a stored param value into {text, translatable}: `tr("Hi")` -> {"Hi", true};
+## anything else passes through untouched. Static and exact (only the canonical
+## one-argument literal form unwraps; expressions with context stay verbatim).
+static func translatable_parts(value: String) -> Dictionary:
+	var trimmed: String = value.strip_edges()
+	if trimmed.begins_with("tr(\"") and trimmed.ends_with("\")"):
+		var inner: String = trimmed.substr(4, trimmed.length() - 6)
+		# Reject values whose inner quotes would make this a multi-arg call
+		# (e.g. tr("a", "ctx")) - only the plain literal form round-trips here.
+		var unescaped: String = inner.replace("\\\"", "")
+		if not unescaped.contains("\""):
+			return {"text": inner.replace("\\\"", "\"").replace("\\\\", "\\"), "translatable": true}
+	return {"text": value, "translatable": false}
 
 
 func _create_options_field(key: String, options: Array, default_value: Variant) -> OptionButton:
@@ -1413,6 +1451,14 @@ func _extract_value(field: Control) -> Variant:
 	if field is Button and field.has_meta("key_constant"):
 		return str(field.get_meta("key_constant"))
 	if field is LineEdit:
+		# A pressed globe wraps the literal in tr(...) INSIDE THE VALUE - the whole
+		# translatable feature is this convention: emission substitutes it verbatim
+		# (so Godot's POT scan finds it), the lifter captures it back untouched, and
+		# the toggle merely reads/writes the wrapper. No schema, no compiler change.
+		if field.has_meta("translatable_toggle"):
+			var globe: Button = field.get_meta("translatable_toggle")
+			if globe != null and globe.button_pressed:
+				return "tr(\"%s\")" % (field as LineEdit).text.replace("\\", "\\\\").replace("\"", "\\\"")
 		return (field as LineEdit).text
 	if field is CodeEdit:
 		# Expression fields are single-line CodeEdits (for completion); strip any newline

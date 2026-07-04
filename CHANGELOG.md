@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - translatable text params: localisation the Godot way, part 1
+
+- **A globe toggle on plain string params** (the params dialog): lit, the value ships
+  wrapped in `tr("...")` at its usage site - so Godot's own localisation pipeline does the
+  rest with zero plugin runtime: Project Settings > Localization > POT Generation finds the
+  call in the compiled `.gd`, translators fill `.po`/`.csv`, and `TranslationServer` swaps
+  languages live. The convention lives IN the value, so emission, the reverse-lift, and the
+  byte round-trip are untouched by construction (pinned in `translatable_params_test`).
+- The toggle stays dim until lit (most params are not player-facing text) and unwraps an
+  incoming `tr("...")` value back into plain text with the globe on; the two-argument
+  context form stays verbatim (it belongs to the expression field).
+
 ### Added - region folds survive reopen (editor state, never the bytes)
 
 - **Fold state persists per project**: folded regions are remembered across editor sessions
