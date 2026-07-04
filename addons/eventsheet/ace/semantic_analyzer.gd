@@ -2,6 +2,36 @@
 class_name EventSheetSemanticAnalyzer
 extends RefCounted
 
+## Every annotation token the provider dialect understands, plus the sheet-attribute
+## markers the compiler writes into pack .gd files (a pack is a compiled sheet AND a
+## provider, so those markers are legitimate in scanned sources). Anything else that
+## looks like an @ace_ annotation is a typo and gets a warning instead of vanishing.
+const KNOWN_ANNOTATIONS := {
+	"@ace_hidden": true,
+	"@ace_deprecated": true,
+	"@ace_category": true,
+	"@ace_name": true,
+	"@ace_description": true,
+	"@ace_icon": true,
+	"@ace_action": true,
+	"@ace_condition": true,
+	"@ace_expression": true,
+	"@ace_trigger": true,
+	"@ace_display_template": true,
+	"@ace_codegen_template": true,
+	"@ace_param_options": true,
+	"@ace_param_autocomplete": true,
+	"@ace_param_hint": true,
+	"@ace_tags": true,
+	"@ace_expose_all": true,
+	"@ace_family": true,
+	"@ace_family_member": true,
+	"@ace_family_var": true,
+	"@ace_group": true,
+	"@ace_includes": true,
+	"@ace_uses": true
+}
+
 
 func parse_source_metadata(script: Script) -> Dictionary:
 	var metadata := {
@@ -10,6 +40,9 @@ func parse_source_metadata(script: Script) -> Dictionary:
 		"tags": [],
 		"expose_all": false,
 		"expose_all_mode": "",
+		"default_category": "",
+		"default_icon": "",
+		"unknown_annotations": [],
 		"signals": {},
 		"methods": {},
 		"properties": {}
@@ -29,22 +62,32 @@ func parse_source_metadata(script: Script) -> Dictionary:
 			if str(metadata["class_description"]).is_empty():
 				var doc_lines: Array[String] = []
 				for pending in pending_directives:
-					if pending.begins_with("@ace_tags"):
-						# `@ace_tags(movement, retro, jam)` -> provider tags (searchable
-						# in the picker, filterable over MCP, shown in tooltips).
-						for raw_tag in _extract_annotation_value(pending).split(","):
-							if not raw_tag.strip_edges().is_empty():
-								(metadata["tags"] as Array).append(raw_tag.strip_edges())
-					elif pending.begins_with("@ace_expose_all"):
-						# One class-level opt-in: every own public method/signal becomes an ACE with
-						# zero per-member annotations (type from return type, name from the identifier,
-						# codegen synthesized). `@ace_expose_all(node)` synthesizes the node-targeted
-						# $Provider.method() form (vs the owned-instance default) for behaviors.
-						metadata["expose_all"] = true
-						if _extract_annotation_value(pending).strip_edges() == "node":
-							metadata["expose_all_mode"] = "node"
-					elif not pending.begins_with("@ace_"):
-						doc_lines.append(pending)
+					match _annotation_token(pending):
+						"@ace_tags":
+							# `@ace_tags(movement, retro, jam)` -> provider tags (searchable
+							# in the picker, filterable over MCP, shown in tooltips).
+							for raw_tag in _extract_annotation_value(pending).split(","):
+								if not raw_tag.strip_edges().is_empty():
+									(metadata["tags"] as Array).append(raw_tag.strip_edges())
+						"@ace_expose_all":
+							# One class-level opt-in: every own public method/signal becomes an ACE with
+							# zero per-member annotations (type from return type, name from the identifier,
+							# codegen synthesized). `@ace_expose_all(node)` synthesizes the node-targeted
+							# $Provider.method() form (vs the owned-instance default) for behaviors.
+							metadata["expose_all"] = true
+							if _extract_annotation_value(pending).strip_edges() == "node":
+								metadata["expose_all_mode"] = "node"
+						"@ace_category":
+							# Class-level category is the pack-wide default: every member without
+							# its own @ace_category inherits it (member annotations win).
+							metadata["default_category"] = _extract_annotation_value(pending)
+						"@ace_icon":
+							# Class-level icon likewise defaults every member's picker icon.
+							metadata["default_icon"] = _extract_annotation_value(pending)
+						"":
+							doc_lines.append(pending)
+						var other_token:
+							_note_unknown_annotation(other_token, metadata)
 				metadata["class_description"] = " ".join(doc_lines).strip_edges()
 			pending_directives.clear()
 			pending_export = false
@@ -61,32 +104,84 @@ func parse_source_metadata(script: Script) -> Dictionary:
 			pending_export = true
 			var inline_property_name: String = _parse_var_name(stripped)
 			if not inline_property_name.is_empty():
-				metadata["properties"][inline_property_name] = _build_overrides(pending_directives, true)
+				metadata["properties"][inline_property_name] = _build_overrides(pending_directives, true, metadata)
 				pending_directives.clear()
 				pending_export = false
 			continue
 		if stripped.begins_with("signal "):
 			var signal_name: String = _parse_signal_name(stripped)
-			metadata["signals"][signal_name] = _build_overrides(pending_directives)
+			metadata["signals"][signal_name] = _build_overrides(pending_directives, false, metadata)
 			pending_directives.clear()
 			pending_export = false
 			continue
 		if stripped.begins_with("func "):
 			var method_name: String = _parse_func_name(stripped)
-			metadata["methods"][method_name] = _build_overrides(pending_directives)
+			metadata["methods"][method_name] = _build_overrides(pending_directives, false, metadata)
 			pending_directives.clear()
 			pending_export = false
 			continue
 		if pending_export and stripped.begins_with("var "):
 			var property_name: String = _parse_var_name(stripped)
-			metadata["properties"][property_name] = _build_overrides(pending_directives, true)
+			metadata["properties"][property_name] = _build_overrides(pending_directives, true, metadata)
 			pending_directives.clear()
 			pending_export = false
 			continue
 		if not stripped.begins_with("@"):
 			pending_directives.clear()
 			pending_export = false
+	_apply_class_defaults(metadata)
+	_warn_unknown_annotations(script.resource_path, metadata)
 	return metadata
+
+
+## Members without their own category/icon inherit the class-level defaults
+## (precedence: member annotation > class default > the generator's per-kind fallback).
+func _apply_class_defaults(metadata: Dictionary) -> void:
+	var default_category: String = str(metadata.get("default_category", ""))
+	var default_icon: String = str(metadata.get("default_icon", ""))
+	if default_category.is_empty() and default_icon.is_empty():
+		return
+	for section in ["signals", "methods", "properties"]:
+		var entries: Dictionary = metadata.get(section, {})
+		for member_name in entries:
+			var overrides: Dictionary = entries[member_name]
+			if not default_category.is_empty() and str(overrides.get("category", "")).is_empty():
+				overrides["category"] = default_category
+			if not default_icon.is_empty() and str(overrides.get("icon", "")).is_empty():
+				overrides["icon"] = default_icon
+
+
+func _warn_unknown_annotations(script_path: String, metadata: Dictionary) -> void:
+	var unknown: Array = metadata.get("unknown_annotations", [])
+	if unknown.is_empty():
+		return
+	push_warning("EventSheets: %s ignores unknown ACE annotation(s): %s (typo?)" % [
+		script_path, ", ".join(PackedStringArray(unknown))
+	])
+
+
+func _note_unknown_annotation(token: String, metadata: Dictionary) -> void:
+	if token.is_empty() or KNOWN_ANNOTATIONS.has(token):
+		return
+	var unknown: Array = metadata.get("unknown_annotations", [])
+	if not unknown.has(token):
+		unknown.append(token)
+	metadata["unknown_annotations"] = unknown
+
+
+## The bare annotation token of a directive line: "@ace_name(\"X\")" -> "@ace_name";
+## returns "" for prose lines (anything not starting with @ace_).
+func _annotation_token(directive: String) -> String:
+	if not directive.begins_with("@ace_"):
+		return ""
+	var token: String = "@ace_"
+	for index in range(5, directive.length()):
+		var character: String = directive.substr(index, 1)
+		if character == "_" or (character >= "a" and character <= "z") or (character >= "0" and character <= "9"):
+			token += character
+		else:
+			break
+	return token
 
 
 func get_provider_id(target: Object, source_metadata: Dictionary) -> String:
@@ -116,7 +211,7 @@ func build_trigger_display_name(signal_name: String) -> String:
 	return "On %s" % _humanize_identifier(signal_name)
 
 
-func _build_overrides(directives: Array[String], exported: bool = false) -> Dictionary:
+func _build_overrides(directives: Array[String], exported: bool = false, metadata: Dictionary = {}) -> Dictionary:
 	var overrides := {
 		"exported": exported,
 		"hidden": false,
@@ -128,77 +223,88 @@ func _build_overrides(directives: Array[String], exported: bool = false) -> Dict
 		"icon": "",
 		"forced_ace_type": -1
 	}
+	var doc_lines: Array[String] = []
 	for directive_text in directives:
 		var directive: String = directive_text.strip_edges()
-		if directive.begins_with("@ace_hidden"):
-			overrides["hidden"] = true
-		elif directive.begins_with("@ace_deprecated"):
-			# `## @ace_deprecated("Use knock_back() instead")` — the ACE keeps working (existing sheets
-			# compile) but is hidden from the picker and flagged on hover, mirroring built-in .deprecated().
-			overrides["deprecated"] = true
-			overrides["deprecation_message"] = _extract_annotation_value(directive)
-		elif directive.begins_with("@ace_category"):
-			overrides["category"] = _extract_annotation_value(directive)
-		elif directive.begins_with("@ace_name"):
-			overrides["name"] = _extract_annotation_value(directive)
-		elif directive.begins_with("@ace_description"):
-			overrides["description"] = _extract_annotation_value(directive)
-		elif directive.begins_with("@ace_icon"):
-			overrides["icon"] = _extract_annotation_value(directive)
-		elif directive.begins_with("@ace_action"):
-			overrides["forced_ace_type"] = ACEDefinition.ACEType.ACTION
-		elif directive.begins_with("@ace_condition"):
-			overrides["forced_ace_type"] = ACEDefinition.ACEType.CONDITION
-		elif directive.begins_with("@ace_expression"):
-			overrides["forced_ace_type"] = ACEDefinition.ACEType.EXPRESSION
-		elif directive.begins_with("@ace_trigger"):
-			overrides["forced_ace_type"] = ACEDefinition.ACEType.TRIGGER
-		elif directive.begins_with("@ace_display_template"):
-			overrides["display_template"] = _extract_annotation_value(directive)
-		elif directive.begins_with("@ace_codegen_template"):
-			overrides["codegen_template"] = _extract_annotation_value(directive)
-		elif directive.begins_with("@ace_param_options"):
-			# `@ace_param_options(movement horizontal, vertical, angle)` -> the param
-			# renders as a dropdown (a Combo) in the params dialog.
-			var options_value: String = _extract_annotation_value(directive)
-			var options_split: PackedStringArray = options_value.split(" ", false, 1)
-			if options_split.size() == 2:
-				var param_options: Dictionary = overrides.get("param_options", {})
-				var option_values: Array = []
-				for raw_option in options_split[1].split(","):
-					if not raw_option.strip_edges().is_empty():
-						option_values.append(raw_option.strip_edges())
-				param_options[options_split[0].strip_edges()] = option_values
-				overrides["param_options"] = param_options
-		elif directive.begins_with("@ace_param_autocomplete"):
-			# `@ace_param_autocomplete(anim "idle", "run", "jump")` -> the param renders as
-			# an EDITABLE suggest combo (autocomplete): the user may type any value AND
-			# filter/pick from these. Toggled purely by the behavior's own code (present =
-			# on). Values are inserted verbatim, so quote string suggestions in the source.
-			# Extract the parens content RAW (unlike _extract_annotation_value, which would
-			# strip the trailing quote off the last suggestion).
-			var auto_open: int = directive.find("(")
-			var auto_close: int = directive.rfind(")")
-			var auto_value: String = ""
-			if auto_open != -1 and auto_close > auto_open:
-				auto_value = directive.substr(auto_open + 1, auto_close - auto_open - 1).strip_edges()
-			var auto_split: PackedStringArray = auto_value.split(" ", false, 1)
-			if auto_split.size() == 2:
-				var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
-				var auto_values: Array = []
-				for raw_suggestion in auto_split[1].split(","):
-					if not raw_suggestion.strip_edges().is_empty():
-						auto_values.append(raw_suggestion.strip_edges())
-				param_autocomplete[auto_split[0].strip_edges()] = auto_values
-				overrides["param_autocomplete"] = param_autocomplete
-		elif directive.begins_with("@ace_param_hint"):
-			# `@ace_param_hint(amount expression)` → param "amount" gets hint "expression"
-			# (drives the params dialog: expression ƒx field, variable_reference dropdown…).
-			var hint_parts: PackedStringArray = _extract_annotation_value(directive).split(" ", false)
-			if hint_parts.size() >= 2:
-				var param_hints: Dictionary = overrides.get("param_hints", {})
-				param_hints[hint_parts[0].strip_edges().trim_suffix(",")] = hint_parts[1].strip_edges()
-				overrides["param_hints"] = param_hints
+		match _annotation_token(directive):
+			"":
+				doc_lines.append(directive)
+			"@ace_hidden":
+				overrides["hidden"] = true
+			"@ace_deprecated":
+				# `## @ace_deprecated("Use knock_back() instead")` - the ACE keeps working (existing sheets
+				# compile) but is hidden from the picker and flagged on hover, mirroring built-in .deprecated().
+				overrides["deprecated"] = true
+				overrides["deprecation_message"] = _extract_annotation_value(directive)
+			"@ace_category":
+				overrides["category"] = _extract_annotation_value(directive)
+			"@ace_name":
+				overrides["name"] = _extract_annotation_value(directive)
+			"@ace_description":
+				overrides["description"] = _extract_annotation_value(directive)
+			"@ace_icon":
+				overrides["icon"] = _extract_annotation_value(directive)
+			"@ace_action":
+				overrides["forced_ace_type"] = ACEDefinition.ACEType.ACTION
+			"@ace_condition":
+				overrides["forced_ace_type"] = ACEDefinition.ACEType.CONDITION
+			"@ace_expression":
+				overrides["forced_ace_type"] = ACEDefinition.ACEType.EXPRESSION
+			"@ace_trigger":
+				overrides["forced_ace_type"] = ACEDefinition.ACEType.TRIGGER
+			"@ace_display_template":
+				overrides["display_template"] = _extract_annotation_value(directive)
+			"@ace_codegen_template":
+				overrides["codegen_template"] = _extract_annotation_value(directive)
+			"@ace_param_options":
+				# `@ace_param_options(movement horizontal, vertical, angle)` -> the param
+				# renders as a dropdown (a Combo) in the params dialog.
+				var options_value: String = _extract_annotation_value(directive)
+				var options_split: PackedStringArray = options_value.split(" ", false, 1)
+				if options_split.size() == 2:
+					var param_options: Dictionary = overrides.get("param_options", {})
+					var option_values: Array = []
+					for raw_option in options_split[1].split(","):
+						if not raw_option.strip_edges().is_empty():
+							option_values.append(raw_option.strip_edges())
+					param_options[options_split[0].strip_edges()] = option_values
+					overrides["param_options"] = param_options
+			"@ace_param_autocomplete":
+				# `@ace_param_autocomplete(anim "idle", "run", "jump")` -> the param renders as
+				# an EDITABLE suggest combo (autocomplete): the user may type any value AND
+				# filter/pick from these. Toggled purely by the behavior's own code (present =
+				# on). Values are inserted verbatim, so quote string suggestions in the source.
+				# Extract the parens content RAW (unlike _extract_annotation_value, which would
+				# strip the trailing quote off the last suggestion).
+				var auto_open: int = directive.find("(")
+				var auto_close: int = directive.rfind(")")
+				var auto_value: String = ""
+				if auto_open != -1 and auto_close > auto_open:
+					auto_value = directive.substr(auto_open + 1, auto_close - auto_open - 1).strip_edges()
+				var auto_split: PackedStringArray = auto_value.split(" ", false, 1)
+				if auto_split.size() == 2:
+					var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
+					var auto_values: Array = []
+					for raw_suggestion in auto_split[1].split(","):
+						if not raw_suggestion.strip_edges().is_empty():
+							auto_values.append(raw_suggestion.strip_edges())
+					param_autocomplete[auto_split[0].strip_edges()] = auto_values
+					overrides["param_autocomplete"] = param_autocomplete
+			"@ace_param_hint":
+				# `@ace_param_hint(amount expression)` -> param "amount" gets hint "expression"
+				# (drives the params dialog: expression fx field, variable_reference dropdown...).
+				var hint_parts: PackedStringArray = _extract_annotation_value(directive).split(" ", false)
+				if hint_parts.size() >= 2:
+					var param_hints: Dictionary = overrides.get("param_hints", {})
+					param_hints[hint_parts[0].strip_edges().trim_suffix(",")] = hint_parts[1].strip_edges()
+					overrides["param_hints"] = param_hints
+			var other_token:
+				_note_unknown_annotation(other_token, metadata)
+	if str(overrides["description"]).is_empty() and not doc_lines.is_empty():
+		# Plain `##` prose above a member IS its description: writing a normal GDScript
+		# doc comment is enough; @ace_description is only needed when the picker text
+		# should differ from the code documentation.
+		overrides["description"] = " ".join(doc_lines).strip_edges()
 	return overrides
 
 

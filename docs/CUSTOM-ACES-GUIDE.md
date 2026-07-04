@@ -205,6 +205,35 @@ annotate the exceptions (a custom name the humanizer can't guess, a dropdown, a 
 > Place the marker **before** `class_name`/`extends` (it is a class-level directive). `_`-prefixed and
 > inherited engine members never surface, so even a big class stays a single tidy picker group.
 
+### Write less: prose descriptions and pack-wide defaults
+
+Three shortcuts keep annotation blocks short (all additive - every long form below still works):
+
+- **Your doc comment IS the description.** Plain `##` prose directly above a member becomes the
+  ACE's tooltip text, so a normal GDScript doc comment is enough. `@ace_description` is only
+  needed when the picker text should differ from the code documentation.
+- **Class-level `@ace_category` / `@ace_icon` default the whole pack.** Put them above
+  `class_name` (next to `@ace_expose_all`) and every member without its own category or icon
+  inherits them. Precedence, most specific first: member annotation > class-level default >
+  the automatic per-kind fallback.
+- **Typos warn instead of vanishing.** An unrecognized `@ace_*` token (say `@ace_categry`)
+  prints a warning naming the script and the token; it never silently changes behavior.
+
+```gdscript
+@tool
+## A weapon helper.
+## @ace_category("Weapons")
+class_name WeaponHelper
+extends Node
+
+
+## Fires the weapon once.
+func fire() -> void:
+	pass
+```
+
+That is a complete, fully-described, categorized action: two doc lines and the func.
+
 ### Annotations: refine the automatic mapping
 
 Put `##` doc-comment lines with `@ace_*` directives directly above a member to override what

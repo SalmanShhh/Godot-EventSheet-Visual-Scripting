@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - the terse provider dialect, part 1: write less, typos warn
+
+- **Your doc comment is the description**: plain `##` prose above a provider member now becomes
+  the ACE's tooltip text; `@ace_description` is only needed when the picker text should differ
+  from the code documentation.
+- **Pack-wide defaults**: class-level `@ace_category` / `@ace_icon` (above `class_name`, like
+  `@ace_expose_all`) default every member; member-level annotations still win. Precedence is
+  member > class default > automatic fallback, pinned by tests.
+- **Typos warn instead of vanishing**: an unrecognized `@ace_*` token prints a warning naming
+  the script and token. Annotation dispatch is exact-token now, so a typo like `@ace_names`
+  can no longer prefix-match a real annotation and silently rename an ACE (it used to).
+- A fully-described, categorized action is now 3 lines: one prose doc line, the class-level
+  category (once per pack), and the func. Suite + 31-pack drift gate green throughout.
+
 ### Added - the v0.11 roadmap spec
 
 - **`docs/internal/SPEC-v0.11-roadmap.md`**: five census-grounded feature specs for the next
