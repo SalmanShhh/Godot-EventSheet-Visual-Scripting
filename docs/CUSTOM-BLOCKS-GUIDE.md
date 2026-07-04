@@ -186,46 +186,21 @@ The practical consequence: you cannot break a user's file with a bad kind. The w
 
 ## 10. Use Cases
 
-Each use case is a complete, registerable kind or a usage pattern. Fields and emission shown are real API.
+Brief sketches - each shows a kind's essence (fields in, GDScript out). The Quick Start above has the full class shape; every snippet here drops into it.
 
 ### 1. A TODO marker with an owner
 
-**Scenario:** the team tags work items in scripts as `# TODO(sam): fix the jump arc` and wants them to read as rows.
+**Scenario:** work items tagged `# TODO(sam): fix the jump arc` read as highlighted rows instead of buried comments.
 
 ```gdscript
-@tool
-extends EventSheetBlockKind
-
-func _init() -> void:
-	kind_id = "team.todo"
-	title = "TODO"
-
 func fields() -> Array[Dictionary]:
-	return [
-		{"id": "owner", "label": "Owner", "type": TYPE_STRING, "default": ""},
-		{"id": "task", "label": "Task", "type": TYPE_STRING, "default": ""},
-	]
+	return [{"id": "owner", "type": TYPE_STRING, "default": ""}, {"id": "task", "type": TYPE_STRING, "default": ""}]
 
 func emit(block: CustomBlockRow) -> PackedStringArray:
-	var owner: String = str(block.fields.get("owner", "")).strip_edges()
-	var task: String = str(block.fields.get("task", "")).strip_edges()
-	if task.is_empty():
-		return PackedStringArray()
-	return PackedStringArray(["# TODO(%s): %s" % [owner, task]])
-
-func lift(lines: PackedStringArray, i: int) -> Dictionary:
-	var probe: RegEx = RegEx.new()
-	probe.compile("^# TODO\\(([^)]*)\\): (.+)$")
-	var found: RegExMatch = probe.search(lines[i])
-	if found == null:
-		return {}
-	return verified_claim({"owner": found.get_string(1), "task": found.get_string(2)}, lines, i, 1)
-
-func summary(block: CustomBlockRow) -> String:
-	return "%s (%s)" % [str(block.fields.get("task", "")), str(block.fields.get("owner", "?"))]
+	return PackedStringArray(["# TODO(%s): %s" % [block.fields.get("owner"), block.fields.get("task")]])
 ```
 
-Note: the lift is deliberately strict (exact `# TODO(...)`: shape). Looser TODO comments stay ordinary comments, which is correct.
+Note: keep the lift probe strict (exact `# TODO(...)` shape) - looser comments correctly stay plain comments.
 
 ### 2. A tuning-constant block
 
@@ -311,9 +286,35 @@ Note: bridge-registered kinds resolve exactly like folder-scanned ones; duplicat
 
 **Scenario:** a reviewer leaves `## NOTE:` lines while reading a teammate's compiled sheet in the script editor; the author sees them as highlighted rows in the sheet view and deletes them as they are addressed.
 
+### 8. A debug toggle designers flip in a dialog
+
+**Scenario:** `const DEBUG_DRAW := false` lives in the sheet as a checkbox block, not a line someone has to type correctly.
+
+```gdscript
+func fields() -> Array[Dictionary]:
+	return [{"id": "enabled", "type": TYPE_BOOL, "default": false}]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const DEBUG_DRAW := %s" % ("true" if bool(block.fields.get("enabled")) else "false")])
+```
+
+### 9. A scene requirement the Doctor enforces
+
+**Scenario:** a block states `## REQUIRES: Camera2D child` in the sheet, and a pack-registered Doctor check reads the emitted line to flag scenes missing it.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## REQUIRES: %s" % str(block.fields.get("requirement", ""))])
+
+# Elsewhere, the pack teaches the Doctor to enforce it (see BUILDING-ON-EVENTSHEETS.md):
+EventSheets.register_doctor_check("my_pack.requirements", _check_scene_requirements)
+```
+
+Note: the block and the health check ship together - the sheet documents the contract, the Doctor enforces it.
+
 ### Other uses at a glance
 
-**License headers** as a one-field block that keeps the exact comment banner canonical across every generated file. **Debug toggles** as a `const DEBUG_DRAW := false` block designers flip in a dialog. **Scene requirements** as a structured comment block (`## REQUIRES: Camera2D child`) that a Project Doctor check can read. **Signal-bus wiring notes** that document which autoload signals a sheet listens to. **Version stamps** for packs, one canonical `const PACK_VERSION := "1.2"` line each.
+**License headers** as a one-field block that keeps the exact comment banner canonical across every generated file. **Signal-bus wiring notes** that document which autoload signals a sheet listens to. **Version stamps** for packs, one canonical `const PACK_VERSION := "1.2"` line each. **Spawn-point manifests** listing marker names a level script reads. **Asset checklists** that name the sounds and textures an event section expects.
 
 ---
 

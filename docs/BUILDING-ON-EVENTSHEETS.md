@@ -11,8 +11,9 @@ Everything an extension needs lives in **one class: `EventSheets`** (`addons/eve
 5. [Codegen Services](#5-codegen-services)
 6. [Project Health Services](#6-project-health-services)
 7. [Full Reference](#7-full-reference)
-8. [Testing Your Extension](#8-testing-your-extension)
-9. [Tips and Common Mistakes](#9-tips-and-common-mistakes)
+8. [Use Cases](#8-use-cases)
+9. [Testing Your Extension](#9-testing-your-extension)
+10. [Tips and Common Mistakes](#10-tips-and-common-mistakes)
 
 ---
 
@@ -142,7 +143,91 @@ A check receives every non-template sheet path plus the shared findings array, a
 
 `compile()`'s Dictionary keys: `"output"` (the source text: this key, not "source"), `"success"`, `"errors"`, `"warnings"`, `"source_map"`. `doctor()`'s: `"findings"` (each `{severity, check, path, message}`), `"errors"`, `"warnings"`, `"infos"`.
 
-## 8. Testing Your Extension
+## 8. Use Cases
+
+Brief sketches - each is one real pattern, ready to adapt.
+
+### 1. A palette command that stamps a session header
+
+**Scenario:** every work session starts with a dated comment at the top of the sheet.
+
+```gdscript
+EventSheets.register_palette_command("Add Session Header", func() -> void:
+	EventSheets.edit("Add Session Header", func(sheet: EventSheetResource) -> void:
+		var comment: CommentRow = CommentRow.new()
+		comment.text = "Session: %s" % Time.get_date_string_from_system()
+		sheet.events.insert(0, comment)))
+```
+
+### 2. A CI script that health-checks the whole project
+
+**Scenario:** the build server fails a merge when any sheet drifted from its generated script.
+
+```gdscript
+# headless: godot --headless --path . --script ci_check.gd
+var report: Dictionary = EventSheets.doctor()
+quit(1 if int(report.get("errors", 0)) > 0 else 0)
+```
+
+### 3. Byte-gating your pack's emission in its own tests
+
+**Scenario:** your custom block kind changes its emit(); the pack's test proves no user file can ever corrupt.
+
+```gdscript
+ok = _check("my block round-trips", EventSheets.round_trips(fixture_source), true) and ok
+```
+
+### 4. A Doctor check that ships with your pack
+
+**Scenario:** your dialogue pack knows a broken setup when it sees one - and says so in every Doctor runner.
+
+```gdscript
+EventSheets.register_doctor_check("dialogue.missing_files", func(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		if _references_missing_dialogue(sheet_path):
+			findings.append({"severity": "warning", "check": "dialogue.missing_files", "path": sheet_path, "message": "References a .dialogue file that does not exist."}))
+```
+
+### 5. Registering your plugin's vocabulary on load
+
+**Scenario:** your editor plugin adds verbs to every project it is installed in - no files copied.
+
+```gdscript
+func _enter_tree() -> void:
+	EventSheets.register_provider_script("res://addons/my_plugin/my_verbs.gd")
+```
+
+### 6. A one-shot codemod over the open sheet
+
+**Scenario:** an audio rebalance halves every Play Sound volume in the sheet - one undo step.
+
+```gdscript
+EventSheets.edit("Halve Sound Volumes", func(sheet: EventSheetResource) -> bool:
+	var changed: bool = false
+	for row: Resource in sheet.events:
+		changed = _halve_volumes_in(row) or changed
+	return changed)
+```
+
+### 7. A tool UI built from reflected vocabulary
+
+**Scenario:** your custom dock lists everything a selected node class can do, using the same definitions the picker shows.
+
+```gdscript
+for definition: ACEDefinition in EventSheets.class_vocabulary("CharacterBody2D"):
+	list.add_item("%s  (%s)" % [definition.display_name, definition.category])
+```
+
+### 8. Jump-open a sheet from your own panel
+
+**Scenario:** your quest tool deep-links from a quest entry to the sheet that implements it.
+
+```gdscript
+if EventSheets.open_sheet("res://quests/rescue_quest.gd"):
+	EventSheets.set_status("Opened the Rescue quest sheet.")
+```
+
+## 9. Testing Your Extension
 
 The plugin's own API test (`tests/eventsheets_api_test.gd`) is a working template: codegen and vocabulary pins run dock-free; editor pins build a real dock (`EventSheetEditor.new()` then `setup(sheet)`) with a fake undo manager. For your extension, the highest-value pins are:
 
@@ -151,7 +236,7 @@ The plugin's own API test (`tests/eventsheets_api_test.gd`) is a working templat
 - **Palette presence:** after registration, your title appears in `EventSheets.palette_commands()`.
 - **Doctor findings:** register your check, run `EventSheets.doctor()` over a fixture project state, and pin that your finding appears with the right severity.
 
-## 9. Tips and Common Mistakes
+## 10. Tips and Common Mistakes
 
 - **Never reach past the facade.** Dock internals (`_` members) move between releases; the extraction refactors rename and relocate them freely. `EventSheets` is the only surface with a stability promise.
 - **Never cache rows across `edit()` calls.** Undo commits replace resources with snapshot duplicates. The row you held is now detached from the sheet; re-fetch from `current_sheet()`.
