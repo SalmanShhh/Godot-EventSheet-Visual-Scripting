@@ -126,6 +126,18 @@ func _store_definition(definition: ACEDefinition) -> void:
 	if definition == null:
 		return
 	var key: String = _make_key(definition.provider_id, definition.id)
+	# The same provider+id can arrive through two registration channels in one build
+	# (a scanned addon that is ALSO a registered autoload, or a sheet re-registering a
+	# scanned script). Replace in BOTH structures: the keyed lookup already took the
+	# newest, but a flat append double-listed the ACE in the picker and search.
+	if _definitions_by_key.has(key):
+		var existing_index: int = _definitions.find(_definitions_by_key[key])
+		if existing_index >= 0:
+			_definitions[existing_index] = definition
+		else:
+			_definitions.append(definition)
+		_definitions_by_key[key] = definition
+		return
 	_definitions_by_key[key] = definition
 	_definitions.append(definition)
 

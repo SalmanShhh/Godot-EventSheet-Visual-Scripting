@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed - a twice-registered provider no longer double-lists in the picker
+
+- The same provider reachable through two registration channels in one build (a scanned
+  addon that is ALSO a registered autoload, or a sheet re-registering a scanned script)
+  appended its definitions twice to the registry's flat list - every ACE showed twice in
+  the picker and search, though keyed lookups were unaffected. The store now replaces in
+  both structures (newest wins). Pinned in ace_registry_cache_test.
+
 ### Fixed - autoload providers call THE singleton, never a second copy
 
 - **Template-less methods on an autoload provider used to bake to the owned-instance

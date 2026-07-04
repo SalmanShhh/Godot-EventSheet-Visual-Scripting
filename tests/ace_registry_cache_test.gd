@@ -56,6 +56,26 @@ static func run() -> bool:
 	all_passed = _check("a pathless source is uncacheable",
 		EventSheetACERegistry._source_cache_key(pathless.new()), "") and all_passed
 
+	# The same provider reachable through TWO registration channels in one build (scanned
+	# addon + registered autoload, or a sheet re-registering a scanned script) must not
+	# double-list in the picker: the flat list dedups by provider+id, newest wins.
+	var registry_e: EventSheetACERegistry = EventSheetACERegistry.new()
+	var source_c: Object = provider_script.new()
+	var source_d: Object = provider_script.new()
+	registry_e.refresh_from_sources([source_c, source_d], false)
+	var seen_keys: Dictionary = {}
+	var duplicate_keys: int = 0
+	for definition: ACEDefinition in registry_e.get_all_definitions():
+		var flat_key: String = "%s::%s" % [definition.provider_id, definition.id]
+		if seen_keys.has(flat_key):
+			duplicate_keys += 1
+		seen_keys[flat_key] = true
+	all_passed = _check("a twice-registered provider lists each ACE once", duplicate_keys, 0) and all_passed
+	if source_c is Node:
+		(source_c as Node).free()
+	if source_d is Node:
+		(source_d as Node).free()
+
 	if source_a is Node:
 		(source_a as Node).free()
 	if source_b is Node:
