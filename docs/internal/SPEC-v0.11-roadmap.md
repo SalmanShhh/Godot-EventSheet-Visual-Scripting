@@ -174,6 +174,10 @@ established delegate pattern, not inline). No compiler changes at all in this ch
 
 ## 3. Collapsible region markers
 
+STATUS: SHIPPED (all three phases + beyond-spec upgrades from review: Discord-bubble outline,
+editable color + description via an @ace_region marker, drag-in glow, pill-free rendering;
+commits 0e3ebb0 / f48d14f / 787dcd2 / 36dabcf / 401a58e / 80cfe7f).
+
 ### Today (census)
 
 - The `region` block kind shipped with the Custom Block API (block_registry.gd:283): emits
