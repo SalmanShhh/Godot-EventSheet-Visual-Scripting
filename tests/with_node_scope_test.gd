@@ -1,6 +1,6 @@
-# Godot EventSheets — "With node X:" scope block (event-sheet-style pick-once).
+# Godot EventSheets - "With node X:" scope block (event-sheet-style pick-once).
 #
-# A row with a with_node_target scopes its actions — and its descendant sub-events' actions — to that
+# A row with a with_node_target scopes its actions - and its descendant sub-events' actions - to that
 # node: any action that leaves its "On node" target on the host (blank, or the "self" of the group/meta
 # ACEs) inlines to X ($Enemy.play()). Actions that are not node-targetable (Print) run on the host, and
 # an explicit target the author set is never overridden. Verifies the compile model the user chose
@@ -77,7 +77,7 @@ static func _compile_scope_sheet() -> String:
 
 
 ## A Core action with empty codegen_template, so the compiler resolves the registered (post-processed)
-## template — exercising the real {target.} node-scoped descriptors.
+## template - exercising the real {target.} node-scoped descriptors.
 static func _action(ace_id: String, params: Dictionary) -> ACEAction:
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = "Core"

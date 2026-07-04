@@ -1,8 +1,8 @@
-# Godot EventSheets — Inspector attribute drawers (Tier 3)
+# Godot EventSheets - Inspector attribute drawers (Tier 3)
 #
 # One EditorInspectorPlugin recognizes the `eventsheet:<drawer>` marker that the compiler bakes into
 # @export_custom hint strings, and swaps in a richer editor control. THE DEGRADATION CONTRACT: generated
-# scripts stay plain GDScript — without this plugin (or in exported games) the property renders as a normal
+# scripts stay plain GDScript - without this plugin (or in exported games) the property renders as a normal
 # field, so the parity covenant is untouched. The actual widgets live in drawer_widgets.gd (reused by the
 # Variable dialog's live preview); here we only map a marker+type to the right EditorProperty and forward edits.
 #
@@ -72,7 +72,7 @@ static func parse_drawer_hint(hint_string: String) -> Dictionary:
 
 
 ## Best-effort resource-class guard for the TYPE_OBJECT drawers. A generated sheet only ever pairs the marker
-## with the right resource type (the compiler type-gates emission), but a hand-edited marker could mismatch —
+## with the right resource type (the compiler type-gates emission), but a hand-edited marker could mismatch -
 ## e.g. a curve_editor on a Texture2D var. A null value (the default) is allowed (can't tell yet, and the
 ## picker is harmless); a present value of the wrong class fails, so we degrade to a plain field.
 static func _value_is_kind(object: Object, name: String, type_class: String) -> bool:

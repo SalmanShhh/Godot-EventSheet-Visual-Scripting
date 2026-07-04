@@ -1,4 +1,4 @@
-# Godot EventSheets — semantic 3-way git merge driver for sheets (.tres)
+# Godot EventSheets - semantic 3-way git merge driver for sheets (.tres)
 #
 # A serialized .tres is effectively unmergeable by git's line merge (sub-resource ids,
 # ext_resource indices shift). This driver merges sheets at the ROW level keyed on the
@@ -12,7 +12,7 @@
 #                        driver = tools/sheet_merge.sh %O %A %B %P
 # Git calls the driver with the ancestor (%O), ours (%A, also the output), theirs (%B) and
 # the pathname (%P). The driver writes the merged sheet back to %A and exits 0 (clean) or
-# 1 (conflicts remain — both versions are kept, fenced by ⚠ comment rows, for the user to
+# 1 (conflicts remain - both versions are kept, fenced by ⚠ comment rows, for the user to
 # resolve in the editor).
 @tool
 extends SceneTree
@@ -30,7 +30,7 @@ func _init() -> void:
 	var ours: EventSheetResource = _load_sheet(args[1])
 	var theirs: EventSheetResource = _load_sheet(args[2])
 	if ours == null or theirs == null:
-		# Not both event sheets — let git fall back to its default merge.
+		# Not both event sheets - let git fall back to its default merge.
 		quit(1)
 		return
 	if ancestor == null:
@@ -227,7 +227,7 @@ static func _merge_rows(ancestor: Array, ours: Array, theirs: Array, conflicts: 
 			continue
 		if anc.has(key):
 			# Not in ours, was in ancestor: ours deleted it. If theirs edited it, that's a
-			# delete-vs-edit conflict — restore theirs' version so the change isn't lost.
+			# delete-vs-edit conflict - restore theirs' version so the change isn't lost.
 			if _row_sig(row) != _row_sig(anc[key]):
 				conflicts.append("row %s (deleted here, edited upstream)" % key)
 				result.append(row)
@@ -253,7 +253,7 @@ static func _function_map(functions: Array) -> Dictionary:
 
 
 ## Stable identity: events/groups by their UID, uid-less rows by their content (so an edit
-## to a comment reads as remove+add — acceptable for the rare comment-vs-comment case).
+## to a comment reads as remove+add - acceptable for the rare comment-vs-comment case).
 static func _row_key(row: Variant) -> String:
 	if row is EventRow:
 		return "event:" + (row as EventRow).event_uid
@@ -291,5 +291,5 @@ static func _function_param_names(event_function: EventFunction) -> PackedString
 
 static func _conflict_marker(side: String) -> CommentRow:
 	var comment: CommentRow = CommentRow.new()
-	comment.text = "⚠ MERGE CONFLICT %s — keep one, delete the other, then re-save" % side
+	comment.text = "⚠ MERGE CONFLICT %s - keep one, delete the other, then re-save" % side
 	return comment

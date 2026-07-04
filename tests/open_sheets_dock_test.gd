@@ -109,7 +109,7 @@ static func run() -> bool:
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	editor.setup(EventSheetResource.new())
-	# The panel now shares the left rail (a VBox) with the Anatomy panel — assert it lives inside
+	# The panel now shares the left rail (a VBox) with the Anatomy panel - assert it lives inside
 	# the workspace body's subtree, not that it is a DIRECT child (the rail wrapper is layout detail).
 	all_passed = _check("panel is mounted inside the workspace body",
 		editor._open_sheets_panel != null and editor._workspace_body.is_ancestor_of(editor._open_sheets_panel), true) and all_passed

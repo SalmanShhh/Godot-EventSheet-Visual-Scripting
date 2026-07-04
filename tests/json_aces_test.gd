@@ -1,8 +1,8 @@
-# Godot EventSheets — JSON ACEs (serialize / parse / validate / file).
+# Godot EventSheets - JSON ACEs (serialize / parse / validate / file).
 #
 # The JSON module is its own thing (consolidated out of Collections). Verifies the JSON vocabulary
 # registers under the dedicated "JSON" category, the codegen templates are the exact native JSON /
-# FileAccess calls, and — for the save/load + parse-into-variable actions — that a compiled sheet
+# FileAccess calls, and - for the save/load + parse-into-variable actions - that a compiled sheet
 # round-trips a value through JSON text and a file on disk (catching any silent runtime error a
 # string-only check would miss). The 5 moved ACEs keep their ace_ids + templates (the covenant).
 @tool

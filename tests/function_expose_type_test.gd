@@ -1,8 +1,8 @@
-# EventForge — three-way function expose (event-sheet-parity function system).
+# EventForge - three-way function expose (event-sheet-parity function system).
 #
 # When a sheet function is exposed as an ACE, the directive follows its RETURN TYPE: a void function
 # publishes as an action, a bool function as a condition, any other value as an expression. (One
-# method maps to exactly one ACE — see ace_generator's one-definition-per-method — so it is one
+# method maps to exactly one ACE - see ace_generator's one-definition-per-method - so it is one
 # directive, not several.) The lifter recognizes all three so a published function round-trips; the
 # exposed type is re-derived from the return type, so no extra state is stored. Existing packs expose
 # only void functions, so this is byte-identical for them (verified separately by drift=0).

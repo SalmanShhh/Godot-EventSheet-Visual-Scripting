@@ -1,4 +1,4 @@
-# EventForge — ACE registry
+# EventForge - ACE registry
 # Combines built-in ACE descriptors with runtime registered providers.
 @tool
 class_name ACERegistry
@@ -24,14 +24,14 @@ static func _ensure_builtin_cache() -> void:
 			# doubles up in the picker). Surface it loudly at load time; find_duplicate_ids()
 			# is the test hook that fails the suite if a new ACE collides with an existing id.
 			if _builtin_index.has(key):
-				push_error("EventForge: duplicate built-in ACE id '%s' — rename one; the later descriptor shadows the earlier in the picker index." % key)
+				push_error("EventForge: duplicate built-in ACE id '%s' - rename one; the later descriptor shadows the earlier in the picker index." % key)
 			_builtin_cache.append(normalized)
 			_builtin_index[key] = normalized
 
 
 ## Returns the set of "provider::ace_id" keys appearing more than once in the given
 ## descriptor list (defaults to the built-in set). A non-empty result means a later
-## descriptor silently shadows an earlier one in the picker index — rename one.
+## descriptor silently shadows an earlier one in the picker index - rename one.
 static func find_duplicate_ids(descriptors: Array = []) -> PackedStringArray:
 	var source: Array = descriptors
 	if source.is_empty():

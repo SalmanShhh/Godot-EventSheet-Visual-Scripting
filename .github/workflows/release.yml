@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g. 0.2.0) — tag v<version> must exist or will be created from this ref"
+        description: "Version to release (e.g. 0.2.0) - tag v<version> must exist or will be created from this ref"
         required: true
 
 permissions:

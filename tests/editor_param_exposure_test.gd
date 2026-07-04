@@ -1,4 +1,4 @@
-# EventSheet — Editor parameter exposure tests
+# EventSheet - Editor parameter exposure tests
 # Covers EditorParamStore, ACEDefinition exposure fields, ParamDefaultResolver,
 # and ACEGenerator exposure inference.
 @tool
@@ -238,7 +238,7 @@ static func _test_ace_generator_exposure_inference() -> bool:
 	var status_text: ACEDefinition = registry.find_definition(provider_id, "method:get_status_label")
 	passed = _check("string-returning expression is editor_exposed", status_text.editor_exposed if status_text != null else false, true) and passed
 
-	# Falsy param default (0) must be preserved — not skipped — by the resolver
+	# Falsy param default (0) must be preserved - not skipped - by the resolver
 	var store2 := EditorParamStore.new()
 	var resolver2 := ParamDefaultResolver.new()
 	resolver2.set_param_store(store2)
@@ -295,7 +295,7 @@ static func _test_exposed_node_scope_and_undo() -> bool:
 	passed = _check("exposed node has at least one dynamic property", first_property.is_empty(), false) and passed
 	if not first_property.is_empty():
 		# The undo adapter speaks EditorUndoRedoManager's positional add_do_method(obj,
-		# method, ...args) contract — which is what production always uses. A plain
+		# method, ...args) contract - which is what production always uses. A plain
 		# UndoRedo takes a single Callable, so its add_do_method rejects the positional
 		# call (Godot 4.7 errors instead of silently no-op'ing), and the store never
 		# updates. Use the editor-shaped fake here to exercise the real code path.

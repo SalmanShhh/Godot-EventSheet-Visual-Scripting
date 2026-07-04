@@ -1,6 +1,6 @@
-# EventForge — RawCodeRow resource
+# EventForge - RawCodeRow resource
 # Passthrough GDScript row: the in-sheet escape hatch. Holds verbatim GDScript that is
-# emitted as-is (the compiler reads ONLY `code` — the editor-UX fields below are never
+# emitted as-is (the compiler reads ONLY `code` - the editor-UX fields below are never
 # compiled, so they don't affect codegen, byte-exact round-trips, or the no-drift packs).
 @tool
 class_name RawCodeRow

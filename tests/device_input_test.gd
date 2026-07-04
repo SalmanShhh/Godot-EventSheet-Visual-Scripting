@@ -1,4 +1,4 @@
-# Godot EventSheets — Device input vocabulary (Keyboard/Mouse/Gamepad/Touch) +
+# Godot EventSheets - Device input vocabulary (Keyboard/Mouse/Gamepad/Touch) +
 # the press-a-key capture workflow + dialog-width hygiene.
 @tool
 class_name DeviceInputTest

@@ -1,5 +1,5 @@
-# EventForge — Phase 3.5 (Stage D): the corrected bare-expression condition fallback.
-# An `if` whose condition no specific ACE claims still lifts to a real event — each top-level term
+# EventForge - Phase 3.5 (Stage D): the corrected bare-expression condition fallback.
+# An `if` whose condition no specific ACE claims still lifts to a real event - each top-level term
 # becomes an Expression Is True condition (bare {expr}). The split is top-level-only: `and` inside
 # parens/brackets/braces or a string literal does NOT fragment the term (the naive split produced
 # garbage rows like "f(a" + "b)"). The byte-identical recompile gates every reconstruction.

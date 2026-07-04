@@ -1,4 +1,4 @@
-# Godot EventSheets — Paste GDScript as events
+# Godot EventSheets - Paste GDScript as events
 # Raw GDScript pasted into a sheet converts through the open-as-sheet pipeline: trigger
 # functions ACE-lift into real events, declarations become variable rows, everything else
 # stays verbatim GDScript blocks (lossless). Non-code clipboard text is left to the other

@@ -58,7 +58,7 @@ func _build_include_manager() -> void:
 	_include_preview.bbcode_enabled = true
 	_include_preview.custom_minimum_size = Vector2(0.0, 76.0)
 	right.add_child(EventSheetPopupUI.titled_card("Preview", _include_preview))
-	# Provenance view — the included sheet's actual rows, read-only (a preview copy; edits here
+	# Provenance view - the included sheet's actual rows, read-only (a preview copy; edits here
 	# never touch the source). "Open Source Sheet" is the jump-to-source.
 	var preview_scroll: ScrollContainer = ScrollContainer.new()
 	preview_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -150,7 +150,7 @@ func _add_include(path: String) -> void:
 		_dock._set_status("%s is already included." % path.get_file(), true)
 		return
 	if EventSheetIncludes.would_create_cycle(_dock._current_sheet_path, path):
-		_dock._set_status("Can't add %s — it would create an include cycle." % path.get_file(), true)
+		_dock._set_status("Can't add %s - it would create an include cycle." % path.get_file(), true)
 		return
 	if _dock._perform_undoable_sheet_edit("Add Include", func() -> bool:
 		_dock._current_sheet.includes.append(path)

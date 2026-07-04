@@ -76,7 +76,7 @@ func _on_comment_dialog_confirmed() -> void:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Comment updated.")
 
-# ── With-node scope dialog ("With node X:" — scope a row's actions to another node) ──
+# ── With-node scope dialog ("With node X:" - scope a row's actions to another node) ──
 var _with_node_dialog: ConfirmationDialog = null
 var _with_node_target_edit: LineEdit = null
 var _with_node_dialog_target: EventRow = null

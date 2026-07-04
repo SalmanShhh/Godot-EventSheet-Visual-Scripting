@@ -1,5 +1,5 @@
 # One-shot maintenance: presets created before the column-header tokens existed render
-# headers with generic defaults — backfill them from each preset's own palette
+# headers with generic defaults - backfill them from each preset's own palette
 # (background-derived surface; existing condition/action text colors).
 @tool
 extends SceneTree

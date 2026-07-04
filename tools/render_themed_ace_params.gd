@@ -1,4 +1,4 @@
-# EventForge — render harness (dev tool) for the themed ACE params dialog. Builds a 2-parameter
+# EventForge - render harness (dev tool) for the themed ACE params dialog. Builds a 2-parameter
 # ACE and opens the dialog so the sunken form card + per-param descriptions can be eyeballed and
 # the dialog confirmed not to balloon. Run NON-headless:
 #   godot --path . --script tools/render_themed_ace_params.gd
@@ -31,7 +31,7 @@ func _on_frame() -> void:
 			{"id": "amount", "display_name": "Amount", "default_value": "10",
 				"description": "How much health to subtract from the target each time this runs."},
 			{"id": "target", "display_name": "Target", "default_value": "%Enemy",
-				"description": "The node to damage — drag a scene node onto the field or pick one."},
+				"description": "The node to damage - drag a scene node onto the field or pick one."},
 		]
 		_dialog.open(d, {})
 		return

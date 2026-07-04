@@ -1,4 +1,4 @@
-# EventForge — Tree-placed variables (movable / insertable like events)
+# EventForge - Tree-placed variables (movable / insertable like events)
 #
 # Variables can be placed directly in the event tree as LocalVariable resources: they render
 # as variable rows, can be inserted below a row via the context menu, move with the normal

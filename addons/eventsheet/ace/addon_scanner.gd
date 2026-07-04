@@ -1,4 +1,4 @@
-# EventSheet — Zero-config ACE addon scanner
+# EventSheet - Zero-config ACE addon scanner
 # Drop a provider script (or a folder of scripts) into res://eventsheet_addons/ and its
 # annotated members become project-wide ACEs automatically. No manifest, no JSON, no
 # per-sheet setup: all metadata derives from the script itself (class_name → provider name,

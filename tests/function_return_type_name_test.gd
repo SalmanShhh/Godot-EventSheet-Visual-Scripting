@@ -1,7 +1,7 @@
-# EventForge — EventFunction.return_type_name: a function can declare a return type a Variant.Type
+# EventForge - EventFunction.return_type_name: a function can declare a return type a Variant.Type
 # can't name (a custom class, an engine class, a typed collection). The emitter uses it verbatim, the
 # empty-body stub falls back to `return null` (valid for any object/collection), and the "Ships as:"
-# signature formatter honours it — so a Studio-authored verb returning `-> Node2D` round-trips. The
+# signature formatter honours it - so a Studio-authored verb returning `-> Node2D` round-trips. The
 # reverse AUTO-LIFT of such a helper stays OFF (a mid-file private helper would reorder the file and
 # fail the byte-verify), so this pins the FORWARD primitive + the drift=0 baseline is unregressed.
 @tool

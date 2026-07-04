@@ -1,4 +1,4 @@
-# Godot EventSheets — Input vocabulary + Wait/Await (Godot-familiarity batch 1)
+# Godot EventSheets - Input vocabulary + Wait/Await (Godot-familiarity batch 1)
 # Input conditions/expressions with InputMap-driven action dropdowns, _input /
 # _unhandled_input lifecycle triggers (compile + verify-lift), and the System: Wait as
 # `await` actions (handlers are implicit coroutines, so await is safe anywhere).

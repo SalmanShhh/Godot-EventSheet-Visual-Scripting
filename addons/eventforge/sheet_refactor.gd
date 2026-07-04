@@ -1,13 +1,13 @@
-# Godot EventSheets — model-level refactors (True Rename)
+# Godot EventSheets - model-level refactors (True Rename)
 #
 # Word-boundary symbol rename across every surface a name can appear in:
 # the variables key itself, LocalVariable rows, ACE param values and comments,
 # raw-code rows (row- and ACE-level), pick filters, trigger args, other variables'
-# attribute strings (show_if etc.), function names and bodies — and comments/prose,
+# attribute strings (show_if etc.), function names and bodies - and comments/prose,
 # deliberately (a rename should keep prose honest; the opposite trade from the
 # doctor's usage detection, which excludes comments).
 #
-# What it never touches: codegen templates, preludes and member declarations —
+# What it never touches: codegen templates, preludes and member declarations -
 # those are machine-baked from descriptors and substitute params at compile time;
 # a variable named "value" must not rewrite a `{value}` placeholder (covenant:
 # refactors rewrite sheet model text, never baked machinery).
@@ -37,7 +37,7 @@ static func rename_symbol(sheet: EventSheetResource, old_name: String, new_name:
 		return 0
 	var counter: Dictionary = {"count": 0}
 	var regex: RegEx = RegEx.create_from_string("\\b%s\\b" % old_name)
-	# The declaration itself: a sheet-variables key (order preserved — Dictionaries
+	# The declaration itself: a sheet-variables key (order preserved - Dictionaries
 	# keep insertion order, so rebuild in place)…
 	if sheet.variables.has(old_name):
 		var rebuilt: Dictionary = {}
@@ -97,7 +97,7 @@ static func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter
 			_rename_in_rows(event.sub_events, regex, new_name, counter)
 
 
-## Rewrites String values in place (recursing into nested Dictionaries — variable
+## Rewrites String values in place (recursing into nested Dictionaries - variable
 ## attributes live one level down).
 static func _rename_in_dictionary(values: Dictionary, regex: RegEx, new_name: String, counter: Dictionary) -> void:
 	for key: Variant in values:

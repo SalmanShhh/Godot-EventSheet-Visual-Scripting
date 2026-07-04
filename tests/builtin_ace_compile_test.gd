@@ -1,24 +1,24 @@
-# EventForge — Built-in ACE compile-coverage guard
+# EventForge - Built-in ACE compile-coverage guard
 #
 # "Do all the built-in ACEs actually produce valid GDScript?" This test answers it directly:
 # it walks EVERY built-in descriptor, fills each param with a realistic value of its type,
 # runs the real ActionCodegen._apply_template substitution, wraps the result in its declared
-# host class (node_type), and reload()s it as GDScript. A template that doesn't parse — a typo,
-# an unbalanced paren, a method that doesn't exist on its host — fails here, not in a game.
+# host class (node_type), and reload()s it as GDScript. A template that doesn't parse - a typo,
+# an unbalanced paren, a method that doesn't exist on its host - fails here, not in a game.
 #
-# Honest coverage: two kinds of ACE are listed-and-skipped rather than mis-tested —
+# Honest coverage: two kinds of ACE are listed-and-skipped rather than mis-tested -
 #   (1) a param with a bare placeholder the user MUST supply that has no compilable stand-in
-#       (a function name to call, a group name) — see the skip in _fill_params;
+#       (a function name to call, a group name) - see the skip in _fill_params;
 #   (2) ACEs that are correct GDScript but only compile inside a context this standalone
 #       harness deliberately doesn't build (a loop, a return-typed function, compiler-injected
-#       companion state, a user-chosen call target) — see NOT_STANDALONE.
+#       companion state, a user-chosen call target) - see NOT_STANDALONE.
 # Triggers are skipped (they name a signal, they have no inline template). Nothing is dropped
 # silently: every skip is printed.
 @tool
 class_name BuiltinACECompileTest
 extends RefCounted
 
-## Correct ACEs that cannot compile in ISOLATION — they need surrounding context this harness
+## Correct ACEs that cannot compile in ISOLATION - they need surrounding context this harness
 ## intentionally does not build: a loop (break/continue), a return-typed function (return X),
 ## compiler-injected companion state (frame-budget / every-N-seconds accumulators emitted as
 ## sibling declarations), a preloaded user resource, or a user-supplied call/connect target.
@@ -84,9 +84,9 @@ static func _fill_params(d: ACEDescriptor) -> Dictionary:
 		elif hint.begins_with("signal_reference"):
 			params[p.id] = "sig"                     # the declared scaffold signal
 		elif d.codegen_template.contains("{%s.}" % p.id) or d.codegen_template.contains("{, %s}" % p.id):
-			params[p.id] = default.strip_edges()     # optional {id.} prefix / {, id} arg — default or "" both drop cleanly
+			params[p.id] = default.strip_edges()     # optional {id.} prefix / {, id} arg - default or "" both drop cleanly
 		elif not default.strip_edges().is_empty():
-			params[p.id] = default                   # concrete default — used verbatim (self, KEY_SPACE, "enemies", a member name, …)
+			params[p.id] = default                   # concrete default - used verbatim (self, KEY_SPACE, "enemies", a member name, …)
 		else:
 			var typed: String = _value_for_type(str(p.type_name))
 			if not typed.is_empty():
@@ -113,7 +113,7 @@ static func _wrap(d: ACEDescriptor, params: Dictionary) -> String:
 		ACEDescriptor.ACEType.EXPRESSION:
 			body_lines = ["var __e = (%s)" % line, "__sink(__e)"]
 		_:
-			for stmt: String in line.split("\n"):    # ACTION — may be multi-statement
+			for stmt: String in line.split("\n"):    # ACTION - may be multi-statement
 				body_lines.append(stmt)
 	var body: String = ""
 	for l: String in body_lines:
@@ -121,7 +121,7 @@ static func _wrap(d: ACEDescriptor, params: Dictionary) -> String:
 	# Stand-ins for the run context a real sheet provides: untyped `v` (a sheet variable of any
 	# type), `item` (a For-Each iterator), `event` (an input event), `text` (a string operand),
 	# `delta`, `sig` (a signal). Each is declared ONLY when the host doesn't already expose that
-	# member, so e.g. `var text` never collides with Label.text — the template then resolves
+	# member, so e.g. `var text` never collides with Label.text - the template then resolves
 	# against the host's own member instead.
 	var scaffold: String = ""
 	for sv: String in ["v", "item", "event", "text", "data", "delta"]:

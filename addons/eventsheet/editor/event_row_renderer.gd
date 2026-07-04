@@ -251,7 +251,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	_draw_indent_guides(control, row_rect, row_data.indent)
 	if not row_data.error_message.is_empty():
 		# Error → row deep-link: a red left stripe + faint wash flag the offending row (the
-		# message shows in the row tooltip). A fixed error red — not yet a theme token.
+		# message shows in the row tooltip). A fixed error red - not yet a theme token.
 		var error_stripe: Color = Color("#ff5555")
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), error_stripe, true)
 		control.draw_rect(row_rect, Color(error_stripe.r, error_stripe.g, error_stripe.b, 0.08), true)
@@ -261,7 +261,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), firing_stripe, true)
 		control.draw_rect(row_rect, Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, 0.10), true)
 	if row_data.selected and not has_span_selection:
-		# Slightly tempered for single-cell rows (comments especially) — selection
+		# Slightly tempered for single-cell rows (comments especially) - selection
 		# stays unmistakable via the outline, without the full-strength flood fill.
 		var row_selection: Color = selection_fill
 		if row_data.row_type != EventRowData.RowType.EVENT:
@@ -274,7 +274,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	# event it lights up the entire block and reads as "selected", which is confusing.
 	if row_data.hovered and row_data.row_type != EventRowData.RowType.EVENT:
 		# Softened (user call: full-strength fill + outline on comment rows strained
-		# the eyes): a faint tint, no outline — selection keeps the strong look.
+		# the eyes): a faint tint, no outline - selection keeps the strong look.
 		var soft_hover: Color = hover_fill
 		soft_hover.a *= 0.4
 		control.draw_rect(row_rect, soft_hover, true)
@@ -425,14 +425,14 @@ func _draw_spans(
 ) -> void:
 	# Multi-line blocks (in-flow GDScript, action-lane comments) paint as ONE merged
 	# cell: union rects per block, background/hover/selection drawn once. The per-line
-	# spans remain the layout + hit-test truth — the merge is purely visual (user
+	# spans remain the layout + hit-test truth - the merge is purely visual (user
 	# call: a 3-line GDScript action is one resized cell, not three stacked cells).
 	var groups: Dictionary = resolve_block_groups(row_data.spans)
 	var block_unions: Dictionary = groups["unions"]
 	var block_heads: Dictionary = groups["heads"]
 	# Selection/background for a block draws once at the union, regardless of WHICH
 	# member line is the selected/hovered one (a single click selects only the clicked
-	# line's span, often not the head — guarding on the head dropped the highlight).
+	# line's span, often not the head - guarding on the head dropped the highlight).
 	var drawn_block_selection: Dictionary = {}
 	# Declutter: the "+ Add action" affordance is hidden at rest and revealed when the row is
 	# hovered or selected, so a populated sheet reads calmly instead of repeating "+ Add action"
@@ -467,7 +467,7 @@ func _draw_spans(
 				if not in_block:
 					_draw_chip_selected_span(control, span, metadata, selection_fill, total_selected_spans > 1)
 				elif not drawn_block_selection.has(head_for_block):
-					# One draw per block — alpha would otherwise stack when several
+					# One draw per block - alpha would otherwise stack when several
 					# members are selected (rubber-band).
 					drawn_block_selection[head_for_block] = true
 					var selected_rect_span: SemanticSpan = SemanticSpan.new()
@@ -573,7 +573,7 @@ func _draw_spans(
 			control.draw_rect(swatch_rect, swatch as Color, true)
 			control.draw_rect(swatch_rect, Color(0.0, 0.0, 0.0, 0.55), false, 1.0)
 			# Record where the swatch landed so a click can hit-test it and open the inline colour picker
-			# (no dialog) — the viewport reads span.metadata["swatch_rect"] in _handle_mouse_button.
+			# (no dialog) - the viewport reads span.metadata["swatch_rect"] in _handle_mouse_button.
 			span.metadata["swatch_rect"] = swatch_rect
 		# Strike through the text when the ACE is disabled OR its whole row (event/group/
 		# comment) is disabled, so "commented out" reads clearly like in code.
@@ -612,7 +612,7 @@ const CODE_CELL_STRIPE := Color(0.56, 0.58, 0.63, 0.38)
 
 ## Groups consecutive multi-line block spans (block_lines>1, starting at block_line 0)
 ## into one visual cell. Returns {"unions": {span_index: Rect2}, "heads":
-## {span_index: head_index}} covering every member of every block — so background,
+## {span_index: head_index}} covering every member of every block - so background,
 ## hover and selection can draw once at the union no matter which member line the
 ## user clicked (the per-line spans stay the hit-test truth).
 static func resolve_block_groups(spans: Array) -> Dictionary:

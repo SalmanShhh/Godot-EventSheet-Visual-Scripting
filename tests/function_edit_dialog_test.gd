@@ -1,6 +1,6 @@
-# EventForge — editing an existing verb in the ACE Studio (double-click a Define block). Pins the
+# EventForge - editing an existing verb in the ACE Studio (double-click a Define block). Pins the
 # dialog's edit mode: prefill (name/kind card/value type/params/expose block), the own-name collision
-# exemption, the apply-updates-in-place path (found by ORIGINAL name in the LIVE sheet — the undo
+# exemption, the apply-updates-in-place path (found by ORIGINAL name in the LIVE sheet - the undo
 # funnel replaces resources, so a held reference would go stale), and the byte-safety property that
 # confirming with nothing changed is a no-op (an accidental open-and-OK on a reverse-lifted helper
 # must not dirty the sheet or clear its annotation-suppression flag).

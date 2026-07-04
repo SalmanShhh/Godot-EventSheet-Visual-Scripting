@@ -1,9 +1,9 @@
-# Godot EventSheets — Group aggregate expressions (Sum / Average / Lowest / Highest in group).
+# Godot EventSheets - Group aggregate expressions (Sum / Average / Lowest / Highest in group).
 #
 # These roll a numeric member up across every node in a group without writing a loop (the "average
 # health of all enemies" case). Verifies they register under "Groups", carry the exact reduce-based
-# one-liners, compile to valid GDScript inside a real sheet, and — running the reduce lambda against a
-# live array of objects — actually compute the right totals (catching any silent error in the lambda).
+# one-liners, compile to valid GDScript inside a real sheet, and - running the reduce lambda against a
+# live array of objects - actually compute the right totals (catching any silent error in the lambda).
 # The headless test runner does its work in _init(), before the SceneTree root viewport exists, so the
 # reduce is exercised against a literal array (the novel part); get_nodes_in_group is stock Godot API.
 # Min/Max are checked on an empty array so the no-members case yields the +/-INF sentinel, never a crash.
@@ -71,7 +71,7 @@ static func _reduce_value(by_id: Dictionary, ace_id: String, nodes: Array) -> Va
 
 
 ## Compiles a sheet that assigns each aggregate expression to a member var in _ready; true if the
-## generated GDScript reloads cleanly (no run needed — this only proves the templates are valid).
+## generated GDScript reloads cleanly (no run needed - this only proves the templates are valid).
 static func _compiles(by_id: Dictionary) -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node"

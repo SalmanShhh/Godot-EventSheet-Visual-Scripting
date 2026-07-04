@@ -1,4 +1,4 @@
-# EventForge — Pairing polish: reverse provenance, ƒx expression validation, row-cell icons
+# EventForge - Pairing polish: reverse provenance, ƒx expression validation, row-cell icons
 #
 # Reverse provenance: clicking generated code selects the sheet row (smallest containing
 # source-map range, falling outward when an inner resource has no row). ƒx fields

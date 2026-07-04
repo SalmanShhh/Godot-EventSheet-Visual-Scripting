@@ -3,7 +3,7 @@ class_name EventSheetMenuBar
 extends RefCounted
 # The dock's top toolbar + menu bar: the HFlowContainer that flow-wraps the grouped
 # Sheet/Add/Edit/View/Tools MenuButtons, the high-frequency one-click buttons, the per-sheet
-# theme picker, and the quick-add LineEdit. Construction-only — every menu/button action targets
+# theme picker, and the quick-add LineEdit. Construction-only - every menu/button action targets
 # a dock method that STAYS on the dock, reached through the `_dock` back-reference (the same
 # pattern as the other dock/ helpers). The widgets the dock reads later (_toolbar, _view_popup,
 # _theme_picker, _quick_add_edit) stay DECLARED on the dock; build() constructs them and assigns
@@ -27,7 +27,7 @@ func build(root: Node) -> void:
 	_dock._toolbar = _toolbar
 	root.add_child(_toolbar)
 
-	# Sheet ▾ — file lifecycle + identity (low frequency, one menu).
+	# Sheet ▾ - file lifecycle + identity (low frequency, one menu).
 	var sheet_menu: MenuButton = MenuButton.new()
 	sheet_menu.name = "EventSheetSheetMenu"
 	sheet_menu.text = "Sheet"
@@ -42,7 +42,7 @@ func build(root: Node) -> void:
 	sheet_popup.add_item("Export GDScript…", 7)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(7),
-		"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency — proof you can leave the addon anytime."
+		"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency - proof you can leave the addon anytime."
 	)
 	sheet_popup.add_separator()
 	sheet_popup.add_item("Sheet Type…", 4)
@@ -51,7 +51,7 @@ func build(root: Node) -> void:
 	sheet_popup.add_item("New Behaviour Addon…", 9)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(9),
-		"Scaffold a ready-to-edit behaviour script in res://eventsheet_addons/ — its signals become triggers, methods become actions/conditions, and @export vars become properties, all auto-discovered as custom ACEs."
+		"Scaffold a ready-to-edit behaviour script in res://eventsheet_addons/ - its signals become triggers, methods become actions/conditions, and @export vars become properties, all auto-discovered as custom ACEs."
 	)
 	sheet_popup.add_item("Export Addon…", 6)
 	sheet_popup.id_pressed.connect(func(id: int) -> void:
@@ -68,15 +68,15 @@ func build(root: Node) -> void:
 			9: _dock._new_addon_panel.open()
 	)
 	_toolbar.add_child(sheet_menu)
-	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet — compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
+	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")
 	_add_toolbar_button(_toolbar, "Run Scene", _dock._run_from_sheet, "Save, then play the scene that uses this sheet's script.", "Play")
 	_add_toolbar_separator(_toolbar)
 	# The core reflexes stay one click (E / C / A on the keyboard).
 	_add_toolbar_button(_toolbar, "Add Event", _dock._on_add_event_requested, "Add an event (E).", "Add")
 	_add_toolbar_button(_toolbar, "Add Condition", _dock._on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
 	_add_toolbar_button(_toolbar, "Add Action", _dock._on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
-	_add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a GDScript block to the selected event — the deliberate 'drop to code' escape hatch (like Construct 3's script actions). Opens the code editor immediately.", "Script")
-	# Add ▾ — the rest of the authoring vocabulary.
+	_add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch (like Construct 3's script actions). Opens the code editor immediately.", "Script")
+	# Add ▾ - the rest of the authoring vocabulary.
 	var add_menu: MenuButton = MenuButton.new()
 	add_menu.name = "EventSheetAddMenu"
 	add_menu.text = "Add"
@@ -108,7 +108,7 @@ func build(root: Node) -> void:
 			4: _dock._on_add_gdscript_action_requested()
 	)
 	_toolbar.add_child(add_menu)
-	# Edit ▾ — clipboard + history (all on shortcuts too).
+	# Edit ▾ - clipboard + history (all on shortcuts too).
 	var edit_menu: MenuButton = MenuButton.new()
 	edit_menu.name = "EventSheetEditMenu"
 	edit_menu.text = "Edit"
@@ -135,7 +135,7 @@ func build(root: Node) -> void:
 			6: _dock._open_ai_generate()
 	)
 	_toolbar.add_child(edit_menu)
-	# View ▾ — panels, multi-view, zoom and theming.
+	# View ▾ - panels, multi-view, zoom and theming.
 	var view_menu: MenuButton = MenuButton.new()
 	view_menu.name = "EventSheetViewMenu"
 	view_menu.text = "View"
@@ -186,12 +186,12 @@ func build(root: Node) -> void:
 	view_popup.set_item_tooltip(view_popup.get_item_index(0), "Show/hide the generated-GDScript panel beside the sheet.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(9), "Show/hide the trailing \"+ Add event…\" rows. Turn off for a cleaner, calmer sheet.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(11), "Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.")
-	view_popup.set_item_tooltip(view_popup.get_item_index(12), "Turn the MCP server (AI-assistant tools) on/off. When off, connected AI clients see no tools and can't read or change your sheets. Takes effect live — no reconnect needed.")
+	view_popup.set_item_tooltip(view_popup.get_item_index(12), "Turn the MCP server (AI-assistant tools) on/off. When off, connected AI clients see no tools and can't read or change your sheets. Takes effect live - no reconnect needed.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(1), "Show/hide a second synchronized view of this sheet, side by side.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(2), "Pop the sheet view out into its own window / bring it back.")
 	view_popup.set_item_tooltip(view_popup.get_item_index(3), "Link/unlink scrolling between the split views.")
 	_toolbar.add_child(view_menu)
-	# Tools ▾ — debug + project workflow tools (the UX-audit consolidation).
+	# Tools ▾ - debug + project workflow tools (the UX-audit consolidation).
 	var tools_menu: MenuButton = MenuButton.new()
 	tools_menu.text = "Tools"
 	tools_menu.tooltip_text = "Debug tools, validation, import, and project workflow."
@@ -245,7 +245,7 @@ func build(root: Node) -> void:
 	_add_toolbar_separator(_toolbar)
 	# GDScript stays a one-click toggle (the pairing thesis: honest output, always
 	# one click away) next to the per-sheet theme picker.
-	_add_toolbar_button(_toolbar, "GDScript", _dock._toggle_code_panel, "Toggle the generated-GDScript panel — the sheet's honest compiled output, side by side.", "Script")
+	_add_toolbar_button(_toolbar, "GDScript", _dock._toggle_code_panel, "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.", "Script")
 	var _theme_picker: OptionButton = OptionButton.new()
 	_theme_picker.name = "EventSheetThemePicker"
 	_theme_picker.tooltip_text = "Theme for this sheet (Load/Reload and the Theme Editor live in View)"

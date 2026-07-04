@@ -1,4 +1,4 @@
-# Godot EventSheets — Release hardening: export-integrity hook + visual theme editor.
+# Godot EventSheets - Release hardening: export-integrity hook + visual theme editor.
 #
 # Export hook: the EditorExportPlugin's recompile-all pass is a static, headless-safe
 # helper (the same code runs at _export_begin), so exports can never ship stale generated
@@ -57,7 +57,7 @@ static func run() -> bool:
 	all_passed = _check("preset round-trips with the edited token",
 		loaded.event_style.behavior_accent_color if loaded != null and loaded.event_style != null else Color.BLACK, Color.BLUE) and all_passed
 
-	# Quick Style — the no-token-fiddling path: EventSheetGodotTheme.apply regenerates the
+	# Quick Style - the no-token-fiddling path: EventSheetGodotTheme.apply regenerates the
 	# entire chrome from base/accent/text, so one colour change re-skins the whole sheet.
 	var quick: EventSheetEditorStyle = EventSheetThemeEditor.duplicate_style(null)
 	var quick_base: Color = Color("#202830")

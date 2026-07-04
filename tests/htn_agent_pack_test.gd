@@ -1,4 +1,4 @@
-# Godot EventSheets — htn_agent pack (typed HTNMethod / HTNCondition) behavioral equivalence.
+# Godot EventSheets - htn_agent pack (typed HTNMethod / HTNCondition) behavioral equivalence.
 #
 # The HTN methods/conditions were untyped Dictionaries read via str()/float()/get() casts; they're
 # now typed inner classes. This builds a tiny task network and drives the real decomposition to prove

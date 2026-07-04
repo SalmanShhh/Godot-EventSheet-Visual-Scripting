@@ -1,4 +1,4 @@
-# Godot EventSheets — 3D vocabulary (lane 1: wrap native 3D nodes)
+# Godot EventSheets - 3D vocabulary (lane 1: wrap native 3D nodes)
 # Node3D/CharacterBody3D/RigidBody3D/Camera3D groups + the Input Vector expression;
 # Tween/visibility/math/scene-flow ACEs are already dimension-agnostic.
 @tool

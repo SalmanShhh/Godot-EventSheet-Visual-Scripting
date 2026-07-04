@@ -1,10 +1,10 @@
-# EventForge module — Loop control vocabulary
+# EventForge module - Loop control vocabulary
 #
 # Early-exit + current-item helpers for the pick/repeat loops the compiler emits
 # (see sheet_compiler._emit_pick_filters). Break/Continue are bare keywords that must sit
-# inside a loop body — the author's responsibility, same contract as a raw GDScript block.
+# inside a loop body - the author's responsibility, same contract as a raw GDScript block.
 # CurrentItem reads the default loop iterator ("item"); rename the iterator and you'd type
-# its name directly instead. Module contract: see ace_factory.gd — ace_ids/templates are API.
+# its name directly instead. Module contract: see ace_factory.gd - ace_ids/templates are API.
 @tool
 class_name EventForgeLoopACEs
 extends RefCounted

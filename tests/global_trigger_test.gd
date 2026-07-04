@@ -1,11 +1,11 @@
 @tool
 class_name GlobalTriggerTest
 extends RefCounted
-# Triggers can connect a signal on a GLOBAL source — get_tree() ("@tree") or get_window() ("@window") —
+# Triggers can connect a signal on a GLOBAL source - get_tree() ("@tree") or get_window() ("@window") -
 # not just self / an autoload / a node path. This powers On Post Tick (SceneTree.process_frame, after
 # every node's _process this frame), its physics sibling, and On Close Requested (the window's X). Each
 # compiles to a `<global>.<signal>.connect(<handler>)` in _ready + the handler func, and round-trips
-# byte-exact (lifted or, worst case, verbatim — the lossless rule holds either way).
+# byte-exact (lifted or, worst case, verbatim - the lossless rule holds either way).
 
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 

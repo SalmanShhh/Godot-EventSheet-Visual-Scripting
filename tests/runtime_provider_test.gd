@@ -1,9 +1,9 @@
-# EventForge — Runtime addon bridge + instance-backed addon ACEs
+# EventForge - Runtime addon bridge + instance-backed addon ACEs
 #
 # Two halves of the "addon ACEs work everywhere" story:
-# 1. EventForgeBridge.register_script_as_provider — code-registered provider scripts join
+# 1. EventForgeBridge.register_script_as_provider - code-registered provider scripts join
 #    the picker vocabulary exactly like eventsheet_addons/ scans (for other plugins/tools).
-# 2. Instance-backed ACEs — addon METHODS without @ace_codegen_template bake a
+# 2. Instance-backed ACEs - addon METHODS without @ace_codegen_template bake a
 #    per-provider member call; the compiler declares each used provider ONCE as a plain
 #    owned instance. Output stays free of EventForge classes (parity contract).
 @tool

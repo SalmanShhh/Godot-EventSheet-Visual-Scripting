@@ -1,4 +1,4 @@
-# EventForge — ACE-level import lifting (reverse template matching)
+# EventForge - ACE-level import lifting (reverse template matching)
 #
 # Opening generated GDScript as a sheet lifts trigger functions back into real EventRows:
 # conditions/actions reverse-match builtin codegen templates (params captured as strings),
@@ -86,7 +86,7 @@ static func run() -> bool:
 			reversed_action = (row as EventRow).actions[0] as ACEAction
 	all_passed = _check("template params are captured", reversed_action != null and not reversed_action.params.is_empty(), true) and all_passed
 	# Specific ACEs must win over the generic Core catch-alls: `velocity = {vel}` (SetVelocity2D) must
-	# not reverse-lift to the generic `{var_name} = {value}` (SetVar). Pins the specificity-sort fix —
+	# not reverse-lift to the generic `{var_name} = {value}` (SetVar). Pins the specificity-sort fix -
 	# the byte-roundtrip alone never caught this (SetVar re-emits the identical line).
 	all_passed = _check("specific ACE wins over the generic SetVar catch-all",
 		reversed_action != null and reversed_action.ace_id == "SetVelocity2D", true) and all_passed

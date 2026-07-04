@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetMultiViewManager
 extends RefCounted
-# Multi-view: the "split view" subsystem — a second pane over the SAME sheet (VSCode-style),
+# Multi-view: the "split view" subsystem - a second pane over the SAME sheet (VSCode-style),
 # for debugging / reading / comparing distant regions. Breakpoints/bookmarks/disabled state are
 # shared by reference; scroll/zoom/selection/folds are per-pane. Owns the split widgets and the
 # split-pane lifecycle (open/close, signal wiring, "Open in Split", linked-pane mirroring, the
@@ -113,7 +113,7 @@ func _open_row_in_split(row_data: EventRowData) -> void:
 				_split_viewport.ensure_selection_visible()
 				_split_viewport.queue_redraw()
 				return
-		# Not in the flat list — it's inside a folded group: unfold the split and retry.
+		# Not in the flat list - it's inside a folded group: unfold the split and retry.
 		_split_viewport._fold_state.clear()
 		_split_viewport.set_sheet(_dock._current_sheet)
 
@@ -163,7 +163,7 @@ func _sync_split_sheet() -> void:
 
 
 ## Find-bar "Open in Split": jumps the split pane to the current match (opening the
-## split if needed) — marrying search and multi-view.
+## split if needed) - marrying search and multi-view.
 func _open_match_in_split() -> void:
 	if _dock._find_resource_matches.is_empty():
 		_dock._set_status("Find something first.", true)

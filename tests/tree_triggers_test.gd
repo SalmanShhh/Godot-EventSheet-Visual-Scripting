@@ -1,6 +1,6 @@
-# Godot EventSheets — Tree-membership triggers (react to tree events, don't poll IsInsideTree).
+# Godot EventSheets - Tree-membership triggers (react to tree events, don't poll IsInsideTree).
 #
-# Godot's nodes emit tree_entered / tree_exiting / tree_exited / renamed / child_entered_tree — so
+# Godot's nodes emit tree_entered / tree_exiting / tree_exited / renamed / child_entered_tree - so
 # "when this OTHER node enters/leaves the scene" is a SIGNAL to react to, not a per-frame IsInsideTree
 # check inside On Process (the poll-every-tick habit). Verifies the five triggers register,
 # compile to a _ready signal connection on the source node with a named handler, carry their args, and
@@ -20,7 +20,7 @@ static func run() -> bool:
 		all_passed = _check("trigger registered: %s" % ace_id,
 			by_id.has(ace_id) and by_id[ace_id].ace_type == ACEDescriptor.ACEType.TRIGGER, true) and all_passed
 
-	# React to ANOTHER node's tree_entered (source path) — the compiler wires the connection in _ready.
+	# React to ANOTHER node's tree_entered (source path) - the compiler wires the connection in _ready.
 	var source: String = _compile_tree_trigger("OnTreeEntered", "Spawner")
 	all_passed = _check("wires the source node's tree_entered in _ready",
 		source.contains("get_node(\"Spawner\").tree_entered.connect(_on_spawner_tree_entered)"), true) and all_passed

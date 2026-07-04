@@ -1,4 +1,4 @@
-# Godot EventSheets — Tool sheets (Phase D, EXPERIMENTAL)
+# Godot EventSheets - Tool sheets (Phase D, EXPERIMENTAL)
 # tool_mode emits @tool ahead of class_name/extends; the Editor Tool preset pairs an
 # EditorScript host with the On Editor Run trigger (File > Run); generated tools
 # verify-lift back and recover tool_mode on re-open.

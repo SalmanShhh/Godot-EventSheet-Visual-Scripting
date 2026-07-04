@@ -1,4 +1,4 @@
-# EventForge — GDScript pairing batch
+# EventForge - GDScript pairing batch
 #
 # Guards the event-sheet→GDScript bridge features: inline GDScript blocks (render multi-line, compile
 # verbatim at class level), codegen tooltip previews, the picker search synonyms, and the

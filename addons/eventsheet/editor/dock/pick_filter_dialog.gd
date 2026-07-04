@@ -146,7 +146,7 @@ func _pick_option_to_kind(option: int) -> int:
 
 
 ## Presets: each fills the pick-filter fields with the matching loop/picking shape
-## (everything still compiles to plain for/while loops — see _emit_pick_filters).
+## (everything still compiles to plain for/while loops - see _emit_pick_filters).
 func _apply_pick_preset(index: int) -> void:
 	match index:
 		1:  # For (indexed)
@@ -313,7 +313,7 @@ func _populate_pick_completion(edit: CodeEdit) -> void:
 	for candidate: Dictionary in EventSheetGDScriptLint.completion_for_context(before, _dock._current_sheet):
 		var label: String = str(candidate.get("label", ""))
 		edit.add_code_completion_option(int(candidate.get("kind", CodeEdit.KIND_PLAIN_TEXT)), label, label)
-	# The iterator (the loop variable) isn't a sheet symbol — surface it unless we're after a dot.
+	# The iterator (the loop variable) isn't a sheet symbol - surface it unless we're after a dot.
 	if not before.strip_edges().ends_with("."):
 		var iterator: String = _pick_iterator_edit.text.strip_edges()
 		if iterator.is_empty():

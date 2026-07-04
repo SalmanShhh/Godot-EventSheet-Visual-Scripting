@@ -1,4 +1,4 @@
-# EventForge — the Behaviour Anatomy panel: a left-rail read model showing the active sheet as seven
+# EventForge - the Behaviour Anatomy panel: a left-rail read model showing the active sheet as seven
 # organs (Properties · State · Triggers · Actions · Conditions · Expressions · Uses), fed by a pure
 # static census. Pins: variables split by exported flag, SignalRow triggers with friendly names,
 # exposed EventFunctions classified like the Studio cards (internal helpers excluded), opened-pack

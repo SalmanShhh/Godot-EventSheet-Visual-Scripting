@@ -1,4 +1,4 @@
-# EventForge — Shift-range row selection
+# EventForge - Shift-range row selection
 #
 # Shift+click / Shift+Arrow select every row between the selection anchor and the target,
 # inclusive, while preserving the anchor so the range can grow OR shrink from the same origin.

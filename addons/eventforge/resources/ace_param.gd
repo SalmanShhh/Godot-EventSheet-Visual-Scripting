@@ -1,4 +1,4 @@
-# EventForge — ACEParam resource
+# EventForge - ACEParam resource
 # Describes a typed parameter accepted by an ACE descriptor.
 #
 # Supported type_name values (GDScript-aligned):
@@ -29,7 +29,7 @@ extends Resource
 ## For SHEET-FUNCTION parameters only: an optional GDScript default argument, emitted into the
 ## function signature as `name: type = <this>` (so the parameter is optional). Distinct from
 ## default_value (a picker pre-fill); empty = a required parameter. GDScript requires defaulted
-## parameters to be trailing — the function dialog enforces that.
+## parameters to be trailing - the function dialog enforces that.
 @export var gdscript_default: String = ""
 @export var initial_value: Variant = null
 @export var initialValue: Variant = null # event-sheet-style alias.

@@ -1,4 +1,4 @@
-# Godot EventSheets — Stateful conditions + multi-statement actions (System batch 2)
+# Godot EventSheets - Stateful conditions + multi-statement actions (System batch 2)
 # Every X Seconds owns a per-instance member (prelude accumulates, on_true rebases);
 # Spawn Scene At is a multi-line template with a baked-uid local. Both keep the parity
 # contract: plain members, plain statements, zero indirection.

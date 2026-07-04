@@ -1,11 +1,11 @@
-# EventForge module — Core vocabulary (the Phase-1 surface, fully migrated).
+# EventForge module - Core vocabulary (the Phase-1 surface, fully migrated).
 #
 # Triggers (lifecycle + common signals), InputMap conditions (HIDDEN-OPTIMIZATION RULE:
-# templates may use expert idioms like &"name" StringName literals — the picker shows
+# templates may use expert idioms like &"name" StringName literals - the picker shows
 # friendly labels, generated code stays readable, user fx/blocks are NEVER rewritten),
 # variable get/set/compare, and the small native-node
 # action set (Node2D/CharacterBody2D/RigidBody2D/Timer/AnimationPlayer).
-# Module contract: see ace_factory.gd — ace_ids/templates are API (compatibility
+# Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility
 # covenant); this file only changes where the descriptors are AUTHORED.
 @tool
 class_name EventForgeCoreACEs
@@ -25,11 +25,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "OnPhysicsProcess", "On Physics Process", ACEDescriptor.ACEType.TRIGGER, "", "_physics_process", [], "Run Context", "Run on physics process")
 		.described("Runs every fixed physics step, the right place for physics-based movement and forces."))
 	descriptors.append(F.make_descriptor("Core", "OnPostTick", "After Every Frame (post-tick)", ACEDescriptor.ACEType.TRIGGER, "", "process_frame", [], "Run Context", "Run after every frame", "Node")
-		.described("Runs once AFTER every node has processed this frame — for logic that must come last, like a camera that follows after movement, or end-of-frame cleanup."))
+		.described("Runs once AFTER every node has processed this frame - for logic that must come last, like a camera that follows after movement, or end-of-frame cleanup."))
 	descriptors.append(F.make_descriptor("Core", "OnPhysicsPostTick", "After Every Physics Tick", ACEDescriptor.ACEType.TRIGGER, "", "physics_frame", [], "Run Context", "Run after every physics tick", "Node")
-		.described("Runs once AFTER every node has finished its physics step this tick — the physics sibling of post-tick."))
+		.described("Runs once AFTER every node has finished its physics step this tick - the physics sibling of post-tick."))
 	descriptors.append(F.make_descriptor("Core", "OnCloseRequested", "On Close Requested", ACEDescriptor.ACEType.TRIGGER, "", "close_requested", [], "Signals / Scene / Input", "On window close requested", "Node")
-		.described("Runs when the player clicks the window's close button (X) or asks to quit — the place to save progress or pop a confirm dialog before exiting."))
+		.described("Runs when the player clicks the window's close button (X) or asks to quit - the place to save progress or pop a confirm dialog before exiting."))
 	descriptors.append(F.make_descriptor("Core", "OnBodyEntered", "On Body Entered", ACEDescriptor.ACEType.TRIGGER, "", "body_entered", [F.make_param("body", "Node")], "Signals / Scene / Input", "On body entered {body}", "Area2D")
 		.described("Runs when a physics body enters this 2D Area, e.g. detecting the player walking into a trigger."))
 	descriptors.append(F.make_descriptor("Core", "OnAreaEntered", "On Area Entered", ACEDescriptor.ACEType.TRIGGER, "", "area_entered", [F.make_param("area", "Area2D")], "Signals / Scene / Input", "On area entered {area}", "Area2D")
@@ -45,7 +45,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		ACEDescriptor.ACEType.TRIGGER,
 		"",
 		"",
-		[F.make_param("signal_name", "String", "eventforge_signal", "Signal Name", "Signal to listen for.", "signal_reference"), F.make_param("args", "String", "", "Arguments", "Optional — the signal's argument signature so this event receives its parameters, e.g. \"amount: int\" or \"x: float, y: float\". Leave empty for a signal with no arguments.", "expression")],
+		[F.make_param("signal_name", "String", "eventforge_signal", "Signal Name", "Signal to listen for.", "signal_reference"), F.make_param("args", "String", "", "Arguments", "Optional - the signal's argument signature so this event receives its parameters, e.g. \"amount: int\" or \"x: float, y: float\". Leave empty for a signal with no arguments.", "expression")],
 		"Signals / Scene / Input",
 		"On signal {signal_name}"
 	)
@@ -60,7 +60,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs when this Timer counts down to zero, e.g. ending a cooldown or spawn delay."))
 	descriptors.append(F.make_descriptor("Core", "OnAnimationFinished", "On Animation Finished", ACEDescriptor.ACEType.TRIGGER, "", "animation_finished", [F.make_param("anim_name", "String", "", "Animation", "Name of the animation that finished.")], "Signals / Scene / Input", "On animation finished {anim_name}", "AnimationPlayer")
 		.described("Runs when an animation finishes playing, e.g. chaining the next animation or action."))
-	# Scene-tree membership signals (every Node) — REACT to a node entering/leaving instead of polling
+	# Scene-tree membership signals (every Node) - REACT to a node entering/leaving instead of polling
 	# IsInsideTree in On Process. Surface as SOURCE-node triggers (another node); for the host's OWN
 	# first entry, On Ready is the idiomatic answer. tree_exiting fires while still in-tree, tree_exited
 	# after removal.
@@ -77,7 +77,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	# HIDDEN-OPTIMIZATION RULE: templates may use expert idioms a beginner wouldn't type
 	# (&"name" StringName literals below skip the per-call String->StringName hash in hot
-	# loops) — the picker shows friendly labels, the generated code stays readable, and
+	# loops) - the picker shows friendly labels, the generated code stays readable, and
 	# user fx/blocks are NEVER rewritten.
 	# Input (action names come from the project's InputMap + the ui_* defaults)
 	descriptors.append(F.make_descriptor("Core", "IsActionPressed", "Is Action Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_pressed(&{action})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action (from the InputMap).", "", F.input_action_options())], "Input", "{action} is pressed")
@@ -136,7 +136,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Moves the character body using its velocity and slides along walls; call each physics frame."))
 	descriptors.append(F.make_descriptor("Core", "SetVelocity2D", "Set Velocity", ACEDescriptor.ACEType.ACTION, "{host.}velocity = {vel}", "", [F.make_param("vel", "String", "Vector2(0, 0)", "Velocity", "Velocity vector as a Vector2 expression.", "expression")], "General Actions", "Set velocity to {vel}", "CharacterBody2D")
 		.described("Sets the character's full movement velocity to the Vector2 you provide."))
-	# CharacterBody2D movement — component-wise velocity + gravity + acceleration: the vocabulary a
+	# CharacterBody2D movement - component-wise velocity + gravity + acceleration: the vocabulary a
 	# platformer/runner behaviour needs WITHOUT dropping to GDScript. The {host.} prefix targets the
 	# parent host inside a behaviour and is empty on a plain CharacterBody2D sheet (byte-stable). The
 	# accel param is named target_speed (not "target") so it never collides with the {target.} scope.
@@ -146,7 +146,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Sets only the vertical speed of the character (negative values move upward)."))
 	descriptors.append(F.make_descriptor("Core", "AddVelocity", "Add To Velocity", ACEDescriptor.ACEType.ACTION, "{host.}velocity += {delta_v}", "", [F.make_param("delta_v", "String", "Vector2(0, 0)", "Amount", "Velocity to add, as a Vector2 expression.", "expression")], "Movement", "Add {delta_v} to velocity", "CharacterBody2D")
 		.described("Adds a Vector2 to the current velocity, handy for nudges, knockback or boosts."))
-	descriptors.append(F.make_descriptor("Core", "ApplyGravity", "Apply Gravity (with terminal velocity)", ACEDescriptor.ACEType.ACTION, "{host.}velocity.y = minf({host.}velocity.y + {gravity} * {delta_t}, {max_fall})", "", [F.make_param("gravity", "String", "980.0", "Gravity", "Downward acceleration (pixels per second, per second).", "expression"), F.make_param("max_fall", "String", "1000.0", "Max fall speed", "Terminal velocity — never fall faster than this.", "expression"), F.make_param("delta_t", "String", "delta", "Delta", "Frame time; defaults to `delta` (valid inside On Physics Process / On Process).", "expression")], "Movement", "Apply gravity {gravity} (max fall {max_fall})", "CharacterBody2D")
+	descriptors.append(F.make_descriptor("Core", "ApplyGravity", "Apply Gravity (with terminal velocity)", ACEDescriptor.ACEType.ACTION, "{host.}velocity.y = minf({host.}velocity.y + {gravity} * {delta_t}, {max_fall})", "", [F.make_param("gravity", "String", "980.0", "Gravity", "Downward acceleration (pixels per second, per second).", "expression"), F.make_param("max_fall", "String", "1000.0", "Max fall speed", "Terminal velocity - never fall faster than this.", "expression"), F.make_param("delta_t", "String", "delta", "Delta", "Frame time; defaults to `delta` (valid inside On Physics Process / On Process).", "expression")], "Movement", "Apply gravity {gravity} (max fall {max_fall})", "CharacterBody2D")
 		.described("Pulls the character downward each frame but caps the maximum falling speed."))
 	descriptors.append(F.make_descriptor("Core", "ApplyGravitySimple", "Apply Gravity", ACEDescriptor.ACEType.ACTION, "{host.}velocity.y += {gravity} * {delta_t}", "", [F.make_param("gravity", "String", "980.0", "Gravity", "Downward acceleration (pixels per second, per second).", "expression"), F.make_param("delta_t", "String", "delta", "Delta", "Frame time; defaults to `delta`.", "expression")], "Movement", "Apply gravity {gravity}", "CharacterBody2D")
 		.described("Adds constant downward acceleration to the character each frame, making it fall."))
@@ -176,7 +176,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "StopAnimation", "Stop Animation", ACEDescriptor.ACEType.ACTION, "stop()", "", [], "General Actions", "Stop animation", "AnimationPlayer")
 		.described("Stops the currently playing animation on the AnimationPlayer."))
 
-	# ── 2D spatial queries (mirror of the 3D raycast block — shooting, interaction, AI
+	# ── 2D spatial queries (mirror of the 3D raycast block - shooting, interaction, AI
 	# vision, ground-snap. A RayCast2D node set + host-agnostic Node2D world queries via
 	# intersect_ray, single-line per the parity contract). ──
 	descriptors.append(F.make_descriptor("Core", "RayCast2DIsColliding", "RayCast Is Colliding (2D)", ACEDescriptor.ACEType.CONDITION, "is_colliding()", "", [], "Raycast 2D", "RayCast is colliding", "RayCast2D")
@@ -211,7 +211,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns the game window's current size in pixels."))
 	descriptors.append(F.make_descriptor("Core", "GetScreenSize", "Screen Size", ACEDescriptor.ACEType.EXPRESSION, "DisplayServer.screen_get_size()", "", [], "Utility: Window", "screen size")
 		.described("Returns the size of the player's monitor in pixels."))
-	# (Set Mouse Mode lives in device_aces under "Mouse" — not duplicated here.)
+	# (Set Mouse Mode lives in device_aces under "Mouse" - not duplicated here.)
 	descriptors.append(F.make_descriptor("Core", "SetClipboard", "Set Clipboard Text", ACEDescriptor.ACEType.ACTION, "DisplayServer.clipboard_set({text})", "", [F.make_param("text", "String", "\"\"", "Text", "Text to copy to the OS clipboard.", "expression")], "Utility: Window", "copy {text} to clipboard")
 		.described("Copies text to the operating system clipboard for pasting elsewhere."))
 	descriptors.append(F.make_descriptor("Core", "GetClipboard", "Clipboard Text", ACEDescriptor.ACEType.EXPRESSION, "DisplayServer.clipboard_get()", "", [], "Utility: Window", "clipboard text")

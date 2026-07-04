@@ -1,4 +1,4 @@
-# Godot EventSheets — EnumRow resource
+# Godot EventSheets - EnumRow resource
 # A class-level enum declared as a sheet row. Compiles to the canonical single-line form
 # `enum Name { IDLE, RUN }` (members may carry explicit values: "HURT = 4"); the importer
 # verify-lifts exactly that form back (multi-line enums stay verbatim GDScript blocks).

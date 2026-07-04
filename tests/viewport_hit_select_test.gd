@@ -1,8 +1,8 @@
-# EventForge — row hit-testing resolves a click to an event row, including the small inter-block gap.
+# EventForge - row hit-testing resolves a click to an event row, including the small inter-block gap.
 #
 # Event blocks are separated by EVENT_BLOCK_GAP, dead space not covered by any row's [top, top+height)
 # band. Before the fix, a click there returned -1 → the selection was CLEARED, so the user "couldn't
-# select an event block by clicking outside the condition cell" — and with nothing selected, Delete
+# select an event block by clicking outside the condition cell" - and with nothing selected, Delete
 # fell through to the editor's scene tree. Now a gap click resolves to the preceding event. Pins
 # EventSheetViewport._row_index_at_y (static + pure, so no Control instance is needed).
 @tool

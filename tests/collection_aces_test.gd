@@ -1,4 +1,4 @@
-# Godot EventSheets — Curated collection ACE set (rich-variables phase 3)
+# Godot EventSheets - Curated collection ACE set (rich-variables phase 3)
 # ~27 Dictionary/Array/JSON ops as builtin Core descriptors: always present in the picker
 # under "Variables: …" groups, direct one-liner codegen (parity-safe), and type-aware
 # variable dropdowns ("variable_reference:Array" offers only Array-typed variables).

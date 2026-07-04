@@ -1,14 +1,14 @@
-# Godot EventSheets — sheet-function dialog / "ACE Studio" (event-sheet style)
+# Godot EventSheets - sheet-function dialog / "ACE Studio" (event-sheet style)
 #
-# Authors an EventFunction from a popup, the way an "Add function" dialog does — reframed so a
+# Authors an EventFunction from a popup, the way an "Add function" dialog does - reframed so a
 # non-programmer designs a behaviour's PUBLIC VERB without meeting the words "func" or "return type":
-#  • "What kind of verb is this?" is three plain-language CARDS — Does something (Action) / Is it
-#    true? (Condition) / A value (Expression) — a friendly restyle of the old "Usable as" toggle. The
+#  • "What kind of verb is this?" is three plain-language CARDS - Does something (Action) / Is it
+#    true? (Condition) / A value (Expression) - a friendly restyle of the old "Usable as" toggle. The
 #    chosen card sets the return type (void / bool / the chosen value type) exactly as before.
 #  • A LIVE PICKER PREVIEW ("this is what other people will see") renders the verb as it will appear
-#    in other sheets' pickers — role badge, name, param chips, category chip — updating per keystroke.
+#    in other sheets' pickers - role badge, name, param chips, category chip - updating per keystroke.
 #  • A quiet "Ships as:" line shows the exact generated `func` signature (built from the SAME compiler
-#    formatters, so it can never disagree with the codegen) — the trust surface for a Godot dev.
+#    formatters, so it can never disagree with the codegen) - the trust surface for a Godot dev.
 #  • Parameters are event-sheet rows: name · type · default value · description.
 #  • "Run only when" adds guard conditions (GDScript boolean expressions) that wrap the body in an `if`.
 #  • Expose-as-ACE publishes it into other sheets' pickers.
@@ -25,9 +25,9 @@ signal function_confirmed(data: Dictionary)
 # "What kind of verb" → the EventFunction return type the three-way expose derives its directive from
 # (void = action, bool = condition, any other value = expression). `card_*` drive the friendly cards.
 const USABLE_AS: Array[Dictionary] = [
-	{"label": "Action (does something — a setter)", "kind": "action", "card_title": "Does something", "card_examples": "Take Damage, Heal, Knock Back", "glyph": "▶"},
+	{"label": "Action (does something - a setter)", "kind": "action", "card_title": "Does something", "card_examples": "Take Damage, Heal, Knock Back", "glyph": "▶"},
 	{"label": "Condition (a yes/no test)", "kind": "condition", "card_title": "Is it true?", "card_examples": "Is Dead, Is Full Health", "glyph": "?"},
-	{"label": "Expression (returns a value — a getter)", "kind": "expression", "card_title": "A value", "card_examples": "Health %, Remaining Shields", "glyph": "ƒx"},
+	{"label": "Expression (returns a value - a getter)", "kind": "expression", "card_title": "A value", "card_examples": "Health %, Remaining Shields", "glyph": "ƒx"},
 ]
 # Value types offered when the verb is "A value" (Expression). `friendly` is the plain-English label
 # shown; `label` is the GDScript type name kept for reference. Order is index-stable (build_function_data
@@ -44,7 +44,7 @@ const VALUE_TYPES: Array[Dictionary] = [
 const PARAM_TYPES: PackedStringArray = ["float", "int", "bool", "String", "Vector2", "Vector3", "Variant"]
 
 var _dialog: ConfirmationDialog = null
-# Non-empty while editing an existing function (its CURRENT name): switches the dialog to edit mode —
+# Non-empty while editing an existing function (its CURRENT name): switches the dialog to edit mode -
 # the taken-names check allows the function's own name, and the confirmed payload carries the original
 # name so the apply updates that function instead of appending a new one.
 var _original_name: String = ""
@@ -95,7 +95,7 @@ func init_dialog(parent_node: Node) -> void:
 	_description_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())
 	form.add_child(EventSheetPopupUI.form_row("Description", _description_edit))
 
-	# What kind of verb — three plain-language cards. The hidden _usable_option stays the backing model
+	# What kind of verb - three plain-language cards. The hidden _usable_option stays the backing model
 	# (build_function_data + the tests read it by index); the cards drive and mirror it.
 	_usable_option = OptionButton.new()
 	for entry: Dictionary in USABLE_AS:
@@ -104,7 +104,7 @@ func init_dialog(parent_node: Node) -> void:
 	form.add_child(_usable_option)
 	form.add_child(_build_verb_kind_section())
 
-	# Value type — only shown for "A value" (Expression). Friendly labels; index-stable mapping.
+	# Value type - only shown for "A value" (Expression). Friendly labels; index-stable mapping.
 	_value_type_option = OptionButton.new()
 	for entry: Dictionary in VALUE_TYPES:
 		_value_type_option.add_item(str(entry.get("friendly")))
@@ -112,10 +112,10 @@ func init_dialog(parent_node: Node) -> void:
 	_value_type_row = EventSheetPopupUI.form_row("What kind of value?", _value_type_option)
 	form.add_child(_value_type_row)
 
-	# The live picker preview + "Ships as:" — grouped in one titled card.
+	# The live picker preview + "Ships as:" - grouped in one titled card.
 	form.add_child(_build_preview_card())
 
-	# Parameters — a titled card holding the event-sheet-style rows (name · type · default · description).
+	# Parameters - a titled card holding the event-sheet-style rows (name · type · default · description).
 	var params_content: VBoxContainer = VBoxContainer.new()
 	params_content.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	_params_box = VBoxContainer.new()
@@ -127,14 +127,14 @@ func init_dialog(parent_node: Node) -> void:
 	params_content.add_child(add_param_button)
 	form.add_child(EventSheetPopupUI.titled_card("Parameters", params_content))
 
-	# Run only when — a titled card of guard conditions that wrap the function body in an `if`.
+	# Run only when - a titled card of guard conditions that wrap the function body in an `if`.
 	var guards_content: VBoxContainer = VBoxContainer.new()
 	guards_content.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	_guards_box = VBoxContainer.new()
 	guards_content.add_child(_guards_box)
 	var add_guard_button: Button = Button.new()
 	add_guard_button.text = "+ Add condition"
-	add_guard_button.tooltip_text = "A GDScript boolean expression — the body runs only when all hold (e.g. host.enabled)."
+	add_guard_button.tooltip_text = "A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled)."
 	add_guard_button.pressed.connect(func() -> void: add_guard_row())
 	guards_content.add_child(add_guard_button)
 	_guards_card = EventSheetPopupUI.titled_card("Run only when", guards_content)
@@ -173,7 +173,7 @@ func init_dialog(parent_node: Node) -> void:
 	_select_usable(0)
 
 
-## Names already taken on the sheet (functions + variables) — duplicates are refused.
+## Names already taken on the sheet (functions + variables) - duplicates are refused.
 func set_taken_names_provider(provider: Callable) -> void:
 	_taken_names_provider = provider
 
@@ -199,7 +199,7 @@ func open() -> void:
 		_name_edit.grab_focus()
 
 
-## Opens the dialog pre-filled from an existing function (edit mode) — the sheet's Define blocks
+## Opens the dialog pre-filled from an existing function (edit mode) - the sheet's Define blocks
 ## double-click into here. The verb-kind card is derived from the return type exactly the way the
 ## canvas classifies it (void = Action, bool = Condition, typed = Expression), so the pre-selected
 ## card always matches the badge the user clicked. The "Run only when" card is hidden: guards live
@@ -208,7 +208,7 @@ func open() -> void:
 func open_for_edit(event_function: EventFunction) -> void:
 	open()
 	_original_name = event_function.function_name
-	_dialog.title = "Edit Verb — %s" % event_function.function_name
+	_dialog.title = "Edit Verb - %s" % event_function.function_name
 	_dialog.ok_button_text = "Save Changes"
 	_guards_card.visible = false
 	_name_edit.text = event_function.function_name
@@ -232,7 +232,7 @@ func open_for_edit(event_function: EventFunction) -> void:
 
 
 ## queue_free alone leaves children in the tree until end of frame, so a prefill added right after
-## would coexist with the stale rows and collect_params() would read both — detach immediately.
+## would coexist with the stale rows and collect_params() would read both - detach immediately.
 func _clear_rows(box: Container) -> void:
 	for child: Node in box.get_children():
 		box.remove_child(child)
@@ -331,7 +331,7 @@ func _card_stylebox(accent: Color, selected: bool) -> StyleBoxFlat:
 
 func _build_preview_card() -> Control:
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
-	# The picker-entry mock — rendered in a sunken panel so it reads like a real row in someone's picker.
+	# The picker-entry mock - rendered in a sunken panel so it reads like a real row in someone's picker.
 	var entry: HBoxContainer = HBoxContainer.new()
 	entry.add_theme_constant_override("separation", 6)
 	_preview_badge = _pill("Action", EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG)
@@ -347,7 +347,7 @@ func _build_preview_card() -> Control:
 	_preview_sub.add_theme_font_size_override("font_size", 11)
 	_preview_sub.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
 	content.add_child(_preview_sub)
-	# "Ships as:" — the exact generated signature (built from the compiler's own formatters).
+	# "Ships as:" - the exact generated signature (built from the compiler's own formatters).
 	var ships_box: VBoxContainer = VBoxContainer.new()
 	ships_box.add_theme_constant_override("separation", 1)
 	var ships_cap: Label = Label.new()
@@ -362,7 +362,7 @@ func _build_preview_card() -> Control:
 	return EventSheetPopupUI.titled_card("This is what other people will see", content)
 
 
-## Rebuilds the preview + signature from the current dialog state — called on every keystroke / choice.
+## Rebuilds the preview + signature from the current dialog state - called on every keystroke / choice.
 ## Uses raw (unvalidated) fields so it shows a live "if published" identity while the name is still
 ## incomplete; the signature falls back to a `new_verb` placeholder so it never renders broken GDScript.
 func _refresh_studio() -> void:
@@ -390,14 +390,14 @@ func _refresh_studio() -> void:
 	for param: Dictionary in params:
 		arg_hint += "  %s" % str(param.get("id"))
 	_preview_sub.text = "%s › %s%s" % [category if not category.is_empty() else "(this behaviour)", display_name, arg_hint]
-	# Signature — from the compiler's own formatters, so it can't disagree with what actually ships.
+	# Signature - from the compiler's own formatters, so it can't disagree with what actually ships.
 	var signature_name: String = raw_name.to_snake_case()
 	if signature_name.is_empty() or not signature_name.is_valid_identifier():
 		signature_name = "new_verb"
 	_preview_signature.text = format_signature(signature_name, _return_type_for_kind(kind), params)
 
 
-## A pill Label with a rounded coloured background — the shared badge/chip look.
+## A pill Label with a rounded coloured background - the shared badge/chip look.
 func _pill(text: String, bg: Color, fg: Color, font_size: int = 11) -> Label:
 	var label: Label = Label.new()
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -450,7 +450,7 @@ func _return_type_for_kind(kind: String) -> int:
 			return TYPE_NIL
 
 
-## The exact generated `func` signature for a verb — built from a transient EventFunction run through
+## The exact generated `func` signature for a verb - built from a transient EventFunction run through
 ## the COMPILER's own static formatters (_emit_function_params / _function_return_type_name), so the
 ## "Ships as:" line can never disagree with the code that actually ships. Static + pure (unit-testable).
 static func format_signature(function_name: String, return_type: int, params: Array) -> String:
@@ -604,12 +604,12 @@ func build_function_data() -> Dictionary:
 	var function_name: String = _name_edit.text.strip_edges().to_snake_case()
 	if function_name.is_empty() or not function_name.is_valid_identifier():
 		return {"problem": "Verb names must be valid identifiers (e.g. take_damage)."}
-	# In edit mode the function's own current name is not a collision — only OTHER taken names are.
+	# In edit mode the function's own current name is not a collision - only OTHER taken names are.
 	if function_name != _original_name and _taken_names_provider.is_valid() \
 			and (_taken_names_provider.call() as PackedStringArray).has(function_name):
 		return {"problem": "\"%s\" already exists on this sheet (function or variable)." % function_name}
 	var params: Array[Dictionary] = collect_params()
-	# GDScript requires defaulted parameters to be trailing — refuse a gap so the generated
+	# GDScript requires defaulted parameters to be trailing - refuse a gap so the generated
 	# function never fails to parse.
 	var seen_default: bool = false
 	for param: Dictionary in params:

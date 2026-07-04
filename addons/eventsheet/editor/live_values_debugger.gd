@@ -1,6 +1,6 @@
-# Godot EventSheets — Live Values debugger bridge (debugging rung 2)
+# Godot EventSheets - Live Values debugger bridge (debugging rung 2)
 # Captures the throttled "eventsheets:live_values" messages that debug-compiled sheets
-# send from _process (see SheetCompiler — emit_live_values), and forwards them to the
+# send from _process (see SheetCompiler - emit_live_values), and forwards them to the
 # editor as a name->value dictionary. Registered by the plugin entry point.
 @tool
 class_name EventSheetLiveValuesDebugger
@@ -9,7 +9,7 @@ extends EditorDebuggerPlugin
 ## Emitted on the editor side whenever a running game streams a values frame.
 signal values_received(values: Dictionary)
 ## Emitted whenever a running game streams the set of event UIDs that fired since the last tick
-## (debugging rung 3 — live event trace). The editor highlights those rows.
+## (debugging rung 3 - live event trace). The editor highlights those rows.
 signal fired_events_received(uids: PackedStringArray)
 ## Emitted when the running game is about to pause at a sheet breakpoint: the generated code
 ## announces its row uid right before the `breakpoint` statement (core debugger messages never reach
@@ -37,7 +37,7 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 	return false
 
 
-## The paused-row payload is a single event uid; empty on a malformed message (fails closed —
+## The paused-row payload is a single event uid; empty on a malformed message (fails closed -
 ## the dock's reveal treats "" as a no-op). Static like the other parsers so tests can drive it
 ## without an editor (EditorDebuggerPlugin cannot be instantiated headless).
 static func parse_paused(data: Array) -> String:

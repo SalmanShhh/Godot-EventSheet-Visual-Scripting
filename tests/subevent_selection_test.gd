@@ -1,4 +1,4 @@
-# EventForge — Sub-event vs parent selection
+# EventForge - Sub-event vs parent selection
 #
 # Selecting a sub-event must NOT select its parent event; selecting a parent should cascade
 # to its sub-events. Guards the selection scoping.

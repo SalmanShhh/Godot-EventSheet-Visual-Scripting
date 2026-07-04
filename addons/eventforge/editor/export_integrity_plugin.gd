@@ -1,7 +1,7 @@
-# Godot EventSheets — Export integrity hook
+# Godot EventSheets - Export integrity hook
 # Recompiles every event sheet in the project when an export starts, so an exported game
 # can never ship a stale generated script (the architecture guarantee this protects:
-# exports contain only plain generated GDScript — no plugin dependency, no interpreter).
+# exports contain only plain generated GDScript - no plugin dependency, no interpreter).
 # Failures are loud push_errors naming the sheet; GDScript-backed sheets are skipped
 # (their .gd already IS the source of truth on disk).
 @tool
@@ -19,7 +19,7 @@ func _export_begin(_features: PackedStringArray, _is_debug: bool, _path: String,
 
 
 ## Walks res:// for EventSheetResource .tres files and recompiles each to its existing
-## pair (the compiler's resolution — never a parallel duplicate next to a builder-shipped
+## pair (the compiler's resolution - never a parallel duplicate next to a builder-shipped
 ## sibling). Returns {compiled: int, failed: int, failures: Array[String]}.
 ## Static + headless-safe so tests (and CI) can run the exact export-time pass.
 static func recompile_all_sheets(root: String = "res://") -> Dictionary:
@@ -38,7 +38,7 @@ static func recompile_all_sheets(root: String = "res://") -> Dictionary:
 		else:
 			report["failed"] = int(report["failed"]) + 1
 			(report["failures"] as Array).append(sheet_path)
-			push_error("[Godot EventSheets] sheet failed to compile at export: %s — %s" % [sheet_path, str(result.get("errors", []))])
+			push_error("[Godot EventSheets] sheet failed to compile at export: %s - %s" % [sheet_path, str(result.get("errors", []))])
 	return report
 
 

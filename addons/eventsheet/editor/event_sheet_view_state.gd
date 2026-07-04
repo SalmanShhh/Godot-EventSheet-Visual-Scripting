@@ -1,4 +1,4 @@
-# Godot EventSheets — per-sheet shared view state (multi-view phase 1)
+# Godot EventSheets - per-sheet shared view state (multi-view phase 1)
 # Breakpoints, bookmarks, and the runtime disabled-state overlay are PER-SHEET facts:
 # when the same sheet is open in multiple panes, every view must agree on them. Each
 # viewport adopts these dictionaries by reference (Godot Dictionaries are shared), while

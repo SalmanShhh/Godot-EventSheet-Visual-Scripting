@@ -1,8 +1,8 @@
-# Godot EventSheets — "by node type" picking ACEs (the node-heavy-object answer).
+# Godot EventSheets - "by node type" picking ACEs (the node-heavy-object answer).
 #
 # Godot objects are deep node trees (a player can be dozens of nodes). Reaching "the AnimationPlayer of
 # this object" used to need a brittle path ($A/B/C/D) or a GDScript block. These ACEs resolve a child by
-# CLASS anywhere in the subtree, so you target it by type instead — no path, no code. This pins their
+# CLASS anywhere in the subtree, so you target it by type instead - no path, no code. This pins their
 # registration + that they compile to the right find_children() call (incl. param substitution).
 @tool
 class_name NodeTypeAcesTest
@@ -31,7 +31,7 @@ static func run() -> bool:
 			(by_id["FirstChildOfType"] as ACEDescriptor).codegen_template.contains(".pop_front()"), true) and all_passed
 
 	# End-to-end: an action built from the descriptor template + params compiles to the resolved call,
-	# proving {target}/{type} substitution works (the whole point — target "the Area2D of $Player").
+	# proving {target}/{type} substitution works (the whole point - target "the Area2D of $Player").
 	if by_id.has("FindChildrenOfType"):
 		var sheet: EventSheetResource = EventSheetResource.new()
 		sheet.host_class = "Node2D"
@@ -54,7 +54,7 @@ static func run() -> bool:
 		all_passed = _check("%s registered under Animation" % anim_id,
 			by_id.has(anim_id) and (by_id[anim_id] as ACEDescriptor).category == "Animation", true) and all_passed
 
-	# Play Animation (in object) compiles to a null-guarded, typed auto-resolve that plays — and PARSES
+	# Play Animation (in object) compiles to a null-guarded, typed auto-resolve that plays - and PARSES
 	# (the multi-line {uid} template, baked here as the dock bakes it per row).
 	if by_id.has("PlayAnimationInObject"):
 		var anim_sheet: EventSheetResource = EventSheetResource.new()
@@ -78,7 +78,7 @@ static func run() -> bool:
 		all_passed = _check("Play Animation (in object) output parses as GDScript", anim_script.reload() == OK, true) and all_passed
 
 	# ── More object verbs (flip / frame / restart / particles) register; restart's 2-statement guarded
-	# body is the riskiest multi-line — compile + parse it. ──
+	# body is the riskiest multi-line - compile + parse it. ──
 	for verb_id: String in ["FlipSpriteInObject", "SetSpriteFrameInObject", "RestartAnimationInObject", "EmitParticlesInObject"]:
 		all_passed = _check("%s registered" % verb_id, by_id.has(verb_id), true) and all_passed
 	if by_id.has("RestartAnimationInObject"):

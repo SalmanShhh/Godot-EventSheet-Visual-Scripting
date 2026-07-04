@@ -1,4 +1,4 @@
-# Godot EventSheets — EnumRow (first-class enums, rich-variables phase 1)
+# Godot EventSheets - EnumRow (first-class enums, rich-variables phase 1)
 # Enums are sheet rows compiling to canonical single-line class enums (before variables,
 # so enum-typed vars work), render as variable-like rows, edit via dialog, verify-lift
 # from generated code, travel in snippets, and feed lint + dot-context completion.

@@ -1,7 +1,7 @@
-# EventForge module — 3D vocabulary
+# EventForge module - 3D vocabulary
 #
 # Lane-1 wraps of Node3D/CharacterBody3D/RigidBody3D/Camera3D surfaces.
-# Module contract: see ace_factory.gd — ace_ids/templates are API (compatibility
+# Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility
 # covenant); this file only changes where the descriptors are AUTHORED.
 @tool
 class_name EventForge3DACEs

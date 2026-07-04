@@ -1,4 +1,4 @@
-# EventForge — visual probe for the Open Sheets dock (dev tool, not shipped logic).
+# EventForge - visual probe for the Open Sheets dock (dev tool, not shipped logic).
 # Instantiates the dock control (open_sheets_dock.gd), feeds it a sample tab snapshot (badges,
 # a dirty sheet, a selected/active sheet, and a recently-closed section) and saves a PNG so the
 # list can be eyeballed. Run NON-headless (needs a renderer):

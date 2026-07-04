@@ -3,7 +3,7 @@ class_name ExpressionBuilderTest
 extends RefCounted
 # The "Insert Expression" window's operator palette and its tree results both insert at the caret of
 # the expression field via _insert_into_expression_target(). That field is always a CodeEdit, but the
-# old insert path only handled LineEdit — so picking a result (or, now, an operator) silently did
+# old insert path only handled LineEdit - so picking a result (or, now, an operator) silently did
 # nothing. These pin the shared helper for both the CodeEdit (the real case) and a LineEdit fallback.
 
 
@@ -21,7 +21,7 @@ static func run() -> bool:
 	dlg._expression_picker._expression_target_key = "value"
 	edit.set_caret_column(edit.text.length())  # caret at end, as after focusing the field
 
-	# Operator palette (" + ") then a chained value ("10") compose at the caret — the regression guard:
+	# Operator palette (" + ") then a chained value ("10") compose at the caret - the regression guard:
 	# before the fix this CodeEdit branch was missing, so both inserts were no-ops.
 	dlg._insert_into_expression_target(" + ")
 	dlg._insert_into_expression_target("10")
@@ -38,7 +38,7 @@ static func run() -> bool:
 	all_passed = _check("inserts into a LineEdit target too", line.text, "x > 5") and all_passed
 	host.free()
 
-	# (c) Non-self reflection — a class-backed sheet variable's members are pickable as `enemy.member`.
+	# (c) Non-self reflection - a class-backed sheet variable's members are pickable as `enemy.member`.
 	all_passed = _check("variable member fragment (property)",
 		ACEParamsDialog.variable_member_fragment("enemy", "health", false), "enemy.health") and all_passed
 	all_passed = _check("variable member fragment (method)",

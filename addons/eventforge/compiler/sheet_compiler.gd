@@ -1,8 +1,8 @@
-# EventForge — Event sheet compiler
+# EventForge - Event sheet compiler
 # Compiles EventSheetResource assets into deterministic GDScript output.
 #
-# THE PIPELINE (main path, in emission order — each phase is a "## …" section below):
-#   1. includes merge (event-sheet-style; policy-gated — see _merge_includes/_addon_policy)
+# THE PIPELINE (main path, in emission order - each phase is a "## …" section below):
+#   1. includes merge (event-sheet-style; policy-gated - see _merge_includes/_addon_policy)
 #   2. header comments, @tool, @ace_tags, @icon, class_name, extends
 #   3. behavior host accessor (behavior_mode)
 #   4. enums → signals → variables (with Inspector attributes) → tree variables
@@ -26,7 +26,7 @@ static var _emit_breakpoints_flag: bool = false
 static var _emit_event_trace_flag: bool = false
 
 # Live-values payload for the current compile (same single-threaded pattern as the
-# breakpoints flag — the trigger-section helper injects it into _process).
+# breakpoints flag - the trigger-section helper injects it into _process).
 static var _live_values_payload: String = ""
 # Whether the current debug compile still needs the edit-back receiver emitted (the
 # Live Values window's value edits arrive through it). Cleared once injected.
@@ -54,7 +54,7 @@ static var _behavior_host_default: String = ""
 
 
 ## Compiles an event sheet resource to a GDScript output file.
-## omit_generated_banner drops the "AUTO-GENERATED / DO NOT EDIT" header — used when the .gd IS the
+## omit_generated_banner drops the "AUTO-GENERATED / DO NOT EDIT" header - used when the .gd IS the
 ## user's source of truth (Save As .gd), not a regenerated companion of a .tres sheet.
 static func compile(sheet: EventSheetResource, output_path: String = "", omit_generated_banner: bool = false) -> Dictionary:
 	var result: Dictionary = {
@@ -73,7 +73,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		(result["errors"] as Array[String]).append("Sheet is null")
 		return result
 
-	# Host-targeting default for {host.} templates — reset before the external-source path so a
+	# Host-targeting default for {host.} templates - reset before the external-source path so a
 	# prior behavior compile never leaks "host" into a later non-behavior compile.
 	_behavior_host_default = ""
 
@@ -92,7 +92,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	_row_group_path = {}
 	# Event-sheet-style includes: merge included sheets' rows/variables/functions (compile-time
 	# only; the root sheet wins collisions, cycles are skipped with warnings).
-	# Include ORDER: an included (library) sheet's events run BEFORE the root sheet's own events —
+	# Include ORDER: an included (library) sheet's events run BEFORE the root sheet's own events -
 	# shared setup/library logic initializes first (the common "include the library at the top"). So the
 	# merged list is seeded with the includes, and the root's own events are appended last.
 	var all_events: Array = []
@@ -129,7 +129,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 			lines.append("## @ace_tags(%s)" % ", ".join(sheet.addon_tags))
 		# Family marker (metadata only, exactly like @ace_tags above): declares that this class is an
 		# event-sheet Family, so other sheets can write one rule over ALL its instances. No code is
-		# emitted from this flag — membership is an explicit "Add To Family" action — so the annotation
+		# emitted from this flag - membership is an explicit "Add To Family" action - so the annotation
 		# round-trips byte-exact and can never double-emit.
 		if sheet.is_family:
 			lines.append("## @ace_family(%s)" % sheet.custom_class_name.strip_edges())
@@ -137,7 +137,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 			lines.append("@icon(\"%s\")" % sheet.custom_class_icon)
 		lines.append("class_name %s" % sheet.custom_class_name.strip_edges())
 	# Behavior sheets compile to attachable Node components that act on their PARENT (the
-	# host) — Godot's component idiom standing in for node-attached behaviors. host_class is
+	# host) - Godot's component idiom standing in for node-attached behaviors. host_class is
 	# the declared required host type, not the script's base.
 	if sheet.behavior_mode:
 		# Node-scoped ACEs ({host.} templates) target the parent host, not the behavior Node.
@@ -151,13 +151,13 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	for description_line: String in _class_description_lines(sheet):
 		lines.append(description_line)
 	# Event-group declarations: one `## @ace_group(...)` per group at class scope, right after the doc
-	# block. Main path only — the external/.gd path keeps these verbatim in its preserved prelude, so
+	# block. Main path only - the external/.gd path keeps these verbatim in its preserved prelude, so
 	# emitting here too would duplicate them (compile() returns into _compile_external before this).
 	_emit_group_declarations(lines, group_decls)
 	# Family without a type: the @ace_family marker (and the derived family_<class> group) both need a
-	# class name, so a flagged-but-unnamed sheet would silently be no family at all — surface it.
+	# class name, so a flagged-but-unnamed sheet would silently be no family at all - surface it.
 	if sheet.is_family and sheet.custom_class_name.strip_edges().is_empty():
-		(result["warnings"] as Array).append("Sheet is marked as a Family but has no custom class name; a Family needs a type its instances share — give it a Custom Node class name. The @ace_family marker was skipped.")
+		(result["warnings"] as Array).append("Sheet is marked as a Family but has no custom class name; a Family needs a type its instances share - give it a Custom Node class name. The @ace_family marker was skipped.")
 
 	var source_map: Array = result["source_map"]
 	if sheet.behavior_mode:
@@ -179,7 +179,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 			if EventSheetIdentifierRules.is_valid(required_entry.strip_edges()):
 				required_behaviors.append("\"%s\"" % required_entry.strip_edges())
 			elif not required_entry.strip_edges().is_empty():
-				(result["warnings"] as Array).append("Requires entry \"%s\" isn't a valid class name — skipped." % required_entry.strip_edges())
+				(result["warnings"] as Array).append("Requires entry \"%s\" isn't a valid class name - skipped." % required_entry.strip_edges())
 		if not required_behaviors.is_empty():
 			lines.append("")
 			lines.append("## Declared sibling dependencies (attach these to the same parent).")
@@ -283,7 +283,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 				source_map.append({"uid": str((local_entry as LocalVariable).get_instance_id()), "start": local_var_start, "end": lines.size(), "kind": "variable"})
 
 	# Runtime-toggleable group flags (Set Group Active targets these members). Collected
-	# in a dedicated early pass — the flatten that ALSO maps guards runs later, in the
+	# in a dedicated early pass - the flatten that ALSO maps guards runs later, in the
 	# trigger-section phase, after this member block has already emitted.
 	_collect_runtime_group_members(all_events)
 	if not _runtime_group_members.is_empty():
@@ -315,14 +315,14 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		for live_key: Variant in live_keys:
 			payload_parts.append("\"%s\", %s" % [str(live_key), str(live_key)])
 		if payload_parts.is_empty():
-			(result["warnings"] as Array).append("Live values: this sheet has no variables to stream — add some or turn the toggle off.")
+			(result["warnings"] as Array).append("Live values: this sheet has no variables to stream - add some or turn the toggle off.")
 		else:
 			_live_values_payload = ", ".join(payload_parts)
 			_live_values_receiver_pending = true
 	if sheet.emit_event_trace:
 		_emit_event_trace_flag = true
 	# Live values and the event trace share one throttled _process, so they share the timer member;
-	# the trace also needs its per-frame buffer. Declared whenever either is enabled — the trace can
+	# the trace also needs its per-frame buffer. Declared whenever either is enabled - the trace can
 	# run on its own (without live values), so this is no longer gated behind emit_live_values.
 	if _live_values_receiver_pending or _emit_event_trace_flag:
 		if variable_lines.is_empty() and tree_variables.is_empty():
@@ -340,7 +340,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 			if trimmed_class.is_empty():
 				continue
 			if not EventSheetIdentifierRules.is_valid(trimmed_class):
-				(result["warnings"] as Array).append("Uses entry \"%s\" isn't a valid class name — skipped." % trimmed_class)
+				(result["warnings"] as Array).append("Uses entry \"%s\" isn't a valid class name - skipped." % trimmed_class)
 				continue
 			lines.append("var __uses_%s := %s.new()" % [trimmed_class.to_snake_case(), trimmed_class])
 
@@ -357,10 +357,10 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 				emitted_tool_button = true
 			lines.append("@export_tool_button(\"%s\") var _btn_%s: Callable = %s" % [button_label.c_escape(), button_target, button_target])
 	if emitted_tool_button and not sheet.tool_mode:
-		(result["warnings"] as Array).append("Tool buttons need a @tool sheet to run in the editor — enable Tool in the Sheet Type dialog.")
+		(result["warnings"] as Array).append("Tool buttons need a @tool sheet to run in the editor - enable Tool in the Sheet Type dialog.")
 
 	# Tree-placed GDScript blocks (top level / inside groups) are emitted verbatim at class
-	# level — helper functions, @onready vars, signal declarations, etc.
+	# level - helper functions, @onready vars, signal declarations, etc.
 	var raw_blocks: Array = []
 	_collect_class_level_raw_rows(all_events, raw_blocks)
 	for raw_entry: Variant in raw_blocks:
@@ -382,7 +382,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		if hook_generated:
 			for raw_entry2: Variant in raw_blocks:
 				if raw_entry2 is RawCodeRow and (raw_entry2 as RawCodeRow).code.contains("func %s(" % hook_name):
-					(result["warnings"] as Array).append("A GDScript block also defines %s() — remove it or clear the Inspector/Requires settings (duplicate functions don't compile)." % hook_name)
+					(result["warnings"] as Array).append("A GDScript block also defines %s() - remove it or clear the Inspector/Requires settings (duplicate functions don't compile)." % hook_name)
 
 	var deferred_rows: PackedStringArray = PackedStringArray()
 	var top_level_events: Array = []
@@ -395,14 +395,14 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 			continue  # emitted above as a class-level GDScript block
 		if row is CommentRow:
 			# Top-level comments compile to real comment lines (emitted after the trigger
-			# sections — position is approximate, content is preserved).
+			# sections - position is approximate, content is preserved).
 			if (row as CommentRow).enabled and not (row as CommentRow).text.strip_edges().is_empty():
 				for comment_line: String in (row as CommentRow).text.split("\n"):
 					deferred_rows.append("# %s" % comment_line)
 			continue
 		if row is EventGroup:
 			# Groups are organizational: their events compile inline (the helper flattens,
-			# honoring event-sheet semantics — a DISABLED group drops all of its children).
+			# honoring event-sheet semantics - a DISABLED group drops all of its children).
 			top_level_events.append(row)
 			continue
 		if row is EnumRow or row is SignalRow:
@@ -489,16 +489,16 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	return result
 
 
-## True when the file at `path` already holds exactly `output` — used to skip no-op rewrites.
+## True when the file at `path` already holds exactly `output` - used to skip no-op rewrites.
 ## Rewriting a byte-identical file bumps its mtime, which makes the Godot editor prompt
-## "Files have been modified outside Godot" on the next scene open/close — even though the
+## "Files have been modified outside Godot" on the next scene open/close - even though the
 ## generated code is byte-stable (the drift audit proves it) and nothing actually changed.
 static func _output_is_current(path: String, output: String) -> bool:
 	return FileAccess.file_exists(path) and FileAccess.get_file_as_string(path) == output
 
 
 ## Writes `output` to `path` only when it differs from what is already on disk, so an unchanged
-## recompile (sheet save, Attach to Node, Test Bench, export — all funnel through compile()) never
+## recompile (sheet save, Attach to Node, Test Bench, export - all funnel through compile()) never
 ## touches the file and never trips Godot's external-change watcher. Returns true on success,
 ## including the "already up to date" no-op; false only if a genuinely-needed write could not open.
 static func _write_output_if_changed(path: String, output: String) -> bool:
@@ -515,7 +515,7 @@ static func _write_output_if_changed(path: String, output: String) -> bool:
 
 ## Order-preserving emission for GDScript-backed sheets: rows reproduce the original file
 ## (verbatim blocks + verify-lifted variables) in sheet order; events/groups the user adds
-## afterwards append as standard trigger functions at the end. Disabled blocks still emit —
+## afterwards append as standard trigger functions at the end. Disabled blocks still emit -
 ## external mode is lossless, never a filter.
 static func _compile_external(sheet: EventSheetResource, result: Dictionary, output_path: String) -> Dictionary:
 	_live_values_receiver_pending = false
@@ -525,14 +525,14 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	_throttle_process_emitted = false
 	# Event groups dissolve into the trigger sections on this path too, so refill the per-compile slug
 	# map for THIS sheet (compile() returns into _compile_external before the main path's reset/collect
-	# runs). The `## @ace_group` declarations ride along verbatim in the preserved prelude rows — we only
+	# runs). The `## @ace_group` declarations ride along verbatim in the preserved prelude rows - we only
 	# need _group_slugs populated so _emit_event_body re-emits the `# @group:` markers (else an imported
 	# grouped sheet would lose them on the next save).
 	_group_slugs = {}
 	_row_group_path = {}
 	_collect_groups(sheet.events, [], {})
 	if not sheet.includes.is_empty() or not sheet.uses_addons.is_empty() or not sheet.requires_behaviors.is_empty():
-		(result["warnings"] as Array).append("GDScript-backed sheets ignore Includes/Uses/Requires — the .gd file is the source of truth (write the equivalent code directly).")
+		(result["warnings"] as Array).append("GDScript-backed sheets ignore Includes/Uses/Requires - the .gd file is the source of truth (write the equivalent code directly).")
 	var lines: PackedStringArray = PackedStringArray()
 	var source_map: Array = result["source_map"]
 	var added_event_rows: Array = []
@@ -540,8 +540,8 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable:
 			# The declaration can be MULTI-LINE (a `## doc` comment above the `@export var` line).
-			# Append each output line separately so lines.size() — and every row's map range after
-			# this one — counts the true line total; appending the whole string as one element would
+			# Append each output line separately so lines.size() - and every row's map range after
+			# this one - counts the true line total; appending the whole string as one element would
 			# undercount and drift the source map for the rest of the file.
 			var variable_start: int = lines.size() + 1
 			for declaration_line: String in _emit_tree_variable_line(entry as LocalVariable).split("\n"):
@@ -565,7 +565,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			var external_signal_line: String = _emit_signal_line(entry as SignalRow)
 			if not external_signal_line.is_empty():
 				# A trigger signal carries its `## @ace_trigger` (+ @ace_name / @ace_category) block ABOVE
-				# the declaration, exactly like the main path (:216-222) — so a behaviour's exposed trigger
+				# the declaration, exactly like the main path (:216-222) - so a behaviour's exposed trigger
 				# signal round-trips as a first-class row instead of stranding those annotations in a separate
 				# GDScript block. Plain signals emit none (byte-identical → existing .gd sheets never change).
 				var external_signal_start: int = lines.size() + 1
@@ -670,7 +670,7 @@ static func emit_function_block_text(event_function: EventFunction, sheet: Event
 
 ## Instance-backed addon ACEs: baked templates may call through a per-provider member
 ## (`__eventsheet_provider_<Class>.method(...)`). This pass scans the emitted lines for
-## those members and declares each one ONCE as a plain owned instance of the addon class —
+## those members and declares each one ONCE as a plain owned instance of the addon class -
 ## a direct, typed call path with zero EventForge dependency in the output (the addon
 ## script ships with the game like any other class). Providers extending Node should
 ## prefer behaviors/autoloads; RefCounted providers are the intended shape.
@@ -679,7 +679,7 @@ static func emit_function_block_text(event_function: EventFunction, sheet: Event
 ## skipping any already present verbatim (untouched files stay byte-identical).
 ## Insertions happen AFTER the source map was built, so every mapped range at or past the insertion
 ## point must shift down with the text or line→row lookups (the GDScript panel's click-to-select,
-## error deep-links) land a few rows off — exactly the bug this fixes. A range that STRADDLES the
+## error deep-links) land a few rows off - exactly the bug this fixes. A range that STRADDLES the
 ## insertion grows (its end shifts, its start doesn't).
 static func _shift_source_map(source_map: Array, first_inserted_line: int, count: int) -> void:
 	if count <= 0:
@@ -754,9 +754,9 @@ static func _insert_provider_member_declarations(lines: PackedStringArray, resul
 
 ## Recursively merges included sheets (see EventSheetResource.includes): variables and
 ## functions skip name collisions with a warning (root wins), rows append in include
-## order. Compile-time only — included rows never enter the editing model.
+## order. Compile-time only - included rows never enter the editing model.
 ## Composition policy: ProjectSettings gates under
-## "eventsheets/addons/*". THE INVARIANT: policy never changes emitted bytes — it only
+## "eventsheets/addons/*". THE INVARIANT: policy never changes emitted bytes - it only
 ## decides allowed (error), flagged (warning) or clean. Defaults are permissive so jams
 ## never meet the policy system.
 static func _addon_policy(key: String, default_value: Variant) -> Variant:
@@ -778,10 +778,10 @@ static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_fu
 			continue
 		if composition_mode == "off" and sheet.behavior_mode:
 			var sheet_label: String = sheet.resource_path.get_file() if not sheet.resource_path.is_empty() else (sheet.custom_class_name if not sheet.custom_class_name.is_empty() else "this sheet")
-			errors.append("Policy: addon composition is off (eventsheets/addons/composition_mode) — %s can't include %s." % [sheet_label, include_path.get_file()])
+			errors.append("Policy: addon composition is off (eventsheets/addons/composition_mode) - %s can't include %s." % [sheet_label, include_path.get_file()])
 			continue
 		if depth > max_depth:
-			var depth_message: String = "Include chain deeper than policy max (%d): %s. Deep chains are where addon ecosystems rot — consider flattening." % [max_depth, include_path.get_file()]
+			var depth_message: String = "Include chain deeper than policy max (%d): %s. Deep chains are where addon ecosystems rot - consider flattening." % [max_depth, include_path.get_file()]
 			if str(_addon_policy("depth_overflow", "warn")) == "error":
 				errors.append(depth_message)
 				continue
@@ -800,7 +800,7 @@ static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_fu
 		if include_sources.begins_with("tagged:"):
 			var required_tag: String = include_sources.trim_prefix("tagged:").strip_edges()
 			if not included.addon_tags.has(required_tag):
-				errors.append("Policy: includes must be tagged \"%s\" (eventsheets/addons/include_sources) — %s isn't." % [required_tag, include_path.get_file()])
+				errors.append("Policy: includes must be tagged \"%s\" (eventsheets/addons/include_sources) - %s isn't." % [required_tag, include_path.get_file()])
 				continue
 		if included.addon_tags.has("deprecated") and deprecated_blocks != "off":
 			var deprecated_message: String = "Include %s is tagged deprecated." % include_path.get_file()
@@ -813,7 +813,7 @@ static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_fu
 				if collision_policy == "error":
 					errors.append("Include %s: variable \"%s\" already defined (collision_policy = error)." % [include_path.get_file(), variable_name])
 				elif collision_policy != "silent":
-					warnings.append("Include %s: variable \"%s\" already defined — root wins." % [include_path.get_file(), variable_name])
+					warnings.append("Include %s: variable \"%s\" already defined - root wins." % [include_path.get_file(), variable_name])
 			else:
 				merged_variables[variable_name] = included.variables[variable_name]
 		var existing_function_names: Dictionary = {}
@@ -825,14 +825,14 @@ static func _merge_includes(sheet: EventSheetResource, all_events: Array, all_fu
 				if collision_policy == "error":
 					errors.append("Include %s: function \"%s\" already defined (collision_policy = error)." % [include_path.get_file(), (function_resource as EventFunction).function_name])
 					continue
-				warnings.append("Include %s: function \"%s\" already defined — root wins." % [include_path.get_file(), (function_resource as EventFunction).function_name])
+				warnings.append("Include %s: function \"%s\" already defined - root wins." % [include_path.get_file(), (function_resource as EventFunction).function_name])
 			else:
 				all_functions.append(function_resource)
 		all_events.append_array(included.events)
 		_merge_includes(included, all_events, all_functions, merged_variables, visited, warnings, errors, depth + 1)
 
 
-## Counts the EventRows nested anywhere under a row list (recursing groups) — drives the
+## Counts the EventRows nested anywhere under a row list (recursing groups) - drives the
 ## "N rows omitted" figure in the disabled-group breadcrumb.
 static func _count_event_rows(rows: Array) -> int:
 	var total: int = 0
@@ -845,7 +845,7 @@ static func _count_event_rows(rows: Array) -> int:
 	return total
 
 
-## A deterministic, GDScript-safe slug for a group name — NOT the random group_uid (which would make
+## A deterministic, GDScript-safe slug for a group name - NOT the random group_uid (which would make
 ## the emitted markers churn on every save). Lowercase, snake-cased, non-alphanumerics collapsed to a
 ## single underscore, with a numeric suffix on collision so two same-named groups stay distinct.
 ## `used` accumulates the slugs already handed out this compile.
@@ -890,7 +890,7 @@ static func _group_text_is_safe(text: String) -> bool:
 
 ## Emits the class-scope `## @ace_group(...)` declaration block (one line per group, parents first).
 ## Only non-default fields are written, and any free-text field with a quote or newline is dropped so
-## the single-line annotation always parses — the round-trip degrades gracefully (the group still
+## the single-line annotation always parses - the round-trip degrades gracefully (the group still
 ## reconstructs from its slug) rather than emitting a line the importer can't read back.
 static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> void:
 	for decl: Dictionary in decls:
@@ -915,7 +915,7 @@ static func _emit_group_declarations(lines: PackedStringArray, decls: Array) -> 
 
 
 ## Flattens trigger-bearing rows for emission: EventRows kept, ENABLED groups recursed (a disabled
-## group is dropped but leaves a breadcrumb comment — group-disable semantics), and group comments
+## group is dropped but leaves a breadcrumb comment - group-disable semantics), and group comments
 ## collected as deferred comment lines.
 static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comment_lines: PackedStringArray, runtime_guard: String = "", group_slug: String = "") -> void:
 	for row: Variant in rows:
@@ -923,7 +923,7 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 			if not runtime_guard.is_empty():
 				_runtime_group_guards[row] = runtime_guard
 			# Tag the row with its group's slug so _emit_event_body can emit a `# @group:` marker before
-			# it — the breadcrumb the importer reconstructs the EventGroup from.
+			# it - the breadcrumb the importer reconstructs the EventGroup from.
 			if not group_slug.is_empty():
 				_row_group_path[row] = group_slug
 			into_events.append(row)
@@ -931,7 +931,7 @@ static func _flatten_trigger_rows(rows: Array, into_events: Array, deferred_comm
 			var group: EventGroup = row as EventGroup
 			if group.enabled:
 				# Runtime-toggleable groups guard their events (nested groups inherit the
-				# INNERMOST toggleable guard — toggling the inner group wins, event-sheet-style).
+				# INNERMOST toggleable guard - toggling the inner group wins, event-sheet-style).
 				var child_guard: String = runtime_guard
 				if group.runtime_toggleable:
 					var guard_token: String = group.group_name.to_snake_case() if not group.group_name.is_empty() else "group"
@@ -975,7 +975,7 @@ static func _scan_declared_signals(raw_blocks: Array) -> Array:
 ## Groups event rows by trigger and emits one handler function per trigger (the standard
 ## trigger sections), plus the `_ready` connections signal-backed triggers need. Shared by
 ## the main compile path and the external (GDScript-backed sheet) path.
-## connect_context: {self_class: String, declared_signals: Array} — self-connections are
+## connect_context: {self_class: String, declared_signals: Array} - self-connections are
 ## validated against these at compile time (emitting a connect to a missing signal would
 ## make the whole generated script fail to parse).
 static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStringArray, source_map: Array, result: Dictionary, connect_context: Dictionary = {}, deferred_comment_lines: PackedStringArray = PackedStringArray()) -> void:
@@ -996,7 +996,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		(grouped[key] as Array).append(event_row)
 
 	# Resolve all signatures first so signal-backed triggers' `_ready` connections are
-	# known up front (handlers used to be generated but never connected — they only fired
+	# known up front (handlers used to be generated but never connected - they only fired
 	# when the user wired the signal manually in the scene).
 	var signatures: Dictionary = {}
 	var ready_connections: PackedStringArray = PackedStringArray()
@@ -1019,18 +1019,18 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			var declared_signals: Array = connect_context.get("declared_signals", [])
 			if not ClassDB.class_has_signal(self_class, signal_name) and not declared_signals.has(signal_name):
 				(result["warnings"] as Array[String]).append(
-					"Trigger %s: %s has no signal \"%s\" — connection skipped (connect it in the scene or declare the signal in a GDScript block)." % [key, self_class, signal_name]
+					"Trigger %s: %s has no signal \"%s\" - connection skipped (connect it in the scene or declare the signal in a GDScript block)." % [key, self_class, signal_name]
 				)
 				continue
 		var source_prefix: String = ""
 		if source_path == "@tree":
-			# Global SceneTree signals (process_frame / physics_frame) — post-tick triggers connect here.
+			# Global SceneTree signals (process_frame / physics_frame) - post-tick triggers connect here.
 			source_prefix = "get_tree()."
 		elif source_path == "@window":
-			# Root-window signals (close_requested) — the On Close Requested trigger connects here.
+			# Root-window signals (close_requested) - the On Close Requested trigger connects here.
 			source_prefix = "get_window()."
 		elif source_path.begins_with("autoload:"):
-			# Bus triggers: autoloads are global — connect by name, no node paths.
+			# Bus triggers: autoloads are global - connect by name, no node paths.
 			source_prefix = "%s." % source_path.trim_prefix("autoload:")
 		elif not source_path.is_empty():
 			source_prefix = "get_node(\"%s\")." % source_path
@@ -1070,7 +1070,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		if function_name == "_ready" and _live_values_receiver_pending:
 			# Edit-back channel: the Live Values window's edits arrive as
 			# "eventsheets:set_value" messages (debug sessions only; one receiver per
-			# game — the first streaming sheet wins, noted in the window).
+			# game - the first streaming sheet wins, noted in the window).
 			lines.append("\tif EngineDebugger.is_active() and not EngineDebugger.has_capture(\"eventsheets\"):")
 			lines.append("\t\tEngineDebugger.register_message_capture(&\"eventsheets\", _eventsheets_debug_set)")
 			had_body = true
@@ -1184,7 +1184,7 @@ static func _emit_event_body(
 				condition_texts.append("false")
 		var joiner: String = " or " if event_row.condition_mode == EventRow.ConditionMode.OR else " and "
 		var joined_conditions: String = joiner.join(condition_texts)
-		# Runtime-group guards AND-wrap the whole condition — joining a guard into an
+		# Runtime-group guards AND-wrap the whole condition - joining a guard into an
 		# OR list would silently disable the gate (`guard or a or b`).
 		if not runtime_group_guard.is_empty():
 			if condition_texts.is_empty():
@@ -1196,7 +1196,7 @@ static func _emit_event_body(
 			condition_texts.append(runtime_group_guard)
 
 		# Stateful conditions: prelude lines run every tick BEFORE the if (so they must
-		# not sit between an if and its elif — stateful events never chain).
+		# not sit between an if and its elif - stateful events never chain).
 		var stateful_preludes: PackedStringArray = PackedStringArray()
 		var stateful_on_true: PackedStringArray = PackedStringArray()
 		for condition: ACECondition in event_row.conditions:
@@ -1212,7 +1212,7 @@ static func _emit_event_body(
 			lines.append(indent + prelude_line)
 			had_body = true
 		# Group breadcrumb: a `# @group:<slug>` line before a grouped event's block, so the importer can
-		# reconstruct the EventGroup. Only top-of-group events (else_mode NONE) are tagged — chained
+		# reconstruct the EventGroup. Only top-of-group events (else_mode NONE) are tagged - chained
 		# else/elif rows belong to the same group as the `if` they continue.
 		if event_row.else_mode == EventRow.ElseMode.NONE and _row_group_path.has(event_row):
 			lines.append("%s# @group:%s" % [indent, str(_row_group_path[event_row])])
@@ -1222,7 +1222,7 @@ static func _emit_event_body(
 			warnings.append("Stateful conditions (Every X Seconds…) can't chain as Else/Else-If; emitted standalone.")
 			wants_chain = false
 		if not stateful_on_true.is_empty() and event_row.condition_mode == EventRow.ConditionMode.OR and event_row.conditions.size() > 1:
-			warnings.append("Stateful conditions in OR events rebase whenever ANY condition passes — consider a dedicated event.")
+			warnings.append("Stateful conditions in OR events rebase whenever ANY condition passes - consider a dedicated event.")
 		if wants_chain and not chain_open:
 			warnings.append("Else/Else-If event has no preceding conditioned event to chain onto; emitted standalone.")
 			wants_chain = false
@@ -1244,8 +1244,8 @@ static func _emit_event_body(
 			for on_true_line: String in stateful_on_true:
 				lines.append("\t".repeat(body_depth) + on_true_line)
 		# Pick filters ('for each' picking, the Godot way): each enabled filter wraps the
-		# event's body in a direct `for` loop — group members, children, or any GDScript
-		# iterable — with an optional predicate and first-N cap. Conditions gate the whole
+		# event's body in a direct `for` loop - group members, children, or any GDScript
+		# iterable - with an optional predicate and first-N cap. Conditions gate the whole
 		# loop; multiple filters nest in order. Plain loops keep the parity contract.
 		var pick_start_size: int = lines.size()
 		body_depth = _emit_pick_filters(event_row, lines, body_depth, warnings)
@@ -1258,7 +1258,7 @@ static func _emit_event_body(
 		if _emit_breakpoints_flag and event_row.debug_break:
 			var break_condition: String = event_row.debug_break_condition.strip_edges()
 			# Announce WHICH row is about to pause before the breakpoint statement: the editor-side
-			# debugger bridge captures "eventsheets:paused_row" and reveals that row on the sheet —
+			# debugger bridge captures "eventsheets:paused_row" and reveals that row on the sheet -
 			# core debugger messages (stack dumps) never reach editor plugins, so the generated code
 			# reports its own location over the same custom channel live-values already uses.
 			var announce: String = "if EngineDebugger.is_active(): EngineDebugger.send_message(\"eventsheets:paused_row\", [\"%s\"])" % event_row.event_uid
@@ -1278,7 +1278,7 @@ static func _emit_event_body(
 				if action_line.is_empty():
 					continue
 				# Multi-statement templates (Spawn Scene At…) emit one line each; an awaited action
-				# awaits only its LAST statement (the actual call) — prefixing `await` onto the joined
+				# awaits only its LAST statement (the actual call) - prefixing `await` onto the joined
 				# multi-line string would land it on a `var … =` declaration line (a parse error).
 				var action_lines: PackedStringArray = action_line.split("\n")
 				for line_index: int in action_lines.size():
@@ -1343,7 +1343,7 @@ static func _emit_event_body(
 ## Supported per filter: collection (GROUP → get_nodes_in_group, CHILDREN → get_children,
 ## EXPRESSION/ARRAY → verbatim GDScript iterable), predicate_expression (iterator-scoped
 ## GDScript), pick_first_n. order_by is not compiled yet (warning); filter_conditions use
-## host-context templates and are likewise warned — write the predicate instead.
+## host-context templates and are likewise warned - write the predicate instead.
 static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, body_depth: int, warnings: Array) -> int:
 	var loop_index: int = 0
 	var pick_idx: int = -1
@@ -1373,9 +1373,9 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			var uid: String = "%s_%d" % [event_row.event_uid, pick_idx]
 			# A budgeted loop only resumes because its trigger re-fires every frame. Warn on the common
 			# footgun: a top-level event whose trigger is one-shot would process only the first slice. (A
-			# sub-event has no trigger_id of its own, so it can't be checked here — that's documented.)
+			# sub-event has no trigger_id of its own, so it can't be checked here - that's documented.)
 			if not event_row.trigger_id.is_empty() and event_row.trigger_id != "OnProcess" and event_row.trigger_id != "OnPhysicsProcess":
-				warnings.append("Budgeted For Each under a one-shot trigger ('%s') only processes the first slice — drive it from On Process, or clear the frame-spread budget." % event_row.trigger_id)
+				warnings.append("Budgeted For Each under a one-shot trigger ('%s') only processes the first slice - drive it from On Process, or clear the frame-spread budget." % event_row.trigger_id)
 			var count_lit: int = pick.frame_spread_count
 			var budget_str: String = str(pick.frame_spread_budget_ms)
 			lines.append("%sif __loop_cursor_%s >= __loop_items_%s.size():" % [indent, uid, uid])
@@ -1472,7 +1472,7 @@ static func _condition_base_expr(condition: ACECondition) -> String:
 ## must be scoped to the picked instance. Resolves node_type via the registry; a custom/addon
 ## condition carrying ONLY a baked codegen_template with no findable descriptor is treated as
 ## non-node-scoped (its base expression still compiles, it just isn't iterator-prefixed).
-## Builtins + registered addons — the common case — resolve correctly.
+## Builtins + registered addons - the common case - resolve correctly.
 static func _condition_is_node_scoped(condition: ACECondition) -> bool:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	return descriptor != null and not descriptor.node_type.strip_edges().is_empty()
@@ -1501,7 +1501,7 @@ static func _pick_collection_expression(pick: PickFilter) -> String:
 
 ## Indents a sibling GDScript block's lines for `depth`. Imported code already carries its
 ## own leading tab (function bodies arrive pre-indented for depth 1), while code written in
-## the block editor is flat — detect which and prepend accordingly so both emit correctly.
+## the block editor is flat - detect which and prepend accordingly so both emit correctly.
 static func _indent_raw_lines(code: String, depth: int) -> PackedStringArray:
 	var raw_lines: PackedStringArray = code.split("\n")
 	var self_indented: bool = false
@@ -1519,18 +1519,18 @@ static func _indent_raw_lines(code: String, depth: int) -> PackedStringArray:
 ## Emits the `@ace_*` annotation block above an exposed sheet function. The annotations are
 ## parsed back by EventSheetSemanticAnalyzer when the compiled script is registered as a
 ## provider (drop it into res://eventsheet_addons/), publishing the function as an ACE in
-## every sheet — the sheet → script → addon loop behaviors and custom nodes build on.
+## every sheet - the sheet → script → addon loop behaviors and custom nodes build on.
 static func _emit_expose_annotations(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray) -> void:
 	if event_function.lifted_unannotated:
-		# Reverse-lifted from a hand-written helper with no annotation block — the source had no
+		# Reverse-lifted from a hand-written helper with no annotation block - the source had no
 		# `## @ace_hidden`, so emit none (keeps the opened .gd byte-identical on save).
 		return
 	if not event_function.expose_as_ace:
 		# Reflection publishes any public method of a provider script, so unexposed sheet
-		# functions are explicitly hidden — expose_as_ace is the single publication switch.
+		# functions are explicitly hidden - expose_as_ace is the single publication switch.
 		lines.append("## @ace_hidden")
 		return
-	# Three-way expose: the return type picks the directive — void = action, bool = condition, any
+	# Three-way expose: the return type picks the directive - void = action, bool = condition, any
 	# other value = expression (one method → one ACE, so exactly ONE directive). The shared
 	# @ace_codegen_template ($Class.fn(args)) serves all three: a method call returning bool/value is a
 	# valid condition/expression. The lifter re-derives the type from the return type on round-trip.
@@ -1563,17 +1563,17 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 	if sheet.behavior_mode and not sheet.custom_class_name.strip_edges().is_empty():
 		call_prefix = "$%s." % sheet.custom_class_name.strip_edges()
 	elif sheet.autoload_mode and not sheet.autoload_name.strip_edges().is_empty():
-		# Singletons are addressed by their autoload name — works from every scene,
+		# Singletons are addressed by their autoload name - works from every scene,
 		# no node paths (the whole point of an autoload).
 		call_prefix = "%s." % sheet.autoload_name.strip_edges()
 	lines.append("## @ace_codegen_template(\"%s%s(%s)\")" % [call_prefix, event_function.function_name, ", ".join(argument_tokens)])
 
 
 ## The stub emitted for a function whose body has no rows yet ("published before implemented").
-## `pass` only parses for void — a bool/typed function needs a type-correct `return <default>` or the
+## `pass` only parses for void - a bool/typed function needs a type-correct `return <default>` or the
 ## whole generated script fails to load, taking every OTHER verb on the sheet down with it.
 static func _empty_function_stub(event_function: EventFunction) -> String:
-	# A named (custom/engine class) return can't be defaulted structurally — null parses for any
+	# A named (custom/engine class) return can't be defaulted structurally - null parses for any
 	# object/collection type, so a bodiless helper with a named return still loads.
 	if not event_function.return_type_name.strip_edges().is_empty():
 		return "\treturn null"
@@ -1601,7 +1601,7 @@ static func _empty_function_stub(event_function: EventFunction) -> String:
 ## Builds the typed parameter list for a sheet function (e.g. "amount: int, label: String").
 ## "-> void" unless the function declares a Variant.Type return (TYPE_NIL = void).
 static func _function_return_type_name(event_function: EventFunction) -> String:
-	# An explicit type NAME wins — it can express what a Variant.Type can't (custom/engine classes,
+	# An explicit type NAME wins - it can express what a Variant.Type can't (custom/engine classes,
 	# typed collections), so a lifted `-> HealthPool` helper round-trips verbatim.
 	if not event_function.return_type_name.strip_edges().is_empty():
 		return event_function.return_type_name.strip_edges()
@@ -1624,7 +1624,7 @@ static func _emit_function_params(event_function: EventFunction) -> String:
 				continue
 			var type_name: String = param.type_name
 			var rendered: String = param_id if (type_name.is_empty() or type_name == "Variant") else "%s: %s" % [param_id, type_name]
-			# Optional GDScript default argument (`amount: int = 5`) — a dedicated field, NOT the picker
+			# Optional GDScript default argument (`amount: int = 5`) - a dedicated field, NOT the picker
 			# pre-fill default_value. GDScript requires defaulted params to be trailing; the function
 			# dialog enforces that on author.
 			var default_text: String = param.gdscript_default.strip_edges()
@@ -1645,7 +1645,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 	var keys: Array = variables.keys()
 	keys.sort()
 	# Tier 2 conditions (Show If / Lock Unless) aggregate into ONE generated
-	# _validate_property below, in variable order — canonical shape, dialog-edited.
+	# _validate_property below, in variable order - canonical shape, dialog-edited.
 	var property_conditions: Array = []
 
 	for key: Variant in keys:
@@ -1675,7 +1675,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			if exported and type_name == "String" and not combo_options.is_empty():
 				for unsupported_key: String in ["clamp", "on_changed", "read_only", "show_if", "lock_unless", "drawer"]:
 					if attributes.has(unsupported_key):
-						warnings.append("Variable \"%s\": combo variables don't support the %s attribute yet — ignored." % [var_name, unsupported_key])
+						warnings.append("Variable \"%s\": combo variables don't support the %s attribute yet - ignored." % [var_name, unsupported_key])
 				lines.append("%s var %s: String = %s" % [_export_enum_prefix(combo_options), var_name, _to_code_literal(default_value)])
 				continue
 			var export_prefix: String = "@export " if exported else ""
@@ -1709,7 +1709,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			# Warn on typos even when the sheet has no functions at all (the empty-dict
 			# guard used to silently skip exactly the case most likely to be a mistake).
 			if not on_changed.is_empty() and not function_names.has(on_changed):
-				warnings.append("Variable \"%s\": On Changed targets unknown function \"%s\" — check the spelling." % [var_name, on_changed])
+				warnings.append("Variable \"%s\": On Changed targets unknown function \"%s\" - check the spelling." % [var_name, on_changed])
 			if not on_changed.is_empty() or clamp_enabled:
 				lines.append("%svar %s: %s = %s:" % [export_prefix, var_name, type_name, _to_code_literal(default_value)])
 				lines.append("\tset(value):")
@@ -1727,7 +1727,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				var condition_predicate: String = str(attributes.get(condition_key, "")).strip_edges()
 				if exported and not condition_predicate.is_empty():
 					if not variables.has(condition_predicate):
-						warnings.append("Variable \"%s\": %s targets unknown variable \"%s\" — check the spelling." % [var_name, condition_key, condition_predicate])
+						warnings.append("Variable \"%s\": %s targets unknown variable \"%s\" - check the spelling." % [var_name, condition_key, condition_predicate])
 					property_conditions.append({"name": var_name, "predicate": condition_predicate, "kind": condition_key})
 		else:
 			lines.append("@export var %s: Variant = %s" % [var_name, _to_code_literal(descriptor)])
@@ -1749,7 +1749,7 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 ## Recursively gathers tree-placed GDScript blocks from the top level and groups (sub-event
 ## raw blocks stay deferred until sub-events compile).
 ## Canonical single-line enum emission ("" when unnamed/empty/disabled). The importer's
-## verify-lift depends on this exact form — change it only with a lifter update.
+## verify-lift depends on this exact form - change it only with a lifter update.
 static func _emit_enum_line(enum_row: EnumRow) -> String:
 	# EnumRow is a registered RESOURCE kind on the Custom Block API - the compiler actively
 	# dispatches the built-in through the same emit contract pack kinds use.
@@ -1785,7 +1785,7 @@ static func _emit_signal_line(signal_row: SignalRow) -> String:
 
 ## Trigger-ACE annotation lines emitted ABOVE a trigger SignalRow's `signal` declaration, so the
 ## signal publishes as a trigger ACE (a code-free alternative to a hand-written @ace_trigger block).
-## Empty for a plain signal — byte-identical to before, so existing signals never change.
+## Empty for a plain signal - byte-identical to before, so existing signals never change.
 static func _emit_signal_annotations(signal_row: SignalRow) -> PackedStringArray:
 	var annotations: PackedStringArray = PackedStringArray()
 	if signal_row == null or not signal_row.enabled or not signal_row.trigger:
@@ -2125,7 +2125,7 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 ## Tier 3 custom-drawer @export_custom prefix. The `eventsheet:<drawer>`
 ## marker rides an @export_custom hint string; the editor's EventSheetAttributeDrawers plugin recognises it
 ## and swaps in a richer control, while WITHOUT the plugin (or in an exported game) the property degrades to
-## a plain field — the parity covenant is untouched. Returns "" when there's no drawer or the var type can't
+## a plain field - the parity covenant is untouched. Returns "" when there's no drawer or the var type can't
 ## host it (so emission is unchanged). One helper drives BOTH _emit_variables (dict) and _emit_tree_variable_
 ## line (tree) so a drawer round-trips identically on either path. progress_bar/vector_dial read their numeric
 ## bounds from attributes.range; the other drawers carry no config.
@@ -2149,7 +2149,7 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 				return ""
 			marker = "eventsheet:swatch_row"
 		"texture_preview":
-			# Texture2D only — matches the dialog's per-type picker (a String-path variant was an inconsistency:
+			# Texture2D only - matches the dialog's per-type picker (a String-path variant was an inconsistency:
 			# the picker never offered it, so editing such a var would silently drop the drawer).
 			if type_name != "Texture2D":
 				return ""
@@ -2164,13 +2164,13 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 
 
 ## @export_group/@export_subgroup lines emitted before an EXPORTED tree variable that carries Inspector
-## grouping. Empty for non-exported or un-grouped vars (the common case — existing emission stays
+## grouping. Empty for non-exported or un-grouped vars (the common case - existing emission stays
 ## byte-identical). Must match _emit_variables' format exactly (the verify-lift compares against it).
 static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	if not local_var.exported or not (local_var.attributes is Dictionary) or local_var.attributes.is_empty():
 		return ""
 	var prefix: String = ""
-	# Tooltip first, then category/group/subgroup — same canonical order as the dict-var path
+	# Tooltip first, then category/group/subgroup - same canonical order as the dict-var path
 	# (_emit_variables), so the importer's absorb can verify-lift the whole block. The ## doc
 	# attaches to the following @export var.
 	var tooltip: String = str(local_var.attributes.get("tooltip", "")).strip_edges()
@@ -2188,7 +2188,7 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	return prefix
 
 
-## Canonical @export_enum prefix ("@export_enum(\"a\", \"b\")") — verify-lift relies on
+## Canonical @export_enum prefix ("@export_enum(\"a\", \"b\")") - verify-lift relies on
 ## this exact form.
 static func _export_enum_prefix(options: PackedStringArray) -> String:
 	var quoted: PackedStringArray = PackedStringArray()
@@ -2218,7 +2218,7 @@ static func _to_code_literal(value: Variant) -> String:
 			return "null"
 		TYPE_ARRAY:
 			# Canonical container literals (recursive, deterministic, str_to_var-parseable):
-			# verify-lift depends on this exact spacing — change only with a lifter update.
+			# verify-lift depends on this exact spacing - change only with a lifter update.
 			var parts: PackedStringArray = PackedStringArray()
 			for item: Variant in (value as Array):
 				parts.append(_to_code_literal(item))
@@ -2230,7 +2230,7 @@ static func _to_code_literal(value: Variant) -> String:
 				entries.append("%s: %s" % [_to_code_literal(key), _to_code_literal(dictionary_value[key])])
 			return "{%s}" % ", ".join(entries)
 		# Constructor literals for the common game-value types (so Vector2/Color variables emit valid,
-		# str_to_var-parseable GDScript that the importer round-trips — str(Vector2) would give "(0, 0)").
+		# str_to_var-parseable GDScript that the importer round-trips - str(Vector2) would give "(0, 0)").
 		# Components reuse the float rule, whose str() form is shortest-round-trippable, keeping re-emission
 		# byte-stable.
 		TYPE_VECTOR2:
@@ -2245,7 +2245,7 @@ static func _to_code_literal(value: Variant) -> String:
 
 ## Resolves output path from explicit input or sheet resource path. With no explicit
 ## path the sheet's EXISTING pair wins: the conventional <name>_generated.gd when
-## present, else a sibling <name>.gd — but only when its header proves the compiler
+## present, else a sibling <name>.gd - but only when its header proves the compiler
 ## wrote it for THIS sheet (the pack builder's take_over_path convention); a
 ## hand-written same-name script is never adopted as an output target. This keeps
 ## compile-on-save and the export-integrity pass refreshing the committed pair
@@ -2254,7 +2254,7 @@ static func _resolve_output_path(sheet: EventSheetResource, output_path: String)
 	if not output_path.is_empty():
 		return output_path
 	if not sheet.resource_path.is_empty():
-		# get_basename() (full path minus extension) — building from get_base_dir()
+		# get_basename() (full path minus extension) - building from get_base_dir()
 		# yields user:///… triple slashes for root-level paths.
 		var base: String = sheet.resource_path.get_basename()
 		var generated: String = base + "_generated.gd"

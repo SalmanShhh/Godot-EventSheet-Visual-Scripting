@@ -1,4 +1,4 @@
-# EventForge — plugin teardown symmetry test.
+# EventForge - plugin teardown symmetry test.
 # "Easy to remove without breaking the project" depends on _exit_tree fully undoing
 # _enter_tree. This guards the contract statically: every EditorPlugin lifecycle add_* the
 # plugin performs must have a matching remove_* so disabling the plugin leaves no orphan

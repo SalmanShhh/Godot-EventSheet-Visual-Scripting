@@ -1,23 +1,23 @@
 @tool
 class_name EventSheetAuthorActions
 extends RefCounted
-# Surface-level authoring shortcuts driven from the toolbar / menu / context-menu — the quick-add
+# Surface-level authoring shortcuts driven from the toolbar / menu / context-menu - the quick-add
 # bar's fuzzy match+apply, Run Scene, and Save/Insert row Snippets. This helper owns:
 #   • the quick-add bar's brain: _quick_match (best-ACE fuzzy match of a "type to insert" query,
 #     honoring the picker's synonym phrasing, filling parameters positionally) and _quick_add (apply
-#     the match — triggers/conditions become a new event, actions append via the standard flow),
+#     the match - triggers/conditions become a new event, actions append via the standard flow),
 #   • Run Scene: save-then-play the scene(s) attaching this sheet's script (the doctor's reverse
 #     lookup; single scene plays, multiple offer a pick menu),
 #   • row Snippets: Save Selection as Snippet… (serialize the top-level selection into the project
-#     library) and Insert Snippet… (paste a library snippet back — fresh uids, missing variables
+#     library) and Insert Snippet… (paste a library snippet back - fresh uids, missing variables
 #     created), each with its own small dialog Window.
 #
 # Extracted from event_sheet_dock.gd to keep that file maintainable.
 #
 # WHAT STAYS ON THE DOCK (reached here through `_dock`):
-#   • the quick-add WIDGET `_quick_add_edit` — it stays declared on the dock and is built + assigned
+#   • the quick-add WIDGET `_quick_add_edit` - it stays declared on the dock and is built + assigned
 #     by menu_bar.gd; its text_submitted closure calls `_dock._quick_add(text)` (the dock delegate),
-#   • `_paste_snippet_text` — it lives in the dock's copy/paste cluster (paste flow + snippet_share_test
+#   • `_paste_snippet_text` - it lives in the dock's copy/paste cluster (paste flow + snippet_share_test
 #     call it); `_insert_snippet_path` reaches it via `_dock._paste_snippet_text`,
 #   • the seam the moved bodies lean on: `_ensure_sheet_for_editing`, `_apply_ace_definition`,
 #     `_ace_registry`, `_active_view`, `_top_level_selected_resources`, `_on_save_requested`,
@@ -27,12 +27,12 @@ extends RefCounted
 # ACEDefinition, EditorInterface, Engine) are unchanged.
 #
 # The dock keeps thin one-line delegates (original names + signatures + returns) for every method
-# reached from outside this helper — the tests (intellisense_test, tedium_test, godot_workflow_test),
+# reached from outside this helper - the tests (intellisense_test, tedium_test, godot_workflow_test),
 # the sibling dock/ helpers (menu_bar → `_quick_add` / `_run_from_sheet`; command_palette →
 # `_run_from_sheet`), and the in-file context-menu dispatchers (`_open_insert_snippet` /
-# `_open_save_snippet_dialog`) — so those callers resolve unchanged.
+# `_open_save_snippet_dialog`) - so those callers resolve unchanged.
 #
-# CLOSURE NOTES (all self-contained — every lambda captures helper-local state and calls sibling
+# CLOSURE NOTES (all self-contained - every lambda captures helper-local state and calls sibling
 # helper methods that ALSO moved here):
 #   • `_run_from_sheet`'s `_run_scene_menu.index_pressed` lambda captures the moved `_run_scene_menu`
 #     and calls the moved `_play_scene_path`,
@@ -61,7 +61,7 @@ func _quick_match(query: String) -> Dictionary:
 	return {"definition": (ranked[0] as Dictionary).get("definition"), "params": (ranked[0] as Dictionary).get("params")}
 
 
-## The ranked quick-add candidates for a query — the same scoring _quick_match uses, kept as a LIST so
+## The ranked quick-add candidates for a query - the same scoring _quick_match uses, kept as a LIST so
 ## the Ghost Row can offer the top matches while the quick-add bar takes the best. Each entry is
 ## {definition, params, score}: exact name = 100, name + trailing params = 90, name-prefix = 60,
 ## substring = 40; higher scores first, and shorter matched names break ties (the query "process"
@@ -119,7 +119,7 @@ func _quick_match_ranked(query: String, limit: int = 5) -> Array:
 ## Splits a quick-add query's trailing parameter text into positional values, QUOTE-AWARE: a
 ## `"`-opened run stays ONE token with its quotes kept (param values are raw GDScript expressions, so
 ## a string param needs them), while unquoted runs split on spaces. The naive split(" ") mis-filled
-## `play "jump land"` as two params ("jump / land"). An unterminated quote is forgiven — the rest of
+## `play "jump land"` as two params ("jump / land"). An unterminated quote is forgiven - the rest of
 ## the text becomes the final token. Static + pure (headless-testable); the same tokenizer the Ghost
 ## Row's zero-dialog add reuses.
 static func tokenize_quick_params(rest: String) -> PackedStringArray:
@@ -152,8 +152,8 @@ func _quick_add(query: String) -> bool:
 		return false
 	var definition: ACEDefinition = matched.get("definition")
 	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
-	# An action lands ON the selected event (append_action — same as the toolbar's Add Action);
-	# "" was falling into the apply's default branch, which wraps the action in a NEW event —
+	# An action lands ON the selected event (append_action - same as the toolbar's Add Action);
+	# "" was falling into the apply's default branch, which wraps the action in a NEW event -
 	# the fallback that's only right when nothing is selected.
 	var mode: String = "new_condition_event"
 	if definition.ace_type == ACEDefinition.ACEType.ACTION:
@@ -165,18 +165,18 @@ func _quick_add(query: String) -> bool:
 	_dock._apply_ace_definition(definition, matched.get("params", {}), context)
 	return true
 
-# ── Run Scene — sheet → playing game in one click ──────────────────────────
+# ── Run Scene - sheet → playing game in one click ──────────────────────────
 var _run_scene_menu: PopupMenu = null
 
 
 ## Sheet → playing game in one click: save (compile-on-save keeps the script fresh),
 ## find the scene(s) attaching this sheet's script (the doctor's reverse lookup),
-## play the only one — or offer the pick menu.
+## play the only one - or offer the pick menu.
 func _run_from_sheet() -> void:
 	if _dock._current_sheet == null:
 		return
 	if _dock._current_sheet.behavior_mode:
-		_dock._set_status("Behaviors run on a host — use Tools → Test Bench.", true)
+		_dock._set_status("Behaviors run on a host - use Tools → Test Bench.", true)
 		return
 	_dock._on_save_requested()
 	if _dock._current_sheet_path.is_empty():
@@ -184,7 +184,7 @@ func _run_from_sheet() -> void:
 	var script_path: String = _run_target_script_path()
 	var scenes: PackedStringArray = EventSheetProjectDoctor.scenes_attaching(script_path)
 	if scenes.is_empty():
-		_dock._set_status("No scene attaches %s yet — attach it to a scene and run again." % script_path.get_file(), true)
+		_dock._set_status("No scene attaches %s yet - attach it to a scene and run again." % script_path.get_file(), true)
 		return
 	if scenes.size() == 1:
 		_play_scene_path(scenes[0])
@@ -215,7 +215,7 @@ func _play_scene_path(scene_path: String) -> void:
 		EditorInterface.play_custom_scene(scene_path)
 	_dock._set_status("Running %s." % scene_path.get_file())
 
-# ── Row snippets — save the selection, insert from the project library
+# ── Row snippets - save the selection, insert from the project library
 # (EventSheetSnippetLibrary; the clipboard text format is the file format) ────────────
 var _snippet_name_window: Window = null
 var _snippet_name_edit: LineEdit = null
@@ -267,14 +267,14 @@ func _save_selection_snippet_named(snippet_name: String) -> String:
 		return ""
 	if Engine.is_editor_hint() and _dock.is_inside_tree():
 		EditorInterface.get_resource_filesystem().scan()
-	_dock._set_status("Snippet saved: %s — Insert Snippet… lists it now." % path)
+	_dock._set_status("Snippet saved: %s - Insert Snippet… lists it now." % path)
 	return path
 
 
 func _open_insert_snippet() -> void:
 	var snippets: PackedStringArray = EventSheetSnippetLibrary.list_snippets()
 	if snippets.is_empty():
-		_dock._set_status("No snippets yet — select rows and Save Selection as Snippet… first.", true)
+		_dock._set_status("No snippets yet - select rows and Save Selection as Snippet… first.", true)
 		return
 	if _snippet_list_window == null:
 		_snippet_list_window = Window.new()
@@ -296,7 +296,7 @@ func _open_insert_snippet() -> void:
 	_snippet_list_window.popup_centered()
 
 
-## Insert = the normal snippet paste (fresh uids, missing variables created — the
+## Insert = the normal snippet paste (fresh uids, missing variables created - the
 ## whole paste contract for free).
 func _insert_snippet_path(snippet_path: String) -> void:
 	if not _dock._paste_snippet_text(EventSheetSnippetLibrary.read_snippet(snippet_path)):

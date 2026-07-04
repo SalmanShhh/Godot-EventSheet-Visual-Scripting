@@ -1,4 +1,4 @@
-# EventForge — generated-line ↔ sheet-row mapping over the compiler's source map.
+# EventForge - generated-line ↔ sheet-row mapping over the compiler's source map.
 #
 # Every compile returns a source_map: [{uid, start, end, kind}] where uid is the emitting resource's
 # instance id and start/end are 1-BASED line numbers in the generated .gd. Ranges NEST (an in-flow
@@ -7,8 +7,8 @@
 # has vanished or has no selectable row of its own".
 #
 # This is the ONE shared lookup for everything that joins generated code back to sheet rows: the
-# GDScript panel's click-to-select and row-highlight (the dock), and — because errors and stack
-# traces arrive as line numbers — runtime-error deep-links and debugger paused-at-row. Static + pure
+# GDScript panel's click-to-select and row-highlight (the dock), and - because errors and stack
+# traces arrive as line numbers - runtime-error deep-links and debugger paused-at-row. Static + pure
 # over the passed source_map, so it works headless and outside the editor UI.
 @tool
 class_name EventSheetLineRowMapper
@@ -33,7 +33,7 @@ static func entries_for_line(source_map: Array, line: int) -> Array:
 
 
 ## The most specific LIVE resource whose emission contains the line (null when every containing
-## entry's resource has been freed — e.g. a stale map after the undo funnel replaced the sheet).
+## entry's resource has been freed - e.g. a stale map after the undo funnel replaced the sheet).
 static func resource_for_line(source_map: Array, line: int) -> Resource:
 	for entry: Variant in entries_for_line(source_map, line):
 		var resource: Resource = instance_from_id(int(str((entry as Dictionary).get("uid", "0")))) as Resource

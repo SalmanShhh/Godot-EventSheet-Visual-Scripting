@@ -1,9 +1,9 @@
-# Godot EventSheets — reusable visual Controls for Tier 3 custom Inspector drawers.
+# Godot EventSheets - reusable visual Controls for Tier 3 custom Inspector drawers.
 #
 # These are plain Controls (NOT EditorProperty), so the SAME widget is reused in two places: the Inspector
 # drawers (attribute_drawers.gd wraps each in an EditorProperty and forwards edits) AND the Variable dialog's
 # live "what the drawer looks like" preview. Each editable widget exposes a value getter/setter and a
-# `value_changed` signal; display-only widgets just take a value. None of this ships in generated game code —
+# `value_changed` signal; display-only widgets just take a value. None of this ships in generated game code -
 # the drawers are an editor-only nicety, so the parity covenant is untouched.
 @tool
 class_name EventSheetDrawerWidgets
@@ -133,7 +133,7 @@ class DrawerVectorDial:
 
 
 # ── Colour swatch row ───────────────────────────────────────────────────────
-## A row of palette presets plus a full picker — click a swatch (or pick) to set the colour fast.
+## A row of palette presets plus a full picker - click a swatch (or pick) to set the colour fast.
 class DrawerSwatchRow:
 	extends HBoxContainer
 	signal value_changed(value: Color)

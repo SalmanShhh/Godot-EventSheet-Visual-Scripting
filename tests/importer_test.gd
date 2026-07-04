@@ -1,4 +1,4 @@
-# EventForge — GDScript importer (structural round-trip)
+# EventForge - GDScript importer (structural round-trip)
 #
 # Imports GDScript into an EventSheetResource (extends host class, exported variables,
 # functions with bodies preserved as RawCodeRow) and verifies a structural round-trip back

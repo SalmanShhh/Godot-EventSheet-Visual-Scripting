@@ -2,10 +2,10 @@
 class_name EventSheetFindBar
 extends RefCounted
 # The FIND & REPLACE bar cluster. This helper owns:
-#   • the script-editor-style find bar behaviour — Ctrl+F opens it, Enter/F3 steps to the next match,
+#   • the script-editor-style find bar behaviour - Ctrl+F opens it, Enter/F3 steps to the next match,
 #     Shift+F3 the previous, Esc hides it (matches recompute on every step so results never go stale,
 #     and find lands inside folded groups by unfolding the path to the match),
-#   • Replace All across the whole sheet — comments, GDScript blocks, string params, pick-filter
+#   • Replace All across the whole sheet - comments, GDScript blocks, string params, pick-filter
 #     expressions, group names/descriptions and match branches, as one undoable edit with a count,
 #   • `_replace_in_rows`, the long/branchy recursion Replace All (and project-wide find) walk to
 #     substitute text through the full row/ACE/group tree.
@@ -14,26 +14,26 @@ extends RefCounted
 #
 # WHAT STAYS ON THE DOCK (reached here through `_dock`):
 #   • the find-bar WIDGET members `_find_bar` / `_find_edit` / `_find_count_label` / `_replace_edit`
-#     and the match-cursor state `_find_resource_matches` / `_find_cursor` — they stay declared on the
+#     and the match-cursor state `_find_resource_matches` / `_find_cursor` - they stay declared on the
 #     dock so the tests (godot_feel_test, ux_polish_test) and project_find.gd can read them by name.
 #     `_ensure_find_bar()` (the builder) constructs them and assigns each back via `_dock._find_bar = …`
 #     etc. (mirrors the menu_bar "widgets-stay, builder-assigns-back" pattern),
 #   • the `_toolbar` the find bar is added into,
 #   • the mutation funnel (`_perform_undoable_sheet_edit` / `_mark_dirty` / `_set_status` /
 #     `_refresh_after_edit`), plus `_current_sheet` and `_viewport` / `_active_view`,
-#   • `_open_match_in_split` — the find bar's "Open in Split" button keeps calling the dock delegate
+#   • `_open_match_in_split` - the find bar's "Open in Split" button keeps calling the dock delegate
 #     (already a _multi_view delegate on the dock).
 # Globals are unchanged.
 #
 # The dock keeps thin one-line delegates (original names + signatures + returns) for every method
-# reached from outside this helper — the in-file `_viewport.find_requested.connect(_show_find_bar)`
+# reached from outside this helper - the in-file `_viewport.find_requested.connect(_show_find_bar)`
 # site, the tests, and the sibling dock/ helpers (multi_view_manager → `_dock._show_find_bar` /
 # `_dock._find_step`; project_find → `_dock._ensure_find_bar` / `_dock._replace_in_rows` /
-# `_dock._replace_all_in_sheet`) — so those callers resolve unchanged.
+# `_dock._replace_all_in_sheet`) - so those callers resolve unchanged.
 #
 # CLOSURE NOTES:
 #   • `_ensure_find_bar`'s `gui_input` lambda captures the WIDGET `_find_bar` and `_viewport`, which
-#     live on the dock — so both reach through `_dock.`,
+#     live on the dock - so both reach through `_dock.`,
 #   • the close-button lambda captures `_find_bar` → `_dock.`,
 #   • `_replace_all_in_sheet`'s undoable lambda captures the LOCALS `counter` / `find_text` /
 #     `replace_text` (not helper/dock members, so they survive verbatim) and calls `_replace_in_rows`
@@ -106,7 +106,7 @@ func _on_find_text_changed(text: String) -> void:
 
 func _find_step(direction: int) -> void:
 	# Matches recompute on every step (results go stale after any edit) and search the
-	# FULL tree — find lands inside folded groups by unfolding the path to the match.
+	# FULL tree - find lands inside folded groups by unfolding the path to the match.
 	if _dock._find_edit == null or _dock._viewport == null or _dock._find_edit.text.strip_edges().is_empty():
 		return
 	_dock._find_resource_matches = _dock._viewport.search_all(_dock._find_edit.text)
@@ -120,7 +120,7 @@ func _find_step(direction: int) -> void:
 
 
 ## Replace All: substitutes the find text across comments, GDScript blocks, string
-## params, pick-filter expressions, group names/descriptions and match branches —
+## params, pick-filter expressions, group names/descriptions and match branches -
 ## one undoable edit, count reported.
 func _replace_all_in_sheet() -> void:
 	if _dock._viewport == null or _dock._current_sheet == null or _dock._find_edit == null or _dock._replace_edit == null:

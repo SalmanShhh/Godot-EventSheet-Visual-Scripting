@@ -1,4 +1,4 @@
-# Godot EventSheets — Language gaps closed (Loops + Pick Instances + returns + more)
+# Godot EventSheets - Language gaps closed (Loops + Pick Instances + returns + more)
 # Ordered picking (pick nearest/highest), Repeat/While loop kinds, function return types
 # (+ Return actions), group-local variables, and real breakpoints (gated emission).
 @tool

@@ -1,8 +1,8 @@
-# Godot EventSheets — ProjectSettings registration
+# Godot EventSheets - ProjectSettings registration
 #
 # Every eventsheets/* setting, registered the Godot way: visible and documented in
 # Project Settings instead of existing only as invisible get_setting() defaults.
-# Registration is value-neutral — defaults equal the in-code fallbacks, and values
+# Registration is value-neutral - defaults equal the in-code fallbacks, and values
 # matching the initial value are never written to project.godot (no git noise).
 # Readers keep their get_setting(name, default) form, so tests that reset a setting
 # to null keep working (null erases; the fallback takes over).

@@ -1,8 +1,8 @@
-# Godot EventSheets — Optional {target.} idiom + node-scoped ACE retargeting.
+# Godot EventSheets - Optional {target.} idiom + node-scoped ACE retargeting.
 #
 # Node-scoped ACEs (Set Modulate, Set Volume, Play, …) used to act only on the host. They now carry an
 # optional "On node" target via the {target.} optional-prefix idiom: blank = the host (output is
-# byte-identical to before — the covenant), set = act on another node ($Enemy.modulate = …). This
+# byte-identical to before - the covenant), set = act on another node ($Enemy.modulate = …). This
 # verifies the idiom substitution, that the post-pass added the target to a real node-scoped ACE (and
 # correctly SKIPPED a non-prefixable one), the blank-target covenant, retargeting, and that BOTH shapes
 # round-trip through import (the lifter expands {target.} into its two reverse forms).

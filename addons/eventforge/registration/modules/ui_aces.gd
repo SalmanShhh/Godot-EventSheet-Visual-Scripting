@@ -1,9 +1,9 @@
-# EventForge module — UI / menu vocabulary (Control / BaseButton / Range / LineEdit)
+# EventForge module - UI / menu vocabulary (Control / BaseButton / Range / LineEdit)
 #
 # The first-class menu/HUD surface: Button On Pressed / On Toggled triggers (connected via
 # the OnButtonPressed/OnButtonToggled arms in trigger_resolver.gd), focus navigation, and
 # Range/LineEdit get-set. Lane-1 wraps of native Control nodes, single-line per the parity
-# contract. Module contract: see ace_factory.gd — ace_ids/templates are API (covenant).
+# contract. Module contract: see ace_factory.gd - ace_ids/templates are API (covenant).
 @tool
 class_name EventForgeUIACEs
 extends RefCounted
@@ -50,7 +50,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetButtonText", "Button Text", ACEDescriptor.ACEType.EXPRESSION, "text", "", [], "UI", "button text", "Button")
 		.described("Returns the label text currently shown on the button."))
 
-	# ── Range (ProgressBar / Slider / SpinBox) — HUD bars + sliders ──
+	# ── Range (ProgressBar / Slider / SpinBox) - HUD bars + sliders ──
 	descriptors.append(F.make_descriptor("Core", "SetRangeValue", "Set Value", ACEDescriptor.ACEType.ACTION, "value = {value}", "", [F.make_param("value", "String", "0", "Value", "New value.", "expression")], "UI", "Set value to {value}", "Range")
 		.described("Sets a slider, progress bar, or spinbox to a specific value."))
 	descriptors.append(F.make_descriptor("Core", "SetRangeMax", "Set Max Value", ACEDescriptor.ACEType.ACTION, "max_value = {max}", "", [F.make_param("max", "String", "100", "Max", "Maximum value.", "expression")], "UI", "Set max value to {max}", "Range")

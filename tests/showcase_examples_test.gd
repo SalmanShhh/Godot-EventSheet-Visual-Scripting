@@ -1,4 +1,4 @@
-# Godot EventSheets — showcase examples regression test.
+# Godot EventSheets - showcase examples regression test.
 # Guards the three shipped demos (flagship Carousel + Starfall + Quest FSM): each .tres
 # must compile to plain GDScript, the compiled output must contain the power-feature
 # constructs each demo advertises, and each .tscn must instantiate. Uses the stable
@@ -12,7 +12,7 @@ extends RefCounted
 static func run() -> bool:
 	var passed: bool = true
 
-	# Flagship: Carousel of Juice — function reuse, runtime group, if/elif/else, behaviors.
+	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",
 		"juice_tile(beat, intensity * 5.0)",
@@ -23,7 +23,7 @@ static func run() -> bool:
 	passed = _check_scene("showcase_carousel scene wires Spring + Tween",
 		"res://demo/showcase/showcase_carousel.tscn", ["SpringBehavior", "TweenBehavior"]) and passed
 
-	# Starfall — enum + match FSM, group pick-filter, spawner.
+	# Starfall - enum + match FSM, group pick-filter, spawner.
 	passed = _check_sheet("starfall", "res://demo/showcase/starfall.gd", [
 		"enum State { PLAYING, GAME_OVER }",
 		"match state:",
@@ -35,7 +35,7 @@ static func run() -> bool:
 		"res://demo/showcase/starfall.tscn", ["Ship", "ScoreLabel"]) and passed
 	passed = _check("star sub-scene exists", ResourceLoader.exists("res://demo/showcase/star.tscn"), true) and passed
 
-	# Quest FSM — enum + match, Dictionary/Array collections, signals, function.
+	# Quest FSM - enum + match, Dictionary/Array collections, signals, function.
 	passed = _check_sheet("quest_fsm", "res://demo/showcase/quest_fsm.gd", [
 		"enum QuestState {",
 		"signal item_collected(id: String)",
@@ -50,7 +50,7 @@ static func run() -> bool:
 	passed = _check_scene("quest_fsm scene has Icon + Screen",
 		"res://demo/showcase/quest_fsm.tscn", ["Icon", "Screen"]) and passed
 
-	# Platformer-Shooter — the new Platformer + Weapon Kit packs combined.
+	# Platformer-Shooter - the new Platformer + Weapon Kit packs combined.
 	passed = _check_sheet("platformer_shooter", "res://demo/showcase/platformer_shooter.gd", [
 		"$Player/PlatformerMovement.jump()",
 		"$Player/PlatformerMovement.jump_released()",
@@ -65,7 +65,7 @@ static func run() -> bool:
 	passed = _check("shot + target sub-scenes exist",
 		ResourceLoader.exists("res://demo/showcase/shot.tscn") and ResourceLoader.exists("res://demo/showcase/target.tscn"), true) and passed
 
-	# Swarm — frame-spreading: a Budgeted For Each over a spawned crowd (the visible-sweep demo).
+	# Swarm - frame-spreading: a Budgeted For Each over a spawned crowd (the visible-sweep demo).
 	passed = _check_sheet("swarm", "res://demo/showcase/swarm.gd", [
 		"var __loop_cursor_",
 		"Array(get_tree().get_nodes_in_group(\"swarm\"))",
@@ -76,7 +76,7 @@ static func run() -> bool:
 	passed = _check_scene("swarm scene has Info HUD", "res://demo/showcase/swarm.tscn", ["Info"]) and passed
 	passed = _check("dot sub-scene exists", ResourceLoader.exists("res://demo/showcase/dot.tscn"), true) and passed
 
-	# Family Arena — the Families trio: an Enemy Family (instances + a family ACE) driven by family-scoped
+	# Family Arena - the Families trio: an Enemy Family (instances + a family ACE) driven by family-scoped
 	# rules. The byte-identity check inside _check_sheet doubles as the @ace_family round-trip proof.
 	passed = _check_sheet("enemy", "res://demo/showcase/enemy.gd", [
 		"## @ace_family(Enemy)",
@@ -95,7 +95,7 @@ static func run() -> bool:
 	passed = _check_scene("family_arena scene has Info HUD", "res://demo/showcase/family_arena.tscn", ["Info"]) and passed
 	passed = _check("enemy sub-scene exists", ResourceLoader.exists("res://demo/showcase/enemy.tscn"), true) and passed
 
-	# Inspector Playground — every Tier 3 custom drawer + @export grouping across the new value types
+	# Inspector Playground - every Tier 3 custom drawer + @export grouping across the new value types
 	# (Vector2/Color/Texture2D/Curve). The byte-identity check inside _check_sheet doubles as the drawer +
 	# grouping round-trip proof (open the .gd → recompile → byte-identical).
 	passed = _check_sheet("inspector_playground", "res://demo/showcase/inspector_playground.gd", [

@@ -3,7 +3,7 @@ class_name FriendlyTypesTest
 extends RefCounted
 # The variable dialog shows friendly type labels (Number / Text / Yes-No) that map to real Godot
 # types, with a "Whole numbers only" tick splitting int vs float. The STORED type stays a real Godot
-# type (so the .gd round-trip is unchanged) — only the dialog's display is friendlier. These pin the
+# type (so the .gd round-trip is unchanged) - only the dialog's display is friendlier. These pin the
 # display ↔ stored-type mapping in both directions.
 
 

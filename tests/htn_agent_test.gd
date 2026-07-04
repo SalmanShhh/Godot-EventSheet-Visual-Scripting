@@ -1,4 +1,4 @@
-# Godot EventSheets — HTN Agent behavior planner test.
+# Godot EventSheets - HTN Agent behavior planner test.
 # Drives the generated HTNAgent at runtime: builds a tiny task network, then checks that
 # decomposition picks the highest-utility APPLICABLE method (with preconditions), executes
 # the plan task-by-task with the right triggers, and fails cleanly when nothing applies.

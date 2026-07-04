@@ -4,8 +4,8 @@ extends RefCounted
 # Export as Addon Pack (coverage Phase C).
 #
 # Exports the current behavior sheet as a reusable addon pack: writes the pack directory
-# (the .tres + its compiled .gd) into eventsheet_addons/<class_snake>/ — the same layout the
-# bundled packs use, where the zero-config scanner publishes its ACEs project-wide — plus a
+# (the .tres + its compiled .gd) into eventsheet_addons/<class_snake>/ - the same layout the
+# bundled packs use, where the zero-config scanner publishes its ACEs project-wide - plus a
 # generated README, and bundles any included sheets when the project policy says so.
 #
 # Extracted from event_sheet_dock.gd to keep that file maintainable.
@@ -13,13 +13,13 @@ extends RefCounted
 # WHAT STAYS ON THE DOCK (reached here through `_dock`):
 #   • the active-tab state (`_current_sheet`),
 #   • the status funnel (`_set_status`),
-#   • `_generate_pack_readme` — a thin dock delegate to EventSheetAuthorLoop.generate_pack_readme
+#   • `_generate_pack_readme` - a thin dock delegate to EventSheetAuthorLoop.generate_pack_readme
 #     that a test (singleton_sheets_test) also calls by name, so it stays on the dock,
-#   • `is_inside_tree()` — the dock's own tree membership (this helper is a detached RefCounted).
+#   • `is_inside_tree()` - the dock's own tree membership (this helper is a detached RefCounted).
 # Globals (EventSheetIdentifierRules, DirAccess, EventSheetResource, ResourceSaver, SheetCompiler,
 # FileAccess, ResourceLoader, Engine, EditorInterface) are unchanged.
 #
-# The dock keeps a thin one-line delegate for `_export_addon_pack` (original name + signature) —
+# The dock keeps a thin one-line delegate for `_export_addon_pack` (original name + signature) -
 # the menu_bar Sheet menu (id 6), the command palette, and the phase-c / addon-composition tests
 # reach it by that name, so they resolve unchanged.
 
@@ -32,12 +32,12 @@ func init(dock: Control) -> void:
 
 ## One-click addon publishing: writes the current behavior sheet (+ compiled script) into
 ## eventsheet_addons/<class_snake>/ where the zero-config scanner publishes its ACEs
-## project-wide — the same layout the bundled packs use. base_dir_override is for tests.
+## project-wide - the same layout the bundled packs use. base_dir_override is for tests.
 func _export_addon_pack(base_dir_override: String = "") -> void:
 	if _dock._current_sheet == null:
 		return
 	if not _dock._current_sheet.behavior_mode or _dock._current_sheet.custom_class_name.strip_edges().is_empty():
-		_dock._set_status("Addon packs are behavior sheets — enable behavior mode and set a class name first (Sheet Type).", true)
+		_dock._set_status("Addon packs are behavior sheets - enable behavior mode and set a class name first (Sheet Type).", true)
 		return
 	var class_name_text: String = _dock._current_sheet.custom_class_name.strip_edges()
 	if not EventSheetIdentifierRules.is_valid(class_name_text):
@@ -64,7 +64,7 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
 	if readme_file != null:
 		readme_file.store_string(_dock._generate_pack_readme(pack_sheet))
 		readme_file.close()
-	# Lane A composition: packs travel complete — bundle included sheets unless the
+	# Lane A composition: packs travel complete - bundle included sheets unless the
 	# project policy says reference-only.
 	var bundled_count: int = 0
 	if str(SheetCompiler._addon_policy("export_bundling", "bundle")) == "bundle":
@@ -76,4 +76,4 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
 	if Engine.is_editor_hint() and _dock.is_inside_tree():
 		EditorInterface.get_resource_filesystem().scan()
 	var bundle_note: String = " (+%d bundled include(s))" % bundled_count if bundled_count > 0 else ""
-	_dock._set_status("Exported addon pack to %s (.tres + .gd)%s — its ACEs are now published project-wide." % [base_dir, bundle_note])
+	_dock._set_status("Exported addon pack to %s (.tres + .gd)%s - its ACEs are now published project-wide." % [base_dir, bundle_note])

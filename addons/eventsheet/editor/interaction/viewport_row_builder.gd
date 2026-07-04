@@ -3,7 +3,7 @@ class_name ViewportRowBuilder
 extends RefCounted
 # The ROW-BUILDER layer: the "model → SemanticSpans" concern for the event sheet's virtualized
 # viewport. Extracted from event_sheet_viewport.gd to keep that file maintainable. This subsystem
-# owns HOW each row's SemanticSpans are built from the event / variable / group / comment model —
+# owns HOW each row's SemanticSpans are built from the event / variable / group / comment model -
 # the span-assembly pass (_build_event_spans + its line-count twin _count_event_lines), the per-ACE
 # descriptor/format/classify helpers (_format_*_descriptor, _object_label_for, _is_trigger_condition,
 # …), and the non-event row builders (_build_group_row / _build_comment_row / _build_variable_row / …).
@@ -11,20 +11,20 @@ extends RefCounted
 # back-reference to the viewport (`_viewport.`), and calls back into the viewport for the STAY concerns
 # (the recursion dispatcher _build_row_from_resource, the element-style accessors, _find_definition).
 #
-# The LAYOUT (assigning span.rect / lane geometry) and the DRAWING stay on the viewport — this layer
+# The LAYOUT (assigning span.rect / lane geometry) and the DRAWING stay on the viewport - this layer
 # only produces the spans; the viewport's _get_or_build_row_layout positions them and the renderer
 # paints them. Span construction must stay byte-identical to the pre-extraction code, so the bodies
-# below were moved VERBATIM — only member access was rewritten to go through `_viewport.` (the span/
+# below were moved VERBATIM - only member access was rewritten to go through `_viewport.` (the span/
 # descriptor logic itself is unchanged, including the `.merged(style_meta, false/true)` overwrite flags,
 # the condition/action line-index accounting that _count_event_lines mirrors, and the same-object
 # _ace_icon_cache / _value_regex caching).
 #
 # `_pending_display_bbcode` is PRIVATE to this layer: its writers (_format_condition_descriptor /
 # _format_action_descriptor) set it on the line immediately before their _make_span call, and its sole
-# reader (_make_span) consumes + clears it — all three live here, so the one-shot flag never needs to
+# reader (_make_span) consumes + clears it - all three live here, so the one-shot flag never needs to
 # cross the viewport boundary on the real render path. (The viewport keeps a tiny same-named bridge var
-# used ONLY by its _make_span delegate, so bbcode_and_pill_test — which pokes the flag then calls the
-# delegate — needs no edit; the render path never touches that bridge.)
+# used ONLY by its _make_span delegate, so bbcode_and_pill_test - which pokes the flag then calls the
+# delegate - needs no edit; the render path never touches that bridge.)
 #
 # `_value_ranges_for` + `_value_regex` are STATIC (pure text → ranges), so they stay unit-testable
 # without a live viewport; the viewport keeps a static forwarder for any class-name caller.
@@ -156,7 +156,7 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 			"kind": "scaffolding_strip",
 			"line_index": 0
 		}),
-		_make_span("class_name, host binding & annotations — %d lines" % line_total, SemanticSpan.SpanType.COMMENT, {
+		_make_span("class_name, host binding & annotations - %d lines" % line_total, SemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "scaffolding_strip",
 			"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.8)
@@ -190,11 +190,11 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 	return row_data
 
 
-## The sheet's functions as visible rows — one foldable "Published verbs" section whose children are
+## The sheet's functions as visible rows - one foldable "Published verbs" section whose children are
 ## Define blocks, one per EventFunction. Functions live in `sheet.functions`, a SEPARATE array from
 ## `sheet.events`, so without this they never appear on the canvas at all: a behaviour pack's whole
 ## vocabulary (its actions/conditions/expressions) was invisible until you opened the Functions dialog.
-## This is a pure READ view — it never writes to either array and never affects codegen — so the
+## This is a pure READ view - it never writes to either array and never affects codegen - so the
 ## byte-exact round-trip of the underlying .gd is untouched. Folded by default with a fingerprint
 ## ("⚡2 · ?1 · ƒx3") so a pack still tells its vocabulary weight at a glance, like a collapsed group.
 func _build_published_verbs_rows(sheet: EventSheetResource) -> Array[EventRowData]:
@@ -265,7 +265,7 @@ static func define_role_for(event_function: EventFunction) -> String:
 ## One Define block: role badge in its ACE-role colour, the friendly published name, a `→ type`
 ## chip for value-returning verbs, the category chip, an "internal" chip when the function is NOT
 ## exposed as an ACE (a plain helper other sheets can't pick), and the muted real signature built
-## by the COMPILER's own emitters — so what the row claims can never disagree with codegen.
+## by the COMPILER's own emitters - so what the row claims can never disagree with codegen.
 func _build_define_function_row(event_function: EventFunction, indent: int) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent
@@ -336,7 +336,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	return row_data
 
 
-## First Color(...) literal among an ACE's param values (null when none) — drives the
+## First Color(...) literal among an ACE's param values (null when none) - drives the
 ## little color swatch drawn after the condition/action text.
 func _first_color_in_params(ace: Resource) -> Variant:
 	var params: Variant = ace.get("params")
@@ -482,8 +482,8 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	var signal_kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(signal_row)
 	var declaration: String = signal_kind.summary_for(signal_row) if signal_kind != null else signal_row.signal_name
 	# A trigger signal (a `## @ace_trigger` block folded onto the row on import) is a first-class
-	# "declare a trigger ACE" block, NOT raw scaffolding: it renders like a Variable row — a "trigger"
-	# badge, the friendly ACE name, an optional category chip — with the underlying `signal …` declaration
+	# "declare a trigger ACE" block, NOT raw scaffolding: it renders like a Variable row - a "trigger"
+	# badge, the friendly ACE name, an optional category chip - with the underlying `signal …` declaration
 	# kept muted beside it so it's still obvious what emits. Double-click still opens the signal dialog.
 	if signal_row.trigger:
 		var trigger_title: String = signal_row.ace_name.strip_edges()
@@ -540,7 +540,7 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 
 
 ## The host class ("" when not a match) if a RawCodeRow is EXACTLY the compiler's generated
-## host-binding `_enter_tree` — the boilerplate every host-targeting behaviour pack emits to bind
+## host-binding `_enter_tree` - the boilerplate every host-targeting behaviour pack emits to bind
 ## `host = get_parent()`. It carries no authored logic (it's regenerated from the sheet's host), so
 ## rendering it as a 4-line GDScript block reads as noise; matched, the row collapses to one muted
 ## "Host binding · acts on <Class>" line instead. Strict exact-shape match so a hand-modified
@@ -568,7 +568,7 @@ static func host_binding_class(code: String) -> String:
 	return bind_match.get_string(1)
 
 
-## True Define-shell info for a RawCodeRow that is PURELY an `## @ace_*` annotation block — the
+## True Define-shell info for a RawCodeRow that is PURELY an `## @ace_*` annotation block - the
 ## published-verb header a pack author writes above each exposed func. Opened packs keep these as
 ## literal code rows (the shell-lift into EventFunctions is separate work), so without this a pack
 ## reads as a wall of 7-line annotation blocks. Returns {kind, name, category, line_count} when the
@@ -584,7 +584,7 @@ static func define_shell_info(code: String) -> Dictionary:
 		if line.is_empty():
 			continue
 		if not line.begins_with("##"):
-			return {}  # real code in the row — not a pure annotation shell
+			return {}  # real code in the row - not a pure annotation shell
 		if line.begins_with("## @ace_action"):
 			kind = "action"
 		elif line.begins_with("## @ace_condition"):
@@ -611,7 +611,7 @@ static func _annotation_string_arg(line: String) -> String:
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
 ## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
 ## A row that is purely a published-verb annotation shell renders as ONE Define-style header line
-## instead (role badge · friendly name · category chip) — a pure view over the same RawCodeRow, so
+## instead (role badge · friendly name · category chip) - a pure view over the same RawCodeRow, so
 ## editing (double-click opens the code dialog), selection, and the byte round-trip are untouched.
 func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var row_data := EventRowData.new()
@@ -645,7 +645,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		return row_data
 	var shell: Dictionary = define_shell_info(raw_row.code)
 	if not shell.is_empty():
-		row_data.line_count = 1  # visual collapse only — the underlying lines are all still there
+		row_data.line_count = 1  # visual collapse only - the underlying lines are all still there
 		var badge_colors: Dictionary = {
 			"action": [EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG],
 			"condition": [EventSheetPalette.COLOR_ACE_CONDITION_BADGE_BG, EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG],
@@ -706,7 +706,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		"line_index": 0
 	}))
 	# The importer sets lift_note on a block it could NOT lift into structured rows ("no matching ACE
-	# template"). Surface it as an inline amber badge — the actionable "why this stayed code" cue — in
+	# template"). Surface it as an inline amber badge - the actionable "why this stayed code" cue - in
 	# addition to the hover tooltip, so a wall of blocks becomes a triage list at a glance.
 	if not raw_row.lift_note.strip_edges().is_empty():
 		spans.append(_make_span("⚠ code", SemanticSpan.SpanType.KEYWORD, {
@@ -744,7 +744,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 		{
 			"is_constant": variable.is_constant,
 			"exported": variable.exported,
-			# Inspector grouping (@export_group/@export_subgroup) recovered onto the variable on import —
+			# Inspector grouping (@export_group/@export_subgroup) recovered onto the variable on import -
 			# shown as the "Group › Subgroup" chip, so a reopened grouped variable still reads as grouped.
 			"group": str((variable.attributes as Dictionary).get("group", "")) if variable.exported and variable.attributes is Dictionary else "",
 			"subgroup": str((variable.attributes as Dictionary).get("subgroup", "")) if variable.exported and variable.attributes is Dictionary else "",
@@ -754,7 +754,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 	)
 
 
-## A group's chapter fingerprint: "N events · ⟳a · ➜b · ⌨c · ▶d · ⚠e" — its child events
+## A group's chapter fingerprint: "N events · ⟳a · ➜b · ⌨c · ▶d · ⚠e" - its child events
 ## counted by trigger TEMPO class (reusing TriggerResolver.tempo_class_for) plus the RawCode (⚠) blocks
 ## inside, so a collapsed group still shows its weight + hotness. Recurses nested groups/sub-events.
 ## Static + pure → unit-testable; "" when the group holds no events or code.
@@ -813,7 +813,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	row_data.disabled = not group.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
 	# The group's distinctive chrome (accent bar + tinted background, drawn from row_type == GROUP)
-	# already reads unmistakably as a group, so the old leading "Group" text badge was pure clutter —
+	# already reads unmistakably as a group, so the old leading "Group" text badge was pure clutter -
 	# the header is now just the inline-editable title (plus an optional description line).
 	row_data.spans = [
 		_make_span(
@@ -827,8 +827,8 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 			}
 		)
 	]
-	# Chapter fingerprint: a muted trailing span on the header line — child events by tempo
-	# class + ⚠-code blocks — so a COLLAPSED group still tells you its weight + hotness (fold-all becomes
+	# Chapter fingerprint: a muted trailing span on the header line - child events by tempo
+	# class + ⚠-code blocks - so a COLLAPSED group still tells you its weight + hotness (fold-all becomes
 	# a real table of contents). Flows after the title on line 0, so it survives fold.
 	var fingerprint: String = group_fingerprint(group)
 	if not fingerprint.is_empty():
@@ -940,7 +940,7 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 	if sheet == null:
 		return rows
 	var names: Array = sheet.variables.keys()
-	# Ungrouped variables first (name-sorted), then each Inspector group as a contiguous block —
+	# Ungrouped variables first (name-sorted), then each Inspector group as a contiguous block -
 	# grouped variables must sit ADJACENT so the bubble outline can wrap them as one visual folder.
 	# View-order only: the variables dictionary and the compiled output are untouched.
 	names.sort_custom(func(a: Variant, b: Variant) -> bool:
@@ -967,7 +967,7 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 					# Match the compiler default (exported unless explicitly false) so the @export badge
 					# agrees with what actually emits as an Inspector-visible @export var.
 					"exported": is_exported,
-					# The Inspector group (@export_group) this exported var lands in — shown as a chip on the
+					# The Inspector group (@export_group) this exported var lands in - shown as a chip on the
 					# row so it's obvious in the sheet which vars share an Inspector section. Only meaningful
 					# for exported vars (the compiler emits @export_group for those).
 					"group": str(var_attributes.get("group", "")) if is_exported else "",
@@ -978,7 +978,7 @@ func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowDat
 	return rows
 
 
-## An exported global's Inspector group ("" when none/unexported) — the adjacency-sort key above.
+## An exported global's Inspector group ("" when none/unexported) - the adjacency-sort key above.
 static func _global_variable_group(sheet: EventSheetResource, var_name: String) -> String:
 	var descriptor: Variant = sheet.variables.get(var_name, {})
 	if not (descriptor is Dictionary):
@@ -989,7 +989,7 @@ static func _global_variable_group(sheet: EventSheetResource, var_name: String) 
 	return str((attributes as Dictionary).get("group", "")).strip_edges() if attributes is Dictionary else ""
 
 
-## Runs of consecutive variable rows sharing one Inspector group — the bubbles the viewport outlines
+## Runs of consecutive variable rows sharing one Inspector group - the bubbles the viewport outlines
 ## around grouped variables so a folder reads as one visual unit. [{start, end, group}] over the flat
 ## row list (0-based inclusive indices). Static + pure → geometry is testable without a canvas.
 static func variable_group_runs(flat_rows: Array) -> Array:
@@ -1066,12 +1066,12 @@ func _build_variable_row(
 		"variable_name": var_name,
 		"variable_index": variable_index,
 		"is_constant": is_constant,
-		# The Inspector group rides in the row metadata (not just the chip) so the grouping gestures —
-		# the drag-into-folder drop, the bubble outline, chip-rename — can read it without re-lookup.
+		# The Inspector group rides in the row metadata (not just the chip) so the grouping gestures -
+		# the drag-into-folder drop, the bubble outline, chip-rename - can read it without re-lookup.
 		"variable_group": str(options.get("group", "")).strip_edges()
 	}
 	# No scope pill: it confused users. The "global"/"sheet" pill was already redundant (every sheet/class
-	# variable is one), and the "local" pill on event-scoped vars read as noise too — scope is obvious from
+	# variable is one), and the "local" pill on event-scoped vars read as noise too - scope is obvious from
 	# the row's nesting under its event, and the @export badge carries the meaningful distinction
 	# (Inspector-visible vs internal). So a variable row leads straight with its name.
 	row_data.spans = [
@@ -1116,7 +1116,7 @@ func _build_variable_row(
 			)
 		)
 	# Inspector group chip: an exported var with an @export_group shows its section name (e.g. "Combat"),
-	# so it reads at a glance which sheet variables share an Inspector group — the "group them in the sheet"
+	# so it reads at a glance which sheet variables share an Inspector group - the "group them in the sheet"
 	# half of the @export_group feature (the variable dialog's Inspector-group field sets it).
 	var inspector_group: String = str(options.get("group", "")).strip_edges()
 	if not inspector_group.is_empty():
@@ -1157,7 +1157,7 @@ func _build_variable_row(
 
 
 ## Sets the tempo glyph + hue on a trigger-badge meta from the event's trigger_id, and returns the glyph.
-## SIGNAL keeps the shipped green ➜ from the event style — the common case stays
+## SIGNAL keeps the shipped green ➜ from the event style - the common case stays
 ## byte-identical; every-tick (⟳) / input (⌨) / once (▶) get their own fill so how OFTEN an event runs
 ## reads at a distance. Shared by both trigger-badge paths (authored ACECondition + lifted trigger_id).
 func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, trigger_id: String) -> String:
@@ -1246,7 +1246,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 		condition_line_index += 1
 	elif not event_row.trigger_id.is_empty():
 		var trigger_id_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
-		# Same tempo badge on the lifted / lifecycle path (trigger_id with no authored ACECondition) —
+		# Same tempo badge on the lifted / lifecycle path (trigger_id with no authored ACECondition) -
 		# this is where On Physics Process etc. render, so the ⟳ hot-path glyph lands here too.
 		var trigger_id_glyph: String = _apply_trigger_tempo(trigger_id_badge_meta, event_style, event_row.trigger_id)
 		trigger_id_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
@@ -1452,7 +1452,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 								"chip": true,
 								"raw_action": true,
 								# The renderer merges block lines into ONE code cell
-								# (left stripe, continuous background) — per-line
+								# (left stripe, continuous background) - per-line
 								# spans stay the layout/hit-test truth.
 								"code_cell": true,
 								"block_lines": inline_total,
@@ -1483,7 +1483,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 								"action_comment": true,
 								# Merged like GDScript blocks, and carrying the action
 								# cell chrome (chip_bg etc.) so a comment in the action
-								# lane reads like its sibling cells — comment text
+								# lane reads like its sibling cells - comment text
 								# color wins (merged with overwrite OFF).
 								"block_lines": action_comment_lines.size(),
 								"block_line": comment_line_index,
@@ -1697,7 +1697,7 @@ func _format_pick_filter(pick: PickFilter) -> String:
 ## Event-sheet-style object label shown before each condition/action (e.g. "System",
 ## "Sprite", "CharacterBody2D"). Core ACEs read as "System"; node-typed ACEs use the class.
 func _object_label_for(provider_id: String, ace_id: String) -> String:
-	# A call to a sheet Function is an abstraction you CREATED (e.g. via Extract to Function) — show it as
+	# A call to a sheet Function is an abstraction you CREATED (e.g. via Extract to Function) - show it as
 	# a named verb under a "ƒ" chip, not a generic "System" action, so the eye reads it as higher-level.
 	if (provider_id.is_empty() or provider_id == "Core") and ace_id == "CallFunction":
 		return "ƒ"
@@ -1711,7 +1711,7 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 	return provider_id
 
 
-## A call to a sheet Function — the row IS an abstraction (a named verb), so the renderer marks it "ƒ"
+## A call to a sheet Function - the row IS an abstraction (a named verb), so the renderer marks it "ƒ"
 ## (see _object_label_for) and shows the verb's name instead of "Call name()".
 func _is_function_call_action(action: ACEAction) -> bool:
 	return action != null and (action.provider_id.is_empty() or action.provider_id == "Core") and action.ace_id == "CallFunction"
@@ -1803,7 +1803,7 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 
 # ── Row-as-sentence hover ───────────────────────────────────────────────────────────
 const _SENTENCE_MAX_ACTIONS := 3
-## Friendly lead phrases for the lifecycle trigger ids — the tempo triggers read as a cadence, not a
+## Friendly lead phrases for the lifecycle trigger ids - the tempo triggers read as a cadence, not a
 ## method name. Signal-backed triggers fall back to the capitalized id ("OnBodyEntered" → "On Body
 ## Entered"); an authored ACECondition trigger uses its own descriptor.
 const _FRIENDLY_TRIGGER := {
@@ -1818,11 +1818,11 @@ const _FRIENDLY_TRIGGER := {
 }
 
 
-## The whole event read as ONE plain-English sentence for the hover tooltip — "When <trigger> — if <c1>
-## and <c2> — do: <a1>, <a2> (+1 more)". Assembled EXCLUSIVELY from the same descriptor strings the cells
+## The whole event read as ONE plain-English sentence for the hover tooltip - "When <trigger> - if <c1>
+## and <c2> - do: <a1>, <a2> (+1 more)". Assembled EXCLUSIVELY from the same descriptor strings the cells
 ## draw (the _base formatters, which don't touch the bbcode render flag), so it can NEVER disagree with
 ## the row. In-flow RawCode actions have no descriptor, so they summarise honestly as "then N lines of
-## code" — the sentence never invents prose for raw statements. "" when there is nothing to say.
+## code" - the sentence never invents prose for raw statements. "" when there is nothing to say.
 func row_sentence(event_row: EventRow) -> String:
 	if event_row == null:
 		return ""
@@ -1842,7 +1842,7 @@ func row_sentence(event_row: EventRow) -> String:
 		clauses.append("If %s" % conditions_clause)
 	if not actions_clause.is_empty():
 		clauses.append(actions_clause)
-	return " — ".join(clauses)
+	return " - ".join(clauses)
 
 
 func _sentence_head(event_row: EventRow) -> String:
@@ -1920,7 +1920,7 @@ static var _value_regex: RegEx = null
 ## Ranges ([start, length, kind]) of parameter-like values inside ACE display text, so the renderer can
 ## highlight them event-sheet-style AND tint by TYPE: kind is "string" (quoted),
 ## "bool" (true/false), or "number". The three come straight from which regex alternate matched, so the
-## tint can never disagree with the highlight. The trailing kind is additive — consumers that read only
+## tint can never disagree with the highlight. The trailing kind is additive - consumers that read only
 ## [start] / [length] (the value hit-test) are unaffected.
 static func _value_ranges_for(text: String) -> Array:
 	if _value_regex == null:
@@ -1938,7 +1938,7 @@ static func _value_ranges_for(text: String) -> Array:
 	return ranges
 
 # One-shot flag set by _format_condition/action_descriptor (their ONLY callers each pass the result straight
-# into a _make_span call) when the ACE's display TEMPLATE carries BBCode markup — i.e. the author opted into
+# into a _make_span call) when the ACE's display TEMPLATE carries BBCode markup - i.e. the author opted into
 # styling via @ace_display_template. _make_span consumes + clears it. Gating on the TEMPLATE (not the
 # substituted text) is what stops a USER's param value or note that happens to contain [b]/[color] from being
 # silently stripped/styled in the cell. PRIVATE to this layer: writers + reader all live here.
@@ -1955,7 +1955,7 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 	# build-time only, so the draw path stays cheap).
 	if str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] and not text.is_empty():
 		if _pending_display_bbcode:
-			# The author's display TEMPLATE carried markup — parse to styled segments and draw the STRIPPED
+			# The author's display TEMPLATE carried markup - parse to styled segments and draw the STRIPPED
 			# text, so the cell width / colour swatch / hit-test all align with what's shown. The author's
 			# explicit styling supersedes the automatic value-highlight for this cell.
 			span.metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(text, Color.WHITE)
@@ -1968,7 +1968,7 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 	return span
 
 
-## True when an ACE's display TEMPLATE (not the substituted text) carries BBCode markup — the author opted
+## True when an ACE's display TEMPLATE (not the substituted text) carries BBCode markup - the author opted
 ## into styling via @ace_display_template. Built-in/custom descriptors resolve their template the same way
 ## format_display does.
 func _display_template_has_markup(provider_id: String, ace_id: String) -> bool:

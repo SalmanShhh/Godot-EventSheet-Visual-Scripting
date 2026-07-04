@@ -1,4 +1,4 @@
-# EventForge — visual render harness for the shared popup layout (dev tool). Builds a dialog with
+# EventForge - visual render harness for the shared popup layout (dev tool). Builds a dialog with
 # EventSheetPopupUI form rows (as the group editor now does) and saves a PNG. Run NON-headless:
 #   godot --path . --script tools/render_popup_preview.gd
 @tool

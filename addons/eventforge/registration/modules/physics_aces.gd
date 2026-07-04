@@ -1,9 +1,9 @@
-# EventForge module — Physics joints (Joint2D / Joint3D)
+# EventForge module - Physics joints (Joint2D / Joint3D)
 #
 # Wire joint bodies, tune spring/pin params, and break a joint at runtime (clearing node_b).
 # Lane-1 wraps of native joint nodes, single-line per the parity contract (no multi-line
-# templates — single-property ACEs are canonical). node_a/node_b are NodePath expressions.
-# Module contract: see ace_factory.gd — ace_ids/templates are API (covenant).
+# templates - single-property ACEs are canonical). node_a/node_b are NodePath expressions.
+# Module contract: see ace_factory.gd - ace_ids/templates are API (covenant).
 @tool
 class_name EventForgePhysicsACEs
 extends RefCounted

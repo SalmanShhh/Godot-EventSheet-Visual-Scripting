@@ -1,4 +1,4 @@
-# EventForge — Eventsheet-authored behaviors: expose-as-ACE + identity UX
+# EventForge - Eventsheet-authored behaviors: expose-as-ACE + identity UX
 #
 # Sheet functions marked expose_as_ace compile WITH @ace_* annotations; feeding the
 # generated script back through the semantic analyzer proves the addon loop (drop the
@@ -85,11 +85,11 @@ static func run() -> bool:
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	all_passed = _check("banner visible for behavior sheets", editor._identity_banner.visible, true) and all_passed
 	all_passed = _check("banner announces the behavior + host",
-		editor._identity_banner._label.contains("PatrolBehavior — Behavior · acts on host: CharacterBody2D"), true) and all_passed
+		editor._identity_banner._label.contains("PatrolBehavior - Behavior · acts on host: CharacterBody2D"), true) and all_passed
 	all_passed = _check("tab badge marks behavior sheets",
 		editor._format_tab_title(sheet, "", false).begins_with("⚙ "), true) and all_passed
 	all_passed = _check("column header gains the host context",
-		editor.get_viewport_control().get_host_context_label(), " — host: CharacterBody2D") and all_passed
+		editor.get_viewport_control().get_host_context_label(), " - host: CharacterBody2D") and all_passed
 
 	# Sheet Type dialog application path (the discoverable event-sheet-style control).
 	var plain_sheet: EventSheetResource = EventSheetResource.new()

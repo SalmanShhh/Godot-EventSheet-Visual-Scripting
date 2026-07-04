@@ -1,4 +1,4 @@
-# EventForge — the jump history behind Alt+Left / Alt+Right. Every jump-away records the current
+# EventForge - the jump history behind Alt+Left / Alt+Right. Every jump-away records the current
 # file-backed sheet; Back/Forward move it between two stacks like a browser, a new jump clears the
 # forward branch, unsaved sheets are skipped, and vanished files are dropped rather than wedging the
 # walk. Driven headlessly on a real dock across two real pack sheets.
@@ -17,7 +17,7 @@ static func run() -> bool:
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(EventSheetResource.new())
 
-	# The starting sheet is unsaved (no path) — jumping away from it records nothing.
+	# The starting sheet is unsaved (no path) - jumping away from it records nothing.
 	dock._navigate.record_current()
 	ok = _check("an unsaved sheet is never recorded", dock._navigate._back_stack.size(), 0) and ok
 

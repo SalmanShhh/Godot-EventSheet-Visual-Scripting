@@ -1,8 +1,8 @@
 @tool
 class_name EventSheetNavigate
 extends RefCounted
-# Ctrl+Click go-to-definition. Every zero-config addon ACE already carries its own address — its
-# provider_id IS the addon script's class_name (that's how the scanner registers it) — so Ctrl+Clicking
+# Ctrl+Click go-to-definition. Every zero-config addon ACE already carries its own address - its
+# provider_id IS the addon script's class_name (that's how the scanner registers it) - so Ctrl+Clicking
 # a behaviour-pack verb in a consumer sheet opens THAT BEHAVIOUR AS A SHEET: the jump the script editor
 # can't make (it lands you in raw text) and Construct-style tools can't make at all (their behaviors are
 # sealed). Built-in Core/module ACEs have no user-meaningful definition file, so they resolve to nothing
@@ -60,9 +60,9 @@ func navigate(row_data: EventRowData, _span_index: int, metadata: Dictionary) ->
 		return
 	record_current()
 	open_or_focus(str(target.get("path")))
-	_dock._set_status("Opened %s — the behaviour that defines this verb (Alt+Left jumps back)." % str(target.get("path")).get_file())
+	_dock._set_status("Opened %s - the behaviour that defines this verb (Alt+Left jumps back)." % str(target.get("path")).get_file())
 
-# ── Jump history (Alt+Left / Alt+Right) — the licence for fearless clicking ─────────────────────
+# ── Jump history (Alt+Left / Alt+Right) - the licence for fearless clicking ─────────────────────
 # Two stacks of sheet paths. Every jump-away records the CURRENT file-backed sheet on the back stack
 # and clears the forward stack (a new branch of history, exactly like a browser); Back/Forward move a
 # path between the stacks and load it. Unsaved in-memory sheets have no path to return to, so they are
@@ -84,11 +84,11 @@ func record_current() -> void:
 
 
 func go_back() -> void:
-	_history_step(_back_stack, _forward_stack, "Nothing to go back to yet — Ctrl+Click a verb or open a sheet first.")
+	_history_step(_back_stack, _forward_stack, "Nothing to go back to yet - Ctrl+Click a verb or open a sheet first.")
 
 
 func go_forward() -> void:
-	_history_step(_forward_stack, _back_stack, "Nothing ahead — Alt+Left goes back first.")
+	_history_step(_forward_stack, _back_stack, "Nothing ahead - Alt+Left goes back first.")
 
 
 ## Pops from one stack onto the other and loads the popped sheet (skipping entries whose file has
@@ -107,7 +107,7 @@ func _history_step(from_stack: PackedStringArray, to_stack: PackedStringArray, e
 	_dock._set_status(empty_message, true)
 
 
-## Opens a sheet by path — RE-FOCUSING its tab when that file is already open instead of importing a
+## Opens a sheet by path - RE-FOCUSING its tab when that file is already open instead of importing a
 ## duplicate copy. The tab store dedupes by sheet OBJECT, and every .gd load imports a fresh resource,
 ## so without this every Back/Forward (or repeated Ctrl+Click) would stack duplicate tabs.
 func open_or_focus(path: String) -> void:

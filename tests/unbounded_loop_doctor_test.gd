@@ -1,4 +1,4 @@
-# Godot EventSheets — Project Doctor unbounded-loop advisory (frame-spreading Solution 5).
+# Godot EventSheets - Project Doctor unbounded-loop advisory (frame-spreading Solution 5).
 #
 # A heavy For Each that runs every frame and is neither capped (pick_first_n) nor budgeted (frame_spread)
 # can hitch the game. The Doctor flags the PATTERN. This drives the detection logic directly on hand-built
@@ -21,7 +21,7 @@ static func run() -> bool:
 	EventSheetProjectDoctor._scan_unbounded_loops(_loop_event(0, 0.0, 0, 3), "res://x.tres", 3, findings)
 	all_passed = _check("unbounded per-frame loop with enough actions flags", findings.size() == 1 and str(findings[0].get("check")) == "unbounded-loop", true) and all_passed
 
-	# Budgeted loops (count or ms) are exempt — this is what the new PickFilter fields buy us.
+	# Budgeted loops (count or ms) are exempt - this is what the new PickFilter fields buy us.
 	findings = []
 	EventSheetProjectDoctor._scan_unbounded_loops(_loop_event(10, 0.0, 0, 3), "res://x.tres", 3, findings)
 	all_passed = _check("a count-budgeted loop is exempt", findings.size(), 0) and all_passed

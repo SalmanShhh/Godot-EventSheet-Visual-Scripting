@@ -1,4 +1,4 @@
-# EventForge — live paused-at-row for sheet breakpoints. Core debugger messages (stack dumps) never
+# EventForge - live paused-at-row for sheet breakpoints. Core debugger messages (stack dumps) never
 # reach editor plugins, so the generated code reports its OWN location: right before each emitted
 # `breakpoint` statement it sends "eventsheets:paused_row" with the row's stable event_uid over the
 # same custom channel live-values uses; the editor bridge relays it and the dock finds the event
@@ -42,7 +42,7 @@ static func run() -> bool:
 	var clean: String = str(SheetCompiler.compile(sheet, "user://_paused_row_out.gd").get("output", ""))
 	ok = _check("no emit flag → no announce, no breakpoint", clean.contains("paused_row") or clean.contains("breakpoint"), false) and ok
 
-	# ── The bridge's payload parse (static — EditorDebuggerPlugin can't be instantiated headless) ──
+	# ── The bridge's payload parse (static - EditorDebuggerPlugin can't be instantiated headless) ──
 	ok = _check("the bridge parses the paused uid",
 		EventSheetLiveValuesDebugger.parse_paused([event.event_uid]), event.event_uid) and ok
 	ok = _check("an empty payload parses empty (fail closed downstream)",

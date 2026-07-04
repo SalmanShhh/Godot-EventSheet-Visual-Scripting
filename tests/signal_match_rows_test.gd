@@ -1,4 +1,4 @@
-# Godot EventSheets — Signal rows + match rows (GDScript language parity)
+# Godot EventSheets - Signal rows + match rows (GDScript language parity)
 # Signals get the enum-row treatment (canonical emission, verify-lift, snippets, picker
 # integration, dialog guardrails); match statements become structured action rows with a
 # whole-construct lint gate (the switch statement).

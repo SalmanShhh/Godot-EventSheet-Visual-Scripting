@@ -1,7 +1,7 @@
-# Godot EventSheets — Project Doctor coroutine-in-per-frame advisory.
+# Godot EventSheets - Project Doctor coroutine-in-per-frame advisory.
 #
 # A coroutine action (Wait / Wait For Signal / Await Next Frame / Await If Over Budget / raw `await`) under
-# a re-firing On Process overlaps itself — the next tick fires while the previous run is still suspended, so
+# a re-firing On Process overlaps itself - the next tick fires while the previous run is still suspended, so
 # the loop double-processes. The Doctor flags it. This drives the detection logic on hand-built events.
 @tool
 class_name CoroutineDoctorTest
@@ -17,7 +17,7 @@ static func run() -> bool:
 		EventSheetProjectDoctor._scan_coroutine_misuse(_event_with_ace(ace_id), "res://x.tres", findings)
 		all_passed = _check("%s flags coroutine-in-per-frame" % ace_id, findings.size() == 1 and str(findings[0].get("check")) == "coroutine-in-per-frame", true) and all_passed
 
-	# Begin Frame Budget alone does NOT await — it just arms the fence — so it must not flag.
+	# Begin Frame Budget alone does NOT await - it just arms the fence - so it must not flag.
 	var f0: Array[Dictionary] = []
 	EventSheetProjectDoctor._scan_coroutine_misuse(_event_with_ace("BeginFrameBudget"), "res://x.tres", f0)
 	all_passed = _check("Begin Frame Budget alone is not a coroutine", f0.size(), 0) and all_passed

@@ -1,4 +1,4 @@
-# Godot EventSheets — project-wide Find / Replace / Usages (dock subsystem)
+# Godot EventSheets - project-wide Find / Replace / Usages (dock subsystem)
 #
 # Extracted from EventSheetDock (the decomposition arc): owns the Find-in-Project
 # window, the res:// sheet scan, per-sheet matching (the SAME surfaces Replace All
@@ -55,7 +55,7 @@ func _open_project_find(initial_query: String = "") -> void:
 		replace_button.pressed.connect(_run_project_replace)
 		replace_row.add_child(replace_button)
 		box.add_child(EventSheetPopupUI.titled_card("Replace", replace_row))
-		box.add_child(EventSheetPopupUI.hint_label("Replace in Project writes closed sheets to disk immediately — only the open sheet's change is undoable."))
+		box.add_child(EventSheetPopupUI.hint_label("Replace in Project writes closed sheets to disk immediately - only the open sheet's change is undoable."))
 		_project_find_results = Tree.new()
 		_project_find_results.hide_root = true
 		_project_find_results.columns = 2
@@ -183,7 +183,7 @@ func _on_project_find_activated() -> void:
 	_project_find_window.hide()
 
 
-## Replace across every project sheet (undo covers only the OPEN sheet — closed sheets
+## Replace across every project sheet (undo covers only the OPEN sheet - closed sheets
 ## save directly; the status names every touched file so nothing changes silently).
 func _run_project_replace() -> void:
 	var needle: String = _project_find_edit.text

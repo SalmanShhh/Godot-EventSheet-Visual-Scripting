@@ -1,4 +1,4 @@
-# EventForge — ACE params dialog logic
+# EventForge - ACE params dialog logic
 #
 # Verifies the pure (non-GUI) logic of ACEParamsDialog: expression-template substitution,
 # variable-name resolution, back/re-edit flags, and hint text. The dialog form itself needs
@@ -44,7 +44,7 @@ static func run() -> bool:
 	all_passed = _check("append mode is not re-edit", dialog._is_reedit_flow(), false) and all_passed
 
 	# Back-to-picker: shown from the add flow (from_picker) AND when editing an existing ACE (a
-	# replace_* mode), so editing an action/expression can go back and swap — not just conditions.
+	# replace_* mode), so editing an action/expression can go back and swap - not just conditions.
 	dialog._context = {"from_picker": true}
 	all_passed = _check("from_picker can return to picker", dialog._can_return_to_picker(), true) and all_passed
 	dialog._context = {"mode": "replace_action"}
@@ -140,7 +140,7 @@ static func run() -> bool:
 
 	# First-result-row helper (powers Enter-to-confirm in the node + expression sub-pickers): depth-
 	# first, skips non-selectable group folders and empty-state rows (no metadata), returns the first
-	# row carrying metadata — so type-and-Enter commits the topmost real match, not a folder header.
+	# row carrying metadata - so type-and-Enter commits the topmost real match, not a folder header.
 	var probe_tree: Tree = Tree.new()
 	var probe_root: TreeItem = probe_tree.create_item()
 	var placeholder: TreeItem = probe_tree.create_item(probe_root)

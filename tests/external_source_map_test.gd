@@ -1,9 +1,9 @@
-# EventForge — the external (opened-pack) source map must point at the RIGHT lines. A few non-raw
+# EventForge - the external (opened-pack) source map must point at the RIGHT lines. A few non-raw
 # entries (a doc-commented @export var emits its `##` line plus the declaration but records only the
 # declaration) undercounted their emitted lines, cascading a small offset onto every raw row after
-# them — so click-to-select / error→row / sheet-diff landed a few rows off on opened packs. The
+# them - so click-to-select / error→row / sheet-diff landed a few rows off on opened packs. The
 # compiler now realigns raw entries against the byte-exact output. This test proves, across EVERY
-# pack, that each raw row's mapped first line equals its code's first line — and that the realign is
+# pack, that each raw row's mapped first line equals its code's first line - and that the realign is
 # map-only (bytes unchanged, drift still 0).
 @tool
 class_name ExternalSourceMapTest
@@ -37,10 +37,10 @@ static func run() -> bool:
 			var code_first: String = str(resource.get("code")).split("\n")[0]
 			var start: int = int((entry as Dictionary).get("start", 0))
 			var mapped_first: String = lines[start - 1] if start >= 1 and start - 1 < lines.size() else "<oob>"
-			# The row's code emits at its mapped first line — compared stripped, because a raw body
+			# The row's code emits at its mapped first line - compared stripped, because a raw body
 			# block picks up leading indentation on emission (its content, and thus the row it points
-			# at, is unchanged; only the leading whitespace differs). A genuine offset — the pre-fix
-			# bug — showed an entirely DIFFERENT line here, not just different indentation.
+			# at, is unchanged; only the leading whitespace differs). A genuine offset - the pre-fix
+			# bug - showed an entirely DIFFERENT line here, not just different indentation.
 			if code_first.strip_edges() != mapped_first.strip_edges():
 				mismatches += 1
 		ok = _check("%s: every raw row's map points at its code (%d rows)" % [pack_path.get_file(), total_raw], mismatches, 0) and ok
@@ -49,7 +49,7 @@ static func run() -> bool:
 	ok = _check("checked a meaningful number of packs", checked_packs > 5, true) and ok
 
 	# End-to-end on health: heal now lifts as a REAL EventFunction, and its mapped range must cover
-	# its whole emission — the annotation block through the final body line.
+	# its whole emission - the annotation block through the final body line.
 	var health: String = FileAccess.get_file_as_string("res://eventsheet_addons/health/health_behavior.gd")
 	var health_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(health)
 	health_sheet.external_source_path = "res://eventsheet_addons/health/health_behavior.gd"

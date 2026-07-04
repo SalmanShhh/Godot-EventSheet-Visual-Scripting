@@ -1,4 +1,4 @@
-# EventForge — demo resource reference regression tests
+# EventForge - demo resource reference regression tests
 @tool
 class_name DemoResourceReferenceTest
 extends RefCounted

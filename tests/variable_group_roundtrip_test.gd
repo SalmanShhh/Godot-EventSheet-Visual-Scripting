@@ -1,4 +1,4 @@
-# Godot EventSheets — Inspector grouping survives a .gd round-trip.
+# Godot EventSheets - Inspector grouping survives a .gd round-trip.
 #
 # Before: a grouped @export var's @export_group/@export_subgroup lines couldn't be lifted, so on reopen the
 # variable degraded into a stray @export_group GDScript BLOCK + an ungrouped variable (violating "no GDScript
@@ -59,7 +59,7 @@ static func run() -> bool:
 			SheetCompiler._emit_tree_variable_line(plain), "@export var speed: float = 5.0") and all_passed
 
 	# Tooltip round-trip: a `## doc` immediately before a var is recovered as the tooltip (Godot's doc
-	# convention), not stranded as a block — and it combines with grouping in canonical order.
+	# convention), not stranded as a block - and it combines with grouping in canonical order.
 	var tip_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n## Player health.\n@export_group(\"Combat\")\n@export var hp: int = 100\n")
 	var hp: LocalVariable = null
 	var tip_block: bool = false
@@ -88,7 +88,7 @@ static func run() -> bool:
 			(dmg.attributes as Dictionary).has("tooltip"), false) and all_passed
 
 	# Editability: the dialog's apply keeps tooltip/group/subgroup on a tree variable (the attributes the
-	# tree path round-trips), dropping the rest — so a reopened variable stays editable, not stuck or cleared.
+	# tree path round-trips), dropping the rest - so a reopened variable stays editable, not stuck or cleared.
 	all_passed = _check("tree-var apply keeps tooltip + group + subgroup",
 		EventSheetDock._tree_group_attributes({"tooltip": "HP", "group": "Combat", "subgroup": "Melee", "range": {"min": "0"}}),
 		{"tooltip": "HP", "group": "Combat", "subgroup": "Melee"}) and all_passed

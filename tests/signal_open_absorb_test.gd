@@ -1,4 +1,4 @@
-# EventForge — opening a .gd behaviour folds each `## @ace_trigger` annotation block ONTO its signal
+# EventForge - opening a .gd behaviour folds each `## @ace_trigger` annotation block ONTO its signal
 # row (a first-class trigger row) instead of stranding it as a separate GDScript "setup" block above a
 # bare signal. Pins the importer's _absorb_signal_trigger_annotations + the external compiler emitting
 # the annotations back inline, so the whole thing round-trips byte-identically. The reverse of
@@ -12,7 +12,7 @@ static func run() -> bool:
 	var ok: bool = true
 
 	# A behaviour-shaped source: a named+categorised trigger signal, a bare @ace_trigger signal, and a
-	# plain signal — the exact shape _compile_external now emits for a trigger SignalRow.
+	# plain signal - the exact shape _compile_external now emits for a trigger SignalRow.
 	var source: String = "\n".join(PackedStringArray([
 		"@tool",
 		"extends Node",
@@ -43,7 +43,7 @@ static func run() -> bool:
 	ok = _check("no RawCodeRow still holds a @ace_trigger block", _count_raw_containing(sheet, "## @ace_trigger"), 0) and ok
 
 	# External round-trip: re-emitting the sheet reproduces the source byte-for-byte (the annotations
-	# come back inline above each trigger signal — the whole point of the folding being byte-safe).
+	# come back inline above each trigger signal - the whole point of the folding being byte-safe).
 	sheet.external_source_path = "user://_signal_open_absorb_verify.gd"
 	var compiled: String = str(SheetCompiler.compile(sheet, "user://_signal_open_absorb_verify.gd").get("output", ""))
 	ok = _check("external round-trip is byte-identical", compiled, source) and ok

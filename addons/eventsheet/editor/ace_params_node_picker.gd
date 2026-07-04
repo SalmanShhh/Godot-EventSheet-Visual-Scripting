@@ -1,7 +1,7 @@
 @tool
 class_name ACEParamsNodePicker
 extends RefCounted
-# The "Pick Node" dialog opened by the 🔍 button next to an expression field — a large-project
+# The "Pick Node" dialog opened by the 🔍 button next to an expression field - a large-project
 # scene-node search that hands a node reference back into the field. Extracted from
 # ace_params_dialog.gd to keep that file maintainable; it owns all its own widgets and reaches the
 # host ACEParamsDialog (the value-bearing _fields, the live ƒx validation, node-reference formatting)
@@ -21,7 +21,7 @@ extends RefCounted
 # calls (ACEParamsDialog.node_matches_query, …) keep working unchanged.
 
 # The host ACEParamsDialog instance (named _host, not _dialog, because the host's OWN field is
-# literally `var _dialog: ConfirmationDialog` — `_host._dialog` reads unambiguously, `_dialog._dialog`
+# literally `var _dialog: ConfirmationDialog` - `_host._dialog` reads unambiguously, `_dialog._dialog`
 # would not). ACEParamsDialog extends RefCounted (not Control), so the back-ref is typed as the host
 # class, and `_host._dialog` is the ConfirmationDialog this picker parents its window under.
 var _host: ACEParamsDialog = null
@@ -68,7 +68,7 @@ func _ensure_node_picker_ui() -> void:
 		_node_picker_window.close_requested.connect(func() -> void: _node_picker_window.hide())
 		_node_picker_window.confirmed.connect(_on_node_picker_activated)
 		# One-click "Make %unique": turns the selected deep node into a scene-unique node (undoable) and
-		# hands back %Name — so ANY node, not just pre-marked ones, gets a flat path-free handle. The button
+		# hands back %Name - so ANY node, not just pre-marked ones, gets a flat path-free handle. The button
 		# enables only for a non-root node that isn't already unique (see _on_node_picker_selection_changed).
 		_node_picker_unique_button = _node_picker_window.add_button("Make %unique", true, "make_unique")
 		_node_picker_unique_button.disabled = true
@@ -154,7 +154,7 @@ func _populate_node_picker_from_root(scene_root: Node) -> void:
 	if query.to_lower().begins_with("scene:"):
 		for hit: Dictionary in scan_scene_files(query.substr(6).strip_edges()):
 			var scene_item: TreeItem = _node_picker_tree.create_item(root_item)
-			scene_item.set_text(0, "%s  —  %s" % [str(hit.get("node", "")), str(hit.get("file", ""))])
+			scene_item.set_text(0, "%s  -  %s" % [str(hit.get("node", "")), str(hit.get("file", ""))])
 			scene_item.set_text(1, str(hit.get("class", "")))
 			scene_item.set_metadata(0, "scene::" + str(hit.get("file", "")))
 		return
@@ -352,7 +352,7 @@ func _on_node_picker_custom_action(action: StringName) -> void:
 		_make_picked_node_unique()
 
 
-## Marks the picked node scene-unique (undoable) and hands back %Name — so ANY deep node, not just
+## Marks the picked node scene-unique (undoable) and hands back %Name - so ANY deep node, not just
 ## pre-marked ones, becomes a flat path-free handle in one click, without leaving the sheet for the scene
 ## editor. No-op outside the editor or for a non-uniqueable selection.
 func _make_picked_node_unique() -> void:

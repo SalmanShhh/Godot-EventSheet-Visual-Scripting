@@ -4,10 +4,10 @@
 #   Lens A (user-open): import_external → attempt_lift only (what you see opening the .gd today).
 #   Lens B (full chain): same, then the pack-build lift passes byte-gated (function-decls, then
 #     function-bodies, event-bodies, signals). Delta A-B measures whether "run the full chain on open"
-#     would erase blocks — it is 0 today (the residue is genuine vocabulary/grammar gaps, not lift reach).
+#     would erase blocks - it is 0 today (the residue is genuine vocabulary/grammar gaps, not lift reach).
 # Each remaining block is tagged with a heuristic reason (blank / scaffold / host-binding / exposed
 # getter/action / helper-func-body / match / numeric / other) so the audit categorises without guessing.
-# NOTE: _classify is a pure-TEXT heuristic and knowingly impure — treat the
+# NOTE: _classify is a pure-TEXT heuristic and knowingly impure - treat the
 # per-category counts as an audit lens, not gospel. Writes a JSON dump to user:// (never committed).
 @tool
 extends SceneTree
@@ -33,7 +33,7 @@ func _init() -> void:
 		for fn_v: Variant in sheet_a.functions:
 			if fn_v is EventFunction:
 				_collect_raw(_fn_body(fn_v), "func %s" % (fn_v as EventFunction).function_name, raws_a)
-		# Lens B — same import, then the full pack-build lift chain (byte-gated so nothing risks the file).
+		# Lens B - same import, then the full pack-build lift chain (byte-gated so nothing risks the file).
 		var sheet_b: EventSheetResource = GDScriptImporter.new().import_external(path)
 		EventSheetACELifter.lift_function_declarations(sheet_b, true)
 		EventSheetACELifter.lift_function_bodies(sheet_b)

@@ -1,5 +1,5 @@
-# EventForge — the Publishes Manifest census. SheetIdentityBanner.manifest_for counts
-# what a behaviour publishes — trigger signals, exposed functions by return type, exported knobs — from
+# EventForge - the Publishes Manifest census. SheetIdentityBanner.manifest_for counts
+# what a behaviour publishes - trigger signals, exposed functions by return type, exported knobs - from
 # both structured rows AND un-lifted `## @ace_*` RawCode. Pins the counts + that _build_manifest_segments
 # drops zero roles and pluralises.
 @tool
@@ -28,7 +28,7 @@ static func run() -> bool:
 	ok = _check("expressions", int(m["expressions"]), 1) and ok
 	ok = _check("knobs (1 tree + 1 dict exported)", int(m["knobs"]), 2) and ok
 
-	# Un-lifted packs keep their verbs as annotated GDScript — the census counts those too.
+	# Un-lifted packs keep their verbs as annotated GDScript - the census counts those too.
 	var raw_sheet: EventSheetResource = EventSheetResource.new()
 	var raw: RawCodeRow = RawCodeRow.new()
 	raw.code = "## @ace_action\nfunc a() -> void:\n\tpass\n## @ace_condition\nfunc b() -> bool:\n\treturn true\n## @ace_trigger\nsignal s"

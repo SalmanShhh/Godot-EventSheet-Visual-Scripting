@@ -1,8 +1,8 @@
-# EventForge — Phase 4: the reverse-lift FIDELITY RATCHET.
-# A representative hand-written script must keep lifting AT LEAST this richly — variables, a helper
+# EventForge - Phase 4: the reverse-lift FIDELITY RATCHET.
+# A representative hand-written script must keep lifting AT LEAST this richly - variables, a helper
 # function, a loop, a condition, and statements all become rows, and the whole file round-trips
 # byte-identically. If a change regresses coverage, the raw-block count climbs past the cap (or a
-# structure stops lifting) and this fails — the ratchet only tightens, never silently loosens.
+# structure stops lifting) and this fails - the ratchet only tightens, never silently loosens.
 @tool
 class_name FidelityRatchetTest
 extends RefCounted
@@ -11,7 +11,7 @@ const SOURCE := "extends Node2D\n\nvar speed: float = 100.0\nvar active: bool = 
 
 # The only block that stays raw is the structural `extends Node2D` class-header prelude (kept verbatim
 # while host_class is also set, for lint/completion). Every actual STATEMENT, loop, condition, variable,
-# and function lifts to a row — so the cap is 1 (the prelude). It may only ever drop, never climb.
+# and function lifts to a row - so the cap is 1 (the prelude). It may only ever drop, never climb.
 const MAX_RAW_BLOCKS := 1
 
 

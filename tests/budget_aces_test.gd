@@ -1,4 +1,4 @@
-# Godot EventSheets — budget/coroutine ACEs (frame-spreading Solution 3).
+# Godot EventSheets - budget/coroutine ACEs (frame-spreading Solution 3).
 #
 # Three ACTION ACEs for hand-rolled frame-spreading inside a loop: Await Next Frame, Begin Frame Budget,
 # and Await If Over Budget. They reuse the Wait/await machinery (the handler becomes an implicit

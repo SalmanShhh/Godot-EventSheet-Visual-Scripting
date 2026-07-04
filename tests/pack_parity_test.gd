@@ -1,4 +1,4 @@
-# Godot EventSheets — capability parity for the behavior packs
+# Godot EventSheets - capability parity for the behavior packs
 # The packs match their event-sheet counterparts' surfaces: Sine waves/movements, Orbit ellipses,
 # Bullet distance, Move To waypoint queues, Follow delayed mode, Drag axes, Car drift,
 # Tile Movement simulate/grid helpers, LOS cone + between-positions. Functional checks

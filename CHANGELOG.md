@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - the em-dash ban now covers code, not just docs
+
+- Swept " — " to " - " across 438 .gd files (~1,900 comment and display-string lines:
+  warnings, status text, lift-report messages, dialog copy) plus the few remaining
+  text files. Six compiler-emitted strings are deliberately EXEMPT and frozen (the
+  DO-NOT-EDIT banner, the group-locals header, the unknown-row and disabled-group
+  breadcrumbs, the Inspector-conditions header): they are part of the emitted shape,
+  and changing them would break byte-identical re-emission of existing generated
+  files. Suite green, drift=0, doctor 0 errors after the sweep.
+
 ### Added - Doctor checks are an extension point + the run_doctor MCP tool
 
 - **Packs and plugins can ship project-health checks**: `EventSheets.register_doctor_check(id, callable)`

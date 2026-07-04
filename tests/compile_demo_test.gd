@@ -1,4 +1,4 @@
-# EventForge — Compile demo test
+# EventForge - Compile demo test
 # Golden-file verification for the Phase 1 compiler.
 @tool
 class_name CompileDemoTest
@@ -21,7 +21,7 @@ static func run() -> bool:
 
 	var expected: String = FileAccess.get_file_as_string(GOLDEN_PATH)
 	var actual: String = str(result.get("output", ""))
-	# The golden must PARSE, not just byte-match — a broken golden once shipped because
+	# The golden must PARSE, not just byte-match - a broken golden once shipped because
 	# only the byte comparison gated it (the editor smoke caught it instead).
 	var golden_script: GDScript = GDScript.new()
 	golden_script.source_code = expected

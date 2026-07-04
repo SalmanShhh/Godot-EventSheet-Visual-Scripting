@@ -1,7 +1,7 @@
-# Godot EventSheets — dropping a scene node onto a condition/action param value.
+# Godot EventSheets - dropping a scene node onto a condition/action param value.
 #
 # Dragging a node from the Scene dock onto a param VALUE in a cell sets that param to the node reference
-# (prefers %unique-names), no dialog — the deep-node-friendly C3-style gesture. The param hit-test reuses
+# (prefers %unique-names), no dialog - the deep-node-friendly C3-style gesture. The param hit-test reuses
 # the proven double-click-to-edit path (layout-dependent, exercised in the editor); this pins the pure
 # pieces: the drag discriminator and the path→reference conversion.
 @tool

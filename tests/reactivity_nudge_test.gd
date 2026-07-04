@@ -1,10 +1,10 @@
-# Godot EventSheets — Reactivity nudge (poll -> signal-twin map).
+# Godot EventSheets - Reactivity nudge (poll -> signal-twin map).
 #
 # The picker shows "Reactive alternative: On Timeout" on a polling condition that has a clean signal
 # twin, steering an event-sheet user from "check every frame" toward Godot's "react to a signal". This
 # guards the curated ACEDescriptor.REACTS_TO map: every mapped polling condition really exists and IS a
 # condition, every reactive trigger really exists and IS a trigger with the named display (so a rename
-# can't silently rot the nudge), and the deliberate omissions (is_on_floor, input-action polls — no
+# can't silently rot the nudge), and the deliberate omissions (is_on_floor, input-action polls - no
 # real signal twin) stay omitted so the plugin never suggests a cargo-cult signal.
 @tool
 class_name ReactivityNudgeTest

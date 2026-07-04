@@ -1,6 +1,6 @@
-# EventForge — published-verb shell rendering: a RawCodeRow that is PURELY an `## @ace_*` annotation
-# block (the header a pack author writes above each exposed func) renders as ONE Define-style line —
-# role badge · friendly name · category chip — instead of a 7-line annotation wall. A pure VIEW over
+# EventForge - published-verb shell rendering: a RawCodeRow that is PURELY an `## @ace_*` annotation
+# block (the header a pack author writes above each exposed func) renders as ONE Define-style line -
+# role badge · friendly name · category chip - instead of a 7-line annotation wall. A pure VIEW over
 # the same RawCodeRow: the resource, editing, and the byte round-trip are untouched (drift=0 pinned on
 # a real pack). The classifier is strict: any real code line, a missing kind marker, or a missing
 # @ace_name falls back to plain GDScript-block rendering.
@@ -35,7 +35,7 @@ static func run() -> bool:
 		ViewportRowBuilder.define_shell_info("## @ace_trigger\n## @ace_name(\"On Hit\")").is_empty(), true) and ok
 
 	# ── Rendering over an opened sheet whose annotated verb CAN'T lift (a custom return type keeps
-	# it raw) — the shell is the honest fallback for whatever the per-function lift leaves behind,
+	# it raw) - the shell is the honest fallback for whatever the per-function lift leaves behind,
 	# so the annotation wall still reads as one Define-style line. ──
 	var source: String = "
 ".join(PackedStringArray([
@@ -79,11 +79,11 @@ static func run() -> bool:
 				has_chip = true
 	ok = _check("named from its @ace_name", has_name, true) and ok
 	ok = _check("a shell visually collapses to one line", shell_row.line_count if shell_row != null else -1, 1) and ok
-	ok = _check("the shell keeps its RawCodeRow (pure view — editing/round-trip untouched)",
+	ok = _check("the shell keeps its RawCodeRow (pure view - editing/round-trip untouched)",
 		shell_row != null and (shell_row.source_resource as RawCodeRow).code.contains("## @ace_codegen_template"), true) and ok
 	ok = _check("the category rides as a chip", has_chip, true) and ok
 
-	# ── Covenant: view-only — the sheet still round-trips byte-identically ──
+	# ── Covenant: view-only - the sheet still round-trips byte-identically ──
 	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), "user://_raw_shell_source.gd").get("output", ""))
 	ok = _check("drift stays 0 with shells rendered", reemitted == source, true) and ok
 

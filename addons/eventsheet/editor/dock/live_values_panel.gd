@@ -1,4 +1,4 @@
-# Godot EventSheets — the Live Values panel (dock subsystem)
+# Godot EventSheets - the Live Values panel (dock subsystem)
 #
 # Extracted from EventSheetDock (decomposition arc, step 3): the streaming window
 # (editable tree, nested containers), the per-pane chip forwarding, and the edit-back
@@ -41,7 +41,7 @@ func toggle() -> void:
 	if _dock._current_sheet.emit_live_values:
 		ensure_window()
 		window.popup_centered()
-		_dock._set_status("Live Values ON: recompile and run — variables stream every 0.25s while the debugger is attached.")
+		_dock._set_status("Live Values ON: recompile and run - variables stream every 0.25s while the debugger is attached.")
 	else:
 		if window != null:
 			window.hide()
@@ -59,7 +59,7 @@ func ensure_window() -> void:
 	window.close_requested.connect(func() -> void: window.hide())
 	var live_box: VBoxContainer = VBoxContainer.new()
 	live_box.set_anchors_preset(Control.PRESET_FULL_RECT)
-	# Group 1 — the Live Values stream: status line + the editable values tree, in one titled card.
+	# Group 1 - the Live Values stream: status line + the editable values tree, in one titled card.
 	var stream_box: VBoxContainer = EventSheetPopupUI.form_box()
 	label = RichTextLabel.new()
 	label.fit_content = true
@@ -78,7 +78,7 @@ func ensure_window() -> void:
 	stream_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stream_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	live_box.add_child(stream_card)
-	# Group 2 — Watch: the hint + the input row + the watch tree, in one titled card.
+	# Group 2 - Watch: the hint + the input row + the watch tree, in one titled card.
 	var watch_box: VBoxContainer = EventSheetPopupUI.form_box()
 	watch_box.add_child(EventSheetPopupUI.hint_label("Expressions over the streamed values above (double-click a row to remove)."))
 	var watch_row: HBoxContainer = HBoxContainer.new()
@@ -115,7 +115,7 @@ func update_values(values: Dictionary) -> void:
 		if pane != null:
 			pane.set_live_values(values)
 	ensure_window()
-	label.text = "Streaming — double-click a value to edit it in the running game."
+	label.text = "Streaming - double-click a value to edit it in the running game."
 	var value_keys: Array = values.keys()
 	value_keys.sort()
 	# Rebuild only when the key set changes; otherwise update in place so an
@@ -206,7 +206,7 @@ func _refresh_watches(values: Dictionary) -> void:
 		item.set_text(0, expression)
 		item.set_metadata(0, expression)
 		if values.is_empty():
-			item.set_text(1, "—")
+			item.set_text(1, "-")
 			continue
 		var verdict: Dictionary = evaluate_watch(expression, values)
 		if bool(verdict.get("ok", false)):

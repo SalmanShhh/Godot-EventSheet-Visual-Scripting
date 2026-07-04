@@ -1,4 +1,4 @@
-# EventForge — ACEDescriptor resource
+# EventForge - ACEDescriptor resource
 # Defines a registerable trigger, condition, action, or expression.
 @tool
 class_name ACEDescriptor
@@ -47,8 +47,8 @@ var codegen_on_true: String = ""
 ## Curated poll -> signal-twin map (the shared "reactivity" datum): the handful of polling CONDITIONS
 ## that have a clean reactive trigger, so the editor can nudge "react to a signal instead of checking
 ## this every frame". Keyed "<provider>::<ace_id>" -> {trigger_id, trigger_name}. Deliberately omits
-## conditions with NO real signal twin — is_on_floor (Godot has no floor signal) and held input-action
-## polls (no per-action signal) — because suggesting one there would be cargo-cult, not idiomatic.
+## conditions with NO real signal twin - is_on_floor (Godot has no floor signal) and held input-action
+## polls (no per-action signal) - because suggesting one there would be cargo-cult, not idiomatic.
 const REACTS_TO: Dictionary = {
 	"Core::IsTimerStopped": {"trigger_id": "OnTimeout", "trigger_name": "On Timeout"},
 	"Core::OverlapsBody": {"trigger_id": "OnBodyEntered", "trigger_name": "On Body Entered"},
@@ -62,7 +62,7 @@ const REACTS_TO: Dictionary = {
 
 
 ## The reactive trigger that replaces a polling condition, or {} if none. The single lookup the picker
-## tip — and later the Project Doctor / inline hint — all read, so the nudge is defined once.
+## tip - and later the Project Doctor / inline hint - all read, so the nudge is defined once.
 static func reactive_alternative(provider_id: String, ace_id: String) -> Dictionary:
 	return REACTS_TO.get("%s::%s" % [provider_id, ace_id], {})
 
@@ -89,7 +89,7 @@ func get_display_text() -> String:
 
 ## Sets the plain-language description and returns self, so a module authors help INLINE, right next to the
 ## descriptor: `F.make_descriptor(...).described("What it does, in friendly English.")`. This keeps every
-## ACE's help in its own file — the same self-contained way custom addons use `## @ace_description(...)` —
+## ACE's help in its own file - the same self-contained way custom addons use `## @ace_description(...)` -
 ## so behaviour packs are easy to author, integrate, and update without touching any central registry.
 func described(text: String) -> ACEDescriptor:
 	description = text
@@ -98,7 +98,7 @@ func described(text: String) -> ACEDescriptor:
 
 ## Marks this ACE deprecated and returns self, so it chains after make_descriptor like .described():
 ## `F.make_descriptor(...).deprecated("Use Move Toward instead", "Core::MoveToward")`. The ACE keeps
-## working — existing sheets that already use it compile byte-for-byte unchanged — but it's hidden from the
+## working - existing sheets that already use it compile byte-for-byte unchanged - but it's hidden from the
 ## picker so it can't be added to new work, and its hover/tooltip flags it with the replacement. This is the
 ## compatibility covenant: never rename or delete a shipped ace_id, deprecate it instead.
 func deprecated(message: String = "", replacement: String = "") -> ACEDescriptor:
@@ -113,7 +113,7 @@ func deprecated(message: String = "", replacement: String = "") -> ACEDescriptor
 func deprecation_note() -> String:
 	if not is_deprecated:
 		return ""
-	# Parenthesised, not "[Deprecated]" — square brackets would be parsed as an (unknown) BBCode tag and
+	# Parenthesised, not "[Deprecated]" - square brackets would be parsed as an (unknown) BBCode tag and
 	# eaten when this note prefixes a description that renders in a rich (BBCode) hover tooltip.
 	var note: String = "(Deprecated)"
 	if not deprecation_message.strip_edges().is_empty():

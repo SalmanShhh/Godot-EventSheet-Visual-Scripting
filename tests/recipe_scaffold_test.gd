@@ -1,4 +1,4 @@
-# EventForge — starter recipes in the New Behaviour dialog. Beyond the teaching skeleton, "Start
+# EventForge - starter recipes in the New Behaviour dialog. Beyond the teaching skeleton, "Start
 # from" offers small COMPLETE behaviours (cooldown, stat pool) with every verb annotated. Pins: each
 # recipe's source actually parses as GDScript, opening one as a sheet absorbs its trigger signals and
 # renders its verbs as annotation shells (it reads code-free immediately), the vocabulary counts are

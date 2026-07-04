@@ -1,9 +1,9 @@
-# EventForge — behavior-mode host targeting for node-scoped ACEs.
+# EventForge - behavior-mode host targeting for node-scoped ACEs.
 #
 # Inside a behavior sheet the compiled script is `extends Node` with a `host` member (its parent), so a
 # node-scoped ACE must call on `host`, not on the behavior Node (self). The {host.} optional-prefix
 # idiom does this: it resolves to `host.` when the compiler passes host_default="host" (behavior mode)
-# and to nothing otherwise — so the SAME descriptor stays byte-identical on a normal sheet and becomes
+# and to nothing otherwise - so the SAME descriptor stays byte-identical on a normal sheet and becomes
 # host-targeted in a behavior. Pins both shapes, incl. a negated condition wrapping the host call.
 @tool
 class_name HostTargetCodegenTest
@@ -21,7 +21,7 @@ static func run() -> bool:
 	ok = _check("MoveAndSlide stays bare on a normal sheet", ActionCodegen.generate_action(slide, "", ""), "move_and_slide()") and ok
 	ok = _check("MoveAndSlide targets the host in a behavior", ActionCodegen.generate_action(slide, "", "host"), "host.move_and_slide()") and ok
 
-	# Action with a param: Set Velocity — the {host.} prefix must precede the assignment target.
+	# Action with a param: Set Velocity - the {host.} prefix must precede the assignment target.
 	var set_vel: ACEAction = ACEAction.new()
 	set_vel.provider_id = "Core"
 	set_vel.ace_id = "SetVelocity2D"
@@ -30,7 +30,7 @@ static func run() -> bool:
 	ok = _check("SetVelocity2D stays bare on a normal sheet", ActionCodegen.generate_action(set_vel, "", ""), "velocity = Vector2(120, 0)") and ok
 	ok = _check("SetVelocity2D targets the host in a behavior", ActionCodegen.generate_action(set_vel, "", "host"), "host.velocity = Vector2(120, 0)") and ok
 
-	# Condition: Is On Floor — bare, host-targeted, and host-targeted-then-negated.
+	# Condition: Is On Floor - bare, host-targeted, and host-targeted-then-negated.
 	var on_floor: ACECondition = ACECondition.new()
 	on_floor.provider_id = "Core"
 	on_floor.ace_id = "IsOnFloor"

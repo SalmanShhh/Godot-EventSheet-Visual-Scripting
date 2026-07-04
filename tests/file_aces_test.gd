@@ -1,7 +1,7 @@
-# Godot EventSheets — File-management ACEs (read / write / JSON / directories).
+# Godot EventSheets - File-management ACEs (read / write / JSON / directories).
 #
 # Verifies the Files / Files: Directories vocabulary registers, the codegen templates are the exact
-# native FileAccess / DirAccess calls, and — critically — that the multi-line guarded write templates
+# native FileAccess / DirAccess calls, and - critically - that the multi-line guarded write templates
 # COMPILE to valid GDScript and actually round-trip on disk (a wrong static method would compile fine
 # as a string but fail silently at runtime, so this runs the generated code).
 @tool

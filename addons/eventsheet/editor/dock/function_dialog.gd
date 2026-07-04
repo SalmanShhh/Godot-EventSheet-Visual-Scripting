@@ -4,7 +4,7 @@ extends RefCounted
 # The Add-sheet-Function dialog glue (Add ▾ → Function…).
 #
 # Owns the lazy construction + wiring of the sheet-function dialog and its apply-to-sheet:
-#   • lazily builds the EventSheetFunctionDialog widget (the name/params/return popup — it lives in
+#   • lazily builds the EventSheetFunctionDialog widget (the name/params/return popup - it lives in
 #     editor/function_dialog.gd), feeds it the "taken names" provider (existing variables + function
 #     names, so the dialog blocks collisions), and connects its function_confirmed signal,
 #   • _apply_function_data: turns the validated dialog payload into an EventFunction on the sheet
@@ -13,7 +13,7 @@ extends RefCounted
 #     plus the publish surface pick the function up.
 #
 # NAMING: the widget already claims the class name EventSheetFunctionDialog (editor/function_dialog.gd),
-# so this glue helper is EventSheetFunctionDialogGlue — mirroring the EventSheetPreviewGlue sibling.
+# so this glue helper is EventSheetFunctionDialogGlue - mirroring the EventSheetPreviewGlue sibling.
 #
 # Extracted from event_sheet_dock.gd to keep that file maintainable.
 #
@@ -21,20 +21,20 @@ extends RefCounted
 #   • `_ensure_sheet_for_editing` (open/adopt a sheet before authoring),
 #   • the active-sheet state (`_current_sheet`),
 #   • the mutation funnel (`_perform_undoable_sheet_edit` / `_mark_dirty`),
-#   • `init_dialog(_dock)` — the widget takes the DOCK (a Control it parents its popup under), not
+#   • `init_dialog(_dock)` - the widget takes the DOCK (a Control it parents its popup under), not
 #     this detached RefCounted helper.
 # Globals (EventSheetFunctionDialog widget, EventFunction, ACEParam, EventRow, ACECondition) are unchanged.
 #
 # The dock keeps thin one-line delegates (original names + signatures) for BOTH methods: the in-file
 # Add-Function button + menu_bar Add menu (id 3) + command palette reach `_open_function_dialog`, and
-# the function_dialog + godot_workflow tests call `_apply_function_data` directly — so they resolve
+# the function_dialog + godot_workflow tests call `_apply_function_data` directly - so they resolve
 # unchanged. The `_function_dialog` widget instance is internal to this helper (no external reader).
 #
 # CLOSURE NOTES:
-#   • the taken-names provider lambda captures no helper/dock member other than `_dock` — it reads
+#   • the taken-names provider lambda captures no helper/dock member other than `_dock` - it reads
 #     `_dock._current_sheet` live at call time,
 #   • the `_apply_function_data` undoable lambda captures the LOCAL `data` (the payload) plus `_dock`;
-#     the built EventFunction / params / guard rows are locals — so it survives verbatim, only the
+#     the built EventFunction / params / guard rows are locals - so it survives verbatim, only the
 #     `_current_sheet` reach-in changed to `_dock._current_sheet`.
 
 var _dock: Control = null
@@ -102,7 +102,7 @@ func _apply_function_data(data: Dictionary) -> void:
 		event_function.expose_as_ace = bool(data.get("expose", false))
 		event_function.ace_display_name = str(data.get("ace_display_name", ""))
 		event_function.ace_category = str(data.get("ace_category", ""))
-		# "Run only when" guards: the body runs inside an `if <guards>:` — an event-sheet-style
+		# "Run only when" guards: the body runs inside an `if <guards>:` - an event-sheet-style
 		# function gate (e.g. only act when a node setting is enabled). Each expression becomes an
 		# Expression Is True condition on a wrapper row the body actions are authored under.
 		var guards: PackedStringArray = PackedStringArray(data.get("guards", PackedStringArray()))
@@ -122,10 +122,10 @@ func _apply_function_data(data: Dictionary) -> void:
 
 
 ## Updates an existing function in place (undoable). The target is found by its ORIGINAL name in the
-## LIVE sheet — never by a held object reference, because the undo funnel's commit restores a duplicated
+## LIVE sheet - never by a held object reference, because the undo funnel's commit restores a duplicated
 ## snapshot that replaces every resource. Only the dialog-owned fields are written; the body
 ## (events/local_variables) and the tool-button label stay untouched. Confirming with nothing changed
-## returns false so the sheet is not dirtied — an accidental open-and-OK on a lifted helper stays
+## returns false so the sheet is not dirtied - an accidental open-and-OK on a lifted helper stays
 ## byte-safe. Call sites are NOT rewritten on rename (same as renaming via the Functions dialog list).
 func _apply_function_edit(data: Dictionary) -> void:
 	var original_name: String = str(data.get("editing"))
@@ -145,7 +145,7 @@ func _apply_function_edit(data: Dictionary) -> void:
 			param.description = str(param_entry.get("description", ""))
 			new_params.append(param)
 		# build_function_data auto-defaults an empty display name to name.capitalize(); when the stored
-		# value is empty, that default is NOT an edit — normalize it back so an untouched open-and-OK
+		# value is empty, that default is NOT an edit - normalize it back so an untouched open-and-OK
 		# compares equal (and stays byte-safe for reverse-lifted helpers).
 		var incoming_display: String = str(data.get("ace_display_name", ""))
 		if target.ace_display_name.is_empty() and incoming_display == str(data.get("name")).capitalize():
@@ -171,7 +171,7 @@ func _apply_function_edit(data: Dictionary) -> void:
 		_dock._mark_dirty("Edited function %s()." % str(data.get("name")))
 
 
-## One comparable string per (name, type, description, expose, display, category, params) tuple —
+## One comparable string per (name, type, description, expose, display, category, params) tuple -
 ## the "did the dialog actually change anything" check above.
 static func _function_fingerprint(function_name: String, return_type: int, description: String,
 		exposed: bool, display_name: String, category: String, params: Array) -> String:

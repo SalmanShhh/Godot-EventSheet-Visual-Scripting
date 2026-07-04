@@ -1,6 +1,6 @@
-# EventForge — Phase 3 (Stage C) of the near-zero-RawCode roadmap: control-flow reverse-lift (loops).
+# EventForge - Phase 3 (Stage C) of the near-zero-RawCode roadmap: control-flow reverse-lift (loops).
 # A `for X in EXPR:` / `for i in range(N):` / `while COND:` inside a lifted trigger body reverse-lifts
-# to a PickFilter loop ROW (EXPRESSION / REPEAT / WHILE) with its body as sub-rows — instead of an
+# to a PickFilter loop ROW (EXPRESSION / REPEAT / WHILE) with its body as sub-rows - instead of an
 # in-flow GDScript cell. Mirrors the existing if/elif/else nesting; the byte-identical recompile gates
 # every match. (No functions move, so the GDScript-backed-sheet append contract is untouched.)
 @tool
@@ -39,7 +39,7 @@ static func run() -> bool:
 		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, roundtrip])
 
 	# Nested control flow: a `for` containing an `if` containing a `while` must lift to NESTED loop
-	# rows (regression pin for _is_plain_collector — a loop child must not be mistaken for a plain
+	# rows (regression pin for _is_plain_collector - a loop child must not be mistaken for a plain
 	# statement collector, which would drop its pick_filter and force a raw fallback).
 	var nested: EventSheetResource = EventSheetResource.new()
 	nested.host_class = "Node2D"

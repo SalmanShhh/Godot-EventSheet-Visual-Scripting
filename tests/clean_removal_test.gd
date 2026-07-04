@@ -1,4 +1,4 @@
-# EventForge — clean-removal contract test.
+# EventForge - clean-removal contract test.
 # The headline covenant is "delete the plugin and your game still runs": every shipped
 # generated script and behavior pack must reference NO plugin class and must parse on its
 # own. This turns that promise from a claim into a gate: scan each output's CODE (comments
@@ -36,7 +36,7 @@ static func run() -> bool:
 		for banned: String in BANNED:
 			passed = _check("%s code references no '%s'" % [name, banned], code.contains(banned), false) and passed
 		# Parses standalone (strip class_name so reload doesn't collide with the already-
-		# registered global class — that's a registration conflict, not a syntax fault).
+		# registered global class - that's a registration conflict, not a syntax fault).
 		var parse_source: String = ""
 		for source_line: String in source.split("\n"):
 			if source_line.begins_with("class_name "):

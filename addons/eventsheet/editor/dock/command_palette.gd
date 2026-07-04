@@ -1,10 +1,10 @@
 @tool
 class_name EventSheetCommandPalette
 extends RefCounted
-# The Command Palette (Ctrl+P): keyboard-first access to every dock action — the affordance power
+# The Command Palette (Ctrl+P): keyboard-first access to every dock action - the affordance power
 # users reach for first. The command list + fuzzy filter are pure/testable (filter_commands is static
 # so tests can score titles without a live window); the popup is the GUI shell built lazily. Every
-# command targets a dock method that STAYS on the dock — this helper only owns the list, the filter,
+# command targets a dock method that STAYS on the dock - this helper only owns the list, the filter,
 # and the window shell, reaching the dock's actions + add_child through the `_dock` back-reference,
 # the same pattern as the other dock/ helpers. Extracted from event_sheet_dock.gd to keep that file
 # maintainable; the dock keeps thin delegates so its shortcut caller and the tests don't change.
@@ -125,12 +125,12 @@ func _sheet_matches(query: String) -> Array:
 	for entry: Dictionary in filter_sheets(_dock.list_project_sheets(), query):
 		var path: String = str(entry["path"])
 		matches.append({"title": "# %s" % str(entry["title"]), "run": func() -> void:
-			_dock._navigate.record_current()  # a palette jump is history too — Alt+Left returns
+			_dock._navigate.record_current()  # a palette jump is history too - Alt+Left returns
 			_dock._navigate.open_or_focus(path)})
 	return matches
 
 
-## Every named symbol in a sheet — exposed functions (ƒ), signals (➜), and tree variables (@) — as
+## Every named symbol in a sheet - exposed functions (ƒ), signals (➜), and tree variables (@) - as
 ## [{title, name, resource}]. `name` is the bare identifier (fuzzy-match target); `title` carries the
 ## kind glyph; `resource` is what the palette reveals. Static + pure over the sheet → testable. Recurses
 ## groups so a symbol inside a group is still findable.
@@ -227,7 +227,7 @@ func _build_command_palette_window() -> void:
 	_dock.add_child(_command_palette_window)
 
 
-## A script location in pasted text — "res://path.gd:42" anywhere inside it, so a whole error or
+## A script location in pasted text - "res://path.gd:42" anywhere inside it, so a whole error or
 ## stack-trace line copied from the Output panel works verbatim. {path, line} or {} when the text
 ## carries no script location. Static + pure (testable without a window).
 static func parse_error_location(text: String) -> Dictionary:
@@ -241,12 +241,12 @@ static func parse_error_location(text: String) -> Dictionary:
 
 
 ## The error-jump entry: opens the located .gd AS A SHEET and selects the row that emitted the line
-## (the line↔row mapper) — a runtime error pastes straight back onto the event that caused it.
+## (the line↔row mapper) - a runtime error pastes straight back onto the event that caused it.
 func _error_jump_matches(location: Dictionary) -> Array:
 	var path: String = str(location.get("path"))
 	var line: int = int(location.get("line"))
 	return [{"title": "⚠ Jump to the row behind %s:%d" % [path.get_file(), line], "run": func() -> void:
-		_dock._navigate.record_current()  # an error jump is history too — Alt+Left returns
+		_dock._navigate.record_current()  # an error jump is history too - Alt+Left returns
 		_dock._navigate.open_or_focus(path)
 		_dock.goto_generated_line(line)}]
 

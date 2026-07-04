@@ -1,4 +1,4 @@
-# EventForge — Collective enable/disable of a multi-selection
+# EventForge - Collective enable/disable of a multi-selection
 #
 # Toggling enabled state acts on the whole current selection: selecting two conditions and
 # toggling disables both; toggling again re-enables them.

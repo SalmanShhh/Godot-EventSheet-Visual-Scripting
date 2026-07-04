@@ -1,11 +1,11 @@
-# EventForge — GDScript importer
+# EventForge - GDScript importer
 # Parses generated/handwritten GDScript back into an EventSheetResource: the `extends`
 # host class, top-level exported variables (with their Inspector @export_group/@export_subgroup
 # grouping absorbed onto the variable), enums, signals, and functions.
 #
 # ACE-level lifting IS shipped: EventSheetACELifter.attempt_lift() reverse-matches generated `if`
 # chains and action templates back into real events/conditions/actions, gated by a byte-identical
-# verify-lift (anything that doesn't reproduce exactly stays a verbatim RawCodeRow — the lossless rule
+# verify-lift (anything that doesn't reproduce exactly stays a verbatim RawCodeRow - the lossless rule
 # always wins).
 @tool
 class_name GDScriptImporter
@@ -20,7 +20,7 @@ func import_script(script_path: String) -> EventSheetResource:
 ## ── GDScript-backed sheets (open ANY .gd as a sheet, losslessly) ─────────────
 ## Unlike import_source (structural import into a normal sheet), external import keeps the
 ## .gd file as the single source of truth. THE LOSSLESS RULE: every line lands in exactly
-## one ordered row — declarations are lifted to first-class rows ONLY when re-emitting them
+## one ordered row - declarations are lifted to first-class rows ONLY when re-emitting them
 ## reproduces the original line byte-for-byte (verify-lift); everything else is preserved
 ## verbatim as GDScript block rows. Saving an untouched file therefore reproduces it
 ## exactly (guarded by golden round-trip tests).
@@ -35,7 +35,7 @@ func import_external(script_path: String) -> EventSheetResource:
 	return sheet
 
 
-## A .gd registered in the project's [autoload] section IS an autoload sheet — recover that identity
+## A .gd registered in the project's [autoload] section IS an autoload sheet - recover that identity
 ## from ProjectSettings (the single source of truth) so opening the .gd round-trips autoload_mode +
 ## autoload_name without needing a marker comment in the file. Unregistered .gd files open as plain
 ## sheets (and Project Doctor already flags an autoload sheet that isn't registered).
@@ -141,14 +141,14 @@ func import_external_source(source: String) -> EventSheetResource:
 			sheet.custom_class_name = class_match.get_string(1)
 	# Recover the custom node icon (`@icon("res://…")`) so the sheet banner shows it and a re-save
 	# regenerates it. The annotation line itself stays in the verbatim prelude block, so this is
-	# metadata only — no double-emit.
+	# metadata only - no double-emit.
 	var icon_regex: RegEx = RegEx.new()
 	if icon_regex.compile("(?m)^@icon\\(\"([^\"]+)\"\\)") == OK:
 		var icon_match: RegExMatch = icon_regex.search(source)
 		if icon_match != null:
 			sheet.custom_class_icon = icon_match.get_string(1)
 	# Recover addon tags (`## @ace_tags(a, b)`) so picker categorization / search round-trips. The
-	# annotation line stays in the verbatim prelude block, so this is metadata only — no double-emit.
+	# annotation line stays in the verbatim prelude block, so this is metadata only - no double-emit.
 	var tags_regex: RegEx = RegEx.new()
 	if tags_regex.compile("(?m)^## @ace_tags\\(([^)]*)\\)") == OK:
 		var tags_match: RegExMatch = tags_regex.search(source)
@@ -160,7 +160,7 @@ func import_external_source(source: String) -> EventSheetResource:
 					recovered_tags.append(trimmed_tag)
 			sheet.addon_tags = recovered_tags
 	# Recover the Family marker (`## @ace_family(Name)`) so a family-typed sheet re-opens as a family.
-	# Metadata only (the line stays in the verbatim prelude) — exactly like @ace_tags above, so it can't
+	# Metadata only (the line stays in the verbatim prelude) - exactly like @ace_tags above, so it can't
 	# double-emit. The group/vars/ACEs are all derived from the class, so the bare name is enough.
 	var family_regex: RegEx = RegEx.new()
 	if family_regex.compile("(?m)^## @ace_family\\(") == OK:
@@ -190,7 +190,7 @@ func import_external_source(source: String) -> EventSheetResource:
 			sheet.behavior_mode = true
 			sheet.host_class = host_match.get_string(1)
 	# Tier 2: reverse template matching lifts trailing trigger functions, sheet functions
-	# (with their @ace annotation blocks), and trailing comments into real rows — verified
+	# (with their @ace annotation blocks), and trailing comments into real rows - verified
 	# by a byte-identical recompile and reverted otherwise (the lossless rule always wins).
 	EventSheetACELifter.attempt_lift(sheet, source)
 	return sheet
@@ -218,7 +218,7 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	# dialog) instead of degrading to a verbatim block. Byte-gated below like every other lift.
 	lifted.is_constant = bool(descriptor.get("constant", false))
 	# A String default that appeared UNQUOTED in the source is a bare code expression (Vector2.ZERO,
-	# Color.RED, Type.CONST), not a literal — mark it so it re-emits verbatim rather than quoted. The
+	# Color.RED, Type.CONST), not a literal - mark it so it re-emits verbatim rather than quoted. The
 	# byte-verify below still gates it: if the flagged re-emission doesn't reproduce the line, revert.
 	if lifted.default_value is String and not lifted.is_constant and not lifted.onready \
 			and line.contains("= %s" % str(lifted.default_value)) and not line.contains("\"%s\"" % str(lifted.default_value)):
@@ -235,7 +235,7 @@ func _try_lift_variable(line: String) -> LocalVariable:
 
 ## @export_color_no_alpha round-trip: pull the bare hint into the structured `no_alpha` attribute so a
 ## reopened Color shows the dialog's "No alpha" tick instead of a verbatim hint. Verify-gated like the
-## drawer recovery — if the structured re-emission doesn't reproduce the line exactly, revert.
+## drawer recovery - if the structured re-emission doesn't reproduce the line exactly, revert.
 func _extract_color_no_alpha(lifted: LocalVariable, line: String) -> void:
 	if lifted.export_hint.strip_edges() != "@export_color_no_alpha":
 		return
@@ -284,7 +284,7 @@ func _extract_placeholder(lifted: LocalVariable, line: String) -> void:
 
 ## Tier 3 round-trip: if the lifted variable's export_hint is a custom-drawer marker
 ## (`@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>…")`), pull it into structured
-## attributes.drawer (+ range bounds for progress_bar/vector_dial) and clear export_hint — so a reopened
+## attributes.drawer (+ range bounds for progress_bar/vector_dial) and clear export_hint - so a reopened
 ## drawer is an editable drawer in the Variable dialog, not a verbatim @export_custom block. Verify-gated:
 ## if re-emission from the structured form doesn't reproduce the exact line, revert (byte-safety wins).
 func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
@@ -301,7 +301,7 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
 	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
 	attrs["drawer"] = parts[1]
-	# progress_bar carries min:max, vector_dial carries a single max magnitude — recovered into the same
+	# progress_bar carries min:max, vector_dial carries a single max magnitude - recovered into the same
 	# `range` dict the emitter reads, so the marker re-emits byte-for-byte.
 	if parts[1] == "progress_bar" and parts.size() >= 4:
 		attrs["range"] = {"min": parts[2], "max": parts[3]}
@@ -315,9 +315,9 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 
 
 ## When a tree variable lifts, pull a directly-preceding @export_group / @export_subgroup off the pending
-## block onto the variable's attributes — but only if the variable's canonical re-emission then reproduces
+## block onto the variable's attributes - but only if the variable's canonical re-emission then reproduces
 ## those exact lines plus the var line (the verify-lift rule). A wrong guess is reverted, so a grouped var
-## becomes a clean grouped variable instead of a stray @export_group GDScript block — without ever risking
+## becomes a clean grouped variable instead of a stray @export_group GDScript block - without ever risking
 ## the byte-exact round-trip. (Order matches _emit_variables: @export_group then @export_subgroup.)
 func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArray, var_line: String) -> void:
 	var subgroup_value: String = ""
@@ -338,7 +338,7 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		meta_count += 1
 		cursor -= 1
 	var tooltip_value: String = ""
-	# A doc comment immediately before the var (no blank line — a blank line would sit at pending's tail
+	# A doc comment immediately before the var (no blank line - a blank line would sit at pending's tail
 	# instead) is the variable's tooltip, per Godot's `##` doc-comment convention. Exclude `## @...`
 	# annotation lines (@ace_tags / @icon / …), which are recovered elsewhere and are never tooltips.
 	if cursor >= 0 and pending[cursor].begins_with("## ") and not pending[cursor].begins_with("## @"):
@@ -369,7 +369,7 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		absorbed.append(pending[index])
 	absorbed.append(var_line)
 	if SheetCompiler._emit_tree_variable_line(lifted) != "\n".join(absorbed):
-		lifted.attributes = saved_attrs  # reverted — keep whatever was already recovered (e.g. the drawer)
+		lifted.attributes = saved_attrs  # reverted - keep whatever was already recovered (e.g. the drawer)
 		return
 	for _removed: int in range(meta_count):
 		pending.remove_at(pending.size() - 1)
@@ -561,8 +561,8 @@ func _try_lift_signal(line: String) -> SignalRow:
 
 
 ## When a signal lifts, pull a directly-preceding `## @ace_trigger` (+ optional `## @ace_name` /
-## `## @ace_category`) block off the pending lines onto the SignalRow — the reverse of the compiler's
-## _emit_signal_annotations — so a behaviour's exposed trigger signal reads as ONE first-class "trigger"
+## `## @ace_category`) block off the pending lines onto the SignalRow - the reverse of the compiler's
+## _emit_signal_annotations - so a behaviour's exposed trigger signal reads as ONE first-class "trigger"
 ## row instead of stranding those annotations in a separate GDScript "setup" block above a bare signal.
 ## Verify-gated exactly like _absorb_tree_variable_group: the SignalRow's canonical re-emission
 ## (annotation block + declaration) must reproduce those exact source lines, or the guess is reverted
@@ -580,7 +580,7 @@ func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedString
 		var text: String = pending[cursor].strip_edges()
 		if text == "## @ace_trigger":
 			run_start = cursor
-			break  # the anchor heads the block — stop (lines above belong to whatever precedes it)
+			break  # the anchor heads the block - stop (lines above belong to whatever precedes it)
 		elif text.begins_with("## @ace_name(\"") and text.ends_with("\")"):
 			ace_name = _extract_first_quoted(pending[cursor])
 			run_start = cursor
@@ -603,7 +603,7 @@ func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedString
 	var expected: PackedStringArray = SheetCompiler._emit_signal_annotations(lifted)
 	expected.append(SheetCompiler._emit_signal_line(lifted))
 	if "\n".join(expected) != "\n".join(absorbed):
-		# The block wasn't in canonical form (reordered / extra directives) — revert to a plain signal so
+		# The block wasn't in canonical form (reordered / extra directives) - revert to a plain signal so
 		# the annotations stay verbatim in their block and the round-trip is never risked.
 		lifted.trigger = false
 		lifted.ace_name = ""

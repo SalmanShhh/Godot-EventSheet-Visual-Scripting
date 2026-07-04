@@ -1,8 +1,8 @@
-# EventSheet — shared popup UI helpers.
+# EventSheet - shared popup UI helpers.
 #
 # A single, consistent look for the plugin's dialogs (aligned "Label  [field]" rows, standard
 # content margins, a standard form box) so every popup matches the Godot 4.7 editor styling
-# instead of each one inventing its own margins + label placement. Pure factory helpers — they
+# instead of each one inventing its own margins + label placement. Pure factory helpers - they
 # return controls the caller parents; they apply no logic of their own, so they are unit-testable.
 @tool
 class_name EventSheetPopupUI
@@ -13,15 +13,15 @@ const ROW_SEPARATION := 8
 const LABEL_MIN_WIDTH := 120.0
 ## Default wrap width (px) for hint/wrapping labels. A ConfirmationDialog/AcceptDialog sizes to its
 ## content's MINIMUM, and an UNBOUNDED autowrap label reports a runaway one-glyph-per-line min height
-## during the initial zero-width pass — which balloons the whole dialog. Giving the label a minimum
+## during the initial zero-width pass - which balloons the whole dialog. Giving the label a minimum
 ## width makes that pass wrap at a sane width while the label still wraps wider at runtime.
 const HINT_WRAP_WIDTH := 360.0
 
 
 ## Hardens a CodeEdit against the most common user syntax errors: auto-CLOSES brackets and quotes (typing
 ## "(" inserts "()" with the caret inside, '"' inserts ""), so an unbalanced pair is hard to leave behind,
-## and matching brackets highlight. Applied to every EDITABLE code field — the ƒx expression boxes and the
-## GDScript-block dialog — so users (especially non-coders) rarely produce a bracket/quote syntax error in
+## and matching brackets highlight. Applied to every EDITABLE code field - the ƒx expression boxes and the
+## GDScript-block dialog - so users (especially non-coders) rarely produce a bracket/quote syntax error in
 ## the first place. Pure setter on the passed control → unit-testable, safe headless.
 static func configure_code_editor(edit: CodeEdit) -> void:
 	if edit == null:
@@ -31,7 +31,7 @@ static func configure_code_editor(edit: CodeEdit) -> void:
 	edit.auto_brace_completion_pairs = {"(": ")", "[": "]", "{": "}", "\"": "\"", "'": "'"}
 
 
-## An aligned "Label   [field]" row — the consistent form layout for the plugin's dialogs. The
+## An aligned "Label   [field]" row - the consistent form layout for the plugin's dialogs. The
 ## label takes a fixed leading width so stacked rows align; the field expands to fill the rest.
 static func form_row(label_text: String, field: Control, label_min_width: float = LABEL_MIN_WIDTH) -> HBoxContainer:
 	var row: HBoxContainer = HBoxContainer.new()
@@ -66,7 +66,7 @@ static func margined(content: Control, margin: int = CONTENT_MARGIN) -> MarginCo
 
 
 ## A muted helper/hint label (the small explanatory text under a field). The autowrap is WIDTH-BOUNDED
-## (wrap_width) so it never balloons a content-sized dialog — see HINT_WRAP_WIDTH. Pass a smaller
+## (wrap_width) so it never balloons a content-sized dialog - see HINT_WRAP_WIDTH. Pass a smaller
 ## wrap_width in a narrower dialog if the default would widen it.
 static func hint_label(text: String, wrap_width: float = HINT_WRAP_WIDTH) -> Label:
 	var label: Label = Label.new()
@@ -80,7 +80,7 @@ static func hint_label(text: String, wrap_width: float = HINT_WRAP_WIDTH) -> Lab
 const PANEL_SECTION_PAD := 6.0
 
 
-## Wraps `content` in a filled "inset card" — a PanelContainer whose background sits a touch darker than
+## Wraps `content` in a filled "inset card" - a PanelContainer whose background sits a touch darker than
 ## the dialog, with a hairline border + rounded corners (Godot's Create-New-Node side-pane look), so a
 ## section reads as a distinct sunken panel instead of floating on the dialog background. Use it to give
 ## the picker's Favorites/Recent/description areas real visual separation. The caller still sets the
@@ -94,7 +94,7 @@ static func panel_section(content: Control, pad: float = PANEL_SECTION_PAD) -> P
 	return panel
 
 
-## A section-title label for grouping a dialog into legible blocks — full opacity, a touch larger,
+## A section-title label for grouping a dialog into legible blocks - full opacity, a touch larger,
 ## tinted with the editor's accent so a section reads as a heading rather than just another form row.
 ## Falls back to a neutral blue outside the editor (headless tests / non-editor runtime).
 static func section_header(text: String) -> Label:
@@ -112,7 +112,7 @@ static func section_header(text: String) -> Label:
 	return label
 
 
-## A titled inset card — a section_header above panel_section(content). The standard "labelled section"
+## A titled inset card - a section_header above panel_section(content). The standard "labelled section"
 ## block, so every dialog groups its content into the same legible, themed panels instead of a flat
 ## wall of rows. The caller still sets the returned panel's size flags if it should expand.
 static func titled_card(title: String, content: Control, pad: float = PANEL_SECTION_PAD) -> PanelContainer:
@@ -124,7 +124,7 @@ static func titled_card(title: String, content: Control, pad: float = PANEL_SECT
 
 
 ## The StyleBoxFlat behind panel_section() (and any card that wants the matching look): a filled inset
-## with a subtle border + 4px corners. Editor-theme-aware — the fill comes from the editor's `dark_color_2`
+## with a subtle border + 4px corners. Editor-theme-aware - the fill comes from the editor's `dark_color_2`
 ## (the same tone Godot's own inset panels use) and the border from `contrast_color_1`; both fall back to
 ## neutral dark values outside the editor (headless tests / non-editor runtime) so it never errors.
 static func inset_panel_stylebox() -> StyleBoxFlat:

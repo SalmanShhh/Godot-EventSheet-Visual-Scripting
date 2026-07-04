@@ -1,4 +1,4 @@
-# EventSheet — GDScript block lint + completion support
+# EventSheet - GDScript block lint + completion support
 # Compile-checks block snippets against the sheet's context: the scratch script extends the
 # sheet's host class and stubs the sheet's variables/functions, so references to them (and
 # host members) resolve. Godot does not expose the ScriptEditor analyzer to plugins; this
@@ -23,7 +23,7 @@ static func lint(code: String, in_flow: bool, sheet: EventSheetResource) -> Dict
 	var error: Error = scratch.reload(true)
 	if error == OK:
 		return {"ok": true, "error": ""}
-	return {"ok": false, "error": "Does not compile (parse/analyze failed — see Output for details)."}
+	return {"ok": false, "error": "Does not compile (parse/analyze failed - see Output for details)."}
 
 
 ## Validates a ƒx field as a plain GDScript expression against the sheet context (sheet
@@ -34,8 +34,8 @@ static func lint_expression(expression: String, sheet: EventSheetResource) -> Di
 	return lint("var __expression_check__ = (%s)" % expression.strip_edges(), true, sheet)
 
 
-## A purely STRUCTURAL GDScript syntax error in `code` — unbalanced ()/[]/{}, a mismatched bracket, or an
-## unterminated string — or "" when structurally sound. These are ALWAYS errors regardless of whether the
+## A purely STRUCTURAL GDScript syntax error in `code` - unbalanced ()/[]/{}, a mismatched bracket, or an
+## unterminated string - or "" when structurally sound. These are ALWAYS errors regardless of whether the
 ## identifiers are declared, so the editor can hard-block committing them with ZERO false positives (unlike
 ## the symbol-aware lint, which flags runtime-only refs like a $spawned node or a dynamic var). Brackets
 ## and quotes inside strings and `#` comments are skipped so they don't miscount; `\` escapes and triple
@@ -106,7 +106,7 @@ static func structural_syntax_error(code: String) -> String:
 		else:
 			i += 1
 	if not openers.is_empty():
-		return "Unclosed \"%s\" from line %d — add its closing bracket." % [openers[openers.size() - 1], open_lines[open_lines.size() - 1]]
+		return "Unclosed \"%s\" from line %d - add its closing bracket." % [openers[openers.size() - 1], open_lines[open_lines.size() - 1]]
 	return ""
 
 
@@ -114,7 +114,7 @@ static func structural_syntax_error(code: String) -> String:
 static func build_scratch_source(code: String, in_flow: bool, sheet: EventSheetResource) -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	var host_class: String = sheet.host_class if sheet != null and ClassDB.class_exists(sheet.host_class) else "RefCounted"
-	# Behavior sheets compile to Node components with a typed `host` accessor — the scratch
+	# Behavior sheets compile to Node components with a typed `host` accessor - the scratch
 	# script mirrors that so `host.member` references lint correctly.
 	if sheet != null and sheet.behavior_mode:
 		lines.append("extends Node")
@@ -226,7 +226,7 @@ static func dot_completion_candidates(token: String, sheet: EventSheetResource) 
 			_add_class_members(candidates, seen, container_type)
 		else:
 			# Array/Dictionary/Packed*Array are Variant built-ins, not ClassDB classes, so
-			# ClassDB can't enumerate them — offer a curated method set (the same vocabulary
+			# ClassDB can't enumerate them - offer a curated method set (the same vocabulary
 			# the collection Helper ACEs wrap, so completion and the picker agree).
 			for member: String in _builtin_collection_members(container_type):
 				_add_candidate(candidates, seen, CodeEdit.KIND_FUNCTION, member)
@@ -378,7 +378,7 @@ static func _sheet_variable_names(sheet: EventSheetResource) -> Array[String]:
 	for entry in sheet.events:
 		if entry is LocalVariable and not (entry as LocalVariable).name.strip_edges().is_empty():
 			# build_scratch_source already declares `var host: <Type>` for behaviour sheets, and opening a
-			# behaviour .gd recovers that accessor as a `host` variable row — skip it here so the scratch
+			# behaviour .gd recovers that accessor as a `host` variable row - skip it here so the scratch
 			# script doesn't get a duplicate `var host` (which fails to parse and spuriously errors the lint).
 			if sheet.behavior_mode and (entry as LocalVariable).name == "host":
 				continue

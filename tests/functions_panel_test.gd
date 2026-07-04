@@ -1,4 +1,4 @@
-# EventForge — the Functions overview panel. Now its OWN dockable left-rail panel (it used to be
+# EventForge - the Functions overview panel. Now its OWN dockable left-rail panel (it used to be
 # welded inside the Generated-GDScript side panel, so seeing your functions meant opening the code
 # view): a fold header ("▸ Functions · N") expands on demand, ＋ adds a function, every sheet
 # function shows its signature (✦ = exposed as an ACE), right-click deletes one, and the collapsed

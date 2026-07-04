@@ -1,4 +1,4 @@
-# EventForge — silent-bug regression suite
+# EventForge - silent-bug regression suite
 #
 # Pins the silent defects an adversarial sweep reproduced (each shipped invalid/wrong behaviour
 # WITHOUT crashing at compile time): an awaited multi-statement action template, an unresolvable

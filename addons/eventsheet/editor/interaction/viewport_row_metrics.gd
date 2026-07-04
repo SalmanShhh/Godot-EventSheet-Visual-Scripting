@@ -6,7 +6,7 @@ extends RefCounted
 # owns the metrics array and the width it was last computed at; it reads the row model
 # (_flat_rows / _root_rows), the zoom, fonts, the event style, and the logical canvas width through
 # a back-reference to the viewport. Row layout must stay byte-identical to the pre-extraction code,
-# so the bodies below were moved VERBATIM — only member access was rewritten to go through
+# so the bodies below were moved VERBATIM - only member access was rewritten to go through
 # `_viewport.` (the metric arithmetic itself is unchanged).
 #
 # Two methods are STATIC + pure (wrapped_line_count, _row_index_at_y) so they remain unit-testable
@@ -160,7 +160,7 @@ func row_index_at_y(y: float) -> int:
 ## Resolves a vertical position to a row index. A click in the small inter-block GAP before a row
 ## (dead space not covered by any row band, EVENT_BLOCK_GAP) resolves to the PRECEDING event, so
 ## clicking just outside / below an event block still selects it instead of clearing the selection
-## — the dead zone that let Delete fall through to the editor's scene tree. Static + pure = testable.
+## - the dead zone that let Delete fall through to the editor's scene tree. Static + pure = testable.
 static func _row_index_at_y(metrics: Array, y: float) -> int:
 	if metrics.is_empty() or y < 0.0:
 		return -1

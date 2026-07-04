@@ -1,4 +1,4 @@
-# Godot EventSheets — Addon tags
+# Godot EventSheets - Addon tags
 # `@ace_tags(a, b)` on an addon class (or the Tags field on a sheet-built addon) tags
 # every ACE the provider publishes: searchable in the picker, exposed over MCP, and
 # emitted/recovered through the generated script.

@@ -6,7 +6,7 @@ extends RefCounted
 # that file maintainable.
 #
 # draw_empty_state is invoked only from the viewport's _draw, so its three draw_string calls are
-# proxied through _viewport (the owning CanvasItem) — CanvasItem.draw_* only works inside the
+# proxied through _viewport (the owning CanvasItem) - CanvasItem.draw_* only works inside the
 # owning node's _draw. is_sheet_visually_empty is a pure predicate over the viewport's flat rows.
 
 var _viewport: Control = null
@@ -16,7 +16,7 @@ func init(viewport: Control) -> void:
 	_viewport = viewport
 
 
-## True when the sheet has no authored rows — either genuinely empty, or holding only the
+## True when the sheet has no authored rows - either genuinely empty, or holding only the
 ## trailing "+ Add event…" footer affordance(s). Drives the getting-started empty state so a
 ## brand-new sheet shows guidance instead of a lone footer row.
 func is_sheet_visually_empty() -> bool:
@@ -28,7 +28,7 @@ func is_sheet_visually_empty() -> bool:
 
 
 ## Calm getting-started state for an empty sheet: one clear heading, one primary call to
-## action, and a single de-emphasized tip — instead of a dense run-on of shortcuts that
+## action, and a single de-emphasized tip - instead of a dense run-on of shortcuts that
 ## reads as clutter the moment a new user opens a sheet. Called from the viewport's _draw, so
 ## draw_string is proxied through _viewport (the owning CanvasItem).
 func draw_empty_state(width: float) -> void:

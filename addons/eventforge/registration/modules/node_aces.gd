@@ -1,4 +1,4 @@
-# EventForge module — Node manipulation + picking (build, rearrange, and select scene-tree nodes).
+# EventForge module - Node manipulation + picking (build, rearrange, and select scene-tree nodes).
 #
 # The everyday scene-tree operations: parent/reorder/free/rename nodes, and PICK nodes (children,
 # by name pattern, or by group) so common tree work never forces a drop to GDScript. Complements
@@ -38,18 +38,18 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetSceneRoot", "Current Scene Root", ACEDescriptor.ACEType.EXPRESSION, "get_tree().current_scene", "", [], "Nodes", "current scene root")
 		.described("Returns the root node of the currently running scene."))
 
-	# ── Nodes: Picking — find / select nodes (children, by name pattern, by group) ──
+	# ── Nodes: Picking - find / select nodes (children, by name pattern, by group) ──
 	descriptors.append(F.make_descriptor("Core", "GetChildren", "Get Children", ACEDescriptor.ACEType.EXPRESSION, "{target}.get_children()", "", [F.make_param("target", "String", "self", "Target", "Node whose direct children to list.", "expression")], "Nodes: Picking", "{target} children")
 		.described("Returns the list of a node's direct children to loop over or pick from."))
 	descriptors.append(F.make_descriptor("Core", "FindChildrenByPattern", "Find Children (by name)", ACEDescriptor.ACEType.EXPRESSION, "{target}.find_children({pattern}, \"\", true, false)", "", [F.make_param("target", "String", "self", "Target", "Node to search beneath.", "expression"), F.make_param("pattern", "String", "\"Enemy*\"", "Pattern", "Name pattern (wildcards allowed).", "expression")], "Nodes: Picking", "find {pattern} in {target}")
 		.described("Returns all descendant nodes whose name matches a pattern, wildcards allowed."))
-	# By TYPE — the answer to Godot's node-heavy objects: reach "the AnimationPlayer / Area2D / Sprite2D of
+	# By TYPE - the answer to Godot's node-heavy objects: reach "the AnimationPlayer / Area2D / Sprite2D of
 	# this object" WITHOUT a brittle deep path ($A/B/C/D) or a GDScript block. find_children("*", Type,
 	# recursive=true, owned=false) walks the whole subtree by class. Pairs with For Each (Find Children Of
 	# Type), With-node / expressions (First Child Of Type), and gating (Has Child Of Type).
-	descriptors.append(F.make_descriptor("Core", "FindChildrenOfType", "Find Children Of Type", ACEDescriptor.ACEType.EXPRESSION, "{target}.find_children(\"*\", {type}, true, false)", "", [F.make_param("target", "String", "self", "Target", "Node to search beneath.", "expression"), F.make_param("type", "String", "\"AnimationPlayer\"", "Type", "Node class name to find — AnimationPlayer, Area2D, Sprite2D, … (every descendant of that type).", "expression")], "Nodes: Picking", "{type} nodes in {target}")
+	descriptors.append(F.make_descriptor("Core", "FindChildrenOfType", "Find Children Of Type", ACEDescriptor.ACEType.EXPRESSION, "{target}.find_children(\"*\", {type}, true, false)", "", [F.make_param("target", "String", "self", "Target", "Node to search beneath.", "expression"), F.make_param("type", "String", "\"AnimationPlayer\"", "Type", "Node class name to find - AnimationPlayer, Area2D, Sprite2D, … (every descendant of that type).", "expression")], "Nodes: Picking", "{type} nodes in {target}")
 		.described("Returns all descendant nodes of a given class, e.g. every Area2D beneath this one."))
-	descriptors.append(F.make_descriptor("Core", "FirstChildOfType", "First Child Of Type", ACEDescriptor.ACEType.EXPRESSION, "{target}.find_children(\"*\", {type}, true, false).pop_front()", "", [F.make_param("target", "String", "self", "Target", "Node to search beneath.", "expression"), F.make_param("type", "String", "\"AnimationPlayer\"", "Type", "Node class name to find — the first match in the subtree (null if none; pop_front is null-safe on empty).", "expression")], "Nodes: Picking", "first {type} in {target}")
+	descriptors.append(F.make_descriptor("Core", "FirstChildOfType", "First Child Of Type", ACEDescriptor.ACEType.EXPRESSION, "{target}.find_children(\"*\", {type}, true, false).pop_front()", "", [F.make_param("target", "String", "self", "Target", "Node to search beneath.", "expression"), F.make_param("type", "String", "\"AnimationPlayer\"", "Type", "Node class name to find - the first match in the subtree (null if none; pop_front is null-safe on empty).", "expression")], "Nodes: Picking", "first {type} in {target}")
 		.described("Returns the first descendant node of a given class, or nothing if none exist."))
 	descriptors.append(F.make_descriptor("Core", "HasChildOfType", "Has Child Of Type", ACEDescriptor.ACEType.CONDITION, "not {target}.find_children(\"*\", {type}, true, false).is_empty()", "", [F.make_param("target", "String", "self", "Target", "Node to search beneath.", "expression"), F.make_param("type", "String", "\"Area2D\"", "Type", "Node class name to test for anywhere in the subtree.", "expression")], "Nodes: Picking", "{target} has a {type}")
 		.described("True when at least one descendant node of the given class exists beneath this node."))
@@ -65,7 +65,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Stops the object's animation by auto-finding its AnimationPlayer."))
 	descriptors.append(F.make_descriptor("Core", "PlaySpriteAnimationInObject", "Play Sprite Animation (in object)", ACEDescriptor.ACEType.ACTION, "var __as_{uid} := {target}.find_children(\"*\", \"AnimatedSprite2D\", true, false).pop_front() as AnimatedSprite2D\nif __as_{uid}:\n\t__as_{uid}.play(&{anim})", "", [F.make_param("target", "String", "self", "Target", "The OBJECT (its AnimatedSprite2D is found automatically).", "expression"), F.make_param("anim", "String", "\"default\"", "Animation", "Animation name.")], "Animation", "play sprite animation {anim} in {target}")
 		.described("Plays a named sprite animation via the object's AnimatedSprite2D, found automatically."))
-	descriptors.append(F.make_descriptor("Core", "IsObjectAnimating", "Is Animating (in object)", ACEDescriptor.ACEType.CONDITION, "{target}.find_children(\"*\", \"AnimationPlayer\", true, false).any(func(__p): return __p.is_playing())", "", [F.make_param("target", "String", "self", "Target", "The OBJECT to test — true if any AnimationPlayer beneath it is playing.", "expression")], "Animation", "{target} is animating")
+	descriptors.append(F.make_descriptor("Core", "IsObjectAnimating", "Is Animating (in object)", ACEDescriptor.ACEType.CONDITION, "{target}.find_children(\"*\", \"AnimationPlayer\", true, false).any(func(__p): return __p.is_playing())", "", [F.make_param("target", "String", "self", "Target", "The OBJECT to test - true if any AnimationPlayer beneath it is playing.", "expression")], "Animation", "{target} is animating")
 		.described("True when any AnimationPlayer beneath the object is currently playing."))
 	# More object-level verbs (same auto-resolve-by-type pattern): the everyday sprite/effect ops a designer
 	# expects on an object, without targeting the deep child by path or dropping to a GDScript block.
@@ -81,7 +81,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns every node belonging to a named group to loop over or count."))
 	descriptors.append(F.make_descriptor("Core", "GetRandomNodeInGroup", "Random Node In Group", ACEDescriptor.ACEType.EXPRESSION, "get_tree().get_nodes_in_group({group}).pick_random()", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group to pick a random member from.", "expression")], "Nodes: Picking", "random node in group {group}")
 		.described("Returns a randomly chosen member of a named group, e.g. a random spawn point."))
-	# Nearest / Furthest by distance from THIS node — the auto-attack / targeting primitives. reduce()
+	# Nearest / Furthest by distance from THIS node - the auto-attack / targeting primitives. reduce()
 	# (Godot 4 Array has no min_by/max_by) over the group, comparing global_position.distance_to: one
 	# template needs global_position, so these register for Node2D hosts (a 3D game can paste the same
 	# reduce() into a GDScript block). Empty group → null.

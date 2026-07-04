@@ -1,5 +1,5 @@
-# EventForge — bulk retune, "Apply to all N": box-select rows, edit one shared value, Ctrl+Enter
-# writes it into the SAME verb's same param on every selected row — structure-aware (only matching
+# EventForge - bulk retune, "Apply to all N": box-select rows, edit one shared value, Ctrl+Enter
+# writes it into the SAME verb's same param on every selected row - structure-aware (only matching
 # provider+ace_id verbs that actually carry the param), one undo step, one dirty mark. Pins the
 # matching-set collection (trigger/conditions/actions + sub-events + group children; different verbs
 # and params untouched), the live re-fetch discipline (the undo funnel replaces resources on commit),
@@ -16,13 +16,13 @@ static func run() -> bool:
 	sheet.host_class = "Node2D"
 	for amount: String in ["5", "10", "15"]:
 		sheet.events.append(_heal_event(amount))
-	# A decoy on the second event: same param NAME on a DIFFERENT verb — must stay untouched.
+	# A decoy on the second event: same param NAME on a DIFFERENT verb - must stay untouched.
 	var decoy: ACEAction = ACEAction.new()
 	decoy.provider_id = "Core"
 	decoy.ace_id = "method:poison"
 	decoy.params = {"amount": "99"}
 	(sheet.events[1] as EventRow).actions.append(decoy)
-	# A sub-event under the third row carrying the same verb — bulk should reach it.
+	# A sub-event under the third row carrying the same verb - bulk should reach it.
 	var sub: EventRow = EventRow.new()
 	var sub_heal: ACEAction = ACEAction.new()
 	sub_heal.provider_id = "Core"
@@ -46,7 +46,7 @@ static func run() -> bool:
 	view._select_range(int(event_indices[event_indices.size() - 1]))
 	ok = _check("three top-level rows selected", dock._top_level_selected_resources().size(), 3) and ok
 
-	# Open the editor on the FIRST event's heal (state only — headless has no window to pop).
+	# Open the editor on the FIRST event's heal (state only - headless has no window to pop).
 	var editor: EventSheetInlineParamEditor = dock._inline_params
 	editor.on_param_value_edit_requested((_live_events(dock)[0] as EventRow).actions[0], "amount", "5")
 	ok = _check("bulk hint is visible with 3 rows selected", editor._param_edit_hint.visible, true) and ok

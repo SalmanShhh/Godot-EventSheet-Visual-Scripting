@@ -1,6 +1,6 @@
-# EventForge — a SignalRow can publish itself as a trigger ACE (## @ace_trigger), so a behaviour
+# EventForge - a SignalRow can publish itself as a trigger ACE (## @ace_trigger), so a behaviour
 # declares a code-free trigger signal as a row instead of a hand-written GDScript block. A plain
-# (non-trigger) signal emits exactly as before — no annotation lines — so existing signals are
+# (non-trigger) signal emits exactly as before - no annotation lines - so existing signals are
 # byte-identical. Pins _emit_signal_annotations + _emit_signal_line (both static).
 @tool
 class_name SignalTriggerRowTest
@@ -20,7 +20,7 @@ static func run() -> bool:
 	ok = _check("trigger annotation block", "\n".join(ann), "## @ace_trigger\n## @ace_name(\"Flash Finished\")\n## @ace_category(\"Juice\")") and ok
 	ok = _check("trigger signal line is the plain declaration", SheetCompiler._emit_signal_line(trig), "signal flash_finished") and ok
 
-	# Name/category are optional — bare @ace_trigger when omitted.
+	# Name/category are optional - bare @ace_trigger when omitted.
 	var trig_bare: SignalRow = SignalRow.new()
 	trig_bare.signal_name = "jumped"
 	trig_bare.trigger = true

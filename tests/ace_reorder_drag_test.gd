@@ -1,4 +1,4 @@
-# EventForge — Reorder a condition/action by dragging (full viewport path)
+# EventForge - Reorder a condition/action by dragging (full viewport path)
 #
 # Drives the real press -> motion -> release drag on the viewport and asserts that dragging
 # the top condition onto the lower half of the bottom condition reorders them (the insert

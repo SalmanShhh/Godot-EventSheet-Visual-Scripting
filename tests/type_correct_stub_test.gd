@@ -1,6 +1,6 @@
-# EventForge — the type-correct empty-body stub ("published before implemented"). A verb created in
+# EventForge - the type-correct empty-body stub ("published before implemented"). A verb created in
 # the ACE Studio starts with no body rows; the compiler used to emit `pass` for every such function,
-# which only PARSES for void — one empty bool/typed verb made the whole generated script fail to load,
+# which only PARSES for void - one empty bool/typed verb made the whole generated script fail to load,
 # taking every other verb on the sheet down with it. Each return type now stubs with its own default
 # return, and the test's teeth: the full generated script must actually parse (GDScript.reload()).
 @tool

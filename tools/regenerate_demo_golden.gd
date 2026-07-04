@@ -1,4 +1,4 @@
-# EventForge — dev tool: regenerate the demo golden output after intentional codegen
+# EventForge - dev tool: regenerate the demo golden output after intentional codegen
 # changes (run headless: godot --headless --script tools/regenerate_demo_golden.gd).
 # compile_demo_test compares SheetCompiler output against demo/sheets/player_generated.gd;
 # regenerating keeps the golden honest when emission changes on purpose (CHANGELOG it!).

@@ -1,7 +1,7 @@
-# EventForge — per-function shell-lift with re-anchoring. The trailing-run lift used to be
+# EventForge - per-function shell-lift with re-anchoring. The trailing-run lift used to be
 # all-or-nothing: ONE hairy function body reverted every function in the file back to raw code. The
 # run now RE-ANCHORS after each failure, so the longest cleanly-lifting TRAILING subset still becomes
-# real EventFunctions (only a trailing subset can lift at all — emission places sheet.functions after
+# real EventFunctions (only a trailing subset can lift at all - emission places sheet.functions after
 # the in-place raw rows, so a raw leftover between lifted functions would reorder the file; the
 # byte-verify still gates everything). Pins: the synthetic hairy-then-clean case, byte-identical
 # round-trips with a partial lift, and a census FLOOR across real packs so a regression screams.
@@ -13,10 +13,10 @@ extends RefCounted
 static func run() -> bool:
 	var ok: bool = true
 
-	# ── Synthetic: a hairy body BEFORE two clean verbs — the clean tail lifts, the hairy stays raw.
+	# ── Synthetic: a hairy body BEFORE two clean verbs - the clean tail lifts, the hairy stays raw.
 	# The source is built by FORWARD-compiling a sheet that already holds the two verbs, so its
 	# annotation blocks carry the exact emission shape the byte-verify demands (hand-writing an
-	# incomplete block is correctly refused — the verify only accepts what it can reproduce). ──
+	# incomplete block is correctly refused - the verify only accepts what it can reproduce). ──
 	var authored: EventSheetResource = EventSheetResource.new()
 	authored.host_class = "Node"
 	authored.tool_mode = true
@@ -58,13 +58,13 @@ static func run() -> bool:
 
 	# ── Census floor across real packs: the re-anchoring must keep these packs lifting.
 	# Floors sit below today's counts (abilities 49, virtual_cursor 54, drag_drop 36, spring 22,
-	# weapon_kit 18, juice 17) so content edits have headroom, while a mechanism regression —
-	# which sends a pack back to ZERO — always fails loudly. ──
+	# weapon_kit 18, juice 17) so content edits have headroom, while a mechanism regression -
+	# which sends a pack back to ZERO - always fails loudly. ──
 	var floors: Dictionary = {
 		"abilities": 40, "virtual_cursor": 40, "drag_drop": 30,
 		"spring": 15, "weapon_kit": 12, "juice": 10, "platformer_movement": 10,
 		# Unlocked by the untyped-parameter fix (a bare `final_value` param re-emitted as
-		# `final_value: String` — ACEParam's default type — and failed the byte-verify).
+		# `final_value: String` - ACEParam's default type - and failed the byte-verify).
 		"htn_agent": 15, "tween": 8, "time_slicer": 8,
 		# Unlocked by the deep-statement guard (a line INSIDE an unlifted control block used to
 		# template-match as a standalone action and re-emit one tab shallower).

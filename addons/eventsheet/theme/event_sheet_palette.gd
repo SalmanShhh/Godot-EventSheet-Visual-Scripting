@@ -60,8 +60,8 @@ const COLOR_CONST_BADGE_FG = Color("#eafde5")
 # gold (COLOR_ACTION); Condition + Expression are kept DISTINCT from the trigger (#d291ff) / group
 # purples so the three roles read as one legible colour family. Each carries a bright accent for the
 # card + a tinted badge bg/fg pair for the pill.
-const COLOR_CONDITION = Color("#5cc2a6")   # teal — a yes/no test
-const COLOR_EXPRESSION = Color("#c07ad8")  # magenta-violet — a value (distinct from trigger/category purple)
+const COLOR_CONDITION = Color("#5cc2a6")   # teal - a yes/no test
+const COLOR_EXPRESSION = Color("#c07ad8")  # magenta-violet - a value (distinct from trigger/category purple)
 const COLOR_ACE_ACTION_BADGE_BG = Color("#463414")
 const COLOR_ACE_ACTION_BADGE_FG = Color("#f2c879")
 const COLOR_ACE_CONDITION_BADGE_BG = Color("#123a30")
@@ -76,7 +76,7 @@ const COLOR_CAT_CHIP_FG = Color("#b3a8dd")
 
 # ── Glance-device colours ─────────────────────────────────────────────────────────────────────
 # The banner manifest pills, the sheet-health chip, and the structural row badges all draw from
-# THIS one named surface — no per-file hex — so a future theme pass retunes the family in one place.
+# THIS one named surface - no per-file hex - so a future theme pass retunes the family in one place.
 const COLOR_MANIFEST_TRIGGERS = Color("#7fd494")     # ➜ signal triggers
 const COLOR_MANIFEST_ACTIONS = Color("#f2c879")      # ⚡ exposed actions
 const COLOR_MANIFEST_CONDITIONS = Color("#69ccb3")   # exposed conditions
@@ -94,7 +94,7 @@ const COLOR_CODE_BADGE_BG = Color(0.2, 0.21, 0.23, 0.9)
 const COLOR_CODE_BADGE_FG = Color(0.62, 0.65, 0.7, 1.0)
 const COLOR_LIFT_NOTE_BADGE_BG = Color(0.38, 0.3, 0.1, 0.9)
 const COLOR_LIFT_NOTE_BADGE_FG = Color(0.95, 0.82, 0.5, 1.0)
-# The Inspector-group (@export_group) chip on variable rows — blue, distinct from the picker-category
+# The Inspector-group (@export_group) chip on variable rows - blue, distinct from the picker-category
 # purple so "where it sits in the Inspector" never reads as "where it sits in the picker".
 const COLOR_GROUP_CHIP_BG = Color(0.22, 0.34, 0.55, 0.92)
 const COLOR_GROUP_CHIP_FG = Color(0.76, 0.86, 1.0, 1.0)
@@ -103,20 +103,20 @@ const COLOR_GROUP_CHIP_FG = Color(0.76, 0.86, 1.0, 1.0)
 # How OFTEN an event runs, as a filled badge on the trigger row. SIGNAL keeps the shipped green arrow
 # (from the event style) so the common case is byte-identical; the other three tempo classes get their
 # own hot/cool/quiet fills here. Classified by TriggerResolver.tempo_class_for(trigger_id).
-const COLOR_TEMPO_EVERY_TICK_BG = Color("#b5651d")  # ⟳ hot amber-orange — the per-frame hot path
+const COLOR_TEMPO_EVERY_TICK_BG = Color("#b5651d")  # ⟳ hot amber-orange - the per-frame hot path
 const COLOR_TEMPO_EVERY_TICK_FG = Color("#ffeccc")
-const COLOR_TEMPO_INPUT_BG = Color("#2f6bb0")       # ⌨ object blue — an input event
+const COLOR_TEMPO_INPUT_BG = Color("#2f6bb0")       # ⌨ object blue - an input event
 const COLOR_TEMPO_INPUT_FG = Color("#e3f0ff")
-const COLOR_TEMPO_ONCE_BG = Color("#6a54b0")        # ▶ muted violet — runs once
+const COLOR_TEMPO_ONCE_BG = Color("#6a54b0")        # ▶ muted violet - runs once
 const COLOR_TEMPO_ONCE_FG = Color("#efe8ff")
 
 # ── Typed value tints ─────────────────────────────────────────────────────────
 # The value-highlight pass in cells tints parameter literals by TYPE so "where are the magic numbers"
 # is a colour question. Numbers keep the shipped value-green (COLOR_VALUE / event_style value colour);
-# strings + booleans get these two new hues (kept clear of the amber action/⚠ family — amber is the
-# most overloaded hue in the system — one hue must keep one meaning).
-const COLOR_VALUE_STRING = Color("#79b8f2")  # text literals — a calm blue
-const COLOR_VALUE_BOOL = Color("#c99af0")    # true / false — a soft violet
+# strings + booleans get these two new hues (kept clear of the amber action/⚠ family - amber is the
+# most overloaded hue in the system - one hue must keep one meaning).
+const COLOR_VALUE_STRING = Color("#79b8f2")  # text literals - a calm blue
+const COLOR_VALUE_BOOL = Color("#c99af0")    # true / false - a soft violet
 
 
 static func clamp_font_size(value: int) -> int:

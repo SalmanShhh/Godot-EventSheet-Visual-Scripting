@@ -1,4 +1,4 @@
-# Godot EventSheets — Signal-handler lifting
+# Godot EventSheets - Signal-handler lifting
 # Generated sheets that use SIGNAL triggers now lift back into events: `_ready`'s connect
 # lines identify each handler's signal + source node; Core signals reverse to their trigger
 # ids, custom ones become "signal:<name>" with baked trigger_args; the connects themselves
@@ -80,7 +80,7 @@ static func run() -> bool:
 	var lone_roundtrip: String = str(SheetCompiler.compile(lone_imported, "user://eventsheets_signal_lone_rt.gd").get("output", ""))
 	all_passed = _check("connects-only round-trip byte-identical", lone_roundtrip == lone_source, true) and all_passed
 
-	# A handler with no connect entry (scene-wired) keeps the file as blocks — lossless.
+	# A handler with no connect entry (scene-wired) keeps the file as blocks - lossless.
 	var unwired: String = "extends Node\n\nfunc _on_mystery(body: Node) -> void:\n\tprint(body)\n"
 	var unwired_imported: EventSheetResource = GDScriptImporter.new().import_external_source(unwired)
 	var unwired_lifted: bool = false

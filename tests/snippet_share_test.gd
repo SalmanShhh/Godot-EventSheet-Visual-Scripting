@@ -1,4 +1,4 @@
-# EventForge — Shareable snippets (system-clipboard text, cross-project paste)
+# EventForge - Shareable snippets (system-clipboard text, cross-project paste)
 #
 # Rows serialize to portable versioned text (no script paths/UIDs) and paste back into a
 # different sheet/editor: structure and params survive, pasted events get fresh UIDs, and
@@ -99,7 +99,7 @@ static func run() -> bool:
 	second_editor.free()
 
 	# Copy collector: selecting a group (which cascades to its children) serializes only the
-	# top-most row — children travel inside the parent. (Refresh first: the Noop undo manager
+	# top-most row - children travel inside the parent. (Refresh first: the Noop undo manager
 	# used in tests skips the snapshot-restore that refreshes the viewport in the editor.)
 	editor._refresh_after_edit()
 	var viewport: EventSheetViewport = editor.get_viewport_control()

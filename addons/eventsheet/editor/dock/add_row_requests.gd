@@ -67,7 +67,7 @@ func on_add_group_requested() -> void:
 	)
 	if changed:
 		_dock._mark_dirty("Added group.")
-		# Drop straight into renaming the new group so naming it is obvious and immediate —
+		# Drop straight into renaming the new group so naming it is obvious and immediate -
 		# the same inline title edit you'd reach by double-clicking it or pressing Enter,
 		# just triggered for you. Deferred so it runs after the viewport rebuilds.
 		call_deferred("_begin_group_rename", group)
@@ -112,7 +112,7 @@ func on_duplicate_requested() -> void:
 ## duplicate does not share selection/fold identity with the source.
 func assign_fresh_event_uids(row: EventRow) -> void:
 	row.event_uid = EventRow._generate_short_uid()
-	# Stateful conditions (Every X Seconds…): the COPY must own its own accumulator —
+	# Stateful conditions (Every X Seconds…): the COPY must own its own accumulator -
 	# re-bake the member uid across all four baked fields, or both timers silently
 	# share one member (copies are independent timers).
 	for condition: Variant in row.conditions:
@@ -129,7 +129,7 @@ func assign_fresh_event_uids(row: EventRow) -> void:
 			stateful.codegen_template = stateful.codegen_template.replace(old_uid, new_uid)
 			stateful.codegen_prelude = stateful.codegen_prelude.replace(old_uid, new_uid)
 			stateful.codegen_on_true = stateful.codegen_on_true.replace(old_uid, new_uid)
-	# Multi-line action templates bake `__spawn_<uid>`/`__sfx_<uid>` locals — pasting the
+	# Multi-line action templates bake `__spawn_<uid>`/`__sfx_<uid>` locals - pasting the
 	# same event twice into one trigger would declare the same local twice in one
 	# function body. Re-bake every baked uid the template carries.
 	for action: Variant in row.actions:

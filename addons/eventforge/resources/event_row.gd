@@ -1,4 +1,4 @@
-# EventForge — EventRow resource
+# EventForge - EventRow resource
 # Serializable event row with trigger, conditions, actions, and child rows.
 @tool
 class_name EventRow
@@ -22,7 +22,7 @@ static var _uid_counter: int = 0
 ## starts with a `breakpoint` statement (pausing the Godot debugger).
 @export var debug_break: bool = false
 ## Optional conditional-breakpoint guard: when non-empty, the breakpoint fires only when this
-## GDScript boolean expression is true (compiled as `if <cond>: breakpoint`) — break on the
+## GDScript boolean expression is true (compiled as `if <cond>: breakpoint`) - break on the
 ## frame that matters instead of every pass.
 @export var debug_break_condition: String = ""
 @export var comment: String = ""
@@ -31,7 +31,7 @@ static var _uid_counter: int = 0
 @export var trigger_params: Dictionary = {}
 ## For signal-backed triggers: the node whose signal fires this event, relative to the
 ## generated script's owner ("" = self). Lets sheets react to OTHER nodes' signals (child
-## behaviors, timers…) — the compiler emits the `_ready` connection.
+## behaviors, timers…) - the compiler emits the `_ready` connection.
 @export var trigger_source_path: String = ""
 ## Baked argument signature for custom signal triggers (e.g. "amount: int"), captured from
 ## the ACE definition at apply time so the compiler can generate a connectable handler
@@ -46,8 +46,8 @@ static var _uid_counter: int = 0
 @export var event_uid: String = ""
 @export var local_variables: Array[LocalVariable] = []
 @export var pick_filters: Array[PickFilter] = []
-## "With node X:" scope (event-sheet-style pick-once). When non-empty, this row's actions — and those of
-## its descendant sub-events — that leave their "On node" target blank/self act on this node instead of
+## "With node X:" scope (event-sheet-style pick-once). When non-empty, this row's actions - and those of
+## its descendant sub-events - that leave their "On node" target blank/self act on this node instead of
 ## the host (the target is inlined per action: $Enemy.play()). Empty = a normal host-scoped row.
 @export var with_node_target: String = ""
 

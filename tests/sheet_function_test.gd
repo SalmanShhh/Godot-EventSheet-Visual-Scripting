@@ -1,4 +1,4 @@
-# EventForge — Sheet functions (compiler emission + call-as-action)
+# EventForge - Sheet functions (compiler emission + call-as-action)
 #
 # Verifies that EventFunction resources compile to GDScript methods and that the built-in
 # "Call Function" action emits a call. Headless-safe (compiler only).

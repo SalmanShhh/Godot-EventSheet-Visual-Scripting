@@ -1,4 +1,4 @@
-# Godot EventSheets — MCP server (stdio transport)
+# Godot EventSheets - MCP server (stdio transport)
 # Newline-delimited JSON-RPC over stdin/stdout, per the MCP stdio transport. Launch with
 # --quiet so the engine banner doesn't corrupt the protocol stream:
 #

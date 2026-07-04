@@ -1,4 +1,4 @@
-# EventForge — trigger tempo classification. TriggerResolver.tempo_class_for
+# EventForge - trigger tempo classification. TriggerResolver.tempo_class_for
 # maps every trigger id to one of four TEMPO classes (every-tick / input / once / signal) so a row's
 # badge says HOW OFTEN it runs. Pins the mapping + exhaustiveness: every id resolve_trigger recognises
 # classifies to a known class, and any unknown id falls to signal (the honest default).
@@ -7,7 +7,7 @@ class_name TriggerTempoTest
 extends RefCounted
 
 # The full id census of TriggerResolver.resolve_trigger, grouped by expected tempo. Kept in lock-step
-# with resolve_trigger's match (both live in trigger_resolver.gd) — a new trigger id must land here too.
+# with resolve_trigger's match (both live in trigger_resolver.gd) - a new trigger id must land here too.
 const EVERY_TICK := ["OnProcess", "OnPhysicsProcess", "OnPostTick", "OnPhysicsPostTick"]
 const INPUT := ["OnInput", "OnUnhandledInput"]
 const ONCE := ["OnReady", "OnEditorRun"]
@@ -31,7 +31,7 @@ static func run() -> bool:
 	for id: String in SIGNAL:
 		ok = _check("%s is signal" % id, TriggerResolver.tempo_class_for(id), TriggerResolver.TEMPO_SIGNAL) and ok
 
-	# Custom "signal:<name>" triggers + any unknown id fall to the signal default — never unclassified.
+	# Custom "signal:<name>" triggers + any unknown id fall to the signal default - never unclassified.
 	ok = _check("signal:custom_event is signal", TriggerResolver.tempo_class_for("signal:custom_event"), TriggerResolver.TEMPO_SIGNAL) and ok
 	ok = _check("an unknown id is signal (honest default)", TriggerResolver.tempo_class_for("SomethingNew"), TriggerResolver.TEMPO_SIGNAL) and ok
 	ok = _check("an empty id is signal", TriggerResolver.tempo_class_for(""), TriggerResolver.TEMPO_SIGNAL) and ok

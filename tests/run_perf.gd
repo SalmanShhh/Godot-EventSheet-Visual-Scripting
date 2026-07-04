@@ -1,4 +1,4 @@
-# EventForge — Standalone headless-safe checks runner.
+# EventForge - Standalone headless-safe checks runner.
 # Runs the viewport checks that do NOT touch the display server (no popups), so they
 # can run under `godot --headless --script tests/run_perf.gd` for quick verification
 # during the editor overhaul without the full editor test suite (which opens popups).

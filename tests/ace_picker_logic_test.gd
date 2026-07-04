@@ -1,4 +1,4 @@
-# EventForge — ACE picker presentation logic
+# EventForge - ACE picker presentation logic
 #
 # Verifies the event-sheet-style grouping/colour/mode logic of ACEPickerDialog without opening the
 # popup window (which needs a display server). Exercises the pure helpers directly.
@@ -20,14 +20,14 @@ static func run() -> bool:
 	all_passed = _check("title: replace action", picker._title_for_mode("replace_action", false), "Replace Action") and all_passed
 	all_passed = _check("title: replace trigger", picker._title_for_mode("replace_trigger", false), "Replace Trigger") and all_passed
 
-	# Per-item type labels (the type tint was removed — Favorites/Recent now render plain like the
+	# Per-item type labels (the type tint was removed - Favorites/Recent now render plain like the
 	# main tree and the native Create-New-Node dialog; the per-row icon carries the type).
 	all_passed = _check("type label trigger", picker._ace_type_label(ACEDefinition.ACEType.TRIGGER), "Trigger") and all_passed
 	all_passed = _check("type label condition", picker._ace_type_label(ACEDefinition.ACEType.CONDITION), "Condition") and all_passed
 	all_passed = _check("type label action", picker._ace_type_label(ACEDefinition.ACEType.ACTION), "Action") and all_passed
 	all_passed = _check("type label expression", picker._ace_type_label(ACEDefinition.ACEType.EXPRESSION), "Expression") and all_passed
 
-	# Category headers are now a single muted "quiet divider" colour for every kind — the node-type
+	# Category headers are now a single muted "quiet divider" colour for every kind - the node-type
 	# distinction is carried by the section's class icon, not a bright per-kind amber/teal/blue/purple.
 	var muted: Color = picker._muted_header_color()
 	all_passed = _check("category header muted: node-type", picker._group_color_for("CharacterBody2D", true), muted) and all_passed
@@ -111,14 +111,14 @@ static func run() -> bool:
 	ProjectSettings.set_setting("eventsheets/picker/favorites", null)
 
 	# De-jargoned hints: the user-facing picker hint must not surface the insider acronym "ACE"
-	# (event sheets / GDevelop never show it — newcomers read "condition / action / trigger").
+	# (event sheets / GDevelop never show it - newcomers read "condition / action / trigger").
 	for hint_mode: String in ["new_condition_event", "append_condition", "append_action", "replace_trigger", "other"]:
 		all_passed = _check("picker hint for %s drops the ACE jargon" % hint_mode,
 			picker._build_hint_text(hint_mode, false).contains("ACE"), false) and all_passed
 	all_passed = _check("signal-only picker hint drops the ACE jargon",
 		picker._build_hint_text("new_condition_event", true).contains("ACE"), false) and all_passed
 
-	# Relevance scoring — type-and-Enter must target the BEST match, not first-in-tree order. Tiers:
+	# Relevance scoring - type-and-Enter must target the BEST match, not first-in-tree order. Tiers:
 	# exact name > name prefix > word-start in name > substring in name > substring elsewhere.
 	var s_exact: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION); s_exact.display_name = "Hide"
 	var s_prefix: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION); s_prefix.display_name = "Hide Player"

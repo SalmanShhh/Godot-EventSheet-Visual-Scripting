@@ -1,8 +1,8 @@
-# EventForge module — System (event-sheet System parity)
+# EventForge module - System (event-sheet System parity)
 #
 # Time/engine, display, text expressions, comparisons, shader/date/platform info,
 # stateful Every X Seconds and the multi-line Spawn Scene At.
-# Module contract: see ace_factory.gd — ace_ids/templates are API (compatibility
+# Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility
 # covenant); this file only changes where the descriptors are AUTHORED.
 @tool
 class_name EventForgeSystemACEs
@@ -90,7 +90,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "IsBetween", "Is Between Values", ACEDescriptor.ACEType.CONDITION, "({min} <= {value} and {value} <= {max})", "", [F.make_param("value", "String", "0", "Value", "Value to test.", "expression"), F.make_param("min", "String", "0", "Min", "Lower bound (inclusive).", "expression"), F.make_param("max", "String", "10", "Max", "Upper bound (inclusive).", "expression")], "General Conditions", "{value} is between {min} and {max}")
 		.described("True when a value falls within a low and high range, bounds included."))
 	# Generic boolean escape hatch (the code-free fallback): use any GDScript that returns a bool as a
-	# condition — e.g. a behavior method like $Player/WeaponKit.can_fire() — without dropping the whole
+	# condition - e.g. a behavior method like $Player/WeaponKit.can_fire() - without dropping the whole
 	# row to a raw GDScript block. Emitted verbatim (opaque param), so the expression is the user's to
 	# get right; it inverts to `not (...)` for free. Prefer a named pack condition where one exists.
 	descriptors.append(F.make_descriptor("Core", "ExpressionIsTrue", "Expression Is True", ACEDescriptor.ACEType.CONDITION, "{expr}", "", [F.make_param("expr", "String", "true", "Expression", "Any GDScript boolean expression, e.g. $Player/WeaponKit.can_fire() or health > 0.", "expression")], "General Conditions", "{expr}")
@@ -103,9 +103,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "IsGroupActive", "Is Group Active", ACEDescriptor.ACEType.CONDITION, "bool(get(\"__group_\" + {group} + \"_active\"))", "", [F.make_param("group", "String", "\"combat\"", "Group", "Snake-cased group name.", "expression")], "General Conditions", "group {group} is active")
 		.described("True when the named runtime group is currently switched on."))
 
-	# Shader materials (assign / swap / clear / read uniforms — completes the one-uniform
+	# Shader materials (assign / swap / clear / read uniforms - completes the one-uniform
 	# SetShaderParameter above into a usable visual-effects surface).
-	descriptors.append(F.make_descriptor("Core", "SetShaderMaterial", "Set Material", ACEDescriptor.ACEType.ACTION, "material = {material}", "", [F.make_param("material", "String", "null", "Material", "ShaderMaterial / CanvasItemMaterial resource — e.g. preload(\"res://your_material.tres\") once that file exists. Defaults to null (no material).", "expression")], "Rendering", "Set material to {material}", "CanvasItem")
+	descriptors.append(F.make_descriptor("Core", "SetShaderMaterial", "Set Material", ACEDescriptor.ACEType.ACTION, "material = {material}", "", [F.make_param("material", "String", "null", "Material", "ShaderMaterial / CanvasItemMaterial resource - e.g. preload(\"res://your_material.tres\") once that file exists. Defaults to null (no material).", "expression")], "Rendering", "Set material to {material}", "CanvasItem")
 		.described("Assigns a shader or canvas material to this node to change how it draws."))
 	descriptors.append(F.make_descriptor("Core", "ClearMaterial", "Clear Material", ACEDescriptor.ACEType.ACTION, "material = null", "", [], "Rendering", "Clear material", "CanvasItem")
 		.described("Removes any material from this node, returning it to default drawing."))

@@ -1,5 +1,5 @@
 # One-shot audit: every behaviour pack's .gd must re-import as an event sheet and recompile to EXACTLY
-# itself (the .gd IS the source of truth — there is no .tres). This is the lossless round-trip gate for
+# itself (the .gd IS the source of truth - there is no .tres). This is the lossless round-trip gate for
 # all bundled packs: open .gd -> import_external -> recompile -> byte-identical to the shipped .gd.
 @tool
 extends SceneTree
@@ -30,7 +30,7 @@ func _init() -> void:
 					drifted += 1
 					print("DRIFT: %s (recompile differs from shipped .gd)" % entry)
 				# load() of the real script is the honest parse check (re-parsing the source text directly
-				# would false-positive on "hides a global class" — its class_name is already registered).
+				# would false-positive on "hides a global class" - its class_name is already registered).
 				if load(script_path) == null:
 					print("PARSE FAIL: %s" % entry)
 		entry = packs_dir.get_next()

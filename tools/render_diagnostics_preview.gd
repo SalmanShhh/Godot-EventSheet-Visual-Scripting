@@ -1,4 +1,4 @@
-# EventForge — visual render harness for the "error → row" diagnostics marker (dev tool).
+# EventForge - visual render harness for the "error → row" diagnostics marker (dev tool).
 # Builds a sheet with a broken GDScript block, runs EventSheetDiagnostics, applies the markers
 # and saves a PNG so the red row marker can be inspected. Run NON-headless:
 #   godot --path . --script tools/render_diagnostics_preview.gd

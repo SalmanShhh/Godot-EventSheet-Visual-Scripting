@@ -1,4 +1,4 @@
-# EventForge — event-sheet-style footer "Add event…" rows + red ✗ negation marker
+# EventForge - event-sheet-style footer "Add event…" rows + red ✗ negation marker
 #
 # The sheet ends with an "Add event…" footer and every group keeps one as its last child
 # (one level deeper). Footers are inert affordances: no source resource, never box-selected,

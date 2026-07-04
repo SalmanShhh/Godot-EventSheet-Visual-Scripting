@@ -1,4 +1,4 @@
-# EventForge — Keyboard authoring action handlers
+# EventForge - Keyboard authoring action handlers
 #
 # Drives the dock's new keyboard-shortcut handlers directly (out of tree, like
 # event_sheet_editor_test) and asserts the model changes. The raw key dispatch +
@@ -32,25 +32,25 @@ static func run() -> bool:
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 
-	# G — add group (no selection -> appended at root).
+	# G - add group (no selection -> appended at root).
 	var before_group: int = sheet.events.size()
 	editor._on_add_group_requested()
 	all_passed = _check("add group grows events", sheet.events.size(), before_group + 1) and all_passed
 	all_passed = _check("added row is a group", sheet.events[sheet.events.size() - 1] is EventGroup, true) and all_passed
 
-	# Q — add comment.
+	# Q - add comment.
 	var before_comment: int = sheet.events.size()
 	editor._on_add_comment_requested()
 	all_passed = _check("add comment grows events", sheet.events.size(), before_comment + 1) and all_passed
 	all_passed = _check("added row is a comment", sheet.events[sheet.events.size() - 1] is CommentRow, true) and all_passed
 
-	# Ctrl+D — duplicate requires an EventRow selection; no selection is a no-op.
+	# Ctrl+D - duplicate requires an EventRow selection; no selection is a no-op.
 	var before_noop: int = sheet.events.size()
 	editor.get_viewport_control().clear_selection()
 	editor._on_duplicate_requested()
 	all_passed = _check("duplicate no-ops without event selection", sheet.events.size(), before_noop) and all_passed
 
-	# Ctrl+D — with the event row selected, clone is inserted after it with a fresh UID.
+	# Ctrl+D - with the event row selected, clone is inserted after it with a fresh UID.
 	var source_event: EventRow = sheet.events[0] as EventRow
 	var source_index: int = sheet.events.find(source_event)
 	var flat_index: int = _flat_index_of(editor.get_viewport_control(), source_event)

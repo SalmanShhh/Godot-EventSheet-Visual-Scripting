@@ -1,11 +1,11 @@
 name: Bug report
-description: Something broke — the editor, the compiler, or generated GDScript.
+description: Something broke - the editor, the compiler, or generated GDScript.
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for kicking the tires on an **experimental** plugin — reports like this
+        Thanks for kicking the tires on an **experimental** plugin - reports like this
         are exactly how it earns real-world validation. Two minutes of detail here
         usually saves a day of guessing.
   - type: input
@@ -36,7 +36,7 @@ body:
       label: Steps to reproduce
       description: |
         The gold standard is a minimal sheet: attach the .tres (zip it), or paste a
-        **text snippet** (select rows → Copy — the clipboard format is shareable text).
+        **text snippet** (select rows → Copy - the clipboard format is shareable text).
       placeholder: |
         1. New sheet → add event "Every tick"
         2. …

@@ -1,4 +1,4 @@
-# EventForge — Built-in ACE registry
+# EventForge - Built-in ACE registry
 # AUTO-DISCOVERS the per-vocabulary modules in registration/modules/: any script there that exposes
 # `static func get_descriptors() -> Array[ACEDescriptor]` is loaded and concatenated automatically, so
 # adding a module is just dropping a file (no edit here). See ace_factory.gd for the module contract;
@@ -13,7 +13,7 @@ const MODULES_DIR := "res://addons/eventforge/registration/modules/"
 
 ## Every built-in descriptor, auto-discovered from registration/modules/. Drop a module file there
 ## (a script with `static func get_descriptors() -> Array[ACEDescriptor]`) and its ACEs register on
-## the next load — no wiring here. Files load in a stable sorted order with the generic helper_aces
+## the next load - no wiring here. Files load in a stable sorted order with the generic helper_aces
 ## module forced LAST, so its catch-all templates never shadow a specific ACE in the reverse-lifter.
 ## (Order otherwise does not affect compiled output: each ACE compiles independently, the picker
 ## groups by category, and the lifter sorts entries by specificity.)
@@ -29,7 +29,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 				if entry is ACEDescriptor:
 					descriptors.append(entry)
 	# Cross-node: give every host-only node-scoped ACE an optional "On node" target so it can act on
-	# another node, not just the host. Covenant-safe — a blank target compiles to the original host
+	# another node, not just the host. Covenant-safe - a blank target compiles to the original host
 	# call, byte-for-byte (see _make_node_scoped_targetable + the {target.} idiom in ActionCodegen).
 	for descriptor: ACEDescriptor in descriptors:
 		_make_node_scoped_targetable(descriptor)
@@ -70,7 +70,7 @@ static func _make_node_scoped_targetable(descriptor: ACEDescriptor) -> void:
 
 
 ## True when every non-blank template line is a simple member operation that survives a `<node>.` prefix
-## — a method call or an assignment whose right-hand side does not read the assigned member back. Lines
+## - a method call or an assignment whose right-hand side does not read the assigned member back. Lines
 ## leading with a statement keyword, `@`, `$`, `%` or a non-identifier are rejected (the spawn-a-new-node
 ## templates), as are self-referential assignments, so retargeting can never silently fold the host's
 ## own state into another node.

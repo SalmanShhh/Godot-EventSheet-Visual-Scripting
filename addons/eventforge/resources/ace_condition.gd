@@ -1,4 +1,4 @@
-# EventForge — ACECondition resource
+# EventForge - ACECondition resource
 # Serializable instance of a condition ACE in an event row.
 @tool
 class_name ACECondition

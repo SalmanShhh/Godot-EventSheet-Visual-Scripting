@@ -1,4 +1,4 @@
-# EventForge — group chapter fingerprints. ViewportRowBuilder.group_fingerprint reads
+# EventForge - group chapter fingerprints. ViewportRowBuilder.group_fingerprint reads
 # a group's weight + hotness as "N events · ⟳a · ➜b · ▶c · ⚠d" (child events by trigger tempo class + the
 # RawCode blocks inside), so a COLLAPSED group still tells you what's in it. Pins the counts + pluralisation.
 @tool

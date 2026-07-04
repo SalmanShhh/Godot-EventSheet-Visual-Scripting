@@ -1,4 +1,4 @@
-# Godot EventSheets — Node-path validation + autocomplete in expression fields.
+# Godot EventSheets - Node-path validation + autocomplete in expression fields.
 #
 # Expression params (including the new "On node" target on node-scoped ACEs) accept node references
 # like $Player, $"UI/Score" and get_node("UI/Score"). A typo there used to fail silently at runtime.
@@ -48,7 +48,7 @@ static func run() -> bool:
 	all_passed = _check("autocomplete lists nested UI/Score", paths.has("UI/Score"), true) and all_passed
 	all_passed = _check("autocomplete is empty for a null scene", ACEParamsDialog.scene_node_paths(null).size(), 0) and all_passed
 
-	# Unique names (%Name) — Godot's stable, refactor-proof references (event-sheet-style "reference by name").
+	# Unique names (%Name) - Godot's stable, refactor-proof references (event-sheet-style "reference by name").
 	# Extraction skips %d / %s format specifiers that live inside a string literal.
 	all_passed = _check("extracts a bare %ref", ACEParamsDialog.unique_names_in_expression("%Player.health"), PackedStringArray(["Player"])) and all_passed
 	all_passed = _check("extracts a quoted %ref", ACEParamsDialog.unique_names_in_expression("%\"Boss Health\""), PackedStringArray(["Boss Health"])) and all_passed

@@ -1,18 +1,18 @@
-# EventForge module — Helper vocabulary (the "structured escape hatch").
+# EventForge module - Helper vocabulary (the "structured escape hatch").
 #
 # These ACEs exist for the GDScript a user would otherwise drop to a raw block for: setting
 # an arbitrary property, calling an arbitrary method, a one-line statement, a ternary, a
 # null-check, a runtime signal connection, the math/string idioms not covered elsewhere.
-# Every template is a single, direct GDScript line (parity covenant — no plugin indirection,
+# Every template is a single, direct GDScript line (parity covenant - no plugin indirection,
 # no reflection helpers), so picking a helper keeps logic as an editable row instead of an
 # opaque code block while compiling to exactly what you'd have hand-written.
 #
 # Design rule: these are deliberately GENERIC (target/property/method/code are free
 # expressions) so one helper replaces a whole family of one-off raw blocks. Where a typed,
 # specific ACE already exists (SetPosition2D, Wait, Clamp, Choose, array/dict ops…), prefer
-# it — these fill the gaps, they don't shadow the curated vocabulary.
+# it - these fill the gaps, they don't shadow the curated vocabulary.
 #
-# Module contract: see ace_factory.gd — ace_ids/templates are API (compatibility covenant);
+# Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility covenant);
 # this file only changes where the descriptors are AUTHORED.
 @tool
 class_name EventForgeHelperACEs
@@ -81,7 +81,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Stops a signal from calling a method, so that response no longer fires."))
 	descriptors.append(F.make_descriptor("Core", "IsSignalConnected", "Signal Is Connected", ACEDescriptor.ACEType.CONDITION, "{source}.{signal}.is_connected({callable})", "", [F.make_param("source", "String", "self", "Source", "Object emitting the signal.", "expression"), F.make_param("signal", "String", "pressed", "Signal", "Signal name."), F.make_param("callable", "String", "_on_pressed", "Callable", "Method/Callable to test.", "expression")], CAT, "{source}.{signal} connected to {callable}")
 		.described("True when a method is currently hooked up to listen for that signal."))
-	# Modern Godot 4 form `target.signal.emit(args)` — `signal` is a BARE identifier (not a quoted
+	# Modern Godot 4 form `target.signal.emit(args)` - `signal` is a BARE identifier (not a quoted
 	# string), which keeps the output parity-clean (the legacy `emit_signal("name")` matches a banned
 	# pattern in codegen_parity_test.gd) and idiomatic. Pairs with a trigger that receives the args.
 	descriptors.append(F.make_descriptor("Core", "EmitSignalOn", "Emit Signal On", ACEDescriptor.ACEType.ACTION, "{target}.{signal}.emit({args})", "", [F.make_param("target", "String", "self", "Target", "Object that owns the signal.", "expression"), F.make_param("signal", "String", "died", "Signal", "Signal name (a bare identifier, e.g. died).", "signal_reference"), F.make_param("args", "String", "", "Arguments", "Optional signal arguments (comma-separated).")], CAT, "emit {target}.{signal}")
@@ -120,11 +120,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Bends a 0-to-1 value along an easing curve for smoother eased motion."))
 	descriptors.append(F.make_descriptor("Core", "SnappedValue", "Snapped", ACEDescriptor.ACEType.EXPRESSION, "snappedf({value}, {step})", "", [F.make_param("value", "String", "0.0", "Value", "Value to snap.", "expression"), F.make_param("step", "String", "1.0", "Step", "Snap increment (e.g. grid size).", "expression")], CAT, "snappedf({value}, {step})")
 		.described("Snaps a value to the nearest multiple of a step, like a grid."))
-	# Load a resource at runtime into a variable. (preload is parse-time only — author it as a RawCode
+	# Load a resource at runtime into a variable. (preload is parse-time only - author it as a RawCode
 	# const where a compile-time scene is required; a placeholder-defaulted preload can't compile-test.)
 	descriptors.append(F.make_descriptor("Core", "LoadResource", "Load Resource", ACEDescriptor.ACEType.EXPRESSION, "load({path})", "", [F.make_param("path", "String", "\"res://\"", "Path", "res:// path to the resource/scene.", "expression")], CAT, "load({path})")
 		.described("Loads a scene or resource from a res:// path so you can use it."))
-	# Trig + interpolation — the vocabulary that lets oscillation/rotation/easing behaviours (sine
+	# Trig + interpolation - the vocabulary that lets oscillation/rotation/easing behaviours (sine
 	# wobble, orbit, look-at, smooth follow) be authored as ƒx expressions instead of a RawCode block.
 	descriptors.append(F.make_descriptor("Core", "SinValue", "Sine", ACEDescriptor.ACEType.EXPRESSION, "sin({value})", "", [F.make_param("value", "String", "0.0", "Value", "Angle in radians.", "expression")], CAT, "sin({value})")
 		.described("Returns the sine of an angle in radians, handy for waves and circular motion."))

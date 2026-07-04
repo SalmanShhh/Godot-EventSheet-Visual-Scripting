@@ -33,7 +33,7 @@ func build_ui() -> void:
 	_dock.add_child(root)
 
 	# Toolbar redesign: grouped by purpose (Sheet / Add / Edit / View / Tools menus)
-	# with only the high-frequency reflexes as one-click buttons — and it FLOWS to
+	# with only the high-frequency reflexes as one-click buttons - and it FLOWS to
 	# a second row instead of clipping when the panel is narrow (the old single HBox
 	# of ~28 controls overflowed past the panel edge).
 	# The toolbar + grouped Sheet/Add/Edit/View/Tools menus + theme picker + quick-add
@@ -90,7 +90,7 @@ func build_ui() -> void:
 	root.add_child(_dock._identity_banner)
 	_dock._identity_banner.edit_requested.connect(_dock._open_sheet_type_dialog)
 
-	# Read-only preview banner (a .gd opened just to look at it) — hidden for normal sheets.
+	# Read-only preview banner (a .gd opened just to look at it) - hidden for normal sheets.
 	_dock._preview_banner = _dock._preview_glue.build_preview_banner()
 	root.add_child(_dock._preview_banner)
 
@@ -115,7 +115,7 @@ func build_ui() -> void:
 	_dock._open_sheets_panel.reopen_requested.connect(_dock.reopen_sheet_path)
 	_dock._open_sheets_panel.collapse_toggled.connect(_dock._on_open_sheets_panel_collapsed)
 	_dock.open_tabs_changed.connect(_dock._refresh_open_sheets_panel)
-	# The Functions overview is its own dockable rail panel (fold-expandable on demand) — it used
+	# The Functions overview is its own dockable rail panel (fold-expandable on demand) - it used
 	# to live inside the Generated-GDScript side panel, so seeing your functions meant opening the
 	# code view. The list's click/right-click handlers stay on the dock.
 	_dock._functions_panel = EventSheetFunctionsPanel.new()
@@ -218,7 +218,7 @@ func build_ui() -> void:
 	# The right-click context menus (condition/action/row/variable/empty-space) are built by the
 	# extracted EventSheetContextMenus; build_all() constructs each and assigns it back onto the dock
 	# (the _*_context_menu / _row_*_submenu members the dock + tests read by name). init() only stores
-	# the _dock back-reference, so wiring it here — before any context-menu site runs — is enough.
+	# the _dock back-reference, so wiring it here - before any context-menu site runs - is enough.
 	_dock._context_menus.init(_dock)
 	_dock._context_menus.build_all()
 	_dock._build_preview_window()
@@ -299,8 +299,8 @@ func ensure_code_panel() -> void:
 	_dock._side_panel.custom_minimum_size = Vector2(360.0, 0.0)
 	_dock._side_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_dock._side_panel.visible = false
-	# (The Functions overview used to live here; it is now its own dockable left-rail panel —
-	# see functions_panel.gd — so it no longer requires the code view to be open.)
+	# (The Functions overview used to live here; it is now its own dockable left-rail panel -
+	# see functions_panel.gd - so it no longer requires the code view to be open.)
 	var header: HBoxContainer = HBoxContainer.new()
 	var title: Label = Label.new()
 	title.text = "Generated GDScript"
@@ -327,7 +327,7 @@ func ensure_code_panel() -> void:
 	_dock._side_panel.add_child(header)
 	# Orientation for non-programmers: say what this panel even is before the code scares them off.
 	var code_hint: Label = Label.new()
-	code_hint.text = "The plain GDScript your sheet compiles to — read-only, refreshed live as you edit. Your game ships this, with no runtime dependency."
+	code_hint.text = "The plain GDScript your sheet compiles to - read-only, refreshed live as you edit. Your game ships this, with no runtime dependency."
 	code_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	code_hint.modulate = Color(1.0, 1.0, 1.0, 0.6)
 	_dock._side_panel.add_child(code_hint)
@@ -349,7 +349,7 @@ func ensure_code_panel() -> void:
 
 # Initializes the picker/params/variable dialogs and wires their signals + providers.
 # Idempotent (guarded by _dock._editor_dialogs_initialized) and safe to run detached: it only
-# touches dialog init + signal connections + provider wiring — nothing tree-bound. Called
+# touches dialog init + signal connections + provider wiring - nothing tree-bound. Called
 # from _dock._ready() in the real editor AND from _dock.setup() so headless tests (which never enter
 # the tree, so _dock._ready never fires) still get initialized dialogs.
 func ensure_editor_dialogs_initialized() -> void:
@@ -459,7 +459,7 @@ func ensure_raw_code_dialog() -> void:
 	# "Open in Godot" hands the block off to Godot's own script editor (more room, full tooling); the
 	# in-popup editor stays for quick inline edits. custom_action fires for non-OK/Cancel buttons.
 	var open_in_godot: Button = _dock._raw_code_dialog.add_button("Open in Godot Script Editor", false, "open_in_godot")
-	open_in_godot.tooltip_text = "Edit this block in Godot's script editor — your changes return when you come back to the sheet."
+	open_in_godot.tooltip_text = "Edit this block in Godot's script editor - your changes return when you come back to the sheet."
 	_dock._raw_code_dialog.custom_action.connect(func(action: StringName) -> void:
 		if String(action) == "open_in_godot":
 			_dock._open_raw_code_block_in_godot())

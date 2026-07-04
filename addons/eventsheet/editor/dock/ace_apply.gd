@@ -2,8 +2,8 @@
 class_name EventSheetACEApply
 extends RefCounted
 # The ACE-APPLICATION + row/ACE DRAG-DROP subsystem. This helper owns turning a picked
-# ACEDefinition + its params + a picker/edit context into concrete sheet mutations —
-# condition/action/trigger baking and insertion — plus the row and ACE drag-and-drop
+# ACEDefinition + its params + a picker/edit context into concrete sheet mutations -
+# condition/action/trigger baking and insertion - plus the row and ACE drag-and-drop
 # reorder logic. Extracted from event_sheet_dock.gd to keep that file maintainable.
 #
 # WHAT STAYS ON THE DOCK (reached here through `_dock`): the mutation funnel
@@ -16,7 +16,7 @@ extends RefCounted
 # and the reflection helpers (`_autoload_provider_names`, `_param_resolver`).
 #
 # The dock keeps thin one-line delegates (original names + signatures) for every method that is
-# reached from outside this helper — the connect() sites in _build_ui, the tests, the sibling
+# reached from outside this helper - the connect() sites in _build_ui, the tests, the sibling
 # dock/ helpers (variables_manager / comment_and_scope_dialogs reach `_dock._find_resource_location`
 # and `_dock._group_children_array`), and multi_view_manager (which connects
 # `_dock._on_viewport_ace_picker_requested` / `_dock._on_viewport_ace_edit_requested` by name).
@@ -24,7 +24,7 @@ extends RefCounted
 #
 # CLOSURE NOTE: `_apply_ace_definition`, `_move_rows`, and `_on_viewport_ace_drop_requested`
 # hand lambdas to `_dock._perform_undoable_sheet_edit(...)`. Those lambdas capture `self`, which
-# is now THIS helper — so every dock STATE/STAY reference inside them is written `_dock.` while
+# is now THIS helper - so every dock STATE/STAY reference inside them is written `_dock.` while
 # calls to methods that live here (e.g. `_group_children_array`, `_find_resource_location`,
 # `_create_condition_from_definition`) stay bare helper calls.
 
@@ -52,13 +52,13 @@ func _on_ace_params_back_requested(definition: ACEDefinition, context: Dictionar
 	var signals_only: bool = bool(context.get("signals_only", false))
 	var selected_resource: Resource = context.get("selected_resource", null)
 	# Preselect the ACE you were editing so Back lands on it in the picker (swap it, or re-pick the
-	# same one to tweak params) — matching the edit-and-swap.
+	# same one to tweak params) - matching the edit-and-swap.
 	if definition != null:
 		context["preselect_ace_id"] = definition.id
 	_dock._ace_picker.open(mode, signals_only, selected_resource, context)
 
 
-## A .gd opens as a read-only preview, but the FIRST intentional edit unlocks it automatically — no
+## A .gd opens as a read-only preview, but the FIRST intentional edit unlocks it automatically - no
 ## "click Edit Events" wall (that extra click is the friction now that .gd is the default format).
 ## Pure viewing stays protected: Save keeps its own read-only guard, so a casual look + Ctrl+S can
 ## still never overwrite a file you only opened to look at.
@@ -96,7 +96,7 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 		_dock._set_status("Couldn't load this row for editing (its action or condition definition is missing).", true)
 		return
 	# Triggers always go to the picker (clicking a trigger means "change what fires this event"), as does
-	# any ACE with no params to edit — both land in the picker preselected on the current ACE, so the
+	# any ACE with no params to edit - both land in the picker preselected on the current ACE, so the
 	# obvious move is to swap it (or re-pick the same one). An ACE WITH params (action/condition) opens
 	# the params editor instead, which carries its own "Back" button to this same preselected picker.
 	if definition.parameters.is_empty() or str(edit_context.get("mode", "")) == "replace_trigger":
@@ -216,7 +216,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 
 ## Bakes a trigger definition's identity + argument signature onto the event row, so the
 ## compiler can group it, generate a connectable handler (`func _on_<signal>(args)`), and
-## emit the `_ready` connection — all without registry access at compile time. Fixes the
+## emit the `_ready` connection - all without registry access at compile time. Fixes the
 ## gap where picker-created trigger events never set trigger_id and silently skipped
 ## compilation. Mirrors codegen_template baking on conditions/actions.
 func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> void:
@@ -274,7 +274,7 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
 	action.params = _resolve_definition_params(definition, params)
 	# Bake the custom/addon codegen template so the ACE compiles standalone.
 	action.codegen_template = _baked_template_for(definition)
-	# Multi-statement action templates declare locals — bake a fresh uid per instance.
+	# Multi-statement action templates declare locals - bake a fresh uid per instance.
 	if action.codegen_template.contains("{uid}"):
 		action.codegen_template = action.codegen_template.replace("{uid}", _dock._fresh_uid_token())
 	return action
@@ -283,7 +283,7 @@ func _create_action_from_definition(definition: ACEDefinition, params: Dictionar
 ## The codegen template baked onto applied ACEs. Explicit @ace_codegen_template wins; addon
 ## METHODS without one become **instance-backed**: the call targets a per-provider member
 ## (`__eventsheet_provider_<Class>.method({args})`) that the compiler declares as a plain
-## owned instance of the addon class — so template-less addon ACEs compile and run in
+## owned instance of the addon class - so template-less addon ACEs compile and run in
 ## exported games with zero EventForge dependency (the addon script ships like any class).
 func _baked_template_for(definition: ACEDefinition) -> String:
 	var explicit: String = str(definition.metadata.get("codegen_template", ""))
@@ -601,8 +601,8 @@ func _resolve_event_ace_resource(event_row: EventRow, lane: String, ace_index: i
 func _on_ace_preview_requested(source_label: String, definitions: Array[ACEDefinition]) -> void:
 	if _dock._preview_window == null or _dock._preview_list == null:
 		return
-	_dock._preview_window.title = "Dropped Node Preview — %s (%d)" % [source_label, definitions.size()]
-	_dock._preview_title.text = "Dropped Node Preview — %s (%d)" % [source_label, definitions.size()]
+	_dock._preview_window.title = "Dropped Node Preview - %s (%d)" % [source_label, definitions.size()]
+	_dock._preview_title.text = "Dropped Node Preview - %s (%d)" % [source_label, definitions.size()]
 	_dock._preview_list.clear()
 	for definition in definitions:
 		_dock._preview_list.add_item("[%s] %s" % [_ace_type_label(definition.ace_type), definition.format_display()])

@@ -1,4 +1,4 @@
-# EventSheet — Godot editor theme adapter
+# EventSheet - Godot editor theme adapter
 # Tints the default (fallback) sheet style from the running Godot editor theme, so sheets
 # without an explicit theme look native to the user's editor (base/dark/accent colors).
 # No-op outside the editor, so headless tests and exports keep deterministic palette colors.
@@ -24,7 +24,7 @@ static func adapt_to_editor(style: EventSheetEditorStyle) -> EventSheetEditorSty
 	return apply(style, base, dark_1, dark_2, accent, font_color)
 
 
-## Pure color-mapping core (no editor access) — derives the sheet's chrome from the five
+## Pure color-mapping core (no editor access) - derives the sheet's chrome from the five
 ## colors every Godot editor theme hinges on, so the look tracks the user's theme (the
 ## neutral grayscale "Modern" 4.6+ default, light themes, custom accents). Extracted from
 ## adapt_to_editor so the render harness and headless tests can preview/verify the adapted

@@ -1,5 +1,5 @@
 # Regenerates every bundled pack (eventsheet_addons/) from its per-pack builder in
-# tools/pack_builders/ — one pack per file, shared scaffold in _lib.gd. Run:
+# tools/pack_builders/ - one pack per file, shared scaffold in _lib.gd. Run:
 #   godot --headless --path . --script tools/build_sample_behaviors.gd
 # Faithfulness gate: tools/audit_addons.gd must report drifted=0 afterwards.
 @tool
@@ -46,5 +46,5 @@ func _init() -> void:
 		var builder: GDScript = load("res://tools/pack_builders/%s.gd" % builder_name)
 		ok = bool(builder.call("build")) and ok
 	if not ok:
-		push_error("[build_sample_behaviors] one or more packs failed — see errors above.")
+		push_error("[build_sample_behaviors] one or more packs failed - see errors above.")
 	quit()

@@ -1,4 +1,4 @@
-# Godot EventSheets — Intellisense upgrades
+# Godot EventSheets - Intellisense upgrades
 # Dot-context completion (host./typed-variable./$Behavior. → that type's members),
 # signature hints for the innermost call, and the event-sheet-style quick-add bar (synonym matcher
 # + positional params + apply).

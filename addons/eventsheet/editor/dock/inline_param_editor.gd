@@ -2,7 +2,7 @@
 class_name EventSheetInlineParamEditor
 extends RefCounted
 
-# The fastest editing gestures — no dialog. Double-click a highlighted parameter value to edit it in
+# The fastest editing gestures - no dialog. Double-click a highlighted parameter value to edit it in
 # a one-field popup at the mouse; click a colour-swatch cell to drop a ColorPicker right there
 # (committed once on close, so dragging is one undo step); drop a scene node onto a param to set it to
 # that node reference. Extracted from event_sheet_dock.gd so the dock stays focused; the dock keeps
@@ -41,7 +41,7 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 		_param_edit_field.gui_input.connect(_on_param_field_input)
 		box.add_child(_param_edit_field)
 		# The bulk-retune hint, shown only when several rows are selected: Ctrl+Enter writes the value
-		# into the SAME verb's same param on every selected row — one undo step.
+		# into the SAME verb's same param on every selected row - one undo step.
 		_param_edit_hint = Label.new()
 		_param_edit_hint.add_theme_font_size_override("font_size", 10)
 		_param_edit_hint.modulate = Color(1.0, 1.0, 1.0, 0.65)
@@ -52,7 +52,7 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 	_param_edit_key = param_id
 	_param_edit_field.text = current_text
 	# Name the param being edited (placeholder when empty + tooltip always), so a blind popup never
-	# leaves the user guessing which value they're typing — e.g. the ghost row's follow-up hop lands
+	# leaves the user guessing which value they're typing - e.g. the ghost row's follow-up hop lands
 	# here on a param the sentence didn't fill.
 	_param_edit_field.placeholder_text = param_id
 	_param_edit_field.tooltip_text = "Editing \"%s\"" % param_id
@@ -88,7 +88,7 @@ func _commit_inline_param_edit(apply_to_all_selected: bool = false) -> void:
 	var updated := {"count": 0}
 	var changed: bool
 	if apply_to_all_selected:
-		# Bulk retune: write the value into the SAME verb's same param on every selected row —
+		# Bulk retune: write the value into the SAME verb's same param on every selected row -
 		# structure-aware (only ACEs with the matching id that actually carry this param), type-safe
 		# (the value goes through the same params dict as a single edit), ONE undo step.
 		var targets: Array = _collect_matching_aces(target, key)
@@ -121,7 +121,7 @@ func _commit_inline_param_edit(apply_to_all_selected: bool = false) -> void:
 
 
 ## Every ACE across the selected rows that is the SAME verb as the edited one (matching provider+id)
-## and carries the edited param — the bulk-apply target set. Walks each selected row's trigger,
+## and carries the edited param - the bulk-apply target set. Walks each selected row's trigger,
 ## conditions, actions, and sub-events (and group children, when a group is selected). The edited
 ## ACE itself is always included, selected or not.
 func _collect_matching_aces(edited: Resource, param_id: String) -> Array:
@@ -159,7 +159,7 @@ func _collect_matching_in(resource: Variant, edited: Resource, param_id: String,
 
 
 ## Clicking a cell's colour swatch opens a ColorPicker right there (no params dialog), inline.
-## The pick is committed once, when the popup closes — so dragging the picker is one clean undo step, not
+## The pick is committed once, when the popup closes - so dragging the picker is one clean undo step, not
 ## one per colour change.
 func on_color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color) -> void:
 	if _color_swatch_popup == null:
@@ -196,7 +196,7 @@ func _commit_color_swatch_edit(new_color: Color) -> void:
 		_dock._mark_dirty("Colour updated.")
 
 
-## A scene node was dropped onto a condition/action param value — set that param to the node reference
+## A scene node was dropped onto a condition/action param value - set that param to the node reference
 ## (e.g. %Player), undoable. The deep-node-friendly gesture: drag from the Scene dock, no dialog.
 func on_param_node_drop_requested(ace: Resource, param_id: String, node_reference: String) -> void:
 	if ace == null or param_id.is_empty():

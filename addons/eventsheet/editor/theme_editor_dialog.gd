@@ -1,8 +1,8 @@
-# Godot EventSheets — Visual theme editor (designer-facing)
+# Godot EventSheets - Visual theme editor (designer-facing)
 # A live theme workbench: the left pane is a REAL EventSheetViewport rendering a sample
 # sheet; the right pane is a token form generated REFLECTIVELY from the style resources'
 # exported properties (Color → color picker, float/int → spinbox, bool → checkbox), so new
-# tokens added to the style classes appear here automatically — no editor changes needed.
+# tokens added to the style classes appear here automatically - no editor changes needed.
 # Edits write into a duplicated working style and repaint live; "Apply" assigns it to the
 # current sheet, "Save As Preset…" writes a shareable .tres.
 @tool
@@ -95,7 +95,7 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	tint.params = {"color": "Color(0.4, 0.7, 1.0, 1.0)"}
 	tint.comment = "ACE note (⊳)"
 	tint_event.actions.append(tint)
-	# Loop/pick rows, BBCode comments, and a disabled row — the newest vocabulary, so
+	# Loop/pick rows, BBCode comments, and a disabled row - the newest vocabulary, so
 	# restyling sees everything the renderer can draw.
 	var repeat_pick: PickFilter = PickFilter.new()
 	repeat_pick.collection_kind = PickFilter.CollectionKind.REPEAT
@@ -149,7 +149,7 @@ func _ensure_dialog() -> void:
 	var split: HSplitContainer = HSplitContainer.new()
 	split.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# Both panes carry REAL minimum sizes (field-test catch: with none, the dialog
-	# auto-sized to the preview alone and the token controls collapsed to a sliver —
+	# auto-sized to the preview alone and the token controls collapsed to a sliver -
 	# the editor looked like "just highlighting things").
 	split.split_offset = 560
 	split.custom_minimum_size = Vector2(1000.0, 540.0)
@@ -191,7 +191,7 @@ func _ensure_dialog() -> void:
 	_dock.add_child(_dialog)
 
 
-## Quick Style — three colours drive the whole palette (base tone, accent, text). One
+## Quick Style - three colours drive the whole palette (base tone, accent, text). One
 ## button regenerates every colour token via EventSheetGodotTheme.apply, so re-skinning is
 ## "pick a colour, click Generate" instead of tuning thirty fields by hand.
 func _build_quick_style(form: VBoxContainer) -> void:
@@ -213,7 +213,7 @@ func _build_quick_style(form: VBoxContainer) -> void:
 	reset.pressed.connect(_reset_to_default)
 	buttons.add_child(reset)
 	quick_box.add_child(buttons)
-	form.add_child(EventSheetPopupUI.titled_card("Quick Style — recolour everything at once", quick_box))
+	form.add_child(EventSheetPopupUI.titled_card("Quick Style - recolour everything at once", quick_box))
 
 
 ## One labelled colour picker, returned so Quick Style can read it back on Generate.
@@ -243,7 +243,7 @@ func _generate_quick_style() -> void:
 		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
 
 
-## Restores the bundled default look — a clean starting point.
+## Restores the bundled default look - a clean starting point.
 func _reset_to_default() -> void:
 	_working_style = duplicate_style(null)
 	if _working_style.has_method("ensure_defaults"):

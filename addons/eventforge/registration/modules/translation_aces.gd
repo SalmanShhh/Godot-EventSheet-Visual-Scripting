@@ -1,4 +1,4 @@
-# EventForge module — Translation vocabulary (localisation the Godot way).
+# EventForge module - Translation vocabulary (localisation the Godot way).
 #
 # Thin verbs over Godot's own localisation runtime: TranslationServer swaps locales,
 # tr()/tr_n() look up the current language, and Project Settings > Localization owns

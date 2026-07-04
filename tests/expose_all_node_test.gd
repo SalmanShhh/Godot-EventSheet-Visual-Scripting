@@ -1,8 +1,8 @@
-# Godot EventSheets — the @ace_expose_all(node) one-line opt-in for custom addons.
+# Godot EventSheets - the @ace_expose_all(node) one-line opt-in for custom addons.
 #
 # A Node with the class-level marker and ZERO per-method annotations publishes every own public method
 # as a NODE-TARGETED ACE: type inferred from the return type, and codegen synthesized as
-# {target}.method(args) — parameterized with an "On node" target defaulting to $Provider — so a behavior
+# {target}.method(args) - parameterized with an "On node" target defaulting to $Provider - so a behavior
 # needs no per-method @ace_codegen_template / @ace_condition / @ace_name. Private + inherited members
 # stay out.
 @tool
@@ -27,7 +27,7 @@ static func run() -> bool:
 	var ammo: ACEDefinition = registry.find_definition(pid, "method:ammo_count")
 	ok = _check("value method -> EXPRESSION", ammo.ace_type if ammo != null else -1, ACEDefinition.ACEType.EXPRESSION) and ok
 
-	# (node) mode: codegen is the node-targeted, parameterized form — NOT the instance-backed default.
+	# (node) mode: codegen is the node-targeted, parameterized form - NOT the instance-backed default.
 	ok = _check("can_fire codegen is node-targeted", str(can_fire.metadata.get("codegen_template", "")) if can_fire != null else "", "{target}.can_fire()") and ok
 	ok = _check("fire codegen is node-targeted", str(fire.metadata.get("codegen_template", "")) if fire != null else "", "{target}.fire()") and ok
 	var set_rate: ACEDefinition = registry.find_definition(pid, "method:set_rate")

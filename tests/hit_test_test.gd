@@ -1,4 +1,4 @@
-# EventForge — Full-cell hit testing for conditions/actions
+# EventForge - Full-cell hit testing for conditions/actions
 #
 # Clicking anywhere on a condition/action line (including the padding/gaps to the right of
 # the text and the vertical gaps between cells) should select that ACE, not fall back to the
@@ -36,14 +36,14 @@ static func run() -> bool:
 	var line_height: float = viewport._get_event_line_height(font_size)
 	var divider: float = viewport.get_lane_divider_x(width)
 
-	# Condition (the explicit condition is on the 2nd condition line) — click far right in
+	# Condition (the explicit condition is on the 2nd condition line) - click far right in
 	# the condition lane, away from the text, in the cell padding.
 	var condition_y: float = row_top + line_height * 1.5
 	var condition_hit: Dictionary = viewport._hit_test(Vector2(divider - 24.0, condition_y))
 	all_passed = _check("far-right condition-lane click hits a condition",
 		str((condition_hit.get("span_metadata", {}) as Dictionary).get("kind", "")) in ["condition", "trigger"], true) and all_passed
 
-	# Action — click far right in the action lane (in the reserved/padding area).
+	# Action - click far right in the action lane (in the reserved/padding area).
 	var action_y: float = row_top + line_height * 0.5
 	var action_hit: Dictionary = viewport._hit_test(Vector2(width - 80.0, action_y))
 	all_passed = _check("far-right action-lane click hits the action",

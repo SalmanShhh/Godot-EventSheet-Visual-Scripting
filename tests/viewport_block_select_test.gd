@@ -1,6 +1,6 @@
-# EventForge — clicking OUTSIDE the condition cell still selects the event block.
+# EventForge - clicking OUTSIDE the condition cell still selects the event block.
 # Complements viewport_hit_select_test (which pins the Y→row resolution): this pins the per-row
-# hit-test, so a click in a row's lane but off every cell — or in the left gutter — resolves to a
+# hit-test, so a click in a row's lane but off every cell - or in the left gutter - resolves to a
 # WHOLE-ROW selection (span_index -1, row_index set), which _select_from_click turns into a block
 # selection (and makes Delete act on the block instead of falling through to the scene tree).
 @tool
@@ -26,7 +26,7 @@ static func run() -> bool:
 	var on_cell: Dictionary = ViewportHitTestHelper.hit_test_row(Vector2(60, 10), 0, layout, row, resolve_lane, find_cond)
 	ok = _check("click on the condition cell hits the condition span", int(on_cell.get("span_index", -99)), 0) and ok
 
-	# Clicking the EMPTY area of the lane (below the cell) — the reported case — selects the WHOLE row.
+	# Clicking the EMPTY area of the lane (below the cell) - the reported case - selects the WHOLE row.
 	var empty_lane: Dictionary = ViewportHitTestHelper.hit_test_row(Vector2(60, 50), 0, layout, row, resolve_lane, find_cond)
 	ok = _check("click outside the condition cell resolves the event row", int(empty_lane.get("row_index", -99)), 0) and ok
 	ok = _check("click outside the condition cell selects the whole row (no span)", int(empty_lane.get("span_index", -99)), -1) and ok

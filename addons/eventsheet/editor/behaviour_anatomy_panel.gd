@@ -1,13 +1,13 @@
 @tool
 class_name BehaviourAnatomyPanel
 extends VBoxContainer
-# The Behaviour Anatomy panel — a left-rail READ MODEL that shows the active sheet as an organism
+# The Behaviour Anatomy panel - a left-rail READ MODEL that shows the active sheet as an organism
 # with always-visible "organs": Properties (exported knobs) · State (internal vars) · Triggers ·
 # Actions · Conditions · Expressions · Uses (outside vocabulary it calls). A behaviour's whole
 # public shape becomes one glance, and double-clicking an entry jumps the canvas to its row.
 #
 # The organ list is CUSTOM-DRAWN with the same pill/badge language as the canvas's Define blocks
-# (role-coloured pills, muted labels) rather than a generic Tree — so a verb reads the same in the
+# (role-coloured pills, muted labels) rather than a generic Tree - so a verb reads the same in the
 # rail as on the sheet. Deliberately NOT an embedded live viewport: the panel must never expose the
 # editing machinery on shared resources, and a draw-only list can't mutate anything by construction.
 #
@@ -16,7 +16,7 @@ extends VBoxContainer
 # EventFunctions, dict + tree variables) and, for opened packs whose verbs are still literal code,
 # the `## @ace_*` annotation shells (the same classifier the canvas shells use).
 
-## The user double-clicked an entry — the workspace reveals that resource's row on the canvas.
+## The user double-clicked an entry - the workspace reveals that resource's row on the canvas.
 signal reveal_requested(resource: Resource)
 
 const _ORGAN_ACCENTS: Dictionary = {
@@ -116,7 +116,7 @@ func _row_index_at(y: float) -> int:
 
 
 ## The panel's whole render: organ headers (accent title · count · underline) and entry rows drawn
-## with the Define-block pill language. Small lists — a full redraw is cheap.
+## with the Define-block pill language. Small lists - a full redraw is cheap.
 func _draw_rows() -> void:
 	var font: Font = get_theme_default_font()
 	var width: float = _canvas.size.x
@@ -181,7 +181,7 @@ var _last_sheet: EventSheetResource = null
 # ── The census (static → headless-testable) ──────────────────────────────────────────────────────
 
 
-## The seven organs, ordered, as [{id, title, entries: [{label, resource?}]}] — static + pure so the
+## The seven organs, ordered, as [{id, title, entries: [{label, resource?}]}] - static + pure so the
 ## census is unit-testable without a panel. `resource` is present when the entry has a canvas row to
 ## jump to (signals, functions, annotation shells, tree variables); dict globals and providers are
 ## informational.
@@ -238,7 +238,7 @@ static func _collect_row(row: Variant, organs: Dictionary, providers: Dictionary
 			_collect_row(child, organs, providers)
 		return
 	if row is LocalVariable:
-		# Tree variables — how opened packs (and tree-first authors) carry their designer knobs.
+		# Tree variables - how opened packs (and tree-first authors) carry their designer knobs.
 		var variable: LocalVariable = row as LocalVariable
 		var organ: String = "properties" if variable.exported else "state"
 		(organs[organ] as Array).append({
@@ -254,7 +254,7 @@ static func _collect_row(row: Variant, organs: Dictionary, providers: Dictionary
 		(organs["triggers"] as Array).append({"label": label, "resource": signal_row})
 		return
 	if row is RawCodeRow:
-		# Opened packs keep UNLIFTABLE verbs as annotation shells — same classifier as the canvas.
+		# Opened packs keep UNLIFTABLE verbs as annotation shells - same classifier as the canvas.
 		var shell: Dictionary = ViewportRowBuilder.define_shell_info((row as RawCodeRow).code)
 		if not shell.is_empty():
 			(organs[str(shell.get("kind")) + "s"] as Array).append(
@@ -276,7 +276,7 @@ static func _collect_row(row: Variant, organs: Dictionary, providers: Dictionary
 			provider = (ace as EventRow).trigger_provider_id
 		elif ace is Resource and (ace as Resource).get("provider_id") != null:
 			provider = str((ace as Resource).get("provider_id"))
-		# "Core" is the built-in vocabulary — Uses lists OUTSIDE vocabulary only.
+		# "Core" is the built-in vocabulary - Uses lists OUTSIDE vocabulary only.
 		if not provider.is_empty() and provider != "Core":
 			providers[provider] = true
 	for sub_event: Variant in event_row.sub_events:

@@ -1,4 +1,4 @@
-# EventForge — Plugin entry point
+# EventForge - Plugin entry point
 # Registers the EventForge editor plugin and runtime bridge autoload.
 @tool
 class_name EventForgePlugin
@@ -74,7 +74,7 @@ static func is_event_sheet_resource(object: Object) -> bool:
 
 
 ## Switches to the EventSheet workspace and loads a sheet (.tres or GDScript-backed
-## .gd) — the landing point for every native entry (context menus, Inspector button).
+## .gd) - the landing point for every native entry (context menus, Inspector button).
 func _open_sheet_in_workspace(path: String) -> void:
 	if _event_sheet_editor == null or not _event_sheet_editor.has_method("_load_sheet_from_path"):
 		return
@@ -83,7 +83,7 @@ func _open_sheet_in_workspace(path: String) -> void:
 
 
 ## The script editor's "Go to Sheet Row": carries the caret line into the sheet's
-## reverse provenance — errors and stack traces land on rows, not generated code.
+## reverse provenance - errors and stack traces land on rows, not generated code.
 func _goto_sheet_row_from_script(script_path: String) -> void:
 	var sheet_path: String = EventSheetProjectDoctor.sheet_for_script(script_path)
 	if sheet_path.is_empty():
@@ -160,7 +160,7 @@ func _enter_tree() -> void:
 	# stream, and feed them to the workspace editor's Live Values window.
 	_live_values_debugger = EventSheetLiveValuesDebugger.new()
 	add_debugger_plugin(_live_values_debugger)
-	# Tier 3 attribute drawers (progress bars…): purely cosmetic — generated scripts
+	# Tier 3 attribute drawers (progress bars…): purely cosmetic - generated scripts
 	# degrade to plain fields without this plugin.
 	_attribute_drawers_plugin = EventSheetAttributeDrawers.new()
 	add_inspector_plugin(_attribute_drawers_plugin)

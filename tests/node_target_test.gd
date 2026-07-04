@@ -1,4 +1,4 @@
-# Godot EventSheets — pack ACE node-target parameterization (the "On node" idiom).
+# Godot EventSheets - pack ACE node-target parameterization (the "On node" idiom).
 #
 # Behavior-pack ACEs authored as "$Pack.method(...)" gain a configurable node target so a sheet can
 # point them at the behavior wherever it actually lives ($Player/WeaponKit, not only a direct child

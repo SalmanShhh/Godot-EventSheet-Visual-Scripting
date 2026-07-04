@@ -1,7 +1,7 @@
-# Godot EventSheets — the compiler only rewrites the generated .gd when its content changed.
+# Godot EventSheets - the compiler only rewrites the generated .gd when its content changed.
 #
 # Rewriting a byte-identical file bumps its mtime and makes the Godot editor prompt
-# "Files have been modified outside Godot" on every scene open/close — alarming users into
+# "Files have been modified outside Godot" on every scene open/close - alarming users into
 # thinking they broke something. SheetCompiler skips the write when the on-disk content already
 # matches. This pins that contract: missing -> writes; identical -> skips (no-op, content stable);
 # different -> writes the new content.

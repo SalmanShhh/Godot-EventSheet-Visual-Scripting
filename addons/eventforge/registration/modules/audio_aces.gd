@@ -1,14 +1,14 @@
-# EventForge module — Audio (the Audio vocabulary, the Godot way).
+# EventForge module - Audio (the Audio vocabulary, the Godot way).
 #
 # A global, tag-based mixer is one approach; Godot's idiom is nodes + buses, so the
 # vocabulary splits in three, all compiling to plain GDScript (parity contract):
 #   1. FIRE-AND-FORGET one-shots ("Play sound"): a throwaway AudioStreamPlayer(2D) that
-#      frees itself on finish — the most common Play call, zero bookkeeping, zero
+#      frees itself on finish - the most common Play call, zero bookkeeping, zero
 #      plugin runtime (the multi-line/{uid} template machinery bakes a private local).
 #   2. PLAYER-SCOPED ACEs (node_type AudioStreamPlayer): attach a sheet/behavior to a
-#      player node for music & controlled playback — play/stop/seek/volume/pitch,
+#      player node for music & controlled playback - play/stop/seek/volume/pitch,
 #      "by tag" control mapped to "by node", the Godot-contextual answer.
-#   3. BUS ACEs (Godot extra): master/SFX/Music volume + mute — what
+#   3. BUS ACEs (Godot extra): master/SFX/Music volume + mute - what
 #      tag-groups stand in for elsewhere, native here.
 #
 # Sound params use hint "audio_path": the params dialog shows a ▶ preview button so you
@@ -23,7 +23,7 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	# 1 — Fire-and-forget one-shots ("Play").
+	# 1 - Fire-and-forget one-shots ("Play").
 	descriptors.append(F.make_descriptor("Core", "PlaySound", "Play Sound", ACEDescriptor.ACEType.ACTION,
 		"var __sfx_{uid} = AudioStreamPlayer.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.bus = {bus}\n\t__sfx_{uid}.volume_db = {volume_db}\n\tadd_child(__sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()",
 		"", [
@@ -40,7 +40,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		], "Audio", "Play sound {path} at {position}", "Node2D")
 		.described("Plays a sound at a world position so it gets louder or quieter with distance."))
 
-	# 2 — Player-scoped (music & controlled playback; attach to an AudioStreamPlayer).
+	# 2 - Player-scoped (music & controlled playback; attach to an AudioStreamPlayer).
 	descriptors.append(F.make_descriptor("Core", "AudioPlay", "Play", ACEDescriptor.ACEType.ACTION,
 		"play({from})", "", [F.make_param("from", "String", "0.0", "From (s)", "Start position in seconds.", "expression")],
 		"Audio", "Play from {from}s", "AudioStreamPlayer")
@@ -71,7 +71,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		"get_playback_position()", "", [], "Audio", "playback position", "AudioStreamPlayer")
 		.described("Gives the current playback time of this audio player, in seconds."))
 
-	# 3 — Bus control (Godot extras; event-sheet users fake these with tag groups).
+	# 3 - Bus control (Godot extras; event-sheet users fake these with tag groups).
 	var bus_param: ACEParam = F.make_param("bus", "String", "\"Master\"", "Bus", "Audio bus name.", "expression")
 	descriptors.append(F.make_descriptor("Core", "SetBusVolume", "Set Bus Volume", ACEDescriptor.ACEType.ACTION,
 		"AudioServer.set_bus_volume_db(AudioServer.get_bus_index({bus}), {db})", "", [

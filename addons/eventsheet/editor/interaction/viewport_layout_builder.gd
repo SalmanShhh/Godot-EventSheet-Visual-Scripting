@@ -46,7 +46,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	if _viewport._layout_cache.has(key):
 		var cached_layout: Dictionary = _viewport._layout_cache.get_layout(key)
 		# Selection/hover are NOT part of the cache key (geometry is unchanged by them), so they
-		# must be refreshed on every read — otherwise a click/hover reads stale state and the
+		# must be refreshed on every read - otherwise a click/hover reads stale state and the
 		# whole event highlights instead of the clicked cell, and hover never appears.
 		cached_layout["selected_span_indices"] = _viewport._selected_span_indices.get(row_data.row_uid, []).duplicate()
 		cached_layout["hovered_span_index"] = _viewport._hovered_span_index if index == _viewport._hovered_row_index else -1

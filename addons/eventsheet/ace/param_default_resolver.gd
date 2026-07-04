@@ -1,4 +1,4 @@
-# EventSheet — ParamDefaultResolver
+# EventSheet - ParamDefaultResolver
 # Resolves the effective value for an ACE parameter using this priority chain:
 #   1. Per-row override (supplied by the caller at the top of the chain)
 #   2. Editor override from EditorParamStore
@@ -18,9 +18,9 @@ func set_param_store(store: EditorParamStore) -> void:
 
 ## Resolve the effective value for one parameter.
 ##
-## provider_id / ace_id / param_id — identify the ACE parameter
-## param_meta  — the parameter Dictionary from ACEDefinition.parameters
-## row_override — value from the specific event row, or null to skip
+## provider_id / ace_id / param_id - identify the ACE parameter
+## param_meta  - the parameter Dictionary from ACEDefinition.parameters
+## row_override - value from the specific event row, or null to skip
 func resolve(provider_id: String, ace_id: String, param_id: String,
 		param_meta: Dictionary, row_override: Variant = null) -> Variant:
 	# 1. Per-row override has highest priority.

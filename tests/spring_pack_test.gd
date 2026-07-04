@@ -1,9 +1,9 @@
-# Godot EventSheets — spring pack (typed inner classes) behavioral equivalence.
+# Godot EventSheets - spring pack (typed inner classes) behavioral equivalence.
 #
 # The spring pack was reworked from per-frame float()-cast Dictionary entries to typed inner classes
 # (SpringEntry / ColorSpringEntry with an integrate(delta) method). This loads the COMPILED pack and
 # drives the real integrator to prove (a) the inner classes emit + parse inside a single-file pack, and
-# (b) the spring still settles to its target with zero residual velocity — i.e. behavior is unchanged.
+# (b) the spring still settles to its target with zero residual velocity - i.e. behavior is unchanged.
 @tool
 class_name SpringPackTest
 extends RefCounted

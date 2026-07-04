@@ -46,7 +46,7 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	var hit: Dictionary = _viewport._hit_test(local_position)
 	_viewport._set_hover_state(int(hit.get("row_index", -1)), int(hit.get("span_index", -1)))
 	# Cursor affordance, in priority order: the lane divider resizes (↔); the empty non-cell area of
-	# an event row is the whole-event DRAG handle (✥ move cursor) — dragging there reorders the event
+	# an event row is the whole-event DRAG handle (✥ move cursor) - dragging there reorders the event
 	# or nests it as a sub-event, so the previously-dead space now reads as grabbable; everything else
 	# is the arrow. (Ctrl-hover's hand cursor is set above and left alone here.)
 	var over_drag_zone: bool = _viewport.is_event_drag_zone(_viewport._row_at(int(hit.get("row_index", -1))), int(hit.get("span_index", -1)))
@@ -93,7 +93,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		if not event.pressed:
 			return
 		_viewport.grab_focus()
-		# Footer "Add event…" rows are pure affordances — no context menu / selection.
+		# Footer "Add event…" rows are pure affordances - no context menu / selection.
 		if _viewport._row_is_add_event_footer(_viewport._row_at(row_index)):
 			_viewport.accept_event()
 			return
@@ -156,7 +156,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport._toggle_row_fold(row_index)
 			return
 		# Ctrl+Click go-to-definition: when the clicked cell resolves to a jump target (the dock's
-		# probe decides), navigate instead of toggling multi-select — unresolvable cells keep
+		# probe decides), navigate instead of toggling multi-select - unresolvable cells keep
 		# Ctrl+Click's multi-select meaning, so both gestures coexist.
 		if (event.ctrl_pressed or event.meta_pressed) and not event.double_click and row_data != null 				and _viewport.navigation_probe.is_valid() and bool(_viewport.navigation_probe.call(row_data, metadata)):
 			_viewport.navigate_requested.emit(row_data, span_index, metadata)
@@ -235,7 +235,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 							_viewport.accept_event()
 							return
 			# Multiline comment rows edit in the dialog (per-line inline editing would
-			# replace the whole text with one line — data loss).
+			# replace the whole text with one line - data loss).
 			if row_data != null and row_data.source_resource is CommentRow and (row_data.source_resource as CommentRow).text.contains("\n"):
 				_viewport.comment_edit_requested.emit(row_data.source_resource)
 				_viewport.accept_event()
@@ -298,7 +298,7 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				if source_row != null:
 					if _viewport._drag_target_mode == "group":
 						# Variable dropped ONTO a variable: fold them into one Inspector-group
-						# "folder" (named right after, like a fresh Discord folder) — not a reorder.
+						# "folder" (named right after, like a fresh Discord folder) - not a reorder.
 						_viewport.variable_group_requested.emit(source_row, target_row)
 					else:
 						_viewport.row_drop_requested.emit(source_row, target_row, _viewport._drag_target_mode, _viewport._drag_row_copy_mode)
@@ -313,7 +313,7 @@ func handle_key(event: InputEventKey) -> void:
 		_viewport._handle_editing_key(event)
 		return
 	# Param scope owns Tab / Esc / Enter / typing while active. The scope is entered explicitly
-	# (Enter below), so Tab at plain row scope still falls through to the dock's nest/outdent —
+	# (Enter below), so Tab at plain row scope still falls through to the dock's nest/outdent -
 	# the two Tabs never fight.
 	if _viewport.param_scope_active():
 		if event.keycode in [KEY_TAB, KEY_BACKTAB]:
@@ -393,7 +393,7 @@ func handle_key(event: InputEventKey) -> void:
 		_viewport._toggle_breakpoint(_viewport._selected_row_index)
 		_viewport.accept_event()
 	elif event.keycode == KEY_SLASH and (event.ctrl_pressed or event.meta_pressed):
-		# Ctrl+/: the "comment out" of event sheets — toggle the row's enabled state.
+		# Ctrl+/: the "comment out" of event sheets - toggle the row's enabled state.
 		_viewport.row_disable_toggle_requested.emit()
 		_viewport.accept_event()
 	elif event.keycode == KEY_UP and event.alt_pressed:

@@ -1,4 +1,4 @@
-# EventForge — GDScript provenance (source map + side panel)
+# EventForge - GDScript provenance (source map + side panel)
 #
 # The compiler emits a source map (resource instance id → 1-based generated line range);
 # the dock's GDScript panel shows the generated script and highlights the selected row's

@@ -1,9 +1,9 @@
-# EventForge module — Developer helper vocabulary (the everyday dev tools).
+# EventForge module - Developer helper vocabulary (the everyday dev tools).
 #
 # The small native operations a Godot dev reaches for constantly while building + debugging:
 # console output, assertions, scene-tree groups, node metadata, and tree navigation. They compile
 # to the exact one-liners you'd hand-write (print(...), add_to_group(...), set_meta(...),
-# get_parent()), so picking one keeps logic as an editable row instead of a raw block — and means
+# get_parent()), so picking one keeps logic as an editable row instead of a raw block - and means
 # common dev chores never force a drop to GDScript. Grouped under Debug / Groups / Metadata / Nodes.
 @tool
 class_name EventForgeDevACEs
@@ -30,7 +30,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Crashes during testing if a condition isn't true, catching bugs early; removed from release."))
 	descriptors.append(F.make_descriptor("Core", "PrintTree", "Print Scene Tree", ACEDescriptor.ACEType.ACTION, "print_tree_pretty()", "", [], "Debug", "print scene tree")
 		.described("Prints the whole scene's node hierarchy to the output log for debugging."))
-	# (Frame Count lives in system_aces.gd under "Time" — no duplicate "Core::GetFrameCount" here.)
+	# (Frame Count lives in system_aces.gd under "Time" - no duplicate "Core::GetFrameCount" here.)
 	# A manual debugger pause as a pickable row (complements the F9 gutter breakpoints).
 	descriptors.append(F.make_descriptor("Core", "Breakpoint", "Breakpoint (pause debugger)", ACEDescriptor.ACEType.ACTION, "breakpoint", "", [], "Debug", "breakpoint")
 		.described("Pauses the game in the debugger right here so you can inspect things."))

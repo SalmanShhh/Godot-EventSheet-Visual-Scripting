@@ -1,4 +1,4 @@
-# Godot EventSheets — Godot-feel batch: find-in-sheet, script-editor shortcuts
+# Godot EventSheets - Godot-feel batch: find-in-sheet, script-editor shortcuts
 # (F9 breakpoint, Ctrl+/ toggle-enabled, Alt+Up/Down move), and editor-theme inheritance
 # (default tokens derived from the user's base/accent editor colors).
 @tool

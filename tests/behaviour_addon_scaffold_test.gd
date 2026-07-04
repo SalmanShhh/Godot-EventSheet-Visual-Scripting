@@ -1,8 +1,8 @@
-# Godot EventSheets — the "New Behaviour Addon" scaffold generator.
+# Godot EventSheets - the "New Behaviour Addon" scaffold generator.
 #
 # The scaffold writes a richly-commented skeleton .gd that teaches the @ace_* vocabulary and is dropped into
 # res://eventsheet_addons/ to become an auto-discovered ACE provider. The load-bearing guarantee: the
-# generated skeleton must be VALID GDScript for every base class offered — a scaffold that doesn't parse is
+# generated skeleton must be VALID GDScript for every base class offered - a scaffold that doesn't parse is
 # worse than none. This pins name validation, the path, the content, and that parse for all bases.
 @tool
 class_name BehaviourAddonScaffoldTest

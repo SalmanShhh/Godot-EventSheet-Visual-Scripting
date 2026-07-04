@@ -1,4 +1,4 @@
-# EventForge — a tree variable whose default is a bare GDScript EXPRESSION (Vector2.ZERO, Color.RED,
+# EventForge - a tree variable whose default is a bare GDScript EXPRESSION (Vector2.ZERO, Color.RED,
 # Type.CONST) now lifts into a first-class State row instead of stranding as a GDScript block. Before,
 # the parser stored `Vector2.ZERO` as a String and the emitter re-quoted it (`= "Vector2.ZERO"`), so
 # the byte-verify failed and it stayed raw. The importer now flags an unquoted-expression default so
@@ -23,7 +23,7 @@ static func run() -> bool:
 	var string_var: LocalVariable = LocalVariable.new()
 	string_var.name = "label"
 	string_var.type_name = "String"
-	string_var.default_value = "hello"  # a genuine String literal — must stay quoted
+	string_var.default_value = "hello"  # a genuine String literal - must stay quoted
 	ok = _check("an unflagged String default stays quoted",
 		SheetCompiler._emit_tree_variable_line(string_var), "var label: String = \"hello\"") and ok
 

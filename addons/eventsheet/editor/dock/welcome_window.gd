@@ -4,7 +4,7 @@ extends RefCounted
 
 # First-run welcome / onboarding window (Tools ▸ Welcome…).
 #
-# Shown once per project on first run (tracked in editor metadata — nothing committed), and
+# Shown once per project on first run (tracked in editor metadata - nothing committed), and
 # reopenable any time from Tools → Welcome or the command palette. Lazily builds an AcceptDialog
 # (so it sizes itself to the content) grouped into themed cards: About / Get Started / Preferences.
 #
@@ -52,7 +52,7 @@ func show() -> void:
 ## cuts clipped buttons and text at the edges); every label wraps inside a fixed content width.
 func _build() -> void:
 	var dialog: AcceptDialog = AcceptDialog.new()
-	dialog.title = "Godot EventSheets — welcome"
+	dialog.title = "Godot EventSheets - welcome"
 	dialog.ok_button_text = "Close"
 	_welcome_window = dialog
 	# Themed onboarding: a form_box of titled_card sections (matching the picker / variable /
@@ -68,7 +68,7 @@ func _build() -> void:
 	# child's min-height pass, so without this the label wraps to one glyph per line at width 0 and
 	# balloons this AcceptDialog (it sizes to content min) to thousands of px tall on first launch.
 	blurb.custom_minimum_size = Vector2(440.0, 0.0)
-	blurb.text = "Event sheets that compile to plain GDScript — zero runtime, performance parity, and every sheet shows you its honest generated code."
+	blurb.text = "Event sheets that compile to plain GDScript - zero runtime, performance parity, and every sheet shows you its honest generated code."
 	about_box.add_child(blurb)
 	box.add_child(EventSheetPopupUI.titled_card("About EventSheets", about_box))
 	var start_box: VBoxContainer = EventSheetPopupUI.form_box()
@@ -91,8 +91,8 @@ func _build() -> void:
 	# canonical audience flag but is otherwise off-by-default and menu-buried.
 	var prefs_box: VBoxContainer = EventSheetPopupUI.form_box()
 	var simple_check: CheckBox = CheckBox.new()
-	simple_check.text = "Simple mode — hide advanced rows & menu items"
-	simple_check.tooltip_text = "New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode — toggle any time in View → Simple Mode."
+	simple_check.text = "Simple mode - hide advanced rows & menu items"
+	simple_check.tooltip_text = "New to event sheets? Simple mode keeps the picker and menus to the essentials. Everything still works in Expert mode - toggle any time in View → Simple Mode."
 	simple_check.toggled.connect(func(on: bool) -> void: _dock.set_simple_mode(on))
 	prefs_box.add_child(simple_check)
 	_welcome_window.set_meta("simple_check", simple_check)
@@ -104,7 +104,7 @@ func _build() -> void:
 	prefs_box.add_child(native_check)
 	_welcome_window.set_meta("native_check", native_check)
 	box.add_child(EventSheetPopupUI.titled_card("Preferences", prefs_box))
-	# Footer migration/reopen note — a muted, width-bounded hint at the bottom (not its own card).
+	# Footer migration/reopen note - a muted, width-bounded hint at the bottom (not its own card).
 	box.add_child(EventSheetPopupUI.hint_label("Coming from another event-sheet tool? The migration guide maps the vocabulary.\nReopen this window any time: Tools → Welcome…", 440.0))
 	dialog.add_child(EventSheetPopupUI.margined(box))
 	_dock.add_child(dialog)

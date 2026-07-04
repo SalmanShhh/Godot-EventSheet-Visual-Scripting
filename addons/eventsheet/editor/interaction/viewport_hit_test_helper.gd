@@ -49,7 +49,7 @@ static func hit_test_row(
 	if divider_x > 0.0:
 		result["lane"] = "action" if position.x >= divider_x else "condition"
 		# Full-line fallback: a click on a condition/action line, to the right of the text or in
-		# the small gaps between cells, still selects that ACE — but only inside a lane. Clicking
+		# the small gaps between cells, still selects that ACE - but only inside a lane. Clicking
 		# the gutter / indent margin (left of the lanes) falls through to whole-event selection.
 		if position.x >= lane_content_left:
 			var wanted_lane: String = str(result.get("lane", "condition"))

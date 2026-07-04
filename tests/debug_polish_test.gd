@@ -1,4 +1,4 @@
-# Godot EventSheets — Debug & polish: breakpoint UX wiring, Find & Replace, shader/
+# Godot EventSheets - Debug & polish: breakpoint UX wiring, Find & Replace, shader/
 # date/platform vocabulary.
 @tool
 class_name DebugPolishTest

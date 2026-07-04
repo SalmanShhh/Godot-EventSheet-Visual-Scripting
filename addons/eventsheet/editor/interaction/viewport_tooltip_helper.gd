@@ -5,7 +5,7 @@ extends RefCounted
 # description, the GDScript codegen preview the row compiles to, and the BBCode-aware custom
 # tooltip panel. Extracted from event_sheet_viewport.gd to keep that file maintainable.
 #
-# This is a stateless content builder — it owns no per-frame state and never draws into the
+# This is a stateless content builder - it owns no per-frame state and never draws into the
 # canvas, so unlike the live-values helper it has no draw proxy. It keeps a back-reference to
 # the viewport only to read sheet data and the ACE-definition lookup (_find_definition, _sheet).
 # Godot's tooltip virtuals (_get_tooltip, _make_custom_tooltip) MUST stay on the Control and
@@ -18,7 +18,7 @@ func init(viewport: Control) -> void:
 	_viewport = viewport
 
 
-## Render a hover tooltip's BBCode ([b]/[i]/[color]) when the text carries any — so an ACE/function
+## Render a hover tooltip's BBCode ([b]/[i]/[color]) when the text carries any - so an ACE/function
 ## description authored with markup reads styled, not as raw tags. Plain descriptions (the common case) and
 ## the GDScript-preview fallback have no markup, so this returns null and Godot uses its default tooltip.
 func build_custom_tooltip(for_text: String) -> Object:
@@ -42,7 +42,7 @@ func build_custom_tooltip(for_text: String) -> Object:
 	return panel
 
 
-## The plain-language description for an ACE — from its registered definition (custom/behaviour ACEs) or
+## The plain-language description for an ACE - from its registered definition (custom/behaviour ACEs) or
 ## its built-in descriptor (filled from the generated descriptions map). "" when none is set.
 func ace_description(provider_id: String, ace_id: String) -> String:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)

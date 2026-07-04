@@ -1,7 +1,7 @@
-# Godot EventSheets — Inspector polish: widget_hint editors + per-row "Selected ACE"
+# Godot EventSheets - Inspector polish: widget_hint editors + per-row "Selected ACE"
 # widget_hint-specific EditorProperty widgets (slider/multiline/expression) replace the
 # default inspector controls, and selecting a condition/trigger/action in the sheet
-# surfaces ITS params as live inspector properties — edits route through the dock's
+# surfaces ITS params as live inspector properties - edits route through the dock's
 # undoable write (the exposed node never mutates sheet resources itself).
 @tool
 class_name InspectorPolishTest

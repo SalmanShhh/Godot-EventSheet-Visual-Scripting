@@ -1,4 +1,4 @@
-# Godot EventSheets — identifier guardrails
+# Godot EventSheets - identifier guardrails
 # Event-sheet-style "you can't enter broken stuff": names that reach GDScript (variables, enums)
 # are auto-corrected where possible (spaces/invalid chars → underscores, digit-led names
 # prefixed) and BLOCKED with a clear message where not (keywords, empty results). Shared

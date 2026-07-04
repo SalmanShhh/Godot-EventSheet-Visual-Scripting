@@ -1,4 +1,4 @@
-# EventForge — restarted workspace shell tests
+# EventForge - restarted workspace shell tests
 @tool
 class_name WorkspaceShellTest
 extends RefCounted

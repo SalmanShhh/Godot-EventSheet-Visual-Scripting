@@ -1,8 +1,8 @@
-# EventForge — the generated host-binding `_enter_tree` block renders as ONE muted "Host binding"
+# EventForge - the generated host-binding `_enter_tree` block renders as ONE muted "Host binding"
 # line instead of a 4-line GDScript block. It carries no authored logic (regenerated from the
 # sheet's host), so a behaviour pack opens reading as vocabulary, not boilerplate. Pins: the strict
 # exact-shape classifier (a hand-modified _enter_tree stays a real block), the collapsed rendering
-# over a real pack, and — covenant-critical — the byte round-trip is untouched (pure view).
+# over a real pack, and - covenant-critical - the byte round-trip is untouched (pure view).
 @tool
 class_name HostBindingRowTest
 extends RefCounted
@@ -46,7 +46,7 @@ static func run() -> bool:
 	ok = _check("the row keeps its RawCodeRow (still edits/round-trips)",
 		host_row != null and host_row.source_resource is RawCodeRow, true) and ok
 
-	# ── Covenant: pure view — the pack still round-trips byte-identically ──
+	# ── Covenant: pure view - the pack still round-trips byte-identically ──
 	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
 	ok = _check("drift stays 0 with the host binding collapsed", reemitted == source, true) and ok
 

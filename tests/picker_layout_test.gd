@@ -1,8 +1,8 @@
-# Godot EventSheets — the ACE picker is a single muted column (Godot Create-New-Node style).
+# Godot EventSheets - the ACE picker is a single muted column (Godot Create-New-Node style).
 #
 # The redundant "Type" column and the per-row type tint are gone; an ACE's type is read from its row
 # icon, its tooltip, and the description panel instead. This pins the structure (one column) and that
-# populating the tree does NOT error — a missed column-1 setter (set_text/custom_color/selectable(1,…))
+# populating the tree does NOT error - a missed column-1 setter (set_text/custom_color/selectable(1,…))
 # would crash on a single-column Tree, so the populate step is the real regression guard.
 @tool
 class_name PickerLayoutTest
@@ -19,7 +19,7 @@ static func run() -> bool:
 
 	ok = _check("tree is single-column (Type column removed)", picker._tree.columns, 1) and ok
 
-	# Populate in append_action mode — a leftover set_*(1, …) would error on a one-column Tree.
+	# Populate in append_action mode - a leftover set_*(1, …) would error on a one-column Tree.
 	picker._context = {"mode": "append_action", "signals_only": false, "selected_resource": null}
 	picker._refresh_tree()
 	var first: TreeItem = picker._first_definition_item(picker._tree.get_root())

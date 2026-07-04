@@ -1,7 +1,7 @@
-# EventForge — Custom node types authored by event sheets
+# EventForge - Custom node types authored by event sheets
 #
 # A sheet with custom_class_name compiles to `@icon(...)` + `class_name X` + `extends Y`,
-# making the generated script a real custom node (Create Node dialog, scene tree icon) —
+# making the generated script a real custom node (Create Node dialog, scene tree icon) -
 # the same mechanism as hand-written GDScript. Sheets without a name are unaffected.
 @tool
 class_name CustomNodeClassTest

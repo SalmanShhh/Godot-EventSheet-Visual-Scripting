@@ -1,10 +1,10 @@
-# Godot EventSheets — a .gd preview unlocks on the first real edit (no "Edit Events" wall).
+# Godot EventSheets - a .gd preview unlocks on the first real edit (no "Edit Events" wall).
 #
-# Opening a .gd is a read-only preview (a casual look must never overwrite the file — see
+# Opening a .gd is a read-only preview (a casual look must never overwrite the file - see
 # external_sheet_test). But now that .gd is the default format, making the user click "Edit Events"
 # before touching their OWN sheet was friction. The first intentional edit (which funnels through
 # _perform_undoable_sheet_edit) now auto-unlocks the preview. Saving keeps its own read-only guard,
-# so a pure view + Ctrl+S is still protected — external_sheet_test pins that contract.
+# so a pure view + Ctrl+S is still protected - external_sheet_test pins that contract.
 @tool
 class_name PreviewAutounlockTest
 extends RefCounted

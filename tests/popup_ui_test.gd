@@ -1,4 +1,4 @@
-# EventSheet — shared popup UI helpers (consistent dialog look).
+# EventSheet - shared popup UI helpers (consistent dialog look).
 # Verifies the pure factory helpers produce the expected control structure.
 @tool
 class_name PopupUITest

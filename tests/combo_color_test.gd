@@ -1,4 +1,4 @@
-# Godot EventSheets — "Combo" properties + color params
+# Godot EventSheets - "Combo" properties + color params
 # String variables with options compile to @export_enum (Inspector dropdowns) and
 # verify-lift back; @ace_param_options gives addon params dropdowns; "enum:Name" hints
 # drive sheet-enum dropdowns; color params get a picker and a swatch in the sheet text.

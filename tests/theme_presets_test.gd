@@ -1,4 +1,4 @@
-# EventForge — Theme preset discovery + theme token coverage
+# EventForge - Theme preset discovery + theme token coverage
 #
 # Verifies the toolbar theme switcher's preset discovery (EventSheetThemePresets) and that
 # the column-header theme tokens exist on EventSheetEventStyle. Headless-safe (file I/O only).

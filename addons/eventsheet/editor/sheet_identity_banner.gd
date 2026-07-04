@@ -1,7 +1,7 @@
-# EventSheet — Sheet identity banner
+# EventSheet - Sheet identity banner
 # A slim band above the sheet announcing what kind of sheet is being edited:
-#   ⚙ PatrolBehavior — Behavior · acts on host: CharacterBody2D
-#   ◆ PatrollingGuard — Custom Node · extends CharacterBody2D
+#   ⚙ PatrolBehavior - Behavior · acts on host: CharacterBody2D
+#   ◆ PatrollingGuard - Custom Node · extends CharacterBody2D
 # Hidden for plain event sheets. Dual-audience cue (Godot: "custom node with an icon";
 # event sheets: "behavior attached to an object"); clicking it opens the Sheet Type dialog.
 @tool
@@ -12,7 +12,7 @@ signal edit_requested
 
 const BANNER_HEIGHT := 24.0
 const ICON_SIZE := 14.0
-## The Publishes Manifest: a second band listing what the behaviour PUBLISHES —
+## The Publishes Manifest: a second band listing what the behaviour PUBLISHES -
 ## its ACE dictionary pinned above the sheet. Role hues match the block/badge families elsewhere.
 const MANIFEST_HEIGHT := 18.0
 const MANIFEST_FONT_SIZE := 12
@@ -27,9 +27,9 @@ var _label: String = ""
 var _is_behavior: bool = false
 var _intent: EventSheetScriptIntent.Intent = EventSheetScriptIntent.Intent.EVENT_SHEET
 var _icon: Texture2D = null
-var _manifest_segments: Array = []  # [{text, color}] — the non-empty role pills, computed on refresh
+var _manifest_segments: Array = []  # [{text, color}] - the non-empty role pills, computed on refresh
 # Sheet health chip (right end of the identity line): the last diagnostics result, pushed ONLY on a
-# save / Check-Sheet run — never an ambient recompile (a full compile is far too costly to run per keystroke). `_health_known` gates its draw
+# save / Check-Sheet run - never an ambient recompile (a full compile is far too costly to run per keystroke). `_health_known` gates its draw
 # so a freshly-opened, not-yet-checked sheet shows no (possibly false) green.
 var _health_known: bool = false
 var _health_count: int = 0
@@ -53,7 +53,7 @@ func set_health(issue_count: int) -> void:
 
 
 ## The published-API census behind the manifest pills: trigger signals, exposed functions split by
-## return type (void→action, bool→condition, else→expression), and exported "knob" variables — counted
+## return type (void→action, bool→condition, else→expression), and exported "knob" variables - counted
 ## from BOTH structured rows (SignalRow/EventFunction/LocalVariable) and un-lifted `## @ace_*` RawCode
 ## blocks, so it reads right whether a pack lifted to rows or still ships annotated GDScript. Static +
 ## pure → unit-testable. Returns {triggers, actions, conditions, expressions, knobs}.
@@ -87,7 +87,7 @@ static func _census_rows(rows: Array, counts: Dictionary) -> void:
 			if (row as LocalVariable).exported:
 				counts["knobs"] += 1
 		elif row is RawCodeRow:
-			# Un-lifted packs keep their public verbs as annotated GDScript — count those too.
+			# Un-lifted packs keep their public verbs as annotated GDScript - count those too.
 			var code: String = (row as RawCodeRow).code
 			counts["triggers"] += code.count("## @ace_trigger")
 			counts["actions"] += code.count("## @ace_action")
@@ -98,7 +98,7 @@ static func _census_rows(rows: Array, counts: Dictionary) -> void:
 			_census_rows(group.events if not group.events.is_empty() else group.rows, counts)
 
 
-## Builds the ordered non-zero manifest pill segments [{text, color}] from a census — a role with a
+## Builds the ordered non-zero manifest pill segments [{text, color}] from a census - a role with a
 ## zero count is dropped so the band stays calm. Static so the layout is testable.
 static func _build_manifest_segments(counts: Dictionary) -> Array:
 	var segments: Array = []
@@ -146,21 +146,21 @@ func update_from_sheet(sheet: EventSheetResource) -> void:
 	# Each intent reads distinctly at a glance: what it IS, then how it meets the project.
 	match _intent:
 		EventSheetScriptIntent.Intent.BEHAVIOUR:
-			_label = "%s — Behavior · acts on host: %s" % [display_name, sheet.host_class]
+			_label = "%s - Behavior · acts on host: %s" % [display_name, sheet.host_class]
 		EventSheetScriptIntent.Intent.AUTOLOAD:
-			_label = "%s — Autoload · one instance, project-wide" % display_name
+			_label = "%s - Autoload · one instance, project-wide" % display_name
 		EventSheetScriptIntent.Intent.EDITOR_TOOL:
-			_label = "%s — Editor Tool · runs in the editor (File > Run)" % display_name
+			_label = "%s - Editor Tool · runs in the editor (File > Run)" % display_name
 		EventSheetScriptIntent.Intent.CUSTOM_RESOURCE:
-			_label = "%s — Custom Resource · every .tres of it is a data asset" % display_name
+			_label = "%s - Custom Resource · every .tres of it is a data asset" % display_name
 		_:
-			_label = "%s — Custom Node · extends %s" % [display_name, sheet.host_class]
+			_label = "%s - Custom Node · extends %s" % [display_name, sheet.host_class]
 	var icon_path: String = sheet.custom_class_icon.strip_edges()
 	if icon_path.begins_with("res://") and ResourceLoader.exists(icon_path):
 		var loaded: Resource = load(icon_path)
 		if loaded is Texture2D:
 			_icon = loaded
-	# A different sheet's health is unknown until it's checked — never carry the old result across.
+	# A different sheet's health is unknown until it's checked - never carry the old result across.
 	if sheet != _health_sheet:
 		_health_known = false
 		_health_sheet = sheet
@@ -209,7 +209,7 @@ func _draw() -> void:
 		draw_string(ThemeDB.fallback_font, Vector2(chip_x, identity_baseline), chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE, chip.get("color"))
 		label_right = chip_x - 8.0
 	draw_string(ThemeDB.fallback_font, Vector2(x, identity_baseline), _label, HORIZONTAL_ALIGNMENT_LEFT, max(label_right - x, 10.0), 13, accent)
-	# Second band — the Publishes Manifest pills, each in its role hue, " · "-separated.
+	# Second band - the Publishes Manifest pills, each in its role hue, " · "-separated.
 	if not _manifest_segments.is_empty():
 		var font: Font = ThemeDB.fallback_font
 		var mx: float = 12.0

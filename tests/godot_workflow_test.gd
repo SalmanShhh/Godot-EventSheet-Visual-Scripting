@@ -1,6 +1,6 @@
-# Godot EventSheets — Godot-native workflow arc: entry points (attach/open from the
+# Godot EventSheets - Godot-native workflow arc: entry points (attach/open from the
 # places Godot devs already click), settings registration, and the debug/docs tier.
-# Editor glue (EventSheetContextMenu) is never instantiated headless — the
+# Editor glue (EventSheetContextMenu) is never instantiated headless - the
 # EditorDebuggerPlugin lesson; cores are tested here, glue by the editor smoke.
 @tool
 class_name GodotWorkflowTest
@@ -63,7 +63,7 @@ static func run() -> bool:
 	all_passed = _check("hand-written scripts pair to nothing",
 		EventSheetProjectDoctor.sheet_for_script("res://addons/eventforge/plugin.gd"), "") and all_passed
 	# The generated script extends the host_class (Node2D here), so 4.7's stricter
-	# set_script requires a matching base type — a plain Node would be rejected.
+	# set_script requires a matching base type - a plain Node would be rejected.
 	var scripted: Node = Node2D.new()
 	scripted.set_script(load("user://boss_fight_sheet_generated.gd"))
 	var plain: Node = Node.new()
@@ -302,7 +302,7 @@ static func run() -> bool:
 	all_passed = _check("welcome self-sizes to its content (AcceptDialog)",
 		toolbar_editor._welcome._welcome_window is AcceptDialog, true) and all_passed
 	# The body is wrapped in the shared EventSheetPopupUI.margined() helper now (a MarginContainer
-	# child of the dialog) rather than a hand-named "WelcomeMargin" — assert real margins remain.
+	# child of the dialog) rather than a hand-named "WelcomeMargin" - assert real margins remain.
 	var welcome_margin: MarginContainer = null
 	for child: Node in toolbar_editor._welcome._welcome_window.get_children():
 		if child is MarginContainer:
@@ -462,7 +462,7 @@ static func run() -> bool:
 		and not preselected.get_parent().collapsed, true) and all_passed
 
 	# Broken lint context: a sheet variable shadowing a host member breaks the
-	# scratch script, so EVERY expression "fails" — OK must still commit.
+	# scratch script, so EVERY expression "fails" - OK must still commit.
 	var broken_sheet: EventSheetResource = EventSheetResource.new()
 	broken_sheet.host_class = "CharacterBody2D"
 	broken_sheet.variables = {"velocity": {"type": "float", "default": 0.0, "exported": true}}

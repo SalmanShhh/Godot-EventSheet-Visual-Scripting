@@ -1,8 +1,8 @@
-# Godot EventSheets — dock startup must not stack untitled sheets.
+# Godot EventSheets - dock startup must not stack untitled sheets.
 #
 # Regression for "two untitled/unsaved event sheets open on project open": _ready() built a demo and
 # called setup(), and the plugin called setup() AGAIN right after add_child() (which had already run
-# _ready) — two demos. setup(null) is now idempotent: it seeds a single starting sheet only when no
+# _ready) - two demos. setup(null) is now idempotent: it seeds a single starting sheet only when no
 # tab exists yet, so the plugin's defensive second call is a harmless no-op.
 @tool
 class_name DockStartupTest
@@ -21,7 +21,7 @@ static func run() -> bool:
 	dock.setup(null)
 	all_passed = _check("a second null setup() is a no-op (the two-untitled bug)", dock._open_tabs.size(), first_count) and all_passed
 
-	# A non-null setup() is never a no-op — loading a real sheet still opens its tab.
+	# A non-null setup() is never a no-op - loading a real sheet still opens its tab.
 	var real: EventSheetResource = EventSheetResource.new()
 	real.resource_path = "res://__dock_startup_probe.tres"
 	dock.setup(real)

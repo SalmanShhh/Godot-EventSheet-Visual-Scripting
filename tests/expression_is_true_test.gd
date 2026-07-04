@@ -1,4 +1,4 @@
-# Godot EventSheets — the generic "Expression Is True" condition.
+# Godot EventSheets - the generic "Expression Is True" condition.
 #
 # The code-free escape hatch for a boolean expression: any GDScript that returns a bool can be a
 # condition (e.g. a behavior method like $Player/WeaponKit.can_fire()) without dropping the row to a

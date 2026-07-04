@@ -1,4 +1,4 @@
-# EventForge — visual render harness for the live event-trace highlight (dev tool).
+# EventForge - visual render harness for the live event-trace highlight (dev tool).
 # Builds a sheet of events and marks some as "firing" (as a debug run would), saving a PNG so
 # the cyan highlight can be inspected. Run NON-headless:
 #   godot --path . --script tools/render_event_trace_preview.gd

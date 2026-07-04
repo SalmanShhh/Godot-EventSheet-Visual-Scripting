@@ -10,8 +10,8 @@ extends RefCounted
 #
 # Extracted from event_sheet_dock.gd to keep that file maintainable. What DELIBERATELY stayed on the
 # dock: the DISPATCHERS (`_on_condition_context_menu_id_pressed`, `_on_action_context_menu_id_pressed`,
-# `_on_row_context_menu_id_pressed`, `_on_empty_space_context_menu_id_pressed`) — context_menus.gd
-# wires those by name and the tests call them — and the shared context STATE `_context_row` /
+# `_on_row_context_menu_id_pressed`, `_on_empty_space_context_menu_id_pressed`) - context_menus.gd
+# wires those by name and the tests call them - and the shared context STATE `_context_row` /
 # `_context_hit`, which `_on_viewport_context_menu_requested` writes and many callers (context_menus.gd,
 # variables_manager.gd, ~15 test sites) read via `dock._context_row`. The ops here READ that state as
 # `_dock._context_row` / `_dock._context_hit`.
@@ -19,7 +19,7 @@ extends RefCounted
 # WHAT STAYS ON THE DOCK (reached here through `_dock`): the mutation funnel
 # (`_perform_undoable_sheet_edit`, `_mark_dirty`, `_set_status`, `_refresh_after_edit`), the active
 # state/view accessors (`_current_sheet`, `_viewport`, `_active_view`), the resource locators
-# (`_find_resource_location`, `_group_children_array` — both live on ace_apply.gd with dock delegates,
+# (`_find_resource_location`, `_group_children_array` - both live on ace_apply.gd with dock delegates,
 # so call them as `_dock.`), the selection collectors (`_get_selected_rows_from_context`,
 # `_get_selected_event_rows_from_context`), the OR-mode probe `_event_rows_use_or_mode`, the descendant
 # check `_resource_contains_descendant`, `_ensure_sheet_for_editing`, the insert helper
@@ -27,14 +27,14 @@ extends RefCounted
 # and CRUCIALLY `_refresh_clone_uids` (the duplicate op's lambda calls `_dock._refresh_clone_uids`).
 #
 # The dock keeps thin one-line delegates (original names + signatures, incl. return types) for every op
-# reached from outside this helper — the dispatchers above, context_menus.gd
+# reached from outside this helper - the dispatchers above, context_menus.gd
 # (`_context_ace_is_disabled` / `_context_row_is_disabled` / `_context_condition_is_negated`),
 # multi_view_manager.gd (`_delete_selected_content`), and the tests (`_toggle_selected_enabled`,
 # `_indent_selected_event`, `_outdent_selected_event`, `_bulk_*`, `_delete_context_ace`,
 # `_insert_child_comment_for_context_row`). Ops called ONLY by other ops here need no delegate.
 #
 # CLOSURE NOTE: several ops hand a lambda to `_dock._perform_undoable_sheet_edit(...)`. Those lambdas
-# capture `self`, which is now THIS helper — so every dock STATE / STAY reference inside them is written
+# capture `self`, which is now THIS helper - so every dock STATE / STAY reference inside them is written
 # `_dock.` while calls to methods that live here stay bare. In particular FOUR ops read `_context_row`
 # INSIDE the lambda and MUST prefix it: `_toggle_context_row_enabled`,
 # `_insert_child_event_for_context_row`, `_insert_child_comment_for_context_row`,
@@ -51,7 +51,7 @@ func init(dock: Control) -> void:
 # ── Bulk operations on the multi-selection (one undo action each) ─────────────────────
 
 
-## Disables every selected row that can be disabled — or re-enables them all when the
+## Disables every selected row that can be disabled - or re-enables them all when the
 ## first one is already off (uniform result, never a mixed toggle).
 func _bulk_set_enabled_on(targets: Array) -> void:
 	var rows: Array = targets.filter(func(resource: Variant) -> bool:
@@ -90,7 +90,7 @@ func _bulk_duplicate_rows(targets: Array) -> void:
 
 
 ## Wraps a same-parent selection in a fresh group (selection order preserved).
-## Returns "" or the user-facing problem — mixed-parent selections are refused
+## Returns "" or the user-facing problem - mixed-parent selections are refused
 ## because silent cross-depth reparenting is how sheets get scrambled.
 func _bulk_group_rows(targets: Array) -> String:
 	if targets.is_empty():
@@ -159,7 +159,7 @@ func _toggle_context_condition_inversion() -> void:
 	var ace_index: int = int(metadata.get("ace_index", -1))
 	var toggled: bool = _dock._perform_undoable_sheet_edit("Invert Condition", func() -> bool:
 		# Only regular conditions invert (compiled as `not (…)`). A trigger has no "not On X", and the
-		# compiler never reads trigger.negated — toggling it was a SILENT no-op that left a misleading
+		# compiler never reads trigger.negated - toggling it was a SILENT no-op that left a misleading
 		# "inverted" trigger on the sheet. The menu disables Invert for triggers; this guards the path too.
 		if kind == "condition" and ace_index >= 0 and ace_index < event_row.conditions.size():
 			event_row.conditions[ace_index].negated = not event_row.conditions[ace_index].negated

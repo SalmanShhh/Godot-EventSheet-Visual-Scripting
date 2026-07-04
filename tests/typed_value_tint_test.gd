@@ -1,4 +1,4 @@
-# EventForge — typed value tinting. ViewportRowBuilder._value_ranges_for tags each
+# EventForge - typed value tinting. ViewportRowBuilder._value_ranges_for tags each
 # highlighted parameter literal with its TYPE ("number" / "string" / "bool") so the renderer can tint it
 # by kind. The kind comes straight from which regex alternate matched, so the tint can't disagree with
 # the highlight; the [start, length] prefix stays index-accessible for the value hit-test (backward-compat).
@@ -24,7 +24,7 @@ static func run() -> bool:
 		ok = _check("first range start (hit-test prefix intact)", int(ranges[0][0]), 2) and ok
 		ok = _check("first range length", int(ranges[0][1]), 1) and ok
 
-	# Plain vocabulary is not a value — no false highlights.
+	# Plain vocabulary is not a value - no false highlights.
 	ok = _check("plain text has no values", ViewportRowBuilder._value_ranges_for("Move And Slide").size(), 0) and ok
 
 	return ok

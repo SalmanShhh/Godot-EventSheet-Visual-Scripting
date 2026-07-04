@@ -1,7 +1,7 @@
-# Godot EventSheets — syntax-error guardrails (help users not write broken GDScript).
+# Godot EventSheets - syntax-error guardrails (help users not write broken GDScript).
 #
 # Three layers, all to keep "little chance of syntax errors by the user":
-#   1. structural_syntax_error() — a context-free check for unbalanced ()/[]/{} or unterminated strings.
+#   1. structural_syntax_error() - a context-free check for unbalanced ()/[]/{} or unterminated strings.
 #      ALWAYS an error (no false positives on runtime-only refs), skipping brackets/quotes inside strings
 #      and # comments, handling \ escapes + triple quotes.
 #   2. The param dialog blocks Apply on a structural error EVEN when the symbol-aware lint can't run.
@@ -42,10 +42,10 @@ static func run() -> bool:
 	all_passed = _check("'\"' is an auto-close pair", edit.auto_brace_completion_pairs.has("\""), true) and all_passed
 	edit.free()
 
-	# ── The param dialog blocks Apply on a structural error — even with NO lint context (the closed hole) ──
+	# ── The param dialog blocks Apply on a structural error - even with NO lint context (the closed hole) ──
 	var dialog: ACEParamsDialog = ACEParamsDialog.new()
 	var broken_field: CodeEdit = CodeEdit.new()
-	broken_field.text = "(speed * 2"  # unbalanced — would not compile
+	broken_field.text = "(speed * 2"  # unbalanced - would not compile
 	dialog._fields = {"amount": broken_field}
 	all_passed = _check("dialog finds the structurally-broken expression field",
 		dialog._first_structural_error_field() == broken_field, true) and all_passed

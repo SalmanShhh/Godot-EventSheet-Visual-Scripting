@@ -1,8 +1,8 @@
-# EventSheet — row-level diagnostics (the "error → row" deep-link analyzer).
+# EventSheet - row-level diagnostics (the "error → row" deep-link analyzer).
 #
 # Verifies EventSheetDiagnostics.analyze: invalid inline GDScript blocks and bad ƒx expression
 # params are flagged on the offending resource (so the editor can jump to + mark the row), and
-# clean sheets stay quiet. Pure/headless — no display server needed.
+# clean sheets stay quiet. Pure/headless - no display server needed.
 @tool
 class_name DiagnosticsTest
 extends RefCounted

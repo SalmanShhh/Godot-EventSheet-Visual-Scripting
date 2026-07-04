@@ -1,7 +1,7 @@
-# EventForge — While / Repeat loops compile to real GDScript loops, so a behaviour can loop code-free
+# EventForge - While / Repeat loops compile to real GDScript loops, so a behaviour can loop code-free
 # (no GDScript block). They are the PickFilter WHILE / REPEAT kinds, added via Add Pick Filter ->
 # "While (condition)" / "Repeat N times". This pins that a While loop compiles to `while <expr>:`
-# wrapping the event body — the loop construct that was the last gap for fully code-free authoring.
+# wrapping the event body - the loop construct that was the last gap for fully code-free authoring.
 @tool
 class_name WhileLoopTest
 extends RefCounted

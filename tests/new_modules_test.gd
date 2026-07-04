@@ -156,7 +156,7 @@ static func run() -> bool:
 		if d4.ace_id == "SpawnSceneFull":
 			spawn_template = d4.codegen_template
 	all_passed = _check("SpawnSceneFull template uses a {uid} local", spawn_template.contains("{uid}"), true) and all_passed
-	# The dock bakes {uid} into a unique token at apply time (event_sheet_dock.gd) — mirror that.
+	# The dock bakes {uid} into a unique token at apply time (event_sheet_dock.gd) - mirror that.
 	spawn_action.codegen_template = spawn_template.replace("{uid}", "t1")
 	spawn_action.params = {"path": "\"res://enemy.tscn\"", "position": "Vector2(8, 0)", "rotation": "180.0", "group": "\"targets\""}
 	spawn_event.actions.append(spawn_action)

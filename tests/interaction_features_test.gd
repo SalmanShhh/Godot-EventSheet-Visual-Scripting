@@ -1,8 +1,8 @@
-# Godot EventSheets — Construct-style interaction features:
+# Godot EventSheets - Construct-style interaction features:
 #   - OR / AND condition blocks (right-click an event → "Convert to OR Block"): conditions join with
 #     `or` instead of `and`.
 #   - Condition inversion (right-click a condition → "Invert Condition"): compiles to `not (…)`.
-#   - A TRIGGER can't be inverted (no "not On X"); the menu disables Invert for triggers — and the
+#   - A TRIGGER can't be inverted (no "not On X"); the menu disables Invert for triggers - and the
 #     compiler never read trigger.negated, so the old enabled-for-triggers item was a silent no-op.
 @tool
 class_name InteractionFeaturesTest
@@ -59,7 +59,7 @@ static func run() -> bool:
 	all_passed = _check("Invert is enabled when the clicked span is a condition",
 		not dock._condition_context_menu.is_item_disabled(invert_index), true) and all_passed
 
-	# Right-clicking an event's bounds (the conditions-lane background — no specific condition/action span)
+	# Right-clicking an event's bounds (the conditions-lane background - no specific condition/action span)
 	# selects the whole event and opens the EVENT row menu, which offers the OR/AND block toggle.
 	dock._on_viewport_context_menu_requested(row_data, {"span_metadata": {}}, Vector2.ZERO)
 	all_passed = _check("right-clicking an event's bounds shows the event menu with the OR/AND block toggle",

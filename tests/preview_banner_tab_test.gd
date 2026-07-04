@@ -1,4 +1,4 @@
-# EventForge — the read-only .gd preview banner must always describe the ACTIVE tab's sheet. A cached
+# EventForge - the read-only .gd preview banner must always describe the ACTIVE tab's sheet. A cached
 # lift report made it keep the previously-opened sheet's counts after a tab switch ("9 event(s)" car
 # showing timer's "1 event(s)"); the banner now recomputes from the active sheet on every refresh.
 @tool

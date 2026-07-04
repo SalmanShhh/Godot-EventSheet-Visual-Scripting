@@ -1,7 +1,7 @@
-# EventForge — built-in ACE ids must be unique per provider.
+# EventForge - built-in ACE ids must be unique per provider.
 #
 # The registry indexes descriptors by "provider::ace_id" (ace_registry.gd:_ensure_builtin_cache) and a
-# duplicate silently shadows the earlier one — and doubles up in the picker. This guards the real
+# duplicate silently shadows the earlier one - and doubles up in the picker. This guards the real
 # built-in set against a newly-added ACE colliding with an existing id (a live risk now that the
 # behaviour-vocabulary work adds many Core ids), and checks the detector itself with a synthetic pair.
 @tool

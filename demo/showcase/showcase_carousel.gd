@@ -53,4 +53,4 @@ func juice_tile(index: int, kick: float) -> void:
 	t.get_node("SpringBehavior").spring_host_scale(1.0)
 	t.get_node("TweenBehavior").tween_rotation(t.rotation_degrees + 90.0, 0.5)
 
-# [b]Carousel of Juice[/b] — 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function). A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party, [b]ui_cancel[/b] calms it. Watch beat/intensity stream in Live Values.
+# [b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function). A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party, [b]ui_cancel[/b] calms it. Watch beat/intensity stream in Live Values.

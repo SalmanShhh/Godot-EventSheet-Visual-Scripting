@@ -1,11 +1,11 @@
-# EventForge module — Collision vocabulary (the "Helper ACEs for collisions").
+# EventForge module - Collision vocabulary (the "Helper ACEs for collisions").
 #
 # The collision queries you'd otherwise drop to a raw block for: CharacterBody slide/wall/
 # floor results (valid AFTER Move And Slide), Area overlap tests + lists, collision layer/
-# mask bits, and enabling/disabling a CollisionShape. Lane-1 wraps of native nodes — every
+# mask bits, and enabling/disabling a CollisionShape. Lane-1 wraps of native nodes - every
 # template is one direct GDScript line (parity covenant), and each is node-type-scoped so
 # the picker files it under its node's section (CharacterBody2D, Area2D, …).
-# Module contract: see ace_factory.gd — ace_ids/templates are API (compatibility covenant).
+# Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility covenant).
 @tool
 class_name EventForgeCollisionACEs
 extends RefCounted
@@ -33,9 +33,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns the surface direction from the character's last collision."))
 
 	# ── Area2D: overlap tests + lists (the common "am I touching X" queries) ──
-	descriptors.append(F.make_descriptor("Core", "OverlapsBody", "Overlaps Body", ACEDescriptor.ACEType.CONDITION, "overlaps_body({body})", "", [F.make_param("body", "String", "get_node(\"../Player\")", "Body", "The body node to test against (replace with your target — `self` never overlaps itself).", "expression")], "Collisions", "overlaps body {body}", "Area2D")
+	descriptors.append(F.make_descriptor("Core", "OverlapsBody", "Overlaps Body", ACEDescriptor.ACEType.CONDITION, "overlaps_body({body})", "", [F.make_param("body", "String", "get_node(\"../Player\")", "Body", "The body node to test against (replace with your target - `self` never overlaps itself).", "expression")], "Collisions", "overlaps body {body}", "Area2D")
 		.described("True when this Area2D is overlapping the given physics body."))
-	descriptors.append(F.make_descriptor("Core", "OverlapsArea", "Overlaps Area", ACEDescriptor.ACEType.CONDITION, "overlaps_area({area})", "", [F.make_param("area", "String", "get_node(\"../Trigger\")", "Area", "The area node to test against (replace with your target — `self` never overlaps itself).", "expression")], "Collisions", "overlaps area {area}", "Area2D")
+	descriptors.append(F.make_descriptor("Core", "OverlapsArea", "Overlaps Area", ACEDescriptor.ACEType.CONDITION, "overlaps_area({area})", "", [F.make_param("area", "String", "get_node(\"../Trigger\")", "Area", "The area node to test against (replace with your target - `self` never overlaps itself).", "expression")], "Collisions", "overlaps area {area}", "Area2D")
 		.described("True when this Area2D is overlapping the given other area."))
 	descriptors.append(F.make_descriptor("Core", "HasOverlappingBodies", "Has Overlapping Bodies", ACEDescriptor.ACEType.CONDITION, "has_overlapping_bodies()", "", [], "Collisions", "has overlapping bodies", "Area2D")
 		.described("True when this Area2D currently overlaps any physics body."))

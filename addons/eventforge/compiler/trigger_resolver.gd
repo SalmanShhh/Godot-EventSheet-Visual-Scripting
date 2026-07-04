@@ -1,6 +1,6 @@
-# EventForge — Trigger resolver
-# Maps EventForge trigger IDs to generated GDScript function signatures, and — for
-# signal-backed triggers — to the signal that must be connected in `_ready` (the compiler
+# EventForge - Trigger resolver
+# Maps EventForge trigger IDs to generated GDScript function signatures, and - for
+# signal-backed triggers - to the signal that must be connected in `_ready` (the compiler
 # emits the connection; handlers used to be generated but never connected). Custom signal
 # triggers from reflection providers use the "signal:<name>" id convention, with their
 # argument signature baked onto the event as `trigger_args` at apply time.
@@ -39,7 +39,7 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_run", "")
 		"OnPostTick":
 			# Godot's "post-tick": SceneTree.process_frame fires ONCE after every node's _process this
-			# frame — for logic that must run after everything else updated (a camera that follows after
+			# frame - for logic that must run after everything else updated (a camera that follows after
 			# movement, end-of-frame cleanup). Connected on get_tree() (the "@tree" global source), not self.
 			return _signal_backed("_on_post_tick", "", "process_frame", "@tree")
 		"OnPhysicsPostTick":
@@ -51,7 +51,7 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			# "Language Just Changed" gate condition so only that notification runs.
 			return _lifecycle("_notification", "what: int")
 		"OnCloseRequested":
-			# The window's close button (X) / an app-quit request — for save-on-quit or a confirm dialog.
+			# The window's close button (X) / an app-quit request - for save-on-quit or a confirm dialog.
 			# Connected on the root window (the "@window" global source), not self.
 			return _signal_backed("_on_close_requested", "", "close_requested", "@window")
 		"OnBodyEntered":
@@ -93,19 +93,19 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return {"function_name": "", "args": "", "signal_name": "", "source_path": ""}
 
 # ── Trigger tempo ───────────────────────────────────────────────────────
-# The four TEMPO classes a trigger id falls into — HOW OFTEN the event runs, the #1 comprehension +
+# The four TEMPO classes a trigger id falls into - HOW OFTEN the event runs, the #1 comprehension +
 # perf fact, surfaced as a coloured badge on the row. Co-located with resolve_trigger ON PURPOSE so the
 # two id censuses can never drift; trigger_tempo_exhaustiveness_test asserts every id resolve_trigger
 # recognises also has a tempo class.
-const TEMPO_EVERY_TICK := "every_tick"  # ⟳ runs every frame — the hot path
+const TEMPO_EVERY_TICK := "every_tick"  # ⟳ runs every frame - the hot path
 const TEMPO_INPUT := "input"            # ⌨ an input event
 const TEMPO_ONCE := "once"              # ▶ runs once (setup)
-const TEMPO_SIGNAL := "signal"          # ➜ reacts to a signal — the honest default
+const TEMPO_SIGNAL := "signal"          # ➜ reacts to a signal - the honest default
 
 
 ## Classifies a trigger id into its tempo class. Every-tick = per-frame lifecycle + the post-tick twins;
-## input = the input handlers; once = _ready / editor-run; everything else — signal-backed triggers,
-## "signal:<name>" custom signals, and any UNKNOWN id — is a signal (the honest default, matching the
+## input = the input handlers; once = _ready / editor-run; everything else - signal-backed triggers,
+## "signal:<name>" custom signals, and any UNKNOWN id - is a signal (the honest default, matching the
 ## shipped green ➜ badge so unclassified ids never look broken).
 static func tempo_class_for(trigger_id: String) -> String:
 	match trigger_id:
@@ -128,7 +128,7 @@ static func _signal_backed(function_name: String, args: String, signal_name: Str
 
 
 ## "" → "" (self keeps the classic handler names); "Platform" → "_platform";
-## "Enemies/Boss" → "_enemies_boss" — a safe identifier fragment for handler names.
+## "Enemies/Boss" → "_enemies_boss" - a safe identifier fragment for handler names.
 static func _identifier_for_source(source_path: String) -> String:
 	if source_path.is_empty():
 		return ""
@@ -140,7 +140,7 @@ static func _identifier_for_source(source_path: String) -> String:
 	var normalized: bool = false
 	for character in source_path.to_lower():
 		# Underscores are legitimate identifier chars (snake_cased autoloads like `event_bus`), so
-		# they pass through WITHOUT counting as normalization — only genuinely illegal chars do.
+		# they pass through WITHOUT counting as normalization - only genuinely illegal chars do.
 		if (character >= "a" and character <= "z") or (character >= "0" and character <= "9") or character == "_":
 			token += character
 		else:

@@ -1,4 +1,4 @@
-# EventForge — Condition add/delete on existing events
+# EventForge - Condition add/delete on existing events
 #
 # Adding a condition must never overwrite an existing trigger (e.g. "Every tick"); and
 # conditions must be deletable, including down to zero conditions.

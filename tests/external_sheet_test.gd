@@ -1,4 +1,4 @@
-# EventForge — GDScript-backed sheets (open ANY .gd as a sheet, losslessly)
+# EventForge - GDScript-backed sheets (open ANY .gd as a sheet, losslessly)
 #
 # THE CONTRACT (GDSCRIPT-PAIRING-SPEC): importing a GDScript file and saving it untouched
 # reproduces the file byte-identically. Declarations lift to first-class rows only when
@@ -78,7 +78,7 @@ static func run() -> bool:
 	all_passed = _check("everything else is untouched by the edit",
 		edited_output.replace("var hp: int = 150", "var hp: int = 100") == SAMPLE_SOURCE, true) and all_passed
 
-	# Adding an event puts it in the events section (standard sheet layout) — before the lifted
+	# Adding an event puts it in the events section (standard sheet layout) - before the lifted
 	# helper functions. The prelude stays a prefix, both helpers survive intact, and the diff is a
 	# single clean insert. (The untouched round-trip above already proved byte-identity.)
 	var event: EventRow = EventRow.new()
@@ -109,7 +109,7 @@ static func run() -> bool:
 	editor._load_sheet_from_path(sample_path)
 	all_passed = _check("dock opens .gd as a GDScript-backed sheet",
 		editor._current_sheet != null and editor._current_sheet.external_source_path == sample_path, true) and all_passed
-	# Opening a .gd is a SAFE read-only PREVIEW by default — a casual look never overwrites it.
+	# Opening a .gd is a SAFE read-only PREVIEW by default - a casual look never overwrites it.
 	all_passed = _check("opening a .gd is a read-only preview", editor._current_sheet.read_only, true) and all_passed
 	# Modify a lifted variable, then a preview-save must NOT write it back over the source.
 	for preview_entry in editor._current_sheet.events:

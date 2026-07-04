@@ -52,7 +52,7 @@ func refresh_anatomy_panel() -> void:
 func on_open_sheets_panel_collapsed(collapsed: bool) -> void:
 	if _dock._workspace_body != null:
 		_dock._workspace_body.split_offset = 26 if collapsed else 200
-	# The whole left rail narrows to the strip — the Functions/Anatomy panels can't fit, so they follow.
+	# The whole left rail narrows to the strip - the Functions/Anatomy panels can't fit, so they follow.
 	if _dock._anatomy_panel != null:
 		_dock._anatomy_panel.visible = not collapsed
 	if _dock._functions_panel != null:
@@ -104,7 +104,7 @@ func toggle_code_panel() -> void:
 
 ## Adopts the editor's code-editor look on a CodeEdit (the GDScript panel): the same
 ## monospace code font + size the script editor uses, plus the built-in minimap and
-## current-line highlight — so the panel reads as part of Godot, not a foreign box.
+## current-line highlight - so the panel reads as part of Godot, not a foreign box.
 ## No-op headless (no editor theme/settings).
 func apply_editor_code_settings(code_edit: CodeEdit) -> void:
 	code_edit.minimap_draw = true
@@ -153,7 +153,7 @@ func refresh_functions_list() -> void:
 
 
 ## "name(a, b)" plus a trailing ✦ when the function is exposed as an ACE (a reusable action/condition/
-## expression in other sheets) — the at-a-glance signature shown in the Functions list.
+## expression in other sheets) - the at-a-glance signature shown in the Functions list.
 func format_function_signature(function: EventFunction) -> String:
 	var param_ids: PackedStringArray = PackedStringArray()
 	for param_variant: Variant in function.params:
@@ -163,7 +163,7 @@ func format_function_signature(function: EventFunction) -> String:
 	return (signature + "  ✦") if function.expose_as_ace else signature
 
 
-## Right-click a function to delete it (the list is otherwise read-only — editing is via the rows).
+## Right-click a function to delete it (the list is otherwise read-only - editing is via the rows).
 func on_functions_list_item_clicked(index: int, at_position: Vector2, mouse_button_index: int) -> void:
 	if mouse_button_index != MOUSE_BUTTON_RIGHT or _dock._functions_menu == null:
 		return
@@ -226,7 +226,7 @@ func update_code_panel_highlight() -> void:
 
 ## Reverse provenance: clicking a line of generated code selects the sheet row that
 ## produced it. Reacts only to mouse releases (never caret moves), so the forward
-## direction — selection setting the caret in _dock._update_code_panel_highlight — cannot loop.
+## direction - selection setting the caret in _dock._update_code_panel_highlight - cannot loop.
 func on_code_panel_gui_input(event: InputEvent) -> void:
 	if not (event is InputEventMouseButton):
 		return
@@ -238,7 +238,7 @@ func on_code_panel_gui_input(event: InputEvent) -> void:
 
 
 ## The script editor's "Go to Sheet Row": shows the GDScript panel, refreshes the
-## source map and selects the row that emitted the given 1-based generated line —
+## source map and selects the row that emitted the given 1-based generated line -
 ## errors and stack traces land on rows, not on generated code.
 func goto_generated_line(line: int) -> void:
 	_dock._ensure_code_panel()
@@ -252,7 +252,7 @@ func goto_generated_line(line: int) -> void:
 
 
 ## Most-specific-first line→row lookup (the shared mapper), walking outward until something
-## selects — inner entries may reference resources without rows of their own (e.g. an in-flow
+## selects - inner entries may reference resources without rows of their own (e.g. an in-flow
 ## block inside an event's actions).
 func select_sheet_row_for_code_line(line: int) -> void:
 	if _dock._viewport == null:
@@ -279,9 +279,9 @@ func on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool) 
 	_dock._raw_code_target = raw_row
 	_dock._raw_code_in_flow = in_flow
 	_dock._raw_code_hint.text = (
-		"Runs inside this event, right after its conditions pass — full GDScript, with the sheet's variables and host in scope. Written verbatim into the .gd."
+		"Runs inside this event, right after its conditions pass - full GDScript, with the sheet's variables and host in scope. Written verbatim into the .gd."
 		if in_flow
-		else "Top-level GDScript — helper functions, @onready vars, signals… anything no ACE covers. Written verbatim into the .gd and callable from your events."
+		else "Top-level GDScript - helper functions, @onready vars, signals… anything no ACE covers. Written verbatim into the .gd and callable from your events."
 	)
 	_dock._raw_code_edit.text = raw_row.code
 	_dock._validate_raw_code()
@@ -294,7 +294,7 @@ func validate_raw_code() -> void:
 	if _dock._raw_code_edit == null or _dock._raw_code_lint_label == null:
 		return
 	# Live hard-block: a STRUCTURAL error (unbalanced brackets / unterminated string) disables Save
-	# immediately — always wrong, so it can never lock the user out on a lint false positive (a runtime-only
+	# immediately - always wrong, so it can never lock the user out on a lint false positive (a runtime-only
 	# symbol). Semantic lint errors keep Save enabled but are caught on confirm (which re-opens the dialog).
 	var structural: String = EventSheetGDScriptLint.structural_syntax_error(_dock._raw_code_edit.text)
 	if _dock._raw_code_dialog != null:
@@ -328,7 +328,7 @@ func on_raw_code_dialog_confirmed() -> void:
 	if _dock._raw_code_target == null:
 		return
 	var target: RawCodeRow = _dock._raw_code_target
-	# Guardrail: broken GDScript never commits — the dialog reopens with the text intact.
+	# Guardrail: broken GDScript never commits - the dialog reopens with the text intact.
 	var commit_lint: Dictionary = EventSheetGDScriptLint.lint(_dock._raw_code_edit.text, _dock._raw_code_in_flow, _dock._current_sheet)
 	if not bool(commit_lint.get("ok", true)):
 		_dock._set_status("GDScript block not saved: fix the error first (or Cancel to discard).", true)

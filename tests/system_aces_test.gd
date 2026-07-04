@@ -1,4 +1,4 @@
-# Godot EventSheets — event-sheet System coverage: time/engine, display, text, comparisons
+# Godot EventSheets - event-sheet System coverage: time/engine, display, text, comparisons
 @tool
 class_name SystemAcesTest
 extends RefCounted

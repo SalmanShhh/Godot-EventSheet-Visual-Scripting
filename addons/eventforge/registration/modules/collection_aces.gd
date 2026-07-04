@@ -1,7 +1,7 @@
-# EventForge module — Collections (rich variables)
+# EventForge module - Collections (rich variables)
 #
-# Curated Dictionary/Array/JSON vocabulary — every op a direct GDScript one-liner.
-# Module contract: see ace_factory.gd — ace_ids/templates are API (compatibility
+# Curated Dictionary/Array/JSON vocabulary - every op a direct GDScript one-liner.
+# Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility
 # covenant); this file only changes where the descriptors are AUTHORED.
 @tool
 class_name EventForgeCollectionACEs
@@ -68,14 +68,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Gives one random item picked from the array."))
 	# JSON moved to its own module (json_aces.gd / EventForgeJsonACEs) so it is its own thing.
 
-	# Time (System: Wait — handlers are implicit coroutines, await is safe anywhere)
+	# Time (System: Wait - handlers are implicit coroutines, await is safe anywhere)
 	descriptors.append(F.make_descriptor("Core", "Wait", "Wait", ACEDescriptor.ACEType.ACTION, "await get_tree().create_timer({seconds}).timeout", "", [F.make_param("seconds", "String", "1.0", "Seconds", "How long to wait before the next action runs.", "expression")], "Time", "Wait {seconds} s")
 		.described("Pauses this event for a number of seconds before continuing."))
 	descriptors.append(F.make_descriptor("Core", "AwaitSignal", "Wait For Signal", ACEDescriptor.ACEType.ACTION, "await {signal_expression}", "", [F.make_param("signal_expression", "String", "get_tree().process_frame", "Signal", "Signal to wait for (e.g. $Timer.timeout).", "expression")], "Time", "Wait for {signal_expression}")
 		.described("Pauses this event until a chosen signal fires, like a timer finishing."))
-	# Frame budgeting (ADVANCED — frame-spreading): hand-roll loop spreading.
+	# Frame budgeting (ADVANCED - frame-spreading): hand-roll loop spreading.
 	# The handler becomes an implicit coroutine, so use these ONLY inside a one-shot trigger
-	# (On Ready / On Signal / a custom function) with a run-once guard — NEVER inside a re-firing On
+	# (On Ready / On Signal / a custom function) with a run-once guard - NEVER inside a re-firing On
 	# Process, where overlapping suspended runs would duplicate work. For the easy path use the Time Slicer pack.
 	descriptors.append(F.make_descriptor("Core", "AwaitNextFrame", "Await Next Frame", ACEDescriptor.ACEType.ACTION, "await get_tree().process_frame", "", [], "Performance", "await next frame")
 		.described("Pauses this event until the next game frame, to spread work out."))
@@ -225,7 +225,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "RandomizeSeed", "Randomize Seed", ACEDescriptor.ACEType.ACTION, "randomize()", "", [], "Math & Random", "randomize seed")
 		.described("Reseeds randomness from the clock so each playthrough differs."))
 
-	# Color math — hit flashes, fades, and tints without dropping to GDScript. The colour params
+	# Color math - hit flashes, fades, and tints without dropping to GDScript. The colour params
 	# are full expressions (a literal, `modulate`, or another colour ACE), so they compose.
 	descriptors.append(F.make_descriptor("Core", "ColorLighten", "Lighten Color", ACEDescriptor.ACEType.EXPRESSION, "({color}).lightened({amount})", "", [F.make_param("color", "String", "Color(1, 1, 1, 1)", "Color", "Base colour.", "color"), F.make_param("amount", "String", "0.2", "Amount", "0..1 toward white.", "expression")], "Color", "lighten {color} by {amount}")
 		.described("Returns the colour shifted toward white by the given amount."))

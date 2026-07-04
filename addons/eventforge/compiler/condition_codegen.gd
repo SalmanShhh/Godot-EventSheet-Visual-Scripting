@@ -1,4 +1,4 @@
-# EventForge — Condition code generation
+# EventForge - Condition code generation
 # Emits GDScript boolean expressions for ACE conditions.
 @tool
 class_name ConditionCodegen

@@ -1,4 +1,4 @@
-# EventSheet — ACE Param Inspector Plugin
+# EventSheet - ACE Param Inspector Plugin
 # EditorInspectorPlugin for EventSheetExposedNode properties: renders custom widgets per
 # `widget_hint` ("slider" → HSlider, "multiline" → TextEdit, "expression" → LineEdit with
 # the ƒx tooltip) and falls back to Godot's default editors otherwise. Hints come from
@@ -125,7 +125,7 @@ class ExpressionParamProperty:
 	var line_edit: LineEdit = LineEdit.new()
 	func _init() -> void:
 		line_edit.placeholder_text = "GDScript expression"
-		line_edit.tooltip_text = "Plain GDScript — anything valid in an expression works here."
+		line_edit.tooltip_text = "Plain GDScript - anything valid in an expression works here."
 		add_child(line_edit)
 		add_focusable(line_edit)
 		line_edit.text_submitted.connect(func(value: String) -> void:

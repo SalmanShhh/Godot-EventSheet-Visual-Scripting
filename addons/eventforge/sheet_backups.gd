@@ -1,14 +1,14 @@
-# Godot EventSheets — save-time backup ring for sheets
+# Godot EventSheets - save-time backup ring for sheets
 #
 # Every save of an existing .tres first copies the file's pre-save bytes into a
 # per-sheet ring under user://eventsheet_backups/ (outside the project: no git noise,
 # no export pollution). The ring keeps the newest N (eventsheets/editor/backup_count,
 # default 10; 0 disables) so a bad save, a wrong-sheet overwrite or an editor crash
-# never costs more than one save's worth of work — git-grade safety for the
+# never costs more than one save's worth of work - git-grade safety for the
 # non-programmer half of the audience who won't have git discipline yet.
 #
 # Restore goes through the dock (Tools → Sheet Backups…): a backup loads INTO the
-# editor as an unsaved change — the user reviews and saves to keep it, so a restore
+# editor as an unsaved change - the user reviews and saves to keep it, so a restore
 # never silently rewrites a file (and the pre-restore state is itself backed up by
 # the save that follows).
 @tool
@@ -29,7 +29,7 @@ static func backup_dir_for(sheet_path: String) -> String:
 
 
 ## All backups of a sheet, newest first. Filenames are zero-padded sequence numbers
-## ("0002.player.tres") so lexicographic order IS age order — timestamps would collide
+## ("0002.player.tres") so lexicographic order IS age order - timestamps would collide
 ## on same-second saves.
 static func list_backups(sheet_path: String) -> PackedStringArray:
 	var dir_path: String = backup_dir_for(sheet_path)

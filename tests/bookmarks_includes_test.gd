@@ -1,7 +1,7 @@
-# Godot EventSheets — Gutter bookmarks + compile-time sheet includes
+# Godot EventSheets - Gutter bookmarks + compile-time sheet includes
 # Bookmarks: session navigation aids (Ctrl+M toggle, F4/Shift+F4 cycle) drawn as gutter
 # pennants. Includes: other sheets' variables/rows/functions merge at compile (root wins
-# collisions, cycles skip with warnings) — included rows never enter the editing model.
+# collisions, cycles skip with warnings) - included rows never enter the editing model.
 @tool
 class_name BookmarksIncludesTest
 extends RefCounted

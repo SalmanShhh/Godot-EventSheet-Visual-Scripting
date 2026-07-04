@@ -1,6 +1,6 @@
-# EventForge — Phase 4: hinted exports (@export_range / @export_file / @export_flags / …).
+# EventForge - Phase 4: hinted exports (@export_range / @export_file / @export_flags / …).
 # Inspector-tuned variables in an opened .gd lift to variable ROWS with the annotation kept verbatim
-# (export_hint), instead of staying RawCode blocks — so a real tuned script renders as a sheet and
+# (export_hint), instead of staying RawCode blocks - so a real tuned script renders as a sheet and
 # round-trips byte-identically. The per-line verify-lift gate rejects any hint we can't reproduce.
 @tool
 class_name HintedExportTest

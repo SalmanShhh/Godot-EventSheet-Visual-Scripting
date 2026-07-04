@@ -1,4 +1,4 @@
-# Godot EventSheets — function calls render as first-class named VERBS (show abstraction level).
+# Godot EventSheets - function calls render as first-class named VERBS (show abstraction level).
 #
 # A Call to a sheet Function is an abstraction you created (e.g. via Extract to Function), not just another
 # action. The renderer marks it with a "ƒ" object chip and shows the verb's friendly name ("Apply Physics")

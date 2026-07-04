@@ -1,9 +1,9 @@
-# Godot EventSheets — Nearest/Furthest picking expressions + the Line-of-Sight "Nearest Visible".
+# Godot EventSheets - Nearest/Furthest picking expressions + the Line-of-Sight "Nearest Visible".
 #
 # Feature: auto-attack / targeting primitives. Two project-level expressions (NearestInGroup /
 # FurthestInGroup) pick the closest/farthest node in a group by distance to the calling node, via the
 # reduce() idiom (Godot 4 Array has NO min_by/max_by). The LoS packs gain a "Nearest Visible In Group"
-# that additionally requires an unobstructed raycast — the occlusion-correct single pick.
+# that additionally requires an unobstructed raycast - the occlusion-correct single pick.
 @tool
 class_name NearestPickingTest
 extends RefCounted

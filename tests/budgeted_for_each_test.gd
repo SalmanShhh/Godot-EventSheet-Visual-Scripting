@@ -1,4 +1,4 @@
-# Godot EventSheets — Budgeted For Each (frame-spreading Solution 2) codegen.
+# Godot EventSheets - Budgeted For Each (frame-spreading Solution 2) codegen.
 #
 # A pick filter with frame_spread_count / frame_spread_budget_ms compiles to an in-place loop that
 # processes a slice per frame over a persistent class-member snapshot, then resumes next frame. This
@@ -31,23 +31,23 @@ static func run() -> bool:
 	var out_ms: String = _compile_loop("loopB", 0, 5.0, "")
 	all_passed = _check("ms: arms a wall-clock fence", out_ms.contains("var __loop_end_loopB_0: int = Time.get_ticks_usec() + int(5.0 * 1000.0)"), true) and all_passed
 	all_passed = _check("ms: breaks when over budget", out_ms.contains("Time.get_ticks_usec() >= __loop_end_loopB_0"), true) and all_passed
-	all_passed = _check("ms: never stalls — at least one item per frame", out_ms.contains("if __done_loopB_0 > 0 and ("), true) and all_passed
+	all_passed = _check("ms: never stalls - at least one item per frame", out_ms.contains("if __done_loopB_0 > 0 and ("), true) and all_passed
 	all_passed = _check("ms: output parses", _parses(out_ms), true) and all_passed
 
-	# --- Case 3: fallback — frame-spread + order-by emits a NORMAL ordered loop, not a budgeted one --
+	# --- Case 3: fallback - frame-spread + order-by emits a NORMAL ordered loop, not a budgeted one --
 	var out_fallback: String = _compile_loop("loopC", 2, 0.0, "num")
 	all_passed = _check("fallback: no budgeted cursor member emitted", out_fallback.contains("__loop_cursor"), false) and all_passed
 	all_passed = _check("fallback: emits the ordered sort", out_fallback.contains("sort_custom"), true) and all_passed
 	all_passed = _check("fallback: emits a plain for-loop", out_fallback.contains("for num in"), true) and all_passed
 	all_passed = _check("fallback: output parses", _parses(out_fallback), true) and all_passed
 
-	# --- Case 4: regression — a plain loop (no frame-spread) is untouched -------------------------
+	# --- Case 4: regression - a plain loop (no frame-spread) is untouched -------------------------
 	var out_plain: String = _compile_loop("loopD", 0, 0.0, "")
 	all_passed = _check("plain: emits a plain for-loop", out_plain.contains("for num in [10, 20, 30, 40, 50]:"), true) and all_passed
 	all_passed = _check("plain: emits NO budgeted machinery", out_plain.contains("__loop_cursor"), false) and all_passed
 	all_passed = _check("plain: output parses", _parses(out_plain), true) and all_passed
 
-	# --- Case 5: footgun warning — a budgeted loop only resumes under a per-frame trigger -----------
+	# --- Case 5: footgun warning - a budgeted loop only resumes under a per-frame trigger -----------
 	all_passed = _check("warns when budgeted under a one-shot trigger", _warns_one_shot("OnReady"), true) and all_passed
 	all_passed = _check("stays quiet when budgeted under On Process", _warns_one_shot("OnProcess"), false) and all_passed
 

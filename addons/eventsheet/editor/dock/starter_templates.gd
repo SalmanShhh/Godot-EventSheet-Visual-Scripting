@@ -26,7 +26,7 @@ func open_menu() -> void:
 	_template_menu.popup(Rect2i(Vector2i(_dock.get_global_mouse_position()), Vector2i(0, 0)))
 
 ## Rebuilt on every open so project templates (res://eventsheet_templates/, ids 100+)
-## appear the moment a .tres lands in the folder — same zero-config convention as
+## appear the moment a .tres lands in the folder - same zero-config convention as
 ## eventsheet_addons/.
 var _project_template_paths: PackedStringArray = PackedStringArray()
 
@@ -63,7 +63,7 @@ func _build_template_menu_items() -> void:
 			_template_menu.add_item(_project_template_paths[index].get_file().get_basename().capitalize(), 100 + index)
 
 
-## A signal-driven BEHAVIOR COMPONENT starter — the Godot composition idiom modelled by example, so a
+## A signal-driven BEHAVIOR COMPONENT starter - the Godot composition idiom modelled by example, so a
 ## newcomer's first copy is NOT a monolithic god-sheet. It compiles to an attachable Node with a typed
 ## `host` accessor (its parent), reacts to the host's body_entered SIGNAL (no per-frame polling), and
 ## emits its own (On Collected) so other sheets stay decoupled. `value` is an exported designer knob.
@@ -74,7 +74,7 @@ static func _build_behavior_component_starter() -> EventSheetResource:
 	sheet.custom_class_name = "PickupBehavior"
 	sheet.variables = {"value": {"type": "int", "default": 1, "exported": true}}
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Behavior Component[/b] — Godot's answer to a node-attached behavior. Instead of one big sheet on the root, this is a small reusable piece you ATTACH as a child of the node it controls (here, an Area2D pickup); it compiles to a Node, and [code]host[/code] is the node it is attached to.\nIt REACTS to a signal (the host's body_entered) instead of checking every frame, and EMITS its own (On Collected) so other sheets stay decoupled. [code]value[/code] is a designer knob in the Inspector."
+	about.text = "[b]Behavior Component[/b] - Godot's answer to a node-attached behavior. Instead of one big sheet on the root, this is a small reusable piece you ATTACH as a child of the node it controls (here, an Area2D pickup); it compiles to a Node, and [code]host[/code] is the node it is attached to.\nIt REACTS to a signal (the host's body_entered) instead of checking every frame, and EMITS its own (On Collected) so other sheets stay decoupled. [code]value[/code] is a designer knob in the Inspector."
 	sheet.events.append(about)
 	var declared_signal: RawCodeRow = RawCodeRow.new()
 	declared_signal.code = "## @ace_trigger\n## @ace_name(\"On Collected\")\n## @ace_category(\"Pickup\")\nsignal collected(by: Node, amount: int)"
@@ -157,14 +157,14 @@ func _new_sheet_from_template(template_id: int) -> void:
 		_dock._dirty = true
 		_dock._refresh_title_strip()
 		_dock._clear_undo_history()
-		_dock._set_status("New sheet from project template — Save As… to keep it.")
+		_dock._set_status("New sheet from project template - Save As… to keep it.")
 		return
 	var sheet: EventSheetResource = EventSheetResource.new()
 	match template_id:
 		1:
 			sheet.host_class = "CharacterBody2D"
 			var note: CommentRow = CommentRow.new()
-			note.text = "[b]Platformer Starter[/b] — move with ui_left/ui_right, jump with ui_accept.\nTune the numbers, then Compile and attach the script."
+			note.text = "[b]Platformer Starter[/b] - move with ui_left/ui_right, jump with ui_accept.\nTune the numbers, then Compile and attach the script."
 			sheet.events.append(note)
 			var tick: EventRow = EventRow.new()
 			tick.trigger_provider_id = "Core"
@@ -197,7 +197,7 @@ func _new_sheet_from_template(template_id: int) -> void:
 		2:
 			sheet.host_class = "CharacterBody2D"
 			var note2: CommentRow = CommentRow.new()
-			note2.text = "[b]Top-down Starter[/b] — 8-way movement with the arrow keys."
+			note2.text = "[b]Top-down Starter[/b] - 8-way movement with the arrow keys."
 			sheet.events.append(note2)
 			var tick2: EventRow = EventRow.new()
 			tick2.trigger_provider_id = "Core"
@@ -215,7 +215,7 @@ func _new_sheet_from_template(template_id: int) -> void:
 		6:
 			sheet.host_class = "CharacterBody3D"
 			var note6: CommentRow = CommentRow.new()
-			note6.text = "[b]First-Person Controller (3D)[/b] — WASD/arrows to move (relative to a child Camera3D's facing), Space to jump.\nAdd a Camera3D child named \"Camera3D\", then Compile and attach the script."
+			note6.text = "[b]First-Person Controller (3D)[/b] - WASD/arrows to move (relative to a child Camera3D's facing), Space to jump.\nAdd a Camera3D child named \"Camera3D\", then Compile and attach the script."
 			sheet.events.append(note6)
 			var tick6: EventRow = EventRow.new()
 			tick6.trigger_provider_id = "Core"
@@ -241,7 +241,7 @@ func _new_sheet_from_template(template_id: int) -> void:
 		7:
 			sheet.host_class = "CharacterBody3D"
 			var note7: CommentRow = CommentRow.new()
-			note7.text = "[b]Third-Person Mover (3D)[/b] — WASD/arrows move on the ground plane and the body turns to face its motion. Space jumps."
+			note7.text = "[b]Third-Person Mover (3D)[/b] - WASD/arrows move on the ground plane and the body turns to face its motion. Space jumps."
 			sheet.events.append(note7)
 			var tick7: EventRow = EventRow.new()
 			tick7.trigger_provider_id = "Core"
@@ -291,7 +291,7 @@ func _new_sheet_from_template(template_id: int) -> void:
 			sheet.autoload_name = "EventBus"
 			sheet.host_class = "Node"
 			var bus_note: CommentRow = CommentRow.new()
-			bus_note.text = "[b]Event Bus[/b] — declare project-wide signals here; emit them from any sheet via EventBus.<signal>.emit(...)."
+			bus_note.text = "[b]Event Bus[/b] - declare project-wide signals here; emit them from any sheet via EventBus.<signal>.emit(...)."
 			sheet.events.append(bus_note)
 			var bus_signals: RawCodeRow = RawCodeRow.new()
 			bus_signals.code = "## @ace_trigger\n## @ace_name(\"On Game Paused\")\n## @ace_category(\"Event Bus\")\nsignal game_paused\n\n## @ace_trigger\n## @ace_name(\"On Level Completed\")\n## @ace_category(\"Event Bus\")\nsignal level_completed(level: int)"
@@ -334,4 +334,4 @@ func _new_sheet_from_template(template_id: int) -> void:
 	_dock._dirty = true
 	_dock._refresh_title_strip()
 	_dock._clear_undo_history()
-	_dock._set_status("New sheet from template — Save As… to keep it.")
+	_dock._set_status("New sheet from template - Save As… to keep it.")

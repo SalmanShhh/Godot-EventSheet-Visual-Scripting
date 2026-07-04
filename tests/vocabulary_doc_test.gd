@@ -1,4 +1,4 @@
-# Godot EventSheets — project vocabulary doc: one committed markdown reference of
+# Godot EventSheets - project vocabulary doc: one committed markdown reference of
 # everything the project's sheets and packs publish, deterministic by contract, kept
 # honest by the Project Doctor's opt-in staleness note.
 @tool

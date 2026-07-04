@@ -1,4 +1,4 @@
-# EventForge — Function parser
+# EventForge - Function parser
 # Parses top-level `func name(params) -> ret:` blocks from GDScript source, capturing each
 # function's name, typed params, return type, and verbatim (indented) body text.
 @tool

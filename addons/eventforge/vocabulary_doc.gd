@@ -1,8 +1,8 @@
-# Godot EventSheets — project vocabulary doc generator
+# Godot EventSheets - project vocabulary doc generator
 #
 # Renders ONE always-current markdown reference of everything this project's sheets
 # and packs publish: per-sheet classes, properties, triggers/conditions/actions/
-# expressions (via EventSheetAuthorLoop.collect_publish_surface — straight from the
+# expressions (via EventSheetAuthorLoop.collect_publish_surface - straight from the
 # model, no compile) plus hand-written script packs (parsed from their @ace_*
 # annotations). For teams and AI assistants alike: "what can I say in this project?"
 # answered by a committed file instead of clicking through pickers.
@@ -17,7 +17,7 @@ extends RefCounted
 const DEFAULT_PATH := "res://EVENTSHEETS-VOCABULARY.md"
 
 
-## Where the doc lives — override with the eventsheets/project/vocabulary_doc_path
+## Where the doc lives - override with the eventsheets/project/vocabulary_doc_path
 ## project setting.
 static func doc_path() -> String:
 	return str(ProjectSettings.get_setting("eventsheets/project/vocabulary_doc_path", DEFAULT_PATH))
@@ -25,14 +25,14 @@ static func doc_path() -> String:
 
 ## The full document. Sheets first (every EventSheetResource in the project, packs
 ## included), then hand-written script packs (compiler-generated pack scripts are
-## excluded — their sheet section already covers them).
+## excluded - their sheet section already covers them).
 static func generate() -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	lines.append("# Project vocabulary - Godot EventSheets")
 	lines.append("")
 	lines.append("> Generated - do not edit. Regenerate via the dock (Tools → Vocabulary Doc…) or")
 	lines.append("> `godot --headless --path . --script tools/vocabulary_doc.gd`.")
-	# Templates are blueprints, not live vocabulary — they don't publish anything yet.
+	# Templates are blueprints, not live vocabulary - they don't publish anything yet.
 	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
 	var sorted_paths: Array = []
 	for sheet_path: String in sheet_paths:
@@ -90,7 +90,7 @@ static func sheet_section(sheet: EventSheetResource, sheet_path: String) -> Pack
 
 
 ## One hand-written script pack's entry. Empty when the script is compiler-generated
-## (a "# Source:" header — its sheet section covers it) or publishes nothing.
+## (a "# Source:" header - its sheet section covers it) or publishes nothing.
 static func script_pack_section(script_path: String) -> PackedStringArray:
 	var source: String = FileAccess.get_file_as_string(script_path)
 	if source.left(400).contains("# Source: "):

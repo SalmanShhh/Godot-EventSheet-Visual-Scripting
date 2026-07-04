@@ -1,4 +1,4 @@
-# EventSheet — Variable creation dialog component
+# EventSheet - Variable creation dialog component
 # Provides a reusable form for creating global or local variables.
 # Connect to variable_confirmed to receive the result.
 @tool
@@ -16,7 +16,7 @@ var _name_edit: LineEdit = null
 var _name_warning: Label = null
 var _sheet_provider: Callable = Callable()
 var _type_option: OptionButton = null
-# "Whole numbers only" — shown only when the friendly "Number" type is selected; ticked stores int,
+# "Whole numbers only" - shown only when the friendly "Number" type is selected; ticked stores int,
 # unticked stores float. The dialog's display is friendly; the stored type stays a real Godot type.
 var _whole_numbers_check: CheckBox = null
 var _whole_numbers_row: HBoxContainer = null
@@ -44,13 +44,13 @@ var _attr_section_card: PanelContainer = null  # themed inset card wrapping _att
 var _attr_advanced_toggle: Button = null
 var _attr_advanced_section: VBoxContainer = null
 ## Attribute keys whose fields live in the nested Advanced tier. MUST mirror the fields parented under
-## _attr_advanced_section in init_dialog — if you move a field between the Basic and Advanced tiers, update
+## _attr_advanced_section in init_dialog - if you move a field between the Basic and Advanced tiers, update
 ## this too, or open_for_edit's auto-expand will disagree with where the field actually sits.
 const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]
-## The Range field's placeholder per type — one source of truth so the initial build and the per-type swap in
+## The Range field's placeholder per type - one source of truth so the initial build and the per-type swap in
 ## _refresh_contextual_rows can't drift. Vector2 prompts a single dial reach; numeric prompts min, max, step.
 const _RANGE_PLACEHOLDER_NUMERIC: String = "min, max, step (numeric: slider)"
-const _RANGE_PLACEHOLDER_VECTOR2: String = "max reach — the dial's magnitude (e.g. 150)"
+const _RANGE_PLACEHOLDER_VECTOR2: String = "max reach - the dial's magnitude (e.g. 150)"
 var _attr_tooltip_edit: LineEdit = null
 var _attr_group_edit: LineEdit = null
 var _attr_subgroup_edit: LineEdit = null
@@ -90,7 +90,7 @@ var _ships_as_label: Label = null
 ## element types for builtin T.
 const TYPE_OPTIONS: PackedStringArray = [
 	"int", "float", "bool", "String",
-	# Common game-value types — also the hosts for the Tier 3 drawers (dial / swatches / texture / curve).
+	# Common game-value types - also the hosts for the Tier 3 drawers (dial / swatches / texture / curve).
 	"Vector2", "Color", "Texture2D", "Curve",
 	"Variant",
 	"Array", "Array[int]", "Array[float]", "Array[String]",
@@ -99,20 +99,20 @@ const TYPE_OPTIONS: PackedStringArray = [
 ]
 
 ## Plain-language hover hints for the Type dropdown, in everyday terms (the three common kinds are a
-## number, text, and yes/no). The stored type name is unchanged — these are on-demand explanations, not renames.
+## number, text, and yes/no). The stored type name is unchanged - these are on-demand explanations, not renames.
 const TYPE_HINTS: Dictionary = {
-	"Number": "A number — a count, score, position, speed… Tick \"Whole numbers only\" for integers.",
-	"Text": "Text — words, names, messages.",
+	"Number": "A number - a count, score, position, speed… Tick \"Whole numbers only\" for integers.",
+	"Text": "Text - words, names, messages.",
 	"Yes-No": "A yes/no, on/off switch (true / false).",
 	"int": "A whole number, no decimals (for a count or score).",
-	"float": "A number that can have decimals — the everyday number type.",
+	"float": "A number that can have decimals - the everyday number type.",
 	"bool": "Yes / no, on / off (true / false).",
 	"String": "Text.",
 	"Vector2": "An x/y pair: a direction, velocity, or position.",
 	"Color": "An RGBA colour.",
 	"Texture2D": "An image / sprite resource.",
 	"Curve": "A shape over 0–1 (easing, falloff, ramps).",
-	"Variant": "Any type — untyped (advanced; prefer a specific type when you can).",
+	"Variant": "Any type - untyped (advanced; prefer a specific type when you can).",
 }
 
 
@@ -166,7 +166,7 @@ func init_dialog(parent_node: Node) -> void:
 	type_row.add_child(type_label)
 	_type_option = OptionButton.new()
 	# Friendly labels first (Number / Text / Yes-No), then a separator, then the advanced Godot types
-	# under their own names. Only the DISPLAY changes — _selected_stored_type() always returns a real
+	# under their own names. Only the DISPLAY changes - _selected_stored_type() always returns a real
 	# Godot type (int/float/String/bool/…), so the stored type_name and the .gd round-trip are unchanged.
 	for friendly: String in ["Number", "Text", "Yes-No"]:
 		_type_option.add_item(friendly)
@@ -190,14 +190,14 @@ func init_dialog(parent_node: Node) -> void:
 	type_row.add_child(_type_option)
 	form.add_child(type_row)
 
-	# "Whole numbers only" — the int/float distinction, surfaced only when "Number" is the chosen type.
+	# "Whole numbers only" - the int/float distinction, surfaced only when "Number" is the chosen type.
 	_whole_numbers_row = HBoxContainer.new()
 	var whole_spacer: Control = Control.new()
 	whole_spacer.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
 	_whole_numbers_row.add_child(whole_spacer)
 	_whole_numbers_check = CheckBox.new()
 	_whole_numbers_check.text = "Whole numbers only"
-	_whole_numbers_check.tooltip_text = "A whole number (no decimals) — stored as an int. Unticked stores a float."
+	_whole_numbers_check.tooltip_text = "A whole number (no decimals) - stored as an int. Unticked stores a float."
 	_whole_numbers_check.toggled.connect(func(_on: bool) -> void:
 		_refresh_default_hint()
 		_refresh_contextual_rows())
@@ -243,7 +243,7 @@ func init_dialog(parent_node: Node) -> void:
 		_options_edit.text = str(_enum_fill_menu.get_popup().get_item_metadata(index)))
 	_options_row.add_child(_enum_fill_menu)
 	form.add_child(_options_row)
-	# Inspector attributes behind a disclosure ("More options") — the dialog used to throw everything at once.
+	# Inspector attributes behind a disclosure ("More options") - the dialog used to throw everything at once.
 	# Collapsed for new variables, auto-expanded when an edited variable already uses an attribute. Exported
 	# globals only. (Progressive disclosure.)
 	_attr_toggle = Button.new()
@@ -251,7 +251,7 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_attr_toggle.toggle_mode = true
 	_attr_toggle.text = "▸  More options (tooltip, range, drawer…)"
-	_attr_toggle.tooltip_text = "Optional Inspector polish for exported globals — everything compiles to plain Godot annotations."
+	_attr_toggle.tooltip_text = "Optional Inspector polish for exported globals - everything compiles to plain Godot annotations."
 	_attr_toggle.toggled.connect(func(expanded: bool) -> void:
 		_attr_toggle.text = ("▾" if expanded else "▸") + _attr_toggle.text.substr(1)
 		_attr_section_card.visible = expanded)
@@ -278,7 +278,7 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_drawer_option.tooltip_text = "Swap the Inspector field for a richer drawer (dial, swatches, curve…).\nGraceful: a plain field without the editor plugin (parity preserved)."
 	_attr_drawer_option.item_selected.connect(func(_i: int) -> void: _refresh_drawer_preview())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Show as", _attr_drawer_option))
-	# Live "what the drawer looks like" preview — the actual widget, updated as the type / drawer / bounds change.
+	# Live "what the drawer looks like" preview - the actual widget, updated as the type / drawer / bounds change.
 	_drawer_preview_box = VBoxContainer.new()
 	_drawer_preview_box.visible = false
 	_drawer_preview_box.add_theme_constant_override("separation", 3)
@@ -286,15 +286,15 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_multiline_check = CheckBox.new()
 	_attr_multiline_check.text = "Multiline (String: big text box)"
 	_attr_section.add_child(_attr_multiline_check)
-	# Color-only: @export_color_no_alpha — a solid RGB swatch (the Inspector hides the alpha slider).
+	# Color-only: @export_color_no_alpha - a solid RGB swatch (the Inspector hides the alpha slider).
 	_attr_no_alpha_check = CheckBox.new()
 	_attr_no_alpha_check.text = "No alpha (Color: solid RGB, no transparency)"
 	_attr_section.add_child(_attr_no_alpha_check)
-	# float-only: @export_exp_easing — an easing-curve handle in the Inspector (for 0-1 attenuation values).
+	# float-only: @export_exp_easing - an easing-curve handle in the Inspector (for 0-1 attenuation values).
 	_attr_exp_easing_check = CheckBox.new()
 	_attr_exp_easing_check.text = "Easing curve (float: exponential ease handle)"
 	_attr_section.add_child(_attr_exp_easing_check)
-	# String-only: @export_placeholder — grey hint text shown while the field is empty.
+	# String-only: @export_placeholder - grey hint text shown while the field is empty.
 	_attr_placeholder_edit = LineEdit.new()
 	_attr_placeholder_edit.placeholder_text = "grey hint shown when the field is empty"
 	_attr_placeholder_row = EventSheetPopupUI.form_row("Placeholder", _attr_placeholder_edit)
@@ -361,13 +361,13 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_placeholder_edit.text_changed.connect(func(_t: String) -> void: _refresh_ships_as())
 	_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_ships_as())
 	# ── ADVANCED tier (nested disclosure): wiring + organization that assumes other vars/funcs exist or
-	# Godot-Inspector fluency — kept out of the common path so the Basic tier reads cleanly. ──
+	# Godot-Inspector fluency - kept out of the common path so the Basic tier reads cleanly. ──
 	_attr_advanced_toggle = Button.new()
 	_attr_advanced_toggle.flat = true
 	_attr_advanced_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_attr_advanced_toggle.toggle_mode = true
 	_attr_advanced_toggle.text = "▸  Advanced (grouping, conditions, clamp…)"
-	_attr_advanced_toggle.tooltip_text = "Inspector grouping, conditional show/lock, an on-changed callback, clamp, read-only — for variables that reference other variables or functions."
+	_attr_advanced_toggle.tooltip_text = "Inspector grouping, conditional show/lock, an on-changed callback, clamp, read-only - for variables that reference other variables or functions."
 	_attr_advanced_toggle.toggled.connect(func(expanded: bool) -> void:
 		_attr_advanced_toggle.text = ("▾" if expanded else "▸") + _attr_advanced_toggle.text.substr(1)
 		_attr_advanced_section.visible = expanded)
@@ -422,7 +422,7 @@ func init_dialog(parent_node: Node) -> void:
 	access_row.add_child(access_label)
 	_exported_check = CheckBox.new()
 	_exported_check.text = "Editable in the Inspector (a designer property)"
-	_exported_check.tooltip_text = "On: a designer can tweak this per-instance in the Inspector (@export var).\nOff: internal script state — a plain private var (the default for a new variable)."
+	_exported_check.tooltip_text = "On: a designer can tweak this per-instance in the Inspector (@export var).\nOff: internal script state - a plain private var (the default for a new variable)."
 	_exported_check.toggled.connect(func(_pressed: bool) -> void: _update_attr_gating())
 	access_row.add_child(_exported_check)
 	form.add_child(access_row)
@@ -447,7 +447,7 @@ func init_dialog(parent_node: Node) -> void:
 ## ── Friendly type mapping (display ↔ stored Godot type) ──────────────────────
 ## The real Godot type the current selection stores (written to LocalVariable.type_name and
 ## round-tripped). Friendly labels map back to int/float/String/bool; advanced types are literal.
-## Only the DROPDOWN DISPLAY is friendly — the stored type is unchanged, so compile/import round-trip.
+## Only the DROPDOWN DISPLAY is friendly - the stored type is unchanged, so compile/import round-trip.
 func _selected_stored_type() -> String:
 	if _type_option == null or _type_option.selected < 0:
 		return "int"
@@ -463,7 +463,7 @@ func _selected_stored_type() -> String:
 			return label
 
 
-## Selects the dropdown entry (+ the Whole-numbers tick) that stores `type_name` — the reverse of
+## Selects the dropdown entry (+ the Whole-numbers tick) that stores `type_name` - the reverse of
 ## _selected_stored_type, used to prefill the dialog when editing an existing variable.
 func _select_stored_type(type_name: String) -> void:
 	var target: String = type_name
@@ -531,7 +531,7 @@ func _build_items_window() -> void:
 	box.add_theme_constant_override("separation", 6)
 	_items_window.add_child(box)
 	var hint: Label = Label.new()
-	hint.text = "One item per line — each line is a GDScript value expression."
+	hint.text = "One item per line - each line is a GDScript value expression."
 	box.add_child(hint)
 	_items_edit = TextEdit.new()
 	_items_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -612,7 +612,7 @@ static func items_to_collection_literal(items: PackedStringArray, is_dictionary:
 
 ## Open the dialog for the given scope ("global" or "local").
 func open(scope: String) -> void:
-	# A new variable is internal script state by DEFAULT (a plain private var) — the user opts into
+	# A new variable is internal script state by DEFAULT (a plain private var) - the user opts into
 	# "Designer-tweakable (@export)" deliberately, instead of every global leaking onto the Inspector.
 	open_for_edit(scope, {}, "", "int", "", false, "Create Variable", false, false)
 
@@ -683,7 +683,7 @@ func open_for_edit(
 	_exported_check.tooltip_text = (
 		"Local variables are always private to the script."
 		if is_local
-		else "On: a designer tweaks this per-instance in the Inspector (@export var).\nOff: internal script state — a plain private var."
+		else "On: a designer tweaks this per-instance in the Inspector (@export var).\nOff: internal script state - a plain private var."
 	)
 	var existing_attributes: Dictionary = context.get("attributes") if context.get("attributes") is Dictionary else {}
 	_attr_tooltip_edit.text = str(existing_attributes.get("tooltip", ""))
@@ -713,7 +713,7 @@ func open_for_edit(
 	_attr_read_only_check.button_pressed = bool(existing_attributes.get("read_only", false))
 	# Progressive disclosure: "More options" starts collapsed for new variables and auto-expands when the
 	# edited variable already uses any attribute. The nested "Advanced" tier auto-expands ONLY when an
-	# advanced attribute is set — a tooltip-only variable shouldn't unfurl the whole advanced block.
+	# advanced attribute is set - a tooltip-only variable shouldn't unfurl the whole advanced block.
 	if _attr_toggle != null:
 		var has_any: bool = not existing_attributes.is_empty()
 		_attr_toggle.button_pressed = has_any
@@ -764,12 +764,12 @@ func _on_confirmed() -> void:
 	if not shadow_owner.is_empty():
 		if _name_warning != null:
 			_name_warning.visible = true
-			_name_warning.text = "✗ \"%s\" shadows a %s member — pick another name." % [var_name, shadow_owner]
+			_name_warning.text = "✗ \"%s\" shadows a %s member - pick another name." % [var_name, shadow_owner]
 		if _dialog.is_inside_tree():
 			_dialog.call_deferred("popup_centered", Vector2i(460, 260))
 		return
 	var type_name: String = _selected_stored_type()
-	# Guardrail (event-sheet-style): an invalid collection literal never commits — the dialog
+	# Guardrail (event-sheet-style): an invalid collection literal never commits - the dialog
 	# reopens with the text intact so the user fixes or cancels deliberately.
 	var verdict: Dictionary = validate_default(type_name, _default_edit.text)
 	if not bool(verdict.get("ok", true)):
@@ -807,13 +807,13 @@ func _on_confirmed() -> void:
 	# previous type (the field is now HIDDEN by _refresh_contextual_rows) is inert
 	# rather than erroring about a field the user can no longer see.
 	var is_numeric: bool = type_name == "int" or type_name == "float"
-	# Vector2 keeps a range too — its max drives the direction dial's magnitude, and the Range row is shown
+	# Vector2 keeps a range too - its max drives the direction dial's magnitude, and the Range row is shown
 	# for it (_refresh_contextual_rows). Without this it'd be dropped on apply, resetting the dial to max 100.
 	var range_applies: bool = is_numeric or type_name == "Vector2"
 	var range_text: String = _attr_range_edit.text.strip_edges()
 	if not range_text.is_empty() and range_applies:
 		# Forgiving: 1 part = max (min 0, step 1); 2 = min, max (step 1); 3 = min, max, step. A dial uses only
-		# its max, so a designer shouldn't have to type a min/step it ignores — config is optional with sensible
+		# its max, so a designer shouldn't have to type a min/step it ignores - config is optional with sensible
 		# defaults, and config beyond a max never hard-errors.
 		# allow_empty=TRUE: keep empty slots so positions are preserved ("0,,5" → ["0","","5"], a blank max that
 		# _parse_range_parts correctly rejects). split(",", false) would drop the empty and silently misread it.
@@ -883,7 +883,7 @@ static func parse_options(raw: String) -> PackedStringArray:
 	return options
 
 
-## The text shown in the Default field for a value — the inverse of _parse_default, and the pair MUST
+## The text shown in the Default field for a value - the inverse of _parse_default, and the pair MUST
 ## round-trip. Containers and the value types (Vector2/Color) use the canonical GDScript literal so
 ## _parse_default can read them back; str() would give the unparseable "(0, 0)" form, silently zeroing the
 ## first component on the next edit. null (a resource default) shows as an empty field, not the literal
@@ -951,7 +951,7 @@ static func validate_default(type_name: String, raw: String) -> Dictionary:
 	var parsed: Variant = str_to_var(value)
 	var wants_dictionary: bool = type_name.begins_with("Dictionary")
 	if parsed == null or (wants_dictionary and not (parsed is Dictionary)) or (not wants_dictionary and not (parsed is Array)):
-		return {"ok": false, "error": "Not a valid %s literal — e.g. %s" % [
+		return {"ok": false, "error": "Not a valid %s literal - e.g. %s" % [
 			"Dictionary" if wants_dictionary else "Array",
 			"{\"key\": 1}" if wants_dictionary else "[1, 2, 3]"
 		]}
@@ -983,11 +983,11 @@ func _refresh_contextual_rows() -> void:
 	_options_row.visible = type_name == "String"
 	_enum_fill_menu.visible = _options_row.visible and _enum_provider.is_valid() and not (_enum_provider.call() as Array).is_empty()
 	if _attr_range_edit != null:
-		# Range now lives in a labelled row — hide the whole row, not just the field, so its
+		# Range now lives in a labelled row - hide the whole row, not just the field, so its
 		# "Range" label doesn't linger on non-numeric types. Vector2 keeps it too: its max drives the dial.
 		_attr_range_edit.get_parent().visible = numeric or type_name == "Vector2"
 		# For a Vector2 the Range is just the dial's reach (only max is read), so prompt for one number, not the
-		# numeric "min, max, step" — the forgiving parser accepts a bare max.
+		# numeric "min, max, step" - the forgiving parser accepts a bare max.
 		_attr_range_edit.placeholder_text = _RANGE_PLACEHOLDER_VECTOR2 if type_name == "Vector2" else _RANGE_PLACEHOLDER_NUMERIC
 		_attr_clamp_check.visible = numeric
 		_attr_multiline_check.visible = type_name == "String"
@@ -1260,7 +1260,7 @@ func _refresh_inspector_preview(shown_name: String, type_name: String, folded_at
 	_inspector_preview_card.update_preview(shown_name, type_name, default_text, card_attributes, exported, constant)
 
 
-## The single drawer kind a variable type can host (or "" — most types host no drawer).
+## The single drawer kind a variable type can host (or "" - most types host no drawer).
 static func _drawer_kind_for_type(type_name: String) -> String:
 	match type_name:
 		"int", "float":
@@ -1337,7 +1337,7 @@ static func _parse_range_parts(parts: PackedStringArray) -> Dictionary:
 	return {}
 
 
-## {min, max} (as floats) parsed from the Range field — drives the progress_bar / dial bounds in the preview,
+## {min, max} (as floats) parsed from the Range field - drives the progress_bar / dial bounds in the preview,
 ## using the SAME forgiving rule as the apply so a 1-part "150" reads as max 150 in both.
 func _parse_range_bounds() -> Dictionary:
 	if _attr_range_edit == null:
@@ -1350,12 +1350,12 @@ func _parse_range_bounds() -> Dictionary:
 
 ## Compact display of a numeric bound: drop a trailing ".0" so 150.0 reads "150", but keep 1.5 as "1.5".
 static func _format_bound(value: float) -> String:
-	# 0.001 is a cosmetic "close enough to whole" tolerance — display-only, never used for storage or compares.
+	# 0.001 is a cosmetic "close enough to whole" tolerance - display-only, never used for storage or compares.
 	return str(int(round(value))) if absf(value - round(value)) < 0.001 else str(value)
 
 
 ## Pre-validate the Clamp↔Range dependency: Clamp needs a min+max to
-## clamp to, so disable the checkbox (with a hint) until a valid Range is entered — making the dependency
+## clamp to, so disable the checkbox (with a hint) until a valid Range is entered - making the dependency
 ## visible BEFORE confirm instead of erroring on OK. No-op when Clamp is hidden (non-numeric types).
 func _refresh_clamp_gate() -> void:
 	if _attr_clamp_check == null or not _attr_clamp_check.visible:
@@ -1366,7 +1366,7 @@ func _refresh_clamp_gate() -> void:
 		_attr_clamp_check.tooltip_text = "Clamp the value to the Range on every assignment."
 	else:
 		_attr_clamp_check.set_pressed_no_signal(false)
-		_attr_clamp_check.tooltip_text = "Enter a Range (a max, or min, max) above first — Clamp keeps the value inside it."
+		_attr_clamp_check.tooltip_text = "Enter a Range (a max, or min, max) above first - Clamp keeps the value inside it."
 
 
 ## Rebuilds the live preview to show the actual drawer widget (display-only) at a representative value.
@@ -1455,7 +1455,7 @@ func _refresh_name_warning() -> void:
 		_name_warning.visible = false
 	else:
 		_name_warning.visible = true
-		_name_warning.text = "⚠ \"%s\" shadows a %s member — rename to avoid a clash." % [_name_edit.text.strip_edges(), owner]
+		_name_warning.text = "⚠ \"%s\" shadows a %s member - rename to avoid a clash." % [_name_edit.text.strip_edges(), owner]
 
 
 func set_enum_provider(provider: Callable) -> void:
@@ -1472,7 +1472,7 @@ func _populate_enum_fill_menu() -> void:
 			continue
 		var members: PackedStringArray = PackedStringArray()
 		for member: Variant in (entry as Dictionary).get("members", []):
-			# Members may carry explicit values ("HURT = 4") — the combo wants names.
+			# Members may carry explicit values ("HURT = 4") - the combo wants names.
 			members.append(str(member).get_slice("=", 0).strip_edges())
 		popup.add_item(str((entry as Dictionary).get("name", "")))
 		popup.set_item_metadata(popup.item_count - 1, ", ".join(members))

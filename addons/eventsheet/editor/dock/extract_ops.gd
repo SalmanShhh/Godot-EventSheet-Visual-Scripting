@@ -17,9 +17,9 @@ func init(dock: Control) -> void:
 
 
 ## Extracts the given actions of an event into a new NAMED, reusable Function (exposed as an ACE) and
-## replaces them with a single Call — turning a pile of statement-level rows into one named CONCEPT (the
-## "create abstraction" gesture). Unlike the old GDScript-only extractor, this works on ANY action —
-## structured ACE actions AND GDScript blocks — and PRESERVES them as rows in the function body (wrapped
+## replaces them with a single Call - turning a pile of statement-level rows into one named CONCEPT (the
+## "create abstraction" gesture). Unlike the old GDScript-only extractor, this works on ANY action -
+## structured ACE actions AND GDScript blocks - and PRESERVES them as rows in the function body (wrapped
 ## in a trigger-less, condition-less event, which the shared event-body compile path emits as plain
 ## statements, structure intact). Static + pure (operates on the passed sheet) so it is headlessly
 ## testable; the dock wraps it in an undoable edit + a name prompt. Returns the new function, or null when
@@ -27,7 +27,7 @@ func init(dock: Control) -> void:
 ##
 ## Scope note: the function compiles to a METHOD on the same class, so it can freely read sheet variables
 ## and host members WITHOUT parameters. It does NOT capture event-LOCAL variables or For-Each iterators
-## (those are trigger/loop-scoped) — extracting actions that depend on them needs params, a later
+## (those are trigger/loop-scoped) - extracting actions that depend on them needs params, a later
 ## refinement. The actions are taken in their original event order, so a non-contiguous selection still
 ## extracts deterministically (consolidated where the first one was).
 static func extract_actions_to_function(sheet: EventSheetResource, event: EventRow, actions_to_extract: Array, raw_name: String) -> EventFunction:
@@ -53,10 +53,10 @@ static func extract_actions_to_function(sheet: EventSheetResource, event: EventR
 	function.expose_as_ace = true
 	function.ace_display_name = display_name if not display_name.is_empty() else function_name.capitalize()
 	function.ace_category = "Functions"
-	function.description = "Extracted from an event — reusable as an ACE."
+	function.description = "Extracted from an event - reusable as an ACE."
 	# Function body: one trigger-less, condition-less event holding the extracted actions in order. A
 	# condition-less event emits its actions directly (no `if` wrapper), so structured AND raw actions
-	# both survive — and the function renders showing those same rows.
+	# both survive - and the function renders showing those same rows.
 	var body_event: EventRow = EventRow.new()
 	var body_actions: Array[Resource] = []
 	for action: Variant in ordered:
@@ -77,7 +77,7 @@ static func extract_actions_to_function(sheet: EventSheetResource, event: EventR
 
 
 ## The first event-SCOPED identifier (an event-local variable or a For-Each iterator name) referenced by
-## the given actions, or "" if none. An extracted function is a SEPARATE method, so it can't see these —
+## the given actions, or "" if none. An extracted function is a SEPARATE method, so it can't see these -
 ## extracting an action that uses one would emit a script that won't parse. The dock refuses with this
 ## name (a clear message) instead of silently producing a broken .gd. Whole-word match so "speed" doesn't
 ## trip on "speedometer". Scans GDScript blocks, ACE param/template text, and a Match action's subject.
@@ -110,7 +110,7 @@ static func _scope_capture_offender(event: EventRow, actions: Array) -> String:
 
 ## Right-click action: extract the event's actions into a NAMED reusable Function (the "create
 ## abstraction" gesture). Reachable from an action's menu or the event row menu. Extracts ALL of the
-## event's actions — turning this event's "do" into one named verb — then prompts for a name and runs the
+## event's actions - turning this event's "do" into one named verb - then prompts for a name and runs the
 ## edit undoably. (A future refinement can honour a partial action selection.)
 func extract_to_function_requested() -> void:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):
@@ -124,7 +124,7 @@ func extract_to_function_requested() -> void:
 	# Refuse (with the offending name) rather than silently emit a script that won't parse.
 	var captured: String = _scope_capture_offender(event, to_extract)
 	if not captured.is_empty():
-		_dock._set_status("Can't extract: these actions use \"%s\", which lives in this event's scope (a local variable or loop iterator) — a function can't see it. Move it to a sheet variable first, then extract." % captured, true)
+		_dock._set_status("Can't extract: these actions use \"%s\", which lives in this event's scope (a local variable or loop iterator) - a function can't see it. Move it to a sheet variable first, then extract." % captured, true)
 		return
 	prompt_extract_function_name(func(entered_name: String) -> void:
 		var changed: bool = _dock._perform_undoable_sheet_edit("Extract to Function", func() -> bool:
@@ -132,7 +132,7 @@ func extract_to_function_requested() -> void:
 		)
 		if changed:
 			_dock._refresh_functions_list()
-			_dock._mark_dirty("Extracted %d action(s) into a reusable Function — now callable as an ACE (Functions)." % to_extract.size())
+			_dock._mark_dirty("Extracted %d action(s) into a reusable Function - now callable as an ACE (Functions)." % to_extract.size())
 	)
 
 

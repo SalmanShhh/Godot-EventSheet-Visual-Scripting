@@ -1,4 +1,4 @@
-# Godot EventSheets — ACE deprecation (the compatibility covenant).
+# Godot EventSheets - ACE deprecation (the compatibility covenant).
 #
 # A deprecated ACE keeps compiling so existing sheets never break, but it's hidden from the picker (can't be
 # added anew), flagged on hover with its replacement, and warned about at compile time. This pins the whole
@@ -12,7 +12,7 @@ extends RefCounted
 static func run() -> bool:
 	var all_passed: bool = true
 
-	# 1. Data model — .deprecated() chains and sets the fields; deprecation_note() reads cleanly.
+	# 1. Data model - .deprecated() chains and sets the fields; deprecation_note() reads cleanly.
 	var descriptor: ACEDescriptor = ACEDescriptor.new()
 	var returned: ACEDescriptor = descriptor.deprecated("Move Toward is smoother.", "Core::MoveToward")
 	all_passed = _check(".deprecated() returns self (chainable)", returned == descriptor, true) and all_passed
@@ -23,13 +23,13 @@ static func run() -> bool:
 	all_passed = _check("a non-deprecated descriptor has an empty note",
 		ACEDescriptor.new().deprecation_note(), "") and all_passed
 
-	# 2. Adapter — deprecation flows into ACEDefinition.metadata (the picker + hover input).
+	# 2. Adapter - deprecation flows into ACEDefinition.metadata (the picker + hover input).
 	var definition: ACEDefinition = EventSheetACEAdapter.from_eventforge_descriptor(descriptor)
 	all_passed = _check("adapter carries the deprecated flag", bool(definition.metadata.get("deprecated", false)), true) and all_passed
 	all_passed = _check("adapter carries the deprecation note",
 		str(definition.metadata.get("deprecation_note", "")).begins_with("(Deprecated)"), true) and all_passed
 
-	# 3. Generator — a custom addon's @ace_deprecated override sets the same metadata.
+	# 3. Generator - a custom addon's @ace_deprecated override sets the same metadata.
 	var custom: ACEDefinition = ACEDefinition.new()
 	EventSheetACEGenerator._apply_deprecation_metadata(custom, {"deprecated": true, "deprecation_message": "Use knock_back() instead."})
 	all_passed = _check("generator marks a custom ACE deprecated", bool(custom.metadata.get("deprecated", false)), true) and all_passed

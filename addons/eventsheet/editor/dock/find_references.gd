@@ -1,4 +1,4 @@
-# EventSheet — symbol-aware Find References / Go-to-Definition.
+# EventSheet - symbol-aware Find References / Go-to-Definition.
 #
 # Project Find matches substrings; this matches whole symbols (\bname\b), so searching
 # `speed` finds the variable `speed` but NOT `move_speed` or the word "speed" mid-identifier.

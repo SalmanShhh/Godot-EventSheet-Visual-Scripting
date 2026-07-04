@@ -1,4 +1,4 @@
-# EventForge — LocalVariable resource
+# EventForge - LocalVariable resource
 # Describes a scoped local variable declaration.
 @tool
 class_name LocalVariable
@@ -17,18 +17,18 @@ extends Resource
 ## `@export_flags("A", "B")`) for inspector-tuned scripts. When set it replaces the plain `@export `
 ## prefix on emit, so an opened `.gd`'s hinted exports round-trip byte-identically. Empty = none.
 @export var export_hint: String = ""
-## When true, compiles to `@onready var` (deferred init — for node refs like $Path that are not
+## When true, compiles to `@onready var` (deferred init - for node refs like $Path that are not
 ## ready at construction). default_value is emitted VERBATIM as an expression, not a quoted literal.
 @export var onready: bool = false
 ## When true, default_value is a bare GDScript EXPRESSION (e.g. `Vector2.ZERO`, `Color.RED`,
-## `Type.CONST`), not a literal — so it emits verbatim rather than being quoted as a String. Set by
+## `Type.CONST`), not a literal - so it emits verbatim rather than being quoted as a String. Set by
 ## the importer when a source default was written unquoted; keeps such vars first-class rows instead
 ## of stranding them as GDScript blocks. Byte-verify gated.
 @export var expression_default: bool = false
 ## Event-sheet-style "Combo": allowed values for a String variable. When exported, compiles to
 ## @export_enum so the Inspector shows a dropdown; the value picker uses it too.
 @export var options: PackedStringArray = PackedStringArray()
-## Inspector attributes that don't ride the export prefix — currently the Inspector grouping
+## Inspector attributes that don't ride the export prefix - currently the Inspector grouping
 ## ("group"/"subgroup", compiling to @export_group/@export_subgroup). Kept here so a tree-placed exported
 ## variable round-trips its grouping losslessly (the importer absorbs the group lines onto this dict, and
 ## _emit_tree_variable_line re-emits them) instead of degrading into a stray @export_group GDScript block.

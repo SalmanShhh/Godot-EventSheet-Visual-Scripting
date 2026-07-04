@@ -1,4 +1,4 @@
-# Godot EventSheets — inline colour-swatch picker (Construct-style).
+# Godot EventSheets - inline colour-swatch picker (Construct-style).
 #
 # Clicking the colour swatch drawn on a condition/action cell opens a ColorPicker right there (no dialog)
 # and writes the chosen colour back into the ACE's Color param. This pins the two pieces of logic the

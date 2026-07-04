@@ -4,7 +4,7 @@ extends RefCounted
 # The dock's right-click context menus: the static condition/action/variable/empty-space PopupMenus
 # built once, plus the row menu (rebuilt per right-click to show only what applies to the clicked
 # row type + selection) and its Insert ▸ / More ▸ submenus. Construction + per-click configuration
-# only — every menu item targets a dock handler that STAYS on the dock (the _on_*_context_menu_id_pressed
+# only - every menu item targets a dock handler that STAYS on the dock (the _on_*_context_menu_id_pressed
 # dispatchers and the per-item actions), reached through the `_dock` back-reference, the same pattern as
 # the other dock/ helpers. The seven PopupMenu members the dock + 20+ tests read later
 # (_condition_context_menu / _action_context_menu / _row_context_menu / _row_insert_submenu /
@@ -57,7 +57,7 @@ func build_all() -> void:
 	_dock.add_child(_dock._action_context_menu)
 
 	# The row menu is rebuilt per right-click (_build_row_context_menu) showing only
-	# what applies to the clicked row type + selection — it used to be a flat ~30-item
+	# what applies to the clicked row type + selection - it used to be a flat ~30-item
 	# list shown for everything. Insert/More are submenus, built the same way.
 	_dock._row_context_menu = PopupMenu.new()
 	_dock._row_context_menu.add_theme_font_size_override("font_size", 14)
@@ -87,7 +87,7 @@ func build_all() -> void:
 	_dock._empty_space_context_menu.add_item("New Condition", _dock.EMPTY_MENU_NEW_CONDITION)
 	_dock._empty_space_context_menu.add_item("Add New Variable", _dock.EMPTY_MENU_ADD_VARIABLE)
 	_dock._empty_space_context_menu.add_separator()
-	# Inserting a saved snippet is "add to the sheet" — it belongs on the canvas menu,
+	# Inserting a saved snippet is "add to the sheet" - it belongs on the canvas menu,
 	# not buried in a row's More submenu.
 	_dock._empty_space_context_menu.add_item("Insert Snippet…", _dock.EMPTY_MENU_INSERT_SNIPPET)
 	_dock._empty_space_context_menu.id_pressed.connect(_dock._on_empty_space_context_menu_id_pressed)
@@ -96,7 +96,7 @@ func build_all() -> void:
 
 ## Rebuilds the row context menu for the clicked row: only the items that apply to its
 ## type (event / group / comment) at the top, universal clipboard/lifecycle next, and
-## the rest folded into Insert ▸ / More ▸ submenus — replacing the old flat ~30-item
+## the rest folded into Insert ▸ / More ▸ submenus - replacing the old flat ~30-item
 ## list shown for every row regardless of type.
 func _build_row_context_menu(row_data: EventRowData) -> void:
 	var menu: PopupMenu = _dock._row_context_menu
@@ -121,12 +121,12 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_item("Edit Comment…", _dock.ROW_MENU_EDIT_COMMENT)
 		menu.add_item("Attach To Event Above", _dock.ROW_MENU_ATTACH_COMMENT)
 	else:
-		# SECTION / unknown rows get only the universal items — no leading separator.
+		# SECTION / unknown rows get only the universal items - no leading separator.
 		added_type_items = false
 	if added_type_items:
 		menu.add_separator()
 	# Universal clipboard + lifecycle (Disable/Duplicate act on the selection, or the
-	# clicked row when nothing is selected — _top_level_selected_resources).
+	# clicked row when nothing is selected - _top_level_selected_resources).
 	menu.add_item("Copy", _dock.ROW_MENU_COPY)
 	menu.add_item("Paste", _dock.ROW_MENU_PASTE)
 	menu.add_item("Duplicate Selection" if multi else "Duplicate", _dock.ROW_MENU_BULK_DUPLICATE)
@@ -148,7 +148,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	menu.add_item("Delete", _dock.ROW_MENU_DELETE)
 
 
-## The Insert ▸ submenu — insert a sibling row of any type below the clicked one.
+## The Insert ▸ submenu - insert a sibling row of any type below the clicked one.
 func _build_row_insert_submenu() -> void:
 	var m: PopupMenu = _dock._row_insert_submenu
 	m.clear()
@@ -165,7 +165,7 @@ func _build_row_insert_submenu() -> void:
 	m.add_item("Enum", _dock.ROW_MENU_ADD_ENUM)
 
 
-## The More ▸ submenu — advanced authoring (events only) + navigation + snippets.
+## The More ▸ submenu - advanced authoring (events only) + navigation + snippets.
 func _build_row_more_submenu(is_event: bool) -> void:
 	var m: PopupMenu = _dock._row_more_submenu
 	m.clear()
@@ -203,12 +203,12 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 	if menu == _dock._condition_context_menu:
 		var invert_index: int = menu.get_item_index(_dock.CONDITION_MENU_INVERT)
 		if invert_index >= 0:
-			# A trigger ("On X" event header) can't be inverted — there's no "not On X", and the compiler
+			# A trigger ("On X" event header) can't be inverted - there's no "not On X", and the compiler
 			# never reads trigger.negated, so it would have silently no-op'd. Only regular conditions
 			# invert (compiled as `not (…)`). Disable the item + explain when the user right-clicked a trigger.
 			var inverting_trigger: bool = str(_dock._context_hit.get("span_metadata", {}).get("kind", "")) == "trigger"
 			menu.set_item_disabled(invert_index, inverting_trigger)
-			menu.set_item_tooltip(invert_index, "Triggers can't be inverted — there's no \"not On X\"." if inverting_trigger else "")
+			menu.set_item_tooltip(invert_index, "Triggers can't be inverted - there's no \"not On X\"." if inverting_trigger else "")
 			menu.set_item_text(invert_index, "Remove Inversion" if _dock._context_condition_is_negated() else "Invert Condition")
 		var condition_toggle_index: int = menu.get_item_index(_dock.CONDITION_MENU_TOGGLE_ENABLED)
 		if condition_toggle_index >= 0:

@@ -1,4 +1,4 @@
-# Extract to Function — the "create abstraction" gesture: turn a pile of statement-level action rows into
+# Extract to Function - the "create abstraction" gesture: turn a pile of statement-level action rows into
 # one NAMED, reusable function (exposed as an ACE), replacing them with a single Call. Unlike the old
 # GDScript-only extractor, this works on STRUCTURED ACE actions too and preserves them as rows in the
 # function body. Tests the pure static core headlessly.
@@ -15,7 +15,7 @@ static func run() -> bool:
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = "Core"
 	event.trigger_id = "OnReady"
-	# A STRUCTURED ACE action + a GDScript block — both must be extracted + preserved (the upgrade).
+	# A STRUCTURED ACE action + a GDScript block - both must be extracted + preserved (the upgrade).
 	var ace_action: ACEAction = ACEAction.new()
 	ace_action.provider_id = "Core"
 	ace_action.ace_id = "QueueFree"

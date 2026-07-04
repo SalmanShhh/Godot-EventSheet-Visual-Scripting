@@ -1,7 +1,7 @@
-# EventForge — Test runner entrypoint
+# EventForge - Test runner entrypoint
 # AUTO-DISCOVERS every test in tests/: any script there with `static func run() -> bool` is loaded and
 # run, so adding a test is just dropping a file (no registration here). Teardown-style tests (they
-# mutate shared state — remove generated files, toggle the plugin) are forced to run LAST so they
+# mutate shared state - remove generated files, toggle the plugin) are forced to run LAST so they
 # cannot disturb earlier tests. Runs in headless Godot and exits with a status code.
 @tool
 class_name EventForgeTestRunner

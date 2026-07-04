@@ -1,4 +1,4 @@
-# Godot EventSheets — the addon-author loop (dock subsystem)
+# Godot EventSheets - the addon-author loop (dock subsystem)
 #
 # Extracted from EventSheetDock (decomposition arc, step 2): the Publish Preview
 # window, the generated pack README, and the Test Bench. Surface collection and the
@@ -77,14 +77,14 @@ var _publish_preview_window: Window = null
 var _publish_preview_text: RichTextLabel = null
 
 
-## Shows what THIS sheet publishes — refreshed from the live model on every open, so
+## Shows what THIS sheet publishes - refreshed from the live model on every open, so
 ## renaming a function updates the surface immediately (no compile-and-reopen loop).
 func open_publish_preview() -> void:
 	if _dock._current_sheet == null:
 		return
 	if _publish_preview_window == null:
 		_publish_preview_window = Window.new()
-		_publish_preview_window.title = "Publish Preview — what other sheets will see"
+		_publish_preview_window.title = "Publish Preview - what other sheets will see"
 		_publish_preview_window.size = Vector2i(440, 460)
 		_publish_preview_window.close_requested.connect(func() -> void: _publish_preview_window.hide())
 		_publish_preview_text = RichTextLabel.new()
@@ -119,11 +119,11 @@ static func publish_surface_text(surface: Dictionary) -> String:
 				line = "  • %s: %s = %s" % [str(entry.get("name")), str(entry.get("type")), str(entry.get("default"))]
 			sections.append(line)
 	if sections.is_empty():
-		return "Nothing published yet — expose a function as an ACE, or annotate a signal with @ace_trigger."
+		return "Nothing published yet - expose a function as an ACE, or annotate a signal with @ace_trigger."
 	return "\n".join(sections)
 
 
-## Markdown sections for a publish surface — shared by the pack README and the project
+## Markdown sections for a publish surface - shared by the pack README and the project
 ## vocabulary doc (EventSheetVocabularyDoc). `heading` sets the section level so callers
 ## can nest the sections under their own headings.
 static func surface_markdown(surface: Dictionary, heading: String = "##") -> PackedStringArray:
@@ -150,7 +150,7 @@ static func surface_markdown(surface: Dictionary, heading: String = "##") -> Pac
 
 
 ## The pack README: name/tags/host, properties with attributes, the full ACE surface,
-## and composition dependencies — generated so shared packs are documented by default.
+## and composition dependencies - generated so shared packs are documented by default.
 static func generate_pack_readme(sheet: EventSheetResource) -> String:
 	var surface: Dictionary = collect_publish_surface(sheet)
 	var lines: PackedStringArray = PackedStringArray()
@@ -181,15 +181,15 @@ static func generate_pack_readme(sheet: EventSheetResource) -> String:
 ## One-click behavior attach: compiles the sheet's pair fresh, then parents a Node
 ## named after the sheet's class with the generated script under the host (owner set
 ## so the scene serializes it). A host-class mismatch warns in the message but still
-## attaches — _get_configuration_warnings already surfaces it in-scene, and blocking
+## attaches - _get_configuration_warnings already surfaces it in-scene, and blocking
 ## would just re-route through the same manual steps. Returns {ok, message}.
 static func attach_behavior(sheet: EventSheetResource, host: Node) -> Dictionary:
 	if sheet == null or not sheet.behavior_mode:
-		return {"ok": false, "message": "Attach to Node works on behavior sheets — set the Sheet Type first."}
+		return {"ok": false, "message": "Attach to Node works on behavior sheets - set the Sheet Type first."}
 	if host == null:
 		return {"ok": false, "message": "Select a node in the Scene dock first."}
 	if sheet.resource_path.is_empty():
-		return {"ok": false, "message": "Save the sheet first — the behavior attaches by its compiled script."}
+		return {"ok": false, "message": "Save the sheet first - the behavior attaches by its compiled script."}
 	var compile_result: Dictionary = SheetCompiler.compile(sheet, "")
 	if not bool(compile_result.get("success", false)):
 		return {"ok": false, "message": "The sheet doesn't compile: %s" % str(compile_result.get("errors"))}
@@ -201,16 +201,16 @@ static func attach_behavior(sheet: EventSheetResource, host: Node) -> Dictionary
 	behavior.owner = host.owner if host.owner != null else host
 	var message: String = "Attached %s under %s." % [behavior.name, host.name]
 	if ClassDB.class_exists(sheet.host_class) and not host.is_class(sheet.host_class):
-		message += " Note: this behavior expects a %s host — it will warn in the scene." % sheet.host_class
+		message += " Note: this behavior expects a %s host - it will warn in the scene." % sheet.host_class
 	return {"ok": true, "message": message}
 
 
 ## Test Bench: one click builds host + behavior scene from the CURRENT sheet and runs
-## it — verify a behavior without hand-building a scene. The scene builder is the
+## it - verify a behavior without hand-building a scene. The scene builder is the
 ## testable core; running needs the editor.
 func open_test_bench() -> void:
 	if _dock._current_sheet == null or not _dock._current_sheet.behavior_mode:
-		_dock._set_status("Test Bench drives behavior sheets — set the type to Behavior first.", true)
+		_dock._set_status("Test Bench drives behavior sheets - set the type to Behavior first.", true)
 		return
 	var bench_error: String = build_test_bench(_dock._current_sheet, "res://.eventsheets_test_bench.tscn")
 	if not bench_error.is_empty():
@@ -218,7 +218,7 @@ func open_test_bench() -> void:
 		return
 	if Engine.is_editor_hint() and _dock.is_inside_tree():
 		EditorInterface.play_custom_scene("res://.eventsheets_test_bench.tscn")
-		_dock._set_status("Test Bench running — Live Values shows the behavior's variables if enabled.")
+		_dock._set_status("Test Bench running - Live Values shows the behavior's variables if enabled.")
 
 
 ## Builds + saves the bench scene (host of host_class + the compiled behavior child).

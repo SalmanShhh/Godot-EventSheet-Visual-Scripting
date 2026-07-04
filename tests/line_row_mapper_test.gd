@@ -1,4 +1,4 @@
-# EventForge — the generated-line ↔ sheet-row mapper. Compiles a real sheet and pins: entries_for_line
+# EventForge - the generated-line ↔ sheet-row mapper. Compiles a real sheet and pins: entries_for_line
 # returns containing ranges MOST SPECIFIC FIRST (nested event beats its enclosing function range),
 # resource_for_line resolves the live emitting resource (and skips freed ones by walking outward),
 # range_for_resource round-trips a row to the exact lines its code occupies (verified against the
@@ -83,7 +83,7 @@ static func run() -> bool:
 		var row_data: EventRowData = view.get_flat_rows()[index].get("row")
 		if row_data != null and row_data.source_resource == seed_event:
 			view._select_row(index)
-	dock._ghost_row._refresh("heal 25")  # a provider-instance ACE — its apply bakes the real template
+	dock._ghost_row._refresh("heal 25")  # a provider-instance ACE - its apply bakes the real template
 	dock._ghost_row._apply_selected()
 	var provider_event: EventRow = null
 	for row: Variant in dock.get_current_sheet().events:

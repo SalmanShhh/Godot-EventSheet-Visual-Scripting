@@ -1,4 +1,4 @@
-# EventForge — Behavior foundations: host accessor + real signal-trigger codegen
+# EventForge - Behavior foundations: host accessor + real signal-trigger codegen
 #
 # Two unlocks for eventsheet-authored Behaviors:
 # 1. behavior_mode sheets compile to attachable Node components with a typed `host`

@@ -44,11 +44,11 @@ func format_event_target_label(event_row: EventRow) -> String:
 		return "(invalid event)"
 	var label: String = "Event %s" % event_row.event_uid
 	if not event_row.comment.is_empty():
-		label += " — %s" % event_row.comment
+		label += " - %s" % event_row.comment
 	elif not event_row.trigger_id.is_empty():
-		label += " — %s" % event_row.trigger_id
+		label += " - %s" % event_row.trigger_id
 	elif event_row.trigger != null and not event_row.trigger.ace_id.is_empty():
-		label += " — %s" % event_row.trigger.ace_id
+		label += " - %s" % event_row.trigger.ace_id
 	return label
 
 

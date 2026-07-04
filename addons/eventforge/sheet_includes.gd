@@ -1,11 +1,11 @@
-# Godot EventSheets — include management helpers.
+# Godot EventSheets - include management helpers.
 #
 # The compiler already MERGES included sheets (see sheet_compiler._merge_includes). These
 # helpers make includes usable from the editor:
 #  - summarize(): what an included sheet contributes (events/functions/variables) for an
 #    include-manager preview.
 #  - extract_to_include(): move selected rows out into a new library sheet and wire the
-#    source to include it — turning copy-paste into modularization in one action.
+#    source to include it - turning copy-paste into modularization in one action.
 @tool
 class_name EventSheetIncludes
 extends RefCounted
@@ -63,7 +63,7 @@ static func would_create_cycle(sheet_path: String, candidate: String, visited: D
 ## Moves `rows` out of `source` into a NEW library EventSheetResource and adds `new_path` to
 ## source.includes. Returns {library, error}. The caller saves the library .tres at new_path
 ## and applies the source change undoably. Rows are MOVED (identity/uids preserved), so the
-## merged result is byte-for-byte what the source had — just relocated.
+## merged result is byte-for-byte what the source had - just relocated.
 static func extract_to_include(source: EventSheetResource, rows: Array, new_path: String) -> Dictionary:
 	if source == null:
 		return {"library": null, "error": "no source sheet"}
@@ -86,7 +86,7 @@ static func extract_to_include(source: EventSheetResource, rows: Array, new_path
 	return {"library": library, "error": ""}
 
 
-## Resolves the sheet's includes (transitively) into what each contributes — the backbone of
+## Resolves the sheet's includes (transitively) into what each contributes - the backbone of
 ## include PROVENANCE in the editor: [{include, class, events: [Resource…], functions: [name…],
 ## variables: [name…]}]. The events are the actual rows from the included sheet; the editor
 ## renders them READ-ONLY (with jump-to-source), so a merged sheet reads as one whole.

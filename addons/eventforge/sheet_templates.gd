@@ -1,10 +1,10 @@
-# Godot EventSheets — project-local sheet templates
+# Godot EventSheets - project-local sheet templates
 #
 # Zero-config, same convention as eventsheet_addons/: drop a sheet .tres into
 # res://eventsheet_templates/ (override with eventsheets/project/templates_dir) and it
 # joins the dock's New… menu under "Project templates". Teams encode THEIR starting
 # points (a boss-fight skeleton, the studio's autoload layout) once and every new
-# sheet starts there — the dock's "Save as Template" writes the current sheet in.
+# sheet starts there - the dock's "Save as Template" writes the current sheet in.
 #
 # Templates are blueprints, not live game code: the Project Doctor and the vocabulary
 # doc skip them (non_template_sheets / is_template_path).
@@ -48,7 +48,7 @@ static func list_templates() -> PackedStringArray:
 	return templates
 
 
-## A deep, path-less copy of a template — adopting it can never mutate the template
+## A deep, path-less copy of a template - adopting it can never mutate the template
 ## (shared sub-resources would otherwise leak edits back into the blueprint).
 static func load_copy(template_path: String) -> EventSheetResource:
 	var template: EventSheetResource = ResourceLoader.load(template_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
@@ -58,7 +58,7 @@ static func load_copy(template_path: String) -> EventSheetResource:
 
 
 ## Filter for project-health consumers (doctor, vocabulary doc): everything except
-## templates — blueprints have no generated output, no scene, no live vocabulary.
+## templates - blueprints have no generated output, no scene, no live vocabulary.
 static func non_template_sheets(sheet_paths: PackedStringArray) -> PackedStringArray:
 	var live: PackedStringArray = PackedStringArray()
 	for sheet_path: String in sheet_paths:

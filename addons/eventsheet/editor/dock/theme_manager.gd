@@ -3,8 +3,8 @@ class_name EventSheetThemeManager
 extends RefCounted
 # Owns loading / applying / picking the editor theme style + the theme file dialog + theme editor +
 # the live-reload binding to the active `.tres`. This helper owns:
-#   • the theme service methods — use_default_theme / load_theme_style_from_path / reload_active_theme
-#     (persist the chosen EventSheetEditorStyle on the sheet, out of undo history — presentation, not
+#   • the theme service methods - use_default_theme / load_theme_style_from_path / reload_active_theme
+#     (persist the chosen EventSheetEditorStyle on the sheet, out of undo history - presentation, not
 #     content) and the menu/toolbar handlers that drive them (_on_load_theme_requested,
 #     _on_reload_theme_requested, _on_set_default_theme_requested, _on_theme_preset_selected),
 #   • the theme FILE DIALOG (build_theme_file_dialog / _on_theme_file_selected) that lets a user load
@@ -13,7 +13,7 @@ extends RefCounted
 #     the "Apply To Current Sheet" landing point (also reached by theme_editor_dialog.gd via the dock's
 #     apply_theme_style delegate),
 #   • the toolbar theme PICKER's populate/refresh logic (_populate_theme_picker /
-#     _refresh_theme_picker_selection) — the picker WIDGET itself stays declared on the dock,
+#     _refresh_theme_picker_selection) - the picker WIDGET itself stays declared on the dock,
 #   • the LIVE-RELOAD binding to the active style: _active_theme_style + _sync_active_theme_binding
 #     (connect/disconnect/swap the style's `changed` signal on tab-switch) + _on_active_theme_style_changed
 #     (the handler that repaints when the active `.tres` is edited on disk). The state var and BOTH
@@ -25,7 +25,7 @@ extends RefCounted
 #   • the theme picker WIDGET `_theme_picker` (an OptionButton built by menu_bar.gd, which assigns it
 #     back onto the dock and connects `_dock._on_theme_preset_selected`); this helper populates it via
 #     `_dock._theme_picker`,
-#   • `_refresh_title_strip` (the title/identity hub — not theme; apply_theme_style pulls it via _dock),
+#   • `_refresh_title_strip` (the title/identity hub - not theme; apply_theme_style pulls it via _dock),
 #   • the active-tab state (`_current_sheet` / `_current_sheet_path`), `_viewport`,
 #   • the mutation funnel (`_perform_undoable_sheet_edit` / `_mark_dirty` / `_set_status` /
 #     `_refresh_after_edit`) + `_suggest_sheet_directory`.
@@ -33,11 +33,11 @@ extends RefCounted
 # EventSheetThemeEditor) are unchanged.
 #
 # The dock keeps thin one-line delegates (original names + signatures + returns) for every method
-# reached from outside this helper — the in-file call sites, the tests (dock.load_theme_style_from_path
+# reached from outside this helper - the in-file call sites, the tests (dock.load_theme_style_from_path
 # / dock.reload_active_theme / dock.use_default_theme), menu_bar.gd (_on_load_theme_requested /
 # _on_reload_theme_requested / _open_theme_editor / _on_theme_preset_selected / _populate_theme_picker),
 # and theme_editor_dialog.gd (which does `_dock.has_method("apply_theme_style")` +
-# `_dock.call("apply_theme_style", ...)`) — so those callers resolve unchanged.
+# `_dock.call("apply_theme_style", ...)`) - so those callers resolve unchanged.
 #
 # STATEFUL-SIGNAL / TEARDOWN NOTE: the dock's `_notification(NOTIFICATION_PREDELETE)` stays on the dock
 # but calls `teardown_theme_binding()` here to disconnect the active style's `changed` signal + null the
@@ -45,7 +45,7 @@ extends RefCounted
 #
 # HIDDEN-READER NOTE: the dock's `_apply_editor_native_defaults` (a Godot-feel method that stays on the
 # dock) reads the active style through `get_active_theme_style()` and re-applies via the dock's
-# apply_theme_style delegate — so the field can live here without moving that method.
+# apply_theme_style delegate - so the field can live here without moving that method.
 #
 # CLOSURE NOTE: `apply_theme_style` hands a lambda to `_dock._perform_undoable_sheet_edit(...)` that
 # captures the LOCAL `style` (not a helper/dock member), so it survives verbatim; only the inner
@@ -68,7 +68,7 @@ func init(dock: Control) -> void:
 
 
 ## The dock's Godot-feel path (_apply_editor_native_defaults) reads the active style through this
-## getter to decide whether to derive the "Match Editor" default — the field lives here now.
+## getter to decide whether to derive the "Match Editor" default - the field lives here now.
 func get_active_theme_style() -> EventSheetEditorStyle:
 	return _active_theme_style
 
@@ -94,7 +94,7 @@ func load_theme_style_from_path(path: String) -> bool:
 		_dock._set_status("Theme load failed: %s is not an EventSheetEditorStyle." % resolved_path.get_file(), true)
 		return false
 	# Theme switches stay OUT of the undo history (user call: undo is for sheet
-	# content — ACEs and variables — never presentation). Still marks dirty: the
+	# content - ACEs and variables - never presentation). Still marks dirty: the
 	# style is persisted on the sheet.
 	_dock._current_sheet.editor_style = loaded as EventSheetEditorStyle
 	_dock._refresh_after_edit()
@@ -169,7 +169,7 @@ func _populate_theme_picker() -> void:
 	if _dock._theme_picker == null:
 		return
 	_dock._theme_picker.clear()
-	# The default IS the editor-derived style (see _apply_editor_native_defaults) —
+	# The default IS the editor-derived style (see _apply_editor_native_defaults) -
 	# label it so a Godot dev knows the sheet already matches their editor.
 	_dock._theme_picker.add_item("Match Editor (default)")
 	_dock._theme_picker.set_item_metadata(0, "")

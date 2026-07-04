@@ -1,9 +1,9 @@
-# EventForge — the Param Hop: a keyboard cursor over the selected row's highlighted parameter values.
+# EventForge - the Param Hop: a keyboard cursor over the selected row's highlighted parameter values.
 # Tab already means nest/outdent at row scope (a shipped structural key), so param scope is entered
 # EXPLICITLY: Enter on a row that has values. Inside it Tab/Shift+Tab cycle (wrapping), Enter opens the
 # one-field editor anchored at the value's rect, Esc drops back to row scope, and any selection change
 # or row rebuild clears the cursor (the spans it pointed into are replaced). Rows without values keep
-# their old Enter (inline span edit) — the fallback that stops the two Enters from fighting.
+# their old Enter (inline span edit) - the fallback that stops the two Enters from fighting.
 @tool
 class_name ParamHopTest
 extends RefCounted

@@ -1,4 +1,4 @@
-# EventForge — behaviour/class descriptions. A sheet's class_description compiles to a `##` doc
+# EventForge - behaviour/class descriptions. A sheet's class_description compiles to a `##` doc
 # comment right after `extends` (Godot's class-doc position, so it shows in the Create Node dialog),
 # and the importer recovers it from there. Round-trips byte-identically; absence never false-matches
 # the host-member doc or signal annotations (which a blank line separates from `extends`).

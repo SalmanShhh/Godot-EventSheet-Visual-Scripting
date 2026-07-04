@@ -1,4 +1,4 @@
-# EventSheet — EventSheetExposedNode
+# EventSheet - EventSheetExposedNode
 # A @tool Node that surfaces ACE-driven editor-exposed parameters in the Godot
 # inspector via _get_property_list() / _get() / _set().  This avoids static
 # @export declarations for generated params and makes them feel like native
@@ -16,7 +16,7 @@ extends Node
 ## Emitted whenever a param value is changed through the inspector.
 signal param_changed(provider_id: String, ace_id: String, param_id: String, value: Variant)
 ## Emitted when a SELECTED-ROW param is edited in the inspector (per-row scope). The dock
-## performs the actual undoable write — this node never mutates sheet resources itself.
+## performs the actual undoable write - this node never mutates sheet resources itself.
 signal row_param_changed(target: Resource, param_id: String, value: Variant)
 
 var _registry: EventSheetACERegistry = null

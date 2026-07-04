@@ -1,8 +1,8 @@
-# Godot EventSheets — "Open as Event Sheet" availability (FileSystem + script-editor right-click).
+# Godot EventSheets - "Open as Event Sheet" availability (FileSystem + script-editor right-click).
 #
 # Pins the context-menu DECISION (EventSheetContextMenu.should_offer_open_as_sheet) so the entry point
 # can't silently regress: right-clicking ANY .gd (or an EventSheet .tres) in the FileSystem offers it,
-# non-sheet files don't, and the script editor always offers it. Static-only — never instantiates the
+# non-sheet files don't, and the script editor always offers it. Static-only - never instantiates the
 # editor-glue plugin (which the editor owns).
 @tool
 class_name OpenAsSheetMenuTest

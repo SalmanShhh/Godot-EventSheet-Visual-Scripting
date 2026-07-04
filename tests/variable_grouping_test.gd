@@ -1,8 +1,8 @@
-# EventForge — Discord-style variable folders. Dragging one variable onto another folds both into a
+# EventForge - Discord-style variable folders. Dragging one variable onto another folds both into a
 # shared Inspector group (the SHIPPED @export_group attribute, so folders round-trip like dialog-set
 # groups); a fresh folder opens the naming popup select-all'd; renaming applies to every member; an
 # empty name dissolves the folder. Grouped globals sort adjacent so the bubble outline can wrap the
-# run as one visual unit — variable_group_runs is the (pure) geometry the bubble draw uses. All edits
+# run as one visual unit - variable_group_runs is the (pure) geometry the bubble draw uses. All edits
 # ride the undo funnel, whose commit REPLACES resources: every assertion re-reads the LIVE sheet.
 @tool
 class_name VariableGroupingTest

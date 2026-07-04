@@ -1,12 +1,12 @@
-# Godot EventSheets — rebindable authoring shortcuts
+# Godot EventSheets - rebindable authoring shortcuts
 #
 # Godot devs expect editor keys to be rebindable. The Editor-Settings shortcut dialog isn't exposed
 # to GDScript plugins, so this is the plugin's own remap layer: every authoring/editing shortcut
-# reads its binding from a PER-USER file (user://eventforge_shortcuts.cfg) — local to each developer,
-# never committed to git — with DEFAULTS as the fallback. Bindings are "Ctrl+S" / "Q" / "Ctrl+Shift+S"
+# reads its binding from a PER-USER file (user://eventforge_shortcuts.cfg) - local to each developer,
+# never committed to git - with DEFAULTS as the fallback. Bindings are "Ctrl+S" / "Q" / "Ctrl+Shift+S"
 # (modifiers + one key name). Matching is EXACT on modifiers, so a chord never shadows its plain form
 # (Ctrl+Shift+C ≠ Ctrl+C ≠ C). Structural keys (Tab nesting, Delete, Enter/F2 inline edit, Escape)
-# stay fixed — they're grammar, not preference. Tools ▸ Keyboard Shortcuts is the editor for these.
+# stay fixed - they're grammar, not preference. Tools ▸ Keyboard Shortcuts is the editor for these.
 @tool
 class_name EventSheetShortcuts
 extends RefCounted
@@ -78,7 +78,7 @@ const ORDER: Array = [
 static func label_for(action: String) -> String:
 	return str(LABELS.get(action, action.capitalize()))
 
-# Per-user overrides cached in memory — the key handler probes ~18 actions per keystroke, so binding
+# Per-user overrides cached in memory - the key handler probes ~18 actions per keystroke, so binding
 # lookups must never touch disk. Loaded once; writes update the cache and the file together.
 static var _overrides: Dictionary = {}
 static var _overrides_loaded: bool = false
@@ -88,7 +88,7 @@ static func _load_overrides() -> void:
 	if _overrides_loaded:
 		return
 	_overrides_loaded = true
-	# Outside the editor (compile / headless tests) there's no UI to remap from, so skip the file —
+	# Outside the editor (compile / headless tests) there's no UI to remap from, so skip the file -
 	# matching falls back to DEFAULTS and the test suite stays side-effect-free.
 	if not Engine.is_editor_hint():
 		return

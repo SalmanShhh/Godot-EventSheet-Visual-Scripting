@@ -1,4 +1,4 @@
-# EventForge — VariableRowFormat format_summary tests
+# EventForge - VariableRowFormat format_summary tests
 # Validates that format_summary produces correct display strings for all common types.
 @tool
 class_name VariableRowFormatTest

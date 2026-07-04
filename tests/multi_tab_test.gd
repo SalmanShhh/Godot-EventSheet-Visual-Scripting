@@ -1,4 +1,4 @@
-# EventForge — Multiple EventSheet tabs
+# EventForge - Multiple EventSheet tabs
 #
 # Drives the dock's tab API: opening sheets adds/activates tabs, re-opening the same sheet
 # reuses its tab, per-tab dirty state is independent, and closing activates a neighbour.

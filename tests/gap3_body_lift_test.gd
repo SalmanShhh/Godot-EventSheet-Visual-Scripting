@@ -1,4 +1,4 @@
-# Godot EventSheets — gap #3: opening a .gd de-codes function/event BODIES into structured ACE rows.
+# Godot EventSheets - gap #3: opening a .gd de-codes function/event BODIES into structured ACE rows.
 #
 # When you open a .gd as a sheet, _lift_sheet_function / _lift_function reverse-parse each body with
 # the same grammar event bodies use: if/elif/else become conditioned (sub-)events and template-
@@ -15,7 +15,7 @@ const PACK := "res://eventsheet_addons/platformer_movement/platformer_movement_b
 static func run() -> bool:
 	var all_passed: bool = true
 	if not FileAccess.file_exists(PACK):
-		print("[PASS] gap3_body_lift_test: pack fixture missing — skipped")
+		print("[PASS] gap3_body_lift_test: pack fixture missing - skipped")
 		return true
 	var source: String = FileAccess.get_file_as_string(PACK)
 	var sheet: EventSheetResource = GDScriptImporter.new().import_external(PACK)
@@ -30,7 +30,7 @@ static func run() -> bool:
 	print("[gap3] structured ACE actions=%d, in-flow code rows=%d" % [int(counts["ace"]), int(counts["raw"])])
 	# The body-lift produces real structured rows, not just code cells.
 	all_passed = _check("function/event bodies de-code into ACE action rows", int(counts["ace"]) > 0, true) and all_passed
-	# And the lossless contract holds — the de-coded sheet reproduces its source byte-for-byte.
+	# And the lossless contract holds - the de-coded sheet reproduces its source byte-for-byte.
 	var roundtrip: String = str(SheetCompiler.compile(sheet, "user://__gap3_verify.gd").get("output", ""))
 	all_passed = _check("body-de-coded sheet round-trips byte-identically", roundtrip, source) and all_passed
 	if FileAccess.file_exists("user://__gap3_verify.gd"):

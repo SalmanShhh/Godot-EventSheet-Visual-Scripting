@@ -1,9 +1,9 @@
-# Godot EventSheets — BBCode in cells/tooltips + removal of the scope pill.
+# Godot EventSheets - BBCode in cells/tooltips + removal of the scope pill.
 #
 # R4: a condition/action cell whose display text carries BBCode-lite ([b]/[i]/[color]) draws styled, with the
 # STRIPPED text driving layout (so the colour swatch + width align); plain text with stray brackets is left
 # alone. A hover description with markup gets a rich (BBCode) tooltip; plain text uses the default.
-# R3: variable rows no longer show a scope pill ("local"/"global") — it confused users.
+# R3: variable rows no longer show a scope pill ("local"/"global") - it confused users.
 @tool
 class_name BBCodeAndPillTest
 extends RefCounted
@@ -13,7 +13,7 @@ static func run() -> bool:
 	var all_passed: bool = true
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 
-	# R4 — when the AUTHOR's display template carried markup (the one-shot flag is set), the cell renders
+	# R4 - when the AUTHOR's display template carried markup (the one-shot flag is set), the cell renders
 	# styled, with the stripped text driving layout.
 	viewport._pending_display_bbcode = true
 	var styled: SemanticSpan = viewport._make_span("[b]Destroy[/b] [color=red]enemy[/color]", SemanticSpan.SpanType.VALUE, {"kind": "condition"})
@@ -22,20 +22,20 @@ static func run() -> bool:
 		styled.metadata.get("bbcode_segments") is Array and (styled.metadata["bbcode_segments"] as Array).size() >= 2, true) and all_passed
 
 	# R4 FIX (review): a USER param value/note containing literal BBCode, in a PLAIN-template cell (flag
-	# clear), is drawn LITERALLY — never stripped or styled. This is the footgun the adversarial review caught
+	# clear), is drawn LITERALLY - never stripped or styled. This is the footgun the adversarial review caught
 	# (e.g. a "Set RichTextLabel text to [b]Hi[/b]" action whose text is the user's own BBCode).
 	viewport._pending_display_bbcode = false
 	var user_value: SemanticSpan = viewport._make_span("Set label to [b]Hi[/b]", SemanticSpan.SpanType.VALUE, {"kind": "action"})
 	all_passed = _check("a user value with literal BBCode is left intact (plain template)", user_value.text, "Set label to [b]Hi[/b]") and all_passed
 	all_passed = _check("a plain-template cell has no bbcode segments", user_value.metadata.has("bbcode_segments"), false) and all_passed
 
-	# R4 — hover tooltip: a custom rich widget only when the description has markup.
+	# R4 - hover tooltip: a custom rich widget only when the description has markup.
 	all_passed = _check("a BBCode description yields a custom tooltip widget",
 		viewport._make_custom_tooltip("[b]Bold[/b] help") != null, true) and all_passed
 	all_passed = _check("a plain description uses the default tooltip (null)",
 		viewport._make_custom_tooltip("just plain help") == null, true) and all_passed
 
-	# R3 — no variable row shows a scope pill anymore.
+	# R3 - no variable row shows a scope pill anymore.
 	var event: EventRow = EventRow.new()
 	var local_var: LocalVariable = LocalVariable.new()
 	local_var.name = "combo"

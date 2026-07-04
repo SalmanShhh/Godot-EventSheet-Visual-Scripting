@@ -2,7 +2,7 @@
 class_name RegexAcesTest
 extends RefCounted
 # The RegEx module compiles to direct Godot RegEx one-liners (parity-clean, null-safe). These pin the
-# BEHAVIOUR of the exact expressions the ACE templates emit — not just that they parse — so a regression
+# BEHAVIOUR of the exact expressions the ACE templates emit - not just that they parse - so a regression
 # in the template (a wrong method, a lost null-guard) is caught here.
 
 const RegexACEs := preload("res://addons/eventforge/registration/modules/regex_aces.gd")

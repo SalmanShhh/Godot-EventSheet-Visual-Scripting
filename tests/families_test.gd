@@ -1,12 +1,12 @@
-# Godot EventSheets — Families (the C3-style "one rule for every instance of a type").
+# Godot EventSheets - Families (the C3-style "one rule for every instance of a type").
 #
 # Pins the Families v1 contract:
 #   - A sheet flagged `is_family` emits a `## @ace_family(<Class>)` marker (metadata only, like @ace_tags
-#     — NO code, so it round-trips byte-exact and can never double-emit).
+#     - NO code, so it round-trips byte-exact and can never double-emit).
 #   - Re-importing that .gd recovers `is_family` (the family survives the .gd ↔ sheet round-trip).
 #   - `family_group()` derives the runtime group from the class name (Enemy → "family_enemy").
 #   - A family-scoped event (a PickFilter over the family group) compiles to a loop over
-#     get_tree().get_nodes_in_group("family_enemy") — the abstraction's whole point: logic-per-type.
+#     get_tree().get_nodes_in_group("family_enemy") - the abstraction's whole point: logic-per-type.
 @tool
 class_name FamiliesTest
 extends RefCounted
@@ -32,7 +32,7 @@ static func run() -> bool:
 	# ── Round-trip: re-importing the compiled .gd recovers the family flag ──
 	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(family_out)
 	all_passed = _check("re-importing the .gd recovers is_family", reimported.is_family, true) and all_passed
-	# Byte gate: an opened .gd recompiles to itself EXACTLY — pins the @ace_family marker's PLACEMENT
+	# Byte gate: an opened .gd recompiles to itself EXACTLY - pins the @ace_family marker's PLACEMENT
 	# (not just its presence), so it can't drift or double-emit. Must go through the real opened-file path:
 	# write to a .gd, import_external (which sets external_source_path), then recompile via the
 	# order-preserving external path (the same lossless route every opened .gd takes).

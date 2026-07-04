@@ -1,6 +1,6 @@
-# EventForge — the whole-event drag zone. An event row is often taller than its condition lane (its
+# EventForge - the whole-event drag zone. An event row is often taller than its condition lane (its
 # ACTION lane has more lines), leaving an empty band below the trigger/conditions. A press there
-# should drag the WHOLE event (reorder / nest as a sub-event), not a condition — and it must LOOK
+# should drag the WHOLE event (reorder / nest as a sub-event), not a condition - and it must LOOK
 # grabbable (move cursor + brightened grip). This pins: the pure classifier, that the empty band
 # hit-tests to whole-event (span_index < 0) while the cell itself still hits its ACE, and that a drag
 # begun in the band moves the row.

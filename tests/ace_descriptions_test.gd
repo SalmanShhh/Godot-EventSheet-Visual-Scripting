@@ -1,7 +1,7 @@
-# Godot EventSheets — built-in ACE descriptions (hover help).
+# Godot EventSheets - built-in ACE descriptions (hover help).
 #
 # Every built-in ACE authors its plain-language description INLINE, chained on its make_descriptor call via
-# .described("..."), so the help lives in the same file as the ACE — exactly how a custom behaviour addon
+# .described("..."), so the help lives in the same file as the ACE - exactly how a custom behaviour addon
 # would author it. This test ENFORCES full coverage (0 blank): a new built-in without a .described(...) call
 # fails here, so authors can't ship an undescribed ACE. It also pins that the registry exposes the
 # description, the viewport resolves it for hover, and a Call-Function row shows the function's own.

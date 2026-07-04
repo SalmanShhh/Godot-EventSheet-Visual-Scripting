@@ -1,4 +1,4 @@
-# EventSheet — EditorParamStore
+# EventSheet - EditorParamStore
 # Serializable resource that stores per-parameter editor overrides for
 # ACE-driven parameters. Values stored here take precedence over ACE defaults
 # but are overridden by per-row values at runtime.

@@ -1,6 +1,6 @@
-# Godot EventSheets — editor-theme inheritance
+# Godot EventSheets - editor-theme inheritance
 # Derives the sheet's default visual tokens from the USER'S Godot editor theme (base +
-# accent colors) so the plugin matches dark/light/custom-accent editors out of the box —
+# accent colors) so the plugin matches dark/light/custom-accent editors out of the box -
 # the way built-in editors do. Explicit theme presets still override (this only supplies
 # the default when no theme was chosen). derive() is pure for headless tests;
 # derive_from_editor() reads the editor settings.

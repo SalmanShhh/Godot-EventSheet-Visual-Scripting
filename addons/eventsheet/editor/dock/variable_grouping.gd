@@ -1,14 +1,14 @@
 @tool
 class_name EventSheetVariableGrouping
 extends RefCounted
-# Variable "folders": drag one variable onto another and they fold into a shared Inspector group —
-# the Discord-folder gesture — then a small popup opens already select-all'd so typing names the
+# Variable "folders": drag one variable onto another and they fold into a shared Inspector group -
+# the Discord-folder gesture - then a small popup opens already select-all'd so typing names the
 # fresh group immediately (Enter confirms; renaming later is a double-click on the group chip, and
 # clearing the name in that popup ungroups every member).
 #
 # The group is the SHIPPED @export_group attribute (descriptor.attributes.group for dict globals,
 # LocalVariable.attributes.group for tree variables), so folders round-trip through the .gd exactly
-# like groups set from the Variable dialog — this class adds gestures, not a new data model. All
+# like groups set from the Variable dialog - this class adds gestures, not a new data model. All
 # writes go through the dock's undo funnel; the funnel's commit REPLACES sheet resources, so member
 # lookups always walk the LIVE sheet rather than holding references.
 
@@ -140,8 +140,8 @@ static func set_subgroup(sheet: EventSheetResource, scope: String, var_name: Str
 	return false
 
 
-## Renames a group across EVERY member — dict globals and tree variables (recursing groups and
-## sub-events) — so the folder renames as one thing. An empty new name dissolves the folder
+## Renames a group across EVERY member - dict globals and tree variables (recursing groups and
+## sub-events) - so the folder renames as one thing. An empty new name dissolves the folder
 ## (every member ungroups). Returns how many variables changed.
 static func rename_group(sheet: EventSheetResource, old_group: String, new_group: String) -> int:
 	var from: String = old_group.strip_edges()
@@ -171,7 +171,7 @@ static func _rename_tree_groups(rows: Array, from: String, to: String) -> int:
 	return changed
 
 
-## The identity a variable row's spans carry: {scope, name, resource} — resource only for tree vars
+## The identity a variable row's spans carry: {scope, name, resource} - resource only for tree vars
 ## (a global row's source_resource is the sheet itself).
 static func row_identity(row_data: EventRowData) -> Dictionary:
 	if row_data == null or row_data.spans.is_empty() or not (row_data.spans[0].metadata is Dictionary):
@@ -189,7 +189,7 @@ static func row_identity(row_data: EventRowData) -> Dictionary:
 
 
 ## Drop-onto-variable: fold both into the target's folder (or a fresh "New Group" when the target
-## has none), then open the naming popup select-all'd — drag, type the name, Enter.
+## has none), then open the naming popup select-all'd - drag, type the name, Enter.
 func on_group_requested(source_row: EventRowData, target_row: EventRowData) -> void:
 	var source: Dictionary = row_identity(source_row)
 	var target: Dictionary = row_identity(target_row)
@@ -225,7 +225,7 @@ func on_group_requested(source_row: EventRowData, target_row: EventRowData) -> v
 	var changed: bool = _dock._perform_undoable_sheet_edit("Group Variables", func() -> bool:
 		var any: bool = false
 		# The funnel snapshot duplicates tree resources on commit, but THIS lambda runs against the
-		# live objects the rows referenced — safe; later gestures re-resolve via the live sheet.
+		# live objects the rows referenced - safe; later gestures re-resolve via the live sheet.
 		if set_group(_dock._current_sheet, str(target.get("scope")), str(target.get("name")), target.get("resource"), group):
 			any = true
 		if set_group(_dock._current_sheet, str(source.get("scope")), str(source.get("name")), source.get("resource"), group):

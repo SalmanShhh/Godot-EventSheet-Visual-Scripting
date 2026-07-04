@@ -1,4 +1,4 @@
-# EventForge — helper functions as Function rows. A behaviour's class-level `func` block (exposed
+# EventForge - helper functions as Function rows. A behaviour's class-level `func` block (exposed
 # `## @ace_condition`/`## @ace_expression` methods + private helpers) is lifted into EventFunction
 # rows at build time, so it reads as Function rows instead of one code cell. Exposed functions keep
 # their exposure; private helpers stay un-exposed (their leading comment relocates into the body);

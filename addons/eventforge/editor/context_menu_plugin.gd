@@ -1,8 +1,8 @@
-# Godot EventSheets — editor context-menu entries (Scene dock / FileSystem / script
+# Godot EventSheets - editor context-menu entries (Scene dock / FileSystem / script
 # editor), one thin EditorContextMenuPlugin instantiated per slot by plugin.gd.
 # Cores live in EventSheetWorkflow; callbacks are injected Callables so this class
 # never reaches into the dock directly. NOTE: like EditorDebuggerPlugin, this editor
-# class is glue — never instantiate it in headless tests.
+# class is glue - never instantiate it in headless tests.
 @tool
 class_name EventSheetContextMenu
 extends EditorContextMenuPlugin
@@ -19,7 +19,7 @@ func _popup_menu(paths: PackedStringArray) -> void:
 			if paths.size() == 1:
 				add_context_menu_item("Attach Event Sheet", _on_attach_requested)
 		EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM:
-			# Right-clicking ANY .gd (or a sheet .tres) in the FileSystem offers "Open as Event Sheet" —
+			# Right-clicking ANY .gd (or a sheet .tres) in the FileSystem offers "Open as Event Sheet" -
 			# a GDScript-backed sheet opens an arbitrary script losslessly. The Script glyph makes the item
 			# easy to spot among Godot's native file actions.
 			if should_offer_open_as_sheet(slot, paths):
@@ -67,7 +67,7 @@ func _on_attach_requested(targets: Variant) -> void:
 
 
 ## Slot payloads differ (FileSystem sends paths, the script editor sends Script
-## objects) — resolve both to a path.
+## objects) - resolve both to a path.
 func _on_open_requested(targets: Variant) -> void:
 	if not open_sheet.is_valid():
 		return

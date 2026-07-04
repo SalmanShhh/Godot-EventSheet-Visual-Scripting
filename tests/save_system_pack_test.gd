@@ -1,4 +1,4 @@
-# Godot EventSheets — save_system pack: truthful On Save Written + value round-trip.
+# Godot EventSheets - save_system pack: truthful On Save Written + value round-trip.
 #
 # The pack used to fire On Save Written optimistically from _write_all (so every Save Value emitted it,
 # regardless of whether the write succeeded). _write_all now returns a bool that captures the

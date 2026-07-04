@@ -185,7 +185,7 @@ func _ensure_match_dialog() -> void:
 	_match_expression_edit = LineEdit.new()
 	_match_expression_edit.placeholder_text = "state"
 	form.add_child(EventSheetPopupUI.form_row("Match expression", _match_expression_edit))
-	form.add_child(EventSheetPopupUI.hint_label("Branches (GDScript match-body syntax — patterns + indented bodies)"))
+	form.add_child(EventSheetPopupUI.hint_label("Branches (GDScript match-body syntax - patterns + indented bodies)"))
 	_match_branches_edit = TextEdit.new()
 	_match_branches_edit.custom_minimum_size = Vector2(480.0, 200.0)
 	_match_branches_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -209,7 +209,7 @@ func _on_match_dialog_confirmed() -> void:
 		construct += "\t" + branch_line + "\n"
 	var verdict: Dictionary = EventSheetGDScriptLint.lint(construct.trim_suffix("\n"), true, _dock._current_sheet)
 	if expression.is_empty() or not bool(verdict.get("ok", true)):
-		_match_hint.text = "✗ The match doesn't compile — fix it before applying."
+		_match_hint.text = "✗ The match doesn't compile - fix it before applying."
 		if _dock.is_inside_tree():
 			_match_dialog.call_deferred("popup_centered", Vector2i(520, 380))
 		return

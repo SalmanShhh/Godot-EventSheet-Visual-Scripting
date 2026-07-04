@@ -1,4 +1,4 @@
-# Showcase/example builder (release ritual): regenerates demo/showcase/ — a flagship
+# Showcase/example builder (release ritual): regenerates demo/showcase/ - a flagship
 # "Carousel of Juice" plus two deeper demos (Starfall arcade, Quest FSM). Each is built
 # programmatically via the public EventSheet API, compiled to plain GDScript, and packed
 # into a playable scene. Run:
@@ -93,7 +93,7 @@ func _attach_behavior(parent: Node, node_name: String, path: String, root: Node,
 	return node
 
 
-## Compile sheet straight to a banner-less .gd (no .tres) — the .gd IS the showcase sheet, hand-editable.
+## Compile sheet straight to a banner-less .gd (no .tres) - the .gd IS the showcase sheet, hand-editable.
 func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) -> bool:
 	# Code-free by default: reverse-lift each function's RawCode body into ACE rows where it recompiles
 	# byte-identically (same build-time pass the behaviour packs use). The showcase ships identical
@@ -107,10 +107,10 @@ func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) ->
 	# Class-level helper `func` blocks -> EventFunction rows (exposed ones publish as ACEs).
 	EventSheetACELifter.lift_function_declarations(sheet, false)
 	# Deterministic row uids so rebuilding an unchanged showcase is byte-identical (no diff
-	# churn) — same fix the behavior-pack builder uses.
+	# churn) - same fix the behavior-pack builder uses.
 	PackLib._assign_stable_uids(sheet)
 	# .gd-only: the showcase .gd IS the sheet (no .tres companion), banner-less so it's hand-editable.
-	# Normal synthesizing compile — do NOT set external_source_path (that path is only for opening an
+	# Normal synthesizing compile - do NOT set external_source_path (that path is only for opening an
 	# existing .gd). Round-trip is covered by the showcase tests + import_external.
 	var result: Dictionary = SheetCompiler.compile(sheet, gd_path, true)
 	var success: bool = bool(result.get("success", false))
@@ -149,7 +149,7 @@ func _build_carousel() -> bool:
 	}
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Carousel of Juice[/b] — 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function). A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party, [b]ui_cancel[/b] calms it. Watch beat/intensity stream in Live Values."
+	about.text = "[b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function). A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party, [b]ui_cancel[/b] calms it. Watch beat/intensity stream in Live Values."
 	sheet.events.append(about)
 
 	# Reused function: juice one tile by index.
@@ -294,7 +294,7 @@ func _build_starfall() -> bool:
 	sheet.emit_live_values = false
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Starfall[/b] — a complete restartable arcade game authored as events: move the ship (ui_left/ui_right) to catch falling stars. Shows an enum+match state machine (PLAYING/GAME_OVER), a group pick-filter that scores & culls stars, an Every-2s spawner, and if/elif input branches. Miss 3 and it's GAME OVER — press ui_accept to restart."
+	about.text = "[b]Starfall[/b] - a complete restartable arcade game authored as events: move the ship (ui_left/ui_right) to catch falling stars. Shows an enum+match state machine (PLAYING/GAME_OVER), a group pick-filter that scores & culls stars, an Every-2s spawner, and if/elif input branches. Miss 3 and it's GAME OVER - press ui_accept to restart."
 	sheet.events.append(about)
 
 	var state_enum: EnumRow = EnumRow.new()
@@ -328,7 +328,7 @@ func _build_starfall() -> bool:
 	fsm.actions.append(fsm_match)
 	sheet.events.append(fsm)
 
-	# Move left (if) — whole-Vector2 assign avoids the value-type-copy pitfall.
+	# Move left (if) - whole-Vector2 assign avoids the value-type-copy pitfall.
 	var move_left: EventRow = EventRow.new()
 	move_left.trigger_provider_id = "Core"; move_left.trigger_id = "OnPhysicsProcess"
 	move_left.conditions.append(_condition("Core", "CompareVar", "{var_name} {op} {value}", {"var_name": "state", "op": "==", "value": "State.PLAYING"}))
@@ -429,7 +429,7 @@ func _build_quest_fsm() -> bool:
 	sheet.emit_live_values = false
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Quest & Inventory FSM[/b] — a self-driving quest engine (no input): an enum+match state machine walks OFFERED -> ACTIVE -> COMPLETE, a reused grant_item() function fills a Dictionary inventory + Array quest log and emits signals, and signal: triggers spring/tween the icon on every beat. Proves the sheet compiles real software logic — collections, signals, functions, match — not just movement."
+	about.text = "[b]Quest & Inventory FSM[/b] - a self-driving quest engine (no input): an enum+match state machine walks OFFERED -> ACTIVE -> COMPLETE, a reused grant_item() function fills a Dictionary inventory + Array quest log and emits signals, and signal: triggers spring/tween the icon on every beat. Proves the sheet compiles real software logic - collections, signals, functions, match - not just movement."
 	sheet.events.append(about)
 
 	var qstate: EnumRow = EnumRow.new()
@@ -462,7 +462,7 @@ func _build_quest_fsm() -> bool:
 	var p_id: ACEParam = ACEParam.new(); p_id.id = "id"; p_id.type_name = "String"; p_id.type = TYPE_STRING
 	var p_qty: ACEParam = ACEParam.new(); p_qty.id = "qty"; p_qty.type_name = "int"; p_qty.type = TYPE_INT
 	fn.params = [p_id, p_qty]
-	# Function bodies compile through _emit_event_body, which processes ROWS — so the
+	# Function bodies compile through _emit_event_body, which processes ROWS - so the
 	# collection ACEs live inside an (untriggered) EventRow, not bare on fn.events.
 	var grant_body: EventRow = EventRow.new()
 	grant_body.actions.append(_action("Core", "DictSetKey", "{var_name}[{key}] = {value}", {"var_name": "inventory", "key": "id", "value": "inventory.get(id, 0) + qty"}))
@@ -482,7 +482,7 @@ func _build_quest_fsm() -> bool:
 	tick_row.actions.append(qmatch)
 	sheet.events.append(tick_row)
 
-	# signal: triggers — react to the sheet's own signals (auto-connected in _ready).
+	# signal: triggers - react to the sheet's own signals (auto-connected in _ready).
 	var on_item: EventRow = EventRow.new()
 	on_item.trigger_provider_id = "Core"; on_item.trigger_id = "signal:item_collected"; on_item.trigger_args = "id: String"
 	on_item.actions.append(_action("SpringBehavior", "method:spring_host_scale", "{on_node}.spring_host_scale({target})", {"on_node": "$Icon/SpringBehavior", "target": "1.0"}))
@@ -558,7 +558,7 @@ func _build_platformer_shooter() -> bool:
 	sheet.emit_live_values = false
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Platformer-Shooter[/b] — the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right."
+	about.text = "[b]Platformer-Shooter[/b] - the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right."
 	sheet.events.append(about)
 
 	sheet.variables = {
@@ -566,7 +566,7 @@ func _build_platformer_shooter() -> bool:
 			"attributes": {"tooltip": "Targets destroyed."}}
 	}
 
-	# Jump (Up): press to jump, release for variable jump height — fully code-free, one event per
+	# Jump (Up): press to jump, release for variable jump height - fully code-free, one event per
 	# edge. The Platformer pack's own _physics_process already runs A/D movement + gravity; we feed
 	# it the jump button via its node-targeted Jump / Jump Released actions on $Player/PlatformerMovement.
 	var jump_press: EventRow = EventRow.new()
@@ -580,10 +580,10 @@ func _build_platformer_shooter() -> bool:
 	jump_release.actions.append(_action("PlatformerMovement", "method:jump_released", "{target}.jump_released()", {"target": "$Player/PlatformerMovement"}))
 	sheet.events.append(jump_release)
 
-	# Fire (hold Space): FULLY CODE-FREE — conditions on the left (the input + the Weapon Kit's own
+	# Fire (hold Space): FULLY CODE-FREE - conditions on the left (the input + the Weapon Kit's own
 	# Can Fire gate, targeting the behavior at $Player/WeaponKit), actions on the right (the pack's
 	# Fire, then Spawn Scene (Full) aimed by the Platformer pack's facing_direction). This is the row
-	# the node-targetable pack ACEs unlocked — no raw GDScript, the same legibility as event sheets.
+	# the node-targetable pack ACEs unlocked - no raw GDScript, the same legibility as event sheets.
 	var fire: EventRow = EventRow.new()
 	fire.trigger_provider_id = "Core"; fire.trigger_id = "OnPhysicsProcess"
 	fire.conditions.append(_condition("Core", "IsActionPressed", "Input.is_action_pressed(&{action})", {"action": "\"ui_accept\""}))
@@ -680,7 +680,7 @@ func _build_platformer_shooter() -> bool:
 
 	return _save_scene(root, "res://demo/showcase/platformer_shooter.tscn")
 
-# ── 5. Swarm — frame-spreading crowd (Budgeted For Each) ─────────────────────
+# ── 5. Swarm - frame-spreading crowd (Budgeted For Each) ─────────────────────
 
 
 func _build_swarm() -> bool:
@@ -700,7 +700,7 @@ func _build_swarm() -> bool:
 	sheet.emit_live_values = false
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Swarm[/b] — frame-spreading made visible. On Ready spawns 800 sprites into the \"swarm\" group; ONE For Each with a frame-spread budget of 90/frame wobbles them, so only a slice updates each frame and the colour refresh SWEEPS through the crowd — that visible wave IS the spreading. The FPS stays pinned even though the loop never touches the whole crowd in a single frame. Tick frame_spread_count on any For Each to get this — no behavior, no await."
+	about.text = "[b]Swarm[/b] - frame-spreading made visible. On Ready spawns 800 sprites into the \"swarm\" group; ONE For Each with a frame-spread budget of 90/frame wobbles them, so only a slice updates each frame and the colour refresh SWEEPS through the crowd - that visible wave IS the spreading. The FPS stays pinned even though the loop never touches the whole crowd in a single frame. Tick frame_spread_count on any For Each to get this - no behavior, no await."
 	sheet.events.append(about)
 
 	sheet.variables = {
@@ -723,7 +723,7 @@ func _build_swarm() -> bool:
 	tick.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Info", "template": "\"%d sprites   ·   Budgeted For Each: 90/frame   ·   %d FPS\"", "args": "count, Engine.get_frames_per_second()"}))
 	sheet.events.append(tick)
 
-	# On Process: a Budgeted For Each over the crowd — wobble the texture offset + sweep the hue.
+	# On Process: a Budgeted For Each over the crowd - wobble the texture offset + sweep the hue.
 	# frame_spread_count = 90 makes it process only ~90 sprites per frame, resuming next frame.
 	var wobble: EventRow = EventRow.new()
 	wobble.trigger_provider_id = "Core"; wobble.trigger_id = "OnProcess"
@@ -761,7 +761,7 @@ func _build_swarm() -> bool:
 func _build_family_arena() -> bool:
 	var tex: ImageTexture = _make_texture()
 
-	# Enemy — a Sprite2D custom node marked as a Family. health/fall_speed are its instance variables.
+	# Enemy - a Sprite2D custom node marked as a Family. health/fall_speed are its instance variables.
 	var enemy: EventSheetResource = EventSheetResource.new()
 	enemy.host_class = "Sprite2D"
 	enemy.custom_class_name = "Enemy"
@@ -774,14 +774,14 @@ func _build_family_arena() -> bool:
 		"fall_speed": {"type": "float", "default": 90.0, "exported": true,
 			"attributes": {"tooltip": "How fast (px/sec) this enemy falls."}}
 	}
-	# On Ready: join the family group (membership — the "Add To Family" gesture is Add To Group with the
+	# On Ready: join the family group (membership - the "Add To Family" gesture is Add To Group with the
 	# family's group) and give each instance its own look + speed.
 	var enemy_ready: EventRow = EventRow.new()
 	enemy_ready.trigger_provider_id = "Core"; enemy_ready.trigger_id = "OnReady"
 	enemy_ready.actions.append(_action("Core", "AddToGroup", "{target}.add_to_group({group})", {"target": "self", "group": "\"family_enemy\""}))
 	enemy_ready.actions.append(_raw("fall_speed = randf_range(60.0, 140.0)\nmodulate = Color.from_hsv(randf(), 0.6, 1.0)\nscale = Vector2(0.4, 0.4)"))
 	enemy.events.append(enemy_ready)
-	# take_damage(amount) — the family-bound ACE: lose health, free at zero.
+	# take_damage(amount) - the family-bound ACE: lose health, free at zero.
 	var take_damage: EventFunction = EventFunction.new()
 	take_damage.function_name = "take_damage"
 	take_damage.enabled = true
@@ -802,12 +802,12 @@ func _build_family_arena() -> bool:
 	if not _save_scene(enemy_node, "res://demo/showcase/enemy.tscn"):
 		return false
 
-	# FamilyArena — spawns Enemies, then drives them all with FAMILY-SCOPED rules.
+	# FamilyArena - spawns Enemies, then drives them all with FAMILY-SCOPED rules.
 	var arena: EventSheetResource = EventSheetResource.new()
 	arena.host_class = "Node2D"
 	arena.custom_class_name = "FamilyArena"
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Family Arena[/b] — the Families trio in one screen. [b]Enemy[/b] is a Family: a Sprite2D whose instances auto-join the family_enemy group, each carrying its own health + fall_speed. This sheet writes ONE rule per behaviour over ALL of them — a family For Each makes every Enemy fall by its own speed and recycle at the bottom, and a timer damages a random one through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes — that's horizontal reuse, the thing event sheets were missing."
+	about.text = "[b]Family Arena[/b] - the Families trio in one screen. [b]Enemy[/b] is a Family: a Sprite2D whose instances auto-join the family_enemy group, each carrying its own health + fall_speed. This sheet writes ONE rule per behaviour over ALL of them - a family For Each makes every Enemy fall by its own speed and recycle at the bottom, and a timer damages a random one through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes - that's horizontal reuse, the thing event sheets were missing."
 	arena.events.append(about)
 	arena.variables = {
 		"spawn_count": {"type": "int", "default": 18, "exported": true,
@@ -857,7 +857,7 @@ func _build_family_arena() -> bool:
 # colour swatch row, texture preview, curve, progress bars) across the new value types (Vector2/Color/
 # Texture2D/Curve), all sorted into @export_group / @export_subgroup Inspector sections. Select the node and
 # open the Inspector to see the rich drawers; press Play and the ship drifts/tints/scales from those same
-# designer-tweakable variables — zero code.
+# designer-tweakable variables - zero code.
 func _build_inspector_playground() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
@@ -865,24 +865,24 @@ func _build_inspector_playground() -> bool:
 	sheet.emit_live_values = false
 	# Names are group-prefixed (aim_/body_/stat_) so the dict-variable emission's alphabetical order keeps each
 	# @export_group's members consecutive. Texture2D/Curve default to null (resource exports have no literal
-	# default — assigned in the Inspector).
+	# default - assigned in the Inspector).
 	sheet.variables = {
 		"aim_dir": {"type": "Vector2", "default": Vector2(70, -35), "exported": true,
-			"attributes": {"tooltip": "Drift direction + speed — drag the dial.", "group": "Aim", "drawer": "vector_dial", "range": {"min": "0", "max": "120", "step": "1"}}},
+			"attributes": {"tooltip": "Drift direction + speed - drag the dial.", "group": "Aim", "drawer": "vector_dial", "range": {"min": "0", "max": "120", "step": "1"}}},
 		"body_icon": {"type": "Texture2D", "default": null, "exported": true,
-			"attributes": {"tooltip": "Emblem texture — drop one in.", "group": "Body", "drawer": "texture_preview"}},
+			"attributes": {"tooltip": "Emblem texture - drop one in.", "group": "Body", "drawer": "texture_preview"}},
 		"body_tint": {"type": "Color", "default": Color("#3aa6e0"), "exported": true,
-			"attributes": {"tooltip": "Hull colour — click a swatch.", "group": "Body", "drawer": "swatch_row"}},
+			"attributes": {"tooltip": "Hull colour - click a swatch.", "group": "Body", "drawer": "swatch_row"}},
 		"stat_curve": {"type": "Curve", "default": null, "exported": true,
 			"attributes": {"tooltip": "Pulse shape over time.", "group": "Stats", "subgroup": "Tuning", "drawer": "curve_editor"}},
 		"stat_health": {"type": "int", "default": 80, "exported": true,
-			"attributes": {"tooltip": "Health — drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "range": {"min": "0", "max": "100", "step": "1"}}},
+			"attributes": {"tooltip": "Health - drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "range": {"min": "0", "max": "100", "step": "1"}}},
 		"stat_speed": {"type": "float", "default": 90.0, "exported": true,
-			"attributes": {"tooltip": "Drift amplitude — drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "range": {"min": "0", "max": "200", "step": "1"}}}
+			"attributes": {"tooltip": "Drift amplitude - drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "range": {"min": "0", "max": "200", "step": "1"}}}
 	}
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Inspector Playground[/b] — select this node and open the Inspector: every exported variable uses a [b]custom drawer[/b] (a direction dial, a colour swatch row, a texture preview, a curve, progress bars) sorted into [b]@export_group[/b] sections. Tweak them and press Play — the ship drifts along the dial, scales with health, and wears your colour. All from designer-tweakable variables, zero code."
+	about.text = "[b]Inspector Playground[/b] - select this node and open the Inspector: every exported variable uses a [b]custom drawer[/b] (a direction dial, a colour swatch row, a texture preview, a curve, progress bars) sorted into [b]@export_group[/b] sections. Tweak them and press Play - the ship drifts along the dial, scales with health, and wears your colour. All from designer-tweakable variables, zero code."
 	sheet.events.append(about)
 
 	# OnReady: adopt the emblem texture if the designer assigned one.

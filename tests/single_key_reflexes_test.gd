@@ -1,6 +1,6 @@
-# EventForge — the single-key reflexes B / I / R + the shortcut-map
+# EventForge - the single-key reflexes B / I / R + the shortcut-map
 # collision audit. B adds a blank sub-event under the selected event, I inverts the selected condition,
-# R replaces the selected ACE — each seeding the context state from the SELECTION and reusing the
+# R replaces the selected ACE - each seeding the context state from the SELECTION and reusing the
 # right-click handlers verbatim. The audit asserts every DEFAULTS binding is pairwise-unique.
 @tool
 class_name SingleKeyReflexesTest
@@ -47,8 +47,8 @@ static func run() -> bool:
 
 	# TWO staleness traps this test must respect: (1) every undoable edit REPLACES the sheet's resources
 	# (_restore_sheet_snapshot restores a duplicated snapshot), so held EventRow/ACECondition refs go
-	# stale — always re-fetch the live objects from the dock; (2) each refresh rebuilds the flat rows and
-	# inverting adds the negation badge span, shifting span indices — always re-locate the selection.
+	# stale - always re-fetch the live objects from the dock; (2) each refresh rebuilds the flat rows and
+	# inverting adds the negation badge span, shifting span indices - always re-locate the selection.
 	ok = _check("test sheet exposes the condition span", _select_condition(view, _live_event(dock)), true) and ok
 
 	# I with the condition span selected inverts it (and again, un-inverts).
@@ -78,7 +78,7 @@ static func run() -> bool:
 	return ok
 
 
-## The LIVE first EventRow on the dock's current sheet (edits replace resources — never hold refs).
+## The LIVE first EventRow on the dock's current sheet (edits replace resources - never hold refs).
 static func _live_event(dock: EventSheetDock) -> EventRow:
 	for row: Variant in dock.get_current_sheet().events:
 		if row is EventRow:

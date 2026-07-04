@@ -1,4 +1,4 @@
-# Godot EventSheets — dialogs must not balloon on launch.
+# Godot EventSheets - dialogs must not balloon on launch.
 #
 # A ConfirmationDialog/AcceptDialog sizes itself to its content's MINIMUM. An autowrap Label with no
 # bounded width reports a runaway one-glyph-per-line minimum height during the initial zero-width
@@ -6,7 +6,7 @@
 # Block" popup did exactly this). The fix is to give every wrapping label a custom_minimum_size.x.
 #
 # This pins the invariant: in the plugin's content-sized dialogs, every autowrap Label that we add
-# is width-bounded. The dialog's OWN built-in message label (AcceptDialog.get_label()) is excluded —
+# is width-bounded. The dialog's OWN built-in message label (AcceptDialog.get_label()) is excluded -
 # the dialog manages and sizes that one itself, so it never balloons.
 @tool
 class_name DialogBalloonTest
@@ -33,7 +33,7 @@ static func run() -> bool:
 	dock._struct_rows._ensure_enum_dialog()
 	dock._struct_rows._ensure_signal_dialog()
 	dock._struct_rows._ensure_match_dialog()
-	dock._welcome._build()  # the first-launch dialog (now dock/welcome_window.gd) — an autowrap blurb here ballooned it to ~5000px
+	dock._welcome._build()  # the first-launch dialog (now dock/welcome_window.gd) - an autowrap blurb here ballooned it to ~5000px
 	for probe: Array in [
 		["Edit GDScript Block", dock._raw_code_dialog],
 		["Scope Actions To Node", dock._comments._with_node_dialog],
@@ -47,7 +47,7 @@ static func run() -> bool:
 		all_passed = _check("%s has no unbounded autowrap label" % probe[0], unbounded, [] as Array[String]) and all_passed
 	dock.free()
 
-	# The function dialog's validation/problem label is autowrap and shows on error — bound too.
+	# The function dialog's validation/problem label is autowrap and shows on error - bound too.
 	var fn_parent: Node = Node.new()
 	var fn_dialog: EventSheetFunctionDialog = EventSheetFunctionDialog.new()
 	fn_dialog.init_dialog(fn_parent)
@@ -59,7 +59,7 @@ static func run() -> bool:
 
 
 ## Recursively collects the names of autowrap Labels under `dialog` that have NO width bound
-## (custom_minimum_size.x ~ 0). The dialog's built-in message label is excluded — AcceptDialog
+## (custom_minimum_size.x ~ 0). The dialog's built-in message label is excluded - AcceptDialog
 ## sizes that one to the dialog width itself, so it cannot balloon.
 static func _unbounded_autowrap_labels(dialog: Window) -> Array[String]:
 	var offenders: Array[String] = []

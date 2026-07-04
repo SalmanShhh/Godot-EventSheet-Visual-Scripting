@@ -1,4 +1,4 @@
-# EventForge — ACEAction resource
+# EventForge - ACEAction resource
 # Serializable instance of an action ACE in an event row.
 @tool
 class_name ACEAction

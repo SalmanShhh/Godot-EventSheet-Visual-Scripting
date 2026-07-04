@@ -1,11 +1,11 @@
-# EventForge module — RegEx text matching (Construct 3's Regex* functions, Godot-native).
+# EventForge module - RegEx text matching (Construct 3's Regex* functions, Godot-native).
 #
-# Pattern matching, search, replace, and capture-group extraction via Godot's RegEx — the catalogue's
+# Pattern matching, search, replace, and capture-group extraction via Godot's RegEx - the catalogue's
 # plain string verbs (Find / Replace / Token At / Split…) live in system_aces/collection_aces; this
 # module adds the PATTERN-based ones C3 exposes as RegexReplace / RegexSearch / RegexMatchCount.
 #
 # Each compiles to a direct one-liner using RegEx.create_from_string({pattern}) (compiles the pattern
-# inline) — parity-clean, no editor plugin and no pre-built RegEx object needed. The search_all-based
+# inline) - parity-clean, no editor plugin and no pre-built RegEx object needed. The search_all-based
 # verbs are NULL-SAFE: search_all returns [] on no match, so First Match / Capture Group fall back to
 # "" instead of crashing on a miss (unlike a bare .search(...).get_string()).
 @tool
@@ -54,9 +54,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "RegexCaptureGroup", "Regex Capture Group", ACEDescriptor.ACEType.EXPRESSION,
 		"(RegEx.create_from_string({pattern}).search_all({text}).map(func(__m): return __m.get_string({group})) + [\"\"]).front()", "",
 		[_pattern_param(), _text_param(), F.make_param("group", "String", "1", "Group", "Which ( ) capture group to return (1 = the first parentheses).", "expression")], "Text: RegEx", "group {group} of {pattern} in {text}")
-		.described("Returns capture group N from the first match — the text inside the Nth pair of parentheses — or empty if none."))
+		.described("Returns capture group N from the first match - the text inside the Nth pair of parentheses - or empty if none."))
 
-	# Godot format strings (the linked doc): a number to a fixed number of decimal places — the common
+	# Godot format strings (the linked doc): a number to a fixed number of decimal places - the common
 	# score/money/percentage display. The plain text verbs (upper/lower/split/pad-zeros/Format String)
 	# already exist elsewhere; this fills the decimal-places gap.
 	descriptors.append(F.make_descriptor("Core", "FormatDecimals", "Format Decimals", ACEDescriptor.ACEType.EXPRESSION,

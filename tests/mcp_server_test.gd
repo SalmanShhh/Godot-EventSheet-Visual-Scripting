@@ -1,5 +1,5 @@
-# Godot EventSheets — MCP server protocol core
-# JSON-RPC handshake, tool listing, and every tool's happy/error path — driven through
+# Godot EventSheets - MCP server protocol core
+# JSON-RPC handshake, tool listing, and every tool's happy/error path - driven through
 # handle_message (the stdio transport in run_mcp_server.gd is a thin loop on top).
 @tool
 class_name McpServerTest

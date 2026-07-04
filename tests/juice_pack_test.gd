@@ -1,7 +1,7 @@
-# Godot EventSheets — juice pack (screenshake / zoom / squash & stretch) smoke + trauma equivalence.
+# Godot EventSheets - juice pack (screenshake / zoom / squash & stretch) smoke + trauma equivalence.
 #
 # Loads the COMPILED juice pack and drives the trauma integrator directly. The headless runner has no
-# live viewport, so the auto-found camera is null — which is exactly the path we want to prove is SAFE:
+# live viewport, so the auto-found camera is null - which is exactly the path we want to prove is SAFE:
 # Shake still accrues + decays trauma, and the camera/host effects no-op instead of crashing. The
 # visual side (actual offset/zoom/scale tweens) is verified in-editor, not here.
 @tool
@@ -46,7 +46,7 @@ static func run() -> bool:
 	behavior.use_camera(NodePath("Nonexistent"))
 	all_passed = _check("camera/host effects no-op safely without a camera or host", true, true) and all_passed
 
-	# Slowmo + spring-squash compiled in (the runtime tween needs a live tree — verified in-editor).
+	# Slowmo + spring-squash compiled in (the runtime tween needs a live tree - verified in-editor).
 	all_passed = _check("slowmo + clear_slowmo + spring_squash actions exist", behavior.has_method("slowmo") and behavior.has_method("clear_slowmo") and behavior.has_method("spring_squash"), true) and all_passed
 	all_passed = _check("slowmo helpers + On Slowmo Finished signal exist", behavior.has_method("_set_time_scale") and behavior.has_method("_slowmo_trans") and behavior.has_method("_apply_host_scale") and behavior.has_signal("slowmo_finished"), true) and all_passed
 

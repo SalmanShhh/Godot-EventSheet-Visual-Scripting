@@ -1,4 +1,4 @@
-# Godot EventSheets — saving a sheet as a plain .gd (the default format; no .tres needed).
+# Godot EventSheets - saving a sheet as a plain .gd (the default format; no .tres needed).
 #
 # "Save As" / New Sheet now default to .gd. Saving to a .gd compiles the sheet to that file and
 # re-opens it as the GDScript-backed source of truth (editable, not the read-only preview a casual
@@ -44,7 +44,7 @@ static func run() -> bool:
 	all_passed = _check("sheet is now GDScript-backed", dock._current_sheet.external_source_path, PROBE_PATH) and all_passed
 	all_passed = _check("backed sheet is editable, not a preview", dock._current_sheet.read_only, false) and all_passed
 	all_passed = _check("host class survived the round-trip", dock._current_sheet.host_class, "CharacterBody2D") and all_passed
-	# Save As replaces the active tab in place — it must NOT open a duplicate tab.
+	# Save As replaces the active tab in place - it must NOT open a duplicate tab.
 	all_passed = _check("save as .gd does not open a second tab", dock._open_tabs.size(), tabs_before) and all_passed
 
 	# The source-of-truth .gd must NOT carry the "regenerated companion" banner.

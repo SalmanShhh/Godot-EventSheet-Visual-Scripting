@@ -1,4 +1,4 @@
-# Godot EventSheets — Godot-native entry points (headless cores)
+# Godot EventSheets - Godot-native entry points (headless cores)
 #
 # The "meet Godot devs where they already click" arc: these are the testable cores
 # behind the Scene-dock "Attach Event Sheet", the FileSystem/script-editor "Open as
@@ -11,13 +11,13 @@ extends RefCounted
 
 ## The "Attach Script" reflex for sheets: creates a sheet whose host_class matches
 ## the node, saves it beside the scene (suffix, never overwrite), compiles its pair
-## and attaches the generated script to the node — one right-click from node to
+## and attaches the generated script to the node - one right-click from node to
 ## editable sheet. Returns {ok, message, sheet_path}.
 static func create_sheet_for_node(node: Node, directory: String) -> Dictionary:
 	if node == null:
 		return {"ok": false, "message": "Select a node first.", "sheet_path": ""}
 	if node.get_script() != null:
-		return {"ok": false, "message": "%s already has a script — open it as a sheet instead (GDScript-backed sheets) or remove it first." % node.name, "sheet_path": ""}
+		return {"ok": false, "message": "%s already has a script - open it as a sheet instead (GDScript-backed sheets) or remove it first." % node.name, "sheet_path": ""}
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = node.get_class()
 	var base_name: String = str(node.name).to_snake_case()
@@ -38,7 +38,7 @@ static func create_sheet_for_node(node: Node, directory: String) -> Dictionary:
 	if not bool(compile_result.get("success", false)):
 		return {"ok": false, "message": "The new sheet didn't compile: %s" % str(compile_result.get("errors")), "sheet_path": sheet_path}
 	node.set_script(load(SheetCompiler._resolve_output_path(saved, "")))
-	return {"ok": true, "message": "Event sheet attached to %s — it opens in the EventSheet workspace." % node.name, "sheet_path": sheet_path}
+	return {"ok": true, "message": "Event sheet attached to %s - it opens in the EventSheet workspace." % node.name, "sheet_path": sheet_path}
 
 
 ## What the "Open as Event Sheet" context entries accept: sheet .tres files and any

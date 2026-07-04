@@ -1,4 +1,4 @@
-# EventForge — Zero-config ACE addons (no JSON, no manifest)
+# EventForge - Zero-config ACE addons (no JSON, no manifest)
 #
 # Scripts under res://eventsheet_addons/ register project-wide automatically; all metadata
 # derives from the script (class_name, top doc comment, @ace_* annotations). The new

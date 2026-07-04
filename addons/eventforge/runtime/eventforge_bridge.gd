@@ -1,4 +1,4 @@
-# EventForge — Runtime bridge autoload
+# EventForge - Runtime bridge autoload
 # Runtime-safe provider registry for ACE descriptors.
 @tool
 class_name EventForgeBridgeRuntime
@@ -55,7 +55,7 @@ func get_descriptors_by_type(ace_type: int) -> Array:
 # Script paths registered as ACE providers from code (other plugins, tool scripts, tests).
 # Static so registration works with or without the autoload instance; the editor dock
 # merges these with the res://eventsheet_addons/ scan. NOTE: this is an EDITOR vocabulary
-# API — exported games never need the bridge, because generated code is plain GDScript
+# API - exported games never need the bridge, because generated code is plain GDScript
 # (instance-backed addon ACEs own a direct instance of the addon class).
 static var _registered_provider_scripts: PackedStringArray = PackedStringArray()
 

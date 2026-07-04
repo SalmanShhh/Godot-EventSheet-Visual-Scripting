@@ -1,6 +1,6 @@
-# EventForge — Sample behavior packs (Platformer / Eight-Direction)
+# EventForge - Sample behavior packs (Platformer / Eight-Direction)
 #
-# The shipped packs are single behaviour .gd files in res://eventsheet_addons/ — each .gd IS the event
+# The shipped packs are single behaviour .gd files in res://eventsheet_addons/ - each .gd IS the event
 # sheet AND the runtime script (no .tres companion), and the zero-config scanner publishes their ACEs.
 # Guards: re-importing a pack .gd and recompiling reproduces it byte-for-byte (the lossless round-trip /
 # no-drift gate), the scripts load as real classes (GDScript interop), and the ACEs resolve with templates.

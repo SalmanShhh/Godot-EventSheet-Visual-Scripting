@@ -1,4 +1,4 @@
-# Godot EventSheets — event-sheet-familiarity batch: group descriptions, slow double-click editing,
+# Godot EventSheets - event-sheet-familiarity batch: group descriptions, slow double-click editing,
 # variable-rename refactoring, and commit-time guardrails (auto-fix or block bad input).
 @tool
 class_name UxGuardrailsTest
@@ -50,7 +50,7 @@ static func run() -> bool:
 	editor.setup(sheet)
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	var viewport: EventSheetViewport = editor.get_viewport_control()
-	# Global variables render as rows above the group — locate the group by resource.
+	# Global variables render as rows above the group - locate the group by resource.
 	var group_row: EventRowData = null
 	var group_row_index: int = -1
 	for index in range(viewport.get_flat_rows().size()):
@@ -117,7 +117,7 @@ static func run() -> bool:
 	var rename_output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_rename.gd").get("output", ""))
 	all_passed = _check("codegen still references the new name",
 		rename_output.contains("setup(health + 5, health)"), true) and all_passed
-	# This assert exposed that GROUP EVENTS never compiled at all — locked in now.
+	# This assert exposed that GROUP EVENTS never compiled at all - locked in now.
 	all_passed = _check("group events compile inline", rename_output.contains("func _ready()"), true) and all_passed
 	group.enabled = false
 	all_passed = _check("disabled groups drop their children (event-sheet semantics)",

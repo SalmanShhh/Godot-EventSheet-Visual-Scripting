@@ -18,7 +18,7 @@ func init(dock: Control) -> void:
 
 
 ## Find References: whole-symbol uses of a variable/function/signal across EVERY sheet, with
-## jump-to-sheet — symbol-aware (so `speed` never matches `move_speed`), unlike substring Find.
+## jump-to-sheet - symbol-aware (so `speed` never matches `move_speed`), unlike substring Find.
 func open() -> void:
 	if _find_refs_window == null:
 		_find_refs_window = Window.new()
@@ -32,7 +32,7 @@ func open() -> void:
 		var find_box: VBoxContainer = EventSheetPopupUI.form_box()
 		var row: HBoxContainer = HBoxContainer.new()
 		_find_refs_edit = LineEdit.new()
-		_find_refs_edit.placeholder_text = "Symbol — a variable / function / signal name…"
+		_find_refs_edit.placeholder_text = "Symbol - a variable / function / signal name…"
 		_find_refs_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_find_refs_edit.text_submitted.connect(func(_t: String) -> void: _run_find_references())
 		row.add_child(_find_refs_edit)

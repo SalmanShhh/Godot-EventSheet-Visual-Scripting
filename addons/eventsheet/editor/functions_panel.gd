@@ -1,14 +1,14 @@
 @tool
 class_name EventSheetFunctionsPanel
 extends VBoxContainer
-# The Functions overview as its OWN dockable left-rail panel — previously welded inside the
+# The Functions overview as its OWN dockable left-rail panel - previously welded inside the
 # Generated-GDScript side panel, so seeing your functions meant opening the code view. Now it sits
 # in the rail (under Open Sheets, above Anatomy) behind a fold header you expand whenever you want:
 # every sheet function at a glance with its signature (✦ = exposed as an ACE), ＋ adds one, and the
-# list keeps its click/right-click behaviour (the dock owns those handlers — this panel is shell +
+# list keeps its click/right-click behaviour (the dock owns those handlers - this panel is shell +
 # fold state only). Expanded/collapsed persists per-project across editor restarts.
 
-## The header's ＋ — the dock opens the function dialog (the ACE Studio).
+## The header's ＋ - the dock opens the function dialog (the ACE Studio).
 signal add_requested
 
 const _META_KEY: String = "eventsheets_functions_panel"

@@ -1,4 +1,4 @@
-# EventForge — ACE drag-and-drop move logic
+# EventForge - ACE drag-and-drop move logic
 #
 # Drives the dock's ace-drop handler (the model side of dragging an individual condition or
 # action) and asserts reordering within an event and moving across events. The raw mouse

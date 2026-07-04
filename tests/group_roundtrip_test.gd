@@ -5,7 +5,7 @@ extends RefCounted
 # `## @ace_group(...)` declarations plus a `# @group:<slug>` marker before each member event; opening
 # that .gd back reconstructs the groups (nesting, colour, collapsed state) and re-saves byte-for-byte.
 # The whole thing is gated by the lift's byte-verify, so a sheet that can't round-trip stays verbatim
-# rather than corrupting — these assertions pin the happy path.
+# rather than corrupting - these assertions pin the happy path.
 
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
 

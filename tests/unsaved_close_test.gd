@@ -1,4 +1,4 @@
-# EventForge — the unsaved-close guard. Closing a tab with unsaved edits must not silently drop
+# EventForge - the unsaved-close guard. Closing a tab with unsaved edits must not silently drop
 # work: a dirty tab arms a 3-way Save / Discard / Cancel dialog, a clean tab closes immediately.
 @tool
 class_name UnsavedCloseTest
@@ -35,7 +35,7 @@ static func run() -> bool:
 	ok = _check("pending index cleared", dock._pending_close_index, -1) and ok
 	ok = _check("remaining tab is clean", dock.has_unsaved_tabs(), false) and ok
 
-	# A clean tab closes immediately, with no guard. Two clean tabs so one remains afterwards —
+	# A clean tab closes immediately, with no guard. Two clean tabs so one remains afterwards -
 	# closing the LAST tab re-opens the welcome sheet (correct), which would mask this check.
 	var clean_a: EventSheetResource = EventSheetResource.new()
 	clean_a.host_class = "Node2D"

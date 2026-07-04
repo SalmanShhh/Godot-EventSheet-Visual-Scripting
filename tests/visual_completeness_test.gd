@@ -1,4 +1,4 @@
-# Godot EventSheets — Visual completeness: multiline comments, per-comment colors,
+# Godot EventSheets - Visual completeness: multiline comments, per-comment colors,
 # comment ↔ action-cell conversion (the final event-sheet-parity comment features).
 @tool
 class_name VisualCompletenessTest

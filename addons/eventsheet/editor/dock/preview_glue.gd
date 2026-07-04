@@ -2,19 +2,19 @@
 class_name EventSheetPreviewGlue
 extends RefCounted
 # The .gd-PREVIEW / OPEN-IN-GODOT / LIFT-REPORT cluster. This helper owns:
-#   • the read-only .gd-preview banner — the plain-language strip shown when a sheet is opened as a
+#   • the read-only .gd-preview banner - the plain-language strip shown when a sheet is opened as a
 #     read-only .gd (a lifted GDScript view), with its "Edit Events" unlock and "Open in Godot
 #     Script Editor" buttons,
 #   • the glue that hands a Script/res:// path to Godot's own script editor
 #     (EditorInterface.edit_script) for every "Open in Godot" action (preview, raw-code block,
 #     generated code, provider script),
-#   • the lift-report window — the Tree that explains, per block, what lifted to events and what
+#   • the lift-report window - the Tree that explains, per block, what lifted to events and what
 #     stayed verbatim code (EventSheetLiftReport), refreshed for the current sheet on open.
 #
 # Extracted from event_sheet_dock.gd to keep that file maintainable.
 #
 # WHAT STAYS ON THE DOCK (reached here through `_dock`):
-#   • the preview-banner WIDGET members `_preview_banner` + `_preview_label` — they stay declared on
+#   • the preview-banner WIDGET members `_preview_banner` + `_preview_label` - they stay declared on
 #     the dock so `_refresh_title_strip()` and the tests can read them by name. `build_preview_banner()`
 #     constructs the panel and assigns `_dock._preview_banner` / `_dock._preview_label` back (mirrors
 #     the menu_bar "widgets-stay, builder-assigns-back" pattern),
@@ -22,22 +22,22 @@ extends RefCounted
 #   • the mutation funnel (`_perform_undoable_sheet_edit` / `_mark_dirty` / `_set_status` /
 #     `_refresh_after_edit`), plus `_save_backed_sheet`, `_refresh_title_strip`, `_persist_session`,
 #     `_clear_undo_history`,
-#   • the RAW-CODE dialog (`_raw_code_target` / `_raw_code_edit` / `_raw_code_dialog` — a separate
+#   • the RAW-CODE dialog (`_raw_code_target` / `_raw_code_edit` / `_raw_code_dialog` - a separate
 #     concern that lives on the dock), `_side_panel` / `_code_edit`, and `_provider_list`.
 # Globals (EditorInterface, EventSheetLiftReport, GDScriptImporter, …) are unchanged.
 #
 # The dock keeps thin one-line delegates (original names + signatures + returns) for every method
-# reached from outside this helper — the in-file `.connect(...)` sites, the tests, and the sibling
+# reached from outside this helper - the in-file `.connect(...)` sites, the tests, and the sibling
 # dock/ helpers (menu_bar → `_open_lift_report`; sheet_io + session_store → `_refresh_preview_banner`;
-# new_addon_panel → `_open_gdscript_path_in_godot`; ace_apply → `_on_preview_edit_requested`) — so
+# new_addon_panel → `_open_gdscript_path_in_godot`; ace_apply → `_on_preview_edit_requested`) - so
 # those callers resolve unchanged.
 #
 # CLOSURE NOTES:
 #   • `_open_raw_code_block_in_godot` hands a lambda to `_dock._perform_undoable_sheet_edit(...)` that
-#     captures the LOCALS `target` + `code` (not helper/dock members) — so it survives verbatim; only
+#     captures the LOCALS `target` + `code` (not helper/dock members) - so it survives verbatim; only
 #     the surrounding `_dock.` reach-ins changed.
 #   • `_open_lift_report` connects `_lift_report_window.close_requested` to a lambda capturing
-#     `_lift_report_window`, which lives here too — so the capture is clean.
+#     `_lift_report_window`, which lives here too - so the capture is clean.
 
 var _dock: Control = null
 
@@ -72,12 +72,12 @@ func build_preview_banner() -> PanelContainer:
 	row.add_child(_dock._preview_label)
 	var edit_button: Button = Button.new()
 	edit_button.text = "Edit Events"
-	edit_button.tooltip_text = "Start editing this sheet here. From then on, Save (Ctrl+S) updates the file — or use Save As… to keep the original and save a copy."
+	edit_button.tooltip_text = "Start editing this sheet here. From then on, Save (Ctrl+S) updates the file - or use Save As… to keep the original and save a copy."
 	edit_button.pressed.connect(_on_preview_edit_requested)
 	row.add_child(edit_button)
 	var script_button: Button = Button.new()
 	script_button.text = "Open in Godot Script Editor"
-	script_button.tooltip_text = "Edit the .gd directly in Godot's script editor — your changes reload here when you come back to this tab."
+	script_button.tooltip_text = "Edit the .gd directly in Godot's script editor - your changes reload here when you come back to this tab."
 	script_button.pressed.connect(_on_preview_open_in_script_editor)
 	row.add_child(script_button)
 	return panel
@@ -95,11 +95,11 @@ func _refresh_preview_banner() -> void:
 	var source_name: String = _dock._current_sheet.external_source_path.get_file()
 	if source_name.is_empty():
 		source_name = "this sheet"
-	# The lift summary is recomputed from the ACTIVE sheet on every refresh — a cached report went
+	# The lift summary is recomputed from the ACTIVE sheet on every refresh - a cached report went
 	# stale the moment you switched tabs between two previews (the banner kept the other sheet's
 	# counts). Recomputing is a cheap row walk, and previews are read-only so refreshes are rare.
 	var report: Array[Dictionary] = EventSheetLiftReport.for_sheet(_dock._current_sheet)
-	_dock._preview_label.text = "👁  Viewing %s as a sheet — just start editing to change it here, or \"Open in Godot Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(report)]
+	_dock._preview_label.text = "👁  Viewing %s as a sheet - just start editing to change it here, or \"Open in Godot Script Editor\" for the code.  (%s)" % [source_name, EventSheetLiftReport.summary(report)]
 
 
 ## "Edit Events": turn the preview into a normal GDScript-backed sheet (Save then compiles
@@ -114,7 +114,7 @@ func _on_preview_edit_requested() -> void:
 	var source_name: String = _dock._current_sheet.external_source_path.get_file()
 	if source_name.is_empty():
 		source_name = "this sheet"
-	_dock._set_status("Now editing %s — Save (Ctrl+S) saves your changes to the file, or use Save As… to keep a separate copy." % source_name)
+	_dock._set_status("Now editing %s - Save (Ctrl+S) saves your changes to the file, or use Save As… to keep a separate copy." % source_name)
 
 
 ## "Open in Godot Script Editor": hand the .gd to Godot's own script editor for direct code edits.
@@ -124,7 +124,7 @@ func _on_preview_open_in_script_editor() -> void:
 	_open_gdscript_path_in_godot(_dock._current_sheet.external_source_path)
 
 
-## Hands a Script resource to Godot's own script editor — the shared glue behind every "Open in
+## Hands a Script resource to Godot's own script editor - the shared glue behind every "Open in
 ## Godot" action. Guarded: a no-op (with a status note) outside the editor or when edit_script is
 ## unavailable, so headless/runtime callers degrade gracefully. Returns whether it opened.
 func _edit_script_in_godot(script: Script, line: int = -1) -> bool:
@@ -154,7 +154,7 @@ func _open_gdscript_path_in_godot(path: String, line: int = -1) -> bool:
 
 
 ## "Open in Godot" for the GDScript block in the popup. A block in a code-backed (.gd) sheet IS part
-## of a real file: apply the popup text, compile the sheet back to its .gd, and open that source —
+## of a real file: apply the popup text, compile the sheet back to its .gd, and open that source -
 ## further edits in Godot reload into the sheet on focus (the existing backed-sheet reload). If the
 ## sheet doesn't compile, the popup stays open and nothing opens (no stale source / lost edit). A
 ## block in a .tres sheet has no file behind it; point the user at Save As… → .gd.
@@ -162,7 +162,7 @@ func _open_raw_code_block_in_godot() -> void:
 	if _dock._raw_code_target == null or _dock._raw_code_edit == null or _dock._current_sheet == null:
 		return
 	if _dock._current_sheet.external_source_path.is_empty():
-		_dock._set_status("Open in Godot edits the sheet's .gd source — Save As… this sheet as a .gd first to edit its code in Godot.", true)
+		_dock._set_status("Open in Godot edits the sheet's .gd source - Save As… this sheet as a .gd first to edit its code in Godot.", true)
 		return
 	var target: RawCodeRow = _dock._raw_code_target
 	var code: String = _dock._raw_code_edit.text
@@ -178,16 +178,16 @@ func _open_raw_code_block_in_godot() -> void:
 		return
 	_dock._raw_code_dialog.hide()
 	if _open_gdscript_path_in_godot(source_path):
-		_dock._set_status("Saved and opened %s in Godot — the sheet reloads your edits when you come back." % source_path.get_file())
+		_dock._set_status("Saved and opened %s in Godot - the sheet reloads your edits when you come back." % source_path.get_file())
 
 
-## "Open in Godot" for the generated GDScript. A code-backed sheet's source IS its generated output —
+## "Open in Godot" for the generated GDScript. A code-backed sheet's source IS its generated output -
 ## open the real .gd. A non-backed (.tres) sheet has no source file (and the generated text often
 ## declares a class_name, which can't safely be written to a throwaway), so point the user at Save
 ## As… → .gd; the in-dock panel + Copy stay available for read-only viewing.
 func _open_generated_in_godot() -> void:
 	if _dock._current_sheet == null or _dock._current_sheet.external_source_path.is_empty():
-		_dock._set_status("Open in Godot opens the .gd source — Save As… this sheet as a .gd to open its generated code in Godot (or use Copy).", true)
+		_dock._set_status("Open in Godot opens the .gd source - Save As… this sheet as a .gd to open its generated code in Godot (or use Copy).", true)
 		return
 	_open_gdscript_path_in_godot(_dock._current_sheet.external_source_path)
 
@@ -207,7 +207,7 @@ func _open_lift_report() -> void:
 	var report: Array[Dictionary] = EventSheetLiftReport.for_sheet(_dock._current_sheet)
 	if _lift_report_window == null:
 		_lift_report_window = Window.new()
-		_lift_report_window.title = "Lift Report — what became events, what stayed code"
+		_lift_report_window.title = "Lift Report - what became events, what stayed code"
 		_lift_report_window.size = Vector2i(640, 400)
 		_lift_report_window.close_requested.connect(func() -> void: _lift_report_window.hide())
 		_lift_report_tree = Tree.new()

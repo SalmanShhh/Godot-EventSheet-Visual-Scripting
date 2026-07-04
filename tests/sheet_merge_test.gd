@@ -1,4 +1,4 @@
-# Godot EventSheets — semantic 3-way merge driver test.
+# Godot EventSheets - semantic 3-way merge driver test.
 # Exercises the pure merge core (tools/sheet_merge.gd merge_sheets): non-overlapping edits
 # merge cleanly keyed on row UIDs, identical edits don't conflict, genuine same-row edits
 # are flagged (keeping both versions), and adds/deletes/variables 3-way merge correctly.

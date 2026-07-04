@@ -1,7 +1,7 @@
-# Godot EventSheets — Pick-filter compilation + rendering ('for each' picking)
+# Godot EventSheets - Pick-filter compilation + rendering ('for each' picking)
 # Pick filters wrap the event body in direct for loops (group/children/iterable) with an
 # optional iterator-scoped predicate and first-N cap; conditions gate the loop; filters
-# nest in order. Plain loops — the parity contract holds.
+# nest in order. Plain loops - the parity contract holds.
 @tool
 class_name PickFilterTest
 extends RefCounted

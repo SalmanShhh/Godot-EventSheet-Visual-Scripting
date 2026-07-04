@@ -1,4 +1,4 @@
-# EventSheet — editor style/resource regression tests
+# EventSheet - editor style/resource regression tests
 @tool
 class_name EventSheetStyleTest
 extends RefCounted

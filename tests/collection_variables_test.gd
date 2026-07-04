@@ -1,4 +1,4 @@
-# Godot EventSheets — Collection variables (rich-variables phase 2)
+# Godot EventSheets - Collection variables (rich-variables phase 2)
 # Array/Dictionary (incl. Godot 4 typed Array[T] / Dictionary[K, V]) variables with
 # canonical literal emission (recursive, escaped, str_to_var-parseable), verify-lift
 # round-trips, and dialog literal validation (live hint + commit guardrail).

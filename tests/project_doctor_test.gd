@@ -1,6 +1,6 @@
-# Godot EventSheets — Project Doctor: the one CI-able audit for cross-file drift
+# Godot EventSheets - Project Doctor: the one CI-able audit for cross-file drift
 # (stale generated outputs, unregistered autoload sheets, unused vocabulary, scene
-# attachment). The final block runs the doctor on THIS repository — it doubles as the
+# attachment). The final block runs the doctor on THIS repository - it doubles as the
 # repo-health gate: every committed generated script must byte-match its sheet.
 @tool
 class_name ProjectDoctorTest
@@ -11,7 +11,7 @@ static func run() -> bool:
 	var all_passed: bool = true
 
 	# Output pairing: editor convention (<name>_generated.gd) first, the pack builder's
-	# header-verified shipped sibling (<name>.gd) as fallback — ONE rule shared by the
+	# header-verified shipped sibling (<name>.gd) as fallback - ONE rule shared by the
 	# doctor, compile-on-save and the export-integrity pass.
 	all_passed = _check("demo sheet pairs with its _generated script",
 		EventSheetProjectDoctor.output_path_for("res://demo/sheets/player.tres"),
@@ -22,7 +22,7 @@ static func run() -> bool:
 	all_passed = _check("a showcase .gd is its own output (compiles in place, no .tres)",
 		EventSheetProjectDoctor.output_path_for("res://demo/showcase/showcase_carousel.gd"),
 		"res://demo/showcase/showcase_carousel.gd") and all_passed
-	# Regression: the export-integrity pass ran earlier in this suite — it must refresh
+	# Regression: the export-integrity pass ran earlier in this suite - it must refresh
 	# the showcase's existing pair, never recreate the parallel _generated duplicate.
 	all_passed = _check("export pass no longer duplicates builder-shipped outputs",
 		FileAccess.file_exists("res://demo/showcase/showcase_carousel_generated.gd"), false) and all_passed
@@ -109,7 +109,7 @@ static func run() -> bool:
 		findings.size() == 1 and str(findings[0].get("message")).contains("dead_var"), true) and all_passed
 
 	# Shadowed variables: a name colliding with a host member breaks the generated
-	# script at load AND blinds expression lint — error tier, with prevention in the
+	# script at load AND blinds expression lint - error tier, with prevention in the
 	# variable dialog sharing the same rule.
 	var shadow_sheet: EventSheetResource = EventSheetResource.new()
 	shadow_sheet.host_class = "CharacterBody2D"
@@ -193,12 +193,12 @@ static func run() -> bool:
 	DirAccess.remove_absolute("user://doctor_fan.tres")
 	DirAccess.remove_absolute("user://doctor_small.tres")
 
-	# The repo gate: this repository must be doctor-clean at the error level — the
+	# The repo gate: this repository must be doctor-clean at the error level - the
 	# byte-identity contract pack goldens pin, generalized to every committed sheet.
 	var report: Dictionary = EventSheetProjectDoctor.run()
 	for finding: Dictionary in (report.get("findings", []) as Array):
 		if str(finding.get("severity")) == "error":
-			print("  doctor error: %s — %s" % [str(finding.get("path")), str(finding.get("message"))])
+			print("  doctor error: %s - %s" % [str(finding.get("path")), str(finding.get("message"))])
 	all_passed = _check("repo is doctor-clean (0 errors)", int(report.get("errors", 0)), 0) and all_passed
 	var unused_packs: PackedStringArray = PackedStringArray()
 	for finding: Dictionary in (report.get("findings", []) as Array):

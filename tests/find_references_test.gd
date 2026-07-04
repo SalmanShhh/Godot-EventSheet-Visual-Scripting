@@ -1,4 +1,4 @@
-# Godot EventSheets — symbol-aware Find References test.
+# Godot EventSheets - symbol-aware Find References test.
 # Proves whole-symbol matching (\bname\b) so `speed` finds the variable `speed` but never
 # `move_speed`, that definitions resolve, and that the rename preview counts what it'll touch.
 @tool

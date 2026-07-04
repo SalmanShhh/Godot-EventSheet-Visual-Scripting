@@ -1,4 +1,4 @@
-# EventForge — Ctrl+Click go-to-definition. An addon ACE's provider_id is its script's class_name, so a
+# EventForge - Ctrl+Click go-to-definition. An addon ACE's provider_id is its script's class_name, so a
 # consumer sheet's "Stop Car" cell resolves to eventsheet_addons/car/car_behavior.gd and Ctrl+Click opens
 # that behaviour AS A SHEET; Core built-ins resolve to nothing (their cells keep multi-select). Pins the
 # class→path map, the per-cell probe, and the end-to-end jump on a real dock.

@@ -47,7 +47,7 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._add_tree_variable_below_context_row()
 		_dock.ROW_MENU_ADD_GDSCRIPT_BELOW:
 			var raw_block: RawCodeRow = RawCodeRow.new()
-			raw_block.code = "# GDScript — emitted verbatim at class level"
+			raw_block.code = "# GDScript - emitted verbatim at class level"
 			_dock._insert_context_row_below(raw_block, "Added GDScript block.")
 		_dock.ROW_MENU_ADD_GDSCRIPT_ACTION:
 			_dock._add_gdscript_action_to_context_row()
@@ -171,10 +171,10 @@ func unhandled_key_input(event: InputEvent) -> void:
 	# keys never fire mid-edit (text fields already consume their own text shortcuts).
 	var typing: bool = _dock._text_field_has_focus()
 	var shift: bool = key_event.shift_pressed
-	# Rebindable shortcuts (EventSheetShortcuts — edit via Tools ▸ Keyboard Shortcuts, saved per-user):
+	# Rebindable shortcuts (EventSheetShortcuts - edit via Tools ▸ Keyboard Shortcuts, saved per-user):
 	# exact modifier matching, so a chord never shadows its plain form. Entries:
 	# [action, suppressed-while-typing, handler]. Core reflexes by default: E event,
-	# C condition, A action (each opens the Ghost Row — the type-a-sentence add popup; the Ctrl
+	# C condition, A action (each opens the Ghost Row - the type-a-sentence add popup; the Ctrl
 	# chords + toolbar keep the classic pickers), Q comment, G group, X toggle.
 	for entry: Array in [
 		["add_condition_chord", true, _dock._on_add_condition_requested],
@@ -207,7 +207,7 @@ func unhandled_key_input(event: InputEvent) -> void:
 			(entry[2] as Callable).call()
 			_dock.accept_event()
 			return
-	# Fixed alternates + structural keys (grammar, not preference — never rebindable):
+	# Fixed alternates + structural keys (grammar, not preference - never rebindable):
 	# Ctrl+Y redo, Ctrl+± zoom, Tab nesting, Delete, Enter/F2 inline edit.
 	if key_event.ctrl_pressed or key_event.meta_pressed:
 		if key_event.keycode == KEY_P:

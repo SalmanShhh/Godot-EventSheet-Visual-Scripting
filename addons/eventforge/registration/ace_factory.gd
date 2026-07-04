@@ -1,4 +1,4 @@
-# EventForge — Shared descriptor factory for builtin/module ACE vocabularies.
+# EventForge - Shared descriptor factory for builtin/module ACE vocabularies.
 #
 # THE MODULE CONTRACT (see modules/): each vocabulary lives in its own file exposing
 # `static func get_descriptors() -> Array[ACEDescriptor]`, built through this factory.
@@ -14,7 +14,7 @@ extends RefCounted
 
 
 ## Builds a descriptor. Mirrors EventForgeBuiltinACEs._make_descriptor exactly (incl. the
-## legacy alias fields) — ace_ids, templates and display text are API (compatibility
+## legacy alias fields) - ace_ids, templates and display text are API (compatibility
 ## covenant); the factory only changes where descriptors are AUTHORED, never what they bake.
 static func make_descriptor(provider_id: String, ace_id: String, display_name: String, ace_type: int, codegen_template: String, signal_name: String = "", params: Array[ACEParam] = [], category: String = "", display_text: String = "", node_type: String = "") -> ACEDescriptor:
 	var descriptor: ACEDescriptor = ACEDescriptor.new()

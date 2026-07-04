@@ -1,8 +1,8 @@
-# Godot EventSheets — On Signal can carry the signal's parameters into the event.
+# Godot EventSheets - On Signal can carry the signal's parameters into the event.
 #
 # The generic "On Signal" trigger (react to any signal by name) gained an optional Arguments field. When
 # set to the signal's signature (e.g. "amount: int"), the generated handler takes those typed parameters,
-# so the event body can use them — like the reflected signal:<name> triggers already could. Empty = a
+# so the event body can use them - like the reflected signal:<name> triggers already could. Empty = a
 # no-argument handler (the prior behavior). Uses a source node path so the connect isn't self-validated.
 @tool
 class_name OnSignalArgsTest
@@ -19,7 +19,7 @@ static func run() -> bool:
 	all_passed = _check("event body can use the parameter", out_args.contains("health -= amount"), true) and all_passed
 	all_passed = _check("output parses", _parses(out_args), true) and all_passed
 
-	# (2) No args (default): backward-compatible — a no-argument handler.
+	# (2) No args (default): backward-compatible - a no-argument handler.
 	var out_none: String = _compile_on_signal("Enemy", "pinged", "", "health += 1")
 	all_passed = _check("no-arg handler when Arguments is empty", out_none.contains("func _on_enemy_pinged() -> void:"), true) and all_passed
 	all_passed = _check("no stray parameter leaks in", out_none.contains("_on_enemy_pinged()"), true) and all_passed

@@ -1,4 +1,4 @@
-# Godot EventSheets — Autoload (Singleton) sheets: a new sheet type compiling to
+# Godot EventSheets - Autoload (Singleton) sheets: a new sheet type compiling to
 # project-wide Nodes whose exposed functions publish ACEs addressed by autoload name.
 @tool
 class_name SingletonSheetsTest
@@ -97,7 +97,7 @@ static func run() -> bool:
 	all_passed = _check("bus handlers token on the bus name",
 		bus_output.contains("func _on_test_bus_game_paused() -> void:"), true) and all_passed
 	# (No reload() assert here: the GDScript analyzer snapshots autoloads at project
-	# load, so a runtime-registered TestBus isn't resolvable headless — the editor
+	# load, so a runtime-registered TestBus isn't resolvable headless - the editor
 	# smoke covers real in-editor usage.)
 	ProjectSettings.set_setting("autoload/TestBus", null)
 
@@ -171,7 +171,7 @@ signal kicked"
 	all_passed = _check("bench script rides next to the scene (no repo-root pollution)",
 		FileAccess.file_exists("user://eventsheets_bench.gd"), true) and all_passed
 	# Unannotated autoload scripts must NOT publish (the bridge mentions \"@ace_*\" in a
-	# doc comment — that must not count either).
+	# doc comment - that must not count either).
 	ProjectSettings.set_setting("autoload/PlainBus", "*res://tests/fixtures/test_bus.gd")
 	author_editor._build_addon_ace_sources()
 	all_passed = _check("unannotated autoloads stay out of the provider scan",

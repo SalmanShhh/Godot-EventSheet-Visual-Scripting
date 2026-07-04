@@ -1,4 +1,4 @@
-# EventForge — CommentRow resource
+# EventForge - CommentRow resource
 # Non-executing comment row preserved during compilation/import.
 @tool
 class_name CommentRow

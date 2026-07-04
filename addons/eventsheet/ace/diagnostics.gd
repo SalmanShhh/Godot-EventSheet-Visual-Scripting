@@ -1,7 +1,7 @@
-# EventSheet — row-level diagnostics for the "error → row" deep-link.
+# EventSheet - row-level diagnostics for the "error → row" deep-link.
 #
-# Walks the in-memory sheet and lints each row's free GDScript — inline blocks (RawCodeRow)
-# and ƒx expression params — against the sheet context (via EventSheetGDScriptLint), returning
+# Walks the in-memory sheet and lints each row's free GDScript - inline blocks (RawCodeRow)
+# and ƒx expression params - against the sheet context (via EventSheetGDScriptLint), returning
 # one diagnostic per offending row. The editor uses these to jump to the row and paint a red
 # marker, instead of surfacing a cryptic status-bar line you then have to hunt down.
 #
@@ -97,7 +97,7 @@ static func _check_local_var(local: LocalVariable, sheet: EventSheetResource, di
 		return
 	var owner: String = EventSheetProjectDoctor.shadowed_member_class(sheet, local.name)
 	if not owner.is_empty():
-		diagnostics.append(_make(local, "Variable \"%s\" shadows a %s member — rename it." % [local.name, owner], ""))
+		diagnostics.append(_make(local, "Variable \"%s\" shadows a %s member - rename it." % [local.name, owner], ""))
 
 
 ## Lints an ACE's ƒx (expression-hinted) params. Flags the OWNING event row (ACEs render as

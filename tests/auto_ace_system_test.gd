@@ -1,4 +1,4 @@
-# EventForge — integrated auto ACE system tests
+# EventForge - integrated auto ACE system tests
 @tool
 class_name AutoACESystemTest
 extends RefCounted

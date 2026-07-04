@@ -1,7 +1,7 @@
-# Godot EventSheets — Function verify-lift + trailing-comment preservation
+# Godot EventSheets - Function verify-lift + trailing-comment preservation
 # Generated sheet FUNCTIONS (with their @ace annotation blocks) and trailing top-level
 # comments now lift back into real rows. Two-pass safety: when the full lift can't verify
-# byte-identically, the event-only lift retries — function/comment upgrades can never
+# byte-identically, the event-only lift retries - function/comment upgrades can never
 # regress previously-lifting files. The shipped PlatformerMovement pack doubles as the
 # end-to-end fixture (behavior-mode annotation regeneration incl. $Class templates).
 @tool
@@ -90,7 +90,7 @@ static func run() -> bool:
 	# The enriched platformer authors its conditions/expressions/helpers as @ace_* method blocks; the
 	# build-time function-lift turns them into EventFunction rows (exposed functions gain the sheet's
 	# @ace_icon, so external import round-trips byte-exact), so they recover as exposed sheet functions
-	# (jump, Is Moving, Can Jump…) and the private _perform_jump as an un-exposed one — not code blocks.
+	# (jump, Is Moving, Can Jump…) and the private _perform_jump as an un-exposed one - not code blocks.
 	var pack_function_names: Array[String] = []
 	for pack_fn in pack.functions:
 		if pack_fn is EventFunction:
@@ -100,7 +100,7 @@ static func run() -> bool:
 		and pack_function_names.has("is_moving") and pack_function_names.has("can_jump"), true) and all_passed
 	all_passed = _check("the private helper lifts as an un-exposed function",
 		pack_function_names.has("_perform_jump"), true) and all_passed
-	# _enter_tree is the behavior host-binding scaffold — external emission keeps the prelude
+	# _enter_tree is the behavior host-binding scaffold - external emission keeps the prelude
 	# verbatim (it never synthesizes the host block), so it must stay a block.
 	all_passed = _check("the host-binding scaffold stays a block",
 		pack_function_blocks.has("func _enter_tree() -> void:"), true) and all_passed

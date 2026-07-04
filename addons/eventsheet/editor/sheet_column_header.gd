@@ -1,4 +1,4 @@
-# EventSheet — pinned Conditions/Actions column header.
+# EventSheet - pinned Conditions/Actions column header.
 # A thin band drawn above the scrollable sheet that labels the two lanes and mirrors the
 # event rows' lane divider position (zoom + horizontal-scroll aware), so the column grid
 # reads from the header straight down through every row.

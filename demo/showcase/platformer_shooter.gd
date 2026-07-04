@@ -42,4 +42,4 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	$Hud.text = "Score %d    Ammo %d/%d    %s" % [score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, ("RELOADING..." if $Player/WeaponKit.is_reloading() else "A/D move   Up jump   hold Space fire")]
 
-# [b]Platformer-Shooter[/b] — the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right.
+# [b]Platformer-Shooter[/b] - the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right.

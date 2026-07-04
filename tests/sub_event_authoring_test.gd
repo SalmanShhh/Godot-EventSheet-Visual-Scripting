@@ -1,4 +1,4 @@
-# EventForge — Sub-event authoring (indent / outdent reparenting)
+# EventForge - Sub-event authoring (indent / outdent reparenting)
 #
 # Drives the dock's indent/outdent handlers (Tab / Shift+Tab) and asserts events move into
 # and out of EventRow.sub_events correctly. Headless-safe.
@@ -35,11 +35,11 @@ static func run() -> bool:
 	editor.set_undo_redo_manager(NoopUndoManager.new())
 	var viewport: EventSheetViewport = editor.get_viewport_control()
 
-	# Indenting the first (top) event is a no-op — nothing above to nest under.
+	# Indenting the first (top) event is a no-op - nothing above to nest under.
 	_select_resource(viewport, first)
 	all_passed = _check("indent of the top event is a no-op", editor._indent_selected_event(), false) and all_passed
 
-	# Outdenting a root event is a no-op — already top level.
+	# Outdenting a root event is a no-op - already top level.
 	_select_resource(viewport, second)
 	all_passed = _check("outdent of a root event is a no-op", editor._outdent_selected_event(), false) and all_passed
 

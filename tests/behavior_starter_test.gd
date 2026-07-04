@@ -1,7 +1,7 @@
-# Godot EventSheets — Behavior Component starter (architecture steering by example).
+# Godot EventSheets - Behavior Component starter (architecture steering by example).
 #
 # The bundled gameplay starters (Platformer, Top-down…) are monolithic host sheets that poll every
-# physics frame — they teach the god-sheet habit by example. This new starter models the
+# physics frame - they teach the god-sheet habit by example. This new starter models the
 # Godot way instead: a small reusable BEHAVIOR you attach as a child (compiles to a Node with a typed
 # `host` accessor), that REACTS to the host's body_entered signal (no per-frame polling) and EMITS its
 # own. This verifies the starter is exactly that shape and compiles to valid GDScript.

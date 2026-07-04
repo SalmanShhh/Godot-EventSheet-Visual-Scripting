@@ -1,10 +1,10 @@
-# EventForge module — Particles (GPUParticles2D / CPUParticles2D)
+# EventForge module - Particles (GPUParticles2D / CPUParticles2D)
 #
 # Emitting/restart/one-shot/amount + an On Particles Finished trigger (the "finished"
 # signal, connected via the OnParticlesFinished arm in trigger_resolver.gd). Lane-1 wraps
 # of native particle nodes, single-line per the parity contract. GPU and CPU are distinct
-# classes, so the picker scopes by node_type — CPU gets its own ace_id where it differs.
-# Module contract: see ace_factory.gd — ace_ids/templates are API (covenant).
+# classes, so the picker scopes by node_type - CPU gets its own ace_id where it differs.
+# Module contract: see ace_factory.gd - ace_ids/templates are API (covenant).
 @tool
 class_name EventForgeParticleACEs
 extends RefCounted
@@ -31,7 +31,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns how many particles the emitter is set to spawn."))
 	descriptors.append(F.make_descriptor("Core", "SetParticleSpeedScale", "Set Speed Scale", ACEDescriptor.ACEType.ACTION, "speed_scale = {scale}", "", [F.make_param("scale", "String", "1.0", "Scale", "1 = normal, 0.5 = slow, 0 = frozen, 2 = double speed.", "expression")], "Particles", "Set speed scale to {scale}", "GPUParticles2D")
 		.described("Speeds up or slows down the particle effect, e.g. 0 freezes it, 2 doubles it."))
-	# CPUParticles2D parallel (distinct class — same member names, separate picker section).
+	# CPUParticles2D parallel (distinct class - same member names, separate picker section).
 	descriptors.append(F.make_descriptor("Core", "SetEmittingCPU", "Set Emitting (CPU)", ACEDescriptor.ACEType.ACTION, "emitting = {emitting}", "", [F.make_param("emitting", "String", "true", "Emitting", "Start / stop emitting.", "", ["true", "false"])], "Particles", "Set emitting {emitting}", "CPUParticles2D")
 		.described("Starts or stops a CPU particle emitter, e.g. switching an effect on."))
 	descriptors.append(F.make_descriptor("Core", "RestartParticlesCPU", "Restart / Burst (CPU)", ACEDescriptor.ACEType.ACTION, "restart()", "", [], "Particles", "Restart particles", "CPUParticles2D")

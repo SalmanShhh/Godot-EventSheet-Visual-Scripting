@@ -1,7 +1,7 @@
-# EventForge — per-pack RawCode budget ratchet (behaviour-as-ACEs parity).
+# EventForge - per-pack RawCode budget ratchet (behaviour-as-ACEs parity).
 #
 # Each bundled behaviour re-authored as code-free ACE rows is pinned to a maximum RawCodeRow count
-# (0 = fully code-free). The test FAILS if a pack EXCEEDS its budget — so a GDScript block can never
+# (0 = fully code-free). The test FAILS if a pack EXCEEDS its budget - so a GDScript block can never
 # silently creep back into a converted pack. As more packs convert, add them here at 0; numeric-kernel
 # packs (spring / juice / sine integrators) keep a documented non-zero budget until converted, per the
 # spec's honest criterion (continuous math kernels read better as GDScript).
@@ -26,7 +26,7 @@ static func run() -> bool:
 		if sheet == null:
 			ok = _check("%s loads" % path.get_file(), false, true) and ok
 			continue
-		# Count LOGIC RawCode (inside event + function BODIES) only — NOT the .gd's inherent top-level
+		# Count LOGIC RawCode (inside event + function BODIES) only - NOT the .gd's inherent top-level
 		# scaffolding (class prelude, the _enter_tree host binding, `## @ace_*` annotation blocks, blank
 		# separators), which every code-backed behaviour .gd carries verbatim and which is not a code block
 		# "creeping into" the logic. The body logic is what the code-free ratchet guards. (Pre-migration this

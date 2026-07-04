@@ -1,7 +1,7 @@
-# Godot EventSheets — the Inspector's "Edit Event Sheet" button
+# Godot EventSheets - the Inspector's "Edit Event Sheet" button
 #
 # Godot devs live in the Inspector: when the selected node's script is generated
-# from a sheet (the pairing rule knows), one button jumps straight to the sheet —
+# from a sheet (the pairing rule knows), one button jumps straight to the sheet -
 # and quietly says "edit the sheet, not the script".
 @tool
 class_name EventSheetEditButtonPlugin
@@ -20,7 +20,7 @@ func _parse_begin(object: Object) -> void:
 		return
 	var button: Button = Button.new()
 	button.text = "Edit Event Sheet"
-	button.tooltip_text = "%s is generated from %s — edit the sheet, not the script." % [
+	button.tooltip_text = "%s is generated from %s - edit the sheet, not the script." % [
 		(object.get_script() as Script).resource_path.get_file() if object.get_script() != null else "the script", sheet_path.get_file()]
 	button.pressed.connect(func() -> void:
 		if open_sheet.is_valid():

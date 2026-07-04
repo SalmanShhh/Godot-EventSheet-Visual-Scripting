@@ -1,6 +1,6 @@
-# EventForge — error-line → row jump. Paste a Godot error or stack-trace line into the command
+# EventForge - error-line → row jump. Paste a Godot error or stack-trace line into the command
 # palette ("res://….gd:42" anywhere in the text) and its one entry opens that .gd AS A SHEET and
-# selects the row that emitted the line (via the line↔row mapper) — a runtime error pastes straight
+# selects the row that emitted the line (via the line↔row mapper) - a runtime error pastes straight
 # back onto the event that caused it. Pins the pure parser (full error lines, quoted paths, no-line
 # and non-script text fail closed), the mode dispatch (an error line wins over command fuzzing), and
 # the end-to-end jump on a real pack.
@@ -50,7 +50,7 @@ static func run() -> bool:
 	ok = _check("the pack opened as a sheet", dock.get_current_sheet().external_source_path, pack_path) and ok
 	var selected: Resource = dock._active_view().get_selected_context().get("source_resource", null)
 	ok = _check("a row was selected", selected != null, true) and ok
-	# take_damage lifts as a REAL EventFunction now, so the jump lands on its Define block — the
+	# take_damage lifts as a REAL EventFunction now, so the jump lands on its Define block - the
 	# reveal path unfolds the Published verbs section to reach it.
 	ok = _check("the selected row is the one that emitted the line (take_damage's Define block)",
 		selected is EventFunction and (selected as EventFunction).function_name == "take_damage", true) and ok

@@ -1,4 +1,4 @@
-# EventForge — visual/size probe for the "Edit GDScript Block" popup (dev tool, not shipped logic).
+# EventForge - visual/size probe for the "Edit GDScript Block" popup (dev tool, not shipped logic).
 # Reproduces the dialog the way double-clicking a GDScript block does, prints its launched size, and
 # saves a PNG so the over-expansion (and its fix) can be inspected. Run NON-headless (needs a renderer):
 #   godot --path . --script tools/render_code_dialog_preview.gd

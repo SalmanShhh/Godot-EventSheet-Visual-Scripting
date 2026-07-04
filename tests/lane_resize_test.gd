@@ -1,4 +1,4 @@
-# EventForge — Drag-to-resize the conditions/actions lane divider
+# EventForge - Drag-to-resize the conditions/actions lane divider
 #
 # Simulates pressing on the lane divider, dragging it, and releasing, then asserts the
 # conditions/actions split ratio changed live and was persisted onto the sheet's editor

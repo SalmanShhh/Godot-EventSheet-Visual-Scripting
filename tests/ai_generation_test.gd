@@ -1,6 +1,6 @@
-# Godot EventSheets — AI event-generation pipeline test.
+# Godot EventSheets - AI event-generation pipeline test.
 # Verifies the grounded prompt, the GDScript→events lift (the same lossless path the editor's
-# paste uses), markdown-fence stripping, and the injectable response provider — so the whole
+# paste uses), markdown-fence stripping, and the injectable response provider - so the whole
 # "describe → events" pipeline is deterministic and testable without a live LLM.
 @tool
 class_name AIGenerationTest

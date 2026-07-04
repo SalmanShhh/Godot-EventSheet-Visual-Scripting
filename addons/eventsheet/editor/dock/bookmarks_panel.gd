@@ -1,8 +1,8 @@
-# Godot EventSheets — the Bookmarks panel (dock subsystem)
+# Godot EventSheets - the Bookmarks panel (dock subsystem)
 #
 # Extracted from EventSheetDock (decomposition arc, step 4): lists every Ctrl+B'd row
 # from the primary pane's shared view state; activating one reveals it. The dock
-# forwards its historical field names (settable — tests construct the window).
+# forwards its historical field names (settable - tests construct the window).
 @tool
 class_name EventSheetBookmarksPanel
 extends RefCounted
@@ -55,5 +55,5 @@ func refresh() -> void:
 				var item_index: int = list.add_item("🔖 %s" % label)
 				list.set_item_metadata(item_index, row_data.source_resource)
 	if list.item_count == 0:
-		list.add_item("(no bookmarks — Ctrl+B marks the selected row)")
+		list.add_item("(no bookmarks - Ctrl+B marks the selected row)")
 

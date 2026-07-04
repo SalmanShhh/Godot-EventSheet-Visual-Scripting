@@ -1,4 +1,4 @@
-# Godot EventSheets — Spring + Tween behavior packs (the simple_spring port, cleaned,
+# Godot EventSheets - Spring + Tween behavior packs (the simple_spring port, cleaned,
 # and Godot Tweens as a behavior). The spring assert SIMULATES: a stepped spring must
 # converge on its target and fire On Spring Reached.
 @tool
@@ -53,8 +53,8 @@ static func run() -> bool:
 		tween_source.contains("@export_enum(\"linear\", \"sine\""), true) and all_passed
 
 	# Save System addon (pack 21): autoload-mode persistence vocabulary.
-	# The .gd IS the sheet now (no .tres). Autoload identity (autoload_mode/name) is project-level — it
-	# lives in ProjectSettings [autoload], not the file — so a bundled, un-installed pack carries it via
+	# The .gd IS the sheet now (no .tres). Autoload identity (autoload_mode/name) is project-level - it
+	# lives in ProjectSettings [autoload], not the file - so a bundled, un-installed pack carries it via
 	# its baked "SaveSystem.<call>" ACE templates (asserted below), not a sheet flag.
 	var save_sheet: EventSheetResource = GDScriptImporter.new().import_external("res://eventsheet_addons/save_system/save_system_addon.gd")
 	all_passed = _check("save pack imports as a sheet (class SaveSystemAddon)",

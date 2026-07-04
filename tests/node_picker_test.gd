@@ -1,4 +1,4 @@
-# Godot EventSheets — Searchable node picker, large-project edition: filter chips,
+# Godot EventSheets - Searchable node picker, large-project edition: filter chips,
 # group:/script:/scene: queries, recents, used-in-sheet audit (missing = red).
 @tool
 class_name NodePickerTest
@@ -102,7 +102,7 @@ static func run() -> bool:
 	all_passed = _check("keypad keys map to KEY_KP_*",
 		ACEParamsDialog.key_constant_for(KEY_KP_ADD), "KEY_KP_ADD") and all_passed
 
-	# Unique-name (%) references collapse deep paths — Godot's answer to node-heavy objects. Picking a
+	# Unique-name (%) references collapse deep paths - Godot's answer to node-heavy objects. Picking a
 	# scene-unique deep node hands back %Name (a flat handle) instead of the brittle $A/B/C path.
 	var arena: Node2D = Node2D.new()
 	arena.name = "Arena"

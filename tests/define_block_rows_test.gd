@@ -1,9 +1,9 @@
-# EventForge — Define-block rendering: the sheet's functions (its published verbs) appear on the
+# EventForge - Define-block rendering: the sheet's functions (its published verbs) appear on the
 # canvas as a foldable "Published verbs" section, one Define row per EventFunction. Functions live in
 # sheet.functions, a SEPARATE array from sheet.events, so before this view a behaviour pack's whole
 # vocabulary was invisible outside the Functions dialog. Pins: the role classification (void=Action /
 # bool=Condition / typed=Expression, mirroring the ACE Studio cards), the badge/chip spans, the
-# compiler-bound signature line, the fold-with-fingerprint default, and — covenant-critical — that the
+# compiler-bound signature line, the fold-with-fingerprint default, and - covenant-critical - that the
 # view is a pure READ (opening a real pack still round-trips byte-identically).
 @tool
 class_name DefineBlockRowsTest
@@ -64,9 +64,9 @@ static func run() -> bool:
 	ok = _check("no functions → no section", _find_row_by_uid_prefix(empty_dock._active_view(), "published_verbs_") == null, true) and ok
 	empty_dock.free()
 
-	# ── Covenant: the view is a pure read — opening a REAL pack still round-trips byte-identically.
+	# ── Covenant: the view is a pure read - opening a REAL pack still round-trips byte-identically.
 	# Since the per-function shell-lift, an opened pack's verbs arrive as REAL EventFunctions, so the
-	# Published verbs section appears for packs too — one Define child per lifted function.
+	# Published verbs section appears for packs too - one Define child per lifted function.
 	var pack_path: String = "res://eventsheet_addons/health/health_behavior.gd"
 	var source: String = (FileAccess.open(pack_path, FileAccess.READ)).get_as_text()
 	dock._load_sheet_from_path(pack_path)  # the real user open path (verify-lift included)

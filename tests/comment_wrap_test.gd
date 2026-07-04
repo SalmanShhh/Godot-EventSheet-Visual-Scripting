@@ -1,4 +1,4 @@
-# Godot EventSheets — comment rows wrap to the row width and grow vertically.
+# Godot EventSheets - comment rows wrap to the row width and grow vertically.
 #
 # A long comment used to render as one line clipped off the right edge. Now each logical
 # comment line word-wraps to the available width and the row reserves enough height for the

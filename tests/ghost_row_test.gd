@@ -1,4 +1,4 @@
-# EventForge — the Ghost Row (zero-dialog add) + the ranked quick-add matcher behind it. Pressing
+# EventForge - the Ghost Row (zero-dialog add) + the ranked quick-add matcher behind it. Pressing
 # E/C/A opens a type-a-sentence popup whose list shows the top matches; Enter applies the highlighted
 # candidate straight onto the sheet. Headless: the popup can't show, but open() still resets state and
 # _refresh/_apply_selected drive the whole match→apply flow, so this pins it end to end.
@@ -56,7 +56,7 @@ static func run() -> bool:
 	# ── Post-insert continuation: an unfilled param stages the follow-up hop; a full sentence doesn't ──
 	ok = _check("a fully-specified sentence stages NO follow-up", dock._ghost_row._last_follow_up.is_empty(), true) and ok
 	# The continuation revealed (and so re-selected) the live event row, so the next action apply
-	# APPENDS to that same event — the unbroken "add another" stream.
+	# APPENDS to that same event - the unbroken "add another" stream.
 	dock._ghost_row._refresh("heal")  # no amount given → the follow-up should target it
 	dock._ghost_row._apply_selected()
 	var follow_up: Dictionary = dock._ghost_row._last_follow_up

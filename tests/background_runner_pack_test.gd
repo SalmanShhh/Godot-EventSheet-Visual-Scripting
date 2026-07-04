@@ -1,8 +1,8 @@
-# Godot EventSheets — background_runner pack (frame-spreading Solution 4) off-thread compute.
+# Godot EventSheets - background_runner pack (frame-spreading Solution 4) off-thread compute.
 #
 # Run In Background hands a PURE callable to WorkerThreadPool; On Done(result) fires on the main thread
 # when it finishes. This loads the COMPILED pack, runs a pure static function off-thread, and polls until
-# the result comes back — proving the add_task / Mutex-guarded result / main-thread emit round-trip works.
+# the result comes back - proving the add_task / Mutex-guarded result / main-thread emit round-trip works.
 @tool
 class_name BackgroundRunnerPackTest
 extends RefCounted
@@ -10,7 +10,7 @@ extends RefCounted
 const PACK := "res://eventsheet_addons/background_runner/background_runner_behavior.gd"
 
 
-# A PURE worker function: no scene-tree, no Node access — exactly what may run off-thread.
+# A PURE worker function: no scene-tree, no Node access - exactly what may run off-thread.
 static func _square(n: int) -> int:
 	return n * n
 

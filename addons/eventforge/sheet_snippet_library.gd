@@ -1,6 +1,6 @@
-# Godot EventSheets — project-local row snippets
+# Godot EventSheets - project-local row snippets
 #
-# The shareable text-snippet format (EventSheetSnippet — what Copy already puts on
+# The shareable text-snippet format (EventSheetSnippet - what Copy already puts on
 # the system clipboard) IS the file format: one serializer, no new dialect. Drop the
 # files in res://eventsheet_snippets/ (override: eventsheets/project/snippets_dir),
 # commit them, and the team shares every-X-seconds-spawn / fade-and-free / knockback

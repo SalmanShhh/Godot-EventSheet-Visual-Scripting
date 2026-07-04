@@ -1,6 +1,6 @@
-# EventForge — trigger signals as first-class rows. A behaviour's `## @ace_trigger … signal X`
+# EventForge - trigger signals as first-class rows. A behaviour's `## @ace_trigger … signal X`
 # declaration block (hand-written GDScript) is lifted into SignalRow trigger rows so it reads as a
-# keyword-badged Trigger row and feeds the On Signal / Emit Signal pickers — and a bare zero-arg
+# keyword-badged Trigger row and feeds the On Signal / Emit Signal pickers - and a bare zero-arg
 # `signal_name.emit()` in an event body reverse-lifts to an Emit Signal action row.
 @tool
 class_name SignalRowLiftTest

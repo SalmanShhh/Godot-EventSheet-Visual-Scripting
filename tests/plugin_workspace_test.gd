@@ -1,4 +1,4 @@
-# EventForge — Plugin workspace behavior tests
+# EventForge - Plugin workspace behavior tests
 @tool
 class_name PluginWorkspaceTest
 extends RefCounted

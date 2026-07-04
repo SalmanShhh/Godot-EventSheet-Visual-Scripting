@@ -1,4 +1,4 @@
-# Godot EventSheets — BBCode-lite comments
+# Godot EventSheets - BBCode-lite comments
 # [b]/[i]/[color=…] style comment text on the canvas; the RAW text (tags included) stays
 # the editing/serialization truth, so styling can never lose data.
 @tool

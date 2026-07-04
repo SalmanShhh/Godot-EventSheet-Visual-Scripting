@@ -1,4 +1,4 @@
-# Godot EventSheets — "With node X:" scope, editor side (chip rendering + edit dialog).
+# Godot EventSheets - "With node X:" scope, editor side (chip rendering + edit dialog).
 #
 # Compilation is covered by with_node_scope_test; this drives the EDITOR: a row with a with_node_target
 # renders a "With node  X" chip in the condition lane, the line count accounts for it, and the dialog

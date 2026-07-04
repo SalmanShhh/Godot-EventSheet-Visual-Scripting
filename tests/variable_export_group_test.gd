@@ -1,4 +1,4 @@
-# Godot EventSheets — grouping @export variables into Inspector @export_group sections.
+# Godot EventSheets - grouping @export variables into Inspector @export_group sections.
 #
 # A variable's "Inspector group" (set in the variable dialog) lands it in an @export_group("Name") section
 # in the generated script, so the Godot Inspector shows the exported vars grouped. This pins both halves:

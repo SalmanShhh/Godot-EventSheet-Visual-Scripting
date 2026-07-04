@@ -1,4 +1,4 @@
-# EventForge — ACE metadata normalization tests
+# EventForge - ACE metadata normalization tests
 @tool
 class_name ACEMetadataTest
 extends RefCounted

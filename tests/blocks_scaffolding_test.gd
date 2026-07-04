@@ -1,10 +1,10 @@
-# Godot EventSheets — GDScript-blocks spec P1: scaffolding detection + the foldable "Class setup" strip.
+# Godot EventSheets - GDScript-blocks spec P1: scaffolding detection + the foldable "Class setup" strip.
 #
 # Pins the two correctness gates of the blocks-as-rows polish:
 #   - is_scaffolding_code() classifies class boilerplate (prelude, ## annotations, the host-binding
-#     _enter_tree, blanks) as scaffolding but NEVER real logic (conservative — it must not hide code).
+#     _enter_tree, blanks) as scaffolding but NEVER real logic (conservative - it must not hide code).
 #   - _build_rows_from_sheet() collapses the LEADING run of ≥2 scaffolding RawCodeRows into ONE synthetic,
-#     foldable, folded-by-default strip whose children are the real rows (view-state only — codegen
+#     foldable, folded-by-default strip whose children are the real rows (view-state only - codegen
 #     untouched). A single scaffolding row, or logic up top, is left inline.
 @tool
 class_name BlocksScaffoldingTest
@@ -36,7 +36,7 @@ static func run() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.events.append(_raw("class_name Patrol\nextends Node\n## @ace_tags(movement)"))
 	sheet.events.append(_raw("func _enter_tree() -> void:\n\thost = get_parent() as Node"))
-	sheet.events.append(_raw("velocity.y += gravity"))  # real logic — must stay inline
+	sheet.events.append(_raw("velocity.y += gravity"))  # real logic - must stay inline
 	var rows: Array = viewport._build_rows_from_sheet(sheet)
 	var strip: EventRowData = _first_strip(rows)
 	all_passed = _check("a leading run of ≥2 scaffolding rows collapses into a strip", strip != null, true) and all_passed
@@ -50,7 +50,7 @@ static func run() -> bool:
 		strip != null and viewport._is_synthetic_scaffolding_strip(strip), true) and all_passed
 
 	# ── A SINGLE multi-line prelude block collapses too (the importer bundles a whole prelude into ONE
-	# RawCodeRow, so the threshold is line-based, not row-based — else the strip would never fire). ──
+	# RawCodeRow, so the threshold is line-based, not row-based - else the strip would never fire). ──
 	var prelude_only: EventSheetResource = EventSheetResource.new()
 	prelude_only.events.append(_raw("class_name Foe\nextends Node2D\n## @ace_family(Foe)"))  # 3 lines, 1 row
 	prelude_only.events.append(_raw("position += velocity"))

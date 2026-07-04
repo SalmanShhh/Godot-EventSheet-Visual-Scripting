@@ -1,8 +1,8 @@
-# Godot EventSheets — dragging a scene node into a param field to reference it.
+# Godot EventSheets - dragging a scene node into a param field to reference it.
 #
 # Dropping a Scene-dock node onto an expression/path field inserts a node reference. For Godot's node-heavy
 # objects this now prefers a scene-unique %Name (collapses a deep $A/B/C/D path to %D, reparent-proof) when
-# the dragged node carries one — the same flat handle the node picker hands back — instead of a brittle
+# the dragged node carries one - the same flat handle the node picker hands back - instead of a brittle
 # $path. Pins the drag→reference conversion + the %Name preference.
 @tool
 class_name NodeDragReferenceTest

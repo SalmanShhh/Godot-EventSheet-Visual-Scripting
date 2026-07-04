@@ -40,6 +40,6 @@ extends Resource
 @export var value_highlight_color: Color = EventSheetPalette.COLOR_VALUE
 ## Hover tint for an individual condition/action cell.
 @export var cell_hover_color: Color = Color(1.0, 1.0, 1.0, 0.14)
-## Accent for behavior sheets (identity banner / tab badge) — soft purple, the event-sheet-style
+## Accent for behavior sheets (identity banner / tab badge) - soft purple, the event-sheet-style
 ## "this is a behavior" color language.
 @export var behavior_accent_color: Color = Color("#8a7bd8")

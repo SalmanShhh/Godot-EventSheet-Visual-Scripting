@@ -31,7 +31,7 @@ func open() -> void:
 		box.set_anchors_preset(Control.PRESET_FULL_RECT)
 		box.add_theme_constant_override("separation", 8)
 		var hint: Label = Label.new()
-		hint.text = "Describe the behavior in plain English — it becomes GDScript, then editable events you can tweak."
+		hint.text = "Describe the behavior in plain English - it becomes GDScript, then editable events you can tweak."
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(hint)
 		_ai_prompt_edit = TextEdit.new()
@@ -60,7 +60,7 @@ func _ai_generate_clicked() -> void:
 		_apply_ai_gdscript(EventSheetAIGeneration.resolve_gdscript(description, _dock._current_sheet))
 		return
 	if not EventSheetAIGeneration.is_live_configured():
-		_dock._set_status("Set eventsheets/ai/api_key (+ endpoint, model) in Project Settings to generate in-editor — or use the MCP server.", true)
+		_dock._set_status("Set eventsheets/ai/api_key (+ endpoint, model) in Project Settings to generate in-editor - or use the MCP server.", true)
 		return
 	_ai_request_live(description)
 

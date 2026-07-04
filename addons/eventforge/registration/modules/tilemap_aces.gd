@@ -1,4 +1,4 @@
-# EventForge module — Tilemaps (TileMapLayer, Godot 4.3+)
+# EventForge module - Tilemaps (TileMapLayer, Godot 4.3+)
 #
 # set/erase/clear cells, query cell source/atlas, and map<->local coordinate conversion.
 # Lane-1 wraps of native TileMapLayer methods, single-line per the parity contract; coords

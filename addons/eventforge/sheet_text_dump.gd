@@ -1,9 +1,9 @@
-# Godot EventSheets — readable text rendering of a sheet (the team-diff backbone)
+# Godot EventSheets - readable text rendering of a sheet (the team-diff backbone)
 #
 # Renders an EventSheetResource as stable, deterministic plain text so git can diff
 # sheets row-by-row (see CONTRIBUTING "Reviewable sheet diffs": a one-line textconv
 # driver turns every .tres PR into readable events). Format goals: one fact per line,
-# model order preserved, no timestamps or volatile ids — identical sheets must dump
+# model order preserved, no timestamps or volatile ids - identical sheets must dump
 # identical text.
 @tool
 class_name EventSheetTextDump

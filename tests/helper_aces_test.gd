@@ -1,4 +1,4 @@
-# EventForge — Helper ACEs test.
+# EventForge - Helper ACEs test.
 # The Helper module is the "structured escape hatch": generic ACEs (set/get any property,
 # call any method, run a line, ternary, is-valid, connect-signal, math/string idioms) for
 # GDScript that doesn't map to a specific ACE. This guards that they register, compile to the
@@ -32,7 +32,7 @@ static func run() -> bool:
 		by_id.has("ConnectSignal") and by_id.has("DisconnectSignal") and by_id.has("MoveTowardValue")
 		and by_id.has("RemapValue") and by_id.has("FormatString"), true) and passed
 
-	# Templates are single-line, direct GDScript (parity contract) — spot-check a few.
+	# Templates are single-line, direct GDScript (parity contract) - spot-check a few.
 	passed = _check("Set Property template is a direct assignment",
 		str(by_id["SetProperty"].codegen_template), "{target}.{property} = {value}") and passed
 	passed = _check("Call Method template is a direct call",

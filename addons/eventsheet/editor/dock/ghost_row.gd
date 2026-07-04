@@ -2,14 +2,14 @@
 class_name EventSheetGhostRow
 extends RefCounted
 # The zero-dialog add: pressing E / C / A materialises a small type-a-sentence popup at the selected
-# row instead of the full picker window. Type "heal 5" or "every tick" — the quick-add brain scores it
+# row instead of the full picker window. Type "heal 5" or "every tick" - the quick-add brain scores it
 # live and the list shows the top matches with their filled parameters; Enter applies the highlighted
 # one straight onto the sheet, ↑/↓ choose, Esc cancels, and Ctrl+Enter opens the full picker for
-# browsing (the picker stays one keystroke away — it doubles as the illustrated catalog a beginner
+# browsing (the picker stays one keystroke away - it doubles as the illustrated catalog a beginner
 # learns the vocabulary from).
 #
-# ONE transient PopupPanel parented on the dock — never a per-row control, so the virtualized canvas
-# stays widget-free — anchored just under the selected row (or at the mouse when nothing is selected).
+# ONE transient PopupPanel parented on the dock - never a per-row control, so the virtualized canvas
+# stays widget-free - anchored just under the selected row (or at the mouse when nothing is selected).
 # While its LineEdit has focus the dock's single-key reflexes suppress themselves exactly as they do
 # for any focused text field, so typing "e" into the query never re-triggers Add Event.
 
@@ -26,7 +26,7 @@ func init(dock: Control) -> void:
 
 
 ## Opens the ghost row for the add-kind that summoned it. In a headless run the popup can't show, so
-## this only resets the query state — the match/apply flow stays fully drivable by tests.
+## this only resets the query state - the match/apply flow stays fully drivable by tests.
 func open(origin: String) -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
@@ -116,12 +116,12 @@ func _refresh(query: String) -> void:
 
 
 ## Applies the highlighted candidate straight onto the sheet: a trigger/condition becomes a new
-## conditioned event, an action appends to the selected event — the same apply flow the quick-add bar
+## conditioned event, an action appends to the selected event - the same apply flow the quick-add bar
 ## and the picker use, so undo/refresh/params-dialog behavior is identical.
 func _apply_selected() -> void:
 	if _candidates.is_empty():
 		if not _edit.text.strip_edges().is_empty():
-			_dock._set_status("Nothing matches \"%s\" — Ctrl+Enter browses the full picker." % _edit.text.strip_edges(), true)
+			_dock._set_status("Nothing matches \"%s\" - Ctrl+Enter browses the full picker." % _edit.text.strip_edges(), true)
 		return
 	var selected: PackedInt32Array = _list.get_selected_items() if _list != null else PackedInt32Array()
 	var index: int = selected[0] if selected.size() > 0 else 0
@@ -131,7 +131,7 @@ func _apply_selected() -> void:
 	var definition: ACEDefinition = candidate.get("definition")
 	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
 	# Mode mirrors the classic picker flows: an action APPENDS to the selected event (mode "" would
-	# fall into the apply's default branch and wrap it in a NEW event — only right with no selection);
+	# fall into the apply's default branch and wrap it in a NEW event - only right with no selection);
 	# a condition summoned by the C key also appends; triggers and the E key start a new event.
 	var mode: String = "new_condition_event"
 	if definition.ace_type == ACEDefinition.ACEType.ACTION:
@@ -153,8 +153,8 @@ var _last_follow_up: Dictionary = {}
 
 
 ## Post-insert continuation: when the sentence left parameters unfilled ("heal" with no amount), the
-## one-field param editor opens straight onto the first of them — pre-filled with the resolved default
-## and select-all'd — so `A → heal ⏎ → 5 ⏎` completes with zero dialogs. A fully-specified sentence
+## one-field param editor opens straight onto the first of them - pre-filled with the resolved default
+## and select-all'd - so `A → heal ⏎ → 5 ⏎` completes with zero dialogs. A fully-specified sentence
 ## ("heal 5") applies silently. Either way the affected row is revealed, so pressing an add key again
 ## continues the stream right below it.
 func _continue_into_params(definition: ACEDefinition, filled: Dictionary) -> void:
@@ -180,7 +180,7 @@ func _continue_into_params(definition: ACEDefinition, filled: Dictionary) -> voi
 
 
 ## Locates the LIVE just-applied ACE. The apply runs through the undo funnel, whose commit restores a
-## duplicated snapshot — the resources it created are replaced — so the only reliable handle is a
+## duplicated snapshot - the resources it created are replaced - so the only reliable handle is a
 ## reverse walk of the live sheet for the newest ACE with this definition's id. {row, ace} or {}.
 func _find_applied_ace(definition: ACEDefinition) -> Dictionary:
 	var sheet: EventSheetResource = _dock.get_current_sheet()
@@ -219,7 +219,7 @@ func _find_in_row(row: Variant, ace_id: String) -> Dictionary:
 	return {}
 
 
-## Ctrl+Enter — the browsable catalog is one keystroke away; which picker opens follows the add-kind
+## Ctrl+Enter - the browsable catalog is one keystroke away; which picker opens follows the add-kind
 ## that summoned the ghost row.
 func _open_full_picker() -> void:
 	if _popup != null:

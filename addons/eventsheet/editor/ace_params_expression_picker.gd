@@ -1,7 +1,7 @@
 @tool
 class_name ACEParamsExpressionPicker
 extends RefCounted
-# The "Insert Expression" picker opened by the ƒx button next to an expression field — a visual
+# The "Insert Expression" picker opened by the ƒx button next to an expression field - a visual
 # expression builder. Lists EXPRESSION-type ACEs (grouped), the host object's reflected
 # properties/methods, and the sheet's own variables (with member chaining while searching), plus an
 # operator palette; picking one inserts its code fragment at the field's caret. Extracted from
@@ -14,7 +14,7 @@ extends RefCounted
 # (ACEParamsDialog.member_expression_fragment, …) keep working unchanged.
 
 # The host ACEParamsDialog instance (named _host, not _dialog, because the host's OWN field is
-# literally `var _dialog: ConfirmationDialog` — `_host._dialog` reads unambiguously). ACEParamsDialog
+# literally `var _dialog: ConfirmationDialog` - `_host._dialog` reads unambiguously). ACEParamsDialog
 # extends RefCounted (not Control), so the back-ref is typed as the host class, and `_host._dialog` is
 # the ConfirmationDialog this picker parents its window under.
 var _host: ACEParamsDialog = null
@@ -57,7 +57,7 @@ func _ensure_expression_window() -> void:
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_expression_window.add_child(margin)
 
-	# Operator palette — click to drop an operator at the expression's caret, so a non-coder builds
+	# Operator palette - click to drop an operator at the expression's caret, so a non-coder builds
 	# comparisons + maths (health > 10, score + 1) without hunting for punctuation. Inserts and stays
 	# open; pair it with the tree below to assemble a whole expression by clicking.
 	content.add_child(EventSheetPopupUI.section_header("Operators"))
@@ -125,11 +125,11 @@ func _refresh_expression_tree() -> void:
 			item.set_tooltip_text(0, definition.description)
 		item.set_metadata(0, definition)
 	# Visual expression builder: also list the host object's OWN members (reflected),
-	# so any property/method is pickable without typing — not just registered ACEs.
+	# so any property/method is pickable without typing - not just registered ACEs.
 	var host_class: String = _host._host_class_for_context()
-	_add_member_expression_group(root, "This Object — Properties", ACEParamsDialog.reflected_members(host_class, "property"), false, query)
-	_add_member_expression_group(root, "This Object — Methods", ACEParamsDialog.reflected_members(host_class, "method"), true, query)
-	# Beyond `self`: the sheet's own variables as one-click leaves, plus — while searching — the typed
+	_add_member_expression_group(root, "This Object - Properties", ACEParamsDialog.reflected_members(host_class, "property"), false, query)
+	_add_member_expression_group(root, "This Object - Methods", ACEParamsDialog.reflected_members(host_class, "method"), true, query)
+	# Beyond `self`: the sheet's own variables as one-click leaves, plus - while searching - the typed
 	# members of any class-backed variable (enemy.health) so reflection isn't limited to the host.
 	_add_sheet_variable_expressions(root, query)
 
@@ -167,11 +167,11 @@ static func variable_member_fragment(var_name: String, member: String, is_method
 	return var_name + "." + member_expression_fragment(member, is_method)
 
 
-## Lists the sheet's own variables as one-click leaves (insert `name`), and — while searching — the
+## Lists the sheet's own variables as one-click leaves (insert `name`), and - while searching - the
 ## members of any variable whose declared type is a reflectable class, so `enemy.health` is one pick.
 ## This is the visual builder's non-self reflection: the host members come from _host_class_for_context,
 ## these reach the OTHER objects the sheet names. Member chaining is query-gated: a class can carry 100+
-## members, so showing them all for every variable would bury the idle tree — they surface as you type.
+## members, so showing them all for every variable would bury the idle tree - they surface as you type.
 func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 	if not _host._lint_context_provider.is_valid():
 		return
@@ -179,7 +179,7 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 	if sheet == null or sheet.variables == null or sheet.variables.is_empty():
 		return
 	var lowered: String = query.to_lower()
-	# (1) The variables themselves — always shown (filtered by the search).
+	# (1) The variables themselves - always shown (filtered by the search).
 	var var_group: TreeItem = null
 	for var_name: Variant in sheet.variables.keys():
 		var name_str: String = str(var_name)
@@ -198,7 +198,7 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 		if not vtype.is_empty():
 			item.set_tooltip_text(0, "%s : %s" % [name_str, vtype])
 		item.set_metadata(0, name_str)
-	# (2) Member chaining (enemy.velocity) — only while searching, and only for class-backed variables.
+	# (2) Member chaining (enemy.velocity) - only while searching, and only for class-backed variables.
 	if lowered.is_empty():
 		return
 	for var_name: Variant in sheet.variables.keys():
@@ -258,8 +258,8 @@ func _on_expression_activated() -> void:
 		return
 	# Insert at the caret so results compose into a larger expression (e.g. health + sin(time)). The OK
 	# button still closes the window (AcceptDialog auto-hides on confirm); double-clicking a tree result
-	# leaves the window open so several can be chained. The old code only handled LineEdit — and the
-	# expression field is always a CodeEdit — so picking a result silently did nothing. This fixes it.
+	# leaves the window open so several can be chained. The old code only handled LineEdit - and the
+	# expression field is always a CodeEdit - so picking a result silently did nothing. This fixes it.
 	_insert_into_expression_target(insert_text)
 
 

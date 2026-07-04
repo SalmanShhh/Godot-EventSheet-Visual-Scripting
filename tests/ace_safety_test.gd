@@ -1,11 +1,11 @@
-# EventForge — Core ACE runtime-safety regression guards
+# EventForge - Core ACE runtime-safety regression guards
 #
 # The adversarial template audit found 9 built-in ACEs that PARSED fine but crashed, leaked, or
 # misbehaved at runtime (null-deref on a failed file/focus, a leaked one-shot player, a wrong-host
 # global_position, a delta that doesn't exist outside _process, defaults that no-op or error-spam).
 # Each was fixed in its module; this test asserts the SHIPPED descriptor still carries the corrected
 # form, so a future edit can't quietly reintroduce the hazard. Pairs with builtin_ace_compile_test
-# (which proves they parse) — this proves the specific runtime guards are present.
+# (which proves they parse) - this proves the specific runtime guards are present.
 @tool
 class_name ACESafetyTest
 extends RefCounted

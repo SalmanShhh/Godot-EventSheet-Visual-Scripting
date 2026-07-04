@@ -1,4 +1,4 @@
-# Godot EventSheets — ƒx expression autocomplete + external-sheet file watcher
+# Godot EventSheets - ƒx expression autocomplete + external-sheet file watcher
 # ƒx fields are single-line CodeEdits with completion fed by the same candidates as the
 # GDScript-block editor; external (GDScript-backed) sheets detect disk changes by mtime
 # and reload on demand (the prompt itself is editor chrome over these primitives).
@@ -58,7 +58,7 @@ static func run() -> bool:
 	all_passed = _check("external sheet opened", editor._current_sheet != null and editor._current_sheet.external_source_path == sample_path, true) and all_passed
 	all_passed = _check("freshly opened file is not 'changed'", editor._external_sheet_changed_on_disk(), false) and all_passed
 	# Simulate an outside edit: rewrite the file and force a different stored mtime
-	# (filesystem mtime granularity can be 1s — too slow to wait for in tests).
+	# (filesystem mtime granularity can be 1s - too slow to wait for in tests).
 	var rewrite: FileAccess = FileAccess.open(sample_path, FileAccess.WRITE)
 	rewrite.store_string("extends Node\n\nvar hp: int = 2\n")
 	rewrite.close()

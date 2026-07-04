@@ -1,4 +1,4 @@
-# Godot EventSheets — tedium-reduction arc (Tier 2+3, spec retired once delivered:
+# Godot EventSheets - tedium-reduction arc (Tier 2+3, spec retired once delivered:
 # see the CHANGELOG slices for the design record).
 # Grows a block per slice: True Rename + create-variable quick-fix, snippets,
 # bulk multi-select ops, session restore, canvas drops, attach/run loop closers.

@@ -1,11 +1,11 @@
 @tool
 class_name EventSheetSheetDiff
 extends RefCounted
-# "What changed since the last save?" — in EVENT language, not text lines.
+# "What changed since the last save?" - in EVENT language, not text lines.
 #
-# Compiles the CURRENT sheet to a scratch path (never the real file — compile writes its output, and
+# Compiles the CURRENT sheet to a scratch path (never the real file - compile writes its output, and
 # a diff must not save behind the user's back), diffs that against the SAVED .gd on disk, and maps
-# the changed lines back to sheet rows through the line↔row mapper — so the answer is "these events
+# the changed lines back to sheet rows through the line↔row mapper - so the answer is "these events
 # change when you save", each clickable to jump to its row, with any disk-only lines listed as what
 # a save would remove. The diff core is static + pure (testable headless); the dialog is the shell.
 #
@@ -25,7 +25,7 @@ func init(dock: Control) -> void:
 
 
 ## The changed region between two line arrays after common prefix/suffix trimming:
-## {old_start, old_end, new_start, new_end} — 1-based inclusive; {} when identical.
+## {old_start, old_end, new_start, new_end} - 1-based inclusive; {} when identical.
 ## A pure insertion/removal yields an empty side (end < start).
 static func changed_region(old_lines: PackedStringArray, new_lines: PackedStringArray) -> Dictionary:
 	var prefix: int = 0
@@ -82,7 +82,7 @@ static func summarize(output: String, source_map: Array, disk_text: String) -> D
 	return {"identical": false, "rows": rows, "removed_lines": removed}
 
 
-## The saved file this sheet's compile targets — the diff's "old" side. "" when never saved.
+## The saved file this sheet's compile targets - the diff's "old" side. "" when never saved.
 static func saved_path_for(sheet: EventSheetResource) -> String:
 	if sheet == null:
 		return ""
@@ -99,7 +99,7 @@ func open() -> void:
 	var sheet: EventSheetResource = _dock._current_sheet
 	var saved_path: String = saved_path_for(sheet)
 	if saved_path.is_empty() or not FileAccess.file_exists(saved_path):
-		_dock._set_status("What Changed: this sheet has no saved file yet — everything is new.")
+		_dock._set_status("What Changed: this sheet has no saved file yet - everything is new.")
 		return
 	var result: Dictionary = SheetCompiler.compile(sheet, "user://eventforge_diff_preview.gd")
 	var summary: Dictionary = summarize(
@@ -107,7 +107,7 @@ func open() -> void:
 		result.get("source_map", []),
 		FileAccess.get_file_as_string(saved_path))
 	if bool(summary.get("identical", false)):
-		_dock._set_status("What Changed: nothing — saving would be byte-identical to %s." % saved_path.get_file())
+		_dock._set_status("What Changed: nothing - saving would be byte-identical to %s." % saved_path.get_file())
 		return
 	_entries = summary.get("rows", [])
 	_ensure_dialog()
@@ -118,7 +118,7 @@ func open() -> void:
 	for removed_line: String in removed:
 		_list.add_item("− %s" % removed_line)
 	var row_count: int = _entries.size()
-	_summary_label.text = "%d row%s change%s on save%s — double-click to jump." % [
+	_summary_label.text = "%d row%s change%s on save%s - double-click to jump." % [
 		row_count, "" if row_count == 1 else "s", "s" if row_count == 1 else "",
 		"" if removed.is_empty() else " · %d line%s removed" % [removed.size(), "" if removed.size() == 1 else "s"]]
 	if _dialog.is_inside_tree():

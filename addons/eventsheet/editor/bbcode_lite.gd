@@ -1,9 +1,9 @@
-# Godot EventSheets — BBCode-lite for comments
+# Godot EventSheets - BBCode-lite for comments
 # A tiny BBCode subset for comment styling on the custom-drawn canvas:
 #   [b]bold[/b]   [i]italic[/i]   [color=#ff7777]tint[/color]   [color=red]named[/color]
 # parse() returns styled segments the renderer draws sequentially; unknown tags are
 # stripped gracefully (their inner text survives). The RAW text (tags included) stays the
-# editing/serialization truth — parsing only shapes the pixels, so no data is ever lost.
+# editing/serialization truth - parsing only shapes the pixels, so no data is ever lost.
 @tool
 class_name EventSheetBBCodeLite
 extends RefCounted

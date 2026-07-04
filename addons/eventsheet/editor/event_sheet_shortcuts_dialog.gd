@@ -1,7 +1,7 @@
 @tool
 class_name EventSheetShortcutsDialog
 extends RefCounted
-# Tools ▸ Keyboard Shortcuts — an editable remapper for the authoring keys (click a binding, then press
+# Tools ▸ Keyboard Shortcuts - an editable remapper for the authoring keys (click a binding, then press
 # the new combo). Built on EventSheetShortcuts (per-user persistence); the structural keys from the dock's
 # FIXED_KEYS table are shown read-only. Clashes are flagged inline but allowed (you resolve them by
 # rebinding one). Extracted from event_sheet_dock.gd; the only dock touch-points are add_child (to host
@@ -53,7 +53,7 @@ func open() -> void:
 	_shortcuts_dialog.popup_centered()
 
 
-## Rebuilds the editor rows from the live bindings — called on open and after every change, so the
+## Rebuilds the editor rows from the live bindings - called on open and after every change, so the
 ## displayed keys and conflict flags always reflect EventSheetShortcuts.
 func _refresh_shortcuts_editor() -> void:
 	if _shortcuts_list == null:
@@ -77,7 +77,7 @@ func _refresh_shortcuts_editor() -> void:
 		var conflict: String = EventSheetShortcuts.conflicting_action(action, binding)
 		if not conflict.is_empty():
 			capture.modulate = Color(1.0, 0.7, 0.4)
-			capture.tooltip_text = "Also bound to '%s' — one of them won't fire. Rebind one." % EventSheetShortcuts.label_for(conflict)
+			capture.tooltip_text = "Also bound to '%s' - one of them won't fire. Rebind one." % EventSheetShortcuts.label_for(conflict)
 		capture.pressed.connect(_begin_shortcut_capture.bind(action, capture))
 		capture.gui_input.connect(_shortcut_capture_gui_input.bind(action, capture))
 		row.add_child(capture)

@@ -20,7 +20,7 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-## Saved-tab paths + the active index. Unsaved sheets (no path) are skipped — there's no file to reopen.
+## Saved-tab paths + the active index. Unsaved sheets (no path) are skipped - there's no file to reopen.
 func persist() -> void:
 	if not _session_tracking:
 		return
@@ -47,7 +47,7 @@ func persist() -> void:
 	session.save(SESSION_PATH)
 
 
-## Reopens last session's tabs (missing files skipped silently — a deleted sheet shouldn't block
+## Reopens last session's tabs (missing files skipped silently - a deleted sheet shouldn't block
 ## startup), then turns persistence on.
 func restore() -> void:
 	# Setting off = sessions fully dormant (no restore, no writes); the last saved session survives

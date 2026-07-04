@@ -1,7 +1,7 @@
-# EventForge — Inline editing of comments + the group editor popup
+# EventForge - Inline editing of comments + the group editor popup
 #
 # Double-clicking a comment starts inline editing; double-clicking a group header opens the
-# group editor popup (name + description) via group_edit_requested, NOT an inline title field —
+# group editor popup (name + description) via group_edit_requested, NOT an inline title field -
 # so a group's description (rendered only once non-empty) is always reachable.
 @tool
 class_name InlineEditTest
@@ -37,7 +37,7 @@ static func run() -> bool:
 	all_passed = _check("comment text updates on commit", comment.text, "new comment") and all_passed
 
 	# Group: double-clicking a group header opens the group editor popup (group_edit_requested),
-	# not an inline title field — so the description (only rendered once non-empty) is reachable.
+	# not an inline title field - so the description (only rendered once non-empty) is reachable.
 	var group_index: int = _flat_index(viewport, group)
 	viewport._get_or_build_row_layout(group_index, width, font, font_size)
 	var group_row: EventRowData = viewport._row_at(group_index)
@@ -45,7 +45,7 @@ static func run() -> bool:
 	var requested_group: Array = [null]
 	viewport.group_edit_requested.connect(func(g: EventGroup) -> void: requested_group[0] = g)
 	# Double-clicking the group title (the only span now the redundant badge is gone) must still open
-	# the group editor popup, not start an inline title field — _begin_edit routes groups to the popup.
+	# the group editor popup, not start an inline title field - _begin_edit routes groups to the popup.
 	_double_click(viewport, group_row.spans[0].rect.get_center())
 	all_passed = _check("double-click a group opens the editor popup, not inline edit",
 		requested_group[0] == group and int(viewport.get_editing_context_for_test().get("span_index", -1)) == -1, true) and all_passed

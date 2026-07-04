@@ -1,4 +1,4 @@
-# EventForge — EventSheet resource
+# EventForge - EventSheet resource
 # Top-level event sheet resource attached to one host node.
 # The @icon makes sheets recognizable at a glance in the FileSystem dock and the
 # Create Resource dialog instead of reading as generic .tres files.
@@ -15,7 +15,7 @@ extends Resource
 ## attach-time warning + lint/completion context).
 @export var behavior_mode: bool = false
 ## Autoload (Singleton) sheets: compiles to an `extends Node` class meant to be
-## registered as a project autoload under autoload_name — Game State, Event Bus,
+## registered as a project autoload under autoload_name - Game State, Event Bus,
 ## Save System and friends, project-wide. Exposed functions publish ACEs that call
 ## through the autoload name (`GameState.add_score(...)`), usable from every sheet.
 @export var autoload_mode: bool = false
@@ -23,12 +23,12 @@ extends Resource
 ## EXPERIMENTAL (editor-version-coupled): emits `@tool` so the generated script runs
 ## inside the editor. Combine with host_class "EditorScript" + the On Editor Run trigger
 ## to build editor tooling from events (File > Run / Ctrl+Shift+X). Runtime ACEs stay on
-## stable APIs only — editor APIs are Godot's most volatile surface.
+## stable APIs only - editor APIs are Godot's most volatile surface.
 @export var tool_mode: bool = false
 ## Debug compile: emit `breakpoint` statements for rows flagged via the gutter (F9).
 @export var emit_breakpoints: bool = false
 ## Debug compile: stream this sheet's variables to the editor's Live Values window
-## (throttled EngineDebugger messages from _process — plain core-Godot API, debug
+## (throttled EngineDebugger messages from _process - plain core-Godot API, debug
 ## compiles only; normal compiles never carry it).
 @export var emit_live_values: bool = false
 ## Live event trace (debugging rung 3): with Live Values on, each event appends its UID to a
@@ -36,7 +36,7 @@ extends Resource
 ## firing rows in real time. Debug compiles only; plain core-Godot API (EngineDebugger); off in
 ## normal compiles. Piggybacks on the Live Values _process, so it needs Live Values + variables.
 @export var emit_event_trace: bool = false
-## When set, the generated script declares `class_name <this>` — the sheet then defines a
+## When set, the generated script declares `class_name <this>` - the sheet then defines a
 ## custom node type that appears in Godot's Create Node dialog, exactly like a hand-written
 ## GDScript class. Must be unique across the project (Godot enforces this).
 @export var custom_class_name: String = ""
@@ -52,10 +52,10 @@ extends Resource
 @export_multiline var class_description: String = ""
 ## When true, this sheet's class is an event-sheet FAMILY: every instance is collected
 ## into the group `family_<snake_class_name>`, so OTHER sheets can write ONE rule that applies to all of
-## them — "for each Enemy where health < 20: flash" compiles to a loop over
+## them - "for each Enemy where health < 20: flash" compiles to a loop over
 ## get_tree().get_nodes_in_group("family_enemy"). The family's `variables` are its per-instance variables
 ## and its exposed `functions` are its per-object ACEs. Emitted ONLY as a `## @ace_family(<name>)`
-## annotation (metadata, exactly like @ace_tags — no code, so it round-trips byte-exact). Membership is an
+## annotation (metadata, exactly like @ace_tags - no code, so it round-trips byte-exact). Membership is an
 ## explicit "Add To Family" action (compiles to add_to_group) the family authors, NEVER auto-emitted code
 ## (which would double on re-import). Requires a custom_class_name.
 @export var is_family: bool = false
@@ -67,11 +67,11 @@ extends Resource
 ## skipped. Edited via the Inspector; ignored for GDScript-backed sheets.
 @export var includes: Array[String] = []
 ## Lane B composition (has-a): addon CLASS NAMES this sheet uses as owned helper
-## instances — each emits `var __uses_<snake> := <Class>.new()` so ƒx/blocks can call
+## instances - each emits `var __uses_<snake> := <Class>.new()` so ƒx/blocks can call
 ## them (suits RefCounted provider/helper addons; Node-behavior auto-attach is the
 ## planned Lane B.2).
 @export var uses_addons: Array[String] = []
-## Lane B.2 composition: behavior CLASS NAMES this pack expects as SIBLING nodes —
+## Lane B.2 composition: behavior CLASS NAMES this pack expects as SIBLING nodes -
 ## compiles to _get_configuration_warnings(), so Godot shows the ⚠ badge when a
 ## dependency is missing (the Unity RequireComponent idiom, warning-only by design).
 @export var requires_behaviors: Array[String] = []
@@ -82,7 +82,7 @@ extends Resource
 ## appear in the ACE picker as conditions/actions/triggers/expressions.
 @export var ace_provider_scripts: Array[String] = []
 ## Non-empty when this sheet was opened FROM a GDScript file (GDScript-backed sheet): the
-## .gd file is the single source of truth — saving compiles back to it (order-preserving,
+## .gd file is the single source of truth - saving compiles back to it (order-preserving,
 ## no generated header), and no .tres exists unless the user saves-as. This is what
 ## lets you open any GDScript as a sheet.
 @export var external_source_path: String = ""
@@ -95,7 +95,7 @@ extends Resource
 
 ## The runtime group a Family's instances live in, derived from the class name (e.g. class "Enemy" →
 ## "family_enemy"). One rule over the family iterates this group. Empty when the sheet has no class name
-## (a family needs a custom_class_name — the type instances share). The "Add To Family" action and any
+## (a family needs a custom_class_name - the type instances share). The "Add To Family" action and any
 ## family-scoped For-Each both reference this single source of truth.
 func family_group() -> String:
 	var class_id: String = custom_class_name.strip_edges()

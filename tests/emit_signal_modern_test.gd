@@ -1,9 +1,9 @@
-# Godot EventSheets — the "Emit Signal On" helper emits the modern, parity-clean signal.emit() form.
+# Godot EventSheets - the "Emit Signal On" helper emits the modern, parity-clean signal.emit() form.
 #
 # Godot 4's idiom is `signal.emit(args)`, and the project's parity guard (codegen_parity_test.gd) bans the
 # legacy `emit_signal("name")` substring. This pulls the REAL EmitSignalOn descriptor from the registry,
 # asserts its template is the modern form, compiles it, and runs the output through the SAME
-# BANNED_PATTERNS scan the parity test uses — so the helper can never regress to the legacy form.
+# BANNED_PATTERNS scan the parity test uses - so the helper can never regress to the legacy form.
 @tool
 class_name EmitSignalModernTest
 extends RefCounted

@@ -1,4 +1,4 @@
-# EventForge — custom node ICON support for behaviour addons + sheets.
+# EventForge - custom node ICON support for behaviour addons + sheets.
 # A sheet's custom_class_icon emits `@icon("res://…")` before class_name (so Godot's Create New Node
 # dialog and the sheet banner show it), and opening the generated .gd recovers the icon back into the
 # field. The icon ships WITH the packs (eventsheet_addons/), so a behaviour stays self-contained.

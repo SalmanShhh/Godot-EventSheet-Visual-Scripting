@@ -1,4 +1,4 @@
-# Godot EventSheets — Phase C: Export as Addon Pack + Godot-native affordances
+# Godot EventSheets - Phase C: Export as Addon Pack + Godot-native affordances
 # One-click addon publishing from the dock, drag-from-docks into fx fields (files ->
 # quoted paths, scene nodes -> $Path), and scene-tree-aware $-completion (the open
 # scene's actual children complete with their script members and signals).

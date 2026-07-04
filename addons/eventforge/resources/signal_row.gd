@@ -1,4 +1,4 @@
-# Godot EventSheets — SignalRow resource
+# Godot EventSheets - SignalRow resource
 # A class-level signal declared as a sheet row (the enum-row pattern): compiles to the
 # canonical `signal name` / `signal name(damage: int)` line, verify-lifts back, renders
 # as a keyword-badged row, and feeds the signal pickers (On Signal / Emit Signal) and

@@ -1,4 +1,4 @@
-# EventForge — visual probe for the Variable dialog's Tier 3 drawer picker + live preview (dev tool).
+# EventForge - visual probe for the Variable dialog's Tier 3 drawer picker + live preview (dev tool).
 # Cycles the dialog through every drawer host type (int / Vector2 / Color / Texture2D / Curve) and saves one
 # PNG per drawer, so the per-type picker and the live "what the drawer looks like" preview can be eyeballed
 # for ALL five. Run NON-headless (needs a renderer):
@@ -20,7 +20,7 @@ var _dlg: VariableDialog = null
 
 
 func _init() -> void:
-	root.title = "Variable Dialog — drawer gallery"
+	root.title = "Variable Dialog - drawer gallery"
 	root.size = Vector2i(620, 680)
 	root.gui_embed_subwindows = true
 	var bg: ColorRect = ColorRect.new()
@@ -42,7 +42,7 @@ func _open(spec: Dictionary) -> void:
 		"tree",
 		{"editing": true, "attributes": attrs},
 		str(spec["name"]), str(spec["type"]), default_value, false,
-		"Variable — %s drawer" % str(spec["drawer"]), false, true
+		"Variable - %s drawer" % str(spec["drawer"]), false, true
 	)
 
 

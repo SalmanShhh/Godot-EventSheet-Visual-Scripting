@@ -1,4 +1,4 @@
-# Godot EventSheets — For Each (pick filter) fields are linted on save / Check Sheet for Errors.
+# Godot EventSheets - For Each (pick filter) fields are linted on save / Check Sheet for Errors.
 #
 # Before this, a row whose only error lived in a pick filter's collection / predicate / order-by slipped
 # past the on-save lint entirely. EventSheetDiagnostics now lints them: the collection is wrapped per kind
@@ -18,7 +18,7 @@ static func run() -> bool:
 	all_passed = _check("valid predicate (uses iterator) does not flag", _has_diag(_sheet(PickFilter.CollectionKind.EXPRESSION, "[1, 2, 3]", "enemy", "enemy < 2", "")), false) and all_passed
 	# A bad collection expression flags.
 	all_passed = _check("bad collection flags", _has_diag(_sheet(PickFilter.CollectionKind.EXPRESSION, "notavar + 1", "item", "", "")), true) and all_passed
-	# A GROUP collection NAME is wrapped (get_nodes_in_group) — not linted as a bare identifier.
+	# A GROUP collection NAME is wrapped (get_nodes_in_group) - not linted as a bare identifier.
 	all_passed = _check("GROUP collection name does not false-positive", _has_diag(_sheet(PickFilter.CollectionKind.GROUP, "enemies", "item", "", "")), false) and all_passed
 	# A bad order-by flags.
 	all_passed = _check("bad order-by flags", _has_diag(_sheet(PickFilter.CollectionKind.EXPRESSION, "[1, 2, 3]", "n", "", "nope.x")), true) and all_passed

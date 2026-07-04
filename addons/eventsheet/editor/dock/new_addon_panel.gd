@@ -6,14 +6,14 @@ extends RefCounted
 #
 # Owns a small authoring dialog that writes a richly-commented behaviour script under
 # res://eventsheet_addons/: its signals become triggers, its methods become actions/conditions,
-# and its @export vars become properties — all auto-discovered as custom ACEs in the picker.
+# and its @export vars become properties - all auto-discovered as custom ACEs in the picker.
 #
 # Extracted from event_sheet_dock.gd so the dock stays focused. It parents its dialog on the dock
 # (passed to init) and, after a successful create, calls back through the dock reference for the
 # three post-create steps: rebuild the ACE registry, open the new .gd in Godot, and write the
 # dock status bar. The actual code generation + validation lives in BehaviourAddonScaffold.
 #
-# Owned entirely by this class — the dock just holds one instance and calls open() from the menu.
+# Owned entirely by this class - the dock just holds one instance and calls open() from the menu.
 
 # preload (not the global class_name) so this parses even before a project re-import registers the
 # freshly-added scaffold class in the global class cache.
@@ -43,7 +43,7 @@ func open() -> void:
 	_desc_edit.text = ""
 	_refresh_preview()
 	if _dialog.is_inside_tree():  # headless tests: fields are reset, there is no window to pop
-		# Tall enough for the whole form INCLUDING the Preview card and the Create/Cancel row —
+		# Tall enough for the whole form INCLUDING the Preview card and the Create/Cancel row -
 		# 360 used to cut the dialog off below the Description field, and the wrapped intro hint
 		# takes seven lines at this width.
 		_dialog.popup_centered(Vector2i(560, 640))
@@ -61,9 +61,9 @@ func _build_dialog() -> void:
 	_dock.add_child(_dialog)
 
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
-	content.add_child(EventSheetPopupUI.hint_label("Creates a ready-to-edit behaviour script under res://eventsheet_addons/. Its signals become triggers, methods become actions/conditions, and @export vars become properties — all auto-discovered as custom ACEs. The skeleton is richly commented to teach the @ace_* annotations."))
+	content.add_child(EventSheetPopupUI.hint_label("Creates a ready-to-edit behaviour script under res://eventsheet_addons/. Its signals become triggers, methods become actions/conditions, and @export vars become properties - all auto-discovered as custom ACEs. The skeleton is richly commented to teach the @ace_* annotations."))
 
-	# "Properties" card — name / base class / category / description, grouped into a themed inset
+	# "Properties" card - name / base class / category / description, grouped into a themed inset
 	# card so this dialog matches the picker / variable / function dialogs instead of flat gray.
 	var properties_box: VBoxContainer = EventSheetPopupUI.form_box()
 	content.add_child(EventSheetPopupUI.titled_card("Properties", properties_box))
@@ -74,7 +74,7 @@ func _build_dialog() -> void:
 	_name_edit.text_submitted.connect(func(_t: String) -> void: _on_create())
 	properties_box.add_child(EventSheetPopupUI.form_row("Name", _name_edit))
 
-	# Starter recipe — the teaching skeleton by default, or a small COMPLETE behaviour (cooldown,
+	# Starter recipe - the teaching skeleton by default, or a small COMPLETE behaviour (cooldown,
 	# stat pool) so "new addon" can mean "working example I rename", not just a commented template.
 	_recipe_option = OptionButton.new()
 	for recipe: Dictionary in BehaviourAddonScaffold.RECIPES:
@@ -103,7 +103,7 @@ func _build_dialog() -> void:
 	_desc_edit.placeholder_text = "What this behaviour does (one line)."
 	properties_box.add_child(EventSheetPopupUI.form_row("Description", _desc_edit))
 
-	# "Preview" card — the suggested target path (muted hint) + an error line if the name clashes.
+	# "Preview" card - the suggested target path (muted hint) + an error line if the name clashes.
 	var preview_box: VBoxContainer = EventSheetPopupUI.form_box()
 	content.add_child(EventSheetPopupUI.titled_card("Preview", preview_box))
 
@@ -153,22 +153,22 @@ func _refresh_preview() -> void:
 func _on_create() -> void:
 	var addon_name: String = _name_edit.text.strip_edges()
 	if not BehaviourAddonScaffold.is_valid_class_name(addon_name):
-		_status_label.text = "\"%s\" isn't a usable class name — use letters/digits/underscore starting with a letter, and not a reserved or existing class name." % addon_name
+		_status_label.text = "\"%s\" isn't a usable class name - use letters/digits/underscore starting with a letter, and not a reserved or existing class name." % addon_name
 		return
 	var path: String = BehaviourAddonScaffold.suggested_path(addon_name)
 	if FileAccess.file_exists(path):
-		_status_label.text = "A file already exists at %s — pick another name." % path
+		_status_label.text = "A file already exists at %s - pick another name." % path
 		return
 	var base: String = _base_option.get_item_text(_base_option.selected)
 	var recipe_id: String = str((BehaviourAddonScaffold.RECIPES[maxi(_recipe_option.selected, 0)] as Dictionary).get("id"))
 	var source: String = BehaviourAddonScaffold.generate_recipe(recipe_id, addon_name, base, _category_edit.text, _desc_edit.text)
 	var folder: String = path.get_base_dir()
 	if DirAccess.make_dir_recursive_absolute(folder) != OK and not DirAccess.dir_exists_absolute(folder):
-		_status_label.text = "Couldn't create the folder %s — check permissions." % folder
+		_status_label.text = "Couldn't create the folder %s - check permissions." % folder
 		return
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
-		_status_label.text = "Couldn't write %s — check folder permissions." % path
+		_status_label.text = "Couldn't write %s - check folder permissions." % path
 		return
 	file.store_string(source)
 	file.close()
@@ -178,4 +178,4 @@ func _on_create() -> void:
 		EditorInterface.get_resource_filesystem().scan()
 	_dock._refresh_ace_registry()
 	_dock._open_gdscript_path_in_godot(path)
-	_dock._set_status("Created behaviour addon \"%s\" at %s — edit it, save, and its ACEs appear in the picker." % [addon_name, path])
+	_dock._set_status("Created behaviour addon \"%s\" at %s - edit it, save, and its ACEs appear in the picker." % [addon_name, path])

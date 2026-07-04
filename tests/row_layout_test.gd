@@ -1,4 +1,4 @@
-# EventForge — Non-event row span layout (overlap regression guard)
+# EventForge - Non-event row span layout (overlap regression guard)
 #
 # Variable (SECTION) and group rows lay their spans out on a single line. A layout bug had
 # every span stacked at the same X (badge text overlapping the name). This guards that the

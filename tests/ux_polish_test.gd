@@ -1,4 +1,4 @@
-# Godot EventSheets — UX polish slice: C/A/E reflexes, picker recents, onboarding
+# Godot EventSheets - UX polish slice: C/A/E reflexes, picker recents, onboarding
 # watermark, inline live-value chips, bookmarks panel, find→split.
 @tool
 class_name UxPolishTest

@@ -1,5 +1,5 @@
-# EventForge — the Project Doctor's debug-residue check. A sheet saved with a
-# debug-emit toggle ON compiles debug instrumentation into its COMMITTED script — a live hazard, because
+# EventForge - the Project Doctor's debug-residue check. A sheet saved with a
+# debug-emit toggle ON compiles debug instrumentation into its COMMITTED script - a live hazard, because
 # the byte-identity check passes on it (the residue is in sync). This pins: the hazard is real, the check
 # flags it, and strip_debug_flags + recompile removes it.
 @tool

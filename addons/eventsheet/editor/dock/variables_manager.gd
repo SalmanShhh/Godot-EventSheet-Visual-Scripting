@@ -15,7 +15,7 @@ const VARIABLE_USAGE_MAX_DEPTH := 8
 var _dock: Control = null
 
 # The variable the variable context menu / viewport edit is acting on. Written by the dock's context-menu
-# dispatcher (and reset on every empty-space / row context open) and read back here — public on this helper
+# dispatcher (and reset on every empty-space / row context open) and read back here - public on this helper
 # precisely because the dock populates it before delegating in.
 var _context_variable: Dictionary = {}
 var _context_variable_row: EventRowData = null
@@ -113,7 +113,7 @@ func _group_context_selection() -> void:
 
 
 ## The create-variable quick-fix behind the params dialog's "+ var" button: declares
-## the identifier as a float (the "number" default — retype via Edit Variable) so
+## the identifier as a float (the "number" default - retype via Edit Variable) so
 ## the expression lints clean without leaving the dialog.
 func _create_variable_quickfix(variable_name: String) -> bool:
 	if _dock._current_sheet == null or not variable_name.is_valid_identifier() or _dock._current_sheet.variables.has(variable_name):
@@ -124,7 +124,7 @@ func _create_variable_quickfix(variable_name: String) -> bool:
 
 
 ## The Inspector attributes a tree-placed LocalVariable round-trips (tooltip + group/subgroup + a Tier 3
-## drawer with its bounds) — the subset the tree-var emission supports. Keeps a reopened variable editable:
+## drawer with its bounds) - the subset the tree-var emission supports. Keeps a reopened variable editable:
 ## the dialog populates these (via the edit context) and this stores back what the user changes, so they
 ## aren't stuck or cleared.
 static func _tree_group_attributes(source: Dictionary) -> Dictionary:
@@ -152,7 +152,7 @@ func _on_variable_dialog_confirmed(
 	combo_options: PackedStringArray = PackedStringArray(),
 	attributes: Dictionary = {}
 ) -> void:
-	# Guardrail (event-sheet-style): auto-correct what's fixable, block what isn't — BEFORE commit.
+	# Guardrail (event-sheet-style): auto-correct what's fixable, block what isn't - BEFORE commit.
 	var sanitized_name: String = EventSheetIdentifierRules.sanitize(var_name)
 	if sanitized_name.is_empty() or not EventSheetIdentifierRules.is_valid(sanitized_name):
 		_dock._set_status("\"%s\" can't be a variable name (letters/digits/underscores, not a GDScript keyword)." % var_name, true)
@@ -161,12 +161,12 @@ func _on_variable_dialog_confirmed(
 		_dock._set_status("Variable name auto-corrected to \"%s\"." % sanitized_name)
 	var_name = sanitized_name
 	# A name shadowing a host member would make the generated script unparseable
-	# AND blind expression lint (field-test catch) — refuse at the source; the
+	# AND blind expression lint (field-test catch) - refuse at the source; the
 	# doctor catches pre-existing ones.
 	if scope == "global" and _dock._current_sheet != null:
 		var shadow_owner: String = EventSheetProjectDoctor.shadowed_member_class(_dock._current_sheet, var_name)
 		if not shadow_owner.is_empty():
-			_dock._set_status("\"%s\" is already a %s member — pick another name (e.g. %s_value)." % [var_name, shadow_owner, var_name], true)
+			_dock._set_status("\"%s\" is already a %s member - pick another name (e.g. %s_value)." % [var_name, shadow_owner, var_name], true)
 			return
 	var selected: Resource = context.get("selected_resource", _dock._active_view().get_selected_context().get("source_resource", null))
 	var original_name: String = str(context.get("original_name", ""))
@@ -448,7 +448,7 @@ func _prompt_convert_global_variable_to_local(entry: Dictionary) -> void:
 	var summary: Label = Label.new()
 	summary.text = "Select the target event for local variable %s." % str(entry.get("name", ""))
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	# Width-bound the label itself — the parent VBox's custom_minimum_size.x does not bound the
+	# Width-bound the label itself - the parent VBox's custom_minimum_size.x does not bound the
 	# child's min-height pass, so an unbounded autowrap label would balloon this dialog on launch.
 	summary.custom_minimum_size = Vector2(400.0, 0.0)
 	content.add_child(summary)

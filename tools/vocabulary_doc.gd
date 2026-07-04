@@ -1,4 +1,4 @@
-# Godot EventSheets — headless vocabulary-doc driver.
+# Godot EventSheets - headless vocabulary-doc driver.
 #
 #   godot --headless --path . --script tools/vocabulary_doc.gd
 #

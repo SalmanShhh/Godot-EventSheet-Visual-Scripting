@@ -1,4 +1,4 @@
-# EventForge — Comments nestable as sub-events
+# EventForge - Comments nestable as sub-events
 #
 # A comment can sit inside an event as a sub-event (to describe the events beneath it). It
 # renders indented under its parent event, and the context-menu helper appends one.

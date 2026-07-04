@@ -1,4 +1,4 @@
-# EventForge — visual render harness for the "Pick Node" dialog (dev tool, not shipped logic).
+# EventForge - visual render harness for the "Pick Node" dialog (dev tool, not shipped logic).
 # Opens the scene-node picker (ACEParamsDialog) over a seeded sample scene and saves a PNG so the
 # editor-themed AcceptDialog look can be inspected. Run NON-headless (needs a real renderer):
 #   godot --path . --script tools/render_node_picker_preview.gd

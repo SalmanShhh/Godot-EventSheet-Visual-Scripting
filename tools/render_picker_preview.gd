@@ -1,4 +1,4 @@
-# EventForge — visual render harness for the ACE picker dialog (dev tool, not shipped logic).
+# EventForge - visual render harness for the ACE picker dialog (dev tool, not shipped logic).
 # Opens the picker with seeded Favorites + Recent and saves a PNG so the Create-Node-parity
 # layout can be inspected. Run NON-headless (needs a real renderer):
 #   godot --path . --script tools/render_picker_preview.gd

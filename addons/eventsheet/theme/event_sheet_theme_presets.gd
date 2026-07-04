@@ -1,4 +1,4 @@
-# EventSheet — bundled theme discovery for the toolbar theme switcher.
+# EventSheet - bundled theme discovery for the toolbar theme switcher.
 # Scans the theme directories for EventSheetEditorStyle resources and returns selectable
 # presets. The built-in (palette) look is offered separately as "Default" by the dock.
 @tool

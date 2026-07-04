@@ -1,4 +1,4 @@
-# EventForge — EventGroupResource resource
+# EventForge - EventGroupResource resource
 # Reusable event group resource that can be inlined into event sheets.
 @tool
 class_name EventGroupResource

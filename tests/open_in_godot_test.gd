@@ -1,4 +1,4 @@
-# Godot EventSheets — "Open in Godot" (open GDScript in Godot's own script editor).
+# Godot EventSheets - "Open in Godot" (open GDScript in Godot's own script editor).
 #
 # Real files only: a custom-ACE provider script, or a code-backed sheet's .gd source. A block in a
 # code-backed sheet applies its popup text, compiles the sheet back to the .gd, and opens that source
@@ -22,7 +22,7 @@ static func run() -> bool:
 	dock._current_sheet = EventSheetResource.new()  # external_source_path empty → a non-backed (.tres) sheet
 
 	# A block in a .tres sheet has no file: "Open in Godot" must NOT mutate the block, must not crash,
-	# and must not write any throwaway files — it points the user at Save As… → .gd.
+	# and must not write any throwaway files - it points the user at Save As… → .gd.
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "print(\"original\")"
 	dock._ensure_raw_code_dialog()
@@ -31,7 +31,7 @@ static func run() -> bool:
 	dock._open_raw_code_block_in_godot()
 	all_passed = _check("block in a .tres sheet is left untouched (no file to open)", block.code, "print(\"original\")") and all_passed
 
-	# Generated "Open in Godot" on a non-backed sheet also just nudges to Save As — no throwaway files.
+	# Generated "Open in Godot" on a non-backed sheet also just nudges to Save As - no throwaway files.
 	dock._ensure_code_panel()
 	dock._code_edit.text = "extends Node\nfunc _ready() -> void:\n\tpass\n"
 	dock._open_generated_in_godot()

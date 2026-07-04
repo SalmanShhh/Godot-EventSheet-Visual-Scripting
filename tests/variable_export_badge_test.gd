@@ -1,7 +1,7 @@
-# Godot EventSheets — the "@export" badge on variable rows.
+# Godot EventSheets - the "@export" badge on variable rows.
 #
 # A sheet variable exposed to the Godot Inspector (@export) gets a blue "@export" pill on its row, so it's
-# obvious at a glance — while scrolling a sheet — which variables show in the Inspector vs. stay internal.
+# obvious at a glance - while scrolling a sheet - which variables show in the Inspector vs. stay internal.
 # The badge tracks the same default the compiler uses (exported unless explicitly false).
 @tool
 class_name VariableExportBadgeTest

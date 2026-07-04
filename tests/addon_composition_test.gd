@@ -1,4 +1,4 @@
-# Godot EventSheets — Addon composition Lane A (meta-packs):
+# Godot EventSheets - Addon composition Lane A (meta-packs):
 # meta-packs via compile-time inclusion, governed by ProjectSettings policy knobs.
 # THE INVARIANT: policy gates compiles, it never changes emitted bytes.
 @tool

@@ -1,9 +1,9 @@
-# Godot EventSheets — sheet metadata round-trips through a .gd-backed sheet.
+# Godot EventSheets - sheet metadata round-trips through a .gd-backed sheet.
 #
 # Toward "no .tres needed": opening a .gd as a sheet, editing, and saving must not lose authoring
 # metadata. addon_tags (## @ace_tags) and autoload identity (the project's [autoload] registration)
-# are now recovered on import. Both are METADATA-ONLY — the annotation text stays verbatim in the
-# file and the registration is read from ProjectSettings — so the byte-exact round-trip is unchanged
+# are now recovered on import. Both are METADATA-ONLY - the annotation text stays verbatim in the
+# file and the registration is read from ProjectSettings - so the byte-exact round-trip is unchanged
 # (no double-emit).
 @tool
 class_name GDScriptMetadataRoundtripTest

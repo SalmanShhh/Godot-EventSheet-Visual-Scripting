@@ -1,4 +1,4 @@
-# EventForge — Lazy event-span invariants
+# EventForge - Lazy event-span invariants
 #
 # Event-row spans are built lazily (only when a row is laid out/hit/selected) so large
 # sheets load fast. Row heights/metrics are derived up front from a cheap line count.

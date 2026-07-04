@@ -1,4 +1,4 @@
-# Godot EventSheets — iconic theme preset builder
+# Godot EventSheets - iconic theme preset builder
 # Generates the bundled "iconic" presets from well-known editor palettes (Dracula, Nord,
 # Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha) so the sheet can match the
 # themes people already live in. Rerun after token additions:

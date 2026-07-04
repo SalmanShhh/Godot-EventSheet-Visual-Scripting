@@ -3,7 +3,7 @@ class_name ConsoleAcesTest
 extends RefCounted
 # The Console module's "As" dropdown shows a friendly label (Message / Warning / Error) but inserts
 # the matching Godot call (print / push_warning / push_error). This pins the friendly-label combo
-# infrastructure end to end — the factory keeps {key,label} dict options, the adapter carries the
+# infrastructure end to end - the factory keeps {key,label} dict options, the adapter carries the
 # label↔value split into the dialog-facing param dict, and the stored KEY is what lands in the
 # generated code (so the dropdown reads "Warning" while the line is push_warning(...)).
 

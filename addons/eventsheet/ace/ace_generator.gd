@@ -22,7 +22,7 @@ const COMMON_METHOD_IGNORE := {
 var _analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
 ## Set per generate_from_object() call from the provider's @ace_expose_all(node) marker; when "node",
 ## un-annotated methods get a synthesized $Provider.method() template (node-targeted) instead of the
-## owned-instance default — so a behavior needs no per-method @ace_codegen_template.
+## owned-instance default - so a behavior needs no per-method @ace_codegen_template.
 var _expose_all_mode: String = ""
 
 
@@ -99,13 +99,13 @@ static func _apply_template_overrides(definition: ACEDefinition, overrides: Dict
 	_parameterize_node_target(definition)
 
 
-## Behavior-pack ACEs author their codegen as "$<Node>.method()" — the conventional behavior-node
+## Behavior-pack ACEs author their codegen as "$<Node>.method()" - the conventional behavior-node
 ## path. To let a sheet target the SAME behavior wherever it actually lives (e.g. $Player/WeaponKit,
 ## not only a direct child literally named WeaponKit), turn that leading "$<Node>." into a
 ## configurable {target} param defaulting to the authored path. The default substitutes back to the
 ## identical string, so existing sheets are byte-for-byte unchanged (drift stays 0); the user retargets
 ## via $-autocomplete. This is the "the ACE acts on the object instance you picked" model,
-## expressed as a Godot node path. Only a bare $Identifier prefix is parameterized — $"Quoted",
+## expressed as a Godot node path. Only a bare $Identifier prefix is parameterized - $"Quoted",
 ## %Unique, and multi-segment $A/B paths are already explicit and stay verbatim.
 static func _parameterize_node_target(definition: ACEDefinition) -> void:
 	if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
@@ -134,7 +134,7 @@ static func _parameterize_node_target(definition: ACEDefinition) -> void:
 	var target_param: Dictionary = {
 		"id": node_param_id,
 		"display_name": "On node",
-		"description": "Which node carries this behavior (default %s). Pick or type a node path — e.g. $Player/WeaponKit." % node_ref,
+		"description": "Which node carries this behavior (default %s). Pick or type a node path - e.g. $Player/WeaponKit." % node_ref,
 		"type": TYPE_STRING,
 		"default_value": node_ref,
 		"property_hint": PROPERTY_HINT_NONE,
@@ -150,14 +150,14 @@ static func _parameterize_node_target(definition: ACEDefinition) -> void:
 
 
 ## Carries an addon's `## @ace_deprecated("…")` into the definition's metadata, matching how a built-in's
-## .deprecated() flows via the adapter — so the picker hides it and the hover flags it, while the ACE keeps
+## .deprecated() flows via the adapter - so the picker hides it and the hover flags it, while the ACE keeps
 ## compiling in sheets that already use it (the compatibility covenant).
 static func _apply_deprecation_metadata(definition: ACEDefinition, overrides: Dictionary) -> void:
 	if definition == null or not bool(overrides.get("deprecated", false)):
 		return
 	definition.metadata["deprecated"] = true
 	var message: String = str(overrides.get("deprecation_message", "")).strip_edges()
-	# Parenthesised (not "[Deprecated]") so it survives a rich (BBCode) hover/tooltip — see deprecation_note().
+	# Parenthesised (not "[Deprecated]") so it survives a rich (BBCode) hover/tooltip - see deprecation_note().
 	var note: String = "(Deprecated)"
 	if not message.is_empty():
 		note += " " + message

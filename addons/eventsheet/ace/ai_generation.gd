@@ -1,8 +1,8 @@
-# EventSheet — AI-assisted event generation ("describe → events").
+# EventSheet - AI-assisted event generation ("describe → events").
 #
 # Closes the loop the MCP server already enables, but inside the editor: a plain-English
 # description is turned into a grounded prompt, an LLM returns GDScript, and that GDScript is
-# run through the SAME lossless GDScript→events lifter the editor's paste uses — so the result
+# run through the SAME lossless GDScript→events lifter the editor's paste uses - so the result
 # lands as ordinary, editable event rows, never opaque generated code.
 #
 # The LLM call itself is injectable: tests (and any offline flow) set `response_provider` to a

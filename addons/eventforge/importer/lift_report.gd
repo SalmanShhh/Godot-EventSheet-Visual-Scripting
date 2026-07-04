@@ -1,8 +1,8 @@
-# Godot EventSheets — the lift report ("why is this still GDScript?")
+# Godot EventSheets - the lift report ("why is this still GDScript?")
 #
 # After a .gd opens as a sheet, this explains the boundary between structure and
 # code: which functions lifted into events, and why each remaining block stayed
-# verbatim — with the closest ACE named, so the boundary teaches instead of
+# verbatim - with the closest ACE named, so the boundary teaches instead of
 # confusing. Computed post-hoc from the imported sheet (the lifter needs no
 # changes to be explainable). For event-sheet users learning Godot, every unlifted block
 # is a lesson; for Godot devs it's trust through transparency.
@@ -12,7 +12,7 @@ extends RefCounted
 
 
 ## One entry per top-level row/function: {kind: "event"|"function"|"code"|"comment",
-## label, reason} — reason is "" for lifted structure.
+## label, reason} - reason is "" for lifted structure.
 static func for_sheet(sheet: EventSheetResource) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	if sheet == null:
@@ -44,20 +44,20 @@ static func reason_for(code: String) -> String:
 	if stripped.begins_with("extends ") or stripped.begins_with("@icon") or stripped.begins_with("class_name ") \
 			or RegEx.create_from_string("(?m)^(@export|var |const |signal |enum )").search(stripped) != null \
 			and not stripped.begins_with("func "):
-		return "Class prelude (extends / variables / signals) — declarations lift only when byte-exact."
+		return "Class prelude (extends / variables / signals) - declarations lift only when byte-exact."
 	if stripped.contains("await "):
-		return "Uses await — the Wait action is the structured equivalent."
+		return "Uses await - the Wait action is the structured equivalent."
 	if RegEx.create_from_string("(?m)^\\s*while ").search(stripped) != null:
-		return "Uses a while loop — the System Repeat/While ACEs are the structured equivalent."
+		return "Uses a while loop - the System Repeat/While ACEs are the structured equivalent."
 	if RegEx.create_from_string("(?m)^\\s*for ").search(stripped) != null:
-		return "Uses a for loop — the System loop ACEs (or a For Each pick filter) cover this."
+		return "Uses a for loop - the System loop ACEs (or a For Each pick filter) cover this."
 	if RegEx.create_from_string("(?m)^\\s*match ").search(stripped) != null:
-		return "Uses match — Add Match To Actions… is the structured equivalent."
+		return "Uses match - Add Match To Actions… is the structured equivalent."
 	if stripped.contains("func("):
-		return "Holds a lambda — Callables-as-data stay honest GDScript by design."
+		return "Holds a lambda - Callables-as-data stay honest GDScript by design."
 	if stripped.begins_with("func "):
-		return "Custom function with no lift shape — sheet functions (exposed as ACEs) cover this."
-	return "No matching ACE template — stays honest GDScript (lossless either way)."
+		return "Custom function with no lift shape - sheet functions (exposed as ACEs) cover this."
+	return "No matching ACE template - stays honest GDScript (lossless either way)."
 
 
 static func _label_for(code: String) -> String:
@@ -67,7 +67,7 @@ static func _label_for(code: String) -> String:
 	return "(blank block)"
 
 
-## "4 events, 1 function, 2 code blocks" — the status-line form.
+## "4 events, 1 function, 2 code blocks" - the status-line form.
 static func summary(entries: Array[Dictionary]) -> String:
 	var counts: Dictionary = {"event": 0, "function": 0, "code": 0, "comment": 0}
 	for entry: Dictionary in entries:

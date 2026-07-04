@@ -1,4 +1,4 @@
-# EventForge — Variable row text formatting helpers.
+# EventForge - Variable row text formatting helpers.
 # Pure, stateless formatters for variable summaries and tooltips used by the
 # virtualized event sheet editor (and covered by variable_row_format_test.gd).
 @tool

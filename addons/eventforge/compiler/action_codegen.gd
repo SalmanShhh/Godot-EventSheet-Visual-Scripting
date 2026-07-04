@@ -1,4 +1,4 @@
-# EventForge — Action code generation
+# EventForge - Action code generation
 # Emits GDScript statements for ACE actions.
 @tool
 class_name ActionCodegen
@@ -30,7 +30,7 @@ static func generate_action(action: ACEAction, target_default: String = "", host
 ## scope is active (target_default set), the template actually has a `{target.}` / `{target}` slot, and
 ## the author left the target on the host (blank, or the "self" default of the group/meta ACEs). An
 ## explicit target the author chose is never overridden, and non-targetable actions pass through
-## untouched. Non-mutating — a copy is returned so the action resource is never altered.
+## untouched. Non-mutating - a copy is returned so the action resource is never altered.
 static func _params_with_scope_target(action: ACEAction, target_default: String, template: String) -> Dictionary:
 	var params: Dictionary = _get_params(action)
 	if target_default.strip_edges().is_empty():
@@ -48,7 +48,7 @@ static func _params_with_scope_target(action: ACEAction, target_default: String,
 ## Folds the behavior-mode host accessor into the params for templates using the {host.}/{host}
 ## idiom, so a node-scoped ACE authored in a behavior calls on the parent host (e.g.
 ## `{host.}move_and_slide()` -> `host.move_and_slide()`). An empty host_default (every non-behavior
-## sheet) leaves the key absent, so {host.} drops to nothing and the call stays bare — byte-stable.
+## sheet) leaves the key absent, so {host.} drops to nothing and the call stays bare - byte-stable.
 ## An author-supplied "host" param (none of the built-ins define one) is never overridden. The lifter
 ## already round-trips this idiom (ace_lifter._optional_prefix_variants), exactly as for {target.}.
 static func _params_with_host(params: Dictionary, host_default: String, template: String) -> Dictionary:
@@ -64,10 +64,10 @@ static func _params_with_host(params: Dictionary, host_default: String, template
 
 ## Applies `{param}`, optional-comma `{, param}`, and optional-prefix `{param.}` substitutions in a
 ## SINGLE left-to-right pass. The optional-prefix idiom (dot INSIDE the braces) emits `<value>.` only
-## when the value is non-empty, else nothing — so `{target.}play()` is `play()` for an empty target
+## when the value is non-empty, else nothing - so `{target.}play()` is `play()` for an empty target
 ## (the host) and `$Enemy.play()` for a set one. The dot lives inside the braces precisely so it
 ## cannot collide with the ordinary `{target}.foo` pattern (dot outside), which keeps emitting `.foo`.
-## Param VALUES are opaque — a value that itself contains `{...}` is emitted verbatim and never
+## Param VALUES are opaque - a value that itself contains `{...}` is emitted verbatim and never
 ## re-scanned (an earlier iterative replace() pass corrupted such values, e.g. "{a}-{b}" with
 ## a="{b}", b="X" produced "X-X" instead of "{b}-X"). Unknown plain `{key}` placeholders are kept
 ## literal; an unresolved optional `{, key}` or `{key.}` is dropped (matching the old trailing strip).

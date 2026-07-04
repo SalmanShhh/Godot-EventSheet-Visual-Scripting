@@ -3,14 +3,14 @@ class_name EventSheetSheetIO
 extends RefCounted
 # The sheet FILE-IO subsystem: opening a sheet from disk and every write-back path (Save,
 # Save As, Export Generated GDScript, Save-as-.gd). Extracted from event_sheet_dock.gd to keep
-# that file maintainable. The tab cluster, mutation funnel, and UI refreshers STAY on the dock —
+# that file maintainable. The tab cluster, mutation funnel, and UI refreshers STAY on the dock -
 # this helper reaches them (and add_child, EVENT_SHEET_FILTERS) through the `_dock` back-reference,
 # the same pattern as the other dock/ helpers. The dock keeps thin one-line delegates with the
 # original names + signatures so external callers (plugin.gd, the other dock/ helpers, menu_bar,
 # command_palette) and the tests don't change. Globals (SheetCompiler, EventSheetBackups,
 # ResourceSaver/Loader, FileAccess, GDScriptImporter, EventSheetLiftReport) are untouched.
 #
-# ORDER NOTE: _on_save_requested's compile-on-save sequence is load-bearing — save →
+# ORDER NOTE: _on_save_requested's compile-on-save sequence is load-bearing - save →
 # (compile-on-save fail → _run_diagnostics → status → _refresh_title_strip → return) else
 # _run_diagnostics → _refresh_title_strip → status. Preserved verbatim from the dock.
 
@@ -33,7 +33,7 @@ func _load_sheet_from_path(path: String) -> void:
 		if imported == null:
 			_dock._set_status("Open failed: could not read %s." % resolved_path.get_file(), true)
 			return
-		# Open a .gd as a SAFE read-only PREVIEW by default — a casual look can never
+		# Open a .gd as a SAFE read-only PREVIEW by default - a casual look can never
 		# overwrite the hand-written script. "Edit Events" in the banner unlocks editing.
 		imported.read_only = true
 		_dock.setup(imported)
@@ -42,11 +42,11 @@ func _load_sheet_from_path(path: String) -> void:
 		_dock._refresh_title_strip()
 		_dock._clear_undo_history()
 		_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
-		# The lift report explains the structure/code boundary per block — the teaching
+		# The lift report explains the structure/code boundary per block - the teaching
 		# surface for what GDScript maps to which events (the banner recomputes its own copy
 		# from the active sheet, so tab switches always show the right counts).
 		_dock._refresh_preview_banner()
-		_dock._set_status("Opened %s — viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(imported))])
+		_dock._set_status("Opened %s - viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(imported))])
 		return
 	var loaded: Resource = ResourceLoader.load(resolved_path)
 	if loaded is EventSheetResource:
@@ -65,7 +65,7 @@ func _load_sheet_from_path(path: String) -> void:
 func _save_backed_sheet() -> bool:
 	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, _dock._current_sheet.external_source_path)
 	if not bool(compile_result.get("success", false)):
-		_dock._set_status("This sheet doesn't compile yet — fix the error, then save again. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
+		_dock._set_status("This sheet doesn't compile yet - fix the error, then save again. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
 		return false
 	_dock._dirty = false
 	_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
@@ -81,7 +81,7 @@ func _on_save_requested() -> void:
 	# "Edit Events" (then this becomes a normal GDScript-backed save), or forks via Save As.
 	if _dock._current_sheet.read_only:
 		var source_name: String = _dock._current_sheet.external_source_path.get_file()
-		_dock._set_status("You're viewing %s — click \"Edit Events\" in the banner to edit and save it, or use Save As… to keep a separate copy." % source_name, true)
+		_dock._set_status("You're viewing %s - click \"Edit Events\" in the banner to edit and save it, or use Save As… to keep a separate copy." % source_name, true)
 		return
 	# GDScript-backed sheets save by compiling back to their .gd source (order-preserving;
 	# an untouched sheet reproduces the file byte-identically).
@@ -94,7 +94,7 @@ func _on_save_requested() -> void:
 		return
 	var save_path: String = _dock._current_sheet_path if not _dock._current_sheet_path.is_empty() else _dock._current_sheet.resource_path
 	# Backup ring: the file's pre-save bytes go to user://eventsheet_backups first
-	# (eventsheets/editor/backup_count, 0 disables) — a bad save costs one save, not
+	# (eventsheets/editor/backup_count, 0 disables) - a bad save costs one save, not
 	# the sheet. Restore lives in Tools → Sheet Backups….
 	EventSheetBackups.backup_sheet(save_path)
 	var err: Error = ResourceSaver.save(_dock._current_sheet, save_path)
@@ -102,7 +102,7 @@ func _on_save_requested() -> void:
 		_dock._current_sheet.take_over_path(save_path)
 		_dock._current_sheet_path = save_path
 		_dock._dirty = false
-		# Save As can change the path — keep the saved session pointing at it
+		# Save As can change the path - keep the saved session pointing at it
 		# (sweep catch: sessions otherwise lag until the next tab switch).
 		_dock._persist_session()
 		# Compile-on-save (default ON; eventsheets/editor/compile_on_save to disable):
@@ -115,7 +115,7 @@ func _on_save_requested() -> void:
 				_dock._run_diagnostics()
 				# Friendly + actionable first (diagnostics just flagged + jumped to the bad row), with
 				# the raw compiler detail kept in parentheses for anyone who wants it.
-				_dock._set_status("Saved, but it won't run yet — a row has an error. Jumped to the first; hover the red row for the fix. (%s)" % ", ".join(PackedStringArray(auto_result.get("errors", []))), true)
+				_dock._set_status("Saved, but it won't run yet - a row has an error. Jumped to the first; hover the red row for the fix. (%s)" % ", ".join(PackedStringArray(auto_result.get("errors", []))), true)
 				_dock._refresh_title_strip()
 				return
 		# Row-level lint: flag any bad ƒx expression / GDScript block ON its row + jump to the
@@ -123,7 +123,7 @@ func _on_save_requested() -> void:
 		var issue_count: int = _dock._run_diagnostics()
 		_dock._refresh_title_strip()
 		if issue_count > 0:
-			_dock._set_status("Saved: %s — %d row(s) need attention (jumped to the first)." % [save_path.get_file(), issue_count], true)
+			_dock._set_status("Saved: %s - %d row(s) need attention (jumped to the first)." % [save_path.get_file(), issue_count], true)
 		else:
 			_dock._set_status("Saved: %s" % save_path.get_file())
 	else:
@@ -183,7 +183,7 @@ func _write_exported_gdscript(path: String) -> void:
 	if not errors.is_empty():
 		_dock._set_status("Export failed: %s" % str(errors[0]), true)
 		return
-	_dock._set_status("Exported standalone GDScript to %s — no plugin dependency." % target.get_file())
+	_dock._set_status("Exported standalone GDScript to %s - no plugin dependency." % target.get_file())
 
 
 func _save_sheet_to_path(path: String) -> void:
@@ -191,7 +191,7 @@ func _save_sheet_to_path(path: String) -> void:
 		_dock._set_status("Nothing to save.", true)
 		return
 	var resolved_path: String = _normalize_sheet_save_path(path)
-	# Saving as .gd makes the sheet a plain GDScript file (no .tres) — the default format.
+	# Saving as .gd makes the sheet a plain GDScript file (no .tres) - the default format.
 	if resolved_path.get_extension().to_lower() == "gd":
 		_save_sheet_as_gdscript(resolved_path)
 		return
@@ -208,7 +208,7 @@ func _save_sheet_to_path(path: String) -> void:
 		_dock._refresh_title_strip()
 		if was_backed:
 			# Don't silently change the format under an expert: name the consequence.
-			_dock._set_status("Saved as %s — now a .tres sheet; the .gd is no longer the source (left untouched on disk)." % resolved_path.get_file())
+			_dock._set_status("Saved as %s - now a .tres sheet; the .gd is no longer the source (left untouched on disk)." % resolved_path.get_file())
 		else:
 			_dock._set_status("Saved as: %s" % resolved_path.get_file())
 	else:
@@ -217,12 +217,12 @@ func _save_sheet_to_path(path: String) -> void:
 
 ## Saves the sheet as a plain .gd (no .tres): compiles it to that path, then re-opens the .gd as the
 ## GDScript-backed source of truth, so the file IS the sheet and future edits round-trip through it.
-## SheetCompiler.compile already picks the right path — full header for a structured sheet, order-
+## SheetCompiler.compile already picks the right path - full header for a structured sheet, order-
 ## preserving for an already-backed one. The reopened sheet is editable (not the read-only preview a
 ## casual Open gives), since the user just authored it. Returns whether it saved.
 func _save_sheet_as_gdscript(path: String) -> bool:
 	# omit_generated_banner: this .gd is the user's hand-editable source of truth, NOT a regenerated
-	# companion — it must not carry the "DO NOT EDIT / regenerated on every compile" banner.
+	# companion - it must not carry the "DO NOT EDIT / regenerated on every compile" banner.
 	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, path, true)
 	if not bool(compile_result.get("success", false)):
 		_dock._set_status("Couldn't save as GDScript: %s" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
@@ -231,7 +231,7 @@ func _save_sheet_as_gdscript(path: String) -> bool:
 	if backed == null:
 		_dock._set_status("Saved %s, but couldn't reopen it as a sheet." % path.get_file(), true)
 		return false
-	backed.read_only = false  # the user just authored it — open it editable, not as a preview
+	backed.read_only = false  # the user just authored it - open it editable, not as a preview
 	# Replace the ACTIVE tab's sheet in place. Calling setup() would append a SECOND tab (its dedup
 	# matches by object identity, and `backed` is a freshly-imported resource), duplicating the sheet.
 	if _dock._active_tab_index >= 0 and _dock._active_tab_index < _dock._open_tabs.size():
@@ -243,7 +243,7 @@ func _save_sheet_as_gdscript(path: String) -> bool:
 		_dock._dirty = false
 	_dock._external_mtime = FileAccess.get_modified_time(path)
 	_dock._refresh_preview_banner()
-	_dock._set_status("Saved as GDScript: %s — the .gd is now the source of truth." % path.get_file())
+	_dock._set_status("Saved as GDScript: %s - the .gd is now the source of truth." % path.get_file())
 	return true
 
 

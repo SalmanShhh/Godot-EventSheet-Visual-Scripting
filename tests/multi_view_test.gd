@@ -1,4 +1,4 @@
-# Godot EventSheets — Multi-view phase 1 (split view)
+# Godot EventSheets - Multi-view phase 1 (split view)
 # The same sheet in two panes: per-sheet state (breakpoints/bookmarks/disabled overlay)
 # is shared by reference, edits refresh both panes through the refresh bus, the
 # companion pane never starts inline edits, and closing the split restores the layout.
@@ -52,7 +52,7 @@ static func run() -> bool:
 	split_first = split.get_flat_rows()[0].get("row")
 	all_passed = _check("bookmarks are shared across panes", split_first.bookmark_enabled, true) and all_passed
 
-	# Phase 1.5: the split pane is a FULL editor — selection there drives toolbar ops.
+	# Phase 1.5: the split pane is a FULL editor - selection there drives toolbar ops.
 	split._select_row(1, -1)
 	split.selection_changed.emit(split.get_flat_rows()[1].get("row"))
 	all_passed = _check("selection in the split makes it the active view",
@@ -85,7 +85,7 @@ static func run() -> bool:
 	all_passed = _check("edits refresh the split pane too", split.get_flat_rows().size(), before + 1) and all_passed
 	all_passed = _check("edits refresh the primary too", primary.get_flat_rows().size(), before + 1) and all_passed
 
-	# P2: detached window — another full pane sharing state + the refresh bus.
+	# P2: detached window - another full pane sharing state + the refresh bus.
 	editor._toggle_detached_view()
 	var detached: EventSheetViewport = editor._detached_viewport
 	all_passed = _check("detached pane exists", detached != null, true) and all_passed
@@ -94,7 +94,7 @@ static func run() -> bool:
 	var detached_first: EventRowData = detached.get_flat_rows()[0].get("row")
 	all_passed = _check("detached pane shares breakpoints", detached_first.breakpoint_enabled, true) and all_passed
 
-	# P3: linked panes — selection mirrors across views (no recursion).
+	# P3: linked panes - selection mirrors across views (no recursion).
 	editor._toggle_linked_views()
 	primary._select_row(2, -1)
 	primary.selection_changed.emit(primary.get_flat_rows()[2].get("row"))

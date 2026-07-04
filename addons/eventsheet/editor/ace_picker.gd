@@ -1,4 +1,4 @@
-# EventSheet — ACE Picker dialog component
+# EventSheet - ACE Picker dialog component
 # Owns the picker window, search field, grouped/filtered tree, and mode-aware filtering.
 # Use open() to show it and connect to ace_selected to receive the chosen ACEDefinition.
 #
@@ -20,20 +20,20 @@ extends RefCounted
 signal ace_selected(definition: ACEDefinition, context: Dictionary)
 
 ## Recents (familiar ACEs surface first): last-used ACE ids, newest first. Persisted PER-USER and
-## PER-PROJECT in a user:// file — NOT project.godot: recents change on every ACE use and would churn
+## PER-PROJECT in a user:// file - NOT project.godot: recents change on every ACE use and would churn
 ## the version-controlled file constantly (Favorites live in ProjectSettings because they change rarely).
 static var _recent_ace_ids: PackedStringArray = PackedStringArray()
 static var _recents_loaded: bool = false
 const RECENT_ACES_CAP := 8
 const RECENTS_FILE := "user://eventforge_picker_recents.cfg"
 
-## ⭐ Favorites persist in ProjectSettings — per-project and PR-shareable, like the
+## ⭐ Favorites persist in ProjectSettings - per-project and PR-shareable, like the
 ## composition policy. Right-click a picker entry to pin/unpin.
 const FAVORITES_SETTING := "eventsheets/picker/favorites"
 
 ## Simple Mode (the newcomer view) hides the advanced "drop to code" + debug ACEs from the picker,
 ## so beginners aren't shown Run GDScript / Evaluate / Breakpoint / Assert / Print Rich. Keyed by
-## "provider_id::ace_id" (definition.id == the descriptor's ace_id — see ace_adapter.gd).
+## "provider_id::ace_id" (definition.id == the descriptor's ace_id - see ace_adapter.gd).
 const _SIMPLE_MODE_DENYLIST := {
 	"Core::RunGDScript": true,
 	"Core::EvaluateGDScript": true,
@@ -65,7 +65,7 @@ static func toggle_favorite(provider_id: String, ace_id: String) -> bool:
 
 
 ## True when `query`'s characters appear in order inside `text` (case/space-insensitive)
-## — the power user's "stt" reflex from event-sheet/GDevelop pickers.
+## - the power user's "stt" reflex from event-sheet/GDevelop pickers.
 static func fuzzy_match(query: String, text: String) -> bool:
 	var needle: String = query.to_lower().replace(" ", "")
 	var haystack: String = text.to_lower().replace(" ", "")
@@ -80,7 +80,7 @@ static func fuzzy_match(query: String, text: String) -> bool:
 	return true
 
 
-## Records a use (newest first, deduped, capped) — drives the ★ Recent picker section, and survives
+## Records a use (newest first, deduped, capped) - drives the ★ Recent picker section, and survives
 ## an editor restart (persisted to the per-user recents file).
 static func note_recent(provider_id: String, ace_id: String) -> void:
 	load_recents()
@@ -101,7 +101,7 @@ static func _recents_project_key() -> String:
 
 
 ## Hydrates this project's recents from the user:// file once per session (a no-op afterwards, and
-## outside the editor where persistence is meaningless — keeps the headless suite side-effect-free).
+## outside the editor where persistence is meaningless - keeps the headless suite side-effect-free).
 static func load_recents() -> void:
 	if _recents_loaded:
 		return
@@ -131,17 +131,17 @@ const EVENT_PICKER_GROUPS: Array[String] = [
 
 ## Categories nest one level on this separator: "Variables: Array" renders as an Array
 ## folder inside the Variables section. Authors get a sub-section just by naming the
-## category "Parent: Sub" — no schema change. Node-type sections never sub-nest.
+## category "Parent: Sub" - no schema change. Node-type sections never sub-nest.
 const SUBCATEGORY_SEPARATOR: String = ": "
 
 # Group-header colours (by group kind).
-const GROUP_COLOR_NODE_TYPE := Color("#e0b070")  # amber — Godot class sections
-const GROUP_COLOR_TRIGGER := Color("#6fd0b0")     # teal-green — run context / triggers / signals
-const GROUP_COLOR_VARIABLE := Color("#8fb4e0")    # muted blue — variables
-const GROUP_COLOR_CUSTOM := Color("#c79bf0")      # purple — custom / runtime providers
-const GROUP_COLOR_NEUTRAL := Color("#9aa1ad")     # neutral muted — other categories
+const GROUP_COLOR_NODE_TYPE := Color("#e0b070")  # amber - Godot class sections
+const GROUP_COLOR_TRIGGER := Color("#6fd0b0")     # teal-green - run context / triggers / signals
+const GROUP_COLOR_VARIABLE := Color("#8fb4e0")    # muted blue - variables
+const GROUP_COLOR_CUSTOM := Color("#c79bf0")      # purple - custom / runtime providers
+const GROUP_COLOR_NEUTRAL := Color("#9aa1ad")     # neutral muted - other categories
 # Used by the ƒx expression autocomplete (ace_params_dialog) to tint expression fragments. The ACE
-# picker itself no longer tints rows by type (Create-New-Node style — the per-row icon carries that).
+# picker itself no longer tints rows by type (Create-New-Node style - the per-row icon carries that).
 const ITEM_COLOR_EXPRESSION := Color("#c79bf0") # soft purple
 
 var _window: ConfirmationDialog = null
@@ -180,13 +180,13 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_window.canceled.connect(close)
 	_window.confirmed.connect(_on_add_button_pressed)
 	parent_node.add_child(_window)
-	# The dialog's own OK button drives "Add" — disabled until something is selected.
+	# The dialog's own OK button drives "Add" - disabled until something is selected.
 	_add_button = _window.get_ok_button()
 	_add_button.disabled = true
 
 	# A sensible default content width; the body height is bounded by the split below so the
 	# dialog opens at a comfortable size and the tree scrolls internally (it does NOT grow to
-	# fit every row — a ConfirmationDialog otherwise hugs its content's full minimum height).
+	# fit every row - a ConfirmationDialog otherwise hugs its content's full minimum height).
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	content.custom_minimum_size = Vector2(700.0, 0.0)
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -228,7 +228,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 
 	# Body: ⭐ Favorites + ★ Recent panes on the left (Create-Node style), category tree right.
 	# A plain Control holder bounds the dialog height: a Tree reports its FULL content height as
-	# its minimum size, and a ConfirmationDialog grows to fit that — so a populated picker would
+	# its minimum size, and a ConfirmationDialog grows to fit that - so a populated picker would
 	# open thousands of px tall. A bare Control ignores its children's minimums and reports only
 	# its own, so the split fills it (anchored) and the trees scroll internally at a fixed height.
 	var body_holder: Control = Control.new()
@@ -294,7 +294,7 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	# Add / Cancel are the dialog's own themed buttons (wired in the window setup above);
 	# double-click and Enter-to-add still work alongside them.
 
-## Provider returning true when Simple Mode is on (wired by the dock) — gates the denylist below.
+## Provider returning true when Simple Mode is on (wired by the dock) - gates the denylist below.
 var _simple_mode_provider: Callable = Callable()
 ## Returns the class name whose reflected "All of <Class>" section the picker
 ## should offer (the current sheet's host class); invalid = no reflection.
@@ -315,7 +315,7 @@ func set_registry(registry: EventSheetACERegistry) -> void:
 
 
 ## Open the picker for the given mode.
-## Selects + reveals the entry for an ace id — the double-click-to-replace flow
+## Selects + reveals the entry for an ace id - the double-click-to-replace flow
 ## opens the picker focused on what's being replaced. Ancestors expand first:
 ## selecting inside a collapsed group is invisible, which reads as "not selected".
 func preselect(ace_id: String) -> void:
@@ -370,7 +370,7 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	_window.popup_centered(Vector2i(720, 520))
 	_window.grab_focus()
 	_search.grab_focus()
-	# Deferred so it lands AFTER the popup and any visibility-driven refresh —
+	# Deferred so it lands AFTER the popup and any visibility-driven refresh -
 	# callers preselect via context instead of racing the open sequence.
 	if _context.has("preselect_ace_id"):
 		call_deferred("preselect", str(_context.get("preselect_ace_id")))
@@ -503,7 +503,7 @@ func _refresh_tree() -> void:
 			group_nodes[node_type] = _make_group_item(root, node_type, true)
 
 	# ⭐ Favorites + ★ Recent now live in dedicated left panes (see _refresh_side_panes), not as
-	# in-tree groups — so they stay visible while you browse categories, Create-Node style.
+	# in-tree groups - so they stay visible while you browse categories, Create-Node style.
 
 	var definitions: Array[ACEDefinition] = _registry.search(query)
 	# Event-sheet vocabulary bridge: familiar event-sheet phrases also find their Godot equivalents.
@@ -549,7 +549,7 @@ func _refresh_tree() -> void:
 			if twin_def != null and not definitions.has(twin_def) and not reactive_twins.has(twin_def):
 				reactive_twins.append(twin_def)
 		definitions.append_array(reactive_twins)
-	# Featured ACEs (the everyday verbs) float to the top of their group + render bold below — the "highlight".
+	# Featured ACEs (the everyday verbs) float to the top of their group + render bold below - the "highlight".
 	if not definitions.is_empty():
 		var __featured: Array[ACEDefinition] = []
 		var __rest: Array[ACEDefinition] = []
@@ -584,7 +584,7 @@ func _refresh_tree() -> void:
 	# Nudge the vocabulary bridge (plain phrases find Godot equivalents) instead of silence.
 	if filtering and root.get_child_count() == 0:
 		var empty_item: TreeItem = _tree.create_item(root)
-		empty_item.set_text(0, "No matches for \"%s\" — try a plainer word like \"move\", \"spawn\", or \"hide\"." % query)
+		empty_item.set_text(0, "No matches for \"%s\" - try a plainer word like \"move\", \"spawn\", or \"hide\"." % query)
 		empty_item.set_selectable(0, false)
 		empty_item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
 
@@ -605,7 +605,7 @@ func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> 
 
 
 ## Resolves (creating as needed) the tree item a row hangs under. Categories using the
-## "Parent: Sub" separator nest one level — the parent folder is shared with any flat ACEs
+## "Parent: Sub" separator nest one level - the parent folder is shared with any flat ACEs
 ## in the same category, and each distinct sub gets its own folder. Node-type sections and
 ## separator-less categories stay flat, exactly as before.
 func _resolve_group_item(root: TreeItem, group_nodes: Dictionary, group_key: String, is_node_type: bool) -> TreeItem:
@@ -682,7 +682,7 @@ static func resolve_definition_icon(definition: ACEDefinition) -> Texture2D:
 	return null
 
 
-## Fetches a named editor-theme icon ("EditorIcons" — class icons and member glyphs).
+## Fetches a named editor-theme icon ("EditorIcons" - class icons and member glyphs).
 ## Null outside the editor or when the name is unknown, so callers degrade gracefully.
 static func editor_icon(icon_name: String) -> Texture2D:
 	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
@@ -772,7 +772,7 @@ func _bold_font() -> Font:
 func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only: bool) -> bool:
 	if definition == null:
 		return false
-	# Deprecated ACEs are hidden from the picker so they can't be added to NEW work — but they still
+	# Deprecated ACEs are hidden from the picker so they can't be added to NEW work - but they still
 	# compile in sheets that already use them (the compatibility covenant; see ACEDescriptor.deprecated).
 	if bool(definition.metadata.get("deprecated", false)):
 		return false
@@ -805,7 +805,7 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 
 
 ## Event-sheet-style bottom info pane: selecting an entry shows its description AND the exact
-## GDScript it will generate — the picker doubles as a teaching surface.
+## GDScript it will generate - the picker doubles as a teaching surface.
 func _on_item_selected_for_info() -> void:
 	var selected: TreeItem = _tree.get_selected()
 	var definition: ACEDefinition = selected.get_metadata(0) as ACEDefinition if selected != null else null
@@ -901,7 +901,7 @@ func _on_tree_context_menu_pressed(item_id: int) -> void:
 				_info_label.text = "Copied the registrar snippet for %s - paste it into a provider script." % definition.display_name
 
 
-## Enter in the search box applies the first concrete match — type-and-Enter, no mouse.
+## Enter in the search box applies the first concrete match - type-and-Enter, no mouse.
 ## Depth-first so sub-category folders (root → parent → sub → entry) are reached too.
 ## Picker speed: pre-select the first concrete ACE so the description panel + Add button
 ## populate immediately and arrow/Enter work without a first click (type → glance → Enter).
@@ -938,7 +938,7 @@ func _first_definition_item(item: TreeItem) -> TreeItem:
 
 
 ## The type-and-Enter target: the highest RELEVANCE-scored row for the current query, not merely the
-## first row in tree order (which, under category grouping, can bury the obvious match — typing "hide"
+## first row in tree order (which, under category grouping, can bury the obvious match - typing "hide"
 ## should pre-select Hide). Falls back to the first definition row when the query is empty or nothing
 ## scores textually (a pure synonym/fuzzy hit), so behaviour is unchanged for empty/loose queries.
 func _best_match_item() -> TreeItem:
@@ -964,7 +964,7 @@ func _best_match_item() -> TreeItem:
 			stack.push_back(child)
 			child = child.get_next()
 	# Reactivity steering: pre-select a polling condition's reactive twin (when it was surfaced in the
-	# list) instead of the poll — unless the user typed the condition's exact name. Ties the Enter-target
+	# list) instead of the poll - unless the user typed the condition's exact name. Ties the Enter-target
 	# to the Godot idiom (overlap -> On Body Entered) without touching the visible list order.
 	if best != null:
 		var best_definition: ACEDefinition = best.get_metadata(0) as ACEDefinition
@@ -984,7 +984,7 @@ static func _reactive_twin_id(definition: ACEDefinition) -> String:
 
 
 ## True when the picker should pre-select a condition's reactive twin instead of the condition: it has
-## a twin AND the user did not type the condition's exact display name — so an explicit pick of the
+## a twin AND the user did not type the condition's exact display name - so an explicit pick of the
 ## poll is respected, while a concept query ("overlap") lands on the reactive trigger.
 static func _prefer_reactive_twin(query: String, definition: ACEDefinition) -> bool:
 	if definition == null or _reactive_twin_id(definition).is_empty():
@@ -1065,7 +1065,7 @@ func _make_side_tree() -> Tree:
 	return tree
 
 
-## A side pane's body — its title label stacked above the list — as one VBox to drop into a
+## A side pane's body - its title label stacked above the list - as one VBox to drop into a
 ## panel_section() card, so each of Favorites / Recent reads as a self-contained titled panel.
 func _titled_pane(title: Label, list: Tree) -> VBoxContainer:
 	var box: VBoxContainer = VBoxContainer.new()
@@ -1102,7 +1102,7 @@ func _populate_side_pane(tree: Tree, keys: PackedStringArray, mode: String, sign
 				item.set_icon(0, icon)
 				item.set_icon_max_width(0, 16)
 			# Favorites/Recent render plain like the main tree (Create-New-Node style): the per-row
-			# icon carries the type, so no foreground tint on the label — consistent with the node picker.
+			# icon carries the type, so no foreground tint on the label - consistent with the node picker.
 			item.set_tooltip_text(0, _item_tooltip(candidate))
 			item.set_metadata(0, candidate)
 			break
@@ -1157,10 +1157,10 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 		# Visible-but-muted: keep the "it's just GDScript" codegen, de-emphasized below the description.
 		body += "\n[color=#%s]→ [code]%s[/code][/color]" % [_muted_header_color().to_html(false), template]
 	# Reactivity nudge: a polling condition that has a clean signal twin gets a one-line tip pointing at
-	# the reactive trigger (the Godot idiom). Informational only — the condition stays fully pickable.
+	# the reactive trigger (the Godot idiom). Informational only - the condition stays fully pickable.
 	var reactive: Dictionary = ACEDescriptor.reactive_alternative(definition.provider_id, definition.id)
 	if not reactive.is_empty():
-		body += "\n[color=#e0b050]💡 Reactive alternative: [b]%s[/b] — reacts once when it happens, instead of checking every frame.[/color]" % str(reactive.get("trigger_name", ""))
+		body += "\n[color=#e0b050]💡 Reactive alternative: [b]%s[/b] - reacts once when it happens, instead of checking every frame.[/color]" % str(reactive.get("trigger_name", ""))
 	_info_label.text = body
 
 

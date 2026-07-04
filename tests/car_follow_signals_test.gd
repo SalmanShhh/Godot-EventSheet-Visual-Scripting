@@ -1,9 +1,9 @@
-# Godot EventSheets — car + follow discrete transition signals (behavior-pack quality fix).
+# Godot EventSheets - car + follow discrete transition signals (behavior-pack quality fix).
 #
 # The behavior-fit assessment found car and follow each missing a discrete transition trigger (they
 # only exposed continuous state). Car now edge-fires On Drift Started / On Drift Recovered; follow
 # edge-fires On Reached Target at the min_distance boundary. follow's `following` flag was also a stray
-# @export designer knob — it's internal state driven by Start/Stop Following, so it's now un-exported.
+# @export designer knob - it's internal state driven by Start/Stop Following, so it's now un-exported.
 # Full motion needs a live host + physics, so this asserts the signals compiled in + the export flip.
 @tool
 class_name CarFollowSignalsTest

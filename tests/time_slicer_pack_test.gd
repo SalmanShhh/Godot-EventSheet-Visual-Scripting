@@ -1,4 +1,4 @@
-# Godot EventSheets — time_slicer pack (frame-spreading Solution 1) behavior.
+# Godot EventSheets - time_slicer pack (frame-spreading Solution 1) behavior.
 #
 # A managed work queue that drains within a per-frame budget. This loads the COMPILED pack and drives
 # the real drain loop in COUNT mode (deterministic; ms mode is wall-clock and timing-dependent) to prove

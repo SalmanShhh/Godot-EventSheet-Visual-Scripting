@@ -1,4 +1,4 @@
-# EventForge — Performance smoke test (virtualized viewport stress guard)
+# EventForge - Performance smoke test (virtualized viewport stress guard)
 #
 # Guards the core invariants that let the editor handle tens of thousands of
 # events/ACEs without killing editor performance:

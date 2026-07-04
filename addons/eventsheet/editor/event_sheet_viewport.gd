@@ -16,9 +16,9 @@ signal ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dic
 ## that parameter (no full dialog). Emitted with the resolved ACE + param id.
 signal param_value_edit_requested(ace: Resource, param_id: String, current_text: String)
 signal param_value_edit_at_rect_requested(ace: Resource, param_id: String, current_text: String, anchor_screen: Rect2)
-## Clicking the inline colour swatch on a condition/action cell — opens the colour picker (no dialog).
+## Clicking the inline colour swatch on a condition/action cell - opens the colour picker (no dialog).
 signal color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color)
-## Dropping a scene-tree node onto a condition/action param VALUE — sets that param to the node reference.
+## Dropping a scene-tree node onto a condition/action param VALUE - sets that param to the node reference.
 signal param_node_drop_requested(ace: Resource, param_id: String, node_reference: String)
 signal ace_drop_requested(
 	source_entries: Array,
@@ -54,17 +54,17 @@ signal signal_edit_requested(signal_row: Resource)
 signal function_edit_requested(event_function: Resource)
 ## Emitted when a match action cell is double-clicked.
 signal match_edit_requested(match_row: Resource)
-## Emitted on Ctrl+/ — the dock toggles the selected rows' enabled state (undoable).
+## Emitted on Ctrl+/ - the dock toggles the selected rows' enabled state (undoable).
 signal row_disable_toggle_requested()
-## Emitted on Alt+Up/Down — the dock moves the selected row (direction -1 = up).
+## Emitted on Alt+Up/Down - the dock moves the selected row (direction -1 = up).
 signal row_move_requested(direction: int)
 # Delete / Backspace on the focused viewport. Emitted so the dock removes the selected rows / ACEs.
 # Handled in _gui_input (not only the dock's _unhandled_key_input) so it wins Godot's input ordering
 # and can never fall through to the editor's Scene-tree "delete node" shortcut.
 signal delete_requested()
-## Emitted on Ctrl+F — the dock shows the find bar.
+## Emitted on Ctrl+F - the dock shows the find bar.
 signal find_requested()
-## Emitted on F3 / Shift+F3 — the dock steps through find matches.
+## Emitted on F3 / Shift+F3 - the dock steps through find matches.
 signal find_step_requested(direction: int)
 ## Emitted when the user finishes dragging the conditions/actions lane divider.
 signal lane_ratio_changed(ratio: float)
@@ -120,8 +120,8 @@ const MIN_SPAN_WIDTH := 10.0
 ## sanely instead of collapsing to one glyph per line.
 const MIN_COMMENT_WRAP_WIDTH := 80.0
 ## Sheets with at most this many rows build all event spans up front (matching the
-## original non-virtualized behavior exactly). Larger sheets keep spans lazy — built
-## on demand during layout/hit/selection — so they load fast regardless of size.
+## original non-virtualized behavior exactly). Larger sheets keep spans lazy - built
+## on demand during layout/hit/selection - so they load fast regardless of size.
 const EAGER_SPAN_LIMIT := 1500
 
 var _renderer: EventRowRenderer = EventRowRenderer.new()
@@ -148,7 +148,7 @@ var _selected_row_uids: Dictionary = {}
 var _selected_span_indices: Dictionary = {}
 ## Rows that landed in `_selected_row_uids` purely because a span of theirs was Ctrl-toggled
 ## on (not via a whole-row select). Tracks selection provenance so that toggling the last span
-## of such a row back off also releases the row from the row-selection set — otherwise the row
+## of such a row back off also releases the row from the row-selection set - otherwise the row
 ## stays phantom-selected (highlighted, drag/delete/edit-eligible) after the user deselects it.
 var _span_only_row_uids: Dictionary = {}
 var _hovered_row_index: int = -1
@@ -376,7 +376,7 @@ func get_selected_context() -> Dictionary:
 	}
 
 
-## The ACE resource backing the selected span (condition/trigger/action), or null —
+## The ACE resource backing the selected span (condition/trigger/action), or null -
 ## drives the Inspector's per-row "Selected ACE" section.
 func get_selected_ace_resource() -> Resource:
 	var context: Dictionary = get_selected_context()
@@ -662,7 +662,7 @@ func get_visible_row_range() -> Vector2i:
 
 
 ## Selects (and scrolls to) the row backed by the given resource. Used by reverse
-## provenance — clicking generated code in the GDScript panel selects its sheet row.
+## provenance - clicking generated code in the GDScript panel selects its sheet row.
 ## Returns false when the resource has no row of its own (e.g. an ACE resource inside an
 ## event); callers fall back to the enclosing row's resource.
 func select_resource(resource: Resource) -> bool:
@@ -691,7 +691,7 @@ func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size:
 	var ranges: Array = span.metadata.get("value_ranges", []) if span.metadata is Dictionary else []
 	if ranges.is_empty():
 		return []
-	# The span's TEXT draws after the object icon/label prefixes — hit-test against where the text
+	# The span's TEXT draws after the object icon/label prefixes - hit-test against where the text
 	# actually is, or clicks on values in labelled rows resolve against a rect shifted left by the
 	# whole label width.
 	var draw_font_size: int = _span_draw_font_size(span, font_size)
@@ -712,7 +712,7 @@ func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size:
 	return []
 
 
-## Where the span's TEXT begins, in logical coordinates — the renderer indents it past the object
+## Where the span's TEXT begins, in logical coordinates - the renderer indents it past the object
 ## icon and object label prefixes (matching _draw_spans' advances exactly). Shared by the value
 ## hit-test and the Param Hop cursor so their geometry can never drift from the draw.
 func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> float:
@@ -747,8 +747,8 @@ static func param_id_for_value(ace: Resource, value_text: String, occurrence: in
 
 # ── Param scope (the Param Hop) ───────────────────────────────────────────────────────────────────
 # A keyboard cursor over the SELECTED row's highlighted parameter values. Tab at row scope already
-# means nest/outdent (the dock's structural key), so param scope is entered EXPLICITLY — Enter on a
-# selected row that has values — and inside it Tab/Shift+Tab cycle values, Enter (or typing) opens the
+# means nest/outdent (the dock's structural key), so param scope is entered EXPLICITLY - Enter on a
+# selected row that has values - and inside it Tab/Shift+Tab cycle values, Enter (or typing) opens the
 # one-field editor anchored at the value, Esc drops back to row scope. The cursor is {entry_index}
 # into _param_value_entries; it clears on any selection change or row rebuild (spans are replaced).
 var _param_cursor: Dictionary = {}
@@ -804,7 +804,7 @@ func _param_value_entries(row_data: EventRowData) -> Array:
 	return entries
 
 
-## Enter param scope on the selected row (cursor on its first value). False when the row has none —
+## Enter param scope on the selected row (cursor on its first value). False when the row has none -
 ## the caller falls back to plain inline span editing, so Enter still works on comment/variable rows.
 func enter_param_scope() -> bool:
 	var entries: Array = _param_value_entries(_row_at(_selected_row_index))
@@ -848,7 +848,7 @@ func handle_enter_key() -> bool:
 
 
 ## Opens the shipped one-field editor on the cursor value, anchored at the value's on-screen rect
-## (keyboard flow — the mouse is nowhere near the value).
+## (keyboard flow - the mouse is nowhere near the value).
 func _open_param_cursor_editor() -> void:
 	var entry: Dictionary = _param_cursor_entry()
 	if entry.is_empty():
@@ -872,7 +872,7 @@ func _param_value_screen_rect(entry: Dictionary) -> Rect2:
 	_get_or_build_row_layout(_selected_row_index, _get_logical_canvas_width(), font, font_size)
 	var local: Rect2 = _param_value_logical_rect(row_data, entry, font, font_size)
 	var zoom: float = max(_zoom_factor, 0.001)
-	# Headless/detached (tests): no window to be relative to — the zoomed local rect still carries
+	# Headless/detached (tests): no window to be relative to - the zoomed local rect still carries
 	# the size information the assertions care about.
 	var origin: Vector2 = get_screen_position() if is_inside_tree() else Vector2.ZERO
 	return Rect2(origin + local.position * zoom, local.size * zoom)
@@ -898,7 +898,7 @@ func _param_value_logical_rect(row_data: EventRowData, entry: Dictionary, font: 
 
 
 ## The param cursor overlay: a soft accent box around the cursor value plus a muted param-name chip
-## just below it — blind Tab-cycling with no name would read worse than the params dialog it replaces.
+## just below it - blind Tab-cycling with no name would read worse than the params dialog it replaces.
 func _draw_param_cursor(font: Font, font_size: int) -> void:
 	if not param_scope_active():
 		return
@@ -942,8 +942,8 @@ func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1)
 	return true
 
 
-## Tree-wide search (the find bar's data source): walks the FULL row tree — including
-## rows hidden inside folded groups — and returns matching source resources in order.
+## Tree-wide search (the find bar's data source): walks the FULL row tree - including
+## rows hidden inside folded groups - and returns matching source resources in order.
 func search_all(query: String) -> Array[Resource]:
 	var matches: Array[Resource] = []
 	var needle: String = query.strip_edges().to_lower()
@@ -1009,7 +1009,7 @@ func _unfold_path_to(row_data: EventRowData, resource: Resource) -> bool:
 
 
 ## Flat indices of rows whose visible text (or GDScript block code) contains the query,
-## case-insensitively — the find bar's data source.
+## case-insensitively - the find bar's data source.
 func search_rows(query: String) -> Array[int]:
 	var matches: Array[int] = []
 	var needle: String = query.strip_edges().to_lower()
@@ -1130,7 +1130,7 @@ func _draw() -> void:
 		_live_values_helper.draw_chip(row_data, row_rect.position.y, row_rect.size.y, font, font_size)
 		# Drag-handle affordance: grip dots on the hovered row's left edge so reordering is
 		# discoverable without being told. They brighten when the pointer is in the whole-event drag
-		# zone (the empty lane band, not on an ACE cell) — the cue that "grab here to move the event".
+		# zone (the empty lane band, not on an ACE cell) - the cue that "grab here to move the event".
 		if index == _hovered_row_index and not _flat_rows.is_empty():
 			var grip_color: Color = Color(1.0, 1.0, 1.0, 0.62 if _hover_is_drag_zone else 0.28)
 			for dot_row in range(3):
@@ -1274,7 +1274,7 @@ func _is_selection_hit(row_index: int, span_index: int) -> bool:
 
 
 
-## True when a hover/press landed on an EVENT row but NOT on one of its ACE cells (span_index < 0) —
+## True when a hover/press landed on an EVENT row but NOT on one of its ACE cells (span_index < 0) -
 ## the empty band of the condition/action lane below the cells. A press there begins a whole-event
 ## drag (reorder / nest), so this drives the move-cursor affordance AND the "grab here" hover. Pure,
 ## so it is unit-testable without a live viewport. Groups/comments/variables aren't included: they're
@@ -1375,10 +1375,10 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	if sheet == null:
 		return root_rows
 	root_rows.append_array(_build_global_variable_rows(sheet))
-	# The sheet's published verbs (its functions) as a foldable Define-block section — without this,
+	# The sheet's published verbs (its functions) as a foldable Define-block section - without this,
 	# `sheet.functions` never appears on the canvas and a behaviour pack's vocabulary is invisible.
 	root_rows.append_array(_row_builder._build_published_verbs_rows(sheet))
-	# Blocks spec P1 — collapse the LEADING run of class scaffolding (prelude / annotations /
+	# Blocks spec P1 - collapse the LEADING run of class scaffolding (prelude / annotations /
 	# host-binding) into one foldable "Class setup" strip, so an opened .gd reads as logic, not
 	# boilerplate. The threshold is LINE-based, not row-based: the importer bundles a whole prelude into
 	# ONE multi-line RawCodeRow, so requiring ≥3 boilerplate lines (rather than ≥2 rows) is what makes the
@@ -1423,14 +1423,14 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 ## line. source_resource stays null so selection / delete / drag treat the header as inert (like the
 ## add-event footer); the real RawCodeRows live on as its children and edit exactly as before. Folded by
 ## default (boilerplate hidden) yet session-remembered via _fold_state, behind a clear "Class setup" label
-## with the line count — discoverable, one click to expand. The existing fold machinery (children +
+## with the line count - discoverable, one click to expand. The existing fold machinery (children +
 ## _flatten_row + the fold arrow, all gated on `children`, not row_type) drives the collapse for free.
 func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Array[EventRowData]) -> EventRowData:
 	return _row_builder._build_scaffolding_strip_row(sheet, scaffold_rows)
 
 
 ## True for the synthetic "Class setup" header built above: a null-source SECTION row whose uid marks it
-## as the scaffolding strip. Used to keep it inert for selection/delete (it owns no resource of its own —
+## as the scaffolding strip. Used to keep it inert for selection/delete (it owns no resource of its own -
 ## its children do), while still allowing the fold arrow (which is gated only on `children`).
 func _is_synthetic_scaffolding_strip(row_data: EventRowData) -> bool:
 	return row_data != null and row_data.source_resource == null and row_data.row_uid.begins_with("scaffolding_strip_")
@@ -1447,13 +1447,13 @@ func _row_is_add_event_footer(row_data: EventRowData) -> bool:
 	return row_data != null and row_data.row_uid.begins_with("add_event_footer_")
 
 
-## First Color(...) literal among an ACE's param values (null when none) — drives the
+## First Color(...) literal among an ACE's param values (null when none) - drives the
 ## little color swatch drawn after the condition/action text.
 func _first_color_in_params(ace: Resource) -> Variant:
 	return _row_builder._first_color_in_params(ace)
 
 
-## The param KEY holding that first Color literal ("" when none) — needed to write a picked colour back.
+## The param KEY holding that first Color literal ("" when none) - needed to write a picked colour back.
 func _first_color_param_id(ace: Resource) -> String:
 	var params: Variant = ace.get("params")
 	if not (params is Dictionary):
@@ -1569,7 +1569,7 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	return _row_builder._build_signal_row(signal_row, indent)
 
 
-## True when a top-level GDScript block is pure class SCAFFOLDING — the structural boilerplate a
+## True when a top-level GDScript block is pure class SCAFFOLDING - the structural boilerplate a
 ## behaviour / custom-node / family sheet always carries (class prelude, `## …` doc + `## @ace_*`
 ## annotations, the generated host-binding `_enter_tree`, blank separators) rather than game LOGIC.
 ## Drives both type-aware styling (scaffolding rendered muted) and the leading-run collapse below, so an
@@ -1694,7 +1694,7 @@ func _get_or_build_row_layout(index: int, width: float, font: Font, font_size: i
 ## it is always visible what the conditions/actions act on.
 func get_host_context_label() -> String:
 	if _sheet != null and _sheet.behavior_mode:
-		return " — host: %s" % _sheet.host_class
+		return " - host: %s" % _sheet.host_class
 	return ""
 
 # ── Row metrics (per-row top/height vertical layout; see ViewportRowMetrics) ──
@@ -1757,7 +1757,7 @@ func _get_logical_canvas_width() -> float:
 
 
 func _select_row(row_index: int, span_index: int = -1) -> void:
-	# The param cursor is bound to the previously selected row's values — moving selection drops it.
+	# The param cursor is bound to the previously selected row's values - moving selection drops it.
 	_param_cursor = {}
 	# Selection state is delegated so event-body selection can include descendant
 	# rows without duplicating toggle/anchor bookkeeping in multiple call sites.
@@ -1787,7 +1787,7 @@ func _select_row(row_index: int, span_index: int = -1) -> void:
 	queue_redraw()
 
 
-## Select every row between the selection anchor and target_index (inclusive) — the Shift+click /
+## Select every row between the selection anchor and target_index (inclusive) - the Shift+click /
 ## Shift+Arrow range gesture. Preserves _selection_anchor_index so the range can grow or shrink
 ## from the same origin, and clears any span-level selection (range selection is whole-row).
 func _select_range(target_index: int) -> void:
@@ -1839,7 +1839,7 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 		if indices.is_empty():
 			_selected_span_indices.erase(row_uid)
 			# If the row was pulled into the selection set only by a span toggle (never
-			# whole-row selected), removing its last span must release the row too —
+			# whole-row selected), removing its last span must release the row too -
 			# otherwise it stays phantom-selected. Whole-row-selected rows are left intact.
 			if _span_only_row_uids.has(row_uid):
 				_span_only_row_uids.erase(row_uid)
@@ -1867,7 +1867,7 @@ func _select_from_click(row_index: int, span_index: int, toggle: bool) -> void:
 				_selected_span_index = -1
 		else:
 			# Whole-row select: this row (and any descendants) are now genuinely selected,
-			# so drop any span-only provenance — they must survive a later span on/off toggle.
+			# so drop any span-only provenance - they must survive a later span on/off toggle.
 			_selected_row_uids[row_uid] = true
 			_span_only_row_uids.erase(row_uid)
 			# The synthetic "Class setup" strip is an inert view-only header (null source): selecting it
@@ -1922,7 +1922,7 @@ func _begin_edit(row_index: int, span_index: int) -> void:
 	var row_data: EventRowData = _row_at(row_index)
 	if row_data == null:
 		return
-	# Group headers edit through a popup (name + description), not an inline title field — so the
+	# Group headers edit through a popup (name + description), not an inline title field - so the
 	# description, which only renders once non-empty, is always reachable. The dock owns the popup.
 	if row_data.source_resource is EventGroup:
 		group_edit_requested.emit(row_data.source_resource as EventGroup)
@@ -2041,7 +2041,7 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
 
 
 ## Hovering a condition/action/trigger shows the GDScript it compiles to (the codegen
-## template with the ACE's parameter values substituted) — the sheet continuously teaches
+## template with the ACE's parameter values substituted) - the sheet continuously teaches
 ## the GDScript mapping. Falls back to tooltip_text (drag feedback) otherwise.
 func _get_tooltip(at_position: Vector2) -> String:
 	var hit: Dictionary = _hit_test(_to_logical_position(at_position))
@@ -2084,15 +2084,15 @@ func _get_tooltip(at_position: Vector2) -> String:
 			# Nothing else to say → at least the sentence (a trigger cell with no ACE description).
 			if not sentence_prefix.is_empty():
 				return sentence.strip_edges()
-	# Raw GDScript blocks are the one row whose codegen is literally themselves — advertise
+	# Raw GDScript blocks are the one row whose codegen is literally themselves - advertise
 	# that the block compiles verbatim (the escape hatch is transparent, not a black box).
 	var raw_row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
 	if raw_row_data != null and raw_row_data.source_resource is RawCodeRow:
 		var raw_block: RawCodeRow = raw_row_data.source_resource as RawCodeRow
 		var first_line: String = raw_block.code.split("\n")[0] if not raw_block.code.is_empty() else ""
-		var tip: String = "GDScript (verbatim):\n%s\nEmitted as-is into the generated script — select to highlight its lines in the GDScript panel." % first_line
+		var tip: String = "GDScript (verbatim):\n%s\nEmitted as-is into the generated script - select to highlight its lines in the GDScript panel." % first_line
 		if not raw_block.note.strip_edges().is_empty():
-			tip = "%s — %s\n%s" % [raw_block.note, "GDScript (verbatim)", tip.split("\n", true, 1)[1] if tip.contains("\n") else tip]
+			tip = "%s - %s\n%s" % [raw_block.note, "GDScript (verbatim)", tip.split("\n", true, 1)[1] if tip.contains("\n") else tip]
 		# Import triage: when a line couldn't lift into a structured ACE, say why right here.
 		if not raw_block.lift_note.strip_edges().is_empty():
 			tip += "\n⚠ Stayed as code: %s" % raw_block.lift_note
@@ -2100,7 +2100,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 	return tooltip_text
 
 
-## Render a hover tooltip's BBCode ([b]/[i]/[color]) when the text carries any — so an ACE/function
+## Render a hover tooltip's BBCode ([b]/[i]/[color]) when the text carries any - so an ACE/function
 ## description authored with markup reads styled, not as raw tags. Plain descriptions (the common case) and
 ## the GDScript-preview fallback have no markup, so this returns null and Godot uses its default tooltip.
 func _make_custom_tooltip(for_text: String) -> Object:
@@ -2195,7 +2195,7 @@ func _resolve_drop_mode(hit: Dictionary, position: Vector2) -> String:
 	return "after" if relative_y > row_height * DROP_ZONE_AFTER_THRESHOLD else "before"
 
 
-## True for any variable row (global dict var or tree LocalVariable) — the grouping gesture's guard.
+## True for any variable row (global dict var or tree LocalVariable) - the grouping gesture's guard.
 func _row_is_variable(row_data: EventRowData) -> bool:
 	return row_data != null and not row_data.spans.is_empty() \
 		and row_data.spans[0].metadata is Dictionary \
@@ -2535,7 +2535,7 @@ static func _value_ranges_for(text: String) -> Array:
 	return ViewportRowBuilder._value_ranges_for(text)
 
 # Test-only bridge for the row builder's private _pending_display_bbcode one-shot flag. On the real
-# render path the flag never crosses this boundary — the writers (_format_*_descriptor) and the reader
+# render path the flag never crosses this boundary - the writers (_format_*_descriptor) and the reader
 # (_make_span) all live in ViewportRowBuilder and run against its own private flag. bbcode_and_pill_test
 # pokes THIS field then calls the _make_span delegate below, which pushes it into the builder; so the
 # test needs no edit. Nothing internal reads this var.
@@ -2655,7 +2655,7 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# Scene-tree node dropped on a param value: set that param to the node reference (prefers %unique-names
-	# via the same converter the params dialog uses), no dialog — the deep-node-friendly gesture.
+	# via the same converter the params dialog uses), no dialog - the deep-node-friendly gesture.
 	if _is_node_path_drag(data):
 		var target: Dictionary = _param_value_at(_to_logical_position(at_position))
 		if not target.is_empty():
@@ -2685,7 +2685,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	ace_preview_requested.emit(source_label, definitions)
 
 
-## Scene/audio files in a FileSystem-dock drop payload — the asset kinds an event
+## Scene/audio files in a FileSystem-dock drop payload - the asset kinds an event
 ## can act on directly (spawn / play).
 static func _resolve_dropped_asset_paths(data: Variant) -> PackedStringArray:
 	var assets: PackedStringArray = PackedStringArray()
@@ -2721,7 +2721,7 @@ func _resolve_dropped_source_objects(data: Variant) -> Array[Object]:
 	return objects
 
 
-## True for a Scene-dock node drag (type "nodes" carrying NodePath/String entries) — as opposed to an
+## True for a Scene-dock node drag (type "nodes" carrying NodePath/String entries) - as opposed to an
 ## Object-valued "nodes" payload, which is a behaviour-source drag handled by _resolve_dropped_source_objects.
 static func _is_node_path_drag(data: Variant) -> bool:
 	if not (data is Dictionary):

@@ -1,4 +1,4 @@
-# Godot EventSheets — health pack (typed HealthPool inner class) behavioral equivalence.
+# Godot EventSheets - health pack (typed HealthPool inner class) behavioral equivalence.
 #
 # The health pack's named pools (shields/armour) were untyped Dictionary entries read via float()
 # casts at ~20 sites; they're now a typed HealthPool inner class. This loads the COMPILED pack and

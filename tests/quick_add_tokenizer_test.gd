@@ -1,6 +1,6 @@
-# EventForge — the quote-aware quick-add tokenizer (the prerequisite for the zero-dialog Ghost Row add).
+# EventForge - the quote-aware quick-add tokenizer (the prerequisite for the zero-dialog Ghost Row add).
 # EventSheetAuthorActions.tokenize_quick_params splits trailing parameter text positionally but keeps a
-# `"`-quoted run as ONE token (quotes included — param values are raw GDScript expressions). The naive
+# `"`-quoted run as ONE token (quotes included - param values are raw GDScript expressions). The naive
 # split(" ") mis-filled `play "jump land"` as two params. Pins the tokenizer + the _quick_match e2e.
 @tool
 class_name QuickAddTokenizerTest

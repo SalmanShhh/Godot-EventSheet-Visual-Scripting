@@ -1,4 +1,4 @@
-# Godot EventSheets — include manager + Extract-to-Include test.
+# Godot EventSheets - include manager + Extract-to-Include test.
 # Covers summarize() (what an included sheet contributes, for the manager preview) and
 # extract_to_include() (move selected rows into a new library sheet + wire the include).
 @tool

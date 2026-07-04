@@ -1,4 +1,4 @@
-# EventForge — Custom ACE provider registration (end-to-end, editor side)
+# EventForge - Custom ACE provider registration (end-to-end, editor side)
 #
 # Registers a user GDScript as a custom-ACE provider on a sheet and asserts its members
 # surface in the ACE registry the picker reads (and disappear when removed). Headless-safe.

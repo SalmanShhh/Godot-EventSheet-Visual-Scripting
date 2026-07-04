@@ -1,4 +1,4 @@
-# EventForge — the ACE Studio's "Ships as:" signature strip. EventSheetFunctionDialog.format_signature
+# EventForge - the ACE Studio's "Ships as:" signature strip. EventSheetFunctionDialog.format_signature
 # builds the exact generated func header from the SAME compiler formatters the codegen uses, so the
 # preview can never disagree with what actually ships (the Godot-dev trust surface).
 @tool
@@ -23,7 +23,7 @@ static func run() -> bool:
 		"func heal(amount: int = 10) -> void") and ok
 
 	# The anti-lie guarantee: format_signature must equal what the compiler's own formatters emit for the
-	# same function — so if it's ever reimplemented by hand this fails.
+	# same function - so if it's ever reimplemented by hand this fails.
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = "knock_back"
 	event_function.return_type = TYPE_VECTOR2

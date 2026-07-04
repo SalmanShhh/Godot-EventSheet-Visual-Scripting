@@ -1,4 +1,4 @@
-# EventForge — visual render harness (dev tool) for the dialog-theming pass. Builds the real
+# EventForge - visual render harness (dev tool) for the dialog-theming pass. Builds the real
 # Function dialog and Theme Editor (now grouped into EventSheetPopupUI titled cards) and saves a
 # PNG of each, so the inset-card + accent-header look can be eyeballed. Run NON-headless:
 #   godot --path . --script tools/render_themed_dialogs.gd

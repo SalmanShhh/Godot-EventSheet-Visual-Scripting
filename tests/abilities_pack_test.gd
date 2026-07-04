@@ -1,4 +1,4 @@
-# Godot EventSheets — abilities pack (typed AbilityData inner class) behavioral equivalence.
+# Godot EventSheets - abilities pack (typed AbilityData inner class) behavioral equivalence.
 #
 # Each ability's runtime state (cooldown/stacks/enabled/active/expiration/tags/data) was an untyped
 # Dictionary read via float()/int()/bool() casts at ~40 sites; it's now a typed AbilityData inner

@@ -1,4 +1,4 @@
-# EventForge — EventGroup resource
+# EventForge - EventGroup resource
 # Organisational row that groups related event rows.
 @tool
 class_name EventGroup
@@ -24,7 +24,7 @@ static var _uid_counter: int = 0
 ## persists across frames).
 @export var local_variables: Array[Resource] = []
 ## The Set Group Active feature, opt-in: compiles a `__group_<name>_active` member and guards
-## every contained event with it — feature flags / debug switches / cheap state
+## every contained event with it - feature flags / debug switches / cheap state
 ## machines at RUNTIME. Off (default) keeps groups zero-cost compile-time organization.
 @export var runtime_toggleable: bool = false
 

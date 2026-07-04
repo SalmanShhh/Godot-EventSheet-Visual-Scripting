@@ -1,6 +1,6 @@
-# Godot EventSheets — Tier 3 custom-drawer round-trip.
+# Godot EventSheets - Tier 3 custom-drawer round-trip.
 #
-# Each drawer compiles to an `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>…")` marker — graceful
+# Each drawer compiles to an `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>…")` marker - graceful
 # degradation: without the editor plugin (or in an exported game) the property is a plain field. This pins
 # (a) emission of every drawer on its compatible type, (b) type-gating (an incompatible type emits no marker),
 # and (c) the importer recovering the marker back into editable attributes.drawer (+ bounds) instead of a
@@ -68,7 +68,7 @@ static func run() -> bool:
 	all_passed = _type_roundtrip("Curve", "@export var falloff: Curve = null", "falloff") and all_passed
 
 	# With the value types round-tripping, the Vector2/Color drawers now round-trip FULLY (the var lifts, then
-	# the drawer extracts) — not just emit.
+	# the drawer extracts) - not just emit.
 	all_passed = _roundtrip("vector_dial", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:150\") var aim: Vector2 = Vector2(0.0, 0.0)", "aim", "vector_dial") and all_passed
 	all_passed = _roundtrip("swatch_row", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:swatch_row\") var hue: Color = Color(1.0, 1.0, 1.0, 1.0)", "hue", "swatch_row") and all_passed
 
@@ -84,7 +84,7 @@ static func run() -> bool:
 
 	# Dialog default-field round-trip: the EXACT text the dialog displays for a value must parse back to that
 	# value. This drives _default_display_text → _parse_default (the real edit cycle). Before the fix the
-	# display used str() — "(5.0, -3.0)" — which _parse_default silently zeroed the first component on edit.
+	# display used str() - "(5.0, -3.0)" - which _parse_default silently zeroed the first component on edit.
 	all_passed = _eq("a Vector2 default survives a display→edit cycle",
 		VariableDialog._parse_default("Vector2", VariableDialog._default_display_text(Vector2(5.0, -3.0))), Vector2(5.0, -3.0)) and all_passed
 	all_passed = _eq("a Color default survives a display→edit cycle",
@@ -92,11 +92,11 @@ static func run() -> bool:
 	all_passed = _eq("a resource (null) default displays empty and parses back to null",
 		VariableDialog._parse_default("Texture2D", VariableDialog._default_display_text(null)), null) and all_passed
 
-	# texture_preview is Texture2D-only (matches the dialog picker) — a String never gets the marker.
+	# texture_preview is Texture2D-only (matches the dialog picker) - a String never gets the marker.
 	all_passed = _eq("texture_preview on a String emits no marker",
 		_emit_for("String", "", {"drawer": "texture_preview"}).contains("eventsheet:"), false) and all_passed
 
-	# A drawer + @export_group + @export_subgroup + tooltip on the SAME variable must ALL round-trip — the
+	# A drawer + @export_group + @export_subgroup + tooltip on the SAME variable must ALL round-trip - the
 	# group absorb must MERGE with (not overwrite) the drawer the hint-extraction already recovered.
 	var combo_line: String = "## Aim it.\n@export_group(\"Aim\")\n@export_subgroup(\"Tuning\")\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:120\") var aim: Vector2 = Vector2(0.0, 0.0)"
 	var combo_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + combo_line + "\n")

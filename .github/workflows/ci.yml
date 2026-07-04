@@ -1,4 +1,4 @@
-# Godot EventSheets CI — runs the headless-safe test suite on every push/PR.
+# Godot EventSheets CI - runs the headless-safe test suite on every push/PR.
 # The full suite (tests/run_tests.gd) currently ends in a known harmless segfault after
 # printing its summary, so CI gates on the headless-safe runner (clean exit codes) and
 # additionally greps the full suite's output for unexpected [FAIL] lines.

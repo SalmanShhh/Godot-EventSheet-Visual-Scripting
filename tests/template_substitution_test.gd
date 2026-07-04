@@ -1,4 +1,4 @@
-# EventForge — ACE template substitution (_apply_template)
+# EventForge - ACE template substitution (_apply_template)
 #
 # Param values must be OPAQUE: a value that itself contains `{...}` must be emitted verbatim, never
 # re-scanned. An earlier iterative replace() pass corrupted such values (e.g. "{a}-{b}" with a="{b}"

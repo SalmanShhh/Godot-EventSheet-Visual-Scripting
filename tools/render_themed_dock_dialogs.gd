@@ -1,4 +1,4 @@
-# EventForge — render harness (dev tool) for the themed event_sheet_dock popups. Builds the dock
+# EventForge - render harness (dev tool) for the themed event_sheet_dock popups. Builds the dock
 # and opens the Welcome, Sheet Type, and Pick dialogs (now grouped into EventSheetPopupUI titled
 # cards) so the look + sizing can be eyeballed. Run NON-headless:
 #   godot --path . --script tools/render_themed_dock_dialogs.gd

@@ -1,8 +1,8 @@
-# Godot EventSheets — an unlocked .gd sheet stays editable across an editor restart.
+# Godot EventSheets - an unlocked .gd sheet stays editable across an editor restart.
 #
 # Opening a .gd lands on a read-only preview; clicking "Edit Events" unlocks it. Previously the
 # session restore re-opened every .gd as a fresh read-only preview, so a sheet you were editing came
-# back LOCKED on every restart — friction, especially now that .gd is the default format. The session
+# back LOCKED on every restart - friction, especially now that .gd is the default format. The session
 # now records which sheets were unlocked and restores that state.
 @tool
 class_name SessionEditableRestoreTest
@@ -32,7 +32,7 @@ static func run() -> bool:
 	all_passed = _check("Edit Events unlocks it", dock_a._current_sheet.read_only, false) and all_passed
 	dock_a.free()
 
-	# Session B: a fresh dock restores the session — the unlocked .gd must come back editable.
+	# Session B: a fresh dock restores the session - the unlocked .gd must come back editable.
 	var dock_b: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock_b.setup(null)  # _session_tracking is false until _restore_session runs, so this won't overwrite the saved session
 	dock_b._restore_session()

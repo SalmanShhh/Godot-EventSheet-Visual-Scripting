@@ -1,4 +1,4 @@
-# EventForge — Cached layout reflects live selection/hover
+# EventForge - Cached layout reflects live selection/hover
 #
 # The row layout is cached by geometry, but selection/hover are NOT part of the cache key.
 # They must be refreshed on every read, otherwise a click reads stale state and the whole
@@ -39,13 +39,13 @@ static func run() -> bool:
 			break
 	all_passed = _check("found a condition/trigger span", span_index >= 0, true) and all_passed
 
-	# Select that span — the cached layout (same key) must reflect it, not stale [].
+	# Select that span - the cached layout (same key) must reflect it, not stale [].
 	viewport._select_row(index, span_index)
 	var layout_after_select: Dictionary = viewport._get_or_build_row_layout(index, width, font, font_size)
 	all_passed = _check("cached layout reflects the new selection",
 		(layout_after_select.get("selected_span_indices", []) as Array).has(span_index), true) and all_passed
 
-	# Hover the span — the cached layout must reflect it, not stale -1.
+	# Hover the span - the cached layout must reflect it, not stale -1.
 	viewport._set_hover_state(index, span_index)
 	var layout_after_hover: Dictionary = viewport._get_or_build_row_layout(index, width, font, font_size)
 	all_passed = _check("cached layout reflects the new hover",

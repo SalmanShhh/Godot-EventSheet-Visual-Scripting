@@ -1,4 +1,4 @@
-# EventForge — the event-sheet-style function dialog. "Usable as" maps to the return type
+# EventForge - the event-sheet-style function dialog. "Usable as" maps to the return type
 # (Action→void / Condition→bool / Expression→typed value), parameters carry default + description,
 # and "Run only when" guard expressions wrap the function body in an `if`. _apply_function_data
 # builds the EventFunction; the compiler emits the default arg + the guard.

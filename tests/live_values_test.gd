@@ -1,4 +1,4 @@
-# Godot EventSheets — Live Values v1 (debugging rung 2): debug compiles stream sheet
+# Godot EventSheets - Live Values v1 (debugging rung 2): debug compiles stream sheet
 # variables over EngineDebugger; the editor's Live Values window shows them. Normal
 # compiles never carry the stream (covenant intact).
 @tool
@@ -107,7 +107,7 @@ static func run() -> bool:
 	all_passed = _check("containers are read-only, scalars stay editable",
 		not stats_row.is_editable(1) and not stats_row.get_first_child().is_editable(1) and score_row.is_editable(1), true) and all_passed
 
-	# (EditorDebuggerPlugin isn't instantiable headless — send_set_value's no-session
+	# (EditorDebuggerPlugin isn't instantiable headless - send_set_value's no-session
 	# guard is exercised by the editor smoke instead.)
 	# Debug compiles register the receiver + handler; normal compiles never do.
 	var rx_output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_lv_rx.gd").get("output", ""))
@@ -122,7 +122,7 @@ static func run() -> bool:
 	editor.free()
 
 	# Stateful copy independence (sweep regression): duplicated Every X Seconds
-	# conditions re-bake their member uid — copies own their own accumulator.
+	# conditions re-bake their member uid - copies own their own accumulator.
 	var stateful: ACECondition = ACECondition.new()
 	stateful.member_declaration = "var __every_aaaa1111: float = 0.0"
 	stateful.codegen_template = "__every_aaaa1111 >= maxf(2.0, 0.001)"
@@ -149,7 +149,7 @@ static func run() -> bool:
 		and spawn_copy.codegen_template.count("__spawn_") == 2, true) and all_passed
 	copy_editor.free()
 	# Baked {uid} tokens never collide within a session (regression: the random-only draw could
-	# repeat, so two {uid} ACEs in one event body declared the same local — invalid GDScript).
+	# repeat, so two {uid} ACEs in one event body declared the same local - invalid GDScript).
 	var uid_seen: Dictionary = {}
 	var uid_ok: bool = true
 	for _uid_i in range(4000):

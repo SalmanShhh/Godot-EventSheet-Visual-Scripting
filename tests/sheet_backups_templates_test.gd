@@ -1,4 +1,4 @@
-# Godot EventSheets — Tier-3 usability: the save-time backup ring (user:// ring,
+# Godot EventSheets - Tier-3 usability: the save-time backup ring (user:// ring,
 # restore-into-editor as an unsaved change) and project-local templates (drop a .tres
 # in the templates dir → New… menu; blueprints skipped by doctor + vocabulary doc).
 @tool

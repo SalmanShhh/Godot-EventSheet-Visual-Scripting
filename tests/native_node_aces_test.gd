@@ -1,7 +1,7 @@
-# Godot EventSheets — Native-node ACE providers (event-sheet coverage Lane 1)
+# Godot EventSheets - Native-node ACE providers (event-sheet coverage Lane 1)
 # Tween/Scene/Audio/AnimatedSprite/Camera/Label/Navigation/CanvasItem/Math vocabulary
 # wrapping NATIVE Godot features (the engine maintains the implementation, we maintain
-# vocabulary — the compatibility covenant's lane 1). Event-sheet names + search synonyms.
+# vocabulary - the compatibility covenant's lane 1). Event-sheet names + search synonyms.
 @tool
 class_name NativeNodeAcesTest
 extends RefCounted

@@ -21,15 +21,15 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-## Whole-word renames a variable across everything that embeds GDScript text — ACE params, GDScript
-## blocks (class-level, in-flow, function bodies), and pick-filter expressions — so a rename never
+## Whole-word renames a variable across everything that embeds GDScript text - ACE params, GDScript
+## blocks (class-level, in-flow, function bodies), and pick-filter expressions - so a rename never
 ## silently breaks compiled code (event-sheet-style refactor safety). Returns the number of replacements.
 ## Call inside the same undoable edit as the rename.
 func rename_variable_references(old_name: String, new_name: String) -> int:
 	if old_name.is_empty() or old_name == new_name or _dock._current_sheet == null:
 		return 0
 	var regex: RegEx = RegEx.new()
-	if regex.compile("\\b%s\\b" % old_name) != OK:  # names are sanitized identifiers — regex-safe
+	if regex.compile("\\b%s\\b" % old_name) != OK:  # names are sanitized identifiers - regex-safe
 		return 0
 	var counter: Dictionary = {"count": 0}
 	_rename_in_rows(_dock._current_sheet.events, regex, new_name, counter)
@@ -68,7 +68,7 @@ func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter: Dicti
 			_rename_in_rows(event_row.sub_events, regex, new_name, counter)
 
 
-## String params hold GDScript expressions / variable references — rename inside them. Baked codegen
+## String params hold GDScript expressions / variable references - rename inside them. Baked codegen
 ## templates can embed the variable too, but their {placeholder} tokens must never be touched (they're
 ## param names, not variables).
 func _rename_in_params(ace: Resource, regex: RegEx, new_name: String, counter: Dictionary) -> void:
@@ -168,7 +168,7 @@ func _perform_symbol_rename(old_name: String, new_name: String) -> bool:
 
 
 ## Rewrites + saves every candidate sheet whose `includes` lists the open sheet (closed sheets save
-## directly — the Replace-in-Project contract).
+## directly - the Replace-in-Project contract).
 func rename_in_includers(old_name: String, new_name: String, candidate_paths: PackedStringArray) -> PackedStringArray:
 	var touched: PackedStringArray = PackedStringArray()
 	for sheet_path: String in candidate_paths:

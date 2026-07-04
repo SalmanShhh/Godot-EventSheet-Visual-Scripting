@@ -1,4 +1,4 @@
-# EventForge — Column header lane-geometry
+# EventForge - Column header lane-geometry
 #
 # The pinned Conditions/Actions header aligns to the same lane divider the rows use, so this
 # guards EventSheetViewport.get_lane_divider_x() (the shared alignment contract) and that the

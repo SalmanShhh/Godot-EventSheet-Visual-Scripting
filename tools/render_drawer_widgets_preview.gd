@@ -1,4 +1,4 @@
-# EventForge — visual probe for the Tier 3 Inspector drawer widgets (dev tool, not shipped logic).
+# EventForge - visual probe for the Tier 3 Inspector drawer widgets (dev tool, not shipped logic).
 # Instantiates each reusable drawer Control (drawer_widgets.gd) with sample values and saves a PNG so the
 # dial / bar / swatches / texture / curve can be eyeballed. Run NON-headless (needs a renderer):
 #   godot --path . --script tools/render_drawer_widgets_preview.gd
@@ -30,32 +30,32 @@ func _init() -> void:
 	pad.add_child(col)
 
 	# progress_bar
-	col.add_child(_heading("progress_bar  —  int / float (drag to set)"))
+	col.add_child(_heading("progress_bar  -  int / float (drag to set)"))
 	var bar: EventSheetDrawerWidgets.DrawerProgressBar = EventSheetDrawerWidgets.DrawerProgressBar.new(0.0, 100.0)
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar.set_value(65.0)
 	col.add_child(bar)
 
 	# vector_dial
-	col.add_child(_heading("vector_dial  —  Vector2 direction + magnitude"))
+	col.add_child(_heading("vector_dial  -  Vector2 direction + magnitude"))
 	var dial: EventSheetDrawerWidgets.DrawerVectorDial = EventSheetDrawerWidgets.DrawerVectorDial.new(100.0)
 	dial.set_value(Vector2(60.0, -40.0))
 	col.add_child(dial)
 
 	# swatch_row
-	col.add_child(_heading("swatch_row  —  Color presets + picker"))
+	col.add_child(_heading("swatch_row  -  Color presets + picker"))
 	var swatches: EventSheetDrawerWidgets.DrawerSwatchRow = EventSheetDrawerWidgets.DrawerSwatchRow.new()
 	swatches.set_value(Color("#e23b3b"))
 	col.add_child(swatches)
 
 	# texture_preview
-	col.add_child(_heading("texture_preview  —  Texture2D / path thumbnail"))
+	col.add_child(_heading("texture_preview  -  Texture2D / path thumbnail"))
 	var tex: EventSheetDrawerWidgets.DrawerTexturePreview = EventSheetDrawerWidgets.DrawerTexturePreview.new()
 	tex.set_texture(_sample_texture())
 	col.add_child(tex)
 
 	# curve_editor
-	col.add_child(_heading("curve_editor  —  inline Curve shape"))
+	col.add_child(_heading("curve_editor  -  inline Curve shape"))
 	var curve_widget: EventSheetDrawerWidgets.DrawerCurvePreview = EventSheetDrawerWidgets.DrawerCurvePreview.new()
 	curve_widget.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	curve_widget.set_curve(_sample_curve())

@@ -1,4 +1,4 @@
-# Godot EventSheets — behavior-declared autocomplete + richer collection helpers.
+# Godot EventSheets - behavior-declared autocomplete + richer collection helpers.
 #
 # Covers two slices added together:
 #  (1) The `## @ace_param_autocomplete(...)` annotation → an EDITABLE suggest combo
@@ -65,7 +65,7 @@ static func run() -> bool:
 		popup.item_count == 1 and popup.is_item_disabled(0), true) and passed
 	popup.free()
 	field.free()
-	# dialog is RefCounted — it auto-frees; calling .free() on it would error.
+	# dialog is RefCounted - it auto-frees; calling .free() on it would error.
 
 	# ── 5. New collection / vector / string Helper ACEs (parity one-liners) ─────────
 	var by_id: Dictionary = {}

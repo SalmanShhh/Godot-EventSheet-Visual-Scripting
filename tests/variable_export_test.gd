@@ -1,4 +1,4 @@
-# EventForge — Global variable private/global (export) toggle
+# EventForge - Global variable private/global (export) toggle
 #
 # A global variable marked exported compiles to `@export var` (readable outside the script);
 # a private one compiles to a plain `var`. Guards the toggle's effect on codegen.

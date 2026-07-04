@@ -2,7 +2,7 @@
 class_name ColorNoAlphaTest
 extends RefCounted
 # A Color variable with the "No alpha" tick compiles to @export_color_no_alpha (a solid RGB swatch in
-# the Inspector) and round-trips STRUCTURALLY — reopening the .gd recovers the no_alpha attribute (so the
+# the Inspector) and round-trips STRUCTURALLY - reopening the .gd recovers the no_alpha attribute (so the
 # dialog tick is re-checked + survives editing), not a verbatim hint. Verify-lift-gated like the drawers.
 
 const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")

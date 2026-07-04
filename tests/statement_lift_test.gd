@@ -1,9 +1,9 @@
-# EventForge — Phase 2 (Stage B) of the near-zero-RawCode roadmap: statement-level reverse coverage.
+# EventForge - Phase 2 (Stage B) of the near-zero-RawCode roadmap: statement-level reverse coverage.
 # Inside an already-lifted trigger body, a property assignment `a.b = c` reverse-lifts to a Set
-# Property row and a method call `a.b()` to a Call Method row — instead of staying an in-flow GDScript
+# Property row and a method call `a.b()` to a Call Method row - instead of staying an in-flow GDScript
 # cell. These two Helper catch-alls are admitted to the reverse index at LOWEST specificity, so a
 # specific ACE always wins; the byte-identical recompile gates correctness. (No functions move, so the
-# GDScript-backed-sheet append contract is untouched — this is independent of the Phase-1 fork.)
+# GDScript-backed-sheet append contract is untouched - this is independent of the Phase-1 fork.)
 @tool
 class_name StatementLiftTest
 extends RefCounted
@@ -20,7 +20,7 @@ static func run() -> bool:
 	event.trigger_id = "OnProcess"
 	var raw: RawCodeRow = RawCodeRow.new()
 	# Property / method with NO dedicated ACE, so the generic Set Property / Call Method catch-alls
-	# win (a property like `modulate` or method like `play` would match a specific ACE instead — which
+	# win (a property like `modulate` or method like `play` would match a specific ACE instead - which
 	# is the correct, higher-specificity behaviour).
 	raw.code = "$Hud.custom_value = 7\n$Hud.refresh_now(true)"
 	event.actions.append(raw)

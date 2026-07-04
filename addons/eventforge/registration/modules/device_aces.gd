@@ -1,7 +1,7 @@
-# EventForge module — Device input (Keyboard/Mouse/Gamepad/Touch)
+# EventForge module - Device input (Keyboard/Mouse/Gamepad/Touch)
 #
 # Polling + event-scoped conditions; key params use the press-a-key capture hint.
-# Module contract: see ace_factory.gd — ace_ids/templates are API (compatibility
+# Module contract: see ace_factory.gd - ace_ids/templates are API (compatibility
 # covenant); this file only changes where the descriptors are AUTHORED.
 @tool
 class_name EventForgeDeviceACEs
@@ -48,7 +48,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns the screen position of a touch from the current input event."))
 
 	# Runtime input remapping (settings-menu rebinding). Capture an event in On Input (the
-	# in-scope `event`), Erase then Add to rebind — two visual steps, no multi-statement
+	# in-scope `event`), Erase then Add to rebind - two visual steps, no multi-statement
 	# template. The action param reuses the InputMap dropdown like the polling ACEs above.
 	descriptors.append(F.make_descriptor("Core", "ActionAddEvent", "Bind Event To Action", ACEDescriptor.ACEType.ACTION, "InputMap.action_add_event(&{action}, {event})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action to bind to.", "", F.input_action_options()), F.make_param("event", "String", "event", "Event", "InputEvent to add (e.g. the captured `event`).", "expression")], "InputMap", "Bind {event} to {action}")
 		.described("Binds a new key, button, or input to a named action at runtime, for remapping."))

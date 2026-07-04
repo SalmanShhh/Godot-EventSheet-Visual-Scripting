@@ -1,4 +1,4 @@
-# EventForge — PickFilter resource
+# EventForge - PickFilter resource
 # Describes an event-sheet-style pick/filter scope for an event.
 @tool
 class_name PickFilter
@@ -30,7 +30,7 @@ enum CollectionKind {
 ## Frame-spreading (Budgeted For Each): when either is > 0 the loop processes a slice per frame and
 ## resumes next frame over a snapshot taken once per pass (items added mid-pass appear next pass; items
 ## freed mid-pass are skipped via is_instance_valid). frame_spread_count caps items EXAMINED per frame
-## (not items that survive the filter); frame_spread_budget_ms is a wall-clock ms budget — at least one
+## (not items that survive the filter); frame_spread_budget_ms is a wall-clock ms budget - at least one
 ## item is always processed per frame, so a tiny budget can't stall. 0/0 = a normal same-frame loop.
 ## Drive a budgeted loop from a PER-FRAME trigger (On Process): under a one-shot trigger it would process
 ## only the first slice and never resume. Not yet combined with While/Repeat, order-by, or pick-first-N

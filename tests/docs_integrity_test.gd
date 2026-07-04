@@ -1,4 +1,4 @@
-# EventSheet — docs artifact regression checks
+# EventSheet - docs artifact regression checks
 @tool
 class_name DocsIntegrityTest
 extends RefCounted

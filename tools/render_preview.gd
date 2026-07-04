@@ -1,4 +1,4 @@
-# EventForge — visual render harness (dev tool, not shipped logic).
+# EventForge - visual render harness (dev tool, not shipped logic).
 # Renders the event sheet viewport with a representative sheet and saves a PNG so the
 # rendering can be inspected. Run NON-headless (needs a real renderer):
 #   godot --path . --script tools/render_preview.gd
@@ -132,7 +132,7 @@ func _build_sheet() -> EventSheetResource:
 	grouped_var.attributes = {"group": "Combat", "subgroup": "Defense"}
 	sheet.events.append(grouped_var)
 
-	# A sheet-built heal() function (a class-level block row — the viewport renders in-sheet rows; full
+	# A sheet-built heal() function (a class-level block row - the viewport renders in-sheet rows; full
 	# function sections live in the dock, which would add toolbar chrome and spoil this clean hero shot).
 	var raw_block: RawCodeRow = RawCodeRow.new()
 	raw_block.code = "func heal(amount: int) -> void:\n\thp += amount"
