@@ -575,6 +575,17 @@ func _draw_spans(
 			# Record where the swatch landed so a click can hit-test it and open the inline colour picker
 			# (no dialog) - the viewport reads span.metadata["swatch_rect"] in _handle_mouse_button.
 			span.metadata["swatch_rect"] = swatch_rect
+		# Compression cue: an ACE that compiles to MORE than one line is doing abstraction
+		# work - a quiet "→N" after the text makes that legible, so plain 1:1 rows read as
+		# Extract-to-Function candidates and compressing rows read as earned leverage.
+		var compiled_lines: int = int(metadata.get("compiled_lines", 0))
+		if compiled_lines > 1 and span_index != editing_span_index:
+			var cue_x: float = text_x + minf(font.get_string_size(draw_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x, text_width) + 8.0
+			if swatch is Color:
+				cue_x += maxf(draw_font_size * 0.7, 8.0) + 8.0
+			var cue_font_size: int = maxi(draw_font_size - 2, 8)
+			var cue_color: Color = Color(TEXT_MUTED, TEXT_MUTED.a * 0.85)
+			_draw_text(control, Vector2(cue_x, baseline_y), "→%d" % compiled_lines, 64.0, font, cue_font_size, cue_color)
 		# Strike through the text when the ACE is disabled OR its whole row (event/group/
 		# comment) is disabled, so "commented out" reads clearly like in code.
 		if not ace_enabled or (row_data != null and row_data.disabled):

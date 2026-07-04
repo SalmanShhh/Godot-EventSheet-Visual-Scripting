@@ -1405,7 +1405,8 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 							"line_index": action_line_index,
 							"object_label": _object_label_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
 							"object_icon": _object_icon_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
-							"swatch_color": _first_color_in_params(action_resource)
+							"swatch_color": _first_color_in_params(action_resource),
+							"compiled_lines": compiled_line_count(action_resource as ACEAction)
 						}.merged(action_style_meta, true)
 					)
 				)
@@ -1775,6 +1776,19 @@ func _is_trigger_condition(condition: ACECondition) -> bool:
 		return generated_definition.ace_type == ACEDefinition.ACEType.TRIGGER
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	return descriptor != null and descriptor.ace_type == ACEDescriptor.ACEType.TRIGGER
+
+
+## How many GDScript lines this action's baked template compiles to - the compression a
+## row performs. The renderer shows "→N" for N > 1, so abstraction is visible at a
+## glance and plain 1:1 rows read as Extract-to-Function candidates. 0 = no template
+## baked (nothing honest to claim).
+static func compiled_line_count(action: ACEAction) -> int:
+	if action == null:
+		return 0
+	var template: String = action.codegen_template.strip_edges()
+	if template.is_empty():
+		return 0
+	return template.count("\n") + 1
 
 
 func _format_action_descriptor(action: ACEAction) -> String:

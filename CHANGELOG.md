@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - the compression cue: rows that compile to more than one line say so
+
+- An action whose baked codegen spans N > 1 lines now shows a quiet muted "→N" after
+  its text - abstraction is visible at a glance: compressing rows read as earned
+  leverage, and plain 1:1 rows read as Extract-to-Function candidates. Completes the
+  "show abstraction level" lever alongside the ƒ verb chip (function calls), "For
+  each" loop rendering, and behaviour object labels. View-only; pinned by
+  tests/abstraction_badge_test.gd and render-verified.
+
 ### Changed - every pack opts into @ace_expose_all(node); hand-written own-node templates gone
 
 - **All 28 builder-backed packs now carry the one-line expose-all opt-in** weapon_kit
