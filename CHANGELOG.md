@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+### Added - the v0.11 roadmap spec
+
+- **`docs/internal/SPEC-v0.11-roadmap.md`**: five census-grounded feature specs for the next
+  release - localisation the Godot way (a translatable mark on string params that emits `tr()`
+  so Godot's own POT/TranslationServer pipeline does the rest, plus a small Translation ACE
+  module), a choose-by-picture Look Gallery + live Inspector preview for designing exported
+  properties, collapsible `#region` fences riding the existing fold machinery (pairing in the
+  view layer only, fold state persisted outside the bytes), a terser ACE provider dialect
+  (doc-comment-as-description, pack-level defaults, one-line param specs) plus a typed
+  registrar that gets real script-editor autocomplete, and on-demand ClassDB reflection so any
+  existing or future Godot node class is browsable vocabulary without hand-authored modules.
+
 ## [0.10.0] - 2026-07-04 - The In-Sheet Authoring Update
 
 ### Removed - vestigial designer template scenes; theme tokens are now the single source of truth
