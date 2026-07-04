@@ -9,6 +9,9 @@
   the bottom), the familiar fold arrow collapses the range, and a folded region names its
   hidden content ("Combat · 12 rows hidden"). Left/Right arrow folding and search reveal
   work unchanged because regions ride the existing fold machinery.
+- **The Discord-bubble outline**: an unfolded region draws a thin rounded accent line around
+  the whole range it covers (the same treatment variable folders get), nesting with nested
+  regions and insetting with the opener's indent, so a region reads as one enclosed span.
 - **View layer only, by construction**: the sheet still stores flat fence rows, so emission
   and the byte round-trip cannot be affected - pinned by `region_folding_test` alongside the
   pairing shape, nesting, and the wart-not-error rule (unbalanced fences stay flat rows).

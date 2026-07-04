@@ -1111,6 +1111,7 @@ func _draw() -> void:
 			for dot_row in range(3):
 				draw_circle(Vector2(row_rect.position.x + 5.0, row_rect.position.y + row_rect.size.y * 0.5 + (dot_row - 1) * 5.0), 1.4, grip_color)
 	_draw_variable_group_bubbles(width)
+	_draw_region_bubbles(width)
 	_draw_box_selection_overlay()
 	_draw_param_cursor(font, font_size)
 	_draw_drag_ghost(font, font_size)
@@ -1135,6 +1136,52 @@ func _draw_variable_group_bubbles(width: float) -> void:
 		var top: float = _get_row_top(start_index)
 		var bottom: float = _get_row_top(end_index) + _get_row_height(end_index)
 		bubble.draw(get_canvas_item(), Rect2(3.0, top + 1.0, width - 6.0, bottom - top - 2.0))
+
+
+## The region bubbles: a THIN rounded outline around each unfolded #region range
+## (the opening fence through the closing fence) - the same Discord-bubble look the
+## variable folders use, outline-only so the enclosed rows keep their own colors.
+## Nested regions draw nested bubbles (each opener draws its own), and the left edge
+## insets with the opener's indent so a region inside a group hugs its lane.
+func _draw_region_bubbles(width: float) -> void:
+	var bubble: StyleBoxFlat = null
+	for index in range(_flat_rows.size()):
+		var row_data: EventRowData = _flat_rows[index].get("row")
+		if row_data == null or row_data.folded or row_data.children.is_empty():
+			continue
+		if not _row_builder._is_region_row(row_data):
+			continue
+		var last_index: int = index + _visible_descendant_count(row_data)
+		if last_index <= index or last_index >= _flat_rows.size():
+			continue
+		if bubble == null:
+			bubble = StyleBoxFlat.new()
+			bubble.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+			bubble.border_color = Color(
+				_get_event_style().behavior_accent_color.r,
+				_get_event_style().behavior_accent_color.g,
+				_get_event_style().behavior_accent_color.b,
+				0.65
+			)
+			bubble.set_border_width_all(1)
+			bubble.set_corner_radius_all(7)
+		var left: float = 3.0 + float(row_data.indent * INDENT_WIDTH)
+		var top: float = _get_row_top(index)
+		var bottom: float = _get_row_top(last_index) + _get_row_height(last_index)
+		bubble.draw(get_canvas_item(), Rect2(left, top + 1.0, width - left - 3.0, bottom - top - 2.0))
+
+
+## How many of a row's descendants are currently visible in the flat list (its
+## children run contiguously right after it in flatten order; a folded child
+## contributes itself but hides its own subtree).
+func _visible_descendant_count(row_data: EventRowData) -> int:
+	if row_data.folded:
+		return 0
+	var count: int = 0
+	for child: EventRowData in row_data.children:
+		count += 1
+		count += _visible_descendant_count(child)
+	return count
 
 
 ## Event-sheet-style drag ghost: a faint (~0.66 opacity) label of the dragged content following the
