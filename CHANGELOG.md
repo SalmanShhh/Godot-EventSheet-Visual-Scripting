@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - the Inspector preview card: see the final Inspector before you press OK
+
+- **A live mock above "Ships as:"** shows what the Inspector will actually display for the
+  variable being edited: the group header, the subgroup indent, the humanized property name,
+  and the chosen widget (progress bar, slider, folder picker, direction dial, swatches...) -
+  reusing the Look Gallery's miniature builders so the two previews cannot diverge. Hidden
+  for unexported variables.
+- **A plain-sentence summary** beneath the mock states the same choices in C3-first language:
+  "A whole number, from 0 to 100, shown as a progress bar, grouped under Combat > Defense."
+  The sentence builder is pinned as exact strings across an 11-case matrix
+  (`inspector_preview_test`); the "Ships as:" strip stays the code truth below it.
+
 ### Added - the Look Gallery: choose an Inspector look by picture
 
 - **"Browse..." next to the Inspector-look dropdown** opens a gallery of picture tiles - one

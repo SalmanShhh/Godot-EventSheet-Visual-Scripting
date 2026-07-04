@@ -74,6 +74,7 @@ var _drawer_preview_box: VBoxContainer = null
 # Studio pattern), so the friendly names teach the annotation instead of hiding it.
 var _attr_look_option: OptionButton = null
 var _look_gallery: EventSheetLookGalleryDialog = null
+var _inspector_preview_card: EventSheetInspectorPreviewCard = null
 var _attr_look_detail_edit: LineEdit = null
 var _attr_look_detail_row: Control = null
 var _attr_or_greater_check: CheckBox = null
@@ -339,6 +340,11 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_look_detail_row = EventSheetPopupUI.form_row("Details", _attr_look_detail_edit)
 	_attr_look_detail_row.visible = false
 	_attr_section.add_child(_attr_look_detail_row)
+	# The Inspector preview card: a live mock of the final Inspector rows (group header,
+	# subgroup indent, name, widget) + a one-sentence summary - the picture for beginners,
+	# with the "Ships as:" strip below it as the code truth for experts.
+	_inspector_preview_card = EventSheetInspectorPreviewCard.new()
+	_attr_section.add_child(_inspector_preview_card)
 	# "Ships as:" - the exact annotation these choices compile to, straight from the compiler's
 	# own prefix builder so it can never drift from reality.
 	_ships_as_label = Label.new()
@@ -1207,6 +1213,38 @@ func _refresh_ships_as() -> void:
 	if _name_edit != null and not _name_edit.text.strip_edges().is_empty():
 		shown_name = _name_edit.text.strip_edges()
 	_ships_as_label.text = "Ships as:  %svar %s: %s" % [prefix, shown_name, type_name]
+	_refresh_inspector_preview(shown_name, type_name, preview)
+
+
+## The preview card rides the exact triggers (and folded attributes) of the "Ships as:"
+## strip, then layers on the tiers the strip does not need: checkboxes, drawer, grouping.
+func _refresh_inspector_preview(shown_name: String, type_name: String, folded_attributes: Dictionary) -> void:
+	if _inspector_preview_card == null:
+		return
+	var card_attributes: Dictionary = folded_attributes.duplicate(true)
+	if _attr_multiline_check != null and _attr_multiline_check.button_pressed and type_name == "String":
+		card_attributes["multiline"] = true
+	if _attr_no_alpha_check != null and _attr_no_alpha_check.button_pressed and type_name == "Color":
+		card_attributes["no_alpha"] = true
+	if _attr_exp_easing_check != null and _attr_exp_easing_check.button_pressed and type_name == "float":
+		card_attributes["exp_easing"] = true
+	if _attr_placeholder_edit != null and not _attr_placeholder_edit.text.strip_edges().is_empty() and type_name == "String":
+		card_attributes["placeholder"] = _attr_placeholder_edit.text.strip_edges()
+	var drawer_kind: String = _selected_drawer_kind()
+	if not drawer_kind.is_empty():
+		card_attributes["drawer"] = drawer_kind
+	if _attr_group_edit != null and not _attr_group_edit.text.strip_edges().is_empty():
+		card_attributes["group"] = _attr_group_edit.text.strip_edges()
+	if _attr_subgroup_edit != null and not _attr_subgroup_edit.text.strip_edges().is_empty():
+		card_attributes["subgroup"] = _attr_subgroup_edit.text.strip_edges()
+	if _attr_clamp_check != null and _attr_clamp_check.button_pressed:
+		card_attributes["clamp"] = true
+	if _attr_read_only_check != null and _attr_read_only_check.button_pressed:
+		card_attributes["read_only"] = true
+	var default_text: String = _default_edit.text.strip_edges() if _default_edit != null else ""
+	var exported: bool = _exported_check != null and _exported_check.button_pressed
+	var constant: bool = _const_check != null and _const_check.button_pressed
+	_inspector_preview_card.update_preview(shown_name, type_name, default_text, card_attributes, exported, constant)
 
 
 ## The single drawer kind a variable type can host (or "" — most types host no drawer).
