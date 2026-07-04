@@ -29,48 +29,36 @@ static func run() -> bool:
 	passed = _check("style exposes group badge token", style.event_style.group_badge_background_color.a > 0.0, true) and passed
 	passed = _check("style exposes comment token", style.event_style.comment_text_color.a > 0.0, true) and passed
 	passed = _check("style exposes interaction token", style.event_style.selection_fill_color.a > 0.0, true) and passed
-	passed = _check("style exposes event visual scene template", style.event_visual_scene != null, true) and passed
-	passed = _check("style exposes condition visual scene template", style.condition_visual_scene != null, true) and passed
-	passed = _check("style exposes action visual scene template", style.action_visual_scene != null, true) and passed
-	var event_template: Node = style.event_visual_scene.instantiate() if style.event_visual_scene != null else null
-	var condition_template: Node = style.condition_visual_scene.instantiate() if style.condition_visual_scene != null else null
-	var action_template: Node = style.action_visual_scene.instantiate() if style.action_visual_scene != null else null
+	# Pin the seeded default look (the exact values ensure_defaults() bakes for a
+	# fresh style) so a regression in the defaults is caught, not just non-null-ness.
 	passed = _check(
-		"event visual scene builds event style",
-		event_template != null and event_template.has_method("build_event_style") and (event_template.call("build_event_style") is EventSheetEventStyle),
+		"default trigger badge color seeded",
+		style.event_style.trigger_badge_background_color.is_equal_approx(Color(0.41, 0.51, 0.76, 0.95)),
 		true
 	) and passed
 	passed = _check(
-		"event template exposes designer usage hint",
-		event_template != null and str(event_template.get("designer_usage_hint")).contains("EventSheet block shell"),
+		"default condition lane color seeded",
+		style.event_style.condition_lane_color.is_equal_approx(Color(0.11, 0.14, 0.20, 0.58)),
 		true
 	) and passed
 	passed = _check(
-		"condition visual scene builds condition style",
-		condition_template != null and condition_template.has_method("build_element_style") and (condition_template.call("build_element_style") is EventSheetElementStyle),
+		"default condition chip colors seeded",
+		style.condition_style.text_color.is_equal_approx(Color(0.78, 0.88, 1.00, 1.0))
+			and style.condition_style.chip_background_color.is_equal_approx(Color(0.30, 0.56, 0.82, 0.14)),
 		true
 	) and passed
 	passed = _check(
-		"condition template exposes designer usage hint",
-		condition_template != null and str(condition_template.get("designer_usage_hint")).contains("designer-friendly template"),
+		"default action chip colors seeded",
+		style.action_style.text_color.is_equal_approx(Color(0.68, 0.92, 0.78, 1.0))
+			and style.action_style.chip_background_color.is_equal_approx(Color(0.25, 0.66, 0.56, 0.12)),
 		true
 	) and passed
 	passed = _check(
-		"action visual scene builds action style",
-		action_template != null and action_template.has_method("build_element_style") and (action_template.call("build_element_style") is EventSheetElementStyle),
+		"element badge derives from chip fill",
+		style.condition_style.badge_background_color.is_equal_approx(style.condition_style.chip_background_color.darkened(0.24))
+			and style.action_style.badge_background_color.is_equal_approx(style.action_style.chip_background_color.darkened(0.24)),
 		true
 	) and passed
-	passed = _check(
-		"action template exposes designer usage hint",
-		action_template != null and str(action_template.get("designer_usage_hint")).contains("designer-friendly template"),
-		true
-	) and passed
-	if event_template != null:
-		event_template.free()
-	if condition_template != null:
-		condition_template.free()
-	if action_template != null:
-		action_template.free()
 
 	style.event_style.minimum_row_height = 40
 	style.event_style.condition_lane_padding = 18

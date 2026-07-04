@@ -23,8 +23,6 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
   surfaced as an editor hint.
 - MCP server (AI tooling, policy-aware): `res://addons/eventsheet/mcp/mcp_server.gd`
 - Theme resources: `res://addons/eventsheet/theme/*.gd`
-- Theme/template scenes: `res://addons/eventsheet/elements/*.tscn` (designer previews -
-  the live editor paints via the renderer + tokens, see `docs/elements/`)
 - Headless suites: `res://tests/run_perf.gd` (safe gate) and `res://tests/run_tests.gd`
   (full; a tail segfault AFTER the summary is a known harmless teardown flake - count
   `[FAIL]` lines)
@@ -44,9 +42,8 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - `EventSheetEditorStyle` is the installable theme resource.
 - `EventSheetEventStyle` now covers structural tokens: sheet background, event block shell, lane colors, group/comment chrome, and interaction fills.
 - `EventSheetElementStyle` covers condition/action entry tokens.
-- Designers can work in two modes:
-  - edit `.tres` token resources directly
-  - edit the preview scenes in `addons/eventsheet/elements/` and point a style resource at them
+- Designers edit `.tres` token resources directly (or through the Theme Editor dialog);
+  the tokens are the single source of truth for the renderer.
 - Theme docs:
   - `docs/EVENTSHEET_THEME_EDITABILITY.md`
   - `docs/EVENTSHEET_ALIGNMENT_GUIDE.md`
@@ -57,7 +54,6 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - `docs/GDSCRIPT-PAIRING-SPEC.md` - how the sheet pairs with GDScript (blocks, codegen tooltips, expressions, C3 synonyms, importer round-trip)
 - `docs/EVENTSHEET_THEME_EDITABILITY.md` - designer-facing theme workflow
 - `docs/EVENTSHEET_ALIGNMENT_GUIDE.md` - stacked layout tuning
-- `docs/elements/*.md` - template scene guidance
 - `docs/C3-MIGRATION-GUIDE.md` - user-facing C3→Godot concept/behavior/plugin map
 - `docs/CUSTOM-BLOCKS-GUIDE.md` - the Custom Block API (register non-ACE row kinds; contract, built-ins, use cases)
 - `docs/MCP-SERVER.md` - the AI-tooling protocol (list/read/compile/lint/snippets)

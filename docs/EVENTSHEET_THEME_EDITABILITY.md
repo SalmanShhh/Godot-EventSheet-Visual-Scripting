@@ -3,7 +3,7 @@
 > Updated 2026-06. A designer-friendly **visual theme editor** (live preview + grouped
 > token controls) ships as the **Theme Editor dialog**.
 
-This editor uses Godot-native resources/scenes instead of runtime CSS. The goal is still the same as a Construct-style theme.css workflow: designers can duplicate a theme package, tune tokens, reload the editor, and keep shipping reusable presets.
+This editor uses Godot-native resources instead of runtime CSS. The goal is still the same as a Construct-style theme.css workflow: designers can duplicate a theme package, tune tokens, reload the editor, and keep shipping reusable presets.
 
 Current additions on top of the model below:
 
@@ -21,11 +21,8 @@ Current additions on top of the model below:
 - `EventSheetEditorStyle` (`.tres`) is the active installable theme package.
 - `EventSheetEventStyle` owns sheet/event/group/comment/interaction tokens.
 - `EventSheetElementStyle` owns condition/action entry tokens.
-- Element templates are scene files in `res://addons/eventsheet/elements/`:
-  - `event_visual_element.tscn`
-  - `condition_visual_element.tscn`
-  - `action_visual_element.tscn`
-- These scenes are linked by `EventSheetEditorStyle.event_visual_scene`, `condition_visual_scene`, and `action_visual_scene`.
+- The theme tokens above are the single source of truth: the live editor paints every row
+  from them via the renderer (there are no per-row scenes to edit).
 
 ## Editing flow for designers
 
@@ -33,7 +30,7 @@ Current additions on top of the model below:
 2. Optionally duplicate `res://demo/themes/designer_template_theme_manifest.cfg` so the package keeps its token notes.
 3. Edit the `.tres` resource in the Inspector for structural tokens such as sheet background, group/comment styling, and hover/selection fills.
 4. Open one of the element `.tscn` files in Godot when you want a more visual preview for lane and chip styling.
-5. Save the scene/resource.
+5. Save the resource.
 6. Assign the style to `EventSheetResource.editor_style` or load it through the dock toolbar.
 
 ## Switching themes

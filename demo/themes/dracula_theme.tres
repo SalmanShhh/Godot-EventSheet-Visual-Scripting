@@ -1,14 +1,11 @@
-[gd_resource type="Resource" script_class="EventSheetEditorStyle" load_steps=10 format=3 uid="uid://bb16lc84a671c"]
+[gd_resource type="Resource" script_class="EventSheetEditorStyle" format=3]
 
-[ext_resource type="Script" uid="uid://qpmpq2p3ch2l" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="1_mawrp"]
-[ext_resource type="PackedScene" path="res://addons/eventsheet/elements/action_visual_element.tscn" id="2_gmkbj"]
-[ext_resource type="PackedScene" path="res://addons/eventsheet/elements/condition_visual_element.tscn" id="3_0yl7m"]
-[ext_resource type="Script" uid="uid://co8xev8hw3miu" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="4_xyv7q"]
-[ext_resource type="PackedScene" path="res://addons/eventsheet/elements/event_visual_element.tscn" id="5_kyk3f"]
-[ext_resource type="Script" uid="uid://bi4je8hybhu85" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="6_j1iqj"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="1_xpd88"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="2_h4j8a"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="3_7hjdi"]
 
-[sub_resource type="Resource" id="Resource_ej2uv"]
-script = ExtResource("1_mawrp")
+[sub_resource type="Resource" id="Resource_mawrp"]
+script = ExtResource("1_xpd88")
 text_color = Color(0.3137255, 0.98039216, 0.48235294, 1)
 chip_background_color = Color(0.3137255, 0.98039216, 0.48235294, 0.08)
 chip_border_color = Color(0.3137255, 0.98039216, 0.48235294, 0.2)
@@ -16,8 +13,8 @@ chip_hover_color = Color(0.3137255, 0.98039216, 0.48235294, 0.3)
 badge_background_color = Color(0.26666668, 0.2784314, 0.3529412, 1)
 badge_foreground_color = Color(0.3137255, 0.98039216, 0.48235294, 1)
 
-[sub_resource type="Resource" id="Resource_ht33q"]
-script = ExtResource("1_mawrp")
+[sub_resource type="Resource" id="Resource_gmkbj"]
+script = ExtResource("1_xpd88")
 text_color = Color(0.54509807, 0.9137255, 0.99215686, 1)
 chip_background_color = Color(0.54509807, 0.9137255, 0.99215686, 0.08)
 chip_border_color = Color(0.54509807, 0.9137255, 0.99215686, 0.2)
@@ -25,8 +22,8 @@ chip_hover_color = Color(0.54509807, 0.9137255, 0.99215686, 0.3)
 badge_background_color = Color(0.26666668, 0.2784314, 0.3529412, 1)
 badge_foreground_color = Color(0.54509807, 0.9137255, 0.99215686, 1)
 
-[sub_resource type="Resource" id="Resource_rhjlg"]
-script = ExtResource("4_xyv7q")
+[sub_resource type="Resource" id="Resource_0yl7m"]
+script = ExtResource("2_h4j8a")
 sheet_background_color = Color(0.15686275, 0.16470589, 0.21176471, 1)
 row_background_color = Color(0.15686275, 0.16470589, 0.21176471, 1)
 row_background_alt_color = Color(0.17254902, 0.18431373, 0.23921569, 1)
@@ -56,7 +53,7 @@ cell_hover_color = Color(0.972549, 0.972549, 0.9490196, 0.12)
 behavior_accent_color = Color(0.7411765, 0.5764706, 0.9764706, 1)
 
 [resource]
-script = ExtResource("6_j1iqj")
-event_style = SubResource("Resource_rhjlg")
-condition_style = SubResource("Resource_ht33q")
-action_style = SubResource("Resource_ej2uv")
+script = ExtResource("3_7hjdi")
+event_style = SubResource("Resource_0yl7m")
+condition_style = SubResource("Resource_gmkbj")
+action_style = SubResource("Resource_mawrp")

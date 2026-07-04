@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Removed - vestigial designer template scenes; theme tokens are now the single source of truth
+
+- **`addons/eventsheet/elements/` deleted** (the three preview `.tscn` scenes and their two
+  template scripts, plus `docs/elements/`): these were designer-preview vestiges of the removed
+  Control-widget editor era. The live virtualized renderer never instantiated them; their only
+  real job was seeding default token values into a fresh `EventSheetEditorStyle`.
+- **Default look now baked in code**: `EventSheetEditorStyle.ensure_defaults()` seeds the exact
+  same token values the scenes used to provide (proven token-identical by a before/after dump
+  of every token in a fresh style). Bundled themes, the manifest template, and the style tests
+  no longer reference any scene; the theme `.tres` token resources are the single source of
+  truth for the renderer.
+
 ### Changed - every user guide restyled to one house structure; the Custom Block API gets a real guide
 
 - **`docs/CUSTOM-BLOCKS-GUIDE.md`**: the Custom Block API's dedicated user guide - intro + TOC,

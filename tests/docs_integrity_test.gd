@@ -19,27 +19,6 @@ const REQUIRED_DOCS := {
 		"Construct 3-like tuning recipe",
 		"Theme token cross-reference"
 	],
-	"res://docs/elements/EVENT_VISUAL_ELEMENT.md": [
-		"# Event Visual Element",
-		"What this element is",
-		"Visual controls",
-		"Usage",
-		"Designer notes"
-	],
-	"res://docs/elements/CONDITION_VISUAL_ELEMENT.md": [
-		"# Condition Visual Element",
-		"What this element is",
-		"Visual controls",
-		"Usage",
-		"Designer notes"
-	],
-	"res://docs/elements/ACTION_VISUAL_ELEMENT.md": [
-		"# Action Visual Element",
-		"What this element is",
-		"Visual controls",
-		"Usage",
-		"Designer notes"
-	],
 	"res://AGENTS.md": [
 		"# AGENTS.md",
 		"Repo overview",
