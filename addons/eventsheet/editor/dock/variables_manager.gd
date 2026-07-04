@@ -18,6 +18,7 @@ var _dock: Control = null
 # dispatcher (and reset on every empty-space / row context open) and read back here — public on this helper
 # precisely because the dock populates it before delegating in.
 var _context_variable: Dictionary = {}
+var _context_variable_row: EventRowData = null
 var _global_variable_entries: Array[Dictionary] = []
 var _local_variable_entries: Array[Dictionary] = []
 # Vestigial: the dock never builds these ItemLists (the variable panel was folded into the viewport's
@@ -73,6 +74,7 @@ func _collect_sheet_variable_names() -> PackedStringArray:
 
 
 func _on_viewport_variable_edit_requested(row_data: EventRowData, metadata: Dictionary) -> void:
+	_context_variable_row = row_data
 	_context_variable = _context_variable_entry_from_metadata(row_data, metadata)
 	if _context_variable.is_empty():
 		_dock._set_status("Select a valid variable before editing.", true)
@@ -92,6 +94,22 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_convert_context_variable_scope()
 		_dock.VARIABLE_MENU_TOGGLE_CONST:
 			_toggle_context_variable_constant()
+		_dock.VARIABLE_MENU_GROUP:
+			_group_context_selection()
+
+
+## "Group Under a Heading..." routes the multi-selection (or just the clicked row)
+## into the same folder gesture the drag performs, so grouping stays discoverable
+## for users who never find the drag-onto-variable gesture.
+func _group_context_selection() -> void:
+	var rows: Array = []
+	if _dock._viewport != null:
+		for row_data: EventRowData in _dock._viewport.get_selected_rows():
+			if not EventSheetVariableGrouping.row_identity(row_data).is_empty():
+				rows.append(row_data)
+	if rows.is_empty() and _context_variable_row != null:
+		rows.append(_context_variable_row)
+	_dock._variable_grouping.on_group_rows_requested(rows)
 
 
 ## The create-variable quick-fix behind the params dialog's "+ var" button: declares

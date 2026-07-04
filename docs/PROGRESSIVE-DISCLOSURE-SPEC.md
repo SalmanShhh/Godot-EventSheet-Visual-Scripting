@@ -49,6 +49,7 @@ Two orthogonal axes govern every surface.
 | **T2** | Advanced | Wiring / organizational / expert surfaces that assume other state exists or Godot fluency | a nested "More…" disclosure **and/or** Simple Mode |
 
 **Audience axis (Simple ↔ Expert)** - orthogonal to depth. **Simple Mode is the canonical audience flag**
+(since v0.11 it also gates the Variable dialog: the Advanced tier hides entirely in Simple Mode, display-only)
 (`event_sheet_dock.gd` `_simple_mode`, persisted in editor project metadata). Expert is the default; Simple
 hides T2-class surfaces entirely. New advanced surfaces **join the existing Simple-Mode gates** (the picker's
 `_SIMPLE_MODE_DENYLIST`, the right-click submenu skips) rather than inventing a parallel toggle. The

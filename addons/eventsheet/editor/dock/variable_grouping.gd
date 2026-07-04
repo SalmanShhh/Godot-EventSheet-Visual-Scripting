@@ -239,6 +239,31 @@ func on_group_requested(source_row: EventRowData, target_row: EventRowData) -> v
 		open_rename_popup(group)  # name the new folder right away, Discord-style
 
 
+## The context-menu route to the same folder gesture: fold the given variable rows
+## into one fresh group and open the naming popup - the feature stays discoverable
+## for users who never find the drag. Same attributes, same undo funnel as the drag.
+func on_group_rows_requested(rows: Array) -> void:
+	var identities: Array[Dictionary] = []
+	for row_data in rows:
+		var identity: Dictionary = row_identity(row_data)
+		if not identity.is_empty():
+			identities.append(identity)
+	if identities.is_empty():
+		return
+	var group: String = "New Group"
+	var changed: bool = _dock._perform_undoable_sheet_edit("Group Variables", func() -> bool:
+		var any: bool = false
+		for identity: Dictionary in identities:
+			if set_group(_dock._current_sheet, str(identity.get("scope")), str(identity.get("name")), identity.get("resource"), group):
+				any = true
+		return any)
+	if not changed:
+		return
+	_dock._refresh_after_edit()
+	_dock._mark_dirty("Grouped %d variable%s under a new heading." % [identities.size(), "" if identities.size() == 1 else "s"])
+	open_rename_popup(group)
+
+
 ## Double-clicking a group chip renames the folder (empty name ungroups all members).
 func on_rename_requested(group_name: String) -> void:
 	open_rename_popup(group_name)

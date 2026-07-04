@@ -74,6 +74,8 @@ var _drawer_preview_box: VBoxContainer = null
 # Studio pattern), so the friendly names teach the annotation instead of hiding it.
 var _attr_look_option: OptionButton = null
 var _look_gallery: EventSheetLookGalleryDialog = null
+## Queried at gating time (dock-owned preference); invalid Callable = expert mode.
+var simple_mode_provider: Callable = Callable()
 var _inspector_preview_card: EventSheetInspectorPreviewCard = null
 var _attr_look_detail_edit: LineEdit = null
 var _attr_look_detail_row: Control = null
@@ -623,6 +625,17 @@ func _update_attr_gating() -> void:
 		return
 	var can_export: bool = _exported_check != null and _exported_check.button_pressed and not _exported_check.disabled
 	_attr_toggle.visible = can_export
+	# Simple Mode keeps the whole Advanced tier out of sight: its six fields are wiring
+	# and organization, not looks. Display-only - attributes already set on a variable
+	# still round-trip untouched, and the tier returns the moment Simple Mode turns off.
+	var simple: bool = simple_mode_provider.is_valid() and bool(simple_mode_provider.call())
+	if _attr_advanced_toggle != null and simple:
+		_attr_advanced_toggle.visible = false
+		_attr_advanced_toggle.set_pressed_no_signal(false)
+		if _attr_advanced_section != null:
+			_attr_advanced_section.visible = false
+	elif _attr_advanced_toggle != null:
+		_attr_advanced_toggle.visible = true
 	if not can_export:
 		_attr_toggle.set_pressed_no_signal(false)
 		_attr_toggle.text = "▸" + _attr_toggle.text.substr(1)

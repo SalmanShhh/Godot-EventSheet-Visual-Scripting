@@ -67,6 +67,31 @@ The variable above compiles to exactly this:
 
 The `##` line becomes the Inspector's hover tooltip, and the `eventsheet:progress_bar` marker is what the editor plugin turns into the draggable bar. In an exported game that same line is just an `int` with a plain spin box.
 
+## 3b. Choosing by Picture (the Look Gallery + the Inspector preview)
+
+You do not need to know any of the vocabulary below to design a property:
+
+1. In the Variable dialog, tick **Editable in the Inspector** and open **More options**.
+2. Press **Browse...** next to *Inspector look*. A gallery of picture tiles opens - each tile
+   is a miniature of the real Inspector widget (checkbox flags, a layers grid, a file picker,
+   an easing curve...) with a one-line explanation. Click the one that looks right.
+3. Looks that need details (flag names, file filters) drop you straight into the **Details**
+   field with an example placeholder.
+4. Watch the **Inspector preview** card: it mocks the final Inspector live - the group
+   heading, the sub-heading indent, the property name, and the chosen widget - and states
+   your choices as one sentence ("A whole number, from 0 to 100, shown as a progress bar,
+   grouped under Combat > Defense."). The **Ships as:** line under it shows the exact
+   GDScript annotation the choice compiles to.
+
+In **Simple Mode** the dialog hides the Advanced tier entirely (show-if, lock-unless,
+on-changed, clamp, read-only, and the grouping text fields) - the gallery, the preview card,
+and the common options stay. Attributes already set on a variable keep round-tripping
+untouched; the tier returns when Simple Mode is turned off.
+
+Grouping without the drag gesture: right-click a variable row (or a multi-selection of them)
+and pick **Group Under a Heading...** - the same folder the drag creates, with the same
+naming popup.
+
 ## 4. The Drawers (the Odin-style controls)
 
 A **drawer** replaces a variable's plain Inspector field with a richer control. Each variable type hosts exactly one drawer, offered in the **"Show as"** dropdown (the default is always "Default field", so a drawer is opt-in). All five are shown in the image at the top of this guide.

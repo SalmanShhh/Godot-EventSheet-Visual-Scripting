@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Changed - Simple Mode reaches the Variable dialog; grouping gets a menu route
+
+- **Simple Mode now gates the Variable dialog**: the Advanced tier (show-if, lock-unless,
+  on-changed, clamp, read-only, grouping fields) hides entirely - it is wiring, not looks.
+  Display-only: attributes already on a variable round-trip untouched, and the tier returns
+  the moment Simple Mode turns off (pinned by `variable_dialog_simple_mode_test`).
+- **"Group Under a Heading..."** on the variable right-click menu folds the multi-selection
+  (or the clicked row) into a new Inspector group and opens the same naming popup the drag
+  gesture uses - grouping stays discoverable for users who never find the drag.
+- The drawers guide gains a "Choosing by Picture" walkthrough (gallery, preview card,
+  sentence, Simple Mode); the progressive-disclosure spec records the audience axis as
+  reaching the dialog.
+
 ### Added - the Inspector preview card: see the final Inspector before you press OK
 
 - **A live mock above "Ships as:"** shows what the Inspector will actually display for the

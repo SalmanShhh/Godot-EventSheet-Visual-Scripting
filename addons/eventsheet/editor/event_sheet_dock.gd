@@ -60,6 +60,7 @@ const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
 const VARIABLE_MENU_RENAME := 4
+const VARIABLE_MENU_GROUP := 5
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
@@ -228,6 +229,7 @@ func _ensure_editor_dialogs_initialized() -> void:
 	_param_resolver.set_param_store(_editor_param_store)
 	_ace_picker.init_dialog(self, _ace_registry)
 	_ace_picker.set_simple_mode_provider(func() -> bool: return _simple_mode)
+	_variable_dlg.simple_mode_provider = func() -> bool: return _simple_mode
 	_ace_picker.ace_selected.connect(_on_ace_picker_selected)
 	_ace_params.init_dialog(self, _ace_registry, _collect_sheet_variable_names)
 	_ace_params.set_lint_context_provider(func() -> EventSheetResource: return _current_sheet)
