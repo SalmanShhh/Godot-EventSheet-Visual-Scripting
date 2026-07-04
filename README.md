@@ -72,6 +72,10 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 
 **The editor** - Two-lane condition/action rows, object icons + labels, flat cells, drag/drop with insertion arrows, groups, colored BBCode comments, inline colour-swatch picking, drag-a-node-onto-a-param, multi-select, copy/paste, full undo/redo. **Find & Replace (Ctrl+F)**, script-editor shortcuts (F9 breakpoints, Ctrl+/ toggle, Alt+↑↓ move), a **Command Palette (Ctrl+P)**, **Simple Mode**, multi-view (split/detached/linked), themeable down to every token (Dracula, Nord, Gruvbox, Monokai, Solarized, Catppuccin, + a Godot-adaptive default).
 
+<img src="docs/previews/editor-ace-picker.png" alt="The ACE picker: live search across actions, conditions, and triggers, favorites and recents rails, and a plain-language description of the selected ACE with the GDScript it ships as." width="620">
+
+<img src="docs/images/variable-dialog.png" alt="The Variable dialog: a plain-language Number variable with a tooltip, a range, a Show as: Progress bar drawer with its live preview, and Inspector access - it ships as one @export_range line." width="547">
+
 **The language** - Events, sub-events, Else/Else-If, the **full C3 loop & picking set** (For / For Each / ordered / Repeat / While; pick by comparison, highest/lowest, nearest, nth, random), **functions** (typed params + custom return types, publishable as ACEs), stateful conditions (Every X Seconds), enums, signals, match rows, collection & combo variables, **Inspector-grouped `@export` variables** (drag one onto another for a folder, again for a subgroup), **every Godot inspector option** (range modifiers, flags, layer grids, file/folder pickers, node-path filters, password/expression/link, storage - chosen in plain language with a live "Ships as:" annotation strip), Inspector drawers (progress bar / dial / swatch / texture / curve), GDScript blocks, includes, Wait / Wait For Signal (`await`), Autoload sheets, and a **Custom Block API** - register your own non-ACE row kinds (preloads, region markers, notes, pack-defined data blocks) with a 30-line script; each gets Add-menu + dialog UX and byte-exact round-trips automatically.
 
 **450+ native ACEs** - Tween, Scene flow, Audio, sprites & cameras, Nav, Math & Random, Color, 2D/3D raycast & Collision queries, Nodes, Project/File utilities, runtime signal wiring, UI/menu, particles, AnimationTree, tilemaps, shaders, physics joints, input rebinding, and a **Helpers** escape hatch (Set/Get Property, Call Method, Run GDScript, Inline If) so unmapped code still stays an editable row.
@@ -82,9 +86,7 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 
 ## Current status
 
-**`v0.9.5` - "Code-Free Authoring & First-Class Variables"** made `.gd` the default sheet format, gave every bundled pack a zero-GDScript-block compile, added first-class `@export` variables with lossless round-trip, the full Inspector-drawer set, and the addon-author loop.
-
-**Since v0.9.5 (unreleased)** - the authoring & in-sheet experience got a large pass toward **authoring a whole game code-free** (full ledger in [CHANGELOG.md](CHANGELOG.md)):
+**`v0.10.0` - "The In-Sheet Authoring Update"** moves the whole authoring loop inside the sheet: defining vocabulary, editing opened packs, retuning rows, navigating, and diagnosing all happen without leaving it (full ledger in [CHANGELOG.md](CHANGELOG.md)):
 
 - **The ACE Studio** - the function dialog reframes "what kind of verb?" as three plain-language cards (Does something / Is it true? / A value) with a live picker preview and a "Ships as:" signature. Double-click a **Define block** to edit a verb in place; the New Behaviour dialog offers working **starter recipes** (Cooldown, Stat pool).
 - **Opened packs become editable vocabulary** - a per-function shell-lift now turns a pack's annotated verbs into real, editable `EventFunction`s (**331 across the library**; health opens with its full 16-action / 5-condition / 12-expression vocabulary), byte-verified. Helpers **anywhere in the file** lift too - a mid-file `_get_pool() -> HealthPool` anchors in place and re-emits at its exact original slot. A left-rail **Anatomy panel** shows the sheet as seven organs (Properties · State · Triggers · Actions · Conditions · Expressions · Uses), click-to-jump.
@@ -92,7 +94,10 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 - **Navigate like the script editor** - Ctrl+Click a behaviour name opens it as a sheet, Alt+←/→ jump history, Ctrl+P `#` sheet / `@` symbol search, and **paste an error line to land on the row that caused it**. Runtime errors and sheet breakpoints jump straight to the emitting event.
 - **What Changed Since Save** - a semantic diff naming the rows a save would touch, in event language.
 - **Variable folders** - drag one variable onto another to fold them into a named Inspector-group **bubble** (Discord-style); it ships as `@export_group` underneath.
-- **The Custom Block API** - packs and projects register new NON-ACE row kinds (preloads, region markers, notes, data blocks) by dropping a script extending `EventSheetBlockKind` into `eventsheet_addons/`; the compiler, importer, viewport, Add menu, and a schema-driven edit dialog are all wired generically, and every kind's round-trip is byte-verify gated.
+- **The Custom Block API** - packs and projects register new NON-ACE row kinds (preloads, region markers, notes, data blocks) by dropping a script extending `EventSheetBlockKind` into `eventsheet_addons/`; the compiler, importer, viewport, Add menu, Command Palette, and a schema-driven edit dialog are all wired generically, and every kind's round-trip is byte-verify gated. The plugin dogfoods it: enum and signal rows run on the same registry.
+- **Script intent, first-class** - creating a sheet asks what you're making; **Custom Resources and Editor Tools** join behaviours and autoloads as guided destinations with their own empty-sheet advice and banner glyphs.
+- **Every inspector export option in plain language** - the Variable dialog's "Inspector look" picker covers the full `@export` hint surface (range modifiers, flags, layer grids, file/folder pickers, node-path filters, password/expression/link, storage) with a live preview and a "Ships as:" GDScript strip; all of it round-trips losslessly.
+- **Faster to open** - ACE definitions are cached for the session; a warm registry refresh dropped from ~200ms to ~5ms, so tab switches and rescans are instant.
 
 **Quality** - 4,700+ assertions, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable.** Generated code never depends on the plugin, templates bake at apply-time, and output is performance-identical to hand-written GDScript - all test-enforced.
 
@@ -106,7 +111,7 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 | `v0.8` - **The Team & Scale Update**: Godot 4.7 + Modern theme, merge driver, Find References, includes manager, new packs + 3D raycast, opt-in MCP | ✅ shipped |
 | `v0.9.0` - **Performance & Game Feel**: frame-spreading, Juice pack, code-free authoring, first-class UI/raycast/particles/tilemaps/shaders, ACE safety audit | ✅ shipped |
 | `v0.9.5` - **Code-Free Authoring & First-Class Variables**: `.gd`-default sheets, zero-block packs, `@export` variables + drawers, addon-author loop | ✅ shipped |
-| _Unreleased_ - **The In-Sheet Authoring Update**: ACE Studio, per-function shell-lift (mid-file + custom-return helpers anchored in place), Anatomy panel, Ghost Row / Param Hop / bulk retune, error→row + paused-at-row, sheet diff, variable folders + subgroups, the Custom Block API, script-intent UX (custom resources + editor tools), full inspector-export coverage | 🔨 in progress |
+| `v0.10.0` - **The In-Sheet Authoring Update**: ACE Studio, per-function shell-lift (mid-file + custom-return helpers anchored in place), Anatomy panel, Ghost Row / Param Hop / bulk retune, error→row + paused-at-row, sheet diff, variable folders + subgroups, the Custom Block API, script-intent UX (custom resources + editor tools), full inspector-export coverage | ✅ shipped |
 | _Roadmap_ - Menu/HUD pack + UI starter, 2D overlap queries, scene-transition + dialogue packs, community feedback | 🗺 planned |
 
 ## Project layout

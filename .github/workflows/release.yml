@@ -79,11 +79,26 @@ jobs:
           (cd stage/samples && zip -qr "../../godot-eventsheets-samples-$VERSION.zip" .)
           ls -lh godot-eventsheets-*.zip
 
+      - name: Extract tag annotation as release notes
+        id: notes
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          git fetch --force origin "refs/tags/$TAG:refs/tags/$TAG" || true
+          git tag -l --format='%(contents)' "$TAG" > tag_notes.md
+          # Annotated tags carry the human-written rundown; lightweight tags yield
+          # an empty file and the release falls back to auto-generated notes only.
+          if [ -s tag_notes.md ]; then
+            echo "has_notes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_notes=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', steps.version.outputs.version) || github.ref_name }}
           name: Godot EventSheets ${{ steps.version.outputs.version }}
+          body_path: ${{ steps.notes.outputs.has_notes == 'true' && 'tag_notes.md' || '' }}
           generate_release_notes: true
           files: |
             godot-eventsheets-${{ steps.version.outputs.version }}.zip

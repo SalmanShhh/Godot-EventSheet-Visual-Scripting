@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.10.0] - 2026-07-04 - The In-Sheet Authoring Update
 
 ### Removed - vestigial designer template scenes; theme tokens are now the single source of truth
 
