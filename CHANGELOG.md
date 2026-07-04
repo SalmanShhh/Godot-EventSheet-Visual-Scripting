@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - the Look Gallery: choose an Inspector look by picture
+
+- **"Browse..." next to the Inspector-look dropdown** opens a gallery of picture tiles - one
+  per look, each showing a non-interactive miniature of the real Inspector widget (checkbox
+  flags, layer grids, file pickers, easing curves, linked axes...) with a plain name and a
+  one-line explanation. A beginner recognizes a slider long before they know the phrase
+  "export hint".
+- **One source of truth**: the dropdown, the gallery, and the tests all read the new
+  `EventSheetInspectorLooks` preset table + type filter, and a chosen tile drives the same
+  dropdown + fold path, so the surfaces cannot drift. Looks that need details (flag labels,
+  file filters) land with the Details field focused.
+- Pinned by `look_gallery_test`: exact per-type preset id lists, a preview miniature for
+  every look, mouse-transparent previews, and gallery tiles == Default + the filtered set.
+
 ### Added - the terse provider dialect, part 3: the typed registrar + authoring aids
 
 - **`static func _eventforge_register(reg: EventForgeRegistrar)`**: a fluent, fully typed

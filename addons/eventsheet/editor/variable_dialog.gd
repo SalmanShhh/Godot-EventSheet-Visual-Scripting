@@ -73,6 +73,7 @@ var _drawer_preview_box: VBoxContainer = null
 # "Ships as:" strip renders the EXACT annotation the current choices compile to (the ACE
 # Studio pattern), so the friendly names teach the annotation instead of hiding it.
 var _attr_look_option: OptionButton = null
+var _look_gallery: EventSheetLookGalleryDialog = null
 var _attr_look_detail_edit: LineEdit = null
 var _attr_look_detail_row: Control = null
 var _attr_or_greater_check: CheckBox = null
@@ -322,7 +323,17 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_look_option.item_selected.connect(func(_i: int) -> void:
 		_refresh_look_detail()
 		_refresh_ships_as())
-	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector look", _attr_look_option))
+	# "Browse..." opens the same presets as picture tiles (choose by recognition,
+	# not vocabulary); both surfaces drive this one dropdown.
+	var look_field: HBoxContainer = HBoxContainer.new()
+	_attr_look_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	look_field.add_child(_attr_look_option)
+	var browse_looks_button: Button = Button.new()
+	browse_looks_button.text = "Browse..."
+	browse_looks_button.tooltip_text = "Pick the Inspector look from picture tiles instead of the list."
+	browse_looks_button.pressed.connect(_open_look_gallery)
+	look_field.add_child(browse_looks_button)
+	_attr_section.add_child(EventSheetPopupUI.form_row("Inspector look", look_field))
 	_attr_look_detail_edit = LineEdit.new()
 	_attr_look_detail_edit.text_changed.connect(func(_t: String) -> void: _refresh_ships_as())
 	_attr_look_detail_row = EventSheetPopupUI.form_row("Details", _attr_look_detail_edit)
@@ -974,34 +985,8 @@ func _refresh_contextual_rows() -> void:
 	_refresh_ships_as()
 
 
-## The Inspector-look presets: plain-language first, each mapping to one structured attribute
-## family the compiler emits/lifts canonically. types = the variable types the preset applies to
-## (empty = any); detail = the placeholder for the preset's one contextual field ("" = none).
-const _LOOK_PRESETS: Array[Dictionary] = [
-	{"id": "file", "label": "File picker (project files)", "types": ["String"], "detail": "filters, e.g. *.ogg, *.wav"},
-	{"id": "global_file", "label": "File picker (any file on disk)", "types": ["String"], "detail": "filters, e.g. *.png"},
-	{"id": "dir", "label": "Folder picker (project)", "types": ["String"], "detail": ""},
-	{"id": "global_dir", "label": "Folder picker (anywhere on disk)", "types": ["String"], "detail": ""},
-	{"id": "flags", "label": "Checkbox flags (Fire, Ice\u2026)", "types": ["int"], "detail": "labels, e.g. Fire:1, Ice:2"},
-	{"id": "enum_values", "label": "Dropdown with numbers (Slow:30\u2026)", "types": ["int"], "detail": "options, e.g. Slow:30, Fast:60"},
-	{"id": "layers_2d_physics", "label": "2D physics layers grid", "types": ["int"], "detail": ""},
-	{"id": "layers_2d_render", "label": "2D render layers grid", "types": ["int"], "detail": ""},
-	{"id": "layers_2d_navigation", "label": "2D navigation layers grid", "types": ["int"], "detail": ""},
-	{"id": "layers_3d_physics", "label": "3D physics layers grid", "types": ["int"], "detail": ""},
-	{"id": "layers_3d_render", "label": "3D render layers grid", "types": ["int"], "detail": ""},
-	{"id": "layers_3d_navigation", "label": "3D navigation layers grid", "types": ["int"], "detail": ""},
-	{"id": "layers_avoidance", "label": "Avoidance layers grid", "types": ["int"], "detail": ""},
-	{"id": "node_path", "label": "Node picker with a type filter", "types": ["NodePath"], "detail": "types, e.g. Button, TouchScreenButton"},
-	{"id": "preset_password", "label": "Password field (dots, not text)", "types": ["String"], "detail": ""},
-	{"id": "preset_expression", "label": "Expression field (math input)", "types": ["String"], "detail": ""},
-	{"id": "preset_link", "label": "Linked axes (one slider drives all)", "types": ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"], "detail": ""},
-	{"id": "easing_attenuation", "label": "Easing curve for attenuation", "types": ["float"], "detail": ""},
-	{"id": "easing_positive", "label": "Easing curve (positive only)", "types": ["float"], "detail": ""},
-	{"id": "storage", "label": "Saved but hidden (storage)", "types": [], "detail": ""},
-]
-
-
 ## Rebuilds the look picker for the current type, keeping the selection when it still applies.
+## The preset table + type filter live in EventSheetInspectorLooks, shared with the gallery.
 func _rebuild_look_options(type_name: String) -> void:
 	if _attr_look_option == null:
 		return
@@ -1009,17 +994,14 @@ func _rebuild_look_options(type_name: String) -> void:
 	_attr_look_option.clear()
 	_attr_look_option.add_item("Default field")
 	_attr_look_option.set_item_metadata(0, "")
-	for preset: Dictionary in _LOOK_PRESETS:
-		var preset_types: Array = preset.get("types", [])
-		if not preset_types.is_empty() and not preset_types.has(type_name):
-			continue
+	for preset: Dictionary in EventSheetInspectorLooks.for_type(type_name):
 		_attr_look_option.add_item(str(preset.get("label")))
 		_attr_look_option.set_item_metadata(_attr_look_option.item_count - 1, str(preset.get("id")))
 	for index: int in range(_attr_look_option.item_count):
 		if str(_attr_look_option.get_item_metadata(index)) == previous:
 			_attr_look_option.select(index)
 			break
-	_attr_look_option.get_parent().visible = _attr_look_option.item_count > 1
+	_attr_look_option.get_parent().get_parent().visible = _attr_look_option.item_count > 1
 	_refresh_look_detail()
 
 
@@ -1033,14 +1015,36 @@ func _selected_look_id() -> String:
 func _refresh_look_detail() -> void:
 	if _attr_look_detail_row == null:
 		return
-	var look_id: String = _selected_look_id()
-	for preset: Dictionary in _LOOK_PRESETS:
-		if str(preset.get("id")) == look_id:
-			var detail: String = str(preset.get("detail", ""))
-			_attr_look_detail_row.visible = not detail.is_empty()
-			_attr_look_detail_edit.placeholder_text = detail
-			return
-	_attr_look_detail_row.visible = false
+	var preset: Dictionary = EventSheetInspectorLooks.preset_by_id(_selected_look_id())
+	var detail: String = str(preset.get("detail", ""))
+	_attr_look_detail_row.visible = not detail.is_empty()
+	if not detail.is_empty():
+		_attr_look_detail_edit.placeholder_text = detail
+
+
+## "Browse..." opens the picture-tile gallery; a chosen tile drives the SAME dropdown
+## (select + the same refreshes), so the fold/apply path stays single no matter how
+## the look was picked.
+func _open_look_gallery() -> void:
+	if _look_gallery == null:
+		_look_gallery = EventSheetLookGalleryDialog.new()
+		_dialog.add_child(_look_gallery)
+		_look_gallery.look_chosen.connect(_on_gallery_look_chosen)
+	_look_gallery.open_for_type(_selected_stored_type(), _selected_look_id())
+
+
+func _on_gallery_look_chosen(look_id: String) -> void:
+	if _attr_look_option == null:
+		return
+	for index: int in range(_attr_look_option.item_count):
+		if str(_attr_look_option.get_item_metadata(index)) == look_id:
+			_attr_look_option.select(index)
+			break
+	_refresh_look_detail()
+	_refresh_ships_as()
+	# A look that needs details (flag labels, file filters) lands ready to type.
+	if _attr_look_detail_row != null and _attr_look_detail_row.visible and _attr_look_detail_edit != null:
+		_attr_look_detail_edit.grab_focus()
 
 
 ## Folds the look picker + range modifiers into the attributes dict - the SAME keys the
