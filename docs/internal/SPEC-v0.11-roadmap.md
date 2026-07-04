@@ -103,6 +103,8 @@ params metadata must ride the snapshot-duplicate undo funnel like all row state.
 
 ## 2. Inspector property design UX for beginners
 
+STATUS: SHIPPED (all three phases; commits cde5be0 / d281be0 / 55a3032).
+
 ### Today (census)
 
 - `variable_dialog.gd` is 1,457 lines with shipped T0/T1/T2 progressive disclosure: T0 always
@@ -241,6 +243,8 @@ labels duplicate.
 ---
 
 ## 4. Terse ACE providers + script-editor autocomplete
+
+STATUS: SHIPPED (all three phases; commits fdd5e10 / 0ef806a / 3284aee).
 
 ### Today (census)
 
