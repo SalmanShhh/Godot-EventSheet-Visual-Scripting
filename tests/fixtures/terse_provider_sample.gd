@@ -33,3 +33,19 @@ func shells_left() -> int:
 ## @ace_names("Bogus")
 func jam() -> void:
 	pass
+
+
+## Aims the weapon.
+## @ace_param(mode, hint: expression, desc: "How to aim, roughly.")
+## @ace_param(stance, options: crouch|stand|prone)
+func aim(mode: String, stance: String) -> void:
+	pass
+
+
+func flash(flash_color: String, hit_anim: String, done_signal: String) -> void:
+	pass
+
+
+## @ace_param_hint(muzzle_color expression)
+func spark(muzzle_color: String) -> void:
+	pass

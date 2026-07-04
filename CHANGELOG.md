@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - the terse provider dialect, part 2: one-line params + convention widgets
+
+- **`@ace_param(name, hint: expression, options: a|b, desc: "text")`**: everything about one
+  parameter in a single annotation - widget hint, fixed dropdown, editable suggestions, and
+  (new) a per-param description that finally reaches the params dialog. Options split on `|`
+  so commas stay free; a quoted desc keeps its commas. The long `@ace_param_*` forms all
+  still work.
+- **Convention widgets**: with no hint at all, a param named `color`/`*_color` gets the color
+  picker, `anim`/`*_anim`/`*_animation` the animation picker, `*_signal`/`signal_name` the
+  signal picker, `*_scene`/`scene_path` the scene picker, `*_audio`/`audio_path` the audio
+  picker. Explicit hints always win; pinned by tests.
+
 ### Added - the terse provider dialect, part 1: write less, typos warn
 
 - **Your doc comment is the description**: plain `##` prose above a provider member now becomes

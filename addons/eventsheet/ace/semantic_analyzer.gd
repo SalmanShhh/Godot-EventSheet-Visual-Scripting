@@ -22,6 +22,7 @@ const KNOWN_ANNOTATIONS := {
 	"@ace_param_options": true,
 	"@ace_param_autocomplete": true,
 	"@ace_param_hint": true,
+	"@ace_param": true,
 	"@ace_tags": true,
 	"@ace_expose_all": true,
 	"@ace_family": true,
@@ -298,6 +299,12 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 					var param_hints: Dictionary = overrides.get("param_hints", {})
 					param_hints[hint_parts[0].strip_edges().trim_suffix(",")] = hint_parts[1].strip_edges()
 					overrides["param_hints"] = param_hints
+			"@ace_param":
+				# `@ace_param(amount, hint: expression, options: a|b|c, desc: "Help, with commas.")` -
+				# the one-line form of the param_* family: widget hint, fixed dropdown options
+				# (|-separated so commas stay free for the key list), editable autocomplete
+				# suggestions, and a per-param description, all in a single annotation.
+				_parse_param_spec(_extract_annotation_parens_raw(directive), overrides)
 			var other_token:
 				_note_unknown_annotation(other_token, metadata)
 	if str(overrides["description"]).is_empty() and not doc_lines.is_empty():
@@ -306,6 +313,79 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 		# should differ from the code documentation.
 		overrides["description"] = " ".join(doc_lines).strip_edges()
 	return overrides
+
+
+## Fills the param_hints/param_options/param_autocomplete/param_descriptions channels
+## from one `@ace_param(name, key: value, ...)` spec. Keys: hint, options (|-separated),
+## autocomplete (|-separated, values verbatim so quoted strings survive), desc.
+func _parse_param_spec(spec: String, overrides: Dictionary) -> void:
+	var segments: Array[String] = _split_outside_quotes(spec, ",")
+	if segments.is_empty():
+		return
+	var param_name: String = segments[0].strip_edges()
+	if param_name.is_empty():
+		return
+	for segment_index in range(1, segments.size()):
+		var segment: String = segments[segment_index]
+		var colon_index: int = segment.find(":")
+		if colon_index == -1:
+			continue
+		var key: String = segment.substr(0, colon_index).strip_edges()
+		var value: String = segment.substr(colon_index + 1).strip_edges()
+		match key:
+			"hint":
+				var param_hints: Dictionary = overrides.get("param_hints", {})
+				param_hints[param_name] = value
+				overrides["param_hints"] = param_hints
+			"options":
+				var param_options: Dictionary = overrides.get("param_options", {})
+				param_options[param_name] = _split_pipe_values(value)
+				overrides["param_options"] = param_options
+			"autocomplete":
+				var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
+				param_autocomplete[param_name] = _split_pipe_values(value)
+				overrides["param_autocomplete"] = param_autocomplete
+			"desc":
+				var param_descriptions: Dictionary = overrides.get("param_descriptions", {})
+				param_descriptions[param_name] = value.trim_prefix("\"").trim_suffix("\"")
+				overrides["param_descriptions"] = param_descriptions
+
+
+func _split_pipe_values(value: String) -> Array:
+	var output: Array = []
+	for raw_entry in value.split("|"):
+		if not raw_entry.strip_edges().is_empty():
+			output.append(raw_entry.strip_edges())
+	return output
+
+
+## Splits on a separator only outside double quotes, so `desc: "Slow, steady"` keeps
+## its comma while the segments around it still split.
+func _split_outside_quotes(text: String, separator: String) -> Array[String]:
+	var segments: Array[String] = []
+	var current: String = ""
+	var in_quotes: bool = false
+	for index in range(text.length()):
+		var character: String = text.substr(index, 1)
+		if character == "\"":
+			in_quotes = not in_quotes
+		if character == separator and not in_quotes:
+			segments.append(current)
+			current = ""
+			continue
+		current += character
+	segments.append(current)
+	return segments
+
+
+## The raw parenthesized payload of an annotation, quotes preserved (unlike
+## _extract_annotation_value, which trims a surrounding quote pair).
+func _extract_annotation_parens_raw(text: String) -> String:
+	var open_index: int = text.find("(")
+	var close_index: int = text.rfind(")")
+	if open_index != -1 and close_index > open_index:
+		return text.substr(open_index + 1, close_index - open_index - 1).strip_edges()
+	return ""
 
 
 func _extract_annotation_value(text: String) -> String:

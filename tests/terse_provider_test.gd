@@ -52,8 +52,39 @@ static func run() -> bool:
 	# The known vocabulary (including compiled-sheet markers) never lands in the list.
 	ok = _check("known tokens are not flagged", unknown.has("@ace_category") or unknown.has("@ace_family"), false) and ok
 
+	# One-line @ace_param: hint + per-param description + options in single annotations.
+	var aim: ACEDefinition = registry.find_definition(pid, "method:aim")
+	var aim_mode: Dictionary = _param_of(aim, "mode")
+	ok = _check("@ace_param hint applies", str(aim_mode.get("hint", "missing")), "expression") and ok
+	ok = _check("@ace_param desc keeps its comma", str(aim_mode.get("description", "missing")), "How to aim, roughly.") and ok
+	var aim_stance: Dictionary = _param_of(aim, "stance")
+	var stance_options: Array = aim_stance.get("options", [])
+	var stance_keys: Array = []
+	for option_entry in stance_options:
+		stance_keys.append(str((option_entry as Dictionary).get("key", "")))
+	ok = _check("@ace_param options split on pipes", str(stance_keys), str(["crouch", "stand", "prone"])) and ok
+
+	# Convention hints: well-known param names get the right widget with zero annotations.
+	var flash: ACEDefinition = registry.find_definition(pid, "method:flash")
+	ok = _check("*_color convention -> color widget", str(_param_of(flash, "flash_color").get("hint", "missing")), "color") and ok
+	ok = _check("*_anim convention -> animation picker", str(_param_of(flash, "hit_anim").get("hint", "missing")), "animation_reference") and ok
+	ok = _check("*_signal convention -> signal picker", str(_param_of(flash, "done_signal").get("hint", "missing")), "signal_reference") and ok
+
+	# An explicit hint always outranks the naming convention.
+	var spark: ACEDefinition = registry.find_definition(pid, "method:spark")
+	ok = _check("explicit hint outranks the convention", str(_param_of(spark, "muzzle_color").get("hint", "missing")), "expression") and ok
+
 	sample.free()
 	return ok
+
+
+static func _param_of(definition: ACEDefinition, param_id: String) -> Dictionary:
+	if definition == null:
+		return {}
+	for parameter in definition.parameters:
+		if parameter is Dictionary and str((parameter as Dictionary).get("id", "")) == param_id:
+			return parameter
+	return {}
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

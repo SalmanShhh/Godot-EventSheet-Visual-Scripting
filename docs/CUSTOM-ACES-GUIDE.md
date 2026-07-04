@@ -218,6 +218,10 @@ Three shortcuts keep annotation blocks short (all additive - every long form bel
   the automatic per-kind fallback.
 - **Typos warn instead of vanishing.** An unrecognized `@ace_*` token (say `@ace_categry`)
   prints a warning naming the script and the token; it never silently changes behavior.
+- **Well-known parameter names pick their own widget.** With no hint annotation at all, a
+  param named `color`/`*_color` gets the color picker, `anim`/`*_anim`/`*_animation` the
+  animation picker, `*_signal`/`signal_name` the signal picker, `*_scene`/`scene_path` the
+  scene picker, and `*_audio`/`audio_path` the audio picker. Any explicit hint wins.
 
 ```gdscript
 @tool
@@ -249,6 +253,7 @@ space-separated (`@ace_category(Combat)` and `@ace_category Combat` both work).
 | `@ace_action` / `@ace_condition` / `@ace_expression` / `@ace_trigger` | Force the ACE type instead of inferring it from the return type. |
 | `@ace_codegen_template(code)` | Replace the auto-generated call with your own GDScript (you own the whole template then). |
 | `@ace_display_template(text)` | Override the picker row phrasing. |
+| `@ace_param(name, hint: h, options: a\|b, autocomplete: a\|b, desc: "text")` | Everything about one parameter in a single line: widget hint, fixed dropdown, editable suggestions, and a description. Options and suggestions split on `\|`; quote a desc that contains commas. |
 | `@ace_param_hint(param_name hint)` | Set a parameter's widget (see the [hint table](#parameter-hints-the-widget-vocabulary)). |
 | `@ace_param_options(param_name a,b,c)` | Give a parameter a fixed dropdown. |
 | `@ace_param_autocomplete(param_name a,b,c)` | Give a parameter an editable suggestion list. |

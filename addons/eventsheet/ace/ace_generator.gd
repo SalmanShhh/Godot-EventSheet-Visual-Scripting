@@ -321,6 +321,7 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
 	var param_hints: Dictionary = overrides.get("param_hints", {})
 	var param_options: Dictionary = overrides.get("param_options", {})
 	var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
+	var param_descriptions: Dictionary = overrides.get("param_descriptions", {})
 	for argument_info in raw_args:
 		if not (argument_info is Dictionary):
 			continue
@@ -339,20 +340,40 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
 			parameter_override = parameter_override.duplicate()
 			parameter_override["autocomplete"] = param_autocomplete[argument_name]
 		var param_type: int = int(parameter_override.get("type", argument_dict.get("type", TYPE_NIL)))
+		var hint_value: String = str(parameter_override.get("hint", ""))
+		if hint_value.is_empty():
+			hint_value = _convention_hint(argument_name)
 		output.append({
 			"id": argument_name,
 			"display_name": str(parameter_override.get("display_name", _analyzer.build_property_display_name(argument_name))),
-			"description": str(parameter_override.get("description", "")),
+			"description": str(parameter_override.get("description", param_descriptions.get(argument_name, ""))),
 			"type": param_type,
 			"default_value": parameter_override.get("default_value", _default_value_for_type(param_type)),
 			"property_hint": int(parameter_override.get("property_hint", PROPERTY_HINT_NONE)),
-			"hint": str(parameter_override.get("hint", "")),
+			"hint": hint_value,
 			"hint_string": str(parameter_override.get("hint_string", "")),
 			"widget_hint": str(parameter_override.get("widget_hint", "")),
 			"options": _normalize_options_to_key_label(parameter_override.get("options", [])),
 			"autocomplete": _normalize_autocomplete(parameter_override.get("autocomplete", []))
 		})
 	return output
+
+
+## Derives a widget hint from a parameter's NAME when no annotation set one, so common
+## params get the right picker with zero ceremony. Any explicit hint (long or one-line
+## form) wins; the conventions are deliberately narrow to avoid surprising matches.
+func _convention_hint(argument_name: String) -> String:
+	if argument_name == "color" or argument_name == "colour" or argument_name.ends_with("_color") or argument_name.ends_with("_colour"):
+		return "color"
+	if argument_name == "animation" or argument_name == "anim" or argument_name.ends_with("_anim") or argument_name.ends_with("_animation"):
+		return "animation_reference"
+	if argument_name == "signal_name" or argument_name.ends_with("_signal"):
+		return "signal_reference"
+	if argument_name == "scene_path" or argument_name.ends_with("_scene"):
+		return "scene_path"
+	if argument_name == "audio_path" or argument_name.ends_with("_audio"):
+		return "audio_path"
+	return ""
 
 
 func _build_method_display_template(display_name: String, parameters: Array) -> String:
