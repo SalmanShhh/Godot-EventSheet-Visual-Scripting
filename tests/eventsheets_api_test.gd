@@ -35,6 +35,26 @@ static func run() -> bool:
 	ok = _check("class_vocabulary reflects on demand",
 		EventSheets.class_vocabulary("GraphEdit").size() >= 10, true) and ok
 
+	# ── Project health: an extension check runs everywhere the Doctor runs ──
+	EventSheets.register_doctor_check("api_test.probe", func(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+		findings.append({"severity": "info", "check": "api_test.probe", "path": "res://",
+			"message": "probe saw %d sheets" % sheet_paths.size()}))
+	EventSheets.register_doctor_check("api_test.probe", func(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+		findings.append({"severity": "info", "check": "api_test.probe", "path": "res://", "message": "replaced probe"}))
+	var report: Dictionary = EventSheets.doctor()
+	var probe_messages: Array = []
+	for finding: Dictionary in (report.get("findings", []) as Array):
+		if str(finding.get("check", "")) == "api_test.probe":
+			probe_messages.append(str(finding.get("message", "")))
+	ok = _check("re-registering an id replaces, and the check reports through doctor()",
+		probe_messages, ["replaced probe"]) and ok
+	ok = _check("severity counts include extension findings",
+		int(report.get("errors", -1)) + int(report.get("warnings", -1)) + int(report.get("infos", -1)),
+		(report.get("findings", []) as Array).size()) and ok
+	EventSheets.unregister_doctor_check("api_test.probe")
+	ok = _check("unregister empties the Doctor's extension list",
+		EventSheetProjectDoctor._extension_checks.is_empty(), true) and ok
+
 	# ── Editor services against a live dock ──
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())

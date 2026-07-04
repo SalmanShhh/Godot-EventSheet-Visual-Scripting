@@ -1,14 +1,15 @@
-# Godot EventSheets — Project Doctor (one audit for the drift no single check sees)
+# Godot EventSheets - Project Doctor (one audit for the drift no single check sees)
 #
-# Unions the project-health checks into a single report, runnable three ways: the
-# dock's Tools menu, the headless CLI (tools/project_doctor.gd) and CI. Severities:
-#   error   — a broken contract: a committed generated script drifted from what its
+# Unions the project-health checks into a single report, runnable four ways: the
+# dock's Tools menu, the headless CLI (tools/project_doctor.gd), CI and the MCP
+# server's run_doctor tool. Severities:
+#   error   - a broken contract: a committed generated script drifted from what its
 #             sheet compiles to today, or a sheet no longer compiles. CI fails on these.
-#   warning — a wiring gap with a one-step fix: sheet never compiled, autoload sheet
+#   warning - a wiring gap with a one-step fix: sheet never compiled, autoload sheet
 #             not registered (or registered to a different script).
-#   info    — advisory vocabulary hygiene: private variable never referenced, pack
+#   info    - advisory vocabulary hygiene: private variable never referenced, pack
 #             published but unused, compiled sheet attached to no scene. Never fails CI.
-# The doctor NEVER writes inside res:// — verification recompiles go to a user://
+# The doctor NEVER writes inside res:// - verification recompiles go to a user://
 # scratch file and are compared as text (contrast tools/audit_addons.gd, which repairs
 # pack outputs in place while reporting drift).
 @tool
@@ -17,12 +18,33 @@ extends RefCounted
 
 const SCRATCH_PATH := "user://eventsheets_doctor_scratch.gd"
 
+## Extension checks registered through EventSheets.register_doctor_check: Array of
+## {"id": String, "run": Callable}. They run after the built-ins in every runner
+## (dock panel, CLI, CI, MCP) with the same contract as a built-in check.
+static var _extension_checks: Array[Dictionary] = []
+
+
+## Registers a project-health check. `check` receives (sheet_paths: PackedStringArray,
+## findings: Array[Dictionary]) and appends findings shaped
+## {"severity": "error"|"warning"|"info", "check": <id>, "path": ..., "message": ...}.
+## Same contract as the built-ins: never write inside res://. Re-registering an id
+## replaces the previous check, so plugin reloads never duplicate.
+static func register_check(check_id: String, check: Callable) -> void:
+	unregister_check(check_id)
+	_extension_checks.append({"id": check_id, "run": check})
+
+
+static func unregister_check(check_id: String) -> void:
+	for index in range(_extension_checks.size() - 1, -1, -1):
+		if str(_extension_checks[index].get("id", "")) == check_id:
+			_extension_checks.remove_at(index)
+
 
 ## Full audit over every sheet in the project. Returns
 ## {findings: Array[Dictionary{severity, check, path, message}], errors, warnings, infos}.
 static func run() -> Dictionary:
 	var findings: Array[Dictionary] = []
-	# Templates are blueprints: no generated output, no scene, no live vocabulary —
+	# Templates are blueprints: no generated output, no scene, no live vocabulary -
 	# auditing them would only manufacture noise.
 	var sheet_paths: PackedStringArray = EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_project_sheets())
 	check_generated_outputs(sheet_paths, findings)
@@ -38,6 +60,12 @@ static func run() -> Dictionary:
 	check_shadowed_variables(sheet_paths, findings)
 	check_untranslated_project(sheet_paths, findings)
 	check_vocabulary_doc(findings)
+	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
+	# after the built-ins so their findings never reorder the established report.
+	for entry: Dictionary in _extension_checks:
+		var extension_check: Callable = entry.get("run") as Callable
+		if extension_check.is_valid():
+			extension_check.call(sheet_paths, findings)
 	var counts: Dictionary = {"error": 0, "warning": 0, "info": 0}
 	for finding: Dictionary in findings:
 		var severity: String = str(finding.get("severity"))
@@ -50,12 +78,12 @@ static func run() -> Dictionary:
 	}
 
 
-## The script a sheet is expected to pair with — the compiler's own resolution
+## The script a sheet is expected to pair with - the compiler's own resolution
 ## (existing <name>_generated.gd, else the pack builder's header-verified sibling
 ## <name>.gd, else the <name>_generated.gd a save WOULD create), so the doctor,
 ## compile-on-save and the export-integrity pass can never disagree about pairing.
 static func output_path_for(sheet_path: String) -> String:
-	# A code-backed (.gd) sheet IS its own output — editing + saving recompiles it in place, no companion.
+	# A code-backed (.gd) sheet IS its own output - editing + saving recompiles it in place, no companion.
 	if sheet_path.get_extension().to_lower() == "gd":
 		return sheet_path
 	var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
@@ -64,7 +92,7 @@ static func output_path_for(sheet_path: String) -> String:
 	return SheetCompiler._resolve_output_path(sheet, "")
 
 
-## Every committed output must be exactly what its sheet compiles to today — the same
+## Every committed output must be exactly what its sheet compiles to today - the same
 ## byte-identity contract pack goldens pin, generalized to every sheet in the project.
 static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
@@ -74,7 +102,7 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 		var output_path: String = output_path_for(sheet_path)
 		if not FileAccess.file_exists(output_path):
 			_add(findings, "warning", "stale-output", sheet_path,
-				"No generated script yet — saving the sheet in the editor writes %s (compile-on-save)." % output_path.get_file())
+				"No generated script yet - saving the sheet in the editor writes %s (compile-on-save)." % output_path.get_file())
 			continue
 		var result: Dictionary = SheetCompiler.compile(sheet, SCRATCH_PATH)
 		if not bool(result.get("success", false)):
@@ -83,15 +111,15 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 			continue
 		if str(result.get("output", "")) != FileAccess.get_file_as_string(output_path):
 			_add(findings, "error", "stale-output", sheet_path,
-				"%s is stale — re-save the sheet (or re-run the pack builder) to refresh it." % output_path.get_file())
+				"%s is stale - re-save the sheet (or re-run the pack builder) to refresh it." % output_path.get_file())
 	DirAccess.remove_absolute(SCRATCH_PATH)
 
 
 ## Debug residue: a sheet saved with a debug-emit toggle ON compiles debug instrumentation INTO its
-## committed script — `breakpoint` statements (which HALT the running game into the debugger), the
+## committed script - `breakpoint` statements (which HALT the running game into the debugger), the
 ## live-values telemetry receiver (`__live_values_timer`, `sheet_compiler.gd:304`), or the per-event
 ## trace buffer (`__eventsheets_fired`, `:306/:1138`). The byte-identity check above PASSES on these
-## because the residue is faithfully in sync with the sheet — so only THIS check catches "in sync, but
+## because the residue is faithfully in sync with the sheet - so only THIS check catches "in sync, but
 ## shipping debug code." A warning (some teams keep live-values on during development); the one-click
 ## fix is strip_debug_flags() + re-save (the Doctor panel's "strip + resave"). Never fails CI on its own,
 ## but the documented CI recipe can escalate it for release branches.
@@ -109,10 +137,10 @@ static func check_debug_residue(sheet_paths: PackedStringArray, findings: Array[
 			flags.append("event trace")
 		if not flags.is_empty():
 			_add(findings, "warning", "debug-residue", sheet_path,
-				"Debug instrumentation (%s) is compiled into the committed script — turn it off (Debug menu) and re-save before shipping." % ", ".join(flags))
+				"Debug instrumentation (%s) is compiled into the committed script - turn it off (Debug menu) and re-save before shipping." % ", ".join(flags))
 
 
-## Clears every debug-emit toggle on a sheet — the data half of the Doctor panel's "strip + resave" fix
+## Clears every debug-emit toggle on a sheet - the data half of the Doctor panel's "strip + resave" fix
 ## (the caller re-saves, which recompiles the residue out). Returns true only if something was on, so the
 ## caller re-saves only when needed.
 static func strip_debug_flags(sheet: EventSheetResource) -> bool:
@@ -134,13 +162,13 @@ static func check_autoload_registration(sheet_paths: PackedStringArray, findings
 			continue
 		if sheet.autoload_name.is_empty():
 			_add(findings, "warning", "autoload", sheet_path,
-				"Autoload sheet has no singleton name — set one in the Sheet Type dialog.")
+				"Autoload sheet has no singleton name - set one in the Sheet Type dialog.")
 			continue
 		var key: String = "autoload/%s" % sheet.autoload_name
 		var expected: String = output_path_for(sheet_path)
 		if not ProjectSettings.has_setting(key):
 			_add(findings, "warning", "autoload", sheet_path,
-				"Autoload sheet \"%s\" is not registered — Tools → Register Autoload." % sheet.autoload_name)
+				"Autoload sheet \"%s\" is not registered - Tools → Register Autoload." % sheet.autoload_name)
 		elif str(ProjectSettings.get_setting(key)).trim_prefix("*") != expected:
 			_add(findings, "warning", "autoload", sheet_path,
 				"Autoload \"%s\" points at %s, but this sheet compiles to %s." % [sheet.autoload_name, str(ProjectSettings.get_setting(key)).trim_prefix("*"), expected])
@@ -148,7 +176,7 @@ static func check_autoload_registration(sheet_paths: PackedStringArray, findings
 
 ## Reverse scene lookup: a compiled sheet nothing instances is usually a forgotten
 ## attach. Skips autoload sheets (registered, not attached) and published packs
-## (vocabulary, not project wiring) — and stays advisory, since scripts can be
+## (vocabulary, not project wiring) - and stays advisory, since scripts can be
 ## attached from code or used as a named class.
 static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	# Scene texts read ONCE for all sheets (review catch: per-sheet scenes_attaching
@@ -172,10 +200,10 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 				break
 		if not attached:
 			_add(findings, "info", "scene-attachment", sheet_path,
-				"%s is attached to no scene — fine if it's instanced from code or used as a class." % output_path.get_file())
+				"%s is attached to no scene - fine if it's instanced from code or used as a class." % output_path.get_file())
 
 
-## The sheet a generated script belongs to — the inverse of output_path_for.
+## The sheet a generated script belongs to - the inverse of output_path_for.
 ## Trusts the script's "# Source:" header first (exact), then sibling naming
 ## verified through the pairing rule. "" when the script isn't sheet-generated.
 static func sheet_for_script(script_path: String) -> String:
@@ -188,14 +216,14 @@ static func sheet_for_script(script_path: String) -> String:
 	var sibling: String = script_path.get_basename().trim_suffix("_generated") + ".tres"
 	if FileAccess.file_exists(sibling) and ResourceLoader.load(sibling, "", ResourceLoader.CACHE_MODE_REUSE) is EventSheetResource and output_path_for(sibling) == script_path:
 		return sibling
-	# A behaviour/addon pack .gd IS its own sheet (no .tres companion) — it pairs to itself. EventForge
+	# A behaviour/addon pack .gd IS its own sheet (no .tres companion) - it pairs to itself. EventForge
 	# sheets carry `## @ace_*` annotations (exposed ACEs / tags / triggers); hand-written scripts do not.
 	if script_path.get_extension().to_lower() == "gd" and RegEx.create_from_string("(?m)^## @ace_").search(FileAccess.get_file_as_string(script_path)) != null:
 		return script_path
 	return ""
 
 
-## Every scene that references a script path — the reverse lookup the attachment
+## Every scene that references a script path - the reverse lookup the attachment
 ## check and the dock's Run Scene share (sorted for stable pick menus).
 static func scenes_attaching(script_path: String) -> PackedStringArray:
 	var matches: PackedStringArray = PackedStringArray()
@@ -238,7 +266,7 @@ static func check_unused_variables(sheet_paths: PackedStringArray, findings: Arr
 					corpus += "\n" + str(usage_by_path.get(other_path, ""))
 			if RegEx.create_from_string("\\b%s\\b" % str(variable_name)).search(corpus) == null:
 				_add(findings, "info", "unused-variable", sheet_path,
-					"Private variable \"%s\" is never referenced — dead vocabulary?" % str(variable_name))
+					"Private variable \"%s\" is never referenced - dead vocabulary?" % str(variable_name))
 
 
 ## The same global declared across several sheets is N copies of one truth; Godot's answer is a single
@@ -355,7 +383,7 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 		if sub is EventRow:
 			_scan_unbounded_loops(sub as EventRow, sheet_path, threshold, findings)
 
-## ACE ids whose codegen `await`s — they suspend the handler into a coroutine (Begin Frame Budget alone
+## ACE ids whose codegen `await`s - they suspend the handler into a coroutine (Begin Frame Budget alone
 ## does not await, so it is intentionally absent).
 const COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget"]
 
@@ -422,7 +450,7 @@ static func _note_node_refs(text: String, targets: Dictionary) -> void:
 		targets["%" + unique_name] = true
 
 
-## Packs no sheet, scene or autoload references are removal candidates — advisory,
+## Packs no sheet, scene or autoload references are removal candidates - advisory,
 ## because a pack is also legitimately used from hand-written GDScript only.
 static func check_unused_packs(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var pack_scripts: Array[String] = EventSheetAddonScanner.list_addon_scripts()
@@ -453,7 +481,7 @@ static func check_unused_packs(sheet_paths: PackedStringArray, findings: Array[D
 		if corpus.contains(script_path) or RegEx.create_from_string("\\b%s\\b" % pack_class).search(corpus) != null:
 			continue
 		_add(findings, "info", "unused-pack", script_path,
-			"Pack class %s is referenced by no sheet, scene or autoload — fine if you call it from hand-written GDScript." % pack_class)
+			"Pack class %s is referenced by no sheet, scene or autoload - fine if you call it from hand-written GDScript." % pack_class)
 
 
 ## The class whose members a sheet's variables actually share a script with:
@@ -469,7 +497,7 @@ static func variable_scope_class(sheet: EventSheetResource) -> String:
 
 ## "" when the name is free, else the class whose member it shadows. A shadowing
 ## variable (e.g. `velocity` on a CharacterBody2D sheet) makes the generated script
-## unparseable AND blinds expression lint — the one rule shared by the doctor check
+## unparseable AND blinds expression lint - the one rule shared by the doctor check
 ## and the variable dialog's refusal.
 static func shadowed_member_class(sheet: EventSheetResource, variable_name: String) -> String:
 	var scope_class: String = variable_scope_class(sheet)
@@ -484,7 +512,7 @@ static func shadowed_member_class(sheet: EventSheetResource, variable_name: Stri
 
 
 ## Variables shadowing host members break the generated script at load (duplicate
-## member) — error tier: the game cannot run until the variable is renamed.
+## member) - error tier: the game cannot run until the variable is renamed.
 static func check_shadowed_variables(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
@@ -494,10 +522,10 @@ static func check_shadowed_variables(sheet_paths: PackedStringArray, findings: A
 			var owner_class: String = shadowed_member_class(sheet, str(variable_name))
 			if not owner_class.is_empty():
 				_add(findings, "error", "shadowed-variable", sheet_path,
-					"Variable \"%s\" shadows a %s member — the generated script can't load. Rename Everywhere… fixes every reference." % [str(variable_name), owner_class])
+					"Variable \"%s\" shadows a %s member - the generated script can't load. Rename Everywhere… fixes every reference." % [str(variable_name), owner_class])
 
 
-## A generated vocabulary doc is a promise to the team — once one exists, the doctor
+## A generated vocabulary doc is a promise to the team - once one exists, the doctor
 ## notes when it no longer matches what the project actually publishes. Opt-in by
 ## design: no doc, no note.
 ## Sheets emit tr() calls (globe-marked params / Translate ACEs) but the project has no
@@ -525,12 +553,12 @@ static func check_vocabulary_doc(findings: Array[Dictionary]) -> void:
 		return
 	if FileAccess.get_file_as_string(path) != EventSheetVocabularyDoc.generate():
 		_add(findings, "info", "vocabulary-doc", path,
-			"Vocabulary doc is stale — regenerate via Tools → Vocabulary Doc… or tools/vocabulary_doc.gd.")
+			"Vocabulary doc is stale - regenerate via Tools → Vocabulary Doc… or tools/vocabulary_doc.gd.")
 
 
 ## Everything in a sheet that can REFERENCE vocabulary: raw code, ACE param values and
 ## baked templates, pick filters, trigger args, local-variable defaults. Comments are
-## deliberately excluded — mentioning a name in prose isn't usage.
+## deliberately excluded - mentioning a name in prose isn't usage.
 static func _sheet_usage_text(sheet: EventSheetResource) -> String:
 	var chunks: PackedStringArray = PackedStringArray()
 	_collect_usage_text(sheet.events, chunks)

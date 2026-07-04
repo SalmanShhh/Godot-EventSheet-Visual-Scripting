@@ -64,6 +64,7 @@ Notes:
 | `compile_sheet {path, write_output?}` | Compiles a sheet. **Dry-run by default** (returns the generated GDScript without touching files); `write_output: true` writes the real output. |
 | `lint_block {code, in_flow?, sheet_path?}` | Compile-checks GDScript against a sheet's context (its variables, enums, host class). |
 | `apply_snippet {path, text, dry_run?}` | Appends rows to a `.tres` sheet from EventSheet snippet text **or plain GDScript** (auto-converted through the same lossless lift pipeline the editor's paste uses). `.tres` only - GDScript-backed sheets are edited as code. |
+| `run_doctor` | The Project Doctor health audit over every sheet: stale generated outputs, compile failures, debug residue, wiring gaps, vocabulary hygiene - plus any pack-registered checks. Returns findings (`{severity, check, path, message}`) and error/warning/info counts. Read-only. |
 
 ---
 

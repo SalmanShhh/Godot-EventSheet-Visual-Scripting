@@ -1,8 +1,8 @@
-# Godot EventSheets — MCP server (protocol core)
+# Godot EventSheets - MCP server (protocol core)
 # A Model Context Protocol server exposing event sheets to AI assistants: list/read
 # sheets, browse the ACE registry, compile (dry-run by default), lint GDScript blocks,
 # and apply snippets/GDScript as rows. JSON-RPC 2.0; the stdio transport lives in
-# run_mcp_server.gd — this class is transport-free so tests drive handle_message
+# run_mcp_server.gd - this class is transport-free so tests drive handle_message
 # directly.
 @tool
 class_name EventSheetMCPServer
@@ -81,6 +81,8 @@ func _handle_tool_call(message: Dictionary) -> Dictionary:
 			outcome = _tool_lint_block(arguments)
 		"apply_snippet":
 			outcome = _tool_apply_snippet(arguments)
+		"run_doctor":
+			outcome = _tool_run_doctor()
 		_:
 			outcome = {"error": "Unknown tool: %s" % str(params.get("name", ""))}
 	if outcome.has("error"):
@@ -212,7 +214,7 @@ func _serialize_ace(ace: Resource) -> Dictionary:
 ## The full ACE vocabulary (builtins + zero-config addons), optionally filtered.
 ## Composition-policy enforcement over MCP: when the
 ## project restricts include sources to a tag, addon ACEs without that tag disappear
-## from list_aces — an AI assistant told "only approved addons" is policy-BOUND, not
+## from list_aces - an AI assistant told "only approved addons" is policy-BOUND, not
 ## policy-advised. Core builtins always list.
 func _policy_allows_definition(definition: ACEDefinition) -> bool:
 	var include_sources: String = str(SheetCompiler._addon_policy("include_sources", "anywhere"))
@@ -327,6 +329,12 @@ func _tool_apply_snippet(arguments: Dictionary) -> Dictionary:
 		return {"error": "Failed to save %s (error %d)." % [path, save_error]}
 	return {"applied": kinds.size(), "kinds": kinds, "hint": "Run compile_sheet to regenerate the script."}
 
+
+## The Project Doctor through the public API, so extension-registered checks
+## (EventSheets.register_doctor_check) report over MCP exactly like built-ins.
+func _tool_run_doctor() -> Dictionary:
+	return EventSheets.doctor()
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
@@ -336,7 +344,7 @@ func _load_sheet(path: String) -> EventSheetResource:
 		return null
 	if path.ends_with(".gd"):
 		return GDScriptImporter.new().import_external(path)
-	# CACHE_MODE_IGNORE: the server is long-lived — a cached resource would silently
+	# CACHE_MODE_IGNORE: the server is long-lived - a cached resource would silently
 	# serve stale sheets after the user edits them in the editor.
 	return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
 
@@ -381,6 +389,11 @@ func _tool_descriptors() -> Array:
 			"name": "apply_snippet",
 			"description": "Append rows to a .tres sheet from EventSheet snippet text OR plain GDScript (auto-converted to events/variables/comments). Set dry_run=true to preview.",
 			"inputSchema": {"type": "object", "properties": {"path": {"type": "string"}, "text": {"type": "string"}, "dry_run": {"type": "boolean"}}, "required": ["path", "text"]}
+		},
+		{
+			"name": "run_doctor",
+			"description": "Run the Project Doctor health audit over every sheet: stale generated outputs, compile failures, debug residue, wiring gaps, vocabulary hygiene. Returns findings plus error/warning/info counts.",
+			"inputSchema": {"type": "object", "properties": {}}
 		}
 	]
 

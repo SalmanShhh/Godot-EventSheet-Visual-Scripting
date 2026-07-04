@@ -23,12 +23,13 @@ static func run() -> bool:
 	var tool_names: Array = []
 	for tool: Variant in (tools_response.get("result", {}) as Dictionary).get("tools", []):
 		tool_names.append(str((tool as Dictionary).get("name", "")))
-	all_passed = _check("six tools listed", tool_names.size(), 6) and all_passed
+	all_passed = _check("seven tools listed", tool_names.size(), 7) and all_passed
 	all_passed = _check("core tools present",
 		tool_names.has("read_sheet") and tool_names.has("list_aces") and tool_names.has("compile_sheet") and tool_names.has("apply_snippet"), true) and all_passed
+	all_passed = _check("run_doctor tool present", tool_names.has("run_doctor"), true) and all_passed
 
 	# Activation gate: turned OFF, the server lists no tools and refuses any call; back ON, the
-	# tools return — so the editor can activate/deactivate the MCP server at will, live.
+	# tools return - so the editor can activate/deactivate the MCP server at will, live.
 	EventSheetMCPServer.enabled_override = false
 	var off_list: Dictionary = server.handle_message({"jsonrpc": "2.0", "id": 31, "method": "tools/list"})
 	all_passed = _check("disabled server lists no tools",
@@ -38,7 +39,7 @@ static func run() -> bool:
 		bool((off_call.get("result", {}) as Dictionary).get("isError", false)), true) and all_passed
 	EventSheetMCPServer.enabled_override = true
 	all_passed = _check("re-enabled server lists tools again",
-		((server.handle_message({"jsonrpc": "2.0", "id": 33, "method": "tools/list"}).get("result", {}) as Dictionary).get("tools", []) as Array).size(), 6) and all_passed
+		((server.handle_message({"jsonrpc": "2.0", "id": 33, "method": "tools/list"}).get("result", {}) as Dictionary).get("tools", []) as Array).size(), 7) and all_passed
 	EventSheetMCPServer.enabled_override = null
 
 	# Fixture sheet on disk.

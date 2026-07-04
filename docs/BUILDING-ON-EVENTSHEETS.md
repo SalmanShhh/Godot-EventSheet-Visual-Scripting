@@ -1,6 +1,6 @@
 # Building on EventSheets
 
-Everything an extension needs lives in **one class: `EventSheets`** (`addons/eventsheet/api/eventsheets.gd`). It is all static, so any `@tool` script, editor plugin, or test can call it with zero setup: register new vocabulary, drive the live editor, or use the compiler and importer as plain services. Every method on it is a compatibility promise, the same covenant `ace_id`s and codegen templates carry: shapes are stable once shipped, new capabilities get added, existing ones are never renamed. The plugin dogfoods this API itself (the region fold commands in the Command Palette and the MCP server's compile and import tools go through it), so the extension path is the exact path the built-ins take.
+Everything an extension needs lives in **one class: `EventSheets`** (`addons/eventsheet/api/eventsheets.gd`). It is all static, so any `@tool` script, editor plugin, or test can call it with zero setup: register new vocabulary, drive the live editor, use the compiler and importer as plain services, or plug into the Project Doctor. Every method on it is a compatibility promise, the same covenant `ace_id`s and codegen templates carry: shapes are stable once shipped, new capabilities get added, existing ones are never renamed. The plugin dogfoods this API itself (the region fold commands in the Command Palette and the MCP server's compile and import tools go through it), so the extension path is the exact path the built-ins take.
 
 ## Table of Contents
 
@@ -9,9 +9,10 @@ Everything an extension needs lives in **one class: `EventSheets`** (`addons/eve
 3. [Vocabulary Services](#3-vocabulary-services)
 4. [Editor Services](#4-editor-services)
 5. [Codegen Services](#5-codegen-services)
-6. [Full Reference](#6-full-reference)
-7. [Testing Your Extension](#7-testing-your-extension)
-8. [Tips and Common Mistakes](#8-tips-and-common-mistakes)
+6. [Project Health Services](#6-project-health-services)
+7. [Full Reference](#7-full-reference)
+8. [Testing Your Extension](#8-testing-your-extension)
+9. [Tips and Common Mistakes](#9-tips-and-common-mistakes)
 
 ---
 
@@ -22,6 +23,7 @@ Everything an extension needs lives in **one class: `EventSheets`** (`addons/eve
 - **A sheet linter or codemod.** Walk `current_sheet().events`, rewrite what you find inside `edit()`, report through `set_status()`.
 - **Headless tooling.** A CI script that compiles every sheet in a project, or byte-verifies that hand-edited GDScript still round-trips, using `compile()` / `round_trips()` with no editor open at all.
 - **A custom emission you can trust.** Building a block kind or tweaking what your pack emits? `round_trips(source)` is the same gate every built-in lift must pass; put it in your own tests.
+- **A health check that ships with your pack.** Your dialogue pack knows what a broken dialogue setup looks like ("this .dialogue file is referenced but missing"). Register a Doctor check and the warning appears in the Doctor panel, the CLI, CI and MCP, right next to the built-in checks.
 
 ## 2. The One-Minute Tour
 
@@ -96,7 +98,26 @@ assert(EventSheets.round_trips(source_text))
 
 `open_gd_as_sheet()` is the same lift the editor uses when you open a `.gd` file: everything liftable lifts, everything else stays a verbatim block, and nothing can be corrupted. `round_trips()` is the covenant check itself; if your custom block kind or provider changes emission, pin it with this in a test.
 
-## 6. Full Reference
+## 6. Project Health Services
+
+The Project Doctor audits every sheet in the project (stale generated outputs, compile failures, debug residue, wiring gaps, vocabulary hygiene) and reports through the dock's Tools menu, the headless CLI, CI and the MCP `run_doctor` tool. The API gives you both directions:
+
+```gdscript
+# Run the whole audit (dock-free; usable from CI scripts and tests).
+var report: Dictionary = EventSheets.doctor()
+print("%d error(s), %d warning(s)" % [report["errors"], report["warnings"]])
+
+# Ship your own check: it runs after the built-ins, everywhere the Doctor runs.
+EventSheets.register_doctor_check("my_pack.missing_tables", func(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		if _uses_my_pack_without_a_table(sheet_path):
+			findings.append({"severity": "warning", "check": "my_pack.missing_tables",
+				"path": sheet_path, "message": "Uses my_pack but defines no drop table."}))
+```
+
+A check receives every non-template sheet path plus the shared findings array, and appends findings shaped `{"severity": "error"|"warning"|"info", "check": <your id>, "path": ..., "message": ...}`. Severity decides consequence: errors fail CI, warnings fail `--strict` CI, infos are advisory. The Doctor covenant applies to your check too: **never write inside res://** (verification work goes to `user://` scratch files). Re-registering an id replaces the previous check, so plugin reloads never duplicate; `unregister_doctor_check(id)` removes it.
+
+## 7. Full Reference
 
 | Group | Method | Returns | Needs dock? |
 |-------|--------|---------|-------------|
@@ -115,18 +136,22 @@ assert(EventSheets.round_trips(source_text))
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
 | Codegen | `open_gd_as_sheet(source: String)` | `EventSheetResource` | no |
 | Codegen | `round_trips(source: String)` | `bool` | no |
+| Health | `doctor()` | `Dictionary` | no |
+| Health | `register_doctor_check(check_id: String, check: Callable)` | `void` | no |
+| Health | `unregister_doctor_check(check_id: String)` | `void` | no |
 
-`compile()`'s Dictionary keys: `"output"` (the source text: this key, not "source"), `"success"`, `"errors"`, `"warnings"`, `"source_map"`.
+`compile()`'s Dictionary keys: `"output"` (the source text: this key, not "source"), `"success"`, `"errors"`, `"warnings"`, `"source_map"`. `doctor()`'s: `"findings"` (each `{severity, check, path, message}`), `"errors"`, `"warnings"`, `"infos"`.
 
-## 7. Testing Your Extension
+## 8. Testing Your Extension
 
 The plugin's own API test (`tests/eventsheets_api_test.gd`) is a working template: codegen and vocabulary pins run dock-free; editor pins build a real dock (`EventSheetEditor.new()` then `setup(sheet)`) with a fake undo manager. For your extension, the highest-value pins are:
 
 - **Emission stability:** compile a small hand-built sheet using your vocabulary and pin the exact output string.
 - **The byte gate:** `EventSheets.round_trips(fixture_source)` for every shape your block kind claims to lift.
 - **Palette presence:** after registration, your title appears in `EventSheets.palette_commands()`.
+- **Doctor findings:** register your check, run `EventSheets.doctor()` over a fixture project state, and pin that your finding appears with the right severity.
 
-## 8. Tips and Common Mistakes
+## 9. Tips and Common Mistakes
 
 - **Never reach past the facade.** Dock internals (`_` members) move between releases; the extraction refactors rename and relocate them freely. `EventSheets` is the only surface with a stability promise.
 - **Never cache rows across `edit()` calls.** Undo commits replace resources with snapshot duplicates. The row you held is now detached from the sheet; re-fetch from `current_sheet()`.

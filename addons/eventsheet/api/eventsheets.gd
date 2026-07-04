@@ -26,8 +26,11 @@ extends RefCounted
 #   GDScript, open GDScript back as a sheet, or byte-verify a round-trip - the same gate
 #   the plugin's own lifts must pass.
 #
+#   PROJECT HEALTH - the Doctor as a service: run the whole audit, or register your own
+#   check so it runs everywhere the Doctor runs (dock panel, headless CLI, CI, MCP).
+#
 # Editor services require the EventSheet dock to be open (they no-op safely headless and
-# return null/false); vocabulary and codegen services work anywhere, including tests.
+# return null/false); vocabulary, codegen and health services work anywhere, including tests.
 # ═══════════════════════════════════════════════════════════════════════════════════════
 
 ## The live dock, registered by the dock itself at setup. Weak by contract: every use
@@ -168,6 +171,28 @@ static func round_trips(source: String) -> bool:
 		return false
 	sheet.external_source_path = "user://__eventsheets_api_roundtrip.gd"
 	return str(compile(sheet, sheet.external_source_path).get("output", "")) == source
+
+
+# ── Project health ─────────────────────────────────────────────────────────────────────
+
+
+## Runs the Project Doctor audit over every sheet in the project (dock-free). Returns
+## {findings: Array[{severity, check, path, message}], errors, warnings, infos}.
+static func doctor() -> Dictionary:
+	return EventSheetProjectDoctor.run()
+
+
+## Adds a project-health check that runs everywhere the Doctor runs (dock panel, CLI,
+## CI, MCP), after the built-ins. `check` receives (sheet_paths: PackedStringArray,
+## findings: Array[Dictionary]) and appends findings shaped
+## {"severity": "error"|"warning"|"info", "check": <check_id>, "path": ..., "message": ...}.
+## Doctor covenant applies: never write inside res://. Re-register an id to replace it.
+static func register_doctor_check(check_id: String, check: Callable) -> void:
+	EventSheetProjectDoctor.register_check(check_id, check)
+
+
+static func unregister_doctor_check(check_id: String) -> void:
+	EventSheetProjectDoctor.unregister_check(check_id)
 
 
 # ── Internal wiring (called by the plugin itself) ─────────────────────────────────────

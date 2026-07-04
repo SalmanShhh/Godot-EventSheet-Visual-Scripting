@@ -1,4 +1,4 @@
-# Godot EventSheets — headless Project Doctor driver (CI-able).
+# Godot EventSheets - headless Project Doctor driver (CI-able).
 #
 #   godot --headless --path . --script tools/project_doctor.gd
 #
@@ -10,9 +10,9 @@ extends SceneTree
 
 
 func _init() -> void:
-	var report: Dictionary = EventSheetProjectDoctor.run()
+	var report: Dictionary = EventSheets.doctor()
 	for finding: Dictionary in (report.get("findings", []) as Array):
-		print("[%s] %s — %s" % [str(finding.get("severity")).to_upper(), str(finding.get("path")), str(finding.get("message"))])
+		print("[%s] %s - %s" % [str(finding.get("severity")).to_upper(), str(finding.get("path")), str(finding.get("message"))])
 	var errors: int = int(report.get("errors", 0))
 	var warnings: int = int(report.get("warnings", 0))
 	print("doctor: %d error(s), %d warning(s), %d note(s)" % [errors, warnings, int(report.get("infos", 0))])

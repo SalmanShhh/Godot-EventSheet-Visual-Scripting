@@ -2,7 +2,7 @@
 class_name EventSheetProjectDoctorPanel
 extends RefCounted
 
-# The Project Doctor window (Tools ▸ Project Doctor) — a one-stop health-audit report.
+# The Project Doctor window (Tools ▸ Project Doctor) - a one-stop health-audit report.
 #
 # The actual checks live in the global EventSheetProjectDoctor so the headless CLI and CI run the
 # exact same audit; this class is only the editor window shell that renders the findings in a Tree
@@ -57,7 +57,9 @@ func open() -> void:
 func _run_project_doctor() -> void:
 	_doctor_tree.clear()
 	var root_item: TreeItem = _doctor_tree.create_item()
-	var report: Dictionary = EventSheetProjectDoctor.run()
+	# Through the public API so extension-registered checks (EventSheets.register_doctor_check)
+	# report in the panel exactly like built-ins.
+	var report: Dictionary = EventSheets.doctor()
 	for finding: Dictionary in (report.get("findings", []) as Array):
 		var item: TreeItem = _doctor_tree.create_item(root_item)
 		var severity: String = str(finding.get("severity"))

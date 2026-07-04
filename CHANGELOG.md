@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - Doctor checks are an extension point + the run_doctor MCP tool
+
+- **Packs and plugins can ship project-health checks**: `EventSheets.register_doctor_check(id, callable)`
+  adds a check that runs after the built-ins everywhere the Doctor runs - the dock's
+  Tools panel, the headless CLI, CI and MCP. A check receives every sheet path plus the
+  shared findings array and appends `{severity, check, path, message}` findings under the
+  same covenant as built-ins (never write inside res://). Re-registering an id replaces,
+  so plugin reloads never duplicate. `EventSheets.doctor()` runs the whole audit as a
+  dock-free service.
+- **Dogfooded end to end**: the Doctor panel and `tools/project_doctor.gd` now route
+  through `EventSheets.doctor()`, so extension checks report in every runner exactly
+  like built-ins.
+- **New MCP tool `run_doctor`**: AI assistants get the full health audit (findings +
+  error/warning/info counts) as a read-only tool, seventh in the toolset.
+- Guide grew a Project Health section (docs/BUILDING-ON-EVENTSHEETS.md); em-dash residue
+  swept from the doctor/MCP files' comments and finding messages.
+
 ### Added - the EventSheets public API: one class to build on
 
 - **`EventSheets`** (`addons/eventsheet/api/eventsheets.gd`): the all-static facade every
