@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - any-node reach, part 2: reflected properties, class-aware member pickers
+
+- **Every editor-visible property reflects as a pair**: "Set <Property>" (plain assignment)
+  and a read expression, in the same "All of <Class>" section as the reflected methods and
+  signals - curated verbs still shadow their reflected twins.
+- The Helper ACEs' Call Method / Set Property member fields already complete from the host
+  class (reflected, inherited members included); now pinned alongside the ClassDB source so
+  the two reflection surfaces stay in step.
+
 ### Added - any-node reach, part 1: every Godot class is browsable vocabulary
 
 - **ClassDB reflection on demand**: the picker grows an "All of <host class>" section for

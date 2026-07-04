@@ -28,6 +28,22 @@ static func run() -> bool:
 	ok = _check("reflected entries sit in the class section",
 		str(arrange.category) if arrange != null else "missing", "All of GraphEdit") and ok
 
+	# ── Properties reflect as Set action + Get expression pairs ──
+	var set_zoom: ACEDefinition = _find(graph_definitions, "property:set:zoom")
+	ok = _check("an editor property reflects a Set action",
+		set_zoom != null and set_zoom.ace_type == ACEDefinition.ACEType.ACTION, true) and ok
+	ok = _check("the setter emits plain assignment",
+		str(set_zoom.metadata.get("codegen_template", "")) if set_zoom != null else "missing", "{target.}zoom = {value}") and ok
+	var get_zoom_property: ACEDefinition = _find(graph_definitions, "property:get:zoom")
+	ok = _check("the getter reads the plain property",
+		get_zoom_property != null and str(get_zoom_property.metadata.get("codegen_template", "")) == "{target.}zoom", true) and ok
+
+	# ── The class-aware helper dropdowns reflect real members (dialog statics) ──
+	ok = _check("method suggestions include an inherited member",
+		ACEParamsDialog.reflected_members("GraphEdit", "method").has("queue_free"), true) and ok
+	ok = _check("property suggestions include an own member",
+		ACEParamsDialog.reflected_members("GraphEdit", "property").has("zoom"), true) and ok
+
 	# ── The session cache returns SHARED instances (the immutability contract) ──
 	var second_pass: Array[ACEDefinition] = EventSheetClassDBSource.definitions_for_class("GraphEdit")
 	ok = _check("the cache shares definition instances", _find(second_pass, "method:arrange_nodes") == arrange, true) and ok

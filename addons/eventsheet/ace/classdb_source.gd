@@ -50,7 +50,59 @@ static func definitions_for_class(target_class: String) -> Array[ACEDefinition]:
 		var trigger: ACEDefinition = _signal_definition(target_class, signal_info)
 		if trigger != null:
 			output.append(trigger)
+	for property_info: Dictionary in ClassDB.class_get_property_list(target_class, true):
+		output.append_array(_property_definitions(target_class, property_info))
 	_cache[target_class] = output
+	return output
+
+
+## An editor-visible property reflects as a Set action + a Get expression, the
+## same `{target.}prop` shapes the curated vocabulary and the helpers emit.
+static func _property_definitions(target_class: String, property_info: Dictionary) -> Array[ACEDefinition]:
+	var output: Array[ACEDefinition] = []
+	var property_name: String = str(property_info.get("name", ""))
+	var usage: int = int(property_info.get("usage", 0))
+	if property_name.is_empty() or property_name.begins_with("_") or property_name.contains("/"):
+		return output
+	if usage & PROPERTY_USAGE_GROUP or usage & PROPERTY_USAGE_SUBGROUP or usage & PROPERTY_USAGE_CATEGORY:
+		return output
+	if not (usage & PROPERTY_USAGE_EDITOR):
+		return output
+	var set_template: String = "{target.}%s = {value}" % property_name
+	if not _curated_templates.has(set_template):
+		var setter: ACEDefinition = ACEDefinition.new()
+		setter.provider_id = target_class
+		setter.id = "property:set:%s" % property_name
+		setter.ace_type = ACEDefinition.ACEType.ACTION
+		setter.display_name = "Set %s" % property_name.capitalize()
+		setter.category = "All of %s" % target_class
+		setter.description = "Sets %s.%s - reflected from the engine." % [target_class, property_name]
+		setter.parameters = [{
+			"id": "value",
+			"display_name": "Value",
+			"description": "",
+			"type": TYPE_STRING,
+			"default_value": _default_literal_for(int(property_info.get("type", TYPE_NIL))),
+			"hint": "expression",
+			"options": [],
+			"autocomplete": [],
+		}]
+		setter.icon = "action"
+		setter.metadata = {"codegen_template": set_template, "reflected": true, "reflect_class": target_class}
+		output.append(setter)
+	var get_template: String = "{target.}%s" % property_name
+	if not _curated_templates.has(get_template):
+		var getter: ACEDefinition = ACEDefinition.new()
+		getter.provider_id = target_class
+		getter.id = "property:get:%s" % property_name
+		getter.ace_type = ACEDefinition.ACEType.EXPRESSION
+		getter.display_name = property_name.capitalize()
+		getter.category = "All of %s" % target_class
+		getter.description = "Reads %s.%s - reflected from the engine." % [target_class, property_name]
+		getter.parameters = []
+		getter.icon = "expression"
+		getter.metadata = {"codegen_template": get_template, "reflected": true, "reflect_class": target_class}
+		output.append(getter)
 	return output
 
 
