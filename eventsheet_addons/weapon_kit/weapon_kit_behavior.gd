@@ -1,4 +1,6 @@
 ## @ace_tags(combat, shooter)
+## @ace_category("Weapon")
+## @ace_expose_all(node)
 @icon("res://eventsheet_addons/behavior.svg")
 class_name WeaponKit
 extends Node
@@ -13,19 +15,14 @@ func _enter_tree() -> void:
 
 ## @ace_trigger
 ## @ace_name("On Fire")
-## @ace_category("Weapon")
 signal fired
 ## @ace_trigger
 ## @ace_name("On Empty")
-## @ace_category("Weapon")
 signal emptied
 ## @ace_trigger
-## @ace_name("On Reload Started")
-## @ace_category("Weapon")
 signal reload_started
 ## @ace_trigger
 ## @ace_name("On Reload Complete")
-## @ace_category("Weapon")
 signal reload_completed
 
 var _burst_left: int = 0
@@ -164,25 +161,14 @@ func set_fire_mode(mode: int) -> void:
 func set_max_ammo(size: int) -> void:
 	max_ammo = maxi(size, 0)
 
-## @ace_condition
-## @ace_name("Can Fire")
-## @ace_category("Weapon")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
-## @ace_codegen_template("$WeaponKit.can_fire()")
 func can_fire() -> bool:
 	return not _reloading and _cooldown <= 0.0 and current_ammo > 0 and _burst_left <= 0
 
-## @ace_condition
-## @ace_name("Has Ammo")
-## @ace_category("Weapon")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
-## @ace_codegen_template("$WeaponKit.has_ammo()")
 func has_ammo() -> bool:
 	return current_ammo > 0
 
 ## @ace_condition
 ## @ace_name("Is Full")
-## @ace_category("Weapon")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.is_full()")
 func is_full() -> bool:
@@ -190,35 +176,19 @@ func is_full() -> bool:
 
 ## @ace_condition
 ## @ace_name("Is Reloading")
-## @ace_category("Weapon")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$WeaponKit.is_reloading()")
 func is_reloading() -> bool:
 	return _reloading
 
-## @ace_expression
-## @ace_name("Ammo Percent")
-## @ace_category("Weapon")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
-## @ace_codegen_template("$WeaponKit.ammo_percent()")
 func ammo_percent() -> float:
 	return (float(current_ammo) / float(maxi(max_ammo, 1))) * 100.0
 
-## @ace_expression
-## @ace_name("Reload Progress")
-## @ace_category("Weapon")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
-## @ace_codegen_template("$WeaponKit.reload_progress()")
 func reload_progress() -> float:
 	if not _reloading:
 		return 1.0
 	return clampf(1.0 - _reload_timer / maxf(reload_time, 0.01), 0.0, 1.0)
 
-## @ace_expression
-## @ace_name("Cooldown Progress")
-## @ace_category("Weapon")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
-## @ace_codegen_template("$WeaponKit.cooldown_progress()")
 func cooldown_progress() -> float:
 	return clampf(1.0 - _cooldown * maxf(fire_rate, 0.01), 0.0, 1.0)
 

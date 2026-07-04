@@ -43,6 +43,15 @@ extends Resource
 ## Addon tags (event-sheet-style: organize/filter your addon library): emitted as a class-level
 ## `@ace_tags(...)` annotation, searchable in the picker and over MCP.
 @export var addon_tags: PackedStringArray = PackedStringArray()
+## Class-level picker category default: emitted as a class-level `## @ace_category("...")`
+## annotation, so every member without its own category lands in ONE tidy picker group
+## (a C3-behavior-style ACE group). Per-member @ace_category still wins.
+@export var addon_category: String = ""
+## Publish every own public method and signal as ACEs with zero per-member annotations:
+## "" = off (only annotated members surface), "all" = owned-instance calls, "node" =
+## node-targeted calls ({target} defaulting to $<class_name>). Emitted as the class-level
+## `## @ace_expose_all` / `## @ace_expose_all(node)` annotation.
+@export var ace_expose_all_mode: String = ""
 ## Optional icon for the custom node type (emitted as `@icon("path")`; shown in the Create
 ## Node dialog and scene tree). 16×16 SVG recommended, like engine icons.
 @export_file("*.svg", "*.png") var custom_class_icon: String = ""

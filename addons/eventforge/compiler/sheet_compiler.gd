@@ -127,6 +127,15 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	if not sheet.custom_class_name.strip_edges().is_empty():
 		if not sheet.addon_tags.is_empty():
 			lines.append("## @ace_tags(%s)" % ", ".join(sheet.addon_tags))
+		# Class-level picker defaults + the expose-all opt-in: metadata-only lines like
+		# @ace_tags above (the importer recovers them without removing them from the
+		# prelude, so they can never double-emit).
+		if not sheet.addon_category.strip_edges().is_empty():
+			lines.append("## @ace_category(\"%s\")" % sheet.addon_category.strip_edges())
+		if sheet.ace_expose_all_mode == "node":
+			lines.append("## @ace_expose_all(node)")
+		elif sheet.ace_expose_all_mode == "all":
+			lines.append("## @ace_expose_all")
 		# Family marker (metadata only, exactly like @ace_tags above): declares that this class is an
 		# event-sheet Family, so other sheets can write one rule over ALL its instances. No code is
 		# emitted from this flag - membership is an explicit "Add To Family" action - so the annotation

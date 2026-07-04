@@ -159,6 +159,24 @@ func import_external_source(source: String) -> EventSheetResource:
 				if not trimmed_tag.is_empty():
 					recovered_tags.append(trimmed_tag)
 			sheet.addon_tags = recovered_tags
+	# Recover the class-level category default and the expose-all opt-in. Metadata only
+	# (the lines stay in the verbatim prelude) - exactly like @ace_tags, so no double-emit.
+	# Search the HEADER only (above class_name/extends): @ace_category also appears
+	# per-member in class bodies, and a member's category must never become the default.
+	var header_end: int = source.find("\nclass_name ")
+	if header_end < 0:
+		header_end = source.find("\nextends ")
+	var header: String = source.substr(0, header_end) if header_end >= 0 else ""
+	var class_category_regex: RegEx = RegEx.new()
+	if class_category_regex.compile("(?m)^## @ace_category\\(\"([^\"]*)\"\\)") == OK:
+		var class_category_match: RegExMatch = class_category_regex.search(header)
+		if class_category_match != null:
+			sheet.addon_category = class_category_match.get_string(1)
+	var expose_all_regex: RegEx = RegEx.new()
+	if expose_all_regex.compile("(?m)^## @ace_expose_all(\\(node\\))?$") == OK:
+		var expose_all_match: RegExMatch = expose_all_regex.search(header)
+		if expose_all_match != null:
+			sheet.ace_expose_all_mode = "node" if not expose_all_match.get_string(1).is_empty() else "all"
 	# Recover the Family marker (`## @ace_family(Name)`) so a family-typed sheet re-opens as a family.
 	# Metadata only (the line stays in the verbatim prelude) - exactly like @ace_tags above, so it can't
 	# double-emit. The group/vars/ACEs are all derived from the class, so the bare name is enough.

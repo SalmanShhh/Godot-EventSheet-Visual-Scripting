@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Changed - Weapon Kit is the terse-provider showcase (and sheets can author class-level defaults)
+
+- **Two new sheet fields close the authoring gap**: `addon_category` emits a class-level
+  `## @ace_category("...")` (every member without its own category joins ONE picker
+  group) and `ace_expose_all_mode` emits `## @ace_expose_all` / `(node)` - both
+  metadata-only lines recovered by the importer exactly like `@ace_tags` (header-anchored,
+  so a member's category can never be mistaken for the default).
+- **Weapon Kit migrated to the terse form**: class-level category + expose_all(node)
+  replace ~40 per-member annotation lines; members keep `@ace_name` only where the
+  curated name genuinely differs (On Fire, On Empty, On Reload Complete, Is Full,
+  Is Reloading). One deliberate vocabulary change: property ACEs moved from the
+  inferred "Gameplay" category into the pack's "Weapon" group.
+- **The whole vocabulary is pinned**: tests/weapon_kit_characterization_test.gd freezes
+  all 53 published definitions (id, type, name, category, codegen) so the terse form
+  provably publishes the same language - and any future row change must be a deliberate,
+  changelog-noted decision.
+
 ### Fixed - reflected property actions compiled to NOTHING; now they write real code
 
 - **The covenant gap is closed**: an @export var on a provider script reflects as Set /
