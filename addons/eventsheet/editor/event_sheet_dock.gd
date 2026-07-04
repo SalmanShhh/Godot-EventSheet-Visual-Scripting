@@ -160,6 +160,7 @@ var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + grou
 var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # right-click context menus: condition/action/row/variable/empty-space build + per-click configure (dock/context_menus.gd)
 var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
+var _ui_builder: EventSheetDockUIBuilder = EventSheetDockUIBuilder.new()  # UI construction pass (dock/dock_ui_builder.gd)
 var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
@@ -202,6 +203,7 @@ func _init() -> void:
 	_sheet_io.init(self)
 	# Same reason as _sheet_io: a test may apply an ACE (or exercise drag-drop) on a fresh .new()
 	# editor before _ready. init() only stores _dock, so wiring it here (and again in the cluster) is safe.
+	_ui_builder.init(self)
 	_ace_apply.init(self)
 	# Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning — tests exercise ops like
 	# _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.
@@ -217,75 +219,9 @@ func _init() -> void:
 var _editor_dialogs_initialized: bool = false
 
 
-# Initializes the picker/params/variable dialogs and wires their signals + providers.
-# Idempotent (guarded by _editor_dialogs_initialized) and safe to run detached: it only
-# touches dialog init + signal connections + provider wiring — nothing tree-bound. Called
-# from _ready() in the real editor AND from setup() so headless tests (which never enter
-# the tree, so _ready never fires) still get initialized dialogs.
 func _ensure_editor_dialogs_initialized() -> void:
-	if _editor_dialogs_initialized:
-		return
-	_editor_dialogs_initialized = true
-	_load_simple_mode_preference()
-	_param_resolver.set_param_store(_editor_param_store)
-	_ace_picker.init_dialog(self, _ace_registry)
-	_ace_picker.set_simple_mode_provider(func() -> bool: return _simple_mode)
-	_ace_picker.set_reflect_class_provider(func() -> String: return _current_sheet.host_class if _current_sheet != null else "")
-	_variable_dlg.simple_mode_provider = func() -> bool: return _simple_mode
-	_ace_picker.ace_selected.connect(_on_ace_picker_selected)
-	_ace_params.init_dialog(self, _ace_registry, _collect_sheet_variable_names)
-	_ace_params.set_lint_context_provider(func() -> EventSheetResource: return _current_sheet)
-	_ace_params.set_variable_creator(_create_variable_quickfix)
-	_ace_params.params_confirmed.connect(_on_ace_params_confirmed)
-	_ace_params.back_requested.connect(_on_ace_params_back_requested)
-	_variable_dlg.init_dialog(self)
-	_new_addon_panel.init(self)
-	_welcome.init(self)
-	_starter.init(self)
-	_comments.init(self)
-	_struct_rows.init(self)
-	_inline_params.init(self)
-	_doctor.init(self)
-	_includes.init(self)
-	_find_refs.init(self)
-	_pick.init(self)
-	_ai.init(self)
-	_sheet_type.init(self)
-	_session.init(self)
-	_shortcuts.init(self)
-	_rename.init(self)
-	_variables.init(self)
-	_multi_view.init(self)
-	_command_palette.init(self)
-	_sheet_diff.init(self)
-	_variable_grouping.init(self)
-	_context_menus.init(self)
-	_external_watcher.init(self)
-	_sheet_io.init(self)
-	_ace_apply.init(self)
-	_row_edit_ops.init(self)
-	_preview_glue.init(self)
-	_author_actions.init(self)
-	_ghost_row.init(self)
-	_navigate.init(self)
-	_export_pack.init(self)
-	_function_dialog_glue.init(self)
-	_theme_manager.init(self)
-	_find_bar_glue.init(self)
-	_clipboard_glue.init(self)
-	_quick_prompts.init(self)
-	_custom_block_dialog.init(self)
-	# Feed the active sheet so the name field can flag host-member shadowing (live + blocking).
-	_variable_dlg.set_sheet_provider(func() -> EventSheetResource: return _current_sheet)
-	_variable_dlg.variable_confirmed.connect(_on_variable_dialog_confirmed)
-	# Sheet enums feed the variable dialog's one-click combo fill.
-	_variable_dlg.set_enum_provider(func() -> Array:
-		var sheet_enums: Array = []
-		if _current_sheet != null:
-			for row: Variant in _current_sheet.events:
-				if row is EnumRow and (row as EnumRow).enabled:
-					sheet_enums.append({"name": (row as EnumRow).enum_name, "members": (row as EnumRow).members})
-		return sheet_enums)
+	_ui_builder.ensure_editor_dialogs_initialized()
+
 
 
 func _ready() -> void:
@@ -678,56 +614,8 @@ func _on_manage_ace_providers_requested() -> void:
 
 
 func _build_provider_dialog() -> void:
-	if _provider_dialog != null:
-		return
-	_provider_dialog = Window.new()
-	_provider_dialog.title = "Custom ACE Providers"
-	_provider_dialog.visible = false
-	_provider_dialog.min_size = Vector2i(460, 320)
-	_provider_dialog.close_requested.connect(func() -> void: _provider_dialog.hide())
-	add_child(_provider_dialog)
+	_ui_builder.build_provider_dialog()
 
-	var content: VBoxContainer = EventSheetPopupUI.form_box()
-	var margin: MarginContainer = EventSheetPopupUI.margined(content)
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_provider_dialog.add_child(margin)
-
-	content.add_child(EventSheetPopupUI.hint_label("Register GDScript files whose methods, signals and exported variables become custom ACEs.\nZero-config alternative: drop scripts into res://eventsheet_addons/ and they register project-wide automatically."))
-
-	var providers_box: VBoxContainer = EventSheetPopupUI.form_box()
-
-	_provider_list = ItemList.new()
-	_provider_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_provider_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	providers_box.add_child(_provider_list)
-
-	var buttons: HBoxContainer = HBoxContainer.new()
-	buttons.add_theme_constant_override("separation", 6)
-	providers_box.add_child(buttons)
-	var add_button: Button = Button.new()
-	add_button.text = "Add…"
-	add_button.pressed.connect(_on_provider_add_pressed)
-	buttons.add_child(add_button)
-	var remove_button: Button = Button.new()
-	remove_button.text = "Remove Selected"
-	remove_button.pressed.connect(_on_provider_remove_pressed)
-	buttons.add_child(remove_button)
-	var open_in_godot_button: Button = Button.new()
-	open_in_godot_button.text = "Open in Godot Script Editor"
-	open_in_godot_button.tooltip_text = "Open the selected provider script in Godot's script editor."
-	open_in_godot_button.pressed.connect(_on_provider_open_in_godot_pressed)
-	buttons.add_child(open_in_godot_button)
-
-	var providers_card: PanelContainer = EventSheetPopupUI.titled_card("Providers", providers_box)
-	providers_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	content.add_child(providers_card)
-
-	_provider_file_dialog = FileDialog.new()
-	_provider_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-	_provider_file_dialog.access = FileDialog.ACCESS_RESOURCES
-	_provider_file_dialog.filters = PackedStringArray(["*.gd ; GDScript"])
-	_provider_file_dialog.file_selected.connect(_on_provider_file_selected)
-	_provider_dialog.add_child(_provider_file_dialog)
 
 
 func _refresh_provider_list() -> void:
@@ -757,210 +645,8 @@ func _on_provider_remove_pressed() -> void:
 
 
 func _build_ui() -> void:
-	if _toolbar != null:
-		return
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_ui_builder.build_ui()
 
-	var root: VBoxContainer = VBoxContainer.new()
-	root.name = "EventSheetWorkspaceRoot"
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(root)
-
-	# Toolbar redesign: grouped by purpose (Sheet / Add / Edit / View / Tools menus)
-	# with only the high-frequency reflexes as one-click buttons — and it FLOWS to
-	# a second row instead of clipping when the panel is narrow (the old single HBox
-	# of ~28 controls overflowed past the panel edge).
-	# The toolbar + grouped Sheet/Add/Edit/View/Tools menus + theme picker + quick-add
-	# are built by the extracted EventSheetMenuBar; it adds _toolbar as root's FIRST child
-	# and assigns _toolbar/_view_popup/_theme_picker/_quick_add_edit back onto the dock.
-	_menu_bar.init(self)
-	_menu_bar.build(root)
-
-	_tab_bar = TabBar.new()
-	_tab_bar.name = "EventSheetTabBar"
-	_tab_bar.clip_tabs = true
-	_tab_bar.tab_close_display_policy = TabBar.CLOSE_BUTTON_SHOW_ALWAYS
-	_tab_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_tab_bar.tab_selected.connect(_on_tab_selected)
-	_tab_bar.tab_close_pressed.connect(_on_tab_close_pressed)
-	root.add_child(_tab_bar)
-
-	_title_strip = HBoxContainer.new()
-	_title_strip.name = "EventSheetTitleStrip"
-	_title_strip.add_theme_constant_override("separation", 8)
-	root.add_child(_title_strip)
-
-	var title_tab_shell: PanelContainer = PanelContainer.new()
-	title_tab_shell.name = "EventSheetTitleTab"
-	_title_strip.add_child(title_tab_shell)
-
-	var title_tab_content: HBoxContainer = HBoxContainer.new()
-	title_tab_content.add_theme_constant_override("separation", 4)
-	title_tab_shell.add_child(title_tab_content)
-
-	_title_tab_label = Label.new()
-	_title_tab_label.name = "EventSheetTitleTabLabel"
-	_title_tab_label.text = "No Sheet Loaded"
-	title_tab_content.add_child(_title_tab_label)
-
-	_title_dirty_dot = Label.new()
-	_title_dirty_dot.name = "EventSheetTitleDirtyDot"
-	_title_dirty_dot.text = "●"
-	_title_dirty_dot.modulate = Color(0.99, 0.78, 0.30, 1.0)
-	_title_dirty_dot.visible = false
-	title_tab_content.add_child(_title_dirty_dot)
-
-	_title_path_label = Label.new()
-	_title_path_label.name = "EventSheetTitlePath"
-	_title_path_label.modulate = Color(0.72, 0.76, 0.84, 1.0)
-	_title_path_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_title_path_label.clip_text = true
-	_title_path_label.text = "Open or create a sheet to begin"
-	_title_strip.add_child(_title_path_label)
-
-	# Pinned Conditions/Actions column header, above the scrolling sheet (bound to the
-	# viewport once it exists). Kept outside the scroll so the scroll still has a single child.
-	_identity_banner = SheetIdentityBanner.new()
-	root.add_child(_identity_banner)
-	_identity_banner.edit_requested.connect(_open_sheet_type_dialog)
-
-	# Read-only preview banner (a .gd opened just to look at it) — hidden for normal sheets.
-	_preview_banner = _preview_glue.build_preview_banner()
-	root.add_child(_preview_banner)
-
-	_column_header = SheetColumnHeader.new()
-	root.add_child(_column_header)
-
-	_scroll = ScrollContainer.new()
-	_scroll.name = "EventSheetScroll"
-	_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	# Wrap the viewport in _content_host, then sit it beside the Open Sheets panel in _workspace_body.
-	_content_host = VBoxContainer.new()
-	_content_host.name = "EventSheetContentHost"
-	_content_host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_content_host.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_content_host.add_child(_scroll)
-	_open_sheets_panel = EventSheetOpenSheetsDock.new()
-	_open_sheets_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_open_sheets_panel.activate_requested.connect(activate_open_tab)
-	_open_sheets_panel.reopen_requested.connect(reopen_sheet_path)
-	_open_sheets_panel.collapse_toggled.connect(_on_open_sheets_panel_collapsed)
-	open_tabs_changed.connect(_refresh_open_sheets_panel)
-	# The Functions overview is its own dockable rail panel (fold-expandable on demand) — it used
-	# to live inside the Generated-GDScript side panel, so seeing your functions meant opening the
-	# code view. The list's click/right-click handlers stay on the dock.
-	_functions_panel = EventSheetFunctionsPanel.new()
-	_functions_panel.add_requested.connect(_open_function_dialog)
-	_functions_list = _functions_panel.list
-	_functions_list.item_clicked.connect(_on_functions_list_item_clicked)
-	_functions_menu = PopupMenu.new()
-	_functions_menu.add_item("Delete Function", 0)
-	_functions_menu.id_pressed.connect(_on_functions_menu_id_pressed)
-	_functions_list.add_child(_functions_menu)
-	# The Anatomy panel shares the left rail below Open Sheets: the active behaviour's organs
-	# (knobs/state/triggers/actions/conditions/expressions/uses) at a glance, click to jump.
-	_anatomy_panel = BehaviourAnatomyPanel.new()
-	_anatomy_panel.reveal_requested.connect(func(resource: Resource) -> void:
-		var view: EventSheetViewport = _active_view()
-		if view != null:
-			view.reveal_resource(resource))
-	var left_rail: VBoxContainer = VBoxContainer.new()
-	left_rail.name = "EventSheetLeftRail"
-	left_rail.add_theme_constant_override("separation", 8)
-	left_rail.add_child(_open_sheets_panel)
-	left_rail.add_child(_functions_panel)
-	left_rail.add_child(_anatomy_panel)
-	_workspace_body = HSplitContainer.new()
-	_workspace_body.name = "EventSheetWorkspaceBody"
-	_workspace_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_workspace_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_workspace_body.add_child(left_rail)
-	_workspace_body.add_child(_content_host)
-	root.add_child(_workspace_body)
-	_apply_open_sheets_panel_prefs()
-
-	_viewport = EventSheetViewport.new()
-	_viewport.name = "EventSheetViewport"
-	_viewport.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_viewport.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_viewport.set_ace_registry(_ace_registry)
-	_scroll.add_child(_viewport)
-	_column_header.setup(_viewport)
-	_identity_banner.setup(_viewport)
-
-	_viewport.selection_changed.connect(_on_viewport_selection_changed)
-	_viewport.selection_changed.connect(func(row_data: EventRowData) -> void:
-		if _mirroring_selection:
-			return  # a mirrored selection must not steal the active view
-		_active_viewport_ref = _viewport
-		_mirror_selection(_viewport, row_data)
-	)
-	_viewport.row_drop_requested.connect(_on_row_drop_requested)
-	_viewport.rows_drop_requested.connect(_on_rows_drop_requested)
-	_viewport.ace_preview_requested.connect(_on_ace_preview_requested)
-	_viewport.asset_dropped.connect(_apply_asset_drop)
-	_viewport.ace_picker_requested.connect(_on_viewport_ace_picker_requested)
-	_viewport.span_edit_requested.connect(_on_viewport_span_edit_requested)
-	_viewport.navigate_requested.connect(_navigate.navigate)
-	_viewport.navigation_probe = _navigate.can_navigate
-	_viewport.ace_edit_requested.connect(_on_viewport_ace_edit_requested)
-	_viewport.param_value_edit_requested.connect(_on_param_value_edit_requested)
-	_viewport.param_value_edit_at_rect_requested.connect(func(ace: Resource, param_id: String, current_text: String, anchor_screen: Rect2) -> void:
-		_inline_params.on_param_value_edit_requested(ace, param_id, current_text, anchor_screen))
-	_viewport.color_swatch_edit_requested.connect(_on_color_swatch_edit_requested)
-	_viewport.param_node_drop_requested.connect(_on_param_node_drop_requested)
-	_viewport.variable_edit_requested.connect(_on_viewport_variable_edit_requested)
-	_viewport.comment_edit_requested.connect(_open_comment_dialog)
-	_viewport.group_edit_requested.connect(_on_group_edit_requested)
-	_viewport.pick_filter_edit_requested.connect(_open_pick_filter_dialog)
-	_viewport.with_node_edit_requested.connect(_open_with_node_dialog)
-	_viewport.enum_edit_requested.connect(_open_enum_dialog)
-	_viewport.signal_edit_requested.connect(_open_signal_dialog)
-	_viewport.custom_block_edit_requested.connect(_open_custom_block_dialog)
-	_viewport.function_edit_requested.connect(_function_dialog_glue._open_function_dialog_for)
-	_viewport.variable_group_requested.connect(_variable_grouping.on_group_requested)
-	_viewport.variable_group_rename_requested.connect(_variable_grouping.on_rename_requested)
-	_viewport.match_edit_requested.connect(_open_match_dialog)
-	_viewport.row_disable_toggle_requested.connect(_toggle_selected_rows_enabled)
-	_viewport.row_move_requested.connect(_move_selected_row)
-	_viewport.delete_requested.connect(_delete_selected_content)
-	_viewport.find_requested.connect(_show_find_bar)
-	_viewport.find_step_requested.connect(_find_step)
-	_apply_editor_native_defaults()
-	_viewport.ace_drop_requested.connect(_on_viewport_ace_drop_requested)
-	_viewport.drag_status_requested.connect(_on_viewport_drag_status_requested)
-	_viewport.lane_ratio_changed.connect(_on_viewport_lane_ratio_changed)
-	_viewport.add_event_requested.connect(_on_viewport_add_event_requested)
-	_viewport.raw_code_edit_requested.connect(_on_viewport_raw_code_edit_requested)
-	_viewport.context_menu_requested.connect(_on_viewport_context_menu_requested)
-	_viewport.empty_space_double_clicked.connect(_on_viewport_empty_space_double_clicked)
-	_viewport.empty_space_context_menu_requested.connect(_on_viewport_empty_space_context_menu_requested)
-	_viewport.set_external_span_edit_handler_enabled(true)
-
-	_status_label = Label.new()
-	_status_label.name = "EventSheetStatus"
-	_status_label.text = "Ready"
-	root.add_child(_status_label)
-
-	_exposed_node.name = "EventSheetExposedParams"
-	add_child(_exposed_node)
-	_exposed_node.setup(_ace_registry, _editor_param_store, _current_sheet, _param_resolver)
-	_exposed_node.set_undo_redo_manager(_undo_redo_adapter.get_manager())
-	# The right-click context menus (condition/action/row/variable/empty-space) are built by the
-	# extracted EventSheetContextMenus; build_all() constructs each and assigns it back onto the dock
-	# (the _*_context_menu / _row_*_submenu members the dock + tests read by name). init() only stores
-	# the _dock back-reference, so wiring it here — before any context-menu site runs — is enough.
-	_context_menus.init(self)
-	_context_menus.build_all()
-	_build_preview_window()
-	_build_theme_file_dialog()
 
 
 func _notification(what: int) -> void:
@@ -1982,73 +1668,9 @@ func is_code_panel_visible() -> bool:
 	return _side_panel != null and _side_panel.visible
 
 
-## Builds the panel lazily on first toggle: wraps the sheet scroll in an HSplitContainer
-## (so the default tree stays untouched until the user asks for the panel) and adds the
-## code view on the right.
 func _ensure_code_panel() -> void:
-	if _split != null:
-		return
-	var scroll_parent: Node = _scroll.get_parent()
-	var scroll_index: int = _scroll.get_index()
-	_split = HSplitContainer.new()
-	_split.name = "EventSheetCodeSplit"
-	_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll_parent.remove_child(_scroll)
-	scroll_parent.add_child(_split)
-	scroll_parent.move_child(_split, scroll_index)
-	_split.add_child(_scroll)
-	_side_panel = VBoxContainer.new()
-	_side_panel.name = "GeneratedGDScriptPanel"
-	_side_panel.custom_minimum_size = Vector2(360.0, 0.0)
-	_side_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_side_panel.visible = false
-	# (The Functions overview used to live here; it is now its own dockable left-rail panel —
-	# see functions_panel.gd — so it no longer requires the code view to be open.)
-	var header: HBoxContainer = HBoxContainer.new()
-	var title: Label = Label.new()
-	title.text = "Generated GDScript"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
-	var open_in_godot_button: Button = Button.new()
-	open_in_godot_button.text = "Open in Godot Script Editor"
-	open_in_godot_button.tooltip_text = "Open the .gd source in Godot's own script editor (code-backed sheets). For a .tres sheet, Save As… a .gd first."
-	open_in_godot_button.pressed.connect(_open_generated_in_godot)
-	header.add_child(open_in_godot_button)
-	var copy_button: Button = Button.new()
-	copy_button.text = "Copy"
-	copy_button.tooltip_text = "Copy the generated script to the clipboard"
-	copy_button.pressed.connect(func() -> void:
-		if _code_edit != null:
-			DisplayServer.clipboard_set(_code_edit.text)
-	)
-	header.add_child(copy_button)
-	var close_button: Button = Button.new()
-	close_button.text = "✕"
-	close_button.tooltip_text = "Close the GDScript panel"
-	close_button.pressed.connect(_toggle_code_panel)
-	header.add_child(close_button)
-	_side_panel.add_child(header)
-	# Orientation for non-programmers: say what this panel even is before the code scares them off.
-	var code_hint: Label = Label.new()
-	code_hint.text = "The plain GDScript your sheet compiles to — read-only, refreshed live as you edit. Your game ships this, with no runtime dependency."
-	code_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	code_hint.modulate = Color(1.0, 1.0, 1.0, 0.6)
-	_side_panel.add_child(code_hint)
-	_code_edit = CodeEdit.new()
-	_code_edit.editable = false
-	_code_edit.gutters_draw_line_numbers = true
-	_code_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_code_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	# GDScriptSyntaxHighlighter is editor-only; headless test runs skip it.
-	if Engine.is_editor_hint() and ClassDB.class_exists("GDScriptSyntaxHighlighter"):
-		_code_edit.syntax_highlighter = ClassDB.instantiate("GDScriptSyntaxHighlighter")
-	# Make the panel read like the actual script editor: its code font + the minimap.
-	_apply_editor_code_settings(_code_edit)
-	_code_edit.gui_input.connect(_on_code_panel_gui_input)
-	_side_panel.add_child(_code_edit)
-	_split.add_child(_side_panel)
-	_split.split_offset = int(size.x * 0.6) if size.x > 0.0 else 600
+	_ui_builder.ensure_code_panel()
+
 
 
 ## Adopts the editor's code-editor look on a CodeEdit (the GDScript panel): the same
@@ -2239,51 +1861,8 @@ func _on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool)
 
 
 func _ensure_raw_code_dialog() -> void:
-	if _raw_code_dialog != null:
-		return
-	_raw_code_dialog = ConfirmationDialog.new()
-	_raw_code_dialog.title = "Edit GDScript Block"
-	# Standard popup margins, consistent with the other plugin dialogs.
-	var layout_box: VBoxContainer = EventSheetPopupUI.form_box()
-	layout_box.custom_minimum_size = Vector2(640.0, 0.0)
-	layout_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	# The hint + lint labels are autowrap but WIDTH-BOUNDED (custom_minimum_size.x): a
-	# ConfirmationDialog sizes to its content's minimum, and an UNBOUNDED autowrap label reports a
-	# runaway min height during the initial zero-width pass (it wraps to one glyph per line), which
-	# ballooned this popup to thousands of px tall on launch. Bounding the width makes the min-size
-	# pass wrap at a sane width while still letting long lint errors wrap at runtime.
-	_raw_code_hint = Label.new()
-	_raw_code_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_raw_code_hint.custom_minimum_size = Vector2(620.0, 0.0)
-	layout_box.add_child(_raw_code_hint)
-	_raw_code_edit = CodeEdit.new()
-	_raw_code_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_raw_code_edit.custom_minimum_size = Vector2(620.0, 330.0)
-	_raw_code_edit.gutters_draw_line_numbers = true
-	_raw_code_edit.indent_use_spaces = false
-	# GDScriptSyntaxHighlighter is editor-only; headless test runs skip it.
-	if Engine.is_editor_hint() and ClassDB.class_exists("GDScriptSyntaxHighlighter"):
-		_raw_code_edit.syntax_highlighter = ClassDB.instantiate("GDScriptSyntaxHighlighter")
-	_raw_code_edit.code_completion_enabled = true
-	EventSheetPopupUI.configure_code_editor(_raw_code_edit)  # auto-close brackets/quotes at the source
-	_raw_code_edit.text_changed.connect(_validate_raw_code)
-	_raw_code_edit.code_completion_requested.connect(_populate_raw_code_completion)
-	layout_box.add_child(_raw_code_edit)
-	_raw_code_lint_label = Label.new()
-	_raw_code_lint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_raw_code_lint_label.custom_minimum_size = Vector2(620.0, 0.0)
-	layout_box.add_child(_raw_code_lint_label)
-	_raw_code_dialog.add_child(EventSheetPopupUI.margined(layout_box))
-	_raw_code_dialog.confirmed.connect(_on_raw_code_dialog_confirmed)
-	# "Open in Godot" hands the block off to Godot's own script editor (more room, full tooling); the
-	# in-popup editor stays for quick inline edits. custom_action fires for non-OK/Cancel buttons.
-	var open_in_godot: Button = _raw_code_dialog.add_button("Open in Godot Script Editor", false, "open_in_godot")
-	open_in_godot.tooltip_text = "Edit this block in Godot's script editor — your changes return when you come back to the sheet."
-	_raw_code_dialog.custom_action.connect(func(action: StringName) -> void:
-		if String(action) == "open_in_godot":
-			_open_raw_code_block_in_godot())
-	add_child(_raw_code_dialog)
+	_ui_builder.ensure_raw_code_dialog()
+
 
 
 ## Compile-checks the dialog's code against the sheet context (host class + sheet symbols).
