@@ -289,18 +289,9 @@ func _baked_template_for(definition: ACEDefinition) -> String:
 	var explicit: String = str(definition.metadata.get("codegen_template", ""))
 	if not explicit.strip_edges().is_empty():
 		return explicit
-	if str(definition.metadata.get("semantic_source", "")) != "reflection":
-		return ""
-	if str(definition.metadata.get("source_kind", "")) != "method":
-		return ""
-	var method_name: String = str(definition.metadata.get("source_name", ""))
-	if method_name.is_empty() or definition.provider_id.is_empty():
-		return ""
-	var argument_tokens: PackedStringArray = PackedStringArray()
-	for parameter in definition.parameters:
-		if parameter is Dictionary and not str((parameter as Dictionary).get("id", "")).is_empty():
-			argument_tokens.append("{%s}" % str((parameter as Dictionary).get("id", "")))
-	return "__eventsheet_provider_%s.%s(%s)" % [definition.provider_id, method_name, ", ".join(argument_tokens)]
+	# The owned-instance synthesis lives ON the definition so the picker and expression
+	# previews show exactly what this bake produces.
+	return definition.instance_backed_template()
 
 
 func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionary) -> Dictionary:

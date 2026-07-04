@@ -54,7 +54,7 @@ For **methods and signals**, the analyzer already registers every own-declared m
 ## 5. MVP scope (build first, safe + verifiable)
 
 **In:** `## @ace_expose_all` + `## @ace_expose_all(node)` for **methods + signals**; own-member lists; the `(node)` node-form template synthesis; the class-name category default; per-member overrides + `@ace_hidden`; tests + a fixture; a characterization migration of one pack.
-**Deferred (documented follow-ups):** ~~property-write codegen (the covenant gap)~~ DELIVERED 2026-07-04 (see review note 2); ~~autoload singleton-prefix node-form~~ DELIVERED 2026-07-04 (the generator detects autoload registration and synthesizes `<SingletonName>.member` for methods + properties; pinned by `tests/autoload_provider_codegen_test.gd`); plain-`var` (non-@export) exposure; the instance-backed **codegen preview** blank for METHODS (property ACEs now show real templates; method preview reads `metadata.codegen_template`, still empty for instance-backed methods); non-primitive-signature method handling.
+**Deferred (documented follow-ups):** ~~property-write codegen (the covenant gap)~~ DELIVERED 2026-07-04 (see review note 2); ~~autoload singleton-prefix node-form~~ DELIVERED 2026-07-04 (the generator detects autoload registration and synthesizes `<SingletonName>.member` for methods + properties; pinned by `tests/autoload_provider_codegen_test.gd`); ~~the instance-backed **codegen preview** blank for METHODS~~ DELIVERED 2026-07-04 (`ACEDefinition.instance_backed_template()` - one synthesis shared by the bake, the picker info panel, and the expression insert); plain-`var` (non-@export) exposure; non-primitive-signature method handling.
 
 ## 6. Files to touch
 

@@ -45,6 +45,10 @@ static func run() -> bool:
 		var baked_action: ACEAction = editor._create_action_from_definition(announce_definition, {"amount": 7})
 		all_passed = _check("instance-backed template baked",
 			baked_action.codegen_template, "__eventsheet_provider_DemoHealthAddon.announce_heal({amount})") and all_passed
+		# The picker/expression previews call the same synthesis the bake uses, so what
+		# the UI shows for a template-less method is exactly what gets baked.
+		all_passed = _check("the preview synthesis matches the bake",
+			announce_definition.instance_backed_template(), baked_action.codegen_template) and all_passed
 
 		# Compiler declares the provider member once, before the first function, and the
 		# call compiles as a direct typed call.

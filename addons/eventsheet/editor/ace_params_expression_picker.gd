@@ -279,6 +279,10 @@ func _insert_into_expression_target(snippet: String) -> void:
 func _expression_template(definition: ACEDefinition) -> String:
 	var template: String = str(definition.metadata.get("codegen_template", ""))
 	if template.is_empty():
+		# Instance-backed reflected methods: insert the owned-instance call the compiler
+		# understands (the display fallback below would paste prose as code).
+		template = definition.instance_backed_template()
+	if template.is_empty():
 		var display: String = definition.format_display({})
 		return display if not display.is_empty() else definition.display_name
 	# Substitute default parameter values into the codegen template placeholders.

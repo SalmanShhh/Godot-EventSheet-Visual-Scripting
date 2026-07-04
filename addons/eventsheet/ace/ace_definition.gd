@@ -63,6 +63,29 @@ func get_inspector_category() -> String:
 	return category_override if not category_override.is_empty() else category
 
 
+## The owned-instance call an instance-backed reflected METHOD compiles to
+## (`__eventsheet_provider_<Class>.method({args})` - the compiler declares the member
+## when it sees the reference). Empty for everything else: explicit templates win at
+## bake, and non-method reflections carry synthesized templates from generation.
+## THE single source for this form - the apply-time bake and the picker/expression
+## previews all call it, so what the UI shows is exactly what gets baked.
+func instance_backed_template() -> String:
+	if not str(metadata.get("codegen_template", "")).strip_edges().is_empty():
+		return ""
+	if str(metadata.get("semantic_source", "")) != "reflection":
+		return ""
+	if str(metadata.get("source_kind", "")) != "method":
+		return ""
+	var method_name: String = str(metadata.get("source_name", ""))
+	if method_name.is_empty() or provider_id.is_empty():
+		return ""
+	var argument_tokens: PackedStringArray = PackedStringArray()
+	for parameter: Variant in parameters:
+		if parameter is Dictionary and not str((parameter as Dictionary).get("id", "")).is_empty():
+			argument_tokens.append("{%s}" % str((parameter as Dictionary).get("id", "")))
+	return "__eventsheet_provider_%s.%s(%s)" % [provider_id, method_name, ", ".join(argument_tokens)]
+
+
 func format_display(params_dict: Dictionary = {}) -> String:
 	var template: String = str(metadata.get("display_template", display_name))
 	if template.is_empty():

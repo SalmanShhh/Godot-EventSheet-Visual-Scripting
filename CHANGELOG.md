@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed - the picker's codegen line is never blank for a working ACE
+
+- Instance-backed reflected methods bake their owned-instance call at APPLY time, so the
+  picker's info panel showed no codegen for them and the expression picker inserted the
+  display NAME as if it were code. The synthesis now lives ON ACEDefinition
+  (`instance_backed_template()`), and the apply-time bake, the info panel, and the
+  expression insert all call it - what the UI shows is provably what gets baked (pinned
+  in runtime_provider_test).
+
 ### Fixed - a twice-registered provider no longer double-lists in the picker
 
 - The same provider reachable through two registration channels in one build (a scanned

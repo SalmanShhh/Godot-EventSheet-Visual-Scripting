@@ -1151,6 +1151,10 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 		return
 	var description: String = definition.description if not definition.description.is_empty() else str(definition.metadata.get("display_template", definition.display_name))
 	var template: String = str(definition.metadata.get("codegen_template", ""))
+	if template.is_empty():
+		# Instance-backed reflected methods bake their owned-instance call at APPLY time -
+		# preview the same call so "ships as" is never blank for a working ACE.
+		template = definition.instance_backed_template()
 	var header_line: String = "[b]%s[/b]  ·  %s  ·  %s" % [definition.display_name, _ace_type_label(definition.ace_type), _category_of(definition)]
 	var body: String = header_line + "\n" + description
 	if not template.is_empty():
