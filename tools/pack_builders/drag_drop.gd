@@ -13,6 +13,7 @@ static func build() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "DragDropBehavior"
 	sheet.addon_category = "Drag & Drop"
+	sheet.ace_expose_all_mode = "node"
 	# Scalar / Array / Dictionary state goes through sheet.variables. Vector2 /
 	# PackedVector2Array defaults and the @export_enum int live in the raw header block
 	# below (the variable emitter can't produce those literals/enums faithfully).
@@ -78,19 +79,16 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Dragging\")",
-		"## @ace_codegen_template(\"$DragDropBehavior.is_dragging()\")",
 		"func is_dragging() -> bool:",
 		"\treturn dragging",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Enabled\")",
-		"## @ace_codegen_template(\"$DragDropBehavior.is_dragdrop_enabled()\")",
 		"func is_dragdrop_enabled() -> bool:",
 		"\treturn enabled",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Snapping\")",
-		"## @ace_codegen_template(\"$DragDropBehavior.is_snapping()\")",
 		"func is_snapping() -> bool:",
 		"\treturn is_snapping_flag",
 		"",

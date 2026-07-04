@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "VirtualCursor"
 	sheet.addon_category = "Virtual Cursor"
+	sheet.ace_expose_all_mode = "node"
 	# Scalar / Array / Dictionary state via sheet.variables. The exported int enums
 	# (direction_mode/hover_mode/bounce_mode) and the Vector2/Rect2 runtime state live in
 	# the raw header block below (the variable emitter only does @export_enum for String
@@ -107,7 +108,6 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Interact Held\")",
-		"## @ace_codegen_template(\"$VirtualCursor.is_interact_held({id})\")",
 		"func is_interact_held(id: String) -> bool:",
 		"\tif id == \"\":",
 		"\t\tfor key in interact_states:",
@@ -118,37 +118,31 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Moving\")",
-		"## @ace_codegen_template(\"$VirtualCursor.is_moving()\")",
 		"func is_moving() -> bool:",
 		"\treturn report_vel.length() > 0.0",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is In Homing Range\")",
-		"## @ace_codegen_template(\"$VirtualCursor.is_in_homing_range()\")",
 		"func is_in_homing_range() -> bool:",
 		"\treturn in_homing_range",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Blocked\")",
-		"## @ace_codegen_template(\"$VirtualCursor.is_blocked()\")",
 		"func is_blocked() -> bool:",
 		"\treturn blocked_this_tick",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Enabled\")",
-		"## @ace_codegen_template(\"$VirtualCursor.is_cursor_enabled()\")",
 		"func is_cursor_enabled() -> bool:",
 		"\treturn enabled",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Ignoring Input\")",
-		"## @ace_codegen_template(\"$VirtualCursor.is_ignoring_input()\")",
 		"func is_ignoring_input() -> bool:",
 		"\treturn ignoring_input",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Hovering\")",
-		"## @ace_codegen_template(\"$VirtualCursor.is_hovering({target})\")",
 		"func is_hovering(target: Node2D) -> bool:",
 		"\thovered_uid = -1",
 		"\tif host == null or target == null or target == host or not target.visible:",

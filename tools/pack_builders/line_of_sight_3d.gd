@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "LOS3DBehavior"
 	sheet.addon_category = "Line Of Sight 3D"
+	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"sight_range": {"type": "float", "default": 1000.0, "exported": true},
 		"cone_of_view_degrees": {"type": "float", "default": 360.0, "exported": true},
@@ -23,7 +24,6 @@ static func build() -> bool:
 	extra_block_0.code = "\n".join(PackedStringArray([
 		"## @ace_condition",
 		"## @ace_name(\"Has Line Of Sight To\")",
-		"## @ace_codegen_template(\"$LOS3DBehavior.has_los_to({point})\")",
 		"func has_los_to(point: Vector3) -> bool:",
 		"\tif host == null or host.global_position.distance_to(point) > sight_range:",
 		"\t\treturn false",
@@ -36,7 +36,6 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Has LOS Between\")",
-		"## @ace_codegen_template(\"$LOS3DBehavior.has_los_between({from_point}, {to_point})\")",
 		"func has_los_between(from_point: Vector3, to_point: Vector3) -> bool:",
 		"\tif host == null:",
 		"\t\treturn false",
@@ -46,7 +45,6 @@ static func build() -> bool:
 		"",
 		"## @ace_expression",
 		"## @ace_name(\"Nearest Visible In Group\")",
-		"## @ace_codegen_template(\"$LOS3DBehavior.nearest_visible_in_group({group})\")",
 		"## The closest group member this node can actually SEE (range + cone + raycast) - scans every",
 		"## candidate and skips occluded ones, so a nearer-but-blocked enemy can't shadow a visible farther",
 		"## one. Returns null if none are visible. The targeting primitive for auto-attack AI.",

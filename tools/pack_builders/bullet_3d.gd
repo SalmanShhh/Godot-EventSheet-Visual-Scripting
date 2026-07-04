@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "Bullet3DBehavior"
 	sheet.addon_category = "Bullet 3D"
+	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"speed": {"type": "float", "default": 10.0, "exported": true},
 		"gravity": {"type": "float", "default": 0.0, "exported": true},

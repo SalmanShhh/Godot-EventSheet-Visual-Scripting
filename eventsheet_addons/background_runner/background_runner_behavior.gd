@@ -1,5 +1,6 @@
 ## @ace_tags(performance, threading)
 ## @ace_category("Background")
+## @ace_expose_all(node)
 @icon("res://eventsheet_addons/behavior.svg")
 class_name BackgroundRunner
 extends Node

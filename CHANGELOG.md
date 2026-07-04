@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - every pack opts into @ace_expose_all(node); hand-written own-node templates gone
+
+- **All 28 builder-backed packs now carry the one-line expose-all opt-in** weapon_kit
+  pioneered, and the 39 hand-written `@ace_codegen_template("$<Class>.method(...)")`
+  lines in their authored blocks are gone - the node-form synthesis produces the exact
+  same templates from the method signatures. Templates that point anywhere OTHER than
+  the pack's own node (host-targeted forms) correctly stay authored.
+- **Proven a pure no-op on the vocabulary**: all 844 definitions dumped before and
+  after - zero rows added, removed, renamed, recategorized, or retemplated. Same
+  language, terser source; and no pack leaked an unannotated public into the picker.
+
 ### Changed - every pack teaches the class-level category default (one picker group per pack)
 
 - **All 28 builder-backed packs migrated** to `sheet.addon_category` - the class-level

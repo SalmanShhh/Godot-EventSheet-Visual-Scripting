@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "FollowBehavior"
 	sheet.addon_category = "Follow"
+	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"target_path": {"type": "String", "default": "", "exported": true},
 		"mode": {"type": "String", "default": "smooth", "exported": true, "options": ["smooth", "delayed"]},

@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "SimpleHealthBehavior"
 	sheet.addon_category = "Health"
+	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"max_health": {"type": "float", "default": 100.0, "exported": true, "attributes": {"tooltip": "Starting max HP; current_health initialises to this.", "range": {"min": "1", "max": "10000", "step": "1"}}},
 		"invulnerable": {"type": "bool", "default": false, "exported": true, "attributes": {"tooltip": "Start invulnerable: takeDamage is a no-op while true."}},
@@ -75,19 +76,16 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Dead\")",
-		"## @ace_codegen_template(\"$SimpleHealthBehavior.is_dead()\")",
 		"func is_dead() -> bool:",
 		"\treturn is_dead_flag",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Invulnerable\")",
-		"## @ace_codegen_template(\"$SimpleHealthBehavior.is_invulnerable()\")",
 		"func is_invulnerable() -> bool:",
 		"\treturn invulnerable",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Has Any Health Pool\")",
-		"## @ace_codegen_template(\"$SimpleHealthBehavior.has_any_health_pool()\")",
 		"func has_any_health_pool() -> bool:",
 		"\tfor pool_name: String in health_pools.keys():",
 		"\t\tif (health_pools[pool_name] as HealthPool).amount > 0.0:",
@@ -96,13 +94,11 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Has Health Pool\")",
-		"## @ace_codegen_template(\"$SimpleHealthBehavior.has_health_pool({type})\")",
 		"func has_health_pool(type: String) -> bool:",
 		"\treturn health_pools.has(type) and (health_pools[type] as HealthPool).amount > 0.0",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Health Pool Is Type\")",
-		"## @ace_codegen_template(\"$SimpleHealthBehavior.is_health_pool_type({type})\")",
 		"func is_health_pool_type(type: String) -> bool:",
 		"\treturn last_trigger_pool_type == type",
 		"",

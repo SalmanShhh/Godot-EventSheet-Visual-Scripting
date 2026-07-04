@@ -1,4 +1,5 @@
 ## @ace_category("Drag & Drop")
+## @ace_expose_all(node)
 @icon("res://eventsheet_addons/behavior.svg")
 class_name DragDropBehavior
 extends Node

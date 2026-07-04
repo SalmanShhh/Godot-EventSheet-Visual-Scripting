@@ -18,6 +18,7 @@ static func build() -> bool:
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "BackgroundRunner"
 	sheet.addon_category = "Background"
+	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["performance", "threading"])
 	var about: CommentRow = CommentRow.new()
 	about.text = "Run In Background: hands a PURE function (no scene-tree access!) to a worker thread; On Done(result) fires on the main thread when it finishes. For heavy compute that would hitch even when spread across frames."
@@ -36,7 +37,6 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Running\")",
-		"## @ace_codegen_template(\"$BackgroundRunner.is_running()\")",
 		"func is_running() -> bool:",
 		"\treturn not _tasks.is_empty()",
 		"",

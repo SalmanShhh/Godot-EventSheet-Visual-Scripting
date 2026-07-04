@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "SineBehavior"
 	sheet.addon_category = "Sine"
+	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"movement": {"type": "String", "default": "horizontal", "exported": true, "options": ["horizontal", "vertical", "forwards-backwards", "size", "angle", "opacity", "value-only"]},
 		"wave": {"type": "String", "default": "sine", "exported": true, "options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"]},

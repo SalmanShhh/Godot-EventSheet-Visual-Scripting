@@ -1,4 +1,5 @@
 ## @ace_category("Line Of Sight 3D")
+## @ace_expose_all(node)
 @icon("res://eventsheet_addons/behavior.svg")
 class_name LOS3DBehavior
 extends Node
@@ -17,7 +18,6 @@ func _enter_tree() -> void:
 
 ## @ace_expression
 ## @ace_name("Nearest Visible In Group")
-## @ace_codegen_template("$LOS3DBehavior.nearest_visible_in_group({group})")
 ## The closest group member this node can actually SEE (range + cone + raycast) - scans every
 ## candidate and skips occluded ones, so a nearer-but-blocked enemy can't shadow a visible farther
 ## one. Returns null if none are visible. The targeting primitive for auto-attack AI.

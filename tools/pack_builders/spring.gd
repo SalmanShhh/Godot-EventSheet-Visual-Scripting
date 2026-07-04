@@ -17,6 +17,7 @@ static func build() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "SpringBehavior"
 	sheet.addon_category = "Spring"
+	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["motion", "juice"])
 	sheet.variables = {
 		"default_stiffness": {"type": "float", "default": 170.0, "exported": true,
@@ -93,7 +94,6 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Springing\")",
-		"## @ace_codegen_template(\"$SpringBehavior.is_springing({spring_name})\")",
 		"func is_springing(spring_name: String) -> bool:",
 		"\treturn springs.has(spring_name) and (springs[spring_name] as SpringEntry).active",
 		"",

@@ -1,5 +1,6 @@
 ## @ace_tags(motion, juice)
 ## @ace_category("Tween")
+## @ace_expose_all(node)
 @icon("res://eventsheet_addons/behavior.svg")
 class_name TweenBehavior
 extends Node

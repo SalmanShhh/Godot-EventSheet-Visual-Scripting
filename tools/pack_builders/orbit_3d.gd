@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "Orbit3DBehavior"
 	sheet.addon_category = "Orbit 3D"
+	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"radius": {"type": "float", "default": 3.0, "exported": true},
 		"speed_degrees": {"type": "float", "default": 90.0, "exported": true},

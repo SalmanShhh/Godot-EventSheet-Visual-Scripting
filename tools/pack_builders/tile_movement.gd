@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "TileMovementBehavior"
 	sheet.addon_category = "Tile Movement"
+	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"tile_size": {"type": "float", "default": 64.0, "exported": true},
 		"move_time": {"type": "float", "default": 0.15, "exported": true},

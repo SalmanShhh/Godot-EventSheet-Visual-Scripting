@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "CarBehavior"
 	sheet.addon_category = "Car"
+	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"max_speed": {"type": "float", "default": 400.0, "exported": true},
 		"acceleration": {"type": "float", "default": 300.0, "exported": true},

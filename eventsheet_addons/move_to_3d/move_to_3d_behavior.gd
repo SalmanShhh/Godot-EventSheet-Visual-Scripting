@@ -1,4 +1,5 @@
 ## @ace_category("Move To 3D")
+## @ace_expose_all(node)
 @icon("res://eventsheet_addons/behavior.svg")
 class_name MoveTo3DBehavior
 extends Node

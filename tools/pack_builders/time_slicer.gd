@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "TimeSlicerBehavior"
 	sheet.addon_category = "Time Slicer"
+	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["performance", "scheduling"])
 	sheet.variables = {
 		"frame_budget_ms": {"type": "float", "default": 4.0, "exported": true,
@@ -42,7 +43,6 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Busy\")",
-		"## @ace_codegen_template(\"$TimeSlicerBehavior.is_busy()\")",
 		"func is_busy() -> bool:",
 		"\treturn not _queue.is_empty()",
 		"",

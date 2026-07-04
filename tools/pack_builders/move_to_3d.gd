@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "MoveTo3DBehavior"
 	sheet.addon_category = "Move To 3D"
+	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"max_speed": {"type": "float", "default": 5.0, "exported": true},
 		"waypoints": {"type": "Array", "default": [], "exported": false},

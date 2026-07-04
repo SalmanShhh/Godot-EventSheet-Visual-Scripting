@@ -23,6 +23,7 @@ static func build() -> bool:
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "HTNAgent"
 	sheet.addon_category = "HTN"
+	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["ai", "planning"])
 	sheet.variables = {
 		"root_task": {"type": "String", "default": "", "exported": true,
@@ -56,13 +57,11 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Has Plan\")",
-		"## @ace_codegen_template(\"$HTNAgent.has_plan()\")",
 		"func has_plan() -> bool:",
 		"\treturn plan_index < plan.size()",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Current Task Is\")",
-		"## @ace_codegen_template(\"$HTNAgent.current_task_is({task_name})\")",
 		"func current_task_is(task_name: String) -> bool:",
 		"\treturn current_task() == task_name",
 		"",

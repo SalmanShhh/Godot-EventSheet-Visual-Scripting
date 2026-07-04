@@ -1,4 +1,5 @@
 ## @ace_category("Sine 3D")
+## @ace_expose_all(node)
 @icon("res://eventsheet_addons/behavior.svg")
 class_name Sine3DBehavior
 extends Node

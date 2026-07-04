@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "TimerBehavior"
 	sheet.addon_category = "Timer"
+	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"duration": {"type": "float", "default": 1.0, "exported": true},
 		"repeating": {"type": "bool", "default": false, "exported": true},

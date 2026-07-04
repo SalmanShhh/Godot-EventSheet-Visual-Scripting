@@ -17,6 +17,7 @@ static func build() -> bool:
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "PlatformerMovement"
 	sheet.addon_category = "Platformer"
+	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["movement", "platformer"])
 	sheet.variables = {
 		# ── Tuning (Inspector) ───────────────────────────────────────────────────────
@@ -87,31 +88,26 @@ static func build() -> bool:
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Moving\")",
-		"## @ace_codegen_template(\"$PlatformerMovement.is_moving()\")",
 		"func is_moving() -> bool:",
 		"\treturn host != null and absf(host.velocity.x) > 1.0",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Jumping\")",
-		"## @ace_codegen_template(\"$PlatformerMovement.is_jumping()\")",
 		"func is_jumping() -> bool:",
 		"\treturn host != null and not host.is_on_floor() and host.velocity.y < 0.0",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Falling\")",
-		"## @ace_codegen_template(\"$PlatformerMovement.is_falling()\")",
 		"func is_falling() -> bool:",
 		"\treturn host != null and not host.is_on_floor() and host.velocity.y > 0.0",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Wall Sliding\")",
-		"## @ace_codegen_template(\"$PlatformerMovement.is_wall_sliding()\")",
 		"func is_wall_sliding() -> bool:",
 		"\treturn _wall_sliding",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Can Jump\")",
-		"## @ace_codegen_template(\"$PlatformerMovement.can_jump()\")",
 		"func can_jump() -> bool:",
 		"\tif host == null:",
 		"\t\treturn false",

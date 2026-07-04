@@ -18,6 +18,7 @@ static func build() -> bool:
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "JuiceBehavior"
 	sheet.addon_category = "Juice"
+	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["camera", "juice"])
 	var about: CommentRow = CommentRow.new()
 	about.text = "Game feel, batteries included: screenshake, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Zoom; Squash & Stretch animates the node it's attached to."
