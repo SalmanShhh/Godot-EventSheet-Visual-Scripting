@@ -59,6 +59,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - `docs/EVENTSHEET_ALIGNMENT_GUIDE.md` - stacked layout tuning
 - `docs/elements/*.md` - template scene guidance
 - `docs/C3-MIGRATION-GUIDE.md` - user-facing C3→Godot concept/behavior/plugin map
+- `docs/CUSTOM-BLOCKS-GUIDE.md` - the Custom Block API (register non-ACE row kinds; contract, built-ins, use cases)
 - `docs/MCP-SERVER.md` - the AI-tooling protocol (list/read/compile/lint/snippets)
 - `docs/UNINSTALL.md` - clean-removal guide (keep/remove table; the zero-runtime-dependency covenant as a guided teardown)
 - `docs/INSPECTOR-ATTRIBUTES-SPEC.md` - Unity/Odin-style attributes (all tiers shipped)
@@ -76,9 +77,10 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - **Bake-at-apply**: templates bake onto ACEs when applied; descriptor changes never
   rewrite sheets. `ace_id`s are API - hide with `@ace_hidden`, never rename.
 - **Policy gates, never bytes**: composition ProjectSettings only allow/warn/error.
-- Indentation split: tabs in `addons/eventforge/`, **spaces** in
-  `addons/eventsheet/editor/`. See `CONTRIBUTING.md` for the gotcha list (e.g. `""`
-  is a backspace escape; `Dictionary.get` doesn't fall back on empty values).
+- Indentation: **tabs everywhere** (the whole plugin was converted; the suite's style gate
+  enforces it, with class_name-first headers and two blank lines around functions).
+  See `CONTRIBUTING.md` for the gotcha list (e.g. `""` is a backspace escape;
+  `Dictionary.get` doesn't fall back on empty values).
 
 ## Current known gaps
 
