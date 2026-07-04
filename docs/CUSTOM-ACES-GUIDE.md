@@ -205,6 +205,19 @@ annotate the exceptions (a custom name the humanizer can't guess, a dropdown, a 
 > Place the marker **before** `class_name`/`extends` (it is a class-level directive). `_`-prefixed and
 > inherited engine members never surface, so even a big class stays a single tidy picker group.
 
+### Every node speaks EventSheet (reflected vocabulary)
+
+You do not need a provider script at all to drive a class: the picker's
+**"All of <your host class>"** section reflects the sheet's own class straight from the
+running engine - its methods become Actions (void), Conditions (bool returns), and
+Expressions (other returns), its editor properties become Set/Get pairs, and its signals
+become triggers. This works for EVERY Godot class (including ones future Godot versions
+add) and for your own `class_name` scripts. Reflected verbs emit the same plain
+`member(...)` calls the curated vocabulary emits, curated verbs always win over their
+reflected twins, and Simple Mode hides the section (it is the expert deep end). Provider
+scripts remain the way to CURATE a vocabulary: friendly names, categories, dropdowns,
+custom templates.
+
 ### Write less: prose descriptions and pack-wide defaults
 
 Three shortcuts keep annotation blocks short (all additive - every long form below still works):

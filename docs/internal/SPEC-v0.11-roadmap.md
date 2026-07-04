@@ -344,6 +344,11 @@ drift=0 and Lens A == Lens B).
 
 ## 5. Any-node vocabulary via ClassDB reflection
 
+STATUS: SHIPPED (commits 1cb9cb8 / c0dcd04 / +user-class reflection; methods, signals, and
+property Set/Get pairs for engine AND class_name classes, picker section, session cache,
+curated shadowing, Simple Mode gate, docs. Deferred honestly: OnSignal apply-time signal
+validation - event.trigger_params has no editor write-seam to hook today.)
+
 ### Today (census)
 
 - Vocabulary is 18 hand-authored builtin modules; an ACE binds to a class via a `node_type`

@@ -39,6 +39,23 @@ static func definitions_for_class(target_class: String) -> Array[ACEDefinition]:
 		return _cache[target_class]
 	var output: Array[ACEDefinition] = []
 	if not ClassDB.class_exists(target_class):
+		# User `class_name` classes reflect the same way, from their script's own
+		# member lists - a game's custom nodes are vocabulary too.
+		var user_script: Script = _script_for_class(target_class)
+		if user_script == null:
+			_cache[target_class] = output
+			return output
+		_ensure_curated_templates()
+		for method_info: Dictionary in user_script.get_script_method_list():
+			var method_definition: ACEDefinition = _method_definition(target_class, method_info)
+			if method_definition != null:
+				output.append(method_definition)
+		for signal_info: Dictionary in user_script.get_script_signal_list():
+			var signal_trigger: ACEDefinition = _signal_definition(target_class, signal_info)
+			if signal_trigger != null:
+				output.append(signal_trigger)
+		for property_info: Dictionary in user_script.get_script_property_list():
+			output.append_array(_property_definitions(target_class, property_info))
 		_cache[target_class] = output
 		return output
 	_ensure_curated_templates()
@@ -187,6 +204,14 @@ static func _signal_definition(target_class: String, signal_info: Dictionary) ->
 		"reflect_class": target_class,
 	}
 	return definition
+
+
+## Resolves a `class_name` to its script via the project's global class list.
+static func _script_for_class(target_class: String) -> Script:
+	for class_info: Dictionary in ProjectSettings.get_global_class_list():
+		if str(class_info.get("class", "")) == target_class:
+			return load(str(class_info.get("path", ""))) as Script
+	return null
 
 
 ## The shadow filter's needle set: every curated builtin codegen template, exact.

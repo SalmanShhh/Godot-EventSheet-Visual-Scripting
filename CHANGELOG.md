@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added - any-node reach, part 3: your own classes reflect too
+
+- **User `class_name` scripts reflect like engine classes**: the sheet's host class being a
+  custom node resolves through the project's global class list, and the script's own methods,
+  signals, and exported properties become the same "All of <Class>" vocabulary. The Custom
+  ACEs guide opens with the reflected-vocabulary story ("Every node speaks EventSheet") and
+  where curated providers still win.
+
 ### Added - any-node reach, part 2: reflected properties, class-aware member pickers
 
 - **Every editor-visible property reflects as a pair**: "Set <Property>" (plain assignment)

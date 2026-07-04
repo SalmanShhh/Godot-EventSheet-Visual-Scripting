@@ -53,6 +53,16 @@ static func run() -> bool:
 	ok = _check("a curated template filters its reflected twin",
 		_find(body_definitions, "method:move_and_slide") == null, true) and ok
 
+	# ── User class_name scripts reflect the same way ──
+	var user_definitions: Array[ACEDefinition] = EventSheetClassDBSource.definitions_for_class("TerseProviderSample")
+	var user_fire: ACEDefinition = _find(user_definitions, "method:fire")
+	ok = _check("a user class reflects its void method as an Action",
+		user_fire != null and user_fire.ace_type == ACEDefinition.ACEType.ACTION, true) and ok
+	ok = _check("the user-class emission is the plain call",
+		str(user_fire.metadata.get("codegen_template", "")) if user_fire != null else "missing", "{target.}fire()") and ok
+	ok = _check("a user class's signal reflects as a Trigger",
+		_find(user_definitions, "signal:reloaded") != null, true) and ok
+
 	# ── Unknown classes reflect to nothing, quietly ──
 	ok = _check("an unknown class reflects to an empty vocabulary",
 		EventSheetClassDBSource.definitions_for_class("NoSuchClass").is_empty(), true) and ok
