@@ -63,6 +63,24 @@ static func run() -> bool:
 	ok = _check("another sheet's registry has the taught verb",
 		other_dock._ace_registry.find_definition("ScoreKeeper", "method:add_score") != null, true) and ok
 	other_dock.free()
+
+	# The un-teach: the Manage Providers dialog lists the taught entry, and Remove is
+	# the inverse gesture - settings only, the sheet and its verbs untouched.
+	dock._build_provider_dialog()
+	dock._providers_glue.refresh_provider_list()
+	var taught_row: int = -1
+	for row_index in range(dock._provider_list.item_count):
+		var entry: Variant = dock._provider_list.get_item_metadata(row_index)
+		if entry is Dictionary and bool((entry as Dictionary).get("taught", false)):
+			taught_row = row_index
+	ok = _check("the providers dialog lists the taught script", taught_row >= 0, true) and ok
+	if taught_row >= 0:
+		dock._provider_list.select(taught_row)
+		dock._providers_glue.on_provider_remove_pressed()
+	ok = _check("un-teach clears the setting",
+		PackedStringArray(ProjectSettings.get_setting(EventSheetDock.TAUGHT_PROVIDERS_SETTING, PackedStringArray())).is_empty(), true) and ok
+	ok = _check("un-teach removes the verb from the vocabulary",
+		dock._ace_registry.find_definition("ScoreKeeper", "method:add_score") == null, true) and ok
 	dock.free()
 	ProjectSettings.set_setting(EventSheetDock.TAUGHT_PROVIDERS_SETTING, null)
 	return ok

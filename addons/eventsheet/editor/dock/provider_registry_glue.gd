@@ -125,7 +125,13 @@ func refresh_provider_list() -> void:
 		return
 	_dock._provider_list.clear()
 	for path in get_ace_provider_scripts():
-		_dock._provider_list.add_item(path)
+		var sheet_index: int = _dock._provider_list.add_item(path)
+		_dock._provider_list.set_item_metadata(sheet_index, {"taught": false, "path": str(path)})
+	# Taught verbs (Sheet > Teach a Verb) are PROJECT-wide, not per-sheet - listed here so
+	# Remove is also the un-teach: one dialog manages the whole custom vocabulary.
+	for taught_path: Variant in ProjectSettings.get_setting(EventSheetDock.TAUGHT_PROVIDERS_SETTING, PackedStringArray()):
+		var taught_index: int = _dock._provider_list.add_item("%s  (taught project-wide)" % str(taught_path))
+		_dock._provider_list.set_item_metadata(taught_index, {"taught": true, "path": str(taught_path)})
 
 
 func on_provider_add_pressed() -> void:
@@ -143,4 +149,24 @@ func on_provider_remove_pressed() -> void:
 	var selected: PackedInt32Array = _dock._provider_list.get_selected_items()
 	if selected.is_empty():
 		return
+	var entry: Variant = _dock._provider_list.get_item_metadata(selected[0])
+	if entry is Dictionary and bool((entry as Dictionary).get("taught", false)):
+		unteach_provider(str((entry as Dictionary).get("path", "")))
+		return
 	remove_ace_provider_script(_dock._provider_list.get_item_text(selected[0]))
+
+
+## The un-teach: removes a taught script from the project-wide vocabulary (the inverse
+## of share_verbs_with_project). Settings only - the sheet and its verbs are untouched.
+func unteach_provider(path: String) -> void:
+	var taught: PackedStringArray = PackedStringArray(ProjectSettings.get_setting(EventSheetDock.TAUGHT_PROVIDERS_SETTING, PackedStringArray()))
+	var index: int = taught.find(path)
+	if index < 0:
+		return
+	taught.remove_at(index)
+	ProjectSettings.set_setting(EventSheetDock.TAUGHT_PROVIDERS_SETTING, taught if not taught.is_empty() else null)
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		ProjectSettings.save()
+	_dock._refresh_ace_registry()
+	refresh_provider_list()
+	_dock._set_status("Un-taught %s - its verbs left the project-wide picker (the sheet itself is untouched)." % path.get_file())

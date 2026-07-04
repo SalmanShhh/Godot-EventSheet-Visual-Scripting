@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added - un-teach: taught verbs are managed where providers live
+
+- The Manage ACE Providers dialog now also lists scripts taught project-wide (marked
+  "taught project-wide"), and Remove is the inverse gesture: the verbs leave every
+  picker while the sheet and its functions stay untouched. Settings-only, like
+  teaching itself. Pinned in tests/teach_a_verb_test.gd (teach → list → un-teach →
+  vocabulary gone).
+
 ### Added - featured verbs: the picker leads with intentions
 
 - **The curated featured list grew from statements to intentions**: Wait, Every X
