@@ -35,6 +35,84 @@ var _viewport: Control = null
 func init(viewport: Control) -> void:
 	_viewport = viewport
 
+
+# ── Region fence pairing (view layer only) ─────────────────────────────────────────────────────
+
+
+## Pairs #region / #endregion fence rows into foldable ranges - VIEW LAYER ONLY.
+## The sheet still stores flat fence rows (emission and the byte round-trip are
+## untouched by construction); the rows between a matched pair become the opener's
+## visual children, so the existing fold machinery (children + folded + the
+## viewport's _flatten_row skip) collapses them for free. Stack-based, so regions
+## nest inside regions and inside groups. Unbalanced fences never pair and stay
+## flat rows - the region block kind's wart-not-error contract holds in the view.
+func _pair_region_fences(rows: Array[EventRowData]) -> Array[EventRowData]:
+	var output: Array[EventRowData] = []
+	var stack: Array[Dictionary] = []
+	for row_data: EventRowData in rows:
+		# Pair inside pre-built child lists first (groups); a region row's own
+		# children were assembled by an inner frame below, never re-walked.
+		if not row_data.children.is_empty() and not _is_region_row(row_data):
+			row_data.children = _pair_region_fences(row_data.children)
+		if _is_region_row(row_data) and not _region_row_is_end(row_data):
+			stack.append({"opener": row_data, "collected": [] as Array[EventRowData]})
+			continue
+		if _is_region_row(row_data) and _region_row_is_end(row_data):
+			if stack.is_empty():
+				_append_to_sink(output, stack, row_data)
+				continue
+			var frame: Dictionary = stack.pop_back()
+			var opener: EventRowData = frame.get("opener")
+			var collected: Array[EventRowData] = frame.get("collected")
+			var region_children: Array[EventRowData] = []
+			for collected_row: EventRowData in collected:
+				_bump_indent(collected_row, 1)
+				region_children.append(collected_row)
+			# The closing fence rides as the LAST child: hidden while folded, still
+			# a real selectable row (its CustomBlockRow is untouched) when open.
+			_bump_indent(row_data, 1)
+			region_children.append(row_data)
+			opener.children = region_children
+			opener.folded = bool(_viewport._fold_state.get(opener.row_uid, false))
+			if opener.folded:
+				var hidden_count: int = region_children.size() - 1
+				opener.spans.append(_make_span(
+					"· %d row%s hidden" % [hidden_count, "" if hidden_count == 1 else "s"],
+					SemanticSpan.SpanType.VALUE,
+					{"text_color": Color(1.0, 1.0, 1.0, 0.45)}
+				))
+			_append_to_sink(output, stack, opener)
+			continue
+		_append_to_sink(output, stack, row_data)
+	# Unclosed openers unwind flat, in document order: the opener row, then
+	# everything it had collected, exactly as they read in the source.
+	for frame: Dictionary in stack:
+		output.append(frame.get("opener"))
+		output.append_array(frame.get("collected"))
+	return output
+
+
+func _append_to_sink(output: Array[EventRowData], stack: Array[Dictionary], row_data: EventRowData) -> void:
+	if stack.is_empty():
+		output.append(row_data)
+	else:
+		(stack[stack.size() - 1].get("collected") as Array[EventRowData]).append(row_data)
+
+
+func _is_region_row(row_data: EventRowData) -> bool:
+	return row_data != null and row_data.source_resource is CustomBlockRow \
+		and (row_data.source_resource as CustomBlockRow).kind_id == "region"
+
+
+func _region_row_is_end(row_data: EventRowData) -> bool:
+	return bool(((row_data.source_resource as CustomBlockRow).fields as Dictionary).get("is_end", false))
+
+
+func _bump_indent(row_data: EventRowData, delta: int) -> void:
+	row_data.indent += delta
+	for child: EventRowData in row_data.children:
+		_bump_indent(child, delta)
+
 # ── Non-event row builders ──────────────────────────────────────────────────────────────────────
 
 

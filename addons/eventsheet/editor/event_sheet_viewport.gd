@@ -1966,6 +1966,10 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 		var row_data: EventRowData = _build_row_from_resource(sheet.events[entry_index], 0)
 		if row_data != null:
 			root_rows.append(row_data)
+	# Pair #region/#endregion fences into foldable ranges (view layer only; the
+	# data model and emission stay flat). Runs before the footer so the trailing
+	# "Add event…" row can never be swallowed by an unclosed fence.
+	root_rows = _row_builder._pair_region_fences(root_rows)
 	# Event-sheet-style trailing "Add event…" footer at the end of the sheet.
 	if show_add_event_footers:
 		root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
