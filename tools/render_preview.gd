@@ -68,10 +68,17 @@ func _build_sheet() -> EventSheetResource:
 		"hp": {"type": "int", "default": 100, "exported": true},
 		"speed": {"type": "float", "default": 200.0}
 	}
+	# A colored region wrapping the group: shows the Discord-style bubble outline + the
+	# pill-free fence rows.
+	var region_open: CustomBlockRow = CustomBlockRow.new()
+	region_open.kind_id = "region"
+	region_open.fields = {"label": "Combat", "is_end": false, "color": "#e06666", "description": "damage in and out"}
+	sheet.events.append(region_open)
 	var group: EventGroup = EventGroup.new()
 	group.group_name = "Gameplay"
 	var hurt_event: EventRow = EventRow.new()
-	hurt_event.trigger_id = "on_body_entered"
+	hurt_event.trigger_provider_id = "Core"
+	hurt_event.trigger_id = "OnBodyEntered"
 	var cond: ACECondition = ACECondition.new()
 	cond.provider_id = "Core"
 	cond.ace_id = "HasGroupMember"
@@ -82,11 +89,24 @@ func _build_sheet() -> EventSheetResource:
 	act.ace_id = "AddVar"
 	act.params = {"var_name": "hp", "amount": "-10"}
 	hurt_event.actions.append(act)
+	# The REAL multi-line registry ACE (param ids must match its descriptor) so the row
+	# reads properly AND carries the muted "→N" compression cue after the text.
+	var flash_action: ACEAction = ACEAction.new()
+	flash_action.provider_id = "Core"
+	flash_action.ace_id = "PlayAnimationInObject"
+	flash_action.codegen_template = "var __ap_1 := {target}.find_children(\"*\", \"AnimationPlayer\", true, false).pop_front() as AnimationPlayer\nif __ap_1:\n\t__ap_1.play(&{anim})"
+	flash_action.params = {"target": "self", "anim": "\"hurt_flash\""}
+	hurt_event.actions.append(flash_action)
 	group.events.append(hurt_event)
 	sheet.events.append(group)
+	var region_close: CustomBlockRow = CustomBlockRow.new()
+	region_close.kind_id = "region"
+	region_close.fields = {"label": "", "is_end": true}
+	sheet.events.append(region_close)
 
 	var move_event: EventRow = EventRow.new()
-	move_event.trigger_id = "on_process"
+	move_event.trigger_provider_id = "Core"
+	move_event.trigger_id = "OnProcess"
 	var is_floor: ACECondition = ACECondition.new()
 	is_floor.provider_id = "Core"
 	is_floor.ace_id = "IsOnFloor"
@@ -104,17 +124,25 @@ func _build_sheet() -> EventSheetResource:
 	move_event.sub_events.append(move_note)
 	sheet.events.append(move_event)
 
-	var empty_condition_event: EventRow = EventRow.new()
-	var empty_action: ACEAction = ACEAction.new()
-	empty_action.provider_id = "Core"
-	empty_action.ace_id = "MoveAndSlide"
-	empty_condition_event.actions.append(empty_action)
-	sheet.events.append(empty_condition_event)
+	var jump_event: EventRow = EventRow.new()
+	jump_event.trigger_provider_id = "Core"
+	jump_event.trigger_id = "OnProcess"
+	var jump_pressed: ACECondition = ACECondition.new()
+	jump_pressed.provider_id = "Core"
+	jump_pressed.ace_id = "IsActionJustPressed"
+	jump_pressed.params = {"action": "\"jump\""}
+	jump_event.conditions.append(jump_pressed)
+	var play_jump: ACEAction = ACEAction.new()
+	play_jump.provider_id = "Core"
+	play_jump.ace_id = "PlaySound"
+	play_jump.params = {"path": "\"res://sfx/jump.ogg\""}
+	jump_event.actions.append(play_jump)
+	sheet.events.append(jump_event)
 
 	var comment: CommentRow = CommentRow.new()
-	# A long, single-line comment exercises word-wrapping: it should flow onto several lines
-	# and grow the row vertically instead of clipping off the right edge.
-	comment.text = "Player gameplay rules: attach this sheet under a CharacterBody2D, run movement every physics tick, and keep the comment readable by wrapping it across as many lines as it needs instead of clipping off the right edge of the sheet."
+	# A wrapping comment: flows onto several lines and grows the row vertically. Kept
+	# short enough to wrap cleanly inside the preview width.
+	comment.text = "Player rules: attach under a CharacterBody2D - movement runs every physics tick, damage lives in the Combat region above."
 	sheet.events.append(comment)
 
 	var tree_var: LocalVariable = LocalVariable.new()

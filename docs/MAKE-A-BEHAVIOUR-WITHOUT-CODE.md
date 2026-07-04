@@ -88,13 +88,17 @@ Inside the loop body, **Current Loop Item** is the iterator; **Break Loop** / **
 
 ## 8. Reusable Logic - Functions
 
-Add a **Function** (name + typed parameters + a return type). How it publishes as an ACE follows the **return type**:
+Add a **Function** (name + typed parameters + a return type). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to.
 
-- returns **nothing (void)** → an **Action** (e.g. `jump()`, `start_timer(seconds)`)
-- returns a **bool** → a **Condition** (e.g. `is_in_state(name)`)
-- returns **any other value** → an **Expression** (e.g. `health_percent()`)
+<img src="images/ace-studio.png" alt="The ACE Studio: three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb, the Ships-as GDScript signature, typed parameters, guards, and the expose-as-ACE card." width="580">
 
-Tick **"expose as ACE"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary.
+- **Does something** (returns nothing) → an **Action** (e.g. `jump()`, `start_timer(seconds)`)
+- **Is it true?** (returns a bool) → a **Condition** (e.g. `is_in_state(name)`)
+- **A value** (returns anything else) → an **Expression** (e.g. `health_percent()`)
+
+Tick **"expose as ACE"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ:
+
+<img src="images/anatomy-panel.png" alt="The Anatomy panel: a behaviour's Properties, State, Triggers, and Actions listed as organs with role pills - the Health pack showing 3 knobs, 9 state values, 8 triggers, and 16 actions." width="340">
 
 ---
 

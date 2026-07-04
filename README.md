@@ -4,8 +4,8 @@
 
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
-> [!WARNING]
-> **Experimental - early, vibecoded, not yet validated.** Built almost entirely through AI-assisted coding. The suite is large (4,700+ CI-gated assertions) and every feature ships with tests, but the project hasn't been proven by real-world use and is **subject to sweeping changes** between releases. Pin a release tag, expect rough edges, and report what you hit.
+> [!NOTE]
+> **Early.** Every feature ships with tests (4,700+ CI-gated assertions, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
@@ -82,13 +82,18 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 
 **31 behavior packs**, all authored as event sheets - Platformer, 8-Direction, Timer, Flash, State Machine, Sine/Orbit/Bullet/Move To/Follow/Car/Tile Movement, Line of Sight (2D & 3D), a 3D quartet, Spring, Tween, Save System, plus C3-addon ports: Drag & Drop, Virtual Cursor, Health (absorption + shield pools), Weapon Kit, HTN Agent, Simple Abilities, a Juice pack (screenshake/zoom/squash), a Time Slicer, and a Run In Background runner. Drop a `class_name` script in `eventsheet_addons/` and it becomes a provider - `@ace_*` annotations shape everything.
 
-**Tooling** - A pure-GDScript **MCP server** (drive the plugin from external tools/AI), a searchable node picker, export integrity + compile-on-save, git-`textconv` sheet diffs, a **Project Doctor** (dock/CLI/CI drift audit), error→row deep-linking, live debugging (Live Values, Watch box, conditional breakpoints, Event Trace), a committed vocabulary doc, sheet backups, and shareable snippets.
+**Abstraction that grows with you** - a row earns its place when it does MORE than a line: multi-line ACEs show a quiet **→N** ("compiles to N lines") cue, function calls read as **ƒ named verbs**, and the picker **leads with featured intention verbs** (Wait, Play Sound, Destroy, Move Toward...). Select actions and **Extract to Function** turns the pile into one reusable verb - captured locals become typed parameters automatically - then **Teach a Verb** publishes it to every sheet's picker in the project, node-targeted and retargetable, exactly like a built-in behavior.
+
+**Tooling** - A searchable node picker, export integrity + compile-on-save, git-`textconv` sheet diffs, a **Project Doctor** (dock/CLI/CI drift audit, extensible by packs), error→row deep-linking, live debugging (Live Values, Watch box, conditional breakpoints, Event Trace), a committed vocabulary doc, sheet backups, shareable snippets, a public **`EventSheets` API** for building plugins on top ([guide](docs/BUILDING-ON-EVENTSHEETS.md)), and an opt-in MCP server for external tooling.
 
 ## Current status
 
 **`v0.10.0` - "The In-Sheet Authoring Update"** moves the whole authoring loop inside the sheet: defining vocabulary, editing opened packs, retuning rows, navigating, and diagnosing all happen without leaving it (full ledger in [CHANGELOG.md](CHANGELOG.md)):
 
 - **The ACE Studio** - the function dialog reframes "what kind of verb?" as three plain-language cards (Does something / Is it true? / A value) with a live picker preview and a "Ships as:" signature. Double-click a **Define block** to edit a verb in place; the New Behaviour dialog offers working **starter recipes** (Cooldown, Stat pool).
+
+  <img src="docs/images/ace-studio.png" alt="The ACE Studio: three verb-kind cards, a live picker preview of the published verb, and the Ships-as GDScript signature." width="500">
+
 - **Opened packs become editable vocabulary** - a per-function shell-lift now turns a pack's annotated verbs into real, editable `EventFunction`s (**331 across the library**; health opens with its full 16-action / 5-condition / 12-expression vocabulary), byte-verified. Helpers **anywhere in the file** lift too - a mid-file `_get_pool() -> HealthPool` anchors in place and re-emits at its exact original slot. A left-rail **Anatomy panel** shows the sheet as seven organs (Properties · State · Triggers · Actions · Conditions · Expressions · Uses), click-to-jump.
 - **Speed-of-thought editing** - a **Ghost Row** (`A → heal 5 ⏎`, zero dialogs), the **Param Hop** (Enter → Tab across a row's values), **Ctrl+Enter bulk retune** across selected rows, and single-key B/I/R.
 - **Navigate like the script editor** - Ctrl+Click a behaviour name opens it as a sheet, Alt+←/→ jump history, Ctrl+P `#` sheet / `@` symbol search, and **paste an error line to land on the row that caused it**. Runtime errors and sheet breakpoints jump straight to the emitting event.
@@ -98,6 +103,19 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 - **Script intent, first-class** - creating a sheet asks what you're making; **Custom Resources and Editor Tools** join behaviours and autoloads as guided destinations with their own empty-sheet advice and banner glyphs.
 - **Every inspector export option in plain language** - the Variable dialog's "Inspector look" picker covers the full `@export` hint surface (range modifiers, flags, layer grids, file/folder pickers, node-path filters, password/expression/link, storage) with a live preview and a "Ships as:" GDScript strip; all of it round-trips losslessly.
 - **Faster to open** - ACE definitions are cached for the session; a warm registry refresh dropped from ~200ms to ~5ms, so tab switches and rescans are instant.
+
+**On main since v0.10.0** (the next release's ledger, already shipped and test-gated):
+
+- **Collapsible regions** - `#region` fences become foldable, color-tinted bubble outlines around any run of rows (groups and every block kind nest inside; they glow when you drag into them), with an editable color + description and folds that survive reopening the project - all without changing a single byte of the `.gd`.
+- **Choose Inspector looks by picture** - a **Look Gallery** of miniature widget tiles (checkbox flags, layer grids, file pickers, easing curves) plus a live **Inspector preview** card that states your choices as one plain sentence.
+
+  <img src="docs/images/look-gallery.png" alt="The Look Gallery: picture tiles of real Inspector widgets, each with a one-line explanation." width="500">
+
+- **The abstraction levers, complete** - the →N compression cue, Extract to Function with partial selection and captured-locals-to-parameters, **Teach a Verb** (project-wide vocabulary in one gesture), and featured intention verbs leading the picker.
+- **Translate your game from the sheet** - a globe toggle marks any string translatable (`tr()` underneath), a Translation ACE module covers locale/plurals/context, and the Doctor flags untranslated projects ([guide](docs/TRANSLATING-YOUR-GAME.md)).
+- **Every node speaks EventSheet** - any engine class or your own `class_name` scripts reflect into browsable vocabulary on demand: methods classify by return type, signals become triggers, properties become Set/Get pairs.
+- **Terse addon authoring** - a `##` doc comment is the description, one class-level `@ace_category` + `@ace_expose_all(node)` publishes a whole behavior, and all 31 shipped packs demonstrate the style (permanently audit-gated).
+- **A public API to build on** - the `EventSheets` facade (vocabulary / editor / codegen / project-health services) with its own [extension guide](docs/BUILDING-ON-EVENTSHEETS.md); the plugin's own features run on the same seams.
 
 **Quality** - 4,700+ assertions, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable.** Generated code never depends on the plugin, templates bake at apply-time, and output is performance-identical to hand-written GDScript - all test-enforced.
 
@@ -112,6 +130,7 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 | `v0.9.0` - **Performance & Game Feel**: frame-spreading, Juice pack, code-free authoring, first-class UI/raycast/particles/tilemaps/shaders, ACE safety audit | ✅ shipped |
 | `v0.9.5` - **Code-Free Authoring & First-Class Variables**: `.gd`-default sheets, zero-block packs, `@export` variables + drawers, addon-author loop | ✅ shipped |
 | `v0.10.0` - **The In-Sheet Authoring Update**: ACE Studio, per-function shell-lift (mid-file + custom-return helpers anchored in place), Anatomy panel, Ghost Row / Param Hop / bulk retune, error→row + paused-at-row, sheet diff, variable folders + subgroups, the Custom Block API, script-intent UX (custom resources + editor tools), full inspector-export coverage | ✅ shipped |
+| `v0.11` - **Structure & Vocabulary**: collapsible colored regions, Look Gallery + Inspector preview, localisation vocabulary, any-node reflection, terse providers (all 31 packs migrated + audit-gated), the abstraction levers (Extract/Teach/featured/compression cue), the public `EventSheets` API | ✅ on main |
 | _Roadmap_ - Menu/HUD pack + UI starter, 2D overlap queries, scene-transition + dialogue packs, community feedback | 🗺 planned |
 
 ## Project layout
@@ -136,4 +155,4 @@ Every feature lands with tests, a CHANGELOG entry, and its spec updated - see `d
 
 ## Contributing & license
 
-[CONTRIBUTING.md](CONTRIBUTING.md) has the dev setup, the compatibility covenant, and how to add ACEs, addons, packs, and themes. This experiment lives or dies by real-world reports - [open an issue](../../issues/new/choose) if something breaks or a C3 workflow feels wrong. MIT licensed (`LICENSE`).
+[CONTRIBUTING.md](CONTRIBUTING.md) has the dev setup, the compatibility covenant, and how to add ACEs, addons, packs, and themes. The project improves fastest through real-world reports - [open an issue](../../issues/new/choose) if something breaks or a C3 workflow feels wrong. MIT licensed (`LICENSE`).

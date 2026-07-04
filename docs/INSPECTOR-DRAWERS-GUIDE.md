@@ -69,6 +69,8 @@ The `##` line becomes the Inspector's hover tooltip, and the `eventsheet:progres
 
 ## 3b. Choosing by Picture (the Look Gallery + the Inspector preview)
 
+<img src="images/look-gallery.png" alt="The Look Gallery: one picture tile per Inspector look - checkbox flags, a numbered dropdown, and the 2D/3D physics, render, and navigation layer grids - each with a one-line plain-language explanation." width="620">
+
 You do not need to know any of the vocabulary below to design a property:
 
 1. In the Variable dialog, tick **Editable in the Inspector** and open **More options**.

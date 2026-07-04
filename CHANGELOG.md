@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Changed - documentation overhaul: pictures, freshness, and a sharper README
+
+- **Feature images shipped into the docs**: the ACE Studio (verb-kind cards + live
+  picker preview + Ships-as signature), the Look Gallery (choose-by-picture Inspector
+  looks), and the Anatomy panel (a behaviour's organs at a glance) - embedded in the
+  behaviour and inspector guides. The README's hero screenshot regenerated to show the
+  current editor: a colored region bubble, the group fingerprint, tempo badges, the →N
+  compression cue, and badges/chips; the picker preview regenerated with featured verbs.
+- **README refreshed to the current reality**: the "On main since v0.10.0" ledger
+  (regions, Look Gallery, localisation, any-node reflection, terse providers, the
+  abstraction levers, the public API), a v0.11 milestones row, and the abstraction
+  story added to the feature tour. The early-project note now leads with the test
+  discipline, and the MCP server moved to a single line at the tail of Tooling.
+- **Stale docs removed**: the delivered code-free roadmap (its content lives on as
+  shipped features and the behaviour guide).
+
 ### Changed - Extract to Function turns captured locals into parameters
 
 - Extracting actions that use an event-scoped name no longer refuses outright. The
