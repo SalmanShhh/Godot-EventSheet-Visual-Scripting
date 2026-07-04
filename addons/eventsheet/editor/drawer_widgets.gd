@@ -73,6 +73,88 @@ class DrawerProgressBar:
 		return false
 
 
+# ── Vector2 min-max range slider ────────────────────────────────────────────
+## Two handles on one track: the Vector2's x is the low end, y the high end - one control for "a range",
+## not two disconnected number fields (spawn intervals, damage ranges, zoom bounds). Drag the nearer
+## handle; the pair can meet but never cross.
+class DrawerMinMaxSlider:
+	extends Control
+	signal value_changed(value: Vector2)
+	var min_value: float = 0.0
+	var max_value: float = 100.0
+	var editable: bool = true
+	var _value: Vector2 = Vector2.ZERO
+	var _dragging_high: bool = false
+
+	func _init(p_min: float = 0.0, p_max: float = 100.0) -> void:
+		min_value = p_min
+		max_value = p_max
+		_value = Vector2(p_min, p_max)
+		custom_minimum_size = Vector2(0.0, 18.0)
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		tooltip_text = "Drag either handle to set the low / high end"
+
+	func set_value(v: Vector2) -> void:
+		var low: float = clampf(minf(v.x, v.y), min_value, max_value)
+		var high: float = clampf(maxf(v.x, v.y), min_value, max_value)
+		_value = Vector2(low, high)
+		queue_redraw()
+
+	func get_value() -> Vector2:
+		return _value
+
+	func _frac(v: float) -> float:
+		return clampf((v - min_value) / maxf(0.0001, max_value - min_value), 0.0, 1.0)
+
+	func _draw() -> void:
+		var w: float = size.x
+		var h: float = size.y
+		var track_y: float = h * 0.5
+		draw_rect(Rect2(0.0, track_y - 2.0, w, 4.0), Color(0.0, 0.0, 0.0, 0.32), true)
+		var x_low: float = _frac(_value.x) * w
+		var x_high: float = _frac(_value.y) * w
+		draw_rect(Rect2(x_low, track_y - 2.0, maxf(0.0, x_high - x_low), 4.0), Color(0.36, 0.66, 1.0, 0.92), true)
+		for x: float in [x_low, x_high]:
+			draw_circle(Vector2(x, track_y), 5.0, Color(0.86, 0.9, 0.97))
+			draw_circle(Vector2(x, track_y), 5.0, Color(0.2, 0.28, 0.4), false, 1.0)
+		# Value labels ride WITH their handles (clamped to the widget), so they read as the pair's
+		# current values - at the edges they would read as the track's fixed bounds instead.
+		var font: Font = ThemeDB.fallback_font
+		var low_label: String = _bound_label(_value.x)
+		var low_width: float = font.get_string_size(low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10).x
+		draw_string(font, Vector2(clampf(x_low - low_width * 0.5, 0.0, w - low_width), track_y - 7.0), low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, Color(1, 1, 1, 0.75))
+		var high_label: String = _bound_label(_value.y)
+		var high_width: float = font.get_string_size(high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10).x
+		if absf(x_high - x_low) > (low_width + high_width) * 0.5 + 4.0:
+			draw_string(font, Vector2(clampf(x_high - high_width * 0.5, 0.0, w - high_width), track_y - 7.0), high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, Color(1, 1, 1, 0.75))
+
+	static func _bound_label(v: float) -> String:
+		return str(int(roundf(v))) if absf(v - roundf(v)) < 0.001 else str(snappedf(v, 0.01))
+
+	func _gui_input(event: InputEvent) -> void:
+		if not editable:
+			return
+		if event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			var x: float = (event as InputEventMouseButton).position.x
+			# Grab whichever handle is nearer; ties (overlapping pair) take the high one so a collapsed
+			# range can always be re-opened by dragging right.
+			_dragging_high = absf(x - _frac(_value.y) * size.x) <= absf(x - _frac(_value.x) * size.x)
+			_drag_to(x)
+			accept_event()
+		elif event is InputEventMouseMotion and ((event as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+			_drag_to((event as InputEventMouseMotion).position.x)
+			accept_event()
+
+	func _drag_to(x: float) -> void:
+		var v: float = min_value + clampf(x / maxf(1.0, size.x), 0.0, 1.0) * (max_value - min_value)
+		if _dragging_high:
+			_value.y = clampf(v, _value.x, max_value)
+		else:
+			_value.x = clampf(v, min_value, _value.y)
+		queue_redraw()
+		value_changed.emit(_value)
+
+
 # ── Vector2 direction dial ──────────────────────────────────────────────────
 ## A draggable dial: the handle's offset from centre IS the vector (Godot Y-down), scaled so a handle at the
 ## rim equals `max_magnitude`. Turns two number fields into one spatial control (velocity, direction, offset).

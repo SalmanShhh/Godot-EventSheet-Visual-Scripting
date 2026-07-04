@@ -133,7 +133,7 @@ static func _tree_group_attributes(source: Dictionary) -> Dictionary:
 		var attr_value: String = str(source.get(attr_key, "")).strip_edges()
 		if not attr_value.is_empty():
 			result[attr_key] = attr_value
-	# A Tier 3 drawer's numeric bounds (progress_bar/vector_dial) ride along as the range dict so the
+	# A Tier 3 drawer's numeric bounds (progress_bar/min_max/vector_dial) ride along as the range dict so the
 	# @export_custom marker can re-emit them; the tree path can't express the other dict-only attributes,
 	# so they're intentionally dropped (degrade to a plain field, never a corrupt one).
 	if result.has("drawer") and source.get("range") is Dictionary and not (source.get("range") as Dictionary).is_empty():

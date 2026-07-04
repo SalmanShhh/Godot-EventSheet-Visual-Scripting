@@ -16,7 +16,7 @@ extends Resource
 ## un-exposed path would otherwise add, so the source round-trips byte-identically. `expose_as_ace`
 ## stays false - re-exposing it (editing the function) clears this and restores normal annotations.
 @export var lifted_unannotated: bool = false
-## Odin-style [Button]: a non-empty label emits
+## Inspector button: a non-empty label emits
 ## `@export_tool_button("Label") var _btn_<name>: Callable = <name>` so the Inspector
 ## shows a clickable button running this function. Needs a @tool sheet to act in-editor
 ## (the compiler warns otherwise). Godot 4.4+.

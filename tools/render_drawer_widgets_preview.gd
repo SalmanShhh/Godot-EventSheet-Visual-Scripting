@@ -36,6 +36,13 @@ func _init() -> void:
 	bar.set_value(65.0)
 	col.add_child(bar)
 
+	# min_max
+	col.add_child(_heading("min_max  -  Vector2 range (x = low end, y = high end)"))
+	var range_slider: EventSheetDrawerWidgets.DrawerMinMaxSlider = EventSheetDrawerWidgets.DrawerMinMaxSlider.new(0.0, 60.0)
+	range_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	range_slider.set_value(Vector2(10.0, 40.0))
+	col.add_child(range_slider)
+
 	# vector_dial
 	col.add_child(_heading("vector_dial  -  Vector2 direction + magnitude"))
 	var dial: EventSheetDrawerWidgets.DrawerVectorDial = EventSheetDrawerWidgets.DrawerVectorDial.new(100.0)

@@ -1,10 +1,10 @@
 # Inspector Attributes - Spec
 
-Unity-style (and Odin-Inspector-style) **attributes on exported variables**, mapped onto
+Unity-style rich-inspector **attributes on exported variables**, mapped onto
 what Godot actually supports. Status: **COMPLETE** - the coverage grew beyond these tiers: every remaining @export family (range modifiers, flags, layer grids, file/folder pickers, node-path filters, int enums, storage, category, the password/expression/link custom-hint presets) shipped via `docs/internal/SPEC-full-export-coverage.md`, all byte-gated with plain-language dialog looks. Original tier record: **Tiers 1-2 SHIPPED** (tooltip/group/range/multiline; clamp/on-changed
 setters, Show If / Lock Unless via generated `_validate_property`, static read-only -
-`tests/inspector_attributes_test.gd`); tool buttons SHIPPED; **Tier 3 SHIPPED IN FULL** - all five drawers
-(`progress_bar`, `vector_dial`, `swatch_row`, `texture_preview`, `curve_editor`) via the `eventsheet:<drawer>`
+`tests/inspector_attributes_test.gd`); tool buttons SHIPPED; **Tier 3 SHIPPED IN FULL** - all six drawers
+(`progress_bar`, `min_max`, `vector_dial`, `swatch_row`, `texture_preview`, `curve_editor`) via the `eventsheet:<drawer>`
 marker, each round-tripping into an editable `attributes.drawer` (not a stray `@export_custom` block), with a
 per-type picker + live widget preview in the Variable dialog and four new host value types (Vector2 / Color /
 Texture2D / Curve) - `tests/inspector_drawer_roundtrip_test.gd`. This documents the design so the constraints
@@ -16,7 +16,7 @@ Sheet variables (and behavior-pack properties) already compile to `@export` /
 `@export_enum` / typed declarations. This phase lets the **Variable dialog** attach
 richer *inspector attributes* - range sliders, headers, tooltips, conditional
 visibility, buttons - so sheet-built nodes and behaviors feel as polished in the
-Inspector as hand-tuned Unity/Odin components.
+Inspector as hand-tuned Unity components.
 
 Everything must obey the two standing contracts:
 
@@ -29,12 +29,12 @@ Everything must obey the two standing contracts:
 
 ### Tier 1 - pure annotations (cheap: emit one line, lift one line)
 
-| Unity / Odin | EventSheets attribute | Godot mechanism / emitted code |
+| Unity equivalent | EventSheets attribute | Godot mechanism / emitted code |
 |---|---|---|
 | `[Range(0,100)]` | **Range** (min, max, step, slider) | `@export_range(0, 100, 1)` (+ `or_greater`/`or_less` flags) |
 | `[Min(0)]` | Range with open top | `@export_range(0, 1e10, 0.01, "or_greater")` |
 | `[Tooltip("…")]` | **Tooltip** | `## text` doc comment line above the export - Godot shows it natively as the Inspector tooltip |
-| `[Header("Combat")]` / Odin `[FoldoutGroup]` | **Group / Subgroup / Category** | `@export_group("Combat")`, `@export_subgroup`, `@export_category` |
+| `[Header("Combat")]` / `[FoldoutGroup]` | **Group / Subgroup / Category** | `@export_group("Combat")`, `@export_subgroup`, `@export_category` |
 | `[Multiline]` / `[TextArea]` | **Multiline** | `@export_multiline` |
 | `[HideInInspector]` (still saved) | **Hidden (stored)** | `@export_storage` |
 | Unity file pickers | **File / Dir** (with filter) | `@export_file("*.ogg")`, `@export_dir`, `@export_global_file` |
@@ -50,12 +50,12 @@ Already shipped and folded into this table when the phase lands: **Combo** (enum
 
 ### Tier 2 - generated support code (setters / callbacks / buttons / warnings)
 
-| Unity / Odin | EventSheets attribute | Emitted code |
+| Unity equivalent | EventSheets attribute | Emitted code |
 |---|---|---|
-| Odin `[OnValueChanged("m")]` | **On Changed → sheet function** | `@export var hp: int = 10: set(value): hp = value; _on_hp_changed()` - the target is a sheet function; works in-editor with tool sheets |
-| Odin `[ValidateInput]` / `[MinValue]` clamp | **Clamp / Validate** | setter emitting `clampi`/`clampf` or the validation expression |
-| Odin `[Button("Label")]` | **Tool Button** | `@export_tool_button("Label") var _do_x: Callable = do_x` (Godot 4.4+; gate on engine version, warn otherwise) |
-| Odin `[ShowIf("use_gravity")]` / `[HideIf]` / `[EnableIf]` | **Show If / Read-only If** | generated `_validate_property(property)`: clears `PROPERTY_USAGE_EDITOR` (ShowIf) or sets `PROPERTY_USAGE_READ_ONLY` (EnableIf) when the predicate variable is false. One generated function aggregates all conditions - must stay byte-stable for the lift |
+| `[OnValueChanged("m")]` | **On Changed → sheet function** | `@export var hp: int = 10: set(value): hp = value; _on_hp_changed()` - the target is a sheet function; works in-editor with tool sheets |
+| `[ValidateInput]` / `[MinValue]` clamp | **Clamp / Validate** | setter emitting `clampi`/`clampf` or the validation expression |
+| `[Button("Label")]` | **Tool Button** | `@export_tool_button("Label") var _do_x: Callable = do_x` (Godot 4.4+; gate on engine version, warn otherwise) |
+| `[ShowIf("use_gravity")]` / `[HideIf]` / `[EnableIf]` | **Show If / Read-only If** | generated `_validate_property(property)`: clears `PROPERTY_USAGE_EDITOR` (ShowIf) or sets `PROPERTY_USAGE_READ_ONLY` (EnableIf) when the predicate variable is false. One generated function aggregates all conditions - must stay byte-stable for the lift |
 | `[ReadOnly]` | **Read-only** | `@export_custom(PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT \| PROPERTY_USAGE_READ_ONLY)` |
 | `[RequireComponent(typeof(X))]` | **Requires sibling/child node** | generated `_get_configuration_warnings()` - already half-exists for behavior host checks; extend with per-attribute checks |
 
@@ -77,7 +77,7 @@ external-compile wiring - round-trip-core surgery disproportionate to a re-edita
 data already round-trips losslessly. Revisit if re-editing these in the dialog (vs the script editor) becomes
 a felt need.
 
-### Tier 3 - Odin-level custom drawers (EditorInspectorPlugin) - SHIPPED IN FULL
+### Tier 3 - fully custom drawers (EditorInspectorPlugin) - SHIPPED IN FULL
 
 A single `EditorInspectorPlugin` (`addons/eventsheet/editor/attribute_drawers.gd`, registered in
 `eventforge/plugin.gd`) recognizes an `@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>")` hint string
@@ -162,10 +162,10 @@ a String - same philosophy as the existing syntax-error prevention).
 ## Out of scope (honest skips)
 
 - Unity `[ExecuteInEditMode]` → already covered by **tool sheets**.
-- Odin serialized dictionaries/polymorphic fields → Godot exports typed
+- Serialized dictionaries/polymorphic fields → Godot exports typed
   Dictionary/Array natively (already shipped as collections).
 - Attribute *inheritance* across sheets → follows the include rules, nothing bespoke.
-- Custom property *types* (Odin value drawers for arbitrary classes) → Godot wants
+- Custom property *types* (value drawers for arbitrary classes) → Godot wants
   `Resource` subclasses for that; map via a doc recipe, not a feature.
 
 ## Phasing (all delivered)

@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - Inspector Designer P1: the min-max range slider drawer
+
+- **A sixth Inspector drawer, `min_max`**: a Vector2 shown as ONE track with two
+  draggable handles - the variable's `x` is the low end, `y` the high end. Spawn
+  intervals, damage ranges, zoom bounds: "between A and B" as a single control instead
+  of two disconnected number boxes. Same seams as the other five: an
+  `eventsheet:min_max:<min>:<max>` marker on `@export_custom` (plain field without the
+  plugin - parity untouched), bounds from the dialog's Range, verify-gated lift back
+  into an editable `attributes.drawer`, live widget preview in the Variable dialog and
+  the Inspector preview card. Vector2 is the first type to host TWO drawers (dial +
+  range), so the "Show as" picker and its reopen re-select now handle a list.
+  First slice of docs/internal/SPEC-inspector-designer.md; pinned in
+  tests/inspector_drawer_roundtrip_test.gd.
+- Docs sweep alongside: the drawers guide gained the Min-max range section, and stale
+  third-party product naming was removed from docs and code comments.
+
 ### Added - 2D overlap queries: "what is HERE right now", no Area2D needed
 
 - Three one-shot query actions in the new **Overlap 2D** category: **Query Bodies At
@@ -3116,7 +3132,7 @@ current. Structure, hygiene and review actions only:
   vocabulary reuses existing span tokens.)
 
 ### Inspector attributes Tier 3 (custom drawers) + bug sweep 8
-- **Custom drawers** (the Odin-cosmetics tier): pick *Progress bar* in the Variable
+- **Custom drawers** (the cosmetics tier): pick *Progress bar* in the Variable
   dialog and the Inspector renders the value as a bar (range-aware). Mechanism: the
   compiler bakes an `eventsheet:progress_bar:<min>:<max>` marker into
   `@export_custom`, and one `EditorInspectorPlugin` recognizes it - **without the
@@ -3148,7 +3164,7 @@ current. Structure, hygiene and review actions only:
 - Covered by `tests/live_values_test.gd` (11 assertions).
 
 ### Tool buttons + MCP policy awareness
-- **Tool buttons** (Odin's `[Button]`): give a sheet function a *Tool Button Label*
+- **Tool buttons** (the classic `[Button]`): give a sheet function a *Tool Button Label*
   and the Inspector shows a clickable button running it
   (`@export_tool_button("Label") var _btn_x: Callable = x`, Godot 4.4+). Non-@tool
   sheets get a compile warning pointing at the Sheet Type toggle - the button needs a
@@ -3219,7 +3235,7 @@ current. Structure, hygiene and review actions only:
   project size and the anti-"addon hell" rationale (bake-at-compile, shallow chains,
   collision warnings, export bundling).
 
-### Inspector attributes, Tier 1 (Unity/Odin-style, the Godot way)
+### Inspector attributes, Tier 1 (Unity-style, the Godot way)
 - Exported globals can now carry **Tooltip** (emitted as the `##` doc comment Godot
   shows natively on hover), **Group** (`@export_group` Inspector sections), **Range**
   (`@export_range` sliders on int/float) and **Multiline** (`@export_multiline` on
@@ -3257,7 +3273,7 @@ current. Structure, hygiene and review actions only:
   jam-ready, scales with the project).
 - Covered by `tests/node_picker_test.gd` (10 assertions).
 
-### Spec: Inspector attributes (Unity/Odin-style, the Godot way)
+### Spec: Inspector attributes (Unity-style, the Godot way)
 - `docs/INSPECTOR-ATTRIBUTES-SPEC.md` - design for Range/Tooltip/Group/Multiline/
   Show-If/On-Changed/Tool-Button/Read-only attributes on sheet variables, tiered by
   mechanism (pure annotations → generated setters/`_validate_property` →

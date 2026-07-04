@@ -8,6 +8,7 @@
 #
 # Drawers + marker forms:
 #   progress_bar   eventsheet:progress_bar:<min>:<max>   int / float
+#   min_max        eventsheet:min_max:<min>:<max>        Vector2 (x = low end, y = high end)
 #   vector_dial    eventsheet:vector_dial:<max>          Vector2
 #   swatch_row     eventsheet:swatch_row                 Color
 #   texture_preview eventsheet:texture_preview           Texture2D / String (path)
@@ -29,6 +30,11 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			if type != TYPE_INT and type != TYPE_FLOAT:
 				return false
 			add_property_editor(name, ProgressBarProperty.new(float(drawer.get("min", 0.0)), float(drawer.get("max", 100.0))))
+			return true
+		"min_max":
+			if type != TYPE_VECTOR2:
+				return false
+			add_property_editor(name, MinMaxSliderProperty.new(float(drawer.get("min", 0.0)), float(drawer.get("max", 100.0))))
 			return true
 		"vector_dial":
 			if type != TYPE_VECTOR2:
@@ -103,6 +109,24 @@ class ProgressBarProperty:
 
 	func _update_property() -> void:
 		_bar.set_value(float(get_edited_object().get(get_edited_property())))
+
+
+## Vector2 min-max range: drag either handle to set the low (x) / high (y) end.
+class MinMaxSliderProperty:
+	extends EditorProperty
+	var _slider: EventSheetDrawerWidgets.DrawerMinMaxSlider
+
+	func _init(min_value: float, max_value: float) -> void:
+		_slider = EventSheetDrawerWidgets.DrawerMinMaxSlider.new(min_value, max_value)
+		_slider.value_changed.connect(_on_changed)
+		add_child(_slider)
+		add_focusable(_slider)
+
+	func _on_changed(v: Vector2) -> void:
+		emit_changed(get_edited_property(), v)
+
+	func _update_property() -> void:
+		_slider.set_value(get_edited_object().get(get_edited_property()))
 
 
 ## Vector2 dial: drag the handle to set direction + magnitude.

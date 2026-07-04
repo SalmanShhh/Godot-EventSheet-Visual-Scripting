@@ -70,8 +70,8 @@ These mechanisms already ship. A new disclosed surface should be built from this
    auto-opens when the edited variable already carries attributes.
 4. **Type-gated contextual rows** (`_refresh_contextual_rows`) - Options/Range/Multiline/Clamp show only for
    the types that can use them; re-run on every type change.
-5. **Per-type drawer picker** (`_rebuild_drawer_options` / `_drawer_kind_for_type`) - offers *only* the one
-   drawer the current type can host, and hides entirely for types with none.
+5. **Per-type drawer picker** (`_rebuild_drawer_options` / `_drawer_kinds_for_type`) - offers *only* the
+   drawers the current type can host, and hides entirely for types with none.
 6. **Self-hiding live preview** (`_refresh_drawer_preview`) - the drawer preview box materializes only when a
    drawer is selected.
 7. **Modal sub-editor** (`_build_items_window`) - the per-line Array/Dictionary editor lives in its own

@@ -141,6 +141,8 @@ static func _widget_phrase(attributes: Dictionary) -> String:
 			return "shown as a progress bar"
 		"vector_dial":
 			return "shown as a direction dial"
+		"min_max":
+			return "shown as a min-max range slider"
 		"swatch_row":
 			return "shown as color swatches"
 		"texture_preview":
@@ -194,6 +196,12 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		return _ignored(swatches)
 	if drawer_kind == "vector_dial":
 		return _ignored(_DialPreview.new())
+	if drawer_kind == "min_max":
+		var range_slider := EventSheetDrawerWidgets.DrawerMinMaxSlider.new(0.0, 100.0)
+		range_slider.editable = false
+		range_slider.set_value(Vector2(25.0, 75.0))
+		range_slider.custom_minimum_size = Vector2(120.0, 18.0)
+		return _ignored(range_slider)
 	if drawer_kind == "texture_preview":
 		var texture_box := ColorRect.new()
 		texture_box.color = Color(0.45, 0.45, 0.5, 0.6)

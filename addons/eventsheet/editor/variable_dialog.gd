@@ -735,8 +735,8 @@ func open_for_edit(
 	_refresh_contextual_rows()
 	# Re-select the drawer the variable already uses (after _refresh_contextual_rows rebuilt the per-type options).
 	var existing_drawer: String = str(existing_attributes.get("drawer", ""))
-	if not existing_drawer.is_empty() and _attr_drawer_option.item_count > 1 and str(_attr_drawer_option.get_item_metadata(1)) == existing_drawer:
-		_attr_drawer_option.select(1)
+	if not existing_drawer.is_empty() and _attr_drawer_option.item_count > 1:
+		_select_drawer_kind(existing_drawer)
 		_refresh_drawer_preview()
 	_type_option.disabled = lock_type
 	_type_help.visible = lock_type
@@ -997,8 +997,8 @@ func _refresh_contextual_rows() -> void:
 	if _attr_range_modifier_row != null:
 		_attr_range_modifier_row.visible = numeric
 	_rebuild_look_options(type_name)
-	# The drawer picker offers only the one drawer the current type can host (or hides when there is none).
-	_rebuild_drawer_options(_drawer_kind_for_type(type_name))
+	# The drawer picker offers the drawers the current type can host (or hides when there are none).
+	_rebuild_drawer_options(_drawer_kinds_for_type(type_name))
 	_refresh_drawer_preview()
 	_refresh_clamp_gate()
 	_refresh_ships_as()
@@ -1260,20 +1260,21 @@ func _refresh_inspector_preview(shown_name: String, type_name: String, folded_at
 	_inspector_preview_card.update_preview(shown_name, type_name, default_text, card_attributes, exported, constant)
 
 
-## The single drawer kind a variable type can host (or "" - most types host no drawer).
-static func _drawer_kind_for_type(type_name: String) -> String:
+## The drawer kinds a variable type can host (empty for most types). Vector2 hosts two: a direction
+## dial (the vector as an arrow) and a min-max range slider (x = low end, y = high end).
+static func _drawer_kinds_for_type(type_name: String) -> PackedStringArray:
 	match type_name:
 		"int", "float":
-			return "progress_bar"
+			return PackedStringArray(["progress_bar"])
 		"Vector2":
-			return "vector_dial"
+			return PackedStringArray(["vector_dial", "min_max"])
 		"Color":
-			return "swatch_row"
+			return PackedStringArray(["swatch_row"])
 		"Texture2D":
-			return "texture_preview"
+			return PackedStringArray(["texture_preview"])
 		"Curve":
-			return "curve_editor"
-	return ""
+			return PackedStringArray(["curve_editor"])
+	return PackedStringArray()
 
 
 ## Human label for the drawer option entry.
@@ -1283,6 +1284,8 @@ static func _drawer_label_for_kind(kind: String) -> String:
 			return "Progress bar"
 		"vector_dial":
 			return "Direction dial"
+		"min_max":
+			return "Min-max range"
 		"swatch_row":
 			return "Swatch row"
 		"texture_preview":
@@ -1302,22 +1305,32 @@ func _selected_drawer_kind() -> String:
 	return str(meta) if meta != null else ""
 
 
-## Rebuilds the drawer OptionButton to offer Default + (when the type hosts one) its single drawer, preserving
-## the current choice when the kind is unchanged so a refresh doesn't silently reset the user's selection.
-func _rebuild_drawer_options(kind: String) -> void:
+## Rebuilds the drawer OptionButton to offer Default + every drawer the type hosts, preserving the current
+## choice when it is still offered so a refresh doesn't silently reset the user's selection.
+func _rebuild_drawer_options(kinds: PackedStringArray) -> void:
 	if _attr_drawer_option == null:
 		return
 	var previous: String = _selected_drawer_kind()
 	_attr_drawer_option.clear()
 	_attr_drawer_option.add_item("Default field")
-	if not kind.is_empty():
+	for kind: String in kinds:
 		_attr_drawer_option.add_item(_drawer_label_for_kind(kind))
-		_attr_drawer_option.set_item_metadata(1, kind)
+		_attr_drawer_option.set_item_metadata(_attr_drawer_option.item_count - 1, kind)
 	# Hide the whole "Show as" row (label + option) for types with no drawer, not just the OptionButton.
 	var show_row: Node = _attr_drawer_option.get_parent()
 	if show_row is Control:
-		(show_row as Control).visible = not kind.is_empty()
-	_attr_drawer_option.select(1 if (not kind.is_empty() and previous == kind) else 0)
+		(show_row as Control).visible = not kinds.is_empty()
+	_select_drawer_kind(previous)
+
+
+## Selects the option whose metadata matches `kind` (Default when absent) - shared by the rebuild's
+## choice-preserve and the reopen path, so both survive a type hosting more than one drawer.
+func _select_drawer_kind(kind: String) -> void:
+	for i: int in range(1, _attr_drawer_option.item_count):
+		if str(_attr_drawer_option.get_item_metadata(i)) == kind:
+			_attr_drawer_option.select(i)
+			return
+	_attr_drawer_option.select(0)
 
 
 ## Forgiving Range parse, shared by the apply (_on_confirmed) and the preview (_parse_range_bounds) so they
@@ -1387,7 +1400,7 @@ func _refresh_drawer_preview() -> void:
 	match kind:
 		"vector_dial":
 			caption.text = "Drawer preview · reach %s" % _format_bound(bounds["max"])
-		"progress_bar":
+		"progress_bar", "min_max":
 			caption.text = "Drawer preview · %s–%s" % [_format_bound(bounds["min"]), _format_bound(bounds["max"])]
 		_:
 			caption.text = "Drawer preview"
@@ -1409,6 +1422,12 @@ func _make_drawer_preview_widget(kind: String) -> Control:
 			bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			bar.set_value(lerpf(bounds["min"], bounds["max"], 0.65))
 			return bar
+		"min_max":
+			var slider: EventSheetDrawerWidgets.DrawerMinMaxSlider = EventSheetDrawerWidgets.DrawerMinMaxSlider.new(bounds["min"], bounds["max"])
+			slider.editable = false
+			slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			slider.set_value(Vector2(lerpf(bounds["min"], bounds["max"], 0.25), lerpf(bounds["min"], bounds["max"], 0.75)))
+			return slider
 		"vector_dial":
 			var dial: EventSheetDrawerWidgets.DrawerVectorDial = EventSheetDrawerWidgets.DrawerVectorDial.new(bounds["max"])
 			dial.editable = false

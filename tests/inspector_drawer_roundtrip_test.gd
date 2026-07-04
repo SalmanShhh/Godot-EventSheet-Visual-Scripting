@@ -24,6 +24,12 @@ static func run() -> bool:
 	all_passed = _starts("vector_dial emits its marker (with max magnitude)",
 		_emit_for("Vector2", Vector2(0, 0), {"drawer": "vector_dial", "range": {"max": "150"}}),
 		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:150\") var v: Vector2 = ") and all_passed
+	all_passed = _starts("min_max emits its marker (with bounds)",
+		_emit_for("Vector2", Vector2(10, 40), {"drawer": "min_max", "range": {"min": "0", "max": "60"}}),
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:min_max:0:60\") var v: Vector2 = ") and all_passed
+	all_passed = _starts("min_max defaults its bounds to 0..100 without a range",
+		_emit_for("Vector2", Vector2(0, 0), {"drawer": "min_max"}),
+		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:min_max:0:100\") var v: Vector2 = ") and all_passed
 	all_passed = _starts("swatch_row emits its marker",
 		_emit_for("Color", Color(1, 1, 1, 1), {"drawer": "swatch_row"}),
 		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:swatch_row\") var v: Color = ") and all_passed
@@ -37,6 +43,8 @@ static func run() -> bool:
 	# --- Type-gating: a drawer on an incompatible type emits no marker (plain @export, no corruption). ---
 	all_passed = _eq("progress_bar on Vector2 emits no marker",
 		_emit_for("Vector2", Vector2(0, 0), {"drawer": "progress_bar"}).contains("eventsheet:"), false) and all_passed
+	all_passed = _eq("min_max on float emits no marker",
+		_emit_for("float", 1.0, {"drawer": "min_max"}).contains("eventsheet:"), false) and all_passed
 	all_passed = _eq("swatch_row on int emits no marker",
 		_emit_for("int", 0, {"drawer": "swatch_row"}).contains("eventsheet:"), false) and all_passed
 	all_passed = _eq("curve_editor on Color emits no marker",
@@ -71,16 +79,29 @@ static func run() -> bool:
 	# the drawer extracts) - not just emit.
 	all_passed = _roundtrip("vector_dial", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:150\") var aim: Vector2 = Vector2(0.0, 0.0)", "aim", "vector_dial") and all_passed
 	all_passed = _roundtrip("swatch_row", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:swatch_row\") var hue: Color = Color(1.0, 1.0, 1.0, 1.0)", "hue", "swatch_row") and all_passed
+	all_passed = _roundtrip("min_max", "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:min_max:0:60\") var spawn_gap: Vector2 = Vector2(10.0, 40.0)", "spawn_gap", "min_max") and all_passed
 
-	# --- Dialog: the per-type picker offers exactly the one drawer each host type can use. ---
-	all_passed = _eq("int hosts the progress_bar drawer", VariableDialog._drawer_kind_for_type("int"), "progress_bar") and all_passed
-	all_passed = _eq("float hosts the progress_bar drawer", VariableDialog._drawer_kind_for_type("float"), "progress_bar") and all_passed
-	all_passed = _eq("Vector2 hosts the vector_dial drawer", VariableDialog._drawer_kind_for_type("Vector2"), "vector_dial") and all_passed
-	all_passed = _eq("Color hosts the swatch_row drawer", VariableDialog._drawer_kind_for_type("Color"), "swatch_row") and all_passed
-	all_passed = _eq("Texture2D hosts the texture_preview drawer", VariableDialog._drawer_kind_for_type("Texture2D"), "texture_preview") and all_passed
-	all_passed = _eq("Curve hosts the curve_editor drawer", VariableDialog._drawer_kind_for_type("Curve"), "curve_editor") and all_passed
-	all_passed = _eq("String hosts no drawer (combo/multiline instead)", VariableDialog._drawer_kind_for_type("String"), "") and all_passed
-	all_passed = _eq("Array hosts no drawer", VariableDialog._drawer_kind_for_type("Array"), "") and all_passed
+	# min_max recovers its bounds into the range dict the emitter reads, and re-emits byte-identically.
+	var mm_line: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:min_max:0:60\") var spawn_gap: Vector2 = Vector2(10.0, 40.0)"
+	var mm_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + mm_line + "\n")
+	var mm: LocalVariable = _find(mm_sheet, "spawn_gap")
+	all_passed = _eq("min_max recovers its bounds into range",
+		(mm.attributes as Dictionary).get("range") if mm != null else null, {"min": "0", "max": "60"}) and all_passed
+	if mm != null:
+		all_passed = _eq("a min_max var re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(mm), mm_line) and all_passed
+
+	# --- Dialog: the per-type picker offers exactly the drawers each host type can use. ---
+	all_passed = _eq("int hosts the progress_bar drawer", VariableDialog._drawer_kinds_for_type("int"), PackedStringArray(["progress_bar"])) and all_passed
+	all_passed = _eq("float hosts the progress_bar drawer", VariableDialog._drawer_kinds_for_type("float"), PackedStringArray(["progress_bar"])) and all_passed
+	all_passed = _eq("Vector2 hosts the dial AND the min-max slider", VariableDialog._drawer_kinds_for_type("Vector2"), PackedStringArray(["vector_dial", "min_max"])) and all_passed
+	all_passed = _eq("Color hosts the swatch_row drawer", VariableDialog._drawer_kinds_for_type("Color"), PackedStringArray(["swatch_row"])) and all_passed
+	all_passed = _eq("Texture2D hosts the texture_preview drawer", VariableDialog._drawer_kinds_for_type("Texture2D"), PackedStringArray(["texture_preview"])) and all_passed
+	all_passed = _eq("Curve hosts the curve_editor drawer", VariableDialog._drawer_kinds_for_type("Curve"), PackedStringArray(["curve_editor"])) and all_passed
+	all_passed = _eq("String hosts no drawer (combo/multiline instead)", VariableDialog._drawer_kinds_for_type("String"), PackedStringArray()) and all_passed
+	all_passed = _eq("Array hosts no drawer", VariableDialog._drawer_kinds_for_type("Array"), PackedStringArray()) and all_passed
+	all_passed = _eq("the min-max drawer label reads 'Min-max range'",
+		VariableDialog._drawer_label_for_kind("min_max"), "Min-max range") and all_passed
 
 	# Dialog default-field round-trip: the EXACT text the dialog displays for a value must parse back to that
 	# value. This drives _default_display_text → _parse_default (the real edit cycle). Before the fix the

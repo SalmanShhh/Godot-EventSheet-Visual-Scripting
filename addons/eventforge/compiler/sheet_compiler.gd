@@ -2149,6 +2149,11 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			if type_name != "int" and type_name != "float":
 				return ""
 			marker = "eventsheet:progress_bar:%s:%s" % [str(bounds.get("min", "0")), str(bounds.get("max", "100"))]
+		"min_max":
+			# Vector2 as a range: x = low end, y = high end; the bounds are the slider's track.
+			if type_name != "Vector2":
+				return ""
+			marker = "eventsheet:min_max:%s:%s" % [str(bounds.get("min", "0")), str(bounds.get("max", "100"))]
 		"vector_dial":
 			if type_name != "Vector2":
 				return ""

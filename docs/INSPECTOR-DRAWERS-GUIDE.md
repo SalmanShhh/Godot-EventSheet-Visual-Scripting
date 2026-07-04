@@ -1,6 +1,6 @@
 # Inspector Drawers & Export Options Guide
 
-Make your event-sheet variables show up as **rich, designer-friendly controls in Godot's Inspector**: sliders, direction dials, colour swatches, texture thumbnails, and inline curves, plus every common `@export` option (ranges, dropdowns, multiline text, grouping, tooltips, read-only, alpha-free colours). It is the Odin-Inspector-style experience for Godot, authored entirely from the **Variable dialog** with no code, and it compiles to plain `@export` GDScript that round-trips losslessly. A teammate who never opens the event sheet still gets a tidy, tuned Inspector to play with.
+Make your event-sheet variables show up as **rich, designer-friendly controls in Godot's Inspector**: sliders, direction dials, colour swatches, texture thumbnails, and inline curves, plus every common `@export` option (ranges, dropdowns, multiline text, grouping, tooltips, read-only, alpha-free colours). It is a rich-inspector experience for Godot, authored entirely from the **Variable dialog** with no code, and it compiles to plain `@export` GDScript that round-trips losslessly. A teammate who never opens the event sheet still gets a tidy, tuned Inspector to play with.
 
 ![The five Inspector drawers](images/inspector-drawers.png)
 
@@ -9,7 +9,7 @@ Make your event-sheet variables show up as **rich, designer-friendly controls in
 1. [Scenarios Where This Excels](#1-scenarios-where-this-excels)
 2. [Core Concepts](#2-core-concepts)
 3. [Getting Started](#3-getting-started)
-4. [The Drawers (the Odin-style controls)](#4-the-drawers-the-odin-style-controls)
+4. [The Drawers (the rich controls)](#4-the-drawers-the-rich-controls)
 5. [The Export Options](#5-the-export-options)
 6. [The Behaviours (Tier-2 setters)](#6-the-behaviours-tier-2-setters)
 7. [Reference: every option and the GDScript it emits](#7-reference-every-option-and-the-gdscript-it-emits)
@@ -44,7 +44,7 @@ Make your event-sheet variables show up as **rich, designer-friendly controls in
 | Term | What it means |
 |---|---|
 | **Variable** | A value your sheet owns (a global or a sheet-level variable). Exporting it puts it on the Inspector. |
-| **Drawer** | A rich Inspector control (slider / dial / swatches / texture / curve). One per type, picked under "Show as". |
+| **Drawer** | A rich Inspector control (slider / range / dial / swatches / texture / curve), picked under "Show as". |
 | **Export option** | A native Godot `@export_*` flavour (range, multiline, dropdown, colour-no-alpha, group, read-only). |
 | **Behaviour** | A generated setter or property rule (clamp, on-changed callback, show-if, lock-unless). |
 | **Parity** | The rule that generated games run identically with or without the editor plugin. |
@@ -94,9 +94,9 @@ Grouping without the drag gesture: right-click a variable row (or a multi-select
 and pick **Group Under a Heading...** - the same folder the drag creates, with the same
 naming popup.
 
-## 4. The Drawers (the Odin-style controls)
+## 4. The Drawers (the rich controls)
 
-A **drawer** replaces a variable's plain Inspector field with a richer control. Each variable type hosts exactly one drawer, offered in the **"Show as"** dropdown (the default is always "Default field", so a drawer is opt-in). All five are shown in the image at the top of this guide.
+A **drawer** replaces a variable's plain Inspector field with a richer control, offered in the **"Show as"** dropdown for the types that can host one (the default is always "Default field", so a drawer is opt-in). Most types host one drawer; `Vector2` hosts two (the dial and the min-max range). All six are shown in the image at the top of this guide.
 
 ### Progress bar (int / float)
 
@@ -110,6 +110,19 @@ A **drawer** replaces a variable's plain Inspector field with a richer control. 
 ```
 
 **Use case.** A `stamina` value designers drain-test by dragging, or a `volume` from 0 to 1 with step `0.05`.
+
+### Min-max range (Vector2)
+
+**What it does.** One track with two draggable handles: the variable's `x` is the low end and `y` the high end. One control for "a range", instead of two disconnected number fields.
+
+**How to use it.** Choose **Show as: Min-max range** on a `Vector2`. The slider's track bounds come from the **Range** (for example `0, 60`).
+
+**Emits:**
+```gdscript
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:min_max:0:60") var spawn_gap: Vector2 = Vector2(10, 40)
+```
+
+**Use case.** A `spawn_gap` of 10-40 seconds, a `damage_range` rolled per hit, or camera `zoom_bounds` - anywhere the design says "between A and B".
 
 ### Direction dial (Vector2)
 
@@ -307,6 +320,7 @@ func _validate_property(property: Dictionary) -> void:
 | Easing curve | More options | float | `@export_exp_easing` |
 | Placeholder | More options | String | `@export_placeholder("hint")` |
 | Show as: Progress bar | More options | int / float | `@export_custom(... "eventsheet:progress_bar:min:max")` |
+| Show as: Min-max range | More options | Vector2 | `@export_custom(... "eventsheet:min_max:min:max")` |
 | Show as: Direction dial | More options | Vector2 | `@export_custom(... "eventsheet:vector_dial:reach")` |
 | Show as: Swatch row | More options | Color | `@export_custom(... "eventsheet:swatch_row")` |
 | Show as: Texture preview | More options | Texture2D | `@export_custom(... "eventsheet:texture_preview")` |
@@ -440,8 +454,8 @@ Variable: current_combo  (Number)
 ## 9. Tips and Common Mistakes
 
 - **Tick "Editable in the Inspector" first.** The drawers and most options only appear for an exported variable; they have no effect on a private value.
-- **A drawer needs its type.** Each drawer is offered only for the type it fits (progress bar for numbers, dial for Vector2, swatch for Color, and so on). Change the type and the "Show as" list updates.
-- **Range feeds the drawers.** The progress bar reads its bounds and the dial reads its reach from the **Range**, so set the Range before (or alongside) the drawer.
+- **A drawer needs its type.** Each drawer is offered only for the type it fits (progress bar for numbers, dial or min-max range for Vector2, swatch for Color, and so on). Change the type and the "Show as" list updates.
+- **Range feeds the drawers.** The progress bar and the min-max slider read their bounds, and the dial its reach, from the **Range**, so set the Range before (or alongside) the drawer.
 - **No alpha vs the swatch drawer.** They both target Color and are mutually exclusive on emit. To use **No alpha**, leave "Show as" on **Default field**; to use the **Swatch row**, leave No alpha unticked.
 - **Drawers degrade, they never break.** Without the editor plugin (or in an exported game) every drawer becomes a plain field. Do not rely on a drawer for runtime behaviour; it is an editor convenience only.
 - **Clamp needs a Range.** "Clamp to range" only generates its setter when the variable is numeric and has a Range; without one it is ignored.

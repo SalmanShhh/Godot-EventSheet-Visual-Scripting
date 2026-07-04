@@ -319,9 +319,9 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 	var saved_attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
 	var attrs: Dictionary = (lifted.attributes as Dictionary).duplicate() if lifted.attributes is Dictionary else {}
 	attrs["drawer"] = parts[1]
-	# progress_bar carries min:max, vector_dial carries a single max magnitude - recovered into the same
-	# `range` dict the emitter reads, so the marker re-emits byte-for-byte.
-	if parts[1] == "progress_bar" and parts.size() >= 4:
+	# progress_bar / min_max carry min:max, vector_dial carries a single max magnitude - recovered into the
+	# same `range` dict the emitter reads, so the marker re-emits byte-for-byte.
+	if (parts[1] == "progress_bar" or parts[1] == "min_max") and parts.size() >= 4:
 		attrs["range"] = {"min": parts[2], "max": parts[3]}
 	elif parts[1] == "vector_dial" and parts.size() >= 3:
 		attrs["range"] = {"max": parts[2]}
