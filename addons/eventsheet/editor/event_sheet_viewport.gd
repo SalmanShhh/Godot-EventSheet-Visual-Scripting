@@ -133,6 +133,7 @@ var _drag_preview_helper: ViewportDragPreviewHelper = ViewportDragPreviewHelper.
 # descriptors, non-event row builders). See interaction/viewport_row_builder.gd. The methods
 # below keep one-line delegates so internal STAY callers and tests reach it by the original names.
 var _row_builder: ViewportRowBuilder = ViewportRowBuilder.new()
+var _folding: ViewportFolding = ViewportFolding.new()  # fold gestures + region fold persistence (interaction/viewport_folding.gd)
 var _ace_registry: EventSheetACERegistry = EventSheetACERegistry.new()
 var _sheet: EventSheetResource = null
 var _editor_style: EventSheetEditorStyle = EventSheetEditorStyle.new()
@@ -208,6 +209,7 @@ var _box_select_current: Vector2 = Vector2.ZERO
 func _init() -> void:
 	_configure_viewport()
 	_row_builder.init(self)
+	_folding.init(self)
 	_row_metrics_helper.init(self)
 	_live_values_helper.init(self)
 	_tooltip_helper.init(self)
@@ -272,56 +274,16 @@ func set_sheet(sheet: EventSheetResource) -> void:
 var persisted_region_folds: Dictionary = {}
 
 
-func _sheet_persist_key() -> String:
-	if _sheet == null:
-		return ""
-	var sheet_path: String = str(_sheet.external_source_path)
-	if sheet_path.is_empty():
-		sheet_path = _sheet.resource_path
-	return sheet_path
-
-
 func _load_persisted_region_folds() -> void:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return
-	var settings: EditorSettings = EditorInterface.get_editor_settings()
-	var sheet_key: String = _sheet_persist_key()
-	if settings == null or sheet_key.is_empty():
-		return
-	var all_folds: Dictionary = settings.get_project_metadata("eventsheets", "region_folds", {})
-	persisted_region_folds = all_folds.get(sheet_key, {})
+	_folding.load_persisted_region_folds()
 
 
 func _persist_region_folds() -> void:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return
-	var settings: EditorSettings = EditorInterface.get_editor_settings()
-	var sheet_key: String = _sheet_persist_key()
-	if settings == null or sheet_key.is_empty():
-		return
-	var all_folds: Dictionary = settings.get_project_metadata("eventsheets", "region_folds", {})
-	var snapshot: Dictionary = region_fold_snapshot()
-	if snapshot.is_empty():
-		all_folds.erase(sheet_key)
-	else:
-		all_folds[sheet_key] = snapshot
-	settings.set_project_metadata("eventsheets", "region_folds", all_folds)
-	persisted_region_folds = snapshot
+	_folding.persist_region_folds()
 
 
-## The regions currently folded, by stable key - only folded entries are stored
-## (open is the default), so an all-open sheet stores nothing at all.
 func region_fold_snapshot() -> Dictionary:
-	var snapshot: Dictionary = {}
-	_collect_region_folds(_root_rows, snapshot)
-	return snapshot
-
-
-func _collect_region_folds(rows: Array[EventRowData], snapshot: Dictionary) -> void:
-	for row_data: EventRowData in rows:
-		if row_data.folded and row_data.has_meta("region_fold_key"):
-			snapshot[str(row_data.get_meta("region_fold_key"))] = true
-		_collect_region_folds(row_data.children, snapshot)
+	return _folding.region_fold_snapshot()
 
 
 func set_ace_registry(ace_registry: EventSheetACERegistry) -> void:
@@ -673,14 +635,7 @@ func zoom_out(anchor_position: Vector2 = Vector2(-1.0, -1.0)) -> void:
 
 
 func toggle_row_fold_by_uid(row_uid: String) -> bool:
-	if row_uid.is_empty():
-		return false
-	for index in range(_flat_rows.size()):
-		var row_data: EventRowData = _row_at(index)
-		if row_data != null and row_data.row_uid == row_uid:
-			_toggle_row_fold(index)
-			return true
-	return false
+	return _folding.toggle_row_fold_by_uid(row_uid)
 
 
 func get_visible_row_range() -> Vector2i:
@@ -1246,51 +1201,15 @@ func _draw_region_bubbles(width: float) -> void:
 ## Regions / Unfold All Regions). include_groups extends the sweep to event
 ## groups for the whole-sheet Fold Everything command.
 func set_region_folds(folded: bool, include_groups: bool = false) -> void:
-	_set_folds_in(_root_rows, folded, include_groups)
-	_refresh_rows()
-	_persist_region_folds()
+	_folding.set_region_folds(folded, include_groups)
 
 
-func _set_folds_in(rows: Array[EventRowData], folded: bool, include_groups: bool) -> void:
-	for row_data: EventRowData in rows:
-		if row_data.children.is_empty():
-			continue
-		var foldable: bool = _row_builder._is_region_row(row_data) \
-			or (include_groups and row_data.source_resource is EventGroup)
-		if foldable:
-			row_data.folded = folded
-			_fold_state[row_data.row_uid] = folded
-		_set_folds_in(row_data.children, folded, include_groups)
-
-
-## The flat index of the innermost paired region whose visible range contains
-## flat_index (the opener itself counts as inside), or -1. Walks backwards, so
-## the first covering opener found is the innermost.
 func _enclosing_region_flat_index(flat_index: int) -> int:
-	if flat_index < 0 or flat_index >= _flat_rows.size():
-		return -1
-	for candidate_index in range(flat_index, -1, -1):
-		var candidate: EventRowData = _flat_rows[candidate_index].get("row")
-		if candidate == null or candidate.children.is_empty():
-			continue
-		if not _row_builder._is_region_row(candidate):
-			continue
-		if candidate_index + _visible_descendant_count(candidate) >= flat_index:
-			return candidate_index
-	return -1
+	return _folding.enclosing_region_flat_index(flat_index)
 
 
-## How many of a row's descendants are currently visible in the flat list (its
-## children run contiguously right after it in flatten order; a folded child
-## contributes itself but hides its own subtree).
 func _visible_descendant_count(row_data: EventRowData) -> int:
-	if row_data.folded:
-		return 0
-	var count: int = 0
-	for child: EventRowData in row_data.children:
-		count += 1
-		count += _visible_descendant_count(child)
-	return count
+	return _folding.visible_descendant_count(row_data)
 
 
 ## Event-sheet-style drag ghost: a faint (~0.66 opacity) label of the dragged content following the
@@ -2905,14 +2824,7 @@ func _set_hover_state(row_index: int, span_index: int) -> void:
 
 
 func _toggle_row_fold(row_index: int) -> void:
-	var row_data: EventRowData = _row_at(row_index)
-	if row_data == null or row_data.children.is_empty():
-		return
-	row_data.folded = not row_data.folded
-	_fold_state[row_data.row_uid] = row_data.folded
-	_refresh_rows()
-	if _row_builder._is_region_row(row_data):
-		_persist_region_folds()
+	_folding.toggle_row_fold(row_index)
 
 
 func _begin_edit(row_index: int, span_index: int) -> void:
