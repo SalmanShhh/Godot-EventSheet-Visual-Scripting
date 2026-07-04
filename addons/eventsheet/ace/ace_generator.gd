@@ -28,6 +28,16 @@ var _expose_all_mode: String = ""
 ## property reads/writes must target it ($Provider.prop, retargetable) - writing to an owned
 ## instance would silently change a copy the game never sees.
 var _provider_is_node: bool = false
+## The registered autoload singleton name when the provider script IS an autoload, else "".
+## An autoload is a live global: reflected members must call THE singleton by name - the
+## owned-instance form would spawn a second bus, and the $-node form resolves against the
+## wrong branch of the tree.
+var _autoload_singleton: String = ""
+## The $-path token synthesized node-form templates use. The provider DISPLAY id can carry
+## spaces ("Bus Fixture" from a class_name-less filename) which is not a valid bare $-path
+## and defeats {target} parameterization - so node templates use the class_name, else the
+## PascalCase filename.
+var _provider_node_name: String = ""
 
 
 func generate_from_object(target: Object) -> Array[ACEDefinition]:
@@ -38,7 +48,13 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
 	var source_metadata: Dictionary = _analyzer.parse_source_metadata(script)
 	_expose_all_mode = str(source_metadata.get("expose_all_mode", ""))
 	_provider_is_node = target is Node
+	_autoload_singleton = _autoload_name_for(script)
 	var provider_id: String = _analyzer.get_provider_id(target, source_metadata)
+	_provider_node_name = str(source_metadata.get("class_name", ""))
+	if _provider_node_name.is_empty() and script != null and not script.resource_path.is_empty():
+		_provider_node_name = script.resource_path.get_file().get_basename().to_pascal_case()
+	if _provider_node_name.is_empty():
+		_provider_node_name = provider_id
 	var signal_overrides: Dictionary = source_metadata.get("signals", {})
 	var property_overrides: Dictionary = source_metadata.get("properties", {})
 	var method_overrides: Dictionary = source_metadata.get("methods", {})
@@ -273,13 +289,30 @@ func _build_property_action_definition(provider_id: String, property_name: Strin
 	return definition
 
 
-## The code path a reflected property compiles through: the behavior node for Node
-## providers (and @ace_expose_all(node) providers), the compiler-declared owned
-## instance (__eventsheet_provider_<Class>) for RefCounted/Resource utility classes.
+## The code path a reflected property compiles through: the autoload singleton by name
+## when the provider is one, the behavior node for Node providers (and
+## @ace_expose_all(node) providers), the compiler-declared owned instance
+## (__eventsheet_provider_<Class>) for RefCounted/Resource utility classes.
 func _property_access(provider_id: String, property_name: String) -> String:
+	if not _autoload_singleton.is_empty():
+		return "%s.%s" % [_autoload_singleton, property_name]
 	if _provider_is_node or _expose_all_mode == "node":
-		return "$%s.%s" % [provider_id, property_name]
+		return "$%s.%s" % [_provider_node_name, property_name]
 	return "__eventsheet_provider_%s.%s" % [provider_id, property_name]
+
+
+## The autoload entry whose script path matches this provider script, or "". Resolved per
+## generate_from_object call so the same generator instance serves scans and tests alike.
+static func _autoload_name_for(script: Script) -> String:
+	if script == null or script.resource_path.is_empty():
+		return ""
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var setting_name: String = str(property_info.get("name", ""))
+		if not setting_name.begins_with("autoload/"):
+			continue
+		if str(ProjectSettings.get_setting(setting_name, "")).trim_prefix("*") == script.resource_path:
+			return setting_name.trim_prefix("autoload/")
+	return ""
 
 
 func _build_method_definition(provider_id: String, method_name: String, method_info: Dictionary, overrides: Dictionary) -> ACEDefinition:
@@ -316,14 +349,20 @@ func _build_method_definition(provider_id: String, method_name: String, method_i
 	definition.hint_string = _string_override(overrides, "hint_string", "")
 	definition.widget_hint = _string_override(overrides, "widget_hint", "")
 	definition.category_override = _string_override(overrides, "category_override", "")
-	# @ace_expose_all(node): synthesize the node-targeted call so no per-method @ace_codegen_template is
-	# needed; _parameterize_node_target (inside _apply_template_overrides) then turns the leading
-	# $Provider. into a configurable {target} "On node" param. An explicit override still wins below.
-	if _expose_all_mode == "node" and str(definition.metadata.get("codegen_template", "")).is_empty():
+	# A registered autoload is a live global: synthesize the singleton call by name - the
+	# owned-instance bake would spawn a SECOND bus, and the $-node form resolves the wrong
+	# branch. Otherwise, @ace_expose_all(node) synthesizes the node-targeted call so no
+	# per-method @ace_codegen_template is needed; _parameterize_node_target (inside
+	# _apply_template_overrides) then turns the leading $Provider. into a configurable
+	# {target} "On node" param. An explicit override still wins below.
+	if str(definition.metadata.get("codegen_template", "")).is_empty():
 		var __arg_ids: PackedStringArray = PackedStringArray()
 		for __pd in parameter_definitions:
 			__arg_ids.append("{%s}" % str((__pd as Dictionary).get("id", "")))
-		definition.metadata["codegen_template"] = "$%s.%s(%s)" % [provider_id, method_name, ", ".join(__arg_ids)]
+		if not _autoload_singleton.is_empty():
+			definition.metadata["codegen_template"] = "%s.%s(%s)" % [_autoload_singleton, method_name, ", ".join(__arg_ids)]
+		elif _expose_all_mode == "node":
+			definition.metadata["codegen_template"] = "$%s.%s(%s)" % [_provider_node_name, method_name, ", ".join(__arg_ids)]
 	_apply_template_overrides(definition, overrides)
 	return definition
 

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Fixed - autoload providers call THE singleton, never a second copy
+
+- **Template-less methods on an autoload provider used to bake to the owned-instance
+  form** - spawning a second bus whose state the game never reads - and reflected
+  properties baked to the $-node form, which resolves against the wrong branch of the
+  tree. The generator now detects the registration (autoload path match) and
+  synthesizes `<SingletonName>.member` for methods, property writes, and property
+  reads, with no retarget param (you do not retarget a singleton).
+- **Node-form templates no longer break on class_name-less scripts**: the $-default
+  derives from the PascalCase filename ($BusFixture), never the spaced display id
+  ("$Bus Fixture" is not a valid bare node path and silently defeated the {target}
+  parameterization).
+- Pinned by tests/autoload_provider_codegen_test.gd (registered vs unregistered forms).
+
 ### Added - every shipped pack is audited against the ACE provider system, permanently
 
 - **tests/pack_provider_audit_test.gd sweeps every scanned addon script** (the exact
@@ -26,7 +40,7 @@
   Is Reloading). One deliberate vocabulary change: property ACEs moved from the
   inferred "Gameplay" category into the pack's "Weapon" group.
 - **The whole vocabulary is pinned**: tests/weapon_kit_characterization_test.gd freezes
-  all 53 published definitions (id, type, name, category, codegen) so the terse form
+  all 52 published definitions (id, type, name, category, codegen) so the terse form
   provably publishes the same language - and any future row change must be a deliberate,
   changelog-noted decision.
 
