@@ -111,7 +111,7 @@ static func _scope_capture_offender(event: EventRow, actions: Array) -> String:
 ## Right-click action: extract the event's actions into a NAMED reusable Function (the "create
 ## abstraction" gesture). Reachable from an action's menu or the event row menu. Extracts ALL of the
 ## event's actions - turning this event's "do" into one named verb - then prompts for a name and runs the
-## edit undoably. (A future refinement can honour a partial action selection.)
+## edit undoably. A multi-selection of the event's action cells extracts JUST those.
 func extract_to_function_requested() -> void:
 	if _dock._context_row == null or not (_dock._context_row.source_resource is EventRow):
 		_dock._set_status("Right-click an event or one of its actions to extract.", true)
@@ -120,7 +120,21 @@ func extract_to_function_requested() -> void:
 	if event.actions.is_empty():
 		_dock._set_status("That event has no actions to extract into a function.", true)
 		return
+	# A multi-selection of this event's actions extracts JUST those. The subset must be
+	# CONTIGUOUS: the call lands where the first extracted action was, so extracting
+	# around a kept action would silently reorder execution. No action selection (or all
+	# of them) = the whole pile, the original gesture.
 	var to_extract: Array = event.actions.duplicate()
+	var selected_indices: Array = _selected_action_indices(event)
+	if not selected_indices.is_empty() and selected_indices.size() < event.actions.size():
+		for cursor in range(1, selected_indices.size()):
+			if int(selected_indices[cursor]) != int(selected_indices[cursor - 1]) + 1:
+				_dock._set_status("Can't extract a gapped selection - the kept action in the middle would change run order. Select a contiguous run of actions.", true)
+				return
+		var subset: Array = []
+		for action_index: Variant in selected_indices:
+			subset.append(event.actions[int(action_index)])
+		to_extract = subset
 	# Refuse (with the offending name) rather than silently emit a script that won't parse.
 	var captured: String = _scope_capture_offender(event, to_extract)
 	if not captured.is_empty():
@@ -134,6 +148,27 @@ func extract_to_function_requested() -> void:
 			_dock._refresh_functions_list()
 			_dock._mark_dirty("Extracted %d action(s) into a reusable Function - now callable as an ACE (Functions)." % to_extract.size())
 	)
+
+
+## The selected action indices belonging to `event` (sorted, deduped), read from the
+## active view's multi-selection - [] when the selection isn't action cells of this event.
+func _selected_action_indices(event: EventRow) -> Array:
+	var view: EventSheetViewport = _dock._active_view()
+	if view == null:
+		return []
+	var indices: Array = []
+	for entry: Variant in view.get_selected_ace_entries():
+		if not (entry is Dictionary):
+			continue
+		if (entry as Dictionary).get("source_resource") != event:
+			continue
+		if str((entry as Dictionary).get("kind", "")) != "action":
+			continue
+		var action_index: int = int((entry as Dictionary).get("ace_index", -1))
+		if action_index >= 0 and action_index < event.actions.size() and not indices.has(action_index):
+			indices.append(action_index)
+	indices.sort()
+	return indices
 
 
 func do_extract_to_include(path: String, rows: Array[Resource]) -> void:

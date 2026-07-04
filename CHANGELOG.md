@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - Extract to Function honours a partial selection
+
+- Multi-select a run of an event's action cells and Extract All Actions to Function
+  now extracts JUST those, leaving the rest in place with the call where the first
+  extracted action was. The subset must be contiguous - extracting around a kept
+  action would silently reorder execution, so a gapped selection refuses with a
+  status hint. No selection (or all actions) keeps the original whole-pile gesture.
+  Pinned in tests/extract_to_function_test.gd (subset core, selection read-back,
+  gapped refusal).
+
 ### Added - the Anatomy panel's Uses entries jump to the behaviour
 
 - Double-clicking a Uses entry opens that provider's script AS A SHEET - the same

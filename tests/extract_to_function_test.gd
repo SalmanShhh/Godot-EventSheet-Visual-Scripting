@@ -109,6 +109,60 @@ static func run() -> bool:
 	all_passed = _check("scope check is whole-word (speedometer != speed)",
 		EventSheetDock.extract_actions_to_function(sc_sheet, sc_event, sc_event.actions.duplicate(), "use_speed") != null, true) and all_passed
 
+	# ── Partial extraction: a contiguous subset becomes the verb, the rest stays put ──
+	var ps_sheet: EventSheetResource = EventSheetResource.new()
+	var ps_event: EventRow = EventRow.new()
+	ps_event.trigger_provider_id = "Core"
+	ps_event.trigger_id = "OnReady"
+	for _n in range(3):
+		ps_event.actions.append(_queue_free_action())
+	var kept_first: Resource = ps_event.actions[0]
+	ps_sheet.events.append(ps_event)
+	var subset_fn: EventFunction = EventSheetDock.extract_actions_to_function(
+		ps_sheet, ps_event, [ps_event.actions[1], ps_event.actions[2]], "tail pair")
+	all_passed = _check("subset extraction creates the function", subset_fn != null, true) and all_passed
+	all_passed = _check("the kept action stays, followed by the call",
+		ps_event.actions.size() == 2 and ps_event.actions[0] == kept_first
+		and (ps_event.actions[1] as ACEAction).ace_id == "CallFunction", true) and all_passed
+	all_passed = _check("the function body holds the two extracted actions",
+		(subset_fn.events[0] as EventRow).actions.size(), 2) and all_passed
+
+	# ── The request side reads the view's multi-selection; a gapped subset refuses ──
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	var sel_sheet: EventSheetResource = EventSheetResource.new()
+	var sel_event: EventRow = EventRow.new()
+	sel_event.trigger_provider_id = "Core"
+	sel_event.trigger_id = "OnReady"
+	for _n in range(3):
+		sel_event.actions.append(_queue_free_action())
+	sel_sheet.events.append(sel_event)
+	dock.setup(sel_sheet)
+	var view: EventSheetViewport = dock.get_viewport_control()
+	var event_row: EventRowData = null
+	var action_span_by_index: Dictionary = {}
+	for row_index in range(view.get_total_row_count()):
+		var row_data: EventRowData = view._row_at(row_index)
+		if row_data == null or row_data.source_resource != sel_event:
+			continue
+		event_row = row_data
+		for span_index in range(row_data.spans.size()):
+			var metadata: Dictionary = row_data.spans[span_index].metadata
+			if str(metadata.get("kind", "")) == "action":
+				action_span_by_index[int(metadata.get("ace_index", -1))] = span_index
+	all_passed = _check("the harness found the event row and its action spans",
+		event_row != null and action_span_by_index.size() == 3, true) and all_passed
+	if event_row != null:
+		dock._context_row = event_row
+		view._selected_span_indices[event_row.row_uid] = [action_span_by_index[1], action_span_by_index[2]]
+		all_passed = _check("the selection reads back as contiguous action indices",
+			dock._extract_ops._selected_action_indices(sel_event), [1, 2]) and all_passed
+		view._selected_span_indices[event_row.row_uid] = [action_span_by_index[0], action_span_by_index[2]]
+		dock._extract_ops.extract_to_function_requested()
+		all_passed = _check("a gapped selection refuses (actions untouched)",
+			sel_event.actions.size(), 3) and all_passed
+	dock.free()
+
 	return all_passed
 
 
