@@ -48,7 +48,7 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New… → Platformer Starter**, add events (live search understands C3 phrases like *"every tick"*), and Run.
 
-Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps every concept, behavior, and plugin to its home here. Learning by building? The [recipes](docs/RECIPES.md) walk a platformer, health, pickups, and debugging end to end. Existing project? [Using EventSheets with your code](docs/USING-WITH-EXISTING-CODE.md) shows how sheets call (and are called by) your GDScript.
+Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps every concept, behavior, and plugin to its home here. Extending the plugin? The [Custom ACEs guide](docs/CUSTOM-ACES-GUIDE.md) and [Custom Blocks guide](docs/CUSTOM-BLOCKS-GUIDE.md) cover both extension surfaces. Learning by building? The [recipes](docs/RECIPES.md) walk a platformer, health, pickups, and debugging end to end. Existing project? [Using EventSheets with your code](docs/USING-WITH-EXISTING-CODE.md) shows how sheets call (and are called by) your GDScript.
 
 ## Why event sheets in Godot? (honest pros & cons)
 
