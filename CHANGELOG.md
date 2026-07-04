@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - every shipped pack is audited against the ACE provider system, permanently
+
+- **tests/pack_provider_audit_test.gd sweeps every scanned addon script** (the exact
+  list the live registry consumes - 33 scripts, 848 definitions) and holds each one to
+  the provider covenant: the script instantiates, no unknown @ace_* annotations, and
+  every action/condition/expression BAKES to real code (explicit template or reflected
+  synthesis - never the silent-empty no-op). Triggers are exempt by design (signals
+  bake through the trigger-connection path). Zero violations on landing; the gate now
+  runs in every suite, so a pack can never drift out of date with the provider system
+  unnoticed.
+
 ### Changed - Weapon Kit is the terse-provider showcase (and sheets can author class-level defaults)
 
 - **Two new sheet fields close the authoring gap**: `addon_category` emits a class-level
