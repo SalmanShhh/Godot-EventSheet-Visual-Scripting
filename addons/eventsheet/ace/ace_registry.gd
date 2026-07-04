@@ -5,7 +5,6 @@ extends RefCounted
 var _generator: EventSheetACEGenerator = EventSheetACEGenerator.new()
 var _definitions: Array[ACEDefinition] = []
 var _definitions_by_key: Dictionary = {}
-var _source_objects: Array[Object] = []
 
 # ── The startup/tab-switch cache ──────────────────────────────────────────────────────────────
 # Reflecting 30+ provider scripts into ~1,400 definitions costs ~200 ms, and refresh runs on
@@ -21,7 +20,6 @@ static var _source_definition_cache: Dictionary = {}
 func refresh_from_sources(sources: Array[Object], include_builtin: bool = true) -> void:
 	_definitions.clear()
 	_definitions_by_key.clear()
-	_source_objects = sources.duplicate()
 	if include_builtin:
 		if _builtin_definition_cache.is_empty():
 			for descriptor in ACERegistry.get_all_descriptors():
@@ -38,22 +36,30 @@ func refresh_from_sources(sources: Array[Object], include_builtin: bool = true) 
 			continue
 		var generated: Array[ACEDefinition] = _generator.generate_from_object(source_object)
 		if not cache_key.is_empty():
+			# One live entry per script: drop this path's older keys (stale mtimes) so a long
+			# editing session never accumulates dead reflections.
+			var path_prefix: String = cache_key.substr(0, cache_key.find("|") + 1)
+			for existing_key: Variant in _source_definition_cache.keys():
+				if str(existing_key).begins_with(path_prefix):
+					_source_definition_cache.erase(existing_key)
 			_source_definition_cache[cache_key] = generated
 		for definition in generated:
 			_store_definition(definition)
 
 
-## Cache identity for a reflectable source: its script's path + saved mtime. "" (uncacheable)
-## for sources without a saved script - those reflect fresh every time, as before.
+## Cache identity for a reflectable source: its script's path + saved mtime + byte length.
+## mtime alone has SECONDS resolution, so two saves inside one second would silently serve
+## stale definitions - the length catches those (a same-second save that also keeps the exact
+## byte count is the accepted residual edge). "" (uncacheable) for sources without a saved
+## script - those reflect fresh every time, as before.
 static func _source_cache_key(source_object: Object) -> String:
 	var script: Script = source_object.get_script() as Script
 	if script == null or script.resource_path.is_empty():
 		return ""
-	return "%s|%d" % [script.resource_path, FileAccess.get_modified_time(script.resource_path)]
-
-
-func hot_reload() -> void:
-	refresh_from_sources(_source_objects, true)
+	var script_path: String = script.resource_path
+	var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
+	var byte_length: int = file.get_length() if file != null else -1
+	return "%s|%d|%d" % [script_path, FileAccess.get_modified_time(script_path), byte_length]
 
 
 func get_all_definitions() -> Array[ACEDefinition]:

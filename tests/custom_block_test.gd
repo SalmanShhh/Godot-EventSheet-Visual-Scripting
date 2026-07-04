@@ -26,6 +26,16 @@ func take_hit(damage: int) -> void:
 static func run() -> bool:
 	var all_passed: bool = true
 
+	# ── Cold init ordering: a rescan-FIRST call must still register the built-ins (this was
+	# a silent bug - the rescan used to poison the registered flag, and enum/signal/preload/
+	# region kinds vanished for the whole session; only UI-build order masked it). ──
+	EventSheetBlockRegistry._built_ins_registered = false
+	EventSheetBlockRegistry._kinds.clear()
+	EventSheetBlockRegistry.rescan_pack_kinds()
+	all_passed = _check("rescan-first still registers the built-ins",
+		EventSheetBlockRegistry.get_kind("enum") != null and EventSheetBlockRegistry.get_kind("signal") != null
+		and EventSheetBlockRegistry.get_kind("preload") != null and EventSheetBlockRegistry.get_kind("region") != null, true) and all_passed
+
 	# ── The registry ──
 	all_passed = _check("preload kind registered", EventSheetBlockRegistry.get_kind("preload") != null, true) and all_passed
 	all_passed = _check("region kind registered", EventSheetBlockRegistry.get_kind("region") != null, true) and all_passed

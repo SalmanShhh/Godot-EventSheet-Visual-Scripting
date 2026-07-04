@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed - a silent block-registry init bug + cache hardening (from the dedicated hunt)
+
+- **A rescan-first registry touch silently lost the built-in block kinds** (enum, signal,
+  preload, region) for the whole session - `rescan_pack_kinds()` marked built-ins as
+  registered without registering them, masked in the shipped editor only by UI-build order.
+  Rescan now ensures the built-ins first; a cold-order test pins it.
+- **Cache hardening**: the definition-cache key gained the file's byte length (mtime alone has
+  seconds resolution - two same-second saves would have served stale definitions), stale keys
+  for a re-saved script are pruned, and the registry dropped a dead `hot_reload` path that
+  retained references to freed provider instances. An independent silent-bug hunt verified the
+  rest: shared definitions are never mutated post-generation, freed sources are unreachable
+  from cached definitions, and the new attribute round-trips reject bad data loudly.
+
 ### Changed - the editor opens and switches tabs much faster
 
 - **ACE definitions are cached across registry refreshes.** Reflecting the 30+ provider

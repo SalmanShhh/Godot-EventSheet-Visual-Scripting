@@ -25,8 +25,16 @@ static func run() -> bool:
 	var source_a: Object = provider_script.new()
 	var source_b: Object = provider_script.new()
 	var key_a: String = EventSheetACERegistry._source_cache_key(source_a)
-	all_passed = _check("a script-backed source gets a path+mtime cache key",
-		key_a.begins_with("res://eventsheet_addons/demo_health_addon.gd|"), true) and all_passed
+	all_passed = _check("a script-backed source gets a path+mtime+length cache key",
+		key_a.begins_with("res://eventsheet_addons/demo_health_addon.gd|") and key_a.split("|").size() == 3, true) and all_passed
+	# A stale key for the same script (an older mtime) is pruned when the fresh one lands, so a
+	# long session never accumulates dead reflections. Clear this path's entries first: the
+	# cache is static and earlier suite tests may have already warmed the real key (a warm HIT
+	# skips the prune-and-store path on purpose).
+	for warm_key: Variant in EventSheetACERegistry._source_definition_cache.keys():
+		if str(warm_key).begins_with("res://eventsheet_addons/demo_health_addon.gd|"):
+			EventSheetACERegistry._source_definition_cache.erase(warm_key)
+	EventSheetACERegistry._source_definition_cache["res://eventsheet_addons/demo_health_addon.gd|1|1"] = []
 	all_passed = _check("two instances of the same saved script share one key",
 		EventSheetACERegistry._source_cache_key(source_b), key_a) and all_passed
 	var registry_c: EventSheetACERegistry = EventSheetACERegistry.new()
@@ -35,6 +43,11 @@ static func run() -> bool:
 	registry_d.refresh_from_sources([source_b], false)
 	all_passed = _check("provider definitions are reused across refreshes",
 		registry_c.get_all_definitions()[0] == registry_d.get_all_definitions()[0], true) and all_passed
+	var live_keys: int = 0
+	for cache_key: Variant in EventSheetACERegistry._source_definition_cache.keys():
+		if str(cache_key).begins_with("res://eventsheet_addons/demo_health_addon.gd|"):
+			live_keys += 1
+	all_passed = _check("stale keys for the same script are pruned (one live entry)", live_keys, 1) and all_passed
 
 	# An unsaved (pathless) source is uncacheable and still reflects fresh - the old behavior.
 	var pathless: GDScript = GDScript.new()

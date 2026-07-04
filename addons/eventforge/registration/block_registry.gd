@@ -68,7 +68,7 @@ static func _ensure_built_ins() -> void:
 	register_kind(RegionBlockKind.new())
 	register_kind(EnumBlockKind.new())
 	register_kind(SignalBlockKind.new())
-	rescan_pack_kinds()
+	_scan_pack_kinds()
 
 
 ## Zero-config pack kinds, mirroring how ACE providers register: any script under
@@ -78,7 +78,14 @@ static func _ensure_built_ins() -> void:
 ## calls this from its ACE-source rebuild); already-registered ids are kept, so a rescan is
 ## additive and deterministic.
 static func rescan_pack_kinds() -> void:
-	_built_ins_registered = true
+	# Built-ins FIRST, always: setting the registered flag here (as this used to) made a
+	# rescan-first call skip built-in registration for the whole session - the enum, signal,
+	# preload, and region kinds silently vanished. _ensure_built_ins is a no-op when done.
+	_ensure_built_ins()
+	_scan_pack_kinds()
+
+
+static func _scan_pack_kinds() -> void:
 	for script_path: String in EventSheetAddonScanner.list_addon_scripts():
 		var script: GDScript = load(script_path) as GDScript
 		if script == null or not _extends_block_kind(script):
