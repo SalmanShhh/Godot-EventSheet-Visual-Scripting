@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - the Translation vocabulary: switch languages from events
+
+- **Seven new built-in ACEs under Translation**: Set Language (`TranslationServer.set_locale`),
+  Current Language, Translate / Translate With Context / Translate Plural (`tr`, two-arg `tr`,
+  `tr_n`) - each a bare native call, parity-clean.
+- **On Language Changed**: a trigger for the engine's translation-changed notification. It
+  compiles to the `_notification` virtual and applying it auto-adds the "Language Just
+  Changed" gate condition - visible in the sheet, deletable, round-tripping as the plain
+  event + condition it is (the same apply-time-baking idiom as `{uid}`).
+
 ### Added - translatable text params: localisation the Godot way, part 1
 
 - **A globe toggle on plain string params** (the params dialog): lit, the value ships

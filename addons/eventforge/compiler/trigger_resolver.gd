@@ -45,6 +45,11 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 		"OnPhysicsPostTick":
 			# The physics-tick sibling: SceneTree.physics_frame, after every _physics_process this step.
 			return _signal_backed("_on_physics_post_tick", "", "physics_frame", "@tree")
+		"OnLocaleChanged":
+			# The translation-changed NOTIFICATION (the engine has no signal for it):
+			# compiles to the _notification virtual; applying the trigger auto-adds the
+			# "Language Just Changed" gate condition so only that notification runs.
+			return _lifecycle("_notification", "what: int")
 		"OnCloseRequested":
 			# The window's close button (X) / an app-quit request — for save-on-quit or a confirm dialog.
 			# Connected on the root window (the "@window" global source), not self.

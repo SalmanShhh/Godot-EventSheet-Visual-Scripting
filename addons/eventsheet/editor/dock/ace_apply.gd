@@ -237,6 +237,15 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 		var param_type: int = int((parameter as Dictionary).get("type", TYPE_NIL))
 		parts.append(param_id if param_type == TYPE_NIL else "%s: %s" % [param_id, type_string(param_type)])
 	event_row.trigger_args = ", ".join(parts)
+	# On Language Changed compiles to the _notification virtual, which the engine
+	# calls for EVERY notification - so applying the trigger auto-adds its gate
+	# condition (visible in the sheet, deletable, round-trips as a plain condition).
+	if definition.id == "OnLocaleChanged" and event_row.conditions.is_empty():
+		var gate: ACECondition = ACECondition.new()
+		gate.provider_id = "Core"
+		gate.ace_id = "IsLocaleChangeNotification"
+		gate.codegen_template = "what == NOTIFICATION_TRANSLATION_CHANGED"
+		event_row.conditions.append(gate)
 
 
 func _create_condition_from_definition(definition: ACEDefinition, params: Dictionary) -> ACECondition:

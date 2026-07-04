@@ -27,6 +27,7 @@ const NOT_STANDALONE: Array[String] = [
 	"LoopBreak", "LoopContinue", "ReturnValue",
 	"EveryXSeconds", "AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
+	"IsLocaleChangeNotification",  # references `what` - only exists inside _notification (its trigger's virtual)
 ]
 
 

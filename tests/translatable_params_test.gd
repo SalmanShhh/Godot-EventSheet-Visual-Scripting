@@ -56,6 +56,48 @@ static func run() -> bool:
 	ok = _check("the compiled script calls tr() at the usage site",
 		compiled.contains("print(tr(\"Spawned\"))"), true) and ok
 
+	# ── The Translation vocabulary (v0.11 chapter 1, P2) ──
+	var registry := EventSheetACERegistry.new()
+	registry.refresh_from_sources([], true)
+	for translation_ace: String in ["SetLocale", "GetLocale", "Translate", "TranslateWithContext", "TranslatePlural", "IsLocaleChangeNotification", "OnLocaleChanged"]:
+		ok = _check("Core/%s is registered" % translation_ace, registry.find_definition("Core", translation_ace) != null, true) and ok
+
+	# Set Language compiles to the bare native call.
+	var locale_sheet: EventSheetResource = EventSheetResource.new()
+	var locale_event: EventRow = EventRow.new()
+	locale_event.trigger_id = "OnReady"
+	var set_locale: ACEAction = ACEAction.new()
+	set_locale.provider_id = "Core"
+	set_locale.ace_id = "SetLocale"
+	set_locale.params = {"locale": "\"es\""}
+	locale_event.actions.append(set_locale)
+	locale_sheet.events.append(locale_event)
+	ok = _check("Set Language emits TranslationServer.set_locale",
+		str(SheetCompiler.compile(locale_sheet).get("output", "")).contains("TranslationServer.set_locale(\"es\")"), true) and ok
+
+	# On Language Changed: the _notification virtual + the auto-added gate condition.
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(EventSheetResource.new())
+	var trigger_definition: ACEDefinition = dock._ace_registry.find_definition("Core", "OnLocaleChanged")
+	var notify_event: EventRow = EventRow.new()
+	dock._ace_apply._bake_trigger_signature(notify_event, trigger_definition)
+	ok = _check("applying the trigger auto-adds the gate condition",
+		notify_event.conditions.size() == 1 and (notify_event.conditions[0] as ACECondition).ace_id == "IsLocaleChangeNotification", true) and ok
+	var notify_print: ACEAction = ACEAction.new()
+	notify_print.provider_id = "Core"
+	notify_print.ace_id = "Print"
+	notify_print.params = {"value": "tr(\"LANGUAGE_NAME\")"}
+	notify_event.actions.append(notify_print)
+	var notify_sheet: EventSheetResource = EventSheetResource.new()
+	notify_sheet.events.append(notify_event)
+	var notify_compiled: String = str(SheetCompiler.compile(notify_sheet).get("output", ""))
+	ok = _check("the trigger compiles to the _notification virtual",
+		notify_compiled.contains("func _notification(what: int)"), true) and ok
+	ok = _check("the gate guards the notification",
+		notify_compiled.contains("if what == NOTIFICATION_TRANSLATION_CHANGED:"), true) and ok
+	dock.free()
+
 	# ── Byte round-trip: a tr() call in an opened .gd survives untouched ──
 	var external_source: String = "extends Node\n\nfunc _ready() -> void:\n\tprint(tr(\"Spawned\"))\n"
 	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)
