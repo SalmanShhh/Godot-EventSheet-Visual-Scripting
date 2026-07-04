@@ -162,7 +162,11 @@ var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
 var _ui_builder: EventSheetDockUIBuilder = EventSheetDockUIBuilder.new()
 var _input_dispatch: EventSheetDockInputDispatch = EventSheetDockInputDispatch.new()
-var _code_panel_glue: EventSheetCodePanelGlue = EventSheetCodePanelGlue.new()  # code/provenance + open-sheets panel behavior (dock/code_panel_glue.gd)  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
+var _code_panel_glue: EventSheetCodePanelGlue = EventSheetCodePanelGlue.new()
+var _providers_glue: EventSheetProviderRegistryGlue = EventSheetProviderRegistryGlue.new()  # dock/provider_registry_glue.gd
+var _sheet_type_glue: EventSheetTypeGlue = EventSheetTypeGlue.new()  # dock/sheet_type_glue.gd
+var _queries: EventSheetDockQueries = EventSheetDockQueries.new()  # dock/sheet_queries.gd
+var _add_rows: EventSheetAddRowRequests = EventSheetAddRowRequests.new()  # dock/add_row_requests.gd  # code/provenance + open-sheets panel behavior (dock/code_panel_glue.gd)  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
 var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
@@ -208,6 +212,10 @@ func _init() -> void:
 	_ui_builder.init(self)
 	_input_dispatch.init(self)
 	_code_panel_glue.init(self)
+	_providers_glue.init(self)
+	_sheet_type_glue.init(self)
+	_queries.init(self)
+	_add_rows.init(self)
 	_ace_apply.init(self)
 	# Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning — tests exercise ops like
 	# _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.
@@ -554,67 +562,28 @@ func set_undo_redo_manager(undo_redo: Variant) -> void:
 
 
 func set_auto_ace_sources(sources: Array[Object]) -> void:
-	_manual_ace_sources = sources.duplicate()
-	_refresh_ace_registry()
+	_providers_glue.set_auto_ace_sources(sources)
 
 
-## Registers a GDScript file as a custom-ACE provider on the current sheet. Its annotated
-## methods/signals/exported properties then appear in the ACE picker.
+
 func add_ace_provider_script(path: String) -> bool:
-	if not _ensure_sheet_for_editing():
-		return false
-	var clean_path: String = path.strip_edges()
-	if clean_path.is_empty() or _current_sheet.ace_provider_scripts.has(clean_path):
-		return false
-	var probe: Object = _instantiate_provider_script(clean_path)
-	if probe == null:
-		_set_status("Not a usable ACE provider script: %s" % clean_path.get_file(), true)
-		return false
-	if probe is Node:
-		(probe as Node).free()
-	var changed: bool = _perform_undoable_sheet_edit("Add ACE Provider", func() -> bool:
-		_current_sheet.ace_provider_scripts.append(clean_path)
-		return true
-	)
-	if changed:
-		_refresh_ace_registry()
-		_refresh_provider_list()
-		_mark_dirty("Added ACE provider: %s" % clean_path.get_file())
-	return changed
+	return _providers_glue.add_ace_provider_script(path)
 
 
-## Removes a registered custom-ACE provider script from the current sheet.
+
 func remove_ace_provider_script(path: String) -> bool:
-	if not _ensure_sheet_for_editing():
-		return false
-	if not _current_sheet.ace_provider_scripts.has(path):
-		return false
-	var changed: bool = _perform_undoable_sheet_edit("Remove ACE Provider", func() -> bool:
-		_current_sheet.ace_provider_scripts.erase(path)
-		return true
-	)
-	if changed:
-		_refresh_ace_registry()
-		_refresh_provider_list()
-		_mark_dirty("Removed ACE provider: %s" % path.get_file())
-	return changed
+	return _providers_glue.remove_ace_provider_script(path)
+
 
 
 func get_ace_provider_scripts() -> PackedStringArray:
-	var output: PackedStringArray = PackedStringArray()
-	if _current_sheet == null:
-		return output
-	for path: Variant in _current_sheet.ace_provider_scripts:
-		output.append(str(path))
-	return output
+	return _providers_glue.get_ace_provider_scripts()
+
 
 
 func _on_manage_ace_providers_requested() -> void:
-	if not _ensure_sheet_for_editing():
-		return
-	_build_provider_dialog()
-	_refresh_provider_list()
-	_provider_dialog.popup_centered(Vector2i(560, 420))
+	_providers_glue.on_manage_ace_providers_requested()
+
 
 
 func _build_provider_dialog() -> void:
@@ -623,29 +592,23 @@ func _build_provider_dialog() -> void:
 
 
 func _refresh_provider_list() -> void:
-	if _provider_list == null:
-		return
-	_provider_list.clear()
-	for path in get_ace_provider_scripts():
-		_provider_list.add_item(path)
+	_providers_glue.refresh_provider_list()
+
 
 
 func _on_provider_add_pressed() -> void:
-	if _provider_file_dialog != null:
-		_provider_file_dialog.popup_centered(Vector2i(720, 520))
+	_providers_glue.on_provider_add_pressed()
+
 
 
 func _on_provider_file_selected(path: String) -> void:
-	add_ace_provider_script(path)
+	_providers_glue.on_provider_file_selected(path)
+
 
 
 func _on_provider_remove_pressed() -> void:
-	if _provider_list == null:
-		return
-	var selected: PackedInt32Array = _provider_list.get_selected_items()
-	if selected.is_empty():
-		return
-	remove_ace_provider_script(_provider_list.get_item_text(selected[0]))
+	_providers_glue.on_provider_remove_pressed()
+
 
 
 func _build_ui() -> void:
@@ -1116,80 +1079,48 @@ func _save_sheet_as_gdscript(path: String) -> bool:
 
 
 func _on_add_event_requested() -> void:
-	if not _ensure_sheet_for_editing():
-		return
-	_ace_picker.open("new_event", false, _active_view().get_selected_context().get("source_resource", null))
+	_add_rows.on_add_event_requested()
+
 
 
 func _on_add_signal_event_requested() -> void:
-	if not _ensure_sheet_for_editing():
-		return
-	_ace_picker.open("new_event", true, _active_view().get_selected_context().get("source_resource", null))
+	_add_rows.on_add_signal_event_requested()
+
 
 
 func _on_add_condition_requested() -> void:
-	if not _ensure_sheet_for_editing():
-		return
-	var selected_resource: Resource = _active_view().get_selected_context().get("source_resource", null)
-	if selected_resource is EventRow:
-		_ace_picker.open("append_condition", false, selected_resource)
-		return
-	_ace_picker.open("new_condition_event", false, selected_resource)
+	_add_rows.on_add_condition_requested()
+
 
 
 func _on_add_action_requested() -> void:
-	if not _ensure_selected_event():
-		return
-	_ace_picker.open("append_action", false, _active_view().get_selected_context().get("source_resource", null))
+	_add_rows.on_add_action_requested()
+
 
 
 func _on_add_comment_requested() -> void:
-	if not _ensure_sheet_for_editing():
-		return
-	var comment: CommentRow = CommentRow.new()
-	comment.text = "Comment"
-	var changed: bool = _perform_undoable_sheet_edit("Add Comment", func() -> bool:
-		_insert_row_below_selection(comment)
-		return true
-	)
-	if changed:
-		_mark_dirty("Added comment.")
+	_add_rows.on_add_comment_requested()
+
 
 
 func _on_add_group_requested() -> void:
-	if not _ensure_sheet_for_editing():
-		return
-	var group: EventGroup = EventGroup.new()
-	group.name = "Group"
-	group.group_name = group.name
-	var changed: bool = _perform_undoable_sheet_edit("Add Group", func() -> bool:
-		_insert_row_below_selection(group)
-		return true
-	)
-	if changed:
-		_mark_dirty("Added group.")
-		# Drop straight into renaming the new group so naming it is obvious and immediate —
-		# the same inline title edit you'd reach by double-clicking it or pressing Enter,
-		# just triggered for you. Deferred so it runs after the viewport rebuilds.
-		call_deferred("_begin_group_rename", group)
+	_add_rows.on_add_group_requested()
 
 
-## Selects a group and opens its editor popup (used right after Add Group so the user can name it
-## immediately, and on double-click / slow-click / Enter of an existing group header).
+
 func _begin_group_rename(group: EventGroup) -> void:
-	var view: EventSheetViewport = _active_view()
-	if view != null:
-		view.select_resource(group)
-	_on_group_edit_requested(group)
+	_add_rows.begin_group_rename(group)
 
 
-# Group editor popup → dock/quick_prompt_dialogs.gd; delegates keep signal wiring + tests stable.
+
 func _on_group_edit_requested(group: EventGroup) -> void:
-	_quick_prompts.on_group_edit_requested(group)
+	_add_rows.on_group_edit_requested(group)
+
 
 
 func apply_group_edit(group: EventGroup, new_name: String, new_desc: String) -> bool:
-	return _quick_prompts.apply_group_edit(group, new_name, new_desc)
+	return _add_rows.apply_group_edit(group, new_name, new_desc)
+
 
 
 static func set_group_fields(group: EventGroup, new_name: String, new_desc: String) -> String:
@@ -1197,23 +1128,10 @@ static func set_group_fields(group: EventGroup, new_name: String, new_desc: Stri
 
 
 func _on_duplicate_requested() -> void:
-	if not _ensure_sheet_for_editing():
-		return
-	var selected_resource: Resource = _active_view().get_selected_context().get("source_resource", null)
-	if not (selected_resource is EventRow):
-		_set_status("Select an event row to duplicate.", true)
-		return
-	var clone: EventRow = (selected_resource as EventRow).duplicate(true)
-	_assign_fresh_event_uids(clone)
-	var changed: bool = _perform_undoable_sheet_edit("Duplicate Event", func() -> bool:
-		_insert_row_below_selection(clone, selected_resource)
-		return true
-	)
-	if changed:
-		_mark_dirty("Duplicated event.")
+	_add_rows.on_duplicate_requested()
 
-## Recursively assigns fresh event UIDs to a cloned event row and its sub-events so the
-## duplicate does not share selection/fold identity with the source.
+
+
 ## A fresh 8-hex-digit token for a baked `{uid}` local. The previous random-only draw could repeat
 ## within one event body (two ACEs → two identical locals → invalid GDScript); this tracks every
 ## token minted this session and re-draws on a clash, so two mints never collide. Full 32-bit (no
@@ -1231,40 +1149,8 @@ static func _fresh_uid_token() -> String:
 
 
 func _assign_fresh_event_uids(row: EventRow) -> void:
-	row.event_uid = EventRow._generate_short_uid()
-	# Stateful conditions (Every X Seconds…): the COPY must own its own accumulator —
-	# re-bake the member uid across all four baked fields, or both timers silently
-	# share one member (copies are independent timers).
-	for condition: Variant in row.conditions:
-		if condition is ACECondition and not (condition as ACECondition).member_declaration.is_empty():
-			var stateful: ACECondition = condition as ACECondition
-			var uid_regex: RegEx = RegEx.new()
-			uid_regex.compile("__[a-z_]+_([0-9a-f]{8})\\b")
-			var uid_match: RegExMatch = uid_regex.search(stateful.member_declaration)
-			if uid_match == null:
-				continue
-			var old_uid: String = uid_match.get_string(1)
-			var new_uid: String = _fresh_uid_token()
-			stateful.member_declaration = stateful.member_declaration.replace(old_uid, new_uid)
-			stateful.codegen_template = stateful.codegen_template.replace(old_uid, new_uid)
-			stateful.codegen_prelude = stateful.codegen_prelude.replace(old_uid, new_uid)
-			stateful.codegen_on_true = stateful.codegen_on_true.replace(old_uid, new_uid)
-	# Multi-line action templates bake `__spawn_<uid>`/`__sfx_<uid>` locals — pasting the
-	# same event twice into one trigger would declare the same local twice in one
-	# function body. Re-bake every baked uid the template carries.
-	for action: Variant in row.actions:
-		if action is ACEAction and (action as ACEAction).codegen_template.contains("__"):
-			var baked: ACEAction = action as ACEAction
-			var action_uid_regex: RegEx = RegEx.new()
-			action_uid_regex.compile("__[a-z_]+_([0-9a-f]{8})\\b")
-			var seen_uids: Dictionary = {}
-			for action_match: RegExMatch in action_uid_regex.search_all(baked.codegen_template):
-				seen_uids[action_match.get_string(1)] = true
-			for stale_uid: Variant in seen_uids.keys():
-				baked.codegen_template = baked.codegen_template.replace(str(stale_uid), _fresh_uid_token())
-	for sub_event in row.sub_events:
-		if sub_event is EventRow:
-			_assign_fresh_event_uids(sub_event as EventRow)
+	_add_rows.assign_fresh_event_uids(row)
+
 
 
 func _on_zoom_in_requested() -> void:
@@ -2562,110 +2448,24 @@ func _detach_comment_to_row(comment_row: CommentRow) -> void:  # action-cell con
 	_comments.detach_comment_to_row(comment_row)
 
 
-# ── Sheet Type dialog (what the sheet compiles into) → dock/sheet_type_dialog.gd ──
-# The dialog shell lives in the helper; the field-builders below (_add_sheet_type_field is shared with the
-# pick dialog) and the _apply_sheet_type_settings service (driven directly by the addon-composition / tags /
-# tool / singleton tests) stay here, so only the dialog's _ensure / widget reach-ins were repointed.
-func _open_sheet_type_dialog() -> void:  # Sheet menu / identity-banner edit / Tools menu
-	_sheet_type.open()
+func _open_sheet_type_dialog() -> void:
+	_sheet_type_glue.open_sheet_type_dialog()
+
 
 
 func _add_sheet_type_field(form: VBoxContainer, label_text: String, placeholder: String) -> LineEdit:
-	var row: HBoxContainer = HBoxContainer.new()
-	var label: Label = Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(130.0, 0.0)
-	row.add_child(label)
-	var edit: LineEdit = LineEdit.new()
-	edit.placeholder_text = placeholder
-	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(edit)
-	form.add_child(row)
-	return edit
+	return _sheet_type_glue.add_sheet_type_field(form, label_text, placeholder)
 
 
-## Like _add_sheet_type_field, but a small multi-line TextEdit — used for the class description,
-## which compiles to a `##` doc comment (Godot's Create Node tooltip supports multiple lines).
+
 func _add_sheet_type_multiline_field(form: VBoxContainer, label_text: String, placeholder: String) -> TextEdit:
-	var row: HBoxContainer = HBoxContainer.new()
-	var label: Label = Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(130.0, 0.0)
-	label.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	row.add_child(label)
-	var edit: TextEdit = TextEdit.new()
-	edit.placeholder_text = placeholder
-	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	edit.custom_minimum_size = Vector2(0.0, 54.0)
-	edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	row.add_child(edit)
-	form.add_child(row)
-	return edit
+	return _sheet_type_glue.add_sheet_type_multiline_field(form, label_text, placeholder)
 
 
-## Applies the chosen sheet type (0 = plain, 1 = custom node, 2 = behavior) undoably and
-## refreshes every identity surface (banner, tab badge, header, lint context). `family_enabled` marks
-## a named sheet as a Family (instances collected into group family_<class>); it's cleared for a plain
-## sheet, which has no class name to derive a family group from.
+
 func _apply_sheet_type_settings(type_index: int, class_name_text: String, icon_path: String, host_class_text: String, tool_enabled: bool = false, addon_tags: PackedStringArray = PackedStringArray(), include_paths: PackedStringArray = PackedStringArray(), uses_classes: PackedStringArray = PackedStringArray(), requires_classes: PackedStringArray = PackedStringArray(), autoload_name_text: String = "", class_description_text: String = "", family_enabled: bool = false) -> void:
-	if _current_sheet == null:
-		return
-	var changed: bool = _perform_undoable_sheet_edit("Set Sheet Type", func() -> bool:
-		_current_sheet.behavior_mode = type_index == 2
-		# The class description rides with the named-type identity (cleared for a plain sheet,
-		# which has no class_name to attach a doc to).
-		_current_sheet.class_description = class_description_text.strip_edges() if type_index != 0 else ""
-		# Autoload (Singleton) sheets: extends Node, addressed project-wide by name.
-		_current_sheet.autoload_mode = type_index == 4
-		_current_sheet.autoload_name = autoload_name_text.strip_edges() if type_index == 4 else ""
-		if type_index == 4:
-			_current_sheet.host_class = "Node"
-		# Editor Tool preset: an EditorScript with @tool — pair with On Editor Run.
-		_current_sheet.tool_mode = tool_enabled or type_index == 3
-		_current_sheet.custom_class_name = class_name_text.strip_edges() if type_index != 0 else ""
-		_current_sheet.custom_class_icon = icon_path.strip_edges() if type_index != 0 else ""
-		# Family rides with the named-type identity: a plain sheet has no class to form a group from, so
-		# clear it there (mirrors custom_class_name) to avoid a stale flag that would emit nothing.
-		_current_sheet.is_family = family_enabled and type_index != 0
-		# Plain sheets aren't addons: clear tags like the class name/icon (otherwise a
-		# type switch would leave stale tags that never emit — silent confusion).
-		_current_sheet.addon_tags = addon_tags if type_index != 0 else PackedStringArray()
-		# Lane A composition (meta-packs): includes apply like tags; plain sheets keep
-		# their includes too (library sheets predate addon composition).
-		var applied_includes: Array[String] = []
-		for include_path: String in include_paths:
-			if not include_path.strip_edges().is_empty():
-				applied_includes.append(include_path.strip_edges())
-		_current_sheet.includes = applied_includes
-		var applied_uses: Array[String] = []
-		for uses_class: String in uses_classes:
-			if not uses_class.strip_edges().is_empty():
-				applied_uses.append(uses_class.strip_edges())
-		_current_sheet.uses_addons = applied_uses
-		var applied_requires: Array[String] = []
-		for requires_class: String in requires_classes:
-			if not requires_class.strip_edges().is_empty():
-				applied_requires.append(requires_class.strip_edges())
-		_current_sheet.requires_behaviors = applied_requires
-		if type_index == 4:
-			pass  # Autoload already forced host_class = "Node" above; the dialog's stale host text must not undo it
-		elif type_index == 3:
-			_current_sheet.host_class = "EditorScript"
-		elif type_index == 5:
-			# Custom Resource: the host must BE a data-asset class. Keep the user's Resource
-			# subclass (AudioStream, a project class typed by hand); anything node-ish falls
-			# back to plain Resource so the choice always produces a valid asset script.
-			var resource_host: String = host_class_text.strip_edges()
-			_current_sheet.host_class = resource_host if EventSheetScriptIntent.is_resource_host(resource_host) else "Resource"
-		elif not host_class_text.strip_edges().is_empty():
-			_current_sheet.host_class = host_class_text.strip_edges()
-		return true
-	)
-	if changed:
-		_refresh_after_edit()
-		_refresh_title_strip()
-		_refresh_tab_bar()
-		_mark_dirty("Sheet type updated.")
+	_sheet_type_glue.apply_sheet_type_settings(type_index, class_name_text, icon_path, host_class_text, tool_enabled, addon_tags, include_paths, uses_classes, requires_classes, autoload_name_text, class_description_text, family_enabled)
+
 
 
 ## Footer "Add event…" rows: opens the event picker; the new event is appended into the
@@ -3250,173 +3050,68 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 
 
 func _collect_event_row_options() -> Array[Dictionary]:
-	var options: Array[Dictionary] = []
-	if _current_sheet == null:
-		return options
-	var event_rows: Array[EventRow] = []
-	_collect_event_rows_recursive(_current_sheet.events, event_rows)
-	for event_row in event_rows:
-		options.append(
-			{
-				"uid": event_row.event_uid,
-				"label": _format_event_target_label(event_row)
-			}
-		)
-	return options
+	return _queries.collect_event_row_options()
+
 
 
 func _collect_event_rows_recursive(resources: Array, output: Array[EventRow]) -> void:
-	for resource_entry in resources:
-		if resource_entry is EventRow:
-			output.append(resource_entry as EventRow)
-			_collect_event_rows_recursive((resource_entry as EventRow).sub_events, output)
-		elif resource_entry is EventGroup:
-			_collect_event_rows_recursive(_group_children_array(resource_entry as EventGroup), output)
+	_queries.collect_event_rows_recursive(resources, output)
+
 
 
 func _format_event_target_label(event_row: EventRow) -> String:
-	if event_row == null:
-		return "(invalid event)"
-	var label: String = "Event %s" % event_row.event_uid
-	if not event_row.comment.is_empty():
-		label += " — %s" % event_row.comment
-	elif not event_row.trigger_id.is_empty():
-		label += " — %s" % event_row.trigger_id
-	elif event_row.trigger != null and not event_row.trigger.ace_id.is_empty():
-		label += " — %s" % event_row.trigger.ace_id
-	return label
+	return _queries.format_event_target_label(event_row)
+
 
 
 func _find_event_row_by_uid(event_uid: String) -> EventRow:
-	if _current_sheet == null or event_uid.is_empty():
-		return null
-	var event_rows: Array[EventRow] = []
-	_collect_event_rows_recursive(_current_sheet.events, event_rows)
-	for event_row in event_rows:
-		if event_row.event_uid == event_uid:
-			return event_row
-	return null
+	return _queries.find_event_row_by_uid(event_uid)
+
 
 
 func _type_from_name(type_name: String) -> int:
-	match type_name:
-		"int":
-			return TYPE_INT
-		"float":
-			return TYPE_FLOAT
-		"bool":
-			return TYPE_BOOL
-		"String":
-			return TYPE_STRING
-		_:
-			return TYPE_NIL
+	return _queries.type_from_name(type_name)
+
 
 
 func _event_row_uses_or_mode(event_row: EventRow) -> bool:
-	return event_row != null and event_row.condition_mode == EventRow.ConditionMode.OR
+	return _queries.event_row_uses_or_mode(event_row)
+
 
 
 func _event_rows_use_or_mode(event_rows: Array[EventRow]) -> bool:
-	if event_rows.is_empty():
-		return false
-	for event_row in event_rows:
-		if not _event_row_uses_or_mode(event_row):
-			return false
-	return true
+	return _queries.event_rows_use_or_mode(event_rows)
+
 
 
 func _get_selected_rows_from_context() -> Array[EventRowData]:
-	if _viewport == null:
-		return []
-	var selected_rows: Array[EventRowData] = _active_view().get_selected_rows()
-	if selected_rows.is_empty():
-		if _context_row != null:
-			return [_context_row]
-		return []
-	if _context_row == null:
-		return selected_rows
-	for row_data in selected_rows:
-		if row_data.row_uid == _context_row.row_uid:
-			return selected_rows
-	return [_context_row]
+	return _queries.get_selected_rows_from_context()
+
 
 
 func _get_selected_event_rows_from_context() -> Array[EventRow]:
-	var event_rows: Array[EventRow] = []
-	for row_data in _get_selected_rows_from_context():
-		if row_data != null and row_data.source_resource is EventRow:
-			event_rows.append(row_data.source_resource as EventRow)
-	return event_rows
+	return _queries.get_selected_event_rows_from_context()
+
 
 
 func _build_ace_edit_context(event_row: EventRow, span_index: int, metadata: Dictionary) -> Dictionary:
-	if event_row == null:
-		return {}
-	var ace_index: int = int(metadata.get("ace_index", -1))
-	var kind: String = str(metadata.get("kind", ""))
-	var definition: ACEDefinition = null
-	var existing_params: Dictionary = {}
-	var mode: String = ""
-	match kind:
-		"trigger":
-			if event_row.trigger == null:
-				return {}
-			definition = _find_definition(event_row.trigger.provider_id, event_row.trigger.ace_id)
-			existing_params = event_row.trigger.params if not event_row.trigger.params.is_empty() else event_row.trigger.parameters
-			mode = "replace_trigger"
-		"condition":
-			if ace_index < 0 or ace_index >= event_row.conditions.size():
-				return {}
-			var condition_entry: ACECondition = event_row.conditions[ace_index]
-			definition = _find_definition(condition_entry.provider_id, condition_entry.ace_id)
-			existing_params = condition_entry.params if not condition_entry.params.is_empty() else condition_entry.parameters
-			mode = "replace_condition"
-		"action":
-			if ace_index < 0 or ace_index >= event_row.actions.size() or not (event_row.actions[ace_index] is ACEAction):
-				return {}
-			var action_entry: ACEAction = event_row.actions[ace_index] as ACEAction
-			definition = _find_definition(action_entry.provider_id, action_entry.ace_id)
-			existing_params = action_entry.params if not action_entry.params.is_empty() else action_entry.parameters
-			mode = "replace_action"
-		_:
-			return {}
-	return {
-		"mode": mode,
-		"selected_resource": event_row,
-		"row_data": _context_row,
-		"definition": definition,
-		"existing_params": existing_params.duplicate(true),
-		"ace_index": ace_index,
-		"span_index": span_index,
-		"kind": kind
-	}
+	return _queries.build_ace_edit_context(event_row, span_index, metadata)
+
 
 
 func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
-	if _ace_registry == null:
-		return null
-	return _ace_registry.find_definition(provider_id, ace_id)
+	return _queries.find_definition(provider_id, ace_id)
+
 
 
 func _find_first_event_row_resource() -> EventRow:
-	if _viewport == null:
-		return null
-	for row_entry: Dictionary in _viewport.get_flat_rows():
-		var row_data: EventRowData = row_entry.get("row")
-		if row_data != null and row_data.source_resource is EventRow:
-			return row_data.source_resource as EventRow
-	return null
+	return _queries.find_first_event_row_resource()
+
 
 
 func _select_first_event_row() -> void:
-	if _viewport == null:
-		return
-	var rows: Array[Dictionary] = _viewport.get_flat_rows()
-	for row_index: int in range(rows.size()):
-		var row_data: EventRowData = rows[row_index].get("row")
-		if row_data != null and row_data.source_resource is EventRow:
-			_viewport._select_row(row_index)
-			return
+	_queries.select_first_event_row()
+
 
 
 func _surround_selection_with_region() -> void:

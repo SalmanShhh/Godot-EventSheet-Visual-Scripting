@@ -9,11 +9,14 @@
   (`interaction/viewport_layout_builder.gd`), and the box-selection + row/ACE drag gestures
   (`interaction/viewport_drag.gd`), and the four input handlers behind _gui_input
   (`interaction/viewport_input.gd`).
-- **The dock sheds three** (4,624 -> 3,744 lines): the five UI construction passes
+- **The dock sheds seven** (4,624 -> 3,437 lines): the five UI construction passes
   (`dock/dock_ui_builder.gd`), the input dispatch layer - row-menu routing, workspace
   shortcuts, Surround with Region (`dock/dock_input_dispatch.gd`), and the side-panel
   glue - provenance highlighting, the Functions list, the raw-GDScript dialog flow, the
-  Open Sheets panel prefs (`dock/code_panel_glue.gd`).
+  Open Sheets panel prefs (`dock/code_panel_glue.gd`), provider registration
+  (`dock/provider_registry_glue.gd`), the Sheet Type dialog glue (`dock/sheet_type_glue.gd`),
+  the sheet/selection query helpers (`dock/sheet_queries.gd`), and the add-row request
+  handlers (`dock/add_row_requests.gd`).
 - Every move is VERBATIM behind the established `_dock.`/`_viewport.` back-reference with
   one-line delegates keeping all call sites (and tests) untouched; each new module opens
   with a header explaining what lives there and why state stays on the host. Suite green
