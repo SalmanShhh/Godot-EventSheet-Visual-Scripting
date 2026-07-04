@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Added - 2D overlap queries: "what is HERE right now", no Area2D needed
+
+- Three one-shot query actions in the new **Overlap 2D** category: **Query Bodies At
+  Point**, **In Circle**, and **In Rectangle** - each collects the overlapping physics
+  objects into a variable of your choice, so For Each picks over the results and
+  Expression Is True gates on `not hits.is_empty()`. Explosion radii, pickup magnets,
+  selection boxes, and room checks without wiring an Area2D. Multi-line templates with
+  per-row {uid} locals (they carry the →N compression cue); parse-teeth pinned in
+  tests/overlap_query_aces_test.gd. First item off the post-v0.11 roadmap.
+
 ## [0.11.0] - 2026-07-04 - The Structure & Vocabulary Update
 
 ### Changed - documentation overhaul: pictures, freshness, and a sharper README
