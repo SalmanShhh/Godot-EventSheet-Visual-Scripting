@@ -1,0 +1,169 @@
+@tool
+class_name EventSheetClassDBSource
+extends RefCounted
+
+## On-demand vocabulary for ANY Godot class, reflected from the running engine -
+## the way GDScript itself keeps up with new node types. Given a class name, its
+## own public methods become typed Actions (void), Conditions (bool), and
+## Expressions (other returns), and its own signals become triggers - each emitting
+## the same plain `{target.}member(...)` calls the curated vocabulary emits, so
+## parity is untouched and a brand-new engine class works the day it ships.
+##
+## Deliberately conservative:
+## - OWN members only (no inheritance walk) - the picker shows one tight
+##   "All of <Class>" section per class, not 400 Node methods everywhere.
+## - Members a CURATED builtin ACE already covers are filtered out by exact
+##   codegen-template equality, so reflection never shadows the hand-tuned verbs.
+## - Definitions are session-cached per class and IMMUTABLE after generation
+##   (the ACEDefinition contract) - template changes bake into row copies at
+##   apply time, never here.
+## - Reflection is apply-time sugar over plain calls: lifting arbitrary calls
+##   back stays as conservative as ever (the lossless covenant outranks lift
+##   coverage).
+
+## class name -> Array[ACEDefinition], shared for the whole session.
+static var _cache: Dictionary = {}
+## Every curated builtin codegen template, for the shadow filter (built once).
+static var _curated_templates: Dictionary = {}
+
+## Methods reflection never exposes: Object/Node plumbing that would only add noise.
+const METHOD_SKIP := {
+	"free": true, "notification": true, "to_string": true, "get_class": true,
+	"is_class": true, "get_instance_id": true, "queue_free": true,
+	"duplicate": true, "get_script": true, "set_script": true,
+}
+
+
+static func definitions_for_class(target_class: String) -> Array[ACEDefinition]:
+	if _cache.has(target_class):
+		return _cache[target_class]
+	var output: Array[ACEDefinition] = []
+	if not ClassDB.class_exists(target_class):
+		_cache[target_class] = output
+		return output
+	_ensure_curated_templates()
+	for method_info: Dictionary in ClassDB.class_get_method_list(target_class, true):
+		var definition: ACEDefinition = _method_definition(target_class, method_info)
+		if definition != null:
+			output.append(definition)
+	for signal_info: Dictionary in ClassDB.class_get_signal_list(target_class, true):
+		var trigger: ACEDefinition = _signal_definition(target_class, signal_info)
+		if trigger != null:
+			output.append(trigger)
+	_cache[target_class] = output
+	return output
+
+
+static func _method_definition(target_class: String, method_info: Dictionary) -> ACEDefinition:
+	var method_name: String = str(method_info.get("name", ""))
+	if method_name.is_empty() or method_name.begins_with("_") or METHOD_SKIP.has(method_name):
+		return null
+	var flags: int = int(method_info.get("flags", 0))
+	if flags & METHOD_FLAG_VIRTUAL or flags & METHOD_FLAG_STATIC or flags & METHOD_FLAG_VARARG:
+		return null
+	var args: Array = method_info.get("args", [])
+	var arg_names: Array[String] = []
+	var parameters: Array = []
+	for arg_info: Dictionary in args:
+		var arg_name: String = str(arg_info.get("name", "arg"))
+		arg_names.append("{%s}" % arg_name)
+		parameters.append({
+			"id": arg_name,
+			"display_name": arg_name.capitalize(),
+			"description": "",
+			"type": TYPE_STRING,
+			"default_value": _default_literal_for(int(arg_info.get("type", TYPE_NIL))),
+			"hint": "expression",
+			"options": [],
+			"autocomplete": [],
+		})
+	var codegen: String = "{target.}%s(%s)" % [method_name, ", ".join(arg_names)]
+	if _curated_templates.has(codegen):
+		return null
+	var return_type: int = int((method_info.get("return", {}) as Dictionary).get("type", TYPE_NIL))
+	var ace_type: int = ACEDefinition.ACEType.ACTION
+	if return_type == TYPE_BOOL:
+		ace_type = ACEDefinition.ACEType.CONDITION
+	elif return_type != TYPE_NIL:
+		ace_type = ACEDefinition.ACEType.EXPRESSION
+	var definition: ACEDefinition = ACEDefinition.new()
+	definition.provider_id = target_class
+	definition.id = "method:%s" % method_name
+	definition.ace_type = ace_type
+	definition.display_name = method_name.capitalize()
+	definition.category = "All of %s" % target_class
+	definition.description = "%s.%s - reflected from the engine; emits the plain call." % [target_class, method_name]
+	definition.parameters = parameters
+	definition.icon = "action" if ace_type == ACEDefinition.ACEType.ACTION else ("condition" if ace_type == ACEDefinition.ACEType.CONDITION else "expression")
+	definition.metadata = {
+		"codegen_template": codegen,
+		"reflected": true,
+		"reflect_class": target_class,
+	}
+	return definition
+
+
+static func _signal_definition(target_class: String, signal_info: Dictionary) -> ACEDefinition:
+	var signal_name: String = str(signal_info.get("name", ""))
+	if signal_name.is_empty():
+		return null
+	# Signal args ride as typed PARAMETERS: applying the trigger derives the
+	# handler signature from these (the same bake path every trigger takes).
+	var parameters: Array = []
+	for arg_info: Dictionary in signal_info.get("args", []):
+		parameters.append({
+			"id": str(arg_info.get("name", "arg")),
+			"display_name": str(arg_info.get("name", "arg")).capitalize(),
+			"description": "",
+			"type": int(arg_info.get("type", TYPE_NIL)),
+			"default_value": "",
+			"hint": "",
+			"options": [],
+			"autocomplete": [],
+		})
+	var definition: ACEDefinition = ACEDefinition.new()
+	definition.provider_id = target_class
+	definition.id = "signal:%s" % signal_name
+	definition.ace_type = ACEDefinition.ACEType.TRIGGER
+	definition.display_name = "On %s" % signal_name.capitalize()
+	definition.category = "All of %s" % target_class
+	definition.description = "The %s.%s signal, reflected from the engine." % [target_class, signal_name]
+	definition.parameters = parameters
+	definition.icon = "trigger"
+	definition.metadata = {
+		"reflected": true,
+		"reflect_class": target_class,
+	}
+	return definition
+
+
+## The shadow filter's needle set: every curated builtin codegen template, exact.
+static func _ensure_curated_templates() -> void:
+	if not _curated_templates.is_empty():
+		return
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		var template: String = str(descriptor.codegen_template).strip_edges()
+		if not template.is_empty():
+			_curated_templates[template] = true
+
+
+## Reflected params are string expression slots; a type-shaped default keeps the
+## generated call compiling before the user touches it.
+static func _default_literal_for(arg_type: int) -> String:
+	match arg_type:
+		TYPE_INT:
+			return "0"
+		TYPE_FLOAT:
+			return "0.0"
+		TYPE_BOOL:
+			return "false"
+		TYPE_STRING, TYPE_STRING_NAME:
+			return "\"\""
+		TYPE_VECTOR2:
+			return "Vector2.ZERO"
+		TYPE_VECTOR3:
+			return "Vector3.ZERO"
+		TYPE_COLOR:
+			return "Color.WHITE"
+		_:
+			return "null"

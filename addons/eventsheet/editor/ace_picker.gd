@@ -296,10 +296,17 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 
 ## Provider returning true when Simple Mode is on (wired by the dock) — gates the denylist below.
 var _simple_mode_provider: Callable = Callable()
+## Returns the class name whose reflected "All of <Class>" section the picker
+## should offer (the current sheet's host class); invalid = no reflection.
+var _reflect_class_provider: Callable = Callable()
 
 
 func set_simple_mode_provider(provider: Callable) -> void:
 	_simple_mode_provider = provider
+
+
+func set_reflect_class_provider(provider: Callable) -> void:
+	_reflect_class_provider = provider
 
 
 ## Update the registry used for searching (e.g. after a hot-reload).
@@ -504,6 +511,19 @@ func _refresh_tree() -> void:
 		for extra_definition: ACEDefinition in _registry.search(synonym_query):
 			if not definitions.has(extra_definition):
 				definitions.append(extra_definition)
+	# "All of <host class>": the sheet's own class reflected on demand from ClassDB,
+	# so ANY engine class is browsable vocabulary even without curated coverage
+	# (and future Godot classes work the day they ship). Search filters by display
+	# name like everything else; Simple Mode skips the deep end.
+	if _reflect_class_provider.is_valid() and not signals_only:
+		var simple: bool = _simple_mode_provider.is_valid() and bool(_simple_mode_provider.call())
+		if not simple:
+			var query_lower: String = query.to_lower()
+			for reflected: ACEDefinition in EventSheetClassDBSource.definitions_for_class(str(_reflect_class_provider.call())):
+				if filtering and not reflected.display_name.to_lower().contains(query_lower):
+					continue
+				if not definitions.has(reflected):
+					definitions.append(reflected)
 	# Fuzzy fallback ("stt" -> Set Time Scale): subsequence matches on the display name
 	# join AFTER exact + synonym hits, capped so noise never buries real matches.
 	if filtering and query.length() >= 2:

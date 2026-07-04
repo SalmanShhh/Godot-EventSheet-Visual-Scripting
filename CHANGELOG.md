@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - any-node reach, part 1: every Godot class is browsable vocabulary
+
+- **ClassDB reflection on demand**: the picker grows an "All of <host class>" section for
+  the sheet's own class - its methods classify by return type (void = Action, bool =
+  Condition, anything else = Expression) and its own signals become triggers, all reflected
+  live from the running engine, so ANY class works (including classes future Godot versions
+  add) without a hand-authored module.
+- **Parity and safety intact**: every reflected verb emits the same plain
+  `{target.}member(...)` call the curated vocabulary uses; curated verbs are never shadowed
+  (exact-template filter); definitions are session-cached and immutable; Simple Mode skips
+  the deep end; reverse-lift stays as conservative as ever. Pinned in `classdb_source_test`
+  with engine-drift-safe floors.
+
 ### Added - localisation, part 3: the Doctor nudge + the Translating Your Game guide
 
 - **Project Doctor**: sheets that translate text (tr / Set Language) while the project has
