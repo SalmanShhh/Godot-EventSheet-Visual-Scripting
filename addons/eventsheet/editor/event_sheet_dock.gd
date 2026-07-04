@@ -5,6 +5,10 @@ extends Control
 # .gd is listed first so it is the default format for New Sheet / Save As - a sheet is just plain
 # GDScript (no .tres needed). .tres/.res stay available (e.g. library sheets used via Includes).
 const EVENT_SHEET_FILTERS: Array[String] = ["*.gd ; GDScript EventSheet", "*.tres ; EventSheetResource", "*.res ; EventSheetResource"]
+## "Teach a Verb" persistence: sheets shared project-wide list their compiled .gd here
+## (a PackedStringArray in project settings), and the provider scan appends them - so a
+## taught verb survives sessions, unlike the bridge's in-memory registrations.
+const TAUGHT_PROVIDERS_SETTING := "eventsheets/vocabulary/taught_provider_scripts"
 const CONDITION_MENU_EDIT := 1
 const CONDITION_MENU_ADD := 2
 const CONDITION_MENU_REPLACE := 3
@@ -593,6 +597,12 @@ func get_ace_provider_scripts() -> PackedStringArray:
 
 func _on_manage_ace_providers_requested() -> void:
 	_providers_glue.on_manage_ace_providers_requested()
+
+
+
+## "Teach a Verb" (Sheet menu): share this sheet's published verbs project-wide.
+func _share_verbs_with_project_requested() -> void:
+	_providers_glue.share_verbs_with_project()
 
 
 
@@ -3128,6 +3138,13 @@ func _build_addon_ace_sources() -> Array[Object]:
 	for registered_path: String in EventForgeBridgeRuntime.get_registered_provider_scripts():
 		if not provider_paths.has(registered_path):
 			provider_paths.append(registered_path)
+	# Taught verbs: sheets shared via "Teach a Verb" persist project-wide through this
+	# setting (durable across sessions, unlike the bridge's in-memory registrations) -
+	# every listed script's exposed verbs join the picker exactly like a pack's.
+	for taught_path: Variant in ProjectSettings.get_setting(TAUGHT_PROVIDERS_SETTING, PackedStringArray()):
+		var taught: String = str(taught_path)
+		if not taught.is_empty() and not provider_paths.has(taught) and ResourceLoader.exists(taught):
+			provider_paths.append(taught)
 	# Registered autoloads with annotated scripts publish project-wide (event buses,
 	# game state) - zero-config, like eventsheet_addons/.
 	_autoload_provider_names.clear()

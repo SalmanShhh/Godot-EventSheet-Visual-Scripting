@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - Teach a Verb: your project's vocabulary grows as you build
+
+- **Sheet > Teach a Verb - Share Published Verbs** makes a sheet's exposed ƒ functions
+  available in EVERY sheet's picker, node-targeted at $<ClassName> and retargetable -
+  exactly like a behavior pack's ACEs. The verb keeps living in its home sheet (correct
+  self-semantics: the code runs on the node that owns it); teaching only publishes the
+  vocabulary, persisted in project settings so it survives sessions. Extract actions to
+  a function (right-click an event), then teach it - two gestures from a pile of
+  actions to a reusable project-wide verb.
+- Teaching writes settings, never the sheet: no undo step needed, round-trips
+  untouched. Guards refuse politely when the sheet has no class name or no published
+  verbs, with the status line saying exactly what to do next.
+- Pinned end to end by tests/teach_a_verb_test.gd (including a second sheet's registry
+  seeing the taught verb) and render-verified in the picker.
+
 ### Removed - the row-type square that sat on every single row
 
 - Every row (events, groups, comments, region markers, the add-event footers) carried a

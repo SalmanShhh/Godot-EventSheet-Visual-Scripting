@@ -53,6 +53,11 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(9),
 		"Scaffold a ready-to-edit behaviour script in res://eventsheet_addons/ - its signals become triggers, methods become actions/conditions, and @export vars become properties, all auto-discovered as custom ACEs."
 	)
+	sheet_popup.add_item("Teach a Verb - Share Published Verbs", 10)
+	sheet_popup.set_item_tooltip(
+		sheet_popup.get_item_index(10),
+		"Make this sheet's published verbs (its exposed ƒ functions) available in EVERY sheet's picker, node-targeted at $%s. Extract actions to a function first (right-click an event), then teach it here." % "<ClassName>"
+	)
 	sheet_popup.add_item("Export Addon…", 6)
 	sheet_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
@@ -66,6 +71,7 @@ func build(root: Node) -> void:
 			7: _dock._export_gdscript_requested()
 			8: _dock._open_include_manager()
 			9: _dock._new_addon_panel.open()
+			10: _dock._share_verbs_with_project_requested()
 	)
 	_toolbar.add_child(sheet_menu)
 	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")

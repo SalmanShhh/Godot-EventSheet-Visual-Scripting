@@ -20,6 +20,47 @@ func set_auto_ace_sources(sources: Array[Object]) -> void:
 	_dock._refresh_ace_registry()
 
 
+## "Teach a Verb", the sharing half: this sheet's compiled .gd joins the project-wide
+## provider scan (persisted in project settings), so every sheet's picker gains its
+## published verbs - node-targeted at $<class name> and retargetable, exactly like a
+## behavior pack's. The verb LIVES in its home sheet (correct self-semantics: the code
+## runs on the node that owns it); teaching only publishes the vocabulary.
+func share_verbs_with_project() -> bool:
+	var sheet: EventSheetResource = _dock._current_sheet
+	if sheet == null:
+		return false
+	if sheet.custom_class_name.strip_edges().is_empty():
+		_dock._set_status("Teach a Verb needs a class name so other sheets can target the node - set one in Sheet > Sheet Type first.", true)
+		return false
+	var has_exposed: bool = false
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction and (entry as EventFunction).expose_as_ace:
+			has_exposed = true
+			break
+	if not has_exposed:
+		_dock._set_status("No published verbs to teach yet - right-click an event and Extract All Actions to Function first.", true)
+		return false
+	var sheet_path: String = str(_dock._current_sheet_path)
+	if sheet_path.is_empty():
+		_dock._set_status("Save the sheet first - Teach a Verb shares the compiled script on disk.", true)
+		return false
+	var output_path: String = EventSheetProjectDoctor.output_path_for(sheet_path)
+	if not FileAccess.file_exists(output_path):
+		_dock._set_status("Save the sheet first (compile-on-save writes %s) - Teach a Verb shares that script." % output_path.get_file(), true)
+		return false
+	var taught: PackedStringArray = PackedStringArray(ProjectSettings.get_setting(EventSheetDock.TAUGHT_PROVIDERS_SETTING, PackedStringArray()))
+	if not taught.has(output_path):
+		taught.append(output_path)
+		ProjectSettings.set_setting(EventSheetDock.TAUGHT_PROVIDERS_SETTING, taught)
+		# Persist only inside the real editor - headless tests exercise the in-memory
+		# setting and must never rewrite the project file.
+		if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+			ProjectSettings.save()
+	_dock._refresh_ace_registry()
+	_dock._set_status("Taught: %s's published verbs are now in every sheet's picker (node-targeted at $%s)." % [sheet.custom_class_name.strip_edges(), sheet.custom_class_name.strip_edges()])
+	return true
+
+
 ## Registers a GDScript file as a custom-ACE provider on the current sheet. Its annotated
 ## methods/signals/exported properties then appear in the ACE picker.
 func add_ace_provider_script(path: String) -> bool:
