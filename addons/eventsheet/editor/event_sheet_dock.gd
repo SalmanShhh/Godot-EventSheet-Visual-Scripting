@@ -160,7 +160,8 @@ var _menu_bar: EventSheetMenuBar = EventSheetMenuBar.new()  # top toolbar + grou
 var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # right-click context menus: condition/action/row/variable/empty-space build + per-click configure (dock/context_menus.gd)
 var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
-var _ui_builder: EventSheetDockUIBuilder = EventSheetDockUIBuilder.new()  # UI construction pass (dock/dock_ui_builder.gd)
+var _ui_builder: EventSheetDockUIBuilder = EventSheetDockUIBuilder.new()
+var _input_dispatch: EventSheetDockInputDispatch = EventSheetDockInputDispatch.new()  # menu/shortcut routing (dock/dock_input_dispatch.gd)  # UI construction pass (dock/dock_ui_builder.gd)
 var _ace_apply: EventSheetACEApply = EventSheetACEApply.new()  # ACE application (condition/action/trigger baking + insert) + row/ACE drag-drop reorder (dock/ace_apply.gd)
 var _row_edit_ops: EventSheetRowEditOps = EventSheetRowEditOps.new()  # context-menu row/ACE edit ops: enable/disable, delete, indent/outdent, else, insert, bulk-selection, invert/OR-AND (dock/row_edit_ops.gd)
 var _preview_glue: EventSheetPreviewGlue = EventSheetPreviewGlue.new()  # .gd-preview banner + "Edit Events" unlock + Open-in-Godot script-editor glue + lift-report window (dock/preview_glue.gd)
@@ -204,6 +205,7 @@ func _init() -> void:
 	# Same reason as _sheet_io: a test may apply an ACE (or exercise drag-drop) on a fresh .new()
 	# editor before _ready. init() only stores _dock, so wiring it here (and again in the cluster) is safe.
 	_ui_builder.init(self)
+	_input_dispatch.init(self)
 	_ace_apply.init(self)
 	# Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning — tests exercise ops like
 	# _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.
@@ -725,94 +727,8 @@ func _build_theme_file_dialog() -> void:  # called by _build_ui() — theme file
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
-	if not (event is InputEventKey):
-		return
-	var key_event: InputEventKey = event as InputEventKey
-	if not key_event.pressed or key_event.echo:
-		return
-	if key_event.keycode == KEY_ESCAPE and _ace_picker.is_open():
-		_ace_picker.close()
-		accept_event()
-		return
-	# Structural/letter shortcuts are suppressed while typing in a text field so authoring
-	# keys never fire mid-edit (text fields already consume their own text shortcuts).
-	var typing: bool = _text_field_has_focus()
-	var shift: bool = key_event.shift_pressed
-	# Rebindable shortcuts (EventSheetShortcuts — edit via Tools ▸ Keyboard Shortcuts, saved per-user):
-	# exact modifier matching, so a chord never shadows its plain form. Entries:
-	# [action, suppressed-while-typing, handler]. Core reflexes by default: E event,
-	# C condition, A action (each opens the Ghost Row — the type-a-sentence add popup; the Ctrl
-	# chords + toolbar keep the classic pickers), Q comment, G group, X toggle.
-	for entry: Array in [
-		["add_condition_chord", true, _on_add_condition_requested],
-		["add_action_chord", true, _on_add_action_requested],
-		["add_variable_chord", true, _on_add_global_variable_requested],
-		["add_event_chord", true, _on_add_event_requested],
-		["duplicate", true, _on_duplicate_requested],
-		["save_as", false, _on_save_as_requested],
-		["save", false, _on_save_requested],
-		["open", false, _on_open_requested],
-		["copy", false, _on_copy_requested],
-		["paste", false, _on_paste_requested],
-		["redo", false, _on_redo_requested],
-		["undo", false, _on_undo_requested],
-		["add_comment", true, _on_add_comment_requested],
-		["add_event", true, _open_ghost_event],
-		["add_condition", true, _open_ghost_condition],
-		["add_action", true, _open_ghost_action],
-		["add_group", true, _on_add_group_requested],
-		["toggle_enabled", true, _toggle_selected_enabled],
-		["add_blank_subevent", true, _on_add_blank_subevent_key],
-		["invert_condition", true, _on_invert_condition_key],
-		["replace_ace", true, _on_replace_ace_key],
-		["history_back", true, _navigate.go_back],
-		["history_forward", true, _navigate.go_forward],
-	]:
-		if EventSheetShortcuts.matches(key_event, str(entry[0])):
-			if bool(entry[1]) and typing:
-				return  # let the text field keep the keystroke
-			(entry[2] as Callable).call()
-			accept_event()
-			return
-	# Fixed alternates + structural keys (grammar, not preference — never rebindable):
-	# Ctrl+Y redo, Ctrl+± zoom, Tab nesting, Delete, Enter/F2 inline edit.
-	if key_event.ctrl_pressed or key_event.meta_pressed:
-		if key_event.keycode == KEY_P:
-			_open_command_palette()
-			accept_event()
-		elif key_event.keycode == KEY_Y:
-			_on_redo_requested()
-			accept_event()
-		elif key_event.keycode in [KEY_EQUAL, KEY_PLUS, KEY_KP_ADD]:
-			_on_zoom_in_requested()
-			accept_event()
-		elif key_event.keycode in [KEY_MINUS, KEY_KP_SUBTRACT]:
-			_on_zoom_out_requested()
-			accept_event()
-		return
-	if typing:
-		return
-	if key_event.keycode == KEY_TAB and shift:
-		# Outdent (un-nest); only consume Tab when the move actually applies so normal
-		# focus traversal still works when there is nothing to outdent.
-		if _outdent_selected_event():
-			accept_event()
-	elif key_event.keycode == KEY_TAB:
-		if _indent_selected_event():
-			accept_event()
-	elif key_event.keycode == KEY_BACKTAB:
-		if _outdent_selected_event():
-			accept_event()
-	elif key_event.keycode in [KEY_DELETE, KEY_BACKSPACE]:
-		_delete_selected_content()
-		accept_event()
-	elif key_event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
-		# Same param-scope-aware funnel as the viewport's own Enter, so both paths agree.
-		if _viewport != null and _viewport.handle_enter_key():
-			accept_event()
-	elif key_event.keycode == KEY_F2:
-		if _viewport != null and _viewport.begin_edit_selected():
-			accept_event()
+	_input_dispatch.unhandled_key_input(event)
+
 
 
 ## True when a text-input control owns keyboard focus (so authoring shortcuts are paused).
@@ -3127,136 +3043,8 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 
 
 func _on_row_context_menu_id_pressed(id: int) -> void:
-	if _context_row == null:
-		return
-	match id:
-		ROW_MENU_ADD_SUB_EVENT:
-			_insert_child_event_for_context_row()
-		ROW_MENU_ADD_COMMENT_SUB_EVENT:
-			_insert_child_comment_for_context_row()
-		ROW_MENU_ADD_EVENT_BELOW:
-			_insert_context_row_below(EventRow.new(), "Added event.")
-		ROW_MENU_ADD_GROUP_BELOW:
-			var group: EventGroup = EventGroup.new()
-			group.name = "Group"
-			group.group_name = group.name
-			_insert_context_row_below(group, "Added group.")
-		ROW_MENU_ADD_COMMENT_BELOW:
-			var comment: CommentRow = CommentRow.new()
-			comment.text = "Comment"
-			_insert_context_row_below(comment, "Added comment.")
-		ROW_MENU_ADD_VARIABLE_BELOW:
-			_add_tree_variable_below_context_row()
-		ROW_MENU_ADD_GDSCRIPT_BELOW:
-			var raw_block: RawCodeRow = RawCodeRow.new()
-			raw_block.code = "# GDScript — emitted verbatim at class level"
-			_insert_context_row_below(raw_block, "Added GDScript block.")
-		ROW_MENU_ADD_GDSCRIPT_ACTION:
-			_add_gdscript_action_to_context_row()
-		ROW_MENU_COPY:
-			_on_copy_requested()
-		ROW_MENU_SURROUND_REGION:
-			_surround_selection_with_region()
-		ROW_MENU_PASTE:
-			_on_paste_requested()
-		ROW_MENU_DELETE:
-			_delete_selected_rows()
-		ROW_MENU_TOGGLE_CONDITION_BLOCK:
-			_toggle_context_condition_block()
-		ROW_MENU_TOGGLE_GROUP_FOLD:
-			_toggle_context_group_fold()
-		ROW_MENU_ADD_SUB_CONDITION:
-			_open_sub_condition_picker_for_context_row()
-		ROW_MENU_MAKE_ELSE:
-			_set_context_else_mode(EventRow.ElseMode.ELSE)
-		ROW_MENU_MAKE_ELIF:
-			_set_context_else_mode(EventRow.ElseMode.ELIF)
-		ROW_MENU_EXTRACT_GDSCRIPT_FN:
-			_extract_to_function_requested()
-		ROW_MENU_BREAKPOINT_CONDITION:
-			_set_breakpoint_condition_requested()
-		ROW_MENU_TOGGLE_ENABLED:
-			_toggle_context_row_enabled()
-		ROW_MENU_EDIT_COMMENT:
-			if _context_row.source_resource is CommentRow:
-				_open_comment_dialog(_context_row.source_resource)
-			else:
-				_set_status("Select a comment row to edit it.", true)
-		ROW_MENU_ATTACH_COMMENT:
-			if _context_row.source_resource is CommentRow:
-				_attach_comment_to_event_above(_context_row.source_resource as CommentRow)
-			else:
-				_set_status("Only comment rows can attach to an event.", true)
-		ROW_MENU_ADD_PICK_FILTER:
-			_open_pick_filter_dialog(_context_row.source_resource, -1)
-		ROW_MENU_SCOPE_TO_NODE:
-			if _context_row != null and _context_row.source_resource is EventRow:
-				_open_with_node_dialog(_context_row.source_resource)
-		ROW_MENU_ADD_ENUM:
-			var new_enum: EnumRow = EnumRow.new()
-			_insert_context_row_below(new_enum, "Added enum.")
-			_open_enum_dialog(new_enum)
-		ROW_MENU_OPEN_IN_SPLIT:
-			_open_row_in_split(_context_row)
-		ROW_MENU_ADD_SIGNAL:
-			var new_signal: SignalRow = SignalRow.new()
-			_insert_context_row_below(new_signal, "Added signal.")
-			_open_signal_dialog(new_signal)
-		ROW_MENU_ADD_MATCH:
-			if _context_row.source_resource is EventRow:
-				var new_match: MatchRow = MatchRow.new()
-				var match_host: EventRow = _context_row.source_resource as EventRow
-				var added_match: bool = _perform_undoable_sheet_edit("Add Match", func() -> bool:
-					match_host.actions.append(new_match)
-					return true
-				)
-				if added_match:
-					_refresh_after_edit()
-					_open_match_dialog(new_match)
-			else:
-				_set_status("Select an event to add a match to its actions.", true)
-		ROW_MENU_FIND_USAGES:
-			var usage_target: Resource = _context_row.source_resource if _context_row != null else null
-			var usage_query: String = ""
-			if usage_target is LocalVariable:
-				usage_query = (usage_target as LocalVariable).name
-			elif usage_target is EventGroup:
-				usage_query = (usage_target as EventGroup).group_name
-			elif _context_row != null and not _context_row.spans.is_empty():
-				usage_query = str(_context_row.spans[0].text).get_slice(":", 0).strip_edges()
-			if usage_query.is_empty():
-				_set_status("Nothing identifiable to search for on this row.", true)
-			else:
-				_open_project_find(usage_query)
-		ROW_MENU_GROUP_RUNTIME:
-			_toggle_group_runtime()
-		ROW_MENU_GROUP_COLOR:
-			_open_group_color_picker()
-		ROW_MENU_BULK_TOGGLE_ENABLED:
-			_bulk_set_enabled_on(_top_level_selected_resources())
-		ROW_MENU_BULK_DUPLICATE:
-			_bulk_duplicate_rows(_top_level_selected_resources())
-		ROW_MENU_BULK_GROUP:
-			var group_problem: String = _bulk_group_rows(_top_level_selected_resources())
-			if not group_problem.is_empty():
-				_set_status(group_problem, true)
-		ROW_MENU_SAVE_SNIPPET:
-			_open_save_snippet_dialog()
-		ROW_MENU_INSERT_SNIPPET:
-			_open_insert_snippet()
-		ROW_MENU_EDIT_GROUP_DESC:
-			if _context_row.source_resource is EventGroup:
-				var described_group: EventGroup = _context_row.source_resource as EventGroup
-				if described_group.description.strip_edges().is_empty():
-					var seeded: bool = _perform_undoable_sheet_edit("Add Group Description", func() -> bool:
-						described_group.description = "Description"
-						return true
-					)
-					if seeded:
-						_refresh_after_edit()
-				_set_status("Double-click the description line (or slow-double-click) to edit it.")
-			else:
-				_set_status("Select a group to edit its description.", true)
+	_input_dispatch.on_row_context_menu_id_pressed(id)
+
 
 
 # ── Bulk operations on the multi-selection — bodies in EventSheetRowEditOps (dock/row_edit_ops.gd).
@@ -3838,49 +3626,9 @@ func _select_first_event_row() -> void:
 			return
 
 
-## "Surround with Region…": wraps the selected top-level rows (or the right-clicked
-## row) in a fresh #region / #endregion fence pair as ONE undo step, then opens the
-## fence editor so the region gets its name/description/color right away - the
-## script editor's surround gesture, event-sheet style. Rows nested inside groups
-## are skipped (fences pair per level; wrap the group itself instead).
 func _surround_selection_with_region() -> void:
-	if _current_sheet == null:
-		return
-	var entry_indices: Array[int] = []
-	var selected_rows: Array[EventRowData] = _viewport.get_selected_rows() if _viewport != null else []
-	if selected_rows.is_empty() and _context_row != null:
-		selected_rows = [_context_row]
-	for row_data: EventRowData in selected_rows:
-		if row_data == null or row_data.source_resource == null:
-			continue
-		var entry_index: int = _current_sheet.events.find(row_data.source_resource)
-		if entry_index != -1 and not entry_indices.has(entry_index):
-			entry_indices.append(entry_index)
-	if entry_indices.is_empty():
-		_set_status("Select top-level rows to surround with a region.", true)
-		return
-	entry_indices.sort()
-	var first_index: int = entry_indices[0]
-	var last_index: int = entry_indices[entry_indices.size() - 1]
-	var opener: CustomBlockRow = CustomBlockRow.new()
-	opener.kind_id = "region"
-	opener.fields = {"label": "New Region", "is_end": false}
-	var closer: CustomBlockRow = CustomBlockRow.new()
-	closer.kind_id = "region"
-	closer.fields = {"label": "", "is_end": true}
-	var changed: bool = _perform_undoable_sheet_edit("Surround with Region", func() -> bool:
-		_current_sheet.events.insert(last_index + 1, closer)
-		_current_sheet.events.insert(first_index, opener)
-		return true)
-	if not changed:
-		return
-	_refresh_after_edit()
-	_mark_dirty("Surrounded %d row%s with a region." % [entry_indices.size(), "" if entry_indices.size() == 1 else "s"])
-	# Name it right away. The undo funnel replaces resources with snapshot duplicates
-	# on commit, so re-fetch the live opener from the sheet instead of trusting `opener`.
-	var live_opener: Resource = _current_sheet.events[first_index] if first_index < _current_sheet.events.size() else null
-	if live_opener is CustomBlockRow and (live_opener as CustomBlockRow).kind_id == "region":
-		_open_block_editor(live_opener)
+	_input_dispatch.surround_selection_with_region()
+
 
 
 func _refresh_after_edit() -> void:

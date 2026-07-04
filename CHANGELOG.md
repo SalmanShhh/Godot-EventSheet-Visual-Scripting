@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed - mega-file breakdown: five new commented subsystem modules
+
+- **The viewport sheds three subsystems** (3,752 -> 3,164 lines): folding + region fold
+  persistence (`interaction/viewport_folding.gd`), the 260-line per-row geometry pass
+  (`interaction/viewport_layout_builder.gd`), and the box-selection + row/ACE drag gestures
+  (`interaction/viewport_drag.gd`).
+- **The dock sheds two** (4,624 -> 3,951 lines): the five UI construction passes
+  (`dock/dock_ui_builder.gd`) and the input dispatch layer - row-menu routing, workspace
+  shortcuts, Surround with Region (`dock/dock_input_dispatch.gd`).
+- Every move is VERBATIM behind the established `_dock.`/`_viewport.` back-reference with
+  one-line delegates keeping all call sites (and tests) untouched; each new module opens
+  with a header explaining what lives there and why state stays on the host. Suite green
+  after every step.
+
 ### Added - any-node reach, part 3: your own classes reflect too
 
 - **User `class_name` scripts reflect like engine classes**: the sheet's host class being a
