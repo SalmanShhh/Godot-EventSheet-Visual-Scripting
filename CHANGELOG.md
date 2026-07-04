@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.11.0] - 2026-07-04 - The Structure & Vocabulary Update
 
 ### Changed - documentation overhaul: pictures, freshness, and a sharper README
 

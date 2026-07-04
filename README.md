@@ -104,7 +104,7 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 - **Every inspector export option in plain language** - the Variable dialog's "Inspector look" picker covers the full `@export` hint surface (range modifiers, flags, layer grids, file/folder pickers, node-path filters, password/expression/link, storage) with a live preview and a "Ships as:" GDScript strip; all of it round-trips losslessly.
 - **Faster to open** - ACE definitions are cached for the session; a warm registry refresh dropped from ~200ms to ~5ms, so tab switches and rescans are instant.
 
-**On main since v0.10.0** (the next release's ledger, already shipped and test-gated):
+**`v0.11.0` - "The Structure & Vocabulary Update"** gives big sheets structure and makes the vocabulary grow with your project:
 
 - **Collapsible regions** - `#region` fences become foldable, color-tinted bubble outlines around any run of rows (groups and every block kind nest inside; they glow when you drag into them), with an editable color + description and folds that survive reopening the project - all without changing a single byte of the `.gd`.
 - **Choose Inspector looks by picture** - a **Look Gallery** of miniature widget tiles (checkbox flags, layer grids, file pickers, easing curves) plus a live **Inspector preview** card that states your choices as one plain sentence.
@@ -130,7 +130,7 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 | `v0.9.0` - **Performance & Game Feel**: frame-spreading, Juice pack, code-free authoring, first-class UI/raycast/particles/tilemaps/shaders, ACE safety audit | ✅ shipped |
 | `v0.9.5` - **Code-Free Authoring & First-Class Variables**: `.gd`-default sheets, zero-block packs, `@export` variables + drawers, addon-author loop | ✅ shipped |
 | `v0.10.0` - **The In-Sheet Authoring Update**: ACE Studio, per-function shell-lift (mid-file + custom-return helpers anchored in place), Anatomy panel, Ghost Row / Param Hop / bulk retune, error→row + paused-at-row, sheet diff, variable folders + subgroups, the Custom Block API, script-intent UX (custom resources + editor tools), full inspector-export coverage | ✅ shipped |
-| `v0.11` - **Structure & Vocabulary**: collapsible colored regions, Look Gallery + Inspector preview, localisation vocabulary, any-node reflection, terse providers (all 31 packs migrated + audit-gated), the abstraction levers (Extract/Teach/featured/compression cue), the public `EventSheets` API | ✅ on main |
+| `v0.11.0` - **The Structure & Vocabulary Update**: collapsible colored regions, Look Gallery + Inspector preview, localisation vocabulary, any-node reflection, terse providers (all 31 packs migrated + audit-gated), the abstraction levers (Extract/Teach/featured/compression cue), the public `EventSheets` API | ✅ shipped |
 | _Roadmap_ - Menu/HUD pack + UI starter, 2D overlap queries, scene-transition + dialogue packs, community feedback | 🗺 planned |
 
 ## Project layout
