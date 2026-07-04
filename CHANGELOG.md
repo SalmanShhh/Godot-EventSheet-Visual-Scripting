@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Added - the EventSheets public API: one class to build on
+
+- **`EventSheets`** (`addons/eventsheet/api/eventsheets.gd`): the all-static facade every
+  extension calls instead of reaching into editor internals, with the same stability
+  covenant as `ace_id`s - shapes never rename once shipped. Three service groups:
+  VOCABULARY (`register_provider_script`, `register_block_kind`, `find_ace`,
+  `class_vocabulary`), EDITOR (`current_sheet`, `open_sheet`, the `edit()` undo funnel -
+  one labelled undo step with refresh + dirty handled, `set_status`, Command Palette
+  registration), and CODEGEN (`compile`, `open_gd_as_sheet`, and `round_trips()` - the
+  byte gate as a one-line service). Editor services no-op safely with no dock open;
+  vocabulary and codegen work anywhere, including headless CI.
+- **The plugin dogfoods its own API**: the four region fold commands now reach the
+  Command Palette through `EventSheets.register_palette_command` (the palette merges
+  extension entries after the built-ins), and the MCP server's compile and import tools
+  route through `EventSheets.compile` / `EventSheets.open_gd_as_sheet`.
+- **`docs/BUILDING-ON-EVENTSHEETS.md`**: what you can build, the one-minute EditorPlugin
+  tour, per-group walkthroughs, the full reference table, and the mistakes that bite
+  (cached rows across `edit()`, mutating shared definitions, the `"output"` result key).
+- Pinned by `tests/eventsheets_api_test.gd`: dock-free codegen + vocabulary, the `edit()`
+  funnel against a real dock, palette register/replace/unregister, and the fold commands
+  arriving through the public seam.
+
 ### Changed - mega-file breakdown: five new commented subsystem modules
 
 - **The viewport sheds four subsystems** (3,752 -> 2,753 lines, UNDER 3k): folding + region fold

@@ -38,10 +38,6 @@ func _command_palette_commands() -> Array[Dictionary]:
 		{"title": "Toggle GDScript Panel", "run": _dock._toggle_code_panel},
 		{"title": "What Changed Since Save…", "run": func() -> void: _dock._sheet_diff.open()},
 		{"title": "Toggle Simple Mode", "run": func() -> void: _dock.set_simple_mode(not _dock._simple_mode)},
-		{"title": "Fold All Regions", "run": func() -> void: _dock._viewport.set_region_folds(true)},
-		{"title": "Unfold All Regions", "run": func() -> void: _dock._viewport.set_region_folds(false)},
-		{"title": "Fold Everything (regions + groups)", "run": func() -> void: _dock._viewport.set_region_folds(true, true)},
-		{"title": "Unfold Everything", "run": func() -> void: _dock._viewport.set_region_folds(false, true)},
 		{"title": "Zoom In", "run": _dock._on_zoom_in_requested},
 		{"title": "Zoom Out", "run": _dock._on_zoom_out_requested},
 		{"title": "Sheet Type…", "run": _dock._open_sheet_type_dialog},
@@ -54,6 +50,9 @@ func _command_palette_commands() -> Array[Dictionary]:
 	for kind: EventSheetBlockKind in EventSheetBlockRegistry.addable_kinds():
 		var kind_id: String = kind.kind_id
 		commands.append({"title": "Add %s…" % kind.title, "run": func() -> void: _dock._open_custom_block_add(kind_id)})
+	# Extension commands registered through the public API (EventSheets.register_palette_
+	# command) - the plugin's own region fold commands arrive this way, dogfooding the seam.
+	commands.append_array(EventSheets.palette_commands())
 	return commands
 
 

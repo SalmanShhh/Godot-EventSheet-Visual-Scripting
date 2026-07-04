@@ -270,7 +270,7 @@ func _tool_compile_sheet(arguments: Dictionary) -> Dictionary:
 		return {"error": "Not an event sheet: %s" % path}
 	var write_output: bool = bool(arguments.get("write_output", false))
 	var output_path: String = "" if write_output else "user://eventsheets_mcp_dry_run.gd"
-	var result: Dictionary = SheetCompiler.compile(sheet, output_path)
+	var result: Dictionary = EventSheets.compile(sheet, output_path)
 	return {
 		"success": bool(result.get("success", false)),
 		"errors": result.get("errors", []),
@@ -307,7 +307,7 @@ func _tool_apply_snippet(arguments: Dictionary) -> Dictionary:
 	if EventSheetSnippet.is_snippet_text(text):
 		rows = EventSheetSnippet.deserialize(text).get("rows", [])
 	else:
-		var converted: EventSheetResource = GDScriptImporter.new().import_external_source(text)
+		var converted: EventSheetResource = EventSheets.open_gd_as_sheet(text)
 		for row: Variant in converted.events:
 			# Drop the synthetic prelude block the importer creates for bare pastes.
 			if row is RawCodeRow and (row as RawCodeRow).code.strip_edges().begins_with("extends "):

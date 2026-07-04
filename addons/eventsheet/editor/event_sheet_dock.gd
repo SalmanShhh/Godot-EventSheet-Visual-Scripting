@@ -218,6 +218,14 @@ func _init() -> void:
 	_queries.init(self)
 	_add_rows.init(self)
 	_extract_ops.init(self)
+	# The public extension API (addons/eventsheet/api/eventsheets.gd) fronts this dock;
+	# the region fold commands register through it as living proof the extension point
+	# works - delete these four lines and only extensions lose their entries.
+	EventSheets._register_dock(self)
+	EventSheets.register_palette_command("Fold All Regions", func() -> void: _viewport.set_region_folds(true))
+	EventSheets.register_palette_command("Unfold All Regions", func() -> void: _viewport.set_region_folds(false))
+	EventSheets.register_palette_command("Fold Everything (regions + groups)", func() -> void: _viewport.set_region_folds(true, true))
+	EventSheets.register_palette_command("Unfold Everything", func() -> void: _viewport.set_region_folds(false, true))
 	_ace_apply.init(self)
 	# Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning — tests exercise ops like
 	# _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.
