@@ -107,6 +107,45 @@ static func run() -> bool:
 		ok = _check("the group row is the region's child", mixed_opener.children[0].source_resource is EventGroup, true) and ok
 		ok = _check("an enum block is the region's child", mixed_opener.children[1].source_resource is EnumRow, true) and ok
 
+	# ── Fold All / Unfold All sweep every paired region in one step ──
+	var sweep_sheet: EventSheetResource = _sheet_with([
+		_region("A", false), _comment("x"), _region("", true),
+		_region("B", false), _comment("y"), _region("", true)
+	])
+	viewport.set_sheet(sweep_sheet)
+	viewport.set_region_folds(true)
+	var swept: Array = _region_rows_in(viewport._build_rows_from_sheet(sweep_sheet))
+	ok = _check("Fold All folds every region", bool(swept[0].folded) and bool(swept[1].folded), true) and ok
+	viewport.set_region_folds(false)
+	swept = _region_rows_in(viewport._build_rows_from_sheet(sweep_sheet))
+	ok = _check("Unfold All reopens every region", bool(swept[0].folded) or bool(swept[1].folded), false) and ok
+
+	# ── The containing region resolves from any row inside its range ──
+	viewport._fold_state.clear()
+	viewport.set_sheet(sweep_sheet)
+	ok = _check("a row inside region A resolves to A's opener", viewport._enclosing_region_flat_index(1), 0) and ok
+	ok = _check("the opener itself counts as inside", viewport._enclosing_region_flat_index(0), 0) and ok
+	ok = _check("a row inside region B resolves to B's opener", viewport._enclosing_region_flat_index(4), 3) and ok
+
+	# ── Surround with Region: fences wrap the context row as one undo step ──
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(_sheet_with([_comment("alpha"), _comment("beta")]))
+	var dock_sheet: EventSheetResource = dock.get_current_sheet()
+	var alpha_row := EventRowData.new()
+	alpha_row.source_resource = dock_sheet.events[0]
+	dock._context_row = alpha_row
+	dock._surround_selection_with_region()
+	var wrapped_kinds: Array = []
+	for entry: Resource in dock.get_current_sheet().events:
+		if entry is CustomBlockRow:
+			wrapped_kinds.append(bool((entry as CustomBlockRow).fields.get("is_end", false)))
+		else:
+			wrapped_kinds.append(str((entry as CommentRow).text))
+	ok = _check("surround inserts opener + closer around the row",
+		str(wrapped_kinds), str([false, "alpha", true, "beta"])) and ok
+
+	dock.free()
 	viewport.free()
 	return ok
 

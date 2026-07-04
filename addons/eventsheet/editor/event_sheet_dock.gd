@@ -43,6 +43,7 @@ const ROW_MENU_EDIT_GROUP_DESC := 20
 const ROW_MENU_GROUP_COLOR := 27
 const ROW_MENU_GROUP_RUNTIME := 28
 const ROW_MENU_FIND_USAGES := 29
+const ROW_MENU_SURROUND_REGION := 30
 const ROW_MENU_SAVE_SNIPPET := 30
 const ROW_MENU_INSERT_SNIPPET := 31
 const ROW_MENU_BULK_TOGGLE_ENABLED := 32
@@ -3574,6 +3575,8 @@ func _on_row_context_menu_id_pressed(id: int) -> void:
 			_add_gdscript_action_to_context_row()
 		ROW_MENU_COPY:
 			_on_copy_requested()
+		ROW_MENU_SURROUND_REGION:
+			_surround_selection_with_region()
 		ROW_MENU_PASTE:
 			_on_paste_requested()
 		ROW_MENU_DELETE:
@@ -4253,6 +4256,51 @@ func _select_first_event_row() -> void:
 		if row_data != null and row_data.source_resource is EventRow:
 			_viewport._select_row(row_index)
 			return
+
+
+## "Surround with Region…": wraps the selected top-level rows (or the right-clicked
+## row) in a fresh #region / #endregion fence pair as ONE undo step, then opens the
+## fence editor so the region gets its name/description/color right away - the
+## script editor's surround gesture, event-sheet style. Rows nested inside groups
+## are skipped (fences pair per level; wrap the group itself instead).
+func _surround_selection_with_region() -> void:
+	if _current_sheet == null:
+		return
+	var entry_indices: Array[int] = []
+	var selected_rows: Array[EventRowData] = _viewport.get_selected_rows() if _viewport != null else []
+	if selected_rows.is_empty() and _context_row != null:
+		selected_rows = [_context_row]
+	for row_data: EventRowData in selected_rows:
+		if row_data == null or row_data.source_resource == null:
+			continue
+		var entry_index: int = _current_sheet.events.find(row_data.source_resource)
+		if entry_index != -1 and not entry_indices.has(entry_index):
+			entry_indices.append(entry_index)
+	if entry_indices.is_empty():
+		_set_status("Select top-level rows to surround with a region.", true)
+		return
+	entry_indices.sort()
+	var first_index: int = entry_indices[0]
+	var last_index: int = entry_indices[entry_indices.size() - 1]
+	var opener: CustomBlockRow = CustomBlockRow.new()
+	opener.kind_id = "region"
+	opener.fields = {"label": "New Region", "is_end": false}
+	var closer: CustomBlockRow = CustomBlockRow.new()
+	closer.kind_id = "region"
+	closer.fields = {"label": "", "is_end": true}
+	var changed: bool = _perform_undoable_sheet_edit("Surround with Region", func() -> bool:
+		_current_sheet.events.insert(last_index + 1, closer)
+		_current_sheet.events.insert(first_index, opener)
+		return true)
+	if not changed:
+		return
+	_refresh_after_edit()
+	_mark_dirty("Surrounded %d row%s with a region." % [entry_indices.size(), "" if entry_indices.size() == 1 else "s"])
+	# Name it right away. The undo funnel replaces resources with snapshot duplicates
+	# on commit, so re-fetch the live opener from the sheet instead of trusting `opener`.
+	var live_opener: Resource = _current_sheet.events[first_index] if first_index < _current_sheet.events.size() else null
+	if live_opener is CustomBlockRow and (live_opener as CustomBlockRow).kind_id == "region":
+		_open_block_editor(live_opener)
 
 
 func _refresh_after_edit() -> void:

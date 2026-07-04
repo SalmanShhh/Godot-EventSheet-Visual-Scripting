@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - region fold commands: Fold All, bracket shortcuts, Surround with Region
+
+- **Command Palette**: Fold All Regions, Unfold All Regions, and Fold/Unfold Everything
+  (regions + groups) sweep the whole sheet in one step.
+- **Ctrl+Shift+[ / ]** fold and unfold the region CONTAINING the selection (script-editor
+  muscle memory); folding lands the selection on the opener so it never vanishes.
+- **"Surround with Region…"** on the row context menu (More) wraps the selected top-level
+  rows in a fresh fence pair as one undo step, then opens the fence editor so the region
+  gets its name, description, and color immediately.
+
 ### Added - regions grow up: color, description, drag-in glow, and everything nests
 
 - **Editable color + description per region** (the fence's edit dialog gains a color picker

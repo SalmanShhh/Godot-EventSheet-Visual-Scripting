@@ -188,6 +188,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
 	m.add_separator()
 	m.add_item("Save Selection as Snippet…", _dock.ROW_MENU_SAVE_SNIPPET)
 	m.add_item("Insert Snippet…", _dock.ROW_MENU_INSERT_SNIPPET)
+	m.add_item("Surround with Region…", _dock.ROW_MENU_SURROUND_REGION)
 
 
 func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:

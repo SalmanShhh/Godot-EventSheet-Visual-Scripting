@@ -1178,6 +1178,43 @@ func _draw_region_bubbles(width: float) -> void:
 		bubble.draw(get_canvas_item(), Rect2(left, top + 1.0, width - left - 3.0, bottom - top - 2.0))
 
 
+## Folds or unfolds every paired region in one step (Command Palette: Fold All
+## Regions / Unfold All Regions). include_groups extends the sweep to event
+## groups for the whole-sheet Fold Everything command.
+func set_region_folds(folded: bool, include_groups: bool = false) -> void:
+	_set_folds_in(_root_rows, folded, include_groups)
+	_refresh_rows()
+
+
+func _set_folds_in(rows: Array[EventRowData], folded: bool, include_groups: bool) -> void:
+	for row_data: EventRowData in rows:
+		if row_data.children.is_empty():
+			continue
+		var foldable: bool = _row_builder._is_region_row(row_data) \
+			or (include_groups and row_data.source_resource is EventGroup)
+		if foldable:
+			row_data.folded = folded
+			_fold_state[row_data.row_uid] = folded
+		_set_folds_in(row_data.children, folded, include_groups)
+
+
+## The flat index of the innermost paired region whose visible range contains
+## flat_index (the opener itself counts as inside), or -1. Walks backwards, so
+## the first covering opener found is the innermost.
+func _enclosing_region_flat_index(flat_index: int) -> int:
+	if flat_index < 0 or flat_index >= _flat_rows.size():
+		return -1
+	for candidate_index in range(flat_index, -1, -1):
+		var candidate: EventRowData = _flat_rows[candidate_index].get("row")
+		if candidate == null or candidate.children.is_empty():
+			continue
+		if not _row_builder._is_region_row(candidate):
+			continue
+		if candidate_index + _visible_descendant_count(candidate) >= flat_index:
+			return candidate_index
+	return -1
+
+
 ## How many of a row's descendants are currently visible in the flat list (its
 ## children run contiguously right after it in flatten order; a folded child
 ## contributes itself but hides its own subtree).
@@ -1852,6 +1889,26 @@ func _handle_key(event: InputEventKey) -> void:
 		_select_row(_selected_row_index + 1, _selected_span_index)
 		ensure_selection_visible()
 		accept_event()
+	elif event.keycode == KEY_BRACKETLEFT and event.ctrl_pressed and event.shift_pressed:
+		# Ctrl+Shift+[ folds the REGION containing the selection (script-editor muscle
+		# memory); the selection lands on the opener so it never vanishes into the fold.
+		var fold_region_index: int = _enclosing_region_flat_index(_selected_row_index)
+		if fold_region_index >= 0:
+			var fold_region: EventRowData = _row_at(fold_region_index)
+			fold_region.folded = true
+			_fold_state[fold_region.row_uid] = true
+			_select_row(fold_region_index, -1)
+			_refresh_rows()
+			accept_event()
+	elif event.keycode == KEY_BRACKETRIGHT and event.ctrl_pressed and event.shift_pressed:
+		# Ctrl+Shift+] unfolds the selected/containing region.
+		var unfold_region_index: int = _enclosing_region_flat_index(_selected_row_index)
+		if unfold_region_index >= 0:
+			var unfold_region: EventRowData = _row_at(unfold_region_index)
+			unfold_region.folded = false
+			_fold_state[unfold_region.row_uid] = false
+			_refresh_rows()
+			accept_event()
 	elif event.keycode == KEY_LEFT and not event.alt_pressed:
 		# Plain Left folds; Alt+Left is the dock's jump-history Back and must pass through.
 		var left_row: EventRowData = _row_at(_selected_row_index)
