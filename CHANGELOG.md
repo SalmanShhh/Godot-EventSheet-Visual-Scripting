@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Removed - the row-type square that sat on every single row
+
+- Every row (events, groups, comments, region markers, the add-event footers) carried a
+  small colored square at its left edge - a vestigial "row type icon" that never became
+  a real icon and said nothing the row itself doesn't (tempo badges, chips, and labels
+  already carry the type). Gone everywhere; row geometry is untouched, so cached span
+  positions and hit-tests are unaffected.
+
 ### Added - the compression cue: rows that compile to more than one line say so
 
 - An action whose baked codegen spans N > 1 lines now shows a quiet muted "→N" after

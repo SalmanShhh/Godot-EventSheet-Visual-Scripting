@@ -170,7 +170,6 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	var row_rect: Rect2 = layout.get("row_rect", Rect2())
 	var gutter_rect: Rect2 = layout.get("gutter_rect", Rect2())
 	var fold_rect: Rect2 = layout.get("fold_rect", Rect2())
-	var icon_rect: Rect2 = layout.get("icon_rect", Rect2())
 	var drag_rect: Rect2 = layout.get("drag_rect", Rect2())
 	var ace_drag_rect: Rect2 = layout.get("ace_drag_rect", Rect2())
 	var ace_drag_error: bool = bool(layout.get("ace_drag_error", false))
@@ -279,7 +278,6 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		soft_hover.a *= 0.4
 		control.draw_rect(row_rect, soft_hover, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
-	_draw_icon(control, icon_rect, row_data)
 	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill)
 	if drag_rect.size != Vector2.ZERO:
 		if bool(layout.get("drag_rect_outline", false)):
@@ -392,20 +390,6 @@ func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2,
 	control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), accent.darkened(0.38), true)
 	if fold_rect.size != Vector2.ZERO:
 		control.draw_rect(fold_rect.grow(1.0), fold_bg, true)
-
-
-func _draw_icon(control: Control, icon_rect: Rect2, row_data: EventRowData) -> void:
-	if icon_rect.size == Vector2.ZERO:
-		return
-	var color: Color = COLOR_OBJECT
-	match row_data.row_type:
-		EventRowData.RowType.GROUP:
-			color = COLOR_TRIGGER
-		EventRowData.RowType.COMMENT:
-			color = EventSheetPalette.COLOR_COMMENT
-		EventRowData.RowType.SECTION:
-			color = TEXT_MUTED
-	control.draw_rect(icon_rect, color, true)
 
 
 func _draw_spans(

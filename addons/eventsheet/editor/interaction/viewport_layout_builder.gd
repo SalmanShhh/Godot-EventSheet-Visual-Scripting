@@ -57,7 +57,9 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, row_height)
 	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.INDENT_WIDTH)
 	var fold_rect: Rect2 = Rect2(x - 14.0, row_top + 6.0, 12.0, 16.0) if not row_data.children.is_empty() else Rect2()
-	var icon_rect := Rect2(x + 2.0, row_top + 9.0, EventSheetPalette.ICON_SIZE, EventSheetPalette.ICON_SIZE)
+	# No row-type glyph: the old colored square here said nothing the row itself doesn't
+	# (tempo badges, chips and labels carry the type). The 18px advance stays so every
+	# row's geometry - and every cached span position - is untouched.
 	x += 18.0
 	var condition_lane_rect := Rect2()
 	var action_lane_rect := Rect2()
@@ -256,7 +258,6 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		"row_height": row_height,
 		"gutter_rect": gutter_rect,
 		"fold_rect": fold_rect,
-		"icon_rect": icon_rect,
 		"condition_lane_rect": condition_lane_rect,
 		"action_lane_rect": action_lane_rect,
 		"lane_divider_rect": lane_divider_rect,
