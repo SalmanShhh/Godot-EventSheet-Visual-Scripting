@@ -172,6 +172,11 @@ prefix is stripped for conditions (`is_dead` becomes `Dead`), and `get_` is stri
 Two filtering rules to know: methods starting with an underscore are skipped, and `@export` is
 required for a variable to surface (a bare `var` is invisible to reflection).
 
+Property ACEs compile to real assignments: on a **Node** provider they write through the behavior
+node with a retargetable "On node" param (`{target}.score = {value}`, default `$<Class>`), so Set
+Score changes the node actually in your scene; on a `RefCounted`/`Resource` utility provider they
+write through the same owned instance the methods call.
+
 ### `@ace_expose_all`: node-targeted in one line
 
 By default the generated call is **instance-backed** - `__eventsheet_provider_<Class>.method(...)`

@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Fixed - reflected property actions compiled to NOTHING; now they write real code
+
+- **The covenant gap is closed**: an @export var on a provider script reflects as Set /
+  Add To / Subtract From actions plus a read expression - and those actions used to
+  carry NO codegen, silently compiling to empty output. The generator now synthesizes
+  the real assignment at generation time: Node providers write through the behavior
+  node with a retargetable "On node" param defaulting to $Provider (exactly like
+  reflected methods), while RefCounted/Resource utility providers write through the
+  compiler-declared owned instance. The read expression inserts real code too (it used
+  to insert the display NAME). Bonus: the picker's codegen strip now shows the true
+  emission for property ACEs.
+- **Autoload trigger baking no longer misses class_name-less scripts**: the
+  class-to-singleton map keyed its fallback as PascalCase while provider ids derive
+  with capitalize() - the lookup could never match, so trigger baking silently skipped.
+  The map now uses the same derivation.
+- Pinned by tests/expose_all_properties_test.gd (node form, utility form, and an
+  end-to-end retargeted compile).
+
 ### Changed - the em-dash ban now covers code, not just docs
 
 - Swept " — " to " - " across 438 .gd files (~1,900 comment and display-string lines:

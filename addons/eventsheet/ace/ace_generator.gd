@@ -24,6 +24,10 @@ var _analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
 ## un-annotated methods get a synthesized $Provider.method() template (node-targeted) instead of the
 ## owned-instance default - so a behavior needs no per-method @ace_codegen_template.
 var _expose_all_mode: String = ""
+## Whether the provider being reflected IS a Node: its properties live on the scene node, so
+## property reads/writes must target it ($Provider.prop, retargetable) - writing to an owned
+## instance would silently change a copy the game never sees.
+var _provider_is_node: bool = false
 
 
 func generate_from_object(target: Object) -> Array[ACEDefinition]:
@@ -33,6 +37,7 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
 	var script: Script = target.get_script() as Script
 	var source_metadata: Dictionary = _analyzer.parse_source_metadata(script)
 	_expose_all_mode = str(source_metadata.get("expose_all_mode", ""))
+	_provider_is_node = target is Node
 	var provider_id: String = _analyzer.get_provider_id(target, source_metadata)
 	var signal_overrides: Dictionary = source_metadata.get("signals", {})
 	var property_overrides: Dictionary = source_metadata.get("properties", {})
@@ -218,6 +223,11 @@ func _build_property_definitions(provider_id: String, property_name: String, pro
 	expression_definition.hint_string = _string_override(overrides, "hint_string", "")
 	expression_definition.widget_hint = _string_override(overrides, "widget_hint", "")
 	expression_definition.category_override = _string_override(overrides, "category_override", "")
+	# Real code behind the picker entry (the covenant: nothing may compile to nothing).
+	# Inserted into expressions as-is for owned instances; the node form is parameterized
+	# to {target} by _parameterize_node_target and re-substitutes its default on insert.
+	# An explicit @ace_codegen_template override still wins inside _apply_template_overrides.
+	expression_definition.metadata["codegen_template"] = _property_access(provider_id, property_name)
 	_apply_template_overrides(expression_definition, overrides)
 	output.append(expression_definition)
 
@@ -253,7 +263,23 @@ func _build_property_action_definition(provider_id: String, property_name: Strin
 		"source_name": property_name,
 		"display_template": "%s {%s}" % [action_name, parameter_name]
 	}
+	# Property writes used to carry NO template and compiled to EMPTY output (a silent
+	# no-op). Synthesize the real assignment: node providers write through the behavior
+	# node (parameterized to a retargetable {target} param below), everything else
+	# through the compiler-declared owned instance.
+	var operator: String = "=" if prefix == "set" else ("+=" if prefix == "add" else "-=")
+	definition.metadata["codegen_template"] = "%s %s {%s}" % [_property_access(provider_id, property_name), operator, parameter_name]
+	_parameterize_node_target(definition)
 	return definition
+
+
+## The code path a reflected property compiles through: the behavior node for Node
+## providers (and @ace_expose_all(node) providers), the compiler-declared owned
+## instance (__eventsheet_provider_<Class>) for RefCounted/Resource utility classes.
+func _property_access(provider_id: String, property_name: String) -> String:
+	if _provider_is_node or _expose_all_mode == "node":
+		return "$%s.%s" % [provider_id, property_name]
+	return "__eventsheet_provider_%s.%s" % [provider_id, property_name]
 
 
 func _build_method_definition(provider_id: String, method_name: String, method_info: Dictionary, overrides: Dictionary) -> ACEDefinition:

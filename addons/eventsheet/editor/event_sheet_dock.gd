@@ -3155,7 +3155,10 @@ func _build_addon_ace_sources() -> Array[Object]:
 		# registered as an autoload still needs bus-style trigger baking).
 		var provider_class: String = str(autoload_script.get_global_name())
 		if provider_class.is_empty():
-			provider_class = autoload_path.get_file().get_basename().to_pascal_case()
+			# Must match get_provider_id's fallback (capitalize(), "My Bus") - the trigger
+			# baking looks this map up BY definition.provider_id, so a pascal-case key here
+			# silently skipped autoload trigger baking for class_name-less scripts.
+			provider_class = autoload_path.get_file().get_basename().capitalize()
 		_autoload_provider_names[provider_class] = setting_name.trim_prefix("autoload/")
 		if not provider_paths.has(autoload_path):
 			provider_paths.append(autoload_path)
