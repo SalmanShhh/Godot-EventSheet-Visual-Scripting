@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - localisation, part 3: the Doctor nudge + the Translating Your Game guide
+
+- **Project Doctor**: sheets that translate text (tr / Set Language) while the project has
+  no translation catalog registered get an advisory pointing at Godot's own pipeline (POT
+  Generation over the compiled .gd, catalogs under Localization > Translations).
+- **`docs/TRANSLATING-YOUR-GAME.md`**: the end-to-end walkthrough - mark with the globe,
+  generate the POT, add a language via CSV or .po, switch live with Set Language, refresh
+  on On Language Changed - including the sharp edges (never wrap variable DEFAULTS in tr();
+  never mark identifiers like node paths or group names).
+
 ### Added - the Translation vocabulary: switch languages from events
 
 - **Seven new built-in ACEs under Translation**: Set Language (`TranslationServer.set_locale`),

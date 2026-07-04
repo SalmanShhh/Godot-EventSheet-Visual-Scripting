@@ -98,6 +98,21 @@ static func run() -> bool:
 		notify_compiled.contains("if what == NOTIFICATION_TRANSLATION_CHANGED:"), true) and ok
 	dock.free()
 
+	# ── The Doctor nudges when tr() ships without a registered translation ──
+	var probe: FileAccess = FileAccess.open("user://_l10n_probe.gd", FileAccess.WRITE)
+	probe.store_string("extends Node\n\nfunc _ready() -> void:\n\tprint(tr(\"HELLO\"))\n")
+	probe.close()
+	var previous_translations: Variant = ProjectSettings.get_setting("internationalization/locale/translations", PackedStringArray())
+	ProjectSettings.set_setting("internationalization/locale/translations", PackedStringArray())
+	var findings: Array[Dictionary] = []
+	EventSheetProjectDoctor.check_untranslated_project(PackedStringArray(["user://_l10n_probe.gd"]), findings)
+	ok = _check("the Doctor nudges on tr() without translations", findings.size(), 1) and ok
+	ProjectSettings.set_setting("internationalization/locale/translations", PackedStringArray(["res://strings.es.translation"]))
+	findings = []
+	EventSheetProjectDoctor.check_untranslated_project(PackedStringArray(["user://_l10n_probe.gd"]), findings)
+	ok = _check("a registered catalog silences the nudge", findings.size(), 0) and ok
+	ProjectSettings.set_setting("internationalization/locale/translations", previous_translations)
+
 	# ── Byte round-trip: a tr() call in an opened .gd survives untouched ──
 	var external_source: String = "extends Node\n\nfunc _ready() -> void:\n\tprint(tr(\"Spawned\"))\n"
 	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(external_source)

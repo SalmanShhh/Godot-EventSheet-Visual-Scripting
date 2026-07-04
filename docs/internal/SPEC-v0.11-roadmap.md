@@ -18,6 +18,11 @@ Contents:
 
 ## 1. Localisation, the Godot way
 
+STATUS: SHIPPED (all three phases; commits 2b24110 / 539f9ba + the Doctor check, guide, and
+pins in translatable_params_test. P1 shipped SIMPLER than designed: the translatable mark
+lives IN the param value as the tr("...") wrapper itself, so no ACEParam metadata field,
+no compiler change, and the byte round-trip holds by construction.)
+
 ### Today (census)
 
 - Zero localisation surface: no `tr()`, `atr()`, `TranslationServer`, `.po`/`.csv`, or POT

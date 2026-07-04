@@ -36,6 +36,7 @@ static func run() -> Dictionary:
 	check_coroutine_in_per_frame_trigger(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
 	check_shadowed_variables(sheet_paths, findings)
+	check_untranslated_project(sheet_paths, findings)
 	check_vocabulary_doc(findings)
 	var counts: Dictionary = {"error": 0, "warning": 0, "info": 0}
 	for finding: Dictionary in findings:
@@ -499,6 +500,25 @@ static func check_shadowed_variables(sheet_paths: PackedStringArray, findings: A
 ## A generated vocabulary doc is a promise to the team — once one exists, the doctor
 ## notes when it no longer matches what the project actually publishes. Opt-in by
 ## design: no doc, no note.
+## Sheets emit tr() calls (globe-marked params / Translate ACEs) but the project has no
+## translations configured - the calls will look up nothing at runtime. Advisory: point
+## at Godot's own pipeline (POT generation reads the compiled .gd; catalogs register in
+## Project Settings > Localization). Checked against the compiled OUTPUT text, so both
+## .gd-backed and .tres-backed sheets are covered by the same scan.
+static func check_untranslated_project(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	if not (ProjectSettings.get_setting("internationalization/locale/translations", PackedStringArray()) as PackedStringArray).is_empty():
+		return
+	for sheet_path: String in sheet_paths:
+		var output_path: String = output_path_for(sheet_path)
+		if not FileAccess.file_exists(output_path):
+			continue
+		var output_text: String = FileAccess.get_file_as_string(output_path)
+		if output_text.contains("tr(\"") or output_text.contains("tr_n(\"") or output_text.contains("TranslationServer.set_locale"):
+			_add(findings, "info", "l10n", sheet_path,
+				"This sheet translates text (tr / Set Language) but the project has no translations registered - generate a POT (Project Settings > Localization > POT Generation, add the compiled .gd), translate it, and add the catalog under Localization > Translations.")
+			return
+
+
 static func check_vocabulary_doc(findings: Array[Dictionary]) -> void:
 	var path: String = EventSheetVocabularyDoc.doc_path()
 	if not FileAccess.file_exists(path):
