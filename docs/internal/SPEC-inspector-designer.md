@@ -57,11 +57,55 @@ The script-intent flow already lands people on a Custom Resource sheet; the Desi
 
 ## 4. Phases
 
-- **P1 - the widgets that matter most:** `min_max` + `info` + `header` + `required` drawers/markers, Look Gallery tiles + preview-card sentences for each, byte-gated round-trip tests, the `required` Doctor check.
+- **P1 - the widgets that matter most:** `min_max` (SHIPPED) + `info` + `header` decor (SHIPPED) + `required` markers, Look Gallery tiles + preview-card sentences, byte-gated round-trip tests, the `required` Doctor check.
 - **P2 - the table drawer:** columns schema, grid widget (add/remove/reorder rows), dialog UX for defining columns in plain language, round-trip + a loot-table recipe.
 - **P3 - the Inspector Designer view:** the whole-Inspector live mock with reorder/group/decor gestures and the combined Ships-as panel.
 - **P4 - polish:** `validate` custom rules, preview drawers (audio/scene thumbnails), and a "Design its Inspector" entry in the Custom Resource flow + docs images.
+- **P5 - the parity long tail (owner directive: get as close to full attribute-catalog parity as Godot allows):** enum toggle-button row (an enum as one row of toggle buttons instead of a dropdown), inline field button (a small per-field button calling a sheet function, riding at the end of the default editor), suggestion dropdown (a String that offers choices but accepts free text - native `PROPERTY_HINT_ENUM_SUGGESTION`), field tint (a `# @inspector_tint #rrggbb` decor arg colouring the property's editor), and label override (display a friendlier property label, editor-side).
 
-## 5. Verification
+## 5. The parity matrix (catalog -> Godot mechanism -> status)
+
+The full attribute catalog of the best-known rich-inspector tooling, mapped honestly. "Native" = stock Godot already does it; "shipped" = EventSheets does it today; a phase tag = planned above; "won't" = Godot's Inspector model makes a faithful version dishonest, with the reason.
+
+| Capability | Godot mechanism | Status |
+|---|---|---|
+| Range / Min / Max sliders | `@export_range` (+ modifier tail) | shipped |
+| Min-max range slider | `min_max` drawer (Vector2) | shipped |
+| Progress bar | `progress_bar` drawer | shipped |
+| Color palette row | `swatch_row` drawer | shipped |
+| Texture/object preview | `texture_preview` drawer + Godot's resource thumbnails | shipped |
+| Curve in the field | `curve_editor` drawer | shipped |
+| Tooltip | `##` doc comment (native hover) | shipped |
+| Title / section header (+ accent) | `# @inspector_header` decor | shipped |
+| Info box | `# @inspector_info` decor | shipped |
+| Foldout / box grouping | `@export_group` / `subgroup` / `category` | shipped |
+| Show If / Hide If | generated `_validate_property` | shipped |
+| Enable If / Disable If | Lock Unless -> `_validate_property` READ_ONLY | shipped |
+| Read-only | `@export_custom(..., READ_ONLY)` | shipped |
+| On value changed | generated setter -> sheet function | shipped |
+| Buttons | `@export_tool_button` | shipped |
+| Multiline text | `@export_multiline` | shipped |
+| File / folder paths | `@export_file` / `@export_dir` (+ filters) | shipped |
+| Value dropdown (fixed) | `@export_enum` | shipped |
+| Flags / layer grids | `@export_flags*` families | shipped |
+| Hidden but saved | `@export_storage` | shipped |
+| Clamped values | generated clamp setter | shipped |
+| Searchable inspector | Godot's built-in Inspector filter box | native |
+| Inline resource editing | Godot's native sub-resource foldout | native |
+| Serialized dictionaries | typed Dictionary/Array exports | native |
+| Required field | `required` marker + Doctor check | P1 |
+| Custom validation with inline message | `validate` -> sheet function | P4 |
+| Table list (arrays as grids) | `table` drawer + columns schema | P2 |
+| The visual designer surface | the Inspector Designer view | P3 |
+| Enum toggle buttons | drawer replacing the dropdown with a button row | P5 |
+| Inline field button | drawer wrapper: default editor + a trailing mini button | P5 |
+| Suggestion dropdown (free text + choices) | `PROPERTY_HINT_ENUM_SUGGESTION` via `@export_custom` | P5 |
+| Field tint | `# @inspector_tint` decor arg | P5 |
+| Label override | `add_property_editor(..., label)` editor-side | P5 |
+| Horizontal field groups | - | won't: Godot's Inspector is a single column; faking columns breaks every other plugin and theme |
+| Tab groups | - | deferred: possible as an editor-side reskin of categories, but it hides properties from Godot's own search; revisit after P3 |
+| Static/global inspector | - | won't: no Godot equivalent surface; the closest honest home is the autoload's own Inspector, which already works |
+
+## 6. Verification
 
 Per phase: marker parse + emission byte-gates (the drawer pattern's existing tests extend), a render-harness image per widget (the docs standard), the Doctor check pinned like `check_debug_residue`, and for P3 a dock-level test driving reorder through the funnel + drift=0 on a pack. The Inspector preview card's sentence matrix grows one row per new look.
