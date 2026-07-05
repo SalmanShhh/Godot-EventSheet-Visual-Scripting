@@ -147,6 +147,22 @@ static func palette_commands() -> Array[Dictionary]:
 	return _palette_commands.duplicate()
 
 
+## Builds the same live Inspector mock the Variable dialog shows - decor, group heading, widget
+## miniature, and the plain-language sentence - as a plain Control for YOUR dialogs and panels.
+## Dock-free. `attributes` uses the compiler's keys (range/drawer/group/header/info/options/...).
+static func build_inspector_preview(variable_name: String, type_name: String, default_text: String, attributes: Dictionary, exported: bool = true, constant: bool = false) -> Control:
+	var card: EventSheetInspectorPreviewCard = EventSheetInspectorPreviewCard.new()
+	card.update_preview(variable_name, type_name, default_text, attributes, exported, constant)
+	return card
+
+
+## One plain sentence describing an exported variable's Inspector look ("A whole number, from 0
+## to 100, shown as a progress bar, grouped under Combat."). Dock-free; the same source of truth
+## as the preview card, so your tooling never drifts from the editor's own wording.
+static func describe_inspector(type_name: String, attributes: Dictionary, exported: bool = true, constant: bool = false) -> String:
+	return EventSheetInspectorPreviewCard.describe(type_name, attributes, exported, constant)
+
+
 # ── Codegen ────────────────────────────────────────────────────────────────────────────
 
 
@@ -154,6 +170,12 @@ static func palette_commands() -> Array[Dictionary]:
 ## "output" (the source text), "success", "errors", "warnings", "source_map".
 static func compile(sheet: EventSheetResource, output_path: String = "") -> Dictionary:
 	return SheetCompiler.compile(sheet, output_path)
+
+
+## The exact GDScript a variable compiles to - its "Ships as:" truth, decor comments, tooltip,
+## grouping, and the @export annotation included. Deterministic: same variable, same bytes.
+static func variable_code(variable: LocalVariable) -> String:
+	return SheetCompiler._emit_tree_variable_line(variable)
 
 
 ## Opens GDScript source as an editable sheet (the lossless external path: everything

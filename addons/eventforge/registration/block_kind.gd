@@ -50,6 +50,13 @@ func lift(_lines: PackedStringArray, _i: int) -> Dictionary:
 func summary(_block: CustomBlockRow) -> String:
 	return title
 
+
+## Optional hover tooltip for rows of this kind - what the block means, not just what it says
+## (the viewport asks the kind before falling back to its generic tooltips). BBCode ([b]/[i]/
+## [color]) renders styled. Return "" for the default behaviour.
+func hover_text(_entry: Resource) -> String:
+	return ""
+
 # ── Resource kinds: the plugin's OWN row classes on the same registry (dogfooding) ──
 # A kind may operate on a dedicated Resource class instead of CustomBlockRow instances - the
 # built-in enum rows work this way, so the registry is a real dispatch surface the plugin itself

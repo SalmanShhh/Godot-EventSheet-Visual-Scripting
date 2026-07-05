@@ -467,6 +467,9 @@ Variable: current_combo  (Number)
 
 ## 9. Tips and Common Mistakes
 
+- **Hover a variable row to see its Inspector.** In the sheet, hovering an exported variable pops the same live preview card the dialog shows - decor, grouping, and the chosen widget - so you can audit a whole sheet's Inspector without opening a single dialog.
+
+  <img src="images/hover-inspector-preview.png" alt="Hovering an exported variable row pops a live Inspector preview: the Combat accent header, an info note panel, the Stats group, and the progress-bar widget, with the plain-language sentence beneath." width="420">
 - **Tick "Editable in the Inspector" first.** The drawers and most options only appear for an exported variable; they have no effect on a private value.
 - **A drawer needs its type.** Each drawer is offered only for the type it fits (progress bar for numbers, dial or min-max range for Vector2, swatch for Color, and so on). Change the type and the "Show as" list updates.
 - **Range feeds the drawers.** The progress bar and the min-max slider read their bounds, and the dial its reach, from the **Range**, so set the Range before (or alongside) the drawer.

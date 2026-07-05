@@ -31,6 +31,38 @@ static func run() -> bool:
 	ok = _check("compile emits through the API",
 		str(EventSheets.compile(built).get("output", "")).contains("print(\"hi\")"), true) and ok
 
+	# ── Inspector services, dock-free (the parity toolkit for extensions) ──
+	var inspector_attrs: Dictionary = {"range": {"min": "0", "max": "100"}, "drawer": "progress_bar", "group": "Combat", "header": "Combat", "info": "Tune with care."}
+	ok = _check("describe_inspector speaks the preview card's sentence",
+		EventSheets.describe_inspector("int", inspector_attrs),
+		"A whole number, from 0 to 100, shown as a progress bar, grouped under Combat, under a \"Combat\" section header, with an info note.") and ok
+	var preview: Control = EventSheets.build_inspector_preview("armour", "int", "10", inspector_attrs)
+	ok = _check("build_inspector_preview returns the live preview card",
+		preview is EventSheetInspectorPreviewCard, true) and ok
+	preview.free()
+	var api_var: LocalVariable = LocalVariable.new()
+	api_var.name = "armour"
+	api_var.type_name = "int"
+	api_var.default_value = 10
+	api_var.exported = true
+	api_var.attributes = {"header": "Combat", "drawer": "progress_bar", "range": {"min": "0", "max": "100"}}
+	ok = _check("variable_code returns the exact Ships-as lines",
+		EventSheets.variable_code(api_var),
+		"# @inspector_header Combat\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\") var armour: int = 10") and ok
+
+	# ── Custom Block API: the hover seam (kinds explain their rows on hover) ──
+	ok = _check("block kinds hover silently by default",
+		EventSheetBlockKind.new().hover_text(CustomBlockRow.new()), "") and ok
+	var hover_kind: EventSheetBlockKind = EventSheetBlockKind.new()
+	var hover_script: GDScript = GDScript.new()
+	hover_script.source_code = "extends EventSheetBlockKind\n\n\nfunc hover_text(entry: Resource) -> String:\n\treturn \"spawns %s\" % str((entry as CustomBlockRow).fields.get(\"what\", \"?\"))\n"
+	ok = _check("a kind's hover_text override parses", hover_script.reload() == OK, true) and ok
+	if hover_script.reload() == OK:
+		hover_kind = hover_script.new() as EventSheetBlockKind
+		var hover_row: CustomBlockRow = CustomBlockRow.new()
+		hover_row.fields = {"what": "goblins"}
+		ok = _check("hover_text reads the row's own fields", hover_kind.hover_text(hover_row), "spawns goblins") and ok
+
 	# ── Vocabulary services, dock-free ──
 	ok = _check("class_vocabulary reflects on demand",
 		EventSheets.class_vocabulary("GraphEdit").size() >= 10, true) and ok

@@ -2052,6 +2052,13 @@ func _get_tooltip(at_position: Vector2) -> String:
 		return "⚠ %s" % hovered_error_row.error_message
 	var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
 	var kind: String = str(metadata.get("kind", ""))
+	# An EXPORTED variable row hovers as a live mock of its Inspector (drawers, decor, grouping) -
+	# the payload stages here and _make_custom_tooltip swaps the sentinel for the preview card.
+	if kind == "variable":
+		var preview_payload: Dictionary = _inspector_preview_payload(hit, metadata)
+		if not preview_payload.is_empty():
+			_tooltip_helper.set_pending_inspector_preview(preview_payload)
+			return ViewportTooltipHelper.INSPECTOR_PREVIEW_SENTINEL
 	if kind in ["condition", "trigger", "action"]:
 		var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
 		if row_data != null and row_data.source_resource is EventRow:
@@ -2084,6 +2091,15 @@ func _get_tooltip(at_position: Vector2) -> String:
 			# Nothing else to say → at least the sentence (a trigger cell with no ACE description).
 			if not sentence_prefix.is_empty():
 				return sentence.strip_edges()
+	# Custom block rows ask their registered kind first: hover_text() lets a pack-defined kind
+	# explain its row on hover (BBCode renders styled), the same way built-ins do.
+	var kind_row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	if kind_row_data != null and kind_row_data.source_resource != null:
+		var block_kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(kind_row_data.source_resource)
+		if block_kind != null:
+			var kind_hover: String = block_kind.hover_text(kind_row_data.source_resource)
+			if not kind_hover.strip_edges().is_empty():
+				return kind_hover
 	# Raw GDScript blocks are the one row whose codegen is literally themselves - advertise
 	# that the block compiles verbatim (the escape hatch is transparent, not a black box).
 	var raw_row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
@@ -2105,6 +2121,46 @@ func _get_tooltip(at_position: Vector2) -> String:
 ## the GDScript-preview fallback have no markup, so this returns null and Godot uses its default tooltip.
 func _make_custom_tooltip(for_text: String) -> Object:
 	return _tooltip_helper.build_custom_tooltip(for_text)
+
+
+## The hover-preview payload for a variable row, or {} when the variable is not exported (nothing to
+## preview - the Inspector never shows it). Tree variables carry themselves as source_resource; dict
+## (sheet-level) variables resolve through the sheet's descriptor, with combo options riding along so
+## the mock shows the dropdown.
+func _inspector_preview_payload(hit: Dictionary, metadata: Dictionary) -> Dictionary:
+	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	if row_data == null:
+		return {}
+	if row_data.source_resource is LocalVariable:
+		var tree_var: LocalVariable = row_data.source_resource as LocalVariable
+		if not tree_var.exported:
+			return {}
+		return {
+			"name": tree_var.name,
+			"type_name": tree_var.type_name,
+			"default_text": VariableDialog._default_display_text(tree_var.default_value),
+			"attributes": (tree_var.attributes as Dictionary).duplicate() if tree_var.attributes is Dictionary else {},
+			"constant": tree_var.is_constant
+		}
+	if str(metadata.get("variable_scope", "")) == "global" and _sheet != null:
+		var descriptor: Variant = _sheet.variables.get(str(metadata.get("variable_name", "")))
+		if not (descriptor is Dictionary):
+			return {}
+		var descriptor_dict: Dictionary = descriptor as Dictionary
+		if not bool(descriptor_dict.get("exported", true)):
+			return {}
+		var attributes: Dictionary = (descriptor_dict.get("attributes") as Dictionary).duplicate() if descriptor_dict.get("attributes") is Dictionary else {}
+		var combo_options: Array = descriptor_dict.get("options") if descriptor_dict.get("options") is Array else []
+		if not combo_options.is_empty():
+			attributes["options"] = combo_options
+		return {
+			"name": str(metadata.get("variable_name", "")),
+			"type_name": str(descriptor_dict.get("type", "Variant")),
+			"default_text": VariableDialog._default_display_text(descriptor_dict.get("default")),
+			"attributes": attributes,
+			"constant": bool(metadata.get("is_constant", false))
+		}
+	return {}
 
 
 ## Static shim kept for callers that reach in by class name (e.g. tests/gdscript_pairing_test.gd

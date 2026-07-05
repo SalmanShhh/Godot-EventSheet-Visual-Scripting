@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - hover a variable, see its Inspector + the Inspector toolkit for extensions
+
+- **Hover preview**: hovering an exported variable row in the sheet pops a small live
+  mock of its Inspector - decor, grouping, the chosen widget, and the plain-language
+  sentence - so a whole sheet's Inspector can be audited without opening one dialog.
+  Rides Godot's native tooltip pipeline (the `_make_custom_tooltip` seam), works for
+  tree variables and sheet-level variables alike, and skips unexported ones.
+- **EventSheets API grows the Inspector toolkit** (dock-free, same source of truth as
+  the editor): `build_inspector_preview(...)` returns the live preview card for YOUR
+  dialogs, `describe_inspector(...)` the one-sentence description, and
+  `variable_code(variable)` the exact "Ships as:" GDScript a variable compiles to.
+- **Custom Block API: the hover seam** - a block kind may override
+  `hover_text(entry)` to explain its rows on hover (BBCode renders styled); the
+  viewport asks the registered kind before its generic tooltips.
+
 ### Added - Inspector Designer P1: section headers + info notes (decor)
 
 - **Two decor fields on every exported variable**: a **Section header** (an

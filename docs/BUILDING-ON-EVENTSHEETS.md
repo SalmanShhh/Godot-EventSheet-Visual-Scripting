@@ -99,6 +99,22 @@ assert(EventSheets.round_trips(source_text))
 
 `open_gd_as_sheet()` is the same lift the editor uses when you open a `.gd` file: everything liftable lifts, everything else stays a verbatim block, and nothing can be corrupted. `round_trips()` is the covenant check itself; if your custom block kind or provider changes emission, pin it with this in a test.
 
+### The Inspector toolkit
+
+The rich-inspector system (drawers, decor, grouping, ranges) is a service too, so your dialogs and tools show the SAME previews the editor does:
+
+```gdscript
+# The live Inspector mock (decor, group heading, widget miniature, plain sentence) as a Control.
+var attrs: Dictionary = {"range": {"min": "0", "max": "100"}, "drawer": "progress_bar", "header": "Combat"}
+my_panel.add_child(EventSheets.build_inspector_preview("armour", "int", "10", attrs))
+
+# The same choices as one sentence (tooltips, logs, docs):
+print(EventSheets.describe_inspector("int", attrs))
+
+# The exact GDScript a variable compiles to - its "Ships as:" truth:
+print(EventSheets.variable_code(my_local_variable))
+```
+
 ## 6. Project Health Services
 
 The Project Doctor audits every sheet in the project (stale generated outputs, compile failures, debug residue, wiring gaps, vocabulary hygiene) and reports through the dock's Tools menu, the headless CLI, CI and the MCP `run_doctor` tool. The API gives you both directions:
@@ -134,7 +150,10 @@ A check receives every non-template sheet path plus the shared findings array, a
 | Editor | `register_palette_command(title: String, action: Callable)` | `void` | no (shows when open) |
 | Editor | `unregister_palette_command(title: String)` | `void` | no |
 | Editor | `palette_commands()` | `Array[Dictionary]` | no |
+| Editor | `build_inspector_preview(name, type_name, default_text, attributes, exported := true, constant := false)` | `Control` | no |
+| Editor | `describe_inspector(type_name, attributes, exported := true, constant := false)` | `String` | no |
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
+| Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
 | Codegen | `open_gd_as_sheet(source: String)` | `EventSheetResource` | no |
 | Codegen | `round_trips(source: String)` | `bool` | no |
 | Health | `doctor()` | `Dictionary` | no |

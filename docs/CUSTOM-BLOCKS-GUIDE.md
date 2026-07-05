@@ -127,6 +127,7 @@ Everything a kind can implement. Only `kind_id`, `title`, and the pieces your ki
 | `lift(lines, i) -> Dictionary` | both | Claim source lines starting at `i`. Return `{}` (not yours), `{"fields": ..., "consumed": n}` (schema), or `{"resource": row, "consumed": n}` (resource kind). |
 | `verified_claim(fields, lines, i, consumed)` | schema | The one-line byte gate for `lift()`: builds the candidate, re-emits it, returns the claim only on an exact byte match. |
 | `summary(block) -> String` | schema | The row's one-line display next to the badge. |
+| `hover_text(entry) -> String` | both | Optional hover tooltip: what the block *means*. BBCode renders styled; `""` keeps the default. |
 | `handles(entry) -> bool` | resource | Claims a dedicated Resource class (`entry is EnumRow`). |
 | `emit_lines(entry) -> PackedStringArray` | resource | Emission for a handled Resource instance. |
 | `summary_for(entry) -> String` | resource | Display for a handled Resource instance. |

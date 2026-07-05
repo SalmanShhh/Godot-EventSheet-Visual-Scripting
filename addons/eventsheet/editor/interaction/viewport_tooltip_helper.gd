@@ -11,17 +11,33 @@ extends RefCounted
 # Godot's tooltip virtuals (_get_tooltip, _make_custom_tooltip) MUST stay on the Control and
 # delegate here; this helper supplies the bodies.
 
+## The sentinel _get_tooltip returns for an exported variable row: _make_custom_tooltip recognizes it
+## and swaps in the live Inspector-preview card instead of a text tooltip. Never shown to the user.
+const INSPECTOR_PREVIEW_SENTINEL: String = "eventsheet:inspector_preview"
+
 var _viewport: Control = null
+# The variable payload staged by _get_tooltip for the sentinel's _make_custom_tooltip call that
+# immediately follows it ({name, type_name, default_text, attributes, constant}).
+var _pending_inspector_preview: Dictionary = {}
 
 
 func init(viewport: Control) -> void:
 	_viewport = viewport
 
 
+## Stages the hovered variable for the Inspector-preview tooltip (see INSPECTOR_PREVIEW_SENTINEL).
+func set_pending_inspector_preview(payload: Dictionary) -> void:
+	_pending_inspector_preview = payload
+
+
 ## Render a hover tooltip's BBCode ([b]/[i]/[color]) when the text carries any - so an ACE/function
 ## description authored with markup reads styled, not as raw tags. Plain descriptions (the common case) and
 ## the GDScript-preview fallback have no markup, so this returns null and Godot uses its default tooltip.
+## An exported variable row instead hovers as a small live mock of its Inspector - the same preview card
+## the Variable dialog shows, built from the row's attributes (drawers, decor, grouping, range).
 func build_custom_tooltip(for_text: String) -> Object:
+	if for_text == INSPECTOR_PREVIEW_SENTINEL and not _pending_inspector_preview.is_empty():
+		return build_inspector_preview_tooltip(_pending_inspector_preview)
 	if not EventSheetBBCodeLite.has_markup(for_text):
 		return null
 	var panel := PanelContainer.new()
@@ -39,6 +55,32 @@ func build_custom_tooltip(for_text: String) -> Object:
 	rich.custom_minimum_size = Vector2(300.0, 0.0)
 	rich.text = for_text
 	panel.add_child(rich)
+	return panel
+
+
+## The hover card for an exported variable: the live Inspector mock (decor, grouping, widget miniature,
+## plain sentence) at tooltip size. Static + dock-free so extensions and the render harness can build the
+## identical card through EventSheets.build_inspector_preview.
+static func build_inspector_preview_tooltip(payload: Dictionary) -> Control:
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.11, 0.11, 0.13, 0.98)
+	style.border_color = Color(1.0, 1.0, 1.0, 0.16)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(4)
+	style.set_content_margin_all(6.0)
+	panel.add_theme_stylebox_override("panel", style)
+	var card := EventSheetInspectorPreviewCard.new()
+	card.custom_minimum_size = Vector2(320.0, 0.0)
+	card.update_preview(
+		str(payload.get("name", "")),
+		str(payload.get("type_name", "Variant")),
+		str(payload.get("default_text", "")),
+		payload.get("attributes") if payload.get("attributes") is Dictionary else {},
+		true,
+		bool(payload.get("constant", false))
+	)
+	panel.add_child(card)
 	return panel
 
 
