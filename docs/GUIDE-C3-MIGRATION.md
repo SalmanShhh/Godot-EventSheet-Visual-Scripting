@@ -257,6 +257,26 @@ C3 families map to the family marker plus group iteration here - pick-by-family 
 
 Multiplayer, Drawing Canvas, and XML route to Godot's native features - the migration table names each destination so nothing dead-ends.
 
+### 6. Killing the "every tick" polling soup
+
+An old top-down shooter had one giant sheet asking "is the player overlapping any pickup?" 60 times a second. On the rebuild you swap that block for On Area Entered on each pickup's Area2D, and the migrated logic runs once on contact instead of re-checking every frame - the port comes out cleaner than the C3 original.
+
+### 7. Retiring the Dictionary and Array addons at once
+
+A save-game blob that leaned on the C3 Dictionary and Array plugins ports with no addon at all: declare a `Dictionary` and an `Array` variable, drive them from the Variables: Dictionary and Variables: Array picker groups, then persist with Save JSON File to a `user://` path that survives exports.
+
+### 8. Gamepad drag-and-drop for a jam build
+
+You ported a mouse-only C3 Drag & Drop mechanic on Friday, then a teammate asks for controller support before submission. Because the Drag & Drop pack is input-agnostic, you attach the Virtual Cursor pack to drive it and the same drop, snap, and throw-velocity events now work on a gamepad without touching the drag logic.
+
+### 9. Auto-targeting without the pick loop
+
+A C3 tower that "picked nearest enemy" each tick becomes a single Nearest Node In Group call - no `for` loop to rebuild. When line-of-sight matters, Nearest Visible In Group swaps in so the tower only fires at an enemy it can actually see past cover.
+
+### 10. Handing events to a teammate over chat
+
+Mid-port you need a coworker to reuse the reload sequence you just rebuilt from the C3 Weapon addon. You copy the events, paste the snippet text into chat, and they paste it straight into their sheet - and because plain GDScript with trigger functions converts to events on paste, a raw script from a tutorial drops in the same way.
+
 ## 11. Tips and Common Mistakes
 
 - **The polling reflex is the #1 imported habit.** Reaching for `On Process` to check for something that *happens at a moment* (a collision, a timer ending, a key press) re-checks 60 times a second for an event Godot already signals. Use the signal trigger; the picker surfaces it first when a polling condition has a signal twin.

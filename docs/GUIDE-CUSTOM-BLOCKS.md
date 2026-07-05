@@ -315,6 +315,70 @@ EventSheets.register_doctor_check("my_pack.requirements", _check_scene_requireme
 
 Note: the block and the health check ship together - the sheet documents the contract, the Doctor enforces it.
 
+### 10. A localization key registry for a jam build
+
+**Scenario:** the last night of a jam, a translator needs every user-facing string in one place. A `## L10N: title_screen.start = "Start"` block per key reads as a highlighted row, so the whole sheet's copy is scannable and swappable without hunting through events.
+
+```gdscript
+func fields() -> Array[Dictionary]:
+	return [{"id": "key", "type": TYPE_STRING, "default": ""}, {"id": "text", "type": TYPE_STRING, "default": ""}]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## L10N: %s = %s" % [str(block.fields.get("key", "")), var_to_str(str(block.fields.get("text", "")))]])
+```
+
+Note: `var_to_str` on the String gives one canonical quoted spelling, so the byte gate holds even when the copy contains quotes.
+
+### 11. A feature flag your team toggles per branch
+
+**Scenario:** a two-person team keeps an experimental boss on a `const FEATURE_NEW_BOSS := false` block. The gameplay programmer flips the checkbox on their branch to test, and the merge diff is one obvious line instead of a hand-typed constant buried mid-file.
+
+```gdscript
+func fields() -> Array[Dictionary]:
+	return [{"id": "flag", "label": "Flag", "type": TYPE_STRING, "default": "FEATURE_X"}, {"id": "on", "type": TYPE_BOOL, "default": false}]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const %s := %s" % [str(block.fields.get("flag", "")), "true" if bool(block.fields.get("on")) else "false"]])
+```
+
+### 12. A input-map contract for the whole level
+
+**Scenario:** a platformer sheet expects the actions `jump` and `dash` to exist in the project's input map. A `## INPUT: jump, dash` block names them as a row, so a new contributor opening the sheet sees the input contract before wiring any On Action events.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## INPUT: %s" % str(block.fields.get("actions", "")).strip_edges()])
+```
+
+Note: pair it with a pack-registered Doctor check that reads the emitted line to flag actions missing from the project settings, the same shape as the requirement block above.
+
+### 13. A boss-phase table a designer balances mid-playtest
+
+**Scenario:** during a live balancing session the designer bumps a boss's phase thresholds without leaving the sheet. One block emits the whole ordered table, and the spinners in its dialog are the only surface anyone touches.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray([
+		"const BOSS_PHASES := {",
+		"\t\"enrage_hp\": %d," % int(block.fields.get("enrage_hp", 30)),
+		"\t\"add_wave_hp\": %d," % int(block.fields.get("add_wave_hp", 60)),
+		"}",
+	])
+```
+
+Note: like the spawn table above, the lift probe matches all three lines and `verified_claim` re-checks them, so a designer's edits round-trip byte-for-byte.
+
+### 14. A credits attribution block that survives every regen
+
+**Scenario:** a released game's compiled scripts must keep an asset attribution line that legal signed off on. A `## CREDIT: music by Foo, CC-BY 4.0` block keeps that exact banner canonical, so no regeneration ever silently drops or reformats it.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## CREDIT: %s" % str(block.fields.get("attribution", "")).strip_edges()])
+```
+
+Note: because emission is deterministic and gated, the attribution reads back identically on every open - a shipping constraint the byte gate enforces for free.
+
 ### Other uses at a glance
 
 **License headers** as a one-field block that keeps the exact comment banner canonical across every generated file. **Signal-bus wiring notes** that document which autoload signals a sheet listens to. **Version stamps** for packs, one canonical `const PACK_VERSION := "1.2"` line each. **Spawn-point manifests** listing marker names a level script reads. **Asset checklists** that name the sounds and textures an event section expects.

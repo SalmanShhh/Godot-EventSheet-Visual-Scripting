@@ -81,6 +81,26 @@ The semantic 3-way merge resolves both edits by row identity instead of line pos
 
 Deterministic emission plus stable row uids mean re-saving an unchanged sheet produces a ZERO-line diff - regeneration never pollutes the blame.
 
+### 5. A game-jam branch race
+
+During a 48-hour jam two teammates fork off `main` to build the boss fight and the pause menu on separate sheets. Because unchanged sheets regenerate byte-identically, neither branch carries phantom churn, so the final merge back is a small, honest diff instead of a wall of resource-soup noise nobody has time to read.
+
+### 6. A cherry-pick to the release branch
+
+You land a coin-pickup fix on `main` but the shippable build is frozen on `release/1.0`. `git cherry-pick` lifts just that commit across, and because the sheet is plain GDScript the picked change applies as a clean textual patch rather than a serialized-resource blob that refuses to graft.
+
+### 7. Blaming a broken enemy spawn
+
+QA reports the wave timer fires twice. `git blame` on the sheet's `.gd` points straight at the row - and thanks to the textconv filter on any legacy `.tres`, even the historical revisions read as `EVENT / IF / DO` lines, so you can trace who last touched that spawn logic without checking out each commit into Godot.
+
+### 8. A designer and a programmer on the same sheet
+
+A designer retunes the `enemy_speed` variable while a programmer rewrites an unrelated collision event in the same sheet. The semantic merge resolves variables 3-way per key and events per UID, so the two changes land together cleanly - the designer never has to learn conflict markers to keep balancing numbers.
+
+### 9. Enforcing byte-stability in CI
+
+Your pipeline runs the pack builders and fails the build if any regenerated sheet shows a diff. Because emission is deterministic with no timestamps or randomness, a dirty working tree after regeneration is a real, reviewable change every time, so a green CI run is a trustworthy guarantee that committed sheets match their generators.
+
 ## 5. Tips and Common Mistakes
 
 - **The merge driver is per-clone.** Merge drivers live in `.git/config`, which isn't committed - run the two `git config merge.eventsheet.*` commands once on every fresh clone.

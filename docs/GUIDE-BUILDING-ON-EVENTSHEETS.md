@@ -248,6 +248,63 @@ if EventSheets.open_sheet("res://quests/rescue_quest.gd"):
 	EventSheets.set_status("Opened the Rescue quest sheet.")
 ```
 
+### 9. A jam-day "strip the debug residue" cleanup command
+
+**Scenario:** it is the last hour of a game jam and print statements are scattered across the sheet; one palette command deletes every debug Print row so the build ships clean.
+
+```gdscript
+EventSheets.register_palette_command("Strip Debug Prints", func() -> void:
+	var removed: bool = EventSheets.edit("Strip Debug Prints", func(sheet: EventSheetResource) -> bool:
+		var before: int = sheet.events.size()
+		sheet.events = sheet.events.filter(func(row: Resource) -> bool: return not _is_debug_print(row))
+		return sheet.events.size() != before)
+	EventSheets.set_status("Debug prints removed." if removed else "No debug prints found."))
+```
+
+### 10. A team style pin in CI so emission never drifts
+
+**Scenario:** your team standardises on one weapon pack; a CI test compiles a canonical sheet and pins the exact output string, so an accidental template edit fails the merge before it reaches anyone.
+
+```gdscript
+var result: Dictionary = EventSheets.compile(_canonical_weapon_sheet())
+ok = _check("weapon emission is frozen", result["output"], _golden_weapon_source) and ok
+```
+
+### 11. An Inspector preview inside your pack's setup dialog
+
+**Scenario:** your loot pack's config dialog lets a designer set a drop-rate variable, and you show the live Inspector mock with its range drawer so they see exactly how the field will look and what it ships as before they commit.
+
+```gdscript
+var attrs: Dictionary = {"range": {"min": "0", "max": "1"}, "drawer": "progress_bar", "header": "Loot"}
+dialog.add_child(EventSheets.build_inspector_preview("drop_rate", "float", "0.25", attrs))
+dialog.hint_label.text = EventSheets.describe_inspector("float", attrs)
+```
+
+### 12. A migration codemod that renames a retired verb
+
+**Scenario:** you deprecated an old inventory action and shipped a replacement; a one-shot palette command rewrites every affected row across the open sheet in a single undo step, so upgrading a project is one click, not a manual find-and-replace.
+
+```gdscript
+EventSheets.edit("Migrate Inventory Verbs", func(sheet: EventSheetResource) -> bool:
+	var changed: bool = false
+	for row: Resource in sheet.events:
+		changed = _rewrite_legacy_inventory_ace(row) or changed
+	return changed)
+```
+
+### 13. A pre-merge round-trip sweep over every hand-edited script
+
+**Scenario:** a teammate hand-edited some generated `.gd` files; a headless CI script re-imports each one and asserts it still round-trips, catching any edit that would corrupt on the next open before it lands on main.
+
+```gdscript
+# headless: godot --headless --path . --script roundtrip_sweep.gd
+for path: String in _all_sheet_scripts():
+	var source: String = FileAccess.get_file_as_string(path)
+	if not EventSheets.round_trips(source):
+		push_error("Round-trip broke: %s" % path)
+		quit(1)
+```
+
 ## 9. Testing Your Extension
 
 The plugin's own API test (`tests/eventsheets_api_test.gd`) is a working template: codegen and vocabulary pins run dock-free; editor pins build a real dock (`EventSheetEditor.new()` then `setup(sheet)`) with a fake undo manager. For your extension, the highest-value pins are:

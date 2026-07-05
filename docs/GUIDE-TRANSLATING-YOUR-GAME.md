@@ -130,6 +130,30 @@ One Set Language action per button ("English", "Deutsch", "Espanol") - labels re
 
 Export the POT at any point - the translator works while you keep adding events; new strings join the next export without disturbing finished entries.
 
+### 7. A CJK build for a storefront launch
+
+Shipping to a Japanese storefront means the menu, tutorial prompts, and item names all need `tr()` and a font that covers the glyphs; mark the strings once in the sheet and one `strings.csv` column carries every translated line without touching your event logic.
+
+### 8. Community-sourced translations
+
+Point your Discord volunteers at the exported POT and merge back the `.po` files they return - each language is just another catalog registered under Localization, so a Brazilian-Portuguese pack from a fan drops in without a single sheet edit.
+
+### 9. Debug overlay stays in one language
+
+Your FPS counter, coordinate readout, and console log are for you, not players, so you leave their globes dim - only the strings a real player reads get marked, and the POT never fills with developer noise.
+
+### 10. Right-to-left languages for a jam theme
+
+Adding Arabic or Hebrew as a stretch goal means registering an RTL catalog and letting Godot mirror layout; the sheet side is unchanged because every player string already flows through `tr()` and re-resolves on the Set Language switch.
+
+### 11. Weekend patch adds a fifth language
+
+A community offers a Polish translation after launch: you regenerate the POT, hand it over, register the returned catalog, and add one more Set Language button - the shipped game needs no recompile of hand-written systems because the sheet already emits plain `tr()` calls.
+
+### 12. Plural and context in the same shop line
+
+An in-game store shows "1 gem" versus "5 gems" and reuses "Free" for both price and shipping; the plural-aware ACE handles the count and Translate With Context keeps the two "Free" entries apart so translators are never guessing.
+
 ## 8. Tips and common mistakes
 
 - **Never wrap a variable's DEFAULT in tr()**. Defaults initialize before translations

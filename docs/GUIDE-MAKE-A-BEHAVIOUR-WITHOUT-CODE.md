@@ -133,6 +133,30 @@ A tiny behaviour with `is_ready()` / `trigger(seconds)` gives every ability the 
 
 The behaviour that started as an experiment exports as an addon pack (Sheet > Export Addon) when it earns a permanent home - same sheet, now shareable.
 
+### 6. A jam-night health bar in rows
+
+At hour two of a 48-hour jam you drop a health behaviour under the player: exported `max_hp`, a `take_damage(amount)` action, and an *On Died* signal-trigger. Every other sheet reacts to *On Died* to play a sound or respawn, and you never wrote a line of GDScript to wire it.
+
+### 7. One knockback, tuned per enemy
+
+Author a knockback behaviour with exported `force` and `duration`, then attach it under the grunt, the brute, and the boss. Each instance gets its own numbers in the Inspector drawer, so the brute shrugs off a hit that sends the grunt flying - one sheet, three feels.
+
+### 8. A door that speaks its own condition
+
+Build a door behaviour that publishes `is_locked()` as a Condition and `unlock(key_id)` as an Action. Now any puzzle sheet reads *Door > Is Locked* straight from the picker, and the interaction logic lives in plain rows instead of scattered `if` checks.
+
+### 9. Spawner over a wave list
+
+A spawner behaviour holds an exported array of enemy scenes and a Repeat N times Pick Filter that instances each one on a timer. Designers add or reorder waves entirely in the Inspector list drawer, and the loop body never needs a `for` written by hand.
+
+### 10. Swap the input, keep the behaviour
+
+Because *Read Input Axis Into* and *Is Action Pressed* are rows, remapping a movement behaviour from arrow keys to a gamepad stick is an Inspector or InputMap change, not a code edit. The same 8-direction sheet ships for keyboard and controller from one file.
+
+### 11. Handing a behaviour to a non-coder teammate
+
+Send an artist the Flash behaviour and they tune `flash_color` from a colour swatch and `flash_time` from a typed drawer, watching *On Flash Finished* fire in their own sheet. They ship polish without ever opening code or asking you to rebuild.
+
 ## 11. Tips and Common Mistakes
 
 - **Loops are the bit people miss.** They are not a row you add from the picker - they live *on the event* as a Pick Filter. Right-click the event → Add Pick Filter.

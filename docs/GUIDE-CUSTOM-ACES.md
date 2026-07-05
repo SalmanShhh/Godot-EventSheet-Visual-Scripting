@@ -762,6 +762,26 @@ Instead of letting sheets call `queue_free()` on anything, expose `despawn_safel
 
 A provider that polls a gamepad's gyro (or a MIDI pedal, or an Arduino over serial) and emits `## @ace_trigger` signals turns exotic input into ordinary event rows.
 
+### 7. A game-jam save/load pair in one afternoon
+
+Deadline in six hours and you still need saving. Write `save_slot(n: int)` / `load_slot(n: int)` / `slot_exists(n: int)` on a `RefCounted` provider once; the picker instantly has Save Slot and Load Slot actions plus a Slot Exists condition, so every menu button in the sheet wires up without you writing another line of GDScript.
+
+### 8. A localization key check the whole team can read
+
+Your strings live in `tr()` keys. Expose `text_for(key: String)` as an expression and `is_translated(key: String)` as a condition, and a non-programmer teammate can build a "warn on missing translation" event row that reads like plain English instead of grepping the CSV by hand.
+
+### 9. Retuning damage numbers without reopening a single sheet
+
+`deal_damage(target, base: float, crit_chance: float = 0.1)` lives in one provider script. When balancing turns the crit rate down for the final build, you edit the one default and recompile - every sheet that used Deal Damage picks up the new value, and no designer has to touch their events.
+
+### 10. A deprecation that never breaks the old levels
+
+You shipped `add_score(n)` in the demo, then the real game needed `award_score(n, source)`. Annotate the old method `## @ace_deprecated("Use Award Score instead")`: the twenty tutorial sheets that already call Add Score keep compiling untouched, while the picker only offers the newer verb to anyone building fresh content.
+
+### 11. A physics helper wrapped as one safe expression
+
+Everyone on the team kept hand-writing the same raycast-from-mouse snippet slightly differently. Wrap it as `world_point_under_mouse()` returning `Vector2`, and the picker gains one Expression that inlines the correct, null-safe idiom everywhere - no more three subtly different copies drifting apart across sheets.
+
 ## 15. Tips and Common Mistakes
 
 - **A wrong method name fails silently.** `position = {pos}` is safe; a typo like `move_too({pos})`

@@ -34,6 +34,12 @@ Short, concrete walkthroughs that each build one real thing - a platformer chara
 - **Hits don't *land*.** The [game-feel toolkit](#13-the-game-feel-toolkit---hit-stop-screenshake-squash-and-punch-zoom) layers hit-stop, trauma screenshake, squash & stretch, and punch-zoom, all fire-and-forget.
 - **The game stutters under crowds.** [Frame-spreading](#12-crowds-without-the-hitch---frame-spreading) spreads heavy work across frames with a budget - three tools, easiest first.
 - **You want to build the Godot way, not the polling way.** The [steering tour](#10-building-the-godot-way---a-steering-tour) walks every nudge: signals over polling, autoloads, behavior components.
+- **A twin-stick horde shooter, and you want it to feel great.** The [auto-attack recipe](#11-auto-attack-with-game-feel---picking-line-of-sight-and-the-juice-pack) picks the nearest *visible* enemy with no per-frame scan, then layers the [game-feel toolkit](#13-the-game-feel-toolkit---hit-stop-screenshake-squash-and-punch-zoom) so each kill kicks, slows, and squashes.
+- **A boss fight that reacts to its minions.** [Coordinating many nodes](#9-coordinating-many-nodes---with-node-groups-and-aggregates) reads a group's average HP and broadcasts a retreat with two loop-free group queries - the boss enrages off a signal, not a tick.
+- **A jam build hitting a wave-spawner wall on the last night.** [Frame-spreading](#12-crowds-without-the-hitch---frame-spreading) drops an 800-enemy AI recompute into a Time Slicer queue with one Inspector tick, so the crunch-hour horde stops stuttering without a rewrite.
+- **Your designer wants to tune values without touching the sheet.** [Designer knobs](#14-designer-knobs---first-class-variables-and-inspector-drawers) turns a variable into an @export with a live drawer - a direction dial for a Vector2, a swatch for a Color - so balancing happens in the Inspector at Play time.
+- **You built one great mechanic and want the whole team to reuse it.** [Author your own behavior and ACEs](#7-author-your-own-behavior-and-aces) exports your dash or shield logic as a published pack that drops into any teammate's project as picker rows, with `@ace_expose_all` surfacing a script's whole API at once.
+- **One rule that should run across every enemy in the scene.** [Families](#15-reuse-and-scale---extract-to-function-and-families) set the Sheet Type to Family so a single sheet iterates the whole group, instead of copy-pasting the same on-death flash onto forty separate enemy sheets.
 
 ---
 

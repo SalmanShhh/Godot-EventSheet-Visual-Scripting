@@ -8,7 +8,8 @@ The plugin's core promise is **zero runtime dependency**: every sheet compiles t
 2. [Recommended Removal Order](#2-recommended-removal-order)
 3. [Keep vs Remove](#3-keep-vs-remove)
 4. [Re-installing Later](#4-re-installing-later)
-5. [Tips and Common Mistakes](#5-tips-and-common-mistakes)
+5. [Scenarios Where Clean Removal Matters](#scenarios-where-clean-removal-matters)
+6. [Tips and Common Mistakes](#5-tips-and-common-mistakes)
 
 ---
 
@@ -52,6 +53,15 @@ The one subtlety: an **autoload sheet** registers a singleton pointing at its *c
 Drop `addons/eventforge/` + `addons/eventsheet/` back in and re-enable the plugin. The `.tres` sources (if you kept them) re-open as sheets; any `.gd` opens as a GDScript-backed sheet. Nothing was lost - the code was always the source of truth.
 
 ---
+
+## Scenarios Where Clean Removal Matters
+
+- **The jam is over and you are handing off the `.zip`.** A judge or teammate opens your project with no plugin installed; because every sheet already compiled to plain GDScript, the game boots and plays exactly as it did on your machine, with zero "missing addon" errors.
+- **A client or publisher forbids third-party editor plugins in the delivered build.** You author everything with EventSheets, run Project Doctor, delete `addons/eventforge/` and `addons/eventsheet/`, and ship a repo that contains only stock Godot and your own generated `.gd` - the contract test proves nothing plugin-shaped leaked into runtime.
+- **You are trimming the git repo before a public open-source release.** Removing the two addon folders drops tens of thousands of editor-only lines from the tree while your gameplay scripts stay byte-identical, so the published project is lean and self-contained.
+- **A teammate on the project does not run the editor at all - they only touch code.** They pull, and the compiled sheets plus behavior packs under `eventsheet_addons/` are just ordinary classes to them; they never install the plugin and never hit a wall because of it.
+- **You are evaluating EventSheets on a real project and want an exit ramp before committing.** Because removal is reversible and the code was always the source of truth, you can pull the plugin out mid-evaluation, confirm the game still runs untouched, and drop it back in later with nothing lost.
+- **CI builds the shipping game on a machine that never had the editor plugin.** The headless export runs against the generated scripts alone; there is no autoload to register and no `EventForgeBridge` to resolve, so the pipeline stays clean and fast.
 
 ## 5. Tips and Common Mistakes
 

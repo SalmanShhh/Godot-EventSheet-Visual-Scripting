@@ -605,6 +605,69 @@ Grey hint text shows while the field is empty and vanishes at the first keystrok
 
 Hover each exported variable row in the sheet: a live preview card pops up with the decor, grouping, widget, and a one-sentence summary ("A whole number, from 0 to 100, shown as a progress bar, grouped under Combat."). Fix anything off via right-click > Edit, hover again to confirm.
 
+### Use case 15: a loot table a designer fills like a spreadsheet
+
+**Scenario:** a jam is on hour 30 and the designer needs to punch in twelve drops for the boss without wrestling Godot's generic array editor.
+
+```
+Variable: loot  (Array)
+  Editable in the Inspector: on
+  Show as: Editable table
+  Table columns: item:String, weight:int, rare:bool
+```
+
+Each Dictionary row becomes a labelled grid line with add / remove / move-up controls; the designer types straight down the column and never opens a nested "Dictionary" fold.
+
+### Use case 16: a difficulty picker with every option in view
+
+**Scenario:** during playtesting a designer flips `difficulty` dozens of times a session and a dropdown that hides the other two choices behind a click is friction.
+
+```
+Variable: difficulty  (Text)
+  Editable in the Inspector: on
+  Options: easy, normal, hard
+  Show as: Toggle buttons
+```
+
+All three sit as one row of buttons - the pressed one is the value - so switching is a single click with nothing hidden. Without the plugin it degrades to a plain text field, so nothing runtime depends on it.
+
+### Use case 17: a portrait slot that cannot ship empty
+
+**Scenario:** every enemy needs a `portrait`, and a scene nobody reopens before release is exactly where a null slot slips through.
+
+```
+Variable: portrait  (Resource type: Texture2D)
+  Editable in the Inspector: on
+  Required: on
+  Show as: Texture preview
+```
+
+The red "Required - assign a value" badge sits above the field until it is set, and the **Project Doctor** scans every scene and saved resource using the script, naming any file that left the portrait unset - so the gap surfaces before ship, not after a bug report.
+
+### Use case 18: a seed field with a Reroll button beside it
+
+**Scenario:** a level author wants to try fresh random layouts from a `stats_seed` without hand-typing new numbers.
+
+```
+Variable: stats_seed  (Number)
+  Editable in the Inspector: on
+  Field button: reroll_stats Reroll
+```
+
+A small "Reroll" button renders right next to the seed and calls `reroll_stats()` on click. The sheet must be a `@tool` sheet for the button to act in-editor; otherwise it disables itself and states why.
+
+### Use case 19: a spawn range that refuses to be entered backwards
+
+**Scenario:** a `spawn_gap` Vector2 stores a low and high bound, and a tired tuner could type a low end above the high end and break spawning silently.
+
+```
+Variable: spawn_gap  (Vector2)
+  Editable in the Inspector: on
+  Validate with: check_spawn_gap
+```
+
+The Inspector calls `check_spawn_gap()` as the field is edited and shows its returned message above the property ("Spawn gap: the low end exceeds the high end.") until the values are sane. It is the cross-field rule a single widget cannot enforce on its own, and it stays silent on a non-`@tool` sheet rather than raising a false alarm.
+
 ### Other game scenarios
 
 **Platformers.** Sliders for `jump_height`, `gravity`, and `coyote_time`; a dial for a `wall_jump_kick` vector; a curve for a variable-jump release ramp.

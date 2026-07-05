@@ -259,6 +259,26 @@ The audio manager and the achievements autoload never knew each other; a ten-row
 
 Expose the knobs (`@export` variables with Inspector looks) in a sheet that forwards to the hardcoded system - designers tune in the Inspector, the system's code never changes.
 
+### 7. Jam-crunch feature slapped onto a shipped prototype
+
+Two days before submission you need a combo meter on a fighter whose input script is already a mess you daren't touch. Drop a behavior-mode sheet under the fighter, listen to its existing `hit_landed` signal with On Signal, and drive the whole meter in rows - the original script never opens.
+
+### 8. Autoload event bus as the sheet's switchboard
+
+Your project already routes everything through an `EventBus` autoload. A sheet reacts to `EventBus.wave_cleared` via an `autoload:EventBus` On Signal source and fires `EventBus.emit_signal("spawn_boss")` back through Emit Signal On, so it plugs into the existing message flow without a single new wire on the emitting side.
+
+### 9. Boss encounter scripted without a new class
+
+The boss node runs a hand-written state machine, and the encounter (phase transitions, arena hazards, camera shakes) is one-off level content that does not deserve its own class. A behavior-mode sheet on the boss reads `host.health` with Get Property and calls `host.enter_phase(2)` with Call Method, keeping the encounter data next to the level instead of buried in engine code.
+
+### 10. Handing a system to a non-programmer teammate
+
+An artist wants to tweak enemy spawn timing but should never edit `spawner.gd`. Reverse-lift the spawner into a sheet once; from then on the timing lives in readable rows they can adjust safely, and the file still round-trips byte-identically for the programmer who owns it.
+
+### 11. Trial run before committing to a pack
+
+You suspect your inventory manager deserves first-class ACEs, but you are not sure the shape is right yet. Wire a few sheets to it with stringly Call Method calls first; if the same three methods keep showing up, that is your signal to add `## @ace_expose_all(node)` and promote them to type-safe vocabulary - no rewrite of the sheets that already use it.
+
 ## 10. Tips and Common Mistakes
 
 Interop is broad, but it isn't magic - here's the candid list so nothing surprises you:
