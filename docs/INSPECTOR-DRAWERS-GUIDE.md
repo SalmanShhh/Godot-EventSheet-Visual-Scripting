@@ -1,8 +1,8 @@
 # Inspector Drawers & Export Options Guide
 
-Make your event-sheet variables show up as **rich, designer-friendly controls in Godot's Inspector**: sliders, direction dials, colour swatches, texture thumbnails, and inline curves, plus every common `@export` option (ranges, dropdowns, multiline text, grouping, tooltips, read-only, alpha-free colours). It is a rich-inspector experience for Godot, authored entirely from the **Variable dialog** with no code, and it compiles to plain `@export` GDScript that round-trips losslessly. A teammate who never opens the event sheet still gets a tidy, tuned Inspector to play with.
+Make your event-sheet variables show up as **rich, designer-friendly controls in Godot's Inspector**: sliders, min-max ranges, direction dials, colour swatches, texture thumbnails, and inline curves, plus **decor** (accent section headers, info note panels) and every common `@export` option (ranges, dropdowns, multiline text, grouping, tooltips, read-only, alpha-free colours). It is a rich-inspector experience for Godot, authored entirely from the **Variable dialog** with no code, and it compiles to plain `@export` GDScript that round-trips losslessly. A teammate who never opens the event sheet still gets a tidy, tuned Inspector to play with - and **hovering any exported variable in the sheet shows a live preview** of exactly what they will get.
 
-![The five Inspector drawers](images/inspector-drawers.png)
+![The six Inspector drawers plus the header and info-note decor](images/inspector-drawers.png)
 
 ## Table of Contents
 
@@ -27,6 +27,9 @@ Make your event-sheet variables show up as **rich, designer-friendly controls in
 - **Easing and falloff curves.** A `damage_falloff` `Curve` shows its shape **inline** in the Inspector so you can read the ramp at a glance before opening the full curve editor.
 - **Self-documenting, safe fields.** Tooltips explain each value on hover, **clamps** keep health between 0 and 100 no matter what code assigns, and **read-only** shows a computed value without letting anyone edit it.
 - **Conditional Inspectors.** A `homing_strength` field that only appears when `is_homing` is ticked keeps the Inspector uncluttered and impossible to misuse.
+- **"Between A and B" values.** A `spawn_interval` or `damage_range` is ONE **min-max slider** with two handles instead of two disconnected number fields that can cross.
+- **Inspectors that explain themselves.** An accent **section header** breaks a long Inspector into readable chapters, and an **info note** puts the one sentence a designer must read ("Shared resource - edits affect every user.") right above the field it concerns.
+- **Auditing without opening dialogs.** Hover any exported variable row in the sheet and a live preview card pops up showing its final Inspector - decor, grouping, and widget included.
 
 ## 2. Core Concepts
 
@@ -447,13 +450,81 @@ Variable: current_combo  (Number)
   Read-only: on
 ```
 
+### Use case 9: a spawn interval as one min-max slider
+
+**Scenario:** enemies should spawn every 10 to 40 seconds, and the two bounds must never cross.
+
+```
+Variable: spawn_gap  (Vector2)
+  Editable in the Inspector: on
+  Range: 0, 60          // the slider's track
+  Show as: Min-max range
+```
+
+One track, two handles; `spawn_gap.x` is the low end and `.y` the high end - `randf_range(spawn_gap.x, spawn_gap.y)` in the sheet.
+
+### Use case 10: camera zoom limits that cannot invert
+
+**Scenario:** the player can pinch-zoom, but design wants a hard floor and ceiling that a tired tuner cannot accidentally swap.
+
+```
+Variable: zoom_bounds  (Vector2)
+  Editable in the Inspector: on
+  Range: 0.5, 4
+  Show as: Min-max range
+```
+
+The handles can meet but never cross, so min <= max holds by construction.
+
+### Use case 11: a shared resource with a warning designers actually see
+
+**Scenario:** one `.tres` is referenced by every enemy in the game; editing it silently changes all of them.
+
+```
+Variable: stats  (Resource type)
+  Editable in the Inspector: on
+  Info note: Shared resource - edits affect every enemy using it.
+```
+
+A quiet panel renders right above the field in the Inspector - the warning lives where the mistake happens, not in a wiki.
+
+### Use case 12: a boss stat block with chapter headers
+
+**Scenario:** a boss has 20 tunables and the Inspector reads as one grey wall.
+
+```
+Variable: phase_two_hp   (Number) -> Section header: Phase Two #e06666
+Variable: enrage_timer   (Number) -> (no header - it sits under Phase Two)
+Variable: loot_quality   (Number) -> Section header: Rewards #f4d03f
+```
+
+Accent-coloured labels break the wall into chapters. Headers are decor comments in the code - zero runtime effect.
+
+### Use case 13: a name field that shows what to type
+
+**Scenario:** an empty `String` field gives no clue whether it wants a name, a path, or an id.
+
+```
+Variable: save_slot_name  (Text)
+  Editable in the Inspector: on
+  Placeholder: e.g. Farm Save 1
+```
+
+Grey hint text shows while the field is empty and vanishes at the first keystroke.
+
+### Use case 14: auditing a whole sheet's Inspector in seconds
+
+**Scenario:** before handing the scene to the design team, you want to check every exported variable looks right - without opening 15 dialogs.
+
+Hover each exported variable row in the sheet: a live preview card pops up with the decor, grouping, widget, and a one-sentence summary ("A whole number, from 0 to 100, shown as a progress bar, grouped under Combat."). Fix anything off via right-click > Edit, hover again to confirm.
+
 ### Other game scenarios
 
 **Platformers.** Sliders for `jump_height`, `gravity`, and `coyote_time`; a dial for a `wall_jump_kick` vector; a curve for a variable-jump release ramp.
 
-**Top-down shooters.** A `spread` slider, a `recoil` dial, a `muzzle_flash_colour` swatch, and a `bullet_falloff` curve, all tuned live.
+**Top-down shooters.** A `spread` slider, a `recoil` dial, a `muzzle_flash_colour` swatch, a `wave_gap` min-max range, and a `bullet_falloff` curve, all tuned live.
 
-**RPGs.** Grouped stat blocks (Combat / Defense / Magic), clamped `hp`/`mp`, an `on_changed` that refreshes a stat sheet, and read-only derived totals.
+**RPGs.** Grouped stat blocks under accent chapter headers (Combat / Defense / Magic), clamped `hp`/`mp`, an `on_changed` that refreshes a stat sheet, info notes on shared class resources, and read-only derived totals.
 
 **Puzzle games.** An `difficulty` dropdown, a `grid_size` range, and a `theme_colour` swatch per level.
 

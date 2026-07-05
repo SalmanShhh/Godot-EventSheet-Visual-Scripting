@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed - the Inspector guide refreshed to the current feature set
+
+- docs/INSPECTOR-DRAWERS-GUIDE.md now covers everything shipped this cycle - the
+  min-max range slider, section-header + info-note decor, and the hover preview -
+  and its Use Cases section grew from 8 to 14 brief recipes (spawn intervals,
+  zoom bounds that cannot invert, shared-resource warnings, boss chapter headers,
+  placeholder hints, and the hover-audit workflow).
+
 ### Added - hover a variable, see its Inspector + the Inspector toolkit for extensions
 
 - **Hover preview**: hovering an exported variable row in the sheet pops a small live
