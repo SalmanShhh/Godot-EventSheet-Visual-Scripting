@@ -107,6 +107,7 @@ static func run() -> bool:
 
 @export_custom(PROPERTY_HINT_PASSWORD, \"\") var api_key: String = \"\"
 @export_custom(PROPERTY_HINT_LINK, \"\") var cell_size: Vector2 = Vector2.ZERO
+@export_custom(PROPERTY_HINT_ENUM_SUGGESTION, \"sword,bow,staff\") var weapon_kind: String = \"sword\"
 @export_exp_easing(\"attenuation\") var falloff: float = 1.0
 "
 	var tail_sheet: EventSheetResource = importer.import_external_source(tail_source)
@@ -124,6 +125,9 @@ static func run() -> bool:
 	var falloff: LocalVariable = tail_by_name.get("falloff")
 	all_passed = _check("flagged exp-easing lifts structured",
 		(falloff.attributes.get("exp_easing_flags", []) as Array) == ["attenuation"] if falloff != null else false, true) and all_passed
+	var weapon_kind: LocalVariable = tail_by_name.get("weapon_kind")
+	all_passed = _check("suggestion dropdown lifts structured (choices intact)",
+		(weapon_kind.attributes.get("suggestions", []) as Array) == ["sword", "bow", "staff"] if weapon_kind != null else false, true) and all_passed
 	all_passed = _check("the tail file round-trips byte-identically",
 		str(SheetCompiler.compile(tail_sheet, "user://export_tail.gd").get("output", "")), tail_source) and all_passed
 

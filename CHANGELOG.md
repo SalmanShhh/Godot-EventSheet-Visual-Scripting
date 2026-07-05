@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - the suggestions dropdown (choices + free typing)
+
+- A new String Inspector look, **"Dropdown with free typing (suggestions)"**: list
+  choices in Details and the Inspector offers them as a dropdown while STILL
+  accepting anything typed - the jam-friendly middle ground between a locked
+  `@export_enum` and a bare text field. Emits Godot's native
+  `@export_custom(PROPERTY_HINT_ENUM_SUGGESTION, "a,b,c")`, round-trips structured
+  back into the Details field, gallery tile + preview-card sentence included.
+
 ### Added - required fields + the EnemyStats Custom Resource showcase
 
 - **Required**: tick "Required" on an exported variable and the Inspector shows a red

@@ -238,6 +238,16 @@ A fixed dropdown for a `String`. Fill the **"Options"** field with comma-separat
 @export_enum("easy", "normal", "hard") var difficulty: String = "normal"
 ```
 
+### Suggestions dropdown (String)
+
+A dropdown of choices that **still accepts free typing** - unlike the Options dropdown, which locks the set. Pick **Inspector look: Dropdown with free typing (suggestions)** and list the choices in Details (`sword, bow, staff`).
+
+```gdscript
+@export_custom(PROPERTY_HINT_ENUM_SUGGESTION, "sword,bow,staff") var weapon_kind: String = "sword"
+```
+
+Round-trips **structured** (the choices come back into the Details field). Use it when the common values are known but designers may need a new one mid-jam.
+
 ### No alpha (Color)
 
 A solid RGB swatch with the alpha slider hidden, for colours that should never be transparent. Tick **"No alpha"** on a `Color`.
@@ -344,6 +354,7 @@ func _validate_property(property: Dictionary) -> void:
 | Range | More options | int / float / Vector2 | `@export_range(min, max, step)` |
 | Multiline | More options | String | `@export_multiline` |
 | Options (combo) | More options | String | `@export_enum("a", "b")` |
+| Suggestions (free typing) | Inspector look | String | `@export_custom(PROPERTY_HINT_ENUM_SUGGESTION, "a,b")` |
 | No alpha | More options | Color | `@export_color_no_alpha` |
 | Easing curve | More options | float | `@export_exp_easing` |
 | Placeholder | More options | String | `@export_placeholder("hint")` |

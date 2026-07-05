@@ -20,7 +20,7 @@ static func run() -> bool:
 		"layers_avoidance", "storage"
 	]) and ok
 	ok = _check("String looks", _ids_for("String"), [
-		"file", "global_file", "dir", "global_dir",
+		"file", "global_file", "dir", "global_dir", "suggestions",
 		"preset_password", "preset_expression", "storage"
 	]) and ok
 	ok = _check("float looks", _ids_for("float"), [

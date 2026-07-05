@@ -171,6 +171,8 @@ static func _widget_phrase(attributes: Dictionary) -> String:
 		return "shown as checkbox flags"
 	if attributes.has("enum_values") or attributes.has("options"):
 		return "shown as a dropdown"
+	if attributes.has("suggestions"):
+		return "shown as a dropdown that also accepts typing"
 	if attributes.has("layers"):
 		return "shown as a layers grid"
 	if attributes.has("node_path_types"):
@@ -273,6 +275,8 @@ static func _look_id_from_attributes(attributes: Dictionary) -> String:
 		return "layers_%s" % str(attributes.get("layers"))
 	if attributes.has("node_path_types"):
 		return "node_path"
+	if attributes.has("suggestions"):
+		return "suggestions"
 	match str(attributes.get("custom_preset", "")):
 		"password":
 			return "preset_password"

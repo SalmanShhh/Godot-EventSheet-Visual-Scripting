@@ -446,6 +446,10 @@ func _extract_structured_hint(lifted: LocalVariable, line: String) -> void:
 		candidate["custom_preset"] = "expression"
 	elif hint == "@export_custom(PROPERTY_HINT_LINK, \"\")" and lifted.type_name in ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"]:
 		candidate["custom_preset"] = "link"
+	elif hint.begins_with("@export_custom(PROPERTY_HINT_ENUM_SUGGESTION, \"") and lifted.type_name == "String":
+		var suggestion_list: String = _extract_first_quoted(hint)
+		if not suggestion_list.strip_edges().is_empty():
+			candidate["suggestions"] = Array(suggestion_list.split(","))
 	elif hint.begins_with("@export_exp_easing(") and lifted.type_name == "float":
 		var easing_flags: Array = []
 		for easing_flag: String in _quoted_arguments(hint):

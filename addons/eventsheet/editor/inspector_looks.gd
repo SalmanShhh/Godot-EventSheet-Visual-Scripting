@@ -15,6 +15,7 @@ const PRESETS: Array[Dictionary] = [
 	{"id": "global_file", "label": "File picker (any file on disk)", "types": ["String"], "detail": "filters, e.g. *.png", "sentence": "Pick a file from anywhere on the computer."},
 	{"id": "dir", "label": "Folder picker (project)", "types": ["String"], "detail": "", "sentence": "Pick a folder from inside the project."},
 	{"id": "global_dir", "label": "Folder picker (anywhere on disk)", "types": ["String"], "detail": "", "sentence": "Pick a folder from anywhere on the computer."},
+	{"id": "suggestions", "label": "Dropdown with free typing (suggestions)", "types": ["String"], "detail": "choices, e.g. sword, bow, staff", "sentence": "A dropdown of suggestions - you can still type anything."},
 	{"id": "flags", "label": "Checkbox flags (Fire, Ice…)", "types": ["int"], "detail": "labels, e.g. Fire:1, Ice:2", "sentence": "Several on/off boxes packed into one number."},
 	{"id": "enum_values", "label": "Dropdown with numbers (Slow:30…)", "types": ["int"], "detail": "options, e.g. Slow:30, Fast:60", "sentence": "A dropdown where each word stands for a number."},
 	{"id": "layers_2d_physics", "label": "2D physics layers grid", "types": ["int"], "detail": "", "sentence": "The little grid of 2D physics layer toggles."},
@@ -85,6 +86,14 @@ static func _build_preview_inner(look_id: String) -> Control:
 			return enum_option
 		"node_path":
 			return _path_field("../Player")
+		"suggestions":
+			var suggestion_option := OptionButton.new()
+			suggestion_option.add_item("sword")
+			suggestion_option.add_item("bow")
+			suggestion_option.add_item("(or type your own...)")
+			suggestion_option.select(0)
+			suggestion_option.disabled = true
+			return suggestion_option
 		"preset_password":
 			var password_edit := LineEdit.new()
 			password_edit.text = "hunter2"

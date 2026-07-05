@@ -1130,6 +1130,14 @@ func _fold_look_attributes(attributes: Dictionary, type_name: String) -> void:
 						node_types.append(type_text.strip_edges())
 				if not node_types.is_empty():
 					attributes["node_path_types"] = node_types
+		"suggestions":
+			if type_name == "String":
+				var suggestion_entries: Array = []
+				for suggestion_text: String in detail.split(",", false):
+					if not suggestion_text.strip_edges().is_empty():
+						suggestion_entries.append(suggestion_text.strip_edges())
+				if not suggestion_entries.is_empty():
+					attributes["suggestions"] = suggestion_entries
 		"storage":
 			attributes["storage"] = true
 		"preset_password":
@@ -1201,6 +1209,12 @@ func _prefill_look(existing: Dictionary) -> void:
 		for type_entry: Variant in existing.get("node_path_types"):
 			type_parts.append(str(type_entry))
 		detail = ", ".join(type_parts)
+	elif existing.get("suggestions") is Array:
+		look_id = "suggestions"
+		var suggestion_parts: PackedStringArray = PackedStringArray()
+		for suggestion_entry: Variant in existing.get("suggestions"):
+			suggestion_parts.append(str(suggestion_entry))
+		detail = ", ".join(suggestion_parts)
 	for index: int in range(_attr_look_option.item_count):
 		if str(_attr_look_option.get_item_metadata(index)) == look_id:
 			_attr_look_option.select(index)

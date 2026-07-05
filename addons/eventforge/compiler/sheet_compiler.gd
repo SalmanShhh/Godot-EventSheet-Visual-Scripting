@@ -1998,6 +1998,17 @@ static func _structured_hint_prefix(attributes: Dictionary, type_name: String) -
 		"link":
 			if type_name in ["Vector2", "Vector2i", "Vector3", "Vector3i", "Vector4", "Vector4i"]:
 				return "@export_custom(PROPERTY_HINT_LINK, \"\") "
+	# A String that OFFERS choices but accepts free text: the suggestion dropdown. Choices ride the
+	# hint string; anything typed still sticks (unlike @export_enum, which locks the set). Values
+	# with quotes/commas are skipped - they cannot survive the comma-joined hint.
+	if type_name == "String" and attributes.get("suggestions") is Array and not (attributes.get("suggestions") as Array).is_empty():
+		var suggestion_values: PackedStringArray = PackedStringArray()
+		for suggestion: Variant in attributes.get("suggestions"):
+			var cleaned: String = str(suggestion).strip_edges()
+			if not cleaned.is_empty() and not cleaned.contains("\"") and not cleaned.contains(","):
+				suggestion_values.append(cleaned)
+		if not suggestion_values.is_empty():
+			return "@export_custom(PROPERTY_HINT_ENUM_SUGGESTION, \"%s\") " % ",".join(suggestion_values)
 	# Exp-easing WITH flags (plain exp_easing keeps its original branch, byte-unchanged).
 	if type_name == "float" and bool(attributes.get("exp_easing", false)) and attributes.get("exp_easing_flags") is Array and not (attributes.get("exp_easing_flags") as Array).is_empty():
 		var easing_flags: PackedStringArray = PackedStringArray()
