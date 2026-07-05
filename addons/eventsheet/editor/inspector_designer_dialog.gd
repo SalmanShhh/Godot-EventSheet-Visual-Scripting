@@ -3,14 +3,36 @@
 # Per-variable dialogs answer "what will THIS property look like"; this dialog answers "what does
 # my whole Inspector look like" - every exported variable rendered top-to-bottom with its decor,
 # grouping, and widget miniature, through the same preview-card builders the Variable dialog uses
-# (one source of truth: the mock cannot lie). This first slice is a pure VIEW: it only reads the
-# sheet; editing gestures (reorder, regroup, click-through) layer on top of it next.
+# (one source of truth: the mock cannot lie). The view itself only READS; every edit routes back
+# through the dock (the ✎ button opens the same Variable dialog, ▲ reorders through the undo
+# funnel), and the dock calls refresh() afterwards - so the Designer can never mutate a sheet
+# behind the funnel's back. Without wired handlers (tests, render harnesses) it stays a pure view.
 @tool
 class_name EventSheetInspectorDesignerDialog
 extends AcceptDialog
 
 var _column: VBoxContainer = null
 var _empty_hint: Label = null
+var _row_card_count: int = 0
+# Editing seams, wired by the dock: ✎ routes the entry to the shared Variable dialog, ▲ swaps a
+# tree variable with the previous one in emission order, and live_sheet re-fetches the CURRENT
+# sheet on refresh (the funnel replaces resources - a cached sheet reference goes stale).
+var _edit_handler: Callable = Callable()
+var _move_up_handler: Callable = Callable()
+var _live_sheet: Callable = Callable()
+
+
+## Wires the editing seams (dock-side); called once right after construction.
+func wire_editing(edit_handler: Callable, move_up_handler: Callable, live_sheet: Callable) -> void:
+	_edit_handler = edit_handler
+	_move_up_handler = move_up_handler
+	_live_sheet = live_sheet
+
+
+## Rebuilds from the LIVE sheet - the dock calls this after a Designer-initiated edit lands.
+func refresh() -> void:
+	if _live_sheet.is_valid():
+		rebuild_for_sheet(_live_sheet.call())
 
 
 func _init() -> void:
@@ -48,6 +70,7 @@ static func collect_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			attributes["options"] = combo_options
 		entries.append({
 			"name": str(var_name),
+			"scope": "global",
 			"type_name": str(descriptor_dict.get("type", "Variant")),
 			"default_text": VariableDialog._default_display_text(descriptor_dict.get("default")),
 			"attributes": attributes,
@@ -58,6 +81,7 @@ static func collect_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 			var tree_var: LocalVariable = entry as LocalVariable
 			entries.append({
 				"name": tree_var.name,
+				"scope": "tree",
 				"type_name": tree_var.type_name,
 				"default_text": VariableDialog._default_display_text(tree_var.default_value),
 				"attributes": (tree_var.attributes as Dictionary).duplicate(true) if tree_var.attributes is Dictionary else {},
@@ -73,6 +97,7 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 		_column.remove_child(stale)
 		stale.free()
 	_empty_hint = null
+	_row_card_count = 0
 	var entries: Array[Dictionary] = collect_entries(sheet)
 	if entries.is_empty():
 		_empty_hint = Label.new()
@@ -81,11 +106,12 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 		_column.add_child(_empty_hint)
 		return
 	var intro: Label = Label.new()
-	intro.text = "Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview)."
+	intro.text = "Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (top-level variables sort alphabetically)." if _edit_handler.is_valid() else "Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview)."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro.add_theme_font_size_override("font_size", 11)
 	intro.modulate = Color(1.0, 1.0, 1.0, 0.65)
 	_column.add_child(intro)
+	var first_tree_entry: bool = true
 	for entry: Dictionary in entries:
 		var card: EventSheetInspectorPreviewCard = EventSheetInspectorPreviewCard.new()
 		card.hide_caption()
@@ -97,7 +123,30 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 			true,
 			bool(entry.get("constant", false))
 		)
-		_column.add_child(card)
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_row_card_count += 1
+		if not _edit_handler.is_valid():
+			_column.add_child(card)
+			continue
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_child(card)
+		var buttons: VBoxContainer = VBoxContainer.new()
+		var edit_button: Button = Button.new()
+		edit_button.text = "✎"
+		edit_button.tooltip_text = "Edit %s in the Variable dialog" % str(entry.get("name"))
+		edit_button.pressed.connect(_on_edit_pressed.bind(entry.duplicate(true)))
+		buttons.add_child(edit_button)
+		if str(entry.get("scope", "")) == "tree" and _move_up_handler.is_valid():
+			var up_button: Button = Button.new()
+			up_button.text = "▲"
+			up_button.tooltip_text = "Move this variable up in the Inspector (one undo step)"
+			up_button.disabled = first_tree_entry
+			up_button.pressed.connect(_on_move_up_pressed.bind(str(entry.get("name"))))
+			buttons.add_child(up_button)
+		if str(entry.get("scope", "")) == "tree":
+			first_tree_entry = false
+		row.add_child(buttons)
+		_column.add_child(row)
 
 
 func open_for_sheet(sheet: EventSheetResource) -> void:
@@ -107,8 +156,15 @@ func open_for_sheet(sheet: EventSheetResource) -> void:
 
 ## The number of variable rows currently shown (excludes the intro/empty hint) - test seam.
 func row_count() -> int:
-	var count: int = 0
-	for child: Node in _column.get_children():
-		if child is EventSheetInspectorPreviewCard:
-			count += 1
-	return count
+	return _row_card_count
+
+
+func _on_edit_pressed(entry: Dictionary) -> void:
+	if _edit_handler.is_valid():
+		_edit_handler.call(entry)
+
+
+func _on_move_up_pressed(var_name: String) -> void:
+	if _move_up_handler.is_valid():
+		_move_up_handler.call(var_name)
+	refresh()

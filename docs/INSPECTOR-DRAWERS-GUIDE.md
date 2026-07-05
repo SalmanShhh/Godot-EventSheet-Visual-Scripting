@@ -194,7 +194,7 @@ A **drawer** replaces a variable's plain Inspector field with a richer control, 
 
 ## 4b. The Inspector Designer (the whole sheet at once)
 
-**Sheet ▸ Inspector Designer…** shows every Inspector-visible variable of the sheet as ONE live view - decor, grouping, and widgets, exactly as Godot will show them, with the plain-language sentence under each. It is the "what does my whole Inspector look like?" answer the per-variable dialogs cannot give; audit it here, then edit any variable from its row in the sheet.
+**Sheet ▸ Inspector Designer…** shows every Inspector-visible variable of the sheet as ONE live view - decor, grouping, and widgets, exactly as Godot will show them, with the plain-language sentence under each. It is the "what does my whole Inspector look like?" answer the per-variable dialogs cannot give - and you edit from it too: **✎** opens that variable in the Variable dialog (the Designer refreshes when you confirm), and **▲** moves a sheet variable up in the Inspector as one undo step. Top-level variables sort alphabetically, so only sheet variables reorder.
 
 <img src="images/inspector-designer.png" alt="The Inspector Designer over the EnemyStats resource: the Combat section with its min-max damage slider, curve, loot grid and health bar, the Identity section with the required portrait warning and swatches, and the Spawning info note - each with a one-line plain-language description." width="620">
 

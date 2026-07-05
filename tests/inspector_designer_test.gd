@@ -44,12 +44,44 @@ static func run() -> bool:
 	all_passed = _eq("a null sheet collects nothing",
 		EventSheetInspectorDesignerDialog.collect_entries(null).is_empty(), true) and all_passed
 
+	all_passed = _eq("entries carry their scope (dict = global, tree = tree)",
+		[str(entries[0].get("scope")), str(entries[2].get("scope"))], ["global", "tree"]) and all_passed
+
 	var dialog: EventSheetInspectorDesignerDialog = EventSheetInspectorDesignerDialog.new()
 	dialog.rebuild_for_sheet(sheet)
 	all_passed = _eq("the dialog shows one card per Inspector-visible variable", dialog.row_count(), 3) and all_passed
 	dialog.rebuild_for_sheet(EventSheetResource.new())
 	all_passed = _eq("an empty sheet shows the empty hint (no cards)", dialog.row_count(), 0) and all_passed
 	dialog.free()
+
+	# ── The ▲ reorder: one funnel step swapping a tree variable with the previous one; the first
+	# tree variable refuses (nothing above it), and undo restores the original order.
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	var dock_sheet: EventSheetResource = EventSheetResource.new()
+	for tree_name: String in ["alpha", "beta"]:
+		var ordered_var: LocalVariable = LocalVariable.new()
+		ordered_var.name = tree_name
+		ordered_var.type_name = "int"
+		ordered_var.default_value = 0
+		ordered_var.exported = true
+		dock_sheet.events.append(ordered_var)
+	dock.setup(dock_sheet)
+	dock._designer_move_variable_up("beta")
+	var order_after: PackedStringArray = PackedStringArray()
+	for moved_entry: Variant in dock.get_current_sheet().events:
+		if moved_entry is LocalVariable:
+			order_after.append((moved_entry as LocalVariable).name)
+	all_passed = _eq("move-up swaps a tree variable with the previous one (via the funnel)",
+		order_after, PackedStringArray(["beta", "alpha"])) and all_passed
+	dock._designer_move_variable_up("beta")
+	var order_refused: PackedStringArray = PackedStringArray()
+	for refused_entry: Variant in dock.get_current_sheet().events:
+		if refused_entry is LocalVariable:
+			order_refused.append((refused_entry as LocalVariable).name)
+	all_passed = _eq("the first tree variable refuses to move up (no change, no undo step)",
+		order_refused, PackedStringArray(["beta", "alpha"])) and all_passed
+	dock.free()
 
 	return all_passed
 

@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - the Inspector Designer edits: ✎ per row + ▲ reorder through the funnel
+
+- The Designer is no longer view-only: every row gains **✎** (opens that variable in
+  the shared Variable dialog - the same apply path as everywhere else - and the
+  Designer refreshes on confirm) and, for sheet (tree) variables, **▲** (swaps the
+  variable with the previous one in Inspector order as ONE undo step through the
+  edit funnel). The first variable's ▲ is disabled; top-level variables sort
+  alphabetically, so they edit but do not reorder. The Designer itself never
+  mutates the sheet - every gesture routes back through the dock, and variables are
+  resolved LIVE by name at click time (the funnel replaces resources on commit).
+  Handlers unwired (tests, harnesses) keep the pure view. Pinned in
+  tests/inspector_designer_test.gd, including the refuse-at-top case.
+
 ### Fixed - a clamped variable kept its drawer when reopened
 
 - A variable carrying BOTH a drawer marker AND a clamp setter (the setter-suffixed

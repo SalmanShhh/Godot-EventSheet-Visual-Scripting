@@ -609,11 +609,66 @@ func _share_verbs_with_project_requested() -> void:
 
 ## "Inspector Designer" (Sheet menu): the whole sheet's Inspector as one live view - every
 ## exported variable with its decor, grouping, and widget, through the shared preview cards.
+## Editing routes BACK through the dock: ✎ opens the shared Variable dialog, ▲ reorders through
+## the undo funnel - the Designer itself never mutates the sheet.
 func _open_inspector_designer() -> void:
 	if _inspector_designer_dialog == null:
 		_inspector_designer_dialog = EventSheetInspectorDesignerDialog.new()
+		_inspector_designer_dialog.wire_editing(
+			_designer_edit_variable,
+			_designer_move_variable_up,
+			func() -> EventSheetResource: return _current_sheet
+		)
 		add_child(_inspector_designer_dialog)
 	_inspector_designer_dialog.open_for_sheet(_current_sheet)
+
+
+## Designer ✎: route the entry into the SAME context-edit path the viewport uses, resolved LIVE
+## by name (never a cached resource - the funnel replaces them on every commit). The Designer
+## refreshes once the dialog confirms.
+func _designer_edit_variable(entry: Dictionary) -> void:
+	if _current_sheet == null:
+		return
+	var var_name: String = str(entry.get("name", ""))
+	var metadata: Dictionary = {"kind": "variable", "variable_name": var_name, "variable_scope": str(entry.get("scope", "global"))}
+	var row_data: EventRowData = EventRowData.new()
+	row_data.source_resource = _current_sheet
+	if str(entry.get("scope", "")) == "tree":
+		for sheet_entry: Variant in _current_sheet.events:
+			if sheet_entry is LocalVariable and (sheet_entry as LocalVariable).name == var_name:
+				row_data.source_resource = sheet_entry
+				break
+		if not (row_data.source_resource is LocalVariable):
+			return
+	if not _variable_dlg.variable_confirmed.is_connected(_refresh_inspector_designer_after_edit):
+		_variable_dlg.variable_confirmed.connect(_refresh_inspector_designer_after_edit, CONNECT_ONE_SHOT)
+	_variables._on_viewport_variable_edit_requested(row_data, metadata)
+
+
+## Deferred so the funnel's commit (which replaces sheet resources) fully lands first.
+func _refresh_inspector_designer_after_edit(_n: Variant = null, _t: Variant = null, _d: Variant = null, _s: Variant = null, _c: Variant = null, _k: Variant = null, _e: Variant = null, _o: Variant = null, _a: Variant = null) -> void:
+	if _inspector_designer_dialog != null and _inspector_designer_dialog.visible:
+		_inspector_designer_dialog.call_deferred("refresh")
+
+
+## Designer ▲: swap the tree variable with the PREVIOUS tree variable in emission order - one
+## undo step. Sheet-level (dict) variables emit alphabetically, so only tree variables reorder.
+func _designer_move_variable_up(var_name: String) -> void:
+	_perform_undoable_sheet_edit("Move Variable Up", func() -> bool:
+		var previous_index: int = -1
+		for index: int in range(_current_sheet.events.size()):
+			var sheet_entry: Variant = _current_sheet.events[index]
+			if not (sheet_entry is LocalVariable):
+				continue
+			if (sheet_entry as LocalVariable).name == var_name:
+				if previous_index < 0:
+					return false
+				var moved: Variant = _current_sheet.events[index]
+				_current_sheet.events[index] = _current_sheet.events[previous_index]
+				_current_sheet.events[previous_index] = moved
+				return true
+			previous_index = index
+		return false)
 
 
 
