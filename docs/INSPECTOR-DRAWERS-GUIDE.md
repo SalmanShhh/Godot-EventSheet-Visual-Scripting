@@ -127,6 +127,19 @@ A **drawer** replaces a variable's plain Inspector field with a richer control, 
 
 **Use case.** A `spawn_gap` of 10-40 seconds, a `damage_range` rolled per hit, or camera `zoom_bounds` - anywhere the design says "between A and B".
 
+### Editable table (Array)
+
+**What it does.** Turns an `Array` of `Dictionary` rows into an **editable grid**: one row per element, one typed cell per column (text, number, checkbox), with add / remove / move-up controls. The single most painful data-editing surface in Godot - loot tables, wave definitions, dialogue lines - becomes a spreadsheet.
+
+**How to use it.** On an `Array` variable choose **Show as: Editable table**, then define the columns in the **Table columns** field as `name:type` pairs (`item:String, count:int, rare:bool`; types: String, int, float, bool).
+
+**Emits** (the column schema rides the marker; each row is a plain Dictionary):
+```gdscript
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:item=String,count=int,rare=bool") var loot: Array = []
+```
+
+**Use case.** A `loot` table designers fill row by row, a `waves` list (enemy, count, delay), or dialogue lines (speaker, text, portrait path) - all without touching Godot's generic array editor.
+
 ### Direction dial (Vector2)
 
 **What it does.** A round dial with a draggable handle. The handle's angle sets the direction and its distance from the centre sets the magnitude, so one gesture sets both components.
@@ -360,6 +373,7 @@ func _validate_property(property: Dictionary) -> void:
 | Placeholder | More options | String | `@export_placeholder("hint")` |
 | Show as: Progress bar | More options | int / float | `@export_custom(... "eventsheet:progress_bar:min:max")` |
 | Show as: Min-max range | More options | Vector2 | `@export_custom(... "eventsheet:min_max:min:max")` |
+| Show as: Editable table | More options | Array | `@export_custom(... "eventsheet:table:name=type,...")` |
 | Show as: Direction dial | More options | Vector2 | `@export_custom(... "eventsheet:vector_dial:reach")` |
 | Show as: Swatch row | More options | Color | `@export_custom(... "eventsheet:swatch_row")` |
 | Show as: Texture preview | More options | Texture2D | `@export_custom(... "eventsheet:texture_preview")` |

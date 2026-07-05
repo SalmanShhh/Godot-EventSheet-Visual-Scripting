@@ -141,6 +141,9 @@ static func _tree_group_attributes(source: Dictionary) -> Dictionary:
 	# so they're intentionally dropped (degrade to a plain field, never a corrupt one).
 	if result.has("drawer") and source.get("range") is Dictionary and not (source.get("range") as Dictionary).is_empty():
 		result["range"] = (source.get("range") as Dictionary).duplicate()
+	# The table drawer's column schema rides along the same way (an Array of {name, type} entries).
+	if result.has("drawer") and source.get("table_columns") is Array and not (source.get("table_columns") as Array).is_empty():
+		result["table_columns"] = (source.get("table_columns") as Array).duplicate(true)
 	return result
 
 

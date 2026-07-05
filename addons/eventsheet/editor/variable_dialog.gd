@@ -69,6 +69,7 @@ var _attr_on_changed_edit: LineEdit = null
 var _attr_clamp_check: CheckBox = null
 var _attr_read_only_check: CheckBox = null
 var _attr_drawer_option: OptionButton = null
+var _attr_table_columns_edit: LineEdit = null
 var _drawer_preview_box: VBoxContainer = null
 # The "Inspector look" picker: type-filtered plain-language
 # presets for the wider hint families (file/folder pickers, checkbox flags, layer grids,
@@ -281,6 +282,12 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_drawer_option.tooltip_text = "Swap the Inspector field for a richer drawer (dial, swatches, curve…).\nGraceful: a plain field without the editor plugin (parity preserved)."
 	_attr_drawer_option.item_selected.connect(func(_i: int) -> void: _refresh_drawer_preview())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Show as", _attr_drawer_option))
+	# The table drawer's one config field: its column schema, in plain "name:type" pairs.
+	_attr_table_columns_edit = LineEdit.new()
+	_attr_table_columns_edit.placeholder_text = "columns, e.g. item:String, count:int, rare:bool"
+	_attr_table_columns_edit.tooltip_text = "One column per entry: name:type (String, int, float or bool).\nEach Array element becomes a row with these cells."
+	_attr_table_columns_edit.text_changed.connect(func(_t: String) -> void: _refresh_drawer_preview())
+	_attr_section.add_child(EventSheetPopupUI.form_row("Table columns", _attr_table_columns_edit))
 	# Live "what the drawer looks like" preview - the actual widget, updated as the type / drawer / bounds change.
 	_drawer_preview_box = VBoxContainer.new()
 	_drawer_preview_box.visible = false
@@ -756,6 +763,12 @@ func open_for_edit(
 	_refresh_contextual_rows()
 	# Re-select the drawer the variable already uses (after _refresh_contextual_rows rebuilt the per-type options).
 	var existing_drawer: String = str(existing_attributes.get("drawer", ""))
+	if existing_attributes.get("table_columns") is Array:
+		var column_texts: PackedStringArray = PackedStringArray()
+		for column: Variant in existing_attributes.get("table_columns"):
+			if column is Dictionary:
+				column_texts.append("%s:%s" % [str((column as Dictionary).get("name", "")), str((column as Dictionary).get("type", "String"))])
+		_attr_table_columns_edit.text = ", ".join(column_texts)
 	if not existing_drawer.is_empty() and _attr_drawer_option.item_count > 1:
 		_select_drawer_kind(existing_drawer)
 		_refresh_drawer_preview()
@@ -886,6 +899,10 @@ func _on_confirmed() -> void:
 	var drawer_kind: String = _selected_drawer_kind()
 	if not drawer_kind.is_empty():
 		attributes["drawer"] = drawer_kind
+	if drawer_kind == "table":
+		var table_columns: Array = _dialog_table_columns()
+		if not table_columns.is_empty():
+			attributes["table_columns"] = table_columns
 	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes)
 
 
@@ -1282,6 +1299,8 @@ func _refresh_inspector_preview(shown_name: String, type_name: String, folded_at
 	var drawer_kind: String = _selected_drawer_kind()
 	if not drawer_kind.is_empty():
 		card_attributes["drawer"] = drawer_kind
+	if drawer_kind == "table" and not _dialog_table_columns().is_empty():
+		card_attributes["table_columns"] = _dialog_table_columns()
 	if _attr_group_edit != null and not _attr_group_edit.text.strip_edges().is_empty():
 		card_attributes["group"] = _attr_group_edit.text.strip_edges()
 	if _attr_subgroup_edit != null and not _attr_subgroup_edit.text.strip_edges().is_empty():
@@ -1305,6 +1324,8 @@ static func _drawer_kinds_for_type(type_name: String) -> PackedStringArray:
 			return PackedStringArray(["progress_bar"])
 		"Vector2":
 			return PackedStringArray(["vector_dial", "min_max"])
+		"Array":
+			return PackedStringArray(["table"])
 		"Color":
 			return PackedStringArray(["swatch_row"])
 		"Texture2D":
@@ -1323,6 +1344,8 @@ static func _drawer_label_for_kind(kind: String) -> String:
 			return "Direction dial"
 		"min_max":
 			return "Min-max range"
+		"table":
+			return "Editable table"
 		"swatch_row":
 			return "Swatch row"
 		"texture_preview":
@@ -1332,6 +1355,28 @@ static func _drawer_label_for_kind(kind: String) -> String:
 			# stock Curve editor after assigning. The label shouldn't promise in-place point editing.
 			return "Curve preview"
 	return ""
+
+
+## The table columns typed in the dialog ("item:String, count:int" - colon syntax, matching the
+## flags/enum detail fields), as the same {name, type} entries the compiler emits. Missing types
+## default to String; the marker-side parser (attribute_drawers) uses "=" pairs instead.
+func _dialog_table_columns() -> Array:
+	if _attr_table_columns_edit == null:
+		return []
+	var columns: Array = []
+	for pair: String in _attr_table_columns_edit.text.split(",", false):
+		var trimmed: String = pair.strip_edges()
+		if trimmed.is_empty():
+			continue
+		var colon: int = trimmed.rfind(":")
+		var column_name: String = (trimmed.substr(0, colon) if colon > 0 else trimmed).strip_edges()
+		var column_type: String = trimmed.substr(colon + 1).strip_edges() if colon > 0 else "String"
+		if column_name.is_empty():
+			continue
+		if not column_type in ["String", "int", "float", "bool"]:
+			column_type = "String"
+		columns.append({"name": column_name, "type": column_type})
+	return columns
 
 
 ## The decor attributes from the Section header / Info note fields. The header field accepts an
@@ -1448,6 +1493,9 @@ func _refresh_drawer_preview() -> void:
 	for child: Node in _drawer_preview_box.get_children():
 		child.queue_free()
 	var kind: String = _selected_drawer_kind()
+	# The Columns row only matters while the table drawer is chosen; it hides with it.
+	if _attr_table_columns_edit != null and _attr_table_columns_edit.get_parent() is Control:
+		(_attr_table_columns_edit.get_parent() as Control).visible = kind == "table"
 	if kind.is_empty():
 		_drawer_preview_box.visible = false
 		return
@@ -1487,6 +1535,18 @@ func _make_drawer_preview_widget(kind: String) -> Control:
 			slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			slider.set_value(Vector2(lerpf(bounds["min"], bounds["max"], 0.25), lerpf(bounds["min"], bounds["max"], 0.75)))
 			return slider
+		"table":
+			var columns: Array = _dialog_table_columns()
+			if columns.is_empty():
+				columns = [{"name": "item", "type": "String"}, {"name": "count", "type": "int"}]
+			var table: EventSheetDrawerWidgets.DrawerTable = EventSheetDrawerWidgets.DrawerTable.new(columns)
+			table.editable = false
+			table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			var sample_row: Dictionary = {}
+			for column: Dictionary in columns:
+				sample_row[str(column.get("name"))] = EventSheetDrawerWidgets.DrawerTable._default_for(str(column.get("type", "String")))
+			table.set_value([sample_row])
+			return table
 		"vector_dial":
 			var dial: EventSheetDrawerWidgets.DrawerVectorDial = EventSheetDrawerWidgets.DrawerVectorDial.new(bounds["max"])
 			dial.editable = false

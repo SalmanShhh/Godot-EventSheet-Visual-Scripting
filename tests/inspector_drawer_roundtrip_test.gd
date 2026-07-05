@@ -99,7 +99,7 @@ static func run() -> bool:
 	all_passed = _eq("Texture2D hosts the texture_preview drawer", VariableDialog._drawer_kinds_for_type("Texture2D"), PackedStringArray(["texture_preview"])) and all_passed
 	all_passed = _eq("Curve hosts the curve_editor drawer", VariableDialog._drawer_kinds_for_type("Curve"), PackedStringArray(["curve_editor"])) and all_passed
 	all_passed = _eq("String hosts no drawer (combo/multiline instead)", VariableDialog._drawer_kinds_for_type("String"), PackedStringArray()) and all_passed
-	all_passed = _eq("Array hosts no drawer", VariableDialog._drawer_kinds_for_type("Array"), PackedStringArray()) and all_passed
+	all_passed = _eq("Dictionary hosts no drawer", VariableDialog._drawer_kinds_for_type("Dictionary"), PackedStringArray()) and all_passed
 	all_passed = _eq("the min-max drawer label reads 'Min-max range'",
 		VariableDialog._drawer_label_for_kind("min_max"), "Min-max range") and all_passed
 
@@ -198,6 +198,44 @@ static func run() -> bool:
 	all_passed = _eq("an assigned value is not missing", EventSheetDrawerWidgets.RequiredBadge.is_value_missing("Cave Rat"), false) and all_passed
 	all_passed = _eq("zero is a value, not missing (required is for unset, not falsy)",
 		EventSheetDrawerWidgets.RequiredBadge.is_value_missing(0), false) and all_passed
+
+	# --- The table drawer: an Array of Dictionary rows edited as a grid; the column schema rides
+	# the marker as name=type pairs and round-trips into editable table_columns.
+	var table_var: LocalVariable = LocalVariable.new()
+	table_var.name = "loot"
+	table_var.type_name = "Array"
+	table_var.default_value = []
+	table_var.exported = true
+	table_var.attributes = {"drawer": "table", "table_columns": [{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "rare", "type": "bool"}]}
+	var table_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,count=int,rare=bool\") var loot: Array = []"
+	all_passed = _eq("table emits its marker (columns as name=type pairs)",
+		SheetCompiler._emit_tree_variable_line(table_var), table_expected) and all_passed
+	all_passed = _eq("table on a non-Array emits no marker",
+		_emit_for("int", 0, {"drawer": "table", "table_columns": [{"name": "hp", "type": "int"}]}).contains("eventsheet:"), false) and all_passed
+	all_passed = _eq("table without columns emits no marker",
+		_emit_for("Array", [], {"drawer": "table"}).contains("eventsheet:"), false) and all_passed
+	var table_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + table_expected + "\n")
+	var table_lifted: LocalVariable = _find(table_sheet, "loot")
+	all_passed = _eq("the lift recovers the table columns",
+		(table_lifted.attributes as Dictionary).get("table_columns") if table_lifted != null else null,
+		[{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "rare", "type": "bool"}]) and all_passed
+	if table_lifted != null:
+		all_passed = _eq("a table var re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(table_lifted), table_expected) and all_passed
+	all_passed = _eq("the editor-side column parse matches (unknown types fall back to String)",
+		EventSheetAttributeDrawers.parse_table_columns("item=String,count=int,odd=Vector2,=int"),
+		[{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "odd", "type": "String"}]) and all_passed
+	all_passed = _eq("Array hosts the table drawer",
+		VariableDialog._drawer_kinds_for_type("Array"), PackedStringArray(["table"])) and all_passed
+	var table_grid: EventSheetDrawerWidgets.DrawerTable = EventSheetDrawerWidgets.DrawerTable.new([{"name": "hp", "type": "int"}])
+	table_grid.set_value([{"hp": 5}, {"hp": 9}])
+	table_grid._on_move_up(1)
+	all_passed = _eq("the grid's move-up swaps rows", table_grid.get_value(), [{"hp": 9}, {"hp": 5}]) and all_passed
+	table_grid._on_remove(0)
+	all_passed = _eq("the grid's remove drops the row", table_grid.get_value(), [{"hp": 5}]) and all_passed
+	table_grid._on_add_row()
+	all_passed = _eq("the grid's add appends typed defaults", table_grid.get_value(), [{"hp": 5}, {"hp": 0}]) and all_passed
+	table_grid.free()
 
 	# The dict-var path emits the same decor lines (one canonical shape across both variable paths).
 	var dict_sheet: EventSheetResource = EventSheetResource.new()

@@ -48,6 +48,18 @@ func _init() -> void:
 	range_slider.set_value(Vector2(10.0, 40.0))
 	col.add_child(range_slider)
 
+	# table
+	col.add_child(_heading("table  -  Array of Dictionary rows as an editable grid"))
+	var table: EventSheetDrawerWidgets.DrawerTable = EventSheetDrawerWidgets.DrawerTable.new([
+		{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "rare", "type": "bool"}
+	])
+	table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	table.set_value([
+		{"item": "Health Potion", "count": 3, "rare": false},
+		{"item": "Fire Sword", "count": 1, "rare": true},
+	])
+	col.add_child(table)
+
 	# vector_dial
 	col.add_child(_heading("vector_dial  -  Vector2 direction + magnitude"))
 	var dial: EventSheetDrawerWidgets.DrawerVectorDial = EventSheetDrawerWidgets.DrawerVectorDial.new(100.0)

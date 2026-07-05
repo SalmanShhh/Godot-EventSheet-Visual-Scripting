@@ -159,6 +159,8 @@ static func _widget_phrase(attributes: Dictionary) -> String:
 			return "shown as a direction dial"
 		"min_max":
 			return "shown as a min-max range slider"
+		"table":
+			return "shown as an editable table"
 		"swatch_row":
 			return "shown as color swatches"
 		"texture_preview":
@@ -220,6 +222,16 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		range_slider.set_value(Vector2(25.0, 75.0))
 		range_slider.custom_minimum_size = Vector2(120.0, 18.0)
 		return _ignored(range_slider)
+	if drawer_kind == "table":
+		var columns: Array = attributes.get("table_columns") if attributes.get("table_columns") is Array else [{"name": "item", "type": "String"}, {"name": "count", "type": "int"}]
+		var table := EventSheetDrawerWidgets.DrawerTable.new(columns)
+		table.editable = false
+		var sample: Dictionary = {}
+		for column: Variant in columns:
+			if column is Dictionary:
+				sample[str((column as Dictionary).get("name"))] = EventSheetDrawerWidgets.DrawerTable._default_for(str((column as Dictionary).get("type", "String")))
+		table.set_value([sample])
+		return _ignored(table)
 	if drawer_kind == "texture_preview":
 		var texture_box := ColorRect.new()
 		texture_box.color = Color(0.45, 0.45, 0.5, 0.6)

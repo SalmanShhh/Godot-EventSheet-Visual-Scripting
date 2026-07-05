@@ -233,6 +233,141 @@ class DrawerMinMaxSlider:
 		value_changed.emit(_value)
 
 
+# ── Array-of-Dictionary table grid ───────────────────────────────────────────
+## An Array[Dictionary] edited as a GRID: one row per element, one typed cell editor per column
+## (text / number / checkbox), with add / remove / move-up controls. Columns come from the
+## variable's table schema ({name, type} entries); values live in plain Dictionaries, so the
+## generated game code needs nothing but the Array itself.
+class DrawerTable:
+	extends VBoxContainer
+	signal value_changed(value: Array)
+	var editable: bool = true
+	var _columns: Array = []
+	var _value: Array = []
+	var _grid: GridContainer = null
+	var _add_button: Button = null
+
+	func _init(columns: Array = []) -> void:
+		for column: Variant in columns:
+			if column is Dictionary and not str((column as Dictionary).get("name", "")).is_empty():
+				_columns.append(column)
+		add_theme_constant_override("separation", 2)
+		_grid = GridContainer.new()
+		_grid.columns = _columns.size() + 2  # cells + move-up + remove
+		_grid.add_theme_constant_override("h_separation", 4)
+		_grid.add_theme_constant_override("v_separation", 2)
+		add_child(_grid)
+		_add_button = Button.new()
+		_add_button.text = "+ Add row"
+		_add_button.pressed.connect(_on_add_row)
+		add_child(_add_button)
+		_rebuild()
+
+	func set_value(rows: Array) -> void:
+		_value = []
+		for row: Variant in rows:
+			if row is Dictionary:
+				_value.append((row as Dictionary).duplicate())
+		_rebuild()
+
+	func get_value() -> Array:
+		return _value.duplicate(true)
+
+	func _on_add_row() -> void:
+		var fresh: Dictionary = {}
+		for column: Dictionary in _columns:
+			fresh[str(column.get("name"))] = _default_for(str(column.get("type", "String")))
+		_value.append(fresh)
+		_rebuild()
+		value_changed.emit(get_value())
+
+	static func _default_for(column_type: String) -> Variant:
+		match column_type:
+			"int":
+				return 0
+			"float":
+				return 0.0
+			"bool":
+				return false
+		return ""
+
+	func _rebuild() -> void:
+		for stale: Node in _grid.get_children():
+			stale.queue_free()
+		_add_button.disabled = not editable
+		for column: Dictionary in _columns:
+			var head: Label = Label.new()
+			head.text = str(column.get("name")).capitalize()
+			head.add_theme_font_size_override("font_size", 10)
+			head.modulate = Color(0.72, 0.76, 0.84)
+			_grid.add_child(head)
+		_grid.add_child(Control.new())
+		_grid.add_child(Control.new())
+		for row_index: int in range(_value.size()):
+			var row: Dictionary = _value[row_index]
+			for column: Dictionary in _columns:
+				_grid.add_child(_make_cell(row, str(column.get("name")), str(column.get("type", "String"))))
+			var up_button: Button = Button.new()
+			up_button.text = "▲"
+			up_button.tooltip_text = "Move this row up"
+			up_button.disabled = not editable or row_index == 0
+			up_button.pressed.connect(_on_move_up.bind(row_index))
+			_grid.add_child(up_button)
+			var remove_button: Button = Button.new()
+			remove_button.text = "✕"
+			remove_button.tooltip_text = "Remove this row"
+			remove_button.disabled = not editable
+			remove_button.pressed.connect(_on_remove.bind(row_index))
+			_grid.add_child(remove_button)
+
+	func _make_cell(row: Dictionary, column_name: String, column_type: String) -> Control:
+		match column_type:
+			"int", "float":
+				var spin: SpinBox = SpinBox.new()
+				spin.allow_greater = true
+				spin.allow_lesser = true
+				spin.step = 1.0 if column_type == "int" else 0.01
+				spin.value = float(row.get(column_name, 0))
+				spin.editable = editable
+				spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				spin.value_changed.connect(func(v: float) -> void:
+					row[column_name] = int(v) if column_type == "int" else v
+					value_changed.emit(get_value()))
+				return spin
+			"bool":
+				var check: CheckBox = CheckBox.new()
+				check.button_pressed = bool(row.get(column_name, false))
+				check.disabled = not editable
+				check.toggled.connect(func(pressed: bool) -> void:
+					row[column_name] = pressed
+					value_changed.emit(get_value()))
+				return check
+		var edit: LineEdit = LineEdit.new()
+		edit.text = str(row.get(column_name, ""))
+		edit.editable = editable
+		edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		edit.text_changed.connect(func(text: String) -> void:
+			row[column_name] = text
+			value_changed.emit(get_value()))
+		return edit
+
+	func _on_move_up(row_index: int) -> void:
+		if row_index <= 0 or row_index >= _value.size():
+			return
+		var moved: Dictionary = _value[row_index]
+		_value.remove_at(row_index)
+		_value.insert(row_index - 1, moved)
+		_rebuild()
+		value_changed.emit(get_value())
+
+	func _on_remove(row_index: int) -> void:
+		if row_index < 0 or row_index >= _value.size():
+			return
+		_value.remove_at(row_index)
+		_rebuild()
+		value_changed.emit(get_value())
+
+
 # ── Vector2 direction dial ──────────────────────────────────────────────────
 ## A draggable dial: the handle's offset from centre IS the vector (Godot Y-down), scaled so a handle at the
 ## rim equals `max_magnitude`. Turns two number fields into one spatial control (velocity, direction, offset).

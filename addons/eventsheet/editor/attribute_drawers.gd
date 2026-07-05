@@ -9,6 +9,7 @@
 # Drawers + marker forms:
 #   progress_bar   eventsheet:progress_bar:<min>:<max>   int / float
 #   min_max        eventsheet:min_max:<min>:<max>        Vector2 (x = low end, y = high end)
+#   table          eventsheet:table:<n>=<t>,<n>=<t>      Array (of Dictionary rows; t: String/int/float/bool)
 #   vector_dial    eventsheet:vector_dial:<max>          Vector2
 #   swatch_row     eventsheet:swatch_row                 Color
 #   texture_preview eventsheet:texture_preview           Texture2D / String (path)
@@ -46,6 +47,15 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			if type != TYPE_VECTOR2:
 				return false
 			add_property_editor(name, MinMaxSliderProperty.new(float(drawer.get("min", 0.0)), float(drawer.get("max", 100.0))))
+			return true
+		"table":
+			if type != TYPE_ARRAY:
+				return false
+			var args: Array = drawer.get("args", [])
+			var columns: Array = parse_table_columns(str(args[0]) if args.size() > 0 else "")
+			if columns.is_empty():
+				return false
+			add_property_editor(name, TableProperty.new(columns))
 			return true
 		"vector_dial":
 			if type != TYPE_VECTOR2:
@@ -161,6 +171,26 @@ static func _var_name_from_line(line: String) -> String:
 	return after.strip_edges()
 
 
+## "hp=int,name=String" -> [{name:"hp", type:"int"}, {name:"name", type:"String"}]. The table
+## marker's column schema; unknown types fall back to String, nameless entries are dropped.
+## Static + UI-free so the headless suite pins the contract.
+static func parse_table_columns(spec: String) -> Array:
+	var columns: Array = []
+	for pair: String in spec.split(","):
+		var trimmed: String = pair.strip_edges()
+		if trimmed.is_empty():
+			continue
+		var eq: int = trimmed.find("=")
+		var column_name: String = (trimmed.substr(0, eq) if eq > 0 else trimmed).strip_edges()
+		var column_type: String = trimmed.substr(eq + 1).strip_edges() if eq > 0 else "String"
+		if column_name.is_empty() or column_name.contains("="):
+			continue
+		if not column_type in ["String", "int", "float", "bool"]:
+			column_type = "String"
+		columns.append({"name": column_name, "type": column_type})
+	return columns
+
+
 ## Best-effort resource-class guard for the TYPE_OBJECT drawers. A generated sheet only ever pairs the marker
 ## with the right resource type (the compiler type-gates emission), but a hand-edited marker could mismatch -
 ## e.g. a curve_editor on a Texture2D var. A null value (the default) is allowed (can't tell yet, and the
@@ -211,6 +241,32 @@ class MinMaxSliderProperty:
 
 	func _update_property() -> void:
 		_slider.set_value(get_edited_object().get(get_edited_property()))
+
+
+## Array-of-Dictionary table: a grid with typed cell editors, add / remove / move-up.
+class TableProperty:
+	extends EditorProperty
+	var _table: EventSheetDrawerWidgets.DrawerTable
+	# Re-entry guard: a cell edit emits the change, which echoes back as _update_property - without
+	# the guard the grid would rebuild mid-keystroke and the cell being typed in would lose focus.
+	var _self_edit: bool = false
+
+	func _init(columns: Array) -> void:
+		_table = EventSheetDrawerWidgets.DrawerTable.new(columns)
+		_table.value_changed.connect(_on_changed)
+		add_child(_table)
+		set_bottom_editor(_table)
+
+	func _on_changed(rows: Array) -> void:
+		_self_edit = true
+		emit_changed(get_edited_property(), rows)
+
+	func _update_property() -> void:
+		if _self_edit:
+			_self_edit = false
+			return
+		var value: Variant = get_edited_object().get(get_edited_property())
+		_table.set_value(value if value is Array else [])
 
 
 ## Vector2 dial: drag the handle to set direction + magnitude.

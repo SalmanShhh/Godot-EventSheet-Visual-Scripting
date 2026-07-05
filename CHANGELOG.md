@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - the table drawer: arrays edited as a grid
+
+- **A seventh drawer, `table`**: an `Array` of `Dictionary` rows edited as a GRID in
+  the Inspector - one row per element, one typed cell per column (text / number /
+  checkbox), add / remove / move-up controls. Loot tables, wave definitions, and
+  dialogue lines stop being Godot's generic array editor and become a spreadsheet.
+  Define columns in the dialog as `name:type` pairs; the schema rides the marker
+  (`eventsheet:table:item=String,count=int`), round-trips back into the Columns
+  field, and the data is plain Dictionaries - the exported game needs nothing but
+  the Array. Type-gated (Array only), live dialog preview, preview-card sentence +
+  mini grid, cell edits guarded against mid-keystroke rebuilds.
+  Pinned in tests/inspector_drawer_roundtrip_test.gd.
+
 ### Added - the suggestions dropdown (choices + free typing)
 
 - A new String Inspector look, **"Dropdown with free typing (suggestions)"**: list

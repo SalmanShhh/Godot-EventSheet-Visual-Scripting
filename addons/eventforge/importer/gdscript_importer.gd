@@ -325,6 +325,17 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 		attrs["range"] = {"min": parts[2], "max": parts[3]}
 	elif parts[1] == "vector_dial" and parts.size() >= 3:
 		attrs["range"] = {"max": parts[2]}
+	elif parts[1] == "table" and parts.size() >= 3:
+		# The column schema (name=type pairs) recovers into the same table_columns the emitter
+		# reads, so the marker re-emits byte-for-byte and the dialog reopens it editable.
+		var columns: Array = []
+		for pair: String in str(parts[2]).split(","):
+			var eq: int = pair.find("=")
+			if eq > 0:
+				columns.append({"name": pair.substr(0, eq), "type": pair.substr(eq + 1)})
+		if columns.is_empty():
+			return
+		attrs["table_columns"] = columns
 	lifted.attributes = attrs
 	lifted.export_hint = ""
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:

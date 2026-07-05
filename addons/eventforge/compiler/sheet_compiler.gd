@@ -2168,6 +2168,25 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			if type_name != "Vector2":
 				return ""
 			marker = "eventsheet:min_max:%s:%s" % [str(bounds.get("min", "0")), str(bounds.get("max", "100"))]
+		"table":
+			# Array of Dictionary rows edited as a grid; the column schema (name=type pairs) rides
+			# the marker. Names that can't survive the joined form (separators, quotes) are skipped.
+			if type_name != "Array" or not (attributes.get("table_columns") is Array):
+				return ""
+			var column_pairs: PackedStringArray = PackedStringArray()
+			for column: Variant in attributes.get("table_columns"):
+				if not (column is Dictionary):
+					continue
+				var column_name: String = str((column as Dictionary).get("name", "")).strip_edges()
+				var column_type: String = str((column as Dictionary).get("type", "String")).strip_edges()
+				if column_name.is_empty() or column_name.contains(",") or column_name.contains("=") or column_name.contains(":") or column_name.contains("\""):
+					continue
+				if not column_type in ["String", "int", "float", "bool"]:
+					column_type = "String"
+				column_pairs.append("%s=%s" % [column_name, column_type])
+			if column_pairs.is_empty():
+				return ""
+			marker = "eventsheet:table:%s" % ",".join(column_pairs)
 		"vector_dial":
 			if type_name != "Vector2":
 				return ""
