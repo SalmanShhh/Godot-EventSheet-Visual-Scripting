@@ -132,6 +132,54 @@ static func run() -> bool:
 		all_passed = _eq("the combined var re-emits byte-identically",
 			SheetCompiler._emit_tree_variable_line(combo_var), combo_line) and all_passed
 
+	# --- Inspector decor (# @inspector_header / # @inspector_info): plain-comment markers the editor
+	# renders as a section label / info panel. Emission order is header, info, tooltip, groups; the
+	# absorb recovers them into editable attributes and the whole block re-emits byte-identically.
+	var decor_var: LocalVariable = LocalVariable.new()
+	decor_var.name = "armour"
+	decor_var.type_name = "int"
+	decor_var.default_value = 10
+	decor_var.exported = true
+	decor_var.attributes = {"header": "Combat", "header_color": "#e06666", "info": "Shared resource - edits affect every user.", "tooltip": "Flat reduction.", "group": "Stats"}
+	var decor_expected: String = "# @inspector_header Combat #e06666\n# @inspector_info Shared resource - edits affect every user.\n## Flat reduction.\n@export_group(\"Stats\")\n@export var armour: int = 10"
+	all_passed = _eq("decor emits header, info, tooltip, group in canonical order",
+		SheetCompiler._emit_tree_variable_line(decor_var), decor_expected) and all_passed
+	var decor_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + decor_expected + "\n")
+	var decor_lifted: LocalVariable = _find(decor_sheet, "armour")
+	all_passed = _eq("a decorated var lifts (not a block)", decor_lifted != null, true) and all_passed
+	if decor_lifted != null:
+		var da: Dictionary = decor_lifted.attributes as Dictionary
+		all_passed = _eq("the lift recovers the header title", str(da.get("header", "")), "Combat") and all_passed
+		all_passed = _eq("the lift recovers the header accent", str(da.get("header_color", "")), "#e06666") and all_passed
+		all_passed = _eq("the lift recovers the info note", str(da.get("info", "")), "Shared resource - edits affect every user.") and all_passed
+		all_passed = _eq("the decorated var re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(decor_lifted), decor_expected) and all_passed
+	var headerless_var: LocalVariable = LocalVariable.new()
+	headerless_var.name = "hp"
+	headerless_var.type_name = "int"
+	headerless_var.default_value = 5
+	headerless_var.exported = true
+	headerless_var.attributes = {"header": "Vitals"}
+	all_passed = _eq("a header without an accent emits no trailing hex",
+		SheetCompiler._emit_tree_variable_line(headerless_var), "# @inspector_header Vitals\n@export var hp: int = 5") and all_passed
+
+	# The editor-side decor map: property name -> decor entries, parsed straight from script source
+	# (tooltips and @export_* lines may sit between the decor and its var; a blank line orphans it).
+	var decor_source: String = "extends Node2D\n\n# @inspector_header Combat #e06666\n# @inspector_info Watch the alpha.\n## Flat reduction.\n@export var armour: int = 10\n\n# @inspector_header Level #not-a-hex\nvar stray: int = 1\n\n# @inspector_info orphaned by a blank line\n\nvar plain: int = 2\n"
+	var decor_map: Dictionary = EventSheetAttributeDrawers.build_decor_map(decor_source)
+	all_passed = _eq("the decor map binds header + info to the following var",
+		decor_map.get("armour"), [{"kind": "header", "text": "Combat", "color": "#e06666"}, {"kind": "info", "text": "Watch the alpha."}]) and all_passed
+	all_passed = _eq("a non-hex tail stays part of the header title",
+		decor_map.get("stray"), [{"kind": "header", "text": "Level #not-a-hex", "color": ""}]) and all_passed
+	all_passed = _eq("a blank line orphans decor (no binding)", decor_map.has("plain"), false) and all_passed
+
+	# The dict-var path emits the same decor lines (one canonical shape across both variable paths).
+	var dict_sheet: EventSheetResource = EventSheetResource.new()
+	dict_sheet.variables = {"speed": {"type": "int", "default": 5, "exported": true, "attributes": {"header": "Motion", "info": "Tiles per second."}}}
+	var dict_output: String = str(SheetCompiler.compile(dict_sheet, "user://decor_dict.gd").get("output", ""))
+	all_passed = _eq("dict-path variables emit the same decor lines",
+		dict_output.contains("# @inspector_header Motion\n# @inspector_info Tiles per second.\n@export var speed: int = 5"), true) and all_passed
+
 	# Edit cycle: re-confirming a Vector2 dial variable must keep its range (the dial's max magnitude); the
 	# apply previously gated range on is_numeric, dropping it for Vector2 and resetting the dial to max 100.
 	all_passed = _vector_dial_range_persists() and all_passed

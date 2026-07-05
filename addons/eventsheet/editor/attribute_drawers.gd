@@ -23,6 +23,14 @@ func _can_handle(_object: Object) -> bool:
 
 
 func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_type: PropertyHint, hint_string: String, _usage_flags: int, _wide: bool) -> bool:
+	# Decor first: `# @inspector_header` / `# @inspector_info` comments above the var render as a section
+	# label / info panel ABOVE the property, composing with any drawer (or the default field) below.
+	for entry: Variant in decor_for(_object, name):
+		var decor_entry: Dictionary = entry as Dictionary
+		if str(decor_entry.get("kind", "")) == "header":
+			add_custom_control(EventSheetDrawerWidgets.build_header_label(str(decor_entry.get("text", "")), str(decor_entry.get("color", ""))))
+		else:
+			add_custom_control(EventSheetDrawerWidgets.build_info_panel(str(decor_entry.get("text", ""))))
 	var drawer: Dictionary = parse_drawer_hint(hint_string)
 	var kind: String = str(drawer.get("drawer", ""))
 	match kind:
@@ -75,6 +83,77 @@ static func parse_drawer_hint(hint_string: String) -> Dictionary:
 	if parts.size() > 3:
 		parsed["max"] = parts[3].to_float()
 	return parsed
+
+
+# Decor maps parsed per script, cached by source length (cosmetic-only, so a same-length edit missing
+# the cache costs nothing worse than one stale render until the next real edit).
+static var _decor_cache: Dictionary = {}
+
+
+## The decor entries for one property, parsed from the object's script source. Decor comments are plain
+## `#` lines (never `##` - those merge into the hover tooltip), so they reach the editor only through
+## the source text, exactly like the parity covenant wants: inert in the exported game.
+static func decor_for(object: Object, property: String) -> Array:
+	if object == null:
+		return []
+	var script: GDScript = object.get_script() as GDScript
+	if script == null:
+		return []
+	var source: String = script.source_code
+	if source.find("# @inspector_") == -1:
+		return []
+	var key: int = script.get_instance_id()
+	var cached: Variant = _decor_cache.get(key)
+	if cached is Dictionary and int((cached as Dictionary).get("len", -1)) == source.length():
+		return ((cached as Dictionary).get("map") as Dictionary).get(property, [])
+	var map: Dictionary = build_decor_map(source)
+	_decor_cache[key] = {"len": source.length(), "map": map}
+	return map.get(property, [])
+
+
+## property name -> Array of decor dicts ({kind:"header", text, color} / {kind:"info", text}), from raw
+## script source. Decor binds to the next `var` declaration; tooltips (`##`) and `@export_*` annotation
+## lines may sit between them (the canonical emission order); anything else orphans the decor.
+static func build_decor_map(source: String) -> Dictionary:
+	var map: Dictionary = {}
+	var pending: Array = []
+	for raw_line: String in source.split("\n"):
+		var line: String = raw_line.strip_edges()
+		if line.begins_with("# @inspector_header "):
+			pending.append(_parse_header_decor(line.substr(20).strip_edges()))
+		elif line.begins_with("# @inspector_info "):
+			pending.append({"kind": "info", "text": line.substr(18).strip_edges()})
+		elif line.begins_with("var ") or (line.begins_with("@") and line.contains(" var ")):
+			if not pending.is_empty():
+				var var_name: String = _var_name_from_line(line)
+				if not var_name.is_empty():
+					map[var_name] = pending.duplicate()
+				pending = []
+		elif line.begins_with("#") or line.begins_with("@"):
+			continue
+		else:
+			pending = []
+	return map
+
+
+## "Combat #e06666" -> {kind:"header", text:"Combat", color:"#e06666"}; a trailing token only counts as
+## the accent when it is a full #rrggbb - anything else stays part of the title.
+static func _parse_header_decor(text: String) -> Dictionary:
+	var tokens: PackedStringArray = text.split(" ")
+	var last: String = tokens[tokens.size() - 1] if tokens.size() > 1 else ""
+	if last.length() == 7 and last.begins_with("#") and last.substr(1).is_valid_hex_number():
+		return {"kind": "header", "text": text.substr(0, text.length() - last.length()).strip_edges(), "color": last}
+	return {"kind": "header", "text": text, "color": ""}
+
+
+## The declared name out of "var health: int = 100" or "@export(...) var health := 1".
+static func _var_name_from_line(line: String) -> String:
+	var after: String = line.substr(line.find("var ") + 4).strip_edges()
+	for terminator: String in [":", "=", " "]:
+		var at: int = after.find(terminator)
+		if at != -1:
+			after = after.substr(0, at)
+	return after.strip_edges()
 
 
 ## Best-effort resource-class guard for the TYPE_OBJECT drawers. A generated sheet only ever pairs the marker

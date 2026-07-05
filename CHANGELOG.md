@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - Inspector Designer P1: section headers + info notes (decor)
+
+- **Two decor fields on every exported variable**: a **Section header** (an
+  accent-colored label above the property; end it with `#rrggbb` to tint, e.g.
+  `Combat #e06666`) and an **Info note** (a quiet panel for a sentence the designer
+  must read - "Shared resource - edits affect every user."). They compose with any
+  drawer and mock live in the Inspector preview card, which also states them in its
+  plain sentence.
+- Mechanism: plain `#` comments (`# @inspector_header ...` / `# @inspector_info ...`)
+  emitted above the tooltip - never `##`, which would merge into the hover tooltip.
+  The drawers plugin reads them from script source (cached per script) and injects
+  the label/panel above the property; without the plugin (or in an exported game)
+  they are inert comments - parity by construction. Verify-gated absorb lifts them
+  back into editable dialog fields; both variable paths (dict + tree) emit one
+  canonical shape. Pinned in tests/inspector_drawer_roundtrip_test.gd.
+
 ### Added - Inspector Designer P1: the min-max range slider drawer
 
 - **A sixth Inspector drawer, `min_max`**: a Vector2 shown as ONE track with two

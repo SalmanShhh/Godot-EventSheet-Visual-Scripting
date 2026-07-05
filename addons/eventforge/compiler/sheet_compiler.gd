@@ -1669,6 +1669,9 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			# canonical order is tooltip doc-comment, group, then the export line. The
 			# doc comment is Godot's native Inspector tooltip.
 			var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
+			if exported:
+				for decor_line: String in _decor_prefix_lines(attributes):
+					lines.append(decor_line)
 			if exported and not str(attributes.get("tooltip", "")).strip_edges().is_empty():
 				lines.append("## %s" % str(attributes.get("tooltip")).strip_edges())
 			# A category is the heaviest Inspector divider (its own header band); it precedes
@@ -2184,9 +2187,11 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	if not local_var.exported or not (local_var.attributes is Dictionary) or local_var.attributes.is_empty():
 		return ""
 	var prefix: String = ""
-	# Tooltip first, then category/group/subgroup - same canonical order as the dict-var path
-	# (_emit_variables), so the importer's absorb can verify-lift the whole block. The ## doc
-	# attaches to the following @export var.
+	# Decor first, then tooltip, then category/group/subgroup - same canonical order as the
+	# dict-var path (_emit_variables), so the importer's absorb can verify-lift the whole block.
+	# The ## doc attaches to the following @export var.
+	for decor_line: String in _decor_prefix_lines(local_var.attributes):
+		prefix += decor_line + "\n"
 	var tooltip: String = str(local_var.attributes.get("tooltip", "")).strip_edges()
 	if not tooltip.is_empty():
 		prefix += "## %s\n" % tooltip
@@ -2200,6 +2205,24 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	if not subgroup.is_empty():
 		prefix += "@export_subgroup(\"%s\")\n" % subgroup
 	return prefix
+
+
+## Inspector decor comment lines emitted before an exported variable's tooltip: a section header
+## (`# @inspector_header Title` with an optional trailing `#rrggbb` accent) and an info note
+## (`# @inspector_info text`). Plain `#` comments, never `##` - consecutive doc-comment lines merge
+## into the Inspector's hover tooltip and decor must not. Editor-only: the drawers plugin reads them
+## from the script source and renders a header label / info panel above the property; without the
+## plugin (or in an exported game) they are inert comments - the parity covenant is untouched.
+static func _decor_prefix_lines(attributes: Dictionary) -> PackedStringArray:
+	var decor: PackedStringArray = PackedStringArray()
+	var header: String = str(attributes.get("header", "")).strip_edges()
+	if not header.is_empty():
+		var accent: String = str(attributes.get("header_color", "")).strip_edges()
+		decor.append("# @inspector_header %s" % (header + " " + accent if not accent.is_empty() else header))
+	var info: String = str(attributes.get("info", "")).strip_edges()
+	if not info.is_empty():
+		decor.append("# @inspector_info %s" % info)
+	return decor
 
 
 ## Canonical @export_enum prefix ("@export_enum(\"a\", \"b\")") - verify-lift relies on

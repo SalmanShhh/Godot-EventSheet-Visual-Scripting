@@ -17,6 +17,45 @@ const SWATCH_PRESETS: Array[Color] = [
 ]
 
 
+# ── Inspector decor (header label / info panel) ─────────────────────────────
+## Built from the `# @inspector_header` / `# @inspector_info` decor comments the compiler emits above a
+## variable. Display-only Controls, reused by the Inspector plugin (above the real property) and by the
+## render harness, so the two can't diverge.
+
+
+## An accent-coloured section label with breathing room above, so the section reads as a visual break.
+static func build_header_label(text: String, accent: String) -> Control:
+	var label: Label = Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_color_override("font_color", Color(accent) if not accent.is_empty() else Color(0.85, 0.88, 0.95))
+	var margin: MarginContainer = MarginContainer.new()
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_bottom", 2)
+	margin.add_child(label)
+	return margin
+
+
+## A quiet, wrapping note panel - the place for "this resource is shared - edits affect every user".
+static func build_info_panel(text: String) -> Control:
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.25, 0.42, 0.6, 0.22)
+	style.border_color = Color(0.36, 0.66, 1.0, 0.5)
+	style.set_border_width_all(1)
+	style.border_width_left = 3
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(6)
+	var panel: PanelContainer = PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", style)
+	var label: Label = Label.new()
+	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", Color(0.86, 0.9, 0.96))
+	panel.add_child(label)
+	return panel
+
+
 # ── Progress bar (int/float) ────────────────────────────────────────────────
 ## A read-and-write bar: click/drag along it to set the value within [min, max].
 class DrawerProgressBar:

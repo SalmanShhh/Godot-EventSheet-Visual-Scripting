@@ -29,6 +29,11 @@ func _init() -> void:
 	col.add_theme_constant_override("separation", 10)
 	pad.add_child(col)
 
+	# decor (header + info) above a property
+	col.add_child(_heading("decor  -  # @inspector_header / # @inspector_info above a property"))
+	col.add_child(EventSheetDrawerWidgets.build_header_label("Combat", "#e06666"))
+	col.add_child(EventSheetDrawerWidgets.build_info_panel("Shared resource - edits affect every user."))
+
 	# progress_bar
 	col.add_child(_heading("progress_bar  -  int / float (drag to set)"))
 	var bar: EventSheetDrawerWidgets.DrawerProgressBar = EventSheetDrawerWidgets.DrawerProgressBar.new(0.0, 100.0)

@@ -364,9 +364,36 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		if not tooltip_value.is_empty():
 			meta_count += 1
 			cursor -= 1
+	# Inspector decor rides ABOVE the tooltip (canonical emission order: header, info, tooltip, groups) -
+	# plain `#` comments the editor renders as a section header / info panel. Recovered into the same
+	# attributes the emitter reads so they reopen as editable dialog fields, verify-gated like the rest.
+	var info_value: String = ""
+	if cursor >= 0 and pending[cursor].begins_with("# @inspector_info "):
+		info_value = pending[cursor].substr(18).strip_edges()
+		if not info_value.is_empty():
+			meta_count += 1
+			cursor -= 1
+	var header_value: String = ""
+	var header_color_value: String = ""
+	if cursor >= 0 and pending[cursor].begins_with("# @inspector_header "):
+		header_value = pending[cursor].substr(20).strip_edges()
+		var header_tokens: PackedStringArray = header_value.split(" ")
+		var last_token: String = header_tokens[header_tokens.size() - 1] if header_tokens.size() > 1 else ""
+		if last_token.length() == 7 and last_token.begins_with("#") and last_token.substr(1).is_valid_hex_number():
+			header_color_value = last_token
+			header_value = header_value.substr(0, header_value.length() - last_token.length()).strip_edges()
+		if not header_value.is_empty():
+			meta_count += 1
+			cursor -= 1
 	var candidate: Dictionary = {}
 	if not tooltip_value.is_empty():
 		candidate["tooltip"] = tooltip_value
+	if not info_value.is_empty():
+		candidate["info"] = info_value
+	if not header_value.is_empty():
+		candidate["header"] = header_value
+	if not header_color_value.is_empty():
+		candidate["header_color"] = header_color_value
 	if not category_value.is_empty():
 		candidate["category"] = category_value
 	if not group_value.is_empty():

@@ -44,6 +44,13 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	visible = exported
 	if not exported:
 		return
+	# Decor mocks first - the same builders the Inspector plugin uses, so the preview can't lie.
+	var header_text: String = str(attributes.get("header", ""))
+	if not header_text.is_empty():
+		_rows.add_child(EventSheetDrawerWidgets.build_header_label(header_text, str(attributes.get("header_color", ""))))
+	var info_text: String = str(attributes.get("info", ""))
+	if not info_text.is_empty():
+		_rows.add_child(EventSheetDrawerWidgets.build_info_panel(info_text))
 	var group_name: String = str(attributes.get("group", ""))
 	var subgroup_name: String = str(attributes.get("subgroup", ""))
 	if not group_name.is_empty():
@@ -100,6 +107,10 @@ static func describe(type_name: String, attributes: Dictionary, exported: bool, 
 		fragments.append("grouped under %s > %s" % [group_name, subgroup_name])
 	elif not group_name.is_empty():
 		fragments.append("grouped under %s" % group_name)
+	if not str(attributes.get("header", "")).is_empty():
+		fragments.append("under a \"%s\" section header" % str(attributes.get("header")))
+	if not str(attributes.get("info", "")).is_empty():
+		fragments.append("with an info note")
 	if bool(attributes.get("clamp", false)):
 		fragments.append("clamped to the range")
 	if bool(attributes.get("read_only", false)):

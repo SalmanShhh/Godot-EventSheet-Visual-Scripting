@@ -129,7 +129,7 @@ func _create_variable_quickfix(variable_name: String) -> bool:
 ## aren't stuck or cleared.
 static func _tree_group_attributes(source: Dictionary) -> Dictionary:
 	var result: Dictionary = {}
-	for attr_key: String in ["tooltip", "group", "subgroup", "drawer"]:
+	for attr_key: String in ["tooltip", "group", "subgroup", "drawer", "header", "header_color", "info"]:
 		var attr_value: String = str(source.get(attr_key, "")).strip_edges()
 		if not attr_value.is_empty():
 			result[attr_key] = attr_value

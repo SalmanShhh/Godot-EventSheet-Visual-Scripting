@@ -247,6 +247,18 @@ A solid RGB swatch with the alpha slider hidden, for colours that should never b
 
 This one round-trips **structured**: reopen the `.gd` and the "No alpha" tick is still checked, so you can untick it later. Note that "No alpha" and the swatch-row drawer are mutually exclusive on emit (leave "Show as" on "Default field" to use No alpha).
 
+### Section header and Info note (decor)
+
+Editor-only decoration drawn **above** a property: a **Section header** is an accent-colored label (end it with a `#rrggbb` to tint it, e.g. `Combat #e06666`), and an **Info note** is a quiet panel for a sentence the designer must read ("Shared resource - edits affect every user."). Fill either field under **Advanced**; they compose with any drawer.
+
+```gdscript
+# @inspector_header Combat #e06666
+# @inspector_info Shared resource - edits affect every user.
+@export var armour: int = 10
+```
+
+They emit as plain `#` comments (never `##`, which would merge into the hover tooltip), so without the editor plugin - or in an exported game - they are inert comments. Round-trips **structured**: reopen the `.gd` and the fields come back editable.
+
 ### Read-only
 
 Shows the value in the Inspector but greys it out so nobody can edit it, for computed or status fields. Tick **"Read-only"** (Advanced).
@@ -325,6 +337,8 @@ func _validate_property(property: Dictionary) -> void:
 | Show as: Swatch row | More options | Color | `@export_custom(... "eventsheet:swatch_row")` |
 | Show as: Texture preview | More options | Texture2D | `@export_custom(... "eventsheet:texture_preview")` |
 | Show as: Curve preview | More options | Curve | `@export_custom(... "eventsheet:curve_editor")` |
+| Section header | Advanced | any | `# @inspector_header Title #rrggbb` (editor decor comment) |
+| Info note | Advanced | any | `# @inspector_info text` (editor decor comment) |
 | Read-only | Advanced | any | `@export_custom(..., PROPERTY_USAGE_READ_ONLY)` |
 | Group / Sub-heading | Advanced | any | `@export_group("...")` / `@export_subgroup("...")` |
 | Clamp to range | Advanced | int / float + Range | a `set(value)` with `clampi` / `clampf` |

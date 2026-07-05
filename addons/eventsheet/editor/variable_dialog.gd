@@ -46,7 +46,7 @@ var _attr_advanced_section: VBoxContainer = null
 ## Attribute keys whose fields live in the nested Advanced tier. MUST mirror the fields parented under
 ## _attr_advanced_section in init_dialog - if you move a field between the Basic and Advanced tiers, update
 ## this too, or open_for_edit's auto-expand will disagree with where the field actually sits.
-const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]
+const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "header", "info", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]
 ## The Range field's placeholder per type - one source of truth so the initial build and the per-type swap in
 ## _refresh_contextual_rows can't drift. Vector2 prompts a single dial reach; numeric prompts min, max, step.
 const _RANGE_PLACEHOLDER_NUMERIC: String = "min, max, step (numeric: slider)"
@@ -54,6 +54,8 @@ const _RANGE_PLACEHOLDER_VECTOR2: String = "max reach - the dial's magnitude (e.
 var _attr_tooltip_edit: LineEdit = null
 var _attr_group_edit: LineEdit = null
 var _attr_subgroup_edit: LineEdit = null
+var _attr_header_edit: LineEdit = null
+var _attr_info_edit: LineEdit = null
 var _attr_range_edit: LineEdit = null
 var _attr_multiline_check: CheckBox = null
 var _attr_no_alpha_check: CheckBox = null
@@ -381,6 +383,15 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_subgroup_edit = LineEdit.new()
 	_attr_subgroup_edit.placeholder_text = "nested section under the group (e.g. Melee)"
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Sub-heading", _attr_subgroup_edit))
+	# Decor: editor-only comment markers rendered above the property (a plain field without the plugin).
+	_attr_header_edit = LineEdit.new()
+	_attr_header_edit.placeholder_text = "accent label above (e.g. Combat #e06666)"
+	_attr_header_edit.tooltip_text = "A coloured section label drawn above this property in the Inspector.\nEnd with a #rrggbb to tint it. Editor decor only - plain comment in the code."
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Section header", _attr_header_edit))
+	_attr_info_edit = LineEdit.new()
+	_attr_info_edit.placeholder_text = "note panel above (e.g. Shared resource - edits affect every user.)"
+	_attr_info_edit.tooltip_text = "A quiet info panel drawn above this property in the Inspector.\nEditor decor only - plain comment in the code."
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Info note", _attr_info_edit))
 	_attr_show_if_edit = LineEdit.new()
 	_attr_show_if_edit.placeholder_text = "bool variable (hidden when false)"
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit))
@@ -689,6 +700,10 @@ func open_for_edit(
 	_attr_tooltip_edit.text = str(existing_attributes.get("tooltip", ""))
 	_attr_group_edit.text = str(existing_attributes.get("group", ""))
 	_attr_subgroup_edit.text = str(existing_attributes.get("subgroup", ""))
+	var existing_header: String = str(existing_attributes.get("header", ""))
+	var existing_header_color: String = str(existing_attributes.get("header_color", ""))
+	_attr_header_edit.text = (existing_header + " " + existing_header_color).strip_edges() if not existing_header_color.is_empty() else existing_header
+	_attr_info_edit.text = str(existing_attributes.get("info", ""))
 	var existing_range: Variant = existing_attributes.get("range")
 	# Default a missing step to 1: a drawer-recovered range carries only min/max, and the apply needs all
 	# three parts (so a reopened progress_bar/dial re-saves cleanly instead of erroring on "min, max").
@@ -803,6 +818,7 @@ func _on_confirmed() -> void:
 		attributes["group"] = _attr_group_edit.text.strip_edges()
 	if not _attr_subgroup_edit.text.strip_edges().is_empty():
 		attributes["subgroup"] = _attr_subgroup_edit.text.strip_edges()
+	attributes.merge(_decor_attributes(), true)
 	# Numeric-only attributes are gated on the type so a leftover value from a
 	# previous type (the field is now HIDDEN by _refresh_contextual_rows) is inert
 	# rather than erroring about a field the user can no longer see.
@@ -1250,6 +1266,7 @@ func _refresh_inspector_preview(shown_name: String, type_name: String, folded_at
 		card_attributes["group"] = _attr_group_edit.text.strip_edges()
 	if _attr_subgroup_edit != null and not _attr_subgroup_edit.text.strip_edges().is_empty():
 		card_attributes["subgroup"] = _attr_subgroup_edit.text.strip_edges()
+	card_attributes.merge(_decor_attributes(), true)
 	if _attr_clamp_check != null and _attr_clamp_check.button_pressed:
 		card_attributes["clamp"] = true
 	if _attr_read_only_check != null and _attr_read_only_check.button_pressed:
@@ -1295,6 +1312,26 @@ static func _drawer_label_for_kind(kind: String) -> String:
 			# stock Curve editor after assigning. The label shouldn't promise in-place point editing.
 			return "Curve preview"
 	return ""
+
+
+## The decor attributes from the Section header / Info note fields. The header field accepts an
+## optional trailing #rrggbb accent ("Combat #e06666"), split here with the same rule the importer
+## uses, so what you type is exactly what a reopened variable shows.
+func _decor_attributes() -> Dictionary:
+	var decor: Dictionary = {}
+	var header: String = _attr_header_edit.text.strip_edges() if _attr_header_edit != null else ""
+	if not header.is_empty():
+		var tokens: PackedStringArray = header.split(" ")
+		var last: String = tokens[tokens.size() - 1] if tokens.size() > 1 else ""
+		if last.length() == 7 and last.begins_with("#") and last.substr(1).is_valid_hex_number():
+			decor["header_color"] = last
+			header = header.substr(0, header.length() - last.length()).strip_edges()
+		if not header.is_empty():
+			decor["header"] = header
+	var info: String = _attr_info_edit.text.strip_edges() if _attr_info_edit != null else ""
+	if not info.is_empty():
+		decor["info"] = info
+	return decor
 
 
 ## The drawer kind currently chosen in the dialog ("" = Default field).
