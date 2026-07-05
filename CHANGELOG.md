@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - the Scene Flow pack: scene changes with a polished fade
+
+- **A 33rd behavior pack, Scene Flow** (the scene-transition roadmap item): **Fade To
+  Scene**, **Fade Reload Scene**, **Go To Scene**, **Reload Scene**, and **Quit
+  Game**, plus the **Is Transitioning** condition and **Current Scene Path**
+  expression; fade duration and cover colour are exported tunables. The fade runner
+  parents itself to the TREE ROOT (not the dying scene), so the fade-out, the swap,
+  and the fade-in all survive the change - the classic "my transition died with my
+  scene" trap, solved once; a group flag makes double-triggering impossible.
+  Terse provider style, drift gate green (audited=33 drifted=0).
+
 ### Added - the Menu Starter: a whole menu flow as one copyable scene
 
 - **demo/showcase/menu_starter.tscn + .gd** - the "UI starter": title, settings,
