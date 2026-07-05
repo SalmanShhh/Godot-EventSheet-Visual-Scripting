@@ -12,17 +12,18 @@ extends PanelContainer
 
 var _rows: VBoxContainer = null
 var _sentence_label: Label = null
+var _caption: Label = null
 
 
 func _init() -> void:
 	add_theme_stylebox_override("panel", EventSheetPopupUI.inset_panel_stylebox())
 	var column := VBoxContainer.new()
 	add_child(column)
-	var caption := Label.new()
-	caption.text = "Inspector preview"
-	caption.add_theme_font_size_override("font_size", 10)
-	caption.modulate = Color(1.0, 1.0, 1.0, 0.5)
-	column.add_child(caption)
+	_caption = Label.new()
+	_caption.text = "Inspector preview"
+	_caption.add_theme_font_size_override("font_size", 10)
+	_caption.modulate = Color(1.0, 1.0, 1.0, 0.5)
+	column.add_child(_caption)
 	_rows = VBoxContainer.new()
 	column.add_child(_rows)
 	_sentence_label = Label.new()
@@ -30,6 +31,12 @@ func _init() -> void:
 	_sentence_label.add_theme_font_size_override("font_size", 11)
 	_sentence_label.modulate = Color(1.0, 1.0, 1.0, 0.72)
 	column.add_child(_sentence_label)
+
+
+## Hides the per-card "Inspector preview" caption - for surfaces that stack many cards into one
+## whole-Inspector view (the Designer), where a caption per variable would read as noise.
+func hide_caption() -> void:
+	_caption.visible = false
 
 
 ## Rebuilds the mock + sentence. attributes carries the SAME keys the compiler

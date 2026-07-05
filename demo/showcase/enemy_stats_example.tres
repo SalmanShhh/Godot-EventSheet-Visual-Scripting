@@ -9,3 +9,16 @@ point_count = 2
 [resource]
 script = ExtResource("1_xu4x3")
 combat_falloff = SubResource("Curve_y6eva")
+combat_loot = [{
+"count": 1,
+"item": "Rat Tail",
+"rare": false
+}, {
+"count": 2,
+"item": "Cheese Wheel",
+"rare": false
+}, {
+"count": 1,
+"item": "Plague Blade",
+"rare": true
+}]

@@ -58,6 +58,11 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(10),
 		"Make this sheet's published verbs (its exposed ƒ functions) available in EVERY sheet's picker, node-targeted at $%s. Extract actions to a function first (right-click an event), then teach it here." % "<ClassName>"
 	)
+	sheet_popup.add_item("Inspector Designer…", 11)
+	sheet_popup.set_item_tooltip(
+		sheet_popup.get_item_index(11),
+		"See the WHOLE sheet's Inspector as one live view - every exported variable with its decor, grouping, and widget, exactly as Godot will show it."
+	)
 	sheet_popup.add_item("Export Addon…", 6)
 	sheet_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
@@ -72,6 +77,7 @@ func build(root: Node) -> void:
 			8: _dock._open_include_manager()
 			9: _dock._new_addon_panel.open()
 			10: _dock._share_verbs_with_project_requested()
+			11: _dock._open_inspector_designer()
 	)
 	_toolbar.add_child(sheet_menu)
 	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")

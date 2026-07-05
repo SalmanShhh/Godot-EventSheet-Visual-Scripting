@@ -8,6 +8,9 @@ extends Resource
 ## Damage multiplier over distance.
 @export_group("Combat")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:curve_editor") var combat_falloff: Curve = null
+## Drop table - one row per possible drop.
+@export_group("Combat")
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:item=String,count=int,rare=bool") var combat_loot: Array = []
 ## Hit points - drag the bar.
 @export_group("Combat")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:200") var combat_max_health: int = 120:
@@ -34,4 +37,4 @@ extends Resource
 func roll_damage() -> float:
 	return randf_range(combat_damage_range.x, combat_damage_range.y)
 
-# [b]EnemyStats[/b] - a Custom Resource whose Inspector was [b]designed from this sheet[/b]: accent section headers, an info note, a [b]required[/b] portrait slot (red warning until assigned), a min-max damage range, a clamped health bar, swatches, and an inline curve. Click [i]enemy_stats_example.tres[/i] in the FileSystem to see it; every marker is a plain comment or annotation, so the resource works without the plugin.
+# [b]EnemyStats[/b] - a Custom Resource whose Inspector was [b]designed from this sheet[/b]: accent section headers, an info note, a [b]required[/b] portrait slot (red warning until assigned), a min-max damage range, a [b]loot table edited as a grid[/b], a clamped health bar, swatches, and an inline curve. Click [i]enemy_stats_example.tres[/i] in the FileSystem to see it; every marker is a plain comment or annotation, so the resource works without the plugin.

@@ -20,6 +20,7 @@ static func run() -> bool:
 		"# @inspector_info Shared resource - edits affect every enemy that references it.",
 		"# @inspector_required",
 		"eventsheet:min_max:0:60",
+		"eventsheet:table:item=String,count=int,rare=bool",
 		"eventsheet:progress_bar:0:200",
 		"combat_max_health = clampi(value, 0, 200)",
 		"@export_placeholder(\"e.g. Cave Rat\")",

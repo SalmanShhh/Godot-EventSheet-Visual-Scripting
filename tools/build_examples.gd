@@ -955,6 +955,9 @@ func _build_enemy_stats() -> bool:
 				"header": "Combat", "header_color": "#e06666", "drawer": "min_max", "range": {"min": "0", "max": "60", "step": "1"}}},
 		"combat_falloff": {"type": "Curve", "default": null, "exported": true,
 			"attributes": {"tooltip": "Damage multiplier over distance.", "group": "Combat", "drawer": "curve_editor"}},
+		"combat_loot": {"type": "Array", "default": [], "exported": true,
+			"attributes": {"tooltip": "Drop table - one row per possible drop.", "group": "Combat", "drawer": "table",
+				"table_columns": [{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "rare", "type": "bool"}]}},
 		"combat_max_health": {"type": "int", "default": 120, "exported": true,
 			"attributes": {"tooltip": "Hit points - drag the bar.", "group": "Combat", "drawer": "progress_bar",
 				"range": {"min": "0", "max": "200", "step": "1"}, "clamp": true}},
@@ -972,7 +975,7 @@ func _build_enemy_stats() -> bool:
 	}
 
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]EnemyStats[/b] - a Custom Resource whose Inspector was [b]designed from this sheet[/b]: accent section headers, an info note, a [b]required[/b] portrait slot (red warning until assigned), a min-max damage range, a clamped health bar, swatches, and an inline curve. Click [i]enemy_stats_example.tres[/i] in the FileSystem to see it; every marker is a plain comment or annotation, so the resource works without the plugin."
+	about.text = "[b]EnemyStats[/b] - a Custom Resource whose Inspector was [b]designed from this sheet[/b]: accent section headers, an info note, a [b]required[/b] portrait slot (red warning until assigned), a min-max damage range, a [b]loot table edited as a grid[/b], a clamped health bar, swatches, and an inline curve. Click [i]enemy_stats_example.tres[/i] in the FileSystem to see it; every marker is a plain comment or annotation, so the resource works without the plugin."
 	sheet.events.append(about)
 	sheet.events.append(_raw("func roll_damage() -> float:\n\treturn randf_range(combat_damage_range.x, combat_damage_range.y)"))
 
@@ -993,6 +996,11 @@ func _build_enemy_stats() -> bool:
 	stats.set("id_display_name", "Cave Rat")
 	stats.set("combat_max_health", 120)
 	stats.set("combat_damage_range", Vector2(4, 11))
+	stats.set("combat_loot", [
+		{"item": "Rat Tail", "count": 1, "rare": false},
+		{"item": "Cheese Wheel", "count": 2, "rare": false},
+		{"item": "Plague Blade", "count": 1, "rare": true},
+	])
 	stats.set("spawn_gap", Vector2(8, 20))
 	var falloff: Curve = Curve.new()
 	falloff.add_point(Vector2(0.0, 1.0))

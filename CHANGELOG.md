@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - the Inspector Designer: the whole sheet's Inspector as one view
+
+- **Sheet ▸ Inspector Designer…** renders EVERY Inspector-visible variable of the
+  sheet top-to-bottom as one live view - decor, grouping, and widgets through the
+  same preview-card builders the Variable dialog uses (one source of truth: the
+  view cannot drift from the per-variable previews), with the plain-language
+  sentence under each. Sheet-level variables come first (the compiler's emission
+  order), then tree variables in sheet order; unexported ones are skipped. This
+  first slice is a pure read-only view - reorder/regroup gestures layer on next.
+  Pinned in tests/inspector_designer_test.gd.
+- The EnemyStats showcase gained a **loot table** (the new table drawer) - three
+  drop rows in enemy_stats_example.tres, columns item/count/rare.
+
 ### Added - the table drawer: arrays edited as a grid
 
 - **A seventh drawer, `table`**: an `Array` of `Dictionary` rows edited as a GRID in

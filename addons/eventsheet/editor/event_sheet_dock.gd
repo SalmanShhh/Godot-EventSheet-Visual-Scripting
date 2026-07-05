@@ -141,6 +141,7 @@ var _ace_picker: ACEPickerDialog = ACEPickerDialog.new()
 var _ace_params: ACEParamsDialog = ACEParamsDialog.new()
 var _variable_dlg: VariableDialog = VariableDialog.new()
 var _new_addon_panel: EventSheetNewAddonPanel = EventSheetNewAddonPanel.new()  # Sheet ▸ New Behaviour Addon… (dock/new_addon_panel.gd)
+var _inspector_designer_dialog: EventSheetInspectorDesignerDialog = null  # Sheet ▸ Inspector Designer… (lazy; added to the dock on first open)
 var _welcome: EventSheetWelcomeWindow = EventSheetWelcomeWindow.new()  # Tools ▸ Welcome… onboarding window (dock/welcome_window.gd)
 var _starter: EventSheetStarterTemplates = EventSheetStarterTemplates.new()  # New-from-template starters (dock/starter_templates.gd)
 var _comments: EventSheetCommentAndScopeDialogs = EventSheetCommentAndScopeDialogs.new()  # comment/with-node dialogs (dock/comment_and_scope_dialogs.gd)
@@ -603,6 +604,16 @@ func _on_manage_ace_providers_requested() -> void:
 ## "Teach a Verb" (Sheet menu): share this sheet's published verbs project-wide.
 func _share_verbs_with_project_requested() -> void:
 	_providers_glue.share_verbs_with_project()
+
+
+
+## "Inspector Designer" (Sheet menu): the whole sheet's Inspector as one live view - every
+## exported variable with its decor, grouping, and widget, through the shared preview cards.
+func _open_inspector_designer() -> void:
+	if _inspector_designer_dialog == null:
+		_inspector_designer_dialog = EventSheetInspectorDesignerDialog.new()
+		add_child(_inspector_designer_dialog)
+	_inspector_designer_dialog.open_for_sheet(_current_sheet)
 
 
 
