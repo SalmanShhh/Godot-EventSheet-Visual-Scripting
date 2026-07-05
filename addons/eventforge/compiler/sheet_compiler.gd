@@ -19,7 +19,7 @@
 class_name SheetCompiler
 extends RefCounted
 
-const VERSION: String = "0.11.0"
+const VERSION: String = "0.12.0"
 
 # Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
 static var _emit_breakpoints_flag: bool = false

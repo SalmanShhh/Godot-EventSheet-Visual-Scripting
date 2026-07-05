@@ -1,7 +1,5 @@
 # Changelog
 
-## [Unreleased]
-
 ## [0.12.0] - 2026-07-06 - The Inspector Designer Update
 
 ### Added - create an event sheet from the FileSystem, and a faster plugin load
