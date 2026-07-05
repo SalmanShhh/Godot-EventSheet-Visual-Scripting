@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - the Doctor enforces required fields project-wide
+
+- A new built-in Doctor check, **required-field**: every scene node and saved
+  resource using a script with Required (and empty-by-default) variables is scanned;
+  any that leaves one unset gets a warning naming the exact file and property -
+  Godot omits default-equal properties from .tscn/.tres, so a missing override line
+  means the empty default ships. Runs everywhere the Doctor runs (dock panel, CLI,
+  CI, MCP); demo/showcase and the packs are exempt (the showcase's unset portrait IS
+  the required-badge demo). The pure halves (watch-list extraction, container-gap
+  detection) are pinned in tests/required_fields_doctor_test.gd. This was the last
+  open item of the Inspector Designer spec - the parity matrix is now fully closed.
+
 ### Added - the Dialogue Kit pack: conversations with a typewriter, zero systems code
 
 - **A 34th behavior pack, Dialogue Kit** (the final item of the packs roadmap row):

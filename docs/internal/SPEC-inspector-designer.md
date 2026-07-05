@@ -93,7 +93,7 @@ The full attribute catalog of the best-known rich-inspector tooling, mapped hone
 | Searchable inspector | Godot's built-in Inspector filter box | native |
 | Inline resource editing | Godot's native sub-resource foldout | native |
 | Serialized dictionaries | typed Dictionary/Array exports | native |
-| Required field | `required` marker (Doctor scene-scan still open) | shipped |
+| Required field | `required` marker + the Doctor's project-wide scan for unset instances | shipped |
 | Custom validation with inline message | `# @inspector_validate` -> sheet function (needs @tool to run in-editor) | shipped |
 | Table list (arrays as grids) | `table` drawer + columns schema | shipped |
 | The visual designer surface | the Inspector Designer view (✎ edit + ▲ reorder) | shipped |

@@ -59,6 +59,7 @@ static func run() -> Dictionary:
 	check_unused_packs(sheet_paths, findings)
 	check_shadowed_variables(sheet_paths, findings)
 	check_untranslated_project(sheet_paths, findings)
+	check_required_fields(sheet_paths, findings)
 	check_vocabulary_doc(findings)
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
@@ -201,6 +202,75 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 		if not attached:
 			_add(findings, "info", "scene-attachment", sheet_path,
 				"%s is attached to no scene - fine if it's instanced from code or used as a class." % output_path.get_file())
+
+
+## Required-fields audit: a variable marked Required (# @inspector_required) whose script DEFAULT
+## is empty is only satisfied when each scene node / saved resource using that script overrides
+## it. Godot omits default-equal properties from .tscn/.tres, so "no override line" means the
+## empty default ships. Warnings name the exact file + property. demo/showcase is exempt (its
+## deliberately unset portrait IS the required-badge demo), as are the packs themselves.
+static func check_required_fields(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var watched: Dictionary = {}
+	for sheet_path: String in sheet_paths:
+		var output_path: String = output_path_for(sheet_path)
+		if not FileAccess.file_exists(output_path):
+			continue
+		var empty_required: PackedStringArray = required_empty_defaults(FileAccess.get_file_as_string(output_path))
+		if not empty_required.is_empty():
+			watched[output_path] = empty_required
+	if watched.is_empty():
+		return
+	for container_ext: String in ["tscn", "tres"]:
+		for container_path: String in _list_files_with_extension(container_ext):
+			if container_path.begins_with("res://demo/") or container_path.begins_with("res://eventsheet_addons/") or container_path.begins_with("res://addons/"):
+				continue
+			for missing: Dictionary in required_gaps_in_container(FileAccess.get_file_as_string(container_path), watched):
+				_add(findings, "warning", "required-field", container_path,
+					"%s leaves the required \"%s\" (%s) unset - assign it in the Inspector." % [container_path.get_file(), str(missing.get("property")), str(missing.get("script")).get_file()])
+
+
+## The script's Required variables whose declared default is empty (null / "") - the ones a
+## scene or resource must override. Reads the same decor markers the Inspector renders.
+static func required_empty_defaults(source: String) -> PackedStringArray:
+	var empty_required: PackedStringArray = PackedStringArray()
+	if source.find("# @inspector_required") == -1:
+		return empty_required
+	var decor_map: Dictionary = EventSheetAttributeDrawers.build_decor_map(source)
+	for var_name: Variant in decor_map.keys():
+		var required: bool = false
+		for entry: Variant in decor_map[var_name]:
+			if entry is Dictionary and str((entry as Dictionary).get("kind", "")) == "required":
+				required = true
+		if not required:
+			continue
+		var declaration: RegExMatch = RegEx.create_from_string("(?m)^.*var %s\\s*:[^=\\n]*=\\s*(.+)$" % var_name).search(source)
+		var default_text: String = declaration.get_string(1).strip_edges() if declaration != null else "null"
+		# A clamped var carries a setter suffix ("= null:") - strip it before judging emptiness.
+		default_text = default_text.trim_suffix(":").strip_edges()
+		if default_text == "null" or default_text == "\"\"":
+			empty_required.append(str(var_name))
+	return empty_required
+
+
+## The required-field gaps inside ONE .tscn/.tres text, for the watched {script_path: [vars]}
+## map: every node/resource block using a watched script that does NOT override a watched
+## property. Pure (text in, gaps out) so the suite pins it without touching the filesystem.
+static func required_gaps_in_container(text: String, watched: Dictionary) -> Array[Dictionary]:
+	var gaps: Array[Dictionary] = []
+	for script_path: Variant in watched.keys():
+		if not text.contains(str(script_path)):
+			continue
+		var id_match: RegExMatch = RegEx.create_from_string("\\[ext_resource[^\\]]*path=\"%s\"[^\\]]*id=\"([^\"]+)\"" % str(script_path).replace("/", "\\/")).search(text)
+		if id_match == null:
+			continue
+		var script_ref: String = "script = ExtResource(\"%s\")" % id_match.get_string(1)
+		for block: String in text.split("\n["):
+			if not block.contains(script_ref):
+				continue
+			for property_name: Variant in watched[script_path]:
+				if not block.contains("\n%s = " % str(property_name)):
+					gaps.append({"script": str(script_path), "property": str(property_name)})
+	return gaps
 
 
 ## The sheet a generated script belongs to - the inverse of output_path_for.
