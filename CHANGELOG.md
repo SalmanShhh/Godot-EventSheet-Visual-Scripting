@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - the Dialogue Kit pack: conversations with a typewriter, zero systems code
+
+- **A 34th behavior pack, Dialogue Kit** (the final item of the packs roadmap row):
+  **Queue Line** (speaker + text), **Start Dialogue**, **Advance** (mid-line advance
+  completes the line instantly; otherwise next line or end), and **End Dialogue** -
+  played with a **typewriter reveal** into NAMED labels at a tunable speed, with the
+  panel shown/hidden automatically and a configurable input action advancing the
+  whole conversation. Four triggers (dialogue/line started/finished) hang portraits,
+  sounds, and camera moves off the sheet; Is Dialogue Active / Is Typing /
+  Speaker Is conditions and Current Speaker / Current Text / Lines Remaining
+  expressions round it out. Terse provider style, drift gate green
+  (audited=34 drifted=0). The README milestones updated: the Menu/HUD + transitions
+  + dialogue roadmap row is fully delivered.
+
 ### Added - the Scene Flow pack: scene changes with a polished fade
 
 - **A 33rd behavior pack, Scene Flow** (the scene-transition roadmap item): **Fade To

@@ -39,6 +39,7 @@ const PACK_BUILDERS: Array[String] = [
 	"background_runner",
 	"hud_kit",
 	"scene_flow",
+	"dialogue_kit",
 ]
 
 

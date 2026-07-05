@@ -131,8 +131,8 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 | `v0.9.5` - **Code-Free Authoring & First-Class Variables**: `.gd`-default sheets, zero-block packs, `@export` variables + drawers, addon-author loop | ✅ shipped |
 | `v0.10.0` - **The In-Sheet Authoring Update**: ACE Studio, per-function shell-lift (mid-file + custom-return helpers anchored in place), Anatomy panel, Ghost Row / Param Hop / bulk retune, error→row + paused-at-row, sheet diff, variable folders + subgroups, the Custom Block API, script-intent UX (custom resources + editor tools), full inspector-export coverage | ✅ shipped |
 | `v0.11.0` - **The Structure & Vocabulary Update**: collapsible colored regions, Look Gallery + Inspector preview, localisation vocabulary, any-node reflection, terse providers (all 31 packs migrated + audit-gated), the abstraction levers (Extract/Teach/featured/compression cue), the public `EventSheets` API | ✅ shipped |
-| `v0.12` - **The Inspector Designer**: design a whole Inspector visually (live mock, drag to reorder/group, decor), min-max sliders, editable table drawers for arrays, required fields + inline validation - Custom Resources as the hero | 🗺 next |
-| _Roadmap_ - Menu/HUD pack + UI starter, scene-transition + dialogue packs, community feedback | 🗺 planned |
+| `v0.12` - **The Inspector Designer**: the whole Inspector designed visually (a live editable view), 8 drawers (min-max sliders, editable tables, toggle buttons), decor + required + inline validation + field buttons, the EnemyStats Custom Resource showcase - PLUS the HUD Kit, Scene Flow, and Dialogue Kit packs with the Menu Starter scene | ✅ on main, unreleased |
+| _Roadmap_ - community feedback, polish, and whatever you ask for next | 🗺 planned |
 
 ## Project layout
 
