@@ -2,6 +2,8 @@
 
 Everything an extension needs lives in **one class: `EventSheets`** (`addons/eventsheet/api/eventsheets.gd`). It is all static, so any `@tool` script, editor plugin, or test can call it with zero setup: register new vocabulary, drive the live editor, use the compiler and importer as plain services, or plug into the Project Doctor. Every method on it is a compatibility promise, the same covenant `ace_id`s and codegen templates carry: shapes are stable once shipped, new capabilities get added, existing ones are never renamed. The plugin dogfoods this API itself (the region fold commands in the Command Palette and the MCP server's compile and import tools go through it), so the extension path is the exact path the built-ins take.
 
+![Vocabulary registered through the EventSheets API appears in the picker exactly like the built-ins - same live search, favorites and recents rails, and Ships-as GDScript preview](previews/editor-ace-picker.png)
+
 ## Table of Contents
 
 1. [What You Can Build](#1-what-you-can-build)

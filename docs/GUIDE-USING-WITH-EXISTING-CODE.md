@@ -8,6 +8,8 @@ The reason it works is one design rule: **a sheet compiles to plain, idiomatic G
 dependency on the plugin.** Delete EventForge and your generated `.gd` files still run. So a sheet and your
 existing code are just GDScript talking to GDScript - there's no runtime bridge to wire up.
 
+![A sheet whose rows call plain GDScript: exported variables, an inline GDScript block, and a sheet-built function callable from any other script in the project](previews/editor-event-sheet.png)
+
 ## Table of Contents
 
 1. [Scenarios Where This Page Helps](#1-scenarios-where-this-page-helps)

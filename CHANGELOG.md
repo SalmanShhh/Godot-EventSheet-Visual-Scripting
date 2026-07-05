@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - the guides are illustrated with feature images
+
+- **Eleven guides now open with a picture of the feature they teach.** Six reuse
+  existing renders (Custom ACEs shows the ACE Studio, Make a Behaviour shows the
+  Anatomy panel, C3 Migration and Building On show the picker, Recipes and Using
+  With Existing Code show a real sheet). Three are freshly rendered: **Custom
+  Blocks** (preload / enum / signal / region rows between events), **Theming**
+  (the same sheet under the bundled Dracula package), and **Translating Your Game**
+  (the lit globe toggle on a string param). Every image carries descriptive alt
+  text; the render harnesses were temporary and are not committed.
+
 ### Changed - the docs are organized by prefix, and every guide teaches by example
 
 - **Every doc file now wears its kind as a prefix**: `GUIDE-` for how-tos (12 of

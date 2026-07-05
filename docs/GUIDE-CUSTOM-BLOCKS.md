@@ -2,6 +2,8 @@
 
 ACEs define what a row can *do* inside events. **Custom blocks** define new *kinds of rows* that live between events: preloads, region markers, notes, config tables, pack-defined data blocks, anything a sheet needs that is not an event. This guide covers the whole Custom Block API: how to register a kind in one small script, the contract every kind implements, the add/edit UX your kind gets for free, and how the byte-gated round-trip guarantees a kind can never corrupt a file. Two block kinds ship built in, and the plugin's own enum and signal rows run on the same API, so everything here is the exact path the built-ins take.
 
+![A sheet's custom blocks between events: two Preload Resource rows, an enum, a signal, and a colored region wrapping an event - each a registered kind that compiles to plain GDScript](images/custom-blocks.png)
+
 ## Table of Contents
 
 1. [Scenarios Where Custom Blocks Excel](#1-scenarios-where-custom-blocks-excel)

@@ -6,6 +6,8 @@ step of its own - a sheet compiles to a plain `.gd`, Godot's POT generator reads
 calls straight out of that file, translators fill in a catalog, and `TranslationServer`
 swaps languages live. Delete the plugin and your translated game still runs.
 
+![A string parameter in the apply dialog with the globe toggle lit next to it - the value ships wrapped in tr("...") for Godot's POT generation and TranslationServer](images/translation-globe.png)
+
 Contents:
 
 1. [Scenarios where this excels](#1-scenarios-where-this-excels)

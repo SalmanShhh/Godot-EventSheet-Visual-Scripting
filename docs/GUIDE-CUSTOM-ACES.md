@@ -7,6 +7,8 @@ every built-in ACE, so there is zero runtime dependency and nothing to ship alon
 guide covers the three ways to author custom ACEs, the schema and template language they share, how
 they appear in the picker, and how to test them so they never fail silently.
 
+![The ACE Studio: three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb, and the GDScript signature it ships as](images/ace-studio.png)
+
 ## Table of Contents
 
 1. [Scenarios Where Custom ACEs Help](#1-scenarios-where-custom-aces-help)

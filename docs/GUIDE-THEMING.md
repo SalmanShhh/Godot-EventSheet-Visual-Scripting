@@ -5,6 +5,8 @@
 
 This editor uses Godot-native resources instead of runtime CSS. The goal is still the same as a Construct-style theme.css workflow: designers can duplicate a theme package, tune tokens, reload the editor, and keep shipping reusable presets.
 
+![The same sheet under the bundled Dracula theme - background, event lanes, region tint, group chrome, and accent all come from one swappable token package](images/theme-dracula.png)
+
 Current additions on top of the model below:
 
 - A **toolbar theme switcher** lists "Default" plus the bundled presets - no file dialog

@@ -2,6 +2,8 @@
 
 You can build a whole reusable **behaviour** - the kind you attach under a node and reuse across a project, like Construct 3's behaviours - using **only event-sheet rows**. No GDScript blocks. This guide maps the vocabulary so you can find every piece: variables and designer knobs, triggers, conditions, actions, loops, and functions that publish as your behaviour's own ACEs - plus the honest line where a GDScript block is still the right tool.
 
+![The Anatomy panel showing a behaviour sheet as seven organs - Properties, State, Triggers, Actions, Conditions, Expressions, and Uses - each row click-to-jump](images/anatomy-panel.png)
+
 ## Table of Contents
 
 1. [Scenarios Where Code-Free Behaviours Excel](#1-scenarios-where-code-free-behaviours-excel)
