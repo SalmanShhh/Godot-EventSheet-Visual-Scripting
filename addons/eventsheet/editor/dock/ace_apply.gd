@@ -299,6 +299,16 @@ func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionar
 
 
 func _insert_row_below_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
+	_insert_row_at_selection(row_resource, explicit_selected_resource, 1)
+
+
+func _insert_row_above_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
+	_insert_row_at_selection(row_resource, explicit_selected_resource, 0)
+
+
+## Shared placement for Insert Above / Below: same anchor resolution, only the offset differs
+## (0 = the anchor's own slot, pushing it down; 1 = right after it).
+func _insert_row_at_selection(row_resource: Resource, explicit_selected_resource: Resource, offset: int) -> void:
 	if _dock._current_sheet == null or row_resource == null:
 		return
 	var selected_resource: Resource = explicit_selected_resource if explicit_selected_resource != null else _dock._active_view().get_selected_context().get("source_resource", null)
@@ -308,7 +318,7 @@ func _insert_row_below_selection(row_resource: Resource, explicit_selected_resou
 	var location: Dictionary = _find_resource_location(selected_resource)
 	var container: Array = location.get("container", _dock._current_sheet.events)
 	var index: int = int(location.get("index", container.size() - 1))
-	container.insert(index + 1, row_resource)
+	container.insert(index + offset, row_resource)
 
 
 func _find_resource_location(target: Resource) -> Dictionary:

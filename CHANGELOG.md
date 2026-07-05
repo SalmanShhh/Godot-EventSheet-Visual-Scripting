@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - context-menu parity: Insert Above, Cut, and Copy as Text
+
+- Three right-click gestures Construct 3 users reach for: the **Insert ▸** submenu
+  now leads with **Event Above** (slot a new event before the current one), **Cut**
+  joins Copy/Paste (copy plus delete as ONE undo step - undoing a Cut restores the
+  rows and the clipboard keeps the copy), and **Copy as Text** (More ▸) puts the
+  selection on the OS clipboard as READABLE text - the same plain-language
+  sentences the hover tooltips use, ready for an issue or a chat message (plain
+  Copy already writes the machine-shareable snippet form).
+
+### Fixed - "Save Selection as Snippet" was unreachable from the row menu
+
+- ROW_MENU_SURROUND_REGION shipped sharing its id with ROW_MENU_SAVE_SNIPPET, so
+  clicking "Save Selection as Snippet…" silently ran Surround with Region instead
+  (first match in the dispatch wins). The ids are distinct now and pinned so they
+  stay that way.
+
 ### Added - the Doctor enforces required fields project-wide
 
 - A new built-in Doctor check, **required-field**: every scene node and saved

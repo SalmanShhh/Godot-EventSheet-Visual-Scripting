@@ -544,9 +544,10 @@ static func run() -> bool:
 	menu_editor._build_row_context_menu(event_row)
 	var event_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)
 	all_passed = _check("event menu is short and type-specific",
-		event_labels.size() <= 12
+		event_labels.size() <= 13  # +1: Cut joined Copy/Paste (C3 parity)
 		and event_labels.has("Add Sub-Event") and event_labels.has("Convert to OR Block")
-		and event_labels.has("Insert Below") and event_labels.has("More") and event_labels.has("Delete")
+		and event_labels.has("Cut")
+		and event_labels.has("Insert") and event_labels.has("More") and event_labels.has("Delete")
 		and not event_labels.has("Group Color…") and not event_labels.has("Edit Comment…"), true) and all_passed
 	# Single-row disable uses the singular id so the live state can relabel it
 	# Disable Row / Enable Row (regression: a static "Disable / Enable" label was shipped).

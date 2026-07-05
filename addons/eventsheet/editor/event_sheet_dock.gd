@@ -47,7 +47,9 @@ const ROW_MENU_EDIT_GROUP_DESC := 20
 const ROW_MENU_GROUP_COLOR := 27
 const ROW_MENU_GROUP_RUNTIME := 28
 const ROW_MENU_FIND_USAGES := 29
-const ROW_MENU_SURROUND_REGION := 30
+# 41, not 30: SURROUND_REGION shipped colliding with SAVE_SNIPPET, which made "Save Selection
+# as Snippet…" silently run Surround with Region (first match in the dispatch wins).
+const ROW_MENU_SURROUND_REGION := 41
 const ROW_MENU_SAVE_SNIPPET := 30
 const ROW_MENU_INSERT_SNIPPET := 31
 const ROW_MENU_BULK_TOGGLE_ENABLED := 32
@@ -61,6 +63,9 @@ const ROW_MENU_MAKE_ELIF := 36
 const ROW_MENU_EXTRACT_GDSCRIPT_FN := 37
 const ROW_MENU_BREAKPOINT_CONDITION := 38
 const ROW_MENU_SCOPE_TO_NODE := 39
+const ROW_MENU_CUT := 42
+const ROW_MENU_COPY_AS_TEXT := 43
+const ROW_MENU_ADD_EVENT_ABOVE := 44
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -1247,6 +1252,10 @@ func _resolve_definition_params(definition: ACEDefinition, row_params: Dictionar
 
 func _insert_row_below_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
 	_ace_apply._insert_row_below_selection(row_resource, explicit_selected_resource)
+
+
+func _insert_row_above_selection(row_resource: Resource, explicit_selected_resource: Resource = null) -> void:
+	_ace_apply._insert_row_above_selection(row_resource, explicit_selected_resource)
 
 
 func _find_resource_location(target: Resource) -> Dictionary:
@@ -2918,6 +2927,21 @@ func _outdent_selected_event() -> bool:
 
 func _insert_context_row_below(resource_entry: Resource, message: String) -> void:
 	_row_edit_ops._insert_context_row_below(resource_entry, message)
+
+
+func _insert_context_row_above(resource_entry: Resource, message: String) -> void:
+	_row_edit_ops._insert_context_row_above(resource_entry, message)
+
+
+## Cut = Copy + Delete: the copy is clipboard-only state, so the delete is the ONE undo step
+## (undoing a Cut restores the rows and the clipboard still holds the copy - C3's behaviour).
+func _cut_selected_rows() -> void:
+	_on_copy_requested()
+	_delete_selected_rows()
+
+
+func _copy_selection_as_text() -> void:
+	_clipboard_glue._copy_selection_as_text()
 
 
 func _context_condition_is_negated() -> bool:

@@ -34,6 +34,8 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._insert_child_comment_for_context_row()
 		_dock.ROW_MENU_ADD_EVENT_BELOW:
 			_dock._insert_context_row_below(EventRow.new(), "Added event.")
+		_dock.ROW_MENU_ADD_EVENT_ABOVE:
+			_dock._insert_context_row_above(EventRow.new(), "Added event above.")
 		_dock.ROW_MENU_ADD_GROUP_BELOW:
 			var group: EventGroup = EventGroup.new()
 			group.name = "Group"
@@ -53,6 +55,10 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._add_gdscript_action_to_context_row()
 		_dock.ROW_MENU_COPY:
 			_dock._on_copy_requested()
+		_dock.ROW_MENU_CUT:
+			_dock._cut_selected_rows()
+		_dock.ROW_MENU_COPY_AS_TEXT:
+			_dock._copy_selection_as_text()
 		_dock.ROW_MENU_SURROUND_REGION:
 			_dock._surround_selection_with_region()
 		_dock.ROW_MENU_PASTE:

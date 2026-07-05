@@ -370,6 +370,22 @@ static func run() -> bool:
     # row the built menu is [0]="Add Sub-Event", [1]="Convert to AND/OR Block".
     dock._build_row_context_menu(dock_viewport.get_flat_rows()[0].get("row"))
     all_passed = _check("or block toggle is second row menu item", dock._row_context_menu.get_item_id(1), EventSheetDock.ROW_MENU_TOGGLE_CONDITION_BLOCK) and all_passed
+    # C3-parity items: Cut sits with Copy/Paste; the Insert submenu leads with Event Above.
+    all_passed = _check("cut is offered on the row menu", dock._row_context_menu.get_item_index(EventSheetDock.ROW_MENU_CUT) >= 0, true) and all_passed
+    all_passed = _check("insert submenu leads with Event Above", dock._row_insert_submenu.get_item_id(0), EventSheetDock.ROW_MENU_ADD_EVENT_ABOVE) and all_passed
+    all_passed = _check("copy as text lives in the More submenu", dock._row_more_submenu.get_item_index(EventSheetDock.ROW_MENU_COPY_AS_TEXT) >= 0, true) and all_passed
+    # Regression: SURROUND_REGION shipped colliding with SAVE_SNIPPET (both 30), which made
+    # "Save Selection as Snippet" unreachable - the ids must stay distinct.
+    all_passed = _check("surround-region and save-snippet menu ids are distinct",
+        EventSheetDock.ROW_MENU_SURROUND_REGION != EventSheetDock.ROW_MENU_SAVE_SNIPPET, true) and all_passed
+    # Insert Event Above places the new event BEFORE the anchor (one funnel step).
+    var pre_insert_count: int = dock.get_current_sheet().events.size()
+    dock._context_row = dock_viewport.get_flat_rows()[0].get("row")
+    dock._on_row_context_menu_id_pressed(EventSheetDock.ROW_MENU_ADD_EVENT_ABOVE)
+    all_passed = _check("insert-above adds one event", dock.get_current_sheet().events.size(), pre_insert_count + 1) and all_passed
+    all_passed = _check("insert-above places it before the anchor",
+        dock.get_current_sheet().events[0] is EventRow and (dock.get_current_sheet().events[0] as EventRow).conditions.is_empty(), true) and all_passed
+    dock._on_undo_requested()
     # The earlier context actions disabled the event, its second condition, and its action;
     # re-enable them all so the compile below exercises the AND-mode join of the two live
     # conditions (a disabled event/condition is skipped, leaving a single-term `if`).

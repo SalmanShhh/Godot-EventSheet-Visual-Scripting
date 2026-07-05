@@ -89,6 +89,51 @@ func _on_copy_requested() -> void:
 	_dock._set_status("Copied %d row(s) - shareable snippet placed on the clipboard." % top_level.size())
 
 
+## "Copy as Text": the selection (or clicked row) as READABLE text - the same plain-language
+## sentences the hover tooltips use for events, names/text for groups and comments, code
+## verbatim for GDScript blocks - onto the OS clipboard, ready for an issue, a design doc, or
+## a chat message. (Plain Copy already writes a machine-shareable snippet; this one is for humans.)
+func _copy_selection_as_text() -> void:
+	var targets: Array = _top_level_selected_resources()
+	if targets.is_empty() and _dock._context_row != null and _dock._context_row.source_resource != null:
+		targets = [_dock._context_row.source_resource]
+	if targets.is_empty():
+		_dock._set_status("Nothing selected to copy as text.", true)
+		return
+	var lines: PackedStringArray = PackedStringArray()
+	for target: Variant in targets:
+		if target is Resource:
+			_append_resource_text(target as Resource, lines, 0)
+	DisplayServer.clipboard_set("\n".join(lines))
+	_dock._set_status("Copied %d row(s) as readable text." % targets.size())
+
+
+func _append_resource_text(resource_entry: Resource, lines: PackedStringArray, depth: int) -> void:
+	var indent: String = "\t".repeat(depth)
+	if resource_entry is EventRow:
+		var event_row: EventRow = resource_entry as EventRow
+		lines.append(indent + _dock._viewport._row_builder.row_sentence(event_row))
+		for sub_entry: Variant in event_row.sub_events:
+			if sub_entry is Resource:
+				_append_resource_text(sub_entry as Resource, lines, depth + 1)
+	elif resource_entry is EventGroup:
+		var group: EventGroup = resource_entry as EventGroup
+		lines.append(indent + "Group: %s" % group.group_name)
+		for child_entry: Variant in (group.events if not group.events.is_empty() else group.rows):
+			if child_entry is Resource:
+				_append_resource_text(child_entry as Resource, lines, depth + 1)
+	elif resource_entry is CommentRow:
+		lines.append(indent + "# %s" % (resource_entry as CommentRow).text)
+	elif resource_entry is RawCodeRow:
+		for code_line: String in (resource_entry as RawCodeRow).code.split("\n"):
+			lines.append(indent + code_line)
+	elif resource_entry is LocalVariable:
+		var tree_var: LocalVariable = resource_entry as LocalVariable
+		lines.append(indent + "var %s: %s = %s" % [tree_var.name, tree_var.type_name, str(tree_var.default_value)])
+	else:
+		lines.append(indent + resource_entry.get_class())
+
+
 ## Top-most selected row resources: children of a selected ancestor are skipped because
 ## they already travel inside their parent's serialized form.
 func _top_level_selected_resources() -> Array:

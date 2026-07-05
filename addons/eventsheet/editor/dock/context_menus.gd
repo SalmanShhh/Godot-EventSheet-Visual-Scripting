@@ -127,6 +127,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_separator()
 	# Universal clipboard + lifecycle (Disable/Duplicate act on the selection, or the
 	# clicked row when nothing is selected - _top_level_selected_resources).
+	menu.add_item("Cut", _dock.ROW_MENU_CUT)
 	menu.add_item("Copy", _dock.ROW_MENU_COPY)
 	menu.add_item("Paste", _dock.ROW_MENU_PASTE)
 	menu.add_item("Duplicate Selection" if multi else "Duplicate", _dock.ROW_MENU_BULK_DUPLICATE)
@@ -140,7 +141,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_item("Group Selection into New Group", _dock.ROW_MENU_BULK_GROUP)
 	menu.add_separator()
 	_build_row_insert_submenu()
-	menu.add_submenu_item("Insert Below", "RowInsertSubmenu")
+	menu.add_submenu_item("Insert", "RowInsertSubmenu")
 	_build_row_more_submenu(is_event)
 	if _dock._row_more_submenu.item_count > 0:
 		menu.add_submenu_item("More", "RowMoreSubmenu")
@@ -148,11 +149,13 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	menu.add_item("Delete", _dock.ROW_MENU_DELETE)
 
 
-## The Insert ▸ submenu - insert a sibling row of any type below the clicked one.
+## The Insert ▸ submenu - a sibling row of any type below the clicked one (plus Event Above,
+## the C3 reflex for slotting a new event before the current one).
 func _build_row_insert_submenu() -> void:
 	var m: PopupMenu = _dock._row_insert_submenu
 	m.clear()
-	m.add_item("Event", _dock.ROW_MENU_ADD_EVENT_BELOW)
+	m.add_item("Event Above", _dock.ROW_MENU_ADD_EVENT_ABOVE)
+	m.add_item("Event Below", _dock.ROW_MENU_ADD_EVENT_BELOW)
 	m.add_item("Group", _dock.ROW_MENU_ADD_GROUP_BELOW)
 	m.add_item("Comment", _dock.ROW_MENU_ADD_COMMENT_BELOW)
 	m.add_item("Variable", _dock.ROW_MENU_ADD_VARIABLE_BELOW)
@@ -183,6 +186,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
 		m.add_item("Scope Actions To Node…", _dock.ROW_MENU_SCOPE_TO_NODE)
 		m.add_item("Add Match To Actions…", _dock.ROW_MENU_ADD_MATCH)
 		m.add_separator()
+	m.add_item("Copy as Text", _dock.ROW_MENU_COPY_AS_TEXT)
 	m.add_item("Find Usages (project)", _dock.ROW_MENU_FIND_USAGES)
 	m.add_item("Open in Split", _dock.ROW_MENU_OPEN_IN_SPLIT)
 	m.add_separator()

@@ -663,6 +663,17 @@ func _insert_context_row_below(resource_entry: Resource, message: String) -> voi
 	if changed:
 		_dock._mark_dirty(message)
 
+
+func _insert_context_row_above(resource_entry: Resource, message: String) -> void:
+	if resource_entry == null or _dock._context_row == null:
+		return
+	var changed: bool = _dock._perform_undoable_sheet_edit("Insert Row", func() -> bool:
+		_dock._insert_row_above_selection(resource_entry, _dock._context_row.source_resource)
+		return true
+	)
+	if changed:
+		_dock._mark_dirty(message)
+
 # ── Support helpers (used only by the ops above + context_menus.gd) ───────────────────
 
 
