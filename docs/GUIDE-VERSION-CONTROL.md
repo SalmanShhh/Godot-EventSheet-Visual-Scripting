@@ -7,7 +7,8 @@ By default an event sheet is a plain **`.gd`** file - it diffs and merges like a
 1. [LF and Byte-Stable Regeneration (Automatic)](#1-lf-and-byte-stable-regeneration-automatic)
 2. [Readable Diffs via textconv](#2-readable-diffs-via-textconv)
 3. [Semantic 3-Way Merge (Opt-In)](#3-semantic-3-way-merge-opt-in)
-4. [Tips and Common Mistakes](#4-tips-and-common-mistakes)
+4. [Use Cases](#4-use-cases)
+5. [Tips and Common Mistakes](#5-tips-and-common-mistakes)
 
 ---
 
@@ -60,7 +61,25 @@ Both sides are preserved in the merged sheet so nothing is lost - open it and ke
 
 ---
 
-## 4. Tips and Common Mistakes
+## 4. Use Cases
+
+### 1. Reviewing a sheet PR as code
+
+A sheet IS its `.gd`, so the pull request diff is readable GDScript - reviewers see exactly what logic changed without opening Godot.
+
+### 2. Two people edit one sheet
+
+The semantic 3-way merge resolves both edits by row identity instead of line position, so parallel work on different events merges clean.
+
+### 3. Bisecting a gameplay bug
+
+`git bisect` over sheet history works like any code history - each commit is a compiling script you can run.
+
+### 4. A quiet diff after regeneration
+
+Deterministic emission plus stable row uids mean re-saving an unchanged sheet produces a ZERO-line diff - regeneration never pollutes the blame.
+
+## 5. Tips and Common Mistakes
 
 - **The merge driver is per-clone.** Merge drivers live in `.git/config`, which isn't committed - run the two `git config merge.eventsheet.*` commands once on every fresh clone.
 - **The attribute is harmless before setup.** Until the driver is configured, git just falls back to its default merge, so `.gitattributes` can ship the mapping safely.

@@ -73,7 +73,7 @@ every named token.
 
 For layout and stacked-lane tuning details, see:
 
-- `res://docs/EVENTSHEET_ALIGNMENT_GUIDE.md`
+- `res://docs/internal/SPEC-layout-alignment.md`
 
 ## CSS-like template path
 
@@ -84,3 +84,10 @@ True CSS is not a practical runtime format for this editor pass, but the project
 - edit named tokens in the Inspector the way you would edit CSS variables/selectors
 
 This preserves the user goal of designer-friendly theming while fitting Godot’s Resource/Scene workflow cleanly.
+
+## Use cases
+
+- **Match the game you're making.** A horror project edits three tokens (background, lane, accent) into a muted palette so the tool stops fighting the mood board.
+- **A high-contrast accessibility preset.** Bump text/background contrast tokens once, save as a package, and every teammate who needs it installs the same preset.
+- **Streaming and tutorials.** A big-font, high-contrast theme makes rows legible in a 720p video - switch from the toolbar before recording.
+- **Ship the team preset in the repo.** The theme package is a folder of `.tres` files; commit it and everyone's editor matches after one toolbar pick.

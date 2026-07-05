@@ -21,7 +21,9 @@ they appear in the picker, and how to test them so they never fail silently.
 10. [Parameter Reference](#10-parameter-reference)
 11. [The Picker: Categories, Node Types, Simple Mode](#11-the-picker-categories-node-types-simple-mode)
 12. [Testing Custom ACEs](#12-testing-custom-aces)
-13. [Tips and Common Mistakes](#13-tips-and-common-mistakes)
+13. [Custom Blocks: register your own NON-ACE row kinds](#13-custom-blocks-register-your-own-non-ace-row-kinds)
+14. [Use Cases](#14-use-cases)
+15. [Tips and Common Mistakes](#15-tips-and-common-mistakes)
 
 ---
 
@@ -730,9 +732,35 @@ convention as ACE providers) and it gets Add-menu, palette, dialog, render, and 
 round-trip integration automatically; other plugins register kinds in code via
 `EventForgeBridgeRuntime.new().register_block_kind(kind)`. The full contract, the built-in
 kinds, worked examples, and the safety rules live in the dedicated
-[Custom Blocks Guide](CUSTOM-BLOCKS-GUIDE.md).
+[Custom Blocks Guide](GUIDE-CUSTOM-BLOCKS.md).
 
-## 14. Tips and Common Mistakes
+## 14. Use Cases
+
+### 1. A game-specific verb every sheet can use
+
+Your game has combo scoring. One annotated `award_combo(points: int, multiplier: float)` on an autoload provider and every sheet's picker offers **Award Combo** - no sheet ever re-implements the math.
+
+### 2. Wrapping an SDK once
+
+Ads, analytics, or a store plugin: wrap its calls in one provider script (`show_rewarded_ad()`, `log_event(name)`) and designers use plain verbs while the SDK's API stays in one file you can swap.
+
+### 3. A studio-standard effect with tuned defaults
+
+`screen_shake(strength: float = 8.0, seconds: float = 0.3)` with your tuned defaults becomes the ONE shake everyone uses - consistent feel, one place to retune.
+
+### 4. An economy singleton as safe verbs
+
+An autoload `Economy` exposes `spend(amount)` / `earn(amount)` / `balance()`; sheets get Spend/Earn actions and a Balance expression, and nobody touches the save-file dictionary directly.
+
+### 5. Guard rails around a dangerous call
+
+Instead of letting sheets call `queue_free()` on anything, expose `despawn_safely(node)` that unregisters, fades, and frees - the picker offers the safe verb, the risky one stays code.
+
+### 6. A hardware trigger
+
+A provider that polls a gamepad's gyro (or a MIDI pedal, or an Arduino over serial) and emits `## @ace_trigger` signals turns exotic input into ordinary event rows.
+
+## 15. Tips and Common Mistakes
 
 - **A wrong method name fails silently.** `position = {pos}` is safe; a typo like `move_too({pos})`
   compiles fine and crashes only when the generated code runs. Compile, parse, then run it in a test.

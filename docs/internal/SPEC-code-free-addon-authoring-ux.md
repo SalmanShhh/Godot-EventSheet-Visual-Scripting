@@ -264,7 +264,7 @@ The four beginner cliffs and their structural prevention: (1) *what do I fill in
 3. **Phase 3 - The Anatomy panel.** `BehaviourAnatomyPanel` read-model, the seven fixed organs + ghost hints + `+` footers, panel↔canvas cross-highlight. Read-model discipline tests. *(→ §15 Wave 2 - shares the left-rail slot with Part II's Outline tab, context-picked.)*
 4. **Phase 4 - Empty-body stub codegen + published-before-implemented.** Stub emission + round-trip test. *(→ §15 Wave 3.)*
 5. **Phase 5 - New Behaviour wizard + recipe scaffolds.** Factor pack-builders into shared static emitters; two-step wizard; recipes land on a fully-populated Anatomy with empty-but-valid bodies. *(→ §15 Wave 3.)*
-6. **Phase 6 - Docs + coach-marks + version bump.** `docs/RECIPES.md` recipe + showcase sheet; first-run coach-mark; regenerate; drift=0. *(→ §15 Wave 4.)*
+6. **Phase 6 - Docs + coach-marks + version bump.** `docs/GUIDE-../GUIDE-RECIPES.md` recipe + showcase sheet; first-run coach-mark; regenerate; drift=0. *(→ §15 Wave 4.)*
 
 *(Files-to-touch and tests for these phases are folded into §15.2/§15.3.)*
 
@@ -551,7 +551,7 @@ Ordering rules distilled from the judges: (1) devices that close promise-breakin
 
 **Wave 4 - team workflows + polish + release:**
 - D: **Sheet Diff via double import** → **merge-conflict flow v1**.
-- Part I **Phase 6**: docs (`docs/RECIPES.md`, the CI recipe page), coach-marks (Ghost-Row Ctrl+Enter discoverability, Ctrl-hover underline), README refresh, version bump, regenerate, drift=0.
+- Part I **Phase 6**: docs (`docs/GUIDE-../GUIDE-RECIPES.md`, the CI recipe page), coach-marks (Ghost-Row Ctrl+Enter discoverability, Ctrl-hover underline), README refresh, version bump, regenerate, drift=0.
 
 ### 15.2 Files to touch (Part II additions; Part I files stand as listed per-phase)
 

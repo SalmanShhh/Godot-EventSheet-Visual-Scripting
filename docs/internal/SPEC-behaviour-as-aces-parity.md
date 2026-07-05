@@ -204,7 +204,7 @@ Tie the new capabilities into the existing **Behavior Component starter** (`even
 3. **Add reusable logic (L2):** "Add function" (the §1 dialog) for `jump()`/`dash()`, each exposable so the behaviour publishes its own vocabulary project-wide.
 4. **Refine (L3):** open any inserted row, edit params via the typed picker; functions gain typed params + defaults; value-returning functions appear in ƒx fields.
 
-Document as a `docs/RECIPES.md` recipe + a showcase sheet.
+Document as a `docs/GUIDE-../GUIDE-RECIPES.md` recipe + a showcase sheet.
 
 ---
 

@@ -60,7 +60,7 @@ to other event sheets). Merged by `addons/eventforge/compiler/sheet_compiler.gd`
   diamonds (the same path merges at most once).
 - **Loading:** `load(include_path) as EventSheetResource` - a `.tres` or imported `.gd`-backed sheet, read into
   the local compile arrays only.
-- **Policy-gated:** `_addon_policy` (ProjectSettings `eventsheets/addons/*`, see ADDON-COMPOSITION-SPEC) -
+- **Policy-gated:** `_addon_policy` (ProjectSettings `eventsheets/addons/*`, see SPEC-addon-composition) -
   `include_sources` (where includes may come from), `collision_policy`, `depth_overflow`. Gates affect
   warnings/errors, never the emitted bytes.
 - **Invariant:** *compile-time only - included rows never enter the editing model.* The root sheet stays

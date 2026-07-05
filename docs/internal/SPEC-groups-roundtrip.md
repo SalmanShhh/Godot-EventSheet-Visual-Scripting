@@ -6,7 +6,7 @@ markers and the importer reconstructs the `EventGroup` rows, verify-lift-gated. 
 compiler/importer.
 
 > Not to be confused with **`@export_group`** - that's the *variable* Inspector-grouping feature, which already
-> round-trips (see INSPECTOR-ATTRIBUTES-SPEC + `_absorb_tree_variable_group`). This spec is about **event
+> round-trips (see SPEC-inspector-attributes + `_absorb_tree_variable_group`). This spec is about **event
 > groups** (`EventGroup` rows - the named, collapsible, toggleable containers of *events*).
 
 Status at a glance: event groups **round-trip** - **SHIPPED** (commit 90367eb). A group's rows are flattened

@@ -61,7 +61,7 @@ For **methods and signals**, the analyzer already registers every own-declared m
 - `addons/eventsheet/ace/semantic_analyzer.gd` - parse the class-level `## @ace_expose_all` (+ optional `(node)` modifier) into `metadata.expose_all` / `metadata.expose_all_mode`.
 - `addons/eventsheet/ace/ace_generator.gd` - when `expose_all`: iterate `get_script_method_list()` / `get_script_signal_list()` and expose all (skip `_` + `COMMON_METHOD_IGNORE`), no override gate; for `(node)` mode synthesize `$<Provider>.<method>({args})` before `_apply_template_overrides`; thread `provider_id` as the category fallback.
 - `tools/pack_builders/weapon_kit.gd` (+ regenerate `eventsheet_addons/weapon_kit/weapon_kit_behavior.gd`) - characterization migration: `## @ace_expose_all(node)` at class level, drop the redundant per-member lines, keep the genuinely-different overrides.
-- `docs/CUSTOM-ACES-GUIDE.md` + `docs/USING-WITH-EXISTING-CODE.md` - document the one-line opt-in + the instance-backed-vs-node decision + how a pre-existing class registers (per-sheet `add_ace_provider_script`, `eventsheet_addons/` folder, annotated autoload - all already work).
+- `docs/GUIDE-CUSTOM-ACES.md` + `docs/GUIDE-../GUIDE-USING-WITH-EXISTING-CODE.md` - document the one-line opt-in + the instance-backed-vs-node decision + how a pre-existing class registers (per-sheet `add_ace_provider_script`, `eventsheet_addons/` folder, annotated autoload - all already work).
 
 ## 7. Tests to add
 

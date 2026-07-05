@@ -13,7 +13,8 @@ You can build a whole reusable **behaviour** - the kind you attach under a node 
 7. [Loop - Pick Filters](#7-loop---pick-filters)
 8. [Reusable Logic - Functions](#8-reusable-logic---functions)
 9. [When GDScript Is Still the Right Tool](#9-when-gdscript-is-still-the-right-tool)
-10. [Tips and Common Mistakes](#10-tips-and-common-mistakes)
+10. [Use Cases](#10-use-cases)
+11. [Tips and Common Mistakes](#11-tips-and-common-mistakes)
 
 ---
 
@@ -108,7 +109,29 @@ Some logic genuinely *is* code and reads better as a block (the escape hatch is 
 
 ---
 
-## 10. Tips and Common Mistakes
+## 10. Use Cases
+
+### 1. A coin magnet from events only
+
+On Process + For Each coin in range + Move Toward host: a complete magnet behaviour, no code, reusable on any collector.
+
+### 2. One patrol, three enemies
+
+Author the patrol once (waypoints as exported variables), drop the behaviour under each enemy, and tune per-instance speed in the Inspector.
+
+### 3. Teach the team your verbs
+
+A behaviour sheet's published functions become picker verbs project-wide via Teach a Verb - your "Flash Red" is now everyone's Flash Red.
+
+### 4. A shared cooldown gate
+
+A tiny behaviour with `is_ready()` / `trigger(seconds)` gives every ability the same cooldown logic - and every sheet reads it as plain conditions.
+
+### 5. Prototype to pack
+
+The behaviour that started as an experiment exports as an addon pack (Sheet > Export Addon) when it earns a permanent home - same sheet, now shareable.
+
+## 11. Tips and Common Mistakes
 
 - **Loops are the bit people miss.** They are not a row you add from the picker - they live *on the event* as a Pick Filter. Right-click the event → Add Pick Filter.
 - **`host` is already wired.** In behavior mode, node ACEs target the parent automatically; you do not select or path to the host node yourself.

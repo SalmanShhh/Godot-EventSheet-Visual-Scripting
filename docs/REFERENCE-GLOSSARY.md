@@ -39,4 +39,4 @@ A one-page Rosetta Stone. If you come from **Construct 3**, read the left column
 | **Inspector drawer** | A live widget for a typed exported variable: a progress bar (int/float), a direction **dial** (Vector2), a colour **swatch** row (Color), a **texture preview** (Texture2D), or an inline **curve** (Curve). Authored via a per-type picker with a live preview; see the **Inspector Playground** showcase. Degrades to a plain field without the editor plugin (parity-clean). |
 | **Simple Mode** | A beginner-friendly audience setting (offered on first run) that trims the options and vocabulary shown, so a newcomer isn't handed the full registry at once. |
 
-See also the [C3 migration guide](C3-MIGRATION-GUIDE.md) (every C3 plugin/behavior mapped) and the [recipes](RECIPES.md) (build something end to end).
+See also the [C3 migration guide](GUIDE-C3-MIGRATION.md) (every C3 plugin/behavior mapped) and the [recipes](GUIDE-RECIPES.md) (build something end to end).

@@ -18,7 +18,8 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
 6. [Call a Sheet from Your Existing Code](#6-call-a-sheet-from-your-existing-code)
 7. [Adopting an Existing Project: Reverse-Lift](#7-adopting-an-existing-project-reverse-lift)
 8. [When to Wrap Existing Code in Your Own ACEs](#8-when-to-wrap-existing-code-in-your-own-aces)
-9. [Tips and Common Mistakes](#9-tips-and-common-mistakes)
+9. [Use Cases](#9-use-cases)
+10. [Tips and Common Mistakes](#10-tips-and-common-mistakes)
 
 ---
 
@@ -226,11 +227,37 @@ upgrade for ergonomics, not a requirement for interop.
 **The one-line version:** if the system is your own class, you don't author a pack at all - add
 `## @ace_expose_all(node)` at the top of the script and register it (`add_ace_provider_script("res://…")`,
 or drop the file in `res://eventsheet_addons/`). Every public method/signal becomes a node-targeted ACE
-with **zero per-member annotations** - see the [Custom ACEs Guide](CUSTOM-ACES-GUIDE.md#5-path-1-auto-ace-provider-scripts).
+with **zero per-member annotations** - see the [Custom ACEs Guide](GUIDE-CUSTOM-ACES.md#5-path-1-auto-ace-provider-scripts).
 For a stateless helper (scoring, inventory math) use plain `## @ace_expose_all` (the owned-instance form).
 
 
-## 9. Tips and Common Mistakes
+## 9. Use Cases
+
+### 1. Level logic on top of a hand-written player
+
+Your player controller stays code; a level sheet handles pickups, doors, and checkpoints by calling its methods (`$Player.stun(2.0)`) through Call Method or the reflected class vocabulary.
+
+### 2. Your code calls a sheet-built function
+
+A sheet's compiled script is plain GDScript, so `game_rules.gd` can call `quest_sheet.grant_item("key", 1)` like any other script - typed signature included.
+
+### 3. A legacy signal drives new events
+
+The old inventory emits `item_added`; an On Signal event picks it up and the new UI logic lives entirely in the sheet - no edits to the legacy file.
+
+### 4. Adopting one script at a time
+
+Open an existing `.gd` as a sheet: everything liftable becomes editable rows, the rest stays verbatim blocks, and the file round-trips byte-identically - migrate a node per week, never a rewrite.
+
+### 5. The sheet as glue between two systems
+
+The audio manager and the achievements autoload never knew each other; a ten-row sheet listens to one and calls the other, and the wiring is readable by the whole team.
+
+### 6. A designer-tunable skin over a hardcoded system
+
+Expose the knobs (`@export` variables with Inspector looks) in a sheet that forwards to the hardcoded system - designers tune in the Inspector, the system's code never changes.
+
+## 10. Tips and Common Mistakes
 
 Interop is broad, but it isn't magic - here's the candid list so nothing surprises you:
 

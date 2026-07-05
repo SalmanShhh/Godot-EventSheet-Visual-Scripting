@@ -4,7 +4,7 @@ class_name DocsIntegrityTest
 extends RefCounted
 
 const REQUIRED_DOCS := {
-	"res://docs/EVENTSHEET_THEME_EDITABILITY.md": [
+	"res://docs/GUIDE-THEMING.md": [
 		"# EventSheet Theme + Editability Guide",
 		"Switching themes",
 		"Bundled example themes",
@@ -12,7 +12,7 @@ const REQUIRED_DOCS := {
 		"Hot-reload behavior",
 		"CSS-like template path"
 	],
-	"res://docs/EVENTSHEET_ALIGNMENT_GUIDE.md": [
+	"res://docs/internal/SPEC-layout-alignment.md": [
 		"# EventSheet Layout + Alignment Guide",
 		"Layout model",
 		"Key alignment settings",
@@ -35,7 +35,7 @@ const REQUIRED_DOCS := {
 		"[tokens]",
 		"[designer_notes]"
 	],
-	"res://docs/GDSCRIPT-PAIRING-SPEC.md": [
+	"res://docs/internal/SPEC-gdscript-pairing.md": [
 		"# GDScript Pairing Spec",
 		"Principles",
 		"Implemented pairing features",

@@ -43,12 +43,12 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 ## Quick start
 
-1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 31 behavior packs. Removal is clean - see [uninstall](docs/UNINSTALL.md).
+1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 31 behavior packs. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
 2. **Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New… → Platformer Starter**, add events (live search understands C3 phrases like *"every tick"*), and Run.
 
-Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps every concept, behavior, and plugin to its home here. Extending the plugin? The [Custom ACEs guide](docs/CUSTOM-ACES-GUIDE.md) and [Custom Blocks guide](docs/CUSTOM-BLOCKS-GUIDE.md) cover both extension surfaces. Learning by building? The [recipes](docs/RECIPES.md) walk a platformer, health, pickups, and debugging end to end. Existing project? [Using EventSheets with your code](docs/USING-WITH-EXISTING-CODE.md) shows how sheets call (and are called by) your GDScript.
+Coming from Construct? The [C3 migration guide](docs/GUIDE-C3-MIGRATION.md) maps every concept, behavior, and plugin to its home here. Extending the plugin? The [Custom ACEs guide](docs/GUIDE-CUSTOM-ACES.md) and [Custom Blocks guide](docs/GUIDE-CUSTOM-BLOCKS.md) cover both extension surfaces. Learning by building? The [recipes](docs/GUIDE-RECIPES.md) walk a platformer, health, pickups, and debugging end to end. Existing project? [Using EventSheets with your code](docs/GUIDE-USING-WITH-EXISTING-CODE.md) shows how sheets call (and are called by) your GDScript.
 
 ## Why event sheets in Godot? (honest pros & cons)
 
@@ -84,7 +84,7 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
 
 **Abstraction that grows with you** - a row earns its place when it does MORE than a line: multi-line ACEs show a quiet **→N** ("compiles to N lines") cue, function calls read as **ƒ named verbs**, and the picker **leads with featured intention verbs** (Wait, Play Sound, Destroy, Move Toward...). Select actions and **Extract to Function** turns the pile into one reusable verb - captured locals become typed parameters automatically - then **Teach a Verb** publishes it to every sheet's picker in the project, node-targeted and retargetable, exactly like a built-in behavior.
 
-**Tooling** - A searchable node picker, export integrity + compile-on-save, git-`textconv` sheet diffs, a **Project Doctor** (dock/CLI/CI drift audit, extensible by packs), error→row deep-linking, live debugging (Live Values, Watch box, conditional breakpoints, Event Trace), a committed vocabulary doc, sheet backups, shareable snippets, a public **`EventSheets` API** for building plugins on top ([guide](docs/BUILDING-ON-EVENTSHEETS.md)), and an opt-in MCP server for external tooling.
+**Tooling** - A searchable node picker, export integrity + compile-on-save, git-`textconv` sheet diffs, a **Project Doctor** (dock/CLI/CI drift audit, extensible by packs), error→row deep-linking, live debugging (Live Values, Watch box, conditional breakpoints, Event Trace), a committed vocabulary doc, sheet backups, shareable snippets, a public **`EventSheets` API** for building plugins on top ([guide](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md)), and an opt-in MCP server for external tooling.
 
 ## Current status
 
@@ -112,10 +112,10 @@ Coming from Construct? The [C3 migration guide](docs/C3-MIGRATION-GUIDE.md) maps
   <img src="docs/images/look-gallery.png" alt="The Look Gallery: picture tiles of real Inspector widgets, each with a one-line explanation." width="500">
 
 - **The abstraction levers, complete** - the →N compression cue, Extract to Function with partial selection and captured-locals-to-parameters, **Teach a Verb** (project-wide vocabulary in one gesture), and featured intention verbs leading the picker.
-- **Translate your game from the sheet** - a globe toggle marks any string translatable (`tr()` underneath), a Translation ACE module covers locale/plurals/context, and the Doctor flags untranslated projects ([guide](docs/TRANSLATING-YOUR-GAME.md)).
+- **Translate your game from the sheet** - a globe toggle marks any string translatable (`tr()` underneath), a Translation ACE module covers locale/plurals/context, and the Doctor flags untranslated projects ([guide](docs/GUIDE-TRANSLATING-YOUR-GAME.md)).
 - **Every node speaks EventSheet** - any engine class or your own `class_name` scripts reflect into browsable vocabulary on demand: methods classify by return type, signals become triggers, properties become Set/Get pairs.
 - **Terse addon authoring** - a `##` doc comment is the description, one class-level `@ace_category` + `@ace_expose_all(node)` publishes a whole behavior, and all 31 shipped packs demonstrate the style (permanently audit-gated).
-- **A public API to build on** - the `EventSheets` facade (vocabulary / editor / codegen / project-health services) with its own [extension guide](docs/BUILDING-ON-EVENTSHEETS.md); the plugin's own features run on the same seams.
+- **A public API to build on** - the `EventSheets` facade (vocabulary / editor / codegen / project-health services) with its own [extension guide](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md); the plugin's own features run on the same seams.
 
 **Quality** - 4,700+ assertions, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable.** Generated code never depends on the plugin, templates bake at apply-time, and output is performance-identical to hand-written GDScript - all test-enforced.
 
@@ -152,7 +152,7 @@ godot --headless --path . --script tests/run_perf.gd     # fast, headless-safe s
 godot --headless --path . --script tests/run_tests.gd    # full suite
 ```
 
-Every feature lands with tests, a CHANGELOG entry, and its spec updated - see `docs/GDSCRIPT-PAIRING-SPEC.md` for authoritative status. Pushes and PRs run the headless suite; pushing a `v*` tag stamps `plugin.cfg` and publishes a GitHub Release.
+Every feature lands with tests, a CHANGELOG entry, and its spec updated - see `docs/internal/SPEC-gdscript-pairing.md` for authoritative status. Pushes and PRs run the headless suite; pushing a `v*` tag stamps `plugin.cfg` and publishes a GitHub Release.
 
 ## Contributing & license
 

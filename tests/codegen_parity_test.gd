@@ -1,6 +1,6 @@
 # EventForge - Performance-parity guard for generated GDScript
 #
-# Hard project constraint (GDSCRIPT-PAIRING-SPEC, Principles #5): generated code must run
+# Hard project constraint (SPEC-gdscript-pairing, Principles #5): generated code must run
 # exactly as fast as hand-written GDScript. This test compiles a representative sheet that
 # exercises every emitting feature and asserts the output contains no runtime indirection
 # (call()/Callable/plugin classes) and keeps static typing where the compiler knows types.

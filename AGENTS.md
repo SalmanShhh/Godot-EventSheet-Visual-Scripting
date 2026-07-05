@@ -45,25 +45,25 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - Designers edit `.tres` token resources directly (or through the Theme Editor dialog);
   the tokens are the single source of truth for the renderer.
 - Theme docs:
-  - `docs/EVENTSHEET_THEME_EDITABILITY.md`
-  - `docs/EVENTSHEET_ALIGNMENT_GUIDE.md`
+  - `docs/GUIDE-THEMING.md`
+  - `docs/internal/SPEC-layout-alignment.md`
 
 ## Docs map
 
 - `README.md` - install + high-level workflow
-- `docs/GDSCRIPT-PAIRING-SPEC.md` - how the sheet pairs with GDScript (blocks, codegen tooltips, expressions, C3 synonyms, importer round-trip)
-- `docs/EVENTSHEET_THEME_EDITABILITY.md` - designer-facing theme workflow
-- `docs/EVENTSHEET_ALIGNMENT_GUIDE.md` - stacked layout tuning
-- `docs/C3-MIGRATION-GUIDE.md` - user-facing C3→Godot concept/behavior/plugin map
-- `docs/CUSTOM-BLOCKS-GUIDE.md` - the Custom Block API (register non-ACE row kinds; contract, built-ins, use cases)
-- `docs/TRANSLATING-YOUR-GAME.md` - localisation the Godot way (globe-marked params, POT, Set Language)
-- `docs/MCP-SERVER.md` - the AI-tooling protocol (list/read/compile/lint/snippets)
-- `docs/UNINSTALL.md` - clean-removal guide (keep/remove table; the zero-runtime-dependency covenant as a guided teardown)
-- `docs/INSPECTOR-ATTRIBUTES-SPEC.md` - Unity-style rich-inspector attributes (all tiers shipped)
-- `docs/ADDON-COMPOSITION-SPEC.md` - meta-packs, uses/requires, project policy (shipped)
-- `docs/PROGRESSIVE-DISCLOSURE-SPEC.md` - tiered disclosure of dialog complexity (C3-migrant-first; shipped)
-- `docs/INCLUDES-SPEC.md` - Construct "Include event sheet" → compile-time merge (not yet `.gd` round-tripping)
-- `docs/GROUPS-ROUNDTRIP-SPEC.md` - event-group round-trip (SHIPPED: groups survive `.gd` round-trips)
+- `docs/internal/SPEC-gdscript-pairing.md` - how the sheet pairs with GDScript (blocks, codegen tooltips, expressions, C3 synonyms, importer round-trip)
+- `docs/GUIDE-THEMING.md` - designer-facing theme workflow
+- `docs/internal/SPEC-layout-alignment.md` - stacked layout tuning
+- `docs/GUIDE-C3-MIGRATION.md` - user-facing C3→Godot concept/behavior/plugin map
+- `docs/GUIDE-CUSTOM-BLOCKS.md` - the Custom Block API (register non-ACE row kinds; contract, built-ins, use cases)
+- `docs/GUIDE-TRANSLATING-YOUR-GAME.md` - localisation the Godot way (globe-marked params, POT, Set Language)
+- `docs/REFERENCE-MCP-SERVER.md` - the AI-tooling protocol (list/read/compile/lint/snippets)
+- `docs/GUIDE-UNINSTALL.md` - clean-removal guide (keep/remove table; the zero-runtime-dependency covenant as a guided teardown)
+- `docs/internal/SPEC-inspector-attributes.md` - Unity-style rich-inspector attributes (all tiers shipped)
+- `docs/internal/SPEC-addon-composition.md` - meta-packs, uses/requires, project policy (shipped)
+- `docs/internal/SPEC-progressive-disclosure.md` - tiered disclosure of dialog complexity (C3-migrant-first; shipped)
+- `docs/internal/SPEC-includes.md` - Construct "Include event sheet" → compile-time merge (not yet `.gd` round-tripping)
+- `docs/internal/SPEC-groups-roundtrip.md` - event-group round-trip (SHIPPED: groups survive `.gd` round-trips)
 - `CONTRIBUTING.md` - dev setup, verification loop, house rules, gotcha list
 - `CHANGELOG.md` - the authoritative feature ledger per release
 

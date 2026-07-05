@@ -1,6 +1,6 @@
 # Recipes - Build Something, End to End
 
-Short, concrete walkthroughs that each build one real thing - a platformer character, a health system, an auto-attacking shooter with game feel - and show the exact GDScript it compiles to. Each recipe assumes the plugin is enabled and you've opened the **EventSheet** tab. New to the vocabulary? Keep the [glossary](GLOSSARY.md) open. Coming from Construct 3? The [migration guide](C3-MIGRATION-GUIDE.md) maps every concept.
+Short, concrete walkthroughs that each build one real thing - a platformer character, a health system, an auto-attacking shooter with game feel - and show the exact GDScript it compiles to. Each recipe assumes the plugin is enabled and you've opened the **EventSheet** tab. New to the vocabulary? Keep the [glossary](REFERENCE-GLOSSARY.md) open. Coming from Construct 3? The [migration guide](GUIDE-C3-MIGRATION.md) maps every concept.
 
 ## Table of Contents
 
@@ -110,7 +110,7 @@ When something misbehaves, you have four tools - no `print()` required.
 No JSON, no boilerplate. Every bundled behaviour pack is a single `.gd` file that compiles with
 **zero GDScript blocks** - you can author yours the same way. Start from **Sheet ▸ New Behaviour
 Addon…** (it scaffolds a ready-to-edit provider), and **`@ace_expose_all`** exposes a whole script's
-public API as ACEs at once. Full walkthrough: [MAKE-A-BEHAVIOUR-WITHOUT-CODE.md](MAKE-A-BEHAVIOUR-WITHOUT-CODE.md).
+public API as ACEs at once. Full walkthrough: [GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE.md](GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE.md).
 Two routes:
 
 - **A behavior pack:** build the logic as an event sheet, then **Export Addon…** turns it into a

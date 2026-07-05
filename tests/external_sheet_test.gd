@@ -1,6 +1,6 @@
 # EventForge - GDScript-backed sheets (open ANY .gd as a sheet, losslessly)
 #
-# THE CONTRACT (GDSCRIPT-PAIRING-SPEC): importing a GDScript file and saving it untouched
+# THE CONTRACT (SPEC-gdscript-pairing): importing a GDScript file and saving it untouched
 # reproduces the file byte-identically. Declarations lift to first-class rows only when
 # canonical re-emission matches the source exactly (verify-lift); everything else is kept
 # verbatim as ordered block rows. Hand-written helper functions reverse-lift to un-exposed sheet

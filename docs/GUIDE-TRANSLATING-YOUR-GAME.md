@@ -14,7 +14,8 @@ Contents:
 4. [Add a language](#4-add-a-language)
 5. [Switch languages from events](#5-switch-languages-from-events)
 6. [The Translation vocabulary](#6-the-translation-vocabulary)
-7. [Tips and common mistakes](#7-tips-and-common-mistakes)
+7. [Use cases](#7-use-cases)
+8. [Tips and common mistakes](#8-tips-and-common-mistakes)
 
 ## 1. Scenarios where this excels
 
@@ -101,7 +102,33 @@ Context disambiguates strings that read the same but translate differently ("May
 month vs the verb). Plural picks the right form for a count per language, including
 languages with more than two plural forms.
 
-## 7. Tips and common mistakes
+## 7. Use cases
+
+### 1. A jam game in two languages by Sunday
+
+Mark the dozen player-facing strings with the globe as you write them, export the POT, paste translations from a friend, done - the sheet logic never changes.
+
+### 2. Dialogue marked translatable at author time
+
+Every queued line or shown message gets the globe toggle when typed, so "we'll localise later" never becomes an archaeology project.
+
+### 3. A language switcher in the pause menu
+
+One Set Language action per button ("English", "Deutsch", "Espanol") - labels re-resolve live, no restart.
+
+### 4. Plurals done right
+
+"%d coin" vs "%d coins" (and languages with more than two forms) go through the plural-aware ACE instead of an `if count == 1` that only works in English.
+
+### 5. One word, two meanings
+
+"Close" the door vs "Close" the menu: contexts keep the two entries separate so translators see which is which.
+
+### 6. Handing off mid-project
+
+Export the POT at any point - the translator works while you keep adding events; new strings join the next export without disturbing finished entries.
+
+## 8. Tips and common mistakes
 
 - **Never wrap a variable's DEFAULT in tr()**. Defaults initialize before translations
   load, and `@export` defaults are data, not display text. Mark the text where it is

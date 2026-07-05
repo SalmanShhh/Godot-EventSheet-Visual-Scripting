@@ -13,7 +13,8 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 7. [Habits That Transfer Directly](#7-habits-that-transfer-directly)
 8. [Habits to Relearn (the Godot Way Is Better Here)](#8-habits-to-relearn-the-godot-way-is-better-here)
 9. [Importing C3 Projects Directly - A Permanent Non-Goal](#9-importing-c3-projects-directly---a-permanent-non-goal)
-10. [Tips and Common Mistakes](#10-tips-and-common-mistakes)
+10. [Use Cases](#10-use-cases)
+11. [Tips and Common Mistakes](#11-tips-and-common-mistakes)
 
 ---
 
@@ -232,7 +233,29 @@ a sheet-by-sheet rebuild - faster than it sounds, because the grammar is the sam
 
 ---
 
-## 10. Tips and Common Mistakes
+## 10. Use Cases
+
+### 1. Porting a weekend platformer
+
+Movement becomes the Platformer pack, "every tick" phrases match in the picker's live search, and the whole port is re-typing events you already know by heart.
+
+### 2. C3 functions become typed functions
+
+Your `Juice_Screenshake(cMagnitude, cDuration)` recreates as a sheet function with typed params and a condition gating the body - same shape, now real GDScript underneath.
+
+### 3. Wait-based cutscenes
+
+C3's "Wait 2 seconds" chains port directly: the Wait action compiles to `await`, and handlers are coroutines, so the timing style you know just works.
+
+### 4. Families, approximately
+
+C3 families map to the family marker plus group iteration here - pick-by-family loops port with the arena showcase as the template.
+
+### 5. The plugins with no equivalent
+
+Multiplayer, Drawing Canvas, and XML route to Godot's native features - the migration table names each destination so nothing dead-ends.
+
+## 11. Tips and Common Mistakes
 
 - **The polling reflex is the #1 imported habit.** Reaching for `On Process` to check for something that *happens at a moment* (a collision, a timer ending, a key press) re-checks 60 times a second for an event Godot already signals. Use the signal trigger; the picker surfaces it first when a polling condition has a signal twin.
 - **But don't contort continuous values into signals.** Camera follow, per-frame smoothing, reading the movement axis, `is_on_floor()` (Godot deliberately has no "landed" signal) are genuinely per-frame work - `On Process` is their correct, idiomatic home.

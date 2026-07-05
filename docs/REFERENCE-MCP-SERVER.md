@@ -110,7 +110,7 @@ It works by toggling a **marker file** (`user://eventsheets_mcp_disabled`) that 
 
 ## 8. Composition Policy
 
-`list_aces` honors the project's **composition policy**: when `eventsheets/addons/include_sources` is `tagged:<tag>`, addon ACEs without that tag are omitted (Core builtins always list). AI assistants are therefore policy-bound - see `docs/ADDON-COMPOSITION-SPEC.md`.
+`list_aces` honors the project's **composition policy**: when `eventsheets/addons/include_sources` is `tagged:<tag>`, addon ACEs without that tag are omitted (Core builtins always list). AI assistants are therefore policy-bound - see `docs/internal/SPEC-addon-composition.md`.
 
 ---
 

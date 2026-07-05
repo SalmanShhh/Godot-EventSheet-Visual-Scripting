@@ -58,8 +58,8 @@ These add words to the event sheet language. They work with or without the edito
 
 | Method | What it does |
 |--------|----------------|
-| `register_provider_script(path)` | A `@tool class_name` script becomes an ACE provider: public methods, signals, and `@export` vars become actions, conditions, expressions, and triggers. Annotate with `@ace_*` doc tokens or a static `_eventforge_register(reg)` hook (both dialects are covered in [CUSTOM-ACES-GUIDE.md](CUSTOM-ACES-GUIDE.md)). |
-| `register_block_kind(kind)` | A new NON-ACE row type (markers, notes, data tables). The kind gets the Add menu, palette, edit dialog, compile and lift wiring for free; the contract is in [CUSTOM-BLOCKS-GUIDE.md](CUSTOM-BLOCKS-GUIDE.md). |
+| `register_provider_script(path)` | A `@tool class_name` script becomes an ACE provider: public methods, signals, and `@export` vars become actions, conditions, expressions, and triggers. Annotate with `@ace_*` doc tokens or a static `_eventforge_register(reg)` hook (both dialects are covered in [GUIDE-CUSTOM-ACES.md](GUIDE-CUSTOM-ACES.md)). |
+| `register_block_kind(kind)` | A new NON-ACE row type (markers, notes, data tables). The kind gets the Add menu, palette, edit dialog, compile and lift wiring for free; the contract is in [GUIDE-CUSTOM-BLOCKS.md](GUIDE-CUSTOM-BLOCKS.md). |
 | `find_ace(provider_id, ace_id)` | Look a definition up in the live registry (editor only). Definitions are session-cached and shared: treat them as IMMUTABLE, bake changes into row copies. |
 | `class_vocabulary(target_class)` | Reflect ANY class (engine or `class_name` script) into browsable ACE definitions on demand: methods classify by return type, signals become triggers, properties become Set/Get pairs. |
 

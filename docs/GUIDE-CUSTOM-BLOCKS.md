@@ -307,7 +307,7 @@ func emit(block: CustomBlockRow) -> PackedStringArray:
 func emit(block: CustomBlockRow) -> PackedStringArray:
 	return PackedStringArray(["## REQUIRES: %s" % str(block.fields.get("requirement", ""))])
 
-# Elsewhere, the pack teaches the Doctor to enforce it (see BUILDING-ON-EVENTSHEETS.md):
+# Elsewhere, the pack teaches the Doctor to enforce it (see GUIDE-BUILDING-ON-EVENTSHEETS.md):
 EventSheets.register_doctor_check("my_pack.requirements", _check_scene_requirements)
 ```
 

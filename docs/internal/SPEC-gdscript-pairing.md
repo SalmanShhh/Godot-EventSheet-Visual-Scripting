@@ -158,7 +158,7 @@ over stdio JSON-RPC: list/read sheets, browse the ACE vocabulary (builtins + zer
 addons via the same registry bootstrap as the editor), dry-run-by-default compilation,
 context-aware lint, and append-only snippet/GDScript application through the lossless
 paste pipeline. Protocol core is transport-free and unit-tested; setup in
-`docs/MCP-SERVER.md`.
+`docs/REFERENCE-../REFERENCE-MCP-SERVER.md`.
 
 ### First-class rich variables - complete (enums, collection variables, curated ACEs)
 
@@ -391,8 +391,8 @@ Also round-tripping (verify-lift-gated, same all-or-nothing rule): variable
 `@export_group`/`@export_subgroup` + tooltips, the five Tier-3 Inspector drawers
 (`@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>")`), **sub-events** (nested `if` blocks ↔
 `sub_events`), and class-scope `##` sheet metadata (tags / autoload / `@ace_tags` / `@ace_family`).
-Event GROUPS and Includes don't round-trip through `.gd` yet - see `GROUPS-ROUNDTRIP-SPEC.md` /
-`INCLUDES-SPEC.md`.
+Event GROUPS and Includes don't round-trip through `.gd` yet - see `SPEC-groups-roundtrip.md` /
+`SPEC-includes.md`.
 
 ### Importer round-trip (structural)
 
@@ -451,7 +451,7 @@ Everything in this section SHIPPED and is kept as the design record:
   stay on stable APIs only).
 - **More behavior packs**: tweens and beyond (platformer, 8-direction, timer, flash, and
   state machine ship today - see Implemented).
-- **C3 migration guide**: implemented - `docs/C3-MIGRATION-GUIDE.md` (concept map + System
+- **C3 migration guide**: implemented - `docs/GUIDE-C3-MIGRATION.md` (concept map + System
   vocabulary table); future nicety: link it from the picker UI.
 
 ## Testing

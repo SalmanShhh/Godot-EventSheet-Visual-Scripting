@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Changed - the docs are organized by prefix, and every guide teaches by example
+
+- **Every doc file now wears its kind as a prefix**: `GUIDE-` for how-tos (12 of
+  them, including GUIDE-CUSTOM-INSPECTORS, renamed from the drawers guide to match
+  how people search for it), `REFERENCE-` for lookups (MCP server, performance,
+  glossary), and design records live under `docs/internal/SPEC-*` - eight shipped
+  specs moved there from the root (inspector attributes, progressive disclosure,
+  includes, groups round-trip, GDScript pairing, addon composition, open-sheets
+  panel, layout alignment). The fully-delivered v0.11 roadmap spec was removed
+  (the changelog is its record). Every cross-link in the README, AGENTS.md,
+  CLAUDE.md, the guides, and the docs-integrity test was swept and verified.
+- **Six more guides gained brief Use Cases sections** (~30 new recipes): Custom
+  ACEs (SDK wrapping, safe verbs, hardware triggers), Using With Existing Code
+  (legacy signals, gradual adoption, glue sheets), Translating Your Game (jam
+  bilingual, plurals, contexts, translator handoff), Make a Behaviour Without Code
+  (coin magnet, shared cooldowns, prototype-to-pack), Version Control (PR review
+  as code, semantic merges, bisect), C3 Migration (weekend ports, Wait cutscenes),
+  and Theming (accessibility and streaming presets).
+
 ### Added - context-menu parity: Insert Above, Cut, and Copy as Text
 
 - Three right-click gestures Construct 3 users reach for: the **Insert ▸** submenu
