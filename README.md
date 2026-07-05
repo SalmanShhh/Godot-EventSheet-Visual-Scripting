@@ -117,7 +117,7 @@ Coming from Construct? The [C3 migration guide](docs/GUIDE-C3-MIGRATION.md) maps
 - **Terse addon authoring** - a `##` doc comment is the description, one class-level `@ace_category` + `@ace_expose_all(node)` publishes a whole behavior, and all 31 shipped packs demonstrate the style (permanently audit-gated).
 - **A public API to build on** - the `EventSheets` facade (vocabulary / editor / codegen / project-health services) with its own [extension guide](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md); the plugin's own features run on the same seams.
 
-**`v0.12` - "The Inspector Designer"** (on `main`, unreleased) makes the whole Godot Inspector something you design visually, right from the sheet:
+**`v0.12.0` - "The Inspector Designer Update"** makes the whole Godot Inspector something you design visually, right from the sheet:
 
 - **Design the Inspector as a live, editable view** - a Sheet-menu dialog lays out every exported variable as a stacked preview card exactly as Godot will show it; edit a variable in place or reorder fields without leaving the picture. Hover any exported variable row and the same preview floats up as a tooltip.
 
@@ -129,6 +129,9 @@ Coming from Construct? The [C3 migration guide](docs/GUIDE-C3-MIGRATION.md) maps
 - **The UI trio of packs** - a **HUD Kit** (menus and HUDs addressed by name, buttons auto-wired, zero systems code), **Scene Flow** (scene changes behind a polished fade), and a **Dialogue Kit** (typewriter conversations), shipping alongside a ready-to-edit **Menu Starter** scene.
 
   <img src="docs/images/menu-starter.png" alt="The Menu Starter scene: a titled main menu with Play, Options, and Quit buttons, built from the HUD Kit pack with no wiring code." width="420">
+
+- **Born where you already right-click** - the FileSystem dock's native **Create New ▸ Event Sheet…** mints a new `.gd` sheet (Blank or a starter) straight into the clicked folder, and **2D overlap queries** ("what is HERE right now") land point / circle / rect checks without an Area2D.
+- **A faster, lighter load** - the workspace editor is now built lazily on first use, so enabling the plugin (or a project that never opens a sheet) skips the whole dock construction at editor startup; the tab still appears instantly.
 
 **Quality** - 4,700+ assertions, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable.** Generated code never depends on the plugin, templates bake at apply-time, and output is performance-identical to hand-written GDScript - all test-enforced.
 
@@ -144,7 +147,7 @@ Coming from Construct? The [C3 migration guide](docs/GUIDE-C3-MIGRATION.md) maps
 | `v0.9.5` - **Code-Free Authoring & First-Class Variables**: `.gd`-default sheets, zero-block packs, `@export` variables + drawers, addon-author loop | ✅ shipped |
 | `v0.10.0` - **The In-Sheet Authoring Update**: ACE Studio, per-function shell-lift (mid-file + custom-return helpers anchored in place), Anatomy panel, Ghost Row / Param Hop / bulk retune, error→row + paused-at-row, sheet diff, variable folders + subgroups, the Custom Block API, script-intent UX (custom resources + editor tools), full inspector-export coverage | ✅ shipped |
 | `v0.11.0` - **The Structure & Vocabulary Update**: collapsible colored regions, Look Gallery + Inspector preview, localisation vocabulary, any-node reflection, terse providers (all 31 packs migrated + audit-gated), the abstraction levers (Extract/Teach/featured/compression cue), the public `EventSheets` API | ✅ shipped |
-| `v0.12` - **The Inspector Designer**: the whole Inspector designed visually (a live editable view), 8 drawers (min-max sliders, editable tables, toggle buttons), decor + required + inline validation + field buttons, the EnemyStats Custom Resource showcase - PLUS the HUD Kit, Scene Flow, and Dialogue Kit packs with the Menu Starter scene | ✅ on main, unreleased |
+| `v0.12.0` - **The Inspector Designer Update**: the whole Inspector designed visually (a live editable view), 8 drawers (min-max sliders, editable tables, toggle buttons), decor + required + inline validation + field buttons, the EnemyStats Custom Resource showcase, the HUD Kit / Scene Flow / Dialogue Kit packs + Menu Starter scene, 2D overlap queries, FileSystem **Create New ▸ Event Sheet**, and a lazily-built (faster-loading) editor | ✅ shipped |
 | _Roadmap_ - community feedback, polish, and whatever you ask for next | 🗺 planned |
 
 ## Project layout
