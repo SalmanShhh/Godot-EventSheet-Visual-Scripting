@@ -88,36 +88,7 @@ Coming from Construct? The [C3 migration guide](docs/GUIDE-C3-MIGRATION.md) maps
 
 ## Current status
 
-**`v0.10.0` - "The In-Sheet Authoring Update"** moves the whole authoring loop inside the sheet: defining vocabulary, editing opened packs, retuning rows, navigating, and diagnosing all happen without leaving it (full ledger in [CHANGELOG.md](CHANGELOG.md)):
-
-- **The ACE Studio** - the function dialog reframes "what kind of verb?" as three plain-language cards (Does something / Is it true? / A value) with a live picker preview and a "Ships as:" signature. Double-click a **Define block** to edit a verb in place; the New Behaviour dialog offers working **starter recipes** (Cooldown, Stat pool).
-
-  <img src="docs/images/ace-studio.png" alt="The ACE Studio: three verb-kind cards, a live picker preview of the published verb, and the Ships-as GDScript signature." width="500">
-
-- **Opened packs become editable vocabulary** - a per-function shell-lift now turns a pack's annotated verbs into real, editable `EventFunction`s (**331 across the library**; health opens with its full 16-action / 5-condition / 12-expression vocabulary), byte-verified. Helpers **anywhere in the file** lift too - a mid-file `_get_pool() -> HealthPool` anchors in place and re-emits at its exact original slot. A left-rail **Anatomy panel** shows the sheet as seven organs (Properties · State · Triggers · Actions · Conditions · Expressions · Uses), click-to-jump.
-- **Speed-of-thought editing** - a **Ghost Row** (`A → heal 5 ⏎`, zero dialogs), the **Param Hop** (Enter → Tab across a row's values), **Ctrl+Enter bulk retune** across selected rows, and single-key B/I/R.
-- **Navigate like the script editor** - Ctrl+Click a behaviour name opens it as a sheet, Alt+←/→ jump history, Ctrl+P `#` sheet / `@` symbol search, and **paste an error line to land on the row that caused it**. Runtime errors and sheet breakpoints jump straight to the emitting event.
-- **What Changed Since Save** - a semantic diff naming the rows a save would touch, in event language.
-- **Variable folders** - drag one variable onto another to fold them into a named Inspector-group **bubble** (Discord-style); it ships as `@export_group` underneath.
-- **The Custom Block API** - packs and projects register new NON-ACE row kinds (preloads, region markers, notes, data blocks) by dropping a script extending `EventSheetBlockKind` into `eventsheet_addons/`; the compiler, importer, viewport, Add menu, Command Palette, and a schema-driven edit dialog are all wired generically, and every kind's round-trip is byte-verify gated. The plugin dogfoods it: enum and signal rows run on the same registry.
-- **Script intent, first-class** - creating a sheet asks what you're making; **Custom Resources and Editor Tools** join behaviours and autoloads as guided destinations with their own empty-sheet advice and banner glyphs.
-- **Every inspector export option in plain language** - the Variable dialog's "Inspector look" picker covers the full `@export` hint surface (range modifiers, flags, layer grids, file/folder pickers, node-path filters, password/expression/link, storage) with a live preview and a "Ships as:" GDScript strip; all of it round-trips losslessly.
-- **Faster to open** - ACE definitions are cached for the session; a warm registry refresh dropped from ~200ms to ~5ms, so tab switches and rescans are instant.
-
-**`v0.11.0` - "The Structure & Vocabulary Update"** gives big sheets structure and makes the vocabulary grow with your project:
-
-- **Collapsible regions** - `#region` fences become foldable, color-tinted bubble outlines around any run of rows (groups and every block kind nest inside; they glow when you drag into them), with an editable color + description and folds that survive reopening the project - all without changing a single byte of the `.gd`.
-- **Choose Inspector looks by picture** - a **Look Gallery** of miniature widget tiles (checkbox flags, layer grids, file pickers, easing curves) plus a live **Inspector preview** card that states your choices as one plain sentence.
-
-  <img src="docs/images/look-gallery.png" alt="The Look Gallery: picture tiles of real Inspector widgets, each with a one-line explanation." width="500">
-
-- **The abstraction levers, complete** - the →N compression cue, Extract to Function with partial selection and captured-locals-to-parameters, **Teach a Verb** (project-wide vocabulary in one gesture), and featured intention verbs leading the picker.
-- **Translate your game from the sheet** - a globe toggle marks any string translatable (`tr()` underneath), a Translation ACE module covers locale/plurals/context, and the Doctor flags untranslated projects ([guide](docs/GUIDE-TRANSLATING-YOUR-GAME.md)).
-- **Every node speaks EventSheet** - any engine class or your own `class_name` scripts reflect into browsable vocabulary on demand: methods classify by return type, signals become triggers, properties become Set/Get pairs.
-- **Terse addon authoring** - a `##` doc comment is the description, one class-level `@ace_category` + `@ace_expose_all(node)` publishes a whole behavior, and all 31 shipped packs demonstrate the style (permanently audit-gated).
-- **A public API to build on** - the `EventSheets` facade (vocabulary / editor / codegen / project-health services) with its own [extension guide](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md); the plugin's own features run on the same seams.
-
-**`v0.12.0` - "The Inspector Designer Update"** makes the whole Godot Inspector something you design visually, right from the sheet:
+The latest release, **`v0.12.0` - "The Inspector Designer Update"**, makes the whole Godot Inspector something you design visually, right from the sheet:
 
 - **Design the Inspector as a live, editable view** - a Sheet-menu dialog lays out every exported variable as a stacked preview card exactly as Godot will show it; edit a variable in place or reorder fields without leaving the picture. Hover any exported variable row and the same preview floats up as a tooltip.
 
@@ -134,6 +105,8 @@ Coming from Construct? The [C3 migration guide](docs/GUIDE-C3-MIGRATION.md) maps
 - **A faster, lighter load** - the workspace editor is now built lazily on first use, so enabling the plugin (or a project that never opens a sheet) skips the whole dock construction at editor startup; the tab still appears instantly.
 
 **Quality** - 4,700+ assertions, all green, CI-gated on every push; byte-exact golden round-trips guard the lossless rules. **Verified on Godot 4.7 stable.** Generated code never depends on the plugin, templates bake at apply-time, and output is performance-identical to hand-written GDScript - all test-enforced.
+
+_Recent releases before this:_ **v0.11.0** (collapsible regions, the abstraction levers, localisation, any-node reflection, the public `EventSheets` API) and **v0.10.0** (the ACE Studio, per-function shell-lift, the Anatomy panel, the Custom Block API). The milestones table below and [CHANGELOG.md](CHANGELOG.md) have the full history.
 
 ## Milestones
 
