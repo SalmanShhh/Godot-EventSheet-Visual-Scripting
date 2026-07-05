@@ -233,6 +233,51 @@ class DrawerMinMaxSlider:
 		value_changed.emit(_value)
 
 
+## The `# @inspector_validate <function>` badge: calls the edited object's validator (a function
+## returning a warning String, "" = valid) a few times a second and shows the returned message
+## while it is non-empty. Runs only when the script actually executes in the editor (a @tool
+## sheet); otherwise it stays silent - never a false alarm. Target-less = mock (the preview card).
+class ValidateBadge:
+	extends Label
+	var _target: Object = null
+	var _function: String = ""
+	var _poll_accumulator: float = 0.0
+
+	func _init(target: Object = null, validate_function: String = "") -> void:
+		_target = target
+		_function = validate_function
+		text = "⚠ validated by %s() while you edit" % (_function if not _function.is_empty() else "a sheet function")
+		autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		add_theme_font_size_override("font_size", 11)
+		add_theme_color_override("font_color", Color("#f0883e"))
+		_refresh()
+
+	func _process(delta: float) -> void:
+		_poll_accumulator += delta
+		if _poll_accumulator < 0.25:
+			return
+		_poll_accumulator = 0.0
+		_refresh()
+
+	func _refresh() -> void:
+		if _target == null:
+			visible = true  # mock: show the badge's look
+			return
+		if not _can_run_validator():
+			visible = false
+			return
+		var message: String = str(_target.call(_function))
+		visible = not message.strip_edges().is_empty()
+		if visible:
+			text = "⚠ %s" % message.strip_edges()
+
+	func _can_run_validator() -> bool:
+		if not _target.has_method(_function):
+			return false
+		var script: Script = _target.get_script() as Script
+		return script != null and script.is_tool()
+
+
 # ── String toggle-button row ─────────────────────────────────────────────────
 ## A String's fixed choices as one row of toggle buttons - every option visible at a glance,
 ## one click to switch (a dropdown hides the alternatives behind a click). The pressed button

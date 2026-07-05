@@ -2274,6 +2274,12 @@ static func _decor_prefix_lines(attributes: Dictionary) -> PackedStringArray:
 	# (a Resource slot left null, a String left ""). Editor-only, like all decor.
 	if bool(attributes.get("required", false)):
 		decor.append("# @inspector_required")
+	# Validate: a sheet function returning a warning String ("" = valid); the editor calls it
+	# while the property is edited and shows the returned message above the field. Needs a
+	# @tool sheet to run in-editor (silent otherwise). Function names only - no arguments.
+	var validate_function: String = str(attributes.get("validate", "")).strip_edges()
+	if not validate_function.is_empty() and validate_function.is_valid_identifier():
+		decor.append("# @inspector_validate %s" % validate_function)
 	return decor
 
 

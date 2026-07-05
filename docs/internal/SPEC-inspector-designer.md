@@ -93,15 +93,15 @@ The full attribute catalog of the best-known rich-inspector tooling, mapped hone
 | Searchable inspector | Godot's built-in Inspector filter box | native |
 | Inline resource editing | Godot's native sub-resource foldout | native |
 | Serialized dictionaries | typed Dictionary/Array exports | native |
-| Required field | `required` marker + Doctor check | P1 |
-| Custom validation with inline message | `validate` -> sheet function | P4 |
-| Table list (arrays as grids) | `table` drawer + columns schema | P2 |
-| The visual designer surface | the Inspector Designer view | P3 |
-| Enum toggle buttons | drawer replacing the dropdown with a button row | P5 |
-| Inline field button | drawer wrapper: default editor + a trailing mini button | P5 |
-| Suggestion dropdown (free text + choices) | `PROPERTY_HINT_ENUM_SUGGESTION` via `@export_custom` | P5 |
-| Field tint | `# @inspector_tint` decor arg | P5 |
-| Label override | `add_property_editor(..., label)` editor-side | P5 |
+| Required field | `required` marker (Doctor scene-scan still open) | shipped |
+| Custom validation with inline message | `# @inspector_validate` -> sheet function (needs @tool to run in-editor) | shipped |
+| Table list (arrays as grids) | `table` drawer + columns schema | shipped |
+| The visual designer surface | the Inspector Designer view (✎ edit + ▲ reorder) | shipped |
+| Enum toggle buttons | `toggle_row` drawer (choices ride the marker) | shipped |
+| Suggestion dropdown (free text + choices) | `PROPERTY_HINT_ENUM_SUGGESTION` via `@export_custom` | shipped |
+| Inline field button | a small per-field button calling a sheet function via `add_custom_control` | P5 |
+| Field tint | - | won't: Godot gives no seam to restyle the STOCK editor of a property without replacing it wholesale; a fake color strip above would claim more than it does |
+| Label override | - | deferred: only possible where a drawer already replaces the editor (`add_property_editor`'s label arg); revisit as a drawer option rather than a general attribute |
 | Horizontal field groups | - | won't: Godot's Inspector is a single column; faking columns breaks every other plugin and theme |
 | Tab groups | - | deferred: possible as an editor-side reskin of categories, but it hides properties from Godot's own search; revisit after P3 |
 | Static/global inspector | - | won't: no Godot equivalent surface; the closest honest home is the autoload's own Inspector, which already works |

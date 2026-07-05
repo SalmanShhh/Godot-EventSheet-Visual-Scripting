@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - inline validation: a sheet function's warning shown at the field
+
+- **"Validate with"** on any exported variable names a sheet function returning a
+  warning String ("" = valid); the Inspector calls it a few times a second while the
+  property is edited and shows the message right above the field - cross-field rules
+  ("starting health must not exceed max health") surface where the mistake happens.
+  Rides the decor channel as `# @inspector_validate <function>`; needs a `@tool`
+  sheet to run in-editor and stays silent otherwise (never a false alarm).
+  Verify-gated round-trip into the dialog field; stated in the preview sentence and
+  mocked in the card. Pinned in tests/inspector_drawer_roundtrip_test.gd.
+- The spec's parity matrix updated to the shipped reality; **field tint** recorded
+  as a won't (Godot gives no seam to restyle a stock editor without replacing it)
+  and **label override** as deferred to a drawer option.
+
 ### Added - toggle buttons: a String's choices as one visible row
 
 - **An eighth drawer, `toggle_row`**: fill Options on a String and choose "Toggle

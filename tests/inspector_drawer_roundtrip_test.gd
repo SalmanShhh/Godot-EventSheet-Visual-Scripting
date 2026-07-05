@@ -272,6 +272,31 @@ static func run() -> bool:
 	all_passed = _eq("a value outside the set stays (never clobbered)", toggle_widget.get_value(), "nonsense") and all_passed
 	toggle_widget.free()
 
+	# --- Inline validation (# @inspector_validate <function>): the editor calls the named sheet
+	# function while the property is edited and shows the returned warning String above the field.
+	var validate_var: LocalVariable = LocalVariable.new()
+	validate_var.name = "spawn_gap"
+	validate_var.type_name = "Vector2"
+	validate_var.default_value = "Vector2(8.0, 20.0)"
+	validate_var.expression_default = true
+	validate_var.exported = true
+	validate_var.attributes = {"required": true, "validate": "check_spawn_gap"}
+	var validate_expected: String = "# @inspector_required\n# @inspector_validate check_spawn_gap\n@export var spawn_gap: Vector2 = Vector2(8.0, 20.0)"
+	all_passed = _eq("validate emits its marker after required",
+		SheetCompiler._emit_tree_variable_line(validate_var), validate_expected) and all_passed
+	all_passed = _eq("a non-identifier validator emits nothing",
+		_emit_for("int", 1, {"validate": "not a function()"}).contains("@inspector_validate"), false) and all_passed
+	var validate_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + validate_expected + "\n")
+	var validate_lifted: LocalVariable = _find(validate_sheet, "spawn_gap")
+	all_passed = _eq("the lift recovers the validator name",
+		str((validate_lifted.attributes as Dictionary).get("validate", "")) if validate_lifted != null else "missing", "check_spawn_gap") and all_passed
+	if validate_lifted != null:
+		all_passed = _eq("a validated var re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(validate_lifted), validate_expected) and all_passed
+	all_passed = _eq("the decor map carries the validator",
+		EventSheetAttributeDrawers.build_decor_map("extends Node\n\n# @inspector_validate check_hp\n@export var hp: int = 1\n").get("hp"),
+		[{"kind": "validate", "function": "check_hp"}]) and all_passed
+
 	# The dict-var path emits the same decor lines (one canonical shape across both variable paths).
 	var dict_sheet: EventSheetResource = EventSheetResource.new()
 	dict_sheet.variables = {"speed": {"type": "int", "default": 5, "exported": true, "attributes": {"header": "Motion", "info": "Tiles per second."}}}

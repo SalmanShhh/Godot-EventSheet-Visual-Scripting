@@ -46,7 +46,7 @@ var _attr_advanced_section: VBoxContainer = null
 ## Attribute keys whose fields live in the nested Advanced tier. MUST mirror the fields parented under
 ## _attr_advanced_section in init_dialog - if you move a field between the Basic and Advanced tiers, update
 ## this too, or open_for_edit's auto-expand will disagree with where the field actually sits.
-const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "header", "info", "required", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]
+const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "header", "info", "required", "validate", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]
 ## The Range field's placeholder per type - one source of truth so the initial build and the per-type swap in
 ## _refresh_contextual_rows can't drift. Vector2 prompts a single dial reach; numeric prompts min, max, step.
 const _RANGE_PLACEHOLDER_NUMERIC: String = "min, max, step (numeric: slider)"
@@ -57,6 +57,7 @@ var _attr_subgroup_edit: LineEdit = null
 var _attr_header_edit: LineEdit = null
 var _attr_info_edit: LineEdit = null
 var _attr_required_check: CheckBox = null
+var _attr_validate_edit: LineEdit = null
 var _attr_range_edit: LineEdit = null
 var _attr_multiline_check: CheckBox = null
 var _attr_no_alpha_check: CheckBox = null
@@ -404,6 +405,10 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_required_check.text = "Required (warn in the Inspector while unset)"
 	_attr_required_check.tooltip_text = "Shows a red warning above the field until a value is assigned\n(a Resource left empty, a String left blank). Editor-only."
 	_attr_advanced_section.add_child(_attr_required_check)
+	_attr_validate_edit = LineEdit.new()
+	_attr_validate_edit.placeholder_text = "sheet function returning a warning String (empty = valid)"
+	_attr_validate_edit.tooltip_text = "The Inspector calls this function while the property is edited and shows\nthe returned message above the field. Needs a @tool sheet to run in-editor."
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Validate with", _attr_validate_edit))
 	_attr_show_if_edit = LineEdit.new()
 	_attr_show_if_edit.placeholder_text = "bool variable (hidden when false)"
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit))
@@ -717,6 +722,7 @@ func open_for_edit(
 	_attr_header_edit.text = (existing_header + " " + existing_header_color).strip_edges() if not existing_header_color.is_empty() else existing_header
 	_attr_info_edit.text = str(existing_attributes.get("info", ""))
 	_attr_required_check.set_pressed_no_signal(bool(existing_attributes.get("required", false)))
+	_attr_validate_edit.text = str(existing_attributes.get("validate", ""))
 	var existing_range: Variant = existing_attributes.get("range")
 	# Default a missing step to 1: a drawer-recovered range carries only min/max, and the apply needs all
 	# three parts (so a reopened progress_bar/dial re-saves cleanly instead of erroring on "min, max").
@@ -1413,6 +1419,9 @@ func _decor_attributes() -> Dictionary:
 		decor["info"] = info
 	if _attr_required_check != null and _attr_required_check.button_pressed:
 		decor["required"] = true
+	var validate_function: String = _attr_validate_edit.text.strip_edges() if _attr_validate_edit != null else ""
+	if validate_function.is_valid_identifier():
+		decor["validate"] = validate_function
 	return decor
 
 

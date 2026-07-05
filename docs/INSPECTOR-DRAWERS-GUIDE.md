@@ -364,6 +364,21 @@ Calls a sheet function every time the value is assigned, for keeping UI or deriv
 
 **Use case.** A `score` that repaints its HUD label whenever it changes, with no polling.
 
+### Validate with (inline validation)
+
+The Inspector calls a sheet function **while the property is edited** and shows the returned warning above the field ("" = valid). Fill **"Validate with"** (Advanced) with the function's name; the sheet needs to be a `@tool` sheet for the check to run in-editor (it stays silent otherwise - never a false alarm).
+
+```gdscript
+# @inspector_validate check_spawn_gap
+@export var spawn_gap: Vector2 = Vector2(8, 20)
+
+
+func check_spawn_gap() -> String:
+	return "" if spawn_gap.x <= spawn_gap.y else "Spawn gap: the low end exceeds the high end."
+```
+
+**Use case.** Cross-field rules a widget cannot enforce alone: "starting health must not exceed max health", "the drop table must not be empty on a boss".
+
 ### Show if / Lock unless
 
 Conditional Inspector visibility or editability driven by another bool variable. Fill **"Show if"** (hide the field unless the bool is true) or **"Lock unless"** (grey it out unless true). These generate a `_validate_property`.
@@ -401,6 +416,7 @@ func _validate_property(property: Dictionary) -> void:
 | Section header | Advanced | any | `# @inspector_header Title #rrggbb` (editor decor comment) |
 | Info note | Advanced | any | `# @inspector_info text` (editor decor comment) |
 | Required | Advanced | any | `# @inspector_required` (editor decor comment) |
+| Validate with | Advanced | any (@tool sheet) | `# @inspector_validate function_name` (editor decor comment) |
 | Read-only | Advanced | any | `@export_custom(..., PROPERTY_USAGE_READ_ONLY)` |
 | Group / Sub-heading | Advanced | any | `@export_group("...")` / `@export_subgroup("...")` |
 | Clamp to range | Advanced | int / float + Range | a `set(value)` with `clampi` / `clampf` |
