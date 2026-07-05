@@ -21,6 +21,7 @@ func _init() -> void:
 	all_ok = _build_family_arena() and all_ok
 	all_ok = _build_inspector_playground() and all_ok
 	all_ok = _build_enemy_stats() and all_ok
+	all_ok = _build_menu_starter() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -1009,3 +1010,148 @@ func _build_enemy_stats() -> bool:
 	var save_err: Error = ResourceSaver.save(stats, "res://demo/showcase/enemy_stats_example.tres")
 	print("[build_examples] enemy_stats_example.tres save=%d" % save_err)
 	return save_err == OK
+
+
+# ── 10. Menu Starter - a whole menu driven by the HUD Kit pack, zero wiring ───
+# The "UI starter": title -> settings -> game -> pause, all screen flips and button
+# handling through ONE HudKit behavior by node name. No connected signals in the scene;
+# every Button reports through the pack's On Button Pressed.
+
+
+func _build_menu_starter() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Control"
+	sheet.custom_class_name = "MenuStarter"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"time_alive": {"type": "float", "default": 0.0, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Menu Starter[/b] - a complete menu flow (title / settings / game / pause overlay) driven by [b]one HUD Kit behavior[/b]: screens switch by NAME, bars and labels update by NAME, and every Button reports through the pack's single [b]On Button Pressed[/b] trigger - the scene contains [b]zero connected signals[/b]. Copy this scene as your project's UI starting point."
+	sheet.events.append(about)
+
+	var on_ready: EventRow = EventRow.new()
+	on_ready.trigger_provider_id = "Core"
+	on_ready.trigger_id = "OnReady"
+	var on_ready_body: RawCodeRow = RawCodeRow.new()
+	on_ready_body.code = "\n".join(PackedStringArray([
+		"$HudKit.switch_screen(\"TitleScreen\")",
+		"$HudKit.on_button_pressed.connect(handle_button)"
+	]))
+	on_ready.actions.append(on_ready_body)
+	sheet.events.append(on_ready)
+
+	# The in-game clock: proof the HUD updates live while the Game screen is up.
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var tick_body: RawCodeRow = RawCodeRow.new()
+	tick_body.code = "\n".join(PackedStringArray([
+		"if $HudKit.is_panel_visible(\"GameScreen\"):",
+		"\ttime_alive += delta",
+		"\t$HudKit.set_text(\"ScoreLabel\", \"Time: %0.1fs\" % time_alive)"
+	]))
+	tick.actions.append(tick_body)
+	sheet.events.append(tick)
+
+	# The whole menu flow in one reused function, routed by button NAME.
+	var handle_fn: EventFunction = EventFunction.new()
+	handle_fn.function_name = "handle_button"
+	handle_fn.enabled = true
+	handle_fn.description = "Routes every menu button by name - the whole flow in one place."
+	handle_fn.events = [_raw("\n".join(PackedStringArray([
+		"var pressed_button: String = $HudKit.last_button_name_value()",
+		"match pressed_button:",
+		"\t\"StartButton\":",
+		"\t\ttime_alive = 0.0",
+		"\t\t$HudKit.switch_screen(\"GameScreen\")",
+		"\t\t$HudKit.set_bar(\"HpBar\", 100.0, 100.0)",
+		"\t\t$HudKit.show_toast(\"Good luck!\")",
+		"\t\"SettingsButton\":",
+		"\t\t$HudKit.switch_screen(\"SettingsScreen\")",
+		"\t\"BackButton\":",
+		"\t\t$HudKit.switch_screen(\"TitleScreen\")",
+		"\t\"PauseButton\":",
+		"\t\t$HudKit.show_panel(\"PauseScreen\")",
+		"\t\"ResumeButton\":",
+		"\t\t$HudKit.hide_panel(\"PauseScreen\")",
+		"\t\"MenuButton\":",
+		"\t\t$HudKit.switch_screen(\"TitleScreen\")",
+		"\t\"QuitButton\":",
+		"\t\t$HudKit.show_toast(\"Quit is disabled in the demo.\")"
+	])))]
+	sheet.functions.append(handle_fn)
+
+	if not _compile(sheet, "res://demo/showcase/menu_starter.tres", "res://demo/showcase/menu_starter.gd"):
+		return false
+	# Compiler output is single-blank; a checked-in showcase .gd is ALSO a repo script, so it must
+	# pass the style gate's two-blank-lines-around-functions rule. The importer preserves blank
+	# lines, so the byte round-trip the showcase test pins still holds.
+	var emitted: String = FileAccess.get_file_as_string("res://demo/showcase/menu_starter.gd")
+	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
+	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
+	var out: FileAccess = FileAccess.open("res://demo/showcase/menu_starter.gd", FileAccess.WRITE)
+	out.store_string(emitted)
+	out.close()
+
+	# The scene: four sibling screens under one Screens container + the HudKit behavior.
+	var root: Control = Control.new()
+	root.name = "MenuStarter"
+	root.size = Vector2(1152, 648)
+	root.set_script(load("res://demo/showcase/menu_starter.gd"))
+	_attach_behavior(root, "HudKit", "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd", root)
+	var screens: Control = Control.new()
+	screens.name = "Screens"
+	screens.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.add_child(screens)
+	screens.add_child(_menu_screen("TitleScreen", "MENU STARTER", [
+		["StartButton", "Start"], ["SettingsButton", "Settings"], ["QuitButton", "Quit"]]))
+	screens.add_child(_menu_screen("SettingsScreen", "SETTINGS", [
+		["BackButton", "Back"]]))
+	var game_screen: VBoxContainer = _menu_screen("GameScreen", "PLAYING", [
+		["PauseButton", "Pause"]])
+	var hp_bar: ProgressBar = ProgressBar.new()
+	hp_bar.name = "HpBar"
+	hp_bar.custom_minimum_size = Vector2(260.0, 24.0)
+	hp_bar.value = 100.0
+	game_screen.add_child(hp_bar)
+	var score_label: Label = Label.new()
+	score_label.name = "ScoreLabel"
+	score_label.text = "Time: 0.0s"
+	score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	game_screen.add_child(score_label)
+	screens.add_child(game_screen)
+	screens.add_child(_menu_screen("PauseScreen", "PAUSED", [
+		["ResumeButton", "Resume"], ["MenuButton", "Back to Menu"]]))
+	# Ownership last: a node can only be owned once it sits inside the owner's tree.
+	_own_deep(screens, root)
+	return _save_scene(root, "res://demo/showcase/menu_starter.tscn")
+
+
+## One centred menu screen: a heading plus a column of named buttons (owners assigned later).
+func _menu_screen(screen_name: String, heading: String, buttons: Array) -> VBoxContainer:
+	var screen: VBoxContainer = VBoxContainer.new()
+	screen.name = screen_name
+	screen.set_anchors_preset(Control.PRESET_CENTER)
+	screen.offset_left = -140.0
+	screen.offset_right = 140.0
+	screen.offset_top = -120.0
+	screen.add_theme_constant_override("separation", 10)
+	screen.visible = false
+	var title: Label = Label.new()
+	title.text = heading
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 28)
+	screen.add_child(title)
+	for button_spec: Array in buttons:
+		var button: Button = Button.new()
+		button.name = str(button_spec[0])
+		button.text = str(button_spec[1])
+		screen.add_child(button)
+	return screen
+
+
+func _own_deep(node: Node, root: Node) -> void:
+	node.owner = root
+	for child: Node in node.get_children():
+		_own_deep(child, root)

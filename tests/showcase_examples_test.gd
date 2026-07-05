@@ -29,6 +29,19 @@ static func run() -> bool:
 	passed = _check("enemy_stats example instance exists",
 		ResourceLoader.exists("res://demo/showcase/enemy_stats_example.tres"), true) and passed
 
+	# Menu Starter - the UI starter driven by the HUD Kit pack (zero connected signals).
+	passed = _check_sheet("menu_starter", "res://demo/showcase/menu_starter.gd", [
+		"class_name MenuStarter",
+		"$HudKit.switch_screen(\"TitleScreen\")",
+		"$HudKit.on_button_pressed.connect(handle_button)",
+		"func handle_button() -> void:",
+		"$HudKit.set_bar(\"HpBar\", 100.0, 100.0)",
+		"$HudKit.is_panel_visible(\"GameScreen\")",
+		"$HudKit.show_toast(",
+	]) and passed
+	passed = _check_scene("menu_starter scene wires HudKit + the four screens",
+		"res://demo/showcase/menu_starter.tscn", ["HudKit", "TitleScreen", "SettingsScreen", "GameScreen", "PauseScreen"]) and passed
+
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",

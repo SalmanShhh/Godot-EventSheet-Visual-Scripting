@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - the Menu Starter: a whole menu flow as one copyable scene
+
+- **demo/showcase/menu_starter.tscn + .gd** - the "UI starter": title, settings,
+  game HUD (live clock + health bar), and a pause overlay, ALL driven by one HUD Kit
+  behavior. Screens switch by name, the HUD updates by name, and every button routes
+  through the pack's single On Button Pressed trigger into one `handle_button()`
+  match - the scene contains ZERO connected signals. Copy it as your project's UI
+  starting point. Byte-round-trip + scene wiring pinned in
+  tests/showcase_examples_test.gd.
+
 ### Added - the HUD Kit pack: menus and HUDs by name, zero wiring
 
 - **A 32nd behavior pack, HUD Kit** (first item of the Menu/HUD roadmap milestone):
