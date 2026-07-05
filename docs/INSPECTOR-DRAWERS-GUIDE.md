@@ -262,6 +262,19 @@ Editor-only decoration drawn **above** a property: a **Section header** is an ac
 
 They emit as plain `#` comments (never `##`, which would merge into the hover tooltip), so without the editor plugin - or in an exported game - they are inert comments. Round-trips **structured**: reopen the `.gd` and the fields come back editable.
 
+### Required
+
+A red "⚠ Required - assign a value" badge above the field until it is set - for the Resource slot or String that must never ship empty. Tick **"Required"** under **Advanced**. Zero is a value, not missing; the badge watches for null resources and blank text.
+
+```gdscript
+# @inspector_required
+@export var portrait: Texture2D = null
+```
+
+Editor-only, like all decor: an inert comment without the plugin. See it live in `demo/showcase/enemy_stats_example.tres` - the portrait is deliberately unset.
+
+<img src="images/enemy-stats-preview.png" alt="Three fields of the EnemyStats Custom Resource showcase: a required portrait slot with the red warning, the Combat min-max damage range under its accent header, and the spawn gap with its shared-resource info note." width="440">
+
 ### Read-only
 
 Shows the value in the Inspector but greys it out so nobody can edit it, for computed or status fields. Tick **"Read-only"** (Advanced).
@@ -342,6 +355,7 @@ func _validate_property(property: Dictionary) -> void:
 | Show as: Curve preview | More options | Curve | `@export_custom(... "eventsheet:curve_editor")` |
 | Section header | Advanced | any | `# @inspector_header Title #rrggbb` (editor decor comment) |
 | Info note | Advanced | any | `# @inspector_info text` (editor decor comment) |
+| Required | Advanced | any | `# @inspector_required` (editor decor comment) |
 | Read-only | Advanced | any | `@export_custom(..., PROPERTY_USAGE_READ_ONLY)` |
 | Group / Sub-heading | Advanced | any | `@export_group("...")` / `@export_subgroup("...")` |
 | Clamp to range | Advanced | int / float + Range | a `set(value)` with `clampi` / `clampf` |

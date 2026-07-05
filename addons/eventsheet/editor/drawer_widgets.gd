@@ -56,6 +56,45 @@ static func build_info_panel(text: String) -> Control:
 	return panel
 
 
+## The `# @inspector_required` badge: a warning row that WATCHES the property and shows only while
+## the value is unset (null resource, empty String/NodePath) - assign one and it vanishes. The poll
+## runs a few times a second in the editor only; parity untouched.
+class RequiredBadge:
+	extends Label
+	var _target: Object = null
+	var _property: String = ""
+	var _poll_accumulator: float = 0.0
+
+	func _init(target: Object = null, property: String = "") -> void:
+		_target = target
+		_property = property
+		text = "⚠ Required - assign a value"
+		add_theme_font_size_override("font_size", 11)
+		add_theme_color_override("font_color", Color("#e06666"))
+		_refresh()
+
+	func _process(delta: float) -> void:
+		_poll_accumulator += delta
+		if _poll_accumulator < 0.25:
+			return
+		_poll_accumulator = 0.0
+		_refresh()
+
+	func _refresh() -> void:
+		# A target-less badge is a mock (the preview card shows the warning's look); a real one
+		# tracks its property and hides the moment a value is assigned.
+		visible = _target == null or is_value_missing(_target.get(_property))
+
+	static func is_value_missing(value: Variant) -> bool:
+		if value == null:
+			return true
+		if value is String:
+			return (value as String).strip_edges().is_empty()
+		if value is NodePath:
+			return (value as NodePath).is_empty()
+		return false
+
+
 # ── Progress bar (int/float) ────────────────────────────────────────────────
 ## A read-and-write bar: click/drag along it to set the value within [min, max].
 class DrawerProgressBar:

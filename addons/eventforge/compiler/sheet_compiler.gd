@@ -2222,6 +2222,10 @@ static func _decor_prefix_lines(attributes: Dictionary) -> PackedStringArray:
 	var info: String = str(attributes.get("info", "")).strip_edges()
 	if not info.is_empty():
 		decor.append("# @inspector_info %s" % info)
+	# Required: the editor shows a warning badge above the property while it is unset/empty
+	# (a Resource slot left null, a String left ""). Editor-only, like all decor.
+	if bool(attributes.get("required", false)):
+		decor.append("# @inspector_required")
 	return decor
 
 

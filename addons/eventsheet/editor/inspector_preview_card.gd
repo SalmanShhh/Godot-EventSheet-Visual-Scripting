@@ -51,6 +51,9 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	var info_text: String = str(attributes.get("info", ""))
 	if not info_text.is_empty():
 		_rows.add_child(EventSheetDrawerWidgets.build_info_panel(info_text))
+	if bool(attributes.get("required", false)):
+		# Mocked in its shown state (target-less) - the point is what the warning looks like.
+		_rows.add_child(EventSheetDrawerWidgets.RequiredBadge.new())
 	var group_name: String = str(attributes.get("group", ""))
 	var subgroup_name: String = str(attributes.get("subgroup", ""))
 	if not group_name.is_empty():
@@ -111,6 +114,8 @@ static func describe(type_name: String, attributes: Dictionary, exported: bool, 
 		fragments.append("under a \"%s\" section header" % str(attributes.get("header")))
 	if not str(attributes.get("info", "")).is_empty():
 		fragments.append("with an info note")
+	if bool(attributes.get("required", false)):
+		fragments.append("required (warns while unset)")
 	if bool(attributes.get("clamp", false)):
 		fragments.append("clamped to the range")
 	if bool(attributes.get("read_only", false)):

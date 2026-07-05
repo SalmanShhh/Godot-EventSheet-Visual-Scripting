@@ -367,6 +367,11 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# Inspector decor rides ABOVE the tooltip (canonical emission order: header, info, tooltip, groups) -
 	# plain `#` comments the editor renders as a section header / info panel. Recovered into the same
 	# attributes the emitter reads so they reopen as editable dialog fields, verify-gated like the rest.
+	var required_value: bool = false
+	if cursor >= 0 and pending[cursor] == "# @inspector_required":
+		required_value = true
+		meta_count += 1
+		cursor -= 1
 	var info_value: String = ""
 	if cursor >= 0 and pending[cursor].begins_with("# @inspector_info "):
 		info_value = pending[cursor].substr(18).strip_edges()
@@ -388,6 +393,8 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	var candidate: Dictionary = {}
 	if not tooltip_value.is_empty():
 		candidate["tooltip"] = tooltip_value
+	if required_value:
+		candidate["required"] = true
 	if not info_value.is_empty():
 		candidate["info"] = info_value
 	if not header_value.is_empty():

@@ -173,6 +173,32 @@ static func run() -> bool:
 		decor_map.get("stray"), [{"kind": "header", "text": "Level #not-a-hex", "color": ""}]) and all_passed
 	all_passed = _eq("a blank line orphans decor (no binding)", decor_map.has("plain"), false) and all_passed
 
+	# Required rides the same decor channel: a bare marker line, absorbed back into a bool attribute.
+	var required_var: LocalVariable = LocalVariable.new()
+	required_var.name = "portrait"
+	required_var.type_name = "Texture2D"
+	required_var.default_value = null
+	required_var.exported = true
+	required_var.attributes = {"required": true, "info": "Every enemy needs a face."}
+	var required_expected: String = "# @inspector_info Every enemy needs a face.\n# @inspector_required\n@export var portrait: Texture2D = null"
+	all_passed = _eq("required emits its marker after info, before the export",
+		SheetCompiler._emit_tree_variable_line(required_var), required_expected) and all_passed
+	var required_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + required_expected + "\n")
+	var required_lifted: LocalVariable = _find(required_sheet, "portrait")
+	all_passed = _eq("the lift recovers required as a bool",
+		(required_lifted.attributes as Dictionary).get("required") if required_lifted != null else null, true) and all_passed
+	if required_lifted != null:
+		all_passed = _eq("a required var re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(required_lifted), required_expected) and all_passed
+	all_passed = _eq("the decor map carries the required kind",
+		EventSheetAttributeDrawers.build_decor_map("extends Node\n\n# @inspector_required\n@export var icon: Texture2D = null\n").get("icon"),
+		[{"kind": "required"}]) and all_passed
+	all_passed = _eq("a null value counts as missing", EventSheetDrawerWidgets.RequiredBadge.is_value_missing(null), true) and all_passed
+	all_passed = _eq("a blank String counts as missing", EventSheetDrawerWidgets.RequiredBadge.is_value_missing("  "), true) and all_passed
+	all_passed = _eq("an assigned value is not missing", EventSheetDrawerWidgets.RequiredBadge.is_value_missing("Cave Rat"), false) and all_passed
+	all_passed = _eq("zero is a value, not missing (required is for unset, not falsy)",
+		EventSheetDrawerWidgets.RequiredBadge.is_value_missing(0), false) and all_passed
+
 	# The dict-var path emits the same decor lines (one canonical shape across both variable paths).
 	var dict_sheet: EventSheetResource = EventSheetResource.new()
 	dict_sheet.variables = {"speed": {"type": "int", "default": 5, "exported": true, "attributes": {"header": "Motion", "info": "Tiles per second."}}}

@@ -12,6 +12,22 @@ extends RefCounted
 static func run() -> bool:
 	var passed: bool = true
 
+	# EnemyStats - the Custom Resource with a designed Inspector (the rich-inspector showcase).
+	passed = _check_sheet("enemy_stats", "res://demo/showcase/enemy_stats.gd", [
+		"class_name EnemyStats",
+		"extends Resource",
+		"# @inspector_header Combat #e06666",
+		"# @inspector_info Shared resource - edits affect every enemy that references it.",
+		"# @inspector_required",
+		"eventsheet:min_max:0:60",
+		"eventsheet:progress_bar:0:200",
+		"combat_max_health = clampi(value, 0, 200)",
+		"@export_placeholder(\"e.g. Cave Rat\")",
+		"func roll_damage() -> float",
+	]) and passed
+	passed = _check("enemy_stats example instance exists",
+		ResourceLoader.exists("res://demo/showcase/enemy_stats_example.tres"), true) and passed
+
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",

@@ -27,10 +27,13 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 	# label / info panel ABOVE the property, composing with any drawer (or the default field) below.
 	for entry: Variant in decor_for(_object, name):
 		var decor_entry: Dictionary = entry as Dictionary
-		if str(decor_entry.get("kind", "")) == "header":
-			add_custom_control(EventSheetDrawerWidgets.build_header_label(str(decor_entry.get("text", "")), str(decor_entry.get("color", ""))))
-		else:
-			add_custom_control(EventSheetDrawerWidgets.build_info_panel(str(decor_entry.get("text", ""))))
+		match str(decor_entry.get("kind", "")):
+			"header":
+				add_custom_control(EventSheetDrawerWidgets.build_header_label(str(decor_entry.get("text", "")), str(decor_entry.get("color", ""))))
+			"required":
+				add_custom_control(EventSheetDrawerWidgets.RequiredBadge.new(_object, name))
+			_:
+				add_custom_control(EventSheetDrawerWidgets.build_info_panel(str(decor_entry.get("text", ""))))
 	var drawer: Dictionary = parse_drawer_hint(hint_string)
 	var kind: String = str(drawer.get("drawer", ""))
 	match kind:
@@ -123,6 +126,8 @@ static func build_decor_map(source: String) -> Dictionary:
 			pending.append(_parse_header_decor(line.substr(20).strip_edges()))
 		elif line.begins_with("# @inspector_info "):
 			pending.append({"kind": "info", "text": line.substr(18).strip_edges()})
+		elif line == "# @inspector_required":
+			pending.append({"kind": "required"})
 		elif line.begins_with("var ") or (line.begins_with("@") and line.contains(" var ")):
 			if not pending.is_empty():
 				var var_name: String = _var_name_from_line(line)

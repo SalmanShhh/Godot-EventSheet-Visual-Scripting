@@ -20,6 +20,7 @@ func _init() -> void:
 	all_ok = _build_swarm() and all_ok
 	all_ok = _build_family_arena() and all_ok
 	all_ok = _build_inspector_playground() and all_ok
+	all_ok = _build_enemy_stats() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -931,3 +932,72 @@ func _build_inspector_playground() -> bool:
 	info.text = "Select this node → the Inspector shows custom drawers\n(dial · swatches · texture · curve · bars) in @export groups.\nTweak them and the ship responds."
 	root.add_child(info); info.owner = root
 	return _save_scene(root, "res://demo/showcase/inspector_playground.tscn")
+
+
+# ── 9. EnemyStats - a Custom Resource with a designed Inspector ──────────────
+# The data-asset showcase: a `class_name EnemyStats extends Resource` built entirely from a
+# sheet, using the whole rich-inspector surface - accent section headers, an info note, a
+# REQUIRED portrait slot, a min-max damage range, a clamped health bar, swatches, an inline
+# curve, tooltips, and a rolled-damage helper. Click enemy_stats_example.tres in the
+# FileSystem and the Inspector reads like a hand-built tool.
+
+
+func _build_enemy_stats() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Resource"
+	sheet.custom_class_name = "EnemyStats"
+	sheet.emit_live_values = false
+	# Names are group-prefixed (combat_/id_/spawn_) so the dict emission's alphabetical order keeps
+	# each @export_group's members consecutive; decor sits on each group's first member.
+	sheet.variables = {
+		"combat_damage_range": {"type": "Vector2", "default": Vector2(4, 11), "exported": true,
+			"attributes": {"tooltip": "Damage rolled per hit - x is the low end, y the high.", "group": "Combat",
+				"header": "Combat", "header_color": "#e06666", "drawer": "min_max", "range": {"min": "0", "max": "60", "step": "1"}}},
+		"combat_falloff": {"type": "Curve", "default": null, "exported": true,
+			"attributes": {"tooltip": "Damage multiplier over distance.", "group": "Combat", "drawer": "curve_editor"}},
+		"combat_max_health": {"type": "int", "default": 120, "exported": true,
+			"attributes": {"tooltip": "Hit points - drag the bar.", "group": "Combat", "drawer": "progress_bar",
+				"range": {"min": "0", "max": "200", "step": "1"}, "clamp": true}},
+		"id_display_name": {"type": "String", "default": "Cave Rat", "exported": true,
+			"attributes": {"tooltip": "Shown in dialogs and the bestiary.", "group": "Identity",
+				"header": "Identity", "header_color": "#3aa6e0", "placeholder": "e.g. Cave Rat"}},
+		"id_portrait": {"type": "Texture2D", "default": null, "exported": true,
+			"attributes": {"tooltip": "Bestiary portrait.", "group": "Identity", "drawer": "texture_preview", "required": true}},
+		"id_tint": {"type": "Color", "default": Color("#8a5a3b"), "exported": true,
+			"attributes": {"tooltip": "Body tint - click a swatch.", "group": "Identity", "drawer": "swatch_row"}},
+		"spawn_gap": {"type": "Vector2", "default": Vector2(8, 20), "exported": true,
+			"attributes": {"tooltip": "Seconds between spawns - low end to high end.", "group": "Spawning",
+				"header": "Spawning", "info": "Shared resource - edits affect every enemy that references it.",
+				"drawer": "min_max", "range": {"min": "0", "max": "30", "step": "1"}}}
+	}
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]EnemyStats[/b] - a Custom Resource whose Inspector was [b]designed from this sheet[/b]: accent section headers, an info note, a [b]required[/b] portrait slot (red warning until assigned), a min-max damage range, a clamped health bar, swatches, and an inline curve. Click [i]enemy_stats_example.tres[/i] in the FileSystem to see it; every marker is a plain comment or annotation, so the resource works without the plugin."
+	sheet.events.append(about)
+	sheet.events.append(_raw("func roll_damage() -> float:\n\treturn randf_range(combat_damage_range.x, combat_damage_range.y)"))
+
+	if not _compile(sheet, "res://demo/showcase/enemy_stats.tres", "res://demo/showcase/enemy_stats.gd"):
+		return false
+	# Compiler output is single-blank by design, but a checked-in showcase .gd is ALSO a repo script,
+	# so it must pass the style gate's two-blank-lines-around-functions rule. The importer preserves
+	# blank lines, so the byte round-trip the showcase test pins still holds.
+	var emitted: String = FileAccess.get_file_as_string("res://demo/showcase/enemy_stats.gd")
+	emitted = emitted.replace("\n\nfunc roll_damage", "\n\n\nfunc roll_damage")
+	var out: FileAccess = FileAccess.open("res://demo/showcase/enemy_stats.gd", FileAccess.WRITE)
+	out.store_string(emitted)
+	out.close()
+
+	# A saved instance to click in the FileSystem: tuned values, the portrait deliberately left
+	# empty so the REQUIRED warning shows the moment the Inspector opens.
+	var stats: Resource = (load("res://demo/showcase/enemy_stats.gd") as GDScript).new() as Resource
+	stats.set("id_display_name", "Cave Rat")
+	stats.set("combat_max_health", 120)
+	stats.set("combat_damage_range", Vector2(4, 11))
+	stats.set("spawn_gap", Vector2(8, 20))
+	var falloff: Curve = Curve.new()
+	falloff.add_point(Vector2(0.0, 1.0))
+	falloff.add_point(Vector2(1.0, 0.25))
+	stats.set("combat_falloff", falloff)
+	var save_err: Error = ResourceSaver.save(stats, "res://demo/showcase/enemy_stats_example.tres")
+	print("[build_examples] enemy_stats_example.tres save=%d" % save_err)
+	return save_err == OK
