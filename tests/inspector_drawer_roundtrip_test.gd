@@ -237,6 +237,18 @@ static func run() -> bool:
 	all_passed = _eq("the grid's add appends typed defaults", table_grid.get_value(), [{"hp": 5}, {"hp": 0}]) and all_passed
 	table_grid.free()
 
+	# A drawer on a CLAMPED var (setter-suffixed "= 120:" line): the drawer must survive the lift -
+	# the expression-default emission previously quoted the suffix and the extraction verify failed,
+	# stranding the drawer as a verbatim hint (found by the Inspector Designer over EnemyStats).
+	var clamped_source: String = "extends Resource\n\n@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:200\") var hp: int = 120:\n\tset(value):\n\t\thp = clampi(value, 0, 200)\n"
+	var clamped_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(clamped_source)
+	var clamped_var: LocalVariable = _find(clamped_sheet, "hp")
+	all_passed = _eq("a clamped var keeps its drawer through the lift",
+		str((clamped_var.attributes as Dictionary).get("drawer", "")) if clamped_var != null else "missing", "progress_bar") and all_passed
+	clamped_sheet.external_source_path = "user://clamped_drawer_roundtrip.gd"
+	all_passed = _eq("the clamped drawer file round-trips byte-identically",
+		str(SheetCompiler.compile(clamped_sheet, "user://clamped_drawer_roundtrip.gd").get("output", "")), clamped_source) and all_passed
+
 	# The dict-var path emits the same decor lines (one canonical shape across both variable paths).
 	var dict_sheet: EventSheetResource = EventSheetResource.new()
 	dict_sheet.variables = {"speed": {"type": "int", "default": 5, "exported": true, "attributes": {"header": "Motion", "info": "Tiles per second."}}}

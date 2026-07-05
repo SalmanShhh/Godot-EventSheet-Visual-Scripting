@@ -2110,7 +2110,11 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	# Tier 3 drawer: a structured @export_custom marker (progress_bar / vector_dial / swatch_row / …), emitted
 	# from attributes so it round-trips identically to the dict-var path instead of staying a verbatim hint.
 	elif not drawer_prefix.is_empty():
-		var_line = "%svar %s: %s = %s" % [drawer_prefix, local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
+		# Expression defaults re-emit verbatim like the structured branch - this includes the
+		# setter-suffixed form ("= 120:" on a clamped var), whose drawer otherwise failed the
+		# extraction verify and stranded as a verbatim hint.
+		var drawer_default: String = str(local_var.default_value) if local_var.expression_default else _to_code_literal(local_var.default_value)
+		var_line = "%svar %s: %s = %s" % [drawer_prefix, local_var.name, local_var.type_name, drawer_default]
 	# Structured hint families (range + modifiers / flags / layers / file / node path /
 	# int-enum / storage): the shared canonical builder, so tree variables round-trip these
 	# as editable attributes instead of verbatim hints.

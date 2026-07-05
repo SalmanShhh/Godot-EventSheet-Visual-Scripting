@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed - a clamped variable kept its drawer when reopened
+
+- A variable carrying BOTH a drawer marker AND a clamp setter (the setter-suffixed
+  `= 120:` line) lost its drawer on lift: the drawer emission quoted the expression
+  default, the extraction's byte-verify failed, and the marker stranded as a verbatim
+  hint - the Inspector then showed a plain field instead of the progress bar. The
+  drawer branch now re-emits expression defaults verbatim, exactly like the
+  structured-hint branch. Found by the Inspector Designer rendering EnemyStats;
+  pinned with a full byte-round-trip in tests/inspector_drawer_roundtrip_test.gd.
+
 ### Added - the Inspector Designer: the whole sheet's Inspector as one view
 
 - **Sheet ▸ Inspector Designer…** renders EVERY Inspector-visible variable of the
