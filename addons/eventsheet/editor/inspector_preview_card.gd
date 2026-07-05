@@ -63,6 +63,8 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 		_rows.add_child(EventSheetDrawerWidgets.RequiredBadge.new())
 	if not str(attributes.get("validate", "")).is_empty():
 		_rows.add_child(EventSheetDrawerWidgets.ValidateBadge.new(null, str(attributes.get("validate"))))
+	if not str(attributes.get("action", "")).is_empty():
+		_rows.add_child(EventSheetDrawerWidgets.ActionButton.new(null, str(attributes.get("action")), str(attributes.get("action_label", ""))))
 	var group_name: String = str(attributes.get("group", ""))
 	var subgroup_name: String = str(attributes.get("subgroup", ""))
 	if not group_name.is_empty():
@@ -127,6 +129,8 @@ static func describe(type_name: String, attributes: Dictionary, exported: bool, 
 		fragments.append("required (warns while unset)")
 	if not str(attributes.get("validate", "")).is_empty():
 		fragments.append("validated by %s()" % str(attributes.get("validate")))
+	if not str(attributes.get("action", "")).is_empty():
+		fragments.append("with a \"%s\" button" % str(attributes.get("action_label", str(attributes.get("action")).capitalize())))
 	if bool(attributes.get("clamp", false)):
 		fragments.append("clamped to the range")
 	if bool(attributes.get("read_only", false)):

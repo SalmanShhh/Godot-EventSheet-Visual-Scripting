@@ -36,6 +36,8 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 				add_custom_control(EventSheetDrawerWidgets.RequiredBadge.new(_object, name))
 			"validate":
 				add_custom_control(EventSheetDrawerWidgets.ValidateBadge.new(_object, str(decor_entry.get("function", ""))))
+			"action":
+				add_custom_control(EventSheetDrawerWidgets.ActionButton.new(_object, str(decor_entry.get("function", "")), str(decor_entry.get("label", ""))))
 			_:
 				add_custom_control(EventSheetDrawerWidgets.build_info_panel(str(decor_entry.get("text", ""))))
 	var drawer: Dictionary = parse_drawer_hint(hint_string)
@@ -152,6 +154,14 @@ static func build_decor_map(source: String) -> Dictionary:
 			pending.append({"kind": "required"})
 		elif line.begins_with("# @inspector_validate "):
 			pending.append({"kind": "validate", "function": line.substr(22).strip_edges()})
+		elif line.begins_with("# @inspector_action "):
+			var action_spec: String = line.substr(20).strip_edges()
+			var first_space: int = action_spec.find(" ")
+			pending.append({
+				"kind": "action",
+				"function": action_spec.substr(0, first_space) if first_space > 0 else action_spec,
+				"label": action_spec.substr(first_space + 1).strip_edges() if first_space > 0 else ""
+			})
 		elif line.begins_with("var ") or (line.begins_with("@") and line.contains(" var ")):
 			if not pending.is_empty():
 				var var_name: String = _var_name_from_line(line)

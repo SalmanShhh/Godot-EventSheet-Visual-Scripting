@@ -46,7 +46,7 @@ var _attr_advanced_section: VBoxContainer = null
 ## Attribute keys whose fields live in the nested Advanced tier. MUST mirror the fields parented under
 ## _attr_advanced_section in init_dialog - if you move a field between the Basic and Advanced tiers, update
 ## this too, or open_for_edit's auto-expand will disagree with where the field actually sits.
-const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "header", "info", "required", "validate", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]
+const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "header", "info", "required", "validate", "action", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]
 ## The Range field's placeholder per type - one source of truth so the initial build and the per-type swap in
 ## _refresh_contextual_rows can't drift. Vector2 prompts a single dial reach; numeric prompts min, max, step.
 const _RANGE_PLACEHOLDER_NUMERIC: String = "min, max, step (numeric: slider)"
@@ -58,6 +58,7 @@ var _attr_header_edit: LineEdit = null
 var _attr_info_edit: LineEdit = null
 var _attr_required_check: CheckBox = null
 var _attr_validate_edit: LineEdit = null
+var _attr_action_edit: LineEdit = null
 var _attr_range_edit: LineEdit = null
 var _attr_multiline_check: CheckBox = null
 var _attr_no_alpha_check: CheckBox = null
@@ -409,6 +410,10 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_validate_edit.placeholder_text = "sheet function returning a warning String (empty = valid)"
 	_attr_validate_edit.tooltip_text = "The Inspector calls this function while the property is edited and shows\nthe returned message above the field. Needs a @tool sheet to run in-editor."
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Validate with", _attr_validate_edit))
+	_attr_action_edit = LineEdit.new()
+	_attr_action_edit.placeholder_text = "function and button label, e.g. reroll_stats Reroll"
+	_attr_action_edit.tooltip_text = "Renders a small button with this field that calls the named sheet function.\nNeeds a @tool sheet to act in-editor. Label optional (defaults to the function name)."
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Field button", _attr_action_edit))
 	_attr_show_if_edit = LineEdit.new()
 	_attr_show_if_edit.placeholder_text = "bool variable (hidden when false)"
 	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Show if", _attr_show_if_edit))
@@ -723,6 +728,9 @@ func open_for_edit(
 	_attr_info_edit.text = str(existing_attributes.get("info", ""))
 	_attr_required_check.set_pressed_no_signal(bool(existing_attributes.get("required", false)))
 	_attr_validate_edit.text = str(existing_attributes.get("validate", ""))
+	var existing_action: String = str(existing_attributes.get("action", ""))
+	var existing_action_label: String = str(existing_attributes.get("action_label", ""))
+	_attr_action_edit.text = (existing_action + " " + existing_action_label).strip_edges() if not existing_action_label.is_empty() else existing_action
 	var existing_range: Variant = existing_attributes.get("range")
 	# Default a missing step to 1: a drawer-recovered range carries only min/max, and the apply needs all
 	# three parts (so a reopened progress_bar/dial re-saves cleanly instead of erroring on "min, max").
@@ -1422,6 +1430,14 @@ func _decor_attributes() -> Dictionary:
 	var validate_function: String = _attr_validate_edit.text.strip_edges() if _attr_validate_edit != null else ""
 	if validate_function.is_valid_identifier():
 		decor["validate"] = validate_function
+	var action_spec: String = _attr_action_edit.text.strip_edges() if _attr_action_edit != null else ""
+	if not action_spec.is_empty():
+		var first_space: int = action_spec.find(" ")
+		var action_function: String = action_spec.substr(0, first_space) if first_space > 0 else action_spec
+		if action_function.is_valid_identifier():
+			decor["action"] = action_function
+			if first_space > 0 and not action_spec.substr(first_space + 1).strip_edges().is_empty():
+				decor["action_label"] = action_spec.substr(first_space + 1).strip_edges()
 	return decor
 
 

@@ -386,6 +386,19 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# Inspector decor rides ABOVE the tooltip (canonical emission order: header, info, tooltip, groups) -
 	# plain `#` comments the editor renders as a section header / info panel. Recovered into the same
 	# attributes the emitter reads so they reopen as editable dialog fields, verify-gated like the rest.
+	var action_value: String = ""
+	var action_label_value: String = ""
+	if cursor >= 0 and pending[cursor].begins_with("# @inspector_action "):
+		var action_spec: String = pending[cursor].substr(20).strip_edges()
+		var first_space: int = action_spec.find(" ")
+		action_value = action_spec.substr(0, first_space) if first_space > 0 else action_spec
+		action_label_value = action_spec.substr(first_space + 1).strip_edges() if first_space > 0 else ""
+		if action_value.is_valid_identifier():
+			meta_count += 1
+			cursor -= 1
+		else:
+			action_value = ""
+			action_label_value = ""
 	var validate_value: String = ""
 	if cursor >= 0 and pending[cursor].begins_with("# @inspector_validate "):
 		validate_value = pending[cursor].substr(22).strip_edges()
@@ -422,6 +435,10 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		candidate["tooltip"] = tooltip_value
 	if not validate_value.is_empty():
 		candidate["validate"] = validate_value
+	if not action_value.is_empty():
+		candidate["action"] = action_value
+		if not action_label_value.is_empty():
+			candidate["action_label"] = action_label_value
 	if required_value:
 		candidate["required"] = true
 	if not info_value.is_empty():

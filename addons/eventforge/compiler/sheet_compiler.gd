@@ -2280,6 +2280,12 @@ static func _decor_prefix_lines(attributes: Dictionary) -> PackedStringArray:
 	var validate_function: String = str(attributes.get("validate", "")).strip_edges()
 	if not validate_function.is_empty() and validate_function.is_valid_identifier():
 		decor.append("# @inspector_validate %s" % validate_function)
+	# Field button: a small button rendered WITH the property, calling a sheet function on click
+	# (reroll_stats, refresh_preview). The optional label rides after the function name.
+	var action_function: String = str(attributes.get("action", "")).strip_edges()
+	if not action_function.is_empty() and action_function.is_valid_identifier():
+		var action_label: String = str(attributes.get("action_label", "")).strip_edges()
+		decor.append(("# @inspector_action %s %s" % [action_function, action_label]) if not action_label.is_empty() else "# @inspector_action %s" % action_function)
 	return decor
 
 

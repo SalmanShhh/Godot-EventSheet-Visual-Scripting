@@ -379,6 +379,15 @@ func check_spawn_gap() -> String:
 
 **Use case.** Cross-field rules a widget cannot enforce alone: "starting health must not exceed max health", "the drop table must not be empty on a boss".
 
+### Field button
+
+A small button rendered **with the property** that calls a sheet function on click - "Reroll" next to the seed, "Refresh preview" next to the path. Fill **"Field button"** (Advanced) with the function name and an optional label (`reroll_stats Reroll`). Needs a `@tool` sheet to act in-editor (the button disables itself with the reason otherwise). Unlike a [Tool button](#7-reference-every-option-and-the-gdscript-it-emits) - which is its own Inspector entry generated from a function - the field button sits with the variable it concerns.
+
+```gdscript
+# @inspector_action reroll_stats Reroll
+@export var stats_seed: int = 0
+```
+
 ### Show if / Lock unless
 
 Conditional Inspector visibility or editability driven by another bool variable. Fill **"Show if"** (hide the field unless the bool is true) or **"Lock unless"** (grey it out unless true). These generate a `_validate_property`.
@@ -417,6 +426,7 @@ func _validate_property(property: Dictionary) -> void:
 | Info note | Advanced | any | `# @inspector_info text` (editor decor comment) |
 | Required | Advanced | any | `# @inspector_required` (editor decor comment) |
 | Validate with | Advanced | any (@tool sheet) | `# @inspector_validate function_name` (editor decor comment) |
+| Field button | Advanced | any (@tool sheet) | `# @inspector_action function_name Label` (editor decor comment) |
 | Read-only | Advanced | any | `@export_custom(..., PROPERTY_USAGE_READ_ONLY)` |
 | Group / Sub-heading | Advanced | any | `@export_group("...")` / `@export_subgroup("...")` |
 | Clamp to range | Advanced | int / float + Range | a `set(value)` with `clampi` / `clampf` |

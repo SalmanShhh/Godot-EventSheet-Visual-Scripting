@@ -99,7 +99,7 @@ The full attribute catalog of the best-known rich-inspector tooling, mapped hone
 | The visual designer surface | the Inspector Designer view (✎ edit + ▲ reorder) | shipped |
 | Enum toggle buttons | `toggle_row` drawer (choices ride the marker) | shipped |
 | Suggestion dropdown (free text + choices) | `PROPERTY_HINT_ENUM_SUGGESTION` via `@export_custom` | shipped |
-| Inline field button | a small per-field button calling a sheet function via `add_custom_control` | P5 |
+| Inline field button | `# @inspector_action` -> a per-field button calling a sheet function | shipped |
 | Field tint | - | won't: Godot gives no seam to restyle the STOCK editor of a property without replacing it wholesale; a fake color strip above would claim more than it does |
 | Label override | - | deferred: only possible where a drawer already replaces the editor (`add_property_editor`'s label arg); revisit as a drawer option rather than a general attribute |
 | Horizontal field groups | - | won't: Godot's Inspector is a single column; faking columns breaks every other plugin and theme |

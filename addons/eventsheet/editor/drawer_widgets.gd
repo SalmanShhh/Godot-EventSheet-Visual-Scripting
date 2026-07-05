@@ -278,6 +278,41 @@ class ValidateBadge:
 		return script != null and script.is_tool()
 
 
+## The `# @inspector_action <function> <Label>` field button: a small button rendered with the
+## property that calls the edited object's function on click (reroll_stats, refresh_preview).
+## Enabled only when the function can actually run in-editor (a @tool sheet); otherwise it stays
+## disabled with the reason in its tooltip. Target-less = mock (the preview card).
+class ActionButton:
+	extends Button
+	var _target: Object = null
+	var _function: String = ""
+
+	func _init(target: Object = null, action_function: String = "", label: String = "") -> void:
+		_target = target
+		_function = action_function
+		text = label if not label.is_empty() else _function.capitalize()
+		add_theme_font_size_override("font_size", 11)
+		size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		if _target == null:
+			return  # mock: enabled-looking, wired to nothing
+		if not _can_run():
+			disabled = true
+			tooltip_text = "Needs a @tool sheet with a %s() function to run in the editor." % _function
+		else:
+			tooltip_text = "Calls %s() on this object." % _function
+		pressed.connect(_on_pressed)
+
+	func _on_pressed() -> void:
+		if _can_run():
+			_target.call(_function)
+
+	func _can_run() -> bool:
+		if _target == null or not _target.has_method(_function):
+			return false
+		var script: Script = _target.get_script() as Script
+		return script != null and script.is_tool()
+
+
 # ── String toggle-button row ─────────────────────────────────────────────────
 ## A String's fixed choices as one row of toggle buttons - every option visible at a glance,
 ## one click to switch (a dropdown hides the alternatives behind a click). The pressed button

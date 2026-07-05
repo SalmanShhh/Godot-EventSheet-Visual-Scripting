@@ -297,6 +297,33 @@ static func run() -> bool:
 		EventSheetAttributeDrawers.build_decor_map("extends Node\n\n# @inspector_validate check_hp\n@export var hp: int = 1\n").get("hp"),
 		[{"kind": "validate", "function": "check_hp"}]) and all_passed
 
+	# --- The field button (# @inspector_action <function> <Label>): a small button rendered with
+	# the property that calls a sheet function on click; label optional (defaults to the function).
+	var action_var: LocalVariable = LocalVariable.new()
+	action_var.name = "stats_seed"
+	action_var.type_name = "int"
+	action_var.default_value = 0
+	action_var.exported = true
+	action_var.attributes = {"action": "reroll_stats", "action_label": "Reroll"}
+	var action_expected: String = "# @inspector_action reroll_stats Reroll\n@export var stats_seed: int = 0"
+	all_passed = _eq("the field button emits its marker (function + label)",
+		SheetCompiler._emit_tree_variable_line(action_var), action_expected) and all_passed
+	all_passed = _eq("a label-less field button emits just the function",
+		_emit_for("int", 0, {"action": "reroll_stats"}), "# @inspector_action reroll_stats\n@export var v: int = 0") and all_passed
+	all_passed = _eq("a non-identifier action emits nothing",
+		_emit_for("int", 0, {"action": "do it()"}).contains("@inspector_action"), false) and all_passed
+	var action_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + action_expected + "\n")
+	var action_lifted: LocalVariable = _find(action_sheet, "stats_seed")
+	all_passed = _eq("the lift recovers the action function + label",
+		[str((action_lifted.attributes as Dictionary).get("action", "")), str((action_lifted.attributes as Dictionary).get("action_label", ""))] if action_lifted != null else [],
+		["reroll_stats", "Reroll"]) and all_passed
+	if action_lifted != null:
+		all_passed = _eq("a field-button var re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(action_lifted), action_expected) and all_passed
+	all_passed = _eq("the decor map carries the action (with label)",
+		EventSheetAttributeDrawers.build_decor_map("extends Node\n\n# @inspector_action reroll_stats Reroll\n@export var s: int = 0\n").get("s"),
+		[{"kind": "action", "function": "reroll_stats", "label": "Reroll"}]) and all_passed
+
 	# The dict-var path emits the same decor lines (one canonical shape across both variable paths).
 	var dict_sheet: EventSheetResource = EventSheetResource.new()
 	dict_sheet.variables = {"speed": {"type": "int", "default": 5, "exported": true, "attributes": {"header": "Motion", "info": "Tiles per second."}}}

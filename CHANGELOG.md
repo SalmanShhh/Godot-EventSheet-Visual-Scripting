@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - field buttons: a per-property action right where it belongs
+
+- **"Field button"** on any exported variable renders a small button WITH the
+  property that calls a sheet function on click - "Reroll" next to the seed,
+  "Refresh preview" next to the path. Function plus optional label
+  (`reroll_stats Reroll`); rides the decor channel as
+  `# @inspector_action <function> <Label>`; needs a `@tool` sheet to act in-editor
+  (the button disables itself with the reason otherwise). Unlike a Tool button -
+  its own Inspector entry generated from a function - this one sits with the
+  variable it concerns. Verify-gated round-trip; preview sentence + card mock.
+  This closes the parity matrix's P5 tail. Pinned in
+  tests/inspector_drawer_roundtrip_test.gd.
+
 ### Added - inline validation: a sheet function's warning shown at the field
 
 - **"Validate with"** on any exported variable names a sheet function returning a
