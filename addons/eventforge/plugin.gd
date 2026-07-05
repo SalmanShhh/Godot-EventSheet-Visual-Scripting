@@ -16,6 +16,7 @@ var _ace_param_inspector_plugin: ACEParamInspectorPlugin = null
 var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
+var _new_sheet_dialog: EventSheetNewSheetDialog = null
 
 
 ## Returns the display name of the plugin.
@@ -33,8 +34,11 @@ func _get_plugin_icon() -> Texture2D:
 	return get_editor_interface().get_editor_theme().get_icon("Node", "EditorIcons")
 
 
-## Controls visibility for the workspace surface when selected in top tabs.
+## Controls visibility for the workspace surface when selected in top tabs. Selecting the tab is
+## the primary lazy trigger: build the editor on first show, then reveal it.
 func _make_visible(visible: bool) -> void:
+	if visible:
+		_ensure_editor()
 	if _event_sheet_editor != null:
 		_event_sheet_editor.visible = visible
 
@@ -50,6 +54,8 @@ func _handles(object: Object) -> bool:
 
 ## Loads the selected EventSheet (or, with the toggle on, a .gd) into the workspace editor.
 func _edit(object: Object) -> void:
+	# Selecting a sheet resource can precede the user ever opening the workspace tab - build on demand.
+	_ensure_editor()
 	if _event_sheet_editor == null:
 		return
 	if is_event_sheet_resource(object):
@@ -76,6 +82,9 @@ static func is_event_sheet_resource(object: Object) -> bool:
 ## Switches to the EventSheet workspace and loads a sheet (.tres or GDScript-backed
 ## .gd) - the landing point for every native entry (context menus, Inspector button).
 func _open_sheet_in_workspace(path: String) -> void:
+	# Context menus / Inspector button / Attach can fire before the workspace was ever opened;
+	# force-build the editor first (set_main_screen_editor only flips visibility, it never builds).
+	_ensure_editor()
 	if _event_sheet_editor == null or not _event_sheet_editor.has_method("_load_sheet_from_path"):
 		return
 	get_editor_interface().set_main_screen_editor(_get_plugin_name())
@@ -113,6 +122,39 @@ func _attach_sheet_to_node(node: Node) -> void:
 		push_warning("[Godot EventSheets] %s" % str(result.get("message")))
 
 
+## The FileSystem "Create New > Event Sheet..." entry: pop the name + starter dialog for the
+## clicked folder. The dialog is parented to the editor's base control (always present), so it
+## works even before the workspace editor has ever been built.
+func _create_sheet_in_directory(directory: String) -> void:
+	# Built once and reused (the standard reusable-dialog pattern) - the plugin holds the strong
+	# reference so the window is never freed out from under its connections. It carries the target
+	# folder in its create_requested signal, so one connection serves every folder.
+	if _new_sheet_dialog == null:
+		_new_sheet_dialog = EventSheetNewSheetDialog.new()
+		_new_sheet_dialog.init_dialog(get_editor_interface().get_base_control())
+		_new_sheet_dialog.create_requested.connect(_finish_create_sheet)
+	_new_sheet_dialog.open(directory)
+
+
+## Writes the chosen starter to a fresh .gd in the target folder, indexes it, and opens it EDITABLE
+## in the workspace (not the read-only preview a casual .gd Open gives - the user just authored it).
+func _finish_create_sheet(directory: String, sheet_name: String, starter_id: int) -> void:
+	var sheet: EventSheetResource = EventSheetStarterTemplates.build_starter(starter_id)
+	var result: Dictionary = EventSheetWorkflow.write_sheet_file(sheet, directory, sheet_name)
+	if not bool(result.get("ok", false)):
+		push_warning("[Godot EventSheets] %s" % str(result.get("message")))
+		return
+	var sheet_path: String = str(result.get("sheet_path"))
+	# Index the just-written file so it appears in the FileSystem dock, then build + reveal the
+	# workspace and open the new sheet editable.
+	get_editor_interface().get_resource_filesystem().scan()
+	_ensure_editor()
+	if _event_sheet_editor == null or not _event_sheet_editor.has_method("open_new_sheet"):
+		return
+	get_editor_interface().set_main_screen_editor(_get_plugin_name())
+	_event_sheet_editor.call("open_new_sheet", sheet_path)
+
+
 ## The newest showcase scene under demo/showcase (review catch: hardcoding the
 ## versioned filename meant every showcase refresh had to edit the plugin).
 static func _find_showcase_scene() -> String:
@@ -137,15 +179,18 @@ func _enter_tree() -> void:
 	# (value-neutral: defaults match the in-code fallbacks).
 	EventSheetSettings.register_all()
 	# Native entry points: right-click a node → Attach Event Sheet; right-click a
-	# sheet .tres / any .gd in the FileSystem or script editor → Open as Event Sheet.
+	# sheet .tres / any .gd in the FileSystem or script editor → Open as Event Sheet;
+	# FileSystem "Create New >" submenu → Event Sheet... (a fresh sheet in that folder).
 	for slot: int in [EditorContextMenuPlugin.CONTEXT_SLOT_SCENE_TREE,
 			EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM,
+			EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM_CREATE,
 			EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR]:
 		var menu: EventSheetContextMenu = EventSheetContextMenu.new()
 		menu.slot = slot
 		menu.open_sheet = _open_sheet_in_workspace
 		menu.attach_sheet = _attach_sheet_to_node
 		menu.goto_row = _goto_sheet_row_from_script
+		menu.create_sheet = _create_sheet_in_directory
 		add_context_menu_plugin(slot, menu)
 		_context_menus.append(menu)
 	# Inspector: nodes whose script is sheet-generated get an "Edit Event Sheet" button.
@@ -164,48 +209,69 @@ func _enter_tree() -> void:
 	# degrade to plain fields without this plugin.
 	_attribute_drawers_plugin = EventSheetAttributeDrawers.new()
 	add_inspector_plugin(_attribute_drawers_plugin)
+	# The workspace editor (the ~3400-line dock, its ~45 delegates, every dialog, and the addon-folder
+	# vocabulary scans) is built LAZILY on first use - see _ensure_editor. Enabling the plugin, or
+	# opening a project that never touches event sheets, pays none of it. The top-strip tab still
+	# appears immediately (driven by _has_main_screen / _get_plugin_name, which don't need the editor).
+	print("[Godot EventSheets] plugin loaded")
+
+
+## Builds the workspace editor on demand (idempotent). Everything heavy is deferred here so plugin
+## enable stays cheap; called from _make_visible(true) and every native entry point before it needs
+## the editor. _event_sheet_editor is assigned ONLY after a fully successful build, so a failure
+## leaves it null for a clean retry (never a half-registered inspector plugin or double-connected
+## signal). The first-run welcome now pops on first workspace open rather than at editor boot.
+func _ensure_editor() -> void:
+	if _event_sheet_editor != null:
+		return
 	var editor_script: Script = load(EVENT_SHEET_EDITOR_PATH)
 	if editor_script == null:
 		push_warning("[EventForge] Failed to load EventSheetEditor script at %s. Verify the file exists and contains valid GDScript." % EVENT_SHEET_EDITOR_PATH)
-	elif not editor_script.can_instantiate():
+		return
+	if not editor_script.can_instantiate():
 		push_warning("[EventForge] EventSheetEditor script is not instantiable: %s" % EVENT_SHEET_EDITOR_PATH)
-	else:
-		var editor_candidate: Variant = editor_script.new()
-		if editor_candidate == null:
-			push_warning("[EventForge] EventSheetEditor script could not be instantiated: %s" % EVENT_SHEET_EDITOR_PATH)
-		elif editor_candidate is Control:
-			_event_sheet_editor = editor_candidate
-			if _live_values_debugger != null and _event_sheet_editor.has_method("update_live_values"):
-				_live_values_debugger.values_received.connect(_event_sheet_editor.update_live_values)
-			if _live_values_debugger != null and _event_sheet_editor.has_method("update_fired_events"):
-				_live_values_debugger.fired_events_received.connect(_event_sheet_editor.update_fired_events)
-			if _live_values_debugger != null and _event_sheet_editor.has_method("reveal_paused_row"):
-				_live_values_debugger.paused_row_received.connect(_event_sheet_editor.reveal_paused_row)
-			if _live_values_debugger != null and _event_sheet_editor.has_method("set_live_values_debugger"):
-				_event_sheet_editor.set_live_values_debugger(_live_values_debugger)
-			_event_sheet_editor.name = MAIN_SCREEN_ROOT_NAME
-			get_editor_interface().get_editor_main_screen().add_child(_event_sheet_editor)
-			# Contract: EventSheetEditor can expose setup(sheet := null) for safe initial state.
-			if _event_sheet_editor.has_method("setup"):
-				_event_sheet_editor.call("setup")
-			if _event_sheet_editor.has_method("set_undo_redo_manager"):
-				_event_sheet_editor.call("set_undo_redo_manager", get_undo_redo())
-			if _event_sheet_editor.has_method("get_editor_param_store"):
-				var store: Variant = _event_sheet_editor.call("get_editor_param_store")
-				if store is EditorParamStore:
-					_ace_param_inspector_plugin = ACEParamInspectorPlugin.new()
-					_ace_param_inspector_plugin.set_param_store(store as EditorParamStore)
-					add_inspector_plugin(_ace_param_inspector_plugin)
-			_make_visible(false)
-		else:
-			push_warning("[EventForge] EventSheetEditor script must extend Control: %s" % EVENT_SHEET_EDITOR_PATH)
-			if editor_candidate is Node:
-				(editor_candidate as Node).queue_free()
-			# Non-Node objects here are RefCounted and released automatically.
-	if _event_sheet_editor != null:
-		print("[Godot EventSheets] plugin loaded")
-	else:
-		print("[Godot EventSheets] plugin loaded (editor panel unavailable)")
+		return
+	var editor_candidate: Variant = editor_script.new()
+	if editor_candidate == null:
+		push_warning("[EventForge] EventSheetEditor script could not be instantiated: %s" % EVENT_SHEET_EDITOR_PATH)
+		return
+	if not (editor_candidate is Control):
+		push_warning("[EventForge] EventSheetEditor script must extend Control: %s" % EVENT_SHEET_EDITOR_PATH)
+		if editor_candidate is Node:
+			(editor_candidate as Node).queue_free()
+		# Non-Node objects here are RefCounted and released automatically.
+		return
+	var editor: Control = editor_candidate as Control
+	# The Live Values debugger itself is registered eagerly in _enter_tree (transport stays live even
+	# before the workspace opens); only these editor-facing sinks defer until the editor exists.
+	if _live_values_debugger != null and editor.has_method("update_live_values"):
+		_live_values_debugger.values_received.connect(editor.update_live_values)
+	if _live_values_debugger != null and editor.has_method("update_fired_events"):
+		_live_values_debugger.fired_events_received.connect(editor.update_fired_events)
+	if _live_values_debugger != null and editor.has_method("reveal_paused_row"):
+		_live_values_debugger.paused_row_received.connect(editor.reveal_paused_row)
+	if _live_values_debugger != null and editor.has_method("set_live_values_debugger"):
+		editor.set_live_values_debugger(_live_values_debugger)
+	editor.name = MAIN_SCREEN_ROOT_NAME
+	get_editor_interface().get_editor_main_screen().add_child(editor)
+	# A main-screen Control defaults to visible and Godot never auto-hides unselected ones, so it
+	# must start hidden - otherwise the _edit-first path (selecting a sheet .tres before ever opening
+	# the tab) would overlay it on the active screen. The reveal happens via _make_visible(true) when
+	# the workspace tab is actually selected (directly, or through set_main_screen_editor).
+	editor.visible = false
+	# Contract: EventSheetEditor can expose setup(sheet := null) for safe initial state.
+	if editor.has_method("setup"):
+		editor.call("setup")
+	if editor.has_method("set_undo_redo_manager"):
+		editor.call("set_undo_redo_manager", get_undo_redo())
+	if editor.has_method("get_editor_param_store"):
+		var store: Variant = editor.call("get_editor_param_store")
+		if store is EditorParamStore:
+			_ace_param_inspector_plugin = ACEParamInspectorPlugin.new()
+			_ace_param_inspector_plugin.set_param_store(store as EditorParamStore)
+			add_inspector_plugin(_ace_param_inspector_plugin)
+	# Commit only after the whole build succeeds - see the docstring's clean-retry contract.
+	_event_sheet_editor = editor
 	_maybe_show_welcome()
 
 
@@ -237,6 +303,9 @@ func _exit_tree() -> void:
 	if _ace_param_inspector_plugin != null:
 		remove_inspector_plugin(_ace_param_inspector_plugin)
 		_ace_param_inspector_plugin = null
+	if _new_sheet_dialog != null:
+		_new_sheet_dialog.free_dialog()
+		_new_sheet_dialog = null
 	if _event_sheet_editor != null:
 		if _event_sheet_editor.get_parent() != null:
 			_event_sheet_editor.get_parent().remove_child(_event_sheet_editor)

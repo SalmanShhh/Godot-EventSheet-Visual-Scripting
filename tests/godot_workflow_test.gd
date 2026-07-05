@@ -43,6 +43,77 @@ static func run() -> bool:
 	all_passed = _check("name collisions suffix instead of overwriting",
 		str(suffixed.get("sheet_path")), "user://boss_fight_sheet-2.tres") and all_passed
 
+	# ── New Event Sheet (the FileSystem "Create New > Event Sheet" core) ──────────
+	# write_sheet_file compiles a starter straight to a hand-editable .gd (the default sheet
+	# format) in the chosen folder; the .gd IS the sheet, so it lifts back to an EventSheetResource.
+	for stale_gd: String in ["user://event_sheet.gd", "user://event_sheet-2.gd", "user://loot_table.gd", "user://escape.gd", "user://player.gd"]:
+		if FileAccess.file_exists(stale_gd):
+			DirAccess.remove_absolute(stale_gd)
+	var made: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(0), "user://", "event_sheet")
+	all_passed = _check("Create New writes a .gd sheet file that exists",
+		bool(made.get("ok")) and FileAccess.file_exists(str(made.get("sheet_path"))), true) and all_passed
+	all_passed = _check("Create New returns the .gd path (the default format, no .tres)",
+		str(made.get("sheet_path")), "user://event_sheet.gd") and all_passed
+	var made_sheet: EventSheetResource = GDScriptImporter.new().import_external(str(made.get("sheet_path")))
+	all_passed = _check("the created .gd lifts back to a sheet that compiles",
+		made_sheet != null and bool(SheetCompiler.compile(made_sheet, "").get("success")), true) and all_passed
+	# event_sheet.gd now exists, so a same-named create must suffix.
+	var made_again: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(0), "user://", "event_sheet")
+	all_passed = _check("a second Create New suffixes instead of overwriting",
+		str(made_again.get("sheet_path")), "user://event_sheet-2.gd") and all_passed
+	# Clear both so the empty-name fallback lands on the un-suffixed default.
+	for reset_gd: String in ["user://event_sheet.gd", "user://event_sheet-2.gd"]:
+		if FileAccess.file_exists(reset_gd):
+			DirAccess.remove_absolute(reset_gd)
+	var blank_named: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), "user://", "")
+	all_passed = _check("a blank name falls back to event_sheet.gd",
+		str(blank_named.get("sheet_path")), "user://event_sheet.gd") and all_passed
+	var loot: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetStarterTemplates.build_starter(9), "user://", "Loot Table")
+	var loot_sheet: EventSheetResource = GDScriptImporter.new().import_external(str(loot.get("sheet_path")))
+	all_passed = _check("the given name snake_cases into the filename and keeps the starter's shape",
+		str(loot.get("sheet_path")) == "user://loot_table.gd"
+		and loot_sheet != null and loot_sheet.host_class == "Resource", true) and all_passed
+	all_passed = _check("a null sheet is refused, never written",
+		bool(EventSheetWorkflow.write_sheet_file(null, "user://", "x").get("ok")), false) and all_passed
+	# The typed name is sanitized to a bare filename: "../escape" can't traverse out of the folder,
+	# and "player.gd" doesn't become player.gd.gd.
+	var traversal: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), "user://", "../escape")
+	all_passed = _check("a name with ../ stays inside the chosen folder",
+		str(traversal.get("sheet_path")), "user://escape.gd") and all_passed
+	var double_ext: Dictionary = EventSheetWorkflow.write_sheet_file(EventSheetResource.new(), "user://", "player.gd")
+	all_passed = _check("a .gd in the typed name is not doubled",
+		str(double_ext.get("sheet_path")), "user://player.gd") and all_passed
+	for cleanup_gd: String in ["user://event_sheet.gd", "user://event_sheet-2.gd", "user://loot_table.gd", "user://escape.gd", "user://player.gd"]:
+		if FileAccess.file_exists(cleanup_gd):
+			DirAccess.remove_absolute(cleanup_gd)
+
+	# ── The starter dispatcher: the New menu and the Create-New dialog share one source ─
+	all_passed = _check("build_starter maps ids to the right host + intent",
+		EventSheetStarterTemplates.build_starter(1).host_class == "CharacterBody2D"
+		and EventSheetStarterTemplates.build_starter(9).host_class == "Resource"
+		and EventSheetStarterTemplates.build_starter(10).tool_mode
+		and EventSheetStarterTemplates.build_starter(0).events.is_empty(), true) and all_passed
+
+	# ── New Event Sheet dialog: confirm carries the folder, name and starter id ────
+	var new_sheet_dialog: EventSheetNewSheetDialog = EventSheetNewSheetDialog.new()
+	var new_sheet_host: Node = Node.new()
+	new_sheet_dialog.init_dialog(new_sheet_host)
+	new_sheet_dialog._directory = "res://scenes"
+	new_sheet_dialog._name_edit.text = "My Sheet"
+	new_sheet_dialog._start_option.select(0)  # Blank (id 0)
+	var create_payload: Array = [null]
+	new_sheet_dialog.create_requested.connect(func(dir: String, nm: String, sid: int) -> void:
+		create_payload[0] = [dir, nm, sid])
+	new_sheet_dialog._on_confirmed()
+	all_passed = _check("the dialog emits the folder, raw name and starter id on confirm",
+		create_payload[0] is Array
+		and str((create_payload[0] as Array)[0]) == "res://scenes"
+		and str((create_payload[0] as Array)[1]) == "My Sheet"
+		and int((create_payload[0] as Array)[2]) == 0, true) and all_passed
+	all_passed = _check("the starter dropdown offers the curated dock-free set",
+		new_sheet_dialog._start_option.item_count, EventSheetStarterTemplates.create_new_starters().size()) and all_passed
+	new_sheet_host.free()
+
 	# ── Open as Event Sheet eligibility ───────────────────────────────────────────
 	all_passed = _check("sheet .tres files are openable",
 		EventSheetWorkflow.is_openable_as_sheet("res://demo/sheets/player.tres"), true) and all_passed

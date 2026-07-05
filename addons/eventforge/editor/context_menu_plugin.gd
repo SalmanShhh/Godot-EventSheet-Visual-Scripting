@@ -11,6 +11,7 @@ var slot: int = -1
 var open_sheet: Callable = Callable()    # Callable(path: String)
 var attach_sheet: Callable = Callable()  # Callable(node: Node)
 var goto_row: Callable = Callable()      # Callable(script_path: String)
+var create_sheet: Callable = Callable()  # Callable(directory: String)
 
 
 func _popup_menu(paths: PackedStringArray) -> void:
@@ -24,6 +25,12 @@ func _popup_menu(paths: PackedStringArray) -> void:
 			# easy to spot among Godot's native file actions.
 			if should_offer_open_as_sheet(slot, paths):
 				add_context_menu_item("Open as Event Sheet", _on_open_requested, _open_as_sheet_icon())
+		EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM_CREATE:
+			# The FileSystem "Create New >" submenu: sit "Event Sheet..." beside the native
+			# Folder/Scene/Script/Resource/TextFile entries. The ellipsis matches the siblings
+			# (it opens a name + starter dialog). Always offered - creating a file needs no selection.
+			if should_offer_create_sheet(slot):
+				add_context_menu_item("Event Sheet...", _on_create_sheet_requested, _open_as_sheet_icon())
 		EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR:
 			add_context_menu_item("Open as Event Sheet", _on_open_requested, _open_as_sheet_icon())
 			for path: String in paths:
@@ -46,6 +53,34 @@ static func should_offer_open_as_sheet(menu_slot: int, paths: PackedStringArray)
 	return false
 
 
+## True when this slot should offer "Create New > Event Sheet". Pure + static so the decision is
+## unit-testable without instantiating this editor-only plugin. Unlike "Open as Event Sheet", the
+## create action needs no selection (it mints a new file), so it is offered in the FileSystem
+## create slot and nowhere else.
+static func should_offer_create_sheet(menu_slot: int) -> bool:
+	return menu_slot == EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM_CREATE
+
+
+## Resolves the right-clicked FileSystem target to a directory (the folder itself, or the folder
+## holding a right-clicked file) and asks the plugin to create a new sheet there. Static + pure so
+## the resolution is unit-testable; falls back to res:// when nothing usable comes through.
+static func directory_from_targets(targets: Variant) -> String:
+	var candidate: String = ""
+	if targets is PackedStringArray and not (targets as PackedStringArray).is_empty():
+		candidate = (targets as PackedStringArray)[0]
+	elif targets is Array and not (targets as Array).is_empty():
+		candidate = str((targets as Array)[0])
+	candidate = candidate.strip_edges()
+	if candidate.is_empty():
+		return "res://"
+	# A right-clicked FOLDER comes through as the directory itself (no file extension); a
+	# right-clicked FILE resolves to its containing folder.
+	if candidate.get_extension().is_empty() or DirAccess.dir_exists_absolute(candidate):
+		return candidate
+	var parent: String = candidate.get_base_dir()
+	return parent if not parent.is_empty() else "res://"
+
+
 ## The editor "Script" glyph for the menu item (a .gd opened as a sheet); null headless / pre-theme.
 static func _open_as_sheet_icon() -> Texture2D:
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
@@ -64,6 +99,11 @@ func _on_goto_row_requested(targets: Variant) -> void:
 func _on_attach_requested(targets: Variant) -> void:
 	if attach_sheet.is_valid() and targets is Array and not (targets as Array).is_empty() and (targets as Array)[0] is Node:
 		attach_sheet.call((targets as Array)[0])
+
+
+func _on_create_sheet_requested(targets: Variant) -> void:
+	if create_sheet.is_valid():
+		create_sheet.call(directory_from_targets(targets))
 
 
 ## Slot payloads differ (FileSystem sends paths, the script editor sends Script

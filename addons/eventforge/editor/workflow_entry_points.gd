@@ -50,3 +50,37 @@ static func is_openable_as_sheet(path: String) -> bool:
 	if extension == "tres":
 		return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REUSE) is EventSheetResource
 	return false
+
+
+## The FileSystem "Create New > Event Sheet" core: compiles a starter sheet straight to a
+## hand-editable .gd in the chosen folder (suffix, never overwrite), so the .gd IS the sheet -
+## the default format, no .tres. Pure + headless: the editable reopen, filesystem rescan and
+## workspace open are the editor glue's job. Returns {ok, message, sheet_path}, the same shape
+## create_sheet_for_node returns so the plugin reads both identically.
+static func write_sheet_file(sheet: EventSheetResource, directory: String, base_name: String) -> Dictionary:
+	if sheet == null:
+		return {"ok": false, "message": "No sheet to create.", "sheet_path": ""}
+	# Sanitize the typed name into a bare filename stem: get_file() drops any path parts and "../"
+	# traversal (so a name can never escape the chosen folder), and a trailing ".gd" is stripped so
+	# "player.gd" becomes player.gd, not player.gd.gd. Then snake_case, with a safe fallback.
+	var raw_name: String = str(base_name).get_file()
+	if raw_name.get_extension().to_lower() == "gd":
+		raw_name = raw_name.get_basename()
+	var stem: String = raw_name.to_snake_case()
+	if stem.is_empty():
+		stem = "event_sheet"
+	# path_join handles trailing slashes itself; trim_suffix would mangle the root
+	# forms ("res://" -> "res:/").
+	var sheet_path: String = directory.path_join(stem + ".gd")
+	var suffix: int = 2
+	while FileAccess.file_exists(sheet_path):
+		sheet_path = directory.path_join("%s-%d.gd" % [stem, suffix])
+		suffix += 1
+	# omit_generated_banner = true: this .gd is the user's own hand-editable source of truth,
+	# NOT a regenerated companion, so it must not carry the "regenerated on every compile"
+	# banner. A non-empty output path is used verbatim (it bypasses the generated-name
+	# resolver), and compile() writes the bytes itself - the core never touches FileAccess.
+	var compile_result: Dictionary = SheetCompiler.compile(sheet, sheet_path, true)
+	if not bool(compile_result.get("success", false)):
+		return {"ok": false, "message": "The new sheet didn't compile: %s" % str(compile_result.get("errors")), "sheet_path": sheet_path}
+	return {"ok": true, "message": "Created event sheet %s." % sheet_path.get_file(), "sheet_path": sheet_path}

@@ -861,6 +861,12 @@ func _load_sheet_from_path(path: String) -> void:
 	_sheet_io._load_sheet_from_path(path)
 
 
+## Opens a freshly-created .gd editable (not the read-only preview a casual Open gives). The plugin's
+## "Create New > Event Sheet" glue calls this after writing + rescanning the new file.
+func open_new_sheet(path: String) -> void:
+	_sheet_io._open_new_sheet(path)
+
+
 ## Compiles a GDScript-backed sheet to its .gd source. Returns whether the compile succeeded (and
 ## sets a failure status when it does not). Shared by Save and "Open in Godot" so the latter can
 ## refuse to open a stale source when the sheet doesn't currently compile.

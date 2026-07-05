@@ -142,6 +142,89 @@ static func _build_editor_tool_starter() -> EventSheetResource:
 	return sheet
 
 
+## A PLATFORMER starter: ui_left/ui_right run, ui_accept jumps. The classic first sheet.
+static func _build_platformer_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "CharacterBody2D"
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Platformer Starter[/b] - move with ui_left/ui_right, jump with ui_accept.\nTune the numbers, then Compile and attach the script."
+	sheet.events.append(note)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnPhysicsProcess"
+	var move: RawCodeRow = RawCodeRow.new()
+	move.code = "velocity.x = Input.get_axis(&\"ui_left\", &\"ui_right\") * 220.0\nif not is_on_floor():\n\tvelocity.y += 980.0 * delta\nmove_and_slide()"
+	tick.actions.append(move)
+	sheet.events.append(tick)
+	var jump: EventRow = EventRow.new()
+	jump.trigger_provider_id = "Core"
+	jump.trigger_id = "OnPhysicsProcess"
+	var grounded: ACECondition = ACECondition.new()
+	grounded.provider_id = "Core"
+	grounded.ace_id = "IsOnFloor"
+	grounded.codegen_template = "is_on_floor()"
+	jump.conditions.append(grounded)
+	var pressed: ACECondition = ACECondition.new()
+	pressed.provider_id = "Core"
+	pressed.ace_id = "IsActionJustPressed"
+	pressed.codegen_template = "Input.is_action_just_pressed(&{action})"
+	pressed.params = {"action": "\"ui_accept\""}
+	jump.conditions.append(pressed)
+	var leap: ACEAction = ACEAction.new()
+	leap.provider_id = "Core"
+	leap.ace_id = "SetVelocity2D"
+	leap.codegen_template = "velocity.y = {vel}"
+	leap.params = {"vel": "-420.0"}
+	jump.actions.append(leap)
+	sheet.events.append(jump)
+	return sheet
+
+
+## A TOP-DOWN starter: 8-way movement on the arrow keys.
+static func _build_topdown_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "CharacterBody2D"
+	var note2: CommentRow = CommentRow.new()
+	note2.text = "[b]Top-down Starter[/b] - 8-way movement with the arrow keys."
+	sheet.events.append(note2)
+	var tick2: EventRow = EventRow.new()
+	tick2.trigger_provider_id = "Core"
+	tick2.trigger_id = "OnPhysicsProcess"
+	var move2: RawCodeRow = RawCodeRow.new()
+	move2.code = "velocity = Input.get_vector(&\"ui_left\", &\"ui_right\", &\"ui_up\", &\"ui_down\") * 200.0\nmove_and_slide()"
+	tick2.actions.append(move2)
+	sheet.events.append(tick2)
+	return sheet
+
+
+## Returns a fresh starter sheet for a template id - the ONE source of truth shared by the
+## New-Sheet menu (below) and the FileSystem "Create New > Event Sheet" dialog. Only the
+## dock-free starters live here (Blank + 2D movement + the three data-asset intents); the
+## New-Sheet menu keeps the autoload/3D cases inline since it also adopts them into the dock.
+static func build_starter(template_id: int) -> EventSheetResource:
+	match template_id:
+		1: return _build_platformer_starter()
+		2: return _build_topdown_starter()
+		8: return _build_behavior_component_starter()
+		9: return _build_custom_resource_starter()
+		10: return _build_editor_tool_starter()
+		_: return EventSheetResource.new()  # 0 Blank (and any other id) -> a minimal editable sheet
+
+
+## The starters the FileSystem "Create New > Event Sheet" dialog offers, as {id, label} in menu
+## order. A curated, dock-free subset of the New-Sheet menu (autoloads + 3D controllers are
+## project-wide/niche and stay in the in-workspace New menu).
+static func create_new_starters() -> Array[Dictionary]:
+	return [
+		{"id": 0, "label": "Blank Sheet"},
+		{"id": 1, "label": "Platformer Starter"},
+		{"id": 2, "label": "Top-down Starter"},
+		{"id": 8, "label": "Behavior Component"},
+		{"id": 9, "label": "Custom Resource"},
+		{"id": 10, "label": "Editor Tool"},
+	]
+
+
 ## Builds a fresh sheet from a starter template and adopts it (unsaved; Save As to keep).
 func _new_sheet_from_template(template_id: int) -> void:
 	if template_id >= 100:
@@ -162,50 +245,9 @@ func _new_sheet_from_template(template_id: int) -> void:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	match template_id:
 		1:
-			sheet.host_class = "CharacterBody2D"
-			var note: CommentRow = CommentRow.new()
-			note.text = "[b]Platformer Starter[/b] - move with ui_left/ui_right, jump with ui_accept.\nTune the numbers, then Compile and attach the script."
-			sheet.events.append(note)
-			var tick: EventRow = EventRow.new()
-			tick.trigger_provider_id = "Core"
-			tick.trigger_id = "OnPhysicsProcess"
-			var move: RawCodeRow = RawCodeRow.new()
-			move.code = "velocity.x = Input.get_axis(&\"ui_left\", &\"ui_right\") * 220.0\nif not is_on_floor():\n\tvelocity.y += 980.0 * delta\nmove_and_slide()"
-			tick.actions.append(move)
-			sheet.events.append(tick)
-			var jump: EventRow = EventRow.new()
-			jump.trigger_provider_id = "Core"
-			jump.trigger_id = "OnPhysicsProcess"
-			var grounded: ACECondition = ACECondition.new()
-			grounded.provider_id = "Core"
-			grounded.ace_id = "IsOnFloor"
-			grounded.codegen_template = "is_on_floor()"
-			jump.conditions.append(grounded)
-			var pressed: ACECondition = ACECondition.new()
-			pressed.provider_id = "Core"
-			pressed.ace_id = "IsActionJustPressed"
-			pressed.codegen_template = "Input.is_action_just_pressed(&{action})"
-			pressed.params = {"action": "\"ui_accept\""}
-			jump.conditions.append(pressed)
-			var leap: ACEAction = ACEAction.new()
-			leap.provider_id = "Core"
-			leap.ace_id = "SetVelocity2D"
-			leap.codegen_template = "velocity.y = {vel}"
-			leap.params = {"vel": "-420.0"}
-			jump.actions.append(leap)
-			sheet.events.append(jump)
+			sheet = _build_platformer_starter()
 		2:
-			sheet.host_class = "CharacterBody2D"
-			var note2: CommentRow = CommentRow.new()
-			note2.text = "[b]Top-down Starter[/b] - 8-way movement with the arrow keys."
-			sheet.events.append(note2)
-			var tick2: EventRow = EventRow.new()
-			tick2.trigger_provider_id = "Core"
-			tick2.trigger_id = "OnPhysicsProcess"
-			var move2: RawCodeRow = RawCodeRow.new()
-			move2.code = "velocity = Input.get_vector(&\"ui_left\", &\"ui_right\", &\"ui_up\", &\"ui_down\") * 200.0\nmove_and_slide()"
-			tick2.actions.append(move2)
-			sheet.events.append(tick2)
+			sheet = _build_topdown_starter()
 		8:
 			sheet = _build_behavior_component_starter()
 		9:

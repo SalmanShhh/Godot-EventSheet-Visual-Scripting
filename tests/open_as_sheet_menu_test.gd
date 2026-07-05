@@ -25,6 +25,20 @@ static func run() -> bool:
 	all_passed = _check("Script editor always offers Open-as-Sheet (the open buffer is a .gd)",
 		EventSheetContextMenu.should_offer_open_as_sheet(script_slot, PackedStringArray()), true) and all_passed
 
+	# ── "Create New > Event Sheet" availability + directory resolution ─────────────
+	var create_slot: int = EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM_CREATE
+	all_passed = _check("the FileSystem Create-New slot offers New Event Sheet (no selection needed)",
+		EventSheetContextMenu.should_offer_create_sheet(create_slot), true) and all_passed
+	all_passed = _check("other slots never offer Create New",
+		EventSheetContextMenu.should_offer_create_sheet(fs_slot)
+		or EventSheetContextMenu.should_offer_create_sheet(script_slot), false) and all_passed
+	all_passed = _check("a right-clicked folder resolves to itself",
+		EventSheetContextMenu.directory_from_targets(PackedStringArray(["res://scenes"])), "res://scenes") and all_passed
+	all_passed = _check("a right-clicked file resolves to its folder",
+		EventSheetContextMenu.directory_from_targets(PackedStringArray(["res://scenes/player.gd"])), "res://scenes") and all_passed
+	all_passed = _check("an empty target falls back to res://",
+		EventSheetContextMenu.directory_from_targets(PackedStringArray()), "res://") and all_passed
+
 	return all_passed
 
 

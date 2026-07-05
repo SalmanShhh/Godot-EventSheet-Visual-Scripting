@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added - create an event sheet from the FileSystem, and a faster plugin load
+
+- **FileSystem "Create New > Event Sheet..."** - right-click a folder in the FileSystem dock and
+  the native Create-New submenu now offers **Event Sheet...** beside Folder / Scene / Script /
+  Resource / TextFile. It opens a compact dialog (a name plus a **Start from** picker - Blank,
+  Platformer, Top-down, Behavior Component, Custom Resource, or Editor Tool) and writes a
+  hand-editable `.gd` sheet into that folder, then opens it ready to edit. The starter picker and
+  the in-workspace New-Sheet menu now share one `build_starter` source of truth. Backed by a pure,
+  headless-tested `EventSheetWorkflow.write_sheet_file` core (collision-safe naming, compiles to the
+  default `.gd` format, byte round-trips).
+- **The workspace editor now loads lazily.** Enabling the plugin - or opening a project that never
+  touches event sheets - no longer pays for building the whole editor (the dock, its ~45 delegates,
+  every dialog, and the addon-folder vocabulary scans) at editor startup. It is constructed on first
+  use (opening the EventSheet tab, or any native entry point like Open/Attach/Create) behind an
+  idempotent `_ensure_editor()` seam. The top-strip tab still appears immediately. The one visible
+  change: the first-run welcome now greets you the first time you open the workspace rather than at
+  editor boot.
+
 ### Added - the guides are illustrated with feature images
 
 - **Eleven guides now open with a picture of the feature they teach.** Six reuse

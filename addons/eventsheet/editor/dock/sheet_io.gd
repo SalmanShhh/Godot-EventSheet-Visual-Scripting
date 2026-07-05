@@ -59,6 +59,28 @@ func _load_sheet_from_path(path: String) -> void:
 	_dock._set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
 
 
+## Opens a freshly-created .gd as an EDITABLE sheet tab, NOT the read-only preview a casual Open
+## gives. The user just authored it via FileSystem "Create New > Event Sheet", so they should be
+## able to add events immediately. Mirrors _save_sheet_as_gdscript's editable-reopen recipe.
+func _open_new_sheet(path: String) -> void:
+	var resolved_path: String = path.strip_edges()
+	if resolved_path.is_empty():
+		return
+	var imported: EventSheetResource = GDScriptImporter.new().import_external(resolved_path)
+	if imported == null:
+		_dock._set_status("Created %s, but couldn't open it as a sheet." % resolved_path.get_file(), true)
+		return
+	imported.read_only = false  # just authored - open it editable, not as a preview
+	_dock.setup(imported)
+	_dock._current_sheet_path = resolved_path
+	_dock._dirty = false
+	_dock._refresh_title_strip()
+	_dock._clear_undo_history()
+	_dock._external_mtime = FileAccess.get_modified_time(resolved_path)
+	_dock._refresh_preview_banner()
+	_dock._set_status("Created %s - start adding events, then Save." % resolved_path.get_file())
+
+
 ## Compiles a GDScript-backed sheet to its .gd source. Returns whether the compile succeeded (and
 ## sets a failure status when it does not). Shared by Save and "Open in Godot" so the latter can
 ## refuse to open a stale source when the sheet doesn't currently compile.
