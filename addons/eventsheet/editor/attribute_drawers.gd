@@ -10,6 +10,7 @@
 #   progress_bar   eventsheet:progress_bar:<min>:<max>   int / float
 #   min_max        eventsheet:min_max:<min>:<max>        Vector2 (x = low end, y = high end)
 #   table          eventsheet:table:<n>=<t>,<n>=<t>      Array (of Dictionary rows; t: String/int/float/bool)
+#   toggle_row     eventsheet:toggle_row:<a>,<b>,<c>     String (choices as one row of toggle buttons)
 #   vector_dial    eventsheet:vector_dial:<max>          Vector2
 #   swatch_row     eventsheet:swatch_row                 Color
 #   texture_preview eventsheet:texture_preview           Texture2D / String (path)
@@ -47,6 +48,15 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 			if type != TYPE_VECTOR2:
 				return false
 			add_property_editor(name, MinMaxSliderProperty.new(float(drawer.get("min", 0.0)), float(drawer.get("max", 100.0))))
+			return true
+		"toggle_row":
+			if type != TYPE_STRING:
+				return false
+			var toggle_args: Array = drawer.get("args", [])
+			var toggle_options: PackedStringArray = PackedStringArray(str(toggle_args[0]).split(",")) if toggle_args.size() > 0 else PackedStringArray()
+			if toggle_options.is_empty():
+				return false
+			add_property_editor(name, ToggleRowProperty.new(toggle_options))
 			return true
 		"table":
 			if type != TYPE_ARRAY:
@@ -241,6 +251,24 @@ class MinMaxSliderProperty:
 
 	func _update_property() -> void:
 		_slider.set_value(get_edited_object().get(get_edited_property()))
+
+
+## String choices as one row of toggle buttons: the pressed button IS the value.
+class ToggleRowProperty:
+	extends EditorProperty
+	var _row: EventSheetDrawerWidgets.DrawerToggleRow
+
+	func _init(options: PackedStringArray) -> void:
+		_row = EventSheetDrawerWidgets.DrawerToggleRow.new(options)
+		_row.value_changed.connect(_on_changed)
+		add_child(_row)
+		set_bottom_editor(_row)
+
+	func _on_changed(value: String) -> void:
+		emit_changed(get_edited_property(), value)
+
+	func _update_property() -> void:
+		_row.set_value(str(get_edited_object().get(get_edited_property())))
 
 
 ## Array-of-Dictionary table: a grid with typed cell editors, add / remove / move-up.

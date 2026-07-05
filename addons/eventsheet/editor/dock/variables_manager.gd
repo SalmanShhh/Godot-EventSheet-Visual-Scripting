@@ -144,6 +144,9 @@ static func _tree_group_attributes(source: Dictionary) -> Dictionary:
 	# The table drawer's column schema rides along the same way (an Array of {name, type} entries).
 	if result.has("drawer") and source.get("table_columns") is Array and not (source.get("table_columns") as Array).is_empty():
 		result["table_columns"] = (source.get("table_columns") as Array).duplicate(true)
+	# So do the toggle-button choices (an Array of Strings on the toggle_row drawer).
+	if result.has("drawer") and source.get("toggle_options") is Array and not (source.get("toggle_options") as Array).is_empty():
+		result["toggle_options"] = (source.get("toggle_options") as Array).duplicate(true)
 	return result
 
 

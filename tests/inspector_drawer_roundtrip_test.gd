@@ -98,7 +98,7 @@ static func run() -> bool:
 	all_passed = _eq("Color hosts the swatch_row drawer", VariableDialog._drawer_kinds_for_type("Color"), PackedStringArray(["swatch_row"])) and all_passed
 	all_passed = _eq("Texture2D hosts the texture_preview drawer", VariableDialog._drawer_kinds_for_type("Texture2D"), PackedStringArray(["texture_preview"])) and all_passed
 	all_passed = _eq("Curve hosts the curve_editor drawer", VariableDialog._drawer_kinds_for_type("Curve"), PackedStringArray(["curve_editor"])) and all_passed
-	all_passed = _eq("String hosts no drawer (combo/multiline instead)", VariableDialog._drawer_kinds_for_type("String"), PackedStringArray()) and all_passed
+	all_passed = _eq("String hosts the toggle_row drawer", VariableDialog._drawer_kinds_for_type("String"), PackedStringArray(["toggle_row"])) and all_passed
 	all_passed = _eq("Dictionary hosts no drawer", VariableDialog._drawer_kinds_for_type("Dictionary"), PackedStringArray()) and all_passed
 	all_passed = _eq("the min-max drawer label reads 'Min-max range'",
 		VariableDialog._drawer_label_for_kind("min_max"), "Min-max range") and all_passed
@@ -249,6 +249,29 @@ static func run() -> bool:
 	all_passed = _eq("the clamped drawer file round-trips byte-identically",
 		str(SheetCompiler.compile(clamped_sheet, "user://clamped_drawer_roundtrip.gd").get("output", "")), clamped_source) and all_passed
 
+	# --- The toggle-button row: a String's fixed choices as one row of toggle buttons; the choices
+	# ride the marker INSTEAD of @export_enum and round-trip into editable toggle_options.
+	var toggle_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:toggle_row:easy,normal,hard\") var difficulty: String = \"normal\""
+	all_passed = _eq("toggle_row emits its marker (choices ride along)",
+		_emit_for_named("difficulty", "String", "normal", {"drawer": "toggle_row", "toggle_options": ["easy", "normal", "hard"]}), toggle_expected) and all_passed
+	all_passed = _eq("toggle_row on an int emits no marker",
+		_emit_for("int", 0, {"drawer": "toggle_row", "toggle_options": ["a"]}).contains("eventsheet:"), false) and all_passed
+	all_passed = _eq("toggle_row without choices emits no marker",
+		_emit_for("String", "", {"drawer": "toggle_row"}).contains("eventsheet:"), false) and all_passed
+	var toggle_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + toggle_expected + "\n")
+	var toggle_lifted: LocalVariable = _find(toggle_sheet, "difficulty")
+	all_passed = _eq("the lift recovers the toggle choices",
+		(toggle_lifted.attributes as Dictionary).get("toggle_options") if toggle_lifted != null else null, ["easy", "normal", "hard"]) and all_passed
+	if toggle_lifted != null:
+		all_passed = _eq("a toggle_row var re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(toggle_lifted), toggle_expected) and all_passed
+	var toggle_widget: EventSheetDrawerWidgets.DrawerToggleRow = EventSheetDrawerWidgets.DrawerToggleRow.new(PackedStringArray(["easy", "normal", "hard"]))
+	toggle_widget.set_value("hard")
+	all_passed = _eq("the toggle row stores the pressed value", toggle_widget.get_value(), "hard") and all_passed
+	toggle_widget.set_value("nonsense")
+	all_passed = _eq("a value outside the set stays (never clobbered)", toggle_widget.get_value(), "nonsense") and all_passed
+	toggle_widget.free()
+
 	# The dict-var path emits the same decor lines (one canonical shape across both variable paths).
 	var dict_sheet: EventSheetResource = EventSheetResource.new()
 	dict_sheet.variables = {"speed": {"type": "int", "default": 5, "exported": true, "attributes": {"header": "Motion", "info": "Tiles per second."}}}
@@ -309,6 +332,16 @@ static func _vector_dial_range_persists() -> bool:
 static func _emit_for(type_name: String, default_value: Variant, attributes: Dictionary) -> String:
 	var lv: LocalVariable = LocalVariable.new()
 	lv.name = "v"
+	lv.type_name = type_name
+	lv.default_value = default_value
+	lv.exported = true
+	lv.attributes = attributes
+	return SheetCompiler._emit_tree_variable_line(lv)
+
+
+static func _emit_for_named(var_name: String, type_name: String, default_value: Variant, attributes: Dictionary) -> String:
+	var lv: LocalVariable = LocalVariable.new()
+	lv.name = var_name
 	lv.type_name = type_name
 	lv.default_value = default_value
 	lv.exported = true

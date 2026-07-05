@@ -325,6 +325,14 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 		attrs["range"] = {"min": parts[2], "max": parts[3]}
 	elif parts[1] == "vector_dial" and parts.size() >= 3:
 		attrs["range"] = {"max": parts[2]}
+	elif parts[1] == "toggle_row" and parts.size() >= 3:
+		var toggle_options: Array = []
+		for toggle_option: String in str(parts[2]).split(","):
+			if not toggle_option.strip_edges().is_empty():
+				toggle_options.append(toggle_option)
+		if toggle_options.is_empty():
+			return
+		attrs["toggle_options"] = toggle_options
 	elif parts[1] == "table" and parts.size() >= 3:
 		# The column schema (name=type pairs) recovers into the same table_columns the emitter
 		# reads, so the marker re-emits byte-for-byte and the dialog reopens it editable.

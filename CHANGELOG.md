@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - toggle buttons: a String's choices as one visible row
+
+- **An eighth drawer, `toggle_row`**: fill Options on a String and choose "Toggle
+  buttons" - the Inspector shows every choice as a toggle button (the pressed one IS
+  the value) instead of hiding them behind a dropdown. The choices ride the marker
+  (`eventsheet:toggle_row:easy,normal,hard`) INSTEAD of `@export_enum` - one
+  annotation slot - so without the plugin the field degrades to plain text, editor
+  convenience only. Verify-gated lift back into editable choices (they reopen in the
+  familiar Options field), a value outside the set is never clobbered, live dialog
+  preview + preview-card sentence and mini row.
+  Pinned in tests/inspector_drawer_roundtrip_test.gd.
+
 ### Added - the Inspector Designer edits: ✎ per row + ▲ reorder through the funnel
 
 - The Designer is no longer view-only: every row gains **✎** (opens that variable in

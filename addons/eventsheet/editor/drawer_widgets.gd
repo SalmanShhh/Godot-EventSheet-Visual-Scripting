@@ -233,6 +233,46 @@ class DrawerMinMaxSlider:
 		value_changed.emit(_value)
 
 
+# ── String toggle-button row ─────────────────────────────────────────────────
+## A String's fixed choices as one row of toggle buttons - every option visible at a glance,
+## one click to switch (a dropdown hides the alternatives behind a click). The pressed button
+## IS the value; a value outside the set leaves nothing pressed (never clobbered).
+class DrawerToggleRow:
+	extends HBoxContainer
+	signal value_changed(value: String)
+	var editable: bool = true
+	var _options: PackedStringArray = PackedStringArray()
+	var _value: String = ""
+	var _buttons: Array[Button] = []
+
+	func _init(options: PackedStringArray = PackedStringArray()) -> void:
+		_options = options
+		add_theme_constant_override("separation", 2)
+		for option: String in _options:
+			var button: Button = Button.new()
+			button.text = option
+			button.toggle_mode = true
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			button.pressed.connect(_on_option_pressed.bind(option))
+			add_child(button)
+			_buttons.append(button)
+
+	func set_value(v: String) -> void:
+		_value = v
+		for button: Button in _buttons:
+			button.set_pressed_no_signal(button.text == _value)
+			button.disabled = not editable
+
+	func get_value() -> String:
+		return _value
+
+	func _on_option_pressed(option: String) -> void:
+		if not editable:
+			return
+		set_value(option)
+		value_changed.emit(_value)
+
+
 # ── Array-of-Dictionary table grid ───────────────────────────────────────────
 ## An Array[Dictionary] edited as a GRID: one row per element, one typed cell editor per column
 ## (text / number / checkbox), with add / remove / move-up controls. Columns come from the

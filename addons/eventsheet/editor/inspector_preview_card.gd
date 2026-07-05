@@ -168,6 +168,8 @@ static func _widget_phrase(attributes: Dictionary) -> String:
 			return "shown as a min-max range slider"
 		"table":
 			return "shown as an editable table"
+		"toggle_row":
+			return "shown as toggle buttons"
 		"swatch_row":
 			return "shown as color swatches"
 		"texture_preview":
@@ -229,6 +231,16 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		range_slider.set_value(Vector2(25.0, 75.0))
 		range_slider.custom_minimum_size = Vector2(120.0, 18.0)
 		return _ignored(range_slider)
+	if drawer_kind == "toggle_row":
+		var toggle_options: Array = attributes.get("toggle_options") if attributes.get("toggle_options") is Array else ["easy", "normal", "hard"]
+		var toggle_texts: PackedStringArray = PackedStringArray()
+		for toggle_option: Variant in toggle_options:
+			toggle_texts.append(str(toggle_option))
+		var toggle_row := EventSheetDrawerWidgets.DrawerToggleRow.new(toggle_texts)
+		toggle_row.editable = false
+		if not toggle_texts.is_empty():
+			toggle_row.set_value(toggle_texts[0])
+		return _ignored(toggle_row)
 	if drawer_kind == "table":
 		var columns: Array = attributes.get("table_columns") if attributes.get("table_columns") is Array else [{"name": "item", "type": "String"}, {"name": "count", "type": "int"}]
 		var table := EventSheetDrawerWidgets.DrawerTable.new(columns)

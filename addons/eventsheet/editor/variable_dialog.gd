@@ -763,6 +763,12 @@ func open_for_edit(
 	_refresh_contextual_rows()
 	# Re-select the drawer the variable already uses (after _refresh_contextual_rows rebuilt the per-type options).
 	var existing_drawer: String = str(existing_attributes.get("drawer", ""))
+	# Toggle-button choices reopen in the familiar Options field (they left it on apply).
+	if existing_attributes.get("toggle_options") is Array and _options_edit != null and _options_edit.text.strip_edges().is_empty():
+		var toggle_texts: PackedStringArray = PackedStringArray()
+		for toggle_option: Variant in existing_attributes.get("toggle_options"):
+			toggle_texts.append(str(toggle_option))
+		_options_edit.text = ", ".join(toggle_texts)
 	if existing_attributes.get("table_columns") is Array:
 		var column_texts: PackedStringArray = PackedStringArray()
 		for column: Variant in existing_attributes.get("table_columns"):
@@ -903,6 +909,11 @@ func _on_confirmed() -> void:
 		var table_columns: Array = _dialog_table_columns()
 		if not table_columns.is_empty():
 			attributes["table_columns"] = table_columns
+	# Toggle buttons consume the Options list: the choices ride the drawer marker INSTEAD of
+	# @export_enum (one annotation slot), so the combo list is withheld from the plain path.
+	if drawer_kind == "toggle_row" and type_name == "String" and not combo_options.is_empty():
+		attributes["toggle_options"] = Array(combo_options)
+		combo_options = PackedStringArray()
 	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes)
 
 
@@ -1326,6 +1337,8 @@ static func _drawer_kinds_for_type(type_name: String) -> PackedStringArray:
 			return PackedStringArray(["vector_dial", "min_max"])
 		"Array":
 			return PackedStringArray(["table"])
+		"String":
+			return PackedStringArray(["toggle_row"])
 		"Color":
 			return PackedStringArray(["swatch_row"])
 		"Texture2D":
@@ -1346,6 +1359,8 @@ static func _drawer_label_for_kind(kind: String) -> String:
 			return "Min-max range"
 		"table":
 			return "Editable table"
+		"toggle_row":
+			return "Toggle buttons (uses Options)"
 		"swatch_row":
 			return "Swatch row"
 		"texture_preview":
@@ -1535,6 +1550,15 @@ func _make_drawer_preview_widget(kind: String) -> Control:
 			slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			slider.set_value(Vector2(lerpf(bounds["min"], bounds["max"], 0.25), lerpf(bounds["min"], bounds["max"], 0.75)))
 			return slider
+		"toggle_row":
+			var toggle_options: PackedStringArray = parse_options(_options_edit.text if _options_edit != null else "")
+			if toggle_options.is_empty():
+				toggle_options = PackedStringArray(["easy", "normal", "hard"])
+			var toggle_widget: EventSheetDrawerWidgets.DrawerToggleRow = EventSheetDrawerWidgets.DrawerToggleRow.new(toggle_options)
+			toggle_widget.editable = false
+			toggle_widget.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			toggle_widget.set_value(toggle_options[0])
+			return toggle_widget
 		"table":
 			var columns: Array = _dialog_table_columns()
 			if columns.is_empty():

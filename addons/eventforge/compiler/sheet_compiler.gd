@@ -2172,6 +2172,20 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 			if type_name != "Vector2":
 				return ""
 			marker = "eventsheet:min_max:%s:%s" % [str(bounds.get("min", "0")), str(bounds.get("max", "100"))]
+		"toggle_row":
+			# A String's fixed choices as one row of toggle buttons - the choices ride the marker
+			# (INSTEAD of @export_enum: one annotation slot). Without the plugin the field degrades
+			# to plain text; the compiled game never depended on the dropdown either way.
+			if type_name != "String" or not (attributes.get("toggle_options") is Array):
+				return ""
+			var toggle_values: PackedStringArray = PackedStringArray()
+			for toggle_option: Variant in attributes.get("toggle_options"):
+				var cleaned_option: String = str(toggle_option).strip_edges()
+				if not cleaned_option.is_empty() and not cleaned_option.contains(",") and not cleaned_option.contains(":") and not cleaned_option.contains("\""):
+					toggle_values.append(cleaned_option)
+			if toggle_values.is_empty():
+				return ""
+			marker = "eventsheet:toggle_row:%s" % ",".join(toggle_values)
 		"table":
 			# Array of Dictionary rows edited as a grid; the column schema (name=type pairs) rides
 			# the marker. Names that can't survive the joined form (separators, quotes) are skipped.
