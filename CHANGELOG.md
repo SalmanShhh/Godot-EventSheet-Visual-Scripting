@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - the HUD Kit pack: menus and HUDs by name, zero wiring
+
+- **A 32nd behavior pack, HUD Kit** (first item of the Menu/HUD roadmap milestone):
+  drop it under your UI root (CanvasLayer or Control) and drive named descendants -
+  **Set Text**, **Set Bar** (any ProgressBar/TextureProgressBar), **Show / Hide /
+  Toggle Panel**, **Switch Screen** (shows the named panel, hides its siblings - one
+  call flips a whole menu), and **Show Toast** (a bottom-centre message that fades
+  after a tunable delay). The headliner: **every descendant Button auto-wires into
+  one On Button Pressed trigger** (with the Button Is condition and Last Button Name
+  expression), so an entire menu needs zero connected signals; a Connect Buttons
+  action re-wires after spawning UI. Named lookups are cached; freed nodes fall out
+  on the next miss. Terse provider style, drift gate green (audited=32 drifted=0).
+
 ### Added - field buttons: a per-property action right where it belongs
 
 - **"Field button"** on any exported variable renders a small button WITH the
