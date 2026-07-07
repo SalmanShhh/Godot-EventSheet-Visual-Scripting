@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - a scaffolder for creating new helper ACE modules
+
+- **`tools/new_ace_module.gd`** - the helper for creating helper modules. Set a name, run it, and it
+  writes a compiling `*_aces.gd` module skeleton (an example Action, Condition, and Expression plus a
+  section description) into `addons/eventforge/registration/modules/`, where the registry auto-discovers
+  it. A beginner starts from something that already builds and passes the gates, then swaps in their own
+  ACEs. It never overwrites an existing module, and the skeleton's templates are plain Godot per the
+  parity covenant.
+
 ### Added - the ObjectPool pack: reuse nodes instead of spawning and freeing
 
 - **ObjectPool** - register as the `ObjectPool` autoload to reuse nodes instead of creating and freeing
