@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased]
+
+### Added - Hitstop in the Juice pack
+
+- **Hitstop** joins the Juice pack (the punchy hit-pause you feel on a connecting
+  blow): freeze `Engine.time_scale` (0 = full stop) for a few frames, then snap
+  back to whatever it was. It runs on a **realtime** `SceneTree` timer so it
+  un-freezes even at a full stop (a scaled timer would never elapse at time_scale
+  0), ignores repeat hits already mid-freeze, and **pauses any active Slowmo** for
+  the duration so the two effects compose. An **On Hitstop Finished** trigger and
+  an **Is Hitstopped** condition round it out, and the pack's tree-exit teardown
+  now un-freezes the game if you leave the scene mid-freeze (so quitting to a menu
+  during a hitstop can never leave it frozen). Params: freeze duration (default
+  0.06s) and freeze scale (default 0). Pinned in `tests/juice_pack_test.gd`;
+  drift gate green (audited=34 drifted=0).
+
 ## [0.12.0] - 2026-07-06 - The Inspector Designer Update
 
 ### Added - create an event sheet from the FileSystem, and a faster plugin load

@@ -25,6 +25,9 @@ signal squash_finished
 ## @ace_trigger
 ## @ace_name("On Slowmo Finished")
 signal slowmo_finished
+## @ace_trigger
+## @ace_name("On Hitstop Finished")
+signal hitstop_finished
 
 # --- Designer knobs (tune the FEEL in the Inspector) ---
 ## Peak camera shake offset, in pixels, at full trauma.
@@ -68,6 +71,9 @@ var _zoom_anchor: Vector2 = Vector2.ZERO
 var _zoom_cam_from: Vector2 = Vector2.ZERO
 # Slowmo state (single tween, kill-before-restart).
 var _slowmo_tween: Tween = null
+# Hitstop state (a brief freeze; driven by a REALTIME timer so it un-freezes even at time_scale 0).
+var _hitstop_active: bool = false
+var _hitstop_prev_scale: float = 1.0
 # Spring-squash state (per-frame integrator springing the scale back to rest).
 var _squash_spring_active: bool = false
 var _squash_value: Vector2 = Vector2.ONE
@@ -94,6 +100,7 @@ func _ready() -> void:
 		_base_scale = (host as Control).scale
 
 func _on_tree_exiting() -> void:
+	_hitstop_active = false
 	clear_slowmo()
 
 func _process(delta: float) -> void:
@@ -288,6 +295,29 @@ func clear_slowmo() -> void:
 		_slowmo_tween = null
 	Engine.time_scale = 1.0
 
+## @ace_action
+## @ace_name("Hitstop")
+## @ace_category("Juice")
+## @ace_description("The punchy hit-pause you feel on a connecting blow: freezes Engine.time_scale (0 = full stop) for a few frames, then snaps back to what it was. Uses a realtime timer so it un-freezes even at a full stop, ignores repeat hits already mid-freeze, pauses any active Slowmo for the duration, and emits On Hitstop Finished. Fire it the instant a hit lands.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.hitstop({freeze_duration}, {freeze_scale})")
+func hitstop(freeze_duration: float, freeze_scale: float) -> void:
+	if _hitstop_active:
+		return
+	_hitstop_active = true
+	_hitstop_prev_scale = Engine.time_scale
+	if _slowmo_tween != null and is_instance_valid(_slowmo_tween) and _slowmo_tween.is_running():
+		_slowmo_tween.pause()
+	Engine.time_scale = maxf(freeze_scale, 0.0)
+	await get_tree().create_timer(maxf(freeze_duration, 0.0), true, false, true).timeout
+	if not _hitstop_active:
+		return
+	_hitstop_active = false
+	Engine.time_scale = _hitstop_prev_scale
+	if _slowmo_tween != null and is_instance_valid(_slowmo_tween):
+		_slowmo_tween.play()
+	hitstop_finished.emit()
+
 func _zoom_anchored_step(f: float) -> void:
 	var cam: Camera2D = _camera()
 	if cam == null:
@@ -311,6 +341,13 @@ func is_shaking() -> bool:
 ## @ace_codegen_template("$JuiceBehavior.current_trauma()")
 func current_trauma() -> float:
 	return trauma
+
+## @ace_condition
+## @ace_name("Is Hitstopped")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.is_hitstopped()")
+func is_hitstopped() -> bool:
+	return _hitstop_active
 
 func _set_time_scale(s: float) -> void:
 	Engine.time_scale = s

@@ -67,6 +67,9 @@ static func build() -> bool:
 		"var _zoom_cam_from: Vector2 = Vector2.ZERO",
 		"# Slowmo state (single tween, kill-before-restart).",
 		"var _slowmo_tween: Tween = null",
+		"# Hitstop state (a brief freeze; driven by a REALTIME timer so it un-freezes even at time_scale 0).",
+		"var _hitstop_active: bool = false",
+		"var _hitstop_prev_scale: float = 1.0",
 		"# Spring-squash state (per-frame integrator springing the scale back to rest).",
 		"var _squash_spring_active: bool = false",
 		"var _squash_value: Vector2 = Vector2.ONE",
@@ -87,6 +90,10 @@ static func build() -> bool:
 		"## @ace_trigger",
 		"## @ace_name(\"On Slowmo Finished\")",
 		"signal slowmo_finished()",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Hitstop Finished\")",
+		"signal hitstop_finished()",
 		"",
 		"## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D -",
 		"## auto-found, so Shake / Zoom just work from anywhere without wiring a path.",
@@ -119,6 +126,11 @@ static func build() -> bool:
 		"## @ace_name(\"Trauma\")",
 		"func current_trauma() -> float:",
 		"\treturn trauma",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Is Hitstopped\")",
+		"func is_hitstopped() -> bool:",
+		"\treturn _hitstop_active",
 		"",
 		"func _set_time_scale(s: float) -> void:",
 		"\tEngine.time_scale = s",
@@ -170,13 +182,14 @@ static func build() -> bool:
 	]))
 	on_ready.actions.append(ready_body)
 	sheet.events.append(on_ready)
-	# Safety: if the host leaves the tree mid-slowmo, restore the GLOBAL Engine.time_scale - otherwise a
-	# scene change during slow motion would leave the entire game running in slow motion.
+	# Safety: if the host leaves the tree mid-slowmo or mid-hitstop, restore the GLOBAL Engine.time_scale -
+	# otherwise a scene change during slow motion (or a freeze) would leave the entire game slowed or frozen.
+	# Clearing _hitstop_active makes a still-pending hitstop timer no-op when it fires (see hitstop).
 	var teardown: EventRow = EventRow.new()
 	teardown.trigger_provider_id = "Core"
 	teardown.trigger_id = "OnTreeExiting"
 	var teardown_body: RawCodeRow = RawCodeRow.new()
-	teardown_body.code = "clear_slowmo()"
+	teardown_body.code = "_hitstop_active = false\nclear_slowmo()"
 	teardown.actions.append(teardown_body)
 	sheet.events.append(teardown)
 	# Per-frame: decay trauma and drive the camera offset/roll from squared trauma (perceptual ramp).
@@ -268,6 +281,11 @@ static func build() -> bool:
 	Lib.append_function(sheet, "clear_slowmo", "Clear Slowmo", "Juice", "Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running).",
 		[],
 		"if _slowmo_tween != null:\n\t_slowmo_tween.kill()\n\t_slowmo_tween = null\nEngine.time_scale = 1.0")
+	Lib.append_function(sheet, "hitstop", "Hitstop", "Juice", "The punchy hit-pause you feel on a connecting blow: freezes Engine.time_scale (0 = full stop) for a few frames, then snaps back to what it was. Uses a realtime timer so it un-freezes even at a full stop, ignores repeat hits already mid-freeze, pauses any active Slowmo for the duration, and emits On Hitstop Finished. Fire it the instant a hit lands.",
+		[["freeze_duration", "float"], ["freeze_scale", "float"]],
+		"if _hitstop_active:\n\treturn\n_hitstop_active = true\n_hitstop_prev_scale = Engine.time_scale\nif _slowmo_tween != null and is_instance_valid(_slowmo_tween) and _slowmo_tween.is_running():\n\t_slowmo_tween.pause()\nEngine.time_scale = maxf(freeze_scale, 0.0)\nawait get_tree().create_timer(maxf(freeze_duration, 0.0), true, false, true).timeout\nif not _hitstop_active:\n\treturn\n_hitstop_active = false\nEngine.time_scale = _hitstop_prev_scale\nif _slowmo_tween != null and is_instance_valid(_slowmo_tween):\n\t_slowmo_tween.play()\nhitstop_finished.emit()")
+	_default(sheet, "freeze_duration", "0.06")
+	_default(sheet, "freeze_scale", "0.0")
 	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_behavior")
 
 
