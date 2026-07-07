@@ -55,6 +55,13 @@ const PACK_BUILDERS: Array[String] = [
 	"loot_loader",
 	"skin_catalog_resource",
 	"skin_catalog_loader",
+	"big_number",
+	"idle_generator",
+	"prestige",
+	"upgrades",
+	"milestones",
+	"click_power",
+	"boosts",
 ]
 
 

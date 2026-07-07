@@ -135,3 +135,19 @@ static func exposed_function(function_name: String, display_name: String, catego
 	body_row.code = body
 	event_function.events.append(body_row)
 	return event_function
+
+
+## Appends a bool-returning exposed function - a Condition in the picker. (Same helper the
+## currency_ledger builder grew locally; hoisted here so every data pack shares one shape.)
+static func condition(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> void:
+	var fn: EventFunction = exposed_function(function_name, display_name, category, description, params, body)
+	fn.return_type = TYPE_BOOL
+	sheet.functions.append(fn)
+
+
+## Appends a value-returning exposed function - an Expression - with the given return type
+## (TYPE_FLOAT / TYPE_INT / TYPE_STRING / TYPE_BOOL / TYPE_ARRAY / TYPE_VECTOR2 ...).
+static func number(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String, ret: int) -> void:
+	var fn: EventFunction = exposed_function(function_name, display_name, category, description, params, body)
+	fn.return_type = ret
+	sheet.functions.append(fn)
