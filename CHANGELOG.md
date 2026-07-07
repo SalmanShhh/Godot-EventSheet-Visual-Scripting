@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Added - the ProcRoom pack: a seeded room-graph generator
+
+- **A 39th behavior pack, ProcRoom** (a Construct 3 addon port): register as the `ProcRoom`
+  autoload to lay out a Slay-the-Spire-style **tiered map** of rooms - discrete depths from a start
+  room to a boss, with forward branches between them - from a single seed string, so the whole run is
+  reproducible. **Register Room Type** (id, weight, min/max depth, max-per-depth), **Set Start Type** /
+  **Set Boss Type**, then **Generate** (seed, depths, max rooms per depth) or **Regenerate** with a new
+  seed, firing **On Graph Generated**. Rooms are placed by weighted random honouring the depth limits,
+  and every room is wired to at least one parent, so the start always connects through to the boss (no
+  orphan rooms). Traverse with **Enter Room** (fires **On Room Entered**, or **On Traversal Blocked**
+  with a reason of "unreachable" / "locked" when the move is illegal), **Force Enter Room** (skip the
+  checks), **Lock / Unlock Room**, **Reveal Room**, and **Reset Traversal**. Conditions Is Graph Ready /
+  Is Room Visited / Is Room Available / Is Room Locked / Is Room Connected; expressions for the seed,
+  totals, the current/entered/blocked room and its type/depth, rooms and connections at a depth, and the
+  visited count. Beginner-friendly over the raw C3 version: reachability is guaranteed by construction
+  (you can never strand the boss), the seed is a plain string, and the ids are stable `d{depth}_{index}`
+  handles you can key art and encounters off. Pinned in `tests/proc_room_test.gd`; drift gate green
+  (audited=39 drifted=0).
+
 ### Added - the SkinVault pack: cosmetic ownership + gacha unlocks
 
 - **A 38th behavior pack, SkinVault** (a Construct 3 addon port): register as the `SkinVault`
