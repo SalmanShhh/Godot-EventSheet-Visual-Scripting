@@ -391,8 +391,9 @@ Also round-tripping (verify-lift-gated, same all-or-nothing rule): variable
 `@export_group`/`@export_subgroup` + tooltips, the five Tier-3 Inspector drawers
 (`@export_custom(PROPERTY_HINT_NONE, "eventsheet:<drawer>")`), **sub-events** (nested `if` blocks ↔
 `sub_events`), and class-scope `##` sheet metadata (tags / autoload / `@ace_tags` / `@ace_family`).
-Event GROUPS and Includes don't round-trip through `.gd` yet - see `SPEC-groups-roundtrip.md` /
-`SPEC-includes.md`.
+Event GROUPS now round-trip through `.gd` (the compiler emits recoverable group markers and the importer
+reconstructs the `EventGroup` rows, verify-lift-gated). Includes still merge at compile time and do not
+yet round-trip back into per-include sheets.
 
 ### Importer round-trip (structural)
 
