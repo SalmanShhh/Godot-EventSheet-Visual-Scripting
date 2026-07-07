@@ -50,6 +50,7 @@ const PACK_BUILDERS: Array[String] = [
 	"physics_car",
 	"fade",
 	"slide_move",
+	"object_pool",
 ]
 
 

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - the ObjectPool pack: reuse nodes instead of spawning and freeing
+
+- **ObjectPool** - register as the `ObjectPool` autoload to reuse nodes instead of creating and freeing
+  them every frame (which makes a game hitch). Two ways to pool: the easy way, **Create Pool** from a
+  scene (.tscn) with an optional **Prewarm**; and the custom way, **Create Empty Pool** then **Add To
+  Pool** your own nodes. **Spawn** hands out a ready node (reusing a free one, else making a new copy) -
+  added to the scene, shown, and returned so you can position it - and **Despawn** parks it back
+  (hidden, processing off) to be reused, rather than freeing it. **Despawn All**, **Clear Pool**, a Has
+  Pool condition, Free / Active / Pool Size counts, Spawn / Last Spawned / Last Despawned, and On
+  Spawned / On Despawned triggers round it out. Pinned in `tests/object_pool_test.gd`; drift gate green
+  (audited=45).
+
 ### Added - the Fade and Slide Movement behavior packs
 
 - **Fade** - a `FadeBehavior` you attach to any sprite or UI node (a CanvasItem): **Fade In**, **Fade
