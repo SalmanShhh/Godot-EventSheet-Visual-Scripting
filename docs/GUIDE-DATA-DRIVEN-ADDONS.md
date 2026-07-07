@@ -8,7 +8,8 @@ programmers never touch it.
 
 Godot EventSheets supports this two ways: **Custom Resources** hold the data, and a small **loader**
 loads them - with a built-in warning if you forget to attach one. This guide shows how to use the
-bundled examples and how to make your own addon data-driven.
+bundled examples and how to make your own addon data-driven. For a cookbook of data-driven game systems
+(enemies, items, levels, quests, and more), see [Building a data-driven game](GUIDE-DATA-DRIVEN-GAMES.md).
 
 ## Table of Contents
 
