@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - the Loot Table pack: a weighted loot roller from any sheet
+
+- **A 36th behavior pack, Loot Table** (a Construct 3 addon port): register as the `LootBox`
+  autoload and build weighted drop tables with discrete ACEs - **Create Table**, **Add Entry**
+  (item + weight), **Add Rare Entry** (weight + quantity + tags), and **Add Table Reference**
+  (an entry that rolls another table inline). **Roll** / **Roll Times** fire **On Roll Result**
+  once per drop (read Roll Item / Roll Quantity / Roll Tags / Roll Index) then **On Roll Complete**.
+  Balance is editing weight numbers, not rewiring events. Extras over a plain weighted pick:
+  **Set Guarantee** (a tag drops at least N times per batch), **Set Pity** (HARD pity - a tag is
+  GUARANTEED after N straight misses, firing On Pity Triggered, instead of the C3 addon's soft
+  weight-doubling), and **Set Seed** for reproducible rolls via a seeded RandomNumberGenerator.
+  This is the full runtime engine, distinct from the plugin's EnemyStats "loot table" drawer
+  showcase (a grid-edited Array with no rolling). Pinned in `tests/loot_table_test.gd`; drift gate
+  green (audited=36 drifted=0).
+
 ### Added - the Currency Ledger pack: a named-currency economy from any sheet
 
 - **A 35th behavior pack, Currency Ledger** (the first of several Construct 3 addon ports

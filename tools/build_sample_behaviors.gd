@@ -41,6 +41,7 @@ const PACK_BUILDERS: Array[String] = [
 	"scene_flow",
 	"dialogue_kit",
 	"currency_ledger",
+	"loot_table",
 ]
 
 
