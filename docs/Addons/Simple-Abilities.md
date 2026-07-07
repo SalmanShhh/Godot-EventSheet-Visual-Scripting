@@ -9,9 +9,10 @@ Simple Abilities is a Godot EventSheets behavior pack that gives any node a smal
 1. [Where this pack shines](#where-this-pack-shines)
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
-4. [ACE reference](#ace-reference)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+4. [Data-driven loadouts (AbilitySetResource)](#data-driven-loadouts-abilitysetresource)
+5. [ACE reference](#ace-reference)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -21,8 +22,8 @@ Simple Abilities is a Godot EventSheets behavior pack that gives any node a smal
 - **Charge-based abilities.** A double or triple dash where each charge regenerates on its own timer, so the player can burst two in a row then wait.
 - **Long-cooldown ultimates.** A big move on a 60-second timer, with Cooldown Progress driving a radial fill and On Ability Ready flashing the icon.
 - **Temporary power-ups.** A pickup grants a `"rapid_fire"` ability that auto-removes after 8 seconds, firing On Ability Removed to clean up the effect.
-- **Cooldown-reduction stats.** A haste buff sets the global cooldown multiplier to 0.8 so every future cooldown is 20% shorter, no per-ability math.
-- **Reset-on-kill mechanics.** Score a kill and instantly reset the dash cooldown, the classic aggressive-movement reward loop.
+- **Cooldown-reduction stats.** A haste buff sets the global cooldown multiplier to 0.8 so every future Set Ability Cooldown is 20% shorter, no per-ability math.
+- **Reset-on-kill mechanics.** Score a kill and instantly refresh the dash charge, the classic aggressive-movement reward loop.
 - **Spell hotbars.** Several named spells on one caster, each with its own cooldown and charges, read straight into a bar of HUD slots.
 - **Silence and disable effects.** A silence disables every ability so activation fails until it lifts, without deleting any of them.
 - **Toggle and channeled abilities.** A shield or a stealth that stays "active" until toggled off, tracked with the active flag instead of a loose boolean.
@@ -38,7 +39,7 @@ The model is small. Learn these seven ideas and the rest is just calling the rig
 
 **An ability is a named slot on the node.** Everything is keyed by a string id you pick - `"dash"`, `"fireball"`, `"potion"`. One `SimpleAbilitiesBehavior` holds a whole dictionary of them, so a single player node can own every skill it has. You grant one with **Create Ability** (or one of the richer create actions), and remove it with **Remove Ability**. Passing an id that was never created is a safe no-op for most actions, so a typo fails quietly rather than crashing - if an ability never seems to work, check the id spelling first.
 
-**Cooldown is a rest timer.** **Set Ability Cooldown** puts an ability on cooldown for N seconds; while it is counting down the ability is not ready. **Reset Cooldown** sets it straight to 0 (instantly ready). The create-with-cooldown actions bake a cooldown into the ability so activating it automatically starts the rest.
+**Cooldown regenerates charges.** Readiness is gated by charges, not by the cooldown directly: **Is Ability Ready** is true when the ability is enabled and has at least one charge. When charges are below the max the cooldown timer runs and hands one back, then fires On Ability Ready. For a plain one-charge ability this behaves exactly like a rest timer - activating it spends the charge and starts the cooldown, and it stays unusable until the cooldown returns that charge. The create-with-cooldown actions bake the timer length in. **Set Ability Cooldown** starts a timer by hand; **Reset Cooldown** clears the timer, but it does not refill a spent charge - restore that with **Set Stacks** or **Add Stacks**.
 
 **Stacks are charges that refill.** An ability can hold several charges (max stacks). Activating spends one charge; when charges are below the max, a cooldown timer runs and hands back one charge at a time. That is how "two dashes, then wait for each to come back" works with zero extra wiring. **Create Ability With Cooldown And Stacks** sets this up; **Add Stacks**, **Set Stacks**, and **Consume Ability Stack** adjust the count by hand.
 
@@ -56,11 +57,12 @@ The model is small. Learn these seven ideas and the rest is just calling the rig
 
 **1. Attach the behavior.** Add a `SimpleAbilitiesBehavior` behavior as a child of the node that should own the abilities - your player, an enemy, a vehicle (open the pack sheet and use Tools > Attach to Selected Node, or drop the pack node in). The behavior acts on its parent, and any Node works as the host. Each node that needs its own abilities gets its own behavior.
 
-**2. Optional Inspector knob.** Select the behavior node and set the one property if you want a global cooldown scale:
+**2. Optional Inspector knobs.** Select the behavior node and set either property from the Inspector - neither is required to start:
 
 | Property | Default | What it does |
 |---|---|---|
 | `cooldown_multiplier` | `1.0` | Multiplies every future Set Ability Cooldown. `0.8` = 20% shorter cooldowns; `1.5` = 50% longer. Also settable at runtime with Set Cooldown Multiplier. |
+| `ability_set` | `null` | Optional data-driven loadout. Drop an `AbilitySetResource` (`.tres`) here and every ability listed in it is created automatically on ready - no Create rows needed. See [Data-driven loadouts](#data-driven-loadouts-abilitysetresource). |
 
 **3. Grant, use, react.** Three moves: create your abilities on ready, activate them on input, and react in the triggers. Here is a complete first ability - a dash with a 2-second cooldown:
 
@@ -85,6 +87,39 @@ On Ability Ready
 
 ---
 
+## Data-driven loadouts (AbilitySetResource)
+
+The examples above build abilities with a burst of Create rows in `On Ready`. That is perfect for one player, but once you have several classes - a mage, a rogue, a knight - or you want a designer to tune numbers without touching the sheet, it is nicer to keep each loadout in a **data file**. That is what `AbilitySetResource` is for: a small Custom Resource that lists a whole set of abilities as a grid, saved as a `.tres` asset you edit in Godot's Inspector.
+
+**What the grid holds.** An `AbilitySetResource` has one row per ability, with these columns:
+
+| Column | Type | Meaning |
+|---|---|---|
+| `id` | String | The ability id (`"dash"`, `"fireball"`). Blank rows are skipped. |
+| `cooldown` | float | Cooldown / stack-regen time in seconds. `0` means no cooldown. |
+| `max_stacks` | int | Charges the ability holds. `1` is a plain single-use ability. |
+| `temporary` | float | Auto-expire lifetime in seconds. `0` means it never expires. |
+| `tags` | String | Comma-separated tags, e.g. `"fire, offense"`. Whitespace around each tag is trimmed. |
+
+**Authoring one.** In the FileSystem dock, create a new resource of type `AbilitySetResource` (Godot's Create Resource dialog), then fill in the abilities grid in the Inspector - one row per ability. Save it as, say, `mage_loadout.tres`. Because it is a plain Resource, no plugin is needed at runtime and you can keep a `.tres` per class.
+
+**Auto-create on ready (the zero-event path).** Select your `SimpleAbilitiesBehavior` node, and drop the `.tres` onto its **Ability Set** slot in the Inspector. On ready the behavior reads the resource and creates every ability in it, each **ready to use** - no Create rows at all. Great for a fixed loadout that never changes.
+
+**Swap loadouts at runtime.** To change kits mid-game (pick a class, transform, respec), call the **Load Ability Set** action with a different resource. Every ability in that resource is created ready. Existing abilities with the same id are updated to the resource's numbers; ids not in the resource are left alone, so clear the old set first if you want a clean swap.
+
+```
+On Ready
+  -> Player | Simple Abilities: Load Ability Set  KnightLoadout
+
+On "swap to mage" pressed
+  -> Player | Simple Abilities: Clear All Abilities
+  -> Player | Simple Abilities: Load Ability Set  MageLoadout
+```
+
+Each row of the resource becomes a live ability exactly as if you had called the matching Create action, so cooldowns, stacks, temporary timers, and tags all behave the same. Everything else in this guide - Activate Ability, the triggers, Current Ability Is, the tag bulk actions - works identically whether an ability came from a Create row or from a loadout resource.
+
+---
+
 ## ACE reference
 
 All ACEs live in the **Abilities** category and target the `SimpleAbilitiesBehavior` on the node they are placed on. Almost every one takes an ability `id` string as its first parameter; the tag actions take a `tag` instead.
@@ -94,7 +129,7 @@ All ACEs live in the **Abilities** category and target the `SimpleAbilitiesBehav
 | Action | Parameters | Description |
 |---|---|---|
 | Create Ability | `id` (String) | Grants an empty ability (no cooldown, 1 charge, enabled). Fires On Ability Created if it is new. |
-| Create Ability With Cooldown | `id` (String), `seconds` (float), `reset_instantly` (bool) | Grants an ability and sets its cooldown. `reset_instantly` true starts it ready; false starts it on cooldown. |
+| Create Ability With Cooldown | `id` (String), `seconds` (float), `reset_instantly` (bool) | Grants an ability and sets its cooldown timer length. `reset_instantly` true starts the timer at 0; false starts it running. Either way a fresh one-charge ability still holds its charge, so it is usable until spent - use the stacks variant if you want it to start locked. |
 | Create Ability With Cooldown And Stacks | `id` (String), `seconds` (float), `max_stacks` (int), `reset_instantly` (bool) | Grants a charge-based ability where each charge regenerates over `seconds`. `reset_instantly` true starts full; false starts empty. |
 | Create Temporary Ability | `id` (String), `seconds` (float) | Grants an ability that auto-removes after `seconds`. Calling it again refreshes the timer. |
 | Remove Ability After Duration | `id` (String), `seconds` (float) | Schedules removal of an existing ability after `seconds`. |
@@ -102,7 +137,7 @@ All ACEs live in the **Abilities** category and target the `SimpleAbilitiesBehav
 | Clear All Abilities | (none) | Removes every ability. Fires On Ability Removed for each. |
 | Activate Ability | `id` (String) | Activates the ability if it is ready (enabled and has a charge): spends a charge, starts regen, fires On Stack Consumed then On Ability Activated. Does nothing if not ready. |
 | Set Ability Cooldown | `id` (String), `seconds` (float) | Puts an ability on cooldown (scaled by the global cooldown multiplier). |
-| Reset Cooldown | `id` (String) | Sets an ability's cooldown to 0 (instantly ready). |
+| Reset Cooldown | `id` (String) | Refreshes an ability: clears its cooldown and grants the next charge back, so a spent ability is ready again (the kill-refresh idiom). A full ability just has its timer cleared. |
 | Set Max Stacks | `id` (String), `max_stacks` (int) | Changes the maximum charges; current charges clamp down to fit. |
 | Set Stacks | `id` (String), `stacks` (int) | Sets the current charges (clamped 0 to max). |
 | Add Stacks | `id` (String), `count` (int) | Adds charges up to the max. Fires On Stack Gained, and On Max Stacks Reached if it would overflow. |
@@ -115,8 +150,9 @@ All ACEs live in the **Abilities** category and target the `SimpleAbilitiesBehav
 | Clear All Tags | `id` (String) | Removes every tag from an ability. |
 | Set Abilities With Tag Enabled | `tag` (String), `enabled` (bool) | Enables or disables every ability carrying a tag. |
 | Remove All Abilities With Tag | `tag` (String) | Deletes every ability with a tag. Fires On Ability Removed for each. |
-| Reset Cooldown For Abilities With Tag | `tag` (String) | Sets cooldown to 0 for every ability with a tag. |
+| Reset Cooldown For Abilities With Tag | `tag` (String) | Refreshes every ability with a tag: clears each cooldown and grants a charge back, so the group is ready again. |
 | Set Cooldown Multiplier | `multiplier` (float) | Global cooldown scaling for all future Set Ability Cooldown calls (0.8 = 20% reduction). |
+| Load Ability Set | `resource` (Resource) | Creates every ability listed in an `AbilitySetResource` (`.tres`): id, cooldown, max stacks, temporary duration, and comma-separated tags. Each is created ready. Call it to swap loadouts at runtime; the `ability_set` Inspector slot calls it once on ready. |
 
 ### Conditions
 
@@ -169,6 +205,7 @@ All ACEs live in the **Abilities** category and target the `SimpleAbilitiesBehav
 | Property | Type | Default | Range |
 |---|---|---|---|
 | `cooldown_multiplier` | float | `1.0` | 0 - 10 |
+| `ability_set` | Resource | `null` | Drop an `AbilitySetResource` (`.tres`) to auto-create its whole loadout on ready. |
 
 ---
 
@@ -218,7 +255,7 @@ A powerful ultimate on a 60-second timer, with a radial fill and a "ready" flash
 
 ```
 On Ready
-  -> Player | Simple Abilities: Create Ability With Cooldown  "ultimate", 60.0, false
+  -> Player | Simple Abilities: Create Ability With Cooldown And Stacks  "ultimate", 60.0, 1, false
 
 On "ultimate" pressed
   Condition: Player | Simple Abilities  Is Ability Ready  "ultimate"
@@ -233,7 +270,7 @@ On Ability Ready
     -> UltIcon: play "ready" glow
 ```
 
-`reset_instantly` false means the ultimate starts on cooldown at the match open. Cooldown Progress runs 1 down to 0, perfect for a draining radial.
+The stacks variant with `reset_instantly` false starts the ultimate empty (0 charges), so Is Ability Ready is false until the 60-second timer regenerates its one charge. Cooldown Progress runs 1 down to 0, perfect for a draining radial. (Create Ability With Cooldown alone would leave the ultimate holding its charge and castable from the start - the empty stack is what locks it.)
 
 ### 4. Temporary power-up pickup
 
@@ -263,22 +300,19 @@ On Haste rune expired
   -> Player | Simple Abilities: Set Cooldown Multiplier  1.0
 ```
 
-The multiplier applies to future Set Ability Cooldown calls, so it shapes cooldowns started after the buff turns on.
+The multiplier only scales Set Ability Cooldown calls made while it is active. Cooldowns baked in by the create actions and the automatic charge-regen keep their own length, so put the abilities you want haste to affect on cooldown with Set Ability Cooldown.
 
-### 6. Reset the dash on a kill
+### 6. Refresh the dash on a kill
 
-Reward aggressive play by refunding the dash cooldown whenever the player scores a kill.
+Reward aggressive play by instantly refreshing the dash whenever the player scores a kill.
 
 ```
 On Enemy killed by Player
   -> Player | Simple Abilities: Reset Cooldown  "dash"
-
-On Ability Ready
-  Condition: Player | Simple Abilities  Current Ability Is  "dash"
-    -> HUD: flash "dash refreshed"
+  -> HUD: flash "dash refreshed"
 ```
 
-Reset Cooldown drops the timer to 0 instantly, so the dash is usable again the same frame.
+Reset Cooldown refreshes the ability in one row: it clears the timer and hands back the spent charge, so the dash is ready again the same frame. (Readiness is charge-based, so Reset Cooldown grants the next charge rather than only zeroing the timer.)
 
 ### 7. Spell hotbar HUD
 
@@ -346,18 +380,17 @@ On Anti-magic zone exited
 
 One tag row touches every fire spell, so adding a third fire spell later needs no change to the zone logic.
 
-### 11. Refresh-all cooldown pickup
+### 11. Refresh a whole group of abilities
 
-A cooldown-reset shrine clears the timers on a whole group of abilities at once.
+A reset shrine refills every ability under a tag, making the group usable again at once.
 
 ```
 On Player touches reset shrine
-  -> Player | Simple Abilities: Add Tag  "dash", "resettable"
-  -> Player | Simple Abilities: Reset Cooldown For Abilities With Tag  "resettable"
+  -> Player | Simple Abilities: Reset Cooldown For Abilities With Tag  "skill"
   -> Shrine: play consumed animation
 ```
 
-Tag whichever abilities the shrine should refresh, then one Reset Cooldown For Abilities With Tag row makes them all ready.
+Reset Cooldown For Abilities With Tag refreshes every ability carrying the tag in one row - clearing each timer and handing back a spent charge - so the whole group is ready again at once. (If you need to force charges to a specific number instead, loop with Set Stacks using Count Abilities By Tag and Ability By Tag Index.)
 
 ### 12. Potion belt with limited charges
 
@@ -418,6 +451,36 @@ On Debug key pressed
 
 Count Abilities By Tag gives the loop bound and Ability By Tag Index reads each id by position; List Abilities By Tag returns the whole comma-separated set at once.
 
+### 15. Class loadout from a data file
+
+Keep each class kit in its own `AbilitySetResource` and grant the whole thing with no Create rows.
+
+```
+On Ready
+  -> Player | Simple Abilities: Load Ability Set  MageLoadout
+```
+
+`MageLoadout` is a `.tres` whose grid lists every mage ability - `"fireball"` with a 1.5s cooldown, `"blink"` on 6s, `"meteor"` on 12s tagged `"fire"`. Each is created ready. The simplest version needs no event at all: just drop the resource on the behavior's Ability Set slot and it loads on ready. Tuning a cooldown later means editing the `.tres`, not the sheet.
+
+### 16. Swap loadouts when the player changes class
+
+A class-select shrine (or a transform power-up) trades one whole kit for another at runtime.
+
+```
+On Ready
+  -> Player | Simple Abilities: Load Ability Set  KnightLoadout
+
+On Player picks "Rogue" at the shrine
+  -> Player | Simple Abilities: Clear All Abilities
+  -> Player | Simple Abilities: Load Ability Set  RogueLoadout
+  -> HUD: rebuild the ability bar
+
+On Ability Created
+  -> HUD: add a slot for Player | Simple Abilities  Current Ability ID
+```
+
+Clear All Abilities wipes the old kit first, then Load Ability Set builds the new one from the rogue's `.tres`. On Ability Created fires once per ability the resource grants, so the HUD can rebuild its bar from the fresh loadout.
+
 ---
 
 ## Tips and common mistakes
@@ -429,6 +492,7 @@ Count Abilities By Tag gives the loop bound and Ability By Tag Index reads each 
 - **Activate self-gates; the ready check is for feedback.** Activate Ability already does nothing when an ability is on cooldown or disabled, so you can call it on every press. Add an Is Ability Ready condition only when you want to branch - for example to play an "on cooldown" buzzer on the failed press.
 - **Enabled and active are different things.** Enabled controls whether an ability can activate at all (a silence disables it). Active is a free flag you set yourself for toggles and channels (a shield that is currently up). Disabling an ability does not clear its active flag, and setting active does not make a disabled ability usable.
 - **Cooldown Progress counts down, not up.** It returns the fraction of the cooldown still remaining - 1 the instant it starts, 0 when ready - which suits a draining radial directly. If you want a filling bar instead, drive it from 1 minus the value.
-- **The multiplier applies to Set Ability Cooldown, not retroactively.** Changing the cooldown multiplier scales cooldowns that start after the change. An ability already resting keeps the timer it was given; the new scale kicks in the next time it goes on cooldown.
+- **A created cooldown does not lock a one-charge ability.** Create Ability With Cooldown hands the ability its charge immediately, so it is usable right away even with `reset_instantly` false - that flag only sets whether the regen timer starts full. To start an ability unusable, create it with Create Ability With Cooldown And Stacks and `reset_instantly` false, which starts it at 0 charges.
+- **The multiplier only scales Set Ability Cooldown.** Cooldowns baked in by the create actions and the automatic charge-regen are not affected; only cooldowns you start with Set Ability Cooldown are multiplied, and only from the next call onward. An ability already resting keeps its current timer.
 - **Temporary abilities refresh, they do not stack.** Calling Create Temporary Ability again on the same id resets the expiry timer rather than adding a second copy. If you want a longer duration from re-pickup, that refresh is the behavior you get; there is only ever one ability per id.
 - **Tag actions act on whatever currently carries the tag.** Set Abilities With Tag Enabled, Remove All Abilities With Tag, and Reset Cooldown For Abilities With Tag hit every ability tagged at call time. Tag your abilities right after creating them so a later bulk row does not miss one.

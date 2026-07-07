@@ -54,6 +54,7 @@ Node script extending `CharacterBody2D`.
 - **Remove All Abilities With Tag** (`tag: String`) - Deletes every ability with a tag. Fires On Ability Removed for each.
 - **Reset Cooldown For Abilities With Tag** (`tag: String`) - Sets cooldown to 0 for every ability with a tag.
 - **Set Cooldown Multiplier** (`multiplier: float`) - Global cooldown scaling for all future Set Cooldown calls (0.8 = 20% cooldown reduction).
+- **Load Ability Set** (`resource: Resource`) - Creates every ability listed in an AbilitySetResource (.tres): id, cooldown, max stacks, temporary duration, and comma-separated tags. Each is granted ready. Drop the resource in the Inspector to auto-load on ready, or call this to swap loadouts at runtime.
 
 #### Expressions
 - **Current Ability ID**
@@ -103,6 +104,7 @@ Node script extending `CharacterBody2D`.
 - **Permutation Value** (`index: int`) - Reads index (wrapped) from the permutation table - generate it first.
 - **Pick From** (`options: Array`) - A uniformly-random element of the array (null if empty).
 - **Weighted Index** (`weights: Array`) - An index chosen in proportion to the weights array (heavier = likelier).
+- **Pick From Table** (`table: Resource`) - A weighted-random value from a RandomTableResource (.tres) - author your odds as a data asset and draw from it. "" if the table is empty.
 - **Shuffle Bag Pick** (`bag_name: String`) - Draws the next item from a named bag - every item appears once before any repeat.
 
 ### BackgroundRunner (`res://eventsheet_addons/background_runner/background_runner_behavior.gd`)
@@ -147,7 +149,7 @@ Node script extending `CharacterBody2D`.
 - **Subtract** (`a: Array, b: Array`) - Subtracts Decimal b from Decimal a.
 - **Multiply** (`a: Array, b: Array`) - Multiplies two Decimals (mantissas multiply, exponents add).
 - **Divide** (`a: Array, b: Array`) - Divides Decimal a by Decimal b (returns 0 if b is 0).
-- **Power** (`decimal: Array, power: float`) - Raises a Decimal to a power: Power(d, 2) squares it.
+- **Power** (`decimal: Array, power: float`) - Raises a Decimal to a power: Power(d, 2) squares it. Works in log space so a big power never overflows.
 - **Scale** (`decimal: Array, factor: float`) - Multiplies a Decimal by a plain number - the easy way to apply a multiplier.
 - **Compare** (`a: Array, b: Array`) - Compares two Decimals: -1 if a < b, 0 if equal, 1 if a > b.
 - **Format Big** (`decimal: Array, decimals: int`) - Formats a Decimal with a short-scale suffix, falling through to scientific past Dc: Make(1.5, 100) -> "1.50e100".
@@ -633,6 +635,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Pity** (`table_id: String, tag: String, threshold: int`) - Hard pity: after `threshold` rolls in a row WITHOUT a tagged drop, the next roll GUARANTEES one (and fires On Pity Triggered).
 - **Reset Pity** (`table_id: String, tag: String`) - Zeroes a tag's pity counter for a table.
 - **Set Seed** (`seed_value: int`) - Makes rolls repeatable from a fixed seed (same seed = same sequence). Pass 0 to go back to random.
+- **Use Advanced Random** (`enabled: bool`) - When on, rolls draw from the shared AdvancedRandom autoload instead of this pack's own generator, so one seed drives your whole game's randomness. When off (the default) it uses its own seed. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).
 - **Load From Resource** (`loot_table: Resource`) - Loads a whole table from a Loot Table resource (a .tres you filled in the Inspector) - its name, entries, and pity - in one step. The data-driven alternative to Create Table plus a string of Add Entry actions.
 - **Roll** (`table_id: String`) - Rolls the table once, firing On Roll Result then On Roll Complete.
 - **Roll Times** (`table_id: String, count: int`) - Rolls the table `count` times in one batch (guarantees + pity apply across the batch), then shuffles.
@@ -861,6 +864,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Register Room Type** (`type_id: String, weight: float, min_depth: int, max_depth: int, max_per_depth: int`) - Registers a room type that Generate may place: a weight (higher = commoner), the depth range it may appear in (max_depth -1 = anywhere), and a per-depth cap (-1 = no cap).
 - **Set Start Type** (`type_id: String`) - The type name given to the single depth-0 room (default "start
 - **Set Boss Type** (`type_id: String`) - The type name given to the single final-depth room (default "boss
+- **Use Advanced Random** (`enabled: bool`) - When on, ProcRoom draws its randomness from the shared AdvancedRandom autoload, so one seed can drive every procedural system at once. When off (the default) it uses its own seeded generator. Set the AdvancedRandom seed before Generate for reproducible maps. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).
 - **Generate** (`seed_text: String, depths: int, max_rooms_per_depth: int`) - Builds a reproducible tiered map from a seed: `depths` tiers (start at 0, boss at the last), up to `max_rooms_per_depth` rooms per interior tier. Same seed = same map. Fires On Graph Generated.
 - **Regenerate** - Rebuilds the map from the SAME seed + settings as the last Generate (a fresh run of the same layout).
 - **Enter Room** (`room_id: String`) - Moves to a room if it's connected forward from the current room and not locked; otherwise fires On Traversal Blocked (read Block Reason). On success marks it visited + fires On Room Entered.
@@ -962,6 +966,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Actions
 - **Register Rarity** (`name: String, weight: float, tier: int`) - Registers a rarity: a roll weight (higher = commoner) and a tier rank (higher = rarer; pity guarantees a tier at or above the pity rarity).
+- **Use Advanced Random** (`enabled: bool`) - When on, rolls draw from the shared AdvancedRandom autoload instead of this pack's own generator, so one seed drives your whole game's randomness. When off (the default) it uses its own generator. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).
 - **Register Skin** (`id: String, display_name: String, rarity: String, cost: float, tags: String`) - Registers a skin: a unique id, a display name, its rarity (must be registered), a cost (0 = not purchasable), and comma-separated tags.
 - **Load Catalog** (`catalog: Resource`) - Registers a whole catalog (rarities + skins) from a Skin Catalog resource (a .tres you filled in the Inspector) in one step. The data-driven alternative to a string of Register Rarity + Register Skin actions.
 - **Roll** (`tag: String`) - Rolls a weighted-random UNOWNED skin (optional tag filter; "" = any) and grants it. Applies pity, then fires On Skin Rolled and On Skin Unlocked. Fires On Pool Empty if nothing is left.
@@ -1086,6 +1091,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Draw** - Evaluates, then activates the highest-weight eligible storylet and fires On Storylet Drawn (or On None Available if nothing qualifies).
 - **Draw Weighted** - Like Draw, but picks randomly among the eligible storylets in proportion to their weight (for variety).
 - **Choose** (`choice_id: String`) - Resolves the active storylet's choice by id (fires On Choice Made, then clears the active storylet). React inside On Choice Made.
+- **Use Advanced Random** (`enabled: bool`) - When on, Draw Weighted picks using the shared AdvancedRandom autoload instead of Godot's own randf(), so one seed drives your whole game's randomness. When off (the default) it uses randf(). Needs the Advanced Random pack installed (it safely falls back if not).
 - **Dismiss** - Clears the active storylet without making a choice (the play still counted).
 - **Reset Play Count** (`id: String`) - Lets a one-shot or limited storylet play again.
 - **Reset All History** - Clears every play count + cooldown (e.g. on New Game).

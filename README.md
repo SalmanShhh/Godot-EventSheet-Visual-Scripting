@@ -43,12 +43,12 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 ## Quick start
 
-1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 56 behavior packs. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
+1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 58 behavior packs. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
 2. **Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New… → Platformer Starter**, add events (live search understands C3 phrases like *"every tick"*), and Run.
 
-Coming from Construct? The [C3 migration guide](docs/GUIDE-C3-MIGRATION.md) maps every concept, behavior, and plugin to its home here. Extending the plugin? The [Custom ACEs guide](docs/GUIDE-CUSTOM-ACES.md) and [Custom Blocks guide](docs/GUIDE-CUSTOM-BLOCKS.md) cover both extension surfaces, [Creating custom modules](docs/GUIDE-CREATING-CUSTOM-MODULES.md) walks you through adding your own vocabulary, [Data-driven addons](docs/GUIDE-DATA-DRIVEN-ADDONS.md) and [Building a data-driven game](docs/GUIDE-DATA-DRIVEN-GAMES.md) show how to author content as Inspector-edited Custom Resources, [Composition and systems](docs/GUIDE-COMPOSITION-SYSTEMS.md) covers the ECS-lite pattern (entities as grouped nodes, systems as sheets that run over them), and [Building editor tools](docs/GUIDE-BUILDING-EDITOR-TOOLS.md) shows how a sheet becomes a Godot editor tool. Learning by building? The [recipes](docs/GUIDE-RECIPES.md) walk a platformer, health, pickups, and debugging end to end. Existing project? [Using EventSheets with your code](docs/GUIDE-USING-WITH-EXISTING-CODE.md) shows how sheets call (and are called by) your GDScript.
+Coming from Construct? The [C3 migration guide](docs/GUIDE-C3-MIGRATION.md) maps every concept, behavior, and plugin to its home here. Extending the plugin? The [Custom ACEs guide](docs/GUIDE-CUSTOM-ACES.md) and [Custom Blocks guide](docs/GUIDE-CUSTOM-BLOCKS.md) cover both extension surfaces, [Creating custom modules](docs/GUIDE-CREATING-CUSTOM-MODULES.md) walks you through adding your own vocabulary, [Data-driven addons](docs/GUIDE-DATA-DRIVEN-ADDONS.md) and [Building a data-driven game](docs/GUIDE-DATA-DRIVEN-GAMES.md) show how to author content as Inspector-edited Custom Resources, [Composition and systems](docs/GUIDE-COMPOSITION-SYSTEMS.md) covers the ECS-lite pattern (entities as grouped nodes, systems as sheets that run over them), [Procedural generation](docs/GUIDE-PROCEDURAL-GENERATION.md) shows how one Advanced Random seed drives maps, loot, and cosmetics (and how to generate content in editor tools and resources), and [Building editor tools](docs/GUIDE-BUILDING-EDITOR-TOOLS.md) shows how a sheet becomes a Godot editor tool. Learning by building? The [recipes](docs/GUIDE-RECIPES.md) walk a platformer, health, pickups, and debugging end to end. Existing project? [Using EventSheets with your code](docs/GUIDE-USING-WITH-EXISTING-CODE.md) shows how sheets call (and are called by) your GDScript.
 
 ## Why event sheets in Godot? (honest pros & cons)
 
@@ -129,7 +129,7 @@ _Recent releases before this:_ **v0.11.0** (collapsible regions, the abstraction
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
-| `eventsheet_addons/` | Zero-config ACE addons + the 56 behavior packs |
+| `eventsheet_addons/` | Zero-config ACE addons + the 58 behavior packs |
 | `demo/` | Demo sheets, themes, and golden compiled output |
 | `tests/` | Headless suite - `run_tests.gd` (full) and `run_perf.gd` (fast gate) |
 | `docs/` | Contract specs + guides (C3 migration, recipes, MCP, glossary, uninstall) |

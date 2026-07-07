@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Added - auto-registered pack builders, data-driven Simple Abilities, and Advanced Random everywhere
+
+- **Pack builders now auto-register.** `tools/build_sample_behaviors.gd` discovers every `*.gd` in
+  `tools/pack_builders/` (skipping the leading-underscore helpers) and calls its `static func build()`,
+  the same zero-config discovery the helper ACE modules use - drop a new builder in and it registers
+  itself, no list to edit. Builds run in sorted order so a rebuild stays deterministic.
+- **Simple Abilities is now data-driven.** A new **AbilitySetResource** Custom Resource holds a whole
+  loadout as a `.tres` (a grid of id / cooldown / max stacks / temporary / tags); the behavior gained an
+  **Ability Set** slot that auto-creates the loadout on ready, and a **Load Ability Set** action to swap
+  loadouts at runtime. The events-driven way still works exactly as before.
+- **Advanced Random can drive the procedural packs.** ProcRoom, Loot Table (LootBox), SkinVault, and
+  Storylets each gained a **Use Advanced Random** action: when on, that pack draws from the shared
+  `AdvancedRandom` autoload instead of its own generator, so one seed reproduces a whole run (map + loot +
+  cosmetics + narrative). Off by default (behaviour is byte-identical), and it falls back safely to the
+  local generator when Advanced Random is not installed.
+- **Data-driven odds.** A new **RandomTableResource** Custom Resource (a value / weight grid) plus
+  Advanced Random's new **Pick From Table** expression, which reads the resource and picks in proportion
+  to weight - author drop rates as a `.tres`, not events.
+- **A Procedural module for tools and resources.** A new "Procedural" ACE section of STATELESS seeded
+  expressions (**Seeded Value / Seeded Int / Seeded Pick / Seeded Sign / Seeded Chance**) that need no
+  autoload, so they work inside Editor Tool sheets and while filling Custom Resources, as well as at
+  runtime - a seed plus an index always gives the same value.
+- **A procedural-generation guide**, [docs/GUIDE-PROCEDURAL-GENERATION.md](docs/GUIDE-PROCEDURAL-GENERATION.md),
+  with 20+ worked cases pairing Advanced Random with the other addons and a start-to-finish seeded-run
+  workflow; the Simple Abilities guide gained a data-driven section. Pinned in
+  `tests/random_integration_test.gd` (drift gate green, audited=58).
+
 ### Added - the incremental / idle game suite (7 packs)
 
 A cohesive toolkit for building clicker, idle, and incremental games. The existing Currency Ledger owns
