@@ -34,6 +34,7 @@ var _entered_type: String = ""
 var _blocked_id: String = ""
 var _block_reason: String = ""
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _use_shared: bool = false
 
 ## @ace_action
 ## @ace_name("Register Room Type")
@@ -61,6 +62,15 @@ func set_start_type(type_id: String) -> void:
 ## @ace_codegen_template("ProcRoom.set_boss_type({type_id})")
 func set_boss_type(type_id: String) -> void:
 	_boss_type = type_id
+
+## @ace_action
+## @ace_name("Use Advanced Random")
+## @ace_category("ProcRoom")
+## @ace_description("When on, ProcRoom draws its randomness from the shared AdvancedRandom autoload, so one seed can drive every procedural system at once. When off (the default) it uses its own seeded generator. Set the AdvancedRandom seed before Generate for reproducible maps. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("ProcRoom.use_advanced_random({enabled})")
+func use_advanced_random(enabled: bool) -> void:
+	_use_shared = enabled
 
 ## @ace_action
 ## @ace_name("Generate")
@@ -392,6 +402,22 @@ func blocked_id() -> String:
 func block_reason() -> String:
 	return _block_reason
 
+func _rand_float() -> float:
+	# Randomness source: the shared AdvancedRandom autoload when Use Advanced Random is on and the
+	# pack is installed, otherwise this pack's own seeded generator (the default - unchanged behaviour).
+	if _use_shared and is_inside_tree():
+		var shared: Node = get_node_or_null("/root/AdvancedRandom")
+		if shared != null:
+			return shared.random_value()
+	return _rng.randf()
+
+func _rand_int(minimum: int, maximum: int) -> int:
+	if _use_shared and is_inside_tree():
+		var shared: Node = get_node_or_null("/root/AdvancedRandom")
+		if shared != null:
+			return shared.random_int(minimum, maximum)
+	return _rng.randi_range(minimum, maximum)
+
 func _connect(a: String, b: String) -> void:
 	if not (b in (_rooms[a].to as Array)):
 		(_rooms[a].to as Array).append(b)
@@ -416,7 +442,7 @@ func _pick_type(depth: int, counts: Dictionary) -> String:
 	var total: float = 0.0
 	for w: float in weights:
 		total += w
-	var r: float = _rng.randf() * total
+	var r: float = _rand_float() * total
 	for i: int in eligible.size():
 		r -= weights[i]
 		if r <= 0.0:
@@ -429,7 +455,7 @@ func _build() -> void:
 	_rng.seed = _seed.hash()
 	var per_depth_counts: Dictionary = {}
 	for d: int in _depths:
-		var count: int = 1 if (d == 0 or d == _depths - 1) else _rng.randi_range(1, _max_per)
+		var count: int = 1 if (d == 0 or d == _depths - 1) else _rand_int(1, _max_per)
 		var ids: Array = []
 		per_depth_counts[d] = {}
 		for i: int in count:
@@ -443,10 +469,10 @@ func _build() -> void:
 		var here: Array = _by_depth[d]
 		var nxt: Array = _by_depth[d + 1]
 		for child: String in nxt:
-			_connect(str(here[_rng.randi_range(0, here.size() - 1)]), child)
+			_connect(str(here[_rand_int(0, here.size() - 1)]), child)
 		for parent: String in here:
-			if _rng.randf() < 0.5 and nxt.size() > 0:
-				_connect(parent, str(nxt[_rng.randi_range(0, nxt.size() - 1)]))
+			if _rand_float() < 0.5 and nxt.size() > 0:
+				_connect(parent, str(nxt[_rand_int(0, nxt.size() - 1)]))
 	_current = "d0_0"
 	_previous = ""
 	if _rooms.has(_current):

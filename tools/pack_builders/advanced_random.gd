@@ -115,6 +115,28 @@ static func build() -> bool:
 			"\t\treturn i",
 			"return weights.size() - 1",
 		])), TYPE_INT)
+	_expr(sheet, "pick_from_table", "Pick From Table", "Advanced Random: Picking", "A weighted-random value from a RandomTableResource (.tres) - author your odds as a data asset and draw from it. \"\" if the table is empty.", [["table", "Resource"]],
+		"\n".join(PackedStringArray([
+			"if table == null:",
+			"\treturn \"\"",
+			"var rows: Variant = table.get(\"entries\")",
+			"if not (rows is Array):",
+			"\treturn \"\"",
+			"var total: float = 0.0",
+			"for row: Variant in (rows as Array):",
+			"\tif row is Dictionary:",
+			"\t\ttotal += maxf(float((row as Dictionary).get(\"weight\", 0.0)), 0.0)",
+			"if total <= 0.0:",
+			"\treturn \"\"",
+			"var roll: float = _rng.randf() * total",
+			"var running: float = 0.0",
+			"for row: Variant in (rows as Array):",
+			"\tif row is Dictionary:",
+			"\t\trunning += maxf(float((row as Dictionary).get(\"weight\", 0.0)), 0.0)",
+			"\t\tif roll < running:",
+			"\t\t\treturn str((row as Dictionary).get(\"value\", \"\"))",
+			"return \"\""
+		])), TYPE_STRING)
 	_expr(sheet, "shuffle_bag_pick", "Shuffle Bag Pick", "Advanced Random: Picking", "Draws the next item from a named bag - every item appears once before any repeat.", [["bag_name", "String"]],
 		"\n".join(PackedStringArray([
 			"if not _bags.has(bag_name):",

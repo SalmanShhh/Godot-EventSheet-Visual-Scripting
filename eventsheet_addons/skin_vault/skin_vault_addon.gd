@@ -53,6 +53,7 @@ var _unlock_method: String = ""
 var _req_id: String = ""
 var _revoked_id: String = ""
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _use_shared: bool = false
 
 func _ready() -> void:
 	_rng.randomize()
@@ -65,6 +66,15 @@ func _ready() -> void:
 ## @ace_codegen_template("SkinVault.register_rarity({name}, {weight}, {tier})")
 func register_rarity(name: String, weight: float, tier: int) -> void:
 	_rarities[name] = {"weight": maxf(weight, 0.0), "tier": tier}
+
+## @ace_action
+## @ace_name("Use Advanced Random")
+## @ace_category("SkinVault")
+## @ace_description("When on, rolls draw from the shared AdvancedRandom autoload instead of this pack's own generator, so one seed drives your whole game's randomness. When off (the default) it uses its own generator. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SkinVault.use_advanced_random({enabled})")
+func use_advanced_random(enabled: bool) -> void:
+	_use_shared = enabled
 
 ## @ace_action
 ## @ace_name("Register Skin")
@@ -123,7 +133,7 @@ func roll(tag: String) -> void:
 	var total: float = 0.0
 	for id: String in pool:
 		total += maxf(_weight(_skins[id].rarity), 0.0001)
-	var r: float = _rng.randf() * total
+	var r: float = _rand_float() * total
 	var picked: String = str(pool[pool.size() - 1])
 	for id: String in pool:
 		r -= maxf(_weight(_skins[id].rarity), 0.0001)
@@ -391,6 +401,15 @@ func requested_cost() -> float:
 ## @ace_codegen_template("SkinVault.revoked_id()")
 func revoked_id() -> String:
 	return _revoked_id
+
+func _rand_float() -> float:
+	# Randomness source: the shared AdvancedRandom autoload when Use Advanced Random is on and the
+	# pack is installed, otherwise this pack's own generator (the default - unchanged behaviour).
+	if _use_shared and is_inside_tree():
+		var shared: Node = get_node_or_null("/root/AdvancedRandom")
+		if shared != null:
+			return shared.random_value()
+	return _rng.randf()
 
 func _tier(rarity: String) -> int:
 	return int(_rarities.get(rarity, {}).get("tier", 0))

@@ -28,6 +28,7 @@ var _active: String = ""
 var _chosen: String = ""
 # Internal monotonic clock (seconds), ticked in _process so cooldowns need no wiring.
 var _clock: float = 0.0
+var _use_shared: bool = false
 
 func _process(delta: float) -> void:
 	_clock += delta
@@ -156,7 +157,7 @@ func draw_weighted() -> void:
 	if total <= 0.0:
 		_activate(str(_available[0]))
 		return
-	var r: float = randf() * total
+	var r: float = _rand_float() * total
 	for id: String in _available:
 		r -= maxf(_lib[id].weight, 0.0)
 		if r <= 0.0:
@@ -176,6 +177,15 @@ func choose(choice_id: String) -> void:
 	_chosen = choice_id
 	on_choice_made.emit()
 	_active = ""
+
+## @ace_action
+## @ace_name("Use Advanced Random")
+## @ace_category("Storylets")
+## @ace_description("When on, Draw Weighted picks using the shared AdvancedRandom autoload instead of Godot's own randf(), so one seed drives your whole game's randomness. When off (the default) it uses randf(). Needs the Advanced Random pack installed (it safely falls back if not).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("Storylets.use_advanced_random({enabled})")
+func use_advanced_random(enabled: bool) -> void:
+	_use_shared = enabled
 
 ## @ace_action
 ## @ace_name("Dismiss")
@@ -404,6 +414,15 @@ func cooldown_remaining(id: String) -> float:
 ## @ace_codegen_template("Storylets.storylet_count()")
 func storylet_count() -> int:
 	return _lib.size()
+
+func _rand_float() -> float:
+	# Randomness source: the shared AdvancedRandom autoload when Use Advanced Random is on and the
+	# pack is installed, otherwise Godot's own randf() (the default - unchanged behaviour).
+	if _use_shared and is_inside_tree():
+		var shared: Node = get_node_or_null("/root/AdvancedRandom")
+		if shared != null:
+			return shared.random_value()
+	return randf()
 
 func _story(id: String) -> Dictionary:
 	if not _lib.has(id):

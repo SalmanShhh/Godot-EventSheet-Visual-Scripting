@@ -33,6 +33,7 @@ var _roll_total: int = 0
 var _pity_ctx_table: String = ""
 var _pity_ctx_tag: String = ""
 var _pity_ctx_count: int = 0
+var _use_shared: bool = false
 
 func _ready() -> void:
 	_rng.randomize()
@@ -119,6 +120,15 @@ func set_seed(seed_value: int) -> void:
 		_rng.randomize()
 	else:
 		_rng.seed = seed_value
+
+## @ace_action
+## @ace_name("Use Advanced Random")
+## @ace_category("Loot")
+## @ace_description("When on, rolls draw from the shared AdvancedRandom autoload instead of this pack's own generator, so one seed drives your whole game's randomness. When off (the default) it uses its own seed. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("LootBox.use_advanced_random({enabled})")
+func use_advanced_random(enabled: bool) -> void:
+	_use_shared = enabled
 
 ## @ace_action
 ## @ace_name("Load From Resource")
@@ -306,6 +316,22 @@ func pity_tag() -> String:
 func pity_count() -> int:
 	return _pity_ctx_count
 
+func _rand_float() -> float:
+	# Randomness source: the shared AdvancedRandom autoload when Use Advanced Random is on and the
+	# pack is installed, otherwise this pack's own seeded generator (the default - unchanged behaviour).
+	if _use_shared and is_inside_tree():
+		var shared: Node = get_node_or_null("/root/AdvancedRandom")
+		if shared != null:
+			return shared.random_value()
+	return _rng.randf()
+
+func _rand_int(minimum: int, maximum: int) -> int:
+	if _use_shared and is_inside_tree():
+		var shared: Node = get_node_or_null("/root/AdvancedRandom")
+		if shared != null:
+			return shared.random_int(minimum, maximum)
+	return _rng.randi_range(minimum, maximum)
+
 func _table(id: String) -> Dictionary:
 	if not _tables.has(id):
 		_tables[id] = {"entries": [], "guarantees": []}
@@ -318,7 +344,7 @@ func _weighted_pick(entries: Array) -> Dictionary:
 		total += maxf(e.weight, 0.0)
 	if total <= 0.0:
 		return {}
-	var r: float = _rng.randf() * total
+	var r: float = _rand_float() * total
 	for e: Dictionary in entries:
 		r -= maxf(e.weight, 0.0)
 		if r <= 0.0:
@@ -385,7 +411,7 @@ func _roll_batch(table_id: String, count: int) -> void:
 			if results.size() < draws:
 				results.append(d)
 	for i: int in range(results.size() - 1, 0, -1):
-		var j: int = _rng.randi_range(0, i)
+		var j: int = _rand_int(0, i)
 		var tmp: Dictionary = results[i]
 		results[i] = results[j]
 		results[j] = tmp

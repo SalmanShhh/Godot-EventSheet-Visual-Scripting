@@ -211,6 +211,33 @@ func weighted_index(weights: Array) -> int:
 	return weights.size() - 1
 
 ## @ace_expression
+## @ace_name("Pick From Table")
+## @ace_category("Advanced Random: Picking")
+## @ace_description("A weighted-random value from a RandomTableResource (.tres) - author your odds as a data asset and draw from it. "" if the table is empty.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("AdvancedRandom.pick_from_table({table})")
+func pick_from_table(table: Resource) -> String:
+	if table == null:
+		return ""
+	var rows: Variant = table.get("entries")
+	if not (rows is Array):
+		return ""
+	var total: float = 0.0
+	for row: Variant in (rows as Array):
+		if row is Dictionary:
+			total += maxf(float((row as Dictionary).get("weight", 0.0)), 0.0)
+	if total <= 0.0:
+		return ""
+	var roll: float = _rng.randf() * total
+	var running: float = 0.0
+	for row: Variant in (rows as Array):
+		if row is Dictionary:
+			running += maxf(float((row as Dictionary).get("weight", 0.0)), 0.0)
+			if roll < running:
+				return str((row as Dictionary).get("value", ""))
+	return ""
+
+## @ace_expression
 ## @ace_name("Shuffle Bag Pick")
 ## @ace_category("Advanced Random: Picking")
 ## @ace_description("Draws the next item from a named bag - every item appears once before any repeat.")
