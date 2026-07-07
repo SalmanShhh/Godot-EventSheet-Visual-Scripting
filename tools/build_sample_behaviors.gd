@@ -48,6 +48,8 @@ const PACK_BUILDERS: Array[String] = [
 	"utility_ai",
 	"combo_box",
 	"physics_car",
+	"fade",
+	"slide_move",
 ]
 
 

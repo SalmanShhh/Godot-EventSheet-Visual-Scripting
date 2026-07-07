@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - the Fade and Slide Movement behavior packs
+
+- **Fade** - a `FadeBehavior` you attach to any sprite or UI node (a CanvasItem): **Fade In**, **Fade
+  Out** (fires On Fade Out Started then On Faded Out, optionally freeing the node), **Start Fade** (the
+  whole fade-in / hold / fade-out sequence from the Inspector times), **Stop Fade**, and **Set Opacity**,
+  with an Is Fading condition and an Opacity expression. Pinned in `tests/fade_test.gd`.
+- **Slide Movement** - a `SlideMove` behavior for grid movement where a tap sends the character sliding
+  until it hits a wall (the Tomb-of-the-Mask feel), distinct from the step-per-press Tile Movement pack.
+  It finds the farthest open tile with a physics ray on a configurable wall layer, then glides there at
+  a constant speed and snaps to the grid. **Slide** (left/right/up/down), **Stop Slide**, **Snap To
+  Grid**, **Teleport To Tile**, **Set Grid Size**; Is Sliding / Can Slide conditions; Slide Direction /
+  Tile X / Tile Y expressions; On Slide Started / On Slide Stopped / On Hit Wall triggers; arrow keys
+  drive it by default. Pinned in `tests/slide_move_test.gd`. Both drift gate green (audited=44).
+
 ### Added - four helper ACE modules: Game Window, Game Options, Input, Vibration
 
 - **Game Window** - go fullscreen / windowed / exclusive, toggle fullscreen, set window size / position,
