@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - four helper ACE modules: Game Window, Game Options, Input, Vibration
+
+- **Game Window** - go fullscreen / windowed / exclusive, toggle fullscreen, set window size / position,
+  center, set vsync, cap the FPS, always-on-top, minimize / maximize, Is Fullscreen, Max FPS.
+- **Game Options** - the options-menu knobs: set the master or a named bus's volume from a 0-100 percent
+  (not decibels), read a bus's volume back as a percent, Is Bus Muted, Save Setting (writes one value to
+  `user://settings.cfg` while keeping the rest), and Has Saved Settings.
+- **Input** - Add Input Action, Rebind Action To Key (clear + bind in one action), Has Input Action, and
+  the movement reads Move Vector / Move Axis / Action Strength (beyond the core is-pressed checks).
+- **Vibration** - Stop Gamepad Vibration, Vibrate Phone (handheld), and Gamepad Vibration Strength (the
+  rumble already had a Vibrate Gamepad action; this rounds it out).
+
+  All bake to plain Godot (`get_window()`, `DisplayServer`, `AudioServer`, `ConfigFile`, `InputMap`,
+  `Input`, `Engine`) with zero plugin references, honouring the parity covenant, and are auto-discovered
+  by drop-in. They pass the builtin-compile and duplicate-id gates (checked=556, failed=0), and each
+  declares its picker section description.
+
 ### Added - descriptions on ACE picker section headers
 
 - **Category / sub-section / node-type headers in the ACE picker now carry a short description**, shown
