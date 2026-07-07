@@ -53,6 +53,8 @@ const PACK_BUILDERS: Array[String] = [
 	"object_pool",
 	"loot_table_resource",
 	"loot_loader",
+	"skin_catalog_resource",
+	"skin_catalog_loader",
 ]
 
 

@@ -122,6 +122,25 @@ static func build() -> bool:
 		[["id", "String"], ["display_name", "String"], ["rarity", "String"], ["cost", "float"], ["tags", "String"]],
 		"var tag_list: PackedStringArray = PackedStringArray()\nfor raw: String in tags.split(\",\", false):\n\tvar trimmed: String = raw.strip_edges()\n\tif not trimmed.is_empty():\n\t\ttag_list.append(trimmed)\n_skins[id] = {\"name\": display_name, \"rarity\": rarity, \"cost\": cost, \"tags\": tag_list}")
 
+	# --- Data-driven: load a whole catalog from a Custom Resource (.tres) ---
+	Lib.append_function(sheet, "load_catalog", "Load Catalog", "SkinVault", "Registers a whole catalog (rarities + skins) from a Skin Catalog resource (a .tres you filled in the Inspector) in one step. The data-driven alternative to a string of Register Rarity + Register Skin actions.",
+		[["catalog", "Resource"]],
+		"\n".join(PackedStringArray([
+			"if catalog == null:",
+			"\tpush_warning(\"SkinVault: Load Catalog was given no resource.\")",
+			"\treturn",
+			"var rarity_rows: Variant = catalog.get(\"rarities\")",
+			"if rarity_rows is Array:",
+			"\tfor row: Variant in (rarity_rows as Array):",
+			"\t\tif row is Dictionary and not str((row as Dictionary).get(\"name\", \"\")).is_empty():",
+			"\t\t\tregister_rarity(str((row as Dictionary).get(\"name\", \"\")), float((row as Dictionary).get(\"weight\", 1.0)), int((row as Dictionary).get(\"tier\", 0)))",
+			"var skin_rows: Variant = catalog.get(\"skins\")",
+			"if skin_rows is Array:",
+			"\tfor row: Variant in (skin_rows as Array):",
+			"\t\tif row is Dictionary and not str((row as Dictionary).get(\"id\", \"\")).is_empty():",
+			"\t\t\tregister_skin(str((row as Dictionary).get(\"id\", \"\")), str((row as Dictionary).get(\"name\", \"\")), str((row as Dictionary).get(\"rarity\", \"\")), float((row as Dictionary).get(\"cost\", 0.0)), str((row as Dictionary).get(\"tags\", \"\")))"
+		])))
+
 	# --- Unlock ---
 	Lib.append_function(sheet, "roll", "Roll", "SkinVault", "Rolls a weighted-random UNOWNED skin (optional tag filter; \"\" = any) and grants it. Applies pity, then fires On Skin Rolled and On Skin Unlocked. Fires On Pool Empty if nothing is left.",
 		[["tag", "String"]],

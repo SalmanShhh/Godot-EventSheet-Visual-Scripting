@@ -2,7 +2,17 @@
 
 ## [Unreleased]
 
-### Added - data-driven addon config with Custom Resources (Loot Table)
+### Added - data-driven addon config with Custom Resources (Loot Table + SkinVault)
+
+- **SkinVault is now data-driven too.** A new **SkinCatalogResource** holds a whole cosmetics catalog as
+  a `.tres` (a rarities grid and a skins grid you edit in the Inspector); **SkinVault gained a Load
+  Catalog action**, and the new **Skin Catalog Loader** behavior (`SkinCatalogLoader`) loads it into the
+  SkinVault autoload on ready, with the same required-slot Inspector warning. Pinned in
+  `tests/skin_catalog_test.gd`.
+- **A guide to data-driven design**, [docs/GUIDE-DATA-DRIVEN-ADDONS.md](docs/GUIDE-DATA-DRIVEN-ADDONS.md):
+  the Custom Resource + loader pattern, the missing-resource warning, and a recipe for making your own
+  addon data-driven.
+
 
 - **Author a loot table as data, not events.** A new **LootTableResource** Custom Resource holds a
   table's drops as a `.tres` asset you fill in the Inspector (an item / weight / tags grid, plus optional

@@ -81,6 +81,27 @@ func register_skin(id: String, display_name: String, rarity: String, cost: float
 	_skins[id] = {"name": display_name, "rarity": rarity, "cost": cost, "tags": tag_list}
 
 ## @ace_action
+## @ace_name("Load Catalog")
+## @ace_category("SkinVault")
+## @ace_description("Registers a whole catalog (rarities + skins) from a Skin Catalog resource (a .tres you filled in the Inspector) in one step. The data-driven alternative to a string of Register Rarity + Register Skin actions.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SkinVault.load_catalog({catalog})")
+func load_catalog(catalog: Resource) -> void:
+	if catalog == null:
+		push_warning("SkinVault: Load Catalog was given no resource.")
+		return
+	var rarity_rows: Variant = catalog.get("rarities")
+	if rarity_rows is Array:
+		for row: Variant in (rarity_rows as Array):
+			if row is Dictionary and not str((row as Dictionary).get("name", "")).is_empty():
+				register_rarity(str((row as Dictionary).get("name", "")), float((row as Dictionary).get("weight", 1.0)), int((row as Dictionary).get("tier", 0)))
+	var skin_rows: Variant = catalog.get("skins")
+	if skin_rows is Array:
+		for row: Variant in (skin_rows as Array):
+			if row is Dictionary and not str((row as Dictionary).get("id", "")).is_empty():
+				register_skin(str((row as Dictionary).get("id", "")), str((row as Dictionary).get("name", "")), str((row as Dictionary).get("rarity", "")), float((row as Dictionary).get("cost", 0.0)), str((row as Dictionary).get("tags", "")))
+
+## @ace_action
 ## @ace_name("Roll")
 ## @ace_category("SkinVault")
 ## @ace_description("Rolls a weighted-random UNOWNED skin (optional tag filter; "" = any) and grants it. Applies pity, then fires On Skin Rolled and On Skin Unlocked. Fires On Pool Empty if nothing is left.")
