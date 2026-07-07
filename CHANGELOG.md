@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+### Added - the ComboBox pack: an input-sequence detector
+
+- **A 42nd behavior pack, ComboBox** (a Construct 3 addon port): register as the `ComboBox` autoload
+  to turn strings of inputs into fighting-game specials, cheat codes, rune gestures, or combination
+  locks. It keeps a rolling buffer of named input **tokens** and, after every input, matches the buffer
+  against your registered **sequences**. **Register Combo** (a comma-separated token sequence like
+  "down,forward,punch" plus a timing window in seconds), then **Press Input** a token from your own
+  keyboard / gamepad / touch / network events - it reads no hardware itself, so it works with any input
+  source. **On Combo Matched** fires when a sequence completes; **On Partial Progress** and **On Combo
+  Failed** drive input-history UI and stalled-motion resets; **On Buffer Cleared** on a **Clear Buffer**.
+  Refine combos with **Set Combo Tags** / **Set Combo Priority** / **Set Combo Strict**, gate them with
+  **Enable / Disable Combo** and the by-tag batch actions, and read the buffer, partials, and registry
+  through the expressions. Beginner-friendly over the C3 original: discrete typed ACEs instead of
+  hand-written JSON registration; timing windows in **seconds** (Godot's unit) off an internal clock,
+  not milliseconds; per-gap timing so a slow first input still counts; a `"*"` wildcard; interleave
+  tolerant matching by default with an optional strict mode; and **one combo wins per input** (highest
+  priority, then longest) so a sub-combo does not also fire when the longer combo completes. Pinned in
+  `tests/combo_box_test.gd`; drift gate green (audited=42 drifted=0).
+
+### Added - the Physics Car pack: a force-driven arcade car
+
+- **A 41st behavior pack, Physics Car** (a Construct 3 addon port): attach a `PhysicsCar` behavior to a
+  **RigidBody2D** and it becomes a car - the body keeps handling collisions and impacts while the
+  behavior adds drive, steering, lateral grip (so it stops sliding sideways like ice), and drift
+  detection, replacing the per-project steering / grip / drift math. Drive it with **Set Throttle** /
+  **Set Brake** / **Set Steer**, the keyboard-style **Simulate Control** ("up" / "down" / "left" /
+  "right" / "stop"), or point it at a target for AI with **Drive Toward Angle** / **Drive Toward
+  Position** (fires **On Drive Target Reached**). **Enable Handbrake** slides the back out, **Teleport**
+  respawns, and **Set Surface Grip** / **Set Surface Resistance** / **Reset Surface** make mud, ice, and
+  grass one action each. Conditions Is Moving / Is Reversing / Is Drifting / Is At Max Speed / Has
+  Reached Drive Target / Has Surface Override / Is Driving Toward Angle-or-Position; expressions for
+  speed, forward / lateral / slip, drift duration, inputs, heading error, effective grip, and the
+  collision context; triggers On Collided / On Drift Started / On Drift Ended. Godot-native over the C3
+  original: the host IS the RigidBody2D (no separate physics component to add and keep in sync), motion
+  is real forces and impulses so collisions stay physical, and the whole feel is Inspector knobs. Pinned
+  in `tests/physics_car_test.gd`; drift gate green (audited=42 drifted=0).
+
 ### Added - the UtilityBrain pack: scoring-based AI, one brain per node
 
 - **A 40th behavior pack, UtilityBrain** (a Construct 3 UtilityAI port): a per-node decision engine

@@ -46,6 +46,8 @@ const PACK_BUILDERS: Array[String] = [
 	"skin_vault",
 	"proc_room",
 	"utility_ai",
+	"combo_box",
+	"physics_car",
 ]
 
 
