@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - the SkinVault pack: cosmetic ownership + gacha unlocks
+
+- **A 38th behavior pack, SkinVault** (a Construct 3 addon port): register as the `SkinVault`
+  autoload to own WHAT the player has and can still get (you build the UI). **Register Rarity**
+  (weight + an explicit tier rank) and **Register Skin** (id, name, rarity, cost, tags), then unlock
+  via three paths that all funnel into **On Skin Unlocked**: **Roll** (weighted-random over the
+  unowned pool, with hard pity), **Purchase** (fires **On Purchase Requested** carrying the cost -
+  your wallet, e.g. the Currency Ledger pack, confirms - then **Confirm/Cancel Purchase**), and
+  **Grant** (free). **Revoke** removes a skin. Conditions Is Owned / Is Registered / Is Unlockable /
+  Is Pool Empty; expressions for counts, skin lookups, Pity Counter / Progress, Owned Ids (save), and
+  the roll/unlock/purchase event context. Pity uses an explicit rarity **tier** integer (so
+  "guarantee an epic-or-better after N misses" no longer depends on the C3 addon's fragile
+  registration order), and currency stays external. Pinned in `tests/skin_vault_test.gd`; drift gate
+  green (audited=38 drifted=0).
+
 ### Added - the Storylet Weaver pack: quality-based narrative from any sheet
 
 - **A 37th behavior pack, Storylet Weaver** (a Construct 3 addon port): register as the
