@@ -43,7 +43,7 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 ## Quick start
 
-1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 34 behavior packs. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
+1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 37 behavior packs. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
 2. **Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New… → Platformer Starter**, add events (live search understands C3 phrases like *"every tick"*), and Run.
@@ -80,7 +80,7 @@ Coming from Construct? The [C3 migration guide](docs/GUIDE-C3-MIGRATION.md) maps
 
 **450+ native ACEs** - Tween, Scene flow, Audio, sprites & cameras, Nav, Math & Random, Color, 2D/3D raycast & Collision queries, Nodes, Project/File utilities, runtime signal wiring, UI/menu, particles, AnimationTree, tilemaps, shaders, physics joints, input rebinding, and a **Helpers** escape hatch (Set/Get Property, Call Method, Run GDScript, Inline If) so unmapped code still stays an editable row.
 
-**36 behavior packs**, all authored as event sheets - Platformer, 8-Direction, Timer, Flash, State Machine, Sine/Orbit/Bullet/Move To/Follow/Car/Tile Movement, Line of Sight (2D & 3D), a 3D quartet, Spring, Tween, Save System, plus C3-addon ports: Drag & Drop, Virtual Cursor, Health (absorption + shield pools), Weapon Kit, HTN Agent, Simple Abilities, a Juice pack (screenshake/zoom/squash/slowmo/hitstop), a Time Slicer, a Run In Background runner, a **Currency Ledger** economy (register currencies by name, then earn/spend/cap/format from any sheet), a **Loot Table** roller (weighted drops, guarantees, hard pity, nested tables, seeded), and the UI trio: a **HUD Kit** (menus and HUDs by name, zero wiring), **Scene Flow** (fades and scene changes), and a **Dialogue Kit** (typewriter conversations). Drop a `class_name` script in `eventsheet_addons/` and it becomes a provider - `@ace_*` annotations shape everything.
+**37 behavior packs**, all authored as event sheets - Platformer, 8-Direction, Timer, Flash, State Machine, Sine/Orbit/Bullet/Move To/Follow/Car/Tile Movement, Line of Sight (2D & 3D), a 3D quartet, Spring, Tween, Save System, plus C3-addon ports: Drag & Drop, Virtual Cursor, Health (absorption + shield pools), Weapon Kit, HTN Agent, Simple Abilities, a Juice pack (screenshake/zoom/squash/slowmo/hitstop), a Time Slicer, a Run In Background runner, a **Currency Ledger** economy (register currencies by name, then earn/spend/cap/format from any sheet), a **Loot Table** roller (weighted drops, guarantees, hard pity, nested tables, seeded), a **Storylet Weaver** (quality-based narrative: define storylets with requirements, then Draw the best eligible one), and the UI trio: a **HUD Kit** (menus and HUDs by name, zero wiring), **Scene Flow** (fades and scene changes), and a **Dialogue Kit** (typewriter conversations). Drop a `class_name` script in `eventsheet_addons/` and it becomes a provider - `@ace_*` annotations shape everything.
 
 **Abstraction that grows with you** - a row earns its place when it does MORE than a line: multi-line ACEs show a quiet **→N** ("compiles to N lines") cue, function calls read as **ƒ named verbs**, and the picker **leads with featured intention verbs** (Wait, Play Sound, Destroy, Move Toward...). Select actions and **Extract to Function** turns the pile into one reusable verb - captured locals become typed parameters automatically - then **Teach a Verb** publishes it to every sheet's picker in the project, node-targeted and retargetable, exactly like a built-in behavior.
 
@@ -129,7 +129,7 @@ _Recent releases before this:_ **v0.11.0** (collapsible regions, the abstraction
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
-| `eventsheet_addons/` | Zero-config ACE addons + the 36 behavior packs |
+| `eventsheet_addons/` | Zero-config ACE addons + the 37 behavior packs |
 | `demo/` | Demo sheets, themes, and golden compiled output |
 | `tests/` | Headless suite - `run_tests.gd` (full) and `run_perf.gd` (fast gate) |
 | `docs/` | Contract specs + guides (C3 migration, recipes, MCP, glossary, uninstall) |

@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - the Storylet Weaver pack: quality-based narrative from any sheet
+
+- **A 37th behavior pack, Storylet Weaver** (a Construct 3 addon port): register as the
+  `Storylets` autoload for quality-based narrative - instead of one giant branching web of
+  if/else, register many small **storylets**, each with its own requirements, and **Draw** the best
+  eligible one. **Define Storylet** (id + title + body), **Add Requirement** (a quality compared with
+  a >= / > / <= / < / = / != dropdown), **Add Choice**, then mirror game state with **Set Quality** /
+  **Increment Quality** and call **Draw** (highest weight) or **Draw Weighted** (random by weight),
+  firing **On Storylet Drawn** or **On None Available**. **Choose** resolves a choice (**On Choice
+  Made**). Beginner-friendly fixes over the C3 version: a missing quality reads as 0 / "" (so
+  `courage >= 3` is simply false, not the C3 addon's surprising "every op but != fails" rule);
+  cooldowns run off an internal clock that ticks automatically; and Draw is evaluate + pick + activate
+  in one call. One-shots via Max Plays, cooldowns, and play history round it out. Discrete typed ACEs
+  replace JSON-blob registration. Pinned in `tests/storylet_weaver_test.gd`; drift gate green
+  (audited=37 drifted=0).
+
 ### Added - the Loot Table pack: a weighted loot roller from any sheet
 
 - **A 36th behavior pack, Loot Table** (a Construct 3 addon port): register as the `LootBox`
