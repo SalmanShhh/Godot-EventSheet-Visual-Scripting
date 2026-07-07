@@ -121,6 +121,34 @@ func set_seed(seed_value: int) -> void:
 		_rng.seed = seed_value
 
 ## @ace_action
+## @ace_name("Load From Resource")
+## @ace_category("Loot")
+## @ace_description("Loads a whole table from a Loot Table resource (a .tres you filled in the Inspector) - its name, entries, and pity - in one step. The data-driven alternative to Create Table plus a string of Add Entry actions.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("LootBox.load_from_resource({loot_table})")
+func load_from_resource(loot_table: Resource) -> void:
+	if loot_table == null:
+		push_warning("LootBox: Load From Resource was given no resource.")
+		return
+	var table_id: String = str(loot_table.get("table_name"))
+	if table_id.is_empty():
+		table_id = "loot"
+	create_table(table_id)
+	var rows: Variant = loot_table.get("entries")
+	if rows is Array:
+		for row: Variant in (rows as Array):
+			if not (row is Dictionary):
+				continue
+			var item: String = str((row as Dictionary).get("item", ""))
+			if item.is_empty():
+				continue
+			add_entry_full(table_id, item, float((row as Dictionary).get("weight", 1.0)), 1.0, str((row as Dictionary).get("tags", "")))
+	var pity_tag_value: String = str(loot_table.get("pity_tag"))
+	var pity_threshold_value: int = int(loot_table.get("pity_threshold"))
+	if not pity_tag_value.is_empty() and pity_threshold_value > 0:
+		set_pity(table_id, pity_tag_value, pity_threshold_value)
+
+## @ace_action
 ## @ace_name("Roll")
 ## @ace_category("Loot")
 ## @ace_description("Rolls the table once, firing On Roll Result then On Roll Complete.")

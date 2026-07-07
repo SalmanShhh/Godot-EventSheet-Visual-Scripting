@@ -200,6 +200,32 @@ static func build() -> bool:
 		[["seed_value", "int"]],
 		"if seed_value == 0:\n\t_rng.randomize()\nelse:\n\t_rng.seed = seed_value")
 
+	# --- Data-driven: load a whole table from a Custom Resource (.tres) ---
+	Lib.append_function(sheet, "load_from_resource", "Load From Resource", "Loot", "Loads a whole table from a Loot Table resource (a .tres you filled in the Inspector) - its name, entries, and pity - in one step. The data-driven alternative to Create Table plus a string of Add Entry actions.",
+		[["loot_table", "Resource"]],
+		"\n".join(PackedStringArray([
+			"if loot_table == null:",
+			"\tpush_warning(\"LootBox: Load From Resource was given no resource.\")",
+			"\treturn",
+			"var table_id: String = str(loot_table.get(\"table_name\"))",
+			"if table_id.is_empty():",
+			"\ttable_id = \"loot\"",
+			"create_table(table_id)",
+			"var rows: Variant = loot_table.get(\"entries\")",
+			"if rows is Array:",
+			"\tfor row: Variant in (rows as Array):",
+			"\t\tif not (row is Dictionary):",
+			"\t\t\tcontinue",
+			"\t\tvar item: String = str((row as Dictionary).get(\"item\", \"\"))",
+			"\t\tif item.is_empty():",
+			"\t\t\tcontinue",
+			"\t\tadd_entry_full(table_id, item, float((row as Dictionary).get(\"weight\", 1.0)), 1.0, str((row as Dictionary).get(\"tags\", \"\")))",
+			"var pity_tag_value: String = str(loot_table.get(\"pity_tag\"))",
+			"var pity_threshold_value: int = int(loot_table.get(\"pity_threshold\"))",
+			"if not pity_tag_value.is_empty() and pity_threshold_value > 0:",
+			"\tset_pity(table_id, pity_tag_value, pity_threshold_value)"
+		])))
+
 	# --- Rolling ---
 	Lib.append_function(sheet, "roll", "Roll", "Loot", "Rolls the table once, firing On Roll Result then On Roll Complete.",
 		[["table_id", "String"]],

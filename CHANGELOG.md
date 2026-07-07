@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - data-driven addon config with Custom Resources (Loot Table)
+
+- **Author a loot table as data, not events.** A new **LootTableResource** Custom Resource holds a
+  table's drops as a `.tres` asset you fill in the Inspector (an item / weight / tags grid, plus optional
+  pity), instead of building it with a string of Add Entry actions. Load it in one step: **LootBox
+  gained a Load From Resource action**, or drop the `.tres` on the new **Loot Table Loader** behavior
+  (`LootTableLoader`), which loads it into the LootBox autoload on ready.
+- **A "you forgot to attach it" Inspector warning.** The Loot Table Loader's resource slot is marked
+  required, so the Inspector flags it with a warning while it is empty - a beginner cannot silently ship
+  a loader with no data. This is built into the pack-authoring toolkit as `_lib.require_resource(...)`,
+  so any behavior pack can declare a required resource slot (an exported Resource plus the required
+  warning) in one line - reuse it to make other addons data-driven.
+- Pinned in `tests/loot_resource_test.gd` (a LootTableResource loads into LootBox and rolls; a null
+  resource is safe). LootTableResource is a `Resource`-host sheet that round-trips byte-exactly (drift
+  gate green, audited=47).
+
 ### Added - a scaffolder for creating new helper ACE modules
 
 - **`tools/new_ace_module.gd`** - the helper for creating helper modules. Set a name, run it, and it

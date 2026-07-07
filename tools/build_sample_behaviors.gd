@@ -51,6 +51,8 @@ const PACK_BUILDERS: Array[String] = [
 	"fade",
 	"slide_move",
 	"object_pool",
+	"loot_table_resource",
+	"loot_loader",
 ]
 
 

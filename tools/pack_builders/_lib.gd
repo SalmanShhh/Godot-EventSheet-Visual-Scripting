@@ -104,6 +104,20 @@ static func append_function(sheet: EventSheetResource, function_name: String, di
 	sheet.functions.append(event_function)
 
 
+## Declares a REQUIRED resource slot on a behavior pack - the data-driven-config helper. Adds an
+## exported var (a Resource slot the user drags a .tres onto) marked `required`, so the Inspector shows a
+## "required" warning on the field while it is empty - the "you forgot to attach it" safety net a
+## beginner needs, with no boilerplate. (This is the plugin's own required-field marker, the same one the
+## EnemyStats Custom Resource showcase uses for its portrait; it is the intended way to flag a missing
+## reference in the Inspector, and it stays warning-free because the compiler owns the config-warnings
+## hook.) The slot is typed Resource (generic) on purpose: a pack cannot reference another pack's class
+## name at build time, and any resource - including your Custom Resource .tres - is a Resource.
+## `display_name` seeds the tooltip; call it once per resource.
+static func require_resource(sheet: EventSheetResource, var_name: String, display_name: String, description: String) -> void:
+	sheet.variables[var_name] = {"type": "Resource", "default": null, "exported": true,
+		"attributes": {"required": true, "tooltip": "%s. %s" % [display_name, description]}}
+
+
 ## _append_function, but returning the function for return-type tweaks.
 static func exposed_function(function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> EventFunction:
 	var event_function: EventFunction = EventFunction.new()
