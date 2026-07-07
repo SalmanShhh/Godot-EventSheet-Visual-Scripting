@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+### Added - the incremental / idle game suite (7 packs)
+
+A cohesive toolkit for building clicker, idle, and incremental games. The existing Currency Ledger owns
+the wallet; these seven new packs add the rest of the genre loop, each compiling to plain Godot with zero
+plugin dependency. Runtime math is pinned in `tests/incremental_packs_test.gd` and every pack round-trips
+byte-exactly (drift gate green, audited=56). The design was pressure-tested against the genre and the
+formulas verified before any ace_id was frozen, then a follow-up adversarial review of the shipped code
+hardened seven edge cases - Decimal Power and Compare at fractional exponents, a Buy Max hang on a sub-1
+cost growth, a prestige gain that wrapped negative past int64 at idle scale, a boost-restart clobber, and
+a milestone progress bar that regressed after latching - each now pinned in the test.
+
+- **Big Numbers** (`BigNumber` autoload) - the number formatting an idle game lives on: Format Short with
+  short-scale suffixes past a trillion (Qa, Qi ... Dc, then scientific), scientific + engineering
+  notation, time, ordinals, commas, percent, and a **Decimal type** (an `[mantissa, exponent]` array, so
+  the mantissa keeps full 64-bit precision) with Add / Multiply / Power / Compare / Format Big for values
+  past a float's 1.8e308 ceiling. The classic formatter traps are fixed: the floor(log/log10)
+  off-by-one at exact powers of ten (a +1e-9 epsilon), the mantissa-rounding carry, and the past-Dc
+  fall-through to scientific.
+- **Idle Generator** (`IdleGeneratorBehavior`) - a producer/building you attach to a node. Geometric cost
+  curve (base * growth^owned) with an **exact closed-form Buy Max** (no loop), Next Cost / Cost For(n) /
+  Max Affordable / Cost To Buy Max, continuous Output Per Second, and an optional fill-and-collect **cycle
+  mode**. Stays decoupled from the wallet - the Buy actions record Last Cost for your sheet to Spend.
+- **Click Power** (`ClickPower` autoload) - manual-tap income: Do Click computes a tap's yield (base +
+  flat bonus + a fraction of production, times a multiplier), rolls a crit, and fires On Click / On Crit.
+- **Boosts** (`Boost` autoload) - temporary timed multipliers (golden-cookie frenzies) that count
+  themselves down and fire On Boost Expired; Total Multiplier folds every active boost into production.
+- **Upgrades** (`Upgrades` autoload) - stacking one-time/repeatable buffs with add or mult modes and a
+  tag; Try Purchase buys against a budget you pass, Total Multiplier(tag) / Total Bonus(tag) aggregate a
+  whole group into one number.
+- **Prestige** (`Prestige` autoload) - reset for a permanent multiplier: Track Earned, preview Prestige
+  Gain (floor((run earned / requirement) ^ exponent)), Do Prestige banks points and resets the run (a
+  run/all-time split means points are never double-awarded), Prestige Multiplier = 1 + points * bonus.
+- **Milestones** (`Milestones` autoload) - threshold achievements that GRANT a reward: Update Progress
+  latches them once, and Total Reward sums every reached milestone's bonus so achievements make the
+  player stronger, not just light up.
+- **Seven guides** in `docs/Addons/` (a new "Incremental and idle" section in the index), each with a
+  full ACE reference and 12+ worked use cases, plus a data pack test and the `_lib` `condition()` /
+  `number()` helpers hoisted for every data pack to share.
+
 ### Added - composition / systems vocabulary (ECS-lite)
 
 - **A "Systems" ACE section** for the composition pattern (entities = nodes in a group, systems = sheets

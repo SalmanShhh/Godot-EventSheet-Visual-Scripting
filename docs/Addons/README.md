@@ -21,6 +21,18 @@ Install as a single project-wide autoload you call from any sheet by name.
 - [Save System](Save-System.md) - save and load your variables and progress to disk.
 - [Advanced Random](Advanced-Random.md) - richer randomness: weighted picks, shuffled bags, dice, and noise.
 
+## Incremental and idle
+
+The toolkit for clicker, idle, and incremental games. The wallet lives in Currency Ledger; these add the rest of the loop. Most are autoloads; Idle Generator attaches to a node (one per building type).
+
+- [Big Numbers](Big-Numbers.md) - format idle-scale numbers (K/M/B/T through Dc, then scientific, plus time, ordinals, commas) and do arithmetic past a float's 1.8e308 ceiling with a Decimal type.
+- [Idle Generator](Idle-Generator.md) - a buy-more-to-make-more building with a geometric cost curve, exact Buy One / Amount / Max, continuous production, and an optional fill-and-collect cycle. Attach one per generator type.
+- [Click Power](Click-Power.md) - manual-tap income with a multiplier, crits, and an optional share of your production per click.
+- [Boosts](Boosts.md) - temporary timed multipliers (golden-cookie frenzies) that count themselves down and expire.
+- [Upgrades](Upgrades.md) - stacking one-time and repeatable buffs with add/mult modes and tags, bought against a budget, aggregated by Total Multiplier / Total Bonus.
+- [Prestige](Prestige.md) - reset for a permanent multiplier, with the classic gain formula, a run/all-time split, and no double-award.
+- [Milestones](Milestones.md) - threshold achievements that grant a permanent reward you aggregate into production.
+
 ## Movement (2D)
 
 Attach to a node to move it.

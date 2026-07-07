@@ -121,6 +121,62 @@ Node script extending `CharacterBody2D`.
 #### Expressions
 - **Tasks Running**
 
+### BigNumberAddon (`res://eventsheet_addons/big_number/big_number_addon.gd`)
+@ace_tags(incremental, idle, format) @ace_category("Big Numbers")
+
+#### Conditions
+- **Is Bigger** (`a: Array, b: Array`) - Whether Decimal a is strictly bigger than Decimal b.
+- **Is At Least** (`a: Array, b: Array`) - Whether Decimal a is at least as big as Decimal b.
+
+#### Expressions
+- **Format Short** (`value: float, decimals: int`) - A compact string with a short-scale suffix: 1250 -> "1.25K", 1250000 -> "1.25M", on through Qa/Qi/.../Dc, then scientific past 1e36. Pass how many decimals.
+- **Format Scientific** (`value: float, decimals: int`) - Scientific notation: 1250000 -> "1.25e6". Pass how many decimals for the mantissa.
+- **Format Engineering** (`value: float, decimals: int`) - Engineering notation - the exponent is always a multiple of 3: 1250000 -> "1.25e6", 12500 -> "12.50e3".
+- **Format Time** (`seconds: float`) - Seconds as a friendly duration: 3725 -> "1h 2m 5s". Drops leading zero units (90 -> "1m 30s
+- **Format Time Short** (`seconds: float`) - Seconds as a clock: 3725 -> "1:02:05", 90 -> "1:30".
+- **Format Ordinal** (`number: int`) - An ordinal string: 1 -> "1st", 2 -> "2nd", 13 -> "13th", 21 -> "21st".
+- **Format Comma** (`value: float`) - Thousands separators on the whole-number part: 1234567 -> "1,234,567".
+- **Format Percent** (`value: float, decimals: int`) - A fraction as a percent: 0.25 -> "25%". Pass how many decimals.
+- **Format Multiplier** (`value: float, decimals: int`) - A multiplier label: 1.5 -> "x1.5", 2.0 -> "x2.0".
+- **Suffix For** (`magnitude: int`) - The short-scale suffix for an order of magnitude: 6 -> "M", 9 -> "B". "" past Dc.
+- **Order Of Magnitude** (`value: float`) - The power of ten of a value (floor log10): 1250 -> 3, 1000000 -> 6.
+- **Make** (`mantissa: float, exponent: float`) - Builds a Decimal from a mantissa and an exponent: Make(1.5, 100) is 1.5e100. Normalized automatically.
+- **From Number** (`value: float`) - Turns a plain number into a Decimal so it can grow past the float ceiling.
+- **To Number** (`decimal: Array`) - Turns a Decimal back into a plain number (may be Infinity if it is above 1.8e308).
+- **Add** (`a: Array, b: Array`) - Adds two Decimals. When one is more than ~15 orders of magnitude larger, the smaller is negligible and dropped.
+- **Subtract** (`a: Array, b: Array`) - Subtracts Decimal b from Decimal a.
+- **Multiply** (`a: Array, b: Array`) - Multiplies two Decimals (mantissas multiply, exponents add).
+- **Divide** (`a: Array, b: Array`) - Divides Decimal a by Decimal b (returns 0 if b is 0).
+- **Power** (`decimal: Array, power: float`) - Raises a Decimal to a power: Power(d, 2) squares it.
+- **Scale** (`decimal: Array, factor: float`) - Multiplies a Decimal by a plain number - the easy way to apply a multiplier.
+- **Compare** (`a: Array, b: Array`) - Compares two Decimals: -1 if a < b, 0 if equal, 1 if a > b.
+- **Format Big** (`decimal: Array, decimals: int`) - Formats a Decimal with a short-scale suffix, falling through to scientific past Dc: Make(1.5, 100) -> "1.50e100".
+
+### BoostAddon (`res://eventsheet_addons/boosts/boosts_addon.gd`)
+@ace_tags(incremental, idle, boost) @ace_category("Boosts")
+
+#### Triggers
+- **On Boost Started**
+
+#### Conditions
+- **Is Active** (`id: String`) - Whether a boost with this id is currently running.
+- **Any Active** - Whether any boost is currently running.
+
+#### Actions
+- **Start Boost** (`id: String, multiplier: float, duration: float`) - Starts (or restarts) a timed multiplier by id for `duration` seconds and fires On Boost Started.
+- **Start Tagged Boost** (`id: String, multiplier: float, duration: float, tag: String`) - Like Start Boost, but with a tag so Multiplier For Tag can group it (e.g. "production", "click
+- **Extend Boost** (`id: String, seconds: float`) - Adds seconds to an active boost's timer (does nothing if it is not active).
+- **Stop Boost** (`id: String`) - Ends a boost immediately (no On Boost Expired - that is for timers running out).
+- **Clear Boosts** - Ends every active boost at once.
+
+#### Expressions
+- **Total Multiplier** - The product of every active boost's multiplier (1.0 if none) - fold it into production.
+- **Multiplier For Tag** (`tag: String`) - The product of active boosts that share this tag (1.0 if none).
+- **Multiplier Of** (`id: String`) - One boost's multiplier (1.0 if it is not active).
+- **Time Left** (`id: String`) - Seconds remaining on a boost (0 if not active) - for a countdown label.
+- **Active Count** - How many boosts are currently running.
+- **Last Expired** - The id of the boost that just ran out (read inside On Boost Expired).
+
 ### BulletBehavior (`res://eventsheet_addons/bullet/bullet_behavior.gd`)
 @ace_category("Bullet") @ace_expose_all(node)
 
@@ -144,6 +200,118 @@ Node script extending `CharacterBody2D`.
 
 #### Actions
 - **Stop Car** - Kills all momentum.
+
+### ClickPowerAddon (`res://eventsheet_addons/click_power/click_power_addon.gd`)
+@ace_tags(incremental, idle, clicker) @ace_category("Click Power")
+
+#### Triggers
+- **On Click**
+
+#### Conditions
+- **Was Crit** - Whether the last click critted (read after Do Click / inside On Click).
+
+#### Actions
+- **Configure** (`base_click: float`) - Sets the base value of one click.
+- **Set Multiplier** (`multiplier: float`) - Sets the click multiplier - feed it your composed prestige x upgrade x boost value.
+- **Set Flat Bonus** (`bonus: float`) - Adds a flat amount to every click before the multiplier (from an upgrade).
+- **Set CPS Fraction** (`fraction: float`) - Makes each click also worth this fraction of current production per second (Cookie-Clicker's "clicking is worth X% of CpS"; 0 = off).
+- **Set Crit** (`chance: float, multiplier: float`) - Sets the crit chance (0 to 1) and its multiplier (e.g. 10 for a lucky x10 click).
+- **Do Click** (`current_cps: float`) - Resolves one tap: computes the yield (pass your current total production per second, or 0), rolls a crit, records Last Click / Was Crit, and fires On Click (and On Crit). Then Add Last Click to your wallet.
+
+#### Expressions
+- **Click Yield** (`current_cps: float`) - What one click earns right now, without a crit (pass current production per second, or 0) - for a "per click" label.
+- **Last Click** - What the last Do Click earned (after any crit) - Add this to your wallet.
+- **Total Clicks** - How many clicks have been resolved.
+- **Click Multiplier** - The current click multiplier.
+- **Crit Chance** - The current crit chance, 0 to 1.
+
+### ComboBoxAddon (`res://eventsheet_addons/combo_box/combo_box_addon.gd`)
+@ace_tags(input, combo) @ace_category("ComboBox")
+
+#### Triggers
+- **On Combo Matched**
+
+#### Conditions
+- **Has Combo** (`id: String`) - Whether a combo id is registered.
+- **Is Combo Enabled** (`id: String`) - Whether a combo is registered and enabled.
+- **Is Buffer Empty** - Whether the input buffer has no tokens.
+- **Combo Has Tag** (`id: String, tag: String`) - Whether a combo carries a tag.
+
+#### Actions
+- **Register Combo** (`id: String, sequence: String, timing_window: float`) - Registers (or replaces) a combo: a unique id and its sequence as comma-separated tokens (for example "down,forward,punch
+- **Set Combo Tags** (`id: String, tags: String`) - Tags a registered combo with comma-separated tags, so you can enable or disable it in batches (for example "ground_move
+- **Set Combo Priority** (`id: String, priority: int`) - Sets a combo's priority. When more than one combo completes on the same input, the highest priority wins (ties go to the longest, then to the first registered).
+- **Set Combo Strict** (`id: String, strict: bool`) - When strict is on, the combo's inputs must be adjacent in the buffer (no unrelated input allowed between them). Off (the default) tolerates stray inputs in between, like a fighting-game motion.
+- **Set Default Timing** (`seconds: float`) - Sets the default seconds allowed between inputs, used by any combo whose own timing window is -1.
+- **Set Buffer Length** (`length: int`) - Sets how many recent inputs to remember. Older inputs drop off, so stale history cannot complete a combo.
+- **Press Input** (`token: String`) - Pushes one input token into the buffer and checks every combo. Call this from your own input events (a key, a gamepad button, a swipe, a network packet). Fires On Combo Matched / On Partial Progress / On Combo Failed as needed.
+- **Clear Buffer** - Empties the buffer and resets all partial progress (fires On Buffer Cleared). Call it on a context change - entering a cutscene or menu - so old inputs cannot leak into new combos.
+- **Enable Combo** (`id: String`) - Enables a combo so it takes part in matching.
+- **Disable Combo** (`id: String`) - Disables a combo so it is skipped in matching (its registration is kept).
+- **Enable Combos By Tag** (`tag: String`) - Enables every combo carrying a tag (for example all "air_move" combos).
+- **Disable Combos By Tag** (`tag: String`) - Disables every combo carrying a tag.
+- **Remove Combo** (`id: String`) - Permanently removes a combo from the registry.
+
+#### Expressions
+- **Matched Id** - The id of the combo that just matched (inside On Combo Matched).
+- **Matched Tags** - The matched combo's tags as a comma-separated string (inside On Combo Matched).
+- **Match Time** - The clock time in seconds when the combo matched (inside On Combo Matched).
+- **Failed Id** - The id of the combo that just failed (inside On Combo Failed).
+- **Fail Index** - How many inputs deep the failed combo had reached before it broke (inside On Combo Failed).
+- **Buffer Length** - How many tokens are in the buffer right now.
+- **Buffer Token** (`index: int`) - The token at a buffer index (0 = oldest); "" if out of range.
+- **Buffer Time** (`index: int`) - The clock time in seconds of the token at a buffer index (0 if out of range).
+- **Cleared Count** - How many tokens were in the buffer when it was last cleared (inside On Buffer Cleared).
+- **Partial Count** - How many combos are part-way matched after the last input (inside On Partial Progress).
+- **Partial Id** (`index: int`) - The id of the part-way combo at an index (use with Partial Count to loop).
+- **Partial Progress** (`index: int`) - How many inputs of the part-way combo at an index are matched so far.
+- **Partial Length** (`index: int`) - The total length of the part-way combo at an index (pair with Partial Progress for a fill bar).
+- **Combo Count** - How many combos are registered.
+- **Combo Id At** (`index: int`) - The registered combo id at an index (use with Combo Count to list them).
+
+### CurrencyLedgerAddon (`res://eventsheet_addons/currency_ledger/currency_ledger_addon.gd`)
+@ace_tags(economy, currency) @ace_category("Currency")
+
+#### Triggers
+- **On Amount Changed**
+
+#### Conditions
+- **Has Currency** (`id: String`) - Whether a currency with this id has been defined or touched.
+- **Can Afford** (`id: String, amount: float`) - Whether the current balance is at least the amount.
+- **Is At Cap** (`id: String`) - Whether the balance is at its max (false when there's no cap).
+- **Is Daily Cap Reached** (`id: String`) - Whether today's earnings have hit the daily cap (false when there's none).
+- **Is In Debt** (`id: String`) - Whether the balance is below zero (only possible after Allow Debt).
+
+#### Actions
+- **Define Currency** (`id: String, starting_amount: float, max_amount: float`) - Creates (or resets) a currency with a starting amount and a max (-1 = no cap). Min is 0 and there's no daily cap until you set one.
+- **Set Max** (`id: String, max_amount: float`) - Changes the hard cap (-1 = no cap). If the current amount is above the new cap it clamps down.
+- **Set Daily Cap** (`id: String, daily_cap: float`) - Caps how much can be EARNED (added) per day (-1 = no daily cap). You decide when a day rolls over by calling Reset Daily Caps.
+- **Allow Debt** (`id: String, minimum: float`) - Lets a currency go negative down to this floor (e.g. -50). Use it for hunger, heat, or overdraft. Default floor is 0 (no debt).
+- **Set Offline Rate** (`id: String, rate_per_second: float`) - Passive income per real second, used by Apply Offline Gain (0 = off).
+- **Add** (`id: String, amount: float`) - Adds a SIGNED amount (negative subtracts) and clamps to the currency's min and max. Positive amounts also respect the daily cap. Fires On Amount Changed, plus On Cap Hit / On Daily Cap Hit if a limit bit.
+- **Spend** (`id: String, amount: float`) - Subtracts the amount only if it can be afforded; otherwise nothing changes and On Spend Failed fires (read Failed Id / Requested Amount / Available Amount there).
+- **Set Amount** (`id: String, amount: float`) - Forces the amount to a value, clamped to the currency's min and max. Fires On Amount Changed.
+- **Reset Daily Caps** - Zeroes the earned-today counter for every currency (call this at your day rollover).
+- **Apply Offline Gain** (`id: String, elapsed_seconds: float`) - Credits offline_rate * seconds to the currency (respecting caps) and fires On Offline Gain. One call - no separate Add needed.
+
+#### Expressions
+- **Balance** (`id: String`) - The current amount of a currency (0 if undefined).
+- **Cap** (`id: String`) - The hard cap of a currency (-1 if none).
+- **Daily Cap** (`id: String`) - The daily earn cap (-1 if none).
+- **Daily Earned** (`id: String`) - How much has been earned today.
+- **Debt Floor** (`id: String`) - The minimum a currency may reach (0 unless Allow Debt was used).
+- **Currency Count** - How many currencies are defined.
+- **Currency Id At** (`index: int`) - The currency id at a position (for menus); "" out of range.
+- **Format Amount** (`value: float, decimals: int`) - A short display string with a K/M/B/T suffix (e.g. 12500 -> "12.5K
+- **Changed Id** - The currency that changed (inside On Amount Changed).
+- **New Amount** - The amount after the change (inside On Amount Changed).
+- **Previous Amount** - The amount before the change (inside On Amount Changed).
+- **Amount Delta** - The signed change (inside On Amount Changed).
+- **Failed Id** - The currency of the failed spend (inside On Spend Failed).
+- **Requested Amount** - The amount that was asked for (inside On Spend Failed).
+- **Available Amount** - What was actually available (inside On Spend Failed).
+- **Offline Id** - The currency credited (inside On Offline Gain).
+- **Offline Gain** - The amount credited offline (inside On Offline Gain).
 
 ### DemoHealthAddon (`res://eventsheet_addons/demo_health_addon.gd`)
 Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ and their annotated members become project-wide ACEs automatically - no manifest, no JSON, no per-sheet setup. Provider name comes from class_name, this comment is the addon description, and @ace_* annotations customize each ACE.
@@ -227,6 +395,25 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Actions
 - **Set Move Speed** (`speed: float`) - Changes the movement speed.
+
+### FadeBehavior (`res://eventsheet_addons/fade/fade_behavior.gd`)
+@ace_tags(fade, juice) @ace_category("Fade")
+
+#### Triggers
+- **On Faded In**
+
+#### Conditions
+- **Is Fading**
+
+#### Actions
+- **Fade In** (`duration: float`) - Fades the node from its current transparency up to fully visible over a duration, then fires On Faded In.
+- **Fade Out** (`duration: float`) - Fades the node down to invisible over a duration (fires On Fade Out Started now, On Faded Out at the end). Frees the node afterwards if Free On Faded Out is on.
+- **Start Fade** - Runs the whole sequence from the Inspector times: fade in, hold, then fade out (firing On Faded In, On Fade Out Started, and On Faded Out along the way). Freeing the node at the end if set.
+- **Stop Fade** - Cancels any running fade, leaving the node at its current transparency.
+- **Set Opacity** (`alpha: float`) - Sets the node's transparency directly (0 = invisible, 1 = fully visible), cancelling any running fade.
+
+#### Expressions
+- **Opacity**
 
 ### FlashBehavior (`res://eventsheet_addons/flash/flash_behavior.gd`)
 @ace_category("Flash") @ace_expose_all(node)
@@ -347,6 +534,40 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Button Name**
 - **Bar Value** (`bar_name: String`)
 
+### IdleGeneratorBehavior (`res://eventsheet_addons/idle_generator/idle_generator_behavior.gd`)
+@ace_tags(incremental, idle, economy) @ace_category("Idle Generator")
+
+#### Triggers
+- **On Purchased**
+
+#### Conditions
+- **Can Afford Next** (`budget: float`) - Whether `budget` covers the next single unit's price.
+- **Is Owned** - Whether at least one unit is owned.
+
+#### Actions
+- **Buy One** - Adds one unit and records its price as Last Cost (Spend that from your wallet). Guard with Can Afford Next first.
+- **Buy Amount** (`count: int`) - Adds `count` units at once and records the total price as Last Cost.
+- **Buy Max** (`budget: float`) - Buys as many as `budget` affords, recording the exact total as Last Cost and the count as Last Bought. Buys nothing if not even one is affordable.
+- **Set Owned** (`count: int`) - Forces the owned count to a value (clamped to 0). Does not record a cost.
+- **Grant** (`count: int`) - Adds free units - a reward or a starting bonus (no cost recorded).
+- **Set Output Multiplier** (`multiplier: float`) - Sets the overall output multiplier - feed it your composed prestige x upgrade x boost value.
+- **Collect** - Cycle mode: hands you the banked output as Last Collected and clears the pending pile. Call it on On Cycle Complete (or from a manager) and credit Last Collected to your wallet.
+- **Reset** - Clears owned, pending output, and cycle progress - for a prestige wipe.
+
+#### Expressions
+- **Owned** - How many units are owned.
+- **Next Cost** - The price of the next single unit.
+- **Cost For** (`count: int`) - The total price to buy `count` more units right now.
+- **Max Affordable** (`budget: float`) - How many units `budget` can buy.
+- **Cost To Buy Max** (`budget: float`) - The exact total spent if you Buy Max with `budget`.
+- **Output Per Second** - Current production per second (owned * base_output * multiplier; in cycle mode, the lump divided by cycle time).
+- **Production Over** (`seconds: float`) - How much is produced over `seconds` at the current rate - pass delta to credit each frame.
+- **Pending** - Cycle mode: output banked and waiting for Collect.
+- **Cycle Progress** - Cycle mode: how full the current cycle is, 0 to 1 (0 in continuous mode).
+- **Last Cost** - What the last Buy cost - Spend this from your wallet.
+- **Last Bought** - How many units the last Buy added (0 if Buy Max could not afford any).
+- **Last Collected** - How much the last Collect handed you.
+
 ### JuiceBehavior (`res://eventsheet_addons/juice/juice_behavior.gd`)
 @ace_tags(camera, juice) @ace_category("Juice") @ace_expose_all(node)
 
@@ -355,6 +576,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Conditions
 - **Is Shaking**
+- **Is Hitstopped**
 
 #### Actions
 - **Shake** (`strength: float`) - Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.
@@ -367,6 +589,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Spring Squash** (`stretch: float`) - Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) - bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing).
 - **Slowmo** (`target_scale: float, hold_duration: float, duration_clock: String`) - Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.
 - **Clear Slowmo** - Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running).
+- **Hitstop** (`freeze_duration: float, freeze_scale: float`) - The punchy hit-pause you feel on a connecting blow: freezes Engine.time_scale (0 = full stop) for a few frames, then snaps back to what it was. Uses a realtime timer so it un-freezes even at a full stop, ignores repeat hits already mid-freeze, pauses any active Slowmo for the duration, and emits On Hitstop Finished. Fire it the instant a hit lands.
 
 #### Expressions
 - **Trauma**
@@ -391,6 +614,70 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Expressions
 - **Nearest Visible In Group** (`group: String`)
 
+### LootBoxAddon (`res://eventsheet_addons/loot_table/loot_table_addon.gd`)
+@ace_tags(loot, random) @ace_category("Loot")
+
+#### Triggers
+- **On Roll Result**
+
+#### Conditions
+- **Has Table** (`table_id: String`) - Whether a table with this id is registered.
+- **Entry Has Tag** (`table_id: String, tag: String`) - Whether any entry in a table carries the given tag.
+
+#### Actions
+- **Create Table** (`table_id: String`) - Starts a fresh, empty loot table with this id (replaces any existing one).
+- **Add Entry** (`table_id: String, item_id: String, weight: float`) - Adds an item to a table with a relative weight (higher = likelier). Quantity 1, no tags.
+- **Add Rare Entry** (`table_id: String, item_id: String, weight: float, quantity: float, tags: String`) - Adds an item with a weight, a quantity, and comma-separated tags (tags drive guarantees + pity).
+- **Add Table Reference** (`table_id: String, sub_table_id: String, weight: float`) - Adds an entry that rolls ANOTHER table inline when picked (shared common-loot pools). Depth-limited.
+- **Set Guarantee** (`table_id: String, tag: String, minimum: int`) - Guarantees at least `minimum` drops carrying this tag in every multi-roll batch.
+- **Set Pity** (`table_id: String, tag: String, threshold: int`) - Hard pity: after `threshold` rolls in a row WITHOUT a tagged drop, the next roll GUARANTEES one (and fires On Pity Triggered).
+- **Reset Pity** (`table_id: String, tag: String`) - Zeroes a tag's pity counter for a table.
+- **Set Seed** (`seed_value: int`) - Makes rolls repeatable from a fixed seed (same seed = same sequence). Pass 0 to go back to random.
+- **Load From Resource** (`loot_table: Resource`) - Loads a whole table from a Loot Table resource (a .tres you filled in the Inspector) - its name, entries, and pity - in one step. The data-driven alternative to Create Table plus a string of Add Entry actions.
+- **Roll** (`table_id: String`) - Rolls the table once, firing On Roll Result then On Roll Complete.
+- **Roll Times** (`table_id: String, count: int`) - Rolls the table `count` times in one batch (guarantees + pity apply across the batch), then shuffles.
+
+#### Expressions
+- **Table Count** - How many tables are registered.
+- **Entry Count** (`table_id: String`) - How many entries a table has.
+- **Pity Count** (`table_id: String, tag: String`) - The current miss streak for a table's tag.
+- **Roll Table** - The table that was rolled (inside On Roll Result / Complete).
+- **Roll Item** - The item id that dropped (inside On Roll Result).
+- **Roll Quantity** - The quantity of the dropped item (inside On Roll Result).
+- **Roll Tags** - Comma-separated tags of the dropped item (inside On Roll Result).
+- **Roll Index** - The 0-based position of this drop in the batch (inside On Roll Result).
+- **Total Rolls** - How many items dropped in the last batch (inside On Roll Complete).
+- **Last Seed** - The seed used for the last roll (store it to replay the exact drop).
+- **Pity Table** - The table whose pity fired (inside On Pity Triggered).
+- **Pity Tag** - The tag whose pity fired (inside On Pity Triggered).
+- **Pity Count At Trigger** - The miss streak when pity fired (inside On Pity Triggered).
+
+### MilestonesAddon (`res://eventsheet_addons/milestones/milestones_addon.gd`)
+@ace_tags(incremental, idle, achievement) @ace_category("Milestones")
+
+#### Triggers
+- **On Milestone Reached**
+
+#### Conditions
+- **Is Reached** (`id: String`) - Whether a milestone has been reached.
+
+#### Actions
+- **Define Milestone** (`id: String, threshold: float, reward: float`) - Creates (or resets) a milestone: the threshold to cross and the reward it grants once reached.
+- **Set Threshold** (`id: String, threshold: float`) - Changes a milestone's threshold (does not un-reach it if already reached).
+- **Update Progress** (`id: String, value: float`) - Reports the current value of the tracked number. The first time it reaches the threshold the milestone latches and On Milestone Reached fires (read Last Reached / Reward there).
+- **Force Reach** (`id: String`) - Marks a milestone reached immediately (for a load) - fires On Milestone Reached if it was not already reached.
+- **Reset** - Un-reaches every milestone and zeroes progress (keeps the definitions).
+
+#### Expressions
+- **Progress** (`id: String`) - How close a milestone is, 0 to 1 (for a progress bar).
+- **Threshold** (`id: String`) - A milestone's threshold value.
+- **Reward** (`id: String`) - A milestone's reward value.
+- **Reached Count** - How many milestones have been reached.
+- **Milestone Count** - How many milestones are defined.
+- **Total Reward** - The sum of the rewards of every reached milestone - fold this into your production multiplier.
+- **Last Reached** - The id of the milestone that just latched (read inside On Milestone Reached).
+- **Nearest Unreached** - The id of the unreached milestone closest to its threshold (for a "next goal" display); "" if all reached.
+
 ### MoveToBehavior (`res://eventsheet_addons/move_to/move_to_behavior.gd`)
 @ace_category("Move To") @ace_expose_all(node)
 
@@ -413,6 +700,32 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Add Waypoint (3D)** (`x: float, y: float, z: float`) - Appends a stop to the queue.
 - **Stop Moving (3D)** - Clears the queue without firing On Arrived.
 
+### ObjectPoolAddon (`res://eventsheet_addons/object_pool/object_pool_addon.gd`)
+@ace_tags(performance, spawning) @ace_category("Object Pool")
+
+#### Triggers
+- **On Spawned**
+
+#### Conditions
+- **Has Pool** (`pool_name: String`) - Whether a pool with this name exists.
+
+#### Actions
+- **Create Pool** (`pool_name: String, scene_path: String, prewarm: int`) - The easy way: makes a pool that spawns copies of a scene (a .tscn path), optionally pre-making some now so the first spawns never hitch.
+- **Create Empty Pool** (`pool_name: String`) - The custom way: makes a pool with no scene of its own. Fill it with Add To Pool (your own nodes), and Spawn hands those back out.
+- **Add To Pool** (`pool_name: String, node: Node`) - Puts one of your own existing nodes into a pool as a ready-to-reuse instance (for custom pools). The node is hidden and parked until spawned.
+- **Prewarm** (`pool_name: String, count: int`) - Pre-makes more copies for a scene pool (so a burst of spawns stays smooth).
+- **Despawn** (`node: Node`) - Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned.
+- **Despawn All** (`pool_name: String`) - Hands every active node of a pool back at once (for a level reset).
+- **Clear Pool** (`pool_name: String`) - Frees (deletes) every node in a pool and removes the pool. Use it when the pool is truly done.
+
+#### Expressions
+- **Spawn** (`pool_name: String`) - Hands out a ready node from a pool (reusing a free one, or making a new copy from the pool's scene) - added to the current scene, shown, and returned so you can position it. Fires On Spawned. Returns nothing if the pool is empty and has no scene.
+- **Last Spawned** - The node most recently spawned (handy inside On Spawned).
+- **Last Despawned** - The node most recently despawned (handy inside On Despawned).
+- **Free Count** (`pool_name: String`) - How many ready (unused) nodes a pool holds.
+- **Active Count** (`pool_name: String`) - How many of a pool's nodes are currently spawned and in use.
+- **Pool Size** (`pool_name: String`) - A pool's total nodes (free plus active).
+
 ### OrbitBehavior (`res://eventsheet_addons/orbit/orbit_behavior.gd`)
 @ace_category("Orbit") @ace_expose_all(node)
 
@@ -426,6 +739,58 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Actions
 - **Set Orbit 3D Center** (`x: float, y: float, z: float`) - Orbits around the given point from now on.
+
+### PhysicsCar (`res://eventsheet_addons/physics_car/physics_car_behavior.gd`)
+@ace_tags(vehicle, physics) @ace_category("Physics Car")
+
+#### Triggers
+- **On Collided**
+
+#### Conditions
+- **Is Moving** - Whether the car is above a small movement speed.
+- **Is Reversing** - Whether the car is moving backwards.
+- **Is Drifting** - Whether the slip angle is past the drift threshold.
+- **Is Handbrake Active** - Whether the handbrake was requested this physics frame.
+- **Is At Max Speed** - Whether the car has hit its forward speed cap.
+- **Has Reached Drive Target** - Whether the last Drive Toward Position target has been reached.
+- **Has Surface Override** - Whether a terrain grip or resistance multiplier is currently in effect.
+- **Is Driving Toward Angle** - Whether the car is in Drive Toward Angle mode.
+- **Is Driving Toward Position** - Whether the car is in Drive Toward Position mode.
+
+#### Actions
+- **Set Throttle** (`amount: float`) - Sets the throttle from -1 (full reverse) to 1 (full forward). Persists until you change it or call Stop.
+- **Set Brake** (`amount: float`) - Sets the brake from 0 (off) to 1 (full). Braking slows the car without reversing it.
+- **Set Steer** (`amount: float`) - Sets the steering from -1 (full left) to 1 (full right). Persists until you change it or call Stop.
+- **Simulate Control** (`direction: String`) - The keyboard-style control: pass "up" / "down" / "left" / "right" while the key is held, or "stop" to release. Call it every frame the key is down (pair with Stop when no key is down).
+- **Stop** - Clears throttle, brake, and steer, and exits any Drive Toward mode. The car coasts to rest.
+- **Enable Handbrake** - Cuts the grip for this one physics frame, so the back end slides. Call it every frame you want the handbrake held.
+- **Drive Toward Angle** (`target_angle: float, throttle_amount: float, max_steer: float, tolerance: float`) - Auto-steers toward a heading (degrees) and applies throttle. Call it each frame; the car turns until it faces within the tolerance. Sets the Is Driving Toward Angle mode.
+- **Drive Toward Position** (`x: float, y: float, throttle_amount: float, max_steer: float, tolerance: float`) - Auto-steers toward a world position and applies throttle. Call it each frame (for example toward a waypoint). Fires On Drive Target Reached inside the reach distance. Sets the Is Driving Toward Position mode.
+- **Teleport** (`x: float, y: float`) - Moves the car to a position and clears its velocity and spin (for respawns and resets).
+- **Set Max Speed** (`value: float`) - Changes the top forward speed at runtime (for boosts or speed caps).
+- **Set Grip** (`value: float`) - Changes the base sideways grip at runtime (1 = glued, 0 = ice).
+- **Set Surface Grip** (`multiplier: float`) - Sets a terrain grip multiplier on top of the base grip (for example 0.2 on ice, 0.45 in mud). 1 = no change.
+- **Set Surface Resistance** (`multiplier: float`) - Sets a terrain drag multiplier (above 1 = sticky mud that slows you, below 1 = slick). 1 = no change.
+- **Reset Surface** - Restores both terrain multipliers to 1 (call it when the car leaves a terrain zone).
+- **Set Reach Distance** (`distance: float`) - Sets how close (pixels) a Drive Toward target must be to fire On Drive Target Reached.
+
+#### Expressions
+- **Speed** - Current speed, in pixels per second.
+- **Forward Speed** - Speed along the way the car faces (negative when reversing).
+- **Lateral Speed** - Sideways slide speed (the part grip fights).
+- **Angle Of Motion** - The direction the car is actually moving, in degrees.
+- **Slip Angle** - Degrees between where the car points and where it moves.
+- **Drift Duration** - Seconds the current drift has lasted (or the final length inside On Drift Ended).
+- **Throttle Input** - The current throttle value (-1 to 1).
+- **Brake Input** - The current brake value (0 to 1).
+- **Steer Input** - The current steer value (-1 to 1).
+- **Heading Error** - Signed degrees a Drive Toward action still needs to turn.
+- **Drive Target Distance** - Distance to the current Drive Toward Position target (0 if none).
+- **Effective Grip** - The final grip after handbrake and terrain multipliers.
+- **Surface Grip Multiplier** - The active terrain grip multiplier.
+- **Surface Resistance Multiplier** - The active terrain drag multiplier.
+- **Collision Force** - Approximate impact speed of the latest collision (inside On Collided).
+- **Collision Angle** - Approximate impact direction in degrees (inside On Collided).
 
 ### PlatformerMovement (`res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd`)
 @ace_tags(movement, platformer) @ace_category("Platformer") @ace_expose_all(node)
@@ -450,6 +815,80 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Jumps Remaining**
 - **Air Time**
 - **Facing Direction**
+
+### PrestigeAddon (`res://eventsheet_addons/prestige/prestige_addon.gd`)
+@ace_tags(incremental, idle, prestige) @ace_category("Prestige")
+
+#### Triggers
+- **On Prestige**
+
+#### Conditions
+- **Can Prestige** - Whether prestiging now would bank at least one point.
+
+#### Actions
+- **Configure** (`requirement: float, exponent: float, bonus_per_point: float`) - Sets the requirement (run earnings before you gain a point), the exponent (curve; 0.5 = square-root, the usual), and the bonus each banked point adds to Prestige Multiplier.
+- **Track Earned** (`amount: float`) - Records earnings toward prestige - call it wherever the player earns the prestige currency. Feeds both the run total (drives the gain) and the all-time Total Earned.
+- **Do Prestige** - Banks the current Prestige Gain, raises the prestige level, and clears the run total. Does nothing if the gain is 0. Reset your currencies and generators in the same event, reading Prestige Gain first.
+- **Set Points** (`points: float`) - Forces banked prestige points to a value (for a load or a cheat menu).
+- **Hard Reset** - Wipes EVERYTHING - points, level, run and all-time earnings. A full new-game, not a prestige.
+
+#### Expressions
+- **Prestige Gain** - How many prestige points the current run would bank right now.
+- **Prestige Points** - Banked prestige currency.
+- **Prestige Level** - How many times the player has prestiged.
+- **Prestige Multiplier** - The permanent production multiplier from banked points: 1 + points * bonus.
+- **Run Earned** - Earnings this run (resets on Do Prestige).
+- **Total Earned** - All-time earnings (never resets).
+- **Last Gain** - Points banked by the most recent Do Prestige (read inside On Prestige).
+- **Requirement** - The run earnings needed before the first point.
+- **Earned For Next Point** - The run earnings needed to reach the next prestige point.
+- **Progress To Next** - How close this run is to the next point, 0 to 1 (for a progress bar).
+
+### ProcRoomAddon (`res://eventsheet_addons/proc_room/proc_room_addon.gd`)
+@ace_tags(procedural, roguelite) @ace_category("ProcRoom")
+
+#### Triggers
+- **On Graph Generated**
+
+#### Conditions
+- **Is Graph Ready** - Whether a map has been generated.
+- **Is Room Visited** (`room_id: String`) - Whether a room has been entered.
+- **Is Room Available** (`room_id: String`) - Whether a room can be entered right now (connected forward from current and unlocked).
+- **Is Room Locked** (`room_id: String`) - Whether a room is locked.
+- **Is Room Connected** (`from_id: String, to_id: String`) - Whether room A connects forward to room B.
+
+#### Actions
+- **Register Room Type** (`type_id: String, weight: float, min_depth: int, max_depth: int, max_per_depth: int`) - Registers a room type that Generate may place: a weight (higher = commoner), the depth range it may appear in (max_depth -1 = anywhere), and a per-depth cap (-1 = no cap).
+- **Set Start Type** (`type_id: String`) - The type name given to the single depth-0 room (default "start
+- **Set Boss Type** (`type_id: String`) - The type name given to the single final-depth room (default "boss
+- **Generate** (`seed_text: String, depths: int, max_rooms_per_depth: int`) - Builds a reproducible tiered map from a seed: `depths` tiers (start at 0, boss at the last), up to `max_rooms_per_depth` rooms per interior tier. Same seed = same map. Fires On Graph Generated.
+- **Regenerate** - Rebuilds the map from the SAME seed + settings as the last Generate (a fresh run of the same layout).
+- **Enter Room** (`room_id: String`) - Moves to a room if it's connected forward from the current room and not locked; otherwise fires On Traversal Blocked (read Block Reason). On success marks it visited + fires On Room Entered.
+- **Force Enter Room** (`room_id: String`) - Moves to any room ignoring connection + lock checks (for teleports / debug). Fires On Room Entered.
+- **Lock Room** (`room_id: String`) - Locks a room so Enter Room is blocked until unlocked (a key door).
+- **Unlock Room** (`room_id: String`) - Unlocks a locked room.
+- **Reveal Room** (`room_id: String`) - Marks a room as revealed (for fog-of-war maps).
+- **Reset Traversal** - Clears visited/revealed/locked and returns to the start room, keeping the same map (a fresh run of the same layout).
+
+#### Expressions
+- **Graph Seed** - The seed of the current map.
+- **Total Rooms** - How many rooms the map has.
+- **Total Depths** - How many depth tiers the map has.
+- **Current Room** - The room the player is in ("" before entry).
+- **Current Room Type** - The type of the current room.
+- **Current Depth** - The depth tier of the current room.
+- **Previous Room** - The room entered just before the current one.
+- **Room Type** (`room_id: String`) - A room's type ("" if unknown).
+- **Room Depth** (`room_id: String`) - A room's depth tier (-1 if unknown).
+- **Rooms At Depth** (`depth: int`) - How many rooms are at a depth tier.
+- **Room At Depth** (`depth: int, index: int`) - The room id at a depth + index ("" out of range).
+- **Connections From** (`room_id: String`) - How many rooms a room connects forward to.
+- **Connection From** (`room_id: String, index: int`) - The Nth room a room connects forward to ("" out of range).
+- **Visited Count** - How many rooms have been visited.
+- **Entered Id** - The room just entered (inside On Room Entered).
+- **Entered Type** - The type of the room just entered (inside On Room Entered).
+- **Blocked Id** - The room that couldn't be entered (inside On Traversal Blocked).
+- **Block Reason** - Why entry was blocked - "locked" or "unreachable" (inside On Traversal Blocked).
 
 ### SaveSystemAddon (`res://eventsheet_addons/save_system/save_system_addon.gd`)
 @ace_tags(persistence)
@@ -509,6 +948,71 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Phase** (`degrees: float`) - Phase offset in degrees.
 - **Reset Sine 3D** - Restarts the wave from the current state.
 
+### SkinVaultAddon (`res://eventsheet_addons/skin_vault/skin_vault_addon.gd`)
+@ace_tags(cosmetics, gacha) @ace_category("SkinVault")
+
+#### Triggers
+- **On Skin Rolled**
+
+#### Conditions
+- **Is Owned** (`skin_id: String`) - Whether the player owns a skin.
+- **Is Registered** (`skin_id: String`) - Whether a skin exists in the catalog.
+- **Is Unlockable** (`skin_id: String`) - Whether a skin is registered but not yet owned (drives lock icons).
+- **Is Pool Empty** (`tag: String`) - Whether there are no unowned skins left to roll (optional tag filter).
+
+#### Actions
+- **Register Rarity** (`name: String, weight: float, tier: int`) - Registers a rarity: a roll weight (higher = commoner) and a tier rank (higher = rarer; pity guarantees a tier at or above the pity rarity).
+- **Register Skin** (`id: String, display_name: String, rarity: String, cost: float, tags: String`) - Registers a skin: a unique id, a display name, its rarity (must be registered), a cost (0 = not purchasable), and comma-separated tags.
+- **Load Catalog** (`catalog: Resource`) - Registers a whole catalog (rarities + skins) from a Skin Catalog resource (a .tres you filled in the Inspector) in one step. The data-driven alternative to a string of Register Rarity + Register Skin actions.
+- **Roll** (`tag: String`) - Rolls a weighted-random UNOWNED skin (optional tag filter; "" = any) and grants it. Applies pity, then fires On Skin Rolled and On Skin Unlocked. Fires On Pool Empty if nothing is left.
+- **Grant** (`skin_id: String`) - Unlocks a skin for free (fires On Skin Unlocked). Does nothing if already owned.
+- **Revoke** (`skin_id: String`) - Removes a skin from the owned set (fires On Skin Revoked).
+- **Purchase** (`skin_id: String`) - Starts a purchase: fires On Purchase Requested carrying the skin id + cost. Check your wallet there, then call Confirm or Cancel Purchase. (SkinVault never touches currency itself.)
+- **Confirm Purchase** (`skin_id: String`) - Completes a purchase and grants the skin (fires On Skin Unlocked with method "purchase
+- **Cancel Purchase** (`skin_id: String`) - Cancels a pending purchase (fires On Purchase Cancelled).
+- **Reset Pity** - Sets the pity counter back to 0.
+- **Load Owned** (`owned_csv: String`) - Restores the owned set from a comma-separated id list (pair with the Owned Ids expression to save).
+- **Set Pity Count** (`count: int`) - Restores the pity counter (for save/load).
+
+#### Expressions
+- **Total Skins** - How many skins are registered.
+- **Owned Count** - How many skins the player owns.
+- **Pool Count** (`tag: String`) - How many unowned skins remain (optional tag filter).
+- **Skin Name** (`skin_id: String`) - A skin's display name.
+- **Skin Rarity** (`skin_id: String`) - A skin's rarity name.
+- **Skin Cost** (`skin_id: String`) - A skin's cost (0 if not purchasable / unknown).
+- **Pity Counter** - The current miss streak toward pity.
+- **Pity Progress** - Progress toward pity as 0.0 - 1.0 (for a bar).
+- **Owned Ids** - The owned skin ids as a comma-separated string (pair with Load Owned to save).
+- **Rolled Id** - The skin just rolled (inside On Skin Rolled).
+- **Unlocked Id** - The skin just unlocked (inside On Skin Unlocked).
+- **Unlock Method** - How it was unlocked - "roll", "grant", or "purchase" (inside On Skin Unlocked).
+- **Requested Id** - The skin being purchased (inside On Purchase Requested / Cancelled).
+- **Requested Cost** - The cost of the requested purchase (inside On Purchase Requested).
+- **Revoked Id** - The skin just revoked (inside On Skin Revoked).
+
+### SlideMove (`res://eventsheet_addons/slide_move/slide_move_behavior.gd`)
+@ace_tags(grid, movement) @ace_category("Slide Movement")
+
+#### Triggers
+- **On Slide Started**
+
+#### Conditions
+- **Is Sliding** - Whether the character is mid-slide.
+- **Can Slide** (`direction: String`) - Whether the tile next to the character in a direction is open (not a wall).
+
+#### Actions
+- **Slide** (`direction: String`) - Starts a slide in a direction (left / right / up / down): the character glides until the tile ahead is a wall, then stops snapped to the grid. Ignored while already sliding; fires On Hit Wall immediately if the very next tile is a wall.
+- **Stop Slide** - Stops a slide immediately and snaps the character to the nearest tile.
+- **Snap To Grid** - Snaps the character to the nearest grid intersection right now.
+- **Teleport To Tile** (`tile_x: int, tile_y: int`) - Jumps instantly to a tile coordinate (multiplied by the grid size), cancelling any slide.
+- **Set Grid Size** (`pixels: float`) - Changes the tile size in pixels at runtime.
+
+#### Expressions
+- **Slide Direction** - The direction of the current or last slide ("left" / "right" / "up" / "down
+- **Tile X** - The character's current column on the grid.
+- **Tile Y** - The character's current row on the grid.
+
 ### SpringBehavior (`res://eventsheet_addons/spring/spring_behavior.gd`)
 @ace_tags(motion, juice) @ace_category("Spring") @ace_expose_all(node)
 
@@ -553,6 +1057,55 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Actions
 - **Set State** (`next: String`) - Switches to the given state and fires On State Changed.
+
+### StoryletsAddon (`res://eventsheet_addons/storylet_weaver/storylet_weaver_addon.gd`)
+@ace_tags(narrative, storylet) @ace_category("Storylets")
+
+#### Triggers
+- **On Storylet Drawn**
+
+#### Conditions
+- **Has Active Storylet** - Whether a storylet is currently active (drawn, not yet resolved).
+- **Is Available** (`id: String`) - Whether a storylet is in the current available list (call Evaluate first).
+- **Has Quality** (`key: String`) - Whether a quality key has been set.
+- **Has Been Played** (`id: String`) - Whether a storylet has played at least once.
+- **Is On Cooldown** (`id: String`) - Whether a storylet is still cooling down.
+- **Is Library Empty** - Whether no storylets are registered.
+
+#### Actions
+- **Define Storylet** (`id: String, title: String, body: String`) - Registers (or replaces) a storylet: an id plus the title + body text your game shows.
+- **Set Storylet Weight** (`id: String, weight: float`) - How strongly this storylet is preferred when several are eligible (higher = picked first / likelier).
+- **Set Storylet Cooldown** (`id: String, seconds: float`) - Seconds this storylet is ineligible after it plays (0 = no cooldown).
+- **Set Max Plays** (`id: String, max_plays: float`) - How many times it may ever play (-1 = unlimited, 1 = a one-shot).
+- **Add Requirement** (`id: String, quality_key: String, op: String, value`) - A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "
+- **Add Choice** (`id: String, choice_id: String, text: String`) - Adds a labelled choice the player can pick on this storylet (resolve it with Choose).
+- **Set Quality** (`key: String, value`) - Stores a quality value (a number like courage=3, or text like location="tavern
+- **Increment Quality** (`key: String, amount: float`) - Adds to a numeric quality (creating it at 0 if new).
+- **Clear Quality** (`key: String`) - Removes a quality key.
+- **Evaluate** - Rebuilds the available list: every eligible storylet, ordered by weight (highest first). Use the Available expressions to show a menu.
+- **Draw** - Evaluates, then activates the highest-weight eligible storylet and fires On Storylet Drawn (or On None Available if nothing qualifies).
+- **Draw Weighted** - Like Draw, but picks randomly among the eligible storylets in proportion to their weight (for variety).
+- **Choose** (`choice_id: String`) - Resolves the active storylet's choice by id (fires On Choice Made, then clears the active storylet). React inside On Choice Made.
+- **Dismiss** - Clears the active storylet without making a choice (the play still counted).
+- **Reset Play Count** (`id: String`) - Lets a one-shot or limited storylet play again.
+- **Reset All History** - Clears every play count + cooldown (e.g. on New Game).
+
+#### Expressions
+- **Quality Number** (`key: String`) - A quality as a number (0 if unset).
+- **Quality Text** (`key: String`) - A quality as text ("" if unset).
+- **Available Count** - How many storylets are eligible (after Evaluate/Draw).
+- **Available Id** (`index: int`) - The eligible storylet id at a position ("" out of range).
+- **Available Title** (`index: int`) - The title of the eligible storylet at a position.
+- **Active Id** - The active storylet id ("" if none).
+- **Active Title** - The active storylet's title.
+- **Active Body** - The active storylet's body text.
+- **Choice Count** - How many choices the active storylet offers.
+- **Choice Id At** (`index: int`) - The choice id at a position on the active storylet.
+- **Choice Text At** (`index: int`) - The choice label at a position on the active storylet.
+- **Chosen Id** - The choice just picked (inside On Choice Made).
+- **Play Count** (`id: String`) - How many times a storylet has played.
+- **Cooldown Remaining** (`id: String`) - Seconds left on a storylet's cooldown (0 if ready).
+- **Storylet Count** - How many storylets are registered.
 
 ### TileMovementBehavior (`res://eventsheet_addons/tile_movement/tile_movement_behavior.gd`)
 @ace_category("Tile Movement") @ace_expose_all(node)
@@ -612,6 +1165,75 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Tween Rotation** (`degrees: float, duration: float`) - Rotates the host to the given degrees.
 - **Tween Alpha** (`alpha: float, duration: float`) - Fades the host's modulate alpha.
 - **Stop Tweens** - Kills the running tween (host stays where it is).
+
+### UpgradesAddon (`res://eventsheet_addons/upgrades/upgrades_addon.gd`)
+@ace_tags(incremental, idle, upgrade) @ace_category("Upgrades")
+
+#### Triggers
+- **On Upgrade Bought**
+
+#### Conditions
+- **Is Maxed** (`id: String`) - Whether an upgrade is at its max level.
+- **Owns** (`id: String`) - Whether an upgrade has at least one level.
+- **Purchase Succeeded** - Whether the last Try Purchase went through (read it right after, or in On Upgrade Bought).
+
+#### Actions
+- **Define Upgrade** (`id: String, base_cost: float, cost_growth: float, max_level: int, per_level: float, mode: String, tag: String`) - Creates (or resets) an upgrade: base cost, cost growth per level, max level (-1 = unlimited), effect per level, mode ("add" or "mult
+- **Set Effect** (`id: String, per_level: float, mode: String`) - Retunes an existing upgrade's per-level effect and mode without touching its level (for live balancing).
+- **Try Purchase** (`id: String, budget: float`) - Buys the next level if `budget` covers Cost Of and it is not maxed. On success records Last Cost and fires On Upgrade Bought (Spend Last Cost from your wallet); otherwise fires On Purchase Failed. Never touches the wallet itself.
+- **Grant Level** (`id: String`) - Adds one free level (a reward), up to the max. No cost, no budget check.
+- **Set Level** (`id: String, level: int`) - Forces an upgrade's level (for a load or cheat), clamped to 0 and the max.
+- **Reset** - Sets every upgrade back to level 0 (keeps the definitions) - for a prestige wipe.
+
+#### Expressions
+- **Cost Of** (`id: String`) - The next level's price (-1 if maxed or undefined).
+- **Level Of** (`id: String`) - An upgrade's current level.
+- **Max Level Of** (`id: String`) - An upgrade's max level (-1 = unlimited).
+- **Effect Of** (`id: String`) - An upgrade's current stacked effect (level*per_level for add mode, per_level^level for mult mode).
+- **Total Multiplier** (`tag: String`) - The product of every mult-mode upgrade sharing this tag (1.0 if none) - multiply production by it.
+- **Total Bonus** (`tag: String`) - The sum of every add-mode upgrade sharing this tag (0.0 if none) - add it to a base value.
+- **Last Cost** - What the last Try Purchase cost - Spend this from your wallet.
+- **Last Upgrade** - The id of the last upgrade bought or failed (read in the trigger).
+- **Upgrade Count** - How many upgrades are defined.
+
+### UtilityBrain (`res://eventsheet_addons/utility_ai/utility_ai_addon.gd`)
+@ace_tags(ai, decision) @ace_category("Utility AI")
+
+#### Triggers
+- **On Decision Made**
+
+#### Conditions
+- **Is Running** (`action_name: String`) - Whether the brain's current action is this one.
+- **Has Action** (`action_name: String`) - Whether an action is registered on this brain.
+- **Is Action Enabled** (`action_name: String`) - Whether an action is registered and enabled.
+- **Is On Cooldown** (`action_name: String`) - Whether an action is currently cooling down.
+- **Was Last Action** (`action_name: String`) - Whether the previous action (before the current one) was this one - for anti-repeat / transition logic.
+- **Is Idle** - Whether the brain has no current action (nothing chosen yet, or the last evaluation found none valid).
+
+#### Actions
+- **Add Action** (`action_name: String, cooldown: float, interruptible: bool, priority: float`) - Registers a candidate action the brain can choose. cooldown = seconds it rests after Mark Action Complete (0 = none); interruptible = whether Interrupt can cancel it; priority = an overall weight multiplier (1 = normal).
+- **Add Consideration** (`action_name: String, input_key: String, curve: String, weight: float, curve_center: float, curve_slope: float`) - Adds a scoring factor to an action: it reads a world-state input (0-1) and maps it through a response curve to a 0-1 score. An action's considerations all multiply together, so any near-zero factor vetoes it. weight sharpens (>1) or softens (<1) this factor; center + slope tune the logistic / threshold / bell curves.
+- **Remove Action** (`action_name: String`) - Removes an action (and any cooldown on it). Clears the current action if it was the one running.
+- **Set Action Enabled** (`action_name: String, enabled: bool`) - Enables or disables an action without removing it (a disabled action is never chosen).
+- **Set Input** (`key: String, value: float`) - Writes a world-state value considerations read by key (usually normalized 0-1, e.g. hp_ratio). Push these right before Evaluate; an unset key reads as 0.
+- **Clear Inputs** - Clears all world-state inputs on this brain.
+- **Evaluate** - Scores every enabled, off-cooldown action from the current world state and picks a winner. Fires On Decision Made (plus On Action Changed + On Action Started when the choice changes), or On No Valid Action if nothing clears the minimum score. Call it on a timer or after a stimulus.
+- **Force Action** (`action_name: String`) - Overrides the decision and starts an action directly (fires On Decision Made + On Action Started). Use it for cutscenes, scripted beats, or an emergency fallback, then return to Evaluate.
+- **Mark Action Complete** - Marks the running action finished: fires On Action Completed, starts its cooldown if it has one, then re-evaluates. Call it when your gameplay finishes performing the action (it already re-evaluates, so do not also call Evaluate).
+- **Interrupt Action** - Stops the running action if it is interruptible (fires On Action Interrupted) and re-evaluates. A non-interruptible action is left alone.
+- **Set Action Cooldown** (`action_name: String, seconds: float`) - Starts (or, with seconds <= 0, clears) a cooldown on an action - so it cannot be chosen until the timer expires. Fires On Cooldown Started.
+- **Clear Cooldowns** - Clears every active cooldown on this brain (e.g. a refresh powerup).
+
+#### Expressions
+- **Current Action** - The id of the action running now ("" if none).
+- **Previous Action** - The id of the action that ran before the current one.
+- **Decision Score** - The winning action's score from the most recent Evaluate.
+- **Action Score** (`action_name: String`) - An action's score from the most recent Evaluate (0 if it was not scored).
+- **Action History** (`index: int`) - A past action by index, most-recent first (0 = current). "" past the end.
+- **Action Count** - How many actions are registered on this brain.
+- **Cooldown Remaining** (`action_name: String`) - Seconds left on an action's cooldown (0 if not cooling down).
+- **Cooldown Action** - The action whose cooldown just started or ended (inside On Cooldown Started / On Cooldown Ended).
+- **Get Input** (`key: String`) - The current value of a world-state input (0 if unset).
 
 ### VirtualCursor (`res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior.gd`)
 @ace_category("Virtual Cursor") @ace_expose_all(node)
