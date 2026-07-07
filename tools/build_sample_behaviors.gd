@@ -45,6 +45,7 @@ const PACK_BUILDERS: Array[String] = [
 	"storylet_weaver",
 	"skin_vault",
 	"proc_room",
+	"utility_ai",
 ]
 
 

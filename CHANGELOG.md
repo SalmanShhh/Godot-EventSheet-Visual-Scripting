@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added - the UtilityBrain pack: scoring-based AI, one brain per node
+
+- **A 40th behavior pack, UtilityBrain** (a Construct 3 UtilityAI port): a per-node decision engine
+  that replaces brittle if/else state machines with utility scoring. Attach one to each enemy /
+  companion / NPC, then **Add Action** (a candidate behaviour with an optional cooldown,
+  interruptible flag, and priority), give it **Add Consideration**s (each reads a world-state input
+  and maps it through a friendly named response curve - **linear / inverse / quadratic /
+  inverse_quadratic / logistic / threshold / bell**, tuned with a center + slope - to a 0-1 score),
+  push state with **Set Input**, and call **Evaluate**: the highest-scoring action wins and fires **On
+  Decision Made**, plus **On Action Started** / **On Action Changed** when the choice moves. Round it
+  out with **Force Action** (scripted overrides), **Mark Action Complete** (starts the cooldown, then
+  re-evaluates), **Interrupt Action**, **Set Action Cooldown** / **Clear Cooldowns**, and the
+  **weighted-random** selection mode (sample among the top N) for less robotic behaviour. Conditions Is
+  Running / Has Action / Is Action Enabled / Is On Cooldown / Was Last Action / Is Idle; expressions
+  for the current/previous action, decision + per-action scores, action history, cooldown remaining,
+  and inputs. Beginner-friendly over the raw C3 addon: **the node IS the agent**, so every "agent id"
+  argument the C3 version threaded through every ACE is gone; considerations are discrete typed ACEs
+  (no hand-written JSON, no consideration-id typos to silently drop a factor); response curves are a
+  named dropdown instead of raw curve math; a consideration-less action scores a flat fallback, so
+  registering an "idle" action IS the always-keep-a-fallback best practice with nothing extra to wire;
+  and inertia only nudges an already-viable action rather than rescuing a vetoed one. Pinned in
+  `tests/utility_ai_test.gd`; drift gate green (audited=40 drifted=0).
+
 ### Added - the ProcRoom pack: a seeded room-graph generator
 
 - **A 39th behavior pack, ProcRoom** (a Construct 3 addon port): register as the `ProcRoom`
