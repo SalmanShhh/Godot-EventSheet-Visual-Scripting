@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - descriptions on ACE picker section headers
+
+- **Category / sub-section / node-type headers in the ACE picker now carry a short description**, shown
+  in the picker's info panel when you select the header (and as its hover tooltip) - so a newcomer
+  browsing the list learns what a whole group is for, not just individual ACEs. Selecting a header shows
+  its blurb and keeps Add disabled (a header is not an ACE). Descriptions come from a new
+  `EventSheetSectionInfo` registry seeded with the core categories, from each ACE module's optional
+  `static func section_descriptions() -> Dictionary`, and - for a pack's own category - automatically
+  from the pack's class doc comment, with no extra wiring. Extensions add their own with
+  `EventSheetSectionInfo.describe(name, text)`. Pinned in `tests/picker_layout_test.gd`.
+
 ### Added - guides for the ported packs + a guide to building editor tools
 
 - **A `docs/Addons/` guide library** with a deep-dive per bundled pack (when to use it, the full ACE

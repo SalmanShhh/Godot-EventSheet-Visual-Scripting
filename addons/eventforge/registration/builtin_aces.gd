@@ -131,8 +131,32 @@ static func _module_files() -> PackedStringArray:
 
 ## True when the loaded script declares a get_descriptors method (the module contract).
 static func _has_get_descriptors(script: GDScript) -> bool:
+	return _declares_method(script, "get_descriptors")
+
+
+## Aggregates every module's OPTIONAL `static func section_descriptions() -> Dictionary` (category /
+## sub-section name -> a short plain-language blurb shown when that header is selected in the picker).
+## Purely additive: a module without the method contributes nothing, and the first description registered
+## for a name wins (so a module never silently overrides another's). Feeds EventSheetSectionInfo.
+static func section_descriptions() -> Dictionary:
+	var merged: Dictionary = {}
+	for module_file: String in _module_files():
+		var script: GDScript = load(MODULES_DIR + module_file)
+		if script == null or not _declares_method(script, "section_descriptions"):
+			continue
+		var module_sections: Variant = script.call("section_descriptions")
+		if module_sections is Dictionary:
+			for key: Variant in (module_sections as Dictionary):
+				var name: String = str(key).strip_edges()
+				if not name.is_empty() and not merged.has(name):
+					merged[name] = str((module_sections as Dictionary)[key])
+	return merged
+
+
+## True when the loaded script declares a static method by name.
+static func _declares_method(script: GDScript, method_name: String) -> bool:
 	for method_info: Dictionary in script.get_script_method_list():
-		if str(method_info.get("name", "")) == "get_descriptors":
+		if str(method_info.get("name", "")) == method_name:
 			return true
 	return false
 

@@ -11,6 +11,14 @@ extends RefCounted
 
 static func run() -> bool:
 	var ok: bool = true
+
+	# Section descriptions registry: core categories are seeded, and describe() adds/overrides.
+	ok = _check("a core category has a seeded description",
+		not EventSheetSectionInfo.description_for("Editor Tools").is_empty(), true) and ok
+	EventSheetSectionInfo.describe("__picker_test_section__", "a test blurb")
+	ok = _check("describe() registers a custom section description",
+		EventSheetSectionInfo.description_for("__picker_test_section__"), "a test blurb") and ok
+
 	var parent: Node = Node.new()
 	var registry := EventSheetACERegistry.new()
 	registry.refresh_from_sources([], true)  # built-in ACEs only
@@ -34,8 +42,35 @@ static func run() -> bool:
 		if not str(def.metadata.get("codegen_template", "")).is_empty():
 			ok = _check("codegen in the description is muted (color-wrapped)", picker._info_label.text.contains("[color=#") and picker._info_label.text.contains("[code]"), true) and ok
 
+	# Section headers are now selectable and carry a {"section": name} marker, so selecting one shows a
+	# group description instead of an ACE (and Add stays disabled - a header is not addable).
+	var header: TreeItem = _first_section_header(picker._tree.get_root())
+	ok = _check("category headers carry a selectable section marker",
+		header != null and header.is_selectable(0) and header.get_metadata(0) is Dictionary and (header.get_metadata(0) as Dictionary).has("section"), true) and ok
+	if header != null and first != null:
+		var section_name: String = str((header.get_metadata(0) as Dictionary)["section"])
+		picker._selected_definition = first.get_metadata(0)
+		picker._add_button.disabled = false
+		picker._show_section_info(header, section_name)
+		ok = _check("selecting a section header shows its description and disables Add",
+			picker._info_label.text.contains(section_name) and picker._add_button.disabled and picker._selected_definition == null, true) and ok
+
 	parent.free()
 	return ok
+
+
+## Depth-first search for the first section-header row (its metadata is a {"section": name} marker).
+static func _first_section_header(item: TreeItem) -> TreeItem:
+	var child: TreeItem = item.get_first_child()
+	while child != null:
+		var meta: Variant = child.get_metadata(0)
+		if meta is Dictionary and (meta as Dictionary).has("section"):
+			return child
+		var nested: TreeItem = _first_section_header(child)
+		if nested != null:
+			return nested
+		child = child.get_next()
+	return null
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

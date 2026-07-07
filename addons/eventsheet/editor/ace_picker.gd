@@ -600,7 +600,7 @@ func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> 
 			group_item.set_icon(0, class_icon)
 			group_item.set_icon_max_width(0, 16)
 	group_item.set_custom_color(0, _group_color_for(group_key, is_node_type))
-	group_item.set_selectable(0, false)
+	_mark_section_header(group_item, group_key)
 	return group_item
 
 
@@ -624,19 +624,32 @@ func _resolve_group_item(root: TreeItem, group_nodes: Dictionary, group_key: Str
 	else:
 		parent_item = _make_group_item(root, parent_key, false)
 		group_nodes[parent_key] = parent_item
-	var sub_item: TreeItem = _make_sub_group_item(parent_item, child_label)
+	var sub_item: TreeItem = _make_sub_group_item(parent_item, child_label, group_key)
 	group_nodes[group_key] = sub_item
 	return sub_item
 
 
-## A nested sub-category folder ("Array" inside "Variables"): same non-selectable folder
-## styling as a top-level group, parented under its category instead of the tree root.
-func _make_sub_group_item(parent_item: TreeItem, child_label: String) -> TreeItem:
+## A nested sub-category folder ("Array" inside "Variables"): same folder styling as a top-level
+## group, parented under its category instead of the tree root. The full "Parent: Sub" key is kept
+## as the section name so its description looks up unambiguously.
+func _make_sub_group_item(parent_item: TreeItem, child_label: String, full_key: String) -> TreeItem:
 	var sub_item: TreeItem = _tree.create_item(parent_item)
 	sub_item.set_text(0, child_label)
 	sub_item.set_custom_color(0, _group_color_for(child_label, false))
-	sub_item.set_selectable(0, false)
+	_mark_section_header(sub_item, full_key)
 	return sub_item
+
+
+## Makes a group / sub-group header selectable and tags it with its section name, so selecting the
+## header shows a description instead of an ACE. The metadata is a marker Dictionary, never an
+## ACEDefinition, so the Add button stays disabled and confirming a header does nothing (see
+## _commit_definition, which no-ops on null). Any registered blurb also becomes the hover tooltip.
+func _mark_section_header(item: TreeItem, section_name: String) -> void:
+	item.set_selectable(0, true)
+	item.set_metadata(0, {"section": section_name})
+	var blurb: String = EventSheetSectionInfo.description_for(section_name)
+	if not blurb.is_empty():
+		item.set_tooltip_text(0, blurb)
 
 
 ## Splits a "Parent: Sub" category into [parent, child] (both stripped). Returns an empty
@@ -824,6 +837,12 @@ func _is_allowed_for_mode(definition: ACEDefinition, mode: String, signals_only:
 ## GDScript it will generate - the picker doubles as a teaching surface.
 func _on_item_selected_for_info() -> void:
 	var selected: TreeItem = _tree.get_selected()
+	# A section header carries a {"section": name} marker (not an ACE): show the group's description.
+	if selected != null:
+		var meta: Variant = selected.get_metadata(0)
+		if meta is Dictionary and (meta as Dictionary).has("section"):
+			_show_section_info(selected, str((meta as Dictionary)["section"]))
+			return
 	var definition: ACEDefinition = selected.get_metadata(0) as ACEDefinition if selected != null else null
 	# Picking in the main tree clears the side-pane highlight so there is one logical selection.
 	if definition != null:
@@ -1182,6 +1201,43 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 	if not reactive.is_empty():
 		body += "\n[color=#e0b050]💡 Reactive alternative: [b]%s[/b] - reacts once when it happens, instead of checking every frame.[/color]" % str(reactive.get("trigger_name", ""))
 	_info_label.text = body
+
+
+## Selecting a section header shows the group's description instead of an ACE: Add stays disabled,
+## and the blurb comes from EventSheetSectionInfo, falling back to a pack's own class doc comment
+## (the first provider_description among the group's rows), then to a generic line.
+func _show_section_info(item: TreeItem, section_name: String) -> void:
+	_selected_definition = null
+	if _add_button != null:
+		_add_button.disabled = true
+	if _favorite_button != null:
+		_favorite_button.set_pressed_no_signal(false)
+	if _info_label == null:
+		return
+	var blurb: String = EventSheetSectionInfo.description_for(section_name)
+	if blurb.is_empty():
+		blurb = _provider_description_in(item)
+	if blurb.is_empty():
+		blurb = "[color=#%s]A group of related actions, conditions, and expressions.[/color]" % _muted_header_color().to_html(false)
+	_info_label.text = "[b]%s[/b]  ·  section\n%s" % [section_name, blurb]
+
+
+## The first provider_description among a section's ACE rows (a pack's class doc comment), or "".
+## Descends through any sub-section folders (which carry a marker Dictionary, not an ACEDefinition).
+func _provider_description_in(item: TreeItem) -> String:
+	var child: TreeItem = item.get_first_child()
+	while child != null:
+		var meta: Variant = child.get_metadata(0)
+		if meta is ACEDefinition:
+			var provider_desc: String = str((meta as ACEDefinition).metadata.get("provider_description", ""))
+			if not provider_desc.is_empty():
+				return provider_desc
+		elif meta is Dictionary:
+			var nested: String = _provider_description_in(child)
+			if not nested.is_empty():
+				return nested
+		child = child.get_next()
+	return ""
 
 
 func _on_favorite_button_pressed() -> void:
