@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Added - Editor Tools ACEs + a friendlier extension API for building on EventSheets
+
+- **A new builtin "Editor Tools" ACE module** (17 ACEs) for authoring `@tool` / EditorScript sheets by
+  events instead of code: **Open Scene In Editor**, **Save Current Scene** / **Save Scene As**, **Play
+  Current Scene** / **Stop Playing**, **Rescan Project Files**, **Select Node In Editor**, **Inspect In
+  Editor**, **Save Resource To File**, **Make Sure Folder Exists**, **Resource Exists**, **Is In
+  Editor**, and the read-backs **Edited Scene Root** / **Selected Nodes** / **Editor Scale** - plus two
+  combined builders that fold three lines into one pickable row: **Add Node To Edited Scene** (create +
+  add child + set owner so it saves with the scene) and **Save Node As Scene** (pack a node and its
+  children into a `.tscn`). Every one bakes to plain Godot (`EditorInterface`, `ResourceSaver`,
+  `DirAccess`, `Engine`) with zero plugin references, honouring the parity covenant. Pair them with a
+  Tool sheet (Sheet Type -> Tool: emits `@tool` + `extends EditorScript` + the On Editor Run trigger).
+
+- **Two beginner-friendly additions to the public `EventSheets` API** (both a frozen compatibility
+  promise, like every method there):
+  - **`EventSheets.new_sheet(config)`** builds a ready-to-fill `EventSheetResource` from a plain
+    Dictionary (`class_name` / `host_class` / `behavior_mode` / `autoload_mode` / `tool_mode` /
+    `category` / `tags` / `description`) - the one public way to author a sheet, behavior, autoload, or
+    tool script from code. Append events and functions, then `compile()` it.
+  - **`EventSheets.simple_block_kind(config)`** builds a whole Custom Block kind from a Dictionary (an
+    `emit` template with `{field}` placeholders, a `summary` template, and a `fields` schema) with **no
+    subclassing** - backed by the new `EventSheetSimpleBlockKind` helper. Forward emission and the
+    viewport summary work immediately; reverse recovery stays opt-in via a `lift` Callable, and without
+    one the block still emits perfectly and re-imports as a verbatim GDScript block (the safe
+    degrade-never-corrupt fallback).
+  - Both pinned in `tests/eventsheets_api_test.gd`; the Editor Tools ACEs pass the builtin-compile and
+    duplicate-id gates (checked=527, failed=0).
+
 ### Added - the ComboBox pack: an input-sequence detector
 
 - **A 42nd behavior pack, ComboBox** (a Construct 3 addon port): register as the `ComboBox` autoload

@@ -31,6 +31,16 @@ static func run() -> bool:
 	ok = _check("compile emits through the API",
 		str(EventSheets.compile(built).get("output", "")).contains("print(\"hi\")"), true) and ok
 
+	# new_sheet: the one public way to author a sheet / behavior / tool from code.
+	var made: EventSheetResource = EventSheets.new_sheet({"class_name": "Turret", "host_class": "Node2D", "behavior_mode": true, "category": "My Pack", "tags": ["ai"]})
+	ok = _check("new_sheet configures the resource",
+		made.custom_class_name == "Turret" and made.host_class == "Node2D" and made.behavior_mode and made.addon_category == "My Pack" and made.addon_tags == PackedStringArray(["ai"]), true) and ok
+	ok = _check("new_sheet compiles with its class_name",
+		str(EventSheets.compile(made).get("output", "")).contains("class_name Turret"), true) and ok
+	var tool_src: String = str(EventSheets.compile(EventSheets.new_sheet({"tool_mode": true, "host_class": "EditorScript"})).get("output", ""))
+	ok = _check("new_sheet can shape a tool script",
+		tool_src.contains("@tool") and tool_src.contains("extends EditorScript"), true) and ok
+
 	# ── Inspector services, dock-free (the parity toolkit for extensions) ──
 	var inspector_attrs: Dictionary = {"range": {"min": "0", "max": "100"}, "drawer": "progress_bar", "group": "Combat", "header": "Combat", "info": "Tune with care."}
 	ok = _check("describe_inspector speaks the preview card's sentence",
@@ -62,6 +72,22 @@ static func run() -> bool:
 		var hover_row: CustomBlockRow = CustomBlockRow.new()
 		hover_row.fields = {"what": "goblins"}
 		ok = _check("hover_text reads the row's own fields", hover_kind.hover_text(hover_row), "spawns goblins") and ok
+
+	# simple_block_kind: a whole Custom Block kind from a Dictionary, no subclassing.
+	var note_kind: EventSheetBlockKind = EventSheets.simple_block_kind({
+		"kind_id": "api_test.note", "title": "Note", "category": "Blocks",
+		"fields": [{"id": "text", "label": "Text", "type": TYPE_STRING, "default": "hi"}],
+		"emit": "## NOTE: {text}", "summary": "note: {text}"})
+	var note_row: CustomBlockRow = CustomBlockRow.new()
+	note_row.kind_id = "api_test.note"
+	note_row.fields = {"text": "remember this"}
+	ok = _check("simple_block_kind emits its template",
+		note_kind.emit(note_row), PackedStringArray(["## NOTE: remember this"])) and ok
+	ok = _check("simple_block_kind fills the summary template", note_kind.summary(note_row), "note: remember this") and ok
+	ok = _check("simple_block_kind exposes the field schema", note_kind.fields().size(), 1) and ok
+	EventSheets.register_block_kind(note_kind)
+	ok = _check("a simple block kind registers on the block registry",
+		EventSheetBlockRegistry.kind_for(note_row) != null, true) and ok
 
 	# ── Vocabulary services, dock-free ──
 	ok = _check("class_vocabulary reflects on demand",

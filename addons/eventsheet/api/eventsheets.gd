@@ -64,6 +64,33 @@ static func register_block_kind(kind: EventSheetBlockKind) -> void:
 	EventSheetBlockRegistry.register_kind(kind)
 
 
+## Builds a Custom Block kind from a plain Dictionary, so a beginner never has to subclass:
+##   {"kind_id": "my_pack.note", "title": "Note", "category": "Blocks",
+##    "fields": [{"id": "text", "label": "Text", "type": TYPE_STRING, "default": "hi"}],
+##    "emit": "## NOTE: {text}", "summary": "note: {text}"}
+## `emit` is a template (one output line per line of the string) with {field} placeholders; `summary`
+## is the one-line viewport display. Forward emission and the summary work immediately; pass an
+## optional `lift` Callable (func(lines, i) -> Dictionary) for reverse recovery, else the block still
+## emits perfectly and re-imports as a verbatim GDScript block. Register the result with
+## register_block_kind(). See the Custom Blocks guide for the field types and the byte-gate.
+static func simple_block_kind(config: Dictionary) -> EventSheetBlockKind:
+	var kind: EventSheetSimpleBlockKind = EventSheetSimpleBlockKind.new()
+	kind.kind_id = str(config.get("kind_id", ""))
+	kind.title = str(config.get("title", kind.kind_id))
+	kind.category = str(config.get("category", "Blocks"))
+	var schema: Array[Dictionary] = []
+	for field: Variant in config.get("fields", []):
+		if field is Dictionary:
+			schema.append(field)
+	kind.field_schema = schema
+	kind.emit_template = str(config.get("emit", ""))
+	kind.summary_template = str(config.get("summary", ""))
+	var lift_value: Variant = config.get("lift", null)
+	if lift_value is Callable:
+		kind.lift_callable = lift_value
+	return kind
+
+
 ## Looks a definition up in the live editor's registry ("Core", "Print"). Editor-only:
 ## returns null when no dock is open.
 static func find_ace(provider_id: String, ace_id: String) -> ACEDefinition:
@@ -164,6 +191,32 @@ static func describe_inspector(type_name: String, attributes: Dictionary, export
 
 
 # ── Codegen ────────────────────────────────────────────────────────────────────────────
+
+
+## Builds a ready-to-fill EventSheetResource from a plain Dictionary, so you can author a sheet,
+## behavior, autoload, or tool script from code (there is no other public "create sheet" entry).
+## All keys optional:
+##   {"class_name": "Enemy", "host_class": "CharacterBody2D", "behavior_mode": false,
+##    "autoload_mode": false, "autoload_name": "", "tool_mode": false,
+##    "category": "My Pack", "tags": ["ai"], "description": "..."}
+## For a tool script pass {"tool_mode": true, "host_class": "EditorScript"}. Append events and
+## functions to the returned sheet, then compile() it or open_sheet() its saved path.
+static func new_sheet(config: Dictionary = {}) -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = str(config.get("host_class", "Node"))
+	sheet.custom_class_name = str(config.get("class_name", ""))
+	sheet.behavior_mode = bool(config.get("behavior_mode", false))
+	sheet.autoload_mode = bool(config.get("autoload_mode", false))
+	sheet.autoload_name = str(config.get("autoload_name", ""))
+	sheet.tool_mode = bool(config.get("tool_mode", false))
+	sheet.addon_category = str(config.get("category", ""))
+	sheet.class_description = str(config.get("description", ""))
+	if config.has("tags"):
+		var tags: PackedStringArray = PackedStringArray()
+		for tag: Variant in config.get("tags", []):
+			tags.append(str(tag))
+		sheet.addon_tags = tags
+	return sheet
 
 
 ## Compiles a sheet to plain GDScript. Returns the compiler's result Dictionary:
