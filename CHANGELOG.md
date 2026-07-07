@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - guides for the ported packs + a guide to building editor tools
+
+- **A `docs/Addons/` guide library** with a deep-dive per bundled pack (when to use it, the full ACE
+  reference, a dozen-plus worked use cases as event-sheet rows, and the gotchas): Currency Ledger, Loot
+  Table, Storylet Weaver, SkinVault, ProcRoom, UtilityBrain, Physics Car, and ComboBox, with a
+  `docs/Addons/README.md` index. More packs to follow.
+- **`docs/GUIDE-BUILDING-EDITOR-TOOLS.md`** - making custom Godot editor tools with event sheets: the
+  Tool sheet (`@tool` + EditorScript + On Editor Run), the new Editor Tools ACEs, and interfacing with
+  the `EventSheets` API from an EditorPlugin, with 12 worked examples. `GUIDE-BUILDING-ON-EVENTSHEETS.md`
+  now documents `new_sheet()` and `simple_block_kind()`.
+
 ### Added - Editor Tools ACEs + a friendlier extension API for building on EventSheets
 
 - **A new builtin "Editor Tools" ACE module** (17 ACEs) for authoring `@tool` / EditorScript sheets by

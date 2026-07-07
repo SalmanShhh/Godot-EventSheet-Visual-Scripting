@@ -62,6 +62,7 @@ These add words to the event sheet language. They work with or without the edito
 |--------|----------------|
 | `register_provider_script(path)` | A `@tool class_name` script becomes an ACE provider: public methods, signals, and `@export` vars become actions, conditions, expressions, and triggers. Annotate with `@ace_*` doc tokens or a static `_eventforge_register(reg)` hook (both dialects are covered in [GUIDE-CUSTOM-ACES.md](GUIDE-CUSTOM-ACES.md)). |
 | `register_block_kind(kind)` | A new NON-ACE row type (markers, notes, data tables). The kind gets the Add menu, palette, edit dialog, compile and lift wiring for free; the contract is in [GUIDE-CUSTOM-BLOCKS.md](GUIDE-CUSTOM-BLOCKS.md). |
+| `simple_block_kind(config)` | Build a whole block kind from a Dictionary (an `emit` template with `{field}` placeholders, a `summary` template, a `fields` schema) with NO subclassing. Forward emission works immediately; reverse recovery is opt-in via a `lift` Callable, else the block re-imports as a verbatim GDScript block. Pass the result to `register_block_kind()`. |
 | `find_ace(provider_id, ace_id)` | Look a definition up in the live registry (editor only). Definitions are session-cached and shared: treat them as IMMUTABLE, bake changes into row copies. |
 | `class_vocabulary(target_class)` | Reflect ANY class (engine or `class_name` script) into browsable ACE definitions on demand: methods classify by return type, signals become triggers, properties become Set/Get pairs. |
 
@@ -142,6 +143,7 @@ A check receives every non-template sheet path plus the shared findings array, a
 |-------|--------|---------|-------------|
 | Vocabulary | `register_provider_script(script_path: String)` | `bool` | no (bridges when closed) |
 | Vocabulary | `register_block_kind(kind: EventSheetBlockKind)` | `void` | no |
+| Vocabulary | `simple_block_kind(config: Dictionary)` | `EventSheetBlockKind` | no |
 | Vocabulary | `find_ace(provider_id: String, ace_id: String)` | `ACEDefinition` | yes |
 | Vocabulary | `class_vocabulary(target_class: String)` | `Array[ACEDefinition]` | no |
 | Editor | `current_sheet()` | `EventSheetResource` | yes |
@@ -154,6 +156,7 @@ A check receives every non-template sheet path plus the shared findings array, a
 | Editor | `palette_commands()` | `Array[Dictionary]` | no |
 | Editor | `build_inspector_preview(name, type_name, default_text, attributes, exported := true, constant := false)` | `Control` | no |
 | Editor | `describe_inspector(type_name, attributes, exported := true, constant := false)` | `String` | no |
+| Codegen | `new_sheet(config: Dictionary = {})` | `EventSheetResource` | no |
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
 | Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
 | Codegen | `open_gd_as_sheet(source: String)` | `EventSheetResource` | no |
