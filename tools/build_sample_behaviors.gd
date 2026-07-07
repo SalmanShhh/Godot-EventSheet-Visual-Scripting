@@ -40,6 +40,7 @@ const PACK_BUILDERS: Array[String] = [
 	"hud_kit",
 	"scene_flow",
 	"dialogue_kit",
+	"currency_ledger",
 ]
 
 

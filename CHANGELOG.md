@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - the Currency Ledger pack: a named-currency economy from any sheet
+
+- **A 35th behavior pack, Currency Ledger** (the first of several Construct 3 addon ports
+  reimagined for Godot): register as the `CurrencyLedger` autoload and manage any number of
+  named currencies (gold, gems, energy, xp, hunger...) from any sheet. **Define Currency**
+  (starting amount + optional max), then **Add** (a signed amount that clamps to the
+  currency's min and max and respects a daily earn cap), **Spend** (fails atomically when you
+  can't afford it), **Set Amount**, **Allow Debt** (a negative floor for hunger/heat/overdraft),
+  **Set Daily Cap** / **Reset Daily Caps**, and **Apply Offline Gain** (credits rate x seconds in
+  ONE call). Conditions Can Afford / Is At Cap / Is Daily Cap Reached / Is In Debt; expressions for
+  Balance / Cap / counts and a **Format Amount** with K/M/B/T suffixes; triggers On Amount Changed /
+  Spend Failed / Cap Hit / Daily Cap Hit / Offline Gain with getter expressions for the event
+  context. The port fixes the C3 addon's debt/non-negative contradiction with one clean min/max
+  model and replaces JSON-blob registration with discrete typed ACEs. Pinned in
+  `tests/currency_ledger_test.gd`; drift gate green (audited=35 drifted=0).
+
 ### Added - Hitstop in the Juice pack
 
 - **Hitstop** joins the Juice pack (the punchy hit-pause you feel on a connecting
