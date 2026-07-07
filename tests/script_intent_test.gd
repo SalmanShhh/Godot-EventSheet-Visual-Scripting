@@ -84,6 +84,15 @@ static func run() -> bool:
 	all_passed = _check("editor tool starter wires On Editor Run",
 		chore_output.contains("func _run() -> void:"), true) and all_passed
 
+	# The Entity System (ECS-lite) starter compiles to an autoload that runs over a group each frame.
+	var system: EventSheetResource = EventSheetStarterTemplates._build_system_starter()
+	all_passed = _check("system starter is an autoload", system.autoload_mode and system.autoload_name == "EnemySystem", true) and all_passed
+	var system_output: String = str(SheetCompiler.compile(system, "user://intent_system.gd").get("output", ""))
+	all_passed = _check("system starter iterates a group each frame",
+		system_output.contains("func _process(delta") and system_output.contains("get_nodes_in_group(\"enemy\")"), true) and all_passed
+	all_passed = _check("build_starter maps the system id to the system starter",
+		EventSheetStarterTemplates.build_starter(11).autoload_name == "EnemySystem", true) and all_passed
+
 	return all_passed
 
 

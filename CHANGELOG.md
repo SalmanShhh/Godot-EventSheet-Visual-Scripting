@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added - composition / systems vocabulary (ECS-lite)
+
+- **A "Systems" ACE section** for the composition pattern (entities = nodes in a group, systems = sheets
+  that run over that group). Seven verbs in `addons/eventforge/registration/modules/composition_aces.gd`:
+  **Entities In Group** and **Any Entity In Group** (query one group as a set of entities), **Entities In
+  Both Groups** / **Count In Both Groups** / **First In Both Groups** / **Is In Both Groups** (the
+  archetype intersection - "in group A and group B"), and **Run On Tagged Entities** (call a method on
+  every entity in a group that also has a tag - a whole system in one action). They compile to plain
+  `get_tree().get_nodes_in_group(...)` + `is_in_group(...)` with zero plugin dependency, honouring the
+  parity covenant.
+- **An "Entity System (Autoload)" starter** in the New... menu (a Systems section) - an autoload with an
+  On Process event that iterates a group each frame and moves every entity. Scaffolds the systems pattern
+  in one click. Pinned in `tests/script_intent_test.gd`.
+- **A composition guide**, [docs/GUIDE-COMPOSITION-SYSTEMS.md](docs/GUIDE-COMPOSITION-SYSTEMS.md): the
+  entity/tag/system model, the Systems vocabulary, a worked status-effect system, honest performance
+  guidance (trigger over poll, tick slow things slowly, query once per frame), and a frank "when NOT to
+  use this" - it is node iteration, not a data-oriented ECS.
+
 ### Added - data-driven addon config with Custom Resources (Loot Table + SkinVault)
 
 - **SkinVault is now data-driven too.** A new **SkinCatalogResource** holds a whole cosmetics catalog as

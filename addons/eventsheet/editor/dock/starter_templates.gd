@@ -52,6 +52,8 @@ func _build_template_menu_items() -> void:
 	_template_menu.add_item("Game State (Autoload)", 3)
 	_template_menu.add_item("Event Bus (Autoload)", 4)
 	_template_menu.add_item("Save System (Autoload)", 5)
+	_template_menu.add_separator("Systems - run over a group of entities")
+	_template_menu.add_item("Entity System (Autoload)", 11)
 	_template_menu.add_separator("Custom Resources - data assets (.tres)")
 	_template_menu.add_item("Custom Resource (data + logic)", 9)
 	_template_menu.add_separator("Editor Tools - run inside the editor")
@@ -93,6 +95,36 @@ static func _build_behavior_component_starter() -> EventSheetResource:
 ## first resource sheet steers toward its full potential: exported variables ARE the asset's
 ## designer-editable fields, logic lives in functions (resources have no _process), and a signal
 ## lets live data notify listeners. Each .tres created from the compiled class is its own asset.
+## An ENTITY SYSTEM starter (composition / ECS-lite): a system runs its step over every entity in a
+## GROUP each frame, instead of copying logic onto every node. Compiles to an autoload singleton with an
+## OnProcess that loops get_nodes_in_group - the Godot-native "systems over groups" pattern. Tag entities
+## with add_to_group, rename the group + autoload for your own, and add more systems as more autoloads.
+static func _build_system_starter() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.autoload_mode = true
+	sheet.autoload_name = "EnemySystem"
+	sheet.host_class = "Node"
+	sheet.custom_class_name = "EnemySystem"
+	sheet.class_description = "A SYSTEM (composition / ECS-lite): it runs over every entity in a group each frame, instead of putting logic on each node. Tag entities into the \"enemy\" group with add_to_group, rename the group + autoload for your own, and register this sheet as an autoload."
+	var note: CommentRow = CommentRow.new()
+	note.text = "[b]Entity System (Autoload)[/b] - composition / ECS-lite. Tag entities into a group and this runs once per frame for every one of them. Add more systems as more autoload sheets. Prefer signals over polling for big sets, and the Time Slicer pack to spread heavy sweeps."
+	sheet.events.append(note)
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var body: RawCodeRow = RawCodeRow.new()
+	body.code = "\n".join(PackedStringArray([
+		"# A system runs its step over every entity in the group. Tag nodes with add_to_group(\"enemy\").",
+		"for entity: Node in get_tree().get_nodes_in_group(\"enemy\"):",
+		"\tif entity is Node2D:",
+		"\t\t# Example: drift every enemy slowly to the right - replace with your system's logic.",
+		"\t\t(entity as Node2D).position += Vector2(20.0, 0.0) * delta"
+	]))
+	tick.actions.append(body)
+	sheet.events.append(tick)
+	return sheet
+
+
 static func _build_custom_resource_starter() -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Resource"
@@ -208,6 +240,7 @@ static func build_starter(template_id: int) -> EventSheetResource:
 		8: return _build_behavior_component_starter()
 		9: return _build_custom_resource_starter()
 		10: return _build_editor_tool_starter()
+		11: return _build_system_starter()
 		_: return EventSheetResource.new()  # 0 Blank (and any other id) -> a minimal editable sheet
 
 
@@ -254,6 +287,8 @@ func _new_sheet_from_template(template_id: int) -> void:
 			sheet = _build_custom_resource_starter()
 		10:
 			sheet = _build_editor_tool_starter()
+		11:
+			sheet = _build_system_starter()
 		6:
 			sheet.host_class = "CharacterBody3D"
 			var note6: CommentRow = CommentRow.new()
