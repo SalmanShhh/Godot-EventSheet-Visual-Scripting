@@ -1,0 +1,18 @@
+# v0.13.0 - The Genre Toolkits Update
+
+This release ships whole game genres as event-sheet toolkits - a complete incremental/idle kit, a composition (ECS-lite) system layer, and procedural generation wired through one shared random source - plus a data-driven pass over abilities and content. Everything still compiles to plain, typed GDScript with zero runtime dependency, and every pack round-trips byte-for-byte.
+
+## Highlights
+
+- **The incremental / idle toolkit (7 packs)** - build a clicker or idle game from parts: **Big Numbers** (short-scale/scientific/engineering/time formatting past a trillion, plus a Decimal type for values beyond a float's 1.8e308 ceiling), **Idle Generator** (a producer with a geometric cost curve, exact closed-form Buy Max, and an optional fill-and-collect cycle), **Click Power** (manual-tap income with crits), **Boosts** (golden-cookie timed multipliers), **Upgrades** (stacking add/mult buffs with tags), **Prestige** (reset for a permanent multiplier, no double-award), and **Milestones** (threshold achievements that grant an aggregated reward). Each has a deep-dive guide with 16+ worked use cases.
+- **Composition and systems (ECS-lite)** - a new Systems vocabulary treats a group as a set of entities and a sheet as a system that runs over it (Entities In Group, the archetype "in both groups" queries, Run On Tagged Entities), with an Entity System autoload starter and an honest guide on where node-and-group composition fits and where it does not.
+- **Advanced Random, everywhere** - flip one **Use Advanced Random** toggle on ProcRoom, Loot Table, SkinVault, or Storylets and that pack draws from the shared `AdvancedRandom` autoload, so a single seed reproduces a whole run (map, loot, cosmetics, and narrative). Off by default and byte-identical, with a safe local fallback.
+- **Data-driven odds and content** - a **RandomTableResource** (a value/weight grid as a `.tres`) plus Advanced Random's **Pick From Table**; an **AbilitySetResource** that defines a Simple Abilities loadout as a `.tres` and auto-creates it on ready (or via Load Ability Set at runtime). Tune drop rates and loadouts in the Inspector, not in events.
+- **Seeded generation for tools and resources** - a new Procedural module of stateless, seeded expressions (Seeded Value / Int / Pick / Sign / Chance) that need no autoload, so they work inside Editor Tool sheets and while filling Custom Resources, as well as at runtime.
+- **Pack builders auto-register** - drop a `tools/pack_builders/<name>.gd` with a `build()` and it registers itself; there is no list to maintain (the same zero-config discovery the helper ACE modules use). The suite is now 58 packs.
+- **A kill-refresh fix for Simple Abilities** - Reset Cooldown now grants the next charge back, so a spent ability is genuinely ready again (readiness is charge-based) - the "killing an enemy refreshes your dash" idiom a roguelite expects.
+- **A procedural-generation guide** with 26 use cases pairing Advanced Random with every other addon and a start-to-finish seeded-run workflow, plus the updated Simple Abilities and composition guides.
+
+**Quality:** every feature landed suite-green with byte-exact round-trip gates and `drifted=0` across all 58 packs; the incremental math and both new mechanisms are pinned in tests, and two rounds of adversarial review hardened a dozen edge cases before ship. Generated code still never depends on the plugin, templates bake at apply-time, and output remains performance-identical to hand-written GDScript - all test-enforced. Verified on Godot 4.7 stable.
+
+Full ledger: [CHANGELOG.md](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/CHANGELOG.md)

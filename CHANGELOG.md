@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.13.0] - 2026-07-08 - The Genre Toolkits Update
 
 ### Added - auto-registered pack builders, data-driven Simple Abilities, and Advanced Random everywhere
 
