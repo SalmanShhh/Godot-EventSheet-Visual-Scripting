@@ -35,6 +35,8 @@ signal on_stack_gained
 signal on_max_stacks_reached
 
 var abilities: Dictionary = {}
+## Optional: drop an AbilitySetResource (.tres) here to auto-create its whole loadout on ready - the data-driven way to define abilities without events.
+@export var ability_set: Resource = null
 ## Global multiplier applied to every Set Cooldown (0.8 = 20% cooldown reduction).
 @export_range(0, 10, 0.05) var cooldown_multiplier: float = 1.0
 var current_ability_id: String = ""
@@ -56,6 +58,13 @@ func _ensure_ability(id: String) -> AbilityData:
 	if not abilities.has(id):
 		abilities[id] = AbilityData.new()
 	return abilities[id] as AbilityData
+
+func _ready() -> void:
+	if ability_set != null:
+		# Deferred so the loadout is created after every node has readied AND connected its triggers -
+		# the host (which carries the event sheet) readies AFTER this child, so emitting On Ability
+		# Created synchronously here would fire before the sheet's handler is connected.
+		load_ability_set.call_deferred(ability_set)
 
 func _process(delta: float) -> void:
 	if abilities.is_empty():
@@ -216,12 +225,20 @@ func set_cooldown(id: String, seconds: float) -> void:
 ## @ace_action
 ## @ace_name("Reset Cooldown")
 ## @ace_category("Abilities")
-## @ace_description("Sets an ability's cooldown to 0 (instantly ready).")
+## @ace_description("Refreshes an ability: clears its cooldown AND grants the next charge back, so a spent ability is ready again (readiness is charge-based). The kill-refresh / cooldown-reset mechanic. On a full ability it just clears the timer.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.reset_cooldown({id})")
 func reset_cooldown(id: String) -> void:
-	if abilities.has(id):
-		(abilities[id] as AbilityData).cooldown = 0.0
+	if not abilities.has(id):
+		return
+	var a: AbilityData = abilities[id]
+	a.cooldown = 0.0
+	if a.stacks < a.max_stacks:
+		a.stacks = a.stacks + 1
+		current_ability_id = id
+		on_stack_gained.emit()
+		if a.stacks < a.max_stacks and a.max_cooldown > 0.0:
+			a.cooldown = a.max_cooldown
 
 ## @ace_action
 ## @ace_name("Set Max Stacks")
@@ -372,12 +389,19 @@ func remove_abilities_with_tag(tag: String) -> void:
 ## @ace_action
 ## @ace_name("Reset Cooldown For Abilities With Tag")
 ## @ace_category("Abilities")
-## @ace_description("Sets cooldown to 0 for every ability with a tag.")
+## @ace_description("Refreshes every ability with a tag: clears each cooldown and grants a charge back, so a whole group is ready again.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.reset_cooldown_for_tag({tag})")
 func reset_cooldown_for_tag(tag: String) -> void:
 	for id: String in _ids_with_tag(tag):
-		(abilities[id] as AbilityData).cooldown = 0.0
+		var a: AbilityData = abilities[id]
+		a.cooldown = 0.0
+		if a.stacks < a.max_stacks:
+			a.stacks = a.stacks + 1
+			current_ability_id = id
+			on_stack_gained.emit()
+			if a.stacks < a.max_stacks and a.max_cooldown > 0.0:
+				a.cooldown = a.max_cooldown
 
 ## @ace_action
 ## @ace_name("Set Cooldown Multiplier")
@@ -387,6 +411,44 @@ func reset_cooldown_for_tag(tag: String) -> void:
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_cooldown_multiplier({multiplier})")
 func set_cooldown_multiplier(multiplier: float) -> void:
 	cooldown_multiplier = maxf(0.0, multiplier)
+
+## @ace_action
+## @ace_name("Load Ability Set")
+## @ace_category("Abilities")
+## @ace_description("Creates every ability listed in an AbilitySetResource (.tres): id, cooldown, max stacks, temporary duration, and comma-separated tags. Each is granted ready. Drop the resource in the Inspector to auto-load on ready, or call this to swap loadouts at runtime.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$SimpleAbilitiesBehavior.load_ability_set({resource})")
+func load_ability_set(resource: Resource) -> void:
+	if resource == null:
+		return
+	var rows: Variant = resource.get("abilities")
+	if not (rows is Array):
+		return
+	for row: Variant in (rows as Array):
+		if not (row is Dictionary):
+			continue
+		var entry: Dictionary = row
+		var id: String = str(entry.get("id", ""))
+		if id.is_empty():
+			continue
+		var is_new: bool = not abilities.has(id)
+		var a: AbilityData = _ensure_ability(id)
+		a.max_cooldown = maxf(0.0, float(entry.get("cooldown", 0.0)))
+		a.max_stacks = maxi(1, int(entry.get("max_stacks", 1)))
+		a.stacks = a.max_stacks
+		a.cooldown = 0.0
+		var temporary: float = float(entry.get("temporary", 0.0))
+		if temporary > 0.0:
+			a.max_expiration = temporary
+			a.expiration = temporary
+		var tag_text: String = str(entry.get("tags", ""))
+		for tag: String in tag_text.split(",", false):
+			var trimmed: String = tag.strip_edges()
+			if not trimmed.is_empty() and not a.tags.has(trimmed):
+				a.tags.append(trimmed)
+		if is_new:
+			current_ability_id = id
+			on_ability_created.emit()
 
 ## @ace_condition
 ## @ace_name("Has Ability")

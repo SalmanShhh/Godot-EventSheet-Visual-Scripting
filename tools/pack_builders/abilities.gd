@@ -19,6 +19,7 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"cooldown_multiplier": {"type": "float", "default": 1.0, "exported": true, "attributes": {"tooltip": "Global multiplier applied to every Set Cooldown (0.8 = 20% cooldown reduction).", "range": {"min": "0", "max": "10", "step": "0.05"}}},
+		"ability_set": {"type": "Resource", "default": null, "exported": true, "attributes": {"tooltip": "Optional: drop an AbilitySetResource (.tres) here to auto-create its whole loadout on ready - the data-driven way to define abilities without events."}},
 		"abilities": {"type": "Dictionary", "default": {}, "exported": false},
 		"current_ability_id": {"type": "String", "default": "", "exported": false}
 	}
@@ -221,6 +222,21 @@ static func build() -> bool:
 	]))
 	sheet.events.append(block)
 
+	# Data-driven: if an AbilitySetResource was dropped in the Inspector, create its whole loadout on ready.
+	var on_ready: EventRow = EventRow.new()
+	on_ready.trigger_provider_id = "Core"
+	on_ready.trigger_id = "OnReady"
+	var on_ready_body: RawCodeRow = RawCodeRow.new()
+	on_ready_body.code = "\n".join(PackedStringArray([
+		"if ability_set != null:",
+		"\t# Deferred so the loadout is created after every node has readied AND connected its triggers -",
+		"\t# the host (which carries the event sheet) readies AFTER this child, so emitting On Ability",
+		"\t# Created synchronously here would fire before the sheet's handler is connected.",
+		"\tload_ability_set.call_deferred(ability_set)"
+	]))
+	on_ready.actions.append(on_ready_body)
+	sheet.events.append(on_ready)
+
 	# Per-frame: count down cooldowns (regenerating stacks), and expire temporary abilities.
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
@@ -360,10 +376,18 @@ static func build() -> bool:
 	])))
 
 	Lib.append_function(sheet, "reset_cooldown", "Reset Cooldown", "Abilities",
-		"Sets an ability's cooldown to 0 (instantly ready).",
+		"Refreshes an ability: clears its cooldown AND grants the next charge back, so a spent ability is ready again (readiness is charge-based). The kill-refresh / cooldown-reset mechanic. On a full ability it just clears the timer.",
 		[["id", "String"]], "\n".join(PackedStringArray([
-		"if abilities.has(id):",
-		"\t(abilities[id] as AbilityData).cooldown = 0.0"
+		"if not abilities.has(id):",
+		"\treturn",
+		"var a: AbilityData = abilities[id]",
+		"a.cooldown = 0.0",
+		"if a.stacks < a.max_stacks:",
+		"\ta.stacks = a.stacks + 1",
+		"\tcurrent_ability_id = id",
+		"\ton_stack_gained.emit()",
+		"\tif a.stacks < a.max_stacks and a.max_cooldown > 0.0:",
+		"\t\ta.cooldown = a.max_cooldown"
 	])))
 
 	Lib.append_function(sheet, "set_max_stacks", "Set Max Stacks", "Abilities",
@@ -477,16 +501,60 @@ static func build() -> bool:
 	])))
 
 	Lib.append_function(sheet, "reset_cooldown_for_tag", "Reset Cooldown For Abilities With Tag", "Abilities",
-		"Sets cooldown to 0 for every ability with a tag.",
+		"Refreshes every ability with a tag: clears each cooldown and grants a charge back, so a whole group is ready again.",
 		[["tag", "String"]], "\n".join(PackedStringArray([
 		"for id: String in _ids_with_tag(tag):",
-		"\t(abilities[id] as AbilityData).cooldown = 0.0"
+		"\tvar a: AbilityData = abilities[id]",
+		"\ta.cooldown = 0.0",
+		"\tif a.stacks < a.max_stacks:",
+		"\t\ta.stacks = a.stacks + 1",
+		"\t\tcurrent_ability_id = id",
+		"\t\ton_stack_gained.emit()",
+		"\t\tif a.stacks < a.max_stacks and a.max_cooldown > 0.0:",
+		"\t\t\ta.cooldown = a.max_cooldown"
 	])))
 
 	Lib.append_function(sheet, "set_cooldown_multiplier", "Set Cooldown Multiplier", "Abilities",
 		"Global cooldown scaling for all future Set Cooldown calls (0.8 = 20% cooldown reduction).",
 		[["multiplier", "float"]], "\n".join(PackedStringArray([
 		"cooldown_multiplier = maxf(0.0, multiplier)"
+	])))
+
+	# Data-driven: create a whole loadout from an AbilitySetResource in one call (the .tres is read
+	# dynamically, so this pack never depends on the resource class existing at build time).
+	Lib.append_function(sheet, "load_ability_set", "Load Ability Set", "Abilities",
+		"Creates every ability listed in an AbilitySetResource (.tres): id, cooldown, max stacks, temporary duration, and comma-separated tags. Each is granted ready. Drop the resource in the Inspector to auto-load on ready, or call this to swap loadouts at runtime.",
+		[["resource", "Resource"]], "\n".join(PackedStringArray([
+		"if resource == null:",
+		"\treturn",
+		"var rows: Variant = resource.get(\"abilities\")",
+		"if not (rows is Array):",
+		"\treturn",
+		"for row: Variant in (rows as Array):",
+		"\tif not (row is Dictionary):",
+		"\t\tcontinue",
+		"\tvar entry: Dictionary = row",
+		"\tvar id: String = str(entry.get(\"id\", \"\"))",
+		"\tif id.is_empty():",
+		"\t\tcontinue",
+		"\tvar is_new: bool = not abilities.has(id)",
+		"\tvar a: AbilityData = _ensure_ability(id)",
+		"\ta.max_cooldown = maxf(0.0, float(entry.get(\"cooldown\", 0.0)))",
+		"\ta.max_stacks = maxi(1, int(entry.get(\"max_stacks\", 1)))",
+		"\ta.stacks = a.max_stacks",
+		"\ta.cooldown = 0.0",
+		"\tvar temporary: float = float(entry.get(\"temporary\", 0.0))",
+		"\tif temporary > 0.0:",
+		"\t\ta.max_expiration = temporary",
+		"\t\ta.expiration = temporary",
+		"\tvar tag_text: String = str(entry.get(\"tags\", \"\"))",
+		"\tfor tag: String in tag_text.split(\",\", false):",
+		"\t\tvar trimmed: String = tag.strip_edges()",
+		"\t\tif not trimmed.is_empty() and not a.tags.has(trimmed):",
+		"\t\t\ta.tags.append(trimmed)",
+		"\tif is_new:",
+		"\t\tcurrent_ability_id = id",
+		"\t\ton_ability_created.emit()"
 	])))
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/abilities/abilities_behavior")
