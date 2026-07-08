@@ -13,10 +13,8 @@ enum State { PLAYING, GAME_OVER }
 @export var state: int = 0
 var __every_spawn_sf: float = 0.0
 
-
 func _ready() -> void:
 	$Ship.position = Vector2(576, 590)
-
 
 func _physics_process(delta: float) -> void:
 	match state:
@@ -54,7 +52,6 @@ func _physics_process(delta: float) -> void:
 			star.queue_free()
 	if lives <= 0 and state == State.PLAYING:
 		state = State.GAME_OVER
-
 
 func _process(delta: float) -> void:
 	$ScoreLabel.text = "Score %d    Lives %d    %s" % [score, lives, ("GAME OVER - press Enter" if state == State.GAME_OVER else "PLAYING")]

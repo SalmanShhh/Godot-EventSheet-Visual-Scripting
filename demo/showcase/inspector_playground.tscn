@@ -14,19 +14,19 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_wem7t"]
 image = SubResource("Image_akhwn")
 
-[node name="TunableShip" type="Node2D" unique_id=1130119622]
+[node name="TunableShip" type="Node2D"]
 position = Vector2(288, 180)
 script = ExtResource("1_c5dkb")
 
-[node name="Body" type="Polygon2D" parent="." unique_id=1997693525]
+[node name="Body" type="Polygon2D" parent="."]
 color = Color(0.22745098, 0.6509804, 0.8784314, 1)
 polygon = PackedVector2Array(30, 0, -20, 18, -8, 0, -20, -18)
 
-[node name="Emblem" type="Sprite2D" parent="." unique_id=1044559670]
+[node name="Emblem" type="Sprite2D" parent="."]
 scale = Vector2(0.5, 0.5)
 texture = SubResource("ImageTexture_wem7t")
 
-[node name="Info" type="Label" parent="." unique_id=1252623682]
+[node name="Info" type="Label" parent="."]
 offset_left = -268.0
 offset_top = -160.0
 offset_right = -268.0

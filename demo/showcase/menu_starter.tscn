@@ -3,22 +3,22 @@
 [ext_resource type="Script" path="res://demo/showcase/menu_starter.gd" id="1_3g5fs"]
 [ext_resource type="Script" path="res://eventsheet_addons/hud_kit/hud_kit_behavior.gd" id="2_mk4op"]
 
-[node name="MenuStarter" type="Control" unique_id=1163209764]
+[node name="MenuStarter" type="Control"]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 1152.0
 offset_bottom = 648.0
 script = ExtResource("1_3g5fs")
 
-[node name="HudKit" type="Node" parent="." unique_id=937502893]
+[node name="HudKit" type="Node" parent="."]
 script = ExtResource("2_mk4op")
 
-[node name="Screens" type="Control" parent="." unique_id=1044982910]
+[node name="Screens" type="Control" parent="."]
 anchors_preset = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="TitleScreen" type="VBoxContainer" parent="Screens" unique_id=526172347]
+[node name="TitleScreen" type="VBoxContainer" parent="Screens"]
 visible = false
 layout_mode = 0
 anchor_left = 0.5
@@ -30,25 +30,25 @@ offset_top = -120.0
 offset_right = 140.0
 theme_override_constants/separation = 10
 
-[node name="@Label@6" type="Label" parent="Screens/TitleScreen" unique_id=1897594893]
+[node name="@Label@6" type="Label" parent="Screens/TitleScreen"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "MENU STARTER"
 horizontal_alignment = 1
 
-[node name="StartButton" type="Button" parent="Screens/TitleScreen" unique_id=1318422541]
+[node name="StartButton" type="Button" parent="Screens/TitleScreen"]
 layout_mode = 2
 text = "Start"
 
-[node name="SettingsButton" type="Button" parent="Screens/TitleScreen" unique_id=698694872]
+[node name="SettingsButton" type="Button" parent="Screens/TitleScreen"]
 layout_mode = 2
 text = "Settings"
 
-[node name="QuitButton" type="Button" parent="Screens/TitleScreen" unique_id=121174344]
+[node name="QuitButton" type="Button" parent="Screens/TitleScreen"]
 layout_mode = 2
 text = "Quit"
 
-[node name="SettingsScreen" type="VBoxContainer" parent="Screens" unique_id=1203416058]
+[node name="SettingsScreen" type="VBoxContainer" parent="Screens"]
 visible = false
 layout_mode = 0
 anchor_left = 0.5
@@ -60,17 +60,17 @@ offset_top = -120.0
 offset_right = 140.0
 theme_override_constants/separation = 10
 
-[node name="@Label@7" type="Label" parent="Screens/SettingsScreen" unique_id=382455677]
+[node name="@Label@7" type="Label" parent="Screens/SettingsScreen"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "SETTINGS"
 horizontal_alignment = 1
 
-[node name="BackButton" type="Button" parent="Screens/SettingsScreen" unique_id=1147431266]
+[node name="BackButton" type="Button" parent="Screens/SettingsScreen"]
 layout_mode = 2
 text = "Back"
 
-[node name="GameScreen" type="VBoxContainer" parent="Screens" unique_id=1555894702]
+[node name="GameScreen" type="VBoxContainer" parent="Screens"]
 visible = false
 layout_mode = 0
 anchor_left = 0.5
@@ -82,27 +82,27 @@ offset_top = -120.0
 offset_right = 140.0
 theme_override_constants/separation = 10
 
-[node name="@Label@8" type="Label" parent="Screens/GameScreen" unique_id=1062946692]
+[node name="@Label@8" type="Label" parent="Screens/GameScreen"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "PLAYING"
 horizontal_alignment = 1
 
-[node name="PauseButton" type="Button" parent="Screens/GameScreen" unique_id=866335027]
+[node name="PauseButton" type="Button" parent="Screens/GameScreen"]
 layout_mode = 2
 text = "Pause"
 
-[node name="HpBar" type="ProgressBar" parent="Screens/GameScreen" unique_id=286780830]
+[node name="HpBar" type="ProgressBar" parent="Screens/GameScreen"]
 custom_minimum_size = Vector2(260, 24)
 layout_mode = 2
 value = 100.0
 
-[node name="ScoreLabel" type="Label" parent="Screens/GameScreen" unique_id=2002295943]
+[node name="ScoreLabel" type="Label" parent="Screens/GameScreen"]
 layout_mode = 2
 text = "Time: 0.0s"
 horizontal_alignment = 1
 
-[node name="PauseScreen" type="VBoxContainer" parent="Screens" unique_id=2089774708]
+[node name="PauseScreen" type="VBoxContainer" parent="Screens"]
 visible = false
 layout_mode = 0
 anchor_left = 0.5
@@ -114,16 +114,16 @@ offset_top = -120.0
 offset_right = 140.0
 theme_override_constants/separation = 10
 
-[node name="@Label@9" type="Label" parent="Screens/PauseScreen" unique_id=773617980]
+[node name="@Label@9" type="Label" parent="Screens/PauseScreen"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "PAUSED"
 horizontal_alignment = 1
 
-[node name="ResumeButton" type="Button" parent="Screens/PauseScreen" unique_id=2001531058]
+[node name="ResumeButton" type="Button" parent="Screens/PauseScreen"]
 layout_mode = 2
 text = "Resume"
 
-[node name="MenuButton" type="Button" parent="Screens/PauseScreen" unique_id=1295417077]
+[node name="MenuButton" type="Button" parent="Screens/PauseScreen"]
 layout_mode = 2
 text = "Back to Menu"

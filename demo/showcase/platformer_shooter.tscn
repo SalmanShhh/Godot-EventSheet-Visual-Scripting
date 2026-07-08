@@ -22,38 +22,38 @@ image = SubResource("Image_vxg7o")
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_emg8o"]
 size = Vector2(40, 48)
 
-[node name="PlatformerShooter" type="Node2D" unique_id=1438933863]
+[node name="PlatformerShooter" type="Node2D"]
 script = ExtResource("1_f3smp")
 
-[node name="Floor" type="StaticBody2D" parent="." unique_id=905273428]
+[node name="Floor" type="StaticBody2D" parent="."]
 position = Vector2(576, 660)
 
-[node name="@CollisionShape2D@2" type="CollisionShape2D" parent="Floor" unique_id=180627133]
+[node name="@CollisionShape2D@2" type="CollisionShape2D" parent="Floor"]
 shape = SubResource("RectangleShape2D_siij8")
 
-[node name="@Sprite2D@3" type="Sprite2D" parent="Floor" unique_id=1789049387]
+[node name="@Sprite2D@3" type="Sprite2D" parent="Floor"]
 modulate = Color(0.3, 0.34, 0.4, 1)
 scale = Vector2(24.6, 1)
 texture = SubResource("ImageTexture_p3wwt")
 
-[node name="Player" type="CharacterBody2D" parent="." unique_id=350560023]
+[node name="Player" type="CharacterBody2D" parent="."]
 position = Vector2(220, 540)
 
-[node name="@CollisionShape2D@4" type="CollisionShape2D" parent="Player" unique_id=77544234]
+[node name="@CollisionShape2D@4" type="CollisionShape2D" parent="Player"]
 shape = SubResource("RectangleShape2D_emg8o")
 
-[node name="@Sprite2D@5" type="Sprite2D" parent="Player" unique_id=1494397143]
+[node name="@Sprite2D@5" type="Sprite2D" parent="Player"]
 modulate = Color(0.4, 0.9, 1, 1)
 texture = SubResource("ImageTexture_p3wwt")
 
-[node name="PlatformerMovement" type="Node" parent="Player" unique_id=368800204]
+[node name="PlatformerMovement" type="Node" parent="Player"]
 script = ExtResource("2_bws2q")
 coyote_time = 0.12
 jump_velocity = -500.0
 max_jumps = 2
 move_speed = 280.0
 
-[node name="WeaponKit" type="Node" parent="Player" unique_id=723842852]
+[node name="WeaponKit" type="Node" parent="Player"]
 script = ExtResource("3_3gpbj")
 current_ammo = 8
 fire_mode = 1
@@ -61,7 +61,7 @@ fire_rate = 7.0
 max_ammo = 8
 reload_time = 0.8
 
-[node name="Hud" type="Label" parent="." unique_id=1093256572]
+[node name="Hud" type="Label" parent="."]
 offset_left = 28.0
 offset_top = 22.0
 offset_right = 28.0

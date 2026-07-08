@@ -127,8 +127,35 @@ func _save_scene(root: Node, path: String) -> bool:
 	var packed: PackedScene = PackedScene.new()
 	var pack_err: Error = packed.pack(root)
 	var save_err: Error = ResourceSaver.save(packed, path)
+	# Godot stamps every node with a random `unique_id=NNNN` at pack time (editor scene-merge
+	# metadata, unused by this plugin and by scene loading). Left in, it turns every regeneration
+	# into a spurious diff and defeats reproducibility. Strip it so a rebuild is byte-identical -
+	# the scene still loads and instantiates identically without it (verified). It is the ONLY
+	# non-deterministic token these scenes emit; ext/sub-resource ids are already stable.
+	if save_err == OK:
+		save_err = _strip_scene_unique_ids(path)
 	print("[build_examples] %s pack=%d save=%d" % [path.get_file(), pack_err, save_err])
 	return pack_err == OK and save_err == OK
+
+
+## Removes the non-deterministic ` unique_id=NNNN` node tokens ResourceSaver stamps into a .tscn so
+## regenerating a showcase scene is byte-stable. The pattern only matches the bare-digit node token,
+## never the quoted `id="1_abc"` ext/sub-resource ids. Returns OK, or the file open error.
+func _strip_scene_unique_ids(path: String) -> Error:
+	var text: String = FileAccess.get_file_as_string(path)
+	if text.is_empty():
+		return FileAccess.get_open_error()
+	var unique_id_token: RegEx = RegEx.new()
+	unique_id_token.compile(" unique_id=\\d+")
+	var stripped: String = unique_id_token.sub(text, "", true)
+	if stripped == text:
+		return OK
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return FileAccess.get_open_error()
+	file.store_string(stripped)
+	file.close()
+	return OK
 
 # ── 1. Carousel of Juice (flagship) ─────────────────────────────────────────
 

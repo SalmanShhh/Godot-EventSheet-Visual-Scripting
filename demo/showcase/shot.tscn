@@ -14,12 +14,12 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_p3wwt"]
 image = SubResource("Image_vxg7o")
 
-[node name="Shot" type="Sprite2D" unique_id=974390292]
+[node name="Shot" type="Sprite2D"]
 modulate = Color(1, 0.95, 0.4, 1)
 scale = Vector2(0.22, 0.12)
 texture = SubResource("ImageTexture_p3wwt")
 
-[node name="BulletBehavior" type="Node" parent="." unique_id=318489247]
+[node name="BulletBehavior" type="Node" parent="."]
 script = ExtResource("1_cdnpg")
 align_rotation = false
 speed = 720.0

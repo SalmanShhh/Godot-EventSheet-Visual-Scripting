@@ -14,7 +14,6 @@ var __group_juice_active: bool = true
 var __every_beat_caro: float = 0.0
 var __every_spin_caro: float = 0.0
 
-
 func _process(delta: float) -> void:
 	__every_beat_caro += delta
 	# @group:juice
@@ -40,11 +39,9 @@ func _process(delta: float) -> void:
 	else:
 		$Hero/SpringBehavior.spring_host_scale(1.0 + sin(Time.get_ticks_msec() / 1000.0) * 0.04)
 
-
 func _ready() -> void:
 	for c: Node in $Tiles.get_children():
 		c.get_node("SineBehavior").active = true
-
 
 ## @ace_hidden
 func juice_tile(index: int, kick: float) -> void:

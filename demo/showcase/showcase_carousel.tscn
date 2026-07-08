@@ -18,166 +18,166 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_g50wr"]
 image = SubResource("Image_7y6om")
 
-[node name="Carousel" type="Node2D" unique_id=997674304]
+[node name="Carousel" type="Node2D"]
 script = ExtResource("1_y7wfq")
 
-[node name="SpringBehavior" type="Node" parent="." unique_id=1628383781]
+[node name="SpringBehavior" type="Node" parent="."]
 script = ExtResource("2_06d17")
 
-[node name="TweenBehavior" type="Node" parent="." unique_id=1776593141]
+[node name="TweenBehavior" type="Node" parent="."]
 script = ExtResource("3_fxpfk")
 
-[node name="FlashBehavior" type="Node" parent="." unique_id=1152535534]
+[node name="FlashBehavior" type="Node" parent="."]
 script = ExtResource("4_5fxfe")
 
-[node name="Hero" type="Sprite2D" parent="." unique_id=636637315]
+[node name="Hero" type="Sprite2D" parent="."]
 position = Vector2(576, 324)
 scale = Vector2(1.6, 1.6)
 texture = SubResource("ImageTexture_g50wr")
 
-[node name="SpringBehavior" type="Node" parent="Hero" unique_id=795253545]
+[node name="SpringBehavior" type="Node" parent="Hero"]
 script = ExtResource("2_06d17")
 
-[node name="TweenBehavior" type="Node" parent="Hero" unique_id=71144615]
+[node name="TweenBehavior" type="Node" parent="Hero"]
 script = ExtResource("3_fxpfk")
 
-[node name="FlashBehavior" type="Node" parent="Hero" unique_id=93753080]
+[node name="FlashBehavior" type="Node" parent="Hero"]
 script = ExtResource("4_5fxfe")
 
-[node name="Tiles" type="Node2D" parent="." unique_id=813580810]
+[node name="Tiles" type="Node2D" parent="."]
 
-[node name="Tile0" type="Sprite2D" parent="Tiles" unique_id=554128118]
+[node name="Tile0" type="Sprite2D" parent="Tiles"]
 modulate = Color(1, 0.14999998, 0.14999998, 1)
 position = Vector2(796, 324)
 texture = SubResource("ImageTexture_g50wr")
 
-[node name="SineBehavior" type="Node" parent="Tiles/Tile0" unique_id=1268666657]
+[node name="SineBehavior" type="Node" parent="Tiles/Tile0"]
 script = ExtResource("5_2qkqr")
 magnitude = 18.0
 movement = "vertical"
 period = 1.6
 
-[node name="SpringBehavior" type="Node" parent="Tiles/Tile0" unique_id=1436553510]
+[node name="SpringBehavior" type="Node" parent="Tiles/Tile0"]
 script = ExtResource("2_06d17")
 
-[node name="TweenBehavior" type="Node" parent="Tiles/Tile0" unique_id=1627687262]
+[node name="TweenBehavior" type="Node" parent="Tiles/Tile0"]
 script = ExtResource("3_fxpfk")
 
-[node name="Tile1" type="Sprite2D" parent="Tiles" unique_id=2084666334]
+[node name="Tile1" type="Sprite2D" parent="Tiles"]
 modulate = Color(1, 0.7875, 0.14999998, 1)
 position = Vector2(731.5635, 479.56348)
 texture = SubResource("ImageTexture_g50wr")
 
-[node name="SineBehavior" type="Node" parent="Tiles/Tile1" unique_id=781478142]
+[node name="SineBehavior" type="Node" parent="Tiles/Tile1"]
 script = ExtResource("5_2qkqr")
 magnitude = 18.0
 movement = "vertical"
 period = 1.6
 
-[node name="SpringBehavior" type="Node" parent="Tiles/Tile1" unique_id=1781119013]
+[node name="SpringBehavior" type="Node" parent="Tiles/Tile1"]
 script = ExtResource("2_06d17")
 
-[node name="TweenBehavior" type="Node" parent="Tiles/Tile1" unique_id=1711615454]
+[node name="TweenBehavior" type="Node" parent="Tiles/Tile1"]
 script = ExtResource("3_fxpfk")
 
-[node name="Tile2" type="Sprite2D" parent="Tiles" unique_id=1957934548]
+[node name="Tile2" type="Sprite2D" parent="Tiles"]
 modulate = Color(0.575, 1, 0.14999998, 1)
 position = Vector2(576, 544)
 texture = SubResource("ImageTexture_g50wr")
 
-[node name="SineBehavior" type="Node" parent="Tiles/Tile2" unique_id=1273976166]
+[node name="SineBehavior" type="Node" parent="Tiles/Tile2"]
 script = ExtResource("5_2qkqr")
 magnitude = 18.0
 movement = "vertical"
 period = 1.6
 
-[node name="SpringBehavior" type="Node" parent="Tiles/Tile2" unique_id=1497513755]
+[node name="SpringBehavior" type="Node" parent="Tiles/Tile2"]
 script = ExtResource("2_06d17")
 
-[node name="TweenBehavior" type="Node" parent="Tiles/Tile2" unique_id=2081535958]
+[node name="TweenBehavior" type="Node" parent="Tiles/Tile2"]
 script = ExtResource("3_fxpfk")
 
-[node name="Tile3" type="Sprite2D" parent="Tiles" unique_id=1851489548]
+[node name="Tile3" type="Sprite2D" parent="Tiles"]
 modulate = Color(0.14999998, 1, 0.36249995, 1)
 position = Vector2(420.43652, 479.56348)
 texture = SubResource("ImageTexture_g50wr")
 
-[node name="SineBehavior" type="Node" parent="Tiles/Tile3" unique_id=1626088636]
+[node name="SineBehavior" type="Node" parent="Tiles/Tile3"]
 script = ExtResource("5_2qkqr")
 magnitude = 18.0
 movement = "vertical"
 period = 1.6
 
-[node name="SpringBehavior" type="Node" parent="Tiles/Tile3" unique_id=440009517]
+[node name="SpringBehavior" type="Node" parent="Tiles/Tile3"]
 script = ExtResource("2_06d17")
 
-[node name="TweenBehavior" type="Node" parent="Tiles/Tile3" unique_id=172776575]
+[node name="TweenBehavior" type="Node" parent="Tiles/Tile3"]
 script = ExtResource("3_fxpfk")
 
-[node name="Tile4" type="Sprite2D" parent="Tiles" unique_id=1775170092]
+[node name="Tile4" type="Sprite2D" parent="Tiles"]
 modulate = Color(0.14999998, 1, 1, 1)
 position = Vector2(356, 324)
 texture = SubResource("ImageTexture_g50wr")
 
-[node name="SineBehavior" type="Node" parent="Tiles/Tile4" unique_id=76415000]
+[node name="SineBehavior" type="Node" parent="Tiles/Tile4"]
 script = ExtResource("5_2qkqr")
 magnitude = 18.0
 movement = "vertical"
 period = 1.6
 
-[node name="SpringBehavior" type="Node" parent="Tiles/Tile4" unique_id=1980936270]
+[node name="SpringBehavior" type="Node" parent="Tiles/Tile4"]
 script = ExtResource("2_06d17")
 
-[node name="TweenBehavior" type="Node" parent="Tiles/Tile4" unique_id=1298433202]
+[node name="TweenBehavior" type="Node" parent="Tiles/Tile4"]
 script = ExtResource("3_fxpfk")
 
-[node name="Tile5" type="Sprite2D" parent="Tiles" unique_id=1179834161]
+[node name="Tile5" type="Sprite2D" parent="Tiles"]
 modulate = Color(0.14999998, 0.36249995, 1, 1)
 position = Vector2(420.43652, 168.43651)
 texture = SubResource("ImageTexture_g50wr")
 
-[node name="SineBehavior" type="Node" parent="Tiles/Tile5" unique_id=1595825055]
+[node name="SineBehavior" type="Node" parent="Tiles/Tile5"]
 script = ExtResource("5_2qkqr")
 magnitude = 18.0
 movement = "vertical"
 period = 1.6
 
-[node name="SpringBehavior" type="Node" parent="Tiles/Tile5" unique_id=441224587]
+[node name="SpringBehavior" type="Node" parent="Tiles/Tile5"]
 script = ExtResource("2_06d17")
 
-[node name="TweenBehavior" type="Node" parent="Tiles/Tile5" unique_id=29560625]
+[node name="TweenBehavior" type="Node" parent="Tiles/Tile5"]
 script = ExtResource("3_fxpfk")
 
-[node name="Tile6" type="Sprite2D" parent="Tiles" unique_id=392920693]
+[node name="Tile6" type="Sprite2D" parent="Tiles"]
 modulate = Color(0.575, 0.14999998, 1, 1)
 position = Vector2(576, 104)
 texture = SubResource("ImageTexture_g50wr")
 
-[node name="SineBehavior" type="Node" parent="Tiles/Tile6" unique_id=900758496]
+[node name="SineBehavior" type="Node" parent="Tiles/Tile6"]
 script = ExtResource("5_2qkqr")
 magnitude = 18.0
 movement = "vertical"
 period = 1.6
 
-[node name="SpringBehavior" type="Node" parent="Tiles/Tile6" unique_id=956795826]
+[node name="SpringBehavior" type="Node" parent="Tiles/Tile6"]
 script = ExtResource("2_06d17")
 
-[node name="TweenBehavior" type="Node" parent="Tiles/Tile6" unique_id=1561859944]
+[node name="TweenBehavior" type="Node" parent="Tiles/Tile6"]
 script = ExtResource("3_fxpfk")
 
-[node name="Tile7" type="Sprite2D" parent="Tiles" unique_id=1924699808]
+[node name="Tile7" type="Sprite2D" parent="Tiles"]
 modulate = Color(1, 0.14999998, 0.7875, 1)
 position = Vector2(731.5635, 168.43651)
 texture = SubResource("ImageTexture_g50wr")
 
-[node name="SineBehavior" type="Node" parent="Tiles/Tile7" unique_id=1696031810]
+[node name="SineBehavior" type="Node" parent="Tiles/Tile7"]
 script = ExtResource("5_2qkqr")
 magnitude = 18.0
 movement = "vertical"
 period = 1.6
 
-[node name="SpringBehavior" type="Node" parent="Tiles/Tile7" unique_id=1959735550]
+[node name="SpringBehavior" type="Node" parent="Tiles/Tile7"]
 script = ExtResource("2_06d17")
 
-[node name="TweenBehavior" type="Node" parent="Tiles/Tile7" unique_id=1107759905]
+[node name="TweenBehavior" type="Node" parent="Tiles/Tile7"]
 script = ExtResource("3_fxpfk")

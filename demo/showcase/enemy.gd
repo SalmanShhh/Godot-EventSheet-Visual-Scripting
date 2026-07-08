@@ -9,13 +9,11 @@ extends Sprite2D
 ## Hits this enemy survives before it dies.
 @export var health: int = 3
 
-
 func _ready() -> void:
 	self.add_to_group("family_enemy")
 	fall_speed = randf_range(60.0, 140.0)
 	modulate = Color.from_hsv(randf(), 0.6, 1.0)
 	scale = Vector2(0.4, 0.4)
-
 
 ## @ace_action
 ## @ace_name("Take Damage")

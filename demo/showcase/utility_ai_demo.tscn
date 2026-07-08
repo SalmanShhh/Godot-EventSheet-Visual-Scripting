@@ -15,19 +15,19 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_v8w2q"]
 image = SubResource("Image_i6efq")
 
-[node name="GuardBrainDemo" type="Node2D" unique_id=1767305769]
+[node name="GuardBrainDemo" type="Node2D"]
 script = ExtResource("1_74sqj")
 
-[node name="Guard" type="Sprite2D" parent="." unique_id=1601751835]
+[node name="Guard" type="Sprite2D" parent="."]
 modulate = Color(1, 0.82, 0.4, 1)
 position = Vector2(576, 360)
 scale = Vector2(2, 2)
 texture = SubResource("ImageTexture_v8w2q")
 
-[node name="Brain" type="Node" parent="Guard" unique_id=2054251115]
+[node name="Brain" type="Node" parent="Guard"]
 script = ExtResource("2_m47ei")
 
-[node name="Screen" type="Label" parent="." unique_id=1818542464]
+[node name="Screen" type="Label" parent="."]
 offset_left = 40.0
 offset_top = 40.0
 offset_right = 40.0

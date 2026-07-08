@@ -23,6 +23,14 @@
   (`build_examples.gd` emits them like the packs, byte-pinned as round-trip artifacts), so they follow the
   emitter's single-blank contract, the same exemption `eventsheet_addons` and `demo/sheets` already have.
 
+### Fixed - showcase regeneration is now byte-reproducible
+
+- **Regenerating the showcases is deterministic.** `build_examples.gd` now strips the random
+  `unique_id=NNNN` token Godot stamps onto every node at pack time (editor scene-merge metadata, unused by
+  the plugin and by scene loading), which was the sole source of `.tscn` churn - running the builder twice
+  now produces byte-identical output. All showcases were regenerated to the current single-blank emitter
+  output, so `demo/showcase` is uniform and a rebuild leaves a clean working tree.
+
 ## [0.13.0] - 2026-07-08 - The Genre Toolkits Update
 
 ### Added - auto-registered pack builders, data-driven Simple Abilities, and Advanced Random everywhere

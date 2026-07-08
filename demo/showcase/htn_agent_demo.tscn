@@ -15,20 +15,20 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_lbsa6"]
 image = SubResource("Image_2ias3")
 
-[node name="ChefPlannerDemo" type="Node2D" unique_id=74008706]
+[node name="ChefPlannerDemo" type="Node2D"]
 script = ExtResource("1_um03g")
 
-[node name="Chef" type="Sprite2D" parent="." unique_id=1409755272]
+[node name="Chef" type="Sprite2D" parent="."]
 modulate = Color(0.6, 0.9, 0.7, 1)
 position = Vector2(576, 360)
 scale = Vector2(2, 2)
 texture = SubResource("ImageTexture_lbsa6")
 
-[node name="Planner" type="Node" parent="Chef" unique_id=1208714784]
+[node name="Planner" type="Node" parent="Chef"]
 script = ExtResource("2_thpcb")
 root_task = "make_meal"
 
-[node name="Screen" type="Label" parent="." unique_id=446183074]
+[node name="Screen" type="Label" parent="."]
 offset_left = 40.0
 offset_top = 40.0
 offset_right = 40.0

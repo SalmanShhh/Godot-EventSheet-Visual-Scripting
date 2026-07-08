@@ -14,12 +14,12 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_g6fws"]
 image = SubResource("Image_e6exl")
 
-[node name="Star" type="Sprite2D" unique_id=627357918 groups=["stars"]]
+[node name="Star" type="Sprite2D" groups=["stars"]]
 modulate = Color(1, 0.86, 0.3, 1)
 scale = Vector2(0.3, 0.3)
 texture = SubResource("ImageTexture_g6fws")
 
-[node name="BulletBehavior" type="Node" parent="." unique_id=1173130056]
+[node name="BulletBehavior" type="Node" parent="."]
 script = ExtResource("1_65d76")
 align_rotation = false
 speed = 150.0

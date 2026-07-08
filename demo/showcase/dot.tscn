@@ -12,6 +12,6 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_wiqms"]
 image = SubResource("Image_28ruq")
 
-[node name="Dot" type="Sprite2D" unique_id=1731779320 groups=["swarm"]]
+[node name="Dot" type="Sprite2D" groups=["swarm"]]
 scale = Vector2(0.32, 0.32)
 texture = SubResource("ImageTexture_wiqms")

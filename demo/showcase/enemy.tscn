@@ -14,6 +14,6 @@ data = {
 [sub_resource type="ImageTexture" id="ImageTexture_b38rs"]
 image = SubResource("Image_qdjf0")
 
-[node name="Enemy" type="Sprite2D" unique_id=1133550072]
+[node name="Enemy" type="Sprite2D"]
 texture = SubResource("ImageTexture_b38rs")
 script = ExtResource("1_008ql")
