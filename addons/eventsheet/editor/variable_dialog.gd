@@ -8,7 +8,7 @@ extends RefCounted
 ## Emitted when the user confirms variable creation or editing.
 ## scope is "global" or "local". exported = accessible outside the generated script
 ## (@export var) vs. private (var).
-signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool, options: PackedStringArray, attributes: Dictionary)
+signal variable_confirmed(name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary, is_constant: bool, exported: bool, options: PackedStringArray, attributes: Dictionary, onready: bool)
 
 var _dialog: ConfirmationDialog = null
 var _scope_label: Label = null
@@ -26,6 +26,10 @@ var _items_window: Window = null
 var _items_edit: TextEdit = null
 var _const_check: CheckBox = null
 var _exported_check: CheckBox = null
+# "@onready" toggle - tree-placed variables only (class-level). When on, the variable compiles to
+# `@onready var` and the Default field is a verbatim GDScript expression (a node ref like $Player).
+var _onready_check: CheckBox = null
+var _onready_row: HBoxContainer = null
 var _const_help: Label = null
 var _type_help: Label = null
 var _scope: String = "global"
@@ -460,6 +464,19 @@ func init_dialog(parent_node: Node) -> void:
 	access_row.add_child(_exported_check)
 	form.add_child(access_row)
 
+	# @onready row - shown only for tree-placed (class-level) variables (open_for_edit gates visibility).
+	_onready_row = HBoxContainer.new()
+	var onready_label: Label = Label.new()
+	onready_label.text = "On ready"
+	onready_label.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
+	_onready_row.add_child(onready_label)
+	_onready_check = CheckBox.new()
+	_onready_check.text = "Set on _ready() - for node refs like $Player"
+	_onready_check.tooltip_text = "On: compiles to @onready var - the Default is a GDScript EXPRESSION evaluated when the node enters the tree (e.g. $Player, get_node(\"UI/Score\")), not a literal.\nUse it to grab a node reference once the scene is ready."
+	_onready_check.toggled.connect(func(pressed: bool) -> void: _on_onready_toggled_interactive(pressed))
+	_onready_row.add_child(_onready_check)
+	form.add_child(_onready_row)
+
 	_const_help = Label.new()
 	_const_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_const_help.custom_minimum_size = Vector2(380.0, 0.0)
@@ -683,6 +700,33 @@ func _update_attr_gating() -> void:
 				_attr_advanced_section.visible = false
 
 
+## Interactive tick: also default the DISPLAY type to Variant so a NEW onready var reads honestly (a node ref
+## is safest untyped, and the dropdown can't name node classes). Editing keeps the var's real type via the
+## confirm branch, so this cosmetic reset never corrupts a round-trip.
+func _on_onready_toggled_interactive(pressed: bool) -> void:
+	if pressed and _type_option != null:
+		_select_stored_type("Variant")
+	_apply_onready_state(pressed)
+
+
+## @onready is mutually exclusive with const / @export (the compiler emits ONLY `@onready var`): ticking it
+## clears + disables both and turns the Default into an expression prompt. Unticking restores them (export stays
+## disabled for a local-scope variable, which is always private). Shared by the interactive tick and open_for_edit.
+func _apply_onready_state(pressed: bool) -> void:
+	if pressed:
+		if _const_check != null:
+			_const_check.set_pressed_no_signal(false)
+		if _exported_check != null:
+			_exported_check.set_pressed_no_signal(false)
+	if _const_check != null:
+		_const_check.disabled = pressed
+	if _exported_check != null:
+		_exported_check.disabled = pressed or _scope == "local"
+	if _default_edit != null:
+		_default_edit.placeholder_text = "expression, e.g. $Player or get_node(\"UI/Score\")" if pressed else ""
+	_update_attr_gating()
+
+
 func open_for_edit(
 	scope: String,
 	context: Dictionary = {},
@@ -692,7 +736,8 @@ func open_for_edit(
 	lock_type: bool = false,
 	title: String = "Edit Variable",
 	is_constant: bool = false,
-	exported: bool = true
+	exported: bool = true,
+	onready: bool = false
 ) -> void:
 	if _dialog == null:
 		push_error("VariableDialog.open() called before init_dialog().")
@@ -718,6 +763,14 @@ func open_for_edit(
 		if is_local
 		else "On: a designer tweaks this per-instance in the Inspector (@export var).\nOff: internal script state - a plain private var."
 	)
+	# @onready is a tree-placed (class-level) concept only - hidden for global/local scopes. Applying the
+	# toggle also (re)sets the const/@export disabling to a consistent state for the current scope.
+	var is_tree: bool = scope == "tree"
+	if _onready_row != null:
+		_onready_row.visible = is_tree
+	if _onready_check != null:
+		_onready_check.set_pressed_no_signal(onready and is_tree)
+	_apply_onready_state(onready and is_tree)
 	var existing_attributes: Dictionary = context.get("attributes") if context.get("attributes") is Dictionary else {}
 	_attr_tooltip_edit.text = str(existing_attributes.get("tooltip", ""))
 	_attr_group_edit.text = str(existing_attributes.get("group", ""))
@@ -823,6 +876,29 @@ func _on_confirmed() -> void:
 			_dialog.call_deferred("popup_centered", Vector2i(460, 260))
 		return
 	var type_name: String = _selected_stored_type()
+	# @onready (tree scope): the Default is a verbatim GDScript expression (a node ref / call), NOT a literal -
+	# so skip the literal validation/coercion and the combo/attribute machinery a deferred node handle never
+	# uses. const/@export are emitted false (the compiler emits only `@onready var`).
+	if _onready_check != null and _onready_check.button_pressed and _scope == "tree":
+		# The expression is mandatory: a blank one would emit `@onready var x: Type = ` - a syntax error.
+		# Block it (event-sheet-style: reopen with the text intact) instead of committing broken GDScript.
+		var onready_expr: String = _default_edit.text.strip_edges()
+		if onready_expr.is_empty():
+			if _default_help != null:
+				_default_help.visible = true
+				_default_help.text = "✗ @onready needs an expression (e.g. $Player or get_node(\"UI/Score\"))."
+			if _dialog.is_inside_tree():
+				_dialog.call_deferred("popup_centered", Vector2i(460, 260))
+			return
+		# Type: an EDITED var keeps its declared type (round-trips a hand-authored `@onready var s: Sprite2D`);
+		# a NEW onready var is Variant - safe for any node ref / expression (the dropdown can't name node
+		# classes like Sprite2D, and a numeric type would crash at runtime assigning a Node).
+		var onready_type: String = "Variant"
+		var editing_resource: Variant = _context.get("variable_resource", null)
+		if editing_resource is LocalVariable:
+			onready_type = str((editing_resource as LocalVariable).type_name)
+		variable_confirmed.emit(var_name, onready_type, onready_expr, _scope, _context.duplicate(true), false, false, PackedStringArray(), {}, true)
+		return
 	# Guardrail (event-sheet-style): an invalid collection literal never commits - the dialog
 	# reopens with the text intact so the user fixes or cancels deliberately.
 	var verdict: Dictionary = validate_default(type_name, _default_edit.text)
@@ -928,7 +1004,7 @@ func _on_confirmed() -> void:
 	if drawer_kind == "toggle_row" and type_name == "String" and not combo_options.is_empty():
 		attributes["toggle_options"] = Array(combo_options)
 		combo_options = PackedStringArray()
-	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes)
+	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes, false)
 
 
 ## Returns the trimmed text from the name field.

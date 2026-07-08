@@ -600,7 +600,7 @@ static func run() -> bool:
 	leftover_dialog._refresh_contextual_rows()
 	leftover_dialog._default_edit.text = "\"hi\""
 	var captured_attrs: Array = [null]
-	leftover_dialog.variable_confirmed.connect(func(_n, _t, _d, _s, _c, _ic, _ex, _co, attrs) -> void: captured_attrs[0] = attrs)
+	leftover_dialog.variable_confirmed.connect(func(_n, _t, _d, _s, _c, _ic, _ex, _co, attrs, _r) -> void: captured_attrs[0] = attrs)
 	leftover_dialog._on_confirmed()
 	all_passed = _check("leftover numeric attributes are inert after switching type",
 		captured_attrs[0] is Dictionary and not (captured_attrs[0] as Dictionary).has("range")

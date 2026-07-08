@@ -218,9 +218,15 @@ func import_external_source(source: String) -> EventSheetResource:
 ## compiler's canonical emission reproduces the source line exactly (the verify-lift rule);
 ## otherwise the line stays verbatim in a block row and nothing is lost.
 func _try_lift_variable(line: String) -> LocalVariable:
-	if not (line.begins_with("var ") or line.begins_with("@export") or line.begins_with("const ")):
+	# An `@onready var <name>: <Type> = <expr>` restores a first-class onready row (an editable variable,
+	# not a stranded verbatim block): strip the annotation, parse the declaration, and flag onready. The
+	# compiler re-emits the default VERBATIM for onready, and the byte-verify below still gates it - if the
+	# re-emission doesn't reproduce the ORIGINAL line exactly, it reverts to a verbatim block, lossless.
+	var onready_prefixed: bool = line.begins_with("@onready var ")
+	var declaration: String = line.substr(9) if onready_prefixed else line  # drop the "@onready " prefix (9 chars)
+	if not (declaration.begins_with("var ") or declaration.begins_with("@export") or declaration.begins_with("const ")):
 		return null
-	var parsed: Dictionary = VariableParser.new().parse(line)
+	var parsed: Dictionary = VariableParser.new().parse(declaration)
 	if parsed.size() != 1:
 		return null
 	var variable_name: String = str(parsed.keys()[0])
@@ -235,9 +241,11 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	# A `const` declaration restores a first-class constant variable (green "const" pill, editable in the
 	# dialog) instead of degrading to a verbatim block. Byte-gated below like every other lift.
 	lifted.is_constant = bool(descriptor.get("constant", false))
+	lifted.onready = onready_prefixed
 	# A String default that appeared UNQUOTED in the source is a bare code expression (Vector2.ZERO,
 	# Color.RED, Type.CONST), not a literal - mark it so it re-emits verbatim rather than quoted. The
 	# byte-verify below still gates it: if the flagged re-emission doesn't reproduce the line, revert.
+	# (Skipped for onready - its branch already emits the default verbatim, no flag needed.)
 	if lifted.default_value is String and not lifted.is_constant and not lifted.onready \
 			and line.contains("= %s" % str(lifted.default_value)) and not line.contains("\"%s\"" % str(lifted.default_value)):
 		lifted.expression_default = true

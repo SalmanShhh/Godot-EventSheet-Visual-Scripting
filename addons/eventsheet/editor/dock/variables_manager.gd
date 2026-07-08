@@ -159,7 +159,8 @@ func _on_variable_dialog_confirmed(
 	is_constant: bool = false,
 	exported: bool = true,
 	combo_options: PackedStringArray = PackedStringArray(),
-	attributes: Dictionary = {}
+	attributes: Dictionary = {},
+	onready: bool = false
 ) -> void:
 	# Guardrail (event-sheet-style): auto-correct what's fixable, block what isn't - BEFORE commit.
 	var sanitized_name: String = EventSheetIdentifierRules.sanitize(var_name)
@@ -199,6 +200,7 @@ func _on_variable_dialog_confirmed(
 				existing.is_constant = resolved_constant
 				existing.exported = exported
 				existing.attributes = _tree_group_attributes(attributes)
+				existing.onready = onready
 				message["text"] = "Updated variable %s." % var_name
 				return true
 			var tree_var: LocalVariable = LocalVariable.new()
@@ -209,6 +211,7 @@ func _on_variable_dialog_confirmed(
 			tree_var.is_constant = resolved_constant
 			tree_var.exported = exported
 			tree_var.attributes = _tree_group_attributes(attributes)
+			tree_var.onready = onready
 			var anchor: Variant = context.get("insert_below", null)
 			if anchor is Resource:
 				var location: Dictionary = _dock._find_resource_location(anchor as Resource)
@@ -363,7 +366,8 @@ func _edit_context_variable() -> void:
 			false,
 			"Edit Variable",
 			tree_var.is_constant,
-			tree_var.exported
+			tree_var.exported,
+			tree_var.onready
 		)
 		return
 	if scope == "local":

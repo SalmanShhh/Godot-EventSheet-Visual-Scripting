@@ -368,7 +368,7 @@ static func _vector_dial_range_persists() -> bool:
 	dlg.init_dialog(parent)
 	dlg.set_sheet_provider(func() -> Variant: return null)
 	var captured: Dictionary = {}
-	dlg.variable_confirmed.connect(func(_n: String, _t: String, _d: Variant, _s: String, _c: Dictionary, _k: bool, _e: bool, _o: PackedStringArray, attributes: Dictionary) -> void:
+	dlg.variable_confirmed.connect(func(_n: String, _t: String, _d: Variant, _s: String, _c: Dictionary, _k: bool, _e: bool, _o: PackedStringArray, attributes: Dictionary, _onready: bool) -> void:
 		captured["attributes"] = attributes
 	)
 	dlg.open_for_edit("tree", {"editing": true, "attributes": {"drawer": "vector_dial", "range": {"min": "0", "max": "150", "step": "1"}}},

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - @onready variables + node-drag into GDScript blocks
+
+- **@onready variables.** A tree-placed variable can now be set on `_ready()`: tick the new
+  **On ready** box in the Variable dialog and the Default becomes a GDScript expression (a node
+  reference like `$Player`, or `get_node(...)`), compiling to `@onready var name: Type = <expr>`. A new
+  variable is typed `Variant` (safe for any node reference - a numeric type would crash assigning a Node);
+  const and `@export` are disabled since the compiler emits only `@onready var`.
+- **`@onready var` round-trips.** Opening a `.gd` that already has `@onready var x = $Path` now lifts it
+  to an editable onready variable row (byte-verify gated, so it stays lossless), preserving its declared
+  type - editing a hand-authored `@onready var s: Sprite2D = $S` keeps the `Sprite2D` type.
+- **Drag a node into a raw GDScript block.** Dropping a Scene-dock node into the raw-GDScript-block editor
+  inserts its `$Path` / `%Name` reference at the caret (a FileSystem asset becomes a quoted `res://` path) -
+  the same converter the ACE param fields already use.
+
 ### Added - Attach Event Sheet is now .gd-first
 
 - **Attach Event Sheet is now `.gd`-first.** The Scene-dock right-click "Attach Event Sheet" writes a

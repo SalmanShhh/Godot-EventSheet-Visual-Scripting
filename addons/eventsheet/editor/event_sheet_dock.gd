@@ -651,7 +651,7 @@ func _designer_edit_variable(entry: Dictionary) -> void:
 
 
 ## Deferred so the funnel's commit (which replaces sheet resources) fully lands first.
-func _refresh_inspector_designer_after_edit(_n: Variant = null, _t: Variant = null, _d: Variant = null, _s: Variant = null, _c: Variant = null, _k: Variant = null, _e: Variant = null, _o: Variant = null, _a: Variant = null) -> void:
+func _refresh_inspector_designer_after_edit(_n: Variant = null, _t: Variant = null, _d: Variant = null, _s: Variant = null, _c: Variant = null, _k: Variant = null, _e: Variant = null, _o: Variant = null, _a: Variant = null, _r: Variant = null) -> void:
 	if _inspector_designer_dialog != null and _inspector_designer_dialog.visible:
 		_inspector_designer_dialog.call_deferred("refresh")
 
@@ -1486,6 +1486,22 @@ func _populate_raw_code_completion() -> void:
 	_code_panel_glue.populate_raw_code_completion()
 
 
+## Drag a Scene-dock node (or a FileSystem asset) into the raw GDScript block: only a node/file
+## payload is droppable, so the cursor reads as accepting there.
+func _can_drop_on_raw_code(_at_position: Vector2, data: Variant) -> bool:
+	return data is Dictionary and str((data as Dictionary).get("type", "")) in ["files", "nodes"]
+
+
+## On drop, insert a $Path / %Name reference (or a quoted res:// path) at the caret - the SAME
+## converter the ACE param fields use, so a node dropped in a hand-written block reads identically.
+func _drop_on_raw_code(_at_position: Vector2, data: Variant) -> void:
+	if _raw_code_edit == null:
+		return
+	var snippet: String = ACEParamsDialog.drop_data_to_expression(data)
+	if not snippet.is_empty():
+		_raw_code_edit.insert_text_at_caret(snippet)
+
+
 
 ## The current line's text up to the caret (what context completion/hints parse).
 static func _text_before_caret(edit: CodeEdit) -> String:
@@ -1579,8 +1595,8 @@ static func _tree_group_attributes(source: Dictionary) -> Dictionary:  # variabl
 	return EventSheetVariablesManager._tree_group_attributes(source)
 
 
-func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary = {}, is_constant: bool = false, exported: bool = true, combo_options: PackedStringArray = PackedStringArray(), attributes: Dictionary = {}) -> void:  # _variable_dlg.variable_confirmed
-	_variables._on_variable_dialog_confirmed(var_name, type_name, default_value, scope, context, is_constant, exported, combo_options, attributes)
+func _on_variable_dialog_confirmed(var_name: String, type_name: String, default_value: Variant, scope: String, context: Dictionary = {}, is_constant: bool = false, exported: bool = true, combo_options: PackedStringArray = PackedStringArray(), attributes: Dictionary = {}, onready: bool = false) -> void:  # _variable_dlg.variable_confirmed
+	_variables._on_variable_dialog_confirmed(var_name, type_name, default_value, scope, context, is_constant, exported, combo_options, attributes, onready)
 
 
 func _on_add_global_variable_requested() -> void:
