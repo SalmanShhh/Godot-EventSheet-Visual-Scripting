@@ -1,6 +1,6 @@
 # EventForge - the GDScript style-guide gate (docs.godotengine.org GDScript style guide).
 #
-# Sweeps every HAND-WRITTEN .gd (addons / tests / tools / demo showcase) and fails on:
+# Sweeps every HAND-WRITTEN .gd (addons / tests / tools) and fails on:
 #   1. `extends` before `class_name` (the guide puts class_name first)
 #   2. a top-level func/class without two blank lines above it (counting its attached
 #      comment/annotation block; multiline strings are skipped so fixtures with column-0
@@ -9,14 +9,16 @@
 #      properties that are public API - renaming them would break saved .tres files and the
 #      pack-author compatibility covenant)
 #
-# eventsheet_addons/*.gd and demo/sheets are COMPILER OUTPUT - their formatting is the
-# emitter's contract (single blank between functions, byte-stable regeneration), a deliberate,
-# documented deviation; the gate does not scan them.
+# eventsheet_addons/*.gd, demo/sheets AND demo/showcase are COMPILER OUTPUT (build_examples.gd
+# emits the showcases the same way the packs are emitted, and showcase_examples_test.gd pins
+# them as byte-exact round-trip artifacts). Their formatting is the emitter's contract - single
+# blank between functions, byte-stable regeneration - a deliberate, documented deviation from the
+# two-blank rule; the gate does not scan them.
 @tool
 class_name StyleGuideTest
 extends RefCounted
 
-const SCAN_ROOTS: Array[String] = ["res://addons", "res://tests", "res://tools", "res://demo/showcase"]
+const SCAN_ROOTS: Array[String] = ["res://addons", "res://tests", "res://tools"]
 
 ## Public-API resource properties frozen for compatibility (saved .tres files + pack authors
 ## reference them by name); everything else must be snake_case.

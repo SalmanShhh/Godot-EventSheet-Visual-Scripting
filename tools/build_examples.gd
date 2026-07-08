@@ -22,6 +22,8 @@ func _init() -> void:
 	all_ok = _build_inspector_playground() and all_ok
 	all_ok = _build_enemy_stats() and all_ok
 	all_ok = _build_menu_starter() and all_ok
+	all_ok = _build_utility_ai() and all_ok
+	all_ok = _build_htn_agent() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -134,6 +136,8 @@ const SPRING := "res://eventsheet_addons/spring/spring_behavior.gd"
 const TWEEN := "res://eventsheet_addons/tween/tween_behavior.gd"
 const SINE := "res://eventsheet_addons/sine/sine_behavior.gd"
 const FLASH := "res://eventsheet_addons/flash/flash_behavior.gd"
+const UTILITY_AI := "res://eventsheet_addons/utility_ai/utility_ai_addon.gd"
+const HTN_AGENT := "res://eventsheet_addons/htn_agent/htn_agent_behavior.gd"
 
 
 func _build_carousel() -> bool:
@@ -527,6 +531,140 @@ func _build_quest_fsm() -> bool:
 	label.text = "QUEST: OFFERED\nitems: 0   log: 0\nt = 0"
 	root.add_child(label); label.owner = root
 	return _save_scene(root, "res://demo/showcase/quest_fsm.tscn")
+
+
+# ── Utility AI showcase: a guard whose UtilityBrain scores patrol/chase/flee ──
+func _build_utility_ai() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "GuardBrainDemo"
+	sheet.emit_live_values = false
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Guard Brain (Utility AI)[/b] - a self-driving guard with no input. The UtilityBrain scores three actions (patrol / chase / flee) from a threat signal that rises and falls plus a stamina wave; a response curve shapes each score, and the highest wins. Set Input -> Evaluate -> read Current Action is the whole loop - the addon drives a real decision maker, not a fixed state machine. Attach a UtilityBrain to any node and score your own actions the same way."
+	sheet.events.append(about)
+
+	sheet.events.append(_local_var("t", TYPE_FLOAT, "float", 0.0))
+	sheet.events.append(_local_var("threat", TYPE_FLOAT, "float", 0.0))
+	sheet.events.append(_local_var("stamina", TYPE_FLOAT, "float", 1.0))
+
+	# One-time setup: register three actions and shape each with considerations + response curves.
+	var setup: EventRow = EventRow.new()
+	setup.trigger_provider_id = "Core"; setup.trigger_id = "OnReady"
+	setup.actions.append(_action("UtilityBrain", "method:add_action", "{target}.add_action({action_name}, {cooldown}, {interruptible}, {priority})", {"target": "$Guard/Brain", "action_name": "\"patrol\"", "cooldown": "0.0", "interruptible": "true", "priority": "0.3"}))
+	setup.actions.append(_action("UtilityBrain", "method:add_action", "{target}.add_action({action_name}, {cooldown}, {interruptible}, {priority})", {"target": "$Guard/Brain", "action_name": "\"chase\"", "cooldown": "0.0", "interruptible": "true", "priority": "1.0"}))
+	setup.actions.append(_action("UtilityBrain", "method:add_action", "{target}.add_action({action_name}, {cooldown}, {interruptible}, {priority})", {"target": "$Guard/Brain", "action_name": "\"flee\"", "cooldown": "0.0", "interruptible": "false", "priority": "1.2"}))
+	# patrol likes LOW threat; chase scales with threat; flee spikes at high threat and low stamina.
+	setup.actions.append(_action("UtilityBrain", "method:add_consideration", "{target}.add_consideration({action_name}, {input_key}, {curve}, {weight}, {curve_center}, {curve_slope})", {"target": "$Guard/Brain", "action_name": "\"patrol\"", "input_key": "\"threat\"", "curve": "\"inverse\"", "weight": "1.0", "curve_center": "0.5", "curve_slope": "1.0"}))
+	setup.actions.append(_action("UtilityBrain", "method:add_consideration", "{target}.add_consideration({action_name}, {input_key}, {curve}, {weight}, {curve_center}, {curve_slope})", {"target": "$Guard/Brain", "action_name": "\"chase\"", "input_key": "\"threat\"", "curve": "\"quadratic\"", "weight": "1.0", "curve_center": "0.5", "curve_slope": "1.0"}))
+	setup.actions.append(_action("UtilityBrain", "method:add_consideration", "{target}.add_consideration({action_name}, {input_key}, {curve}, {weight}, {curve_center}, {curve_slope})", {"target": "$Guard/Brain", "action_name": "\"flee\"", "input_key": "\"threat\"", "curve": "\"logistic\"", "weight": "1.0", "curve_center": "0.8", "curve_slope": "8.0"}))
+	setup.actions.append(_action("UtilityBrain", "method:add_consideration", "{target}.add_consideration({action_name}, {input_key}, {curve}, {weight}, {curve_center}, {curve_slope})", {"target": "$Guard/Brain", "action_name": "\"flee\"", "input_key": "\"stamina\"", "curve": "\"inverse\"", "weight": "0.6", "curve_center": "0.5", "curve_slope": "1.0"}))
+	sheet.events.append(setup)
+
+	# Self-driving tick: oscillate the world signals, feed them in, and evaluate.
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"; tick.trigger_id = "OnProcess"
+	tick.actions.append(_action("Core", "AddVar", "{var_name} += {amount}", {"var_name": "t", "amount": "delta"}))
+	tick.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "threat", "value": "0.5 + 0.5 * sin(t * 0.8)"}))
+	tick.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "stamina", "value": "0.5 + 0.5 * cos(t * 0.5)"}))
+	tick.actions.append(_action("UtilityBrain", "method:set_input", "{target}.set_input({key}, {value})", {"target": "$Guard/Brain", "key": "\"threat\"", "value": "threat"}))
+	tick.actions.append(_action("UtilityBrain", "method:set_input", "{target}.set_input({key}, {value})", {"target": "$Guard/Brain", "key": "\"stamina\"", "value": "stamina"}))
+	tick.actions.append(_action("UtilityBrain", "method:evaluate", "{target}.evaluate()", {"target": "$Guard/Brain"}))
+	sheet.events.append(tick)
+
+	# HUD: show the winning action, its score, and the live inputs.
+	var hud: EventRow = EventRow.new()
+	hud.trigger_provider_id = "Core"; hud.trigger_id = "OnProcess"
+	hud.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Screen", "template": "\"GUARD BRAIN (Utility AI)\naction: %s  (score %.2f)\nthreat %.2f   stamina %.2f\"", "args": "$Guard/Brain.current_action(), $Guard/Brain.decision_score(), threat, stamina"}))
+	sheet.events.append(hud)
+
+	if not _compile(sheet, "res://demo/showcase/utility_ai_demo.tres", "res://demo/showcase/utility_ai_demo.gd"):
+		return false
+
+	# Scene
+	var root: Node2D = Node2D.new()
+	root.name = "GuardBrainDemo"
+	root.set_script(load("res://demo/showcase/utility_ai_demo.gd"))
+	var guard: Sprite2D = Sprite2D.new()
+	guard.name = "Guard"
+	guard.texture = _make_texture()
+	guard.position = Vector2(576, 360)
+	guard.scale = Vector2(2.0, 2.0)
+	guard.modulate = Color(1.0, 0.82, 0.4, 1.0)
+	root.add_child(guard); guard.owner = root
+	_attach_behavior(guard, "Brain", UTILITY_AI, root)
+	var label: Label = Label.new()
+	label.name = "Screen"
+	label.position = Vector2(40, 40)
+	label.add_theme_font_size_override("font_size", 28)
+	label.text = "GUARD BRAIN (Utility AI)"
+	root.add_child(label); label.owner = root
+	return _save_scene(root, "res://demo/showcase/utility_ai_demo.tscn")
+
+
+# ── HTN Agent showcase: a chef that plans make_meal -> gather -> cook -> serve ──
+func _build_htn_agent() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "ChefPlannerDemo"
+	sheet.emit_live_values = false
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Chef Planner (HTN Agent)[/b] - a self-driving planner, no input. The compound task make_meal decomposes (via a method whose world-state condition holds) into an ordered plan gather -> cook -> serve; a tick marks each primitive task complete and walks the plan to the end. Add tasks + methods, Request Plan, Mark Task Complete - the whole hierarchical-planning loop. Attach an HTN Agent to any node and give it your own task network."
+	sheet.events.append(about)
+
+	# One-time setup: declare the task network, seed the world, and plan.
+	var setup: EventRow = EventRow.new()
+	setup.trigger_provider_id = "Core"; setup.trigger_id = "OnReady"
+	setup.actions.append(_action("HTNAgent", "method:set_world_state", "{target}.set_world_state({key}, {value})", {"target": "$Chef/Planner", "key": "\"has_kitchen\"", "value": "true"}))
+	setup.actions.append(_action("HTNAgent", "method:add_compound", "{target}.add_compound({task_name})", {"target": "$Chef/Planner", "task_name": "\"make_meal\""}))
+	setup.actions.append(_action("HTNAgent", "method:add_primitive", "{target}.add_primitive({task_name})", {"target": "$Chef/Planner", "task_name": "\"gather\""}))
+	setup.actions.append(_action("HTNAgent", "method:add_primitive", "{target}.add_primitive({task_name})", {"target": "$Chef/Planner", "task_name": "\"cook\""}))
+	setup.actions.append(_action("HTNAgent", "method:add_primitive", "{target}.add_primitive({task_name})", {"target": "$Chef/Planner", "task_name": "\"serve\""}))
+	setup.actions.append(_action("HTNAgent", "method:add_method", "{target}.add_method({task_name}, {method_id}, {utility})", {"target": "$Chef/Planner", "task_name": "\"make_meal\"", "method_id": "\"cook_it\"", "utility": "1.0"}))
+	setup.actions.append(_action("HTNAgent", "method:add_method_condition", "{target}.add_method_condition({task_name}, {method_id}, {key}, {op}, {value})", {"target": "$Chef/Planner", "task_name": "\"make_meal\"", "method_id": "\"cook_it\"", "key": "\"has_kitchen\"", "op": "\"==\"", "value": "true"}))
+	setup.actions.append(_action("HTNAgent", "method:add_method_subtask", "{target}.add_method_subtask({task_name}, {method_id}, {subtask})", {"target": "$Chef/Planner", "task_name": "\"make_meal\"", "method_id": "\"cook_it\"", "subtask": "\"gather\""}))
+	setup.actions.append(_action("HTNAgent", "method:add_method_subtask", "{target}.add_method_subtask({task_name}, {method_id}, {subtask})", {"target": "$Chef/Planner", "task_name": "\"make_meal\"", "method_id": "\"cook_it\"", "subtask": "\"cook\""}))
+	setup.actions.append(_action("HTNAgent", "method:add_method_subtask", "{target}.add_method_subtask({task_name}, {method_id}, {subtask})", {"target": "$Chef/Planner", "task_name": "\"make_meal\"", "method_id": "\"cook_it\"", "subtask": "\"serve\""}))
+	setup.actions.append(_action("HTNAgent", "method:request_plan", "{target}.request_plan()", {"target": "$Chef/Planner"}))
+	sheet.events.append(setup)
+
+	# Self-driving: once a second, complete the current primitive task to walk the plan.
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"; tick.trigger_id = "OnProcess"
+	tick.conditions.append(_every("chef", "1.0"))
+	tick.conditions.append(_condition("HTNAgent", "method:has_plan", "{target}.has_plan()", {"target": "$Chef/Planner"}))
+	tick.actions.append(_action("HTNAgent", "method:mark_complete", "{target}.mark_complete()", {"target": "$Chef/Planner"}))
+	sheet.events.append(tick)
+
+	# HUD: show the running task and how many steps remain.
+	var hud: EventRow = EventRow.new()
+	hud.trigger_provider_id = "Core"; hud.trigger_id = "OnProcess"
+	hud.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Screen", "template": "\"CHEF PLANNER (HTN)\ntask: %s\nsteps left: %d\"", "args": "$Chef/Planner.current_task(), $Chef/Planner.plan_length()"}))
+	sheet.events.append(hud)
+
+	if not _compile(sheet, "res://demo/showcase/htn_agent_demo.tres", "res://demo/showcase/htn_agent_demo.gd"):
+		return false
+
+	# Scene
+	var root: Node2D = Node2D.new()
+	root.name = "ChefPlannerDemo"
+	root.set_script(load("res://demo/showcase/htn_agent_demo.gd"))
+	var chef: Sprite2D = Sprite2D.new()
+	chef.name = "Chef"
+	chef.texture = _make_texture()
+	chef.position = Vector2(576, 360)
+	chef.scale = Vector2(2.0, 2.0)
+	chef.modulate = Color(0.6, 0.9, 0.7, 1.0)
+	root.add_child(chef); chef.owner = root
+	_attach_behavior(chef, "Planner", HTN_AGENT, root, {"root_task": "make_meal"})
+	var label: Label = Label.new()
+	label.name = "Screen"
+	label.position = Vector2(40, 40)
+	label.add_theme_font_size_override("font_size", 28)
+	label.text = "CHEF PLANNER (HTN)"
+	root.add_child(label); label.owner = root
+	return _save_scene(root, "res://demo/showcase/htn_agent_demo.tscn")
 
 # ── 4. Platformer-Shooter (two new behavior packs working together) ──────────
 

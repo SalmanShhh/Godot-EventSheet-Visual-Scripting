@@ -9,6 +9,20 @@
   it to the node - identical to how FileSystem "Create New > Event Sheet" and every other sheet is born.
   One right-click takes a bare node to an editable event sheet, opened straight in the workspace.
 
+### Added - two AI showcases
+
+- **Two AI showcases**, one per bundled AI pack, each a self-driving demo that compiles to plain GDScript
+  and round-trips byte-exactly (pinned in `tests/showcase_examples_test.gd`):
+  - **Guard Brain** (Utility AI) - a guard with no input whose `UtilityBrain` scores patrol / chase / flee
+    from an oscillating threat signal and a stamina wave; each action is shaped by a response curve and the
+    highest score wins. Set Input -> Evaluate -> read Current Action, the whole utility loop.
+  - **Chef Planner** (HTN Agent) - a planner with no input whose compound task `make_meal` decomposes (via
+    a method whose world-state condition holds) into an ordered plan gather -> cook -> serve, walked to the
+    end one primitive per tick. Add tasks + methods, Request Plan, Mark Complete, the whole HTN loop.
+- The style-guide gate no longer scans `demo/showcase`: the showcases are compiler output
+  (`build_examples.gd` emits them like the packs, byte-pinned as round-trip artifacts), so they follow the
+  emitter's single-blank contract, the same exemption `eventsheet_addons` and `demo/sheets` already have.
+
 ## [0.13.0] - 2026-07-08 - The Genre Toolkits Update
 
 ### Added - auto-registered pack builders, data-driven Simple Abilities, and Advanced Random everywhere

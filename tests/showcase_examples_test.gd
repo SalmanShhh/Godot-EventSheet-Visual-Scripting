@@ -80,6 +80,33 @@ static func run() -> bool:
 	passed = _check_scene("quest_fsm scene has Icon + Screen",
 		"res://demo/showcase/quest_fsm.tscn", ["Icon", "Screen"]) and passed
 
+	# Guard Brain - the Utility AI pack driving a self-scoring decision maker (patrol/chase/flee).
+	passed = _check_sheet("utility_ai_demo", "res://demo/showcase/utility_ai_demo.gd", [
+		"class_name GuardBrainDemo",
+		"$Guard/Brain.add_action(\"flee\", 0.0, false, 1.2)",
+		"$Guard/Brain.add_consideration(\"chase\", \"threat\", \"quadratic\", 1.0, 0.5, 1.0)",
+		"$Guard/Brain.set_input(\"threat\", threat)",
+		"$Guard/Brain.evaluate()",
+		"$Guard/Brain.current_action()",
+		"threat = 0.5 + 0.5 * sin(t * 0.8)",
+	]) and passed
+	passed = _check_scene("utility_ai_demo scene has Guard + Brain + Screen",
+		"res://demo/showcase/utility_ai_demo.tscn", ["Guard", "Brain", "Screen"]) and passed
+
+	# Chef Planner - the HTN Agent pack decomposing a compound task into an ordered plan.
+	passed = _check_sheet("htn_agent_demo", "res://demo/showcase/htn_agent_demo.gd", [
+		"class_name ChefPlannerDemo",
+		"$Chef/Planner.add_compound(\"make_meal\")",
+		"$Chef/Planner.add_method_condition(\"make_meal\", \"cook_it\", \"has_kitchen\", \"==\", true)",
+		"$Chef/Planner.add_method_subtask(\"make_meal\", \"cook_it\", \"serve\")",
+		"$Chef/Planner.request_plan()",
+		"$Chef/Planner.has_plan()",
+		"$Chef/Planner.mark_complete()",
+		"$Chef/Planner.current_task()",
+	]) and passed
+	passed = _check_scene("htn_agent_demo scene has Chef + Planner + Screen",
+		"res://demo/showcase/htn_agent_demo.tscn", ["Chef", "Planner", "Screen"]) and passed
+
 	# Platformer-Shooter - the new Platformer + Weapon Kit packs combined.
 	passed = _check_sheet("platformer_shooter", "res://demo/showcase/platformer_shooter.gd", [
 		"$Player/PlatformerMovement.jump()",
