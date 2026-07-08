@@ -6,15 +6,22 @@
 
 - **@onready variables.** A tree-placed variable can now be set on `_ready()`: tick the new
   **On ready** box in the Variable dialog and the Default becomes a GDScript expression (a node
-  reference like `$Player`, or `get_node(...)`), compiling to `@onready var name: Type = <expr>`. A new
-  variable is typed `Variant` (safe for any node reference - a numeric type would crash assigning a Node);
-  const and `@export` are disabled since the compiler emits only `@onready var`.
+  reference like `$Player`, or `get_node(...)`), compiling to `@onready var name: Type = <expr>`. In onready
+  mode the Type becomes a free-text field so you can type the node's class (`Sprite2D`, `Label`, `Area2D`…)
+  or leave `Variant`; const and `@export` are disabled since the compiler emits only `@onready var`. A blank
+  expression is refused (it would emit a `= ` syntax error).
 - **`@onready var` round-trips.** Opening a `.gd` that already has `@onready var x = $Path` now lifts it
   to an editable onready variable row (byte-verify gated, so it stays lossless), preserving its declared
   type - editing a hand-authored `@onready var s: Sprite2D = $S` keeps the `Sprite2D` type.
 - **Drag a node into a raw GDScript block.** Dropping a Scene-dock node into the raw-GDScript-block editor
   inserts its `$Path` / `%Name` reference at the caret (a FileSystem asset becomes a quoted `res://` path) -
   the same converter the ACE param fields already use.
+- **Copy as Text keeps the declaration.** Copying a tree variable as text now emits its real declaration
+  (`const` / `@export var` / `@onready var`), so paste-as-GDScript re-imports it losslessly instead of
+  degrading an onready/const var to a plain `var`.
+- **Node drops are type-checked.** Dropping a node reference onto a param cell is now refused on a plain
+  number / bool param (where `$Path` would be nonsense) - it still fills object, String, and expression
+  params. Unknown params stay permissive.
 
 ### Added - Attach Event Sheet is now .gd-first
 

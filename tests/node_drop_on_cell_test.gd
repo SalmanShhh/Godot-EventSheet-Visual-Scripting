@@ -32,6 +32,18 @@ static func run() -> bool:
 	all_passed = _check("a dropped node path resolves to a node reference",
 		ACEParamsDialog.drop_data_to_expression({"type": "nodes", "nodes": ["/root/Main/Player"]}), "$Player") and all_passed
 
+	# Type-gate: a node ref fits object/String/expression params, but NOT a plain number/bool cell (a footgun).
+	all_passed = _check("a node ref is rejected on a plain int param",
+		EventSheetViewport._node_ref_fits_param_type("int", ""), false) and all_passed
+	all_passed = _check("a node ref is rejected on a plain bool param",
+		EventSheetViewport._node_ref_fits_param_type("bool", ""), false) and all_passed
+	all_passed = _check("a node ref is allowed on an expression-hinted numeric param",
+		EventSheetViewport._node_ref_fits_param_type("float", "expression"), true) and all_passed
+	all_passed = _check("a node ref is allowed on a String param",
+		EventSheetViewport._node_ref_fits_param_type("String", ""), true) and all_passed
+	all_passed = _check("a node ref is allowed on an object/node-typed param",
+		EventSheetViewport._node_ref_fits_param_type("Node2D", ""), true) and all_passed
+
 	return all_passed
 
 

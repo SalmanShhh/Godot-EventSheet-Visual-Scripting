@@ -12,8 +12,56 @@ static func run() -> bool:
 	passed = _test_importer_lifts_onready_roundtrip() and passed
 	passed = _test_plain_var_still_lifts_not_onready() and passed
 	passed = _test_dialog_onready_type_safety() and passed
+	passed = _test_dialog_onready_typed_freetext() and passed
+	passed = _test_copy_as_text_preserves_onready() and passed
 	passed = _test_raw_block_drop_converter() and passed
 	return passed
+
+
+## Gap B: typing a node class in the @onready type field emits THAT type (not Variant), so a typed node
+## reference like `@onready var hp: ProgressBar = $HP` is authorable from the dialog - not just Variant.
+static func _test_dialog_onready_typed_freetext() -> bool:
+	var captured: Dictionary = {}
+	var dlg: VariableDialog = VariableDialog.new()
+	var parent: Node = Node.new()
+	dlg.init_dialog(parent)
+	dlg.set_sheet_provider(func() -> Variant: return null)
+	dlg.variable_confirmed.connect(func(_n: String, type_name: String, _d: Variant, _s: String, _c: Dictionary, _ic: bool, _ex: bool, _o: PackedStringArray, _a: Dictionary, _r: bool) -> void:
+		captured["type"] = type_name
+	)
+	dlg.open_for_edit("tree", {}, "hp", "int", "", false, "Add Variable")
+	dlg._onready_check.set_pressed_no_signal(true)
+	dlg._on_onready_toggled_interactive(true)
+	dlg._onready_type_edit.text = "ProgressBar"
+	dlg._default_edit.text = "$HP"
+	dlg._on_confirmed()
+	parent.free()
+	return _check("a typed @onready node class is authorable (ProgressBar, not Variant)", str(captured.get("type", "")), "ProgressBar")
+
+
+## Gap A: Copy as Text of a tree variable emits its canonical declaration (const / @onready var), not a
+## plain `var` - so copy-as-text is real pasteable GDScript that re-imports losslessly (paste-as-GDScript
+## lifts it back). Before, an onready var pasted as a plain `var x = $Player`, resolving null at construction.
+static func _test_copy_as_text_preserves_onready() -> bool:
+	var clip: EventSheetClipboard = EventSheetClipboard.new()
+	var onready_var: LocalVariable = LocalVariable.new()
+	onready_var.name = "player"
+	onready_var.type_name = "Node2D"
+	onready_var.onready = true
+	onready_var.default_value = "$Player"
+	var lines_a: PackedStringArray = PackedStringArray()
+	clip._append_resource_text(onready_var, lines_a, 0)
+	var ok: bool = _check("copy-as-text of an onready var emits @onready var",
+		"\n".join(lines_a), "@onready var player: Node2D = $Player")
+	var const_var: LocalVariable = LocalVariable.new()
+	const_var.name = "MAX_HP"
+	const_var.type_name = "int"
+	const_var.is_constant = true
+	const_var.default_value = 99
+	var lines_b: PackedStringArray = PackedStringArray()
+	clip._append_resource_text(const_var, lines_b, 0)
+	ok = _check("copy-as-text of a const var emits const", "\n".join(lines_b), "const MAX_HP: int = 99") and ok
+	return ok
 
 
 ## #1 dialog behavior: ticking @onready on a NEW variable emits type Variant (safe for any node ref - a

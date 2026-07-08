@@ -128,8 +128,9 @@ func _append_resource_text(resource_entry: Resource, lines: PackedStringArray, d
 		for code_line: String in (resource_entry as RawCodeRow).code.split("\n"):
 			lines.append(indent + code_line)
 	elif resource_entry is LocalVariable:
-		var tree_var: LocalVariable = resource_entry as LocalVariable
-		lines.append(indent + "var %s: %s = %s" % [tree_var.name, tree_var.type_name, str(tree_var.default_value)])
+		# The canonical declaration (const / @export var / @onready var / drawer prefixes), so copy-as-text is
+		# real pasteable GDScript that re-imports losslessly - a plain `var` would drop onready/const/@export.
+		lines.append(indent + SheetCompiler._emit_tree_variable_line(resource_entry as LocalVariable))
 	else:
 		lines.append(indent + resource_entry.get_class())
 

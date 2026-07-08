@@ -2701,10 +2701,12 @@ func _get_scroll_width() -> float:
 
 
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
-	# A scene-tree node dragged ONTO a condition/action param value → fill that param with the node
-	# reference (only accept the drop when it's over such a value, so the cursor reads as droppable there).
-	if _is_node_path_drag(data) and not _param_value_at(_to_logical_position(at_position)).is_empty():
-		return true
+	# A scene-tree node dragged ONTO a condition/action param VALUE → fill that param with the node
+	# reference, but only when the param can hold one (not a plain number/bool cell), so the cursor reads
+	# as droppable exactly where the drop will land somewhere sensible.
+	if _is_node_path_drag(data):
+		var node_target: Dictionary = _param_value_at(_to_logical_position(at_position))
+		return not node_target.is_empty() and _param_accepts_node_ref(node_target.get("ace"), str(node_target.get("param_id", "")))
 	return not _resolve_dropped_source_objects(data).is_empty() \
 		or not _resolve_dropped_asset_paths(data).is_empty()
 
@@ -2714,7 +2716,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	# via the same converter the params dialog uses), no dialog - the deep-node-friendly gesture.
 	if _is_node_path_drag(data):
 		var target: Dictionary = _param_value_at(_to_logical_position(at_position))
-		if not target.is_empty():
+		if not target.is_empty() and _param_accepts_node_ref(target.get("ace"), str(target.get("param_id", ""))):
 			var reference: String = ACEParamsDialog.drop_data_to_expression(data)
 			if not reference.is_empty():
 				param_node_drop_requested.emit(target.get("ace"), str(target.get("param_id", "")), reference)
@@ -2807,3 +2809,27 @@ func _param_value_at(local_position: Vector2) -> Dictionary:
 				if not param.is_empty():
 					return {"ace": ace, "param_id": param, "current": str(value_hit[0])}
 	return {}
+
+
+## A dropped node reference ($Path / %Name) fits a param that holds an object / expression, NOT a plain
+## numeric or bool cell (where it would be nonsense). Conservative: an expression-hinted param takes any
+## GDScript, so it always accepts; only int / float / bool declared types reject.
+static func _node_ref_fits_param_type(type_name: String, hint: String) -> bool:
+	if hint == "expression":
+		return true
+	return not (type_name.to_lower() in ["int", "integer", "float", "double", "bool", "boolean"])
+
+
+## Whether a node reference may be dropped onto this ACE param. Unknown definition / param (nothing found)
+## stays PERMISSIVE - the gate only blocks the clear footgun (a node ref onto a numeric/bool cell), never a
+## legitimate or unrecognized param.
+func _param_accepts_node_ref(ace: Variant, param_id: String) -> bool:
+	if not (ace is Resource) or param_id.is_empty():
+		return true
+	var definition: ACEDefinition = _find_definition(str((ace as Resource).get("provider_id")), str((ace as Resource).get("ace_id")))
+	if definition == null:
+		return true
+	for parameter: Variant in definition.parameters:
+		if parameter is ACEParam and (parameter as ACEParam).id == param_id:
+			return _node_ref_fits_param_type((parameter as ACEParam).type_name, (parameter as ACEParam).hint)
+	return true

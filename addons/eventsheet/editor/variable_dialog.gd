@@ -30,6 +30,9 @@ var _exported_check: CheckBox = null
 # `@onready var` and the Default field is a verbatim GDScript expression (a node ref like $Player).
 var _onready_check: CheckBox = null
 var _onready_row: HBoxContainer = null
+# Free-text type shown IN PLACE of the dropdown while @onready is on - so node classes the dropdown can't
+# list (Sprite2D, Label, CharacterBody2D…) are authorable. _selected_stored_type() reads it when onready.
+var _onready_type_edit: LineEdit = null
 var _const_help: Label = null
 var _type_help: Label = null
 var _scope: String = "global"
@@ -198,6 +201,14 @@ func init_dialog(parent_node: Node) -> void:
 		_refresh_items_button()
 	)
 	type_row.add_child(_type_option)
+	# @onready mode swaps the dropdown for this free-text field (the dropdown can't name node classes). Hidden
+	# until onready is ticked; _apply_onready_state toggles it, _selected_stored_type() reads it.
+	_onready_type_edit = LineEdit.new()
+	_onready_type_edit.placeholder_text = "type - e.g. Node2D, Label, Sprite2D (or Variant for any)"
+	_onready_type_edit.tooltip_text = "The variable's type. For a node reference, type the node's class (Sprite2D, Label, Area2D…) or leave Variant."
+	_onready_type_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_onready_type_edit.visible = false
+	type_row.add_child(_onready_type_edit)
 	form.add_child(type_row)
 
 	# "Whole numbers only" - the int/float distinction, surfaced only when "Number" is the chosen type.
@@ -499,6 +510,11 @@ func init_dialog(parent_node: Node) -> void:
 ## round-tripped). Friendly labels map back to int/float/String/bool; advanced types are literal.
 ## Only the DROPDOWN DISPLAY is friendly - the stored type is unchanged, so compile/import round-trip.
 func _selected_stored_type() -> String:
+	# In @onready mode the type comes from the free-text field (node classes the dropdown can't list); empty
+	# falls back to Variant, which safely accepts any node reference / expression.
+	if _onready_check != null and _onready_check.button_pressed and _onready_type_edit != null:
+		var typed_name: String = _onready_type_edit.text.strip_edges()
+		return typed_name if not typed_name.is_empty() else "Variant"
 	if _type_option == null or _type_option.selected < 0:
 		return "int"
 	var label: String = _type_option.get_item_text(_type_option.selected)
@@ -700,17 +716,17 @@ func _update_attr_gating() -> void:
 				_attr_advanced_section.visible = false
 
 
-## Interactive tick: also default the DISPLAY type to Variant so a NEW onready var reads honestly (a node ref
-## is safest untyped, and the dropdown can't name node classes). Editing keeps the var's real type via the
-## confirm branch, so this cosmetic reset never corrupts a round-trip.
+## Interactive tick: seed the free-text type with a safe Variant default (a node ref is safest untyped, and
+## the user can then type the node's class). Only when empty, so an already-typed field is left alone.
 func _on_onready_toggled_interactive(pressed: bool) -> void:
-	if pressed and _type_option != null:
-		_select_stored_type("Variant")
+	if pressed and _onready_type_edit != null and _onready_type_edit.text.strip_edges().is_empty():
+		_onready_type_edit.text = "Variant"
 	_apply_onready_state(pressed)
 
 
 ## @onready is mutually exclusive with const / @export (the compiler emits ONLY `@onready var`): ticking it
-## clears + disables both and turns the Default into an expression prompt. Unticking restores them (export stays
+## clears + disables both, swaps the Type dropdown for the free-text type field (node classes the dropdown
+## can't list), and turns the Default into an expression prompt. Unticking restores everything (export stays
 ## disabled for a local-scope variable, which is always private). Shared by the interactive tick and open_for_edit.
 func _apply_onready_state(pressed: bool) -> void:
 	if pressed:
@@ -724,6 +740,19 @@ func _apply_onready_state(pressed: bool) -> void:
 		_exported_check.disabled = pressed or _scope == "local"
 	if _default_edit != null:
 		_default_edit.placeholder_text = "expression, e.g. $Player or get_node(\"UI/Score\")" if pressed else ""
+	# Swap the Type control: free-text in onready mode, the friendly dropdown otherwise.
+	if _onready_type_edit != null:
+		_onready_type_edit.visible = pressed
+	if _type_option != null:
+		_type_option.visible = not pressed
+	if _whole_numbers_row != null and pressed:
+		_whole_numbers_row.visible = false
+	elif not pressed:
+		_refresh_whole_numbers_row()
+	# In onready mode const is already disabled (not a per-type story), so the "const unavailable for <type>"
+	# hint is redundant + can read stale against the free-text type - hide it.
+	if _const_help != null and pressed:
+		_const_help.visible = false
 	_update_attr_gating()
 
 
@@ -770,6 +799,10 @@ func open_for_edit(
 		_onready_row.visible = is_tree
 	if _onready_check != null:
 		_onready_check.set_pressed_no_signal(onready and is_tree)
+	# EDITING an onready var: seed the free-text type with its declared type (so Sprite2D shows + round-trips).
+	# Otherwise clear it, so ticking onready later defaults to Variant instead of a stale numeric type.
+	if _onready_type_edit != null:
+		_onready_type_edit.text = type_name if (onready and is_tree) else ""
 	_apply_onready_state(onready and is_tree)
 	var existing_attributes: Dictionary = context.get("attributes") if context.get("attributes") is Dictionary else {}
 	_attr_tooltip_edit.text = str(existing_attributes.get("tooltip", ""))
@@ -890,14 +923,10 @@ func _on_confirmed() -> void:
 			if _dialog.is_inside_tree():
 				_dialog.call_deferred("popup_centered", Vector2i(460, 260))
 			return
-		# Type: an EDITED var keeps its declared type (round-trips a hand-authored `@onready var s: Sprite2D`);
-		# a NEW onready var is Variant - safe for any node ref / expression (the dropdown can't name node
-		# classes like Sprite2D, and a numeric type would crash at runtime assigning a Node).
-		var onready_type: String = "Variant"
-		var editing_resource: Variant = _context.get("variable_resource", null)
-		if editing_resource is LocalVariable:
-			onready_type = str((editing_resource as LocalVariable).type_name)
-		variable_confirmed.emit(var_name, onready_type, onready_expr, _scope, _context.duplicate(true), false, false, PackedStringArray(), {}, true)
+		# type_name is _selected_stored_type() = the @onready free-text type: a node class the user typed
+		# (Sprite2D, Label…) or Variant (safe for any node ref). const/@export are false - the compiler
+		# emits only @onready var.
+		variable_confirmed.emit(var_name, type_name, onready_expr, _scope, _context.duplicate(true), false, false, PackedStringArray(), {}, true)
 		return
 	# Guardrail (event-sheet-style): an invalid collection literal never commits - the dialog
 	# reopens with the text intact so the user fixes or cancels deliberately.
