@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Added - Attach Event Sheet is now .gd-first
+
+- **Attach Event Sheet is now `.gd`-first.** The Scene-dock right-click "Attach Event Sheet" writes a
+  single hand-editable `.gd` beside the scene (the `.gd` IS the sheet, no `.tres` companion) and attaches
+  it to the node - identical to how FileSystem "Create New > Event Sheet" and every other sheet is born.
+  One right-click takes a bare node to an editable event sheet, opened straight in the workspace.
+
 ## [0.13.0] - 2026-07-08 - The Genre Toolkits Update
 
 ### Added - auto-registered pack builders, data-driven Simple Abilities, and Advanced Random everywhere

@@ -9,10 +9,10 @@ class_name EventSheetWorkflow
 extends RefCounted
 
 
-## The "Attach Script" reflex for sheets: creates a sheet whose host_class matches
-## the node, saves it beside the scene (suffix, never overwrite), compiles its pair
-## and attaches the generated script to the node - one right-click from node to
-## editable sheet. Returns {ok, message, sheet_path}.
+## The "Attach Script" reflex for sheets: creates a sheet whose host_class matches the node, writes it
+## beside the scene as a single hand-editable .gd (the .gd IS the sheet - the default format, no .tres
+## companion, exactly like Create New > Event Sheet), and attaches that .gd to the node - one right-click
+## from a bare node to an editable event sheet. Returns {ok, message, sheet_path}.
 static func create_sheet_for_node(node: Node, directory: String) -> Dictionary:
 	if node == null:
 		return {"ok": false, "message": "Select a node first.", "sheet_path": ""}
@@ -22,23 +22,15 @@ static func create_sheet_for_node(node: Node, directory: String) -> Dictionary:
 	sheet.host_class = node.get_class()
 	var base_name: String = str(node.name).to_snake_case()
 	if base_name.is_empty():
-		base_name = "sheet"
-	# path_join handles trailing slashes itself; trim_suffix would mangle the
-	# root forms ("user://" → "user:/").
-	var sheet_path: String = directory.path_join(base_name + "_sheet.tres")
-	var suffix: int = 2
-	while FileAccess.file_exists(sheet_path):
-		sheet_path = directory.path_join("%s_sheet-%d.tres" % [base_name, suffix])
-		suffix += 1
-	if ResourceSaver.save(sheet, sheet_path) != OK:
-		return {"ok": false, "message": "Couldn't save the sheet to %s." % sheet_path, "sheet_path": ""}
-	var saved: EventSheetResource = ResourceLoader.load(sheet_path, "", ResourceLoader.CACHE_MODE_IGNORE)
-	saved.take_over_path(sheet_path)
-	var compile_result: Dictionary = SheetCompiler.compile(saved, "")
-	if not bool(compile_result.get("success", false)):
-		return {"ok": false, "message": "The new sheet didn't compile: %s" % str(compile_result.get("errors")), "sheet_path": sheet_path}
-	node.set_script(load(SheetCompiler._resolve_output_path(saved, "")))
-	return {"ok": true, "message": "Event sheet attached to %s - it opens in the EventSheet workspace." % node.name, "sheet_path": sheet_path}
+		base_name = "node"
+	# Reuse the Create-New writer: a banner-less .gd that IS the sheet (suffix on collision, never
+	# overwrite). No .tres and no regenerated companion - an attached sheet is a plain editable script
+	# from the first frame, consistent with every other way a sheet is born.
+	var result: Dictionary = write_sheet_file(sheet, directory, base_name + "_sheet")
+	if not bool(result.get("ok", false)):
+		return result
+	node.set_script(load(str(result.get("sheet_path"))))
+	return {"ok": true, "message": "Event sheet attached to %s - it opens in the EventSheet workspace." % node.name, "sheet_path": str(result.get("sheet_path"))}
 
 
 ## What the "Open as Event Sheet" context entries accept: sheet .tres files and any

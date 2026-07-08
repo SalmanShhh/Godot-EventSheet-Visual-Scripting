@@ -20,28 +20,29 @@ class NoopUndoManager:
 static func run() -> bool:
 	var all_passed: bool = true
 
-	# ── Attach Event Sheet (the "Attach Script" reflex) ───────────────────────────
-	for stale: String in ["user://boss_fight_sheet.tres", "user://boss_fight_sheet_generated.gd",
-			"user://boss_fight_sheet-2.tres", "user://boss_fight_sheet-2_generated.gd"]:
+	# ── Attach Event Sheet (the "Attach Script" reflex): a single hand-editable .gd, no .tres ──
+	for stale: String in ["user://boss_fight_sheet.gd", "user://boss_fight_sheet-2.gd",
+			"user://boss_fight_sheet.tres", "user://boss_fight_sheet_generated.gd"]:
 		if FileAccess.file_exists(stale):
 			DirAccess.remove_absolute(stale)
 	var node: Node2D = Node2D.new()
 	node.name = "Boss Fight"
 	var created: Dictionary = EventSheetWorkflow.create_sheet_for_node(node, "user://")
-	var created_sheet: EventSheetResource = ResourceLoader.load(str(created.get("sheet_path")), "", ResourceLoader.CACHE_MODE_IGNORE)
-	all_passed = _check("attach creates a host-matched sheet beside the scene",
-		bool(created.get("ok")) and str(created.get("sheet_path")) == "user://boss_fight_sheet.tres"
-		and created_sheet.host_class == "Node2D", true) and all_passed
-	all_passed = _check("attach compiles the pair and scripts the node",
+	# The attached sheet is a plain .gd (the default format), so it lifts back to an EventSheetResource.
+	var created_sheet: EventSheetResource = GDScriptImporter.new().import_external(str(created.get("sheet_path")))
+	all_passed = _check("attach creates a host-matched .gd sheet beside the scene",
+		bool(created.get("ok")) and str(created.get("sheet_path")) == "user://boss_fight_sheet.gd"
+		and created_sheet != null and created_sheet.host_class == "Node2D", true) and all_passed
+	all_passed = _check("attach writes a single .gd (no .tres companion) and scripts the node",
 		node.get_script() != null
-		and FileAccess.file_exists("user://boss_fight_sheet_generated.gd"), true) and all_passed
+		and not FileAccess.file_exists("user://boss_fight_sheet.tres"), true) and all_passed
 	all_passed = _check("nodes that already have a script are refused",
 		bool(EventSheetWorkflow.create_sheet_for_node(node, "user://").get("ok")), false) and all_passed
 	var sibling_node: Node2D = Node2D.new()
 	sibling_node.name = "Boss Fight"
 	var suffixed: Dictionary = EventSheetWorkflow.create_sheet_for_node(sibling_node, "user://")
 	all_passed = _check("name collisions suffix instead of overwriting",
-		str(suffixed.get("sheet_path")), "user://boss_fight_sheet-2.tres") and all_passed
+		str(suffixed.get("sheet_path")), "user://boss_fight_sheet-2.gd") and all_passed
 
 	# ── New Event Sheet (the FileSystem "Create New > Event Sheet" core) ──────────
 	# write_sheet_file compiles a starter straight to a hand-editable .gd (the default sheet
@@ -125,9 +126,21 @@ static func run() -> bool:
 		EventSheetWorkflow.is_openable_as_sheet("res://icon.png"), false) and all_passed
 
 	# ── Script → sheet pairing (the Inspector button + Go to Sheet Row backbone) ──
+	# The .tres-companion case (a .tres sheet compiles to a <name>_generated.gd whose header points
+	# back) still exists for .tres-authored sheets; build one explicitly so the pairing is tested
+	# independently of how Attach Event Sheet writes its file (a plain .gd, tested above).
+	for stale_paired: String in ["user://paired.tres", "user://paired_generated.gd"]:
+		if FileAccess.file_exists(stale_paired):
+			DirAccess.remove_absolute(stale_paired)
+	var paired_sheet: EventSheetResource = EventSheetResource.new()
+	paired_sheet.host_class = "Node2D"
+	ResourceSaver.save(paired_sheet, "user://paired.tres")
+	var paired_loaded: EventSheetResource = ResourceLoader.load("user://paired.tres", "", ResourceLoader.CACHE_MODE_IGNORE)
+	paired_loaded.take_over_path("user://paired.tres")
+	SheetCompiler.compile(paired_loaded, "")
+	var paired_gd: String = SheetCompiler._resolve_output_path(paired_loaded, "")
 	all_passed = _check("the Source header pairs generated scripts to their sheet",
-		EventSheetProjectDoctor.sheet_for_script("user://boss_fight_sheet_generated.gd"),
-		"user://boss_fight_sheet.tres") and all_passed
+		EventSheetProjectDoctor.sheet_for_script(paired_gd), "user://paired.tres") and all_passed
 	all_passed = _check("a behaviour pack .gd pairs to itself (the .gd IS the sheet, no .tres)",
 		EventSheetProjectDoctor.sheet_for_script("res://eventsheet_addons/spring/spring_behavior.gd"),
 		"res://eventsheet_addons/spring/spring_behavior.gd") and all_passed
@@ -136,17 +149,17 @@ static func run() -> bool:
 	# The generated script extends the host_class (Node2D here), so 4.7's stricter
 	# set_script requires a matching base type - a plain Node would be rejected.
 	var scripted: Node = Node2D.new()
-	scripted.set_script(load("user://boss_fight_sheet_generated.gd"))
+	scripted.set_script(load(paired_gd))
 	var plain: Node = Node.new()
 	all_passed = _check("the Inspector button handles sheet-scripted nodes only",
-		EventSheetEditButtonPlugin.sheet_path_for(scripted) == "user://boss_fight_sheet.tres"
+		EventSheetEditButtonPlugin.sheet_path_for(scripted) == "user://paired.tres"
 		and EventSheetEditButtonPlugin.sheet_path_for(plain) == "", true) and all_passed
 	scripted.free()
 	plain.free()
 	node.free()
 	sibling_node.free()
-	for cleanup: String in ["user://boss_fight_sheet.tres", "user://boss_fight_sheet_generated.gd",
-			"user://boss_fight_sheet-2.tres", "user://boss_fight_sheet-2_generated.gd"]:
+	for cleanup: String in ["user://boss_fight_sheet.gd", "user://boss_fight_sheet-2.gd",
+			"user://paired.tres", paired_gd]:
 		if FileAccess.file_exists(cleanup):
 			DirAccess.remove_absolute(cleanup)
 
