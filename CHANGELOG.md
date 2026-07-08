@@ -15,7 +15,7 @@
   type - editing a hand-authored `@onready var s: Sprite2D = $S` keeps the `Sprite2D` type.
 - **Drag a node into a raw GDScript block.** Dropping a Scene-dock node into the raw-GDScript-block editor
   inserts its `$Path` / `%Name` reference at the caret (a FileSystem asset becomes a quoted `res://` path) -
-  the same converter the ACE param fields already use.
+  the same converter the ACE param fields already use, and the editor keeps its native text drag-drop.
 - **Copy as Text keeps the declaration.** Copying a tree variable as text now emits its real declaration
   (`const` / `@export var` / `@onready var`), so paste-as-GDScript re-imports it losslessly instead of
   degrading an onready/const var to a plain `var`.

@@ -1486,22 +1486,6 @@ func _populate_raw_code_completion() -> void:
 	_code_panel_glue.populate_raw_code_completion()
 
 
-## Drag a Scene-dock node (or a FileSystem asset) into the raw GDScript block: only a node/file
-## payload is droppable, so the cursor reads as accepting there.
-func _can_drop_on_raw_code(_at_position: Vector2, data: Variant) -> bool:
-	return data is Dictionary and str((data as Dictionary).get("type", "")) in ["files", "nodes"]
-
-
-## On drop, insert a $Path / %Name reference (or a quoted res:// path) at the caret - the SAME
-## converter the ACE param fields use, so a node dropped in a hand-written block reads identically.
-func _drop_on_raw_code(_at_position: Vector2, data: Variant) -> void:
-	if _raw_code_edit == null:
-		return
-	var snippet: String = ACEParamsDialog.drop_data_to_expression(data)
-	if not snippet.is_empty():
-		_raw_code_edit.insert_text_at_caret(snippet)
-
-
 
 ## The current line's text up to the caret (what context completion/hints parse).
 static func _text_before_caret(edit: CodeEdit) -> String:

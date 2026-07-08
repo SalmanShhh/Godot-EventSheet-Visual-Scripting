@@ -205,15 +205,26 @@ static func _test_plain_var_still_lifts_not_onready() -> bool:
 	return ok
 
 
-## #3: the raw-GDScript-block drop reuses the SAME converter the ACE param fields use - a Scene-dock
-## node payload becomes a $Path reference, and inserting it fills the editor (the glue's net effect).
+## #3: the raw-GDScript-block editor (EventSheetRawCodeEdit) accepts a Scene-dock node / FileSystem asset
+## drop and inserts the reference at the caret, via the shared converter - while its `super` delegation keeps
+## the CodeEdit's native text drag-and-drop intact (that path isn't exercisable headlessly).
 static func _test_raw_block_drop_converter() -> bool:
-	var reference: String = ACEParamsDialog.drop_data_to_expression({"type": "nodes", "nodes": ["/root/Main/Player"]})
-	var ok: bool = _check("a node dropped in a raw block converts to a node reference", reference, "$Player")
-	var edit: CodeEdit = CodeEdit.new()
-	edit.insert_text_at_caret(reference)
-	ok = _check("inserting the reference fills the raw block editor", edit.text, "$Player") and ok
-	edit.free()
+	var editor: EventSheetRawCodeEdit = EventSheetRawCodeEdit.new()
+	var node_payload: Dictionary = {"type": "nodes", "nodes": ["/root/Main/Player"]}
+	var ok: bool = _check("raw block accepts a Scene-node drag", editor._can_drop_data(Vector2.ZERO, node_payload), true)
+	editor._drop_data(Vector2.ZERO, node_payload)
+	ok = _check("dropping a node inserts its $Path reference", editor.text, "$Player") and ok
+	var file_editor: EventSheetRawCodeEdit = EventSheetRawCodeEdit.new()
+	file_editor._drop_data(Vector2.ZERO, {"type": "files", "files": ["res://icon.svg"]})
+	ok = _check("dropping a file inserts a quoted res:// path", file_editor.text, "\"res://icon.svg\"") and ok
+	# Native text drag-drop is preserved (a String payload still inserts, not silently rejected).
+	var text_editor: EventSheetRawCodeEdit = EventSheetRawCodeEdit.new()
+	ok = _check("raw block still accepts a text drag", text_editor._can_drop_data(Vector2.ZERO, "dropped text"), true) and ok
+	text_editor._drop_data(Vector2.ZERO, "dropped text")
+	ok = _check("a text drop still inserts (native drag-drop preserved)", text_editor.text, "dropped text") and ok
+	editor.free()
+	file_editor.free()
+	text_editor.free()
 	return ok
 
 

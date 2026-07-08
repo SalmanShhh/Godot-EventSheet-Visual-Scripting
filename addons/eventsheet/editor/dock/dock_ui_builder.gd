@@ -447,7 +447,9 @@ func ensure_raw_code_dialog() -> void:
 	_dock._raw_code_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_dock._raw_code_hint.custom_minimum_size = Vector2(620.0, 0.0)
 	layout_box.add_child(_dock._raw_code_hint)
-	_dock._raw_code_edit = CodeEdit.new()
+	# EventSheetRawCodeEdit adds Scene-node / asset drop (insert $Path / %Name at the caret) while keeping
+	# the CodeEdit's native text drag-and-drop - a plain set_drag_forwarding would clobber the latter.
+	_dock._raw_code_edit = EventSheetRawCodeEdit.new()
 	_dock._raw_code_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_dock._raw_code_edit.custom_minimum_size = Vector2(620.0, 330.0)
 	_dock._raw_code_edit.gutters_draw_line_numbers = true
@@ -459,9 +461,6 @@ func ensure_raw_code_dialog() -> void:
 	EventSheetPopupUI.configure_code_editor(_dock._raw_code_edit)  # auto-close brackets/quotes at the source
 	_dock._raw_code_edit.text_changed.connect(_dock._validate_raw_code)
 	_dock._raw_code_edit.code_completion_requested.connect(_dock._populate_raw_code_completion)
-	# Drag a Scene-dock node into the block to insert its $Path / %Name reference at the caret (files
-	# become quoted res:// paths) - node references in hand-written GDScript without typing the path.
-	_dock._raw_code_edit.set_drag_forwarding(Callable(), _dock._can_drop_on_raw_code, _dock._drop_on_raw_code)
 	layout_box.add_child(_dock._raw_code_edit)
 	_dock._raw_code_lint_label = Label.new()
 	_dock._raw_code_lint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
