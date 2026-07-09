@@ -52,6 +52,6 @@ GODOT="/c/Users/mrlig/OneDrive/Desktop/GameDev Programs/Godot_v4.7-stable_win64.
 - **No em-dashes anywhere in repo text** (docs, changelog, commit messages, code comments, emitted strings). Use " - ".
 - **Code never references documentation files** (no "see docs/X.md" in comments); state the point inline.
 - **Every feature lands with**: tests (suite green), a `CHANGELOG.md` `[Unreleased]` entry, and for UI features a rendered preview image shown to the user (delete the temp harness before committing).
-- Commit conventional-style directly to `main` and push; end commit messages with the Co-Authored-By trailer for the current model.
+- Commit conventional-style directly to `main` and push. Do NOT add a `Co-Authored-By` (or any AI-attribution) trailer to commit messages.
 - Dialogs/popups build with `EventSheetPopupUI` helpers (`titled_card`, `panel_section`, `form_row`), not raw flat controls.
 - New behaviors/addons are authored as pack builders (`tools/pack_builders/*.gd`), not standalone addons.
