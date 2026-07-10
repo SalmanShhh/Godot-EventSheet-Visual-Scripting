@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - an optional 2-minute tour
+
+- **Tools > Start the Tour…** (also a button on the Welcome window): a small floating window that
+  walks a first-time user through the core loop in 6 steps - read a row, add an event, give it a
+  condition, make it act, see the honest GDScript, and where to go next. The editor stays fully
+  interactive underneath: each step asks you to DO the thing in the real UI, and the step flips to a
+  green "Done - nice!" the moment the edit lands on the live sheet. Next is never gated, Skip closes
+  instantly, and nothing auto-opens - the tour is invited, not imposed.
+
 ### Changed - the Sheet Type dialog shows only what the chosen type uses
 
 - **Choice fatigue removed from the Sheet Type dialog.** Picking a type now shows ONLY the fields that

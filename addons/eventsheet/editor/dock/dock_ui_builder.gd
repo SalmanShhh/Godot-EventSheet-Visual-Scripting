@@ -381,6 +381,7 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._variable_dlg.init_dialog(_dock)
 	_dock._new_addon_panel.init(_dock)
 	_dock._welcome.init(_dock)
+	_dock._tour.init(_dock)
 	_dock._starter.init(_dock)
 	_dock._comments.init(_dock)
 	_dock._struct_rows.init(_dock)

@@ -148,6 +148,7 @@ var _variable_dlg: VariableDialog = VariableDialog.new()
 var _new_addon_panel: EventSheetNewAddonPanel = EventSheetNewAddonPanel.new()  # Sheet ▸ New Behaviour Addon… (dock/new_addon_panel.gd)
 var _inspector_designer_dialog: EventSheetInspectorDesignerDialog = null  # Sheet ▸ Inspector Designer… (lazy; added to the dock on first open)
 var _welcome: EventSheetWelcomeWindow = EventSheetWelcomeWindow.new()  # Tools ▸ Welcome… onboarding window (dock/welcome_window.gd)
+var _tour: EventSheetTourWindow = EventSheetTourWindow.new()  # Tools ▸ Start the Tour… first-time walkthrough (dock/tour_window.gd)
 var _starter: EventSheetStarterTemplates = EventSheetStarterTemplates.new()  # New-from-template starters (dock/starter_templates.gd)
 var _comments: EventSheetCommentAndScopeDialogs = EventSheetCommentAndScopeDialogs.new()  # comment/with-node dialogs (dock/comment_and_scope_dialogs.gd)
 var _struct_rows: EventSheetStructRowDialogs = EventSheetStructRowDialogs.new()  # enum/signal/match row editors (dock/struct_row_dialogs.gd)
@@ -2747,6 +2748,10 @@ func show_welcome_if_first_run() -> void:  # plugin calls this at editor startup
 
 func show_welcome() -> void:  # Tools menu (id 13) + command palette ("Open Welcome")
 	_welcome.show()
+
+
+func start_tour() -> void:  # Tools menu (id 17) + the Welcome window's tour button
+	_tour.start()
 
 # ── Loop closers: attach the behavior where you're looking, run the scene that
 # uses this sheet (core lookups are headless; playing needs the editor) ───────────────

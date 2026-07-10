@@ -229,6 +229,7 @@ func build(root: Node) -> void:
 	tools_popup.add_item("Lift Report…", 12)
 	tools_popup.add_separator()
 	tools_popup.add_item("Welcome…", 13)
+	tools_popup.add_item("Start the Tour…", 17)
 	tools_popup.add_item("Keyboard Shortcuts", 16)
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
@@ -247,6 +248,7 @@ func build(root: Node) -> void:
 			11: _dock._attach_behavior_to_selection()
 			12: _dock._open_lift_report()
 			13: _dock.show_welcome()
+			17: _dock.start_tour()
 			16: _dock._open_shortcuts_help()
 			14: _dock._run_diagnostics_action()
 	)

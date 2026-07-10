@@ -72,6 +72,13 @@ func _build() -> void:
 	about_box.add_child(blurb)
 	box.add_child(EventSheetPopupUI.titled_card("About EventSheets", about_box))
 	var start_box: VBoxContainer = EventSheetPopupUI.form_box()
+	# The first-time walkthrough - a floating 6-step tour of the core loop, done in the live editor.
+	var tour_button: Button = Button.new()
+	tour_button.text = "Take the 2-minute tour"
+	tour_button.pressed.connect(func() -> void:
+		_welcome_window.hide()
+		_dock.start_tour())
+	start_box.add_child(tour_button)
 	var showcase_button: Button = Button.new()
 	showcase_button.text = "Open the playable showcase scene"
 	showcase_button.pressed.connect(func() -> void:
