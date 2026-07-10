@@ -25,7 +25,8 @@ extends RefCounted
 ## Their templates are exercised by their own feature tests; here they are listed, not dropped.
 const NOT_STANDALONE: Array[String] = [
 	"LoopBreak", "LoopContinue", "ReturnValue",
-	"EveryXSeconds", "AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
+	"EveryXSeconds", "TriggerOnce",  # call sheet-synthesized companion state (an accumulator / an edge-test helper)
+	"AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
 	"IsLocaleChangeNotification",  # references `what` - only exists inside _notification (its trigger's virtual)
 ]

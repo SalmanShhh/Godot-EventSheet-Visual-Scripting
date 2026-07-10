@@ -573,6 +573,22 @@ All three fields receive the same `{uid}` and `{param}` substitutions. Stateful 
 sense inside per-frame triggers (Every Frame, On Physics Process) where `delta` exists; the compiler
 does not stop you from using one elsewhere, so do not.
 
+`codegen_prelude` and `codegen_on_true` must each be a SINGLE statement (they are emitted as one indented
+line inside the trigger's function). `member_template` sits at class level, so it MAY span several lines -
+which lets a condition ship a small helper function beside its state var. The built-in **Trigger Once**
+does exactly that:
+
+```gdscript
+once.member_template = "var __once_{uid}: int = 1\n\nfunc __trigger_once_{uid}() -> bool:\n\tvar ticks_since_last: int = __once_{uid}\n\t__once_{uid} = 0\n\treturn ticks_since_last > 1"
+once.codegen_prelude = "__once_{uid} += 1"        # age the counter every tick
+# codegen_template = "__trigger_once_{uid}()"     # reads + zeroes it the moment it is reached
+```
+
+Why that works: conditions compile to a short-circuiting `and` chain, so a condition is only reached when
+every condition before it is true. "Was I reached on the previous tick?" therefore answers "were those
+conditions already true then?" - a gap wider than one tick is the rising edge. Note a stateful condition
+can never be inverted (its state would advance on the ticks it does not fire); the compiler warns if you try.
+
 ---
 
 ## 9. Descriptor Reference

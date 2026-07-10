@@ -39,7 +39,7 @@ Node script extending `CharacterBody2D`.
 - **Clear All Abilities** - Removes every ability. Fires On Ability Removed for each.
 - **Activate Ability** (`id: String`) - Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated.
 - **Set Ability Cooldown** (`id: String, seconds: float`) - Puts an ability on cooldown (scaled by the global cooldown multiplier).
-- **Reset Cooldown** (`id: String`) - Sets an ability's cooldown to 0 (instantly ready).
+- **Reset Cooldown** (`id: String`) - Refreshes an ability: clears its cooldown AND grants the next charge back, so a spent ability is ready again (readiness is charge-based). The kill-refresh / cooldown-reset mechanic. On a full ability it just clears the timer.
 - **Set Max Stacks** (`id: String, max_stacks: int`) - Changes max charges (current stacks clamp down).
 - **Set Stacks** (`id: String, stacks: int`) - Sets current charges (clamped 0..max).
 - **Add Stacks** (`id: String, count: int`) - Adds charges up to max. Fires On Stack Gained, and On Max Stacks Reached if it would overflow.
@@ -52,7 +52,7 @@ Node script extending `CharacterBody2D`.
 - **Clear All Tags** (`id: String`) - Removes every tag from an ability.
 - **Set Abilities With Tag Enabled** (`tag: String, enabled: bool`) - Enables/disables every ability carrying a tag.
 - **Remove All Abilities With Tag** (`tag: String`) - Deletes every ability with a tag. Fires On Ability Removed for each.
-- **Reset Cooldown For Abilities With Tag** (`tag: String`) - Sets cooldown to 0 for every ability with a tag.
+- **Reset Cooldown For Abilities With Tag** (`tag: String`) - Refreshes every ability with a tag: clears each cooldown and grants a charge back, so a whole group is ready again.
 - **Set Cooldown Multiplier** (`multiplier: float`) - Global cooldown scaling for all future Set Cooldown calls (0.8 = 20% cooldown reduction).
 - **Load Ability Set** (`resource: Resource`) - Creates every ability listed in an AbilitySetResource (.tres): id, cooldown, max stacks, temporary duration, and comma-separated tags. Each is granted ready. Drop the resource in the Inspector to auto-load on ready, or call this to swap loadouts at runtime.
 

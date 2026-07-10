@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Added - a Trigger Once condition
+
+- **Trigger Once** (Core, "Run Context"): runs the event only on the FIRST tick of each stretch where the
+  conditions above it hold, and re-arms once they go false again - the classic "trigger once while true".
+  Add it as the last condition. On its own (no other conditions) it fires exactly once, ever. It compiles to
+  a tiny per-instance helper beside its state var, so the generated GDScript stays plain and readable:
+
+  ```gdscript
+  var __once_x: int = 1
+
+  func __trigger_once_x() -> bool:
+  	var ticks_since_last: int = __once_x
+  	__once_x = 0
+  	return ticks_since_last > 1
+
+  func _process(delta: float) -> void:
+  	__once_x += 1
+  	if flag and __trigger_once_x():
+  		counter += 1
+  ```
+
+  Conditions compile to a short-circuiting `and` chain, so the term is reached only when everything before
+  it is true - which makes "was I reached last tick?" exactly the rising-edge test. Like any stateful
+  condition it can not be inverted, and the compiler now warns if you try (it previously only caught the
+  ones carrying an on-true rebase).
+- A stateful condition's `member_template` may now span several lines, so it can ship a helper function
+  beside its state var. Plain `var` members are emitted before any such helper, and the compiled-line
+  source map now counts the real emitted lines instead of the number of entries.
+
 ### Added - @onready variables + node-drag into GDScript blocks
 
 - **@onready variables.** A tree-placed variable can now be set on `_ready()`: tick the new

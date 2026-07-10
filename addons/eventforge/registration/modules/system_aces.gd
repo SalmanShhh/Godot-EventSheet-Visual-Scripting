@@ -78,6 +78,17 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	every_seconds.codegen_prelude = "__every_{uid} += get_process_delta_time()"
 	every_seconds.codegen_on_true = "__every_{uid} = fmod(__every_{uid}, maxf({seconds}, 0.001))"
 	descriptors.append(every_seconds)
+	# Trigger Once: run the event only on the FIRST tick of each stretch where the conditions above it hold,
+	# re-arming once they go false again. Conditions compile to a short-circuiting `and` chain, so this term
+	# is reached only when every condition before it is true - which makes "was I reached on the previous
+	# tick?" exactly the question "were those conditions already true last tick?". The prelude ages a per
+	# instance tick counter every tick; the helper reads it and zeroes it the moment the term is reached, so
+	# a gap wider than one tick means the conditions have just become true. Place it AFTER the conditions it
+	# guards; on its own (no other conditions) it is reached every tick, so it fires exactly once.
+	var trigger_once: ACEDescriptor = F.make_descriptor("Core", "TriggerOnce", "Trigger Once", ACEDescriptor.ACEType.CONDITION, "__trigger_once_{uid}()", "", [], "Run Context", "Trigger once while true").described("True only on the first tick each time the conditions above it become true, and again after they have gone false. Add it as the LAST condition.")
+	trigger_once.member_template = "var __once_{uid}: int = 1\n\nfunc __trigger_once_{uid}() -> bool:\n\tvar ticks_since_last: int = __once_{uid}\n\t__once_{uid} = 0\n\treturn ticks_since_last > 1"
+	trigger_once.codegen_prelude = "__once_{uid} += 1"
+	descriptors.append(trigger_once)
 	# Multi-statement template: spawns AND positions (locals get a per-instance uid).
 	descriptors.append(F.make_descriptor("Core", "SpawnSceneAt", "Spawn Scene At", ACEDescriptor.ACEType.ACTION, "var __spawn_{uid} = load({path}).instantiate()\n__spawn_{uid}.position = {position}\nadd_child(__spawn_{uid})", "", [F.make_param("path", "String", "\"res://enemy.tscn\"", "Scene", "Scene file to instance.", "scene_path"), F.make_param("position", "String", "Vector2(0, 0)", "Position", "Spawn position.", "expression")], "Scene", "Spawn {path} at {position}")
 		.described("Loads a scene and drops a copy into the world at a position."))

@@ -310,7 +310,10 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	if not stateful_members.is_empty():
 		if variable_lines.is_empty() and tree_variables.is_empty():
 			lines.append("")
-		for member_line: String in stateful_members:
+		# A member may span SEVERAL lines (a condition can ship a helper beside its state var). Append ONE
+		# ENTRY PER LINE - the source map indexes `lines` one line per entry, so a multi-line entry here would
+		# mis-map every event row below it - with the plain one-liner vars first, so no `var` follows a `func`.
+		for member_line: String in _order_stateful_members(stateful_members):
 			lines.append(member_line)
 
 	# Live values (debugging rung 2): a throttle timer member; the send block itself
@@ -708,9 +711,11 @@ static func _insert_stateful_member_declarations(lines: PackedStringArray, sheet
 	for function_entry: Variant in sheet.functions:
 		if function_entry is EventFunction:
 			_collect_stateful_members((function_entry as EventFunction).events if not (function_entry as EventFunction).events.is_empty() else (function_entry as EventFunction).rows, members)
-	var missing: PackedStringArray = PackedStringArray()
+	# A member may span several lines, so its identity is its FIRST line (the state var) - a plain
+	# `lines.has()` of the whole multi-line string never matches once it has been emitted one line per entry.
+	var missing: Array = []
 	for member_line: Variant in members:
-		if not lines.has(str(member_line)):
+		if not lines.has(str(member_line).split("\n")[0]):
 			missing.append(str(member_line))
 	if missing.is_empty():
 		return
@@ -721,10 +726,27 @@ static func _insert_stateful_member_declarations(lines: PackedStringArray, sheet
 			break
 	if insert_index < 0:
 		insert_index = lines.size()
-	for offset in range(missing.size()):
-		lines.insert(insert_index + offset, missing[offset])
-	lines.insert(insert_index + missing.size(), "")
-	_shift_source_map(source_map, insert_index + 1, missing.size() + 1)
+	# Flatten to ONE ENTRY PER LINE (see _order_stateful_members) and shift the source map by the REAL
+	# emitted line count, not the number of member entries.
+	var ordered: PackedStringArray = _order_stateful_members(missing)
+	for offset in range(ordered.size()):
+		lines.insert(insert_index + offset, ordered[offset])
+	lines.insert(insert_index + ordered.size(), "")
+	_shift_source_map(source_map, insert_index + 1, ordered.size() + 1)
+
+
+## Flattens stateful members to one line per entry (a member may carry a helper function beside its state
+## var), the plain one-liner declarations first so no `var` ever trails a `func`.
+static func _order_stateful_members(members: Array) -> PackedStringArray:
+	var ordered: PackedStringArray = PackedStringArray()
+	for member_text: Variant in members:
+		if not str(member_text).contains("\n"):
+			ordered.append(str(member_text))
+	for member_text: Variant in members:
+		if str(member_text).contains("\n"):
+			for member_line: String in str(member_text).split("\n"):
+				ordered.append(member_line)
+	return ordered
 
 
 static func _insert_provider_member_declarations(lines: PackedStringArray, result: Dictionary) -> void:
@@ -1213,9 +1235,11 @@ static func _emit_event_body(
 				continue
 			if not condition.codegen_prelude.is_empty():
 				stateful_preludes.append(_substitute_params(condition.codegen_prelude, condition.params))
+			# ANY stateful condition breaks when inverted - it would advance its state on the ticks it does
+			# not fire. Keyed on the member (Trigger Once carries no on-true rebase, so the old check missed it).
+			if condition.negated and not condition.member_declaration.is_empty():
+				warnings.append("Stateful conditions (Every X Seconds\u2026) can not be inverted; ignoring the negation.")
 			if not condition.codegen_on_true.is_empty():
-				if condition.negated:
-					warnings.append("Stateful conditions (Every X Seconds\u2026) can not be inverted; ignoring the negation.")
 				stateful_on_true.append(_substitute_params(condition.codegen_on_true, condition.params))
 		for prelude_line: String in stateful_preludes:
 			lines.append(indent + prelude_line)
