@@ -26,9 +26,10 @@ static func generate_condition(condition: ACECondition, host_default: String = "
 		params = params.duplicate()
 		params["host"] = host_default
 	var output: String = ActionCodegen._apply_template(template, params)
-	# Stateful conditions (Every X Seconds\u2026) have no meaningful inverse: their codegen_on_true
-	# reset must run WHEN the interval elapses, so a `not (...)` header would run the reset in the
-	# wrong branch (the compiler also warns). Refuse the negation for stateful terms.
-	if condition.negated and condition.codegen_on_true.is_empty() and not output.is_empty():
+	# Stateful conditions (Every X Seconds, Trigger Once) have no meaningful inverse: their state must
+	# advance exactly when the term passes, so a `not (...)` header would fire it in the wrong branch
+	# (the compiler also warns). Keyed on the member - Trigger Once has no on-true rebase, but every
+	# stateful condition owns a member declaration.
+	if condition.negated and condition.member_declaration.is_empty() and not output.is_empty():
 		return "not (%s)" % output
 	return output

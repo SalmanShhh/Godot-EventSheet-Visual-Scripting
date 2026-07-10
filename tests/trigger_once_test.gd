@@ -12,11 +12,50 @@ extends RefCounted
 static func run() -> bool:
 	var passed: bool = true
 	passed = _test_emits_helper_and_prelude() and passed
+	passed = _test_position_independent_emission() and passed
 	passed = _test_runtime_fires_once_and_rearms() and passed
+	passed = _test_runtime_trigger_once_in_first_cell() and passed
 	passed = _test_runtime_alone_fires_exactly_once() and passed
 	passed = _test_negated_warns() and passed
 	passed = _test_source_map_stays_aligned() and passed
 	return passed
+
+
+## The compiler hoists the term to the end of the chain, so ANY condition cell works: first, middle,
+## or last all emit the same `if <others> and __trigger_once_x():` - and an OR row parenthesizes the
+## OR list so the edge test gates the whole result instead of leaking in by precedence.
+static func _test_position_independent_emission() -> bool:
+	var ok: bool = true
+	# Trigger Once in the FIRST cell of an AND row.
+	var first_sheet: EventSheetResource = _build_sheet(true, 0)
+	var first_output: String = str(SheetCompiler.compile(first_sheet, "user://trigger_once_first.gd").get("output", ""))
+	ok = _check("first-cell Trigger Once still emits LAST in the and-chain",
+		first_output.contains("if flag and __trigger_once_x():"), true) and ok
+	# Trigger Once in the MIDDLE of an OR row: [flag, TO, other] with OR mode.
+	var or_sheet: EventSheetResource = _build_sheet(true, 1, true)
+	var or_output: String = str(SheetCompiler.compile(or_sheet, "user://trigger_once_or.gd").get("output", ""))
+	ok = _check("mid-cell Trigger Once in an OR row gates the parenthesized OR result",
+		or_output.contains("if (flag or other) and __trigger_once_x():"), true) and ok
+	return ok
+
+
+## Same runtime semantics with Trigger Once in the FIRST condition cell: fires once, re-arms.
+static func _test_runtime_trigger_once_in_first_cell() -> bool:
+	var node: Node = _instantiate(_build_sheet(true, 0))
+	if node == null:
+		return _check("first-cell Trigger Once sheet instantiates", false, true)
+	var ok: bool = true
+	node.set("flag", true)
+	for _i in range(3):
+		node.call("_process", 0.016)
+	ok = _check("first-cell: 3 true ticks fire exactly once", int(node.get("counter")), 1) and ok
+	node.set("flag", false)
+	node.call("_process", 0.016)
+	node.set("flag", true)
+	node.call("_process", 0.016)
+	ok = _check("first-cell: re-arms after a false tick", int(node.get("counter")), 2) and ok
+	node.free()
+	return ok
 
 
 ## The multi-line member inserts SEVERAL class-level lines; the source map indexes lines one-per-entry, so
@@ -45,10 +84,12 @@ static func _test_source_map_stays_aligned() -> bool:
 
 
 ## Builds `<host> / var flag / var counter / _process: if flag and __trigger_once_x(): counter += 1`.
-static func _build_sheet(with_flag_condition: bool) -> EventSheetResource:
+## once_position places the Trigger Once cell: -1 = last (the default), 0 = first, else that index.
+## or_mode adds a second `other` condition and joins the row's conditions with OR.
+static func _build_sheet(with_flag_condition: bool, once_position: int = -1, or_mode: bool = false) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node"
-	for spec: Array in [["flag", "bool", false], ["counter", "int", 0]]:
+	for spec: Array in [["flag", "bool", false], ["other", "bool", false], ["counter", "int", 0]]:
 		var variable: LocalVariable = LocalVariable.new()
 		variable.name = str(spec[0])
 		variable.type_name = str(spec[1])
@@ -57,13 +98,14 @@ static func _build_sheet(with_flag_condition: bool) -> EventSheetResource:
 	var row: EventRow = EventRow.new()
 	row.trigger_provider_id = "Core"
 	row.trigger_id = "OnProcess"
+	if or_mode:
+		row.condition_mode = EventRow.ConditionMode.OR
 	if with_flag_condition:
-		var flag_condition: ACECondition = ACECondition.new()
-		flag_condition.provider_id = "Core"
-		flag_condition.ace_id = "ExpressionIsTrue"
-		flag_condition.codegen_template = "flag"
-		row.conditions.append(flag_condition)
-	row.conditions.append(_trigger_once_condition())
+		row.conditions.append(_expression_condition("flag"))
+	if or_mode:
+		row.conditions.append(_expression_condition("other"))
+	var once_index: int = clampi(once_position, 0, row.conditions.size()) if once_position >= 0 else row.conditions.size()
+	row.conditions.insert(once_index, _trigger_once_condition())
 	var bump: ACEAction = ACEAction.new()
 	bump.provider_id = "Core"
 	bump.ace_id = "AddVar"
@@ -71,6 +113,14 @@ static func _build_sheet(with_flag_condition: bool) -> EventSheetResource:
 	row.actions.append(bump)
 	sheet.events.append(row)
 	return sheet
+
+
+static func _expression_condition(expression: String) -> ACECondition:
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = "Core"
+	condition.ace_id = "ExpressionIsTrue"
+	condition.codegen_template = expression
+	return condition
 
 
 ## Bakes a uid into the REAL registered descriptor, exactly as the dock's apply step does.

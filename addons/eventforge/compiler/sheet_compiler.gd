@@ -1203,11 +1203,18 @@ static func _emit_event_body(
 		var effective_node_target: String = own_node_target if not own_node_target.is_empty() else inherited_node_target
 		var event_start_line: int = lines.size() + 1
 		var condition_texts: PackedStringArray = PackedStringArray()
+		# Trigger Once terms are hoisted to the END of the chain regardless of their cell position: the
+		# edge test asks "was I reached last tick?", which only means "were the OTHER conditions true
+		# then?" when every other term short-circuits before it. Collected apart, appended last below.
+		var tail_condition_texts: PackedStringArray = PackedStringArray()
 		var runtime_group_guard: String = str(_runtime_group_guards.get(event_row, ""))
 		for condition: ACECondition in event_row.conditions:
 			var condition_line: String = ConditionCodegen.generate_condition(condition, _behavior_host_default)
 			if not condition_line.is_empty():
-				condition_texts.append(condition_line)
+				if condition.provider_id == "Core" and condition.ace_id == "TriggerOnce":
+					tail_condition_texts.append(condition_line)
+				else:
+					condition_texts.append(condition_line)
 			elif condition != null and condition.enabled and condition.codegen_template.strip_edges().is_empty() and (not condition.ace_id.is_empty() or not condition.provider_id.is_empty()):
 				# Unresolvable ACE (addon uninstalled / stale provider_id|ace_id). Fail CLOSED so a
 				# vanished gate can never silently run the event body unconditionally every tick.
@@ -1225,6 +1232,18 @@ static func _emit_event_body(
 			else:
 				joined_conditions = "%s and %s" % [runtime_group_guard, joined_conditions]
 			condition_texts.append(runtime_group_guard)
+		# Append the hoisted Trigger Once terms as the FINAL and-terms. An OR list is parenthesized first
+		# (unless the guard wrap above already did), so the edge test gates the whole OR result -
+		# `(a or b) and __trigger_once_x()` - instead of leaking in by precedence.
+		if not tail_condition_texts.is_empty():
+			var tail_expression: String = " and ".join(tail_condition_texts)
+			if joined_conditions.is_empty():
+				joined_conditions = tail_expression
+			else:
+				if event_row.condition_mode == EventRow.ConditionMode.OR and condition_texts.size() > 1 and runtime_group_guard.is_empty():
+					joined_conditions = "(%s)" % joined_conditions
+				joined_conditions = "%s and %s" % [joined_conditions, tail_expression]
+			condition_texts.append_array(tail_condition_texts)
 
 		# Stateful conditions: prelude lines run every tick BEFORE the if (so they must
 		# not sit between an if and its elif - stateful events never chain).

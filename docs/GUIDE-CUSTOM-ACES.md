@@ -585,9 +585,11 @@ once.codegen_prelude = "__once_{uid} += 1"        # age the counter every tick
 ```
 
 Why that works: conditions compile to a short-circuiting `and` chain, so a condition is only reached when
-every condition before it is true. "Was I reached on the previous tick?" therefore answers "were those
-conditions already true then?" - a gap wider than one tick is the rising edge. Note a stateful condition
-can never be inverted (its state would advance on the ticks it does not fire); the compiler warns if you try.
+every condition before it is true. "Was I reached on the previous tick?" therefore answers "were the other
+conditions already true then?" - a gap wider than one tick is the rising edge. The compiler HOISTS Trigger
+Once to the end of the emitted chain no matter which condition cell it occupies (an OR row is parenthesized
+first, `(a or b) and __trigger_once_x()`), so authors can place it anywhere. Note a stateful condition can
+never be inverted (its state would advance on the ticks it does not fire); the compiler warns if you try.
 
 ---
 

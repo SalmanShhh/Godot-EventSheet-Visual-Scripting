@@ -5,9 +5,11 @@
 ### Added - a Trigger Once condition
 
 - **Trigger Once** (Core, "Run Context"): runs the event only on the FIRST tick of each stretch where the
-  conditions above it hold, and re-arms once they go false again - the classic "trigger once while true".
-  Add it as the last condition. On its own (no other conditions) it fires exactly once, ever. It compiles to
-  a tiny per-instance helper beside its state var, so the generated GDScript stays plain and readable:
+  event's other conditions hold, and re-arms once they go false again - the classic "trigger once while
+  true". It works in ANY condition cell: the compiler hoists the term to the end of the emitted chain
+  (an OR row is parenthesized first, so it gates the whole OR result). On its own (no other conditions) it
+  fires exactly once, ever. It compiles to a tiny per-instance helper beside its state var, so the
+  generated GDScript stays plain and readable:
 
   ```gdscript
   var __once_x: int = 1
