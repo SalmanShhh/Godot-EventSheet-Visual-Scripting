@@ -61,7 +61,7 @@ static func steps() -> Array[Dictionary]:
 		},
 		{
 			"title": "You know the loop",
-			"body": "Events + conditions + actions, compiled to code you can read. From here: Sheet > New From Template opens full starters, Tools > Welcome has the playable showcase, and Add > Variable gives your sheet memory. Have fun!",
+			"body": "Events + conditions + actions, compiled to code you can read. From here: Sheet > New From Template opens full starters, Tools > Welcome has the playable showcase, and Add > Variable gives your sheet memory. Take this tour again any time: Tools > Start the Tour. Have fun!",
 			"task": "Hit Finish and go make something.",
 			"check": Callable(),
 		},
