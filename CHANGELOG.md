@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Changed - the Sheet Type dialog shows only what the chosen type uses
+
+- **Choice fatigue removed from the Sheet Type dialog.** Picking a type now shows ONLY the fields that
+  type actually consumes (mirroring the apply logic exactly): a plain Event Sheet shows just the host
+  row; Autoload and Editor Tool hide the host (the compiler forces it) and Autoload shows its global
+  name; Family appears only for Custom Node / Behavior. The composition wiring (tags, includes, uses,
+  requires) and the experimental `@tool` toggle fold behind a collapsed "More options" disclosure, so
+  the everyday read is 3-4 controls instead of 13. Hiding is visual only - hidden values pass through
+  untouched on OK.
+- **A one-line plain-English hint per type** under the dropdown ("Attach under any node as a child -
+  its events act on that parent."), and the host label rewords contextually ("Acts on (parent)" for a
+  behavior, "Extends (data type)" for a custom resource).
+- **Pick the host by meaning.** A "Choose…" menu beside the host field offers a curated shortlist -
+  "2D Character - moves and collides (CharacterBody2D)", "UI Control", "Invisible Manager" and friends -
+  so a newcomer picks what the sheet controls instead of recalling Godot class names. Typing stays for
+  experts.
+- **Live "Ships as" line with real validation.** The dialog previews the compiled identity
+  (`class_name Patrol extends CharacterBody2D`) as you type, and flags problems before OK: an unknown
+  host class (with a nearest-match suggestion - "did you mean CharacterBody2D?"), a class name that
+  collides with an engine or project class, and invalid identifiers. Previously a typo shipped a
+  broken `extends` with no warning.
+
 ### Added - a Trigger Once condition
 
 - **Trigger Once** (Core, "Run Context"): runs the event only on the FIRST tick of each stretch where the
