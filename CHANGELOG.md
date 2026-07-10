@@ -23,6 +23,13 @@
   host class (with a nearest-match suggestion - "did you mean CharacterBody2D?"), a class name that
   collides with an engine or project class, and invalid identifiers. Previously a typo shipped a
   broken `extends` with no warning.
+- **As-you-type host suggestions (IntelliSense).** Typing in the host field pops matching classes
+  right under it - prefix matches first, then substring, with the editor's own class icons. The list
+  only offers classes that make sense as a host (Node or Resource family, instantiable) plus your
+  project's own `class_name` scripts, capped at 8. Up/Down highlight, Enter accepts, Escape closes;
+  free typing always wins. An empty field suggests the curated shortlist.
+- **Pick the icon from the FileSystem.** A Browse… button beside the Icon field opens the resource
+  file picker (svg / png / webp) instead of requiring a typed res:// path.
 
 ### Added - a Trigger Once condition
 

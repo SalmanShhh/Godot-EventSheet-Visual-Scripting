@@ -14,7 +14,32 @@ static func run() -> bool:
 	passed = _test_field_visibility() and passed
 	passed = _test_identity_preview() and passed
 	passed = _test_validation() and passed
+	passed = _test_host_candidates() and passed
 	return passed
+
+
+## The as-you-type host suggestions: curated shortlist when empty, prefix-then-substring ranking,
+## host-sensible classes only (Node/Resource family, instantiable), project class_names included.
+static func _test_host_candidates() -> bool:
+	var ok: bool = true
+	var empty_typed: PackedStringArray = EventSheetSheetTypeDialog.host_candidates("")
+	ok = _check("empty text offers the curated shortlist first", empty_typed[0], "CharacterBody2D") and ok
+	ok = _check("the curated shortlist is capped at 8", empty_typed.size() <= 8, true) and ok
+	var char_typed: PackedStringArray = EventSheetSheetTypeDialog.host_candidates("Char")
+	ok = _check("prefix matches rank first for \"Char\"", char_typed[0], "CharacterBody2D") and ok
+	ok = _check("\"Char\" also offers the 3D sibling", char_typed.has("CharacterBody3D"), true) and ok
+	var lower_typed: PackedStringArray = EventSheetSheetTypeDialog.host_candidates("sprite")
+	ok = _check("matching is case-insensitive", lower_typed.has("Sprite2D"), true) and ok
+	var substring_typed: PackedStringArray = EventSheetSheetTypeDialog.host_candidates("Body2D")
+	ok = _check("substring matches surface too (Body2D -> CharacterBody2D)", substring_typed.has("CharacterBody2D"), true) and ok
+	ok = _check("non-host classes are never suggested (TextServer is not a Node/Resource)",
+		EventSheetSheetTypeDialog.host_candidates("TextServer").has("TextServer"), false) and ok
+	ok = _check("project class_name scripts are suggested",
+		EventSheetSheetTypeDialog.host_candidates("Enem", ["EnemyBase", "Loot"]).has("EnemyBase"), true) and ok
+	ok = _check("an exactly-typed class is not suggested back",
+		EventSheetSheetTypeDialog.host_candidates("Node2D").has("Node2D"), false) and ok
+	ok = _check("results never exceed the cap", EventSheetSheetTypeDialog.host_candidates("a").size() <= 8, true) and ok
+	return ok
 
 
 ## The per-type field map - pinned VALUE by VALUE so a regression names the exact field and type.

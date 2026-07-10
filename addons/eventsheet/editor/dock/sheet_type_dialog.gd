@@ -34,6 +34,12 @@ var _identity_card: PanelContainer = null
 var _ships_as: Label = null
 var _more_toggle: Button = null
 var _more_card: PanelContainer = null
+# As-you-type host suggestions (IntelliSense-style): an unfocusable popup under the field, so the
+# caret never leaves the LineEdit; Up/Down highlight, Enter accepts, Escape dismisses.
+var _host_suggest: PopupMenu = null
+var _host_suggest_items: PackedStringArray = PackedStringArray()
+var _host_suggest_index: int = -1
+var _icon_file_dialog: EditorFileDialog = null
 
 ## One plain-English line per type, shown under the dropdown - what the choice MEANS, not its jargon.
 const TYPE_HINTS: Array[String] = [
@@ -169,6 +175,59 @@ static func _nearest_class(typed: String) -> String:
 	return best
 
 
+## As-you-type host suggestions. Empty text offers the curated shortlist (steer first, type later).
+## Typed text ranks case-insensitive PREFIX matches before substring matches, drawn from the classes
+## that make sense as a host - Node or Resource family, instantiable (filters out servers and
+## abstract engine machinery a beginner should never land on) - plus the project's own class_name
+## scripts (injectable for tests; defaults to the live global class list). Free text always wins:
+## suggestions steer, they never block.
+static func host_candidates(typed: String, project_classes: Array = [], limit: int = 8) -> PackedStringArray:
+	var results: PackedStringArray = PackedStringArray()
+	var trimmed: String = typed.strip_edges()
+	if trimmed.is_empty():
+		for entry: Dictionary in COMMON_HOSTS:
+			results.append(str(entry["host"]))
+			if results.size() >= limit:
+				break
+		return results
+	var lower: String = trimmed.to_lower()
+	var user_classes: Array = project_classes
+	if user_classes.is_empty():
+		for entry: Dictionary in ProjectSettings.get_global_class_list():
+			user_classes.append(str(entry.get("class", "")))
+	var prefix_hits: PackedStringArray = PackedStringArray()
+	var substring_hits: PackedStringArray = PackedStringArray()
+	for candidate: Variant in user_classes:
+		_bucket_candidate(str(candidate), lower, prefix_hits, substring_hits)
+	for engine_class: String in ClassDB.get_class_list():
+		if not ClassDB.can_instantiate(engine_class):
+			continue
+		if not (ClassDB.is_parent_class(engine_class, "Node") or ClassDB.is_parent_class(engine_class, "Resource")):
+			continue
+		_bucket_candidate(engine_class, lower, prefix_hits, substring_hits)
+	prefix_hits.sort()
+	substring_hits.sort()
+	for hit: String in prefix_hits:
+		if results.size() < limit:
+			results.append(hit)
+	for hit: String in substring_hits:
+		if results.size() < limit and not results.has(hit):
+			results.append(hit)
+	return results
+
+
+static func _bucket_candidate(candidate: String, lower_typed: String, prefix_hits: PackedStringArray, substring_hits: PackedStringArray) -> void:
+	if candidate.is_empty():
+		return
+	var candidate_lower: String = candidate.to_lower()
+	if candidate_lower == lower_typed:
+		return  # already typed exactly - suggesting it back is noise
+	if candidate_lower.begins_with(lower_typed):
+		prefix_hits.append(candidate)
+	elif candidate_lower.contains(lower_typed):
+		substring_hits.append(candidate)
+
+
 func _ensure_sheet_type_dialog() -> void:
 	if _sheet_type_dialog != null:
 		return
@@ -190,10 +249,24 @@ func _ensure_sheet_type_dialog() -> void:
 	var ident_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_sheet_type_name_edit = _dock._add_sheet_type_field(ident_box, "Class name", "PatrolBehavior")
 	_sheet_type_icon_edit = _dock._add_sheet_type_field(ident_box, "Icon (res://…)", "res://icons/patrol.svg")
+	# Pick the icon straight from the FileSystem instead of typing a res:// path.
+	var icon_browse: Button = Button.new()
+	icon_browse.text = "Browse…"
+	icon_browse.pressed.connect(_open_icon_file_dialog)
+	_sheet_type_icon_edit.get_parent().add_child(icon_browse)
 	_sheet_type_description_edit = _dock._add_sheet_type_multiline_field(ident_box, "Description", "What this does - shown in Godot's Create Node dialog.")
 	_sheet_type_host_edit = _dock._add_sheet_type_field(ident_box, "Controls / extends", "CharacterBody2D")
 	var host_row: HBoxContainer = _sheet_type_host_edit.get_parent()
 	_host_label = host_row.get_child(0)
+	# As-you-type suggestions: an unfocusable popup under the field (the caret stays in the LineEdit),
+	# listing matching classes with their editor icons. Up/Down highlight, Enter accepts, Escape closes.
+	_host_suggest = PopupMenu.new()
+	_host_suggest.unfocusable = true
+	_host_suggest.id_pressed.connect(func(index: int) -> void: _accept_host_suggestion(index))
+	_sheet_type_host_edit.add_child(_host_suggest)
+	_sheet_type_host_edit.text_changed.connect(func(text: String) -> void: _refresh_host_suggestions(text))
+	_sheet_type_host_edit.focus_exited.connect(func() -> void: _host_suggest.hide())
+	_sheet_type_host_edit.gui_input.connect(_on_host_edit_input)
 	# "Choose…" fills the host field from the curated shortlist - pick by meaning, type only if you
 	# already know the exact class.
 	_host_menu = MenuButton.new()
@@ -267,6 +340,84 @@ func _refresh_type_ui() -> void:
 	_refresh_identity_preview()
 	if _sheet_type_dialog.visible:
 		_sheet_type_dialog.reset_size()
+
+
+## Rebuilds the suggestion popup for the typed host text. Shown only while the field has focus and
+## there is something to offer; an exact match or no match closes it, so it never lingers as noise.
+func _refresh_host_suggestions(typed: String) -> void:
+	if _host_suggest == null or not _sheet_type_host_edit.has_focus():
+		return
+	_host_suggest_items = host_candidates(typed)
+	_host_suggest_index = -1
+	if _host_suggest_items.is_empty():
+		_host_suggest.hide()
+		return
+	_host_suggest.clear()
+	for candidate: String in _host_suggest_items:
+		# The editor's own class icon when it has one (a Script glyph for project classes) - the same
+		# visual language as Godot's Create Node dialog, so classes are recognizable at a glance.
+		var icon_name: String = candidate if _dock.has_theme_icon(candidate, "EditorIcons") else "Script"
+		if _dock.has_theme_icon(icon_name, "EditorIcons"):
+			_host_suggest.add_icon_item(_dock.get_theme_icon(icon_name, "EditorIcons"), candidate)
+		else:
+			_host_suggest.add_item(candidate)
+	_host_suggest.position = Vector2i(_sheet_type_host_edit.get_screen_position() + Vector2(0.0, _sheet_type_host_edit.size.y))
+	_host_suggest.reset_size()
+	if not _host_suggest.visible:
+		_host_suggest.popup()
+
+
+func _accept_host_suggestion(index: int) -> void:
+	if index < 0 or index >= _host_suggest_items.size():
+		return
+	_sheet_type_host_edit.text = _host_suggest_items[index]
+	_sheet_type_host_edit.caret_column = _sheet_type_host_edit.text.length()
+	_host_suggest.hide()
+	_sheet_type_host_edit.grab_focus()
+	_refresh_identity_preview()
+
+
+## Keyboard-first suggestion flow while the caret STAYS in the field: Down opens/advances the
+## highlight, Up retreats, Enter accepts the highlighted (or only) match, Escape dismisses without
+## touching the dialog. Plain typing keeps flowing to the LineEdit untouched.
+func _on_host_edit_input(event: InputEvent) -> void:
+	var key_event: InputEventKey = event as InputEventKey
+	if key_event == null or not key_event.pressed:
+		return
+	match key_event.keycode:
+		KEY_DOWN:
+			if not _host_suggest.visible:
+				_refresh_host_suggestions(_sheet_type_host_edit.text)
+			elif _host_suggest_index < _host_suggest_items.size() - 1:
+				_host_suggest_index += 1
+				_host_suggest.set_focused_item(_host_suggest_index)
+			_sheet_type_host_edit.accept_event()
+		KEY_UP:
+			if _host_suggest.visible and _host_suggest_index > 0:
+				_host_suggest_index -= 1
+				_host_suggest.set_focused_item(_host_suggest_index)
+				_sheet_type_host_edit.accept_event()
+		KEY_ENTER, KEY_KP_ENTER:
+			if _host_suggest.visible:
+				_accept_host_suggestion(_host_suggest_index if _host_suggest_index >= 0 else 0)
+				_sheet_type_host_edit.accept_event()
+		KEY_ESCAPE:
+			if _host_suggest.visible:
+				_host_suggest.hide()
+				_sheet_type_host_edit.accept_event()
+
+
+## The FileSystem picker for the class icon - browse res:// images instead of typing a path.
+func _open_icon_file_dialog() -> void:
+	if _icon_file_dialog == null:
+		_icon_file_dialog = EditorFileDialog.new()
+		_icon_file_dialog.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+		_icon_file_dialog.access = EditorFileDialog.ACCESS_RESOURCES
+		_icon_file_dialog.add_filter("*.svg, *.png, *.webp", "Images")
+		_icon_file_dialog.file_selected.connect(func(path: String) -> void:
+			_sheet_type_icon_edit.text = path)
+		_dock.add_child(_icon_file_dialog)
+	_icon_file_dialog.popup_centered_ratio(0.5)
 
 
 func _refresh_identity_preview() -> void:
