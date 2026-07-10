@@ -555,41 +555,49 @@ A Trigger has no `codegen_template`. The compiler reads `signal_name` and wires 
 
 ### Stateful conditions
 
-A condition that needs per-instance memory (a timer, a latch) uses three extra template fields. The
-canonical example is `Every X Seconds`:
+A condition that needs per-instance memory (a timer, a latch) declares it with the fluent
+`.stateful(member, prelude, on_true)` chain: `member` is a class member the compiler synthesizes per
+applied instance, `prelude` runs every tick before the if, `on_true` just inside it. The canonical
+example is `Every X Seconds`:
 
 ```gdscript
-var every := F.make_descriptor("Core", "EveryXSeconds", "Every X Seconds",
+descriptors.append(F.make_descriptor("Core", "EveryXSeconds", "Every X Seconds",
     ACEDescriptor.ACEType.CONDITION,
     "__every_{uid} >= maxf({seconds}, 0.001)", "",
     [F.make_param("seconds", "float", "1.0", "Seconds", "Interval.", "expression")],
     "Time", "Every {seconds} seconds")
-every.member_template = "var __every_{uid}: float = 0.0"        # a class member, per instance
-every.codegen_prelude = "__every_{uid} += delta"               # runs every frame, before the if
-every.codegen_on_true = "__every_{uid} = fmod(__every_{uid}, maxf({seconds}, 0.001))"  # resets on fire
+    .stateful(
+        "var __every_{uid}: float = 0.0",                        # a class member, per instance
+        "__every_{uid} += delta",                                # runs every frame, before the if
+        "__every_{uid} = fmod(__every_{uid}, maxf({seconds}, 0.001))"))  # resets on fire
 ```
 
-All three fields receive the same `{uid}` and `{param}` substitutions. Stateful conditions only make
-sense inside per-frame triggers (Every Frame, On Physics Process) where `delta` exists; the compiler
-does not stop you from using one elsewhere, so do not.
+All three receive the same `{uid}` and `{param}` substitutions ({uid} is baked fresh per applied
+instance, so two rows never share state). Stateful conditions only make sense inside per-frame
+triggers (Every Frame, On Physics Process) where `delta` exists; the compiler does not stop you from
+using one elsewhere, so do not.
 
-`codegen_prelude` and `codegen_on_true` must each be a SINGLE statement (they are emitted as one indented
-line inside the trigger's function). `member_template` sits at class level, so it MAY span several lines -
-which lets a condition ship a small helper function beside its state var. The built-in **Trigger Once**
-does exactly that:
+The prelude and on-true must each be a SINGLE statement (they are emitted as one indented line inside
+the trigger's function). The member sits at class level, so it MAY span several lines - which lets a
+condition ship a small helper function beside its state var. **Edge gates** (Trigger Once style
+conditions whose state test asks "was I reached last tick?") add `.evaluated_last()`: the compiler
+then HOISTS the term to the end of the emitted `and` chain no matter which condition cell it occupies
+(an OR row is parenthesized first, `(a or b) and __trigger_once_x()`), so users can place it anywhere.
+The built-in **Trigger Once** is declared exactly this way - your pack can make its own:
 
 ```gdscript
-once.member_template = "var __once_{uid}: int = 1\n\nfunc __trigger_once_{uid}() -> bool:\n\tvar ticks_since_last: int = __once_{uid}\n\t__once_{uid} = 0\n\treturn ticks_since_last > 1"
-once.codegen_prelude = "__once_{uid} += 1"        # age the counter every tick
-# codegen_template = "__trigger_once_{uid}()"     # reads + zeroes it the moment it is reached
+descriptors.append(F.make_descriptor("MyPack", "OnceGate", "Once Gate",
+    ACEDescriptor.ACEType.CONDITION, "__once_gate_{uid}()", "", [], "Custom", "Once gate")
+    .stateful("var __gate_{uid}: int = 1\n\nfunc __once_gate_{uid}() -> bool:\n\tvar gap: int = __gate_{uid}\n\t__gate_{uid} = 0\n\treturn gap > 1",
+        "__gate_{uid} += 1")     # age the counter every tick; the helper zeroes it when reached
+    .evaluated_last())
 ```
 
-Why that works: conditions compile to a short-circuiting `and` chain, so a condition is only reached when
-every condition before it is true. "Was I reached on the previous tick?" therefore answers "were the other
-conditions already true then?" - a gap wider than one tick is the rising edge. The compiler HOISTS Trigger
-Once to the end of the emitted chain no matter which condition cell it occupies (an OR row is parenthesized
-first, `(a or b) and __trigger_once_x()`), so authors can place it anywhere. Note a stateful condition can
-never be inverted (its state would advance on the ticks it does not fire); the compiler warns if you try.
+Why that works: conditions compile to a short-circuiting `and` chain, and `.evaluated_last()` guarantees
+the term is reached exactly when every other condition is true. "Was I reached on the previous tick?"
+therefore answers "were the other conditions already true then?" - a gap wider than one tick is the
+rising edge. Note a stateful condition can never be inverted (its state would advance on the ticks it
+does not fire); the compiler warns if you try.
 
 ---
 

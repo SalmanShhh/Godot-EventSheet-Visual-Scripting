@@ -735,6 +735,16 @@ static func _insert_stateful_member_declarations(lines: PackedStringArray, sheet
 	_shift_source_map(source_map, insert_index + 1, ordered.size() + 1)
 
 
+## True for an edge-gate condition the compiler must evaluate LAST in the chain (Trigger Once style,
+## descriptor `.evaluated_last()`): the flag baked at apply time wins; the registry lookup covers
+## conditions the importer rebuilt from source, where apply-time baking never ran.
+static func _condition_evaluates_last(condition: ACECondition) -> bool:
+	if condition.evaluate_last:
+		return true
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
+	return descriptor != null and descriptor.evaluate_last
+
+
 ## Flattens stateful members to one line per entry (a member may carry a helper function beside its state
 ## var), the plain one-liner declarations first so no `var` ever trails a `func`.
 static func _order_stateful_members(members: Array) -> PackedStringArray:
@@ -1203,15 +1213,16 @@ static func _emit_event_body(
 		var effective_node_target: String = own_node_target if not own_node_target.is_empty() else inherited_node_target
 		var event_start_line: int = lines.size() + 1
 		var condition_texts: PackedStringArray = PackedStringArray()
-		# Trigger Once terms are hoisted to the END of the chain regardless of their cell position: the
-		# edge test asks "was I reached last tick?", which only means "were the OTHER conditions true
-		# then?" when every other term short-circuits before it. Collected apart, appended last below.
+		# Edge-gate terms (Trigger Once style, descriptor `.evaluated_last()`) are hoisted to the END of
+		# the chain regardless of their cell position: the edge test asks "was I reached last tick?",
+		# which only means "were the OTHER conditions true then?" when every other term short-circuits
+		# before it. Collected apart, appended last below.
 		var tail_condition_texts: PackedStringArray = PackedStringArray()
 		var runtime_group_guard: String = str(_runtime_group_guards.get(event_row, ""))
 		for condition: ACECondition in event_row.conditions:
 			var condition_line: String = ConditionCodegen.generate_condition(condition, _behavior_host_default)
 			if not condition_line.is_empty():
-				if condition.provider_id == "Core" and condition.ace_id == "TriggerOnce":
+				if _condition_evaluates_last(condition):
 					tail_condition_texts.append(condition_line)
 				else:
 					condition_texts.append(condition_line)
@@ -1232,7 +1243,7 @@ static func _emit_event_body(
 			else:
 				joined_conditions = "%s and %s" % [runtime_group_guard, joined_conditions]
 			condition_texts.append(runtime_group_guard)
-		# Append the hoisted Trigger Once terms as the FINAL and-terms. An OR list is parenthesized first
+		# Append the hoisted edge-gate terms as the FINAL and-terms. An OR list is parenthesized first
 		# (unless the guard wrap above already did), so the edge test gates the whole OR result -
 		# `(a or b) and __trigger_once_x()` - instead of leaking in by precedence.
 		if not tail_condition_texts.is_empty():

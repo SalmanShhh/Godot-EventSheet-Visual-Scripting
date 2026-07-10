@@ -73,22 +73,20 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# Stateful conditions (the Every X seconds pattern): each applied instance owns a member;
 	# the prelude accumulates frame time (get_process_delta_time, defined on any Node) before the
 	# if, on_true rebases inside it. Compiles under any trigger; best used under a per-frame one.
-	var every_seconds: ACEDescriptor = F.make_descriptor("Core", "EveryXSeconds", "Every X Seconds", ACEDescriptor.ACEType.CONDITION, "__every_{uid} >= maxf({seconds}, 0.001)", "", [F.make_param("seconds", "String", "1.0", "Seconds", "Interval between runs (needs a per-frame trigger).", "expression")], "Time", "Every {seconds} seconds").described("True once each time the chosen number of seconds passes, for repeating timers.")
-	every_seconds.member_template = "var __every_{uid}: float = 0.0"
-	every_seconds.codegen_prelude = "__every_{uid} += get_process_delta_time()"
-	every_seconds.codegen_on_true = "__every_{uid} = fmod(__every_{uid}, maxf({seconds}, 0.001))"
-	descriptors.append(every_seconds)
+	descriptors.append(F.make_descriptor("Core", "EveryXSeconds", "Every X Seconds", ACEDescriptor.ACEType.CONDITION, "__every_{uid} >= maxf({seconds}, 0.001)", "", [F.make_param("seconds", "String", "1.0", "Seconds", "Interval between runs (needs a per-frame trigger).", "expression")], "Time", "Every {seconds} seconds")
+		.described("True once each time the chosen number of seconds passes, for repeating timers.")
+		.stateful("var __every_{uid}: float = 0.0", "__every_{uid} += get_process_delta_time()", "__every_{uid} = fmod(__every_{uid}, maxf({seconds}, 0.001))"))
 	# Trigger Once: run the event only on the FIRST tick of each stretch where the row's OTHER conditions
-	# hold, re-arming once they go false again. The compiler HOISTS this term to the end of the emitted
+	# hold, re-arming once they go false again. .evaluated_last() HOISTS the term to the end of the emitted
 	# `and` chain no matter which condition cell it sits in, so short-circuiting guarantees it is reached
 	# exactly when everything else is true - which makes "was I reached on the previous tick?" exactly the
 	# question "were the other conditions already true last tick?". The prelude ages a per-instance tick
 	# counter every tick; the helper reads it and zeroes it the moment the term is reached, so a gap wider
 	# than one tick is the rising edge. On its own (no other conditions) it fires exactly once.
-	var trigger_once: ACEDescriptor = F.make_descriptor("Core", "TriggerOnce", "Trigger Once", ACEDescriptor.ACEType.CONDITION, "__trigger_once_{uid}()", "", [], "Run Context", "Trigger once while true").described("True only on the first tick each time the event's other conditions become true, and again after they have gone false. Works in any condition slot.")
-	trigger_once.member_template = "var __once_{uid}: int = 1\n\nfunc __trigger_once_{uid}() -> bool:\n\tvar ticks_since_last: int = __once_{uid}\n\t__once_{uid} = 0\n\treturn ticks_since_last > 1"
-	trigger_once.codegen_prelude = "__once_{uid} += 1"
-	descriptors.append(trigger_once)
+	descriptors.append(F.make_descriptor("Core", "TriggerOnce", "Trigger Once", ACEDescriptor.ACEType.CONDITION, "__trigger_once_{uid}()", "", [], "Run Context", "Trigger once while true")
+		.described("True only on the first tick each time the event's other conditions become true, and again after they have gone false. Works in any condition slot.")
+		.stateful("var __once_{uid}: int = 1\n\nfunc __trigger_once_{uid}() -> bool:\n\tvar ticks_since_last: int = __once_{uid}\n\t__once_{uid} = 0\n\treturn ticks_since_last > 1", "__once_{uid} += 1")
+		.evaluated_last())
 	# Multi-statement template: spawns AND positions (locals get a per-instance uid).
 	descriptors.append(F.make_descriptor("Core", "SpawnSceneAt", "Spawn Scene At", ACEDescriptor.ACEType.ACTION, "var __spawn_{uid} = load({path}).instantiate()\n__spawn_{uid}.position = {position}\nadd_child(__spawn_{uid})", "", [F.make_param("path", "String", "\"res://enemy.tscn\"", "Scene", "Scene file to instance.", "scene_path"), F.make_param("position", "String", "Vector2(0, 0)", "Position", "Spawn position.", "expression")], "Scene", "Spawn {path} at {position}")
 		.described("Loads a scene and drops a copy into the world at a position."))

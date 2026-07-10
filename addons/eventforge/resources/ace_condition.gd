@@ -20,3 +20,7 @@ extends Resource
 @export var member_declaration: String = ""
 @export var codegen_prelude: String = ""
 @export var codegen_on_true: String = ""
+## Edge-gate conditions (Trigger Once style): the compiler hoists this term to the END of the emitted
+## `and` chain regardless of its cell position, so its "was I reached last tick?" state test always
+## means "were the row's other conditions true then?". Baked from the descriptor at apply.
+@export var evaluate_last: bool = false

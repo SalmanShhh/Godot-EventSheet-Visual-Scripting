@@ -32,6 +32,14 @@
 - A stateful condition's `member_template` may now span several lines, so it can ship a helper function
   beside its state var. Plain `var` members are emitted before any such helper, and the compiled-line
   source map now counts the real emitted lines instead of the number of entries.
+- **Stateful conditions are now a first-class descriptor API.** `.stateful(member, prelude, on_true)`
+  declares the per-instance state in one chained call, and `.evaluated_last()` marks an EDGE GATE the
+  compiler hoists to the end of the condition chain - so ANY pack can build its own Trigger Once style
+  condition and get the same any-cell-position behavior; the hoist is no longer special-cased to the
+  built-in. The flag is baked onto the applied condition (rides the saved sheet) with a registry
+  fallback for importer-rebuilt rows. Both built-ins (Every X Seconds, Trigger Once) are dogfooded
+  through the new API, and a third-party-style edge gate is test-pinned end to end (hoist + runtime
+  fire-once/re-arm). The Custom ACEs guide documents the pattern.
 
 ### Added - @onready variables + node-drag into GDScript blocks
 

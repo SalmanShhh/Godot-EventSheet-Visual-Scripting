@@ -27,10 +27,15 @@ enum ACEType {
 ## Stateful conditions ("Every X seconds"/latches): a class member the compiler
 ## declares per applied instance ({uid} is baked fresh at apply), plus lines emitted
 ## before the if (prelude) and just inside it (on_true). Params substitute like the
-## main template.
+## main template. Prefer the fluent `.stateful(member, prelude, on_true)`.
 var member_template: String = ""
 var codegen_prelude: String = ""
 var codegen_on_true: String = ""
+## Edge-gate conditions (Trigger Once style): the compiler HOISTS this term to the END of the emitted
+## `and` chain regardless of which condition cell it occupies, so short-circuiting guarantees it is
+## reached exactly when the row's other conditions are true - the property a "was I reached last
+## tick?" state test depends on. Set via the fluent `.evaluated_last()`.
+var evaluate_last: bool = false
 @export var nodeType: String = "" # event-sheet-style alias for node_type.
 @export var params: Array[ACEParam] = []
 @export var signal_name: String = ""
@@ -105,6 +110,29 @@ func described(text: String) -> ACEDescriptor:
 ## verbs - featuring everything features nothing.
 func featured() -> ACEDescriptor:
 	is_featured = true
+	return self
+
+
+## Declares a STATEFUL condition in one chained call: `member` is the class-level state the compiler
+## synthesizes per applied instance (may span several lines - Trigger Once ships a helper function
+## beside its state var); `prelude` is a single statement emitted every tick before the if; `on_true`
+## a single statement emitted just inside it. All three receive the same {uid} and {param}
+## substitutions as the main template. Chains like .described():
+## `F.make_descriptor(...).stateful("var __t_{uid}: float = 0.0", "__t_{uid} += delta")`.
+func stateful(member: String, prelude: String = "", on_true: String = "") -> ACEDescriptor:
+	member_template = member
+	codegen_prelude = prelude
+	codegen_on_true = on_true
+	return self
+
+
+## Marks this condition as an EDGE GATE the compiler evaluates LAST: the term is hoisted to the end
+## of the emitted `and` chain no matter which condition cell it occupies (an OR row is parenthesized
+## first), so short-circuiting guarantees it is reached exactly when the row's other conditions are
+## true. Use it for Trigger Once style conditions whose state test means "was I reached last tick?".
+## Chains like .described(): `F.make_descriptor(...).stateful(...).evaluated_last()`.
+func evaluated_last() -> ACEDescriptor:
+	evaluate_last = true
 	return self
 
 

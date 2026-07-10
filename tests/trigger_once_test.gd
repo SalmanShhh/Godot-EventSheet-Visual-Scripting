@@ -18,7 +18,55 @@ static func run() -> bool:
 	passed = _test_runtime_alone_fires_exactly_once() and passed
 	passed = _test_negated_warns() and passed
 	passed = _test_source_map_stays_aligned() and passed
+	passed = _test_custom_edge_gate_via_fluent_api() and passed
 	return passed
+
+
+## API dogfood proof: a THIRD-PARTY stateful edge gate declared with the fluent descriptor API
+## (.stateful() + .evaluated_last()) gets the same position-independent hoisting as the built-in.
+## The provider is NOT in the registry, so the flag BAKED at apply time - not any Core special
+## case - must carry the hoist, exactly the path an addon pack rides.
+static func _test_custom_edge_gate_via_fluent_api() -> bool:
+	var descriptor: ACEDescriptor = ACEDescriptor.new()
+	descriptor.codegen_template = "__once_gate_{uid}()"
+	descriptor.stateful("var __gate_{uid}: int = 1\n\nfunc __once_gate_{uid}() -> bool:\n\tvar gap: int = __gate_{uid}\n\t__gate_{uid} = 0\n\treturn gap > 1", "__gate_{uid} += 1").evaluated_last()
+	var ok: bool = _check("the fluent chain sets all stateful fields",
+		[descriptor.member_template.is_empty(), descriptor.codegen_prelude, descriptor.evaluate_last],
+		[false, "__gate_{uid} += 1", true])
+	# Bake a uid the way the dock's apply step does, onto a condition from a provider the registry
+	# has never heard of.
+	var gate: ACECondition = ACECondition.new()
+	gate.provider_id = "MyPack"
+	gate.ace_id = "OnceGate"
+	gate.codegen_template = descriptor.codegen_template.replace("{uid}", "g")
+	gate.member_declaration = descriptor.member_template.replace("{uid}", "g")
+	gate.codegen_prelude = descriptor.codegen_prelude.replace("{uid}", "g")
+	gate.evaluate_last = descriptor.evaluate_last
+	# FIRST cell, the flag condition second - only the baked flag can hoist it.
+	var sheet: EventSheetResource = _build_sheet(true)
+	for entry: Variant in sheet.events:
+		if entry is EventRow:
+			(entry as EventRow).conditions.clear()
+			(entry as EventRow).conditions.append(gate)
+			(entry as EventRow).conditions.append(_expression_condition("flag"))
+	var output: String = str(SheetCompiler.compile(sheet, "user://custom_gate.gd").get("output", ""))
+	ok = _check("a custom pack edge gate in the first cell is hoisted last",
+		output.contains("if flag and __once_gate_g():"), true) and ok
+	# And it behaves at runtime: fires once on the rising edge, re-arms after a false tick.
+	var node: Node = _instantiate_source(output)
+	if node == null:
+		return _check("custom gate sheet instantiates", false, true)
+	node.set("flag", true)
+	for _i in range(3):
+		node.call("_process", 0.016)
+	ok = _check("custom gate fires exactly once over 3 true ticks", int(node.get("counter")), 1) and ok
+	node.set("flag", false)
+	node.call("_process", 0.016)
+	node.set("flag", true)
+	node.call("_process", 0.016)
+	ok = _check("custom gate re-arms", int(node.get("counter")), 2) and ok
+	node.free()
+	return ok
 
 
 ## The compiler hoists the term to the end of the chain, so ANY condition cell works: first, middle,
@@ -123,7 +171,9 @@ static func _expression_condition(expression: String) -> ACECondition:
 	return condition
 
 
-## Bakes a uid into the REAL registered descriptor, exactly as the dock's apply step does.
+## Bakes a uid into the REAL registered descriptor, exactly as the dock's apply step does - EXCEPT
+## evaluate_last, deliberately left unbaked: the compiler's registry fallback must hoist it anyway
+## (the path an importer-rebuilt condition rides, where apply-time baking never ran).
 static func _trigger_once_condition(uid: String = "x") -> ACECondition:
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "TriggerOnce")
 	var condition: ACECondition = ACECondition.new()
@@ -195,7 +245,10 @@ static func _test_negated_warns() -> bool:
 
 
 static func _instantiate(sheet: EventSheetResource) -> Node:
-	var source: String = str(SheetCompiler.compile(sheet, "user://trigger_once_run.gd").get("output", ""))
+	return _instantiate_source(str(SheetCompiler.compile(sheet, "user://trigger_once_run.gd").get("output", "")))
+
+
+static func _instantiate_source(source: String) -> Node:
 	var script: GDScript = GDScript.new()
 	script.source_code = source
 	if script.reload() != OK:
