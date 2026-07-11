@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Changed - visible Simple Mode + clickable chrome
+
+- **Simple Mode is a toolbar pill now**, not just a buried View-menu check - one glance to read,
+  one click to flip. While it's on, the toolbar's "Add Code" button hides and the Add menu's code
+  item disables (with a pointer back to the toggle). A project's FIRST run now starts in Simple
+  Mode - the newcomer surface is the default surface, and Expert mode is one visible click away.
+- **Project Doctor findings are destinations.** Double-click (or Enter on) a finding to open the
+  offending sheet in a tab - "go fix it" is one gesture instead of a manual hunt.
+- **The status bar has tiers.** Errors keep their full-strength red ⚠ until something replaces
+  them; informational messages fade to muted after a few seconds, so a stale tip never carries the
+  same weight as fresh feedback.
+- **Plain sheets get the identity strip too.** The banner (and its save-time health chip) used to
+  hide for exactly the sheets beginners make; now a plain sheet shows a minimal
+  "Event Sheet · a script for the <host> it's attached to" line, and clicking it still opens the
+  Sheet Type dialog.
+
 ### Changed - a calmer, more legible picker
 
 - **First open reads as a table of contents.** With no search query every picker section starts

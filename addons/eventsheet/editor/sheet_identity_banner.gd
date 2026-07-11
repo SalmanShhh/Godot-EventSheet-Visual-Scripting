@@ -128,12 +128,13 @@ func setup(viewport: EventSheetViewport) -> void:
 	visible = false
 
 
-## Refreshes the banner from the sheet; hides itself for plain event sheets.
+## Refreshes the banner from the sheet; hides itself only when there is no sheet at all.
 func update_from_sheet(sheet: EventSheetResource) -> void:
 	_icon = null
-	# Named sheets, behaviours, and autoloads all carry identity worth pinning; only a truly
-	# plain sheet hides the banner.
-	if sheet == null or (not sheet.behavior_mode and not sheet.autoload_mode and sheet.custom_class_name.strip_edges().is_empty()):
+	# Every sheet gets its identity strip - INCLUDING the plain event sheets beginners make.
+	# Hiding it for exactly those sheets (the old rule) meant the newcomers who most needed the
+	# "what is this / click to configure" cue and the save-time health chip never saw either.
+	if sheet == null:
 		visible = false
 		queue_redraw()
 		return
@@ -153,6 +154,9 @@ func update_from_sheet(sheet: EventSheetResource) -> void:
 			_label = "%s - Editor Tool · runs in the editor (File > Run)" % display_name
 		EventSheetScriptIntent.Intent.CUSTOM_RESOURCE:
 			_label = "%s - Custom Resource · every .tres of it is a data asset" % display_name
+		EventSheetScriptIntent.Intent.EVENT_SHEET:
+			# The plain sheet a beginner makes: say what it is and where it runs, in one line.
+			_label = "Event Sheet · a script for the %s it's attached to" % sheet.host_class
 		_:
 			_label = "%s - Custom Node · extends %s" % [display_name, sheet.host_class]
 	var icon_path: String = sheet.custom_class_icon.strip_edges()

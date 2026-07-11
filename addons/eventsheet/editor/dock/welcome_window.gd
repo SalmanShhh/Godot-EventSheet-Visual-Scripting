@@ -32,6 +32,10 @@ func show_if_first_run() -> void:
 	if bool(editor_settings.get_project_metadata("eventsheets", "welcomed", false)):
 		return
 	editor_settings.set_project_metadata("eventsheets", "welcomed", true)
+	# First run in a project starts in Simple Mode (the Welcome's checkbox shows it checked): the
+	# newcomer surface should be the default surface, and the toolbar's Simple Mode pill makes
+	# flipping to Expert one visible click - so experts lose seconds, beginners gain a fighting start.
+	_dock.set_simple_mode(true)
 	show()
 
 

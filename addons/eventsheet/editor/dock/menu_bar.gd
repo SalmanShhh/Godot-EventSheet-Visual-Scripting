@@ -87,7 +87,8 @@ func build(root: Node) -> void:
 	_add_toolbar_button(_toolbar, "Add Event", _dock._on_add_event_requested, "Add an event (E).", "Add")
 	_add_toolbar_button(_toolbar, "Add Condition", _dock._on_add_condition_requested, "Add a condition to the selected event (C).", "MemberConstant")
 	_add_toolbar_button(_toolbar, "Add Action", _dock._on_add_action_requested, "Add an action to the selected event (A).", "MemberMethod")
-	_add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch (like Construct 3's script actions). Opens the code editor immediately.", "Script")
+	# Kept as a reference: Simple Mode hides this deliberate drop-to-code surface entirely.
+	_dock._add_code_button = _add_toolbar_button(_toolbar, "Add Code", _dock._on_add_gdscript_action_requested, "Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.", "Script")
 	# Add ▾ - the rest of the authoring vocabulary.
 	var add_menu: MenuButton = MenuButton.new()
 	add_menu.name = "EventSheetAddMenu"
@@ -119,6 +120,8 @@ func build(root: Node) -> void:
 			3: _dock._open_function_dialog()
 			4: _dock._on_add_gdscript_action_requested()
 	)
+	# Kept as a reference so Simple Mode can gate the code item (id 4) live.
+	_dock._add_menu_popup = add_popup
 	_toolbar.add_child(add_menu)
 	# Edit ▾ - clipboard + history (all on shortcuts too).
 	var edit_menu: MenuButton = MenuButton.new()
@@ -257,6 +260,16 @@ func build(root: Node) -> void:
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")
 	_toolbar.add_child(tools_menu)
 	_add_toolbar_separator(_toolbar)
+	# Simple Mode as a persistent, visible pill (not only a buried View-menu check): the audience
+	# flag should be one glance to read and one click to flip.
+	var simple_button: Button = Button.new()
+	simple_button.text = "Simple Mode"
+	simple_button.toggle_mode = true
+	simple_button.set_pressed_no_signal(_dock._simple_mode)
+	simple_button.tooltip_text = "Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off."
+	simple_button.toggled.connect(func(on: bool) -> void: _dock.set_simple_mode(on))
+	_dock._simple_mode_button = simple_button
+	_toolbar.add_child(simple_button)
 	# GDScript stays a one-click toggle (the pairing thesis: honest output, always
 	# one click away) next to the per-sheet theme picker.
 	_add_toolbar_button(_toolbar, "GDScript", _dock._toggle_code_panel, "Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.", "Script")
@@ -277,11 +290,14 @@ func build(root: Node) -> void:
 			_quick_add_edit.clear()
 	)
 	_toolbar.add_child(_quick_add_edit)
+	# The persisted Simple Mode preference loads before the toolbar builds - apply its gates now.
+	_dock._apply_simple_mode_gates()
 
 
 ## Adds a one-click toolbar button wired to `callable`, with an optional editor icon.
+## Returns the button so callers that need to gate/restyle it can keep a reference.
 ## (Moved verbatim from the dock; targets the toolbar passed in rather than a member.)
-func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callable, tooltip: String = "", editor_icon: String = "") -> void:
+func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callable, tooltip: String = "", editor_icon: String = "") -> Button:
 	var button: Button = Button.new()
 	button.text = text
 	button.tooltip_text = tooltip
@@ -293,6 +309,7 @@ func _add_toolbar_button(toolbar: HFlowContainer, text: String, callable: Callab
 			button.icon = editor_theme.get_icon(editor_icon, "EditorIcons")
 	button.pressed.connect(callable)
 	toolbar.add_child(button)
+	return button
 
 
 func _add_toolbar_separator(toolbar: HFlowContainer) -> void:

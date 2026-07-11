@@ -41,6 +41,9 @@ func open() -> void:
 		_doctor_tree.set_column_custom_minimum_width(1, 180)
 		_doctor_tree.column_titles_visible = true
 		_doctor_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		# A finding is a destination, not just a report line: double-click (or Enter) opens the
+		# offending sheet in a tab so "go fix it" is one gesture instead of a manual hunt.
+		_doctor_tree.item_activated.connect(_open_activated_finding)
 		var findings_card: PanelContainer = EventSheetPopupUI.titled_card("Findings", _doctor_tree)
 		findings_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		box.add_child(findings_card)
@@ -69,5 +72,25 @@ func _run_project_doctor() -> void:
 		item.set_text(1, str(finding.get("path")).get_file())
 		item.set_tooltip_text(1, str(finding.get("path")))
 		item.set_text(2, str(finding.get("message")))
+		item.set_metadata(0, str(finding.get("path", "")))
+		item.set_tooltip_text(2, "%s\n\nDouble-click to open this sheet." % str(finding.get("message")))
 	var errors: int = int(report.get("errors", 0))
 	_dock._set_status("Project Doctor: %d error(s), %d warning(s), %d note(s)." % [errors, int(report.get("warnings", 0)), int(report.get("infos", 0))], errors > 0)
+
+
+## Double-click / Enter on a finding: open its sheet in a tab (re-focusing an already-open one).
+## Findings that point at non-sheet files (project.godot, a doc) fall back to a status hint.
+func _open_activated_finding() -> void:
+	var item: TreeItem = _doctor_tree.get_selected()
+	if item == null:
+		return
+	var path: String = str(item.get_metadata(0))
+	if path.is_empty() or not ResourceLoader.exists(path):
+		_dock._set_status("This finding has no sheet to open (%s)." % (path if not path.is_empty() else "no path"))
+		return
+	if path.get_extension() != "gd" and path.get_extension() != "tres":
+		_dock._set_status("This finding points at %s - open it from the FileSystem dock." % path.get_file())
+		return
+	_dock._load_sheet_from_path(path)
+	_doctor_window.hide()
+	_dock._set_status("Opened %s from the Project Doctor." % path.get_file())

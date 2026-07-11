@@ -96,7 +96,11 @@ static func run() -> bool:
 	var second_editor: EventSheetEditor = EventSheetEditor.new()
 	second_editor.setup(plain_sheet)
 	second_editor.set_undo_redo_manager(NoopUndoManager.new())
-	all_passed = _check("banner hidden for plain sheets", second_editor._identity_banner.visible, false) and all_passed
+	# Plain sheets keep a minimal identity strip (the beginner's "what is this" cue + the save-time
+	# health chip) - the old rule hid the banner for exactly the sheets newcomers make.
+	all_passed = _check("banner visible for plain sheets too", second_editor._identity_banner.visible, true) and all_passed
+	all_passed = _check("plain-sheet banner says what it is",
+		second_editor._identity_banner._label.begins_with("Event Sheet · "), true) and all_passed
 	second_editor._apply_sheet_type_settings(2, "GuardBrain", "res://addons/eventsheet/icons/eventsheet.svg", "Area2D")
 	all_passed = _check("dialog apply sets behavior mode", plain_sheet.behavior_mode, true) and all_passed
 	all_passed = _check("dialog apply sets name/host",

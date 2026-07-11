@@ -204,8 +204,16 @@ var _context_hit: Dictionary = {}
 ## Simple mode (progressive disclosure for artist-first / first-time users): trims the
 ## right-click menus to the everyday authoring verbs and hides the advanced/code-leaning
 ## entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums). Persisted
-## per-project in editor metadata; defaults off so existing/expert users are unaffected.
+## per-project in editor metadata. Starts OFF here, but a project's FIRST run flips it on
+## (welcome_window.show_if_first_run) - the toolbar pill makes Expert one visible click away.
 var _simple_mode: bool = false
+# The toolbar's Simple Mode pill + the surfaces it gates live: the Add Code button disappears and
+# the Add menu's code item disables while Simple Mode is on (set by menu_bar.gd at build).
+var _simple_mode_button: Button = null
+var _add_code_button: Button = null
+var _add_menu_popup: PopupMenu = null
+# Fades informational status messages to muted after a few seconds (errors never fade).
+var _status_fade_tween: Tween = null
 var _view_popup: PopupMenu = null
 # Command palette (Ctrl+P): keyboard-first access to every dock action - list + fuzzy filter +
 # popup shell live on _command_palette (dock/command_palette.gd); the action targets stay here.
@@ -1687,7 +1695,23 @@ func set_simple_mode(enabled: bool) -> void:
 		var idx: int = _view_popup.get_item_index(11)
 		if idx >= 0:
 			_view_popup.set_item_checked(idx, enabled)
+	if _simple_mode_button != null:
+		_simple_mode_button.set_pressed_no_signal(enabled)
+	_apply_simple_mode_gates()
 	_set_status("Simple mode ON - advanced entries hidden." if enabled else "Expert mode - all entries shown.")
+
+
+## Applies Simple Mode to the always-visible surfaces it gates: the toolbar's deliberate
+## drop-to-code button hides, and the Add menu's code item disables with a pointer to the toggle.
+## (The picker and the right-click menus apply their own gates when they open.)
+func _apply_simple_mode_gates() -> void:
+	if _add_code_button != null:
+		_add_code_button.visible = not _simple_mode
+	if _add_menu_popup != null:
+		var code_index: int = _add_menu_popup.get_item_index(4)
+		if code_index >= 0:
+			_add_menu_popup.set_item_disabled(code_index, _simple_mode)
+			_add_menu_popup.set_item_tooltip(code_index, "Turn off Simple Mode (toolbar) to add GDScript blocks." if _simple_mode else "")
 
 
 func _load_simple_mode_preference() -> void:
@@ -3154,6 +3178,16 @@ func _set_status(text: String, is_error: bool = false) -> void:
 	_status_label.text = ("⚠  %s" % text) if is_error else text
 	_status_label.tooltip_text = text
 	_status_label.modulate = Color(1.0, 0.48, 0.48) if is_error else Color(1.0, 1.0, 1.0)
+	# Tiered presence: an error keeps its full-strength red until something replaces it, while an
+	# informational message fades to muted after a few seconds - a stale tip should never carry
+	# the same visual weight as fresh feedback (236 call sites share this one label).
+	if _status_fade_tween != null:
+		_status_fade_tween.kill()
+		_status_fade_tween = null
+	if not is_error and is_inside_tree():
+		_status_fade_tween = create_tween()
+		_status_fade_tween.tween_interval(6.0)
+		_status_fade_tween.tween_property(_status_label, "modulate:a", 0.45, 1.5)
 
 
 func _refresh_title_strip() -> void:
