@@ -2,14 +2,20 @@
 
 ## [Unreleased]
 
-### Added - the rest of the System expressions
+### Added - the rest of the System expressions, actions, and conditions
 
-- The System module completes its everyday expression toolkit with 13 new picker entries:
-  **Token At** / **Token Count** (pull pieces out of "ann,bob,cat"-style strings), **To Text** /
-  **To Integer** / **To Decimal** conversions, **Absolute Value**, **Square Root**, **Power**,
-  **Exponential**, **Pi**, and degree-based **Sin / Cos / Tan** (angles read the way sheet
-  authors expect - no radians required). All compile to plain GDScript one-liners; the existing
-  "tokenat" / "zeropad" plain-language picker phrases now land on real entries.
+- The System module completes its everyday **expression** toolkit with 11 new picker entries:
+  **To Text** / **To Integer** / **To Decimal** conversions, **Absolute Value**,
+  **Square Root**, **Power**, **Exponential**, **Pi**, and degree-based **Sin / Cos / Tan**
+  (angles read the way sheet authors expect - no radians required). All compile to plain
+  GDScript one-liners.
+- New System **actions**: **Take Screenshot** (save the screen as a PNG), **Set Max FPS**,
+  **Set Physics Rate**, and **Set Random Seed** (pin the global randomness so a run replays
+  identically - the seeded partner of the existing Randomize Seed).
+- New System **conditions**: **Is Within Angle** / **Is Clockwise From** (wrap-aware angle
+  tests), **Value Is A Number** / **Value Is Text** (guard untyped variables and loaded JSON
+  before math or string work), **Is NaN** (catch broken calculations), and **Is Fullscreen**
+  (pairs with Set Fullscreen Mode for a toggle).
 
 ### Added - twelve extension seams (build custom plugin features through the API)
 
