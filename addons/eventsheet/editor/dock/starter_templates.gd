@@ -234,6 +234,16 @@ static func _build_topdown_starter() -> EventSheetResource:
 ## dock-free starters live here (Blank + 2D movement + the three data-asset intents); the
 ## New-Sheet menu keeps the autoload/3D cases inline since it also adopts them into the dock.
 static func build_starter(template_id: int) -> EventSheetResource:
+	# Extension starters (EventSheets.register_starter) occupy ids 1000+ in registration order.
+	if template_id >= 1000:
+		var registered: Array[Dictionary] = EventSheets.registered_starters()
+		var starter_index: int = template_id - 1000
+		if starter_index < registered.size():
+			var build: Callable = registered[starter_index].get("build", Callable())
+			var built: Variant = build.call() if build.is_valid() else null
+			if built is EventSheetResource:
+				return built
+		return EventSheetResource.new()
 	match template_id:
 		1: return _build_platformer_starter()
 		2: return _build_topdown_starter()
@@ -248,7 +258,7 @@ static func build_starter(template_id: int) -> EventSheetResource:
 ## order. A curated, dock-free subset of the New-Sheet menu (autoloads + 3D controllers are
 ## project-wide/niche and stay in the in-workspace New menu).
 static func create_new_starters() -> Array[Dictionary]:
-	return [
+	var starters: Array[Dictionary] = [
 		{"id": 0, "label": "Blank Sheet"},
 		{"id": 1, "label": "Platformer Starter"},
 		{"id": 2, "label": "Top-down Starter"},
@@ -256,6 +266,11 @@ static func create_new_starters() -> Array[Dictionary]:
 		{"id": 9, "label": "Custom Resource"},
 		{"id": 10, "label": "Editor Tool"},
 	]
+	# Extension starters (EventSheets.register_starter) append after the built-ins, ids 1000+.
+	var registered: Array[Dictionary] = EventSheets.registered_starters()
+	for starter_index: int in range(registered.size()):
+		starters.append({"id": 1000 + starter_index, "label": str(registered[starter_index].get("label", ""))})
+	return starters
 
 
 ## Builds a fresh sheet from a starter template and adopts it (unsaved; Save As to keep).

@@ -185,6 +185,16 @@ Display strings only.
 | Health | `doctor()` | `Dictionary` | no |
 | Health | `register_doctor_check(check_id: String, check: Callable)` | `void` | no |
 | Health | `unregister_doctor_check(check_id: String)` | `void` | no |
+| Seams | `register_row_menu_item(label, filter, action)` / `unregister_row_menu_item(label)` | `void` | no (shows when open) |
+| Seams | `register_simple_ace(config: Dictionary)` / `simple_ace(config)` | `ACEDefinition` | no (joins next refresh) |
+| Seams | `register_param_editor(tag: String, factory: Callable)` | `void` | no |
+| Seams | `on_sheet_opened/saved/compiled(callback: Callable)` | `void` | no |
+| Seams | `register_starter({label, build})` | `void` | no |
+| Seams | `register_quick_add_synonyms(map: Dictionary)` | `void` | no |
+| Seams | `register_section_description(name, blurb)` | `void` | no |
+| Seams | `register_preference(builder: Callable)` | `void` | no |
+| Seams | `register_tour(name, steps)` / `start_tour(steps)` | `void` / `bool` | start needs dock |
+| Seams | `verify_pack(pack_gd_path: String)` | `Dictionary` | no |
 | Localisation | `translate(text: String)` | `String` | no |
 | Localisation | `register_translation_file(path: String)` | `bool` | no |
 | Localisation | `available_languages()` | `PackedStringArray` | no |

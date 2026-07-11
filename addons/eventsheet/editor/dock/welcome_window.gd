@@ -132,6 +132,13 @@ func _build() -> void:
 	language_row.add_child(language_picker)
 	prefs_box.add_child(language_row)
 	_welcome_window.set_meta("language_picker", language_picker)
+	# Extension preferences (EventSheets.register_preference): each builder returns one Control
+	# row - extensions get a settings home without inventing their own dialog.
+	for preference_builder: Callable in EventSheets.preference_builders():
+		if preference_builder.is_valid():
+			var preference_row: Variant = preference_builder.call()
+			if preference_row is Control:
+				prefs_box.add_child(preference_row)
 	box.add_child(EventSheetPopupUI.titled_card("Preferences", prefs_box))
 	# Footer migration row: the guide is one CLICK, not a filename to go hunting for - the old
 	# text named it without linking it. Reopen note stays a muted hint below.

@@ -474,16 +474,27 @@ const SEARCH_SYNONYMS := {
 }
 
 
+## Extension synonyms (EventSheets.register_quick_add_synonyms): packs teach their own phrases
+## on top of the built-in table. Session-scoped - re-register on plugin load.
+static var _extra_synonyms: Dictionary = {}
+
+
+static func register_synonyms(synonyms: Dictionary) -> void:
+	for phrase: Variant in synonyms:
+		_extra_synonyms[str(phrase).to_lower()] = str(synonyms[phrase])
+
+
 static func _c3_synonym_queries(query: String) -> Array[String]:
 	var lowered: String = query.to_lower().strip_edges()
 	var extra: Array[String] = []
 	if lowered.length() < 4:
 		return extra
-	for phrase: String in SEARCH_SYNONYMS:
-		if lowered.contains(phrase) or phrase.contains(lowered):
-			var mapped: String = str(SEARCH_SYNONYMS[phrase])
-			if not extra.has(mapped):
-				extra.append(mapped)
+	for table: Dictionary in [SEARCH_SYNONYMS, _extra_synonyms]:
+		for phrase: String in table:
+			if lowered.contains(phrase) or phrase.contains(lowered):
+				var mapped: String = str(table[phrase])
+				if not extra.has(mapped):
+					extra.append(mapped)
 	return extra
 
 

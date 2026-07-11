@@ -194,7 +194,20 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	label.text = str(param_dict.get("display_name", key))
 	label.custom_minimum_size = Vector2(160.0, 0.0)
 	row.add_child(label)
-	var field: Control = _create_field(param_dict, initial_values, key, hint)
+	# Extension seam (EventSheets.register_param_editor): a factory registered for this param's
+	# hint (or type_name) supplies the field. Contract: it returns a LineEdit (subclass freely -
+	# buttons, popups, validation) so the dialog's value read (.text) needs no special case.
+	var field: Control = null
+	var editor_factory: Callable = EventSheets.param_editor_for(hint if not hint.is_empty() else str(param_dict.get("type_name", "")))
+	if editor_factory.is_valid():
+		var custom_field: Variant = editor_factory.call(param_dict, str(initial_values.get(key, param_dict.get("default", ""))))
+		if custom_field is LineEdit:
+			field = custom_field
+			_fields[key] = custom_field
+		else:
+			push_warning("[EventSheets] param editor for '%s' must return a LineEdit - falling back." % key)
+	if field == null:
+		field = _create_field(param_dict, initial_values, key, hint)
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(field)
 	_form.add_child(row)

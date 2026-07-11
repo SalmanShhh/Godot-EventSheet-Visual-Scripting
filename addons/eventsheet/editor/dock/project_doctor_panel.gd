@@ -18,6 +18,24 @@ func init(dock: Control) -> void:
 
 var _doctor_window: Window = null
 var _doctor_tree: Tree = null
+var _fix_button: Button = null
+
+
+## Enables the Fix button only when the selected finding carries a fix Callable.
+func _refresh_fix_button() -> void:
+	if _fix_button == null:
+		return
+	var item: TreeItem = _doctor_tree.get_selected()
+	var finding: Variant = item.get_metadata(1) if item != null else null
+	_fix_button.disabled = not (finding is Dictionary and (finding as Dictionary).get("fix") is Callable)
+
+
+func _run_selected_fix() -> void:
+	var item: TreeItem = _doctor_tree.get_selected()
+	var finding: Variant = item.get_metadata(1) if item != null else null
+	if finding is Dictionary and (finding as Dictionary).get("fix") is Callable:
+		((finding as Dictionary)["fix"] as Callable).call(finding)
+		_run_project_doctor()
 
 
 func open() -> void:
@@ -47,10 +65,21 @@ func open() -> void:
 		var findings_card: PanelContainer = EventSheetPopupUI.titled_card("Findings", _doctor_tree)
 		findings_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		box.add_child(findings_card)
+		var buttons: HBoxContainer = HBoxContainer.new()
 		var rerun_button: Button = Button.new()
 		rerun_button.text = "Re-run checks"
+		rerun_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		rerun_button.pressed.connect(_run_project_doctor)
-		box.add_child(rerun_button)
+		buttons.add_child(rerun_button)
+		# Extension checks may attach a "fix" Callable to a finding - one click repairs it, then
+		# the audit re-runs so the finding's disappearance is PROVEN, not assumed.
+		_fix_button = Button.new()
+		_fix_button.text = "Fix selected"
+		_fix_button.disabled = true
+		_fix_button.pressed.connect(_run_selected_fix)
+		buttons.add_child(_fix_button)
+		box.add_child(buttons)
+		_doctor_tree.item_selected.connect(_refresh_fix_button)
 		_doctor_window.add_child(body)
 		_dock.add_child(_doctor_window)
 	_doctor_window.popup_centered()
@@ -73,6 +102,7 @@ func _run_project_doctor() -> void:
 		item.set_tooltip_text(1, str(finding.get("path")))
 		item.set_text(2, str(finding.get("message")))
 		item.set_metadata(0, str(finding.get("path", "")))
+		item.set_metadata(1, finding)
 		item.set_tooltip_text(2, "%s\n\nDouble-click to open this sheet." % str(finding.get("message")))
 	var errors: int = int(report.get("errors", 0))
 	_dock._set_status("Project Doctor: %d error(s), %d warning(s), %d note(s)." % [errors, int(report.get("warnings", 0)), int(report.get("infos", 0))], errors > 0)

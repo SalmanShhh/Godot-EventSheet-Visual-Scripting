@@ -99,7 +99,16 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
-func start() -> void:
+## Custom steps (an extension tour via EventSheets.start_tour); empty = the built-in tour.
+var _custom_steps: Array[Dictionary] = []
+
+
+func _active_steps() -> Array[Dictionary]:
+	return _custom_steps if not _custom_steps.is_empty() else steps()
+
+
+func start(custom_steps: Array[Dictionary] = []) -> void:
+	_custom_steps = custom_steps
 	# A first-timer may start the tour before any sheet exists - hand them a blank practice sheet so
 	# every step's gesture actually works (the no-sheet guard would otherwise reject each one).
 	if _dock._current_sheet == null:
@@ -169,7 +178,7 @@ func _build() -> void:
 	buttons.add_child(_back_button)
 	_next_button = Button.new()
 	_next_button.pressed.connect(func() -> void:
-		if _step_index >= steps().size() - 1:
+		if _step_index >= _active_steps().size() - 1:
 			_finish()
 		else:
 			_step_index += 1
@@ -186,7 +195,7 @@ func _build() -> void:
 
 
 func _show_step() -> void:
-	var tour_steps: Array[Dictionary] = steps()
+	var tour_steps: Array[Dictionary] = _active_steps()
 	var step: Dictionary = tour_steps[_step_index]
 	_title_label.text = str(step["title"])
 	_body_label.text = str(step["body"])
@@ -203,7 +212,7 @@ func _show_step() -> void:
 ## Flips the step to a green "Done!" the moment the asked-for edit exists on the live sheet. Purely
 ## encouraging feedback - Next never waits for it.
 func _poll_current_step() -> void:
-	var step: Dictionary = steps()[_step_index]
+	var step: Dictionary = _active_steps()[_step_index]
 	var check: Callable = step["check"]
 	if not check.is_valid():
 		return

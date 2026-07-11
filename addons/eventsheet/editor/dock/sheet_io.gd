@@ -46,6 +46,7 @@ func _load_sheet_from_path(path: String) -> void:
 		# surface for what GDScript maps to which events (the banner recomputes its own copy
 		# from the active sheet, so tab switches always show the right counts).
 		_dock._refresh_preview_banner()
+		EventSheets._notify_lifecycle("opened", {"sheet": imported, "path": resolved_path})
 		_dock._set_status("Opened %s - viewing it as a sheet. Just start editing to change it here, or \"Open in Godot Script Editor\" for the code. (%s)" % [resolved_path.get_file(), EventSheetLiftReport.summary(EventSheetLiftReport.for_sheet(imported))])
 		return
 	var loaded: Resource = ResourceLoader.load(resolved_path)
@@ -55,6 +56,7 @@ func _load_sheet_from_path(path: String) -> void:
 		_dock._dirty = false
 		_dock._refresh_title_strip()
 		_dock._clear_undo_history()
+		EventSheets._notify_lifecycle("opened", {"sheet": loaded, "path": resolved_path})
 		return
 	_dock._set_status("Open failed: %s is not an EventSheetResource." % resolved_path.get_file(), true)
 
@@ -86,12 +88,14 @@ func _open_new_sheet(path: String) -> void:
 ## refuse to open a stale source when the sheet doesn't currently compile.
 func _save_backed_sheet() -> bool:
 	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, _dock._current_sheet.external_source_path)
+	EventSheets._notify_lifecycle("compiled", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path, "success": bool(compile_result.get("success", false))})
 	if not bool(compile_result.get("success", false)):
 		_dock._set_status("This sheet doesn't compile yet - fix the error, then save again. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
 		return false
 	_dock._dirty = false
 	_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
 	_dock._refresh_title_strip()
+	EventSheets._notify_lifecycle("saved", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path})
 	return true
 
 

@@ -147,6 +147,13 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_submenu_item("More", "RowMoreSubmenu")
 	menu.add_separator()
 	menu.add_item("Delete", _dock.ROW_MENU_DELETE)
+	# Extension seam (EventSheets.register_row_menu_item): registered items whose filter accepts
+	# this row append at the end, ids 900+ in registration order (dispatched by dock_input_dispatch).
+	var extension_items: Array[Dictionary] = EventSheets.row_menu_items_for(row_data.source_resource if row_data != null else null)
+	if not extension_items.is_empty():
+		menu.add_separator()
+		for extension_index: int in range(extension_items.size()):
+			menu.add_item(str(extension_items[extension_index].get("label", "")), 900 + extension_index)
 
 
 ## The Insert ▸ submenu - a sibling row of any type below the clicked one (plus Event Above,

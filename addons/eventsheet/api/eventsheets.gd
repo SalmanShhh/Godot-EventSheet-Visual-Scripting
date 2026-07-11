@@ -158,7 +158,11 @@ static func refresh() -> void:
 ## Adds an entry to the Command Palette (Ctrl+P). `action` runs when picked. Re-register
 ## under the same title to replace; unregister_palette_command removes it. Works before
 ## the dock opens - entries appear once a palette exists.
-static func register_palette_command(title: String, action: Callable) -> void:
+static func register_palette_command(title: String, action: Callable, category: String = "") -> void:
+	# An optional category prefixes the display title ("My Pack: Reroll Loot") so extension
+	# commands group together in the palette's fuzzy filter.
+	if not category.is_empty():
+		title = "%s: %s" % [category, title]
 	unregister_palette_command(title)
 	_palette_commands.append({"title": title, "run": action})
 
@@ -306,6 +310,202 @@ static func register_doctor_check(check_id: String, check: Callable) -> void:
 
 static func unregister_doctor_check(check_id: String) -> void:
 	EventSheetProjectDoctor.unregister_check(check_id)
+
+
+# ── Extension seams (custom features plug in here) ─────────────────────────────────────
+
+## Row context-menu items: [{label, filter: Callable(resource)->bool, action: Callable(resource)}].
+static var _row_menu_items: Array[Dictionary] = []
+## Lifecycle listeners: event name -> Array[Callable].
+static var _lifecycle: Dictionary = {"opened": [], "saved": [], "compiled": []}
+## Extension starters: [{label, build: Callable()->EventSheetResource}] - ids 1000+ in the dialog.
+static var _starters: Array[Dictionary] = []
+## Param editors: hint or type_name -> Callable(param_dict, initial_text) -> LineEdit.
+static var _param_editors: Dictionary = {}
+## Welcome Preferences rows: Array[Callable() -> Control].
+static var _preference_builders: Array[Callable] = []
+## Dictionary-defined ACEs live in the registry's extras (see register_simple_ace).
+static var _simple_aces: Array[ACEDefinition] = []
+
+
+## Adds an entry to the right-click menu of event rows. `filter` receives the row's source
+## resource (an EventRow) and returns whether the item should appear; `action` receives the same
+## resource when clicked. Mutate the sheet inside your action via EventSheets.edit() so the
+## change is one undo step. Re-registering a label replaces it.
+static func register_row_menu_item(label: String, filter: Callable, action: Callable) -> void:
+	unregister_row_menu_item(label)
+	_row_menu_items.append({"label": label, "filter": filter, "action": action})
+
+
+static func unregister_row_menu_item(label: String) -> void:
+	for index: int in range(_row_menu_items.size() - 1, -1, -1):
+		if str(_row_menu_items[index].get("label", "")) == label:
+			_row_menu_items.remove_at(index)
+
+
+## The registered row items applicable to `resource` (consulted by the context-menu builder).
+static func row_menu_items_for(resource: Resource) -> Array[Dictionary]:
+	var applicable: Array[Dictionary] = []
+	for entry: Dictionary in _row_menu_items:
+		var filter: Callable = entry.get("filter", Callable())
+		if not filter.is_valid() or bool(filter.call(resource)):
+			applicable.append(entry)
+	return applicable
+
+
+## Lifecycle hooks: run `callback(payload)` whenever a sheet is opened ({sheet, path}), saved
+## ({sheet, path}), or compiled ({sheet, path, success}). Fired by the editor's own open/save
+## funnels - linters, sync tools, and exporters subscribe instead of polling.
+static func on_sheet_opened(callback: Callable) -> void:
+	(_lifecycle["opened"] as Array).append(callback)
+
+
+static func on_sheet_saved(callback: Callable) -> void:
+	(_lifecycle["saved"] as Array).append(callback)
+
+
+static func on_sheet_compiled(callback: Callable) -> void:
+	(_lifecycle["compiled"] as Array).append(callback)
+
+
+## Internal: the dock's IO funnels announce lifecycle events here.
+static func _notify_lifecycle(event_name: String, payload: Dictionary) -> void:
+	for callback: Callable in (_lifecycle.get(event_name, []) as Array):
+		if callback.is_valid():
+			callback.call(payload)
+
+
+## Registers a starter template for the FileSystem "Create New > Event Sheet" dialog:
+## {"label": "FPS Player", "build": Callable() -> EventSheetResource}. Appears after the
+## built-ins; the Callable runs fresh per create.
+static func register_starter(config: Dictionary) -> void:
+	if str(config.get("label", "")).is_empty() or not (config.get("build") is Callable):
+		push_warning("[EventSheets] register_starter needs a label and a build Callable.")
+		return
+	_starters.append(config)
+
+
+static func registered_starters() -> Array[Dictionary]:
+	return _starters
+
+
+## Teaches the quick-add bar, the Ghost Row, and the picker your pack's phrases:
+## {"dash forward": "dash", ...} - the key is what users type, the value is the search term
+## that finds your ACE.
+static func register_quick_add_synonyms(synonyms: Dictionary) -> void:
+	ACEPickerDialog.register_synonyms(synonyms)
+
+
+## Registers the blurb shown when a picker section header is selected (the same channel the
+## built-in sections use).
+static func register_section_description(section_name: String, blurb: String) -> void:
+	EventSheetSectionInfo.register_description(section_name, blurb)
+
+
+## Registers a custom parameter editor. `tag` matches a param's hint (or its type_name when it
+## has no hint); `factory(param_dict, initial_text)` must return a LineEdit (subclass and style
+## it freely - add buttons, popups, validation - the dialog reads the final value from .text).
+static func register_param_editor(tag: String, factory: Callable) -> void:
+	_param_editors[tag] = factory
+
+
+static func param_editor_for(tag: String) -> Callable:
+	return _param_editors.get(tag, Callable())
+
+
+## Adds a row to the Welcome window's Preferences card: `builder()` returns the Control (built
+## fresh each time the Welcome first builds). Give your extension's setting a home without
+## inventing a settings dialog.
+static func register_preference(builder: Callable) -> void:
+	_preference_builders.append(builder)
+
+
+static func preference_builders() -> Array[Callable]:
+	return _preference_builders
+
+
+## Defines an ACE from a plain Dictionary - no provider script file:
+##   {"id": "Dash", "kind": "action",              # action | condition | expression
+##    "display_name": "Dash Forward", "category": "My Pack",
+##    "template": "velocity.x = {speed} * 2.0",     # the GDScript it compiles to
+##    "params": [{"id": "speed", "type_name": "float", "default": "300.0"}],
+##    "description": "..."}
+## register_simple_ace() puts it in every sheet's picker for the session (re-register on plugin
+## load); simple_ace() just builds the definition. Ids are contracts once sheets use them.
+static func simple_ace(config: Dictionary) -> ACEDefinition:
+	var definition: ACEDefinition = ACEDefinition.new()
+	definition.id = str(config.get("id", ""))
+	definition.provider_id = str(config.get("provider_id", "Extension"))
+	definition.display_name = str(config.get("display_name", definition.id.capitalize()))
+	definition.category = str(config.get("category", "Extensions"))
+	definition.description = str(config.get("description", ""))
+	match str(config.get("kind", "action")):
+		"condition":
+			definition.ace_type = ACEDefinition.ACEType.CONDITION
+		"expression":
+			definition.ace_type = ACEDefinition.ACEType.EXPRESSION
+		_:
+			definition.ace_type = ACEDefinition.ACEType.ACTION
+	definition.metadata["codegen_template"] = str(config.get("template", ""))
+	for param_config: Variant in (config.get("params", []) as Array):
+		if param_config is Dictionary:
+			definition.parameters.append((param_config as Dictionary).duplicate(true))
+	return definition
+
+
+static func register_simple_ace(config: Dictionary) -> ACEDefinition:
+	var definition: ACEDefinition = simple_ace(config)
+	if definition.id.is_empty():
+		push_warning("[EventSheets] register_simple_ace needs an id.")
+		return definition
+	for index: int in range(_simple_aces.size() - 1, -1, -1):
+		if _simple_aces[index].id == definition.id and _simple_aces[index].provider_id == definition.provider_id:
+			_simple_aces.remove_at(index)
+	_simple_aces.append(definition)
+	if _dock_alive() and _dock.has_method("_refresh_ace_registry"):
+		_dock.call("_refresh_ace_registry")
+	return definition
+
+
+static func simple_aces() -> Array[ACEDefinition]:
+	return _simple_aces
+
+
+## Runs a custom guided tour through the built-in tour engine. Steps use the same shape as the
+## first-time tour: {"title", "body", "task", "check": Callable(sheet)->bool or Callable()}.
+## Needs the workspace open; the check (optional) flips the step to Done live.
+static func start_tour(steps: Array[Dictionary]) -> bool:
+	if not _dock_alive() or not ("_tour" in _dock):
+		return false
+	_dock._tour.start(steps)
+	return true
+
+
+## Registers a named tour as a Command Palette entry ("Tour: <name>") - packs ship their own
+## 2-minute walkthroughs on the engine the built-in tour uses.
+static func register_tour(tour_name: String, steps: Array[Dictionary]) -> void:
+	register_palette_command("Tour: %s" % tour_name, func() -> void: start_tour(steps))
+
+
+## One-call pack verification for addon authors - the gates that actually bite, bundled:
+## the emitted .gd must PARSE (the build + drift audit don't check this), and it must lift
+## back and re-emit byte-identically (the lossless covenant). Returns
+## {ok, parses, round_trips, errors: Array[String]}.
+static func verify_pack(pack_gd_path: String) -> Dictionary:
+	var report: Dictionary = {"ok": false, "parses": false, "round_trips": false, "errors": []}
+	if not FileAccess.file_exists(pack_gd_path):
+		(report["errors"] as Array).append("no such file: %s" % pack_gd_path)
+		return report
+	var script: Variant = load(pack_gd_path)
+	report["parses"] = script is Script and (script as Script).can_instantiate()
+	if not bool(report["parses"]):
+		(report["errors"] as Array).append("the emitted GDScript does not parse/load: %s" % pack_gd_path)
+	var source: String = FileAccess.get_file_as_string(pack_gd_path)
+	report["round_trips"] = round_trips(source)
+	if not bool(report["round_trips"]):
+		(report["errors"] as Array).append("open-as-sheet does not re-emit byte-identically: %s" % pack_gd_path)
+	report["ok"] = bool(report["parses"]) and bool(report["round_trips"])
+	return report
 
 
 # ── Internal wiring (called by the plugin itself) ─────────────────────────────────────

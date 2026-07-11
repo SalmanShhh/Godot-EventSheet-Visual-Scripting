@@ -37,6 +37,19 @@ func emit(_block: CustomBlockRow) -> PackedStringArray:
 	return PackedStringArray()
 
 
+## Optional row styling: return {"accent": Color} to tint this block's badge in the sheet
+## (default = the theme's behavior accent). Display only - never affects emission.
+func style(_block: CustomBlockRow) -> Dictionary:
+	return {}
+
+
+## Optional live validation: return a short problem description (or "" when the block is fine).
+## The message renders as a red note on the row - catch bad fields at authoring time instead of
+## at compile.
+func validate(_block: CustomBlockRow) -> String:
+	return ""
+
+
 ## Try to claim source lines starting at index i. Return {} when the lines are not yours; else
 ## {"fields": Dictionary, "consumed": int} (consumed >= 1) - or, for a RESOURCE kind,
 ## {"resource": Resource, "consumed": int} carrying a ready row instance. The importer re-emits

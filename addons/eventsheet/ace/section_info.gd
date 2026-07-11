@@ -34,6 +34,13 @@ static func has(name: String) -> bool:
 	return _descriptions.has(name.strip_edges())
 
 
+## Extension seam (EventSheets.register_section_description): packs register the blurb their
+## picker section shows when its header is selected - same channel as the built-ins.
+static func register_description(name: String, blurb: String) -> void:
+	_ensure_seeded()
+	_descriptions[name.strip_edges()] = blurb
+
+
 ## A copy of every registered description (for tests / tooling).
 static func all() -> Dictionary:
 	_ensure_seeded()

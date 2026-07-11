@@ -20,6 +20,10 @@ static var _source_definition_cache: Dictionary = {}
 func refresh_from_sources(sources: Array[Object], include_builtin: bool = true) -> void:
 	_definitions.clear()
 	_definitions_by_key.clear()
+	# Extension seam: dictionary-defined ACEs (EventSheets.register_simple_ace) join every
+	# refresh - session-scoped verbs with no provider script file.
+	for simple_definition: ACEDefinition in EventSheets.simple_aces():
+		_store_definition(simple_definition)
 	if include_builtin:
 		if _builtin_definition_cache.is_empty():
 			for descriptor in ACERegistry.get_all_descriptors():

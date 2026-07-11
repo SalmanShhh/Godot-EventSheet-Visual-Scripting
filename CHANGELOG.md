@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Added - twelve extension seams (build custom plugin features through the API)
+
+- **Row context-menu items**: `EventSheets.register_row_menu_item(label, filter, action)` puts
+  your tool in the right-click menu of event rows, filtered per row.
+- **Dictionary-defined ACEs**: `register_simple_ace({...})` adds a verb (action / condition /
+  expression, with a codegen template and params) to every sheet's picker - no provider script
+  file. Session-scoped; re-register on load.
+- **Custom parameter editors**: `register_param_editor(tag, factory)` - a factory returning a
+  LineEdit (subclass freely) takes over params whose hint or type matches the tag.
+- **Doctor quick-fixes**: a check's finding may carry a `fix` Callable - the Project Doctor
+  grows a "Fix selected" button that runs it and re-audits.
+- **Sheet lifecycle hooks**: `on_sheet_opened / on_sheet_saved / on_sheet_compiled(callback)` -
+  linters, sync tools, and exporters subscribe instead of polling.
+- **Starter templates**: `register_starter({label, build})` appears in the FileSystem
+  "Create New > Event Sheet" dialog after the built-ins.
+- **Quick-add synonyms**: `register_quick_add_synonyms({...})` teaches the quick-add bar, the
+  Ghost Row, and the picker your pack's phrases.
+- **Custom Block styling + validation**: `EventSheetBlockKind.style(block)` tints the row badge
+  and `validate(block)` renders a live red note for bad fields - authoring-time, not compile-time.
+- **`verify_pack(path)`**: one call bundles the pack gates that actually bite - the emitted .gd
+  must parse (the build and drift audit don't check this) and re-emit byte-identically.
+- **Welcome preferences + custom tours**: `register_preference(builder)` adds a row to the
+  Welcome's Preferences card; `register_tour(name, steps)` ships a guided tour on the built-in
+  tour engine (a "Tour: <name>" palette command).
+- **Palette categories**: `register_palette_command(title, action, category)` groups extension
+  commands ("My Pack: Reroll") in the Ctrl+P palette.
+- **Section descriptions**: `register_section_description(name, blurb)` gives a pack's picker
+  section the same header-click blurb the built-ins have.
+
 ### Added - FPS Controller pack + FPS Arena showcase
 
 - **FPS Controller** (`eventsheet_addons/fps_controller/`, the 59th pack): a complete

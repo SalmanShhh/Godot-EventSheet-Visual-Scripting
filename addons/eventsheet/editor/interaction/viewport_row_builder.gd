@@ -426,11 +426,14 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 		return row_data
 	var badge_text: String = kind.title if kind != null else "block"
 	var summary_text: String = kind.summary(block) if kind != null else block.kind_id
+	# Extension hooks: a kind may tint its badge (style) and flag bad fields live (validate).
+	var kind_style: Dictionary = kind.style(block) if kind != null else {}
+	var badge_color: Color = kind_style.get("accent", event_style.behavior_accent_color)
 	row_data.spans = [
 		_make_span(
 			badge_text,
 			SemanticSpan.SpanType.KEYWORD,
-			{"badge": true, "text_color": event_style.behavior_accent_color}
+			{"badge": true, "text_color": badge_color}
 		),
 		_make_span(
 			summary_text,
@@ -438,6 +441,13 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 			{"kind": "custom_block_row", "text_color": event_style.object_label_color}
 		)
 	]
+	var problem: String = kind.validate(block) if kind != null else ""
+	if not problem.is_empty():
+		row_data.spans.append(_make_span(
+			"⚠ " + problem,
+			SemanticSpan.SpanType.VALUE,
+			{"kind": "custom_block_row", "text_color": Color(0.88, 0.42, 0.42, 1.0)}
+		))
 	return row_data
 
 

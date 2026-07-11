@@ -27,6 +27,15 @@ func init(dock: Control) -> void:
 func on_row_context_menu_id_pressed(id: int) -> void:
 	if _dock._context_row == null:
 		return
+	# Extension row-menu items (EventSheets.register_row_menu_item) occupy ids 900+.
+	if id >= 900:
+		var applicable: Array[Dictionary] = EventSheets.row_menu_items_for(_dock._context_row.source_resource)
+		var extension_index: int = id - 900
+		if extension_index < applicable.size():
+			var action: Callable = applicable[extension_index].get("action", Callable())
+			if action.is_valid():
+				action.call(_dock._context_row.source_resource)
+		return
 	match id:
 		_dock.ROW_MENU_ADD_SUB_EVENT:
 			_dock._insert_child_event_for_context_row()
