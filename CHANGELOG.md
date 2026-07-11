@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Changed - a friendlier on-ramp (empty states + add affordances)
+
+- **The empty sheet greets you with real buttons.** The getting-started text is now centered like a
+  proper landing view with clickable call-to-action buttons: "+ Add your first event" opens the
+  picker and "New from template…" opens the starter menu - a single click, no gesture knowledge
+  needed. The intent-aware advice (behavior / autoload / editor tool / custom resource) still picks
+  the text.
+- **The no-sheet state is honest and self-healing.** With no sheet open the empty state no longer
+  claims "double-click to add your first event" (there was nowhere to put one); it says so plainly
+  and offers a "Create an event sheet…" button. Double-clicking empty space in that state now opens
+  the starter-template menu instead of dying on a status-bar warning.
+- **"+ Add condition" joins "+ Add action" in the row.** Every event now carries the mirror
+  affordance in the condition lane - clicking it opens the picker in add-condition mode. Like its
+  action twin it hides at rest and reveals on hover/selection, staying visible only where the lane
+  genuinely needs content (an event with no trigger and no conditions).
+- **Add affordances look like buttons.** "+ Add event…", "+ Add action" and "+ Add condition" draw a
+  faint rounded pill with an outline (brightening on hover) instead of reusing note/comment styling -
+  newcomers don't click things that look like notes.
+
 ### Added - an optional 2-minute tour
 
 - **Tools > Start the Tour…** (also a button on the Welcome window): a small floating window that

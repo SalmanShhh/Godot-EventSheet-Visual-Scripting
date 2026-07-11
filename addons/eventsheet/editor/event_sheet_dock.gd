@@ -2507,6 +2507,13 @@ func _build_row_more_submenu(is_event: bool) -> void:
 
 
 func _on_viewport_empty_space_double_clicked() -> void:
+	# With NO sheet open, the empty state invites this exact gesture - honor it. The old path died
+	# inside _ensure_sheet_for_editing with only a status-bar warning, which read as a broken
+	# promise to a first-time user. Opening the starter menu makes the double-click CREATE the
+	# sheet it needs instead of scolding.
+	if _current_sheet == null:
+		_open_template_menu()
+		return
 	if not _ensure_sheet_for_editing():
 		return
 	# Double-clicking empty space reads as "I want a new event here" - open the ACE picker in new-event

@@ -68,6 +68,15 @@ static func display(intent: Intent) -> Dictionary:
 ## intent's full potential, shown only while the sheet has no authored rows. Kept SHORT on
 ## purpose (one heading + one action + one tip reads calm; a wall of advice reads like clutter).
 static func empty_sheet_advice(sheet: EventSheetResource) -> Dictionary:
+	# No sheet loaded at all is its own state: telling the user to "add your first event" would be
+	# a lie (there is nowhere to put one). Steer toward creating a sheet instead - the viewport's
+	# double-click and CTA buttons open the starter menu in this state.
+	if sheet == null:
+		return {
+			"heading": "No event sheet is open",
+			"primary": "Create one to start building - a menu of ready-made starters opens.",
+			"tip": "Tip: Tools > Welcome… has a playable showcase and a 2-minute tour.",
+		}
 	var host: String = sheet.host_class if sheet != null else "Node"
 	match of_sheet(sheet):
 		Intent.BEHAVIOUR:

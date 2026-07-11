@@ -782,11 +782,14 @@ static func run() -> bool:
     dock_viewport.size = Vector2(640.0, 1200.0)
     var scroll_shell: ScrollContainer = dock.find_child("EventSheetScroll", true, false)
     # Scroll to the exact top of row 2 so the first visible row is deterministically row 2,
-    # independent of per-row heights.
+    # independent of per-row heights. Headless trap: no layout frame runs between the resize and
+    # the read, so the shell still clamps scroll_vertical to its STALE pre-setup content height -
+    # lift the scrollbar range manually before setting the scroll.
     var row_two_top: float = dock_viewport.get_row_layout_for_test(2, 640.0).get("row_rect", Rect2()).position.y
     if scroll_shell != null:
         scroll_shell.size = Vector2(640.0, 56.0)
-        scroll_shell.scroll_vertical = int(row_two_top)
+        scroll_shell.get_v_scroll_bar().max_value = row_two_top + 400.0
+        scroll_shell.scroll_vertical = int(ceilf(row_two_top))
     var visible_range: Vector2i = dock_viewport.get_visible_row_range()
     all_passed = _check("visible range starts from scrolled row", visible_range.x, 2) and all_passed
 

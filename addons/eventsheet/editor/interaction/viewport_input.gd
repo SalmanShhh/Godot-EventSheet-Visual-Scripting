@@ -121,6 +121,18 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport.accept_event()
 			return
 		if row_index < 0:
+			# The centered getting-started CTAs are real buttons: a single click activates them.
+			# "add_event" routes through the same signal as the double-click gesture, so the dock's
+			# self-healing (open the starter menu when no sheet is loaded) covers both.
+			var cta_action: String = _viewport._empty_state_helper.cta_action_at(local_position)
+			if cta_action == "add_event":
+				_viewport.empty_space_double_clicked.emit()
+				_viewport.accept_event()
+				return
+			if cta_action == "template_menu":
+				_viewport.template_menu_requested.emit()
+				_viewport.accept_event()
+				return
 			if event.double_click:
 				_viewport.empty_space_double_clicked.emit()
 				_viewport.accept_event()
@@ -145,6 +157,10 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 					return
 		if row_data != null and str(metadata.get("kind", "")) == "add_action":
 			_viewport.ace_picker_requested.emit(row_data, "action")
+			_viewport.accept_event()
+			return
+		if row_data != null and str(metadata.get("kind", "")) == "add_condition":
+			_viewport.ace_picker_requested.emit(row_data, "condition")
 			_viewport.accept_event()
 			return
 		if row_data != null and str(metadata.get("kind", "")) == "add_event":

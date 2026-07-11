@@ -213,6 +213,7 @@ func build_ui() -> void:
 	_dock._viewport.raw_code_edit_requested.connect(_dock._on_viewport_raw_code_edit_requested)
 	_dock._viewport.context_menu_requested.connect(_dock._on_viewport_context_menu_requested)
 	_dock._viewport.empty_space_double_clicked.connect(_dock._on_viewport_empty_space_double_clicked)
+	_dock._viewport.template_menu_requested.connect(_dock._open_template_menu)
 	_dock._viewport.empty_space_context_menu_requested.connect(_dock._on_viewport_empty_space_context_menu_requested)
 	_dock._viewport.set_external_span_edit_handler_enabled(true)
 

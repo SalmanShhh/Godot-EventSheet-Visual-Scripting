@@ -418,23 +418,39 @@ func _draw_spans(
 	# member line is the selected/hovered one (a single click selects only the clicked
 	# line's span, often not the head - guarding on the head dropped the highlight).
 	var drawn_block_selection: Dictionary = {}
-	# Declutter: the "+ Add action" affordance is hidden at rest and revealed when the row is
-	# hovered or selected, so a populated sheet reads calmly instead of repeating "+ Add action"
-	# under every event. Events that have NO actions yet keep it visible so newcomers can still
-	# discover it. The span stays in the layout model regardless (hit-testing + tests rely on it).
+	# Declutter: the "+ Add action" / "+ Add condition" affordances are hidden at rest and revealed
+	# when the row is hovered or selected, so a populated sheet reads calmly instead of repeating
+	# add links under every event. Events that have NO actions (or no real conditions - the Every
+	# Tick placeholder doesn't count) keep theirs visible so newcomers can still discover them.
+	# The spans stay in the layout model regardless (hit-testing + tests rely on them).
 	var row_has_action: bool = false
+	var row_has_condition: bool = false
 	for probe_span: SemanticSpan in row_data.spans:
-		if probe_span != null and probe_span.metadata is Dictionary and str((probe_span.metadata as Dictionary).get("kind", "")) == "action":
+		if probe_span == null or not (probe_span.metadata is Dictionary):
+			continue
+		var probe_meta: Dictionary = probe_span.metadata as Dictionary
+		var probe_kind: String = str(probe_meta.get("kind", ""))
+		if probe_kind == "action":
 			row_has_action = true
-			break
+		elif probe_kind == "trigger" or (probe_kind == "condition" and not bool(probe_meta.get("placeholder", false))):
+			# A trigger occupies the lane too: an "On Ready -> act" row is complete, so its add
+			# link can wait for hover like any populated lane.
+			row_has_condition = true
 	var reveal_add_action: bool = row_data.hovered or row_data.selected or not row_has_action
+	var reveal_add_condition: bool = row_data.hovered or row_data.selected or not row_has_condition
 	for span_index: int in range(row_data.spans.size()):
 		var span: SemanticSpan = row_data.spans[span_index]
 		if span == null:
 			continue
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
-		if str(metadata.get("kind", "")) == "add_action" and not reveal_add_action:
+		var span_kind: String = str(metadata.get("kind", ""))
+		if span_kind == "add_action" and not reveal_add_action:
 			continue
+		if span_kind == "add_condition" and not reveal_add_condition:
+			continue
+		# The add affordances get button chrome (a faint pill) instead of the generic span hover
+		# box, so they read as clickable buttons rather than stray muted text.
+		var is_add_affordance: bool = span_kind == "add_action" or span_kind == "add_condition" or span_kind == "add_event"
 		var in_block: bool = block_heads.has(span_index)
 		var is_block_head: bool = in_block and int(block_heads[span_index]) == span_index
 		if bool(metadata.get("chip", false)):
@@ -464,7 +480,7 @@ func _draw_spans(
 				var selected_outline: Color = selection_fill.lightened(SPAN_SELECT_OUTLINE_LIGHTEN)
 				selected_outline.a = SPAN_SELECT_OUTLINE_ALPHA
 				control.draw_rect(span.rect.grow(2.0), selected_outline, false, 1.0)
-		elif span_index == hovered_span_index:
+		elif span_index == hovered_span_index and not is_add_affordance:
 			if bool(metadata.get("chip", false)):
 				var hover_rect: Rect2 = block_unions[span_index] if in_block else span.rect
 				_draw_cell_hover(control, hover_rect, event_style.cell_hover_color if event_style != null else Color(1.0, 1.0, 1.0, 0.14))
@@ -483,6 +499,8 @@ func _draw_spans(
 		var ace_enabled: bool = bool(metadata.get("ace_enabled", true))
 		if not ace_enabled:
 			color = color.lerp(TEXT_MUTED, 0.6)
+		if is_add_affordance:
+			_draw_add_affordance_pill(control, span.rect, color, span_index == hovered_span_index)
 		if row_data.row_type == EventRowData.RowType.GROUP and bool(metadata.get("group_title", false)):
 			color = event_style.group_title_color if event_style != null else EventSheetPalette.COLOR_GROUP_TITLE
 		var draw_text: String = editing_buffer if span_index == editing_span_index else span.text
@@ -598,6 +616,19 @@ func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary)
 	# Flat event-sheet/GDevelop-style cell: a subtle rectangular fill, no border or rounded corners.
 	var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
 	control.draw_rect(span.rect, bg, true)
+
+
+## Button chrome behind the "+ Add event/condition/action" affordances: a faint rounded pill with
+## an outline, brightening on hover - so the add gestures read as clickable buttons instead of
+## stray muted text (newcomers don't click things that look like notes). Alpha is fixed here; the
+## accent's own alpha is ignored (the affordance text is deliberately faded to 55%).
+static func _draw_add_affordance_pill(control: Control, rect: Rect2, accent: Color, hovered: bool) -> void:
+	var pill: StyleBoxFlat = StyleBoxFlat.new()
+	pill.set_corner_radius_all(8)
+	pill.set_border_width_all(1)
+	pill.bg_color = Color(accent.r, accent.g, accent.b, 0.16 if hovered else 0.06)
+	pill.border_color = Color(accent.r, accent.g, accent.b, 0.55 if hovered else 0.28)
+	control.draw_style_box(pill, rect.grow_individual(7.0, 1.0, 7.0, 1.0))
 
 # Calm, theme-neutral GDScript-cell tint: a very faint desaturated wash + a muted left stripe, so a
 # code cell reads as "this is code" without the saturated blue that fought the editor theme.

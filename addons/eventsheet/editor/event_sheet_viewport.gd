@@ -31,6 +31,9 @@ signal ace_drop_requested(
 signal context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2)
 signal empty_space_context_menu_requested(global_position: Vector2)
 signal empty_space_double_clicked
+# The empty-state "New from template…" / "Create an event sheet…" CTA buttons - the dock opens
+# its starter-template menu.
+signal template_menu_requested
 ## Ctrl+Click on a cell the dock can resolve to a definition (see navigation_probe below).
 signal navigate_requested(row_data: EventRowData, span_index: int, metadata: Dictionary)
 signal drag_status_requested(message: String, is_error: bool)
@@ -1114,6 +1117,8 @@ func _draw() -> void:
 	if _empty_state_helper.is_sheet_visually_empty():
 		_empty_state_helper.draw_empty_state(width)
 		return
+	# Populated sheet: drop any button rects from a previous empty frame so they can't eat clicks.
+	_empty_state_helper.clear_cta_rects()
 	var visible_range: Vector2i = get_visible_row_range()
 	if visible_range.x < 0:
 		return

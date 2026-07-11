@@ -1388,6 +1388,27 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 				}.merged(condition_style_meta, true)
 			)
 		)
+	# Event-sheet-style faint "+ Add condition" affordance on its own line below the conditions -
+	# the mirror of "+ Add action", because clicking in the condition lane IS the core
+	# add-a-condition gesture. The renderer hides it at rest (revealed on hover/selection, or when
+	# the event has no real conditions yet); it always stays in the layout model, and
+	# _count_event_lines mirrors its line (maxi(...) keeps it below the Every Tick placeholder,
+	# which sits at line 0 without advancing condition_line_index).
+	var add_condition_color: Color = condition_style_meta.get("text_color", EventSheetPalette.COLOR_CONDITION)
+	add_condition_color.a *= 0.55
+	spans.append(
+		_make_span(
+			"+ Add condition",
+			SemanticSpan.SpanType.CONDITION,
+			{
+				"lane": "condition",
+				"kind": "add_condition",
+				"line_index": maxi(condition_line_index, 1),
+				"text_color": add_condition_color,
+				"font_size_delta": condition_style_meta.get("font_size_delta", 0)
+			}
+		)
+	)
 	if not event_row.actions.is_empty():
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
@@ -1563,7 +1584,10 @@ func _count_event_lines(event_row: EventRow) -> int:
 	for pick_entry in event_row.pick_filters:
 		if pick_entry is PickFilter and (pick_entry as PickFilter).enabled:
 			condition_lines += 1
-	var max_condition_line: int = maxi(condition_lines - 1, 0)
+	# "+ Add condition" sits on its own line below the conditions, so the lane's last line index
+	# equals the condition line count - except an empty lane, where the Every Tick placeholder
+	# holds line 0 and the affordance takes line 1 (mirrors _build_event_spans exactly).
+	var max_condition_line: int = maxi(condition_lines, 1)
 	# Action lane: "+ Add" sits on its own line below the actions (and below the event comment
 	# when present), so the lane spans action_count (+ comment) + 1 lines. In-flow GDScript
 	# blocks occupy one line per code line.
