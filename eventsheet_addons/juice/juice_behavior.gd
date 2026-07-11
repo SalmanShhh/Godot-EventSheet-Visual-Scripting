@@ -28,6 +28,9 @@ signal slowmo_finished
 ## @ace_trigger
 ## @ace_name("On Hitstop Finished")
 signal hitstop_finished
+## @ace_trigger
+## @ace_name("On Tilt Finished")
+signal tilt_finished
 
 # --- Designer knobs (tune the FEEL in the Inspector) ---
 ## Peak camera shake offset, in pixels, at full trauma.
@@ -54,11 +57,25 @@ signal hitstop_finished
 ## Spring Squash: stiffness + damping of the spring-back (lower damping = bouncier).
 @export_range(1.0, 1000.0, 1.0) var squash_stiffness: float = 250.0
 @export_range(0.0, 1.0, 0.01) var squash_damping: float = 0.6
+## How fast a Recoil kick returns to centre, in pixels per second.
+@export_range(10.0, 2000.0, 5.0) var recoil_recovery: float = 140.0
 
 # --- Internal state ---
 var trauma: float = 0.0
 var shake_time: float = 0.0
 var _shaking: bool = false
+# True while ANY camera effect is holding the camera away from its captured rest pose.
+var _cam_driving: bool = false
+var _recoil_vec: Vector2 = Vector2.ZERO
+var _bob_active: bool = false
+var _bob_time: float = 0.0
+var _bob_amplitude: float = 6.0
+var _bob_frequency: float = 2.2
+var _jitter_active: bool = false
+var _jitter_time: float = 0.0
+var _jitter_amount: float = 3.0
+var _tilt_roll: float = 0.0
+var _tilt_tween: Tween = null
 var _base_offset: Vector2 = Vector2.ZERO
 var _base_rotation: float = 0.0
 var _base_scale: Vector2 = Vector2.ONE
@@ -104,28 +121,51 @@ func _on_tree_exiting() -> void:
 	clear_slowmo()
 
 func _process(delta: float) -> void:
+	# Effect STATE advances camera-or-not (headless-safe: trauma must decay and recoil must
+	# recover even when no viewport exists); only the camera write below needs a camera.
 	if trauma > 0.0:
 		trauma = maxf(trauma - shake_decay * delta, 0.0)
-		var cam: Camera2D = _camera()
-		if cam != null:
-			if not _shaking:
-				_shaking = true
+		shake_time += delta
+		_shaking = true
+	if trauma <= 0.0 and _shaking:
+		_shaking = false
+		shake_stopped.emit()
+	if _recoil_vec != Vector2.ZERO:
+		_recoil_vec = _recoil_vec.move_toward(Vector2.ZERO, recoil_recovery * delta)
+	if _bob_active:
+		_bob_time += delta * _bob_frequency
+	if _jitter_active:
+		_jitter_time += delta * shake_frequency
+	var cam: Camera2D = _camera()
+	if cam != null:
+		# One mixer for every camera effect: all contributions sum around ONE captured rest pose,
+		# so shake + recoil + bob + jitter + tilt compose instead of fighting over the offset.
+		var cam_wants: bool = trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001
+		if cam_wants:
+			if not _cam_driving:
+				_cam_driving = true
 				_base_offset = cam.offset
 				_base_rotation = cam.rotation
+			var fx_offset: Vector2 = _recoil_vec
+			var fx_roll: float = deg_to_rad(_tilt_roll)
 			if trauma > 0.0:
-				shake_time += delta
 				# Square the trauma so the shake ramps in perceptually (Squirrel Eiserloh's model).
 				var amount: float = trauma * trauma
 				var t: float = shake_time * shake_frequency
-				cam.offset = _base_offset + Vector2(max_offset.x * amount * _noise.get_noise_2d(t, 0.0), max_offset.y * amount * _noise.get_noise_2d(0.0, t))
-				cam.rotation = _base_rotation + deg_to_rad(max_roll_degrees) * amount * _noise.get_noise_2d(t, t)
-			else:
-				# Settled this frame: restore the camera's resting offset/roll.
-				cam.offset = _base_offset
-				cam.rotation = _base_rotation
-		if trauma <= 0.0 and _shaking:
-			_shaking = false
-			shake_stopped.emit()
+				fx_offset += Vector2(max_offset.x * amount * _noise.get_noise_2d(t, 0.0), max_offset.y * amount * _noise.get_noise_2d(0.0, t))
+				fx_roll += deg_to_rad(max_roll_degrees) * amount * _noise.get_noise_2d(t, t)
+			if _jitter_active:
+				fx_offset += Vector2(_jitter_amount * _noise.get_noise_2d(_jitter_time, 100.0), _jitter_amount * _noise.get_noise_2d(100.0, _jitter_time))
+			if _bob_active:
+				# A walking figure-8: side sway at half rate, one vertical dip per step.
+				fx_offset += Vector2(sin(_bob_time * TAU * 0.5) * _bob_amplitude * 0.5, sin(_bob_time * TAU) * _bob_amplitude)
+			cam.offset = _base_offset + fx_offset
+			cam.rotation = _base_rotation + fx_roll
+		elif _cam_driving:
+			# Every effect settled: hand the camera back exactly as we found it.
+			cam.offset = _base_offset
+			cam.rotation = _base_rotation
+			_cam_driving = false
 	if _squash_spring_active:
 		# Spring the scale back to rest (semi-implicit, framerate-independent - same model as the Spring pack).
 		_squash_velocity += (_base_scale - _squash_value) * squash_stiffness * delta
@@ -152,17 +192,18 @@ func shake(strength: float) -> void:
 ## @ace_action
 ## @ace_name("Stop Shake")
 ## @ace_category("Juice")
-## @ace_description("Cancels any shake and restores the camera to rest immediately.")
+## @ace_description("Cancels any shake immediately (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it).")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$JuiceBehavior.stop_shake()")
 func stop_shake() -> void:
 	trauma = 0.0
 	shake_time = 0.0
+	_shaking = false
 	var cam: Camera2D = _camera()
-	if cam != null and _shaking:
+	if cam != null and _cam_driving and not (_bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001):
 		cam.offset = _base_offset
 		cam.rotation = _base_rotation
-	_shaking = false
+		_cam_driving = false
 
 ## @ace_action
 ## @ace_name("Use Camera")
@@ -172,6 +213,68 @@ func stop_shake() -> void:
 ## @ace_codegen_template("$JuiceBehavior.use_camera({camera_path})")
 func use_camera(camera_path: NodePath) -> void:
 	_camera_override = get_node_or_null(camera_path) as Camera2D
+
+## @ace_action
+## @ace_name("Recoil")
+## @ace_category("Juice")
+## @ace_description("Kicks the camera a distance (pixels) in a direction (degrees: -90 = up, 0 = right) and springs it back at the Recoil Recovery rate. Fire on every shot - kicks stack, so rapid fire climbs. Composes with Shake/Bob/Jitter.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.recoil({angle_degrees}, {strength})")
+func recoil(angle_degrees: float, strength: float) -> void:
+	_recoil_vec += Vector2.from_angle(deg_to_rad(angle_degrees)) * strength
+
+## @ace_action
+## @ace_name("Start Head Bob")
+## @ace_category("Juice")
+## @ace_description("Starts a walking head-bob on the camera: a figure-8 sway (side at half rate, one vertical dip per step). Amplitude is pixels, frequency is steps per second. Call while your character moves; Stop Head Bob when they halt.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.start_head_bob({amplitude}, {frequency})")
+func start_head_bob(amplitude: float, frequency: float) -> void:
+	_bob_amplitude = amplitude
+	_bob_frequency = maxf(frequency, 0.01)
+	_bob_active = true
+
+## @ace_action
+## @ace_name("Stop Head Bob")
+## @ace_category("Juice")
+## @ace_description("Stops the head bob (the camera returns to rest once every other effect settles too).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.stop_head_bob()")
+func stop_head_bob() -> void:
+	_bob_active = false
+
+## @ace_action
+## @ace_name("Start Jitter")
+## @ace_category("Juice")
+## @ace_description("Starts a continuous nervous wobble on the camera (pixels) that runs until Stop Jitter - unlike Shake it never decays. Great for engines idling, drunk vision, earthquakes building, low-health unease.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.start_jitter({amount})")
+func start_jitter(amount: float) -> void:
+	_jitter_amount = amount
+	_jitter_active = true
+
+## @ace_action
+## @ace_name("Stop Jitter")
+## @ace_category("Juice")
+## @ace_description("Stops the jitter wobble.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.stop_jitter()")
+func stop_jitter() -> void:
+	_jitter_active = false
+
+## @ace_action
+## @ace_name("Tilt To")
+## @ace_category("Juice")
+## @ace_description("Eases the camera roll to an angle (degrees) and HOLDS it - lean into a drift, a hill, or a dramatic dutch angle. Tilt back to 0 to level out. Emits On Tilt Finished.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.tilt_to({degrees}, {duration})")
+func tilt_to(degrees: float, duration: float) -> void:
+	if _tilt_tween != null:
+		_tilt_tween.kill()
+	var tw: Tween = create_tween()
+	tw.tween_property(self, "_tilt_roll", degrees, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.finished.connect(func() -> void: tilt_finished.emit())
+	_tilt_tween = tw
 
 ## @ace_action
 ## @ace_name("Zoom By Percent")
@@ -377,4 +480,4 @@ func _apply_host_scale(s: Vector2) -> void:
 		c.pivot_offset = c.size / 2.0
 		c.scale = s
 
-# Game feel, batteries included: screenshake, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Zoom; Squash & Stretch animates the node it's attached to.
+# Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.)

@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+### Added - FPS Controller movement tech (crouch, crouch slide, wall ride, wall jump)
+
+- **Crouch** (hold Ctrl, or the Crouch / Stand Up / Set Crouching actions): the capsule collider
+  physically shrinks toward the floor (the shape resource is duplicated first, so a capsule
+  shared across scenes never shrinks globally), the Head drops, movement slows to the crouch
+  multiplier, and standing is ceiling-checked - release Ctrl inside a vent and you pop up the
+  moment you clear it. Can Stand Up is a condition too.
+- **Crouch slide**: crouch at sprint speed and the direction locks while speed decays from Slide
+  Boost Speed to crouch-walk pace over Slide Duration. On Slide Started / Ended triggers.
+- **Wall ride**: hold forward against a wall mid-air with enough speed to glide along it with
+  softened gravity, up to Wall Ride Max Time. On Wall Ride Started / Ended triggers, plus Wall
+  Normal X/Z expressions for camera leans.
+- **Wall jump**: jump mid-air against any wall - Jump Velocity up plus Wall Jump Push away, with
+  the push fading over about half a second so air control returns smoothly. On Wall Jumped.
+- Every piece has an Enabled/tuning knob; all four work out of the box in the FPS Arena showcase.
+
+### Added - camera game-feel verbs in Juice (2D) + the new Juice 3D pack
+
+- **Juice (2D)** gains **Recoil** (a directional kick that springs back - rapid fire climbs),
+  **Start/Stop Head Bob** (a walking figure-8), **Start/Stop Jitter** (a continuous wobble that
+  never decays - engines, low health, fear), and **Tilt To** (ease the roll to an angle and hold
+  it). All camera effects now mix around ONE captured rest pose, so shake + recoil + bob + tilt
+  compose instead of fighting, and the camera is handed back exactly where it started.
+- **Juice 3D** (60th pack): the same feel for `Camera3D` - trauma Shake, weapon **Recoil**
+  (pitch kick + side spread, cosmetic: aim is untouched), **Head Bob**, **Jitter**, **Lean**
+  (held roll, made for wall rides and peeks), **FOV Punch** (self-recovering speed kick), and
+  **Zoom FOV To** (aim-down-sights in one action). Every effect is an additive offset that is
+  subtracted again next frame, so it composes with whatever owns the camera (the FPS
+  Controller's mouse look, animations, cutscenes). Guide: `docs/Addons/Juice-3D.md`.
+
 ### Added - preview behaviors in the editor (and the API seam behind it)
 
 - **Tools > Preview Behaviors on Selected Node** (also in the Command Palette): select a node in

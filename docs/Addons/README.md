@@ -50,7 +50,7 @@ Attach to a node to move it.
 
 ## Movement (3D)
 
-- [FPS Controller](FPS-Controller.md) - a complete first/third-person character: mouse look, WASD move, sprint, jump, and a one-verb camera-mode switch (see the FPS Arena showcase).
+- [FPS Controller](FPS-Controller.md) - a complete first/third-person character: mouse look, WASD move, sprint, jump, crouch + crouch slide, wall ride + wall jump, and a one-verb camera-mode switch (see the FPS Arena showcase).
 - [Move To 3D](Move-To-3D.md) - move a 3D node to a point or along a path.
 - [Bullet 3D](Bullet-3D.md) - fire a 3D node in a straight line.
 - [Sine 3D](Sine-3D.md) - oscillate a 3D property on a sine wave.
@@ -73,7 +73,8 @@ Attach to a node to move it.
 
 ## Visuals and juice
 
-- [Juice](Juice.md) - screenshake, smooth zoom, squash and stretch, slowmo, and hitstop.
+- [Juice](Juice.md) - screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, squash and stretch, slowmo, and hitstop (2D).
+- [Juice 3D](Juice-3D.md) - camera shake, weapon recoil, head bob, jitter, lean, and FOV punch/zoom on the active Camera3D.
 - [Flash](Flash.md) - flash a sprite a colour on hit.
 - [Fade](Fade.md) - fade any sprite or UI in and out by animating its transparency.
 - [Spring](Spring.md) - springy, bouncy motion toward a target value.

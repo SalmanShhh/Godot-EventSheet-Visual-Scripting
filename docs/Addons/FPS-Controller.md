@@ -4,6 +4,11 @@ FPS Controller is a complete first-person / third-person character controller yo
 `CharacterBody3D` and drive from event-sheet rows. It handles mouse look (yaw on the body, pitch
 on the head), WASD/arrow movement relative to where you look, Shift sprint, Space jump with
 gravity, landing detection, and a one-verb camera-mode switch between first and third person.
+Movement tech is built in: **crouch** (hold Ctrl - the capsule physically shrinks, and standing
+is ceiling-checked so you cannot pop up inside a vent), **crouch slide** (crouch while
+sprinting), **wall ride** (hold forward against a wall mid-air to glide along it), and
+**wall jump** (press jump mid-air against any wall) - each with its own triggers, so a camera
+lean or a sound is one row away.
 The bundled **FPS Arena** showcase (`demo/showcase/fps_arena/`) is the reference setup - open it,
 press play, and walk around before wiring your own.
 
@@ -71,13 +76,44 @@ the behavior finds them by name and quietly skips what's missing.
 | Action | Apply Camera Mode | Re-applies the mode to the Arm (after swapping rigs at runtime). |
 | Action | Capture Mouse / Release Mouse | Locks the cursor for looking / frees it (Esc also frees it). |
 | Action | Set Move Speed / Set Sprint Multiplier / Set Mouse Sensitivity | Runtime feel tuning. |
+| Action | Crouch / Stand Up / Set Crouching (enabled) | Crouches (capsule shrinks to Crouch Height, Head drops, speed drops to the crouch multiplier) / stands - refused while a ceiling blocks the headroom. Held Ctrl drives these automatically. |
+| Action | Stop Sliding | Ends a crouch slide early (you stay crouched). |
+| Action | Wall Jump | Kicks off the touched wall: Jump Velocity up + Wall Jump Push away (the push fades over ~0.5 s). Pressing jump mid-air against a wall does this automatically. |
+| Action | Stop Wall Ride | Detaches from the wall; full gravity resumes. |
+| Trigger | On Crouched / On Stood Up | Crouch state changes. |
+| Trigger | On Slide Started / On Slide Ended | The crouch slide window - great for a camera tilt. |
+| Trigger | On Wall Ride Started / On Wall Ride Ended | Wall contact glide begins/ends - lean the camera here. |
+| Trigger | On Wall Jumped | A wall jump launched. |
 | Condition | Is Sprinting | True while Shift is held. |
 | Condition | Is First Person | True in first-person mode. |
+| Condition | Is Crouching / Is Sliding / Is Wall Riding | The movement-tech states. |
+| Condition | Can Stand Up | True when there is headroom to stand (no ceiling above the crouched capsule). |
 | Expression | Current Speed | Horizontal speed in m/s (drive a speed HUD or FOV kick). |
 | Expression | Look Yaw / Look Pitch | The current view angles in degrees. |
+| Expression | Wall Normal X / Z | The touched wall's outward normal (zero off-wall) - the wall-jump push direction; feed it to a camera lean. |
 
 Exported knobs (Inspector or sheet variables): Move Speed, Sprint Multiplier, Jump Velocity,
 Gravity, Mouse Sensitivity, Pitch Min/Max, Third Person, Camera Distance, Capture Mouse On Ready.
+Movement tech knobs: Crouch Height + Crouch Speed Multiplier; Slide Enabled + Slide Boost Speed +
+Slide Min Speed (the speed a crouch must be moving at to slide - default just above walking, so
+only a sprint-crouch slides) + Slide Duration; Wall Ride Enabled + Wall Ride Gravity Scale +
+Wall Ride Max Time + Wall Ride Min Speed; Wall Jump Enabled + Wall Jump Push.
+
+### How the tech reads your rig
+
+- **Crouch** finds the host's capsule `CollisionShape3D` automatically, duplicates the shape
+  resource on first use (so a capsule shared between scenes never shrinks globally), shortens it
+  toward the floor, and drops the `Head` by the lost height. Standing sweeps the body upward
+  first - blocked headroom keeps you crouched, and the stand retries each frame the key is up,
+  so you pop up the moment you clear the vent.
+- **Crouch slide** starts when you crouch while moving at Slide Min Speed or faster on the
+  floor: direction locks, speed decays from Slide Boost Speed down to crouch-walk pace over
+  Slide Duration. Jumping or Stop Sliding ends it early.
+- **Wall ride** engages mid-air when you hold forward against a wall with enough speed: gravity
+  drops to Wall Ride Gravity Scale and a slight stick keeps you glued until the timer, the wall,
+  or your speed runs out.
+- **Wall jump** works from a ride or any mid-air wall touch: up at Jump Velocity, away at Wall
+  Jump Push, and the push decays over about half a second so air control comes back smoothly.
 
 ## Use cases
 
@@ -90,6 +126,14 @@ Gravity, Mouse Sensitivity, Pitch Min/Max, Third Person, Camera Distance, Captur
    `Capture Mouse` + restore on end.
 5. **Ladder / low-gravity zones.** An Area3D toggles the Gravity knob - the controller keeps
    working, just floatier.
+6. **Slide dash with a camera kick.** `On Slide Started → Juice 3D: FOV Punch 8` and
+   `On Slide Ended → (nothing - the punch recovers itself)`. Sprint, tap Ctrl, feel the speed.
+7. **Wall-run lean.** `On Wall Ride Started → Juice 3D: Lean (Wall Normal X * -12, 0.2)` then
+   `On Wall Ride Ended → Lean (0, 0.25)` - the camera banks into the wall and levels out.
+8. **Vent crawl gate.** `Is Crouching + not Can Stand Up → show "find the exit" hint` - the
+   ceiling check doubles as a "am I inside a crawlspace" test.
+9. **Parkour chain telegraph.** `On Wall Jumped → Juice 3D: Recoil 1.0 0.3` + a whoosh sound -
+   every kick off a wall gets tactile feedback.
 
 ## Tips and common mistakes
 
@@ -101,4 +145,13 @@ Gravity, Mouse Sensitivity, Pitch Min/Max, Third Person, Camera Distance, Captur
   and clicking Capture Mouse re-locks after an Esc.
 - **Custom keys.** Movement reads `ui_left/right/up/down` and jump reads `ui_accept`; remap
   those actions in the Input Map, or call Jump / Add Look from your own input events for fully
-  custom bindings.
+  custom bindings. Crouch is held Ctrl the same way - or call Set Crouching from any input you
+  like (a toggle-crouch is `Set Crouching (not Is Crouching)` on your keybind).
+- **"My slide never triggers."** The slide needs Slide Min Speed at the moment you crouch - the
+  default (6.5) sits between walk (5) and sprint (8) on purpose. Sprint first, then crouch. If
+  you want every moving crouch to slide, lower Slide Min Speed below your walk speed.
+- **"Wall ride won't start."** It needs all four: airborne, touching a wall, holding forward,
+  and moving at Wall Ride Min Speed. Run ALONG the wall, not into it - a head-on push has no
+  tangential speed left after the wall eats it.
+- **Turn tech off per game.** Slide, wall ride, and wall jump each have an Enabled knob - a
+  slower tactical game can keep crouch and drop the parkour without touching the sheet.

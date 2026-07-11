@@ -24,24 +24,86 @@ signal landed
 ## @ace_name("On Camera Mode Changed")
 ## @ace_category("FPS Controller")
 signal camera_mode_changed
+## @ace_trigger
+## @ace_name("On Crouched")
+## @ace_category("FPS Controller")
+signal crouched
+## @ace_trigger
+## @ace_name("On Stood Up")
+## @ace_category("FPS Controller")
+signal stood_up
+## @ace_trigger
+## @ace_name("On Slide Started")
+## @ace_category("FPS Controller")
+signal slide_started
+## @ace_trigger
+## @ace_name("On Slide Ended")
+## @ace_category("FPS Controller")
+signal slide_ended
+## @ace_trigger
+## @ace_name("On Wall Ride Started")
+## @ace_category("FPS Controller")
+signal wall_ride_started
+## @ace_trigger
+## @ace_name("On Wall Ride Ended")
+## @ace_category("FPS Controller")
+signal wall_ride_ended
+## @ace_trigger
+## @ace_name("On Wall Jumped")
+## @ace_category("FPS Controller")
+signal wall_jumped
 
 @export var camera_distance: float = 3.5
 @export var capture_mouse_on_ready: bool = true
+@export var crouch_height: float = 0.9
+@export var crouch_speed_multiplier: float = 0.5
+var crouching: bool = false
 @export var gravity: float = 9.8
+var head_base_y: float = 0.0
 @export var jump_velocity: float = 4.5
 @export var mouse_sensitivity: float = 0.12
 @export var move_speed: float = 5.0
 var pitch: float = 0.0
 @export var pitch_max: float = 80.0
 @export var pitch_min: float = -80.0
+var push_x: float = 0.0
+var push_z: float = 0.0
+var shape_base_y: float = 0.0
+@export var slide_boost_speed: float = 9.0
+var slide_dir_x: float = 0.0
+var slide_dir_z: float = 0.0
+@export var slide_duration: float = 0.9
+@export var slide_enabled: bool = true
+@export var slide_min_speed: float = 6.5
+var slide_time: float = 0.0
+var sliding: bool = false
 var sprint_held: bool = false
 @export var sprint_multiplier: float = 1.6
+var standing_height: float = 0.0
+var standing_radius: float = 0.0
 @export var third_person: bool = false
+@export var wall_jump_enabled: bool = true
+@export var wall_jump_push: float = 6.0
+@export var wall_ride_enabled: bool = true
+@export var wall_ride_gravity_scale: float = 0.25
+@export var wall_ride_max_time: float = 1.5
+@export var wall_ride_min_speed: float = 3.0
+var wall_ride_time: float = 0.0
+var wall_riding: bool = false
 var was_on_floor: bool = true
 var yaw: float = 0.0
 
 func _head() -> Node3D:
 	return (host.get_node_or_null("Head") as Node3D) if host != null else null
+## The host's capsule collider (first CollisionShape3D child holding a CapsuleShape3D).
+## @ace_hidden
+func _capsule() -> CollisionShape3D:
+	if host == null:
+		return null
+	for child in host.get_children():
+		if child is CollisionShape3D and (child as CollisionShape3D).shape is CapsuleShape3D:
+			return child as CollisionShape3D
+	return null
 
 func _ready() -> void:
 	if capture_mouse_on_ready:
@@ -51,18 +113,58 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if host == null:
 		return
-	if not host.is_on_floor():
-		host.velocity.y -= gravity * delta
-	sprint_held = Input.is_key_pressed(KEY_SHIFT)
+	var on_floor := host.is_on_floor()
+	# Gravity, softened while riding a wall so the slide down reads as a glide.
+	if not on_floor:
+		host.velocity.y -= gravity * (wall_ride_gravity_scale if wall_riding else 1.0) * delta
+	sprint_held = Input.is_key_pressed(KEY_SHIFT) and not crouching
+	# Crouch is hold-to-crouch (Ctrl); standing back up is ceiling-checked and retries
+	# every frame the key is up, so releasing under a low tunnel pops you up at the exit.
+	if Input.is_key_pressed(KEY_CTRL):
+		if not crouching:
+			do_crouch()
+	elif crouching:
+		stand_up()
 	var input_vec := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	var direction := host.transform.basis * Vector3(input_vec.x, 0.0, input_vec.y)
 	if direction.length() > 1.0:
 		direction = direction.normalized()
-	var speed := move_speed * (sprint_multiplier if sprint_held else 1.0)
-	host.velocity.x = direction.x * speed
-	host.velocity.z = direction.z * speed
-	if Input.is_action_just_pressed("ui_accept") and host.is_on_floor():
-		do_jump()
+	if sliding:
+		# Crouch slide: locked direction, speed decaying from the boost down to crouch-walk pace.
+		slide_time += delta
+		var slide_fraction := clampf(slide_time / maxf(slide_duration, 0.001), 0.0, 1.0)
+		var slide_now := lerpf(slide_boost_speed, move_speed * crouch_speed_multiplier, slide_fraction)
+		host.velocity.x = slide_dir_x * slide_now
+		host.velocity.z = slide_dir_z * slide_now
+		if slide_fraction >= 1.0 or not on_floor:
+			stop_sliding()
+	else:
+		var speed := move_speed * (sprint_multiplier if sprint_held else 1.0) * (crouch_speed_multiplier if crouching else 1.0)
+		# push_x/z is the decaying wall-jump kick - without it the every-frame velocity
+		# assignment would erase the push after a single physics tick.
+		host.velocity.x = direction.x * speed + push_x
+		host.velocity.z = direction.z * speed + push_z
+	var push_fade := wall_jump_push * 2.0 * delta
+	push_x = move_toward(push_x, 0.0, push_fade)
+	push_z = move_toward(push_z, 0.0, push_fade)
+	if wall_riding:
+		wall_ride_time += delta
+		if on_floor or not host.is_on_wall() or wall_ride_time >= wall_ride_max_time or Vector2(host.velocity.x, host.velocity.z).length() < wall_ride_min_speed:
+			stop_wall_ride()
+		else:
+			# Glue: a slight into-wall push keeps contact; move_and_slide discards it against the wall.
+			var wall_normal := host.get_wall_normal()
+			host.velocity.x -= wall_normal.x * 1.5
+			host.velocity.z -= wall_normal.z * 1.5
+	elif wall_ride_enabled and not on_floor and host.is_on_wall() and input_vec.y < -0.2 and Vector2(host.velocity.x, host.velocity.z).length() >= wall_ride_min_speed:
+		_start_wall_ride()
+	if Input.is_action_just_pressed("ui_accept"):
+		if on_floor:
+			if sliding:
+				stop_sliding()
+			do_jump()
+		elif wall_jump_enabled and host.is_on_wall():
+			do_wall_jump()
 	host.move_and_slide()
 	if host.is_on_floor() and not was_on_floor:
 		landed.emit()
@@ -210,10 +312,194 @@ func look_yaw() -> float:
 func look_pitch() -> float:
 	return pitch
 
+## @ace_action
+## @ace_name("Crouch")
+## @ace_category("FPS Controller")
+## @ace_description("Crouches: the capsule shrinks to Crouch Height (feet stay planted), the Head drops, and movement slows to the crouch multiplier. Crouching at sprint speed starts a crouch slide (see Slide knobs). Fires On Crouched. Held Ctrl does this automatically.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.do_crouch()")
+func do_crouch() -> void:
+	if crouching or host == null:
+		return
+	crouching = true
+	_apply_crouch_shape(true)
+	if slide_enabled and host.is_on_floor():
+		var horizontal := Vector3(host.velocity.x, 0.0, host.velocity.z)
+		if horizontal.length() >= slide_min_speed:
+			sliding = true
+			slide_time = 0.0
+			var slide_direction := horizontal.normalized()
+			slide_dir_x = slide_direction.x
+			slide_dir_z = slide_direction.z
+			slide_started.emit()
+	crouched.emit()
+
+## @ace_action
+## @ace_name("Stand Up")
+## @ace_category("FPS Controller")
+## @ace_description("Stands back up from a crouch - unless a ceiling is in the way, in which case the crouch holds (re-check by calling again, or use the Can Stand Up condition). Ends any slide. Fires On Stood Up.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.stand_up()")
+func stand_up() -> void:
+	if not crouching:
+		return
+	if not _can_stand_up():
+		return
+	if sliding:
+		stop_sliding()
+	crouching = false
+	_apply_crouch_shape(false)
+	stood_up.emit()
+
+## @ace_action
+## @ace_name("Set Crouching")
+## @ace_category("FPS Controller")
+## @ace_description("Crouches (on) or stands (off) - the scripted version of holding/releasing Ctrl.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.set_crouching({enabled})")
+func set_crouching(enabled: bool) -> void:
+	if enabled:
+		do_crouch()
+	else:
+		stand_up()
+
+## @ace_action
+## @ace_name("Stop Sliding")
+## @ace_category("FPS Controller")
+## @ace_description("Ends a crouch slide early (you stay crouched). Fires On Slide Ended.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.stop_sliding()")
+func stop_sliding() -> void:
+	if not sliding:
+		return
+	sliding = false
+	slide_ended.emit()
+
+## @ace_action
+## @ace_name("Wall Jump")
+## @ace_category("FPS Controller")
+## @ace_description("Kicks off the wall the host is touching: Jump Velocity upward plus Wall Jump Push away from the wall (the push fades over about half a second). Ends any wall ride. Fires On Wall Jumped. Pressing jump mid-air against a wall does this automatically.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.do_wall_jump()")
+func do_wall_jump() -> void:
+	if host == null or not host.is_on_wall():
+		return
+	var wall_normal := host.get_wall_normal()
+	if wall_riding:
+		stop_wall_ride()
+	push_x = wall_normal.x * wall_jump_push
+	push_z = wall_normal.z * wall_jump_push
+	host.velocity.y = jump_velocity
+	wall_jumped.emit()
+
+## @ace_action
+## @ace_name("Stop Wall Ride")
+## @ace_category("FPS Controller")
+## @ace_description("Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.stop_wall_ride()")
+func stop_wall_ride() -> void:
+	if not wall_riding:
+		return
+	wall_riding = false
+	wall_ride_ended.emit()
+
+## @ace_condition
+## @ace_name("Is Crouching")
+## @ace_category("FPS Controller")
+## @ace_description("True while crouched (including during a crouch slide).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.is_crouching()")
+func is_crouching() -> bool:
+	return crouching
+
+## @ace_condition
+## @ace_name("Is Sliding")
+## @ace_category("FPS Controller")
+## @ace_description("True during a crouch slide.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.is_sliding()")
+func is_sliding() -> bool:
+	return sliding
+
+## @ace_condition
+## @ace_name("Is Wall Riding")
+## @ace_category("FPS Controller")
+## @ace_description("True while riding a wall (airborne, glued to it, gravity softened).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.is_wall_riding()")
+func is_wall_riding() -> bool:
+	return wall_riding
+
+## @ace_condition
+## @ace_name("Can Stand Up")
+## @ace_category("FPS Controller")
+## @ace_description("True when there is headroom to stand from the current crouch (no ceiling in the way).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.can_stand_up()")
+func can_stand_up() -> bool:
+	return _can_stand_up()
+
+## @ace_expression
+## @ace_name("Wall Normal X")
+## @ace_category("FPS Controller")
+## @ace_description("The touched wall's outward normal, X component (zero when not on a wall) - with Z, the direction a wall jump pushes; feed it to camera lean.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.wall_normal_x()")
+func wall_normal_x() -> float:
+	return host.get_wall_normal().x if host != null and host.is_on_wall() else 0.0
+
+## @ace_expression
+## @ace_name("Wall Normal Z")
+## @ace_category("FPS Controller")
+## @ace_description("The touched wall's outward normal, Z component (zero when not on a wall).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$FPSController.wall_normal_z()")
+func wall_normal_z() -> float:
+	return host.get_wall_normal().z if host != null and host.is_on_wall() else 0.0
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		add_look((event as InputEventMouseMotion).relative.x, (event as InputEventMouseMotion).relative.y)
 	elif event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_ESCAPE:
 		release_mouse()
 
-# FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person.
+func _apply_crouch_shape(low: bool) -> void:
+	var shape_node := _capsule()
+	if shape_node != null:
+		var capsule := shape_node.shape as CapsuleShape3D
+		if standing_height <= 0.0:
+			standing_height = capsule.height
+			standing_radius = capsule.radius
+			shape_base_y = shape_node.position.y
+			var head_node := _head()
+			head_base_y = head_node.position.y if head_node != null else 0.0
+			shape_node.shape = capsule.duplicate()
+			capsule = shape_node.shape as CapsuleShape3D
+		var low_height: float = minf(crouch_height, standing_height)
+		capsule.height = low_height if low else standing_height
+		# A crouch below capsule-diameter auto-shrinks the radius; put it back on stand.
+		if not low:
+			capsule.radius = standing_radius
+		shape_node.position.y = shape_base_y - ((standing_height - low_height) * 0.5 if low else 0.0)
+	var head := _head()
+	if head != null and standing_height > 0.0:
+		head.position.y = head_base_y - ((standing_height - minf(crouch_height, standing_height)) if low else 0.0)
+
+func _can_stand_up() -> bool:
+	if host == null or standing_height <= 0.0 or not host.is_inside_tree():
+		return true
+	var params := PhysicsTestMotionParameters3D.new()
+	params.from = host.global_transform
+	params.motion = Vector3.UP * (standing_height - minf(crouch_height, standing_height))
+	return not PhysicsServer3D.body_test_motion(host.get_rid(), params)
+
+## @ace_hidden
+func _start_wall_ride() -> void:
+	wall_riding = true
+	wall_ride_time = 0.0
+	if host != null and host.velocity.y < 0.0:
+		host.velocity.y *= 0.25
+	wall_ride_started.emit()
+
+# FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person. Movement tech included: crouch (hold Ctrl, capsule shrinks, ceiling-checked stand), crouch slide (crouch while sprinting), wall ride (hold forward against a wall mid-air), and wall jump (jump off any wall mid-air).

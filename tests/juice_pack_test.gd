@@ -82,6 +82,27 @@ static func run() -> bool:
 	all_passed = _check("spring squash settles back to rest", behavior._squash_spring_active, false) and all_passed
 	all_passed = _check("spring squash returns to base scale", behavior._squash_value.is_equal_approx(Vector2.ONE), true) and all_passed
 
+	# The camera-feel verbs (recoil / head bob / jitter / tilt): state advances camera-or-not.
+	behavior.recoil_recovery = 140.0
+	behavior.recoil(-90.0, 12.0)
+	all_passed = _check("recoil kicks the offset in the given direction", (behavior._recoil_vec as Vector2).is_equal_approx(Vector2(0.0, -12.0)), true) and all_passed
+	behavior._process(0.05)
+	all_passed = _check("recoil springs back at the recovery rate", is_equal_approx((behavior._recoil_vec as Vector2).length(), 12.0 - 140.0 * 0.05), true) and all_passed
+	for _r in 200:
+		behavior._process(0.1)
+	all_passed = _check("recoil settles fully", behavior._recoil_vec == Vector2.ZERO, true) and all_passed
+	behavior.start_head_bob(6.0, 2.2)
+	all_passed = _check("head bob starts", behavior._bob_active, true) and all_passed
+	behavior._process(0.1)
+	all_passed = _check("head bob advances its clock", behavior._bob_time > 0.0, true) and all_passed
+	behavior.stop_head_bob()
+	all_passed = _check("head bob stops", behavior._bob_active, false) and all_passed
+	behavior.start_jitter(3.0)
+	all_passed = _check("jitter starts", behavior._jitter_active, true) and all_passed
+	behavior.stop_jitter()
+	all_passed = _check("jitter stops", behavior._jitter_active, false) and all_passed
+	all_passed = _check("tilt action + On Tilt Finished trigger exist (tween needs a live tree)", behavior.has_method("tilt_to") and behavior.has_signal("tilt_finished"), true) and all_passed
+
 	# Engine.time_scale must not leak to other tests.
 	all_passed = _check("Engine.time_scale restored to 1.0", is_equal_approx(Engine.time_scale, 1.0), true) and all_passed
 

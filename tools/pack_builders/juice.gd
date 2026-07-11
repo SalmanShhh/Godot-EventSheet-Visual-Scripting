@@ -21,7 +21,7 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["camera", "juice"])
 	var about: CommentRow = CommentRow.new()
-	about.text = "Game feel, batteries included: screenshake, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Zoom; Squash & Stretch animates the node it's attached to."
+	about.text = "Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.)"
 	sheet.events.append(about)
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
@@ -50,11 +50,25 @@ static func build() -> bool:
 		"## Spring Squash: stiffness + damping of the spring-back (lower damping = bouncier).",
 		"@export_range(1.0, 1000.0, 1.0) var squash_stiffness: float = 250.0",
 		"@export_range(0.0, 1.0, 0.01) var squash_damping: float = 0.6",
+		"## How fast a Recoil kick returns to centre, in pixels per second.",
+		"@export_range(10.0, 2000.0, 5.0) var recoil_recovery: float = 140.0",
 		"",
 		"# --- Internal state ---",
 		"var trauma: float = 0.0",
 		"var shake_time: float = 0.0",
 		"var _shaking: bool = false",
+		"# True while ANY camera effect is holding the camera away from its captured rest pose.",
+		"var _cam_driving: bool = false",
+		"var _recoil_vec: Vector2 = Vector2.ZERO",
+		"var _bob_active: bool = false",
+		"var _bob_time: float = 0.0",
+		"var _bob_amplitude: float = 6.0",
+		"var _bob_frequency: float = 2.2",
+		"var _jitter_active: bool = false",
+		"var _jitter_time: float = 0.0",
+		"var _jitter_amount: float = 3.0",
+		"var _tilt_roll: float = 0.0",
+		"var _tilt_tween: Tween = null",
 		"var _base_offset: Vector2 = Vector2.ZERO",
 		"var _base_rotation: float = 0.0",
 		"var _base_scale: Vector2 = Vector2.ONE",
@@ -94,6 +108,10 @@ static func build() -> bool:
 		"## @ace_trigger",
 		"## @ace_name(\"On Hitstop Finished\")",
 		"signal hitstop_finished()",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Tilt Finished\")",
+		"signal tilt_finished()",
 		"",
 		"## The camera these effects drive: an explicit override (Use Camera), else the active Camera2D -",
 		"## auto-found, so Shake / Zoom just work from anywhere without wiring a path.",
@@ -198,28 +216,51 @@ static func build() -> bool:
 	tick.trigger_id = "OnProcess"
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
+		"# Effect STATE advances camera-or-not (headless-safe: trauma must decay and recoil must",
+		"# recover even when no viewport exists); only the camera write below needs a camera.",
 		"if trauma > 0.0:",
 		"\ttrauma = maxf(trauma - shake_decay * delta, 0.0)",
-		"\tvar cam: Camera2D = _camera()",
-		"\tif cam != null:",
-		"\t\tif not _shaking:",
-		"\t\t\t_shaking = true",
+		"\tshake_time += delta",
+		"\t_shaking = true",
+		"if trauma <= 0.0 and _shaking:",
+		"\t_shaking = false",
+		"\tshake_stopped.emit()",
+		"if _recoil_vec != Vector2.ZERO:",
+		"\t_recoil_vec = _recoil_vec.move_toward(Vector2.ZERO, recoil_recovery * delta)",
+		"if _bob_active:",
+		"\t_bob_time += delta * _bob_frequency",
+		"if _jitter_active:",
+		"\t_jitter_time += delta * shake_frequency",
+		"var cam: Camera2D = _camera()",
+		"if cam != null:",
+		"\t# One mixer for every camera effect: all contributions sum around ONE captured rest pose,",
+		"\t# so shake + recoil + bob + jitter + tilt compose instead of fighting over the offset.",
+		"\tvar cam_wants: bool = trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001",
+		"\tif cam_wants:",
+		"\t\tif not _cam_driving:",
+		"\t\t\t_cam_driving = true",
 		"\t\t\t_base_offset = cam.offset",
 		"\t\t\t_base_rotation = cam.rotation",
+		"\t\tvar fx_offset: Vector2 = _recoil_vec",
+		"\t\tvar fx_roll: float = deg_to_rad(_tilt_roll)",
 		"\t\tif trauma > 0.0:",
-		"\t\t\tshake_time += delta",
 		"\t\t\t# Square the trauma so the shake ramps in perceptually (Squirrel Eiserloh's model).",
 		"\t\t\tvar amount: float = trauma * trauma",
 		"\t\t\tvar t: float = shake_time * shake_frequency",
-		"\t\t\tcam.offset = _base_offset + Vector2(max_offset.x * amount * _noise.get_noise_2d(t, 0.0), max_offset.y * amount * _noise.get_noise_2d(0.0, t))",
-		"\t\t\tcam.rotation = _base_rotation + deg_to_rad(max_roll_degrees) * amount * _noise.get_noise_2d(t, t)",
-		"\t\telse:",
-		"\t\t\t# Settled this frame: restore the camera's resting offset/roll.",
-		"\t\t\tcam.offset = _base_offset",
-		"\t\t\tcam.rotation = _base_rotation",
-		"\tif trauma <= 0.0 and _shaking:",
-		"\t\t_shaking = false",
-		"\t\tshake_stopped.emit()",
+		"\t\t\tfx_offset += Vector2(max_offset.x * amount * _noise.get_noise_2d(t, 0.0), max_offset.y * amount * _noise.get_noise_2d(0.0, t))",
+		"\t\t\tfx_roll += deg_to_rad(max_roll_degrees) * amount * _noise.get_noise_2d(t, t)",
+		"\t\tif _jitter_active:",
+		"\t\t\tfx_offset += Vector2(_jitter_amount * _noise.get_noise_2d(_jitter_time, 100.0), _jitter_amount * _noise.get_noise_2d(100.0, _jitter_time))",
+		"\t\tif _bob_active:",
+		"\t\t\t# A walking figure-8: side sway at half rate, one vertical dip per step.",
+		"\t\t\tfx_offset += Vector2(sin(_bob_time * TAU * 0.5) * _bob_amplitude * 0.5, sin(_bob_time * TAU) * _bob_amplitude)",
+		"\t\tcam.offset = _base_offset + fx_offset",
+		"\t\tcam.rotation = _base_rotation + fx_roll",
+		"\telif _cam_driving:",
+		"\t\t# Every effect settled: hand the camera back exactly as we found it.",
+		"\t\tcam.offset = _base_offset",
+		"\t\tcam.rotation = _base_rotation",
+		"\t\t_cam_driving = false",
 		"if _squash_spring_active:",
 		"\t# Spring the scale back to rest (semi-implicit, framerate-independent - same model as the Spring pack).",
 		"\t_squash_velocity += (_base_scale - _squash_value) * squash_stiffness * delta",
@@ -241,12 +282,37 @@ static func build() -> bool:
 		[["strength", "float"]],
 		"trauma = clampf(trauma + strength, 0.0, 1.0)")
 	_default(sheet, "strength", "0.4")
-	Lib.append_function(sheet, "stop_shake", "Stop Shake", "Juice", "Cancels any shake and restores the camera to rest immediately.",
+	Lib.append_function(sheet, "stop_shake", "Stop Shake", "Juice", "Cancels any shake immediately (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it).",
 		[],
-		"trauma = 0.0\nshake_time = 0.0\nvar cam: Camera2D = _camera()\nif cam != null and _shaking:\n\tcam.offset = _base_offset\n\tcam.rotation = _base_rotation\n_shaking = false")
+		"trauma = 0.0\nshake_time = 0.0\n_shaking = false\nvar cam: Camera2D = _camera()\nif cam != null and _cam_driving and not (_bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001):\n\tcam.offset = _base_offset\n\tcam.rotation = _base_rotation\n\t_cam_driving = false")
 	Lib.append_function(sheet, "use_camera", "Use Camera", "Juice", "Pin the effects to a specific Camera2D (by path). Leave it unused to auto-target whichever camera is active.",
 		[["camera_path", "NodePath"]],
 		"_camera_override = get_node_or_null(camera_path) as Camera2D")
+	Lib.append_function(sheet, "recoil", "Recoil", "Juice", "Kicks the camera a distance (pixels) in a direction (degrees: -90 = up, 0 = right) and springs it back at the Recoil Recovery rate. Fire on every shot - kicks stack, so rapid fire climbs. Composes with Shake/Bob/Jitter.",
+		[["angle_degrees", "float"], ["strength", "float"]],
+		"_recoil_vec += Vector2.from_angle(deg_to_rad(angle_degrees)) * strength")
+	_default(sheet, "angle_degrees", "-90")
+	_default(sheet, "strength", "12")
+	Lib.append_function(sheet, "start_head_bob", "Start Head Bob", "Juice", "Starts a walking head-bob on the camera: a figure-8 sway (side at half rate, one vertical dip per step). Amplitude is pixels, frequency is steps per second. Call while your character moves; Stop Head Bob when they halt.",
+		[["amplitude", "float"], ["frequency", "float"]],
+		"_bob_amplitude = amplitude\n_bob_frequency = maxf(frequency, 0.01)\n_bob_active = true")
+	_default(sheet, "amplitude", "6")
+	_default(sheet, "frequency", "2.2")
+	Lib.append_function(sheet, "stop_head_bob", "Stop Head Bob", "Juice", "Stops the head bob (the camera returns to rest once every other effect settles too).",
+		[],
+		"_bob_active = false")
+	Lib.append_function(sheet, "start_jitter", "Start Jitter", "Juice", "Starts a continuous nervous wobble on the camera (pixels) that runs until Stop Jitter - unlike Shake it never decays. Great for engines idling, drunk vision, earthquakes building, low-health unease.",
+		[["amount", "float"]],
+		"_jitter_amount = amount\n_jitter_active = true")
+	_default(sheet, "amount", "3")
+	Lib.append_function(sheet, "stop_jitter", "Stop Jitter", "Juice", "Stops the jitter wobble.",
+		[],
+		"_jitter_active = false")
+	Lib.append_function(sheet, "tilt_to", "Tilt To", "Juice", "Eases the camera roll to an angle (degrees) and HOLDS it - lean into a drift, a hill, or a dramatic dutch angle. Tilt back to 0 to level out. Emits On Tilt Finished.",
+		[["degrees", "float"], ["duration", "float"]],
+		"if _tilt_tween != null:\n\t_tilt_tween.kill()\nvar tw: Tween = create_tween()\ntw.tween_property(self, \"_tilt_roll\", degrees, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: tilt_finished.emit())\n_tilt_tween = tw")
+	_default(sheet, "degrees", "6")
+	_default(sheet, "duration", "0.3")
 	Lib.append_function(sheet, "zoom_by_percent", "Zoom By Percent", "Juice", "Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs.",
 		[["percent", "float"], ["duration", "float"]],
 		"var cam: Camera2D = _camera()\nif cam == null:\n\treturn\nvar target_zoom: Vector2 = cam.zoom * (percent / 100.0)\ntarget_zoom = Vector2(clampf(target_zoom.x, min_zoom, max_zoom), clampf(target_zoom.y, min_zoom, max_zoom))\nvar tw: Tween = create_tween()\ntw.tween_property(cam, \"zoom\", target_zoom, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: zoom_finished.emit())")

@@ -1,4 +1,4 @@
-# Juice - Screenshake, Zoom, Squash, Slowmo and Hitstop in One Behavior
+# Juice - Screenshake, Recoil, Head Bob, Zoom, Squash, Slowmo and Hitstop in One Behavior
 
 Juice is a Godot EventSheets behavior pack that adds game feel to a scene without a line of tween code. You attach a `JuiceBehavior` to a node - a sprite, the player, a UI panel, anything drawn on screen - and that node gains a toolbox of camera and squash effects you fire straight from event rows. The host must be a `CanvasItem` (that means a `Node2D` like a sprite, or a `Control` like a UI panel). Camera effects (Shake, Zoom) find the active `Camera2D` on their own, so Shake and Zoom "just work" from wherever you place the behavior with no path to wire. Squash effects animate the node the behavior is attached to. Slowmo and Hitstop drive `Engine.time_scale` globally. Every effect is fire-and-forget and, where it has a lifetime, ends by emitting an "On X Finished" trigger so you can chain the next beat.
 
@@ -94,8 +94,14 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Action | Parameters | Description |
 |---|---|---|
 | Shake | `strength` (float) | Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit. Opens at 0.4. |
-| Stop Shake | (none) | Cancels any shake and restores the camera to rest immediately. |
+| Stop Shake | (none) | Cancels any shake immediately (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it). |
 | Use Camera | `camera_path` (NodePath) | Pins the effects to a specific `Camera2D` by path. Leave it unset to auto-target whichever camera is active. |
+| Recoil | `angle_degrees` (float), `strength` (float) | Kicks the camera `strength` pixels in a direction (-90 = up, 0 = right) and springs it back at the Recoil Recovery rate. Fire on every shot - kicks stack, so rapid fire climbs. Opens at -90, 12. |
+| Start Head Bob | `amplitude` (float), `frequency` (float) | Starts a walking head-bob: a figure-8 sway (side at half rate, one vertical dip per step). Pixels and steps-per-second. Call while moving; Stop Head Bob when halting. Opens at 6, 2.2. |
+| Stop Head Bob | (none) | Stops the head bob. |
+| Start Jitter | `amount` (float) | A continuous nervous wobble (pixels) that runs until Stop Jitter - unlike Shake it never decays. Idling engines, drunk vision, building earthquakes, low-health unease. Opens at 3. |
+| Stop Jitter | (none) | Stops the jitter wobble. |
+| Tilt To | `degrees` (float), `duration` (float) | Eases the camera roll to an angle and HOLDS it - lean into a drift, a hill, a dutch angle. Tilt back to 0 to level out. Opens at 6, 0.3. |
 | Zoom By Percent | `percent` (float), `duration` (float) | Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs. Opens at 150, 0.4. |
 | Zoom To Position | `world_position` (Vector2), `percent` (float), `duration` (float) | Zooms in while gliding the camera so a world position becomes the screen centre - frame a spot in one action. Opens at 150, 0.4. |
 | Zoom Toward Point | `world_position` (Vector2), `percent` (float), `duration` (float) | Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) - great for strategy/map zoom. Opens at 150, 0.4. |
@@ -123,6 +129,7 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Trigger | Fires when |
 |---|---|
 | On Shake Stopped | Trauma reaches zero and the camera settles back to rest after a shake. |
+| On Tilt Finished | A Tilt To ease reaches its target angle. |
 | On Zoom Finished | Any of the three zoom actions finishes its glide. |
 | On Squash Finished | A Squash & Stretch tween or a Spring Squash spring settles back to rest. |
 | On Slowmo Finished | Slowmo has ramped back to normal time scale. |
@@ -146,6 +153,12 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | `slowmo_fade_out_secs` | float | `0.35` | 0.0 - 2.0 |
 | `squash_stiffness` | float | `250.0` | 1.0 - 1000.0 |
 | `squash_damping` | float | `0.6` | 0.0 - 1.0 |
+| `recoil_recovery` | float | `140.0` | 10.0 - 2000.0 |
+
+All camera effects (shake, recoil, bob, jitter, tilt) sum around ONE captured rest pose, so they
+compose freely - a recoil during a shake during a head bob just works, and the camera is handed
+back exactly where it started once everything settles. For a `Camera3D`, use the **Juice 3D**
+pack - the same verbs, plus FOV punch/zoom and lean.
 
 ---
 
@@ -349,6 +362,51 @@ On Squash Finished
 Squash & Stretch runs over the `duration` you pass and fires On Squash Finished when the elastic settle completes, a clean hook to remove the coin.
 
 ---
+
+### 17. Gun recoil that climbs under sustained fire
+
+Each shot kicks the camera up 12 pixels; the spring-back is slower than the fire rate, so holding the trigger walks the view upward exactly like a real spray pattern.
+
+```
+On Shoot
+  -> Player | Juice: Recoil  -90, 12
+```
+
+### 18. Footsteps you can feel
+
+Bob while moving, stop when idle - two rows and the camera walks with the character.
+
+```
+Every tick
+  Condition: Player  is moving
+    -> Player | Juice: Start Head Bob  6, 2.2
+  Else
+    -> Player | Juice: Stop Head Bob
+```
+
+### 19. A drift lean
+
+Tilt into the corner while drifting, level out on exit - the roll eases both ways.
+
+```
+On Drift Started
+  -> Car | Juice: Tilt To  8, 0.3
+
+On Drift Ended
+  -> Car | Juice: Tilt To  0, 0.4
+```
+
+### 20. Low-health unease
+
+A permanent subtle wobble below 25% health that vanishes on heal - jitter never decays, so it reads as a STATE, not an event.
+
+```
+On Health Changed
+  Condition: Player.health < 25
+    -> Player | Juice: Start Jitter  2
+  Else
+    -> Player | Juice: Stop Jitter
+```
 
 ## Tips and common mistakes
 
