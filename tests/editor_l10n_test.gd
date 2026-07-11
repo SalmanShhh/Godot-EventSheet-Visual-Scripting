@@ -29,14 +29,21 @@ static func run() -> bool:
 	all_passed = _check("English is always offered", Array(EventSheetL10n.available_locales()).has("en"), true) and all_passed
 	all_passed = _check("English display name says default", EventSheetL10n.locale_display_name("en").contains("default"), true) and all_passed
 
-	# 1b. The bundled samples (addons/eventsheet/translations/fr.csv + es.csv) are discovered from
-	# a bare rescan and actually translate - the shipped proof that drop-in files work.
-	all_passed = _check("bundled French sample is discovered", Array(EventSheetL10n.available_locales()).has("fr"), true) and all_passed
-	EventSheetL10n.set_locale("fr")
-	all_passed = _check("bundled French translates the toolbar", EventSheetL10n.translate("Run Scene"), "Lancer la scène") and all_passed
-	all_passed = _check("bundled Spanish sample is discovered", Array(EventSheetL10n.available_locales()).has("es"), true) and all_passed
-	EventSheetL10n.set_locale("es")
-	all_passed = _check("bundled Spanish translates the toolbar", EventSheetL10n.translate("Run Scene"), "Ejecutar escena") and all_passed
+	# 1b. The bundled EFIGS samples (addons/eventsheet/translations/{fr,es,it,de}.csv - English
+	# IS the source) are discovered from a bare rescan and actually translate - the shipped
+	# proof that drop-in files work.
+	var bundled_expectations: Dictionary = {
+		"fr": "Lancer la scène",
+		"es": "Ejecutar escena",
+		"it": "Esegui scena",
+		"de": "Szene ausführen",
+	}
+	for bundled_locale: String in bundled_expectations:
+		all_passed = _check("bundled %s sample is discovered" % bundled_locale,
+			Array(EventSheetL10n.available_locales()).has(bundled_locale), true) and all_passed
+		EventSheetL10n.set_locale(bundled_locale)
+		all_passed = _check("bundled %s translates the toolbar" % bundled_locale,
+			EventSheetL10n.translate("Run Scene"), str(bundled_expectations[bundled_locale])) and all_passed
 	EventSheetL10n.set_locale("en")
 
 	# 2. Drop-in CSV: locales appear, translations apply, unknown strings fall back.

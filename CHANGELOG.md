@@ -15,10 +15,12 @@
   automatically; the canvas-drawn surfaces (empty states, banner, add affordances) route through
   the same layer explicitly. `tools/extract_editor_strings.gd` dumps every current string
   (325 today) into a ready-to-fill template CSV.
-- **French and Spanish ship as worked examples.** `addons/eventsheet/translations/fr.csv` and
-  `es.csv` each translate the everyday surface (toolbar, menus, dialogs, the getting-started
-  screens, the tour) - so Français and Español appear in the language dropdown out of the box,
-  and the files double as the samples to copy when starting your own language.
+- **EFIGS ships out of the box.** English is the built-in source language, and bundled samples
+  translate the everyday surface (toolbar, menus, dialogs, the getting-started screens, the
+  tour) into French, Spanish, Italian, and German
+  (`addons/eventsheet/translations/{fr,es,it,de}.csv`) - so all four appear in the language
+  dropdown immediately, and the files double as the samples to copy when starting your own
+  language.
 - **The extension APIs localise too.** `EventSheets.translate()`,
   `EventSheets.register_translation_file()` (ship translations WITH a pack),
   `available_languages()` and `set_editor_language()` join the public API; ACE display names,
