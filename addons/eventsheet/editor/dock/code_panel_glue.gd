@@ -281,7 +281,7 @@ func on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool) 
 	_dock._raw_code_hint.text = (
 		"Runs inside this event, right after its conditions pass - full GDScript, with the sheet's variables and host in scope. Written verbatim into the .gd."
 		if in_flow
-		else "Top-level GDScript - helper functions, @onready vars, signals… anything no ACE covers. Written verbatim into the .gd and callable from your events."
+		else "Top-level GDScript - helper functions, @onready vars, signals… anything no built-in action covers. Written verbatim into the .gd and callable from your events."
 	)
 	_dock._raw_code_edit.text = raw_row.code
 	_dock._validate_raw_code()

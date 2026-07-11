@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed - identity + plain-words polish
+
+- **The workspace tab wears its own icon** - the sheet glyph (trigger band + condition/action
+  rows) instead of the borrowed generic Node icon.
+- **Plain words in the everyday surfaces.** "ACE" is gone from the hints, statuses, and undo
+  names a beginner reads: the params dialog says "Editing this existing cell", statuses say
+  "Deleted the cell." / "Cell note saved.", the Function dialog's checkbox reads "Publish to the
+  picker (other sheets can use it)". Pack names in the picker display title-cased ("Weapon Kit",
+  not "weapon_kit") - display only, ids never change.
+- **Visual polish batch:** the inverted-condition ✕ softened from pure #FF0000 to a calmer red
+  (still unmistakable, no longer shouting); region/block muted text routes through the shared
+  palette instead of hardcoded whites; the Welcome window's migration-guide mention is now an
+  actual button that opens the guide; the Ghost Row popup builds with the shared themed helpers.
+
 ### Changed - visible Simple Mode + clickable chrome
 
 - **Simple Mode is a toolbar pill now**, not just a buried View-menu check - one glance to read,

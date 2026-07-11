@@ -130,7 +130,7 @@ func _delete_context_ace() -> void:
 	var metadata: Dictionary = _dock._context_hit.get("span_metadata", {})
 	var ace_index: int = int(metadata.get("ace_index", -1))
 	var kind: String = str(metadata.get("kind", ""))
-	var deleted: bool = _dock._perform_undoable_sheet_edit("Delete ACE", func() -> bool:
+	var deleted: bool = _dock._perform_undoable_sheet_edit("Delete Cell", func() -> bool:
 		match kind:
 			"trigger":
 				if event_row.trigger != null:
@@ -147,7 +147,7 @@ func _delete_context_ace() -> void:
 		return false
 	)
 	if deleted:
-		_dock._mark_dirty("Deleted ACE.")
+		_dock._mark_dirty("Deleted the cell.")
 
 
 func _toggle_context_condition_inversion() -> void:
@@ -208,7 +208,7 @@ func _toggle_context_ace_enabled() -> void:
 	var metadata: Dictionary = _dock._context_hit.get("span_metadata", {})
 	var kind: String = str(metadata.get("kind", ""))
 	var ace_index: int = int(metadata.get("ace_index", -1))
-	var changed: bool = _dock._perform_undoable_sheet_edit("Toggle ACE Enabled", func() -> bool:
+	var changed: bool = _dock._perform_undoable_sheet_edit("Toggle Cell Enabled", func() -> bool:
 		match kind:
 			"trigger":
 				if event_row.trigger != null:
@@ -226,7 +226,7 @@ func _toggle_context_ace_enabled() -> void:
 		return false
 	)
 	if changed:
-		_dock._mark_dirty("Updated ACE enabled state.")
+		_dock._mark_dirty("Cell enabled state updated.")
 
 
 ## Disables (or re-enables) everything currently selected at once: individual conditions /
@@ -445,7 +445,7 @@ func _delete_selected_spans() -> bool:
 	var selected_targets: Array = _dock._active_view().get_selected_span_targets()
 	if selected_targets.is_empty():
 		return false
-	var deleted: bool = _dock._perform_undoable_sheet_edit("Delete ACE", func() -> bool:
+	var deleted: bool = _dock._perform_undoable_sheet_edit("Delete Cell", func() -> bool:
 		var targets_by_row: Dictionary = {}
 		for target in selected_targets:
 			if not (target is Dictionary):
@@ -483,7 +483,7 @@ func _delete_selected_spans() -> bool:
 	if not deleted:
 		return false
 	_dock._viewport.clear_selection()
-	_dock._mark_dirty("Deleted ACE.")
+	_dock._mark_dirty("Deleted the cell.")
 	return true
 
 

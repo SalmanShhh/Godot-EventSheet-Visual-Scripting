@@ -127,7 +127,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 	var message := {"text": ""}
 	# This lambda runs inside the dock's undo funnel and captures `self` (this helper), so every
 	# dock state reference below is written `_dock.` while calls into helper methods stay bare.
-	var changed: bool = _dock._perform_undoable_sheet_edit("Apply ACE", func() -> bool:
+	var changed: bool = _dock._perform_undoable_sheet_edit("Apply Cell Edit", func() -> bool:
 		match mode:
 			"new_condition_event":
 				var condition_event: EventRow = EventRow.new()
@@ -211,7 +211,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 		return false
 	)
 	if changed:
-		_dock._mark_dirty(str(message.get("text", "Applied ACE.")))
+		_dock._mark_dirty(str(message.get("text", "Applied.")))
 
 
 ## Bakes a trigger definition's identity + argument signature onto the event row, so the
@@ -465,7 +465,7 @@ func _on_viewport_ace_drop_requested(
 				target_anchor = null
 				break
 	# Undo-funnel lambda captures `self` (this helper): helper calls stay bare, dock state is `_dock.`.
-	var moved: bool = _dock._perform_undoable_sheet_edit("Drag ACE", func() -> bool:
+	var moved: bool = _dock._perform_undoable_sheet_edit("Drag Cell", func() -> bool:
 		var moving_resources: Array = []
 		var moved_trigger: ACECondition = null
 		for entry in normalized_entries:
@@ -504,7 +504,7 @@ func _on_viewport_ace_drop_requested(
 		return moved_trigger != null or not moving_resources.is_empty()
 	)
 	if moved:
-		_dock._mark_dirty("Copied ACE via drag and drop." if copy_mode else "Moved ACE via drag and drop.")
+		_dock._mark_dirty("Copied the cell via drag and drop." if copy_mode else "Moved the cell via drag and drop.")
 
 
 func _normalize_ace_drag_entries(source_entries: Array, lane: String) -> Array:

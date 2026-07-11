@@ -1656,7 +1656,7 @@ func _is_reedit_flow() -> bool:
 
 func _build_hint_text() -> String:
 	if _apply_blocked:
-		return "This ACE references a sheet variable, but none exist yet. Add a variable to the sheet first, then add this ACE."
+		return "This needs a sheet variable, but none exist yet. Add a variable to the sheet first (Add > Global Variable), then come back."
 	var mode: String = str(_context.get("mode", ""))
 	var base: String = "Fill in parameters, then press OK to apply."
 	match mode:
@@ -1667,9 +1667,9 @@ func _build_hint_text() -> String:
 		"new_sub_condition_event":
 			base = "Creating a nested sub-condition event."
 		"replace_condition", "replace_trigger", "replace_action":
-			base = "Re-editing an existing ACE entry."
+			base = "Editing this existing cell."
 		"new_event", "new_condition_event":
-			base = "Creating a new event from this ACE."
+			base = "Creating a new event from this pick."
 	return "%s %s" % [
 		base,
 		"Existing values were loaded for quick re-editing." if _is_reedit_flow() else ""

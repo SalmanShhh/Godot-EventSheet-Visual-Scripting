@@ -89,7 +89,7 @@ static func empty_sheet_advice(sheet: EventSheetResource) -> Dictionary:
 			return {
 				"heading": "Empty autoload sheet",
 				"primary": "Add the signals and functions every sheet in the project should reach (score, game state, an event bus).",
-				"tip": "Tip: expose a function as an ACE and it appears in every sheet's picker, project-wide.",
+				"tip": "Tip: publish a function to the picker and every sheet in the project can call it.",
 			}
 		Intent.EDITOR_TOOL:
 			return {

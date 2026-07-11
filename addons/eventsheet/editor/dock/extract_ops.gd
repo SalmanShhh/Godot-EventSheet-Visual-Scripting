@@ -56,7 +56,7 @@ static func extract_actions_to_function(sheet: EventSheetResource, event: EventR
 	function.expose_as_ace = true
 	function.ace_display_name = display_name if not display_name.is_empty() else function_name.capitalize()
 	function.ace_category = "Functions"
-	function.description = "Extracted from an event - reusable as an ACE."
+	function.description = "Extracted from an event - reusable from the picker."
 	var argument_names: PackedStringArray = PackedStringArray()
 	for capture: Dictionary in captures:
 		var parameter: ACEParam = ACEParam.new()
@@ -218,7 +218,7 @@ func extract_to_function_requested() -> void:
 		if changed:
 			_dock._refresh_functions_list()
 			var note: String = "" if capture_names.is_empty() else " Event-scoped %s became parameter(s) - the call passes the live value(s)." % ", ".join(capture_names)
-			_dock._mark_dirty("Extracted %d action(s) into a reusable Function - now callable as an ACE (Functions).%s" % [to_extract.size(), note])
+			_dock._mark_dirty("Extracted %d action(s) into a reusable Function - now callable from the picker (Functions).%s" % [to_extract.size(), note])
 	)
 
 

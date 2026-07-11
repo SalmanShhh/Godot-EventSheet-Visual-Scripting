@@ -3021,13 +3021,13 @@ func _on_ace_comment_confirmed() -> void:
 		return
 	var target: Resource = _ace_comment_target
 	var new_comment: String = _ace_comment_edit.text.strip_edges()
-	var changed: bool = _perform_undoable_sheet_edit("Edit ACE Comment", func() -> bool:
+	var changed: bool = _perform_undoable_sheet_edit("Edit Cell Note", func() -> bool:
 		target.set("comment", new_comment)
 		return true
 	)
 	if changed:
 		_refresh_after_edit()
-		_mark_dirty("ACE comment saved.")
+		_mark_dirty("Cell note saved.")
 
 
 # ── Starter templates ("new from template") - menu + sheet construction in dock/starter_templates.gd ──

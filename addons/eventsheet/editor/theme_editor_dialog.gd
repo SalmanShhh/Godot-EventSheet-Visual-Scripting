@@ -93,7 +93,7 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	tint.ace_id = "SetModulate"
 	tint.codegen_template = "modulate = {color}"
 	tint.params = {"color": "Color(0.4, 0.7, 1.0, 1.0)"}
-	tint.comment = "ACE note (⊳)"
+	tint.comment = "Cell note (⊳)"
 	tint_event.actions.append(tint)
 	# Loop/pick rows, BBCode comments, and a disabled row - the newest vocabulary, so
 	# restyling sees everything the renderer can draw.

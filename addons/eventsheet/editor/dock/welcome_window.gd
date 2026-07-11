@@ -115,7 +115,22 @@ func _build() -> void:
 	prefs_box.add_child(native_check)
 	_welcome_window.set_meta("native_check", native_check)
 	box.add_child(EventSheetPopupUI.titled_card("Preferences", prefs_box))
-	# Footer migration/reopen note - a muted, width-bounded hint at the bottom (not its own card).
-	box.add_child(EventSheetPopupUI.hint_label("Coming from another event-sheet tool? The migration guide maps the vocabulary.\nReopen this window any time: Tools → Welcome…", 440.0))
+	# Footer migration row: the guide is one CLICK, not a filename to go hunting for - the old
+	# text named it without linking it. Reopen note stays a muted hint below.
+	var migration_row: HBoxContainer = HBoxContainer.new()
+	migration_row.add_theme_constant_override("separation", 8)
+	var migration_label: Label = Label.new()
+	migration_label.text = "Coming from another event-sheet tool?"
+	migration_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.65))
+	migration_row.add_child(migration_label)
+	var migration_button: Button = Button.new()
+	migration_button.text = "Open the migration guide"
+	migration_button.flat = true
+	migration_button.tooltip_text = "docs/GUIDE-C3-MIGRATION.md - maps the vocabulary you already know onto this plugin's."
+	migration_button.pressed.connect(func() -> void:
+		OS.shell_open(ProjectSettings.globalize_path("res://docs/GUIDE-C3-MIGRATION.md")))
+	migration_row.add_child(migration_button)
+	box.add_child(migration_row)
+	box.add_child(EventSheetPopupUI.hint_label("Reopen this window any time: Tools → Welcome…", 440.0))
 	dialog.add_child(EventSheetPopupUI.margined(box))
 	_dock.add_child(dialog)

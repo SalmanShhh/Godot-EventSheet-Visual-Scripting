@@ -29,8 +29,13 @@ func _has_main_screen() -> bool:
 	return true
 
 
-## Returns the icon shown in the top editor workspace strip.
+## Returns the icon shown in the top editor workspace strip: the bespoke sheet glyph (trigger
+## band + condition/action rows), so the tab reads as ITS OWN workspace rather than borrowing
+## the generic Node icon. Falls back to that Node icon if the svg ever goes missing.
 func _get_plugin_icon() -> Texture2D:
+	var icon: Resource = load("res://addons/eventsheet/icons/eventsheet.svg")
+	if icon is Texture2D:
+		return icon
 	return get_editor_interface().get_editor_theme().get_icon("Node", "EditorIcons")
 
 

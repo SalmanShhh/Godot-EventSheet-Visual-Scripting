@@ -142,7 +142,7 @@ func init_dialog(parent_node: Node) -> void:
 
 	# Expose as an ACE other sheets can pick.
 	_expose_check = CheckBox.new()
-	_expose_check.text = "Expose as a reusable ACE (other sheets can pick it)"
+	_expose_check.text = "Publish to the picker (other sheets can use it)"
 	_expose_check.tooltip_text = "Publishes the verb into pickers as the chosen kind."
 	_expose_check.toggled.connect(func(on: bool) -> void:
 		_expose_card.visible = on

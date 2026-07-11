@@ -98,7 +98,7 @@ func _pair_region_fences_walk(rows: Array[EventRowData]) -> Array[EventRowData]:
 				opener.spans.append(_make_span(
 					"· %d row%s hidden" % [hidden_count, "" if hidden_count == 1 else "s"],
 					SemanticSpan.SpanType.VALUE,
-					{"text_color": Color(1.0, 1.0, 1.0, 0.45)}
+					{"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.75)}
 				))
 			_append_to_sink(output, stack, opener)
 			continue
@@ -407,7 +407,7 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 			row_data.spans = [_make_span(
 				"end region",
 				SemanticSpan.SpanType.VALUE,
-				{"kind": "custom_block_row", "text_color": Color(1.0, 1.0, 1.0, 0.4)}
+				{"kind": "custom_block_row", "text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.7)}
 			)]
 			return row_data
 		var region_label: String = str(block.fields.get("label", "")).strip_edges()
@@ -421,7 +421,7 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 			row_data.spans.append(_make_span(
 				region_description,
 				SemanticSpan.SpanType.VALUE,
-				{"text_color": Color(1.0, 1.0, 1.0, 0.55)}
+				{"text_color": Color(EventSheetPalette.TEXT_SECONDARY.r, EventSheetPalette.TEXT_SECONDARY.g, EventSheetPalette.TEXT_SECONDARY.b, 0.8)}
 			))
 		return row_data
 	var badge_text: String = kind.title if kind != null else "block"

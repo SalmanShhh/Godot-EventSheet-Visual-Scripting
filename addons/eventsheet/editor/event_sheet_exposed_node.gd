@@ -96,7 +96,7 @@ func _rebuild_prop_map() -> void:
 func _get_property_list() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	if not _row_prop_map.is_empty():
-		result.append({"name": "Selected ACE", "type": TYPE_NIL, "usage": PROPERTY_USAGE_CATEGORY})
+		result.append({"name": "Selected Cell", "type": TYPE_NIL, "usage": PROPERTY_USAGE_CATEGORY})
 		for row_key: String in _row_prop_map.keys():
 			var row_entry: Dictionary = _row_prop_map[row_key]
 			result.append({

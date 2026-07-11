@@ -44,8 +44,10 @@ func _ensure_popup() -> void:
 	if _popup != null:
 		return
 	_popup = PopupPanel.new()
-	var box: VBoxContainer = VBoxContainer.new()
-	box.add_theme_constant_override("separation", 4)
+	# Built with the shared popup helpers (form_box spacing + margined body + hint_label), so the
+	# ghost row reads like every other themed popup instead of raw flat controls - kept card-less
+	# on purpose: it's a transient type-and-go strip, not a dialog.
+	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	_edit = LineEdit.new()
 	_edit.placeholder_text = "Type what to add…  e.g. heal 5  ·  play sound \"jump\""
 	_edit.custom_minimum_size = Vector2(420.0, 0.0)
@@ -59,12 +61,10 @@ func _ensure_popup() -> void:
 		_list.select(index)
 		_apply_selected())
 	box.add_child(_list)
-	var hint: Label = Label.new()
-	hint.text = "⏎ add  ·  ↑/↓ choose  ·  Ctrl+⏎ browse the full picker  ·  Esc cancel"
+	var hint: Label = EventSheetPopupUI.hint_label("⏎ add  ·  ↑/↓ choose  ·  Ctrl+⏎ browse the full picker  ·  Esc cancel", 420.0)
 	hint.add_theme_font_size_override("font_size", 11)
-	hint.modulate = Color(1.0, 1.0, 1.0, 0.65)
 	box.add_child(hint)
-	_popup.add_child(box)
+	_popup.add_child(EventSheetPopupUI.margined(box))
 	_dock.add_child(_popup)
 
 

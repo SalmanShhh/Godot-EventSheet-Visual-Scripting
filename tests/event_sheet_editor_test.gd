@@ -1509,7 +1509,7 @@ static func run() -> bool:
         # bound for this flow (a tree-independent signal that open() ran).
         all_passed = _check("editing ace with params opens param dialog", dock._ace_params._definition == action_definition, true) and all_passed
         all_passed = _check("params dialog adds edit cue in title for replace flows", dock._ace_params._dialog.title.contains("(Edit)"), true) and all_passed
-        all_passed = _check("params dialog exposes flow-aware hint text", dock._ace_params._hint.text.contains("Re-editing"), true) and all_passed
+        all_passed = _check("params dialog exposes flow-aware hint text", dock._ace_params._hint.text.contains("Editing this existing cell"), true) and all_passed
         # grab_focus() is a no-op for a detached control, so assert the first focusable field
         # the focus routine targets exists and is eligible, rather than has_focus().
         var first_focus_field: Control = null

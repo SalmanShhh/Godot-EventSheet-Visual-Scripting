@@ -90,7 +90,7 @@ static func run() -> bool:
 
 	# New semantic theme tokens exist with event-sheet-faithful defaults.
 	var style: EventSheetEventStyle = EventSheetEventStyle.new()
-	all_passed = _check("invert marker token defaults to red", style.invert_marker_color, Color("#FF0000")) and all_passed
+	all_passed = _check("invert marker token defaults to soft red", style.invert_marker_color, Color("#e05c5c")) and all_passed
 	all_passed = _check("object label token exists", style.object_label_color, EventSheetPalette.COLOR_OBJECT) and all_passed
 	all_passed = _check("value highlight token exists", style.value_highlight_color, EventSheetPalette.COLOR_VALUE) and all_passed
 

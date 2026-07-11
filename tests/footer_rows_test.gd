@@ -88,7 +88,7 @@ static func run() -> bool:
 		if span != null and span.text == "✕" and span.metadata is Dictionary:
 			marker_meta = span.metadata
 	all_passed = _check("negated condition shows the ✕ marker", not marker_meta.is_empty(), true) and all_passed
-	all_passed = _check("✕ marker is red", marker_meta.get("badge_fg", Color.BLACK), Color("#FF0000")) and all_passed
+	all_passed = _check("✕ marker is red", marker_meta.get("badge_fg", Color.BLACK), Color("#e05c5c")) and all_passed
 	all_passed = _check("✕ marker has no circle behind it", (marker_meta.get("badge_bg", Color.WHITE) as Color).a, 0.0) and all_passed
 	viewport.free()
 

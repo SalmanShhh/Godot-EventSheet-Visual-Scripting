@@ -754,7 +754,9 @@ func _category_of(definition: ACEDefinition) -> String:
 func _item_label(definition: ACEDefinition) -> String:
 	if definition.provider_id.is_empty() or definition.provider_id == "Core":
 		return definition.display_name
-	return "%s  ·  %s" % [definition.display_name, definition.provider_id]
+	# Title-case the pack suffix for display ("weapon_kit" -> "Weapon Kit"): raw snake_case ids
+	# read as internals, not as the addon's name. Display-only - the id itself never changes.
+	return "%s  ·  %s" % [definition.display_name, definition.provider_id.capitalize()]
 
 
 func _item_tooltip(definition: ACEDefinition) -> String:

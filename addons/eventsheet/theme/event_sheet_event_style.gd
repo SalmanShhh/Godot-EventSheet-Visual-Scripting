@@ -32,8 +32,10 @@ extends Resource
 @export var column_header_background_color: Color = Color("#22242b")
 @export var column_header_conditions_color: Color = Color("#8fb0e0")
 @export var column_header_actions_color: Color = Color("#6fd0bf")
-## Red ✗ shown on inverted (negated) conditions (the --invert-icon-color).
-@export var invert_marker_color: Color = Color("#FF0000")
+## Red ✗ shown on inverted (negated) conditions (the --invert-icon-color). Softened from pure
+## #FF0000: full-saturation red reads as "error!" and vibrates against the dark theme; this stays
+## unmistakably red without shouting.
+@export var invert_marker_color: Color = Color("#e05c5c")
 ## Object/origin label drawn before each condition/action ("System", node class).
 @export var object_label_color: Color = EventSheetPalette.COLOR_OBJECT
 ## Parameter values (numbers / strings / booleans) highlighted inside ACE text.
