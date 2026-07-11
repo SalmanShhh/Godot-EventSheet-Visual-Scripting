@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - the ACE design guide (docs/GUIDE-DESIGNING-USER-FRIENDLY-ACES.md)
+
+- A craft guide for anyone authoring vocabulary (modules, packs, provider scripts): the four
+  surfaces a user actually sees, rows-as-sentences, verb naming, choosing the right kind,
+  parameter design (pick-don't-type via the field-hint table, defaults that open usable),
+  descriptions that answer "when would I use this?", progressive disclosure (featured / hidden /
+  sections / synonyms / tags), the behavior patterns the bundled packs converged on (safe to
+  spam, finish triggers, state-vs-event verbs, auto-find + override, whole-step verbs), codegen
+  as a fifth surface, a worked bad-to-good redesign, and a pre-ship checklist. Cross-linked from
+  the Custom ACEs and Custom Modules guides.
+
 ### Added - mouse focus + delta + position ACEs, and the Input Rebind showcase
 
 - **Mouse focus pair**: **Capture Mouse** (lock + hide the pointer, motion feeds your aim -

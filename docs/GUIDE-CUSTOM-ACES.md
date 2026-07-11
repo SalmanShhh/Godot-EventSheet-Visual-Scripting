@@ -5,7 +5,9 @@ the real power is that you can add your own. A custom ACE turns a piece of your 
 reusable system, into a drag-and-drop block in the event sheet. It compiles to plain GDScript like
 every built-in ACE, so there is zero runtime dependency and nothing to ship alongside your game. This
 guide covers the three ways to author custom ACEs, the schema and template language they share, how
-they appear in the picker, and how to test them so they never fail silently.
+they appear in the picker, and how to test them so they never fail silently. For the CRAFT side -
+naming, parameter design, descriptions, and picker UX that beginners can use first try - read
+[Designing user-friendly ACEs](GUIDE-DESIGNING-USER-FRIENDLY-ACES.md) alongside this one.
 
 ![The ACE Studio: three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb, and the GDScript signature it ships as](images/ace-studio.png)
 

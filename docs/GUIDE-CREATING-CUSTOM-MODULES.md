@@ -4,6 +4,8 @@ A **helper ACE module** is the fastest way to add your own vocabulary to Godot E
 file into `addons/eventforge/registration/modules/` and its Actions, Conditions, and Expressions show
 up in the picker on the next load - no registration code, no wiring. This guide walks the whole thing:
 scaffolding a module, the anatomy of an ACE, the template rules, and the two contracts you must keep.
+For the design side - naming, parameters, and descriptions that read well in the picker - see
+[Designing user-friendly ACEs](GUIDE-DESIGNING-USER-FRIENDLY-ACES.md).
 
 If you want to add a whole *pack* (a behavior you attach to a node, or an autoload with state), that is
 a different tool - see [Building on EventSheets](GUIDE-BUILDING-ON-EVENTSHEETS.md). A module is for
