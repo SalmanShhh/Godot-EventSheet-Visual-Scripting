@@ -437,6 +437,32 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Start Following** (`path: String`) - Follows the node at the given path.
 - **Stop Following** - Stops trailing the target.
 
+### FPSController (`res://eventsheet_addons/fps_controller/fps_controller_behavior.gd`)
+@ace_category("FPS Controller") @ace_expose_all(node)
+
+#### Triggers
+- **On Jumped**
+
+#### Conditions
+- **Is Sprinting** - True while the sprint key (Shift) is held.
+- **Is First Person** - True in first-person camera mode.
+
+#### Actions
+- **Jump** - Launches the host upward with Jump Velocity and fires On Jumped.
+- **Add Look** (`x: float, y: float`) - Turns the view by a mouse delta (pixels): yaw rotates the host, pitch tilts the Head child, clamped to Pitch Min/Max.
+- **Set Third Person** (`enabled: bool`) - Switches between first person (off) and third person (on) and fires On Camera Mode Changed.
+- **Toggle Camera Mode** - Flips between first and third person.
+- **Apply Camera Mode** - Re-applies the current camera mode to the Head's SpringArm3D (named Arm): ~0 length in first person, Camera Distance in third.
+- **Capture Mouse** - Locks the mouse to the window for looking around (Esc releases it).
+- **Release Mouse** - Frees the mouse cursor.
+- **Set Move Speed** (`value: float`) - Changes the base walking speed.
+- **Set Mouse Sensitivity** (`value: float`) - Changes look sensitivity (degrees per mouse pixel).
+
+#### Expressions
+- **Current Speed** - The host's horizontal speed right now (metres per second).
+- **Look Yaw** - The current horizontal look angle in degrees (-180..180).
+- **Look Pitch** - The current vertical look angle in degrees (clamped to Pitch Min/Max).
+
 ### SimpleHealthBehavior (`res://eventsheet_addons/health/health_behavior.gd`)
 @ace_category("Health") @ace_expose_all(node)
 

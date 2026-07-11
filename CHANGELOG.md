@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - the rest of the System expressions
+
+- The System module completes its everyday expression toolkit with 13 new picker entries:
+  **Token At** / **Token Count** (pull pieces out of "ann,bob,cat"-style strings), **To Text** /
+  **To Integer** / **To Decimal** conversions, **Absolute Value**, **Square Root**, **Power**,
+  **Exponential**, **Pi**, and degree-based **Sin / Cos / Tan** (angles read the way sheet
+  authors expect - no radians required). All compile to plain GDScript one-liners; the existing
+  "tokenat" / "zeropad" plain-language picker phrases now land on real entries.
+
 ### Added - twelve extension seams (build custom plugin features through the API)
 
 - **Row context-menu items**: `EventSheets.register_row_menu_item(label, filter, action)` puts
