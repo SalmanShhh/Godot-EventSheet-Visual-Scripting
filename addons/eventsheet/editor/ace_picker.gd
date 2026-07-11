@@ -4,11 +4,12 @@
 #
 # Event-sheet-style presentation:
 #  - Entries are grouped by Godot node type (ACEDefinition.metadata.node_type) when set,
-#    otherwise by category. Node-type sections are colour-coded amber; Run Context /
-#    Triggers teal-green; Variables muted blue; Custom ACEs purple; others neutral.
-#  - Each entry's name is tinted by ACE type (trigger = green, condition = blue,
-#    action = teal, expression = purple) and its tooltip is prefixed with the type, e.g.
-#    "[Condition]  Is on floor".
+#    otherwise by category. With no query every section starts COLLAPSED (a scannable table
+#    of contents - pick the object, then browse its verbs); searching rebuilds expanded.
+#  - Each row carries a small dot in its ACE type's role colour (trigger purple, condition
+#    teal, action amber, expression magenta - the sheet's own lane colours), and its tooltip
+#    is prefixed with the type, e.g. "[Condition]  Is on floor". Featured rows are bold with
+#    a leading star.
 #  - In event-creation modes the node-type sections are pre-declared (always present) and,
 #    while searching, empty sections are hidden so only matching groups remain.
 @tool
@@ -277,7 +278,9 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_info_panel = PanelContainer.new()
 	# Same filled inset card as the Favorites/Recent panes, so the description reads as a distinct panel.
 	_info_panel.add_theme_stylebox_override("panel", EventSheetPopupUI.inset_panel_stylebox())
-	_info_panel.custom_minimum_size = Vector2(0.0, 72.0)
+	# Tall enough for name + description + the "ships as" codegen line without scrolling - the
+	# description panel is the picker's main teaching surface, so it gets room to breathe.
+	_info_panel.custom_minimum_size = Vector2(0.0, 110.0)
 	content.add_child(_info_panel)
 	var info_margin: MarginContainer = MarginContainer.new()
 	info_margin.add_theme_constant_override("margin_left", 8)
@@ -568,14 +571,17 @@ func _refresh_tree() -> void:
 		var group_key: String = node_type if is_node_type_group else _category_of(definition)
 		var group_item: TreeItem = _resolve_group_item(root, group_nodes, group_key, is_node_type_group)
 		var item: TreeItem = _tree.create_item(group_item)
-		item.set_text(0, _item_label(definition))
+		var featured: bool = _is_featured(definition)
+		# Featured rows lead with a star so the highlight is legible even where bold barely
+		# differs from regular (small font sizes / some system fonts).
+		item.set_text(0, ("★ " + _item_label(definition)) if featured else _item_label(definition))
 		var item_icon: Texture2D = resolve_definition_icon(definition)
 		if item_icon != null:
 			item.set_icon(0, item_icon)
 			item.set_icon_max_width(0, 16)
 		item.set_tooltip_text(0, _item_tooltip(definition))
 		item.set_metadata(0, definition)
-		if _is_featured(definition):
+		if featured:
 			var __bold: Font = _bold_font()
 			if __bold != null:
 				item.set_custom_font(0, __bold)
@@ -587,6 +593,16 @@ func _refresh_tree() -> void:
 		empty_item.set_text(0, "No matches for \"%s\" - try a plainer word like \"move\", \"spawn\", or \"hide\"." % query)
 		empty_item.set_selectable(0, false)
 		empty_item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+
+	# First-open calm: with no query the tree reads as a table of contents - every section starts
+	# collapsed (the event-sheet reflex: pick the object first, then browse its verbs) instead of
+	# 250+ rows under dozens of expanded headers. Searching rebuilds the tree expanded so matches
+	# are immediately visible, and preselect() re-expands the ancestors of a targeted entry.
+	if not filtering:
+		var section: TreeItem = root.get_first_child()
+		while section != null:
+			section.collapsed = true
+			section = section.get_next()
 
 
 func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> TreeItem:
@@ -666,10 +682,13 @@ static func split_subcategory(group_key: String) -> PackedStringArray:
 	return PackedStringArray([parent_name, child_name])
 
 
-## Resolves an ACE's icon, in event-sheet-familiarity order: an explicit `res://` texture from the
-## addon's @ace_icon annotation → the node type's editor class icon → a member-kind editor
-## icon (signal/method/property). Returns null headless / when nothing matches, which keeps
-## the previous text-only look. Static + shared so row rendering can reuse it later.
+## Resolves an ACE's icon: an explicit `res://` texture from the addon's @ace_icon annotation,
+## else a small dot in the ACE type's role colour. The dot replaced two older fallbacks - the
+## row's node-type class icon (redundant: the section header already shows it) and Godot's
+## member glyphs (MemberSignal/MemberMethod/…, insider vocabulary a newcomer can't read).
+## Colour is the sheet's own visual language: the dot reuses the exact lane colours the rows
+## paint with, so "teal = a yes/no test" transfers from the picker to the sheet and back.
+## Static + shared so row rendering can reuse it later.
 static func resolve_definition_icon(definition: ACEDefinition) -> Texture2D:
 	if definition == null:
 		return null
@@ -678,21 +697,39 @@ static func resolve_definition_icon(definition: ACEDefinition) -> Texture2D:
 		var loaded: Resource = load(icon_hint)
 		if loaded is Texture2D:
 			return loaded
-	var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()
-	if not node_type.is_empty():
-		var class_icon: Texture2D = editor_icon(node_type)
-		if class_icon != null:
-			return class_icon
-	match definition.ace_type:
+	return kind_dot(definition.ace_type)
+
+
+static var _kind_dot_cache: Dictionary = {}
+
+
+## A small filled dot in the given ACE type's role colour (trigger purple, condition teal, action
+## amber, expression magenta - EventSheetPalette's lane colours). Image-built and cached per type,
+## so it renders identically in the editor and headless.
+static func kind_dot(ace_type: int) -> Texture2D:
+	if _kind_dot_cache.has(ace_type):
+		return _kind_dot_cache[ace_type]
+	var color: Color = EventSheetPalette.COLOR_ACTION
+	match ace_type:
 		ACEDefinition.ACEType.TRIGGER:
-			return editor_icon("MemberSignal")
-		ACEDefinition.ACEType.ACTION:
-			return editor_icon("MemberMethod")
-		ACEDefinition.ACEType.EXPRESSION:
-			return editor_icon("MemberProperty")
+			color = EventSheetPalette.COLOR_TRIGGER
 		ACEDefinition.ACEType.CONDITION:
-			return editor_icon("MemberConstant")
-	return null
+			color = EventSheetPalette.COLOR_CONDITION
+		ACEDefinition.ACEType.EXPRESSION:
+			color = EventSheetPalette.COLOR_EXPRESSION
+	var dot_size: int = 12
+	var image: Image = Image.create(dot_size, dot_size, false, Image.FORMAT_RGBA8)
+	var center: float = (dot_size - 1) * 0.5
+	var radius: float = 4.5
+	for y in range(dot_size):
+		for x in range(dot_size):
+			# 1px soft edge so the dot reads round at UI scale, not as a jagged square of pixels.
+			var alpha: float = clampf(radius + 0.5 - Vector2(x - center, y - center).length(), 0.0, 1.0)
+			if alpha > 0.0:
+				image.set_pixel(x, y, Color(color.r, color.g, color.b, alpha))
+	var texture: ImageTexture = ImageTexture.create_from_image(image)
+	_kind_dot_cache[ace_type] = texture
+	return texture
 
 
 ## Fetches a named editor-theme icon ("EditorIcons" - class icons and member glyphs).
@@ -891,10 +928,10 @@ func _on_tree_gui_input(input_event: InputEvent) -> void:
 	if not mouse_event.pressed or mouse_event.button_index != MOUSE_BUTTON_RIGHT:
 		return
 	var clicked: TreeItem = _tree.get_item_at_position(mouse_event.position)
-	var definition: ACEDefinition = clicked.get_metadata(0) as ACEDefinition if clicked != null else null
-	if definition == null:
+	var clicked_meta: Variant = clicked.get_metadata(0) if clicked != null else null
+	if not (clicked_meta is ACEDefinition):
 		return
-	_open_tree_context_menu(definition)
+	_open_tree_context_menu(clicked_meta as ACEDefinition)
 
 
 ## Right-click menu on a result row: the favorite toggle plus copy-ready authoring
@@ -982,7 +1019,10 @@ func _best_match_item() -> TreeItem:
 	var first: TreeItem = _first_definition_item(_tree.get_root())
 	var query: String = _search.text.strip_edges() if _search != null else ""
 	if query.is_empty():
-		return first
+		# No query means the sections are collapsed (first-open state): auto-selecting a row
+		# INSIDE a collapsed section is invisible and would arm Enter/Add on something the user
+		# never saw. Let the first pick be deliberate.
+		return null
 	var best: TreeItem = null
 	var best_score: int = 0
 	var stack: Array = [_tree.get_root()]
@@ -990,9 +1030,11 @@ func _best_match_item() -> TreeItem:
 		var node: TreeItem = stack.pop_back()
 		var child: TreeItem = node.get_first_child()
 		while child != null:
-			var definition: ACEDefinition = child.get_metadata(0) as ACEDefinition
-			if definition != null:
-				var score: int = _score_match(query, definition)
+			# Guard before casting: section headers carry a Dictionary marker, and casting a
+			# non-Object to a typed object variable is a runtime error, not a null.
+			var child_meta: Variant = child.get_metadata(0)
+			if child_meta is ACEDefinition:
+				var score: int = _score_match(query, child_meta as ACEDefinition)
 				if score > best_score:
 					best_score = score
 					best = child
@@ -1002,7 +1044,8 @@ func _best_match_item() -> TreeItem:
 	# list) instead of the poll - unless the user typed the condition's exact name. Ties the Enter-target
 	# to the Godot idiom (overlap -> On Body Entered) without touching the visible list order.
 	if best != null:
-		var best_definition: ACEDefinition = best.get_metadata(0) as ACEDefinition
+		var best_meta: Variant = best.get_metadata(0)
+		var best_definition: ACEDefinition = best_meta if best_meta is ACEDefinition else null
 		if _prefer_reactive_twin(query, best_definition):
 			var twin_item: TreeItem = _find_definition_item(best_definition.provider_id, _reactive_twin_id(best_definition))
 			if twin_item != null:
@@ -1036,8 +1079,8 @@ func _find_definition_item(provider_id: String, ace_id: String) -> TreeItem:
 		var node: TreeItem = stack.pop_back()
 		var child: TreeItem = node.get_first_child()
 		while child != null:
-			var definition: ACEDefinition = child.get_metadata(0) as ACEDefinition
-			if definition != null and definition.provider_id == provider_id and definition.id == ace_id:
+			var child_meta: Variant = child.get_metadata(0)
+			if child_meta is ACEDefinition and (child_meta as ACEDefinition).provider_id == provider_id and (child_meta as ACEDefinition).id == ace_id:
 				return child
 			stack.push_back(child)
 			child = child.get_next()
@@ -1082,7 +1125,10 @@ static func _word_starts_with(text: String, prefix: String) -> bool:
 
 func _on_item_activated() -> void:
 	var item: TreeItem = _tree.get_selected()
-	_commit_definition(item.get_metadata(0) as ACEDefinition if item != null else null)
+	# Double-clicking a section header must fold/unfold, not crash: headers carry a Dictionary
+	# marker, and casting a non-Object to an object type is a runtime error.
+	var item_meta: Variant = item.get_metadata(0) if item != null else null
+	_commit_definition(item_meta if item_meta is ACEDefinition else null)
 
 
 ## A compact single-column Tree for the ⭐ Favorites / ★ Recent side panes (Create-Node style).
@@ -1141,6 +1187,14 @@ func _populate_side_pane(tree: Tree, keys: PackedStringArray, mode: String, sign
 			item.set_tooltip_text(0, _item_tooltip(candidate))
 			item.set_metadata(0, candidate)
 			break
+	# An empty pane teaches how to fill it instead of sitting silently blank - a first-timer
+	# otherwise reads two empty boxes as broken UI.
+	if root.get_child_count() == 0:
+		var hint_item: TreeItem = tree.create_item(root)
+		hint_item.set_text(0, "Right-click any entry to pin it here." if tree == _favorites_list else "Entries you use appear here.")
+		hint_item.set_selectable(0, false)
+		hint_item.set_custom_color(0, _muted_header_color())
+		hint_item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
 
 
 func _on_side_item_selected(tree: Tree) -> void:

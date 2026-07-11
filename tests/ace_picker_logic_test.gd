@@ -45,6 +45,17 @@ static func run() -> bool:
 	plain_def.provider_id = "Core"; plain_def.id = "ZzNotAFeaturedAce"
 	all_passed = _check("featured: an unlisted ace is not featured", picker._is_featured(plain_def), false) and all_passed
 
+	# Kind dots: every ACE type resolves to a role-colour dot texture (the fallback row icon),
+	# distinct per type, and cached (same instance on repeat calls). Works headless - the dot is
+	# Image-built, unlike the old editor-theme member glyphs.
+	var trigger_dot: Texture2D = ACEPickerDialog.kind_dot(ACEDefinition.ACEType.TRIGGER)
+	var condition_dot: Texture2D = ACEPickerDialog.kind_dot(ACEDefinition.ACEType.CONDITION)
+	all_passed = _check("kind dot exists for triggers", trigger_dot != null, true) and all_passed
+	all_passed = _check("kind dots differ per type", trigger_dot == condition_dot, false) and all_passed
+	all_passed = _check("kind dots are cached", ACEPickerDialog.kind_dot(ACEDefinition.ACEType.TRIGGER) == trigger_dot, true) and all_passed
+	var undotted: ACEDefinition = _make_def(ACEDefinition.ACEType.ACTION)
+	all_passed = _check("icon fallback is the kind dot", ACEPickerDialog.resolve_definition_icon(undotted) == ACEPickerDialog.kind_dot(ACEDefinition.ACEType.ACTION), true) and all_passed
+
 	# Sub-category nesting: a "Parent: Sub" category splits into a parent + child folder so
 	# related ACEs (Array/Dictionary/… helpers) cluster under one section instead of a flat list.
 	all_passed = _check("subcategory splits Variables: Array",

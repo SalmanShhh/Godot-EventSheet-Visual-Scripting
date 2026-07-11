@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Changed - a calmer, more legible picker
+
+- **First open reads as a table of contents.** With no search query every picker section starts
+  collapsed - pick the object, then browse its verbs - instead of 250+ rows under dozens of expanded
+  headers. Searching expands everything that matched, and the replace flows still auto-expand to the
+  entry being replaced. Nothing is pre-selected while collapsed, so Enter can't add something you
+  never saw.
+- **Row type at a glance.** Every row carries a small dot in its type's role colour - trigger purple,
+  condition teal, action amber, expression magenta, the sheet's own lane colours - replacing Godot's
+  insider member glyphs and the redundant per-row class icons. Featured verbs lead with a star on top
+  of their bold.
+- **The description panel got room to breathe** (name + what-it-does + the ships-as GDScript now fit
+  without scrolling), and empty Favorites / Recent panes teach how to fill themselves instead of
+  sitting blank.
+- **Fixed:** right-clicking or double-clicking a section header (and typing certain queries) hit a
+  runtime cast error on the header's marker metadata; headers now fold/unfold safely.
+
 ### Changed - a friendlier on-ramp (empty states + add affordances)
 
 - **The empty sheet greets you with real buttons.** The getting-started text is now centered like a
