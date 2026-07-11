@@ -50,6 +50,49 @@ static func build() -> bool:
 		"\treturn sin(cycle * TAU)"
 	]))
 	sheet.events.append(extra_block_0)
+	var extra_block_1: RawCodeRow = RawCodeRow.new()
+	extra_block_1.code = "\n".join(PackedStringArray([
+		"## @ace_hidden",
+		"static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:",
+		"\t# Editor-preview contract (Tools > Preview Behaviors on Selected Node): pure wave math over",
+		"\t# the Inspector values, so the editor can animate the host without running the behavior.",
+		"\tif not bool(params.get(\"active\", true)):",
+		"\t\treturn {}",
+		"\tvar t := time / maxf(float(params.get(\"period\", 4.0)), 0.001) + float(params.get(\"phase_degrees\", 0.0)) / 360.0",
+		"\tvar cycle := fposmod(t, 1.0)",
+		"\tvar value := sin(cycle * TAU)",
+		"\tmatch str(params.get(\"wave\", \"sine\")):",
+		"\t\t\"triangle\":",
+		"\t\t\tvalue = 1.0 - 4.0 * absf(cycle - 0.5)",
+		"\t\t\"sawtooth\":",
+		"\t\t\tvalue = 2.0 * cycle - 1.0",
+		"\t\t\"reverse-sawtooth\":",
+		"\t\t\tvalue = 1.0 - 2.0 * cycle",
+		"\t\t\"square\":",
+		"\t\t\tvalue = 1.0 if cycle < 0.5 else -1.0",
+		"\tvar magnitude := float(params.get(\"magnitude\", 50.0))",
+		"\tvar offset := value * magnitude",
+		"\tvar base_position: Vector2 = base.get(\"position\", Vector2.ZERO)",
+		"\tvar base_rot := float(base.get(\"rotation\", 0.0))",
+		"\tmatch str(params.get(\"movement\", \"horizontal\")):",
+		"\t\t\"horizontal\":",
+		"\t\t\treturn {\"position\": base_position + Vector2(offset, 0.0)}",
+		"\t\t\"vertical\":",
+		"\t\t\treturn {\"position\": base_position + Vector2(0.0, offset)}",
+		"\t\t\"forwards-backwards\":",
+		"\t\t\treturn {\"position\": base_position + Vector2.from_angle(base_rot) * offset}",
+		"\t\t\"size\":",
+		"\t\t\tvar base_scale: Vector2 = base.get(\"scale\", Vector2.ONE)",
+		"\t\t\treturn {\"scale\": base_scale * (1.0 + value * magnitude * 0.01)}",
+		"\t\t\"angle\":",
+		"\t\t\treturn {\"rotation\": base_rot + offset * 0.0174533}",
+		"\t\t\"opacity\":",
+		"\t\t\tvar color: Color = base.get(\"modulate\", Color.WHITE)",
+		"\t\t\tcolor.a = clampf(color.a + value * magnitude * 0.01, 0.0, 1.0)",
+		"\t\t\treturn {\"modulate\": color}",
+		"\treturn {}"
+	]))
+	sheet.events.append(extra_block_1)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"

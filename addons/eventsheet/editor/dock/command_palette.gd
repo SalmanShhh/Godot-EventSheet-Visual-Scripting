@@ -44,6 +44,7 @@ func _command_palette_commands() -> Array[Dictionary]:
 		{"title": "Export Addon Pack…", "run": _dock._export_addon_pack},
 		{"title": "Open Welcome", "run": _dock.show_welcome},
 		{"title": "Start the Tour", "run": _dock.start_tour},
+		{"title": "Preview Behaviors on Selected Node", "run": _dock.toggle_behavior_preview},
 	]
 	# One "Add <kind>…" command per registered Custom Block kind (preloads, region markers,
 	# pack-defined kinds), so custom blocks are reachable from Ctrl+P like everything else.

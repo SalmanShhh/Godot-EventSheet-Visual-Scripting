@@ -149,6 +149,7 @@ var _new_addon_panel: EventSheetNewAddonPanel = EventSheetNewAddonPanel.new()  #
 var _inspector_designer_dialog: EventSheetInspectorDesignerDialog = null  # Sheet ▸ Inspector Designer… (lazy; added to the dock on first open)
 var _welcome: EventSheetWelcomeWindow = EventSheetWelcomeWindow.new()  # Tools ▸ Welcome… onboarding window (dock/welcome_window.gd)
 var _tour: EventSheetTourWindow = EventSheetTourWindow.new()  # Tools ▸ Start the Tour… first-time walkthrough (dock/tour_window.gd)
+var _behavior_preview: EventSheetBehaviorPreview = EventSheetBehaviorPreview.new()  # Tools ▸ Preview Behaviors on Selected Node (behavior_preview.gd)
 var _starter: EventSheetStarterTemplates = EventSheetStarterTemplates.new()  # New-from-template starters (dock/starter_templates.gd)
 var _comments: EventSheetCommentAndScopeDialogs = EventSheetCommentAndScopeDialogs.new()  # comment/with-node dialogs (dock/comment_and_scope_dialogs.gd)
 var _struct_rows: EventSheetStructRowDialogs = EventSheetStructRowDialogs.new()  # enum/signal/match row editors (dock/struct_row_dialogs.gd)
@@ -2787,6 +2788,10 @@ func show_welcome() -> void:  # Tools menu (id 13) + command palette ("Open Welc
 
 func start_tour() -> void:  # Tools menu (id 17) + the Welcome window's tour button
 	_tour.start()
+
+
+func toggle_behavior_preview() -> void:  # Tools menu (id 18) + command palette
+	_behavior_preview.toggle()
 
 # ── Loop closers: attach the behavior where you're looking, run the scene that
 # uses this sheet (core lookups are headless; playing needs the editor) ───────────────

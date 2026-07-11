@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - preview behaviors in the editor (and the API seam behind it)
+
+- **Tools > Preview Behaviors on Selected Node** (also in the Command Palette): select a node in
+  the Scene dock, run the command, and its attached behaviors animate right in the editor
+  viewport - no play button. Run it again (or select another node) and the node snaps back
+  exactly where it was; the scene's saved bytes are never touched. Tweaking a knob in the
+  Inspector re-shapes the motion live while the preview runs.
+- **The seam** (`docs/GUIDE-BUILDING-ON-EVENTSHEETS.md` section 8.14): a behavior opts in by
+  shipping one pure static on its script,
+  `static func editor_preview_sample(params, base, time) -> Dictionary` - Inspector values in,
+  host properties out. It needs no `@tool` and no editor dependencies, so any pack can add it as
+  a raw GDScript block. For scripts you cannot edit,
+  `EventSheets.register_editor_preview(script_path, sampler)` registers the sampler externally
+  (it takes priority); `EventSheets.preview_behaviors()` toggles the preview from code.
+- **Dogfooded by the Sine behavior**: all its movement modes (horizontal / vertical /
+  forwards-backwards / size / angle / opacity) preview in the editor, waves and phase included.
+
 ### Added - the rest of the System expressions, actions, and conditions
 
 - The System module completes its everyday **expression** toolkit with 11 new picker entries:

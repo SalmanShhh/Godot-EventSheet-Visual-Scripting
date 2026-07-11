@@ -72,6 +72,12 @@ The mental model is small. Learn these ideas and the rest of the pack is just kn
 
 **2. Set the Inspector knobs (optional).** Select the behavior node and tune `movement`, `magnitude`, `period`, `phase_degrees`, and `wave`. The defaults (horizontal, magnitude 50, period 4, sine) already produce a visible slide, so with the behavior attached the node moves the moment you press play - you can author zero event rows and still get motion.
 
+**2b. Preview it without pressing play.** Select the host node in the Scene dock and run
+**Tools > Preview Behaviors on Selected Node** (also in the Command Palette). The node starts
+oscillating right in the editor viewport, and every knob you tweak in the Inspector reshapes the
+motion live - dial in the exact bob, sway, or pulse by eye. Run the command again (or select
+another node) and the node snaps back exactly where it was; nothing about the scene is changed.
+
 **3. Retune from the sheet if you like.** If you would rather set it up in events (or change it at runtime), here is a complete first mover - a coin that bobs up and down:
 
 ```
@@ -357,5 +363,6 @@ The banner stops mid-sway on pause and picks up exactly where it left off on res
 - **`triangle` for platforms, `sine` for organic motion, `square` for blinks.** The wave shape changes the feel completely. A platform on sine eases and is hard to time; on triangle it moves at a constant speed. A blink wants square, not a fade. Pick the shape for the job.
 - **Phase is how you stagger a group.** Identical waves with different `phase_degrees` values ripple instead of moving in lockstep. Use 180 for a see-saw pair, or spread a squad by setting each member's phase from its index.
 - **There are two names for the same knob - either works.** Set Sine Active and Set Active both set whether the wave runs; Set Phase and Set Phase Degrees both set the phase offset. They are the friendly named action and the auto-generated property setter for the same value, so use whichever reads better in your sheet.
+- **Tune the motion by eye, in the editor.** You do not need to press play to see a wobble: Tools > Preview Behaviors on Selected Node animates the host right in the viewport while you drag the Inspector knobs, and restores it exactly when you stop. Dial in magnitude and period there, then keep the values.
 - **The wave never fires a trigger.** This pack has no triggers and no conditions of its own; the motion just runs. Drive your reactions off your existing events, and branch on state with the Active expression (`Node | Sine: Active is true`) when you need it.
 - **value-only drives nothing until you read it.** In value-only mode the node will not move on its own - that is the point. Read `$Node/Sine.wave_value` (a number between -1 and 1) each frame and apply it yourself, or you will see no effect and wonder why.

@@ -326,6 +326,8 @@ static var _param_editors: Dictionary = {}
 static var _preference_builders: Array[Callable] = []
 ## Dictionary-defined ACEs live in the registry's extras (see register_simple_ace).
 static var _simple_aces: Array[ACEDefinition] = []
+## Editor-preview samplers: behavior script path -> Callable(params, base, time) -> Dictionary.
+static var _editor_preview_samplers: Dictionary = {}
 
 
 ## Adds an entry to the right-click menu of event rows. `filter` receives the row's source
@@ -485,6 +487,30 @@ static func start_tour(steps: Array[Dictionary]) -> bool:
 ## 2-minute walkthroughs on the engine the built-in tour uses.
 static func register_tour(tour_name: String, steps: Array[Dictionary]) -> void:
 	register_palette_command("Tour: %s" % tour_name, func() -> void: start_tour(steps))
+
+
+## In-editor behavior preview (Tools > Preview Behaviors on Selected Node): a behavior opts in
+## by shipping a pure static on its emitted script -
+##   static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary
+## (params = the behavior node's exported values, base = the host's captured rest state, return =
+## host properties to apply this frame). This call registers a sampler for scripts that CANNOT
+## ship the static (third-party or generated code you don't control): `script_path` is the
+## behavior script's resource path; `sampler` has the same signature and takes priority.
+static func register_editor_preview(script_path: String, sampler: Callable) -> void:
+	_editor_preview_samplers[script_path] = sampler
+
+
+static func editor_preview_sampler_for(script_path: String) -> Callable:
+	return _editor_preview_samplers.get(script_path, Callable())
+
+
+## Toggles the behavior preview on the current scene-editor selection - the same entry the
+## Tools menu and Command Palette use. Returns false when the workspace is not open.
+static func preview_behaviors() -> bool:
+	if not _dock_alive() or not ("_behavior_preview" in _dock):
+		return false
+	_dock._behavior_preview.toggle()
+	return true
 
 
 ## One-call pack verification for addon authors - the gates that actually bite, bundled:

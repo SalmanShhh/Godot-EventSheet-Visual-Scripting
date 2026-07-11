@@ -194,6 +194,8 @@ Display strings only.
 | Seams | `register_section_description(name, blurb)` | `void` | no |
 | Seams | `register_preference(builder: Callable)` | `void` | no |
 | Seams | `register_tour(name, steps)` / `start_tour(steps)` | `void` / `bool` | start needs dock |
+| Seams | `register_editor_preview(script_path, sampler)` / `editor_preview_sampler_for(script_path)` | `void` / `Callable` | no |
+| Seams | `preview_behaviors()` | `bool` | yes |
 | Seams | `verify_pack(pack_gd_path: String)` | `Dictionary` | no |
 | Localisation | `translate(text: String)` | `String` | no |
 | Localisation | `register_translation_file(path: String)` | `bool` | no |
@@ -341,6 +343,36 @@ for path: String in _all_sheet_scripts():
 	if not EventSheets.round_trips(source):
 		push_error("Round-trip broke: %s" % path)
 		quit(1)
+```
+
+### 14. Make your behavior animate in the editor (Preview Behaviors)
+
+**Scenario:** your pack ships an oscillating or orbiting motion behavior and you want users to see it move in the editor viewport - select the node, run Tools > Preview Behaviors on Selected Node, watch it go, and get the node back exactly where it was when the preview stops.
+
+A behavior opts in by shipping one pure static on its script (in a pack builder, add it as a raw
+GDScript block - the bundled Sine behavior does exactly this):
+
+```gdscript
+static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
+	# params = the behavior node's exported values as the Inspector shows them right now.
+	# base   = the host's rest state ({"position", "rotation", "scale", "modulate"}).
+	# Return the host properties for this frame; {} means "leave the host alone".
+	var angle := time * float(params.get("speed_degrees", 90.0)) * (PI / 180.0)
+	return {"position": (base.get("position") as Vector2) + Vector2.from_angle(angle) * float(params.get("radius", 40.0))}
+```
+
+The editor drives the preview at 30 samples a second, re-reads `params` every tick (so tweaking
+a knob in the Inspector re-shapes the motion live), and restores every property it touched when
+the preview stops - the scene's saved bytes are never affected. The static runs WITHOUT the
+behavior executing, so it works on plain (non-@tool) pack scripts.
+
+For a script you cannot edit (third-party, or generated code you do not control), register the
+sampler externally instead - it takes priority over the static:
+
+```gdscript
+EventSheets.register_editor_preview("res://addons/thirdparty/bob.gd",
+	func(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
+		return {"position": (base.get("position") as Vector2) + Vector2(0.0, sin(time * TAU) * 8.0)})
 ```
 
 ## 9. Testing Your Extension
