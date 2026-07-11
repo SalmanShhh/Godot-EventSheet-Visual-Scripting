@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Changed - the plugin loads ~20x faster
+
+- **Enabling the plugin (and every editor boot with it installed) dropped from ~1.8s of script
+  compilation to ~85ms.** The boot-path scripts named heavy classes - and in GDScript, naming a
+  global class anywhere in a file compiles that class's entire dependency subtree the moment the
+  file loads. The context-menu, Inspector-button, and export plugins were pulling the whole
+  importer + compiler + registry graph at boot. Those references now load by path on first
+  actual use (a right-click, an Inspector selection, an export), where the one-time cost is
+  imperceptible. A lint test pins the contract so a future class-name reference can't silently
+  re-inflate boot.
+- The workspace itself was already lazy (built on first open); that first open still pays its
+  one-time build (a few seconds on a cold session), unchanged.
+
 ### Added - the editor speaks your language (drop-in translations)
 
 - **Translate the whole editor with one CSV file.** Drop a file into `eventsheet_translations/`

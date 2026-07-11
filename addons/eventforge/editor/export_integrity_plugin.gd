@@ -23,16 +23,21 @@ func _export_begin(_features: PackedStringArray, _is_debug: bool, _path: String,
 ## sibling). Returns {compiled: int, failed: int, failures: Array[String]}.
 ## Static + headless-safe so tests (and CI) can run the exact export-time pass.
 static func recompile_all_sheets(root: String = "res://") -> Dictionary:
+	# The templates helper and THE COMPILER load by path, not by class name: this export plugin
+	# registers at editor boot, and naming SheetCompiler would compile its whole subtree right
+	# there. An export run absorbs the one-time load instead (it compiles sheets anyway).
+	var templates: Script = load("res://addons/eventforge/sheet_templates.gd")
+	var compiler: Script = load("res://addons/eventforge/compiler/sheet_compiler.gd")
 	var report: Dictionary = {"compiled": 0, "failed": 0, "failures": []}
 	for sheet_path: String in _find_sheet_paths(root):
 		# Templates are blueprints, not game code: compiling them at export would
 		# strew *_generated.gd siblings through the templates dir (sweep catch).
-		if EventSheetTemplates.is_template_path(sheet_path):
+		if templates.is_template_path(sheet_path):
 			continue
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
 		if sheet == null or not sheet.external_source_path.is_empty():
 			continue
-		var result: Dictionary = SheetCompiler.compile(sheet, "")
+		var result: Dictionary = compiler.compile(sheet, "")
 		if bool(result.get("success", false)):
 			report["compiled"] = int(report["compiled"]) + 1
 		else:

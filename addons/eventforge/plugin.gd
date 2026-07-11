@@ -9,14 +9,27 @@ const BRIDGE_PATH: String = "res://addons/eventforge/runtime/eventforge_bridge.g
 const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
 const MAIN_SCREEN_ROOT_NAME: String = "EventSheetWorkspace"
 
+# Cold-path helpers load BY PATH, not by class name: naming a global class in any function body
+# (or a var type) makes its whole dependency subtree - the importer, the compiler, the registry -
+# compile the moment THIS script loads, i.e. at every editor boot. load() at the call site defers
+# each subtree to its first actual use and caches it from then on, so enabling the plugin (and
+# opening any project that has it installed) stays near-instant.
+const WORKFLOW_PATH: String = "res://addons/eventforge/editor/workflow_entry_points.gd"
+const PROJECT_DOCTOR_PATH: String = "res://addons/eventforge/project_doctor.gd"
+const STARTER_TEMPLATES_PATH: String = "res://addons/eventsheet/editor/dock/starter_templates.gd"
+const NEW_SHEET_DIALOG_PATH: String = "res://addons/eventsheet/editor/new_sheet_dialog.gd"
+const ACE_PARAM_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/ace_param_inspector_plugin.gd"
+
 var _event_sheet_editor: Control = null
 var _export_integrity_plugin: EditorExportPlugin = null
 var _live_values_debugger: EventSheetLiveValuesDebugger = null
-var _ace_param_inspector_plugin: ACEParamInspectorPlugin = null
+# Typed loosely on purpose (see the path consts above): their concrete class names must not
+# appear in this file, or their subtrees join the boot compile.
+var _ace_param_inspector_plugin: EditorInspectorPlugin = null
 var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
-var _new_sheet_dialog: EventSheetNewSheetDialog = null
+var _new_sheet_dialog: RefCounted = null
 
 
 ## Returns the display name of the plugin.
@@ -54,7 +67,7 @@ func _handles(object: Object) -> bool:
 		return true
 	# Auto-preview toggle (OFF by default): when on, selecting a sheet-liftable .gd routes here so it
 	# opens as a read-only EVENTS preview instead of the script editor. Limited to liftable game scripts.
-	return _auto_preview_gd_enabled() and object is Script and EventSheetWorkflow.is_openable_as_sheet((object as Script).resource_path)
+	return _auto_preview_gd_enabled() and object is Script and load(WORKFLOW_PATH).is_openable_as_sheet((object as Script).resource_path)
 
 
 ## Loads the selected EventSheet (or, with the toggle on, a .gd) into the workspace editor.
@@ -99,7 +112,7 @@ func _open_sheet_in_workspace(path: String) -> void:
 ## The script editor's "Go to Sheet Row": carries the caret line into the sheet's
 ## reverse provenance - errors and stack traces land on rows, not generated code.
 func _goto_sheet_row_from_script(script_path: String) -> void:
-	var sheet_path: String = EventSheetProjectDoctor.sheet_for_script(script_path)
+	var sheet_path: String = load(PROJECT_DOCTOR_PATH).sheet_for_script(script_path)
 	if sheet_path.is_empty():
 		return
 	var line: int = 0
@@ -118,7 +131,7 @@ func _attach_sheet_to_node(node: Node) -> void:
 	var directory: String = "res://"
 	if scene_root != null and not scene_root.scene_file_path.is_empty():
 		directory = scene_root.scene_file_path.get_base_dir()
-	var result: Dictionary = EventSheetWorkflow.create_sheet_for_node(node, directory)
+	var result: Dictionary = load(WORKFLOW_PATH).create_sheet_for_node(node, directory)
 	if bool(result.get("ok", false)):
 		get_editor_interface().mark_scene_as_unsaved()
 		get_editor_interface().get_resource_filesystem().scan()
@@ -135,7 +148,7 @@ func _create_sheet_in_directory(directory: String) -> void:
 	# reference so the window is never freed out from under its connections. It carries the target
 	# folder in its create_requested signal, so one connection serves every folder.
 	if _new_sheet_dialog == null:
-		_new_sheet_dialog = EventSheetNewSheetDialog.new()
+		_new_sheet_dialog = load(NEW_SHEET_DIALOG_PATH).new()
 		_new_sheet_dialog.init_dialog(get_editor_interface().get_base_control())
 		_new_sheet_dialog.create_requested.connect(_finish_create_sheet)
 	_new_sheet_dialog.open(directory)
@@ -144,8 +157,8 @@ func _create_sheet_in_directory(directory: String) -> void:
 ## Writes the chosen starter to a fresh .gd in the target folder, indexes it, and opens it EDITABLE
 ## in the workspace (not the read-only preview a casual .gd Open gives - the user just authored it).
 func _finish_create_sheet(directory: String, sheet_name: String, starter_id: int) -> void:
-	var sheet: EventSheetResource = EventSheetStarterTemplates.build_starter(starter_id)
-	var result: Dictionary = EventSheetWorkflow.write_sheet_file(sheet, directory, sheet_name)
+	var sheet: EventSheetResource = load(STARTER_TEMPLATES_PATH).build_starter(starter_id)
+	var result: Dictionary = load(WORKFLOW_PATH).write_sheet_file(sheet, directory, sheet_name)
 	if not bool(result.get("ok", false)):
 		push_warning("[Godot EventSheets] %s" % str(result.get("message")))
 		return
@@ -271,9 +284,9 @@ func _ensure_editor() -> void:
 		editor.call("set_undo_redo_manager", get_undo_redo())
 	if editor.has_method("get_editor_param_store"):
 		var store: Variant = editor.call("get_editor_param_store")
-		if store is EditorParamStore:
-			_ace_param_inspector_plugin = ACEParamInspectorPlugin.new()
-			_ace_param_inspector_plugin.set_param_store(store as EditorParamStore)
+		if store != null:
+			_ace_param_inspector_plugin = load(ACE_PARAM_INSPECTOR_PATH).new()
+			_ace_param_inspector_plugin.call("set_param_store", store)
 			add_inspector_plugin(_ace_param_inspector_plugin)
 	# Commit only after the whole build succeeds - see the docstring's clean-retry contract.
 	_event_sheet_editor = editor

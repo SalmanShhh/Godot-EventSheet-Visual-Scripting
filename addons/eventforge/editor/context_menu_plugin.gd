@@ -7,6 +7,12 @@
 class_name EventSheetContextMenu
 extends EditorContextMenuPlugin
 
+# Loaded BY PATH at call time, never named as classes: this plugin registers at editor boot, and
+# a class-name reference would compile the whole workflow/doctor subtree (importer + compiler)
+# right there. Right-click latency absorbs the one-time load instead; load() caches afterwards.
+const WORKFLOW_PATH: String = "res://addons/eventforge/editor/workflow_entry_points.gd"
+const PROJECT_DOCTOR_PATH: String = "res://addons/eventforge/project_doctor.gd"
+
 var slot: int = -1
 var open_sheet: Callable = Callable()    # Callable(path: String)
 var attach_sheet: Callable = Callable()  # Callable(node: Node)
@@ -34,7 +40,7 @@ func _popup_menu(paths: PackedStringArray) -> void:
 		EditorContextMenuPlugin.CONTEXT_SLOT_SCRIPT_EDITOR:
 			add_context_menu_item("Open as Event Sheet", _on_open_requested, _open_as_sheet_icon())
 			for path: String in paths:
-				if not EventSheetProjectDoctor.sheet_for_script(path).is_empty():
+				if not load(PROJECT_DOCTOR_PATH).sheet_for_script(path).is_empty():
 					add_context_menu_item("Go to Sheet Row", _on_goto_row_requested)
 					break
 
@@ -48,7 +54,7 @@ static func should_offer_open_as_sheet(menu_slot: int, paths: PackedStringArray)
 		return true
 	if menu_slot == EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM:
 		for path: String in paths:
-			if EventSheetWorkflow.is_openable_as_sheet(path):
+			if load(WORKFLOW_PATH).is_openable_as_sheet(path):
 				return true
 	return false
 
@@ -119,6 +125,6 @@ func _on_open_requested(targets: Variant) -> void:
 		entries = targets
 	for entry: Variant in entries:
 		var path: String = (entry as Script).resource_path if entry is Script else str(entry)
-		if EventSheetWorkflow.is_openable_as_sheet(path):
+		if load(WORKFLOW_PATH).is_openable_as_sheet(path):
 			open_sheet.call(path)
 			return

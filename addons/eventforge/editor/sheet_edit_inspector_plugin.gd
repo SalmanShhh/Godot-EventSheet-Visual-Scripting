@@ -45,6 +45,9 @@ static func sheet_path_for(object: Object) -> String:
 	var cached: Variant = _pairing_cache.get(script_path)
 	if cached is Dictionary and int((cached as Dictionary).get("mtime")) == mtime:
 		return str((cached as Dictionary).get("sheet"))
-	var sheet_path: String = EventSheetProjectDoctor.sheet_for_script(script_path)
+	# Loaded by path, not named as a class: this inspector plugin registers at editor boot, and
+	# naming EventSheetProjectDoctor would compile its whole subtree (the compiler included)
+	# right there. The first Inspector selection absorbs the one-time load instead.
+	var sheet_path: String = load("res://addons/eventforge/project_doctor.gd").sheet_for_script(script_path)
 	_pairing_cache[script_path] = {"mtime": mtime, "sheet": sheet_path}
 	return sheet_path
