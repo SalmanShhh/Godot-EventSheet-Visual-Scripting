@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - each showcase lives in its own folder
+
+- `demo/showcase/` is now one folder per showcase (`carousel/`, `starfall/`, `quest_fsm/`,
+  `utility_ai/`, `htn_agent/`, `platformer_shooter/`, `swarm/`, `family_arena/`,
+  `inspector_playground/`, `enemy_stats/`, `menu_starter/`) - every scene, sheet, and helper
+  asset (stars, shots, enemies…) sits beside the showcase it belongs to, so nothing gets mixed
+  up. The generator (`tools/build_examples.gd`) creates the folders on demand and regeneration
+  stays byte-stable; the Welcome's showcase button finds the flagship in its new home.
+
 ### Changed - the plugin loads ~20x faster
 
 - **Enabling the plugin (and every editor boot with it installed) dropped from ~1.8s of script

@@ -174,20 +174,22 @@ func _finish_create_sheet(directory: String, sheet_name: String, starter_id: int
 
 
 ## The newest showcase scene under demo/showcase (review catch: hardcoding the
-## versioned filename meant every showcase refresh had to edit the plugin).
+## versioned filename meant every showcase refresh had to edit the plugin). Each showcase
+## lives in its own subfolder now, so the scan walks one level deep for showcase_*.tscn.
 static func _find_showcase_scene() -> String:
-	var dir: DirAccess = DirAccess.open("res://demo/showcase")
-	if dir == null:
+	var root: DirAccess = DirAccess.open("res://demo/showcase")
+	if root == null:
 		return ""
 	var newest: String = ""
-	dir.list_dir_begin()
-	var entry: String = dir.get_next()
-	while not entry.is_empty():
-		if entry.begins_with("showcase_") and entry.ends_with(".tscn") and entry > newest:
-			newest = entry
-		entry = dir.get_next()
-	dir.list_dir_end()
-	return "res://demo/showcase/%s" % newest if not newest.is_empty() else ""
+	for folder: String in root.get_directories():
+		var dir: DirAccess = DirAccess.open("res://demo/showcase/%s" % folder)
+		if dir == null:
+			continue
+		for entry: String in dir.get_files():
+			var candidate: String = "res://demo/showcase/%s/%s" % [folder, entry]
+			if entry.begins_with("showcase_") and entry.ends_with(".tscn") and candidate.get_file() > newest.get_file():
+				newest = candidate
+	return newest
 
 
 ## Registers plugin services when the plugin is enabled.

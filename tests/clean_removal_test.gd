@@ -18,7 +18,7 @@ static func run() -> bool:
 	_collect(files, "res://eventsheet_addons", "_behavior.gd")
 	# Compiled demo + showcase scripts (what scenes actually attach).
 	_collect(files, "res://demo", "_generated.gd")
-	for showcase_gd: String in ["res://demo/showcase/showcase_carousel.gd", "res://demo/showcase/starfall.gd", "res://demo/showcase/quest_fsm.gd"]:
+	for showcase_gd: String in ["res://demo/showcase/carousel/showcase_carousel.gd", "res://demo/showcase/starfall/starfall.gd", "res://demo/showcase/quest_fsm/quest_fsm.gd"]:
 		if FileAccess.file_exists(showcase_gd):
 			files.append(showcase_gd)
 

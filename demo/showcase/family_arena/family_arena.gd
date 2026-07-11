@@ -8,7 +8,7 @@ var __every_strike_fam: float = 0.0
 func _ready() -> void:
 	var __cols: int = 6
 	for __i: int in range(spawn_count):
-		var __e: Sprite2D = load("res://demo/showcase/enemy.tscn").instantiate()
+		var __e: Sprite2D = load("res://demo/showcase/family_arena/enemy.tscn").instantiate()
 		__e.position = Vector2(80.0 + float(__i % __cols) * 90.0, 40.0 + float(__i / __cols) * 80.0)
 		add_child(__e)
 

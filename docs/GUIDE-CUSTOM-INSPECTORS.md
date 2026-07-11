@@ -313,7 +313,7 @@ A red "⚠ Required - assign a value" badge above the field until it is set - fo
 @export var portrait: Texture2D = null
 ```
 
-Editor-only, like all decor: an inert comment without the plugin. See it live in `demo/showcase/enemy_stats_example.tres` - the portrait is deliberately unset.
+Editor-only, like all decor: an inert comment without the plugin. See it live in `demo/showcase/enemy_stats/enemy_stats_example.tres` - the portrait is deliberately unset.
 
 The **Project Doctor** enforces it project-wide: every scene node and saved resource using the script is scanned, and any that leaves a required (and empty-by-default) property unset gets a warning naming the exact file and property - so a required field can't slip through in a scene nobody opened.
 

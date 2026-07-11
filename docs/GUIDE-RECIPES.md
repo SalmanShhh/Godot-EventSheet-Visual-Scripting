@@ -438,7 +438,7 @@ its type - no custom editor code.
    `@export_subgroup`) - they show a **"Group › Subgroup"** chip on the row and nest in the Inspector.
 4. Select the node and the Inspector shows the rich, grouped drawers; press Play and the game reads
    from those same designer-tweaked values. The **Inspector Playground** showcase
-   (`demo/showcase/inspector_playground.tscn`) demonstrates all five drawers at once.
+   (`demo/showcase/inspector_playground/inspector_playground.tscn`) demonstrates all five drawers at once.
 
 Without the editor plugin (or in an exported game) each property is just a plain field - the parity
 covenant is untouched. New here? The dialog starts simple (Basic "More options") and only unfurls the
@@ -455,7 +455,7 @@ Two ways to stop repeating yourself.
   rows are replaced by the call. It's the "create an abstraction" gesture - a named verb, not a copy.
 - **Families.** When the same logic should run across *many* objects, set **Sheet Type → Family**:
   the sheet's events iterate over a whole **family** of nodes (family-scoped), so one sheet drives the
-  group. The **Family Arena** showcase (`demo/showcase/family_arena.tscn`) shows it end to end.
+  group. The **Family Arena** showcase (`demo/showcase/family_arena/family_arena.tscn`) shows it end to end.
 
 ---
 

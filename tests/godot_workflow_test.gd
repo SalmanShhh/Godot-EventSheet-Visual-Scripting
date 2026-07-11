@@ -359,7 +359,7 @@ static func run() -> bool:
 	run_editor_2.free()
 	DirAccess.remove_absolute("user://run_target.gd")
 	all_passed = _check("the welcome panel discovers the newest showcase scene",
-		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/showcase_carousel.tscn") and all_passed
+		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/carousel/showcase_carousel.tscn") and all_passed
 
 	# ── Toolbar redesign: grouped menus, flow-wraps instead of clipping ───────────
 	var toolbar_editor: EventSheetEditor = EventSheetEditor.new()

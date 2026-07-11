@@ -116,6 +116,9 @@ func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) ->
 	# .gd-only: the showcase .gd IS the sheet (no .tres companion), banner-less so it's hand-editable.
 	# Normal synthesizing compile - do NOT set external_source_path (that path is only for opening an
 	# existing .gd). Round-trip is covered by the showcase tests + import_external.
+	# Each showcase lives in its own demo/showcase/<name>/ folder - create it on demand so a
+	# fresh checkout (or a brand-new showcase) regenerates without manual mkdir.
+	DirAccess.make_dir_recursive_absolute(gd_path.get_base_dir())
 	var result: Dictionary = SheetCompiler.compile(sheet, gd_path, true)
 	var success: bool = bool(result.get("success", false))
 	print("[build_examples] %s compile=%s warnings=%s errors=%s" % [
@@ -124,6 +127,7 @@ func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) ->
 
 
 func _save_scene(root: Node, path: String) -> bool:
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var packed: PackedScene = PackedScene.new()
 	var pack_err: Error = packed.pack(root)
 	var save_err: Error = ResourceSaver.save(packed, path)
@@ -256,14 +260,14 @@ func _build_carousel() -> bool:
 	seed_row.actions.append(_raw("for c: Node in $Tiles.get_children():\n\tc.get_node(\"SineBehavior\").active = true"))
 	sheet.events.append(seed_row)
 
-	if not _compile(sheet, "res://demo/showcase/showcase_carousel.tres", "res://demo/showcase/showcase_carousel.gd"):
+	if not _compile(sheet, "res://demo/showcase/carousel/showcase_carousel.tres", "res://demo/showcase/carousel/showcase_carousel.gd"):
 		return false
 
 	# Scene
 	var tex: ImageTexture = _make_texture()
 	var root: Node2D = Node2D.new()
 	root.name = "Carousel"
-	root.set_script(load("res://demo/showcase/showcase_carousel.gd"))
+	root.set_script(load("res://demo/showcase/carousel/showcase_carousel.gd"))
 	# root-level behaviors for the bare $TweenBehavior / $FlashBehavior board calls
 	# (SpringBehavior too, so the showcase wires the canonical Spring + Tween pair).
 	_attach_behavior(root, "SpringBehavior", SPRING, root)
@@ -299,7 +303,7 @@ func _build_carousel() -> bool:
 		_attach_behavior(tile, "SpringBehavior", SPRING, root)
 		_attach_behavior(tile, "TweenBehavior", TWEEN, root)
 
-	return _save_scene(root, "res://demo/showcase/showcase_carousel.tscn")
+	return _save_scene(root, "res://demo/showcase/carousel/showcase_carousel.tscn")
 
 # ── 2. Starfall (arcade mini-game) ───────────────────────────────────────────
 
@@ -318,7 +322,7 @@ func _build_starfall() -> bool:
 	star.modulate = Color(1.0, 0.86, 0.3, 1.0)
 	star.add_to_group("stars", true)
 	_attach_behavior(star, "BulletBehavior", BULLET, star, {"speed": 150.0, "align_rotation": false})
-	if not _save_scene(star, "res://demo/showcase/star.tscn"):
+	if not _save_scene(star, "res://demo/showcase/starfall/star.tscn"):
 		return false
 
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -390,7 +394,7 @@ func _build_starfall() -> bool:
 	spawn.conditions.append(_condition("Core", "CompareVar", "{var_name} {op} {value}", {"var_name": "state", "op": "==", "value": "State.PLAYING"}))
 	spawn.conditions.append(_every("spawn_sf", "2.0"))
 	spawn.actions.append(_action("Core", "SpawnSceneAt",
-		"var __spawn_star = load(\"res://demo/showcase/star.tscn\").instantiate()\n__spawn_star.position = Vector2(randf_range(60.0, 1100.0), -20.0)\n__spawn_star.rotation_degrees = 90.0\nadd_child(__spawn_star)", {}))
+		"var __spawn_star = load(\"res://demo/showcase/starfall/star.tscn\").instantiate()\n__spawn_star.position = Vector2(randf_range(60.0, 1100.0), -20.0)\n__spawn_star.rotation_degrees = 90.0\nadd_child(__spawn_star)", {}))
 	sheet.events.append(spawn)
 
 	# Score / cull via a GROUP pick-filter (for-each star past the catch line).
@@ -421,13 +425,13 @@ func _build_starfall() -> bool:
 	hud.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$ScoreLabel", "template": "\"Score %d    Lives %d    %s\"", "args": "score, lives, (\"GAME OVER - press Enter\" if state == State.GAME_OVER else \"PLAYING\")"}))
 	sheet.events.append(hud)
 
-	if not _compile(sheet, "res://demo/showcase/starfall.tres", "res://demo/showcase/starfall.gd"):
+	if not _compile(sheet, "res://demo/showcase/starfall/starfall.tres", "res://demo/showcase/starfall/starfall.gd"):
 		return false
 
 	# Scene
 	var root: Node2D = Node2D.new()
 	root.name = "Starfall"
-	root.set_script(load("res://demo/showcase/starfall.gd"))
+	root.set_script(load("res://demo/showcase/starfall/starfall.gd"))
 	var ship: Sprite2D = Sprite2D.new()
 	ship.name = "Ship"
 	ship.texture = tex
@@ -440,7 +444,7 @@ func _build_starfall() -> bool:
 	label.add_theme_font_size_override("font_size", 28)
 	label.text = "Score 0    Lives 3    PLAYING"
 	root.add_child(label); label.owner = root
-	return _save_scene(root, "res://demo/showcase/starfall.tscn")
+	return _save_scene(root, "res://demo/showcase/starfall/starfall.tscn")
 
 # ── 3. Quest & Inventory FSM (software-logic systems demo) ───────────────────
 
@@ -534,14 +538,14 @@ func _build_quest_fsm() -> bool:
 	hud.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Screen", "template": "\"QUEST: %s\nitems: %d   log: %d\nt = %d\"", "args": "[\"OFFERED\", \"ACTIVE\", \"COMPLETE\"][quest_state], inventory.size(), quest_log.size(), tick"}))
 	sheet.events.append(hud)
 
-	if not _compile(sheet, "res://demo/showcase/quest_fsm.tres", "res://demo/showcase/quest_fsm.gd"):
+	if not _compile(sheet, "res://demo/showcase/quest_fsm/quest_fsm.tres", "res://demo/showcase/quest_fsm/quest_fsm.gd"):
 		return false
 
 	# Scene
 	var tex: ImageTexture = _make_texture()
 	var root: Node2D = Node2D.new()
 	root.name = "QuestDemo"
-	root.set_script(load("res://demo/showcase/quest_fsm.gd"))
+	root.set_script(load("res://demo/showcase/quest_fsm/quest_fsm.gd"))
 	var icon: Sprite2D = Sprite2D.new()
 	icon.name = "Icon"
 	icon.texture = tex
@@ -557,7 +561,7 @@ func _build_quest_fsm() -> bool:
 	label.add_theme_font_size_override("font_size", 30)
 	label.text = "QUEST: OFFERED\nitems: 0   log: 0\nt = 0"
 	root.add_child(label); label.owner = root
-	return _save_scene(root, "res://demo/showcase/quest_fsm.tscn")
+	return _save_scene(root, "res://demo/showcase/quest_fsm/quest_fsm.tscn")
 
 
 # ── Utility AI showcase: a guard whose UtilityBrain scores patrol/chase/flee ──
@@ -605,13 +609,13 @@ func _build_utility_ai() -> bool:
 	hud.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Screen", "template": "\"GUARD BRAIN (Utility AI)\naction: %s  (score %.2f)\nthreat %.2f   stamina %.2f\"", "args": "$Guard/Brain.current_action(), $Guard/Brain.decision_score(), threat, stamina"}))
 	sheet.events.append(hud)
 
-	if not _compile(sheet, "res://demo/showcase/utility_ai_demo.tres", "res://demo/showcase/utility_ai_demo.gd"):
+	if not _compile(sheet, "res://demo/showcase/utility_ai/utility_ai_demo.tres", "res://demo/showcase/utility_ai/utility_ai_demo.gd"):
 		return false
 
 	# Scene
 	var root: Node2D = Node2D.new()
 	root.name = "GuardBrainDemo"
-	root.set_script(load("res://demo/showcase/utility_ai_demo.gd"))
+	root.set_script(load("res://demo/showcase/utility_ai/utility_ai_demo.gd"))
 	var guard: Sprite2D = Sprite2D.new()
 	guard.name = "Guard"
 	guard.texture = _make_texture()
@@ -626,7 +630,7 @@ func _build_utility_ai() -> bool:
 	label.add_theme_font_size_override("font_size", 28)
 	label.text = "GUARD BRAIN (Utility AI)"
 	root.add_child(label); label.owner = root
-	return _save_scene(root, "res://demo/showcase/utility_ai_demo.tscn")
+	return _save_scene(root, "res://demo/showcase/utility_ai/utility_ai_demo.tscn")
 
 
 # ── HTN Agent showcase: a chef that plans make_meal -> gather -> cook -> serve ──
@@ -670,13 +674,13 @@ func _build_htn_agent() -> bool:
 	hud.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Screen", "template": "\"CHEF PLANNER (HTN)\ntask: %s\nsteps left: %d\"", "args": "$Chef/Planner.current_task(), $Chef/Planner.plan_length()"}))
 	sheet.events.append(hud)
 
-	if not _compile(sheet, "res://demo/showcase/htn_agent_demo.tres", "res://demo/showcase/htn_agent_demo.gd"):
+	if not _compile(sheet, "res://demo/showcase/htn_agent/htn_agent_demo.tres", "res://demo/showcase/htn_agent/htn_agent_demo.gd"):
 		return false
 
 	# Scene
 	var root: Node2D = Node2D.new()
 	root.name = "ChefPlannerDemo"
-	root.set_script(load("res://demo/showcase/htn_agent_demo.gd"))
+	root.set_script(load("res://demo/showcase/htn_agent/htn_agent_demo.gd"))
 	var chef: Sprite2D = Sprite2D.new()
 	chef.name = "Chef"
 	chef.texture = _make_texture()
@@ -691,7 +695,7 @@ func _build_htn_agent() -> bool:
 	label.add_theme_font_size_override("font_size", 28)
 	label.text = "CHEF PLANNER (HTN)"
 	root.add_child(label); label.owner = root
-	return _save_scene(root, "res://demo/showcase/htn_agent_demo.tscn")
+	return _save_scene(root, "res://demo/showcase/htn_agent/htn_agent_demo.tscn")
 
 # ── 4. Platformer-Shooter (two new behavior packs working together) ──────────
 
@@ -706,7 +710,7 @@ func _build_platformer_shooter() -> bool:
 	shot.scale = Vector2(0.22, 0.12)
 	shot.modulate = Color(1.0, 0.95, 0.4, 1.0)
 	_attach_behavior(shot, "BulletBehavior", BULLET, shot, {"speed": 720.0, "align_rotation": false})
-	if not _save_scene(shot, "res://demo/showcase/shot.tscn"):
+	if not _save_scene(shot, "res://demo/showcase/platformer_shooter/shot.tscn"):
 		return false
 
 	# Target that drifts in from the right (also a BulletBehavior, slower).
@@ -716,7 +720,7 @@ func _build_platformer_shooter() -> bool:
 	target.scale = Vector2(0.4, 0.4)
 	target.modulate = Color(1.0, 0.4, 0.45, 1.0)
 	_attach_behavior(target, "BulletBehavior", BULLET, target, {"speed": 130.0, "align_rotation": false})
-	if not _save_scene(target, "res://demo/showcase/target.tscn"):
+	if not _save_scene(target, "res://demo/showcase/platformer_shooter/target.tscn"):
 		return false
 
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -756,7 +760,7 @@ func _build_platformer_shooter() -> bool:
 	fire.conditions.append(_condition("Core", "IsActionPressed", "Input.is_action_pressed(&{action})", {"action": "\"ui_accept\""}))
 	fire.conditions.append(_condition("WeaponKit", "method:can_fire", "{target}.can_fire()", {"target": "$Player/WeaponKit"}))
 	fire.actions.append(_action("WeaponKit", "method:fire", "{target}.fire()", {"target": "$Player/WeaponKit"}))
-	fire.actions.append(_action("Core", "SpawnSceneFull", "var __spawn_shot = load({path}).instantiate()\n__spawn_shot.position = {position}\n__spawn_shot.rotation_degrees = {rotation}\nadd_child(__spawn_shot)\nif {group} != \"\": __spawn_shot.add_to_group({group})", {"path": "\"res://demo/showcase/shot.tscn\"", "position": "$Player.position + Vector2(32.0 * $Player/PlatformerMovement.facing_direction(), -6.0)", "rotation": "0.0 if $Player/PlatformerMovement.facing_direction() >= 0 else 180.0", "group": "\"shots\""}))
+	fire.actions.append(_action("Core", "SpawnSceneFull", "var __spawn_shot = load({path}).instantiate()\n__spawn_shot.position = {position}\n__spawn_shot.rotation_degrees = {rotation}\nadd_child(__spawn_shot)\nif {group} != \"\": __spawn_shot.add_to_group({group})", {"path": "\"res://demo/showcase/platformer_shooter/shot.tscn\"", "position": "$Player.position + Vector2(32.0 * $Player/PlatformerMovement.facing_direction(), -6.0)", "rotation": "0.0 if $Player/PlatformerMovement.facing_direction() >= 0 else 180.0", "group": "\"shots\""}))
 	sheet.events.append(fire)
 
 	# Keep the player on screen.
@@ -769,7 +773,7 @@ func _build_platformer_shooter() -> bool:
 	var spawn: EventRow = EventRow.new()
 	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnPhysicsProcess"
 	spawn.conditions.append(_every("ps_spawn", "1.5"))
-	spawn.actions.append(_action("Core", "SpawnSceneFull", "var __spawn_shot = load({path}).instantiate()\n__spawn_shot.position = {position}\n__spawn_shot.rotation_degrees = {rotation}\nadd_child(__spawn_shot)\nif {group} != \"\": __spawn_shot.add_to_group({group})", {"path": "\"res://demo/showcase/target.tscn\"", "position": "Vector2(1240.0, randf_range(120.0, 540.0))", "rotation": "180.0", "group": "\"targets\""}))
+	spawn.actions.append(_action("Core", "SpawnSceneFull", "var __spawn_shot = load({path}).instantiate()\n__spawn_shot.position = {position}\n__spawn_shot.rotation_degrees = {rotation}\nadd_child(__spawn_shot)\nif {group} != \"\": __spawn_shot.add_to_group({group})", {"path": "\"res://demo/showcase/platformer_shooter/target.tscn\"", "position": "Vector2(1240.0, randf_range(120.0, 540.0))", "rotation": "180.0", "group": "\"targets\""}))
 	sheet.events.append(spawn)
 
 	# Hit detection (shots x targets) + off-screen culling.
@@ -795,13 +799,13 @@ func _build_platformer_shooter() -> bool:
 	hud_row.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Hud", "template": "\"Score %d    Ammo %d/%d    %s\"", "args": "score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, (\"RELOADING...\" if $Player/WeaponKit.is_reloading() else \"A/D move   Up jump   hold Space fire\")"}))
 	sheet.events.append(hud_row)
 
-	if not _compile(sheet, "res://demo/showcase/platformer_shooter.tres", "res://demo/showcase/platformer_shooter.gd"):
+	if not _compile(sheet, "res://demo/showcase/platformer_shooter/platformer_shooter.tres", "res://demo/showcase/platformer_shooter/platformer_shooter.gd"):
 		return false
 
 	# ── Scene: floor + player (with both behaviors) + HUD ──
 	var root: Node2D = Node2D.new()
 	root.name = "PlatformerShooter"
-	root.set_script(load("res://demo/showcase/platformer_shooter.gd"))
+	root.set_script(load("res://demo/showcase/platformer_shooter/platformer_shooter.gd"))
 
 	# Add each container to the tree BEFORE its children set owner = root (owner must be an
 	# ancestor already in the tree, else the node is dropped from the packed scene).
@@ -845,7 +849,7 @@ func _build_platformer_shooter() -> bool:
 	hud.text = "Score 0    Ammo 8/8    A/D move   Up jump   hold Space fire"
 	root.add_child(hud); hud.owner = root
 
-	return _save_scene(root, "res://demo/showcase/platformer_shooter.tscn")
+	return _save_scene(root, "res://demo/showcase/platformer_shooter/platformer_shooter.tscn")
 
 # ── 5. Swarm - frame-spreading crowd (Budgeted For Each) ─────────────────────
 
@@ -858,7 +862,7 @@ func _build_swarm() -> bool:
 	dot.texture = tex
 	dot.scale = Vector2(0.32, 0.32)
 	dot.add_to_group("swarm", true)
-	if not _save_scene(dot, "res://demo/showcase/dot.tscn"):
+	if not _save_scene(dot, "res://demo/showcase/swarm/dot.tscn"):
 		return false
 
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -880,7 +884,7 @@ func _build_swarm() -> bool:
 	# On Ready: spawn the crowd in a 40-wide grid into the "swarm" group.
 	var spawn: EventRow = EventRow.new()
 	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnReady"
-	spawn.actions.append(_raw("var __cols: int = 40\nfor __i: int in range(count):\n\tvar __dot: Sprite2D = load(\"res://demo/showcase/dot.tscn\").instantiate()\n\t__dot.position = Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + float(__i / __cols) * 27.0)\n\tadd_child(__dot)"))
+	spawn.actions.append(_raw("var __cols: int = 40\nfor __i: int in range(count):\n\tvar __dot: Sprite2D = load(\"res://demo/showcase/swarm/dot.tscn\").instantiate()\n\t__dot.position = Vector2(48.0 + float(__i % __cols) * 27.0, 70.0 + float(__i / __cols) * 27.0)\n\tadd_child(__dot)"))
 	sheet.events.append(spawn)
 
 	# On Process: advance the clock + show the live FPS so you can see it stay smooth.
@@ -904,20 +908,20 @@ func _build_swarm() -> bool:
 	wobble.actions.append(_raw("dot.offset = Vector2(sin(t * 2.0 + dot.position.x * 0.02) * 10.0, cos(t * 2.4 + dot.position.y * 0.02) * 10.0)\ndot.modulate = Color.from_hsv(fmod(t * 0.08 + dot.position.x * 0.0008, 1.0), 0.65, 1.0)"))
 	sheet.events.append(wobble)
 
-	if not _compile(sheet, "res://demo/showcase/swarm.tres", "res://demo/showcase/swarm.gd"):
+	if not _compile(sheet, "res://demo/showcase/swarm/swarm.tres", "res://demo/showcase/swarm/swarm.gd"):
 		return false
 
 	# Scene: the script-bearing root + a HUD label.
 	var root: Node2D = Node2D.new()
 	root.name = "Swarm"
-	root.set_script(load("res://demo/showcase/swarm.gd"))
+	root.set_script(load("res://demo/showcase/swarm/swarm.gd"))
 	var label: Label = Label.new()
 	label.name = "Info"
 	label.position = Vector2(24, 18)
 	label.add_theme_font_size_override("font_size", 24)
 	label.text = "800 sprites   ·   Budgeted For Each: 90/frame   ·   60 FPS"
 	root.add_child(label); label.owner = root
-	return _save_scene(root, "res://demo/showcase/swarm.tscn")
+	return _save_scene(root, "res://demo/showcase/swarm/swarm.tscn")
 
 
 # ── 6. Family Arena (the Families trio: horizontal abstraction) ───────────────
@@ -959,14 +963,14 @@ func _build_family_arena() -> bool:
 	take_damage.params = [p_amount]
 	take_damage.events = [_raw("health -= amount\nif health <= 0:\n\tqueue_free()")]
 	enemy.functions.append(take_damage)
-	if not _compile(enemy, "res://demo/showcase/enemy.tres", "res://demo/showcase/enemy.gd"):
+	if not _compile(enemy, "res://demo/showcase/family_arena/enemy.tres", "res://demo/showcase/family_arena/enemy.gd"):
 		return false
 	# Enemy sub-scene: a Sprite2D bearing the compiled Enemy script.
 	var enemy_node: Sprite2D = Sprite2D.new()
 	enemy_node.name = "Enemy"
-	enemy_node.set_script(load("res://demo/showcase/enemy.gd"))
+	enemy_node.set_script(load("res://demo/showcase/family_arena/enemy.gd"))
 	enemy_node.texture = tex
-	if not _save_scene(enemy_node, "res://demo/showcase/enemy.tscn"):
+	if not _save_scene(enemy_node, "res://demo/showcase/family_arena/enemy.tscn"):
 		return false
 
 	# FamilyArena - spawns Enemies, then drives them all with FAMILY-SCOPED rules.
@@ -983,7 +987,7 @@ func _build_family_arena() -> bool:
 	# On Ready: spawn the Enemies into a grid.
 	var spawn: EventRow = EventRow.new()
 	spawn.trigger_provider_id = "Core"; spawn.trigger_id = "OnReady"
-	spawn.actions.append(_raw("var __cols: int = 6\nfor __i: int in range(spawn_count):\n\tvar __e: Sprite2D = load(\"res://demo/showcase/enemy.tscn\").instantiate()\n\t__e.position = Vector2(80.0 + float(__i % __cols) * 90.0, 40.0 + float(__i / __cols) * 80.0)\n\tadd_child(__e)"))
+	spawn.actions.append(_raw("var __cols: int = 6\nfor __i: int in range(spawn_count):\n\tvar __e: Sprite2D = load(\"res://demo/showcase/family_arena/enemy.tscn\").instantiate()\n\t__e.position = Vector2(80.0 + float(__i % __cols) * 90.0, 40.0 + float(__i / __cols) * 80.0)\n\tadd_child(__e)"))
 	arena.events.append(spawn)
 	# On Process: ONE family rule moves every Enemy by its own instance fall_speed + recycles it.
 	var fall: EventRow = EventRow.new()
@@ -1003,20 +1007,20 @@ func _build_family_arena() -> bool:
 	strike.actions.append(_raw("var __e = get_tree().get_nodes_in_group(\"family_enemy\").pick_random()\nif __e != null:\n\t__e.take_damage(1)"))
 	strike.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Info", "template": "\"%d Enemies · one family For Each moves them all\"", "args": "get_tree().get_node_count_in_group(\"family_enemy\")"}))
 	arena.events.append(strike)
-	if not _compile(arena, "res://demo/showcase/family_arena.tres", "res://demo/showcase/family_arena.gd"):
+	if not _compile(arena, "res://demo/showcase/family_arena/family_arena.tres", "res://demo/showcase/family_arena/family_arena.gd"):
 		return false
 
 	# Scene: the FamilyArena root + a HUD label.
 	var root: Node2D = Node2D.new()
 	root.name = "FamilyArena"
-	root.set_script(load("res://demo/showcase/family_arena.gd"))
+	root.set_script(load("res://demo/showcase/family_arena/family_arena.gd"))
 	var label: Label = Label.new()
 	label.name = "Info"
 	label.position = Vector2(24, 18)
 	label.add_theme_font_size_override("font_size", 22)
 	label.text = "18 Enemies · one family For Each moves them all"
 	root.add_child(label); label.owner = root
-	return _save_scene(root, "res://demo/showcase/family_arena.tscn")
+	return _save_scene(root, "res://demo/showcase/family_arena/family_arena.tscn")
 
 
 # ── 7. Inspector Playground (Tier 3 custom drawers + @export grouping) ────────
@@ -1073,14 +1077,14 @@ func _build_inspector_playground() -> bool:
 		"$Body.scale = Vector2.ONE * (0.6 + stat_health / 100.0)"))
 	sheet.events.append(move_row)
 
-	if not _compile(sheet, "res://demo/showcase/inspector_playground.tres", "res://demo/showcase/inspector_playground.gd"):
+	if not _compile(sheet, "res://demo/showcase/inspector_playground/inspector_playground.tres", "res://demo/showcase/inspector_playground/inspector_playground.gd"):
 		return false
 
 	# Scene: a ship Body (Polygon2D, tinted live by body_tint) + a centred Emblem (Sprite2D, default texture).
 	var root: Node2D = Node2D.new()
 	root.name = "TunableShip"
 	root.position = Vector2(288, 180)
-	root.set_script(load("res://demo/showcase/inspector_playground.gd"))
+	root.set_script(load("res://demo/showcase/inspector_playground/inspector_playground.gd"))
 	var body: Polygon2D = Polygon2D.new()
 	body.name = "Body"
 	body.polygon = PackedVector2Array([Vector2(30, 0), Vector2(-20, 18), Vector2(-8, 0), Vector2(-20, -18)])
@@ -1097,7 +1101,7 @@ func _build_inspector_playground() -> bool:
 	info.add_theme_font_size_override("font_size", 16)
 	info.text = "Select this node → the Inspector shows custom drawers\n(dial · swatches · texture · curve · bars) in @export groups.\nTweak them and the ship responds."
 	root.add_child(info); info.owner = root
-	return _save_scene(root, "res://demo/showcase/inspector_playground.tscn")
+	return _save_scene(root, "res://demo/showcase/inspector_playground/inspector_playground.tscn")
 
 
 # ── 9. EnemyStats - a Custom Resource with a designed Inspector ──────────────
@@ -1145,20 +1149,20 @@ func _build_enemy_stats() -> bool:
 	sheet.events.append(about)
 	sheet.events.append(_raw("func roll_damage() -> float:\n\treturn randf_range(combat_damage_range.x, combat_damage_range.y)"))
 
-	if not _compile(sheet, "res://demo/showcase/enemy_stats.tres", "res://demo/showcase/enemy_stats.gd"):
+	if not _compile(sheet, "res://demo/showcase/enemy_stats/enemy_stats.tres", "res://demo/showcase/enemy_stats/enemy_stats.gd"):
 		return false
 	# Compiler output is single-blank by design, but a checked-in showcase .gd is ALSO a repo script,
 	# so it must pass the style gate's two-blank-lines-around-functions rule. The importer preserves
 	# blank lines, so the byte round-trip the showcase test pins still holds.
-	var emitted: String = FileAccess.get_file_as_string("res://demo/showcase/enemy_stats.gd")
+	var emitted: String = FileAccess.get_file_as_string("res://demo/showcase/enemy_stats/enemy_stats.gd")
 	emitted = emitted.replace("\n\nfunc roll_damage", "\n\n\nfunc roll_damage")
-	var out: FileAccess = FileAccess.open("res://demo/showcase/enemy_stats.gd", FileAccess.WRITE)
+	var out: FileAccess = FileAccess.open("res://demo/showcase/enemy_stats/enemy_stats.gd", FileAccess.WRITE)
 	out.store_string(emitted)
 	out.close()
 
 	# A saved instance to click in the FileSystem: tuned values, the portrait deliberately left
 	# empty so the REQUIRED warning shows the moment the Inspector opens.
-	var stats: Resource = (load("res://demo/showcase/enemy_stats.gd") as GDScript).new() as Resource
+	var stats: Resource = (load("res://demo/showcase/enemy_stats/enemy_stats.gd") as GDScript).new() as Resource
 	stats.set("id_display_name", "Cave Rat")
 	stats.set("combat_max_health", 120)
 	stats.set("combat_damage_range", Vector2(4, 11))
@@ -1172,7 +1176,7 @@ func _build_enemy_stats() -> bool:
 	falloff.add_point(Vector2(0.0, 1.0))
 	falloff.add_point(Vector2(1.0, 0.25))
 	stats.set("combat_falloff", falloff)
-	var save_err: Error = ResourceSaver.save(stats, "res://demo/showcase/enemy_stats_example.tres")
+	var save_err: Error = ResourceSaver.save(stats, "res://demo/showcase/enemy_stats/enemy_stats_example.tres")
 	print("[build_examples] enemy_stats_example.tres save=%d" % save_err)
 	return save_err == OK
 
@@ -1247,15 +1251,15 @@ func _build_menu_starter() -> bool:
 	])))]
 	sheet.functions.append(handle_fn)
 
-	if not _compile(sheet, "res://demo/showcase/menu_starter.tres", "res://demo/showcase/menu_starter.gd"):
+	if not _compile(sheet, "res://demo/showcase/menu_starter/menu_starter.tres", "res://demo/showcase/menu_starter/menu_starter.gd"):
 		return false
 	# Compiler output is single-blank; a checked-in showcase .gd is ALSO a repo script, so it must
 	# pass the style gate's two-blank-lines-around-functions rule. The importer preserves blank
 	# lines, so the byte round-trip the showcase test pins still holds.
-	var emitted: String = FileAccess.get_file_as_string("res://demo/showcase/menu_starter.gd")
+	var emitted: String = FileAccess.get_file_as_string("res://demo/showcase/menu_starter/menu_starter.gd")
 	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
 	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
-	var out: FileAccess = FileAccess.open("res://demo/showcase/menu_starter.gd", FileAccess.WRITE)
+	var out: FileAccess = FileAccess.open("res://demo/showcase/menu_starter/menu_starter.gd", FileAccess.WRITE)
 	out.store_string(emitted)
 	out.close()
 
@@ -1263,7 +1267,7 @@ func _build_menu_starter() -> bool:
 	var root: Control = Control.new()
 	root.name = "MenuStarter"
 	root.size = Vector2(1152, 648)
-	root.set_script(load("res://demo/showcase/menu_starter.gd"))
+	root.set_script(load("res://demo/showcase/menu_starter/menu_starter.gd"))
 	_attach_behavior(root, "HudKit", "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd", root)
 	var screens: Control = Control.new()
 	screens.name = "Screens"
@@ -1290,7 +1294,7 @@ func _build_menu_starter() -> bool:
 		["ResumeButton", "Resume"], ["MenuButton", "Back to Menu"]]))
 	# Ownership last: a node can only be owned once it sits inside the owner's tree.
 	_own_deep(screens, root)
-	return _save_scene(root, "res://demo/showcase/menu_starter.tscn")
+	return _save_scene(root, "res://demo/showcase/menu_starter/menu_starter.tscn")
 
 
 ## One centred menu screen: a heading plus a column of named buttons (owners assigned later).

@@ -111,14 +111,14 @@ static func run() -> bool:
 	save_instance.free()
 
 	# Release showcase (the release ritual): loads, parses, scene instantiates.
-	var showcase_sheet: EventSheetResource = GDScriptImporter.new().import_external("res://demo/showcase/showcase_carousel.gd")
+	var showcase_sheet: EventSheetResource = GDScriptImporter.new().import_external("res://demo/showcase/carousel/showcase_carousel.gd")
 	all_passed = _check("release showcase ships clean GDScript (Live Values off)",
 		showcase_sheet != null and not showcase_sheet.emit_live_values, true) and all_passed
 	all_passed = _check("showcase script loads",
-		load("res://demo/showcase/showcase_carousel.gd") != null, true) and all_passed
+		load("res://demo/showcase/carousel/showcase_carousel.gd") != null, true) and all_passed
 	all_passed = _check("showcase .gd carries no EngineDebugger / runtime-hook plumbing",
-		not FileAccess.get_file_as_string("res://demo/showcase/showcase_carousel.gd").contains("EngineDebugger"), true) and all_passed
-	var showcase_scene: PackedScene = load("res://demo/showcase/showcase_carousel.tscn")
+		not FileAccess.get_file_as_string("res://demo/showcase/carousel/showcase_carousel.gd").contains("EngineDebugger"), true) and all_passed
+	var showcase_scene: PackedScene = load("res://demo/showcase/carousel/showcase_carousel.tscn")
 	var showcase_root: Node = showcase_scene.instantiate()
 	all_passed = _check("showcase scene wires Spring + Tween behaviors",
 		showcase_root.get_node_or_null("SpringBehavior") != null and showcase_root.get_node_or_null("TweenBehavior") != null, true) and all_passed

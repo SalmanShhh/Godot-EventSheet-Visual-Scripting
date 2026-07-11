@@ -12,7 +12,7 @@ func _physics_process(delta: float) -> void:
 		$Player/PlatformerMovement.jump_released()
 	if Input.is_action_pressed(&"ui_accept") and $Player/WeaponKit.can_fire():
 		$Player/WeaponKit.fire()
-		var __spawn_shot = load("res://demo/showcase/shot.tscn").instantiate()
+		var __spawn_shot = load("res://demo/showcase/platformer_shooter/shot.tscn").instantiate()
 		__spawn_shot.position = $Player.position + Vector2(32.0 * $Player/PlatformerMovement.facing_direction(), -6.0)
 		__spawn_shot.rotation_degrees = 0.0 if $Player/PlatformerMovement.facing_direction() >= 0 else 180.0
 		add_child(__spawn_shot)
@@ -21,7 +21,7 @@ func _physics_process(delta: float) -> void:
 	__every_ps_spawn += delta
 	if __every_ps_spawn >= maxf(1.5, 0.001):
 		__every_ps_spawn = fmod(__every_ps_spawn, maxf(1.5, 0.001))
-		var __spawn_shot = load("res://demo/showcase/target.tscn").instantiate()
+		var __spawn_shot = load("res://demo/showcase/platformer_shooter/target.tscn").instantiate()
 		__spawn_shot.position = Vector2(1240.0, randf_range(120.0, 540.0))
 		__spawn_shot.rotation_degrees = 180.0
 		add_child(__spawn_shot)

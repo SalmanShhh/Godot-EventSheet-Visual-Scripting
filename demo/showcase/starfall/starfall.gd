@@ -37,7 +37,7 @@ func _physics_process(delta: float) -> void:
 	__every_spawn_sf += delta
 	if state == State.PLAYING and __every_spawn_sf >= maxf(2.0, 0.001):
 		__every_spawn_sf = fmod(__every_spawn_sf, maxf(2.0, 0.001))
-		var __spawn_star = load("res://demo/showcase/star.tscn").instantiate()
+		var __spawn_star = load("res://demo/showcase/starfall/star.tscn").instantiate()
 		__spawn_star.position = Vector2(randf_range(60.0, 1100.0), -20.0)
 		__spawn_star.rotation_degrees = 90.0
 		add_child(__spawn_star)

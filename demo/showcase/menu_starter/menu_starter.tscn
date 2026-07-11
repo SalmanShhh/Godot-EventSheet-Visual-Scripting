@@ -1,17 +1,17 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://demo/showcase/menu_starter.gd" id="1_3g5fs"]
-[ext_resource type="Script" path="res://eventsheet_addons/hud_kit/hud_kit_behavior.gd" id="2_mk4op"]
+[ext_resource type="Script" path="res://demo/showcase/menu_starter/menu_starter.gd" id="1_agp4w"]
+[ext_resource type="Script" path="res://eventsheet_addons/hud_kit/hud_kit_behavior.gd" id="2_25gfp"]
 
 [node name="MenuStarter" type="Control"]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 1152.0
 offset_bottom = 648.0
-script = ExtResource("1_3g5fs")
+script = ExtResource("1_agp4w")
 
 [node name="HudKit" type="Node" parent="."]
-script = ExtResource("2_mk4op")
+script = ExtResource("2_25gfp")
 
 [node name="Screens" type="Control" parent="."]
 anchors_preset = 0

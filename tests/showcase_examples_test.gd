@@ -13,7 +13,7 @@ static func run() -> bool:
 	var passed: bool = true
 
 	# EnemyStats - the Custom Resource with a designed Inspector (the rich-inspector showcase).
-	passed = _check_sheet("enemy_stats", "res://demo/showcase/enemy_stats.gd", [
+	passed = _check_sheet("enemy_stats", "res://demo/showcase/enemy_stats/enemy_stats.gd", [
 		"class_name EnemyStats",
 		"extends Resource",
 		"# @inspector_header Combat #e06666",
@@ -27,10 +27,10 @@ static func run() -> bool:
 		"func roll_damage() -> float",
 	]) and passed
 	passed = _check("enemy_stats example instance exists",
-		ResourceLoader.exists("res://demo/showcase/enemy_stats_example.tres"), true) and passed
+		ResourceLoader.exists("res://demo/showcase/enemy_stats/enemy_stats_example.tres"), true) and passed
 
 	# Menu Starter - the UI starter driven by the HUD Kit pack (zero connected signals).
-	passed = _check_sheet("menu_starter", "res://demo/showcase/menu_starter.gd", [
+	passed = _check_sheet("menu_starter", "res://demo/showcase/menu_starter/menu_starter.gd", [
 		"class_name MenuStarter",
 		"$HudKit.switch_screen(\"TitleScreen\")",
 		"$HudKit.on_button_pressed.connect(handle_button)",
@@ -40,10 +40,10 @@ static func run() -> bool:
 		"$HudKit.show_toast(",
 	]) and passed
 	passed = _check_scene("menu_starter scene wires HudKit + the four screens",
-		"res://demo/showcase/menu_starter.tscn", ["HudKit", "TitleScreen", "SettingsScreen", "GameScreen", "PauseScreen"]) and passed
+		"res://demo/showcase/menu_starter/menu_starter.tscn", ["HudKit", "TitleScreen", "SettingsScreen", "GameScreen", "PauseScreen"]) and passed
 
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
-	passed = _check_sheet("showcase_carousel", "res://demo/showcase/showcase_carousel.gd", [
+	passed = _check_sheet("showcase_carousel", "res://demo/showcase/carousel/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",
 		"juice_tile(beat, intensity * 5.0)",
 		"__group_juice_active",
@@ -51,22 +51,22 @@ static func run() -> bool:
 		"else:",
 	]) and passed
 	passed = _check_scene("showcase_carousel scene wires Spring + Tween",
-		"res://demo/showcase/showcase_carousel.tscn", ["SpringBehavior", "TweenBehavior"]) and passed
+		"res://demo/showcase/carousel/showcase_carousel.tscn", ["SpringBehavior", "TweenBehavior"]) and passed
 
 	# Starfall - enum + match FSM, group pick-filter, spawner.
-	passed = _check_sheet("starfall", "res://demo/showcase/starfall.gd", [
+	passed = _check_sheet("starfall", "res://demo/showcase/starfall/starfall.gd", [
 		"enum State { PLAYING, GAME_OVER }",
 		"match state:",
 		"for star in get_tree().get_nodes_in_group(\"stars\")",
 		"if not (star.position.y > 560.0):",
-		"load(\"res://demo/showcase/star.tscn\").instantiate()",
+		"load(\"res://demo/showcase/starfall/star.tscn\").instantiate()",
 	]) and passed
 	passed = _check_scene("starfall scene has Ship + ScoreLabel",
-		"res://demo/showcase/starfall.tscn", ["Ship", "ScoreLabel"]) and passed
-	passed = _check("star sub-scene exists", ResourceLoader.exists("res://demo/showcase/star.tscn"), true) and passed
+		"res://demo/showcase/starfall/starfall.tscn", ["Ship", "ScoreLabel"]) and passed
+	passed = _check("star sub-scene exists", ResourceLoader.exists("res://demo/showcase/starfall/star.tscn"), true) and passed
 
 	# Quest FSM - enum + match, Dictionary/Array collections, signals, function.
-	passed = _check_sheet("quest_fsm", "res://demo/showcase/quest_fsm.gd", [
+	passed = _check_sheet("quest_fsm", "res://demo/showcase/quest_fsm/quest_fsm.gd", [
 		"enum QuestState {",
 		"signal item_collected(id: String)",
 		"signal quest_advanced(phase: int)",
@@ -78,10 +78,10 @@ static func run() -> bool:
 		"match quest_state:",
 	]) and passed
 	passed = _check_scene("quest_fsm scene has Icon + Screen",
-		"res://demo/showcase/quest_fsm.tscn", ["Icon", "Screen"]) and passed
+		"res://demo/showcase/quest_fsm/quest_fsm.tscn", ["Icon", "Screen"]) and passed
 
 	# Guard Brain - the Utility AI pack driving a self-scoring decision maker (patrol/chase/flee).
-	passed = _check_sheet("utility_ai_demo", "res://demo/showcase/utility_ai_demo.gd", [
+	passed = _check_sheet("utility_ai_demo", "res://demo/showcase/utility_ai/utility_ai_demo.gd", [
 		"class_name GuardBrainDemo",
 		"$Guard/Brain.add_action(\"flee\", 0.0, false, 1.2)",
 		"$Guard/Brain.add_consideration(\"chase\", \"threat\", \"quadratic\", 1.0, 0.5, 1.0)",
@@ -91,10 +91,10 @@ static func run() -> bool:
 		"threat = 0.5 + 0.5 * sin(t * 0.8)",
 	]) and passed
 	passed = _check_scene("utility_ai_demo scene has Guard + Brain + Screen",
-		"res://demo/showcase/utility_ai_demo.tscn", ["Guard", "Brain", "Screen"]) and passed
+		"res://demo/showcase/utility_ai/utility_ai_demo.tscn", ["Guard", "Brain", "Screen"]) and passed
 
 	# Chef Planner - the HTN Agent pack decomposing a compound task into an ordered plan.
-	passed = _check_sheet("htn_agent_demo", "res://demo/showcase/htn_agent_demo.gd", [
+	passed = _check_sheet("htn_agent_demo", "res://demo/showcase/htn_agent/htn_agent_demo.gd", [
 		"class_name ChefPlannerDemo",
 		"$Chef/Planner.add_compound(\"make_meal\")",
 		"$Chef/Planner.add_method_condition(\"make_meal\", \"cook_it\", \"has_kitchen\", \"==\", true)",
@@ -105,10 +105,10 @@ static func run() -> bool:
 		"$Chef/Planner.current_task()",
 	]) and passed
 	passed = _check_scene("htn_agent_demo scene has Chef + Planner + Screen",
-		"res://demo/showcase/htn_agent_demo.tscn", ["Chef", "Planner", "Screen"]) and passed
+		"res://demo/showcase/htn_agent/htn_agent_demo.tscn", ["Chef", "Planner", "Screen"]) and passed
 
 	# Platformer-Shooter - the new Platformer + Weapon Kit packs combined.
-	passed = _check_sheet("platformer_shooter", "res://demo/showcase/platformer_shooter.gd", [
+	passed = _check_sheet("platformer_shooter", "res://demo/showcase/platformer_shooter/platformer_shooter.gd", [
 		"$Player/PlatformerMovement.jump()",
 		"$Player/PlatformerMovement.jump_released()",
 		"$Player/PlatformerMovement.facing_direction()",
@@ -118,24 +118,24 @@ static func run() -> bool:
 		"score += 1",
 	]) and passed
 	passed = _check_scene("platformer_shooter scene has Player + Floor + Hud",
-		"res://demo/showcase/platformer_shooter.tscn", ["Player", "Floor", "Hud"]) and passed
+		"res://demo/showcase/platformer_shooter/platformer_shooter.tscn", ["Player", "Floor", "Hud"]) and passed
 	passed = _check("shot + target sub-scenes exist",
-		ResourceLoader.exists("res://demo/showcase/shot.tscn") and ResourceLoader.exists("res://demo/showcase/target.tscn"), true) and passed
+		ResourceLoader.exists("res://demo/showcase/platformer_shooter/shot.tscn") and ResourceLoader.exists("res://demo/showcase/platformer_shooter/target.tscn"), true) and passed
 
 	# Swarm - frame-spreading: a Budgeted For Each over a spawned crowd (the visible-sweep demo).
-	passed = _check_sheet("swarm", "res://demo/showcase/swarm.gd", [
+	passed = _check_sheet("swarm", "res://demo/showcase/swarm/swarm.gd", [
 		"var __loop_cursor_",
 		"Array(get_tree().get_nodes_in_group(\"swarm\"))",
-		"load(\"res://demo/showcase/dot.tscn\").instantiate()",
+		"load(\"res://demo/showcase/swarm/dot.tscn\").instantiate()",
 		"dot.offset = Vector2(",
 		"Color.from_hsv(",
 	]) and passed
-	passed = _check_scene("swarm scene has Info HUD", "res://demo/showcase/swarm.tscn", ["Info"]) and passed
-	passed = _check("dot sub-scene exists", ResourceLoader.exists("res://demo/showcase/dot.tscn"), true) and passed
+	passed = _check_scene("swarm scene has Info HUD", "res://demo/showcase/swarm/swarm.tscn", ["Info"]) and passed
+	passed = _check("dot sub-scene exists", ResourceLoader.exists("res://demo/showcase/swarm/dot.tscn"), true) and passed
 
 	# Family Arena - the Families trio: an Enemy Family (instances + a family ACE) driven by family-scoped
 	# rules. The byte-identity check inside _check_sheet doubles as the @ace_family round-trip proof.
-	passed = _check_sheet("enemy", "res://demo/showcase/enemy.gd", [
+	passed = _check_sheet("enemy", "res://demo/showcase/family_arena/enemy.gd", [
 		"## @ace_family(Enemy)",
 		"class_name Enemy",
 		"extends Sprite2D",
@@ -143,19 +143,19 @@ static func run() -> bool:
 		"func take_damage(amount: int)",
 		"@export var health: int = 3",
 	]) and passed
-	passed = _check_sheet("family_arena", "res://demo/showcase/family_arena.gd", [
+	passed = _check_sheet("family_arena", "res://demo/showcase/family_arena/family_arena.gd", [
 		"class_name FamilyArena",
 		"for enemy in get_tree().get_nodes_in_group(\"family_enemy\"):",
 		"enemy.position.y += enemy.fall_speed * delta",
 		"__e.take_damage(1)",
 	]) and passed
-	passed = _check_scene("family_arena scene has Info HUD", "res://demo/showcase/family_arena.tscn", ["Info"]) and passed
-	passed = _check("enemy sub-scene exists", ResourceLoader.exists("res://demo/showcase/enemy.tscn"), true) and passed
+	passed = _check_scene("family_arena scene has Info HUD", "res://demo/showcase/family_arena/family_arena.tscn", ["Info"]) and passed
+	passed = _check("enemy sub-scene exists", ResourceLoader.exists("res://demo/showcase/family_arena/enemy.tscn"), true) and passed
 
 	# Inspector Playground - every Tier 3 custom drawer + @export grouping across the new value types
 	# (Vector2/Color/Texture2D/Curve). The byte-identity check inside _check_sheet doubles as the drawer +
 	# grouping round-trip proof (open the .gd → recompile → byte-identical).
-	passed = _check_sheet("inspector_playground", "res://demo/showcase/inspector_playground.gd", [
+	passed = _check_sheet("inspector_playground", "res://demo/showcase/inspector_playground/inspector_playground.gd", [
 		"class_name InspectorPlayground",
 		"@export_group(\"Aim\")",
 		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:vector_dial:120\") var aim_dir: Vector2",
@@ -166,11 +166,11 @@ static func run() -> bool:
 		"@export_custom(PROPERTY_HINT_NONE, \"eventsheet:progress_bar:0:100\") var stat_health: int = 80",
 	]) and passed
 	passed = _check_scene("inspector_playground scene has Body + Emblem + Info",
-		"res://demo/showcase/inspector_playground.tscn", ["Body", "Emblem", "Info"]) and passed
+		"res://demo/showcase/inspector_playground/inspector_playground.tscn", ["Body", "Emblem", "Info"]) and passed
 
 	# Discovery: the flagship is the one the plugin opens; the secondaries never compete.
 	passed = _check("flagship is the discovered showcase",
-		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/showcase_carousel.tscn") and passed
+		EventForgePlugin._find_showcase_scene(), "res://demo/showcase/carousel/showcase_carousel.tscn") and passed
 
 	return passed
 

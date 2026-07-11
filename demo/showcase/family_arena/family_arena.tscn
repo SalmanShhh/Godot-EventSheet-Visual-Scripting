@@ -1,9 +1,9 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://demo/showcase/family_arena.gd" id="1_bqlue"]
+[ext_resource type="Script" path="res://demo/showcase/family_arena/family_arena.gd" id="1_dcjk2"]
 
 [node name="FamilyArena" type="Node2D"]
-script = ExtResource("1_bqlue")
+script = ExtResource("1_dcjk2")
 
 [node name="Info" type="Label" parent="."]
 offset_left = 24.0

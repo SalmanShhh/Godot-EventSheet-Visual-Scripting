@@ -20,12 +20,12 @@ static func run() -> bool:
 		EventSheetProjectDoctor.output_path_for("res://eventsheet_addons/spring/spring_behavior.gd"),
 		"res://eventsheet_addons/spring/spring_behavior.gd") and all_passed
 	all_passed = _check("a showcase .gd is its own output (compiles in place, no .tres)",
-		EventSheetProjectDoctor.output_path_for("res://demo/showcase/showcase_carousel.gd"),
-		"res://demo/showcase/showcase_carousel.gd") and all_passed
+		EventSheetProjectDoctor.output_path_for("res://demo/showcase/carousel/showcase_carousel.gd"),
+		"res://demo/showcase/carousel/showcase_carousel.gd") and all_passed
 	# Regression: the export-integrity pass ran earlier in this suite - it must refresh
 	# the showcase's existing pair, never recreate the parallel _generated duplicate.
 	all_passed = _check("export pass no longer duplicates builder-shipped outputs",
-		FileAccess.file_exists("res://demo/showcase/showcase_carousel_generated.gd"), false) and all_passed
+		FileAccess.file_exists("res://demo/showcase/carousel/showcase_carousel_generated.gd"), false) and all_passed
 	# A hand-written same-name sibling (no "# Source:" header) is never adopted.
 	var handwritten: FileAccess = FileAccess.open("user://doctor_handwritten.gd", FileAccess.WRITE)
 	handwritten.store_string("extends Node\n# my own script, not generated\n")
