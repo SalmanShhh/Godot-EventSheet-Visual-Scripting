@@ -24,6 +24,7 @@ func _init() -> void:
 	all_ok = _build_menu_starter() and all_ok
 	all_ok = _build_utility_ai() and all_ok
 	all_ok = _build_htn_agent() and all_ok
+	all_ok = _build_fps_arena() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -1324,3 +1325,133 @@ func _own_deep(node: Node, root: Node) -> void:
 	node.owner = root
 	for child: Node in node.get_children():
 		_own_deep(child, root)
+
+
+# ── 12. FPS Arena - first/third-person controller (fps_controller pack) ──────
+const FPS_CONTROLLER := "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
+
+
+## A walkable 3D arena driven by the FPSController behavior: mouse look, WASD move, Shift
+## sprint, Space jump, Tab flips first/third person (the sheet calls the behavior's ACE),
+## Esc frees the mouse. The Player rig (Head > Arm > Camera3D) is the reference layout the
+## pack's camera-mode verbs expect.
+func _build_fps_arena() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node3D"
+	var about: CommentRow = CommentRow.new()
+	about.text = "FPS Arena: the FPSController behavior does all the work - this sheet only prints the controls and flips the camera mode on Tab."
+	sheet.events.append(about)
+	var ready_event: EventRow = EventRow.new()
+	ready_event.trigger_provider_id = "Core"
+	ready_event.trigger_id = "OnReady"
+	ready_event.actions.append(_action("Core", "PrintLog", "print({message})", {
+		"message": "\"FPS Arena - WASD/arrows move, mouse looks, Shift sprints, Space jumps, Tab flips the camera, Esc frees the mouse.\""}))
+	sheet.events.append(ready_event)
+	var camera_toggle: EventRow = EventRow.new()
+	camera_toggle.trigger_provider_id = "Core"
+	camera_toggle.trigger_id = "OnProcess"
+	camera_toggle.actions.append(_raw("if Input.is_action_just_pressed(\"ui_focus_next\"):\n\t$Player/FPSController.toggle_camera_mode()"))
+	sheet.events.append(camera_toggle)
+	if not _compile(sheet, "res://demo/showcase/fps_arena/fps_arena.tres", "res://demo/showcase/fps_arena/fps_arena.gd"):
+		return false
+
+	var root: Node3D = Node3D.new()
+	root.name = "FpsArena"
+	root.set_script(load("res://demo/showcase/fps_arena/fps_arena.gd"))
+
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-50.0, -30.0, 0.0)
+	sun.shadow_enabled = true
+	root.add_child(sun); sun.owner = root
+
+	var floor_body: StaticBody3D = StaticBody3D.new()
+	floor_body.name = "Floor"
+	root.add_child(floor_body); floor_body.owner = root
+	var floor_shape: CollisionShape3D = CollisionShape3D.new()
+	var floor_box: BoxShape3D = BoxShape3D.new()
+	floor_box.size = Vector3(40.0, 1.0, 40.0)
+	floor_shape.shape = floor_box
+	floor_shape.position = Vector3(0.0, -0.5, 0.0)
+	floor_body.add_child(floor_shape); floor_shape.owner = root
+	var floor_mesh: MeshInstance3D = MeshInstance3D.new()
+	var floor_box_mesh: BoxMesh = BoxMesh.new()
+	floor_box_mesh.size = Vector3(40.0, 1.0, 40.0)
+	var floor_material: StandardMaterial3D = StandardMaterial3D.new()
+	floor_material.albedo_color = Color(0.32, 0.36, 0.42, 1.0)
+	floor_box_mesh.material = floor_material
+	floor_mesh.mesh = floor_box_mesh
+	floor_mesh.position = Vector3(0.0, -0.5, 0.0)
+	floor_body.add_child(floor_mesh); floor_mesh.owner = root
+
+	var crate_material: StandardMaterial3D = StandardMaterial3D.new()
+	crate_material.albedo_color = Color(0.75, 0.55, 0.3, 1.0)
+	var crate_positions: Array[Vector3] = [
+		Vector3(4.0, 1.0, -3.0), Vector3(-5.0, 1.0, -6.0), Vector3(0.0, 1.0, -10.0), Vector3(7.0, 1.0, 4.0)
+	]
+	for crate_index: int in range(crate_positions.size()):
+		var crate: StaticBody3D = StaticBody3D.new()
+		crate.name = "Crate%d" % (crate_index + 1)
+		crate.position = crate_positions[crate_index]
+		root.add_child(crate); crate.owner = root
+		var crate_shape: CollisionShape3D = CollisionShape3D.new()
+		var crate_box: BoxShape3D = BoxShape3D.new()
+		crate_box.size = Vector3(2.0, 2.0, 2.0)
+		crate_shape.shape = crate_box
+		crate.add_child(crate_shape); crate_shape.owner = root
+		var crate_mesh: MeshInstance3D = MeshInstance3D.new()
+		var crate_box_mesh: BoxMesh = BoxMesh.new()
+		crate_box_mesh.size = Vector3(2.0, 2.0, 2.0)
+		crate_box_mesh.material = crate_material
+		crate_mesh.mesh = crate_box_mesh
+		crate.add_child(crate_mesh); crate_mesh.owner = root
+
+	var player: CharacterBody3D = CharacterBody3D.new()
+	player.name = "Player"
+	player.position = Vector3(0.0, 1.2, 8.0)
+	root.add_child(player); player.owner = root
+	var player_shape: CollisionShape3D = CollisionShape3D.new()
+	var capsule: CapsuleShape3D = CapsuleShape3D.new()
+	capsule.height = 1.8
+	capsule.radius = 0.4
+	player_shape.shape = capsule
+	player.add_child(player_shape); player_shape.owner = root
+	var player_mesh: MeshInstance3D = MeshInstance3D.new()
+	var capsule_mesh: CapsuleMesh = CapsuleMesh.new()
+	capsule_mesh.height = 1.8
+	capsule_mesh.radius = 0.4
+	var player_material: StandardMaterial3D = StandardMaterial3D.new()
+	player_material.albedo_color = Color(0.4, 0.8, 1.0, 1.0)
+	capsule_mesh.material = player_material
+	player_mesh.mesh = capsule_mesh
+	player.add_child(player_mesh); player_mesh.owner = root
+	# The camera rig the pack's verbs drive: Head pitches, the 180-degree-turned Arm extends
+	# BEHIND the player in third person (SpringArm3D pushes children along its local -Z), and
+	# the camera un-turns so it always faces where the player faces.
+	var head: Node3D = Node3D.new()
+	head.name = "Head"
+	head.position = Vector3(0.0, 0.6, 0.0)
+	player.add_child(head); head.owner = root
+	var arm: SpringArm3D = SpringArm3D.new()
+	arm.name = "Arm"
+	arm.rotation_degrees = Vector3(0.0, 180.0, 0.0)
+	arm.spring_length = 0.05
+	head.add_child(arm); arm.owner = root
+	var camera: Camera3D = Camera3D.new()
+	camera.name = "Camera3D"
+	camera.rotation_degrees = Vector3(0.0, 180.0, 0.0)
+	camera.current = true
+	arm.add_child(camera); camera.owner = root
+	_attach_behavior(player, "FPSController", FPS_CONTROLLER, root, {})
+
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HudLayer"
+	root.add_child(hud_layer); hud_layer.owner = root
+	var hud: Label = Label.new()
+	hud.name = "Hud"
+	hud.position = Vector2(24.0, 20.0)
+	hud.add_theme_font_size_override("font_size", 20)
+	hud.text = "WASD/arrows move · mouse looks · Shift sprints · Space jumps · Tab flips camera · Esc frees mouse"
+	hud_layer.add_child(hud); hud.owner = root
+
+	return _save_scene(root, "res://demo/showcase/fps_arena/fps_arena.tscn")

@@ -50,6 +50,7 @@ Attach to a node to move it.
 
 ## Movement (3D)
 
+- [FPS Controller](FPS-Controller.md) - a complete first/third-person character: mouse look, WASD move, sprint, jump, and a one-verb camera-mode switch (see the FPS Arena showcase).
 - [Move To 3D](Move-To-3D.md) - move a 3D node to a point or along a path.
 - [Bullet 3D](Bullet-3D.md) - fire a 3D node in a straight line.
 - [Sine 3D](Sine-3D.md) - oscillate a 3D property on a sine wave.

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - FPS Controller pack + FPS Arena showcase
+
+- **FPS Controller** (`eventsheet_addons/fps_controller/`, the 59th pack): a complete
+  first/third-person character controller you attach under a CharacterBody3D - mouse look (yaw
+  on the body, pitch on a Head child), WASD/arrow movement relative to the view, Shift sprint,
+  Space jump with gravity, and a one-verb camera switch that drives a SpringArm3D (first person
+  at ~0 length, third person at Camera Distance). Triggers: On Jumped / On Landed / On Camera
+  Mode Changed; runtime verbs for speed, sensitivity, camera mode, and mouse capture;
+  Is Sprinting / Is First Person conditions and Current Speed / Look Yaw / Look Pitch
+  expressions. Guide: docs/Addons/FPS-Controller.md.
+- **FPS Arena showcase** (`demo/showcase/fps_arena/`): a walkable lit 3D arena with crates and
+  the reference Player rig (Head > Arm > Camera3D) - press play, walk around, Tab flips the
+  camera mode (the sheet calls the pack's verb), Esc frees the mouse.
+
 ### Changed - each showcase lives in its own folder
 
 - `demo/showcase/` is now one folder per showcase (`carousel/`, `starfall/`, `quest_fsm/`,

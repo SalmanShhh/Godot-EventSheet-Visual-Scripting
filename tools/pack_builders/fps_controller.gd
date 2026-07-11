@@ -1,0 +1,317 @@
+# Pack builder - fps_controller (one pack per file; run via tools/build_sample_behaviors.gd).
+@tool
+
+const Lib := preload("res://tools/pack_builders/_lib.gd")
+
+
+## First/third-person character controller behavior: mouse look (yaw on the host, pitch on a
+## child named "Head"), WASD/arrows movement relative to where you look, sprint, jump with
+## gravity, and a camera mode switch that drives a SpringArm3D named "Arm" under the Head
+## (spring length ~0 = first person, camera_distance = third person). Attach under a
+## CharacterBody3D whose scene has Head/Arm/Camera3D children - the bundled FPS Arena showcase
+## is the reference rig.
+static func build() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "CharacterBody3D"
+	sheet.custom_class_name = "FPSController"
+	sheet.addon_category = "FPS Controller"
+	sheet.ace_expose_all_mode = "node"
+	sheet.variables = {
+		"move_speed": {"type": "float", "default": 5.0, "exported": true},
+		"sprint_multiplier": {"type": "float", "default": 1.6, "exported": true},
+		"jump_velocity": {"type": "float", "default": 4.5, "exported": true},
+		"gravity": {"type": "float", "default": 9.8, "exported": true},
+		"mouse_sensitivity": {"type": "float", "default": 0.12, "exported": true},
+		"pitch_min": {"type": "float", "default": -80.0, "exported": true},
+		"pitch_max": {"type": "float", "default": 80.0, "exported": true},
+		"third_person": {"type": "bool", "default": false, "exported": true},
+		"camera_distance": {"type": "float", "default": 3.5, "exported": true},
+		"capture_mouse_on_ready": {"type": "bool", "default": true, "exported": true},
+		"yaw": {"type": "float", "default": 0.0, "exported": false},
+		"pitch": {"type": "float", "default": 0.0, "exported": false},
+		"sprint_held": {"type": "bool", "default": false, "exported": false},
+		"was_on_floor": {"type": "bool", "default": true, "exported": false},
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person."
+	sheet.events.append(about)
+
+	var jumped_signal: SignalRow = SignalRow.new()
+	jumped_signal.signal_name = "jumped"
+	jumped_signal.trigger = true
+	jumped_signal.ace_name = "On Jumped"
+	jumped_signal.ace_category = "FPS Controller"
+	sheet.events.append(jumped_signal)
+	var landed_signal: SignalRow = SignalRow.new()
+	landed_signal.signal_name = "landed"
+	landed_signal.trigger = true
+	landed_signal.ace_name = "On Landed"
+	landed_signal.ace_category = "FPS Controller"
+	sheet.events.append(landed_signal)
+	var camera_signal: SignalRow = SignalRow.new()
+	camera_signal.signal_name = "camera_mode_changed"
+	camera_signal.trigger = true
+	camera_signal.ace_name = "On Camera Mode Changed"
+	camera_signal.ace_category = "FPS Controller"
+	sheet.events.append(camera_signal)
+
+	# Mouse look + the Esc escape hatch live in _unhandled_input (no per-frame polling), and the
+	# Head lookup is one shared helper - both are plain class-level GDScript blocks.
+	var input_block: RawCodeRow = RawCodeRow.new()
+	input_block.code = "\n".join(PackedStringArray([
+		"func _head() -> Node3D:",
+		"\treturn (host.get_node_or_null(\"Head\") as Node3D) if host != null else null",
+		"",
+		"",
+		"func _unhandled_input(event: InputEvent) -> void:",
+		"\tif event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:",
+		"\t\tadd_look((event as InputEventMouseMotion).relative.x, (event as InputEventMouseMotion).relative.y)",
+		"\telif event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_ESCAPE:",
+		"\t\trelease_mouse()"
+	]))
+	sheet.events.append(input_block)
+
+	var ready_event: EventRow = EventRow.new()
+	ready_event.trigger_provider_id = "Core"
+	ready_event.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"if capture_mouse_on_ready:",
+		"\tcapture_mouse()",
+		"apply_camera_mode()"
+	]))
+	ready_event.actions.append(ready_body)
+	sheet.events.append(ready_event)
+
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnPhysicsProcess"
+	var tick_body: RawCodeRow = RawCodeRow.new()
+	tick_body.code = "\n".join(PackedStringArray([
+		"if host == null:",
+		"\treturn",
+		"if not host.is_on_floor():",
+		"\thost.velocity.y -= gravity * delta",
+		"sprint_held = Input.is_key_pressed(KEY_SHIFT)",
+		"var input_vec := Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\")",
+		"var direction := host.transform.basis * Vector3(input_vec.x, 0.0, input_vec.y)",
+		"if direction.length() > 1.0:",
+		"\tdirection = direction.normalized()",
+		"var speed := move_speed * (sprint_multiplier if sprint_held else 1.0)",
+		"host.velocity.x = direction.x * speed",
+		"host.velocity.z = direction.z * speed",
+		"if Input.is_action_just_pressed(\"ui_accept\") and host.is_on_floor():",
+		"\tdo_jump()",
+		"host.move_and_slide()",
+		"if host.is_on_floor() and not was_on_floor:",
+		"\tlanded.emit()",
+		"was_on_floor = host.is_on_floor()"
+	]))
+	tick.actions.append(tick_body)
+	sheet.events.append(tick)
+
+	var jump_fn: EventFunction = EventFunction.new()
+	jump_fn.function_name = "do_jump"
+	jump_fn.expose_as_ace = true
+	jump_fn.ace_display_name = "Jump"
+	jump_fn.ace_category = "FPS Controller"
+	jump_fn.description = "Launches the host upward with Jump Velocity and fires On Jumped."
+	var jump_body: RawCodeRow = RawCodeRow.new()
+	jump_body.code = "\n".join(PackedStringArray([
+		"if host == null:",
+		"\treturn",
+		"host.velocity.y = jump_velocity",
+		"jumped.emit()"
+	]))
+	jump_fn.events.append(jump_body)
+	sheet.functions.append(jump_fn)
+
+	var look_fn: EventFunction = EventFunction.new()
+	look_fn.function_name = "add_look"
+	look_fn.expose_as_ace = true
+	look_fn.ace_display_name = "Add Look"
+	look_fn.ace_category = "FPS Controller"
+	look_fn.description = "Turns the view by a mouse delta (pixels): yaw rotates the host, pitch tilts the Head child, clamped to Pitch Min/Max."
+	var look_x: ACEParam = ACEParam.new()
+	look_x.id = "x"
+	look_x.type_name = "float"
+	look_fn.params.append(look_x)
+	var look_y: ACEParam = ACEParam.new()
+	look_y.id = "y"
+	look_y.type_name = "float"
+	look_fn.params.append(look_y)
+	var look_body: RawCodeRow = RawCodeRow.new()
+	look_body.code = "\n".join(PackedStringArray([
+		"yaw = wrapf(yaw - x * mouse_sensitivity, -180.0, 180.0)",
+		"pitch = clampf(pitch - y * mouse_sensitivity, pitch_min, pitch_max)",
+		"if host != null:",
+		"\thost.rotation_degrees.y = yaw",
+		"var head := _head()",
+		"if head != null:",
+		"\thead.rotation_degrees.x = pitch"
+	]))
+	look_fn.events.append(look_body)
+	sheet.functions.append(look_fn)
+
+	var camera_fn: EventFunction = EventFunction.new()
+	camera_fn.function_name = "set_third_person"
+	camera_fn.expose_as_ace = true
+	camera_fn.ace_display_name = "Set Third Person"
+	camera_fn.ace_category = "FPS Controller"
+	camera_fn.description = "Switches between first person (off) and third person (on) and fires On Camera Mode Changed."
+	var camera_enabled: ACEParam = ACEParam.new()
+	camera_enabled.id = "enabled"
+	camera_enabled.type_name = "bool"
+	camera_fn.params.append(camera_enabled)
+	var camera_body: RawCodeRow = RawCodeRow.new()
+	camera_body.code = "\n".join(PackedStringArray([
+		"third_person = enabled",
+		"apply_camera_mode()",
+		"camera_mode_changed.emit()"
+	]))
+	camera_fn.events.append(camera_body)
+	sheet.functions.append(camera_fn)
+
+	var toggle_fn: EventFunction = EventFunction.new()
+	toggle_fn.function_name = "toggle_camera_mode"
+	toggle_fn.expose_as_ace = true
+	toggle_fn.ace_display_name = "Toggle Camera Mode"
+	toggle_fn.ace_category = "FPS Controller"
+	toggle_fn.description = "Flips between first and third person."
+	var toggle_body: RawCodeRow = RawCodeRow.new()
+	toggle_body.code = "set_third_person(not third_person)"
+	toggle_fn.events.append(toggle_body)
+	sheet.functions.append(toggle_fn)
+
+	var apply_fn: EventFunction = EventFunction.new()
+	apply_fn.function_name = "apply_camera_mode"
+	apply_fn.expose_as_ace = true
+	apply_fn.ace_display_name = "Apply Camera Mode"
+	apply_fn.ace_category = "FPS Controller"
+	apply_fn.description = "Re-applies the current camera mode to the Head's SpringArm3D (named Arm): ~0 length in first person, Camera Distance in third."
+	var apply_body: RawCodeRow = RawCodeRow.new()
+	apply_body.code = "\n".join(PackedStringArray([
+		"var head := _head()",
+		"if head == null:",
+		"\treturn",
+		"var arm := head.get_node_or_null(\"Arm\") as SpringArm3D",
+		"if arm != null:",
+		"\tarm.spring_length = camera_distance if third_person else 0.05"
+	]))
+	apply_fn.events.append(apply_body)
+	sheet.functions.append(apply_fn)
+
+	var capture_fn: EventFunction = EventFunction.new()
+	capture_fn.function_name = "capture_mouse"
+	capture_fn.expose_as_ace = true
+	capture_fn.ace_display_name = "Capture Mouse"
+	capture_fn.ace_category = "FPS Controller"
+	capture_fn.description = "Locks the mouse to the window for looking around (Esc releases it)."
+	var capture_body: RawCodeRow = RawCodeRow.new()
+	capture_body.code = "Input.mouse_mode = Input.MOUSE_MODE_CAPTURED"
+	capture_fn.events.append(capture_body)
+	sheet.functions.append(capture_fn)
+
+	var release_fn: EventFunction = EventFunction.new()
+	release_fn.function_name = "release_mouse"
+	release_fn.expose_as_ace = true
+	release_fn.ace_display_name = "Release Mouse"
+	release_fn.ace_category = "FPS Controller"
+	release_fn.description = "Frees the mouse cursor."
+	var release_body: RawCodeRow = RawCodeRow.new()
+	release_body.code = "Input.mouse_mode = Input.MOUSE_MODE_VISIBLE"
+	release_fn.events.append(release_body)
+	sheet.functions.append(release_fn)
+
+	var speed_fn: EventFunction = EventFunction.new()
+	speed_fn.function_name = "set_move_speed"
+	speed_fn.expose_as_ace = true
+	speed_fn.ace_display_name = "Set Move Speed"
+	speed_fn.ace_category = "FPS Controller"
+	speed_fn.description = "Changes the base walking speed."
+	var speed_value: ACEParam = ACEParam.new()
+	speed_value.id = "value"
+	speed_value.type_name = "float"
+	speed_fn.params.append(speed_value)
+	var speed_body: RawCodeRow = RawCodeRow.new()
+	speed_body.code = "move_speed = value"
+	speed_fn.events.append(speed_body)
+	sheet.functions.append(speed_fn)
+
+	var sensitivity_fn: EventFunction = EventFunction.new()
+	sensitivity_fn.function_name = "set_mouse_sensitivity"
+	sensitivity_fn.expose_as_ace = true
+	sensitivity_fn.ace_display_name = "Set Mouse Sensitivity"
+	sensitivity_fn.ace_category = "FPS Controller"
+	sensitivity_fn.description = "Changes look sensitivity (degrees per mouse pixel)."
+	var sensitivity_value: ACEParam = ACEParam.new()
+	sensitivity_value.id = "value"
+	sensitivity_value.type_name = "float"
+	sensitivity_fn.params.append(sensitivity_value)
+	var sensitivity_body: RawCodeRow = RawCodeRow.new()
+	sensitivity_body.code = "mouse_sensitivity = value"
+	sensitivity_fn.events.append(sensitivity_body)
+	sheet.functions.append(sensitivity_fn)
+
+	var sprinting_fn: EventFunction = EventFunction.new()
+	sprinting_fn.function_name = "is_sprinting"
+	sprinting_fn.expose_as_ace = true
+	sprinting_fn.ace_display_name = "Is Sprinting"
+	sprinting_fn.ace_category = "FPS Controller"
+	sprinting_fn.return_type = TYPE_BOOL
+	sprinting_fn.description = "True while the sprint key (Shift) is held."
+	var sprinting_body: RawCodeRow = RawCodeRow.new()
+	sprinting_body.code = "return sprint_held"
+	sprinting_fn.events.append(sprinting_body)
+	sheet.functions.append(sprinting_fn)
+
+	var first_person_fn: EventFunction = EventFunction.new()
+	first_person_fn.function_name = "is_first_person"
+	first_person_fn.expose_as_ace = true
+	first_person_fn.ace_display_name = "Is First Person"
+	first_person_fn.ace_category = "FPS Controller"
+	first_person_fn.return_type = TYPE_BOOL
+	first_person_fn.description = "True in first-person camera mode."
+	var first_person_body: RawCodeRow = RawCodeRow.new()
+	first_person_body.code = "return not third_person"
+	first_person_fn.events.append(first_person_body)
+	sheet.functions.append(first_person_fn)
+
+	var current_speed_fn: EventFunction = EventFunction.new()
+	current_speed_fn.function_name = "current_speed"
+	current_speed_fn.expose_as_ace = true
+	current_speed_fn.ace_display_name = "Current Speed"
+	current_speed_fn.ace_category = "FPS Controller"
+	current_speed_fn.return_type = TYPE_FLOAT
+	current_speed_fn.description = "The host's horizontal speed right now (metres per second)."
+	var current_speed_body: RawCodeRow = RawCodeRow.new()
+	current_speed_body.code = "return Vector2(host.velocity.x, host.velocity.z).length() if host != null else 0.0"
+	current_speed_fn.events.append(current_speed_body)
+	sheet.functions.append(current_speed_fn)
+
+	var look_yaw_fn: EventFunction = EventFunction.new()
+	look_yaw_fn.function_name = "look_yaw"
+	look_yaw_fn.expose_as_ace = true
+	look_yaw_fn.ace_display_name = "Look Yaw"
+	look_yaw_fn.ace_category = "FPS Controller"
+	look_yaw_fn.return_type = TYPE_FLOAT
+	look_yaw_fn.description = "The current horizontal look angle in degrees (-180..180)."
+	var look_yaw_body: RawCodeRow = RawCodeRow.new()
+	look_yaw_body.code = "return yaw"
+	look_yaw_fn.events.append(look_yaw_body)
+	sheet.functions.append(look_yaw_fn)
+
+	var look_pitch_fn: EventFunction = EventFunction.new()
+	look_pitch_fn.function_name = "look_pitch"
+	look_pitch_fn.expose_as_ace = true
+	look_pitch_fn.ace_display_name = "Look Pitch"
+	look_pitch_fn.ace_category = "FPS Controller"
+	look_pitch_fn.return_type = TYPE_FLOAT
+	look_pitch_fn.description = "The current vertical look angle in degrees (clamped to Pitch Min/Max)."
+	var look_pitch_body: RawCodeRow = RawCodeRow.new()
+	look_pitch_body.code = "return pitch"
+	look_pitch_fn.events.append(look_pitch_body)
+	sheet.functions.append(look_pitch_fn)
+
+	return Lib.save_pack(sheet, "res://eventsheet_addons/fps_controller/fps_controller_behavior")
