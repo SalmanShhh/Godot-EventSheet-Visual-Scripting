@@ -671,6 +671,7 @@ The `hint` chooses the input widget in the parameter dialog. `expression` is by 
 | `variable_reference:Array` (or `:Dictionary`, etc.) | Dropdown filtered to that variable type | A typed variable; only matching (or Variant) variables show. |
 | `color` | ColorPickerButton | A `Color`. |
 | `key_capture` | Press-a-key modal | A keyboard key (records the key you press). |
+| `input_action` | Editable picker of the project's Input Map actions (enumerated live at dialog-open, project actions first) | An existing input action, as a quoted literal. |
 | `audio_path` | Text field with a `▶` preview button | An audio file path. |
 | `scene_path` | Text field with a Browse button | A `.tscn` path. |
 | `animation_reference` | Field plus a dropdown of AnimationPlayer animations | An animation name. |

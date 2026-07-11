@@ -123,6 +123,9 @@ The `hint` picks the field's editor:
 - `"property_reference"` / `"method_reference"` / `"signal_reference"` - name pickers for a node's members.
 - `"scene_path"` - a `.tscn` path picker.
 - `"key_capture"` - press-a-key to capture a keycode.
+- `"input_action"` - an editable picker of the project's Input Map actions, enumerated LIVE when
+  the dialog opens (the project's own actions first, the everyday `ui_*` built-ins after). Use it
+  on any parameter that names an existing action.
 - `"color"` - a colour swatch.
 
 Two more optional arguments make a dropdown or a suggest box:

@@ -80,11 +80,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# loops) - the picker shows friendly labels, the generated code stays readable, and
 	# user fx/blocks are NEVER rewritten.
 	# Input (action names come from the project's InputMap + the ui_* defaults)
-	descriptors.append(F.make_descriptor("Core", "IsActionPressed", "Is Action Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_pressed(&{action})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action (from the InputMap).", "", F.input_action_options())], "Input", "{action} is pressed")
+	descriptors.append(F.make_descriptor("Core", "IsActionPressed", "Is Action Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_pressed(&{action})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action (from the InputMap).", "input_action", F.input_action_options())], "Input", "{action} is pressed")
 		.described("True while the named input action is held down, for continuous controls like running."))
-	descriptors.append(F.make_descriptor("Core", "IsActionJustPressed", "On Action Just Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_just_pressed(&{action})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action (from the InputMap).", "", F.input_action_options())], "Input", "{action} just pressed")
+	descriptors.append(F.make_descriptor("Core", "IsActionJustPressed", "On Action Just Pressed", ACEDescriptor.ACEType.CONDITION, "Input.is_action_just_pressed(&{action})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action (from the InputMap).", "input_action", F.input_action_options())], "Input", "{action} just pressed")
 		.described("True only on the frame the named input action was first pressed, for jumps or single taps."))
-	descriptors.append(F.make_descriptor("Core", "IsActionJustReleased", "On Action Just Released", ACEDescriptor.ACEType.CONDITION, "Input.is_action_just_released(&{action})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action (from the InputMap).", "", F.input_action_options())], "Input", "{action} just released")
+	descriptors.append(F.make_descriptor("Core", "IsActionJustReleased", "On Action Just Released", ACEDescriptor.ACEType.CONDITION, "Input.is_action_just_released(&{action})", "", [F.make_param("action", "String", F.default_input_action(), "Action", "Input action (from the InputMap).", "input_action", F.input_action_options())], "Input", "{action} just released")
 		.described("True only on the frame the named input action was let go, for charge-and-release moves."))
 	# Conditions
 	descriptors.append(F.make_descriptor("Core", "Always", "Always", ACEDescriptor.ACEType.CONDITION, "true", "", [], "General Conditions", "Always")

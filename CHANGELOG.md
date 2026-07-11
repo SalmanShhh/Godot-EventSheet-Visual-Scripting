@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added - pick input actions from the Input Map (and a fuller input vocabulary)
+
+- **The Input Map picker**: every ACE parameter that names an input action (Is Action Pressed,
+  Move Vector, Action Strength, the rebind actions…) now opens as an editable picker of the
+  project's actual Input Map actions - enumerated LIVE when the dialog opens, so an action you
+  just added in Project Settings appears without restarting anything. The project's own actions
+  list first; the everyday `ui_*` built-ins follow; typing any expression still works. Custom
+  ACEs and packs opt in with the new `input_action` param hint (documented in both custom-ACE
+  guides).
+- **New Mouse helpers**: Move Mouse Pointer, Mouse Velocity, Mouse Is Captured,
+  On Mouse Button Pressed/Released (event), On Mouse Wheel Up/Down (event), and
+  Set / Clear Custom Cursor.
+- **New Keyboard helpers**: Anything Is Pressed (press-any-key screens), Key Name
+  ("Space" from a keycode - rebind screens), and Keycode From Name (the reverse).
+- **New InputMap helpers**: Remove Input Action, Rebind Action To Mouse Button / To Gamepad
+  Button (keyboard, mouse, and gamepad rebinding all one-step now), Set Action Deadzone,
+  Action Binding As Text ("Space" / "unbound" - print it on a rebind row), All Input Actions
+  (loop it to BUILD the rebind screen), and Restore Default Bindings (the reset button).
+- **New Gamepad helpers**: Gamepad Count, Gamepad Name, Gamepad Is Recognized, and
+  On Gamepad Button Pressed (event).
+
 ### Added - FPS Controller movement tech (crouch, crouch slide, wall ride, wall jump)
 
 - **Crouch** (hold Ctrl, or the Crouch / Stand Up / Set Crouching actions): the capsule collider

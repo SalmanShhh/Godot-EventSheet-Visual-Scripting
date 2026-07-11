@@ -243,6 +243,7 @@ func _ensure_hint_factories() -> void:
 	if _hint_factories.is_empty():
 		_hint_factories = {
 			"key_capture": _create_key_capture_field,
+			"input_action": _create_input_action_field,
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
 			"animation_reference": _create_animation_field,
@@ -440,6 +441,32 @@ func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStringArra
 	if not any_added:
 		popup.add_item("(no match - keep typing)", -1)
 		popup.set_item_disabled(popup.item_count - 1, true)
+
+
+## Live Input Map picker (hint "input_action"): an editable suggest-combo whose choices are
+## enumerated from the PROJECT'S Input Map when the dialog builds - NOT the snapshot baked into
+## the definition at registry-refresh time, so actions added in Project Settings a minute ago
+## appear without an editor restart. Free text stays allowed (expressions, variables).
+func _create_input_action_field(key: String, default_value: Variant) -> Control:
+	return _create_autocomplete_field(key, input_action_choices(), default_value)
+
+
+## The project's input actions as the quoted string literals codegen templates expect
+## ("\"jump\""): the project's OWN actions first (they are what the user cares about), then the
+## handful of everyday ui_* built-ins. The other ~40 editor-facing ui_* actions ProjectSettings
+## also carries (ui_cut, ui_focus_mode…) are deliberately left out - they would drown the
+## project's actions; type one if you genuinely need it. Pure and static, so tests pin it.
+static func input_action_choices() -> Array:
+	var choices: Array = []
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var property_name: String = str(property_info.get("name", ""))
+		if property_name.begins_with("input/") and not property_name.contains(".") and not property_name.trim_prefix("input/").begins_with("ui_"):
+			choices.append("\"%s\"" % property_name.trim_prefix("input/"))
+	for builtin: String in ["ui_accept", "ui_cancel", "ui_select", "ui_left", "ui_right", "ui_up", "ui_down", "ui_focus_next", "ui_focus_prev"]:
+		var quoted: String = "\"%s\"" % builtin
+		if not choices.has(quoted):
+			choices.append(quoted)
+	return choices
 
 
 ## hint may carry a required base type ("variable_reference:Array") - the dropdown then
