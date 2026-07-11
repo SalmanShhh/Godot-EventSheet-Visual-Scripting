@@ -34,8 +34,8 @@ extend your sheets.
 
 ## The interactive showcases (three minutes)
 
-Five playable demos live in `demo/showcase/`, each authored entirely as event sheets and
-compiled to plain GDScript. The dock's **Open the playable showcase scene** button (and the
+The playable demos live in `demo/showcase/` (one folder each), authored entirely as event
+sheets and compiled to plain GDScript. The dock's **Open the playable showcase scene** button (and the
 plugin's discovery) opens the flagship; the others are right there in the folder.
 
 - **`showcase_carousel.tscn` - Carousel of Juice (flagship).** A ring of eight rainbow
@@ -93,6 +93,9 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 | `showcase/quest_fsm.{tscn,tres,gd}` | Quest & Inventory FSM (Dictionary/Array collections, signals, reused function, match) |
 | `showcase/platformer_shooter.{tscn,tres,gd}` + `shot.tscn` + `target.tscn` | Platformer + Weapon Kit packs combined (coyote-time jump, hold-fire, group cull) |
 | `showcase/swarm.{tscn,tres,gd}` + `dot.tscn` | **Swarm** - frame-spreading: a Budgeted For Each sweeping a spawned crowd |
+| `showcase/fps_arena/` | **FPS Arena** - the FPS Controller pack: mouse look, sprint, jump, crouch + slide, wall ride/jump, first/third person |
+| `showcase/menu_starter/` | **Menu Starter** - a complete menu flow on one HUD Kit behavior (zero connected signals) |
+| `showcase/input_rebind/` | **Input Rebind** - a working rebind screen: click Rebind then press ANY key/mouse/gamepad input, live binding labels, gamepad name + vibration test |
 | `themes/` | Nine bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |
 

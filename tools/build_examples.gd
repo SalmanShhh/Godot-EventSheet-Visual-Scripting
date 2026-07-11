@@ -25,6 +25,7 @@ func _init() -> void:
 	all_ok = _build_utility_ai() and all_ok
 	all_ok = _build_htn_agent() and all_ok
 	all_ok = _build_fps_arena() and all_ok
+	all_ok = _build_input_rebind() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -1455,3 +1456,222 @@ func _build_fps_arena() -> bool:
 	hud_layer.add_child(hud); hud.owner = root
 
 	return _save_scene(root, "res://demo/showcase/fps_arena/fps_arena.tscn")
+
+
+# ── 13. Input Rebind - a working rebind screen from the input vocabulary ─────
+
+
+## A playable options-menu slice: two actions (jump/dash) with live binding labels, a
+## click-then-press-anything rebind flow that accepts KEYBOARD, MOUSE, or GAMEPAD input
+## (InputMap.action_add_event takes the captured event verbatim), a demo-defaults reset, and a
+## gamepad panel (count + product name every frame, test vibration). The actions are created at
+## RUNTIME (Add Input Action) so the demo never touches project.godot. UI is one HUD Kit
+## behavior: labels update by NAME, every Button reports through On Button Pressed - zero
+## connected signals in the scene.
+func _build_input_rebind() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Control"
+	sheet.custom_class_name = "InputRebindDemo"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"rebinding_action": {"type": "String", "default": "", "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Input Rebind[/b] - a working rebind screen built from the Input/InputMap/Gamepad vocabulary: click Rebind, then press ANY key, mouse button, or gamepad button (the captured event binds verbatim). Binding labels read InputMap.action_get_events(...).as_text() - the Action Binding As Text pattern. Actions are created at runtime, so the demo leaves your project's Input Map alone."
+	sheet.events.append(about)
+
+	var on_ready: EventRow = EventRow.new()
+	on_ready.trigger_provider_id = "Core"
+	on_ready.trigger_id = "OnReady"
+	var on_ready_body: RawCodeRow = RawCodeRow.new()
+	on_ready_body.code = "\n".join(PackedStringArray([
+		"setup_default_bindings()",
+		"$HudKit.on_button_pressed.connect(handle_button)",
+		"$HudKit.set_text(\"StatusLabel\", \"Click a Rebind button, then press any input.\")"
+	]))
+	on_ready.actions.append(on_ready_body)
+	sheet.events.append(on_ready)
+
+	# The capture step: while a rebind is armed, the FIRST pressed input of any device becomes
+	# the action's whole binding. _input sees the event raw, before any UI eats it.
+	var on_input: EventRow = EventRow.new()
+	on_input.trigger_provider_id = "Core"
+	on_input.trigger_id = "OnInput"
+	var on_input_body: RawCodeRow = RawCodeRow.new()
+	on_input_body.code = "\n".join(PackedStringArray([
+		"if rebinding_action == \"\":",
+		"\treturn",
+		"if (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed) or (event is InputEventJoypadButton and event.pressed):",
+		"\tInputMap.action_erase_events(rebinding_action)",
+		"\tInputMap.action_add_event(rebinding_action, event)",
+		"\t$HudKit.set_text(\"StatusLabel\", \"%s bound to %s\" % [rebinding_action.capitalize(), event.as_text()])",
+		"\trebinding_action = \"\"",
+		"\trefresh_binding_labels()"
+	]))
+	on_input.actions.append(on_input_body)
+	sheet.events.append(on_input)
+
+	# Live feedback: test the actions wherever they are bound now + the gamepad panel.
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	var tick_body: RawCodeRow = RawCodeRow.new()
+	tick_body.code = "\n".join(PackedStringArray([
+		"if Input.is_action_just_pressed(\"demo_jump\"):",
+		"\t$HudKit.show_toast(\"Jump!\")",
+		"if Input.is_action_just_pressed(\"demo_dash\"):",
+		"\t$HudKit.show_toast(\"Dash!\")",
+		"var pads: Array = Input.get_connected_joypads()",
+		"if pads.is_empty():",
+		"\t$HudKit.set_text(\"GamepadLabel\", \"No gamepad connected - plug one in\")",
+		"else:",
+		"\t$HudKit.set_text(\"GamepadLabel\", \"%d gamepad(s) - %s\" % [pads.size(), Input.get_joy_name(pads[0])])"
+	]))
+	tick.actions.append(tick_body)
+	sheet.events.append(tick)
+
+	var handle_fn: EventFunction = EventFunction.new()
+	handle_fn.function_name = "handle_button"
+	handle_fn.enabled = true
+	handle_fn.description = "Routes every button by name: arm a rebind, reset the defaults, or buzz the gamepad."
+	handle_fn.events = [_raw("\n".join(PackedStringArray([
+		"var pressed_button: String = $HudKit.last_button_name_value()",
+		"match pressed_button:",
+		"\t\"RebindJumpButton\":",
+		"\t\trebinding_action = \"demo_jump\"",
+		"\t\t$HudKit.set_text(\"StatusLabel\", \"Press any key, mouse or gamepad button to bind Jump…\")",
+		"\t\"RebindDashButton\":",
+		"\t\trebinding_action = \"demo_dash\"",
+		"\t\t$HudKit.set_text(\"StatusLabel\", \"Press any key, mouse or gamepad button to bind Dash…\")",
+		"\t\"ResetButton\":",
+		"\t\tsetup_default_bindings()",
+		"\t\t$HudKit.set_text(\"StatusLabel\", \"Bindings restored to the demo defaults.\")",
+		"\t\"VibrateButton\":",
+		"\t\tInput.start_joy_vibration(0, 0.5, 0.5, 0.4)",
+		"\t\t$HudKit.set_text(\"StatusLabel\", \"Vibrating gamepad 0 (if one is connected).\")"
+	])))]
+	sheet.functions.append(handle_fn)
+
+	# Demo-defaults (NOT Restore Default Bindings: these actions live only at runtime, so
+	# InputMap.load_from_project_settings() would erase them instead of resetting them).
+	var setup_fn: EventFunction = EventFunction.new()
+	setup_fn.function_name = "setup_default_bindings"
+	setup_fn.enabled = true
+	setup_fn.description = "Creates the demo actions if missing and binds Jump=Space, Dash=C."
+	setup_fn.events = [_raw("\n".join(PackedStringArray([
+		"if not InputMap.has_action(\"demo_jump\"):",
+		"\tInputMap.add_action(\"demo_jump\")",
+		"if not InputMap.has_action(\"demo_dash\"):",
+		"\tInputMap.add_action(\"demo_dash\")",
+		"InputMap.action_erase_events(\"demo_jump\")",
+		"var jump_key: InputEventKey = InputEventKey.new()",
+		"jump_key.physical_keycode = KEY_SPACE",
+		"InputMap.action_add_event(\"demo_jump\", jump_key)",
+		"InputMap.action_erase_events(\"demo_dash\")",
+		"var dash_key: InputEventKey = InputEventKey.new()",
+		"dash_key.physical_keycode = KEY_C",
+		"InputMap.action_add_event(\"demo_dash\", dash_key)",
+		"refresh_binding_labels()"
+	])))]
+	sheet.functions.append(setup_fn)
+
+	var refresh_fn: EventFunction = EventFunction.new()
+	refresh_fn.function_name = "refresh_binding_labels"
+	refresh_fn.enabled = true
+	refresh_fn.description = "Prints each action's current binding as readable text next to its row."
+	refresh_fn.events = [_raw("\n".join(PackedStringArray([
+		"$HudKit.set_text(\"JumpLabel\", \"Jump: %s\" % binding_text(\"demo_jump\"))",
+		"$HudKit.set_text(\"DashLabel\", \"Dash: %s\" % binding_text(\"demo_dash\"))"
+	])))]
+	sheet.functions.append(refresh_fn)
+
+	var binding_fn: EventFunction = EventFunction.new()
+	binding_fn.function_name = "binding_text"
+	binding_fn.enabled = true
+	binding_fn.return_type = TYPE_STRING
+	binding_fn.description = "An action's first binding as readable text (the Action Binding As Text pattern)."
+	var binding_param: ACEParam = ACEParam.new()
+	binding_param.id = "action_name"
+	binding_param.type_name = "String"
+	binding_fn.params.append(binding_param)
+	binding_fn.events = [_raw("\n".join(PackedStringArray([
+		"var events: Array = InputMap.action_get_events(action_name)",
+		"return events[0].as_text() if not events.is_empty() else \"unbound\""
+	])))]
+	sheet.functions.append(binding_fn)
+
+	if not _compile(sheet, "res://demo/showcase/input_rebind/input_rebind.tres", "res://demo/showcase/input_rebind/input_rebind.gd"):
+		return false
+	var emitted: String = FileAccess.get_file_as_string("res://demo/showcase/input_rebind/input_rebind.gd")
+	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
+	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
+	var out: FileAccess = FileAccess.open("res://demo/showcase/input_rebind/input_rebind.gd", FileAccess.WRITE)
+	out.store_string(emitted)
+	out.close()
+
+	# The scene: one centred column of named labels/buttons + the HudKit behavior.
+	var root: Control = Control.new()
+	root.name = "InputRebindDemo"
+	root.size = Vector2(1152, 648)
+	root.set_script(load("res://demo/showcase/input_rebind/input_rebind.gd"))
+	_attach_behavior(root, "HudKit", "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd", root)
+	var column: VBoxContainer = VBoxContainer.new()
+	column.name = "Column"
+	column.set_anchors_preset(Control.PRESET_CENTER)
+	column.offset_left = -220.0
+	column.offset_right = 220.0
+	column.offset_top = -180.0
+	column.add_theme_constant_override("separation", 12)
+	root.add_child(column)
+	var title: Label = Label.new()
+	title.name = "TitleLabel"
+	title.text = "INPUT REBINDING + GAMEPAD"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 26)
+	column.add_child(title)
+	var info: Label = Label.new()
+	info.name = "InfoLabel"
+	info.text = "Click Rebind, then press any key, mouse button, or gamepad button.\nTest with your bindings: Jump toasts, Dash toasts."
+	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	info.add_theme_font_size_override("font_size", 13)
+	column.add_child(info)
+	column.add_child(_binding_row("JumpLabel", "Jump: Space", "RebindJumpButton"))
+	column.add_child(_binding_row("DashLabel", "Dash: C", "RebindDashButton"))
+	var reset_button: Button = Button.new()
+	reset_button.name = "ResetButton"
+	reset_button.text = "Restore Demo Defaults"
+	column.add_child(reset_button)
+	var status: Label = Label.new()
+	status.name = "StatusLabel"
+	status.text = ""
+	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(status)
+	var gamepad: Label = Label.new()
+	gamepad.name = "GamepadLabel"
+	gamepad.text = "No gamepad connected - plug one in"
+	gamepad.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(gamepad)
+	var vibrate_button: Button = Button.new()
+	vibrate_button.name = "VibrateButton"
+	vibrate_button.text = "Test Gamepad Vibration"
+	column.add_child(vibrate_button)
+	_own_deep(column, root)
+	return _save_scene(root, "res://demo/showcase/input_rebind/input_rebind.tscn")
+
+
+## One rebind row: the live binding label on the left, the named Rebind button on the right.
+func _binding_row(label_name: String, label_text: String, button_name: String) -> HBoxContainer:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.name = label_name + "Row"
+	row.add_theme_constant_override("separation", 14)
+	var label: Label = Label.new()
+	label.name = label_name
+	label.text = label_text
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.add_theme_font_size_override("font_size", 18)
+	row.add_child(label)
+	var button: Button = Button.new()
+	button.name = button_name
+	button.text = "Rebind"
+	row.add_child(button)
+	return row

@@ -42,6 +42,20 @@ static func run() -> bool:
 	passed = _check_scene("menu_starter scene wires HudKit + the four screens",
 		"res://demo/showcase/menu_starter/menu_starter.tscn", ["HudKit", "TitleScreen", "SettingsScreen", "GameScreen", "PauseScreen"]) and passed
 
+	# Input Rebind - the rebind screen built from the Input/InputMap/Gamepad vocabulary.
+	passed = _check_sheet("input_rebind", "res://demo/showcase/input_rebind/input_rebind.gd", [
+		"class_name InputRebindDemo",
+		"InputMap.action_erase_events(rebinding_action)",
+		"InputMap.action_add_event(rebinding_action, event)",
+		"Input.is_action_just_pressed(\"demo_jump\")",
+		"Input.get_joy_name(pads[0])",
+		"Input.start_joy_vibration(0, 0.5, 0.5, 0.4)",
+		"func binding_text(action_name: String) -> String:",
+		"return events[0].as_text() if not events.is_empty() else \"unbound\"",
+	]) and passed
+	passed = _check_scene("input_rebind scene wires HudKit + the rebind rows",
+		"res://demo/showcase/input_rebind/input_rebind.tscn", ["HudKit", "JumpLabel", "RebindJumpButton", "DashLabel", "RebindDashButton", "ResetButton", "GamepadLabel", "VibrateButton"]) and passed
+
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/carousel/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",

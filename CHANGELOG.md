@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - mouse focus + delta + position ACEs, and the Input Rebind showcase
+
+- **Mouse focus pair**: **Capture Mouse** (lock + hide the pointer, motion feeds your aim -
+  mouse focus for FPS control) and **Release Mouse** (free it again) - the one-word verbs;
+  Set Mouse Mode remains the parameterised version.
+- **Mouse Move Delta (event)**: how far the mouse moved THIS event (the raw aim delta while
+  captured), inside On Input. **Mouse Position (local)** joins the world/screen pair: the cursor
+  in a node's own coordinate space. **Mouse Ray Origin / Direction (3D)**: the cursor's picking
+  ray in world space for click-to-select and click-to-move (needs an active Camera3D).
+- **New showcase `demo/showcase/input_rebind/`**: a working options-menu rebind screen built
+  from the Input/InputMap/Gamepad vocabulary - click Rebind, then press ANY key, mouse button,
+  or gamepad button and the captured event binds verbatim; live binding labels
+  (the Action Binding As Text pattern), a demo-defaults reset, jump/dash test toasts, and a
+  gamepad panel (count + product name, test vibration). Actions are created at runtime, so the
+  demo leaves the project's Input Map untouched. One HUD Kit behavior, zero connected signals.
+
 ### Added - pick input actions from the Input Map (and a fuller input vocabulary)
 
 - **The Input Map picker**: every ACE parameter that names an input action (Is Action Pressed,

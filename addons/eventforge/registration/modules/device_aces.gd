@@ -38,7 +38,21 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True when a gamepad at the given device slot is plugged in."))
 	descriptors.append(F.make_descriptor("Core", "StartJoyVibration", "Vibrate Gamepad", ACEDescriptor.ACEType.ACTION, "Input.start_joy_vibration({device}, {weak}, {strong}, {duration})", "", [F.make_param("device", "String", "0", "Gamepad", "Device index.", "expression"), F.make_param("weak", "String", "0.5", "Weak", "Weak motor 0..1.", "expression"), F.make_param("strong", "String", "0.5", "Strong", "Strong motor 0..1.", "expression"), F.make_param("duration", "String", "0.3", "Seconds", "Duration.", "expression")], "Gamepad", "Vibrate gamepad {duration}s")
 		.described("Rumbles a connected gamepad at chosen strength for a set duration."))
+	# ── Mouse focus: the one-word capture/release pair (Set Mouse Mode is the parameterised
+	# version; these are the verbs a sheet reads naturally).
+	descriptors.append(F.make_descriptor("Core", "CaptureMouse", "Capture Mouse", ACEDescriptor.ACEType.ACTION, "Input.mouse_mode = Input.MOUSE_MODE_CAPTURED", "", [], "Mouse", "Capture the mouse")
+		.described("Focuses the mouse into the window: the pointer locks and hides, and motion feeds your look/aim (FPS style). Release Mouse undoes it.").featured())
+	descriptors.append(F.make_descriptor("Core", "ReleaseMouse", "Release Mouse", ACEDescriptor.ACEType.ACTION, "Input.mouse_mode = Input.MOUSE_MODE_VISIBLE", "", [], "Mouse", "Release the mouse")
+		.described("Unfocuses the mouse: the pointer is visible and free again - pause menus, dialogs, quitting to the map."))
 	# ── Mouse helpers beyond position/mode: pointer control, wheel + click events, cursor art.
+	descriptors.append(F.make_descriptor("Core", "MouseMotionDelta", "Mouse Move Delta (event)", ACEDescriptor.ACEType.EXPRESSION, "event.relative", "", [], "Mouse", "mouse move delta")
+		.described("How far the mouse moved THIS event (a Vector2 in pixels), used inside an On Input event - the raw aim delta while the mouse is captured."))
+	descriptors.append(F.make_descriptor("Core", "MouseLocalPosition", "Mouse Position (local)", ACEDescriptor.ACEType.EXPRESSION, "get_local_mouse_position()", "", [], "Mouse", "mouse local position", "Node2D")
+		.described("The mouse position relative to THIS node (its own coordinate space) - is the cursor inside me, and where?"))
+	descriptors.append(F.make_descriptor("Core", "MouseRayOrigin", "Mouse Ray Origin (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_viewport().get_camera_3d().project_ray_origin(get_viewport().get_mouse_position())", "", [], "Mouse", "mouse ray origin (3D)", "Node3D")
+		.described("Where the cursor's picking ray starts in 3D world space (needs an active Camera3D) - pair with Mouse Ray Direction for click-to-select and click-to-move."))
+	descriptors.append(F.make_descriptor("Core", "MouseRayDirection", "Mouse Ray Direction (3D)", ACEDescriptor.ACEType.EXPRESSION, "get_viewport().get_camera_3d().project_ray_normal(get_viewport().get_mouse_position())", "", [], "Mouse", "mouse ray direction (3D)", "Node3D")
+		.described("The direction the cursor's picking ray travels in 3D world space (needs an active Camera3D) - cast it with a raycast to find what the mouse is over."))
 	descriptors.append(F.make_descriptor("Core", "WarpMouse", "Move Mouse Pointer", ACEDescriptor.ACEType.ACTION, "Input.warp_mouse({position})", "", [F.make_param("position", "String", "Vector2(100, 100)", "Position", "Window position in pixels to move the pointer to.", "expression")], "Mouse", "Move mouse to {position}")
 		.described("Teleports the mouse pointer to a window position - snap it to a menu item or re-centre after a cutscene."))
 	descriptors.append(F.make_descriptor("Core", "GetMouseVelocity", "Mouse Velocity", ACEDescriptor.ACEType.EXPRESSION, "Input.get_last_mouse_velocity()", "", [], "Mouse", "mouse velocity")

@@ -1,0 +1,83 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/input_rebind/input_rebind.gd" id="1_i1vyo"]
+[ext_resource type="Script" path="res://eventsheet_addons/hud_kit/hud_kit_behavior.gd" id="2_uqtvf"]
+
+[node name="InputRebindDemo" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+script = ExtResource("1_i1vyo")
+
+[node name="HudKit" type="Node" parent="."]
+script = ExtResource("2_uqtvf")
+
+[node name="Column" type="VBoxContainer" parent="."]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -180.0
+offset_right = 220.0
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Column"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "INPUT REBINDING + GAMEPAD"
+horizontal_alignment = 1
+
+[node name="InfoLabel" type="Label" parent="Column"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Click Rebind, then press any key, mouse button, or gamepad button.
+Test with your bindings: Jump toasts, Dash toasts."
+horizontal_alignment = 1
+
+[node name="JumpLabelRow" type="HBoxContainer" parent="Column"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="JumpLabel" type="Label" parent="Column/JumpLabelRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Jump: Space"
+
+[node name="RebindJumpButton" type="Button" parent="Column/JumpLabelRow"]
+layout_mode = 2
+text = "Rebind"
+
+[node name="DashLabelRow" type="HBoxContainer" parent="Column"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="DashLabel" type="Label" parent="Column/DashLabelRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Dash: C"
+
+[node name="RebindDashButton" type="Button" parent="Column/DashLabelRow"]
+layout_mode = 2
+text = "Rebind"
+
+[node name="ResetButton" type="Button" parent="Column"]
+layout_mode = 2
+text = "Restore Demo Defaults"
+
+[node name="StatusLabel" type="Label" parent="Column"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="GamepadLabel" type="Label" parent="Column"]
+layout_mode = 2
+text = "No gamepad connected - plug one in"
+horizontal_alignment = 1
+
+[node name="VibrateButton" type="Button" parent="Column"]
+layout_mode = 2
+text = "Test Gamepad Vibration"

@@ -23,6 +23,12 @@ static func run() -> bool:
 
 	# The new vocabulary exists, in the right category, as the right kind.
 	var expected: Dictionary = {
+		"CaptureMouse": ["Mouse", ACEDescriptor.ACEType.ACTION],
+		"ReleaseMouse": ["Mouse", ACEDescriptor.ACEType.ACTION],
+		"MouseMotionDelta": ["Mouse", ACEDescriptor.ACEType.EXPRESSION],
+		"MouseLocalPosition": ["Mouse", ACEDescriptor.ACEType.EXPRESSION],
+		"MouseRayOrigin": ["Mouse", ACEDescriptor.ACEType.EXPRESSION],
+		"MouseRayDirection": ["Mouse", ACEDescriptor.ACEType.EXPRESSION],
 		"WarpMouse": ["Mouse", ACEDescriptor.ACEType.ACTION],
 		"GetMouseVelocity": ["Mouse", ACEDescriptor.ACEType.EXPRESSION],
 		"IsMouseCaptured": ["Mouse", ACEDescriptor.ACEType.CONDITION],
