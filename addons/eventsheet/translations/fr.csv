@@ -1,0 +1,208 @@
+keys,fr
+Sheet,Feuille
+Save,Enregistrer
+Run Scene,Lancer la scène
+Add Event,Ajouter un événement
+Add Condition,Ajouter une condition
+Add Action,Ajouter une action
+Add Code,Ajouter du code
+Add,Ajouter
+Edit,Édition
+View,Affichage
+Tools,Outils
+Simple Mode,Mode simple
+Search,Rechercher
+Cancel,Annuler
+Open,Ouvrir
+Undo,Annuler l'action
+Redo,Rétablir
+Copy,Copier
+Paste,Coller
+Zoom In,Zoom avant
+Zoom Out,Zoom arrière
+Name,Nom
+Name:,Nom :
+Type,Type
+Text,Texte
+Number,Nombre
+Yes-No,Oui-Non
+Details,Détails
+Parameters,Paramètres
+Default,Par défaut
+Tooltip,Infobulle
+Placeholder,Texte indicatif
+Range,Plage
+◀ Back,◀ Retour
+★ Recent,★ Récents
+⭐ Favorites,⭐ Favoris
+✚ Apply & Add Another,✚ Appliquer et ajouter un autre
+Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,Enregistre la feuille - la compilation à l'enregistrement garde son script généré à jour (Ctrl+S).
+"Save, then play the scene that uses this sheet's script.","Enregistre, puis lance la scène qui utilise le script de cette feuille."
+Add an event (E).,Ajoute un événement (E).
+Add a condition to the selected event (C).,Ajoute une condition à l'événement sélectionné (C).
+Add an action to the selected event (A).,Ajoute une action à l'événement sélectionné (A).
+Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,Ajoute un bloc GDScript à l'événement sélectionné - la porte de sortie délibérée vers le code. Ouvre immédiatement l'éditeur de code.
+"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","Vue pour débutants : masque les entrées avancées/code (blocs GDScript, sous-conditions, filtres, signaux/énumérations). Tout reste disponible une fois désactivé."
+"Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.","Affiche/masque le panneau GDScript généré - la sortie compilée, honnête, de la feuille, côte à côte."
+Theme for this sheet (Load/Reload and the Theme Editor live in View),Thème de cette feuille (Charger/Recharger et l'éditeur de thème sont dans Affichage)
+"Quick add…  (e.g. every tick, heal 5)","Ajout rapide…  (ex. chaque tick, heal 5)"
+"Create, open, save, and configure this event sheet.","Créer, ouvrir, enregistrer et configurer cette feuille d'événements."
+"Panels, multi-view panes, theme, live values, and zoom.","Panneaux, vues multiples, thème, valeurs en direct et zoom."
+"Debug tools, validation, import, and project workflow.","Outils de débogage, validation, import et flux de travail du projet."
+New…,Nouveau…
+Open…,Ouvrir…
+Save As…,Enregistrer sous…
+Sheet Type…,Type de feuille…
+Manage Includes…,Gérer les inclusions…
+Custom Actions…,Actions personnalisées…
+Export GDScript…,Exporter le GDScript…
+Export Addon…,Exporter l'extension…
+New Behaviour Addon…,Nouvelle extension de comportement…
+Inspector Designer…,Concepteur d'Inspecteur…
+Teach a Verb - Share Published Verbs,Enseigner un verbe - Partager les verbes publiés
+Signal Event…,Événement de signal…
+Global Variable…,Variable globale…
+Local Variable…,Variable locale…
+Function…,Fonction…
+Code (GDScript) on Selected Event,Code (GDScript) sur l'événement sélectionné
+Note…,Note…
+Region…,Région…
+Preload Resource…,Précharger une ressource…
+Extract Selection to Include…,Extraire la sélection vers une inclusion…
+Find References…,Rechercher les références…
+Generate from Description (AI)…,Générer depuis une description (IA)…
+Simple Mode (beginner-friendly),Mode simple (adapté aux débutants)
+GDScript Panel (toggle),Panneau GDScript (basculer)
+Open Sheets Panel,Panneau des feuilles ouvertes
+Add-Event Rows,Lignes « + Ajouter un événement »
+Split View (toggle),Vue scindée (basculer)
+Detached View (toggle),Vue détachée (basculer)
+Link Views (toggle),Lier les vues (basculer)
+Load Theme…,Charger un thème…
+Reload Theme,Recharger le thème
+Theme Editor…,Éditeur de thème…
+MCP Server (AI tools),Serveur MCP (outils IA)
+"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","Masque les entrées avancées/code (blocs GDScript, sous-conditions, filtres, match, signaux/énumérations) des menus contextuels. Tout reste disponible en mode expert."
+Show/hide the generated-GDScript panel beside the sheet.,Affiche/masque le panneau GDScript généré à côté de la feuille.
+"Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.",Affiche/masque les lignes « + Ajouter un événement… ». À désactiver pour une feuille plus calme.
+"Show/hide a second synchronized view of this sheet, side by side.","Affiche/masque une seconde vue synchronisée de cette feuille, côte à côte."
+Pop the sheet view out into its own window / bring it back.,Détache la vue de la feuille dans sa propre fenêtre / la ramène.
+Link/unlink scrolling between the split views.,Lie/délie le défilement entre les vues scindées.
+Debug Breakpoints (toggle),Points d'arrêt de débogage (basculer)
+Live Values (toggle),Valeurs en direct (basculer)
+Event Trace (live highlight),Trace d'événements (surbrillance en direct)
+Bookmarks…,Signets…
+Register Autoload,Enregistrer l'autoload
+Publish Preview…,Aperçu de publication…
+Test Bench,Banc d'essai
+Find in Project…,Rechercher dans le projet…
+Project Doctor…,Docteur du projet…
+Check Sheet for Errors,Vérifier les erreurs de la feuille
+Vocabulary Doc,Doc du vocabulaire
+Sheet Backups…,Sauvegardes de la feuille…
+Save as Template,Enregistrer comme modèle
+Attach to Selected Node,Attacher au nœud sélectionné
+Lift Report…,Rapport d'import…
+Welcome…,Bienvenue…
+Start the Tour…,Commencer la visite…
+Keyboard Shortcuts,Raccourcis clavier
+Rename Everywhere…,Renommer partout…
+Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,Analyse chaque expression ƒx et bloc GDScript ; signale les lignes fautives et saute à la première.
+Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,Bascule l'émission des points d'arrêt : les feuilles compilées en débogage s'arrêtent aux lignes marquées.
+Toggle Live Values: running sheets stream their variables here (editable).,Bascule les valeurs en direct : les feuilles en cours d'exécution diffusent leurs variables ici (modifiables).
++ Add action,+ Ajouter une action
++ Add condition,+ Ajouter une condition
++ Add event…,+ Ajouter un événement…
+Every Tick,Chaque tick
++  Add your first event,+  Ajouter votre premier événement
+New from template…,Nouveau depuis un modèle…
+Create an event sheet…,Créer une feuille d'événements…
+This event sheet is empty,Cette feuille d'événements est vide
+No event sheet is open,Aucune feuille d'événements n'est ouverte
+Empty behavior sheet,Feuille de comportement vide
+Empty autoload sheet,Feuille d'autoload vide
+Double-click anywhere - or press E - to add your first event.,Double-cliquez n'importe où - ou appuyez sur E - pour ajouter votre premier événement.
+Double-click anywhere - or press E - to add an event that drives the Node this attaches to.,Double-cliquez n'importe où - ou appuyez sur E - pour ajouter un événement qui pilote le Node auquel ceci s'attache.
+Create one to start building - a menu of ready-made starters opens.,Créez-en une pour commencer - un menu de modèles prêts à l'emploi s'ouvre.
+"Add the signals and functions every sheet in the project should reach (score, game state, an event bus).","Ajoutez les signaux et fonctions que chaque feuille du projet doit atteindre (score, état du jeu, bus d'événements)."
+"Tip: the picker understands plain language. Try typing ""every tick"".",Astuce : le sélecteur comprend le langage courant. Essayez « every tick ».
+Tip: Tools > Welcome… has a playable showcase and a 2-minute tour.,Astuce : Outils > Bienvenue… propose une démo jouable et une visite de 2 minutes.
+Tip: publish a function to the picker and every sheet in the project can call it.,Astuce : publiez une fonction dans le sélecteur et chaque feuille du projet pourra l'appeler.
+%s - Behavior · acts on host: %s,%s - Comportement · agit sur l'hôte : %s
+"%s - Autoload · one instance, project-wide","%s - Autoload · une seule instance, pour tout le projet"
+%s - Editor Tool · runs in the editor (File > Run),%s - Outil d'éditeur · s'exécute dans l'éditeur (Fichier > Exécuter)
+%s - Custom Resource · every .tres of it is a data asset,%s - Ressource personnalisée · chaque .tres est un asset de données
+Event Sheet · a script for the %s it's attached to,Feuille d'événements · un script pour le %s auquel elle est attachée
+%s - Custom Node · extends %s,%s - Nœud personnalisé · étend %s
+"Click to edit the sheet type (name, icon, host class).","Cliquez pour modifier le type de feuille (nom, icône, classe hôte)."
+Add Action / Condition,Ajouter une action / condition
+"Search actions, conditions, triggers...","Rechercher des actions, conditions, déclencheurs…"
+Pin the highlighted entry to Favorites (or right-click any entry).,Épingle l'entrée en surbrillance dans les favoris (ou clic droit sur n'importe quelle entrée).
+Right-click any entry to pin it here.,Clic droit sur une entrée pour l'épingler ici.
+Entries you use appear here.,Les entrées que vous utilisez apparaissent ici.
+"Select a condition, action, or trigger to create a new event.","Sélectionnez une condition, une action ou un déclencheur pour créer un nouvel événement."
+Select an action to append to the selected event.,Sélectionnez une action à ajouter à l'événement sélectionné.
+Select a condition or trigger to append to the selected event.,Sélectionnez une condition ou un déclencheur à ajouter à l'événement sélectionné.
+Untitled EventSheet,Feuille sans titre
+Unsaved (in-memory),Non enregistrée (en mémoire)
+Open Sheets,Feuilles ouvertes
+Filter sheets…,Filtrer les feuilles…
+Filter the open sheets by name or path.,Filtre les feuilles ouvertes par nom ou chemin.
+New Event,Nouvel événement
+New Condition,Nouvelle condition
+Edit Action,Modifier l'action
+Edit Condition,Modifier la condition
+Delete Action,Supprimer l'action
+Delete Condition,Supprimer la condition
+Delete Function,Supprimer la fonction
+Replace Action,Remplacer l'action
+Replace Condition,Remplacer la condition
+Disable Action,Désactiver l'action
+Disable Condition,Désactiver la condition
+Invert Condition,Inverser la condition
+Add New Variable,Ajouter une nouvelle variable
+Create Variable,Créer la variable
+Edit Variable,Modifier la variable
+Add a function…,Ajouter une fonction…
+Edit Note…,Modifier la note…
+Edit Events,Modifier les événements
+Insert Snippet…,Insérer un extrait…
+Extract All Actions to Function…,Extraire toutes les actions vers une fonction…
+Group Under a Heading…,Regrouper sous un titre…
+Detach Comment To Row,Détacher le commentaire en ligne
+Convert Scope,Convertir la portée
+Toggle Constant,Basculer en constante
+Whole numbers only,Nombres entiers uniquement
+Editable in the Inspector (a designer property),Modifiable dans l'Inspecteur (une propriété de design)
+Constant (can't change at runtime),Constante (ne change pas à l'exécution)
+Set on _ready() - for node refs like $Player,Définie dans _ready() - pour des références de nœuds comme $Player
+"Text - words, names, messages.","Texte - mots, noms, messages."
+"A number - a count, score, position, speed… Tick ""Whole numbers only"" for integers.","Un nombre - un compte, un score, une position, une vitesse… Cochez « Nombres entiers uniquement » pour des entiers."
+"A yes/no, on/off switch (true / false).","Un interrupteur oui/non, marche/arrêt (true / false)."
+"An x/y pair: a direction, velocity, or position.","Une paire x/y : une direction, une vélocité ou une position."
+An RGBA colour.,Une couleur RVBA.
+An image / sprite resource.,Une ressource image / sprite.
+Viewing as a sheet,Affichée comme feuille
+Open in Godot Script Editor,Ouvrir dans l'éditeur de script Godot
+Edit the .gd directly in Godot's script editor - your changes reload here when you come back to this tab.,Modifiez le .gd directement dans l'éditeur de script de Godot - vos changements se rechargent ici à votre retour sur cet onglet.
+Take the 2-minute tour,Suivre la visite de 2 minutes
+Editor language,Langue de l'éditeur
+Simple mode - hide advanced rows & menu items,Mode simple - masquer les lignes et menus avancés
+Open the GDScript panel with every sheet,Ouvrir le panneau GDScript avec chaque feuille
+Coming from another event-sheet tool?,Vous venez d'un autre outil de feuilles d'événements ?
+Open the migration guide,Ouvrir le guide de migration
+Reopen this window any time: Tools → Welcome…,Rouvrez cette fenêtre à tout moment : Outils → Bienvenue…
+Translations are plain CSV files - drop one into eventsheet_translations/ and its language appears here.,Les traductions sont de simples fichiers CSV - déposez-en un dans eventsheet_translations/ et sa langue apparaît ici.
+The 2-minute tour,La visite de 2 minutes
+Read a sheet like a sentence,Lire une feuille comme une phrase
+Add your first event,Ajoutez votre premier événement
+Give it a condition,Donnez-lui une condition
+Make it DO something,Faites-lui FAIRE quelque chose
+See the honest GDScript,"Voyez le GDScript, sans tricherie"
+You know the loop,Vous connaissez la boucle
+Skip tour,Passer la visite
+Back,Retour
+Next,Suivant
+Finish,Terminer
+✓ Done - nice! Hit Next.,✓ Fait - bravo ! Cliquez sur Suivant.
+Hit Finish and go make something.,Cliquez sur Terminer et allez créer quelque chose.

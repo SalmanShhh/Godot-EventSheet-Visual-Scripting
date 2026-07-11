@@ -15,6 +15,10 @@
   automatically; the canvas-drawn surfaces (empty states, banner, add affordances) route through
   the same layer explicitly. `tools/extract_editor_strings.gd` dumps every current string
   (325 today) into a ready-to-fill template CSV.
+- **French ships as the worked example.** `addons/eventsheet/translations/fr.csv` translates the
+  everyday surface (toolbar, menus, dialogs, the getting-started screens, the tour) - so
+  Français appears in the language dropdown out of the box, and the file doubles as the sample
+  to copy when starting your own language.
 - **The extension APIs localise too.** `EventSheets.translate()`,
   `EventSheets.register_translation_file()` (ship translations WITH a pack),
   `available_languages()` and `set_editor_language()` join the public API; ACE display names,

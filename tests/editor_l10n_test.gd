@@ -29,6 +29,13 @@ static func run() -> bool:
 	all_passed = _check("English is always offered", Array(EventSheetL10n.available_locales()).has("en"), true) and all_passed
 	all_passed = _check("English display name says default", EventSheetL10n.locale_display_name("en").contains("default"), true) and all_passed
 
+	# 1b. The bundled French sample (addons/eventsheet/translations/fr.csv) is discovered from a
+	# bare rescan and actually translates - the shipped proof that drop-in files work.
+	all_passed = _check("bundled French sample is discovered", Array(EventSheetL10n.available_locales()).has("fr"), true) and all_passed
+	EventSheetL10n.set_locale("fr")
+	all_passed = _check("bundled French translates the toolbar", EventSheetL10n.translate("Run Scene"), "Lancer la scène") and all_passed
+	EventSheetL10n.set_locale("en")
+
 	# 2. Drop-in CSV: locales appear, translations apply, unknown strings fall back.
 	var file: FileAccess = FileAccess.open(TEST_CSV, FileAccess.WRITE)
 	file.store_csv_line(PackedStringArray(["keys", "fr", "es", "en"]))
