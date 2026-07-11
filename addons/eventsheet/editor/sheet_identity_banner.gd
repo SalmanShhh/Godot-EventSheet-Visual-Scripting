@@ -144,21 +144,23 @@ func update_from_sheet(sheet: EventSheetResource) -> void:
 	var display_name: String = sheet.custom_class_name.strip_edges()
 	if display_name.is_empty():
 		display_name = sheet.autoload_name.strip_edges() if sheet.autoload_mode else intent_label
-	# Each intent reads distinctly at a glance: what it IS, then how it meets the project.
+	# Each intent reads distinctly at a glance: what it IS, then how it meets the project. The
+	# banner draws on canvas (no auto-translation), so the TEMPLATES translate explicitly -
+	# names/classes stay verbatim inside the placeholders.
 	match _intent:
 		EventSheetScriptIntent.Intent.BEHAVIOUR:
-			_label = "%s - Behavior · acts on host: %s" % [display_name, sheet.host_class]
+			_label = EventSheetL10n.translate("%s - Behavior · acts on host: %s") % [display_name, sheet.host_class]
 		EventSheetScriptIntent.Intent.AUTOLOAD:
-			_label = "%s - Autoload · one instance, project-wide" % display_name
+			_label = EventSheetL10n.translate("%s - Autoload · one instance, project-wide") % display_name
 		EventSheetScriptIntent.Intent.EDITOR_TOOL:
-			_label = "%s - Editor Tool · runs in the editor (File > Run)" % display_name
+			_label = EventSheetL10n.translate("%s - Editor Tool · runs in the editor (File > Run)") % display_name
 		EventSheetScriptIntent.Intent.CUSTOM_RESOURCE:
-			_label = "%s - Custom Resource · every .tres of it is a data asset" % display_name
+			_label = EventSheetL10n.translate("%s - Custom Resource · every .tres of it is a data asset") % display_name
 		EventSheetScriptIntent.Intent.EVENT_SHEET:
 			# The plain sheet a beginner makes: say what it is and where it runs, in one line.
-			_label = "Event Sheet · a script for the %s it's attached to" % sheet.host_class
+			_label = EventSheetL10n.translate("Event Sheet · a script for the %s it's attached to") % sheet.host_class
 		_:
-			_label = "%s - Custom Node · extends %s" % [display_name, sheet.host_class]
+			_label = EventSheetL10n.translate("%s - Custom Node · extends %s") % [display_name, sheet.host_class]
 	var icon_path: String = sheet.custom_class_icon.strip_edges()
 	if icon_path.begins_with("res://") and ResourceLoader.exists(icon_path):
 		var loaded: Resource = load(icon_path)

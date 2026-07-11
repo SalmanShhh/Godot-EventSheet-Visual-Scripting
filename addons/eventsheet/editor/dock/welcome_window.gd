@@ -49,6 +49,10 @@ func show() -> void:
 	var simple_check: CheckBox = _welcome_window.get_meta("simple_check") as CheckBox
 	if simple_check != null:
 		simple_check.set_pressed_no_signal(_dock._simple_mode)
+	# Rescan the translation folders on every open, so "drop a CSV in, open the Welcome" is the
+	# whole flow for a new language - no registration step, no restart.
+	EventSheetL10n.rescan()
+	_refresh_language_picker()
 	_welcome_window.popup_centered()
 
 
@@ -114,6 +118,20 @@ func _build() -> void:
 		ProjectSettings.set_setting("eventsheets/editor/open_code_panel_by_default", true if on else null))
 	prefs_box.add_child(native_check)
 	_welcome_window.set_meta("native_check", native_check)
+	# Editor language: English by default; every locale a drop-in translation file provides is
+	# offered automatically (see editor/l10n.gd for the file format + folders). Switching applies
+	# live to auto-translated Controls; some already-drawn text refreshes on the next open/redraw.
+	var language_row: HBoxContainer = HBoxContainer.new()
+	language_row.add_theme_constant_override("separation", 8)
+	var language_label: Label = Label.new()
+	language_label.text = "Editor language"
+	language_row.add_child(language_label)
+	var language_picker: OptionButton = OptionButton.new()
+	language_picker.tooltip_text = "Translations are plain CSV files - drop one into eventsheet_translations/ and its language appears here."
+	language_picker.item_selected.connect(_on_language_selected)
+	language_row.add_child(language_picker)
+	prefs_box.add_child(language_row)
+	_welcome_window.set_meta("language_picker", language_picker)
 	box.add_child(EventSheetPopupUI.titled_card("Preferences", prefs_box))
 	# Footer migration row: the guide is one CLICK, not a filename to go hunting for - the old
 	# text named it without linking it. Reopen note stays a muted hint below.
@@ -134,3 +152,31 @@ func _build() -> void:
 	box.add_child(EventSheetPopupUI.hint_label("Reopen this window any time: Tools → Welcome…", 440.0))
 	dialog.add_child(EventSheetPopupUI.margined(box))
 	_dock.add_child(dialog)
+
+
+## Fills the language picker from the discovered locales (English first, then one entry per
+## locale a translation file provided) and selects the active one.
+func _refresh_language_picker() -> void:
+	var language_picker: OptionButton = _welcome_window.get_meta("language_picker") as OptionButton
+	if language_picker == null:
+		return
+	language_picker.clear()
+	var locales: PackedStringArray = EventSheetL10n.available_locales()
+	var active: String = EventSheetL10n.get_locale()
+	for index: int in range(locales.size()):
+		language_picker.add_item(EventSheetL10n.locale_display_name(locales[index]), index)
+		if locales[index] == active:
+			language_picker.select(index)
+
+
+## Applies the picked language live: auto-translated Controls retranslate on the propagated
+## notification; canvas-drawn text follows on its next redraw.
+func _on_language_selected(index: int) -> void:
+	var locales: PackedStringArray = EventSheetL10n.available_locales()
+	if index < 0 or index >= locales.size():
+		return
+	EventSheetL10n.set_locale(locales[index])
+	_dock.propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
+	if _dock.get_viewport_control() != null:
+		_dock.get_viewport_control().queue_redraw()
+	_dock._set_status("Editor language: %s" % EventSheetL10n.locale_display_name(locales[index]))

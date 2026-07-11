@@ -177,7 +177,7 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 	row_data.folded = false
 	row_data.spans = [
 		_make_span(
-			label,
+			EventSheetL10n.translate(label),
 			SemanticSpan.SpanType.COMMENT,
 			{
 				"kind": "add_event",
@@ -1376,7 +1376,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 		# text) so the condition lane still shows a clear, clickable empty event block.
 		spans.append(
 			_make_span(
-				"Every Tick",
+				EventSheetL10n.translate("Every Tick"),
 				SemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
@@ -1398,7 +1398,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	add_condition_color.a *= 0.55
 	spans.append(
 		_make_span(
-			"+ Add condition",
+			EventSheetL10n.translate("+ Add condition"),
 			SemanticSpan.SpanType.CONDITION,
 			{
 				"lane": "condition",
@@ -1540,7 +1540,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	add_action_color.a *= 0.55
 	spans.append(
 		_make_span(
-			"+ Add action",
+			EventSheetL10n.translate("+ Add action"),
 			SemanticSpan.SpanType.ACTION,
 			{
 				"lane": "action",

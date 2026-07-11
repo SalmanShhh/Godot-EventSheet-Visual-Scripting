@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added - the editor speaks your language (drop-in translations)
+
+- **Translate the whole editor with one CSV file.** Drop a file into `eventsheet_translations/`
+  (project root) or `addons/eventsheet/translations/` - English source text in the first column,
+  one column per locale - and that language automatically appears in the new **Editor language**
+  dropdown on the Welcome window's Preferences card. No code, no registration, no restart: the
+  choice applies live, persists per-user per-project, and English stays the default AND the
+  fallback (untranslated strings show their English source, never a blank).
+- **Built to stay translatable.** The dock shares one translation domain, so every Control
+  string - buttons, menus, tooltips, dialogs, including ones future features add - translates
+  automatically; the canvas-drawn surfaces (empty states, banner, add affordances) route through
+  the same layer explicitly. `tools/extract_editor_strings.gd` dumps every current string
+  (325 today) into a ready-to-fill template CSV.
+- **The extension APIs localise too.** `EventSheets.translate()`,
+  `EventSheets.register_translation_file()` (ship translations WITH a pack),
+  `available_languages()` and `set_editor_language()` join the public API; ACE display names,
+  descriptions, and Custom Block kind titles already resolve through the layer in the picker and
+  menus - ids never translate (they are compatibility contracts). New guide:
+  docs/GUIDE-TRANSLATING-THE-EDITOR.md.
+
 ### Changed - identity + plain-words polish
 
 - **The workspace tab wears its own icon** - the sheet glyph (trigger band + condition/action

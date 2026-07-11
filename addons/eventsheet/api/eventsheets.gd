@@ -248,6 +248,44 @@ static func round_trips(source: String) -> bool:
 	return str(compile(sheet, sheet.external_source_path).get("output", "")) == source
 
 
+# ── Localisation (the editor UI's language - game l10n is the Translation module) ──────
+
+
+## Translates an editor-UI string into the active plugin language. English is the default
+## and the fallback: with no translation loaded (or English active) the text passes through
+## unchanged. Route every user-facing string a FUTURE feature or extension shows through
+## this (or through a Control, which auto-translates via the plugin's translation domain),
+## and it localises the day someone drops in a CSV. Frozen ids (ace_id, kind_id, provider
+## ids) are contracts, never translated - display strings only.
+static func translate(text: String) -> String:
+	return EventSheetL10n.translate(text)
+
+
+## Registers an extension's own translation file (the drop-in CSV shape - see
+## docs/GUIDE-TRANSLATING-THE-EDITOR.md - or a ready-made Translation resource), merging its
+## messages into the language catalogs and refreshing the active language live. Use this when
+## a pack ships translations for its OWN display names/descriptions somewhere outside the
+## auto-scanned folders. Returns false when the file contributed nothing.
+static func register_translation_file(path: String) -> bool:
+	EventSheetL10n.ensure_loaded()
+	if not EventSheetL10n.load_translation_file(path):
+		return false
+	EventSheetL10n.set_locale(EventSheetL10n.get_locale())
+	return true
+
+
+## Every language currently offered: "en" plus each locale a translation file provides.
+static func available_languages() -> PackedStringArray:
+	return EventSheetL10n.available_locales()
+
+
+## Switches the editor UI language ("en" restores the default English). Persisted per-user.
+static func set_editor_language(locale: String) -> void:
+	EventSheetL10n.set_locale(locale)
+	if _dock_alive():
+		_dock.propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
+
+
 # ── Project health ─────────────────────────────────────────────────────────────────────
 
 

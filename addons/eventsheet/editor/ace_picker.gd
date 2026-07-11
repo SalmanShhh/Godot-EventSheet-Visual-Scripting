@@ -752,15 +752,18 @@ func _category_of(definition: ACEDefinition) -> String:
 
 
 func _item_label(definition: ACEDefinition) -> String:
+	# Display names route through the plugin l10n layer (a pass-through in English), so a pack
+	# that ships a translation CSV gets localised picker rows for free. Ids never translate.
+	var display_name: String = EventSheetL10n.translate(definition.display_name)
 	if definition.provider_id.is_empty() or definition.provider_id == "Core":
-		return definition.display_name
+		return display_name
 	# Title-case the pack suffix for display ("weapon_kit" -> "Weapon Kit"): raw snake_case ids
 	# read as internals, not as the addon's name. Display-only - the id itself never changes.
-	return "%s  ·  %s" % [definition.display_name, definition.provider_id.capitalize()]
+	return "%s  ·  %s" % [display_name, definition.provider_id.capitalize()]
 
 
 func _item_tooltip(definition: ACEDefinition) -> String:
-	var body: String = definition.description if not definition.description.is_empty() else definition.display_name
+	var body: String = EventSheetL10n.translate(definition.description if not definition.description.is_empty() else definition.display_name)
 	var tip: String = "[%s]  %s" % [_ace_type_label(definition.ace_type), body]
 	# Deprecated entries are filtered out of the picker, but a still-surfaced one (e.g. via search/recents)
 	# carries its deprecation note so the user is steered to the replacement.
@@ -1240,7 +1243,7 @@ func _update_info_panel(definition: ACEDefinition) -> void:
 	if definition == null:
 		_info_label.text = ""
 		return
-	var description: String = definition.description if not definition.description.is_empty() else str(definition.metadata.get("display_template", definition.display_name))
+	var description: String = EventSheetL10n.translate(definition.description if not definition.description.is_empty() else str(definition.metadata.get("display_template", definition.display_name)))
 	var template: String = str(definition.metadata.get("codegen_template", ""))
 	if template.is_empty():
 		# Instance-backed reflected methods bake their owned-instance call at APPLY time -

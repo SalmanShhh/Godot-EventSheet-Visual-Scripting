@@ -106,7 +106,8 @@ func build(root: Node) -> void:
 	add_popup.add_separator()
 	var registered_kinds: Array[EventSheetBlockKind] = EventSheetBlockRegistry.addable_kinds()
 	for kind_index: int in range(registered_kinds.size()):
-		add_popup.add_item("%s…" % registered_kinds[kind_index].title, 100 + kind_index)
+		# Kind TITLES localise (a pack can ship a CSV for its block names); kind_ids never do.
+		add_popup.add_item("%s…" % EventSheetL10n.translate(registered_kinds[kind_index].title), 100 + kind_index)
 	add_popup.id_pressed.connect(func(id: int) -> void:
 		if id >= 100:
 			var kinds_now: Array[EventSheetBlockKind] = EventSheetBlockRegistry.addable_kinds()

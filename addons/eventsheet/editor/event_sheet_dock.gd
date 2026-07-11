@@ -266,6 +266,10 @@ func _ensure_editor_dialogs_initialized() -> void:
 
 
 func _ready() -> void:
+	# The plugin's translation domain covers the whole dock subtree (windows and dialogs parent
+	# here, so they inherit it): every Control string auto-translates when a non-English language
+	# is picked, and stays English (the source text) by default. See editor/l10n.gd.
+	EventSheetL10n.apply_to(self)
 	_build_ui()
 	_ensure_editor_dialogs_initialized()
 	_refresh_ace_registry()

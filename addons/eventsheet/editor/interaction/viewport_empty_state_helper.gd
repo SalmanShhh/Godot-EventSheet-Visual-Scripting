@@ -78,9 +78,11 @@ func draw_empty_state(width: float) -> void:
 	# brand-new sheet steers its author toward that script type's full potential. One extendable
 	# table owns the text: EventSheetScriptIntent.empty_sheet_advice.
 	var advice: Dictionary = EventSheetScriptIntent.empty_sheet_advice(_viewport._sheet)
-	var heading: String = str(advice.get("heading", ""))
-	var primary: String = str(advice.get("primary", ""))
-	var tip: String = str(advice.get("tip", ""))
+	# Canvas-drawn text sits outside the auto-translated Control tree, so this choke point
+	# translates explicitly (a no-op pass-through in the default English).
+	var heading: String = EventSheetL10n.translate(str(advice.get("heading", "")))
+	var primary: String = EventSheetL10n.translate(str(advice.get("primary", "")))
+	var tip: String = EventSheetL10n.translate(str(advice.get("tip", "")))
 	var center_x: float = width * 0.5
 	var max_w: float = max(width - 36.0, 1.0)
 	var heading_size: int = EventSheetPalette.resolve_font_size(font_size, 0, 2)
@@ -113,7 +115,7 @@ func _draw_cta_buttons(font: Font, font_size: int, center_x: float, top_y: float
 	var widths: Array[float] = []
 	var total_w: float = 0.0
 	for spec: Dictionary in specs:
-		var w: float = font.get_string_size(str(spec["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x + pad_x * 2.0
+		var w: float = font.get_string_size(EventSheetL10n.translate(str(spec["label"])), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x + pad_x * 2.0
 		widths.append(w)
 		total_w += w
 	total_w += gap * float(maxi(specs.size() - 1, 0))
@@ -133,7 +135,7 @@ func _draw_cta_buttons(font: Font, font_size: int, center_x: float, top_y: float
 			pill.bg_color = Color(1.0, 1.0, 1.0, 0.05)
 			pill.border_color = Color(1.0, 1.0, 1.0, 0.22)
 		_viewport.draw_style_box(pill, rect)
-		var label: String = str(spec["label"])
+		var label: String = EventSheetL10n.translate(str(spec["label"]))
 		var label_w: float = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
 		var label_color: Color = EventSheetPalette.TEXT_PRIMARY if primary_button else EventSheetPalette.TEXT_SECONDARY
 		var baseline: float = rect.position.y + rect.size.y * 0.5 + float(font_size) * 0.36

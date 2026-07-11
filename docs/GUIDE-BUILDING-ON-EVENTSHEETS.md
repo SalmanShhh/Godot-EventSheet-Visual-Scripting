@@ -12,6 +12,7 @@ Everything an extension needs lives in **one class: `EventSheets`** (`addons/eve
 4. [Editor Services](#4-editor-services)
 5. [Codegen Services](#5-codegen-services)
 6. [Project Health Services](#6-project-health-services)
+6b. [Localisation Services](#6b-localisation-services)
 7. [Full Reference](#7-full-reference)
 8. [Use Cases](#8-use-cases)
 9. [Testing Your Extension](#9-testing-your-extension)
@@ -137,6 +138,26 @@ EventSheets.register_doctor_check("my_pack.missing_tables", func(sheet_paths: Pa
 
 A check receives every non-template sheet path plus the shared findings array, and appends findings shaped `{"severity": "error"|"warning"|"info", "check": <your id>, "path": ..., "message": ...}`. Severity decides consequence: errors fail CI, warnings fail `--strict` CI, infos are advisory. The Doctor covenant applies to your check too: **never write inside res://** (verification work goes to `user://` scratch files). Re-registering an id replaces the previous check, so plugin reloads never duplicate; `unregister_doctor_check(id)` removes it.
 
+## 6b. Localisation Services
+
+The editor UI translates through one shared layer (see the "Translating the editor into your
+language" guide for the drop-in CSV format). Anything you show through a Control translates
+automatically - the dock's translation domain covers your dialogs and buttons too. For strings
+you draw or format yourself, route them through the API and they localise the day someone
+provides a translation (a pass-through in the default English):
+
+```gdscript
+# Translate any display string (English default; falls back to the source text).
+canvas.draw_string(font, position, EventSheets.translate("Nothing selected"), ...)
+
+# Ship translations WITH your pack - your ACE display names and Custom Block titles are
+# looked up through the same layer in the picker and menus.
+EventSheets.register_translation_file("res://addons/my_pack/translations/my_pack.csv")
+```
+
+Never translate ids (`ace_id`, `kind_id`, provider ids): they are compatibility contracts.
+Display strings only.
+
 ## 7. Full Reference
 
 | Group | Method | Returns | Needs dock? |
@@ -164,6 +185,10 @@ A check receives every non-template sheet path plus the shared findings array, a
 | Health | `doctor()` | `Dictionary` | no |
 | Health | `register_doctor_check(check_id: String, check: Callable)` | `void` | no |
 | Health | `unregister_doctor_check(check_id: String)` | `void` | no |
+| Localisation | `translate(text: String)` | `String` | no |
+| Localisation | `register_translation_file(path: String)` | `bool` | no |
+| Localisation | `available_languages()` | `PackedStringArray` | no |
+| Localisation | `set_editor_language(locale: String)` | `void` | no |
 
 `compile()`'s Dictionary keys: `"output"` (the source text: this key, not "source"), `"success"`, `"errors"`, `"warnings"`, `"source_map"`. `doctor()`'s: `"findings"` (each `{severity, check, path, message}`), `"errors"`, `"warnings"`, `"infos"`.
 
