@@ -8,7 +8,7 @@ plain GDScript fall out of it. This folder is the guided tour.
 **If you're coming from Construct 3:** events read exactly like home - two-lane rows,
 a searchable picker that understands your vocabulary ("every tick", "go to layout",
 "choose"), behaviors that attach to objects, Wait actions, combo dropdowns, color
-pickers with swatches. **66 behavior packs** ship in the box - the C3 classics (Platformer,
+pickers with swatches. **68 behavior packs** ship in the box - the C3 classics (Platformer,
 8-Direction, Sine with wave types, Orbit ellipses, Bullet, Move To with waypoints,
 Follow with delay mode, **Drag & Drop** (event-driven: Start Drag / Set Drag Point / Drop
 with follow-speed, direction lock, throw and snapping - drivable by the **Virtual Cursor**
@@ -97,6 +97,7 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 | `showcase/menu_starter/` | **Menu Starter** - a complete menu flow on one HUD Kit behavior (zero connected signals) |
 | `showcase/input_rebind/` | **Input Rebind** - a working rebind screen: click Rebind then press ANY key/mouse/gamepad input, live binding labels, gamepad name + vibration test |
 | `showcase/path_chase/` | **Path Chase** - Platformer Pathfinding + Platformer Movement: the red Chaser routes to you through stairs, gaps, and platforms (green line = its live path) |
+| `showcase/draw_lab/` | **Draw Lab** - four Drawing Canvases at work: your live line-of-sight fan (walls carve it), an enemy telegraph cone, a comet ribbon, a persistent paint trail, and target-marker DRAWING PREFABS stamped from one .tres (Space stamps one where you stand) |
 | `themes/` | Nine bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |
 

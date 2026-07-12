@@ -27,6 +27,7 @@ func _init() -> void:
 	all_ok = _build_fps_arena() and all_ok
 	all_ok = _build_input_rebind() and all_ok
 	all_ok = _build_path_chase() and all_ok
+	all_ok = _build_draw_lab() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -1988,3 +1989,195 @@ func _binding_row(label_name: String, label_text: String, button_name: String) -
 	button.text = "Rebind"
 	row.add_child(button)
 	return row
+
+
+# ── Draw Lab (Drawing Canvas feature tour) ──────────────────────────────────
+
+
+const EIGHT_DIRECTION := "res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd"
+const DRAWING_CANVAS := "res://eventsheet_addons/drawing_canvas/drawing_canvas_behavior.gd"
+const DRAWING_PREFAB := "res://eventsheet_addons/drawing_prefab_resource/drawing_prefab_resource.gd"
+
+
+## The Drawing Canvas showcase: four canvases with different jobs on one screen. The Player
+## carries an auto-clear canvas drawing a live LINE OF SIGHT fan the walls carve; an Enemy
+## carries one drawing a rotating attack-telegraph cone; a whole-screen persistent canvas
+## collects a paint trail plus DRAWING PREFABS (a target-marker formation authored as a
+## .tres, stamped with Space); and a center auto-clear canvas runs a ribbon trailing an
+## orbiting comet.
+func _build_draw_lab() -> bool:
+	# The prefab asset: an ordered target-marker formation the sheet stamps around.
+	var prefab: Resource = (load(DRAWING_PREFAB) as GDScript).new()
+	prefab.set("prefab_name", "target_marker")
+	prefab.set("steps", [
+		{"kind": "ring", "x": 0.0, "y": 0.0, "p1": 46.0, "p2": 5.0, "p3": 0.0, "color": "#ffd24d", "texture": ""},
+		{"kind": "ring", "x": 0.0, "y": 0.0, "p1": 18.0, "p2": 3.0, "p3": 0.0, "color": "#ffd24d", "texture": ""},
+		{"kind": "line", "x": -60.0, "y": 0.0, "p1": 60.0, "p2": 0.0, "p3": 3.0, "color": "#ffd24dcc", "texture": ""},
+		{"kind": "line", "x": 0.0, "y": -60.0, "p1": 0.0, "p2": 60.0, "p3": 3.0, "color": "#ffd24dcc", "texture": ""},
+		{"kind": "circle", "x": 40.0, "y": -40.0, "p1": 5.0, "p2": 0.0, "p3": 0.0, "color": "#ff8844", "texture": ""},
+		{"kind": "circle", "x": -40.0, "y": -40.0, "p1": 5.0, "p2": 0.0, "p3": 0.0, "color": "#ff8844", "texture": ""},
+		{"kind": "circle", "x": 40.0, "y": 40.0, "p1": 5.0, "p2": 0.0, "p3": 0.0, "color": "#ff8844", "texture": ""},
+		{"kind": "circle", "x": -40.0, "y": 40.0, "p1": 5.0, "p2": 0.0, "p3": 0.0, "color": "#ff8844", "texture": ""}
+	])
+	DirAccess.make_dir_recursive_absolute("res://demo/showcase/draw_lab")
+	if ResourceSaver.save(prefab, "res://demo/showcase/draw_lab/target_marker.tres") != OK:
+		push_error("[build_examples] draw_lab: could not save target_marker.tres")
+		return false
+
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "DrawLabDemo"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"facing_deg": {"type": "float", "default": 0.0, "exported": false},
+		"comet_angle": {"type": "float", "default": 0.0, "exported": false}
+	}
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Draw Lab[/b] - four Drawing Canvases with different jobs. The Player carries an AUTO-CLEAR canvas redrawing a raycast Line Of Sight fan every tick (the walls carve it); the Enemy carries one redrawing a rotating attack-telegraph cone; the whole-screen PERSISTENT canvas keeps everything drawn on it - the paint trail dripping under the Player and the target-marker DRAWING PREFABS (an ordered shape formation authored as a .tres, replayed by Draw Prefab at any position/scale/rotation - press Space to stamp one where you stand); and the center canvas ribbons the orbiting comet."
+	sheet.events.append(about)
+
+	var on_ready: EventRow = EventRow.new()
+	on_ready.trigger_provider_id = "Core"
+	on_ready.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "\n".join(PackedStringArray([
+		"# Three prefab stampings prove position / scale / rotation reuse of ONE .tres.",
+		"var marker: Resource = load(\"res://demo/showcase/draw_lab/target_marker.tres\")",
+		"$PaintLayer/Paint.draw_prefab(marker, 180.0, 140.0, 1.0, 0.0)",
+		"$PaintLayer/Paint.draw_prefab(marker, 980.0, 500.0, 0.6, 45.0)",
+		"$PaintLayer/Paint.draw_prefab(marker, 180.0, 520.0, 1.4, 15.0)",
+		"$FxLayer/Fx.start_ribbon($Comet, 34, 7.0, Color(0.45, 0.9, 1.0, 0.85))"
+	]))
+	on_ready.actions.append(ready_body)
+	sheet.events.append(on_ready)
+
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnPhysicsProcess"
+	var tick_body: RawCodeRow = RawCodeRow.new()
+	tick_body.code = "\n".join(PackedStringArray([
+		"facing_deg += 40.0 * delta",
+		"comet_angle += 1.4 * delta",
+		"$Comet.position = Vector2(576.0, 324.0) + Vector2.from_angle(comet_angle) * 205.0",
+		"# The live drawings: re-issued every tick, wiped by their AUTO-CLEAR canvases.",
+		"$Player/Vision.draw_line_of_sight($Player.global_position.x, $Player.global_position.y, facing_deg, 80.0, 280.0, 1, Color(1.0, 0.92, 0.45, 0.3))",
+		"$Enemy/Telegraph.draw_canvas_cone($Enemy.global_position.x, $Enemy.global_position.y, -facing_deg * 1.5, 50.0, 170.0, Color(1.0, 0.3, 0.25, 0.4))",
+		"if Input.is_action_just_pressed(\"ui_accept\"):",
+		"\t$PaintLayer/Paint.draw_prefab(load(\"res://demo/showcase/draw_lab/target_marker.tres\"), $Player.global_position.x, $Player.global_position.y, 0.8, facing_deg)"
+	]))
+	tick.actions.append(tick_body)
+	sheet.events.append(tick)
+
+	# The paint trail: a persistent splat under the Player, ten times a second - the
+	# accumulate-until-cleared half of the canvas story.
+	var trail: EventRow = EventRow.new()
+	trail.trigger_provider_id = "Core"
+	trail.trigger_id = "OnProcess"
+	trail.conditions.append(_every("paint", "0.1"))
+	var trail_body: RawCodeRow = RawCodeRow.new()
+	trail_body.code = "$PaintLayer/Paint.draw_canvas_circle($Player.global_position.x, $Player.global_position.y + 12.0, 7.0, Color(0.35, 0.6, 1.0, 0.25))"
+	trail.actions.append(trail_body)
+	sheet.events.append(trail)
+
+	if not _compile(sheet, "res://demo/showcase/draw_lab/draw_lab.tres", "res://demo/showcase/draw_lab/draw_lab.gd"):
+		return false
+	var emitted: String = FileAccess.get_file_as_string("res://demo/showcase/draw_lab/draw_lab.gd")
+	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
+	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
+	var out: FileAccess = FileAccess.open("res://demo/showcase/draw_lab/draw_lab.gd", FileAccess.WRITE)
+	out.store_string(emitted)
+	out.close()
+
+	# ── The scene ──
+	var root: Node2D = Node2D.new()
+	root.name = "DrawLab"
+	root.set_script(load("res://demo/showcase/draw_lab/draw_lab.gd"))
+	var backdrop: ColorRect = ColorRect.new()
+	backdrop.name = "Backdrop"
+	backdrop.color = Color(0.09, 0.1, 0.13)
+	backdrop.size = Vector2(1152.0, 648.0)
+	root.add_child(backdrop)
+	backdrop.owner = root
+
+	# Walls (physics layer 1) that carve the Player line of sight.
+	for wall_spec: Array in [[Vector2(576.0, 110.0), Vector2(300.0, 36.0)], [Vector2(820.0, 330.0), Vector2(36.0, 240.0)], [Vector2(390.0, 470.0), Vector2(220.0, 36.0)]]:
+		var wall: StaticBody2D = StaticBody2D.new()
+		wall.name = "Wall%d" % (root.get_child_count())
+		wall.position = wall_spec[0]
+		wall.collision_layer = 1
+		var wall_shape: CollisionShape2D = CollisionShape2D.new()
+		wall_shape.name = "Shape"
+		var wall_rect: RectangleShape2D = RectangleShape2D.new()
+		wall_rect.size = wall_spec[1]
+		wall_shape.shape = wall_rect
+		wall.add_child(wall_shape)
+		var wall_visual: ColorRect = ColorRect.new()
+		wall_visual.name = "Visual"
+		wall_visual.color = Color(0.4, 0.44, 0.54)
+		wall_visual.position = -(wall_spec[1] as Vector2) / 2.0
+		wall_visual.size = wall_spec[1]
+		wall.add_child(wall_visual)
+		root.add_child(wall)
+		_own_deep(wall, root)
+
+	# The whole-screen persistent paint canvas + the center auto-clear ribbon canvas.
+	var paint_layer: Node2D = Node2D.new()
+	paint_layer.name = "PaintLayer"
+	paint_layer.position = Vector2(576.0, 324.0)
+	root.add_child(paint_layer)
+	paint_layer.owner = root
+	_attach_behavior(paint_layer, "Paint", DRAWING_CANVAS, root, {"canvas_width": 1152, "canvas_height": 648})
+	var fx_layer: Node2D = Node2D.new()
+	fx_layer.name = "FxLayer"
+	fx_layer.position = Vector2(576.0, 324.0)
+	root.add_child(fx_layer)
+	fx_layer.owner = root
+	_attach_behavior(fx_layer, "Fx", DRAWING_CANVAS, root, {"canvas_width": 1152, "canvas_height": 648, "auto_clear": true})
+
+	# The Player: 8-Direction movement + an auto-clear vision canvas.
+	var player: CharacterBody2D = _chase_actor("Player", Vector2(280.0, 320.0), Color(0.35, 0.65, 1.0))
+	root.add_child(player)
+	_own_deep(player, root)
+	_attach_behavior(player, "Movement", EIGHT_DIRECTION, root)
+	_attach_behavior(player, "Vision", DRAWING_CANVAS, root, {"canvas_width": 640, "canvas_height": 640, "auto_clear": true})
+
+	# The Enemy: a static threat with an auto-clear telegraph canvas.
+	var enemy: Node2D = Node2D.new()
+	enemy.name = "Enemy"
+	enemy.position = Vector2(950.0, 170.0)
+	var enemy_visual: ColorRect = ColorRect.new()
+	enemy_visual.name = "Visual"
+	enemy_visual.color = Color(1.0, 0.35, 0.3)
+	enemy_visual.position = Vector2(-13.0, -13.0)
+	enemy_visual.size = Vector2(26.0, 26.0)
+	enemy.add_child(enemy_visual)
+	root.add_child(enemy)
+	_own_deep(enemy, root)
+	_attach_behavior(enemy, "Telegraph", DRAWING_CANVAS, root, {"canvas_width": 420, "canvas_height": 420, "auto_clear": true})
+
+	# The comet the ribbon trails.
+	var comet: Node2D = Node2D.new()
+	comet.name = "Comet"
+	comet.position = Vector2(781.0, 324.0)
+	var comet_visual: ColorRect = ColorRect.new()
+	comet_visual.name = "Visual"
+	comet_visual.color = Color(0.75, 0.95, 1.0)
+	comet_visual.position = Vector2(-7.0, -7.0)
+	comet_visual.size = Vector2(14.0, 14.0)
+	comet.add_child(comet_visual)
+	root.add_child(comet)
+	_own_deep(comet, root)
+
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HudLayer"
+	root.add_child(hud_layer)
+	hud_layer.owner = root
+	var hud: Label = Label.new()
+	hud.name = "Hud"
+	hud.position = Vector2(24.0, 16.0)
+	hud.add_theme_font_size_override("font_size", 18)
+	hud.text = "Arrows move · Space stamps the target-marker PREFAB (a .tres formation) where you stand\nYellow fan = your live line of sight (walls carve it) · red wedge = the enemy telegraph\nCyan ribbon trails the comet · your steps drip paint - persistent vs auto-clear canvases"
+	hud_layer.add_child(hud)
+	hud.owner = root
+
+	return _save_scene(root, "res://demo/showcase/draw_lab/draw_lab.tscn")

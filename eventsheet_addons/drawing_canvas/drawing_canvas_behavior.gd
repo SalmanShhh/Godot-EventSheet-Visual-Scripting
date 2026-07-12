@@ -186,6 +186,45 @@ func draw_line_of_sight(origin_x: float, origin_y: float, facing_deg: float, fov
 		points.append(_to_canvas(end_point))
 	_push_command({"kind": "polygon", "points": points, "color": color})
 
+func draw_prefab(prefab: Resource, x: float, y: float, scale_factor: float, rotation_deg: float) -> void:
+	if prefab == null:
+		return
+	var steps: Variant = prefab.get("steps")
+	if not (steps is Array):
+		return
+	var origin: Vector2 = Vector2(x, y)
+	var spin: float = deg_to_rad(rotation_deg)
+	var scale_by: float = maxf(scale_factor, 0.01)
+	for step: Variant in steps:
+		if not (step is Dictionary):
+			continue
+		var entry: Dictionary = step
+		var at: Vector2 = origin + (Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0))) * scale_by).rotated(spin)
+		var p1: float = float(entry.get("p1", 0.0))
+		var p2: float = float(entry.get("p2", 0.0))
+		var p3: float = float(entry.get("p3", 0.0))
+		var tint: Color = Color.from_string(str(entry.get("color", "white")), Color.WHITE)
+		match str(entry.get("kind", "")):
+			"circle":
+				draw_canvas_circle(at.x, at.y, p1 * scale_by, tint)
+			"ring":
+				draw_canvas_ring(at.x, at.y, p1 * scale_by, maxf(p2 * scale_by, 1.0), tint)
+			"rect":
+				# Rects rotate with the prefab: the four corners transform into a polygon.
+				var corners: PackedVector2Array = PackedVector2Array()
+				for corner: Vector2 in [Vector2.ZERO, Vector2(p1, 0.0), Vector2(p1, p2), Vector2(0.0, p2)]:
+					corners.append(_to_canvas(origin + ((Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0))) + corner) * scale_by).rotated(spin)))
+				_push_command({"kind": "polygon", "points": corners, "color": tint})
+			"line":
+				var to_point: Vector2 = origin + (Vector2(p1, p2) * scale_by).rotated(spin)
+				draw_canvas_line(at.x, at.y, to_point.x, to_point.y, maxf(p3 * scale_by, 1.0), tint)
+			"cone":
+				draw_canvas_cone(at.x, at.y, p1 + rotation_deg, p2, p3 * scale_by, tint)
+			"stamp":
+				var texture_path: String = str(entry.get("texture", "")).strip_edges()
+				if not texture_path.is_empty() and ResourceLoader.exists(texture_path):
+					draw_canvas_stamp(load(texture_path) as Texture2D, at.x, at.y, maxf(p1, 0.01) * scale_by, p2 + rotation_deg)
+
 func start_ribbon(follow: Node, point_count: int, width: float, color: Color) -> void:
 	_ensure_canvas()
 	if _drawer == null or not (follow is Node2D):

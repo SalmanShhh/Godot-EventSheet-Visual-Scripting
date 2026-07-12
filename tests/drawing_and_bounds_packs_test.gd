@@ -55,6 +55,48 @@ static func run() -> bool:
 	all_passed = _check("empty mask reads as No layers", dialog.call("_physics_mask_summary", 0, "2d_physics"), "No layers") and all_passed
 	field.free()
 
+	# ── Rotate: the C3-parity spinner + its editor-preview contract
+	var rotate_script: GDScript = load("res://eventsheet_addons/rotate/rotate_behavior.gd")
+	var rotate: Node = rotate_script.new()
+	for rotate_method: String in ["set_rotation_enabled", "set_rotation_speed", "set_rotation_acceleration", "set_rotation_type", "reverse_rotation", "is_rotating", "rotation_speed"]:
+		all_passed = _check("Rotate has %s" % rotate_method, rotate.has_method(rotate_method), true) and all_passed
+	all_passed = _check("Rotate spins by default", rotate.get("rotate_enabled"), true) and all_passed
+	all_passed = _check("Rotate defaults to 2D", rotate.get("rotation_type"), "2d") and all_passed
+	rotate.free()
+	# The preview static: angle(t) = speed*t + accel*t^2/2, on a 2D float and a 3D axis.
+	var preview_2d: Dictionary = rotate_script.editor_preview_sample({"speed": 90.0, "acceleration": 0.0}, {"rotation": 0.0}, 2.0)
+	all_passed = _check("Rotate preview spins a 2D host (90 deg/s for 2s = PI)", is_equal_approx(float(preview_2d.get("rotation", 0.0)), PI), true) and all_passed
+	var preview_accel: Dictionary = rotate_script.editor_preview_sample({"speed": 0.0, "acceleration": 90.0}, {"rotation": 0.0}, 2.0)
+	all_passed = _check("Rotate preview applies acceleration (accel 90 for 2s = PI)", is_equal_approx(float(preview_accel.get("rotation", 0.0)), PI), true) and all_passed
+	var preview_y: Dictionary = rotate_script.editor_preview_sample({"speed": 90.0, "rotation_type": "y"}, {"rotation": Vector3.ZERO}, 1.0)
+	all_passed = _check("Rotate preview spins a 3D Y axis", is_equal_approx((preview_y.get("rotation", Vector3.ZERO) as Vector3).y, PI / 2.0), true) and all_passed
+	var preview_off: Dictionary = rotate_script.editor_preview_sample({"rotate_enabled": false, "speed": 90.0}, {"rotation": 0.0}, 1.0)
+	all_passed = _check("Rotate preview respects the toggle", preview_off.is_empty(), true) and all_passed
+
+	# ── Wrap: the circular constraint
+	var wrap_circle: Node = (load("res://eventsheet_addons/wrap/wrap_behavior.gd") as GDScript).new()
+	all_passed = _check("Wrap has set_circle_wrap_bounds", wrap_circle.has_method("set_circle_wrap_bounds"), true) and all_passed
+	all_passed = _check("Wrap shape defaults to rect", wrap_circle.get("wrap_shape"), "rect") and all_passed
+	wrap_circle.call("set_circle_wrap_bounds", 100.0, 200.0, 250.0)
+	all_passed = _check("Set Circle Wrap Bounds switches the shape", wrap_circle.get("wrap_shape"), "circle") and all_passed
+	all_passed = _check("Set Circle Wrap Bounds stores the radius", is_equal_approx(float(wrap_circle.get("wrap_circle_radius")), 250.0), true) and all_passed
+	all_passed = _check("circle exits report a side word", wrap_circle.call("_direction_side", Vector2(1.0, 0.2)), "right") and all_passed
+	wrap_circle.free()
+
+	# ── Drawing prefabs: the ordered-steps resource + the canvas verb that replays it
+	var prefab: Resource = (load("res://eventsheet_addons/drawing_prefab_resource/drawing_prefab_resource.gd") as GDScript).new()
+	all_passed = _check("DrawingPrefabResource carries an ordered steps array", prefab.get("steps") is Array, true) and all_passed
+	var canvas_prefab: Node = (load("res://eventsheet_addons/drawing_canvas/drawing_canvas_behavior.gd") as GDScript).new()
+	all_passed = _check("Drawing Canvas has draw_prefab", canvas_prefab.has_method("draw_prefab"), true) and all_passed
+	canvas_prefab.free()
+	# The showcase's bundled prefab asset loads and keeps its step order.
+	var marker: Resource = load("res://demo/showcase/draw_lab/target_marker.tres")
+	all_passed = _check("draw_lab target_marker.tres loads", marker != null, true) and all_passed
+	if marker != null:
+		var steps: Array = marker.get("steps")
+		all_passed = _check("target marker has 8 ordered steps", steps.size(), 8) and all_passed
+		all_passed = _check("target marker draws the outer ring FIRST", str((steps[0] as Dictionary).get("kind", "")), "ring") and all_passed
+
 	# ── The name convention: *_mask params route to the picker with zero ceremony
 	var generator: Variant = (load("res://addons/eventsheet/ace/ace_generator.gd") as GDScript).new()
 	all_passed = _check("collision_mask routes to the 2D picker", generator.call("_convention_hint", "collision_mask"), "physics_layer_2d") and all_passed

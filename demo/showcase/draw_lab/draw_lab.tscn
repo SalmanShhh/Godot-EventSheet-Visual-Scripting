@@ -1,0 +1,141 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/draw_lab/draw_lab.gd" id="1_0ycc5"]
+[ext_resource type="Script" path="res://eventsheet_addons/drawing_canvas/drawing_canvas_behavior.gd" id="2_xoypm"]
+[ext_resource type="Script" path="res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd" id="3_gdwgm"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hpr70"]
+size = Vector2(300, 36)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_in8rm"]
+size = Vector2(36, 240)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xaa73"]
+size = Vector2(220, 36)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_u724k"]
+size = Vector2(22, 28)
+
+[node name="DrawLab" type="Node2D"]
+script = ExtResource("1_0ycc5")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.09, 0.1, 0.13, 1)
+
+[node name="Wall1" type="StaticBody2D" parent="."]
+position = Vector2(576, 110)
+
+[node name="Shape" type="CollisionShape2D" parent="Wall1"]
+shape = SubResource("RectangleShape2D_hpr70")
+
+[node name="Visual" type="ColorRect" parent="Wall1"]
+offset_left = -150.0
+offset_top = -18.0
+offset_right = 150.0
+offset_bottom = 18.0
+color = Color(0.4, 0.44, 0.54, 1)
+
+[node name="Wall2" type="StaticBody2D" parent="."]
+position = Vector2(820, 330)
+
+[node name="Shape" type="CollisionShape2D" parent="Wall2"]
+shape = SubResource("RectangleShape2D_in8rm")
+
+[node name="Visual" type="ColorRect" parent="Wall2"]
+offset_left = -18.0
+offset_top = -120.0
+offset_right = 18.0
+offset_bottom = 120.0
+color = Color(0.4, 0.44, 0.54, 1)
+
+[node name="Wall3" type="StaticBody2D" parent="."]
+position = Vector2(390, 470)
+
+[node name="Shape" type="CollisionShape2D" parent="Wall3"]
+shape = SubResource("RectangleShape2D_xaa73")
+
+[node name="Visual" type="ColorRect" parent="Wall3"]
+offset_left = -110.0
+offset_top = -18.0
+offset_right = 110.0
+offset_bottom = 18.0
+color = Color(0.4, 0.44, 0.54, 1)
+
+[node name="PaintLayer" type="Node2D" parent="."]
+position = Vector2(576, 324)
+
+[node name="Paint" type="Node" parent="PaintLayer"]
+script = ExtResource("2_xoypm")
+canvas_width = 1152
+canvas_height = 648
+
+[node name="FxLayer" type="Node2D" parent="."]
+position = Vector2(576, 324)
+
+[node name="Fx" type="Node" parent="FxLayer"]
+script = ExtResource("2_xoypm")
+canvas_width = 1152
+canvas_height = 648
+auto_clear = true
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(280, 320)
+
+[node name="Collider" type="CollisionShape2D" parent="Player"]
+shape = SubResource("RectangleShape2D_u724k")
+
+[node name="Visual" type="ColorRect" parent="Player"]
+offset_left = -11.0
+offset_top = -14.0
+offset_right = 11.0
+offset_bottom = 14.0
+color = Color(0.35, 0.65, 1, 1)
+
+[node name="Movement" type="Node" parent="Player"]
+script = ExtResource("3_gdwgm")
+
+[node name="Vision" type="Node" parent="Player"]
+script = ExtResource("2_xoypm")
+canvas_width = 640
+canvas_height = 640
+auto_clear = true
+
+[node name="Enemy" type="Node2D" parent="."]
+position = Vector2(950, 170)
+
+[node name="Visual" type="ColorRect" parent="Enemy"]
+offset_left = -13.0
+offset_top = -13.0
+offset_right = 13.0
+offset_bottom = 13.0
+color = Color(1, 0.35, 0.3, 1)
+
+[node name="Telegraph" type="Node" parent="Enemy"]
+script = ExtResource("2_xoypm")
+canvas_width = 420
+canvas_height = 420
+auto_clear = true
+
+[node name="Comet" type="Node2D" parent="."]
+position = Vector2(781, 324)
+
+[node name="Visual" type="ColorRect" parent="Comet"]
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+color = Color(0.75, 0.95, 1, 1)
+
+[node name="HudLayer" type="CanvasLayer" parent="."]
+
+[node name="Hud" type="Label" parent="HudLayer"]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 24.0
+offset_bottom = 16.0
+theme_override_font_sizes/font_size = 18
+text = "Arrows move · Space stamps the target-marker PREFAB (a .tres formation) where you stand
+Yellow fan = your live line of sight (walls carve it) · red wedge = the enemy telegraph
+Cyan ribbon trails the comet · your steps drip paint - persistent vs auto-clear canvases"

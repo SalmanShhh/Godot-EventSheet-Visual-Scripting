@@ -27,7 +27,8 @@ On Wrapped -> Ship | Fade Out: Fade In  0.15   (a soft blink as it re-enters)
 |---|---|---|---|
 | Action | Set Wrap Enabled | `enabled` | On/off at runtime. |
 | Action | Set Wrap Space | `space` (`screen`/`custom`) | What to wrap around. |
-| Action | Set Custom Wrap Bounds | `x`, `y`, `width`, `height` | World-space rect; switches the space to it. |
+| Action | Set Custom Wrap Bounds | `x`, `y`, `width`, `height` | World-space rect; switches the space (and shape) to it. |
+| Action | Set Circle Wrap Bounds | `center_x`, `center_y`, `radius` | A CIRCULAR constraint: fully outside the circle teleports to the antipode - a round arena in one action. |
 | Action | Set Wrap Axes | `horizontal`, `vertical` (bool) | Which edges wrap. |
 | Action | Set Wrap Extents | `new_half_width`, `new_half_height` | Half-size for the fully-outside test. |
 | Trigger | On Wrapped | `side` (`left`/`right`/`top`/`bottom`) | Fired on each teleport, naming the side it LEFT from. |
@@ -36,7 +37,9 @@ On Wrapped -> Ship | Fade Out: Fade In  0.15   (a soft blink as it re-enters)
 
 | Property | Default | What it does |
 |---|---|---|
-| `wrap_space` | `screen` | Camera view or the custom rectangle. |
+| `wrap_space` | `screen` | Camera view or the custom constraint. |
+| `wrap_shape` | `rect` | The custom constraint shape: rectangle edges, or a circle (antipodal wrap). |
+| `wrap_circle_center` / `wrap_circle_radius` | `(576, 324)` / `300` | The circular arena, when the shape is circle. |
 | `wrap_horizontal` / `wrap_vertical` | `true` | Per-axis wrapping. |
 | `half_width` / `half_height` | `16` | Half the sprite - wraps only when fully outside. |
 | `wrap_enabled` | `true` | Master switch. |
@@ -54,7 +57,16 @@ On Ready -> Player | Wrap: Set Custom Wrap Bounds  0, 256, 1152, 64
          -> Player | Wrap: Set Wrap Axes  true, false
 ```
 
-### 3. Score the loop
+### 3. A round arena
+
+```
+On Ready -> Ship | Wrap: Set Circle Wrap Bounds  576, 324, 300
+```
+
+Fly out through any point of the circle and glide back in from the opposite side - the
+antipodal wrap keeps momentum readable. On Wrapped still reports the dominant exit side.
+
+### 4. Score the loop
 
 ```
 On Wrapped
@@ -67,5 +79,6 @@ On Wrapped
   and there is a long invisible gap. Half the sprite is right.
 - **Fast movers still wrap cleanly** - the re-entry point is placed fully outside the
   opposite edge, so a bullet glides in instead of popping mid-screen.
+- **Circle wraps ignore the per-axis toggles** - a circle has no left edge to switch off; the fully-outside test uses the larger half-size.
 - **Bound or Wrap, not both on one axis.** They fight: one clamps at the edge the other
   teleports across.

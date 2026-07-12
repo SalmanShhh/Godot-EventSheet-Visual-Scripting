@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Added - Rotate pack, circular Wrap constraints, drawing prefabs + the Draw Lab showcase (68 packs)
+
+- **Rotate pack**: the C3-parity spinner - Speed (deg/s), Acceleration (deg/s^2), and one
+  Rotation Type knob covering a 2D node's rotation and a 3D node's X / Y / Z axis. Set
+  Rotation Enabled toggles it, Reverse Rotation flips it, and it ships the
+  `editor_preview_sample` contract, so **Tools > Preview Behaviors on Selected Node**
+  animates the spin in the editor at live Inspector values (2D and 3D).
+- **Wrap: circular constraints.** `wrap_shape` (rect/circle) + **Set Circle Wrap Bounds**
+  (center, radius): fully outside the circle teleports to the ANTIPODE, still fully outside,
+  so momentum glides the mover back in - a round arena in one action. On Wrapped reports the
+  dominant exit side; rect behavior unchanged.
+- **DrawingPrefabResource + Draw Prefab**: author a drawing ONCE as a .tres - an ordered
+  grid of shape steps (circle / ring / rect / line / cone / stamp with offsets, per-kind
+  numbers, and colors, edited as an Inspector table) - and the Drawing Canvas's **Draw
+  Prefab** replays the formation at any position, scale, and rotation (rects corner-rotate
+  as polygons, cones and stamps take the prefab's rotation).
+- **Draw Lab showcase** (`demo/showcase/draw_lab/`): four canvases with different jobs on
+  one screen - the Player's live line-of-sight fan (walls carve it), an enemy telegraph
+  cone, a comet ribbon, the persistent paint trail, and target-marker prefabs stamped from
+  one bundled .tres at three scales/rotations (Space stamps one where you stand). Verified
+  live: prefab pixels + trail persistence + ribbon + vision texture asserted on camera.
+
 ### Added - drawing packs, screen-bounds duo, and the collision-mask picker (66 packs)
 
 - **Drawing Canvas pack (2D)**: a texture the sheet draws onto with verbs - lines, circles,

@@ -19,6 +19,13 @@ signal wrapped(side: String)
 # --- Designer knobs (tune in the Inspector) ---
 ## What to wrap around: the camera's on-screen view, or the custom bounds rectangle.
 @export_enum("screen", "custom") var wrap_space: String = "screen"
+## The custom constraint's SHAPE: a rectangle (wrap across opposite edges) or a circle
+## (wrap to the antipode - leave one side of the arena, glide in from the other).
+@export_enum("rect", "circle") var wrap_shape: String = "rect"
+## Circle constraint: the center of the circular arena (world space).
+@export var wrap_circle_center: Vector2 = Vector2(576.0, 324.0)
+## Circle constraint: the arena radius in pixels.
+@export var wrap_circle_radius: float = 300.0
 ## Wrap across the left/right edges.
 @export var wrap_horizontal: bool = true
 ## Wrap across the top/bottom edges.
@@ -47,6 +54,16 @@ func _wrap_rect() -> Rect2:
 
 func _physics_process(delta: float) -> void:
 	if not wrap_enabled or host == null:
+		return
+	# The circular constraint: once fully outside the circle, re-enter at the ANTIPODE
+	# (still fully outside, so momentum glides the host in instead of popping it).
+	if wrap_shape == "circle" and wrap_space == "custom":
+		var offset: Vector2 = host.global_position - wrap_circle_center
+		var pad: float = maxf(half_width, half_height)
+		if offset.length() - pad > wrap_circle_radius:
+			var direction: Vector2 = offset.normalized()
+			host.global_position = wrap_circle_center - direction * (wrap_circle_radius + pad)
+			wrapped.emit(_direction_side(direction))
 		return
 	var rect: Rect2 = _wrap_rect()
 	var pos: Vector2 = host.global_position
@@ -88,6 +105,7 @@ func set_wrap_enabled(enabled: bool) -> void:
 ## @ace_codegen_template("$WrapBehavior.set_custom_wrap_bounds({x}, {y}, {width}, {height})")
 func set_custom_wrap_bounds(x: float, y: float, width: float, height: float) -> void:
 	custom_bounds = Rect2(x, y, width, height)
+	wrap_shape = "rect"
 	wrap_space = "custom"
 
 ## @ace_action
@@ -113,5 +131,16 @@ func set_wrap_extents(new_half_width: float, new_half_height: float) -> void:
 func set_wrap_space(space: String) -> void:
 	if space in ["screen", "custom"]:
 		wrap_space = space
+
+func set_circle_wrap_bounds(center_x: float, center_y: float, radius: float) -> void:
+	wrap_circle_center = Vector2(center_x, center_y)
+	wrap_circle_radius = maxf(radius, 1.0)
+	wrap_shape = "circle"
+	wrap_space = "custom"
+
+func _direction_side(direction: Vector2) -> String:
+	if absf(direction.x) >= absf(direction.y):
+		return "right" if direction.x >= 0.0 else "left"
+	return "bottom" if direction.y >= 0.0 else "top"
 
 # Wrap behavior (event-sheet parity): once the host is FULLY outside an edge of the SCREEN (the camera's view) or a CUSTOM rectangle, it teleports to the opposite edge - Asteroids in one attach. Per-axis toggles; On Wrapped tells you which side it left. This pack is an event sheet - extend it by editing it.

@@ -52,6 +52,7 @@ Every tick     -> Player | Drawing Canvas: Draw Line Of Sight
 | Draw Cone | `x`, `y`, `facing_deg`, `fov_deg`, `radius`, `color` | Filled wedge - the attack telegraph. |
 | Draw Stamp | `texture`, `x`, `y`, `scale_factor`, `rotation_deg` | Stamps a texture - bullet holes, footprints. |
 | Draw Line Of Sight | `origin_x`, `origin_y`, `facing_deg`, `fov_deg`, `max_range`, `collision_mask`, `color` | Raycast fan against the mask, filled - vision cones that hug the level. The mask param opens the layer PICKER (named project layers as checkboxes). |
+| Draw Prefab | `prefab` (Resource), `x`, `y`, `scale_factor`, `rotation_deg` | Replays a DrawingPrefabResource's steps IN ORDER at a position, scaled and rotated - reusable formations from a .tres. |
 | Start Ribbon | `follow` (Node), `point_count`, `width`, `color` | A trail following a node (last N frames of history). |
 | Set Ribbon Texture | `follow`, `texture` | Skins a running ribbon, stretched along its length. |
 | Stop Ribbon | `follow` | Ends that node's ribbon. |
@@ -109,7 +110,23 @@ Persistent canvas + a ribbon per wheel while drifting (`Start Ribbon` on On Drif
 `Stop Ribbon` on On Drift Recovered - the Car pack provides both triggers). In persistent
 mode the ribbon smears onto the texture as it moves: instant tire marks.
 
-### 5. Draw onto the 3D world
+### 5. Drawing prefabs - author once, stamp everywhere
+
+Create a **DrawingPrefabResource** (.tres), fill its ordered steps grid in the Inspector -
+kind (circle / ring / rect / line / cone / stamp), an x/y offset, per-kind p1/p2/p3 numbers,
+and a color - and replay it anywhere:
+
+```
+On Ready       -> Level | Drawing Canvas: Draw Prefab  preload("res://fx/target_marker.tres"), 400, 300, 1.0, 0
+On Spell Cast  -> Level | Drawing Canvas: Draw Prefab  preload("res://fx/target_marker.tres"), cast_x, cast_y, 0.8, cast_angle
+```
+
+Steps draw top to bottom (the formation is ordered), and the whole prefab translates,
+scales, and rotates as one - rings-and-crosshair markers, explosion scorches, magic circles,
+minimap icons. The Draw Lab showcase stamps one .tres at three scales plus wherever you
+press Space.
+
+### 6. Draw onto the 3D world
 
 Draw a target ring on the canvas, then `Spawn Canvas Decal` from the **Decal Painter** pack
 projects the live texture onto your 3D floor - the 2D verbs become 3D ground markings.

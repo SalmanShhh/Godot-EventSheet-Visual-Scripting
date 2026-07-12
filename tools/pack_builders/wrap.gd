@@ -22,6 +22,13 @@ static func build() -> bool:
 		"# --- Designer knobs (tune in the Inspector) ---",
 		"## What to wrap around: the camera's on-screen view, or the custom bounds rectangle.",
 		"@export_enum(\"screen\", \"custom\") var wrap_space: String = \"screen\"",
+		"## The custom constraint's SHAPE: a rectangle (wrap across opposite edges) or a circle",
+		"## (wrap to the antipode - leave one side of the arena, glide in from the other).",
+		"@export_enum(\"rect\", \"circle\") var wrap_shape: String = \"rect\"",
+		"## Circle constraint: the center of the circular arena (world space).",
+		"@export var wrap_circle_center: Vector2 = Vector2(576.0, 324.0)",
+		"## Circle constraint: the arena radius in pixels.",
+		"@export var wrap_circle_radius: float = 300.0",
 		"## Wrap across the left/right edges.",
 		"@export var wrap_horizontal: bool = true",
 		"## Wrap across the top/bottom edges.",
@@ -59,7 +66,25 @@ static func build() -> bool:
 		"## @ace_param_options(space screen, custom)",
 		"func set_wrap_space(space: String) -> void:",
 		"\tif space in [\"screen\", \"custom\"]:",
-		"\t\twrap_space = space"
+		"\t\twrap_space = space",
+		"",
+		"## Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it:",
+		"## fully outside the circle teleports to the antipode - a round arena in one action.",
+		"## @ace_action",
+		"## @ace_name(\"Set Circle Wrap Bounds\")",
+		"func set_circle_wrap_bounds(center_x: float, center_y: float, radius: float) -> void:",
+		"\twrap_circle_center = Vector2(center_x, center_y)",
+		"\twrap_circle_radius = maxf(radius, 1.0)",
+		"\twrap_shape = \"circle\"",
+		"\twrap_space = \"custom\"",
+		"",
+		"## The dominant exit direction as a side word - so circle wraps report through the",
+		"## same On Wrapped vocabulary the rect edges use.",
+		"## @ace_hidden",
+		"func _direction_side(direction: Vector2) -> String:",
+		"\tif absf(direction.x) >= absf(direction.y):",
+		"\t\treturn \"right\" if direction.x >= 0.0 else \"left\"",
+		"\treturn \"bottom\" if direction.y >= 0.0 else \"top\""
 	]))
 	sheet.events.append(block)
 	var tick: EventRow = EventRow.new()
@@ -68,6 +93,16 @@ static func build() -> bool:
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
 		"if not wrap_enabled or host == null:",
+		"\treturn",
+		"# The circular constraint: once fully outside the circle, re-enter at the ANTIPODE",
+		"# (still fully outside, so momentum glides the host in instead of popping it).",
+		"if wrap_shape == \"circle\" and wrap_space == \"custom\":",
+		"\tvar offset: Vector2 = host.global_position - wrap_circle_center",
+		"\tvar pad: float = maxf(half_width, half_height)",
+		"\tif offset.length() - pad > wrap_circle_radius:",
+		"\t\tvar direction: Vector2 = offset.normalized()",
+		"\t\thost.global_position = wrap_circle_center - direction * (wrap_circle_radius + pad)",
+		"\t\twrapped.emit(_direction_side(direction))",
 		"\treturn",
 		"var rect: Rect2 = _wrap_rect()",
 		"var pos: Vector2 = host.global_position",
@@ -102,7 +137,7 @@ static func build() -> bool:
 	Lib.append_function(sheet, "set_custom_wrap_bounds", "Set Custom Wrap Bounds", "Wrap",
 		"Sets the custom rectangle (world-space pixels) and switches wrapping to it - your arena's edges.",
 		[["x", "float"], ["y", "float"], ["width", "float"], ["height", "float"]],
-		"custom_bounds = Rect2(x, y, width, height)\nwrap_space = \"custom\"")
+		"custom_bounds = Rect2(x, y, width, height)\nwrap_shape = \"rect\"\nwrap_space = \"custom\"")
 	Lib.append_function(sheet, "set_wrap_axes", "Set Wrap Axes", "Wrap",
 		"Chooses which axes wrap (horizontal: left/right edges, vertical: top/bottom).",
 		[["horizontal", "bool"], ["vertical", "bool"]],

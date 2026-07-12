@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="DrawingPrefabResource" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/drawing_prefab_resource/drawing_prefab_resource.gd" id="1_b7dc0"]
+
+[resource]
+script = ExtResource("1_b7dc0")
+prefab_name = "target_marker"
+steps = [{
+"color": "#ffd24d",
+"kind": "ring",
+"p1": 46.0,
+"p2": 5.0,
+"p3": 0.0,
+"texture": "",
+"x": 0.0,
+"y": 0.0
+}, {
+"color": "#ffd24d",
+"kind": "ring",
+"p1": 18.0,
+"p2": 3.0,
+"p3": 0.0,
+"texture": "",
+"x": 0.0,
+"y": 0.0
+}, {
+"color": "#ffd24dcc",
+"kind": "line",
+"p1": 60.0,
+"p2": 0.0,
+"p3": 3.0,
+"texture": "",
+"x": -60.0,
+"y": 0.0
+}, {
+"color": "#ffd24dcc",
+"kind": "line",
+"p1": 0.0,
+"p2": 60.0,
+"p3": 3.0,
+"texture": "",
+"x": 0.0,
+"y": -60.0
+}, {
+"color": "#ff8844",
+"kind": "circle",
+"p1": 5.0,
+"p2": 0.0,
+"p3": 0.0,
+"texture": "",
+"x": 40.0,
+"y": -40.0
+}, {
+"color": "#ff8844",
+"kind": "circle",
+"p1": 5.0,
+"p2": 0.0,
+"p3": 0.0,
+"texture": "",
+"x": -40.0,
+"y": -40.0
+}, {
+"color": "#ff8844",
+"kind": "circle",
+"p1": 5.0,
+"p2": 0.0,
+"p3": 0.0,
+"texture": "",
+"x": 40.0,
+"y": 40.0
+}, {
+"color": "#ff8844",
+"kind": "circle",
+"p1": 5.0,
+"p2": 0.0,
+"p3": 0.0,
+"texture": "",
+"x": -40.0,
+"y": 40.0
+}]
