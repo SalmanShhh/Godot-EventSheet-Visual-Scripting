@@ -444,6 +444,12 @@ func _convention_hint(argument_name: String) -> String:
 		return "scene_path"
 	if argument_name == "audio_path" or argument_name.ends_with("_audio"):
 		return "audio_path"
+	# Physics-layer masks get the checkable layer picker (named layers by name) - plain
+	# "mask" is deliberately NOT matched: some ACEs use it for a single layer NUMBER.
+	if argument_name == "collision_mask_3d" or argument_name.ends_with("_mask_3d"):
+		return "physics_layer_3d"
+	if argument_name == "collision_mask" or argument_name.ends_with("_mask"):
+		return "physics_layer_2d"
 	return ""
 
 

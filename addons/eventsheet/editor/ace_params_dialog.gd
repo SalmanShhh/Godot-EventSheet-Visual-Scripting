@@ -249,6 +249,8 @@ func _ensure_hint_factories() -> void:
 			"animation_reference": _create_animation_field,
 			"method_reference": _create_method_reference_field,
 			"property_reference": _create_property_reference_field,
+			"physics_layer_2d": _create_physics_layer_2d_field,
+			"physics_layer_3d": _create_physics_layer_3d_field,
 		}
 
 
@@ -467,6 +469,61 @@ static func input_action_choices() -> Array:
 		if not choices.has(quoted):
 			choices.append(quoted)
 	return choices
+
+
+func _create_physics_layer_2d_field(key: String, default_value: Variant) -> Control:
+	return _create_physics_layer_field(key, default_value, "2d_physics")
+
+
+func _create_physics_layer_3d_field(key: String, default_value: Variant) -> Control:
+	return _create_physics_layer_field(key, default_value, "3d_physics")
+
+
+## The collision-mask picker: a checkable list of the project's physics layers - NAMED layers
+## show their Project Settings names, so a beginner ticks "Walls" instead of computing the
+## bitmask integer. The button label reads the selection back ("Walls, Enemies"); the value
+## submitted is the plain mask int the ACE expects. Layers past 8 only list once the project
+## names them - 32 anonymous checkboxes would bury the ones that matter.
+func _create_physics_layer_field(key: String, default_value: Variant, dimension: String) -> Control:
+	var button: MenuButton = MenuButton.new()
+	button.flat = false
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var default_text: String = str(default_value).strip_edges()
+	var mask: int = default_text.to_int() if default_text.is_valid_int() else 1
+	button.set_meta("physics_mask", mask)
+	var popup: PopupMenu = button.get_popup()
+	popup.hide_on_checkable_item_selection = false
+	for layer_index: int in 32:
+		var layer_name: String = str(ProjectSettings.get_setting("layer_names/%s/layer_%d" % [dimension, layer_index + 1], "")).strip_edges()
+		if layer_index >= 8 and layer_name.is_empty() and not ((mask >> layer_index) & 1):
+			continue
+		var label: String = ("Layer %d" % (layer_index + 1)) if layer_name.is_empty() else ("%d  %s" % [layer_index + 1, layer_name])
+		popup.add_check_item(label, layer_index)
+		popup.set_item_checked(popup.item_count - 1, bool((mask >> layer_index) & 1))
+	popup.index_pressed.connect(func(index: int) -> void:
+		popup.set_item_checked(index, not popup.is_item_checked(index))
+		var value: int = 0
+		for item_index: int in popup.item_count:
+			if popup.is_item_checked(item_index):
+				value |= 1 << popup.get_item_id(item_index)
+		button.set_meta("physics_mask", value)
+		button.text = _physics_mask_summary(value, dimension))
+	button.text = _physics_mask_summary(mask, dimension)
+	_fields[key] = button
+	return button
+
+
+## Human-readable readback of a mask: named layers by name, anonymous ones by number.
+func _physics_mask_summary(mask: int, dimension: String) -> String:
+	if mask == 0:
+		return "No layers"
+	var parts: PackedStringArray = PackedStringArray()
+	for layer_index: int in 32:
+		if (mask >> layer_index) & 1:
+			var layer_name: String = str(ProjectSettings.get_setting("layer_names/%s/layer_%d" % [dimension, layer_index + 1], "")).strip_edges()
+			parts.append(layer_name if not layer_name.is_empty() else str(layer_index + 1))
+	var summary: String = ", ".join(parts)
+	return summary if summary.length() <= 42 else summary.left(39) + "..."
 
 
 ## hint may carry a required base type ("variable_reference:Array") - the dropdown then
@@ -1467,6 +1524,8 @@ func _create_vector_field(key: String, parts: PackedStringArray) -> Control:
 func _extract_value(field: Control) -> Variant:
 	if field is CheckBox:
 		return (field as CheckBox).button_pressed
+	if field is MenuButton and field.has_meta("physics_mask"):
+		return int(field.get_meta("physics_mask"))
 	if field.has_meta("vector_axis_edits"):
 		var axis_values: PackedStringArray = PackedStringArray()
 		for axis_edit: Variant in (field.get_meta("vector_axis_edits") as Array):

@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Added - drawing packs, screen-bounds duo, and the collision-mask picker (66 packs)
+
+- **Drawing Canvas pack (2D)**: a texture the sheet draws onto with verbs - lines, circles,
+  rings, rects, cones, texture stamps, textured ribbons (Line2D-backed: round caps, skinnable),
+  and a raycast **Draw Line Of Sight** fan that hugs your walls. Two modes on one knob:
+  persistent (strokes bake onto the render target until Clear Canvas - paint, splats, skid
+  marks) and auto-clear (redrawn every frame - attack telegraphs, vision cones). **Canvas
+  Texture** exposes the live texture for materials, UI, particles, or a 3D Decal. World or
+  raw-canvas coordinates; optional on-host display sprite.
+- **Decal Painter pack (3D)**: sheet-driven Decal nodes - **Spawn Decal** (lifetime fade +
+  a max-decals FIFO cap), **Spawn Blob Shadow** (a generated radial shadow ground-snapped
+  under any node by raycast against your floor mask), and **Spawn Canvas Decal**, which
+  projects a 2D Drawing Canvas's LIVE texture onto the 3D world - draw in 2D, mark the floor
+  in 3D. All verified live (blob tracks a circling ball at floor height; expired splats free).
+- **Bound To pack**: keeps the host inside the SCREEN (the camera's live view) or a custom
+  rectangle, by edge or origin - with an edge-triggered **On Hit Bound** (side) and an
+  **Is At Bound** condition. C3-parity "bound to layout".
+- **Wrap pack**: Asteroids-style wrapping - fully outside one edge teleports to the opposite
+  edge, per axis, screen or custom rect, firing **On Wrapped** (side).
+- **The collision-mask picker**: params dialog fields hinted `physics_layer_2d` /
+  `physics_layer_3d` become a checkable list of the project's physics layers - NAMED layers
+  (Project Settings > Layer Names) show their names and the button reads the selection back
+  ("World, Walls, Enemies") while submitting the plain mask int. Params named
+  `collision_mask` / `*_mask` (2D) or `*_mask_3d` (3D) get the picker BY CONVENTION - zero
+  annotation; plain `mask` stays untouched (some ACEs use it for a layer number). First
+  consumers: Draw Line Of Sight + Spawn Blob Shadow.
+- Guides for all four packs in `docs/Addons/` + the hint documented in the custom-ACE guides.
+
 ### Added - the player-or-AI input seam on every input-reading pack
 
 - **The universal AI drive seam now covers ALL input-reading behavior packs.** Car

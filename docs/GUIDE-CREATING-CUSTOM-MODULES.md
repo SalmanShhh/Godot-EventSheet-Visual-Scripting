@@ -125,6 +125,9 @@ The `hint` picks the field's editor:
 - `"property_reference"` / `"method_reference"` / `"signal_reference"` - name pickers for a node's members.
 - `"scene_path"` - a `.tscn` path picker.
 - `"key_capture"` - press-a-key to capture a keycode.
+- `"physics_layer_2d"` / `"physics_layer_3d"` - a checkable list of the project's named physics
+  layers producing the mask int (params named `collision_mask` / `*_mask` / `*_mask_3d` get it
+  by convention - beginners tick "Walls" instead of computing a bitmask).
 - `"input_action"` - an editable picker of the project's Input Map actions, enumerated LIVE when
   the dialog opens (the project's own actions first, the everyday `ui_*` built-ins after). Use it
   on any parameter that names an existing action.

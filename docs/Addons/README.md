@@ -44,6 +44,8 @@ Attach to a node to move it.
 - [Car](Car.md) - arcade car steering (turn-and-drive), no physics body needed.
 - [Tile Movement](Tile-Movement.md) - grid-locked stepping, one tile per press.
 - [Slide Movement](Slide-Movement.md) - grid movement where a tap slides you until you hit a wall.
+- [Bound To](Bound-To.md) - keep anything inside the screen or a custom area (with On Hit Bound).
+- [Wrap](Wrap.md) - Asteroids-style screen wrapping, per axis.
 - [Move To](Move-To.md) - move a node to a point or along a path.
 - [Follow](Follow.md) - chase or trail another node with easing.
 - [Bullet](Bullet.md) - fire a node in a straight line at a speed and angle.
@@ -89,6 +91,8 @@ Attach to a node to move it.
 - [Dialogue Kit](Dialogue-Kit.md) - typewriter conversations with named UI.
 - [Virtual Cursor](Virtual-Cursor.md) - a gamepad-driven pointer for controller UI.
 - [Drag And Drop](Drag-And-Drop.md) - make a node draggable, with drop targets.
+- [Drawing Canvas](Drawing-Canvas.md) - draw shapes, ribbons, and raycast line-of-sight fans onto a live texture (persistent paint or per-frame telegraphs).
+- [Decal Painter](Decal-Painter.md) - 3D blob shadows, splats with lifetimes, and 2D-canvas textures projected onto the world.
 
 ## Timing and performance
 
