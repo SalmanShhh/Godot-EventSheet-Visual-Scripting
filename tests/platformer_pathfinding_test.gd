@@ -76,6 +76,33 @@ static func run() -> bool:
 	behavior.clear_portals()
 	all_passed = _check("Clear Portals removes the link", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "") and all_passed
 
+	# ── Ledge restriction (P2): walk-only routing, drops gated by leniency ─────────
+	behavior.set("ledge_restriction", true)
+	all_passed = _check("restricted: the gap route is gone (jumps blocked)", behavior._astar(Vector2i(0, 4), Vector2i(15, 4)).is_empty(), true) and all_passed
+	all_passed = _check("restricted: walking the same platform still routes", behavior._astar(Vector2i(0, 4), Vector2i(7, 4)).is_empty(), false) and all_passed
+	all_passed = _check("restricted + leniency 0: the platform drop is blocked", behavior._astar(Vector2i(13, 2), Vector2i(10, 4)).is_empty(), true) and all_passed
+	behavior.set("ledge_leniency", 70.0)
+	all_passed = _check("restricted + 70px leniency: the 64px drop is allowed", behavior._astar(Vector2i(13, 2), Vector2i(10, 4)).is_empty(), false) and all_passed
+	behavior.set("ledge_restriction", false)
+	behavior.set("ledge_leniency", 0.0)
+
+	# ── The shared path budget (P2): over-budget requests defer, never crash ──────
+	behavior.set_max_paths_per_tick(0)
+	behavior.find_path_to(100.0, 100.0, "nearest")
+	all_passed = _check("over budget: the request defers (Is Path Pending)", behavior.is_path_pending(), true) and all_passed
+	all_passed = _check("over budget: no path was computed", behavior.has_path(), false) and all_passed
+	behavior.stop_pathfinding()
+	all_passed = _check("Stop Pathfinding clears the pending request", behavior.is_path_pending(), false) and all_passed
+	behavior.set_max_paths_per_tick(8)
+
+	# ── The P2 surface exists ──────────────────────────────────────────────────────
+	for p2_method: String in ["set_ledge_restriction", "set_ledge_leniency", "set_jump_positioning", "set_coyote_time", "set_repath_interval", "set_repath_threshold", "set_max_paths_per_tick", "is_path_pending"]:
+		all_passed = _check("P2 method %s exists" % p2_method, behavior.has_method(p2_method), true) and all_passed
+	for p2_signal: String in ["waypoint_stuck", "repathed"]:
+		all_passed = _check("P2 trigger %s exists" % p2_signal, behavior.has_signal(p2_signal), true) and all_passed
+	for p2_knob: String in ["jump_positioning", "coyote_time", "repath_interval", "repath_threshold", "stuck_timeout"]:
+		all_passed = _check("P2 knob %s exists" % p2_knob, behavior.get(p2_knob) != null, true) and all_passed
+
 	# ── The universal AI drive seam: every input-reading movement pack carries it ─
 	all_passed = _check("variable jump ships on (toggleable)", behavior.get("variable_jump"), true) and all_passed
 	all_passed = _check("the fallback driver knobs exist", behavior.get("fallback_move_speed") != null and behavior.get("fallback_jump_velocity") != null and behavior.get("fallback_gravity") != null, true) and all_passed

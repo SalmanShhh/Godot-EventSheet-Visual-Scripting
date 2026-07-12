@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added - pathfinding P2: patrol discipline, chase freshness, the watchdog, and the budget
+
+- **Ledge Restriction + Ledge Leniency**: walk-only routing for patrollers - no jumps, no
+  portals, and drops only within the leniency, so a guard never chases you off its rooftop.
+- **Jump Positioning** (`relaxed`/`strict`): relaxed leaps the moment a jump leg starts (the
+  old behavior, still the default); strict walks onto the exact takeoff spot first for tight
+  arcs.
+- **Coyote Time for AI jumps**: a frame-late takeoff (the agent just ran off the ledge) still
+  fires, instead of turning into a fall.
+- **Find Path To Node now FOLLOWS**: one call chases forever - the route auto-refreshes every
+  Repath Interval once the target has moved Repath Threshold pixels, firing **On Repath**. Stop
+  Pathfinding ends the follow.
+- **The stuck watchdog**: no waypoint progress for Stuck Timeout fires **On Waypoint Stuck**
+  and re-routes the agent from wherever it actually is - knocked-back agents self-recover.
+- **The shared path budget**: **Set Max Paths Per Tick** caps route computations per physics
+  tick ACROSS every agent (default 8); extra requests defer a tick (**Is Path Pending**
+  condition) instead of spiking a frame - twenty chasers repath in waves.
+- Calling Find Path To before the graph exists now push_warnings with the fix (build the graph
+  On Ready) instead of failing silently.
+
 ### Added - Nav Agent 3D (62nd pack): navmesh pathfinding, sheet-shaped
 
 - **Nav Agent 3D** completes the pathfinding pair (spec P3): a thin, zero-wiring wrapper over

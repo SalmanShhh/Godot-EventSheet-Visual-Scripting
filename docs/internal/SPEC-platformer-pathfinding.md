@@ -9,12 +9,16 @@ trio, waypoint expressions, path debug line, and the `demo/showcase/path_chase/`
 **P3 SHIPPED** (`nav_agent_3d`: the auto-inserted NavigationAgent3D wrapper with 2D verb
 symmetry, the universal-AI-seam drive of FPSController or a built-in body mover, avoidance,
 runtime Bake Navigation Region, and the FPS Arena stalker). **Portals shipped early** (pulled
-forward from P4 into the 2D pack). P2 (discipline: ledge restriction, jump positioning, repath
-knobs, stuck watchdog, budget, Doctor checks) and the REST of P4 (hazards, moving platforms)
-remain as phased below. P1
-simplifications vs this spec: the graph lives per agent (no shared autoload yet), slope
-classification is the generic one-step-up/down walk rule (full physics-polygon classification
-lands with P2), and debug draw shows the active path (not the whole graph).
+forward from P4 into the 2D pack). **P2 SHIPPED** (ledge restriction + leniency as an A* edge
+filter, strict/relaxed jump positioning, AI coyote time, follow-mode repath interval/threshold
+with On Repath, the stuck watchdog with On Waypoint Stuck, and the shared Max Paths Per Tick
+budget via class statics with Is Path Pending; the "graph built before find path" check ships
+as a runtime warning rather than an editor Doctor check, and jump positioning is a global knob
+rather than per-path). Only the REST of P4 (hazards, moving platforms) remains phased below. P1
+simplifications vs this spec that still stand: the graph lives per agent (no shared autoload;
+the shared BUDGET ships via class statics instead), slope classification is the generic
+one-step-up/down walk rule (slope-shaped tiles walk fine through it; the full physics-polygon
+classifier remains future work), and debug draw shows the active path (not the whole graph).
 
 ## Goals
 

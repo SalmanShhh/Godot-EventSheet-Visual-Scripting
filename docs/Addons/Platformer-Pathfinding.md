@@ -103,7 +103,12 @@ they are placed on.
 | Regenerate Nav Graph | (none) | Rebuilds from the same tilemap after runtime tile edits. |
 | Find Path To | `x`, `y` (float), `mode` (`nearest`/`reach`) | Routes to a world position and starts moving. `reach` fails when the spot is unreachable; `nearest` goes to the closest reachable node instead. Fires On Path Found / On Path Failed. |
 | Find Path To Node | `target` (Node), `mode` | Find Path To with the position read for you - re-call on a timer to chase. |
-| Stop Pathfinding | (none) | Clears the path and hands the movement pack back to the keyboard. |
+| Stop Pathfinding | (none) | Clears the path (and any follow) and hands the movement pack back to the keyboard. |
+| Set Ledge Restriction / Set Ledge Leniency | `enabled` (bool) / `pixels` (float) | Patrol discipline: walk-only routing - no jumps, no portals, drops only within the leniency. The patroller stays on its platform. |
+| Set Jump Positioning | `mode` (`relaxed`/`strict`) | relaxed: leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first (tight arcs). |
+| Set Coyote Time | `seconds` (float) | Grace window for AI jumps a frame after running off the takeoff ledge. |
+| Set Repath Interval / Set Repath Threshold | `seconds` / `pixels` (float) | Follow-mode freshness: how often the route may refresh, and how far the followed node must move first. |
+| Set Max Paths Per Tick | `count` (int) | The SHARED budget across all agents: extra route requests defer a tick (Is Path Pending) instead of spiking the frame. |
 | Add Portal | `from_x`, `from_y`, `to_x`, `to_y` (float), `bidirectional` (bool) | Links two world positions: routes through it walk to the entrance and BLINK to the exit (On Portal Taken). Survives Regenerate. |
 | Clear Portals | (none) | Removes every registered portal. |
 | Set Auto Control | `enabled` (bool) | On (default): drive the sibling movement pack. Off: paths compute, you drive. |
@@ -115,6 +120,7 @@ they are placed on.
 |---|---|---|
 | Condition | Has Path | An active path exists. |
 | Condition | Path Wants Jump | The drive wants a jump right now (jump arc, or a step-assist hop) - the manual-mode jump signal. |
+| Condition | Is Path Pending | This agent's route request is queued for a later tick (the shared budget was spent). |
 | Expression | Path Move Axis | The current steering, -1..1 - feed it to your own driver in manual mode. |
 | Expression | Current Waypoint X / Y | The waypoint being moved toward, in world pixels. |
 | Expression | Waypoint Count / Current Waypoint Index | Path length and progress. |
@@ -123,6 +129,8 @@ they are placed on.
 | Trigger | On Waypoint Reached | Each waypoint passed. |
 | Trigger | On Nav Graph Built | The scan finished. |
 | Trigger | On Portal Taken | The agent just blinked through a portal. |
+| Trigger | On Waypoint Stuck | No progress toward the waypoint for Stuck Timeout - it re-routes itself and tells you. |
+| Trigger | On Repath | The route refreshed (a follow update or a stuck recovery). |
 
 ### Inspector properties
 
@@ -136,6 +144,11 @@ they are placed on.
 | `debug_draw` | `false` | Draw the active path. |
 | `variable_jump` | `true` | Release each jump at the height its arc needs (smoother hops). Off = full-height jumps always. |
 | `fallback_move_speed` / `fallback_jump_velocity` / `fallback_gravity` | `200 / -400 / 980` | The built-in driver used when no movement sibling exists (also sizes arcs then). |
+| `ledge_restriction` / `ledge_leniency` | `false` / `0.0` | Walk-only routing; drops allowed up to the leniency (px). |
+| `jump_positioning` | `relaxed` | relaxed leaps at leg start; strict walks onto the takeoff spot first. |
+| `coyote_time` | `0.12` | AI jump grace after leaving the takeoff ledge (s). |
+| `repath_interval` / `repath_threshold` | `0.5` / `24.0` | Follow-mode refresh rate and the movement needed to trigger it. |
+| `stuck_timeout` | `1.5` | No waypoint progress for this long fires On Waypoint Stuck + a self re-route. |
 
 ## Use cases
 
@@ -152,6 +165,8 @@ Every 1 seconds  -> Enemy | Pathfinding: Find Path To Node  $Player, "nearest"
 ### 2. A patrol between posts
 
 Walk to post B, then back to post A, forever - On Path Complete is the turnaround signal.
+Add `Set Ledge Restriction true` on ready and the guard NEVER leaves its platform - no chasing
+the player off a rooftop.
 
 ```
 On Ready           -> Guard | Pathfinding: Find Path To  1200, 400, "reach"
@@ -220,8 +235,15 @@ On Wall Destroyed
   pack executes under real physics. If an agent misses a jump the router thought possible,
   lower the overrides slightly or widen the gap's platforms - the derivation already applies a
   10% safety margin.
-- **Re-route on a timer, not every tick.** Chasing re-plans the whole path; once a second reads
-  as relentless and costs nothing. Every tick is wasted work and mid-air flip-flopping.
+- **One Find Path To Node call chases forever.** It follows the node: the route auto-refreshes
+  every Repath Interval once the target has moved Repath Threshold pixels. You do not need a
+  timer row (though re-calling on one is harmless - each call just resets the follow).
+- **Twenty chasers? Set the budget.** Route computations are capped at Max Paths Per Tick
+  ACROSS all agents (default 8); extra requests defer a tick (Is Path Pending) instead of
+  spiking a frame. Crowds repath in waves for free.
+- **The watchdog has your back.** An agent making no waypoint progress for Stuck Timeout fires
+  On Waypoint Stuck and re-routes itself from where it actually is - a knocked-back or
+  blocked-in agent recovers without a single sheet row.
 - **`nearest` for chasing, `reach` for scripted moves.** A chaser should get as close as it
   can; a cutscene walk-to-mark should fail loudly if the mark is unreachable.
 - **Tune with the debug line on.** Set Nav Debug Draw during development; the green line shows

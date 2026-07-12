@@ -17,6 +17,12 @@ func _enter_tree() -> void:
 ## @ace_name("On Portal Taken")
 signal portal_taken
 ## @ace_trigger
+## @ace_name("On Waypoint Stuck")
+signal waypoint_stuck
+## @ace_trigger
+## @ace_name("On Repath")
+signal repathed
+## @ace_trigger
 ## @ace_name("On Path Found")
 signal path_found
 ## @ace_trigger
@@ -36,6 +42,8 @@ signal nav_graph_built
 @export var arrive_distance: float = 10.0
 ## Drive the sibling PlatformerMovement automatically. Off = paths still compute; read Path Move Axis / Path Wants Jump and steer yourself.
 @export var auto_control: bool = true
+## Grace window (s) for AI jumps just after running off the takeoff ledge - a frame-late jump still fires.
+@export var coyote_time: float = 0.12
 ## Draw the active path as a line in the world.
 @export var debug_draw: bool = false
 ## The fallback driver's gravity.
@@ -48,8 +56,20 @@ signal nav_graph_built
 @export var jump_distance_override: float = 0.0
 ## Max jump height in px (0 = derive it from the sibling PlatformerMovement's jump_velocity/gravity).
 @export var jump_height_override: float = 0.0
+## relaxed: jump as soon as a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.
+@export_enum("relaxed", "strict") var jump_positioning: String = "relaxed"
+## With Ledge Restriction on, drops up to this many pixels are still allowed (0 = no drops at all).
+@export var ledge_leniency: float = 0.0
+## Patrol discipline: routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency. The agent stays on its platform.
+@export var ledge_restriction: bool = false
 ## The furthest safe drop (px) the graph will route through.
 @export var max_fall_distance: float = 320.0
+## While following a node (Find Path To Node), how often the route may refresh.
+@export var repath_interval: float = 0.5
+## The route only refreshes when the followed node has moved at least this many pixels from where the current path was aimed.
+@export var repath_threshold: float = 24.0
+## No progress toward the current waypoint for this long fires On Waypoint Stuck and re-routes from wherever the agent actually is.
+@export var stuck_timeout: float = 1.5
 ## Release the jump at the height each arc actually needs (short hops for flat gaps, full rises for tall ledges) - smoother-looking movement. Off = every jump is full height.
 @export var variable_jump: bool = true
 
@@ -70,6 +90,25 @@ var _move_axis: float = 0.0
 var _debug_line: Line2D = null
 ## Registered portals: {"from": Vector2, "to": Vector2, "both": bool} - survive regenerate.
 var _portals: Array = []
+# Follow mode (Find Path To Node): the tracked node + where the current path was aimed.
+var _follow_target: Node = null
+var _path_goal: Vector2 = Vector2.ZERO
+var _goal_mode: String = "nearest"
+var _repath_clock: float = 0.0
+# Coyote grace: seconds since the host last stood on the floor.
+var _floor_grace: float = 0.0
+# Stuck watchdog: best distance seen toward the current waypoint + time without progress.
+var _best_waypoint_distance: float = INF
+var _stuck_clock: float = 0.0
+# Budget-deferred request (this agent is queued for a later tick).
+var _path_pending: bool = false
+var _pending_goal: Vector2 = Vector2.ZERO
+var _pending_goal_mode: String = "nearest"
+# The SHARED path budget: statics are one value across every agent of this behavior, so
+# N chasers repathing at once spread their A* runs over frames instead of spiking one.
+static var _shared_max_paths_per_tick: int = 8
+static var _shared_tick_id: int = -1
+static var _shared_paths_this_tick: int = 0
 ## The sibling movement pack, duck-typed: any child of the host with a move_speed and a
 ## jump() (PlatformerMovement, or your own driver with the same surface).
 ## @ace_hidden
@@ -122,7 +161,25 @@ func _nearest_node(world: Vector2, max_cells: int) -> Vector2i:
 	return best
 
 func _physics_process(delta: float) -> void:
-	if host == null or _path.is_empty():
+	if host == null:
+		return
+	# Coyote bookkeeping: seconds since the host last stood on the floor (the jump gate
+	# below accepts a frame-late takeoff within Coyote Time).
+	if host.is_on_floor():
+		_floor_grace = 0.0
+	else:
+		_floor_grace += delta
+	# Budget-deferred retries and follow-mode refreshes run even without an active path.
+	_repath_clock += delta
+	if _path_pending:
+		find_path_to(_pending_goal.x, _pending_goal.y, _pending_goal_mode)
+	elif _follow_target != null and is_instance_valid(_follow_target) and _follow_target is Node2D and _repath_clock >= repath_interval:
+		_repath_clock = 0.0
+		var followed: Vector2 = (_follow_target as Node2D).global_position
+		if followed.distance_to(_path_goal) > repath_threshold:
+			find_path_to(followed.x, followed.y, _goal_mode)
+			repathed.emit()
+	if _path.is_empty():
 		return
 	var waypoint: Dictionary = _path[_path_index]
 	var target: Vector2 = waypoint["world"]
@@ -142,8 +199,15 @@ func _physics_process(delta: float) -> void:
 	var wants_jump: bool = waypoint["action"] == "jump"
 	if not wants_jump and waypoint["action"] == "walk":
 		wants_jump = target.y < host.global_position.y - 8.0 and absf(dx) < tile * 1.5
+	# Strict jump positioning: walk onto the exact takeoff spot before leaping (relaxed
+	# leaps the moment the jump leg starts - faster, but looser on tight arcs).
+	if waypoint["action"] == "jump" and jump_positioning == "strict" and not _jumped_this_segment and _path_index > 0:
+		var takeoff_dx: float = (_path[_path_index - 1]["world"] as Vector2).x - host.global_position.x
+		if absf(takeoff_dx) > 4.0:
+			_move_axis = clampf(takeoff_dx / 24.0, -1.0, 1.0)
+			wants_jump = false
 	if auto_control:
-		var start_jump: bool = wants_jump and not _jumped_this_segment and host.is_on_floor()
+		var start_jump: bool = wants_jump and not _jumped_this_segment and (host.is_on_floor() or _floor_grace <= coyote_time)
 		if start_jump:
 			_jumped_this_segment = true
 			_jump_released = false
@@ -180,6 +244,21 @@ func _physics_process(delta: float) -> void:
 			host.move_and_slide()
 	if absf(dx) <= arrive_distance and absf(target.y - host.global_position.y) <= tile:
 		_advance_waypoint()
+	# Stuck watchdog: no progress toward the waypoint for Stuck Timeout -> On Waypoint Stuck
+	# and a fresh route from wherever the agent actually is.
+	else:
+		var waypoint_gap: float = host.global_position.distance_to(target)
+		if waypoint_gap < _best_waypoint_distance - 1.0:
+			_best_waypoint_distance = waypoint_gap
+			_stuck_clock = 0.0
+		else:
+			_stuck_clock += delta
+			if _stuck_clock >= maxf(stuck_timeout, 0.1):
+				_stuck_clock = 0.0
+				_best_waypoint_distance = INF
+				waypoint_stuck.emit()
+				find_path_to(_path_goal.x, _path_goal.y, _goal_mode)
+				repathed.emit()
 	if debug_draw:
 		_refresh_debug()
 
@@ -248,7 +327,24 @@ func regenerate_nav_graph() -> void:
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, {mode})")
 func find_path_to(x: float, y: float, mode: String) -> void:
-	if host == null or _tilemap == null or _nodes.is_empty():
+	# The shared budget: at most Max Paths Per Tick A* runs per physics tick ACROSS all
+	# agents - extra requests defer to the next tick (Is Path Pending) instead of spiking.
+	var frame: int = Engine.get_physics_frames()
+	if frame != _shared_tick_id:
+		_shared_tick_id = frame
+		_shared_paths_this_tick = 0
+	if _shared_paths_this_tick >= maxi(_shared_max_paths_per_tick, 0):
+		_pending_goal = Vector2(x, y)
+		_pending_goal_mode = mode
+		_path_pending = true
+		return
+	_shared_paths_this_tick += 1
+	_path_pending = false
+	if _tilemap == null or _nodes.is_empty():
+		push_warning("[PlatformerPathfinding] Find Path To called before the nav graph exists - call Build Nav Graph From Tilemap (usually On Ready) first.")
+		path_failed.emit()
+		return
+	if host == null:
 		path_failed.emit()
 		return
 	var start: Vector2i = _nearest_node(host.global_position, 3)
@@ -262,23 +358,30 @@ func find_path_to(x: float, y: float, mode: String) -> void:
 		stop_pathfinding()
 		path_failed.emit()
 		return
+	_path_goal = Vector2(x, y)
+	_goal_mode = mode
 	_path = []
 	for index in range(cells.size()):
 		var action: String = "walk" if index == 0 else _edge_kind(cells[index - 1], cells[index])
 		_path.append({"world": _cell_world(cells[index]), "action": action})
 	_path_index = 0
 	_jumped_this_segment = false
+	_best_waypoint_distance = INF
+	_stuck_clock = 0.0
 	path_found.emit()
 
 ## @ace_action
 ## @ace_name("Find Path To Node")
 ## @ace_category("Platformer Pathfinding")
-## @ace_description("Routes to another node's position (the player, a pickup) - Find Path To with the position read for you. Re-call it on a timer to chase.")
+## @ace_description("Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.find_path_to_node({target}, {mode})")
 func find_path_to_node(target: Node, mode: String) -> void:
 	if target is Node2D:
 		find_path_to((target as Node2D).global_position.x, (target as Node2D).global_position.y, mode)
+		_follow_target = target
+		_goal_mode = mode
+		_repath_clock = 0.0
 	else:
 		path_failed.emit()
 
@@ -293,6 +396,10 @@ func stop_pathfinding() -> void:
 	_path_index = 0
 	_move_axis = 0.0
 	_jumped_this_segment = false
+	_follow_target = null
+	_path_pending = false
+	_stuck_clock = 0.0
+	_best_waypoint_distance = INF
 	var movement: Node = _find_movement()
 	if movement != null:
 		movement.set("ai_move_axis", 0.0)
@@ -312,6 +419,69 @@ func set_auto_control(enabled: bool) -> void:
 		var movement: Node = _find_movement()
 		if movement != null:
 			movement.set("ai_controlled", false)
+
+## @ace_action
+## @ace_name("Set Ledge Restriction")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("Patrol discipline: on, routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency, so the agent stays on its platform. Applies from the next Find Path To.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.set_ledge_restriction({enabled})")
+func set_ledge_restriction(enabled: bool) -> void:
+	ledge_restriction = enabled
+
+## @ace_action
+## @ace_name("Set Ledge Leniency")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("With Ledge Restriction on, drops up to this many pixels are still allowed (a patroller may hop down one step but never off the tower).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.set_ledge_leniency({pixels})")
+func set_ledge_leniency(pixels: float) -> void:
+	ledge_leniency = pixels
+
+## @ace_action
+## @ace_name("Set Jump Positioning")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("relaxed (default): leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.set_jump_positioning({mode})")
+func set_jump_positioning(mode: String) -> void:
+	jump_positioning = mode
+
+## @ace_action
+## @ace_name("Set Coyote Time")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("Grace window (s) for AI jumps just after running off the takeoff ledge.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.set_coyote_time({seconds})")
+func set_coyote_time(seconds: float) -> void:
+	coyote_time = seconds
+
+## @ace_action
+## @ace_name("Set Repath Interval")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("While following a node, how often the route may refresh (chase freshness vs cost).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.set_repath_interval({seconds})")
+func set_repath_interval(seconds: float) -> void:
+	repath_interval = seconds
+
+## @ace_action
+## @ace_name("Set Repath Threshold")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("The route only refreshes when the followed node has moved at least this many pixels.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.set_repath_threshold({pixels})")
+func set_repath_threshold(pixels: float) -> void:
+	repath_threshold = pixels
+
+## @ace_action
+## @ace_name("Set Max Paths Per Tick")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("The SHARED budget across every agent: at most this many route computations per physics tick - extras defer a tick (Is Path Pending) instead of spiking the frame. The difference between 20 chasers working and not.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.set_max_paths_per_tick({count})")
+func set_max_paths_per_tick(count: int) -> void:
+	_shared_max_paths_per_tick = count
 
 ## @ace_action
 ## @ace_name("Add Portal")
@@ -344,6 +514,13 @@ func clear_portals() -> void:
 func set_nav_debug_draw(enabled: bool) -> void:
 	debug_draw = enabled
 	_refresh_debug()
+
+## @ace_condition
+## @ace_name("Is Path Pending")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.is_path_pending()")
+func is_path_pending() -> bool:
+	return _path_pending
 
 ## @ace_condition
 ## @ace_name("Has Path")
@@ -432,6 +609,8 @@ func _apply_portal(portal: Dictionary) -> void:
 func _advance_waypoint() -> void:
 	_jumped_this_segment = false
 	_jump_released = false
+	_best_waypoint_distance = INF
+	_stuck_clock = 0.0
 	_path_index += 1
 	waypoint_reached.emit()
 	if _path_index >= _path.size():
@@ -476,6 +655,8 @@ func _astar(start: Vector2i, goal: Vector2i) -> Array:
 				cells.push_front(current)
 			return cells
 		for edge in (_edges.get(current, []) as Array):
+			if not _edge_allowed(current, edge):
+				continue
 			var next_cell: Vector2i = edge["to"]
 			var next_cost: float = cost_so_far[current] + float(edge["cost"])
 			if not cost_so_far.has(next_cell) or next_cost < float(cost_so_far[next_cell]):
@@ -484,6 +665,17 @@ func _astar(start: Vector2i, goal: Vector2i) -> Array:
 				if not open.has(next_cell):
 					open.append(next_cell)
 	return []
+
+func _edge_allowed(from_cell: Vector2i, edge: Dictionary) -> bool:
+	if not ledge_restriction:
+		return true
+	var kind: String = str(edge["kind"])
+	if kind == "walk":
+		return true
+	if kind == "fall":
+		var tile: float = float(_tilemap.tile_set.tile_size.y) if _tilemap != null else 32.0
+		return float(((edge["to"] as Vector2i).y - from_cell.y)) * tile <= ledge_leniency
+	return false
 
 func _edge_kind(from_cell: Vector2i, to_cell: Vector2i) -> String:
 	for edge in (_edges.get(from_cell, []) as Array):
