@@ -49,8 +49,11 @@ func _ensure_comment_dialog() -> void:
 	_comment_text_edit = TextEdit.new()
 	_comment_text_edit.custom_minimum_size = Vector2(520.0, 200.0)
 	_comment_text_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_comment_text_edit.placeholder_text = "Comment text (multiline supported)"
+	_comment_text_edit.placeholder_text = "Comment text (multiline supported; highlight text to format it)"
 	form.add_child(_comment_text_edit)
+	# Discord-style formatting: highlight text and a small unfocused bar floats above the
+	# selection to wrap it in BBCode (comments render BBCode in the sheet).
+	EventSheetBBCodeSelectionBar.attach(_comment_text_edit)
 	_comment_color_button = ColorPickerButton.new()
 	_comment_color_button.custom_minimum_size = Vector2(64.0, 0.0)
 	_comment_color_button.color = Color(0, 0, 0, 0)

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - Discord-style formatting bar in the comment editor
+
+- **Highlight text in the Edit Comment dialog and a small unfocused bar floats by the
+  selection**: B / I / U / S toggle the matching BBCode wrap on exactly the selected text
+  (re-pressing unwraps, Discord-style), and the color swatch wraps `[color=#hex]`. The
+  wrapped text stays selected so formats stack, no control steals focus (the highlight
+  never blinks away), and Ctrl+B / Ctrl+I / Ctrl+U work from the keyboard. Comments render
+  BBCode in the sheet, so what you format is what you see.
+
 ### Added - last-played-sound control in the Audio vocabulary
 
 - **Play Sound / Play Sound At (2D) now remember the shot they fired** (as `__last_sfx`
