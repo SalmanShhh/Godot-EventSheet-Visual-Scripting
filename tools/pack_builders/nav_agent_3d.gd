@@ -4,7 +4,7 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
-## 3D pathfinding made sheet-shaped (docs/internal/SPEC-platformer-pathfinding.md, P3): a thin
+## 3D pathfinding made sheet-shaped: a thin
 ## wrapper over Godot's navmesh navigation with THE SAME verb names as the 2D Platformer
 ## Pathfinding pack (Find Path To, Stop Pathfinding, the Found/Failed/Complete trio, Has Path).
 ## A NavigationAgent3D child is auto-inserted (zero wiring); auto-control drives a sibling that

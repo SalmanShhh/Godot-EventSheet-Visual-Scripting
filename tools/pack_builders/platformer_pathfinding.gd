@@ -4,7 +4,7 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
-## Platformer pathfinding for a CharacterBody2D (docs/internal/SPEC-platformer-pathfinding.md, P1):
+## Platformer pathfinding for a CharacterBody2D - the 2D jump-graph navigator:
 ## scans a TileMapLayer's physics tiles into standable nodes, connects them with WALK edges
 ## (adjacent cells, one step up/down - which is what makes stairs and tile slopes walkable),
 ## JUMP arcs, and FALL drops, then A*-routes over the graph. Jump reach is DERIVED from the

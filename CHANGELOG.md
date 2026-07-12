@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-07-12 - The Pathfinding & Game-Feel Update
+
 ### Added - pathfinding P2: patrol discipline, chase freshness, the watchdog, and the budget
 
 - **Ledge Restriction + Ledge Leniency**: walk-only routing for patrollers - no jumps, no
