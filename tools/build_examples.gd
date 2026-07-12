@@ -1720,10 +1720,11 @@ func _build_path_chase() -> bool:
 	sheet.custom_class_name = "PathChaseDemo"
 	sheet.emit_live_values = false
 	sheet.variables = {
-		"bridge_on": {"type": "bool", "default": false, "exported": false}
+		"bridge_on": {"type": "bool", "default": false, "exported": false},
+		"platform_time": {"type": "float", "default": 0.0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with, variable jump included. The purple PORTAL pair links the ground to the floating platform (blink on arrival), and the tile BRIDGE over the gap toggles every 3 seconds + Regenerate Nav Graph, so the route flips between walking it and jumping the gap live. Green line = the Chaser's path."
+	about.text = "[b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with, variable jump included. The purple PORTAL pair links the ground to the floating platform, the tile BRIDGE over the gap toggles every 3 seconds + Regenerate Nav Graph, the red zone is a DEADLY HAZARD routes refuse (forcing the high-platform detour), and the orange ELEVATOR is a registered moving platform - the Chaser waits for it, rides it, and walks off onto the tower. Green line = the Chaser's path."
 	sheet.events.append(about)
 
 	var on_ready: EventRow = EventRow.new()
@@ -1733,10 +1734,35 @@ func _build_path_chase() -> bool:
 	on_ready_body.code = "\n".join(PackedStringArray([
 		"$Chaser/Pathfinding.build_nav_graph($Level)",
 		"$Chaser/Pathfinding.add_portal(976.0, 528.0, 176.0, 304.0, true)",
+		"$Chaser/Pathfinding.add_hazard(704.0, 512.0, 192.0, 64.0, true)",
+		"$Chaser/Pathfinding.add_moving_platform($MovingPlatform, 1088.0, 552.0, 1088.0, 200.0)",
 		"$Chaser/Pathfinding.set_nav_debug_draw(true)"
 	]))
 	on_ready.actions.append(on_ready_body)
 	sheet.events.append(on_ready)
+
+	# The elevator: an AnimatableBody2D ping-ponging between exactly the registered endpoints
+	# (the pack navigates it; the sheet owns the motion - moved in physics so riders carry).
+	var elevator: EventRow = EventRow.new()
+	elevator.trigger_provider_id = "Core"
+	elevator.trigger_id = "OnPhysicsProcess"
+	var elevator_body: RawCodeRow = RawCodeRow.new()
+	elevator_body.code = "\n".join(PackedStringArray([
+		"# 8s cycle with 1.5s DWELLS at both ends - the pathfinder boards only a parked platform.",
+		"platform_time = fmod(platform_time + delta, 8.0)",
+		"var travel: float = 0.0",
+		"if platform_time < 1.5:",
+		"\ttravel = 0.0",
+		"elif platform_time < 4.0:",
+		"\ttravel = (platform_time - 1.5) / 2.5 * 352.0",
+		"elif platform_time < 5.5:",
+		"\ttravel = 352.0",
+		"else:",
+		"\ttravel = (1.0 - (platform_time - 5.5) / 2.5) * 352.0",
+		"$MovingPlatform.global_position = Vector2(1088.0, 552.0 - travel)"
+	]))
+	elevator.actions.append(elevator_body)
+	sheet.events.append(elevator)
 
 	# The chase: re-route to wherever the Player is now, once a second.
 	var repath: EventRow = EventRow.new()
@@ -1827,8 +1853,45 @@ func _build_path_chase() -> bool:
 		level.set_cell(Vector2i(x, 13), 0, Vector2i.ZERO)
 	for x in range(3, 9):
 		level.set_cell(Vector2i(x, 10), 0, Vector2i.ZERO)
+	# The tower: reachable ONLY by riding the elevator (11 cells above the ground).
+	for x in range(30, 33):
+		level.set_cell(Vector2i(x, 6), 0, Vector2i.ZERO)
 	root.add_child(level)
 	level.owner = root
+
+	# The deadly hazard (spikes): a red zone on the ground under the high platform - routes
+	# refuse it, forcing the scenic detour OVER the platform. Visual only; the routing rect
+	# is the sheet's add_hazard call.
+	var hazard_zone: ColorRect = ColorRect.new()
+	hazard_zone.name = "HazardZone"
+	hazard_zone.color = Color(1.0, 0.25, 0.2, 0.35)
+	hazard_zone.position = Vector2(704.0, 512.0)
+	hazard_zone.size = Vector2(160.0, 64.0)
+	root.add_child(hazard_zone)
+	hazard_zone.owner = root
+
+	# The elevator: an AnimatableBody2D the sheet ping-pongs between the registered endpoints.
+	var moving_platform: AnimatableBody2D = AnimatableBody2D.new()
+	moving_platform.name = "MovingPlatform"
+	moving_platform.position = Vector2(1088.0, 552.0)
+	moving_platform.sync_to_physics = true
+	var platform_collider: CollisionShape2D = CollisionShape2D.new()
+	platform_collider.name = "Collider"
+	var platform_shape: RectangleShape2D = RectangleShape2D.new()
+	# 48 wide: the shaft clears both the tower's east edge and the boundary wall by 8px, so a
+	# body resting at either lip is never clipped by the moving collider (an AnimatableBody2D
+	# push is effectively infinite-mass - grazing it ejects a CharacterBody2D violently).
+	platform_shape.size = Vector2(48.0, 16.0)
+	platform_collider.shape = platform_shape
+	moving_platform.add_child(platform_collider)
+	var platform_visual: ColorRect = ColorRect.new()
+	platform_visual.name = "Visual"
+	platform_visual.color = Color(1.0, 0.62, 0.2)
+	platform_visual.position = Vector2(-24.0, -8.0)
+	platform_visual.size = Vector2(48.0, 16.0)
+	moving_platform.add_child(platform_visual)
+	root.add_child(moving_platform)
+	_own_deep(moving_platform, root)
 
 	# The portal pair: entrance on the right ground, exit on the floating platform (the
 	# platform is 7 cells up - portal-only by design). Purple markers are visuals; the LINK
@@ -1860,7 +1923,7 @@ func _build_path_chase() -> bool:
 	hud.name = "Hud"
 	hud.position = Vector2(24.0, 16.0)
 	hud.add_theme_font_size_override("font_size", 18)
-	hud.text = "Arrows move · Space jumps · the red Chaser pathfinds to you (green = its path)\nPurple = a portal pair (it blinks through) · the bridge over the gap toggles every 3s and it re-routes"
+	hud.text = "Arrows move · Space jumps · the red Chaser pathfinds to you (green = its path)\nPurple = portal · red zone = deadly hazard (routes refuse it) · the bridge toggles every 3s\nOrange elevator = a moving platform: stand on the tower and watch it wait, ride, and walk off"
 	hud_layer.add_child(hud)
 	hud.owner = root
 

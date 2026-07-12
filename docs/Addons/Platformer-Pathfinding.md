@@ -50,6 +50,12 @@ keyboard Player, a chasing agent, and the debug path line visible.
 - **Variable jump (toggleable, on by default).** Each jump releases at the height its arc
   actually needs - flat gap hops stay low and quick, tall ledges get the full rise. Movement
   looks intentional instead of every hop being a moon jump.
+- **Hazards are one action too.** Add Hazard marks a world rectangle: deadly zones (spikes,
+  lava) are NEVER routed through, danger zones (fire, mud) cost 4x so they are crossed only
+  when no clean way exists. Applies to routing instantly - no graph rebuild.
+- **Moving platforms carry the agent.** Add Moving Platform registers an AnimatableBody2D you
+  animate between two endpoints; a routed agent walks to the track, WAITS beside it standing
+  still until the platform parks, boards, rides centered, and walks off at the far side.
 - **See it think.** Set Nav Debug Draw paints the live route as a line in the world.
 
 ## Core concepts
@@ -69,6 +75,21 @@ automatically (a walking body cannot step up a full tile).
 **Reach and nearest.** Find Path To's mode decides what happens when the target spot is not on
 the graph: `reach` fails honestly (On Path Failed - play the confused animation), `nearest`
 never fails - it routes to the closest reachable node instead (the right default for chasing).
+
+**Hazards shape routes, not the level.** Add Hazard marks a world rectangle without touching
+tiles or the graph: deadly hazards block their edges outright (and are never picked as a
+`nearest` goal), danger hazards multiply their edges' cost by 4 so the router detours whenever
+a clean route exists and grits through only when there is none. On Hazard Entered fires if the
+agent ends up inside one anyway (knockback, a mid-air clip) - that is the damage hook.
+
+**Moving platforms are choreography.** Add Moving Platform registers a platform you animate
+(an AnimatableBody2D with `sync_to_physics`, ping-ponged between exactly the two registered
+endpoints) and adds a PLATFORM edge between the nearest standable nodes. The drive then runs a
+boarding discipline: the agent stops BESIDE the track (never under it - a descending platform
+crushes whatever it lands on), stands still until the platform parks at the boarding side,
+walks on, rides centered, and walks off at the far side. Waiting and riding legitimately stall
+waypoint progress, so the stuck watchdog holds off, and route refreshes are deferred mid-ride
+(a fresh route would start from a ground node and steer the rider off the shaft).
 
 ## Setup
 
@@ -111,6 +132,10 @@ they are placed on.
 | Set Max Paths Per Tick | `count` (int) | The SHARED budget across all agents: extra route requests defer a tick (Is Path Pending) instead of spiking the frame. |
 | Add Portal | `from_x`, `from_y`, `to_x`, `to_y` (float), `bidirectional` (bool) | Links two world positions: routes through it walk to the entrance and BLINK to the exit (On Portal Taken). Survives Regenerate. |
 | Clear Portals | (none) | Removes every registered portal. |
+| Add Hazard | `x`, `y`, `width`, `height` (float), `deadly` (bool) | Marks a world rectangle as hazardous. Deadly: routes never pass through it. Not deadly: routes pay 4x to cross. Applies to routing instantly - no rebuild. |
+| Clear Hazards | (none) | Removes every registered hazard. |
+| Add Moving Platform | `platform` (Node), `from_x`, `from_y`, `to_x`, `to_y` (float) | Registers a moving platform (an AnimatableBody2D your sheet animates between exactly these endpoints): the graph gains a PLATFORM edge, and a routed agent waits beside the track, boards when it parks, rides, and walks off. Survives Regenerate. |
+| Clear Moving Platforms | (none) | Removes every registered platform (their edges leave on the next Regenerate). |
 | Set Auto Control | `enabled` (bool) | On (default): drive the sibling movement pack. Off: paths compute, you drive. |
 | Set Nav Debug Draw | `enabled` (bool) | Draw the active path as a line in the world. |
 
@@ -121,16 +146,18 @@ they are placed on.
 | Condition | Has Path | An active path exists. |
 | Condition | Path Wants Jump | The drive wants a jump right now (jump arc, or a step-assist hop) - the manual-mode jump signal. |
 | Condition | Is Path Pending | This agent's route request is queued for a later tick (the shared budget was spent). |
+| Condition | Is In Hazard | The agent is standing inside a registered hazard right now (deadly or danger). |
 | Expression | Path Move Axis | The current steering, -1..1 - feed it to your own driver in manual mode. |
 | Expression | Current Waypoint X / Y | The waypoint being moved toward, in world pixels. |
 | Expression | Waypoint Count / Current Waypoint Index | Path length and progress. |
-| Expression | Current Path Action | What this leg is: `walk`, `jump`, `fall`, or `portal`. |
+| Expression | Current Path Action | What this leg is: `walk`, `jump`, `fall`, `portal`, or `platform`. |
 | Trigger | On Path Found / On Path Failed / On Path Complete | The reaction trio. |
 | Trigger | On Waypoint Reached | Each waypoint passed. |
 | Trigger | On Nav Graph Built | The scan finished. |
 | Trigger | On Portal Taken | The agent just blinked through a portal. |
 | Trigger | On Waypoint Stuck | No progress toward the waypoint for Stuck Timeout - it re-routes itself and tells you. |
 | Trigger | On Repath | The route refreshed (a follow update or a stuck recovery). |
+| Trigger | On Hazard Entered | The agent just stepped into a hazard (deadly or danger) - the damage hook. |
 
 ### Inspector properties
 
@@ -221,6 +248,22 @@ On Wall Destroyed
   -> Enemy | Pathfinding: Find Path To Node  $Player, "nearest"
 ```
 
+### 7. Spikes, lava, and an elevator
+
+A spike pit the chaser refuses to cross, and a tower it can only reach by riding your
+elevator (the Path Chase showcase plays exactly this).
+
+```
+On Ready
+  -> Enemy | Pathfinding: Build Nav Graph From Tilemap  $Level
+  -> Enemy | Pathfinding: Add Hazard  704, 512, 160, 64, true      (deadly - never crossed)
+  -> Enemy | Pathfinding: Add Moving Platform  $Elevator, 1088, 552, 1088, 200
+On Hazard Entered -> Enemy | Health: Apply Damage  10               (if it lands in one anyway)
+```
+
+The sheet animates `$Elevator` between those two endpoints with a pause at each end; the
+chaser waits beside the shaft, rides up, and walks off onto the tower.
+
 ## Tips and common mistakes
 
 - **A movement sibling is best, not required.** The pathfinder finds the movement pack among
@@ -246,6 +289,16 @@ On Wall Destroyed
   blocked-in agent recovers without a single sheet row.
 - **`nearest` for chasing, `reach` for scripted moves.** A chaser should get as close as it
   can; a cutscene walk-to-mark should fail loudly if the mark is unreachable.
+- **Give moving platforms a DWELL.** Pause the platform for a second or two at each endpoint -
+  the agent only boards a platform that is parked at the boarding side (stepping under a
+  still-moving one is how walkers get crushed), so a pause-free ping-pong never offers a
+  boarding window. Animate the platform between exactly the endpoints you registered.
+- **Size the shaft with clearance.** An AnimatableBody2D's push is effectively infinite-mass -
+  a CharacterBody2D it lands on gets ejected violently. Keep the platform's collider a little
+  narrower than its travel corridor so a body standing at either lip is never clipped.
+- **Deadly vs danger is a design dial.** Spikes and lava = deadly (never routed). Fire patches
+  and mud = danger (4x cost) - the agent braves them only when the clean route disappears,
+  which reads as smart desperation.
 - **Tune with the debug line on.** Set Nav Debug Draw during development; the green line shows
   exactly what the router decided, which makes level-layout problems obvious.
 - **Does it work with nav meshes? No - on purpose.** A navmesh describes walkable SURFACES and

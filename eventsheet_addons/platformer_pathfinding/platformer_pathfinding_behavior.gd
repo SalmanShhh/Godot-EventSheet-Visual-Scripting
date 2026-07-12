@@ -23,6 +23,9 @@ signal waypoint_stuck
 ## @ace_name("On Repath")
 signal repathed
 ## @ace_trigger
+## @ace_name("On Hazard Entered")
+signal hazard_entered
+## @ace_trigger
 ## @ace_name("On Path Found")
 signal path_found
 ## @ace_trigger
@@ -90,6 +93,13 @@ var _move_axis: float = 0.0
 var _debug_line: Line2D = null
 ## Registered portals: {"from": Vector2, "to": Vector2, "both": bool} - survive regenerate.
 var _portals: Array = []
+## World-space hazard rects: {"rect": Rect2, "deadly": bool}. Applied at ROUTING time (no
+## rebuild needed when they change): deadly blocks edges outright, danger multiplies cost.
+var _hazards: Array = []
+var _was_in_hazard: bool = false
+## Registered moving platforms: {"node": Node2D, "a": Vector2, "b": Vector2} - survive
+## regenerate. Each becomes a "platform" edge; the drive waits, boards, and rides it.
+var _moving_platforms: Array = []
 # Follow mode (Find Path To Node): the tracked node + where the current path was aimed.
 var _follow_target: Node = null
 var _path_goal: Vector2 = Vector2.ZERO
@@ -154,6 +164,9 @@ func _nearest_node(world: Vector2, max_cells: int) -> Vector2i:
 	var best: Vector2i = Vector2i.MAX
 	var best_distance: float = float(max_cells) + 0.51
 	for cell in _nodes:
+		# A node inside a deadly hazard is never a start or goal.
+		if _point_in_hazard(_cell_world(cell), true):
+			continue
 		var cell_distance: float = Vector2(cell - around).length()
 		if cell_distance < best_distance:
 			best_distance = cell_distance
@@ -169,6 +182,11 @@ func _physics_process(delta: float) -> void:
 		_floor_grace = 0.0
 	else:
 		_floor_grace += delta
+	# Hazard presence (any kind) fires On Hazard Entered on the way in - the damage hook.
+	var in_hazard_now: bool = _point_in_hazard(host.global_position, false)
+	if in_hazard_now and not _was_in_hazard:
+		hazard_entered.emit()
+	_was_in_hazard = in_hazard_now
 	# Budget-deferred retries and follow-mode refreshes run even without an active path.
 	_repath_clock += delta
 	if _path_pending:
@@ -206,6 +224,44 @@ func _physics_process(delta: float) -> void:
 		if absf(takeoff_dx) > 4.0:
 			_move_axis = clampf(takeoff_dx / 24.0, -1.0, 1.0)
 			wants_jump = false
+	# Moving-platform leg: wait beside the track, board, ride, walk off - the platform carries.
+	if waypoint["action"] == "platform":
+		_move_axis = _platform_move_axis(target, _move_axis)
+		wants_jump = false
+	# A platform leg coming up within the next few waypoints: its boarding nodes sit under
+	# the track, so the wait-beside steering engages EARLY - the agent stands clear until
+	# the platform parks instead of idling beneath a descending one.
+	else:
+		for ahead in range(_path_index + 1, mini(_path_index + 4, _path.size())):
+			if _path[ahead]["action"] == "platform":
+				_move_axis = _platform_approach_axis(_path[ahead]["world"], _move_axis)
+				wants_jump = false
+				break
+	# The final waypoint is the chase goal, and a chased body physically OCCUPIES its node -
+	# arrival there accepts standing beside it (a body-width radius) instead of pressing
+	# into the target forever (two CharacterBody2Ds grind, and the loser gets bulldozed).
+	var arrive_radius: float = arrive_distance if _path_index < _path.size() - 1 else maxf(arrive_distance, tile)
+	# Arrival is checked BEFORE the drive: the arrival tick must not also steer, or every
+	# instant-complete refind leaks one frame of drive and a parked agent creeps off ledges.
+	if absf(dx) <= arrive_radius and absf(target.y - host.global_position.y) <= tile:
+		_advance_waypoint()
+		if debug_draw:
+			_refresh_debug()
+		return
+	# Stuck watchdog: no progress toward the waypoint for Stuck Timeout -> On Waypoint Stuck
+	# and a fresh route from wherever the agent actually is.
+	var waypoint_gap: float = host.global_position.distance_to(target)
+	if waypoint_gap < _best_waypoint_distance - 1.0:
+		_best_waypoint_distance = waypoint_gap
+		_stuck_clock = 0.0
+	else:
+		_stuck_clock += delta
+		if _stuck_clock >= maxf(stuck_timeout, 0.1):
+			_stuck_clock = 0.0
+			_best_waypoint_distance = INF
+			waypoint_stuck.emit()
+			find_path_to(_path_goal.x, _path_goal.y, _goal_mode)
+			repathed.emit()
 	if auto_control:
 		var start_jump: bool = wants_jump and not _jumped_this_segment and (host.is_on_floor() or _floor_grace <= coyote_time)
 		if start_jump:
@@ -242,23 +298,6 @@ func _physics_process(delta: float) -> void:
 				_jump_released = true
 				host.velocity.y *= 0.45
 			host.move_and_slide()
-	if absf(dx) <= arrive_distance and absf(target.y - host.global_position.y) <= tile:
-		_advance_waypoint()
-	# Stuck watchdog: no progress toward the waypoint for Stuck Timeout -> On Waypoint Stuck
-	# and a fresh route from wherever the agent actually is.
-	else:
-		var waypoint_gap: float = host.global_position.distance_to(target)
-		if waypoint_gap < _best_waypoint_distance - 1.0:
-			_best_waypoint_distance = waypoint_gap
-			_stuck_clock = 0.0
-		else:
-			_stuck_clock += delta
-			if _stuck_clock >= maxf(stuck_timeout, 0.1):
-				_stuck_clock = 0.0
-				_best_waypoint_distance = INF
-				waypoint_stuck.emit()
-				find_path_to(_path_goal.x, _path_goal.y, _goal_mode)
-				repathed.emit()
 	if debug_draw:
 		_refresh_debug()
 
@@ -315,9 +354,11 @@ func regenerate_nav_graph() -> void:
 				var kind: String = "fall" if dy > 0 and absi(dx) <= 2 else "jump"
 				var span: float = Vector2(float(dx), float(dy)).length()
 				_add_edge(cell, to, kind, span * (1.5 if kind == "jump" else 1.1))
-	# Registered portals survive every rebuild.
+	# Registered portals and moving platforms survive every rebuild.
 	for portal in _portals:
 		_apply_portal(portal)
+	for ride in _moving_platforms:
+		_apply_moving_platform(ride)
 	nav_graph_built.emit()
 
 ## @ace_action
@@ -327,6 +368,11 @@ func regenerate_nav_graph() -> void:
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, {mode})")
 func find_path_to(x: float, y: float, mode: String) -> void:
+	# A repath while riding a mid-travel moving platform is DEFERRED (the current path
+	# keeps driving): a fresh route would start from a ground node and steer the rider
+	# off the shaft in mid-air.
+	if _riding_moving_platform():
+		return
 	# The shared budget: at most Max Paths Per Tick A* runs per physics tick ACROSS all
 	# agents - extra requests defer to the next tick (Is Path Pending) instead of spiking.
 	var frame: int = Engine.get_physics_frames()
@@ -365,6 +411,11 @@ func find_path_to(x: float, y: float, mode: String) -> void:
 		var action: String = "walk" if index == 0 else _edge_kind(cells[index - 1], cells[index])
 		_path.append({"world": _cell_world(cells[index]), "action": action})
 	_path_index = 0
+	# A fresh route starts at OUR nearest node - when we already stand on it, aim at the
+	# next waypoint instead (a repath mid-stride must never walk the agent backward, or a
+	# chaser re-finding on a timer thrashes in place at node boundaries).
+	if _path.size() > 1 and host.global_position.distance_to(_path[0]["world"]) <= float(_tilemap.tile_set.tile_size.y):
+		_path_index = 1
 	_jumped_this_segment = false
 	_best_waypoint_distance = INF
 	_stuck_clock = 0.0
@@ -506,6 +557,48 @@ func clear_portals() -> void:
 	regenerate_nav_graph()
 
 ## @ace_action
+## @ace_name("Add Hazard")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("Marks a world-space rectangle as hazardous. Deadly: routes NEVER pass through it (spikes, lava). Not deadly: routes pay 4x to cross, so it is taken only when no clean way exists (fire patches, slow mud). Applies to routing instantly - no rebuild - and On Hazard Entered fires if the agent ends up inside one anyway.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.add_hazard({x}, {y}, {width}, {height}, {deadly})")
+func add_hazard(x: float, y: float, width: float, height: float, deadly: bool) -> void:
+	_hazards.append({"rect": Rect2(x, y, width, height), "deadly": deadly})
+
+## @ace_action
+## @ace_name("Clear Hazards")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("Removes every hazard (routing sees the change immediately).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.clear_hazards()")
+func clear_hazards() -> void:
+	_hazards = []
+
+## @ace_action
+## @ace_name("Add Moving Platform")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("Registers a moving platform (an AnimatableBody2D you animate) by its two travel endpoints: the graph gains a PLATFORM edge between them, and an agent routed across it walks to the track, WAITS for the platform, boards, rides, and walks off at the far side. Survives Regenerate. The pack never moves the platform - your sheet animates it between exactly these endpoints.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.add_moving_platform({platform}, {from_x}, {from_y}, {to_x}, {to_y})")
+func add_moving_platform(platform: Node, from_x: float, from_y: float, to_x: float, to_y: float) -> void:
+	if not (platform is Node2D):
+		return
+	var ride: Dictionary = {"node": platform, "a": Vector2(from_x, from_y), "b": Vector2(to_x, to_y)}
+	_moving_platforms.append(ride)
+	if not _nodes.is_empty():
+		_apply_moving_platform(ride)
+
+## @ace_action
+## @ace_name("Clear Moving Platforms")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("Unregisters every moving platform (takes effect on the next Regenerate Nav Graph).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.clear_moving_platforms()")
+func clear_moving_platforms() -> void:
+	_moving_platforms = []
+	regenerate_nav_graph()
+
+## @ace_action
 ## @ace_name("Set Nav Debug Draw")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Draws the active path as a line in the world (great while tuning a level).")
@@ -521,6 +614,31 @@ func set_nav_debug_draw(enabled: bool) -> void:
 ## @ace_codegen_template("$PlatformerPathfinding.is_path_pending()")
 func is_path_pending() -> bool:
 	return _path_pending
+
+## @ace_condition
+## @ace_name("Is In Hazard")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.is_in_hazard()")
+func is_in_hazard() -> bool:
+	return host != null and _point_in_hazard(host.global_position, false)
+
+func _point_in_hazard(world: Vector2, deadly_only: bool) -> bool:
+	for hazard in _hazards:
+		if (not deadly_only or bool(hazard["deadly"])) and (hazard["rect"] as Rect2).has_point(world):
+			return true
+	return false
+
+func _segment_hazard(from_cell: Vector2i, to_cell: Vector2i) -> int:
+	if _hazards.is_empty():
+		return 0
+	var verdict: int = 0
+	for sample in [_cell_world(from_cell), _cell_world(to_cell), (_cell_world(from_cell) + _cell_world(to_cell)) * 0.5]:
+		for hazard in _hazards:
+			if (hazard["rect"] as Rect2).has_point(sample):
+				if bool(hazard["deadly"]):
+					return 2
+				verdict = 1
+	return verdict
 
 ## @ace_condition
 ## @ace_name("Has Path")
@@ -605,6 +723,77 @@ func _apply_portal(portal: Dictionary) -> void:
 	if bool(portal["both"]):
 		_add_edge(to_node, from_node, "portal", 2.0)
 
+func _apply_moving_platform(ride: Dictionary) -> void:
+	var from_node: Vector2i = _nearest_node(ride["a"], 3)
+	var to_node: Vector2i = _nearest_node(ride["b"], 3)
+	if from_node == Vector2i.MAX or to_node == Vector2i.MAX:
+		return
+	var span: float = (ride["a"] as Vector2).distance_to(ride["b"]) / float(_tilemap.tile_set.tile_size.y)
+	_add_edge(from_node, to_node, "platform", span * 1.3)
+	_add_edge(to_node, from_node, "platform", span * 1.3)
+
+func _platform_for_waypoint(target: Vector2) -> Dictionary:
+	for ride in _moving_platforms:
+		if not is_instance_valid(ride["node"]):
+			continue
+		if (ride["a"] as Vector2).distance_to(target) < 96.0 or (ride["b"] as Vector2).distance_to(target) < 96.0:
+			return ride
+	return {}
+
+func _platform_move_axis(target: Vector2, default_axis: float) -> float:
+	var ride: Dictionary = _platform_for_waypoint(target)
+	if ride.is_empty():
+		return default_axis
+	_stuck_clock = 0.0
+	_best_waypoint_distance = INF
+	var platform: Node2D = ride["node"]
+	var plat: Vector2 = platform.global_position
+	var dest_side: Vector2 = ride["a"] if (ride["a"] as Vector2).distance_to(target) <= (ride["b"] as Vector2).distance_to(target) else ride["b"]
+	var board_side: Vector2 = ride["b"] if dest_side == ride["a"] else ride["a"]
+	var riding: bool = host.is_on_floor() and absf(host.global_position.x - plat.x) < 64.0 and host.global_position.y < plat.y + 8.0 and absf(host.global_position.y - plat.y) < 48.0
+	if riding:
+		if plat.distance_to(dest_side) < 40.0:
+			return default_axis
+		var center_dx: float = plat.x - host.global_position.x
+		return clampf(center_dx / 24.0, -1.0, 1.0) if absf(center_dx) > 6.0 else 0.0
+	# Board only a PARKED platform (a still-moving one can crush the walker) - give your
+	# platform a dwell at each endpoint so there is a boarding window.
+	if plat.distance_to(board_side) < 12.0:
+		var board_dx: float = plat.x - host.global_position.x
+		return clampf(board_dx / 24.0, -1.0, 1.0) if absf(board_dx) > 4.0 else 0.0
+	# Wait on the DESTINATION's side of the track - clear of the descending platform.
+	var wait_x: float = board_side.x - 56.0 if target.x <= board_side.x else board_side.x + 56.0
+	var wait_dx: float = wait_x - host.global_position.x
+	return clampf(wait_dx / 24.0, -1.0, 1.0) if absf(wait_dx) > 6.0 else 0.0
+
+func _platform_approach_axis(leg_target: Vector2, default_axis: float) -> float:
+	var ride: Dictionary = _platform_for_waypoint(leg_target)
+	if ride.is_empty():
+		return default_axis
+	var plat: Vector2 = (ride["node"] as Node2D).global_position
+	var dest_side: Vector2 = ride["a"] if (ride["a"] as Vector2).distance_to(leg_target) <= (ride["b"] as Vector2).distance_to(leg_target) else ride["b"]
+	var board_side: Vector2 = ride["b"] if dest_side == ride["a"] else ride["a"]
+	if plat.distance_to(board_side) < 12.0:
+		return default_axis
+	_stuck_clock = 0.0
+	_best_waypoint_distance = INF
+	var wait_x: float = board_side.x - 56.0 if leg_target.x <= board_side.x else board_side.x + 56.0
+	var wait_dx: float = wait_x - host.global_position.x
+	return clampf(wait_dx / 24.0, -1.0, 1.0) if absf(wait_dx) > 6.0 else 0.0
+
+func _riding_moving_platform() -> bool:
+	if host == null or not host.is_on_floor():
+		return false
+	for ride in _moving_platforms:
+		if not is_instance_valid(ride["node"]):
+			continue
+		var plat: Vector2 = (ride["node"] as Node2D).global_position
+		if absf(host.global_position.x - plat.x) >= 40.0 or host.global_position.y > plat.y or plat.y - host.global_position.y >= 48.0:
+			continue
+		if plat.distance_to(ride["a"]) > 12.0 and plat.distance_to(ride["b"]) > 12.0:
+			return true
+	return false
+
 ## @ace_hidden
 func _advance_waypoint() -> void:
 	_jumped_this_segment = false
@@ -658,7 +847,9 @@ func _astar(start: Vector2i, goal: Vector2i) -> Array:
 			if not _edge_allowed(current, edge):
 				continue
 			var next_cell: Vector2i = edge["to"]
-			var next_cost: float = cost_so_far[current] + float(edge["cost"])
+			# Danger (non-deadly) hazards stay traversable but cost 4x - taken only when
+			# no clean route exists.
+			var next_cost: float = cost_so_far[current] + float(edge["cost"]) * (4.0 if _segment_hazard(current, next_cell) == 1 else 1.0)
 			if not cost_so_far.has(next_cell) or next_cost < float(cost_so_far[next_cell]):
 				cost_so_far[next_cell] = next_cost
 				came_from[next_cell] = current
@@ -667,6 +858,8 @@ func _astar(start: Vector2i, goal: Vector2i) -> Array:
 	return []
 
 func _edge_allowed(from_cell: Vector2i, edge: Dictionary) -> bool:
+	if _segment_hazard(from_cell, edge["to"]) == 2:
+		return false
 	if not ledge_restriction:
 		return true
 	var kind: String = str(edge["kind"])

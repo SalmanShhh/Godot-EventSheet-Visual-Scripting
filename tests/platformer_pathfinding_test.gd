@@ -103,6 +103,39 @@ static func run() -> bool:
 	for p2_knob: String in ["jump_positioning", "coyote_time", "repath_interval", "repath_threshold", "stuck_timeout"]:
 		all_passed = _check("P2 knob %s exists" % p2_knob, behavior.get(p2_knob) != null, true) and all_passed
 
+	# ── Hazards (P4): deadly blocks routing, danger costs through, both are instant ─
+	# A deadly strip over the gap-jump corridor severs the only crossing.
+	behavior.add_hazard(240.0, 128.0, 100.0, 34.0, true)
+	all_passed = _check("a deadly hazard over the only crossing severs the route", behavior._astar(Vector2i(0, 4), Vector2i(15, 4)).is_empty(), true) and all_passed
+	behavior.clear_hazards()
+	all_passed = _check("Clear Hazards restores the route instantly (no rebuild)", behavior._astar(Vector2i(0, 4), Vector2i(15, 4)).is_empty(), false) and all_passed
+	behavior.add_hazard(240.0, 128.0, 100.0, 34.0, false)
+	all_passed = _check("a DANGER hazard keeps the route traversable (4x cost, not a wall)", behavior._astar(Vector2i(0, 4), Vector2i(15, 4)).is_empty(), false) and all_passed
+	behavior.clear_hazards()
+	# A deadly patch on the floor forces the stair-top detour around it.
+	behavior.add_hazard(96.0, 128.0, 96.0, 34.0, true)
+	var detour: Array = behavior._astar(Vector2i(0, 4), Vector2i(7, 4))
+	all_passed = _check("a floor hazard still routes (over the stair top)", not detour.is_empty(), true) and all_passed
+	all_passed = _check("the detour avoids the hazardous floor cells", detour.has(Vector2i(3, 4)) or detour.has(Vector2i(5, 4)), false) and all_passed
+	all_passed = _check("nearest-node never picks a node inside a deadly hazard", behavior._nearest_node(behavior._cell_world(Vector2i(3, 4)), 2) != Vector2i(3, 4), true) and all_passed
+	behavior.clear_hazards()
+
+	# ── Moving platforms (P4): a slow platform edge that survives regenerate ───────
+	var ferry: Node2D = Node2D.new()
+	behavior.add_moving_platform(ferry, 16.0, 144.0, 432.0, 80.0)
+	all_passed = _check("a platform links its endpoints' nearest nodes", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "platform") and all_passed
+	all_passed = _check("the platform edge works both ways", _edge_kind(behavior, Vector2i(13, 2), Vector2i(0, 4)), "platform") and all_passed
+	behavior.regenerate_nav_graph()
+	all_passed = _check("platforms survive Regenerate Nav Graph", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "platform") and all_passed
+	var ride: Dictionary = behavior._platform_for_waypoint(behavior._cell_world(Vector2i(13, 2)))
+	all_passed = _check("the drive can find the platform serving a waypoint", ride.get("node") == ferry, true) and all_passed
+	behavior.clear_moving_platforms()
+	all_passed = _check("Clear Moving Platforms removes the edge", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "") and all_passed
+	ferry.free()
+	for p4_method: String in ["add_hazard", "clear_hazards", "add_moving_platform", "clear_moving_platforms", "is_in_hazard"]:
+		all_passed = _check("P4 method %s exists" % p4_method, behavior.has_method(p4_method), true) and all_passed
+	all_passed = _check("P4 trigger hazard_entered exists", behavior.has_signal("hazard_entered"), true) and all_passed
+
 	# ── The universal AI drive seam: every input-reading movement pack carries it ─
 	all_passed = _check("variable jump ships on (toggleable)", behavior.get("variable_jump"), true) and all_passed
 	all_passed = _check("the fallback driver knobs exist", behavior.get("fallback_move_speed") != null and behavior.get("fallback_jump_velocity") != null and behavior.get("fallback_gravity") != null, true) and all_passed

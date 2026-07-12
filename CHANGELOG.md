@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Added - pathfinding P4: hazards + moving platforms
+
+- **Add Hazard / Clear Hazards** (Platformer Pathfinding): mark a world rectangle as
+  hazardous at routing time - no graph rebuild. Deadly hazards (spikes, lava) block their
+  edges outright and are never picked as a `nearest` goal; danger hazards (fire, mud) cost
+  4x, so the router detours while a clean route exists and grits through only when none
+  does. New **Is In Hazard** condition + **On Hazard Entered** trigger (the damage hook).
+- **Add Moving Platform / Clear Moving Platforms**: register an AnimatableBody2D you animate
+  between two endpoints and the graph gains a PLATFORM edge between them. The drive runs a
+  full boarding discipline: the agent stops BESIDE the track and stands still (never idles
+  under a descending platform - its push is effectively infinite-mass and crushes walkers),
+  boards only a platform parked at the boarding side, rides centered, and walks off at the
+  far side; the stuck watchdog holds off and route refreshes are deferred mid-ride.
+  Registrations survive Regenerate Nav Graph. `platform` joins Current Path Action's values.
+- **Arrival grace at the chase goal**: the final waypoint accepts standing beside it (a
+  body-width radius) - a chased body physically occupies its node, so a pixel-perfect arrive
+  there made the agent press into its target forever. Arrival is also checked before the
+  drive, so an instant-complete refind no longer leaks one frame of steering per second (a
+  parked chaser used to creep off ledges).
+- **Path Chase showcase, act two**: a deadly spike zone the routes refuse (forcing the
+  high-platform detour) and an orange elevator with endpoint dwells - stand on the tower and
+  watch the chaser wait beside the shaft, ride up, and walk off after you.
+- Guide updated: hazards and moving-platform sections, the elevator use case, and the
+  "give platforms a dwell" + shaft-clearance tips (`docs/Addons/Platformer-Pathfinding.md`).
+
 ## [0.14.0] - 2026-07-12 - The Pathfinding & Game-Feel Update
 
 ### Added - pathfinding P2: patrol discipline, chase freshness, the watchdog, and the budget
