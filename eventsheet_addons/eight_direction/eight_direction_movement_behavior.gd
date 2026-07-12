@@ -12,11 +12,15 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("EightDirectionMovement behavior requires a CharacterBody2D parent.")
 
+## AI drive: read ai_move_x/ai_move_y instead of the keyboard (the standard seam an AI driver flips on to steer).
+@export var ai_controlled: bool = false
+var ai_move_x: float = 0.0
+var ai_move_y: float = 0.0
 @export var move_speed: float = 200.0
 
 func _physics_process(delta: float) -> void:
 	if is_instance_valid(host):
-		var input_vector: Vector2 = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+		var input_vector: Vector2 = Vector2(ai_move_x, ai_move_y).limit_length(1.0) if ai_controlled else Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 		host.velocity = input_vector * move_speed
 		host.move_and_slide()
 
@@ -29,4 +33,4 @@ func _physics_process(delta: float) -> void:
 func set_move_speed(speed: float) -> void:
 	move_speed = speed
 
-# Top-down 8-direction movement: attach under a CharacterBody2D; moves with the ui_* input actions.
+# Top-down 8-direction movement: attach under a CharacterBody2D; moves with the ui_* input actions. An AI can steer it through the standard drive seam: flip ai_controlled on and write ai_move_x/ai_move_y.

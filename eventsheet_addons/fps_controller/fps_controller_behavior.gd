@@ -53,6 +53,9 @@ signal wall_ride_ended
 ## @ace_category("FPS Controller")
 signal wall_jumped
 
+@export var ai_controlled: bool = false
+var ai_move_x: float = 0.0
+var ai_move_z: float = 0.0
 @export var camera_distance: float = 3.5
 @export var capture_mouse_on_ready: bool = true
 @export var crouch_height: float = 0.9
@@ -125,7 +128,9 @@ func _physics_process(delta: float) -> void:
 			do_crouch()
 	elif crouching:
 		stand_up()
-	var input_vec := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	# The standard AI drive seam: a driver (a 3D navigator, a cutscene) writes ai_move_x/z
+	# and flips ai_controlled on; off (the default) this is exactly the keyboard read.
+	var input_vec := Vector2(ai_move_x, ai_move_z).limit_length(1.0) if ai_controlled else Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	var direction := host.transform.basis * Vector3(input_vec.x, 0.0, input_vec.y)
 	if direction.length() > 1.0:
 		direction = direction.normalized()

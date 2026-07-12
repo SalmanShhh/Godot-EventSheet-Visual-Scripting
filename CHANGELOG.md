@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Added - pathfinding round 2: portals, variable jump, the universal AI drive seam
+
+- **Portals**: `Add Portal` links two world positions into the nav graph - an agent whose route
+  uses one walks to the entrance and BLINKS to the exit, firing On Portal Taken. Doors,
+  teleporters, ladders, and elevators all model as portals; they join the graph immediately and
+  survive Regenerate Nav Graph. `Clear Portals` removes them.
+- **Variable jump** (`variable_jump` knob, on by default, toggleable): each AI jump releases the
+  movement pack's jump at the height its arc actually needs - flat gap hops stay low and quick,
+  tall ledges get the full rise - so pathfinding movement stops looking like a series of moon
+  jumps. Arcs that need (nearly) the whole jump are never cut (releasing a near-max jump on its
+  first frames would kill the climb - found and fixed in the live smoke run).
+- **Movement behaviors auto-adapt - the universal AI drive seam**: PlatformerMovement,
+  **8-Direction**, and the **FPS Controller** now all carry the same inert-by-default seam
+  (`ai_controlled` + `ai_move_axis` / `ai_move_x`/`ai_move_y` / `ai_move_x`/`ai_move_z`) - flip
+  it on and write the intent, and the pack moves exactly as it does under the keyboard. And
+  with NO movement sibling at all, Platformer Pathfinding's built-in **fallback driver** now
+  moves the CharacterBody2D itself (fallback speed/jump/gravity knobs) - one behavior on any
+  body pathfinds out of the box.
+- **The Path Chase showcase got bigger**: a floating platform reachable ONLY through the purple
+  portal pair (the Player starts there), and a tile BRIDGE over the gap that toggles every 3
+  seconds + Regenerate Nav Graph - the route flips between walking the bridge and jumping the
+  gap live, and falling in when it vanishes is escapable (the pit is jump-out-able).
+  Live-verified end to end: the smoke run asserts path found, bridge toggled, portal taken, and
+  the Chaser standing next to the Player (22px) on the portal-only platform.
+
 ### Added - Platformer Pathfinding (61st pack) + the Path Chase showcase
 
 - **Platformer Pathfinding**: jump-aware navigation for 2D platformers - Godot's navigation is

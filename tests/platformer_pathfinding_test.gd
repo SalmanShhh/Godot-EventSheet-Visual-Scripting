@@ -65,9 +65,37 @@ static func run() -> bool:
 	all_passed = _check("A* reaches the raised platform", not up_top.is_empty() and up_top.back() == Vector2i(13, 2), true) and all_passed
 	all_passed = _check("an unreachable goal returns an empty route", behavior._astar(Vector2i(0, 4), Vector2i(30, 30)).is_empty(), true) and all_passed
 
-	# ── Derived reach falls back safely with no movement sibling ──────────────────
+	# ── Portals: linked into the graph, surviving regenerate, cleared on demand ───
+	behavior.add_portal(16.0, 144.0, 432.0, 80.0, true)
+	all_passed = _check("a portal links its endpoints' nearest nodes", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "portal") and all_passed
+	all_passed = _check("bidirectional portals link back too", _edge_kind(behavior, Vector2i(13, 2), Vector2i(0, 4)), "portal") and all_passed
+	behavior.regenerate_nav_graph()
+	all_passed = _check("portals survive Regenerate Nav Graph", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "portal") and all_passed
+	var through_portal: Array = behavior._astar(Vector2i(0, 4), Vector2i(13, 2))
+	all_passed = _check("A* takes the portal shortcut (start straight to goal)", through_portal, [Vector2i(0, 4), Vector2i(13, 2)]) and all_passed
+	behavior.clear_portals()
+	all_passed = _check("Clear Portals removes the link", _edge_kind(behavior, Vector2i(0, 4), Vector2i(13, 2)), "") and all_passed
+
+	# ── The universal AI drive seam: every input-reading movement pack carries it ─
+	all_passed = _check("variable jump ships on (toggleable)", behavior.get("variable_jump"), true) and all_passed
+	all_passed = _check("the fallback driver knobs exist", behavior.get("fallback_move_speed") != null and behavior.get("fallback_jump_velocity") != null and behavior.get("fallback_gravity") != null, true) and all_passed
+	var seam_specs: Array = [
+		["res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd", ["ai_controlled", "ai_move_axis"]],
+		["res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd", ["ai_controlled", "ai_move_x", "ai_move_y"]],
+		["res://eventsheet_addons/fps_controller/fps_controller_behavior.gd", ["ai_controlled", "ai_move_x", "ai_move_z"]],
+	]
+	for seam_spec: Array in seam_specs:
+		var pack_script: GDScript = load(str(seam_spec[0]))
+		var pack_instance: Node = pack_script.new()
+		for seam_var: String in (seam_spec[1] as Array):
+			all_passed = _check("%s carries the %s seam" % [str(seam_spec[0]).get_file(), seam_var], pack_instance.get(seam_var) != null, true) and all_passed
+		all_passed = _check("%s seam is INERT by default" % str(seam_spec[0]).get_file(), pack_instance.get("ai_controlled"), false) and all_passed
+		pack_instance.free()
+
+	# ── Derived reach with no movement sibling comes from the fallback driver knobs
+	# (speed 200, jump -400, gravity 980 -> 147px across, 73px up -> 5 x 3 cells).
 	var reach: Vector2i = behavior._jump_reach_cells()
-	all_passed = _check("fallback jump reach is sane (4 across, 3 up)", reach, Vector2i(4, 3)) and all_passed
+	all_passed = _check("fallback jump reach derives from the fallback knobs (5 across, 3 up)", reach, Vector2i(5, 3)) and all_passed
 
 	# ── The pack's public surface exists ───────────────────────────────────────────
 	for method_name: String in ["build_nav_graph", "regenerate_nav_graph", "find_path_to", "find_path_to_node", "stop_pathfinding", "set_auto_control", "set_nav_debug_draw", "has_path", "path_wants_jump", "path_move_axis", "waypoint_count", "current_waypoint_x", "current_waypoint_y", "current_path_action"]:

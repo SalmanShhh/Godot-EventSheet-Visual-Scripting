@@ -60,12 +60,15 @@ static func run() -> bool:
 	passed = _check_sheet("path_chase", "res://demo/showcase/path_chase/path_chase.gd", [
 		"class_name PathChaseDemo",
 		"$Chaser/Pathfinding.build_nav_graph($Level)",
+		"$Chaser/Pathfinding.add_portal(976.0, 528.0, 176.0, 304.0, true)",
 		"$Chaser/Pathfinding.set_nav_debug_draw(true)",
 		"$Chaser/Pathfinding.find_path_to_node($Player, \"nearest\")",
+		"$Chaser/Pathfinding.regenerate_nav_graph()",
+		"func toggle_bridge() -> void:",
 		"$Player/Movement.jump()",
 	]) and passed
-	passed = _check_scene("path_chase scene wires the Level + both actors' behaviors",
-		"res://demo/showcase/path_chase/path_chase.tscn", ["Level", "Player", "Chaser", "Movement", "Pathfinding"]) and passed
+	passed = _check_scene("path_chase scene wires the Level + actors + the portal pair",
+		"res://demo/showcase/path_chase/path_chase.tscn", ["Level", "Player", "Chaser", "Movement", "Pathfinding", "PortalEntrance", "PortalExit"]) and passed
 
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/carousel/showcase_carousel.gd", [

@@ -14,6 +14,9 @@ func _enter_tree() -> void:
 		push_warning("PlatformerPathfinding behavior requires a CharacterBody2D parent.")
 
 ## @ace_trigger
+## @ace_name("On Portal Taken")
+signal portal_taken
+## @ace_trigger
 ## @ace_name("On Path Found")
 signal path_found
 ## @ace_trigger
@@ -35,12 +38,20 @@ signal nav_graph_built
 @export var auto_control: bool = true
 ## Draw the active path as a line in the world.
 @export var debug_draw: bool = false
+## The fallback driver's gravity.
+@export var fallback_gravity: float = 980.0
+## The fallback driver's jump velocity (negative = up). Also sizes jump arcs when nothing can be derived.
+@export var fallback_jump_velocity: float = -400.0
+## No movement sibling? The built-in fallback driver moves the CharacterBody2D itself at this speed.
+@export var fallback_move_speed: float = 200.0
 ## Max jump distance in px (0 = derive it from the sibling PlatformerMovement's speed and air time).
 @export var jump_distance_override: float = 0.0
 ## Max jump height in px (0 = derive it from the sibling PlatformerMovement's jump_velocity/gravity).
 @export var jump_height_override: float = 0.0
 ## The furthest safe drop (px) the graph will route through.
 @export var max_fall_distance: float = 320.0
+## Release the jump at the height each arc actually needs (short hops for flat gaps, full rises for tall ledges) - smoother-looking movement. Off = every jump is full height.
+@export var variable_jump: bool = true
 
 # --- Internal state (the graph lives per agent in P1) ---
 var _tilemap: TileMapLayer = null
@@ -53,8 +64,12 @@ var _edges: Dictionary = {}
 var _path: Array = []
 var _path_index: int = 0
 var _jumped_this_segment: bool = false
+var _jump_released: bool = false
+var _jump_release_velocity: float = 0.0
 var _move_axis: float = 0.0
 var _debug_line: Line2D = null
+## Registered portals: {"from": Vector2, "to": Vector2, "both": bool} - survive regenerate.
+var _portals: Array = []
 ## The sibling movement pack, duck-typed: any child of the host with a move_speed and a
 ## jump() (PlatformerMovement, or your own driver with the same surface).
 ## @ace_hidden
@@ -83,15 +98,20 @@ func _jump_reach_cells() -> Vector2i:
 			height_px = rise * rise / (2.0 * fall_pull) * 0.9
 		if distance_px <= 0.0:
 			distance_px = float(movement.get("move_speed")) * (2.0 * rise / fall_pull) * 0.9
+	# No sibling to derive from: size arcs from the fallback driver's own physics.
+	var fallback_rise: float = absf(fallback_jump_velocity)
 	if height_px <= 0.0:
-		height_px = tile * 2.5
+		height_px = fallback_rise * fallback_rise / (2.0 * maxf(fallback_gravity, 1.0)) * 0.9
 	if distance_px <= 0.0:
-		distance_px = tile * 4.0
+		distance_px = fallback_move_speed * (2.0 * fallback_rise / maxf(fallback_gravity, 1.0)) * 0.9
 	return Vector2i(maxi(int(ceil(distance_px / tile)), 1), maxi(int(ceil(height_px / tile)), 1))
 ## The standable node nearest a world position (within max_cells), or Vector2i.MAX.
+## Tree-safe: outside a scene tree (tools, tests) the tilemap's own offset stands in for
+## the global transform.
 ## @ace_hidden
 func _nearest_node(world: Vector2, max_cells: int) -> Vector2i:
-	var around: Vector2i = _tilemap.local_to_map(_tilemap.to_local(world))
+	var local: Vector2 = _tilemap.to_local(world) if _tilemap.is_inside_tree() else world - _tilemap.position
+	var around: Vector2i = _tilemap.local_to_map(local)
 	var best: Vector2i = Vector2i.MAX
 	var best_distance: float = float(max_cells) + 0.51
 	for cell in _nodes:
@@ -106,6 +126,13 @@ func _physics_process(delta: float) -> void:
 		return
 	var waypoint: Dictionary = _path[_path_index]
 	var target: Vector2 = waypoint["world"]
+	# Portal traversal: the waypoint IS the exit - blink there and continue.
+	if waypoint["action"] == "portal":
+		host.global_position = target
+		host.velocity = Vector2.ZERO
+		portal_taken.emit()
+		_advance_waypoint()
+		return
 	var dx: float = target.x - host.global_position.x
 	_move_axis = clampf(dx / 24.0, -1.0, 1.0) if absf(dx) > 2.0 else 0.0
 	var movement: Node = _find_movement()
@@ -115,19 +142,44 @@ func _physics_process(delta: float) -> void:
 	var wants_jump: bool = waypoint["action"] == "jump"
 	if not wants_jump and waypoint["action"] == "walk":
 		wants_jump = target.y < host.global_position.y - 8.0 and absf(dx) < tile * 1.5
-	if auto_control and movement != null:
-		movement.set("ai_controlled", true)
-		movement.set("ai_move_axis", _move_axis)
-		if wants_jump and not _jumped_this_segment and host.is_on_floor():
+	if auto_control:
+		var start_jump: bool = wants_jump and not _jumped_this_segment and host.is_on_floor()
+		if start_jump:
 			_jumped_this_segment = true
-			movement.jump()
+			_jump_released = false
+			_jump_release_velocity = _release_velocity_for(target)
+			# An arc that needs (nearly) the whole jump must never be cut - releasing a
+			# near-max jump on its first frames kills the climb. Variable jump only arms
+			# when there is clear headroom.
+			var full_rise: float = absf(float(movement.get("jump_velocity"))) if movement != null else absf(fallback_jump_velocity)
+			if _jump_release_velocity >= full_rise * 0.85:
+				_jump_release_velocity = 0.0
+		# Variable jump: once remaining upward speed is just enough for THIS arc's rise,
+		# release - flat gap hops stay low, tall ledges get the full jump.
+		var release_now: bool = variable_jump and _jumped_this_segment and not _jump_released and host.velocity.y < 0.0 and absf(host.velocity.y) <= _jump_release_velocity
+		if movement != null:
+			# The standard drive seam on the movement sibling - its accel, coyote time, and
+			# jump feel all still apply under AI control.
+			movement.set("ai_controlled", true)
+			movement.set("ai_move_axis", _move_axis)
+			if start_jump:
+				movement.jump()
+			if release_now and movement.has_method("jump_released"):
+				_jump_released = true
+				movement.jump_released()
+		else:
+			# No movement sibling: the built-in fallback drives the CharacterBody2D itself,
+			# so ANY body pathfinds out of the box (attach one behavior, done).
+			host.velocity.y = minf(host.velocity.y + fallback_gravity * delta, 1000.0)
+			host.velocity.x = _move_axis * fallback_move_speed
+			if start_jump:
+				host.velocity.y = fallback_jump_velocity
+			if release_now:
+				_jump_released = true
+				host.velocity.y *= 0.45
+			host.move_and_slide()
 	if absf(dx) <= arrive_distance and absf(target.y - host.global_position.y) <= tile:
-		_jumped_this_segment = false
-		_path_index += 1
-		waypoint_reached.emit()
-		if _path_index >= _path.size():
-			stop_pathfinding()
-			path_complete.emit()
+		_advance_waypoint()
 	if debug_draw:
 		_refresh_debug()
 
@@ -184,6 +236,9 @@ func regenerate_nav_graph() -> void:
 				var kind: String = "fall" if dy > 0 and absi(dx) <= 2 else "jump"
 				var span: float = Vector2(float(dx), float(dy)).length()
 				_add_edge(cell, to, kind, span * (1.5 if kind == "jump" else 1.1))
+	# Registered portals survive every rebuild.
+	for portal in _portals:
+		_apply_portal(portal)
 	nav_graph_built.emit()
 
 ## @ace_action
@@ -259,6 +314,28 @@ func set_auto_control(enabled: bool) -> void:
 			movement.set("ai_controlled", false)
 
 ## @ace_action
+## @ace_name("Add Portal")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("Links two world positions as a PORTAL: an agent whose route uses it walks to the entrance and blinks to the exit (fires On Portal Taken). Bidirectional works both ways. Portals join the graph immediately and survive Regenerate - doors, teleporters, ladders, and elevators all model as portals.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.add_portal({from_x}, {from_y}, {to_x}, {to_y}, {bidirectional})")
+func add_portal(from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool) -> void:
+	var portal: Dictionary = {"from": Vector2(from_x, from_y), "to": Vector2(to_x, to_y), "both": bidirectional}
+	_portals.append(portal)
+	if not _nodes.is_empty():
+		_apply_portal(portal)
+
+## @ace_action
+## @ace_name("Clear Portals")
+## @ace_category("Platformer Pathfinding")
+## @ace_description("Removes every registered portal (takes effect on the next Regenerate Nav Graph).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$PlatformerPathfinding.clear_portals()")
+func clear_portals() -> void:
+	_portals = []
+	regenerate_nav_graph()
+
+## @ace_action
 ## @ace_name("Set Nav Debug Draw")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Draws the active path as a line in the world (great while tuning a level).")
@@ -332,6 +409,35 @@ func current_waypoint_y() -> float:
 func current_path_action() -> String:
 	return str(_path[_path_index]["action"]) if not _path.is_empty() else ""
 
+func _drive_gravity() -> float:
+	var movement: Node = _find_movement()
+	if movement != null and movement.get("gravity") != null:
+		return maxf(float(movement.get("gravity")), 1.0)
+	return maxf(fallback_gravity, 1.0)
+
+func _release_velocity_for(target: Vector2) -> float:
+	var rise: float = maxf(host.global_position.y - target.y, 0.0) + 20.0
+	return sqrt(2.0 * _drive_gravity() * rise)
+
+func _apply_portal(portal: Dictionary) -> void:
+	var from_node: Vector2i = _nearest_node(portal["from"], 2)
+	var to_node: Vector2i = _nearest_node(portal["to"], 2)
+	if from_node == Vector2i.MAX or to_node == Vector2i.MAX:
+		return
+	_add_edge(from_node, to_node, "portal", 2.0)
+	if bool(portal["both"]):
+		_add_edge(to_node, from_node, "portal", 2.0)
+
+## @ace_hidden
+func _advance_waypoint() -> void:
+	_jumped_this_segment = false
+	_jump_released = false
+	_path_index += 1
+	waypoint_reached.emit()
+	if _path_index >= _path.size():
+		stop_pathfinding()
+		path_complete.emit()
+
 func _arc_clear(from_cell: Vector2i, to_cell: Vector2i, solid: Dictionary) -> bool:
 	if solid.has(from_cell + Vector2i(0, -1)) or solid.has(to_cell + Vector2i(0, -1)):
 		return false
@@ -349,7 +455,8 @@ func _add_edge(from_cell: Vector2i, to_cell: Vector2i, kind: String, cost: float
 
 ## @ace_hidden
 func _cell_world(cell: Vector2i) -> Vector2:
-	return _tilemap.to_global(_tilemap.map_to_local(cell))
+	var local: Vector2 = _tilemap.map_to_local(cell)
+	return _tilemap.to_global(local) if _tilemap.is_inside_tree() else local + _tilemap.position
 
 func _astar(start: Vector2i, goal: Vector2i) -> Array:
 	var open: Array = [start]

@@ -1665,18 +1665,24 @@ const PLATFORMER_MOVEMENT := "res://eventsheet_addons/platformer_movement/platfo
 const PLATFORMER_PATHFINDING := "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd"
 
 
-## The pathfinding pairing showcase: a tile level (ground with a gap, a two-step stair to a mid
-## platform, a hop, and a high platform), a keyboard-driven Player, and a Chaser whose
-## PlatformerPathfinding behavior routes to the Player once a second and DRIVES the sibling
-## PlatformerMovement through its ai_move_axis seam - stairs walk, the gap is jumped, the
-## platforms are climbed, and the green debug line shows the live path.
+## The pathfinding pairing showcase: a tile level (ground with a gap + an escapable pit, a
+## two-step stair to a mid platform, a hop, a high platform, and a floating platform that is
+## PORTAL-ONLY), a keyboard-driven Player, and a Chaser whose PlatformerPathfinding behavior
+## routes to the Player once a second and DRIVES the sibling PlatformerMovement through its
+## ai_move_axis seam. A tile BRIDGE across the gap toggles every 3 seconds (Regenerate Nav
+## Graph after each toggle) so the route flips between walking the bridge and jumping the gap,
+## the portal blinks the Chaser up to the floating platform, and variable jump keeps flat hops
+## low. Green line = the live path.
 func _build_path_chase() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "PathChaseDemo"
 	sheet.emit_live_values = false
+	sheet.variables = {
+		"bridge_on": {"type": "bool", "default": false, "exported": false}
+	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with. Green line = the Chaser's live path."
+	about.text = "[b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with, variable jump included. The purple PORTAL pair links the ground to the floating platform (blink on arrival), and the tile BRIDGE over the gap toggles every 3 seconds + Regenerate Nav Graph, so the route flips between walking it and jumping the gap live. Green line = the Chaser's path."
 	sheet.events.append(about)
 
 	var on_ready: EventRow = EventRow.new()
@@ -1685,6 +1691,7 @@ func _build_path_chase() -> bool:
 	var on_ready_body: RawCodeRow = RawCodeRow.new()
 	on_ready_body.code = "\n".join(PackedStringArray([
 		"$Chaser/Pathfinding.build_nav_graph($Level)",
+		"$Chaser/Pathfinding.add_portal(976.0, 528.0, 176.0, 304.0, true)",
 		"$Chaser/Pathfinding.set_nav_debug_draw(true)"
 	]))
 	on_ready.actions.append(on_ready_body)
@@ -1699,6 +1706,32 @@ func _build_path_chase() -> bool:
 	repath_body.code = "$Chaser/Pathfinding.find_path_to_node($Player, \"nearest\")"
 	repath.actions.append(repath_body)
 	sheet.events.append(repath)
+
+	# The moving object: a tile bridge across the gap appears/vanishes every 3 seconds, and
+	# one Regenerate Nav Graph makes the router see the new level instantly.
+	var bridge: EventRow = EventRow.new()
+	bridge.trigger_provider_id = "Core"
+	bridge.trigger_id = "OnProcess"
+	bridge.conditions.append(_every("bridge", "3.0"))
+	var bridge_body: RawCodeRow = RawCodeRow.new()
+	bridge_body.code = "toggle_bridge()"
+	bridge.actions.append(bridge_body)
+	sheet.events.append(bridge)
+
+	var bridge_fn: EventFunction = EventFunction.new()
+	bridge_fn.function_name = "toggle_bridge"
+	bridge_fn.enabled = true
+	bridge_fn.description = "Places or removes the bridge tiles over the gap, then rebuilds the nav graph so routes flip between walking the bridge and jumping the gap."
+	bridge_fn.events = [_raw("\n".join(PackedStringArray([
+		"bridge_on = not bridge_on",
+		"for x in range(15, 18):",
+		"\tif bridge_on:",
+		"\t\t$Level.set_cell(Vector2i(x, 17), 0, Vector2i.ZERO)",
+		"\telse:",
+		"\t\t$Level.erase_cell(Vector2i(x, 17))",
+		"$Chaser/Pathfinding.regenerate_nav_graph()"
+	])))]
+	sheet.functions.append(bridge_fn)
 
 	# Player jump keys (movement itself reads ui_left/ui_right on its own).
 	var jump_keys: EventRow = EventRow.new()
@@ -1728,14 +1761,17 @@ func _build_path_chase() -> bool:
 	root.name = "PathChase"
 	root.set_script(load("res://demo/showcase/path_chase/path_chase.gd"))
 
-	# The level: ground with a 3-cell gap, a two-step stair onto a mid platform, a hop
-	# platform after the gap, and a high platform (the Player's perch). 32px tiles.
+	# The level: ground with a 3-cell gap (pit floor below, escapable), a two-step stair onto
+	# a mid platform, a hop platform, a high platform, and a floating platform reachable ONLY
+	# through the portal. 32px tiles.
 	var level: TileMapLayer = TileMapLayer.new()
 	level.name = "Level"
 	level.tile_set = _chase_tileset()
 	for x in range(1, 35):
 		if x < 15 or x > 17:
 			level.set_cell(Vector2i(x, 17), 0, Vector2i.ZERO)
+	for x in range(15, 18):
+		level.set_cell(Vector2i(x, 19), 0, Vector2i.ZERO)
 	for wall_y in range(10, 18):
 		level.set_cell(Vector2i(0, wall_y), 0, Vector2i.ZERO)
 		level.set_cell(Vector2i(35, wall_y), 0, Vector2i.ZERO)
@@ -1748,10 +1784,24 @@ func _build_path_chase() -> bool:
 		level.set_cell(Vector2i(x, 15), 0, Vector2i.ZERO)
 	for x in range(22, 28):
 		level.set_cell(Vector2i(x, 13), 0, Vector2i.ZERO)
+	for x in range(3, 9):
+		level.set_cell(Vector2i(x, 10), 0, Vector2i.ZERO)
 	root.add_child(level)
 	level.owner = root
 
-	var player: CharacterBody2D = _chase_actor("Player", Vector2(784.0, 384.0), Color(0.35, 0.65, 1.0))
+	# The portal pair: entrance on the right ground, exit on the floating platform (the
+	# platform is 7 cells up - portal-only by design). Purple markers are visuals; the LINK
+	# is the sheet's add_portal call.
+	for portal_spec: Array in [["PortalEntrance", Vector2(976.0, 528.0)], ["PortalExit", Vector2(176.0, 304.0)]]:
+		var portal_marker: ColorRect = ColorRect.new()
+		portal_marker.name = str(portal_spec[0])
+		portal_marker.color = Color(0.72, 0.4, 1.0, 0.85)
+		portal_marker.position = (portal_spec[1] as Vector2) + Vector2(-10.0, -26.0)
+		portal_marker.size = Vector2(20.0, 42.0)
+		root.add_child(portal_marker)
+		portal_marker.owner = root
+
+	var player: CharacterBody2D = _chase_actor("Player", Vector2(208.0, 288.0), Color(0.35, 0.65, 1.0))
 	root.add_child(player)
 	_own_deep(player, root)
 	_attach_behavior(player, "Movement", PLATFORMER_MOVEMENT, root)
@@ -1769,7 +1819,7 @@ func _build_path_chase() -> bool:
 	hud.name = "Hud"
 	hud.position = Vector2(24.0, 16.0)
 	hud.add_theme_font_size_override("font_size", 18)
-	hud.text = "Arrows move · Space jumps · the red Chaser pathfinds to you (green line = its path)"
+	hud.text = "Arrows move · Space jumps · the red Chaser pathfinds to you (green = its path)\nPurple = a portal pair (it blinks through) · the bridge over the gap toggles every 3s and it re-routes"
 	hud_layer.add_child(hud)
 	hud.owner = root
 
