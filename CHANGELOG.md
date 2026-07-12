@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added - the player-or-AI input seam on every input-reading pack
+
+- **The universal AI drive seam now covers ALL input-reading behavior packs.** Car
+  (`ai_throttle_axis`/`ai_steer_axis`), Tile Movement, Slide Move, and Virtual Cursor
+  (`ai_move_x`/`ai_move_y`) join Platformer Movement, 8-Direction, and the FPS Controller:
+  flip the exported `ai_controlled` and hold the persistent `ai_*` intents - the pack moves
+  with the same feel knobs the player gets. Off (the default) every pack reads real input
+  exactly as before.
+- **Virtual Cursor: On Cursor Arrived.** The Simulate Mouse glide now fires a trigger when
+  it lands, so scripted/AI cursor moves sequence in rows: glide to the card, arrive, press
+  interact, glide to the slot, drop. Combined with Drag & Drop's Start Drag At Object this
+  makes a fully AI-driven drag & drop (bot hands, tutorials, card-game opponents) a
+  handful of rows - verified live end to end with zero real input.
+- **Guide: `docs/GUIDE-PLAYER-AND-AI-INPUT.md`** - the whole convention on one page: the
+  per-pack seam table, the three input styles (real input / persistent intents / one-shot
+  Simulate verbs), the AI drag & drop recipe, and the 3-line recipe for putting the same
+  seam in your own addons.
+
 ### Added - pathfinding P4: hazards + moving platforms
 
 - **Add Hazard / Clear Hazards** (Platformer Pathfinding): mark a world rectangle as

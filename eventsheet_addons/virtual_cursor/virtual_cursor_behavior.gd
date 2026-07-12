@@ -22,6 +22,9 @@ signal interact_released(id: String)
 ## @ace_name("On Layout Edge Hit")
 signal layout_edge_hit
 ## @ace_trigger
+## @ace_name("On Cursor Arrived")
+signal cursor_arrived
+## @ace_trigger
 ## @ace_name("On Homing Target Entered")
 signal homing_target_entered
 ## @ace_trigger
@@ -39,6 +42,10 @@ signal bounce_triggered
 
 ## Speed-up rate while axis held (px/s^2).
 @export var acceleration: float = 1800.0
+## AI drive: read ai_move_x/ai_move_y instead of the ui_* actions (a sheet or AI driver flips this on to steer the cursor).
+@export var ai_controlled: bool = false
+var ai_move_x: float = 0.0
+var ai_move_y: float = 0.0
 ## Slide along solids instead of hard-stop.
 @export var allow_sliding: bool = true
 var blocked_this_tick: bool = false
@@ -118,6 +125,10 @@ func _physics_process(delta: float) -> void:
 		axis = simulated_axis.limit_length(1.0)
 		simulated_axis = Vector2.ZERO
 		has_simulated_axis = false
+	elif ai_controlled:
+		# The AI seam: a driver holds ai_move_x/ai_move_y - the same persistent-axis
+		# contract the movement packs carry (one write drives until changed).
+		axis = Vector2(ai_move_x, ai_move_y).limit_length(1.0)
 	elif default_controls:
 		axis = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	else:
@@ -139,6 +150,9 @@ func _physics_process(delta: float) -> void:
 		if to.length() < 0.5:
 			vel *= 0.5
 			has_mouse_target = false
+			# The glide landed - the sequencing hook for scripted/AI cursor moves
+			# (glide with Simulate Mouse, then press interact On Cursor Arrived).
+			cursor_arrived.emit()
 	elif axis != Vector2.ZERO:
 		var dir := axis.normalized()
 		var spd := minf(vel.length() + acceleration * delta, max_speed)

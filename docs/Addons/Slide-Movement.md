@@ -101,6 +101,7 @@ Character On Hit Wall
 | Wall Mask | layer 1 | Which physics collision layer counts as a wall. |
 | Default Controls | on | Let the arrow keys / ui_* actions start a slide automatically. |
 | Max Slide Tiles | 64 | Safety cap on how many tiles a single slide may cross. |
+| AI Controlled | off | AI drive: the held `ai_move_x`/`ai_move_y` intents start slides instead of the arrow keys - the dominant axis wins, same as the keys (see docs/GUIDE-PLAYER-AND-AI-INPUT.md). |
 
 ## Use cases
 

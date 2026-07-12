@@ -33,8 +33,13 @@ signal on_hit_wall
 @export var default_controls: bool = true
 ## Safety cap: the most tiles a single slide may cross (stops a runaway slide on an open map).
 @export_range(1, 512, 1) var max_slide_tiles: int = 64
+## AI drive: read ai_move_x/ai_move_y instead of the arrow keys (a sheet or AI driver flips this on to steer).
+@export var ai_controlled: bool = false
 
 # --- Internal state ---
+# The AI seam's persistent intent axes - a driver holds them like held keys.
+var ai_move_x: float = 0.0
+var ai_move_y: float = 0.0
 var _sliding: bool = false
 var _dir: Vector2 = Vector2.ZERO
 var _target: Vector2 = Vector2.ZERO
@@ -203,7 +208,18 @@ func _move(delta: float) -> void:
 		else:
 			body.global_position += _dir * step
 		return
-	if default_controls:
+	# The AI seam: a driver holds ai_move_x/ai_move_y like held keys - the dominant
+	# axis starts the slide (same one-direction-at-a-time rule as the keyboard).
+	if ai_controlled:
+		if ai_move_x < -0.5:
+			slide("left")
+		elif ai_move_x > 0.5:
+			slide("right")
+		elif ai_move_y < -0.5:
+			slide("up")
+		elif ai_move_y > 0.5:
+			slide("down")
+	elif default_controls:
 		if Input.is_action_pressed(&"ui_left"):
 			slide("left")
 		elif Input.is_action_pressed(&"ui_right"):

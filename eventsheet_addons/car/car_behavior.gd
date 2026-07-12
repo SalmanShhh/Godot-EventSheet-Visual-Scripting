@@ -21,6 +21,10 @@ signal drift_recovered
 
 var _drifting: bool = false
 @export var acceleration: float = 300.0
+## AI drive: read ai_throttle_axis/ai_steer_axis instead of the keyboard (a sheet or AI driver flips this on to steer).
+@export var ai_controlled: bool = false
+var ai_steer_axis: float = 0.0
+var ai_throttle_axis: float = 0.0
 @export var deceleration: float = 400.0
 @export var drift_angle_threshold: float = 15.0
 @export var drift_recover: float = 0.15
@@ -32,14 +36,16 @@ var speed: float = 0.0
 func _physics_process(delta: float) -> void:
 	if host == null:
 		return
-	var throttle := Input.get_axis(&"ui_down", &"ui_up")
+	# The AI seam: a driver writes ai_throttle_axis/ai_steer_axis and flips ai_controlled
+	# on; off (the default) these are exactly the keyboard reads they always were.
+	var throttle := ai_throttle_axis if ai_controlled else Input.get_axis(&"ui_down", &"ui_up")
 	if throttle > 0.0:
 		speed = minf(speed + acceleration * delta, max_speed)
 	elif throttle < 0.0:
 		speed = maxf(speed - acceleration * delta, -max_speed * 0.5)
 	else:
 		speed = move_toward(speed, 0.0, deceleration * delta)
-	var steer := Input.get_axis(&"ui_left", &"ui_right")
+	var steer := ai_steer_axis if ai_controlled else Input.get_axis(&"ui_left", &"ui_right")
 	var steer_scale := 1.0 if (turn_while_stopped and absf(speed) < 1.0) else clampf(absf(speed) / max_speed, 0.0, 1.0) * signf(speed)
 	host.rotation += deg_to_rad(steer_degrees) * steer * delta * steer_scale
 	var heading := Vector2.from_angle(host.rotation) * speed

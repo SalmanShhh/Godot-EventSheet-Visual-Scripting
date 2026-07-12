@@ -146,6 +146,7 @@ Set these on the node for the default feel; each one also has the Set / Add To /
 | `drift_recover` | float | `0.15` | Grip: how much the velocity blends back to the heading each step (1 = grippy, low = drifty). |
 | `drift_angle_threshold` | float | `15.0` | Slide angle in degrees that counts as a drift. |
 | `turn_while_stopped` | bool | `false` | Allow steering while the car is standing still. |
+| `ai_controlled` | bool | `false` | AI drive: read the held `ai_throttle_axis`/`ai_steer_axis` intents instead of the keyboard - a sheet or AI drives with the same drift physics (see docs/GUIDE-PLAYER-AND-AI-INPUT.md). |
 
 ---
 

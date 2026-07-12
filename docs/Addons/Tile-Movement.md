@@ -126,6 +126,7 @@ All ACEs live in the **Tile Movement** category and act on the `TileMovementBeha
 | `tile_size` | float | `64.0` | Grid cell size in pixels; one step moves this far. Also readable as the `Tile Size` expression and settable with `Set Tile Size`. |
 | `move_time` | float | `0.15` | Seconds a single tile step takes to slide. Also readable as the `Move Time` expression and settable with `Set Move Time`. |
 | `default_controls` | bool | `true` | When on, arrow keys drive stepping automatically. Also readable as the `Default Controls` expression and settable with `Set Default Controls`. |
+| `ai_controlled` | bool | `false` | AI drive: read the held `ai_move_x`/`ai_move_y` intents instead of the arrow keys - a sheet or AI driver steps the host with the player's exact feel (see docs/GUIDE-PLAYER-AND-AI-INPUT.md). |
 
 ---
 

@@ -76,6 +76,7 @@ Separately, Simulate Mouse and Simulate Direct Mouse Position drive the cursor t
 | `deceleration` | `2400.0` | Slow-down rate when the axis is released (px/s^2). |
 | `allow_sliding` | `true` | Slide along solids (true) instead of hard-stopping (false). |
 | `default_controls` | `true` | Read `ui_left` / `ui_right` / `ui_up` / `ui_down` each tick (keyboard and gamepad). |
+| `ai_controlled` | `false` | AI drive: read the held `ai_move_x`/`ai_move_y` intents instead of the ui_* actions - a sheet or AI steers the cursor (see docs/GUIDE-PLAYER-AND-AI-INPUT.md). Pair with `Simulate Mouse` + the `On Cursor Arrived` trigger for point-to-point glides. |
 | `enabled` | `true` | Master on/off for the whole behavior. |
 | `constrain_to_layout` | `false` | Clamp the cursor inside the viewport or constraint bounds. |
 | `direction_mode` | `eight` | Movement axis constraint: `up_down`, `left_right`, `four`, or `eight`. |

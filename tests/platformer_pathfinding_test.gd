@@ -143,6 +143,10 @@ static func run() -> bool:
 		["res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd", ["ai_controlled", "ai_move_axis"]],
 		["res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd", ["ai_controlled", "ai_move_x", "ai_move_y"]],
 		["res://eventsheet_addons/fps_controller/fps_controller_behavior.gd", ["ai_controlled", "ai_move_x", "ai_move_z"]],
+		["res://eventsheet_addons/car/car_behavior.gd", ["ai_controlled", "ai_throttle_axis", "ai_steer_axis"]],
+		["res://eventsheet_addons/slide_move/slide_move_behavior.gd", ["ai_controlled", "ai_move_x", "ai_move_y"]],
+		["res://eventsheet_addons/tile_movement/tile_movement_behavior.gd", ["ai_controlled", "ai_move_x", "ai_move_y"]],
+		["res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior.gd", ["ai_controlled", "ai_move_x", "ai_move_y"]],
 	]
 	for seam_spec: Array in seam_specs:
 		var pack_script: GDScript = load(str(seam_spec[0]))
@@ -151,6 +155,13 @@ static func run() -> bool:
 			all_passed = _check("%s carries the %s seam" % [str(seam_spec[0]).get_file(), seam_var], pack_instance.get(seam_var) != null, true) and all_passed
 		all_passed = _check("%s seam is INERT by default" % str(seam_spec[0]).get_file(), pack_instance.get("ai_controlled"), false) and all_passed
 		pack_instance.free()
+
+	# Virtual Cursor's glide gained the arrival hook that lets a sheet sequence scripted/AI
+	# cursor moves (Simulate Mouse -> On Cursor Arrived -> Press Interact).
+	var cursor_script: GDScript = load("res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior.gd")
+	var cursor_instance: Node = cursor_script.new()
+	all_passed = _check("Virtual Cursor carries On Cursor Arrived", cursor_instance.has_signal("cursor_arrived"), true) and all_passed
+	cursor_instance.free()
 
 	# ── Derived reach with no movement sibling comes from the fallback driver knobs
 	# (speed 200, jump -400, gravity 980 -> 147px across, 73px up -> 5 x 3 cells).
