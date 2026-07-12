@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added - Nav Agent 3D (62nd pack): navmesh pathfinding, sheet-shaped
+
+- **Nav Agent 3D** completes the pathfinding pair (spec P3): a thin, zero-wiring wrapper over
+  Godot's navmesh navigation. Attach it under a `CharacterBody3D` and call **Find Path To** - a
+  `NavigationAgent3D` child is inserted and tuned for you (radius/height/arrive knobs), routes
+  come from the scene's `NavigationRegion3D`, and the verbs MIRROR the 2D Platformer
+  Pathfinding pack (Find Path To / Find Path To Node / Stop Pathfinding, the
+  Found/Failed/Complete trio, Has Path, `nearest`/`reach` modes) - learn one, know both.
+  Auto-control drives an `FPSController` sibling through the universal AI seam
+  (`ai_move_x`/`ai_move_z`), or the built-in mover drives the body itself; **Set Avoidance**
+  turns on RVO steering between agents; **Bake Navigation Region** rebakes the mesh at runtime.
+  3D slopes come free from the bake's max-angle setting. Guide: `docs/Addons/Nav-Agent-3D.md`.
+- **The FPS Arena showcase** gains an orange **Stalker** that bakes the arena's navmesh on ready
+  and navmesh-paths to the player once a second - live-verified (the smoke run asserts it closes
+  distance across the arena).
+- **Does Platformer Pathfinding work with nav meshes?** Documented honestly in its guide: no,
+  on purpose - navmeshes describe walkable surfaces and cannot express jumps, which is the whole
+  platformer problem; use the jump graph in 2D side-view and Nav Agent 3D where walking gets you
+  everywhere.
+
 ### Added - pathfinding round 2: portals, variable jump, the universal AI drive seam
 
 - **Portals**: `Add Portal` links two world positions into the nav graph - an agent whose route

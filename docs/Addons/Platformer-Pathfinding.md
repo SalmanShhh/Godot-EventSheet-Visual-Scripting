@@ -226,3 +226,9 @@ On Wall Destroyed
   can; a cutscene walk-to-mark should fail loudly if the mark is unreachable.
 - **Tune with the debug line on.** Set Nav Debug Draw during development; the green line shows
   exactly what the router decided, which makes level-layout problems obvious.
+- **Does it work with nav meshes? No - on purpose.** A navmesh describes walkable SURFACES and
+  has no concept of a jump, so it cannot express "leap this gap, climb that ledge" - which is
+  the whole problem in a side-view platformer. This pack builds its own jump graph from your
+  tiles instead. For 3D worlds (where walking really does get you everywhere the bake allows),
+  use the **Nav Agent 3D** pack - it wraps Godot's navmesh behind the SAME verb names, so
+  nothing new to learn.

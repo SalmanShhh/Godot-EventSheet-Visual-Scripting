@@ -1331,6 +1331,7 @@ func _own_deep(node: Node, root: Node) -> void:
 
 # ── 12. FPS Arena - first/third-person controller (fps_controller pack) ──────
 const FPS_CONTROLLER := "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
+const NAV_AGENT_3D := "res://eventsheet_addons/nav_agent_3d/nav_agent_3d_behavior.gd"
 
 
 ## A walkable 3D arena driven by the FPSController behavior: mouse look, WASD move, Shift
@@ -1348,12 +1349,22 @@ func _build_fps_arena() -> bool:
 	ready_event.trigger_id = "OnReady"
 	ready_event.actions.append(_action("Core", "PrintLog", "print({message})", {
 		"message": "\"FPS Arena - WASD/arrows move, mouse looks, Shift sprints, Space jumps, Tab flips the camera, Esc frees the mouse.\""}))
+	# Bake the navmesh from the arena's live geometry, then the stalker can path on it.
+	ready_event.actions.append(_raw("$Stalker/Navigator.bake_navigation_region($NavRegion)"))
 	sheet.events.append(ready_event)
 	var camera_toggle: EventRow = EventRow.new()
 	camera_toggle.trigger_provider_id = "Core"
 	camera_toggle.trigger_id = "OnProcess"
 	camera_toggle.actions.append(_raw("if Input.is_action_just_pressed(\"ui_focus_next\"):\n\t$Player/FPSController.toggle_camera_mode()"))
 	sheet.events.append(camera_toggle)
+	# The stalker: navmesh-path to wherever the player is, once a second (verb symmetry with
+	# the 2D Path Chase showcase - same Find Path To Node, different dimension).
+	var stalk: EventRow = EventRow.new()
+	stalk.trigger_provider_id = "Core"
+	stalk.trigger_id = "OnProcess"
+	stalk.conditions.append(_every("stalk", "1.0"))
+	stalk.actions.append(_raw("$Stalker/Navigator.find_path_to_node($Player, \"nearest\")"))
+	sheet.events.append(stalk)
 	if not _compile(sheet, "res://demo/showcase/fps_arena/fps_arena.tres", "res://demo/showcase/fps_arena/fps_arena.gd"):
 		return false
 
@@ -1367,9 +1378,16 @@ func _build_fps_arena() -> bool:
 	sun.shadow_enabled = true
 	root.add_child(sun); sun.owner = root
 
+	# Floor + crates live INSIDE the NavigationRegion3D so the runtime bake parses their
+	# meshes into the walkable surface (the stalker's world).
+	var nav_region: NavigationRegion3D = NavigationRegion3D.new()
+	nav_region.name = "NavRegion"
+	nav_region.navigation_mesh = NavigationMesh.new()
+	root.add_child(nav_region); nav_region.owner = root
+
 	var floor_body: StaticBody3D = StaticBody3D.new()
 	floor_body.name = "Floor"
-	root.add_child(floor_body); floor_body.owner = root
+	nav_region.add_child(floor_body); floor_body.owner = root
 	var floor_shape: CollisionShape3D = CollisionShape3D.new()
 	var floor_box: BoxShape3D = BoxShape3D.new()
 	floor_box.size = Vector3(40.0, 1.0, 40.0)
@@ -1395,7 +1413,7 @@ func _build_fps_arena() -> bool:
 		var crate: StaticBody3D = StaticBody3D.new()
 		crate.name = "Crate%d" % (crate_index + 1)
 		crate.position = crate_positions[crate_index]
-		root.add_child(crate); crate.owner = root
+		nav_region.add_child(crate); crate.owner = root
 		var crate_shape: CollisionShape3D = CollisionShape3D.new()
 		var crate_box: BoxShape3D = BoxShape3D.new()
 		crate_box.size = Vector3(2.0, 2.0, 2.0)
@@ -1446,6 +1464,29 @@ func _build_fps_arena() -> bool:
 	arm.add_child(camera); camera.owner = root
 	_attach_behavior(player, "FPSController", FPS_CONTROLLER, root, {})
 
+	# The stalker: an orange capsule that navmesh-paths to the player via the Nav Agent 3D
+	# pack's built-in driver (no FPS Controller on it - the fallback moves the body itself).
+	var stalker: CharacterBody3D = CharacterBody3D.new()
+	stalker.name = "Stalker"
+	stalker.position = Vector3(-12.0, 1.2, -12.0)
+	root.add_child(stalker); stalker.owner = root
+	var stalker_shape: CollisionShape3D = CollisionShape3D.new()
+	var stalker_capsule: CapsuleShape3D = CapsuleShape3D.new()
+	stalker_capsule.height = 1.8
+	stalker_capsule.radius = 0.4
+	stalker_shape.shape = stalker_capsule
+	stalker.add_child(stalker_shape); stalker_shape.owner = root
+	var stalker_mesh: MeshInstance3D = MeshInstance3D.new()
+	var stalker_capsule_mesh: CapsuleMesh = CapsuleMesh.new()
+	stalker_capsule_mesh.height = 1.8
+	stalker_capsule_mesh.radius = 0.4
+	var stalker_material: StandardMaterial3D = StandardMaterial3D.new()
+	stalker_material.albedo_color = Color(1.0, 0.5, 0.2, 1.0)
+	stalker_capsule_mesh.material = stalker_material
+	stalker_mesh.mesh = stalker_capsule_mesh
+	stalker.add_child(stalker_mesh); stalker_mesh.owner = root
+	_attach_behavior(stalker, "Navigator", NAV_AGENT_3D, root, {"move_speed": 3.0})
+
 	var hud_layer: CanvasLayer = CanvasLayer.new()
 	hud_layer.name = "HudLayer"
 	root.add_child(hud_layer); hud_layer.owner = root
@@ -1453,7 +1494,7 @@ func _build_fps_arena() -> bool:
 	hud.name = "Hud"
 	hud.position = Vector2(24.0, 20.0)
 	hud.add_theme_font_size_override("font_size", 20)
-	hud.text = "WASD/arrows move · mouse looks · Shift sprints · Space jumps · Tab flips camera · Esc frees mouse"
+	hud.text = "WASD/arrows move · mouse looks · Shift sprints · Space jumps · Tab flips camera · Esc frees mouse\nThe orange Stalker navmesh-paths to you (Nav Agent 3D)"
 	hud_layer.add_child(hud); hud.owner = root
 
 	return _save_scene(root, "res://demo/showcase/fps_arena/fps_arena.tscn")
