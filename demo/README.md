@@ -8,7 +8,7 @@ plain GDScript fall out of it. This folder is the guided tour.
 **If you're coming from Construct 3:** events read exactly like home - two-lane rows,
 a searchable picker that understands your vocabulary ("every tick", "go to layout",
 "choose"), behaviors that attach to objects, Wait actions, combo dropdowns, color
-pickers with swatches. **31 behavior packs** ship in the box - the C3 classics (Platformer,
+pickers with swatches. **62 behavior packs** ship in the box - the C3 classics (Platformer,
 8-Direction, Sine with wave types, Orbit ellipses, Bullet, Move To with waypoints,
 Follow with delay mode, **Drag & Drop** (event-driven: Start Drag / Set Drag Point / Drop
 with follow-speed, direction lock, throw and snapping - drivable by the **Virtual Cursor**
@@ -18,7 +18,7 @@ Timer, Flash, State Machine), a 3D starter quartet (Sine, Orbit, Bullet, Move To
 the juice duo: **Spring** (named numeric springs - squash & stretch in one action) and
 **Tween** (Godot Tweens with Inspector combos) - plus the 0.9.0 additions: **Juice** (screenshake /
 zoom / squash & stretch / slow-mo), **Time Slicer** + **Run In Background** (frame-spreading), **Weapon
-Kit**, **HTN Agent**, **Simple Abilities**, and **Advanced Random**.
+Kit**, **HTN Agent**, **Simple Abilities**, and **Advanced Random** - and the newer waves: the economy/narrative ports (Currency Ledger, Loot Table, Storylets, SkinVault, ProcRoom, UtilityBrain), the UI trio (HUD Kit / Scene Flow / Dialogue Kit), the incremental/idle kit, an **FPS Controller** with full movement tech, **Platformer Pathfinding** (2D jump graphs with portals) + **Nav Agent 3D** (navmesh, same verbs), and **Juice 3D** camera feel.
 
 **If you're a Godot user:** there is no runtime, no interpreter, no lock-in. Every sheet
 compiles to **typed, idiomatic GDScript** you could have written yourself - delete the

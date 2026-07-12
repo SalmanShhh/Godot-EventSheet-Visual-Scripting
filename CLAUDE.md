@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Godot EventSheets (engine codename EventForge): a Godot 4 `@tool` plugin providing a Construct 3-style event sheet editor that compiles sheets to plain, typed GDScript. `addons/eventforge/` is the data model, compiler, importer, and builtin ACE vocabulary; `addons/eventsheet/` is the editor (dock, virtualized viewport, renderer, picker, themes, MCP server); `eventsheet_addons/` holds the 31 behavior packs (COMPILER OUTPUT, regenerated from `tools/pack_builders/`); `AGENTS.md` has the deeper architecture map and standing contracts.
+Godot EventSheets (engine codename EventForge): a Godot 4 `@tool` plugin providing a Construct 3-style event sheet editor that compiles sheets to plain, typed GDScript. `addons/eventforge/` is the data model, compiler, importer, and builtin ACE vocabulary; `addons/eventsheet/` is the editor (dock, virtualized viewport, renderer, picker, themes, MCP server, drop-in CSV translations); `eventsheet_addons/` holds the 62 behavior packs (COMPILER OUTPUT, regenerated from `tools/pack_builders/` - builders auto-register by glob, no list to maintain); `demo/showcase/<name>/` holds the playable showcases (also generated - `tools/build_examples.gd`); `AGENTS.md` has the deeper architecture map and standing contracts.
 
 ## Commands
 
@@ -19,11 +19,14 @@ GODOT="/c/Users/mrlig/OneDrive/Desktop/GameDev Programs/Godot_v4.7-stable_win64.
 - Fast gate: `"$GODOT" --headless --path . --script tests/run_perf.gd`
 - Single test: there is no filter flag; run a scratch SceneTree script that calls `MyTest.run()` then `quit(0)`, or just run the full suite and grep for the test's name.
 - Pack drift gate (must print `drifted=0`): `"$GODOT" --headless --path . --script tools/audit_addons.gd`
-- Rebuild all packs after touching `tools/pack_builders/`: `"$GODOT" --headless --path . --script tools/build_sample_behaviors.gd`
+- Rebuild all packs after touching `tools/pack_builders/`: `"$GODOT" --headless --path . --script tools/build_sample_behaviors.gd` - then `--check-only --script` the emitted pack (the build + drift gates do NOT parse-check output).
+- Regenerate showcases after touching `tools/build_examples.gd`: `"$GODOT" --headless --path . --script tools/build_examples.gd` (regen must be byte-stable - verify by hashing the showcase folder across two runs, never with `git stash`).
 - Regenerate the vocabulary doc: `"$GODOT" --headless --path . --script tools/vocabulary_doc.gd`
+- Release ritual: bump `sheet_compiler.gd` `VERSION` + `addons/eventforge/plugin.cfg`, regenerate the demo golden (`tools/regenerate_demo_golden.gd`), finalize the CHANGELOG header + `docs/internal/RELEASE-NOTES-vX.md`, refresh README status/milestones + pack counts, delete shipped specs from `docs/internal/`, then commit + annotated tag `vX.Y.Z` + `git push --follow-tags`.
 - After adding a `class_name`, regenerate the editor class cache, then revert the churn:
   `"$GODOT" --editor --headless --path . --quit-after 3` followed by `git checkout -- project.godot`
 - Editor-UI screenshots are possible: run a `tools/render_*.gd` harness NON-headless (set `root.gui_embed_subwindows = true` for dialogs); headless runs cannot render.
+- Runtime smokes for showcases use the same pattern: a temp NON-headless SceneTree harness instantiates the scene, lets physics run N frames, asserts behavior (positions, signals), and screenshots - physics does NOT step in `run_tests.gd` (its `_init` runs before the main loop exists, so `Engine.get_main_loop()` is null there and tests cannot reach a scene tree or physics space).
 
 ## Verifying results (the traps that bite here)
 
@@ -52,6 +55,6 @@ GODOT="/c/Users/mrlig/OneDrive/Desktop/GameDev Programs/Godot_v4.7-stable_win64.
 - **No em-dashes anywhere in repo text** (docs, changelog, commit messages, code comments, emitted strings). Use " - ".
 - **Code never references documentation files** (no "see docs/X.md" in comments); state the point inline.
 - **Every feature lands with**: tests (suite green), a `CHANGELOG.md` `[Unreleased]` entry, and for UI features a rendered preview image shown to the user (delete the temp harness before committing).
-- Commit conventional-style directly to `main` and push; end commit messages with the Co-Authored-By trailer for the current model.
+- Commit conventional-style directly to `main` and push proactively (split unrelated work into separate commits).
 - Dialogs/popups build with `EventSheetPopupUI` helpers (`titled_card`, `panel_section`, `form_row`), not raw flat controls.
 - New behaviors/addons are authored as pack builders (`tools/pack_builders/*.gd`), not standalone addons.
