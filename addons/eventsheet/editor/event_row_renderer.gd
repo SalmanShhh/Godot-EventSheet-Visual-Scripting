@@ -184,6 +184,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	var editing_span_index: int = int(layout.get("editing_span_index", -1))
 	var editing_buffer: String = str(layout.get("editing_buffer", ""))
 	var editing_caret: int = int(layout.get("editing_caret", -1))
+	var editing_select_anchor: int = int(layout.get("editing_select_anchor", -1))
 	var selected_span_indices: Array = layout.get("selected_span_indices", [])
 	var hovered_span_index: int = int(layout.get("hovered_span_index", -1))
 	var total_selected_spans: int = int(layout.get("total_selected_spans", 0))
@@ -278,7 +279,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		soft_hover.a *= 0.4
 		control.draw_rect(row_rect, soft_hover, true)
 	_draw_fold_arrow(control, fold_rect, row_data.folded, not row_data.children.is_empty())
-	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill)
+	_draw_spans(control, row_data, font, font_size, editing_span_index, editing_buffer, editing_caret, editing_select_anchor, selected_span_indices, hovered_span_index, total_selected_spans, event_style, selection_fill, hover_fill)
 	if drag_rect.size != Vector2.ZERO:
 		if bool(layout.get("drag_rect_outline", false)):
 			# Group-fold drop: outline the whole target row (a filled row-sized rect would bury the
@@ -400,6 +401,7 @@ func _draw_spans(
 	editing_span_index: int,
 	editing_buffer: String,
 	editing_caret: int,
+	editing_select_anchor: int,
 	selected_span_indices: Array,
 	hovered_span_index: int,
 	total_selected_spans: int,
@@ -600,6 +602,16 @@ func _draw_spans(
 				true
 			)
 		if span_index == editing_span_index:
+			# Inline text selection: a translucent band over anchor..caret (drawn over the
+			# text, low alpha = the classic highlight look).
+			if editing_select_anchor >= 0 and editing_select_anchor != editing_caret:
+				var select_from: int = clamp(mini(editing_select_anchor, editing_caret), 0, draw_text.length())
+				var select_to: int = clamp(maxi(editing_select_anchor, editing_caret), 0, draw_text.length())
+				var select_x: float = text_x + font.get_string_size(draw_text.substr(0, select_from), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+				var select_w: float = font.get_string_size(draw_text.substr(select_from, select_to - select_from), HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+				select_w = minf(select_w, maxf(span.rect.end.x - right_padding - select_x, 0.0))
+				if select_w > 0.0:
+					control.draw_rect(Rect2(select_x, span.rect.position.y + 3.0, select_w, span.rect.size.y - 6.0), Color(0.45, 0.62, 1.0, 0.3), true)
 			var prefix: String = draw_text.substr(0, clamp(editing_caret, 0, draw_text.length()))
 			var prefix_width: float = font.get_string_size(prefix, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 			var caret_x: float = min(text_x + prefix_width + 1.0, span.rect.end.x - right_padding)

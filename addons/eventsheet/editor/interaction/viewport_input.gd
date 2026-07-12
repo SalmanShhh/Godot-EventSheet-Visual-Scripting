@@ -450,25 +450,65 @@ func handle_editing_key(event: InputEventKey) -> void:
 		_viewport.accept_event()
 		return
 	if event.keycode == KEY_BACKSPACE:
-		if _viewport._editing_caret > 0:
+		# A selection deletes as one unit (standard text-editing semantics).
+		if _viewport._editing_has_selection():
+			_viewport._delete_editing_selection()
+			_viewport._update_inline_format_bar()
+			_viewport.queue_redraw()
+		elif _viewport._editing_caret > 0:
 			_viewport._editing_buffer = _viewport._editing_buffer.substr(0, _viewport._editing_caret - 1) + _viewport._editing_buffer.substr(_viewport._editing_caret)
 			_viewport._editing_caret -= 1
 			_viewport.queue_redraw()
 		_viewport.accept_event()
 		return
 	if event.keycode == KEY_LEFT:
+		# Shift extends the selection (anchoring on the first shifted move); a plain
+		# arrow collapses it.
+		if event.shift_pressed and _viewport._editing_select_anchor < 0:
+			_viewport._editing_select_anchor = _viewport._editing_caret
+		elif not event.shift_pressed:
+			_viewport._editing_select_anchor = -1
 		_viewport._editing_caret = maxi(_viewport._editing_caret - 1, 0)
+		_viewport._update_inline_format_bar()
 		_viewport.queue_redraw()
 		_viewport.accept_event()
 		return
 	if event.keycode == KEY_RIGHT:
+		if event.shift_pressed and _viewport._editing_select_anchor < 0:
+			_viewport._editing_select_anchor = _viewport._editing_caret
+		elif not event.shift_pressed:
+			_viewport._editing_select_anchor = -1
 		_viewport._editing_caret = mini(_viewport._editing_caret + 1, _viewport._editing_buffer.length())
+		_viewport._update_inline_format_bar()
 		_viewport.queue_redraw()
+		_viewport.accept_event()
+		return
+	if event.keycode == KEY_A and (event.ctrl_pressed or event.meta_pressed):
+		_viewport._editing_select_anchor = 0
+		_viewport._editing_caret = _viewport._editing_buffer.length()
+		_viewport._update_inline_format_bar()
+		_viewport.queue_redraw()
+		_viewport.accept_event()
+		return
+	# Discord keyboard parity on comment rows: Ctrl+B/I/U toggles the BBCode wrap on the
+	# inline selection (same shortcuts the comment dialog's bar answers to).
+	if (event.ctrl_pressed or event.meta_pressed) and event.keycode in [KEY_B, KEY_I, KEY_U] and _viewport._editing_has_selection() and _viewport._editing_span_is_comment():
+		match event.keycode:
+			KEY_B:
+				_viewport._wrap_editing_selection("[b]", "[/b]")
+			KEY_I:
+				_viewport._wrap_editing_selection("[i]", "[/i]")
+			KEY_U:
+				_viewport._wrap_editing_selection("[u]", "[/u]")
 		_viewport.accept_event()
 		return
 	if event.unicode > 0 and not event.ctrl_pressed and not event.alt_pressed and not event.meta_pressed:
 		var typed_char: String = char(event.unicode)
 		if not typed_char.is_empty():
+			# Typing over a selection replaces it (standard text-editing semantics).
+			if _viewport._editing_has_selection():
+				_viewport._delete_editing_selection()
+				_viewport._update_inline_format_bar()
 			_viewport._editing_buffer = _viewport._editing_buffer.substr(0, _viewport._editing_caret) + typed_char + _viewport._editing_buffer.substr(_viewport._editing_caret)
 			_viewport._editing_caret += typed_char.length()
 			_viewport.queue_redraw()

@@ -161,6 +161,10 @@ var _editing_row_index: int = -1
 var _editing_span_index: int = -1
 var _editing_buffer: String = ""
 var _editing_caret: int = 0
+# Inline text selection (Shift+arrows / Ctrl+A while editing): -1 = none, else the
+# selection spans anchor..caret. Comment rows get the floating BBCode format bar on it.
+var _editing_select_anchor: int = -1
+var _inline_format_bar: Control = null
 var _drag_row_index: int = -1
 var _drag_row_indices: Array[int] = []
 var _drag_target_index: int = -1
@@ -1948,6 +1952,8 @@ func _begin_edit(row_index: int, span_index: int) -> void:
 	_editing_span_index = resolved_span_index
 	_editing_buffer = span.text
 	_editing_caret = _editing_buffer.length()
+	_editing_select_anchor = -1
+	_update_inline_format_bar()
 	queue_redraw()
 
 
@@ -2015,6 +2021,8 @@ func _commit_edit() -> void:
 	_editing_span_index = -1
 	_editing_buffer = ""
 	_editing_caret = 0
+	_editing_select_anchor = -1
+	_update_inline_format_bar()
 	_refresh_rows()
 
 
@@ -2023,7 +2031,92 @@ func _cancel_edit() -> void:
 	_editing_span_index = -1
 	_editing_buffer = ""
 	_editing_caret = 0
+	_editing_select_anchor = -1
+	_update_inline_format_bar()
 	queue_redraw()
+
+
+# ── Inline text selection + the floating BBCode bar (comment rows) ─────────────────
+# The inline span editor is custom-drawn (no Control), so it carries its own tiny
+# selection model: Shift+Left/Right extends anchor..caret, Ctrl+A selects all, and on
+# COMMENT rows the same Discord-style bar the comment dialog uses floats above the
+# selection to toggle BBCode wraps.
+
+
+func _editing_has_selection() -> bool:
+	return _editing_row_index >= 0 and _editing_select_anchor >= 0 and _editing_select_anchor != _editing_caret
+
+
+func _editing_selection_range() -> Vector2i:
+	return Vector2i(mini(_editing_select_anchor, _editing_caret), maxi(_editing_select_anchor, _editing_caret))
+
+
+func _delete_editing_selection() -> void:
+	if not _editing_has_selection():
+		return
+	var span_range: Vector2i = _editing_selection_range()
+	_editing_buffer = _editing_buffer.substr(0, span_range.x) + _editing_buffer.substr(span_range.y)
+	_editing_caret = span_range.x
+	_editing_select_anchor = -1
+
+
+## Toggle-wraps the inline selection in BBCode (same semantics as the comment dialog's
+## bar: an exactly-wrapped selection unwraps; the result stays selected so formats stack).
+func _wrap_editing_selection(open_tag: String, close_tag: String) -> void:
+	if not _editing_has_selection():
+		return
+	var span_range: Vector2i = _editing_selection_range()
+	var selected: String = _editing_buffer.substr(span_range.x, span_range.y - span_range.x)
+	var already_wrapped: bool = selected.begins_with(open_tag) and selected.ends_with(close_tag)
+	if open_tag.begins_with("[color=") and selected.begins_with("[color=") and selected.ends_with(close_tag):
+		already_wrapped = true
+	var replacement: String
+	if already_wrapped:
+		var inner_start: int = (selected.find("]") + 1) if open_tag.begins_with("[color=") else open_tag.length()
+		replacement = selected.substr(inner_start, selected.length() - inner_start - close_tag.length())
+	else:
+		replacement = open_tag + selected + close_tag
+	_editing_buffer = _editing_buffer.substr(0, span_range.x) + replacement + _editing_buffer.substr(span_range.y)
+	_editing_select_anchor = span_range.x
+	_editing_caret = span_range.x + replacement.length()
+	_update_inline_format_bar()
+	queue_redraw()
+
+
+## The editing span belongs to a comment row (the only inline surface where BBCode wraps
+## make sense - ACE cells hold expressions).
+func _editing_span_is_comment() -> bool:
+	var row_data: EventRowData = _row_at(_editing_row_index)
+	return row_data != null and row_data.source_resource is CommentRow
+
+
+## Shows/positions the floating format bar while a comment selection exists, hides it
+## otherwise. Lazily built; positioned above the selection start inside the editing span.
+func _update_inline_format_bar() -> void:
+	var wants_bar: bool = _editing_has_selection() and _editing_span_is_comment()
+	if not wants_bar:
+		if _inline_format_bar != null:
+			_inline_format_bar.visible = false
+		return
+	if _inline_format_bar == null:
+		_inline_format_bar = EventSheetBBCodeSelectionBar.attach_floating(self)
+		_inline_format_bar.format_requested.connect(_wrap_editing_selection)
+	var row_data: EventRowData = _row_at(_editing_row_index)
+	if row_data == null or _editing_span_index >= row_data.spans.size():
+		_inline_format_bar.visible = false
+		return
+	var span: SemanticSpan = row_data.spans[_editing_span_index]
+	var font: Font = get_theme_default_font()
+	var prefix_width: float = 0.0
+	if font != null:
+		prefix_width = font.get_string_size(_editing_buffer.substr(0, _editing_selection_range().x), HORIZONTAL_ALIGNMENT_LEFT, -1.0, get_theme_default_font_size()).x
+	_inline_format_bar.visible = true
+	var bar_size: Vector2 = _inline_format_bar.get_combined_minimum_size()
+	var target: Vector2 = span.rect.position + Vector2(prefix_width, -bar_size.y - 4.0)
+	if target.y < 0.0:
+		target.y = span.rect.end.y + 4.0
+	target.x = clampf(target.x, 0.0, maxf(size.x - bar_size.x - 8.0, 0.0))
+	_inline_format_bar.position = target
 
 
 func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String) -> void:

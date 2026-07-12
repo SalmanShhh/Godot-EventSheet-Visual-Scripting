@@ -50,6 +50,12 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		# whole event highlights instead of the clicked cell, and hover never appears.
 		cached_layout["selected_span_indices"] = _viewport._selected_span_indices.get(row_data.row_uid, []).duplicate()
 		cached_layout["hovered_span_index"] = _viewport._hovered_span_index if index == _viewport._hovered_row_index else -1
+		# The inline edit state (buffer/caret/text selection) changes per keystroke without
+		# touching geometry - same rule: refresh on read, never trust the snapshot.
+		cached_layout["editing_span_index"] = _viewport._editing_span_index if index == _viewport._editing_row_index else -1
+		cached_layout["editing_buffer"] = _viewport._editing_buffer if index == _viewport._editing_row_index else ""
+		cached_layout["editing_caret"] = _viewport._editing_caret if index == _viewport._editing_row_index else -1
+		cached_layout["editing_select_anchor"] = _viewport._editing_select_anchor if index == _viewport._editing_row_index else -1
 		return cached_layout
 	var row_top: float = _viewport._get_row_top(index)
 	var row_height: float = _viewport._get_row_height(index)
@@ -277,6 +283,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		"editing_span_index": _viewport._editing_span_index if index == _viewport._editing_row_index else -1,
 		"editing_buffer": _viewport._editing_buffer if index == _viewport._editing_row_index else "",
 		"editing_caret": _viewport._editing_caret if index == _viewport._editing_row_index else -1,
+		"editing_select_anchor": _viewport._editing_select_anchor if index == _viewport._editing_row_index else -1,
 		"total_selected_spans": _viewport._get_selected_span_count(),
 		"selected_span_indices": _viewport._selected_span_indices.get(row_data.row_uid, []).duplicate(),
 		"hovered_span_index": _viewport._hovered_span_index if index == _viewport._hovered_row_index else -1,

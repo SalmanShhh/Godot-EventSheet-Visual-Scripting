@@ -45,6 +45,38 @@ static func run() -> bool:
 	all_passed = _check("no selection is a no-op", text_edit.text, "make it pop") and all_passed
 
 	text_edit.free()
+
+	# ── Floating mode: pure UI - button presses route to the host via format_requested.
+	var host: Control = Control.new()
+	var floating: EventSheetBBCodeSelectionBar = EventSheetBBCodeSelectionBar.attach_floating(host)
+	all_passed = _check("floating bar attaches hidden", floating.visible, false) and all_passed
+	var routed: Array = []
+	floating.format_requested.connect(func(open_tag: String, close_tag: String) -> void: routed.append([open_tag, close_tag]))
+	floating._wrap_selection("[b]", "[/b]")
+	all_passed = _check("floating mode routes the wrap to the host", routed, [["[b]", "[/b]"]]) and all_passed
+	host.free()
+
+	# ── The inline comment editor (custom-drawn viewport buffer): same wrap semantics
+	# through the viewport's own selection model (Shift+arrows / Ctrl+A set anchor..caret).
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	viewport._editing_row_index = 0
+	viewport._editing_buffer = "make it pop"
+	viewport._editing_select_anchor = 5
+	viewport._editing_caret = 7
+	all_passed = _check("inline selection is live", viewport._editing_has_selection(), true) and all_passed
+	viewport._wrap_editing_selection("[b]", "[/b]")
+	all_passed = _check("inline bold wraps the selection", viewport._editing_buffer, "make [b]it[/b] pop") and all_passed
+	all_passed = _check("inline wrap keeps the result selected", viewport._editing_selection_range(), Vector2i(5, 14)) and all_passed
+	viewport._wrap_editing_selection("[i]", "[/i]")
+	all_passed = _check("inline formats stack", viewport._editing_buffer, "make [i][b]it[/b][/i] pop") and all_passed
+	viewport._wrap_editing_selection("[i]", "[/i]")
+	viewport._wrap_editing_selection("[b]", "[/b]")
+	all_passed = _check("inline re-press unwraps back to plain", viewport._editing_buffer, "make it pop") and all_passed
+	viewport._delete_editing_selection()
+	all_passed = _check("inline selection deletes as one unit", viewport._editing_buffer, "make  pop") and all_passed
+	all_passed = _check("delete collapses the selection", viewport._editing_has_selection(), false) and all_passed
+	viewport.free()
+
 	return all_passed
 
 

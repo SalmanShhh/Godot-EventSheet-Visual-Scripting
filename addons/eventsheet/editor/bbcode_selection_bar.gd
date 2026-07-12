@@ -12,6 +12,11 @@ extends PanelContainer
 # to the TextEdit, tracks caret changes, and shows only while a selection exists.
 # Ctrl+B / Ctrl+I / Ctrl+U toggle the wraps from the keyboard, Discord-style.
 
+## Floating mode (no TextEdit): button presses emit this instead of editing directly -
+## the host (the sheet viewport's inline comment editor) applies the wrap to its own
+## buffer and repositions the bar.
+signal format_requested(open_tag: String, close_tag: String)
+
 var _text_edit: TextEdit = null
 var _color_button: ColorPickerButton = null
 
@@ -27,6 +32,16 @@ static func attach(text_edit: TextEdit) -> EventSheetBBCodeSelectionBar:
 	text_edit.caret_changed.connect(bar._refresh)
 	text_edit.text_changed.connect(bar._refresh)
 	text_edit.gui_input.connect(bar._on_text_edit_input)
+	bar.visible = false
+	return bar
+
+
+## Floating mode: the bar is pure UI - it parents to any Control and emits
+## format_requested instead of editing a TextEdit. The host owns the text and position.
+static func attach_floating(parent: Control) -> EventSheetBBCodeSelectionBar:
+	var bar: EventSheetBBCodeSelectionBar = EventSheetBBCodeSelectionBar.new()
+	parent.add_child(bar)
+	bar._build()
 	bar.visible = false
 	return bar
 
@@ -75,8 +90,12 @@ func _format_button(label: String, tooltip: String, open_tag: String, close_tag:
 
 ## Toggle-wraps the selection: an exactly-wrapped selection unwraps (Discord behavior),
 ## anything else wraps. The result stays selected, so formats stack ([b] then [i]).
+## In floating mode there is no TextEdit - the request routes to the host instead.
 func _wrap_selection(open_tag: String, close_tag: String) -> void:
-	if _text_edit == null or not _text_edit.has_selection():
+	if _text_edit == null:
+		format_requested.emit(open_tag, close_tag)
+		return
+	if not _text_edit.has_selection():
 		return
 	var selected: String = _text_edit.get_selected_text()
 	var replacement: String

@@ -10,6 +10,14 @@
   wrapped text stays selected so formats stack, no control steals focus (the highlight
   never blinks away), and Ctrl+B / Ctrl+I / Ctrl+U work from the keyboard. Comments render
   BBCode in the sheet, so what you format is what you see.
+- **The INLINE comment editor got it too** - and with it, the inline editor gained text
+  selection itself (it is custom-drawn on the virtualized canvas, so it never had one):
+  Shift+Left/Right extends the highlight, Ctrl+A selects all, a selection deletes or is
+  typed over as one unit, and the highlight renders as the classic translucent band. On
+  comment rows the same floating chip appears by the selection (button presses route to
+  the canvas editor's buffer), and Ctrl+B / Ctrl+I / Ctrl+U work inline as well. Fixed in
+  passing: the row layout cache now refreshes the inline edit state (buffer, caret,
+  selection) on cache hits, matching the selection/hover rule.
 
 ### Added - last-played-sound control in the Audio vocabulary
 
