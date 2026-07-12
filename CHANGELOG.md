@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - last-played-sound control in the Audio vocabulary
+
+- **Play Sound / Play Sound At (2D) now remember the shot they fired** (as `__last_sfx`
+  meta on the emitting node - still plain GDScript, still self-freeing), and three new
+  Audio actions retune it: **Set Last Sound Playback Rate** (speed + pitch; the default is
+  `randf_range(0.9, 1.1)`, so `Play Sound` then `Set Last Sound Playback Rate` gives every
+  hit natural pitch variation in two rows - the classic event-sheet idiom), **Set Last
+  Sound Volume**, and **Stop Last Sound** (one-shots are throwaway players, so stopping
+  frees). Each node tracks its own last shot; a finished-and-freed shot is a safe no-op.
+
 ### Changed - every addon guide now carries 15 worked use cases + 5 quick sketches
 
 - All 61 pack guides in `docs/Addons/` now have at least **15 numbered use cases** (scenario

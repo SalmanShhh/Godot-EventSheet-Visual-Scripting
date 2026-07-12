@@ -12,6 +12,14 @@ static func run() -> bool:
 	for descriptor in EventForgeBuiltinACEs.get_descriptors():
 		by_id[descriptor.ace_id] = descriptor
 	all_passed = _check("one-shots registered", by_id.has("PlaySound") and by_id.has("PlaySoundAt"), true) and all_passed
+	all_passed = _check("last-sound group registered",
+		by_id.has("SetLastSoundRate") and by_id.has("SetLastSoundVolume") and by_id.has("StopLastSound"), true) and all_passed
+	all_passed = _check("one-shots remember the last sound",
+		str(by_id["PlaySound"].codegen_template).contains("set_meta(\"__last_sfx\"") and str(by_id["PlaySoundAt"].codegen_template).contains("set_meta(\"__last_sfx\""), true) and all_passed
+	all_passed = _check("last-sound rate guards a freed shot",
+		str(by_id["SetLastSoundRate"].codegen_template).contains("is_instance_valid"), true) and all_passed
+	all_passed = _check("last-sound rate defaults to natural variation",
+		str((by_id["SetLastSoundRate"].params[0] as ACEParam).default_value), "randf_range(0.9, 1.1)") and all_passed
 	all_passed = _check("player-scoped group registered",
 		by_id.has("AudioPlay") and by_id.has("AudioPlayStream") and by_id.has("AudioStop") and by_id.has("AudioSeek") and by_id.has("AudioSetVolume") and by_id.has("AudioSetPitch") and by_id.has("AudioIsPlaying") and by_id.has("AudioGetPosition"), true) and all_passed
 	all_passed = _check("bus extras registered",
@@ -33,9 +41,20 @@ static func run() -> bool:
 	play.params = {"path": "\"res://demo/sound.ogg\"", "bus": "\"Master\"", "volume_db": "0.0"}
 	event.actions.append(play)
 	sheet.events.append(event)
+	# The C3-style follow-up: Play, then retune the LAST sound (pitch variation in two rows).
+	var rate: ACEAction = ACEAction.new()
+	rate.provider_id = "Core"
+	rate.ace_id = "SetLastSoundRate"
+	rate.codegen_template = str(by_id["SetLastSoundRate"].codegen_template).replace("{uid}", "t2")
+	rate.params = {"rate": "randf_range(0.9, 1.1)"}
+	event.actions.append(rate)
 	var output: String = str(SheetCompiler.compile(sheet, "user://eventsheets_audio.gd").get("output", ""))
 	all_passed = _check("one-shot emits the self-freeing player",
 		output.contains("\tvar __sfx_t1 = AudioStreamPlayer.new()") and output.contains("\t__sfx_t1.finished.connect(__sfx_t1.queue_free)") and output.contains("\t__sfx_t1.play()"), true) and all_passed
+	all_passed = _check("one-shot records itself as the last sound",
+		output.contains("\tset_meta(\"__last_sfx\", __sfx_t1)"), true) and all_passed
+	all_passed = _check("last-sound rate reads the handle and retunes pitch",
+		output.contains("get_meta(\"__last_sfx\", null)") and output.contains("__last_sfx_t2.pitch_scale = randf_range(0.9, 1.1)"), true) and all_passed
 	var generated: GDScript = GDScript.new()
 	generated.source_code = output
 	all_passed = _check("audio output parses", generated.reload(true) == OK, true) and all_passed

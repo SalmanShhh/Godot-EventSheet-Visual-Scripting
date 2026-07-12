@@ -23,22 +23,47 @@ const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
-	# 1 - Fire-and-forget one-shots ("Play").
+	# 1 - Fire-and-forget one-shots ("Play"). Each Play remembers its throwaway player as
+	# "__last_sfx" meta on the emitting node, so the last-sound ACEs below can retune the
+	# shot that JUST fired (the event-sheet "last played sound" idiom) - still zero plugin
+	# runtime, still self-freeing.
 	descriptors.append(F.make_descriptor("Core", "PlaySound", "Play Sound", ACEDescriptor.ACEType.ACTION,
-		"var __sfx_{uid} = AudioStreamPlayer.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.bus = {bus}\n\t__sfx_{uid}.volume_db = {volume_db}\n\tadd_child(__sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()",
+		"var __sfx_{uid} = AudioStreamPlayer.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.bus = {bus}\n\t__sfx_{uid}.volume_db = {volume_db}\n\tadd_child(__sfx_{uid})\n\tset_meta(\"__last_sfx\", __sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()",
 		"", [
 			F.make_param("path", "String", "\"res://sound.ogg\"", "Sound", "Audio file to play once.", "audio_path"),
 			F.make_param("bus", "String", "\"Master\"", "Bus", "Audio bus name.", "expression"),
 			F.make_param("volume_db", "String", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression")
 		], "Audio", "Play sound {path}")
-		.described("Plays a sound file once on a chosen bus and volume, then cleans itself up."))
+		.described("Plays a sound file once on a chosen bus and volume, then cleans itself up. Remembers the shot as the LAST SOUND, so Set Last Sound Playback Rate right after can retune it."))
 	descriptors.append(F.make_descriptor("Core", "PlaySoundAt", "Play Sound At (2D)", ACEDescriptor.ACEType.ACTION,
-		"var __sfx_{uid} = AudioStreamPlayer2D.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.global_position = {position}\n\tadd_child(__sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()",
+		"var __sfx_{uid} = AudioStreamPlayer2D.new()\n__sfx_{uid}.stream = load({path})\nif __sfx_{uid}.stream == null:\n\t__sfx_{uid}.queue_free()\nelse:\n\t__sfx_{uid}.global_position = {position}\n\tadd_child(__sfx_{uid})\n\tset_meta(\"__last_sfx\", __sfx_{uid})\n\t__sfx_{uid}.finished.connect(__sfx_{uid}.queue_free)\n\t__sfx_{uid}.play()",
 		"", [
 			F.make_param("path", "String", "\"res://sound.ogg\"", "Sound", "Audio file to play once, positionally.", "audio_path"),
 			F.make_param("position", "String", "global_position", "Position", "World position (2D falloff).", "expression")
 		], "Audio", "Play sound {path} at {position}", "Node2D")
-		.described("Plays a sound at a world position so it gets louder or quieter with distance."))
+		.described("Plays a sound at a world position so it gets louder or quieter with distance. Remembers the shot as the LAST SOUND for the last-sound actions."))
+
+	# 1b - Last-sound control: retune the one-shot that just fired. The classic use is
+	# pitch variation - Play Sound, then Set Last Sound Playback Rate randf_range(0.9, 1.1)
+	# so repeated hits never sound machine-gun identical. Each node remembers ITS OWN last
+	# shot (the meta lives on the emitting node); the guard makes a finished-and-freed shot
+	# a safe no-op.
+	descriptors.append(F.make_descriptor("Core", "SetLastSoundRate", "Set Last Sound Playback Rate", ACEDescriptor.ACEType.ACTION,
+		"var __last_sfx_{uid} = get_meta(\"__last_sfx\", null)\nif is_instance_valid(__last_sfx_{uid}):\n\t__last_sfx_{uid}.pitch_scale = {rate}",
+		"", [
+			F.make_param("rate", "String", "randf_range(0.9, 1.1)", "Rate", "1 = normal speed/pitch; the default randomizes a little for natural variation.", "expression")
+		], "Audio", "Set last sound rate {rate}x")
+		.described("Changes the speed and pitch of the sound the last Play Sound started (1 = normal). Put it right after Play Sound - the default randf_range(0.9, 1.1) gives every shot a slightly different pitch."))
+	descriptors.append(F.make_descriptor("Core", "SetLastSoundVolume", "Set Last Sound Volume", ACEDescriptor.ACEType.ACTION,
+		"var __last_sfx_{uid} = get_meta(\"__last_sfx\", null)\nif is_instance_valid(__last_sfx_{uid}):\n\t__last_sfx_{uid}.volume_db = {db}",
+		"", [
+			F.make_param("db", "String", "0.0", "Volume dB", "0 = full, -80 = silent.", "expression")
+		], "Audio", "Set last sound volume {db} dB")
+		.described("Changes the volume of the sound the last Play Sound started, in decibels."))
+	descriptors.append(F.make_descriptor("Core", "StopLastSound", "Stop Last Sound", ACEDescriptor.ACEType.ACTION,
+		"var __last_sfx_{uid} = get_meta(\"__last_sfx\", null)\nif is_instance_valid(__last_sfx_{uid}):\n\t__last_sfx_{uid}.queue_free()",
+		"", [], "Audio", "Stop last sound")
+		.described("Silences and frees the sound the last Play Sound started (one-shots are throwaway players, so stopping IS freeing)."))
 
 	# 2 - Player-scoped (music & controlled playback; attach to an AudioStreamPlayer).
 	descriptors.append(F.make_descriptor("Core", "AudioPlay", "Play", ACEDescriptor.ACEType.ACTION,
