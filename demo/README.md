@@ -96,6 +96,7 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 | `showcase/fps_arena/` | **FPS Arena** - the FPS Controller pack: mouse look, sprint, jump, crouch + slide, wall ride/jump, first/third person |
 | `showcase/menu_starter/` | **Menu Starter** - a complete menu flow on one HUD Kit behavior (zero connected signals) |
 | `showcase/input_rebind/` | **Input Rebind** - a working rebind screen: click Rebind then press ANY key/mouse/gamepad input, live binding labels, gamepad name + vibration test |
+| `showcase/path_chase/` | **Path Chase** - Platformer Pathfinding + Platformer Movement: the red Chaser routes to you through stairs, gaps, and platforms (green line = its live path) |
 | `themes/` | Nine bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |
 

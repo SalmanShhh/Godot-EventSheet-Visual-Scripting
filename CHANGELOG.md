@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Added - Platformer Pathfinding (61st pack) + the Path Chase showcase
+
+- **Platformer Pathfinding**: jump-aware navigation for 2D platformers - Godot's navigation is
+  surface-based, platformers need a jump graph, and this builds one. Build Nav Graph From
+  Tilemap scans your TileMapLayer's physics tiles into standable nodes, WALK edges (one step
+  up/down - stairs), JUMP arcs, and FALL drops; A* routes over it preferring walking to jumping.
+  Jump reach is DERIVED from the sibling PlatformerMovement's jump_velocity/gravity/move_speed,
+  and auto-control drives that sibling through a new two-variable `ai_controlled` +
+  `ai_move_axis` seam plus its jump() - the agent obeys exactly the movement rules the player
+  does (coyote time and all), with an automatic step-assist hop on full-block stairs. Find Path
+  To's `nearest` mode never fails (chasers); `reach` fails honestly (On Path Failed). Manual
+  mode exposes the intents (Path Move Axis, Path Wants Jump, Current Waypoint X/Y, Current Path
+  Action) for custom drivers, and Set Nav Debug Draw paints the live route.
+  Guide: `docs/Addons/Platformer-Pathfinding.md`. (Spec P1; P2 discipline knobs, the shared
+  graph autoload, physics-polygon slope classification, and the 3D wrapper are phased next.)
+- **PlatformerMovement** gains the `ai_controlled` + `ai_move_axis` seam - inert by default
+  (the keyboard read is unchanged when off); any AI can now steer the pack.
+- **New showcase `demo/showcase/path_chase/`**: a tile level with a gap, a two-step stair, and
+  raised platforms; arrows + Space drive the Player while the red Chaser pathfinds to you
+  through all of it, its live route drawn in green. Runtime-verified: the smoke run asserts the
+  Chaser finds a path and covers ground (it jumps the gap on camera).
+
 ### Added - the ACE design guide (docs/GUIDE-DESIGNING-USER-FRIENDLY-ACES.md)
 
 - A craft guide for anyone authoring vocabulary (modules, packs, provider scripts): the four

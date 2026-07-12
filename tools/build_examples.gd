@@ -26,6 +26,7 @@ func _init() -> void:
 	all_ok = _build_htn_agent() and all_ok
 	all_ok = _build_fps_arena() and all_ok
 	all_ok = _build_input_rebind() and all_ok
+	all_ok = _build_path_chase() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -1657,6 +1658,164 @@ func _build_input_rebind() -> bool:
 	column.add_child(vibrate_button)
 	_own_deep(column, root)
 	return _save_scene(root, "res://demo/showcase/input_rebind/input_rebind.tscn")
+
+
+# ── 14. Path Chase - Platformer Pathfinding driving Platformer Movement ──────
+const PLATFORMER_MOVEMENT := "res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd"
+const PLATFORMER_PATHFINDING := "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd"
+
+
+## The pathfinding pairing showcase: a tile level (ground with a gap, a two-step stair to a mid
+## platform, a hop, and a high platform), a keyboard-driven Player, and a Chaser whose
+## PlatformerPathfinding behavior routes to the Player once a second and DRIVES the sibling
+## PlatformerMovement through its ai_move_axis seam - stairs walk, the gap is jumped, the
+## platforms are climbed, and the green debug line shows the live path.
+func _build_path_chase() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "PathChaseDemo"
+	sheet.emit_live_values = false
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with. Green line = the Chaser's live path."
+	sheet.events.append(about)
+
+	var on_ready: EventRow = EventRow.new()
+	on_ready.trigger_provider_id = "Core"
+	on_ready.trigger_id = "OnReady"
+	var on_ready_body: RawCodeRow = RawCodeRow.new()
+	on_ready_body.code = "\n".join(PackedStringArray([
+		"$Chaser/Pathfinding.build_nav_graph($Level)",
+		"$Chaser/Pathfinding.set_nav_debug_draw(true)"
+	]))
+	on_ready.actions.append(on_ready_body)
+	sheet.events.append(on_ready)
+
+	# The chase: re-route to wherever the Player is now, once a second.
+	var repath: EventRow = EventRow.new()
+	repath.trigger_provider_id = "Core"
+	repath.trigger_id = "OnProcess"
+	repath.conditions.append(_every("repath", "1.0"))
+	var repath_body: RawCodeRow = RawCodeRow.new()
+	repath_body.code = "$Chaser/Pathfinding.find_path_to_node($Player, \"nearest\")"
+	repath.actions.append(repath_body)
+	sheet.events.append(repath)
+
+	# Player jump keys (movement itself reads ui_left/ui_right on its own).
+	var jump_keys: EventRow = EventRow.new()
+	jump_keys.trigger_provider_id = "Core"
+	jump_keys.trigger_id = "OnProcess"
+	var jump_keys_body: RawCodeRow = RawCodeRow.new()
+	jump_keys_body.code = "\n".join(PackedStringArray([
+		"if Input.is_action_just_pressed(\"ui_accept\"):",
+		"\t$Player/Movement.jump()",
+		"if Input.is_action_just_released(\"ui_accept\"):",
+		"\t$Player/Movement.jump_released()"
+	]))
+	jump_keys.actions.append(jump_keys_body)
+	sheet.events.append(jump_keys)
+
+	if not _compile(sheet, "res://demo/showcase/path_chase/path_chase.tres", "res://demo/showcase/path_chase/path_chase.gd"):
+		return false
+	var emitted: String = FileAccess.get_file_as_string("res://demo/showcase/path_chase/path_chase.gd")
+	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
+	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
+	var out: FileAccess = FileAccess.open("res://demo/showcase/path_chase/path_chase.gd", FileAccess.WRITE)
+	out.store_string(emitted)
+	out.close()
+
+	# ── The scene ──
+	var root: Node2D = Node2D.new()
+	root.name = "PathChase"
+	root.set_script(load("res://demo/showcase/path_chase/path_chase.gd"))
+
+	# The level: ground with a 3-cell gap, a two-step stair onto a mid platform, a hop
+	# platform after the gap, and a high platform (the Player's perch). 32px tiles.
+	var level: TileMapLayer = TileMapLayer.new()
+	level.name = "Level"
+	level.tile_set = _chase_tileset()
+	for x in range(1, 35):
+		if x < 15 or x > 17:
+			level.set_cell(Vector2i(x, 17), 0, Vector2i.ZERO)
+	for wall_y in range(10, 18):
+		level.set_cell(Vector2i(0, wall_y), 0, Vector2i.ZERO)
+		level.set_cell(Vector2i(35, wall_y), 0, Vector2i.ZERO)
+	level.set_cell(Vector2i(7, 16), 0, Vector2i.ZERO)
+	level.set_cell(Vector2i(8, 16), 0, Vector2i.ZERO)
+	level.set_cell(Vector2i(8, 15), 0, Vector2i.ZERO)
+	for x in range(9, 13):
+		level.set_cell(Vector2i(x, 15), 0, Vector2i.ZERO)
+	for x in range(19, 21):
+		level.set_cell(Vector2i(x, 15), 0, Vector2i.ZERO)
+	for x in range(22, 28):
+		level.set_cell(Vector2i(x, 13), 0, Vector2i.ZERO)
+	root.add_child(level)
+	level.owner = root
+
+	var player: CharacterBody2D = _chase_actor("Player", Vector2(784.0, 384.0), Color(0.35, 0.65, 1.0))
+	root.add_child(player)
+	_own_deep(player, root)
+	_attach_behavior(player, "Movement", PLATFORMER_MOVEMENT, root)
+	var chaser: CharacterBody2D = _chase_actor("Chaser", Vector2(112.0, 512.0), Color(1.0, 0.35, 0.35))
+	root.add_child(chaser)
+	_own_deep(chaser, root)
+	_attach_behavior(chaser, "Movement", PLATFORMER_MOVEMENT, root)
+	_attach_behavior(chaser, "Pathfinding", PLATFORMER_PATHFINDING, root)
+
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HudLayer"
+	root.add_child(hud_layer)
+	hud_layer.owner = root
+	var hud: Label = Label.new()
+	hud.name = "Hud"
+	hud.position = Vector2(24.0, 16.0)
+	hud.add_theme_font_size_override("font_size", 18)
+	hud.text = "Arrows move · Space jumps · the red Chaser pathfinds to you (green line = its path)"
+	hud_layer.add_child(hud)
+	hud.owner = root
+
+	return _save_scene(root, "res://demo/showcase/path_chase/path_chase.tscn")
+
+
+## A 32px TileSet with one solid grey physics tile (source id 0, atlas (0,0)).
+func _chase_tileset() -> TileSet:
+	var tile_set: TileSet = TileSet.new()
+	tile_set.tile_size = Vector2i(32, 32)
+	tile_set.add_physics_layer()
+	var source: TileSetAtlasSource = TileSetAtlasSource.new()
+	var image: Image = Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.42, 0.45, 0.52))
+	for edge in range(32):
+		image.set_pixel(edge, 0, Color(0.55, 0.58, 0.66))
+		image.set_pixel(edge, 31, Color(0.3, 0.32, 0.38))
+	source.texture = ImageTexture.create_from_image(image)
+	source.texture_region_size = Vector2i(32, 32)
+	# The source must join the set before tile data is configured (physics layers live on the set).
+	tile_set.add_source(source, 0)
+	source.create_tile(Vector2i.ZERO)
+	var tile_data: TileData = source.get_tile_data(Vector2i.ZERO, 0)
+	tile_data.add_collision_polygon(0)
+	tile_data.set_collision_polygon_points(0, 0, PackedVector2Array([Vector2(-16, -16), Vector2(16, -16), Vector2(16, 16), Vector2(-16, 16)]))
+	return tile_set
+
+
+## One chase actor: a CharacterBody2D with a 22x28 collider and a coloured box visual.
+func _chase_actor(actor_name: String, world_position: Vector2, tint: Color) -> CharacterBody2D:
+	var actor: CharacterBody2D = CharacterBody2D.new()
+	actor.name = actor_name
+	actor.position = world_position
+	var collider: CollisionShape2D = CollisionShape2D.new()
+	collider.name = "Collider"
+	var shape: RectangleShape2D = RectangleShape2D.new()
+	shape.size = Vector2(22.0, 28.0)
+	collider.shape = shape
+	actor.add_child(collider)
+	var visual: ColorRect = ColorRect.new()
+	visual.name = "Visual"
+	visual.color = tint
+	visual.position = Vector2(-11.0, -14.0)
+	visual.size = Vector2(22.0, 28.0)
+	actor.add_child(visual)
+	return actor
 
 
 ## One rebind row: the live binding label on the left, the named Rebind button on the right.

@@ -2,8 +2,15 @@
 
 Design for two behavior packs that give sheet authors plug-and-play pathfinding, ported from a
 proven event-sheet-style navigation-graph addon (per-character behavior, level-shared graph,
-auto-control of the movement behavior, explicit slope awareness). Status: DESIGN - approved
-surface below; implementation phased at the end.
+auto-control of the movement behavior, explicit slope awareness). Status: **P1 SHIPPED**
+(the 2D `platformer_pathfinding` pack: tilemap scan, stand nodes, walk/jump/fall edges with
+derived jump reach, A*, the ai_move_axis drive with step-assist, reach/nearest, the reaction
+trio, waypoint expressions, path debug line, and the `demo/showcase/path_chase/` showcase).
+P2 (discipline: ledge restriction, jump positioning, repath knobs, stuck watchdog, budget,
+Doctor checks), P3 (`nav_agent_3d`), and P4 (portals/hazards) remain as phased below. P1
+simplifications vs this spec: the graph lives per agent (no shared autoload yet), slope
+classification is the generic one-step-up/down walk rule (full physics-polygon classification
+lands with P2), and debug draw shows the active path (not the whole graph).
 
 ## Goals
 

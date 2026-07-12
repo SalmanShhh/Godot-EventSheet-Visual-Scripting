@@ -35,6 +35,9 @@ var _wall_sliding: bool = false
 var _was_on_floor: bool = false
 ## How fast you reach top speed when pressing a direction.
 @export var acceleration: float = 1500.0
+## AI drive: read ai_move_axis instead of the keyboard (the Platformer Pathfinding behavior flips this on to steer).
+@export var ai_controlled: bool = false
+var ai_move_axis: float = 0.0
 ## Grace window (s) to still jump just after walking off a ledge.
 @export var coyote_time: float = 0.1
 ## How fast you stop when no direction is pressed.
@@ -76,7 +79,9 @@ func _physics_process(delta: float) -> void:
 		_air_time += delta
 	else:
 		_air_time = 0.0
-	var direction := Input.get_axis("ui_left", "ui_right")
+	# The AI seam: a sibling driver (Platformer Pathfinding) writes ai_move_axis and flips
+	# ai_controlled on; off (the default) this is exactly the keyboard read it always was.
+	var direction := ai_move_axis if ai_controlled else Input.get_axis("ui_left", "ui_right")
 	var target_speed := direction * move_speed
 	var rate := acceleration if not is_zero_approx(direction) else deceleration
 	host.velocity.x = move_toward(host.velocity.x, target_speed, rate * delta)

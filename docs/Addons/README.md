@@ -38,6 +38,7 @@ The toolkit for clicker, idle, and incremental games. The wallet lives in Curren
 Attach to a node to move it.
 
 - [Platformer](Platformer.md) - run, jump, gravity, and coyote time for a side-scroller.
+- [Platformer Pathfinding](Platformer-Pathfinding.md) - jump-aware navigation: a graph built from your tiles, A* with walk/jump/fall edges, driving Platformer movement through its AI seam (see the Path Chase showcase).
 - [Eight Direction](Eight-Direction.md) - top-down movement in eight directions.
 - [Car](Car.md) - arcade car steering (turn-and-drive), no physics body needed.
 - [Tile Movement](Tile-Movement.md) - grid-locked stepping, one tile per press.

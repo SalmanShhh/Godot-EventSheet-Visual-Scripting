@@ -56,6 +56,17 @@ static func run() -> bool:
 	passed = _check_scene("input_rebind scene wires HudKit + the rebind rows",
 		"res://demo/showcase/input_rebind/input_rebind.tscn", ["HudKit", "JumpLabel", "RebindJumpButton", "DashLabel", "RebindDashButton", "ResetButton", "GamepadLabel", "VibrateButton"]) and passed
 
+	# Path Chase - Platformer Pathfinding driving Platformer Movement through the ai seam.
+	passed = _check_sheet("path_chase", "res://demo/showcase/path_chase/path_chase.gd", [
+		"class_name PathChaseDemo",
+		"$Chaser/Pathfinding.build_nav_graph($Level)",
+		"$Chaser/Pathfinding.set_nav_debug_draw(true)",
+		"$Chaser/Pathfinding.find_path_to_node($Player, \"nearest\")",
+		"$Player/Movement.jump()",
+	]) and passed
+	passed = _check_scene("path_chase scene wires the Level + both actors' behaviors",
+		"res://demo/showcase/path_chase/path_chase.tscn", ["Level", "Player", "Chaser", "Movement", "Pathfinding"]) and passed
+
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/carousel/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",

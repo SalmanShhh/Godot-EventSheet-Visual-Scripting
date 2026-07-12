@@ -1,0 +1,418 @@
+# Pack builder - platformer_pathfinding (one pack per file; run via tools/build_sample_behaviors.gd).
+@tool
+
+const Lib := preload("res://tools/pack_builders/_lib.gd")
+
+
+## Platformer pathfinding for a CharacterBody2D (docs/internal/SPEC-platformer-pathfinding.md, P1):
+## scans a TileMapLayer's physics tiles into standable nodes, connects them with WALK edges
+## (adjacent cells, one step up/down - which is what makes stairs and tile slopes walkable),
+## JUMP arcs, and FALL drops, then A*-routes over the graph. Jump reach is DERIVED from the
+## sibling PlatformerMovement's move_speed/jump_velocity/gravity, and auto-control DRIVES that
+## sibling through its ai_move_axis seam + jump() - pathfinding never reimplements movement.
+## Manual mode (Set Auto Control off) exposes the same intents as expressions.
+static func build() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.behavior_mode = true
+	sheet.host_class = "CharacterBody2D"
+	sheet.custom_class_name = "PlatformerPathfinding"
+	sheet.addon_category = "Platformer Pathfinding"
+	sheet.ace_expose_all_mode = "node"
+	sheet.addon_tags = PackedStringArray(["movement", "platformer", "ai", "pathfinding"])
+	sheet.variables = {
+		"auto_control": {"type": "bool", "default": true, "exported": true,
+			"attributes": {"tooltip": "Drive the sibling PlatformerMovement automatically. Off = paths still compute; read Path Move Axis / Path Wants Jump and steer yourself."}},
+		"arrive_distance": {"type": "float", "default": 10.0, "exported": true,
+			"attributes": {"tooltip": "How close (px, horizontally) counts as reaching a waypoint."}},
+		"max_fall_distance": {"type": "float", "default": 320.0, "exported": true,
+			"attributes": {"tooltip": "The furthest safe drop (px) the graph will route through."}},
+		"jump_height_override": {"type": "float", "default": 0.0, "exported": true,
+			"attributes": {"tooltip": "Max jump height in px (0 = derive it from the sibling PlatformerMovement's jump_velocity/gravity)."}},
+		"jump_distance_override": {"type": "float", "default": 0.0, "exported": true,
+			"attributes": {"tooltip": "Max jump distance in px (0 = derive it from the sibling PlatformerMovement's speed and air time)."}},
+		"debug_draw": {"type": "bool", "default": false, "exported": true,
+			"attributes": {"tooltip": "Draw the active path as a line in the world."}},
+	}
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "Platformer pathfinding: attach as a SIBLING of PlatformerMovement under a CharacterBody2D. Build Nav Graph from your TileMapLayer once, then Find Path To - the behavior derives jump reach from the movement pack and drives it through the ai_move_axis seam. Stairs and tile slopes walk (adjacent cells one step up/down are WALK edges); gaps and ledges route through jump arcs and fall drops."
+	sheet.events.append(about)
+
+	# Internal state + triggers + conditions + expressions + the graph/AStar helpers.
+	var block: RawCodeRow = RawCodeRow.new()
+	block.code = "\n".join(PackedStringArray([
+		"# --- Internal state (the graph lives per agent in P1) ---",
+		"var _tilemap: TileMapLayer = null",
+		"var _movement: Node = null",
+		"## Standable cells (the cell the agent's feet occupy) -> true.",
+		"var _nodes: Dictionary = {}",
+		"## cell -> Array of {\"to\": Vector2i, \"kind\": \"walk\"/\"jump\"/\"fall\", \"cost\": float}.",
+		"var _edges: Dictionary = {}",
+		"## The active path: Array of {\"world\": Vector2, \"action\": String}.",
+		"var _path: Array = []",
+		"var _path_index: int = 0",
+		"var _jumped_this_segment: bool = false",
+		"var _move_axis: float = 0.0",
+		"var _debug_line: Line2D = null",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Path Found\")",
+		"signal path_found",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Path Failed\")",
+		"signal path_failed",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Path Complete\")",
+		"signal path_complete",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Waypoint Reached\")",
+		"signal waypoint_reached",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Nav Graph Built\")",
+		"signal nav_graph_built",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Has Path\")",
+		"func has_path() -> bool:",
+		"\treturn not _path.is_empty()",
+		"",
+		"## @ace_condition",
+		"## @ace_name(\"Path Wants Jump\")",
+		"func path_wants_jump() -> bool:",
+		"\tif _path.is_empty() or _jumped_this_segment or host == null:",
+		"\t\treturn false",
+		"\tvar waypoint: Dictionary = _path[_path_index]",
+		"\tif waypoint[\"action\"] == \"jump\":",
+		"\t\treturn true",
+		"\t# Step assist: a close-and-higher walk waypoint needs a hop on full-block stairs.",
+		"\tvar tile: float = float(_tilemap.tile_set.tile_size.y) if _tilemap != null else 32.0",
+		"\tvar target: Vector2 = waypoint[\"world\"]",
+		"\treturn waypoint[\"action\"] == \"walk\" and target.y < host.global_position.y - 8.0 and absf(target.x - host.global_position.x) < tile * 1.5",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Path Move Axis\")",
+		"func path_move_axis() -> float:",
+		"\treturn _move_axis",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Waypoint Count\")",
+		"func waypoint_count() -> int:",
+		"\treturn _path.size()",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Current Waypoint Index\")",
+		"func current_waypoint_index() -> int:",
+		"\treturn _path_index",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Current Waypoint X\")",
+		"func current_waypoint_x() -> float:",
+		"\treturn (_path[_path_index][\"world\"] as Vector2).x if not _path.is_empty() else 0.0",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Current Waypoint Y\")",
+		"func current_waypoint_y() -> float:",
+		"\treturn (_path[_path_index][\"world\"] as Vector2).y if not _path.is_empty() else 0.0",
+		"",
+		"## @ace_expression",
+		"## @ace_name(\"Current Path Action\")",
+		"func current_path_action() -> String:",
+		"\treturn str(_path[_path_index][\"action\"]) if not _path.is_empty() else \"\"",
+		"",
+		"## The sibling movement pack, duck-typed: any child of the host with a move_speed and a",
+		"## jump() (PlatformerMovement, or your own driver with the same surface).",
+		"## @ace_hidden",
+		"func _find_movement() -> Node:",
+		"\tif _movement != null and is_instance_valid(_movement):",
+		"\t\treturn _movement",
+		"\tif host == null:",
+		"\t\treturn null",
+		"\tfor child in host.get_children():",
+		"\t\tif child != self and child.has_method(\"jump\") and child.get(\"move_speed\") != null:",
+		"\t\t\t_movement = child",
+		"\t\t\treturn _movement",
+		"\treturn null",
+		"",
+		"## Jump reach in CELLS, derived from the movement pack's physics (the overrides win when",
+		"## set): height = v^2/2g, distance = speed * full air time, both with a 0.9 safety margin.",
+		"## @ace_hidden",
+		"func _jump_reach_cells() -> Vector2i:",
+		"\tvar tile: float = float(_tilemap.tile_set.tile_size.y)",
+		"\tvar height_px: float = jump_height_override",
+		"\tvar distance_px: float = jump_distance_override",
+		"\tvar movement: Node = _find_movement()",
+		"\tif movement != null:",
+		"\t\tvar rise: float = absf(float(movement.get(\"jump_velocity\")))",
+		"\t\tvar fall_pull: float = maxf(float(movement.get(\"gravity\")), 1.0)",
+		"\t\tif height_px <= 0.0:",
+		"\t\t\theight_px = rise * rise / (2.0 * fall_pull) * 0.9",
+		"\t\tif distance_px <= 0.0:",
+		"\t\t\tdistance_px = float(movement.get(\"move_speed\")) * (2.0 * rise / fall_pull) * 0.9",
+		"\tif height_px <= 0.0:",
+		"\t\theight_px = tile * 2.5",
+		"\tif distance_px <= 0.0:",
+		"\t\tdistance_px = tile * 4.0",
+		"\treturn Vector2i(maxi(int(ceil(distance_px / tile)), 1), maxi(int(ceil(height_px / tile)), 1))",
+		"",
+		"## Coarse clearance for a jump/fall arc: the cells along the chord, lifted one cell for",
+		"## the rise, must be free. Coarse on purpose - P1 favours routing in open layouts.",
+		"## @ace_hidden",
+		"func _arc_clear(from_cell: Vector2i, to_cell: Vector2i, solid: Dictionary) -> bool:",
+		"\tif solid.has(from_cell + Vector2i(0, -1)) or solid.has(to_cell + Vector2i(0, -1)):",
+		"\t\treturn false",
+		"\tfor step in [0.25, 0.5, 0.75]:",
+		"\t\tvar sample: Vector2 = Vector2(from_cell).lerp(Vector2(to_cell), step) + Vector2(0.0, -1.0)",
+		"\t\tif solid.has(Vector2i(roundi(sample.x), roundi(sample.y))):",
+		"\t\t\treturn false",
+		"\treturn true",
+		"",
+		"## @ace_hidden",
+		"func _add_edge(from_cell: Vector2i, to_cell: Vector2i, kind: String, cost: float) -> void:",
+		"\tif not _edges.has(from_cell):",
+		"\t\t_edges[from_cell] = []",
+		"\t(_edges[from_cell] as Array).append({\"to\": to_cell, \"kind\": kind, \"cost\": cost})",
+		"",
+		"## The standable node nearest a world position (within max_cells), or Vector2i.MAX.",
+		"## @ace_hidden",
+		"func _nearest_node(world: Vector2, max_cells: int) -> Vector2i:",
+		"\tvar around: Vector2i = _tilemap.local_to_map(_tilemap.to_local(world))",
+		"\tvar best: Vector2i = Vector2i.MAX",
+		"\tvar best_distance: float = float(max_cells) + 0.51",
+		"\tfor cell in _nodes:",
+		"\t\tvar cell_distance: float = Vector2(cell - around).length()",
+		"\t\tif cell_distance < best_distance:",
+		"\t\t\tbest_distance = cell_distance",
+		"\t\t\tbest = cell",
+		"\treturn best",
+		"",
+		"## @ace_hidden",
+		"func _cell_world(cell: Vector2i) -> Vector2:",
+		"\treturn _tilemap.to_global(_tilemap.map_to_local(cell))",
+		"",
+		"## A* over the walk/jump/fall edges (jump edges already carry their cost premium, so the",
+		"## router prefers walking a ramp over jumping it). Returns the cell path or [].",
+		"## @ace_hidden",
+		"func _astar(start: Vector2i, goal: Vector2i) -> Array:",
+		"\tvar open: Array = [start]",
+		"\tvar came_from: Dictionary = {}",
+		"\tvar cost_so_far: Dictionary = {start: 0.0}",
+		"\twhile not open.is_empty():",
+		"\t\tvar best_index: int = 0",
+		"\t\tfor index in range(1, open.size()):",
+		"\t\t\tvar here: Vector2i = open[index]",
+		"\t\t\tif cost_so_far[here] + Vector2(goal - here).length() < cost_so_far[open[best_index]] + Vector2(goal - (open[best_index] as Vector2i)).length():",
+		"\t\t\t\tbest_index = index",
+		"\t\tvar current: Vector2i = open.pop_at(best_index)",
+		"\t\tif current == goal:",
+		"\t\t\tvar cells: Array = [current]",
+		"\t\t\twhile came_from.has(current):",
+		"\t\t\t\tcurrent = came_from[current]",
+		"\t\t\t\tcells.push_front(current)",
+		"\t\t\treturn cells",
+		"\t\tfor edge in (_edges.get(current, []) as Array):",
+		"\t\t\tvar next_cell: Vector2i = edge[\"to\"]",
+		"\t\t\tvar next_cost: float = cost_so_far[current] + float(edge[\"cost\"])",
+		"\t\t\tif not cost_so_far.has(next_cell) or next_cost < float(cost_so_far[next_cell]):",
+		"\t\t\t\tcost_so_far[next_cell] = next_cost",
+		"\t\t\t\tcame_from[next_cell] = current",
+		"\t\t\t\tif not open.has(next_cell):",
+		"\t\t\t\t\topen.append(next_cell)",
+		"\treturn []",
+		"",
+		"## The edge kind walking cell A -> B on the found path (for the waypoint's action).",
+		"## @ace_hidden",
+		"func _edge_kind(from_cell: Vector2i, to_cell: Vector2i) -> String:",
+		"\tfor edge in (_edges.get(from_cell, []) as Array):",
+		"\t\tif edge[\"to\"] == to_cell:",
+		"\t\t\treturn str(edge[\"kind\"])",
+		"\treturn \"walk\"",
+		"",
+		"## @ace_hidden",
+		"func _refresh_debug() -> void:",
+		"\tif not debug_draw:",
+		"\t\tif _debug_line != null and is_instance_valid(_debug_line):",
+		"\t\t\t_debug_line.clear_points()",
+		"\t\treturn",
+		"\tif _debug_line == null or not is_instance_valid(_debug_line):",
+		"\t\t_debug_line = Line2D.new()",
+		"\t\t_debug_line.width = 3.0",
+		"\t\t_debug_line.default_color = Color(0.2, 0.9, 0.5, 0.8)",
+		"\t\t_debug_line.top_level = true",
+		"\t\thost.add_child(_debug_line)",
+		"\t_debug_line.clear_points()",
+		"\tif _path.is_empty():",
+		"\t\treturn",
+		"\t_debug_line.add_point(host.global_position)",
+		"\tfor index in range(_path_index, _path.size()):",
+		"\t\t_debug_line.add_point(_path[index][\"world\"])"
+	]))
+	sheet.events.append(block)
+
+	# Per-physics-tick drive: resolve the current waypoint into the {move_axis, want_jump}
+	# intent, feed the sibling movement pack (auto) or just publish the expressions (manual).
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnPhysicsProcess"
+	var tick_body: RawCodeRow = RawCodeRow.new()
+	tick_body.code = "\n".join(PackedStringArray([
+		"if host == null or _path.is_empty():",
+		"\treturn",
+		"var waypoint: Dictionary = _path[_path_index]",
+		"var target: Vector2 = waypoint[\"world\"]",
+		"var dx: float = target.x - host.global_position.x",
+		"_move_axis = clampf(dx / 24.0, -1.0, 1.0) if absf(dx) > 2.0 else 0.0",
+		"var movement: Node = _find_movement()",
+		"var tile: float = float(_tilemap.tile_set.tile_size.y) if _tilemap != null else 32.0",
+		"# Jump on jump arcs, and STEP-ASSIST on raised walk waypoints: a full-block stair stops",
+		"# a walking body, so a close-and-higher waypoint gets a hop (slope tiles just walk).",
+		"var wants_jump: bool = waypoint[\"action\"] == \"jump\"",
+		"if not wants_jump and waypoint[\"action\"] == \"walk\":",
+		"\twants_jump = target.y < host.global_position.y - 8.0 and absf(dx) < tile * 1.5",
+		"if auto_control and movement != null:",
+		"\tmovement.set(\"ai_controlled\", true)",
+		"\tmovement.set(\"ai_move_axis\", _move_axis)",
+		"\tif wants_jump and not _jumped_this_segment and host.is_on_floor():",
+		"\t\t_jumped_this_segment = true",
+		"\t\tmovement.jump()",
+		"if absf(dx) <= arrive_distance and absf(target.y - host.global_position.y) <= tile:",
+		"\t_jumped_this_segment = false",
+		"\t_path_index += 1",
+		"\twaypoint_reached.emit()",
+		"\tif _path_index >= _path.size():",
+		"\t\tstop_pathfinding()",
+		"\t\tpath_complete.emit()",
+		"if debug_draw:",
+		"\t_refresh_debug()"
+	]))
+	tick.actions.append(tick_body)
+	sheet.events.append(tick)
+
+	# ── Exposed actions ─────────────────────────────────────────────────────────────
+	Lib.append_function(sheet, "build_nav_graph", "Build Nav Graph From Tilemap", "Platformer Pathfinding",
+		"Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK edges, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.",
+		[["tilemap", "Node"]],
+		"_tilemap = tilemap as TileMapLayer\nregenerate_nav_graph()")
+	Lib.append_function(sheet, "regenerate_nav_graph", "Regenerate Nav Graph", "Platformer Pathfinding",
+		"Rebuilds the graph from the same TileMapLayer (after runtime tile edits).",
+		[],
+		"\n".join(PackedStringArray([
+			"_nodes.clear()",
+			"_edges.clear()",
+			"if _tilemap == null:",
+			"\treturn",
+			"var solid: Dictionary = {}",
+			"for cell in _tilemap.get_used_cells():",
+			"\tvar tile_data: TileData = _tilemap.get_cell_tile_data(cell)",
+			"\tif tile_data != null and tile_data.get_collision_polygons_count(0) > 0:",
+			"\t\tsolid[cell] = true",
+			"# A standable node = a solid cell with two cells of headroom above it.",
+			"for cell in solid:",
+			"\tvar stand: Vector2i = cell + Vector2i(0, -1)",
+			"\tif not solid.has(stand) and not solid.has(stand + Vector2i(0, -1)):",
+			"\t\t_nodes[stand] = true",
+			"# WALK edges: neighbours one cell over, up to one step up/down - stairs and slopes",
+			"# included, at plain euclidean cost so ramps beat jumps in the router.",
+			"for cell in _nodes:",
+			"\tfor dx in [-1, 1]:",
+			"\t\tfor dy in [-1, 0, 1]:",
+			"\t\t\tvar to: Vector2i = cell + Vector2i(dx, dy)",
+			"\t\t\tif _nodes.has(to):",
+			"\t\t\t\t_add_edge(cell, to, \"walk\", Vector2(float(dx), float(dy)).length())",
+			"# JUMP arcs + FALL drops within the derived reach, clearance-checked coarsely.",
+			"var reach: Vector2i = _jump_reach_cells()",
+			"var fall_cells: int = maxi(int(ceil(max_fall_distance / float(_tilemap.tile_set.tile_size.y))), 1)",
+			"for cell in _nodes:",
+			"\tfor dx in range(-reach.x, reach.x + 1):",
+			"\t\tfor dy in range(-reach.y, fall_cells + 1):",
+			"\t\t\tif absi(dx) <= 1 and absi(dy) <= 1:",
+			"\t\t\t\tcontinue",
+			"\t\t\tvar to: Vector2i = cell + Vector2i(dx, dy)",
+			"\t\t\tif not _nodes.has(to) or not _arc_clear(cell, to, solid):",
+			"\t\t\t\tcontinue",
+			"\t\t\tvar kind: String = \"fall\" if dy > 0 and absi(dx) <= 2 else \"jump\"",
+			"\t\t\tvar span: float = Vector2(float(dx), float(dy)).length()",
+			"\t\t\t_add_edge(cell, to, kind, span * (1.5 if kind == \"jump\" else 1.1))",
+			"nav_graph_built.emit()"
+		])))
+	Lib.append_function(sheet, "find_path_to", "Find Path To", "Platformer Pathfinding",
+		"Routes to a world position and starts moving. Mode \"reach\" fails (On Path Failed) when the spot itself is unreachable; \"nearest\" never fails - it goes to the closest reachable node instead. Fires On Path Found / On Path Failed.",
+		[["x", "float"], ["y", "float"], ["mode", "String"]],
+		"\n".join(PackedStringArray([
+			"if host == null or _tilemap == null or _nodes.is_empty():",
+			"\tpath_failed.emit()",
+			"\treturn",
+			"var start: Vector2i = _nearest_node(host.global_position, 3)",
+			"var goal: Vector2i = _nearest_node(Vector2(x, y), 2 if mode == \"reach\" else 1000000)",
+			"if start == Vector2i.MAX or goal == Vector2i.MAX:",
+			"\tstop_pathfinding()",
+			"\tpath_failed.emit()",
+			"\treturn",
+			"var cells: Array = _astar(start, goal)",
+			"if cells.is_empty():",
+			"\tstop_pathfinding()",
+			"\tpath_failed.emit()",
+			"\treturn",
+			"_path = []",
+			"for index in range(cells.size()):",
+			"\tvar action: String = \"walk\" if index == 0 else _edge_kind(cells[index - 1], cells[index])",
+			"\t_path.append({\"world\": _cell_world(cells[index]), \"action\": action})",
+			"_path_index = 0",
+			"_jumped_this_segment = false",
+			"path_found.emit()"
+		])))
+	_default(sheet, "mode", "nearest")
+	_param_options(sheet, "mode", ["nearest", "reach"])
+	Lib.append_function(sheet, "find_path_to_node", "Find Path To Node", "Platformer Pathfinding",
+		"Routes to another node's position (the player, a pickup) - Find Path To with the position read for you. Re-call it on a timer to chase.",
+		[["target", "Node"], ["mode", "String"]],
+		"if target is Node2D:\n\tfind_path_to((target as Node2D).global_position.x, (target as Node2D).global_position.y, mode)\nelse:\n\tpath_failed.emit()")
+	_default(sheet, "mode", "nearest")
+	_param_options(sheet, "mode", ["nearest", "reach"])
+	Lib.append_function(sheet, "stop_pathfinding", "Stop Pathfinding", "Platformer Pathfinding",
+		"Clears the path and releases the movement pack back to the keyboard (ai_controlled off).",
+		[],
+		"\n".join(PackedStringArray([
+			"_path = []",
+			"_path_index = 0",
+			"_move_axis = 0.0",
+			"_jumped_this_segment = false",
+			"var movement: Node = _find_movement()",
+			"if movement != null:",
+			"\tmovement.set(\"ai_move_axis\", 0.0)",
+			"\tmovement.set(\"ai_controlled\", false)",
+			"if _debug_line != null and is_instance_valid(_debug_line):",
+			"\t_debug_line.clear_points()"
+		])))
+	Lib.append_function(sheet, "set_auto_control", "Set Auto Control", "Platformer Pathfinding",
+		"On (default): the behavior drives the sibling PlatformerMovement. Off: paths still compute - read Path Move Axis / Path Wants Jump / Current Waypoint X/Y and drive anything you like.",
+		[["enabled", "bool"]],
+		"auto_control = enabled\nif not enabled:\n\tvar movement: Node = _find_movement()\n\tif movement != null:\n\t\tmovement.set(\"ai_controlled\", false)")
+	Lib.append_function(sheet, "set_nav_debug_draw", "Set Nav Debug Draw", "Platformer Pathfinding",
+		"Draws the active path as a line in the world (great while tuning a level).",
+		[["enabled", "bool"]],
+		"debug_draw = enabled\n_refresh_debug()")
+
+	return Lib.save_pack(sheet, "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior")
+
+
+## Pre-fills the last-appended ACE's parameter default (authoring-time metadata only).
+static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.default_value = value
+
+
+## Sets the dropdown options[] on the last-appended ACE's parameter.
+static func _param_options(sheet: EventSheetResource, param_id: String, choices: Array) -> void:
+	var typed: Array[String] = []
+	for choice: Variant in choices:
+		typed.append(str(choice))
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.options = typed
