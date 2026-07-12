@@ -354,6 +354,18 @@ On Combo Reset Timer Timeout
   -> ClickPower: Set Multiplier  1
 ```
 
+### Other use cases
+
+**Tap-damage boss battles.** Nothing says the payout has to be money: treat Last Click as damage and subtract it from a boss health pool on every On Click. Crits become massive hits with their own On Crit slam effect, and the composed multiplier is your hero's total DPS stat.
+
+**Resource-node harvesting.** Each pickaxe swing on an ore vein is a Do Click, with the flat bonus as your tool tier and a crit as striking a rich seam. The same node logic covers trees, rocks, and herbs - only the Configure numbers change.
+
+**Button-mash minigames.** A tug-of-war or reel-in-the-fish mash fills a meter by Last Click per press, so upgrades the player bought elsewhere genuinely make mashing stronger. Total Clicks doubles as a "presses this attempt" stat for the results screen.
+
+**Pet and egg progress tapping.** Tapping an egg adds Last Click to a hatch meter, and a crit gives the shell a lucky big crack. The CPS Fraction rule even lets an incubator's passive warmth make each tap worth more as the nursery upgrades.
+
+**Restaurant serving rushes.** In an idle-hybrid diner, every customer served by hand is a Do Click and the payout is the tip, with crits as generous big spenders. Set Multiplier composes the menu quality and decor bonuses, so active play scales with the same economy as the idle layer.
+
 ---
 
 ## Tips and common mistakes

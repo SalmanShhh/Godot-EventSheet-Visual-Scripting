@@ -357,6 +357,18 @@ On Debug Overlay Refresh
 
 If the per-frame count is far higher than you want, drop `frame_budget_ms` or switch to count mode; if it is crawling, raise the budget.
 
+### Other use cases
+
+**Strategy end-turn resolution.** Pressing End Turn enqueues every unit's AI decision and resolves a budgeted slice per frame, so a 200-unit turn plays out under a spinner instead of freezing the screen.
+
+**Spreading fire or growth.** Each burning or growing tile processes as an item and enqueues its neighbors, so wildfire, vines, or corruption creep across the map at a smooth, controllable rate.
+
+**Hitch-free autosave capture.** Before writing a save, enqueue every entity and collect one state snapshot per On Process Item, then write the file On Drained, so the autosave moment stops being the stutter moment.
+
+**Domino and cascade pacing.** In count mode with a small cap, queued dominoes, chain reactions, or match-cascade pops resolve at a deliberate, readable rhythm instead of all at once.
+
+**Stadium crowd wave.** Enqueue the seating sections in order and drip them through the queue so the crowd stands and sits in a rolling wave, one cheap trigger per section.
+
 ---
 
 ## Tips and common mistakes

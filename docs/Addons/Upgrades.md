@@ -338,6 +338,18 @@ On Upgrade Bought
   -> Total Spent Label: set text to "Just spent " + BigNumber.Format Short(Upgrades.Last Cost()) + " on " + Upgrades.Last Upgrade()
 ```
 
+### Other use cases
+
+**Tower-defense between-wave shops.** Define "tower_damage", "tower_range", and "fire_rate" as add-mode upgrades and let the player spend wave gold in the intermission. Each tower reads Total Bonus("damage") on the next wave, so one aggregate call retunes every turret on the map.
+
+**Roguelite meta-progression.** Permanent between-run perks like "+10 starting health" are add-mode upgrades bought with the bones or gems a run banks. Because the prestige-style Reset is something you invoke yourself, the meta catalogue simply never gets wiped and keeps compounding across runs.
+
+**Blacksmith gear enhancement.** A weapon enhanced from +1 to +10 is one upgrade with max_level 10 and a steep cost_growth, so each rank costs visibly more at the forge. Is Maxed swaps the button for a MAX badge, and Effect Of drives the weapon's bonus damage.
+
+**Survivors-style level-up drafts.** When the run's XP bar fills, offer three upgrade cards and call Grant Level on the chosen one - no wallet involved mid-fight. The build's stats stay readable as Total Bonus and Total Multiplier per tag, and the run-scoped catalogue resets cleanly for the next attempt.
+
+**City-builder building tiers.** Each structure's level is an upgrade: the town hall at level 3 gates the barracks via Level Of, and a max_level keeps districts finite. Cost growth per tier gives the classic "each expansion costs more" pacing without a hand-written price table.
+
 ---
 
 ## Tips and common mistakes

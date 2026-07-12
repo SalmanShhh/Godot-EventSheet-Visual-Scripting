@@ -323,6 +323,18 @@ Every 0.4 seconds
       -> HUD: ping Ally.spotted.global_position
 ```
 
+### Other use cases
+
+**Weeping-angel horror monsters.** Flip the sensor around: give the player node the behavior and ask Has Line Of Sight To the monster's position every frame. While the player can see it the creature freezes; the instant the check fails it is free to creep closer, which is the whole scare loop of a look-or-lose horror game.
+
+**Stealth detection meters.** Instead of an instant alarm, poll Has Line Of Sight To the player on a short timer and fill an awareness bar a little on every true result, draining it on false. Guards ramp from suspicious to hostile only after sustained visibility, and narrowing the cone at night or widening it with a spotlight retunes the whole system live.
+
+**Wildlife photography quests.** A photo only counts if the camera node genuinely has the animal in frame: within sight_range, inside a cone matched to the lens angle, and not blocked by a tree. One Has Line Of Sight To check at the moment of the shutter click validates the shot, and Nearest Visible In Group can pick which creature the photo is "of".
+
+**Prison-break searchlights.** Mount the behavior on a rotating searchlight with a narrow cone and a long range, and poll for the escaping player as the host sweeps. Because the cone follows the host's forward direction, the moving beam is just the node's rotation, and one true result triggers the sirens.
+
+**Escort missions with visual contact.** Bodyguards check Has Line Of Sight To the VIP on a timer and switch to a regroup state the moment a wall or crowd breaks the view. The same polled check drives a "lost sight of the client" panic timer, so the escort tension comes from geometry rather than a leash distance.
+
 ---
 
 ## Tips and common mistakes

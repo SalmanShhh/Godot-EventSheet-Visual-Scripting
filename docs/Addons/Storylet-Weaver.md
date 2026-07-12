@@ -488,6 +488,18 @@ On enter throne room
 
 Pair a specific storylet's id with **Has Been Played** when you want tight control over a single beat rather than a pooled Draw. (Setting **Set Max Plays** `1` achieves the same automatically, without the manual check.)
 
+### Other use cases
+
+**Sports announcer commentary.** Mirror the match into qualities like `score_gap`, `streak`, and `minutes_left`, and Draw Weighted a commentary line after each play. Cooldowns stop the announcer repeating himself, and a huge weight on the "comeback complete" beat makes sure the big call always wins the draw.
+
+**Open-world radio news.** A news bulletin that reacts to the player's deeds is a pool of storylets gated on qualities like `banks_robbed` or `mayor_saved`. Each broadcast Draws a fitting story, one-shots keep old headlines from returning, and the fallback beat is the weather report.
+
+**Colony-sim crisis decks.** Each in-game morning, Draw the day's event from a library of hardships and windfalls whose requirements read `food`, `morale`, and `season`. Choices carry the response ("ration it" / "feast"), and On Choice Made applies the consequences back into the same qualities.
+
+**Boss taunt barks.** Track `times_dodged`, `player_hp`, and `phase` as qualities and let the boss Draw a taunt at scripted beats. The mockery escalates as requirements unlock crueler lines, and max plays keep the best zinger from wearing out mid-fight.
+
+**Strategy-game chronicles.** An end-of-run chronicle or obituary assembles itself from storylets gated on what actually happened - `wars_won`, `heirs_lost`, `wonders_built`. Evaluate lists every earned entry in weight order, and the run's story reads back as prose instead of a stat dump.
+
 ---
 
 ## Tips and common mistakes

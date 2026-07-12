@@ -367,6 +367,34 @@ On Double Jumped
 
 Pair it with `max_jumps` set to 2 or 3 so there is a count to show.
 
+### 15. Feed a State Machine one movement state
+
+Pair with the State Machine pack so animation, sound, and AI all read one named state instead of polling movement conditions everywhere.
+
+```
+Every frame
+  Condition: Player | PlatformerMovement  Is Wall Sliding
+    -> Player | StateMachineBehavior: Set State  "wall_slide"
+  Condition: Player | PlatformerMovement  Is Jumping
+    -> Player | StateMachineBehavior: Set State  "jump"
+  Condition: Player | PlatformerMovement  Is Falling
+    -> Player | StateMachineBehavior: Set State  "fall"
+```
+
+Setting the same state every frame is safe - the State Machine's change guard fires its transition trigger only on a real switch.
+
+### Other use cases
+
+**Dialogue lockdown.** Set Move Speed to 0 when a conversation opens so the player cannot wander off mid-line, then restore the resting speed when the dialogue closes.
+
+**Updraft columns.** Call Reset Jumps every frame while the player is inside a wind area, letting them chain air jumps to ride the column upward and drop back to normal rules on exit.
+
+**Trick-score landings.** Read Air Time inside On Landed and award style points for long hang times, so risky long jumps pay out more than safe hops.
+
+**One-button runner.** Since horizontal running is automatic, an endless-runner prototype only needs the Jump action bound to a single tap - coyote time and buffering keep it forgiving on touch screens.
+
+**Wall-kick combo counter.** Count On Wall Jumped events in quick succession for a chained wall-jump combo meter, and reset the count in On Landed when the player touches the floor.
+
 ---
 
 ## Tips and common mistakes

@@ -327,6 +327,18 @@ On Cheat Set Points Pressed
   # 1000 points at 0.02 bonus reads x21.0
 ```
 
+### Other use cases
+
+**Roguelite soul banking.** Nothing says the earnings have to be idle gold: Track Earned the score a run accumulates, and on death Do Prestige converts it into permanent souls. The square-root curve naturally rewards deeper runs more than grinding shallow ones, and Prestige Multiplier is the hero's inherited power.
+
+**Tycoon franchise sales.** Selling the restaurant chain to reopen with reputation stars is the same bank-and-reset: lifetime revenue feeds Track Earned, the "Sell for N stars" button reads Prestige Gain live, and every future venture earns faster by Prestige Multiplier.
+
+**Seasonal ladder resets.** A live game's season end is one Do Prestige converting season earnings into legacy points, with Total Earned keeping the all-time career stats intact across every season. Prestige Level doubles as the "seasons played" badge.
+
+**New Game Plus.** Finish the story, bank the playthrough's accumulated score, and start NG+ with a permanent multiplier on XP and drops. Because the pack never wipes your game itself, you choose exactly what carries over and what resets in the same event.
+
+**Generational farm sims.** Passing the farm to an heir banks the parent's lifetime harvest into heirloom points, and each generation works the land a little faster. Progress To Next makes a gentle "legacy" bar that fills over a whole playthrough rather than a session.
+
 ---
 
 ## Tips and common mistakes

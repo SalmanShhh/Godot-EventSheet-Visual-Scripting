@@ -334,6 +334,18 @@ On Weekend Panel Refresh
   -> Total Label: set text to "Total x" + BigNumber.Format Short(Boost.Total Multiplier(), 1)
 ```
 
+### Other use cases
+
+**Racing nitro pickups.** The pack never touches production specifically - it just reports a multiplier - so a nitro pad can Start Boost "nitro" and the car multiplies its top speed by Total Multiplier each frame. Driving over a second pad mid-burn is one Extend Boost, and the flame effect switches off inside On Boost Expired.
+
+**Tower-defense war horns.** A support ability starts a tagged "attack_speed" boost for eight seconds and every tower divides its fire interval by Multiplier For Tag("attack_speed"). Stacking a commander aura on top multiplies in automatically, and the horde feels the difference without any per-tower timers.
+
+**Survivor-run pickups.** Magnet, double-XP, and freeze pickups in a horde survivor are each a short boost under its own id, all live at once. The HUD reads Active Count for the icon row, and On Boost Expired is where each effect cleans itself up mid-swarm.
+
+**Cafe-sim happy hours.** A restaurant or shop sim runs "happy_hour" as a tagged boost that multiplies tips while the rush lasts. Seasonal promotions and a celebrity-visit event stack multiplicatively with it, and the till just multiplies each sale by Multiplier For Tag("income").
+
+**Lucky-charm drop windows.** A charm or shrine blessing starts a "luck" boost, and your loot logic multiplies its rare-drop chance by Multiplier Of("luck") for the duration. Because an inactive boost reads 1.0, the odds math needs no special case when the charm wears off.
+
 ---
 
 ## Tips and common mistakes

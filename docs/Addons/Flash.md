@@ -307,6 +307,35 @@ On Danger Cleared
 
 The Interval expression lets the sheet check how fast the blink currently is before deciding to reset it and stop.
 
+### 15. A disarmable trap telegraph
+
+An interrupt case: the trap blinks its warning, but a rogue can disarm it mid-telegraph. Because Stop Flash never fires On Flash Finished, cancelling the blink also cancels the spring.
+
+```
+On Trap Armed
+  -> Spikes | FlashBehavior: Flash  0.8
+
+On Trap Disarmed
+  -> Spikes | FlashBehavior: Stop Flash
+
+On Flash Finished
+  -> Spikes: extend spikes and enable hitbox
+```
+
+The spikes only fire when the telegraph runs its full course; a successful disarm silently parks the trap visible and harmless.
+
+### Other use cases
+
+**Rhythm-beat cues.** Target rings blink on every beat with the interval matched to the song's tempo, so the flash itself teaches the timing.
+
+**Tower ammo warnings.** Towers running low blink faster as the clip empties, letting the player triage reloads across the whole map at a glance.
+
+**Failing corridor light.** A long Flash with a slow interval reads as glitching wiring in a horror hallway, and Stop Flash steadies the lamp when the generator is fixed.
+
+**Respawn grace period.** Freshly respawned players blink for the length of their protection window, so opponents read the no-damage state without a UI banner.
+
+**Treasure sonar.** A compass icon blinks quicker as the player nears buried loot, shrinking the interval with distance until the dig spot is obvious.
+
 ---
 
 ## Tips and common mistakes

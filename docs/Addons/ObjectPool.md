@@ -194,6 +194,53 @@ On fire
     -> set b = ObjectPool.Spawn("bullets")
 ```
 
+**13. Pooled damage numbers that dissolve with Fade.** Pair with the Fade pack: the label fades out, then
+its fade-out trigger hands it back to the pool instead of freeing it.
+
+```
+On damage
+  -> set n = ObjectPool.Spawn("labels"), set its text and position
+  -> n | Fade: Fade Out  0.6
+Label On Faded Out
+  -> ObjectPool: Despawn  the label
+```
+
+Leave the Fade behavior's free-on-fade option off - freeing a pooled node loses it for good.
+
+**14. Endless runner ground recycling.** The same handful of tile nodes leapfrogs forever: reclaim tiles
+behind the player and hand them back out ahead.
+
+```
+Every tick
+  Condition: a Tile is off-screen behind the player
+    -> ObjectPool: Despawn  the Tile
+On gap ahead
+  -> set t = ObjectPool.Spawn("tiles"), place it at the next slot
+```
+
+**15. Cap the active count so a pool cannot balloon.** A scene pool grows on demand, so in a spawn storm
+put the ceiling in your own logic.
+
+```
+On fire
+  Condition: ObjectPool.Active Count("bullets") < 100
+    -> set b = ObjectPool.Spawn("bullets"), aim it
+```
+
+The oldest shots despawn on their own (hit or off-screen), freeing room for the next volley.
+
+### Other use cases
+
+**Footprint and tire-track trails.** A small pool of decal sprites is handed out under the character each step and reclaimed once the trail behind grows long enough.
+
+**Turret muzzle flashes.** A defense level with dozens of turrets shares one flash pool, so every barrel can flash each shot without a single instancing hitch.
+
+**Chat and combat-log bubbles.** A pool of text bubbles serves every speaker in the scene, despawned as each bubble expires so long sessions never accumulate nodes.
+
+**Rain splashes and weather.** Spawn splash effects from a pool wherever drops land and despawn them a moment later, keeping heavy weather cheap on mobile.
+
+**Boss minion recycling.** A summoner boss reuses the same minion nodes across the whole fight, with Despawn All wiping the arena clean between phases.
+
 ## Tips and common mistakes
 
 - **Despawn, do not free.** Freeing a pooled node defeats the point; call Despawn to return it.

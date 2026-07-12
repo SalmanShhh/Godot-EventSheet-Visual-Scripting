@@ -348,6 +348,36 @@ On Timer
 
 Set Repeating flips the behavior live, so the same Timer that was a one-shot earlier in the fight now pulses on a beat once the boss enrages.
 
+### 15. Telegraphed attack with the State Machine pack
+
+Pair a one-shot Timer with the State Machine pack for a readable boss telegraph: enter the windup state, light the fuse, and let the strike land when it elapses.
+
+```
+On Attack Chosen
+  -> Boss | StateMachineBehavior: Set State  "windup"
+  -> Boss | Timer: Start Timer  1.2
+
+On Timer
+  -> Boss | StateMachineBehavior: Set State  "strike"
+
+On Boss Staggered
+  -> Boss | Timer: Stop Timer
+```
+
+Stop Timer cancels the strike silently, so a well-timed stagger defuses the attack with no extra bookkeeping.
+
+### Other use cases
+
+**Combo window.** Restart a short one-shot Timer on every landed hit; because Start Timer always resets the fuse, On Timer only fires once the flurry stops, which is exactly when the combo counter should reset.
+
+**King-of-the-hill scoring.** A repeating Timer on the capture zone awards a point each beat while a player stands inside, and Stop Timer on exit pauses the scoring cleanly.
+
+**Shop restock.** A long repeating Timer on the merchant refreshes the inventory every few minutes of play, and Subtract From Duration can quicken restocks as the run progresses.
+
+**Breath meter.** Start a one-shot Timer when the player submerges and Stop Timer on surfacing; if On Timer ever fires, the air ran out and the drowning damage begins.
+
+**Hot-potato fuse.** A single running Timer rides an item that players pass around - whoever holds it when On Timer fires takes the blast, and nobody knows exactly when that will be.
+
 ---
 
 ## Tips and common mistakes

@@ -295,6 +295,34 @@ On Spawn Planets
 
 Each planet shares the same center but its own radius and speed, so the inner one laps the outer one.
 
+### 15. A black-hole spiral that speeds up as it falls
+
+Combine a shrinking radius with a growing speed and snagged debris spirals inward faster and faster, like matter circling a drain.
+
+```
+On Debris Snagged
+  -> Debris | Orbit3DBehavior: Set Orbit 3D Center  BlackHole.position.x, BlackHole.position.y, BlackHole.position.z
+
+Every 0.1 seconds
+  Condition: Debris | Orbit3DBehavior  Radius  >  0.5
+    -> Debris | Orbit3DBehavior: Subtract From Radius  0.4
+    -> Debris | Orbit3DBehavior: Add To Speed Degrees  20
+```
+
+Once the Radius expression reads 0.5 or less, remove the debris node - it has reached the center.
+
+### Other use cases
+
+**Planetarium diorama.** Nested orbiters at different radii and speeds around one sun read as a working solar-system exhibit.
+
+**Torch-wisp lighting.** A light wisp circles the hero with the center raised on Y, throwing a moving halo around night-time exploration.
+
+**Boss shield phases.** Guard drones widen their ring and speed up at each health phase, with the expressions gating how far the escalation goes.
+
+**Derelict debris fields.** Junk circles wrecked ships at varied radii and lazy speeds, making empty space feel inhabited.
+
+**Ritual altar climax.** Relics circle the altar during the chant and spiral inward as the ritual completes, landing on the center at the final word.
+
 ---
 
 ## Tips and common mistakes

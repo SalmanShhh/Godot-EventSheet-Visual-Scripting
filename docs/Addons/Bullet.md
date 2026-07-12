@@ -329,6 +329,31 @@ Every frame
 
 The behavior sums the distance for you, so a range limit is one comparison and a destroy.
 
+### 15. A spent shot that dissolves with Fade
+
+Pair with the Fade pack so a bullet at the end of its range fades away instead of popping: freeze its movement, fade it out, and let Fade's free-on-fade-out option delete it.
+
+```
+Every frame
+  Condition: [Expression] $Bullet/BulletBehavior.distance_travelled  >  800
+    -> Bullet | BulletBehavior: Set Bullet Enabled  false
+    -> Bullet | Fade: Fade Out  0.2
+```
+
+Freezing first keeps the shot from drifting while it dissolves, and the fade handles the cleanup for you.
+
+### Other use cases
+
+**Carnival shooting gallery.** Ducks and targets glide across the booth as slow flat bullets on fixed headings, reusing the same behavior for the props as for the player's shots.
+
+**Confetti and firework bursts.** Spawn a handful of nodes at one point, give each a random rotation and some gravity, and every piece arcs outward and falls on its own.
+
+**Underwater drag zones.** While a shot is inside water, set a strong negative acceleration so bullets visibly lose punch, then restore it when they exit.
+
+**Volley warnings.** Fire a slow telegraph shot along the boss's aim line first, then the real fast round a beat later at the same angle, so players can read the attack.
+
+**Ejected shell casings.** Each shot also spawns a tiny casing node with low speed, high gravity, and rotation-alignment off, for a physics-free cosmetic that arcs to the floor.
+
 ---
 
 ## Tips and common mistakes

@@ -134,6 +134,35 @@ Wall Ride Max Time + Wall Ride Min Speed; Wall Jump Enabled + Wall Jump Push.
    ceiling check doubles as a "am I inside a crawlspace" test.
 9. **Parkour chain telegraph.** `On Wall Jumped → Juice 3D: Recoil 1.0 0.3` + a whoosh sound -
    every kick off a wall gets tactile feedback.
+10. **Speedometer HUD.** `Every tick → set SpeedLabel.text to round(Current Speed)` - the
+   expression is horizontal m/s, so it reads zero at the top of a straight-up jump, which is
+   exactly what a speed readout should do.
+11. **Aim-down-sights.** While aim is held: `Is First Person → Set Mouse Sensitivity 0.08` (and
+   narrow the camera FOV); on release `Set Mouse Sensitivity 0.25` - fine control while scoped,
+   snappy turns when not.
+12. **Stamina sprint.** `Every tick + Is Sprinting → subtract 1 from stamina`; at zero
+   `Set Sprint Multiplier 1`, then once the Timer pack's regen delay refills the bar,
+   `Set Sprint Multiplier 1.6` - Shift never stops working, it just stops being faster.
+13. **Slide tackle.** On touching an enemy: `Is Sliding → hurt them with the Health pack` - the
+   slide window doubles as the attack window, no extra hitbox state to track.
+14. **Runtime rig swap.** Swapping the camera rig mid-game (a vehicle seat, then back on foot)?
+   After re-adding the `Head`/`Arm` nodes call `Apply Camera Mode` - it re-applies the current
+   mode to the new Arm, the edge case that otherwise leaves a first-person arm at third-person
+   length.
+15. **Compass strip.** `Every tick → scroll the compass texture by Look Yaw` - the expression is
+   already in degrees, so 0-360 maps straight onto a wrap-around compass HUD.
+
+### Other use cases
+
+**Horror flashlight walk.** Move Speed low, Sprint Multiplier barely above 1, Mouse Sensitivity soft, and the parkour knobs off - the same controller reads as dread instead of freerunning purely through the exported knobs.
+
+**Speedrun practice room.** Timestamps taken on the jump and landing triggers grade bunny-hop timing on a HUD, while Current Speed paints a live speed graph for route optimization.
+
+**Cozy third-person walker.** Set Third Person on ready with a long Camera Distance and a gentle Move Speed, and the pack becomes an over-the-shoulder controller for a farming or exploration game with no shooting at all.
+
+**Moon base airlocks.** Rooms swap the Gravity knob as the player crosses between the artificial-gravity decks and the lunar surface, so the jump feel changes with one row per door.
+
+**Kart hybrid.** Climbing into a kart releases the mouse and hides the player while the vehicle takes over; hopping out re-captures the cursor and the controller resumes exactly where it left off.
 
 ## Tips and common mistakes
 

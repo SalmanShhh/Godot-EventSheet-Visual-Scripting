@@ -361,6 +361,18 @@ On Refresh Check (every 2 seconds)
     -> HUD: show "Armour down"
 ```
 
+### Other use cases
+
+**Training dummy with a DPS meter.** A practice dummy takes hits normally but calls Revive the moment On Death fires, while every On Damaged adds Last Damage into a running total, giving players a damage-per-second readout that never runs out of target.
+
+**Poison and burn ticks.** A status effect applies a small Take Damage on a repeating timer, so damage-over-time reuses the exact same pipeline as direct hits - shields soak it, resistance scales it, and On Death fires if it finishes the job.
+
+**Vampiric lifesteal.** When the player's attack lands, read the victim's Last Damage inside its On Damaged and Heal the attacker for a fraction of it, turning lifesteal into two rows with no extra bookkeeping.
+
+**Escort and payload missions.** Give the caravan or payload its own behavior; enemies chip at it like any actor, a bar tracks Health Percent, and its On Death is simply the mission-failed trigger.
+
+**Difficulty settings without touching damage numbers.** On easy mode, Set Health Absorption Rate to 0.5 on the player and 1.5 on enemies at scene start - every weapon and hazard keeps its authored values while the whole game gets softer or harsher.
+
 ---
 
 ## Tips and common mistakes

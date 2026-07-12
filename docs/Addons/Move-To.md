@@ -319,6 +319,18 @@ On Errand requested
 
 Add Waypoint keeps the in-progress route intact and tacks the new stop on at the end, so On Arrived still fires only once, after the final destination.
 
+### Other use cases
+
+**Card dealing.** Each dealt card glides from the deck position to its hand slot with Move To Position, and On Arrived flips it face up, giving a card game its table feel with no tween chains.
+
+**Conga-line followers.** Every few ticks each follower calls Move To Position on the spot of the character ahead, so rescued critters or party members trail the leader in a loose line.
+
+**Ambient wanderers.** A fish, butterfly, or villager picks a random nearby point, glides there, and On Arrived picks the next one - an endless idle wander from two rows.
+
+**Tutorial pointer.** A floating hand glides to whatever button or pickup the tutorial wants noticed next, arriving exactly when the hint text appears.
+
+**Telegraphed boss slam.** The boss glides to a marked target tile at a readable speed, and On Arrived detonates the shockwave, so the wind-up and the payoff stay cleanly separated.
+
 ---
 
 ## Tips and common mistakes

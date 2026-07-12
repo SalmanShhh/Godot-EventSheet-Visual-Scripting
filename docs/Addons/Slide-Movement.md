@@ -185,6 +185,50 @@ On up pressed
     -> Player | SlideMove: Slide  "up"
 ```
 
+**13. Glue patch interrupts a slide mid-way.** A sticky tile that catches the player before the wall:
+Stop Slide halts the glide and snaps to the nearest tile.
+
+```
+Player enters GluePatch  (area overlap)
+  Condition: Player | SlideMove  Is Sliding
+    -> Player | SlideMove: Stop Slide
+    -> play a squelch sound
+```
+
+**14. Exit tile fades to the next maze with Fade.** Pair with the Fade pack: when a slide lands on the
+exit, fade a black overlay in, then load the next level.
+
+```
+Player On Slide Stopped
+  Condition: Player | SlideMove.Tile X() == exit_x and Player | SlideMove.Tile Y() == exit_y
+    -> BlackOverlay | Fade: Fade In  0.4
+BlackOverlay On Faded In
+  -> load the next maze
+```
+
+**15. Portal pairs across the maze.** Landing on one portal pops the player out of its twin, ready for
+the next input.
+
+```
+Player On Slide Stopped
+  Condition: standing on the blue portal tile
+    -> Player | SlideMove: Teleport To Tile  12, 3
+```
+
+Teleport To Tile cancels any slide and lands on a tile centre, so no extra snap is needed.
+
+### Other use cases
+
+**Replay ghosts.** Record Slide Direction on each On Slide Started and play the list back later, since a slide level's whole solution is just its sequence of directions.
+
+**Par-move medals.** Compare the move counter you build from On Slide Started against a per-level par to award bronze, silver, and gold on the results screen.
+
+**Directional tutorial arrows.** Light up on-screen arrows only for directions where Can Slide is true, teaching new players which moves are open right now.
+
+**Enemy sliders.** Give patrolling enemies the same behavior with Default Controls off and issue Slide calls from their AI, so hunters obey the exact ice rules the player does.
+
+**Daily puzzle seeds.** Generate a wall layout per day and verify it is solvable by simulating slides with Can Slide and tile coordinates before publishing the seed.
+
 ## Tips and common mistakes
 
 - **Set Wall Mask to your walls' collision layer** - with no walls on that layer, a slide runs to the

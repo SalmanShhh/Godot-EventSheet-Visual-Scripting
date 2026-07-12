@@ -301,6 +301,34 @@ On Time Unfreeze
   -> Bolt | Bullet3DBehavior: Set Bullet 3D Speed  60
 ```
 
+### 15. Pooled bolts with ObjectPool
+
+Pair with the ObjectPool pack to reuse projectile nodes instead of instancing them: hand a bolt out of the pool, re-aim it, and relaunch it along its new facing.
+
+```
+On Fire Pressed
+  -> set b = ObjectPool.Spawn("bolts")
+  -> b: move to Muzzle.global_position, aim along the barrel
+  -> b | Bullet3DBehavior: Launch Forward
+
+On bolt hit
+  -> ObjectPool: Despawn  the bolt
+```
+
+Launch Forward exists exactly for this - a recycled bolt keeps its old velocity until you relaunch it, so always relaunch after respawning.
+
+### Other use cases
+
+**Clay-pigeon skeet range.** Launch discs from a thrower with a moderate speed and gravity so each target flies a clean, readable arc for the player to lead.
+
+**Volcano debris showers.** Erupt a burst of rock nodes with varied rotations and a heavy gravity, and every chunk rains back down around the crater without a rigid body each.
+
+**Dodgeball and sports throws.** Balls leave a character's hand along their facing with a light gravity, giving believable throws in a sports minigame with zero physics setup.
+
+**Harpoons and grapple darts.** A fast, near-flat dart flies from the launcher's muzzle; your own hit event then takes over to reel in whatever it struck.
+
+**Wind-tunnel puzzle shots.** Fan zones add to or subtract from gravity while a projectile passes through, so players bend shots around cover by aiming through the currents.
+
 ---
 
 ## Tips and common mistakes

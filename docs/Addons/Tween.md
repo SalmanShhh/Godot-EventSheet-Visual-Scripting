@@ -314,6 +314,18 @@ On Deselected
 
 Passing `0` uses `default_duration` (0.3s by default). Retune the feel of every quick nudge from one Inspector knob instead of editing rows.
 
+### Other use cases
+
+**Card flip.** Tween Property squeezes `scale:x` to 0, the finish trigger swaps the card face, and a second tween opens it back to 1 - a full flip built from one scalar path.
+
+**Prize wheel.** Tween Rotation with an `out` easing and a long duration sends the wheel spinning fast and coasting to a stop exactly on the winning angle you passed in.
+
+**Elevator platform.** A lift Tween Positions between its floor marks, and On Tween Finished waits a beat before starting the return trip, so the ride has a natural pause at each stop.
+
+**Ambient cloud drift.** Background clouds slowly Tween Position across the sky, and On Tween Finished teleports each one back to the far edge to start again, filling the scene with lazy motion.
+
+**Damage vignette pulse.** A full-screen red overlay Tween Alphas up sharply when the player is hurt and fades back down, a readable "you got hit" flash that doubles as a low-health warning.
+
 ---
 
 ## Tips and common mistakes

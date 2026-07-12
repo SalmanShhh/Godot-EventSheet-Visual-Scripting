@@ -189,6 +189,49 @@ On Line Started
   -> look up a voice clip by Dialogue Kit.Current Speaker() and play it
 ```
 
+**13. Auto-advancing cutscene.** An intro scene that plays itself: advance on a timer, but only once the
+current line has finished typing.
+
+```
+Every 2 seconds
+  Condition: Dialogue Kit  Is Dialogue Active
+  Condition: Dialogue Kit  Is Typing  (inverted)
+    -> Dialogue Kit: Advance
+```
+
+Keep the interval a little longer than your slowest line takes to read.
+
+**14. Portraits that ease in with Fade.** Pair with the Fade pack so each speaker's portrait fades in
+instead of popping when their line starts.
+
+```
+On Line Started
+  Condition: Dialogue Kit  Speaker Is  "Guard"
+    -> GuardPortrait | Fade: Fade In  0.2
+```
+
+**15. Clean up when gameplay interrupts a conversation.** If the player dies or the level ends mid-line,
+end the dialogue so the panel is not stuck on screen after the restart.
+
+```
+On player died
+  Condition: Dialogue Kit  Is Dialogue Active
+    -> Dialogue Kit: End Dialogue
+  -> restart the level
+```
+
+### Other use cases
+
+**Shopkeeper greetings.** Queue a one-line welcome when the player opens a shop, so every merchant has a voice without a full cutscene system.
+
+**Loading-screen lore.** Type a short piece of world lore onto the loading screen and let On Dialogue Finished tell you the player has read it before the level swaps in.
+
+**Boss phase taunts.** At each boss health threshold, queue a taunt line and start it; freeze the arena on On Dialogue Started for a dramatic beat.
+
+**Tutorial coach.** A guide character queues a hint line whenever the player reaches a new mechanic, using Lines Remaining to keep a progress dot row in sync.
+
+**Typed credits.** Queue the credits as speaker and role pairs and let the typewriter pace the crawl, ending on On Dialogue Finished to return to the menu.
+
 ## Tips and common mistakes
 
 - **Name your UI to match** the Panel / Speaker Label / Text Label names, or set the names in the

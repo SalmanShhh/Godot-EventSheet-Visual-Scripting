@@ -135,6 +135,136 @@ each other.
 `reach` mode + On Path Failed: a fetch companion refuses marks that are off the mesh instead of
 walking into a wall forever.
 
+### 6. Retreat to the healing fountain
+
+A bruiser that breaks off the fight when it is hurt. Pair with the Health pack for the damage
+bookkeeping; the retreat itself is one path.
+
+```
+Every 0.5 seconds
+  Condition: ogre_health < 25
+    -> Ogre | Nav Agent 3D: Find Path To Node  $Fountain, "reach"
+On Path Complete -> (refill ogre_health, resume the chase)
+```
+
+`reach` mode means a walled-off fountain fails loudly instead of luring the ogre into a corner.
+
+### 7. Walk when far, sprint when close
+
+Distance To Target feeding Set Move Speed: a zombie shambles across the map, then lunges.
+
+```
+Every 0.5 seconds
+  Condition: Zombie | Nav Agent 3D: Distance To Target > 10
+    -> Zombie | Nav Agent 3D: Set Move Speed  1.5
+  Else
+    -> Zombie | Nav Agent 3D: Set Move Speed  5.0
+```
+
+Set Move Speed tunes the built-in mover; with an FPS Controller sibling the controller owns speed.
+
+### 8. Footsteps on waypoints
+
+On Waypoint Reached fires at each navmesh waypoint passed - a free hook for corner scuffs and
+dust puffs with no timers.
+
+```
+On Waypoint Reached -> (play a gravel step, puff dust at the agent's feet)
+```
+
+On big open mesh the waypoints are sparse, so treat this as a corner cue, not a per-step one.
+
+### 9. "I'll get as close as I can"
+
+`nearest` mode always produces a route, but Target Is Reachable tells you whether the exact spot
+is on the mesh - the honest voice line for squad orders.
+
+```
+On Order Issued
+  -> Unit | Nav Agent 3D: Find Path To  order_x, order_y, order_z, "nearest"
+  Condition: Unit | Nav Agent 3D: Target Is Reachable  is false
+    -> Unit says "I'll get as close as I can."
+```
+
+### 10. Freeze for the cutscene
+
+Stop Pathfinding clears the route AND hands the driver sibling back, so a scripted animation can
+own the body without the agent fighting it.
+
+```
+On Cutscene Started -> Stalker | Nav Agent 3D: Stop Pathfinding
+On Cutscene Ended   -> Stalker | Nav Agent 3D: Find Path To Node  $Player, "nearest"
+```
+
+### 11. Manual mode for a four-legged controller
+
+Auto control off: paths still compute, and Path Move X / Z become a steering feed for your own
+mover and skeleton.
+
+```
+On Ready   -> Wolf | Nav Agent 3D: Set Auto Control  false
+Every tick
+  Condition: Wolf | Nav Agent 3D: Has Path
+    -> (drive the wolf from Path Move X / Path Move Z, aim the skeleton the same way)
+```
+
+### 12. Rebake when the drawbridge lowers
+
+The mesh only knows the level it was baked from. When geometry changes at runtime, rebake -
+agents see the new mesh on their next Find Path To.
+
+```
+On Drawbridge Lowered
+  -> Knight | Nav Agent 3D: Bake Navigation Region  $NavRegion
+  -> Knight | Nav Agent 3D: Find Path To Node  $Player, "nearest"
+```
+
+### 13. Idle wandering
+
+On Path Complete immediately picks a new random destination - villagers that never stand still.
+
+```
+On Ready         -> Villager | Nav Agent 3D: Find Path To  randf_range(-20, 20), 0, randf_range(-20, 20), "nearest"
+On Path Complete -> Villager | Nav Agent 3D: Find Path To  randf_range(-20, 20), 0, randf_range(-20, 20), "nearest"
+```
+
+`nearest` snaps even a mid-air random point onto the mesh, so wild coordinates still land
+somewhere walkable.
+
+### 14. Calling off the chase
+
+Distance To Target is straight-line metres to the target - the giving-up dial. Player too far
+ahead? Go home.
+
+```
+Every 0.5 seconds
+  Condition: Hound | Nav Agent 3D: Distance To Target > 30
+    -> Hound | Nav Agent 3D: Stop Pathfinding
+    -> Hound | Nav Agent 3D: Find Path To  kennel_x, kennel_y, kennel_z, "nearest"
+```
+
+### 15. Auto-walk the player (FPS Controller)
+
+Attach Nav Agent 3D under the player next to the FPS Controller: a scripted route walks the
+player with their own speed and feel, then hands the keyboard back.
+
+```
+On Briefing Started -> Player | Nav Agent 3D: Find Path To  podium_x, podium_y, podium_z, "reach"
+On Path Complete    -> Player | Nav Agent 3D: Stop Pathfinding
+```
+
+### Other use cases
+
+**Tower-defense creeps.** Each spawned creep gets one Find Path To at the exit in nearest mode; the navmesh IS the lane layout, and rebaking after the player builds a wall reshapes every route.
+
+**Stealth guard investigation.** A noise event sends the guard pathing to the sound's position in nearest mode; On Path Complete starts a look-around timer before it walks back to its post.
+
+**Boss phase repositioning.** Between phases the boss paths to a staged arena anchor in reach mode, and On Path Complete is the cue to start the next attack pattern.
+
+**Ambient wildlife.** Deer wander with the random-destination loop and simply Find Path To a point away from the player when they get close, so the forest feels alive for a handful of rows.
+
+**Summoned minions.** A summon spell drops three minions that Find Path To Node the summoner's current target, with avoidance on so the pack spreads around it instead of stacking.
+
 ## Tips and common mistakes
 
 - **No NavigationRegion3D = no paths.** The scene needs one, with geometry under it, baked

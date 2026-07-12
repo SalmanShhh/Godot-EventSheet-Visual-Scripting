@@ -408,6 +408,35 @@ On refresh input display
 
 **Buffer Length** and **Buffer Token** (with `0` = oldest) read the rolling history directly, and **Is Buffer Empty** guards the empty case. **Buffer Time** gives each token's timestamp if you want to space the icons by how far apart the inputs landed.
 
+### 15. A practice mode that loosens the whole detector
+
+**Scenario:** A training toggle gives new players more time between inputs and a longer memory, then restores tournament rules - and flushes the buffer so a slow practice motion cannot complete under the tight windows.
+
+```
+On practice mode enabled
+  -> ComboBox: Set Default Timing  1.2
+  -> ComboBox: Set Buffer Length  24
+
+On practice mode disabled
+  -> ComboBox: Set Default Timing  0.5
+  -> ComboBox: Set Buffer Length  12
+  -> ComboBox: Clear Buffer
+```
+
+Only combos registered with a `timing_window` of `-1` follow **Set Default Timing**, so register the movelist with `-1` and this one toggle retunes every move at once.
+
+### Other use cases
+
+**Fighting-game training dojo.** A dummy replays the exact motion the player must copy, the partial-progress meter fills as each input lands, and On Combo Failed points at the step that broke.
+
+**Morse-code puzzle doors.** Short and long taps become dot and dash tokens, and a strict, no-time-limit sequence opens each vault door on the exact rhythm pattern.
+
+**Dance-machine minigame.** Direction tokens pressed on the beat feed tight timing windows, with partial progress driving a crowd-excitement meter that collapses on a miss.
+
+**Stealth knock codes.** Knocking on safehouse doors pushes knock tokens; the right pattern opens the door, while On Combo Failed alerts the guard inside.
+
+**Wizard duel counterspells.** Both duelists' gestures feed the same detector, and a higher-priority counter combo beats the incoming cast when they complete on the same input.
+
 ---
 
 ## Tips and common mistakes

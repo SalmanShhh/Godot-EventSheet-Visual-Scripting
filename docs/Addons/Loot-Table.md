@@ -471,6 +471,18 @@ On Roll Result
     -> Show text "You found the treasure!"
 ```
 
+### Other use cases
+
+**Booster-pack openings.** A deckbuilder's card pack is one Roll Times "booster", 8 with a Set Guarantee that at least one drop carries the "rare" tag, exactly the paper-TCG promise. Each On Roll Result reveals one card, and On Roll Complete flips the pack summary.
+
+**Random encounter tables.** Classic wandering-monster checks are one weighted table per biome: swamps roll "swamp_encounters", roads roll something gentler. Nested table references let every biome share one "common_beasts" pool while keeping its signature threats local.
+
+**Battle-royale floor loot.** At match start, each spawn point rolls a "floor_loot" table to scatter weapons and armor, with rare tags keeping snipers scarce. Seeding the match id with Set Seed means every player's client scatters the identical loot.
+
+**Carnival prize wheels.** A prize wheel is a single Roll on a table whose weights mirror the wedge sizes, so the plush toy stays rarer than the sticker. Dig-style pity on the grand-prize tag quietly ensures no player walks away empty after a long losing streak.
+
+**Seeded daily weather.** Roll a "weather" table each morning with Set Seed derived from the date, and every player in the world gets the same storm on the same day. Weighted entries keep rain common and the blood moon a genuine event, with Reset-free bookkeeping since the pack owns the RNG.
+
 ---
 
 ## Tips and common mistakes

@@ -359,6 +359,43 @@ Car On Drive Target Reached
 
 Set Reach Distance up front if you want the car to call a point reached from further out - handy for wide, fast patrol loops.
 
+### 14. Tire marks with Drawing Canvas
+
+The drift triggers pair naturally with the Drawing Canvas pack: start a ribbon on the car when the slide begins, stop it when the car recovers. On a persistent canvas the ribbon bakes into permanent rubber on the track.
+
+```
+Car On Drift Started
+  -> Level | Drawing Canvas: Start Ribbon  Car, 20, 6, Color(0.1, 0.1, 0.1, 0.7)
+
+Car On Drift Ended
+  -> Level | Drawing Canvas: Stop Ribbon  Car
+```
+
+### 15. A stuck-against-the-wall rescue
+
+Full throttle but no movement means the car is pinned. Check occasionally and Teleport back to the last checkpoint - Teleport clears velocity and spin, so the rescue is clean.
+
+```
+Every 2 seconds
+  Condition: Car | PhysicsCar  Throttle Input  >  0.5
+  Condition: Car | PhysicsCar  [Is Moving]  is false
+    -> Car | PhysicsCar: Teleport  Checkpoint.global_position.x, Checkpoint.global_position.y
+```
+
+Two seconds is long enough that a normal standing start never trips the rescue.
+
+### Other use cases
+
+**Parking challenge.** Low max speed, high grip, and a Drive Target Reached zone per bay make a parking minigame out of the same car that races - only Inspector knobs change.
+
+**Car soccer.** Because every car is a real RigidBody2D, ramming a heavier ball body just works, and On Collided with a big Collision Force is your power-hit sound cue.
+
+**Ambient traffic.** Civilian cars loop Drive Toward Position waypoints at gentle throttle and never need a driver, which fills a city with motion for a handful of rows per route.
+
+**Sumo arena.** Two players, one shrinking platform, no walls: position checks decide who fell off, while the grip and acceleration knobs set how shovey the match feels.
+
+**Timed delivery runs.** Chain checkpoints with Set Reach Distance widened for fast drive-through pickups, banking time bonuses inside On Drive Target Reached.
+
 ---
 
 ## Tips and common mistakes

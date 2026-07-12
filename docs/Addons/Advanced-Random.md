@@ -323,6 +323,18 @@ On enemy dodge
   -> Move enemy by (dir * 120, 0)
 ```
 
+### Other use cases
+
+**Slot machine reels.** Each reel picks its symbol with Weighted Index so jackpot symbols stay rare, and a Chance condition decides whether a bonus round triggers on top. The weights array is the whole payout tuning surface.
+
+**Music playlist that never repeats.** Fill a shuffle bag with your track names and draw the next song with Shuffle Bag Pick whenever one ends - every track plays once before any comes around again, so the soundtrack feels curated instead of random.
+
+**Dynamic weather.** Feed the game clock into Noise 1D and read the result as wind strength or storm intensity - weather drifts smoothly between calm and rough instead of snapping, and a fixed seed makes the same day play out identically.
+
+**Cave wall texture from cellular noise.** Set Noise Type to Cellular and sample Noise 2D across a tile grid to carve cracked, cell-like rock patterns that read very differently from rolling Perlin hills.
+
+**Crowd variety.** When spawning background NPCs, Pick From chooses a skin, Random Range nudges the walk speed, and Random Sign flips which way each one faces, so a copy-pasted crowd stops looking cloned.
+
 ---
 
 ## Tips and common mistakes

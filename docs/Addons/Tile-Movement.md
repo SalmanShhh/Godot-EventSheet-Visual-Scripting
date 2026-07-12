@@ -338,6 +338,18 @@ On Step Finished
   -> set Highlight.scale = Player | Tile Movement: Tile Size / 64.0
 ```
 
+### Other use cases
+
+**Sokoban crate pushing.** Give every crate its own behavior alongside the player's. When the player steps toward an occupied cell, Simulate Step the crate in the same direction first, and both slide in lockstep with the same tile size and move time - the boxes land dead-center every push.
+
+**Snake-style follower trains.** A conga line of party members or wagon cars is one behavior per segment: on the leader's On Step Finished, each follower takes a Simulate Step toward the cell the segment ahead just vacated. The whole train stays perfectly on-grid without any path math.
+
+**Rhythm-grid crawlers.** For a beat-synced dungeon, turn default controls off and only forward a buffered input to Simulate Step on the metronome tick, with Set Move Time matched to the beat length. Off-beat presses simply never become steps, which is the entire genre rule.
+
+**Ice-floor sliding puzzles.** On a slick tile, re-queue the same direction from On Step Finished so the host keeps gliding cell after cell until your sheet sees a wall or a rough tile ahead. The one-tile-at-a-time model makes each slide segment checkable before it happens.
+
+**You-move-they-move roguelike time.** Classic roguelike turns fall out of the trigger: every monster takes its one Simulate Step inside the player's On Step Finished, so the world only advances when the player does and everyone stays on the shared grid.
+
 ---
 
 ## Tips and common mistakes

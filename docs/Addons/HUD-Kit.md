@@ -312,6 +312,18 @@ On Button Pressed
     -> (load the next level)
 ```
 
+### Other use cases
+
+**Combo meter.** Write the current combo count into a label with Set Text and mirror the decay timer in a bar with Set Bar, so the whole "keep the streak alive" readout is two rows fed from your combat variables.
+
+**Tutorial hint overlays.** Keep each hint as a named panel and Show Panel it when the player enters a teaching zone, Hide Panel when they perform the move - contextual tips with no dedicated tutorial UI code.
+
+**Racing HUD.** Lap counter and position go into labels, a speed or boost gauge into a Range bar, and the pause and results screens flip with Switch Screen, covering an entire racing overlay with the same four verbs.
+
+**Oxygen gauge that only appears underwater.** Show Panel the gauge when the player submerges, drive it with Set Bar every tick, and Hide Panel it back on the surface, so the HUD stays clean until the stat actually matters.
+
+**Cutscene HUD hiding.** Put the whole gameplay HUD under one named panel and Hide Panel it when a cutscene starts, then Show Panel it after - one string toggles the entire interface instead of touching every widget.
+
 ---
 
 ## Tips and common mistakes

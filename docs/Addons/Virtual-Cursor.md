@@ -462,6 +462,18 @@ On Cutscene End
 
 Set Ignoring Input decays the cursor to a stop rather than snapping it dead. Use Set Enabled instead if you want to freeze the whole behavior, including homing and constraints.
 
+### Other use cases
+
+**Seance planchette.** A spooky pointer drifts letter to letter across a board using Simulate Mouse with heavy smoothing, spelling out a message the player cannot control - the eased glide is what sells the haunting.
+
+**Board-grid piece selector.** Four-way direction mode plus snap-mode homing targets on every tile center gives a chess or tactics cursor that steps cleanly cell to cell and locks onto squares.
+
+**Ghost cursor tutorials.** Record the cursor's positions during a developer playthrough and replay them with Simulate Direct Mouse Position, so an attract mode or tutorial shows a ghost hand demonstrating the menus.
+
+**Couch co-op pointer games.** Give each player their own cursor body reading a different device through Simulate Axis, and party minigames like button-mash races or cooperative sorting fall out of the same behavior.
+
+**Firefly companion.** An ambient familiar eases toward wherever the player last tapped using Simulate Mouse, bounded to the play area, adding a living touch that doubles as a soft pointer.
+
 ---
 
 ## Tips and common mistakes

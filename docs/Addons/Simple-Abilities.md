@@ -481,6 +481,18 @@ On Ability Created
 
 Clear All Abilities wipes the old kit first, then Load Ability Set builds the new one from the rogue's `.tres`. On Ability Created fires once per ability the resource grants, so the HUD can rebuild its bar from the fresh loadout.
 
+### Other use cases
+
+**Boss move rotations.** Give the boss its own behavior with each attack as an ability on its own cooldown, then let the AI read Ready Abilities each think-tick and pick from whatever is off cooldown. The fight paces itself: the big slam simply is not in the list again until its timer returns the charge.
+
+**Kart-racer item slots.** An item box grants a temporary ability like "red_shell" or "boost" that expires if unused, and firing it is one Activate Ability call. Stacks model a triple-item pickup naturally, with On Stack Consumed driving the shrinking item icons.
+
+**Crafting station timers.** Each oven, forge, or brewing stand is a node with its own behavior, where "bake" is an ability whose cooldown is the craft time. Consume a charge when the player loads ingredients, show Cooldown Progress as the station's progress dial, and On Ability Ready is the ding that the bread is done.
+
+**Companion command wheels.** A pet or summon exposes "fetch", "attack", and "heal" as abilities with independent cooldowns, so the command wheel greys out each order via Is Ability Ready. Silencing the whole pet when it is downed is one Set Abilities With Tag Enabled row.
+
+**Tower-defense special attacks.** Every tower carries its base shot plus a special on a long cooldown, and an overcharge pickup can Reset Cooldown on just one tower or refresh a whole lane through a shared tag. Cooldown Progress feeds the little radial sweep on each tower's head.
+
 ---
 
 ## Tips and common mistakes

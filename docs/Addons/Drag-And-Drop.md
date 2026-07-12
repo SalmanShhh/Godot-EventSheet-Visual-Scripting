@@ -357,6 +357,18 @@ On Drag Cancelled
   -> Piece: tween back to its start position
 ```
 
+### Other use cases
+
+**Potion mixing.** Ingredients are draggables and the cauldron is a snap object, so On Snapped is the "ingredient added" moment that advances the recipe and puffs the smoke.
+
+**Parcel sorting.** A mail-room minigame registers each bin as a snap object and reads Snapped Object UID on drop to score right and wrong deliveries under a timer.
+
+**Wire-to-socket puzzles.** Drag a plug toward its socket and use Is Snapping to light the socket up while the connection would land, so the player gets a live preview before releasing.
+
+**Furniture placement preview.** A decorating mode tints the dragged couch green or red from Is Snapping against valid floor anchors, confirming placement in On Snapped and bouncing bad drops back.
+
+**Feeding moving animals.** Zoo or pet-cafe critters wander while registered as live snap objects, so dropping food near one snaps it into their mouth even though the target never stood still.
+
 ---
 
 ## Tips and common mistakes

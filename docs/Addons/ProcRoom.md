@@ -382,6 +382,18 @@ On updating the map
   // Is Room Available is true only when room is connected forward from the current room and unlocked
 ```
 
+### Other use cases
+
+**World-map level select.** A Mario-style overworld with branching paths is a shallow graph: each depth is a world segment, rooms are levels, and visited state marks the ones beaten. Locked rooms make the secret exits, unlocked when the player finds the hidden goal.
+
+**Story chapter flowcharts.** A visual novel's branching chapters map onto rooms with types like "dialogue", "choice", and "ending" - the guaranteed start-to-boss path means every route can reach a finale. Visited flags drive the replay flowchart screen that shows which branches the reader has seen.
+
+**Tournament brackets.** A fighting-game championship is a narrow graph where each depth is a round and the rooms are opponents, weighted so rare prestige fighters appear occasionally. A seeded bracket means a shared weekly tournament everyone can race.
+
+**Between-wave modifier draughts.** An arena survival game can offer a choice of paths between waves - each forward room is a modifier like "double enemies, double gold" typed accordingly. On Room Entered configures the next wave from Entered Type, and depth doubles as the wave counter.
+
+**FTL-style star charts.** A space run reads naturally as a sector map: rooms are star systems, forward-only connections are jumps toward the exit gate, and types mark nebulae, stores, and distress beacons. The pursuing fleet is just a depth threshold that locks rooms behind the player.
+
 ---
 
 ## Tips and common mistakes

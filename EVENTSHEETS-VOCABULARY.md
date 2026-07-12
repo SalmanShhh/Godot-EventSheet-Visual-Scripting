@@ -179,6 +179,17 @@ Node script extending `CharacterBody2D`.
 - **Active Count** - How many boosts are currently running.
 - **Last Expired** - The id of the boost that just ran out (read inside On Boost Expired).
 
+### BoundToBehavior (`res://eventsheet_addons/bound_to/bound_to_behavior.gd`)
+@ace_tags(movement, screen) @ace_category("Bound To")
+
+#### Triggers
+- **On Hit Bound** (`side: String`)
+
+#### Actions
+- **Set Bound Enabled** (`enabled: bool`) - Turns the binding on or off at runtime (off = the host moves freely).
+- **Set Custom Bounds** (`x: float, y: float, width: float, height: float`) - Sets the custom rectangle (world-space pixels) and switches the binding to it - your level's playable area.
+- **Set Bound Extents** (`new_half_width: float, new_half_height: float`) - Sets the host's half-size used by edge binding (half the sprite's width and height).
+
 ### BulletBehavior (`res://eventsheet_addons/bullet/bullet_behavior.gd`)
 @ace_category("Bullet") @ace_expose_all(node)
 
@@ -315,6 +326,12 @@ Node script extending `CharacterBody2D`.
 - **Offline Id** - The currency credited (inside On Offline Gain).
 - **Offline Gain** - The amount credited offline (inside On Offline Gain).
 
+### DecalPainter (`res://eventsheet_addons/decal_painter/decal_painter_behavior.gd`)
+@ace_tags(3d, drawing, visual) @ace_category("Decal Painter")
+
+#### Expressions
+- **Decal Count**
+
 ### DemoHealthAddon (`res://eventsheet_addons/demo_health_addon.gd`)
 Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ and their annotated members become project-wide ACEs automatically - no manifest, no JSON, no per-sheet setup. Provider name comes from class_name, this comment is the addon description, and @ace_* annotations customize each ACE.
 
@@ -392,6 +409,15 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Snap Target Y**
 - **Snapped Object UID**
 
+### DrawingCanvas (`res://eventsheet_addons/drawing_canvas/drawing_canvas_behavior.gd`)
+@ace_tags(drawing, visual) @ace_category("Drawing Canvas")
+
+#### Conditions
+- **Is Auto Clear**
+
+#### Expressions
+- **Canvas Texture**
+
 ### EightDirectionMovement (`res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd`)
 @ace_category("Eight Direction") @ace_expose_all(node)
 
@@ -446,6 +472,10 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Conditions
 - **Is Sprinting** - True while the sprint key (Shift) is held.
 - **Is First Person** - True in first-person camera mode.
+- **Is Crouching** - True while crouched (including during a crouch slide).
+- **Is Sliding** - True during a crouch slide.
+- **Is Wall Riding** - True while riding a wall (airborne, glued to it, gravity softened).
+- **Can Stand Up** - True when there is headroom to stand from the current crouch (no ceiling in the way).
 
 #### Actions
 - **Jump** - Launches the host upward with Jump Velocity and fires On Jumped.
@@ -457,11 +487,19 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Release Mouse** - Frees the mouse cursor.
 - **Set Move Speed** (`value: float`) - Changes the base walking speed.
 - **Set Mouse Sensitivity** (`value: float`) - Changes look sensitivity (degrees per mouse pixel).
+- **Crouch** - Crouches: the capsule shrinks to Crouch Height (feet stay planted), the Head drops, and movement slows to the crouch multiplier. Crouching at sprint speed starts a crouch slide (see Slide knobs). Fires On Crouched. Held Ctrl does this automatically.
+- **Stand Up** - Stands back up from a crouch - unless a ceiling is in the way, in which case the crouch holds (re-check by calling again, or use the Can Stand Up condition). Ends any slide. Fires On Stood Up.
+- **Set Crouching** (`enabled: bool`) - Crouches (on) or stands (off) - the scripted version of holding/releasing Ctrl.
+- **Stop Sliding** - Ends a crouch slide early (you stay crouched). Fires On Slide Ended.
+- **Wall Jump** - Kicks off the wall the host is touching: Jump Velocity upward plus Wall Jump Push away from the wall (the push fades over about half a second). Ends any wall ride. Fires On Wall Jumped. Pressing jump mid-air against a wall does this automatically.
+- **Stop Wall Ride** - Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.
 
 #### Expressions
 - **Current Speed** - The host's horizontal speed right now (metres per second).
 - **Look Yaw** - The current horizontal look angle in degrees (-180..180).
 - **Look Pitch** - The current vertical look angle in degrees (clamped to Pitch Min/Max).
+- **Wall Normal X** - The touched wall's outward normal, X component (zero when not on a wall) - with Z, the direction a wall jump pushes; feed it to camera lean.
+- **Wall Normal Z** - The touched wall's outward normal, Z component (zero when not on a wall).
 
 ### SimpleHealthBehavior (`res://eventsheet_addons/health/health_behavior.gd`)
 @ace_category("Health") @ace_expose_all(node)
@@ -608,8 +646,14 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Actions
 - **Shake** (`strength: float`) - Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.
-- **Stop Shake** - Cancels any shake and restores the camera to rest immediately.
+- **Stop Shake** - Cancels any shake immediately (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it).
 - **Use Camera** (`camera_path: NodePath`) - Pin the effects to a specific Camera2D (by path). Leave it unused to auto-target whichever camera is active.
+- **Recoil** (`angle_degrees: float, strength: float`) - Kicks the camera a distance (pixels) in a direction (degrees: -90 = up, 0 = right) and springs it back at the Recoil Recovery rate. Fire on every shot - kicks stack, so rapid fire climbs. Composes with Shake/Bob/Jitter.
+- **Start Head Bob** (`amplitude: float, frequency: float`) - Starts a walking head-bob on the camera: a figure-8 sway (side at half rate, one vertical dip per step). Amplitude is pixels, frequency is steps per second. Call while your character moves; Stop Head Bob when they halt.
+- **Stop Head Bob** - Stops the head bob (the camera returns to rest once every other effect settles too).
+- **Start Jitter** (`amount: float`) - Starts a continuous nervous wobble on the camera (pixels) that runs until Stop Jitter - unlike Shake it never decays. Great for engines idling, drunk vision, earthquakes building, low-health unease.
+- **Stop Jitter** - Stops the jitter wobble.
+- **Tilt To** (`degrees: float, duration: float`) - Eases the camera roll to an angle (degrees) and HOLDS it - lean into a drift, a hill, or a dramatic dutch angle. Tilt back to 0 to level out. Emits On Tilt Finished.
 - **Zoom By Percent** (`percent: float, duration: float`) - Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs.
 - **Zoom To Position** (`world_position: Vector2, percent: float, duration: float`) - Zooms in while gliding the camera so a world position becomes the screen CENTRE - frame a spot in one action.
 - **Zoom Toward Point** (`world_position: Vector2, percent: float, duration: float`) - Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) - great for strategy/map zoom.
@@ -618,6 +662,31 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Slowmo** (`target_scale: float, hold_duration: float, duration_clock: String`) - Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.
 - **Clear Slowmo** - Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running).
 - **Hitstop** (`freeze_duration: float, freeze_scale: float`) - The punchy hit-pause you feel on a connecting blow: freezes Engine.time_scale (0 = full stop) for a few frames, then snaps back to what it was. Uses a realtime timer so it un-freezes even at a full stop, ignores repeat hits already mid-freeze, pauses any active Slowmo for the duration, and emits On Hitstop Finished. Fire it the instant a hit lands.
+
+#### Expressions
+- **Trauma**
+
+### Juice3DBehavior (`res://eventsheet_addons/juice_3d/juice_3d_behavior.gd`)
+@ace_tags(camera, juice, 3d) @ace_category("Juice 3D") @ace_expose_all(node)
+
+#### Triggers
+- **On Shake Stopped**
+
+#### Conditions
+- **Is Shaking**
+
+#### Actions
+- **Shake** (`strength: float`) - Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.
+- **Stop Shake** - Cancels any shake immediately (other effects keep running).
+- **Recoil** (`vertical_kick: float, horizontal_spread: float`) - Weapon recoil: kicks the view UP by a pitch (degrees) plus a random side spread, then re-centres at the Recoil Recovery rate. Fire on every shot - kicks stack, so sustained fire climbs. Cosmetic (rides on top of mouse look; aim is untouched).
+- **Start Head Bob** (`amplitude: float, frequency: float`) - Starts a walking head-bob on the camera: a figure-8 (side sway at half rate, one downward dip per step). Amplitude is metres, frequency is steps per second. Call while your character moves; Stop Head Bob when they halt.
+- **Stop Head Bob** - Stops the head bob.
+- **Start Jitter** (`position_amount: float, roll_degrees: float`) - Starts a continuous nervous wobble (position in metres + a touch of roll) that runs until Stop Jitter - unlike Shake it never decays. Engines idling, helicopters, low health, fear.
+- **Stop Jitter** - Stops the jitter wobble.
+- **Lean** (`degrees: float, duration: float`) - Eases the camera roll to an angle (degrees) and HOLDS it - lean into a wall ride, peek a corner, bank with a turn. Lean back to 0 to level out. Emits On Lean Finished.
+- **FOV Punch** (`amount: float`) - Kicks the field of view wider (positive, a speed boost / dash) or tighter (negative, an impact) by an amount in degrees, then eases back at the FOV Recovery rate. Fire-and-forget.
+- **Zoom FOV To** (`fov: float, duration: float`) - Smoothly changes the camera's base field of view to a value in degrees and keeps it there (an aim-down-sights zoom is FOV 40, back to 75 to unzoom). Emits On Zoom Finished.
+- **Use Camera** (`camera_path: NodePath`) - Pin the effects to a specific Camera3D (by path). Leave it unused to auto-target whichever camera is active.
 
 #### Expressions
 - **Trauma**
@@ -728,6 +797,33 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Move To Position (3D)** (`x: float, y: float, z: float`) - Replaces the queue and glides toward the point.
 - **Add Waypoint (3D)** (`x: float, y: float, z: float`) - Appends a stop to the queue.
 - **Stop Moving (3D)** - Clears the queue without firing On Arrived.
+
+### NavAgent3D (`res://eventsheet_addons/nav_agent_3d/nav_agent_3d_behavior.gd`)
+@ace_tags(movement, 3d, ai, pathfinding) @ace_category("Nav Agent 3D") @ace_expose_all(node)
+
+#### Triggers
+- **On Path Found**
+
+#### Conditions
+- **Has Path**
+- **Target Is Reachable**
+
+#### Actions
+- **Find Path To** (`x: float, y: float, z: float, mode: String`) - Routes to a world position across the baked navmesh and starts moving. Mode "reach" fails (On Path Failed) when the spot is off the mesh; "nearest" never fails - the agent goes to the closest point on the mesh instead. Fires On Path Found / On Path Failed.
+- **Find Path To Node** (`target: Node, mode: String`) - Routes to another node's position (the player, a beacon) - Find Path To with the position read for you. Re-call on a timer to chase.
+- **Stop Pathfinding** - Clears the path and hands the driver sibling back to the player (ai_controlled off).
+- **Set Auto Control** (`enabled: bool`) - On (default): drive the sibling controller or the body. Off: paths still compute - read Path Move X/Z and Current Waypoint X/Y/Z and drive anything you like.
+- **Set Avoidance** (`enabled: bool`) - Agents steer around each other (RVO avoidance). Applies to the built-in driver; a driver sibling owns its own velocity.
+- **Set Move Speed** (`value: float`) - Changes the built-in driver's speed (m/s).
+- **Bake Navigation Region** (`region: Node`) - Rebakes a NavigationRegion3D's navmesh from its current child geometry, at runtime - call it on ready (or after the level changes) and every agent sees the walkable world. Slopes come free: the bake's max-angle setting decides what is walkable.
+
+#### Expressions
+- **Current Waypoint X**
+- **Current Waypoint Y**
+- **Current Waypoint Z**
+- **Distance To Target**
+- **Path Move X**
+- **Path Move Z**
 
 ### ObjectPoolAddon (`res://eventsheet_addons/object_pool/object_pool_addon.gd`)
 @ace_tags(performance, spawning) @ace_category("Object Pool")
@@ -845,6 +941,48 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Air Time**
 - **Facing Direction**
 
+### PlatformerPathfinding (`res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd`)
+@ace_tags(movement, platformer, ai, pathfinding) @ace_category("Platformer Pathfinding") @ace_expose_all(node)
+
+#### Triggers
+- **On Portal Taken**
+
+#### Conditions
+- **Is Path Pending**
+- **Is In Hazard**
+- **Has Path**
+- **Path Wants Jump**
+
+#### Actions
+- **Build Nav Graph From Tilemap** (`tilemap: Node`) - Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK edges, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.
+- **Regenerate Nav Graph** - Rebuilds the graph from the same TileMapLayer (after runtime tile edits).
+- **Find Path To** (`x: float, y: float, mode: String`) - Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails - it goes to the closest reachable node instead. Fires On Path Found / On Path Failed.
+- **Find Path To Node** (`target: Node, mode: String`) - Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.
+- **Stop Pathfinding** - Clears the path and releases the movement pack back to the keyboard (ai_controlled off).
+- **Set Auto Control** (`enabled: bool`) - On (default): the behavior drives the sibling PlatformerMovement. Off: paths still compute - read Path Move Axis / Path Wants Jump / Current Waypoint X/Y and drive anything you like.
+- **Set Ledge Restriction** (`enabled: bool`) - Patrol discipline: on, routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency, so the agent stays on its platform. Applies from the next Find Path To.
+- **Set Ledge Leniency** (`pixels: float`) - With Ledge Restriction on, drops up to this many pixels are still allowed (a patroller may hop down one step but never off the tower).
+- **Set Jump Positioning** (`mode: String`) - relaxed (default): leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.
+- **Set Coyote Time** (`seconds: float`) - Grace window (s) for AI jumps just after running off the takeoff ledge.
+- **Set Repath Interval** (`seconds: float`) - While following a node, how often the route may refresh (chase freshness vs cost).
+- **Set Repath Threshold** (`pixels: float`) - The route only refreshes when the followed node has moved at least this many pixels.
+- **Set Max Paths Per Tick** (`count: int`) - The SHARED budget across every agent: at most this many route computations per physics tick - extras defer a tick (Is Path Pending) instead of spiking the frame. The difference between 20 chasers working and not.
+- **Add Portal** (`from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool`) - Links two world positions as a PORTAL: an agent whose route uses it walks to the entrance and blinks to the exit (fires On Portal Taken). Bidirectional works both ways. Portals join the graph immediately and survive Regenerate - doors, teleporters, ladders, and elevators all model as portals.
+- **Clear Portals** - Removes every registered portal (takes effect on the next Regenerate Nav Graph).
+- **Add Hazard** (`x: float, y: float, width: float, height: float, deadly: bool`) - Marks a world-space rectangle as hazardous. Deadly: routes NEVER pass through it (spikes, lava). Not deadly: routes pay 4x to cross, so it is taken only when no clean way exists (fire patches, slow mud). Applies to routing instantly - no rebuild - and On Hazard Entered fires if the agent ends up inside one anyway.
+- **Clear Hazards** - Removes every hazard (routing sees the change immediately).
+- **Add Moving Platform** (`platform: Node, from_x: float, from_y: float, to_x: float, to_y: float`) - Registers a moving platform (an AnimatableBody2D you animate) by its two travel endpoints: the graph gains a PLATFORM edge between them, and an agent routed across it walks to the track, WAITS for the platform, boards, rides, and walks off at the far side. Survives Regenerate. The pack never moves the platform - your sheet animates it between exactly these endpoints.
+- **Clear Moving Platforms** - Unregisters every moving platform (takes effect on the next Regenerate Nav Graph).
+- **Set Nav Debug Draw** (`enabled: bool`) - Draws the active path as a line in the world (great while tuning a level).
+
+#### Expressions
+- **Path Move Axis**
+- **Waypoint Count**
+- **Current Waypoint Index**
+- **Current Waypoint X**
+- **Current Waypoint Y**
+- **Current Path Action**
+
 ### PrestigeAddon (`res://eventsheet_addons/prestige/prestige_addon.gd`)
 @ace_tags(incremental, idle, prestige) @ace_category("Prestige")
 
@@ -919,6 +1057,15 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Entered Type** - The type of the room just entered (inside On Room Entered).
 - **Blocked Id** - The room that couldn't be entered (inside On Traversal Blocked).
 - **Block Reason** - Why entry was blocked - "locked" or "unreachable" (inside On Traversal Blocked).
+
+### RotateBehavior (`res://eventsheet_addons/rotate/rotate_behavior.gd`)
+@ace_tags(movement, visual) @ace_category("Rotate")
+
+#### Conditions
+- **Is Rotating**
+
+#### Expressions
+- **Rotation Speed**
 
 ### SaveSystemAddon (`res://eventsheet_addons/save_system/save_system_addon.gd`)
 @ace_tags(persistence)
@@ -1351,3 +1498,15 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Fire Rate** (`rate: float`) - Changes the shots-per-second.
 - **Set Fire Mode** (`mode: int`) - 0 = single, 1 = auto, 2 = burst.
 - **Set Magazine Size** (`size: int`) - Changes the magazine size.
+
+### WrapBehavior (`res://eventsheet_addons/wrap/wrap_behavior.gd`)
+@ace_tags(movement, screen) @ace_category("Wrap")
+
+#### Triggers
+- **On Wrapped** (`side: String`)
+
+#### Actions
+- **Set Wrap Enabled** (`enabled: bool`) - Turns wrapping on or off at runtime.
+- **Set Custom Wrap Bounds** (`x: float, y: float, width: float, height: float`) - Sets the custom rectangle (world-space pixels) and switches wrapping to it - your arena's edges.
+- **Set Wrap Axes** (`horizontal: bool, vertical: bool`) - Chooses which axes wrap (horizontal: left/right edges, vertical: top/bottom).
+- **Set Wrap Extents** (`new_half_width: float, new_half_height: float`) - Sets the host's half-size (half the sprite's width and height) used by the fully-outside test.

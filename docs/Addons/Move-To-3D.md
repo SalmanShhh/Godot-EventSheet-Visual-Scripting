@@ -338,6 +338,32 @@ On Arrived (3D)
   -> CraneArm: play "docked" sound
 ```
 
+### 15. Deploy a sentry, then hand off to Orbit 3D
+
+Pair this pack with the Orbit 3D pack: the sentry glides to its post with Move To 3D, and only once On Arrived (3D) fires does its circling patrol begin.
+
+```
+On deploy sentry
+  -> Sentry | MoveTo3DBehavior: Move To Position (3D)  0, 6, 0
+
+On Arrived (3D)
+  -> Sentry: start its Orbit 3D sweep around the post
+```
+
+Keep the orbit inactive until the arrival so only one behavior is moving the sentry at a time.
+
+### Other use cases
+
+**Space-station tram.** A crew shuttle threads waypoints between modules and plays its arrival chime only at the final dock.
+
+**Theater-style cutscenes.** Props and set pieces glide to their marks on cue, and On Arrived advances the scene the frame the stage is set.
+
+**Warehouse gantry crane.** A pickup run chains Add Waypoint stops over each bin, reporting once when the last crate is lifted.
+
+**Boss-arena crushers.** Slabs slide to scripted marks and slam the moment On Arrived says they are in position, keeping the choreography frame-exact.
+
+**Photo-tour drone.** A camera drone flies a chained route of viewpoints for an automated level flythrough, one waypoint per vista.
+
 ---
 
 ## Tips and common mistakes

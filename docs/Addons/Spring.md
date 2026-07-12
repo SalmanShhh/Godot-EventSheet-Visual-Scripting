@@ -383,6 +383,18 @@ On Respawn
 
 Pause Spring freezes a spring exactly where it is; Resume Spring picks it back up toward the same target. Stop Spring cancels one spring's motion for good. Reset All Springs clears every spring on the behavior, and **Remove Spring** deletes a single named one when you no longer need it.
 
+### Other use cases
+
+**Fishing bobber.** The float sits on a Y spring; a nibble calls Add Impulse for a convincing dip-and-recover, and the real bite gives a bigger kick the player learns to read.
+
+**Beat-reactive props.** On every music beat, Add Impulse to a scale spring driving speakers, dancers, or a pulsing logo, so the whole scene throbs in time without any keyframed loop.
+
+**Analog gauge needles.** A speedometer, heat gauge, or danger meter springs its needle angle toward each new reading, overshooting slightly on sharp changes the way a real needle would.
+
+**Pokeable jelly pet.** Clicking a slime or mascot fires an impulse into a low-damping scale spring, so it wobbles when prodded and slowly settles - a toy built from one spring.
+
+**Aim-down-sights zoom.** Drive the camera zoom from a named spring: aiming springs it toward the zoomed value and releasing springs it back, giving the snap-in feel without a tween chain in each direction.
+
 ---
 
 ## Tips and common mistakes

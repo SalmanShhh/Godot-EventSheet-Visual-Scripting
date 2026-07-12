@@ -351,6 +351,32 @@ On Pause Menu Closed
 
 The banner stops mid-sway on pause and picks up exactly where it left off on resume.
 
+### 15. Wind the motion down before freezing it
+
+Cutting a sway off with Set Sine Active mid-swing can look abrupt. Shrink the swing to nothing first, then freeze, for a graceful stop.
+
+```
+Every 0.1 seconds
+  Condition: Banner is powering down
+    -> Banner | Sine: Subtract From Magnitude  2
+  Condition: [Expression] Banner | Sine  Magnitude  <=  0
+    -> Banner | Sine: Set Sine Active  false
+```
+
+Restore the swing with Set Magnitude when the banner powers back up, and Set Sine Active true resumes right where it froze.
+
+### Other use cases
+
+**Countdown urgency blink.** Pair with the Timer pack: when the round clock enters its final seconds, Set Period to something short so the warning lamp's opacity wave flips from a calm throb to a frantic blink.
+
+**Low-health heartbeat.** Pair with the Health pack: pulse the HP bar with a size wave and Subtract From Period a little each time health drops, so the bar visibly races as danger grows.
+
+**Phasing ghost.** A slow wave on opacity fades a spectral enemy in and out of visibility on a loop, and Set Sine Active false locks it solid the moment it is angered.
+
+**Fishing bobber.** Give the float a vertical bob and call Update Initial State the instant the cast lands, so the wave re-centers on the splash point instead of the rod.
+
+**Debris field.** Give every piece of floating wreckage the same vertical wave with a different Set Phase value so the water's surface rolls instead of lifting in one rigid sheet.
+
 ---
 
 ## Tips and common mistakes

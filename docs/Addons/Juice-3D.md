@@ -192,6 +192,103 @@ Every tick
   -> Input: Start Vibration ($Player/Juice3D.current_trauma(), 0.1)
 ```
 
+### 9. Damage feedback in one row
+
+The simplest possible hookup - every hit adds trauma, the decay handles the rest.
+
+```
+On Player Hit
+  -> Player | Juice 3D: Shake  0.4
+```
+
+Stacking is the feature: three fast hits rattle harder than one, with no bookkeeping.
+
+### 10. Landing thump
+
+A negative FOV punch reads as impact, and a whisper of shake gives the fall weight. Fire both
+from whatever marks the landing in your controller.
+
+```
+On Landed
+  -> Player | Juice 3D: Shake  0.15
+  -> Player | Juice 3D: FOV Punch  -3
+```
+
+### 11. Low-health tremble
+
+Jitter is a state, so bind it to a state: shaky hands under 25 health (the Health pack supplies
+the number), steady again above.
+
+```
+Every tick
+  Condition: player_health < 25
+    -> Player | Juice 3D: Start Jitter  0.01, 0.4
+  Else
+    -> Player | Juice 3D: Stop Jitter
+```
+
+### 12. Corner peek on Q and E
+
+Lean holds until told otherwise, so the release row is what levels you out.
+
+```
+Every tick
+  Condition: Key "q" is down      -> Player | Juice 3D: Lean  -14, 0.15
+  Condition: Key "e" is down      -> Player | Juice 3D: Lean  14, 0.15
+  Condition: neither key is down  -> Player | Juice 3D: Lean  0, 0.2
+```
+
+### 13. Sniper scope gated on the glide
+
+On Zoom Finished tells you the ease actually arrived - show the scope overlay then, not on the
+button press, and the zoom-in feels deliberate.
+
+```
+On Aim Pressed   -> Player | Juice 3D: Zoom FOV To  30, 0.2
+On Zoom Finished -> (show the scope overlay, enable the shot)
+On Aim Released  -> Player | Juice 3D: Zoom FOV To  75, 0.15
+```
+
+### 14. Cutscene calm
+
+The cleanup rows: kill every looping effect before a scripted camera takes over, and pin the
+effects to the cutscene rig if you still want scripted shakes there.
+
+```
+On Cutscene Started
+  -> Player | Juice 3D: Stop Shake
+  -> Player | Juice 3D: Stop Jitter
+  -> Player | Juice 3D: Stop Head Bob
+  -> Player | Juice 3D: Use Camera  $CutsceneRig/Camera3D
+On Cutscene Ended
+  -> Player | Juice 3D: Use Camera  $Player/Head/Camera3D
+```
+
+### 15. Earthquake with aftershocks
+
+On Shake Stopped is a chain link: when the big one settles, fire a smaller one, and the quake
+tapers naturally instead of clipping off.
+
+```
+On Quake Started -> Player | Juice 3D: Shake  1.0
+On Shake Stopped
+  Condition: aftershocks_left > 0
+    -> subtract 1 from aftershocks_left
+    -> Player | Juice 3D: Shake  0.5
+```
+
+### Other use cases
+
+**Boss footstep dread.** Scale a small Shake by the boss's distance on every stomp so the floor feels heavier as it closes in, with zero extra camera code.
+
+**Poison sway.** A long, slow Lean eased left and right on a timer while poisoned makes the world swim; Lean back to 0 on cure.
+
+**Turret sections.** Recoil with a big vertical kick and a slow recovery knob turns a mounted gun emplacement into something with mass, even though the aim never actually moves.
+
+**Train and boat rides.** Start Jitter for the whole ride gives vehicles a live engine feel, and stopping it at the station makes solid ground register.
+
+**Photo mode discipline.** Stop Shake, Stop Jitter, and Stop Head Bob on entering photo mode guarantee a still frame no matter what was exploding a moment before.
+
 ---
 
 ## Tips and common mistakes

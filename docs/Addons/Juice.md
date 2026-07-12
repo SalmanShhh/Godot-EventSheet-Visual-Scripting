@@ -408,6 +408,18 @@ On Health Changed
     -> Player | Juice: Stop Jitter
 ```
 
+### Other use cases
+
+**Rhythm-synced pulses.** Fire a small Spring Squash on the album art or the whole HUD panel on every beat, and a slightly larger one on downbeats. The spring settles before the next beat at sensible tempos, so the interface breathes with the music using no tween code.
+
+**Speed-sensitive racing cameras.** Map the car's velocity to Zoom By Percent so the view pulls back as speed climbs and tightens when braking, with the min/max zoom knobs keeping it sane. A nitro burst layers a quick Recoil kick backwards for the launch feel.
+
+**Earthquake set pieces.** A collapsing mine or a rumbling titan approach is Start Jitter at low amount, escalated by re-calling it with bigger values as the scene builds, then Stop Jitter when the dust settles. Unlike Shake it never decays, so the ground keeps trembling exactly as long as the script says.
+
+**Pinball table feedback.** Bumpers fire a tiny Shake, slingshots add a touch more, and a jackpot ramps a Zoom By Percent punch on the playfield camera - the trauma model sums a fast multiball into one satisfying rumble instead of discrete twitches. Nudging the table is a single Recoil in the shove direction.
+
+**Jackpot celebrations.** A slot-machine or wheel-spin minigame lands its top prize with a chained beat: Hitstop the reels the instant the third symbol locks, then On Hitstop Finished rolls into a short Slowmo while coins burst and the camera Zoom To Position frames the payout counter.
+
 ## Tips and common mistakes
 
 - **Camera effects need an active Camera2D.** Shake and the three Zoom actions drive `get_viewport().get_camera_2d()`. If nothing is happening on Shake, confirm a `Camera2D` in the scene is set as current (or pin one with Use Camera). No camera means the action quietly does nothing.

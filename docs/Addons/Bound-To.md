@@ -64,6 +64,140 @@ On Hit Bound
   Condition: side = "right" -> set dir to -1
 ```
 
+### 4. Pong paddle
+
+The simplest court: attach to the paddle, set the half-size, and no flick can ever send it
+off screen.
+
+```
+On Ready -> Paddle | Bound To: Set Bound Extents  8, 48
+```
+
+### 5. Edge thump feedback
+
+Give the clamp a voice - a sound and a blink every time the ship presses a side.
+
+```
+On Hit Bound -> Ship | play "thump"
+             -> Ship | Flash: quick blink
+```
+
+The Flash pack sells the "you cannot go further" without any UI text.
+
+### 6. Outro fly-off
+
+Cutscenes want the ship to leave the screen - the one thing the clamp forbids. Disable for
+the outro, re-enable on retry.
+
+```
+On Outro Start -> Ship | Bound To: Set Bound Enabled  false
+On Retry       -> Ship | Bound To: Set Bound Enabled  true
+```
+
+### 7. Shrinking boss arena
+
+Each boss phase tightens the fight into a smaller rectangle - no walls to move, one action
+per phase.
+
+```
+On Phase 2 -> Player | Bound To: Set Custom Bounds  192, 96, 768, 456
+On Phase 3 -> Player | Bound To: Set Custom Bounds  384, 192, 384, 264
+```
+
+### 8. Grow powerup
+
+A size pickup scales the sprite, so the clamp's half-size must follow - or the big ship hangs
+off the edges.
+
+```
+On Powerup  -> Ship | Bound To: Set Bound Extents  48, 32
+On Wear Off -> Ship | Bound To: Set Bound Extents  24, 16
+```
+
+### 9. Push-to-scroll rooms
+
+Classic single-screen adventure: hold against the screen edge and the game pans to the next
+room.
+
+```
+Every tick
+  Condition: Is At Bound  side = "right" -> start the pan to the next room
+```
+
+Is At Bound reads "pressed right now", so the pan only starts while the player is actively
+pushing.
+
+### 10. Cards stay on the mat
+
+Pair with the Drag & Drop pack: the player can fling a card anywhere, but the clamp runs
+every physics frame, so it always settles inside the play mat.
+
+```
+On Ready -> Card | Bound To: Set Custom Bounds  96, 400, 960, 240
+```
+
+### 11. Shared-screen co-op
+
+The camera follows the midpoint between two players; binding both to the screen means
+neither one can sprint out of view and vanish.
+
+```
+On Hit Bound -> P1 | show the "wait for your partner" nudge arrow
+```
+
+### 12. Breakout walls without walls
+
+The ball needs no collision shapes for the court - flip its velocity on each pressed side
+and let the bottom mean a lost ball.
+
+```
+On Hit Bound
+  Condition: side = "left"   -> set vx to abs(vx)
+  Condition: side = "right"  -> set vx to -abs(vx)
+  Condition: side = "top"    -> set vy to abs(vy)
+  Condition: side = "bottom" -> lose a ball
+```
+
+### 13. Camera leash
+
+Bind the Camera2D's follow target to the level rectangle so the view never pans past the
+level edge into the void.
+
+```
+On Ready -> CamTarget | Bound To: Set Custom Bounds  0, 0, 4096, 648
+```
+
+### 14. Reticle by origin
+
+A gamepad aim reticle should keep its CENTER on screen while its art may overhang - turn
+`bound_by_edge` off in the Inspector and only the origin is clamped.
+
+```
+Every tick -> Reticle | move by the right stick   (the clamp tidies the result)
+```
+
+### 15. Tutorial pen, then the world
+
+Start new players in a small practice rectangle, then hand them the whole screen with one
+action - the extents never need to change.
+
+```
+On Ready         -> Player | Bound To: Set Custom Bounds  384, 174, 384, 300
+On Tutorial Done -> Player | Bound To: Set Bound Space  "screen"
+```
+
+### Other use cases
+
+**Tower defense build cursor.** Clamp the placement ghost to the buildable field with a custom rectangle, so towers can never be dropped on the HUD strip or outside the map.
+
+**Photo mode camera.** Give the free-fly photo camera a custom rect slightly larger than the arena - players can frame shots from just outside the walls but never fly off into the skybox.
+
+**Virtual joystick thumb.** Bind the mobile stick's thumb sprite to a small custom rectangle over the stick base, so the thumb visual stays readable however far the finger drags.
+
+**Fishing cast marker.** A custom rect over the pond clamps the aim marker while the player lines up a cast, so every throw is guaranteed to land in water.
+
+**Racing minimap blips.** Bind each car's blip to the minimap panel - cars far ahead pin to the frame edge instead of drifting over the rest of the HUD.
+
 ## Tips and common mistakes
 
 - **Half-size is yours to set.** The pack does not measure your sprite - set the extents (or

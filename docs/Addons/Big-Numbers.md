@@ -327,6 +327,18 @@ On Buy Pressed
   # To Number is safe while the Decimal is below 1.8e308; guard huge costs by staying in Decimal
 ```
 
+### Other use cases
+
+**Merge-game economies.** Each merge tier doubles an item's value, so board totals go exponential fast; Format Short keeps every tile's price tag and the wallet readout to a few characters. Order Of Magnitude can drive the tile's colour band as tiers climb.
+
+**ARPG damage numbers.** Late-game crits in a loot game read better as "1.2M" than a nine-digit smear, so pipe every floating combat number through Format Short with one decimal. The same call scales from tutorial hits to endgame without a second code path.
+
+**4X empire ledgers.** A galactic economy's stockpiles outgrow readable digits by mid-game: keep credits and minerals as Decimals once they run hot, tick income with Scale and Add, and paint the resource bar with Format Big so a thousand-turn empire never shows Infinity.
+
+**Leaderboard and rank screens.** A results table is formatting all the way down: Format Ordinal for each row's placement, Format Comma for exact scores, and Format Time Short for the run clock next to them. No stored state means the same expressions redraw live as entries shuffle.
+
+**End-of-run tally screens.** The slot-machine count-up after a run is just repainting a label every tick with Format Short as your tally variable climbs toward the total, then switching to Format Comma for the final exact figure. Format Multiplier labels the bonus lines ("x2.5 no-damage bonus") in the same style.
+
 ---
 
 ## Tips and common mistakes

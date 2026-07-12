@@ -357,6 +357,18 @@ On Prestige Confirmed
   # Define Currency re-creates each currency from scratch, clearing the old amount
 ```
 
+### Other use cases
+
+**Faction reputation.** Each faction's standing is a currency with Allow Debt, so favors Add and betrayals subtract, Is In Debt marks a hostile faction, and threshold checks unlock vendors or ambushes.
+
+**Ammo pools.** Each ammo type is a currency spent one shot at a time; the atomic Spend means the trigger click on an empty magazine is just On Spend Failed driving a dry-fire sound and a reload prompt.
+
+**Arcade ticket exchange.** Minigames Add tickets and the prize counter Spends them, with Format Amount keeping the ticket display readable once the totals balloon.
+
+**Crafting stockpiles.** Wood, stone, and iron are three currencies, a recipe is a row of Can Afford checks followed by Spends, and On Spend Failed names exactly which material ran short.
+
+**Wanted-level heat.** Crimes Add to a capped "heat" currency, a lay-low timer subtracts over time, and On Cap Hit is the moment maximum wanted level triggers the heavy response.
+
 ---
 
 ## Tips and common mistakes

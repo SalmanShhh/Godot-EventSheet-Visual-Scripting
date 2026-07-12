@@ -305,6 +305,35 @@ On Ready
 
 Keep an invisible `AimPoint` Node2D on the mouse or stick position and let the reticle chase it.
 
+### 15. A fetch loop that retargets on arrival
+
+A dog chases the thrown ball, and the moment it arrives it turns around and brings it back - the Target Path expression tells the arrival handler which leg just finished.
+
+```
+On Ball Thrown
+  -> Dog | Follow: Set Min Distance  12
+  -> Dog | Follow: Start Following  "../Ball"
+
+On Reached Target
+  Condition: Dog | Follow  Target Path  ==  "../Ball"
+    -> Dog: pick up the ball
+    -> Dog | Follow: Start Following  "../Player"
+```
+
+Start Following on the return leg clears the history, so the trip back begins fresh instead of replaying the chase.
+
+### Other use cases
+
+**Fishing lure minigame.** The fish smooth-follows the bobbing lure at a low follow speed, and On Reached Target is the bite that starts the reel-in.
+
+**Parade caravan.** Wagons in delayed mode each replay the one ahead, so the whole procession snakes through town corners without cutting them.
+
+**Boss tentacle chain.** Segments follow the head with growing delays, and shrinking those delays on enrage snaps the tentacle taut.
+
+**Haunting pursuer.** A spirit in delayed mode walks the victim's exact route a few seconds behind, so doubling back means meeting your own past.
+
+**Magnet loot.** Dropped coins ease toward the hero once they are close, with a small Min Distance so On Reached Target marks the collect moment.
+
 ---
 
 ## Tips and common mistakes

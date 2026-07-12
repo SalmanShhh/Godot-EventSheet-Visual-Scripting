@@ -524,6 +524,18 @@ On new day starts
 
 Because the two methods have opposite conditions on `raining`, the farmer plans field work on clear days and stays sheltered when it rains, with no extra branching in the sheet.
 
+### Other use cases
+
+**Restaurant kitchen sim.** A cook plans "serve the order" as fetch ingredients, cook, plate, and deliver, with a world fact per ingredient so a missing item makes the planner backtrack to a simpler dish.
+
+**Creature needs loop.** A pet or zoo animal keeps hunger, energy, and fun as world-state facts and re-plans a "live your life" root each time a plan completes, so the method with the most urgent need (highest utility) wins next.
+
+**Heist crew roles.** Each crew member runs its own planner against shared facts like "alarm" and "vault_open", so the safecracker plans drill-and-grab while the lookout plans watch-and-warn, and one tripped alarm re-plans everyone into escape methods.
+
+**Repair drone rounds.** A maintenance drone plans "keep the base running" as fly to the most damaged structure, repair, and return to dock, marking each leg complete and re-requesting the plan so it always services whatever broke most recently.
+
+**Wildlife predator.** A wolf plans "eat" through a stalk-chase-feed method gated on a "prey_near" fact, with a lower-utility scavenge method as the fallback when the hunt precondition fails, so the ecosystem keeps moving without a state machine.
+
 ---
 
 ## Tips and common mistakes

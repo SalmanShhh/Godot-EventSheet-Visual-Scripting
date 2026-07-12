@@ -311,6 +311,33 @@ On Done
 
 Inside On Done the just-finished task is already gone from the count, so `Tasks Running == 0` is exactly the "that was the last one" signal.
 
+### 15. Timed autosave with the Timer pack
+
+Pair with the Timer pack for a hands-free autosave: a repeating Timer supplies the beat, and the serialization runs off-thread so the save never hitches a frame.
+
+```
+On Timer
+  Condition (inverted): SaveSystem | BackgroundRunner  Is Running
+    -> SaveSystem | BackgroundRunner: Run In Background  func(): return var_to_bytes(snapshot_dict)
+
+On Done
+  -> SaveSystem: write result to user://autosave.dat
+```
+
+The inverted Is Running simply skips a beat if the previous save is still in flight, so autosaves never stack.
+
+### Other use cases
+
+**Roguelike floor pre-baking.** Generate the next dungeon floor on a worker thread while the player finishes the current one, so taking the stairs swaps floors instantly instead of showing a loading pause.
+
+**Leaderboard crunching.** Sort and rank thousands of score entries off-thread when the results screen opens, then fill the list in On Done so the screen itself appears immediately.
+
+**Replay compression.** Compress a match's input recording into bytes on a worker thread when the round ends, and write the file in On Done while the players are already back in the lobby.
+
+**Word-game move finder.** Search a huge dictionary for valid plays off-thread each turn, and light up the hint button the moment the result lands.
+
+**Fog-of-war rebuild.** Recompute the minimap's revealed-tiles data on a worker thread whenever a region is explored, and swap the finished texture in during On Done.
+
 ---
 
 ## Tips and common mistakes

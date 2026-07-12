@@ -305,6 +305,33 @@ Every 0.2 seconds
     -> Comet: disable motion trail
 ```
 
+### 15. A telegraphed hazard escalation with Flash
+
+Pair the orbit with the Flash pack for fair difficulty spikes: the saw blade blinks its warning first, and the exact frame the blink ends, the orbit steps up.
+
+```
+On Hazard Phase Up
+  -> Saw | FlashBehavior: Flash  0.8
+
+On Flash Finished
+  -> Saw | OrbitBehavior: Add To Speed Degrees  90
+  -> Saw | OrbitBehavior: Add To Primary Radius  40
+```
+
+Stepping both the speed and the primary radius makes the new sweep visibly bigger and faster the moment the warning ends.
+
+### Other use cases
+
+**Clockwork puzzle rooms.** Gears, hands, and platforms are all orbiters with linked speeds, and one lever reversing a subset re-times the whole room.
+
+**Bullet-hell lattices.** Rings of shots at staggered offset angles weave overlapping rotating patterns from nothing but per-bullet knobs.
+
+**Carnival vignette.** Carriages on a tall ellipse with match rotation on read as a Ferris wheel turning behind the midway.
+
+**Koi pond ambience.** Fish drift on slow, tilted ellipses at different speeds so the pond feels alive without a single path node.
+
+**Magic shield stance.** Guard orbs tighten their radius while blocking and fling outward with a fast radius grow as the counter-attack.
+
 ---
 
 ## Tips and common mistakes

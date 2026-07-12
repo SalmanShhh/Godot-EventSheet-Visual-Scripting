@@ -264,6 +264,116 @@ On Hazard Entered -> Enemy | Health: Apply Damage  10               (if it lands
 The sheet animates `$Elevator` between those two endpoints with a pause at each end; the
 chaser waits beside the shaft, rides up, and walks off onto the tower.
 
+### 8. A door that is really a portal
+
+Two linked positions and the router treats them as adjacent: the agent walks to the doorway and
+blinks to the other side.
+
+```
+On Ready        -> Enemy | Pathfinding: Add Portal  416, 480, 1504, 480, true
+On Portal Taken -> (play the door sound, puff dust at both ends)
+```
+
+Portals survive Regenerate Nav Graph, so destructible levels keep their doors.
+
+### 9. Thirty chasers without a frame spike
+
+Route computations share one budget across ALL agents; extra requests wait a tick instead of
+stalling the frame.
+
+```
+On Ready         -> Enemy | Pathfinding: Set Max Paths Per Tick  4
+Every 1 seconds  -> Enemy | Pathfinding: Find Path To Node  $Player, "nearest"
+Every tick
+  Condition: Enemy | Pathfinding: Is Path Pending
+    -> (keep running the current animation - the route arrives next tick)
+```
+
+### 10. The stuck shrug
+
+The watchdog already re-routes a blocked agent by itself; your job is just the acting.
+
+```
+On Waypoint Stuck -> (play the "shrug" animation and a frustrated grunt)
+On Repath         -> (snap back to the run animation)
+```
+
+Tune `stuck_timeout` down for twitchy arcade enemies, up for slow lumbering ones.
+
+### 11. A fire patch that burns but does not block
+
+A danger (non-deadly) hazard costs 4x, so the router detours when it can; Is In Hazard plus the
+Health pack ticks the burn when it cannot.
+
+```
+On Ready -> Enemy | Pathfinding: Add Hazard  512, 448, 96, 32, false
+Every 0.5 seconds
+  Condition: Enemy | Pathfinding: Is In Hazard
+    -> Enemy | Health: Apply Damage  5
+```
+
+### 12. Animations from the path leg
+
+Current Path Action names what the current leg is - the whole animation switch in one expression.
+
+```
+Every tick
+  Condition: Current Path Action is "walk"  -> play "run"
+  Condition: Current Path Action is "jump"  -> play "leap"
+  Condition: Current Path Action is "fall"  -> play "fall"
+```
+
+`portal` and `platform` legs are also reported - a teleport sparkle and an idle stance cover them.
+
+### 13. The coward
+
+There is no flee verb, and you do not need one: path to a made-up point away from the player and
+`nearest` mode snaps it onto the graph.
+
+```
+Every 1 seconds
+  Condition: distance to $Player < 200
+    -> Rabbit | Pathfinding: Find Path To  Rabbit.X + sign(Rabbit.X - Player.X) * 400, Rabbit.Y, "nearest"
+```
+
+### 14. Pixel-tight takeoffs
+
+One-tile pillars punish early leaps. Strict positioning walks onto the exact takeoff spot first;
+a shorter coyote time stops late jumps from drifting.
+
+```
+On Ready
+  -> Ninja | Pathfinding: Set Jump Positioning  "strict"
+  -> Ninja | Pathfinding: Set Coyote Time  0.05
+```
+
+### 15. Level-swap cleanup
+
+Portals, hazards, and platforms are registered per behavior and survive rebuilds BY DESIGN - so a
+level transition must clear them explicitly, or the old level's doors haunt the new one.
+
+```
+On Level Finished
+  -> Enemy | Pathfinding: Stop Pathfinding
+  -> Enemy | Pathfinding: Clear Portals
+  -> Enemy | Pathfinding: Clear Hazards
+  -> Enemy | Pathfinding: Clear Moving Platforms
+On Next Level Ready
+  -> Enemy | Pathfinding: Build Nav Graph From Tilemap  $Level2
+```
+
+### Other use cases
+
+**Rooftop assassin patrols.** Ledge restriction keeps each guard glued to its own rooftop while normal chasing agents below jump between platforms, so two AI temperaments share one pack.
+
+**Escort missions.** The ally simply follows the player with Find Path To Node in nearest mode, and On Waypoint Stuck is your cue to nudge or teleport them forward when the player runs off without them.
+
+**Treasure goblin.** A loot thief paths to the nearest coin, and On Path Complete grabs it and immediately routes to the next one - kill it before the route list runs out.
+
+**Elevator lobbies.** Register your scripted elevator as a moving platform and multi-floor towers become routable; agents queue beside the shaft on their own thanks to the boarding discipline.
+
+**Boss arena adds.** Minions spawned at the edges all Find Path To the arena centre with a small shared path budget, arriving in staggered waves instead of one synchronized frame spike.
+
 ## Tips and common mistakes
 
 - **A movement sibling is best, not required.** The pathfinder finds the movement pack among

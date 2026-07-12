@@ -349,6 +349,31 @@ Every tick
 
 Because the expressions read the current values (not the Inspector defaults), the labels update the instant a boost pad or an ice patch changes them.
 
+### 15. Checkpoint respawn with a crash blink
+
+Pair the car with the Flash pack for a clean water-hazard respawn: kill all momentum, teleport to the last checkpoint, and blink the car so the reset reads clearly.
+
+```
+Car On Area Entered  "Water"
+  -> Car | CarBehavior: Stop Car
+  -> Car: set global_position to LastCheckpoint.position
+  -> Car | FlashBehavior: Flash  0.6
+```
+
+Stop Car before the teleport so no leftover velocity carries into the respawned car.
+
+### Other use cases
+
+**Racing drift trials.** A time-attack mode where only sliding scores: On Drift Started and On Drift Recovered bracket every slide, and the summed drift time decides the medal at the finish line.
+
+**Demolition derby.** Every collision Subtracts From Acceleration and Steer Degrees, so battered cars visibly limp and wallow, and the last car that still handles wins the arena.
+
+**Courier rush on mixed terrain.** A timed delivery route crosses mud, ice, and boost pads, each zone retuning Max Speed and Drift Recover on entry and restoring it on exit.
+
+**Top-down tank level.** Turn While Stopped on plus a low Steer Degrees reads as tracked steering, so the same behavior drives a tank that pivots in place between shots.
+
+**Rally school tutorial.** Lessons lower the Drift Angle Threshold so students trigger scored drifts early and feel the reward, then the exam raises it back for strict technique.
+
 ---
 
 ## Tips and common mistakes

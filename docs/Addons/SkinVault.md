@@ -529,6 +529,18 @@ On debug key pressed  (P)
 Grant is the cheat-friendly path - free, immediate, and safe to spam. Reset Pity is also useful in real
 designs, for example clearing the streak after a paid ten-pull.
 
+### Other use cases
+
+**Sticker albums.** A collect-them-all album is the owned set drawn as a grid: every pack rip is a Roll, duplicates are impossible because the pool only holds unowned stickers, and Owned Count over Total Skins is the album's completion line. On Pool Empty is the "album complete!" fanfare.
+
+**Rhythm-game song unlocks.** Tracks are skins with rarities as difficulty tiers: clear a set to Grant the next song, or let a jukebox token Roll a surprise unlock. Is Unlockable drives the greyed-out entries in the song wheel.
+
+**Cooking recipe discovery.** New dishes join the menu by Grant when an ingredient is first found, or by a market-stall Roll for a random regional recipe. Tags like "dessert" and "soup" let an event roll only one cuisine, and the recipe book's completion percentage falls straight out of the counts.
+
+**In-world gachapon machines.** Each physical capsule machine in your hub rolls a different tag - the "spooky" machine only dispenses skins tagged for it. Is Pool Empty per tag lets a machine display SOLD OUT while the others keep spinning, all against one shared catalog.
+
+**Roguelite roster unlocks.** Playable characters and starting relics are skins granted by achievements between runs, with rarity tiers marking how deep a run must go to earn them. The character-select screen reads Is Owned for selectable heroes and shows silhouettes for the rest.
+
 ---
 
 ## Tips and common mistakes

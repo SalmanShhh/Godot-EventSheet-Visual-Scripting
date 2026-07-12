@@ -342,6 +342,18 @@ On Buy Torch Pressed
   # with cost_growth 1.0 every torch costs exactly base_cost
 ```
 
+### Other use cases
+
+**Tower-defense banks.** An income tower is a generator node: each one bought costs more, and Production Over credits gold between waves, giving the classic "economy tower" tradeoff with no custom math.
+
+**Escalating reroll prices.** A shop reroll button is a generator with zero output - Buy One just records the geometrically climbing Last Cost, so each reroll gets pricier along a tuned curve.
+
+**City-builder power plants.** Plants run in cycle mode, banking energy every cycle; the player (or a built manager) Collects on visits, and Cycle Progress fills each plant's little gauge on the map.
+
+**Restaurant staffing.** Each staff role is a generator - cooks produce meals per second, waiters raise the multiplier - so a food-truck-to-empire sim is a handful of nodes and one wallet.
+
+**Garden that grows while you adventure.** An RPG farm plot uses Production Over with the time since your last visit, so returning from a dungeon pays out exactly what the crops earned while you were away.
+
 ---
 
 ## Tips and common mistakes

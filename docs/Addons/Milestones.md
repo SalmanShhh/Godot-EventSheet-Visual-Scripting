@@ -325,6 +325,18 @@ On Balance Patch Applied
   # Set Threshold leaves already-reached milestones latched; it only affects future crossings
 ```
 
+### Other use cases
+
+**Battle-pass tiers.** Each pass tier is a milestone keyed to seasonal XP, and one Update Progress after every match latches whatever tiers the player just crossed, firing On Milestone Reached per reward to grant. Reached Count over Milestone Count is the pass screen's "tier 12 of 50" readout for free.
+
+**Boss phases by damage dealt.** Define a milestone per phase threshold on the boss's total damage taken, then Update Progress on every hit. Because the latch is one-way, a heal cannot un-trigger a phase, and On Milestone Reached is the clean place to swap the moveset and play the roar.
+
+**Daily challenge tracks.** Define today's three goals on login ("win 2 races", "drift 500m"), feed each id from its own counter, and show Progress bars next to each. At the daily rollover one Reset re-arms everything while keeping the definitions, ready for tomorrow's numbers.
+
+**Farming-sim shipment ladders.** Track total crops shipped per crop type as separate milestone ids, with thresholds that unlock seeds, sprinklers, and a greenhouse. The multi-metric design means "shipped_parsnips" and "shipped_melons" run the same earn / latch / reward loop without touching each other.
+
+**Onboarding feature drip.** Gate advanced features behind gentle usage milestones - ranked mode after ten matches, the editor after the first world is finished - by feeding playtime or match counts into Update Progress. Is Reached keeps each feature permanently open once earned, so a returning player never sees a menu re-lock.
+
 ---
 
 ## Tips and common mistakes

@@ -160,12 +160,13 @@ The picker wraps the native feature:
 
 ### Lane 2 - portable behaviors ship as event-sheet packs
 
-**31 are bundled**:
+**68 are bundled**:
 Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,
-Follow, Car, Tile Movement, Line of Sight (2D & 3D)** (Follow now emits On Reached Target, Car On
-Drift Started / Recovered), the motion packs (**Spring**, **Tween**, and **Juice** for camera/game-feel -
-trauma screenshake, smooth zoom, squash & stretch), the **Save System** singleton, a 3D quartet
-(Sine/Orbit/Bullet/Move To 3D), and faithful ports of custom C3 addons:
+Follow, Car, Tile Movement, Line of Sight (2D & 3D), Rotate, Fade, Bound To, Wrap** (Follow now
+emits On Reached Target, Car On Drift Started / Recovered; Bound To is C3's "Bound to layout",
+Wrap adds circular arenas), the motion packs (**Spring**, **Tween**, and **Juice** for
+camera/game-feel - trauma screenshake, smooth zoom, squash & stretch), the **Save System**
+singleton, a 3D quartet (Sine/Orbit/Bullet/Move To 3D), and faithful ports of custom C3 addons:
 
 | Construct 3 addon | Godot EventSheets pack |
 | --- | --- |
@@ -175,6 +176,7 @@ trauma screenshake, smooth zoom, squash & stretch), the **Save System** singleto
 | Weapon (custom addon) | **Weapon Kit** (ammo + reserve, fire-rate cooldown, single/auto/burst fire modes, timed + instant reload - Fire triggers; you spawn the bullet) |
 | HTN planner (custom addon) | **HTN Agent** (utility-driven Hierarchical Task Network - world-state blackboard + primitive/compound tasks whose methods carry preconditions, subtasks, and a utility score) |
 | (Simple) Abilities (custom addon) | **Simple Abilities** (grant abilities by id, cooldowns, stack charges with auto-regen, temporary auto-expiring abilities, custom data + tags for bulk ops) |
+| Drawing Canvas | **Drawing Canvas** (draw lines/circles/rings/rects/cones/stamps/textured ribbons and raycast line-of-sight fans onto a live texture - persistent paint or per-frame auto-clear; reusable DrawingPrefabResource formations; the **Decal Painter** pack projects the texture onto 3D surfaces) |
 
 Attach as a child node; properties live in the Inspector; their ACEs appear in the picker
 automatically.
@@ -187,7 +189,7 @@ shared behavior packs for shared ACEs - so you can also drop to that lower level
 ### Lane 3 - use the Godot feature directly
 
 Multiplayer (high-level multiplayer API),
-Drawing Canvas (`_draw`), 3D plugins (Godot 3D), Binary Data (`PackedByteArray`),
+3D plugins (Godot 3D), Binary Data (`PackedByteArray`),
 i18n (Godot translations).
 
 ---
@@ -255,7 +257,7 @@ C3 families map to the family marker plus group iteration here - pick-by-family 
 
 ### 5. The plugins with no equivalent
 
-Multiplayer, Drawing Canvas, and XML route to Godot's native features - the migration table names each destination so nothing dead-ends.
+Multiplayer and XML route to Godot's native features - the migration table names each destination so nothing dead-ends.
 
 ### 6. Killing the "every tick" polling soup
 

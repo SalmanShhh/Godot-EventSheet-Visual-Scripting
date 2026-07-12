@@ -204,6 +204,53 @@ Every tick
   -> set Shadow scale to 1.0 - Sprite | Fade.Opacity()
 ```
 
+**13. Dim the world during a conversation with Dialogue Kit.** Pair with the Dialogue Kit pack: fade a
+dark overlay in when a conversation starts and out when it ends.
+
+```
+On Dialogue Started
+  -> Dimmer | Fade: Fade In  0.3
+On Dialogue Finished
+  -> Dimmer | Fade: Fade Out  0.3
+```
+
+**14. Skip button interrupts a fade cleanly.** If the player skips the splash mid-fade, stop the tween
+and snap to the end state instead of leaving the logo half-visible.
+
+```
+On skip pressed
+  Condition: Logo | Fade  Is Fading
+    -> Logo | Fade: Stop Fade
+    -> Logo | Fade: Set Opacity  0.0
+  -> go to the main menu
+```
+
+**15. Respawn invulnerability blink.** Chain the triggers into a loop: each fade out starts a fade in and
+back, until the invulnerability window ends.
+
+```
+PlayerSprite On Faded Out  (while invulnerable)
+  -> PlayerSprite | Fade: Fade In  0.15
+PlayerSprite On Faded In  (while invulnerable)
+  -> PlayerSprite | Fade: Fade Out  0.15
+On invulnerability over
+  -> PlayerSprite | Fade: Set Opacity  1.0
+```
+
+Leave Free On Faded Out off here, or the player sprite deletes itself on the first blink.
+
+### Other use cases
+
+**Secret-area reveal.** Cover a hidden room with a dark ColorRect and fade it out the moment the player steps inside, so the reveal feels earned rather than instant.
+
+**Photo-mode UI hide.** Fade the whole HUD out when photo mode opens and back in when it closes, keeping screenshots clean without toggling visibility per element.
+
+**Day-night overlay.** Fade a tinted full-screen rect in as evening falls and out at dawn, driving a whole mood shift with two actions on one node.
+
+**Checkpoint confirmation pulse.** Snap a checkpoint glow to full opacity with Set Opacity and fade it out slowly, a quiet "saved" signal that needs no popup.
+
+**Spectator ghost players.** Fade other players' ghosts to a fixed low opacity with Set Opacity so replays and multiplayer ghosts read as see-through without a shader.
+
 ## Tips and common mistakes
 
 - **Attach it to the thing that should fade**, not its parent - Fade animates the node it is on.

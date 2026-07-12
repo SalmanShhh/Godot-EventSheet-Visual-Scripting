@@ -131,6 +131,127 @@ press Space.
 Draw a target ring on the canvas, then `Spawn Canvas Decal` from the **Decal Painter** pack
 projects the live texture onto your 3D floor - the 2D verbs become 3D ground markings.
 
+### 7. The one-row shadow (simplest start)
+
+The smallest useful canvas: auto-clear on, one circle a frame.
+
+```
+On Ready   -> Player | Drawing Canvas: Set Auto Clear  true
+Every tick -> Player | Drawing Canvas: Draw Circle  Player.X, Player.Y + 14, 10, Color(0, 0, 0, 0.35)
+```
+
+The canvas follows the host, so in world coordinates the shadow just tracks the player.
+
+### 8. A laser aim line
+
+One live line from the muzzle to the cursor, redrawn every tick in auto-clear mode.
+
+```
+Every tick -> Player | Drawing Canvas: Draw Line
+              Player.X, Player.Y, Mouse.X, Mouse.Y, 2, Color(1, 0, 0, 0.6)
+```
+
+Drop the alpha to taste - a faint line reads as a sight, a solid one reads as a beam.
+
+### 9. Grenade blast preview
+
+While the throw button is held, ring the landing spot so the player can read the blast before
+committing.
+
+```
+Every tick (while aiming)
+  -> Player | Drawing Canvas: Draw Ring  throw_x, throw_y, 96, 3, Color(1, 0.5, 0, 0.8)
+```
+
+Match the ring radius to the grenade's real damage radius - a lying telegraph is worse than none.
+
+### 10. Bullet holes that stay
+
+Persistent canvas on the level root + Draw Stamp: each hit renders once onto the texture, so a
+thousand holes cost the same as one.
+
+```
+On Bullet Hit
+  -> Level | Drawing Canvas: Draw Stamp
+     preload("res://fx/bullet_hole.png"), hit_x, hit_y, 1.0, randf_range(0, 360)
+```
+
+The random rotation is what stops the wall from looking rubber-stamped.
+
+### 11. A sword swoosh
+
+```
+On Swing Started -> Hero | Drawing Canvas: Start Ribbon  $Hero/SwordTip, 14, 18, Color(1, 1, 1, 0.9)
+                 -> Hero | Drawing Canvas: Set Ribbon Texture  $Hero/SwordTip, preload("res://fx/swoosh.png")
+On Swing Ended   -> Hero | Drawing Canvas: Stop Ribbon  $Hero/SwordTip
+```
+
+Keep the canvas in auto-clear mode for a clean arc - a persistent ribbon smears.
+
+### 12. Spray paint with a wash
+
+Persistent painting plus the cleanup verb: Clear Canvas is the bucket of water that wipes the
+wall and then keeps accumulating again.
+
+```
+Every tick
+  Condition: MOUSE_BUTTON_LEFT is down
+    -> Wall | Drawing Canvas: Draw Circle  Mouse.X, Mouse.Y, 8, spray_color
+On "c" pressed
+  -> Wall | Drawing Canvas: Clear Canvas
+```
+
+### 13. A minimap in the corner
+
+Canvas Texture makes the drawing portable: hide the world copy, hand the live texture to a HUD
+TextureRect, and redraw blips on a timer (coordinates `canvas`, so you plot scaled pixels).
+
+```
+On Ready    -> Level | Drawing Canvas: Set Canvas Visible  false
+            -> (assign Level | Drawing Canvas: Canvas Texture to $HUD/Minimap.texture)
+Every 0.1s  -> Level | Drawing Canvas: Clear Canvas
+            -> For each Enemy: Level | Drawing Canvas: Draw Rect  Enemy.X / 8, Enemy.Y / 8, 4, 4, Color(1, 0, 0, 1)
+```
+
+### 14. Fog of war
+
+A persistent canvas is a memory: draw a reveal circle wherever the player walks and feed
+Canvas Texture into your fog shader as the mask - explored ground stays revealed.
+
+```
+On Ready   -> Level | Drawing Canvas: Set Canvas Visible  false
+Every tick -> Level | Drawing Canvas: Draw Circle  Player.X, Player.Y, 80, Color(1, 1, 1, 1)
+```
+
+Persistent mode means the reveal never has to be re-issued - one pass over the ground is enough.
+
+### 15. Freeze-frame debugging
+
+Is Auto Clear plus the toggle makes a one-key pause for per-frame drawings: freeze the last
+vision-cone frame to study it, unfreeze to go live again.
+
+```
+On "F3" pressed
+  Condition: Level | Drawing Canvas: Is Auto Clear
+    -> Level | Drawing Canvas: Set Auto Clear  false
+  Else
+    -> Level | Drawing Canvas: Set Auto Clear  true
+```
+
+Gate your Every tick draw rows on the same state, or new strokes pile onto the frozen frame.
+
+### Other use cases
+
+**Footprints in snow.** A persistent canvas under the winter level plus a small Draw Stamp on a step timer leaves tracks everywhere anyone walks, and Clear Canvas is the fresh snowfall.
+
+**Tower range preview.** While the player hovers a build spot, an auto-clear Draw Ring shows the tower's exact reach, tinted red when the spot is invalid.
+
+**Damage direction hints.** A brief auto-clear Draw Cone at the player aimed toward the latest attacker tells the player where the hit came from without any HUD art.
+
+**Boss arena choreography.** Author each attack's floor markings once as a DrawingPrefabResource and Draw Prefab it at the strike point, rotated to the boss's facing, so every telegraph stays consistent.
+
+**Mouse gesture spells.** In persistent mode the player literally draws a rune with Draw Line segments while the mouse button is held; Clear Canvas wipes the slate after the cast resolves.
+
 ## Tips and common mistakes
 
 - **Auto Clear drawings must be re-issued every tick.** A one-shot `Draw Cone` in auto-clear

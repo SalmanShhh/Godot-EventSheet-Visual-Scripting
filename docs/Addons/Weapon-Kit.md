@@ -438,6 +438,18 @@ Turret On Reload Started
 
 The turret fires until its mag empties, auto-reload kicks in, and On Reload Started gives the player a readable window to push in.
 
+### Other use cases
+
+**Spell wands with mana charges.** Reskin the magazine as charges on a wand: each cast is a Fire, the reload is a channel that draws from a mana reserve, and On Reload Started plays the focusing animation. Silence effects are just Cancel Reload plus refusing to call Fire.
+
+**Vehicles with multiple mounts.** A tank is two WeaponKit nodes on one hull - a slow single-shot cannon and a fast auto machine gun - each with its own ammo, cooldown, and reload. Because the node is the weapon, switching seats is just routing the trigger input to the other kit.
+
+**Dual-wield pistols.** Two kits on the player, and the fire input alternates which one gets the Fire call. Each gun runs its own magazine and dry-click, so one pistol can be mid-reload while the other keeps shooting, which is the whole fantasy.
+
+**Film-roll photography games.** A camera is a weapon that shoots photos: the film roll is the magazine, swapping rolls is the timed reload, and On Empty is the heartbreak click when the cryptid finally appears. Reload Progress drives the little rewind animation.
+
+**Flamethrower fuel tanks.** Auto fire mode at a very high fire rate turns each On Fire into one puff of a continuous stream, with the magazine as the fuel tank. Fuel canister pickups call Add Reserve Ammo, and Ammo Percent drives the pressure gauge on the HUD.
+
 ---
 
 ## Tips and common mistakes

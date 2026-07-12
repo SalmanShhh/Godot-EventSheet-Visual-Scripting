@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - every addon guide now carries 15 worked use cases + 5 quick sketches
+
+- All 61 pack guides in `docs/Addons/` now have at least **15 numbered use cases** (scenario
+  + event-sheet rows + a tip where one is non-obvious) covering a simplest-possible setup,
+  an edge case, and at least one cross-pack combination each - plus a new **Other use
+  cases** section: 5 brief genre sketches per guide showing breadth without code.
+- Docs freshness pass: pack count corrected in `CLAUDE.md` (68), the C3 migration guide now
+  lists Rotate / Fade / Bound To / Wrap among the bundled classics and maps C3's Drawing
+  Canvas to the Drawing Canvas pack (it previously routed to raw `_draw`), and
+  `EVENTSHEETS-VOCABULARY.md` regenerated with the five new pack sections.
+
 ### Added - Rotate pack, circular Wrap constraints, drawing prefabs + the Draw Lab showcase (68 packs)
 
 - **Rotate pack**: the C3-parity spinner - Speed (deg/s), Acceleration (deg/s^2), and one

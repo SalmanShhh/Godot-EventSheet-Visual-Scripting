@@ -322,6 +322,18 @@ Every 0.25 seconds
     -> Enemy: set barked = false
 ```
 
+### Other use cases
+
+**Freeze-when-watched enemy.** Give the player a sensor and only let the ghost or statue creep forward while the player does *not* have line of sight to it - the classic "it moves when you look away" monster is one inverted condition.
+
+**Crime witness NPCs.** When something scandalous happens, check which NPCs have line of sight to the spot; only those witnesses run to report it, so hiding a misdeed behind a wall genuinely works.
+
+**Tension music.** Switch to the combat or stealth-danger track while any enemy can see the player and relax it once every sensor loses sight, driving the whole audio mood from checks you are already running.
+
+**Hiding in foliage.** Put bushes and tall grass on a sight-blocking layer so crouching into cover truly breaks enemy vision, and let a special hunter swap its collision mask to ignore foliage for a scarier pursuer.
+
+**Hide-and-seek party mode.** Seekers tag any player they can genuinely see with Nearest Visible In Group, so winning is about real cover and corners rather than distance circles.
+
 ---
 
 ## Tips and common mistakes

@@ -260,6 +260,35 @@ On Player exits Area "Ice"
       -> Player | EightDirectionMovement: Subtract From Move Speed  20
 ```
 
+### 15. Double-tap dash with ComboBox
+
+Pair the movement with the ComboBox pack for a fighting-game dash: feed key presses to it as tokens, and a quick double-tap grants a short speed burst.
+
+```
+On Ready
+  -> ComboBox: Register Combo  "double_left", "left,left", 0.25
+
+On Combo Matched
+  Condition: ComboBox.Matched Id() = "double_left"
+    -> Player | EightDirectionMovement: Add To Move Speed  250
+    -> Wait 0.25 seconds
+    -> Player | EightDirectionMovement: Subtract From Move Speed  250
+```
+
+Adding and subtracting the same amount means the burst undoes itself cleanly whatever state the player was in.
+
+### Other use cases
+
+**Farming sim seasons.** Deep snow in winter sets a trudging speed across the whole farm, and spring restores the stroll, so the seasons are felt underfoot.
+
+**Zombie horde survival.** Bites subtract speed one wound at a time while adrenaline pickups add it back, turning every escape into a resource race.
+
+**Warehouse push puzzles.** Holding a crate against the push key drops the speed to a strain, and releasing it restores the normal walk.
+
+**Haunted-mansion stealth.** A sneak key sets a slow creep so footsteps stay silent near ghosts, and a panic sprint doubles it when one turns around.
+
+**Pit-crew management.** A crew member hustles between stations with the speed set from job urgency, so critical repairs visibly move faster.
+
 ---
 
 ## Tips and common mistakes

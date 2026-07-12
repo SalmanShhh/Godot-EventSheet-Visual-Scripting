@@ -413,6 +413,36 @@ On Every Tick
 
 No flags, no "can I move" boolean - if the state is `"stunned"`, every action-gating Is In State elsewhere simply reads false.
 
+### 15. Resume the interrupted state after a knockback
+
+An interruption should return the actor to whatever it was doing before, not dump it back to a default. Capture `previous` on the way into the interrupt state and restore it when the interruption ends.
+
+```
+On Knocked Back
+  -> Enemy | StateMachineBehavior: Set State  "knockback"
+
+On State Changed
+  Condition: next  ==  "knockback"
+    -> Enemy: set resume_state = previous
+
+On Knockback timer timeout
+  -> Enemy | StateMachineBehavior: Set State  Enemy.resume_state
+```
+
+The Timer pack's one-shot countdown is a natural fit for the knockback window.
+
+### Other use cases
+
+**Utility brain mirror.** Pair with the UtilityBrain pack: copy the brain's chosen action into a state on each switch so animation and sound systems branch on Is In State without knowing anything about scoring.
+
+**Cutscene lockout.** Set a `"cutscene"` state on the game manager and gate every input and AI row behind not being in it, so scripted scenes cannot be interrupted by stray gameplay.
+
+**Tutorial step tracking.** Walk a machine through `"step_1"`, `"step_2"`, and `"done"` as the player completes each task, and let On State Changed swap the hint text so the prompt always matches the stage.
+
+**Crafting station lock.** Flip a workbench between `"idle"` and `"crafting"` so a second job cannot start while one is in progress - the Is In State guard is the whole queue.
+
+**Weather cycle.** Advance `"clear"` to `"rain"` to `"storm"` on a timer and hang the particle, sound, and lighting swaps off On State Changed so each front rolls in exactly once.
+
 ---
 
 ## Tips and common mistakes

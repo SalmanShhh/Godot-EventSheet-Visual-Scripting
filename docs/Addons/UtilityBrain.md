@@ -480,6 +480,32 @@ On Damaged
 
 Meteor stays out of the pool until the boss drops below half health, then its long cooldown and `inverse` proximity (favoring range) shape when it lands.
 
+### 15. Reset a pooled enemy's brain on respawn
+
+A recycled enemy must not wake up with the dead one's stale inputs and cooldowns. Wipe the transient state when it leaves the pool so its first Evaluate reads a fresh world.
+
+```
+On Enemy Respawned
+  -> Enemy | UtilityBrain: Clear Inputs
+  -> Enemy | UtilityBrain: Clear Cooldowns
+  -> Enemy | UtilityBrain: Set Input  "hp", 1.0
+  -> Enemy | UtilityBrain: Evaluate
+```
+
+Registered actions and considerations survive the reset, so there is nothing to re-add - only the world state and cooldowns are cleared.
+
+### Other use cases
+
+**Timer pack heartbeat.** Pair with the Timer pack: a repeating Timer is the cleanest Evaluate pulse, and stopping it freezes the whole brain during pauses and cutscenes without touching a single action.
+
+**Adaptive spawn director.** A hidden brain on the level scores "spawn wave", "drop pickup", and "stay quiet" from inputs like player health and recent deaths, pacing the pressure to how hard the player is struggling.
+
+**Racing rubber-banding.** Each AI driver weighs push, block, and coast from a gap-to-player input, so the field naturally tightens when the player leads and eases off when they trail.
+
+**Pet mood system.** A companion pet picks nap, play, and beg from hunger and energy inputs, with weighted-random selection keeping its day-to-day behavior lively instead of scripted.
+
+**Squad role balancing.** Every squad member runs the same actions - frontline, flank, support - but feeds its own distance and health inputs, so the group self-organizes without a commander script.
+
 ---
 
 ## Tips and common mistakes

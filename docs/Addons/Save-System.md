@@ -345,6 +345,18 @@ On Before Save
 
 One Save Game call from anywhere writes all three, and each sheet reads its own key back on On After Load.
 
+### Other use cases
+
+**Roguelike meta-progression.** Permanent unlocks - new characters, starting items, discovered recipes - are saved the moment a run ends and read back at the start of the next one, so death wipes the run but never the account.
+
+**New Game Plus.** On finishing the game, write just the keys that should carry over (loadout, cosmetics, gold), start the campaign scene fresh, and load only those keys back - a curated carry-over instead of a full restore.
+
+**Player-built levels.** A level editor stores the whole layout as one Dictionary under a single Save Value key, so sharing, listing, and reloading user creations rides the same slot machinery as normal saves.
+
+**Daily bonus tracking.** Save a timestamp when the player claims the daily reward and compare it against the clock on launch to decide whether the bonus button lights up again.
+
+**Lifetime stats profile.** Reserve one slot as the profile file for totals like playtime, kills, and achievements, switching to it briefly on save and load, so career stats persist no matter which campaign slot the player deletes.
+
 ---
 
 ## Tips and common mistakes

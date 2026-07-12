@@ -344,6 +344,18 @@ On Ready
   -> Cloud | Sine 3D: Set Period  8
 ```
 
+### Other use cases
+
+**Quest marker over an NPC.** A floating exclamation mark above a quest giver bobs on the Y axis with a small magnitude and short period, so the player's eye finds it from across the map.
+
+**Sleeping creature breathing.** A tiny, slow Y swing on a resting boss or campsite companion reads as chest-rise breathing, keeping a quiet scene alive with zero animation work.
+
+**Carousel horses.** Each horse on a fairground ride gets the same Y bob with a different phase, so the row rises and falls in a rolling sequence instead of pumping in unison.
+
+**Factory pistons.** A line of pistons uses the triangle wave on Y for constant-speed up-down strokes, phase-offset down the row, selling a working machine hall with one behavior per piston.
+
+**Radar dish sweep.** A sawtooth wave on rotation-y turns a radar dish or scanner beacon steadily around and around, a continuous surveillance spin with nothing to script.
+
 ---
 
 ## Tips and common mistakes

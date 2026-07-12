@@ -296,6 +296,18 @@ On Chapter 2 Pressed
 
 One behavior node serves every button; only the path changes per row.
 
+### Other use cases
+
+**Attract mode.** A demo or kiosk build starts an idle timer on the title and gameplay scenes and Fade To Scene back to the intro when nobody touches the controls, keeping a show-floor build presentable on its own.
+
+**Flashback sequences.** Set `fade_color` to white on the behavior in the memory trigger scene, so slipping into a dream or flashback reads visually different from the black fades the rest of the game uses.
+
+**In-game arcade cabinet.** Interacting with a cabinet Fade To Scene loads the minigame, and the minigame's exit button fades back to the hub, turning a whole minigame collection into a set of ordinary scene files.
+
+**Day and night variants.** Sleeping at the inn fades into the night version of the same town scene, letting you author two moods as two scene files instead of relighting one scene at runtime.
+
+**Looping horror corridor.** Walking through the far door calls Go To Scene on the same corridor scene instantly - no fade, no visible seam - so the player only slowly realizes the hallway is repeating.
+
 ---
 
 ## Tips and common mistakes
