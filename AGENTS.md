@@ -51,6 +51,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 ## Docs map
 
 - `README.md` - install + high-level workflow
+- `docs/README.md` - the documentation index: every guide and reference grouped by task
 - `docs/internal/SPEC-gdscript-pairing.md` - how the sheet pairs with GDScript (blocks, codegen tooltips, expressions, C3 synonyms, importer round-trip)
 - `docs/GUIDE-THEMING.md` - designer-facing theme workflow
 - `docs/internal/SPEC-layout-alignment.md` - stacked layout tuning

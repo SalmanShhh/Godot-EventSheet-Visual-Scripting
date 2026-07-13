@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added - Documentation index
+
+- **docs/README.md** is a new documentation landing page that lists every guide and
+  reference grouped by task (learn by doing, the Studios, extending the plugin, patterns,
+  localization, working with your project, migration, reference, and the addon packs
+  index). Linked from the README and the AGENTS docs map.
+
 ### Added - Guides for the Save Studio and the ACE Studio
 
 - **docs/GUIDE-USING-THE-SAVE-STUDIO.md** walks the Save Studio window tab by tab
