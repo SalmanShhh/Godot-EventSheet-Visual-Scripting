@@ -4,11 +4,13 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
-## DrawingCanvas: an event-sheet-parity drawing surface - a texture the sheet draws onto with
-## verbs (lines, circles, cones, stamps, ribbons, line-of-sight fans). Two modes: PERSISTENT
-## (strokes accumulate until Clear Canvas - paint, splats, decals) and AUTO-CLEAR (redrawn
-## every frame - telegraphs, vision cones). The live texture is an expression, so the same
-## canvas feeds a Sprite2D, a TextureRect, a shader, or a 3D Decal.
+## DrawingCanvas: an event-sheet-parity drawing surface - a texture the sheet draws onto with verbs
+## (lines, circles, cones, stamps, ribbons, line-of-sight fans). All the engine plumbing (the offscreen
+## SubViewport, the command queue, coordinate mapping, the self-updating ribbons) now lives in the shared
+## CanvasSurface runtime pack, so THIS behaviour is thin: each verb is a one-line call to the surface, and
+## the per-frame ribbon loop is gone. Two modes: PERSISTENT (strokes accumulate until Clear Canvas) and
+## AUTO-CLEAR (redrawn every frame). The live texture is an expression, so the same canvas feeds a
+## Sprite2D, a TextureRect, a shader, or a 3D Decal.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -17,10 +19,13 @@ static func build() -> bool:
 	sheet.addon_category = "Drawing Canvas"
 	sheet.addon_tags = PackedStringArray(["drawing", "visual"])
 	var about: CommentRow = CommentRow.new()
-	about.text = "Drawing Canvas behavior (event-sheet parity): a texture your sheet draws onto with verbs - lines, circles, rings, rects, cones, texture stamps, textured ribbons, and a raycast LINE OF SIGHT fan. Persistent mode keeps strokes until Clear Canvas (paint, blood splats, skid marks); Auto Clear redraws every frame (attack telegraphs, vision cones). Canvas Texture exposes the live texture for materials, UI, or a 3D Decal. This pack is an event sheet - extend it by editing it."
+	about.text = "Drawing Canvas behavior (event-sheet parity): a texture your sheet draws onto with verbs - lines, circles, rings, rects, cones, texture stamps, textured ribbons, and a raycast LINE OF SIGHT fan. Persistent mode keeps strokes until Clear Canvas (paint, blood splats, skid marks); Auto Clear redraws every frame (attack telegraphs, vision cones). Canvas Texture exposes the live texture for materials, UI, or a 3D Decal. The drawing plumbing lives in the shared CanvasSurface runtime; this pack is a thin event sheet - extend it by editing it."
 	sheet.events.append(about)
-	var block: RawCodeRow = RawCodeRow.new()
-	block.code = "\n".join(PackedStringArray([
+
+	# Designer knobs + the one hidden helper that fetches this host's shared drawing surface. All the
+	# heavy plumbing moved to CanvasSurface, so what remains here is configuration + thin verbs.
+	var knobs: RawCodeRow = RawCodeRow.new()
+	knobs.code = "\n".join(PackedStringArray([
 		"# --- Designer knobs (tune in the Inspector) ---",
 		"## Canvas texture width in pixels.",
 		"@export var canvas_width: int = 512",
@@ -36,207 +41,94 @@ static func build() -> bool:
 		"## offscreen and you place Canvas Texture wherever you want it.",
 		"@export var display_on_host: bool = true",
 		"",
-		"# --- Internal state ---",
-		"var _canvas_viewport: SubViewport = null",
-		"var _drawer: Node2D = null",
-		"var _display: Sprite2D = null",
-		"var _commands: Array = []",
-		"var _ribbons: Array = []",
-		"",
-		"## Builds the offscreen render target once: a SubViewport holding the drawer node whose",
-		"## draw signal replays the command queue. Clear mode is the whole persistence story -",
-		"## NEVER accumulates strokes on the target (paint), ALWAYS wipes each frame (live",
-		"## redraw), and Clear Canvas flips to ONCE (wipe next frame, then keep again).",
+		"## This host's shared drawing surface (created + cached on first use).",
 		"## @ace_hidden",
-		"func _ensure_canvas() -> void:",
-		"\tif _canvas_viewport != null or not is_inside_tree():",
-		"\t\treturn",
-		"\t_canvas_viewport = SubViewport.new()",
-		"\t_canvas_viewport.size = Vector2i(maxi(canvas_width, 8), maxi(canvas_height, 8))",
-		"\t_canvas_viewport.transparent_bg = true",
-		"\t_canvas_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS",
-		"\t_canvas_viewport.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS if auto_clear else SubViewport.CLEAR_MODE_NEVER",
-		"\tadd_child(_canvas_viewport)",
-		"\t_drawer = Node2D.new()",
-		"\t_canvas_viewport.add_child(_drawer)",
-		"\t_drawer.draw.connect(_run_draw_commands)",
-		"\tif display_on_host and host is Node2D:",
-		"\t\t_display = Sprite2D.new()",
-		"\t\t_display.texture = _canvas_viewport.get_texture()",
-		"\t\t# Deferred: at On Ready the host is still mid-setup and a direct add_child on",
-		"\t\t# the PARENT is rejected (\"parent busy setting up children\").",
-		"\t\t(host as Node2D).add_child.call_deferred(_display)",
-		"",
-		"## World position -> canvas pixels: the canvas is centered on the host, so the mapping",
-		"## is a translation. In canvas coordinate mode points pass through untouched.",
-		"## @ace_hidden",
-		"func _to_canvas(point: Vector2) -> Vector2:",
-		"\tif coordinates != \"world\" or not (host is Node2D):",
-		"\t\treturn point",
-		"\treturn point - (host as Node2D).global_position + Vector2(canvas_width, canvas_height) * 0.5",
-		"",
-		"## Replays the queued draw commands onto the drawer, then empties the queue - in",
-		"## persistent mode each command renders exactly one frame and the unclearing render",
-		"## target keeps it (that is how strokes bake without a growing command list).",
-		"## @ace_hidden",
-		"func _run_draw_commands() -> void:",
-		"\tfor command: Dictionary in _commands:",
-		"\t\tmatch str(command[\"kind\"]):",
-		"\t\t\t\"line\":",
-		"\t\t\t\t_drawer.draw_line(command[\"a\"], command[\"b\"], command[\"color\"], command[\"width\"])",
-		"\t\t\t\"circle\":",
-		"\t\t\t\t_drawer.draw_circle(command[\"at\"], command[\"radius\"], command[\"color\"])",
-		"\t\t\t\"ring\":",
-		"\t\t\t\t_drawer.draw_arc(command[\"at\"], command[\"radius\"], 0.0, TAU, 64, command[\"color\"], command[\"width\"])",
-		"\t\t\t\"rect\":",
-		"\t\t\t\t_drawer.draw_rect(command[\"rect\"], command[\"color\"])",
-		"\t\t\t\"polygon\":",
-		"\t\t\t\t_drawer.draw_colored_polygon(command[\"points\"], command[\"color\"])",
-		"\t\t\t\"stamp\":",
-		"\t\t\t\tvar texture: Texture2D = command[\"texture\"]",
-		"\t\t\t\tif texture != null:",
-		"\t\t\t\t\t_drawer.draw_set_transform(command[\"at\"], command[\"rotation\"], Vector2.ONE * float(command[\"scale\"]))",
-		"\t\t\t\t\t_drawer.draw_texture(texture, -texture.get_size() * 0.5)",
-		"\t\t\t\t\t_drawer.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)",
-		"\t_commands.clear()",
-		"",
+		"func _surface() -> CanvasSurface:",
+		"\treturn CanvasSurface.for_node(host)"
+	]))
+	sheet.events.append(knobs)
+
+	# On Ready: hand the designer knobs to the surface once.
+	var on_ready: EventRow = EventRow.new()
+	on_ready.trigger_provider_id = "Core"
+	on_ready.trigger_id = "OnReady"
+	var ready_body: RawCodeRow = RawCodeRow.new()
+	ready_body.code = "_surface().configure(canvas_width, canvas_height, auto_clear, coordinates, display_on_host)"
+	on_ready.actions.append(ready_body)
+	sheet.events.append(on_ready)
+
+	# ── Drawing verbs: each is a one-line call to the shared surface (ace_ids unchanged). ──
+	var verbs: RawCodeRow = RawCodeRow.new()
+	verbs.code = "\n".join(PackedStringArray([
 		"## The canvas's LIVE texture - assign it to a TextureRect, a material, a particle, or a",
 		"## 3D Decal (the Decal Painter pack accepts it directly). Updates as the canvas draws.",
 		"## @ace_expression",
 		"## @ace_name(\"Canvas Texture\")",
 		"func canvas_texture() -> Texture2D:",
-		"\t_ensure_canvas()",
-		"\treturn _canvas_viewport.get_texture() if _canvas_viewport != null else null",
+		"\treturn _surface().texture()",
 		"",
 		"## @ace_condition",
 		"## @ace_name(\"Is Auto Clear\")",
 		"func is_auto_clear() -> bool:",
-		"\treturn auto_clear",
+		"\treturn _surface().auto_clear",
 		"",
-		"## Queues one draw command and wakes the drawer.",
-		"## @ace_hidden",
-		"func _push_command(command: Dictionary) -> void:",
-		"\t_ensure_canvas()",
-		"\tif _drawer == null:",
-		"\t\treturn",
-		"\t_commands.append(command)",
-		"\t_drawer.queue_redraw()"
-	]))
-	sheet.events.append(block)
-
-	var on_ready: EventRow = EventRow.new()
-	on_ready.trigger_provider_id = "Core"
-	on_ready.trigger_id = "OnReady"
-	var ready_body: RawCodeRow = RawCodeRow.new()
-	ready_body.code = "_ensure_canvas()"
-	on_ready.actions.append(ready_body)
-	sheet.events.append(on_ready)
-
-	# Ribbons are Line2D children in the viewport (textured + round-jointed for free),
-	# refreshed every physics frame from each followed node's trail.
-	var tick: EventRow = EventRow.new()
-	tick.trigger_provider_id = "Core"
-	tick.trigger_id = "OnPhysicsProcess"
-	var tick_body: RawCodeRow = RawCodeRow.new()
-	tick_body.code = "\n".join(PackedStringArray([
-		"if _ribbons.is_empty() or _drawer == null:",
-		"\treturn",
-		"var kept: Array = []",
-		"for ribbon: Dictionary in _ribbons:",
-		"\tvar followed: Node2D = instance_from_id(int(ribbon[\"id\"])) as Node2D",
-		"\tvar line: Line2D = ribbon[\"line\"]",
-		"\tif followed == null or not is_instance_valid(line):",
-		"\t\tif is_instance_valid(line):",
-		"\t\t\tline.queue_free()",
-		"\t\tcontinue",
-		"\tkept.append(ribbon)",
-		"\tvar trail: Array = ribbon[\"trail\"]",
-		"\ttrail.append(followed.global_position)",
-		"\twhile trail.size() > int(ribbon[\"length\"]):",
-		"\t\ttrail.pop_front()",
-		"\t# Trail points are stored in WORLD space and mapped fresh each frame - the canvas",
-		"\t# follows the host, so old points must re-map against the host's current position.",
-		"\tvar mapped: PackedVector2Array = PackedVector2Array()",
-		"\tfor point: Variant in trail:",
-		"\t\tmapped.append(_to_canvas(point))",
-		"\tline.points = mapped"
-	]))
-	tick.actions.append(tick_body)
-	sheet.events.append(tick)
-
-	# ── Drawing verbs (raw-block annotated: typed params, color/mask hints by convention) ──
-	var verbs: RawCodeRow = RawCodeRow.new()
-	verbs.code = "\n".join(PackedStringArray([
 		"## Wipes the canvas. In persistent mode the wipe happens on the next frame and the",
 		"## canvas keeps strokes again afterwards.",
 		"## @ace_action",
 		"## @ace_name(\"Clear Canvas\")",
 		"func clear_canvas() -> void:",
-		"\t_ensure_canvas()",
-		"\t_commands.clear()",
-		"\tif _canvas_viewport != null and not auto_clear:",
-		"\t\t_canvas_viewport.render_target_clear_mode = SubViewport.CLEAR_MODE_ONCE",
-		"\tif _drawer != null:",
-		"\t\t_drawer.queue_redraw()",
+		"\t_surface().clear()",
 		"",
 		"## On: the canvas wipes itself every frame (re-issue draws each tick - vision cones,",
 		"## telegraphs). Off: strokes stay until Clear Canvas (paint, splats, skid marks).",
 		"## @ace_action",
 		"## @ace_name(\"Set Auto Clear\")",
 		"func set_auto_clear(enabled: bool) -> void:",
-		"\tauto_clear = enabled",
-		"\tif _canvas_viewport != null:",
-		"\t\t_canvas_viewport.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS if enabled else SubViewport.CLEAR_MODE_NEVER",
+		"\t_surface().set_auto_clear(enabled)",
 		"",
 		"## Shows or hides the canvas display on the host.",
 		"## @ace_action",
 		"## @ace_name(\"Set Canvas Visible\")",
 		"func set_canvas_visible(visible_now: bool) -> void:",
-		"\tif _display != null:",
-		"\t\t_display.visible = visible_now",
+		"\t_surface().set_display_visible(visible_now)",
 		"",
 		"## Draws a line segment - attack direction indicators, lasers, aim guides.",
 		"## @ace_action",
 		"## @ace_name(\"Draw Line\")",
 		"func draw_canvas_line(from_x: float, from_y: float, to_x: float, to_y: float, width: float, color: Color) -> void:",
-		"\t_push_command({\"kind\": \"line\", \"a\": _to_canvas(Vector2(from_x, from_y)), \"b\": _to_canvas(Vector2(to_x, to_y)), \"width\": width, \"color\": color})",
+		"\t_surface().line(from_x, from_y, to_x, to_y, width, color)",
 		"",
 		"## Draws a filled circle - the classic soft blob shadow under a character.",
 		"## @ace_action",
 		"## @ace_name(\"Draw Circle\")",
 		"func draw_canvas_circle(x: float, y: float, radius: float, color: Color) -> void:",
-		"\t_push_command({\"kind\": \"circle\", \"at\": _to_canvas(Vector2(x, y)), \"radius\": radius, \"color\": color})",
+		"\t_surface().circle(x, y, radius, color)",
 		"",
 		"## Draws a circle outline - selection rings, blast-radius previews.",
 		"## @ace_action",
 		"## @ace_name(\"Draw Ring\")",
 		"func draw_canvas_ring(x: float, y: float, radius: float, width: float, color: Color) -> void:",
-		"\t_push_command({\"kind\": \"ring\", \"at\": _to_canvas(Vector2(x, y)), \"radius\": radius, \"width\": width, \"color\": color})",
+		"\t_surface().ring(x, y, radius, width, color)",
 		"",
 		"## Draws a filled rectangle (x/y = top-left corner).",
 		"## @ace_action",
 		"## @ace_name(\"Draw Rect\")",
 		"func draw_canvas_rect(x: float, y: float, width: float, height: float, color: Color) -> void:",
-		"\t_push_command({\"kind\": \"rect\", \"rect\": Rect2(_to_canvas(Vector2(x, y)), Vector2(width, height)), \"color\": color})",
+		"\t_surface().rect(x, y, width, height, color)",
 		"",
 		"## Draws a filled wedge - the attack-telegraph cone (pair with Auto Clear so it follows",
 		"## the attacker every frame).",
 		"## @ace_action",
 		"## @ace_name(\"Draw Cone\")",
 		"func draw_canvas_cone(x: float, y: float, facing_deg: float, fov_deg: float, radius: float, color: Color) -> void:",
-		"\tvar center: Vector2 = _to_canvas(Vector2(x, y))",
-		"\tvar points: PackedVector2Array = PackedVector2Array([center])",
-		"\tfor i: int in 33:",
-		"\t\tvar angle: float = deg_to_rad(facing_deg - fov_deg * 0.5 + fov_deg * float(i) / 32.0)",
-		"\t\tpoints.append(center + Vector2.from_angle(angle) * radius)",
-		"\t_push_command({\"kind\": \"polygon\", \"points\": points, \"color\": color})",
+		"\t_surface().cone(x, y, facing_deg, fov_deg, radius, color)",
 		"",
 		"## Stamps a texture onto the canvas - bullet holes, footprints, splats. In persistent",
 		"## mode stamps pile up like decals.",
 		"## @ace_action",
 		"## @ace_name(\"Draw Stamp\")",
 		"func draw_canvas_stamp(texture: Texture2D, x: float, y: float, scale_factor: float, rotation_deg: float) -> void:",
-		"\t_push_command({\"kind\": \"stamp\", \"texture\": texture, \"at\": _to_canvas(Vector2(x, y)), \"scale\": maxf(scale_factor, 0.01), \"rotation\": deg_to_rad(rotation_deg)})",
+		"\t_surface().stamp(texture, x, y, scale_factor, rotation_deg)",
 		"",
 		"## Draws a character's LINE OF SIGHT as a filled fan: rays cast against the collision",
 		"## mask stop at walls, so the shape hugs the level exactly. Re-issue each tick with",
@@ -244,111 +136,33 @@ static func build() -> bool:
 		"## @ace_action",
 		"## @ace_name(\"Draw Line Of Sight\")",
 		"func draw_line_of_sight(origin_x: float, origin_y: float, facing_deg: float, fov_deg: float, max_range: float, collision_mask: int, color: Color) -> void:",
-		"\t_ensure_canvas()",
-		"\tif host == null or not is_inside_tree() or _drawer == null:",
-		"\t\treturn",
-		"\tvar space: PhysicsDirectSpaceState2D = (host as Node2D).get_world_2d().direct_space_state if host is Node2D else null",
-		"\tif space == null:",
-		"\t\treturn",
-		"\tvar origin: Vector2 = Vector2(origin_x, origin_y)",
-		"\tvar points: PackedVector2Array = PackedVector2Array([_to_canvas(origin)])",
-		"\tfor i: int in 49:",
-		"\t\tvar angle: float = deg_to_rad(facing_deg - fov_deg * 0.5 + fov_deg * float(i) / 48.0)",
-		"\t\tvar direction: Vector2 = Vector2.from_angle(angle)",
-		"\t\tvar query: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(origin, origin + direction * max_range, collision_mask)",
-		"\t\tif host is CollisionObject2D:",
-		"\t\t\tquery.exclude = [(host as CollisionObject2D).get_rid()]",
-		"\t\tvar hit: Dictionary = space.intersect_ray(query)",
-		"\t\tvar end_point: Vector2 = hit[\"position\"] if not hit.is_empty() else origin + direction * max_range",
-		"\t\tpoints.append(_to_canvas(end_point))",
-		"\t_push_command({\"kind\": \"polygon\", \"points\": points, \"color\": color})",
+		"\t_surface().line_of_sight(origin_x, origin_y, facing_deg, fov_deg, max_range, collision_mask, color)",
 		"",
 		"## Replays a DrawingPrefabResource's steps IN ORDER at a position, scaled and rotated -",
 		"## author a target marker or scorch formation once as a .tres, stamp it everywhere.",
 		"## @ace_action",
 		"## @ace_name(\"Draw Prefab\")",
 		"func draw_prefab(prefab: Resource, x: float, y: float, scale_factor: float, rotation_deg: float) -> void:",
-		"\tif prefab == null:",
-		"\t\treturn",
-		"\tvar steps: Variant = prefab.get(\"steps\")",
-		"\tif not (steps is Array):",
-		"\t\treturn",
-		"\tvar origin: Vector2 = Vector2(x, y)",
-		"\tvar spin: float = deg_to_rad(rotation_deg)",
-		"\tvar scale_by: float = maxf(scale_factor, 0.01)",
-		"\tfor step: Variant in steps:",
-		"\t\tif not (step is Dictionary):",
-		"\t\t\tcontinue",
-		"\t\tvar entry: Dictionary = step",
-		"\t\tvar at: Vector2 = origin + (Vector2(float(entry.get(\"x\", 0.0)), float(entry.get(\"y\", 0.0))) * scale_by).rotated(spin)",
-		"\t\tvar p1: float = float(entry.get(\"p1\", 0.0))",
-		"\t\tvar p2: float = float(entry.get(\"p2\", 0.0))",
-		"\t\tvar p3: float = float(entry.get(\"p3\", 0.0))",
-		"\t\tvar tint: Color = Color.from_string(str(entry.get(\"color\", \"white\")), Color.WHITE)",
-		"\t\tmatch str(entry.get(\"kind\", \"\")):",
-		"\t\t\t\"circle\":",
-		"\t\t\t\tdraw_canvas_circle(at.x, at.y, p1 * scale_by, tint)",
-		"\t\t\t\"ring\":",
-		"\t\t\t\tdraw_canvas_ring(at.x, at.y, p1 * scale_by, maxf(p2 * scale_by, 1.0), tint)",
-		"\t\t\t\"rect\":",
-		"\t\t\t\t# Rects rotate with the prefab: the four corners transform into a polygon.",
-		"\t\t\t\tvar corners: PackedVector2Array = PackedVector2Array()",
-		"\t\t\t\tfor corner: Vector2 in [Vector2.ZERO, Vector2(p1, 0.0), Vector2(p1, p2), Vector2(0.0, p2)]:",
-		"\t\t\t\t\tcorners.append(_to_canvas(origin + ((Vector2(float(entry.get(\"x\", 0.0)), float(entry.get(\"y\", 0.0))) + corner) * scale_by).rotated(spin)))",
-		"\t\t\t\t_push_command({\"kind\": \"polygon\", \"points\": corners, \"color\": tint})",
-		"\t\t\t\"line\":",
-		"\t\t\t\tvar to_point: Vector2 = origin + (Vector2(p1, p2) * scale_by).rotated(spin)",
-		"\t\t\t\tdraw_canvas_line(at.x, at.y, to_point.x, to_point.y, maxf(p3 * scale_by, 1.0), tint)",
-		"\t\t\t\"cone\":",
-		"\t\t\t\tdraw_canvas_cone(at.x, at.y, p1 + rotation_deg, p2, p3 * scale_by, tint)",
-		"\t\t\t\"stamp\":",
-		"\t\t\t\tvar texture_path: String = str(entry.get(\"texture\", \"\")).strip_edges()",
-		"\t\t\t\tif not texture_path.is_empty() and ResourceLoader.exists(texture_path):",
-		"\t\t\t\t\tdraw_canvas_stamp(load(texture_path) as Texture2D, at.x, at.y, maxf(p1, 0.01) * scale_by, p2 + rotation_deg)",
+		"\t_surface().prefab(prefab, x, y, scale_factor, rotation_deg)",
 		"",
 		"## Starts a textured ribbon trailing a node - sword swooshes, skid marks, comet tails.",
 		"## The ribbon follows for Point Count frames of history; Set Ribbon Texture skins it.",
 		"## @ace_action",
 		"## @ace_name(\"Start Ribbon\")",
 		"func start_ribbon(follow: Node, point_count: int, width: float, color: Color) -> void:",
-		"\t_ensure_canvas()",
-		"\tif _drawer == null or not (follow is Node2D):",
-		"\t\treturn",
-		"\tstop_ribbon(follow)",
-		"\tvar line: Line2D = Line2D.new()",
-		"\tline.width = width",
-		"\tline.default_color = color",
-		"\tline.joint_mode = Line2D.LINE_JOINT_ROUND",
-		"\tline.begin_cap_mode = Line2D.LINE_CAP_ROUND",
-		"\tline.end_cap_mode = Line2D.LINE_CAP_ROUND",
-		"\t_drawer.add_child(line)",
-		"\t_ribbons.append({\"id\": follow.get_instance_id(), \"line\": line, \"trail\": [], \"length\": maxi(point_count, 2)})",
+		"\t_surface().start_ribbon(follow, point_count, width, color)",
 		"",
 		"## Skins a running ribbon with a texture, stretched along its length.",
 		"## @ace_action",
 		"## @ace_name(\"Set Ribbon Texture\")",
 		"func set_ribbon_texture(follow: Node, texture: Texture2D) -> void:",
-		"\tif follow == null:",
-		"\t\treturn",
-		"\tfor ribbon: Dictionary in _ribbons:",
-		"\t\tif int(ribbon[\"id\"]) == follow.get_instance_id() and is_instance_valid(ribbon[\"line\"]):",
-		"\t\t\t(ribbon[\"line\"] as Line2D).texture = texture",
-		"\t\t\t(ribbon[\"line\"] as Line2D).texture_mode = Line2D.LINE_TEXTURE_STRETCH",
+		"\t_surface().set_ribbon_texture(follow, texture)",
 		"",
 		"## Ends the ribbon trailing a node.",
 		"## @ace_action",
 		"## @ace_name(\"Stop Ribbon\")",
 		"func stop_ribbon(follow: Node) -> void:",
-		"\tif follow == null:",
-		"\t\treturn",
-		"\tvar kept: Array = []",
-		"\tfor ribbon: Dictionary in _ribbons:",
-		"\t\tif int(ribbon[\"id\"]) == follow.get_instance_id():",
-		"\t\t\tif is_instance_valid(ribbon[\"line\"]):",
-		"\t\t\t\t(ribbon[\"line\"] as Line2D).queue_free()",
-		"\t\telse:",
-		"\t\t\tkept.append(ribbon)",
-		"\t_ribbons = kept"
+		"\t_surface().stop_ribbon(follow)"
 	]))
 	sheet.events.append(verbs)
 

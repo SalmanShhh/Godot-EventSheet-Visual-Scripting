@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed - Drawing Canvas plumbing moved to a shared CanvasSurface runtime (the behavior is thin now)
+
+- **The Drawing Canvas behavior no longer carries engine plumbing.** The offscreen SubViewport, the
+  command queue, coordinate mapping, and the per-frame ribbon update loop moved into a new shared
+  **CanvasSurface** runtime pack (`eventsheet_addons/canvas_surface/`); the behavior is now a thin sheet -
+  each drawing verb is a one-line call to the surface, and the ugly per-frame GDScript loop the ribbon
+  update used to render as is gone entirely. Opening the pack as a sheet reads as a list of functions,
+  not a wall of raw plumbing.
+- Compatibility preserved: every Drawing Canvas `ace_id` (Draw Circle, Draw Prefab, Start Ribbon, Canvas
+  Texture, ...) is unchanged, so existing sheets and the Draw Lab showcase compile byte-identically. The
+  CanvasSurface pack is plain GDScript that ships with the addons - it references no editor plugin, so the
+  clean-removal covenant (a compiled game runs without the editor) still holds. Verified live: drawing
+  still renders through the delegation; suite green, `drifted=0`.
+
 ### Added - DrawingPrefabStamp: a placeable viewport gizmo for prefabs
 
 - **Drop a `DrawingPrefabStamp` node into a 2D scene, assign a `DrawingPrefabResource`, and its composed
