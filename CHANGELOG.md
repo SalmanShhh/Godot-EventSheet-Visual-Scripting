@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added - DrawingPrefabStamp: a placeable viewport gizmo for prefabs
+
+- **Drop a `DrawingPrefabStamp` node into a 2D scene, assign a `DrawingPrefabResource`, and its composed
+  formation draws right in the editor viewport** (and at runtime) as crisp vectors - a placeable,
+  previewable stamp. It is the dedicated in-scene gizmo for prefabs: what you see in the editor is what
+  Draw Prefab paints. `prefab_scale` and `prefab_rotation` transform the whole formation, and the
+  preview refreshes live as you edit the steps grid. (71 packs.)
+
 ### Added - a variable's description becomes its Inspector property description
 
 - **Give a variable a comment and it shows up in the Inspector automatically.** The variable dialog's
@@ -2439,7 +2447,7 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   is untyped, `make_param` accepts the dict form, and the adapter preserves the label↔value split - reusable for
   any future combo (e.g. comparison operators could read "equals" instead of `==`).
   - *Note:* the plain immediate **Print / Push Warning / Push Error** verbs are kept (not deprecated). The
-    reverse-lift is most-specific-first, so a *plain* `push_warning("x")` still lifts to Push Warning; the
+	reverse-lift is most-specific-first, so a *plain* `push_warning("x")` still lifts to Push Warning; the
     combined **Log** stays distinct only because of its `# @ace:Core.ConsoleLog` marker (above).
 
 ### Added - Event groups round-trip through `.gd` (docs/GROUPS-ROUNDTRIP-SPEC.md)

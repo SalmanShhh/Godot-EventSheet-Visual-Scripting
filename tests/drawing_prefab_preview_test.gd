@@ -36,6 +36,15 @@ static func run() -> bool:
 	all_passed = _check("a red circle paints red at the center", center.r > 0.5 and center.g < 0.4 and center.b < 0.4, true) and all_passed
 	all_passed = _check("the corner stays background", _is_bg(red_img.get_pixel(1, 1), bg), true) and all_passed
 
+	# The DrawingPrefabStamp @tool node (the placeable viewport gizmo) instantiates, exposes the shared
+	# vector draw routine, and holds a prefab. Its actual drawing is verified live by a render harness.
+	var stamp: Node2D = DrawingPrefabStamp.new()
+	all_passed = _check("DrawingPrefabStamp exposes the shared draw routine", stamp.has_method("draw_prefab_steps"), true) and all_passed
+	var stamp_prefab: DrawingPrefabResource = DrawingPrefabResource.new()
+	stamp.set("prefab", stamp_prefab)
+	all_passed = _check("DrawingPrefabStamp holds its assigned prefab", stamp.get("prefab") == stamp_prefab, true) and all_passed
+	stamp.free()
+
 	# The Inspector plugin (_can_handle -> DrawingPrefabResource only) and the thumbnail generator
 	# (_handles -> "DrawingPrefabResource" only) extend editor-only classes, so they cannot be instantiated
 	# in this headless (non-editor) suite. They are parse-checked at build time and verified live in-editor;
