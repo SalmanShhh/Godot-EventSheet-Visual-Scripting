@@ -92,7 +92,7 @@ Inside the loop body, **Current Loop Item** is the iterator; **Break Loop** / **
 
 ## 8. Reusable Logic - Functions
 
-Add a **Function** (name + typed parameters + a return type). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to.
+Add a **Function** (name + typed parameters + a return type). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to. The "Using the ACE Studio" guide walks through it field by field.
 
 <img src="images/ace-studio.png" alt="The ACE Studio: three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb, the Ships-as GDScript signature, typed parameters, guards, and the expose-as-ACE card." width="580">
 

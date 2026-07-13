@@ -79,7 +79,7 @@ Beyond reading one key at a time with Load Value, three helpers read a save in b
 
 ### Save Studio
 
-Save Studio is a tool window you open from the editor's Tools menu. It has three tabs:
+Save Studio is a tool window you open from the editor's Tools menu. It has three tabs (for a full walkthrough, see the "Using the Save Studio" guide):
 
 1. **Format Preview** lets you pick an addon and a format and see exactly what its save file will look like on disk, before you commit to anything.
 2. **Save Slots** browses the real `user://` save files in your project, shows their contents, and exports them to disk in any format, optionally converting the format on the way out.
