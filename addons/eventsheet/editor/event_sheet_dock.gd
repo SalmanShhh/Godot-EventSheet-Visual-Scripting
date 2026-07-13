@@ -187,6 +187,7 @@ var _author_actions: EventSheetAuthorActions = EventSheetAuthorActions.new()  # 
 var _ghost_row: EventSheetGhostRow = EventSheetGhostRow.new()  # zero-dialog add: E/C/A open a type-a-sentence popup at the selected row (dock/ghost_row.gd)
 var _navigate: EventSheetNavigate = EventSheetNavigate.new()  # Ctrl+Click go-to-definition: addon verbs open their behaviour as a sheet (dock/navigate.gd)
 var _export_pack: EventSheetExportPack = EventSheetExportPack.new()  # Sheet ▸ Export Addon Pack: writes eventsheet_addons/<class>/ (.tres + .gd + README, bundles includes) (dock/export_pack.gd)
+var _save_studio: EventSheetSaveStudio = EventSheetSaveStudio.new()  # Tools ▸ Save Studio: format preview + slot browser/export + save_state generator (dock/save_studio.gd)
 var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog.gd)
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
 var _find_bar_glue: EventSheetFindBar = EventSheetFindBar.new()  # Ctrl+F find bar + Replace-All across the sheet + _replace_in_rows recursion (dock/find_bar.gd)
@@ -2207,6 +2208,13 @@ func _generate_vocabulary_doc() -> void:
 	if Engine.is_editor_hint() and is_inside_tree():
 		EditorInterface.get_resource_filesystem().scan()
 	_set_status("Vocabulary doc written to %s." % doc_path)
+
+
+## Tools ▸ Save Studio: format preview, slot browser/export, and the save_state()/
+## load_state() generator for addon authors (dock/save_studio.gd).
+func _open_save_studio() -> void:
+	_save_studio.open()
+
 
 # ── Sheet backups - the save-time ring (core in EventSheetBackups) ────────────────────
 var _backups_window: Window = null

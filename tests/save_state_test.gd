@@ -37,6 +37,41 @@ static func run() -> bool:
 	all_passed = _format_round_trips() and all_passed
 	all_passed = _node_state_walk() and all_passed
 	all_passed = _emission_survival() and all_passed
+	all_passed = _studio_generator() and all_passed
+	return all_passed
+
+
+## The Save Studio "Add Save Support" generator: its pure core must emit the exact
+## convention (underscore-stripped keys, typed coercion, duplicate(true) on collections)
+## AND the emitted pair must be valid GDScript that actually round-trips a live node.
+static func _studio_generator() -> bool:
+	var all_passed: bool = true
+	var code: String = EventSheetSaveStudio.build_seam_code([
+		{"name": "_wallet", "type": "Dictionary"},
+		{"name": "level", "type": "int"},
+		{"name": "speed", "type": "float"},
+		{"name": "unlocked", "type": "bool"},
+		{"name": "title", "type": "String"}
+	])
+	all_passed = _check("generator strips the leading underscore for the key", code.contains("\"wallet\": _wallet.duplicate(true)"), true) and all_passed
+	all_passed = _check("generator coerces ints on load", code.contains("level = int(state.get(\"level\", level))"), true) and all_passed
+	all_passed = _check("generator deep-duplicates dictionaries on load", code.contains("_wallet = (state.get(\"wallet\", {}) as Dictionary).duplicate(true)"), true) and all_passed
+	all_passed = _check("generator tolerates an empty state", code.contains("if state.is_empty():"), true) and all_passed
+	all_passed = _check("last snapshot entry drops its trailing comma", code.contains("\"title\": title\n\t}"), true) and all_passed
+	# The real test: wrap the generated pair in a class and confirm it compiles + runs.
+	var script: GDScript = GDScript.new()
+	script.source_code = "@tool\nextends Node\n\nvar _wallet: Dictionary = {}\nvar level: int = 0\nvar speed: float = 0.0\nvar unlocked: bool = false\nvar title: String = \"\"\n\n\n%s\n" % code
+	all_passed = _check("generated seam compiles", script.reload(), OK) and all_passed
+	var live: Node = script.new()
+	live.set("_wallet", {"gold": 5})
+	live.set("level", 9)
+	live.set("title", "hero")
+	var snap: Dictionary = live.call("save_state")
+	var fresh: Node = script.new()
+	fresh.call("load_state", snap)
+	all_passed = _check("generated seam round-trips a live node", fresh.call("save_state"), snap) and all_passed
+	live.free()
+	fresh.free()
 	return all_passed
 
 

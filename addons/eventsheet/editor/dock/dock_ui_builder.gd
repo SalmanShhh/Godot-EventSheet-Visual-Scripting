@@ -412,6 +412,7 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._ghost_row.init(_dock)
 	_dock._navigate.init(_dock)
 	_dock._export_pack.init(_dock)
+	_dock._save_studio.init(_dock)
 	_dock._function_dialog_glue.init(_dock)
 	_dock._theme_manager.init(_dock)
 	_dock._find_bar_glue.init(_dock)
