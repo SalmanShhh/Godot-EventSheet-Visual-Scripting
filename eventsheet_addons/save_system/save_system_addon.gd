@@ -155,6 +155,33 @@ func save_keys() -> Array:
 func read_file(path: String, file_format: String) -> Dictionary:
 	return _read_path(path, file_format if not file_format.is_empty() else format)
 
+## @ace_expression
+## @ace_name("Save File Format")
+## @ace_category("Save System")
+## @ace_description("Detects the format of the save file at the path (config/json/binary/csv/ini/xml), or "" when it is missing or unrecognised. Feed it to Read Save File.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.save_file_format({path})")
+func save_file_format(path: String) -> String:
+	return _detect_format(path)
+
+## @ace_condition
+## @ace_name("Save File Is Format")
+## @ace_category("Save System")
+## @ace_description("Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.save_file_is_format({path}, {expected_format})")
+func save_file_is_format(path: String, expected_format: String) -> bool:
+	return _detect_format(path) == expected_format
+
+## @ace_condition
+## @ace_name("Save Format Is")
+## @ace_category("Save System")
+## @ace_description("Whether the active save format (the Inspector format property) equals the given one.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.save_format_is({expected_format})")
+func save_format_is(expected_format: String) -> bool:
+	return format == expected_format
+
 ## @ace_action
 ## @ace_name("Delete Slot")
 ## @ace_category("Save System")
@@ -432,6 +459,42 @@ func _read_path(path: String, fmt: String) -> Dictionary:
 func _xml_escape(text: String) -> String:
 	# XML entities on write; XMLParser un-escapes on read.
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
+
+func _detect_format(path: String) -> String:
+	# Best-effort format detection for a save file. The extension is authoritative for
+	# the pack's own files (config and ini are otherwise identical on disk); an unknown
+	# extension sniffs the first bytes. Returns "" when the file is missing or unclear.
+	if not FileAccess.file_exists(path):
+		return ""
+	match path.get_extension().to_lower():
+		"cfg":
+			return "config"
+		"ini":
+			return "ini"
+		"json":
+			return "json"
+		"csv":
+			return "csv"
+		"xml":
+			return "xml"
+		"sav":
+			return "binary"
+	var bytes: PackedByteArray = FileAccess.get_file_as_bytes(path)
+	if bytes.is_empty():
+		return ""
+	if bytes.slice(0, mini(256, bytes.size())).find(0) != -1:
+		return "binary"
+	var text: String = bytes.get_string_from_utf8().strip_edges()
+	if text.begins_with("<"):
+		return "xml"
+	if text.begins_with("{"):
+		return "json"
+	if text.begins_with("["):
+		# config and ini both open with a [section]; content alone cannot tell them apart.
+		return "config"
+	if text.contains(","):
+		return "csv"
+	return ""
 
 func _write_all(data: Dictionary) -> bool:
 	# Atomic write: every backend writes a .tmp sibling then renames it over the slot,

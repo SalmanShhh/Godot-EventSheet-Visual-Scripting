@@ -40,6 +40,38 @@ static func run() -> bool:
 	all_passed = _studio_generator() and all_passed
 	all_passed = _reviewer_regressions() and all_passed
 	all_passed = _new_formats_and_read_helpers() and all_passed
+	all_passed = _format_detection() and all_passed
+	return all_passed
+
+
+## Save File Format detects a file's format (by extension, then content), Save File Is
+## Format checks it, and Save Format Is checks the active configured format.
+static func _format_detection() -> bool:
+	var all_passed: bool = true
+	var extensions: Dictionary = {"config": "cfg", "json": "json", "binary": "sav", "csv": "csv", "ini": "ini", "xml": "xml"}
+	for fmt: String in extensions:
+		var sv: Node = (load("res://eventsheet_addons/save_system/save_system_addon.gd") as GDScript).new()
+		sv.set("save_directory", "user://")
+		sv.set("file_pattern", "test_detect_%s_{slot}.%s" % [fmt, str(extensions[fmt])])
+		sv.set("format", fmt)
+		sv.call("save_value", "hp", 10)
+		var path: String = str(sv.call("_slot_path"))
+		all_passed = _check("%s: Save File Format detects by extension" % fmt, sv.call("save_file_format", path), fmt) and all_passed
+		all_passed = _check("%s: Save File Is Format is true for its own format" % fmt, sv.call("save_file_is_format", path, fmt), true) and all_passed
+		all_passed = _check("%s: Save File Is Format is false for another format" % fmt, sv.call("save_file_is_format", path, "json" if fmt != "json" else "csv"), false) and all_passed
+		all_passed = _check("%s: Save Format Is matches the active format" % fmt, sv.call("save_format_is", fmt), true) and all_passed
+		DirAccess.remove_absolute(path)
+		sv.free()
+	# A missing file detects as empty.
+	var missing: Node = (load("res://eventsheet_addons/save_system/save_system_addon.gd") as GDScript).new()
+	all_passed = _check("a missing file detects as empty", missing.call("save_file_format", "user://__no_such_save.json"), "") and all_passed
+	missing.free()
+	# An unrecognised extension falls back to sniffing the content.
+	var sniff: Node = _new_save_system("detect_sniff", "json")
+	sniff.call("save_value", "x", 1)
+	all_passed = _check("unknown extension sniffs json by content", sniff.call("save_file_format", str(sniff.call("_slot_path"))), "json") and all_passed
+	_remove_slot(sniff)
+	sniff.free()
 	return all_passed
 
 

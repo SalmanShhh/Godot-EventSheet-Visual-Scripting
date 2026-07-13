@@ -130,6 +130,8 @@ All ACEs live in the **Save System** category and are called on the `SaveSystem`
 |---|---|---|
 | Has Save Key | `key` (String) | Whether the key exists in the active slot. |
 | Slot Exists | `slot_index` (int) | Whether the given slot has a save file. |
+| Save File Is Format | `path` (String), `expected_format` (String) | Whether the save file at the path is the given format (`config`/`json`/`binary`/`csv`/`ini`/`xml`). |
+| Save Format Is | `expected_format` (String) | Whether the active save format (the Inspector `format` property) equals the given one. |
 
 ### Expressions
 
@@ -141,6 +143,7 @@ All ACEs live in the **Save System** category and are called on the `SaveSystem`
 | Read All | (none) | Dictionary | The whole active slot as one Dictionary - every saved key and value at once. |
 | List Save Keys | (none) | Array | The keys stored in the active slot; loop them to read or migrate a whole save. |
 | Read Save File | `path` (String), `file_format` (String) | Dictionary | Reads any save file at `path` in the given format (`config`/`json`/`binary`/`csv`/`ini`/`xml`; blank uses the active format) and returns its Dictionary, without touching the active slot. |
+| Save File Format | `path` (String) | String | Detects the format of the save file at the path (by extension, then by content), or `""` when missing or unrecognised. Feed it to Read Save File. |
 | List Slots | (none) | Array | The slot numbers that currently have a save file - build a save/load menu from it. |
 | Slot Modified Time | `slot_index` (int) | int | Unix modified time of the slot's file, or 0 when the slot has no file. |
 

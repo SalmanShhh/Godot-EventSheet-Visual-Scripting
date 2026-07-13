@@ -226,6 +226,42 @@ static func build() -> bool:
 		"func _xml_escape(text: String) -> String:",
 		"\treturn text.replace(\"&\", \"&amp;\").replace(\"<\", \"&lt;\").replace(\">\", \"&gt;\").replace(\"\\\"\", \"&quot;\")",
 		"",
+		"# Best-effort format detection for a save file. The extension is authoritative for",
+		"# the pack's own files (config and ini are otherwise identical on disk); an unknown",
+		"# extension sniffs the first bytes. Returns \"\" when the file is missing or unclear.",
+		"func _detect_format(path: String) -> String:",
+		"\tif not FileAccess.file_exists(path):",
+		"\t\treturn \"\"",
+		"\tmatch path.get_extension().to_lower():",
+		"\t\t\"cfg\":",
+		"\t\t\treturn \"config\"",
+		"\t\t\"ini\":",
+		"\t\t\treturn \"ini\"",
+		"\t\t\"json\":",
+		"\t\t\treturn \"json\"",
+		"\t\t\"csv\":",
+		"\t\t\treturn \"csv\"",
+		"\t\t\"xml\":",
+		"\t\t\treturn \"xml\"",
+		"\t\t\"sav\":",
+		"\t\t\treturn \"binary\"",
+		"\tvar bytes: PackedByteArray = FileAccess.get_file_as_bytes(path)",
+		"\tif bytes.is_empty():",
+		"\t\treturn \"\"",
+		"\tif bytes.slice(0, mini(256, bytes.size())).find(0) != -1:",
+		"\t\treturn \"binary\"",
+		"\tvar text: String = bytes.get_string_from_utf8().strip_edges()",
+		"\tif text.begins_with(\"<\"):",
+		"\t\treturn \"xml\"",
+		"\tif text.begins_with(\"{\"):",
+		"\t\treturn \"json\"",
+		"\tif text.begins_with(\"[\"):",
+		"\t\t# config and ini both open with a [section]; content alone cannot tell them apart.",
+		"\t\treturn \"config\"",
+		"\tif text.contains(\",\"):",
+		"\t\treturn \"csv\"",
+		"\treturn \"\"",
+		"",
 		"# Atomic write: every backend writes a .tmp sibling then renames it over the slot,",
 		"# so a crash mid-write leaves the previous good save intact, never a half-file.",
 		"func _write_all(data: Dictionary) -> bool:",
@@ -401,6 +437,19 @@ static func build() -> bool:
 		"return _read_path(path, file_format if not file_format.is_empty() else format)")
 	read_file.return_type = TYPE_DICTIONARY
 	sheet.functions.append(read_file)
+	# Format helpers: know a file's format (detect it, or check it), and the active one.
+	var file_format: EventFunction = Lib.exposed_function("save_file_format", "Save File Format", "Save System", "Detects the format of the save file at the path (config/json/binary/csv/ini/xml), or \"\" when it is missing or unrecognised. Feed it to Read Save File.", [["path", "String"]],
+		"return _detect_format(path)")
+	file_format.return_type = TYPE_STRING
+	sheet.functions.append(file_format)
+	var file_is_format: EventFunction = Lib.exposed_function("save_file_is_format", "Save File Is Format", "Save System", "Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).", [["path", "String"], ["expected_format", "String"]],
+		"return _detect_format(path) == expected_format")
+	file_is_format.return_type = TYPE_BOOL
+	sheet.functions.append(file_is_format)
+	var format_is: EventFunction = Lib.exposed_function("save_format_is", "Save Format Is", "Save System", "Whether the active save format (the Inspector format property) equals the given one.", [["expected_format", "String"]],
+		"return format == expected_format")
+	format_is.return_type = TYPE_BOOL
+	sheet.functions.append(format_is)
 	Lib.append_function(sheet, "delete_slot", "Delete Slot", "Save System", "Removes the active slot's save file.",
 		[],
 		"if FileAccess.file_exists(_slot_path()):\n\tDirAccess.remove_absolute(_slot_path())")

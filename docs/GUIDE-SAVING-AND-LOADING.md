@@ -195,6 +195,10 @@ Call Read All to pull the entire active slot into one Dictionary, or List Save K
 
 Point Read Save File at any path and pass the format it was written in (or leave the format blank to use the active one). It returns that file's Dictionary without touching the active slot, so you can inspect a backup, accept an imported save, or read a file from a companion app and copy the values you want into the current game.
 
+### 28. Read a dropped-in save without knowing its format up front
+
+When a player imports a save file and you do not know how it was written, call Save File Format to detect it (config, json, binary, csv, ini, or xml), then hand that result straight to Read Save File. Or branch with the Save File Is Format condition - "if the file is xml, run the XML import path" - and use Save Format Is to check what the game itself is currently set to write. Together these let a load flow accept whatever file it is handed instead of assuming one format.
+
 ## Other use cases
 
 - **Skin selection.** Save the Skin Vault addon so a player's chosen and unlocked cosmetics survive a restart.

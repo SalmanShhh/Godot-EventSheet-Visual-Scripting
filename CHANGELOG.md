@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added - Save-format helper conditions
+
+- **Save File Is Format** (condition) tells you whether a save file at a path is a given
+  format (config/json/binary/csv/ini/xml), and **Save File Format** (expression) detects
+  and returns it - by extension first, then by sniffing the content - so a load flow can
+  accept a dropped-in file without knowing its format up front (detect, then feed Read
+  Save File). **Save Format Is** checks the active configured format for branching.
+
 ### Added - Two more save formats (INI, XML) + read helpers
 
 - **INI and XML save formats** join config/json/binary/csv on the Save System's
