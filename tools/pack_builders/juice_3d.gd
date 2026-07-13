@@ -181,6 +181,56 @@ static func build() -> bool:
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
+
+	# ── Screen tints (a CanvasLayer wash renders over the 3D view), adjustable strength ──
+	var tint_block: RawCodeRow = RawCodeRow.new()
+	tint_block.code = "\n".join(PackedStringArray([
+		"# The tint overlay: a top CanvasLayer ColorRect built on first use - the screen",
+		"# wash for damage reds, poison greens, night blues. Strength IS the opacity.",
+		"var _tint_overlay: CanvasLayer = null",
+		"var _tint_rect: ColorRect = null",
+		"",
+		"## @ace_hidden",
+		"func _ensure_tint_overlay() -> void:",
+		"\tif _tint_overlay != null or not is_inside_tree():",
+		"\t\treturn",
+		"\t_tint_overlay = CanvasLayer.new()",
+		"\t_tint_overlay.layer = 90",
+		"\tadd_child(_tint_overlay)",
+		"\t_tint_rect = ColorRect.new()",
+		"\t_tint_rect.color = Color(0.0, 0.0, 0.0, 0.0)",
+		"\t_tint_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE",
+		"\t_tint_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)",
+		"\t_tint_overlay.add_child(_tint_rect)",
+		"",
+		"## Washes the WHOLE SCREEN with a color at Strength opacity (0..1) over the 3D view -",
+		"## damage red, poison green, night blue. Call again to retune; strength 0 clears.",
+		"## @ace_action",
+		"## @ace_name(\"Set Screen Tint\")",
+		"func set_screen_tint(color: Color, strength: float) -> void:",
+		"\t_ensure_tint_overlay()",
+		"\tif _tint_rect != null:",
+		"\t\t_tint_rect.color = Color(color.r, color.g, color.b, clampf(strength, 0.0, 1.0))",
+		"\t\t_tint_rect.visible = _tint_rect.color.a > 0.001",
+		"",
+		"## Fades the screen tint's strength to zero over the given seconds - the damage-flash",
+		"## pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.",
+		"## @ace_action",
+		"## @ace_name(\"Fade Screen Tint\")",
+		"func fade_screen_tint(seconds: float) -> void:",
+		"\tif _tint_rect == null or not _tint_rect.visible:",
+		"\t\treturn",
+		"\tcreate_tween().tween_property(_tint_rect, \"color:a\", 0.0, maxf(seconds, 0.01))",
+		"",
+		"## Removes the screen tint instantly.",
+		"## @ace_action",
+		"## @ace_name(\"Clear Screen Tint\")",
+		"func clear_screen_tint() -> void:",
+		"\tif _tint_rect != null:",
+		"\t\t_tint_rect.visible = false"
+	]))
+	sheet.events.append(tint_block)
+
 	# --- Actions (fire-and-forget, mirroring the 2D Juice verbs) ---
 	Lib.append_function(sheet, "shake", "Shake", "Juice 3D", "Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.",
 		[["strength", "float"]],

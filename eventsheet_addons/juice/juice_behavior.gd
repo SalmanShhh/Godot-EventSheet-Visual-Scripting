@@ -105,6 +105,11 @@ func _camera() -> Camera2D:
 		return null
 	return vp.get_camera_2d()
 
+# The tint overlay: a top CanvasLayer ColorRect built on first use - the screen
+# wash for damage reds, poison greens, flashback sepias. Strength IS the opacity.
+var _tint_overlay: CanvasLayer = null
+var _tint_rect: ColorRect = null
+
 func _ready() -> void:
 	tree_exiting.connect(_on_tree_exiting)
 	_noise = FastNoiseLite.new()
@@ -372,6 +377,7 @@ func spring_squash(stretch: float) -> void:
 ## @ace_name("Slowmo")
 ## @ace_category("Juice")
 ## @ace_description("Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.")
+## @ace_param_options(duration_clock realtime, gametime)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$JuiceBehavior.slowmo({target_scale}, {hold_duration}, {duration_clock})")
 func slowmo(target_scale: float, hold_duration: float, duration_clock: String) -> void:
@@ -479,5 +485,66 @@ func _apply_host_scale(s: Vector2) -> void:
 		var c: Control = host as Control
 		c.pivot_offset = c.size / 2.0
 		c.scale = s
+
+## @ace_hidden
+func _ensure_tint_overlay() -> void:
+	if _tint_overlay != null or not is_inside_tree():
+		return
+	_tint_overlay = CanvasLayer.new()
+	_tint_overlay.layer = 90
+	add_child(_tint_overlay)
+	_tint_rect = ColorRect.new()
+	_tint_rect.color = Color(0.0, 0.0, 0.0, 0.0)
+	_tint_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tint_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_tint_overlay.add_child(_tint_rect)
+
+## @ace_action
+## @ace_name("Set Host Tint")
+## @ace_description("Tints the HOST object: blends its color toward the tint by Strength (0 = its own colors untouched, 1 = fully the tint color) - the classic object tint, with the strength as your opacity dial. Children inherit (modulate).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.set_host_tint({color}, {strength})")
+func set_host_tint(color: Color, strength: float) -> void:
+	if host is CanvasItem:
+		(host as CanvasItem).modulate = Color.WHITE.lerp(Color(color.r, color.g, color.b, 1.0), clampf(strength, 0.0, 1.0))
+
+## @ace_action
+## @ace_name("Clear Host Tint")
+## @ace_description("Removes the host tint (back to its own colors).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.clear_host_tint()")
+func clear_host_tint() -> void:
+	if host is CanvasItem:
+		(host as CanvasItem).modulate = Color.WHITE
+
+## @ace_action
+## @ace_name("Set Screen Tint")
+## @ace_description("Washes the WHOLE SCREEN with a color at Strength opacity (0..1) - damage red, poison green, night blue, flashback sepia. Call again to retune; strength 0 clears.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.set_screen_tint({color}, {strength})")
+func set_screen_tint(color: Color, strength: float) -> void:
+	_ensure_tint_overlay()
+	if _tint_rect != null:
+		_tint_rect.color = Color(color.r, color.g, color.b, clampf(strength, 0.0, 1.0))
+		_tint_rect.visible = _tint_rect.color.a > 0.001
+
+## @ace_action
+## @ace_name("Fade Screen Tint")
+## @ace_description("Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.fade_screen_tint({seconds})")
+func fade_screen_tint(seconds: float) -> void:
+	if _tint_rect == null or not _tint_rect.visible:
+		return
+	create_tween().tween_property(_tint_rect, "color:a", 0.0, maxf(seconds, 0.01))
+
+## @ace_action
+## @ace_name("Clear Screen Tint")
+## @ace_description("Removes the screen tint instantly.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$JuiceBehavior.clear_screen_tint()")
+func clear_screen_tint() -> void:
+	if _tint_rect != null:
+		_tint_rect.visible = false
 
 # Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.)

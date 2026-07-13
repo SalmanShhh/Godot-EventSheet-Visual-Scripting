@@ -71,6 +71,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Simulate Step")
 ## @ace_category("Tile Movement")
 ## @ace_description("Steps one tile in a direction: left, right, up or down (simulate control).")
+## @ace_param_options(direction left, right, up, down)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$TileMovementBehavior.simulate_step({direction})")
 func simulate_step(direction: String) -> void:

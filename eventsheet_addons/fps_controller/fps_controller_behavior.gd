@@ -469,6 +469,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_ESCAPE:
 		release_mouse()
 
+## @ace_hidden
 func _apply_crouch_shape(low: bool) -> void:
 	var shape_node := _capsule()
 	if shape_node != null:
@@ -491,6 +492,7 @@ func _apply_crouch_shape(low: bool) -> void:
 	if head != null and standing_height > 0.0:
 		head.position.y = head_base_y - ((standing_height - minf(crouch_height, standing_height)) if low else 0.0)
 
+## @ace_hidden
 func _can_stand_up() -> bool:
 	if host == null or standing_height <= 0.0 or not host.is_inside_tree():
 		return true

@@ -102,11 +102,23 @@ func set_bound_extents(new_half_width: float, new_half_height: float) -> void:
 	half_width = new_half_width
 	half_height = new_half_height
 
+## @ace_condition
+## @ace_name("Is At Bound")
+## @ace_description("True while the host is pressed against a bound. side: left / right / top / bottom / any.")
+## @ace_param_options(side left, right, top, bottom, any)
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$BoundToBehavior.is_at_bound({side})")
 func is_at_bound(side: String = "any") -> bool:
 	if side == "any":
 		return not _pressed_sides.is_empty()
 	return _pressed_sides.has(side)
 
+## @ace_action
+## @ace_name("Set Bound Space")
+## @ace_description("Switches what the host is kept inside: the on-screen camera view, or the custom rectangle.")
+## @ace_param_options(space screen, custom)
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$BoundToBehavior.set_bound_space({space})")
 func set_bound_space(space: String) -> void:
 	if space in ["screen", "custom"]:
 		bound_space = space

@@ -72,6 +72,11 @@ func _camera() -> Camera3D:
 		return null
 	return vp.get_camera_3d()
 
+# The tint overlay: a top CanvasLayer ColorRect built on first use - the screen
+# wash for damage reds, poison greens, night blues. Strength IS the opacity.
+var _tint_overlay: CanvasLayer = null
+var _tint_rect: ColorRect = null
+
 func _ready() -> void:
 	tree_exiting.connect(_on_tree_exiting)
 	_noise = FastNoiseLite.new()
@@ -269,5 +274,48 @@ func is_shaking() -> bool:
 ## @ace_codegen_template("$Juice3DBehavior.current_trauma()")
 func current_trauma() -> float:
 	return trauma
+
+## @ace_hidden
+func _ensure_tint_overlay() -> void:
+	if _tint_overlay != null or not is_inside_tree():
+		return
+	_tint_overlay = CanvasLayer.new()
+	_tint_overlay.layer = 90
+	add_child(_tint_overlay)
+	_tint_rect = ColorRect.new()
+	_tint_rect.color = Color(0.0, 0.0, 0.0, 0.0)
+	_tint_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tint_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_tint_overlay.add_child(_tint_rect)
+
+## @ace_action
+## @ace_name("Set Screen Tint")
+## @ace_description("Washes the WHOLE SCREEN with a color at Strength opacity (0..1) over the 3D view - damage red, poison green, night blue. Call again to retune; strength 0 clears.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$Juice3DBehavior.set_screen_tint({color}, {strength})")
+func set_screen_tint(color: Color, strength: float) -> void:
+	_ensure_tint_overlay()
+	if _tint_rect != null:
+		_tint_rect.color = Color(color.r, color.g, color.b, clampf(strength, 0.0, 1.0))
+		_tint_rect.visible = _tint_rect.color.a > 0.001
+
+## @ace_action
+## @ace_name("Fade Screen Tint")
+## @ace_description("Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$Juice3DBehavior.fade_screen_tint({seconds})")
+func fade_screen_tint(seconds: float) -> void:
+	if _tint_rect == null or not _tint_rect.visible:
+		return
+	create_tween().tween_property(_tint_rect, "color:a", 0.0, maxf(seconds, 0.01))
+
+## @ace_action
+## @ace_name("Clear Screen Tint")
+## @ace_description("Removes the screen tint instantly.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$Juice3DBehavior.clear_screen_tint()")
+func clear_screen_tint() -> void:
+	if _tint_rect != null:
+		_tint_rect.visible = false
 
 # 3D camera game feel: shake, recoil, head bob, jitter, lean, and FOV punch/zoom on the active Camera3D - auto-found, applied as additive offsets so they never fight the controller that owns the camera. Verbs mirror the 2D Juice pack.

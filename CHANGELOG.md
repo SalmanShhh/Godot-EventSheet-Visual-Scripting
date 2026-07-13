@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+### Added - StatForge, Juice color tints, and rounded sheet corners (70 packs)
+
+- **StatForge pack**: stats as a per-node BUFF STACK - Add Buff targets a stat with a
+  value and a mode (add / multiply / override, the HIGHEST override wins), optional
+  comma-separated TAGS, a SOURCE, and a DURATION that expires on its own (auto-tick, or
+  Advance Timers as a manual clock for turn-based games). Stat Total computes
+  (base + adds) * multipliers with clamp/wrap/none overflow knobs; remove or toggle buffs
+  by id, tag, or source; pause and refresh timers; THRESHOLD RULES fire On Threshold
+  Crossed when a stat crosses a value (rising/falling/both, one-shot or repeating,
+  re-armable). Triggers: On Buff Added / Removed / Expired + context expressions. Two
+  verbs run an RPG stat; the rest scales to incremental and action games.
+- **StatSheetResource**: whole loadouts as .tres data - a bases grid and an ordered buffs
+  grid edited in the Inspector (table drawers + designer headers/hints), applied with one
+  **Load Stat Sheet** action. Author classes, enemy tiers, and difficulty presets as
+  assets designers can edit without touching a sheet.
+- **Juice color tints (2D + 3D)**: **Set Host Tint** blends the host's colors toward a
+  tint with a STRENGTH dial (0..1 opacity), **Set Screen Tint** washes the whole screen
+  (damage red, poison green, flashback sepia), **Fade Screen Tint** eases the wash out
+  (the damage-flash pattern), and Clear verbs for both. Juice 3D gets the screen tint
+  trio over the 3D view.
+- **Fixed - pack functions with doc comments now publish.** A plain doc comment above a
+  function's `## @ace_action` block used to make the pack build silently DROP the whole
+  annotation block, so the function never appeared in the picker (Rotate, Wrap, Bound To,
+  Drawing Canvas, Decal Painter, and the Juice tints were all partially unpublished).
+  The lift now folds doc comments into the ACE description, and `@ace_param_options` /
+  `@ace_param_hint` survive emission (rides on the params both ways) - so builder-declared
+  dropdowns like Add Buff's mode combo finally reach the picker. Regression-pinned.
+- **Rounded sheet corners**: condition/action cells draw with softly rounded corners, and
+  the event block rounds its silhouette - the LEFT side (including the always-rounded
+  bottom-left) carries the full radius, the right side half of it. Both radii are theme
+  tokens (`event_corner_radius`, `cell_corner_radius`) editable live in the Theme Editor;
+  0 restores the classic square look. Border lines inset past the curves; rounded fills
+  share cached styleboxes (no per-frame allocation).
+
 ### Added - Discord-style formatting bar in the comment editor
 
 - **Highlight text in the Edit Comment dialog and a small unfocused bar floats by the

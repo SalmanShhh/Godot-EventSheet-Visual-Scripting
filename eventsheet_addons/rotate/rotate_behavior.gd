@@ -84,21 +84,47 @@ func is_rotating() -> bool:
 func rotation_speed() -> float:
 	return _current_speed if _speed_primed else speed
 
+## @ace_action
+## @ace_name("Set Rotation Enabled")
+## @ace_description("Turns the spin on or off - the pause/resume toggle.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$RotateBehavior.set_rotation_enabled({enabled})")
 func set_rotation_enabled(enabled: bool) -> void:
 	rotate_enabled = enabled
 
+## @ace_action
+## @ace_name("Set Rotation Speed")
+## @ace_description("Sets the live rotation speed in degrees per second (negative = the other way).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$RotateBehavior.set_rotation_speed({degrees_per_second})")
 func set_rotation_speed(degrees_per_second: float) -> void:
 	speed = degrees_per_second
 	_current_speed = degrees_per_second
 	_speed_primed = true
 
+## @ace_action
+## @ace_name("Set Rotation Acceleration")
+## @ace_description("Sets the acceleration in degrees per second, per second (0 = constant).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$RotateBehavior.set_rotation_acceleration({degrees_per_second_squared})")
 func set_rotation_acceleration(degrees_per_second_squared: float) -> void:
 	acceleration = degrees_per_second_squared
 
+## @ace_action
+## @ace_name("Set Rotation Type")
+## @ace_description("Switches what spins: a Node2D's rotation, or a Node3D's X / Y / Z axis.")
+## @ace_param_options(type 2d, x, y, z)
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$RotateBehavior.set_rotation_type({type})")
 func set_rotation_type(type: String) -> void:
 	if type in ["2d", "x", "y", "z"]:
 		rotation_type = type
 
+## @ace_action
+## @ace_name("Reverse Rotation")
+## @ace_description("Flips the spin direction (negates the live speed).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$RotateBehavior.reverse_rotation()")
 func reverse_rotation() -> void:
 	if not _speed_primed:
 		_current_speed = speed

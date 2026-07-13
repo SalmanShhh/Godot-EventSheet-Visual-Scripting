@@ -1612,6 +1612,18 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 		lines.append("## @ace_category(\"%s\")" % category)
 	if not event_function.description.strip_edges().is_empty():
 		lines.append("## @ace_description(\"%s\")" % event_function.description.strip_edges())
+	# Param dropdowns and widget hints ship as one-line annotations the provider scanner
+	# reads back - without these the picker loses the combos a builder declared.
+	for annotated_param in event_function.params:
+		if annotated_param is ACEParam:
+			var ace_param: ACEParam = annotated_param
+			if not ace_param.options.is_empty():
+				var option_texts: PackedStringArray = PackedStringArray()
+				for option_value in ace_param.options:
+					option_texts.append(str(option_value))
+				lines.append("## @ace_param_options(%s %s)" % [ace_param.id, ", ".join(option_texts)])
+			if not ace_param.hint.strip_edges().is_empty():
+				lines.append("## @ace_param_hint(%s %s)" % [ace_param.id, ace_param.hint.strip_edges()])
 	# The sheet's icon flows to the published ACE (one icon, set once, shown everywhere).
 	if not sheet.custom_class_icon.strip_edges().is_empty():
 		lines.append("## @ace_icon(\"%s\")" % sheet.custom_class_icon.strip_edges())

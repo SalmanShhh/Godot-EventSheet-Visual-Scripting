@@ -106,6 +106,11 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Zoom To Position | `world_position` (Vector2), `percent` (float), `duration` (float) | Zooms in while gliding the camera so a world position becomes the screen centre - frame a spot in one action. Opens at 150, 0.4. |
 | Zoom Toward Point | `world_position` (Vector2), `percent` (float), `duration` (float) | Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) - great for strategy/map zoom. Opens at 150, 0.4. |
 | Squash & Stretch | `stretch` (float), `duration` (float) | Pops the host (Node2D or Control) with a volume-preserving stretch that springs back elastically over `duration`. Positive = stretch tall (a jump), negative = squash wide (a landing). Opens at 0.3, 0.4. |
+| Set Host Tint | `color`, `strength` | Blends the host's colors toward the tint (0 = untouched, 1 = fully the color) - the object tint with strength as the opacity dial. |
+| Clear Host Tint | (none) | Back to the host's own colors. |
+| Set Screen Tint | `color`, `strength` | Washes the whole screen with a color at Strength opacity - damage red, poison green, flashback sepia. |
+| Fade Screen Tint | `seconds` | Fades the screen tint to nothing - the damage-flash pattern (Set red 0.4, Fade 0.3). |
+| Clear Screen Tint | (none) | Removes the wash instantly. |
 | Spring Squash | `stretch` (float) | Pops the host with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) - bouncier and more organic than Squash & Stretch, and it needs no duration. Opens at 0.3. |
 | Slowmo | `target_scale` (float), `hold_duration` (float), `duration_clock` (String) | Eases `Engine.time_scale` down to `target_scale`, holds for `hold_duration`, then eases back to normal. `duration_clock` picks `realtime` or `gametime` for the hold. Fade curves are Inspector knobs. Opens at 0.15, 0.25, realtime. |
 | Clear Slowmo | (none) | Cancels any slowmo and snaps `Engine.time_scale` back to 1.0 immediately (call on scene exit if a slowmo might still be running). |

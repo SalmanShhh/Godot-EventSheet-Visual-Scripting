@@ -99,3 +99,11 @@ This preserves the user goal of designer-friendly theming while fitting Godot’
 - **Onboard a non-programmer designer.** Hand them the duplicated `designer_template_theme.tres` and its `_manifest.cfg` token notes; they edit named tokens in the Inspector like CSS variables, never touch a line of GDScript, and hand back a finished package.
 - **Match the studio brand.** Marketing gives you a hex palette for screenshots and store pages, so you pour those exact values into background, accent, and `object_label_color` tokens once and every captured sheet is on-brand.
 - **Two themes for two hats.** Keep a calm low-contrast package for authoring long sessions and a punchy high-contrast one for pair-review calls; the toolbar switcher flips between them in a click with no file dialog.
+
+## Corner roundness
+
+Two integer tokens control the sheet's corner rounding, editable live in the Theme
+Editor like every other token: `event_corner_radius` rounds the event BLOCK (the left
+side, including the always-rounded bottom-left, uses the full radius; the right side
+half of it), and `cell_corner_radius` rounds individual condition/action cells. Set
+both to 0 for the classic square look.

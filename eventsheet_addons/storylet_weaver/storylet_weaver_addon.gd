@@ -73,6 +73,7 @@ func set_storylet_max_plays(id: String, max_plays: float) -> void:
 ## @ace_name("Add Requirement")
 ## @ace_category("Storylets")
 ## @ace_description("A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "").")
+## @ace_param_options(op >=, >, <=, <, =, !=)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("Storylets.add_requirement({id}, {quality_key}, {op}, {value})")
 func add_requirement(id: String, quality_key: String, op: String, value) -> void:

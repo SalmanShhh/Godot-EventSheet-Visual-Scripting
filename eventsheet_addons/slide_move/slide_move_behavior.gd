@@ -56,6 +56,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Slide")
 ## @ace_category("Slide Movement")
 ## @ace_description("Starts a slide in a direction (left / right / up / down): the character glides until the tile ahead is a wall, then stops snapped to the grid. Ignored while already sliding; fires On Hit Wall immediately if the very next tile is a wall.")
+## @ace_param_options(direction left, right, up, down)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SlideMove.slide({direction})")
 func slide(direction: String) -> void:
@@ -128,6 +129,7 @@ func is_sliding() -> bool:
 ## @ace_name("Can Slide")
 ## @ace_category("Slide Movement")
 ## @ace_description("Whether the tile next to the character in a direction is open (not a wall).")
+## @ace_param_options(direction left, right, up, down)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$SlideMove.can_slide({direction})")
 func can_slide(direction: String) -> bool:

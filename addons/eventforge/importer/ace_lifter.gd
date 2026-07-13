@@ -735,8 +735,9 @@ static func _is_connected_handler(header: String, connections: Dictionary) -> bo
 ## Reverse of _emit_expose_annotations: parses a `## @ace_*` block into EventFunction
 ## exposure fields. {} = unrecognized shape (lift falls back).
 static func _parse_annotations(code: String) -> Dictionary:
-	var fields: Dictionary = {"expose": false, "name": "", "category": "", "description": ""}
+	var fields: Dictionary = {"expose": false, "name": "", "category": "", "description": "", "param_options": {}, "param_hints": {}}
 	var recognized: bool = false
+	var doc_lines: PackedStringArray = PackedStringArray()
 	for line: String in code.split("\n"):
 		var text: String = line.strip_edges()
 		if text.is_empty():
@@ -754,12 +755,37 @@ static func _parse_annotations(code: String) -> Dictionary:
 			fields["category"] = text.substr(18, text.length() - 20)
 		elif text.begins_with("## @ace_description(\"") and text.ends_with("\")"):
 			fields["description"] = text.substr(21, text.length() - 23)
+		elif text.begins_with("## @ace_param_options(") and text.ends_with(")"):
+			# `@ace_param_options(mode add, multiply, override)` -> dropdown options; carried
+			# onto the lifted param so emission ships them (they used to be dropped here,
+			# silently unpublishing the whole function).
+			var options_inner: String = text.substr(22, text.length() - 23)
+			var options_space: int = options_inner.find(" ")
+			if options_space > 0:
+				var option_values: Array = []
+				for value: String in options_inner.substr(options_space + 1).split(","):
+					option_values.append(value.strip_edges())
+				(fields["param_options"] as Dictionary)[options_inner.substr(0, options_space)] = option_values
+		elif text.begins_with("## @ace_param_hint(") and text.ends_with(")"):
+			# `@ace_param_hint(amount expression)` -> the params-dialog widget hint.
+			var hint_inner: String = text.substr(19, text.length() - 20)
+			var hint_space: int = hint_inner.find(" ")
+			if hint_space > 0:
+				(fields["param_hints"] as Dictionary)[hint_inner.substr(0, hint_space)] = hint_inner.substr(hint_space + 1).strip_edges()
 		elif text.begins_with("## @ace_codegen_template("):
 			pass  # regenerated from the function shape; byte-verify confirms it matches
 		elif text.begins_with("## @ace_icon("):
 			pass  # regenerated from the sheet's custom_class_icon; byte-verify confirms
-		else:
+		elif text.begins_with("## @"):
+			# An @ace annotation this parser doesn't know - refuse the block rather than
+			# silently dropping information.
 			return {}
+		else:
+			# A plain doc comment above the annotations - the human description. Folded into
+			# the ACE description (doc-comment-as-description), never a reason to refuse.
+			doc_lines.append(text.trim_prefix("##").strip_edges())
+	if str(fields["description"]).is_empty() and not doc_lines.is_empty():
+		fields["description"] = " ".join(doc_lines)
 	return fields if recognized else {}
 
 
@@ -820,6 +846,16 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.ace_display_name = str(annotations.get("name", ""))
 	event_function.ace_category = str(annotations.get("category", ""))
 	event_function.description = str(annotations.get("description", ""))
+	# @ace_param_options / @ace_param_hint ride on the params themselves, so emission can
+	# ship them back out and the picker gets its dropdowns and widgets.
+	var lifted_param_options: Dictionary = annotations.get("param_options", {})
+	var lifted_param_hints: Dictionary = annotations.get("param_hints", {})
+	for lifted_param: ACEParam in event_function.params:
+		if lifted_param_options.has(lifted_param.id):
+			for option_value: Variant in (lifted_param_options[lifted_param.id] as Array):
+				lifted_param.options.append(str(option_value))
+		if lifted_param_hints.has(lifted_param.id):
+			lifted_param.hint = str(lifted_param_hints[lifted_param.id])
 	var body: Dictionary = _lift_function(PackedStringArray(["func _ready() -> void:"]) + function_lines.slice(1), {}, true)
 	if not bool(body.get("ok", false)):
 		return {"ok": false}

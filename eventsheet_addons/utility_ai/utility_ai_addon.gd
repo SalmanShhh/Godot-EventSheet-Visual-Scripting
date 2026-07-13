@@ -104,6 +104,7 @@ func add_action(action_name: String, cooldown: float, interruptible: bool, prior
 ## @ace_name("Add Consideration")
 ## @ace_category("Utility AI")
 ## @ace_description("Adds a scoring factor to an action: it reads a world-state input (0-1) and maps it through a response curve to a 0-1 score. An action's considerations all multiply together, so any near-zero factor vetoes it. weight sharpens (>1) or softens (<1) this factor; center + slope tune the logistic / threshold / bell curves.")
+## @ace_param_options(curve linear, inverse, quadratic, inverse_quadratic, logistic, threshold, bell)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$UtilityBrain.add_consideration({action_name}, {input_key}, {curve}, {weight}, {curve_center}, {curve_slope})")
 func add_consideration(action_name: String, input_key: String, curve: String, weight: float, curve_center: float, curve_slope: float) -> void:

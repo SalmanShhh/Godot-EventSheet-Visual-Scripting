@@ -137,6 +137,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Find Path To")
 ## @ace_category("Nav Agent 3D")
 ## @ace_description("Routes to a world position across the baked navmesh and starts moving. Mode "reach" fails (On Path Failed) when the spot is off the mesh; "nearest" never fails - the agent goes to the closest point on the mesh instead. Fires On Path Found / On Path Failed.")
+## @ace_param_options(mode nearest, reach)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$NavAgent3D.find_path_to({x}, {y}, {z}, {mode})")
 func find_path_to(x: float, y: float, z: float, mode: String) -> void:
@@ -153,6 +154,7 @@ func find_path_to(x: float, y: float, z: float, mode: String) -> void:
 ## @ace_name("Find Path To Node")
 ## @ace_category("Nav Agent 3D")
 ## @ace_description("Routes to another node's position (the player, a beacon) - Find Path To with the position read for you. Re-call on a timer to chase.")
+## @ace_param_options(mode nearest, reach)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$NavAgent3D.find_path_to_node({target}, {mode})")
 func find_path_to_node(target: Node, mode: String) -> void:

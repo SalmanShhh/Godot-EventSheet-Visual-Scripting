@@ -365,6 +365,7 @@ func regenerate_nav_graph() -> void:
 ## @ace_name("Find Path To")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails - it goes to the closest reachable node instead. Fires On Path Found / On Path Failed.")
+## @ace_param_options(mode nearest, reach)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, {mode})")
 func find_path_to(x: float, y: float, mode: String) -> void:
@@ -425,6 +426,7 @@ func find_path_to(x: float, y: float, mode: String) -> void:
 ## @ace_name("Find Path To Node")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.")
+## @ace_param_options(mode nearest, reach)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.find_path_to_node({target}, {mode})")
 func find_path_to_node(target: Node, mode: String) -> void:
@@ -493,6 +495,7 @@ func set_ledge_leniency(pixels: float) -> void:
 ## @ace_name("Set Jump Positioning")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("relaxed (default): leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.")
+## @ace_param_options(mode relaxed, strict)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.set_jump_positioning({mode})")
 func set_jump_positioning(mode: String) -> void:
@@ -622,12 +625,14 @@ func is_path_pending() -> bool:
 func is_in_hazard() -> bool:
 	return host != null and _point_in_hazard(host.global_position, false)
 
+## @ace_hidden
 func _point_in_hazard(world: Vector2, deadly_only: bool) -> bool:
 	for hazard in _hazards:
 		if (not deadly_only or bool(hazard["deadly"])) and (hazard["rect"] as Rect2).has_point(world):
 			return true
 	return false
 
+## @ace_hidden
 func _segment_hazard(from_cell: Vector2i, to_cell: Vector2i) -> int:
 	if _hazards.is_empty():
 		return 0
@@ -704,16 +709,19 @@ func current_waypoint_y() -> float:
 func current_path_action() -> String:
 	return str(_path[_path_index]["action"]) if not _path.is_empty() else ""
 
+## @ace_hidden
 func _drive_gravity() -> float:
 	var movement: Node = _find_movement()
 	if movement != null and movement.get("gravity") != null:
 		return maxf(float(movement.get("gravity")), 1.0)
 	return maxf(fallback_gravity, 1.0)
 
+## @ace_hidden
 func _release_velocity_for(target: Vector2) -> float:
 	var rise: float = maxf(host.global_position.y - target.y, 0.0) + 20.0
 	return sqrt(2.0 * _drive_gravity() * rise)
 
+## @ace_hidden
 func _apply_portal(portal: Dictionary) -> void:
 	var from_node: Vector2i = _nearest_node(portal["from"], 2)
 	var to_node: Vector2i = _nearest_node(portal["to"], 2)
@@ -723,6 +731,7 @@ func _apply_portal(portal: Dictionary) -> void:
 	if bool(portal["both"]):
 		_add_edge(to_node, from_node, "portal", 2.0)
 
+## @ace_hidden
 func _apply_moving_platform(ride: Dictionary) -> void:
 	var from_node: Vector2i = _nearest_node(ride["a"], 3)
 	var to_node: Vector2i = _nearest_node(ride["b"], 3)
@@ -732,6 +741,7 @@ func _apply_moving_platform(ride: Dictionary) -> void:
 	_add_edge(from_node, to_node, "platform", span * 1.3)
 	_add_edge(to_node, from_node, "platform", span * 1.3)
 
+## @ace_hidden
 func _platform_for_waypoint(target: Vector2) -> Dictionary:
 	for ride in _moving_platforms:
 		if not is_instance_valid(ride["node"]):
@@ -740,6 +750,7 @@ func _platform_for_waypoint(target: Vector2) -> Dictionary:
 			return ride
 	return {}
 
+## @ace_hidden
 func _platform_move_axis(target: Vector2, default_axis: float) -> float:
 	var ride: Dictionary = _platform_for_waypoint(target)
 	if ride.is_empty():
@@ -766,6 +777,7 @@ func _platform_move_axis(target: Vector2, default_axis: float) -> float:
 	var wait_dx: float = wait_x - host.global_position.x
 	return clampf(wait_dx / 24.0, -1.0, 1.0) if absf(wait_dx) > 6.0 else 0.0
 
+## @ace_hidden
 func _platform_approach_axis(leg_target: Vector2, default_axis: float) -> float:
 	var ride: Dictionary = _platform_for_waypoint(leg_target)
 	if ride.is_empty():
@@ -781,6 +793,7 @@ func _platform_approach_axis(leg_target: Vector2, default_axis: float) -> float:
 	var wait_dx: float = wait_x - host.global_position.x
 	return clampf(wait_dx / 24.0, -1.0, 1.0) if absf(wait_dx) > 6.0 else 0.0
 
+## @ace_hidden
 func _riding_moving_platform() -> bool:
 	if host == null or not host.is_on_floor():
 		return false
@@ -806,6 +819,7 @@ func _advance_waypoint() -> void:
 		stop_pathfinding()
 		path_complete.emit()
 
+## @ace_hidden
 func _arc_clear(from_cell: Vector2i, to_cell: Vector2i, solid: Dictionary) -> bool:
 	if solid.has(from_cell + Vector2i(0, -1)) or solid.has(to_cell + Vector2i(0, -1)):
 		return false
@@ -826,6 +840,7 @@ func _cell_world(cell: Vector2i) -> Vector2:
 	var local: Vector2 = _tilemap.map_to_local(cell)
 	return _tilemap.to_global(local) if _tilemap.is_inside_tree() else local + _tilemap.position
 
+## @ace_hidden
 func _astar(start: Vector2i, goal: Vector2i) -> Array:
 	var open: Array = [start]
 	var came_from: Dictionary = {}
@@ -857,6 +872,7 @@ func _astar(start: Vector2i, goal: Vector2i) -> Array:
 					open.append(next_cell)
 	return []
 
+## @ace_hidden
 func _edge_allowed(from_cell: Vector2i, edge: Dictionary) -> bool:
 	if _segment_hazard(from_cell, edge["to"]) == 2:
 		return false
@@ -870,6 +886,7 @@ func _edge_allowed(from_cell: Vector2i, edge: Dictionary) -> bool:
 		return float(((edge["to"] as Vector2i).y - from_cell.y)) * tile <= ledge_leniency
 	return false
 
+## @ace_hidden
 func _edge_kind(from_cell: Vector2i, to_cell: Vector2i) -> String:
 	for edge in (_edges.get(from_cell, []) as Array):
 		if edge["to"] == to_cell:

@@ -128,16 +128,28 @@ func set_wrap_extents(new_half_width: float, new_half_height: float) -> void:
 	half_width = new_half_width
 	half_height = new_half_height
 
+## @ace_action
+## @ace_name("Set Wrap Space")
+## @ace_description("Switches what the host wraps around: the on-screen camera view, or the custom rectangle.")
+## @ace_param_options(space screen, custom)
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$WrapBehavior.set_wrap_space({space})")
 func set_wrap_space(space: String) -> void:
 	if space in ["screen", "custom"]:
 		wrap_space = space
 
+## @ace_action
+## @ace_name("Set Circle Wrap Bounds")
+## @ace_description("Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it: fully outside the circle teleports to the antipode - a round arena in one action.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$WrapBehavior.set_circle_wrap_bounds({center_x}, {center_y}, {radius})")
 func set_circle_wrap_bounds(center_x: float, center_y: float, radius: float) -> void:
 	wrap_circle_center = Vector2(center_x, center_y)
 	wrap_circle_radius = maxf(radius, 1.0)
 	wrap_shape = "circle"
 	wrap_space = "custom"
 
+## @ace_hidden
 func _direction_side(direction: Vector2) -> String:
 	if absf(direction.x) >= absf(direction.y):
 		return "right" if direction.x >= 0.0 else "left"

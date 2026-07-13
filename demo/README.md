@@ -8,7 +8,7 @@ plain GDScript fall out of it. This folder is the guided tour.
 **If you're coming from Construct 3:** events read exactly like home - two-lane rows,
 a searchable picker that understands your vocabulary ("every tick", "go to layout",
 "choose"), behaviors that attach to objects, Wait actions, combo dropdowns, color
-pickers with swatches. **68 behavior packs** ship in the box - the C3 classics (Platformer,
+pickers with swatches. **70 behavior packs** ship in the box - the C3 classics (Platformer,
 8-Direction, Sine with wave types, Orbit ellipses, Bullet, Move To with waypoints,
 Follow with delay mode, **Drag & Drop** (event-driven: Start Drag / Set Drag Point / Drop
 with follow-speed, direction lock, throw and snapping - drivable by the **Virtual Cursor**

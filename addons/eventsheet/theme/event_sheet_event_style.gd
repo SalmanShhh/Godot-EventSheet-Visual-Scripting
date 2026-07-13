@@ -45,3 +45,9 @@ extends Resource
 ## Accent for behavior sheets (identity banner / tab badge) - soft purple, the event-sheet-style
 ## "this is a behavior" color language.
 @export var behavior_accent_color: Color = Color("#8a7bd8")
+## Corner roundness of the event BLOCK, in pixels. The LEFT side (including the always-
+## rounded bottom-left) uses this full radius; the right side uses half of it, so blocks
+## read as opening toward their actions. 0 = the classic square look.
+@export_range(0, 24, 1) var event_corner_radius: int = 8
+## Corner roundness of individual condition/action CELLS, in pixels.
+@export_range(0, 16, 1) var cell_corner_radius: int = 4

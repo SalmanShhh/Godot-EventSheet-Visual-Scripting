@@ -125,6 +125,7 @@ func set_steer(amount: float) -> void:
 ## @ace_name("Simulate Control")
 ## @ace_category("Physics Car")
 ## @ace_description("The keyboard-style control: pass "up" / "down" / "left" / "right" while the key is held, or "stop" to release. Call it every frame the key is down (pair with Stop when no key is down).")
+## @ace_param_options(direction up, down, left, right, stop)
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$PhysicsCar.simulate_control({direction})")
 func simulate_control(direction: String) -> void:

@@ -74,6 +74,7 @@ Attach to a node to move it.
 - [Physics Car](Physics-Car.md) - a force-driven arcade car on a RigidBody2D, with grip and drift.
 - [Weapon Kit](Weapon-Kit.md) - fire rates, ammo, reloads, and spread for a weapon.
 - [Health](Health.md) - hit points with absorption and shield pools, damage and heal events.
+- [StatForge](StatForge.md) - stats as a buff stack: add/multiply/override modifiers with tags, sources, timers, threshold rules, and .tres loadouts (StatSheetResource).
 - [Simple Abilities](Simple-Abilities.md) - cooldown-gated abilities you trigger by name.
 
 ## Visuals and juice

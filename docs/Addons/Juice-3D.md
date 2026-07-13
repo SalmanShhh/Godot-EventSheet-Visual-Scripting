@@ -71,6 +71,9 @@ placed on.
 | Stop Jitter | (none) | Stops the jitter wobble. |
 | Lean | `degrees` (float), `duration` (float) | Eases the camera roll to an angle and HOLDS it - wall rides, corner peeks, banking turns. Lean back to 0 to level out. Emits On Lean Finished. Opens at 10, 0.25. |
 | FOV Punch | `amount` (float) | Kicks the field of view wider (positive - a dash) or tighter (negative - an impact) by degrees, then eases back at the FOV Recovery rate. Fire-and-forget. Opens at 8. |
+| Set Screen Tint | `color`, `strength` | Washes the whole screen over the 3D view at Strength opacity - damage red, poison green, night blue. |
+| Fade Screen Tint | `seconds` | Fades the tint to nothing - the damage-flash pattern. |
+| Clear Screen Tint | (none) | Removes the wash instantly. |
 | Zoom FOV To | `fov` (float), `duration` (float) | Smoothly changes the camera's base FOV and keeps it there (aim-down-sights is 40; back to 75 to unzoom). Emits On Zoom Finished. Opens at 40, 0.15. |
 | Use Camera | `camera_path` (NodePath) | Pins the effects to a specific `Camera3D`. Leave unset to auto-target the active camera. |
 

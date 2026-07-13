@@ -226,18 +226,17 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		)
 	else:
 		control.draw_rect(row_rect, BG_1 if alternating else BG_0, true)
+	# The event block's silhouette: the LEFT edge (condition lane) carries the full corner
+	# radius - the bottom-left always rounds - and the RIGHT edge (action lane) half of it,
+	# so blocks read as opening toward their actions. Radius 0 = the classic square look.
+	var block_radius: int = event_style.event_corner_radius if event_style != null else 8
+	var block_radius_right: int = int(round(block_radius * 0.5))
 	if condition_lane_rect.size != Vector2.ZERO:
-		control.draw_rect(
-			condition_lane_rect,
-			event_style.condition_lane_color if event_style != null else EventSheetPalette.COLOR_LANE_CONDITIONS,
-			true
-		)
+		var lane_color: Color = event_style.condition_lane_color if event_style != null else EventSheetPalette.COLOR_LANE_CONDITIONS
+		_draw_rounded_rect(control, condition_lane_rect, lane_color, block_radius, 0, block_radius, 0)
 	if action_lane_rect.size != Vector2.ZERO:
-		control.draw_rect(
-			action_lane_rect,
-			event_style.action_lane_color if event_style != null else EventSheetPalette.COLOR_LANE_ACTIONS,
-			true
-		)
+		var action_color: Color = event_style.action_lane_color if event_style != null else EventSheetPalette.COLOR_LANE_ACTIONS
+		_draw_rounded_rect(control, action_lane_rect, action_color, 0, block_radius_right, 0, block_radius_right)
 	if lane_divider_rect.size != Vector2.ZERO:
 		control.draw_rect(
 			lane_divider_rect,
@@ -245,9 +244,12 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			true
 		)
 	if row_data.row_type == EventRowData.RowType.EVENT and event_style != null:
+		# Border lines inset past the rounded corners so they never cut across the curve.
 		var block_border: Color = event_style.row_border_color
-		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, row_rect.size.x, 1.0), block_border, true)
-		control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), block_border, true)
+		var border_left: float = row_rect.position.x + float(block_radius)
+		var border_width: float = maxf(row_rect.size.x - float(block_radius + block_radius_right), 0.0)
+		control.draw_rect(Rect2(border_left, row_rect.position.y, border_width, 1.0), block_border, true)
+		control.draw_rect(Rect2(border_left, row_rect.end.y - 1.0, border_width, 1.0), block_border, true)
 	_draw_indent_guides(control, row_rect, row_data.indent)
 	if not row_data.error_message.is_empty():
 		# Error → row deep-link: a red left stripe + faint wash flag the offending row (the
@@ -462,7 +464,7 @@ func _draw_spans(
 			elif bool(metadata.get("code_cell", false)):
 				_draw_block_cell(control, span.rect, metadata)
 			else:
-				_draw_chip_span(control, span, metadata)
+				_draw_chip_span(control, span, metadata, event_style.cell_corner_radius if event_style != null else 4)
 		if selected_span_indices.has(span_index):
 			if bool(metadata.get("chip", false)):
 				var head_for_block: int = int(block_heads.get(span_index, -1))
@@ -624,10 +626,34 @@ func _draw_spans(
 			)
 
 
-func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary) -> void:
-	# Flat event-sheet/GDevelop-style cell: a subtle rectangular fill, no border or rounded corners.
+## Rounded-rect fills share cached StyleBoxFlats (bounded: a handful of colors x radii),
+## so per-frame drawing allocates nothing. Radius 0 on every corner falls back to the
+## plain rect fill.
+static var _rounded_box_cache: Dictionary = {}
+
+
+func _draw_rounded_rect(control: Control, rect: Rect2, color: Color, top_left: int, top_right: int, bottom_left: int, bottom_right: int) -> void:
+	if top_left == 0 and top_right == 0 and bottom_left == 0 and bottom_right == 0:
+		control.draw_rect(rect, color, true)
+		return
+	var key: String = "%d:%d:%d:%d:%s" % [top_left, top_right, bottom_left, bottom_right, color.to_html()]
+	var box: StyleBoxFlat = _rounded_box_cache.get(key)
+	if box == null:
+		box = StyleBoxFlat.new()
+		box.bg_color = color
+		box.corner_radius_top_left = top_left
+		box.corner_radius_top_right = top_right
+		box.corner_radius_bottom_left = bottom_left
+		box.corner_radius_bottom_right = bottom_right
+		_rounded_box_cache[key] = box
+	box.draw(control.get_canvas_item(), rect)
+
+
+func _draw_chip_span(control: Control, span: SemanticSpan, metadata: Dictionary, cell_radius: int = 4) -> void:
+	# Flat event-sheet/GDevelop-style cell with softly rounded corners (the radius is the
+	# theme's cell_corner_radius token; 0 = the classic square cell).
 	var bg: Color = metadata.get("chip_bg", Color(1.0, 1.0, 1.0, 0.035))
-	control.draw_rect(span.rect, bg, true)
+	_draw_rounded_rect(control, span.rect, bg, cell_radius, cell_radius, cell_radius, cell_radius)
 
 
 ## Button chrome behind the "+ Add event/condition/action" affordances: a faint rounded pill with
