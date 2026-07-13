@@ -389,4 +389,26 @@ func _check_thresholds() -> void:
 	for stat: String in new_totals:
 		_last_totals[stat] = new_totals[stat]
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	return {
+		"bases": _bases.duplicate(true),
+		"buffs": _buffs.duplicate(true),
+		"rules": _rules.duplicate(true),
+		"last_totals": _last_totals.duplicate(true)
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_bases = (state.get("bases", {}) as Dictionary).duplicate(true)
+	_buffs = (state.get("buffs", {}) as Dictionary).duplicate(true)
+	_rules = (state.get("rules", {}) as Dictionary).duplicate(true)
+	# Restoring the last-seen totals keeps threshold rules from spuriously re-firing
+	# on the first change after a load.
+	_last_totals = (state.get("last_totals", {}) as Dictionary).duplicate(true)
+
 # StatForge behavior: stats as a per-node buff stack. Add Buff targets a stat with a value and a mode - add / multiply / override (highest override wins) - with optional TAGS, a SOURCE, and a DURATION that expires on its own. Stat Total computes (base + adds) * multipliers, clamped or wrapped by the overflow knobs. Remove by id, tag, or source; pause and refresh timers; threshold rules fire On Threshold Crossed when a stat crosses a value. Load whole loadouts from a StatSheetResource (.tres). Two verbs run an RPG stat; the rest scales with your game. This pack is an event sheet - extend it by editing it.

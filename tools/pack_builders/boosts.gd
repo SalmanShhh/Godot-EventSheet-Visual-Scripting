@@ -124,4 +124,23 @@ static func build() -> bool:
 	Lib.number(sheet, "last_expired", "Last Expired", "Boosts", "The id of the boost that just ran out (read inside On Boost Expired).",
 		[], "return _last_expired_id", TYPE_STRING)
 
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"# Each entry carries its own `remaining` seconds, so restored boosts resume mid-countdown.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"boosts\": _boosts.duplicate(true)",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\t_boosts = (state.get(\"boosts\", {}) as Dictionary).duplicate(true)"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/boosts/boosts_addon")

@@ -158,6 +158,32 @@ static func build() -> bool:
 	_cond(sheet, "chance", "Chance", "Advanced Random: Chance", "True roughly percent of the time (0-100) - e.g. Chance(5) for a 5% event.", [["percent", "float"]], "return _rng.randf() * 100.0 < percent")
 	_cond(sheet, "one_in", "One In", "Advanced Random: Chance", "True with a 1-in-n probability.", [["n", "int"]], "return _rng.randi_range(1, maxi(n, 1)) == 1")
 
+	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"# The noise and permutation channels re-seed via their own Configure verbs and are",
+		"# not part of the snapshot.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"seed\": _rng.seed,",
+		"\t\t\"state\": _rng.state,",
+		"\t\t\"bags\": _bags.duplicate(true)",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\t# Seed must be assigned before state - assigning seed resets the RNG state.",
+		"\t_rng.seed = int(state.get(\"seed\", 0))",
+		"\t_rng.state = int(state.get(\"state\", 0))",
+		"\t_bags = (state.get(\"bags\", {}) as Dictionary).duplicate(true)"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/advanced_random/advanced_random_addon")
 
 

@@ -184,4 +184,28 @@ static func build() -> bool:
 	Lib.number(sheet, "last_collected_amount", "Last Collected", "Idle Generator", "How much the last Collect handed you.",
 		[], "return last_collected", TYPE_FLOAT)
 
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"owned\": owned,",
+		"\t\t\"cycle_progress\": _cycle_progress,",
+		"\t\t\"pending\": _pending,",
+		"\t\t\"output_multiplier\": output_multiplier",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\towned = int(state.get(\"owned\", 0))",
+		"\t_cycle_progress = float(state.get(\"cycle_progress\", 0.0))",
+		"\t_pending = float(state.get(\"pending\", 0.0))",
+		"\toutput_multiplier = float(state.get(\"output_multiplier\", 1.0))"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/idle_generator/idle_generator_behavior")

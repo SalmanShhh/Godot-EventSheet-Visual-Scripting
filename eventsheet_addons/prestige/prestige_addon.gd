@@ -213,4 +213,25 @@ func _earned_for(points: int) -> float:
 		return _requirement
 	return _requirement * pow(float(points), 1.0 / _exponent)
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	# Tuning vars (requirement/exponent/bonus) are NOT saved - sheets re-Configure on ready.
+	return {
+		"run_earned": _run_earned,
+		"total_earned": _total_earned,
+		"points": _points,
+		"level": _level
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_run_earned = float(state.get("run_earned", 0.0))
+	_total_earned = float(state.get("total_earned", 0.0))
+	_points = float(state.get("points", 0.0))
+	_level = int(state.get("level", 0))
+
 # Prestige: register as the Prestige autoload. Configure a requirement + exponent + bonus per point once, Track Earned as the player earns this run, then Do Prestige to bank points (Prestige Gain), raise the level, and reset the run. Prestige Multiplier = 1 + points * bonus is the permanent boost. Do Prestige clears the RUN total (no double-award); Total Earned is the all-time tally. This pack is an event sheet - extend it by editing it.

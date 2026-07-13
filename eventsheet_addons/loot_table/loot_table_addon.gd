@@ -434,4 +434,18 @@ func _roll_batch(table_id: String, count: int) -> void:
 		on_roll_result.emit()
 	on_roll_complete.emit()
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	return {
+		"pity": _pity.duplicate(true)
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_pity = (state.get("pity", {}) as Dictionary).duplicate(true)
+
 # Loot Table: register as the LootBox autoload, build weighted drop tables with Create Table + Add Entry, then Roll by id and react with On Roll Result (once per item) and On Roll Complete. Balance is editing weight numbers, not rewiring events. This pack is an event sheet - extend it by editing it.

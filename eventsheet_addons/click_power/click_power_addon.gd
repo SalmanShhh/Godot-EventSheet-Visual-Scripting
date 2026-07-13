@@ -151,4 +151,30 @@ func _yield(current_cps: float) -> float:
 	# The deterministic (no-crit) yield of one click at the given current production per second.
 	return (_base_click + _flat_bonus + _cps_fraction * current_cps) * _multiplier
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	return {
+		"base_click": _base_click,
+		"multiplier": _multiplier,
+		"flat_bonus": _flat_bonus,
+		"cps_fraction": _cps_fraction,
+		"crit_chance": _crit_chance,
+		"crit_multiplier": _crit_multiplier,
+		"total_clicks": _total_clicks
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_base_click = float(state.get("base_click", 1.0))
+	_multiplier = float(state.get("multiplier", 1.0))
+	_flat_bonus = float(state.get("flat_bonus", 0.0))
+	_cps_fraction = float(state.get("cps_fraction", 0.0))
+	_crit_chance = float(state.get("crit_chance", 0.0))
+	_crit_multiplier = float(state.get("crit_multiplier", 10.0))
+	_total_clicks = int(state.get("total_clicks", 0))
+
 # Click Power: register as the ClickPower autoload. Do Click(current_cps) works out one tap's yield - (base + flat bonus + cps fraction * current_cps) * multiplier, then a possible crit - records it as Last Click and fires On Click / On Crit; you Add Last Click to your wallet. Click Yield previews the no-crit value for a label. This pack is an event sheet - extend it by editing it.

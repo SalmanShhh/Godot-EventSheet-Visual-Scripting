@@ -23,7 +23,10 @@ var autosave_accumulator: float = 0.0
 @export var encryption_key: String = ""
 ## {slot} becomes the slot number.
 @export var file_pattern: String = "save_{slot}.cfg"
-@export_enum("config", "json") var format: String = "config"
+## config = ConfigFile (full Variant types), json = readable text, binary = compact store_var, csv = spreadsheet-friendly key,value rows.
+@export_enum("config", "json", "binary", "csv") var format: String = "config"
+## Nodes in this group (and their behaviors) auto-save via save_state()/load_state() on Save Game / Load Game.
+@export var persist_group: String = "persist"
 ## Where save files live.
 @export var save_directory: String = "user://"
 ## ConfigFile section / JSON namespace for values.
@@ -31,6 +34,11 @@ var autosave_accumulator: float = 0.0
 ## Active save slot (each slot is its own file).
 @export_group("Save System")
 @export_range(0, 9, 1) var slot: int = 0
+
+func _open_read(path: String) -> FileAccess:
+	return FileAccess.open_encrypted_with_pass(path, FileAccess.READ, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.READ)
+func _open_write(path: String) -> FileAccess:
+	return FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)
 
 func _process(delta: float) -> void:
 	if autosave_interval <= 0.0:
@@ -118,23 +126,89 @@ func delete_slot() -> void:
 ## @ace_action
 ## @ace_name("Save Game")
 ## @ace_category("Save System")
-## @ace_description("Broadcasts On Before Save (every sheet writes its state), then On Save Written.")
+## @ace_description("Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, then fires On Save Written.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.save_game()")
 func save_game() -> void:
 	before_save.emit(slot)
 	var data: Dictionary = _read_all()
+	var persisted: Dictionary = _collect_group_state(persist_group)
+	if not persisted.is_empty():
+		data["__persist"] = persisted
 	if _write_all(data):
 		save_written.emit(slot)
 
 ## @ace_action
 ## @ace_name("Load Game")
 ## @ace_category("Save System")
-## @ace_description("Broadcasts On After Load - every sheet reads its state back.")
+## @ace_description("Restores every persist-group snapshot, then broadcasts On After Load so every sheet reads its state back.")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("SaveSystem.load_game()")
 func load_game() -> void:
+	var data: Dictionary = _read_all()
+	if data.get("__persist", null) is Dictionary:
+		_apply_states(data["__persist"] as Dictionary)
 	after_load.emit(slot)
+
+## @ace_action
+## @ace_name("Save Node State")
+## @ace_category("Save System")
+## @ace_description("Snapshots a node and its behaviors (any child with save_state) under the key.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.save_node_state({node}, {key})")
+func save_node_state(node: Node, key: String) -> void:
+	save_value(key, _collect_node_state(node))
+
+## @ace_action
+## @ace_name("Load Node State")
+## @ace_category("Save System")
+## @ace_description("Restores a node and its behaviors from the key's snapshot.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.load_node_state({node}, {key})")
+func load_node_state(node: Node, key: String) -> void:
+	var states: Variant = load_value(key, {})
+	if states is Dictionary:
+		_apply_node_state(node, states as Dictionary)
+
+## @ace_action
+## @ace_name("Save Group State")
+## @ace_category("Save System")
+## @ace_description("Snapshots every node in the scene-tree group (and their behaviors) under the key.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.save_group_state({group}, {key})")
+func save_group_state(group: String, key: String) -> void:
+	save_value(key, _collect_group_state(group))
+
+## @ace_action
+## @ace_name("Load Group State")
+## @ace_category("Save System")
+## @ace_description("Restores the group snapshot saved under the key (nodes matched by scene path).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.load_group_state({key})")
+func load_group_state(key: String) -> void:
+	var states: Variant = load_value(key, {})
+	if states is Dictionary:
+		_apply_states(states as Dictionary)
+
+## @ace_action
+## @ace_name("Save Singleton State")
+## @ace_category("Save System")
+## @ace_description("Snapshots an autoload addon (Currency Ledger, Upgrades, Prestige...) by its autoload name.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.save_singleton_state({singleton_name}, {key})")
+func save_singleton_state(singleton_name: String, key: String) -> void:
+	save_value(key, _collect_node_state(get_node_or_null("/root/" + singleton_name)))
+
+## @ace_action
+## @ace_name("Load Singleton State")
+## @ace_category("Save System")
+## @ace_description("Restores an autoload addon's snapshot from the key.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.load_singleton_state({singleton_name}, {key})")
+func load_singleton_state(singleton_name: String, key: String) -> void:
+	var states: Variant = load_value(key, {})
+	if states is Dictionary:
+		_apply_node_state(get_node_or_null("/root/" + singleton_name), states as Dictionary)
 
 ## @ace_condition
 ## @ace_name("Slot Exists")
@@ -171,15 +245,69 @@ func _slot_path(target_slot: int = -1) -> String:
 	var chosen: int = slot if target_slot < 0 else target_slot
 	return save_directory.path_join(file_pattern.replace("{slot}", str(chosen)))
 
+func _to_jsonable(value) -> Variant:
+	# JSON cannot hold Vector2/Color/etc, so non-JSON-native Variants travel as a
+	# {"__var": var_to_str(...)} wrapper and come back through str_to_var.
+	match typeof(value):
+		TYPE_NIL, TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING:
+			return value
+		TYPE_DICTIONARY:
+			var out: Dictionary = {}
+			for key: Variant in (value as Dictionary).keys():
+				out[str(key)] = _to_jsonable((value as Dictionary)[key])
+			return out
+		TYPE_ARRAY:
+			var items: Array = []
+			for item: Variant in (value as Array):
+				items.append(_to_jsonable(item))
+			return items
+		_:
+			return {"__var": var_to_str(value)}
+
+func _from_jsonable(value) -> Variant:
+	if value is Dictionary:
+		var dict: Dictionary = value
+		if dict.size() == 1 and dict.has("__var"):
+			return str_to_var(str(dict["__var"]))
+		var out: Dictionary = {}
+		for key: Variant in dict.keys():
+			out[key] = _from_jsonable(dict[key])
+		return out
+	if value is Array:
+		var items: Array = []
+		for item: Variant in value:
+			items.append(_from_jsonable(item))
+		return items
+	return value
+
 func _read_all() -> Dictionary:
 	# Format-agnostic backends: everything above reads/writes one Dictionary.
 	var path: String = _slot_path()
 	if format == "json":
-		var file: FileAccess = FileAccess.open_encrypted_with_pass(path, FileAccess.READ, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.READ)
+		var file: FileAccess = _open_read(path)
 		if file == null:
 			return {}
 		var parsed: Variant = JSON.parse_string(file.get_as_text())
+		return _from_jsonable((parsed as Dictionary).get(section, {})) if parsed is Dictionary else {}
+	if format == "binary":
+		var file: FileAccess = _open_read(path)
+		if file == null:
+			return {}
+		var parsed: Variant = file.get_var()
 		return (parsed as Dictionary).get(section, {}) if parsed is Dictionary else {}
+	if format == "csv":
+		var file: FileAccess = _open_read(path)
+		if file == null:
+			return {}
+		var data: Dictionary = {}
+		while not file.eof_reached():
+			var row: PackedStringArray = file.get_csv_line()
+			if row.size() < 2 or row[0].is_empty():
+				continue
+			var parsed: Variant = str_to_var(row[1].c_unescape())
+			# Hand-authored cells (bare words) parse to null - keep them as raw text.
+			data[row[0]] = parsed if parsed != null or row[1] == "null" else row[1]
+		return data
 	var config: ConfigFile = ConfigFile.new()
 	if encryption_key.is_empty():
 		config.load(path)
@@ -193,25 +321,77 @@ func _read_all() -> Dictionary:
 func _write_all(data: Dictionary) -> bool:
 	var path: String = _slot_path()
 	if format == "json":
-		var file: FileAccess = FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)
+		var file: FileAccess = _open_write(path)
 		if file == null:
 			return false
-		file.store_string(JSON.stringify({section: data}, "\t"))
+		file.store_string(JSON.stringify({section: _to_jsonable(data)}, "\t"))
 		if file.get_error() != Error.OK:
 			return false
 		file.close()
 		return true
-	else:
-		var config: ConfigFile = ConfigFile.new()
-		for key: Variant in data.keys():
-			config.set_value(section, str(key), data[key])
-		var err: Error
-		if encryption_key.is_empty():
-			err = config.save(path)
-		else:
-			err = config.save_encrypted_pass(path, encryption_key)
-		if err != Error.OK:
+	if format == "binary":
+		var file: FileAccess = _open_write(path)
+		if file == null:
 			return false
-		return true
+		file.store_var({section: data})
+		var stored: bool = file.get_error() == Error.OK
+		file.close()
+		return stored
+	if format == "csv":
+		var file: FileAccess = _open_write(path)
+		if file == null:
+			return false
+		# c_escape keeps each value on one CSV row (var_to_str pretty-prints dictionaries).
+		for key: Variant in data.keys():
+			file.store_csv_line(PackedStringArray([str(key), var_to_str(data[key]).c_escape()]))
+		var stored: bool = file.get_error() == Error.OK
+		file.close()
+		return stored
+	var config: ConfigFile = ConfigFile.new()
+	for key: Variant in data.keys():
+		config.set_value(section, str(key), data[key])
+	var err: Error
+	if encryption_key.is_empty():
+		err = config.save(path)
+	else:
+		err = config.save_encrypted_pass(path, encryption_key)
+	return err == Error.OK
+
+func _collect_node_state(node: Node) -> Dictionary:
+	# The save-state seam: any node (or behavior child) exposing save_state() ->
+	# Dictionary and load_state(state) participates - no registration, no base class.
+	var states: Dictionary = {}
+	if node == null:
+		return states
+	if node.has_method("save_state"):
+		states["."] = node.save_state()
+	for child: Node in node.get_children():
+		if child.has_method("save_state"):
+			states[str(child.name)] = child.save_state()
+	return states
+
+func _apply_node_state(node: Node, states: Dictionary) -> void:
+	if node == null:
+		return
+	for entry: Variant in states.keys():
+		var target: Node = node if str(entry) == "." else node.get_node_or_null(NodePath(str(entry)))
+		if target != null and target.has_method("load_state") and states[entry] is Dictionary:
+			target.load_state(states[entry] as Dictionary)
+
+func _collect_group_state(group: String) -> Dictionary:
+	var states: Dictionary = {}
+	if not is_inside_tree() or group.is_empty():
+		return states
+	for member: Node in get_tree().get_nodes_in_group(group):
+		var entry: Dictionary = _collect_node_state(member)
+		if not entry.is_empty():
+			states[str(member.get_path())] = entry
+	return states
+
+func _apply_states(states: Dictionary) -> void:
+	for path: Variant in states.keys():
+		var member: Node = get_node_or_null(NodePath(str(path)))
+		if member != null and states[path] is Dictionary:
+			_apply_node_state(member, states[path] as Dictionary)
 
 # Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet - extend it by editing it.

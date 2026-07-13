@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+### Added - Save-state seam: behaviors persist themselves (18 packs + 4 save formats)
+
+- **The save-state seam**: every stateful pack now ships two plain methods -
+  `save_state() -> Dictionary` (a snapshot of its runtime state, plain data only) and
+  `load_state(state)` (restores it, tolerating missing keys so old saves survive pack
+  updates). No base class, no registration - the Save System duck-types the pair on any
+  node, so YOUR scripts can join the same convention by just implementing the two
+  methods. Seamed packs: StatForge, Health, Currency Ledger, Skin Vault, Timer, State
+  Machine, Idle Generator, Click Power, Boosts, Upgrades, Prestige, Milestones, Weapon
+  Kit, Storylet Weaver, Loot Table (pity), Advanced Random (RNG seed/state + bags),
+  Proc Room (run state), Abilities (cooldowns/stacks/charges). The methods are
+  picker-hidden plumbing; the Save System provides the user-facing verbs.
+- **Persist group automation**: put any node in the `persist` group (the name is an
+  Inspector knob) and **Save Game** snapshots it - and every behavior child with the
+  seam - into the slot automatically; **Load Game** restores everything before firing
+  On After Load. Whole-scene persistence with zero extra rows.
+- **Targeted state verbs** on the Save System: **Save/Load Node State** (one node and
+  its behaviors under a key), **Save/Load Group State** (a whole scene-tree group,
+  matched back by node path), **Save/Load Singleton State** (autoload addons like
+  Currency Ledger or Prestige by autoload name).
+- **Four save formats** via the existing `format` knob: `config` (ConfigFile, full
+  Variant fidelity - the default), `json` (readable text; Vector2/Color and friends
+  ride a `{"__var": ...}` wrapper so they round-trip exactly; plain numbers come back
+  as floats), `binary` (compact `store_var`), and `csv` (spreadsheet-friendly
+  key,value rows - hand-authored bare numbers and words load too). All four honor the
+  encryption key.
+- Round-trip tests for all 18 seams (mutate -> snapshot -> restore -> identical
+  re-snapshot + behavioral readbacks), all four formats, the node-state walk, and
+  emitted-pack survival pins (tests/save_state_test.gd).
+
 ### Added - StatForge, Juice color tints, and rounded sheet corners (70 packs)
 
 - **StatForge pack**: stats as a per-node BUFF STACK - Add Buff targets a stat with a

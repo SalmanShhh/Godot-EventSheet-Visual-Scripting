@@ -4,7 +4,8 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
-## Minimal state machine, authored entirely as ACE rows (ZERO RawCode) - including the Is In State
+## Minimal state machine, authored as ACE rows (the only RawCode is the unpublished save-state
+## seam) - including the Is In State
 ## CONDITION, now a bool-returning sheet function (the three-way function expose: bool -> condition).
 ## On State Changed is a trigger SignalRow.
 static func build() -> bool:
@@ -56,6 +57,26 @@ static func build() -> bool:
 	set_state_body.actions.append(_action("EmitSignal", {"signal_name": "state_changed", "args": "previous, next"}))
 	set_state.events.append(set_state_body)
 	sheet.functions.append(set_state)
+
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"# The parameter is named data (not state) so it never shadows the state member.",
+		"# Loading assigns state directly - a restore must not fire On State Changed.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"state\": state",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(data: Dictionary) -> void:",
+		"\tif data.is_empty():",
+		"\t\treturn",
+		"\tstate = str(data.get(\"state\", \"idle\"))"
+	]))
+	sheet.events.append(persistence)
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/state_machine/state_machine_behavior")
 

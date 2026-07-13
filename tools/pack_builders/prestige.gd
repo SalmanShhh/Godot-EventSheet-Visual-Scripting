@@ -147,4 +147,29 @@ static func build() -> bool:
 			"return clampf((_run_earned - lower) / (upper - lower), 0.0, 1.0)"
 		])), TYPE_FLOAT)
 
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"# Tuning vars (requirement/exponent/bonus) are NOT saved - sheets re-Configure on ready.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"run_earned\": _run_earned,",
+		"\t\t\"total_earned\": _total_earned,",
+		"\t\t\"points\": _points,",
+		"\t\t\"level\": _level",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\t_run_earned = float(state.get(\"run_earned\", 0.0))",
+		"\t_total_earned = float(state.get(\"total_earned\", 0.0))",
+		"\t_points = float(state.get(\"points\", 0.0))",
+		"\t_level = int(state.get(\"level\", 0))"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/prestige/prestige_addon")

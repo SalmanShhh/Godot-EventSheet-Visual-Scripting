@@ -371,4 +371,30 @@ static func build() -> bool:
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
 
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"bases\": _bases.duplicate(true),",
+		"\t\t\"buffs\": _buffs.duplicate(true),",
+		"\t\t\"rules\": _rules.duplicate(true),",
+		"\t\t\"last_totals\": _last_totals.duplicate(true)",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\t_bases = (state.get(\"bases\", {}) as Dictionary).duplicate(true)",
+		"\t_buffs = (state.get(\"buffs\", {}) as Dictionary).duplicate(true)",
+		"\t_rules = (state.get(\"rules\", {}) as Dictionary).duplicate(true)",
+		"\t# Restoring the last-seen totals keeps threshold rules from spuriously re-firing",
+		"\t# on the first change after a load.",
+		"\t_last_totals = (state.get(\"last_totals\", {}) as Dictionary).duplicate(true)"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/stat_forge/stat_forge_behavior")

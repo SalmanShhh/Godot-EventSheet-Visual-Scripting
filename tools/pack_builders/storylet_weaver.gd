@@ -262,6 +262,27 @@ static func build() -> bool:
 	_expr(sheet, "storylet_count", "Storylet Count", "Storylets", "How many storylets are registered.", [],
 		"return _lib.size()", TYPE_INT)
 
+	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"qualities\": _qualities.duplicate(true),",
+		"\t\t\"plays\": _plays.duplicate(true)",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\t_qualities = (state.get(\"qualities\", {}) as Dictionary).duplicate(true)",
+		"\t_plays = (state.get(\"plays\", {}) as Dictionary).duplicate(true)"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/storylet_weaver/storylet_weaver_addon")
 
 

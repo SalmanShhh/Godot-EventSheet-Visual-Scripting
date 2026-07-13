@@ -163,4 +163,19 @@ func active_count() -> int:
 func last_expired() -> String:
 	return _last_expired_id
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	# Each entry carries its own `remaining` seconds, so restored boosts resume mid-countdown.
+	return {
+		"boosts": _boosts.duplicate(true)
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_boosts = (state.get("boosts", {}) as Dictionary).duplicate(true)
+
 # Boosts: register as the Boost autoload. Start Boost(id, multiplier, duration) begins a timed multiplier that counts itself down and fires On Boost Expired when it ends. Total Multiplier multiplies every active boost together; Multiplier For Tag narrows it to a group. Fold Total Multiplier into your production alongside prestige and upgrade multipliers. This pack is an event sheet - extend it by editing it.

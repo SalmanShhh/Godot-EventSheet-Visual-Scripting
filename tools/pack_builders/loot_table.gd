@@ -291,6 +291,25 @@ static func build() -> bool:
 	_number(sheet, "pity_count", "Pity Count At Trigger", "Loot", "The miss streak when pity fired (inside On Pity Triggered).", [],
 		"return _pity_ctx_count", TYPE_INT)
 
+	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"pity\": _pity.duplicate(true)",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\t_pity = (state.get(\"pity\", {}) as Dictionary).duplicate(true)"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/loot_table/loot_table_addon")
 
 

@@ -201,4 +201,26 @@ static func build() -> bool:
 		[["size", "int"]],
 		"max_ammo = maxi(size, 0)")
 
+	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"# Transient combat state (_cooldown, _reloading, _burst_left) is deliberately skipped.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"ammo\": current_ammo,",
+		"\t\t\"reserve\": reserve_ammo",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\tcurrent_ammo = int(state.get(\"ammo\", 12))",
+		"\treserve_ammo = int(state.get(\"reserve\", 96))"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/weapon_kit/weapon_kit_behavior")

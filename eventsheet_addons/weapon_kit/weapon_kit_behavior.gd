@@ -215,4 +215,21 @@ func _complete_reload() -> void:
 	_reload_timer = 0.0
 	reload_completed.emit()
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	# Transient combat state (_cooldown, _reloading, _burst_left) is deliberately skipped.
+	return {
+		"ammo": current_ammo,
+		"reserve": reserve_ammo
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	current_ammo = int(state.get("ammo", 12))
+	reserve_ammo = int(state.get("reserve", 96))
+
 # Weapon Kit: ammo + reserve, fire-rate cooldown, single/auto/burst modes, and timed/instant reload. Call Fire (it manages ammo + cooldown and triggers On Fire - you spawn the bullet); call Reload. Read Ammo %, Reload Progress, etc. for HUD.

@@ -225,6 +225,24 @@ static func build() -> bool:
 	_number(sheet, "offline_gain", "Offline Gain", "Currency", "The amount credited offline (inside On Offline Gain).", [],
 		"return _offline_gain", TYPE_FLOAT)
 
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"wallet\": _wallet.duplicate(true)",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\t_wallet = (state.get(\"wallet\", {}) as Dictionary).duplicate(true)"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/currency_ledger/currency_ledger_addon")
 
 

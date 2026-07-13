@@ -238,4 +238,18 @@ func _effect_of(id: String) -> float:
 		return pow(float(record.per_level), int(record.level))
 	return float(record.level) * float(record.per_level)
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	return {
+		"upgrades": _upgrades.duplicate(true)
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_upgrades = (state.get("upgrades", {}) as Dictionary).duplicate(true)
+
 # Upgrades: register as the Upgrades autoload. Define Upgrade sets an upgrade's cost curve, max level, per-level effect, mode (add or mult), and tag. Try Purchase(id, budget) buys the next level if it fits the budget, firing On Upgrade Bought (read Last Cost, then Spend it) or On Purchase Failed. Total Multiplier(tag) and Total Bonus(tag) roll every upgrade with a tag into one number. This pack is an event sheet - extend it by editing it.

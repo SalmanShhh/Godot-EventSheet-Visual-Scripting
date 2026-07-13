@@ -417,4 +417,18 @@ func _changed(id: String, previous: float, current: float) -> void:
 	_evt_delta = current - previous
 	on_amount_changed.emit()
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	return {
+		"wallet": _wallet.duplicate(true)
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_wallet = (state.get("wallet", {}) as Dictionary).duplicate(true)
+
 # Currency Ledger: register as the CurrencyLedger autoload, then earn and spend named currencies from any sheet. Add takes a signed amount and clamps to each currency's min (0 by default) and max (none by default); Spend fails when you can't afford it. React with On Amount Changed / On Spend Failed. This pack is an event sheet - extend it by editing it.

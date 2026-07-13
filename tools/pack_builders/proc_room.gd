@@ -257,6 +257,35 @@ static func build() -> bool:
 	_expr(sheet, "block_reason", "Block Reason", "ProcRoom", "Why entry was blocked - \"locked\" or \"unreachable\" (inside On Traversal Blocked).", [],
 		"return _block_reason", TYPE_STRING)
 
+	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"# Generator config (_types, _start_type, _boss_type, _depths, _max_per) is skipped -",
+		"# sheets re-register it on ready; only the generated run state is snapshotted.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"rooms\": _rooms.duplicate(true),",
+		"\t\t\"by_depth\": _by_depth.duplicate(true),",
+		"\t\t\"current\": _current,",
+		"\t\t\"previous\": _previous,",
+		"\t\t\"seed\": _seed",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\t_rooms = (state.get(\"rooms\", {}) as Dictionary).duplicate(true)",
+		"\t_by_depth = (state.get(\"by_depth\", []) as Array).duplicate(true)",
+		"\t_current = str(state.get(\"current\", \"\"))",
+		"\t_previous = str(state.get(\"previous\", \"\"))",
+		"\t_seed = str(state.get(\"seed\", \"\"))"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/proc_room/proc_room_addon")
 
 

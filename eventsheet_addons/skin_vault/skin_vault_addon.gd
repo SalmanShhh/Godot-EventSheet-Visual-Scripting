@@ -436,4 +436,20 @@ func _grant(id: String, method: String) -> void:
 	_unlock_method = method
 	on_skin_unlocked.emit()
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	return {
+		"owned": _owned.duplicate(true),
+		"pity": _pity
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_owned = (state.get("owned", {}) as Dictionary).duplicate(true)
+	_pity = int(state.get("pity", 0))
+
 # SkinVault: register as the SkinVault autoload. Register rarities + skins, then unlock via Roll (weighted, with pity), Purchase (your wallet confirms), or Grant. React with On Skin Unlocked. It owns ownership; you build the UI. This pack is an event sheet - extend it by editing it.

@@ -479,4 +479,20 @@ func _activate(id: String) -> void:
 	_active = id
 	on_storylet_drawn.emit()
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	return {
+		"qualities": _qualities.duplicate(true),
+		"plays": _plays.duplicate(true)
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_qualities = (state.get("qualities", {}) as Dictionary).duplicate(true)
+	_plays = (state.get("plays", {}) as Dictionary).duplicate(true)
+
 # Storylet Weaver: register as the Storylets autoload. Define small story fragments with Add Requirement rules, mirror your game state into qualities with Set Quality, then Draw to get the best eligible storylet and react with On Storylet Drawn. This pack is an event sheet - extend it by editing it.

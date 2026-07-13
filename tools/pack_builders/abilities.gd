@@ -557,4 +557,54 @@ static func build() -> bool:
 		"\t\ton_ability_created.emit()"
 	])))
 
+	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"# Ability entries are AbilityData objects, so each one is flattened to plain fields",
+		"# here and rebuilt on load.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\tvar saved: Dictionary = {}",
+		"\tfor id: String in abilities.keys():",
+		"\t\tvar a: AbilityData = abilities[id]",
+		"\t\tsaved[id] = {",
+		"\t\t\t\"cooldown\": a.cooldown,",
+		"\t\t\t\"max_cooldown\": a.max_cooldown,",
+		"\t\t\t\"stacks\": a.stacks,",
+		"\t\t\t\"max_stacks\": a.max_stacks,",
+		"\t\t\t\"enabled\": a.enabled,",
+		"\t\t\t\"active\": a.active,",
+		"\t\t\t\"data\": a.data.duplicate(true),",
+		"\t\t\t\"tags\": a.tags.duplicate(true),",
+		"\t\t\t\"expiration\": a.expiration,",
+		"\t\t\t\"max_expiration\": a.max_expiration",
+		"\t\t}",
+		"\treturn {",
+		"\t\t\"abilities\": saved",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\tabilities.clear()",
+		"\tvar saved: Dictionary = (state.get(\"abilities\", {}) as Dictionary)",
+		"\tfor id: String in saved.keys():",
+		"\t\tvar entry: Dictionary = saved[id]",
+		"\t\tvar a: AbilityData = _ensure_ability(id)",
+		"\t\ta.cooldown = float(entry.get(\"cooldown\", 0.0))",
+		"\t\ta.max_cooldown = float(entry.get(\"max_cooldown\", 0.0))",
+		"\t\ta.stacks = int(entry.get(\"stacks\", 1))",
+		"\t\ta.max_stacks = int(entry.get(\"max_stacks\", 1))",
+		"\t\ta.enabled = bool(entry.get(\"enabled\", true))",
+		"\t\ta.active = bool(entry.get(\"active\", false))",
+		"\t\ta.data = (entry.get(\"data\", {}) as Dictionary).duplicate(true)",
+		"\t\ta.tags = (entry.get(\"tags\", []) as Array).duplicate(true)",
+		"\t\ta.expiration = float(entry.get(\"expiration\", 0.0))",
+		"\t\ta.max_expiration = float(entry.get(\"max_expiration\", 0.0))"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/abilities/abilities_behavior")

@@ -38,6 +38,11 @@ static func run() -> bool:
 				count += _count_rawcode((row as EventRow).actions)
 		for fn: Variant in sheet.functions:
 			if fn is EventFunction:
+				# The save-state seam (unpublished save_state/load_state on stateful packs) is
+				# deliberate plumbing shared repo-wide, not logic creeping back - exempt it so
+				# code-free packs can participate in saves without spending their budget.
+				if (fn as EventFunction).function_name in ["save_state", "load_state"]:
+					continue
 				count += _count_rawcode((fn as EventFunction).events)
 		ok = _check("%s logic within RawCode budget %d (has %d)" % [path.get_file(), budget, count], count <= budget, true) and ok
 	return ok

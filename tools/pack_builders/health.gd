@@ -398,4 +398,44 @@ static func build() -> bool:
 		"on_health_changed.emit()"
 	])))
 
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only -",
+		"# HealthPool objects flatten to plain dicts on save and rebuild on load.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\tvar pools: Dictionary = {}",
+		"\tfor pool_name: String in health_pools.keys():",
+		"\t\tvar pool: HealthPool = health_pools[pool_name]",
+		"\t\tpools[pool_name] = {\"amount\": pool.amount, \"decay_rate\": pool.decay_rate, \"absorption_rate\": pool.absorption_rate, \"priority\": pool.priority}",
+		"\treturn {",
+		"\t\t\"current_health\": current_health,",
+		"\t\t\"max_health\": max_health,",
+		"\t\t\"pools\": pools,",
+		"\t\t\"dead\": is_dead_flag,",
+		"\t\t\"invulnerable\": invulnerable",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\tmax_health = float(state.get(\"max_health\", 100.0))",
+		"\tcurrent_health = float(state.get(\"current_health\", 100.0))",
+		"\tis_dead_flag = bool(state.get(\"dead\", false))",
+		"\tinvulnerable = bool(state.get(\"invulnerable\", false))",
+		"\thealth_pools.clear()",
+		"\tvar pools: Dictionary = (state.get(\"pools\", {}) as Dictionary)",
+		"\tfor pool_name: String in pools.keys():",
+		"\t\tvar data: Dictionary = pools[pool_name]",
+		"\t\tvar pool: HealthPool = HealthPool.new()",
+		"\t\tpool.amount = float(data.get(\"amount\", 0.0))",
+		"\t\tpool.decay_rate = float(data.get(\"decay_rate\", 0.0))",
+		"\t\tpool.absorption_rate = float(data.get(\"absorption_rate\", 1.0))",
+		"\t\tpool.priority = float(data.get(\"priority\", 0.0))",
+		"\t\thealth_pools[pool_name] = pool"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/health/health_behavior")

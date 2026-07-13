@@ -293,4 +293,24 @@ func _max_affordable(budget: float) -> int:
 		count += 1
 	return maxi(count, 0)
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	return {
+		"owned": owned,
+		"cycle_progress": _cycle_progress,
+		"pending": _pending,
+		"output_multiplier": output_multiplier
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	owned = int(state.get("owned", 0))
+	_cycle_progress = float(state.get("cycle_progress", 0.0))
+	_pending = float(state.get("pending", 0.0))
+	output_multiplier = float(state.get("output_multiplier", 1.0))
+
 # Idle Generator: a buy-more-to-make-more building. Cost climbs geometrically (base_cost * cost_growth^owned); Buy One / Buy Amount / Buy Max compute the exact geometric-series price and record it as Last Cost for your sheet to Spend. Continuous mode gives Output Per Second; set Cycle Time > 0 for a fill-and-collect building that fires On Cycle Complete. This pack is an event sheet - extend it by editing it.

@@ -446,4 +446,40 @@ func _sorted_pool_keys() -> Array:
 		out.append(entry[0])
 	return out
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only -
+	# HealthPool objects flatten to plain dicts on save and rebuild on load.
+	var pools: Dictionary = {}
+	for pool_name: String in health_pools.keys():
+		var pool: HealthPool = health_pools[pool_name]
+		pools[pool_name] = {"amount": pool.amount, "decay_rate": pool.decay_rate, "absorption_rate": pool.absorption_rate, "priority": pool.priority}
+	return {
+		"current_health": current_health,
+		"max_health": max_health,
+		"pools": pools,
+		"dead": is_dead_flag,
+		"invulnerable": invulnerable
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	max_health = float(state.get("max_health", 100.0))
+	current_health = float(state.get("current_health", 100.0))
+	is_dead_flag = bool(state.get("dead", false))
+	invulnerable = bool(state.get("invulnerable", false))
+	health_pools.clear()
+	var pools: Dictionary = (state.get("pools", {}) as Dictionary)
+	for pool_name: String in pools.keys():
+		var data: Dictionary = pools[pool_name]
+		var pool: HealthPool = HealthPool.new()
+		pool.amount = float(data.get("amount", 0.0))
+		pool.decay_rate = float(data.get("decay_rate", 0.0))
+		pool.absorption_rate = float(data.get("absorption_rate", 1.0))
+		pool.priority = float(data.get("priority", 0.0))
+		health_pools[pool_name] = pool
+
 # Simple Health behavior (event-sheet parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. current_health seeds to max_health On Ready.

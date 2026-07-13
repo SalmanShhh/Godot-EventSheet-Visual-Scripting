@@ -639,4 +639,49 @@ func _ids_with_tag(tag: String) -> Array:
 			out.append(id)
 	return out
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	# Ability entries are AbilityData objects, so each one is flattened to plain fields
+	# here and rebuilt on load.
+	var saved: Dictionary = {}
+	for id: String in abilities.keys():
+		var a: AbilityData = abilities[id]
+		saved[id] = {
+			"cooldown": a.cooldown,
+			"max_cooldown": a.max_cooldown,
+			"stacks": a.stacks,
+			"max_stacks": a.max_stacks,
+			"enabled": a.enabled,
+			"active": a.active,
+			"data": a.data.duplicate(true),
+			"tags": a.tags.duplicate(true),
+			"expiration": a.expiration,
+			"max_expiration": a.max_expiration
+		}
+	return {
+		"abilities": saved
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	abilities.clear()
+	var saved: Dictionary = (state.get("abilities", {}) as Dictionary)
+	for id: String in saved.keys():
+		var entry: Dictionary = saved[id]
+		var a: AbilityData = _ensure_ability(id)
+		a.cooldown = float(entry.get("cooldown", 0.0))
+		a.max_cooldown = float(entry.get("max_cooldown", 0.0))
+		a.stacks = int(entry.get("stacks", 1))
+		a.max_stacks = int(entry.get("max_stacks", 1))
+		a.enabled = bool(entry.get("enabled", true))
+		a.active = bool(entry.get("active", false))
+		a.data = (entry.get("data", {}) as Dictionary).duplicate(true)
+		a.tags = (entry.get("tags", []) as Array).duplicate(true)
+		a.expiration = float(entry.get("expiration", 0.0))
+		a.max_expiration = float(entry.get("max_expiration", 0.0))
+
 # Simple Abilities (event-sheet parity + Godot extras): grant abilities by id, cooldowns, stack charges that auto-regen, temporary abilities that auto-expire, per-ability custom data, and tags for bulk operations. Triggers fire for ANY ability; read Current Ability ID (or the Current Ability Is condition) to tell which one fired.

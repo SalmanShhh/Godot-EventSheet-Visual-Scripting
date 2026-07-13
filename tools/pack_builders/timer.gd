@@ -5,7 +5,7 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
 ## "Timer" behavior: attach under any node; Start/Stop ACEs; "On Timer" trigger.
-## Authored entirely as ACE rows (ZERO RawCode).
+## Authored entirely as ACE rows; the only RawCode is the unpublished save-state seam.
 static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.behavior_mode = true
@@ -77,6 +77,30 @@ static func build() -> bool:
 	stop_body.actions.append(_action("SetVar", {"var_name": "running", "value": "false"}))
 	stop_timer.events.append(stop_body)
 	sheet.functions.append(stop_timer)
+
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"remaining\": remaining,",
+		"\t\t\"running\": running,",
+		"\t\t\"duration\": duration,",
+		"\t\t\"repeating\": repeating",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\tremaining = float(state.get(\"remaining\", 0.0))",
+		"\trunning = bool(state.get(\"running\", false))",
+		"\tduration = float(state.get(\"duration\", 1.0))",
+		"\trepeating = bool(state.get(\"repeating\", false))"
+	]))
+	sheet.events.append(persistence)
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/timer/timer_behavior")
 

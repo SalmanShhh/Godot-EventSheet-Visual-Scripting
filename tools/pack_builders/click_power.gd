@@ -114,4 +114,34 @@ static func build() -> bool:
 	Lib.number(sheet, "crit_chance", "Crit Chance", "Click Power", "The current crit chance, 0 to 1.",
 		[], "return _crit_chance", TYPE_FLOAT)
 
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"base_click\": _base_click,",
+		"\t\t\"multiplier\": _multiplier,",
+		"\t\t\"flat_bonus\": _flat_bonus,",
+		"\t\t\"cps_fraction\": _cps_fraction,",
+		"\t\t\"crit_chance\": _crit_chance,",
+		"\t\t\"crit_multiplier\": _crit_multiplier,",
+		"\t\t\"total_clicks\": _total_clicks",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\t_base_click = float(state.get(\"base_click\", 1.0))",
+		"\t_multiplier = float(state.get(\"multiplier\", 1.0))",
+		"\t_flat_bonus = float(state.get(\"flat_bonus\", 0.0))",
+		"\t_cps_fraction = float(state.get(\"cps_fraction\", 0.0))",
+		"\t_crit_chance = float(state.get(\"crit_chance\", 0.0))",
+		"\t_crit_multiplier = float(state.get(\"crit_multiplier\", 10.0))",
+		"\t_total_clicks = int(state.get(\"total_clicks\", 0))"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/click_power/click_power_addon")

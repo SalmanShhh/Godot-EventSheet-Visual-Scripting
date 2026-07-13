@@ -40,4 +40,20 @@ func set_state(next: String) -> void:
 		state = next
 		state_changed.emit(previous, next)
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	# The parameter is named data (not state) so it never shadows the state member.
+	# Loading assigns state directly - a restore must not fire On State Changed.
+	return {
+		"state": state
+	}
+
+## @ace_hidden
+func load_state(data: Dictionary) -> void:
+	if data.is_empty():
+		return
+	state = str(data.get("state", "idle"))
+
 # State machine behavior: Set State / Is In State from any sheet; On State Changed fires with (previous, next).

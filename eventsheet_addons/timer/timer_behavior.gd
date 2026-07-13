@@ -52,4 +52,24 @@ func start_timer(seconds: float) -> void:
 func stop_timer() -> void:
 	running = false
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	return {
+		"remaining": remaining,
+		"running": running,
+		"duration": duration,
+		"repeating": repeating
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	remaining = float(state.get("remaining", 0.0))
+	running = bool(state.get("running", false))
+	duration = float(state.get("duration", 1.0))
+	repeating = bool(state.get("repeating", false))
+
 # Timer behavior (event-sheet-style): Start Timer / Stop Timer from any sheet; the On Timer trigger fires when it elapses (repeats when 'repeating').

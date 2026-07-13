@@ -183,4 +183,20 @@ func _ensure(id: String) -> Dictionary:
 		_milestones[id] = {"threshold": 0.0, "reward": 0.0, "reached": false, "value": 0.0}
 	return _milestones[id]
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	# The whole dict is saved (definitions + reached flags + last values); a later Define
+	# Milestone on ready resets that entry, so sheets should Define BEFORE loading.
+	return {
+		"milestones": _milestones.duplicate(true)
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_milestones = (state.get("milestones", {}) as Dictionary).duplicate(true)
+
 # Milestones: register as the Milestones autoload. Define Milestone(id, threshold, reward), then Update Progress(id, value) as the tracked number grows. Crossing the threshold latches the milestone reached and fires On Milestone Reached once. Total Reward adds up every reached milestone's reward so the achievements grant a real, permanent bonus. This pack is an event sheet - extend it by editing it.

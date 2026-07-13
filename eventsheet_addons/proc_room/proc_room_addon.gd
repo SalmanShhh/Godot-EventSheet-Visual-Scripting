@@ -480,4 +480,28 @@ func _build() -> void:
 		_rooms[_current].revealed = true
 	on_graph_generated.emit()
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	# Generator config (_types, _start_type, _boss_type, _depths, _max_per) is skipped -
+	# sheets re-register it on ready; only the generated run state is snapshotted.
+	return {
+		"rooms": _rooms.duplicate(true),
+		"by_depth": _by_depth.duplicate(true),
+		"current": _current,
+		"previous": _previous,
+		"seed": _seed
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	_rooms = (state.get("rooms", {}) as Dictionary).duplicate(true)
+	_by_depth = (state.get("by_depth", []) as Array).duplicate(true)
+	_current = str(state.get("current", ""))
+	_previous = str(state.get("previous", ""))
+	_seed = str(state.get("seed", ""))
+
 # ProcRoom: register as the ProcRoom autoload. Register weighted room types, Generate a seeded tiered map (start at depth 0, boss at the last depth), then move the player with Enter Room and read the visited/available/locked state to draw your own map. This pack is an event sheet - extend it by editing it.

@@ -259,6 +259,26 @@ static func build() -> bool:
 	_expr(sheet, "revoked_id", "Revoked Id", "SkinVault", "The skin just revoked (inside On Skin Revoked).", [],
 		"return _revoked_id", TYPE_STRING)
 
+	var persistence: RawCodeRow = RawCodeRow.new()
+	persistence.code = "\n".join(PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"## @ace_hidden",
+		"func save_state() -> Dictionary:",
+		"\treturn {",
+		"\t\t\"owned\": _owned.duplicate(true),",
+		"\t\t\"pity\": _pity",
+		"\t}",
+		"",
+		"## @ace_hidden",
+		"func load_state(state: Dictionary) -> void:",
+		"\tif state.is_empty():",
+		"\t\treturn",
+		"\t_owned = (state.get(\"owned\", {}) as Dictionary).duplicate(true)",
+		"\t_pity = int(state.get(\"pity\", 0))"
+	]))
+	sheet.events.append(persistence)
+
 	return Lib.save_pack(sheet, "res://eventsheet_addons/skin_vault/skin_vault_addon")
 
 

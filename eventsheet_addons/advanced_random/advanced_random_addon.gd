@@ -276,4 +276,25 @@ func chance(percent: float) -> bool:
 func one_in(n: int) -> bool:
 	return _rng.randi_range(1, maxi(n, 1)) == 1
 
+## @ace_hidden
+func save_state() -> Dictionary:
+	# Save-state seam: the Save System walks any node in its persist group (or targeted
+	# by Save/Load Node State) and duck-types these two methods. Plain data only.
+	# The noise and permutation channels re-seed via their own Configure verbs and are
+	# not part of the snapshot.
+	return {
+		"seed": _rng.seed,
+		"state": _rng.state,
+		"bags": _bags.duplicate(true)
+	}
+
+## @ace_hidden
+func load_state(state: Dictionary) -> void:
+	if state.is_empty():
+		return
+	# Seed must be assigned before state - assigning seed resets the RNG state.
+	_rng.seed = int(state.get("seed", 0))
+	_rng.state = int(state.get("state", 0))
+	_bags = (state.get("bags", {}) as Dictionary).duplicate(true)
+
 # Advanced Random (autoload): register as the AdvancedRandom autoload, then call its ACEs from any sheet - seeded numbers/dice/normal, Perlin/Simplex noise, permutation tables, shuffle bags, weighted picks, and a Chance(%) condition. Set seed_on_start in the Inspector for reproducible runs. This pack is an event sheet - extend it by editing it.
