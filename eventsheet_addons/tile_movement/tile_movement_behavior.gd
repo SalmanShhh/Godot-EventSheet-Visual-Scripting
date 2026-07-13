@@ -20,14 +20,17 @@ signal step_finished
 @export var ai_controlled: bool = false
 var ai_move_x: float = 0.0
 var ai_move_y: float = 0.0
+## When on, the arrow keys step the host one tile at a time.
 @export var default_controls: bool = true
 var from_x: float = 0.0
 var from_y: float = 0.0
+## Seconds to slide across one tile.
 @export var move_time: float = 0.15
 var moving: bool = false
 var pending_x: float = 0.0
 var pending_y: float = 0.0
 var progress: float = 0.0
+## Pixel size of one grid tile - each step moves the host this many pixels.
 @export var tile_size: float = 64.0
 var to_x: float = 0.0
 var to_y: float = 0.0

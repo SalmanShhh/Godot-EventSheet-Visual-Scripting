@@ -17,8 +17,10 @@ func _enter_tree() -> void:
 ## @ace_category("Move To")
 signal arrived
 
+## Pixels per second the host glides toward its target.
 @export var max_speed: float = 200.0
 var moving: bool = false
+## When on, the host faces its direction of travel.
 @export var rotate_toward_motion: bool = false
 var waypoints: Array = []
 

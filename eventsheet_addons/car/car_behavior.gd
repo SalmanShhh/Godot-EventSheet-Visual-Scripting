@@ -20,17 +20,24 @@ signal drift_started
 signal drift_recovered
 
 var _drifting: bool = false
+## How fast speed builds while on the throttle, in pixels per second squared.
 @export var acceleration: float = 300.0
 ## AI drive: read ai_throttle_axis/ai_steer_axis instead of the keyboard (a sheet or AI driver flips this on to steer).
 @export var ai_controlled: bool = false
 var ai_steer_axis: float = 0.0
 var ai_throttle_axis: float = 0.0
+## How fast the car coasts back to a stop when off the throttle, in pixels per second squared.
 @export var deceleration: float = 400.0
+## Angle in degrees between velocity and heading before a drift is counted.
 @export var drift_angle_threshold: float = 15.0
+## How strongly velocity snaps back toward the heading each frame (1 = grippy, low = drifty).
 @export var drift_recover: float = 0.15
+## Top forward speed in pixels per second (reverse tops out at half this).
 @export var max_speed: float = 400.0
 var speed: float = 0.0
+## Turn rate in degrees per second at full steering.
 @export var steer_degrees: float = 180.0
+## Allows steering while the car is stopped.
 @export var turn_while_stopped: bool = false
 
 func _physics_process(delta: float) -> void:

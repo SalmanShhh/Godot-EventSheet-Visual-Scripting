@@ -13,8 +13,8 @@ static func build() -> bool:
 	sheet.addon_category = "Bullet 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"speed": {"type": "float", "default": 10.0, "exported": true},
-		"gravity": {"type": "float", "default": 0.0, "exported": true},
+		"speed": {"type": "float", "default": 10.0, "exported": true, "description": "Units per second the bullet travels along the host's forward (-Z)."},
+		"gravity": {"type": "float", "default": 0.0, "exported": true, "description": "Downward acceleration pulling the bullet's vertical velocity down each second."},
 		"distance_travelled": {"type": "float", "default": 0.0, "exported": false},
 		"vel_x": {"type": "float", "default": 0.0, "exported": false},
 		"vel_y": {"type": "float", "default": 0.0, "exported": false},

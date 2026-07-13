@@ -13,9 +13,9 @@ static func build() -> bool:
 	sheet.addon_category = "Tile Movement"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"tile_size": {"type": "float", "default": 64.0, "exported": true},
-		"move_time": {"type": "float", "default": 0.15, "exported": true},
-		"default_controls": {"type": "bool", "default": true, "exported": true},
+		"tile_size": {"type": "float", "default": 64.0, "exported": true, "description": "Pixel size of one grid tile - each step moves the host this many pixels."},
+		"move_time": {"type": "float", "default": 0.15, "exported": true, "description": "Seconds to slide across one tile."},
+		"default_controls": {"type": "bool", "default": true, "exported": true, "description": "When on, the arrow keys step the host one tile at a time."},
 		"ai_controlled": {"type": "bool", "default": false, "exported": true,
 			"attributes": {"tooltip": "AI drive: read ai_move_x/ai_move_y instead of the arrow keys (a sheet or AI driver flips this on to steer)."}},
 		"ai_move_x": {"type": "float", "default": 0.0, "exported": false},

@@ -27,6 +27,7 @@ var _queue: Array = []
 @export_range(0.1, 16, 0.1) var frame_budget_ms: float = 4.0
 ## Hard cap on items processed per frame (used when Mode includes count).
 @export var max_items_per_frame: int = 64
+## Which per-frame budget stops the drain - both the ms fence and the item cap, ms only, or count only.
 @export_enum("both", "ms", "count") var mode: String = "both"
 
 func _process(delta: float) -> void:

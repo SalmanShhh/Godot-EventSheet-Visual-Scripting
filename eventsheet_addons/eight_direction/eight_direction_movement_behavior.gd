@@ -16,6 +16,7 @@ func _enter_tree() -> void:
 @export var ai_controlled: bool = false
 var ai_move_x: float = 0.0
 var ai_move_y: float = 0.0
+## Movement speed in pixels per second the host travels at full input.
 @export var move_speed: float = 200.0
 
 func _physics_process(delta: float) -> void:

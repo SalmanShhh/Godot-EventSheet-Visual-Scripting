@@ -14,8 +14,8 @@ static func build() -> bool:
 	sheet.addon_category = "Timer"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"duration": {"type": "float", "default": 1.0, "exported": true},
-		"repeating": {"type": "bool", "default": false, "exported": true},
+		"duration": {"type": "float", "default": 1.0, "exported": true, "description": "Length of the countdown in seconds; the timer resets to this each time it repeats."},
+		"repeating": {"type": "bool", "default": false, "exported": true, "description": "When on, the timer restarts after firing On Timer instead of stopping."},
 		"remaining": {"type": "float", "default": 0.0, "exported": false},
 		"running": {"type": "bool", "default": false, "exported": false}
 	}

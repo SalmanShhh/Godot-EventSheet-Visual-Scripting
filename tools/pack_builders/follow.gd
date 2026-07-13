@@ -13,11 +13,11 @@ static func build() -> bool:
 	sheet.addon_category = "Follow"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"target_path": {"type": "String", "default": "", "exported": true},
-		"mode": {"type": "String", "default": "smooth", "exported": true, "options": ["smooth", "delayed"]},
-		"follow_speed": {"type": "float", "default": 5.0, "exported": true},
-		"delay": {"type": "float", "default": 0.4, "exported": true},
-		"min_distance": {"type": "float", "default": 0.0, "exported": true},
+		"target_path": {"type": "String", "default": "", "exported": true, "description": "Node path (relative to the host) of the node to follow; empty means idle."},
+		"mode": {"type": "String", "default": "smooth", "exported": true, "options": ["smooth", "delayed"], "description": "smooth lerps toward the target each frame; delayed replays the target's past positions."},
+		"follow_speed": {"type": "float", "default": 5.0, "exported": true, "description": "In smooth mode, how quickly the host chases the target each second (higher is snappier)."},
+		"delay": {"type": "float", "default": 0.4, "exported": true, "description": "In delayed mode, how many seconds behind the target's recorded path the host trails."},
+		"min_distance": {"type": "float", "default": 0.0, "exported": true, "description": "In smooth mode, stops and fires On Reached Target once within this many pixels of the target."},
 		"following": {"type": "bool", "default": true, "exported": false},
 		"history": {"type": "Array", "default": [], "exported": false},
 		"clock": {"type": "float", "default": 0.0, "exported": false},

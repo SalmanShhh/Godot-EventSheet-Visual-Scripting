@@ -12,17 +12,23 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Sine3DBehavior behavior requires a Node3D parent.")
 
+## When on the oscillation runs; turn off to freeze the host.
 @export var active: bool = true
 var base_captured: bool = false
 var base_rot_y: float = 0.0
 var base_x: float = 0.0
 var base_y: float = 0.0
 var base_z: float = 0.0
+## Peak offset from the start position (degrees for rotation-y).
 @export var magnitude: float = 2.0
+## Which axis the host oscillates on - x, y, z position or rotation around Y.
 @export_enum("x", "y", "z", "rotation-y") var movement: String = "y"
+## Seconds the wave takes to complete one full cycle.
 @export var period: float = 4.0
+## Starting offset into the wave cycle, in degrees.
 @export var phase_degrees: float = 0.0
 var time: float = 0.0
+## The waveform shape used for the oscillation.
 @export_enum("sine", "triangle", "sawtooth", "reverse-sawtooth", "square") var wave: String = "sine"
 
 func _process(delta: float) -> void:

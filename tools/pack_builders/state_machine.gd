@@ -15,7 +15,7 @@ static func build() -> bool:
 	sheet.custom_class_name = "StateMachineBehavior"
 	sheet.addon_category = "State Machine"
 	sheet.ace_expose_all_mode = "node"
-	sheet.variables = {"state": {"type": "String", "default": "idle", "exported": true}}
+	sheet.variables = {"state": {"type": "String", "default": "idle", "exported": true, "description": "The machine's current state name; change it with Set State."}}
 	var about: CommentRow = CommentRow.new()
 	about.text = "State machine behavior: Set State / Is In State from any sheet; On State Changed fires with (previous, next)."
 	sheet.events.append(about)

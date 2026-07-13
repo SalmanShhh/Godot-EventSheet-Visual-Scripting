@@ -20,7 +20,7 @@ static func build() -> bool:
 	sheet.custom_class_name = "AdvancedRandomAddon"
 	sheet.addon_tags = PackedStringArray(["random", "noise", "procedural"])
 	sheet.variables = {
-		"seed_on_start": {"type": "int", "default": 0, "exported": true,
+		"seed_on_start": {"type": "int", "default": 0, "exported": true, "description": "Seed applied on _ready - 0 gives a fresh random seed each run; any other value makes runs reproducible.",
 			"attributes": {"tooltip": "Seed applied on _ready (0 = a fresh random seed each run; any other value = reproducible runs).", "group": "Advanced Random"}},
 	}
 	var about: CommentRow = CommentRow.new()

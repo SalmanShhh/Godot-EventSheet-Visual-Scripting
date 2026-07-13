@@ -12,8 +12,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("LOSBehavior behavior requires a Node2D parent.")
 
+## Physics layers the sight raycast tests against - matching bodies block the view.
 @export var collision_mask: int = 1
+## Field of view angle in degrees centered on the node's facing - 360 sees all around.
 @export var cone_of_view_degrees: float = 360.0
+## Maximum distance the node can see - targets farther away are never visible.
 @export var sight_range: float = 400.0
 
 ## @ace_expression

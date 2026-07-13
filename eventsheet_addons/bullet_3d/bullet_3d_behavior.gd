@@ -13,8 +13,10 @@ func _enter_tree() -> void:
 		push_warning("Bullet3DBehavior behavior requires a Node3D parent.")
 
 var distance_travelled: float = 0.0
+## Downward acceleration pulling the bullet's vertical velocity down each second.
 @export var gravity: float = 0.0
 var launched: bool = false
+## Units per second the bullet travels along the host's forward (-Z).
 @export var speed: float = 10.0
 var vel_x: float = 0.0
 var vel_y: float = 0.0

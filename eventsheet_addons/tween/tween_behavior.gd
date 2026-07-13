@@ -19,7 +19,9 @@ signal tween_finished
 
 ## Seconds used when a tween call passes 0.
 @export_range(0.01, 10, 0.01) var default_duration: float = 0.3
+## Where the motion eases - in, out, or both ends.
 @export_enum("in", "out", "in_out", "out_in") var easing: String = "out"
+## Motion curve every tween uses (sine, bounce, elastic, and so on).
 @export_enum("linear", "sine", "quad", "cubic", "quart", "quint", "expo", "circ", "elastic", "back", "bounce", "spring") var transition: String = "sine"
 
 var _active_tween: Tween = null

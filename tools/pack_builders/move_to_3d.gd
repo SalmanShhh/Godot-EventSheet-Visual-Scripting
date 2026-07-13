@@ -13,7 +13,7 @@ static func build() -> bool:
 	sheet.addon_category = "Move To 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"max_speed": {"type": "float", "default": 5.0, "exported": true},
+		"max_speed": {"type": "float", "default": 5.0, "exported": true, "description": "Units per second the host glides toward each waypoint."},
 		"waypoints": {"type": "Array", "default": [], "exported": false},
 		"moving": {"type": "bool", "default": false, "exported": false}
 	}

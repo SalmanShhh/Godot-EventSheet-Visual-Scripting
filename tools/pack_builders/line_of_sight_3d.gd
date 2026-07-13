@@ -13,9 +13,9 @@ static func build() -> bool:
 	sheet.addon_category = "Line Of Sight 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"sight_range": {"type": "float", "default": 1000.0, "exported": true},
-		"cone_of_view_degrees": {"type": "float", "default": 360.0, "exported": true},
-		"collision_mask": {"type": "int", "default": 1, "exported": true}
+		"sight_range": {"type": "float", "default": 1000.0, "exported": true, "description": "Maximum distance the host can see - targets farther than this are never visible."},
+		"cone_of_view_degrees": {"type": "float", "default": 360.0, "exported": true, "description": "Field-of-view angle in degrees around the host's -Z forward - 360 sees all around."},
+		"collision_mask": {"type": "int", "default": 1, "exported": true, "description": "Physics layers the sight raycast tests against - anything on these layers blocks the view."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Line of Sight 3D behavior (event-sheet parity): raycast LOS in 3D with range and an optional cone of view (degrees; 360 = all around, measured from the host's -Z forward). Conditions: Has Line Of Sight To, Has LOS Between positions."

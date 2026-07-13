@@ -12,8 +12,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("LOS3DBehavior behavior requires a Node3D parent.")
 
+## Physics layers the sight raycast tests against - anything on these layers blocks the view.
 @export var collision_mask: int = 1
+## Field-of-view angle in degrees around the host's -Z forward - 360 sees all around.
 @export var cone_of_view_degrees: float = 360.0
+## Maximum distance the host can see - targets farther than this are never visible.
 @export var sight_range: float = 1000.0
 
 ## @ace_expression

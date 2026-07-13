@@ -16,6 +16,7 @@ func _enter_tree() -> void:
 ## @ace_name("On Arrived (3D)")
 signal arrived
 
+## Units per second the host glides toward each waypoint.
 @export var max_speed: float = 5.0
 var moving: bool = false
 var waypoints: Array = []

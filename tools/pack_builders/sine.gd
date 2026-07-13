@@ -14,12 +14,12 @@ static func build() -> bool:
 	sheet.addon_category = "Sine"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"movement": {"type": "String", "default": "horizontal", "exported": true, "options": ["horizontal", "vertical", "forwards-backwards", "size", "angle", "opacity", "value-only"]},
-		"wave": {"type": "String", "default": "sine", "exported": true, "options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"]},
-		"period": {"type": "float", "default": 4.0, "exported": true},
-		"magnitude": {"type": "float", "default": 50.0, "exported": true},
-		"phase_degrees": {"type": "float", "default": 0.0, "exported": true},
-		"active": {"type": "bool", "default": true, "exported": true},
+		"movement": {"type": "String", "default": "horizontal", "exported": true, "options": ["horizontal", "vertical", "forwards-backwards", "size", "angle", "opacity", "value-only"], "description": "Which host property the wave drives - position, size, angle, opacity, or value-only."},
+		"wave": {"type": "String", "default": "sine", "exported": true, "options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"], "description": "Waveform shape of the oscillation - sine, triangle, sawtooth, reverse-sawtooth, or square."},
+		"period": {"type": "float", "default": 4.0, "exported": true, "description": "Seconds for one full wave cycle."},
+		"magnitude": {"type": "float", "default": 50.0, "exported": true, "description": "Peak strength of the oscillation (pixels, degrees, or scale/opacity factor by movement)."},
+		"phase_degrees": {"type": "float", "default": 0.0, "exported": true, "description": "Phase offset in degrees - shifts where in the cycle the wave starts."},
+		"active": {"type": "bool", "default": true, "exported": true, "description": "When off, pauses the oscillation and leaves the host in place."},
 		"wave_value": {"type": "float", "default": 0.0, "exported": false},
 		"time": {"type": "float", "default": 0.0, "exported": false},
 		"base_x": {"type": "float", "default": 0.0, "exported": false},

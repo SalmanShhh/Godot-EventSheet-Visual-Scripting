@@ -13,8 +13,8 @@ static func build() -> bool:
 	sheet.addon_category = "Orbit 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"radius": {"type": "float", "default": 3.0, "exported": true},
-		"speed_degrees": {"type": "float", "default": 90.0, "exported": true},
+		"radius": {"type": "float", "default": 3.0, "exported": true, "description": "Distance in world units the host stays from the orbit center."},
+		"speed_degrees": {"type": "float", "default": 90.0, "exported": true, "description": "Degrees per second the host travels around the orbit."},
 		"angle": {"type": "float", "default": 0.0, "exported": false},
 		"center_x": {"type": "float", "default": 0.0, "exported": false},
 		"center_y": {"type": "float", "default": 0.0, "exported": false},

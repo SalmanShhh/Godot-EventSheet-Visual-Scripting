@@ -13,12 +13,12 @@ static func build() -> bool:
 	sheet.addon_category = "Sine 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"movement": {"type": "String", "default": "y", "exported": true, "options": ["x", "y", "z", "rotation-y"]},
-		"wave": {"type": "String", "default": "sine", "exported": true, "options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"]},
-		"period": {"type": "float", "default": 4.0, "exported": true},
-		"magnitude": {"type": "float", "default": 2.0, "exported": true},
-		"phase_degrees": {"type": "float", "default": 0.0, "exported": true},
-		"active": {"type": "bool", "default": true, "exported": true},
+		"movement": {"type": "String", "default": "y", "exported": true, "options": ["x", "y", "z", "rotation-y"], "description": "Which axis the host oscillates on - x, y, z position or rotation around Y."},
+		"wave": {"type": "String", "default": "sine", "exported": true, "options": ["sine", "triangle", "sawtooth", "reverse-sawtooth", "square"], "description": "The waveform shape used for the oscillation."},
+		"period": {"type": "float", "default": 4.0, "exported": true, "description": "Seconds the wave takes to complete one full cycle."},
+		"magnitude": {"type": "float", "default": 2.0, "exported": true, "description": "Peak offset from the start position (degrees for rotation-y)."},
+		"phase_degrees": {"type": "float", "default": 0.0, "exported": true, "description": "Starting offset into the wave cycle, in degrees."},
+		"active": {"type": "bool", "default": true, "exported": true, "description": "When on the oscillation runs; turn off to freeze the host."},
 		"time": {"type": "float", "default": 0.0, "exported": false},
 		"base_x": {"type": "float", "default": 0.0, "exported": false},
 		"base_y": {"type": "float", "default": 0.0, "exported": false},

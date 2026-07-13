@@ -16,10 +16,15 @@ var angle: float = 0.0
 var center_captured: bool = false
 var center_x: float = 0.0
 var center_y: float = 0.0
+## When on, the node rotates to face its direction of travel.
 @export var match_rotation: bool = false
+## Tilts the whole ellipse by this many degrees.
 @export var offset_angle_degrees: float = 0.0
+## Orbit radius on the primary axis, in pixels.
 @export var primary_radius: float = 100.0
+## Orbit radius on the second axis, in pixels; 0 makes a circle from primary_radius.
 @export var secondary_radius: float = 0.0
+## Degrees per second traveled around the orbit; negative reverses direction.
 @export var speed_degrees: float = 90.0
 var total_rotation: float = 0.0
 

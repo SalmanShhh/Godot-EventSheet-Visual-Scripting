@@ -17,7 +17,9 @@ var center_captured: bool = false
 var center_x: float = 0.0
 var center_y: float = 0.0
 var center_z: float = 0.0
+## Distance in world units the host stays from the orbit center.
 @export var radius: float = 3.0
+## Degrees per second the host travels around the orbit.
 @export var speed_degrees: float = 90.0
 
 func _process(delta: float) -> void:

@@ -18,12 +18,17 @@ signal reached_target
 
 var _reached: bool = false
 var clock: float = 0.0
+## In delayed mode, how many seconds behind the target's recorded path the host trails.
 @export var delay: float = 0.4
+## In smooth mode, how quickly the host chases the target each second (higher is snappier).
 @export var follow_speed: float = 5.0
 var following: bool = true
 var history: Array = []
+## In smooth mode, stops and fires On Reached Target once within this many pixels of the target.
 @export var min_distance: float = 0.0
+## smooth lerps toward the target each frame; delayed replays the target's past positions.
 @export_enum("smooth", "delayed") var mode: String = "smooth"
+## Node path (relative to the host) of the node to follow; empty means idle.
 @export var target_path: String = ""
 
 func _process(delta: float) -> void:

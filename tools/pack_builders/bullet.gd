@@ -13,11 +13,11 @@ static func build() -> bool:
 	sheet.addon_category = "Bullet"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"speed": {"type": "float", "default": 300.0, "exported": true},
-		"acceleration": {"type": "float", "default": 0.0, "exported": true},
-		"gravity": {"type": "float", "default": 0.0, "exported": true},
-		"align_rotation": {"type": "bool", "default": true, "exported": true},
-		"enabled_movement": {"type": "bool", "default": true, "exported": true},
+		"speed": {"type": "float", "default": 300.0, "exported": true, "description": "Travel speed in pixels per second."},
+		"acceleration": {"type": "float", "default": 0.0, "exported": true, "description": "Change in speed per second along the direction of motion."},
+		"gravity": {"type": "float", "default": 0.0, "exported": true, "description": "Downward pull added to vertical speed each second."},
+		"align_rotation": {"type": "bool", "default": true, "exported": true, "description": "Rotates the host to face its direction of motion."},
+		"enabled_movement": {"type": "bool", "default": true, "exported": true, "description": "When off, the bullet stops moving."},
 		"distance_travelled": {"type": "float", "default": 0.0, "exported": false},
 		"vel_x": {"type": "float", "default": 0.0, "exported": false},
 		"vel_y": {"type": "float", "default": 0.0, "exported": false},

@@ -15,7 +15,7 @@ static func build() -> bool:
 	sheet.addon_category = "Eight Direction"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"move_speed": {"type": "float", "default": 200.0, "exported": true},
+		"move_speed": {"type": "float", "default": 200.0, "exported": true, "description": "Movement speed in pixels per second the host travels at full input."},
 		"ai_controlled": {"type": "bool", "default": false, "exported": true,
 			"attributes": {"tooltip": "AI drive: read ai_move_x/ai_move_y instead of the keyboard (the standard seam an AI driver flips on to steer)."}},
 		"ai_move_x": {"type": "float", "default": 0.0, "exported": false},

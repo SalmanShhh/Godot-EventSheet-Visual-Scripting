@@ -19,6 +19,7 @@ signal flash_finished
 
 var accumulator: float = 0.0
 var flashing: bool = false
+## Seconds between visibility toggles - smaller values blink faster.
 @export var interval: float = 0.1
 var remaining: float = 0.0
 

@@ -23,7 +23,7 @@ static func build() -> bool:
 			"attributes": {"tooltip": "Max milliseconds per frame spent draining the queue (used when Mode includes ms).", "range": {"min": "0.1", "max": "16", "step": "0.1"}}},
 		"max_items_per_frame": {"type": "int", "default": 64, "exported": true,
 			"attributes": {"tooltip": "Hard cap on items processed per frame (used when Mode includes count)."}},
-		"mode": {"type": "String", "default": "both", "exported": true, "options": ["both", "ms", "count"]},
+		"mode": {"type": "String", "default": "both", "exported": true, "options": ["both", "ms", "count"], "description": "Which per-frame budget stops the drain - both the ms fence and the item cap, ms only, or count only."},
 		"_queue": {"type": "Array", "default": [], "exported": false},
 		"_last_count": {"type": "int", "default": 0, "exported": false},
 		"_paused": {"type": "bool", "default": false, "exported": false}

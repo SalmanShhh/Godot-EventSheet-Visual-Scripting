@@ -47,15 +47,19 @@ signal tilt_finished
 @export_range(1.0, 16.0, 0.5) var max_zoom: float = 5.0
 ## Slowmo: how the slow-down ramps IN (curve + direction).
 @export_enum("linear", "sine", "quad", "cubic", "expo", "circ", "back") var slowmo_fade_in_trans: String = "sine"
+## Slowmo: which direction the fade-IN curve eases (in / out / in-out / out-in).
 @export_enum("in", "out", "in_out", "out_in") var slowmo_fade_in_ease: String = "out"
 ## Slowmo: how time ramps back OUT to normal.
 @export_enum("linear", "sine", "quad", "cubic", "expo", "circ", "back") var slowmo_fade_out_trans: String = "sine"
+## Slowmo: which direction the fade-OUT curve eases back to normal speed (in / out / in-out / out-in).
 @export_enum("in", "out", "in_out", "out_in") var slowmo_fade_out_ease: String = "in"
 ## Slowmo: seconds spent fading in / out (the ramp lengths, separate from the HOLD).
 @export_range(0.0, 2.0, 0.05) var slowmo_fade_in_secs: float = 0.15
+## Slowmo: seconds spent easing back OUT to normal speed (separate from the HOLD).
 @export_range(0.0, 2.0, 0.05) var slowmo_fade_out_secs: float = 0.35
 ## Spring Squash: stiffness + damping of the spring-back (lower damping = bouncier).
 @export_range(1.0, 1000.0, 1.0) var squash_stiffness: float = 250.0
+## Spring Squash: how quickly the spring-back settles (lower = bouncier, higher = calmer).
 @export_range(0.0, 1.0, 0.01) var squash_damping: float = 0.6
 ## How fast a Recoil kick returns to centre, in pixels per second.
 @export_range(10.0, 2000.0, 5.0) var recoil_recovery: float = 140.0

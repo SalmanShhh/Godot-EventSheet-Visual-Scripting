@@ -16,8 +16,8 @@ static func build() -> bool:
 	sheet.addon_category = "Move To"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"max_speed": {"type": "float", "default": 200.0, "exported": true},
-		"rotate_toward_motion": {"type": "bool", "default": false, "exported": true},
+		"max_speed": {"type": "float", "default": 200.0, "exported": true, "description": "Pixels per second the host glides toward its target."},
+		"rotate_toward_motion": {"type": "bool", "default": false, "exported": true, "description": "When on, the host faces its direction of travel."},
 		"waypoints": {"type": "Array", "default": [], "exported": false},
 		"moving": {"type": "bool", "default": false, "exported": false}
 	}

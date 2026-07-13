@@ -17,6 +17,7 @@ func _enter_tree() -> void:
 ## @ace_category("State Machine")
 signal state_changed(previous: String, next: String)
 
+## The machine's current state name; change it with Set State.
 @export var state: String = "idle"
 
 ## @ace_condition

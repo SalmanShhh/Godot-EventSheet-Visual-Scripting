@@ -12,12 +12,17 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("BulletBehavior behavior requires a Node2D parent.")
 
+## Change in speed per second along the direction of motion.
 @export var acceleration: float = 0.0
+## Rotates the host to face its direction of motion.
 @export var align_rotation: bool = true
 var distance_travelled: float = 0.0
+## When off, the bullet stops moving.
 @export var enabled_movement: bool = true
+## Downward pull added to vertical speed each second.
 @export var gravity: float = 0.0
 var launched: bool = false
+## Travel speed in pixels per second.
 @export var speed: float = 300.0
 var vel_x: float = 0.0
 var vel_y: float = 0.0

@@ -19,7 +19,7 @@ static func build() -> bool:
 	sheet.addon_category = "Flash"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
-		"interval": {"type": "float", "default": 0.1, "exported": true},
+		"interval": {"type": "float", "default": 0.1, "exported": true, "description": "Seconds between visibility toggles - smaller values blink faster."},
 		"remaining": {"type": "float", "default": 0.0, "exported": false},
 		"accumulator": {"type": "float", "default": 0.0, "exported": false},
 		"flashing": {"type": "bool", "default": false, "exported": false}
