@@ -284,17 +284,17 @@ static func _format_round_trips() -> bool:
 		sv.set("file_pattern", "test_seam_%s_{slot}.dat" % fmt)
 		sv.set("format", fmt)
 		sv.call("save_value", "hp", 42.5)
+		sv.call("save_value", "count", 7)
 		sv.call("save_value", "pos", Vector2(3.0, 4.0))
 		sv.call("save_value", "bag", {"sword": 1, "name": "zed"})
 		all_passed = _check("%s: float round-trips" % fmt, sv.call("load_value", "hp", 0.0), 42.5) and all_passed
+		all_passed = _check("%s: a top-level int stays an int" % fmt, typeof(sv.call("load_value", "count", 0)), TYPE_INT) and all_passed
 		all_passed = _check("%s: Vector2 round-trips exactly" % fmt, sv.call("load_value", "pos", Vector2.ZERO), Vector2(3.0, 4.0)) and all_passed
 		var bag: Dictionary = sv.call("load_value", "bag", {})
 		all_passed = _check("%s: nested dict text survives" % fmt, str(bag.get("name", "")), "zed") and all_passed
-		if fmt == "json":
-			# JSON has one honest caveat: numbers inside plain dicts parse back as floats.
-			all_passed = _check("json: nested int comes back as float (documented)", bag.get("sword", 0), 1.0) and all_passed
-		else:
-			all_passed = _check("%s: nested int keeps its type" % fmt, bag.get("sword", 0), 1) and all_passed
+		# Every format now preserves int type (JSON wraps ints so they survive its float parse).
+		all_passed = _check("%s: nested int keeps its type" % fmt, bag.get("sword", 0), 1) and all_passed
+		all_passed = _check("%s: nested int is still an int, not a float" % fmt, typeof(bag.get("sword", 0)), TYPE_INT) and all_passed
 		DirAccess.remove_absolute(sv.call("_slot_path"))
 		sv.free()
 	# Spreadsheet workflow: a hand-authored CSV (bare numbers and words, no var_to_str

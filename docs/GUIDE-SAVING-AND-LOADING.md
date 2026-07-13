@@ -61,7 +61,7 @@ Targeted verbs are ideal when you want to snapshot one enemy, one squad, or one 
 The `format` Inspector property picks how bytes hit the disk. All four round-trip through the same verbs, so you can switch formats without changing a single sheet:
 
 - **config** is Godot's ConfigFile format and the default. It preserves full Variant fidelity, so integers stay integers and Vector2 stays Vector2.
-- **json** produces human-readable text, which is perfect for modding and hand-editing. Variants that JSON cannot represent natively, such as Vector2 and Color, are wrapped so they still round-trip exactly, but be aware that plain numbers reload as floats.
+- **json** produces human-readable text, which is perfect for modding and hand-editing. Variants that JSON cannot represent natively, such as Vector2 and Color, are wrapped so they round-trip exactly, and integers are wrapped too so a whole number stays an integer instead of reloading as a float (floats, strings, and booleans stay bare, so the file is still easy to read).
 - **binary** uses compact `store_var` output. It is small and fast but not meant to be hand-edited.
 - **csv** writes spreadsheet-friendly `key,value` rows and can also load a CSV you authored by hand, which makes it handy for balancing tables.
 
@@ -119,7 +119,7 @@ Proc Room seams the current run's state. At the end of each room, call `SaveSyst
 
 ### 11. Switch a save to JSON for modding
 
-If you want players to open and tweak their saves, set the Save System's `format` Inspector property to `json`. Every save and load verb behaves the same, but the file on disk becomes readable text. Remember that Vector2 and Color values are wrapped so they still round-trip exactly, while plain numbers reload as floats, so read integers back with care.
+If you want players to open and tweak their saves, set the Save System's `format` Inspector property to `json`. Every save and load verb behaves the same, but the file on disk becomes readable text. Vector2 and Color values are wrapped so they round-trip exactly, and integers are wrapped so they stay integers rather than reloading as floats, so your saved values come back with the same types you wrote.
 
 ### 12. Export a CSV for a balancing spreadsheet
 
@@ -193,5 +193,5 @@ Add the Loot Table and Storylet Weaver addons to your save (persist group or sin
 - **Keep your keys stable across versions.** The key you pass to Save Number or Save Node State is the contract with old files. If you rename a key in a later build, existing saves lose that value. Add new keys rather than renaming old ones, and let `load_state` tolerate the missing ones.
 - **Node references are not saved, only plain data.** The seam snapshots plain values. A saved dictionary should never contain a live node, a Callable, or another non-data object. If you need to remember which node something pointed at, store a stable identifier such as a name or path and re-resolve it after load.
 - **The persist group is matched back by node path.** On load, each snapshot is reunited with its node by that node's path in the scene tree. The node must already exist at the same path when Load Game runs, so restore into the same scene layout you saved from, or spawn the nodes before loading.
-- **JSON reloads plain integers as floats.** If you save in json, a whole number can come back as a float. Convert it explicitly where an integer matters, and prefer config or binary when full numeric fidelity is important.
+- **All four formats preserve exact types.** An integer comes back as an integer, a float as a float, a Vector2 as a Vector2, in every format including json and csv. You do not need to convert numbers on load. If you hand-edit a json save, note that a value you write as a wrapped object is how the system stores an integer or a rich type.
 - **`save_state` must return plain data only.** When you write your own `save_state`, build the dictionary from numbers, strings, booleans, arrays, dictionaries, and the wrapped Variants the system understands. Returning anything that cannot be serialised will break the save. Save Studio's Add Save Support generator picks safe fields for you, which is the easiest way to stay on the right side of this rule.

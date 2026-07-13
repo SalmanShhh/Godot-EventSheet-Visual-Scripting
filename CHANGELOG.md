@@ -23,10 +23,11 @@
   matched back by node path), **Save/Load Singleton State** (autoload addons like
   Currency Ledger or Prestige by autoload name).
 - **Four save formats** via the existing `format` knob: `config` (ConfigFile, full
-  Variant fidelity - the default), `json` (readable text; Vector2/Color and friends
-  ride a `{"__var": ...}` wrapper so they round-trip exactly; plain numbers come back
-  as floats), `binary` (compact `store_var`), and `csv` (spreadsheet-friendly
-  key,value rows - hand-authored bare numbers and words load too). All four honor the
+  Variant fidelity - the default), `json` (readable text; Vector2/Color and integers
+  ride an internal wrapper so every type round-trips exactly, floats/strings/booleans
+  stay bare and readable), `binary` (compact `store_var`), and `csv` (spreadsheet-
+  friendly key,value rows - hand-authored bare numbers and words load too). All four
+  formats reload your values with the exact types you saved, and all honor the
   encryption key.
 - Round-trip tests for all 18 seams (mutate -> snapshot -> restore -> identical
   re-snapshot + behavioral readbacks), all four formats, the node-state walk, and
@@ -36,9 +37,11 @@
   no longer gets silently wiped by the next Save Game or autosave - the write is
   refused instead. Every write is now **atomic** (write to a temp file, then rename
   over the slot), so a crash mid-save leaves the previous save intact. CSV round-trips
-  backslash values correctly (Windows paths, regex). JSON preserves 64-bit ints (RNG
-  determinism) and moved its internal wrapper key off `__var` so a real user dictionary
-  is not mistaken for a wrapped value. A persist-group snapshot with no matching node
+  backslash values correctly (Windows paths, regex). JSON now preserves every integer
+  exactly - not just 64-bit ones (Godot's JSON parser reloads all numbers as floats, so
+  ints ride the wrapper) - keeping types stable and RNG determinism intact, and the
+  wrapper key moved off `__var` so a real user dictionary is not mistaken for a wrapped
+  value. A persist-group snapshot with no matching node
   at load time (renamed or not-yet-loaded) now warns instead of vanishing quietly.
 - **Save Studio** (Tools menu): one window, three tabs. **Format Preview** runs the
   real save pipeline on any seamed addon and shows the on-disk output in each format

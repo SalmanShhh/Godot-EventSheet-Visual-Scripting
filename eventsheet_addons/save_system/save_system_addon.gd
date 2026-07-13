@@ -39,12 +39,13 @@ func _open_read(path: String) -> FileAccess:
 	return FileAccess.open_encrypted_with_pass(path, FileAccess.READ, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.READ)
 func _open_write(path: String) -> FileAccess:
 	return FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)
-# JSON cannot hold Vector2/Color/etc, and its numbers are doubles (a 64-bit int
-# would lose precision), so those Variants travel as a one-key wrapper and come
-# back through str_to_var. The key is long and namespaced so a real user dict is
-# extremely unlikely to be mistaken for a wrapped value.
+# JSON has no integer type - JSON.parse reloads every number as a float (even 5
+# becomes 5.0, and a 64-bit int loses precision), and it cannot hold Vector2/Color.
+# So ints and non-JSON-native Variants travel as a one-key wrapper and come back
+# through str_to_var, keeping their exact type. Floats/strings/bools stay bare so
+# the file is still readable. The key is long and namespaced so a real one-key user
+# dictionary is extremely unlikely to be mistaken for a wrapped value.
 const VAR_WRAPPER_KEY: String = "__eventsheet_var"
-const JSON_SAFE_INT: int = 1 << 53
 # _read_all sets _last_read_ok = false when a slot file EXISTS but cannot be read
 # (bad decrypt key, corrupt JSON, truncated binary). Writers check the flag and
 # refuse to overwrite a slot they could not read, so a failed read never wipes a
@@ -267,8 +268,7 @@ func _to_jsonable(value) -> Variant:
 		TYPE_NIL, TYPE_BOOL, TYPE_FLOAT, TYPE_STRING:
 			return value
 		TYPE_INT:
-			# Ints past 2^53 (RNG state, big ids) lose precision as JSON doubles - wrap them.
-			return value if absi(value) < JSON_SAFE_INT else {VAR_WRAPPER_KEY: var_to_str(value)}
+			return {VAR_WRAPPER_KEY: var_to_str(value)}
 		TYPE_DICTIONARY:
 			var out: Dictionary = {}
 			for key: Variant in (value as Dictionary).keys():
