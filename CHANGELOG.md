@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - Two more save formats (INI, XML) + read helpers
+
+- **INI and XML save formats** join config/json/binary/csv on the Save System's
+  `format` knob (six total). `ini` writes a plain, portable `[section]` + `key=value`
+  file other INI tools can read; `xml` writes structured `<entry key="...">` tags for
+  pipelines that expect XML. Both are type-lossless (an int stays an int, a Vector2 a
+  Vector2), handle XML-special and INI-delimiter characters correctly, and honor the
+  encryption key and the atomic-write path like the other formats.
+- **Read helpers** to load and read saves easily: **Read All** returns the whole active
+  slot as one Dictionary, **List Save Keys** returns its keys (loop them for a debug
+  dump or a migration), and **Read Save File** reads ANY save file at a path in a given
+  format (blank = the active format) without touching the active slot - so importing a
+  backup or a file another tool wrote is one call.
+- The Save Studio Format Preview now offers all six formats; the guide and Save System
+  reference cover the new formats and read verbs; tests round-trip ini/xml (including
+  special characters and empty strings) and exercise every read helper.
+
 ### Added - Save support in the public EventSheets API (Save Studio now built on it)
 
 - **A Save group on the `EventSheets` API** so an extension can add save support as

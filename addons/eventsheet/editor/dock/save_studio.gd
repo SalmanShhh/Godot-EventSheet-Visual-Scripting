@@ -22,8 +22,8 @@ extends RefCounted
 # Used only by the Save Slots export-conversion path (reads/writes through the pack's own
 # backend). The scan, generate, and preview features run through the public EventSheets API.
 const SAVE_SYSTEM_SCRIPT: String = "res://eventsheet_addons/save_system/save_system_addon.gd"
-const FORMATS: PackedStringArray = ["config", "json", "binary", "csv"]
-const FORMAT_EXTENSIONS: Dictionary = {"config": ".cfg", "json": ".json", "binary": ".sav", "csv": ".csv"}
+const FORMATS: PackedStringArray = ["config", "json", "binary", "csv", "ini", "xml"]
+const FORMAT_EXTENSIONS: Dictionary = {"config": ".cfg", "json": ".json", "binary": ".sav", "csv": ".csv", "ini": ".ini", "xml": ".xml"}
 
 var _dock: Control = null
 var _window: Window = null
@@ -362,7 +362,11 @@ func _format_for_extension(path: String) -> String:
 			return "json"
 		"csv":
 			return "csv"
-		"cfg", "ini":
+		"ini":
+			return "ini"
+		"xml":
+			return "xml"
+		"cfg":
 			return "config"
 	return "binary"
 

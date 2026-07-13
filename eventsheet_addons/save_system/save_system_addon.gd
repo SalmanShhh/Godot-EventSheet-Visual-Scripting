@@ -23,8 +23,8 @@ var autosave_accumulator: float = 0.0
 @export var encryption_key: String = ""
 ## {slot} becomes the slot number.
 @export var file_pattern: String = "save_{slot}.cfg"
-## config = ConfigFile (full Variant types), json = readable text, binary = compact store_var, csv = spreadsheet-friendly key,value rows.
-@export_enum("config", "json", "binary", "csv") var format: String = "config"
+## config = ConfigFile (Godot-native), json = readable text, binary = compact store_var, csv = spreadsheet rows, ini = portable [section] key=value, xml = structured <entry> tags. All six preserve exact types.
+@export_enum("config", "json", "binary", "csv", "ini", "xml") var format: String = "config"
 ## Nodes in this group (and their behaviors) auto-save via save_state()/load_state() on Save Game / Load Game.
 @export var persist_group: String = "persist"
 ## Where save files live.
@@ -127,6 +127,33 @@ func load_text(key: String) -> String:
 ## @ace_codegen_template("SaveSystem.has_save_key({key})")
 func has_save_key(key: String) -> bool:
 	return _read_all().has(key)
+
+## @ace_expression
+## @ace_name("Read All")
+## @ace_category("Save System")
+## @ace_description("Reads the whole active slot as one Dictionary (every saved key and value).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.read_all()")
+func read_all() -> Dictionary:
+	return _read_all()
+
+## @ace_expression
+## @ace_name("List Save Keys")
+## @ace_category("Save System")
+## @ace_description("The keys stored in the active slot (loop them to read a whole save).")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.save_keys()")
+func save_keys() -> Array:
+	return _read_all().keys()
+
+## @ace_expression
+## @ace_name("Read Save File")
+## @ace_category("Save System")
+## @ace_description("Reads ANY save file at a path in the given format (config/json/binary/csv/ini/xml; blank = the active format) and returns its Dictionary.")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("SaveSystem.read_file({path}, {file_format})")
+func read_file(path: String, file_format: String) -> Dictionary:
+	return _read_path(path, file_format if not file_format.is_empty() else format)
 
 ## @ace_action
 ## @ace_name("Delete Slot")
@@ -299,11 +326,15 @@ func _from_jsonable(value) -> Variant:
 	return value
 
 func _read_all() -> Dictionary:
-	var path: String = _slot_path()
+	return _read_path(_slot_path(), format)
+
+func _read_path(path: String, fmt: String) -> Dictionary:
+	# Reads any save file at `path` in `fmt` (the same six backends). Reused by the
+	# active-slot read and by Read Save File, so tooling can open a file from anywhere.
 	_last_read_ok = true
 	if not FileAccess.file_exists(path):
 		return {}
-	if format == "json":
+	if fmt == "json":
 		var file: FileAccess = _open_read(path)
 		if file == null:
 			_last_read_ok = false
@@ -313,7 +344,7 @@ func _read_all() -> Dictionary:
 			_last_read_ok = false
 			return {}
 		return _from_jsonable((parsed as Dictionary).get(section, {}))
-	if format == "binary":
+	if fmt == "binary":
 		var file: FileAccess = _open_read(path)
 		if file == null:
 			_last_read_ok = false
@@ -323,7 +354,7 @@ func _read_all() -> Dictionary:
 			_last_read_ok = false
 			return {}
 		return (parsed as Dictionary).get(section, {})
-	if format == "csv":
+	if fmt == "csv":
 		var file: FileAccess = _open_read(path)
 		if file == null:
 			_last_read_ok = false
@@ -337,6 +368,57 @@ func _read_all() -> Dictionary:
 			# Hand-authored cells (bare words) parse to null - keep them as raw text.
 			data[row[0]] = parsed if parsed != null or row[1] == "null" else row[1]
 		return data
+	if fmt == "ini":
+		var file: FileAccess = _open_read(path)
+		if file == null:
+			_last_read_ok = false
+			return {}
+		var data: Dictionary = {}
+		# Read only keys under our [section]; an empty section reads every key.
+		var in_section: bool = section.is_empty()
+		while not file.eof_reached():
+			var line: String = file.get_line().strip_edges()
+			if line.is_empty() or line.begins_with(";") or line.begins_with("#"):
+				continue
+			if line.begins_with("[") and line.ends_with("]"):
+				in_section = line.substr(1, line.length() - 2) == section or section.is_empty()
+				continue
+			var eq: int = line.find("=")
+			if not in_section or eq < 0:
+				continue
+			var ini_key: String = line.substr(0, eq).strip_edges()
+			var raw: String = line.substr(eq + 1).strip_edges()
+			var parsed: Variant = str_to_var(raw)
+			data[ini_key] = parsed if parsed != null or raw == "null" else raw
+		return data
+	if fmt == "xml":
+		var file: FileAccess = _open_read(path)
+		if file == null:
+			_last_read_ok = false
+			return {}
+		var parser: XMLParser = XMLParser.new()
+		if parser.open_buffer(file.get_as_text().to_utf8_buffer()) != Error.OK:
+			_last_read_ok = false
+			return {}
+		var data: Dictionary = {}
+		# XMLParser resolves &amp;/&lt;/&gt; itself, so the text is ready for str_to_var.
+		var pending_key: String = ""
+		while parser.read() == Error.OK:
+			var node_type: int = parser.get_node_type()
+			if node_type == XMLParser.NODE_ELEMENT and parser.get_node_name() == "entry":
+				pending_key = parser.get_named_attribute_value_safe("key")
+				if parser.is_empty():
+					data[pending_key] = ""
+					pending_key = ""
+			elif node_type == XMLParser.NODE_TEXT and not pending_key.is_empty():
+				var raw: String = parser.get_node_data()
+				var parsed: Variant = str_to_var(raw)
+				data[pending_key] = parsed if parsed != null or raw == "null" else raw
+				pending_key = ""
+			elif node_type == XMLParser.NODE_ELEMENT_END and parser.get_node_name() == "entry" and not pending_key.is_empty():
+				data[pending_key] = ""
+				pending_key = ""
+		return data
 	var config: ConfigFile = ConfigFile.new()
 	var load_err: Error = config.load(path) if encryption_key.is_empty() else config.load_encrypted_pass(path, encryption_key)
 	if load_err != Error.OK:
@@ -346,6 +428,10 @@ func _read_all() -> Dictionary:
 	for key: String in config.get_section_keys(section) if config.has_section(section) else PackedStringArray():
 		data[key] = config.get_value(section, key)
 	return data
+
+func _xml_escape(text: String) -> String:
+	# XML entities on write; XMLParser un-escapes on read.
+	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
 
 func _write_all(data: Dictionary) -> bool:
 	# Atomic write: every backend writes a .tmp sibling then renames it over the slot,
@@ -379,6 +465,32 @@ func _write_all(data: Dictionary) -> bool:
 		# value on one CSV row without a second escape layer to conflict with str_to_var.
 		for key: Variant in data.keys():
 			file.store_csv_line(PackedStringArray([str(key), var_to_str(data[key]).replace("\n", "")]))
+		var write_ok: bool = file.get_error() == Error.OK
+		file.close()
+		if not write_ok:
+			return false
+	elif format == "ini":
+		var file: FileAccess = _open_write(tmp)
+		if file == null:
+			return false
+		# A plain, portable [section] + key=value INI; var_to_str keeps each value
+		# on one line and exact-typed, so other INI tools can read the structure.
+		file.store_line("[%s]" % section)
+		for key: Variant in data.keys():
+			file.store_line("%s=%s" % [str(key), var_to_str(data[key]).replace("\n", "")])
+		var write_ok: bool = file.get_error() == Error.OK
+		file.close()
+		if not write_ok:
+			return false
+	elif format == "xml":
+		var file: FileAccess = _open_write(tmp)
+		if file == null:
+			return false
+		file.store_line("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+		file.store_line("<save section=\"%s\">" % _xml_escape(section))
+		for key: Variant in data.keys():
+			file.store_line("\t<entry key=\"%s\">%s</entry>" % [_xml_escape(str(key)), _xml_escape(var_to_str(data[key]).replace("\n", ""))])
+		file.store_line("</save>")
 		var write_ok: bool = file.get_error() == Error.OK
 		file.close()
 		if not write_ok:

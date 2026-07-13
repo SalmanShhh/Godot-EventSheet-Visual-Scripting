@@ -11,7 +11,7 @@ The whole system is built on one small idea, the save-state seam, and one drop-i
   - [The persist group](#the-persist-group)
   - [The lifecycle broadcast](#the-lifecycle-broadcast)
   - [Targeted saving vs whole-game saving](#targeted-saving-vs-whole-game-saving)
-  - [The four save formats](#the-four-save-formats)
+  - [The six save formats](#the-six-save-formats)
   - [Save Studio](#save-studio)
 - [Use cases](#use-cases)
 - [Other use cases](#other-use-cases)
@@ -56,16 +56,26 @@ There are two ways to save. Whole-game saving (Save Game and Load Game) captures
 
 Targeted verbs are ideal when you want to snapshot one enemy, one squad, or one global system without saving the entire game.
 
-### The four save formats
+### The six save formats
 
-The `format` Inspector property picks how bytes hit the disk. All four round-trip through the same verbs, so you can switch formats without changing a single sheet:
+The `format` Inspector property picks how bytes hit the disk. All six round-trip through the same verbs and preserve exact types, so you can switch formats without changing a single sheet:
 
 - **config** is Godot's ConfigFile format and the default. It preserves full Variant fidelity, so integers stay integers and Vector2 stays Vector2.
 - **json** produces human-readable text, which is perfect for modding and hand-editing. Variants that JSON cannot represent natively, such as Vector2 and Color, are wrapped so they round-trip exactly, and integers are wrapped too so a whole number stays an integer instead of reloading as a float (floats, strings, and booleans stay bare, so the file is still easy to read).
 - **binary** uses compact `store_var` output. It is small and fast but not meant to be hand-edited.
 - **csv** writes spreadsheet-friendly `key,value` rows and can also load a CSV you authored by hand, which makes it handy for balancing tables.
+- **ini** writes a plain, portable `[section]` header with `key=value` lines. It is the format other tools and INI libraries can read the structure of, while still preserving exact types.
+- **xml** writes structured `<entry key="...">value</entry>` tags inside a `<save>` root. It is the pick when a pipeline, importer, or external tool expects XML.
 
-Related Inspector properties: `encryption_key` (any non-empty value turns on encrypted saves), `slot` (which numbered file to use), `save_directory` (defaults to `user://`), `file_pattern` (the filename template, which must contain `{slot}`), `section` (the config section name), and `autosave_interval` (seconds between automatic saves, `0` means off).
+Related Inspector properties: `encryption_key` (any non-empty value turns on encrypted saves), `slot` (which numbered file to use), `save_directory` (defaults to `user://`), `file_pattern` (the filename template, which must contain `{slot}`), `section` (the section/namespace name), and `autosave_interval` (seconds between automatic saves, `0` means off).
+
+### Reading a whole save
+
+Beyond reading one key at a time with Load Value, three helpers read a save in bulk:
+
+- **Read All** returns the whole active slot as one Dictionary - every key and value at once.
+- **List Save Keys** returns the keys in the active slot, so you can loop them (for a debug dump, a save-migration pass, or a "what's in this file" inspector).
+- **Read Save File** reads ANY save file at a path in a given format (`config`, `json`, `binary`, `csv`, `ini`, `xml`, or blank to use the active format) and returns its Dictionary. Point it at an imported save, a backup, or a file another tool wrote.
 
 ### Save Studio
 
@@ -159,7 +169,7 @@ Open Save Studio from the Tools menu, go to the Add Save Support tab, and point 
 
 ### 21. Preview a format before committing
 
-Before you settle on a format, open Save Studio's Format Preview tab, choose an addon, and choose a format. You will see exactly what that addon's save file looks like on disk. This lets you compare config, json, binary, and csv side by side and pick the one that fits your modding, size, and readability goals without touching your project.
+Before you settle on a format, open Save Studio's Format Preview tab, choose an addon, and choose a format. You will see exactly what that addon's save file looks like on disk. This lets you compare config, json, binary, csv, ini, and xml side by side and pick the one that fits your modding, size, and readability goals without touching your project.
 
 ### 22. Convert an existing save between formats
 
@@ -172,6 +182,18 @@ You do not have to choose between the persist group and manual saving. Put your 
 ### 24. Persist Loot Table pity and Storylet Weaver history
 
 Add the Loot Table and Storylet Weaver addons to your save (persist group or singletons). Loot Table's `save_state` records its pity counters so a player who was close to a guaranteed rare does not lose that progress on reload, and Storylet Weaver's snapshot keeps which story beats have already fired so the narrative does not repeat itself after a load.
+
+### 25. Write portable INI or XML saves for external tools
+
+Set `format` to `ini` when another tool or an INI library needs to read your save's structure, or to `xml` when a pipeline expects XML. Both keep exact types (an integer stays an integer, a Vector2 stays a Vector2), so switching to them costs nothing on the Godot side while giving you a file shape other software understands.
+
+### 26. Read a whole save at once for a debug panel or migration
+
+Call Read All to pull the entire active slot into one Dictionary, or List Save Keys to loop the keys. This is the fast way to build a "what's in this save" debug panel, dump a slot to the output log, or run a one-time migration that rewrites old keys into a new shape before saving again.
+
+### 27. Import a save file that another tool or an older build wrote
+
+Point Read Save File at any path and pass the format it was written in (or leave the format blank to use the active one). It returns that file's Dictionary without touching the active slot, so you can inspect a backup, accept an imported save, or read a file from a companion app and copy the values you want into the current game.
 
 ## Other use cases
 
@@ -193,5 +215,5 @@ Add the Loot Table and Storylet Weaver addons to your save (persist group or sin
 - **Keep your keys stable across versions.** The key you pass to Save Number or Save Node State is the contract with old files. If you rename a key in a later build, existing saves lose that value. Add new keys rather than renaming old ones, and let `load_state` tolerate the missing ones.
 - **Node references are not saved, only plain data.** The seam snapshots plain values. A saved dictionary should never contain a live node, a Callable, or another non-data object. If you need to remember which node something pointed at, store a stable identifier such as a name or path and re-resolve it after load.
 - **The persist group is matched back by node path.** On load, each snapshot is reunited with its node by that node's path in the scene tree. The node must already exist at the same path when Load Game runs, so restore into the same scene layout you saved from, or spawn the nodes before loading.
-- **All four formats preserve exact types.** An integer comes back as an integer, a float as a float, a Vector2 as a Vector2, in every format including json and csv. You do not need to convert numbers on load. If you hand-edit a json save, note that a value you write as a wrapped object is how the system stores an integer or a rich type.
+- **All six formats preserve exact types.** An integer comes back as an integer, a float as a float, a Vector2 as a Vector2, in every format including json, csv, ini, and xml. You do not need to convert numbers on load. If you hand-edit a json save, note that a value you write as a wrapped object is how the system stores an integer or a rich type.
 - **`save_state` must return plain data only.** When you write your own `save_state`, build the dictionary from numbers, strings, booleans, arrays, dictionaries, and the wrapped Variants the system understands. Returning anything that cannot be serialised will break the save. Save Studio's Add Save Support generator picks safe fields for you, which is the easiest way to stay on the right side of this rule.

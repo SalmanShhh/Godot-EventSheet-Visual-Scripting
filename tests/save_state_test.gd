@@ -39,6 +39,50 @@ static func run() -> bool:
 	all_passed = _emission_survival() and all_passed
 	all_passed = _studio_generator() and all_passed
 	all_passed = _reviewer_regressions() and all_passed
+	all_passed = _new_formats_and_read_helpers() and all_passed
+	return all_passed
+
+
+## The ini and xml backends round-trip a range of values (including XML-special and INI
+## key=value characters), and the Read All / List Save Keys / Read Save File helpers work.
+static func _new_formats_and_read_helpers() -> bool:
+	var all_passed: bool = true
+	for fmt: String in ["ini", "xml"]:
+		var sv: Node = _new_save_system("regress_%s" % fmt, fmt)
+		sv.call("save_value", "coins", 1500)
+		sv.call("save_value", "player", "Zed <the> \"Bold\" & Co")
+		sv.call("save_value", "path", "C:\\Users\\me")
+		sv.call("save_value", "pos", Vector2(3, 4))
+		sv.call("save_value", "bag", {"sword": 1, "note": "a=b;c"})
+		all_passed = _check("%s: int stays int" % fmt, typeof(sv.call("load_value", "coins", 0)), TYPE_INT) and all_passed
+		all_passed = _check("%s: special-char string round-trips" % fmt, sv.call("load_value", "player", ""), "Zed <the> \"Bold\" & Co") and all_passed
+		all_passed = _check("%s: backslash path round-trips" % fmt, sv.call("load_value", "path", ""), "C:\\Users\\me") and all_passed
+		all_passed = _check("%s: Vector2 round-trips" % fmt, sv.call("load_value", "pos", Vector2.ZERO), Vector2(3, 4)) and all_passed
+		var bag: Dictionary = sv.call("load_value", "bag", {})
+		all_passed = _check("%s: nested dict with = and ; survives" % fmt, str(bag.get("note", "")), "a=b;c") and all_passed
+		# Read helpers: whole slot, its keys, and reading the same file back by path.
+		var all_data: Dictionary = sv.call("read_all")
+		all_passed = _check("%s: Read All returns every key" % fmt, all_data.size(), 5) and all_passed
+		all_passed = _check("%s: List Save Keys lists them" % fmt, (sv.call("save_keys") as Array).has("coins"), true) and all_passed
+		var by_path: Dictionary = sv.call("read_file", str(sv.call("_slot_path")), fmt)
+		all_passed = _check("%s: Read Save File reads an arbitrary path" % fmt, by_path.get("coins", 0), 1500) and all_passed
+		all_passed = _check("%s: Read Save File with a blank format uses the active one" % fmt, sv.call("read_file", str(sv.call("_slot_path")), "").get("coins", 0), 1500) and all_passed
+		_remove_slot(sv)
+		sv.free()
+	# Read Save File crosses formats: write json, read it back through Read Save File as json.
+	var writer: Node = _new_save_system("regress_cross", "json")
+	writer.call("save_value", "level", 9)
+	var cross: Dictionary = writer.call("read_file", str(writer.call("_slot_path")), "json")
+	all_passed = _check("Read Save File reads a different-format file by name", cross.get("level", 0), 9) and all_passed
+	_remove_slot(writer)
+	writer.free()
+	# An empty-string value survives ini and xml (the empty-content edge).
+	for fmt: String in ["ini", "xml"]:
+		var sv2: Node = _new_save_system("regress_empty_%s" % fmt, fmt)
+		sv2.call("save_value", "note", "")
+		all_passed = _check("%s: empty string round-trips" % fmt, sv2.call("load_value", "note", "x"), "") and all_passed
+		_remove_slot(sv2)
+		sv2.free()
 	return all_passed
 
 
@@ -273,12 +317,12 @@ static func _behavioral_readbacks() -> bool:
 	return all_passed
 
 
-## All four backends round-trip exact Variants: config/binary natively, json through the
-## {"__var": ...} wrapper (ints legitimately come back as floats there - pinned), csv
-## through var_to_str/str_to_var with c_escape keeping every value on one row.
+## All six backends round-trip exact Variants (config/binary natively; json via the
+## wrapper; csv/ini/xml via var_to_str/str_to_var), preserving float, int, Vector2, and
+## nested-dict types identically in every format.
 static func _format_round_trips() -> bool:
 	var all_passed: bool = true
-	for fmt: String in ["config", "json", "binary", "csv"]:
+	for fmt: String in ["config", "json", "binary", "csv", "ini", "xml"]:
 		var sv: Node = (load("res://eventsheet_addons/save_system/save_system_addon.gd") as GDScript).new()
 		sv.set("save_directory", "user://")
 		sv.set("file_pattern", "test_seam_%s_{slot}.dat" % fmt)
