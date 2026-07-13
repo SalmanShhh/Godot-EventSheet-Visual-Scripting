@@ -31,6 +31,14 @@
 - Round-trip tests for all 18 seams (mutate -> snapshot -> restore -> identical
   re-snapshot + behavioral readbacks), all four formats, the node-state walk, and
   emitted-pack survival pins (tests/save_state_test.gd).
+- **Save Studio** (Tools menu): one window, three tabs. **Format Preview** runs the
+  real save pipeline on any seamed addon and shows the on-disk output in each format
+  before you commit to one. **Save Slots** browses the project's user:// saves, views
+  their contents, and exports them anywhere - with optional format conversion. **Add
+  Save Support** points at any script, lists its variables (data pre-ticked, node
+  references left off), and generates a copy-paste `save_state`/`load_state` pair that
+  follows the convention - so building save support into your own addons or tools is a
+  three-click job, not a lookup.
 
 ### Added - StatForge, Juice color tints, and rounded sheet corners (70 packs)
 

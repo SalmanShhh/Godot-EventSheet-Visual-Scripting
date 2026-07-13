@@ -14,9 +14,10 @@ You can build a whole reusable **behaviour** - the kind you attach under a node 
 6. [Act - Actions](#6-act---actions)
 7. [Loop - Pick Filters](#7-loop---pick-filters)
 8. [Reusable Logic - Functions](#8-reusable-logic---functions)
-9. [When GDScript Is Still the Right Tool](#9-when-gdscript-is-still-the-right-tool)
-10. [Use Cases](#10-use-cases)
-11. [Tips and Common Mistakes](#11-tips-and-common-mistakes)
+9. [Give Your Behaviour Save Support](#9-give-your-behaviour-save-support)
+10. [When GDScript Is Still the Right Tool](#10-when-gdscript-is-still-the-right-tool)
+11. [Use Cases](#11-use-cases)
+12. [Tips and Common Mistakes](#12-tips-and-common-mistakes)
 
 ---
 
@@ -105,13 +106,26 @@ Tick **"expose as ACE"** and the function becomes a picker entry in every sheet 
 
 ---
 
-## 9. When GDScript Is Still the Right Tool
+## 9. Give Your Behaviour Save Support
+
+If your behaviour holds state that should survive a save - a stat total, a cooldown, a level, an owned-items dictionary - it can join the project-wide save convention with two plain methods. Any node the Save System touches is checked for a pair of methods:
+
+- `save_state() -> Dictionary` returns a plain-data snapshot of your behaviour's runtime state (numbers, text, booleans, dictionaries, arrays - never node or resource references).
+- `load_state(state: Dictionary)` reads that snapshot back, tolerating missing keys so an old save still loads after you add a field.
+
+There is no base class and no registration. The Save System duck-types the pair, so once your behaviour has it, a node carrying your behaviour is saved automatically when it sits in the persist group, or on demand with **Save Node State**. Your behaviour's own state travels with the rest of the game's save, in whatever format the project uses.
+
+You do not have to hand-write the pair. Open **Tools > Save Studio > Add Save Support**, point it at your behaviour's script, and it lists every variable with a checkbox - plain data pre-ticked, node references left off. Tick what should persist and it generates the `save_state`/`load_state` methods in the exact convention (underscore-stripped keys, deep-copied collections, typed coercion on load). Copy them into your script and you are done. Every bundled stateful pack - StatForge, Health, the incremental packs, Weapon Kit, and more - already carries this pair, so they persist out of the box.
+
+---
+
+## 10. When GDScript Is Still the Right Tool
 
 Some logic genuinely *is* code and reads better as a block (the escape hatch is always there): a typed **inner class**, continuous **numeric integration** (`cos`/`sin`/spring math), or a tight numeric kernel. The bundled `spring`, `juice`, and `bullet` packs keep those as GDScript on purpose. The goal is **zero *gratuitous* GDScript** - not dogmatic zero. Everything in sections 3-8 above is the discrete game logic that should be rows.
 
 ---
 
-## 10. Use Cases
+## 11. Use Cases
 
 ### 1. A coin magnet from events only
 
@@ -157,7 +171,7 @@ Because *Read Input Axis Into* and *Is Action Pressed* are rows, remapping a mov
 
 Send an artist the Flash behaviour and they tune `flash_color` from a colour swatch and `flash_time` from a typed drawer, watching *On Flash Finished* fire in their own sheet. They ship polish without ever opening code or asking you to rebuild.
 
-## 11. Tips and Common Mistakes
+## 12. Tips and Common Mistakes
 
 - **Loops are the bit people miss.** They are not a row you add from the picker - they live *on the event* as a Pick Filter. Right-click the event → Add Pick Filter.
 - **`host` is already wired.** In behavior mode, node ACEs target the parent automatically; you do not select or path to the host node yourself.
