@@ -1738,8 +1738,15 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 			if exported:
 				for decor_line: String in _decor_prefix_lines(attributes):
 					lines.append(decor_line)
-			if exported and not str(attributes.get("tooltip", "")).strip_edges().is_empty():
-				lines.append("## %s" % str(attributes.get("tooltip")).strip_edges())
+			# The variable's description doubles as its Inspector tooltip (Godot's `##` doc-comment
+			# convention): an explicit "tooltip" attribute wins, else the plain description field is
+			# used - so a comment typed on a variable becomes the property's Inspector description
+			# automatically. Newlines collapse to spaces (a bare second line would break the `##` block).
+			var tooltip_text: String = str(attributes.get("tooltip", "")).strip_edges()
+			if tooltip_text.is_empty():
+				tooltip_text = str(descriptor.get("description", "")).strip_edges()
+			if exported and not tooltip_text.is_empty():
+				lines.append("## %s" % tooltip_text.replace("\n", " "))
 			# A category is the heaviest Inspector divider (its own header band); it precedes
 			# the group exactly as Godot applies them.
 			if exported and not str(attributes.get("category", "")).strip_edges().is_empty():
@@ -2298,24 +2305,32 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 ## grouping. Empty for non-exported or un-grouped vars (the common case - existing emission stays
 ## byte-identical). Must match _emit_variables' format exactly (the verify-lift compares against it).
 static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
-	if not local_var.exported or not (local_var.attributes is Dictionary) or local_var.attributes.is_empty():
+	# A plain-description exported variable (no attributes) still earns a `##` doc line, so the
+	# guard is on `exported` alone; the attribute-driven lines below all no-op on an empty dict.
+	if not local_var.exported:
 		return ""
+	var attributes: Dictionary = local_var.attributes if local_var.attributes is Dictionary else {}
 	var prefix: String = ""
 	# Decor first, then tooltip, then category/group/subgroup - same canonical order as the
 	# dict-var path (_emit_variables), so the importer's absorb can verify-lift the whole block.
 	# The ## doc attaches to the following @export var.
-	for decor_line: String in _decor_prefix_lines(local_var.attributes):
+	for decor_line: String in _decor_prefix_lines(attributes):
 		prefix += decor_line + "\n"
-	var tooltip: String = str(local_var.attributes.get("tooltip", "")).strip_edges()
+	# The description doubles as the Inspector tooltip: an explicit "tooltip" attribute wins, else the
+	# plain description field is used (so a comment on a variable becomes its Inspector description).
+	# Newlines collapse to spaces - a bare second line would break Godot's `##` doc-comment block.
+	var tooltip: String = str(attributes.get("tooltip", "")).strip_edges()
+	if tooltip.is_empty():
+		tooltip = local_var.description.strip_edges()
 	if not tooltip.is_empty():
-		prefix += "## %s\n" % tooltip
-	var category: String = str(local_var.attributes.get("category", "")).strip_edges()
+		prefix += "## %s\n" % tooltip.replace("\n", " ")
+	var category: String = str(attributes.get("category", "")).strip_edges()
 	if not category.is_empty():
 		prefix += "@export_category(\"%s\")\n" % category
-	var group: String = str(local_var.attributes.get("group", "")).strip_edges()
+	var group: String = str(attributes.get("group", "")).strip_edges()
 	if not group.is_empty():
 		prefix += "@export_group(\"%s\")\n" % group
-	var subgroup: String = str(local_var.attributes.get("subgroup", "")).strip_edges()
+	var subgroup: String = str(attributes.get("subgroup", "")).strip_edges()
 	if not subgroup.is_empty():
 		prefix += "@export_subgroup(\"%s\")\n" % subgroup
 	return prefix

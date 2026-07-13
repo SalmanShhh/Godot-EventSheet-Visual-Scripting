@@ -1,14 +1,23 @@
 ; Engine configuration file.
-; This root project exists so tests can run with `godot --headless --script tests/run_tests.gd`.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
 [application]
+
 config/name="EventForge"
 run/main_scene="res://demo/scenes/player.tscn"
+config/features=PackedStringArray("4.7")
 
 [autoload]
-EventForgeBridge="*res://addons/eventforge/runtime/eventforge_bridge.gd"
+
+EventForgeBridge="*uid://duh4jgpamtcwn"
 
 [editor_plugins]
+
 enabled=PackedStringArray("res://addons/eventforge/plugin.cfg")

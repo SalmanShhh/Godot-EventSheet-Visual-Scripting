@@ -467,9 +467,14 @@ static func run() -> bool:
 		variable_dialog._attr_section_card.visible, false) and all_passed
 	all_passed = _check("combo options hide for non-String types",
 		variable_dialog._options_row.visible, false) and all_passed
-	variable_dialog.open_for_edit("global", {"attributes": {"tooltip": "hi"}}, "title", "String", "\"x\"", false, "Edit Variable", false, true)
-	all_passed = _check("existing attributes auto-expand the section",
+	variable_dialog.open_for_edit("global", {"attributes": {"group": "Combat"}}, "title", "String", "\"x\"", false, "Edit Variable", false, true)
+	all_passed = _check("existing (advanced) attributes auto-expand the section",
 		variable_dialog._attr_section_card.visible and variable_dialog._options_row.visible, true) and all_passed
+	# Description (the promoted tooltip field) is always visible now, so a description-only variable
+	# must NOT unfurl More options - only genuinely-advanced attributes do.
+	variable_dialog.open_for_edit("global", {"attributes": {"tooltip": "hi"}}, "note", "String", "\"x\"", false, "Edit Variable", false, true)
+	all_passed = _check("a description-only variable keeps More options collapsed",
+		variable_dialog._attr_section_card.visible, false) and all_passed
 	variable_dialog._populate_enum_fill_menu()
 	var enum_popup: PopupMenu = variable_dialog._enum_fill_menu.get_popup()
 	all_passed = _check("sheet enums fill the combo with member names (values stripped)",

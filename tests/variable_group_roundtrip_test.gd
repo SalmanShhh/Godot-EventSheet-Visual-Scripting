@@ -95,6 +95,43 @@ static func run() -> bool:
 	all_passed = _check("a non-grouping attribute (range) is dropped from the tree subset",
 		EventSheetDock._tree_group_attributes({"range": {"min": "0"}}), {}) and all_passed
 
+	# Description-as-Inspector-tooltip: a variable's plain description compiles to a `## ` doc comment
+	# above the @export var (Godot's Inspector-description convention), so a comment typed on a variable
+	# automatically becomes the property's Inspector description - no separate Tooltip step needed.
+	var described: LocalVariable = LocalVariable.new()
+	described.name = "shield"
+	described.type_name = "int"
+	described.default_value = 50
+	described.exported = true
+	described.description = "Absorbs damage before health."
+	all_passed = _check("a described exported var emits its description as a ## doc comment",
+		SheetCompiler._emit_tree_variable_line(described),
+		"## Absorbs damage before health.\n@export var shield: int = 50") and all_passed
+	# An explicit tooltip attribute wins over the description field (the override path).
+	described.attributes = {"tooltip": "Shield points."}
+	all_passed = _check("an explicit tooltip wins over the description field",
+		SheetCompiler._emit_tree_variable_line(described),
+		"## Shield points.\n@export var shield: int = 50") and all_passed
+	# A described but NON-exported var stays a plain private var (Godot only surfaces exported docs).
+	var priv: LocalVariable = LocalVariable.new()
+	priv.name = "_ticks"
+	priv.type_name = "int"
+	priv.default_value = 0
+	priv.exported = false
+	priv.description = "internal counter"
+	all_passed = _check("a described private var emits no doc comment",
+		SheetCompiler._emit_tree_variable_line(priv), "var _ticks: int = 0") and all_passed
+	# Round-trip: the description-emitted `## ` reopens as the variable's tooltip (byte-identical re-emit,
+	# so the lossless .gd contract holds). Pin the value, never a `bool and String` chain (it crashes).
+	var desc_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n## Absorbs damage before health.\n@export var shield: int = 50\n")
+	var reopened: LocalVariable = null
+	for entry: Variant in desc_sheet.events:
+		if entry is LocalVariable and (entry as LocalVariable).name == "shield":
+			reopened = entry as LocalVariable
+	var reopened_tip: String = str((reopened.attributes as Dictionary).get("tooltip", "")) if reopened != null else ""
+	all_passed = _check("the description-emitted doc reopens as a tooltip (round-trip)",
+		reopened_tip, "Absorbs damage before health.") and all_passed
+
 	return all_passed
 
 

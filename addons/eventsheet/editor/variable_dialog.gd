@@ -264,6 +264,12 @@ func init_dialog(parent_node: Node) -> void:
 		_options_edit.text = str(_enum_fill_menu.get_popup().get_item_metadata(index)))
 	_options_row.add_child(_enum_fill_menu)
 	form.add_child(_options_row)
+	# Description: an always-visible comment on the variable. It compiles to a `## ` doc comment above
+	# the @export var, which IS Godot's Inspector property description - so a comment typed here shows up
+	# in the Inspector automatically, no extra step. (Stored as the "tooltip" attribute the compiler reads.)
+	_attr_tooltip_edit = LineEdit.new()
+	_attr_tooltip_edit.placeholder_text = "what this variable is for - shown as its description in the Inspector"
+	form.add_child(EventSheetPopupUI.form_row("Description", _attr_tooltip_edit))
 	# Inspector attributes behind a disclosure ("More options") - the dialog used to throw everything at once.
 	# Collapsed for new variables, auto-expanded when an edited variable already uses an attribute. Exported
 	# globals only. (Progressive disclosure.)
@@ -271,7 +277,7 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_toggle.flat = true
 	_attr_toggle.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_attr_toggle.toggle_mode = true
-	_attr_toggle.text = "▸  More options (tooltip, range, drawer…)"
+	_attr_toggle.text = "▸  More options (range, drawer, grouping…)"
 	_attr_toggle.tooltip_text = "Optional Inspector polish for exported globals - everything compiles to plain Godot annotations."
 	_attr_toggle.toggled.connect(func(expanded: bool) -> void:
 		_attr_toggle.text = ("▾" if expanded else "▸") + _attr_toggle.text.substr(1)
@@ -283,10 +289,8 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_section_card = EventSheetPopupUI.panel_section(_attr_section)
 	_attr_section_card.visible = false
 	form.add_child(_attr_section_card)
-	# ── BASIC tier: the friendly polish a designer reaches for first ──
-	_attr_tooltip_edit = LineEdit.new()
-	_attr_tooltip_edit.placeholder_text = "shown when hovering the property"
-	_attr_section.add_child(EventSheetPopupUI.form_row("Tooltip", _attr_tooltip_edit))
+	# ── BASIC tier: the friendly polish a designer reaches for first (Description is promoted to
+	# the always-visible form above; range / drawer / look controls live here) ──
 	_attr_range_edit = LineEdit.new()
 	_attr_range_edit.placeholder_text = _RANGE_PLACEHOLDER_NUMERIC
 	_attr_range_edit.text_changed.connect(func(_t: String) -> void:
@@ -843,7 +847,10 @@ func open_for_edit(
 	# edited variable already uses any attribute. The nested "Advanced" tier auto-expands ONLY when an
 	# advanced attribute is set - a tooltip-only variable shouldn't unfurl the whole advanced block.
 	if _attr_toggle != null:
-		var has_any: bool = not existing_attributes.is_empty()
+		var non_description_attrs: Dictionary = existing_attributes.duplicate()
+		# Description (tooltip) lives in the always-visible form now, so it alone must NOT unfurl More options.
+		non_description_attrs.erase("tooltip")
+		var has_any: bool = not non_description_attrs.is_empty()
 		_attr_toggle.button_pressed = has_any
 		_attr_section_card.visible = has_any
 		_attr_toggle.text = ("▾" if _attr_section_card.visible else "▸") + _attr_toggle.text.substr(1)

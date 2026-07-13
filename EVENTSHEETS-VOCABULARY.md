@@ -185,10 +185,14 @@ Node script extending `CharacterBody2D`.
 #### Triggers
 - **On Hit Bound** (`side: String`)
 
+#### Conditions
+- **Is At Bound** (`side: String = "any"`) - True while the host is pressed against a bound. side: left / right / top / bottom / any.
+
 #### Actions
 - **Set Bound Enabled** (`enabled: bool`) - Turns the binding on or off at runtime (off = the host moves freely).
 - **Set Custom Bounds** (`x: float, y: float, width: float, height: float`) - Sets the custom rectangle (world-space pixels) and switches the binding to it - your level's playable area.
 - **Set Bound Extents** (`new_half_width: float, new_half_height: float`) - Sets the host's half-size used by edge binding (half the sprite's width and height).
+- **Set Bound Space** (`space: String`) - Switches what the host is kept inside: the on-screen camera view, or the custom rectangle.
 
 ### BulletBehavior (`res://eventsheet_addons/bullet/bullet_behavior.gd`)
 @ace_category("Bullet") @ace_expose_all(node)
@@ -329,6 +333,14 @@ Node script extending `CharacterBody2D`.
 ### DecalPainter (`res://eventsheet_addons/decal_painter/decal_painter_behavior.gd`)
 @ace_tags(3d, drawing, visual) @ace_category("Decal Painter")
 
+#### Actions
+- **Spawn Decal** (`texture: Texture2D, x: float, y: float, z: float, size: float, rotation_deg: float, lifetime: float`) - Stamps a decal onto the world at a position - splats, scorch marks, target rings. Lifetime 0 keeps it forever (until the max-decals cap recycles it).
+- **Spawn Blob Shadow** (`follow: Node, radius: float, opacity: float, collision_mask_3d: int`) - Keeps a soft shadow blob ground-snapped under a node - the classic character shadow, no asset needed. The floor is found by raycast against the collision mask.
+- **Stop Blob Shadow** (`follow: Node`) - Removes the blob shadow following a node.
+- **Spawn Canvas Decal** (`canvas: Node, x: float, y: float, z: float, size: float, rotation_deg: float`) - Projects a 2D Drawing Canvas's LIVE texture onto the world as a decal - draw a line-of-sight fan or telegraph in 2D and paint it on the 3D floor. Pass the DrawingCanvas behavior node; the decal updates as the canvas draws.
+- **Clear Decals** - Frees every spawned decal and blob shadow.
+- **Set Max Decals** (`count: int`) - Changes the FIFO cap - the oldest decals free immediately if over it.
+
 #### Expressions
 - **Decal Count**
 
@@ -414,6 +426,22 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Conditions
 - **Is Auto Clear**
+
+#### Actions
+- **Clear Canvas** - Wipes the canvas. In persistent mode the wipe happens on the next frame and the canvas keeps strokes again afterwards.
+- **Set Auto Clear** (`enabled: bool`) - On: the canvas wipes itself every frame (re-issue draws each tick - vision cones, telegraphs). Off: strokes stay until Clear Canvas (paint, splats, skid marks).
+- **Set Canvas Visible** (`visible_now: bool`) - Shows or hides the canvas display on the host.
+- **Draw Line** (`from_x: float, from_y: float, to_x: float, to_y: float, width: float, color: Color`) - Draws a line segment - attack direction indicators, lasers, aim guides.
+- **Draw Circle** (`x: float, y: float, radius: float, color: Color`) - Draws a filled circle - the classic soft blob shadow under a character.
+- **Draw Ring** (`x: float, y: float, radius: float, width: float, color: Color`) - Draws a circle outline - selection rings, blast-radius previews.
+- **Draw Rect** (`x: float, y: float, width: float, height: float, color: Color`) - Draws a filled rectangle (x/y = top-left corner).
+- **Draw Cone** (`x: float, y: float, facing_deg: float, fov_deg: float, radius: float, color: Color`) - Draws a filled wedge - the attack-telegraph cone (pair with Auto Clear so it follows the attacker every frame).
+- **Draw Stamp** (`texture: Texture2D, x: float, y: float, scale_factor: float, rotation_deg: float`) - Stamps a texture onto the canvas - bullet holes, footprints, splats. In persistent mode stamps pile up like decals.
+- **Draw Line Of Sight** (`origin_x: float, origin_y: float, facing_deg: float, fov_deg: float, max_range: float, collision_mask: int, color: Color`) - Draws a character's LINE OF SIGHT as a filled fan: rays cast against the collision mask stop at walls, so the shape hugs the level exactly. Re-issue each tick with Auto Clear on for a live vision cone. Origin and range are WORLD coordinates.
+- **Draw Prefab** (`prefab: Resource, x: float, y: float, scale_factor: float, rotation_deg: float`) - Replays a DrawingPrefabResource's steps IN ORDER at a position, scaled and rotated - author a target marker or scorch formation once as a .tres, stamp it everywhere.
+- **Start Ribbon** (`follow: Node, point_count: int, width: float, color: Color`) - Starts a textured ribbon trailing a node - sword swooshes, skid marks, comet tails. The ribbon follows for Point Count frames of history; Set Ribbon Texture skins it.
+- **Set Ribbon Texture** (`follow: Node, texture: Texture2D`) - Skins a running ribbon with a texture, stretched along its length.
+- **Stop Ribbon** (`follow: Node`) - Ends the ribbon trailing a node.
 
 #### Expressions
 - **Canvas Texture**
@@ -662,6 +690,11 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Slowmo** (`target_scale: float, hold_duration: float, duration_clock: String`) - Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.
 - **Clear Slowmo** - Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running).
 - **Hitstop** (`freeze_duration: float, freeze_scale: float`) - The punchy hit-pause you feel on a connecting blow: freezes Engine.time_scale (0 = full stop) for a few frames, then snaps back to what it was. Uses a realtime timer so it un-freezes even at a full stop, ignores repeat hits already mid-freeze, pauses any active Slowmo for the duration, and emits On Hitstop Finished. Fire it the instant a hit lands.
+- **Set Host Tint** (`color: Color, strength: float`) - Tints the HOST object: blends its color toward the tint by Strength (0 = its own colors untouched, 1 = fully the tint color) - the classic object tint, with the strength as your opacity dial. Children inherit (modulate).
+- **Clear Host Tint** - Removes the host tint (back to its own colors).
+- **Set Screen Tint** (`color: Color, strength: float`) - Washes the WHOLE SCREEN with a color at Strength opacity (0..1) - damage red, poison green, night blue, flashback sepia. Call again to retune; strength 0 clears.
+- **Fade Screen Tint** (`seconds: float`) - Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.
+- **Clear Screen Tint** - Removes the screen tint instantly.
 
 #### Expressions
 - **Trauma**
@@ -687,6 +720,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **FOV Punch** (`amount: float`) - Kicks the field of view wider (positive, a speed boost / dash) or tighter (negative, an impact) by an amount in degrees, then eases back at the FOV Recovery rate. Fire-and-forget.
 - **Zoom FOV To** (`fov: float, duration: float`) - Smoothly changes the camera's base field of view to a value in degrees and keeps it there (an aim-down-sights zoom is FOV 40, back to 75 to unzoom). Emits On Zoom Finished.
 - **Use Camera** (`camera_path: NodePath`) - Pin the effects to a specific Camera3D (by path). Leave it unused to auto-target whichever camera is active.
+- **Set Screen Tint** (`color: Color, strength: float`) - Washes the WHOLE SCREEN with a color at Strength opacity (0..1) over the 3D view - damage red, poison green, night blue. Call again to retune; strength 0 clears.
+- **Fade Screen Tint** (`seconds: float`) - Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.
+- **Clear Screen Tint** - Removes the screen tint instantly.
 
 #### Expressions
 - **Trauma**
@@ -1064,6 +1100,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Conditions
 - **Is Rotating**
 
+#### Actions
+- **Set Rotation Enabled** (`enabled: bool`) - Turns the spin on or off - the pause/resume toggle.
+- **Set Rotation Speed** (`degrees_per_second: float`) - Sets the live rotation speed in degrees per second (negative = the other way).
+- **Set Rotation Acceleration** (`degrees_per_second_squared: float`) - Sets the acceleration in degrees per second, per second (0 = constant).
+- **Set Rotation Type** (`type: String`) - Switches what spins: a Node2D's rotation, or a Node3D's X / Y / Z axis.
+- **Reverse Rotation** - Flips the spin direction (negates the live speed).
+
 #### Expressions
 - **Rotation Speed**
 
@@ -1075,6 +1118,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Conditions
 - **Has Save Key** (`key: String`) - Whether the key exists in the active slot.
+- **Save File Is Format** (`path: String, expected_format: String`) - Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).
+- **Save Format Is** (`expected_format: String`) - Whether the active save format (the Inspector format property) equals the given one.
 - **Slot Exists** (`slot_index: int`) - Whether the slot has a save file.
 
 #### Actions
@@ -1082,13 +1127,23 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Save Number** (`key: String, value: float`) - Writes a number under the key (active slot).
 - **Save Text** (`key: String, value: String`) - Writes a string under the key (active slot).
 - **Delete Slot** - Removes the active slot's save file.
-- **Save Game** - Broadcasts On Before Save (every sheet writes its state), then On Save Written.
-- **Load Game** - Broadcasts On After Load - every sheet reads its state back.
+- **Save Game** - Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, then fires On Save Written.
+- **Load Game** - Restores every persist-group snapshot, then broadcasts On After Load so every sheet reads its state back.
+- **Save Node State** (`node: Node, key: String`) - Snapshots a node and its behaviors (any child with save_state) under the key.
+- **Load Node State** (`node: Node, key: String`) - Restores a node and its behaviors from the key's snapshot.
+- **Save Group State** (`group: String, key: String`) - Snapshots every node in the scene-tree group (and their behaviors) under the key.
+- **Load Group State** (`key: String`) - Restores the group snapshot saved under the key (nodes matched by scene path).
+- **Save Singleton State** (`singleton_name: String, key: String`) - Snapshots an autoload addon (Currency Ledger, Upgrades, Prestige...) by its autoload name.
+- **Load Singleton State** (`singleton_name: String, key: String`) - Restores an autoload addon's snapshot from the key.
 
 #### Expressions
 - **Load Value** (`key: String, default_value`) - Reads any value (your default when missing).
 - **Load Number** (`key: String`) - Reads a number (0 when missing).
 - **Load Text** (`key: String`) - Reads a string ("" when missing).
+- **Read All** - Reads the whole active slot as one Dictionary (every saved key and value).
+- **List Save Keys** - The keys stored in the active slot (loop them to read a whole save).
+- **Read Save File** (`path: String, file_format: String`) - Reads ANY save file at a path in the given format (config/json/binary/csv/ini/xml; blank = the active format) and returns its Dictionary.
+- **Save File Format** (`path: String`) - Detects the format of the save file at the path (config/json/binary/csv/ini/xml), or "" when it is missing or unrecognised. Feed it to Read Save File.
 - **List Slots** - Slot numbers that have save files (for menus).
 - **Slot Modified Time** (`slot_index: int`) - Unix mtime of the slot's file (0 when missing).
 
@@ -1223,6 +1278,47 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Spring Value** (`spring_name: String`)
 - **Spring Velocity** (`spring_name: String`)
 - **Spring Progress** (`spring_name: String`)
+
+### StatForge (`res://eventsheet_addons/stat_forge/stat_forge_behavior.gd`)
+@ace_tags(stats, rpg, data) @ace_category("StatForge")
+
+#### Triggers
+- **On Buff Added** (`buff_id: String, stat: String`)
+
+#### Conditions
+- **Has Buff** (`buff_id: String`)
+- **Buff Is Active** (`buff_id: String`)
+- **Has Buffs With Tag** (`tag: String`)
+- **Has Buffs From Source** (`source: String`)
+- **Stat Is At Least** (`stat: String, value: float`) - The beginner-friendly stat compare (Stat Total works in any expression too).
+
+#### Actions
+- **Add Buff** (`buff_id: String, stat: String, value: float, mode: String = "add", tags: String = "", source: String = "", duration: float = 0.0`) - The one verb that runs the whole system: a named buff targeting a stat with a value and a mode (add / multiply / override - highest override wins). Tags are comma-separated labels for bulk ops, source names who applied it, duration in seconds expires it (0 = permanent). Re-adding an id REPLACES that buff.
+- **Remove Buff** (`buff_id: String`) - Removes one buff by id (a no-op when absent).
+- **Remove Buffs By Tag** (`tag: String`) - Removes every buff carrying the tag - unequip all "equipment" in one action.
+- **Remove Buffs By Source** (`source: String`) - Removes every buff a source applied - clear one enemy's curses when it dies.
+- **Clear Buffs** - Empties the whole stack (bases stay).
+- **Set Stat Base** (`stat: String, value: float`) - Sets a stat's base value - the number the buff math starts from.
+- **Set Buff Active** (`buff_id: String, active: bool`) - Turns one buff on or off WITHOUT removing it - inactive buffs stay in the stack but contribute nothing (a stance toggle, a disabled rune).
+- **Set Buffs Active By Tag** (`tag: String, active: bool`) - Bulk activation by tag - silence every "aura" buff in an antimagic zone.
+- **Set Buff Value** (`buff_id: String, value: float`) - Changes a live buff's value in place (a stacking poison that deepens).
+- **Refresh Buff** (`buff_id: String, duration: float`) - Restarts a timed buff's countdown (re-drinking the potion refreshes, not stacks).
+- **Set Buff Timer Paused** (`buff_id: String, paused: bool`) - Freezes/unfreezes one buff's countdown (cutscenes, pause-adjacent states).
+- **Advance Timers** (`seconds: float`) - Advances every unpaused timer by the given seconds - the manual clock for turn-based games (turn ends: Advance Timers 1).
+- **Add Threshold Rule** (`rule_id: String, stat: String, value: float, direction: String = "rising", repeating: bool = true`) - Watches a stat and fires On Threshold Crossed when its total crosses the value. Direction rising / falling / both; a repeating rule re-arms once the stat is back across, a one-shot stays spent until Re-Arm Threshold Rule.
+- **Remove Threshold Rule** (`rule_id: String`)
+- **Re-Arm Threshold Rule** (`rule_id: String`) - Re-arms a spent one-shot rule so it can fire again.
+- **Load Stat Sheet** (`stat_sheet: Resource`) - Applies a StatSheetResource (.tres): its bases set stat bases, its buff rows Add Buff one by one IN ORDER - whole loadouts, classes, and difficulty presets as data.
+
+#### Expressions
+- **Stat Total** (`stat: String`) - The stat computation: (base + active adds) * active multipliers - unless active OVERRIDE buffs exist, where the HIGHEST override wins outright. Overflow applies last (clamp / wrap / none).
+- **Stat Base** (`stat: String`)
+- **Buff Value** (`buff_id: String`)
+- **Buff Time Left** (`buff_id: String`) - Seconds left on a timed buff (-1 = permanent or unknown).
+- **Buff Count**
+- **Buff Count With Tag** (`tag: String`)
+- **Last Expired Buff** - The buff that expired most recently - read it inside On Buff Expired.
+- **Last Threshold Rule** - The rule that fired most recently - read it inside On Threshold Crossed.
 
 ### StateMachineBehavior (`res://eventsheet_addons/state_machine/state_machine_behavior.gd`)
 @ace_category("State Machine") @ace_expose_all(node)
@@ -1510,3 +1606,5 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Custom Wrap Bounds** (`x: float, y: float, width: float, height: float`) - Sets the custom rectangle (world-space pixels) and switches wrapping to it - your arena's edges.
 - **Set Wrap Axes** (`horizontal: bool, vertical: bool`) - Chooses which axes wrap (horizontal: left/right edges, vertical: top/bottom).
 - **Set Wrap Extents** (`new_half_width: float, new_half_height: float`) - Sets the host's half-size (half the sprite's width and height) used by the fully-outside test.
+- **Set Wrap Space** (`space: String`) - Switches what the host wraps around: the on-screen camera view, or the custom rectangle.
+- **Set Circle Wrap Bounds** (`center_x: float, center_y: float, radius: float`) - Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it: fully outside the circle teleports to the antipode - a round arena in one action.
