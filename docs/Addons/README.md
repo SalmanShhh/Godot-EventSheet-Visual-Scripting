@@ -7,6 +7,8 @@ cases as event-sheet rows, and the tips and gotchas that bite in practice.
 Every pack here is authored as an event sheet and compiles to plain GDScript with zero plugin
 dependency, just like your own sheets - open its `.gd` in the editor to read it as events.
 
+For the plugin's guides and references (not the packs), see the [documentation index](../README.md).
+
 ## Systems (autoload singletons)
 
 Install as a single project-wide autoload you call from any sheet by name.
