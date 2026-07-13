@@ -65,6 +65,8 @@ If you pick an Action or a Condition, this dropdown stays hidden, because their 
 
 ## 3. The Live Preview and the Ships-as Line
 
+![A filled-in ACE Studio: a Take Damage action with an amount parameter, the live preview showing the Action badge and param chip, the Ships-as line reading func take_damage(amount: float) -> void, a host.enabled guard, and the publish card set to the Combat category](images/ace-studio-example.png)
+
 The card labelled **"This is what other people will see"** is a live preview that updates on every keystroke. It is there so you can shape a clear, picker-ready verb before you commit. It shows:
 
 - A mock picker entry with a **role badge** (Action, Condition, or Expression), the **display name**, a **chip for each parameter**, and a **category chip**.

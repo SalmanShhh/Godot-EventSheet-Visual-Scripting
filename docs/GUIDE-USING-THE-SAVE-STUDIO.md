@@ -72,6 +72,8 @@ The Save Slots tab browses, inspects, and exports the real save files your proje
 
 The Add Save Support tab generates the `save_state` / `load_state` seam for one of your own scripts - an addon, an editor tool, or a plain node - so that it joins the exact same save convention the built-in behaviors use.
 
+![The Add Save Support tab: a scanned Timer script with its variables in a checklist (host left off, duration and remaining ticked) and the generated save_state pair below](images/save-studio-add-support.png)
+
 1. **Path field and Browse... button.** Type or pick the path to a `.gd` file.
 2. **Scan Variables button.** Scanning fills a table with three columns: a **Save** checkbox, a **Variable** name, and its **Type**, with one row per top-level variable in the script. Plain-data variables (numbers, text, dictionaries, arrays, Vector2, Color, and so on) are pre-ticked. Object references - a Node, a Resource, a RandomNumberGenerator, anything that is a pointer rather than data - are left unticked, because a live object must never go into a save file.
 3. **Generate save_state / load_state button.** This builds the method pair from the ticked rows only, following the repo convention: snapshot keys drop a leading underscore, collections are deep-copied so the save never aliases live data, and loads coerce each value by type and tolerate a missing key so an older save never crashes a newer build.

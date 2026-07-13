@@ -6,11 +6,13 @@
 
 - **docs/GUIDE-USING-THE-SAVE-STUDIO.md** walks the Save Studio window tab by tab
   (Format Preview, Save Slots, Add Save Support), the matching `EventSheets` API, and
-  12 use cases, with a rendered hero image.
+  12 use cases, illustrated with rendered images of the Format Preview and Add Save
+  Support tabs.
 - **docs/GUIDE-USING-THE-ACE-STUDIO.md** walks the "Define a Verb" dialog field by field
   (verb-kind cards, value type, the live preview and Ships-as line, parameters, guards,
-  publishing) plus 12 use cases. Cross-linked from the Custom ACEs and make-a-behaviour
-  guides; both added to the README and the AGENTS docs map.
+  publishing) plus 12 use cases, illustrated with the dialog and a filled-in worked
+  example. Cross-linked from the Custom ACEs and make-a-behaviour guides; both added to
+  the README and the AGENTS docs map.
 
 ### Added - Doctor check: stateful behavior missing the save-state seam
 
