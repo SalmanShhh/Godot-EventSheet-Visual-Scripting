@@ -31,6 +31,15 @@
 - Round-trip tests for all 18 seams (mutate -> snapshot -> restore -> identical
   re-snapshot + behavioral readbacks), all four formats, the node-state walk, and
   emitted-pack survival pins (tests/save_state_test.gd).
+- **Hardened against data loss** (found by an adversarial review of the backend):
+  a slot that exists but cannot be read (bad decrypt key, corrupt or truncated file)
+  no longer gets silently wiped by the next Save Game or autosave - the write is
+  refused instead. Every write is now **atomic** (write to a temp file, then rename
+  over the slot), so a crash mid-save leaves the previous save intact. CSV round-trips
+  backslash values correctly (Windows paths, regex). JSON preserves 64-bit ints (RNG
+  determinism) and moved its internal wrapper key off `__var` so a real user dictionary
+  is not mistaken for a wrapped value. A persist-group snapshot with no matching node
+  at load time (renamed or not-yet-loaded) now warns instead of vanishing quietly.
 - **Save Studio** (Tools menu): one window, three tabs. **Format Preview** runs the
   real save pipeline on any seamed addon and shows the on-disk output in each format
   before you commit to one. **Save Slots** browses the project's user:// saves, views

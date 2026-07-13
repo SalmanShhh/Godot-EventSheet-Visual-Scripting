@@ -38,7 +38,99 @@ static func run() -> bool:
 	all_passed = _node_state_walk() and all_passed
 	all_passed = _emission_survival() and all_passed
 	all_passed = _studio_generator() and all_passed
+	all_passed = _reviewer_regressions() and all_passed
 	return all_passed
+
+
+## Regressions for the confirmed data-loss bugs an adversarial review reproduced:
+## a failed read wiping the slot on the next write, non-atomic overwrite, CSV
+## backslash corruption, the JSON wrapper-key collision, and RNG precision through JSON.
+static func _reviewer_regressions() -> bool:
+	var all_passed: bool = true
+	# 1. A failed read (here: wrong encryption key on a plaintext slot) must NOT let the
+	# next write clobber the existing save. The write-guard aborts instead.
+	var guard: Node = _new_save_system("regress_guard", "config")
+	guard.call("save_value", "coins", 100)
+	guard.set("encryption_key", "wrongkey")
+	guard.call("_read_all")
+	all_passed = _check("read failure is detected (not treated as empty)", guard.get("_last_read_ok"), false) and all_passed
+	guard.call("save_value", "gems", 5)  # must be refused, not a wipe
+	guard.set("encryption_key", "")
+	all_passed = _check("a failed read does not wipe the existing save", guard.call("load_value", "coins", -1), 100) and all_passed
+	all_passed = _check("the guarded write was refused, not applied", guard.call("has_save_key", "gems"), false) and all_passed
+	_remove_slot(guard)
+	guard.free()
+	# 2. Atomic overwrite: writing a slot twice (rename over an existing file) must work
+	# on every platform and leave the newest value, with no leftover .tmp.
+	var atomic: Node = _new_save_system("regress_atomic", "config")
+	atomic.call("save_value", "hp", 1)
+	atomic.call("save_value", "hp", 2)
+	all_passed = _check("second write overwrites (atomic rename works)", atomic.call("load_value", "hp", -1), 2) and all_passed
+	all_passed = _check("no .tmp file is left behind", FileAccess.file_exists(str(atomic.call("_slot_path")) + ".tmp"), false) and all_passed
+	_remove_slot(atomic)
+	atomic.free()
+	# 3. CSV must round-trip a backslash (Windows paths, regex, escape sequences).
+	var csv: Node = _new_save_system("regress_csv", "csv")
+	csv.call("save_value", "path", "C:\\Users\\me")
+	csv.call("save_value", "shape", Vector2(3, 4))
+	all_passed = _check("csv round-trips a backslash value", csv.call("load_value", "path", ""), "C:\\Users\\me") and all_passed
+	all_passed = _check("csv round-trips a Vector2", csv.call("load_value", "shape", Vector2.ZERO), Vector2(3, 4)) and all_passed
+	_remove_slot(csv)
+	csv.free()
+	# 4. The JSON wrapper key moved off "__var", so a user dict using the OLD key now
+	# round-trips as real data instead of being mis-decoded.
+	var jsonw: Node = _new_save_system("regress_json", "json")
+	jsonw.call("save_value", "userdict", {"__var": "hello"})
+	all_passed = _check("a user dict keyed __var survives json (no wrapper collision)", jsonw.call("load_value", "userdict", {}), {"__var": "hello"}) and all_passed
+	_remove_slot(jsonw)
+	jsonw.free()
+	# 5. RNG determinism survives every format (big 64-bit state does not lose precision).
+	for fmt: String in ["config", "json", "binary", "csv"]:
+		var sv: Node = _new_save_system("regress_rng_%s" % fmt, fmt)
+		var source: Node = (load(str(STATEFUL_PACKS["advanced_random"])) as GDScript).new()
+		var rng: RandomNumberGenerator = source.get("_rng")
+		rng.seed = 999
+		for _i: int in range(5):
+			rng.randi()
+		sv.call("save_value", "rng", source.call("save_state"))
+		var restored: Node = (load(str(STATEFUL_PACKS["advanced_random"])) as GDScript).new()
+		restored.call("load_state", sv.call("load_value", "rng", {}))
+		all_passed = _check("%s preserves RNG determinism" % fmt, (restored.get("_rng") as RandomNumberGenerator).randi(), rng.randi()) and all_passed
+		_remove_slot(sv)
+		sv.free()
+		source.free()
+		restored.free()
+	# 6. A stateful pack survives a full trip through the JSON file backend (not just the
+	# in-memory seam) - the format the earlier tests never exercised end to end.
+	var sv_json: Node = _new_save_system("regress_pack_json", "json")
+	var forge: Node = (load(str(STATEFUL_PACKS["stat_forge"])) as GDScript).new()
+	forge.set("auto_tick", false)
+	forge.call("set_stat_base", "hp", 80.0)
+	forge.call("add_buff", "vest", "hp", 20.0, "add", "gear", "shop", 0.0)
+	sv_json.call("save_value", "forge", forge.call("save_state"))
+	var forge2: Node = (load(str(STATEFUL_PACKS["stat_forge"])) as GDScript).new()
+	forge2.set("auto_tick", false)
+	forge2.call("load_state", sv_json.call("load_value", "forge", {}))
+	all_passed = _check("StatForge survives a full JSON file round-trip", forge2.call("stat_total", "hp"), 100.0) and all_passed
+	_remove_slot(sv_json)
+	sv_json.free()
+	forge.free()
+	forge2.free()
+	return all_passed
+
+
+static func _new_save_system(name: String, fmt: String) -> Node:
+	var sv: Node = (load("res://eventsheet_addons/save_system/save_system_addon.gd") as GDScript).new()
+	sv.set("save_directory", "user://")
+	sv.set("file_pattern", "test_%s_{slot}.dat" % name)
+	sv.set("format", fmt)
+	return sv
+
+
+static func _remove_slot(sv: Node) -> void:
+	var path: String = str(sv.call("_slot_path"))
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
 
 
 ## The Save Studio "Add Save Support" generator: its pure core must emit the exact

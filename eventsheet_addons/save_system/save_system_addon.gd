@@ -39,6 +39,17 @@ func _open_read(path: String) -> FileAccess:
 	return FileAccess.open_encrypted_with_pass(path, FileAccess.READ, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.READ)
 func _open_write(path: String) -> FileAccess:
 	return FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, encryption_key) if not encryption_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)
+# JSON cannot hold Vector2/Color/etc, and its numbers are doubles (a 64-bit int
+# would lose precision), so those Variants travel as a one-key wrapper and come
+# back through str_to_var. The key is long and namespaced so a real user dict is
+# extremely unlikely to be mistaken for a wrapped value.
+const VAR_WRAPPER_KEY: String = "__eventsheet_var"
+const JSON_SAFE_INT: int = 1 << 53
+# _read_all sets _last_read_ok = false when a slot file EXISTS but cannot be read
+# (bad decrypt key, corrupt JSON, truncated binary). Writers check the flag and
+# refuse to overwrite a slot they could not read, so a failed read never wipes a
+# good save on the next write or autosave. A genuinely absent file reads as OK.
+var _last_read_ok: bool = true
 
 func _process(delta: float) -> void:
 	if autosave_interval <= 0.0:
@@ -56,6 +67,9 @@ func _process(delta: float) -> void:
 ## @ace_codegen_template("SaveSystem.save_value({key}, {value})")
 func save_value(key: String, value) -> void:
 	var data: Dictionary = _read_all()
+	if not _last_read_ok:
+		push_error("Save System: slot %d exists but could not be read - refusing to overwrite it." % slot)
+		return
 	data[key] = value
 	_write_all(data)
 
@@ -132,6 +146,9 @@ func delete_slot() -> void:
 func save_game() -> void:
 	before_save.emit(slot)
 	var data: Dictionary = _read_all()
+	if not _last_read_ok:
+		push_error("Save System: slot %d exists but could not be read - refusing to overwrite it." % slot)
+		return
 	var persisted: Dictionary = _collect_group_state(persist_group)
 	if not persisted.is_empty():
 		data["__persist"] = persisted
@@ -246,11 +263,12 @@ func _slot_path(target_slot: int = -1) -> String:
 	return save_directory.path_join(file_pattern.replace("{slot}", str(chosen)))
 
 func _to_jsonable(value) -> Variant:
-	# JSON cannot hold Vector2/Color/etc, so non-JSON-native Variants travel as a
-	# {"__var": var_to_str(...)} wrapper and come back through str_to_var.
 	match typeof(value):
-		TYPE_NIL, TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING:
+		TYPE_NIL, TYPE_BOOL, TYPE_FLOAT, TYPE_STRING:
 			return value
+		TYPE_INT:
+			# Ints past 2^53 (RNG state, big ids) lose precision as JSON doubles - wrap them.
+			return value if absi(value) < JSON_SAFE_INT else {VAR_WRAPPER_KEY: var_to_str(value)}
 		TYPE_DICTIONARY:
 			var out: Dictionary = {}
 			for key: Variant in (value as Dictionary).keys():
@@ -262,13 +280,13 @@ func _to_jsonable(value) -> Variant:
 				items.append(_to_jsonable(item))
 			return items
 		_:
-			return {"__var": var_to_str(value)}
+			return {VAR_WRAPPER_KEY: var_to_str(value)}
 
 func _from_jsonable(value) -> Variant:
 	if value is Dictionary:
 		var dict: Dictionary = value
-		if dict.size() == 1 and dict.has("__var"):
-			return str_to_var(str(dict["__var"]))
+		if dict.size() == 1 and dict.has(VAR_WRAPPER_KEY):
+			return str_to_var(str(dict[VAR_WRAPPER_KEY]))
 		var out: Dictionary = {}
 		for key: Variant in dict.keys():
 			out[key] = _from_jsonable(dict[key])
@@ -281,81 +299,98 @@ func _from_jsonable(value) -> Variant:
 	return value
 
 func _read_all() -> Dictionary:
-	# Format-agnostic backends: everything above reads/writes one Dictionary.
 	var path: String = _slot_path()
+	_last_read_ok = true
+	if not FileAccess.file_exists(path):
+		return {}
 	if format == "json":
 		var file: FileAccess = _open_read(path)
 		if file == null:
+			_last_read_ok = false
 			return {}
 		var parsed: Variant = JSON.parse_string(file.get_as_text())
-		return _from_jsonable((parsed as Dictionary).get(section, {})) if parsed is Dictionary else {}
+		if not parsed is Dictionary:
+			_last_read_ok = false
+			return {}
+		return _from_jsonable((parsed as Dictionary).get(section, {}))
 	if format == "binary":
 		var file: FileAccess = _open_read(path)
 		if file == null:
+			_last_read_ok = false
 			return {}
 		var parsed: Variant = file.get_var()
-		return (parsed as Dictionary).get(section, {}) if parsed is Dictionary else {}
+		if not parsed is Dictionary:
+			_last_read_ok = false
+			return {}
+		return (parsed as Dictionary).get(section, {})
 	if format == "csv":
 		var file: FileAccess = _open_read(path)
 		if file == null:
+			_last_read_ok = false
 			return {}
 		var data: Dictionary = {}
 		while not file.eof_reached():
 			var row: PackedStringArray = file.get_csv_line()
 			if row.size() < 2 or row[0].is_empty():
 				continue
-			var parsed: Variant = str_to_var(row[1].c_unescape())
+			var parsed: Variant = str_to_var(row[1])
 			# Hand-authored cells (bare words) parse to null - keep them as raw text.
 			data[row[0]] = parsed if parsed != null or row[1] == "null" else row[1]
 		return data
 	var config: ConfigFile = ConfigFile.new()
-	if encryption_key.is_empty():
-		config.load(path)
-	else:
-		config.load_encrypted_pass(path, encryption_key)
+	var load_err: Error = config.load(path) if encryption_key.is_empty() else config.load_encrypted_pass(path, encryption_key)
+	if load_err != Error.OK:
+		_last_read_ok = false
+		return {}
 	var data: Dictionary = {}
 	for key: String in config.get_section_keys(section) if config.has_section(section) else PackedStringArray():
 		data[key] = config.get_value(section, key)
 	return data
 
 func _write_all(data: Dictionary) -> bool:
+	# Atomic write: every backend writes a .tmp sibling then renames it over the slot,
+	# so a crash mid-write leaves the previous good save intact, never a half-file.
 	var path: String = _slot_path()
+	var tmp: String = path + ".tmp"
 	if format == "json":
-		var file: FileAccess = _open_write(path)
+		var file: FileAccess = _open_write(tmp)
 		if file == null:
 			return false
 		file.store_string(JSON.stringify({section: _to_jsonable(data)}, "\t"))
-		if file.get_error() != Error.OK:
-			return false
+		var write_ok: bool = file.get_error() == Error.OK
 		file.close()
-		return true
-	if format == "binary":
-		var file: FileAccess = _open_write(path)
+		if not write_ok:
+			return false
+	elif format == "binary":
+		var file: FileAccess = _open_write(tmp)
 		if file == null:
 			return false
 		file.store_var({section: data})
-		var stored: bool = file.get_error() == Error.OK
+		var write_ok: bool = file.get_error() == Error.OK
 		file.close()
-		return stored
-	if format == "csv":
-		var file: FileAccess = _open_write(path)
+		if not write_ok:
+			return false
+	elif format == "csv":
+		var file: FileAccess = _open_write(tmp)
 		if file == null:
 			return false
-		# c_escape keeps each value on one CSV row (var_to_str pretty-prints dictionaries).
+		# var_to_str escapes newlines inside strings, so the only real newlines are the
+		# ones it pretty-prints between container elements - stripping those keeps each
+		# value on one CSV row without a second escape layer to conflict with str_to_var.
 		for key: Variant in data.keys():
-			file.store_csv_line(PackedStringArray([str(key), var_to_str(data[key]).c_escape()]))
-		var stored: bool = file.get_error() == Error.OK
+			file.store_csv_line(PackedStringArray([str(key), var_to_str(data[key]).replace("\n", "")]))
+		var write_ok: bool = file.get_error() == Error.OK
 		file.close()
-		return stored
-	var config: ConfigFile = ConfigFile.new()
-	for key: Variant in data.keys():
-		config.set_value(section, str(key), data[key])
-	var err: Error
-	if encryption_key.is_empty():
-		err = config.save(path)
+		if not write_ok:
+			return false
 	else:
-		err = config.save_encrypted_pass(path, encryption_key)
-	return err == Error.OK
+		var config: ConfigFile = ConfigFile.new()
+		for key: Variant in data.keys():
+			config.set_value(section, str(key), data[key])
+		var err: Error = config.save(tmp) if encryption_key.is_empty() else config.save_encrypted_pass(tmp, encryption_key)
+		if err != Error.OK:
+			return false
+	return DirAccess.rename_absolute(tmp, path) == Error.OK
 
 func _collect_node_state(node: Node) -> Dictionary:
 	# The save-state seam: any node (or behavior child) exposing save_state() ->
@@ -393,5 +428,9 @@ func _apply_states(states: Dictionary) -> void:
 		var member: Node = get_node_or_null(NodePath(str(path)))
 		if member != null and states[path] is Dictionary:
 			_apply_node_state(member, states[path] as Dictionary)
+		elif member == null:
+			# The save holds state for a node that is not here now (renamed, re-parented,
+			# or the scene is not loaded yet). Surface it rather than dropping it silently.
+			push_warning("Save System: no node at %s to restore its saved state." % str(path))
 
 # Save System: register as the SaveSystem autoload, then save from any sheet. Strategy (paths/format/encryption) lives in the Inspector; On Before Save / On After Load let every sheet contribute its own state. This pack is an event sheet - extend it by editing it.
