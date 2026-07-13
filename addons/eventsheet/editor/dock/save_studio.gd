@@ -19,12 +19,11 @@ extends RefCounted
 # `save_state() -> Dictionary` and `load_state(state: Dictionary)`. No base class, no
 # registration - the Save System duck-types the pair (persist group, Save Node State).
 
+# Used only by the Save Slots export-conversion path (reads/writes through the pack's own
+# backend). The scan, generate, and preview features run through the public EventSheets API.
 const SAVE_SYSTEM_SCRIPT: String = "res://eventsheet_addons/save_system/save_system_addon.gd"
-const PREVIEW_FILE: String = "__save_studio_preview.tmp"
 const FORMATS: PackedStringArray = ["config", "json", "binary", "csv"]
 const FORMAT_EXTENSIONS: Dictionary = {"config": ".cfg", "json": ".json", "binary": ".sav", "csv": ".csv"}
-# Object-ish declared types that never belong in a snapshot (references, not data).
-const NON_DATA_TYPES: PackedStringArray = ["Node", "Node2D", "Node3D", "Control", "Tween", "Timer", "Resource", "Texture2D", "PackedScene", "RandomNumberGenerator", "FastNoiseLite", "Mutex", "Thread", "Camera2D", "Camera3D", "SubViewport", "Sprite2D", "Line2D", "AudioStreamPlayer", "Callable", "Signal"]
 
 var _dock: Control = null
 var _window: Window = null
@@ -234,14 +233,9 @@ func _refresh_preview_addons() -> void:
 		var selection: Array[Node] = EditorInterface.get_selection().get_selected_nodes()
 		if not selection.is_empty():
 			_preview_addons.append({"label": "Selected node: %s" % selection[0].name, "node": selection[0]})
-	for pack_dir: String in DirAccess.get_directories_at("res://eventsheet_addons"):
-		for file: String in DirAccess.get_files_at("res://eventsheet_addons/%s" % pack_dir):
-			if not file.ends_with(".gd"):
-				continue
-			var path: String = "res://eventsheet_addons/%s/%s" % [pack_dir, file]
-			if FileAccess.get_file_as_string(path).contains("func save_state() -> Dictionary:"):
-				_preview_addons.append({"label": pack_dir.capitalize(), "script": path})
-				break
+	# The public API enumerates the bundled packs that ship the seam.
+	for path: String in EventSheets.save_capable_scripts():
+		_preview_addons.append({"label": path.get_base_dir().get_file().capitalize(), "script": path})
 	for entry: Dictionary in _preview_addons:
 		_preview_addon_picker.add_item(str(entry["label"]))
 
@@ -268,20 +262,8 @@ func _run_format_preview() -> void:
 		snapshot = instance.call("save_state")
 		key = str(entry["label"])
 		instance.free()
-	var fmt: String = FORMATS[_preview_format_picker.selected]
-	var writer: Node = (load(SAVE_SYSTEM_SCRIPT) as GDScript).new()
-	writer.set("save_directory", "user://")
-	writer.set("file_pattern", PREVIEW_FILE)
-	writer.set("format", fmt)
-	writer.call("save_value", key, snapshot)
-	var path: String = str(writer.call("_slot_path"))
-	if fmt == "binary":
-		var bytes: PackedByteArray = FileAccess.get_file_as_bytes(path)
-		_preview_output.text = "binary (store_var): %d bytes - compact and fast, not hand-editable.\n\nFirst bytes:\n%s" % [bytes.size(), bytes.slice(0, mini(96, bytes.size())).hex_encode()]
-	else:
-		_preview_output.text = FileAccess.get_file_as_string(path)
-	DirAccess.remove_absolute(path)
-	writer.free()
+	# The public API runs the real Save System backend and returns the on-disk text.
+	_preview_output.text = EventSheets.preview_save(snapshot, FORMATS[_preview_format_picker.selected], key)
 
 
 ## The same duck-typed walk Save Node State performs (node + behavior children).
@@ -398,36 +380,19 @@ func _scan_support_script() -> void:
 		_dock._set_status("No script at %s." % path, true)
 		return
 	var root: TreeItem = _support_vars.create_item()
-	var pattern: RegEx = RegEx.new()
-	pattern.compile("^(?:@export[^\\n]*?\\s+)?var\\s+([a-zA-Z_]\\w*)\\s*(?::\\s*([\\w\\[\\], ]+?))?\\s*(?::?=.*)?$")
-	for line: String in FileAccess.get_file_as_string(path).split("\n"):
-		if line.begins_with("\t") or line.begins_with(" "):
-			continue
-		var hit: RegExMatch = pattern.search(line.strip_edges())
-		if hit == null:
-			continue
-		var var_name: String = hit.get_string(1)
-		var var_type: String = hit.get_string(2).strip_edges()
+	# The public API scans the script's fields and flags the plain-data ones.
+	for field: Dictionary in EventSheets.persistable_fields(path):
 		var item: TreeItem = _support_vars.create_item(root)
 		item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
 		item.set_editable(0, true)
-		item.set_checked(0, _looks_like_data(var_name, var_type))
-		item.set_text(1, var_name)
-		item.set_text(2, var_type if not var_type.is_empty() else "Variant")
+		item.set_checked(0, bool(field.get("recommended", false)))
+		item.set_text(1, str(field.get("name", "")))
+		item.set_text(2, str(field.get("type", "Variant")))
 	if root.get_child_count() == 0:
 		_dock._set_status("No top-level variables found in %s." % path.get_file(), true)
 
 
-func _looks_like_data(var_name: String, var_type: String) -> bool:
-	if var_name == "host" or var_type.begins_with("Array[Node"):
-		return false
-	for object_type: String in NON_DATA_TYPES:
-		if var_type == object_type:
-			return false
-	return true
-
-
-## Reads the ticked rows and hands them to the static generator, then shows the result.
+## Reads the ticked rows and hands them to the public API's generator, then shows it.
 func _generate_support_code() -> void:
 	var root: TreeItem = _support_vars.get_root()
 	if root == null:
@@ -445,54 +410,8 @@ func _generate_support_code() -> void:
 	_support_output.text = build_seam_code(entries)
 
 
-## The generator, pure and testable: turns [{name, type}, ...] into the seam verbatim -
-## snapshot keys without the leading underscore, duplicate(true) on collections, typed
-## coercion + the declared default on loads. This is the convention the whole repo follows.
+## Kept as a thin delegate to the public API (its ace_id-style shape is pinned by a test).
+## Save Studio itself is built on EventSheets.save_state_code - the same seam an extension
+## would call - so the API stays sufficient to build save tooling.
 static func build_seam_code(entries: Array) -> String:
-	var save_lines: PackedStringArray = PackedStringArray()
-	var load_lines: PackedStringArray = PackedStringArray()
-	for entry: Dictionary in entries:
-		var var_name: String = str(entry["name"])
-		var var_type: String = str(entry["type"])
-		var key: String = var_name.trim_prefix("_")
-		match var_type:
-			"Dictionary":
-				save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])
-				load_lines.append("\t%s = (state.get(\"%s\", {}) as Dictionary).duplicate(true)" % [var_name, key])
-			"Array":
-				save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])
-				load_lines.append("\t%s = (state.get(\"%s\", []) as Array).duplicate(true)" % [var_name, key])
-			"int":
-				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = int(state.get(\"%s\", %s))" % [var_name, key, var_name])
-			"float":
-				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = float(state.get(\"%s\", %s))" % [var_name, key, var_name])
-			"bool":
-				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = bool(state.get(\"%s\", %s))" % [var_name, key, var_name])
-			"String":
-				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = str(state.get(\"%s\", %s))" % [var_name, key, var_name])
-			_:
-				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
-				load_lines.append("\t%s = state.get(\"%s\", %s)" % [var_name, key, var_name])
-	if save_lines.is_empty():
-		return ""
-	# The last snapshot entry drops its trailing comma.
-	save_lines[save_lines.size() - 1] = str(save_lines[save_lines.size() - 1]).trim_suffix(",")
-	var lines: PackedStringArray = PackedStringArray([
-		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
-		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
-		"func save_state() -> Dictionary:",
-		"\treturn {"
-	])
-	lines.append_array(save_lines)
-	lines.append("\t}")
-	lines.append("")
-	lines.append("")
-	lines.append("func load_state(state: Dictionary) -> void:")
-	lines.append("\tif state.is_empty():")
-	lines.append("\t\treturn")
-	lines.append_array(load_lines)
-	return "\n".join(lines)
+	return EventSheets.save_state_code(entries)

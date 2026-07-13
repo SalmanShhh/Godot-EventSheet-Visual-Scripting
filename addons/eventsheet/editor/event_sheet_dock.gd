@@ -247,6 +247,7 @@ func _init() -> void:
 	EventSheets.register_palette_command("Unfold All Regions", func() -> void: _viewport.set_region_folds(false))
 	EventSheets.register_palette_command("Fold Everything (regions + groups)", func() -> void: _viewport.set_region_folds(true, true))
 	EventSheets.register_palette_command("Unfold Everything", func() -> void: _viewport.set_region_folds(false, true))
+	EventSheets.register_palette_command("Save Studio", func() -> void: _open_save_studio())
 	_ace_apply.init(self)
 	# Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning - tests exercise ops like
 	# _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.

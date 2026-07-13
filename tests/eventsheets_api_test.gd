@@ -93,6 +93,54 @@ static func run() -> bool:
 	ok = _check("class_vocabulary reflects on demand",
 		EventSheets.class_vocabulary("GraphEdit").size() >= 10, true) and ok
 
+	# ── Save support, dock-free (the surface the built-in Save Studio is built on) ──
+	var seam: String = EventSheets.save_state_code([
+		{"name": "_wallet", "type": "Dictionary"}, {"name": "level", "type": "int"}, {"name": "title", "type": "String"}])
+	ok = _check("save_state_code emits both seam methods",
+		seam.contains("func save_state() -> Dictionary:") and seam.contains("func load_state(state: Dictionary) -> void:"), true) and ok
+	ok = _check("save_state_code strips the leading underscore for the key",
+		seam.contains("\"wallet\": _wallet.duplicate(true)"), true) and ok
+	ok = _check("save_state_code coerces typed loads",
+		seam.contains("level = int(state.get(\"level\", level))"), true) and ok
+	# The generated pair must be valid GDScript that actually round-trips a live node.
+	var gen_script: GDScript = GDScript.new()
+	gen_script.source_code = "@tool\nextends Node\n\nvar _wallet: Dictionary = {}\nvar level: int = 0\nvar title: String = \"\"\n\n\n%s\n" % seam
+	ok = _check("save_state_code compiles", gen_script.reload(), OK) and ok
+	var gen_node: Node = gen_script.new()
+	gen_node.set("_wallet", {"gold": 3})
+	gen_node.set("level", 8)
+	var gen_snap: Dictionary = gen_node.call("save_state")
+	var gen_fresh: Node = gen_script.new()
+	gen_fresh.call("load_state", gen_snap)
+	ok = _check("save_state_code round-trips a live node", gen_fresh.call("save_state"), gen_snap) and ok
+	gen_node.free()
+	gen_fresh.free()
+	# persistable_fields flags plain data and skips references (host / RNG).
+	var timer_path: String = "res://eventsheet_addons/timer/timer_behavior.gd"
+	var fields: Array[Dictionary] = EventSheets.persistable_fields(timer_path)
+	var by_name: Dictionary = {}
+	for field: Dictionary in fields:
+		by_name[str(field.get("name", ""))] = bool(field.get("recommended", false))
+	ok = _check("persistable_fields recommends plain data", by_name.get("remaining", false), true) and ok
+	ok = _check("persistable_fields skips the host reference", by_name.get("host", true), false) and ok
+	# has_save_support: true for a seamed pack path, false for a script without the seam.
+	ok = _check("has_save_support finds the seam on a pack",
+		EventSheets.has_save_support("res://eventsheet_addons/stat_forge/stat_forge_behavior.gd"), true) and ok
+	ok = _check("has_save_support is false without the seam",
+		EventSheets.has_save_support("res://addons/eventsheet/api/eventsheets.gd"), false) and ok
+	# add_save_support scans + generates in one call, keeping only recommended fields.
+	var timer_seam: String = EventSheets.add_save_support(timer_path)
+	ok = _check("add_save_support generates for recommended fields",
+		timer_seam.contains("\"remaining\": remaining") and not timer_seam.contains("host"), true) and ok
+	# save_capable_scripts enumerates the bundled seamed packs.
+	ok = _check("save_capable_scripts lists the seamed packs",
+		EventSheets.save_capable_scripts().has("res://eventsheet_addons/stat_forge/stat_forge_behavior.gd"), true) and ok
+	# preview_save renders through the real backend, exact types per format.
+	ok = _check("preview_save renders json with the key",
+		EventSheets.preview_save({"level": 5}, "json").contains("level"), true) and ok
+	ok = _check("preview_save renders a csv value",
+		EventSheets.preview_save({"hp": 42.5}, "csv").contains("42.5"), true) and ok
+
 	# ── Project health: an extension check runs everywhere the Doctor runs ──
 	EventSheets.register_doctor_check("api_test.probe", func(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 		findings.append({"severity": "info", "check": "api_test.probe", "path": "res://",
@@ -140,6 +188,7 @@ static func run() -> bool:
 		titles.append(str(command.get("title", "")))
 	ok = _check("a registered command reaches the palette", titles.has("API Test Command"), true) and ok
 	ok = _check("the fold commands dogfood the same seam", titles.has("Fold All Regions") and titles.has("Unfold Everything"), true) and ok
+	ok = _check("Save Studio dogfoods the palette seam", titles.has("Save Studio"), true) and ok
 	for command: Dictionary in EventSheets.palette_commands():
 		if str(command.get("title", "")) == "API Test Command":
 			(command.get("run") as Callable).call()

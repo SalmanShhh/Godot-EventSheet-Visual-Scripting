@@ -158,6 +158,38 @@ EventSheets.register_translation_file("res://addons/my_pack/translations/my_pack
 Never translate ids (`ace_id`, `kind_id`, provider ids): they are compatibility contracts.
 Display strings only.
 
+## 6c. Save Support Services
+
+A node joins the project's save system by exposing two plain methods - `save_state() -> Dictionary` and `load_state(state)` - which the Save System duck-types (no base class, no registration). These services let your extension GENERATE that seam, detect it, and preview how a snapshot lands on disk. They are dock-free, so a build tool or a test can use them. The built-in **Save Studio** is written entirely on this surface, so anything it does, your tooling can do too.
+
+```gdscript
+# Generate the seam pair for a set of fields (keys drop a leading underscore, collections
+# deep-copy, loads coerce by type and tolerate a missing key). Paste the result into a script.
+var seam: String = EventSheets.save_state_code([
+	{"name": "_wallet", "type": "Dictionary"}, {"name": "level", "type": "int"}])
+
+# Or let it choose: scan a script's plain-data fields (skipping node/resource references)
+# and generate for the recommended ones in one call.
+var ready_to_paste: String = EventSheets.add_save_support("res://addons/my_pack/hoard.gd")
+
+# Inspect what a scan found, to build your own picker (each is {name, type, recommended}).
+for field: Dictionary in EventSheets.persistable_fields("res://addons/my_pack/hoard.gd"):
+	print(field["name"], " ", field["type"], " keep=", field["recommended"])
+
+# Does something already persist? Works on a path, a Script, or a live Node.
+if EventSheets.has_save_support($Enemy):
+	pass
+
+# Show what a save will look like on disk BEFORE committing to a format.
+var preview: String = EventSheets.preview_save({"level": 5, "pos": Vector2(3, 4)}, "json")
+
+# Enumerate the bundled packs that already ship the seam.
+for pack_gd: String in EventSheets.save_capable_scripts():
+	print(pack_gd)
+```
+
+`save_state_code` follows the repo convention exactly (int/float/bool/String/Dictionary/Array coercion, anything else passes through), and the generated pair is valid GDScript that round-trips a live node. `preview_save` runs the REAL Save System backend for the given format (`"config"`, `"json"`, `"binary"`, `"csv"`), so the text you show is byte-for-byte what ships - all four formats preserve exact types. When `eventsheet_addons/save_system/` is not installed, `preview_save` returns an explanatory line and `save_capable_scripts` returns empty rather than erroring.
+
 ## 7. Full Reference
 
 | Group | Method | Returns | Needs dock? |
@@ -182,6 +214,12 @@ Display strings only.
 | Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
 | Codegen | `open_gd_as_sheet(source: String)` | `EventSheetResource` | no |
 | Codegen | `round_trips(source: String)` | `bool` | no |
+| Save | `save_state_code(fields: Array)` | `String` | no |
+| Save | `persistable_fields(script_path: String)` | `Array[Dictionary]` | no |
+| Save | `has_save_support(target)` (path / Script / Node) | `bool` | no |
+| Save | `add_save_support(script_path: String)` | `String` | no |
+| Save | `save_capable_scripts()` | `PackedStringArray` | no |
+| Save | `preview_save(data: Dictionary, format: String, key := "state")` | `String` | no |
 | Health | `doctor()` | `Dictionary` | no |
 | Health | `register_doctor_check(check_id: String, check: Callable)` | `void` | no |
 | Health | `unregister_doctor_check(check_id: String)` | `void` | no |
@@ -373,6 +411,27 @@ sampler externally instead - it takes priority over the static:
 EventSheets.register_editor_preview("res://addons/thirdparty/bob.gd",
 	func(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
 		return {"position": (base.get("position") as Vector2) + Vector2(0.0, sin(time * TAU) * 8.0)})
+```
+
+### 15. Add save support to your pack's node with one call
+
+**Scenario:** your pack ships a behavior that holds runtime state (a stat pool, a cooldown, an owned-items dictionary) and you want it to survive a save. A setup command scans the script and drops the generated `save_state`/`load_state` pair on the clipboard, so wiring persistence in is paste-and-done - the same generator the built-in Save Studio uses.
+
+```gdscript
+EventSheets.register_palette_command("My Pack: Add Save Support", func() -> void:
+	var seam: String = EventSheets.add_save_support("res://addons/my_pack/hoard.gd")
+	DisplayServer.clipboard_set(seam)
+	EventSheets.set_status("Save-support seam copied - paste it into hoard.gd."))
+```
+
+And a Doctor check that flags a pack node holding obvious state but shipping no seam, so a persistence gap surfaces in CI instead of at a player's "why didn't my progress save":
+
+```gdscript
+EventSheets.register_doctor_check("my_pack.needs_save_support", func(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var hoard := "res://addons/my_pack/hoard.gd"
+	if not EventSheets.persistable_fields(hoard).is_empty() and not EventSheets.has_save_support(hoard):
+		findings.append({"severity": "info", "check": "my_pack.needs_save_support",
+			"path": hoard, "message": "Holds state but has no save_state/load_state seam."}))
 ```
 
 ## 9. Testing Your Extension

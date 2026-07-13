@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - Save support in the public EventSheets API (Save Studio now built on it)
+
+- **A Save group on the `EventSheets` API** so an extension can add save support as
+  easily as the built-in tooling does: `save_state_code(fields)` generates the
+  `save_state`/`load_state` pair in the repo convention, `persistable_fields(path)`
+  scans a script's fields and flags the plain-data ones (skipping node/resource
+  references), `add_save_support(path)` does both in one call, `has_save_support(target)`
+  duck-types a path/Script/Node, `save_capable_scripts()` lists the bundled seamed
+  packs, and `preview_save(data, format)` renders a snapshot through the REAL Save
+  System backend so tooling can show a save before committing to a format. All dock-free.
+- **Dogfood**: the Save Studio is now built entirely on these API methods - its Add
+  Save Support tab runs on `persistable_fields` + `save_state_code`, its Format Preview
+  on `preview_save`, its addon list on `save_capable_scripts` - and it registers a
+  "Save Studio" Command Palette entry through the same `register_palette_command` seam
+  the region-fold commands use. Pinned by tests/eventsheets_api_test.gd.
+
 ### Added - Save-state seam: behaviors persist themselves (18 packs + 4 save formats)
 
 - **The save-state seam**: every stateful pack now ships two plain methods -

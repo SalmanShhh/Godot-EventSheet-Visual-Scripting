@@ -252,6 +252,181 @@ static func round_trips(source: String) -> bool:
 	return str(compile(sheet, sheet.external_source_path).get("output", "")) == source
 
 
+# ── Save support (build the save_state seam into any script or tool) ───────────────────
+#
+# A node persists across a save by exposing two plain methods - `save_state() ->
+# Dictionary` and `load_state(state: Dictionary)`. The Save System duck-types the pair
+# (no base class, no registration), so these services let an extension GENERATE that
+# seam, detect it, and preview how a snapshot lands on disk - the same primitives the
+# built-in Save Studio is built on. Dock-free; they work in tests and headless tools.
+
+## Object-typed declared types that are references, not data, and never belong in a
+## snapshot. Used to pre-tick the safe fields in persistable_fields().
+const _NON_DATA_TYPES: PackedStringArray = ["Node", "Node2D", "Node3D", "Control", "Tween", "Timer", "Resource", "Texture2D", "PackedScene", "RandomNumberGenerator", "FastNoiseLite", "Mutex", "Thread", "Camera2D", "Camera3D", "SubViewport", "Sprite2D", "Line2D", "AudioStreamPlayer", "Callable", "Signal"]
+const _SAVE_SYSTEM_SCRIPT: String = "res://eventsheet_addons/save_system/save_system_addon.gd"
+
+
+## Generates the save_state()/load_state() pair from a list of fields, in the repo-wide
+## convention: snapshot keys drop a leading underscore, collections deep-copy, and loads
+## coerce by type and tolerate a missing key (returning the field's current value). Each
+## field is {"name": "_wallet", "type": "Dictionary"}; the type drives the coercion
+## (int/float/bool/String/Dictionary/Array, anything else passes through). Returns the
+## two methods as one pastable block, or "" when fields is empty.
+static func save_state_code(fields: Array) -> String:
+	var save_lines: PackedStringArray = PackedStringArray()
+	var load_lines: PackedStringArray = PackedStringArray()
+	for field: Variant in fields:
+		if not field is Dictionary:
+			continue
+		var var_name: String = str((field as Dictionary).get("name", ""))
+		var var_type: String = str((field as Dictionary).get("type", "Variant"))
+		var key: String = var_name.trim_prefix("_")
+		match var_type:
+			"Dictionary":
+				save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])
+				load_lines.append("\t%s = (state.get(\"%s\", {}) as Dictionary).duplicate(true)" % [var_name, key])
+			"Array":
+				save_lines.append("\t\t\"%s\": %s.duplicate(true)," % [key, var_name])
+				load_lines.append("\t%s = (state.get(\"%s\", []) as Array).duplicate(true)" % [var_name, key])
+			"int":
+				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
+				load_lines.append("\t%s = int(state.get(\"%s\", %s))" % [var_name, key, var_name])
+			"float":
+				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
+				load_lines.append("\t%s = float(state.get(\"%s\", %s))" % [var_name, key, var_name])
+			"bool":
+				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
+				load_lines.append("\t%s = bool(state.get(\"%s\", %s))" % [var_name, key, var_name])
+			"String":
+				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
+				load_lines.append("\t%s = str(state.get(\"%s\", %s))" % [var_name, key, var_name])
+			_:
+				save_lines.append("\t\t\"%s\": %s," % [key, var_name])
+				load_lines.append("\t%s = state.get(\"%s\", %s)" % [var_name, key, var_name])
+	if save_lines.is_empty():
+		return ""
+	save_lines[save_lines.size() - 1] = str(save_lines[save_lines.size() - 1]).trim_suffix(",")
+	var lines: PackedStringArray = PackedStringArray([
+		"# Save-state seam: the Save System walks any node in its persist group (or targeted",
+		"# by Save/Load Node State) and duck-types these two methods. Plain data only.",
+		"func save_state() -> Dictionary:",
+		"\treturn {"
+	])
+	lines.append_array(save_lines)
+	lines.append("\t}")
+	lines.append("")
+	lines.append("")
+	lines.append("func load_state(state: Dictionary) -> void:")
+	lines.append("\tif state.is_empty():")
+	lines.append("\t\treturn")
+	lines.append_array(load_lines)
+	return "\n".join(lines)
+
+
+## Lists a script's top-level variables as [{"name", "type", "recommended"}], where
+## `recommended` is true for plain-data fields (numbers, text, dictionaries, arrays,
+## Vector2/Color...) and false for object references (a Node, a Resource, an RNG) that
+## are pointers, not state. Feed the recommended ones to save_state_code(). Returns []
+## when the file is missing or has no top-level vars.
+static func persistable_fields(script_path: String) -> Array[Dictionary]:
+	var fields: Array[Dictionary] = []
+	if not FileAccess.file_exists(script_path):
+		return fields
+	var pattern: RegEx = RegEx.new()
+	pattern.compile("^(?:@export[^\\n]*?\\s+)?var\\s+([a-zA-Z_]\\w*)\\s*(?::\\s*([\\w\\[\\], ]+?))?\\s*(?::?=.*)?$")
+	for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
+		if line.begins_with("\t") or line.begins_with(" "):
+			continue
+		var hit: RegExMatch = pattern.search(line.strip_edges())
+		if hit == null:
+			continue
+		var var_name: String = hit.get_string(1)
+		var var_type: String = hit.get_string(2).strip_edges()
+		fields.append({
+			"name": var_name,
+			"type": var_type if not var_type.is_empty() else "Variant",
+			"recommended": _is_plain_data(var_name, var_type)
+		})
+	return fields
+
+
+static func _is_plain_data(var_name: String, var_type: String) -> bool:
+	if var_name == "host" or var_type.begins_with("Array[Node"):
+		return false
+	return not _NON_DATA_TYPES.has(var_type)
+
+
+## True when `target` participates in the save convention - it exposes BOTH save_state
+## and load_state. `target` may be a live Node, a Script/GDScript, or a script path.
+static func has_save_support(target: Variant) -> bool:
+	if target is Node:
+		return (target as Node).has_method("save_state") and (target as Node).has_method("load_state")
+	var script: Script = null
+	if target is Script:
+		script = target
+	elif target is String and FileAccess.file_exists(target):
+		var loaded: Variant = load(target)
+		if loaded is Script:
+			script = loaded
+	if script == null:
+		return false
+	var names: Dictionary = {}
+	for method: Dictionary in script.get_script_method_list():
+		names[str(method.get("name", ""))] = true
+	return names.has("save_state") and names.has("load_state")
+
+
+## One call to add save support to a script: scans its recommended (plain-data) fields
+## and returns the save_state/load_state pair to paste in. Skips object references. Use
+## persistable_fields() + save_state_code() directly when you want to choose the fields.
+static func add_save_support(script_path: String) -> String:
+	var recommended: Array[Dictionary] = []
+	for field: Dictionary in persistable_fields(script_path):
+		if bool(field.get("recommended", false)):
+			recommended.append(field)
+	return save_state_code(recommended)
+
+
+## The bundled pack scripts that already ship the seam (their .gd paths), so tooling can
+## enumerate what persists out of the box. Empty when eventsheet_addons/ is not installed.
+static func save_capable_scripts() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var root: String = "res://eventsheet_addons"
+	if not DirAccess.dir_exists_absolute(root):
+		return found
+	for pack_dir: String in DirAccess.get_directories_at(root):
+		for file: String in DirAccess.get_files_at("%s/%s" % [root, pack_dir]):
+			if file.ends_with(".gd") and FileAccess.get_file_as_string("%s/%s/%s" % [root, pack_dir, file]).contains("func save_state() -> Dictionary:"):
+				found.append("%s/%s/%s" % [root, pack_dir, file])
+				break
+	return found
+
+
+## Renders a snapshot Dictionary to on-disk text through the REAL Save System backend in
+## the given format ("config", "json", "binary", "csv"), so tooling can show exactly what
+## a save will look like before committing to a format. Returns the file text (a hex head
+## for binary), or an explanatory line when the Save System pack is not installed.
+static func preview_save(data: Dictionary, format: String, key: String = "state") -> String:
+	if not FileAccess.file_exists(_SAVE_SYSTEM_SCRIPT):
+		return "The Save System pack is not installed (eventsheet_addons/save_system/)."
+	var writer: Node = (load(_SAVE_SYSTEM_SCRIPT) as GDScript).new()
+	writer.set("save_directory", "user://")
+	writer.set("file_pattern", "__eventsheets_api_preview.tmp")
+	writer.set("format", format)
+	writer.call("save_value", key, data)
+	var path: String = str(writer.call("_slot_path"))
+	var text: String
+	if format == "binary":
+		var bytes: PackedByteArray = FileAccess.get_file_as_bytes(path)
+		text = "binary (store_var): %d bytes - compact and fast, not hand-editable.\n\nFirst bytes:\n%s" % [bytes.size(), bytes.slice(0, mini(96, bytes.size())).hex_encode()]
+	else:
+		text = FileAccess.get_file_as_string(path)
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
+	writer.free()
+	return text
+
+
 # ── Localisation (the editor UI's language - game l10n is the Translation module) ──────
 
 
