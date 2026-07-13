@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - Draw ACEs: draw onto any node, as first-class pickable vocabulary
+
+- **Drawing is now a builtin vocabulary you can pick in any sheet, on any node** - no need to attach the
+  Drawing Canvas behavior. A new **Drawing** section in the picker adds Draw Line / Circle / Ring / Rect /
+  Cone / Stamp / Line Of Sight / Prefab, Start / Set / Stop Ribbon, Configure Canvas, Set / Is Auto Clear,
+  and Canvas Texture - each "on {node}", each compiling to a `CanvasSurface.for_node({node}).…()` call
+  against the shared drawing runtime. So "Draw Circle on that enemy" is one row, and the Drawing Canvas
+  behavior's verbs now emit the same call (a user's Draw Circle and the pack's Draw Circle are the exact
+  same output). CanvasSurface ships with the addons and references no editor plugin, so generated games
+  stay self-contained. Pinned by tests/drawing_aces_test.gd; the vocabulary doc regenerated.
+
 ### Changed - Drawing Canvas plumbing moved to a shared CanvasSurface runtime (the behavior is thin now)
 
 - **The Drawing Canvas behavior no longer carries engine plumbing.** The offscreen SubViewport, the

@@ -26,27 +26,23 @@ func _enter_tree() -> void:
 ## Show the canvas on the host (a centered Sprite2D child). Off: the canvas renders
 ## offscreen and you place Canvas Texture wherever you want it.
 @export var display_on_host: bool = true
-## This host's shared drawing surface (created + cached on first use).
-## @ace_hidden
-func _surface() -> CanvasSurface:
-	return CanvasSurface.for_node(host)
 
 ## The canvas's LIVE texture - assign it to a TextureRect, a material, a particle, or a
 ## 3D Decal (the Decal Painter pack accepts it directly). Updates as the canvas draws.
 ## @ace_expression
 ## @ace_name("Canvas Texture")
 func canvas_texture() -> Texture2D:
-	return _surface().texture()
+	return CanvasSurface.for_node(host).texture()
 
 func _ready() -> void:
-	_surface().configure(canvas_width, canvas_height, auto_clear, coordinates, display_on_host)
+	CanvasSurface.for_node(host).configure(canvas_width, canvas_height, auto_clear, coordinates, display_on_host)
 
 ## @ace_condition
 ## @ace_name("Is Auto Clear")
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.is_auto_clear()")
 func is_auto_clear() -> bool:
-	return _surface().auto_clear
+	return CanvasSurface.for_node(host).auto_clear
 
 ## @ace_action
 ## @ace_name("Clear Canvas")
@@ -54,7 +50,7 @@ func is_auto_clear() -> bool:
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.clear_canvas()")
 func clear_canvas() -> void:
-	_surface().clear()
+	CanvasSurface.for_node(host).clear()
 
 ## @ace_action
 ## @ace_name("Set Auto Clear")
@@ -62,7 +58,7 @@ func clear_canvas() -> void:
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.set_auto_clear({enabled})")
 func set_auto_clear(enabled: bool) -> void:
-	_surface().set_auto_clear(enabled)
+	CanvasSurface.for_node(host).set_auto_clear(enabled)
 
 ## @ace_action
 ## @ace_name("Set Canvas Visible")
@@ -70,7 +66,7 @@ func set_auto_clear(enabled: bool) -> void:
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.set_canvas_visible({visible_now})")
 func set_canvas_visible(visible_now: bool) -> void:
-	_surface().set_display_visible(visible_now)
+	CanvasSurface.for_node(host).set_display_visible(visible_now)
 
 ## @ace_action
 ## @ace_name("Draw Line")
@@ -78,7 +74,7 @@ func set_canvas_visible(visible_now: bool) -> void:
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.draw_canvas_line({from_x}, {from_y}, {to_x}, {to_y}, {width}, {color})")
 func draw_canvas_line(from_x: float, from_y: float, to_x: float, to_y: float, width: float, color: Color) -> void:
-	_surface().line(from_x, from_y, to_x, to_y, width, color)
+	CanvasSurface.for_node(host).line(from_x, from_y, to_x, to_y, width, color)
 
 ## @ace_action
 ## @ace_name("Draw Circle")
@@ -86,7 +82,7 @@ func draw_canvas_line(from_x: float, from_y: float, to_x: float, to_y: float, wi
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.draw_canvas_circle({x}, {y}, {radius}, {color})")
 func draw_canvas_circle(x: float, y: float, radius: float, color: Color) -> void:
-	_surface().circle(x, y, radius, color)
+	CanvasSurface.for_node(host).circle(x, y, radius, color)
 
 ## @ace_action
 ## @ace_name("Draw Ring")
@@ -94,7 +90,7 @@ func draw_canvas_circle(x: float, y: float, radius: float, color: Color) -> void
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.draw_canvas_ring({x}, {y}, {radius}, {width}, {color})")
 func draw_canvas_ring(x: float, y: float, radius: float, width: float, color: Color) -> void:
-	_surface().ring(x, y, radius, width, color)
+	CanvasSurface.for_node(host).ring(x, y, radius, width, color)
 
 ## @ace_action
 ## @ace_name("Draw Rect")
@@ -102,7 +98,7 @@ func draw_canvas_ring(x: float, y: float, radius: float, width: float, color: Co
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.draw_canvas_rect({x}, {y}, {width}, {height}, {color})")
 func draw_canvas_rect(x: float, y: float, width: float, height: float, color: Color) -> void:
-	_surface().rect(x, y, width, height, color)
+	CanvasSurface.for_node(host).rect(x, y, width, height, color)
 
 ## @ace_action
 ## @ace_name("Draw Cone")
@@ -110,7 +106,7 @@ func draw_canvas_rect(x: float, y: float, width: float, height: float, color: Co
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.draw_canvas_cone({x}, {y}, {facing_deg}, {fov_deg}, {radius}, {color})")
 func draw_canvas_cone(x: float, y: float, facing_deg: float, fov_deg: float, radius: float, color: Color) -> void:
-	_surface().cone(x, y, facing_deg, fov_deg, radius, color)
+	CanvasSurface.for_node(host).cone(x, y, facing_deg, fov_deg, radius, color)
 
 ## @ace_action
 ## @ace_name("Draw Stamp")
@@ -118,7 +114,7 @@ func draw_canvas_cone(x: float, y: float, facing_deg: float, fov_deg: float, rad
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.draw_canvas_stamp({texture}, {x}, {y}, {scale_factor}, {rotation_deg})")
 func draw_canvas_stamp(texture: Texture2D, x: float, y: float, scale_factor: float, rotation_deg: float) -> void:
-	_surface().stamp(texture, x, y, scale_factor, rotation_deg)
+	CanvasSurface.for_node(host).stamp(texture, x, y, scale_factor, rotation_deg)
 
 ## @ace_action
 ## @ace_name("Draw Line Of Sight")
@@ -126,7 +122,7 @@ func draw_canvas_stamp(texture: Texture2D, x: float, y: float, scale_factor: flo
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.draw_line_of_sight({origin_x}, {origin_y}, {facing_deg}, {fov_deg}, {max_range}, {collision_mask}, {color})")
 func draw_line_of_sight(origin_x: float, origin_y: float, facing_deg: float, fov_deg: float, max_range: float, collision_mask: int, color: Color) -> void:
-	_surface().line_of_sight(origin_x, origin_y, facing_deg, fov_deg, max_range, collision_mask, color)
+	CanvasSurface.for_node(host).line_of_sight(origin_x, origin_y, facing_deg, fov_deg, max_range, collision_mask, color)
 
 ## @ace_action
 ## @ace_name("Draw Prefab")
@@ -134,7 +130,7 @@ func draw_line_of_sight(origin_x: float, origin_y: float, facing_deg: float, fov
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.draw_prefab({prefab}, {x}, {y}, {scale_factor}, {rotation_deg})")
 func draw_prefab(prefab: Resource, x: float, y: float, scale_factor: float, rotation_deg: float) -> void:
-	_surface().prefab(prefab, x, y, scale_factor, rotation_deg)
+	CanvasSurface.for_node(host).prefab(prefab, x, y, scale_factor, rotation_deg)
 
 ## @ace_action
 ## @ace_name("Start Ribbon")
@@ -142,7 +138,7 @@ func draw_prefab(prefab: Resource, x: float, y: float, scale_factor: float, rota
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.start_ribbon({follow}, {point_count}, {width}, {color})")
 func start_ribbon(follow: Node, point_count: int, width: float, color: Color) -> void:
-	_surface().start_ribbon(follow, point_count, width, color)
+	CanvasSurface.for_node(host).start_ribbon(follow, point_count, width, color)
 
 ## @ace_action
 ## @ace_name("Set Ribbon Texture")
@@ -150,7 +146,7 @@ func start_ribbon(follow: Node, point_count: int, width: float, color: Color) ->
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.set_ribbon_texture({follow}, {texture})")
 func set_ribbon_texture(follow: Node, texture: Texture2D) -> void:
-	_surface().set_ribbon_texture(follow, texture)
+	CanvasSurface.for_node(host).set_ribbon_texture(follow, texture)
 
 ## @ace_action
 ## @ace_name("Stop Ribbon")
@@ -158,6 +154,6 @@ func set_ribbon_texture(follow: Node, texture: Texture2D) -> void:
 ## @ace_icon("res://eventsheet_addons/behavior.svg")
 ## @ace_codegen_template("$DrawingCanvas.stop_ribbon({follow})")
 func stop_ribbon(follow: Node) -> void:
-	_surface().stop_ribbon(follow)
+	CanvasSurface.for_node(host).stop_ribbon(follow)
 
 # Drawing Canvas behavior (event-sheet parity): a texture your sheet draws onto with verbs - lines, circles, rings, rects, cones, texture stamps, textured ribbons, and a raycast LINE OF SIGHT fan. Persistent mode keeps strokes until Clear Canvas (paint, blood splats, skid marks); Auto Clear redraws every frame (attack telegraphs, vision cones). Canvas Texture exposes the live texture for materials, UI, or a 3D Decal. The drawing plumbing lives in the shared CanvasSurface runtime; this pack is a thin event sheet - extend it by editing it.
