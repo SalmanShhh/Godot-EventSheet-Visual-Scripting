@@ -19,6 +19,8 @@ const PROJECT_DOCTOR_PATH: String = "res://addons/eventforge/project_doctor.gd"
 const STARTER_TEMPLATES_PATH: String = "res://addons/eventsheet/editor/dock/starter_templates.gd"
 const NEW_SHEET_DIALOG_PATH: String = "res://addons/eventsheet/editor/new_sheet_dialog.gd"
 const ACE_PARAM_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/ace_param_inspector_plugin.gd"
+const DRAWING_PREFAB_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd"
+const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_preview_generator.gd"
 
 var _event_sheet_editor: Control = null
 var _export_integrity_plugin: EditorExportPlugin = null
@@ -27,6 +29,9 @@ var _live_values_debugger: EventSheetLiveValuesDebugger = null
 # appear in this file, or their subtrees join the boot compile.
 var _ace_param_inspector_plugin: EditorInspectorPlugin = null
 var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
+# Loosely typed on purpose (boot-lazy): loaded by path in _enter_tree so their subtrees stay off the boot compile.
+var _drawing_prefab_inspector: EditorInspectorPlugin = null
+var _drawing_prefab_preview_gen: EditorResourcePreviewGenerator = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
 var _new_sheet_dialog: RefCounted = null
@@ -229,6 +234,14 @@ func _enter_tree() -> void:
 	# degrade to plain fields without this plugin.
 	_attribute_drawers_plugin = EventSheetAttributeDrawers.new()
 	add_inspector_plugin(_attribute_drawers_plugin)
+	# DrawingPrefabResource previews: an Inspector panel + a FileSystem/resource-picker thumbnail, both
+	# rendered by the tree-free rasterizer. Cosmetic - a prefab still edits as a plain steps table without them.
+	_drawing_prefab_inspector = load(DRAWING_PREFAB_INSPECTOR_PATH).new()
+	add_inspector_plugin(_drawing_prefab_inspector)
+	_drawing_prefab_preview_gen = load(DRAWING_PREFAB_PREVIEW_GEN_PATH).new()
+	var prefab_previewer: EditorResourcePreview = get_editor_interface().get_resource_previewer()
+	if prefab_previewer != null:
+		prefab_previewer.add_preview_generator(_drawing_prefab_preview_gen)
 	# The workspace editor (the ~3400-line dock, its ~45 delegates, every dialog, and the addon-folder
 	# vocabulary scans) is built LAZILY on first use - see _ensure_editor. Enabling the plugin, or
 	# opening a project that never touches event sheets, pays none of it. The top-strip tab still
@@ -320,6 +333,14 @@ func _exit_tree() -> void:
 	if _attribute_drawers_plugin != null:
 		remove_inspector_plugin(_attribute_drawers_plugin)
 		_attribute_drawers_plugin = null
+		if _drawing_prefab_inspector != null:
+			remove_inspector_plugin(_drawing_prefab_inspector)
+			_drawing_prefab_inspector = null
+		if _drawing_prefab_preview_gen != null:
+			var prefab_previewer: EditorResourcePreview = get_editor_interface().get_resource_previewer()
+			if prefab_previewer != null:
+				prefab_previewer.remove_preview_generator(_drawing_prefab_preview_gen)
+			_drawing_prefab_preview_gen = null
 	if _ace_param_inspector_plugin != null:
 		remove_inspector_plugin(_ace_param_inspector_plugin)
 		_ace_param_inspector_plugin = null
