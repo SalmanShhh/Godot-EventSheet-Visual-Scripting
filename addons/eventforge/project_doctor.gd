@@ -8,7 +8,8 @@
 #   warning - a wiring gap with a one-step fix: sheet never compiled, autoload sheet
 #             not registered (or registered to a different script).
 #   info    - advisory vocabulary hygiene: private variable never referenced, pack
-#             published but unused, compiled sheet attached to no scene. Never fails CI.
+#             published but unused, compiled sheet attached to no scene, a stateful
+#             behavior missing the save-state seam. Never fails CI.
 # The doctor NEVER writes inside res:// - verification recompiles go to a user://
 # scratch file and are compared as text (contrast tools/audit_addons.gd, which repairs
 # pack outputs in place while reporting drift).
@@ -60,6 +61,7 @@ static func run() -> Dictionary:
 	check_shadowed_variables(sheet_paths, findings)
 	check_untranslated_project(sheet_paths, findings)
 	check_required_fields(sheet_paths, findings)
+	check_missing_save_support(sheet_paths, findings)
 	check_vocabulary_doc(findings)
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
@@ -271,6 +273,35 @@ static func required_gaps_in_container(text: String, watched: Dictionary) -> Arr
 				if not block.contains("\n%s = " % str(property_name)):
 					gaps.append({"script": str(script_path), "property": str(property_name)})
 	return gaps
+
+
+## Save support: a behavior or autoload that declares State (non-exported) variables but
+## whose compiled script has no save_state/load_state seam won't survive Save Game - that
+## runtime state lives only in the node and is unreachable by the Save System's verbs. The
+## fix is one click (Tools > Save Studio > Add Save Support, which generates the pair, or
+## the seam by hand). Info-tier and honest: plenty of State is transient and rightly
+## unsaved, so this nudges, never fails CI. Statefulness reads the sheet's own Properties/
+## State split (a declared State variable is the author saying "this is runtime state");
+## the seam is detected in the compiled OUTPUT, so a hand-written save_state counts too.
+static func check_missing_save_support(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null or not (sheet.behavior_mode or sheet.autoload_mode):
+			continue
+		var state_vars: int = 0
+		for descriptor: Variant in sheet.variables.values():
+			if descriptor is Dictionary and not bool((descriptor as Dictionary).get("exported", true)):
+				state_vars += 1
+		if state_vars == 0:
+			continue
+		var output_path: String = output_path_for(sheet_path)
+		if not FileAccess.file_exists(output_path):
+			continue  # the stale-output check owns the "not compiled yet" case
+		if FileAccess.get_file_as_string(output_path).contains("func save_state("):
+			continue
+		var kind: String = "autoload" if sheet.autoload_mode else "behavior"
+		_add(findings, "info", "save-support", sheet_path,
+			"This %s holds %d State variable(s) but has no save_state/load_state seam, so its runtime state won't survive Save Game - Tools > Save Studio > Add Save Support generates the pair (ignore if the state is transient)." % [kind, state_vars])
 
 
 ## The sheet a generated script belongs to - the inverse of output_path_for.

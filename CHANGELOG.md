@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - Doctor check: stateful behavior missing the save-state seam
+
+- The Project Doctor now flags a behavior or autoload that declares State (non-exported)
+  variables but ships no `save_state`/`load_state` seam - its runtime state would not
+  survive Save Game. Info-tier and advisory (transient state is fine to leave unsaved),
+  so it never fails CI; the one-click fix is Tools > Save Studio > Add Save Support. The
+  check reads the sheet's Properties/State split for statefulness and the compiled output
+  for the seam (a hand-written pair counts), and stays quiet on Property-only behaviors,
+  plain scene sheets, and already-seamed packs.
+
 ### Added - Save-format helper conditions
 
 - **Save File Is Format** (condition) tells you whether a save file at a path is a given
