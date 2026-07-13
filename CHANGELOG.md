@@ -1,5 +1,31 @@
 # Changelog
 
+## [Unreleased]
+
+### Added - a variable's description becomes its Inspector property description
+
+- **Give a variable a comment and it shows up in the Inspector automatically.** The variable dialog's
+  description field (formerly the buried "Tooltip" option, now promoted to the always-visible form and
+  relabeled **Description**) compiles to a `## ` doc comment above the exported var - which IS Godot's
+  native property description, shown when you hover the field in the Inspector. An explicit tooltip
+  attribute still wins; private (non-exported) variables emit none. Round-trips byte-identically (the
+  importer already lifts a `## ` back onto the variable), so `.gd`-backed sheets stay lossless.
+- **Every bundled pack now documents its exported knobs.** Swept all 24 packs whose exported variables
+  had no description (bullet, car, sine, orbit, timer, tween, follow, line-of-sight, the FPS Controller,
+  Juice, and more) - 90 variables in all - so each shows its purpose in the Inspector. Zero exported
+  variables across the 70 packs are undescribed now; `drifted=0`.
+
+### Added - preview a DrawingPrefabResource in the Inspector and as a thumbnail
+
+- **See a drawing prefab, don't guess it from a filename.** A `DrawingPrefabResource` now renders its
+  composed drawing (all its steps - circles, rings, rects, lines, cones, stamps - in order) two ways: a
+  live **preview panel at the top of its Inspector** that re-renders as you edit the steps grid, and a
+  **thumbnail in the FileSystem dock and every resource picker** (so the Draw Prefab action's prefab
+  slot shows pictures). One tree-free software rasterizer feeds both, mirroring the runtime
+  `draw_prefab` geometry with supersampled edges; the thumbnail path is thread-safe. Cosmetic and
+  degradable - a prefab still edits as a plain steps table without the editor plugins. Pinned by
+  tests/drawing_prefab_preview_test.gd.
+
 ## [0.15.0] - 2026-07-13 - Save Anything, Control Anything & BBcode it
 
 ### Added - Documentation index

@@ -121,6 +121,10 @@ On Ready       -> Level | Drawing Canvas: Draw Prefab  preload("res://fx/target_
 On Spell Cast  -> Level | Drawing Canvas: Draw Prefab  preload("res://fx/target_marker.tres"), cast_x, cast_y, 0.8, cast_angle
 ```
 
+The Inspector shows a **live preview** of the composed drawing at the top of the resource (it redraws
+as you edit the steps), and the saved `.tres` gets a matching **thumbnail** in the FileSystem dock and
+the Draw Prefab prefab picker - so you choose a formation by its picture, not its filename.
+
 Steps draw top to bottom (the formation is ordered), and the whole prefab translates,
 scales, and rotates as one - rings-and-crosshair markers, explosion scorches, magic circles,
 minimap icons. The Draw Lab showcase stamps one .tres at three scales plus wherever you
