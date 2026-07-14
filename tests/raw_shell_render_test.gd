@@ -119,26 +119,44 @@ static func run() -> bool:
 	ok = _check("drift stays 0 with shells rendered", reemitted == source, true) and ok
 	dock.free()
 
-	# ── A blank RawCodeRow (round-trip spacing separator) renders with NO "GDScript" badge - was an
-	# empty pill. Build a real sheet with a stray blank block and inspect its rendered spans. ──
-	var blank_source: String = "\n".join(PackedStringArray(["extends Node", "", "", "func _ready() -> void:", "	visible = true"])) + "\n"
+	# ── Badge split: a BLANK RawCodeRow (round-trip spacing separator) renders with NO "GDScript" badge
+	# (was an empty pill), while a GENUINE code block KEEPS the badge so it reads unambiguously as code -
+	# the explicit marking that lets it round-trip as raw truth. Both rows, one dock, inspect their spans. ──
 	var blank_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	blank_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	var blank_sheet: EventSheetResource = EventSheetResource.new()
 	var blank_row: RawCodeRow = RawCodeRow.new()
 	blank_row.code = ""
 	blank_sheet.events.append(blank_row)
+	var code_row: RawCodeRow = RawCodeRow.new()
+	code_row.code = "flags |= 2"  # a genuine, irreducible statement (no ACE) - stays a GDScript block
+	blank_sheet.events.append(code_row)
 	blank_sheet.external_source_path = "user://_blank_block.gd"
 	blank_dock.setup(blank_sheet)
 	var blank_view: EventSheetViewport = blank_dock._active_view()
 	var blank_span_texts: Array = []
+	var code_span_texts: Array = []
 	for blank_entry: Dictionary in blank_view.get_flat_rows():
 		var blank_rd: EventRowData = blank_entry.get("row")
-		if blank_rd != null and blank_rd.source_resource == blank_row:
+		if blank_rd == null:
+			continue
+		if blank_rd.source_resource == blank_row:
 			for blank_span: SemanticSpan in blank_rd.spans:
 				blank_span_texts.append(str(blank_span.text))
+		elif blank_rd.source_resource == code_row:
+			for code_span: SemanticSpan in blank_rd.spans:
+				code_span_texts.append(str(code_span.text))
 	ok = _check("a blank block has no GDScript badge", blank_span_texts.has("GDScript"), false) and ok
+	ok = _check("a genuine code block keeps the GDScript badge (explicit)", code_span_texts.has("GDScript"), true) and ok
 	blank_dock.free()
+
+	# ── #4 covenant: a genuine irreducible code block, opened from a .gd, stays an explicit RawCodeRow and
+	# recompiles byte-for-byte - the "GDScript block survives the round-trip" guarantee. ──
+	var code_source: String = "\n".join(PackedStringArray(["extends Node", "", "", "func _ready() -> void:", "	flags |= 2"])) + "\n"
+	var code_imported: EventSheetResource = GDScriptImporter.new().import_external_source(code_source)
+	code_imported.external_source_path = "user://_code_block_rt.gd"
+	var code_reemit: String = str(SheetCompiler.compile(code_imported, "user://_code_block_rt.gd").get("output", ""))
+	ok = _check("a genuine code block round-trips byte-identically", code_reemit == code_source, true) and ok
 
 	return ok
 
