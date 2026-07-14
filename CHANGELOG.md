@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed - an authored sheet's verb bodies are now editable inline
+
+- **On an authored sheet, a published verb's body is now LIVE and editable.** Expand a verb and its
+  conditions, actions, and GDScript blocks are real, selectable rows: edit a value, add a condition or
+  action, add or delete a body event, or reorder rows within the body - every edit routes into the
+  function's own body (`event_function.events`) through the undo funnel, never into the main event loop.
+  Adding an event with the verb's header selected grows that verb (including its first row when the body is
+  empty). A drag may reorder rows within one tree - the main event list or a single verb body - but a
+  cross-tree drop (a main event into a verb body, or the reverse) is refused, so a row is never aliased into
+  two arrays or made to emit unintended code. Opened behaviour packs stay a pure READ (their bodies remain
+  inert) so an opened `.gd` still round-trips byte-identically (drift=0); per-function opt-in editing for
+  opened packs comes next. An authored `.tres` sheet has no verbatim source to protect, so its verbs are
+  freely editable.
+
 ### Changed - a published verb expands to show its body as event rows
 
 - **Each published verb (a sheet's function) is now an expandable Construct-style block.** The tinted

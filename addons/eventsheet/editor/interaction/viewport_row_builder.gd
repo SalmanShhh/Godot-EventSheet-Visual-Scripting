@@ -407,16 +407,20 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	row_data.spans = spans
 	# Construct-style expandable block: the function BODY renders as foldable children (its conditions,
 	# actions, and raw GDScript blocks), built by the SAME dispatcher as sheet events, folding like a group.
-	# Pure READ view - each body child is made INERT (source_resource nulled over the subtree) so no
-	# selection / drag / delete / inline edit can reach it: those resources live in event_function.events,
-	# NOT sheet.events, so a mutation would alias the row into two arrays or corrupt the file. Editing the
-	# body is a later phase. Default-collapsed (folded seeded from _fold_state) preserves the header look.
+	# On an AUTHORED sheet the body is LIVE - the child rows keep their source_resource so selection / drag /
+	# delete / inline edit reach the verb's own conditions and actions (edits route to event_function.events
+	# via _find_resource_location's function-body search). On an OPENED behaviour pack (or a read-only
+	# preview) the body stays a pure READ instead: each child is made INERT (source_resource nulled over the
+	# subtree) so no mutation can reach it and corrupt the .gd's byte round-trip - per-function opt-in
+	# unlocks that later. Default-collapsed (folded seeded from _fold_state) preserves the header look.
+	var body_editable: bool = _function_body_editable()
 	var body_entries: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
 	for body_entry: Variant in body_entries:
 		if body_entry is Resource:
 			var child_row: EventRowData = _viewport._build_row_from_resource(body_entry as Resource, indent + 1)
 			if child_row != null:
-				_make_row_inert(child_row)
+				if not body_editable:
+					_make_row_inert(child_row)
 				row_data.children.append(child_row)
 	if not row_data.children.is_empty():
 		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
@@ -432,6 +436,17 @@ func _make_row_inert(row_data: EventRowData) -> void:
 	row_data.source_resource = null
 	for child: EventRowData in row_data.children:
 		_make_row_inert(child)
+
+
+## True when a published verb's body should render as LIVE, editable event rows: only on an AUTHORED sheet
+## (one not backed by an opened .gd - external_source_path empty) that isn't in read-only preview. For an
+## opened behaviour pack the body stays a pure read (rows inert), so editing it can never corrupt the .gd's
+## byte round-trip; a per-function opt-in unlocks editing there. A missing sheet reference reads as inert.
+func _function_body_editable() -> bool:
+	var sheet: EventSheetResource = _viewport._sheet
+	if sheet == null:
+		return false
+	return sheet.external_source_path.strip_edges().is_empty() and not sheet.read_only
 
 
 ## First Color(...) literal among an ACE's param values (null when none) - drives the

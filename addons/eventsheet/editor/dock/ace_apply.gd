@@ -318,6 +318,16 @@ func _insert_row_at_selection(row_resource: Resource, explicit_selected_resource
 	if selected_resource == null:
 		_dock._current_sheet.events.append(row_resource)
 		return
+	# Anchoring on a published-verb header (its source_resource is the EventFunction) targets that verb's own
+	# body on an AUTHORED sheet, so adding an event with the header selected grows the function - including
+	# its FIRST row when the body is empty - instead of leaking into the main event loop. On an opened pack
+	# the body stays read-only (bodies are inert), so the header anchor keeps its prior main-loop fallback.
+	if selected_resource is EventFunction:
+		if _sheet_is_authored():
+			(selected_resource as EventFunction).events.append(row_resource)
+		else:
+			_dock._current_sheet.events.append(row_resource)
+		return
 	var location: Dictionary = _find_resource_location(selected_resource)
 	var container: Array = location.get("container", _dock._current_sheet.events)
 	var index: int = int(location.get("index", container.size() - 1))
@@ -325,7 +335,46 @@ func _insert_row_at_selection(row_resource: Resource, explicit_selected_resource
 
 
 func _find_resource_location(target: Resource) -> Dictionary:
-	return _find_resource_location_in_array(target, _dock._current_sheet.events)
+	var in_events: Dictionary = _find_resource_location_in_array(target, _dock._current_sheet.events)
+	if not in_events.is_empty():
+		return in_events
+	# An editable function's body (an authored sheet's published verbs) lives in sheet.functions[].events -
+	# a SEPARATE array from sheet.events - so resolve a body row's container there, letting add / delete /
+	# drag reach the right array. The model never aliases a resource across both, so searching events first
+	# is safe. Opened-pack bodies stay inert (null source_resource), so their rows never reach this search;
+	# only live (authored) body rows do, keeping the opened .gd byte round-trip untouched.
+	for function_entry: Variant in _dock._current_sheet.functions:
+		if function_entry is EventFunction:
+			var event_function: EventFunction = function_entry as EventFunction
+			var body: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+			var in_body: Dictionary = _find_resource_location_in_array(target, body)
+			if not in_body.is_empty():
+				return in_body
+	return {}
+
+
+## Which top-level tree a row lives in: the sheet itself (its main event list, including groups and
+## sub-events) or a specific EventFunction (its editable body). A drag may reorder rows within ONE tree but
+## must never move one across trees, so _move_rows refuses a source and target whose owners differ. Returns
+## null when the resource is in neither tree (e.g. an inert opened-pack body row, whose source is nulled).
+## True when the current sheet is AUTHORED - a .tres / new sheet with no opened .gd behind it (empty
+## external_source_path) and not a read-only preview - so its function bodies are freely editable. An opened
+## behaviour pack has verbatim source to protect, so its verb bodies stay read-only until per-function opt-in.
+func _sheet_is_authored() -> bool:
+	var sheet: EventSheetResource = _dock._current_sheet
+	return sheet != null and sheet.external_source_path.strip_edges().is_empty() and not sheet.read_only
+
+
+func _row_tree_owner(target: Resource) -> Object:
+	if not _find_resource_location_in_array(target, _dock._current_sheet.events).is_empty():
+		return _dock._current_sheet
+	for function_entry: Variant in _dock._current_sheet.functions:
+		if function_entry is EventFunction:
+			var event_function: EventFunction = function_entry as EventFunction
+			var body: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+			if not _find_resource_location_in_array(target, body).is_empty():
+				return event_function
+	return null
 
 
 func _find_resource_location_in_array(target: Resource, container: Array) -> Dictionary:
@@ -372,6 +421,11 @@ func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String,
 	var target_resource: Resource = target_row.source_resource
 	if target_resource == null:
 		return
+	# A drag may reorder rows WITHIN one tree - the sheet's main event list (with its groups and
+	# sub-events) or a single editable function's body - but must never cross between them. Moving a main
+	# event into a verb body (or the reverse) would emit unintended code, e.g. a trigger row inside a plain
+	# function, so a cross-tree drop is refused. Both trees resolve to the same owner for an in-tree move.
+	var target_owner: Object = _row_tree_owner(target_resource)
 	var source_resources: Array[Resource] = []
 	for source_row in source_rows:
 		if not (source_row is EventRowData):
@@ -379,6 +433,9 @@ func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String,
 		var source_resource: Resource = (source_row as EventRowData).source_resource
 		if source_resource == null or source_resource == target_resource or source_resources.has(source_resource):
 			continue
+		if _row_tree_owner(source_resource) != target_owner:
+			_dock._set_status("Cannot move a row between the sheet and a function's body.", true)
+			return
 		if not copy_mode and _dock._resource_contains_descendant(source_resource, target_resource):
 			_dock._set_status("Cannot move a row into one of its descendants.", true)
 			return
