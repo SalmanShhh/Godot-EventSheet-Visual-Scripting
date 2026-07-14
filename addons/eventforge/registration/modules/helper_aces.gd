@@ -74,6 +74,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# force RawCode in a behaviour tick) stay expressible as ACE rows.
 	descriptors.append(F.make_descriptor("Core", "SetLocalVarTyped", "Set Local Variable (typed)", ACEDescriptor.ACEType.ACTION, "var {name}: {var_type} = {value}", "", [F.make_param("name", "String", "temp", "Name", "Local variable name (scoped to this event body)."), F.make_param("var_type", "String", "float", "Type", "Static type for the local.", "", ["float", "int", "bool", "String", "Vector2", "Vector3"]), F.make_param("value", "String", "0.0", "Value", "Initial value expression.", "expression")], CAT, "var {name}: {var_type} = {value}")
 		.described("Creates a temporary variable of a fixed type within this event."))
+	# Inferred sibling (`:=`): a local whose type is inferred from its value - the idiomatic
+	# `var heading := Vector2.from_angle(...)`. Without this, a `:=` line forced a RawCode block (the plain
+	# `=` template needs a space-equals-space, which `:=` never has). Reverse-lifts + round-trips byte-exact.
+	descriptors.append(F.make_descriptor("Core", "SetLocalVarInferred", "Set Local Variable (inferred)", ACEDescriptor.ACEType.ACTION, "var {name} := {value}", "", [F.make_param("name", "String", "temp", "Name", "Local variable name (scoped to this event body)."), F.make_param("value", "String", "0.0", "Value", "Value expression; its type is inferred.", "expression")], CAT, "var {name} := {value}")
+		.described("Creates a temporary variable whose type is inferred from its value, within this event."))
 
 	# ── Validity / null (freed-instance safety, the classic source of crashes) ──
 	descriptors.append(F.make_descriptor("Core", "IsValid", "Is Valid", ACEDescriptor.ACEType.CONDITION, "is_instance_valid({target})", "", [F.make_param("target", "String", "self", "Target", "Object expression to test.", "expression")], CAT, "{target} is valid")

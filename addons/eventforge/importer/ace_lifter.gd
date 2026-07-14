@@ -1317,7 +1317,7 @@ static func _build_reverse_entries() -> Array:
 		# and its typed sibling (Stage D), so a local declaration in a hand-written body becomes a row, not a
 		# code cell. Each has more literal chars than the bare-var forms, so `self.x += 1` prefers the property
 		# twin over Add Variable, while a genuine specific `+=` ACE still outranks it. Byte-verify gates all.
-		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "AddToProperty", "SubtractFromProperty", "MultiplyProperty", "DivideProperty", "CallMethod", "SetLocalVar", "SetLocalVarTyped"]):
+		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "AddToProperty", "SubtractFromProperty", "MultiplyProperty", "DivideProperty", "CallMethod", "SetLocalVar", "SetLocalVarTyped", "SetLocalVarInferred"]):
 			continue
 		if template in ["break", "continue", "pass"]:
 			# Bare loop-control keywords also appear in generated pick-loop bodies, so

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed - a typed-inferred local (`var x := …`) lifts to a row instead of a raw block
+
+- **Opening a .gd now lifts an inferred local declaration** - `var heading := Vector2.from_angle(host.rotation)
+  * speed` - to a "Set Local Variable (inferred)" row, where before it forced a verbatim GDScript block (the
+  plain `var x = y` template needs a space-equals-space that `:=` never has). The plain `=` and typed `: T =`
+  forms still lift to their own rows, and the round-trip stays byte-exact.
+
 ### Fixed - Insert Expression lists a script's @export / State variables and the host binding
 
 - **The "Insert Expression" picker now lists the sheet's tree variables** - the `@export` vars, State vars,

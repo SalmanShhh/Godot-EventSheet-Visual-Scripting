@@ -133,6 +133,37 @@ static func run() -> bool:
 	var roundtrip4: String = str(SheetCompiler.compile(imported4, "user://sb_rt4.gd").get("output", ""))
 	ok = _check("shadow-guard case round-trips byte-identically", roundtrip4 == source4, true) and ok
 
+	# Local declarations: the three `var` forms each lift to their own row, distinctly. The inferred `:=`
+	# (var heading := ...) used to force a raw block because the plain `=` template needs a space-equals-space
+	# that `:=` never has; SetLocalVarInferred closes that. The `=` and `: T =` forms must stay distinct.
+	var authored5: EventSheetResource = EventSheetResource.new()
+	authored5.host_class = "Node2D"
+	var event5: EventRow = EventRow.new()
+	event5.trigger_provider_id = "Core"
+	event5.trigger_id = "OnProcess"
+	var raw5: RawCodeRow = RawCodeRow.new()
+	raw5.code = "var heading := position * 2.0\nvar plain = 5\nvar typed: int = 7"
+	event5.actions.append(raw5)
+	authored5.events.append(event5)
+	var source5: String = str(SheetCompiler.compile(authored5, "user://sb_source5.gd").get("output", ""))
+	var imported5: EventSheetResource = GDScriptImporter.new().import_external_source(source5)
+	var ace_ids5: Array = []
+	var inflow5: int = 0
+	for row5: Variant in imported5.events:
+		if row5 is EventRow:
+			for a5: Variant in (row5 as EventRow).actions:
+				if a5 is ACEAction:
+					ace_ids5.append((a5 as ACEAction).ace_id)
+				elif a5 is RawCodeRow:
+					inflow5 += 1
+	ok = _check("inferred := lifts to SetLocalVarInferred", ace_ids5.has("SetLocalVarInferred"), true) and ok
+	ok = _check("plain = still lifts to SetLocalVar", ace_ids5.has("SetLocalVar"), true) and ok
+	ok = _check("typed : T = still lifts to SetLocalVarTyped", ace_ids5.has("SetLocalVarTyped"), true) and ok
+	ok = _check("no in-flow block remains (all three var forms lift)", inflow5, 0) and ok
+	imported5.external_source_path = "user://sb_rt5.gd"
+	var roundtrip5: String = str(SheetCompiler.compile(imported5, "user://sb_rt5.gd").get("output", ""))
+	ok = _check("inferred-local lift round-trips byte-identically", roundtrip5 == source5, true) and ok
+
 	return ok
 
 
