@@ -37,7 +37,24 @@ static func run() -> bool:
 	var irreducible: String = "extends Node\n\n\nfunc _ready() -> void:\n\tvisible = false\n\n\nfunc _process(delta: float) -> void:\n\tflags |= 2\n"
 	ok = _check("irreducible two-blank file still round-trips (verbatim fallback)", _roundtrip(irreducible), true) and ok
 
+	# The common real shape: a lifecycle trigger plus a plain helper function, two blanks apart. Before the
+	# helper-spacing fix this reverted the whole file; now _ready lifts to an event and the helper to a sheet
+	# function, round-tripping byte-for-byte.
+	var trigger_helper: String = "extends Node\n\n\nfunc _ready() -> void:\n\t_setup()\n\n\nfunc _setup() -> void:\n\tvisible = true\n"
+	ok = _check("trigger + two-blank helper lifts the helper", _functions(trigger_helper) >= 1, true) and ok
+	ok = _check("trigger + two-blank helper round-trips byte-identically", _roundtrip(trigger_helper), true) and ok
+
+	# Two plain helper functions, two blanks apart (no trigger at all): both lift as sheet functions.
+	var two_helpers: String = "extends Node\n\n\nfunc _setup() -> void:\n\tvisible = true\n\n\nfunc _teardown() -> void:\n\tvisible = false\n"
+	ok = _check("two two-blank helpers both lift", _functions(two_helpers) >= 2, true) and ok
+	ok = _check("two two-blank helpers round-trip byte-identically", _roundtrip(two_helpers), true) and ok
+
 	return ok
+
+
+## The number of lifted sheet functions the import produced (0 means the helpers stayed raw blocks).
+static func _functions(source: String) -> int:
+	return GDScriptImporter.new().import_external_source(source).functions.size()
 
 
 ## The number of top-level EventRow rows the import produced (0 means the file reverted to raw blocks).

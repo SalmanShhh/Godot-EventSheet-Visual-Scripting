@@ -133,7 +133,14 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 						pending_annotations = {}
 						if bool(function_lift.get("ok", false)):
 							saw_function = true
-							lifted_functions.append(function_lift.get("function"))
+							var lifted_function: Variant = function_lift.get("function")
+							# Same source-spacing preservation as the trigger branch, for a helper/sheet function:
+							# stamp the gap count so a hand-written two-blank gap before a helper round-trips.
+							# Only when >1; the first lifted function's gap lives in the prelude (boundary-detach),
+							# never a "blank" row here, so it is never stamped and can't double-count.
+							if pending_blank_count > 1 and lifted_function is EventFunction:
+								(lifted_function as EventFunction).set_meta("__source_leading_blanks", pending_blank_count)
+							lifted_functions.append(lifted_function)
 						else:
 							failed = true
 			_:

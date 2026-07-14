@@ -632,7 +632,13 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			continue
 		if anchored_names.has(event_function.function_name):
 			continue
-		lines.append("")
+		# One blank before each trailing function. This loop is the EXTERNAL (opened-file) path only, so it
+		# honors the function's captured source blank spacing (__source_leading_blanks) - a hand-written
+		# two-blank gap before a helper round-trips instead of reverting. Default 1 (a lifted function with
+		# no captured multi-blank gap, and every generated pack, which emits via the main path) is unchanged.
+		var function_blanks: int = maxi(int(event_function.get_meta("__source_leading_blanks", 1)), 1)
+		for _blank_index: int in range(function_blanks):
+			lines.append("")
 		_emit_function_block(event_function, sheet, lines, source_map, result)
 
 	# Top-level comments emit last, one blank before each line (main path's deferred format).

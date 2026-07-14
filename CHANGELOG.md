@@ -2,17 +2,17 @@
 
 ## [Unreleased]
 
-### Changed - hand-written multi-trigger .gd files lift instead of reverting to one raw block
+### Changed - hand-written multi-function .gd files lift instead of reverting to one raw block
 
-- **Opening a hand-written .gd with two or more lifecycle triggers now lifts its events instead of reverting
-  the whole file to a verbatim block.** Idiomatic GDScript puts two blank lines between top-level functions,
-  but the compiler emits one between trigger sections, so the whole-file byte check failed on that one-line
-  difference and kept everything raw. The importer now captures each trigger function's source blank-line
-  spacing and reproduces it on the opened-file path, so `func _ready()` + `func _process()` (and more) become
-  real event rows while the round-trip stays byte-exact. Generated packs are untouched - they keep the single
-  blank by design (the spacing is honored only on the opened-file compile path). Scoped to trigger sections
-  for now: a file whose extra blank sits before a plain helper / sheet function still degrades losslessly to a
-  verbatim block (that path is a follow-up).
+- **Opening a hand-written .gd with two or more top-level functions now lifts them instead of reverting the
+  whole file to a verbatim block.** Idiomatic GDScript puts two blank lines between top-level functions, but
+  the compiler emits one between sections, so the whole-file byte check failed on that one-line difference and
+  kept everything raw. The importer now captures each function's source blank-line spacing and reproduces it on
+  the opened-file path, so `func _ready()` + `func _process()` (triggers) AND `func _ready()` + a plain
+  `func _setup()` (a helper) - the common real shape - become real event rows and sheet functions while the
+  round-trip stays byte-exact. Generated packs are untouched: they keep the single blank by design (the spacing
+  is honored only on the opened-file compile path). Remaining edge: a helper carrying `## @ace_*` annotations
+  with a two-blank gap still degrades losslessly to a verbatim block.
 
 ### Changed - opening a .gd lifts compound-assignment statements to rows (and a shadow-guard fix)
 
