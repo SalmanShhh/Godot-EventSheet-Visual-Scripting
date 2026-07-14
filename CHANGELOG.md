@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - the host binding reads as a first-class block
+
+- **An opened behaviour pack's generated `_enter_tree` host boilerplate now reads as a first-class "Host
+  binding" block**: a badge, the host CLASS as its own chip, and a muted cue ("the node this behaviour is
+  attached to - double-click to edit in code"). Because an opened pack bakes its host into the `.gd`, the
+  class stays read-only here and double-click opens the code editor to change it, so the byte round-trip is
+  untouched (pure view change, drift stays 0). A dedicated pick-host dialog for authored sheets is a
+  follow-up (authored sheets already change their host through the Sheet Type dialog).
+
 ### Added - opt a single verb of an opened pack into body editing
 
 - **An opened behaviour pack's verb bodies are read-only by default, but you can now opt a single verb into

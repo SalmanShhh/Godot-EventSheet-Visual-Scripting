@@ -40,7 +40,11 @@ static func run() -> bool:
 			host_row = row_data
 	ok = _check("the pack shows a Host binding row", host_row != null, true) and ok
 	ok = _check("it collapses to one line", host_row.line_count if host_row != null else -1, 1) and ok
-	ok = _check("it names the host class", host_row != null and str(host_row.spans[1].text).contains("Node2D"), true) and ok
+	# First-class block: the host class is its OWN chip span (not buried in prose), followed by a cue that
+	# points at the double-click-to-edit-in-code affordance (the RawCodeRow editor keeps the .gd round-trip).
+	ok = _check("the host class is its own chip span", host_row != null and str(host_row.spans[1].text) == "Node2D", true) and ok
+	ok = _check("a muted cue explains the class edits in code",
+		host_row != null and host_row.spans.size() >= 3 and str(host_row.spans[2].text).contains("edit in code"), true) and ok
 	ok = _check("no bare `func _enter_tree` GDScript block remains",
 		_has_enter_tree_block(view), false) and ok
 	ok = _check("the row keeps its RawCodeRow (still edits/round-trips)",

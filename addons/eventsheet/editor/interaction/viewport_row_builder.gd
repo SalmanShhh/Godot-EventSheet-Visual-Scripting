@@ -792,6 +792,10 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# lines are all still there and still edit/round-trip as before).
 	var host_class: String = host_binding_class(raw_row.code)
 	if not host_class.is_empty():
+		# The generated `_enter_tree` host boilerplate reads as a first-class "Host binding" block: a badge,
+		# the host CLASS as a distinct chip, and a muted cue. On an opened pack this prelude is verbatim .gd
+		# (host is baked into the file), so the class stays read-only here - double-click opens the code
+		# editor to change it (the RawCodeRow double-click at viewport_input.gd), keeping the byte round-trip.
 		row_data.line_count = 1
 		row_data.spans = [
 			_make_span("Host binding", SemanticSpan.SpanType.KEYWORD, {
@@ -803,7 +807,16 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 				"kind": "raw_code",
 				"line_index": 0
 			}),
-			_make_span("acts on the host node · get_parent() as %s" % host_class, SemanticSpan.SpanType.VALUE, {
+			_make_span(host_class, SemanticSpan.SpanType.KEYWORD, {
+				"editable": false,
+				"badge": true,
+				"badge_style": "scope",
+				"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+				"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+				"kind": "raw_code",
+				"line_index": 0
+			}),
+			_make_span("the node this behaviour is attached to · double-click to edit in code", SemanticSpan.SpanType.VALUE, {
 				"editable": false,
 				"kind": "raw_code",
 				"line_index": 0,
