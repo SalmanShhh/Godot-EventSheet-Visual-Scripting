@@ -176,14 +176,20 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 	if not _host._lint_context_provider.is_valid():
 		return
 	var sheet: EventSheetResource = _host._lint_context_provider.call() as EventSheetResource
-	if sheet == null or sheet.variables == null or sheet.variables.is_empty():
+	if sheet == null:
+		return
+	# Every variable the script can reach: the family/per-instance `variables` DICT plus the TREE
+	# variables (LocalVariable rows: @export vars, State vars, and the `host` binding). An opened .gd
+	# stores its @export/state vars as tree rows, so a dict-only listing showed nothing for real packs.
+	var entries: Array = _gather_sheet_variables(sheet)
+	if entries.is_empty():
 		return
 	var lowered: String = query.to_lower()
 	# (1) The variables themselves - always shown (filtered by the search).
 	var var_group: TreeItem = null
-	for var_name: Variant in sheet.variables.keys():
-		var name_str: String = str(var_name)
-		if not lowered.is_empty() and not name_str.to_lower().contains(lowered):
+	for entry: Dictionary in entries:
+		var name_str: String = str(entry.get("name", ""))
+		if name_str.is_empty() or (not lowered.is_empty() and not name_str.to_lower().contains(lowered)):
 			continue
 		if var_group == null:
 			var_group = _expression_tree.create_item(root)
@@ -193,20 +199,60 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 		var item: TreeItem = _expression_tree.create_item(var_group)
 		item.set_text(0, name_str)
 		item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
-		var vdef: Variant = sheet.variables[var_name]
-		var vtype: String = str((vdef as Dictionary).get("type", "")).strip_edges() if vdef is Dictionary else ""
+		var vtype: String = str(entry.get("type_name", ""))
 		if not vtype.is_empty():
 			item.set_tooltip_text(0, "%s : %s" % [name_str, vtype])
 		item.set_metadata(0, name_str)
-	# (2) Member chaining (enemy.velocity) - only while searching, and only for class-backed variables.
+	# (2) Member chaining (host.velocity) - only while searching, and only for class-backed variables.
 	if lowered.is_empty():
 		return
-	for var_name: Variant in sheet.variables.keys():
-		var vdef: Variant = sheet.variables[var_name]
-		var vtype: String = str((vdef as Dictionary).get("type", "")).strip_edges() if vdef is Dictionary else ""
+	for entry: Dictionary in entries:
+		var vtype: String = str(entry.get("type_name", ""))
 		if vtype.is_empty() or not ClassDB.class_exists(vtype):
 			continue
-		_add_variable_member_group(root, str(var_name), vtype, lowered)
+		_add_variable_member_group(root, str(entry.get("name", "")), vtype, lowered)
+
+
+## Every reachable sheet variable as [{name, type_name}], deduped by name (dict entry wins). Merges the
+## `variables` DICT (family/per-instance) with the TREE variables (LocalVariable rows recovered from an
+## opened .gd - @export, State, and the host binding), so the picker lists what the script can actually use.
+func _gather_sheet_variables(sheet: EventSheetResource) -> Array:
+	var out: Array = []
+	var seen: Dictionary = {}
+	if sheet.variables is Dictionary:
+		for var_name: Variant in sheet.variables.keys():
+			var name_str: String = str(var_name).strip_edges()
+			if name_str.is_empty() or seen.has(name_str):
+				continue
+			seen[name_str] = true
+			var vdef: Variant = sheet.variables[var_name]
+			var vtype: String = str((vdef as Dictionary).get("type", "")).strip_edges() if vdef is Dictionary else ""
+			out.append({"name": name_str, "type_name": vtype})
+	var tree_vars: Array = []
+	_collect_tree_variables_into(sheet.events, tree_vars)
+	for tree_var: Variant in tree_vars:
+		if not (tree_var is LocalVariable):
+			continue
+		var lv: LocalVariable = tree_var as LocalVariable
+		var name_str: String = lv.name.strip_edges()
+		if name_str.is_empty() or seen.has(name_str):
+			continue
+		seen[name_str] = true
+		out.append({"name": name_str, "type_name": lv.type_name.strip_edges()})
+	return out
+
+
+## Recursively collect every LocalVariable row (top-level, inside groups, and nested in sub-events).
+## Mirrors SheetCompiler._collect_tree_variables so the picker stays self-contained (read-only).
+func _collect_tree_variables_into(entries: Array, into: Array) -> void:
+	for entry: Variant in entries:
+		if entry is LocalVariable:
+			into.append(entry)
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_collect_tree_variables_into(group.events if not group.events.is_empty() else group.rows, into)
+		elif entry is EventRow:
+			_collect_tree_variables_into((entry as EventRow).sub_events, into)
 
 
 ## A per-variable group of `varname.member` fragments (properties, then methods), filtered by the query.

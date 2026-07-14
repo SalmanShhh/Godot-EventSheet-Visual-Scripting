@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed - Insert Expression lists a script's @export / State variables and the host binding
+
+- **The "Insert Expression" picker now lists the sheet's tree variables** - the `@export` vars, State vars,
+  and the `host` binding recovered when you open a `.gd` - not just the family/per-instance `variables`
+  dict. Real opened packs store their variables as tree rows, so the picker used to show none of them. Each
+  is a one-click leaf, and a class-backed one (like `host: CharacterBody2D`) chains its members as you search
+  (`host.velocity`).
+
 ### Fixed - a long expression wraps and the box grows in the ACE parameters dialog
 
 - **The expression field in an ACE's parameters dialog (e.g. "Expression Is True") now wraps a long

@@ -65,6 +65,25 @@ static func run() -> bool:
 	dlg2._expression_picker._expression_search.text = "velocity"
 	dlg2._refresh_expression_tree()
 	all_passed = _check("chained member 'enemy.velocity' is offered", _tree_has_item(dlg2._expression_picker._expression_tree, "enemy.velocity"), true) and all_passed
+
+	# TREE variables (LocalVariable rows) - an opened .gd stores its @export/State vars and the host
+	# binding this way, NOT in the `variables` dict. The picker must list them too, and a class-backed one
+	# (host) chains like a dict var. This is the #5 fix: real packs showed nothing before.
+	var host_var: LocalVariable = LocalVariable.new()
+	host_var.name = "host"
+	host_var.type_name = "CharacterBody2D"
+	sheet.events.append(host_var)
+	var speed_var: LocalVariable = LocalVariable.new()
+	speed_var.name = "move_speed"
+	speed_var.type_name = "float"
+	sheet.events.append(speed_var)
+	dlg2._expression_picker._expression_search.text = ""
+	dlg2._refresh_expression_tree()
+	all_passed = _check("tree variable 'host' is listed", _tree_has_item(dlg2._expression_picker._expression_tree, "host"), true) and all_passed
+	all_passed = _check("tree variable 'move_speed' is listed", _tree_has_item(dlg2._expression_picker._expression_tree, "move_speed"), true) and all_passed
+	dlg2._expression_picker._expression_search.text = "velocity"
+	dlg2._refresh_expression_tree()
+	all_passed = _check("tree variable 'host' chains 'host.velocity'", _tree_has_item(dlg2._expression_picker._expression_tree, "host.velocity"), true) and all_passed
 	host2.free()
 	return all_passed
 
