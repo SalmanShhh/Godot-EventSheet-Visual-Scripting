@@ -120,6 +120,11 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	elif is_comment:
 		menu.add_item("Edit Comment…", _dock.ROW_MENU_EDIT_COMMENT)
 		menu.add_item("Attach To Event Above", _dock.ROW_MENU_ATTACH_COMMENT)
+	elif row_type == EventRowData.RowType.SECTION and row_data != null and row_data.source_resource is EventFunction:
+		# A published-verb (Define) header row: edit the verb, or add a parameter to it right here -
+		# the same right-click-to-add-an-argument gesture a visual event editor gives its functions.
+		menu.add_item("Edit Verb…", _dock.ROW_MENU_EDIT_FUNCTION)
+		menu.add_item("Add Parameter", _dock.ROW_MENU_ADD_FUNCTION_PARAM)
 	else:
 		# SECTION / unknown rows get only the universal items - no leading separator.
 		added_type_items = false

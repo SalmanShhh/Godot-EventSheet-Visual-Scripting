@@ -100,6 +100,16 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 				_dock._attach_comment_to_event_above(_dock._context_row.source_resource as CommentRow)
 			else:
 				_dock._set_status("Only comment rows can attach to an event.", true)
+		_dock.ROW_MENU_EDIT_FUNCTION:
+			if _dock._context_row != null and _dock._context_row.source_resource is EventFunction:
+				_dock._function_dialog_glue._open_function_dialog_for(_dock._context_row.source_resource)
+			else:
+				_dock._set_status("Select a published verb row to edit it.", true)
+		_dock.ROW_MENU_ADD_FUNCTION_PARAM:
+			if _dock._context_row != null and _dock._context_row.source_resource is EventFunction:
+				_dock._function_dialog_glue._open_function_dialog_add_param(_dock._context_row.source_resource)
+			else:
+				_dock._set_status("Select a published verb row to add a parameter to it.", true)
 		_dock.ROW_MENU_ADD_PICK_FILTER:
 			_dock._open_pick_filter_dialog(_dock._context_row.source_resource, -1)
 		_dock.ROW_MENU_SCOPE_TO_NODE:

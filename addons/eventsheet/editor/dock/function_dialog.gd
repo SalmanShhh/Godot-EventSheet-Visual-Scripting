@@ -63,6 +63,15 @@ func _open_function_dialog_for(event_function: Resource) -> void:
 	_function_dialog.open_for_edit(event_function as EventFunction)
 
 
+## Right-click ▸ "Add Parameter" on a Define row: the same edit dialog, but pre-focused on a fresh
+## parameter row so the user is naming the new argument immediately (nothing else has to be touched).
+func _open_function_dialog_add_param(event_function: Resource) -> void:
+	if not (event_function is EventFunction) or _dock._current_sheet == null:
+		return
+	_ensure_dialog()
+	_function_dialog.open_for_edit_focus_new_param(event_function as EventFunction)
+
+
 func _ensure_dialog() -> void:
 	if _function_dialog != null:
 		return

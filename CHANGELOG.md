@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - right-click a published verb to add a parameter (structured Name/Type/Default/Description)
+
+- **Right-clicking a Define (published-verb) row now offers "Edit Verb…" and "Add Parameter".** Adding an
+  argument to a verb is a single gesture: "Add Parameter" opens the verb's edit dialog with a fresh
+  parameter row already appended and focused, so you land typing the new param's name and then tab through
+  its Type, Default, and Description - the way you right-click a function to add an argument in a visual
+  event editor, instead of hunting for the dialog and scrolling to a "+ Add parameter" button. "Edit Verb…"
+  is the explicit menu entry for the same edit dialog that double-clicking the row opens.
+
 ### Changed - the Edit-verb dialog is decluttered (publish fields live under Publish)
 
 - **The verb dialog no longer front-loads publish-only fields.** The big "This is what other people will

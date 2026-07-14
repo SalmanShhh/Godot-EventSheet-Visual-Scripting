@@ -378,6 +378,19 @@ static func run() -> bool:
     # "Save Selection as Snippet" unreachable - the ids must stay distinct.
     all_passed = _check("surround-region and save-snippet menu ids are distinct",
         EventSheetDock.ROW_MENU_SURROUND_REGION != EventSheetDock.ROW_MENU_SAVE_SNIPPET, true) and all_passed
+    # A published-verb (Define) row is a SECTION row whose source is an EventFunction; its menu offers
+    # the right-click-to-edit-and-add-a-param gesture. Build the menu on a synthesized verb row so the
+    # branch is exercised without depending on where the define row lands in the flat-row list.
+    var verb_menu_fn: EventFunction = EventFunction.new()
+    verb_menu_fn.function_name = "spawn_enemy"
+    var verb_menu_row: EventRowData = EventRowData.new()
+    verb_menu_row.row_type = EventRowData.RowType.SECTION
+    verb_menu_row.source_resource = verb_menu_fn
+    dock._build_row_context_menu(verb_menu_row)
+    all_passed = _check("published-verb row offers Edit Verb",
+        dock._row_context_menu.get_item_index(EventSheetDock.ROW_MENU_EDIT_FUNCTION) >= 0, true) and all_passed
+    all_passed = _check("published-verb row offers Add Parameter",
+        dock._row_context_menu.get_item_index(EventSheetDock.ROW_MENU_ADD_FUNCTION_PARAM) >= 0, true) and all_passed
     # Insert Event Above places the new event BEFORE the anchor (one funnel step).
     var pre_insert_count: int = dock.get_current_sheet().events.size()
     dock._context_row = dock_viewport.get_flat_rows()[0].get("row")

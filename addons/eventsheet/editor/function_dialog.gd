@@ -239,6 +239,23 @@ func open_for_edit(event_function: EventFunction) -> void:
 	_refresh_studio()
 
 
+## Right-click ▸ "Add Parameter" entry point: opens the verb for editing, then appends a fresh
+## parameter row and focuses its name field - so the whole "add an argument" gesture is a single
+## right-click, and the user lands typing the new param's name (Name/Type/Default/Description follow).
+func open_for_edit_focus_new_param(event_function: EventFunction) -> void:
+	open_for_edit(event_function)
+	add_param_row()
+	var row_count: int = _params_box.get_child_count()
+	if row_count == 0:
+		return
+	var last_row: Node = _params_box.get_child(row_count - 1)
+	if last_row.get_child_count() > 0 and last_row.get_child(0) is LineEdit:
+		var name_field: LineEdit = last_row.get_child(0) as LineEdit
+		# The dialog is still popping up this frame; defer so focus lands after layout settles.
+		name_field.call_deferred("grab_focus")
+		name_field.call_deferred("select_all")
+
+
 ## queue_free alone leaves children in the tree until end of frame, so a prefill added right after
 ## would coexist with the stale rows and collect_params() would read both - detach immediately.
 func _clear_rows(box: Container) -> void:
