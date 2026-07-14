@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - comment-only code blocks read as clean notes; the "setup" pill is gone
+
+- **A code block that is entirely comment lines now reads as a comment**, not code: no badge, and the
+  leading `#` / `##` is dropped from the display (you are already visibly in a comment) - so a doc
+  comment between two exported knobs shows "On: the canvas clears itself every frame..." instead of
+  "setup  ## On: the canvas...". The raw code stays the serialization truth (the round-trip is
+  untouched); only the display changes. Pinned by tests/raw_shell_render_test.gd.
+- **The confusing "setup" pill is removed.** Boilerplate GDScript blocks still read dimmer, but every
+  code block now carries the same plain "GDScript" badge instead of a separate "setup" label.
+
 ### Added - theme editor: group corners, region styling, more row-height headroom
 
 - **The Theme editor gains four more knobs** (they surface automatically in its reflective form): group

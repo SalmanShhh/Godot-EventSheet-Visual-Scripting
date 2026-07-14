@@ -49,6 +49,18 @@ static func run() -> bool:
 	ok = _check("a non-func block is not a function row",
 		ViewportRowBuilder.function_body_info("health += 5\nqueue_free()").is_empty(), true) and ok
 
+	# ── is_comment_only_block + strip_comment_prefix: a pure-comment block reads as a clean note (no
+	# "setup"/code badge, no leading #), while any real code keeps the GDScript block treatment. ──
+	ok = _check("a block of only ## comments is comment-only",
+		ViewportRowBuilder.is_comment_only_block(PackedStringArray(["## On: the canvas clears", "## Off: strokes stay"])), true) and ok
+	ok = _check("a # note is comment-only", ViewportRowBuilder.is_comment_only_block(PackedStringArray(["# tip"])), true) and ok
+	ok = _check("a mixed code+comment block is NOT comment-only",
+		ViewportRowBuilder.is_comment_only_block(PackedStringArray(["## note", "var x := 1"])), false) and ok
+	ok = _check("an empty block is not comment-only (nothing to show as a note)",
+		ViewportRowBuilder.is_comment_only_block(PackedStringArray(["", "  "])), false) and ok
+	ok = _check("the ## prefix is dropped for display", ViewportRowBuilder.strip_comment_prefix("## On: the canvas"), "On: the canvas") and ok
+	ok = _check("a single # prefix is dropped too", ViewportRowBuilder.strip_comment_prefix("# tip: keep it short"), "tip: keep it short") and ok
+
 	# ── Rendering over an opened sheet whose annotated verb CAN'T lift (a custom return type keeps
 	# it raw) - the shell is the honest fallback for whatever the per-function lift leaves behind,
 	# so the annotation wall still reads as one Define-style line. ──

@@ -299,6 +299,33 @@ static func friendly_template_line(event_function: EventFunction) -> String:
 	return template
 
 
+## True when every non-blank line of a code block is a comment (# or ##). Such a block reads as a note,
+## so it renders as a comment (no code badge, leading # dropped) instead of a GDScript block.
+static func is_comment_only_block(code_lines: PackedStringArray) -> bool:
+	var saw_comment: bool = false
+	for line: String in code_lines:
+		var stripped: String = line.strip_edges()
+		if stripped.is_empty():
+			continue
+		if not stripped.begins_with("#"):
+			return false
+		saw_comment = true
+	return saw_comment
+
+
+## Drops the leading # / ## (and one following space) from a comment line for DISPLAY only - the row's
+## raw code stays the serialization truth. "## On: the canvas..." -> "On: the canvas...".
+static func strip_comment_prefix(line: String) -> String:
+	var body: String = line.strip_edges()
+	var hashes: int = 0
+	while hashes < body.length() and body[hashes] == "#":
+		hashes += 1
+	body = body.substr(hashes)
+	if body.begins_with(" "):
+		body = body.substr(1)
+	return body
+
+
 ## One Define block: role badge in its ACE-role colour, the friendly published name, a `→ type`
 ## chip for value-returning verbs, the category chip, an "internal" chip when the function is NOT
 ## exposed as an ACE (a plain helper other sheets can't pick), and the muted real signature built
@@ -838,10 +865,25 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		return row_data
 	var code_lines: PackedStringArray = raw_row.code.split("\n")
 	row_data.line_count = maxi(code_lines.size(), 1)
-	# Type-aware styling: boilerplate reads dimmer + labelled "setup" so the eye skips it,
-	# while real logic keeps the brighter "GDScript" badge + primary text. Same row, no codegen change.
+	# A block that is ENTIRELY comment lines (## doc comments, # notes) reads as a comment, not code:
+	# no code/"setup" badge, and the leading # is dropped from the display (we are already visibly a
+	# comment). The raw code stays the serialization truth - these spans are display-only.
+	if is_comment_only_block(code_lines):
+		var comment_style: EventSheetEventStyle = _viewport._get_event_style()
+		var note_spans: Array[SemanticSpan] = []
+		for note_index in range(code_lines.size()):
+			var shown: String = strip_comment_prefix(code_lines[note_index])
+			note_spans.append(_make_span(
+				shown if not shown.is_empty() else " ",
+				SemanticSpan.SpanType.COMMENT,
+				{"editable": false, "kind": "raw_code", "line_index": note_index, "text_color": comment_style.comment_text_color}
+			))
+		row_data.spans = note_spans
+		return row_data
+	# Type-aware styling: boilerplate reads dimmer (no label) while real logic keeps the brighter
+	# "GDScript" badge + primary text. Same row, no codegen change.
 	var is_scaffold: bool = _viewport.is_scaffolding_code(raw_row.code)
-	var badge_label: String = "setup" if is_scaffold else "GDScript"
+	var badge_label: String = "GDScript"
 	var badge_fg: Color = EventSheetPalette.COLOR_SETUP_BADGE_FG if is_scaffold else EventSheetPalette.COLOR_CODE_BADGE_FG
 	var line_fg: Color = EventSheetPalette.TEXT_MUTED if is_scaffold else EventSheetPalette.TEXT_PRIMARY
 	var spans: Array[SemanticSpan] = []
