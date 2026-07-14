@@ -776,6 +776,156 @@ static func function_body_info(code: String) -> Dictionary:
 	}
 
 
+## The class name ("" when not a match) if a RawCodeRow is EXACTLY a pure-data inner class: an optional
+## leading prelude of blank/comment lines, then `class Name[ extends Base]:`, then a body of only typed
+## fields (`var`/`const`/`@export`) and comments - no methods, no nested classes, no top-level code after
+## it. This is the shape the compiler emits for a data holder (AbilityData and friends): it carries no
+## logic, so it reads as a first-class "Data class" block (name chip + field rows) rather than a GDScript
+## wall. A `func`, a second/nested class, or any dedented line rejects it (stays a real editable code block,
+## so a method-bearing class never mis-lifts). Static + pure -> unit-testable without a viewport. See
+## parse_data_class for the structured model and data_class_lifts for the byte-gate this feeds.
+static func data_class_name(code: String) -> String:
+	var lines: PackedStringArray = code.split("\n")
+	var i: int = 0
+	# Skip the leading prelude: blank lines and `#`/`##` comments (the class doc block).
+	while i < lines.size():
+		var stripped: String = lines[i].strip_edges()
+		if stripped.is_empty() or stripped.begins_with("#"):
+			i += 1
+		else:
+			break
+	if i >= lines.size():
+		return ""
+	var header: RegEx = RegEx.new()
+	if header.compile("^class ([A-Za-z_][A-Za-z0-9_]*)(?: extends [A-Za-z_][A-Za-z0-9_.]*)?:$") != OK:
+		return ""
+	var header_match: RegExMatch = header.search(lines[i])
+	if header_match == null:
+		return ""
+	i += 1
+	# Every later non-blank line must be an indented field or comment. A dedented line (a second top-level
+	# construct - func, class, or code) means this row is more than a lone data class, so it stays verbatim.
+	var field_count: int = 0
+	while i < lines.size():
+		var body_line: String = lines[i]
+		i += 1
+		if body_line.strip_edges().is_empty():
+			continue
+		if not body_line.begins_with("\t"):
+			return ""
+		var inner: String = body_line.substr(1)  # one leading tab stripped for the keyword test
+		if inner.begins_with("var ") or inner.begins_with("const ") or inner.begins_with("@export"):
+			field_count += 1
+		elif inner.begins_with("#"):
+			pass  # a comment inside the class body - allowed, not counted as a field
+		else:
+			return ""  # a method, nested class, or any other statement - not a pure data class
+	if field_count == 0:
+		return ""  # an empty or comment-only class carries no editable fields; keep it verbatim
+	return header_match.get_string(1)
+
+
+## The structured, editable model of a pure-data inner class ({} when data_class_name rejects the code):
+## { class_name, extends, prefix (verbatim lines before the header), header (verbatim class line), body }.
+## `body` is one entry per body line: a canonical `\tvar name: Type[ = default]` becomes a structured field
+## {kind:"field", name, type, default, has_default}; every other line (a comment, blank, const, @export, or
+## a non-canonical var) is kept verbatim as {kind:"raw", text} so emit_data_class can reproduce it exactly.
+## Static + pure so the model is unit-testable without a viewport.
+static func parse_data_class(code: String) -> Dictionary:
+	var class_name_str: String = data_class_name(code)
+	if class_name_str.is_empty():
+		return {}
+	var lines: PackedStringArray = code.split("\n")
+	var i: int = 0
+	var prefix: Array[String] = []
+	while i < lines.size():
+		var stripped: String = lines[i].strip_edges()
+		if stripped.is_empty() or stripped.begins_with("#"):
+			prefix.append(lines[i])
+			i += 1
+		else:
+			break
+	var header_line: String = lines[i]
+	var extends_base: String = ""
+	var ext: RegEx = RegEx.new()
+	if ext.compile("^class [A-Za-z_][A-Za-z0-9_]*(?: extends ([A-Za-z_][A-Za-z0-9_.]*))?:$") == OK:
+		var ext_match: RegExMatch = ext.search(header_line)
+		if ext_match != null:
+			extends_base = ext_match.get_string(1)
+	i += 1
+	var with_default: RegEx = RegEx.new()
+	with_default.compile("^\\tvar ([A-Za-z_][A-Za-z0-9_]*): (\\S.*?) = (.+)$")
+	var no_default: RegEx = RegEx.new()
+	no_default.compile("^\\tvar ([A-Za-z_][A-Za-z0-9_]*): (\\S.*)$")
+	var body: Array = []
+	while i < lines.size():
+		var line: String = lines[i]
+		i += 1
+		var field_match: RegExMatch = with_default.search(line)
+		if field_match != null:
+			body.append({
+				"kind": "field",
+				"name": field_match.get_string(1),
+				"type": field_match.get_string(2),
+				"default": field_match.get_string(3),
+				"has_default": true
+			})
+			continue
+		field_match = no_default.search(line)
+		if field_match != null:
+			body.append({
+				"kind": "field",
+				"name": field_match.get_string(1),
+				"type": field_match.get_string(2),
+				"default": "",
+				"has_default": false
+			})
+			continue
+		body.append({"kind": "raw", "text": line})
+	return {
+		"class_name": class_name_str,
+		"extends": extends_base,
+		"prefix": prefix,
+		"header": header_line,
+		"body": body
+	}
+
+
+## Re-emits a parse_data_class model back to GDScript text: the verbatim prefix, a reconstructed
+## `class Name[ extends Base]:` header, then each body entry (a structured field rebuilt as
+## `\tvar name: Type[ = default]`, a raw line passed through). Deterministic. data_class_lifts gates the
+## round-trip: a class whose model does NOT reproduce its source byte-for-byte is never lifted.
+static func emit_data_class(model: Dictionary) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	for prefix_line: String in model.get("prefix", []):
+		out.append(prefix_line)
+	var base: String = str(model.get("extends", ""))
+	if base.is_empty():
+		out.append("class %s:" % str(model.get("class_name")))
+	else:
+		out.append("class %s extends %s:" % [str(model.get("class_name")), base])
+	for entry: Dictionary in model.get("body", []):
+		if str(entry.get("kind")) == "field":
+			var line: String = "\tvar %s: %s" % [str(entry.get("name")), str(entry.get("type"))]
+			if bool(entry.get("has_default", false)):
+				line += " = %s" % str(entry.get("default"))
+			out.append(line)
+		else:
+			out.append(str(entry.get("text")))
+	return "\n".join(out)
+
+
+## The byte-gate: true only when a RawCodeRow is a data class AND its structured model re-emits to the
+## EXACT source. This is the covenant guard - a data class the model can reproduce lifts to an editable
+## block; anything else (spacing quirks, defaults the field split cannot round-trip) stays a verbatim
+## RawCodeRow. Static + pure so the gate is provable in a test the same way the compiler's is.
+static func data_class_lifts(code: String) -> bool:
+	var model: Dictionary = parse_data_class(code)
+	if model.is_empty():
+		return false
+	return emit_data_class(model) == code
+
+
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
 ## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
 ## A row that is purely a published-verb annotation shell renders as ONE Define-style header line
@@ -868,6 +1018,14 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		}))
 		row_data.spans = shell_spans
 		return row_data
+	# A pure-data inner class (a `class X:` of only typed fields - AbilityData and friends) reads as a
+	# first-class "Data class" block: a badge, the class name as a chip, and its fields as foldable child
+	# rows (name : type = default), instead of a raw GDScript wall. Byte-gated: only a class whose structured
+	# model re-emits to the exact source lifts (data_class_lifts); everything else stays a verbatim block, so
+	# the .gd round-trip is never at risk. Phase 1 renders the fields read-only (inert child rows); editing
+	# them in place is the next slice. Double-click still opens the code editor as the escape hatch.
+	if data_class_lifts(raw_row.code):
+		return _build_data_class_row(raw_row, indent)
 	# A lone top-level function (a helper the importer could not lift) collapses to a `ƒ name(params) ->
 	# Type` header + line count, so it reads as a FUNCTION, not a raw GDScript wall - the same view-only
 	# collapse as host-binding and annotation shells above. Double-click still opens the code dialog.
@@ -970,6 +1128,96 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			}
 		))
 	row_data.spans = spans
+	return row_data
+
+
+## Builds the foldable "Data class" block for a RawCodeRow that data_class_lifts recognises: a one-line
+## header (badge · class-name chip · optional extends · field-count cue) whose children are the class's
+## fields, each rendered as a read-only `name : type = default` row like a variable. The header keeps its
+## RawCodeRow as source_resource so double-click opens the code editor (the escape hatch); the field rows
+## are inert so no mutation reaches them (Phase 1 is a pure read - editing fields in place is the next
+## slice). row_uid is class-name-keyed so an expanded block survives the undo funnel's resource rebuild.
+func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
+	var model: Dictionary = parse_data_class(raw_row.code)
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = raw_row
+	row_data.line_count = 1  # visual collapse only - the underlying lines are all still there
+	var data_class_name_str: String = str(model.get("class_name"))
+	row_data.row_uid = "data_class_%s" % (data_class_name_str if not data_class_name_str.is_empty() else str(raw_row.get_instance_id()))
+	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
+	var fields: Array = []
+	for entry: Dictionary in model.get("body", []):
+		if str(entry.get("kind")) == "field":
+			fields.append(entry)
+	var header_spans: Array[SemanticSpan] = [
+		_make_span("Data class", SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
+			"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
+			"kind": "raw_code",
+			"line_index": 0
+		}),
+		_make_span(data_class_name_str, SemanticSpan.SpanType.OBJECT, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+			"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+			"kind": "raw_code",
+			"line_index": 0
+		})
+	]
+	var base: String = str(model.get("extends", ""))
+	if not base.is_empty():
+		header_spans.append(_make_span("extends %s" % base, SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"kind": "raw_code",
+			"line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}))
+	header_spans.append(_make_span("%d field%s · double-click to edit in code" % [fields.size(), "" if fields.size() == 1 else "s"], SemanticSpan.SpanType.VALUE, {
+		"editable": false,
+		"kind": "raw_code",
+		"line_index": 0,
+		"text_color": EventSheetPalette.TEXT_MUTED
+	}))
+	row_data.spans = header_spans
+	for field: Dictionary in fields:
+		row_data.children.append(_build_data_class_field_row(field, indent + 1))
+	if not row_data.children.is_empty():
+		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+	return row_data
+
+
+## One field of a "Data class" block, rendered read-only like a variable row (name : type = default). The
+## row is inert (source_resource null) so selection, drag, delete and inline edit all skip it - the class
+## text is untouched, so the byte round-trip holds. The editable field model layers on top of this in the
+## next slice; for now the double-click-to-edit-in-code header is the way to change a field.
+func _build_data_class_field_row(field: Dictionary, indent: int) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.line_count = 1
+	var field_meta := {"editable": false, "kind": "data_class_field"}
+	row_data.spans = [
+		_make_span(str(field.get("name")), SemanticSpan.SpanType.OBJECT, field_meta.merged({
+			"text_color": _viewport._get_event_style().object_label_color
+		}, true)),
+		_make_span(":", SemanticSpan.SpanType.OPERATOR, field_meta.duplicate()),
+		_make_span(str(field.get("type")), SemanticSpan.SpanType.VALUE, field_meta.merged({
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}, true))
+	]
+	if bool(field.get("has_default", false)):
+		row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, field_meta.duplicate()))
+		row_data.spans.append(_make_span(str(field.get("default")), SemanticSpan.SpanType.VALUE, field_meta.merged({
+			"text_color": _viewport._get_event_style().value_highlight_color
+		}, true)))
 	return row_data
 
 

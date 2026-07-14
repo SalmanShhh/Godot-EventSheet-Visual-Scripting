@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - a pure-data class reads as an expandable "Data class" block
+
+- **When you open a behaviour pack, a data holder written as a plain inner class (a `class X:` of only typed
+  fields, like the `AbilityData` runtime state) now reads as a first-class "Data class" block instead of a
+  wall of GDScript.** The header shows a badge, the class name as a chip, an optional `extends` cue, and a
+  field count; fold it open and each field renders as its own row (`name : type = default`), exactly like a
+  sheet variable. This is the first slice of the structured lift: it is a pure view (the fields are read-only
+  for now - double-click still opens the code editor to change them), and it is byte-gated - only a class
+  whose structured model re-emits to the exact source is lifted, so anything the model cannot reproduce
+  (a method-bearing class, a second/nested class, trailing code, an unusual default) stays a verbatim code
+  block. The `.gd` round-trip is untouched (drift stays 0 across all 72 packs). Editing the fields in place
+  is the next slice.
+
 ### Changed - the host binding reads as a first-class block
 
 - **An opened behaviour pack's generated `_enter_tree` host boilerplate now reads as a first-class "Host
