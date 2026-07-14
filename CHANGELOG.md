@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added - integer-precise Clamp (int) and Wrap (int) helper expressions
+
+- **Two new ƒx helpers, "Clamp (int)" and "Wrap (int)", keep whole-number values whole.** The existing
+  Clamp / Wrap emit `clampf` / `wrapf`, which return a float that truncates (or type-errors) when stored back
+  into an integer variable - a score, health, ammo, or a menu/inventory index. The new pair emit `clampi` /
+  `wrapi` so the result stays a clean int. "Wrap (int)" is the natural fit for cycling a selection index past
+  the ends back to the start. This closes the last common gap in the built-in math vocabulary.
+
 ### Added - DrawingPrefabResource steps edit as shape-aware titled cards, not opaque p1/p2/p3
 
 - **Each step in a DrawingPrefabResource now edits as a titled card whose fields match its shape.** Adding a

@@ -31,6 +31,11 @@ static func run() -> bool:
 	passed = _check("signal + math + string helpers registered",
 		by_id.has("ConnectSignal") and by_id.has("DisconnectSignal") and by_id.has("MoveTowardValue")
 		and by_id.has("RemapValue") and by_id.has("FormatString"), true) and passed
+	# The integer-typed clamp/wrap twins (int stats/indices, where the float versions truncate).
+	passed = _check("integer-precise math helpers registered",
+		by_id.has("ClampIntValue") and by_id.has("WrapIntValue"), true) and passed
+	passed = _check("Clamp (int) emits clampi", str(by_id["ClampIntValue"].codegen_template), "clampi({value}, {min}, {max})") and passed
+	passed = _check("Wrap (int) emits wrapi", str(by_id["WrapIntValue"].codegen_template), "wrapi({value}, {min}, {max})") and passed
 
 	# Templates are single-line, direct GDScript (parity contract) - spot-check a few.
 	passed = _check("Set Property template is a direct assignment",
