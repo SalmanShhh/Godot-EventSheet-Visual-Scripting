@@ -41,6 +41,41 @@ static func for_node(host: Node) -> CanvasSurface:
 func texture() -> Texture2D:
 	_ensure()
 	return _viewport.get_texture() if _viewport != null else null
+# --- Dashed shapes: ONE dash primitive turns any polyline into disjoint dash segments, drawn in a
+# single draw_multiline call. Line = 2 points, ring = a sampled circle, rect = 4 closed corners - the
+# same routine serves all three and any future dashed shape. ---
+
+## Walks a polyline by arc length, carrying the dash phase across vertices so the rhythm stays
+## continuous around ring and rect corners, and returns endpoint PAIRS for draw_multiline. dash_len
+## is floored at 0.5 and gap at 0 so a zero-gap value degrades to a solid stroke, never an infinite loop.
+static func _dash_polyline(points: PackedVector2Array, dash_len: float, gap_len: float) -> PackedVector2Array:
+	var out: PackedVector2Array = PackedVector2Array()
+	var d: float = maxf(dash_len, 0.5)
+	var g: float = maxf(gap_len, 0.0)
+	var period: float = d + g
+	if points.size() < 2 or period <= 0.0:
+		return out
+	var phase: float = 0.0
+	for i: int in range(points.size() - 1):
+		var a: Vector2 = points[i]
+		var b: Vector2 = points[i + 1]
+		var seg: Vector2 = b - a
+		var seg_len: float = seg.length()
+		if seg_len <= 0.0001:
+			continue
+		var dir: Vector2 = seg / seg_len
+		var t: float = 0.0
+		while t < seg_len:
+			var pos: float = fmod(phase + t, period)
+			if pos < d:
+				var t_end: float = minf(t + (d - pos), seg_len)
+				out.append(a + dir * t)
+				out.append(a + dir * t_end)
+				t = t_end
+			else:
+				t += period - pos
+		phase = fmod(phase + seg_len, period)
+	return out
 
 func configure(width: int, height: int, clear_each_frame: bool, coords: String, show_on_host: bool) -> void:
 	canvas_width = width
@@ -93,6 +128,8 @@ func _run_draw_commands() -> void:
 				_drawer.draw_rect(command["rect"], command["color"])
 			"polygon":
 				_drawer.draw_colored_polygon(command["points"], command["color"])
+			"multiline":
+				_drawer.draw_multiline(command["points"], command["color"], command["width"])
 			"stamp":
 				var texture: Texture2D = command["texture"]
 				if texture != null:
@@ -215,6 +252,27 @@ func _prefab_entries(prefab_res: Resource) -> Array:
 	if not (raw is Array):
 		return []
 	return DrawingPrefabResource.compile_steps(raw)
+
+func _push_dashes(points: PackedVector2Array, dash_length: float, gap_length: float, width: float, color: Color) -> void:
+	var segments: PackedVector2Array = _dash_polyline(points, dash_length, gap_length)
+	if segments.is_empty():
+		return
+	_push({"kind": "multiline", "points": segments, "color": color, "width": maxf(width, 0.5)})
+
+func dashed_line(from_x: float, from_y: float, to_x: float, to_y: float, dash_length: float, gap_length: float, width: float, color: Color) -> void:
+	_push_dashes(PackedVector2Array([to_canvas(Vector2(from_x, from_y)), to_canvas(Vector2(to_x, to_y))]), dash_length, gap_length, width, color)
+
+func dashed_ring(x: float, y: float, radius: float, dash_length: float, gap_length: float, width: float, color: Color) -> void:
+	var center: Vector2 = to_canvas(Vector2(x, y))
+	var points: PackedVector2Array = PackedVector2Array()
+	for i: int in 65:
+		points.append(center + Vector2.from_angle(TAU * float(i) / 64.0) * radius)
+	_push_dashes(points, dash_length, gap_length, width, color)
+
+func dashed_rect(x: float, y: float, width: float, height: float, dash_length: float, gap_length: float, line_width: float, color: Color) -> void:
+	var o: Vector2 = Vector2(x, y)
+	var corners: PackedVector2Array = PackedVector2Array([to_canvas(o), to_canvas(o + Vector2(width, 0.0)), to_canvas(o + Vector2(width, height)), to_canvas(o + Vector2(0.0, height)), to_canvas(o)])
+	_push_dashes(corners, dash_length, gap_length, line_width, color)
 
 func start_ribbon(follow: Node, point_count: int, width: float, color: Color) -> void:
 	_ensure()

@@ -119,6 +119,33 @@ func draw_canvas_rect(x: float, y: float, width: float, height: float, color: Co
 	CanvasSurface.for_node(host).rect(x, y, width, height, color)
 
 ## @ace_action
+## @ace_name("Draw Dashed Line")
+## @ace_description("Draws a DASHED line segment - aim guides, tethers, boundary previews. dash_length and gap_length set the on/off rhythm.")
+## @ace_display_template("Draw a dashed line from ({from_x}, {from_y}) to ({to_x}, {to_y})")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DrawingCanvas.draw_canvas_dashed_line({from_x}, {from_y}, {to_x}, {to_y}, {dash_length}, {gap_length}, {width}, {color})")
+func draw_canvas_dashed_line(from_x: float, from_y: float, to_x: float, to_y: float, dash_length: float, gap_length: float, width: float, color: Color) -> void:
+	CanvasSurface.for_node(host).dashed_line(from_x, from_y, to_x, to_y, dash_length, gap_length, width, color)
+
+## @ace_action
+## @ace_name("Draw Dashed Ring")
+## @ace_description("Draws a DASHED circle outline - range rings, dashed selection markers. The same dash primitive as Draw Dashed Line, wrapped around the circle.")
+## @ace_display_template("Draw a dashed ring at ({x}, {y}), radius {radius}")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DrawingCanvas.draw_canvas_dashed_ring({x}, {y}, {radius}, {dash_length}, {gap_length}, {width}, {color})")
+func draw_canvas_dashed_ring(x: float, y: float, radius: float, dash_length: float, gap_length: float, width: float, color: Color) -> void:
+	CanvasSurface.for_node(host).dashed_ring(x, y, radius, dash_length, gap_length, width, color)
+
+## @ace_action
+## @ace_name("Draw Dashed Rect")
+## @ace_description("Draws a DASHED rectangle outline - selection boxes, build-placement previews, zone markers. The dash rhythm carries continuously around all four sides.")
+## @ace_display_template("Draw a dashed rect at ({x}, {y}), {width} by {height}")
+## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_codegen_template("$DrawingCanvas.draw_canvas_dashed_rect({x}, {y}, {width}, {height}, {dash_length}, {gap_length}, {line_width}, {color})")
+func draw_canvas_dashed_rect(x: float, y: float, width: float, height: float, dash_length: float, gap_length: float, line_width: float, color: Color) -> void:
+	CanvasSurface.for_node(host).dashed_rect(x, y, width, height, dash_length, gap_length, line_width, color)
+
+## @ace_action
 ## @ace_name("Draw Cone")
 ## @ace_description("Draws a filled wedge - the attack-telegraph cone (pair with Auto Clear so it follows the attacker every frame).")
 ## @ace_display_template("Draw a cone at ({x}, {y}) facing {facing_deg} deg, fov {fov_deg} deg")

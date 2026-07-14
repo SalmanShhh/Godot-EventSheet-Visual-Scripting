@@ -12,12 +12,28 @@ static func run() -> bool:
 
 	# ── Drawing Canvas: the verb set that makes shadows/telegraphs/LoS/ribbons one row each
 	var canvas: Node = (load("res://eventsheet_addons/drawing_canvas/drawing_canvas_behavior.gd") as GDScript).new()
-	for canvas_method: String in ["clear_canvas", "set_auto_clear", "set_canvas_visible", "draw_canvas_line", "draw_canvas_circle", "draw_canvas_ring", "draw_canvas_rect", "draw_canvas_cone", "draw_canvas_stamp", "draw_line_of_sight", "start_ribbon", "set_ribbon_texture", "stop_ribbon", "canvas_texture", "is_auto_clear"]:
+	for canvas_method: String in ["clear_canvas", "set_auto_clear", "set_canvas_visible", "draw_canvas_line", "draw_canvas_circle", "draw_canvas_ring", "draw_canvas_rect", "draw_canvas_dashed_line", "draw_canvas_dashed_ring", "draw_canvas_dashed_rect", "draw_canvas_cone", "draw_canvas_stamp", "draw_line_of_sight", "start_ribbon", "set_ribbon_texture", "stop_ribbon", "canvas_texture", "is_auto_clear"]:
 		all_passed = _check("Drawing Canvas has %s" % canvas_method, canvas.has_method(canvas_method), true) and all_passed
 	all_passed = _check("Drawing Canvas is persistent by default", canvas.get("auto_clear"), false) and all_passed
 	all_passed = _check("Drawing Canvas reads world coordinates by default", canvas.get("coordinates"), "world") and all_passed
 	all_passed = _check("Drawing Canvas verbs no-op safely out of tree", canvas.call("canvas_texture") == null, true) and all_passed
 	canvas.free()
+
+	# ── Dashed shapes: the shared dash primitive turns any polyline into disjoint segments (one draw call)
+	var surface: Node = (load("res://eventsheet_addons/canvas_surface/canvas_surface.gd") as GDScript).new()
+	for dash_method: String in ["dashed_line", "dashed_ring", "dashed_rect"]:
+		all_passed = _check("CanvasSurface has %s" % dash_method, surface.has_method(dash_method), true) and all_passed
+	surface.free()
+	# A 100px line at dash 10 / gap 10 = 5 dashes = 10 endpoint entries; first dash (0,0)->(10,0), next (20,0)->...
+	var dashes: PackedVector2Array = CanvasSurface._dash_polyline(PackedVector2Array([Vector2(0, 0), Vector2(100, 0)]), 10.0, 10.0)
+	all_passed = _check("dash primitive emits 5 dashes (10 endpoints) for a 100px line at 10/10", dashes.size(), 10) and all_passed
+	all_passed = _check("first dash starts at the line start", dashes[0], Vector2(0, 0)) and all_passed
+	all_passed = _check("first dash ends one dash-length in", dashes[1], Vector2(10, 0)) and all_passed
+	all_passed = _check("second dash starts after the gap", dashes[2], Vector2(20, 0)) and all_passed
+	all_passed = _check("last dash ends before the line end", dashes[9], Vector2(90, 0)) and all_passed
+	# A dash longer than the line degrades to one solid segment, never an infinite loop.
+	var solid: PackedVector2Array = CanvasSurface._dash_polyline(PackedVector2Array([Vector2(0, 0), Vector2(50, 0)]), 1000.0, 0.0)
+	all_passed = _check("dash longer than the line is one solid segment", solid.size(), 2) and all_passed
 
 	# ── Decal Painter: spawn/blob/canvas-link verbs
 	var painter: Node = (load("res://eventsheet_addons/decal_painter/decal_painter_behavior.gd") as GDScript).new()

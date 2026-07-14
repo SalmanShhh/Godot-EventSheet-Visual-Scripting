@@ -49,6 +49,9 @@ Every tick     -> Player | Drawing Canvas: Draw Line Of Sight
 | Draw Circle | `x`, `y`, `radius`, `color` | Filled circle - the classic blob shadow. |
 | Draw Ring | `x`, `y`, `radius`, `width`, `color` | Circle outline - selection rings, blast previews. |
 | Draw Rect | `x`, `y`, `width`, `height`, `color` | Filled rectangle (x/y = top-left). |
+| Draw Dashed Line | `from_x`, `from_y`, `to_x`, `to_y`, `dash_length`, `gap_length`, `width`, `color` | A dashed line segment - aim guides, tethers, boundary previews. |
+| Draw Dashed Ring | `x`, `y`, `radius`, `dash_length`, `gap_length`, `width`, `color` | A dashed circle outline - range rings, dashed selection markers. |
+| Draw Dashed Rect | `x`, `y`, `width`, `height`, `dash_length`, `gap_length`, `line_width`, `color` | A dashed rectangle outline - selection boxes, zone markers, build-placement previews. |
 | Draw Cone | `x`, `y`, `facing_deg`, `fov_deg`, `radius`, `color` | Filled wedge - the attack telegraph. |
 | Draw Stamp | `texture`, `x`, `y`, `scale_factor`, `rotation_deg` | Stamps a texture - bullet holes, footprints. |
 | Draw Line Of Sight | `origin_x`, `origin_y`, `facing_deg`, `fov_deg`, `max_range`, `collision_mask`, `color` | Raycast fan against the mask, filled - vision cones that hug the level. The mask param opens the layer PICKER (named project layers as checkboxes). |
@@ -263,6 +266,24 @@ On "F3" pressed
 ```
 
 Gate your Every tick draw rows on the same state, or new strokes pile onto the frozen frame.
+
+### 16. Build-placement preview (dashed)
+
+While the player drags a building over the grid, an auto-clear dashed rectangle marks the footprint
+and a dashed ring shows its effect radius - dashed so it reads as "not placed yet" and never hides the
+terrain under it.
+
+```
+Every tick
+  On placing a building
+    -> Player | Drawing Canvas: Set Auto Clear  true
+    -> Player | Drawing Canvas: Draw Dashed Rect  ghost_x, ghost_y, tile_w, tile_h, 16, 10, 3, place_color
+    -> Player | Drawing Canvas: Draw Dashed Ring  ghost_x, ghost_y, effect_radius, 14, 10, 2, place_color
+```
+
+Tint `place_color` red when the spot is blocked, green when it is clear. The dash length and gap are the
+last numbers before the color (rect takes a line width, ring/line take a width). All three dashed verbs -
+line, ring, rect - share one dash rhythm, so they read as a set.
 
 ### Other use cases
 

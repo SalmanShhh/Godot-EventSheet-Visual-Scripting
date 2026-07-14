@@ -35,6 +35,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Draws a circle outline onto a node's canvas - selection rings, blast-radius previews."))
 	d.append(F.make_descriptor("Core", "DrawRect", "Draw Rect", ACEDescriptor.ACEType.ACTION, "CanvasSurface.for_node({node}).rect({x}, {y}, {width}, {height}, {color})", "", [_node(), _num("x", "X"), _num("y", "Y"), F.make_param("width", "float", "32.0", "Width", "Rectangle width.", "expression"), F.make_param("height", "float", "32.0", "Height", "Rectangle height.", "expression"), _color()], CAT, "draw rect on {node}")
 		.described("Draws a filled rectangle onto a node's canvas (x/y = top-left corner)."))
+	d.append(F.make_descriptor("Core", "DrawDashedLine", "Draw Dashed Line", ACEDescriptor.ACEType.ACTION, "CanvasSurface.for_node({node}).dashed_line({from_x}, {from_y}, {to_x}, {to_y}, {dash_length}, {gap_length}, {width}, {color})", "", [_node(), _num("from_x", "From X"), _num("from_y", "From Y"), _num("to_x", "To X"), _num("to_y", "To Y"), _dash(), _gap(), F.make_param("width", "float", "2.0", "Width", "Line thickness in pixels.", "expression"), _color()], CAT, "draw dashed line on {node}")
+		.described("Draws a dashed line segment onto a node's canvas - aim guides, tethers, boundary previews. Dash and gap set the on/off rhythm."))
+	d.append(F.make_descriptor("Core", "DrawDashedRing", "Draw Dashed Ring", ACEDescriptor.ACEType.ACTION, "CanvasSurface.for_node({node}).dashed_ring({x}, {y}, {radius}, {dash_length}, {gap_length}, {width}, {color})", "", [_node(), _num("x", "X"), _num("y", "Y"), F.make_param("radius", "float", "16.0", "Radius", "Ring radius in pixels.", "expression"), _dash(), _gap(), F.make_param("width", "float", "2.0", "Width", "Outline thickness.", "expression"), _color()], CAT, "draw dashed ring on {node}")
+		.described("Draws a dashed circle outline onto a node's canvas - range rings, dashed selection markers. Same dash primitive as Draw Dashed Line, wrapped around the circle."))
+	d.append(F.make_descriptor("Core", "DrawDashedRect", "Draw Dashed Rect", ACEDescriptor.ACEType.ACTION, "CanvasSurface.for_node({node}).dashed_rect({x}, {y}, {width}, {height}, {dash_length}, {gap_length}, {line_width}, {color})", "", [_node(), _num("x", "X"), _num("y", "Y"), F.make_param("width", "float", "32.0", "Width", "Rectangle width.", "expression"), F.make_param("height", "float", "32.0", "Height", "Rectangle height.", "expression"), _dash(), _gap(), F.make_param("line_width", "float", "2.0", "Line Width", "Outline thickness.", "expression"), _color()], CAT, "draw dashed rect on {node}")
+		.described("Draws a dashed rectangle outline onto a node's canvas - selection boxes, build-placement previews, zone markers. The dash rhythm carries continuously around all four sides."))
 	d.append(F.make_descriptor("Core", "DrawCone", "Draw Cone", ACEDescriptor.ACEType.ACTION, "CanvasSurface.for_node({node}).cone({x}, {y}, {facing_deg}, {fov_deg}, {radius}, {color})", "", [_node(), _num("x", "X"), _num("y", "Y"), F.make_param("facing_deg", "float", "0.0", "Facing", "Facing angle in degrees.", "expression"), F.make_param("fov_deg", "float", "60.0", "FOV", "Field-of-view width in degrees.", "expression"), F.make_param("radius", "float", "64.0", "Radius", "Cone reach in pixels.", "expression"), _color()], CAT, "draw cone on {node}")
 		.described("Draws a filled wedge onto a node's canvas - the attack-telegraph cone (pair with Auto Clear so it follows each frame)."))
 	d.append(F.make_descriptor("Core", "DrawStamp", "Draw Stamp", ACEDescriptor.ACEType.ACTION, "CanvasSurface.for_node({node}).stamp({texture}, {x}, {y}, {scale_factor}, {rotation_deg})", "", [_node(), F.make_param("texture", "Texture2D", "null", "Texture", "The image to stamp.", "expression"), _num("x", "X"), _num("y", "Y"), F.make_param("scale_factor", "float", "1.0", "Scale", "Stamp scale.", "expression"), F.make_param("rotation_deg", "float", "0.0", "Rotation", "Stamp rotation in degrees.", "expression")], CAT, "draw stamp on {node}")
@@ -71,6 +77,14 @@ static func _num(param_id: String, label: String) -> ACEParam:
 
 static func _color() -> ACEParam:
 	return F.make_param("color", "Color", "Color.WHITE", "Color", "The draw color.", "")
+
+
+static func _dash() -> ACEParam:
+	return F.make_param("dash_length", "float", "12.0", "Dash", "Length of each dash in pixels.", "expression")
+
+
+static func _gap() -> ACEParam:
+	return F.make_param("gap_length", "float", "8.0", "Gap", "Gap between dashes in pixels.", "expression")
 
 
 static func section_descriptions() -> Dictionary:

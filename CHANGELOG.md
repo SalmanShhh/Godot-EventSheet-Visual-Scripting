@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - dashed line, ring, and rect on the Drawing Canvas
+
+- **Three new draw verbs - Draw Dashed Line, Draw Dashed Ring, Draw Dashed Rect** - render dashed strokes
+  onto a node's canvas, with a dash length and a gap length that set the on/off rhythm. They share ONE
+  dash primitive that turns any polyline into disjoint dash segments drawn in a single `draw_multiline`
+  call, so the same routine dashes a straight line, a circle outline, and a rectangle outline (and any
+  future shape); the rhythm carries continuously around ring and rect corners. Both forms ship: the
+  pickable Draw ACEs usable on any node, and the DrawingCanvas behavior verbs.
+
 ### Performance - Draw Prefab scales to 1000+ stamps on screen
 
 - **A DrawingPrefabResource now compiles its steps once** (colors parsed, kinds resolved, stamp textures

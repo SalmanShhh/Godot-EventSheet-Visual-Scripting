@@ -30,6 +30,11 @@ static func run() -> bool:
 		str((by_id.get("DrawCanvasTexture") as ACEDescriptor).codegen_template) if by_id.has("DrawCanvasTexture") else "MISSING",
 		"CanvasSurface.for_node({node}).texture()") and all_passed
 
+	# Dashed shapes: new ace_ids + frozen templates (additive - the shared dash primitive on the runtime).
+	all_passed = _check("dashed verbs register", by_id.has("DrawDashedLine") and by_id.has("DrawDashedRing") and by_id.has("DrawDashedRect"), true) and all_passed
+	all_passed = _check("Draw Dashed Line template is frozen", str((by_id.get("DrawDashedLine") as ACEDescriptor).codegen_template) if by_id.has("DrawDashedLine") else "MISSING", "CanvasSurface.for_node({node}).dashed_line({from_x}, {from_y}, {to_x}, {to_y}, {dash_length}, {gap_length}, {width}, {color})") and all_passed
+	all_passed = _check("Draw Dashed Rect template is frozen", str((by_id.get("DrawDashedRect") as ACEDescriptor).codegen_template) if by_id.has("DrawDashedRect") else "MISSING", "CanvasSurface.for_node({node}).dashed_rect({x}, {y}, {width}, {height}, {dash_length}, {gap_length}, {line_width}, {color})") and all_passed
+
 	# No emitted template names a plugin class (the runtime lives in eventsheet_addons, not the editor).
 	var clean: bool = true
 	for d: ACEDescriptor in descs:
