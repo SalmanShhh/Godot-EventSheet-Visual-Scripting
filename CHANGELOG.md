@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - a function reads as a function, not a GDScript wall
+
+- **A lone top-level function in a sheet now renders as a collapsed `ƒ name(params) -> Type` row**
+  (with a "N lines" cue) instead of a multi-line raw GDScript block - the same view-only collapse the
+  editor already does for host-binding and published-verb annotation shells. So a private helper the
+  importer can't lift into an ACE (or any func opened from a .gd) reads as a function rather than a wall
+  of code. Double-click still opens the code dialog to edit it, and the underlying lines are untouched,
+  so the byte round-trip and compilation are unchanged. Multi-statement blocks and two-function blocks
+  keep their full multi-line rendering. Pinned by tests/raw_shell_render_test.gd.
+
 ### Added - Draw ACEs: draw onto any node, as first-class pickable vocabulary
 
 - **Drawing is now a builtin vocabulary you can pick in any sheet, on any node** - no need to attach the

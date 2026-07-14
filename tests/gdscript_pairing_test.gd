@@ -16,6 +16,11 @@ static func run() -> bool:
 	var helper_block: RawCodeRow = RawCodeRow.new()
 	helper_block.code = "func heal(amount: int) -> void:\n\thealth += amount"
 	sheet.events.append(helper_block)
+	# A multi-line block that is NOT a single function (funcs now collapse to a ƒ header) - used below to
+	# check that a genuine code block still renders as a stacked multi-line row.
+	var render_block: RawCodeRow = RawCodeRow.new()
+	render_block.code = "prints(\"a\")\nprints(\"b\")"
+	sheet.events.append(render_block)
 	var group: EventGroup = EventGroup.new()
 	group.group_name = "G"
 	var grouped_block: RawCodeRow = RawCodeRow.new()
@@ -49,7 +54,7 @@ static func run() -> bool:
 	var flat: Array[Dictionary] = viewport.get_flat_rows()
 	for i in range(flat.size()):
 		var row_data: EventRowData = flat[i].get("row")
-		if row_data != null and row_data.source_resource == helper_block:
+		if row_data != null and row_data.source_resource == render_block:
 			raw_index = i
 	all_passed = _check("raw block renders as a row", raw_index >= 0, true) and all_passed
 	var raw_row_data: EventRowData = flat[raw_index].get("row")

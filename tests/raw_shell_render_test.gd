@@ -34,6 +34,21 @@ static func run() -> bool:
 	ok = _check("an @ace_trigger block is left to the signal fold, not shelled",
 		ViewportRowBuilder.define_shell_info("## @ace_trigger\n## @ace_name(\"On Hit\")").is_empty(), true) and ok
 
+	# ── function_body_info: a lone top-level func (an unliftable helper) collapses to a ƒ header ──
+	var tick: Dictionary = ViewportRowBuilder.function_body_info("func _tick() -> void:\n\tpass")
+	ok = _check("a plain void func is a function row", str(tick.get("name", "")), "_tick") and ok
+	ok = _check("void return recorded", str(tick.get("return_type", "")), "void") and ok
+	var score: Dictionary = ViewportRowBuilder.function_body_info("func score(bonus: int) -> int:\n\treturn 5 + bonus\n\treturn 0")
+	ok = _check("typed return recorded", str(score.get("return_type", "")), "int") and ok
+	ok = _check("params captured", str(score.get("params", "")), "bonus: int") and ok
+	ok = _check("body line count captured (blank/indented body)", int(score.get("body_lines", -1)), 2) and ok
+	ok = _check("TWO top-level funcs stay a plain block (not one function row)",
+		ViewportRowBuilder.function_body_info("func a() -> void:\n\tpass\nfunc b() -> void:\n\tpass").is_empty(), true) and ok
+	ok = _check("a bodyless func stub is not collapsed",
+		ViewportRowBuilder.function_body_info("func stub() -> void:").is_empty(), true) and ok
+	ok = _check("a non-func block is not a function row",
+		ViewportRowBuilder.function_body_info("health += 5\nqueue_free()").is_empty(), true) and ok
+
 	# ── Rendering over an opened sheet whose annotated verb CAN'T lift (a custom return type keeps
 	# it raw) - the shell is the honest fallback for whatever the per-function lift leaves behind,
 	# so the annotation wall still reads as one Define-style line. ──

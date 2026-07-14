@@ -618,6 +618,48 @@ static func _annotation_string_arg(line: String) -> String:
 	return line.substr(open_quote + 1, close_quote - open_quote - 1)
 
 
+## A RawCodeRow that is ONE top-level function definition (a private helper the importer could not lift
+## into an ACE, or any func body opened from a .gd) - the header line plus an indented body, nothing else
+## at column 0. Returns {name, params, return_type, body_lines, line_count} so the row renders as a
+## collapsed `ƒ name(params) -> Type` function row instead of a raw GDScript wall - a function reads as a
+## function, not code. Pure view: the lines are unchanged, so double-click-to-edit and the byte round-trip
+## are untouched. Static + pure so it is unit-testable without a viewport.
+static func function_body_info(code: String) -> Dictionary:
+	var lines: PackedStringArray = code.split("\n")
+	var header_index: int = -1
+	for i: int in range(lines.size()):
+		if not lines[i].strip_edges().is_empty():
+			header_index = i
+			break
+	if header_index < 0:
+		return {}
+	var header_regex: RegEx = RegEx.new()
+	if header_regex.compile("^func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?: -> (.+))?:$") != OK:
+		return {}
+	var header_match: RegExMatch = header_regex.search(lines[header_index])
+	if header_match == null:
+		return {}
+	# Every later non-blank line must be indented (the body); a second column-0 statement means this row
+	# is more than one function and stays a plain block.
+	var body_lines: int = 0
+	for j: int in range(header_index + 1, lines.size()):
+		if lines[j].strip_edges().is_empty():
+			continue
+		if not lines[j].begins_with("\t"):
+			return {}
+		body_lines += 1
+	if body_lines == 0:
+		return {}
+	var return_type: String = header_match.get_string(3)
+	return {
+		"name": header_match.get_string(1),
+		"params": header_match.get_string(2),
+		"return_type": return_type if not return_type.is_empty() else "void",
+		"body_lines": body_lines,
+		"line_count": lines.size()
+	}
+
+
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
 ## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
 ## A row that is purely a published-verb annotation shell renders as ONE Define-style header line
@@ -696,6 +738,48 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"text_color": EventSheetPalette.TEXT_MUTED
 		}))
 		row_data.spans = shell_spans
+		return row_data
+	# A lone top-level function (a helper the importer could not lift) collapses to a `ƒ name(params) ->
+	# Type` header + line count, so it reads as a FUNCTION, not a raw GDScript wall - the same view-only
+	# collapse as host-binding and annotation shells above. Double-click still opens the code dialog.
+	var function_info: Dictionary = function_body_info(raw_row.code)
+	if not function_info.is_empty():
+		row_data.line_count = 1
+		var function_spans: Array[SemanticSpan] = [
+			_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
+				"editable": false,
+				"badge": true,
+				"badge_style": "scope",
+				"badge_bg": EventSheetPalette.COLOR_CODE_BADGE_BG,
+				"badge_fg": EventSheetPalette.COLOR_CODE_BADGE_FG,
+				"kind": "raw_code",
+				"line_index": 0
+			}),
+			_make_span("%s(%s)" % [str(function_info.get("name")), str(function_info.get("params"))], SemanticSpan.SpanType.OBJECT, {
+				"editable": false,
+				"kind": "raw_code",
+				"line_index": 0,
+				"text_color": _viewport._get_event_style().object_label_color
+			})
+		]
+		if str(function_info.get("return_type")) != "void":
+			function_spans.append(_make_span("→ %s" % str(function_info.get("return_type")), SemanticSpan.SpanType.KEYWORD, {
+				"editable": false,
+				"badge": true,
+				"badge_style": "scope",
+				"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
+				"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
+				"kind": "raw_code",
+				"line_index": 0
+			}))
+		var body_line_count: int = int(function_info.get("body_lines"))
+		function_spans.append(_make_span("function · %d line%s" % [body_line_count, "" if body_line_count == 1 else "s"], SemanticSpan.SpanType.VALUE, {
+			"editable": false,
+			"kind": "raw_code",
+			"line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}))
+		row_data.spans = function_spans
 		return row_data
 	var code_lines: PackedStringArray = raw_row.code.split("\n")
 	row_data.line_count = maxi(code_lines.size(), 1)
