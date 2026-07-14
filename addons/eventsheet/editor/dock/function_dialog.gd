@@ -100,6 +100,7 @@ func _apply_function_data(data: Dictionary) -> void:
 		var event_function: EventFunction = EventFunction.new()
 		event_function.function_name = str(data.get("name"))
 		event_function.return_type = int(data.get("return_type", TYPE_NIL))
+		event_function.return_type_name = str(data.get("return_type_name", ""))
 		event_function.description = str(data.get("description", ""))
 		for param_entry: Dictionary in (data.get("params", []) as Array):
 			var param: ACEParam = ACEParam.new()
@@ -159,14 +160,18 @@ func _apply_function_edit(data: Dictionary) -> void:
 		var incoming_display: String = str(data.get("ace_display_name", ""))
 		if target.ace_display_name.is_empty() and incoming_display == str(data.get("name")).capitalize():
 			incoming_display = ""
-		if _function_fingerprint(target.function_name, target.return_type, target.description,
-				target.expose_as_ace, target.ace_display_name, target.ace_category, target.params) \
+		if _function_fingerprint(target.function_name, target.return_type, target.return_type_name,
+				target.description, target.expose_as_ace, target.ace_display_name, target.ace_category, target.params) \
 				== _function_fingerprint(str(data.get("name")), int(data.get("return_type", TYPE_NIL)),
-				str(data.get("description", "")), bool(data.get("expose", false)),
+				str(data.get("return_type_name", "")), str(data.get("description", "")), bool(data.get("expose", false)),
 				incoming_display, str(data.get("ace_category", "")), new_params):
 			return false
 		target.function_name = str(data.get("name"))
 		target.return_type = int(data.get("return_type", TYPE_NIL))
+		# return_type_name (a custom / engine class like HealthPool) wins over the int return type in codegen,
+		# so it is written explicitly: a lifted `-> HealthPool` verb opened and saved unchanged compares equal
+		# above (no-op, byte-safe); changing the type to a builtin card clears it so the new type takes effect.
+		target.return_type_name = str(data.get("return_type_name", ""))
 		target.description = str(data.get("description", ""))
 		target.params = new_params
 		target.expose_as_ace = bool(data.get("expose", false))
@@ -180,12 +185,19 @@ func _apply_function_edit(data: Dictionary) -> void:
 		_dock._mark_dirty("Edited function %s()." % str(data.get("name")))
 
 
-## One comparable string per (name, type, description, expose, display, category, params) tuple -
-## the "did the dialog actually change anything" check above.
-static func _function_fingerprint(function_name: String, return_type: int, description: String,
-		exposed: bool, display_name: String, category: String, params: Array) -> String:
+## One comparable string per (name, emitted-return-type, description, expose, display, category, params)
+## tuple - the "did the dialog actually change anything" check above. The type component is the COMPILER's
+## emitted `-> Type` name (return_type_name when set, else the Variant.Type name), so the two equivalent ways
+## to spell one return type - (TYPE_COLOR, "") and (TYPE_MAX, "Color"), or the importer's (TYPE_MAX,
+## "HealthPool") vs the dialog's rebuild - collapse to the same key. That keeps an open-and-OK on a lifted
+## custom-return verb a byte-safe no-op (it never spuriously clears lifted_unannotated or the annotations).
+static func _function_fingerprint(function_name: String, return_type: int, return_type_name: String,
+		description: String, exposed: bool, display_name: String, category: String, params: Array) -> String:
+	var type_probe: EventFunction = EventFunction.new()
+	type_probe.return_type = return_type
+	type_probe.return_type_name = return_type_name
 	var parts: PackedStringArray = PackedStringArray([
-		function_name, str(return_type), description, str(exposed), display_name, category])
+		function_name, SheetCompiler._function_return_type_name(type_probe), description, str(exposed), display_name, category])
 	for param: ACEParam in params:
 		parts.append("%s|%s|%s|%s" % [param.id, param.type_name, param.gdscript_default, param.description])
 	return "\n".join(parts)

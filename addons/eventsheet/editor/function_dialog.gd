@@ -200,6 +200,7 @@ func open() -> void:
 	_expose_name_edit.text = ""
 	_expose_category_edit.text = ""
 	_problem_label.visible = false
+	_reset_value_type_items()
 	_value_type_option.select(0)
 	_select_usable(0)
 	if _dialog.is_inside_tree():
@@ -221,14 +222,26 @@ func open_for_edit(event_function: EventFunction) -> void:
 	_guards_card.visible = false
 	_name_edit.text = event_function.function_name
 	_description_edit.text = event_function.description
-	if event_function.return_type == TYPE_NIL:
+	# Represent whatever type this verb returns, using the compiler's own emitted type name as the truth.
+	# A custom / engine class (return_type_name set), OR a builtin Variant type with no card (Color, Array,
+	# Dictionary, ...), rides in a dynamic Expression dropdown entry that shows that exact `-> Type`; only the
+	# carded builtins (float/int/String/bool/Vector2/Vector3/Variant) and void/bool select a fixed card. This
+	# keeps opening + saving with no change a byte-safe no-op instead of flattening the type to void / float.
+	if not event_function.return_type_name.strip_edges().is_empty():
+		_add_custom_value_type(event_function.return_type_name.strip_edges())
+		_select_usable(2)
+	elif event_function.return_type == TYPE_NIL:
 		_select_usable(0)
 	elif event_function.return_type == TYPE_BOOL:
 		_select_usable(1)
 	else:
-		for index: int in range(VALUE_TYPES.size()):
-			if int(VALUE_TYPES[index].get("type")) == event_function.return_type:
-				_value_type_option.select(index)
+		var builtin_index: int = _builtin_value_type_index(event_function.return_type)
+		if builtin_index >= 0:
+			_value_type_option.select(builtin_index)
+		else:
+			# A builtin Variant type with no card (Color, Array, Dictionary, ...): show its emitted name so
+			# opening and saving re-emits `-> Type` exactly, rather than mislabelling it the first card (float).
+			_add_custom_value_type(SheetCompiler._function_return_type_name(event_function))
 		_select_usable(2)
 	for param: ACEParam in event_function.params:
 		add_param_row(param.id, param.type_name, param.gdscript_default, param.description)
@@ -419,7 +432,7 @@ func _refresh_studio() -> void:
 	var signature_name: String = raw_name.to_snake_case()
 	if signature_name.is_empty() or not signature_name.is_valid_identifier():
 		signature_name = "new_verb"
-	_preview_signature.text = format_signature(signature_name, _return_type_for_kind(kind), params)
+	_preview_signature.text = format_signature(signature_name, _return_type_for_kind(kind), params, _selected_return_type_name())
 
 
 ## A pill Label with a rounded coloured background - the shared badge/chip look.
@@ -470,18 +483,59 @@ func _return_type_for_kind(kind: String) -> int:
 		"condition":
 			return TYPE_BOOL
 		"expression":
+			if _value_type_option.selected >= VALUE_TYPES.size():
+				# A custom / not-carded return carried by return_type_name: store TYPE_MAX (Variant), matching
+				# how the importer lifts one, so return_type never disagrees and the fingerprint stays stable.
+				return TYPE_MAX
 			return int(VALUE_TYPES[maxi(_value_type_option.selected, 0)].get("type"))
 		_:
 			return TYPE_NIL
 
 
+## The exact `-> Type` name currently chosen when it can't be a builtin card, or "" otherwise. Non-empty
+## only when the Expression value-type dropdown points at a dynamic entry (a custom / engine class, or a
+## builtin Variant type with no card like Color) - the compiler then emits it verbatim (return_type_name
+## wins). Switching to the Action / Condition card, or to a carded builtin value type, yields "" so the
+## dynamic type is intentionally dropped and the new one takes effect.
+func _selected_return_type_name() -> String:
+	if _usable_kind() != "expression":
+		return ""
+	if _value_type_option.selected >= VALUE_TYPES.size():
+		return _value_type_option.get_item_text(_value_type_option.selected).strip_edges()
+	return ""
+
+
+## Index of the VALUE_TYPES card for a Variant.Type, or -1 when that type has no card (Color, Array, ...).
+func _builtin_value_type_index(return_type: int) -> int:
+	for index: int in range(VALUE_TYPES.size()):
+		if int(VALUE_TYPES[index].get("type")) == return_type:
+			return index
+	return -1
+
+
+## Appends a dynamic value-type entry naming a type no builtin card offers (a custom / engine class, or a
+## not-carded Variant type) and selects it, so the Expression dropdown shows the verb's exact `-> Type`.
+## The selected entry's text is the single source of truth for the type name (read by _selected_return_type_name).
+func _add_custom_value_type(type_name: String) -> void:
+	_value_type_option.add_item(type_name)
+	_value_type_option.select(_value_type_option.item_count - 1)
+
+
+## Drops any dynamic entry a prior edit appended, leaving only the builtin VALUE_TYPES rows so the
+## value-type dropdown starts each open in a known state (item_count back to VALUE_TYPES.size()).
+func _reset_value_type_items() -> void:
+	while _value_type_option.item_count > VALUE_TYPES.size():
+		_value_type_option.remove_item(_value_type_option.item_count - 1)
+
+
 ## The exact generated `func` signature for a verb - built from a transient EventFunction run through
 ## the COMPILER's own static formatters (_emit_function_params / _function_return_type_name), so the
 ## "Ships as:" line can never disagree with the code that actually ships. Static + pure (unit-testable).
-static func format_signature(function_name: String, return_type: int, params: Array) -> String:
+static func format_signature(function_name: String, return_type: int, params: Array, return_type_name: String = "") -> String:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = function_name
 	event_function.return_type = return_type
+	event_function.return_type_name = return_type_name
 	for param_entry: Variant in params:
 		var param: ACEParam = ACEParam.new()
 		param.id = str((param_entry as Dictionary).get("id"))
@@ -647,6 +701,7 @@ func build_function_data() -> Dictionary:
 		"editing": _original_name,  # "" = create a new function; non-empty = update the one so named
 		"name": function_name,
 		"return_type": _return_type_for_kind(_usable_kind()),
+		"return_type_name": _selected_return_type_name(),
 		"params": params,
 		"guards": collect_guards(),
 		"description": _description_edit.text.strip_edges(),

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Fixed - the Function dialog now shows and preserves a not-carded return type
+
+- **A verb whose return type has no dialog card - a custom or engine class (`-> HealthPool`, `-> Camera2D`)
+  or a builtin type the dialog doesn't offer as a card (`-> Color`, `-> Array`, `-> Dictionary`) - now opens
+  in the Function dialog correctly**, as an Expression whose value type IS that type, with the "Ships as:"
+  strip reading its exact `func make_pool(...) -> HealthPool`, instead of being mislabelled a void Action (or
+  silently flattened to the first card, `float`). Opening such a verb and clicking Save with nothing changed
+  is a byte-safe no-op: the change check now compares the compiler's emitted `-> Type` name, so a
+  reverse-lifted helper keeps its annotation-suppression and the source re-emits byte-identically (no
+  spurious `## @ace_hidden`, no `-> Color` turning into `-> float`). Editing it to a carded kind
+  (Action / Condition / a builtin value type) intentionally drops the type so the new one takes effect.
+  Before this, the dialog never read the return type it couldn't card, so it showed the wrong verb kind and
+  a routine edit could silently corrupt the emitted signature.
+
 ### Changed - an authored sheet's verb bodies are now editable inline
 
 - **On an authored sheet, a published verb's body is now LIVE and editable.** Expand a verb and its
