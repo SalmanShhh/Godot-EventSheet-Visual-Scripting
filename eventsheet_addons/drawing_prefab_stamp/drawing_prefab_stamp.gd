@@ -32,20 +32,20 @@ extends Node2D
 static func draw_prefab_steps(canvas: CanvasItem, prefab_res: Resource, origin: Vector2, scale_by: float, rotation_deg: float) -> void:
 	if prefab_res == null:
 		return
-	var steps: Variant = prefab_res.get("steps")
-	if not (steps is Array):
+	# One draw path fed by pre-typed entries: the resource's cached compiled_steps() when available,
+	# else a raw parse of a generic Resource's steps (same shape). Colors and kinds are already parsed,
+	# so 1000+ stamps sharing a prefab never re-run Color.from_string per draw.
+	var entries: Array = _prefab_entries(prefab_res)
+	if entries.is_empty():
 		return
 	canvas.draw_set_transform(origin, deg_to_rad(rotation_deg), Vector2.ONE * maxf(scale_by, 0.001))
-	for step: Variant in steps:
-		if not (step is Dictionary):
-			continue
-		var entry: Dictionary = step
-		var at: Vector2 = Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0)))
-		var p1: float = float(entry.get("p1", 0.0))
-		var p2: float = float(entry.get("p2", 0.0))
-		var p3: float = float(entry.get("p3", 0.0))
-		var tint: Color = Color.from_string(str(entry.get("color", "white")), Color.WHITE)
-		match str(entry.get("kind", "")):
+	for entry: Dictionary in entries:
+		var at: Vector2 = Vector2(entry["x"], entry["y"])
+		var p1: float = entry["p1"]
+		var p2: float = entry["p2"]
+		var p3: float = entry["p3"]
+		var tint: Color = entry["color"]
+		match str(entry["kind"]):
 			"circle":
 				canvas.draw_circle(at, maxf(p1, 0.5), tint)
 			"ring":
@@ -61,12 +61,24 @@ static func draw_prefab_steps(canvas: CanvasItem, prefab_res: Resource, origin: 
 					points.append(at + Vector2.from_angle(angle) * maxf(p3, 0.5))
 				canvas.draw_colored_polygon(points, tint)
 			"stamp":
-				var texture_path: String = str(entry.get("texture", "")).strip_edges()
-				if not texture_path.is_empty() and ResourceLoader.exists(texture_path):
-					var texture: Texture2D = load(texture_path) as Texture2D
-					if texture != null:
-						canvas.draw_texture_rect(texture, Rect2(at - texture.get_size() * maxf(p1, 0.01) * 0.5, texture.get_size() * maxf(p1, 0.01)), false, tint)
+				var texture: Texture2D = entry["tex"]
+				if texture != null:
+					canvas.draw_texture_rect(texture, Rect2(at - texture.get_size() * maxf(p1, 0.01) * 0.5, texture.get_size() * maxf(p1, 0.01)), false, tint)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+## Typed draw entries for a prefab: the resource's cached compiled_steps() (parsed once, shared by
+## every stamp) when it exposes one, else a raw parse of any Resource's steps into the same shape -
+## so the draw loop above is a single path and the generic "any Resource with steps" contract holds.
+## @ace_hidden
+static func _prefab_entries(prefab_res: Resource) -> Array:
+	if prefab_res.has_method("compiled_steps"):
+		var compiled: Variant = prefab_res.compiled_steps()
+		if compiled is Array:
+			return compiled
+	var steps: Variant = prefab_res.get("steps")
+	if not (steps is Array):
+		return []
+	return DrawingPrefabResource.compile_steps(steps)
 
 func _draw() -> void:
 	draw_prefab_steps(self, prefab, Vector2.ZERO, prefab_scale, prefab_rotation)

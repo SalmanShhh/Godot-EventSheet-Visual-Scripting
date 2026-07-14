@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Performance - Draw Prefab scales to 1000+ stamps on screen
+
+- **A DrawingPrefabResource now compiles its steps once** (colors parsed, kinds resolved, stamp textures
+  pre-loaded) and caches the result, so Draw Prefab and the DrawingPrefabStamp node no longer re-parse
+  every step on every draw. A thousand-plus stamps that share one prefab pay the parse a single time -
+  measured about 33x cheaper per-draw expansion in the suite (36.6ms to 1.1ms over 2000 draws) - and the
+  rendering stays byte-identical (the shared draw loop reads the same fields either way). The cache
+  rebuilds when the resource changes; a runtime edit to a prefab's steps needs `emit_changed()` (the
+  Inspector already does this on every cell edit).
+
 ### Added - a referenced DrawingPrefabResource previews in the 2D and 3D viewport
 
 - **Any node that references a `DrawingPrefabResource` now previews it in the editor viewport.** Give a

@@ -170,22 +170,23 @@ func line_of_sight(origin_x: float, origin_y: float, facing_deg: float, fov_deg:
 func prefab(prefab_res: Resource, x: float, y: float, scale_factor: float, rotation_deg: float) -> void:
 	if prefab_res == null:
 		return
-	var steps: Variant = prefab_res.get("steps")
-	if not (steps is Array):
+	# One expansion path fed by pre-typed entries (the resource's cached compiled_steps() when it
+	# exposes one, else a raw parse) - the same circle/ring/rect/line/cone/stamp calls, minus the
+	# per-step Color.from_string, so drawing a prefab 1000x per frame does not re-parse strings.
+	var entries: Array = _prefab_entries(prefab_res)
+	if entries.is_empty():
 		return
 	var origin: Vector2 = Vector2(x, y)
 	var spin: float = deg_to_rad(rotation_deg)
 	var scale_by: float = maxf(scale_factor, 0.01)
-	for step: Variant in steps:
-		if not (step is Dictionary):
-			continue
-		var entry: Dictionary = step
-		var at: Vector2 = origin + (Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0))) * scale_by).rotated(spin)
-		var p1: float = float(entry.get("p1", 0.0))
-		var p2: float = float(entry.get("p2", 0.0))
-		var p3: float = float(entry.get("p3", 0.0))
-		var tint: Color = Color.from_string(str(entry.get("color", "white")), Color.WHITE)
-		match str(entry.get("kind", "")):
+	for entry: Dictionary in entries:
+		var local: Vector2 = Vector2(entry["x"], entry["y"])
+		var at: Vector2 = origin + (local * scale_by).rotated(spin)
+		var p1: float = entry["p1"]
+		var p2: float = entry["p2"]
+		var p3: float = entry["p3"]
+		var tint: Color = entry["color"]
+		match str(entry["kind"]):
 			"circle":
 				circle(at.x, at.y, p1 * scale_by, tint)
 			"ring":
@@ -193,7 +194,7 @@ func prefab(prefab_res: Resource, x: float, y: float, scale_factor: float, rotat
 			"rect":
 				var corners: PackedVector2Array = PackedVector2Array()
 				for corner: Vector2 in [Vector2.ZERO, Vector2(p1, 0.0), Vector2(p1, p2), Vector2(0.0, p2)]:
-					corners.append(to_canvas(origin + ((Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0))) + corner) * scale_by).rotated(spin)))
+					corners.append(to_canvas(origin + ((local + corner) * scale_by).rotated(spin)))
 				_push({"kind": "polygon", "points": corners, "color": tint})
 			"line":
 				var to_point: Vector2 = origin + (Vector2(p1, p2) * scale_by).rotated(spin)
@@ -201,9 +202,19 @@ func prefab(prefab_res: Resource, x: float, y: float, scale_factor: float, rotat
 			"cone":
 				cone(at.x, at.y, p1 + rotation_deg, p2, p3 * scale_by, tint)
 			"stamp":
-				var texture_path: String = str(entry.get("texture", "")).strip_edges()
-				if not texture_path.is_empty() and ResourceLoader.exists(texture_path):
-					stamp(load(texture_path) as Texture2D, at.x, at.y, maxf(p1, 0.01) * scale_by, p2 + rotation_deg)
+				var texture: Texture2D = entry["tex"]
+				if texture != null:
+					stamp(texture, at.x, at.y, maxf(p1, 0.01) * scale_by, p2 + rotation_deg)
+
+func _prefab_entries(prefab_res: Resource) -> Array:
+	if prefab_res.has_method("compiled_steps"):
+		var compiled: Variant = prefab_res.compiled_steps()
+		if compiled is Array:
+			return compiled
+	var raw: Variant = prefab_res.get("steps")
+	if not (raw is Array):
+		return []
+	return DrawingPrefabResource.compile_steps(raw)
 
 func start_ribbon(follow: Node, point_count: int, width: float, color: Color) -> void:
 	_ensure()

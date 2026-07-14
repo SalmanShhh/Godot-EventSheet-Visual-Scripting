@@ -130,6 +130,12 @@ scales, and rotates as one - rings-and-crosshair markers, explosion scorches, ma
 minimap icons. The Draw Lab showcase stamps one .tres at three scales plus wherever you
 press Space.
 
+**Scales to thousands.** A prefab parses its steps (colors, kinds, stamp textures) once and caches the
+result, so Draw Prefab and the DrawingPrefabStamp node stay cheap when a thousand-plus stamps share one
+prefab - each draw reuses the compiled steps instead of re-parsing. The cache refreshes when the resource
+changes; if game code edits a prefab's `steps` at runtime, call `emit_changed()` on it afterwards (the
+Inspector does this for you when you edit in the grid).
+
 **Place it in the editor.** Set a Drawing Canvas's **Editor Preview** knobs (`preview_prefab`,
 `preview_scale`, `preview_rotation`) and select the node: the formation draws right in the 2D viewport
 at the host, so you can line up a target marker or scorch before wiring Draw Prefab. The preview shows
