@@ -735,7 +735,7 @@ static func _is_connected_handler(header: String, connections: Dictionary) -> bo
 ## Reverse of _emit_expose_annotations: parses a `## @ace_*` block into EventFunction
 ## exposure fields. {} = unrecognized shape (lift falls back).
 static func _parse_annotations(code: String) -> Dictionary:
-	var fields: Dictionary = {"expose": false, "name": "", "category": "", "description": "", "param_options": {}, "param_hints": {}}
+	var fields: Dictionary = {"expose": false, "name": "", "category": "", "description": "", "display_template": "", "param_options": {}, "param_hints": {}}
 	var recognized: bool = false
 	var doc_lines: PackedStringArray = PackedStringArray()
 	for line: String in code.split("\n"):
@@ -755,6 +755,8 @@ static func _parse_annotations(code: String) -> Dictionary:
 			fields["category"] = text.substr(18, text.length() - 20)
 		elif text.begins_with("## @ace_description(\"") and text.ends_with("\")"):
 			fields["description"] = text.substr(21, text.length() - 23)
+		elif text.begins_with("## @ace_display_template(\"") and text.ends_with("\")"):
+			fields["display_template"] = text.substr(26, text.length() - 28)
 		elif text.begins_with("## @ace_param_options(") and text.ends_with(")"):
 			# `@ace_param_options(mode add, multiply, override)` -> dropdown options; carried
 			# onto the lifted param so emission ships them (they used to be dropped here,
@@ -846,6 +848,7 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.ace_display_name = str(annotations.get("name", ""))
 	event_function.ace_category = str(annotations.get("category", ""))
 	event_function.description = str(annotations.get("description", ""))
+	event_function.display_template = str(annotations.get("display_template", ""))
 	# @ace_param_options / @ace_param_hint ride on the params themselves, so emission can
 	# ship them back out and the picker gets its dropdowns and widgets.
 	var lifted_param_options: Dictionary = annotations.get("param_options", {})

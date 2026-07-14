@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Changed - a published verb reads as an event-sheet line, not a raw signature
+
+- **Open a behavior pack as a sheet and its verbs now read like event-sheet actions**, not `func
+  draw_canvas_line(from_x: float, from_y: float, to_x: float, to_y: float, width: float, color: Color) ->
+  void`. Each Published-verb row shows a readable line - the friendly name plus its parameters as
+  plain labels ("Draw Line   from x, from y, to x, to y, width, color") - and the real `func ... -> Type`
+  signature stays as a muted code cue at the end, so the sheet still reads like code (it is visual
+  scripting) and the row can never disagree with what compiles.
+- **Verbs can carry an authored sentence.** A new `@ace_display_template("Draw a line from ({from_x},
+  {from_y}) to ({to_x}, {to_y})")` annotation renders the row as that sentence with each `{param}` slot
+  filled by its label; when a verb is actually USED in a sheet the same template fills with the real
+  values ("Draw a line from (100, 50) to (200, 80)"). It round-trips losslessly - `EventFunction` gained a
+  `display_template` field, the compiler emits `@ace_display_template` (after the description), and the
+  importer lifts it back, byte-gated. The 16 Drawing Canvas verbs ship authored sentences; every other
+  pack auto-derives the label line, so all 72 read cleanly with zero hand-authoring required.
+- Pure view + lossless: nothing touches `ace_id`s, `codegen_template`s, or emitted call sites. Pinned by
+  tests/define_block_rows_test.gd (readable line, authored template, auto fallback) and the per-function
+  byte round-trip; suite green, `drifted=0`.
+
 ### Added - table drawer: dropdown columns + a live-updating preview
 
 - **A table-drawer column can now be a dropdown.** Type a column as `enum(a|b|c)` and its cells render as

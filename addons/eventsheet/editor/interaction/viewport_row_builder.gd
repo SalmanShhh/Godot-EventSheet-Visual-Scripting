@@ -262,6 +262,43 @@ static func define_role_for(event_function: EventFunction) -> String:
 	return "expression"
 
 
+## Humanizes one parameter for reading: an authored display name wins, else the id with underscores
+## opened out ("from_x" -> "from x"). This is the label a published-verb row shows, not a value.
+static func friendly_param_label(param: ACEParam) -> String:
+	var label: String = param.get_param_name().strip_edges()
+	if label.is_empty():
+		label = param.id
+	return label.replace("_", " ").strip_edges()
+
+
+## The auto verb line's parameter slice - each param's friendly label, comma-joined ("from x, from y,
+## width, color"). Empty when the verb takes none. Falls back to the legacy `parameters` string alias
+## when a lifted verb carries no ACEParam metadata.
+static func friendly_param_labels(event_function: EventFunction) -> String:
+	var labels: PackedStringArray = PackedStringArray()
+	for param: Variant in event_function.params:
+		if param is ACEParam:
+			labels.append(friendly_param_label(param as ACEParam))
+	if labels.is_empty():
+		for legacy: String in event_function.parameters:
+			labels.append(str(legacy).replace("_", " ").strip_edges())
+	return ", ".join(labels)
+
+
+## An authored @ace_display_template with its {param_id} slots filled with the FRIENDLY LABELS (a
+## Define row shows the verb's shape, not call-site values): "Draw line from ({from_x}, {from_y})" ->
+## "Draw line from (from x, from y)". Empty when the verb has no display_template.
+static func friendly_template_line(event_function: EventFunction) -> String:
+	var template: String = event_function.display_template.strip_edges()
+	if template.is_empty():
+		return ""
+	for param: Variant in event_function.params:
+		if param is ACEParam:
+			var ace_param: ACEParam = param as ACEParam
+			template = template.replace("{%s}" % ace_param.id, friendly_param_label(ace_param))
+	return template
+
+
 ## One Define block: role badge in its ACE-role colour, the friendly published name, a `→ type`
 ## chip for value-returning verbs, the category chip, an "internal" chip when the function is NOT
 ## exposed as an ACE (a plain helper other sheets can't pick), and the muted real signature built
@@ -290,12 +327,30 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"badge_bg": (badge_colors[role] as Array)[0],
 			"badge_fg": (badge_colors[role] as Array)[1],
 			"kind": "define_function"
-		}),
-		_make_span(display_name, SemanticSpan.SpanType.OBJECT, {
-			"kind": "define_function",
-			"text_color": _viewport._get_event_style().object_label_color
 		})
 	]
+	# The verb reads as an event-sheet line, not a raw signature: an authored @ace_display_template is
+	# the whole sentence (its {param} slots filled with each parameter's label); otherwise the friendly
+	# name plus a comma-joined slot list. The real `func ... -> Type` still follows as a muted code cue
+	# below, so the row stays code-adjacent and can never disagree with what compiles.
+	var authored_line: String = friendly_template_line(event_function)
+	if not authored_line.is_empty():
+		spans.append(_make_span(authored_line, SemanticSpan.SpanType.OBJECT, {
+			"kind": "define_function",
+			"text_color": _viewport._get_event_style().object_label_color
+		}))
+	else:
+		spans.append(_make_span(display_name, SemanticSpan.SpanType.OBJECT, {
+			"kind": "define_function",
+			"text_color": _viewport._get_event_style().object_label_color
+		}))
+		var param_labels: String = friendly_param_labels(event_function)
+		if not param_labels.is_empty():
+			spans.append(_make_span(param_labels, SemanticSpan.SpanType.VALUE, {
+				"editable": false,
+				"kind": "define_function",
+				"text_color": _viewport._get_event_style().value_highlight_color
+			}))
 	if role != "action":
 		spans.append(_make_span("→ %s" % SheetCompiler._function_return_type_name(event_function), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,

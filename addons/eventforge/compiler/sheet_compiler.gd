@@ -1612,6 +1612,10 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 		lines.append("## @ace_category(\"%s\")" % category)
 	if not event_function.description.strip_edges().is_empty():
 		lines.append("## @ace_description(\"%s\")" % event_function.description.strip_edges())
+	# A readable sentence for the row (and the picker), with {param} slots - emitted right after the
+	# description so the block round-trips in a stable order.
+	if not event_function.display_template.strip_edges().is_empty():
+		lines.append("## @ace_display_template(\"%s\")" % event_function.display_template.strip_edges())
 	# Param dropdowns and widget hints ship as one-line annotations the provider scanner
 	# reads back - without these the picker loses the combos a builder declared.
 	for annotated_param in event_function.params:

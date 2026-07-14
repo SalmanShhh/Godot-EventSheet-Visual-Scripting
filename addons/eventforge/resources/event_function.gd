@@ -24,6 +24,11 @@ extends Resource
 ## Optional ACE presentation when exposed (fall back to a humanized function name).
 @export var ace_display_name: String = ""
 @export var ace_category: String = ""
+## Optional readable sentence for the published-verb row, with {param_id} slots that show each
+## parameter's label (e.g. "Draw line from ({from_x}, {from_y}) to ({to_x}, {to_y})"). Emitted as
+## `## @ace_display_template("...")` and lifted back, so it round-trips. Empty = the row auto-derives
+## a slot line from the name plus the humanized parameter ids.
+@export var display_template: String = ""
 @export var params: Array[ACEParam] = []
 @export var parameters: Array[String] = [] # Backwards-compatible alias.
 @export var return_type: int = TYPE_NIL

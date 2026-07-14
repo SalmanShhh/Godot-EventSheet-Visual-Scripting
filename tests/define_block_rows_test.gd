@@ -57,6 +57,21 @@ static func run() -> bool:
 	ok = _check("the signature line is the compiler's own emission",
 		_row_has_span_text(action_row, "func take_damage(amount: float) -> void"), true) and ok
 
+	# ── The readable verb line: reads like an event-sheet action, with the real signature kept as a
+	# muted code cue below. Auto-derives the friendly param labels; an authored @ace_display_template
+	# fills its slots with those labels (a Define row shows the verb's shape, not call-site values).
+	ok = _check("the auto verb line lists the friendly param labels next to the name",
+		_row_has_span_text(action_row, "amount"), true) and ok
+	ok = _check("params humanize the id (underscores open out)",
+		ViewportRowBuilder.friendly_param_labels(_two_param_function()), "from x, to x") and ok
+	var templated: EventFunction = _make_function("draw_line", TYPE_NIL, true, "Draw Line", "")
+	templated.params[0].id = "from_x"
+	templated.display_template = "Line to {from_x}"
+	ok = _check("an authored template fills its slots with param labels",
+		ViewportRowBuilder.friendly_template_line(templated), "Line to from x") and ok
+	ok = _check("no template yields an empty authored line (auto path used)",
+		ViewportRowBuilder.friendly_template_line(_make_function("f", TYPE_NIL, true, "", "")), "") and ok
+
 	# ── A function-less sheet grows no section ──
 	var empty_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	empty_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
@@ -94,6 +109,17 @@ static func _make_function(fn_name: String, return_type: int, exposed: bool, dis
 	param.id = "amount"
 	param.type_name = "float"
 	event_function.params.append(param)
+	return event_function
+
+
+static func _two_param_function() -> EventFunction:
+	var event_function: EventFunction = EventFunction.new()
+	event_function.function_name = "draw"
+	for pid: String in ["from_x", "to_x"]:
+		var param: ACEParam = ACEParam.new()
+		param.id = pid
+		param.type_name = "float"
+		event_function.params.append(param)
 	return event_function
 
 
