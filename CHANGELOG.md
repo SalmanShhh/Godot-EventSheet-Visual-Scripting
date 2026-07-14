@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed - WASD moves the character in the FPS Arena showcase
+
+- **WASD now drives movement in the FPS Arena showcase.** The FPS Controller reads the `ui_left/right/up/down`
+  actions, which Godot binds to the arrow keys by default - so WASD did nothing. The project input map now
+  adds W/A/S/D to those actions (alongside the arrows), so both work. Verified end-to-end: a W key press moves
+  the player forward.
+
 ### Changed - a typed-inferred local (`var x := …`) lifts to a row instead of a raw block
 
 - **Opening a .gd now lifts an inferred local declaration** - `var heading := Vector2.from_angle(host.rotation)
