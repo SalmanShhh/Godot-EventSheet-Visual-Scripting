@@ -302,6 +302,8 @@ var _simple_mode_provider: Callable = Callable()
 ## Returns the class name whose reflected "All of <Class>" section the picker
 ## should offer (the current sheet's host class); invalid = no reflection.
 var _reflect_class_provider: Callable = Callable()
+## Returns whether the current sheet is a behaviour (its `host` var exists); gates the host-only ACEs.
+var _behavior_mode_provider: Callable = Callable()
 
 
 func set_simple_mode_provider(provider: Callable) -> void:
@@ -310,6 +312,19 @@ func set_simple_mode_provider(provider: Callable) -> void:
 
 func set_reflect_class_provider(provider: Callable) -> void:
 	_reflect_class_provider = provider
+
+
+## The behaviour-only host vocabulary (Host / Host Is Valid) reads the literal `host` var, which only
+## exists in a behaviour sheet's synthesized prelude. The dock feeds this a `-> bool` that is true when
+## the current sheet is a behaviour, so the picker hides those ACEs off a plain / resource / node sheet.
+func set_behavior_mode_provider(provider: Callable) -> void:
+	_behavior_mode_provider = provider
+
+
+## True when a definition is a behaviour-only host ACE that must NOT be offered on a non-behaviour sheet
+## (it would emit an undefined `host`). Pure + static so the gate is unit-testable without a live picker.
+static func host_ace_hidden(provider_id: String, ace_id: String, is_behavior_sheet: bool) -> bool:
+	return not is_behavior_sheet and provider_id == "Core" and ace_id in ["BehaviorHost", "BehaviorHostValid"]
 
 
 ## Update the registry used for searching (e.g. after a hot-reload).
@@ -550,6 +565,15 @@ func _refresh_tree() -> void:
 			if fuzzy_match(query, candidate.display_name):
 				definitions.append(candidate)
 				fuzzy_added += 1
+	# Behaviour-only host vocabulary: hide Host / Host Is Valid off a non-behaviour sheet (they read the
+	# literal `host`, which only a behaviour sheet's prelude declares). Single chokepoint - `definitions`
+	# is the assembled set that renders, so this covers search, synonyms, reflection, and fuzzy hits.
+	var is_behavior_sheet: bool = _behavior_mode_provider.is_valid() and bool(_behavior_mode_provider.call())
+	var host_filtered: Array[ACEDefinition] = []
+	for host_candidate: ACEDefinition in definitions:
+		if not host_ace_hidden(str(host_candidate.provider_id), str(host_candidate.id), is_behavior_sheet):
+			host_filtered.append(host_candidate)
+	definitions = host_filtered
 	# Reactivity steering: surface a polling condition's reactive twin beside it (off the shared
 	# ACEDescriptor.REACTS_TO map), so "react instead?" is one keystroke away; _best_match_item then
 	# pre-selects it, and the mode filter below drops the trigger where it is not a valid choice.

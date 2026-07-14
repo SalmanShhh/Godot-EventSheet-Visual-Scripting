@@ -372,6 +372,7 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._ace_picker.init_dialog(_dock, _dock._ace_registry)
 	_dock._ace_picker.set_simple_mode_provider(func() -> bool: return _dock._simple_mode)
 	_dock._ace_picker.set_reflect_class_provider(func() -> String: return _dock._current_sheet.host_class if _dock._current_sheet != null else "")
+	_dock._ace_picker.set_behavior_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.behavior_mode)
 	_dock._variable_dlg.simple_mode_provider = func() -> bool: return _dock._simple_mode
 	_dock._ace_picker.ace_selected.connect(_dock._on_ace_picker_selected)
 	_dock._ace_params.init_dialog(_dock, _dock._ace_registry, _dock._collect_sheet_variable_names)

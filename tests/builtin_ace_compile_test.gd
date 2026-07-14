@@ -29,6 +29,7 @@ const NOT_STANDALONE: Array[String] = [
 	"AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
 	"IsLocaleChangeNotification",  # references `what` - only exists inside _notification (its trigger's virtual)
+	"BehaviorHost", "BehaviorHostValid",  # read the behaviour-only `host` var (synthesized only when behavior_mode)
 ]
 
 

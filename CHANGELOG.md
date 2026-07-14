@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added - Host and Host Is Valid vocabulary for behavior sheets
+
+- **Two behavior-sheet ACEs make the host node first-class, pickable vocabulary**: the **Host** expression
+  reads the parent node a behavior is attached to, and the **Host Is Valid** condition guards access to it
+  (true while the host still exists). They read the behavior's synthesized `host` binding, so the picker
+  offers them only on a behavior sheet - a plain, resource, or node sheet has no `host`, and hiding them
+  there keeps the generated code compilable.
+
 ### Changed - a sheet's verbs read inline instead of behind a "Published verbs" section
 
 - **A sheet's functions (its published verbs) now render as inline, role-tinted event-rows** - one Define
