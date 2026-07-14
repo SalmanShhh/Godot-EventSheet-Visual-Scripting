@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - opt a single verb of an opened pack into body editing
+
+- **An opened behaviour pack's verb bodies are read-only by default, but you can now opt a single verb into
+  editing.** Right-click a published-verb (Define) row and choose "Make Verb Body Editable"; that one verb's
+  body becomes live event rows you can edit, add to, delete, and reorder, exactly like an authored sheet.
+  The opt-in is pure editor state (kept per verb by name, never written to the `.gd`), so flipping it changes
+  no bytes on its own - only a later edit re-emits that one verb from its model. Every verb you did NOT opt
+  in stays a read-only, byte-identical part of the file - the sibling guarantee - so editing one verb can
+  never disturb the rest of the pack (drift stays 0). "Lock Verb Body (read-only)" flips it back. Authored
+  sheets edit every body already and a read-only preview edits nothing, so the toggle only appears on an
+  editable opened pack.
+
 ### Fixed - the Function dialog now shows and preserves a not-carded return type
 
 - **A verb whose return type has no dialog card - a custom or engine class (`-> HealthPool`, `-> Camera2D`)

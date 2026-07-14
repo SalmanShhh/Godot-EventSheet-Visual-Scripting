@@ -125,6 +125,14 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# the same right-click-to-add-an-argument gesture a visual event editor gives its functions.
 		menu.add_item("Edit Verb…", _dock.ROW_MENU_EDIT_FUNCTION)
 		menu.add_item("Add Parameter", _dock.ROW_MENU_ADD_FUNCTION_PARAM)
+		# On an OPENED behaviour pack a verb's body is read-only by default (protecting the .gd round-trip);
+		# offer a per-function opt-in to edit THIS verb's body. Authored sheets edit every body already, and
+		# a read-only preview edits nothing, so the toggle only appears for an editable opened pack.
+		var sheet: EventSheetResource = _dock._current_sheet
+		if sheet != null and not sheet.read_only and not sheet.external_source_path.strip_edges().is_empty():
+			var fn_name: String = (row_data.source_resource as EventFunction).function_name
+			var already: bool = _dock._active_view().is_function_body_editable_opt_in(fn_name)
+			menu.add_item("Lock Verb Body (read-only)" if already else "Make Verb Body Editable", _dock.ROW_MENU_MAKE_FUNCTION_EDITABLE)
 	else:
 		# SECTION / unknown rows get only the universal items - no leading separator.
 		added_type_items = false

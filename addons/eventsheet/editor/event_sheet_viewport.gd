@@ -182,6 +182,12 @@ var _drag_feedback_is_error: bool = false
 var _last_scroll: int = -1
 var _last_scroll_size: Vector2 = Vector2.ZERO
 var _fold_state: Dictionary = {}
+# Per-function "Make Body Editable" opt-in for an OPENED behaviour pack, keyed by function name (a set;
+# name -> true). Pure editor state - NEVER written to the .gd - so it survives the undo funnel's resource
+# replacement (like _fold_state) and never affects the byte round-trip. An authored sheet ignores this
+# (all its verb bodies are editable already); an opted-in verb's body becomes live and re-emits from its
+# model, while every un-opted sibling stays inert and byte-identical. See _row_builder._function_body_editable.
+var _editable_function_names: Dictionary = {}
 var _debug_rows: Dictionary = {}
 var _breakpoint_rows: Dictionary = {}
 # Session bookmarks (navigation aid; not persisted): row_uid -> true. Ctrl+M / F4.
@@ -273,6 +279,25 @@ func set_sheet(sheet: EventSheetResource) -> void:
 	_load_persisted_region_folds()
 	_editor_style = _resolve_editor_style(sheet)
 	_update_layout_style_signature(_get_font_size())
+	_refresh_rows()
+
+
+## True when the user has opted a specific verb (by function name) into body editing on an opened pack.
+func is_function_body_editable_opt_in(function_name: String) -> bool:
+	return _editable_function_names.has(function_name.strip_edges())
+
+
+## Flips the per-function "Make Body Editable" opt-in for an opened pack and rebuilds so the verb's body
+## rows switch between inert (read-only) and live (editable). Pure editor state - the .gd is untouched, so
+## the flip alone never dirties the sheet; only a subsequent edit of the now-live body re-emits that verb.
+func toggle_function_body_editable(function_name: String) -> void:
+	var key: String = function_name.strip_edges()
+	if key.is_empty():
+		return
+	if _editable_function_names.has(key):
+		_editable_function_names.erase(key)
+	else:
+		_editable_function_names[key] = true
 	_refresh_rows()
 
 

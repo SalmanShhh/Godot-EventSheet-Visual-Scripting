@@ -338,11 +338,11 @@ func _find_resource_location(target: Resource) -> Dictionary:
 	var in_events: Dictionary = _find_resource_location_in_array(target, _dock._current_sheet.events)
 	if not in_events.is_empty():
 		return in_events
-	# An editable function's body (an authored sheet's published verbs) lives in sheet.functions[].events -
-	# a SEPARATE array from sheet.events - so resolve a body row's container there, letting add / delete /
-	# drag reach the right array. The model never aliases a resource across both, so searching events first
-	# is safe. Opened-pack bodies stay inert (null source_resource), so their rows never reach this search;
-	# only live (authored) body rows do, keeping the opened .gd byte round-trip untouched.
+	# An editable function's body lives in sheet.functions[].events - a SEPARATE array from sheet.events - so
+	# resolve a body row's container there, letting add / delete / drag reach the right array. The model
+	# never aliases a resource across both, so searching events first is safe. Only LIVE body rows reach this
+	# search (an authored sheet's bodies, or an opened pack's per-function opted-in body); every still-inert
+	# opened-pack body has a null source_resource, so it is never located and its .gd round-trip is untouched.
 	for function_entry: Variant in _dock._current_sheet.functions:
 		if function_entry is EventFunction:
 			var event_function: EventFunction = function_entry as EventFunction

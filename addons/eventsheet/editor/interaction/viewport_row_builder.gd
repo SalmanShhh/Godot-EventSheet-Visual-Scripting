@@ -413,7 +413,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	# preview) the body stays a pure READ instead: each child is made INERT (source_resource nulled over the
 	# subtree) so no mutation can reach it and corrupt the .gd's byte round-trip - per-function opt-in
 	# unlocks that later. Default-collapsed (folded seeded from _fold_state) preserves the header look.
-	var body_editable: bool = _function_body_editable()
+	var body_editable: bool = _function_body_editable(event_function)
 	var body_entries: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
 	for body_entry: Variant in body_entries:
 		if body_entry is Resource:
@@ -438,15 +438,18 @@ func _make_row_inert(row_data: EventRowData) -> void:
 		_make_row_inert(child)
 
 
-## True when a published verb's body should render as LIVE, editable event rows: only on an AUTHORED sheet
-## (one not backed by an opened .gd - external_source_path empty) that isn't in read-only preview. For an
-## opened behaviour pack the body stays a pure read (rows inert), so editing it can never corrupt the .gd's
-## byte round-trip; a per-function opt-in unlocks editing there. A missing sheet reference reads as inert.
-func _function_body_editable() -> bool:
+## True when a published verb's body should render as LIVE, editable event rows. On an AUTHORED sheet (one
+## not backed by an opened .gd - external_source_path empty) every verb body is editable. On an OPENED
+## behaviour pack only a verb the user explicitly opted in (per function, via "Make Body Editable") is live;
+## the rest stay a pure read (rows inert) so their .gd round-trips byte-identically - the sibling guarantee.
+## A read-only preview, or a missing sheet reference, is always inert.
+func _function_body_editable(event_function: EventFunction) -> bool:
 	var sheet: EventSheetResource = _viewport._sheet
-	if sheet == null:
+	if sheet == null or sheet.read_only:
 		return false
-	return sheet.external_source_path.strip_edges().is_empty() and not sheet.read_only
+	if sheet.external_source_path.strip_edges().is_empty():
+		return true
+	return _viewport.is_function_body_editable_opt_in(event_function.function_name)
 
 
 ## First Color(...) literal among an ACE's param values (null when none) - drives the

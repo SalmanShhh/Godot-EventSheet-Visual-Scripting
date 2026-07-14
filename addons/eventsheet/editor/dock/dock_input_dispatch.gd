@@ -110,6 +110,14 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 				_dock._function_dialog_glue._open_function_dialog_add_param(_dock._context_row.source_resource)
 			else:
 				_dock._set_status("Select a published verb row to add a parameter to it.", true)
+		_dock.ROW_MENU_MAKE_FUNCTION_EDITABLE:
+			# Opt THIS opened-pack verb's body in/out of editing (editor state only - never dirties the .gd).
+			if _dock._context_row != null and _dock._context_row.source_resource is EventFunction:
+				var verb_name: String = (_dock._context_row.source_resource as EventFunction).function_name
+				_dock._active_view().toggle_function_body_editable(verb_name)
+				_dock._set_status("%s is now %s." % [verb_name, "editable" if _dock._active_view().is_function_body_editable_opt_in(verb_name) else "read-only"])
+			else:
+				_dock._set_status("Select a published verb row to change its body editability.", true)
 		_dock.ROW_MENU_ADD_PICK_FILTER:
 			_dock._open_pick_filter_dialog(_dock._context_row.source_resource, -1)
 		_dock.ROW_MENU_SCOPE_TO_NODE:
