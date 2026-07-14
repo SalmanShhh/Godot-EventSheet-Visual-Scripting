@@ -387,10 +387,13 @@ func _draw_group_row_chrome(control: Control, row_rect: Rect2, fold_rect: Rect2,
 		accent = group_tint
 		bg = bg.lerp(Color(group_tint.r, group_tint.g, group_tint.b, bg.a), 0.22)
 	var fold_bg: Color = event_style.group_fold_background_color if event_style != null else EventSheetPalette.COLOR_GROUP_FOLD_BG
-	control.draw_rect(row_rect, bg, true)
+	# Group corner rounding is a theme token (0 = the classic square bar). When rounded, the full-width
+	# top/bottom accent hairlines inset by the radius so they don't overhang the rounded corners.
+	var group_radius: int = event_style.group_corner_radius if event_style != null else 0
+	_draw_rounded_rect(control, row_rect, bg, group_radius, group_radius, group_radius, group_radius)
 	control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), accent, true)
-	control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, row_rect.size.x, 1.0), accent.darkened(0.28), true)
-	control.draw_rect(Rect2(row_rect.position.x, row_rect.end.y - 1.0, row_rect.size.x, 1.0), accent.darkened(0.38), true)
+	control.draw_rect(Rect2(row_rect.position.x + group_radius, row_rect.position.y, row_rect.size.x - 2.0 * group_radius, 1.0), accent.darkened(0.28), true)
+	control.draw_rect(Rect2(row_rect.position.x + group_radius, row_rect.end.y - 1.0, row_rect.size.x - 2.0 * group_radius, 1.0), accent.darkened(0.38), true)
 	if fold_rect.size != Vector2.ZERO:
 		control.draw_rect(fold_rect.grow(1.0), fold_bg, true)
 

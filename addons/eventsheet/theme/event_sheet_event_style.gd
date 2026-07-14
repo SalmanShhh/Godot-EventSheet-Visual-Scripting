@@ -15,7 +15,7 @@ extends Resource
 @export_range(0, 64, 1) var condition_badge_column_width: int = int(EventSheetPalette.CONDITION_BADGE_COLUMN_WIDTH)
 @export_range(0, 32, 1) var action_lane_padding: int = int(EventSheetPalette.ACTION_LANE_PADDING)
 @export_range(1, 8, 1) var lane_divider_width: int = int(EventSheetPalette.LANE_DIVIDER_WIDTH)
-@export_range(28, 96, 1) var minimum_row_height: int = EventSheetPalette.ROW_HEIGHT
+@export_range(28, 200, 1) var minimum_row_height: int = EventSheetPalette.ROW_HEIGHT
 @export var trigger_badge_background_color: Color = EventSheetPalette.COLOR_TRIGGER_ARROW_BG
 @export var trigger_badge_foreground_color: Color = EventSheetPalette.COLOR_TRIGGER_ARROW_FG
 @export var group_background_color: Color = EventSheetPalette.COLOR_GROUP_BG
@@ -52,3 +52,9 @@ extends Resource
 @export_range(0, 24, 1) var event_corner_radius: int = 8
 ## Corner roundness of individual condition/action CELLS, in pixels.
 @export_range(0, 16, 1) var cell_corner_radius: int = 4
+## Corner roundness of GROUP rows, in pixels. 0 = the classic square group bar.
+@export_range(0, 24, 1) var group_corner_radius: int = 0
+## Corner roundness of REGION marker bubbles, in pixels.
+@export_range(0, 24, 1) var region_corner_radius: int = 7
+## Line thickness of REGION marker borders, in pixels.
+@export_range(1, 6, 1) var region_line_width: int = 1

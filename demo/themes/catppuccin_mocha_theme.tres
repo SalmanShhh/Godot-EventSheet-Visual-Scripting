@@ -51,6 +51,8 @@ object_label_color = Color(0.9764706, 0.8862745, 0.6862745, 1)
 value_highlight_color = Color(0.5372549, 0.8627451, 0.92156863, 1)
 cell_hover_color = Color(0.8039216, 0.8392157, 0.95686275, 0.12)
 behavior_accent_color = Color(0.79607844, 0.6509804, 0.96862745, 1)
+group_corner_radius = 6
+region_corner_radius = 8
 
 [resource]
 script = ExtResource("3_gqx75")

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - theme editor: group corners, region styling, more row-height headroom
+
+- **The Theme editor gains four more knobs** (they surface automatically in its reflective form): group
+  corner rounding, region-marker corner rounding, region-marker line thickness, and a taller ceiling on
+  the row-height / spacing control (now up to 200px). Groups draw through the rounded-rect helper (their
+  accent hairlines inset with the radius), and region markers read their corner radius + border width
+  from the theme instead of hardcoded 7 / 1. Defaults reproduce the previous look exactly (group corners
+  0, region radius 7, region line 1), so no theme changes unless you tune it.
+- **The bundled theme presets are brought up to date** with the newer corner tokens - all nine (the six
+  iconic builder-generated presets plus the three hand-authored ones) now carry a soft modern rounding
+  (rounded groups + region bubbles) instead of falling back to the plain defaults.
+
 ### Changed - comments read as full-width banners and double-click edits them
 
 - **A comment now fills the row as a Construct-style banner.** Its text starts at the row's left edge

@@ -95,6 +95,13 @@ func _build_style(palette: Dictionary) -> EventSheetEditorStyle:
 	event_style.value_highlight_color = cool
 	event_style.behavior_accent_color = signature
 	event_style.cell_hover_color = Color(fg.r, fg.g, fg.b, 0.12)
+	# Corner + region styling (the newer theme tokens): a soft, modern rounded look shared across the
+	# iconic presets so they stay current with the Default look's rounding capabilities.
+	event_style.event_corner_radius = 8
+	event_style.cell_corner_radius = 4
+	event_style.group_corner_radius = 6
+	event_style.region_corner_radius = 8
+	event_style.region_line_width = 1
 
 	var condition_style: EventSheetElementStyle = EventSheetElementStyle.new()
 	condition_style.text_color = cool

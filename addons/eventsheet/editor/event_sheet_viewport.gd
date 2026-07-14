@@ -1204,8 +1204,11 @@ func _draw_region_bubbles(width: float) -> void:
 		var bubble: StyleBoxFlat = StyleBoxFlat.new()
 		bubble.bg_color = Color(accent.r, accent.g, accent.b, 0.07) if glowing else Color(0.0, 0.0, 0.0, 0.0)
 		bubble.border_color = Color(accent.r, accent.g, accent.b, 1.0 if glowing else 0.65)
-		bubble.set_border_width_all(2 if glowing else 1)
-		bubble.set_corner_radius_all(7)
+		# Region border thickness + corner rounding are theme tokens; a drag target reads one pixel
+		# thicker. Defaults (width 1, radius 7) reproduce the previous hardcoded look.
+		var region_line: int = _get_event_style().region_line_width
+		bubble.set_border_width_all(region_line + 1 if glowing else region_line)
+		bubble.set_corner_radius_all(_get_event_style().region_corner_radius)
 		var left: float = 3.0 + float(row_data.indent * INDENT_WIDTH)
 		var top: float = _get_row_top(index)
 		var bottom: float = _get_row_top(last_index) + _get_row_height(last_index)
