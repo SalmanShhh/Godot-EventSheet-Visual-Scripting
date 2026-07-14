@@ -130,6 +130,13 @@ scales, and rotates as one - rings-and-crosshair markers, explosion scorches, ma
 minimap icons. The Draw Lab showcase stamps one .tres at three scales plus wherever you
 press Space.
 
+**Place it in the editor.** Set a Drawing Canvas's **Editor Preview** knobs (`preview_prefab`,
+`preview_scale`, `preview_rotation`) and select the node: the formation draws right in the 2D viewport
+at the host, so you can line up a target marker or scorch before wiring Draw Prefab. The preview shows
+while the node is selected and disappears when you deselect - it is a design aid only, never saved into
+the scene and never drawn in the running game. (For a standalone, always-visible gizmo, drop a
+`DrawingPrefabStamp` node instead.)
+
 ### 6. Draw onto the 3D world
 
 Draw a target ring on the canvas, then `Spawn Canvas Decal` from the **Decal Painter** pack

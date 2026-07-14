@@ -40,6 +40,15 @@ static func build() -> bool:
 		"## Show the canvas on the host (a centered Sprite2D child). Off: the canvas renders",
 		"## offscreen and you place Canvas Texture wherever you want it.",
 		"@export var display_on_host: bool = true",
+		"",
+		"## A prefab to preview in the 2D EDITOR viewport, drawn at this node so you can position a",
+		"## formation before wiring Draw Prefab. Design aid only - the running game never draws it.",
+		"@export_group(\"Editor Preview\")",
+		"@export var preview_prefab: DrawingPrefabResource = null",
+		"## Scale of the editor preview.",
+		"@export var preview_scale: float = 1.0",
+		"## Rotation of the editor preview, in degrees.",
+		"@export var preview_rotation: float = 0.0",
 	]))
 	sheet.events.append(knobs)
 

@@ -27,6 +27,15 @@ func _enter_tree() -> void:
 ## offscreen and you place Canvas Texture wherever you want it.
 @export var display_on_host: bool = true
 
+## A prefab to preview in the 2D EDITOR viewport, drawn at this node so you can position a
+## formation before wiring Draw Prefab. Design aid only - the running game never draws it.
+@export_group("Editor Preview")
+@export var preview_prefab: DrawingPrefabResource = null
+## Scale of the editor preview.
+@export var preview_scale: float = 1.0
+## Rotation of the editor preview, in degrees.
+@export var preview_rotation: float = 0.0
+
 ## The canvas's LIVE texture - assign it to a TextureRect, a material, a particle, or a
 ## 3D Decal (the Decal Painter pack accepts it directly). Updates as the canvas draws.
 ## @ace_expression

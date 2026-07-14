@@ -45,6 +45,17 @@
   Draw Prefab paints. `prefab_scale` and `prefab_rotation` transform the whole formation, and the
   preview refreshes live as you edit the steps grid. (71 packs.)
 
+### Added - a Drawing Canvas previews its formation in the editor when selected
+
+- **Give a Drawing Canvas a preview prefab and it draws right in the 2D viewport whenever the node is
+  selected** - a live gizmo for placing a target marker or scorch formation before wiring Draw Prefab. A
+  new **Editor Preview** group on the behavior (`preview_prefab`, `preview_scale`, `preview_rotation`)
+  feeds the shared DrawingPrefabStamp renderer at the host's position. The preview appears on select and
+  vanishes on deselect; it is a transient design aid that never serializes into the scene and never runs
+  in the game. It is selection-driven (the node is never routed through the plugin), so selecting a
+  Drawing Canvas leaves the 2D editor untouched - it can't hijack the workspace. Pinned by
+  tests/drawing_canvas_gizmo_test.gd; render-verified.
+
 ### Added - a variable's description becomes its Inspector property description
 
 - **Give a variable a comment and it shows up in the Inspector automatically.** The variable dialog's

@@ -21,6 +21,7 @@ const NEW_SHEET_DIALOG_PATH: String = "res://addons/eventsheet/editor/new_sheet_
 const ACE_PARAM_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/ace_param_inspector_plugin.gd"
 const DRAWING_PREFAB_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd"
 const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_preview_generator.gd"
+const DRAWING_CANVAS_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_canvas_gizmo.gd"
 
 var _event_sheet_editor: Control = null
 var _export_integrity_plugin: EditorExportPlugin = null
@@ -32,6 +33,8 @@ var _attribute_drawers_plugin: EventSheetAttributeDrawers = null
 # Loosely typed on purpose (boot-lazy): loaded by path in _enter_tree so their subtrees stay off the boot compile.
 var _drawing_prefab_inspector: EditorInspectorPlugin = null
 var _drawing_prefab_preview_gen: EditorResourcePreviewGenerator = null
+# Selection-driven 2D gizmo: previews a selected DrawingCanvas's preview_prefab at the host (loaded by path).
+var _drawing_canvas_gizmo: RefCounted = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
 var _new_sheet_dialog: RefCounted = null
@@ -242,6 +245,10 @@ func _enter_tree() -> void:
 	var prefab_previewer: EditorResourcePreview = get_editor_interface().get_resource_previewer()
 	if prefab_previewer != null:
 		prefab_previewer.add_preview_generator(_drawing_prefab_preview_gen)
+	# DrawingCanvas 2D preview gizmo: selecting a DrawingCanvas draws its preview_prefab at the host.
+	# Selection-driven (never _handles), so it can't hijack the workspace. Cosmetic design aid.
+	_drawing_canvas_gizmo = load(DRAWING_CANVAS_GIZMO_PATH).new()
+	_drawing_canvas_gizmo.call("init", get_editor_interface())
 	# The workspace editor (the ~3400-line dock, its ~45 delegates, every dialog, and the addon-folder
 	# vocabulary scans) is built LAZILY on first use - see _ensure_editor. Enabling the plugin, or
 	# opening a project that never touches event sheets, pays none of it. The top-strip tab still
@@ -321,6 +328,9 @@ func _exit_tree() -> void:
 	for menu: EventSheetContextMenu in _context_menus:
 		remove_context_menu_plugin(menu)
 	_context_menus.clear()
+	if _drawing_canvas_gizmo != null:
+		_drawing_canvas_gizmo.call("teardown")
+		_drawing_canvas_gizmo = null
 	if _sheet_edit_button_plugin != null:
 		remove_inspector_plugin(_sheet_edit_button_plugin)
 		_sheet_edit_button_plugin = null
