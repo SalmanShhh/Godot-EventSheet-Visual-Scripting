@@ -112,6 +112,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Multiplies a variable by a factor, e.g. scaling speed or applying a bonus."))
 	descriptors.append(F.make_descriptor("Core", "DivideVar", "Divide Variable", ACEDescriptor.ACEType.ACTION, "{var_name} /= {amount}", "", [F.make_param("var_name", "String", "var", "Variable", "Variable name to divide.", "variable_reference"), F.make_param("amount", "String", "2", "Divisor", "What to divide by.", "expression")], "Variables", "Divide {var_name} by {amount}")
 		.described("Divides a variable by a value, e.g. halving a stat."))
+	# The last compound-assign sibling (%=), so `health %= 3` reads as a row instead of a raw block.
+	descriptors.append(F.make_descriptor("Core", "ModuloVar", "Modulo Variable", ACEDescriptor.ACEType.ACTION, "{var_name} %= {amount}", "", [F.make_param("var_name", "String", "var", "Variable", "Variable name to wrap.", "variable_reference"), F.make_param("amount", "String", "2", "Divisor", "Take the remainder against this.", "expression")], "Variables", "Set {var_name} to its remainder over {amount}")
+		.described("Replaces a variable with its remainder over a value, e.g. cycling an index that must stay in range."))
 	descriptors.append(F.make_descriptor("Core", "PrintLog", "Print Log", ACEDescriptor.ACEType.ACTION, "print({message})", "", [F.make_param("message", "String", "\"TODO\"", "Message", "Message to print.")], "General Actions", "Print {message}")
 		.described("Prints a message to the output console, useful for debugging and checking values."))
 	descriptors.append(F.make_descriptor("Core", "QueueFree", "Queue Free", ACEDescriptor.ACEType.ACTION, "queue_free()", "", [], "General Actions", "Queue free")

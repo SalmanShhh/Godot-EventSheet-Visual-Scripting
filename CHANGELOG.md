@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed - opening a .gd lifts compound-assignment statements to rows (and a shadow-guard fix)
+
+- **More raw statements become event rows when you open a `.gd` file.** A property changed relative to itself
+  now reverse-lifts to a row instead of staying a verbatim code cell: `self.position += velocity` reads as
+  Add To Property, `$Sprite.modulate -= fade` as Subtract From Property, `node.scale *= 1.1` as Multiply
+  Property, `node.scale /= 2` as Divide Property. A bare `health %= 3` reads as Modulo Variable, completing
+  the compound-assign vocabulary alongside the existing `+= -= *= /=`. Every lift is gated by the byte-exact
+  recompile, and a specific ACE (e.g. Add To Velocity for `velocity += …`) still outranks the generic twins.
+- **Fixed a reverse-lift shadow bug (also pre-existing for the bare-var forms):** a PLAIN assignment whose
+  string value happened to contain a compound operator - `label.text = "score += 1"` - could mis-lift to a
+  garbled Add To Property / Add Variable row (byte-identical, but the row read wrong). The matcher now
+  rejects a compound-assign whose left side carries a plain ` = ` before the operator, so such lines lift
+  cleanly as Set Property / Set Variable.
+
 ### Added - integer-precise Clamp (int) and Wrap (int) helper expressions
 
 - **Two new ƒx helpers, "Clamp (int)" and "Wrap (int)", keep whole-number values whole.** The existing

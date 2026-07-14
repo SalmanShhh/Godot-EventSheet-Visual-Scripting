@@ -1285,12 +1285,14 @@ static func _build_reverse_entries() -> Array:
 			continue  # optional-segment templates are not reversible (v1)
 		# Helper ACEs are mostly forward-authoring conveniences with deliberately generic templates
 		# ({code}, math expressions) that would shadow specific ACEs - kept out of the reverse index.
-		# EXCEPT four statement catch-alls, admitted at LOWEST specificity (the literal_len sort at the
+		# EXCEPT the statement catch-alls, admitted at LOWEST specificity (the literal_len sort at the
 		# bottom puts them after every specific ACE) so they reverse-lift only what nothing else claims:
-		# Set Property (`{target}.{property} = {value}`) and Call Method (`{target}.{method}({args})`)
-		# (Stage B), plus Set Local Variable (`var {name} = {value}`) and its typed sibling (Stage D),
-		# so a local declaration in a hand-written body becomes a row, not a code cell. Byte-verify gates.
-		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "CallMethod", "SetLocalVar", "SetLocalVarTyped"]):
+		# Set Property (`{target}.{property} = {value}`) and its compound-assign twins (`+= -= *= /=`),
+		# Call Method (`{target}.{method}({args})`) (Stage B), plus Set Local Variable (`var {name} = {value}`)
+		# and its typed sibling (Stage D), so a local declaration in a hand-written body becomes a row, not a
+		# code cell. Each has more literal chars than the bare-var forms, so `self.x += 1` prefers the property
+		# twin over Add Variable, while a genuine specific `+=` ACE still outranks it. Byte-verify gates all.
+		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "AddToProperty", "SubtractFromProperty", "MultiplyProperty", "DivideProperty", "CallMethod", "SetLocalVar", "SetLocalVarTyped"]):
 			continue
 		if template in ["break", "continue", "pass"]:
 			# Bare loop-control keywords also appear in generated pick-loop bodies, so
@@ -1311,7 +1313,16 @@ static func _build_reverse_entries() -> Array:
 			if regex == null:
 				continue
 			var literal_len: int = brace_regex.sub(variant, "", true).length()
-			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size()})
+			# A compound-assign template (`… += …`) can match a PLAIN assignment whose string value happens
+			# to contain the operator (`label.text = "score += 1"`), producing a byte-identical but wrong row.
+			# Record the operator so _match_entry can reject that case and fall through to Set Property / Set
+			# Variable. (A real lvalue never has a plain ` = ` before the operator.)
+			var assign_op: String = ""
+			for op: String in [" += ", " -= ", " *= ", " /= ", " %= "]:
+				if variant.contains(op):
+					assign_op = op
+					break
+			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op})
 	# Try SPECIFIC templates before generic catch-alls. The Core generics (SetVar `{var_name} = {value}`,
 	# CallFunction `{function_name}({args})`, …) use lazy `.+?` captures that match almost any
 	# assignment/call, so in raw registry order they SHADOW every specific node ACE (`position = …`
@@ -1330,6 +1341,13 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String) -> 
 		var regex_match: RegExMatch = regex.search(line)
 		if regex_match == null:
 			continue
+		# Reject a compound-assign that only matched because the operator sits inside a plain assignment's
+		# string value (`x = "a += b"`): a genuine `x += …` has no plain ` = ` before the operator.
+		var assign_op: String = str((entry as Dictionary).get("assign_op", ""))
+		if not assign_op.is_empty():
+			var op_index: int = line.find(assign_op)
+			if op_index != -1 and line.substr(0, op_index).contains(" = "):
+				continue
 		var params: Dictionary = {}
 		for group_name: String in regex.get_names():
 			params[group_name] = regex_match.get_string(group_name)

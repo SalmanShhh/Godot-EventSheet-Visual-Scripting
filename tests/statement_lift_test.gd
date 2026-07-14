@@ -49,6 +49,90 @@ static func run() -> bool:
 	if roundtrip != source:
 		print("  --- source ---\n%s\n  --- roundtrip ---\n%s" % [source, roundtrip])
 
+	# Compound-assignment coverage: a property changed relative to itself (`+= -= *= /=`) lifts to the
+	# Set-Property twins, and a bare `%=` to Modulo Variable - so "self.x += v" reads as a row, not a block.
+	# Properties/vars with NO specific ACE are used so the generic catch-alls win (the correct fallback).
+	var authored2: EventSheetResource = EventSheetResource.new()
+	authored2.host_class = "Node2D"
+	var event2: EventRow = EventRow.new()
+	event2.trigger_provider_id = "Core"
+	event2.trigger_id = "OnProcess"
+	var raw2: RawCodeRow = RawCodeRow.new()
+	raw2.code = "$Hud.custom_value += 7\n$Hud.custom_value -= 2\n$Hud.zoom_factor *= 3\n$Hud.zoom_factor /= 4\ncombo_index %= 5"
+	event2.actions.append(raw2)
+	authored2.events.append(event2)
+	var source2: String = str(SheetCompiler.compile(authored2, "user://sb_source2.gd").get("output", ""))
+	var imported2: EventSheetResource = GDScriptImporter.new().import_external_source(source2)
+	var ace_ids2: Array = []
+	var inflow2: int = 0
+	for row2: Variant in imported2.events:
+		if row2 is EventRow:
+			for a2: Variant in (row2 as EventRow).actions:
+				if a2 is ACEAction:
+					ace_ids2.append((a2 as ACEAction).ace_id)
+				elif a2 is RawCodeRow:
+					inflow2 += 1
+	ok = _check("property += lifts to AddToProperty", ace_ids2.has("AddToProperty"), true) and ok
+	ok = _check("property -= lifts to SubtractFromProperty", ace_ids2.has("SubtractFromProperty"), true) and ok
+	ok = _check("property *= lifts to MultiplyProperty", ace_ids2.has("MultiplyProperty"), true) and ok
+	ok = _check("property /= lifts to DivideProperty", ace_ids2.has("DivideProperty"), true) and ok
+	ok = _check("bare %= lifts to ModuloVar", ace_ids2.has("ModuloVar"), true) and ok
+	ok = _check("no in-flow code cell remains (compound)", inflow2, 0) and ok
+	imported2.external_source_path = "user://sb_rt2.gd"
+	var roundtrip2: String = str(SheetCompiler.compile(imported2, "user://sb_rt2.gd").get("output", ""))
+	ok = _check("compound-assign lift round-trips byte-identically", roundtrip2 == source2, true) and ok
+	if roundtrip2 != source2:
+		print("  --- source2 ---\n%s\n  --- roundtrip2 ---\n%s" % [source2, roundtrip2])
+
+	# Specificity guard: the generic property twins must NOT out-rank a specific compound ACE. A
+	# `velocity += …` is Add To Velocity, never the generic Add To Property (the literal-length sort
+	# keeps the specific one ahead). Without this, a too-greedy generic could shadow real vocabulary.
+	var authored3: EventSheetResource = EventSheetResource.new()
+	authored3.host_class = "CharacterBody2D"
+	var event3: EventRow = EventRow.new()
+	event3.trigger_provider_id = "Core"
+	event3.trigger_id = "OnPhysicsProcess"
+	var raw3: RawCodeRow = RawCodeRow.new()
+	raw3.code = "velocity += Vector2(1, 0)"
+	event3.actions.append(raw3)
+	authored3.events.append(event3)
+	var source3: String = str(SheetCompiler.compile(authored3, "user://sb_source3.gd").get("output", ""))
+	var imported3: EventSheetResource = GDScriptImporter.new().import_external_source(source3)
+	var ace_ids3: Array = []
+	for row3: Variant in imported3.events:
+		if row3 is EventRow:
+			for a3: Variant in (row3 as EventRow).actions:
+				if a3 is ACEAction:
+					ace_ids3.append((a3 as ACEAction).ace_id)
+	ok = _check("specific velocity += wins over the generic property twin", ace_ids3.has("AddVelocity") and not ace_ids3.has("AddToProperty"), true) and ok
+
+	# Shadow guard: a PLAIN assignment whose string value contains a compound operator must lift as a Set,
+	# never as a bogus compound row. `label.text = "score += 1"` is a Set Property, not an Add To Property;
+	# `msg = "combo += 1"` is a Set Variable, not an Add Variable. (Both round-trip either way, but the row
+	# must read correctly.) This also covers the pre-existing bare-var compound catch-alls.
+	var authored4: EventSheetResource = EventSheetResource.new()
+	authored4.host_class = "Node2D"
+	var event4: EventRow = EventRow.new()
+	event4.trigger_provider_id = "Core"
+	event4.trigger_id = "OnReady"
+	var raw4: RawCodeRow = RawCodeRow.new()
+	raw4.code = "$Label.text = \"score += 1\"\nmsg = \"combo += 1\""
+	event4.actions.append(raw4)
+	authored4.events.append(event4)
+	var source4: String = str(SheetCompiler.compile(authored4, "user://sb_source4.gd").get("output", ""))
+	var imported4: EventSheetResource = GDScriptImporter.new().import_external_source(source4)
+	var ace_ids4: Array = []
+	for row4: Variant in imported4.events:
+		if row4 is EventRow:
+			for a4: Variant in (row4 as EventRow).actions:
+				if a4 is ACEAction:
+					ace_ids4.append((a4 as ACEAction).ace_id)
+	ok = _check("in-string += does not shadow Set Property", ace_ids4.has("SetProperty") and not ace_ids4.has("AddToProperty"), true) and ok
+	ok = _check("in-string += does not shadow Set Variable", ace_ids4.has("SetVar") and not ace_ids4.has("AddVar"), true) and ok
+	imported4.external_source_path = "user://sb_rt4.gd"
+	var roundtrip4: String = str(SheetCompiler.compile(imported4, "user://sb_rt4.gd").get("output", ""))
+	ok = _check("shadow-guard case round-trips byte-identically", roundtrip4 == source4, true) and ok
+
 	return ok
 
 

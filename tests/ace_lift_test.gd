@@ -32,7 +32,9 @@ static func run() -> bool:
 	custom_line.code = "health -= 1"  # now reverse-lifts to SubtractVar (Phase 0 compound-assign ACE)
 	event.actions.append(custom_line)
 	var irreducible_line: RawCodeRow = RawCodeRow.new()
-	irreducible_line.code = "health %= 3"  # %= has no ACE (and isn't a `x = y` SetVar) -> in-flow code cell
+	# A bitwise-or-assign has no ACE (and isn't a `x = y` SetVar nor an arithmetic compound-assign), so it
+	# stays an in-flow code cell - the honest fallback for a statement no template can reproduce.
+	irreducible_line.code = "flags |= 2"
 	event.actions.append(irreducible_line)
 	authored.events.append(event)
 	var source: String = str(SheetCompiler.compile(authored, "user://eventforge_lift_source.gd").get("output", ""))
