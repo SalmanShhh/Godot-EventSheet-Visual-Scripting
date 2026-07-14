@@ -61,6 +61,10 @@ static func run() -> bool:
 	ok = _check("the ## prefix is dropped for display", ViewportRowBuilder.strip_comment_prefix("## On: the canvas"), "On: the canvas") and ok
 	ok = _check("a single # prefix is dropped too", ViewportRowBuilder.strip_comment_prefix("# tip: keep it short"), "tip: keep it short") and ok
 
+	# ── is_blank_block: a wholly blank block is round-trip spacing, not code - it renders badge-less. ──
+	ok = _check("a wholly blank block is a blank block", ViewportRowBuilder.is_blank_block(PackedStringArray(["", "  "])), true) and ok
+	ok = _check("a block with any content is not a blank block", ViewportRowBuilder.is_blank_block(PackedStringArray(["", "x"])), false) and ok
+
 	# ── Rendering over an opened sheet whose annotated verb CAN'T lift (a custom return type keeps
 	# it raw) - the shell is the honest fallback for whatever the per-function lift leaves behind,
 	# so the annotation wall still reads as one Define-style line. ──
@@ -113,8 +117,29 @@ static func run() -> bool:
 	# ── Covenant: view-only - the sheet still round-trips byte-identically ──
 	var reemitted: String = str(SheetCompiler.compile(dock.get_current_sheet(), "user://_raw_shell_source.gd").get("output", ""))
 	ok = _check("drift stays 0 with shells rendered", reemitted == source, true) and ok
-
 	dock.free()
+
+	# ── A blank RawCodeRow (round-trip spacing separator) renders with NO "GDScript" badge - was an
+	# empty pill. Build a real sheet with a stray blank block and inspect its rendered spans. ──
+	var blank_source: String = "\n".join(PackedStringArray(["extends Node", "", "", "func _ready() -> void:", "	visible = true"])) + "\n"
+	var blank_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	blank_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	var blank_sheet: EventSheetResource = EventSheetResource.new()
+	var blank_row: RawCodeRow = RawCodeRow.new()
+	blank_row.code = ""
+	blank_sheet.events.append(blank_row)
+	blank_sheet.external_source_path = "user://_blank_block.gd"
+	blank_dock.setup(blank_sheet)
+	var blank_view: EventSheetViewport = blank_dock._active_view()
+	var blank_span_texts: Array = []
+	for blank_entry: Dictionary in blank_view.get_flat_rows():
+		var blank_rd: EventRowData = blank_entry.get("row")
+		if blank_rd != null and blank_rd.source_resource == blank_row:
+			for blank_span: SemanticSpan in blank_rd.spans:
+				blank_span_texts.append(str(blank_span.text))
+	ok = _check("a blank block has no GDScript badge", blank_span_texts.has("GDScript"), false) and ok
+	blank_dock.free()
+
 	return ok
 
 

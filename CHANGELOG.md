@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed - a blank spacing block no longer shows an empty "GDScript" pill
+
+- **A wholly blank code block (a round-trip spacing separator between other blocks) now renders as quiet empty
+  space instead of an empty "GDScript" badge.** It still carries its bytes, so the round-trip is untouched -
+  only the display changes: it takes the same badge-less path a pure-comment block does.
+
 ### Changed - hand-written multi-function .gd files lift instead of reverting to one raw block
 
 - **Opening a hand-written .gd with two or more top-level functions now lifts them instead of reverting the

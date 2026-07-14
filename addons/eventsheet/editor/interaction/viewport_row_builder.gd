@@ -313,6 +313,16 @@ static func is_comment_only_block(code_lines: PackedStringArray) -> bool:
 	return saw_comment
 
 
+## True when a code block is entirely blank lines - a round-trip spacing separator. It carries bytes
+## (so it must not be dropped) but is not real code, so it renders as quiet empty space with NO
+## "GDScript" badge, instead of an empty pill.
+static func is_blank_block(code_lines: PackedStringArray) -> bool:
+	for line: String in code_lines:
+		if not line.strip_edges().is_empty():
+			return false
+	return true
+
+
 ## Drops the leading # / ## (and one following space) from a comment line for DISPLAY only - the row's
 ## raw code stays the serialization truth. "## On: the canvas..." -> "On: the canvas...".
 static func strip_comment_prefix(line: String) -> String:
@@ -882,8 +892,10 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	row_data.line_count = maxi(code_lines.size(), 1)
 	# A block that is ENTIRELY comment lines (## doc comments, # notes) reads as a comment, not code:
 	# no code/"setup" badge, and the leading # is dropped from the display (we are already visibly a
-	# comment). The raw code stays the serialization truth - these spans are display-only.
-	if is_comment_only_block(code_lines):
+	# comment). The raw code stays the serialization truth - these spans are display-only. A wholly BLANK
+	# block (a round-trip spacing separator) takes the same badge-less path so it renders as quiet empty
+	# space, never an empty "GDScript" pill.
+	if is_comment_only_block(code_lines) or is_blank_block(code_lines):
 		var comment_style: EventSheetEventStyle = _viewport._get_event_style()
 		var note_spans: Array[SemanticSpan] = []
 		for note_index in range(code_lines.size()):
