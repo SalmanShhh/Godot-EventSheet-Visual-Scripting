@@ -49,6 +49,10 @@ func _ensure_comment_dialog() -> void:
 	_comment_text_edit = TextEdit.new()
 	_comment_text_edit.custom_minimum_size = Vector2(520.0, 200.0)
 	_comment_text_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_comment_text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Wrap long lines to the box width so the whole comment is readable without a horizontal scroll (C3
+	# style); Enter still inserts a newline (a multiline TextEdit consumes it rather than confirming).
+	_comment_text_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	_comment_text_edit.placeholder_text = "Comment text (multiline supported; highlight text to format it)"
 	form.add_child(_comment_text_edit)
 	# Discord-style formatting: highlight text and a small unfocused bar floats above the

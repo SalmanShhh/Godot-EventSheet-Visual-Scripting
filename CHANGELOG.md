@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed - the Edit Comment box wraps long text instead of scrolling sideways
+
+- **The Edit Comment dialog's text box now wraps long lines to its width and fills the dialog**, so the whole
+  comment is readable without a horizontal scroll (C3 style). Newlines still work - it is a multiline field.
+
 ### Fixed - a blank spacing block no longer shows an empty "GDScript" pill
 
 - **A wholly blank code block (a round-trip spacing separator between other blocks) now renders as quiet empty
