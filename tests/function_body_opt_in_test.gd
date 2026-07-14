@@ -63,9 +63,44 @@ static func run() -> bool:
 		output_after == output_baseline.replace("\treturn 1", "\treturn 0"), true) and ok
 	ok = _check("beta's function block survives verbatim (sibling guarantee)",
 		output_after.contains("func beta() -> int:\n\treturn 2"), true) and ok
-
 	dock.free()
+
+	# ── A published-verb HEADER row deletes nothing (its resource is the EventFunction, not in sheet.events
+	# or a body), so a delete/cut targeting only it must NEVER unlock a read-only preview or false-dirty -
+	# 2b's new Define-row context menu puts users on that row, so this stays byte-safe. ──
+	var preview: EventSheetResource = EventSheetResource.new()
+	preview.host_class = "Node2D"
+	preview.external_source_path = "user://_preview_pack_test.gd"
+	preview.read_only = true
+	preview.functions.append(_lifted_verb("gamma", "return 3"))
+	var pdock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	pdock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	pdock.setup(preview)
+	var pview: EventSheetViewport = pdock._active_view()
+	var header_index: int = -1
+	var pflat: Array = pview.get_flat_rows()
+	for i in range(pflat.size()):
+		var rd: EventRowData = pflat[i].get("row")
+		if rd != null and rd.row_uid == "define_fn_gamma":
+			header_index = i
+	ok = _check("the gamma Define header row is present", header_index >= 0, true) and ok
+	if header_index >= 0:
+		pview._select_row(header_index)
+	pdock._delete_selected_rows()
+	ok = _check("deleting a Define header leaves the verb intact (nothing removed)",
+		_find_function_named(pdock, "gamma") != null, true) and ok
+	ok = _check("deleting a Define header does NOT unlock a read-only preview",
+		pdock.get_current_sheet().read_only, true) and ok
+	pdock.free()
+
 	return ok
+
+
+static func _find_function_named(dock: EventSheetDock, fn_name: String) -> EventFunction:
+	for entry: Variant in dock.get_current_sheet().functions:
+		if entry is EventFunction and (entry as EventFunction).function_name == fn_name:
+			return entry as EventFunction
+	return null
 
 
 ## A reverse-lifted verb (no @ace annotations) with a one-line raw body, as the importer produces one.

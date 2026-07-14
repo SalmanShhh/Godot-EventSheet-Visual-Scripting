@@ -512,11 +512,22 @@ func _delete_selected_rows() -> void:
 		resources_to_delete.append(source_resource)
 	if resources_to_delete.is_empty():
 		return
+	# Keep only rows we can actually locate. A published-verb (Define) header's source_resource is the
+	# EventFunction itself, which lives in sheet.functions - not sheet.events or a function body - so it is
+	# never locatable and deleting it removes nothing. Filtering BEFORE the funnel means a delete / cut that
+	# targets only such a row does not enter _perform_undoable_sheet_edit at all, so it can't unlock a
+	# read-only preview or false-dirty the sheet for a delete that changes nothing.
+	var deletable: Array[Resource] = []
+	for resource_entry in resources_to_delete:
+		if not _dock._find_resource_location(resource_entry).is_empty():
+			deletable.append(resource_entry)
+	if deletable.is_empty():
+		return
 	var deleted: bool = _dock._perform_undoable_sheet_edit("Delete Row", func() -> bool:
-		resources_to_delete.sort_custom(func(a: Resource, b: Resource) -> bool:
+		deletable.sort_custom(func(a: Resource, b: Resource) -> bool:
 			return _resource_sort_key(a) > _resource_sort_key(b)
 		)
-		for resource_entry in resources_to_delete:
+		for resource_entry in deletable:
 			var location: Dictionary = _dock._find_resource_location(resource_entry)
 			if location.is_empty():
 				continue
