@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - a sheet's verbs read inline instead of behind a "Published verbs" section
+
+- **A sheet's functions (its published verbs) now render as inline, role-tinted event-rows** - one Define
+  row each (Action / Condition / Expression badge, friendly name, a `→ type` chip for value-returning
+  verbs, the category chip, an `internal` chip for un-exposed helpers, and the muted real signature) -
+  reading top-to-bottom like the function definitions in a code file, instead of hiding behind a folded
+  "Published verbs" section header. Pure view change: `sheet.functions` and the byte-exact round-trip of
+  the underlying .gd are untouched.
+
 ### Added - dashed line, ring, and rect on the Drawing Canvas
 
 - **Three new draw verbs - Draw Dashed Line, Draw Dashed Ring, Draw Dashed Rect** - render dashed strokes

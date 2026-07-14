@@ -1,10 +1,10 @@
-# EventForge - Define-block rendering: the sheet's functions (its published verbs) appear on the
-# canvas as a foldable "Published verbs" section, one Define row per EventFunction. Functions live in
-# sheet.functions, a SEPARATE array from sheet.events, so before this view a behaviour pack's whole
-# vocabulary was invisible outside the Functions dialog. Pins: the role classification (void=Action /
-# bool=Condition / typed=Expression, mirroring the ACE Studio cards), the badge/chip spans, the
-# compiler-bound signature line, the fold-with-fingerprint default, and - covenant-critical - that the
-# view is a pure READ (opening a real pack still round-trips byte-identically).
+# EventForge - Define-block rendering: the sheet's functions (its verbs) appear on the canvas as INLINE
+# role-tinted Define rows, one per EventFunction, at root level (no "Published verbs" section wrapper) - so
+# a sheet reads top-to-bottom like a code file. Functions live in sheet.functions, a SEPARATE array from
+# sheet.events, so before this view a behaviour pack's whole vocabulary was invisible outside the Functions
+# dialog. Pins: the role classification (void=Action / bool=Condition / typed=Expression, mirroring the ACE
+# Studio cards), the badge/chip spans, the compiler-bound signature line, the inline-at-root layout, and -
+# covenant-critical - that the view is a pure READ (opening a real pack still round-trips byte-identically).
 @tool
 class_name DefineBlockRowsTest
 extends RefCounted
@@ -26,24 +26,26 @@ static func run() -> bool:
 	dock.setup(sheet)
 	var view: EventSheetViewport = dock._active_view()
 
-	# ── The section header: present, folded by default, fingerprint tells the vocabulary weight ──
-	var header: EventRowData = _find_row_by_uid_prefix(view, "published_verbs_")
-	ok = _check("the Published verbs section exists", header != null, true) and ok
-	ok = _check("folded by default (weight at a glance, detail on demand)", header.folded if header != null else false, true) and ok
-	ok = _check("one Define child per function", header.children.size() if header != null else -1, 4) and ok
-	var fingerprint: String = str(header.spans[1].text) if header != null and header.spans.size() > 1 else ""
-	ok = _check("fingerprint counts exposed verbs by role + internals", fingerprint, "⚡1 · ?1 · ƒx1 · 1 internal") and ok
+	# ── Inline: one Define row per function, at root level, NOT hidden behind a section header ──
+	var define_rows: Array[EventRowData] = _find_rows_by_uid_prefix(view, "define_fn_")
+	ok = _check("one inline Define row per function", define_rows.size(), 4) and ok
+	ok = _check("no 'Published verbs' section wrapper remains",
+		_find_row_by_uid_prefix(view, "published_verbs_") == null, true) and ok
+	ok = _check("the inline verb rows sit at root indent",
+		define_rows[0].indent if define_rows.size() > 0 else -1, 0) and ok
+	ok = _check("the verbs render in sheet order (take_damage first)",
+		_span_text(define_rows[0] if define_rows.size() > 0 else null, 1), "Take Damage") and ok
 
 	# ── Role classification mirrors the ACE Studio cards ──
 	ok = _check("void → action", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_NIL, true, "", "")), "action") and ok
 	ok = _check("bool → condition", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_BOOL, true, "", "")), "condition") and ok
 	ok = _check("float → expression", ViewportRowBuilder.define_role_for(_make_function("f", TYPE_FLOAT, true, "", "")), "expression") and ok
 
-	# ── The Define rows themselves (unfold to inspect the children) ──
-	var action_row: EventRowData = header.children[0] if header != null else null
-	var condition_row: EventRowData = header.children[1] if header != null else null
-	var expression_row: EventRowData = header.children[2] if header != null else null
-	var internal_row: EventRowData = header.children[3] if header != null else null
+	# ── The Define rows themselves, in sheet order ──
+	var action_row: EventRowData = define_rows[0] if define_rows.size() > 0 else null
+	var condition_row: EventRowData = define_rows[1] if define_rows.size() > 1 else null
+	var expression_row: EventRowData = define_rows[2] if define_rows.size() > 2 else null
+	var internal_row: EventRowData = define_rows[3] if define_rows.size() > 3 else null
 	ok = _check("action badge", _span_text(action_row, 0), "Action") and ok
 	ok = _check("display name prefers @ace_name", _span_text(action_row, 1), "Take Damage") and ok
 	ok = _check("category chip rides along", _row_has_span_text(action_row, "Health"), true) and ok
@@ -72,25 +74,24 @@ static func run() -> bool:
 	ok = _check("no template yields an empty authored line (auto path used)",
 		ViewportRowBuilder.friendly_template_line(_make_function("f", TYPE_NIL, true, "", "")), "") and ok
 
-	# ── A function-less sheet grows no section ──
+	# ── A function-less sheet grows no verb rows ──
 	var empty_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	empty_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	empty_dock.setup(EventSheetResource.new())
-	ok = _check("no functions → no section", _find_row_by_uid_prefix(empty_dock._active_view(), "published_verbs_") == null, true) and ok
+	ok = _check("no functions → no verb rows", _find_row_by_uid_prefix(empty_dock._active_view(), "define_fn_") == null, true) and ok
 	empty_dock.free()
 
 	# ── Covenant: the view is a pure read - opening a REAL pack still round-trips byte-identically.
-	# Since the per-function shell-lift, an opened pack's verbs arrive as REAL EventFunctions, so the
-	# Published verbs section appears for packs too - one Define child per lifted function.
+	# Since the per-function shell-lift, an opened pack's verbs arrive as REAL EventFunctions, so its
+	# verbs render inline too - one Define row per lifted function.
 	var pack_path: String = "res://eventsheet_addons/health/health_behavior.gd"
 	var source: String = (FileAccess.open(pack_path, FileAccess.READ)).get_as_text()
 	dock._load_sheet_from_path(pack_path)  # the real user open path (verify-lift included)
 	var opened: EventSheetResource = dock.get_current_sheet()
 	ok = _check("an opened pack lifts real functions", opened.functions.size() > 20, true) and ok
-	var pack_header: EventRowData = _find_row_by_uid_prefix(dock._active_view(), "published_verbs_")
-	ok = _check("the pack shows its verbs section", pack_header != null, true) and ok
-	ok = _check("one Define child per lifted function",
-		pack_header.children.size() if pack_header != null else -1, opened.functions.size()) and ok
+	var pack_rows: Array[EventRowData] = _find_rows_by_uid_prefix(dock._active_view(), "define_fn_")
+	ok = _check("the pack shows its verbs inline - one row per lifted function",
+		pack_rows.size(), opened.functions.size()) and ok
 	var reemitted: String = str(SheetCompiler.compile(opened, pack_path).get("output", ""))
 	ok = _check("round-trip stays byte-identical with the view built (drift=0)", reemitted == source, true) and ok
 
@@ -129,6 +130,15 @@ static func _find_row_by_uid_prefix(view: EventSheetViewport, prefix: String) ->
 		if row_data != null and row_data.row_uid.begins_with(prefix):
 			return row_data
 	return null
+
+
+static func _find_rows_by_uid_prefix(view: EventSheetViewport, prefix: String) -> Array[EventRowData]:
+	var found: Array[EventRowData] = []
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.row_uid.begins_with(prefix):
+			found.append(row_data)
+	return found
 
 
 static func _span_text(row_data: EventRowData, index: int) -> String:

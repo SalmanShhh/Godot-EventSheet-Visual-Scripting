@@ -190,64 +190,21 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 	return row_data
 
 
-## The sheet's functions as visible rows - one foldable "Published verbs" section whose children are
-## Define blocks, one per EventFunction. Functions live in `sheet.functions`, a SEPARATE array from
-## `sheet.events`, so without this they never appear on the canvas at all: a behaviour pack's whole
-## vocabulary (its actions/conditions/expressions) was invisible until you opened the Functions dialog.
-## This is a pure READ view - it never writes to either array and never affects codegen - so the
-## byte-exact round-trip of the underlying .gd is untouched. Folded by default with a fingerprint
-## ("⚡2 · ?1 · ƒx3") so a pack still tells its vocabulary weight at a glance, like a collapsed group.
+## The sheet's verbs (its functions) as INLINE event-rows - one role-tinted Define row per EventFunction,
+## at root level, so a sheet reads top-to-bottom like the function definitions in a code file. Functions
+## live in `sheet.functions`, a SEPARATE array from `sheet.events`, so without this they never appear on
+## the canvas at all: a behaviour pack's whole vocabulary was invisible until you opened the Functions
+## dialog. This is a pure READ view - it never writes to either array and never affects codegen - so the
+## byte-exact round-trip of the underlying .gd is untouched. (Formerly a folded "Published verbs" section;
+## the verbs now read inline, role-tinted like any Action / Condition / Expression, rather than hiding
+## behind a section header.)
 func _build_published_verbs_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
 	if sheet == null or sheet.functions.is_empty():
 		return rows
-	var children: Array[EventRowData] = []
-	var counts: Dictionary = {"action": 0, "condition": 0, "expression": 0, "internal": 0}
 	for entry: Variant in sheet.functions:
-		if not (entry is EventFunction):
-			continue
-		var event_function: EventFunction = entry as EventFunction
-		var role: String = define_role_for(event_function)
-		if event_function.expose_as_ace:
-			counts[role] = int(counts[role]) + 1
-		else:
-			counts["internal"] = int(counts["internal"]) + 1
-		children.append(_build_define_function_row(event_function, 1))
-	if children.is_empty():
-		return rows
-	var header := EventRowData.new()
-	header.indent = 0
-	header.row_type = EventRowData.RowType.SECTION
-	header.source_resource = null  # inert for selection/delete, like the add-event footer
-	header.row_uid = "published_verbs_%d" % sheet.get_instance_id()
-	header.children = children
-	header.folded = bool(_viewport._fold_state.get(header.row_uid, true))
-	var fingerprint_parts: PackedStringArray = PackedStringArray()
-	if int(counts["action"]) > 0:
-		fingerprint_parts.append("⚡%d" % int(counts["action"]))
-	if int(counts["condition"]) > 0:
-		fingerprint_parts.append("?%d" % int(counts["condition"]))
-	if int(counts["expression"]) > 0:
-		fingerprint_parts.append("ƒx%d" % int(counts["expression"]))
-	if int(counts["internal"]) > 0:
-		fingerprint_parts.append("%d internal" % int(counts["internal"]))
-	header.spans = [
-		_make_span("Published verbs", SemanticSpan.SpanType.KEYWORD, {
-			"editable": false,
-			"badge": true,
-			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
-			"badge_fg": EventSheetPalette.COLOR_SECTION_BADGE_FG,
-			"kind": "published_verbs",
-			"line_index": 0
-		}),
-		_make_span(" · ".join(fingerprint_parts), SemanticSpan.SpanType.COMMENT, {
-			"editable": false,
-			"kind": "published_verbs",
-			"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.8)
-		})
-	]
-	rows.append(header)
+		if entry is EventFunction:
+			rows.append(_build_define_function_row(entry as EventFunction, 0))
 	return rows
 
 
@@ -383,7 +340,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	# name plus a comma-joined slot list. The real `func ... -> Type` still follows as a muted code cue
 	# below, so the row stays code-adjacent and can never disagree with what compiles.
 	# Slight per-role tint on the verb name so an Action / Condition / Expression reads distinctly at a
-	# glance in the Published verbs list (reinforces the role badge without a loud colour).
+	# glance among the inline verb rows (reinforces the role badge without a loud colour).
 	var name_color: Color = _define_role_name_color(role)
 	var authored_line: String = friendly_template_line(event_function)
 	if not authored_line.is_empty():

@@ -261,8 +261,8 @@ func select_sheet_row_for_code_line(line: int) -> void:
 		var resource: Resource = instance_from_id(int(str((entry as Dictionary).get("uid", "0")))) as Resource
 		if resource == null:
 			continue
-		# reveal_resource falls back where plain selection can't reach: a lifted function's Define
-		# block lives inside the folded "Published verbs" section, and reveal unfolds ancestors.
+		# reveal_resource falls back where plain selection can't reach (e.g. a resource nested inside a
+		# folded section like the Class-setup strip); it unfolds ancestors before selecting.
 		if _dock._viewport.select_resource(resource) or _dock._viewport.reveal_resource(resource):
 			_dock._update_code_panel_highlight()
 			return
