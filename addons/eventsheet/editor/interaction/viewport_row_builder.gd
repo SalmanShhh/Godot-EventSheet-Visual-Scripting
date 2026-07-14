@@ -322,6 +322,11 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		"condition": [EventSheetPalette.COLOR_ACE_CONDITION_BADGE_BG, EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG],
 		"expression": [EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG, EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG],
 	}
+	# The whole verb reads as a Construct-style event block tinted by its ACE kind: a faint wash of the
+	# role's accent behind the row (drawn by the renderer's custom_color path) plus a left accent bar, so
+	# Action / Condition / Expression are distinguishable at a glance, not only by the badge word.
+	var role_accent: Color = (badge_colors[role] as Array)[1]
+	row_data.custom_color = Color(role_accent.r, role_accent.g, role_accent.b, 0.16)
 	var display_name: String = event_function.ace_display_name.strip_edges()
 	if display_name.is_empty():
 		display_name = event_function.function_name.capitalize()

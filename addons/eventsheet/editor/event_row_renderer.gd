@@ -225,7 +225,15 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			true
 		)
 	else:
-		control.draw_rect(row_rect, BG_1 if alternating else BG_0, true)
+		var section_bg: Color = BG_1 if alternating else BG_0
+		# A row may carry a faint role tint (a published-verb Define row washed by its ACE kind): blend it
+		# over the base so the block reads as its kind - a Construct-style event block - then a left accent
+		# bar in the same hue drives the cue home. custom_color.a == 0 rows are untouched.
+		if row_data.custom_color.a > 0.01:
+			section_bg = section_bg.lerp(Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, section_bg.a), row_data.custom_color.a)
+		control.draw_rect(row_rect, section_bg, true)
+		if row_data.custom_color.a > 0.01:
+			control.draw_rect(Rect2(row_rect.position, Vector2(3.0, row_rect.size.y)), Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, 0.9), true)
 	# The event block's silhouette: the LEFT edge (condition lane) carries the full corner
 	# radius - the bottom-left always rounds - and the RIGHT edge (action lane) half of it,
 	# so blocks read as opening toward their actions. Radius 0 = the classic square look.
