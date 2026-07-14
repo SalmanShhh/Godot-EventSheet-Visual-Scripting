@@ -2320,7 +2320,7 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 					# fully-invalid option list degrades to a plain String cell (never a broken marker).
 					var enum_token: String = table_enum_type((column as Dictionary).get("options", []))
 					column_type = enum_token if not enum_token.is_empty() else "String"
-				elif not column_type in ["String", "int", "float", "bool"]:
+				elif not column_type in ["String", "int", "float", "bool", "color"]:
 					column_type = "String"
 				column_pairs.append("%s=%s" % [column_name, column_type])
 			if column_pairs.is_empty():

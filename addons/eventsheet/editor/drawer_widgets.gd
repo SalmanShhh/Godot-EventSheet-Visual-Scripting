@@ -414,6 +414,8 @@ class DrawerTable:
 			"enum":
 				var options: Array = column.get("options", []) if column.get("options") is Array else []
 				return str(options[0]) if not options.is_empty() else ""
+			"color":
+				return "#ffffff"
 		return ""
 
 	func _rebuild() -> void:
@@ -489,6 +491,18 @@ class DrawerTable:
 						row[column_name] = str(options[idx])
 						value_changed.emit(get_value()))
 				return choice
+			"color":
+				# A visual swatch instead of a typed hex. The stored value stays a String
+				# ("#rrggbb", or "#rrggbbaa" when translucent) so the .tres bytes are unchanged;
+				# Color.from_string reads back both hex and legacy named colors like "white".
+				var swatch: ColorPickerButton = ColorPickerButton.new()
+				swatch.disabled = not editable
+				swatch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				swatch.color = Color.from_string(str(row.get(column_name, "")), Color.WHITE)
+				swatch.color_changed.connect(func(picked: Color) -> void:
+					row[column_name] = "#" + picked.to_html(picked.a < 1.0)
+					value_changed.emit(get_value()))
+				return swatch
 		var edit: LineEdit = LineEdit.new()
 		edit.text = str(row.get(column_name, ""))
 		edit.editable = editable

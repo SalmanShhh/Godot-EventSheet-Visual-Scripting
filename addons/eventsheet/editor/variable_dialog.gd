@@ -306,7 +306,7 @@ func init_dialog(parent_node: Node) -> void:
 	# The table drawer's one config field: its column schema, in plain "name:type" pairs.
 	_attr_table_columns_edit = LineEdit.new()
 	_attr_table_columns_edit.placeholder_text = "columns, e.g. item:String, count:int, rare:bool"
-	_attr_table_columns_edit.tooltip_text = "One column per entry: name:type (String, int, float, bool, or enum(a|b|c) for a dropdown).\nEach Array element becomes a row with these cells."
+	_attr_table_columns_edit.tooltip_text = "One column per entry: name:type (String, int, float, bool, color for a swatch, or enum(a|b|c) for a dropdown).\nEach Array element becomes a row with these cells."
 	_attr_table_columns_edit.text_changed.connect(func(_t: String) -> void: _refresh_drawer_preview())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Table columns", _attr_table_columns_edit))
 	# Live "what the drawer looks like" preview - the actual widget, updated as the type / drawer / bounds change.
@@ -1524,7 +1524,7 @@ func _dialog_table_columns() -> Array:
 		if not enum_options.is_empty():
 			columns.append({"name": column_name, "type": "enum", "options": enum_options})
 			continue
-		if not column_type in ["String", "int", "float", "bool"]:
+		if not column_type in ["String", "int", "float", "bool", "color"]:
 			column_type = "String"
 		columns.append({"name": column_name, "type": column_type})
 	return columns

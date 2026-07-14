@@ -273,6 +273,33 @@ static func run() -> bool:
 	all_passed = _eq("a fresh enum row seeds the first option", enum_grid.get_value(), [{"kind": "circle"}]) and all_passed
 	enum_grid.free()
 
+	# --- Color columns: a String cell shown as a swatch (ColorPickerButton). The stored value stays a
+	# plain hex String, so the marker just gains a bare "color" type token that round-trips verbatim.
+	var color_var: LocalVariable = LocalVariable.new()
+	color_var.name = "steps"
+	color_var.type_name = "Array"
+	color_var.default_value = []
+	color_var.exported = true
+	color_var.attributes = {"drawer": "table", "table_columns": [{"name": "tint", "type": "color"}, {"name": "x", "type": "float"}]}
+	var color_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:tint=color,x=float\") var steps: Array = []"
+	all_passed = _eq("a color column emits its bare type token",
+		SheetCompiler._emit_tree_variable_line(color_var), color_expected) and all_passed
+	var color_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + color_expected + "\n")
+	var color_lifted: LocalVariable = _find(color_sheet, "steps")
+	all_passed = _eq("the lift recovers the color column verbatim",
+		(color_lifted.attributes as Dictionary).get("table_columns") if color_lifted != null else null,
+		[{"name": "tint", "type": "color"}, {"name": "x", "type": "float"}]) and all_passed
+	if color_lifted != null:
+		all_passed = _eq("a color column re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(color_lifted), color_expected) and all_passed
+	all_passed = _eq("the editor parse keeps a color column",
+		EventSheetAttributeDrawers.parse_table_columns("tint=color,x=float"),
+		[{"name": "tint", "type": "color"}, {"name": "x", "type": "float"}]) and all_passed
+	var color_grid: EventSheetDrawerWidgets.DrawerTable = EventSheetDrawerWidgets.DrawerTable.new([{"name": "tint", "type": "color"}])
+	color_grid._on_add_row()
+	all_passed = _eq("a fresh color row seeds a valid hex String", color_grid.get_value(), [{"tint": "#ffffff"}]) and all_passed
+	color_grid.free()
+
 	# A drawer on a CLAMPED var (setter-suffixed "= 120:" line): the drawer must survive the lift -
 	# the expression-default emission previously quoted the suffix and the extraction verify failed,
 	# stranding the drawer as a verbatim hint (found by the Inspector Designer over EnemyStats).

@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - table drawer: a color column is a swatch, not hand-typed hex
+
+- **A table-drawer column typed `color` renders a color-picker swatch** instead of a free-text hex
+  field - so the Drawing Canvas prefab's **color** column is now a click-to-pick swatch, no more typing
+  `#ff8800` by hand. Generic: any `eventsheet:table` drawer can use it (`tint:color` in the variable
+  dialog). The stored cell value stays a plain hex String (`#rrggbb`, or `#rrggbbaa` when translucent),
+  so the `.tres` data and the byte-exact marker round-trip are unchanged; a legacy named color like
+  `white` still reads back into the swatch. Pinned by tests/inspector_drawer_roundtrip_test.gd (emit,
+  lift, re-emit byte-identical, fresh-row default); `drifted=0`.
+
 ### Changed - a published verb reads as an event-sheet line, not a raw signature
 
 - **Open a behavior pack as a sheet and its verbs now read like event-sheet actions**, not `func
