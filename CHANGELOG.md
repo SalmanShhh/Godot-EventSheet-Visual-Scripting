@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - DrawingPrefabResource steps edit as shape-aware titled cards, not opaque p1/p2/p3
+
+- **Each step in a DrawingPrefabResource now edits as a titled card whose fields match its shape.** Adding a
+  step and picking its shape shows only that shape's fields, each with a plain title: a Circle shows
+  "Radius", a Ring shows "Radius" + "Thickness", a Rect shows "Width" + "Height", a Line shows "End X" +
+  "End Y" + "Thickness", a Cone shows "Facing" + "FOV" + "Radius", a Stamp shows "Scale" + "Spin" +
+  "Texture" - plus a common "Offset X/Y" and a colour swatch, with reorder and remove per card. This
+  replaces the generic grid's opaque "P1 / P2 / P3" columns (where P1 meant radius for one shape and width
+  for the next). The stored keys are unchanged, so the pack, the rasterizer, the Draw Prefab action, and the
+  .tres bytes are all untouched - and the live preview panel still repaints on every tweak.
+
 ### Added - right-click a published verb to add a parameter (structured Name/Type/Default/Description)
 
 - **Right-clicking a Define (published-verb) row now offers "Edit Verb…" and "Add Parameter".** Adding an

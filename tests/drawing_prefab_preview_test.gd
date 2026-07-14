@@ -50,11 +50,43 @@ static func run() -> bool:
 	# in this headless (non-editor) suite. They are parse-checked at build time and verified live in-editor;
 	# both are thin wrappers over the rasterizer pinned above, which is their substantive logic.
 
+	# The shape-aware steps editor's substance is its INNER Control (a plain VBoxContainer, so it DOES
+	# instantiate headless). On load it preserves the stored keys exactly - never injecting a `texture`
+	# slot the source lacked, never coercing a legacy color name - so opening a prefab reads back faithfully;
+	# only an explicit edit changes the data.
+	var steps_editor: EventSheetDrawingPrefabInspector.ShapeStepsEditor = EventSheetDrawingPrefabInspector.ShapeStepsEditor.new()
+	steps_editor.set_steps([{"kind": "line", "x": 1.0, "y": 2.0, "p1": 5.0, "p2": 6.0, "p3": 3.0, "color": "red"}])
+	var roundtrip: Array = steps_editor.get_steps()
+	var first: Dictionary = roundtrip[0] if not roundtrip.is_empty() else {}
+	all_passed = _check("steps editor round-trips the stored keys unchanged", "|".join(first.keys()), "kind|x|y|p1|p2|p3|color") and all_passed
+	all_passed = _check("steps editor keeps a legacy color name verbatim on load", str(first.get("color", "")), "red") and all_passed
+	# Each shape titles its own slots (never the raw p1/p2/p3) - the field vocabulary IS the promise this
+	# feature makes to a beginner, so pin it per shape.
+	all_passed = _check("circle titles p1 as Radius", _shape_labels("circle"), "Radius") and all_passed
+	all_passed = _check("rect titles p1/p2 as Width/Height", _shape_labels("rect"), "Width|Height") and all_passed
+	all_passed = _check("line titles p1/p2/p3 as End X/End Y/Thickness", _shape_labels("line"), "End X|End Y|Thickness") and all_passed
+	all_passed = _check("cone titles p1/p2/p3 as Facing/FOV/Radius", _shape_labels("cone"), "Facing|FOV|Radius") and all_passed
+	# A freshly added step is a visible filled circle with every storage slot seeded (valid immediately).
+	steps_editor.set_steps([])
+	steps_editor._on_add()
+	var added: Dictionary = steps_editor.get_steps()[0]
+	all_passed = _check("a new step defaults to a circle", str(added.get("kind", "")), "circle") and all_passed
+	all_passed = _check("a new step seeds every storage slot", added.has("p1") and added.has("texture") and added.has("color"), true) and all_passed
+	steps_editor.free()
+
 	return all_passed
 
 
 static func _is_bg(c: Color, bg: Color) -> bool:
 	return absf(c.r - bg.r) < 0.05 and absf(c.g - bg.g) < 0.05 and absf(c.b - bg.b) < 0.05
+
+
+## The titled field labels a shape shows, pipe-joined in display order (circle -> "Radius").
+static func _shape_labels(kind: String) -> String:
+	var labels: PackedStringArray = PackedStringArray()
+	for field: Variant in EventSheetDrawingPrefabInspector.ShapeStepsEditor.SHAPE_FIELDS.get(kind, []):
+		labels.append(str((field as Dictionary).get("label", "")))
+	return "|".join(labels)
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

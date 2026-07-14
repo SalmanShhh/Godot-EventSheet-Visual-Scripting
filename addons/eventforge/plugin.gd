@@ -233,14 +233,16 @@ func _enter_tree() -> void:
 	# stream, and feed them to the workspace editor's Live Values window.
 	_live_values_debugger = EventSheetLiveValuesDebugger.new()
 	add_debugger_plugin(_live_values_debugger)
+	# DrawingPrefabResource: a shape-aware `steps` editor + a live preview panel + a FileSystem/resource-picker
+	# thumbnail, all rendered by the tree-free rasterizer. Registered BEFORE the generic attribute drawers so
+	# its _parse_property claims `steps` (the titled per-shape editor) ahead of the generic p1/p2/p3 grid.
+	# Cosmetic - a prefab still edits as a plain steps table and draws identically without this plugin.
+	_drawing_prefab_inspector = load(DRAWING_PREFAB_INSPECTOR_PATH).new()
+	add_inspector_plugin(_drawing_prefab_inspector)
 	# Tier 3 attribute drawers (progress bars…): purely cosmetic - generated scripts
 	# degrade to plain fields without this plugin.
 	_attribute_drawers_plugin = EventSheetAttributeDrawers.new()
 	add_inspector_plugin(_attribute_drawers_plugin)
-	# DrawingPrefabResource previews: an Inspector panel + a FileSystem/resource-picker thumbnail, both
-	# rendered by the tree-free rasterizer. Cosmetic - a prefab still edits as a plain steps table without them.
-	_drawing_prefab_inspector = load(DRAWING_PREFAB_INSPECTOR_PATH).new()
-	add_inspector_plugin(_drawing_prefab_inspector)
 	_drawing_prefab_preview_gen = load(DRAWING_PREFAB_PREVIEW_GEN_PATH).new()
 	var prefab_previewer: EditorResourcePreview = get_editor_interface().get_resource_previewer()
 	if prefab_previewer != null:
