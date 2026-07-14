@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - theme editor: hover descriptions + a live preview that shows structural changes too
+
+- **Every theme property now has a plain-language hover description** (on the label and its control) that
+  says what it does - "The banner colour behind a full-width comment", "Height of a single event row,
+  in pixels - raise it for more breathing room" - so you are not decoding token names like
+  `comment_row_background_color`. Any token without a written description falls back to its humanized name.
+- **The live preview now reflects STRUCTURAL edits, not just colours.** Adjusting a numeric token (row
+  height, corner radii, lane widths, region line thickness) rebuilds the sample sheet so you see the
+  layout change immediately, instead of a repaint that kept the old cached layout.
+
 ### Changed - published verbs tint by role (Action / Condition / Expression)
 
 - **A published verb's name now carries a slight role tint** in the Published verbs list, so an Action,

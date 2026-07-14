@@ -118,6 +118,64 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	return sheet
 
 
+## Plain-language descriptions of what each theme token does, shown as a hover tooltip on its row.
+## A token not listed here falls back to its humanized name (still readable, just less descriptive).
+const _TOKEN_DESCRIPTIONS := {
+	"sheet_background_color": "The colour behind the whole sheet, outside the rows.",
+	"row_background_color": "The background of a normal event row.",
+	"row_background_alt_color": "The background of every OTHER row (the zebra stripe).",
+	"row_border_color": "The thin line between rows.",
+	"condition_lane_color": "A faint tint over the conditions (left) lane.",
+	"action_lane_color": "A faint tint over the actions (right) lane.",
+	"lane_divider_color": "The vertical line splitting conditions from actions.",
+	"condition_lane_ratio": "How much of the row width the conditions lane takes (0.2 - 0.8).",
+	"minimum_conditions_lane_width": "The conditions lane never shrinks below this many pixels.",
+	"condition_lane_padding": "Inner padding on the conditions lane, in pixels.",
+	"condition_badge_column_width": "Width reserved for the trigger/condition badge column.",
+	"action_lane_padding": "Inner padding on the actions lane, in pixels.",
+	"lane_divider_width": "Thickness of the conditions/actions divider line.",
+	"minimum_row_height": "Height of a single event row, in pixels - raise it for more breathing room.",
+	"trigger_badge_background_color": "Fill of the trigger arrow badge (On Ready, On Signal...).",
+	"trigger_badge_foreground_color": "Icon/text colour on the trigger badge.",
+	"group_background_color": "Background of a group header row.",
+	"group_background_alt_color": "Alternate group header background (zebra).",
+	"group_accent_color": "The group's left accent stripe and hairlines.",
+	"group_title_color": "The group title text colour.",
+	"group_badge_background_color": "Fill of the count badge on a group.",
+	"group_badge_foreground_color": "Text colour on the group count badge.",
+	"group_fold_background_color": "Background of the fold triangle box on a group.",
+	"comment_row_background_color": "The banner colour behind a full-width comment.",
+	"comment_text_color": "The text colour of comments.",
+	"selection_fill_color": "The highlight over a selected row.",
+	"hover_fill_color": "The tint over the row under the mouse.",
+	"column_header_background_color": "Background of the Conditions / Actions column header bar.",
+	"column_header_conditions_color": "The 'Conditions' header label colour.",
+	"column_header_actions_color": "The 'Actions' header label colour.",
+	"invert_marker_color": "The red X shown on an inverted (negated) condition.",
+	"object_label_color": "The object/origin label before each condition/action (System, node class).",
+	"value_highlight_color": "Parameter values (numbers, strings) highlighted inside ACE text.",
+	"cell_hover_color": "Tint over a single condition/action cell under the mouse.",
+	"behavior_accent_color": "The soft-purple 'this is a behavior' accent (banner, region default).",
+	"event_corner_radius": "Corner roundness of the event block, in pixels (0 = square).",
+	"cell_corner_radius": "Corner roundness of individual condition/action cells.",
+	"group_corner_radius": "Corner roundness of group rows (0 = square bar).",
+	"region_corner_radius": "Corner roundness of region marker bubbles.",
+	"region_line_width": "Line thickness of region marker borders.",
+	"text_color": "The text colour of the chip.",
+	"chip_background_color": "Fill of the condition/action chip.",
+	"chip_border_color": "Border of the condition/action chip.",
+	"chip_hover_color": "Chip fill when hovered.",
+	"badge_background_color": "Fill of the role badge on the chip.",
+	"badge_foreground_color": "Text colour of the role badge.",
+	"corner_radius": "Corner roundness of the chip, in pixels.",
+}
+
+
+## The hover description for a token (falls back to its humanized name).
+static func _token_description(token_name: String) -> String:
+	return str(_TOKEN_DESCRIPTIONS.get(token_name, token_name.capitalize()))
+
+
 ## Exported tokens of a style resource that the form can edit (Color/float/int/bool).
 static func editable_tokens(style_resource: Resource) -> Array[Dictionary]:
 	var tokens: Array[Dictionary] = []
@@ -273,22 +331,27 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 	var section_box: VBoxContainer = EventSheetPopupUI.form_box()
 	for token: Dictionary in editable_tokens(style_resource):
 		var token_name: String = str(token.get("name"))
+		var description: String = _token_description(token_name)
 		var row: HBoxContainer = HBoxContainer.new()
+		row.tooltip_text = description
 		var label: Label = Label.new()
 		label.text = token_name.capitalize()
 		label.custom_minimum_size = Vector2(230.0, 0.0)
-		label.tooltip_text = token_name
+		label.tooltip_text = description
+		label.mouse_filter = Control.MOUSE_FILTER_PASS
 		row.add_child(label)
 		match int(token.get("type")):
 			TYPE_COLOR:
 				var picker: ColorPickerButton = ColorPickerButton.new()
 				picker.color = style_resource.get(token_name)
 				picker.custom_minimum_size = Vector2(72.0, 0.0)
+				picker.tooltip_text = description
 				picker.color_changed.connect(func(value: Color) -> void: _on_token_edited(style_resource, token_name, value))
 				row.add_child(picker)
 			TYPE_BOOL:
 				var check: CheckBox = CheckBox.new()
 				check.button_pressed = bool(style_resource.get(token_name))
+				check.tooltip_text = description
 				check.toggled.connect(func(value: bool) -> void: _on_token_edited(style_resource, token_name, value))
 				row.add_child(check)
 			_:
@@ -297,6 +360,7 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 				spin.min_value = -4096.0
 				spin.max_value = 4096.0
 				spin.value = float(style_resource.get(token_name))
+				spin.tooltip_text = description
 				spin.value_changed.connect(func(value: float) -> void: _on_token_edited(style_resource, token_name, value if int(token.get("type")) == TYPE_FLOAT else int(value)))
 				row.add_child(spin)
 		section_box.add_child(row)
@@ -305,7 +369,9 @@ func _build_section(form: VBoxContainer, title: String, style_resource: Resource
 
 func _on_token_edited(style_resource: Resource, token_name: String, value: Variant) -> void:
 	if apply_token(style_resource, token_name, value) and _preview_viewport != null:
-		_preview_viewport.queue_redraw()
+		# Rebuild the sample sheet so BOTH colour and STRUCTURAL tokens (row height, corner radii, lane
+		# widths, line thickness) show live - a plain repaint keeps the old cached layout.
+		_preview_viewport.set_sheet(build_sample_sheet(_working_style))
 
 
 func _apply_to_sheet() -> void:
