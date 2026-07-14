@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed - published verbs tint by role (Action / Condition / Expression)
+
+- **A published verb's name now carries a slight role tint** in the Published verbs list, so an Action,
+  a Condition, and an Expression are scannable at a glance without reading the badge - the friendly name
+  is the object-label colour lerped toward the role's accent (warm for actions, cool for conditions,
+  purple for expressions). Subtle, not loud; reinforces the existing role badge.
+
 ### Changed - comment-only code blocks read as clean notes; the "setup" pill is gone
 
 - **A code block that is entirely comment lines now reads as a comment**, not code: no badge, and the

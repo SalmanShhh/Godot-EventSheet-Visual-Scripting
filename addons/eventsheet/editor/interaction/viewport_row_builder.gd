@@ -326,6 +326,18 @@ static func strip_comment_prefix(line: String) -> String:
 	return body
 
 
+## A subtle per-role tint for a published-verb name - the object label lerped toward the role's badge
+## accent, so Action / Condition / Expression read distinctly without a loud colour.
+func _define_role_name_color(role: String) -> Color:
+	var base: Color = _viewport._get_event_style().object_label_color
+	match role:
+		"condition":
+			return base.lerp(EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG, 0.55)
+		"expression":
+			return base.lerp(EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG, 0.55)
+	return base.lerp(EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG, 0.55)
+
+
 ## One Define block: role badge in its ACE-role colour, the friendly published name, a `→ type`
 ## chip for value-returning verbs, the category chip, an "internal" chip when the function is NOT
 ## exposed as an ACE (a plain helper other sheets can't pick), and the muted real signature built
@@ -360,16 +372,19 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	# the whole sentence (its {param} slots filled with each parameter's label); otherwise the friendly
 	# name plus a comma-joined slot list. The real `func ... -> Type` still follows as a muted code cue
 	# below, so the row stays code-adjacent and can never disagree with what compiles.
+	# Slight per-role tint on the verb name so an Action / Condition / Expression reads distinctly at a
+	# glance in the Published verbs list (reinforces the role badge without a loud colour).
+	var name_color: Color = _define_role_name_color(role)
 	var authored_line: String = friendly_template_line(event_function)
 	if not authored_line.is_empty():
 		spans.append(_make_span(authored_line, SemanticSpan.SpanType.OBJECT, {
 			"kind": "define_function",
-			"text_color": _viewport._get_event_style().object_label_color
+			"text_color": name_color
 		}))
 	else:
 		spans.append(_make_span(display_name, SemanticSpan.SpanType.OBJECT, {
 			"kind": "define_function",
-			"text_color": _viewport._get_event_style().object_label_color
+			"text_color": name_color
 		}))
 		var param_labels: String = friendly_param_labels(event_function)
 		if not param_labels.is_empty():
