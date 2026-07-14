@@ -314,7 +314,10 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	row_data.indent = indent
 	row_data.row_type = EventRowData.RowType.SECTION
 	row_data.source_resource = event_function
-	row_data.row_uid = "define_fn_%d" % event_function.get_instance_id()
+	# Name-keyed uid (keeping the define_fn_ prefix every consumer matches) so an expanded body survives the
+	# undo funnel's resource-replacement rebuild - an instance-id uid would reset the fold on every edit.
+	var fold_key: String = event_function.function_name.strip_edges()
+	row_data.row_uid = "define_fn_%s" % (fold_key if not fold_key.is_empty() else str(event_function.get_instance_id()))
 	row_data.disabled = not event_function.enabled
 	var role: String = define_role_for(event_function)
 	var badge_colors: Dictionary = {
@@ -402,7 +405,33 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		{"editable": false, "kind": "define_function", "text_color": EventSheetPalette.TEXT_MUTED}
 	))
 	row_data.spans = spans
+	# Construct-style expandable block: the function BODY renders as foldable children (its conditions,
+	# actions, and raw GDScript blocks), built by the SAME dispatcher as sheet events, folding like a group.
+	# Pure READ view - each body child is made INERT (source_resource nulled over the subtree) so no
+	# selection / drag / delete / inline edit can reach it: those resources live in event_function.events,
+	# NOT sheet.events, so a mutation would alias the row into two arrays or corrupt the file. Editing the
+	# body is a later phase. Default-collapsed (folded seeded from _fold_state) preserves the header look.
+	var body_entries: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+	for body_entry: Variant in body_entries:
+		if body_entry is Resource:
+			var child_row: EventRowData = _viewport._build_row_from_resource(body_entry as Resource, indent + 1)
+			if child_row != null:
+				_make_row_inert(child_row)
+				row_data.children.append(child_row)
+	if not row_data.children.is_empty():
+		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
 	return row_data
+
+
+## Strips a row and its whole subtree of its editing identity so it renders but is inert - no selection,
+## drag, delete, or inline edit reaches it (every mutation path guards on source_resource being the row's
+## kind, and the add-cell click guards on a non-null source). Used for a published verb's body rows: they
+## display the function's conditions/actions/raw blocks for reading, but their resources live in
+## event_function.events, not sheet.events, so any write would alias or corrupt the .gd. Read-only reveal.
+func _make_row_inert(row_data: EventRowData) -> void:
+	row_data.source_resource = null
+	for child: EventRowData in row_data.children:
+		_make_row_inert(child)
 
 
 ## First Color(...) literal among an ACE's param values (null when none) - drives the

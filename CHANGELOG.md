@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed - a published verb expands to show its body as event rows
+
+- **Each published verb (a sheet's function) is now an expandable Construct-style block.** The tinted
+  header (Action / Condition / Expression) carries a fold arrow; expand it to reveal the function's BODY -
+  its conditions, actions, and raw GDScript - rendered as indented event rows, folded like a group, so a
+  behavior reads top-to-bottom like code you can browse. Double-click the header still opens the function's
+  return-type / params dialog. This is a pure READ view: the body rows are inert (they cannot be selected,
+  dragged, deleted, or edited into the sheet - their resources live in the function, not the event list),
+  so an opened .gd pack still round-trips byte-identically (drift=0). A drag that could not locate its
+  source row is now a no-op instead of aliasing the row into two arrays. Editing the body inline is a
+  later step.
+
 ### Added - Host and Host Is Valid vocabulary for behavior sheets
 
 - **Two behavior-sheet ACEs make the host node first-class, pickable vocabulary**: the **Host** expression

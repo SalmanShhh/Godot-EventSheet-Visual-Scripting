@@ -392,7 +392,10 @@ func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String,
 			for source_resource in source_resources:
 				inserted_resources.append(source_resource.duplicate(true))
 		else:
-			inserted_resources = source_resources
+			# Only rows actually removed get re-inserted. A source we cannot locate in the live sheet - e.g.
+			# an inert function-body row, whose resource lives in event_function.events and NOT sheet.events -
+			# is left untouched (never removed, never inserted), so it can't be aliased into two arrays and
+			# emitted twice. Aliasing there would corrupt an opened .gd's byte round-trip.
 			for source_resource in source_resources:
 				var source_location: Dictionary = _find_resource_location(source_resource)
 				if source_location.is_empty():
@@ -401,6 +404,9 @@ func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String,
 				var source_index: int = int(source_location.get("index", -1))
 				if source_index >= 0 and source_index < source_container.size():
 					source_container.remove_at(source_index)
+					inserted_resources.append(source_resource)
+			if inserted_resources.is_empty():
+				return false  # nothing locatable to move - no spurious snapshot / dirty
 		var target_container: Array = []
 		var insertion_index: int = 0
 		if drop_mode == "inside":

@@ -95,8 +95,57 @@ static func run() -> bool:
 	var reemitted: String = str(SheetCompiler.compile(opened, pack_path).get("output", ""))
 	ok = _check("round-trip stays byte-identical with the view built (drift=0)", reemitted == source, true) and ok
 
+	# ── Phase 1: a verb's BODY renders as foldable child rows, and every body row is INERT (source_resource
+	# nulled over the subtree) so no selection / drag / delete / inline edit can reach it. Their resources
+	# live in event_function.events, NOT sheet.events - the read-only gate that keeps the covenant.
+	var body_roots: Array = []
+	for header_row: EventRowData in pack_rows:
+		body_roots.append_array(header_row.children)
+	var body_check: Array = _count_and_check_inert(body_roots)
+	var body_rows_built: int = int(body_check[0])
+	var all_body_inert: bool = bool(body_check[1])
+	ok = _check("lifted functions render their body as child rows", body_rows_built > 0, true) and ok
+	ok = _check("every function-body row is inert (source nulled - no drag/delete/edit reaches it)", all_body_inert, true) and ok
+	# Anti-aliasing at the MODEL level: a function's body resources are never also in sheet.events, so a
+	# body row can never be moved/emitted into the sheet (the exact corruption the gate + _move_rows fix stop).
+	var body_leaked: bool = false
+	for entry: Variant in opened.functions:
+		if entry is EventFunction:
+			for body_res: Variant in (entry as EventFunction).events:
+				if opened.events.has(body_res):
+					body_leaked = true
+	ok = _check("function-body resources are NOT aliased into sheet.events", body_leaked, false) and ok
+	# Expanding every body is still a pure read: unfold all verb headers, rebuild, re-emit byte-identically.
+	var pack_view: EventSheetViewport = dock._active_view()
+	for header_row: EventRowData in pack_rows:
+		if not header_row.children.is_empty():
+			pack_view._fold_state[header_row.row_uid] = false
+	pack_view.set_sheet(opened)
+	var reemitted_expanded: String = str(SheetCompiler.compile(dock.get_current_sheet(), pack_path).get("output", ""))
+	ok = _check("expanding every function body is still read-only (byte-identical)", reemitted_expanded == source, true) and ok
+
 	dock.free()
 	return ok
+
+
+## Returns [count, all_inert] over the whole subtree rooted at `rows` - every function-body row and its
+## descendants must be inert (source_resource == null) so no selection / drag / delete / inline edit
+## reaches them; a reveal that leaves one editable is caught.
+static func _count_and_check_inert(rows: Array) -> Array:
+	var count: int = 0
+	var inert: bool = true
+	for entry: Variant in rows:
+		var row_data: EventRowData = entry
+		if row_data == null:
+			continue
+		count += 1
+		if row_data.source_resource != null:
+			inert = false
+		var sub: Array = _count_and_check_inert(row_data.children)
+		count += int(sub[0])
+		if not bool(sub[1]):
+			inert = false
+	return [count, inert]
 
 
 static func _make_function(fn_name: String, return_type: int, exposed: bool, display: String, category: String) -> EventFunction:

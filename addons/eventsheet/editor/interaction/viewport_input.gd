@@ -155,11 +155,11 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 					_viewport.color_swatch_edit_requested.emit(swatch_ace, color_param, metadata["swatch_color"] as Color)
 					_viewport.accept_event()
 					return
-		if row_data != null and str(metadata.get("kind", "")) == "add_action":
+		if row_data != null and row_data.source_resource != null and str(metadata.get("kind", "")) == "add_action":
 			_viewport.ace_picker_requested.emit(row_data, "action")
 			_viewport.accept_event()
 			return
-		if row_data != null and str(metadata.get("kind", "")) == "add_condition":
+		if row_data != null and row_data.source_resource != null and str(metadata.get("kind", "")) == "add_condition":
 			_viewport.ace_picker_requested.emit(row_data, "condition")
 			_viewport.accept_event()
 			return
