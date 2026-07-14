@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed - hand-written multi-trigger .gd files lift instead of reverting to one raw block
+
+- **Opening a hand-written .gd with two or more lifecycle triggers now lifts its events instead of reverting
+  the whole file to a verbatim block.** Idiomatic GDScript puts two blank lines between top-level functions,
+  but the compiler emits one between trigger sections, so the whole-file byte check failed on that one-line
+  difference and kept everything raw. The importer now captures each trigger function's source blank-line
+  spacing and reproduces it on the opened-file path, so `func _ready()` + `func _process()` (and more) become
+  real event rows while the round-trip stays byte-exact. Generated packs are untouched - they keep the single
+  blank by design (the spacing is honored only on the opened-file compile path). Scoped to trigger sections
+  for now: a file whose extra blank sits before a plain helper / sheet function still degrades losslessly to a
+  verbatim block (that path is a follow-up).
+
 ### Changed - opening a .gd lifts compound-assignment statements to rows (and a shadow-guard fix)
 
 - **More raw statements become event rows when you open a `.gd` file.** A property changed relative to itself

@@ -612,7 +612,10 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			external_raw_rows.append(entry)
 	var external_connect_context: Dictionary = {
 		"self_class": sheet.host_class if ClassDB.class_exists(sheet.host_class) else "Node",
-		"declared_signals": _scan_declared_signals(external_raw_rows)
+		"declared_signals": _scan_declared_signals(external_raw_rows),
+		# Opened-file path: honor each lifted function's source blank-line spacing (the main/generated path
+		# omits this flag, so packs keep the fixed single blank and stay byte-identical).
+		"external": true,
 	}
 	_emit_grouped_trigger_functions(added_event_rows, lines, source_map, result, external_connect_context, deferred_comment_lines_external)
 	# Anchored functions (FunctionAnchorRow) already emitted at their in-file slot above - the
@@ -1102,7 +1105,15 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			(result["warnings"] as Array[String]).append("Unsupported trigger %s" % key)
 			continue
 		var args: String = str(signature.get("args", ""))
-		lines.append("")
+		# One blank line before each trigger func on the generated path. On the EXTERNAL (opened-file) path,
+		# honor the source's own inter-function spacing captured at lift time (__source_leading_blanks on the
+		# group's leading event), so a hand-written file with the idiomatic two blank lines between functions
+		# round-trips byte-for-byte instead of reverting to a raw block. Default 1 keeps packs single-blank.
+		var leading_blanks: int = 1
+		if bool(connect_context.get("external", false)) and events[0] is EventRow:
+			leading_blanks = maxi(int((events[0] as EventRow).get_meta("__source_leading_blanks", 1)), 1)
+		for _blank_index: int in range(leading_blanks):
+			lines.append("")
 		if args.is_empty():
 			lines.append("func %s() -> void:" % function_name)
 		else:

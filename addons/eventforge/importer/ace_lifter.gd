@@ -79,11 +79,19 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	var lifted_comments: Array = []
 	var saw_function: bool = false
 	var anchor_index: int = first_run_index
+	# The blank-line count separating the previous lifted function from the next one. Emission re-adds a
+	# single blank by default; this carries the SOURCE count so a hand-written two-blank gap round-trips.
+	# It survives ONLY from a "blank" row to the immediately following row (the "blank" branch continues
+	# past the end-of-body reset below); every other row type clears it.
+	var pending_blank_count: int = 0
 	for index in range(first_run_index, sheet.events.size()):
 		var row: RawCodeRow = sheet.events[index] as RawCodeRow
 		var failed: bool = false
 		match _run_row_kind(row.code, lift_functions):
 			"blank":
+				# N blank lines import as a joined "\n"*(N-1) block, so size() == N. Stamped onto the next
+				# lifted function's first event below; the compiler re-emits it on the external path.
+				pending_blank_count = row.code.split("\n").size()
 				continue  # separator; emission re-adds it
 			"annotations":
 				pending_annotations = _parse_annotations(row.code)
@@ -107,7 +115,14 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 						var lift: Dictionary = _lift_function(row.code.split("\n"), connections, true)
 						if bool(lift.get("ok", false)):
 							saw_function = true
-							lifted_events.append_array(lift.get("events", []))
+							var lift_events: Array = lift.get("events", [])
+							# Preserve the source's inter-function spacing: stamp the gap count onto this
+							# function's FIRST event (only when >1, so ordinary single-blank sources stay
+							# meta-free). The first lifted function's gap is owned by the boundary-detach path
+							# below, so this only governs gaps BETWEEN lifted sections and never double-counts.
+							if pending_blank_count > 1 and not lift_events.is_empty() and lift_events[0] is EventRow:
+								(lift_events[0] as EventRow).set_meta("__source_leading_blanks", pending_blank_count)
+							lifted_events.append_array(lift_events)
 						else:
 							failed = true
 				else:
@@ -131,6 +146,9 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			pending_annotations = {}
 			saw_function = false
 			anchor_index = index + 1
+		# A blank separator's count was just consumed by (or is irrelevant to) this non-blank row - clear it
+		# so it never leaks onto a later function. The "blank" branch continues past here, keeping its count.
+		pending_blank_count = 0
 	var trailing_lifted: bool = saw_function and not (lifted_events.is_empty() and lifted_functions.is_empty())
 	var backup: Array[Resource] = sheet.events.duplicate()
 	var functions_backup: Array[Resource] = sheet.functions.duplicate()
