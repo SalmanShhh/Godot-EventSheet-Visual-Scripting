@@ -250,9 +250,10 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 							_viewport.param_value_edit_requested.emit(clicked_ace, clicked_param, str(value_hit[0]))
 							_viewport.accept_event()
 							return
-			# Multiline comment rows edit in the dialog (per-line inline editing would
-			# replace the whole text with one line - data loss).
-			if row_data != null and row_data.source_resource is CommentRow and (row_data.source_resource as CommentRow).text.contains("\n"):
+			# Double-clicking a comment opens its edit dialog (text + colour) - what the user expects
+			# from "edit this comment", instead of dropping into a per-line inline caret that reads as a
+			# whole-row highlight. The dialog is also the only safe editor for multi-line comment text.
+			if row_data != null and row_data.source_resource is CommentRow:
 				_viewport.comment_edit_requested.emit(row_data.source_resource)
 				_viewport.accept_event()
 				return

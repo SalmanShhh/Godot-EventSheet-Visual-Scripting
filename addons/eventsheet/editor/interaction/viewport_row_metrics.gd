@@ -95,16 +95,14 @@ func _measure_comment_height(row_data: EventRowData) -> float:
 ## Where comment text begins on the row (logical/unzoomed px). Kept in sync with the comment
 ## branch of the layout pass so wrapping width, hit-testing, and drawing all agree.
 func _comment_text_origin_x(indent: int) -> float:
-	var origin_x: float = (
+	# Construct-style banner: comment text starts at the row's left edge (no badge-column indent),
+	# kept in sync with the comment branch of the layout pass (which now adds no indent either).
+	return (
 		EventSheetPalette.ROW_HORIZONTAL_PADDING
 		+ EventSheetPalette.GUTTER_WIDTH
 		+ float(indent * _viewport.INDENT_WIDTH)
 		+ 18.0
 	)
-	var badge_column: float = max(float(_viewport._get_event_style().condition_badge_column_width), 0.0)
-	if badge_column > 0.0:
-		origin_x += badge_column + EventSheetPalette.SPAN_GAP
-	return origin_x
 
 
 ## The pixel width comment text wraps inside: from the comment text origin to the row's right

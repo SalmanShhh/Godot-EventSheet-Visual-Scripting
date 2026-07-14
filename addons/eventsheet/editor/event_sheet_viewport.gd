@@ -941,8 +941,8 @@ func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1)
 	var metadata: Dictionary = row_data.spans[span_index].metadata if row_data.spans[span_index].metadata is Dictionary else {}
 	if not bool(metadata.get("editable", false)):
 		return false
-	if row_data.source_resource is CommentRow and (row_data.source_resource as CommentRow).text.contains("
-"):
+	if row_data.source_resource is CommentRow:
+		# Every comment edits through its dialog (text + colour), not a per-line inline caret.
 		comment_edit_requested.emit(row_data.source_resource)
 		return true
 	_begin_edit(row_index, span_index)

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - comments read as full-width banners and double-click edits them
+
+- **A comment now fills the row as a Construct-style banner.** Its text starts at the row's left edge
+  (no condition-lane indent), the cell fills the full width, and it paints on a warm note-colour band -
+  so a comment reads as a heading/annotation across the sheet instead of a scrap of text floating in the
+  condition lane. (The band colour is a theme token; change it in the Theme editor.)
+- **Double-clicking a comment now opens its edit dialog** (text + colour) instead of dropping a per-line
+  inline caret behind a whole-row highlight. Every comment (single- or multi-line) edits the same way.
+
 ### Fixed - the first-run Welcome dialog is centered
 
 - **The Welcome dialog no longer opens off-centre.** It is a content-fitting AcceptDialog, and

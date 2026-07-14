@@ -25,14 +25,17 @@ static func run() -> bool:
 	var font: Font = viewport._get_font()
 	var font_size: int = viewport._get_font_size()
 
-	# Comment: double-clicking it starts editing, and applying updates the text.
+	# Comment: double-clicking it opens the comment dialog (text + colour), not an inline caret that
+	# reads as a whole-row highlight - the dialog is requested and no inline edit starts.
 	var comment_index: int = _flat_index(viewport, comment)
 	viewport._get_or_build_row_layout(comment_index, width, font, font_size)
 	var comment_row: EventRowData = viewport._row_at(comment_index)
+	var requested_comment: Array = [null]
+	viewport.comment_edit_requested.connect(func(c: Resource) -> void: requested_comment[0] = c)
 	_double_click(viewport, comment_row.spans[0].rect.get_center())
-	all_passed = _check("double-click starts editing the comment",
-		int(viewport.get_editing_context_for_test().get("row_index", -1)), comment_index) and all_passed
-	viewport._cancel_edit()
+	all_passed = _check("double-click a comment opens the dialog, not inline edit",
+		requested_comment[0] == comment and int(viewport.get_editing_context_for_test().get("span_index", -1)) == -1, true) and all_passed
+	# The apply path still writes the edited text back onto the comment.
 	viewport._apply_span_edit(comment_row, comment_row.spans[0], "new comment")
 	all_passed = _check("comment text updates on commit", comment.text, "new comment") and all_passed
 

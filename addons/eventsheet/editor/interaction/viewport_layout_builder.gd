@@ -94,12 +94,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# Running X per line for non-event rows (group / variable / comment / GDScript block),
 	# which lay out left-to-right; multi-line rows stack by span line_index.
 	var non_event_origin_x: float = x
-	# Indent comment text to line up with where an event's condition text begins (past the
-	# trigger/badge column), so comments align with the event blocks they annotate.
-	if row_data.row_type == EventRowData.RowType.COMMENT:
-		var comment_badge_column: float = max(float(event_style.condition_badge_column_width), 0.0)
-		if comment_badge_column > 0.0:
-			non_event_origin_x += comment_badge_column + EventSheetPalette.SPAN_GAP
+	# Comments read as a Construct-style full-width banner: text starts at the row's left edge (no
+	# badge-column indent) and the cell fills the row (see the width branch below).
 	var non_event_line_x: Dictionary = {}
 	# Comment wrapping: each logical line wraps to the row width, so a span can be several
 	# visual lines tall. Precompute, per span, the visual-line offset it starts at and how
@@ -188,9 +184,13 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 					span_width = max(max_action_width, 1.0)
 				else:
 					span_width = max(min(span_width, max_action_width), 1.0)
+		elif is_comment_row:
+			# A comment fills to the row's right padding (Construct-style banner), not just its text
+			# width, so the whole row reads as one solid note band.
+			span_width = max(row_right_limit - span_x - 2.0, 1.0)
 		else:
-			# -2.0 accounts for the +2.0 the rect adds below, so non-event spans (comments,
-			# variables, blocks) never bleed past the row's right padding.
+			# -2.0 accounts for the +2.0 the rect adds below, so non-event spans (variables,
+			# blocks) never bleed past the row's right padding.
 			span_width = max(min(span_width, row_right_limit - span_x - 2.0), 1.0)
 		# Event-sheet-style contiguous cells: chip cells (conditions/actions/comments) fill their full
 		# line minus a 1px hairline, so stacked cells read as one solid block. Badges and

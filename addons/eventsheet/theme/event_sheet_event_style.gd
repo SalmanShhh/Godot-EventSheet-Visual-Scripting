@@ -25,7 +25,8 @@ extends Resource
 @export var group_badge_background_color: Color = EventSheetPalette.COLOR_GROUP_BADGE_BG
 @export var group_badge_foreground_color: Color = EventSheetPalette.COLOR_GROUP_BADGE_FG
 @export var group_fold_background_color: Color = EventSheetPalette.COLOR_GROUP_FOLD_BG
-@export var comment_row_background_color: Color = EventSheetPalette.BG_1
+# A warm note band (Construct-style) so a full-width comment reads as a banner, not another row.
+@export var comment_row_background_color: Color = Color("#38321f")
 @export var comment_text_color: Color = EventSheetPalette.COLOR_COMMENT
 @export var selection_fill_color: Color = EventSheetPalette.COLOR_SELECTION
 @export var hover_fill_color: Color = EventSheetPalette.COLOR_HOVER
