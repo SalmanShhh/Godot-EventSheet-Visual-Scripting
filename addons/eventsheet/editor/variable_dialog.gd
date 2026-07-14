@@ -306,7 +306,7 @@ func init_dialog(parent_node: Node) -> void:
 	# The table drawer's one config field: its column schema, in plain "name:type" pairs.
 	_attr_table_columns_edit = LineEdit.new()
 	_attr_table_columns_edit.placeholder_text = "columns, e.g. item:String, count:int, rare:bool"
-	_attr_table_columns_edit.tooltip_text = "One column per entry: name:type (String, int, float or bool).\nEach Array element becomes a row with these cells."
+	_attr_table_columns_edit.tooltip_text = "One column per entry: name:type (String, int, float, bool, or enum(a|b|c) for a dropdown).\nEach Array element becomes a row with these cells."
 	_attr_table_columns_edit.text_changed.connect(func(_t: String) -> void: _refresh_drawer_preview())
 	_attr_section.add_child(EventSheetPopupUI.form_row("Table columns", _attr_table_columns_edit))
 	# Live "what the drawer looks like" preview - the actual widget, updated as the type / drawer / bounds change.
@@ -880,7 +880,12 @@ func open_for_edit(
 		var column_texts: PackedStringArray = PackedStringArray()
 		for column: Variant in existing_attributes.get("table_columns"):
 			if column is Dictionary:
-				column_texts.append("%s:%s" % [str((column as Dictionary).get("name", "")), str((column as Dictionary).get("type", "String"))])
+				var loaded_type: String = str((column as Dictionary).get("type", "String"))
+				# A fixed-choice column shows its options back as enum(a|b|c) so a reopened variable
+				# keeps its dropdown instead of degrading to free text.
+				if loaded_type == "enum":
+					loaded_type = SheetCompiler.table_enum_type((column as Dictionary).get("options", []))
+				column_texts.append("%s:%s" % [str((column as Dictionary).get("name", "")), loaded_type])
 		_attr_table_columns_edit.text = ", ".join(column_texts)
 	if not existing_drawer.is_empty() and _attr_drawer_option.item_count > 1:
 		_select_drawer_kind(existing_drawer)
@@ -1514,6 +1519,11 @@ func _dialog_table_columns() -> Array:
 		var column_type: String = trimmed.substr(colon + 1).strip_edges() if colon > 0 else "String"
 		if column_name.is_empty():
 			continue
+		# A fixed-choice column authored as name:enum(a|b|c) renders as a dropdown; the options ride along.
+		var enum_options: Array = SheetCompiler.table_enum_options(column_type)
+		if not enum_options.is_empty():
+			columns.append({"name": column_name, "type": "enum", "options": enum_options})
+			continue
 		if not column_type in ["String", "int", "float", "bool"]:
 			column_type = "String"
 		columns.append({"name": column_name, "type": column_type})
@@ -1705,7 +1715,7 @@ func _make_drawer_preview_widget(kind: String) -> Control:
 			table.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var sample_row: Dictionary = {}
 			for column: Dictionary in columns:
-				sample_row[str(column.get("name"))] = EventSheetDrawerWidgets.DrawerTable._default_for(str(column.get("type", "String")))
+				sample_row[str(column.get("name"))] = EventSheetDrawerWidgets.DrawerTable._default_for(column)
 			table.set_value([sample_row])
 			return table
 		"vector_dial":

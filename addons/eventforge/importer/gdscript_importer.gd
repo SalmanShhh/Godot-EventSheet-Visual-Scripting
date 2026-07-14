@@ -348,7 +348,14 @@ func _extract_drawer_from_hint(lifted: LocalVariable, line: String) -> void:
 		for pair: String in str(parts[2]).split(","):
 			var eq: int = pair.find("=")
 			if eq > 0:
-				columns.append({"name": pair.substr(0, eq), "type": pair.substr(eq + 1)})
+				var lifted_type: String = pair.substr(eq + 1)
+				# A fixed-choice column recovers into the same {type:"enum", options:[...]} shape the
+				# editor + emitter use, so the marker re-emits byte-for-byte and the dropdown survives.
+				var enum_options: Array = SheetCompiler.table_enum_options(lifted_type)
+				if not enum_options.is_empty():
+					columns.append({"name": pair.substr(0, eq), "type": "enum", "options": enum_options})
+				else:
+					columns.append({"name": pair.substr(0, eq), "type": lifted_type})
 		if columns.is_empty():
 			return
 		attrs["table_columns"] = columns

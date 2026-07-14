@@ -396,19 +396,24 @@ class DrawerTable:
 	func _on_add_row() -> void:
 		var fresh: Dictionary = {}
 		for column: Dictionary in _columns:
-			fresh[str(column.get("name"))] = _default_for(str(column.get("type", "String")))
+			fresh[str(column.get("name"))] = _default_for(column)
 		_value.append(fresh)
 		_rebuild()
 		value_changed.emit(get_value())
 
-	static func _default_for(column_type: String) -> Variant:
-		match column_type:
+	## The starting cell value for a fresh row, by column type. An enum column seeds its FIRST choice
+	## so a new row is valid immediately; everything else keeps its zero-ish default.
+	static func _default_for(column: Dictionary) -> Variant:
+		match str(column.get("type", "String")):
 			"int":
 				return 0
 			"float":
 				return 0.0
 			"bool":
 				return false
+			"enum":
+				var options: Array = column.get("options", []) if column.get("options") is Array else []
+				return str(options[0]) if not options.is_empty() else ""
 		return ""
 
 	func _rebuild() -> void:
@@ -426,7 +431,7 @@ class DrawerTable:
 		for row_index: int in range(_value.size()):
 			var row: Dictionary = _value[row_index]
 			for column: Dictionary in _columns:
-				_grid.add_child(_make_cell(row, str(column.get("name")), str(column.get("type", "String"))))
+				_grid.add_child(_make_cell(row, column))
 			var up_button: Button = Button.new()
 			up_button.text = "▲"
 			up_button.tooltip_text = "Move this row up"
@@ -440,7 +445,9 @@ class DrawerTable:
 			remove_button.pressed.connect(_on_remove.bind(row_index))
 			_grid.add_child(remove_button)
 
-	func _make_cell(row: Dictionary, column_name: String, column_type: String) -> Control:
+	func _make_cell(row: Dictionary, column: Dictionary) -> Control:
+		var column_name: String = str(column.get("name"))
+		var column_type: String = str(column.get("type", "String"))
 		match column_type:
 			"int", "float":
 				var spin: SpinBox = SpinBox.new()
@@ -462,6 +469,26 @@ class DrawerTable:
 					row[column_name] = pressed
 					value_changed.emit(get_value()))
 				return check
+			"enum":
+				# A fixed-choice cell: a dropdown of the column's options. The stored value stays the
+				# plain String choice, so the Array-of-Dictionary shape and .tres bytes are unchanged.
+				var options: Array = column.get("options", []) if column.get("options") is Array else []
+				var choice: OptionButton = OptionButton.new()
+				choice.disabled = not editable
+				choice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				var current: String = str(row.get(column_name, ""))
+				var selected_index: int = -1
+				for i: int in range(options.size()):
+					choice.add_item(str(options[i]))
+					if str(options[i]) == current:
+						selected_index = i
+				# A legacy value outside the option list stays untouched (select nothing, don't coerce).
+				choice.select(selected_index)
+				choice.item_selected.connect(func(idx: int) -> void:
+					if idx >= 0 and idx < options.size():
+						row[column_name] = str(options[idx])
+						value_changed.emit(get_value()))
+				return choice
 		var edit: LineEdit = LineEdit.new()
 		edit.text = str(row.get(column_name, ""))
 		edit.editable = editable

@@ -131,14 +131,15 @@ A **drawer** replaces a variable's plain Inspector field with a richer control, 
 
 **What it does.** Turns an `Array` of `Dictionary` rows into an **editable grid**: one row per element, one typed cell per column (text, number, checkbox), with add / remove / move-up controls. The single most painful data-editing surface in Godot - loot tables, wave definitions, dialogue lines - becomes a spreadsheet.
 
-**How to use it.** On an `Array` variable choose **Show as: Editable table**, then define the columns in the **Table columns** field as `name:type` pairs (`item:String, count:int, rare:bool`; types: String, int, float, bool).
+**How to use it.** On an `Array` variable choose **Show as: Editable table**, then define the columns in the **Table columns** field as `name:type` pairs (`item:String, count:int, rare:bool`; types: String, int, float, bool). A column typed `enum(a|b|c)` renders as a **dropdown** limited to those choices - e.g. `kind:enum(circle|ring|rect)` - instead of a free-text field; the stored value stays the plain String, so nothing downstream changes.
 
 **Emits** (the column schema rides the marker; each row is a plain Dictionary):
 ```gdscript
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:item=String,count=int,rare=bool") var loot: Array = []
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:kind=enum(circle|ring|rect),size=float") var steps: Array = []
 ```
 
-**Use case.** A `loot` table designers fill row by row, a `waves` list (enemy, count, delay), or dialogue lines (speaker, text, portrait path) - all without touching Godot's generic array editor.
+**Use case.** A `loot` table designers fill row by row, a `waves` list (enemy, count, delay), or dialogue lines (speaker, text, portrait path) - all without touching Godot's generic array editor. Use an `enum(...)` column wherever a cell should only ever hold one of a fixed set of words (a shape kind, a rarity, an easing mode), so designers pick from a list instead of risking a typo.
 
 ### Toggle buttons (String with Options)
 

@@ -237,6 +237,42 @@ static func run() -> bool:
 	all_passed = _eq("the grid's add appends typed defaults", table_grid.get_value(), [{"hp": 5}, {"hp": 0}]) and all_passed
 	table_grid.free()
 
+	# --- Enum columns: a String column constrained to a fixed choice list, rendered as a dropdown.
+	# The stored cell value stays a plain String; only the marker gains an enum(a|b|c) token. The `|`
+	# option delimiter avoids every reserved marker char, so the whole thing round-trips byte-for-byte.
+	all_passed = _eq("the enum codec decodes an option list",
+		SheetCompiler.table_enum_options("enum(circle|ring|rect)"), ["circle", "ring", "rect"]) and all_passed
+	all_passed = _eq("the enum codec ignores a non-enum token",
+		SheetCompiler.table_enum_options("String"), []) and all_passed
+	all_passed = _eq("the enum codec ignores a malformed token (no closing paren)",
+		SheetCompiler.table_enum_options("enum(circle|ring"), []) and all_passed
+	all_passed = _eq("the enum codec re-encodes an option list",
+		SheetCompiler.table_enum_type(["circle", "ring", "rect"]), "enum(circle|ring|rect)") and all_passed
+	var enum_var: LocalVariable = LocalVariable.new()
+	enum_var.name = "steps"
+	enum_var.type_name = "Array"
+	enum_var.default_value = []
+	enum_var.exported = true
+	enum_var.attributes = {"drawer": "table", "table_columns": [{"name": "kind", "type": "enum", "options": ["circle", "ring", "rect"]}, {"name": "x", "type": "float"}]}
+	var enum_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:kind=enum(circle|ring|rect),x=float\") var steps: Array = []"
+	all_passed = _eq("an enum column emits its option list in the marker",
+		SheetCompiler._emit_tree_variable_line(enum_var), enum_expected) and all_passed
+	var enum_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + enum_expected + "\n")
+	var enum_lifted: LocalVariable = _find(enum_sheet, "steps")
+	all_passed = _eq("the lift recovers the enum column as {type:enum, options}",
+		(enum_lifted.attributes as Dictionary).get("table_columns") if enum_lifted != null else null,
+		[{"name": "kind", "type": "enum", "options": ["circle", "ring", "rect"]}, {"name": "x", "type": "float"}]) and all_passed
+	if enum_lifted != null:
+		all_passed = _eq("an enum column re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(enum_lifted), enum_expected) and all_passed
+	all_passed = _eq("the editor parse recovers an enum column (options captured)",
+		EventSheetAttributeDrawers.parse_table_columns("kind=enum(circle|ring),x=float"),
+		[{"name": "kind", "type": "enum", "options": ["circle", "ring"]}, {"name": "x", "type": "float"}]) and all_passed
+	var enum_grid: EventSheetDrawerWidgets.DrawerTable = EventSheetDrawerWidgets.DrawerTable.new([{"name": "kind", "type": "enum", "options": ["circle", "ring"]}])
+	enum_grid._on_add_row()
+	all_passed = _eq("a fresh enum row seeds the first option", enum_grid.get_value(), [{"kind": "circle"}]) and all_passed
+	enum_grid.free()
+
 	# A drawer on a CLAMPED var (setter-suffixed "= 120:" line): the drawer must survive the lift -
 	# the expression-default emission previously quoted the suffix and the extraction verify failed,
 	# stranding the drawer as a verbatim hint (found by the Inspector Designer over EnemyStats).

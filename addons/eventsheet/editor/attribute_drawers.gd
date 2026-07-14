@@ -209,6 +209,11 @@ static func parse_table_columns(spec: String) -> Array:
 		var column_type: String = trimmed.substr(eq + 1).strip_edges() if eq > 0 else "String"
 		if column_name.is_empty() or column_name.contains("="):
 			continue
+		# A fixed-choice column - enum(a|b|c) - renders as a dropdown; the options ride the schema.
+		var enum_options: Array = SheetCompiler.table_enum_options(column_type)
+		if not enum_options.is_empty():
+			columns.append({"name": column_name, "type": "enum", "options": enum_options})
+			continue
 		if not column_type in ["String", "int", "float", "bool"]:
 			column_type = "String"
 		columns.append({"name": column_name, "type": column_type})
@@ -289,9 +294,6 @@ class ToggleRowProperty:
 class TableProperty:
 	extends EditorProperty
 	var _table: EventSheetDrawerWidgets.DrawerTable
-	# Re-entry guard: a cell edit emits the change, which echoes back as _update_property - without
-	# the guard the grid would rebuild mid-keystroke and the cell being typed in would lose focus.
-	var _self_edit: bool = false
 
 	func _init(columns: Array) -> void:
 		_table = EventSheetDrawerWidgets.DrawerTable.new(columns)
@@ -300,15 +302,25 @@ class TableProperty:
 		set_bottom_editor(_table)
 
 	func _on_changed(rows: Array) -> void:
-		_self_edit = true
 		emit_changed(get_edited_property(), rows)
+		# emit_changed writes `rows` onto the resource through the inspector's set(), which does NOT fire
+		# the resource's `changed` signal - so live-preview listeners (the DrawingPrefab preview panel, a
+		# DrawingPrefabStamp) never repaint on a table edit. Emit `changed` explicitly so they refresh
+		# from the just-written value; the _update_property echo it may provoke is a no-op (equal value).
+		var edited: Object = get_edited_object()
+		if edited is Resource:
+			(edited as Resource).emit_changed()
 
 	func _update_property() -> void:
-		if _self_edit:
-			_self_edit = false
-			return
+		# Guard by VALUE, not a one-shot flag: the echo from our own commit (and from the `changed`
+		# signal we fire for the live preview) carries a value equal to what the grid already shows, so
+		# we skip the rebuild and the cell being typed in keeps focus. Only an external change (undo,
+		# reselecting the asset) brings a different value that actually rebuilds the grid.
 		var value: Variant = get_edited_object().get(get_edited_property())
-		_table.set_value(value if value is Array else [])
+		var incoming: Array = value if value is Array else []
+		if incoming == _table.get_value():
+			return
+		_table.set_value(incoming)
 
 
 ## Vector2 dial: drag the handle to set direction + magnitude.

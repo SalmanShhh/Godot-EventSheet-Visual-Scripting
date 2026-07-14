@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - table drawer: dropdown columns + a live-updating preview
+
+- **A table-drawer column can now be a dropdown.** Type a column as `enum(a|b|c)` and its cells render as
+  an OptionButton limited to those choices instead of a free-text field - so the Drawing Canvas prefab's
+  **kind** column is now a pick-from-list of circle / ring / rect / line / cone / stamp, no more typos. It
+  is a generic column type any `eventsheet:table` drawer can use (author it in the variable dialog as
+  `kind:enum(circle|ring|rect)`). The stored cell value stays the plain String, so the `.tres` data and
+  the byte-exact marker round-trip are unchanged (the `|` option delimiter avoids every reserved marker
+  char). A stored value outside the choice list is preserved, never silently coerced. Pinned by
+  tests/inspector_drawer_roundtrip_test.gd (codec, emit, lift, re-emit byte-identical, fresh-row default).
+- **The Inspector preview now repaints live as you edit a table.** A table-drawer edit updated the
+  resource through the inspector's `set()`, which does not fire the resource's `changed` signal - so the
+  DrawingPrefab preview panel (and a DrawingPrefabStamp) never repainted until you reselected the asset.
+  The drawer now emits `changed` explicitly on each commit, so the target-marker preview redraws on every
+  value tweak. Generic: any Resource-hosted table drawer wakes its live-preview listeners now.
+
 ### Changed - a function reads as a function, not a GDScript wall
 
 - **A lone top-level function in a sheet now renders as a collapsed `ƒ name(params) -> Type` row**

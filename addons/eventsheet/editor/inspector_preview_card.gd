@@ -256,7 +256,7 @@ func _build_widget(type_name: String, default_text: String, attributes: Dictiona
 		var sample: Dictionary = {}
 		for column: Variant in columns:
 			if column is Dictionary:
-				sample[str((column as Dictionary).get("name"))] = EventSheetDrawerWidgets.DrawerTable._default_for(str((column as Dictionary).get("type", "String")))
+				sample[str((column as Dictionary).get("name"))] = EventSheetDrawerWidgets.DrawerTable._default_for(column as Dictionary)
 		table.set_value([sample])
 		return _ignored(table)
 	if drawer_kind == "texture_preview":

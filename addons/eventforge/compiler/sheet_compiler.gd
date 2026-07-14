@@ -2222,6 +2222,45 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	return _tree_variable_group_prefix(local_var) + var_line
 
 
+## Decodes a table-column enum type token: "enum(circle|ring|rect)" -> ["circle", "ring", "rect"];
+## returns [] for any non-enum token (String/int/float/bool or malformed), so callers fall back to
+## their plain-type path. The `|` option delimiter is chosen because it avoids every reserved marker
+## char ( , = : " ), so the option list survives the column/name/type/marker splits verbatim. Shared by
+## the compiler emit, the importer lift, the editor drawer parse, and the variable dialog so all four
+## agree on the encoding (a mismatch would silently downgrade an enum column to free text).
+static func table_enum_options(type_token: String) -> Array:
+	var token: String = type_token.strip_edges()
+	if not token.begins_with("enum(") or not token.ends_with(")"):
+		return []
+	var options: Array = []
+	for option: String in token.substr(5, token.length() - 6).split("|"):
+		if _valid_enum_option(option):
+			options.append(option.strip_edges())
+	return options
+
+
+## Encodes an option list into the marker type token: ["circle", "ring"] -> "enum(circle|ring)". Returns
+## "" when no option survives the reserved-char filter, so the column falls back to a plain String cell.
+static func table_enum_type(options: Array) -> String:
+	var clean: PackedStringArray = PackedStringArray()
+	for option: Variant in options:
+		if _valid_enum_option(str(option)):
+			clean.append(str(option).strip_edges())
+	if clean.is_empty():
+		return ""
+	return "enum(%s)" % "|".join(clean)
+
+
+## One option is valid iff it is non-empty and carries no reserved marker char. Shared by BOTH codecs
+## so decode and encode agree - the dialog preview (which decodes free-typed text) can never show a
+## choice the emitter would silently drop.
+static func _valid_enum_option(option: String) -> bool:
+	var cleaned: String = option.strip_edges()
+	if cleaned.is_empty():
+		return false
+	return not (cleaned.contains(",") or cleaned.contains("=") or cleaned.contains(":") or cleaned.contains("\"") or cleaned.contains("|") or cleaned.contains("(") or cleaned.contains(")"))
+
+
 ## Tier 3 custom-drawer @export_custom prefix. The `eventsheet:<drawer>`
 ## marker rides an @export_custom hint string; the editor's EventSheetAttributeDrawers plugin recognises it
 ## and swaps in a richer control, while WITHOUT the plugin (or in an exported game) the property degrades to
@@ -2272,7 +2311,12 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 				var column_type: String = str((column as Dictionary).get("type", "String")).strip_edges()
 				if column_name.is_empty() or column_name.contains(",") or column_name.contains("=") or column_name.contains(":") or column_name.contains("\""):
 					continue
-				if not column_type in ["String", "int", "float", "bool"]:
+				if column_type == "enum":
+					# A fixed-choice String column: re-encode the option list as enum(a|b|c). An empty /
+					# fully-invalid option list degrades to a plain String cell (never a broken marker).
+					var enum_token: String = table_enum_type((column as Dictionary).get("options", []))
+					column_type = enum_token if not enum_token.is_empty() else "String"
+				elif not column_type in ["String", "int", "float", "bool"]:
 					column_type = "String"
 				column_pairs.append("%s=%s" % [column_name, column_type])
 			if column_pairs.is_empty():
