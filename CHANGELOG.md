@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed - a long expression wraps and the box grows in the ACE parameters dialog
+
+- **The expression field in an ACE's parameters dialog (e.g. "Expression Is True") now wraps a long
+  expression across the box width and grows taller to fit it**, so the whole thing is readable without a
+  horizontal scroll (C3 style). It stays one logical line, so Enter still confirms the dialog.
+
 ### Fixed - the Edit Comment box wraps long text instead of scrolling sideways
 
 - **The Edit Comment dialog's text box now wraps long lines to its width and fills the dialog**, so the whole

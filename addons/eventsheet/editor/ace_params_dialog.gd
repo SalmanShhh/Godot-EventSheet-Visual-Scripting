@@ -977,6 +977,10 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	edit.custom_minimum_size = Vector2(0.0, 31.0)
 	edit.scroll_fit_content_height = true
+	# Wrap a long expression across the box width (with scroll_fit_content_height the box grows taller to
+	# fit) so the whole thing is readable without a horizontal scroll - C3-style. Still one LOGICAL line
+	# (wrap is visual only; the newline-strip below keeps Enter confirming the dialog).
+	edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	edit.gutters_draw_line_numbers = false
 	edit.code_completion_enabled = true
 	EventSheetPopupUI.configure_code_editor(edit)  # auto-close brackets/quotes - prevent syntax errors at the source
