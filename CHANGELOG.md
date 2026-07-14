@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed - the first-run Welcome dialog is centered
+
+- **The Welcome dialog no longer opens off-centre.** It is a content-fitting AcceptDialog, and
+  `popup_centered()` was centering it against a pre-layout (too-small) size, so the content then
+  expanded down-and-right and left the window visibly off-centre on first open. It now `reset_size()`s to
+  its real content size before centering, so it opens dead-centre every time. (The separate invited Tour
+  window keeps its intentional top-right placement.)
+
 ### Added - table drawer: a color column is a swatch, not hand-typed hex
 
 - **A table-drawer column typed `color` renders a color-picker swatch** instead of a free-text hex
