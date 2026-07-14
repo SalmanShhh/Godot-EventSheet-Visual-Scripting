@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed - the DrawingPrefabResource inspector preview is a compact card, not an elongated box
+
+- **The prefab preview panel no longer reserves a tall box with empty letterbox bands.** Its fixed height
+  dropped from 208 to 158 so it tracks the raster's own aspect at a typical inspector-column width - the
+  drawing fills the card and the steps grid sits right below it instead of after a gap.
+
 ### Added - theme editor: hover descriptions + a live preview that shows structural changes too
 
 - **Every theme property now has a plain-language hover description** (on the label and its control) that

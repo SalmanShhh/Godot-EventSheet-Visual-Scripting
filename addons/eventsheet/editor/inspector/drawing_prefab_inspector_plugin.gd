@@ -29,7 +29,9 @@ class PreviewPanel:
 
 	func _init(resource: Resource) -> void:
 		_resource = resource
-		custom_minimum_size = Vector2(0, 208)
+		# Height tracks the raster's own aspect (384x200) at a typical inspector-column width, so the
+		# preview is a compact card instead of a tall box with big empty letterbox bands above and below.
+		custom_minimum_size = Vector2(0, 158)
 		var margin: MarginContainer = MarginContainer.new()
 		for side: String in ["left", "right", "top", "bottom"]:
 			margin.add_theme_constant_override("margin_" + side, 4)
