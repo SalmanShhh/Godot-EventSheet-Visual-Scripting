@@ -49,6 +49,7 @@ var _dialog: ConfirmationDialog = null
 # name so the apply updates that function instead of appending a new one.
 var _original_name: String = ""
 var _guards_card: Control = null
+var _preview_card: Control = null
 var _name_edit: LineEdit = null
 var _description_edit: LineEdit = null
 var _usable_option: OptionButton = null           # hidden backing model for the three cards
@@ -90,10 +91,11 @@ func init_dialog(parent_node: Node) -> void:
 	_dialog.register_text_enter(_name_edit)
 	form.add_child(EventSheetPopupUI.form_row("Name", _name_edit))
 
+	# Description is a picker/publish concern (grouped under Publish below), not a first thing a beginner
+	# naming a local helper needs - so it lives in the expose section, not the always-visible form.
 	_description_edit = LineEdit.new()
 	_description_edit.placeholder_text = "What this verb does (shown in the picker)."
 	_description_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())
-	form.add_child(EventSheetPopupUI.form_row("Description", _description_edit))
 
 	# What kind of verb - three plain-language cards. The hidden _usable_option stays the backing model
 	# (build_function_data + the tests read it by index); the cards drive and mirror it.
@@ -112,8 +114,11 @@ func init_dialog(parent_node: Node) -> void:
 	_value_type_row = EventSheetPopupUI.form_row("What kind of value?", _value_type_option)
 	form.add_child(_value_type_row)
 
-	# The live picker preview + "Ships as:" - grouped in one titled card.
-	form.add_child(_build_preview_card())
+	# The live picker preview + "Ships as:" - only relevant when publishing ("what OTHER people see"),
+	# so it stays hidden until Publish is ticked to keep the default create/edit view focused.
+	_preview_card = _build_preview_card()
+	_preview_card.visible = false
+	form.add_child(_preview_card)
 
 	# Parameters - a titled card holding the event-sheet-style rows (name · type · default · description).
 	var params_content: VBoxContainer = VBoxContainer.new()
@@ -146,9 +151,12 @@ func init_dialog(parent_node: Node) -> void:
 	_expose_check.tooltip_text = "Publishes the verb into pickers as the chosen kind."
 	_expose_check.toggled.connect(func(on: bool) -> void:
 		_expose_card.visible = on
+		_preview_card.visible = on
 		_refresh_studio())
 	form.add_child(_expose_check)
 	_expose_section = EventSheetPopupUI.form_box()
+	# Description sits with the other picker/publish fields (it is "shown in the picker").
+	_expose_section.add_child(EventSheetPopupUI.form_row("Description", _description_edit))
 	_expose_name_edit = LineEdit.new()
 	_expose_name_edit.placeholder_text = "defaults from the verb name"
 	_expose_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())

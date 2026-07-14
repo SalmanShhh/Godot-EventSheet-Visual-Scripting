@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - the Edit-verb dialog is decluttered (publish fields live under Publish)
+
+- **The verb dialog no longer front-loads publish-only fields.** The big "This is what other people will
+  see" preview card and the Description field are picker/publish concerns, so they now live under the
+  "Publish to the picker" checkbox instead of always being visible. The default create/edit view is the
+  essentials - Name, the verb-kind cards, and Parameters - and the "what others see" preview + Display
+  name + category + Description all appear together the moment you tick Publish. Less information overload
+  for the common case of a plain local helper.
+
 ### Fixed - the DrawingPrefabResource inspector preview is a compact card, not an elongated box
 
 - **The prefab preview panel no longer reserves a tall box with empty letterbox bands.** Its fixed height
