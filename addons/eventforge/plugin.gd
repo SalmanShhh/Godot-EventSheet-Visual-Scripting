@@ -22,6 +22,8 @@ const ACE_PARAM_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspect
 const DRAWING_PREFAB_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd"
 const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_preview_generator.gd"
 const DRAWING_CANVAS_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_canvas_gizmo.gd"
+const DRAWING_PREFAB_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_gizmo.gd"
+const DRAWING_PREFAB_3D_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd"
 
 var _event_sheet_editor: Control = null
 var _export_integrity_plugin: EditorExportPlugin = null
@@ -35,6 +37,9 @@ var _drawing_prefab_inspector: EditorInspectorPlugin = null
 var _drawing_prefab_preview_gen: EditorResourcePreviewGenerator = null
 # Selection-driven 2D gizmo: previews a selected DrawingCanvas's preview_prefab at the host (loaded by path).
 var _drawing_canvas_gizmo: RefCounted = null
+# Selection-driven prefab gizmos: preview a referenced DrawingPrefabResource in the 2D / 3D viewport (loaded by path).
+var _drawing_prefab_gizmo: RefCounted = null
+var _drawing_prefab_3d_gizmo: RefCounted = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
 var _new_sheet_dialog: RefCounted = null
@@ -251,6 +256,14 @@ func _enter_tree() -> void:
 	# Selection-driven (never _handles), so it can't hijack the workspace. Cosmetic design aid.
 	_drawing_canvas_gizmo = load(DRAWING_CANVAS_GIZMO_PATH).new()
 	_drawing_canvas_gizmo.call("init", get_editor_interface())
+	# DrawingPrefabResource preview gizmos: selecting any Node2D/Node3D that references a prefab draws it
+	# in the 2D viewport at the node's origin, or as a camera-facing billboard in the 3D viewport. Both
+	# are selection-driven (never _handles) and spawn transient owner-less children, so they can't hijack
+	# the workspace and never touch the scene file. Cosmetic design aids.
+	_drawing_prefab_gizmo = load(DRAWING_PREFAB_GIZMO_PATH).new()
+	_drawing_prefab_gizmo.call("init", get_editor_interface())
+	_drawing_prefab_3d_gizmo = load(DRAWING_PREFAB_3D_GIZMO_PATH).new()
+	_drawing_prefab_3d_gizmo.call("init", get_editor_interface())
 	# The workspace editor (the ~3400-line dock, its ~45 delegates, every dialog, and the addon-folder
 	# vocabulary scans) is built LAZILY on first use - see _ensure_editor. Enabling the plugin, or
 	# opening a project that never touches event sheets, pays none of it. The top-strip tab still
@@ -333,6 +346,12 @@ func _exit_tree() -> void:
 	if _drawing_canvas_gizmo != null:
 		_drawing_canvas_gizmo.call("teardown")
 		_drawing_canvas_gizmo = null
+	if _drawing_prefab_gizmo != null:
+		_drawing_prefab_gizmo.call("teardown")
+		_drawing_prefab_gizmo = null
+	if _drawing_prefab_3d_gizmo != null:
+		_drawing_prefab_3d_gizmo.call("teardown")
+		_drawing_prefab_3d_gizmo = null
 	if _sheet_edit_button_plugin != null:
 		remove_inspector_plugin(_sheet_edit_button_plugin)
 		_sheet_edit_button_plugin = null

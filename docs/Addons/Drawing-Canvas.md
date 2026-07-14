@@ -137,6 +137,13 @@ while the node is selected and disappears when you deselect - it is a design aid
 the scene and never drawn in the running game. (For a standalone, always-visible gizmo, drop a
 `DrawingPrefabStamp` node instead.)
 
+**Preview any node that references a prefab.** You do not need a Drawing Canvas: give any node an
+`@export var marker: DrawingPrefabResource` (however you name it) and select it. A **2D node** draws
+the formation at its origin in the 2D viewport; a **3D node** shows it as a camera-facing billboard at
+its origin in the 3D viewport - so a target ring, a scorch mark, or a cone reads in the scene the same
+way the Decal Painter stamps these formations onto 3D surfaces. Both are selection-driven design aids:
+transient, never serialized into the scene, gone the instant you deselect.
+
 ### 6. Draw onto the 3D world
 
 Draw a target ring on the canvas, then `Spawn Canvas Decal` from the **Decal Painter** pack

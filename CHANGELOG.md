@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - a referenced DrawingPrefabResource previews in the 2D and 3D viewport
+
+- **Any node that references a `DrawingPrefabResource` now previews it in the editor viewport.** Give a
+  node an `@export var marker: DrawingPrefabResource` (any property name) and select it: a **2D node**
+  draws the formation at its origin in the 2D viewport, and a **3D node** shows it as a camera-facing
+  billboard at its origin in the 3D viewport - textured by the same software rasterizer behind the
+  Inspector preview and the FileSystem thumbnail. Both are selection-driven design aids (mirroring the
+  Drawing Canvas gizmo): a transient owner-less child, never written to the scene file, gone the instant
+  you deselect - so nothing hijacks the workspace and the scene stays byte-identical.
+
 ### Fixed - WASD moves the character in the FPS Arena showcase
 
 - **WASD now drives movement in the FPS Arena showcase.** The FPS Controller reads the `ui_left/right/up/down`
