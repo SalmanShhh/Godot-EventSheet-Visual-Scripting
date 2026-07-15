@@ -155,6 +155,21 @@ static func refresh() -> void:
 		_dock._refresh_after_edit()
 
 
+## Builds a sheet-native CONDITION/ACTION row so a construct reads as an EVENT, not a text blob - the model
+## the whole tool is built on. The discriminating text (a pattern, a guard, a case) goes in the CONDITION
+## cell; each `action_lines` entry is an ACTION cell. Returns an EventRowData laid out with the condition |
+## action lane divider (or null with no dock). This is the primitive for mapping ANY feature onto the event
+## model: the built-in switch/case dogfoods it for its case rows, and a Custom Block's renderer can return
+## these so its rows read as events. `source` is the resource a double-click on the row should route to.
+static func build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int = 0, source: Resource = null) -> EventRowData:
+	if not _dock_alive():
+		return null
+	var view: EventSheetViewport = _dock._active_view()
+	if view == null:
+		return null
+	return view._row_builder._build_condition_action_row(condition_text, action_lines, indent, source)
+
+
 ## Adds an entry to the Command Palette (Ctrl+P). `action` runs when picked. Re-register
 ## under the same title to replace; unregister_palette_command removes it. Works before
 ## the dock opens - entries appear once a palette exists.

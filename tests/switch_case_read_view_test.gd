@@ -53,15 +53,24 @@ static func run() -> bool:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("match_action", false)):
 			match_action_texts.append(str(span.text))
 
-	# The row must be tall enough to actually SHOW the case lines (header + 2 cases x (pattern + body) = 5).
-	ok = _check("the structured match expands the row height to fit its cases", event_row_data.line_count >= 5, true) and ok
-	ok = _check("the match header renders", texts.has("match phase:"), true) and ok
-	ok = _check("the first case pattern renders", texts.has("\t0:"), true) and ok
-	ok = _check("the case body is summarised (not a raw blob)", texts.has("\t\tvelocity = Vector2.ZERO"), true) and ok
-	ok = _check("the default case pattern renders", texts.has("\t_:"), true) and ok
-	ok = _check("an empty case reads as pass", texts.has("\t\tpass"), true) and ok
+	ok = _check("the event shows just the match header in its action lane", texts.has("match phase:"), true) and ok
 	ok = _check("branches_text is not shown when cases exist", _any_contains(texts, "SHOULD_NOT_SHOW"), false) and ok
-	ok = _check("structured match spans open the editor on double-click (match_action)", not match_action_texts.is_empty(), true) and ok
+	ok = _check("the match header opens the editor on double-click (match_action)", not match_action_texts.is_empty(), true) and ok
+
+	# ── Each case maps onto the sheet's model: a condition/action CHILD row - PATTERN in the condition cell,
+	# BODY in the action cell (not a flat text block in one action lane) ──
+	var case_rows: Array = []
+	for child: EventRowData in event_row_data.children:
+		if child.row_type == EventRowData.RowType.EVENT and _lane_span(child, "condition") != null:
+			case_rows.append(child)
+	ok = _check("each case renders as its own condition/action row (2 cases)", case_rows.size(), 2) and ok
+	if case_rows.size() == 2:
+		ok = _check("a case row is an EVENT row (so it gets the condition | action lanes)",
+			(case_rows[0] as EventRowData).row_type == EventRowData.RowType.EVENT, true) and ok
+		ok = _check("the first case's PATTERN is in the condition cell", _lane_text(case_rows[0], "condition"), "0") and ok
+		ok = _check("the first case's BODY is in the action cell", _lane_text(case_rows[0], "action"), "velocity = Vector2.ZERO") and ok
+		ok = _check("the default case's pattern is in the condition cell", _lane_text(case_rows[1], "condition"), "_") and ok
+		ok = _check("an empty case reads as a `pass` action", _lane_text(case_rows[1], "action"), "pass") and ok
 
 	# ── A raw-text MatchRow (no cases) still shows its branches and keeps the double-click dialog ──
 	var raw_match: MatchRow = MatchRow.new()
@@ -93,6 +102,18 @@ static func run() -> bool:
 
 	viewport.free()
 	return ok
+
+
+static func _lane_span(row: EventRowData, lane: String) -> SemanticSpan:
+	for span: SemanticSpan in row.spans:
+		if span.metadata is Dictionary and str((span.metadata as Dictionary).get("lane")) == lane:
+			return span
+	return null
+
+
+static func _lane_text(row: EventRowData, lane: String) -> String:
+	var span: SemanticSpan = _lane_span(row, lane)
+	return str(span.text) if span != null else "<none>"
 
 
 static func _any_contains(texts: Array, needle: String) -> bool:

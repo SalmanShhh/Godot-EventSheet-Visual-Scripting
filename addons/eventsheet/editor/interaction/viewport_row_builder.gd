@@ -1479,7 +1479,66 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 		var child_row: EventRowData = _viewport._build_row_from_resource(child, indent + 1)
 		if child_row != null:
 			row_data.children.append(child_row)
+	# A structured switch (a MatchRow with cases) maps onto the sheet's own model: each case renders as its
+	# own condition/action child row (the pattern in the condition cell, the body in the action cells).
+	for case_row: EventRowData in _build_match_case_rows(event_row, indent + 1):
+		row_data.children.append(case_row)
 	return row_data
+
+
+## One condition/action child row per case of any structured MatchRow in this event's actions - the switch
+## mapped onto the sheet: the case PATTERN reads as a condition, the case BODY as the actions to run. The row
+## keeps the MatchRow as source_resource so double-click opens the switch editor; an empty case body is a
+## single "pass" action.
+func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	for action_item: Variant in event_row.actions:
+		if not (action_item is MatchRow):
+			continue
+		var match_row: MatchRow = action_item as MatchRow
+		if match_row.cases.is_empty():
+			continue
+		for match_case: MatchCase in match_row.cases:
+			if match_case == null:
+				continue
+			var body: PackedStringArray = _match_case_summary_lines(match_case.events)
+			if body.is_empty():
+				body = PackedStringArray(["pass"])
+			rows.append(_build_condition_action_row(str(match_case.pattern).strip_edges(), body, indent, match_row))
+	return rows
+
+
+## Builds a synthetic event-model row: a CONDITION cell (condition_text) on the left, ACTION cells
+## (action_lines, one per line) on the right - the sheet's condition -> action idiom without an EventRow
+## resource behind it. row_type EVENT gives it the lane divider; _ensure_event_spans keeps these pre-built
+## spans. Reusable so any feature can render a construct as sheet-native events (the switch/case dogfoods it;
+## exposed via EventSheets.build_condition_action_row for custom blocks). Non-interactive (spans editable:
+## false); the caller sets source_resource for double-click routing.
+func _build_condition_action_row(condition_text: String, action_lines: PackedStringArray, indent: int, source: Resource) -> EventRowData:
+	var row := EventRowData.new()
+	row.indent = indent
+	row.row_type = EventRowData.RowType.EVENT
+	row.source_resource = source
+	row.line_count = maxi(action_lines.size(), 1)
+	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var spans: Array[SemanticSpan] = [
+		_make_span(condition_text if not condition_text.is_empty() else " ", SemanticSpan.SpanType.CONDITION, {
+			"lane": "condition",
+			"kind": "match_case",
+			"editable": false,
+			"line_index": 0
+		}.merged(condition_style, true))
+	]
+	for line_index: int in range(action_lines.size()):
+		spans.append(_make_span(action_lines[line_index] if not action_lines[line_index].is_empty() else " ", SemanticSpan.SpanType.ACTION, {
+			"lane": "action",
+			"kind": "match_case",
+			"editable": false,
+			"line_index": line_index
+		}.merged(action_style, true)))
+	row.spans = spans
+	return row
 
 
 func _build_global_variable_rows(sheet: EventSheetResource) -> Array[EventRowData]:
@@ -1988,18 +2047,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 				var match_resource: MatchRow = action_resource as MatchRow
 				var structured_match: bool = not match_resource.cases.is_empty()
 				var match_lines: PackedStringArray = PackedStringArray(["match %s:" % match_resource.match_expression])
-				if structured_match:
-					for match_case: MatchCase in match_resource.cases:
-						if match_case == null:
-							continue
-						match_lines.append("\t" + str(match_case.pattern).strip_edges() + ":")
-						var body_summary: PackedStringArray = _match_case_summary_lines(match_case.events)
-						if body_summary.is_empty():
-							match_lines.append("\t\tpass")
-						else:
-							for summary_line: String in body_summary:
-								match_lines.append("\t\t" + summary_line)
-				else:
+				# Structured cases render as their OWN condition/action child rows (built in
+				# _build_event_row); this header stays one line. Only a raw-text match shows branches here.
+				if not structured_match:
 					for branch_line: String in match_resource.branches_text.split("\n"):
 						match_lines.append("\t" + branch_line)
 				for match_line_index in range(match_lines.size()):
@@ -2012,7 +2062,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 								"kind": "action",
 								"ace_index": action_index,
 								"match_action": true,
-								"action_line": match_line_index,
+								# line_index stacks each match line on its own row (the action lane lays spans
+								# out vertically by line_index); without it every branch overlapped at line 0.
+								"line_index": match_line_index,
 								"text_color": event_style.value_highlight_color
 							}
 						)
@@ -2163,13 +2215,7 @@ func _count_event_lines(event_row: EventRow) -> int:
 		elif action_resource is MatchRow:
 			var match_resource: MatchRow = action_resource as MatchRow
 			if not match_resource.cases.is_empty():
-				# Structured: the `match expr:` line, plus per case a `pattern:` line and its body (or `pass`).
-				var structured_lines: int = 1
-				for match_case: MatchCase in match_resource.cases:
-					if match_case == null:
-						continue
-					structured_lines += 1 + maxi(_match_case_summary_lines(match_case.events).size(), 1)
-				action_count += structured_lines
+				action_count += 1  # just the `match expr:` header; each case is its own child row now
 			else:
 				action_count += match_resource.branches_text.split("\n").size() + 1
 		elif action_resource is CommentRow:
