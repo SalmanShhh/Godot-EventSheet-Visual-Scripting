@@ -10,6 +10,10 @@ extends Resource
 @export var default_value: Variant = null
 @export var description: String = ""
 @export var is_constant: bool = false
+## When true, compiles to `static var` (a class-level member shared across all instances, no `self`).
+## Mutually exclusive with @export / @onready / const. Set on lift from a `static var` line and byte-gated,
+## so a hand-written static var opens as an editable row instead of a verbatim block.
+@export var is_static: bool = false
 ## When true and placed in the event tree, compiles to `@export var` (usable outside the
 ## script); otherwise a plain private `var`.
 @export var exported: bool = false

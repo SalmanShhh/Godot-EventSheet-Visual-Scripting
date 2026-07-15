@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added - a class-level `static var` opens as an editable variable row
+
+- **A `static var` in an opened `.gd` now lifts to a first-class editable variable row** (with a new
+  `static` flag) instead of a verbatim block, matching the already-shipped `const` and `@onready` lifts. It
+  re-emits `static var` exactly and is byte-gated: an untyped `static var x = 5` that cannot re-emit to its
+  source stays a verbatim block, and every non-static variable emits byte-identically.
+
 ### Added - a `static func` opens as an editable function, not a raw block
 
 - **A `static func` in an opened `.gd` now lifts to a first-class, editable function** (with a new

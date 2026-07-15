@@ -2276,7 +2276,7 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 		var hinted_default: String = str(local_var.default_value) if local_var.expression_default else _to_code_literal(local_var.default_value)
 		var_line = "%s var %s: %s = %s" % [local_var.export_hint, local_var.name, local_var.type_name, hinted_default]
 	else:
-		var export_prefix: String = "@export " if local_var.exported else ""
+		var export_prefix: String = "static " if local_var.is_static else ("@export " if local_var.exported else "")
 		# A bare-expression default (Vector2.ZERO, Color.RED, Type.CONST) emits VERBATIM; a literal
 		# goes through _to_code_literal (which quotes strings). This keeps a `= Vector2.ZERO` var a
 		# first-class row instead of stranding it as a GDScript block over a quoted `"Vector2.ZERO"`.

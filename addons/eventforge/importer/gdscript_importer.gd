@@ -223,7 +223,14 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	# compiler re-emits the default VERBATIM for onready, and the byte-verify below still gates it - if the
 	# re-emission doesn't reproduce the ORIGINAL line exactly, it reverts to a verbatim block, lossless.
 	var onready_prefixed: bool = line.begins_with("@onready var ")
-	var declaration: String = line.substr(9) if onready_prefixed else line  # drop the "@onready " prefix (9 chars)
+	# A `static var` is a class-level shared member; strip the `static ` prefix (7 chars) so the same
+	# declaration parser handles it, then flag is_static below (mirrors the @onready handling).
+	var static_prefixed: bool = line.begins_with("static var ")
+	var declaration: String = line
+	if onready_prefixed:
+		declaration = line.substr(9)  # drop the "@onready " prefix (9 chars)
+	elif static_prefixed:
+		declaration = line.substr(7)  # drop the "static " prefix (7 chars)
 	if not (declaration.begins_with("var ") or declaration.begins_with("@export") or declaration.begins_with("const ")):
 		return null
 	var parsed: Dictionary = VariableParser.new().parse(declaration)
@@ -242,6 +249,7 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	# dialog) instead of degrading to a verbatim block. Byte-gated below like every other lift.
 	lifted.is_constant = bool(descriptor.get("constant", false))
 	lifted.onready = onready_prefixed
+	lifted.is_static = static_prefixed
 	# A String default that appeared UNQUOTED in the source is a bare code expression (Vector2.ZERO,
 	# Color.RED, Type.CONST), not a literal - mark it so it re-emits verbatim rather than quoted. The
 	# byte-verify below still gates it: if the flagged re-emission doesn't reproduce the line, revert.
