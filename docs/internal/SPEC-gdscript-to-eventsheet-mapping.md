@@ -118,34 +118,55 @@ deliberately NOT lifted: no ACE has that template and the compiler emits it only
 Test: `tests/loop_control_lift_test.gd`. (The statement-after-nested-block interleaving limit below still
 keeps a `for`/`while` with work following an `if...continue` guard as a verbatim block.)
 
-### G3. static func - the biggest opaque-block offender in real utility code [TOP REMAINING GAP]
+### G3. static func [SHIPPED]
 
-`static func foo() -> T:` never lifts: the reverse header regex demands `^func ... -> Type:`
-(ace_lifter.gd:830) and the emitter has no static prefix (sheet_compiler.gd:675). `EventFunction` has no
-`is_static` field. Very common in singletons/utility classes; each stays a full verbatim block.
+**SHIPPED (645b837).** Added `EventFunction.is_static`; emits `static func` at both function-header sites
+(sheet_compiler.gd, main/.tres and external/.gd paths); the reverse header regex (ace_lifter.gd) grew a
+non-capturing `(static )?` prefix and the four `begins_with("func ")` gates (importer chunker, trailing-run
+classifier, mid-file anchor, declaration splitter) admit `static func `. Byte-gated: a return-type-less
+`static func tick():` stays raw, non-static funcs emit byte-identically. Test: `tests/static_func_lift_test.gd`.
 
-- **Fix:** add `EventFunction.is_static`; emit `static func` when set; widen the header regex to an optional
-  `static ` prefix and capture it. Declaration-level (not condition/action-shaped), but high "reads as a
-  sheet" value.
-- **Scope:** one field + emitter branch + regex widen. Clean.
+### G4. the batch - resolved
 
-### G4. lower-value gaps (batch later)
-
-- **static var / static members** - no field, no ACE.
-- **inner class with methods** - no `ClassRow`; stays verbatim. (Pure-data classes are already
-  view-structured; a methods-bearing class would need a nested-sheet concept - largest effort here.)
-- **`super` / `super.method()`** - no ACE; opaque or incidentally `CallFunction`.
-- **multi-line / hand-formatted `enum`** - only the canonical single-line form lifts.
-- **local `const` in flow** - downgrades to a plain `var` + warning (sheet_compiler.gd:1214).
-- **arbitrary annotations** (`@rpc`/`@warning_ignore`/`@abstract`/`@static_unload`/raw `@export_custom`) - stay
-  verbatim; only `@ace_*` and the export-hint families are structured.
-- **statements interleaved AFTER a nested block in one body** - unrepresentable (actions emit before
-  `sub_events`); falls to a lenient raw block (ace_lifter.gd:1197). A structural limit, not a quick fix.
+- **static var** [SHIPPED e8362aa] - `LocalVariable.is_static`; emits `static var`; recognized via a
+  `static ` prefix strip in `_try_lift_variable`; byte-gated. Test: `tests/static_var_lift_test.gd`.
+- **local `const` in flow** [SHIPPED 22b835d] - three `SetLocalConst` Helper ACEs (plain/typed/inferred)
+  mirroring the `SetLocalVar` family, whitelisted into the reverse index; `const N = 3` reads as a Set Local
+  Constant row. Test: `tests/local_const_lift_test.gd`.
+- **arbitrary annotations (`@rpc` etc.)** [SHIPPED f2ca60e] - `EventFunction.annotation_lines` keeps any
+  leading GDScript annotation verbatim and re-emits it between the `## @ace_*` block and the `func` header;
+  `_run_row_kind` + the boundary-detach + the trailing scan collect the `@`-lines. One field covers every
+  annotation. Test: `tests/function_annotation_lift_test.gd`.
+- **statements interleaved AFTER a nested block** [SHIPPED a6b527e] - NOT the architectural change the first
+  pass assumed: a condition-less sub-event already emits trailing statements in place byte-exact, so
+  `_adopt_block_body` simply stopped refusing a plain collector after a sub-event. High value (also completes
+  the loop-control story). Test: `tests/interleaved_statements_lift_test.gd`.
+- **inner class with methods** [SHIPPED-partial c32d748] - a methods-bearing inner class reads as a foldable,
+  READ-ONLY class block (fields + `ƒ name() -> Type` method chips) via a pure view over the unchanged
+  RawCodeRow (`methods_class_name`/`parse_methods_class`/`methods_class_lifts`, mirroring the data-class
+  trio). Test: `tests/methods_class_lift_test.gd`. The FULL resource-structured nested-sheet (editable
+  methods emitted at +1 indent) remains DEFERRED - it needs an indent-parameterized function emitter and a
+  nested-resource container threaded through the undo funnel / source-map / drag, multiplying the covenant
+  surface for re-editability of already-lossless verbatim (the project's Tier-2 deferral category).
+- **`super` / `super.method()`** [NON-GAP] - a probe confirmed both already reverse-lift and round-trip
+  byte-identically today: `super.method(args)` matches `CallMethod` (target `super`), `super()` matches
+  `CallFunction`. A dedicated `Call parent method` ACE would only cosmetically relabel rows that already read
+  correctly, so it is not built.
+- **multi-line / hand-formatted `enum`** [DEFERRED] - a multi-line enum already round-trips as a verbatim
+  RawCodeRow and gives enum-typed exports their Inspector dropdown; lifting it to an editable `EnumRow` would
+  reopen the frozen single-line enum emit contract and take on an unguarded cache-invalidation obligation at
+  every EnumRow edit site (a new corruption vector). Low value, byte-risky. The only covenant-safe slice is a
+  pure-VIEW recognizer (like the data-class block) that delivers a cosmetic summary but no editability.
+- **static var / static members (member funcs aside)** - class-level static var is shipped; a `static`
+  qualifier on a whole member-set beyond var/func is out of scope (rare, no demand).
 
 ## Net assessment
 
-Statement-level coverage is **essentially complete** for the common imperative subset in both directions, on
-a rich declaration layer, and the generic catch-alls guarantee any `.gd` opens as rows. **G1 (OR-mode
-reverse) and G2 (loop-control reverse) are now shipped**, so the remaining structural gaps that keep real
-hand-written code reading as opaque blocks are, in priority order: **static func (G3)**, then the G4 batch.
-Closing G3 would make the vast majority of everyday GDScript read as discrete condition/action rows.
+Statement-level coverage is **complete** for the common imperative subset in both directions, on a rich
+declaration layer, with generic catch-alls guaranteeing any `.gd` opens as rows. **All the ranked structural
+gaps are now resolved**: G1 (OR block), G2 (loop control), G3 (static func), and the G4 batch (static var,
+local const, `@rpc`/annotations, interleaved statements, methods-class view) are shipped; `super` was a
+non-gap; the multi-line enum and the full resource-structured nested class are deliberately DEFERRED
+(byte-risk / re-editability-of-verbatim, the project's Tier-2 category). The vast majority of everyday
+GDScript - and essentially every construct in the common imperative + declaration subset - now reads as
+discrete, structured rows on the condition/action model.
