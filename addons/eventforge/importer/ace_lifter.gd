@@ -981,9 +981,10 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 ## `if <conds>:` opens a conditioned row, an adjacent `elif <conds>:`/`else:` chains
 ## onto it via else_mode (ELSE + conditions == ELIF - the emitter's rule), and the
 ## block's own body parses one level deeper - statements become the row's actions,
-## nested blocks its sub_events. Anything unrepresentable (unmatched conditions,
-## statements interleaved AFTER a nested block, arbitrary control flow) falls back to
-## the lenient path: the raw line + its deeper lines stay in-flow GDScript with their
+## nested blocks its sub_events, and statements interleaved AFTER a nested block become
+## condition-less sub_events (the emitter sequences them in place). Anything still
+## unrepresentable (unmatched conditions, arbitrary control flow) falls back to the
+## lenient path: the raw line + its deeper lines stay in-flow GDScript with their
 ## relative indentation, exactly as before this grammar existed. The byte-identical
 ## recompile in attempt_lift gates every shape this parser produces.
 ## Returns {ok, rows: Array[EventRow], next: int}; a "plain collector" row (no
@@ -1193,10 +1194,12 @@ static func _reconstruct_match_branches(cases: Array[MatchCase]) -> String:
 	return "\n".join(out)
 
 
-## Folds a parsed block body into its event: a leading plain collector's statements
-## become the event's actions, every conditioned/chained row becomes a sub-event.
-## False when the shape can't survive emission (actions emit BEFORE sub-events, so
-## statements after a nested block have no faithful home).
+## Folds a parsed block body into its event: a LEADING plain collector's statements become the event's
+## actions, every conditioned/chained/loop row becomes a sub-event, and a plain collector that appears
+## AFTER a block becomes a condition-less sub-event too. The emitter sequences actions-then-(blocks
+## interleaved with condition-less collectors) at the parent's body depth, so `do A; if C: D; do E` reads
+## as actions=[A] + sub_events=[if C -> D, condition-less -> E] and re-emits byte-exact - a post-block
+## statement no longer collapses the whole block to a verbatim cell. The byte-verify still gates it.
 static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
 	var cursor: int = 0
 	if cursor < inner_rows.size() and _is_plain_collector(inner_rows[cursor] as EventRow):
@@ -1205,7 +1208,9 @@ static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
 		cursor += 1
 	while cursor < inner_rows.size():
 		var child: EventRow = inner_rows[cursor] as EventRow
-		if _is_plain_collector(child):
+		# An empty plain collector can't arise from _parse_body (collectors are created lazily on a
+		# consumed statement); bail defensively rather than emit a stray no-op sub-event.
+		if _is_plain_collector(child) and child.actions.is_empty():
 			return false
 		block_event.sub_events.append(child)
 		cursor += 1

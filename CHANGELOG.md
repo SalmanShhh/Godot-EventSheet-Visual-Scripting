@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - a statement after a nested block reads as events, not one raw cell
+
+- **Opening a `.gd` now keeps a block structured even when a statement follows a nested block inside it.**
+  Before, a body like `if outer: pre(); if inner: mid(); post()` collapsed the entire outer block into one
+  opaque code cell, because an event emits its actions before its sub-events and a trailing `post()` had no
+  home. Now that trailing statement reads as a condition-less "Every Tick" sub-event, which the compiler
+  already emits as bare statements in place - so the block reads fully as events (leading actions, the nested
+  block, then the trailing statements, in order) and still re-emits byte-for-byte. This also completes the
+  loop-control story: a loop written as `for e in items: if e.dead: continue; e.update()` (a skip-guard
+  followed by work) now lifts fully instead of staying verbatim. Arbitrary interleaving of statements and
+  blocks round-trips, and the byte-identical recompile gates every shape, so a `.gd` still round-trips exactly.
+
 ### Added - `break` / `continue` in a loop read as Break Loop / Continue Loop actions
 
 - **Opening a `.gd` now lifts a `break` or `continue` inside a loop body into a Break Loop / Continue Loop
