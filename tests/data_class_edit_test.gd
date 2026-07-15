@@ -137,9 +137,11 @@ static func _diff_is(before: String, after: String, old_line: String, new_line: 
 
 
 static func _find_data_class_row(view: EventSheetViewport) -> EventRowData:
+	# The data-class header row keeps its RawCodeRow as source and a class-name-keyed row_uid; its field
+	# children are inert (null source). This finds the header without depending on its span text.
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
-		if row_data != null and not row_data.spans.is_empty() and str(row_data.spans[0].text) == "Data class":
+		if row_data != null and row_data.source_resource is RawCodeRow and str(row_data.row_uid).begins_with("data_class_"):
 			return row_data
 	return null
 

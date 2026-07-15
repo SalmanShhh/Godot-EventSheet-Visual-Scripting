@@ -64,12 +64,14 @@ static func run() -> bool:
 	var class_row: EventRowData = null
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
-		if row_data != null and not row_data.spans.is_empty() and str(row_data.spans[0].text) == "Data class":
+		if row_data != null and row_data.source_resource is RawCodeRow and str(row_data.row_uid).begins_with("data_class_"):
 			class_row = row_data
-	ok = _check("the pack shows a Data class row", class_row != null, true) and ok
+	ok = _check("the pack shows a data class row", class_row != null, true) and ok
 	ok = _check("it collapses to one header line", class_row.line_count if class_row != null else -1, 1) and ok
-	ok = _check("the class name is its own chip span",
-		class_row != null and class_row.spans.size() >= 2 and str(class_row.spans[1].text) == "AbilityData", true) and ok
+	# The header reads like a regular event row (no dimmed "Data class" pill): the class declaration in the
+	# condition cell, its field count in the action cell.
+	ok = _check("the header shows the class in the condition cell",
+		class_row != null and str(class_row.spans[0].text) == "class AbilityData" and str((class_row.spans[0].metadata as Dictionary).get("lane")) == "condition", true) and ok
 	ok = _check("the fields render as child rows", class_row.children.size() if class_row != null else -1, 10) and ok
 	# A field child reads like a variable row: name : type = default.
 	var first_field_row: EventRowData = class_row.children[0] if class_row != null and not class_row.children.is_empty() else null
@@ -77,7 +79,7 @@ static func run() -> bool:
 		first_field_row != null and str(first_field_row.spans[0].text) == "cooldown", true) and ok
 	ok = _check("a field row is inert (source_resource null, no mutation reaches it)",
 		first_field_row != null and first_field_row.source_resource == null, true) and ok
-	ok = _check("no bare `class AbilityData:` GDScript span remains", _has_class_span(view), false) and ok
+	ok = _check("no bare `class AbilityData:` raw GDScript span remains (it lifted)", _has_class_span(view), false) and ok
 	ok = _check("the header keeps its RawCodeRow (still edits/round-trips)",
 		class_row != null and class_row.source_resource is RawCodeRow, true) and ok
 
@@ -95,7 +97,9 @@ static func _has_class_span(view: EventSheetViewport) -> bool:
 		if row_data == null:
 			continue
 		for span: SemanticSpan in row_data.spans:
-			if str(span.text).begins_with("class AbilityData"):
+			# The RAW form is `class AbilityData:` (with the colon); the lifted header reads `class
+			# AbilityData` (no colon) in the condition cell, so it is not a raw block.
+			if str(span.text).begins_with("class AbilityData:"):
 				return true
 	return false
 

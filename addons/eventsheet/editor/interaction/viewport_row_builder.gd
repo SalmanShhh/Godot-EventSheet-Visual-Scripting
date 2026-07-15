@@ -1144,7 +1144,7 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var model: Dictionary = parse_data_class(raw_row.code)
 	var row_data := EventRowData.new()
 	row_data.indent = indent
-	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.row_type = EventRowData.RowType.EVENT  # reads like a regular event row (condition | action lanes), not a dimmed block
 	row_data.source_resource = raw_row
 	row_data.line_count = 1  # visual collapse only - the underlying lines are all still there
 	var data_class_name_str: String = str(model.get("class_name"))
@@ -1162,43 +1162,35 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			editable_count += 1
 		elif not str(entry.get("text")).strip_edges().is_empty():
 			member_count += 1
-	var header_spans: Array[SemanticSpan] = [
-		_make_span("Data class", SemanticSpan.SpanType.KEYWORD, {
-			"editable": false,
-			"badge": true,
-			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
-			"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
-			"kind": "raw_code",
-			"line_index": 0
-		}),
-		_make_span(data_class_name_str, SemanticSpan.SpanType.OBJECT, {
-			"editable": false,
-			"badge": true,
-			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_CHIP_BG,
-			"badge_fg": EventSheetPalette.COLOR_CHIP_FG,
-			"kind": "raw_code",
-			"line_index": 0
-		})
-	]
+	# The class header reads like a regular event row - no dimmed "Data class" pill: its declaration
+	# (`class Name [extends Base]`) in the CONDITION cell, its field count in the ACTION cell, and its
+	# fields as condition/action child rows below.
+	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var base: String = str(model.get("extends", ""))
+	var header_text: String = "class %s" % data_class_name_str
 	if not base.is_empty():
-		header_spans.append(_make_span("extends %s" % base, SemanticSpan.SpanType.KEYWORD, {
+		header_text += " extends %s" % base
+	var header_spans: Array[SemanticSpan] = [
+		_make_span(header_text, SemanticSpan.SpanType.OBJECT, {
+			"lane": "condition",
 			"editable": false,
 			"kind": "raw_code",
 			"line_index": 0,
-			"text_color": EventSheetPalette.TEXT_MUTED
-		}))
+			"text_color": event_style.object_label_color
+		}.merged(condition_style, true))
+	]
 	var cue: String = "%d field%s" % [member_count, "" if member_count == 1 else "s"]
 	if editable_count > 0:
 		cue += " · double-click a default to edit"
 	header_spans.append(_make_span(cue, SemanticSpan.SpanType.VALUE, {
+		"lane": "action",
 		"editable": false,
 		"kind": "raw_code",
 		"line_index": 0,
-		"text_color": EventSheetPalette.TEXT_MUTED
-	}))
+		"text_color": event_style.value_highlight_color
+	}.merged(action_style, true)))
 	row_data.spans = header_spans
 	for body_index: int in range(body.size()):
 		var entry: Dictionary = body[body_index]
