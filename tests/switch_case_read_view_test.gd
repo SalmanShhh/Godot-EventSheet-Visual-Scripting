@@ -53,6 +53,8 @@ static func run() -> bool:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("match_action", false)):
 			match_action_texts.append(str(span.text))
 
+	# The row must be tall enough to actually SHOW the case lines (header + 2 cases x (pattern + body) = 5).
+	ok = _check("the structured match expands the row height to fit its cases", event_row_data.line_count >= 5, true) and ok
 	ok = _check("the match header renders", texts.has("match phase:"), true) and ok
 	ok = _check("the first case pattern renders", texts.has("\t0:"), true) and ok
 	ok = _check("the case body is summarised (not a raw blob)", texts.has("\t\tvelocity = Vector2.ZERO"), true) and ok

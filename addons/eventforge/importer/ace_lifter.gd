@@ -1103,6 +1103,11 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				var match_row: MatchRow = MatchRow.new()
 				match_row.match_expression = rest.substr(6, rest.length() - 7)  # strip "match " and ":"
 				match_row.branches_text = "\n".join(branch_lines)
+				# Structured lift: parse the branch text into first-class cases (pattern + body) so the switch
+				# reads and (later) edits as event-sheet blocks, not a text blob. Byte-gated - the cases are
+				# only taken when re-emitting them reproduces the branch text exactly; otherwise the verbatim
+				# branches_text stands (the raw fallback), so this never risks the round-trip.
+				match_row.cases = _structure_match_cases(branch_lines)
 				current.actions.append(match_row)
 				index = scan
 				chain_open = false
@@ -1124,6 +1129,65 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		chain_open = false
 	_flush_raw(current, pending_raw)
 	return {"ok": true, "rows": rows, "next": index}
+
+
+## Parses a match's dedented branch lines (patterns at column 0, bodies one tab deeper) into structured
+## MatchCases (pattern + a RawCodeRow body dedented one more tab). Returns [] - so the caller keeps the
+## verbatim branches_text - unless the parse is clean AND re-emitting the cases reproduces the branch lines
+## byte-for-byte (the verify-lift gate: a case body compiles at pattern-indent + one tab, exactly where the
+## branch line sat, so a structured re-emit equals the raw one, and the whole-match round-trip is preserved).
+static func _structure_match_cases(branch_lines: PackedStringArray) -> Array[MatchCase]:
+	var cases: Array[MatchCase] = []
+	var current_case: MatchCase = null
+	var current_body: PackedStringArray = PackedStringArray()
+	for line: String in branch_lines:
+		if not line.begins_with("\t"):
+			# A pattern line at column 0; it must end with ":" to be a branch head.
+			if not line.ends_with(":"):
+				return []
+			if current_case != null:
+				_finish_match_case(current_case, current_body)
+				current_body = PackedStringArray()
+			current_case = MatchCase.new()
+			current_case.pattern = line.substr(0, line.length() - 1)
+			cases.append(current_case)
+		else:
+			if current_case == null:
+				return []  # a body line before any pattern - not a clean case list
+			current_body.append(line.substr(1))  # dedent one tab, relative to its pattern
+	if current_case != null:
+		_finish_match_case(current_case, current_body)
+	if cases.is_empty():
+		return []
+	# Every branch must carry a body (a match arm is never empty in real code) and re-emitting the cases must
+	# reproduce the exact branch lines - otherwise fall back to the verbatim text so the round-trip is safe.
+	for match_case: MatchCase in cases:
+		if (match_case.events as Array).is_empty():
+			return []
+	if _reconstruct_match_branches(cases) != "\n".join(branch_lines):
+		return []
+	return cases
+
+
+static func _finish_match_case(match_case: MatchCase, body: PackedStringArray) -> void:
+	if body.is_empty():
+		return
+	var raw: RawCodeRow = RawCodeRow.new()
+	raw.code = "\n".join(body)
+	match_case.events = [raw]
+
+
+## Rebuilds the dedented branch-line text from structured cases (the inverse of _structure_match_cases): each
+## `pattern:` line plus its body re-indented one tab. Used only to verify a structured lift is lossless.
+static func _reconstruct_match_branches(cases: Array[MatchCase]) -> String:
+	var out: PackedStringArray = PackedStringArray()
+	for match_case: MatchCase in cases:
+		out.append(match_case.pattern + ":")
+		for item: Variant in match_case.events:
+			if item is RawCodeRow:
+				for code_line: String in (item as RawCodeRow).code.split("\n"):
+					out.append("\t" + code_line)
+	return "\n".join(out)
 
 
 ## Folds a parsed block body into its event: a leading plain collector's statements

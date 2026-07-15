@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - a GDScript `match` reads as a structured switch/case
+
+- **Opening a `.gd` with a `match` statement now reads it as a structured switch: each branch becomes a
+  first-class case with its own pattern and body, rendered as readable `pattern:` lines with the body
+  summarised beneath (an action reads as its friendly text), instead of one opaque block of match text.** The
+  lift is byte-gated - the structured cases are only taken when re-emitting them reproduces the original
+  branch text exactly (nested branch bodies keep their indentation), so a `.gd` still round-trips
+  byte-for-byte and any match the parser can't cleanly structure stays a verbatim block. A structured switch
+  is read-only for now (double-click no longer opens the old raw-text match dialog, which can't represent
+  cases); editing cases as event-sheet blocks is a follow-up. Behind this: a MatchRow carries structured
+  `cases` (each a `MatchCase` of a pattern plus an action-lane body) that compile to the same plain `match`.
+
 ### Changed - the enum editor gives each value its own field
 
 - **Editing an enum now shows each value in its own field, with a "+ Add value" button and a remove (✕) on
