@@ -99,34 +99,26 @@ Ranking axis: how common the construct is in hand-written GDScript, times how we
 condition/action reading. Each gap below is a construct that stays **opaque** (level 3) when it should reach
 level 1 or 2.
 
-### G1. OR-mode reverse-lift - `if a or b:` should read as two OR'd conditions
+### G1. OR-mode reverse-lift - `if a or b:` reads as OR'd conditions [SHIPPED]
 
-Today OR is FORWARD-only. The reverse splits condition text only on top-level ` and `
-(`_split_top_level_and`, ace_lifter.gd:1281), so `if a or b:` lifts as **one** `ExpressionIsTrue` blob - byte
-exact, but the OR structure is lost. This is the single most **on-model** gap: it is about the condition lane
-itself, and C3 users already know "Or blocks."
+**SHIPPED (a6ff947).** A purely-OR `if` (no top-level ` and `) now splits on top-level ` or `, lifts each
+term as its own condition, and sets `condition_mode = OR`, so it reads as a C3-style "Or block". A mixed
+`a or b and c` keeps the ` and ` split (GDScript binds `and` tighter) and stays AND-mode - byte-exact, not
+falsely restructured. `_split_top_level_and` was generalized to `_split_top_level(expr, sep)`; the branch
+lives in `_parse_conditions` (ace_lifter.gd). Byte-gated. Test: `tests/or_condition_lift_test.gd`.
 
-- **Fix:** detect whether the top-level joiner is ` or ` (and there is no top-level ` and ` - GDScript binds
-  `and` tighter, so a mixed `a and b or c` cannot collapse to one `condition_mode` and must stay one term).
-  For a purely-OR expression, split on top-level ` or `, reverse-match each term, set `condition_mode = OR`.
-  Byte-gate as always (re-emit must reproduce the source), so a mismatch falls back to the single blob.
-- **Scope:** one new top-level splitter mirroring `_split_top_level_and`, plus a branch in `_parse_conditions`
-  (ace_lifter.gd:1319). Well-contained. **Recommended first.**
+### G2. break / continue reverse-lift - loop control as actions [SHIPPED]
 
-### G2. break / continue / pass reverse-lift - loop control as actions
+**SHIPPED (563df13).** `break`/`continue` inside a lifted loop body (including nested in an `if` inside the
+loop) now lift into Break Loop / Continue Loop action rows. They are admitted to the reverse index tagged
+`loop_control` and only claimed when `in_loop` is threaded true through `_parse_body` ->
+`_consume_action_line` -> `_match_entry` (a loop-control keyword is invalid GDScript elsewhere). `pass` is
+deliberately NOT lifted: no ACE has that template and the compiler emits it only as an empty-body stub
+(sheet_compiler.gd:1426), so an empty block reads as empty rather than gaining a spurious action. Byte-gated.
+Test: `tests/loop_control_lift_test.gd`. (The statement-after-nested-block interleaving limit below still
+keeps a `for`/`while` with work following an `if...continue` guard as a verbatim block.)
 
-The FORWARD ACEs exist (`LoopBreak`/`LoopContinue`, loop_aces.gd:17,19), but the reverse index EXCLUDES bare
-`break`/`continue`/`pass` (ace_lifter.gd:1386) because the compiler's own pick-loop scaffolding emits them, so
-lifting indiscriminately would mis-claim generated lines. Result: a hand-written `for`/`while` with a `break`
-keeps the break as an opaque `RawCodeRow` inside an otherwise-structured loop.
-
-- **Fix:** allow the lift only for statements inside a **user** loop body (a reverse-lifted `PickFilter`
-  container), not at compiler-scaffolding scope. Add a dedicated `pass` action (none exists;
-  `pass` is only emitted today as an empty-body stub, sheet_compiler.gd:1426). Byte-gate protects correctness.
-- **Scope:** a scope-aware admit rule in `_parse_body` (ace_lifter.gd:991) + one new ACE. On-model (actions in
-  a loop). **Recommended second - natural companion to G1.**
-
-### G3. static func - the biggest opaque-block offender in real utility code
+### G3. static func - the biggest opaque-block offender in real utility code [TOP REMAINING GAP]
 
 `static func foo() -> T:` never lifts: the reverse header regex demands `^func ... -> Type:`
 (ace_lifter.gd:830) and the emitter has no static prefix (sheet_compiler.gd:675). `EventFunction` has no
@@ -153,7 +145,7 @@ keeps the break as an opaque `RawCodeRow` inside an otherwise-structured loop.
 ## Net assessment
 
 Statement-level coverage is **essentially complete** for the common imperative subset in both directions, on
-a rich declaration layer, and the generic catch-alls guarantee any `.gd` opens as rows. The genuine
-*structural* gaps that keep real hand-written code reading as opaque blocks are, in priority order:
-**OR-mode reverse (G1), loop-control reverse (G2), static func (G3)**, then the G4 batch. Closing G1+G2+G3
-would make the vast majority of everyday GDScript read as discrete condition/action rows.
+a rich declaration layer, and the generic catch-alls guarantee any `.gd` opens as rows. **G1 (OR-mode
+reverse) and G2 (loop-control reverse) are now shipped**, so the remaining structural gaps that keep real
+hand-written code reading as opaque blocks are, in priority order: **static func (G3)**, then the G4 batch.
+Closing G3 would make the vast majority of everyday GDScript read as discrete condition/action rows.
