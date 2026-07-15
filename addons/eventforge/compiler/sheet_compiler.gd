@@ -1379,15 +1379,27 @@ static func _emit_event_body(
 				had_body = true
 				source_map.append({"uid": str(inline_raw.get_instance_id()), "start": inline_start, "end": lines.size(), "kind": "raw"})
 			elif action_item is MatchRow:
-				# A GDScript `match` as a structured action row (the switch idiom): subject +
-				# verbatim branch lines, one level deeper.
+				# A GDScript `match` as a structured action row (the switch idiom): subject + branches one
+				# level deeper. Structured `cases` (each an editable action body) win when present; otherwise
+				# the verbatim branches_text form (the raw escape hatch + what today's importer lifts).
 				var match_row: MatchRow = action_item as MatchRow
 				if not match_row.enabled or match_row.match_expression.strip_edges().is_empty():
 					continue
 				var match_start: int = lines.size() + 1
 				lines.append(body_indent + "match %s:" % match_row.match_expression.strip_edges())
-				for branch_line: String in match_row.branches_text.split("\n"):
-					lines.append(body_indent + "\t" + branch_line)
+				if not match_row.cases.is_empty():
+					for match_case: MatchCase in match_row.cases:
+						if match_case == null or not match_case.enabled:
+							continue
+						lines.append(body_indent + "\t" + match_case.pattern.strip_edges() + ":")
+						var case_lines: PackedStringArray = _emit_match_case_body(match_case.events, body_indent + "\t\t", effective_node_target)
+						if case_lines.is_empty():
+							lines.append(body_indent + "\t\tpass")  # a match branch may not be empty
+						else:
+							lines.append_array(case_lines)
+				else:
+					for branch_line: String in match_row.branches_text.split("\n"):
+						lines.append(body_indent + "\t" + branch_line)
 				had_body = true
 				source_map.append({"uid": str(match_row.get_instance_id()), "start": match_start, "end": lines.size(), "kind": "match"})
 			elif action_item is CommentRow:
@@ -1417,6 +1429,38 @@ static func _emit_event_body(
 			source_map.append({"uid": str(event_row.get_instance_id()), "start": event_start_line, "end": lines.size(), "kind": "event"})
 		chain_open = emitted_block
 	return had_body
+
+
+## Emits one structured match branch's body (the action-lane items of a MatchCase) at `indent`, reusing the
+## ordinary action codegen so a case runs actions exactly like an event body does. Returns the lines (empty
+## when the case has no emittable body, so the caller can substitute `pass`). Handles ACEAction (with the
+## same last-statement `await` rule the main loop uses), a verbatim RawCodeRow, and a CommentRow.
+static func _emit_match_case_body(events: Array, indent: String, node_target: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for item: Variant in events:
+		if item is ACEAction:
+			var action: ACEAction = item as ACEAction
+			var action_line: String = ActionCodegen.generate_action(action, node_target, _behavior_host_default)
+			if action_line.is_empty():
+				continue
+			var action_lines: PackedStringArray = action_line.split("\n")
+			for line_index: int in action_lines.size():
+				var emitted: String = action_lines[line_index]
+				if (action.is_awaited or action.await_call) and line_index == action_lines.size() - 1:
+					emitted = "await %s" % emitted
+				out.append(indent + emitted)
+		elif item is RawCodeRow:
+			var raw: RawCodeRow = item as RawCodeRow
+			if not raw.enabled or raw.code.strip_edges().is_empty():
+				continue
+			for raw_line: String in raw.code.split("\n"):
+				out.append(indent + raw_line)
+		elif item is CommentRow:
+			var comment: CommentRow = item as CommentRow
+			if comment.enabled and not comment.text.strip_edges().is_empty():
+				for comment_line: String in comment.text.split("\n"):
+					out.append("%s# %s" % [indent, comment_line])
+	return out
 
 
 ## Emits the `for` loop headers for an event's pick filters and returns the new body depth.
