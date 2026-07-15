@@ -38,6 +38,10 @@ extends Resource
 ## of staying a raw block. Empty = use return_type as before.
 @export var return_type_name: String = ""
 @export var is_async: bool = false
+## When true, the generated function is emitted as `static func` (a class-level helper with no `self`).
+## Set on lift from a `static func` header and re-emitted verbatim, so a static utility helper opens as a
+## real editable function instead of a raw block. Default false keeps every existing function byte-identical.
+@export var is_static: bool = false
 @export var events: Array[Resource] = []
 @export var rows: Array[Resource] = [] # Backwards-compatible alias.
 @export var local_variables: Dictionary = {}

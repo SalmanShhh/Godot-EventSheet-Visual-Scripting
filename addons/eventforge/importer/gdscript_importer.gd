@@ -81,7 +81,7 @@ func import_external_source(source: String) -> EventSheetResource:
 		var line: String = lines[index]
 		# Top-level function: emitted as its OWN block row (one row per function gives the
 		# sheet useful granularity and per-function provenance without lossy lifting).
-		if line.begins_with("func "):
+		if line.begins_with("func ") or line.begins_with("static func "):
 			_flush_pending(pending, sheet)
 			var function_lines: PackedStringArray = PackedStringArray([line])
 			index += 1

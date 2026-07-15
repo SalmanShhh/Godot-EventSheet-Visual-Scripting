@@ -201,7 +201,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	if lift_functions:
 		for mid_index in range(sheet.events.size()):
 			var mid_row: RawCodeRow = sheet.events[mid_index] as RawCodeRow
-			if mid_row == null or not mid_row.code.begins_with("func "):
+			if mid_row == null or not (mid_row.code.begins_with("func ") or mid_row.code.begins_with("static func ")):
 				continue
 			var mid_header: String = mid_row.code.split("\n")[0]
 			if LIFECYCLE_TRIGGERS.has(mid_header) or _is_connected_handler(mid_header, connections):
@@ -272,12 +272,15 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 ## Godot engine virtual callbacks by header name - excluded from the mid-file anchor lift (they
 ## are structural boilerplate, not vocabulary; several are regenerated from sheet metadata).
 static func _is_engine_virtual_header(header: String) -> bool:
-	var name_end: int = header.find("(")
+	# Strip a leading `static ` so the name extraction (substr past "func ") works for a static engine
+	# hook like `_static_init`, which stays structural boilerplate rather than an editable row.
+	var bare: String = header.substr(7) if header.begins_with("static func ") else header
+	var name_end: int = bare.find("(")
 	if name_end < 0:
 		return false
-	var function_name: String = header.substr(5, name_end - 5).strip_edges()
+	var function_name: String = bare.substr(5, name_end - 5).strip_edges()
 	return function_name in [
-		"_init", "_ready", "_enter_tree", "_exit_tree", "_process", "_physics_process",
+		"_init", "_static_init", "_ready", "_enter_tree", "_exit_tree", "_process", "_physics_process",
 		"_input", "_unhandled_input", "_unhandled_key_input", "_shortcut_input", "_gui_input",
 		"_draw", "_notification", "_get_configuration_warnings", "_to_string",
 		"_get_property_list", "_validate_property", "_property_can_revert", "_property_get_revert",
@@ -660,7 +663,7 @@ static func _split_function_declarations(raw: RawCodeRow) -> Dictionary:
 	var i: int = 0
 	while i < src.size():
 		var line: String = src[i]
-		if line.begins_with("func ") and line.strip_edges().ends_with(":"):
+		if (line.begins_with("func ") or line.begins_with("static func ")) and line.strip_edges().ends_with(":"):
 			var function_lines: PackedStringArray = PackedStringArray([line])
 			var k: int = i + 1
 			while k < src.size() and (src[k].strip_edges().is_empty() or src[k].begins_with("\t") or src[k].begins_with(" ")):
@@ -727,7 +730,7 @@ static func _collect_single_block_event_rows(events: Array, into: Array[EventRow
 ## Classifies a trailing-run row: "func", "annotations" (## @ace block), "blank",
 ## "comments" (top-level # lines), or "other" (breaks the run).
 static func _run_row_kind(code: String, lift_functions: bool) -> String:
-	if code.begins_with("func "):
+	if code.begins_with("func ") or code.begins_with("static func "):
 		return "func"
 	if code.strip_edges().is_empty():
 		return "blank"
@@ -827,14 +830,16 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	# return-type-less `func foo():` still falls back to a verbatim block.
 	var unannotated: bool = annotations.is_empty()
 	var header_regex: RegEx = RegEx.new()
-	header_regex.compile("^func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> ([A-Za-z_][A-Za-z0-9_]*):$")
+	# Optional non-emitting `(static )?` prefix (group 1) shifts the name/args/return captures to 2/3/4.
+	header_regex.compile("^(static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> ([A-Za-z_][A-Za-z0-9_]*):$")
 	var header_match: RegExMatch = header_regex.search(function_lines[0])
 	if header_match == null:
 		return {"ok": false}
 	var event_function: EventFunction = EventFunction.new()
 	event_function.lifted_unannotated = unannotated
-	event_function.function_name = header_match.get_string(1)
-	var return_name: String = header_match.get_string(3) if header_match.get_group_count() >= 3 else "void"
+	event_function.is_static = not header_match.get_string(1).is_empty()
+	event_function.function_name = header_match.get_string(2)
+	var return_name: String = header_match.get_string(4) if header_match.get_group_count() >= 4 else "void"
 	var return_types: Dictionary = {"void": TYPE_NIL, "bool": TYPE_BOOL, "int": TYPE_INT, "float": TYPE_FLOAT, "String": TYPE_STRING, "Vector2": TYPE_VECTOR2, "Vector3": TYPE_VECTOR3, "Color": TYPE_COLOR, "Array": TYPE_ARRAY, "Dictionary": TYPE_DICTIONARY, "Variant": TYPE_MAX}
 	if return_types.has(return_name):
 		event_function.return_type = return_types[return_name]
@@ -850,7 +855,7 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 		event_function.return_type_name = return_name
 	else:
 		return {"ok": false}
-	for argument: String in header_match.get_string(2).split(", ", false):
+	for argument: String in header_match.get_string(3).split(", ", false):
 		var param: ACEParam = ACEParam.new()
 		var argument_text: String = argument
 		# Split off a default value (`amount: int = 5`) first, so it never leaks into the type name.

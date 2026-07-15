@@ -477,7 +477,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		lines.append("")
 		var function_start: int = lines.size() + 1
 		_emit_expose_annotations(event_function, sheet, lines)
-		lines.append("func %s(%s) -> %s:" % [event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
+		lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
 		var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
 		var function_had_body: bool = _emit_event_body(function_events, lines, source_map, 1, result["warnings"])
 		if not function_had_body:
@@ -672,7 +672,7 @@ static func _find_function_by_name(sheet: EventSheetResource, function_name: Str
 static func _emit_function_block(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray, source_map: Array, result: Dictionary) -> void:
 	var function_start: int = lines.size() + 1
 	_emit_expose_annotations(event_function, sheet, lines)
-	lines.append("func %s(%s) -> %s:" % [event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
+	lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
 	var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
 	if not _emit_event_body(function_events, lines, source_map, 1, result["warnings"]):
 		lines.append(_empty_function_stub(event_function))

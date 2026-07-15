@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - a `static func` opens as an editable function, not a raw block
+
+- **A `static func` in an opened `.gd` now lifts to a first-class, editable function** (with a new
+  `static` flag on the function) instead of staying a verbatim code block. Static utility/singleton helpers -
+  a normal GDScript idiom - previously read as opaque code; now they read and edit like any other sheet
+  function and re-emit with their `static` keyword intact. The round-trip is byte-gated as always: a static
+  helper the model cannot reproduce exactly (for example a return-type-less `static func tick():`, the same
+  rule that already keeps return-type-less plain functions raw) stays a verbatim block, and every existing
+  non-static function emits byte-identically (drift stays 0 across all 72 packs).
+
 ### Added - a statement after a nested block reads as events, not one raw cell
 
 - **Opening a `.gd` now keeps a block structured even when a statement follows a nested block inside it.**
