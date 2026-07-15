@@ -430,8 +430,9 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 
 ## Fills `popup` with the suggestions whose text contains `filter_text` (case-insensitive;
 ## empty filter shows all). Each item's id is its index into the FULL list, so a pick maps
-## back correctly even when filtered. Pure enough to unit-test directly.
-func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStringArray, filter_text: String) -> void:
+## back correctly even when filtered. Pure (no instance state) so it is static and shared - the
+## match/switch dialog reuses it for its case-pattern autocomplete.
+static func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStringArray, filter_text: String) -> void:
 	popup.clear()
 	var needle: String = filter_text.strip_edges().to_lower()
 	var any_added: bool = false

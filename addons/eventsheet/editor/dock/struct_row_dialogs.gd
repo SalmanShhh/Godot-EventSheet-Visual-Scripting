@@ -275,14 +275,36 @@ func _ensure_match_dialog() -> void:
 	_match_cases_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_match_cases_box)
 	form.add_child(scroll)
+	var buttons: HBoxContainer = HBoxContainer.new()
 	var add_button: Button = Button.new()
 	add_button.text = "+ Add case"
 	add_button.tooltip_text = "Add another branch"
-	add_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	add_button.pressed.connect(func() -> void:
 		var entry: Dictionary = _add_match_case_row("", "")
 		(entry["pattern"] as LineEdit).grab_focus())
-	form.add_child(add_button)
+	buttons.add_child(add_button)
+	# One click adds a case for every value of a sheet enum (patterns pre-filled as Name.MEMBER), so a switch
+	# on an enum starts exhaustive and correctly named - the user just fills each body. Non-destructive: it
+	# only adds branches not already present and drops empty unfilled slots.
+	var fill_button: MenuButton = MenuButton.new()
+	fill_button.text = "Fill from enum ▾"
+	fill_button.tooltip_text = "Add a case for each value of a sheet enum"
+	fill_button.get_popup().about_to_popup.connect(func() -> void:
+		var popup: PopupMenu = fill_button.get_popup()
+		popup.clear()
+		var enums: Array = _sheet_enums()
+		for enum_entry: Dictionary in enums:
+			popup.add_item(str(enum_entry.get("name")))
+			popup.set_item_metadata(popup.item_count - 1, enum_entry)
+		if enums.is_empty():
+			popup.add_item("(no enums on this sheet)")
+			popup.set_item_disabled(0, true))
+	fill_button.get_popup().index_pressed.connect(func(index: int) -> void:
+		var meta: Variant = fill_button.get_popup().get_item_metadata(index)
+		if meta is Dictionary:
+			_fill_cases_from_enum(meta as Dictionary))
+	buttons.add_child(fill_button)
+	form.add_child(buttons)
 	_match_hint = Label.new()
 	form.add_child(_match_hint)
 	_match_dialog.add_child(EventSheetPopupUI.margined(form))
@@ -300,6 +322,31 @@ func _add_match_case_row(pattern: String, body: String) -> Dictionary:
 	pattern_edit.placeholder_text = "State.IDLE  (or _ for default)"
 	pattern_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(pattern_edit)
+	# Autocomplete: a picker that suggests valid patterns for what the switch is ON - an enum variable's
+	# members (State.IDLE, …), true / false for a bool, or any sheet enum otherwise - so the pattern is
+	# steered to a real value instead of typed by hand (and still freely editable). The list filters by what
+	# is typed (reusing the ACE param dialog's shared popup filter), and Down in the field opens it.
+	var pick: MenuButton = MenuButton.new()
+	pick.text = "▾"
+	pick.tooltip_text = "Pick a valid value for this branch (you can still type any)"
+	var pick_popup: PopupMenu = pick.get_popup()
+	pick_popup.about_to_popup.connect(func() -> void:
+		ACEParamsDialog._rebuild_autocomplete_popup(pick_popup, PackedStringArray(_match_pattern_choices()), pattern_edit.text))
+	pick_popup.id_pressed.connect(func(picked_id: int) -> void:
+		var choices: Array = _match_pattern_choices()
+		if picked_id >= 0 and picked_id < choices.size():
+			pattern_edit.text = str(choices[picked_id])
+			pattern_edit.caret_column = pattern_edit.text.length()
+			pattern_edit.grab_focus())
+	head.add_child(pick)
+	pattern_edit.gui_input.connect(func(event: InputEvent) -> void:
+		var key_event: InputEventKey = event as InputEventKey
+		if key_event != null and key_event.pressed and key_event.keycode == KEY_DOWN:
+			ACEParamsDialog._rebuild_autocomplete_popup(pick_popup, PackedStringArray(_match_pattern_choices()), pattern_edit.text)
+			pick_popup.position = Vector2i(pattern_edit.get_screen_position() + Vector2(0.0, pattern_edit.size.y))
+			pick_popup.reset_size()
+			pick_popup.popup()
+			pattern_edit.accept_event())
 	var remove_button: Button = Button.new()
 	remove_button.text = "✕"
 	remove_button.tooltip_text = "Remove this case"
@@ -339,6 +386,98 @@ func _case_body_text(match_case: MatchCase) -> String:
 		if item is RawCodeRow:
 			lines.append((item as RawCodeRow).code)
 	return "\n".join(lines)
+
+
+## The sheet's enums as [{name, members}], read straight off the live sheet (the same shape the variable
+## dialog uses) - no provider callable, since the dialog already has the dock.
+func _sheet_enums() -> Array:
+	var out: Array = []
+	var sheet: EventSheetResource = _dock._current_sheet
+	if sheet == null:
+		return out
+	var rows: Array = []
+	SheetCompiler._collect_enum_rows(sheet.events, rows)  # group-recursive, so enums inside groups count too
+	for row: Variant in rows:
+		if row is EnumRow and (row as EnumRow).enabled:
+			out.append({"name": (row as EnumRow).enum_name, "members": (row as EnumRow).members})
+	return out
+
+
+## The declared type name of a sheet variable (a tree LocalVariable row or a dict-form sheet variable), or
+## "" when the name isn't a known variable. Used to steer the case patterns by what the switch is ON.
+func _sheet_variable_type(var_name: String) -> String:
+	var sheet: EventSheetResource = _dock._current_sheet
+	if sheet == null or var_name.is_empty():
+		return ""
+	if sheet.variables is Dictionary and (sheet.variables as Dictionary).has(var_name):
+		var entry: Variant = (sheet.variables as Dictionary)[var_name]
+		return str((entry as Dictionary).get("type", "")) if entry is Dictionary else ""
+	for row: Variant in sheet.events:
+		if row is LocalVariable and (row as LocalVariable).name == var_name:
+			return (row as LocalVariable).type_name
+	return ""
+
+
+## The name of the sheet enum the switch is ON (its subject variable's type is that enum), or "".
+func _subject_enum_name() -> String:
+	var expr: String = _match_expression_edit.text.strip_edges()
+	var ident: RegEx = RegEx.new()
+	if ident.compile("^([A-Za-z_][A-Za-z0-9_]*)") != OK:
+		return ""
+	var leading: RegExMatch = ident.search(expr)
+	if leading == null:
+		return ""
+	var type_name: String = _sheet_variable_type(leading.get_string(1))
+	for enum_entry: Dictionary in _sheet_enums():
+		if str(enum_entry.get("name")) == type_name:
+			return type_name
+	return ""
+
+
+## The pattern values offered for a case (the "autocomplete"). When the switch is on a known enum variable,
+## only that enum's members (Name.MEMBER); true / false when it's a bool; otherwise every sheet enum's
+## members (so any is pickable). Always ends with `_` (the default branch). Member "= 4" values are stripped.
+func _match_pattern_choices() -> Array:
+	var choices: Array = []
+	var subject_enum: String = _subject_enum_name()
+	for enum_entry: Dictionary in _sheet_enums():
+		var enum_name: String = str(enum_entry.get("name"))
+		if not subject_enum.is_empty() and enum_name != subject_enum:
+			continue  # the switched type is known - offer only its values
+		for member: Variant in enum_entry.get("members", []):
+			choices.append("%s.%s" % [enum_name, str(member).get_slice("=", 0).strip_edges()])
+	var ident: RegEx = RegEx.new()
+	if ident.compile("^([A-Za-z_][A-Za-z0-9_]*)") == OK:
+		var leading: RegExMatch = ident.search(_match_expression_edit.text.strip_edges())
+		if leading != null and _sheet_variable_type(leading.get_string(1)) == "bool":
+			choices.append("true")
+			choices.append("false")
+	choices.append("_")
+	return choices
+
+
+## Adds one case per value of the given sheet enum (patterns as Name.MEMBER), skipping values already present
+## and dropping empty unfilled slots, then a `_` default - so a switch on an enum starts exhaustive.
+func _fill_cases_from_enum(enum_entry: Dictionary) -> void:
+	var enum_name: String = str(enum_entry.get("name"))
+	var existing: Array = []
+	for entry: Dictionary in _match_case_rows:
+		var pattern: String = (entry["pattern"] as LineEdit).text.strip_edges()
+		if not pattern.is_empty():
+			existing.append(pattern)
+	# Drop purely-empty slots (blank pattern AND body) so filling does not leave stray rows.
+	for entry: Dictionary in _match_case_rows.duplicate():
+		if (entry["pattern"] as LineEdit).text.strip_edges().is_empty() and (entry["body"] as TextEdit).text.strip_edges().is_empty():
+			_match_case_rows.erase(entry)
+			_match_cases_box.remove_child(entry["row"])
+			(entry["row"] as Node).free()
+	for member: Variant in enum_entry.get("members", []):
+		var pattern: String = "%s.%s" % [enum_name, str(member).get_slice("=", 0).strip_edges()]
+		if not existing.has(pattern):
+			_add_match_case_row(pattern, "")
+			existing.append(pattern)
+	if not existing.has("_"):
+		_add_match_case_row("_", "")
 
 
 func _on_match_dialog_confirmed() -> void:
