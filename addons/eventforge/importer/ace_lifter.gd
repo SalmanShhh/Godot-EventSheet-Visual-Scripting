@@ -1402,10 +1402,11 @@ static func _build_reverse_entries() -> Array:
 		# bottom puts them after every specific ACE) so they reverse-lift only what nothing else claims:
 		# Set Property (`{target}.{property} = {value}`) and its compound-assign twins (`+= -= *= /=`),
 		# Call Method (`{target}.{method}({args})`) (Stage B), plus Set Local Variable (`var {name} = {value}`)
-		# and its typed sibling (Stage D), so a local declaration in a hand-written body becomes a row, not a
-		# code cell. Each has more literal chars than the bare-var forms, so `self.x += 1` prefers the property
-		# twin over Add Variable, while a genuine specific `+=` ACE still outranks it. Byte-verify gates all.
-		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "AddToProperty", "SubtractFromProperty", "MultiplyProperty", "DivideProperty", "CallMethod", "SetLocalVar", "SetLocalVarTyped", "SetLocalVarInferred"]):
+		# and its typed/inferred siblings (Stage D) AND their `const` twins (`const {name} = {value}`, typed,
+		# inferred), so a local declaration or constant in a hand-written body becomes a row, not a code cell.
+		# Each has more literal chars than the bare-var forms, so `self.x += 1` prefers the property twin over
+		# Add Variable, and typed outranks plain (`const N: int = 3` binds name="N"). Byte-verify gates all.
+		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "AddToProperty", "SubtractFromProperty", "MultiplyProperty", "DivideProperty", "CallMethod", "SetLocalVar", "SetLocalVarTyped", "SetLocalVarInferred", "SetLocalConst", "SetLocalConstTyped", "SetLocalConstInferred"]):
 			continue
 		# `break` / `continue` are admitted but tagged loop_control: _match_entry only claims them inside a
 		# lifted loop body (they are invalid GDScript anywhere else), so they never mis-claim a bare keyword

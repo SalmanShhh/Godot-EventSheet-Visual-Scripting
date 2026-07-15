@@ -79,6 +79,15 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# `=` template needs a space-equals-space, which `:=` never has). Reverse-lifts + round-trips byte-exact.
 	descriptors.append(F.make_descriptor("Core", "SetLocalVarInferred", "Set Local Variable (inferred)", ACEDescriptor.ACEType.ACTION, "var {name} := {value}", "", [F.make_param("name", "String", "temp", "Name", "Local variable name (scoped to this event body)."), F.make_param("value", "String", "0.0", "Value", "Value expression; its type is inferred.", "expression")], CAT, "var {name} := {value}")
 		.described("Creates a temporary variable whose type is inferred from its value, within this event."))
+	# Local CONSTANT twins of the SetLocalVar family - a `const` inside a flow body (a tuning constant or a
+	# lookup value the compiler folds once). Three variants so `const N = 3`, `const N: int = 3` and
+	# `const N := 3` each reverse-lift to the right row instead of a generic Set Variable named "const N".
+	descriptors.append(F.make_descriptor("Core", "SetLocalConst", "Set Local Constant", ACEDescriptor.ACEType.ACTION, "const {name} = {value}", "", [F.make_param("name", "String", "temp", "Name", "Local constant name (scoped to this event body)."), F.make_param("value", "String", "0", "Value", "Constant value expression (must be compile-time constant).", "expression")], CAT, "const {name} = {value}")
+		.described("Creates a named constant used only within this event."))
+	descriptors.append(F.make_descriptor("Core", "SetLocalConstTyped", "Set Local Constant (typed)", ACEDescriptor.ACEType.ACTION, "const {name}: {const_type} = {value}", "", [F.make_param("name", "String", "temp", "Name", "Local constant name (scoped to this event body)."), F.make_param("const_type", "String", "int", "Type", "Static type for the constant.", "", ["int", "float", "bool", "String", "Vector2", "Vector3"]), F.make_param("value", "String", "0", "Value", "Constant value expression.", "expression")], CAT, "const {name}: {const_type} = {value}")
+		.described("Creates a typed named constant used only within this event."))
+	descriptors.append(F.make_descriptor("Core", "SetLocalConstInferred", "Set Local Constant (inferred)", ACEDescriptor.ACEType.ACTION, "const {name} := {value}", "", [F.make_param("name", "String", "temp", "Name", "Local constant name (scoped to this event body)."), F.make_param("value", "String", "0", "Value", "Constant value expression; its type is inferred.", "expression")], CAT, "const {name} := {value}")
+		.described("Creates a named constant whose type is inferred from its value, within this event."))
 
 	# ── Validity / null (freed-instance safety, the classic source of crashes) ──
 	descriptors.append(F.make_descriptor("Core", "IsValid", "Is Valid", ACEDescriptor.ACEType.CONDITION, "is_instance_valid({target})", "", [F.make_param("target", "String", "self", "Target", "Object expression to test.", "expression")], CAT, "{target} is valid")

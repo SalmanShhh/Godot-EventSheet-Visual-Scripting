@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added - a local `const` in a flow body reads as a Set Local Constant row
+
+- **Three new actions - Set Local Constant, Set Local Constant (typed), Set Local Constant (inferred)** - so a
+  `const` inside an event/function body (a tuning constant or lookup value) reads as its own row instead of
+  mis-lifting to a Set Variable named `const N`. They mirror the Set Local Variable family, emit `const ... =
+  ...`, and reverse-lift the three shapes (`const N = 3`, `const N: int = 3`, `const N := 3`) - typed
+  outranks plain so `const N: int = 3` binds the name correctly. Byte-gated round-trip as always.
+
 ### Added - a class-level `static var` opens as an editable variable row
 
 - **A `static var` in an opened `.gd` now lifts to a first-class editable variable row** (with a new
