@@ -988,7 +988,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 ## recompile in attempt_lift gates every shape this parser produces.
 ## Returns {ok, rows: Array[EventRow], next: int}; a "plain collector" row (no
 ## conditions, no else_mode) holds the statements between blocks.
-static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigger_id: String, trigger_provider: String, trigger_args: String, trigger_source: String, reverse_entries: Array, lenient_ifs: bool) -> Dictionary:
+static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigger_id: String, trigger_provider: String, trigger_args: String, trigger_source: String, reverse_entries: Array, lenient_ifs: bool, in_loop: bool = false) -> Dictionary:
 	var indent: String = "\t".repeat(depth)
 	var rows: Array = []
 	var current: EventRow = null
@@ -1030,7 +1030,9 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			var representable: bool = expression.is_empty() or _parse_conditions(expression, block_event, reverse_entries)
 			var inner: Dictionary = {}
 			if representable:
-				inner = _parse_body(lines, index + 1, depth + 1, "", "", "", "", reverse_entries, lenient_ifs)
+				# An `if` inherits the loop context of its parent (a break/continue inside it belongs to the
+				# enclosing loop), so pass in_loop straight through.
+				inner = _parse_body(lines, index + 1, depth + 1, "", "", "", "", reverse_entries, lenient_ifs, in_loop)
 				representable = bool(inner.get("ok", false)) and _adopt_block_body(block_event, inner.get("rows", []))
 			if not representable:
 				if not lenient_ifs:
@@ -1060,7 +1062,8 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		if is_for or is_while:
 			var loop_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 			loop_event.pick_filters.append(_loop_pick_filter(rest, is_while))
-			var loop_inner: Dictionary = _parse_body(lines, index + 1, depth + 1, "", "", "", "", reverse_entries, lenient_ifs)
+			# The loop body IS a loop context: break/continue in it (or in an `if` nested in it) lift.
+			var loop_inner: Dictionary = _parse_body(lines, index + 1, depth + 1, "", "", "", "", reverse_entries, lenient_ifs, true)
 			var loop_ok: bool = bool(loop_inner.get("ok", false)) and _adopt_block_body(loop_event, loop_inner.get("rows", []))
 			if not loop_ok:
 				if not lenient_ifs:
@@ -1119,7 +1122,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 			rows.append(current)
 		if at_this_depth:
-			_consume_action_line(current, rest, 0, pending_raw, reverse_entries)
+			_consume_action_line(current, rest, 0, pending_raw, reverse_entries, in_loop)
 		else:
 			# A DEEPER line lives inside an unlifted control block above it. Template-matching it
 			# would tear it out as a standalone ACTION that re-emits at the event's depth - one tab
@@ -1348,8 +1351,8 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 
 ## Action line → ACEAction when a template matches; otherwise queued as raw GDScript so the
 ## event still lifts (in-flow blocks re-emit verbatim at the body indent).
-static func _consume_action_line(event: EventRow, line: String, _depth: int, pending_raw: PackedStringArray, reverse_entries: Array) -> void:
-	var matched: Dictionary = _match_entry(line, reverse_entries, "action")
+static func _consume_action_line(event: EventRow, line: String, _depth: int, pending_raw: PackedStringArray, reverse_entries: Array, in_loop: bool = false) -> void:
+	var matched: Dictionary = _match_entry(line, reverse_entries, "action", in_loop)
 	if matched.is_empty():
 		pending_raw.append(line)
 		return
@@ -1394,10 +1397,11 @@ static func _build_reverse_entries() -> Array:
 		# twin over Add Variable, while a genuine specific `+=` ACE still outranks it. Byte-verify gates all.
 		if descriptor.category == "Helpers" and not (descriptor.ace_id in ["SetProperty", "AddToProperty", "SubtractFromProperty", "MultiplyProperty", "DivideProperty", "CallMethod", "SetLocalVar", "SetLocalVarTyped", "SetLocalVarInferred"]):
 			continue
-		if template in ["break", "continue", "pass"]:
-			# Bare loop-control keywords also appear in generated pick-loop bodies, so
-			# reverse-lifting them would mis-claim the compiler's own break/continue lines.
-			continue
+		# `break` / `continue` are admitted but tagged loop_control: _match_entry only claims them inside a
+		# lifted loop body (they are invalid GDScript anywhere else), so they never mis-claim a bare keyword
+		# at function scope. (`pass` has no ACE - the compiler emits it only as an empty-body stub, so there
+		# is nothing to reverse-lift and an empty block stays empty rather than gaining a spurious action.)
+		var loop_control: bool = template in ["break", "continue"]
 		var kind: String = ""
 		match descriptor.ace_type:
 			ACEDescriptor.ACEType.CONDITION:
@@ -1422,7 +1426,7 @@ static func _build_reverse_entries() -> Array:
 				if variant.contains(op):
 					assign_op = op
 					break
-			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op})
+			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control})
 	# Try SPECIFIC templates before generic catch-alls. The Core generics (SetVar `{var_name} = {value}`,
 	# CallFunction `{function_name}({args})`, …) use lazy `.+?` captures that match almost any
 	# assignment/call, so in raw registry order they SHADOW every specific node ACE (`position = …`
@@ -1433,9 +1437,12 @@ static func _build_reverse_entries() -> Array:
 	return entries
 
 
-static func _match_entry(line: String, reverse_entries: Array, kind: String) -> Dictionary:
+static func _match_entry(line: String, reverse_entries: Array, kind: String, in_loop: bool = true) -> Dictionary:
 	for entry: Variant in reverse_entries:
 		if str((entry as Dictionary).get("kind", "")) != kind:
+			continue
+		# A loop-control action (`break`/`continue`) is only valid - and only lifts - inside a loop body.
+		if bool((entry as Dictionary).get("loop_control", false)) and not in_loop:
 			continue
 		var regex: RegEx = (entry as Dictionary).get("regex")
 		var regex_match: RegExMatch = regex.search(line)

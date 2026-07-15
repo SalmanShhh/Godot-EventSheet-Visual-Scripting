@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - `break` / `continue` in a loop read as Break Loop / Continue Loop actions
+
+- **Opening a `.gd` now lifts a `break` or `continue` inside a loop body into a Break Loop / Continue Loop
+  action row, instead of leaving it as an in-flow code cell.** A `while alive: tick(); if done: break` reads
+  as a loop with a `tick` action and a nested `if done` -> Break Loop, so an early-exit loop reads fully as
+  events. They lift only inside a loop (a loop-control keyword is invalid GDScript anywhere else), including
+  when nested in an `if` inside the loop, and the byte-identical recompile gates every lift, so the `.gd`
+  round-trips byte-for-byte. Two honest limits carry over unchanged: `pass` is never lifted to an action (it
+  has no ACE and the compiler emits it only as an empty-body stub, so an empty block reads as empty rather
+  than gaining a spurious action), and a statement placed AFTER a nested block in the same body (e.g. work
+  following an `if skip: continue` guard) still keeps that loop as a verbatim block - the action lane emits
+  before sub-events, so that interleaving has no faithful row layout yet.
+
 ### Changed - `if a or b:` reads as an "Or block", not one opaque condition
 
 - **Opening a `.gd` now lifts a purely-OR `if` as separate OR'd conditions instead of one flat blob.** An
