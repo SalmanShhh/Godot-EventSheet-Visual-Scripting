@@ -1980,25 +1980,44 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 				)
 				action_line_index += 1
 			elif action_resource is MatchRow:
-				# match statement (the switch): header + branch lines as action cells
-				# sharing one ace_index; double-click opens the match dialog.
+				# match statement (the switch): header + branch lines as action cells sharing one ace_index.
+				# A STRUCTURED MatchRow (its `cases` set) renders each case as a `pattern:` line with its body
+				# summarised beneath (an action as its friendly text) - read-only for now: it omits the
+				# match_action flag, so double-click does NOT open the branches_text dialog, which cannot
+				# represent cases (editing structured cases is a later phase). The raw-text form keeps the
+				# double-click-to-edit dialog.
 				var match_resource: MatchRow = action_resource as MatchRow
+				var structured_match: bool = not match_resource.cases.is_empty()
 				var match_lines: PackedStringArray = PackedStringArray(["match %s:" % match_resource.match_expression])
-				for branch_line: String in match_resource.branches_text.split("\n"):
-					match_lines.append("\t" + branch_line)
+				if structured_match:
+					for match_case: MatchCase in match_resource.cases:
+						if match_case == null:
+							continue
+						match_lines.append("\t" + str(match_case.pattern).strip_edges() + ":")
+						var body_summary: PackedStringArray = _match_case_summary_lines(match_case.events)
+						if body_summary.is_empty():
+							match_lines.append("\t\tpass")
+						else:
+							for summary_line: String in body_summary:
+								match_lines.append("\t\t" + summary_line)
+				else:
+					for branch_line: String in match_resource.branches_text.split("\n"):
+						match_lines.append("\t" + branch_line)
 				for match_line_index in range(match_lines.size()):
+					var match_meta: Dictionary = {
+						"lane": "action",
+						"kind": "action",
+						"ace_index": action_index,
+						"action_line": match_line_index,
+						"text_color": event_style.value_highlight_color
+					}
+					if not structured_match:
+						match_meta["match_action"] = true
 					spans.append(
 						_make_span(
 							match_lines[match_line_index] if not match_lines[match_line_index].is_empty() else " ",
 							SemanticSpan.SpanType.VALUE,
-							{
-								"lane": "action",
-								"kind": "action",
-								"ace_index": action_index,
-								"match_action": true,
-								"action_line": match_line_index,
-								"text_color": event_style.value_highlight_color
-							}
+							match_meta
 						)
 					)
 			elif action_resource is RawCodeRow:
@@ -2145,7 +2164,17 @@ func _count_event_lines(event_row: EventRow) -> int:
 		elif action_resource is RawCodeRow:
 			action_count += maxi((action_resource as RawCodeRow).code.split("\n").size(), 1)
 		elif action_resource is MatchRow:
-			action_count += (action_resource as MatchRow).branches_text.split("\n").size() + 1
+			var match_resource: MatchRow = action_resource as MatchRow
+			if not match_resource.cases.is_empty():
+				# Structured: the `match expr:` line, plus per case a `pattern:` line and its body (or `pass`).
+				var structured_lines: int = 1
+				for match_case: MatchCase in match_resource.cases:
+					if match_case == null:
+						continue
+					structured_lines += 1 + maxi(_match_case_summary_lines(match_case.events).size(), 1)
+				action_count += structured_lines
+			else:
+				action_count += match_resource.branches_text.split("\n").size() + 1
 		elif action_resource is CommentRow:
 			action_count += maxi((action_resource as CommentRow).text.split("\n").size(), 1)
 	var max_action_line: int = action_count
@@ -2360,6 +2389,24 @@ static func compiled_line_count(action: ACEAction) -> int:
 	if template.is_empty():
 		return 0
 	return template.count("\n") + 1
+
+
+## Friendly one-line summaries of a structured match case's action-lane body, for the switch read view: an
+## ACEAction reads as its descriptor text (the same friendly sentence an action cell shows), a RawCodeRow as
+## its verbatim code lines, a CommentRow as `# text`. Empty when the case has no body (the caller shows
+## `pass`). Read-only rendering - it does not touch the resources.
+func _match_case_summary_lines(events: Array) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for item: Variant in events:
+		if item is ACEAction:
+			out.append(_format_action_descriptor(item as ACEAction))
+		elif item is RawCodeRow:
+			for code_line: String in (item as RawCodeRow).code.split("\n"):
+				out.append(code_line)
+		elif item is CommentRow:
+			for comment_line: String in (item as CommentRow).text.split("\n"):
+				out.append("# " + comment_line)
+	return out
 
 
 func _format_action_descriptor(action: ACEAction) -> String:
