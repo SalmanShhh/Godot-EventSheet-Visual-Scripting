@@ -1213,69 +1213,83 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	return row_data
 
 
-## One field of a "Data class" block, rendered like a variable row (name : type = default). ONLY the default
-## value is editable: double-clicking it carries an edit descriptor {data_class_field_edit, part:"default",
-## field_index (its index in the class model's body array), raw_row} that fires the viewport's
-## data_class_field_edit_requested signal -> the same one-field inline editor an ACE param uses -> the commit
-## re-emits the class from its model through the undo funnel (see inline_param_editor.gd). The name and type
-## are shown read-only on purpose: renaming a field or changing its type would leave every use site elsewhere
-## in the .gd untouched and silently break the file, so that needs whole-file reference awareness (a later
-## slice), not a one-line edit. The row keeps source_resource null so selection, drag and delete still skip
-## it (its spans are editable:false, so the generic caret editor never touches them either), which keeps the
-## read-only gate intact while the default becomes editable. A per-field row_uid avoids sharing one blank uid
-## (which would highlight every field row on selecting one).
+## One field of a "Data class" block, mapped onto the sheet's condition/action model: the field IDENTITY
+## (name : type) reads in the CONDITION cell, its DEFAULT in the ACTION cell (set it to X). ONLY the default
+## is editable - double-clicking it carries {data_class_field_edit, part:"default", field_index, raw_row}
+## that fires data_class_field_edit_requested -> the same inline editor an ACE param uses -> the commit
+## re-emits the class through the undo funnel (see inline_param_editor.gd). Name and type are read-only on
+## purpose: renaming or retyping a field would leave every use site in the .gd untouched and silently break
+## it (needs whole-file reference awareness, a later slice). row_type EVENT gives the condition | action lane
+## divider; source_resource stays null so selection / drag / delete skip it (spans editable:false keep the
+## caret editor away too), and only the default-value gesture can change it. A per-field row_uid stops one
+## blank uid from highlighting every field row together.
 func _build_data_class_field_row(raw_row: RawCodeRow, class_name_str: String, field_index: int, field: Dictionary, indent: int) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent
-	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.row_type = EventRowData.RowType.EVENT
 	row_data.source_resource = null
 	row_data.line_count = 1
 	row_data.row_uid = "data_class_field_%s_%d" % [class_name_str, field_index]
-	row_data.spans = [
+	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	# Condition cell: what the field IS (name : type).
+	var spans: Array[SemanticSpan] = [
 		_make_span(str(field.get("name")), SemanticSpan.SpanType.OBJECT, {
+			"lane": "condition",
 			"editable": false,
 			"kind": "data_class_field",
+			"line_index": 0,
 			"text_color": _viewport._get_event_style().object_label_color
-		}),
-		_make_span(":", SemanticSpan.SpanType.OPERATOR, {"editable": false, "kind": "data_class_field"}),
+		}.merged(condition_style, true)),
+		_make_span(":", SemanticSpan.SpanType.OPERATOR, {"lane": "condition", "editable": false, "kind": "data_class_field", "line_index": 0}.merged(condition_style, true)),
 		_make_span(str(field.get("type")), SemanticSpan.SpanType.VALUE, {
+			"lane": "condition",
 			"editable": false,
 			"kind": "data_class_field",
+			"line_index": 0,
 			"text_color": EventSheetPalette.TEXT_MUTED
-		})
+		}.merged(condition_style, true))
 	]
+	# Action cell: its default value (the editable part).
 	if bool(field.get("has_default", false)):
-		row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, {"editable": false, "kind": "data_class_field"}))
-		row_data.spans.append(_make_span(str(field.get("default")), SemanticSpan.SpanType.VALUE, {
+		spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, {"lane": "action", "editable": false, "kind": "data_class_field", "line_index": 0}.merged(action_style, true)))
+		spans.append(_make_span(str(field.get("default")), SemanticSpan.SpanType.VALUE, {
+			"lane": "action",
 			"editable": false,
 			"kind": "data_class_field",
 			"data_class_field_edit": true,
 			"part": "default",
 			"field_index": field_index,
 			"raw_row": raw_row,
+			"line_index": 0,
 			"text_color": _viewport._get_event_style().value_highlight_color
-		}))
+		}.merged(action_style, true)))
+	row_data.spans = spans
 	return row_data
 
 
 ## An @export / const / comment member of a "Data class" block: shown verbatim and READ-ONLY (source null,
-## no edit descriptor), so the expanded block reveals every declaration in the class instead of only plain
-## `var` fields. Editing these in place is out of scope for this slice (an @export/const often participates
-## in Inspector/const semantics that a one-line edit cannot honour); the double-click-header code editor
-## remains the way to change them. A per-member row_uid keeps selection from highlighting siblings.
+## no edit descriptor) in the CONDITION cell, so the expanded block reveals every declaration - not only
+## plain `var` fields - while still reading on the condition/action model. Editing these in place is out of
+## scope (an @export/const often carries Inspector/const semantics a one-line edit cannot honour); the
+## double-click-header code editor remains the way to change them. A per-member row_uid keeps selection from
+## highlighting siblings.
 func _build_data_class_member_row(class_name_str: String, body_index: int, text: String, indent: int) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent
-	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.row_type = EventRowData.RowType.EVENT
 	row_data.source_resource = null
 	row_data.line_count = 1
 	row_data.row_uid = "data_class_member_%s_%d" % [class_name_str, body_index]
+	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	row_data.spans = [
 		_make_span(text.strip_edges(), SemanticSpan.SpanType.VALUE, {
+			"lane": "condition",
 			"editable": false,
 			"kind": "data_class_field",
+			"line_index": 0,
 			"text_color": EventSheetPalette.TEXT_MUTED
-		})
+		}.merged(condition_style, true))
 	]
 	return row_data
 

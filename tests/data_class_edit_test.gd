@@ -38,6 +38,14 @@ static func run() -> bool:
 	ok = _check("the default span is not caret-editable (the generic inline editor skips it)",
 		default_span != null and not bool((default_span.metadata as Dictionary).get("editable", true)), true) and ok
 	ok = _check("the field row is inert (source null - select / drag / delete skip it)", cooldown_row.source_resource == null, true) and ok
+	# The field maps onto the sheet's condition/action model: name : type in the CONDITION cell, default in
+	# the ACTION cell (so it reads as an event, not a plain declaration line).
+	ok = _check("the field is an EVENT row (gets the condition | action lanes)",
+		cooldown_row.row_type == EventRowData.RowType.EVENT, true) and ok
+	ok = _check("the field name is in the CONDITION cell",
+		str((cooldown_row.spans[0].metadata as Dictionary).get("lane")), "condition") and ok
+	var default_lane: String = str((default_span.metadata as Dictionary).get("lane")) if default_span != null else "<null>"
+	ok = _check("the editable default is in the ACTION cell", default_lane, "action") and ok
 	ok = _check("each field row has a unique row_uid (selecting one never highlights the rest)",
 		str(cooldown_row.row_uid) != "" and str(cooldown_row.row_uid) != str((class_row.children[1] as EventRowData).row_uid), true) and ok
 	var raw_row: Resource = (default_span.metadata as Dictionary).get("raw_row") if default_span != null else null

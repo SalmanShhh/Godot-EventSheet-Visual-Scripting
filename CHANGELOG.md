@@ -48,7 +48,9 @@
   Enter without changing anything) touches nothing - it never dirties or unlocks a pack you only opened to
   look at - and the value is written verbatim, so a field whose default carried unusual whitespace is
   preserved exactly. Every member of the class now renders too: `@export`, `const`, and comment lines show as
-  read-only rows, so a class is never displayed as "0 fields" with its real declarations hidden.
+  read-only rows, so a class is never displayed as "0 fields" with its real declarations hidden. Each field
+  reads on the sheet's condition/action model - the field's name and type in the condition cell, its default
+  in the action cell (the editable part) - so a data holder reads like the events around it, not a plain list.
 
 ### Added - a pure-data class reads as an expandable "Data class" block
 
