@@ -1274,11 +1274,12 @@ static func _make_event(trigger_id: String, trigger_provider: String = "Core", t
 	return event
 
 
-## Splits a joined condition on TOP-LEVEL " and " only - ignoring " and " inside (), [], {} or a
-## string literal - so a compound term like `f(a and b)`, `x == "a and b"`, or `not (a and b)` stays
-## ONE condition. The naive String.split(" and ") fragmented these into garbage Expression-Is-True
-## rows ("f(a", "b)"); each piece still round-tripped when rejoined, but the structure was nonsense.
-static func _split_top_level_and(expression: String) -> PackedStringArray:
+## Splits a joined condition on a TOP-LEVEL separator (" and " or " or ") only - ignoring the separator
+## inside (), [], {} or a string literal - so a compound term like `f(a and b)`, `x == "a or b"`, or
+## `not (a and b)` stays ONE condition. The naive String.split(sep) fragmented these into garbage
+## Expression-Is-True rows ("f(a", "b)"); each piece still round-tripped when rejoined, but the structure
+## was nonsense. (Both separators start with a space, so the `c == " "` guard covers either.)
+static func _split_top_level(expression: String, sep: String) -> PackedStringArray:
 	var parts: PackedStringArray = PackedStringArray()
 	var depth: int = 0
 	var in_string: bool = false
@@ -1286,6 +1287,7 @@ static func _split_top_level_and(expression: String) -> PackedStringArray:
 	var start: int = 0
 	var i: int = 0
 	var n: int = expression.length()
+	var sep_len: int = sep.length()
 	while i < n:
 		var c: String = expression[i]
 		if in_string:
@@ -1303,9 +1305,9 @@ static func _split_top_level_and(expression: String) -> PackedStringArray:
 			depth += 1
 		elif c == ")" or c == "]" or c == "}":
 			depth -= 1
-		elif depth == 0 and c == " " and expression.substr(i, 5) == " and ":
+		elif depth == 0 and c == " " and expression.substr(i, sep_len) == sep:
 			parts.append(expression.substr(start, i - start))
-			i += 5
+			i += sep_len
 			start = i
 			continue
 		i += 1
@@ -1313,11 +1315,20 @@ static func _split_top_level_and(expression: String) -> PackedStringArray:
 	return parts
 
 
-## Splits a joined condition expression on top-level " and " and reverse-matches every term
-## (supporting `not (...)` negation). All terms must match or the lift fails - though the generic
-## Expression Is True condition (bare {expr}) catches any term no specific ACE claims.
+## Splits a joined condition expression into terms and reverse-matches every term (supporting `not (...)`
+## negation), setting the event's AND/OR condition_mode. All terms must match or the lift fails - though
+## the generic Expression Is True condition (bare {expr}) catches any term no specific ACE claims. A
+## top-level ` and ` takes precedence (GDScript binds `and` tighter than `or`), so ` or ` splitting fires
+## only for a PURELY-OR expression (`a or b or c`, no top-level ` and `), which lifts as OR'd conditions -
+## a C3-style "Or block". A mixed `a and b or c` keeps the ` and ` split, which still re-emits byte-exact.
 static func _parse_conditions(expression: String, event: EventRow, reverse_entries: Array) -> bool:
-	for term: String in _split_top_level_and(expression):
+	var terms: PackedStringArray = _split_top_level(expression, " and ")
+	if terms.size() == 1:
+		var or_terms: PackedStringArray = _split_top_level(expression, " or ")
+		if or_terms.size() > 1:
+			terms = or_terms
+			event.condition_mode = EventRow.ConditionMode.OR
+	for term: String in terms:
 		var negated: bool = false
 		var candidate: String = term
 		if candidate.begins_with("not (") and candidate.ends_with(")"):

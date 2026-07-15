@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - `if a or b:` reads as an "Or block", not one opaque condition
+
+- **Opening a `.gd` now lifts a purely-OR `if` as separate OR'd conditions instead of one flat blob.** An
+  `if a or b:` used to read as a single Expression-Is-True condition holding the whole `a or b` text; now
+  each ` or ` term becomes its own condition and the event is set to OR-mode, so the row reads like a
+  Construct-3 "Or block" (any condition true -> the actions run). A top-level ` and ` still takes precedence -
+  GDScript binds `and` tighter than `or`, so a mixed `a or b and c` keeps the `and` split and stays AND-mode
+  rather than being falsely restructured. The ` or ` split is top-level only (an ` or ` inside a call, a
+  subscript, or a string literal never fragments the term), and every reconstruction is gated by the
+  byte-identical recompile, so a `.gd` still round-trips byte-for-byte.
+
 ### Added - a `match` reads and edits as a structured switch/case
 
 - **A GDScript `match` (the switch idiom) is now a structured switch/case that reads and edits like the rest
