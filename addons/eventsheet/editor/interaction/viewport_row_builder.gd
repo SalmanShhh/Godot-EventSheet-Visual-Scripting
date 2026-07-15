@@ -1980,12 +1980,11 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 				)
 				action_line_index += 1
 			elif action_resource is MatchRow:
-				# match statement (the switch): header + branch lines as action cells sharing one ace_index.
-				# A STRUCTURED MatchRow (its `cases` set) renders each case as a `pattern:` line with its body
-				# summarised beneath (an action as its friendly text) - read-only for now: it omits the
-				# match_action flag, so double-click does NOT open the branches_text dialog, which cannot
-				# represent cases (editing structured cases is a later phase). The raw-text form keeps the
-				# double-click-to-edit dialog.
+				# match statement (the switch): header + branch lines as action cells sharing one ace_index;
+				# double-click opens the match dialog. A STRUCTURED MatchRow (its `cases` set) renders each
+				# case as a `pattern:` line with its body summarised beneath (an action as its friendly text)
+				# and the dialog edits those cases as first-class rows; a raw-text MatchRow shows its
+				# branches_text and the dialog edits the text. Either way match_action drives the editor.
 				var match_resource: MatchRow = action_resource as MatchRow
 				var structured_match: bool = not match_resource.cases.is_empty()
 				var match_lines: PackedStringArray = PackedStringArray(["match %s:" % match_resource.match_expression])
@@ -2004,20 +2003,18 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 					for branch_line: String in match_resource.branches_text.split("\n"):
 						match_lines.append("\t" + branch_line)
 				for match_line_index in range(match_lines.size()):
-					var match_meta: Dictionary = {
-						"lane": "action",
-						"kind": "action",
-						"ace_index": action_index,
-						"action_line": match_line_index,
-						"text_color": event_style.value_highlight_color
-					}
-					if not structured_match:
-						match_meta["match_action"] = true
 					spans.append(
 						_make_span(
 							match_lines[match_line_index] if not match_lines[match_line_index].is_empty() else " ",
 							SemanticSpan.SpanType.VALUE,
-							match_meta
+							{
+								"lane": "action",
+								"kind": "action",
+								"ace_index": action_index,
+								"match_action": true,
+								"action_line": match_line_index,
+								"text_color": event_style.value_highlight_color
+							}
 						)
 					)
 			elif action_resource is RawCodeRow:

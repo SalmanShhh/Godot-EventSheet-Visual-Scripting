@@ -2,17 +2,21 @@
 
 ## [Unreleased]
 
-### Added - a GDScript `match` reads as a structured switch/case
+### Added - a `match` reads and edits as a structured switch/case
 
-- **Opening a `.gd` with a `match` statement now reads it as a structured switch: each branch becomes a
+- **A GDScript `match` (the switch idiom) is now a structured switch/case you build like the rest of the
+  sheet, instead of one opaque block of match text.** Opening a `.gd` with a `match` lifts each branch into a
   first-class case with its own pattern and body, rendered as readable `pattern:` lines with the body
-  summarised beneath (an action reads as its friendly text), instead of one opaque block of match text.** The
-  lift is byte-gated - the structured cases are only taken when re-emitting them reproduces the original
-  branch text exactly (nested branch bodies keep their indentation), so a `.gd` still round-trips
-  byte-for-byte and any match the parser can't cleanly structure stays a verbatim block. A structured switch
-  is read-only for now (double-click no longer opens the old raw-text match dialog, which can't represent
-  cases); editing cases as event-sheet blocks is a follow-up. Behind this: a MatchRow carries structured
-  `cases` (each a `MatchCase` of a pattern plus an action-lane body) that compile to the same plain `match`.
+  summarised beneath (an action reads as its friendly text). Double-click it and the match editor opens each
+  case as its own panel - a pattern (`State.IDLE`, `1`, `_` for default) and the actions to run - with a
+  "+ Add case" button and a remove on each, the same first-class-list gesture the enum editor uses (no more
+  editing one shared text blob). The whole switch is lint-gated before it commits, an empty case compiles to
+  `pass`, and a switch you author round-trips: it compiles to a plain `match` and re-opens as the same
+  structured cases. The import lift is byte-gated - structured cases are only taken when re-emitting them
+  reproduces the original branch text exactly (nested branch bodies keep their indentation), so a `.gd` still
+  round-trips byte-for-byte and any match the parser can't cleanly structure stays a verbatim block. Behind
+  this: a MatchRow carries structured `cases` (each a `MatchCase` of a pattern plus an action-lane body) that
+  compile to the same plain `match`.
 
 ### Changed - the enum editor gives each value its own field
 

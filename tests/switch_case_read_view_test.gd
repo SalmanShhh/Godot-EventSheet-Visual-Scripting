@@ -61,7 +61,7 @@ static func run() -> bool:
 	ok = _check("the default case pattern renders", texts.has("\t_:"), true) and ok
 	ok = _check("an empty case reads as pass", texts.has("\t\tpass"), true) and ok
 	ok = _check("branches_text is not shown when cases exist", _any_contains(texts, "SHOULD_NOT_SHOW"), false) and ok
-	ok = _check("structured match spans are read-only (no match_action dialog)", match_action_texts.is_empty(), true) and ok
+	ok = _check("structured match spans open the editor on double-click (match_action)", not match_action_texts.is_empty(), true) and ok
 
 	# ── A raw-text MatchRow (no cases) still shows its branches and keeps the double-click dialog ──
 	var raw_match: MatchRow = MatchRow.new()

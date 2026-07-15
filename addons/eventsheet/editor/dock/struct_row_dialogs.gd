@@ -160,7 +160,8 @@ var _signal_params_edit: TextEdit = null
 var _signal_target: SignalRow = null
 var _match_dialog: ConfirmationDialog = null
 var _match_expression_edit: LineEdit = null
-var _match_branches_edit: TextEdit = null
+var _match_cases_box: VBoxContainer = null
+var _match_case_rows: Array = []  # each: {"pattern": LineEdit, "body": TextEdit, "row": Control}
 var _match_hint: Label = null
 var _match_target: MatchRow = null
 
@@ -226,17 +227,34 @@ func _on_signal_dialog_confirmed() -> void:
 		_dock._mark_dirty("Signal updated (it now appears in the On/Emit Signal pickers).")
 
 
-## Opens the match editor (double-click a match cell or "Add Match To Actions…").
+## Opens the match editor (double-click a match cell or "Add Match To Actions…"). The switch is edited as
+## first-class cases: one panel per branch (a pattern + the actions to run), added / removed with buttons,
+## instead of one GDScript text blob - the same "+ Add" list gesture the enum editor uses.
 func open_match_dialog(match_resource: Resource) -> void:
 	var match_row: MatchRow = match_resource as MatchRow
 	if match_row == null:
 		return
 	_ensure_match_dialog()
+	_populate_match_dialog(match_row)
+	_match_dialog.popup_centered(Vector2i(560, 460))
+
+
+## Fills the (already-built) dialog with the match's expression and one case panel per branch - the non-popup
+## half of open_match_dialog, so it is drivable without a window. Populates from the structured `cases` when
+## present, else parses branches_text into cases (the same parse the importer uses), else one empty case.
+func _populate_match_dialog(match_row: MatchRow) -> void:
 	_match_target = match_row
 	_match_expression_edit.text = match_row.match_expression
-	_match_branches_edit.text = match_row.branches_text
 	_match_hint.text = ""
-	_match_dialog.popup_centered(Vector2i(520, 380))
+	_clear_match_case_rows()
+	var cases: Array[MatchCase] = match_row.cases
+	if cases.is_empty() and not match_row.branches_text.strip_edges().is_empty():
+		cases = EventSheetACELifter._structure_match_cases(match_row.branches_text.split("\n"))
+	if cases.is_empty():
+		_add_match_case_row("_", "pass")
+	else:
+		for match_case: MatchCase in cases:
+			_add_match_case_row(match_case.pattern, _case_body_text(match_case))
 
 
 func _ensure_match_dialog() -> void:
@@ -247,12 +265,24 @@ func _ensure_match_dialog() -> void:
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
 	_match_expression_edit = LineEdit.new()
 	_match_expression_edit.placeholder_text = "state"
-	form.add_child(EventSheetPopupUI.form_row("Match expression", _match_expression_edit))
-	form.add_child(EventSheetPopupUI.hint_label("Branches (GDScript match-body syntax - patterns + indented bodies)"))
-	_match_branches_edit = TextEdit.new()
-	_match_branches_edit.custom_minimum_size = Vector2(480.0, 200.0)
-	_match_branches_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	form.add_child(_match_branches_edit)
+	form.add_child(EventSheetPopupUI.form_row("Match on", _match_expression_edit))
+	form.add_child(EventSheetPopupUI.hint_label("One case per branch - a pattern (State.IDLE, 1, _ for default) and the actions to run:"))
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(500.0, 220.0)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_match_cases_box = VBoxContainer.new()
+	_match_cases_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_match_cases_box)
+	form.add_child(scroll)
+	var add_button: Button = Button.new()
+	add_button.text = "+ Add case"
+	add_button.tooltip_text = "Add another branch"
+	add_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	add_button.pressed.connect(func() -> void:
+		var entry: Dictionary = _add_match_case_row("", "")
+		(entry["pattern"] as LineEdit).grab_focus())
+	form.add_child(add_button)
 	_match_hint = Label.new()
 	form.add_child(_match_hint)
 	_match_dialog.add_child(EventSheetPopupUI.margined(form))
@@ -260,27 +290,120 @@ func _ensure_match_dialog() -> void:
 	_dock.add_child(_match_dialog)
 
 
+## Adds one case panel (pattern field + remove button, with a body editor beneath) and returns its controls.
+func _add_match_case_row(pattern: String, body: String) -> Dictionary:
+	var panel: VBoxContainer = VBoxContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var head: HBoxContainer = HBoxContainer.new()
+	var pattern_edit: LineEdit = LineEdit.new()
+	pattern_edit.text = pattern
+	pattern_edit.placeholder_text = "State.IDLE  (or _ for default)"
+	pattern_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(pattern_edit)
+	var remove_button: Button = Button.new()
+	remove_button.text = "✕"
+	remove_button.tooltip_text = "Remove this case"
+	head.add_child(remove_button)
+	panel.add_child(head)
+	var body_edit: TextEdit = TextEdit.new()
+	body_edit.text = body
+	body_edit.placeholder_text = "actions to run (leave blank for pass)"
+	body_edit.custom_minimum_size = Vector2(480.0, 52.0)
+	panel.add_child(body_edit)
+	_match_cases_box.add_child(panel)
+	var entry: Dictionary = {"pattern": pattern_edit, "body": body_edit, "row": panel}
+	remove_button.pressed.connect(_remove_match_case_row.bind(entry))
+	_match_case_rows.append(entry)
+	return entry
+
+
+func _remove_match_case_row(entry: Dictionary) -> void:
+	_match_case_rows.erase(entry)
+	_match_cases_box.remove_child(entry["row"])
+	(entry["row"] as Node).queue_free()
+	if _match_case_rows.is_empty():
+		_add_match_case_row("_", "pass")
+
+
+func _clear_match_case_rows() -> void:
+	for entry: Dictionary in _match_case_rows:
+		_match_cases_box.remove_child(entry["row"])
+		(entry["row"] as Node).free()
+	_match_case_rows.clear()
+
+
+## The body text a case shows in the editor: its RawCodeRow bodies joined (empty for a `pass`-only case).
+func _case_body_text(match_case: MatchCase) -> String:
+	var lines: PackedStringArray = PackedStringArray()
+	for item: Variant in match_case.events:
+		if item is RawCodeRow:
+			lines.append((item as RawCodeRow).code)
+	return "\n".join(lines)
+
+
 func _on_match_dialog_confirmed() -> void:
 	if _match_target == null:
 		return
 	var target: MatchRow = _match_target
 	var expression: String = _match_expression_edit.text.strip_edges()
-	var branches: String = _match_branches_edit.text
+	# Build cases from the panels; a blank pattern is an unfilled slot (skipped), an empty body compiles to
+	# `pass`. The body text is stripped of surrounding whitespace so a blank line never truncates the re-lift.
+	var new_cases: Array[MatchCase] = []
+	for entry: Dictionary in _match_case_rows:
+		var pattern: String = (entry["pattern"] as LineEdit).text.strip_edges()
+		if pattern.is_empty():
+			continue
+		var body: String = (entry["body"] as TextEdit).text.strip_edges()
+		var match_case: MatchCase = MatchCase.new()
+		match_case.pattern = pattern
+		if not body.is_empty():
+			var raw: RawCodeRow = RawCodeRow.new()
+			raw.code = body
+			match_case.events = [raw]
+		new_cases.append(match_case)
 	# Guardrail: the WHOLE construct must compile before it commits.
-	var construct: String = "match %s:\n" % expression
-	for branch_line: String in branches.split("\n"):
-		construct += "\t" + branch_line + "\n"
-	var verdict: Dictionary = EventSheetGDScriptLint.lint(construct.trim_suffix("\n"), true, _dock._current_sheet)
-	if expression.is_empty() or not bool(verdict.get("ok", true)):
+	var verdict: Dictionary = EventSheetGDScriptLint.lint(_match_construct_preview(expression, new_cases), true, _dock._current_sheet)
+	if expression.is_empty() or new_cases.is_empty() or not bool(verdict.get("ok", true)):
 		_match_hint.text = "✗ The match doesn't compile - fix it before applying."
 		if _dock.is_inside_tree():
-			_match_dialog.call_deferred("popup_centered", Vector2i(520, 380))
+			_match_dialog.call_deferred("popup_centered", Vector2i(560, 460))
 		return
+	var branches: String = _match_branches_from_cases(new_cases)
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Match", func() -> bool:
 		target.match_expression = expression
-		target.branches_text = branches
+		target.cases = new_cases
+		target.branches_text = branches  # kept in sync as the raw fallback
 		return true
 	)
 	if changed:
 		_dock._refresh_after_edit()
 		_dock._mark_dirty("Match updated.")
+
+
+## The whole match construct (for the lint gate): `match expr:` + each case's pattern and its body one indent
+## deeper, an empty body as `pass`.
+func _match_construct_preview(expression: String, cases: Array[MatchCase]) -> String:
+	var lines: PackedStringArray = PackedStringArray(["match %s:" % expression])
+	for match_case: MatchCase in cases:
+		lines.append("\t" + match_case.pattern + ":")
+		var body_text: String = _case_body_text(match_case)
+		if body_text.strip_edges().is_empty():
+			lines.append("\t\tpass")
+		else:
+			for body_line: String in body_text.split("\n"):
+				lines.append("\t\t" + body_line)
+	return "\n".join(lines)
+
+
+## The verbatim branches_text form kept in sync with the cases (the raw fallback / what the importer lifts).
+func _match_branches_from_cases(cases: Array[MatchCase]) -> String:
+	var lines: PackedStringArray = PackedStringArray()
+	for match_case: MatchCase in cases:
+		lines.append(match_case.pattern + ":")
+		var body_text: String = _case_body_text(match_case)
+		if body_text.strip_edges().is_empty():
+			lines.append("\tpass")
+		else:
+			for body_line: String in body_text.split("\n"):
+				lines.append("\t" + body_line)
+	return "\n".join(lines)
