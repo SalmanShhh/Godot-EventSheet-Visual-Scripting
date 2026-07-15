@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - a `@rpc` (or any) annotation no longer blocks a function from opening
+
+- **A function carrying a leading GDScript annotation - `@rpc`, `@warning_ignore`, `@abstract`,
+  `@static_unload`, stacked, or any other - now opens as an editable function instead of a raw block.** The
+  annotation lines are kept verbatim on the function and re-emitted in place (after the `## @ace_*` block,
+  before the `func` header), so a multiplayer `@rpc` method reads and edits like any other sheet function.
+  This uses the repo's established "preserve syntax we don't model verbatim" pattern (like `@export` hints),
+  so it covers every annotation in one field with no per-annotation parsing, and it is byte-gated - anything
+  that cannot reproduce its source stays a verbatim block, and every existing function emits byte-identically.
+
 ### Added - a local `const` in a flow body reads as a Set Local Constant row
 
 - **Three new actions - Set Local Constant, Set Local Constant (typed), Set Local Constant (inferred)** - so a

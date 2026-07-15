@@ -477,6 +477,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		lines.append("")
 		var function_start: int = lines.size() + 1
 		_emit_expose_annotations(event_function, sheet, lines)
+		_emit_function_annotation_prefix(event_function, lines)
 		lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
 		var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
 		var function_had_body: bool = _emit_event_body(function_events, lines, source_map, 1, result["warnings"])
@@ -672,6 +673,7 @@ static func _find_function_by_name(sheet: EventSheetResource, function_name: Str
 static func _emit_function_block(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray, source_map: Array, result: Dictionary) -> void:
 	var function_start: int = lines.size() + 1
 	_emit_expose_annotations(event_function, sheet, lines)
+	_emit_function_annotation_prefix(event_function, lines)
 	lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
 	var function_events: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
 	if not _emit_event_body(function_events, lines, source_map, 1, result["warnings"]):
@@ -1644,6 +1646,14 @@ static func _indent_raw_lines(code: String, depth: int) -> PackedStringArray:
 ## parsed back by EventSheetSemanticAnalyzer when the compiled script is registered as a
 ## provider (drop it into res://eventsheet_addons/), publishing the function as an ACE in
 ## every sheet - the sheet → script → addon loop behaviors and custom nodes build on.
+## Emits any verbatim GDScript annotation lines (`@rpc(...)`, `@warning_ignore(...)`, ...) carried on the
+## function, between the `## @ace_*` block and the `func` header. Empty for every function without them, so
+## existing output is byte-unchanged.
+static func _emit_function_annotation_prefix(event_function: EventFunction, lines: PackedStringArray) -> void:
+	for annotation_line: String in event_function.annotation_lines:
+		lines.append(annotation_line)
+
+
 static func _emit_expose_annotations(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray) -> void:
 	if event_function.lifted_unannotated:
 		# Reverse-lifted from a hand-written helper with no annotation block - the source had no

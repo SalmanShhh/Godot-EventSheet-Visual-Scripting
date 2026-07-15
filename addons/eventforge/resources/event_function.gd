@@ -16,6 +16,11 @@ extends Resource
 ## un-exposed path would otherwise add, so the source round-trips byte-identically. `expose_as_ace`
 ## stays false - re-exposing it (editing the function) clears this and restores normal annotations.
 @export var lifted_unannotated: bool = false
+## GDScript annotation lines kept VERBATIM (`@rpc(...)`, `@warning_ignore(...)`, `@abstract`, stacked), each
+## emitted on its own line between the `## @ace_*` block and the `func` header - the GDScript convention.
+## Set on lift from the leading annotation lines above a function and byte-gated, so a `@rpc` function opens as
+## an editable function instead of a raw block. Empty = none.
+@export var annotation_lines: PackedStringArray = PackedStringArray()
 ## Inspector button: a non-empty label emits
 ## `@export_tool_button("Label") var _btn_<name>: Callable = <name>` so the Inspector
 ## shows a clickable button running this function. Needs a @tool sheet to act in-editor

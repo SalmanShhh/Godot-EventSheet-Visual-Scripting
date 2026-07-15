@@ -52,15 +52,19 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	# glued to that preceding "other" row - split it off (stripped at mutation time).
 	var boundary_annotations_text: String = ""
 	var pending_annotations: Dictionary = {}
+	# Verbatim `@rpc`-style function annotations riding onto the next lifted function (see annotation_lines).
+	var pending_annotation_lines: PackedStringArray = PackedStringArray()
 	if lift_functions and first_run_index > 0 and sheet.events[first_run_index - 1] is RawCodeRow:
 		var boundary_lines: PackedStringArray = (sheet.events[first_run_index - 1] as RawCodeRow).code.split("\n")
 		var annotation_start: int = boundary_lines.size()
-		while annotation_start > 0 and boundary_lines[annotation_start - 1].begins_with("## "):
+		# Peel the trailing `## @ace_*` doc block AND any `@rpc`-style function annotations glued to the prelude.
+		while annotation_start > 0 and (boundary_lines[annotation_start - 1].begins_with("## ") or _is_function_annotation_line(boundary_lines[annotation_start - 1])):
 			annotation_start -= 1
 		if annotation_start < boundary_lines.size():
 			var annotation_lines: PackedStringArray = boundary_lines.slice(annotation_start)
 			boundary_annotations_text = "\n" + "\n".join(annotation_lines)
 			pending_annotations = _parse_annotations("\n".join(annotation_lines))
+			pending_annotation_lines = _collect_gd_annotation_lines("\n".join(annotation_lines))
 	# `_ready`'s leading connect lines reveal which functions are signal handlers
 	# (and for which signal/source node). Emission regenerates the connects.
 	var connections: Dictionary = {}
@@ -95,7 +99,8 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 				continue  # separator; emission re-adds it
 			"annotations":
 				pending_annotations = _parse_annotations(row.code)
-				if pending_annotations.is_empty():
+				pending_annotation_lines = _collect_gd_annotation_lines(row.code)
+				if pending_annotations.is_empty() and pending_annotation_lines.is_empty():
 					failed = true
 			"comments":
 				# Trailing top-level comments (deferred emission): one CommentRow per
@@ -107,7 +112,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			"func":
 				var header: String = row.code.split("\n")[0]
 				if LIFECYCLE_TRIGGERS.has(header) or _is_connected_handler(header, connections):
-					if not pending_annotations.is_empty():
+					if not pending_annotations.is_empty() or not pending_annotation_lines.is_empty():
 						failed = true
 					else:
 						# Lenient ifs: unmatched control flow becomes in-flow GDScript inside
@@ -129,8 +134,9 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 					if not lift_functions:
 						failed = true  # event-only pass: helper funcs stay raw; the run restarts after
 					else:
-						var function_lift: Dictionary = _lift_sheet_function(row.code.split("\n"), pending_annotations)
+						var function_lift: Dictionary = _lift_sheet_function(row.code.split("\n"), pending_annotations, false, pending_annotation_lines)
 						pending_annotations = {}
+						pending_annotation_lines = PackedStringArray()
 						if bool(function_lift.get("ok", false)):
 							saw_function = true
 							var lifted_function: Variant = function_lift.get("function")
@@ -151,6 +157,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			lifted_functions.clear()
 			lifted_comments.clear()
 			pending_annotations = {}
+			pending_annotation_lines = PackedStringArray()
 			saw_function = false
 			anchor_index = index + 1
 		# A blank separator's count was just consumed by (or is irrelevant to) this non-blank row - clear it
@@ -727,14 +734,33 @@ static func _collect_single_block_event_rows(events: Array, into: Array[EventRow
 			_collect_single_block_event_rows((item as EventGroup).events, into)
 
 
-## Classifies a trailing-run row: "func", "annotations" (## @ace block), "blank",
-## "comments" (top-level # lines), or "other" (breaks the run).
+## True for a leading GDScript annotation that decorates a FUNCTION (`@rpc`, `@warning_ignore`, `@abstract`,
+## `@static_unload`, ...). Excludes variable annotations (`@export`/`@onready var ...`), which lift as their
+## own LocalVariable rows, so this never steals a variable's annotation.
+static func _is_function_annotation_line(line: String) -> bool:
+	var text: String = line.strip_edges()
+	return text.begins_with("@") and not text.begins_with("@export") and not text.begins_with("@onready")
+
+
+## The function-annotation lines of a block, verbatim and in order (the `@rpc(...)` etc. that ride onto the
+## next function as EventFunction.annotation_lines). Skips `## @ace_*` doc lines and blanks.
+static func _collect_gd_annotation_lines(code: String) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for line: String in code.split("\n"):
+		if _is_function_annotation_line(line):
+			out.append(line)
+	return out
+
+
+## Classifies a trailing-run row: "func", "annotations" (## @ace and/or @rpc-style annotation block),
+## "blank", "comments" (top-level # lines), or "other" (breaks the run).
 static func _run_row_kind(code: String, lift_functions: bool) -> String:
 	if code.begins_with("func ") or code.begins_with("static func "):
 		return "func"
 	if code.strip_edges().is_empty():
 		return "blank"
 	var saw_annotation: bool = false
+	var saw_gd_annotation: bool = false
 	var saw_comment: bool = false
 	for line: String in code.split("\n"):
 		if line.strip_edges().is_empty():
@@ -743,11 +769,13 @@ static func _run_row_kind(code: String, lift_functions: bool) -> String:
 			saw_annotation = true
 		elif line.begins_with("# "):
 			saw_comment = true
+		elif _is_function_annotation_line(line):
+			saw_gd_annotation = true  # @rpc / @warning_ignore / ... - rides onto the next function
 		else:
 			return "other"
-	if saw_annotation and not saw_comment and lift_functions:
+	if (saw_annotation or saw_gd_annotation) and not saw_comment and lift_functions:
 		return "annotations"
-	if saw_comment and not saw_annotation and lift_functions:
+	if saw_comment and not saw_annotation and not saw_gd_annotation and lift_functions:
 		return "comments"
 	return "other"
 
@@ -822,7 +850,7 @@ static func _parse_annotations(code: String) -> Dictionary:
 ## A non-trigger function → EventFunction (sheet function), body parsed with the same
 ## grammar as event bodies (events without triggers). {} fields come from the preceding
 ## annotation block (every generated sheet function has one: @ace_action… or @ace_hidden).
-static func _lift_sheet_function(function_lines: PackedStringArray, annotations: Dictionary, allow_custom_return: bool = false) -> Dictionary:
+static func _lift_sheet_function(function_lines: PackedStringArray, annotations: Dictionary, allow_custom_return: bool = false, annotation_lines: PackedStringArray = PackedStringArray()) -> Dictionary:
 	# A generated sheet function always carries an annotation block (@ace_action… or @ace_hidden); a
 	# hand-written helper in an opened .gd has none. Both lift - the un-annotated one becomes an
 	# un-exposed function whose @ace_hidden emission is suppressed (lifted_unannotated), so it
@@ -837,6 +865,7 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 		return {"ok": false}
 	var event_function: EventFunction = EventFunction.new()
 	event_function.lifted_unannotated = unannotated
+	event_function.annotation_lines = annotation_lines
 	event_function.is_static = not header_match.get_string(1).is_empty()
 	event_function.function_name = header_match.get_string(2)
 	var return_name: String = header_match.get_string(4) if header_match.get_group_count() >= 4 else "void"
