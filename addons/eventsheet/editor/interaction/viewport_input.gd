@@ -269,6 +269,20 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			if _viewport._maybe_request_variable_edit(hit, row_index):
 				_viewport.accept_event()
 				return
+			# A "Data class" field value (name / type / default) edits inline: the field rows are inert
+			# (null source) so this is the ONLY mutation gesture that reaches them. The raw_row and the
+			# field's index ride in the span metadata; the dock re-emits the class from its model.
+			if bool(double_click_meta.get("data_class_field_edit", false)) and span_index >= 0 and span_index < row_data.spans.size():
+				var field_raw: Variant = double_click_meta.get("raw_row")
+				if field_raw is RawCodeRow:
+					_viewport.data_class_field_edit_requested.emit(
+						field_raw,
+						int(double_click_meta.get("field_index", -1)),
+						str(double_click_meta.get("part", "")),
+						str(row_data.spans[span_index].text)
+					)
+					_viewport.accept_event()
+					return
 			if row_data != null and row_data.source_resource is RawCodeRow:
 				_viewport.raw_code_edit_requested.emit(row_data.source_resource, false)
 				_viewport.accept_event()

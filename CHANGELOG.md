@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - a "Data class" field's default value is editable in place
+
+- **You can now edit a data holder's default values directly in its "Data class" block: double-click a
+  field's default (like `0.0` or `true`) and change it inline, exactly like editing any other value in the
+  sheet.** The edit re-emits the class from its structured model through the normal undo funnel, and because
+  the class only became an editable block when its model reproduced the source byte-for-byte, changing one
+  field's default touches ONLY that field's line - every other field, the class header, and the doc comment
+  stay byte-identical. The field's name and type are shown read-only on purpose: renaming a field or changing
+  its type would leave every use of it elsewhere in the file untouched and silently break the code, so that
+  needs whole-file reference awareness (a later slice). Guards worth naming: a no-op (double-click, press
+  Enter without changing anything) touches nothing - it never dirties or unlocks a pack you only opened to
+  look at - and the value is written verbatim, so a field whose default carried unusual whitespace is
+  preserved exactly. Every member of the class now renders too: `@export`, `const`, and comment lines show as
+  read-only rows, so a class is never displayed as "0 fields" with its real declarations hidden.
+
 ### Added - a pure-data class reads as an expandable "Data class" block
 
 - **When you open a behaviour pack, a data holder written as a plain inner class (a `class X:` of only typed

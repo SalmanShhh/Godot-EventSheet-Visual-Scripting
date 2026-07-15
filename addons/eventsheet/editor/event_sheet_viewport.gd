@@ -77,6 +77,11 @@ signal add_event_requested(owner_resource: Resource)
 ## Emitted when a GDScript block is double-clicked for editing. in_flow is true for blocks
 ## living inside an event's actions (statements), false for class-level tree blocks.
 signal raw_code_edit_requested(raw_row: Resource, in_flow: bool)
+## Emitted when a "Data class" block field's name / type / default value is double-clicked. The dock opens
+## a one-field inline editor; committing re-emits the class from its model (parse_data_class -> mutate the
+## field at field_index -> emit_data_class) into raw_row.code through the undo funnel. field_index is the
+## field's index in the parsed model's body array; part is "name", "type" or "default".
+signal data_class_field_edit_requested(raw_row: Resource, field_index: int, part: String, current_text: String)
 
 const ROW_HEIGHT := EventSheetPalette.ROW_HEIGHT
 const INDENT_WIDTH := EventSheetPalette.INDENT_WIDTH

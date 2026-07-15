@@ -25,6 +25,11 @@ var _color_swatch_popup: PopupPanel = null
 var _color_swatch_picker: ColorPicker = null
 var _color_swatch_target: Resource = null
 var _color_swatch_key: String = ""
+var _field_edit_popup: PopupPanel = null
+var _field_edit_field: LineEdit = null
+var _field_edit_raw: Resource = null
+var _field_edit_index: int = -1
+var _field_edit_part: String = ""
 
 
 ## Double-clicking a highlighted value opens this one-field editor at the mouse. Keyboard flows
@@ -156,6 +161,86 @@ func _collect_matching_in(resource: Variant, edited: Resource, param_id: String,
 			matches.append(ace)
 	for sub_event: Variant in event_row.sub_events:
 		_collect_matching_in(sub_event, edited, param_id, matches)
+
+
+## Double-clicking a "Data class" block field's name / type / default value opens the same one-field
+## editor an ACE param uses. The field lives inside a RawCodeRow's GDScript text (a `class X:` of typed
+## fields), not in a params dict, so the commit re-emits the whole class from its structured model: parse
+## raw_row.code -> mutate the field at field_index's part -> emit -> write back, all through the undo funnel.
+## Because the class only lifted to an editable block when its model reproduced the source byte-for-byte,
+## re-emitting after an edit changes ONLY the touched field's line - every other field, the header and the
+## doc prefix round-trip unchanged.
+func on_data_class_field_edit_requested(raw_row: Resource, field_index: int, part: String, current_text: String) -> void:
+	if not (raw_row is RawCodeRow) or field_index < 0 or part.is_empty():
+		return
+	if _field_edit_popup == null:
+		_field_edit_popup = PopupPanel.new()
+		_field_edit_field = LineEdit.new()
+		_field_edit_field.custom_minimum_size = Vector2(180.0, 0.0)
+		_field_edit_field.text_submitted.connect(func(_t: String) -> void: _commit_data_class_field_edit())
+		_field_edit_popup.add_child(_field_edit_field)
+		_dock.add_child(_field_edit_popup)
+	_field_edit_raw = raw_row
+	_field_edit_index = field_index
+	_field_edit_part = part
+	_field_edit_field.text = current_text
+	_field_edit_field.placeholder_text = part
+	_field_edit_field.tooltip_text = "Editing field %s" % part
+	if not _field_edit_popup.is_inside_tree():
+		return  # headless tests: state is set, there is no window to pop
+	_field_edit_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i(200, 36)))
+	_field_edit_field.grab_focus()
+	_field_edit_field.select_all()
+
+
+## Applies the committed value to a field's DEFAULT and re-emits the class into raw_row.code (one undo step).
+## Only the default is editable (a rename / type change would leave use sites elsewhere in the .gd broken -
+## the builder does not expose those parts). Two covenant guards: (1) the value is NOT stripped, so a field
+## whose default carried surrounding whitespace re-emits byte-identically and a no-op Enter changes nothing;
+## (2) the no-change check runs BEFORE the undo funnel - `_perform_undoable_sheet_edit` unlocks a read-only
+## preview on entry, so a no-op must never reach it, or merely double-clicking + Enter would unlock a pack
+## opened just to look.
+func _commit_data_class_field_edit() -> void:
+	var raw_row: Resource = _field_edit_raw
+	var field_index: int = _field_edit_index
+	if _field_edit_popup != null:
+		_field_edit_popup.hide()
+	if not (raw_row is RawCodeRow) or field_index < 0 or _field_edit_part != "default":
+		return
+	# Raw text, not strip_edges: preserve the exact bytes so an unchanged value re-emits identically.
+	var new_value: String = _field_edit_field.text
+	var new_code: String = _emit_data_class_default_edit(raw_row, field_index, new_value)
+	if new_code.is_empty() or new_code == str(raw_row.get("code")):
+		return  # invalid target, or no change: touch nothing (no funnel, so no unlock, no dirty)
+	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Field", func() -> bool:
+		# Recompute from the LIVE code inside the funnel (the sheet may have moved since the popup opened).
+		var live_code: String = _emit_data_class_default_edit(raw_row, field_index, new_value)
+		if live_code.is_empty() or live_code == str(raw_row.get("code")):
+			return false
+		raw_row.set("code", live_code)
+		return true
+	)
+	if changed:
+		_dock._refresh_after_edit()
+		_dock._mark_dirty("Field updated.")
+
+
+## Returns raw_row's class text with the field at field_index's default set to new_value ("" when the row is
+## no longer a lifting data class or field_index is not a field, so the caller leaves it untouched). An empty
+## new_value drops the ` = default` entirely. Pure re-emit through the same model the block was built from.
+func _emit_data_class_default_edit(raw_row: Resource, field_index: int, new_value: String) -> String:
+	var model: Dictionary = ViewportRowBuilder.parse_data_class(str(raw_row.get("code")))
+	if model.is_empty():
+		return ""
+	var body: Array = model["body"]
+	if field_index < 0 or field_index >= body.size():
+		return ""
+	var entry: Dictionary = body[field_index]
+	if str(entry.get("kind")) != "field":
+		return ""
+	entry["has_default"] = not new_value.is_empty()
+	entry["default"] = new_value
+	return ViewportRowBuilder.emit_data_class(model)
 
 
 ## Clicking a cell's colour swatch opens a ColorPicker right there (no params dialog), inline.

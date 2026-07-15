@@ -95,6 +95,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
 	view.find_step_requested.connect(_dock._find_step)
 	view.context_menu_requested.connect(_dock._on_viewport_context_menu_requested)
 	view.raw_code_edit_requested.connect(_dock._on_viewport_raw_code_edit_requested)
+	view.data_class_field_edit_requested.connect(_dock._on_data_class_field_edit_requested)
 
 
 ## "Open in Split": pins the given row in the other pane (opens the split if needed).

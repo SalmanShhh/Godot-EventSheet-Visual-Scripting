@@ -1133,10 +1133,13 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 
 ## Builds the foldable "Data class" block for a RawCodeRow that data_class_lifts recognises: a one-line
 ## header (badge · class-name chip · optional extends · field-count cue) whose children are the class's
-## fields, each rendered as a read-only `name : type = default` row like a variable. The header keeps its
-## RawCodeRow as source_resource so double-click opens the code editor (the escape hatch); the field rows
-## are inert so no mutation reaches them (Phase 1 is a pure read - editing fields in place is the next
-## slice). row_uid is class-name-keyed so an expanded block survives the undo funnel's resource rebuild.
+## fields, each rendered as a `name : type = default` row like a variable. Double-clicking a field's name,
+## type or default value edits it inline; the edit re-emits the class from its structured model through the
+## undo funnel (deterministic, and - because the model reproduced the source byte-for-byte to lift in the
+## first place - an edit changes ONLY the touched field's line, nothing else in the class). The header keeps
+## its RawCodeRow as source_resource so double-click there opens the code editor (the escape hatch); the
+## field rows stay inert (source null) for selection / drag / delete so only the value edit can change them.
+## row_uid is class-name-keyed so an expanded block survives the undo funnel's resource rebuild.
 func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var model: Dictionary = parse_data_class(raw_row.code)
 	var row_data := EventRowData.new()
@@ -1147,10 +1150,18 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var data_class_name_str: String = str(model.get("class_name"))
 	row_data.row_uid = "data_class_%s" % (data_class_name_str if not data_class_name_str.is_empty() else str(raw_row.get_instance_id()))
 	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
-	var fields: Array = []
-	for entry: Dictionary in model.get("body", []):
+	var body: Array = model.get("body", [])
+	# Count what will render: every field plus every non-blank @export / const / comment line (all body
+	# members show, so an @export- or const-only class never reads "0 fields" with its members hidden).
+	# editable_count is the plain `var` fields whose default value can be double-clicked to edit.
+	var member_count: int = 0
+	var editable_count: int = 0
+	for entry: Dictionary in body:
 		if str(entry.get("kind")) == "field":
-			fields.append(entry)
+			member_count += 1
+			editable_count += 1
+		elif not str(entry.get("text")).strip_edges().is_empty():
+			member_count += 1
 	var header_spans: Array[SemanticSpan] = [
 		_make_span("Data class", SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
@@ -1179,45 +1190,93 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			"line_index": 0,
 			"text_color": EventSheetPalette.TEXT_MUTED
 		}))
-	header_spans.append(_make_span("%d field%s · double-click to edit in code" % [fields.size(), "" if fields.size() == 1 else "s"], SemanticSpan.SpanType.VALUE, {
+	var cue: String = "%d field%s" % [member_count, "" if member_count == 1 else "s"]
+	if editable_count > 0:
+		cue += " · double-click a default to edit"
+	header_spans.append(_make_span(cue, SemanticSpan.SpanType.VALUE, {
 		"editable": false,
 		"kind": "raw_code",
 		"line_index": 0,
 		"text_color": EventSheetPalette.TEXT_MUTED
 	}))
 	row_data.spans = header_spans
-	for field: Dictionary in fields:
-		row_data.children.append(_build_data_class_field_row(field, indent + 1))
+	for body_index: int in range(body.size()):
+		var entry: Dictionary = body[body_index]
+		if str(entry.get("kind")) == "field":
+			row_data.children.append(_build_data_class_field_row(raw_row, data_class_name_str, body_index, entry, indent + 1))
+		elif not str(entry.get("text")).strip_edges().is_empty():
+			# @export / const / comment members render verbatim and READ-ONLY (inert). Editing the default of
+			# a plain `var` field is the editable path; these keep the block honest - no hidden declarations.
+			row_data.children.append(_build_data_class_member_row(data_class_name_str, body_index, str(entry.get("text")), indent + 1))
 	if not row_data.children.is_empty():
 		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
 	return row_data
 
 
-## One field of a "Data class" block, rendered read-only like a variable row (name : type = default). The
-## row is inert (source_resource null) so selection, drag, delete and inline edit all skip it - the class
-## text is untouched, so the byte round-trip holds. The editable field model layers on top of this in the
-## next slice; for now the double-click-to-edit-in-code header is the way to change a field.
-func _build_data_class_field_row(field: Dictionary, indent: int) -> EventRowData:
+## One field of a "Data class" block, rendered like a variable row (name : type = default). ONLY the default
+## value is editable: double-clicking it carries an edit descriptor {data_class_field_edit, part:"default",
+## field_index (its index in the class model's body array), raw_row} that fires the viewport's
+## data_class_field_edit_requested signal -> the same one-field inline editor an ACE param uses -> the commit
+## re-emits the class from its model through the undo funnel (see inline_param_editor.gd). The name and type
+## are shown read-only on purpose: renaming a field or changing its type would leave every use site elsewhere
+## in the .gd untouched and silently break the file, so that needs whole-file reference awareness (a later
+## slice), not a one-line edit. The row keeps source_resource null so selection, drag and delete still skip
+## it (its spans are editable:false, so the generic caret editor never touches them either), which keeps the
+## read-only gate intact while the default becomes editable. A per-field row_uid avoids sharing one blank uid
+## (which would highlight every field row on selecting one).
+func _build_data_class_field_row(raw_row: RawCodeRow, class_name_str: String, field_index: int, field: Dictionary, indent: int) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent
 	row_data.row_type = EventRowData.RowType.SECTION
 	row_data.source_resource = null
 	row_data.line_count = 1
-	var field_meta := {"editable": false, "kind": "data_class_field"}
+	row_data.row_uid = "data_class_field_%s_%d" % [class_name_str, field_index]
 	row_data.spans = [
-		_make_span(str(field.get("name")), SemanticSpan.SpanType.OBJECT, field_meta.merged({
+		_make_span(str(field.get("name")), SemanticSpan.SpanType.OBJECT, {
+			"editable": false,
+			"kind": "data_class_field",
 			"text_color": _viewport._get_event_style().object_label_color
-		}, true)),
-		_make_span(":", SemanticSpan.SpanType.OPERATOR, field_meta.duplicate()),
-		_make_span(str(field.get("type")), SemanticSpan.SpanType.VALUE, field_meta.merged({
+		}),
+		_make_span(":", SemanticSpan.SpanType.OPERATOR, {"editable": false, "kind": "data_class_field"}),
+		_make_span(str(field.get("type")), SemanticSpan.SpanType.VALUE, {
+			"editable": false,
+			"kind": "data_class_field",
 			"text_color": EventSheetPalette.TEXT_MUTED
-		}, true))
+		})
 	]
 	if bool(field.get("has_default", false)):
-		row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, field_meta.duplicate()))
-		row_data.spans.append(_make_span(str(field.get("default")), SemanticSpan.SpanType.VALUE, field_meta.merged({
+		row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, {"editable": false, "kind": "data_class_field"}))
+		row_data.spans.append(_make_span(str(field.get("default")), SemanticSpan.SpanType.VALUE, {
+			"editable": false,
+			"kind": "data_class_field",
+			"data_class_field_edit": true,
+			"part": "default",
+			"field_index": field_index,
+			"raw_row": raw_row,
 			"text_color": _viewport._get_event_style().value_highlight_color
-		}, true)))
+		}))
+	return row_data
+
+
+## An @export / const / comment member of a "Data class" block: shown verbatim and READ-ONLY (source null,
+## no edit descriptor), so the expanded block reveals every declaration in the class instead of only plain
+## `var` fields. Editing these in place is out of scope for this slice (an @export/const often participates
+## in Inspector/const semantics that a one-line edit cannot honour); the double-click-header code editor
+## remains the way to change them. A per-member row_uid keeps selection from highlighting siblings.
+func _build_data_class_member_row(class_name_str: String, body_index: int, text: String, indent: int) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.line_count = 1
+	row_data.row_uid = "data_class_member_%s_%d" % [class_name_str, body_index]
+	row_data.spans = [
+		_make_span(text.strip_edges(), SemanticSpan.SpanType.VALUE, {
+			"editable": false,
+			"kind": "data_class_field",
+			"text_color": EventSheetPalette.TEXT_MUTED
+		})
+	]
 	return row_data
 
 

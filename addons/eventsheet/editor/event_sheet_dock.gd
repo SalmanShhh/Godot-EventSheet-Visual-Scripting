@@ -1490,6 +1490,10 @@ func _on_viewport_raw_code_edit_requested(raw_resource: Resource, in_flow: bool)
 	_code_panel_glue.on_viewport_raw_code_edit_requested(raw_resource, in_flow)
 
 
+func _on_data_class_field_edit_requested(raw_row: Resource, field_index: int, part: String, current_text: String) -> void:  # viewport data_class_field_edit_requested
+	_inline_params.on_data_class_field_edit_requested(raw_row, field_index, part, current_text)
+
+
 
 func _ensure_raw_code_dialog() -> void:
 	_ui_builder.ensure_raw_code_dialog()
@@ -2530,6 +2534,12 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 		return
 	if kind == "action":
 		_show_popup_menu(_action_context_menu, global_position)
+		return
+	# A "Data class" block field / member row is synthetic (source_resource null): it owns no sheet
+	# resource, so the row menu's Insert / Delete / Disable do not apply and would fall through to the sheet
+	# ROOT (a null anchor appends there). Editing is by double-clicking the default value, or the header's
+	# double-click-to-edit-in-code. Show no row menu rather than a menu that acts on the wrong target.
+	if kind == "data_class_field":
 		return
 	_build_row_context_menu(row_data)
 	_show_popup_menu(_row_context_menu, global_position)

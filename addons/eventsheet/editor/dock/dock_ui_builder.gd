@@ -211,6 +211,7 @@ func build_ui() -> void:
 	_dock._viewport.lane_ratio_changed.connect(_dock._on_viewport_lane_ratio_changed)
 	_dock._viewport.add_event_requested.connect(_dock._on_viewport_add_event_requested)
 	_dock._viewport.raw_code_edit_requested.connect(_dock._on_viewport_raw_code_edit_requested)
+	_dock._viewport.data_class_field_edit_requested.connect(_dock._on_data_class_field_edit_requested)
 	_dock._viewport.context_menu_requested.connect(_dock._on_viewport_context_menu_requested)
 	_dock._viewport.empty_space_double_clicked.connect(_dock._on_viewport_empty_space_double_clicked)
 	_dock._viewport.template_menu_requested.connect(_dock._open_template_menu)
