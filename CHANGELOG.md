@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - the enum editor gives each value its own field
+
+- **Editing an enum now shows each value in its own field, with a "+ Add value" button and a remove (✕) on
+  each row, instead of one shared text box.** It used to be a single multi-line box where it was easy to lose
+  track of whether you had actually added another value or just wrapped a line; now every value is visibly a
+  separate entry you can add, rename, or remove one at a time. You can still set an explicit number on a value
+  by typing `= 4` in its field. This is purely an editor change - an enum still compiles to the same canonical
+  `enum Name { A, B }` line, so opening and re-saving a `.gd` is byte-identical as before.
+
 ### Added - a "Data class" field's default value is editable in place
 
 - **You can now edit a data holder's default values directly in its "Data class" block: double-click a

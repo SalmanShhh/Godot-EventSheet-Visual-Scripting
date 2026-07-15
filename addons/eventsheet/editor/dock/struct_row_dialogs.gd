@@ -18,10 +18,14 @@ var _dock: Control = null
 func init(dock: Control) -> void:
 	_dock = dock
 
-# ── Enum dialog (name + members, one per line) ───────────────────────────────────────
+# ── Enum dialog (name + one field per value, with a "+ Add value" button) ────────────
+# Each enum value is its own LineEdit row instead of lines in one TextEdit, so it is unambiguous that
+# every value is a separate entry (the "did I add another one?" confusion a shared text field breeds).
+# The model is unchanged - members stays a PackedStringArray - so the compile + byte-gated lift are untouched.
 var _enum_dialog: ConfirmationDialog = null
 var _enum_name_edit: LineEdit = null
-var _enum_members_edit: TextEdit = null
+var _enum_members_box: VBoxContainer = null
+var _enum_member_edits: Array[LineEdit] = []
 var _enum_target: EnumRow = null
 
 
@@ -31,11 +35,22 @@ func open_enum_dialog(enum_resource: Resource) -> void:
 	if enum_row == null:
 		return
 	_ensure_enum_dialog()
+	_populate_enum_dialog(enum_row)
+	_enum_dialog.popup_centered(Vector2i(440, 340))
+
+
+## Fills the (already-built) dialog with the enum's name and one value field per member - the non-popup
+## half of open_enum_dialog, so it is drivable without a window.
+func _populate_enum_dialog(enum_row: EnumRow) -> void:
 	_enum_target = enum_row
 	_enum_name_edit.text = enum_row.enum_name
-	_enum_members_edit.text = "
-".join(enum_row.members)
-	_enum_dialog.popup_centered(Vector2i(420, 300))
+	# One value field per existing member (at least one empty field so the list is never blank).
+	_clear_enum_member_rows()
+	if enum_row.members.is_empty():
+		_add_enum_member_row("")
+	else:
+		for member: String in enum_row.members:
+			_add_enum_member_row(member)
 
 
 func _ensure_enum_dialog() -> void:
@@ -47,14 +62,62 @@ func _ensure_enum_dialog() -> void:
 	_enum_name_edit = LineEdit.new()
 	_enum_name_edit.placeholder_text = "State"
 	form.add_child(EventSheetPopupUI.form_row("Enum name", _enum_name_edit))
-	form.add_child(EventSheetPopupUI.hint_label("Members (one per line; optional \"NAME = 4\" values)"))
-	_enum_members_edit = TextEdit.new()
-	_enum_members_edit.custom_minimum_size = Vector2(380.0, 150.0)
-	_enum_members_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	form.add_child(_enum_members_edit)
+	form.add_child(EventSheetPopupUI.hint_label("Values - one per field; optional \"= 4\" to set an explicit number:"))
+	# A scroll box so a long value list stays inside the dialog; each value is added as its own row.
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(400.0, 150.0)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_enum_members_box = VBoxContainer.new()
+	_enum_members_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_enum_members_box)
+	form.add_child(scroll)
+	var add_button: Button = Button.new()
+	add_button.text = "+ Add value"
+	add_button.tooltip_text = "Add another enum value"
+	add_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	add_button.pressed.connect(func() -> void:
+		var edit: LineEdit = _add_enum_member_row("")
+		edit.grab_focus())
+	form.add_child(add_button)
 	_enum_dialog.add_child(EventSheetPopupUI.margined(form))
 	_enum_dialog.confirmed.connect(_on_enum_dialog_confirmed)
 	_dock.add_child(_enum_dialog)
+
+
+## Adds one "value field + remove button" row and returns its LineEdit (so callers can focus it).
+func _add_enum_member_row(text: String) -> LineEdit:
+	var row: HBoxContainer = HBoxContainer.new()
+	var edit: LineEdit = LineEdit.new()
+	edit.text = text
+	edit.placeholder_text = "IDLE"
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	edit.text_submitted.connect(func(_t: String) -> void: _enum_dialog.get_ok_button().grab_focus())
+	row.add_child(edit)
+	var remove_button: Button = Button.new()
+	remove_button.text = "✕"
+	remove_button.tooltip_text = "Remove this value"
+	remove_button.pressed.connect(_remove_enum_member_row.bind(row, edit))
+	row.add_child(remove_button)
+	_enum_members_box.add_child(row)
+	_enum_member_edits.append(edit)
+	return edit
+
+
+func _remove_enum_member_row(row: HBoxContainer, edit: LineEdit) -> void:
+	_enum_member_edits.erase(edit)
+	_enum_members_box.remove_child(row)
+	row.queue_free()
+	# Keep at least one field so the list is never empty and there is always somewhere to type.
+	if _enum_member_edits.is_empty():
+		_add_enum_member_row("")
+
+
+func _clear_enum_member_rows() -> void:
+	for row: Node in _enum_members_box.get_children():
+		_enum_members_box.remove_child(row)
+		row.free()
+	_enum_member_edits.clear()
 
 
 func _on_enum_dialog_confirmed() -> void:
@@ -66,20 +129,20 @@ func _on_enum_dialog_confirmed() -> void:
 		_dock._set_status("\"%s\" can't be an enum name (letters/digits/underscores, not a GDScript keyword)." % _enum_name_edit.text, true)
 		return
 	var new_members: PackedStringArray = PackedStringArray()
-	for line: String in _enum_members_edit.text.split("
-"):
-		if line.strip_edges().is_empty():
-			continue
-		var member_name: String = EventSheetIdentifierRules.sanitize(line.get_slice("=", 0))
+	for edit: LineEdit in _enum_member_edits:
+		var entry: String = edit.text
+		if entry.strip_edges().is_empty():
+			continue  # a blank field is just an unfilled slot, not an error
+		var member_name: String = EventSheetIdentifierRules.sanitize(entry.get_slice("=", 0))
 		if not EventSheetIdentifierRules.is_valid(member_name):
-			_dock._set_status("\"%s\" can't be an enum member name." % line.strip_edges(), true)
+			_dock._set_status("\"%s\" can't be an enum value name." % entry.strip_edges(), true)
 			return
 		var member_text: String = member_name
-		if line.contains("="):
-			member_text += " = " + line.get_slice("=", 1).strip_edges()
+		if entry.contains("="):
+			member_text += " = " + entry.get_slice("=", 1).strip_edges()
 		new_members.append(member_text)
 	if new_members.is_empty():
-		_dock._set_status("Enums need a name and at least one member.", true)
+		_dock._set_status("Enums need a name and at least one value.", true)
 		return
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Enum", func() -> bool:
 		target.enum_name = new_name

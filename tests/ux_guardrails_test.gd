@@ -136,7 +136,9 @@ static func run() -> bool:
 	sheet.events.append(guarded_enum)
 	editor._struct_rows._enum_target = guarded_enum
 	editor._struct_rows._enum_name_edit.text = "player state"
-	editor._struct_rows._enum_members_edit.text = "idle mode\nRUN = 4"
+	editor._struct_rows._clear_enum_member_rows()
+	editor._struct_rows._add_enum_member_row("idle mode")
+	editor._struct_rows._add_enum_member_row("RUN = 4")
 	editor._struct_rows._on_enum_dialog_confirmed()
 	all_passed = _check("enum names auto-correct",
 		guarded_enum.enum_name == "player_state" and guarded_enum.members[0] == "idle_mode" and guarded_enum.members[1] == "RUN = 4", true) and all_passed

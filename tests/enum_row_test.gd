@@ -110,7 +110,10 @@ static func run() -> bool:
 	editor._struct_rows._ensure_enum_dialog()
 	editor._struct_rows._enum_target = state
 	editor._struct_rows._enum_name_edit.text = "PlayerState"
-	editor._struct_rows._enum_members_edit.text = "IDLE\nDASH"
+	# The enum dialog now shows each value in its own field (was one TextEdit): populate two fields.
+	editor._struct_rows._clear_enum_member_rows()
+	editor._struct_rows._add_enum_member_row("IDLE")
+	editor._struct_rows._add_enum_member_row("DASH")
 	editor._struct_rows._on_enum_dialog_confirmed()
 	all_passed = _check("dialog applies name + members",
 		state.enum_name == "PlayerState" and state.members == PackedStringArray(["IDLE", "DASH"]), true) and all_passed
