@@ -825,6 +825,52 @@ static func data_class_name(code: String) -> String:
 	return header_match.get_string(1)
 
 
+## The class name ("" when not a match) if a RawCodeRow is a METHODS-bearing inner class: the same shape as
+## data_class_name but the body may ALSO contain `func`/`static func` methods (and their deeper-indented
+## bodies), and at least ONE method is required. Disjoint from data_class_name (which requires ZERO methods),
+## so a class routes to exactly one recognizer. This feeds a pure-VIEW read-only class block (methods render
+## as read-only chips) over an UNCHANGED RawCodeRow, so it is byte-safe by construction - the compiler never
+## sees a structured nested class. A nested `class`, a dedent to column 0, or any other one-tab statement rejects.
+static func methods_class_name(code: String) -> String:
+	var lines: PackedStringArray = code.split("\n")
+	var i: int = 0
+	while i < lines.size():
+		var stripped: String = lines[i].strip_edges()
+		if stripped.is_empty() or stripped.begins_with("#"):
+			i += 1
+		else:
+			break
+	if i >= lines.size():
+		return ""
+	var header: RegEx = RegEx.new()
+	if header.compile("^class ([A-Za-z_][A-Za-z0-9_]*)(?: extends [A-Za-z_][A-Za-z0-9_.]*)?:$") != OK:
+		return ""
+	var header_match: RegExMatch = header.search(lines[i])
+	if header_match == null:
+		return ""
+	i += 1
+	var method_count: int = 0
+	while i < lines.size():
+		var body_line: String = lines[i]
+		i += 1
+		if body_line.strip_edges().is_empty():
+			continue
+		if not body_line.begins_with("\t"):
+			return ""  # a dedent to column 0 - a second top-level construct, not this class
+		var inner: String = body_line.substr(1)  # one leading tab stripped for the keyword test
+		if inner.begins_with("func ") or inner.begins_with("static func "):
+			method_count += 1
+		elif inner.begins_with("\t"):
+			continue  # a deeper-indented method / block body line - belongs to the method above
+		elif inner.begins_with("var ") or inner.begins_with("const ") or inner.begins_with("@") or inner.begins_with("#"):
+			pass  # a field, annotation, or comment member - allowed
+		else:
+			return ""  # a nested class header, bare code, or any other one-tab statement rejects
+	if method_count == 0:
+		return ""  # no method -> a pure-data class (or empty); not this recognizer
+	return header_match.get_string(1)
+
+
 ## The structured, editable model of a pure-data inner class ({} when data_class_name rejects the code):
 ## { class_name, extends, prefix (verbatim lines before the header), header (verbatim class line), body }.
 ## `body` is one entry per body line: a canonical `\tvar name: Type[ = default]` becomes a structured field
@@ -835,6 +881,33 @@ static func parse_data_class(code: String) -> Dictionary:
 	var class_name_str: String = data_class_name(code)
 	if class_name_str.is_empty():
 		return {}
+	return _parse_class_body(code, class_name_str)
+
+
+## The structured model of a methods-bearing inner class (see methods_class_name). Reuses the shared body
+## parser: canonical `\tvar name: Type[ = default]` fields become {kind:"field"}, and every other line - the
+## `\tfunc`/`\t\t` method lines, comments, @export - is kept verbatim as {kind:"raw"}, so emit_data_class
+## reproduces the whole class (methods included) byte-for-byte. {} when methods_class_name rejects the code.
+static func parse_methods_class(code: String) -> Dictionary:
+	var class_name_str: String = methods_class_name(code)
+	if class_name_str.is_empty():
+		return {}
+	return _parse_class_body(code, class_name_str)
+
+
+## True only when a RawCodeRow is a methods-bearing class AND its structured model re-emits to the EXACT
+## source (the view byte-gate). The render is a pure view over the unchanged RawCodeRow, so this only decides
+## structured-vs-verbatim reading, never the emitted bytes.
+static func methods_class_lifts(code: String) -> bool:
+	var model: Dictionary = parse_methods_class(code)
+	if model.is_empty():
+		return false
+	return emit_data_class(model) == code
+
+
+## Shared body parser for a data class OR a methods class, given a pre-validated class name. Splits the
+## verbatim prefix, the `class …:` header, and one body entry per line (structured fields, raw everything else).
+static func _parse_class_body(code: String, class_name_str: String) -> Dictionary:
 	var lines: PackedStringArray = code.split("\n")
 	var i: int = 0
 	var prefix: Array[String] = []
@@ -1026,6 +1099,12 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# them in place is the next slice. Double-click still opens the code editor as the escape hatch.
 	if data_class_lifts(raw_row.code):
 		return _build_data_class_row(raw_row, indent)
+	# A methods-bearing inner class (a `class X:` with methods, not just data) reads as a foldable, READ-ONLY
+	# class block: the class in the condition cell, and its fields + a `ƒ name(params) -> Type` chip per method
+	# as child rows, instead of a GDScript wall. Byte-gated (methods_class_lifts) and a pure view over the
+	# unchanged RawCodeRow, so the .gd round-trip is never at risk; double-click opens the code editor.
+	if methods_class_lifts(raw_row.code):
+		return _build_methods_class_row(raw_row, indent)
 	# A lone top-level function (a helper the importer could not lift) collapses to a `ƒ name(params) ->
 	# Type` header + line count, so it reads as a FUNCTION, not a raw GDScript wall - the same view-only
 	# collapse as host-binding and annotation shells above. Double-click still opens the code dialog.
@@ -1283,6 +1362,128 @@ func _build_data_class_member_row(class_name_str: String, body_index: int, text:
 			"text_color": EventSheetPalette.TEXT_MUTED
 		}.merged(condition_style, true))
 	]
+	return row_data
+
+
+## A methods-bearing inner class (methods_class_name) rendered as a foldable, READ-ONLY block: the class in
+## the condition cell, its field + method counts in the action cell, and each field (read-only) plus a
+## `ƒ name(params) -> Type` chip per method as child rows. Pure view - the RawCodeRow stays the source
+## (double-click opens the code editor), nothing is editable here, so the byte round-trip is untouched.
+func _build_methods_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
+	var model: Dictionary = parse_methods_class(raw_row.code)
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.EVENT
+	row_data.source_resource = raw_row
+	row_data.line_count = 1
+	var class_name_str: String = str(model.get("class_name"))
+	row_data.row_uid = "methods_class_%s" % (class_name_str if not class_name_str.is_empty() else str(raw_row.get_instance_id()))
+	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
+	var body: Array = model.get("body", [])
+	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var base: String = str(model.get("extends", ""))
+	var header_text: String = "class %s" % class_name_str
+	if not base.is_empty():
+		header_text += " extends %s" % base
+	var field_count: int = 0
+	var method_count: int = 0
+	for entry: Dictionary in body:
+		if str(entry.get("kind")) == "field":
+			field_count += 1
+		elif str(entry.get("text")).begins_with("\tfunc ") or str(entry.get("text")).begins_with("\tstatic func "):
+			method_count += 1
+	var header_spans: Array[SemanticSpan] = [
+		_make_span(header_text, SemanticSpan.SpanType.OBJECT, {
+			"lane": "condition", "editable": false, "kind": "raw_code", "line_index": 0,
+			"text_color": event_style.object_label_color
+		}.merged(condition_style, true))
+	]
+	var cue_parts: PackedStringArray = PackedStringArray()
+	if field_count > 0:
+		cue_parts.append("%d field%s" % [field_count, "" if field_count == 1 else "s"])
+	cue_parts.append("%d method%s" % [method_count, "" if method_count == 1 else "s"])
+	header_spans.append(_make_span(" · ".join(cue_parts), SemanticSpan.SpanType.VALUE, {
+		"lane": "action", "editable": false, "kind": "raw_code", "line_index": 0,
+		"text_color": event_style.value_highlight_color
+	}.merged(action_style, true)))
+	row_data.spans = header_spans
+	# Walk the body, collapsing each method (its `\tfunc` header + deeper `\t\t` body lines) into ONE chip row.
+	var child_index: int = 0
+	var k: int = 0
+	while k < body.size():
+		var entry: Dictionary = body[k]
+		if str(entry.get("kind")) == "field":
+			var field_text: String = "var %s: %s" % [str(entry.get("name")), str(entry.get("type"))]
+			if bool(entry.get("has_default", false)):
+				field_text += " = %s" % str(entry.get("default"))
+			row_data.children.append(_build_data_class_member_row(class_name_str, child_index, field_text, indent + 1))
+			child_index += 1
+			k += 1
+			continue
+		var text: String = str(entry.get("text"))
+		if text.strip_edges().is_empty():
+			k += 1
+			continue
+		if text.begins_with("\tfunc ") or text.begins_with("\tstatic func "):
+			var method_lines: PackedStringArray = PackedStringArray([text.substr(1)])  # dedent one tab
+			k += 1
+			while k < body.size() and str(body[k].get("kind")) != "field":
+				var next_text: String = str(body[k].get("text"))
+				if next_text.strip_edges().is_empty() or next_text.begins_with("\t\t"):
+					method_lines.append(next_text.substr(1) if next_text.begins_with("\t") else next_text)
+					k += 1
+				else:
+					break  # a sibling one-tab member starts here
+			row_data.children.append(_build_class_method_row(class_name_str, child_index, method_lines, indent + 1))
+			child_index += 1
+			continue
+		# A one-tab comment or annotation member (a `## doc` or `@rpc` above a method).
+		row_data.children.append(_build_data_class_member_row(class_name_str, child_index, text, indent + 1))
+		child_index += 1
+		k += 1
+	if not row_data.children.is_empty():
+		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+	return row_data
+
+
+## One method of a methods-class block, collapsed to a read-only `ƒ name(params) -> Type` chip plus a
+## body-line count. method_lines is the method dedented one tab (header at column 0). Read-only (source null);
+## the block header's double-click opens the code editor to change the method.
+func _build_class_method_row(class_name_str: String, child_index: int, method_lines: PackedStringArray, indent: int) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.EVENT
+	row_data.source_resource = null
+	row_data.line_count = 1
+	row_data.row_uid = "methods_class_method_%s_%d" % [class_name_str, child_index]
+	var header_regex: RegEx = RegEx.new()
+	header_regex.compile("^(static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?: -> (.+))?:$")
+	var header_match: RegExMatch = header_regex.search(method_lines[0])
+	var label: String = method_lines[0].strip_edges()
+	if header_match != null:
+		var static_prefix: String = "static " if not header_match.get_string(1).is_empty() else ""
+		var ret: String = header_match.get_string(4)
+		label = "ƒ %s%s(%s) -> %s" % [static_prefix, header_match.get_string(2), header_match.get_string(3), ret if not ret.is_empty() else "void"]
+	var body_line_count: int = 0
+	for j: int in range(1, method_lines.size()):
+		if not method_lines[j].strip_edges().is_empty():
+			body_line_count += 1
+	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
+	var spans: Array[SemanticSpan] = [
+		_make_span(label, SemanticSpan.SpanType.OBJECT, {
+			"lane": "condition", "editable": false, "kind": "raw_code", "line_index": 0,
+			"text_color": _viewport._get_event_style().object_label_color
+		}.merged(condition_style, true))
+	]
+	if body_line_count > 0:
+		spans.append(_make_span("%d line%s" % [body_line_count, "" if body_line_count == 1 else "s"], SemanticSpan.SpanType.VALUE, {
+			"lane": "action", "editable": false, "kind": "raw_code", "line_index": 0,
+			"text_color": EventSheetPalette.TEXT_MUTED
+		}.merged(action_style, true)))
+	row_data.spans = spans
 	return row_data
 
 

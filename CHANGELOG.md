@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - a methods-bearing inner class reads as a foldable class block
+
+- **An inner class that carries methods (not only data) now reads as a foldable, read-only class block**
+  instead of a wall of GDScript: the class in the condition cell, its field count and method count in the
+  action cell, and - folded open - each field plus a `ƒ name(params) -> Type` chip per method as child rows.
+  It is a pure view over the unchanged code (double-click still opens the code editor), byte-gated, and
+  distinct from the editable pure-data class block (which has no methods), so the `.gd` round-trip is
+  untouched. This complements the data-holder block so both flavours of inner class read structurally.
+
 ### Added - a `@rpc` (or any) annotation no longer blocks a function from opening
 
 - **A function carrying a leading GDScript annotation - `@rpc`, `@warning_ignore`, `@abstract`,
