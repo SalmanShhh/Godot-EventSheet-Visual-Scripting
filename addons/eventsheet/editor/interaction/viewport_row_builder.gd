@@ -2045,7 +2045,8 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	if event_row.else_mode == EventRow.ElseMode.ELSE:
 		spans.append(
 			_make_span(
-				"Else",
+				# Canvas-drawn (not a Control), so translate at span-build time like Every Tick.
+				EventSheetL10n.translate("Else"),
 				SemanticSpan.SpanType.KEYWORD,
 				{
 					"lane": "condition",
@@ -2060,7 +2061,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	elif event_row.else_mode == EventRow.ElseMode.ELIF:
 		spans.append(
 			_make_span(
-				"Else If",
+				EventSheetL10n.translate("Else If"),
 				SemanticSpan.SpanType.KEYWORD,
 				{
 					"lane": "condition",

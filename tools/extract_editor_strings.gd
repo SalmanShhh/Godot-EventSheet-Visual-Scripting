@@ -126,7 +126,7 @@ func _collect_drawn_tables(strings: Dictionary) -> void:
 			_remember(strings, str(value))
 		for spec: Dictionary in ViewportEmptyStateHelper.cta_specs(sheet):
 			_remember(strings, str(spec.get("label", "")))
-	for affordance: String in ["+ Add action", "+ Add condition", "+ Add event…", "Every Tick"]:
+	for affordance: String in ["+ Add action", "+ Add condition", "+ Add event…", "Every Tick", "Else", "Else If"]:
 		_remember(strings, affordance)
 	for template: String in [
 		"%s - Behavior · acts on host: %s",
