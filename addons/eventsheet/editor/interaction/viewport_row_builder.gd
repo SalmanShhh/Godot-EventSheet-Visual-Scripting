@@ -2071,6 +2071,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 				}.merged(condition_style_meta, true)
 			)
 		)
+		# Same as the ELSE branch: the keyword owns its line, so a trigger badge on the same row
+		# (a same-trigger top-level chain) never draws over it.
+		condition_line_index += 1
 	if event_row.trigger != null:
 		var trigger_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		# Tempo badge: the glyph + hue say HOW OFTEN this event runs, from trigger_id.
@@ -2422,9 +2425,10 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 func _count_event_lines(event_row: EventRow) -> int:
 	if event_row == null:
 		return 1
-	# Condition lane.
+	# Condition lane. The Else / Else-If keyword owns its own line (the span pass increments
+	# condition_line_index for BOTH modes, so a trigger badge never draws over the keyword).
 	var condition_lines: int = 0
-	if event_row.else_mode == EventRow.ElseMode.ELSE:
+	if event_row.else_mode == EventRow.ElseMode.ELSE or event_row.else_mode == EventRow.ElseMode.ELIF:
 		condition_lines += 1
 	var inline_trigger_index: int = _find_inline_trigger_condition_index(event_row)
 	var has_trigger: bool = (

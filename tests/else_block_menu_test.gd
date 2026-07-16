@@ -79,6 +79,28 @@ static func run() -> bool:
 	var live_else: EventRow = dock.get_current_sheet().events[1] as EventRow
 	ok = _check("Make Else on an else row clears it (toggle)", live_else.else_mode, EventRow.ElseMode.NONE) and ok
 
+	# ── Rendering: on an ELIF row with a visible trigger, the "Else If" keyword owns its line - the
+	# trigger badge renders on the NEXT line, never over the keyword (the badge-overlap regression). ──
+	live_else.else_mode = EventRow.ElseMode.ELIF
+	dock._refresh_after_edit()
+	var elif_row: EventRowData = null
+	for entry: Dictionary in dock._active_view().get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.source_resource == live_else:
+			elif_row = row_data
+	var keyword_line: int = -1
+	var trigger_line: int = -1
+	if elif_row != null:
+		for span: SemanticSpan in elif_row.spans:
+			if span.metadata is Dictionary:
+				var span_kind: String = str((span.metadata as Dictionary).get("kind", ""))
+				if span_kind == "else_keyword":
+					keyword_line = int((span.metadata as Dictionary).get("line_index", -1))
+				elif span_kind == "trigger":
+					trigger_line = int((span.metadata as Dictionary).get("line_index", -1))
+	ok = _check("the Else If keyword sits on line 0", keyword_line, 0) and ok
+	ok = _check("the trigger badge renders on the NEXT line (no overlap)", trigger_line, 1) and ok
+
 	dock.free()
 	return ok
 
