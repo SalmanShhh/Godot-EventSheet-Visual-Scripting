@@ -42,6 +42,15 @@
   relabeled "Disable Row" - an id-less submenu item takes its INDEX as its id, which collided with the
   Disable-Row live-state relabel; both submenu entries now carry explicit ids.
 
+### Changed - the Theme Editor is now translatable, and its strings are translated
+
+- **The Theme Editor's own strings (its buttons, section headers, every token label, and every
+  plain-language token tooltip) are now translated into French, Spanish, German, and Italian** - 122 strings
+  per language (425 keys each). The Theme Editor is a lazily-built dialog, so its text was never reaching the
+  translators: `tools/extract_editor_strings.gd` now builds and walks it (plus its token-description table),
+  so future Theme Editor strings surface for translation automatically. Also filled in the five element-style
+  layout tokens (padding, gap, badge width, font-size delta) that were missing tooltips.
+
 ### Changed - the bundled translations catch up with the editor
 
 - **French, Spanish, German, and Italian each gained 83 new translated strings** (291 keys per language,

@@ -16,6 +16,7 @@ func _init() -> void:
 	var strings: Dictionary = {}
 	_collect(dock, strings)
 	_collect_drawn_tables(strings)
+	_collect_theme_editor(dock, strings)
 	var keys: Array = strings.keys()
 	keys.sort()
 	var out_dir: String = "res://eventsheet_translations"
@@ -62,6 +63,20 @@ func _collect(node: Node, strings: Dictionary) -> void:
 			_remember(strings, (node as PopupMenu).get_item_text(index))
 	for child: Node in node.get_children(true):
 		_collect(child, strings)
+
+
+## The Theme Editor is a lazy dialog (built only when opened), so it is not in the dock's tree at
+## extraction time - build it here and walk its Controls plus its token-description table, so every
+## theme-editor label, button, and tooltip is translatable like the rest of the editor.
+func _collect_theme_editor(dock: Control, strings: Dictionary) -> void:
+	var editor: EventSheetThemeEditor = EventSheetThemeEditor.new()
+	var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
+	style.ensure_defaults()
+	editor.open(dock, style)
+	# open() builds the dialog and adds it under the dock; walk it, then the plain-language token help.
+	_collect(dock, strings)
+	for description: Variant in EventSheetThemeEditor._TOKEN_DESCRIPTIONS.values():
+		_remember(strings, str(description))
 
 
 ## The strings drawn straight to canvas (they never live on a Control) - collected from their

@@ -320,3 +320,125 @@ The statements that run when this variable is assigned (`set(value):`). Use `val
 "The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter.","Le istruzioni che vengono eseguite quando questa variabile viene letta (`get:`), che terminano con `return …`. Lascia vuoto per nessun getter."
 "getter body, e.g.  return _health","corpo del getter, es.  return _health"
 "setter body, e.g.  health = clampi(value, 0, max_health)","corpo del setter, es.  health = clampi(value, 0, max_health)"
+A faint tint over the actions (right) lane.,Una leggera tinta sulla corsia delle azioni (destra).
+A faint tint over the conditions (left) lane.,Una leggera tinta sulla corsia delle condizioni (sinistra).
+"Accent (groups, selection)","Accento (gruppi, selezione)"
+Action Lane Color,Colore della corsia di azione
+Action Lane Padding,Spaziatura interna della corsia di azione
+Action cells,Celle di azione
+Alternate group header background (zebra).,Sfondo alternato dell'intestazione di gruppo (zebra).
+Apply To Current Sheet,Applica al foglio corrente
+Background of a group header row.,Sfondo di una riga di intestazione di gruppo.
+Background of the Conditions / Actions column header bar.,Sfondo della barra di intestazione delle colonne Condizioni / Azioni.
+Background of the fold triangle box on a group.,Sfondo della casella del triangolo di piega su un gruppo.
+Badge Background Color,Colore di sfondo del badge
+Badge Extra Width,Larghezza extra del badge
+Badge Foreground Color,Colore di primo piano del badge
+Base (background tone),Base (tonalità di sfondo)
+Behavior Accent Color,Colore d'accento del comportamento
+Border of the condition/action chip.,Bordo del chip di condizione/azione.
+Cell Corner Radius,Raggio degli angoli della cella
+Cell Hover Color,Colore hover della cella
+Chip Background Color,Colore di sfondo del chip
+Chip Border Color,Colore del bordo del chip
+Chip Hover Color,Colore hover del chip
+Chip fill when hovered.,Riempimento del chip al passaggio del cursore.
+Close,Chiudi
+Column Header Actions Color,Colore dell'intestazione Azioni
+Column Header Background Color,Colore di sfondo dell'intestazione di colonna
+Column Header Conditions Color,Colore dell'intestazione Condizioni
+Comment Row Background Color,Colore di sfondo della riga di commento
+Comment Text Color,Colore del testo del commento
+Condition Badge Column Width,Larghezza colonna del badge di condizione
+Condition Lane Color,Colore della corsia di condizione
+Condition Lane Padding,Spaziatura interna della corsia di condizione
+Condition Lane Ratio,Rapporto della corsia di condizione
+Condition cells,Celle di condizione
+Corner Radius,Raggio degli angoli
+Corner roundness of group rows (0 = square bar).,Arrotondamento degli angoli delle righe di gruppo (0 = barra quadrata).
+Corner roundness of individual condition/action cells.,Arrotondamento degli angoli delle singole celle di condizione/azione.
+Corner roundness of region marker bubbles.,Arrotondamento degli angoli delle bolle dei marcatori di regione.
+"Corner roundness of the chip, in pixels.","Arrotondamento degli angoli del chip, in pixel."
+"Corner roundness of the event block, in pixels (0 = square).","Arrotondamento degli angoli del blocco evento, in pixel (0 = quadrato)."
+"Editor (hover, selection, lanes)","Editor (hover, selezione, corsie)"
+Event Corner Radius,Raggio degli angoli dell'evento
+"Extra width reserved for the role badge on the chip, in pixels.","Larghezza extra riservata al badge di ruolo sul chip, in pixel."
+Fill of the condition/action chip.,Riempimento del chip di condizione/azione.
+Fill of the count badge on a group.,Riempimento del badge di conteggio su un gruppo.
+Fill of the role badge on the chip.,Riempimento del badge di ruolo sul chip.
+"Fill of the trigger arrow badge (On Ready, On Signal...).","Riempimento del badge freccia del trigger (On Ready, On Signal...)."
+Font Size Delta,Delta della dimensione del carattere
+Gap After,Spazio dopo
+Generate Theme,Genera tema
+Group Accent Color,Colore d'accento del gruppo
+Group Background Alt Color,Colore di sfondo alternato del gruppo
+Group Background Color,Colore di sfondo del gruppo
+Group Badge Background Color,Colore di sfondo del badge del gruppo
+Group Badge Foreground Color,Colore di primo piano del badge del gruppo
+Group Corner Radius,Raggio degli angoli del gruppo
+Group Fold Background Color,Colore di sfondo della piega del gruppo
+Group Title Color,Colore del titolo del gruppo
+"Height of a single event row, in pixels - raise it for more breathing room.","Altezza di una singola riga di evento, in pixel - aumentala per più respiro."
+Horizontal Padding,Spaziatura interna orizzontale
+Hover Fill Color,Colore di riempimento al passaggio
+How much of the row width the conditions lane takes (0.2 - 0.8).,"Quanta larghezza della riga occupa la corsia delle condizioni (0,2 - 0,8)."
+Icon/text colour on the trigger badge.,Colore dell'icona/del testo sul badge del trigger.
+"Inner padding on the actions lane, in pixels.","Spaziatura interna della corsia delle azioni, in pixel."
+"Inner padding on the conditions lane, in pixels.","Spaziatura interna della corsia delle condizioni, in pixel."
+Invert Marker Color,Colore del marcatore di inversione
+Lane Divider Color,Colore del divisore di corsia
+Lane Divider Width,Spessore del divisore di corsia
+Language Block Accent Color,Colore d'accento dei blocchi di linguaggio
+Line thickness of region marker borders.,Spessore della linea dei bordi dei marcatori di regione.
+Minimum Conditions Lane Width,Larghezza minima della corsia delle condizioni
+Minimum Row Height,Altezza minima della riga
+Object Label Color,Colore dell'etichetta dell'oggetto
+"Parameter values (numbers, strings) highlighted inside ACE text.","I valori dei parametri (numeri, stringhe) evidenziati nel testo degli ACE."
+"Pick a base + accent, then Generate. Fine-tune individual tokens below.","Scegli una base + un accento, poi Genera. Regola i singoli token qui sotto."
+Quick Style - recolour everything at once,Stile rapido - ricolora tutto in una volta
+Rebuild every colour token from the three colours above.,Ricostruisce ogni token di colore dai tre colori sopra.
+Region Corner Radius,Raggio degli angoli della regione
+Region Line Width,Spessore della linea della regione
+Reset To Default,Ripristina predefinito
+Restore the bundled default look.,Ripristina l'aspetto predefinito incluso.
+Row Background Alt Color,Colore di sfondo alternato della riga
+Row Background Color,Colore di sfondo della riga
+Row Border Color,Colore del bordo della riga
+Save As Preset…,Salva come preset…
+Selection Fill Color,Colore di riempimento della selezione
+Sheet & rows (event style),Foglio e righe (stile evento)
+Sheet Background Color,Colore di sfondo del foglio
+"Space between this chip and the next one, in pixels.","Spazio tra questo chip e il successivo, in pixel."
+"Space inside the chip, above and below its text, in pixels.","Spazio dentro il chip, sopra e sotto il testo, in pixel."
+"Space inside the chip, left and right of its text, in pixels.","Spazio dentro il chip, a sinistra e a destra del testo, in pixel."
+Text Color,Colore del testo
+Text colour of the role badge.,Colore del testo del badge di ruolo.
+Text colour on the group count badge.,Colore del testo sul badge di conteggio del gruppo.
+"Text size adjustment for this chip kind, relative to the sheet font (+/- points).","Regolazione della dimensione del testo per questo tipo di chip, rispetto al font del foglio (+/- punti)."
+The 'Actions' header label colour.,Il colore dell'etichetta dell'intestazione «Azioni».
+The 'Conditions' header label colour.,Il colore dell'etichetta dell'intestazione «Condizioni».
+The background of a normal event row.,Lo sfondo di una normale riga di evento.
+The background of every OTHER row (the zebra stripe).,Lo sfondo di ogni ALTRA riga (la striscia zebrata).
+The banner colour behind a full-width comment.,Il colore del banner dietro un commento a tutta larghezza.
+"The colour behind the whole sheet, outside the rows.","Il colore dietro l'intero foglio, fuori dalle righe."
+The conditions lane never shrinks below this many pixels.,La corsia delle condizioni non scende mai sotto questo numero di pixel.
+The group title text colour.,Il colore del testo del titolo del gruppo.
+The group's left accent stripe and hairlines.,La striscia d'accento sinistra del gruppo e le sue linee sottili.
+The highlight over a selected row.,L'evidenziazione su una riga selezionata.
+"The object/origin label before each condition/action (System, node class).","L'etichetta di oggetto/origine prima di ogni condizione/azione (System, classe del nodo)."
+The red X shown on an inverted (negated) condition.,La X rossa mostrata su una condizione invertita (negata).
+"The soft-purple 'this is a behavior' accent (banner, region default).","L'accento viola tenue «questo è un comportamento» (banner, regione predefinita)."
+"The stripe + wash on language blocks (a data class, a host binding, a switch case) so they read as code structure, not regular events.","La striscia + velo sui blocchi di linguaggio (classe di dati, binding dell'host, switch) così si leggono come struttura di codice, non come eventi normali."
+The text colour of comments.,Il colore del testo dei commenti.
+The text colour of the chip.,Il colore del testo del chip.
+The thin line between rows.,La linea sottile tra le righe.
+The tint over the row under the mouse.,La tinta sulla riga sotto il mouse.
+The vertical line splitting conditions from actions.,La linea verticale che separa le condizioni dalle azioni.
+Theme Editor,Editor di temi
+Thickness of the conditions/actions divider line.,Spessore della linea divisoria condizioni/azioni.
+Tint over a single condition/action cell under the mouse.,Tinta su una singola cella di condizione/azione sotto il mouse.
+Trigger Badge Background Color,Colore di sfondo del badge del trigger
+Trigger Badge Foreground Color,Colore di primo piano del badge del trigger
+Value Highlight Color,Colore di evidenziazione dei valori
+Vertical Padding,Spaziatura interna verticale
+Width reserved for the trigger/condition badge column.,Larghezza riservata alla colonna del badge di trigger/condizione.
