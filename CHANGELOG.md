@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - Create Code Region on a multi-selection (+ a submenu relabel fix)
+
+- **Selecting several event blocks and right-clicking now offers "Create Code Region" directly in the
+  context menu** - the script editor's selection idiom. It wraps the selection in a `#region` /
+  `#endregion` fence pair as one undo step and opens the fence editor so the region gets its name right
+  away (the single-row form lives under More ▸ as "Create Code Region…", renamed from "Surround with
+  Region…"). Fixed in passing: on a multi-selection the "More ▸" submenu entry was being silently
+  relabeled "Disable Row" - an id-less submenu item takes its INDEX as its id, which collided with the
+  Disable-Row live-state relabel; both submenu entries now carry explicit ids.
+
 ### Changed - the bundled translations catch up with the editor
 
 - **French, Spanish, German, and Italian each gained 83 new translated strings** (291 keys per language,

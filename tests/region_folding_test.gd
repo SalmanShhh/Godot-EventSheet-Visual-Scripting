@@ -145,6 +145,34 @@ static func run() -> bool:
 	ok = _check("surround inserts opener + closer around the row",
 		str(wrapped_kinds), str([false, "alpha", true, "beta"])) and ok
 
+	# ── Create Code Region on a MULTI-selection: fences wrap the whole selection, and the row
+	# context menu surfaces the gesture top-level (the script editor's selection idiom). ──
+	var multi_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	multi_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	multi_dock.setup(_sheet_with([_comment("one"), _comment("two"), _comment("three")]))
+	var multi_view: EventSheetViewport = multi_dock._active_view()
+	# Select the first two rows (uid-keyed selection, exactly what the click path populates).
+	for entry: Dictionary in multi_view.get_flat_rows().slice(0, 2):
+		var row_data: EventRowData = entry.get("row")
+		multi_view._selected_row_uids[row_data.row_uid] = true
+		row_data.selected = true
+	multi_dock._build_row_context_menu(multi_view.get_flat_rows()[0].get("row"))
+	var has_region_item: bool = false
+	for item_index: int in range(multi_dock._row_context_menu.item_count):
+		if multi_dock._row_context_menu.get_item_id(item_index) == multi_dock.ROW_MENU_SURROUND_REGION:
+			has_region_item = true
+	ok = _check("a multi-selection's context menu offers Create Code Region top-level", has_region_item, true) and ok
+	multi_dock._surround_selection_with_region()
+	var multi_kinds: Array = []
+	for entry: Resource in multi_dock.get_current_sheet().events:
+		if entry is CustomBlockRow:
+			multi_kinds.append(bool((entry as CustomBlockRow).fields.get("is_end", false)))
+		else:
+			multi_kinds.append(str((entry as CommentRow).text))
+	ok = _check("Create Code Region wraps the whole multi-selection",
+		str(multi_kinds), str([false, "one", "two", true, "three"])) and ok
+	multi_dock.free()
+
 	# ── Fold persistence: stable "label#occurrence" keys seed folds across sessions ──
 	var persist_sheet: EventSheetResource = _sheet_with([
 		_region("Combat", false), _comment("a"), _region("", true),

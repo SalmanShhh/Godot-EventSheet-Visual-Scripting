@@ -152,12 +152,19 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_item("Disable Row", _dock.ROW_MENU_TOGGLE_ENABLED)
 	if multi:
 		menu.add_item("Group Selection into New Group", _dock.ROW_MENU_BULK_GROUP)
+		# The script editor's selection gesture, surfaced top-level on a multi-selection (the single-row
+		# form stays under More): wraps the selected rows in a #region fence pair and opens the name editor.
+		menu.add_item("Create Code Region", _dock.ROW_MENU_SURROUND_REGION)
 	menu.add_separator()
 	_build_row_insert_submenu()
-	menu.add_submenu_item("Insert", "RowInsertSubmenu")
+	# Explicit ids: an id-less submenu item gets its INDEX as its id, which collided with
+	# ROW_MENU_TOGGLE_ENABLED (11) on a multi-selection - the live-state relabel in
+	# _configure_context_menu then renamed the submenu entry to "Disable Row". 880+ is clear
+	# of every ROW_MENU_* const and below the 900+ extension range.
+	menu.add_submenu_item("Insert", "RowInsertSubmenu", 880)
 	_build_row_more_submenu(is_event)
 	if _dock._row_more_submenu.item_count > 0:
-		menu.add_submenu_item("More", "RowMoreSubmenu")
+		menu.add_submenu_item("More", "RowMoreSubmenu", 881)
 	menu.add_separator()
 	menu.add_item("Delete", _dock.ROW_MENU_DELETE)
 	# Extension seam (EventSheets.register_row_menu_item): registered items whose filter accepts
@@ -212,7 +219,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
 	m.add_separator()
 	m.add_item("Save Selection as Snippet…", _dock.ROW_MENU_SAVE_SNIPPET)
 	m.add_item("Insert Snippet…", _dock.ROW_MENU_INSERT_SNIPPET)
-	m.add_item("Surround with Region…", _dock.ROW_MENU_SURROUND_REGION)
+	m.add_item("Create Code Region…", _dock.ROW_MENU_SURROUND_REGION)
 
 
 func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
