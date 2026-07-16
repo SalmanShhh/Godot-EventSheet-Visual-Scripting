@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="UHTNPlanResource" format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/uhtn_plan_resource/uhtn_plan_resource.gd" id="1_snqqf"]
+
+[resource]
+script = ExtResource("1_snqqf")
+conditions = [{
+"key": "hurt",
+"method": "m_flee",
+"op": "==",
+"value": "1"
+}]
+methods = [{
+"method": "m_watch",
+"scorer": "",
+"subtasks": "watch_step",
+"task": "root",
+"utility": 0.25
+}, {
+"method": "m_engage",
+"scorer": "aggro",
+"subtasks": "engage",
+"task": "root",
+"utility": 0.0
+}, {
+"method": "m_flee",
+"scorer": "fear",
+"subtasks": "flee_step",
+"task": "root",
+"utility": 0.0
+}, {
+"method": "m_rush",
+"scorer": "",
+"subtasks": "chase_step",
+"task": "engage",
+"utility": 1.0
+}]
+plan_name = "guard_post"
+root_task = "root"
+scorer_inputs = [{
+"center": 0.5,
+"curve": "linear",
+"input": "closeness",
+"scorer": "aggro",
+"slope": 0.2,
+"weight": 1.0
+}, {
+"center": 0.5,
+"curve": "inverse",
+"input": "health",
+"scorer": "fear",
+"slope": 0.2,
+"weight": 1.0
+}]
+tasks = [{
+"kind": "primitive",
+"name": "watch_step"
+}, {
+"kind": "primitive",
+"name": "chase_step"
+}, {
+"kind": "primitive",
+"name": "flee_step"
+}, {
+"kind": "compound",
+"name": "root"
+}, {
+"kind": "compound",
+"name": "engage"
+}]

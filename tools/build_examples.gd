@@ -24,6 +24,7 @@ func _init() -> void:
 	all_ok = _build_menu_starter() and all_ok
 	all_ok = _build_utility_ai() and all_ok
 	all_ok = _build_htn_agent() and all_ok
+	all_ok = _build_uhtn_planning() and all_ok
 	all_ok = _build_fps_arena() and all_ok
 	all_ok = _build_input_rebind() and all_ok
 	all_ok = _build_path_chase() and all_ok
@@ -173,6 +174,8 @@ const SINE := "res://eventsheet_addons/sine/sine_behavior.gd"
 const FLASH := "res://eventsheet_addons/flash/flash_behavior.gd"
 const UTILITY_AI := "res://eventsheet_addons/utility_ai/utility_ai_addon.gd"
 const HTN_AGENT := "res://eventsheet_addons/htn_agent/htn_agent_behavior.gd"
+const UHTN_PLANNER := "res://eventsheet_addons/uhtn_planning/uhtn_planning_behavior.gd"
+const UHTN_RESOURCE := "res://eventsheet_addons/uhtn_plan_resource/uhtn_plan_resource.gd"
 
 
 func _build_carousel() -> bool:
@@ -700,6 +703,128 @@ func _build_htn_agent() -> bool:
 	label.text = "CHEF PLANNER (HTN)"
 	root.add_child(label); label.owner = root
 	return _save_scene(root, "res://demo/showcase/htn_agent/htn_agent_demo.tscn")
+
+
+## Guard Post (UHTN Planning) - the full utility-driven feature sweep, DATA-DRIVEN: the whole plan
+## (tasks, methods, preconditions, scorers) ships as a UHTNPlanResource .tres built here exactly as a
+## designer would fill the Inspector grids, dropped onto the planner's Plan Resource slot. A prowler
+## sweeps closer and further on a sine; the guard's closeness fact flows through a linear curve into an
+## "aggro" scorer that ranks the chase method LIVE (far = the fixed-utility watch wins, near = chase
+## overtakes), while an oscillating health fact drives a "fear" scorer (inverse curve) whose flee method
+## is precondition-gated on hurt == 1. Every 9 seconds Force Task pushes a scripted "salute" beat. The
+## HUD prints the current task plus both scorer values - the live-curve-debugging workflow.
+func _build_uhtn_planning() -> bool:
+	# The plan asset, authored the way the Inspector grids would author it.
+	var plan: Resource = (load(UHTN_RESOURCE) as GDScript).new()
+	plan.set("plan_name", "guard_post")
+	plan.set("root_task", "root")
+	plan.set("tasks", [
+		{"name": "watch_step", "kind": "primitive"},
+		{"name": "chase_step", "kind": "primitive"},
+		{"name": "flee_step", "kind": "primitive"},
+		{"name": "root", "kind": "compound"},
+		{"name": "engage", "kind": "compound"}
+	])
+	plan.set("methods", [
+		{"task": "root", "method": "m_watch", "subtasks": "watch_step", "scorer": "", "utility": 0.25},
+		{"task": "root", "method": "m_engage", "subtasks": "engage", "scorer": "aggro", "utility": 0.0},
+		{"task": "root", "method": "m_flee", "subtasks": "flee_step", "scorer": "fear", "utility": 0.0},
+		{"task": "engage", "method": "m_rush", "subtasks": "chase_step", "scorer": "", "utility": 1.0}
+	])
+	plan.set("conditions", [
+		{"method": "m_flee", "key": "hurt", "op": "==", "value": "1"}
+	])
+	plan.set("scorer_inputs", [
+		{"scorer": "aggro", "input": "closeness", "curve": "linear", "weight": 1.0, "center": 0.5, "slope": 0.2},
+		{"scorer": "fear", "input": "health", "curve": "inverse", "weight": 1.0, "center": 0.5, "slope": 0.2}
+	])
+	DirAccess.make_dir_recursive_absolute("res://demo/showcase/uhtn_planning")
+	if ResourceSaver.save(plan, "res://demo/showcase/uhtn_planning/guard_plan.tres") != OK:
+		return false
+
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "GuardPostDemo"
+	sheet.emit_live_values = false
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Guard Post (UHTN Planning)[/b] - Utility AI steering an HTN, fully data-driven. The whole plan lives in guard_plan.tres (Inspector grids: tasks, methods, preconditions, scorer curves) dropped on the planner's Plan Resource slot. The prowler sweeps in and out; a closeness fact through a linear curve ranks the chase method LIVE, so far = watch (fixed utility 0.25) and near = chase, with no re-authoring. Oscillating health feeds a fear scorer (inverse curve) whose flee method only competes while the hurt precondition holds. Every 9s Force Task pushes a scripted salute beat. The HUD shows both scorer values ticking - tune the curves in the .tres and watch behavior change."
+	sheet.events.append(about)
+
+	# Facts every tick: closeness from the real prowler distance, health on a slow sine, hurt from health.
+	var facts: EventRow = EventRow.new()
+	facts.trigger_provider_id = "Core"; facts.trigger_id = "OnProcess"
+	facts.actions.append(_action("UHTNPlanner", "method:set_world_state", "{target}.set_world_state({key}, {value})", {"target": "$Guard/Planner", "key": "\"closeness\"", "value": "1.0 - clampf($Guard.position.distance_to($Prowler.position) / 600.0, 0.0, 1.0)"}))
+	facts.actions.append(_action("UHTNPlanner", "method:set_world_state", "{target}.set_world_state({key}, {value})", {"target": "$Guard/Planner", "key": "\"health\"", "value": "0.5 + 0.5 * sin(Time.get_ticks_msec() / 4000.0)"}))
+	facts.actions.append(_action("UHTNPlanner", "method:set_world_state", "{target}.set_world_state({key}, {value})", {"target": "$Guard/Planner", "key": "\"hurt\"", "value": "1 if $Guard/Planner.world_value(\"health\") < 0.3 else 0"}))
+	sheet.events.append(facts)
+
+	# Replan once a second with the fresh scores (event-paced, not per-tick) - the current task stays
+	# visible between ticks because replanning restarts the plan rather than consuming it.
+	var replan: EventRow = EventRow.new()
+	replan.trigger_provider_id = "Core"; replan.trigger_id = "OnProcess"
+	replan.conditions.append(_every("uhtn_replan", "1.0"))
+	replan.actions.append(_action("UHTNPlanner", "method:request_plan", "{target}.request_plan()", {"target": "$Guard/Planner"}))
+	sheet.events.append(replan)
+
+	# Walk the plan on a slower beat: completing a step is the gameplay layer's job (here, a timer).
+	var walk: EventRow = EventRow.new()
+	walk.trigger_provider_id = "Core"; walk.trigger_id = "OnProcess"
+	walk.conditions.append(_every("uhtn_walk", "3.0"))
+	walk.conditions.append(_condition("UHTNPlanner", "method:has_plan", "{target}.has_plan()", {"target": "$Guard/Planner"}))
+	walk.actions.append(_action("UHTNPlanner", "method:mark_complete", "{target}.mark_complete()", {"target": "$Guard/Planner"}))
+	sheet.events.append(walk)
+
+	# The scripted-override beat: every 9 seconds, Force Task pushes a salute in front of the plan.
+	var beat: EventRow = EventRow.new()
+	beat.trigger_provider_id = "Core"; beat.trigger_id = "OnProcess"
+	beat.conditions.append(_every("uhtn_salute", "9.0"))
+	beat.actions.append(_action("UHTNPlanner", "method:force_task", "{target}.force_task({task_name})", {"target": "$Guard/Planner", "task_name": "\"salute\""}))
+	sheet.events.append(beat)
+
+	# The prowler sweeps toward and away from the guard, so closeness (and the aggro score) oscillates.
+	var sweep: EventRow = EventRow.new()
+	sweep.trigger_provider_id = "Core"; sweep.trigger_id = "OnProcess"
+	sweep.actions.append(_action("Core", "SetProperty", "{target}.{property} = {value}", {"target": "$Prowler", "property": "position", "value": "Vector2(576.0 + 500.0 * sin(Time.get_ticks_msec() / 3000.0), 360.0)"}))
+	sheet.events.append(sweep)
+
+	# HUD: the current task plus BOTH live scorer values (the Scorer Value expression at work).
+	var hud: EventRow = EventRow.new()
+	hud.trigger_provider_id = "Core"; hud.trigger_id = "OnProcess"
+	hud.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]", {"target": "$Screen", "template": "\"GUARD POST (UHTN PLANNING)\ntask: %s\naggro: %.2f   fear: %.2f\"", "args": "$Guard/Planner.current_task(), $Guard/Planner.scorer_value(\"aggro\"), $Guard/Planner.scorer_value(\"fear\")"}))
+	sheet.events.append(hud)
+
+	if not _compile(sheet, "res://demo/showcase/uhtn_planning/uhtn_planning_demo.tres", "res://demo/showcase/uhtn_planning/uhtn_planning_demo.gd"):
+		return false
+
+	# Scene: the guard (planner + the .tres on its Plan Resource slot) and the sweeping prowler.
+	var root: Node2D = Node2D.new()
+	root.name = "GuardPostDemo"
+	root.set_script(load("res://demo/showcase/uhtn_planning/uhtn_planning_demo.gd"))
+	var guard: Sprite2D = Sprite2D.new()
+	guard.name = "Guard"
+	guard.texture = _make_texture()
+	guard.position = Vector2(576, 360)
+	guard.scale = Vector2(2.0, 2.0)
+	guard.modulate = Color(0.55, 0.75, 1.0, 1.0)
+	root.add_child(guard); guard.owner = root
+	_attach_behavior(guard, "Planner", UHTN_PLANNER, root, {
+		"plan_resource": load("res://demo/showcase/uhtn_planning/guard_plan.tres")
+	})
+	var prowler: Sprite2D = Sprite2D.new()
+	prowler.name = "Prowler"
+	prowler.texture = _make_texture()
+	prowler.position = Vector2(1076, 360)
+	prowler.scale = Vector2(1.4, 1.4)
+	prowler.modulate = Color(1.0, 0.5, 0.45, 1.0)
+	root.add_child(prowler); prowler.owner = root
+	var label: Label = Label.new()
+	label.name = "Screen"
+	label.position = Vector2(40, 40)
+	label.add_theme_font_size_override("font_size", 28)
+	label.text = "GUARD POST (UHTN PLANNING)"
+	root.add_child(label); label.owner = root
+	return _save_scene(root, "res://demo/showcase/uhtn_planning/uhtn_planning_demo.tscn")
 
 # ── 4. Platformer-Shooter (two new behavior packs working together) ──────────
 
