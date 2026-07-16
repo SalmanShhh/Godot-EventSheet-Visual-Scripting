@@ -102,6 +102,7 @@ func _apply_function_data(data: Dictionary) -> void:
 		event_function.return_type = int(data.get("return_type", TYPE_NIL))
 		event_function.return_type_name = str(data.get("return_type_name", ""))
 		event_function.description = str(data.get("description", ""))
+		event_function.doc_comment = str(data.get("doc_comment", ""))
 		for param_entry: Dictionary in (data.get("params", []) as Array):
 			var param: ACEParam = ACEParam.new()
 			param.id = str(param_entry.get("id"))
@@ -161,10 +162,10 @@ func _apply_function_edit(data: Dictionary) -> void:
 		if target.ace_display_name.is_empty() and incoming_display == str(data.get("name")).capitalize():
 			incoming_display = ""
 		if _function_fingerprint(target.function_name, target.return_type, target.return_type_name,
-				target.description, target.expose_as_ace, target.ace_display_name, target.ace_category, target.params) \
+				target.description, target.expose_as_ace, target.ace_display_name, target.ace_category, target.params, target.doc_comment) \
 				== _function_fingerprint(str(data.get("name")), int(data.get("return_type", TYPE_NIL)),
 				str(data.get("return_type_name", "")), str(data.get("description", "")), bool(data.get("expose", false)),
-				incoming_display, str(data.get("ace_category", "")), new_params):
+				incoming_display, str(data.get("ace_category", "")), new_params, str(data.get("doc_comment", ""))):
 			return false
 		target.function_name = str(data.get("name"))
 		target.return_type = int(data.get("return_type", TYPE_NIL))
@@ -173,6 +174,7 @@ func _apply_function_edit(data: Dictionary) -> void:
 		# above (no-op, byte-safe); changing the type to a builtin card clears it so the new type takes effect.
 		target.return_type_name = str(data.get("return_type_name", ""))
 		target.description = str(data.get("description", ""))
+		target.doc_comment = str(data.get("doc_comment", ""))
 		target.params = new_params
 		target.expose_as_ace = bool(data.get("expose", false))
 		target.ace_display_name = incoming_display
@@ -192,12 +194,12 @@ func _apply_function_edit(data: Dictionary) -> void:
 ## "HealthPool") vs the dialog's rebuild - collapse to the same key. That keeps an open-and-OK on a lifted
 ## custom-return verb a byte-safe no-op (it never spuriously clears lifted_unannotated or the annotations).
 static func _function_fingerprint(function_name: String, return_type: int, return_type_name: String,
-		description: String, exposed: bool, display_name: String, category: String, params: Array) -> String:
+		description: String, exposed: bool, display_name: String, category: String, params: Array, doc_comment: String = "") -> String:
 	var type_probe: EventFunction = EventFunction.new()
 	type_probe.return_type = return_type
 	type_probe.return_type_name = return_type_name
 	var parts: PackedStringArray = PackedStringArray([
-		function_name, SheetCompiler._function_return_type_name(type_probe), description, str(exposed), display_name, category])
+		function_name, SheetCompiler._function_return_type_name(type_probe), description, str(exposed), display_name, category, doc_comment])
 	for param: ACEParam in params:
 		parts.append("%s|%s|%s|%s" % [param.id, param.type_name, param.gdscript_default, param.description])
 	return "\n".join(parts)

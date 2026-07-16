@@ -51,6 +51,7 @@ var _original_name: String = ""
 var _guards_card: Control = null
 var _preview_card: Control = null
 var _name_edit: LineEdit = null
+var _doc_comment_edit: TextEdit = null
 var _description_edit: LineEdit = null
 var _usable_option: OptionButton = null           # hidden backing model for the three cards
 var _usable_cards: Array = []                      # [{panel, title, examples, accent, kind}], index-aligned to USABLE_AS
@@ -90,6 +91,17 @@ func init_dialog(parent_node: Node) -> void:
 	_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())
 	_dialog.register_text_enter(_name_edit)
 	form.add_child(EventSheetPopupUI.form_row("Name", _name_edit))
+
+	# Godot documentation comment (the `##` block above the function). BBCode is allowed - it renders in
+	# the generated docs and in-editor tooltips - so the same selection toolbar the comment dialog uses is
+	# attached here. Applies to ANY function, not just published verbs, so it lives in the always-visible form.
+	_doc_comment_edit = TextEdit.new()
+	_doc_comment_edit.placeholder_text = "Documentation shown above the function (## …). BBCode like [b]bold[/b] is allowed."
+	_doc_comment_edit.custom_minimum_size = Vector2(0.0, 60.0)
+	_doc_comment_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	form.add_child(EventSheetPopupUI.form_row("Doc comment", _doc_comment_edit))
+	# Highlight-to-format bar (same one the comment dialog uses) - BBCode renders in Godot's generated docs.
+	EventSheetBBCodeSelectionBar.attach(_doc_comment_edit)
 
 	# Description is a picker/publish concern (grouped under Publish below), not a first thing a beginner
 	# naming a local helper needs - so it lives in the expose section, not the always-visible form.
@@ -194,6 +206,7 @@ func open() -> void:
 	_clear_rows(_params_box)
 	_clear_rows(_guards_box)
 	_name_edit.text = ""
+	_doc_comment_edit.text = ""
 	_description_edit.text = ""
 	_expose_check.button_pressed = false
 	_expose_card.visible = false
@@ -221,6 +234,7 @@ func open_for_edit(event_function: EventFunction) -> void:
 	_dialog.ok_button_text = "Save Changes"
 	_guards_card.visible = false
 	_name_edit.text = event_function.function_name
+	_doc_comment_edit.text = event_function.doc_comment
 	_description_edit.text = event_function.description
 	# Represent whatever type this verb returns, using the compiler's own emitted type name as the truth.
 	# A custom / engine class (return_type_name set), OR a builtin Variant type with no card (Color, Array,
@@ -704,6 +718,7 @@ func build_function_data() -> Dictionary:
 		"return_type_name": _selected_return_type_name(),
 		"params": params,
 		"guards": collect_guards(),
+		"doc_comment": _doc_comment_edit.text.strip_edges(),
 		"description": _description_edit.text.strip_edges(),
 		"expose": _expose_check.button_pressed,
 		"ace_display_name": _expose_name_edit.text.strip_edges() if not _expose_name_edit.text.strip_edges().is_empty() else function_name.capitalize(),

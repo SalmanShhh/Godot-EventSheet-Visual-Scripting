@@ -476,6 +476,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 			continue
 		lines.append("")
 		var function_start: int = lines.size() + 1
+		_emit_function_doc_comment(event_function, lines)
 		_emit_expose_annotations(event_function, sheet, lines)
 		_emit_function_annotation_prefix(event_function, lines)
 		lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
@@ -672,6 +673,7 @@ static func _find_function_by_name(sheet: EventSheetResource, function_name: Str
 ## the raw block above it).
 static func _emit_function_block(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray, source_map: Array, result: Dictionary) -> void:
 	var function_start: int = lines.size() + 1
+	_emit_function_doc_comment(event_function, lines)
 	_emit_expose_annotations(event_function, sheet, lines)
 	_emit_function_annotation_prefix(event_function, lines)
 	lines.append("%sfunc %s(%s) -> %s:" % ["static " if event_function.is_static else "", event_function.function_name, _emit_function_params(event_function), _function_return_type_name(event_function)])
@@ -1646,6 +1648,16 @@ static func _indent_raw_lines(code: String, depth: int) -> PackedStringArray:
 ## parsed back by EventSheetSemanticAnalyzer when the compiled script is registered as a
 ## provider (drop it into res://eventsheet_addons/), publishing the function as an ACE in
 ## every sheet - the sheet → script → addon loop behaviors and custom nodes build on.
+## Emits the function's Godot doc comment (the plain `##` block) ABOVE everything else - the topmost lines,
+## matching Godot's convention that a member's doc comment sits directly above it (and above annotations).
+## A blank stored line emits a bare `##`. Empty doc_comment emits nothing, so existing output is unchanged.
+static func _emit_function_doc_comment(event_function: EventFunction, lines: PackedStringArray) -> void:
+	if event_function.doc_comment.strip_edges().is_empty():
+		return
+	for doc_line: String in event_function.doc_comment.split("\n"):
+		lines.append("##" if doc_line.is_empty() else "## %s" % doc_line)
+
+
 ## Emits any verbatim GDScript annotation lines (`@rpc(...)`, `@warning_ignore(...)`, ...) carried on the
 ## function, between the `## @ace_*` block and the `func` header. Empty for every function without them, so
 ## existing output is byte-unchanged.

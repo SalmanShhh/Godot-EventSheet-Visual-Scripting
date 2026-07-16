@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - Godot documentation comments on functions (with a BBCode field)
+
+- **A function's Godot documentation comment (the `##` block above it) now round-trips as an editable doc,
+  and the function dialog gained a "Doc comment" field with the same highlight-to-format BBCode toolbar the
+  comment dialog uses.** Opening a `.gd` with a documented helper lifts its `##` brief/description onto the
+  function (BBCode like `[b]…[/b]` / `[code]…[/code]` preserved, blank lines kept as bare `##`), and saving
+  re-emits it above the function - topmost, above any `## @ace` exposure block and `@rpc` annotations - so a
+  documented helper reads and edits as a function instead of a stray comment block. Byte-gated: anything the
+  model can't reproduce stays verbatim. (Class and variable descriptions already emit as `##` docs; this
+  closes the function gap. Signals and enums remain a follow-up.)
+
 ### Added - a setter/getter property reads and edits as an event block
 
 - **A GDScript property (a variable with a `set(value):` and/or `get:` accessor) now reads as a first-class

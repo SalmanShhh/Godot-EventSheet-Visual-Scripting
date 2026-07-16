@@ -16,6 +16,11 @@ extends Resource
 ## un-exposed path would otherwise add, so the source round-trips byte-identically. `expose_as_ace`
 ## stays false - re-exposing it (editing the function) clears this and restores normal annotations.
 @export var lifted_unannotated: bool = false
+## A Godot documentation comment (the plain `##` block directly above the function - brief + description,
+## BBCode allowed per Godot's doc conventions). Stored WITHOUT the `## ` prefix (one entry per line); emitted
+## as `## <line>` above the function and byte-gated on lift. Distinct from `description` (the `@ace_*`
+## exposure blurb for a published verb) - this is the ordinary GDScript doc comment a plain helper carries.
+@export_multiline var doc_comment: String = ""
 ## GDScript annotation lines kept VERBATIM (`@rpc(...)`, `@warning_ignore(...)`, `@abstract`, stacked), each
 ## emitted on its own line between the `## @ace_*` block and the `func` header - the GDScript convention.
 ## Set on lift from the leading annotation lines above a function and byte-gated, so a `@rpc` function opens as
