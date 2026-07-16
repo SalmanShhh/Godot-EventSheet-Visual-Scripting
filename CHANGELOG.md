@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed - Else reads as a CONDITION, exactly like Construct
+
+- **An Else block now leads its condition lane with a "System | Else" condition chip** - the same chip
+  styling as every other condition - instead of a small floating keyword label, and an Else-If reads as the
+  "System | Else If" chip with its own conditions beneath. The row also **no longer redraws its trigger**
+  (a Construct Else block never repeats its trigger; it stays structural for the same-handler chain), so a
+  chain reads: the trigger event, then bare Else / Else-If blocks - exactly the C3 silhouette.
+
 ### Changed - the Else block is now front-and-centre, like Construct
 
 - **"Make Else" and "Make Else-If" now sit top-level in an event's right-click menu - in Simple Mode too.**

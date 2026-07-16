@@ -2042,40 +2042,28 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	if event_row.else_mode == EventRow.ElseMode.ELSE:
+	if event_row.else_mode != EventRow.ElseMode.NONE:
+		# The event-sheet Else reads as a CONDITION, exactly like Construct's System Else: a "System | Else"
+		# chip heading the condition lane (an ELIF is the Else chip with its own conditions beneath). The
+		# row's trigger stays structural (it is what chains the block into the same handler) but is NOT
+		# re-drawn - a C3 Else block never repeats its trigger. Canvas-drawn, so translated at build time.
+		var else_text: String = EventSheetL10n.translate("Else" if event_row.else_mode == EventRow.ElseMode.ELSE else "Else If")
 		spans.append(
 			_make_span(
-				# Canvas-drawn (not a Control), so translate at span-build time like Every Tick.
-				EventSheetL10n.translate("Else"),
-				SemanticSpan.SpanType.KEYWORD,
+				else_text,
+				SemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
 					"kind": "else_keyword",
-					"badge": true,
+					"chip": true,
 					"hoverable": false,
-					"line_index": condition_line_index
+					"line_index": condition_line_index,
+					"object_label": _object_label_for("Core", "")
 				}.merged(condition_style_meta, true)
 			)
 		)
 		condition_line_index += 1
-	elif event_row.else_mode == EventRow.ElseMode.ELIF:
-		spans.append(
-			_make_span(
-				EventSheetL10n.translate("Else If"),
-				SemanticSpan.SpanType.KEYWORD,
-				{
-					"lane": "condition",
-					"kind": "else_keyword",
-					"badge": true,
-					"hoverable": false,
-					"line_index": condition_line_index
-				}.merged(condition_style_meta, true)
-			)
-		)
-		# Same as the ELSE branch: the keyword owns its line, so a trigger badge on the same row
-		# (a same-trigger top-level chain) never draws over it.
-		condition_line_index += 1
-	if event_row.trigger != null:
+	if event_row.else_mode == EventRow.ElseMode.NONE and event_row.trigger != null:
 		var trigger_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		# Tempo badge: the glyph + hue say HOW OFTEN this event runs, from trigger_id.
 		var trigger_glyph: String = _apply_trigger_tempo(trigger_badge_meta, event_style, event_row.trigger_id)
@@ -2100,7 +2088,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 			)
 		)
 		condition_line_index += 1
-	elif not event_row.trigger_id.is_empty():
+	elif event_row.else_mode == EventRow.ElseMode.NONE and not event_row.trigger_id.is_empty():
 		var trigger_id_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		# Same tempo badge on the lifted / lifecycle path (trigger_id with no authored ACECondition) -
 		# this is where On Physics Process etc. render, so the ⟳ hot-path glyph lands here too.
@@ -2125,7 +2113,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 			)
 		)
 		condition_line_index += 1
-	elif inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
+	elif event_row.else_mode == EventRow.ElseMode.NONE and inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
 		var inline_trigger: ACECondition = event_row.conditions[inline_trigger_condition_index]
 		var inline_trigger_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		inline_trigger_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
@@ -2426,8 +2414,9 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 func _count_event_lines(event_row: EventRow) -> int:
 	if event_row == null:
 		return 1
-	# Condition lane. The Else / Else-If keyword owns its own line (the span pass increments
-	# condition_line_index for BOTH modes, so a trigger badge never draws over the keyword).
+	# Condition lane. An else row leads with its "System | Else" condition chip INSTEAD of a trigger line
+	# (a C3 Else block never repeats its trigger) - the span pass renders exactly one of the two, so the
+	# count mirrors that with a plain either/or.
 	var condition_lines: int = 0
 	if event_row.else_mode == EventRow.ElseMode.ELSE or event_row.else_mode == EventRow.ElseMode.ELIF:
 		condition_lines += 1
@@ -2437,7 +2426,7 @@ func _count_event_lines(event_row: EventRow) -> int:
 		or not event_row.trigger_id.is_empty()
 		or (inline_trigger_index >= 0 and inline_trigger_index < event_row.conditions.size())
 	)
-	if has_trigger:
+	if has_trigger and event_row.else_mode == EventRow.ElseMode.NONE:
 		condition_lines += 1
 	for condition_index in range(event_row.conditions.size()):
 		if condition_index == inline_trigger_index:

@@ -79,8 +79,9 @@ static func run() -> bool:
 	var live_else: EventRow = dock.get_current_sheet().events[1] as EventRow
 	ok = _check("Make Else on an else row clears it (toggle)", live_else.else_mode, EventRow.ElseMode.NONE) and ok
 
-	# ── Rendering: on an ELIF row with a visible trigger, the "Else If" keyword owns its line - the
-	# trigger badge renders on the NEXT line, never over the keyword (the badge-overlap regression). ──
+	# ── Rendering (C3-style): the Else reads as a CONDITION - a "System | Else If" chip heading the
+	# condition lane - and the row does NOT redraw its trigger (a C3 Else block never repeats it; the
+	# trigger stays structural for the same-handler chain). ──
 	live_else.else_mode = EventRow.ElseMode.ELIF
 	dock._refresh_after_edit()
 	var elif_row: EventRowData = null
@@ -89,17 +90,23 @@ static func run() -> bool:
 		if row_data != null and row_data.source_resource == live_else:
 			elif_row = row_data
 	var keyword_line: int = -1
-	var trigger_line: int = -1
+	var keyword_is_chip: bool = false
+	var keyword_object: String = ""
+	var trigger_span_count: int = 0
 	if elif_row != null:
 		for span: SemanticSpan in elif_row.spans:
 			if span.metadata is Dictionary:
 				var span_kind: String = str((span.metadata as Dictionary).get("kind", ""))
 				if span_kind == "else_keyword":
 					keyword_line = int((span.metadata as Dictionary).get("line_index", -1))
+					keyword_is_chip = bool((span.metadata as Dictionary).get("chip", false))
+					keyword_object = str((span.metadata as Dictionary).get("object_label", ""))
 				elif span_kind == "trigger":
-					trigger_line = int((span.metadata as Dictionary).get("line_index", -1))
-	ok = _check("the Else If keyword sits on line 0", keyword_line, 0) and ok
-	ok = _check("the trigger badge renders on the NEXT line (no overlap)", trigger_line, 1) and ok
+					trigger_span_count += 1
+	ok = _check("the Else If chip heads the condition lane (line 0)", keyword_line, 0) and ok
+	ok = _check("the Else reads as a condition CHIP (not a floating label)", keyword_is_chip, true) and ok
+	ok = _check("the chip carries the System object label, like any condition", keyword_object, "System") and ok
+	ok = _check("an else row does NOT redraw its trigger", trigger_span_count, 0) and ok
 
 	dock.free()
 	return ok
