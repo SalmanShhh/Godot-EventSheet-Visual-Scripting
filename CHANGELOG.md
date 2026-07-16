@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - a draggable object column inside each lane (the C3 sub-lane)
+
+- **The gap between an object name and its display text is now a draggable divider** - in the
+  conditions lane AND the actions lane, exactly like Construct's sub-lane handle: grab the gap
+  (the cursor flips to a resize arrow), drag, and every row's display text aligns at the same
+  column edge, names clipped to the column so the text stays fully visible. Widths persist with
+  the sheet (same promote-or-edit flow as the main lane divider) and are **theme tokens**
+  (`condition_object_column_width` / `action_object_column_width`, 0 = the classic flow where
+  text follows each name; both documented in the Theme Editor).
+- One shared resolver keeps the renderer, the width measure, and the hit-test text origin in
+  agreement (`tests/object_column_test.gd` pins all three plus the drag boundary).
+
 ### Added - C3-style icon chips, friendly trigger names, and an Object Icons toggle
 
 - **Object icons now sit on a Construct-style framed chip** - a subtle rounded plate behind every

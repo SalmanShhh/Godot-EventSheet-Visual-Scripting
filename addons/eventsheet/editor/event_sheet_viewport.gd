@@ -71,6 +71,9 @@ signal find_requested()
 signal find_step_requested(direction: int)
 ## Emitted when the user finishes dragging the conditions/actions lane divider.
 signal lane_ratio_changed(ratio: float)
+## An object-column resize finished (lane is "condition" or "action"; width 0 restores flow).
+## The dock persists it onto the sheet's editor style, like the lane ratio.
+signal object_column_width_changed(lane: String, width: int)
 ## Emitted when a footer "Add event…" row is clicked. owner_resource is the EventGroup the
 ## event should be appended into, or the EventSheetResource for the sheet-end footer.
 signal add_event_requested(owner_resource: Resource)
@@ -210,6 +213,11 @@ var _external_span_edit_handler_enabled: bool = false
 var _zoom_factor: float = 1.0
 var _layout_style_signature: String = ""
 var _dragging_lane_divider: bool = false
+# C3-style object-column resize: dragging the gap between an object name and its display text
+# sets the lane's fixed object-column width ("condition"/"action"; "" = not dragging). The
+# anchor is where the column starts (span x + icon advance) so width = cursor x - anchor.
+var _dragging_object_column_lane: String = ""
+var _object_column_drag_anchor_x: float = 0.0
 const LANE_DIVIDER_GRAB_TOLERANCE := 5.0
 ## Event-sheet-style trailing "Add event…" footer rows (sheet-end and per-group). On by default;
 ## settable so headless tests can assert raw row counts/indices without the affordance
@@ -558,6 +566,59 @@ func _is_near_lane_divider(local_position: Vector2) -> bool:
 
 
 ## Live-resizes the conditions/actions split from a logical X (during a divider drag).
+## The object-column boundary under the cursor, if any: {"lane": "condition"/"action",
+## "anchor_x": float} or {} when not near one. The boundary of a span with a fixed column
+## sits at anchor + column width; a flow-mode span's boundary sits right after its label,
+## so grabbing THERE is how a fixed column is first created. Tolerance matches the lane
+## divider's grab feel.
+func object_column_boundary_hit(local_position: Vector2) -> Dictionary:
+	var hit: Dictionary = _hit_test(local_position)
+	var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+	var span_index: int = int(hit.get("span_index", -1))
+	if row_data == null or span_index < 0 or span_index >= row_data.spans.size():
+		return {}
+	var span: SemanticSpan = row_data.spans[span_index]
+	if span == null or not (span.metadata is Dictionary):
+		return {}
+	var metadata: Dictionary = span.metadata as Dictionary
+	var lane: String = str(metadata.get("lane", ""))
+	if lane != "condition" and lane != "action":
+		return {}
+	if str(metadata.get("object_label", "")).is_empty():
+		return {}
+	var font: Font = _get_font()
+	var font_size: int = _get_font_size()
+	var anchor_x: float = span.rect.position.x
+	if metadata.get("object_icon") is Texture2D:
+		anchor_x += EventRowRenderer.OBJECT_ICON_ADVANCE
+	var boundary_x: float = anchor_x
+	var column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), lane)
+	if column_width > 0.0:
+		boundary_x += column_width
+	else:
+		boundary_x += font.get_string_size(str(metadata.get("object_label", "")) + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, _span_draw_font_size(span, font_size)).x
+	if absf(local_position.x - boundary_x) > LANE_DIVIDER_GRAB_TOLERANCE:
+		return {}
+	return {"lane": lane, "anchor_x": anchor_x}
+
+
+## Live object-column resize during the drag: width follows the cursor (clamped so the label
+## never vanishes and the column never eats the lane). Same invalidation as the lane ratio -
+## geometry changed, spans did not.
+func _set_object_column_width_from_x(local_x: float) -> void:
+	if _dragging_object_column_lane.is_empty():
+		return
+	var width: int = int(clampf(local_x - _object_column_drag_anchor_x, 24.0, 480.0))
+	var event_style: EventSheetEventStyle = _get_event_style()
+	if _dragging_object_column_lane == "condition":
+		event_style.condition_object_column_width = width
+	else:
+		event_style.action_object_column_width = width
+	_update_layout_style_signature(_get_font_size())
+	_layout_cache.clear()
+	queue_redraw()
+
+
 func _set_lane_ratio_from_x(local_x: float) -> void:
 	var content_left: float = EventSheetPalette.GUTTER_WIDTH
 	var content_width: float = max(_get_logical_canvas_width() - content_left, 120.0)
@@ -617,7 +678,7 @@ func _build_layout_style_signature(font_size: int) -> String:
 	var event_style: EventSheetEventStyle = _get_event_style()
 	var condition_style: EventSheetElementStyle = _get_condition_style()
 	var action_style: EventSheetElementStyle = _get_action_style()
-	return "%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d" % [
+	return "%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d:%d" % [
 		int(round(_get_event_line_height(font_size))),
 		event_style.minimum_conditions_lane_width,
 		event_style.condition_lane_padding,
@@ -625,6 +686,8 @@ func _build_layout_style_signature(font_size: int) -> String:
 		event_style.action_lane_padding,
 		event_style.lane_divider_width,
 		int(round(event_style.condition_lane_ratio * 100.0)),
+		event_style.condition_object_column_width,
+		event_style.action_object_column_width,
 		condition_style.horizontal_padding,
 		condition_style.gap_after,
 		action_style.horizontal_padding,
@@ -762,7 +825,13 @@ func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> floa
 		origin_x += EventRowRenderer.OBJECT_ICON_ADVANCE
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
-		origin_x += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, _span_draw_font_size(span, font_size)).x
+		# Fixed object column (C3 sub-lane) advances by the column width; flow mode by the
+		# label's own width - mirrors the renderer exactly.
+		var object_column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), str(metadata.get("lane", "")))
+		if object_column_width > 0.0:
+			origin_x += object_column_width
+		else:
+			origin_x += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, _span_draw_font_size(span, font_size)).x
 	return origin_x
 
 

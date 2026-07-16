@@ -2573,7 +2573,13 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 	var span_width: float = font.get_string_size(display_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	var object_label: String = str(metadata.get("object_label", ""))
 	if not object_label.is_empty():
-		span_width += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+		# Fixed object column (C3 sub-lane): the label occupies exactly the column width;
+		# flow mode occupies the label's own width. Must mirror the renderer's advance.
+		var object_column_width: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), str(metadata.get("lane", "")))
+		if object_column_width > 0.0:
+			span_width += object_column_width
+		else:
+			span_width += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	if metadata.get("object_icon") is Texture2D:
 		span_width += EventRowRenderer.OBJECT_ICON_ADVANCE
 	if bool(metadata.get("badge", false)):

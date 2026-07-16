@@ -39,6 +39,9 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	if _viewport._dragging_lane_divider:
 		_viewport._set_lane_ratio_from_x(local_position.x)
 		return
+	if not _viewport._dragging_object_column_lane.is_empty():
+		_viewport._set_object_column_width_from_x(local_position.x)
+		return
 	if _viewport._box_select_active:
 		_viewport._box_select_current = local_position
 		_viewport.queue_redraw()
@@ -54,6 +57,9 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 		_viewport._hover_is_drag_zone = over_drag_zone
 		_viewport.queue_redraw()  # brighten the grip handle on the hovered row
 	if _viewport._is_near_lane_divider(local_position):
+		_viewport.mouse_default_cursor_shape = Control.CURSOR_HSIZE
+	elif not _viewport.object_column_boundary_hit(local_position).is_empty():
+		# The object-name / display-text gap is a C3-style sub-lane divider: same ↔ affordance.
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_HSIZE
 	elif over_drag_zone:
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_MOVE
@@ -118,6 +124,12 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 		_viewport.grab_focus()
 		if _viewport._is_near_lane_divider(local_position):
 			_viewport._dragging_lane_divider = true
+			_viewport.accept_event()
+			return
+		var object_column_hit: Dictionary = _viewport.object_column_boundary_hit(local_position)
+		if not object_column_hit.is_empty():
+			_viewport._dragging_object_column_lane = str(object_column_hit.get("lane", ""))
+			_viewport._object_column_drag_anchor_x = float(object_column_hit.get("anchor_x", 0.0))
 			_viewport.accept_event()
 			return
 		if row_index < 0:
@@ -305,6 +317,14 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 	if _viewport._dragging_lane_divider:
 		_viewport._dragging_lane_divider = false
 		_viewport.lane_ratio_changed.emit(_viewport._get_event_style().condition_lane_ratio)
+		_viewport.accept_event()
+		return
+	if not _viewport._dragging_object_column_lane.is_empty():
+		var resized_lane: String = _viewport._dragging_object_column_lane
+		_viewport._dragging_object_column_lane = ""
+		var event_style: EventSheetEventStyle = _viewport._get_event_style()
+		var resized_width: int = event_style.condition_object_column_width if resized_lane == "condition" else event_style.action_object_column_width
+		_viewport.object_column_width_changed.emit(resized_lane, resized_width)
 		_viewport.accept_event()
 		return
 	if not _viewport._drag_ace_entries.is_empty():

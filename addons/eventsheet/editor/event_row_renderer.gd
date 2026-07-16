@@ -31,6 +31,20 @@ const OBJECT_ICON_PLATE_BORDER := Color(1.0, 1.0, 1.0, 0.13)
 static var _icon_plate_style: StyleBoxFlat = null
 
 
+## The fixed object-name column width for a span's lane (0 = flow, the classic behavior).
+## One resolver shared by the draw, the width measure, and the text-origin hit-test so the
+## three can never disagree about where display text starts.
+static func object_column_width_for(event_style: EventSheetEventStyle, lane: String) -> float:
+	if event_style == null:
+		return 0.0
+	match lane:
+		"condition":
+			return float(event_style.condition_object_column_width)
+		"action":
+			return float(event_style.action_object_column_width)
+	return 0.0
+
+
 static func _object_icon_plate_style() -> StyleBoxFlat:
 	if _icon_plate_style == null:
 		_icon_plate_style = StyleBoxFlat.new()
@@ -581,9 +595,16 @@ func _draw_spans(
 			# actual condition/action, not a column of identical "System" labels.
 			if object_label == "System":
 				object_color.a *= 0.5
-			_draw_text(control, Vector2(text_x, baseline_y), object_label, text_width, font, draw_font_size, object_color)
-			var label_advance: float = font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
-			text_x += label_advance
+			# C3-style sub-lane: a fixed object column aligns every row's display text at the
+			# same edge (label clipped to the column); width 0 keeps the classic flow where
+			# text follows each label.
+			var object_column_width: float = object_column_width_for(event_style, str(metadata.get("lane", "")))
+			if object_column_width > 0.0:
+				_draw_text(control, Vector2(text_x, baseline_y), object_label, min(object_column_width - 4.0, text_width), font, draw_font_size, object_color)
+				text_x += object_column_width
+			else:
+				_draw_text(control, Vector2(text_x, baseline_y), object_label, text_width, font, draw_font_size, object_color)
+				text_x += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var value_ranges: Array = metadata.get("value_ranges", []) if span_index != editing_span_index else []
 		var bbcode_segments: Array = metadata.get("bbcode_segments", []) if span_index != editing_span_index else []

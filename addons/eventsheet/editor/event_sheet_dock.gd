@@ -2551,6 +2551,24 @@ func _on_viewport_lane_ratio_changed(ratio: float) -> void:
 	_mark_dirty("Resized conditions/actions lane to %d%%." % int(round(ratio * 100.0)))
 
 
+## Persists an object-column resize (the C3 sub-lane between object names and display text),
+## same promote-or-edit flow as the lane ratio so the width saves with the sheet.
+func _on_viewport_object_column_width_changed(lane: String, width: int) -> void:
+	if _current_sheet == null:
+		return
+	if _current_sheet.editor_style == null:
+		var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
+		style.ensure_defaults()
+		_current_sheet.editor_style = style
+		_viewport.apply_editor_style(style)
+	var event_style: EventSheetEventStyle = _current_sheet.editor_style.get_event_style()
+	if lane == "condition":
+		event_style.condition_object_column_width = width
+	else:
+		event_style.action_object_column_width = width
+	_mark_dirty("Resized the %s lane's object column to %dpx." % [lane, width])
+
+
 func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary, global_position: Vector2) -> void:
 	_context_row = row_data
 	_context_hit = hit.duplicate(true)

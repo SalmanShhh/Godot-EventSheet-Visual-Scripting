@@ -140,6 +140,8 @@ const _TOKEN_DESCRIPTIONS := {
 	"lane_divider_width": "Thickness of the conditions/actions divider line.",
 	"minimum_row_height": "Height of a single event row, in pixels - raise it for more breathing room.",
 	"group_row_height": "Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.",
+	"condition_object_column_width": "Fixed width of the object-name column in the conditions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.",
+	"action_object_column_width": "Fixed width of the object-name column in the actions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.",
 	"trigger_badge_background_color": "Fill of the trigger arrow badge (On Ready, On Signal...).",
 	"trigger_badge_foreground_color": "Icon/text colour on the trigger badge.",
 	"group_background_color": "Background of a group header row.",
