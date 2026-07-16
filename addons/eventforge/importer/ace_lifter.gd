@@ -693,13 +693,29 @@ static func _split_function_declarations(raw: RawCodeRow) -> Dictionary:
 				remainder.remove_at(remainder.size() - 1)
 			var ace_block: PackedStringArray = PackedStringArray()
 			var plain_comments: PackedStringArray = PackedStringArray()
+			var has_ace_directive: bool = false
 			for lead_line: String in lead:
 				if lead_line.strip_edges().begins_with("##"):
 					ace_block.append(lead_line)
+					if lead_line.strip_edges().begins_with("## @"):
+						has_ace_directive = true
 				else:
 					plain_comments.append(lead_line.strip_edges().trim_prefix("#").strip_edges())
 			var annotations: Dictionary = _parse_annotations("\n".join(ace_block)) if not ace_block.is_empty() else {}
-			var lift: Dictionary = _lift_sheet_function(function_lines, annotations)
+			if has_ace_directive and annotations.is_empty():
+				# `## @` directives were present but the block wasn't recognized (e.g. @ace_name
+				# without a type marker): lifting would silently eat them. Keep it all verbatim.
+				for lead_line: String in lead:
+					remainder.append(lead_line)
+				for function_line: String in function_lines:
+					remainder.append(function_line)
+				i = k
+				continue
+			# An un-annotated function's plain `##` lines are its Godot doc comment: carry them onto
+			# the EventFunction so re-emission keeps them (they used to be dropped here). A recognized
+			# annotation block instead folds them into the ACE description inside _parse_annotations.
+			var doc_comment: String = "" if has_ace_directive else _collect_doc_comment_text("\n".join(ace_block))
+			var lift: Dictionary = _lift_sheet_function(function_lines, annotations, false, PackedStringArray(), doc_comment)
 			if bool(lift.get("ok", false)):
 				var event_function: EventFunction = lift.get("function") as EventFunction
 				if not plain_comments.is_empty():
