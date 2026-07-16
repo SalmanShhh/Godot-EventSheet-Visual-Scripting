@@ -1466,7 +1466,12 @@ static func _build_reverse_entries() -> Array:
 				if variant.contains(op):
 					assign_op = op
 					break
-			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control})
+			# A local declaration template (`var {name}…` / `const {name}…`) whose `{name}` capture is lazy
+			# `.+?` can mis-carve a string value that contains `:`/`=` (a typed const `const S: T = V` regex
+			# eats `const FMT = "a: b = c"` into name=`FMT = "a`). Flag it so _match_entry rejects any match
+			# whose captured name is not a bare identifier, letting the plain (correct) template win.
+			var decl_name: bool = variant.begins_with("var ") or variant.begins_with("const ")
+			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name})
 	# Try SPECIFIC templates before generic catch-alls. The Core generics (SetVar `{var_name} = {value}`,
 	# CallFunction `{function_name}({args})`, …) use lazy `.+?` captures that match almost any
 	# assignment/call, so in raw registry order they SHADOW every specific node ACE (`position = …`
@@ -1498,8 +1503,22 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 		var params: Dictionary = {}
 		for group_name: String in regex.get_names():
 			params[group_name] = regex_match.get_string(group_name)
+		# A declaration template's `{name}` must be a bare identifier - otherwise the lazy capture carved a
+		# string/expression value at an internal `:` or `=` (see decl_name). Reject so the plain form wins.
+		if bool((entry as Dictionary).get("decl_name", false)) and not _is_bare_identifier(str(params.get("name", ""))):
+			continue
 		return {"provider": (entry as Dictionary).get("provider"), "ace_id": (entry as Dictionary).get("ace_id"), "params": params}
 	return {}
+
+
+## True when the text is a single GDScript identifier (no spaces, operators, or quotes) - used to reject a
+## declaration whose `{name}` capture actually swallowed part of a string/typed value.
+static func _is_bare_identifier(text: String) -> bool:
+	if text.is_empty():
+		return false
+	var regex: RegEx = RegEx.new()
+	regex.compile("^[A-Za-z_][A-Za-z0-9_]*$")
+	return regex.search(text) != null
 
 
 ## Expands an optional-prefix template `{name.}foo` into the two shapes it can compile to, so both

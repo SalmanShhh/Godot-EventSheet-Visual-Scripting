@@ -233,6 +233,13 @@ func _try_lift_variable(line: String) -> LocalVariable:
 		declaration = line.substr(7)  # drop the "static " prefix (7 chars)
 	if not (declaration.begins_with("var ") or declaration.begins_with("@export") or declaration.begins_with("const ")):
 		return null
+	# A STATIC declaration ending in `:` opens an inline getter/setter property (`static var x: int = 0:`
+	# then `set(v):`). Lifting only the declaration line orphans the accessor body and captures a nonsense
+	# `0:` default, and editing that default re-emits non-parsing GDScript - so leave the whole property a
+	# verbatim block. Scoped to the static path: the drawer/clamp machinery deliberately lifts a hinted
+	# setter-suffixed var (`@export_custom(...) var hp: int = 120:`) and re-emits it byte-exactly.
+	if static_prefixed and declaration.strip_edges().ends_with(":"):
+		return null
 	var parsed: Dictionary = VariableParser.new().parse(declaration)
 	if parsed.size() != 1:
 		return null

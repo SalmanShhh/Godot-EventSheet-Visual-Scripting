@@ -59,6 +59,15 @@ static func run() -> bool:
 	if plain_lifted.size() == 1:
 		ok = _check("a plain var is NOT flagged static", (plain_lifted[0] as LocalVariable).is_static, false) and ok
 
+	# ── Regression (review e8362aa): a static var with an inline setter tail must NOT lift (the accessor
+	# body would be orphaned and the `0:` default would recompile to invalid GDScript). Stays verbatim. ──
+	var setter: String = "@tool\nextends Node\n\nstatic var health: int = 0:\n\tset(value):\n\t\thealth = value\n"
+	var setter_imported: EventSheetResource = GDScriptImporter.new().import_external_source(setter)
+	ok = _check("a static var with a setter tail does NOT lift", _all_local_vars(setter_imported).is_empty(), true) and ok
+	setter_imported.external_source_path = "user://sv_setter.gd"
+	ok = _check("the setter-property static var round-trips byte-identically",
+		str(SheetCompiler.compile(setter_imported, "user://sv_setter.gd").get("output", "")) == setter, true) and ok
+
 	# ── Degrade safety: an untyped `static var x = 5` cannot re-emit exactly -> stays a verbatim block ──
 	var untyped: String = "@tool\nextends Node\n\nstatic var x = 5\n"
 	var untyped_imported: EventSheetResource = GDScriptImporter.new().import_external_source(untyped)

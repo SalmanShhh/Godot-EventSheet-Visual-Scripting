@@ -41,6 +41,16 @@ static func run() -> bool:
 	# ── A const inside a loop body lifts too (const entries are not loop-control) and round-trips ──
 	ok = _roundtrips("for i in range(3):\n\tconst STEP = 2\n\tmove(STEP)") and ok
 
+	# ── Regression (review 22b835d): a string value containing both ': ' and ' = ' must NOT be carved by the
+	# typed-const regex into name/type/value. It lifts to a PLAIN SetLocalConst with the string intact. ──
+	var tricky: Array = _lift_body_actions("const FMT = \"ratio: a = b\"")
+	var plain_c: ACEAction = _by_id(tricky, "SetLocalConst")
+	ok = _check("a string with :/= lifts to PLAIN SetLocalConst (not typed)",
+		plain_c != null and not _ids(tricky).has("SetLocalConstTyped"), true) and ok
+	var fmt_name: String = str((plain_c.params as Dictionary).get("name", "")) if plain_c != null else "<null>"
+	ok = _check("the const name is the bare identifier, string not split", fmt_name, "FMT") and ok
+	ok = _roundtrips("const FMT = \"ratio: a = b\"") and ok
+
 	return ok
 
 
