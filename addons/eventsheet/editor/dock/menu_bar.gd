@@ -178,6 +178,33 @@ func build(root: Node) -> void:
 	view_popup.add_item("Load Theme…", 6)
 	view_popup.add_item("Reload Theme", 7)
 	view_popup.add_item("Theme Editor…", 8)
+	# Language lives beside the Theme entries (both are "how the editor looks/reads" choices).
+	# The submenu rebuilds each open so a translation CSV dropped in mid-session is instantly
+	# pickable (the drop-in reload keeps catalogs fresh; this keeps the MENU fresh). Explicit
+	# child-popup wiring, never an id-less add_submenu_item (index-as-id collides with the
+	# relabel logic - the 880/881 lesson).
+	var language_menu: PopupMenu = PopupMenu.new()
+	language_menu.name = "EventSheetLanguageMenu"
+	view_popup.add_child(language_menu)
+	view_popup.add_submenu_item("Language", "EventSheetLanguageMenu", 14)
+	view_popup.set_item_tooltip(view_popup.get_item_index(14), "Switch the EventSheets editor language. Drop a translation CSV into addons/eventsheet/translations/ and it appears here automatically.")
+	view_popup.about_to_popup.connect(func() -> void:
+		language_menu.clear()
+		var locales: PackedStringArray = EventSheetL10n.available_locales()
+		for locale_index: int in locales.size():
+			language_menu.add_radio_check_item(EventSheetL10n.locale_display_name(locales[locale_index]), locale_index)
+			language_menu.set_item_checked(locale_index, locales[locale_index] == EventSheetL10n.get_locale())
+	)
+	language_menu.id_pressed.connect(func(locale_id: int) -> void:
+		var locales: PackedStringArray = EventSheetL10n.available_locales()
+		if locale_id < 0 or locale_id >= locales.size():
+			return
+		EventSheetL10n.set_locale(locales[locale_id])
+		_dock.propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
+		if _dock.get_viewport_control() != null:
+			_dock.get_viewport_control().queue_redraw()
+		_dock._set_status("Editor language: %s" % EventSheetL10n.locale_display_name(locales[locale_id]))
+	)
 	view_popup.add_separator()
 	view_popup.add_check_item("MCP Server (AI tools)", 12)
 	view_popup.set_item_checked(view_popup.get_item_index(12), EventSheetMCPServer.is_enabled())

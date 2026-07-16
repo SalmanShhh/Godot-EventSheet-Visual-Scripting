@@ -1,0 +1,490 @@
+keys,ko
+Sheet,시트
+Save,저장
+Run Scene,씬 실행
+Add Event,이벤트 추가
+Add Condition,조건 추가
+Add Action,액션 추가
+Add Code,코드 추가
+Add,추가
+Edit,편집
+View,보기
+Tools,도구
+Simple Mode,간단 모드
+Search,검색
+Cancel,취소
+Open,열기
+Undo,실행 취소
+Redo,다시 실행
+Copy,복사
+Paste,붙여넣기
+Zoom In,확대
+Zoom Out,축소
+Name,이름
+Name:,이름:
+Type,타입
+Text,텍스트
+Number,숫자
+Yes-No,예-아니오
+Details,세부 정보
+Parameters,매개변수
+Default,기본값
+Tooltip,툴팁
+Placeholder,자리 표시자
+Range,범위
+◀ Back,◀ 뒤로
+★ Recent,★ 최근
+⭐ Favorites,⭐ 즐겨찾기
+✚ Apply & Add Another,✚ 적용 후 하나 더 추가
+Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,시트를 저장합니다 - 저장 시 컴파일로 생성된 스크립트가 항상 최신 상태로 유지됩니다 (Ctrl+S).
+"Save, then play the scene that uses this sheet's script.",저장한 뒤 이 시트의 스크립트를 사용하는 씬을 실행합니다.
+Add an event (E).,이벤트를 추가합니다 (E).
+Add a condition to the selected event (C).,선택한 이벤트에 조건을 추가합니다 (C).
+Add an action to the selected event (A).,선택한 이벤트에 액션을 추가합니다 (A).
+Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,선택한 이벤트에 GDScript 블록을 추가합니다 - 의도적으로 '코드로 내려가는' 탈출구입니다. 코드 편집기가 바로 열립니다.
+"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","초보자 친화적 보기: 고급/코드 항목(GDScript 블록, 하위 조건, 선택 필터, 시그널/열거형)을 숨깁니다. 꺼도 모든 기능은 그대로 동작합니다."
+"Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.",생성된 GDScript 패널을 켜고 끕니다 - 시트의 있는 그대로의 컴파일 결과를 나란히 보여줍니다.
+Theme for this sheet (Load/Reload and the Theme Editor live in View),이 시트의 테마 (불러오기/다시 불러오기와 테마 편집기는 보기 메뉴에 있습니다)
+"Quick add…  (e.g. every tick, heal 5)","빠른 추가…  (예: every tick, heal 5)"
+"Create, open, save, and configure this event sheet.","이 이벤트 시트를 만들고, 열고, 저장하고, 설정합니다."
+"Panels, multi-view panes, theme, live values, and zoom.","패널, 다중 보기 창, 테마, 실시간 값, 확대/축소."
+"Debug tools, validation, import, and project workflow.","디버그 도구, 검증, 가져오기, 프로젝트 워크플로."
+New…,새로 만들기…
+Open…,열기…
+Save As…,다른 이름으로 저장…
+Sheet Type…,시트 타입…
+Manage Includes…,포함 시트 관리…
+Custom Actions…,사용자 지정 액션…
+Export GDScript…,GDScript 내보내기…
+Export Addon…,애드온 내보내기…
+New Behaviour Addon…,새 비헤이비어 애드온…
+Inspector Designer…,Inspector 디자이너…
+Teach a Verb - Share Published Verbs,동사 가르치기 - 게시된 동사 공유
+Signal Event…,시그널 이벤트…
+Global Variable…,전역 변수…
+Local Variable…,지역 변수…
+Function…,함수…
+Code (GDScript) on Selected Event,선택한 이벤트에 코드 (GDScript)
+Note…,노트…
+Region…,영역…
+Preload Resource…,리소스 미리 불러오기…
+Extract Selection to Include…,선택 항목을 포함 시트로 추출…
+Find References…,참조 찾기…
+Generate from Description (AI)…,설명으로 생성 (AI)…
+Simple Mode (beginner-friendly),간단 모드 (초보자용)
+GDScript Panel (toggle),GDScript 패널 (켜기/끄기)
+Open Sheets Panel,열린 시트 패널
+Add-Event Rows,'+ 이벤트 추가' 행
+Split View (toggle),분할 보기 (켜기/끄기)
+Detached View (toggle),분리 보기 (켜기/끄기)
+Link Views (toggle),보기 연동 (켜기/끄기)
+Load Theme…,테마 불러오기…
+Reload Theme,테마 다시 불러오기
+Theme Editor…,테마 편집기…
+MCP Server (AI tools),MCP 서버 (AI 도구)
+"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","우클릭 메뉴에서 고급/코드 항목(GDScript 블록, 하위 조건, 선택 필터, match, 시그널/열거형)을 숨깁니다. 전문가 모드에서는 모든 기능이 그대로 동작합니다."
+Show/hide the generated-GDScript panel beside the sheet.,시트 옆의 생성된 GDScript 패널을 표시하거나 숨깁니다.
+"Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.","끝의 ""+ 이벤트 추가…"" 행을 표시하거나 숨깁니다. 끄면 더 깔끔하고 차분한 시트가 됩니다."
+"Show/hide a second synchronized view of this sheet, side by side.",이 시트의 두 번째 동기화된 보기를 나란히 표시하거나 숨깁니다.
+Pop the sheet view out into its own window / bring it back.,시트 보기를 별도 창으로 분리하거나 다시 가져옵니다.
+Link/unlink scrolling between the split views.,분할 보기 간 스크롤을 연동하거나 해제합니다.
+Debug Breakpoints (toggle),디버그 중단점 (켜기/끄기)
+Live Values (toggle),실시간 값 (켜기/끄기)
+Event Trace (live highlight),이벤트 추적 (실시간 강조)
+Bookmarks…,북마크…
+Register Autoload,오토로드 등록
+Publish Preview…,게시 미리보기…
+Test Bench,테스트 벤치
+Find in Project…,프로젝트에서 찾기…
+Project Doctor…,프로젝트 Doctor…
+Check Sheet for Errors,시트 오류 검사
+Vocabulary Doc,어휘 문서
+Sheet Backups…,시트 백업…
+Save as Template,템플릿으로 저장
+Attach to Selected Node,선택한 노드에 붙이기
+Preview Behaviors on Selected Node,선택한 노드에서 비헤이비어 미리보기
+Lift Report…,가져오기 보고서…
+Welcome…,시작 화면…
+Start the Tour…,둘러보기 시작…
+Keyboard Shortcuts,키보드 단축키
+Rename Everywhere…,모든 곳에서 이름 바꾸기…
+Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,모든 ƒx 표현식과 GDScript 블록을 검사하여 문제가 있는 행을 표시하고 첫 번째 행으로 이동합니다.
+Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,중단점 출력을 켜고 끕니다: 디버그로 컴파일된 시트는 중단점이 있는 행에서 일시 정지합니다.
+Toggle Live Values: running sheets stream their variables here (editable).,실시간 값을 켜고 끕니다: 실행 중인 시트의 변수가 여기로 스트리밍됩니다 (편집 가능).
++ Add action,+ 액션 추가
++ Add condition,+ 조건 추가
++ Add event…,+ 이벤트 추가…
+Every Tick,매 틱마다
++  Add your first event,+  첫 이벤트 추가하기
+New from template…,템플릿에서 새로 만들기…
+Create an event sheet…,이벤트 시트 만들기…
+This event sheet is empty,이 이벤트 시트는 비어 있습니다
+No event sheet is open,열린 이벤트 시트가 없습니다
+Empty behavior sheet,빈 비헤이비어 시트
+Empty autoload sheet,빈 오토로드 시트
+Double-click anywhere - or press E - to add your first event.,아무 곳이나 더블클릭하거나 E 키를 눌러 첫 이벤트를 추가하세요.
+Double-click anywhere - or press E - to add an event that drives the Node this attaches to.,아무 곳이나 더블클릭하거나 E 키를 눌러 이 시트가 붙는 노드를 움직이는 이벤트를 추가하세요.
+Create one to start building - a menu of ready-made starters opens.,하나 만들어 시작하세요 - 바로 쓸 수 있는 스타터 메뉴가 열립니다.
+"Add the signals and functions every sheet in the project should reach (score, game state, an event bus).","프로젝트의 모든 시트가 접근해야 하는 시그널과 함수(점수, 게임 상태, 이벤트 버스)를 추가하세요."
+"Tip: the picker understands plain language. Try typing ""every tick"".","팁: 선택기는 일상 언어를 이해합니다. ""every tick""을 입력해 보세요."
+Tip: Tools > Welcome… has a playable showcase and a 2-minute tour.,팁: 도구 > 시작 화면… 에 플레이 가능한 쇼케이스와 2분 둘러보기가 있습니다.
+Tip: publish a function to the picker and every sheet in the project can call it.,팁: 함수를 선택기에 게시하면 프로젝트의 모든 시트에서 호출할 수 있습니다.
+%s - Behavior · acts on host: %s,%s - 비헤이비어 · 호스트에 작동: %s
+"%s - Autoload · one instance, project-wide",%s - 오토로드 · 프로젝트 전체에서 단일 인스턴스
+%s - Editor Tool · runs in the editor (File > Run),%s - 에디터 도구 · 에디터에서 실행됩니다 (파일 > 실행)
+%s - Custom Resource · every .tres of it is a data asset,%s - 커스텀 리소스 · 이 타입의 모든 .tres 가 데이터 애셋입니다
+Event Sheet · a script for the %s it's attached to,이벤트 시트 · 붙어 있는 %s 를 위한 스크립트
+%s - Custom Node · extends %s,%s - 커스텀 노드 · %s 상속
+"Click to edit the sheet type (name, icon, host class).","클릭하여 시트 타입(이름, 아이콘, 호스트 클래스)을 편집합니다."
+Add Action / Condition,액션 / 조건 추가
+"Search actions, conditions, triggers...","액션, 조건, 트리거 검색..."
+Pin the highlighted entry to Favorites (or right-click any entry).,강조된 항목을 즐겨찾기에 고정합니다 (또는 아무 항목이나 우클릭).
+Right-click any entry to pin it here.,아무 항목이나 우클릭하여 여기에 고정하세요.
+Entries you use appear here.,사용한 항목이 여기에 표시됩니다.
+"Select a condition, action, or trigger to create a new event.","조건, 액션 또는 트리거를 선택하여 새 이벤트를 만드세요."
+Select an action to append to the selected event.,선택한 이벤트에 추가할 액션을 선택하세요.
+Select a condition or trigger to append to the selected event.,선택한 이벤트에 추가할 조건 또는 트리거를 선택하세요.
+Untitled EventSheet,제목 없는 이벤트 시트
+Unsaved (in-memory),저장되지 않음 (메모리)
+Open Sheets,열린 시트
+Filter sheets…,시트 필터…
+Filter the open sheets by name or path.,열린 시트를 이름이나 경로로 필터링합니다.
+New Event,새 이벤트
+New Condition,새 조건
+Edit Action,액션 편집
+Edit Condition,조건 편집
+Delete Action,액션 삭제
+Delete Condition,조건 삭제
+Delete Function,함수 삭제
+Replace Action,액션 교체
+Replace Condition,조건 교체
+Disable Action,액션 비활성화
+Disable Condition,조건 비활성화
+Invert Condition,조건 반전
+Add New Variable,새 변수 추가
+Create Variable,변수 만들기
+Edit Variable,변수 편집
+Add a function…,함수 추가…
+Edit Note…,노트 편집…
+Edit Events,이벤트 편집
+Insert Snippet…,스니펫 삽입…
+Extract All Actions to Function…,모든 액션을 함수로 추출…
+Group Under a Heading…,제목 아래로 그룹화…
+Detach Comment To Row,주석을 행으로 분리
+Convert Scope,범위 변환
+Toggle Constant,상수 전환
+Whole numbers only,정수만
+Editable in the Inspector (a designer property),Inspector에서 편집 가능 (디자이너 속성)
+Constant (can't change at runtime),상수 (런타임에 변경 불가)
+Set on _ready() - for node refs like $Player,_ready()에서 설정 - $Player 같은 노드 참조용
+"Text - words, names, messages.","텍스트 - 단어, 이름, 메시지."
+"A number - a count, score, position, speed… Tick ""Whole numbers only"" for integers.","숫자 - 개수, 점수, 위치, 속도… 정수가 필요하면 ""정수만""을 체크하세요."
+"A yes/no, on/off switch (true / false).","예/아니오, 켜기/끄기 스위치 (true / false)."
+"An x/y pair: a direction, velocity, or position.","x/y 쌍: 방향, 속도 또는 위치."
+An RGBA colour.,RGBA 색상.
+An image / sprite resource.,이미지 / 스프라이트 리소스.
+Viewing as a sheet,시트로 보는 중
+Open in Godot Script Editor,Godot 스크립트 편집기에서 열기
+Edit the .gd directly in Godot's script editor - your changes reload here when you come back to this tab.,Godot 스크립트 편집기에서 .gd 파일을 직접 편집하세요 - 이 탭으로 돌아오면 변경 사항이 여기에 다시 로드됩니다.
+Take the 2-minute tour,2분 둘러보기 시작
+Editor language,에디터 언어
+Simple mode - hide advanced rows & menu items,간단 모드 - 고급 행과 메뉴 항목 숨기기
+Open the GDScript panel with every sheet,모든 시트에서 GDScript 패널 열기
+Coming from another event-sheet tool?,다른 이벤트 시트 도구를 쓰다 오셨나요?
+Open the migration guide,마이그레이션 가이드 열기
+Reopen this window any time: Tools → Welcome…,이 창은 언제든 다시 열 수 있습니다: 도구 → 시작 화면…
+Translations are plain CSV files - drop one into eventsheet_translations/ and its language appears here.,번역은 일반 CSV 파일입니다 - eventsheet_translations/ 폴더에 넣으면 해당 언어가 여기에 나타납니다.
+The 2-minute tour,2분 둘러보기
+Read a sheet like a sentence,시트를 문장처럼 읽기
+Add your first event,첫 이벤트 추가하기
+Give it a condition,조건 달아 주기
+Make it DO something,무언가 하게 만들기
+See the honest GDScript,있는 그대로의 GDScript 보기
+You know the loop,이제 흐름을 아셨습니다
+Skip tour,둘러보기 건너뛰기
+Back,뒤로
+Next,다음
+Finish,완료
+✓ Done - nice! Hit Next.,✓ 완료 - 잘하셨어요! 다음을 누르세요.
+Hit Finish and go make something.,완료를 누르고 무언가를 만들어 보세요.
+"A coloured section label drawn above this property in the Inspector.
+End with a #rrggbb to tint it. Editor decor only - plain comment in the code.","Inspector에서 이 속성 위에 그려지는 색상 섹션 라벨입니다.
+끝에 #rrggbb 를 붙이면 색이 입혀집니다. 에디터 장식일 뿐 - 코드에서는 일반 주석입니다."
+"A quiet info panel drawn above this property in the Inspector.
+Editor decor only - plain comment in the code.","Inspector에서 이 속성 위에 그려지는 은은한 정보 패널입니다.
+에디터 장식일 뿐 - 코드에서는 일반 주석입니다."
+"A shape over 0–1 (easing, falloff, ramps).","0–1 구간의 곡선 (이징, 감쇠, 램프)."
+A whole number (no decimals) - stored as an int. Unticked stores a float.,정수 (소수점 없음) - int 로 저장됩니다. 체크 해제 시 float 로 저장됩니다.
+Access,접근
+Advanced types,고급 타입
+Anatomy,구조
+Any type - untyped (advanced; prefer a specific type when you can).,아무 타입 - 타입 없음 (고급; 가능하면 구체적인 타입을 사용하세요).
+Clamp to range,범위로 제한
+Collapse the panel to a strip,패널을 띠 모양으로 접기
+Default field,기본값 필드
+Description,설명
+Dropped Node Preview,드롭한 노드 미리보기
+Easing curve (float: exponential ease handle),이징 곡선 (float: 지수 이징 핸들)
+Edit an Array/Dictionary's items one per line instead of typing a literal.,리터럴을 직접 입력하는 대신 Array/Dictionary 의 항목을 한 줄에 하나씩 편집합니다.
+Edit items…,항목 편집…
+"Event-sheet-style quick add: type an event/condition/action (event-sheet phrasing works) plus optional parameter values, press Enter.",이벤트 시트 방식의 빠른 추가: 이벤트/조건/액션(이벤트 시트식 표현도 가능)과 선택적 매개변수 값을 입력한 뒤 Enter 를 누르세요.
+Every sheet function at a glance (✦ = published as an ACE). Click to expand or collapse.,시트의 모든 함수를 한눈에 (✦ = ACE로 게시됨). 클릭하여 펼치거나 접습니다.
+Field button,필드 버튼
+Flags,플래그
+From enum,enum에서
+Group under heading,제목 아래 그룹화
+"How this variable's field LOOKS in the Inspector - pickers, flags, layer grids... Plain fields need no choice here.","이 변수의 필드가 Inspector에서 어떻게 보이는지 - 선택기, 플래그, 레이어 그리드... 일반 필드는 여기서 선택할 것이 없습니다."
+Info note,정보 노트
+"Inspector grouping, conditional show/lock, an on-changed callback, clamp, read-only - for variables that reference other variables or functions.","Inspector 그룹화, 조건부 표시/잠금, 변경 시 콜백, 범위 제한, 읽기 전용 - 다른 변수나 함수를 참조하는 변수를 위한 기능입니다."
+Inspector look,Inspector 모양
+Inspector preview,Inspector 미리보기
+Inspector section header (e.g. Combat),Inspector 섹션 제목 (예: Combat)
+Lock unless,다음이 아니면 잠금
+"Make this sheet's published verbs (its exposed ƒ functions) available in EVERY sheet's picker, node-targeted at $<ClassName>. Extract actions to a function first (right-click an event), then teach it here.",이 시트의 게시된 동사(노출된 ƒ 함수)를 모든 시트의 선택기에서 $<ClassName> 노드 대상으로 사용할 수 있게 합니다. 먼저 액션을 함수로 추출한 뒤(이벤트 우클릭) 여기서 가르치세요.
+Match Editor (default),Match 편집기 (기본값)
+Multiline (String: big text box),여러 줄 (String: 큰 텍스트 상자)
+"No alpha (Color: solid RGB, no transparency)","알파 없음 (Color: 불투명 RGB, 투명도 없음)"
+No lower limit,하한 없음
+No upper limit,상한 없음
+On changed,변경 시
+On ready,준비 시 (ready)
+"On: a designer can tweak this per-instance in the Inspector (@export var).
+Off: internal script state - a plain private var (the default for a new variable).","켬: 디자이너가 Inspector에서 인스턴스별로 조정할 수 있습니다 (@export var).
+끔: 스크립트 내부 상태 - 일반 비공개 var 입니다 (새 변수의 기본값)."
+"On: compiles to @onready var - the Default is a GDScript EXPRESSION evaluated when the node enters the tree (e.g. $Player, get_node(""UI/Score"")), not a literal.
+Use it to grab a node reference once the scene is ready.","켬: @onready var 로 컴파일됩니다 - 기본값은 노드가 트리에 들어갈 때 평가되는 GDScript 표현식이며 (예: $Player, get_node(""UI/Score"")), 리터럴이 아닙니다.
+씬이 준비된 후 노드 참조를 가져올 때 사용하세요."
+"One column per entry: name:type (String, int, float, bool, color for a swatch, or enum(a|b|c) for a dropdown).
+Each Array element becomes a row with these cells.","항목마다 열 하나: 이름:타입 (String, int, float, bool, 색상 견본은 color, 드롭다운은 enum(a|b|c)).
+Array 의 각 요소가 이 셀들을 가진 행이 됩니다."
+Optional Inspector polish for exported globals - everything compiles to plain Godot annotations.,내보낸 전역 변수를 위한 선택적 Inspector 꾸미기 - 모두 일반 Godot 어노테이션으로 컴파일됩니다.
+Options (combo),옵션 (콤보)
+Pick the Inspector look from picture tiles instead of the list.,목록 대신 그림 타일에서 Inspector 모양을 선택합니다.
+Read-only,읽기 전용
+"Renders a small button with this field that calls the named sheet function.
+Needs a @tool sheet to act in-editor. Label optional (defaults to the function name).","이 필드 옆에 지정한 시트 함수를 호출하는 작은 버튼을 표시합니다.
+에디터 안에서 동작하려면 @tool 시트가 필요합니다. 라벨은 선택 사항입니다 (기본값은 함수 이름)."
+Required (warn in the Inspector while unset),필수 (설정되지 않은 동안 Inspector에서 경고)
+Save Studio…,Studio 저장…
+"Scaffold a ready-to-edit behaviour script in res://eventsheet_addons/ - its signals become triggers, methods become actions/conditions, and @export vars become properties, all auto-discovered as custom ACEs.","res://eventsheet_addons/ 에 바로 편집할 수 있는 비헤이비어 스크립트를 생성합니다 - 시그널은 트리거가 되고, 메서드는 액션/조건이 되고, @export 변수는 속성이 되며, 모두 커스텀 ACE로 자동 발견됩니다."
+Section header,섹션 제목
+"See the WHOLE sheet's Inspector as one live view - every exported variable with its decor, grouping, and widget, exactly as Godot will show it.","시트 전체의 Inspector를 하나의 실시간 보기로 확인하세요 - 내보낸 모든 변수의 장식, 그룹, 위젯이 Godot 이 보여줄 모습 그대로 표시됩니다."
+Show as,표시 방식
+Show if,표시 조건
+Shown after the number in the Inspector (suffix:px).,Inspector에서 숫자 뒤에 표시됩니다 (suffix:px).
+"Shows a red warning above the field until a value is assigned
+(a Resource left empty, a String left blank). Editor-only.","값이 할당될 때까지 필드 위에 빨간 경고를 표시합니다
+(비워 둔 Resource, 빈 String). 에디터 전용."
+Slider extras,슬라이더 추가 옵션
+"Start editing this sheet here. From then on, Save (Ctrl+S) updates the file - or use Save As… to keep the original and save a copy.",여기서 이 시트 편집을 시작하세요. 이후 저장(Ctrl+S)이 파일을 업데이트합니다 - 원본을 유지하고 사본으로 저장하려면 다른 이름으로 저장… 을 사용하세요.
+Sub-heading,하위 제목
+"Swap the Inspector field for a richer drawer (dial, swatches, curve…).
+Graceful: a plain field without the editor plugin (parity preserved).","Inspector 필드를 더 풍부한 위젯(다이얼, 색상 견본, 곡선…)으로 바꿉니다.
+안전한 대체: 에디터 플러그인이 없으면 일반 필드로 표시됩니다 (동작은 동일)."
+Table columns,테이블 열
+"The Inspector calls this function while the property is edited and shows
+the returned message above the field. Needs a @tool sheet to run in-editor.","속성을 편집하는 동안 Inspector가 이 함수를 호출하고 반환된 메시지를
+필드 위에 표시합니다. 에디터 안에서 실행하려면 @tool 시트가 필요합니다."
+The slider stops at max but typing a bigger number is allowed (or_greater).,슬라이더는 최댓값에서 멈추지만 더 큰 숫자를 직접 입력할 수 있습니다 (or_greater).
+"The variable's type. For a node reference, type the node's class (Sprite2D, Label, Area2D…) or leave Variant.","변수의 타입입니다. 노드 참조라면 노드의 클래스(Sprite2D, Label, Area2D…)를 입력하거나 Variant 로 두세요."
+"Turn the MCP server (AI-assistant tools) on/off. When off, connected AI clients see no tools and can't read or change your sheets. Takes effect live - no reconnect needed.",MCP 서버(AI 어시스턴트 도구)를 켜거나 끕니다. 끄면 연결된 AI 클라이언트에 도구가 보이지 않으며 시트를 읽거나 변경할 수 없습니다. 즉시 적용됩니다 - 재연결이 필요 없습니다.
+Typing below min is allowed (or_less).,최솟값보다 작은 값을 직접 입력할 수 있습니다 (or_less).
+Validate with,검증 함수
+"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency - proof you can leave the addon anytime.",이 시트의 순수하고 독립적인 GDScript를 원하는 파일로 내보냅니다. 플러그인 의존성이 없습니다 - 언제든 애드온을 떠날 수 있다는 증거입니다.
+accent label above (e.g. Combat #e06666),위에 표시되는 강조 라벨 (예: Combat #e06666)
+bool variable (hidden when false),bool 변수 (false면 숨김)
+bool variable (read-only when false),bool 변수 (false면 읽기 전용)
+"columns, e.g. item:String, count:int, rare:bool","열, 예: item:String, count:int, rare:bool"
+"comma-separated, e.g. easy, normal, hard (String only)","쉼표로 구분, 예: easy, normal, hard (String 전용)"
+"function and button label, e.g. reroll_stats Reroll","함수와 버튼 라벨, 예: reroll_stats Reroll"
+grey hint shown when the field is empty,필드가 비어 있을 때 표시되는 회색 힌트
+"min, max, step (numeric: slider)","최소, 최대, 단계 (숫자: 슬라이더)"
+nested section under the group (e.g. Melee),그룹 아래 중첩 섹션 (예: Melee)
+note panel above (e.g. Shared resource - edits affect every user.),위에 표시되는 노트 패널 (예: 공유 리소스 - 수정하면 모든 사용자에게 영향을 줍니다.)
+sheet function called after assignment,할당 후 호출되는 시트 함수
+sheet function returning a warning String (empty = valid),경고 String 을 반환하는 시트 함수 (비어 있으면 유효)
+"type - e.g. Node2D, Label, Sprite2D (or Variant for any)","타입 - 예: Node2D, Label, Sprite2D (아무 타입이면 Variant)"
+"unit, e.g. px","단위, 예: px"
+what this variable is for - shown as its description in the Inspector,이 변수의 용도 - Inspector에서 설명으로 표시됩니다
+"▸  Advanced (grouping, conditions, clamp…)","▸  고급 (그룹화, 조건, 범위 제한…)"
+"▸  More options (range, drawer, grouping…)","▸  추가 옵션 (범위, 위젯, 그룹화…)"
+Create Code Region,코드 영역 만들기
+Create Code Region…,코드 영역 만들기…
+Doc comment,문서 주석
+Documentation shown above the function (## …). BBCode like [b]bold[/b] is allowed.,함수 위에 표시되는 문서입니다 (## …). [b]굵게[/b] 같은 BBCode를 사용할 수 있습니다.
+Getter body,게터 본문
+Setter body,세터 본문
+Setter parameter,세터 매개변수
+The name of the setter's incoming-value parameter (defaults to `value`).,세터로 들어오는 값 매개변수의 이름입니다 (기본값 `value`).
+The statements that run when this variable is assigned (`set(value):`). Use `value` for the incoming value. Leave blank for no setter.,이 변수에 값이 할당될 때 실행되는 문장입니다 (`set(value):`). 들어오는 값은 `value` 를 사용하세요. 비워 두면 세터가 없습니다.
+"The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter.","이 변수를 읽을 때 실행되는 문장이며 (`get:`), `return …` 으로 끝납니다. 비워 두면 게터가 없습니다."
+"getter body, e.g.  return _health","게터 본문, 예:  return _health"
+"setter body, e.g.  health = clampi(value, 0, max_health)","세터 본문, 예:  health = clampi(value, 0, max_health)"
+A faint tint over the actions (right) lane.,액션(오른쪽) 레인 위의 옅은 색조.
+A faint tint over the conditions (left) lane.,조건(왼쪽) 레인 위의 옅은 색조.
+"Accent (groups, selection)","강조 (그룹, 선택)"
+Action Lane Color,액션 레인 색상
+Action Lane Padding,액션 레인 여백
+Action cells,액션 셀
+Alternate group header background (zebra).,그룹 헤더의 교차 배경 (얼룩말 줄무늬).
+Apply To Current Sheet,현재 시트에 적용
+Background of a group header row.,그룹 헤더 행의 배경.
+Background of the Conditions / Actions column header bar.,조건 / 액션 열 헤더 바의 배경.
+Background of the fold triangle box on a group.,그룹의 접기 삼각형 상자 배경.
+Badge Background Color,배지 배경 색상
+Badge Extra Width,배지 추가 너비
+Badge Foreground Color,배지 전경 색상
+Base (background tone),베이스 (배경 톤)
+Behavior Accent Color,비헤이비어 강조 색상
+Border of the condition/action chip.,조건/액션 칩의 테두리.
+Cell Corner Radius,셀 모서리 반경
+Cell Hover Color,셀 호버 색상
+Chip Background Color,칩 배경 색상
+Chip Border Color,칩 테두리 색상
+Chip Hover Color,칩 호버 색상
+Chip fill when hovered.,마우스를 올렸을 때 칩의 채우기 색.
+Close,닫기
+Column Header Actions Color,열 헤더 액션 색상
+Column Header Background Color,열 헤더 배경 색상
+Column Header Conditions Color,열 헤더 조건 색상
+Comment Row Background Color,주석 행 배경 색상
+Comment Text Color,주석 텍스트 색상
+Condition Badge Column Width,조건 배지 열 너비
+Condition Lane Color,조건 레인 색상
+Condition Lane Padding,조건 레인 여백
+Condition Lane Ratio,조건 레인 비율
+Condition cells,조건 셀
+Corner Radius,모서리 반경
+Corner roundness of group rows (0 = square bar).,그룹 행의 모서리 둥글기 (0 = 각진 바).
+Corner roundness of individual condition/action cells.,개별 조건/액션 셀의 모서리 둥글기.
+Corner roundness of region marker bubbles.,영역 마커 말풍선의 모서리 둥글기.
+"Corner roundness of the chip, in pixels.",칩의 모서리 둥글기 (픽셀 단위).
+"Corner roundness of the event block, in pixels (0 = square).","이벤트 블록의 모서리 둥글기, 픽셀 단위 (0 = 각짐)."
+"Editor (hover, selection, lanes)","에디터 (호버, 선택, 레인)"
+Event Corner Radius,이벤트 모서리 반경
+"Extra width reserved for the role badge on the chip, in pixels.",칩의 역할 배지를 위해 예약된 추가 너비 (픽셀 단위).
+Fill of the condition/action chip.,조건/액션 칩의 채우기 색.
+Fill of the count badge on a group.,그룹의 개수 배지 채우기 색.
+Fill of the role badge on the chip.,칩의 역할 배지 채우기 색.
+"Fill of the trigger arrow badge (On Ready, On Signal...).","트리거 화살표 배지의 채우기 색 (On Ready, On Signal...)."
+Font Size Delta,글꼴 크기 차이
+Gap After,뒤쪽 간격
+Generate Theme,테마 생성
+Group Accent Color,그룹 강조 색상
+Group Background Alt Color,그룹 배경 교차 색상
+Group Background Color,그룹 배경 색상
+Group Badge Background Color,그룹 배지 배경 색상
+Group Badge Foreground Color,그룹 배지 전경 색상
+Group Corner Radius,그룹 모서리 반경
+Group Fold Background Color,그룹 접기 배경 색상
+Group Title Color,그룹 제목 색상
+"Height of a single event row, in pixels - raise it for more breathing room.","이벤트 행 하나의 높이, 픽셀 단위 - 더 여유로운 공간을 원하면 높이세요."
+Horizontal Padding,가로 여백
+Hover Fill Color,호버 채우기 색상
+How much of the row width the conditions lane takes (0.2 - 0.8).,행 너비에서 조건 레인이 차지하는 비율 (0.2 - 0.8).
+Icon/text colour on the trigger badge.,트리거 배지의 아이콘/텍스트 색상.
+"Inner padding on the actions lane, in pixels.",액션 레인의 안쪽 여백 (픽셀 단위).
+"Inner padding on the conditions lane, in pixels.",조건 레인의 안쪽 여백 (픽셀 단위).
+Invert Marker Color,반전 마커 색상
+Lane Divider Color,레인 구분선 색상
+Lane Divider Width,레인 구분선 두께
+Language Block Accent Color,언어 블록 강조 색상
+Line thickness of region marker borders.,영역 마커 테두리의 선 두께.
+Minimum Conditions Lane Width,조건 레인 최소 너비
+Minimum Row Height,행 최소 높이
+Object Label Color,오브젝트 라벨 색상
+"Parameter values (numbers, strings) highlighted inside ACE text.","ACE 텍스트 안에서 강조되는 매개변수 값 (숫자, 문자열)."
+"Pick a base + accent, then Generate. Fine-tune individual tokens below.",베이스 + 강조 색을 고른 뒤 생성을 누르세요. 아래에서 개별 토큰을 세밀하게 조정할 수 있습니다.
+Quick Style - recolour everything at once,빠른 스타일 - 한 번에 전체 색 바꾸기
+Rebuild every colour token from the three colours above.,위의 세 가지 색상으로 모든 색상 토큰을 다시 만듭니다.
+Region Corner Radius,영역 모서리 반경
+Region Line Width,영역 선 두께
+Reset To Default,기본값으로 재설정
+Restore the bundled default look.,기본 제공되는 모양으로 되돌립니다.
+Row Background Alt Color,행 배경 교차 색상
+Row Background Color,행 배경 색상
+Row Border Color,행 테두리 색상
+Save As Preset…,프리셋으로 저장…
+Selection Fill Color,선택 채우기 색상
+Sheet & rows (event style),시트와 행 (이벤트 스타일)
+Sheet Background Color,시트 배경 색상
+"Space between this chip and the next one, in pixels.",이 칩과 다음 칩 사이의 간격 (픽셀 단위).
+"Space inside the chip, above and below its text, in pixels.",칩 안쪽에서 텍스트 위아래의 여백 (픽셀 단위).
+"Space inside the chip, left and right of its text, in pixels.",칩 안쪽에서 텍스트 좌우의 여백 (픽셀 단위).
+Text Color,텍스트 색상
+Text colour of the role badge.,역할 배지의 텍스트 색상.
+Text colour on the group count badge.,그룹 개수 배지의 텍스트 색상.
+"Text size adjustment for this chip kind, relative to the sheet font (+/- points).","이 칩 종류의 텍스트 크기 조정, 시트 글꼴 기준 (+/- 포인트)."
+The 'Actions' header label colour.,'액션' 헤더 라벨 색상.
+The 'Conditions' header label colour.,'조건' 헤더 라벨 색상.
+The background of a normal event row.,일반 이벤트 행의 배경.
+The background of every OTHER row (the zebra stripe).,한 행 걸러 하나씩 적용되는 배경 (얼룩말 줄무늬).
+The banner colour behind a full-width comment.,전체 너비 주석 뒤의 배너 색상.
+"The colour behind the whole sheet, outside the rows.","행 바깥, 시트 전체 뒤의 색상."
+The conditions lane never shrinks below this many pixels.,조건 레인은 이 픽셀 수보다 작아지지 않습니다.
+The group title text colour.,그룹 제목 텍스트 색상.
+The group's left accent stripe and hairlines.,그룹의 왼쪽 강조 줄무늬와 가는 선.
+The highlight over a selected row.,선택된 행 위의 강조 표시.
+"The object/origin label before each condition/action (System, node class).","각 조건/액션 앞의 오브젝트/출처 라벨 (System, 노드 클래스)."
+The red X shown on an inverted (negated) condition.,반전(부정)된 조건에 표시되는 빨간 X.
+"The soft-purple 'this is a behavior' accent (banner, region default).","'이것은 비헤이비어' 를 나타내는 연보라 강조색 (배너, 영역 기본값)."
+"The stripe + wash on language blocks (a data class, a host binding, a switch case) so they read as code structure, not regular events.","언어 블록(데이터 클래스, 호스트 바인딩, switch 케이스)의 줄무늬 + 배경색으로, 일반 이벤트가 아닌 코드 구조로 읽히게 합니다."
+The text colour of comments.,주석의 텍스트 색상.
+The text colour of the chip.,칩의 텍스트 색상.
+The thin line between rows.,행 사이의 가는 선.
+The tint over the row under the mouse.,마우스 아래 행에 씌워지는 색조.
+The vertical line splitting conditions from actions.,조건과 액션을 나누는 세로선.
+Theme Editor,테마 편집기
+Thickness of the conditions/actions divider line.,조건/액션 구분선의 두께.
+Tint over a single condition/action cell under the mouse.,마우스 아래 단일 조건/액션 셀에 씌워지는 색조.
+Trigger Badge Background Color,트리거 배지 배경 색상
+Trigger Badge Foreground Color,트리거 배지 전경 색상
+Value Highlight Color,값 강조 색상
+Vertical Padding,세로 여백
+Width reserved for the trigger/condition badge column.,트리거/조건 배지 열에 예약된 너비.
+Add Comment Sub-Event,주석 하위 이벤트 추가
+Add GDScript Action,GDScript 액션 추가
+Add Match To Actions…,액션에 match 추가…
+Add Pick Filter (For Each)…,선택 필터 추가 (각각에 대해)…
+Add Sub-Condition,하위 조건 추가
+Add Sub-Event,하위 이벤트 추가
+Attach To Event Above,위 이벤트에 붙이기
+Clear Else,Else 제거
+Clear Else-If,Else-If 제거
+Close Group,그룹 닫기
+Comment,주석
+Convert to AND Block,AND 블록으로 변환
+Convert to OR Block,OR 블록으로 변환
+Copy as Text,텍스트로 복사
+Cut,잘라내기
+Delete,삭제
+Disable / Enable Selection,선택 항목 비활성화 / 활성화
+Disable Row,행 비활성화
+Duplicate,복제
+Duplicate Selection,선택 항목 복제
+Edit Comment…,주석 편집…
+Edit Description…,설명 편집…
+Enable Row,행 활성화
+Enum,열거형 (Enum)
+Event Above,위에 이벤트
+Event Below,아래에 이벤트
+Find Usages (project),사용처 찾기 (프로젝트)
+GDScript Block,GDScript 블록
+Group,그룹
+Group Color…,그룹 색상…
+Group Selection into New Group,선택 항목을 새 그룹으로 묶기
+Insert,삽입
+Make Else,Else로 만들기
+Make Else-If,Else-If로 만들기
+More,더 보기
+Open / Close Group,그룹 열기 / 닫기
+Open Group,그룹 열기
+Open in Split,분할 보기로 열기
+Runtime Toggleable,런타임에 전환 가능
+Save Selection as Snippet…,선택 항목을 스니펫으로 저장…
+Scope Actions To Node…,액션을 노드로 한정…
+Set Breakpoint Condition…,중단점 조건 설정…
+Signal Handler,시그널 핸들러
+Variable,변수
+Else,아니면
+Else If,아니면 만약

@@ -1,0 +1,490 @@
+keys,ja
+Sheet,シート
+Save,保存
+Run Scene,シーンを実行
+Add Event,イベントを追加
+Add Condition,条件を追加
+Add Action,アクションを追加
+Add Code,コードを追加
+Add,追加
+Edit,編集
+View,表示
+Tools,ツール
+Simple Mode,シンプルモード
+Search,検索
+Cancel,キャンセル
+Open,開く
+Undo,元に戻す
+Redo,やり直す
+Copy,コピー
+Paste,貼り付け
+Zoom In,ズームイン
+Zoom Out,ズームアウト
+Name,名前
+Name:,名前:
+Type,型
+Text,テキスト
+Number,数値
+Yes-No,はい/いいえ
+Details,詳細
+Parameters,パラメーター
+Default,デフォルト
+Tooltip,ツールチップ
+Placeholder,プレースホルダー
+Range,範囲
+◀ Back,◀ 戻る
+★ Recent,★ 最近使用
+⭐ Favorites,⭐ お気に入り
+✚ Apply & Add Another,✚ 適用してさらに追加
+Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,シートを保存します - 保存時コンパイルにより生成スクリプトが常に最新に保たれます (Ctrl+S)。
+"Save, then play the scene that uses this sheet's script.",保存してから、このシートのスクリプトを使うシーンを再生します。
+Add an event (E).,イベントを追加します (E)。
+Add a condition to the selected event (C).,選択したイベントに条件を追加します (C)。
+Add an action to the selected event (A).,選択したイベントにアクションを追加します (A)。
+Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,選択したイベントに GDScript ブロックを追加します - 意図的に「コードへ降りる」ための出口です。すぐにコードエディターが開きます。
+"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.",初心者向けの表示: 上級者/コード系の項目 (GDScript ブロック、サブ条件、ピックフィルター、シグナル/列挙型) を隠します。オフでもすべての機能はそのまま動作します。
+"Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.",生成された GDScript パネルを切り替えます - シートの正直なコンパイル結果を並べて表示します。
+Theme for this sheet (Load/Reload and the Theme Editor live in View),このシートのテーマ (読み込み/再読み込みとテーマエディターは「表示」メニューにあります)
+"Quick add…  (e.g. every tick, heal 5)","クイック追加…  (例: every tick, heal 5)"
+"Create, open, save, and configure this event sheet.",このイベントシートの作成、オープン、保存、設定を行います。
+"Panels, multi-view panes, theme, live values, and zoom.",パネル、マルチビューペイン、テーマ、ライブ値、ズーム。
+"Debug tools, validation, import, and project workflow.",デバッグツール、検証、インポート、プロジェクトワークフロー。
+New…,新規…
+Open…,開く…
+Save As…,名前を付けて保存…
+Sheet Type…,シートタイプ…
+Manage Includes…,インクルードの管理…
+Custom Actions…,カスタムアクション…
+Export GDScript…,GDScript をエクスポート…
+Export Addon…,アドオンをエクスポート…
+New Behaviour Addon…,新規ビヘイビアアドオン…
+Inspector Designer…,Inspector デザイナー…
+Teach a Verb - Share Published Verbs,動詞を教える - 公開済みの動詞を共有
+Signal Event…,シグナルイベント…
+Global Variable…,グローバル変数…
+Local Variable…,ローカル変数…
+Function…,関数…
+Code (GDScript) on Selected Event,選択中のイベントにコード (GDScript)
+Note…,メモ…
+Region…,リージョン…
+Preload Resource…,リソースをプリロード…
+Extract Selection to Include…,選択範囲をインクルードへ抽出…
+Find References…,参照を検索…
+Generate from Description (AI)…,説明から生成 (AI)…
+Simple Mode (beginner-friendly),シンプルモード (初心者向け)
+GDScript Panel (toggle),GDScript パネル (切り替え)
+Open Sheets Panel,開いているシートパネル
+Add-Event Rows,イベント追加行
+Split View (toggle),分割ビュー (切り替え)
+Detached View (toggle),分離ビュー (切り替え)
+Link Views (toggle),ビューをリンク (切り替え)
+Load Theme…,テーマを読み込み…
+Reload Theme,テーマを再読み込み
+Theme Editor…,テーマエディター…
+MCP Server (AI tools),MCP サーバー (AI ツール)
+"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.",右クリックメニューから上級者/コード系の項目 (GDScript ブロック、サブ条件、ピックフィルター、match、シグナル/列挙型) を隠します。エキスパートモードではすべてそのまま使えます。
+Show/hide the generated-GDScript panel beside the sheet.,シートの横に生成された GDScript パネルを表示/非表示にします。
+"Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.",末尾の「+ イベントを追加…」行を表示/非表示にします。オフにするとシートがすっきり落ち着きます。
+"Show/hide a second synchronized view of this sheet, side by side.",このシートの2つ目の同期ビューを並べて表示/非表示にします。
+Pop the sheet view out into its own window / bring it back.,シートビューを独立したウィンドウに切り離す/元に戻します。
+Link/unlink scrolling between the split views.,分割ビュー間のスクロールをリンク/解除します。
+Debug Breakpoints (toggle),デバッグブレークポイント (切り替え)
+Live Values (toggle),ライブ値 (切り替え)
+Event Trace (live highlight),イベントトレース (ライブハイライト)
+Bookmarks…,ブックマーク…
+Register Autoload,自動読み込みに登録
+Publish Preview…,公開プレビュー…
+Test Bench,テストベンチ
+Find in Project…,プロジェクト内を検索…
+Project Doctor…,プロジェクト Doctor…
+Check Sheet for Errors,シートのエラーをチェック
+Vocabulary Doc,語彙ドキュメント
+Sheet Backups…,シートのバックアップ…
+Save as Template,テンプレートとして保存
+Attach to Selected Node,選択中のノードにアタッチ
+Preview Behaviors on Selected Node,選択中のノードでビヘイビアをプレビュー
+Lift Report…,リフトレポート…
+Welcome…,ようこそ…
+Start the Tour…,ツアーを開始…
+Keyboard Shortcuts,キーボードショートカット
+Rename Everywhere…,すべての場所で名前を変更…
+Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,すべての ƒx 式と GDScript ブロックをリントし、問題のある行をマークして最初の行へジャンプします。
+Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,ブレークポイント出力を切り替えます: デバッグコンパイルされたシートはブレークポイントのある行で一時停止します。
+Toggle Live Values: running sheets stream their variables here (editable).,ライブ値を切り替えます: 実行中のシートの変数がここにストリーム表示されます (編集可能)。
++ Add action,+ アクションを追加
++ Add condition,+ 条件を追加
++ Add event…,+ イベントを追加…
+Every Tick,毎ティック
++  Add your first event,+  最初のイベントを追加
+New from template…,テンプレートから新規…
+Create an event sheet…,イベントシートを作成…
+This event sheet is empty,このイベントシートは空です
+No event sheet is open,イベントシートが開かれていません
+Empty behavior sheet,空のビヘイビアシート
+Empty autoload sheet,空の自動読み込みシート
+Double-click anywhere - or press E - to add your first event.,どこかをダブルクリック - または E キー - で最初のイベントを追加します。
+Double-click anywhere - or press E - to add an event that drives the Node this attaches to.,どこかをダブルクリック - または E キー - で、アタッチ先のノードを動かすイベントを追加します。
+Create one to start building - a menu of ready-made starters opens.,作成して構築を始めましょう - すぐ使えるスターターのメニューが開きます。
+"Add the signals and functions every sheet in the project should reach (score, game state, an event bus).",プロジェクト内のすべてのシートから使いたいシグナルや関数 (スコア、ゲーム状態、イベントバス) を追加します。
+"Tip: the picker understands plain language. Try typing ""every tick"".",ヒント: ピッカーは普通の言葉を理解します。「every tick」と入力してみてください。
+Tip: Tools > Welcome… has a playable showcase and a 2-minute tour.,ヒント: ツール > ようこそ… に遊べるショーケースと2分間ツアーがあります。
+Tip: publish a function to the picker and every sheet in the project can call it.,ヒント: 関数をピッカーに公開すると、プロジェクト内のどのシートからも呼び出せます。
+%s - Behavior · acts on host: %s,%s - ビヘイビア · ホストに作用: %s
+"%s - Autoload · one instance, project-wide",%s - 自動読み込み · プロジェクト全体で1インスタンス
+%s - Editor Tool · runs in the editor (File > Run),%s - エディターツール · エディター内で実行 (ファイル > 実行)
+%s - Custom Resource · every .tres of it is a data asset,%s - カスタムリソース · その .tres はすべてデータアセットです
+Event Sheet · a script for the %s it's attached to,イベントシート · アタッチ先の %s のためのスクリプト
+%s - Custom Node · extends %s,%s - カスタムノード · %s を継承
+"Click to edit the sheet type (name, icon, host class).",クリックしてシートタイプ (名前、アイコン、ホストクラス) を編集します。
+Add Action / Condition,アクション / 条件を追加
+"Search actions, conditions, triggers...",アクション、条件、トリガーを検索...
+Pin the highlighted entry to Favorites (or right-click any entry).,ハイライト中の項目をお気に入りにピン留めします (任意の項目を右クリックでも可)。
+Right-click any entry to pin it here.,任意の項目を右クリックするとここにピン留めできます。
+Entries you use appear here.,使用した項目がここに表示されます。
+"Select a condition, action, or trigger to create a new event.",条件、アクション、またはトリガーを選択して新しいイベントを作成します。
+Select an action to append to the selected event.,選択したイベントに追加するアクションを選択します。
+Select a condition or trigger to append to the selected event.,選択したイベントに追加する条件またはトリガーを選択します。
+Untitled EventSheet,無題の EventSheet
+Unsaved (in-memory),未保存 (メモリ内)
+Open Sheets,開いているシート
+Filter sheets…,シートをフィルター…
+Filter the open sheets by name or path.,開いているシートを名前またはパスでフィルターします。
+New Event,新規イベント
+New Condition,新規条件
+Edit Action,アクションを編集
+Edit Condition,条件を編集
+Delete Action,アクションを削除
+Delete Condition,条件を削除
+Delete Function,関数を削除
+Replace Action,アクションを置換
+Replace Condition,条件を置換
+Disable Action,アクションを無効化
+Disable Condition,条件を無効化
+Invert Condition,条件を反転
+Add New Variable,新しい変数を追加
+Create Variable,変数を作成
+Edit Variable,変数を編集
+Add a function…,関数を追加…
+Edit Note…,メモを編集…
+Edit Events,イベントを編集
+Insert Snippet…,スニペットを挿入…
+Extract All Actions to Function…,すべてのアクションを関数へ抽出…
+Group Under a Heading…,見出しの下にグループ化…
+Detach Comment To Row,コメントを行として分離
+Convert Scope,スコープを変換
+Toggle Constant,定数を切り替え
+Whole numbers only,整数のみ
+Editable in the Inspector (a designer property),Inspector で編集可能 (デザイナープロパティ)
+Constant (can't change at runtime),定数 (実行時に変更不可)
+Set on _ready() - for node refs like $Player,_ready() で設定 - $Player のようなノード参照用
+"Text - words, names, messages.",テキスト - 単語、名前、メッセージ。
+"A number - a count, score, position, speed… Tick ""Whole numbers only"" for integers.",数値 - カウント、スコア、位置、速度など。整数にするには「整数のみ」にチェック。
+"A yes/no, on/off switch (true / false).",はい/いいえ、オン/オフのスイッチ (true / false)。
+"An x/y pair: a direction, velocity, or position.",x/y のペア: 方向、速度、位置。
+An RGBA colour.,RGBA カラー。
+An image / sprite resource.,画像 / スプライトのリソース。
+Viewing as a sheet,シートとして表示中
+Open in Godot Script Editor,Godot スクリプトエディターで開く
+Edit the .gd directly in Godot's script editor - your changes reload here when you come back to this tab.,.gd を Godot のスクリプトエディターで直接編集します - このタブに戻ると変更がここに再読み込みされます。
+Take the 2-minute tour,2分間ツアーを始める
+Editor language,エディターの言語
+Simple mode - hide advanced rows & menu items,シンプルモード - 上級者向けの行とメニュー項目を隠す
+Open the GDScript panel with every sheet,すべてのシートで GDScript パネルを開く
+Coming from another event-sheet tool?,別のイベントシートツールから来ましたか?
+Open the migration guide,移行ガイドを開く
+Reopen this window any time: Tools → Welcome…,このウィンドウはいつでも再表示できます: ツール → ようこそ…
+Translations are plain CSV files - drop one into eventsheet_translations/ and its language appears here.,翻訳はただの CSV ファイルです - eventsheet_translations/ に1つ入れると、その言語がここに表示されます。
+The 2-minute tour,2分間ツアー
+Read a sheet like a sentence,シートを文章のように読む
+Add your first event,最初のイベントを追加する
+Give it a condition,条件を与える
+Make it DO something,何かをさせる
+See the honest GDScript,正直な GDScript を見る
+You know the loop,これで流れはマスターです
+Skip tour,ツアーをスキップ
+Back,戻る
+Next,次へ
+Finish,完了
+✓ Done - nice! Hit Next.,✓ できました - ナイス! 「次へ」を押してください。
+Hit Finish and go make something.,「完了」を押して、何か作りに行きましょう。
+"A coloured section label drawn above this property in the Inspector.
+End with a #rrggbb to tint it. Editor decor only - plain comment in the code.","Inspector でこのプロパティの上に描画される色付きセクションラベルです。
+末尾に #rrggbb を付けると色が変わります。エディター上の装飾のみ - コード内では普通のコメントです。"
+"A quiet info panel drawn above this property in the Inspector.
+Editor decor only - plain comment in the code.","Inspector でこのプロパティの上に描画される控えめな情報パネルです。
+エディター上の装飾のみ - コード内では普通のコメントです。"
+"A shape over 0–1 (easing, falloff, ramps).",0–1 の範囲の形状 (イージング、減衰、ランプ)。
+A whole number (no decimals) - stored as an int. Unticked stores a float.,整数 (小数なし) - int として保存されます。チェックを外すと float で保存されます。
+Access,アクセス
+Advanced types,高度な型
+Anatomy,アナトミー
+Any type - untyped (advanced; prefer a specific type when you can).,任意の型 - 型なし (上級者向け。できれば特定の型を推奨)。
+Clamp to range,範囲にクランプ
+Collapse the panel to a strip,パネルをストリップに折りたたむ
+Default field,デフォルトフィールド
+Description,説明
+Dropped Node Preview,ドロップしたノードのプレビュー
+Easing curve (float: exponential ease handle),イージングカーブ (float: 指数イーズハンドル)
+Edit an Array/Dictionary's items one per line instead of typing a literal.,Array/Dictionary の項目をリテラル入力ではなく1行に1つずつ編集します。
+Edit items…,項目を編集…
+"Event-sheet-style quick add: type an event/condition/action (event-sheet phrasing works) plus optional parameter values, press Enter.",イベントシート流のクイック追加: イベント/条件/アクション (イベントシートの言い回しが使えます) と任意のパラメーター値を入力して Enter を押します。
+Every sheet function at a glance (✦ = published as an ACE). Click to expand or collapse.,シートの全関数を一覧表示します (✦ = ACE として公開済み)。クリックで展開/折りたたみ。
+Field button,フィールドボタン
+Flags,フラグ
+From enum,列挙型から
+Group under heading,見出しの下にグループ化
+"How this variable's field LOOKS in the Inspector - pickers, flags, layer grids... Plain fields need no choice here.",この変数のフィールドが Inspector でどう見えるか - ピッカー、フラグ、レイヤーグリッドなど。通常のフィールドではここでの選択は不要です。
+Info note,情報メモ
+"Inspector grouping, conditional show/lock, an on-changed callback, clamp, read-only - for variables that reference other variables or functions.",Inspector でのグループ化、条件付き表示/ロック、変更時コールバック、クランプ、読み取り専用 - 他の変数や関数を参照する変数向けです。
+Inspector look,Inspector での見た目
+Inspector preview,Inspector プレビュー
+Inspector section header (e.g. Combat),Inspector のセクションヘッダー (例: Combat)
+Lock unless,ロック解除条件
+"Make this sheet's published verbs (its exposed ƒ functions) available in EVERY sheet's picker, node-targeted at $<ClassName>. Extract actions to a function first (right-click an event), then teach it here.",このシートの公開済みの動詞 (公開された ƒ 関数) を、すべてのシートのピッカーで $<ClassName> をターゲットにして使えるようにします。まずアクションを関数へ抽出し (イベントを右クリック)、それからここで教えます。
+Match Editor (default),Match エディター (デフォルト)
+Multiline (String: big text box),複数行 (String: 大きなテキストボックス)
+"No alpha (Color: solid RGB, no transparency)",アルファなし (Color: 不透明 RGB、透明度なし)
+No lower limit,下限なし
+No upper limit,上限なし
+On changed,変更時
+On ready,準備完了時 (@onready)
+"On: a designer can tweak this per-instance in the Inspector (@export var).
+Off: internal script state - a plain private var (the default for a new variable).","オン: デザイナーが Inspector でインスタンスごとに調整できます (@export var)。
+オフ: スクリプト内部の状態 - 通常のプライベート変数です (新規変数のデフォルト)。"
+"On: compiles to @onready var - the Default is a GDScript EXPRESSION evaluated when the node enters the tree (e.g. $Player, get_node(""UI/Score"")), not a literal.
+Use it to grab a node reference once the scene is ready.","オン: @onready var にコンパイルされます - デフォルト値は、ノードがツリーに入ったときに評価される GDScript の式です (例: $Player、get_node(""UI/Score""))。リテラルではありません。
+シーンの準備ができた時点でノード参照を取得するのに使います。"
+"One column per entry: name:type (String, int, float, bool, color for a swatch, or enum(a|b|c) for a dropdown).
+Each Array element becomes a row with these cells.","1項目につき1列: name:type (String、int、float、bool、スウォッチ用の color、ドロップダウン用の enum(a|b|c))。
+Array の各要素がこれらのセルを持つ行になります。"
+Optional Inspector polish for exported globals - everything compiles to plain Godot annotations.,エクスポートされたグローバル向けの任意の Inspector 装飾です - すべて通常の Godot アノテーションにコンパイルされます。
+Options (combo),選択肢 (コンボ)
+Pick the Inspector look from picture tiles instead of the list.,Inspector での見た目をリストではなく画像タイルから選びます。
+Read-only,読み取り専用
+"Renders a small button with this field that calls the named sheet function.
+Needs a @tool sheet to act in-editor. Label optional (defaults to the function name).","このフィールドに、指定したシート関数を呼び出す小さなボタンを表示します。
+エディター内で動作させるには @tool シートが必要です。ラベルは省略可能 (デフォルトは関数名)。"
+Required (warn in the Inspector while unset),必須 (未設定の間は Inspector で警告)
+Save Studio…,Studio を保存…
+"Scaffold a ready-to-edit behaviour script in res://eventsheet_addons/ - its signals become triggers, methods become actions/conditions, and @export vars become properties, all auto-discovered as custom ACEs.",res://eventsheet_addons/ にすぐ編集できるビヘイビアスクリプトの雛形を作成します - シグナルはトリガーに、メソッドはアクション/条件に、@export 変数はプロパティになり、すべてカスタム ACE として自動検出されます。
+Section header,セクションヘッダー
+"See the WHOLE sheet's Inspector as one live view - every exported variable with its decor, grouping, and widget, exactly as Godot will show it.",シート全体の Inspector を1つのライブビューとして表示します - 装飾、グループ化、ウィジェット付きのすべてのエクスポート変数を、Godot での表示そのままに確認できます。
+Show as,表示形式
+Show if,表示条件
+Shown after the number in the Inspector (suffix:px).,Inspector で数値の後ろに表示されます (suffix:px)。
+"Shows a red warning above the field until a value is assigned
+(a Resource left empty, a String left blank). Editor-only.","値が割り当てられるまでフィールドの上に赤い警告を表示します
+(空のままの Resource、空欄の String)。エディター専用です。"
+Slider extras,スライダー追加設定
+"Start editing this sheet here. From then on, Save (Ctrl+S) updates the file - or use Save As… to keep the original and save a copy.",このシートの編集をここで始めます。以後、保存 (Ctrl+S) でファイルが更新されます - 元を残してコピーを保存するには「名前を付けて保存…」を使ってください。
+Sub-heading,サブ見出し
+"Swap the Inspector field for a richer drawer (dial, swatches, curve…).
+Graceful: a plain field without the editor plugin (parity preserved).","Inspector のフィールドをよりリッチなドロワー (ダイヤル、スウォッチ、カーブなど) に置き換えます。
+エディタープラグインがない環境では通常のフィールドになります (互換性は維持)。"
+Table columns,テーブル列
+"The Inspector calls this function while the property is edited and shows
+the returned message above the field. Needs a @tool sheet to run in-editor.","プロパティの編集中に Inspector がこの関数を呼び出し、
+返されたメッセージをフィールドの上に表示します。エディター内で実行するには @tool シートが必要です。"
+The slider stops at max but typing a bigger number is allowed (or_greater).,スライダーは max で止まりますが、より大きい数値の入力は許可されます (or_greater)。
+"The variable's type. For a node reference, type the node's class (Sprite2D, Label, Area2D…) or leave Variant.",変数の型です。ノード参照の場合はノードのクラス名 (Sprite2D、Label、Area2D など) を入力するか、Variant のままにします。
+"Turn the MCP server (AI-assistant tools) on/off. When off, connected AI clients see no tools and can't read or change your sheets. Takes effect live - no reconnect needed.",MCP サーバー (AI アシスタントツール) をオン/オフします。オフの間、接続中の AI クライアントにはツールが見えず、シートの読み取りや変更はできません。即座に反映されます - 再接続は不要です。
+Typing below min is allowed (or_less).,min より小さい値の入力が許可されます (or_less)。
+Validate with,検証関数
+"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency - proof you can leave the addon anytime.",このシートの通常のスタンドアロンな GDScript を自分のファイルに書き出します。プラグイン依存なし - いつでもアドオンから離れられる証明です。
+accent label above (e.g. Combat #e06666),上に表示するアクセントラベル (例: Combat #e06666)
+bool variable (hidden when false),bool 変数 (false のとき非表示)
+bool variable (read-only when false),bool 変数 (false のとき読み取り専用)
+"columns, e.g. item:String, count:int, rare:bool","列 (例: item:String, count:int, rare:bool)"
+"comma-separated, e.g. easy, normal, hard (String only)","カンマ区切り (例: easy, normal, hard) (String のみ)"
+"function and button label, e.g. reroll_stats Reroll",関数とボタンラベル (例: reroll_stats Reroll)
+grey hint shown when the field is empty,フィールドが空のときに表示されるグレーのヒント
+"min, max, step (numeric: slider)","min, max, step (数値: スライダー)"
+nested section under the group (e.g. Melee),グループ下のネストされたセクション (例: Melee)
+note panel above (e.g. Shared resource - edits affect every user.),上に表示するメモパネル (例: 共有リソース - 編集は全ユーザーに影響します。)
+sheet function called after assignment,代入後に呼ばれるシート関数
+sheet function returning a warning String (empty = valid),警告の String を返すシート関数 (空 = 有効)
+"type - e.g. Node2D, Label, Sprite2D (or Variant for any)",型 - 例: Node2D、Label、Sprite2D (任意なら Variant)
+"unit, e.g. px",単位 (例: px)
+what this variable is for - shown as its description in the Inspector,この変数の用途 - Inspector で説明として表示されます
+"▸  Advanced (grouping, conditions, clamp…)",▸  高度な設定 (グループ化、条件、クランプ…)
+"▸  More options (range, drawer, grouping…)",▸  その他のオプション (範囲、ドロワー、グループ化…)
+Create Code Region,コードリージョンを作成
+Create Code Region…,コードリージョンを作成…
+Doc comment,ドキュメントコメント
+Documentation shown above the function (## …). BBCode like [b]bold[/b] is allowed.,関数の上に表示されるドキュメントです (## …)。[b]太字[/b] などの BBCode が使えます。
+Getter body,ゲッター本体
+Setter body,セッター本体
+Setter parameter,セッターのパラメーター
+The name of the setter's incoming-value parameter (defaults to `value`).,セッターの受け取り値パラメーターの名前です (デフォルトは `value`)。
+The statements that run when this variable is assigned (`set(value):`). Use `value` for the incoming value. Leave blank for no setter.,この変数に代入されたときに実行される文です (`set(value):`)。受け取った値には `value` を使います。空欄でセッターなし。
+"The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter.",この変数が読み取られたときに実行される文で (`get:`)、`return …` で終わります。空欄でゲッターなし。
+"getter body, e.g.  return _health",ゲッター本体 (例:  return _health)
+"setter body, e.g.  health = clampi(value, 0, max_health)","セッター本体 (例:  health = clampi(value, 0, max_health))"
+A faint tint over the actions (right) lane.,アクション (右) レーンにかかるかすかな色合い。
+A faint tint over the conditions (left) lane.,条件 (左) レーンにかかるかすかな色合い。
+"Accent (groups, selection)",アクセント (グループ、選択)
+Action Lane Color,アクションレーンの色
+Action Lane Padding,アクションレーンのパディング
+Action cells,アクションセル
+Alternate group header background (zebra).,グループヘッダーの交互背景 (ゼブラ)。
+Apply To Current Sheet,現在のシートに適用
+Background of a group header row.,グループヘッダー行の背景。
+Background of the Conditions / Actions column header bar.,条件 / アクション列ヘッダーバーの背景。
+Background of the fold triangle box on a group.,グループの折りたたみ三角ボックスの背景。
+Badge Background Color,バッジの背景色
+Badge Extra Width,バッジの追加幅
+Badge Foreground Color,バッジの前景色
+Base (background tone),ベース (背景トーン)
+Behavior Accent Color,ビヘイビアのアクセント色
+Border of the condition/action chip.,条件/アクションチップの枠線。
+Cell Corner Radius,セルの角の半径
+Cell Hover Color,セルのホバー色
+Chip Background Color,チップの背景色
+Chip Border Color,チップの枠線色
+Chip Hover Color,チップのホバー色
+Chip fill when hovered.,ホバー時のチップの塗り。
+Close,閉じる
+Column Header Actions Color,列ヘッダーのアクション色
+Column Header Background Color,列ヘッダーの背景色
+Column Header Conditions Color,列ヘッダーの条件色
+Comment Row Background Color,コメント行の背景色
+Comment Text Color,コメントのテキスト色
+Condition Badge Column Width,条件バッジ列の幅
+Condition Lane Color,条件レーンの色
+Condition Lane Padding,条件レーンのパディング
+Condition Lane Ratio,条件レーンの比率
+Condition cells,条件セル
+Corner Radius,角の半径
+Corner roundness of group rows (0 = square bar).,グループ行の角の丸み (0 = 四角いバー)。
+Corner roundness of individual condition/action cells.,個々の条件/アクションセルの角の丸み。
+Corner roundness of region marker bubbles.,リージョンマーカーバブルの角の丸み。
+"Corner roundness of the chip, in pixels.",チップの角の丸み (ピクセル単位)。
+"Corner roundness of the event block, in pixels (0 = square).",イベントブロックの角の丸み (ピクセル単位、0 = 四角)。
+"Editor (hover, selection, lanes)",エディター (ホバー、選択、レーン)
+Event Corner Radius,イベントの角の半径
+"Extra width reserved for the role badge on the chip, in pixels.",チップ上のロールバッジ用に確保する追加幅 (ピクセル単位)。
+Fill of the condition/action chip.,条件/アクションチップの塗り。
+Fill of the count badge on a group.,グループのカウントバッジの塗り。
+Fill of the role badge on the chip.,チップのロールバッジの塗り。
+"Fill of the trigger arrow badge (On Ready, On Signal...).",トリガー矢印バッジの塗り (On Ready、On Signal など)。
+Font Size Delta,フォントサイズの差分
+Gap After,後ろの間隔
+Generate Theme,テーマを生成
+Group Accent Color,グループのアクセント色
+Group Background Alt Color,グループ背景の交互色
+Group Background Color,グループの背景色
+Group Badge Background Color,グループバッジの背景色
+Group Badge Foreground Color,グループバッジの前景色
+Group Corner Radius,グループの角の半径
+Group Fold Background Color,グループ折りたたみの背景色
+Group Title Color,グループタイトルの色
+"Height of a single event row, in pixels - raise it for more breathing room.",イベント行1行の高さ (ピクセル単位) - 上げると余白が増えます。
+Horizontal Padding,水平パディング
+Hover Fill Color,ホバー塗り色
+How much of the row width the conditions lane takes (0.2 - 0.8).,行幅のうち条件レーンが占める割合 (0.2 - 0.8)。
+Icon/text colour on the trigger badge.,トリガーバッジ上のアイコン/テキストの色。
+"Inner padding on the actions lane, in pixels.",アクションレーンの内側パディング (ピクセル単位)。
+"Inner padding on the conditions lane, in pixels.",条件レーンの内側パディング (ピクセル単位)。
+Invert Marker Color,反転マーカーの色
+Lane Divider Color,レーン区切り線の色
+Lane Divider Width,レーン区切り線の幅
+Language Block Accent Color,言語ブロックのアクセント色
+Line thickness of region marker borders.,リージョンマーカー枠線の太さ。
+Minimum Conditions Lane Width,条件レーンの最小幅
+Minimum Row Height,行の最小高さ
+Object Label Color,オブジェクトラベルの色
+"Parameter values (numbers, strings) highlighted inside ACE text.",ACE テキスト内でハイライトされるパラメーター値 (数値、文字列)。
+"Pick a base + accent, then Generate. Fine-tune individual tokens below.",ベースとアクセントを選んで「生成」を押します。下で個々のトークンを微調整できます。
+Quick Style - recolour everything at once,クイックスタイル - 全体を一括で再配色
+Rebuild every colour token from the three colours above.,上の3色からすべてのカラートークンを再構築します。
+Region Corner Radius,リージョンの角の半径
+Region Line Width,リージョンの線の幅
+Reset To Default,デフォルトにリセット
+Restore the bundled default look.,同梱のデフォルトの見た目に戻します。
+Row Background Alt Color,行背景の交互色
+Row Background Color,行の背景色
+Row Border Color,行の枠線色
+Save As Preset…,プリセットとして保存…
+Selection Fill Color,選択の塗り色
+Sheet & rows (event style),シートと行 (イベントスタイル)
+Sheet Background Color,シートの背景色
+"Space between this chip and the next one, in pixels.",このチップと次のチップの間隔 (ピクセル単位)。
+"Space inside the chip, above and below its text, in pixels.",チップ内のテキスト上下の余白 (ピクセル単位)。
+"Space inside the chip, left and right of its text, in pixels.",チップ内のテキスト左右の余白 (ピクセル単位)。
+Text Color,テキスト色
+Text colour of the role badge.,ロールバッジのテキスト色。
+Text colour on the group count badge.,グループカウントバッジのテキスト色。
+"Text size adjustment for this chip kind, relative to the sheet font (+/- points).",このチップ種別のテキストサイズ調整。シートフォントに対する相対値 (+/- ポイント)。
+The 'Actions' header label colour.,「アクション」ヘッダーラベルの色。
+The 'Conditions' header label colour.,「条件」ヘッダーラベルの色。
+The background of a normal event row.,通常のイベント行の背景。
+The background of every OTHER row (the zebra stripe).,1行おきの行の背景 (ゼブラストライプ)。
+The banner colour behind a full-width comment.,全幅コメントの背後のバナー色。
+"The colour behind the whole sheet, outside the rows.",行の外側、シート全体の背後の色。
+The conditions lane never shrinks below this many pixels.,条件レーンはこのピクセル数より狭くなりません。
+The group title text colour.,グループタイトルのテキスト色。
+The group's left accent stripe and hairlines.,グループの左アクセントストライプとヘアライン。
+The highlight over a selected row.,選択された行のハイライト。
+"The object/origin label before each condition/action (System, node class).",各条件/アクションの前のオブジェクト/由来ラベル (System、ノードクラス)。
+The red X shown on an inverted (negated) condition.,反転 (否定) された条件に表示される赤い X。
+"The soft-purple 'this is a behavior' accent (banner, region default).",「これはビヘイビア」を示すソフトパープルのアクセント (バナー、リージョンのデフォルト)。
+"The stripe + wash on language blocks (a data class, a host binding, a switch case) so they read as code structure, not regular events.",言語ブロック (データクラス、ホストバインディング、switch の case) のストライプと背景色。通常のイベントではなくコード構造として読めるようにします。
+The text colour of comments.,コメントのテキスト色。
+The text colour of the chip.,チップのテキスト色。
+The thin line between rows.,行と行の間の細い線。
+The tint over the row under the mouse.,マウス下の行にかかる色合い。
+The vertical line splitting conditions from actions.,条件とアクションを分ける縦線。
+Theme Editor,テーマエディター
+Thickness of the conditions/actions divider line.,条件/アクション区切り線の太さ。
+Tint over a single condition/action cell under the mouse.,マウス下の単一の条件/アクションセルにかかる色合い。
+Trigger Badge Background Color,トリガーバッジの背景色
+Trigger Badge Foreground Color,トリガーバッジの前景色
+Value Highlight Color,値ハイライトの色
+Vertical Padding,垂直パディング
+Width reserved for the trigger/condition badge column.,トリガー/条件バッジ列用に確保する幅。
+Add Comment Sub-Event,コメントサブイベントを追加
+Add GDScript Action,GDScript アクションを追加
+Add Match To Actions…,アクションに Match を追加…
+Add Pick Filter (For Each)…,ピックフィルターを追加 (For Each)…
+Add Sub-Condition,サブ条件を追加
+Add Sub-Event,サブイベントを追加
+Attach To Event Above,上のイベントにアタッチ
+Clear Else,Else をクリア
+Clear Else-If,Else-If をクリア
+Close Group,グループを閉じる
+Comment,コメント
+Convert to AND Block,AND ブロックに変換
+Convert to OR Block,OR ブロックに変換
+Copy as Text,テキストとしてコピー
+Cut,切り取り
+Delete,削除
+Disable / Enable Selection,選択範囲を無効化 / 有効化
+Disable Row,行を無効化
+Duplicate,複製
+Duplicate Selection,選択範囲を複製
+Edit Comment…,コメントを編集…
+Edit Description…,説明を編集…
+Enable Row,行を有効化
+Enum,列挙型
+Event Above,上にイベント
+Event Below,下にイベント
+Find Usages (project),使用箇所を検索 (プロジェクト)
+GDScript Block,GDScript ブロック
+Group,グループ
+Group Color…,グループの色…
+Group Selection into New Group,選択範囲を新しいグループにまとめる
+Insert,挿入
+Make Else,Else にする
+Make Else-If,Else-If にする
+More,その他
+Open / Close Group,グループを開く / 閉じる
+Open Group,グループを開く
+Open in Split,分割ビューで開く
+Runtime Toggleable,実行時に切り替え可能
+Save Selection as Snippet…,選択範囲をスニペットとして保存…
+Scope Actions To Node…,アクションをノードにスコープ…
+Set Breakpoint Condition…,ブレークポイント条件を設定…
+Signal Handler,シグナルハンドラー
+Variable,変数
+Else,それ以外
+Else If,それ以外なら

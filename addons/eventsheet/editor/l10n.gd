@@ -59,6 +59,45 @@ static func rescan() -> void:
 			continue
 		for file_name: String in DirAccess.get_files_at(dir_path):
 			load_translation_file("%s/%s" % [dir_path, file_name])
+	_scan_stamp = scan_fingerprint()
+
+
+## What the scan folders currently hold (names + modified times), cheap enough to compare on
+## every editor filesystem-changed ping. When it differs from the last rescan's stamp, a
+## translation file was dropped in / edited / removed.
+static var _scan_stamp: String = ""
+
+
+static func scan_fingerprint() -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for dir_path: String in SCAN_DIRS:
+		if not DirAccess.dir_exists_absolute(dir_path):
+			continue
+		for file_name: String in DirAccess.get_files_at(dir_path):
+			var ext: String = file_name.get_extension().to_lower()
+			if ext != "csv" and ext != "translation" and ext != "tres":
+				continue
+			var path: String = "%s/%s" % [dir_path, file_name]
+			parts.append("%s|%d" % [path, FileAccess.get_modified_time(path)])
+	parts.sort()
+	return "\n".join(parts)
+
+
+## Drop-in live reload: when the scan folders changed since the last rescan, re-read every
+## translation file, re-adopt the saved language preference (a preferred locale whose CSV was
+## missing at boot activates the moment its file lands), and reinstall the active catalog so
+## already-open UI re-translates. Returns true when a reload actually happened - the dock uses
+## that to propagate NOTIFICATION_TRANSLATION_CHANGED. No-op (and false) when nothing changed.
+static func reload_if_changed() -> bool:
+	ensure_loaded()
+	if scan_fingerprint() == _scan_stamp:
+		return false
+	rescan()
+	_load_language_preference()
+	if _locale != "en" and not _catalogs.has(_locale):
+		_locale = "en"  # the active language's file was removed - fall back rather than dangle
+	_apply_domain()
+	return true
 
 
 ## Loads one translation file into the catalogs (merging; later files win on key collisions).

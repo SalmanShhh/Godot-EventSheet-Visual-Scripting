@@ -1,0 +1,490 @@
+keys,zh_CN
+Sheet,事件表
+Save,保存
+Run Scene,运行场景
+Add Event,添加事件
+Add Condition,添加条件
+Add Action,添加动作
+Add Code,添加代码
+Add,添加
+Edit,编辑
+View,视图
+Tools,工具
+Simple Mode,简易模式
+Search,搜索
+Cancel,取消
+Open,打开
+Undo,撤销
+Redo,重做
+Copy,复制
+Paste,粘贴
+Zoom In,放大
+Zoom Out,缩小
+Name,名称
+Name:,名称：
+Type,类型
+Text,文本
+Number,数字
+Yes-No,是-否
+Details,详情
+Parameters,参数
+Default,默认值
+Tooltip,工具提示
+Placeholder,占位文本
+Range,范围
+◀ Back,◀ 返回
+★ Recent,★ 最近使用
+⭐ Favorites,⭐ 收藏
+✚ Apply & Add Another,✚ 应用并再添加一个
+Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,保存事件表 - 保存时编译会让其生成的脚本保持最新（Ctrl+S）。
+"Save, then play the scene that uses this sheet's script.",保存后，运行使用此事件表脚本的场景。
+Add an event (E).,添加一个事件（E）。
+Add a condition to the selected event (C).,为所选事件添加一个条件（C）。
+Add an action to the selected event (A).,为所选事件添加一个动作（A）。
+Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,为所选事件添加一个 GDScript 代码块 - 特意保留的“回到代码”出口。会立即打开代码编辑器。
+"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.",适合新手的视图：隐藏高级/代码条目（GDScript 代码块、子条件、筛选条件、信号/枚举）。关闭后一切功能仍然可用。
+"Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.",切换生成的 GDScript 面板 - 事件表真实的编译输出，并排显示。
+Theme for this sheet (Load/Reload and the Theme Editor live in View),此事件表的主题（加载/重新加载和主题编辑器在“视图”菜单中）
+"Quick add…  (e.g. every tick, heal 5)",快速添加…（例如 every tick、heal 5）
+"Create, open, save, and configure this event sheet.",创建、打开、保存和配置此事件表。
+"Panels, multi-view panes, theme, live values, and zoom.",面板、多视图窗格、主题、实时值和缩放。
+"Debug tools, validation, import, and project workflow.",调试工具、验证、导入和项目工作流。
+New…,新建…
+Open…,打开…
+Save As…,另存为…
+Sheet Type…,事件表类型…
+Manage Includes…,管理包含表…
+Custom Actions…,自定义动作…
+Export GDScript…,导出 GDScript…
+Export Addon…,导出插件…
+New Behaviour Addon…,新建行为插件…
+Inspector Designer…,Inspector 设计器…
+Teach a Verb - Share Published Verbs,传授动词 - 分享已发布的动词
+Signal Event…,信号事件…
+Global Variable…,全局变量…
+Local Variable…,局部变量…
+Function…,函数…
+Code (GDScript) on Selected Event,在所选事件上添加代码（GDScript）
+Note…,便签…
+Region…,区域…
+Preload Resource…,预加载资源…
+Extract Selection to Include…,将所选内容提取到包含表…
+Find References…,查找引用…
+Generate from Description (AI)…,根据描述生成（AI）…
+Simple Mode (beginner-friendly),简易模式（适合新手）
+GDScript Panel (toggle),GDScript 面板（切换）
+Open Sheets Panel,已打开事件表面板
+Add-Event Rows,“+ 添加事件”行
+Split View (toggle),拆分视图（切换）
+Detached View (toggle),独立窗口视图（切换）
+Link Views (toggle),联动视图（切换）
+Load Theme…,加载主题…
+Reload Theme,重新加载主题
+Theme Editor…,主题编辑器…
+MCP Server (AI tools),MCP 服务器（AI 工具）
+"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.",在右键菜单中隐藏高级/代码条目（GDScript 代码块、子条件、筛选条件、match、信号/枚举）。专家模式下一切功能仍然可用。
+Show/hide the generated-GDScript panel beside the sheet.,显示/隐藏事件表旁边生成的 GDScript 面板。
+"Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.",显示/隐藏末尾的“+ 添加事件…”行。关闭后事件表更简洁清爽。
+"Show/hide a second synchronized view of this sheet, side by side.",显示/隐藏此事件表的第二个同步视图，并排显示。
+Pop the sheet view out into its own window / bring it back.,将事件表视图弹出为独立窗口 / 收回。
+Link/unlink scrolling between the split views.,联动/取消联动拆分视图之间的滚动。
+Debug Breakpoints (toggle),调试断点（切换）
+Live Values (toggle),实时值（切换）
+Event Trace (live highlight),事件跟踪（实时高亮）
+Bookmarks…,书签…
+Register Autoload,注册 Autoload
+Publish Preview…,发布预览…
+Test Bench,测试台
+Find in Project…,在项目中查找…
+Project Doctor…,项目 Doctor…
+Check Sheet for Errors,检查事件表错误
+Vocabulary Doc,词汇文档
+Sheet Backups…,事件表备份…
+Save as Template,保存为模板
+Attach to Selected Node,附加到所选节点
+Preview Behaviors on Selected Node,在所选节点上预览行为
+Lift Report…,导入报告…
+Welcome…,欢迎…
+Start the Tour…,开始导览…
+Keyboard Shortcuts,键盘快捷键
+Rename Everywhere…,全局重命名…
+Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,检查每个 ƒx 表达式和 GDScript 代码块；标记有问题的行并跳转到第一处。
+Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,切换断点输出：以调试模式编译的事件表会在带断点的行暂停。
+Toggle Live Values: running sheets stream their variables here (editable).,切换实时值：运行中的事件表会将其变量实时显示在此处（可编辑）。
++ Add action,+ 添加动作
++ Add condition,+ 添加条件
++ Add event…,+ 添加事件…
+Every Tick,每帧
++  Add your first event,+  添加你的第一个事件
+New from template…,从模板新建…
+Create an event sheet…,创建事件表…
+This event sheet is empty,此事件表为空
+No event sheet is open,没有打开的事件表
+Empty behavior sheet,空的行为事件表
+Empty autoload sheet,空的 Autoload 事件表
+Double-click anywhere - or press E - to add your first event.,双击任意位置 - 或按 E - 添加你的第一个事件。
+Double-click anywhere - or press E - to add an event that drives the Node this attaches to.,双击任意位置 - 或按 E - 添加一个事件来驱动此表所附加的 Node。
+Create one to start building - a menu of ready-made starters opens.,创建一个即可开始 - 会打开一个现成起步模板菜单。
+"Add the signals and functions every sheet in the project should reach (score, game state, an event bus).",添加项目中每个事件表都应能访问的信号和函数（分数、游戏状态、事件总线）。
+"Tip: the picker understands plain language. Try typing ""every tick"".",提示：选择器能理解日常语言。试试输入 “every tick”。
+Tip: Tools > Welcome… has a playable showcase and a 2-minute tour.,提示：工具 > 欢迎… 中有可玩的演示和 2 分钟导览。
+Tip: publish a function to the picker and every sheet in the project can call it.,提示：将函数发布到选择器后，项目中的每个事件表都能调用它。
+%s - Behavior · acts on host: %s,%s - 行为 · 作用于宿主：%s
+"%s - Autoload · one instance, project-wide",%s - Autoload · 单一实例，全项目可用
+%s - Editor Tool · runs in the editor (File > Run),%s - 编辑器工具 · 在编辑器中运行（文件 > 运行）
+%s - Custom Resource · every .tres of it is a data asset,%s - 自定义资源 · 它的每个 .tres 都是一份数据资产
+Event Sheet · a script for the %s it's attached to,事件表 · 附加到 %s 上的脚本
+%s - Custom Node · extends %s,%s - 自定义节点 · 继承自 %s
+"Click to edit the sheet type (name, icon, host class).",点击编辑事件表类型（名称、图标、宿主类）。
+Add Action / Condition,添加动作 / 条件
+"Search actions, conditions, triggers...",搜索动作、条件、触发器…
+Pin the highlighted entry to Favorites (or right-click any entry).,将高亮条目固定到收藏（或右键点击任意条目）。
+Right-click any entry to pin it here.,右键点击任意条目即可固定到这里。
+Entries you use appear here.,你用过的条目会显示在这里。
+"Select a condition, action, or trigger to create a new event.",选择一个条件、动作或触发器来创建新事件。
+Select an action to append to the selected event.,选择一个动作追加到所选事件。
+Select a condition or trigger to append to the selected event.,选择一个条件或触发器追加到所选事件。
+Untitled EventSheet,未命名事件表
+Unsaved (in-memory),未保存（内存中）
+Open Sheets,已打开的事件表
+Filter sheets…,筛选事件表…
+Filter the open sheets by name or path.,按名称或路径筛选已打开的事件表。
+New Event,新建事件
+New Condition,新建条件
+Edit Action,编辑动作
+Edit Condition,编辑条件
+Delete Action,删除动作
+Delete Condition,删除条件
+Delete Function,删除函数
+Replace Action,替换动作
+Replace Condition,替换条件
+Disable Action,禁用动作
+Disable Condition,禁用条件
+Invert Condition,反转条件
+Add New Variable,添加新变量
+Create Variable,创建变量
+Edit Variable,编辑变量
+Add a function…,添加函数…
+Edit Note…,编辑便签…
+Edit Events,编辑事件
+Insert Snippet…,插入片段…
+Extract All Actions to Function…,将全部动作提取为函数…
+Group Under a Heading…,归入标题分组…
+Detach Comment To Row,将注释拆分为独立行
+Convert Scope,转换作用域
+Toggle Constant,切换常量
+Whole numbers only,仅限整数
+Editable in the Inspector (a designer property),可在 Inspector 中编辑（设计师属性）
+Constant (can't change at runtime),常量（运行时不可更改）
+Set on _ready() - for node refs like $Player,在 _ready() 中设置 - 用于 $Player 之类的节点引用
+"Text - words, names, messages.",文本 - 单词、名称、消息。
+"A number - a count, score, position, speed… Tick ""Whole numbers only"" for integers.",数字 - 计数、分数、位置、速度… 勾选“仅限整数”可存整数。
+"A yes/no, on/off switch (true / false).",是/否、开/关的开关（true / false）。
+"An x/y pair: a direction, velocity, or position.",一对 x/y 值：方向、速度或位置。
+An RGBA colour.,一个 RGBA 颜色。
+An image / sprite resource.,图像 / 精灵资源。
+Viewing as a sheet,以事件表方式查看
+Open in Godot Script Editor,在 Godot 脚本编辑器中打开
+Edit the .gd directly in Godot's script editor - your changes reload here when you come back to this tab.,直接在 Godot 的脚本编辑器中编辑 .gd 文件 - 回到此标签页时，你的修改会在这里重新加载。
+Take the 2-minute tour,体验 2 分钟导览
+Editor language,编辑器语言
+Simple mode - hide advanced rows & menu items,简易模式 - 隐藏高级行和菜单项
+Open the GDScript panel with every sheet,每次打开事件表时同时打开 GDScript 面板
+Coming from another event-sheet tool?,从其他事件表工具转来？
+Open the migration guide,打开迁移指南
+Reopen this window any time: Tools → Welcome…,随时可重新打开此窗口：工具 → 欢迎…
+Translations are plain CSV files - drop one into eventsheet_translations/ and its language appears here.,翻译只是普通的 CSV 文件 - 放一个到 eventsheet_translations/ 中，它的语言就会出现在这里。
+The 2-minute tour,2 分钟导览
+Read a sheet like a sentence,像读句子一样读事件表
+Add your first event,添加你的第一个事件
+Give it a condition,给它一个条件
+Make it DO something,让它做点什么
+See the honest GDScript,查看真实的 GDScript
+You know the loop,你已掌握这套流程
+Skip tour,跳过导览
+Back,上一步
+Next,下一步
+Finish,完成
+✓ Done - nice! Hit Next.,✓ 完成 - 很棒！点击“下一步”。
+Hit Finish and go make something.,点击“完成”，去创造点什么吧。
+"A coloured section label drawn above this property in the Inspector.
+End with a #rrggbb to tint it. Editor decor only - plain comment in the code.","在 Inspector 中此属性上方绘制的彩色分区标签。
+结尾加 #rrggbb 可为其着色。仅为编辑器装饰 - 在代码中只是普通注释。"
+"A quiet info panel drawn above this property in the Inspector.
+Editor decor only - plain comment in the code.","在 Inspector 中此属性上方绘制的低调信息面板。
+仅为编辑器装饰 - 在代码中只是普通注释。"
+"A shape over 0–1 (easing, falloff, ramps).",一条 0–1 区间的曲线（缓动、衰减、渐变）。
+A whole number (no decimals) - stored as an int. Unticked stores a float.,整数（无小数）- 存储为 int。不勾选则存储为 float。
+Access,访问权限
+Advanced types,高级类型
+Anatomy,结构
+Any type - untyped (advanced; prefer a specific type when you can).,任意类型 - 无类型（高级；可能时请优先使用具体类型）。
+Clamp to range,限制在范围内
+Collapse the panel to a strip,将面板折叠为窄条
+Default field,默认值字段
+Description,描述
+Dropped Node Preview,拖放节点预览
+Easing curve (float: exponential ease handle),缓动曲线（float：指数缓动手柄）
+Edit an Array/Dictionary's items one per line instead of typing a literal.,逐行编辑 Array/Dictionary 的元素，而不是手动输入字面量。
+Edit items…,编辑元素…
+"Event-sheet-style quick add: type an event/condition/action (event-sheet phrasing works) plus optional parameter values, press Enter.",事件表风格的快速添加：输入事件/条件/动作（支持事件表式表述），可附带参数值，然后按 Enter。
+Every sheet function at a glance (✦ = published as an ACE). Click to expand or collapse.,一览事件表中的所有函数（✦ = 已发布为 ACE）。点击可展开或折叠。
+Field button,字段按钮
+Flags,标志位
+From enum,来自枚举
+Group under heading,归入标题分组
+"How this variable's field LOOKS in the Inspector - pickers, flags, layer grids... Plain fields need no choice here.",此变量的字段在 Inspector 中的外观 - 选择器、标志位、层网格… 普通字段无需在此选择。
+Info note,信息便签
+"Inspector grouping, conditional show/lock, an on-changed callback, clamp, read-only - for variables that reference other variables or functions.",Inspector 分组、条件显示/锁定、on-changed 回调、范围限制、只读 - 适用于引用其他变量或函数的变量。
+Inspector look,Inspector 外观
+Inspector preview,Inspector 预览
+Inspector section header (e.g. Combat),Inspector 分区标题（例如 Combat）
+Lock unless,锁定，除非
+"Make this sheet's published verbs (its exposed ƒ functions) available in EVERY sheet's picker, node-targeted at $<ClassName>. Extract actions to a function first (right-click an event), then teach it here.",让此事件表已发布的动词（其公开的 ƒ 函数）出现在所有事件表的选择器中，以 $<ClassName> 为目标节点。请先将动作提取为函数（右键点击事件），再在这里传授它。
+Match Editor (default),匹配编辑器（默认）
+Multiline (String: big text box),多行（String：大文本框）
+"No alpha (Color: solid RGB, no transparency)",无 Alpha（Color：纯 RGB，不透明）
+No lower limit,无下限
+No upper limit,无上限
+On changed,更改时
+On ready,就绪时（ready）
+"On: a designer can tweak this per-instance in the Inspector (@export var).
+Off: internal script state - a plain private var (the default for a new variable).","开启：设计师可在 Inspector 中按实例调整（@export var）。
+关闭：脚本内部状态 - 普通私有变量（新变量的默认设置）。"
+"On: compiles to @onready var - the Default is a GDScript EXPRESSION evaluated when the node enters the tree (e.g. $Player, get_node(""UI/Score"")), not a literal.
+Use it to grab a node reference once the scene is ready.","开启：编译为 @onready var - 默认值是节点进入场景树时求值的 GDScript 表达式（例如 $Player、get_node(""UI/Score"")），而不是字面量。
+用它在场景就绪后获取节点引用。"
+"One column per entry: name:type (String, int, float, bool, color for a swatch, or enum(a|b|c) for a dropdown).
+Each Array element becomes a row with these cells.","每个条目一列：名称:类型（String、int、float、bool，color 显示色块，enum(a|b|c) 显示下拉框）。
+Array 的每个元素都会成为带这些单元格的一行。"
+Optional Inspector polish for exported globals - everything compiles to plain Godot annotations.,为导出的全局变量提供可选的 Inspector 修饰 - 一切都会编译为普通的 Godot 注解。
+Options (combo),选项（下拉框）
+Pick the Inspector look from picture tiles instead of the list.,通过图片磁贴而非列表来选择 Inspector 外观。
+Read-only,只读
+"Renders a small button with this field that calls the named sheet function.
+Needs a @tool sheet to act in-editor. Label optional (defaults to the function name).","在此字段旁渲染一个小按钮，用于调用指定的事件表函数。
+需要 @tool 事件表才能在编辑器中生效。标签可选（默认为函数名）。"
+Required (warn in the Inspector while unset),必填（未设置时在 Inspector 中警告）
+Save Studio…,保存 Studio…
+"Scaffold a ready-to-edit behaviour script in res://eventsheet_addons/ - its signals become triggers, methods become actions/conditions, and @export vars become properties, all auto-discovered as custom ACEs.",在 res://eventsheet_addons/ 中生成一个可直接编辑的行为脚本 - 它的信号会成为触发器，方法会成为动作/条件，@export 变量会成为属性，全部自动发现为自定义 ACE。
+Section header,分区标题
+"See the WHOLE sheet's Inspector as one live view - every exported variable with its decor, grouping, and widget, exactly as Godot will show it.",以一个实时视图查看整个事件表的 Inspector - 每个导出变量及其装饰、分组和控件，与 Godot 的实际显示完全一致。
+Show as,显示为
+Show if,显示条件
+Shown after the number in the Inspector (suffix:px).,显示在 Inspector 中数字之后（suffix:px）。
+"Shows a red warning above the field until a value is assigned
+(a Resource left empty, a String left blank). Editor-only.","在字段上方显示红色警告，直到赋值为止
+（如 Resource 留空、String 为空白）。仅编辑器内有效。"
+Slider extras,滑块附加选项
+"Start editing this sheet here. From then on, Save (Ctrl+S) updates the file - or use Save As… to keep the original and save a copy.",从这里开始编辑此事件表。之后，保存（Ctrl+S）会更新文件 - 或使用另存为… 保留原文件并保存副本。
+Sub-heading,子标题
+"Swap the Inspector field for a richer drawer (dial, swatches, curve…).
+Graceful: a plain field without the editor plugin (parity preserved).","将 Inspector 字段换成更丰富的控件（旋钮、色板、曲线…）。
+优雅降级：没有编辑器插件时显示为普通字段（保持一致性）。"
+Table columns,表格列
+"The Inspector calls this function while the property is edited and shows
+the returned message above the field. Needs a @tool sheet to run in-editor.","Inspector 会在编辑该属性时调用此函数，并将
+返回的消息显示在字段上方。需要 @tool 事件表才能在编辑器中运行。"
+The slider stops at max but typing a bigger number is allowed (or_greater).,滑块在最大值处停止，但允许输入更大的数字（or_greater）。
+"The variable's type. For a node reference, type the node's class (Sprite2D, Label, Area2D…) or leave Variant.",变量的类型。若是节点引用，请输入节点的类名（Sprite2D、Label、Area2D…）或保留 Variant。
+"Turn the MCP server (AI-assistant tools) on/off. When off, connected AI clients see no tools and can't read or change your sheets. Takes effect live - no reconnect needed.",开启/关闭 MCP 服务器（AI 助手工具）。关闭时，已连接的 AI 客户端看不到任何工具，也无法读取或修改你的事件表。即时生效 - 无需重新连接。
+Typing below min is allowed (or_less).,允许输入低于最小值的数字（or_less）。
+Validate with,验证函数
+"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency - proof you can leave the addon anytime.",将此事件表的纯净、独立 GDScript 写入你自己的文件。不依赖插件 - 证明你随时可以离开此插件。
+accent label above (e.g. Combat #e06666),上方的强调标签（例如 Combat #e06666）
+bool variable (hidden when false),bool 变量（为 false 时隐藏）
+bool variable (read-only when false),bool 变量（为 false 时只读）
+"columns, e.g. item:String, count:int, rare:bool","列定义，例如 item:String, count:int, rare:bool"
+"comma-separated, e.g. easy, normal, hard (String only)","逗号分隔，例如 easy, normal, hard（仅限 String）"
+"function and button label, e.g. reroll_stats Reroll",函数与按钮标签，例如 reroll_stats Reroll
+grey hint shown when the field is empty,字段为空时显示的灰色提示
+"min, max, step (numeric: slider)",最小值、最大值、步长（数值：滑块）
+nested section under the group (e.g. Melee),分组下的嵌套分区（例如 Melee）
+note panel above (e.g. Shared resource - edits affect every user.),上方的便签面板（例如：共享资源 - 修改会影响所有使用者。）
+sheet function called after assignment,赋值后调用的事件表函数
+sheet function returning a warning String (empty = valid),返回警告 String 的事件表函数（为空 = 有效）
+"type - e.g. Node2D, Label, Sprite2D (or Variant for any)",类型 - 例如 Node2D、Label、Sprite2D（或用 Variant 表示任意）
+"unit, e.g. px",单位，例如 px
+what this variable is for - shown as its description in the Inspector,此变量的用途 - 会作为其描述显示在 Inspector 中
+"▸  Advanced (grouping, conditions, clamp…)",▸  高级（分组、条件、范围限制…）
+"▸  More options (range, drawer, grouping…)",▸  更多选项（范围、控件、分组…）
+Create Code Region,创建代码区域
+Create Code Region…,创建代码区域…
+Doc comment,文档注释
+Documentation shown above the function (## …). BBCode like [b]bold[/b] is allowed.,显示在函数上方的文档（## …）。允许使用 [b]bold[/b] 之类的 BBCode。
+Getter body,Getter 函数体
+Setter body,Setter 函数体
+Setter parameter,Setter 参数
+The name of the setter's incoming-value parameter (defaults to `value`).,Setter 传入值参数的名称（默认为 `value`）。
+The statements that run when this variable is assigned (`set(value):`). Use `value` for the incoming value. Leave blank for no setter.,当此变量被赋值时执行的语句（`set(value):`）。用 `value` 表示传入值。留空则不生成 setter。
+"The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter.",当此变量被读取时执行的语句（`get:`），以 `return …` 结尾。留空则不生成 getter。
+"getter body, e.g.  return _health",getter 函数体，例如  return _health
+"setter body, e.g.  health = clampi(value, 0, max_health)","setter 函数体，例如  health = clampi(value, 0, max_health)"
+A faint tint over the actions (right) lane.,动作（右侧）栏上的淡淡色调。
+A faint tint over the conditions (left) lane.,条件（左侧）栏上的淡淡色调。
+"Accent (groups, selection)",强调色（分组、选中）
+Action Lane Color,动作栏颜色
+Action Lane Padding,动作栏内边距
+Action cells,动作单元格
+Alternate group header background (zebra).,分组标题的交替背景（斑马纹）。
+Apply To Current Sheet,应用到当前事件表
+Background of a group header row.,分组标题行的背景。
+Background of the Conditions / Actions column header bar.,条件 / 动作列标题栏的背景。
+Background of the fold triangle box on a group.,分组上折叠三角框的背景。
+Badge Background Color,徽章背景色
+Badge Extra Width,徽章额外宽度
+Badge Foreground Color,徽章前景色
+Base (background tone),基色（背景色调）
+Behavior Accent Color,行为强调色
+Border of the condition/action chip.,条件/动作条目的边框。
+Cell Corner Radius,单元格圆角半径
+Cell Hover Color,单元格悬停颜色
+Chip Background Color,条目背景色
+Chip Border Color,条目边框色
+Chip Hover Color,条目悬停色
+Chip fill when hovered.,悬停时条目的填充色。
+Close,关闭
+Column Header Actions Color,列标题“动作”颜色
+Column Header Background Color,列标题背景色
+Column Header Conditions Color,列标题“条件”颜色
+Comment Row Background Color,注释行背景色
+Comment Text Color,注释文本颜色
+Condition Badge Column Width,条件徽章列宽
+Condition Lane Color,条件栏颜色
+Condition Lane Padding,条件栏内边距
+Condition Lane Ratio,条件栏比例
+Condition cells,条件单元格
+Corner Radius,圆角半径
+Corner roundness of group rows (0 = square bar).,分组行的圆角程度（0 = 方形条）。
+Corner roundness of individual condition/action cells.,每个条件/动作单元格的圆角程度。
+Corner roundness of region marker bubbles.,区域标记气泡的圆角程度。
+"Corner roundness of the chip, in pixels.",条目的圆角程度，单位为像素。
+"Corner roundness of the event block, in pixels (0 = square).",事件块的圆角程度，单位为像素（0 = 方形）。
+"Editor (hover, selection, lanes)",编辑器（悬停、选中、栏）
+Event Corner Radius,事件圆角半径
+"Extra width reserved for the role badge on the chip, in pixels.",为条目上的角色徽章预留的额外宽度，单位为像素。
+Fill of the condition/action chip.,条件/动作条目的填充色。
+Fill of the count badge on a group.,分组上计数徽章的填充色。
+Fill of the role badge on the chip.,条目上角色徽章的填充色。
+"Fill of the trigger arrow badge (On Ready, On Signal...).",触发器箭头徽章的填充色（On Ready、On Signal…）。
+Font Size Delta,字号增减
+Gap After,后方间距
+Generate Theme,生成主题
+Group Accent Color,分组强调色
+Group Background Alt Color,分组交替背景色
+Group Background Color,分组背景色
+Group Badge Background Color,分组徽章背景色
+Group Badge Foreground Color,分组徽章前景色
+Group Corner Radius,分组圆角半径
+Group Fold Background Color,分组折叠框背景色
+Group Title Color,分组标题颜色
+"Height of a single event row, in pixels - raise it for more breathing room.",单个事件行的高度，单位为像素 - 调大可获得更多留白。
+Horizontal Padding,水平内边距
+Hover Fill Color,悬停填充色
+How much of the row width the conditions lane takes (0.2 - 0.8).,条件栏占行宽的比例（0.2 - 0.8）。
+Icon/text colour on the trigger badge.,触发器徽章上图标/文字的颜色。
+"Inner padding on the actions lane, in pixels.",动作栏的内边距，单位为像素。
+"Inner padding on the conditions lane, in pixels.",条件栏的内边距，单位为像素。
+Invert Marker Color,反转标记颜色
+Lane Divider Color,栏分隔线颜色
+Lane Divider Width,栏分隔线宽度
+Language Block Accent Color,语言块强调色
+Line thickness of region marker borders.,区域标记边框的线条粗细。
+Minimum Conditions Lane Width,条件栏最小宽度
+Minimum Row Height,行最小高度
+Object Label Color,对象标签颜色
+"Parameter values (numbers, strings) highlighted inside ACE text.",在 ACE 文本中高亮显示的参数值（数字、字符串）。
+"Pick a base + accent, then Generate. Fine-tune individual tokens below.",选择基色 + 强调色，然后点击生成。可在下方微调各个颜色项。
+Quick Style - recolour everything at once,快速样式 - 一次性重新着色
+Rebuild every colour token from the three colours above.,根据上方三种颜色重建所有颜色项。
+Region Corner Radius,区域圆角半径
+Region Line Width,区域线宽
+Reset To Default,重置为默认
+Restore the bundled default look.,恢复自带的默认外观。
+Row Background Alt Color,行交替背景色
+Row Background Color,行背景色
+Row Border Color,行边框颜色
+Save As Preset…,保存为预设…
+Selection Fill Color,选中填充色
+Sheet & rows (event style),事件表与行（事件样式）
+Sheet Background Color,事件表背景色
+"Space between this chip and the next one, in pixels.",此条目与下一个条目之间的间距，单位为像素。
+"Space inside the chip, above and below its text, in pixels.",条目内部文字上下的间距，单位为像素。
+"Space inside the chip, left and right of its text, in pixels.",条目内部文字左右的间距，单位为像素。
+Text Color,文本颜色
+Text colour of the role badge.,角色徽章的文字颜色。
+Text colour on the group count badge.,分组计数徽章上的文字颜色。
+"Text size adjustment for this chip kind, relative to the sheet font (+/- points).",此类条目的文字大小调整，相对于事件表字体（+/- 磅）。
+The 'Actions' header label colour.,“动作”标题标签的颜色。
+The 'Conditions' header label colour.,“条件”标题标签的颜色。
+The background of a normal event row.,普通事件行的背景。
+The background of every OTHER row (the zebra stripe).,每隔一行的背景（斑马纹）。
+The banner colour behind a full-width comment.,全宽注释背后的横幅颜色。
+"The colour behind the whole sheet, outside the rows.",整个事件表背后、行以外区域的颜色。
+The conditions lane never shrinks below this many pixels.,条件栏的宽度不会缩小到低于此像素值。
+The group title text colour.,分组标题文字的颜色。
+The group's left accent stripe and hairlines.,分组左侧的强调条纹和细线。
+The highlight over a selected row.,选中行上的高亮。
+"The object/origin label before each condition/action (System, node class).",每个条件/动作前的对象/来源标签（System、节点类）。
+The red X shown on an inverted (negated) condition.,反转（取反）条件上显示的红色 X。
+"The soft-purple 'this is a behavior' accent (banner, region default).",柔和紫色的“这是一个行为”强调色（横幅、区域默认色）。
+"The stripe + wash on language blocks (a data class, a host binding, a switch case) so they read as code structure, not regular events.",语言块（数据类、宿主绑定、switch 分支）上的条纹和底色，让它们读起来是代码结构，而非普通事件。
+The text colour of comments.,注释的文字颜色。
+The text colour of the chip.,条目的文字颜色。
+The thin line between rows.,行与行之间的细线。
+The tint over the row under the mouse.,鼠标所在行上的色调。
+The vertical line splitting conditions from actions.,分隔条件与动作的竖线。
+Theme Editor,主题编辑器
+Thickness of the conditions/actions divider line.,条件/动作分隔线的粗细。
+Tint over a single condition/action cell under the mouse.,鼠标所在的单个条件/动作单元格上的色调。
+Trigger Badge Background Color,触发器徽章背景色
+Trigger Badge Foreground Color,触发器徽章前景色
+Value Highlight Color,数值高亮颜色
+Vertical Padding,垂直内边距
+Width reserved for the trigger/condition badge column.,为触发器/条件徽章列预留的宽度。
+Add Comment Sub-Event,添加注释子事件
+Add GDScript Action,添加 GDScript 动作
+Add Match To Actions…,向动作添加 match…
+Add Pick Filter (For Each)…,添加筛选条件（For Each）…
+Add Sub-Condition,添加子条件
+Add Sub-Event,添加子事件
+Attach To Event Above,附加到上方事件
+Clear Else,移除“否则”
+Clear Else-If,移除“否则如果”
+Close Group,折叠分组
+Comment,注释
+Convert to AND Block,转换为 AND 块
+Convert to OR Block,转换为 OR 块
+Copy as Text,复制为文本
+Cut,剪切
+Delete,删除
+Disable / Enable Selection,禁用 / 启用所选内容
+Disable Row,禁用行
+Duplicate,创建副本
+Duplicate Selection,为所选内容创建副本
+Edit Comment…,编辑注释…
+Edit Description…,编辑描述…
+Enable Row,启用行
+Enum,枚举
+Event Above,上方事件
+Event Below,下方事件
+Find Usages (project),查找用法（项目范围）
+GDScript Block,GDScript 代码块
+Group,分组
+Group Color…,分组颜色…
+Group Selection into New Group,将所选内容归入新分组
+Insert,插入
+Make Else,设为“否则”
+Make Else-If,设为“否则如果”
+More,更多
+Open / Close Group,展开 / 折叠分组
+Open Group,展开分组
+Open in Split,在拆分视图中打开
+Runtime Toggleable,可在运行时切换
+Save Selection as Snippet…,将所选内容保存为片段…
+Scope Actions To Node…,将动作限定到节点…
+Set Breakpoint Condition…,设置断点条件…
+Signal Handler,信号处理器
+Variable,变量
+Else,否则
+Else If,否则如果

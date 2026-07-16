@@ -1,0 +1,490 @@
+keys,ru
+Sheet,Лист
+Save,Сохранить
+Run Scene,Запустить сцену
+Add Event,Добавить событие
+Add Condition,Добавить условие
+Add Action,Добавить действие
+Add Code,Добавить код
+Add,Добавить
+Edit,Правка
+View,Вид
+Tools,Инструменты
+Simple Mode,Простой режим
+Search,Поиск
+Cancel,Отмена
+Open,Открыть
+Undo,Отменить
+Redo,Повторить
+Copy,Копировать
+Paste,Вставить
+Zoom In,Увеличить
+Zoom Out,Уменьшить
+Name,Имя
+Name:,Имя:
+Type,Тип
+Text,Текст
+Number,Число
+Yes-No,Да-Нет
+Details,Подробности
+Parameters,Параметры
+Default,По умолчанию
+Tooltip,Подсказка
+Placeholder,Заполнитель
+Range,Диапазон
+◀ Back,◀ Назад
+★ Recent,★ Недавние
+⭐ Favorites,⭐ Избранное
+✚ Apply & Add Another,✚ Применить и добавить ещё
+Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).,Сохранить лист - компиляция при сохранении обновляет его сгенерированный скрипт (Ctrl+S).
+"Save, then play the scene that uses this sheet's script.","Сохранить, затем запустить сцену, использующую скрипт этого листа."
+Add an event (E).,Добавить событие (E).
+Add a condition to the selected event (C).,Добавить условие к выбранному событию (C).
+Add an action to the selected event (A).,Добавить действие к выбранному событию (A).
+Add a GDScript block to the selected event - the deliberate 'drop to code' escape hatch. Opens the code editor immediately.,"Добавить блок GDScript к выбранному событию - осознанный запасной выход ""в код"". Сразу открывает редактор кода."
+"Beginner-friendly view: hides the advanced/code entries (GDScript blocks, sub-conditions, pick filters, signals/enums). Everything still works when off.","Режим для новичков: скрывает продвинутые/кодовые пункты (блоки GDScript, под-условия, фильтры выбора, сигналы/перечисления). При выключении всё продолжает работать."
+"Toggle the generated-GDScript panel - the sheet's honest compiled output, side by side.","Показать/скрыть панель сгенерированного GDScript - честный скомпилированный результат листа, бок о бок."
+Theme for this sheet (Load/Reload and the Theme Editor live in View),Тема этого листа (Загрузить/Перезагрузить и Редактор тем находятся в меню Вид)
+"Quick add…  (e.g. every tick, heal 5)","Быстрое добавление…  (напр. every tick, heal 5)"
+"Create, open, save, and configure this event sheet.","Создание, открытие, сохранение и настройка этого листа событий."
+"Panels, multi-view panes, theme, live values, and zoom.","Панели, многопанельные виды, тема, живые значения и масштаб."
+"Debug tools, validation, import, and project workflow.","Инструменты отладки, проверка, импорт и рабочий процесс проекта."
+New…,Создать…
+Open…,Открыть…
+Save As…,Сохранить как…
+Sheet Type…,Тип листа…
+Manage Includes…,Управление включениями…
+Custom Actions…,Пользовательские действия…
+Export GDScript…,Экспортировать GDScript…
+Export Addon…,Экспортировать аддон…
+New Behaviour Addon…,Новый аддон поведения…
+Inspector Designer…,Дизайнер Inspector…
+Teach a Verb - Share Published Verbs,Научить глаголу - поделиться опубликованными глаголами
+Signal Event…,Событие сигнала…
+Global Variable…,Глобальная переменная…
+Local Variable…,Локальная переменная…
+Function…,Функция…
+Code (GDScript) on Selected Event,Код (GDScript) для выбранного события
+Note…,Заметка…
+Region…,Регион…
+Preload Resource…,Предзагрузить ресурс…
+Extract Selection to Include…,Извлечь выделение во включение…
+Find References…,Найти ссылки…
+Generate from Description (AI)…,Сгенерировать из описания (ИИ)…
+Simple Mode (beginner-friendly),Простой режим (для новичков)
+GDScript Panel (toggle),Панель GDScript (переключить)
+Open Sheets Panel,Панель открытых листов
+Add-Event Rows,"Строки ""+ Добавить событие"""
+Split View (toggle),Разделённый вид (переключить)
+Detached View (toggle),Отсоединённый вид (переключить)
+Link Views (toggle),Связать виды (переключить)
+Load Theme…,Загрузить тему…
+Reload Theme,Перезагрузить тему
+Theme Editor…,Редактор тем…
+MCP Server (AI tools),Сервер MCP (инструменты ИИ)
+"Hide the advanced/code entries (GDScript blocks, sub-conditions, pick filters, match, signals/enums) from the right-click menus. Everything still works in Expert mode.","Скрыть продвинутые/кодовые пункты (блоки GDScript, под-условия, фильтры выбора, match, сигналы/перечисления) из контекстных меню. В режиме эксперта всё продолжает работать."
+Show/hide the generated-GDScript panel beside the sheet.,Показать/скрыть панель сгенерированного GDScript рядом с листом.
+"Show/hide the trailing ""+ Add event…"" rows. Turn off for a cleaner, calmer sheet.","Показать/скрыть завершающие строки ""+ Добавить событие…"". Отключите для более чистого и спокойного листа."
+"Show/hide a second synchronized view of this sheet, side by side.","Показать/скрыть второй синхронизированный вид этого листа, бок о бок."
+Pop the sheet view out into its own window / bring it back.,Вынести вид листа в отдельное окно / вернуть обратно.
+Link/unlink scrolling between the split views.,Связать/отвязать прокрутку между разделёнными видами.
+Debug Breakpoints (toggle),Точки останова отладки (переключить)
+Live Values (toggle),Живые значения (переключить)
+Event Trace (live highlight),Трассировка событий (живая подсветка)
+Bookmarks…,Закладки…
+Register Autoload,Зарегистрировать автозагрузку
+Publish Preview…,Предпросмотр публикации…
+Test Bench,Испытательный стенд
+Find in Project…,Найти в проекте…
+Project Doctor…,Doctor проекта…
+Check Sheet for Errors,Проверить лист на ошибки
+Vocabulary Doc,Документ словаря
+Sheet Backups…,Резервные копии листа…
+Save as Template,Сохранить как шаблон
+Attach to Selected Node,Прикрепить к выбранному узлу
+Preview Behaviors on Selected Node,Предпросмотр поведений на выбранном узле
+Lift Report…,Отчёт о преобразовании…
+Welcome…,Добро пожаловать…
+Start the Tour…,Начать тур…
+Keyboard Shortcuts,Горячие клавиши
+Rename Everywhere…,Переименовать везде…
+Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,Проверить каждое выражение ƒx и блок GDScript; пометить проблемные строки и перейти к первой.
+Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,"Переключить эмиссию точек останова: листы, скомпилированные в режиме отладки, останавливаются на строках с точками останова."
+Toggle Live Values: running sheets stream their variables here (editable).,Переключить живые значения: работающие листы передают сюда свои переменные (можно редактировать).
++ Add action,+ Добавить действие
++ Add condition,+ Добавить условие
++ Add event…,+ Добавить событие…
+Every Tick,Каждый тик
++  Add your first event,+  Добавьте первое событие
+New from template…,Создать из шаблона…
+Create an event sheet…,Создать лист событий…
+This event sheet is empty,Этот лист событий пуст
+No event sheet is open,Нет открытого листа событий
+Empty behavior sheet,Пустой лист поведения
+Empty autoload sheet,Пустой лист автозагрузки
+Double-click anywhere - or press E - to add your first event.,Дважды щёлкните в любом месте - или нажмите E - чтобы добавить первое событие.
+Double-click anywhere - or press E - to add an event that drives the Node this attaches to.,"Дважды щёлкните в любом месте - или нажмите E - чтобы добавить событие, управляющее узлом, к которому прикреплён лист."
+Create one to start building - a menu of ready-made starters opens.,"Создайте его, чтобы начать - откроется меню готовых заготовок."
+"Add the signals and functions every sheet in the project should reach (score, game state, an event bus).","Добавьте сигналы и функции, которые должны быть доступны каждому листу проекта (счёт, состояние игры, шина событий)."
+"Tip: the picker understands plain language. Try typing ""every tick"".","Совет: панель выбора понимает обычный язык. Попробуйте ввести ""every tick""."
+Tip: Tools > Welcome… has a playable showcase and a 2-minute tour.,Совет: в Инструменты > Добро пожаловать… есть играбельная демонстрация и 2-минутный тур.
+Tip: publish a function to the picker and every sheet in the project can call it.,Совет: опубликуйте функцию в панель выбора - и её сможет вызывать каждый лист проекта.
+%s - Behavior · acts on host: %s,%s - Поведение · действует на хосте: %s
+"%s - Autoload · one instance, project-wide",%s - Автозагрузка · один экземпляр на весь проект
+%s - Editor Tool · runs in the editor (File > Run),%s - Инструмент редактора · выполняется в редакторе (Файл > Запустить)
+%s - Custom Resource · every .tres of it is a data asset,%s - Пользовательский ресурс · каждый его .tres - это ассет данных
+Event Sheet · a script for the %s it's attached to,"Лист событий · скрипт для %s, к которому он прикреплён"
+%s - Custom Node · extends %s,%s - Пользовательский узел · расширяет %s
+"Click to edit the sheet type (name, icon, host class).","Щёлкните, чтобы изменить тип листа (имя, иконка, класс хоста)."
+Add Action / Condition,Добавить действие / условие
+"Search actions, conditions, triggers...","Поиск действий, условий, триггеров..."
+Pin the highlighted entry to Favorites (or right-click any entry).,Закрепить выделенный пункт в Избранном (или щёлкните правой кнопкой по любому пункту).
+Right-click any entry to pin it here.,"Щёлкните правой кнопкой по любому пункту, чтобы закрепить его здесь."
+Entries you use appear here.,"Здесь появляются пункты, которыми вы пользуетесь."
+"Select a condition, action, or trigger to create a new event.","Выберите условие, действие или триггер, чтобы создать новое событие."
+Select an action to append to the selected event.,"Выберите действие, чтобы добавить его к выбранному событию."
+Select a condition or trigger to append to the selected event.,"Выберите условие или триггер, чтобы добавить к выбранному событию."
+Untitled EventSheet,Безымянный EventSheet
+Unsaved (in-memory),Не сохранено (в памяти)
+Open Sheets,Открытые листы
+Filter sheets…,Фильтр листов…
+Filter the open sheets by name or path.,Фильтровать открытые листы по имени или пути.
+New Event,Новое событие
+New Condition,Новое условие
+Edit Action,Изменить действие
+Edit Condition,Изменить условие
+Delete Action,Удалить действие
+Delete Condition,Удалить условие
+Delete Function,Удалить функцию
+Replace Action,Заменить действие
+Replace Condition,Заменить условие
+Disable Action,Отключить действие
+Disable Condition,Отключить условие
+Invert Condition,Инвертировать условие
+Add New Variable,Добавить новую переменную
+Create Variable,Создать переменную
+Edit Variable,Изменить переменную
+Add a function…,Добавить функцию…
+Edit Note…,Изменить заметку…
+Edit Events,Изменить события
+Insert Snippet…,Вставить сниппет…
+Extract All Actions to Function…,Извлечь все действия в функцию…
+Group Under a Heading…,Сгруппировать под заголовком…
+Detach Comment To Row,Вынести комментарий в отдельную строку
+Convert Scope,Изменить область видимости
+Toggle Constant,Переключить константу
+Whole numbers only,Только целые числа
+Editable in the Inspector (a designer property),Редактируется в Inspector (свойство для дизайнера)
+Constant (can't change at runtime),Константа (нельзя изменить во время выполнения)
+Set on _ready() - for node refs like $Player,Задаётся в _ready() - для ссылок на узлы вроде $Player
+"Text - words, names, messages.","Текст - слова, имена, сообщения."
+"A number - a count, score, position, speed… Tick ""Whole numbers only"" for integers.","Число - счётчик, очки, позиция, скорость… Отметьте ""Только целые числа"" для целых."
+"A yes/no, on/off switch (true / false).","Переключатель да/нет, вкл/выкл (true / false)."
+"An x/y pair: a direction, velocity, or position.","Пара x/y: направление, скорость или позиция."
+An RGBA colour.,Цвет RGBA.
+An image / sprite resource.,Ресурс изображения / спрайта.
+Viewing as a sheet,Просмотр как лист
+Open in Godot Script Editor,Открыть в редакторе скриптов Godot
+Edit the .gd directly in Godot's script editor - your changes reload here when you come back to this tab.,"Редактируйте .gd прямо в редакторе скриптов Godot - изменения подхватятся здесь, когда вы вернётесь на эту вкладку."
+Take the 2-minute tour,Пройти 2-минутный тур
+Editor language,Язык редактора
+Simple mode - hide advanced rows & menu items,Простой режим - скрыть продвинутые строки и пункты меню
+Open the GDScript panel with every sheet,Открывать панель GDScript с каждым листом
+Coming from another event-sheet tool?,Переходите из другого инструмента событийных листов?
+Open the migration guide,Открыть руководство по миграции
+Reopen this window any time: Tools → Welcome…,Это окно можно открыть снова: Инструменты → Добро пожаловать…
+Translations are plain CSV files - drop one into eventsheet_translations/ and its language appears here.,"Переводы - это обычные CSV-файлы: положите файл в eventsheet_translations/, и его язык появится здесь."
+The 2-minute tour,2-минутный тур
+Read a sheet like a sentence,Читайте лист как предложение
+Add your first event,Добавьте первое событие
+Give it a condition,Дайте ему условие
+Make it DO something,Заставьте его ЧТО-ТО делать
+See the honest GDScript,Посмотрите честный GDScript
+You know the loop,Теперь вы знаете цикл
+Skip tour,Пропустить тур
+Back,Назад
+Next,Далее
+Finish,Готово
+✓ Done - nice! Hit Next.,"✓ Готово - отлично! Нажмите ""Далее""."
+Hit Finish and go make something.,"Нажмите ""Готово"" и идите творить."
+"A coloured section label drawn above this property in the Inspector.
+End with a #rrggbb to tint it. Editor decor only - plain comment in the code.","Цветная подпись раздела над этим свойством в Inspector.
+Завершите её кодом #rrggbb, чтобы задать оттенок. Только оформление редактора - в коде это обычный комментарий."
+"A quiet info panel drawn above this property in the Inspector.
+Editor decor only - plain comment in the code.","Неброская информационная панель над этим свойством в Inspector.
+Только оформление редактора - в коде это обычный комментарий."
+"A shape over 0–1 (easing, falloff, ramps).","Кривая на отрезке 0-1 (плавность, затухание, рампы)."
+A whole number (no decimals) - stored as an int. Unticked stores a float.,Целое число (без десятичных) - хранится как int. Без галочки хранится float.
+Access,Доступ
+Advanced types,Продвинутые типы
+Anatomy,Анатомия
+Any type - untyped (advanced; prefer a specific type when you can).,Любой тип - без типа (для продвинутых; по возможности предпочитайте конкретный тип).
+Clamp to range,Ограничить диапазоном
+Collapse the panel to a strip,Свернуть панель в полосу
+Default field,Поле по умолчанию
+Description,Описание
+Dropped Node Preview,Предпросмотр перетащенного узла
+Easing curve (float: exponential ease handle),Кривая плавности (float: экспоненциальная ручка ease)
+Edit an Array/Dictionary's items one per line instead of typing a literal.,Редактируйте элементы Array/Dictionary по одному в строке вместо ввода литерала.
+Edit items…,Изменить элементы…
+"Event-sheet-style quick add: type an event/condition/action (event-sheet phrasing works) plus optional parameter values, press Enter.",Быстрое добавление в стиле событийного листа: введите событие/условие/действие (формулировки листа работают) плюс необязательные значения параметров и нажмите Enter.
+Every sheet function at a glance (✦ = published as an ACE). Click to expand or collapse.,"Все функции листа с первого взгляда (✦ = опубликована как ACE). Щёлкните, чтобы развернуть или свернуть."
+Field button,Кнопка поля
+Flags,Флаги
+From enum,Из перечисления
+Group under heading,Группа под заголовком
+"How this variable's field LOOKS in the Inspector - pickers, flags, layer grids... Plain fields need no choice here.","Как поле этой переменной ВЫГЛЯДИТ в Inspector - пикеры, флаги, сетки слоёв... Обычным полям выбор не нужен."
+Info note,Инфо-заметка
+"Inspector grouping, conditional show/lock, an on-changed callback, clamp, read-only - for variables that reference other variables or functions.","Группировка в Inspector, условный показ/блокировка, колбэк при изменении, ограничение, только чтение - для переменных, ссылающихся на другие переменные или функции."
+Inspector look,Вид в Inspector
+Inspector preview,Предпросмотр Inspector
+Inspector section header (e.g. Combat),Заголовок раздела Inspector (напр. Combat)
+Lock unless,"Блокировать, если не"
+"Make this sheet's published verbs (its exposed ƒ functions) available in EVERY sheet's picker, node-targeted at $<ClassName>. Extract actions to a function first (right-click an event), then teach it here.","Сделать опубликованные глаголы этого листа (его открытые ƒ-функции) доступными в панели выбора КАЖДОГО листа, с адресацией узла $<ClassName>. Сначала извлеките действия в функцию (правый щелчок по событию), затем научите её здесь."
+Match Editor (default),Как в редакторе (по умолчанию)
+Multiline (String: big text box),Многострочное (String: большое текстовое поле)
+"No alpha (Color: solid RGB, no transparency)","Без альфы (Color: сплошной RGB, без прозрачности)"
+No lower limit,Без нижнего предела
+No upper limit,Без верхнего предела
+On changed,При изменении
+On ready,При готовности
+"On: a designer can tweak this per-instance in the Inspector (@export var).
+Off: internal script state - a plain private var (the default for a new variable).","Вкл: дизайнер может настраивать это для каждого экземпляра в Inspector (@export var).
+Выкл: внутреннее состояние скрипта - обычная приватная var (по умолчанию для новой переменной)."
+"On: compiles to @onready var - the Default is a GDScript EXPRESSION evaluated when the node enters the tree (e.g. $Player, get_node(""UI/Score"")), not a literal.
+Use it to grab a node reference once the scene is ready.","Вкл: компилируется в @onready var - поле по умолчанию содержит ВЫРАЖЕНИЕ GDScript, вычисляемое при входе узла в дерево (напр. $Player, get_node(""UI/Score"")), а не литерал.
+Используйте, чтобы один раз получить ссылку на узел, когда сцена готова."
+"One column per entry: name:type (String, int, float, bool, color for a swatch, or enum(a|b|c) for a dropdown).
+Each Array element becomes a row with these cells.","Одна колонка на запись: имя:тип (String, int, float, bool, color для образца цвета или enum(a|b|c) для выпадающего списка).
+Каждый элемент Array становится строкой с этими ячейками."
+Optional Inspector polish for exported globals - everything compiles to plain Godot annotations.,Необязательная полировка Inspector для экспортируемых глобальных переменных - всё компилируется в обычные аннотации Godot.
+Options (combo),Варианты (комбо)
+Pick the Inspector look from picture tiles instead of the list.,Выбирайте вид в Inspector по картинкам-плиткам вместо списка.
+Read-only,Только чтение
+"Renders a small button with this field that calls the named sheet function.
+Needs a @tool sheet to act in-editor. Label optional (defaults to the function name).","Рисует рядом с полем маленькую кнопку, вызывающую указанную функцию листа.
+Для работы в редакторе нужен лист @tool. Подпись необязательна (по умолчанию имя функции)."
+Required (warn in the Inspector while unset),"Обязательное (предупреждение в Inspector, пока не задано)"
+Save Studio…,Сохранить студию…
+"Scaffold a ready-to-edit behaviour script in res://eventsheet_addons/ - its signals become triggers, methods become actions/conditions, and @export vars become properties, all auto-discovered as custom ACEs.","Создать готовый к редактированию скрипт поведения в res://eventsheet_addons/ - его сигналы становятся триггерами, методы - действиями/условиями, а переменные @export - свойствами; всё автоматически обнаруживается как пользовательские ACE."
+Section header,Заголовок раздела
+"See the WHOLE sheet's Inspector as one live view - every exported variable with its decor, grouping, and widget, exactly as Godot will show it.","Смотрите Inspector ВСЕГО листа как один живой вид - каждая экспортируемая переменная с её оформлением, группировкой и виджетом, ровно так, как покажет Godot."
+Show as,Показывать как
+Show if,"Показывать, если"
+Shown after the number in the Inspector (suffix:px).,Показывается после числа в Inspector (suffix:px).
+"Shows a red warning above the field until a value is assigned
+(a Resource left empty, a String left blank). Editor-only.","Показывает красное предупреждение над полем, пока значение не задано
+(пустой Resource, незаполненная String). Только в редакторе."
+Slider extras,Дополнения слайдера
+"Start editing this sheet here. From then on, Save (Ctrl+S) updates the file - or use Save As… to keep the original and save a copy.","Начните редактировать этот лист здесь. Дальше Сохранить (Ctrl+S) обновляет файл - или используйте Сохранить как…, чтобы оставить оригинал и сохранить копию."
+Sub-heading,Подзаголовок
+"Swap the Inspector field for a richer drawer (dial, swatches, curve…).
+Graceful: a plain field without the editor plugin (parity preserved).","Заменить поле Inspector на более богатый виджет (циферблат, образцы, кривая…).
+Безопасно: без плагина редактора остаётся обычное поле (паритет сохранён)."
+Table columns,Колонки таблицы
+"The Inspector calls this function while the property is edited and shows
+the returned message above the field. Needs a @tool sheet to run in-editor.","Inspector вызывает эту функцию при редактировании свойства и показывает
+возвращённое сообщение над полем. Для работы в редакторе нужен лист @tool."
+The slider stops at max but typing a bigger number is allowed (or_greater).,"Слайдер останавливается на максимуме, но ввести большее число можно (or_greater)."
+"The variable's type. For a node reference, type the node's class (Sprite2D, Label, Area2D…) or leave Variant.","Тип переменной. Для ссылки на узел укажите класс узла (Sprite2D, Label, Area2D…) или оставьте Variant."
+"Turn the MCP server (AI-assistant tools) on/off. When off, connected AI clients see no tools and can't read or change your sheets. Takes effect live - no reconnect needed.","Включить/выключить сервер MCP (инструменты ИИ-ассистентов). Когда он выключен, подключённые ИИ-клиенты не видят инструментов и не могут читать или менять ваши листы. Действует сразу - переподключение не нужно."
+Typing below min is allowed (or_less).,Ввод значения меньше минимума разрешён (or_less).
+Validate with,Проверять функцией
+"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency - proof you can leave the addon anytime.","Записать обычный автономный GDScript этого листа в ваш собственный файл. Никакой зависимости от плагина - доказательство, что вы можете уйти от аддона в любой момент."
+accent label above (e.g. Combat #e06666),цветная подпись сверху (напр. Combat #e06666)
+bool variable (hidden when false),"переменная bool (скрыто, когда false)"
+bool variable (read-only when false),"переменная bool (только чтение, когда false)"
+"columns, e.g. item:String, count:int, rare:bool","колонки, напр. item:String, count:int, rare:bool"
+"comma-separated, e.g. easy, normal, hard (String only)","через запятую, напр. easy, normal, hard (только String)"
+"function and button label, e.g. reroll_stats Reroll","функция и подпись кнопки, напр. reroll_stats Reroll"
+grey hint shown when the field is empty,"серая подсказка, когда поле пустое"
+"min, max, step (numeric: slider)","мин, макс, шаг (число: слайдер)"
+nested section under the group (e.g. Melee),вложенный раздел внутри группы (напр. Melee)
+note panel above (e.g. Shared resource - edits affect every user.),панель-заметка сверху (напр. Общий ресурс - правки затронут всех пользователей.)
+sheet function called after assignment,"функция листа, вызываемая после присваивания"
+sheet function returning a warning String (empty = valid),"функция листа, возвращающая String с предупреждением (пустая = всё верно)"
+"type - e.g. Node2D, Label, Sprite2D (or Variant for any)","тип - напр. Node2D, Label, Sprite2D (или Variant для любого)"
+"unit, e.g. px","единица, напр. px"
+what this variable is for - shown as its description in the Inspector,для чего эта переменная - показывается как её описание в Inspector
+"▸  Advanced (grouping, conditions, clamp…)","▸  Продвинутое (группировка, условия, ограничение…)"
+"▸  More options (range, drawer, grouping…)","▸  Больше опций (диапазон, виджет, группировка…)"
+Create Code Region,Создать регион кода
+Create Code Region…,Создать регион кода…
+Doc comment,Документирующий комментарий
+Documentation shown above the function (## …). BBCode like [b]bold[/b] is allowed.,Документация над функцией (## …). Допускается BBCode вроде [b]bold[/b].
+Getter body,Тело геттера
+Setter body,Тело сеттера
+Setter parameter,Параметр сеттера
+The name of the setter's incoming-value parameter (defaults to `value`).,Имя входного параметра сеттера (по умолчанию `value`).
+The statements that run when this variable is assigned (`set(value):`). Use `value` for the incoming value. Leave blank for no setter.,"Инструкции, выполняемые при присваивании этой переменной (`set(value):`). Используйте `value` для входного значения. Оставьте пустым, чтобы не было сеттера."
+"The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter.","Инструкции, выполняемые при чтении этой переменной (`get:`), заканчивающиеся `return …`. Оставьте пустым, чтобы не было геттера."
+"getter body, e.g.  return _health","тело геттера, напр.  return _health"
+"setter body, e.g.  health = clampi(value, 0, max_health)","тело сеттера, напр.  health = clampi(value, 0, max_health)"
+A faint tint over the actions (right) lane.,Лёгкая тонировка полосы действий (справа).
+A faint tint over the conditions (left) lane.,Лёгкая тонировка полосы условий (слева).
+"Accent (groups, selection)","Акцент (группы, выделение)"
+Action Lane Color,Цвет полосы действий
+Action Lane Padding,Отступ полосы действий
+Action cells,Ячейки действий
+Alternate group header background (zebra).,Чередующийся фон заголовка группы (зебра).
+Apply To Current Sheet,Применить к текущему листу
+Background of a group header row.,Фон строки заголовка группы.
+Background of the Conditions / Actions column header bar.,Фон панели заголовков колонок Условия / Действия.
+Background of the fold triangle box on a group.,Фон квадратика с треугольником сворачивания у группы.
+Badge Background Color,Цвет фона значка
+Badge Extra Width,Дополнительная ширина значка
+Badge Foreground Color,Цвет текста значка
+Base (background tone),База (тон фона)
+Behavior Accent Color,Акцентный цвет поведения
+Border of the condition/action chip.,Граница чипа условия/действия.
+Cell Corner Radius,Радиус углов ячейки
+Cell Hover Color,Цвет ячейки при наведении
+Chip Background Color,Цвет фона чипа
+Chip Border Color,Цвет границы чипа
+Chip Hover Color,Цвет чипа при наведении
+Chip fill when hovered.,Заливка чипа при наведении.
+Close,Закрыть
+Column Header Actions Color,Цвет заголовка колонки действий
+Column Header Background Color,Цвет фона заголовка колонок
+Column Header Conditions Color,Цвет заголовка колонки условий
+Comment Row Background Color,Цвет фона строки комментария
+Comment Text Color,Цвет текста комментария
+Condition Badge Column Width,Ширина колонки значка условия
+Condition Lane Color,Цвет полосы условий
+Condition Lane Padding,Отступ полосы условий
+Condition Lane Ratio,Доля полосы условий
+Condition cells,Ячейки условий
+Corner Radius,Радиус углов
+Corner roundness of group rows (0 = square bar).,Скругление углов строк групп (0 = прямоугольная полоса).
+Corner roundness of individual condition/action cells.,Скругление углов отдельных ячеек условий/действий.
+Corner roundness of region marker bubbles.,Скругление углов пузырьков-маркеров регионов.
+"Corner roundness of the chip, in pixels.","Скругление углов чипа, в пикселях."
+"Corner roundness of the event block, in pixels (0 = square).","Скругление углов блока события, в пикселях (0 = прямые углы)."
+"Editor (hover, selection, lanes)","Редактор (наведение, выделение, полосы)"
+Event Corner Radius,Радиус углов события
+"Extra width reserved for the role badge on the chip, in pixels.","Дополнительная ширина, отведённая под значок роли на чипе, в пикселях."
+Fill of the condition/action chip.,Заливка чипа условия/действия.
+Fill of the count badge on a group.,Заливка значка-счётчика у группы.
+Fill of the role badge on the chip.,Заливка значка роли на чипе.
+"Fill of the trigger arrow badge (On Ready, On Signal...).","Заливка значка-стрелки триггера (On Ready, On Signal...)."
+Font Size Delta,Смещение размера шрифта
+Gap After,Отступ после
+Generate Theme,Сгенерировать тему
+Group Accent Color,Акцентный цвет группы
+Group Background Alt Color,Альтернативный цвет фона группы
+Group Background Color,Цвет фона группы
+Group Badge Background Color,Цвет фона значка группы
+Group Badge Foreground Color,Цвет текста значка группы
+Group Corner Radius,Радиус углов группы
+Group Fold Background Color,Цвет фона треугольника сворачивания группы
+Group Title Color,Цвет заголовка группы
+"Height of a single event row, in pixels - raise it for more breathing room.","Высота одной строки события, в пикселях - увеличьте для большего простора."
+Horizontal Padding,Горизонтальный отступ
+Hover Fill Color,Цвет заливки при наведении
+How much of the row width the conditions lane takes (0.2 - 0.8).,Какую часть ширины строки занимает полоса условий (0.2 - 0.8).
+Icon/text colour on the trigger badge.,Цвет иконки/текста на значке триггера.
+"Inner padding on the actions lane, in pixels.","Внутренний отступ полосы действий, в пикселях."
+"Inner padding on the conditions lane, in pixels.","Внутренний отступ полосы условий, в пикселях."
+Invert Marker Color,Цвет маркера инверсии
+Lane Divider Color,Цвет разделителя полос
+Lane Divider Width,Толщина разделителя полос
+Language Block Accent Color,Акцентный цвет языковых блоков
+Line thickness of region marker borders.,Толщина линий границ маркеров регионов.
+Minimum Conditions Lane Width,Минимальная ширина полосы условий
+Minimum Row Height,Минимальная высота строки
+Object Label Color,Цвет подписи объекта
+"Parameter values (numbers, strings) highlighted inside ACE text.","Значения параметров (числа, строки), подсвеченные внутри текста ACE."
+"Pick a base + accent, then Generate. Fine-tune individual tokens below.","Выберите базу + акцент, затем нажмите Сгенерировать. Ниже можно донастроить отдельные токены."
+Quick Style - recolour everything at once,Быстрый стиль - перекрасить всё сразу
+Rebuild every colour token from the three colours above.,Пересобрать все цветовые токены из трёх цветов выше.
+Region Corner Radius,Радиус углов региона
+Region Line Width,Толщина линий региона
+Reset To Default,Сбросить по умолчанию
+Restore the bundled default look.,Восстановить стандартный встроенный вид.
+Row Background Alt Color,Альтернативный цвет фона строки
+Row Background Color,Цвет фона строки
+Row Border Color,Цвет границы строки
+Save As Preset…,Сохранить как пресет…
+Selection Fill Color,Цвет заливки выделения
+Sheet & rows (event style),Лист и строки (стиль событий)
+Sheet Background Color,Цвет фона листа
+"Space between this chip and the next one, in pixels.","Расстояние между этим чипом и следующим, в пикселях."
+"Space inside the chip, above and below its text, in pixels.","Пространство внутри чипа, над и под текстом, в пикселях."
+"Space inside the chip, left and right of its text, in pixels.","Пространство внутри чипа, слева и справа от текста, в пикселях."
+Text Color,Цвет текста
+Text colour of the role badge.,Цвет текста значка роли.
+Text colour on the group count badge.,Цвет текста на значке-счётчике группы.
+"Text size adjustment for this chip kind, relative to the sheet font (+/- points).",Изменение размера текста для этого вида чипов относительно шрифта листа (+/- пунктов).
+The 'Actions' header label colour.,"Цвет подписи заголовка ""Действия""."
+The 'Conditions' header label colour.,"Цвет подписи заголовка ""Условия""."
+The background of a normal event row.,Фон обычной строки события.
+The background of every OTHER row (the zebra stripe).,Фон каждой второй строки (полоса зебры).
+The banner colour behind a full-width comment.,Цвет плашки за комментарием на всю ширину.
+"The colour behind the whole sheet, outside the rows.","Цвет позади всего листа, вне строк."
+The conditions lane never shrinks below this many pixels.,Полоса условий никогда не сужается меньше этого количества пикселей.
+The group title text colour.,Цвет текста заголовка группы.
+The group's left accent stripe and hairlines.,Левая акцентная полоска группы и тонкие линии.
+The highlight over a selected row.,Подсветка выбранной строки.
+"The object/origin label before each condition/action (System, node class).","Подпись объекта/источника перед каждым условием/действием (System, класс узла)."
+The red X shown on an inverted (negated) condition.,Красный X на инвертированном (отрицаемом) условии.
+"The soft-purple 'this is a behavior' accent (banner, region default).","Мягко-фиолетовый акцент ""это поведение"" (баннер, регион по умолчанию)."
+"The stripe + wash on language blocks (a data class, a host binding, a switch case) so they read as code structure, not regular events.","Полоска и заливка на языковых блоках (класс данных, привязка хоста, ветка switch), чтобы они читались как структура кода, а не обычные события."
+The text colour of comments.,Цвет текста комментариев.
+The text colour of the chip.,Цвет текста чипа.
+The thin line between rows.,Тонкая линия между строками.
+The tint over the row under the mouse.,Тонировка строки под курсором мыши.
+The vertical line splitting conditions from actions.,"Вертикальная линия, отделяющая условия от действий."
+Theme Editor,Редактор тем
+Thickness of the conditions/actions divider line.,Толщина разделительной линии условий/действий.
+Tint over a single condition/action cell under the mouse.,Тонировка отдельной ячейки условия/действия под курсором.
+Trigger Badge Background Color,Цвет фона значка триггера
+Trigger Badge Foreground Color,Цвет текста значка триггера
+Value Highlight Color,Цвет подсветки значений
+Vertical Padding,Вертикальный отступ
+Width reserved for the trigger/condition badge column.,"Ширина, отведённая под колонку значков триггеров/условий."
+Add Comment Sub-Event,Добавить подсобытие-комментарий
+Add GDScript Action,Добавить действие GDScript
+Add Match To Actions…,Добавить match в действия…
+Add Pick Filter (For Each)…,Добавить фильтр выбора (For Each)…
+Add Sub-Condition,Добавить под-условие
+Add Sub-Event,Добавить подсобытие
+Attach To Event Above,Присоединить к событию выше
+Clear Else,Убрать Else
+Clear Else-If,Убрать Else-If
+Close Group,Свернуть группу
+Comment,Комментарий
+Convert to AND Block,Преобразовать в блок AND
+Convert to OR Block,Преобразовать в блок OR
+Copy as Text,Копировать как текст
+Cut,Вырезать
+Delete,Удалить
+Disable / Enable Selection,Отключить / включить выделенное
+Disable Row,Отключить строку
+Duplicate,Дублировать
+Duplicate Selection,Дублировать выделенное
+Edit Comment…,Изменить комментарий…
+Edit Description…,Изменить описание…
+Enable Row,Включить строку
+Enum,Перечисление
+Event Above,Событие выше
+Event Below,Событие ниже
+Find Usages (project),Найти использования (проект)
+GDScript Block,Блок GDScript
+Group,Группа
+Group Color…,Цвет группы…
+Group Selection into New Group,Сгруппировать выделенное в новую группу
+Insert,Вставка
+Make Else,Сделать Else
+Make Else-If,Сделать Else-If
+More,Ещё
+Open / Close Group,Развернуть / свернуть группу
+Open Group,Развернуть группу
+Open in Split,Открыть в разделённом виде
+Runtime Toggleable,Переключаемая во время выполнения
+Save Selection as Snippet…,Сохранить выделенное как сниппет…
+Scope Actions To Node…,Привязать действия к узлу…
+Set Breakpoint Condition…,Задать условие точки останова…
+Signal Handler,Обработчик сигнала
+Variable,Переменная
+Else,Иначе
+Else If,Иначе если

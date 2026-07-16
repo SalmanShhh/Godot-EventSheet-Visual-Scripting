@@ -276,6 +276,14 @@ func _ready() -> void:
 	# here, so they inherit it): every Control string auto-translates when a non-English language
 	# is picked, and stays English (the source text) by default. See editor/l10n.gd.
 	EventSheetL10n.apply_to(self)
+	# Drop-in translations reload live: dropping/editing/removing a CSV (or .translation) in a
+	# scan folder re-reads the catalogs on the editor's next filesystem scan and re-translates
+	# the open UI - no restart, and a newly dropped locale is immediately pickable.
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var filesystem: Object = Engine.get_singleton("EditorInterface").call("get_resource_filesystem")
+		if filesystem != null and filesystem.has_signal("filesystem_changed") \
+				and not filesystem.is_connected("filesystem_changed", _on_translations_maybe_changed):
+			filesystem.connect("filesystem_changed", _on_translations_maybe_changed)
 	_build_ui()
 	_ensure_editor_dialogs_initialized()
 	_refresh_ace_registry()
@@ -291,6 +299,15 @@ func _ready() -> void:
 			_current_sheet = _build_demo_sheet()
 			_viewport.set_debug_overlay_states({})
 		setup(_current_sheet)
+
+
+## Editor filesystem ping: cheap fingerprint check inside; only a REAL translation-folder
+## change reloads catalogs and re-translates the live UI (and redraws the canvas-drawn strings).
+func _on_translations_maybe_changed() -> void:
+	if EventSheetL10n.reload_if_changed():
+		propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
+		if _viewport != null:
+			_viewport.queue_redraw()
 
 
 func setup(sheet: EventSheetResource = null) -> void:
