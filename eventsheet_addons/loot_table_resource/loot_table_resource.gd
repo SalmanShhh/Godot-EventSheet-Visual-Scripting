@@ -1,4 +1,4 @@
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/loot_table_resource/icon.svg")
 class_name LootTableResource
 extends Resource
 ## A loot table's drops as a data asset. Fill the entries grid in the Inspector, save as a .tres, and load it with the LootBox Load From Resource action or the Loot Table Loader behavior.

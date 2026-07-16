@@ -1,6 +1,6 @@
 ## @ace_category("Follow")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/follow/icon.svg")
 class_name FollowBehavior
 extends Node
 
@@ -62,7 +62,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Start Following")
 ## @ace_category("Follow")
 ## @ace_description("Follows the node at the given path.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/follow/icon.svg")
 ## @ace_codegen_template("$FollowBehavior.start_following({path})")
 func start_following(path: String) -> void:
 	target_path = path
@@ -73,7 +73,7 @@ func start_following(path: String) -> void:
 ## @ace_name("Stop Following")
 ## @ace_category("Follow")
 ## @ace_description("Stops trailing the target.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/follow/icon.svg")
 ## @ace_codegen_template("$FollowBehavior.stop_following()")
 func stop_following() -> void:
 	following = false

@@ -1,6 +1,6 @@
 ## @ace_category("Tile Movement")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/tile_movement/icon.svg")
 class_name TileMovementBehavior
 extends Node
 
@@ -75,7 +75,7 @@ func _process(delta: float) -> void:
 ## @ace_category("Tile Movement")
 ## @ace_description("Steps one tile in a direction: left, right, up or down (simulate control).")
 ## @ace_param_options(direction left, right, up, down)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/tile_movement/icon.svg")
 ## @ace_codegen_template("$TileMovementBehavior.simulate_step({direction})")
 func simulate_step(direction: String) -> void:
 	if direction == "left":
@@ -91,7 +91,7 @@ func simulate_step(direction: String) -> void:
 ## @ace_name("Teleport To Tile")
 ## @ace_category("Tile Movement")
 ## @ace_description("Snaps to a tile coordinate instantly.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/tile_movement/icon.svg")
 ## @ace_codegen_template("$TileMovementBehavior.teleport_to_tile({tile_x}, {tile_y})")
 func teleport_to_tile(tile_x: float, tile_y: float) -> void:
 	if host != null:

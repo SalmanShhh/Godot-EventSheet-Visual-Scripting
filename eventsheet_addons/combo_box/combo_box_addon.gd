@@ -1,6 +1,6 @@
 ## @ace_tags(input, combo)
 ## @ace_category("ComboBox")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/combo_box/icon.svg")
 class_name ComboBoxAddon
 extends Node
 
@@ -53,7 +53,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Register Combo")
 ## @ace_category("ComboBox")
 ## @ace_description("Registers (or replaces) a combo: a unique id and its sequence as comma-separated tokens (for example "down,forward,punch"). timing_window is the seconds allowed between inputs (-1 = use the default, 0 = no time limit). Use "*" as a token to match any input.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.register_combo({id}, {sequence}, {timing_window})")
 func register_combo(id: String, sequence: String, timing_window: float) -> void:
 	var seq: PackedStringArray = PackedStringArray()
@@ -68,7 +68,7 @@ func register_combo(id: String, sequence: String, timing_window: float) -> void:
 ## @ace_name("Set Combo Tags")
 ## @ace_category("ComboBox")
 ## @ace_description("Tags a registered combo with comma-separated tags, so you can enable or disable it in batches (for example "ground_move").")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.set_combo_tags({id}, {tags})")
 func set_combo_tags(id: String, tags: String) -> void:
 	if not _combos.has(id):
@@ -84,7 +84,7 @@ func set_combo_tags(id: String, tags: String) -> void:
 ## @ace_name("Set Combo Priority")
 ## @ace_category("ComboBox")
 ## @ace_description("Sets a combo's priority. When more than one combo completes on the same input, the highest priority wins (ties go to the longest, then to the first registered).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.set_combo_priority({id}, {priority})")
 func set_combo_priority(id: String, priority: int) -> void:
 	if _combos.has(id):
@@ -94,7 +94,7 @@ func set_combo_priority(id: String, priority: int) -> void:
 ## @ace_name("Set Combo Strict")
 ## @ace_category("ComboBox")
 ## @ace_description("When strict is on, the combo's inputs must be adjacent in the buffer (no unrelated input allowed between them). Off (the default) tolerates stray inputs in between, like a fighting-game motion.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.set_combo_strict({id}, {strict})")
 func set_combo_strict(id: String, strict: bool) -> void:
 	if _combos.has(id):
@@ -104,7 +104,7 @@ func set_combo_strict(id: String, strict: bool) -> void:
 ## @ace_name("Set Default Timing")
 ## @ace_category("ComboBox")
 ## @ace_description("Sets the default seconds allowed between inputs, used by any combo whose own timing window is -1.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.set_default_timing({seconds})")
 func set_default_timing(seconds: float) -> void:
 	default_timing = maxf(seconds, 0.0)
@@ -113,7 +113,7 @@ func set_default_timing(seconds: float) -> void:
 ## @ace_name("Set Buffer Length")
 ## @ace_category("ComboBox")
 ## @ace_description("Sets how many recent inputs to remember. Older inputs drop off, so stale history cannot complete a combo.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.set_buffer_length({length})")
 func set_buffer_length(length: int) -> void:
 	buffer_length = maxi(length, 2)
@@ -124,7 +124,7 @@ func set_buffer_length(length: int) -> void:
 ## @ace_name("Press Input")
 ## @ace_category("ComboBox")
 ## @ace_description("Pushes one input token into the buffer and checks every combo. Call this from your own input events (a key, a gamepad button, a swipe, a network packet). Fires On Combo Matched / On Partial Progress / On Combo Failed as needed.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.press_input({token})")
 func press_input(token: String) -> void:
 	_buffer.append({"token": token, "time": _clock})
@@ -138,7 +138,7 @@ func press_input(token: String) -> void:
 ## @ace_name("Clear Buffer")
 ## @ace_category("ComboBox")
 ## @ace_description("Empties the buffer and resets all partial progress (fires On Buffer Cleared). Call it on a context change - entering a cutscene or menu - so old inputs cannot leak into new combos.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.clear_buffer()")
 func clear_buffer() -> void:
 	_cleared_count = _buffer.size()
@@ -150,7 +150,7 @@ func clear_buffer() -> void:
 ## @ace_name("Enable Combo")
 ## @ace_category("ComboBox")
 ## @ace_description("Enables a combo so it takes part in matching.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.enable_combo({id})")
 func enable_combo(id: String) -> void:
 	if _combos.has(id):
@@ -160,7 +160,7 @@ func enable_combo(id: String) -> void:
 ## @ace_name("Disable Combo")
 ## @ace_category("ComboBox")
 ## @ace_description("Disables a combo so it is skipped in matching (its registration is kept).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.disable_combo({id})")
 func disable_combo(id: String) -> void:
 	if _combos.has(id):
@@ -170,7 +170,7 @@ func disable_combo(id: String) -> void:
 ## @ace_name("Enable Combos By Tag")
 ## @ace_category("ComboBox")
 ## @ace_description("Enables every combo carrying a tag (for example all "air_move" combos).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.enable_combos_by_tag({tag})")
 func enable_combos_by_tag(tag: String) -> void:
 	for id: String in _combos:
@@ -181,7 +181,7 @@ func enable_combos_by_tag(tag: String) -> void:
 ## @ace_name("Disable Combos By Tag")
 ## @ace_category("ComboBox")
 ## @ace_description("Disables every combo carrying a tag.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.disable_combos_by_tag({tag})")
 func disable_combos_by_tag(tag: String) -> void:
 	for id: String in _combos:
@@ -192,7 +192,7 @@ func disable_combos_by_tag(tag: String) -> void:
 ## @ace_name("Remove Combo")
 ## @ace_category("ComboBox")
 ## @ace_description("Permanently removes a combo from the registry.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.remove_combo({id})")
 func remove_combo(id: String) -> void:
 	_combos.erase(id)
@@ -202,7 +202,7 @@ func remove_combo(id: String) -> void:
 ## @ace_name("Has Combo")
 ## @ace_category("ComboBox")
 ## @ace_description("Whether a combo id is registered.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.has_combo({id})")
 func has_combo(id: String) -> bool:
 	return _combos.has(id)
@@ -211,7 +211,7 @@ func has_combo(id: String) -> bool:
 ## @ace_name("Is Combo Enabled")
 ## @ace_category("ComboBox")
 ## @ace_description("Whether a combo is registered and enabled.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.is_combo_enabled({id})")
 func is_combo_enabled(id: String) -> bool:
 	return _combos.has(id) and bool(_combos[id].enabled)
@@ -220,7 +220,7 @@ func is_combo_enabled(id: String) -> bool:
 ## @ace_name("Is Buffer Empty")
 ## @ace_category("ComboBox")
 ## @ace_description("Whether the input buffer has no tokens.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.is_buffer_empty()")
 func is_buffer_empty() -> bool:
 	return _buffer.is_empty()
@@ -229,7 +229,7 @@ func is_buffer_empty() -> bool:
 ## @ace_name("Combo Has Tag")
 ## @ace_category("ComboBox")
 ## @ace_description("Whether a combo carries a tag.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.combo_has_tag({id}, {tag})")
 func combo_has_tag(id: String, tag: String) -> bool:
 	return _combos.has(id) and tag in (_combos[id].tags as PackedStringArray)
@@ -238,7 +238,7 @@ func combo_has_tag(id: String, tag: String) -> bool:
 ## @ace_name("Matched Id")
 ## @ace_category("ComboBox")
 ## @ace_description("The id of the combo that just matched (inside On Combo Matched).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.matched_id()")
 func matched_id() -> String:
 	return _matched_id
@@ -247,7 +247,7 @@ func matched_id() -> String:
 ## @ace_name("Matched Tags")
 ## @ace_category("ComboBox")
 ## @ace_description("The matched combo's tags as a comma-separated string (inside On Combo Matched).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.matched_tags()")
 func matched_tags() -> String:
 	return _matched_tags
@@ -256,7 +256,7 @@ func matched_tags() -> String:
 ## @ace_name("Match Time")
 ## @ace_category("ComboBox")
 ## @ace_description("The clock time in seconds when the combo matched (inside On Combo Matched).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.match_time()")
 func match_time() -> float:
 	return _match_time
@@ -265,7 +265,7 @@ func match_time() -> float:
 ## @ace_name("Failed Id")
 ## @ace_category("ComboBox")
 ## @ace_description("The id of the combo that just failed (inside On Combo Failed).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.failed_id()")
 func failed_id() -> String:
 	return _failed_id
@@ -274,7 +274,7 @@ func failed_id() -> String:
 ## @ace_name("Fail Index")
 ## @ace_category("ComboBox")
 ## @ace_description("How many inputs deep the failed combo had reached before it broke (inside On Combo Failed).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.fail_index()")
 func fail_index() -> int:
 	return _fail_index
@@ -283,7 +283,7 @@ func fail_index() -> int:
 ## @ace_name("Buffer Length")
 ## @ace_category("ComboBox")
 ## @ace_description("How many tokens are in the buffer right now.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.buffer_length_now()")
 func buffer_length_now() -> int:
 	return _buffer.size()
@@ -292,7 +292,7 @@ func buffer_length_now() -> int:
 ## @ace_name("Buffer Token")
 ## @ace_category("ComboBox")
 ## @ace_description("The token at a buffer index (0 = oldest); "" if out of range.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.buffer_token({index})")
 func buffer_token(index: int) -> String:
 	return str(_buffer[index].token) if index >= 0 and index < _buffer.size() else ""
@@ -301,7 +301,7 @@ func buffer_token(index: int) -> String:
 ## @ace_name("Buffer Time")
 ## @ace_category("ComboBox")
 ## @ace_description("The clock time in seconds of the token at a buffer index (0 if out of range).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.buffer_time({index})")
 func buffer_time(index: int) -> float:
 	return float(_buffer[index].time) if index >= 0 and index < _buffer.size() else 0.0
@@ -310,7 +310,7 @@ func buffer_time(index: int) -> float:
 ## @ace_name("Cleared Count")
 ## @ace_category("ComboBox")
 ## @ace_description("How many tokens were in the buffer when it was last cleared (inside On Buffer Cleared).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.cleared_count()")
 func cleared_count() -> int:
 	return _cleared_count
@@ -319,7 +319,7 @@ func cleared_count() -> int:
 ## @ace_name("Partial Count")
 ## @ace_category("ComboBox")
 ## @ace_description("How many combos are part-way matched after the last input (inside On Partial Progress).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.partial_count()")
 func partial_count() -> int:
 	return _partials.size()
@@ -328,7 +328,7 @@ func partial_count() -> int:
 ## @ace_name("Partial Id")
 ## @ace_category("ComboBox")
 ## @ace_description("The id of the part-way combo at an index (use with Partial Count to loop).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.partial_id({index})")
 func partial_id(index: int) -> String:
 	return str(_partials[index].id) if index >= 0 and index < _partials.size() else ""
@@ -337,7 +337,7 @@ func partial_id(index: int) -> String:
 ## @ace_name("Partial Progress")
 ## @ace_category("ComboBox")
 ## @ace_description("How many inputs of the part-way combo at an index are matched so far.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.partial_progress({index})")
 func partial_progress(index: int) -> int:
 	return int(_partials[index].progress) if index >= 0 and index < _partials.size() else 0
@@ -346,7 +346,7 @@ func partial_progress(index: int) -> int:
 ## @ace_name("Partial Length")
 ## @ace_category("ComboBox")
 ## @ace_description("The total length of the part-way combo at an index (pair with Partial Progress for a fill bar).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.partial_length({index})")
 func partial_length(index: int) -> int:
 	return int(_partials[index].length) if index >= 0 and index < _partials.size() else 0
@@ -355,7 +355,7 @@ func partial_length(index: int) -> int:
 ## @ace_name("Combo Count")
 ## @ace_category("ComboBox")
 ## @ace_description("How many combos are registered.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.combo_count()")
 func combo_count() -> int:
 	return _combos.size()
@@ -364,7 +364,7 @@ func combo_count() -> int:
 ## @ace_name("Combo Id At")
 ## @ace_category("ComboBox")
 ## @ace_description("The registered combo id at an index (use with Combo Count to list them).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/combo_box/icon.svg")
 ## @ace_codegen_template("ComboBox.combo_id_at({index})")
 func combo_id_at(index: int) -> String:
 	return str(_combos.keys()[index]) if index >= 0 and index < _combos.size() else ""

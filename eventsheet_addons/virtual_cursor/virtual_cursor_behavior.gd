@@ -1,6 +1,6 @@
 ## @ace_category("Virtual Cursor")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 class_name VirtualCursor
 extends Node
 
@@ -259,7 +259,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Press Interact")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Marks a named interact button held and fires On Interact Pressed.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.press_interact({id})")
 func press_interact(id: String) -> void:
 	interact_states[id] = true
@@ -270,7 +270,7 @@ func press_interact(id: String) -> void:
 ## @ace_name("Release Interact")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Marks a named interact button released and fires On Interact Released.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.release_interact({id})")
 func release_interact(id: String) -> void:
 	interact_states[id] = false
@@ -281,7 +281,7 @@ func release_interact(id: String) -> void:
 ## @ace_name("Simulate Interact")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Fires a press+release of a named button in one tick.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.simulate_interact({id})")
 func simulate_interact(id: String) -> void:
 	if ignoring_input:
@@ -295,7 +295,7 @@ func simulate_interact(id: String) -> void:
 ## @ace_name("Set Max Speed")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Sets the max cursor speed (px/s).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_max_speed({speed})")
 func set_max_speed(speed: float) -> void:
 	max_speed = speed
@@ -304,7 +304,7 @@ func set_max_speed(speed: float) -> void:
 ## @ace_name("Set Acceleration")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Sets the speed-up rate while an axis is held.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_acceleration({rate})")
 func set_acceleration(rate: float) -> void:
 	acceleration = rate
@@ -313,7 +313,7 @@ func set_acceleration(rate: float) -> void:
 ## @ace_name("Set Deceleration")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Sets the slow-down rate when the axis is released.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_deceleration({rate})")
 func set_deceleration(rate: float) -> void:
 	deceleration = rate
@@ -322,7 +322,7 @@ func set_deceleration(rate: float) -> void:
 ## @ace_name("Set Velocity")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Sets the cursor velocity directly.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_cursor_velocity({vel_x}, {vel_y})")
 func set_cursor_velocity(vel_x: float, vel_y: float) -> void:
 	vel = Vector2(vel_x, vel_y)
@@ -332,7 +332,7 @@ func set_cursor_velocity(vel_x: float, vel_y: float) -> void:
 ## @ace_name("Simulate Direct Mouse Position")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Teleports the cursor to a position, reporting the implied velocity.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.simulate_direct_mouse_position({target_x}, {target_y})")
 func simulate_direct_mouse_position(target_x: float, target_y: float) -> void:
 	if ignoring_input or host == null:
@@ -348,7 +348,7 @@ func simulate_direct_mouse_position(target_x: float, target_y: float) -> void:
 ## @ace_name("Simulate Mouse")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Drives the cursor toward a target with smoothing (mouse-follow).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.simulate_mouse({target_x}, {target_y}, {smoothing})")
 func simulate_mouse(target_x: float, target_y: float, smoothing: float) -> void:
 	if ignoring_input:
@@ -361,7 +361,7 @@ func simulate_mouse(target_x: float, target_y: float, smoothing: float) -> void:
 ## @ace_name("Simulate Axis")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Feeds an analog axis for this tick (accel/decel applies).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.simulate_axis({x}, {y})")
 func simulate_axis(x: float, y: float) -> void:
 	if ignoring_input:
@@ -373,7 +373,7 @@ func simulate_axis(x: float, y: float) -> void:
 ## @ace_name("Simulate Control")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Feeds a cardinal direction (0 up, 1 down, 2 left, 3 right) for this tick.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.simulate_control({direction})")
 func simulate_control(direction: int) -> void:
 	if ignoring_input:
@@ -387,7 +387,7 @@ func simulate_control(direction: int) -> void:
 ## @ace_name("Set Homing Enabled")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Turns the homing magnet on/off.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_homing_enabled({is_enabled})")
 func set_homing_enabled(is_enabled: bool) -> void:
 	homing_enabled = is_enabled
@@ -396,7 +396,7 @@ func set_homing_enabled(is_enabled: bool) -> void:
 ## @ace_name("Set Homing Mode")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("0 steer, 1 snap-radius, 2 snap-overlap.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_homing_mode({mode})")
 func set_homing_mode(mode: int) -> void:
 	homing_mode = clampi(mode, 0, 2)
@@ -405,7 +405,7 @@ func set_homing_mode(mode: int) -> void:
 ## @ace_name("Set Homing Radius")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Sets the homing engagement radius.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_homing_radius({radius})")
 func set_homing_radius(radius: float) -> void:
 	homing_radius = maxf(0.0, radius)
@@ -414,7 +414,7 @@ func set_homing_radius(radius: float) -> void:
 ## @ace_name("Set Homing Strength")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("How strongly the cursor is pulled toward a homing target (0..1).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_homing_strength({strength})")
 func set_homing_strength(strength: float) -> void:
 	homing_strength = clampf(strength, 0.0, 1.0)
@@ -423,7 +423,7 @@ func set_homing_strength(strength: float) -> void:
 ## @ace_name("Add Homing Target")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Registers a node as a homing target.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.add_homing_target({target})")
 func add_homing_target(target: Node2D) -> void:
 	if target != null:
@@ -435,7 +435,7 @@ func add_homing_target(target: Node2D) -> void:
 ## @ace_name("Remove Homing Target")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Unregisters a homing target.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.remove_homing_target({target})")
 func remove_homing_target(target: Node2D) -> void:
 	if target != null:
@@ -445,7 +445,7 @@ func remove_homing_target(target: Node2D) -> void:
 ## @ace_name("Clear Homing Targets")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Removes every homing target.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.clear_homing_targets()")
 func clear_homing_targets() -> void:
 	homing_targets.clear()
@@ -458,7 +458,7 @@ func clear_homing_targets() -> void:
 ## @ace_name("Add Solid")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Registers a node as a tracked solid (for SolidUID reporting).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.add_solid({target})")
 func add_solid(target: Node2D) -> void:
 	if target != null:
@@ -470,7 +470,7 @@ func add_solid(target: Node2D) -> void:
 ## @ace_name("Remove Solid")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Unregisters a tracked solid.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.remove_solid({target})")
 func remove_solid(target: Node2D) -> void:
 	if target != null:
@@ -480,7 +480,7 @@ func remove_solid(target: Node2D) -> void:
 ## @ace_name("Clear Solids")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Clears the tracked-solids list.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.clear_solids()")
 func clear_solids() -> void:
 	solids.clear()
@@ -489,7 +489,7 @@ func clear_solids() -> void:
 ## @ace_name("Set Solid Collision")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Toggles solid push-out via move_and_slide.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_solid_collision({is_enabled})")
 func set_solid_collision(is_enabled: bool) -> void:
 	solid_collision = is_enabled
@@ -498,7 +498,7 @@ func set_solid_collision(is_enabled: bool) -> void:
 ## @ace_name("Set Allow Sliding")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Slide along solids (true) or hard-stop (false).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_allow_sliding({state})")
 func set_allow_sliding(state: bool) -> void:
 	allow_sliding = state
@@ -507,7 +507,7 @@ func set_allow_sliding(state: bool) -> void:
 ## @ace_name("Set Bounce")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("0 none, 1 solids, 2 constraints, 3 both.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_bounce({mode})")
 func set_bounce(mode: int) -> void:
 	bounce_mode = clampi(mode, 0, 3)
@@ -516,7 +516,7 @@ func set_bounce(mode: int) -> void:
 ## @ace_name("Set Direction Mode")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("0 up/down, 1 left/right, 2 four-way, 3 eight-way.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_direction_mode({mode})")
 func set_direction_mode(mode: int) -> void:
 	direction_mode = clampi(mode, 0, 3)
@@ -525,7 +525,7 @@ func set_direction_mode(mode: int) -> void:
 ## @ace_name("Set Default Controls")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Read ui_left/right/up/down each tick.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_default_controls({state})")
 func set_default_controls(state: bool) -> void:
 	default_controls = state
@@ -534,7 +534,7 @@ func set_default_controls(state: bool) -> void:
 ## @ace_name("Set Enabled")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Master on/off.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_cursor_enabled({is_enabled})")
 func set_cursor_enabled(is_enabled: bool) -> void:
 	enabled = is_enabled
@@ -543,7 +543,7 @@ func set_cursor_enabled(is_enabled: bool) -> void:
 ## @ace_name("Set Ignoring Input")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Ignore all input while true (movement decays to zero).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_ignoring_input({state})")
 func set_ignoring_input(state: bool) -> void:
 	ignoring_input = state
@@ -552,7 +552,7 @@ func set_ignoring_input(state: bool) -> void:
 ## @ace_name("Set Constrain To Layout")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Clamp the cursor inside the bounds.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_constrain_to_layout({is_enabled})")
 func set_constrain_to_layout(is_enabled: bool) -> void:
 	constrain_to_layout = is_enabled
@@ -561,7 +561,7 @@ func set_constrain_to_layout(is_enabled: bool) -> void:
 ## @ace_name("Set Constraint Bounds")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Sets explicit clamp bounds (all-zero clears them, falling back to the viewport).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_constraint_bounds({left}, {top}, {right}, {bottom})")
 func set_constraint_bounds(left: float, top: float, right: float, bottom: float) -> void:
 	if left == 0.0 and top == 0.0 and right == 0.0 and bottom == 0.0:
@@ -574,14 +574,14 @@ func set_constraint_bounds(left: float, top: float, right: float, bottom: float)
 ## @ace_name("Set Hover Mode")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("0 point (origin inside shape), 1 overlap (shapes overlap).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.set_hover_mode({mode})")
 func set_hover_mode(mode: int) -> void:
 	hover_mode = clampi(mode, 0, 1)
 
 ## @ace_condition
 ## @ace_name("Is Interact Held")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.is_interact_held({id})")
 func is_interact_held(id: String) -> bool:
 	if id == "":
@@ -593,42 +593,42 @@ func is_interact_held(id: String) -> bool:
 
 ## @ace_condition
 ## @ace_name("Is Moving")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.is_moving()")
 func is_moving() -> bool:
 	return report_vel.length() > 0.0
 
 ## @ace_condition
 ## @ace_name("Is In Homing Range")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.is_in_homing_range()")
 func is_in_homing_range() -> bool:
 	return in_homing_range
 
 ## @ace_condition
 ## @ace_name("Is Blocked")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.is_blocked()")
 func is_blocked() -> bool:
 	return blocked_this_tick
 
 ## @ace_condition
 ## @ace_name("Is Enabled")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.is_cursor_enabled()")
 func is_cursor_enabled() -> bool:
 	return enabled
 
 ## @ace_condition
 ## @ace_name("Is Ignoring Input")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.is_ignoring_input()")
 func is_ignoring_input() -> bool:
 	return ignoring_input
 
 ## @ace_condition
 ## @ace_name("Is Hovering")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.is_hovering({target})")
 func is_hovering(target: Node2D) -> bool:
 	hovered_uid = -1
@@ -664,102 +664,106 @@ func is_hovering(target: Node2D) -> bool:
 
 ## @ace_expression
 ## @ace_name("Cursor X")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.cursor_x()")
 func cursor_x() -> float:
 	return host.global_position.x if host != null else 0.0
 
 ## @ace_expression
 ## @ace_name("Cursor Y")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.cursor_y()")
 func cursor_y() -> float:
 	return host.global_position.y if host != null else 0.0
 
 ## @ace_expression
 ## @ace_name("Speed")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.speed()")
 func speed() -> float:
 	return report_vel.length()
 
 ## @ace_expression
 ## @ace_name("Velocity X")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.velocity_x()")
 func velocity_x() -> float:
 	return report_vel.x
 
 ## @ace_expression
 ## @ace_name("Velocity Y")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.velocity_y()")
 func velocity_y() -> float:
 	return report_vel.y
 
 ## @ace_expression
 ## @ace_name("Moving Angle")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.moving_angle()")
 func moving_angle() -> float:
 	return fposmod(rad_to_deg(report_vel.angle()), 360.0)
 
 ## @ace_expression
 ## @ace_name("Axis X")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.axis_x()")
 func axis_x() -> float:
 	return axis.x
 
 ## @ace_expression
 ## @ace_name("Axis Y")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.axis_y()")
 func axis_y() -> float:
 	return axis.y
 
 ## @ace_expression
 ## @ace_name("Max Speed")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.max_speed_value()")
 func max_speed_value() -> float:
 	return max_speed
 
 ## @ace_expression
 ## @ace_name("Hovered UID")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.hovered_uid_value()")
 func hovered_uid_value() -> int:
 	return hovered_uid
 
 ## @ace_expression
 ## @ace_name("Homing Target UID")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.homing_target_uid_value()")
 func homing_target_uid_value() -> int:
 	return nearest_homing_uid
 
 ## @ace_expression
 ## @ace_name("Homing Target Dist")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.homing_target_dist_value()")
 func homing_target_dist_value() -> float:
 	return nearest_homing_dist
 
 ## @ace_expression
 ## @ace_name("Count Homing Targets")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.count_homing_targets()")
 func count_homing_targets() -> int:
 	return homing_targets.size()
 
 ## @ace_expression
 ## @ace_name("Bounce Mode")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.bounce_mode_token()")
 func bounce_mode_token() -> String:
 	return ["none", "solids", "constraints", "both"][bounce_mode]
 
+## Best-effort world-space AABB for a target that has no usable CollisionShape2D.
+## Sprite2D/CanvasItem expose a LOCAL get_rect(); we transform its centre + half-size
+## through global_transform so hover works on plain sprites. Returns has_area=false when
+## nothing usable is found (caller then falls back to a distance/extent check).
 func _target_world_rect(target: Node2D) -> Dictionary:
 	var shape := target.get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if shape != null and shape.shape != null:
@@ -770,6 +774,9 @@ func _target_world_rect(target: Node2D) -> Dictionary:
 		return {"has_area": true, "rect": _xform_rect(target.global_transform, r)}
 	return {"has_area": false, "rect": Rect2()}
 
+## A representative world-space proximity radius for a target: half the larger side of
+## its derived world rect, else 32px. Used by overlap-mode hover so the gate tracks the
+## actual target size instead of a fixed constant.
 func _target_extent(target: Node2D) -> float:
 	var info := _target_world_rect(target)
 	if bool(info["has_area"]):

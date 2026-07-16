@@ -1,6 +1,6 @@
 ## @ace_tags(vehicle, physics)
 ## @ace_category("Physics Car")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/physics_car/icon.svg")
 class_name PhysicsCar
 extends Node
 
@@ -96,7 +96,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Set Throttle")
 ## @ace_category("Physics Car")
 ## @ace_description("Sets the throttle from -1 (full reverse) to 1 (full forward). Persists until you change it or call Stop.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.set_throttle({amount})")
 func set_throttle(amount: float) -> void:
 	throttle = clampf(amount, -1.0, 1.0)
@@ -106,7 +106,7 @@ func set_throttle(amount: float) -> void:
 ## @ace_name("Set Brake")
 ## @ace_category("Physics Car")
 ## @ace_description("Sets the brake from 0 (off) to 1 (full). Braking slows the car without reversing it.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.set_brake({amount})")
 func set_brake(amount: float) -> void:
 	brake = clampf(amount, 0.0, 1.0)
@@ -115,7 +115,7 @@ func set_brake(amount: float) -> void:
 ## @ace_name("Set Steer")
 ## @ace_category("Physics Car")
 ## @ace_description("Sets the steering from -1 (full left) to 1 (full right). Persists until you change it or call Stop.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.set_steer({amount})")
 func set_steer(amount: float) -> void:
 	steer = clampf(amount, -1.0, 1.0)
@@ -126,7 +126,7 @@ func set_steer(amount: float) -> void:
 ## @ace_category("Physics Car")
 ## @ace_description("The keyboard-style control: pass "up" / "down" / "left" / "right" while the key is held, or "stop" to release. Call it every frame the key is down (pair with Stop when no key is down).")
 ## @ace_param_options(direction up, down, left, right, stop)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.simulate_control({direction})")
 func simulate_control(direction: String) -> void:
 	_drive_mode = ""
@@ -144,7 +144,7 @@ func simulate_control(direction: String) -> void:
 ## @ace_name("Stop")
 ## @ace_category("Physics Car")
 ## @ace_description("Clears throttle, brake, and steer, and exits any Drive Toward mode. The car coasts to rest.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.stop()")
 func stop() -> void:
 	throttle = 0.0
@@ -156,7 +156,7 @@ func stop() -> void:
 ## @ace_name("Enable Handbrake")
 ## @ace_category("Physics Car")
 ## @ace_description("Cuts the grip for this one physics frame, so the back end slides. Call it every frame you want the handbrake held.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.enable_handbrake()")
 func enable_handbrake() -> void:
 	_handbrake = true
@@ -165,7 +165,7 @@ func enable_handbrake() -> void:
 ## @ace_name("Drive Toward Angle")
 ## @ace_category("Physics Car")
 ## @ace_description("Auto-steers toward a heading (degrees) and applies throttle. Call it each frame; the car turns until it faces within the tolerance. Sets the Is Driving Toward Angle mode.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.drive_toward_angle({target_angle}, {throttle_amount}, {max_steer}, {tolerance})")
 func drive_toward_angle(target_angle: float, throttle_amount: float, max_steer: float, tolerance: float) -> void:
 	_drive_mode = "angle"
@@ -180,7 +180,7 @@ func drive_toward_angle(target_angle: float, throttle_amount: float, max_steer: 
 ## @ace_name("Drive Toward Position")
 ## @ace_category("Physics Car")
 ## @ace_description("Auto-steers toward a world position and applies throttle. Call it each frame (for example toward a waypoint). Fires On Drive Target Reached inside the reach distance. Sets the Is Driving Toward Position mode.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.drive_toward_position({x}, {y}, {throttle_amount}, {max_steer}, {tolerance})")
 func drive_toward_position(x: float, y: float, throttle_amount: float, max_steer: float, tolerance: float) -> void:
 	_drive_mode = "position"
@@ -200,7 +200,7 @@ func drive_toward_position(x: float, y: float, throttle_amount: float, max_steer
 ## @ace_name("Teleport")
 ## @ace_category("Physics Car")
 ## @ace_description("Moves the car to a position and clears its velocity and spin (for respawns and resets).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.teleport({x}, {y})")
 func teleport(x: float, y: float) -> void:
 	var body: RigidBody2D = host as RigidBody2D
@@ -214,7 +214,7 @@ func teleport(x: float, y: float) -> void:
 ## @ace_name("Set Max Speed")
 ## @ace_category("Physics Car")
 ## @ace_description("Changes the top forward speed at runtime (for boosts or speed caps).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.set_max_speed({value})")
 func set_max_speed(value: float) -> void:
 	max_speed = maxf(value, 0.0)
@@ -223,7 +223,7 @@ func set_max_speed(value: float) -> void:
 ## @ace_name("Set Grip")
 ## @ace_category("Physics Car")
 ## @ace_description("Changes the base sideways grip at runtime (1 = glued, 0 = ice).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.set_grip({value})")
 func set_grip(value: float) -> void:
 	grip = clampf(value, 0.0, 1.0)
@@ -232,7 +232,7 @@ func set_grip(value: float) -> void:
 ## @ace_name("Set Surface Grip")
 ## @ace_category("Physics Car")
 ## @ace_description("Sets a terrain grip multiplier on top of the base grip (for example 0.2 on ice, 0.45 in mud). 1 = no change.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.set_surface_grip({multiplier})")
 func set_surface_grip(multiplier: float) -> void:
 	_surface_grip = maxf(multiplier, 0.0)
@@ -241,7 +241,7 @@ func set_surface_grip(multiplier: float) -> void:
 ## @ace_name("Set Surface Resistance")
 ## @ace_category("Physics Car")
 ## @ace_description("Sets a terrain drag multiplier (above 1 = sticky mud that slows you, below 1 = slick). 1 = no change.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.set_surface_resistance({multiplier})")
 func set_surface_resistance(multiplier: float) -> void:
 	_surface_resist = maxf(multiplier, 0.0)
@@ -250,7 +250,7 @@ func set_surface_resistance(multiplier: float) -> void:
 ## @ace_name("Reset Surface")
 ## @ace_category("Physics Car")
 ## @ace_description("Restores both terrain multipliers to 1 (call it when the car leaves a terrain zone).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.reset_surface()")
 func reset_surface() -> void:
 	_surface_grip = 1.0
@@ -260,7 +260,7 @@ func reset_surface() -> void:
 ## @ace_name("Set Reach Distance")
 ## @ace_category("Physics Car")
 ## @ace_description("Sets how close (pixels) a Drive Toward target must be to fire On Drive Target Reached.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.set_reach_distance({distance})")
 func set_reach_distance(distance: float) -> void:
 	reach_distance = maxf(distance, 0.0)
@@ -269,7 +269,7 @@ func set_reach_distance(distance: float) -> void:
 ## @ace_name("Is Moving")
 ## @ace_category("Physics Car")
 ## @ace_description("Whether the car is above a small movement speed.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.is_moving()")
 func is_moving() -> bool:
 	return _speed > 5.0
@@ -278,7 +278,7 @@ func is_moving() -> bool:
 ## @ace_name("Is Reversing")
 ## @ace_category("Physics Car")
 ## @ace_description("Whether the car is moving backwards.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.is_reversing()")
 func is_reversing() -> bool:
 	return _fwd_speed < -1.0
@@ -287,7 +287,7 @@ func is_reversing() -> bool:
 ## @ace_name("Is Drifting")
 ## @ace_category("Physics Car")
 ## @ace_description("Whether the slip angle is past the drift threshold.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.is_drifting()")
 func is_drifting() -> bool:
 	return _drifting
@@ -296,7 +296,7 @@ func is_drifting() -> bool:
 ## @ace_name("Is Handbrake Active")
 ## @ace_category("Physics Car")
 ## @ace_description("Whether the handbrake was requested this physics frame.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.is_handbrake_active()")
 func is_handbrake_active() -> bool:
 	return _handbrake
@@ -305,7 +305,7 @@ func is_handbrake_active() -> bool:
 ## @ace_name("Is At Max Speed")
 ## @ace_category("Physics Car")
 ## @ace_description("Whether the car has hit its forward speed cap.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.is_at_max_speed()")
 func is_at_max_speed() -> bool:
 	return _fwd_speed >= max_speed - 1.0
@@ -314,7 +314,7 @@ func is_at_max_speed() -> bool:
 ## @ace_name("Has Reached Drive Target")
 ## @ace_category("Physics Car")
 ## @ace_description("Whether the last Drive Toward Position target has been reached.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.has_reached_target()")
 func has_reached_target() -> bool:
 	return _reached
@@ -323,7 +323,7 @@ func has_reached_target() -> bool:
 ## @ace_name("Has Surface Override")
 ## @ace_category("Physics Car")
 ## @ace_description("Whether a terrain grip or resistance multiplier is currently in effect.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.has_surface_override()")
 func has_surface_override() -> bool:
 	return not is_equal_approx(_surface_grip, 1.0) or not is_equal_approx(_surface_resist, 1.0)
@@ -332,7 +332,7 @@ func has_surface_override() -> bool:
 ## @ace_name("Is Driving Toward Angle")
 ## @ace_category("Physics Car")
 ## @ace_description("Whether the car is in Drive Toward Angle mode.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.is_driving_toward_angle()")
 func is_driving_toward_angle() -> bool:
 	return _drive_mode == "angle"
@@ -341,7 +341,7 @@ func is_driving_toward_angle() -> bool:
 ## @ace_name("Is Driving Toward Position")
 ## @ace_category("Physics Car")
 ## @ace_description("Whether the car is in Drive Toward Position mode.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.is_driving_toward_position()")
 func is_driving_toward_position() -> bool:
 	return _drive_mode == "position"
@@ -350,7 +350,7 @@ func is_driving_toward_position() -> bool:
 ## @ace_name("Speed")
 ## @ace_category("Physics Car")
 ## @ace_description("Current speed, in pixels per second.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.speed()")
 func speed() -> float:
 	return _speed
@@ -359,7 +359,7 @@ func speed() -> float:
 ## @ace_name("Forward Speed")
 ## @ace_category("Physics Car")
 ## @ace_description("Speed along the way the car faces (negative when reversing).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.forward_speed()")
 func forward_speed() -> float:
 	return _fwd_speed
@@ -368,7 +368,7 @@ func forward_speed() -> float:
 ## @ace_name("Lateral Speed")
 ## @ace_category("Physics Car")
 ## @ace_description("Sideways slide speed (the part grip fights).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.lateral_speed()")
 func lateral_speed() -> float:
 	return _lat_speed
@@ -377,7 +377,7 @@ func lateral_speed() -> float:
 ## @ace_name("Angle Of Motion")
 ## @ace_category("Physics Car")
 ## @ace_description("The direction the car is actually moving, in degrees.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.angle_of_motion()")
 func angle_of_motion() -> float:
 	return _motion_angle
@@ -386,7 +386,7 @@ func angle_of_motion() -> float:
 ## @ace_name("Slip Angle")
 ## @ace_category("Physics Car")
 ## @ace_description("Degrees between where the car points and where it moves.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.slip_angle()")
 func slip_angle() -> float:
 	return _slip
@@ -395,7 +395,7 @@ func slip_angle() -> float:
 ## @ace_name("Drift Duration")
 ## @ace_category("Physics Car")
 ## @ace_description("Seconds the current drift has lasted (or the final length inside On Drift Ended).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.drift_duration()")
 func drift_duration() -> float:
 	return _drift_time
@@ -404,7 +404,7 @@ func drift_duration() -> float:
 ## @ace_name("Throttle Input")
 ## @ace_category("Physics Car")
 ## @ace_description("The current throttle value (-1 to 1).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.throttle_input()")
 func throttle_input() -> float:
 	return throttle
@@ -413,7 +413,7 @@ func throttle_input() -> float:
 ## @ace_name("Brake Input")
 ## @ace_category("Physics Car")
 ## @ace_description("The current brake value (0 to 1).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.brake_input()")
 func brake_input() -> float:
 	return brake
@@ -422,7 +422,7 @@ func brake_input() -> float:
 ## @ace_name("Steer Input")
 ## @ace_category("Physics Car")
 ## @ace_description("The current steer value (-1 to 1).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.steer_input()")
 func steer_input() -> float:
 	return steer
@@ -431,7 +431,7 @@ func steer_input() -> float:
 ## @ace_name("Heading Error")
 ## @ace_category("Physics Car")
 ## @ace_description("Signed degrees a Drive Toward action still needs to turn.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.heading_error()")
 func heading_error() -> float:
 	return _heading_error
@@ -440,7 +440,7 @@ func heading_error() -> float:
 ## @ace_name("Drive Target Distance")
 ## @ace_category("Physics Car")
 ## @ace_description("Distance to the current Drive Toward Position target (0 if none).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.drive_target_distance()")
 func drive_target_distance() -> float:
 	return _target_dist
@@ -449,7 +449,7 @@ func drive_target_distance() -> float:
 ## @ace_name("Effective Grip")
 ## @ace_category("Physics Car")
 ## @ace_description("The final grip after handbrake and terrain multipliers.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.effective_grip()")
 func effective_grip() -> float:
 	return _eff_grip
@@ -458,7 +458,7 @@ func effective_grip() -> float:
 ## @ace_name("Surface Grip Multiplier")
 ## @ace_category("Physics Car")
 ## @ace_description("The active terrain grip multiplier.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.surface_grip_multiplier()")
 func surface_grip_multiplier() -> float:
 	return _surface_grip
@@ -467,7 +467,7 @@ func surface_grip_multiplier() -> float:
 ## @ace_name("Surface Resistance Multiplier")
 ## @ace_category("Physics Car")
 ## @ace_description("The active terrain drag multiplier.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.surface_resistance_multiplier()")
 func surface_resistance_multiplier() -> float:
 	return _surface_resist
@@ -476,7 +476,7 @@ func surface_resistance_multiplier() -> float:
 ## @ace_name("Collision Force")
 ## @ace_category("Physics Car")
 ## @ace_description("Approximate impact speed of the latest collision (inside On Collided).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.collision_force()")
 func collision_force() -> float:
 	return _collision_force
@@ -485,7 +485,7 @@ func collision_force() -> float:
 ## @ace_name("Collision Angle")
 ## @ace_category("Physics Car")
 ## @ace_description("Approximate impact direction in degrees (inside On Collided).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.collision_angle()")
 func collision_angle() -> float:
 	return _collision_angle

@@ -253,15 +253,18 @@ func _build_property_definitions(provider_id: String, property_name: String, pro
 	_apply_template_overrides(expression_definition, overrides)
 	output.append(expression_definition)
 
-	var set_definition := _build_property_action_definition(provider_id, property_name, display_name, category, "set", "Set %s" % display_name, TYPE_NIL)
+	# The write-side actions inherit the member/class icon override too (a pack's own icon),
+	# with the generic property-action marker only as the last fallback.
+	var action_icon: String = _string_override(overrides, "icon", "property_action")
+	var set_definition := _build_property_action_definition(provider_id, property_name, display_name, category, "set", "Set %s" % display_name, TYPE_NIL, "value", action_icon)
 	output.append(set_definition)
 	if property_type in [TYPE_INT, TYPE_FLOAT]:
-		output.append(_build_property_action_definition(provider_id, property_name, display_name, category, "add", "Add To %s" % display_name, TYPE_NIL, "amount"))
-		output.append(_build_property_action_definition(provider_id, property_name, display_name, category, "subtract", "Subtract From %s" % display_name, TYPE_NIL, "amount"))
+		output.append(_build_property_action_definition(provider_id, property_name, display_name, category, "add", "Add To %s" % display_name, TYPE_NIL, "amount", action_icon))
+		output.append(_build_property_action_definition(provider_id, property_name, display_name, category, "subtract", "Subtract From %s" % display_name, TYPE_NIL, "amount", action_icon))
 	return output
 
 
-func _build_property_action_definition(provider_id: String, property_name: String, display_name: String, category: String, prefix: String, action_name: String, return_type: int, parameter_name: String = "value") -> ACEDefinition:
+func _build_property_action_definition(provider_id: String, property_name: String, display_name: String, category: String, prefix: String, action_name: String, return_type: int, parameter_name: String = "value", icon_name: String = "property_action") -> ACEDefinition:
 	var definition := ACEDefinition.new()
 	definition.provider_id = provider_id
 	definition.id = "%s:%s" % [prefix, property_name]
@@ -278,7 +281,7 @@ func _build_property_action_definition(provider_id: String, property_name: Strin
 		}
 	]
 	definition.return_type = return_type
-	definition.icon = "property_action"
+	definition.icon = icon_name
 	definition.metadata = {
 		"semantic_source": "reflection",
 		"source_kind": "property_action",

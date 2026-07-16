@@ -1,7 +1,7 @@
 ## @ace_tags(ai, planning, utility)
 ## @ace_category("UHTN Planning")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 class_name UHTNPlanner
 extends Node
 
@@ -70,7 +70,7 @@ func _find_method_anywhere(method_id: String) -> HTNMethod:
 ## @ace_name("Set World State")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Writes a fact - preconditions and scorer inputs read it.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.set_world_state({key}, {value})")
 func set_world_state(key: String, value) -> void:
 	world_state[key] = value
@@ -79,7 +79,7 @@ func set_world_state(key: String, value) -> void:
 ## @ace_name("Clear World State")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Removes a world-state key.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.clear_world_state({key})")
 func clear_world_state(key: String) -> void:
 	world_state.erase(key)
@@ -88,7 +88,7 @@ func clear_world_state(key: String) -> void:
 ## @ace_name("Add Primitive Task")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Registers a leaf task your sheet executes directly.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.add_primitive({task_name})")
 func add_primitive(task_name: String) -> void:
 	primitives[task_name] = true
@@ -97,7 +97,7 @@ func add_primitive(task_name: String) -> void:
 ## @ace_name("Add Compound Task")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Registers a task that decomposes via methods.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.add_compound({task_name})")
 func add_compound(task_name: String) -> void:
 	if not compounds.has(task_name):
@@ -107,7 +107,7 @@ func add_compound(task_name: String) -> void:
 ## @ace_name("Add Method")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Adds (or re-scores) a way to accomplish a compound task; the best-ranked applicable method wins.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.add_method({task_name}, {method_id}, {utility})")
 func add_method(task_name: String, method_id: String, utility: float) -> void:
 	if not compounds.has(task_name):
@@ -125,7 +125,7 @@ func add_method(task_name: String, method_id: String, utility: float) -> void:
 ## @ace_name("Add Method Condition")
 ## @ace_category("UHTN Planning")
 ## @ace_description("A precondition (world-state key, operator, value) the method needs to be chosen.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.add_method_condition({task_name}, {method_id}, {key}, {op}, {value})")
 func add_method_condition(task_name: String, method_id: String, key: String, op: String, value) -> void:
 	var method: HTNMethod = _find_method(task_name, method_id)
@@ -140,7 +140,7 @@ func add_method_condition(task_name: String, method_id: String, key: String, op:
 ## @ace_name("Add Method Subtask")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Appends a subtask (primitive or compound) to a method, in order.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.add_method_subtask({task_name}, {method_id}, {subtask})")
 func add_method_subtask(task_name: String, method_id: String, subtask: String) -> void:
 	var method: HTNMethod = _find_method(task_name, method_id)
@@ -151,7 +151,7 @@ func add_method_subtask(task_name: String, method_id: String, subtask: String) -
 ## @ace_name("Add Scorer Input")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Feeds a world-state key through a response curve (linear / inverse / quadratic / inverse_quadratic / logistic / threshold / bell) into a named scorer. A scorer is the weighted average of its inputs.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.add_scorer_input({scorer_id}, {input_key}, {curve}, {weight}, {center}, {slope})")
 func add_scorer_input(scorer_id: String, input_key: String, curve: String, weight: float, center: float, slope: float) -> void:
 	if not scorers.has(scorer_id):
@@ -162,7 +162,7 @@ func add_scorer_input(scorer_id: String, input_key: String, curve: String, weigh
 ## @ace_name("Set Method Scorer")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Binds a utility scorer to a method - the method is then ranked by the scorer's LIVE value at plan time instead of its fixed utility.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.set_method_scorer({task_name}, {method_id}, {scorer_id})")
 func set_method_scorer(task_name: String, method_id: String, scorer_id: String) -> void:
 	var method: HTNMethod = _find_method(task_name, method_id)
@@ -173,7 +173,7 @@ func set_method_scorer(task_name: String, method_id: String, scorer_id: String) 
 ## @ace_name("Clear Task Network")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Wipes all tasks, methods, and scorers (keeps world state).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.clear_network()")
 func clear_network() -> void:
 	primitives.clear()
@@ -184,7 +184,7 @@ func clear_network() -> void:
 ## @ace_name("Load Plan Resource")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Loads a UHTNPlanResource (.tres): its tasks, methods, preconditions, and scorer inputs replace the current network, and its root task becomes the goal. Fires On Plan Loaded.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.load_plan({resource})")
 func load_plan(resource: Resource) -> void:
 	if resource == null:
@@ -224,7 +224,7 @@ func load_plan(resource: Resource) -> void:
 ## @ace_name("Request Plan")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Decomposes the root task into a plan (best-ranked methods win) and starts the first task.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.request_plan()")
 func request_plan() -> void:
 	plan = _decompose(root_task, 0)
@@ -238,7 +238,7 @@ func request_plan() -> void:
 ## @ace_name("Mark Task Complete")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Advances to the next task, or fires On Plan Complete at the end.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.mark_complete()")
 func mark_complete() -> void:
 	if plan_index >= plan.size():
@@ -255,7 +255,7 @@ func mark_complete() -> void:
 ## @ace_name("Mark Task Failed")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Re-plans from the root (or fires On Plan Failed if auto-replan is off).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.mark_failed()")
 func mark_failed() -> void:
 	if auto_replan_on_fail:
@@ -269,7 +269,7 @@ func mark_failed() -> void:
 ## @ace_name("Force Task")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Pushes a task to the front of the plan and starts it - the scripted-override escape hatch (cutscene beats, staggers).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.force_task({task_name})")
 func force_task(task_name: String) -> void:
 	plan.insert(plan_index, task_name)
@@ -279,7 +279,7 @@ func force_task(task_name: String) -> void:
 ## @ace_name("Invalidate Plan")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Drops the current plan so the next Request Plan rebuilds it.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.invalidate_plan()")
 func invalidate_plan() -> void:
 	plan = []
@@ -287,49 +287,49 @@ func invalidate_plan() -> void:
 
 ## @ace_condition
 ## @ace_name("Has Plan")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.has_plan()")
 func has_plan() -> bool:
 	return plan_index < plan.size()
 
 ## @ace_condition
 ## @ace_name("Current Task Is")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.current_task_is({task_name})")
 func current_task_is(task_name: String) -> bool:
 	return current_task() == task_name
 
 ## @ace_expression
 ## @ace_name("Current Task")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.current_task()")
 func current_task() -> String:
 	return str(plan[plan_index]) if plan_index < plan.size() else ""
 
 ## @ace_expression
 ## @ace_name("Plan Length")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.plan_length()")
 func plan_length() -> int:
 	return plan.size()
 
 ## @ace_expression
 ## @ace_name("Plan Task At")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.plan_task_at({index})")
 func plan_task_at(index: int) -> String:
 	return str(plan[index]) if index >= 0 and index < plan.size() else ""
 
 ## @ace_expression
 ## @ace_name("World Value")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.world_value({key})")
 func world_value(key: String) -> Variant:
 	return world_state.get(key, 0)
 
 ## @ace_expression
 ## @ace_name("Scorer Value")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.scorer_value({scorer_id})")
 func scorer_value(scorer_id: String) -> float:
 	return _evaluate_scorer(scorer_id)

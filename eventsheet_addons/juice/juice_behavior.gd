@@ -1,7 +1,7 @@
 ## @ace_tags(camera, juice)
 ## @ace_category("Juice")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/juice/icon.svg")
 class_name JuiceBehavior
 extends Node
 
@@ -193,7 +193,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Shake")
 ## @ace_category("Juice")
 ## @ace_description("Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.shake({strength})")
 func shake(strength: float) -> void:
 	trauma = clampf(trauma + strength, 0.0, 1.0)
@@ -202,7 +202,7 @@ func shake(strength: float) -> void:
 ## @ace_name("Stop Shake")
 ## @ace_category("Juice")
 ## @ace_description("Cancels any shake immediately (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.stop_shake()")
 func stop_shake() -> void:
 	trauma = 0.0
@@ -218,7 +218,7 @@ func stop_shake() -> void:
 ## @ace_name("Use Camera")
 ## @ace_category("Juice")
 ## @ace_description("Pin the effects to a specific Camera2D (by path). Leave it unused to auto-target whichever camera is active.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.use_camera({camera_path})")
 func use_camera(camera_path: NodePath) -> void:
 	_camera_override = get_node_or_null(camera_path) as Camera2D
@@ -227,7 +227,7 @@ func use_camera(camera_path: NodePath) -> void:
 ## @ace_name("Recoil")
 ## @ace_category("Juice")
 ## @ace_description("Kicks the camera a distance (pixels) in a direction (degrees: -90 = up, 0 = right) and springs it back at the Recoil Recovery rate. Fire on every shot - kicks stack, so rapid fire climbs. Composes with Shake/Bob/Jitter.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.recoil({angle_degrees}, {strength})")
 func recoil(angle_degrees: float, strength: float) -> void:
 	_recoil_vec += Vector2.from_angle(deg_to_rad(angle_degrees)) * strength
@@ -236,7 +236,7 @@ func recoil(angle_degrees: float, strength: float) -> void:
 ## @ace_name("Start Head Bob")
 ## @ace_category("Juice")
 ## @ace_description("Starts a walking head-bob on the camera: a figure-8 sway (side at half rate, one vertical dip per step). Amplitude is pixels, frequency is steps per second. Call while your character moves; Stop Head Bob when they halt.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.start_head_bob({amplitude}, {frequency})")
 func start_head_bob(amplitude: float, frequency: float) -> void:
 	_bob_amplitude = amplitude
@@ -247,7 +247,7 @@ func start_head_bob(amplitude: float, frequency: float) -> void:
 ## @ace_name("Stop Head Bob")
 ## @ace_category("Juice")
 ## @ace_description("Stops the head bob (the camera returns to rest once every other effect settles too).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.stop_head_bob()")
 func stop_head_bob() -> void:
 	_bob_active = false
@@ -256,7 +256,7 @@ func stop_head_bob() -> void:
 ## @ace_name("Start Jitter")
 ## @ace_category("Juice")
 ## @ace_description("Starts a continuous nervous wobble on the camera (pixels) that runs until Stop Jitter - unlike Shake it never decays. Great for engines idling, drunk vision, earthquakes building, low-health unease.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.start_jitter({amount})")
 func start_jitter(amount: float) -> void:
 	_jitter_amount = amount
@@ -266,7 +266,7 @@ func start_jitter(amount: float) -> void:
 ## @ace_name("Stop Jitter")
 ## @ace_category("Juice")
 ## @ace_description("Stops the jitter wobble.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.stop_jitter()")
 func stop_jitter() -> void:
 	_jitter_active = false
@@ -275,7 +275,7 @@ func stop_jitter() -> void:
 ## @ace_name("Tilt To")
 ## @ace_category("Juice")
 ## @ace_description("Eases the camera roll to an angle (degrees) and HOLDS it - lean into a drift, a hill, or a dramatic dutch angle. Tilt back to 0 to level out. Emits On Tilt Finished.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.tilt_to({degrees}, {duration})")
 func tilt_to(degrees: float, duration: float) -> void:
 	if _tilt_tween != null:
@@ -289,7 +289,7 @@ func tilt_to(degrees: float, duration: float) -> void:
 ## @ace_name("Zoom By Percent")
 ## @ace_category("Juice")
 ## @ace_description("Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.zoom_by_percent({percent}, {duration})")
 func zoom_by_percent(percent: float, duration: float) -> void:
 	var cam: Camera2D = _camera()
@@ -305,7 +305,7 @@ func zoom_by_percent(percent: float, duration: float) -> void:
 ## @ace_name("Zoom To Position")
 ## @ace_category("Juice")
 ## @ace_description("Zooms in while gliding the camera so a world position becomes the screen CENTRE - frame a spot in one action.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.zoom_to_position({world_position}, {percent}, {duration})")
 func zoom_to_position(world_position: Vector2, percent: float, duration: float) -> void:
 	var cam: Camera2D = _camera()
@@ -323,7 +323,7 @@ func zoom_to_position(world_position: Vector2, percent: float, duration: float) 
 ## @ace_name("Zoom Toward Point")
 ## @ace_category("Juice")
 ## @ace_description("Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) - great for strategy/map zoom.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.zoom_toward_point({world_position}, {percent}, {duration})")
 func zoom_toward_point(world_position: Vector2, percent: float, duration: float) -> void:
 	var cam: Camera2D = _camera()
@@ -342,7 +342,7 @@ func zoom_toward_point(world_position: Vector2, percent: float, duration: float)
 ## @ace_name("Squash & Stretch")
 ## @ace_category("Juice")
 ## @ace_description("Pops the host (Node2D or Control) with a volume-preserving stretch that springs back elastically. Positive = stretch tall (a jump), negative = squash wide (a landing).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.squash_and_stretch({stretch}, {duration})")
 func squash_and_stretch(stretch: float, duration: float) -> void:
 	if host == null:
@@ -366,7 +366,7 @@ func squash_and_stretch(stretch: float, duration: float) -> void:
 ## @ace_name("Spring Squash")
 ## @ace_category("Juice")
 ## @ace_description("Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) - bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.spring_squash({stretch})")
 func spring_squash(stretch: float) -> void:
 	if host == null:
@@ -382,7 +382,7 @@ func spring_squash(stretch: float) -> void:
 ## @ace_category("Juice")
 ## @ace_description("Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.")
 ## @ace_param_options(duration_clock realtime, gametime)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.slowmo({target_scale}, {hold_duration}, {duration_clock})")
 func slowmo(target_scale: float, hold_duration: float, duration_clock: String) -> void:
 	if _slowmo_tween != null:
@@ -400,7 +400,7 @@ func slowmo(target_scale: float, hold_duration: float, duration_clock: String) -
 ## @ace_name("Clear Slowmo")
 ## @ace_category("Juice")
 ## @ace_description("Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.clear_slowmo()")
 func clear_slowmo() -> void:
 	if _slowmo_tween != null:
@@ -412,7 +412,7 @@ func clear_slowmo() -> void:
 ## @ace_name("Hitstop")
 ## @ace_category("Juice")
 ## @ace_description("The punchy hit-pause you feel on a connecting blow: freezes Engine.time_scale (0 = full stop) for a few frames, then snaps back to what it was. Uses a realtime timer so it un-freezes even at a full stop, ignores repeat hits already mid-freeze, pauses any active Slowmo for the duration, and emits On Hitstop Finished. Fire it the instant a hit lands.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.hitstop({freeze_duration}, {freeze_scale})")
 func hitstop(freeze_duration: float, freeze_scale: float) -> void:
 	if _hitstop_active:
@@ -431,6 +431,8 @@ func hitstop(freeze_duration: float, freeze_scale: float) -> void:
 		_slowmo_tween.play()
 	hitstop_finished.emit()
 
+## Drives an ANCHORED zoom: keeps _zoom_anchor pinned under the same screen point as the zoom
+## interpolates (mouse-wheel-to-cursor feel). Called by Zoom Toward Point's tween each frame.
 func _zoom_anchored_step(f: float) -> void:
 	var cam: Camera2D = _camera()
 	if cam == null:
@@ -443,21 +445,21 @@ func _zoom_anchored_step(f: float) -> void:
 
 ## @ace_condition
 ## @ace_name("Is Shaking")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.is_shaking()")
 func is_shaking() -> bool:
 	return trauma > 0.0
 
 ## @ace_expression
 ## @ace_name("Trauma")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.current_trauma()")
 func current_trauma() -> float:
 	return trauma
 
 ## @ace_condition
 ## @ace_name("Is Hitstopped")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.is_hitstopped()")
 func is_hitstopped() -> bool:
 	return _hitstop_active
@@ -465,6 +467,7 @@ func is_hitstopped() -> bool:
 func _set_time_scale(s: float) -> void:
 	Engine.time_scale = s
 
+## Maps a slowmo easing-curve name (Inspector enum) to a Tween.TransitionType.
 func _slowmo_trans(easing_name: String) -> int:
 	match easing_name:
 		"linear": return Tween.TRANS_LINEAR
@@ -475,6 +478,7 @@ func _slowmo_trans(easing_name: String) -> int:
 		"back": return Tween.TRANS_BACK
 		_: return Tween.TRANS_SINE
 
+## Maps a slowmo easing-direction name (Inspector enum) to a Tween.EaseType.
 func _slowmo_ease(easing_name: String) -> int:
 	match easing_name:
 		"in": return Tween.EASE_IN
@@ -482,6 +486,8 @@ func _slowmo_ease(easing_name: String) -> int:
 		"out_in": return Tween.EASE_OUT_IN
 		_: return Tween.EASE_OUT
 
+## Applies a scale to the host whether it's a Node2D or a Control (centring a Control's pivot so
+## it scales from the middle). Used by Spring Squash's per-frame integrator.
 func _apply_host_scale(s: Vector2) -> void:
 	if host is Node2D:
 		(host as Node2D).scale = s
@@ -506,7 +512,7 @@ func _ensure_tint_overlay() -> void:
 ## @ace_action
 ## @ace_name("Set Host Tint")
 ## @ace_description("Tints the HOST object: blends its color toward the tint by Strength (0 = its own colors untouched, 1 = fully the tint color) - the classic object tint, with the strength as your opacity dial. Children inherit (modulate).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.set_host_tint({color}, {strength})")
 func set_host_tint(color: Color, strength: float) -> void:
 	if host is CanvasItem:
@@ -515,7 +521,7 @@ func set_host_tint(color: Color, strength: float) -> void:
 ## @ace_action
 ## @ace_name("Clear Host Tint")
 ## @ace_description("Removes the host tint (back to its own colors).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.clear_host_tint()")
 func clear_host_tint() -> void:
 	if host is CanvasItem:
@@ -524,7 +530,7 @@ func clear_host_tint() -> void:
 ## @ace_action
 ## @ace_name("Set Screen Tint")
 ## @ace_description("Washes the WHOLE SCREEN with a color at Strength opacity (0..1) - damage red, poison green, night blue, flashback sepia. Call again to retune; strength 0 clears.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.set_screen_tint({color}, {strength})")
 func set_screen_tint(color: Color, strength: float) -> void:
 	_ensure_tint_overlay()
@@ -535,7 +541,7 @@ func set_screen_tint(color: Color, strength: float) -> void:
 ## @ace_action
 ## @ace_name("Fade Screen Tint")
 ## @ace_description("Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.fade_screen_tint({seconds})")
 func fade_screen_tint(seconds: float) -> void:
 	if _tint_rect == null or not _tint_rect.visible:
@@ -545,7 +551,7 @@ func fade_screen_tint(seconds: float) -> void:
 ## @ace_action
 ## @ace_name("Clear Screen Tint")
 ## @ace_description("Removes the screen tint instantly.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.clear_screen_tint()")
 func clear_screen_tint() -> void:
 	if _tint_rect != null:

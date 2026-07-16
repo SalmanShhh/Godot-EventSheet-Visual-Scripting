@@ -1,4 +1,4 @@
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/skin_catalog_resource/icon.svg")
 class_name SkinCatalogResource
 extends Resource
 ## A cosmetics catalog as a data asset for the SkinVault pack. Fill the rarities and skins grids in the Inspector, save as a .tres, and load it with the SkinVault Load Catalog action or the Skin Catalog Loader behavior.

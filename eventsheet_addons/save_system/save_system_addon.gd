@@ -1,5 +1,5 @@
 ## @ace_tags(persistence)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/save_system/icon.svg")
 class_name SaveSystemAddon
 extends Node
 
@@ -64,7 +64,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Save Value")
 ## @ace_category("Save System")
 ## @ace_description("Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_value({key}, {value})")
 func save_value(key: String, value) -> void:
 	var data: Dictionary = _read_all()
@@ -78,7 +78,7 @@ func save_value(key: String, value) -> void:
 ## @ace_name("Load Value")
 ## @ace_category("Save System")
 ## @ace_description("Reads any value (your default when missing).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.load_value({key}, {default_value})")
 func load_value(key: String, default_value) -> Variant:
 	return _read_all().get(key, default_value)
@@ -87,7 +87,7 @@ func load_value(key: String, default_value) -> Variant:
 ## @ace_name("Save Number")
 ## @ace_category("Save System")
 ## @ace_description("Writes a number under the key (active slot).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_number({key}, {value})")
 func save_number(key: String, value: float) -> void:
 	save_value(key, value)
@@ -96,7 +96,7 @@ func save_number(key: String, value: float) -> void:
 ## @ace_name("Load Number")
 ## @ace_category("Save System")
 ## @ace_description("Reads a number (0 when missing).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.load_number({key})")
 func load_number(key: String) -> float:
 	return float(load_value(key, 0.0))
@@ -105,7 +105,7 @@ func load_number(key: String) -> float:
 ## @ace_name("Save Text")
 ## @ace_category("Save System")
 ## @ace_description("Writes a string under the key (active slot).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_text({key}, {value})")
 func save_text(key: String, value: String) -> void:
 	save_value(key, value)
@@ -114,7 +114,7 @@ func save_text(key: String, value: String) -> void:
 ## @ace_name("Load Text")
 ## @ace_category("Save System")
 ## @ace_description("Reads a string ("" when missing).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.load_text({key})")
 func load_text(key: String) -> String:
 	return str(load_value(key, ""))
@@ -123,7 +123,7 @@ func load_text(key: String) -> String:
 ## @ace_name("Has Save Key")
 ## @ace_category("Save System")
 ## @ace_description("Whether the key exists in the active slot.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.has_save_key({key})")
 func has_save_key(key: String) -> bool:
 	return _read_all().has(key)
@@ -132,7 +132,7 @@ func has_save_key(key: String) -> bool:
 ## @ace_name("Read All")
 ## @ace_category("Save System")
 ## @ace_description("Reads the whole active slot as one Dictionary (every saved key and value).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.read_all()")
 func read_all() -> Dictionary:
 	return _read_all()
@@ -141,7 +141,7 @@ func read_all() -> Dictionary:
 ## @ace_name("List Save Keys")
 ## @ace_category("Save System")
 ## @ace_description("The keys stored in the active slot (loop them to read a whole save).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_keys()")
 func save_keys() -> Array:
 	return _read_all().keys()
@@ -150,7 +150,7 @@ func save_keys() -> Array:
 ## @ace_name("Read Save File")
 ## @ace_category("Save System")
 ## @ace_description("Reads ANY save file at a path in the given format (config/json/binary/csv/ini/xml; blank = the active format) and returns its Dictionary.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.read_file({path}, {file_format})")
 func read_file(path: String, file_format: String) -> Dictionary:
 	return _read_path(path, file_format if not file_format.is_empty() else format)
@@ -159,7 +159,7 @@ func read_file(path: String, file_format: String) -> Dictionary:
 ## @ace_name("Save File Format")
 ## @ace_category("Save System")
 ## @ace_description("Detects the format of the save file at the path (config/json/binary/csv/ini/xml), or "" when it is missing or unrecognised. Feed it to Read Save File.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_file_format({path})")
 func save_file_format(path: String) -> String:
 	return _detect_format(path)
@@ -168,7 +168,7 @@ func save_file_format(path: String) -> String:
 ## @ace_name("Save File Is Format")
 ## @ace_category("Save System")
 ## @ace_description("Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_file_is_format({path}, {expected_format})")
 func save_file_is_format(path: String, expected_format: String) -> bool:
 	return _detect_format(path) == expected_format
@@ -177,7 +177,7 @@ func save_file_is_format(path: String, expected_format: String) -> bool:
 ## @ace_name("Save Format Is")
 ## @ace_category("Save System")
 ## @ace_description("Whether the active save format (the Inspector format property) equals the given one.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_format_is({expected_format})")
 func save_format_is(expected_format: String) -> bool:
 	return format == expected_format
@@ -186,7 +186,7 @@ func save_format_is(expected_format: String) -> bool:
 ## @ace_name("Delete Slot")
 ## @ace_category("Save System")
 ## @ace_description("Removes the active slot's save file.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.delete_slot()")
 func delete_slot() -> void:
 	if FileAccess.file_exists(_slot_path()):
@@ -196,7 +196,7 @@ func delete_slot() -> void:
 ## @ace_name("Save Game")
 ## @ace_category("Save System")
 ## @ace_description("Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, then fires On Save Written.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_game()")
 func save_game() -> void:
 	before_save.emit(slot)
@@ -214,7 +214,7 @@ func save_game() -> void:
 ## @ace_name("Load Game")
 ## @ace_category("Save System")
 ## @ace_description("Restores every persist-group snapshot, then broadcasts On After Load so every sheet reads its state back.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.load_game()")
 func load_game() -> void:
 	var data: Dictionary = _read_all()
@@ -226,7 +226,7 @@ func load_game() -> void:
 ## @ace_name("Save Node State")
 ## @ace_category("Save System")
 ## @ace_description("Snapshots a node and its behaviors (any child with save_state) under the key.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_node_state({node}, {key})")
 func save_node_state(node: Node, key: String) -> void:
 	save_value(key, _collect_node_state(node))
@@ -235,7 +235,7 @@ func save_node_state(node: Node, key: String) -> void:
 ## @ace_name("Load Node State")
 ## @ace_category("Save System")
 ## @ace_description("Restores a node and its behaviors from the key's snapshot.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.load_node_state({node}, {key})")
 func load_node_state(node: Node, key: String) -> void:
 	var states: Variant = load_value(key, {})
@@ -246,7 +246,7 @@ func load_node_state(node: Node, key: String) -> void:
 ## @ace_name("Save Group State")
 ## @ace_category("Save System")
 ## @ace_description("Snapshots every node in the scene-tree group (and their behaviors) under the key.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_group_state({group}, {key})")
 func save_group_state(group: String, key: String) -> void:
 	save_value(key, _collect_group_state(group))
@@ -255,7 +255,7 @@ func save_group_state(group: String, key: String) -> void:
 ## @ace_name("Load Group State")
 ## @ace_category("Save System")
 ## @ace_description("Restores the group snapshot saved under the key (nodes matched by scene path).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.load_group_state({key})")
 func load_group_state(key: String) -> void:
 	var states: Variant = load_value(key, {})
@@ -266,7 +266,7 @@ func load_group_state(key: String) -> void:
 ## @ace_name("Save Singleton State")
 ## @ace_category("Save System")
 ## @ace_description("Snapshots an autoload addon (Currency Ledger, Upgrades, Prestige...) by its autoload name.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_singleton_state({singleton_name}, {key})")
 func save_singleton_state(singleton_name: String, key: String) -> void:
 	save_value(key, _collect_node_state(get_node_or_null("/root/" + singleton_name)))
@@ -275,7 +275,7 @@ func save_singleton_state(singleton_name: String, key: String) -> void:
 ## @ace_name("Load Singleton State")
 ## @ace_category("Save System")
 ## @ace_description("Restores an autoload addon's snapshot from the key.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.load_singleton_state({singleton_name}, {key})")
 func load_singleton_state(singleton_name: String, key: String) -> void:
 	var states: Variant = load_value(key, {})
@@ -286,7 +286,7 @@ func load_singleton_state(singleton_name: String, key: String) -> void:
 ## @ace_name("Slot Exists")
 ## @ace_category("Save System")
 ## @ace_description("Whether the slot has a save file.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.slot_exists({slot_index})")
 func slot_exists(slot_index: int) -> bool:
 	return FileAccess.file_exists(_slot_path(slot_index))
@@ -295,7 +295,7 @@ func slot_exists(slot_index: int) -> bool:
 ## @ace_name("List Slots")
 ## @ace_category("Save System")
 ## @ace_description("Slot numbers that have save files (for menus).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.list_slots()")
 func list_slots() -> Array:
 	var found: Array = []
@@ -308,7 +308,7 @@ func list_slots() -> Array:
 ## @ace_name("Slot Modified Time")
 ## @ace_category("Save System")
 ## @ace_description("Unix mtime of the slot's file (0 when missing).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.slot_modified_time({slot_index})")
 func slot_modified_time(slot_index: int) -> int:
 	return FileAccess.get_modified_time(_slot_path(slot_index)) if FileAccess.file_exists(_slot_path(slot_index)) else 0

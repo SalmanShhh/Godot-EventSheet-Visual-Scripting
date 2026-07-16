@@ -1,6 +1,6 @@
 ## @ace_category("Move To 3D")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/move_to_3d/icon.svg")
 class_name MoveTo3DBehavior
 extends Node
 
@@ -36,7 +36,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Move To Position (3D)")
 ## @ace_category("Move To 3D")
 ## @ace_description("Replaces the queue and glides toward the point.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/move_to_3d/icon.svg")
 ## @ace_codegen_template("$MoveTo3DBehavior.move_to_position_3d({x}, {y}, {z})")
 func move_to_position_3d(x: float, y: float, z: float) -> void:
 	waypoints = [Vector3(x, y, z)]
@@ -46,7 +46,7 @@ func move_to_position_3d(x: float, y: float, z: float) -> void:
 ## @ace_name("Add Waypoint (3D)")
 ## @ace_category("Move To 3D")
 ## @ace_description("Appends a stop to the queue.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/move_to_3d/icon.svg")
 ## @ace_codegen_template("$MoveTo3DBehavior.add_waypoint_3d({x}, {y}, {z})")
 func add_waypoint_3d(x: float, y: float, z: float) -> void:
 	waypoints.append(Vector3(x, y, z))
@@ -56,7 +56,7 @@ func add_waypoint_3d(x: float, y: float, z: float) -> void:
 ## @ace_name("Stop Moving (3D)")
 ## @ace_category("Move To 3D")
 ## @ace_description("Clears the queue without firing On Arrived.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/move_to_3d/icon.svg")
 ## @ace_codegen_template("$MoveTo3DBehavior.stop_moving_3d()")
 func stop_moving_3d() -> void:
 	moving = false

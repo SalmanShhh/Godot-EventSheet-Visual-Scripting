@@ -1,6 +1,6 @@
 ## @ace_tags(incremental, idle, achievement)
 ## @ace_category("Milestones")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/milestones/icon.svg")
 class_name MilestonesAddon
 extends Node
 
@@ -18,7 +18,7 @@ var _last_reached_id: String = ""
 ## @ace_name("Define Milestone")
 ## @ace_category("Milestones")
 ## @ace_description("Creates (or resets) a milestone: the threshold to cross and the reward it grants once reached.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.define_milestone({id}, {threshold}, {reward})")
 func define_milestone(id: String, threshold: float, reward: float) -> void:
 	_milestones[id] = {"threshold": threshold, "reward": reward, "reached": false, "value": 0.0}
@@ -27,7 +27,7 @@ func define_milestone(id: String, threshold: float, reward: float) -> void:
 ## @ace_name("Set Threshold")
 ## @ace_category("Milestones")
 ## @ace_description("Changes a milestone's threshold (does not un-reach it if already reached).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.set_threshold({id}, {threshold})")
 func set_threshold(id: String, threshold: float) -> void:
 	_ensure(id).threshold = threshold
@@ -36,7 +36,7 @@ func set_threshold(id: String, threshold: float) -> void:
 ## @ace_name("Update Progress")
 ## @ace_category("Milestones")
 ## @ace_description("Reports the current value of the tracked number. The first time it reaches the threshold the milestone latches and On Milestone Reached fires (read Last Reached / Reward there).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.update_progress({id}, {value})")
 func update_progress(id: String, value: float) -> void:
 	var record: Dictionary = _ensure(id)
@@ -50,7 +50,7 @@ func update_progress(id: String, value: float) -> void:
 ## @ace_name("Force Reach")
 ## @ace_category("Milestones")
 ## @ace_description("Marks a milestone reached immediately (for a load) - fires On Milestone Reached if it was not already reached.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.force_reach({id})")
 func force_reach(id: String) -> void:
 	var record: Dictionary = _ensure(id)
@@ -63,7 +63,7 @@ func force_reach(id: String) -> void:
 ## @ace_name("Reset")
 ## @ace_category("Milestones")
 ## @ace_description("Un-reaches every milestone and zeroes progress (keeps the definitions).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.reset_milestones()")
 func reset_milestones() -> void:
 	for id: String in _milestones:
@@ -74,7 +74,7 @@ func reset_milestones() -> void:
 ## @ace_name("Is Reached")
 ## @ace_category("Milestones")
 ## @ace_description("Whether a milestone has been reached.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.is_reached({id})")
 func is_reached(id: String) -> bool:
 	return _milestones.has(id) and bool(_milestones[id].reached)
@@ -83,7 +83,7 @@ func is_reached(id: String) -> bool:
 ## @ace_name("Progress")
 ## @ace_category("Milestones")
 ## @ace_description("How close a milestone is, 0 to 1 (for a progress bar).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.progress({id})")
 func progress(id: String) -> float:
 	if not _milestones.has(id):
@@ -101,7 +101,7 @@ func progress(id: String) -> float:
 ## @ace_name("Threshold")
 ## @ace_category("Milestones")
 ## @ace_description("A milestone's threshold value.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.threshold_of({id})")
 func threshold_of(id: String) -> float:
 	return float(_milestones[id].threshold) if _milestones.has(id) else 0.0
@@ -110,7 +110,7 @@ func threshold_of(id: String) -> float:
 ## @ace_name("Reward")
 ## @ace_category("Milestones")
 ## @ace_description("A milestone's reward value.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.reward_of({id})")
 func reward_of(id: String) -> float:
 	return float(_milestones[id].reward) if _milestones.has(id) else 0.0
@@ -119,7 +119,7 @@ func reward_of(id: String) -> float:
 ## @ace_name("Reached Count")
 ## @ace_category("Milestones")
 ## @ace_description("How many milestones have been reached.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.reached_count()")
 func reached_count() -> int:
 	var count: int = 0
@@ -132,7 +132,7 @@ func reached_count() -> int:
 ## @ace_name("Milestone Count")
 ## @ace_category("Milestones")
 ## @ace_description("How many milestones are defined.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.milestone_count()")
 func milestone_count() -> int:
 	return _milestones.size()
@@ -141,7 +141,7 @@ func milestone_count() -> int:
 ## @ace_name("Total Reward")
 ## @ace_category("Milestones")
 ## @ace_description("The sum of the rewards of every reached milestone - fold this into your production multiplier.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.total_reward()")
 func total_reward() -> float:
 	var total: float = 0.0
@@ -154,7 +154,7 @@ func total_reward() -> float:
 ## @ace_name("Last Reached")
 ## @ace_category("Milestones")
 ## @ace_description("The id of the milestone that just latched (read inside On Milestone Reached).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.last_reached()")
 func last_reached() -> String:
 	return _last_reached_id
@@ -163,7 +163,7 @@ func last_reached() -> String:
 ## @ace_name("Nearest Unreached")
 ## @ace_category("Milestones")
 ## @ace_description("The id of the unreached milestone closest to its threshold (for a "next goal" display); "" if all reached.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.nearest_unreached()")
 func nearest_unreached() -> String:
 	var best_id: String = ""

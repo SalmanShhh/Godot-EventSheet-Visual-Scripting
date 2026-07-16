@@ -1,7 +1,7 @@
 ## @ace_tags(performance, scheduling)
 ## @ace_category("Time Slicer")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/time_slicer/icon.svg")
 class_name TimeSlicerBehavior
 extends Node
 
@@ -51,7 +51,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Enqueue Item")
 ## @ace_category("Time Slicer")
 ## @ace_description("Adds one item to the work queue (processed later within the per-frame budget).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.enqueue_item({item})")
 func enqueue_item(item) -> void:
 	_queue.append(item)
@@ -60,7 +60,7 @@ func enqueue_item(item) -> void:
 ## @ace_name("Enqueue Items")
 ## @ace_category("Time Slicer")
 ## @ace_description("Adds every element of an array to the work queue.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.enqueue_items({items})")
 func enqueue_items(items: Array) -> void:
 	_queue.append_array(items)
@@ -69,7 +69,7 @@ func enqueue_items(items: Array) -> void:
 ## @ace_name("Enqueue Group")
 ## @ace_category("Time Slicer")
 ## @ace_description("Adds every node in a group to the work queue (e.g. process all enemies, spread over frames).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.enqueue_group({group})")
 func enqueue_group(group: String) -> void:
 	_queue.append_array(get_tree().get_nodes_in_group(group))
@@ -78,7 +78,7 @@ func enqueue_group(group: String) -> void:
 ## @ace_name("Clear Queue")
 ## @ace_category("Time Slicer")
 ## @ace_description("Drops all pending items without processing them.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.clear_queue()")
 func clear_queue() -> void:
 	_queue.clear()
@@ -87,7 +87,7 @@ func clear_queue() -> void:
 ## @ace_name("Set Frame Budget")
 ## @ace_category("Time Slicer")
 ## @ace_description("Sets the per-frame millisecond budget at runtime (dial it down during heavy scenes).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.set_frame_budget({ms})")
 func set_frame_budget(ms: float) -> void:
 	frame_budget_ms = maxf(0.0, ms)
@@ -96,7 +96,7 @@ func set_frame_budget(ms: float) -> void:
 ## @ace_name("Pause")
 ## @ace_category("Time Slicer")
 ## @ace_description("Stops draining (items stay queued).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.pause_slicer()")
 func pause_slicer() -> void:
 	_paused = true
@@ -105,28 +105,28 @@ func pause_slicer() -> void:
 ## @ace_name("Resume")
 ## @ace_category("Time Slicer")
 ## @ace_description("Resumes draining the queue.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.resume_slicer()")
 func resume_slicer() -> void:
 	_paused = false
 
 ## @ace_condition
 ## @ace_name("Is Busy")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.is_busy()")
 func is_busy() -> bool:
 	return not _queue.is_empty()
 
 ## @ace_expression
 ## @ace_name("Items Remaining")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.items_remaining()")
 func items_remaining() -> int:
 	return _queue.size()
 
 ## @ace_expression
 ## @ace_name("Last Frame Item Count")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.last_frame_item_count()")
 func last_frame_item_count() -> int:
 	return _last_count

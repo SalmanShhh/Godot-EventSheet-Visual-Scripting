@@ -10,11 +10,17 @@ const BEHAVIOR_ICON := "res://eventsheet_addons/behavior.svg"
 
 
 static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: String = BEHAVIOR_ICON) -> bool:
-	# Behaviour icon: every pack shows a recognizable EventForge behaviour icon in Godot's Create New
-	# Node dialog (emitted as `@icon` before class_name) and the sheet banner. A builder can pass its
-	# own icon, or set sheet.custom_class_icon before calling - an already-set icon is never overwritten.
-	if not icon_path.strip_edges().is_empty() and sheet.custom_class_icon.strip_edges().is_empty():
-		sheet.custom_class_icon = icon_path
+	# Behaviour icon: every pack shows a recognizable icon in Godot's Create New Node dialog (emitted
+	# as `@icon` before class_name), the sheet banner, the ACE picker, and viewport object labels.
+	# A pack-local icon.svg beside the .gd wins automatically (drop the file in, rebuild - no builder
+	# edit), then a builder-passed icon, then the shared EventForge behaviour icon. A builder that set
+	# sheet.custom_class_icon itself is never overwritten.
+	if sheet.custom_class_icon.strip_edges().is_empty():
+		var pack_icon: String = base_path.get_base_dir() + "/icon.svg"
+		if FileAccess.file_exists(pack_icon):
+			sheet.custom_class_icon = pack_icon
+		elif not icon_path.strip_edges().is_empty():
+			sheet.custom_class_icon = icon_path
 	# Code-free by default: reverse-lift each function's RawCode body into ACE rows where it recompiles
 	# byte-identically (per-function gated). The pack ships the SAME GDScript, but the .gd reads as
 	# events - algorithmic kernels (spring/sine/physics) become Set/Add/Set-Property rows, not code

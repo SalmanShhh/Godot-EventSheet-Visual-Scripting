@@ -1,6 +1,6 @@
 ## @ace_tags(movement, screen)
 ## @ace_category("Wrap")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/wrap/icon.svg")
 class_name WrapBehavior
 extends Node
 
@@ -92,7 +92,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Set Wrap Enabled")
 ## @ace_category("Wrap")
 ## @ace_description("Turns wrapping on or off at runtime.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
 ## @ace_codegen_template("$WrapBehavior.set_wrap_enabled({enabled})")
 func set_wrap_enabled(enabled: bool) -> void:
 	wrap_enabled = enabled
@@ -101,7 +101,7 @@ func set_wrap_enabled(enabled: bool) -> void:
 ## @ace_name("Set Custom Wrap Bounds")
 ## @ace_category("Wrap")
 ## @ace_description("Sets the custom rectangle (world-space pixels) and switches wrapping to it - your arena's edges.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
 ## @ace_codegen_template("$WrapBehavior.set_custom_wrap_bounds({x}, {y}, {width}, {height})")
 func set_custom_wrap_bounds(x: float, y: float, width: float, height: float) -> void:
 	custom_bounds = Rect2(x, y, width, height)
@@ -112,7 +112,7 @@ func set_custom_wrap_bounds(x: float, y: float, width: float, height: float) -> 
 ## @ace_name("Set Wrap Axes")
 ## @ace_category("Wrap")
 ## @ace_description("Chooses which axes wrap (horizontal: left/right edges, vertical: top/bottom).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
 ## @ace_codegen_template("$WrapBehavior.set_wrap_axes({horizontal}, {vertical})")
 func set_wrap_axes(horizontal: bool, vertical: bool) -> void:
 	wrap_horizontal = horizontal
@@ -122,7 +122,7 @@ func set_wrap_axes(horizontal: bool, vertical: bool) -> void:
 ## @ace_name("Set Wrap Extents")
 ## @ace_category("Wrap")
 ## @ace_description("Sets the host's half-size (half the sprite's width and height) used by the fully-outside test.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
 ## @ace_codegen_template("$WrapBehavior.set_wrap_extents({new_half_width}, {new_half_height})")
 func set_wrap_extents(new_half_width: float, new_half_height: float) -> void:
 	half_width = new_half_width
@@ -132,7 +132,7 @@ func set_wrap_extents(new_half_width: float, new_half_height: float) -> void:
 ## @ace_name("Set Wrap Space")
 ## @ace_description("Switches what the host wraps around: the on-screen camera view, or the custom rectangle.")
 ## @ace_param_options(space screen, custom)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
 ## @ace_codegen_template("$WrapBehavior.set_wrap_space({space})")
 func set_wrap_space(space: String) -> void:
 	if space in ["screen", "custom"]:
@@ -141,7 +141,7 @@ func set_wrap_space(space: String) -> void:
 ## @ace_action
 ## @ace_name("Set Circle Wrap Bounds")
 ## @ace_description("Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it: fully outside the circle teleports to the antipode - a round arena in one action.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
 ## @ace_codegen_template("$WrapBehavior.set_circle_wrap_bounds({center_x}, {center_y}, {radius})")
 func set_circle_wrap_bounds(center_x: float, center_y: float, radius: float) -> void:
 	wrap_circle_center = Vector2(center_x, center_y)

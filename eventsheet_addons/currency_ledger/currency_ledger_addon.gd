@@ -1,6 +1,6 @@
 ## @ace_tags(economy, currency)
 ## @ace_category("Currency")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/currency_ledger/icon.svg")
 class_name CurrencyLedgerAddon
 extends Node
 
@@ -42,7 +42,7 @@ var _offline_gain: float = 0.0
 ## @ace_name("Define Currency")
 ## @ace_category("Currency")
 ## @ace_description("Creates (or resets) a currency with a starting amount and a max (-1 = no cap). Min is 0 and there's no daily cap until you set one.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.define_currency({id}, {starting_amount}, {max_amount})")
 func define_currency(id: String, starting_amount: float, max_amount: float) -> void:
 	var start: float = starting_amount
@@ -54,7 +54,7 @@ func define_currency(id: String, starting_amount: float, max_amount: float) -> v
 ## @ace_name("Set Max")
 ## @ace_category("Currency")
 ## @ace_description("Changes the hard cap (-1 = no cap). If the current amount is above the new cap it clamps down.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.set_max({id}, {max_amount})")
 func set_max(id: String, max_amount: float) -> void:
 	var r: Dictionary = _ensure(id)
@@ -68,7 +68,7 @@ func set_max(id: String, max_amount: float) -> void:
 ## @ace_name("Set Daily Cap")
 ## @ace_category("Currency")
 ## @ace_description("Caps how much can be EARNED (added) per day (-1 = no daily cap). You decide when a day rolls over by calling Reset Daily Caps.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.set_daily_cap({id}, {daily_cap})")
 func set_daily_cap(id: String, daily_cap: float) -> void:
 	_ensure(id).daily_cap = daily_cap
@@ -77,7 +77,7 @@ func set_daily_cap(id: String, daily_cap: float) -> void:
 ## @ace_name("Allow Debt")
 ## @ace_category("Currency")
 ## @ace_description("Lets a currency go negative down to this floor (e.g. -50). Use it for hunger, heat, or overdraft. Default floor is 0 (no debt).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.allow_debt({id}, {minimum})")
 func allow_debt(id: String, minimum: float) -> void:
 	_ensure(id).min = minimum
@@ -86,7 +86,7 @@ func allow_debt(id: String, minimum: float) -> void:
 ## @ace_name("Set Offline Rate")
 ## @ace_category("Currency")
 ## @ace_description("Passive income per real second, used by Apply Offline Gain (0 = off).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.set_offline_rate({id}, {rate_per_second})")
 func set_offline_rate(id: String, rate_per_second: float) -> void:
 	_ensure(id).offline_rate = rate_per_second
@@ -95,7 +95,7 @@ func set_offline_rate(id: String, rate_per_second: float) -> void:
 ## @ace_name("Add")
 ## @ace_category("Currency")
 ## @ace_description("Adds a SIGNED amount (negative subtracts) and clamps to the currency's min and max. Positive amounts also respect the daily cap. Fires On Amount Changed, plus On Cap Hit / On Daily Cap Hit if a limit bit.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.add({id}, {amount})")
 func add(id: String, amount: float) -> void:
 	var r: Dictionary = _ensure(id)
@@ -130,7 +130,7 @@ func add(id: String, amount: float) -> void:
 ## @ace_name("Spend")
 ## @ace_category("Currency")
 ## @ace_description("Subtracts the amount only if it can be afforded; otherwise nothing changes and On Spend Failed fires (read Failed Id / Requested Amount / Available Amount there).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.spend({id}, {amount})")
 func spend(id: String, amount: float) -> void:
 	var current: float = _wallet[id].amount if _wallet.has(id) else 0.0
@@ -149,7 +149,7 @@ func spend(id: String, amount: float) -> void:
 ## @ace_name("Set Amount")
 ## @ace_category("Currency")
 ## @ace_description("Forces the amount to a value, clamped to the currency's min and max. Fires On Amount Changed.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.set_amount({id}, {amount})")
 func set_amount(id: String, amount: float) -> void:
 	var r: Dictionary = _ensure(id)
@@ -164,7 +164,7 @@ func set_amount(id: String, amount: float) -> void:
 ## @ace_name("Reset Daily Caps")
 ## @ace_category("Currency")
 ## @ace_description("Zeroes the earned-today counter for every currency (call this at your day rollover).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.reset_daily_caps()")
 func reset_daily_caps() -> void:
 	for id: String in _wallet:
@@ -174,7 +174,7 @@ func reset_daily_caps() -> void:
 ## @ace_name("Apply Offline Gain")
 ## @ace_category("Currency")
 ## @ace_description("Credits offline_rate * seconds to the currency (respecting caps) and fires On Offline Gain. One call - no separate Add needed.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.apply_offline_gain({id}, {elapsed_seconds})")
 func apply_offline_gain(id: String, elapsed_seconds: float) -> void:
 	var r: Dictionary = _ensure(id)
@@ -190,7 +190,7 @@ func apply_offline_gain(id: String, elapsed_seconds: float) -> void:
 ## @ace_name("Has Currency")
 ## @ace_category("Currency")
 ## @ace_description("Whether a currency with this id has been defined or touched.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.has_currency({id})")
 func has_currency(id: String) -> bool:
 	return _wallet.has(id)
@@ -199,7 +199,7 @@ func has_currency(id: String) -> bool:
 ## @ace_name("Can Afford")
 ## @ace_category("Currency")
 ## @ace_description("Whether the current balance is at least the amount.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.can_afford({id}, {amount})")
 func can_afford(id: String, amount: float) -> bool:
 	return balance(id) >= amount
@@ -208,7 +208,7 @@ func can_afford(id: String, amount: float) -> bool:
 ## @ace_name("Is At Cap")
 ## @ace_category("Currency")
 ## @ace_description("Whether the balance is at its max (false when there's no cap).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.is_at_cap({id})")
 func is_at_cap(id: String) -> bool:
 	var r: Dictionary = _wallet.get(id, {})
@@ -218,7 +218,7 @@ func is_at_cap(id: String) -> bool:
 ## @ace_name("Is Daily Cap Reached")
 ## @ace_category("Currency")
 ## @ace_description("Whether today's earnings have hit the daily cap (false when there's none).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.is_daily_cap_reached({id})")
 func is_daily_cap_reached(id: String) -> bool:
 	var r: Dictionary = _wallet.get(id, {})
@@ -228,7 +228,7 @@ func is_daily_cap_reached(id: String) -> bool:
 ## @ace_name("Is In Debt")
 ## @ace_category("Currency")
 ## @ace_description("Whether the balance is below zero (only possible after Allow Debt).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.is_in_debt({id})")
 func is_in_debt(id: String) -> bool:
 	return balance(id) < 0.0
@@ -237,7 +237,7 @@ func is_in_debt(id: String) -> bool:
 ## @ace_name("Balance")
 ## @ace_category("Currency")
 ## @ace_description("The current amount of a currency (0 if undefined).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.balance({id})")
 func balance(id: String) -> float:
 	return _wallet[id].amount if _wallet.has(id) else 0.0
@@ -246,7 +246,7 @@ func balance(id: String) -> float:
 ## @ace_name("Cap")
 ## @ace_category("Currency")
 ## @ace_description("The hard cap of a currency (-1 if none).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.cap({id})")
 func cap(id: String) -> float:
 	return _wallet[id].max if _wallet.has(id) else -1.0
@@ -255,7 +255,7 @@ func cap(id: String) -> float:
 ## @ace_name("Daily Cap")
 ## @ace_category("Currency")
 ## @ace_description("The daily earn cap (-1 if none).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.daily_cap({id})")
 func daily_cap(id: String) -> float:
 	return _wallet[id].daily_cap if _wallet.has(id) else -1.0
@@ -264,7 +264,7 @@ func daily_cap(id: String) -> float:
 ## @ace_name("Daily Earned")
 ## @ace_category("Currency")
 ## @ace_description("How much has been earned today.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.daily_earned({id})")
 func daily_earned(id: String) -> float:
 	return _wallet[id].daily_earned if _wallet.has(id) else 0.0
@@ -273,7 +273,7 @@ func daily_earned(id: String) -> float:
 ## @ace_name("Debt Floor")
 ## @ace_category("Currency")
 ## @ace_description("The minimum a currency may reach (0 unless Allow Debt was used).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.debt_floor({id})")
 func debt_floor(id: String) -> float:
 	return _wallet[id].min if _wallet.has(id) else 0.0
@@ -282,7 +282,7 @@ func debt_floor(id: String) -> float:
 ## @ace_name("Currency Count")
 ## @ace_category("Currency")
 ## @ace_description("How many currencies are defined.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.currency_count()")
 func currency_count() -> int:
 	return _wallet.size()
@@ -291,7 +291,7 @@ func currency_count() -> int:
 ## @ace_name("Currency Id At")
 ## @ace_category("Currency")
 ## @ace_description("The currency id at a position (for menus); "" out of range.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.currency_id_at({index})")
 func currency_id_at(index: int) -> String:
 	var ids: Array = _wallet.keys()
@@ -301,7 +301,7 @@ func currency_id_at(index: int) -> String:
 ## @ace_name("Format Amount")
 ## @ace_category("Currency")
 ## @ace_description("A short display string with a K/M/B/T suffix (e.g. 12500 -> "12.5K").")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.format_amount({value}, {decimals})")
 func format_amount(value: float, decimals: int) -> String:
 	var mag: float = absf(value)
@@ -325,7 +325,7 @@ func format_amount(value: float, decimals: int) -> String:
 ## @ace_name("Changed Id")
 ## @ace_category("Currency")
 ## @ace_description("The currency that changed (inside On Amount Changed).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.changed_id()")
 func changed_id() -> String:
 	return _evt_id
@@ -334,7 +334,7 @@ func changed_id() -> String:
 ## @ace_name("New Amount")
 ## @ace_category("Currency")
 ## @ace_description("The amount after the change (inside On Amount Changed).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.new_amount()")
 func new_amount() -> float:
 	return _evt_new
@@ -343,7 +343,7 @@ func new_amount() -> float:
 ## @ace_name("Previous Amount")
 ## @ace_category("Currency")
 ## @ace_description("The amount before the change (inside On Amount Changed).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.previous_amount()")
 func previous_amount() -> float:
 	return _evt_prev
@@ -352,7 +352,7 @@ func previous_amount() -> float:
 ## @ace_name("Amount Delta")
 ## @ace_category("Currency")
 ## @ace_description("The signed change (inside On Amount Changed).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.amount_delta()")
 func amount_delta() -> float:
 	return _evt_delta
@@ -361,7 +361,7 @@ func amount_delta() -> float:
 ## @ace_name("Failed Id")
 ## @ace_category("Currency")
 ## @ace_description("The currency of the failed spend (inside On Spend Failed).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.failed_id()")
 func failed_id() -> String:
 	return _fail_id
@@ -370,7 +370,7 @@ func failed_id() -> String:
 ## @ace_name("Requested Amount")
 ## @ace_category("Currency")
 ## @ace_description("The amount that was asked for (inside On Spend Failed).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.requested_amount()")
 func requested_amount() -> float:
 	return _fail_requested
@@ -379,7 +379,7 @@ func requested_amount() -> float:
 ## @ace_name("Available Amount")
 ## @ace_category("Currency")
 ## @ace_description("What was actually available (inside On Spend Failed).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.available_amount()")
 func available_amount() -> float:
 	return _fail_current
@@ -388,7 +388,7 @@ func available_amount() -> float:
 ## @ace_name("Offline Id")
 ## @ace_category("Currency")
 ## @ace_description("The currency credited (inside On Offline Gain).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.offline_id()")
 func offline_id() -> String:
 	return _offline_id
@@ -397,7 +397,7 @@ func offline_id() -> String:
 ## @ace_name("Offline Gain")
 ## @ace_category("Currency")
 ## @ace_description("The amount credited offline (inside On Offline Gain).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.offline_gain()")
 func offline_gain() -> float:
 	return _offline_gain

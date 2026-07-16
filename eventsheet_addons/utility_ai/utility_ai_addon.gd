@@ -1,6 +1,6 @@
 ## @ace_tags(ai, decision)
 ## @ace_category("Utility AI")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/utility_ai/icon.svg")
 class_name UtilityBrain
 extends Node
 
@@ -95,7 +95,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Add Action")
 ## @ace_category("Utility AI")
 ## @ace_description("Registers a candidate action the brain can choose. cooldown = seconds it rests after Mark Action Complete (0 = none); interruptible = whether Interrupt can cancel it; priority = an overall weight multiplier (1 = normal).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.add_action({action_name}, {cooldown}, {interruptible}, {priority})")
 func add_action(action_name: String, cooldown: float, interruptible: bool, priority: float) -> void:
 	_actions[action_name] = {"cooldown": maxf(cooldown, 0.0), "interruptible": interruptible, "enabled": true, "priority": maxf(priority, 0.0), "considerations": []}
@@ -105,7 +105,7 @@ func add_action(action_name: String, cooldown: float, interruptible: bool, prior
 ## @ace_category("Utility AI")
 ## @ace_description("Adds a scoring factor to an action: it reads a world-state input (0-1) and maps it through a response curve to a 0-1 score. An action's considerations all multiply together, so any near-zero factor vetoes it. weight sharpens (>1) or softens (<1) this factor; center + slope tune the logistic / threshold / bell curves.")
 ## @ace_param_options(curve linear, inverse, quadratic, inverse_quadratic, logistic, threshold, bell)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.add_consideration({action_name}, {input_key}, {curve}, {weight}, {curve_center}, {curve_slope})")
 func add_consideration(action_name: String, input_key: String, curve: String, weight: float, curve_center: float, curve_slope: float) -> void:
 	if not _actions.has(action_name):
@@ -116,7 +116,7 @@ func add_consideration(action_name: String, input_key: String, curve: String, we
 ## @ace_name("Remove Action")
 ## @ace_category("Utility AI")
 ## @ace_description("Removes an action (and any cooldown on it). Clears the current action if it was the one running.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.remove_action({action_name})")
 func remove_action(action_name: String) -> void:
 	_actions.erase(action_name)
@@ -128,7 +128,7 @@ func remove_action(action_name: String) -> void:
 ## @ace_name("Set Action Enabled")
 ## @ace_category("Utility AI")
 ## @ace_description("Enables or disables an action without removing it (a disabled action is never chosen).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.set_action_enabled({action_name}, {enabled})")
 func set_action_enabled(action_name: String, enabled: bool) -> void:
 	if _actions.has(action_name):
@@ -138,7 +138,7 @@ func set_action_enabled(action_name: String, enabled: bool) -> void:
 ## @ace_name("Set Input")
 ## @ace_category("Utility AI")
 ## @ace_description("Writes a world-state value considerations read by key (usually normalized 0-1, e.g. hp_ratio). Push these right before Evaluate; an unset key reads as 0.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.set_input({key}, {value})")
 func set_input(key: String, value: float) -> void:
 	_world[key] = value
@@ -147,7 +147,7 @@ func set_input(key: String, value: float) -> void:
 ## @ace_name("Clear Inputs")
 ## @ace_category("Utility AI")
 ## @ace_description("Clears all world-state inputs on this brain.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.clear_inputs()")
 func clear_inputs() -> void:
 	_world.clear()
@@ -156,7 +156,7 @@ func clear_inputs() -> void:
 ## @ace_name("Evaluate")
 ## @ace_category("Utility AI")
 ## @ace_description("Scores every enabled, off-cooldown action from the current world state and picks a winner. Fires On Decision Made (plus On Action Changed + On Action Started when the choice changes), or On No Valid Action if nothing clears the minimum score. Call it on a timer or after a stimulus.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.evaluate()")
 func evaluate() -> void:
 	var candidates: Array = []
@@ -193,7 +193,7 @@ func evaluate() -> void:
 ## @ace_name("Force Action")
 ## @ace_category("Utility AI")
 ## @ace_description("Overrides the decision and starts an action directly (fires On Decision Made + On Action Started). Use it for cutscenes, scripted beats, or an emergency fallback, then return to Evaluate.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.force_action({action_name})")
 func force_action(action_name: String) -> void:
 	if not _actions.has(action_name):
@@ -205,7 +205,7 @@ func force_action(action_name: String) -> void:
 ## @ace_name("Mark Action Complete")
 ## @ace_category("Utility AI")
 ## @ace_description("Marks the running action finished: fires On Action Completed, starts its cooldown if it has one, then re-evaluates. Call it when your gameplay finishes performing the action (it already re-evaluates, so do not also call Evaluate).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.mark_complete()")
 func mark_complete() -> void:
 	if _current == "":
@@ -223,7 +223,7 @@ func mark_complete() -> void:
 ## @ace_name("Interrupt Action")
 ## @ace_category("Utility AI")
 ## @ace_description("Stops the running action if it is interruptible (fires On Action Interrupted) and re-evaluates. A non-interruptible action is left alone.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.interrupt()")
 func interrupt() -> void:
 	if _current == "" or not _actions.has(_current):
@@ -237,7 +237,7 @@ func interrupt() -> void:
 ## @ace_name("Set Action Cooldown")
 ## @ace_category("Utility AI")
 ## @ace_description("Starts (or, with seconds <= 0, clears) a cooldown on an action - so it cannot be chosen until the timer expires. Fires On Cooldown Started.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.set_cooldown({action_name}, {seconds})")
 func set_cooldown(action_name: String, seconds: float) -> void:
 	if seconds <= 0.0:
@@ -251,7 +251,7 @@ func set_cooldown(action_name: String, seconds: float) -> void:
 ## @ace_name("Clear Cooldowns")
 ## @ace_category("Utility AI")
 ## @ace_description("Clears every active cooldown on this brain (e.g. a refresh powerup).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.clear_cooldowns()")
 func clear_cooldowns() -> void:
 	_cooldowns.clear()
@@ -260,7 +260,7 @@ func clear_cooldowns() -> void:
 ## @ace_name("Is Running")
 ## @ace_category("Utility AI")
 ## @ace_description("Whether the brain's current action is this one.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.is_running({action_name})")
 func is_running(action_name: String) -> bool:
 	return _current == action_name
@@ -269,7 +269,7 @@ func is_running(action_name: String) -> bool:
 ## @ace_name("Has Action")
 ## @ace_category("Utility AI")
 ## @ace_description("Whether an action is registered on this brain.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.has_action({action_name})")
 func has_action(action_name: String) -> bool:
 	return _actions.has(action_name)
@@ -278,7 +278,7 @@ func has_action(action_name: String) -> bool:
 ## @ace_name("Is Action Enabled")
 ## @ace_category("Utility AI")
 ## @ace_description("Whether an action is registered and enabled.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.is_action_enabled({action_name})")
 func is_action_enabled(action_name: String) -> bool:
 	return _actions.has(action_name) and bool(_actions[action_name].enabled)
@@ -287,7 +287,7 @@ func is_action_enabled(action_name: String) -> bool:
 ## @ace_name("Is On Cooldown")
 ## @ace_category("Utility AI")
 ## @ace_description("Whether an action is currently cooling down.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.is_on_cooldown({action_name})")
 func is_on_cooldown(action_name: String) -> bool:
 	return _cooldowns.has(action_name)
@@ -296,7 +296,7 @@ func is_on_cooldown(action_name: String) -> bool:
 ## @ace_name("Was Last Action")
 ## @ace_category("Utility AI")
 ## @ace_description("Whether the previous action (before the current one) was this one - for anti-repeat / transition logic.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.was_last_action({action_name})")
 func was_last_action(action_name: String) -> bool:
 	return _previous == action_name
@@ -305,7 +305,7 @@ func was_last_action(action_name: String) -> bool:
 ## @ace_name("Is Idle")
 ## @ace_category("Utility AI")
 ## @ace_description("Whether the brain has no current action (nothing chosen yet, or the last evaluation found none valid).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.is_idle()")
 func is_idle() -> bool:
 	return _current == ""
@@ -314,7 +314,7 @@ func is_idle() -> bool:
 ## @ace_name("Current Action")
 ## @ace_category("Utility AI")
 ## @ace_description("The id of the action running now ("" if none).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.current_action()")
 func current_action() -> String:
 	return _current
@@ -323,7 +323,7 @@ func current_action() -> String:
 ## @ace_name("Previous Action")
 ## @ace_category("Utility AI")
 ## @ace_description("The id of the action that ran before the current one.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.previous_action()")
 func previous_action() -> String:
 	return _previous
@@ -332,7 +332,7 @@ func previous_action() -> String:
 ## @ace_name("Decision Score")
 ## @ace_category("Utility AI")
 ## @ace_description("The winning action's score from the most recent Evaluate.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.decision_score()")
 func decision_score() -> float:
 	return _decision_score
@@ -341,7 +341,7 @@ func decision_score() -> float:
 ## @ace_name("Action Score")
 ## @ace_category("Utility AI")
 ## @ace_description("An action's score from the most recent Evaluate (0 if it was not scored).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.action_score({action_name})")
 func action_score(action_name: String) -> float:
 	return float(_scores.get(action_name, 0.0))
@@ -350,7 +350,7 @@ func action_score(action_name: String) -> float:
 ## @ace_name("Action History")
 ## @ace_category("Utility AI")
 ## @ace_description("A past action by index, most-recent first (0 = current). "" past the end.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.action_history({index})")
 func action_history(index: int) -> String:
 	return _history[index] if index >= 0 and index < _history.size() else ""
@@ -359,7 +359,7 @@ func action_history(index: int) -> String:
 ## @ace_name("Action Count")
 ## @ace_category("Utility AI")
 ## @ace_description("How many actions are registered on this brain.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.action_count()")
 func action_count() -> int:
 	return _actions.size()
@@ -368,7 +368,7 @@ func action_count() -> int:
 ## @ace_name("Cooldown Remaining")
 ## @ace_category("Utility AI")
 ## @ace_description("Seconds left on an action's cooldown (0 if not cooling down).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.cooldown_remaining({action_name})")
 func cooldown_remaining(action_name: String) -> float:
 	return float(_cooldowns.get(action_name, 0.0))
@@ -377,7 +377,7 @@ func cooldown_remaining(action_name: String) -> float:
 ## @ace_name("Cooldown Action")
 ## @ace_category("Utility AI")
 ## @ace_description("The action whose cooldown just started or ended (inside On Cooldown Started / On Cooldown Ended).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.cooldown_action()")
 func cooldown_action() -> String:
 	return _cooldown_action
@@ -386,7 +386,7 @@ func cooldown_action() -> String:
 ## @ace_name("Get Input")
 ## @ace_category("Utility AI")
 ## @ace_description("The current value of a world-state input (0 if unset).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.get_input({key})")
 func get_input(key: String) -> float:
 	return float(_world.get(key, 0.0))

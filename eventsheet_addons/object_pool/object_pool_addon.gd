@@ -1,6 +1,6 @@
 ## @ace_tags(performance, spawning)
 ## @ace_category("Object Pool")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/object_pool/icon.svg")
 class_name ObjectPoolAddon
 extends Node
 
@@ -23,7 +23,7 @@ var _last_despawned: Node = null
 ## @ace_name("Create Pool")
 ## @ace_category("Object Pool")
 ## @ace_description("The easy way: makes a pool that spawns copies of a scene (a .tscn path), optionally pre-making some now so the first spawns never hitch.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.create_pool({pool_name}, {scene_path}, {prewarm})")
 func create_pool(pool_name: String, scene_path: String, prewarm: int) -> void:
 	var scene: PackedScene = load(scene_path) as PackedScene
@@ -37,7 +37,7 @@ func create_pool(pool_name: String, scene_path: String, prewarm: int) -> void:
 ## @ace_name("Create Empty Pool")
 ## @ace_category("Object Pool")
 ## @ace_description("The custom way: makes a pool with no scene of its own. Fill it with Add To Pool (your own nodes), and Spawn hands those back out.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.create_empty_pool({pool_name})")
 func create_empty_pool(pool_name: String) -> void:
 	_pools[pool_name] = {"scene": null, "free": [], "active": []}
@@ -46,7 +46,7 @@ func create_empty_pool(pool_name: String) -> void:
 ## @ace_name("Add To Pool")
 ## @ace_category("Object Pool")
 ## @ace_description("Puts one of your own existing nodes into a pool as a ready-to-reuse instance (for custom pools). The node is hidden and parked until spawned.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.add_to_pool({pool_name}, {node})")
 func add_to_pool(pool_name: String, node: Node) -> void:
 	_stow(pool_name, node)
@@ -55,7 +55,7 @@ func add_to_pool(pool_name: String, node: Node) -> void:
 ## @ace_name("Prewarm")
 ## @ace_category("Object Pool")
 ## @ace_description("Pre-makes more copies for a scene pool (so a burst of spawns stays smooth).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.prewarm({pool_name}, {count})")
 func prewarm(pool_name: String, count: int) -> void:
 	if not _pools.has(pool_name) or _pools[pool_name].scene == null:
@@ -67,7 +67,7 @@ func prewarm(pool_name: String, count: int) -> void:
 ## @ace_name("Despawn")
 ## @ace_category("Object Pool")
 ## @ace_description("Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.despawn({node})")
 func despawn(node: Node) -> void:
 	if node == null or not node.has_meta(&"__pool__"):
@@ -84,7 +84,7 @@ func despawn(node: Node) -> void:
 ## @ace_name("Despawn All")
 ## @ace_category("Object Pool")
 ## @ace_description("Hands every active node of a pool back at once (for a level reset).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.despawn_all({pool_name})")
 func despawn_all(pool_name: String) -> void:
 	if not _pools.has(pool_name):
@@ -96,7 +96,7 @@ func despawn_all(pool_name: String) -> void:
 ## @ace_name("Clear Pool")
 ## @ace_category("Object Pool")
 ## @ace_description("Frees (deletes) every node in a pool and removes the pool. Use it when the pool is truly done.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.clear_pool({pool_name})")
 func clear_pool(pool_name: String) -> void:
 	if not _pools.has(pool_name):
@@ -110,7 +110,7 @@ func clear_pool(pool_name: String) -> void:
 ## @ace_name("Has Pool")
 ## @ace_category("Object Pool")
 ## @ace_description("Whether a pool with this name exists.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.has_pool({pool_name})")
 func has_pool(pool_name: String) -> bool:
 	return _pools.has(pool_name)
@@ -119,7 +119,7 @@ func has_pool(pool_name: String) -> bool:
 ## @ace_name("Spawn")
 ## @ace_category("Object Pool")
 ## @ace_description("Hands out a ready node from a pool (reusing a free one, or making a new copy from the pool's scene) - added to the current scene, shown, and returned so you can position it. Fires On Spawned. Returns nothing if the pool is empty and has no scene.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.spawn({pool_name})")
 func spawn(pool_name: String) -> Node:
 	if not _pools.has(pool_name):
@@ -143,7 +143,7 @@ func spawn(pool_name: String) -> Node:
 ## @ace_name("Last Spawned")
 ## @ace_category("Object Pool")
 ## @ace_description("The node most recently spawned (handy inside On Spawned).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.last_spawned()")
 func last_spawned() -> Node:
 	return _last_spawned
@@ -152,7 +152,7 @@ func last_spawned() -> Node:
 ## @ace_name("Last Despawned")
 ## @ace_category("Object Pool")
 ## @ace_description("The node most recently despawned (handy inside On Despawned).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.last_despawned()")
 func last_despawned() -> Node:
 	return _last_despawned
@@ -161,7 +161,7 @@ func last_despawned() -> Node:
 ## @ace_name("Free Count")
 ## @ace_category("Object Pool")
 ## @ace_description("How many ready (unused) nodes a pool holds.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.free_count({pool_name})")
 func free_count(pool_name: String) -> int:
 	return (_pools[pool_name].free as Array).size() if _pools.has(pool_name) else 0
@@ -170,7 +170,7 @@ func free_count(pool_name: String) -> int:
 ## @ace_name("Active Count")
 ## @ace_category("Object Pool")
 ## @ace_description("How many of a pool's nodes are currently spawned and in use.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.active_count({pool_name})")
 func active_count(pool_name: String) -> int:
 	return (_pools[pool_name].active as Array).size() if _pools.has(pool_name) else 0
@@ -179,7 +179,7 @@ func active_count(pool_name: String) -> int:
 ## @ace_name("Pool Size")
 ## @ace_category("Object Pool")
 ## @ace_description("A pool's total nodes (free plus active).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.pool_size({pool_name})")
 func pool_size(pool_name: String) -> int:
 	return ((_pools[pool_name].free as Array).size() + (_pools[pool_name].active as Array).size()) if _pools.has(pool_name) else 0

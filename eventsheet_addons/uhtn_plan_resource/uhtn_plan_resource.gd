@@ -1,4 +1,4 @@
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/uhtn_plan_resource/icon.svg")
 class_name UHTNPlanResource
 extends Resource
 ## A complete UHTN plan (utility-driven Hierarchical Task Network) as a data asset: the tasks, the methods that decompose them (ranked by utility scorers), their preconditions, and the scoring curves - all authored in Inspector grids. Drop the saved .tres onto a UHTNPlanner's Plan Resource slot.

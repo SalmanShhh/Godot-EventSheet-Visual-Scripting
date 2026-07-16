@@ -1,6 +1,6 @@
 ## @ace_tags(movement, screen)
 ## @ace_category("Bound To")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/bound_to/icon.svg")
 class_name BoundToBehavior
 extends Node
 
@@ -75,7 +75,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Set Bound Enabled")
 ## @ace_category("Bound To")
 ## @ace_description("Turns the binding on or off at runtime (off = the host moves freely).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/bound_to/icon.svg")
 ## @ace_codegen_template("$BoundToBehavior.set_bound_enabled({enabled})")
 func set_bound_enabled(enabled: bool) -> void:
 	bound_enabled = enabled
@@ -86,7 +86,7 @@ func set_bound_enabled(enabled: bool) -> void:
 ## @ace_name("Set Custom Bounds")
 ## @ace_category("Bound To")
 ## @ace_description("Sets the custom rectangle (world-space pixels) and switches the binding to it - your level's playable area.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/bound_to/icon.svg")
 ## @ace_codegen_template("$BoundToBehavior.set_custom_bounds({x}, {y}, {width}, {height})")
 func set_custom_bounds(x: float, y: float, width: float, height: float) -> void:
 	custom_bounds = Rect2(x, y, width, height)
@@ -96,7 +96,7 @@ func set_custom_bounds(x: float, y: float, width: float, height: float) -> void:
 ## @ace_name("Set Bound Extents")
 ## @ace_category("Bound To")
 ## @ace_description("Sets the host's half-size used by edge binding (half the sprite's width and height).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/bound_to/icon.svg")
 ## @ace_codegen_template("$BoundToBehavior.set_bound_extents({new_half_width}, {new_half_height})")
 func set_bound_extents(new_half_width: float, new_half_height: float) -> void:
 	half_width = new_half_width
@@ -106,7 +106,7 @@ func set_bound_extents(new_half_width: float, new_half_height: float) -> void:
 ## @ace_name("Is At Bound")
 ## @ace_description("True while the host is pressed against a bound. side: left / right / top / bottom / any.")
 ## @ace_param_options(side left, right, top, bottom, any)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/bound_to/icon.svg")
 ## @ace_codegen_template("$BoundToBehavior.is_at_bound({side})")
 func is_at_bound(side: String = "any") -> bool:
 	if side == "any":
@@ -117,7 +117,7 @@ func is_at_bound(side: String = "any") -> bool:
 ## @ace_name("Set Bound Space")
 ## @ace_description("Switches what the host is kept inside: the on-screen camera view, or the custom rectangle.")
 ## @ace_param_options(space screen, custom)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/bound_to/icon.svg")
 ## @ace_codegen_template("$BoundToBehavior.set_bound_space({space})")
 func set_bound_space(space: String) -> void:
 	if space in ["screen", "custom"]:

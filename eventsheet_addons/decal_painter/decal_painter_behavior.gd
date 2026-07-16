@@ -1,6 +1,6 @@
 ## @ace_tags(3d, drawing, visual)
 ## @ace_category("Decal Painter")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/decal_painter/icon.svg")
 class_name DecalPainter
 extends Node
 
@@ -90,7 +90,7 @@ func _track(decal: Decal, lifetime: float) -> void:
 
 ## @ace_expression
 ## @ace_name("Decal Count")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.decal_count()")
 func decal_count() -> int:
 	var alive: int = 0
@@ -102,7 +102,7 @@ func decal_count() -> int:
 ## @ace_action
 ## @ace_name("Spawn Decal")
 ## @ace_description("Stamps a decal onto the world at a position - splats, scorch marks, target rings. Lifetime 0 keeps it forever (until the max-decals cap recycles it).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.spawn_decal({texture}, {x}, {y}, {z}, {size}, {rotation_deg}, {lifetime})")
 func spawn_decal(texture: Texture2D, x: float, y: float, z: float, size: float, rotation_deg: float, lifetime: float) -> void:
 	var decal: Decal = Decal.new()
@@ -116,7 +116,7 @@ func spawn_decal(texture: Texture2D, x: float, y: float, z: float, size: float, 
 ## @ace_action
 ## @ace_name("Spawn Blob Shadow")
 ## @ace_description("Keeps a soft shadow blob ground-snapped under a node - the classic character shadow, no asset needed. The floor is found by raycast against the collision mask.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.spawn_blob_shadow({follow}, {radius}, {opacity}, {collision_mask_3d})")
 func spawn_blob_shadow(follow: Node, radius: float, opacity: float, collision_mask_3d: int) -> void:
 	if not (follow is Node3D):
@@ -132,7 +132,7 @@ func spawn_blob_shadow(follow: Node, radius: float, opacity: float, collision_ma
 ## @ace_action
 ## @ace_name("Stop Blob Shadow")
 ## @ace_description("Removes the blob shadow following a node.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.stop_blob_shadow({follow})")
 func stop_blob_shadow(follow: Node) -> void:
 	if follow == null:
@@ -149,7 +149,7 @@ func stop_blob_shadow(follow: Node) -> void:
 ## @ace_action
 ## @ace_name("Spawn Canvas Decal")
 ## @ace_description("Projects a 2D Drawing Canvas's LIVE texture onto the world as a decal - draw a line-of-sight fan or telegraph in 2D and paint it on the 3D floor. Pass the DrawingCanvas behavior node; the decal updates as the canvas draws.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.spawn_canvas_decal({canvas}, {x}, {y}, {z}, {size}, {rotation_deg})")
 func spawn_canvas_decal(canvas: Node, x: float, y: float, z: float, size: float, rotation_deg: float) -> void:
 	if canvas == null or not canvas.has_method("canvas_texture"):
@@ -159,7 +159,7 @@ func spawn_canvas_decal(canvas: Node, x: float, y: float, z: float, size: float,
 ## @ace_action
 ## @ace_name("Clear Decals")
 ## @ace_description("Frees every spawned decal and blob shadow.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.clear_decals()")
 func clear_decals() -> void:
 	for entry: Dictionary in _decals:
@@ -174,7 +174,7 @@ func clear_decals() -> void:
 ## @ace_action
 ## @ace_name("Set Max Decals")
 ## @ace_description("Changes the FIFO cap - the oldest decals free immediately if over it.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/decal_painter/icon.svg")
 ## @ace_codegen_template("$DecalPainter.set_max_decals({count})")
 func set_max_decals(count: int) -> void:
 	max_decals = maxi(count, 1)

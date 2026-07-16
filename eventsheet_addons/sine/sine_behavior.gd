@@ -1,6 +1,6 @@
 ## @ace_category("Sine")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/sine/icon.svg")
 class_name SineBehavior
 extends Node
 
@@ -33,6 +33,87 @@ var time: float = 0.0
 ## Waveform shape of the oscillation - sine, triangle, sawtooth, reverse-sawtooth, or square.
 @export_enum("sine", "triangle", "sawtooth", "reverse-sawtooth", "square") var wave: String = "sine"
 var wave_value: float = 0.0
+
+func _process(delta: float) -> void:
+	if not active or host == null:
+		return
+	if not base_captured:
+		update_initial_state()
+	time += delta
+	var t := time / maxf(period, 0.001) + phase_degrees / 360.0
+	wave_value = _wave(t)
+	var offset := wave_value * magnitude
+	if movement == "horizontal":
+		host.position.x = base_x + offset
+	elif movement == "vertical":
+		host.position.y = base_y + offset
+	elif movement == "forwards-backwards":
+		host.position = Vector2(base_x, base_y) + Vector2.from_angle(base_rotation) * offset
+	elif movement == "size":
+		host.scale = Vector2(base_scale_x, base_scale_y) * (1.0 + wave_value * magnitude * 0.01)
+	elif movement == "angle":
+		host.rotation = base_rotation + offset * 0.0174533
+	elif movement == "opacity":
+		host.modulate.a = clampf(base_alpha + wave_value * magnitude * 0.01, 0.0, 1.0)
+
+## @ace_action
+## @ace_name("Set Sine Active")
+## @ace_category("Sine")
+## @ace_description("Pauses or resumes the oscillation.")
+## @ace_icon("res://eventsheet_addons/sine/icon.svg")
+## @ace_codegen_template("$SineBehavior.set_sine_active({is_active})")
+func set_sine_active(is_active: bool) -> void:
+	active = is_active
+
+## @ace_action
+## @ace_name("Update Initial State")
+## @ace_category("Sine")
+## @ace_description("Re-captures the host's current position/scale/angle/opacity as the wave's base (updateInitialState).")
+## @ace_icon("res://eventsheet_addons/sine/icon.svg")
+## @ace_codegen_template("$SineBehavior.update_initial_state()")
+func update_initial_state() -> void:
+	if host == null:
+		return
+	base_x = host.position.x
+	base_y = host.position.y
+	base_rotation = host.rotation
+	base_scale_x = host.scale.x
+	base_scale_y = host.scale.y
+	base_alpha = host.modulate.a
+	base_captured = true
+
+## @ace_action
+## @ace_name("Set Phase")
+## @ace_category("Sine")
+## @ace_description("Phase offset in degrees.")
+## @ace_icon("res://eventsheet_addons/sine/icon.svg")
+## @ace_codegen_template("$SineBehavior.set_sine_phase({degrees})")
+func set_sine_phase(degrees: float) -> void:
+	phase_degrees = degrees
+
+## @ace_action
+## @ace_name("Reset Sine")
+## @ace_category("Sine")
+## @ace_description("Restarts the wave from the current state.")
+## @ace_icon("res://eventsheet_addons/sine/icon.svg")
+## @ace_codegen_template("$SineBehavior.reset_sine()")
+func reset_sine() -> void:
+	time = 0.0
+	base_captured = false
+
+## @ace_hidden
+func _wave(t: float) -> float:
+	var cycle := fposmod(t, 1.0)
+	match wave:
+		"triangle":
+			return 1.0 - 4.0 * absf(cycle - 0.5)
+		"sawtooth":
+			return 2.0 * cycle - 1.0
+		"reverse-sawtooth":
+			return 1.0 - 2.0 * cycle
+		"square":
+			return 1.0 if cycle < 0.5 else -1.0
+	return sin(cycle * TAU)
 
 ## @ace_hidden
 static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
@@ -73,86 +154,5 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 			color.a = clampf(color.a + value * magnitude * 0.01, 0.0, 1.0)
 			return {"modulate": color}
 	return {}
-
-func _process(delta: float) -> void:
-	if not active or host == null:
-		return
-	if not base_captured:
-		update_initial_state()
-	time += delta
-	var t := time / maxf(period, 0.001) + phase_degrees / 360.0
-	wave_value = _wave(t)
-	var offset := wave_value * magnitude
-	if movement == "horizontal":
-		host.position.x = base_x + offset
-	elif movement == "vertical":
-		host.position.y = base_y + offset
-	elif movement == "forwards-backwards":
-		host.position = Vector2(base_x, base_y) + Vector2.from_angle(base_rotation) * offset
-	elif movement == "size":
-		host.scale = Vector2(base_scale_x, base_scale_y) * (1.0 + wave_value * magnitude * 0.01)
-	elif movement == "angle":
-		host.rotation = base_rotation + offset * 0.0174533
-	elif movement == "opacity":
-		host.modulate.a = clampf(base_alpha + wave_value * magnitude * 0.01, 0.0, 1.0)
-
-## @ace_action
-## @ace_name("Set Sine Active")
-## @ace_category("Sine")
-## @ace_description("Pauses or resumes the oscillation.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
-## @ace_codegen_template("$SineBehavior.set_sine_active({is_active})")
-func set_sine_active(is_active: bool) -> void:
-	active = is_active
-
-## @ace_action
-## @ace_name("Update Initial State")
-## @ace_category("Sine")
-## @ace_description("Re-captures the host's current position/scale/angle/opacity as the wave's base (updateInitialState).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
-## @ace_codegen_template("$SineBehavior.update_initial_state()")
-func update_initial_state() -> void:
-	if host == null:
-		return
-	base_x = host.position.x
-	base_y = host.position.y
-	base_rotation = host.rotation
-	base_scale_x = host.scale.x
-	base_scale_y = host.scale.y
-	base_alpha = host.modulate.a
-	base_captured = true
-
-## @ace_action
-## @ace_name("Set Phase")
-## @ace_category("Sine")
-## @ace_description("Phase offset in degrees.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
-## @ace_codegen_template("$SineBehavior.set_sine_phase({degrees})")
-func set_sine_phase(degrees: float) -> void:
-	phase_degrees = degrees
-
-## @ace_action
-## @ace_name("Reset Sine")
-## @ace_category("Sine")
-## @ace_description("Restarts the wave from the current state.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
-## @ace_codegen_template("$SineBehavior.reset_sine()")
-func reset_sine() -> void:
-	time = 0.0
-	base_captured = false
-
-## @ace_hidden
-func _wave(t: float) -> float:
-	var cycle := fposmod(t, 1.0)
-	match wave:
-		"triangle":
-			return 1.0 - 4.0 * absf(cycle - 0.5)
-		"sawtooth":
-			return 2.0 * cycle - 1.0
-		"reverse-sawtooth":
-			return 1.0 - 2.0 * cycle
-		"square":
-			return 1.0 if cycle < 0.5 else -1.0
-	return sin(cycle * TAU)
 
 # Sine behavior (event-sheet parity): wave-driven oscillation. movement: horizontal, vertical, forwards-backwards, size, angle, opacity, value-only. wave: sine, triangle, sawtooth, reverse-sawtooth, square. Read the current wave via $SineBehavior.wave_value.

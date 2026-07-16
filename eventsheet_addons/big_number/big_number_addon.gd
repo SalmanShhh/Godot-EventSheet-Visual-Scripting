@@ -1,6 +1,6 @@
 ## @ace_tags(incremental, idle, format)
 ## @ace_category("Big Numbers")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/big_number/icon.svg")
 class_name BigNumberAddon
 extends Node
 
@@ -11,7 +11,7 @@ const SUFFIXES: Array = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "
 ## @ace_name("Format Short")
 ## @ace_category("Big Numbers")
 ## @ace_description("A compact string with a short-scale suffix: 1250 -> "1.25K", 1250000 -> "1.25M", on through Qa/Qi/.../Dc, then scientific past 1e36. Pass how many decimals.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.fmt_short({value}, {decimals})")
 func fmt_short(value: float, decimals: int) -> String:
 	if not is_finite(value):
@@ -37,7 +37,7 @@ func fmt_short(value: float, decimals: int) -> String:
 ## @ace_name("Format Scientific")
 ## @ace_category("Big Numbers")
 ## @ace_description("Scientific notation: 1250000 -> "1.25e6". Pass how many decimals for the mantissa.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.fmt_scientific({value}, {decimals})")
 func fmt_scientific(value: float, decimals: int) -> String:
 	if not is_finite(value):
@@ -58,7 +58,7 @@ func fmt_scientific(value: float, decimals: int) -> String:
 ## @ace_name("Format Engineering")
 ## @ace_category("Big Numbers")
 ## @ace_description("Engineering notation - the exponent is always a multiple of 3: 1250000 -> "1.25e6", 12500 -> "12.50e3".")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.fmt_engineering({value}, {decimals})")
 func fmt_engineering(value: float, decimals: int) -> String:
 	if not is_finite(value):
@@ -80,7 +80,7 @@ func fmt_engineering(value: float, decimals: int) -> String:
 ## @ace_name("Format Time")
 ## @ace_category("Big Numbers")
 ## @ace_description("Seconds as a friendly duration: 3725 -> "1h 2m 5s". Drops leading zero units (90 -> "1m 30s").")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.fmt_time({seconds})")
 func fmt_time(seconds: float) -> String:
 	var total: int = int(maxf(seconds, 0.0))
@@ -104,7 +104,7 @@ func fmt_time(seconds: float) -> String:
 ## @ace_name("Format Time Short")
 ## @ace_category("Big Numbers")
 ## @ace_description("Seconds as a clock: 3725 -> "1:02:05", 90 -> "1:30".")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.fmt_time_short({seconds})")
 func fmt_time_short(seconds: float) -> String:
 	var total: int = int(maxf(seconds, 0.0))
@@ -119,7 +119,7 @@ func fmt_time_short(seconds: float) -> String:
 ## @ace_name("Format Ordinal")
 ## @ace_category("Big Numbers")
 ## @ace_description("An ordinal string: 1 -> "1st", 2 -> "2nd", 13 -> "13th", 21 -> "21st".")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.fmt_ordinal({number})")
 func fmt_ordinal(number: int) -> String:
 	var mod100: int = number % 100
@@ -138,7 +138,7 @@ func fmt_ordinal(number: int) -> String:
 ## @ace_name("Format Comma")
 ## @ace_category("Big Numbers")
 ## @ace_description("Thousands separators on the whole-number part: 1234567 -> "1,234,567".")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.fmt_comma({value})")
 func fmt_comma(value: float) -> String:
 	var negative: bool = value < 0.0
@@ -156,7 +156,7 @@ func fmt_comma(value: float) -> String:
 ## @ace_name("Format Percent")
 ## @ace_category("Big Numbers")
 ## @ace_description("A fraction as a percent: 0.25 -> "25%". Pass how many decimals.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.fmt_percent({value}, {decimals})")
 func fmt_percent(value: float, decimals: int) -> String:
 	return String.num(value * 100.0, maxi(decimals, 0)) + "%"
@@ -165,7 +165,7 @@ func fmt_percent(value: float, decimals: int) -> String:
 ## @ace_name("Format Multiplier")
 ## @ace_category("Big Numbers")
 ## @ace_description("A multiplier label: 1.5 -> "x1.5", 2.0 -> "x2.0".")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.fmt_multiplier({value}, {decimals})")
 func fmt_multiplier(value: float, decimals: int) -> String:
 	return "x" + String.num(value, maxi(decimals, 0))
@@ -174,7 +174,7 @@ func fmt_multiplier(value: float, decimals: int) -> String:
 ## @ace_name("Suffix For")
 ## @ace_category("Big Numbers")
 ## @ace_description("The short-scale suffix for an order of magnitude: 6 -> "M", 9 -> "B". "" past Dc.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.suffix_for({magnitude})")
 func suffix_for(magnitude: int) -> String:
 	if magnitude < 0:
@@ -186,7 +186,7 @@ func suffix_for(magnitude: int) -> String:
 ## @ace_name("Order Of Magnitude")
 ## @ace_category("Big Numbers")
 ## @ace_description("The power of ten of a value (floor log10): 1250 -> 3, 1000000 -> 6.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.order_of_magnitude({value})")
 func order_of_magnitude(value: float) -> int:
 	return _oom(value)
@@ -195,7 +195,7 @@ func order_of_magnitude(value: float) -> int:
 ## @ace_name("Make")
 ## @ace_category("Big Numbers")
 ## @ace_description("Builds a Decimal from a mantissa and an exponent: Make(1.5, 100) is 1.5e100. Normalized automatically.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_make({mantissa}, {exponent})")
 func dec_make(mantissa: float, exponent: float) -> Array:
 	return _dnorm(mantissa, exponent)
@@ -204,7 +204,7 @@ func dec_make(mantissa: float, exponent: float) -> Array:
 ## @ace_name("From Number")
 ## @ace_category("Big Numbers")
 ## @ace_description("Turns a plain number into a Decimal so it can grow past the float ceiling.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_from({value})")
 func dec_from(value: float) -> Array:
 	return _dnorm(value, 0.0)
@@ -213,7 +213,7 @@ func dec_from(value: float) -> Array:
 ## @ace_name("To Number")
 ## @ace_category("Big Numbers")
 ## @ace_description("Turns a Decimal back into a plain number (may be Infinity if it is above 1.8e308).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_to({decimal})")
 func dec_to(decimal: Array) -> float:
 	return float(decimal[0]) * pow(10.0, float(decimal[1]))
@@ -222,7 +222,7 @@ func dec_to(decimal: Array) -> float:
 ## @ace_name("Add")
 ## @ace_category("Big Numbers")
 ## @ace_description("Adds two Decimals. When one is more than ~15 orders of magnitude larger, the smaller is negligible and dropped.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_add({a}, {b})")
 func dec_add(a: Array, b: Array) -> Array:
 	var am: float = float(a[0])
@@ -243,7 +243,7 @@ func dec_add(a: Array, b: Array) -> Array:
 ## @ace_name("Subtract")
 ## @ace_category("Big Numbers")
 ## @ace_description("Subtracts Decimal b from Decimal a.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_sub({a}, {b})")
 func dec_sub(a: Array, b: Array) -> Array:
 	return dec_add(a, [-float(b[0]), float(b[1])])
@@ -252,7 +252,7 @@ func dec_sub(a: Array, b: Array) -> Array:
 ## @ace_name("Multiply")
 ## @ace_category("Big Numbers")
 ## @ace_description("Multiplies two Decimals (mantissas multiply, exponents add).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_mul({a}, {b})")
 func dec_mul(a: Array, b: Array) -> Array:
 	return _dnorm(float(a[0]) * float(b[0]), float(a[1]) + float(b[1]))
@@ -261,7 +261,7 @@ func dec_mul(a: Array, b: Array) -> Array:
 ## @ace_name("Divide")
 ## @ace_category("Big Numbers")
 ## @ace_description("Divides Decimal a by Decimal b (returns 0 if b is 0).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_div({a}, {b})")
 func dec_div(a: Array, b: Array) -> Array:
 	if float(b[0]) == 0.0:
@@ -272,7 +272,7 @@ func dec_div(a: Array, b: Array) -> Array:
 ## @ace_name("Power")
 ## @ace_category("Big Numbers")
 ## @ace_description("Raises a Decimal to a power: Power(d, 2) squares it. Works in log space so a big power never overflows.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_pow({decimal}, {power})")
 func dec_pow(decimal: Array, power: float) -> Array:
 	var mantissa: float = float(decimal[0])
@@ -291,7 +291,7 @@ func dec_pow(decimal: Array, power: float) -> Array:
 ## @ace_name("Scale")
 ## @ace_category("Big Numbers")
 ## @ace_description("Multiplies a Decimal by a plain number - the easy way to apply a multiplier.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_scale({decimal}, {factor})")
 func dec_scale(decimal: Array, factor: float) -> Array:
 	return _dnorm(float(decimal[0]) * factor, float(decimal[1]))
@@ -300,7 +300,7 @@ func dec_scale(decimal: Array, factor: float) -> Array:
 ## @ace_name("Compare")
 ## @ace_category("Big Numbers")
 ## @ace_description("Compares two Decimals: -1 if a < b, 0 if equal, 1 if a > b.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_compare({a}, {b})")
 func dec_compare(a: Array, b: Array) -> int:
 	return _dcmp(a, b)
@@ -309,7 +309,7 @@ func dec_compare(a: Array, b: Array) -> int:
 ## @ace_name("Format Big")
 ## @ace_category("Big Numbers")
 ## @ace_description("Formats a Decimal with a short-scale suffix, falling through to scientific past Dc: Make(1.5, 100) -> "1.50e100".")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_format({decimal}, {decimals})")
 func dec_format(decimal: Array, decimals: int) -> String:
 	var normalized: Array = _dnorm(float(decimal[0]), float(decimal[1]))
@@ -339,7 +339,7 @@ func dec_format(decimal: Array, decimals: int) -> String:
 ## @ace_name("Is Bigger")
 ## @ace_category("Big Numbers")
 ## @ace_description("Whether Decimal a is strictly bigger than Decimal b.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_greater({a}, {b})")
 func dec_greater(a: Array, b: Array) -> bool:
 	return _dcmp(a, b) > 0
@@ -348,7 +348,7 @@ func dec_greater(a: Array, b: Array) -> bool:
 ## @ace_name("Is At Least")
 ## @ace_category("Big Numbers")
 ## @ace_description("Whether Decimal a is at least as big as Decimal b.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_at_least({a}, {b})")
 func dec_at_least(a: Array, b: Array) -> bool:
 	return _dcmp(a, b) >= 0

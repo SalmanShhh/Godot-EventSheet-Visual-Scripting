@@ -1,6 +1,6 @@
 ## @ace_tags(grid, movement)
 ## @ace_category("Slide Movement")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/slide_move/icon.svg")
 class_name SlideMove
 extends Node
 
@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_category("Slide Movement")
 ## @ace_description("Starts a slide in a direction (left / right / up / down): the character glides until the tile ahead is a wall, then stops snapped to the grid. Ignored while already sliding; fires On Hit Wall immediately if the very next tile is a wall.")
 ## @ace_param_options(direction left, right, up, down)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.slide({direction})")
 func slide(direction: String) -> void:
 	if _sliding:
@@ -79,7 +79,7 @@ func slide(direction: String) -> void:
 ## @ace_name("Stop Slide")
 ## @ace_category("Slide Movement")
 ## @ace_description("Stops a slide immediately and snaps the character to the nearest tile.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.stop_slide()")
 func stop_slide() -> void:
 	_sliding = false
@@ -90,7 +90,7 @@ func stop_slide() -> void:
 ## @ace_name("Snap To Grid")
 ## @ace_category("Slide Movement")
 ## @ace_description("Snaps the character to the nearest grid intersection right now.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.snap_to_grid()")
 func snap_to_grid() -> void:
 	if host is Node2D:
@@ -100,7 +100,7 @@ func snap_to_grid() -> void:
 ## @ace_name("Teleport To Tile")
 ## @ace_category("Slide Movement")
 ## @ace_description("Jumps instantly to a tile coordinate (multiplied by the grid size), cancelling any slide.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.teleport_to_tile({tile_x}, {tile_y})")
 func teleport_to_tile(tile_x: int, tile_y: int) -> void:
 	_sliding = false
@@ -111,7 +111,7 @@ func teleport_to_tile(tile_x: int, tile_y: int) -> void:
 ## @ace_name("Set Grid Size")
 ## @ace_category("Slide Movement")
 ## @ace_description("Changes the tile size in pixels at runtime.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.set_grid_size({pixels})")
 func set_grid_size(pixels: float) -> void:
 	grid_size = maxf(pixels, 1.0)
@@ -120,7 +120,7 @@ func set_grid_size(pixels: float) -> void:
 ## @ace_name("Is Sliding")
 ## @ace_category("Slide Movement")
 ## @ace_description("Whether the character is mid-slide.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.is_sliding()")
 func is_sliding() -> bool:
 	return _sliding
@@ -130,7 +130,7 @@ func is_sliding() -> bool:
 ## @ace_category("Slide Movement")
 ## @ace_description("Whether the tile next to the character in a direction is open (not a wall).")
 ## @ace_param_options(direction left, right, up, down)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.can_slide({direction})")
 func can_slide(direction: String) -> bool:
 	var dir: Vector2 = _dir_from(direction)
@@ -142,7 +142,7 @@ func can_slide(direction: String) -> bool:
 ## @ace_name("Slide Direction")
 ## @ace_category("Slide Movement")
 ## @ace_description("The direction of the current or last slide ("left" / "right" / "up" / "down").")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.slide_direction()")
 func slide_direction() -> String:
 	return _dir_name
@@ -151,7 +151,7 @@ func slide_direction() -> String:
 ## @ace_name("Tile X")
 ## @ace_category("Slide Movement")
 ## @ace_description("The character's current column on the grid.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.tile_x()")
 func tile_x() -> int:
 	return roundi((host as Node2D).global_position.x / grid_size) if host is Node2D else 0
@@ -160,7 +160,7 @@ func tile_x() -> int:
 ## @ace_name("Tile Y")
 ## @ace_category("Slide Movement")
 ## @ace_description("The character's current row on the grid.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.tile_y()")
 func tile_y() -> int:
 	return roundi((host as Node2D).global_position.y / grid_size) if host is Node2D else 0

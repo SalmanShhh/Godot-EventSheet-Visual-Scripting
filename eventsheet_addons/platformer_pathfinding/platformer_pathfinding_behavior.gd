@@ -1,7 +1,7 @@
 ## @ace_tags(movement, platformer, ai, pathfinding)
 ## @ace_category("Platformer Pathfinding")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 class_name PlatformerPathfinding
 extends Node
 
@@ -305,7 +305,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Build Nav Graph From Tilemap")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK edges, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.build_nav_graph({tilemap})")
 func build_nav_graph(tilemap: Node) -> void:
 	_tilemap = tilemap as TileMapLayer
@@ -315,7 +315,7 @@ func build_nav_graph(tilemap: Node) -> void:
 ## @ace_name("Regenerate Nav Graph")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Rebuilds the graph from the same TileMapLayer (after runtime tile edits).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.regenerate_nav_graph()")
 func regenerate_nav_graph() -> void:
 	_nodes.clear()
@@ -366,7 +366,7 @@ func regenerate_nav_graph() -> void:
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails - it goes to the closest reachable node instead. Fires On Path Found / On Path Failed.")
 ## @ace_param_options(mode nearest, reach)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, {mode})")
 func find_path_to(x: float, y: float, mode: String) -> void:
 	# A repath while riding a mid-travel moving platform is DEFERRED (the current path
@@ -427,7 +427,7 @@ func find_path_to(x: float, y: float, mode: String) -> void:
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.")
 ## @ace_param_options(mode nearest, reach)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.find_path_to_node({target}, {mode})")
 func find_path_to_node(target: Node, mode: String) -> void:
 	if target is Node2D:
@@ -442,7 +442,7 @@ func find_path_to_node(target: Node, mode: String) -> void:
 ## @ace_name("Stop Pathfinding")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Clears the path and releases the movement pack back to the keyboard (ai_controlled off).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.stop_pathfinding()")
 func stop_pathfinding() -> void:
 	_path = []
@@ -464,7 +464,7 @@ func stop_pathfinding() -> void:
 ## @ace_name("Set Auto Control")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("On (default): the behavior drives the sibling PlatformerMovement. Off: paths still compute - read Path Move Axis / Path Wants Jump / Current Waypoint X/Y and drive anything you like.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.set_auto_control({enabled})")
 func set_auto_control(enabled: bool) -> void:
 	auto_control = enabled
@@ -477,7 +477,7 @@ func set_auto_control(enabled: bool) -> void:
 ## @ace_name("Set Ledge Restriction")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Patrol discipline: on, routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency, so the agent stays on its platform. Applies from the next Find Path To.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.set_ledge_restriction({enabled})")
 func set_ledge_restriction(enabled: bool) -> void:
 	ledge_restriction = enabled
@@ -486,7 +486,7 @@ func set_ledge_restriction(enabled: bool) -> void:
 ## @ace_name("Set Ledge Leniency")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("With Ledge Restriction on, drops up to this many pixels are still allowed (a patroller may hop down one step but never off the tower).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.set_ledge_leniency({pixels})")
 func set_ledge_leniency(pixels: float) -> void:
 	ledge_leniency = pixels
@@ -496,7 +496,7 @@ func set_ledge_leniency(pixels: float) -> void:
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("relaxed (default): leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.")
 ## @ace_param_options(mode relaxed, strict)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.set_jump_positioning({mode})")
 func set_jump_positioning(mode: String) -> void:
 	jump_positioning = mode
@@ -505,7 +505,7 @@ func set_jump_positioning(mode: String) -> void:
 ## @ace_name("Set Coyote Time")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Grace window (s) for AI jumps just after running off the takeoff ledge.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.set_coyote_time({seconds})")
 func set_coyote_time(seconds: float) -> void:
 	coyote_time = seconds
@@ -514,7 +514,7 @@ func set_coyote_time(seconds: float) -> void:
 ## @ace_name("Set Repath Interval")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("While following a node, how often the route may refresh (chase freshness vs cost).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.set_repath_interval({seconds})")
 func set_repath_interval(seconds: float) -> void:
 	repath_interval = seconds
@@ -523,7 +523,7 @@ func set_repath_interval(seconds: float) -> void:
 ## @ace_name("Set Repath Threshold")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("The route only refreshes when the followed node has moved at least this many pixels.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.set_repath_threshold({pixels})")
 func set_repath_threshold(pixels: float) -> void:
 	repath_threshold = pixels
@@ -532,7 +532,7 @@ func set_repath_threshold(pixels: float) -> void:
 ## @ace_name("Set Max Paths Per Tick")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("The SHARED budget across every agent: at most this many route computations per physics tick - extras defer a tick (Is Path Pending) instead of spiking the frame. The difference between 20 chasers working and not.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.set_max_paths_per_tick({count})")
 func set_max_paths_per_tick(count: int) -> void:
 	_shared_max_paths_per_tick = count
@@ -541,7 +541,7 @@ func set_max_paths_per_tick(count: int) -> void:
 ## @ace_name("Add Portal")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Links two world positions as a PORTAL: an agent whose route uses it walks to the entrance and blinks to the exit (fires On Portal Taken). Bidirectional works both ways. Portals join the graph immediately and survive Regenerate - doors, teleporters, ladders, and elevators all model as portals.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.add_portal({from_x}, {from_y}, {to_x}, {to_y}, {bidirectional})")
 func add_portal(from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool) -> void:
 	var portal: Dictionary = {"from": Vector2(from_x, from_y), "to": Vector2(to_x, to_y), "both": bidirectional}
@@ -553,7 +553,7 @@ func add_portal(from_x: float, from_y: float, to_x: float, to_y: float, bidirect
 ## @ace_name("Clear Portals")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Removes every registered portal (takes effect on the next Regenerate Nav Graph).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.clear_portals()")
 func clear_portals() -> void:
 	_portals = []
@@ -563,7 +563,7 @@ func clear_portals() -> void:
 ## @ace_name("Add Hazard")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Marks a world-space rectangle as hazardous. Deadly: routes NEVER pass through it (spikes, lava). Not deadly: routes pay 4x to cross, so it is taken only when no clean way exists (fire patches, slow mud). Applies to routing instantly - no rebuild - and On Hazard Entered fires if the agent ends up inside one anyway.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.add_hazard({x}, {y}, {width}, {height}, {deadly})")
 func add_hazard(x: float, y: float, width: float, height: float, deadly: bool) -> void:
 	_hazards.append({"rect": Rect2(x, y, width, height), "deadly": deadly})
@@ -572,7 +572,7 @@ func add_hazard(x: float, y: float, width: float, height: float, deadly: bool) -
 ## @ace_name("Clear Hazards")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Removes every hazard (routing sees the change immediately).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.clear_hazards()")
 func clear_hazards() -> void:
 	_hazards = []
@@ -581,7 +581,7 @@ func clear_hazards() -> void:
 ## @ace_name("Add Moving Platform")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Registers a moving platform (an AnimatableBody2D you animate) by its two travel endpoints: the graph gains a PLATFORM edge between them, and an agent routed across it walks to the track, WAITS for the platform, boards, rides, and walks off at the far side. Survives Regenerate. The pack never moves the platform - your sheet animates it between exactly these endpoints.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.add_moving_platform({platform}, {from_x}, {from_y}, {to_x}, {to_y})")
 func add_moving_platform(platform: Node, from_x: float, from_y: float, to_x: float, to_y: float) -> void:
 	if not (platform is Node2D):
@@ -595,7 +595,7 @@ func add_moving_platform(platform: Node, from_x: float, from_y: float, to_x: flo
 ## @ace_name("Clear Moving Platforms")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Unregisters every moving platform (takes effect on the next Regenerate Nav Graph).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.clear_moving_platforms()")
 func clear_moving_platforms() -> void:
 	_moving_platforms = []
@@ -605,7 +605,7 @@ func clear_moving_platforms() -> void:
 ## @ace_name("Set Nav Debug Draw")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Draws the active path as a line in the world (great while tuning a level).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.set_nav_debug_draw({enabled})")
 func set_nav_debug_draw(enabled: bool) -> void:
 	debug_draw = enabled
@@ -613,14 +613,14 @@ func set_nav_debug_draw(enabled: bool) -> void:
 
 ## @ace_condition
 ## @ace_name("Is Path Pending")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.is_path_pending()")
 func is_path_pending() -> bool:
 	return _path_pending
 
 ## @ace_condition
 ## @ace_name("Is In Hazard")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.is_in_hazard()")
 func is_in_hazard() -> bool:
 	return host != null and _point_in_hazard(host.global_position, false)
@@ -647,14 +647,14 @@ func _segment_hazard(from_cell: Vector2i, to_cell: Vector2i) -> int:
 
 ## @ace_condition
 ## @ace_name("Has Path")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.has_path()")
 func has_path() -> bool:
 	return not _path.is_empty()
 
 ## @ace_condition
 ## @ace_name("Path Wants Jump")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.path_wants_jump()")
 func path_wants_jump() -> bool:
 	if _path.is_empty() or _jumped_this_segment or host == null:
@@ -669,42 +669,42 @@ func path_wants_jump() -> bool:
 
 ## @ace_expression
 ## @ace_name("Path Move Axis")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.path_move_axis()")
 func path_move_axis() -> float:
 	return _move_axis
 
 ## @ace_expression
 ## @ace_name("Waypoint Count")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.waypoint_count()")
 func waypoint_count() -> int:
 	return _path.size()
 
 ## @ace_expression
 ## @ace_name("Current Waypoint Index")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.current_waypoint_index()")
 func current_waypoint_index() -> int:
 	return _path_index
 
 ## @ace_expression
 ## @ace_name("Current Waypoint X")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.current_waypoint_x()")
 func current_waypoint_x() -> float:
 	return (_path[_path_index]["world"] as Vector2).x if not _path.is_empty() else 0.0
 
 ## @ace_expression
 ## @ace_name("Current Waypoint Y")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.current_waypoint_y()")
 func current_waypoint_y() -> float:
 	return (_path[_path_index]["world"] as Vector2).y if not _path.is_empty() else 0.0
 
 ## @ace_expression
 ## @ace_name("Current Path Action")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.current_path_action()")
 func current_path_action() -> String:
 	return str(_path[_path_index]["action"]) if not _path.is_empty() else ""

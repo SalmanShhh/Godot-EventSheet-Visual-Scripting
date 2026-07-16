@@ -1,6 +1,6 @@
 ## @ace_category("Move To")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/move_to/icon.svg")
 class_name MoveToBehavior
 extends Node
 
@@ -41,7 +41,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Move To Position")
 ## @ace_category("Move To")
 ## @ace_description("Replaces the queue and glides toward the point.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/move_to/icon.svg")
 ## @ace_codegen_template("$MoveToBehavior.move_to_position({x}, {y})")
 func move_to_position(x: float, y: float) -> void:
 	waypoints = [Vector2(x, y)]
@@ -51,7 +51,7 @@ func move_to_position(x: float, y: float) -> void:
 ## @ace_name("Add Waypoint")
 ## @ace_category("Move To")
 ## @ace_description("Appends a stop to the queue (waypoints).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/move_to/icon.svg")
 ## @ace_codegen_template("$MoveToBehavior.add_waypoint({x}, {y})")
 func add_waypoint(x: float, y: float) -> void:
 	waypoints.append(Vector2(x, y))
@@ -61,7 +61,7 @@ func add_waypoint(x: float, y: float) -> void:
 ## @ace_name("Stop Moving")
 ## @ace_category("Move To")
 ## @ace_description("Clears the queue without firing On Arrived.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/move_to/icon.svg")
 ## @ace_codegen_template("$MoveToBehavior.stop_moving()")
 func stop_moving() -> void:
 	moving = false

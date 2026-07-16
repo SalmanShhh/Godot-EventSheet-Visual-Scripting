@@ -1,7 +1,7 @@
 ## @ace_tags(movement, platformer)
 ## @ace_category("Platformer")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/platformer_movement/icon.svg")
 class_name PlatformerMovement
 extends Node
 
@@ -109,7 +109,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Jump")
 ## @ace_category("Platformer")
 ## @ace_description("Jumps: from the floor or within coyote time, off a wall (if enabled), or a mid-air (double) jump if any remain. If none are available right now, the press is buffered.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.jump()")
 func jump() -> void:
 	if host == null:
@@ -134,7 +134,7 @@ func jump() -> void:
 ## @ace_name("Jump Released")
 ## @ace_category("Platformer")
 ## @ace_description("Call when the jump button is released - cuts the rise short for variable jump height (hold = higher).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.jump_released()")
 func jump_released() -> void:
 	if host != null and variable_jump_height and host.velocity.y < 0.0:
@@ -144,7 +144,7 @@ func jump_released() -> void:
 ## @ace_name("Set Move Speed")
 ## @ace_category("Platformer")
 ## @ace_description("Changes the horizontal move speed.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.set_move_speed({speed})")
 func set_move_speed(speed: float) -> void:
 	move_speed = speed
@@ -153,42 +153,42 @@ func set_move_speed(speed: float) -> void:
 ## @ace_name("Reset Jumps")
 ## @ace_category("Platformer")
 ## @ace_description("Refills the air-jump count (e.g. after grabbing a power-up).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.reset_jumps()")
 func reset_jumps() -> void:
 	_jumps_left = maxi(max_jumps - 1, 0)
 
 ## @ace_condition
 ## @ace_name("Is Moving")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_moving()")
 func is_moving() -> bool:
 	return host != null and absf(host.velocity.x) > 1.0
 
 ## @ace_condition
 ## @ace_name("Is Jumping")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_jumping()")
 func is_jumping() -> bool:
 	return host != null and not host.is_on_floor() and host.velocity.y < 0.0
 
 ## @ace_condition
 ## @ace_name("Is Falling")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_falling()")
 func is_falling() -> bool:
 	return host != null and not host.is_on_floor() and host.velocity.y > 0.0
 
 ## @ace_condition
 ## @ace_name("Is Wall Sliding")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_wall_sliding()")
 func is_wall_sliding() -> bool:
 	return _wall_sliding
 
 ## @ace_condition
 ## @ace_name("Can Jump")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.can_jump()")
 func can_jump() -> bool:
 	if host == null:
@@ -197,21 +197,21 @@ func can_jump() -> bool:
 
 ## @ace_expression
 ## @ace_name("Jumps Remaining")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.jumps_remaining()")
 func jumps_remaining() -> int:
 	return _jumps_left
 
 ## @ace_expression
 ## @ace_name("Air Time")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.air_time()")
 func air_time() -> float:
 	return _air_time
 
 ## @ace_expression
 ## @ace_name("Facing Direction")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.facing_direction()")
 func facing_direction() -> int:
 	return _facing

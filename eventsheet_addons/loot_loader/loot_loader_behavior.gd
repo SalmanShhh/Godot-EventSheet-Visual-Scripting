@@ -1,6 +1,6 @@
 ## @ace_tags(loot, data)
 ## @ace_category("Loot")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/loot_loader/icon.svg")
 class_name LootTableLoader
 extends Node
 

@@ -135,6 +135,70 @@ const EVENT_PICKER_GROUPS: Array[String] = [
 ## category "Parent: Sub" - no schema change. Node-type sections never sub-nest.
 const SUBCATEGORY_SEPARATOR: String = ": "
 
+## Builtin vocabulary sections lead with a native editor-theme icon (the object/module icon a
+## sheet user expects next to a name everywhere). Values are EditorIcons names - mostly class
+## icons, which every editor build ships. Unknown names and headless runs degrade to no icon.
+## A "Parent: Sub" category without its own entry inherits the parent's (category_header_icon).
+const CATEGORY_EDITOR_ICONS: Dictionary = {
+	"Animation": "AnimationPlayer",
+	"Audio": "AudioStreamPlayer",
+	"Behavior": "Node",
+	"Collisions": "CollisionShape2D",
+	"Color": "Color",
+	"Debug": "NodeWarning",
+	"Display": "Window",
+	"Drawing": "CanvasItem",
+	"Editor Tools": "Tools",
+	"Effects": "Shader",
+	"Files": "File",
+	"Files: Directories": "Folder",
+	"Functions": "MemberMethod",
+	"Game Options": "Tools",
+	"Game Window": "Window",
+	"Gamepad": "InputEventJoypadButton",
+	"General Actions": "Play",
+	"General Conditions": "GuiChecked",
+	"General Expressions": "Variant",
+	"Groups": "Groups",
+	"Helpers": "GDScript",
+	"Input": "InputEvent",
+	"InputMap": "InputEventAction",
+	"JSON": "JSON",
+	"Joints": "PinJoint2D",
+	"Keyboard": "InputEventKey",
+	"Loops": "Loop",
+	"Math & Random": "RandomNumberGenerator",
+	"Metadata": "Object",
+	"Mouse": "InputEventMouseButton",
+	"Movement": "Path2D",
+	"Nodes": "Node",
+	"Overlap 2D": "Area2D",
+	"Particles": "GPUParticles2D",
+	"Platform": "Godot",
+	"Procedural": "FastNoiseLite",
+	"Raycast 2D": "RayCast2D",
+	"Raycast 3D": "RayCast3D",
+	"Rendering": "Environment",
+	"Run Context": "PlayScene",
+	"Scene": "PackedScene",
+	"Signals / Scene / Input": "Signals",
+	"Systems": "Groups",
+	"Text": "String",
+	"Tilemap": "TileMap",
+	"Time": "Timer",
+	"Touch": "InputEventScreenTouch",
+	"Translation": "Translation",
+	"Tween": "Tween",
+	"UI": "Control",
+	"Utility": "Tools",
+	"Variables": "MemberProperty",
+	"Variables: Array": "Array",
+	"Variables: Dictionary": "Dictionary",
+	"Variables: String": "String",
+	"Variables: Vector": "Vector2",
+	"Vibration": "InputEventJoypadMotion",
+}
+
 # Group-header colours (by group kind).
 const GROUP_COLOR_NODE_TYPE := Color("#e0b070")  # amber - Godot class sections
 const GROUP_COLOR_TRIGGER := Color("#6fd0b0")     # teal-green - run context / triggers / signals
@@ -614,6 +678,12 @@ func _refresh_tree() -> void:
 		if item_icon != null:
 			item.set_icon(0, item_icon)
 			item.set_icon_max_width(0, 16)
+		# A pack class the editor theme can't resolve (custom classes aren't EditorIcons) still
+		# gets a section icon: promote the first row's own @ace_icon texture onto its header.
+		# Guarded to explicit res:// icons so a builtin row's kind dot never claims a header.
+		if group_item.get_icon(0) == null and definition.icon.strip_edges().begins_with("res://") and item_icon != null:
+			group_item.set_icon(0, item_icon)
+			group_item.set_icon_max_width(0, 16)
 		item.set_tooltip_text(0, _item_tooltip(definition))
 		item.set_metadata(0, definition)
 		if featured:
@@ -643,16 +713,37 @@ func _refresh_tree() -> void:
 func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> TreeItem:
 	var group_item: TreeItem = _tree.create_item(root)
 	group_item.set_text(0, group_key)
-	# Node-type sections show the class's editor icon (event-sheet users expect the object's icon
-	# next to its name everywhere).
-	if is_node_type:
-		var class_icon: Texture2D = editor_icon(group_key)
-		if class_icon != null:
-			group_item.set_icon(0, class_icon)
-			group_item.set_icon_max_width(0, 16)
+	# Every section shows its object/module icon next to its name (event-sheet users expect the
+	# icon everywhere): node-type sections use the class's editor icon, builtin vocabulary
+	# sections map through CATEGORY_EDITOR_ICONS. A pack class the editor theme doesn't know
+	# gets its icon later, from its first definition's own icon (see _rebuild_tree).
+	var header_icon: Texture2D = editor_icon(group_key) if is_node_type else category_header_icon(group_key)
+	if header_icon != null:
+		group_item.set_icon(0, header_icon)
+		group_item.set_icon_max_width(0, 16)
 	group_item.set_custom_color(0, _group_color_for(group_key, is_node_type))
 	_mark_section_header(group_item, group_key)
 	return group_item
+
+
+## The editor-theme icon for a builtin category header ("Math & Random" -> the
+## RandomNumberGenerator icon). Null outside a live editor or for unmapped categories
+## (text-only header, exactly the pre-icon look).
+static func category_header_icon(group_key: String) -> Texture2D:
+	var icon_name: String = category_icon_name(group_key)
+	return null if icon_name.is_empty() else editor_icon(icon_name)
+
+
+## Resolves a category to its EditorIcons name: an exact CATEGORY_EDITOR_ICONS entry wins,
+## else a "Parent: Sub" key inherits the parent's entry, else "". Pure + static so the
+## mapping is unit-testable without a display server.
+static func category_icon_name(group_key: String) -> String:
+	var icon_name: String = str(CATEGORY_EDITOR_ICONS.get(group_key, ""))
+	if icon_name.is_empty():
+		var parts: PackedStringArray = split_subcategory(group_key)
+		if not parts.is_empty():
+			icon_name = str(CATEGORY_EDITOR_ICONS.get(parts[0], ""))
+	return icon_name
 
 
 ## Resolves (creating as needed) the tree item a row hangs under. Categories using the
@@ -686,6 +777,10 @@ func _resolve_group_item(root: TreeItem, group_nodes: Dictionary, group_key: Str
 func _make_sub_group_item(parent_item: TreeItem, child_label: String, full_key: String) -> TreeItem:
 	var sub_item: TreeItem = _tree.create_item(parent_item)
 	sub_item.set_text(0, child_label)
+	var sub_icon: Texture2D = category_header_icon(full_key)
+	if sub_icon != null:
+		sub_item.set_icon(0, sub_icon)
+		sub_item.set_icon_max_width(0, 16)
 	sub_item.set_custom_color(0, _group_color_for(child_label, false))
 	_mark_section_header(sub_item, full_key)
 	return sub_item

@@ -1,6 +1,6 @@
 ## @ace_category("Scenes")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/scene_flow/icon.svg")
 class_name SceneFlowBehavior
 extends Node
 
@@ -51,7 +51,7 @@ class TransitionRunner:
 ## @ace_name("Fade To Scene")
 ## @ace_category("Scenes")
 ## @ace_description("Fades the screen out, changes to the scene, and fades back in (ignored while a transition runs).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.fade_to_scene({path})")
 func fade_to_scene(path: String) -> void:
 	if path.strip_edges().is_empty():
@@ -62,7 +62,7 @@ func fade_to_scene(path: String) -> void:
 ## @ace_name("Fade Reload Scene")
 ## @ace_category("Scenes")
 ## @ace_description("Fades out, reloads the current scene, and fades back in - the polished retry button.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.fade_reload_scene()")
 func fade_reload_scene() -> void:
 	_start_fade("")
@@ -71,7 +71,7 @@ func fade_reload_scene() -> void:
 ## @ace_name("Go To Scene")
 ## @ace_category("Scenes")
 ## @ace_description("Changes to the scene immediately (no fade).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.go_to_scene({path})")
 func go_to_scene(path: String) -> void:
 	if not path.strip_edges().is_empty():
@@ -81,7 +81,7 @@ func go_to_scene(path: String) -> void:
 ## @ace_name("Reload Scene")
 ## @ace_category("Scenes")
 ## @ace_description("Reloads the current scene immediately (no fade).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.reload_scene()")
 func reload_scene() -> void:
 	get_tree().reload_current_scene()
@@ -90,21 +90,21 @@ func reload_scene() -> void:
 ## @ace_name("Quit Game")
 ## @ace_category("Scenes")
 ## @ace_description("Quits the game (a no-op on platforms that forbid it, like web).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.quit_game()")
 func quit_game() -> void:
 	get_tree().quit()
 
 ## @ace_condition
 ## @ace_name("Is Transitioning")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.is_transitioning()")
 func is_transitioning() -> bool:
 	return not get_tree().get_nodes_in_group("scene_flow_transition").is_empty()
 
 ## @ace_expression
 ## @ace_name("Current Scene Path")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.current_scene_path()")
 func current_scene_path() -> String:
 	var current: Node = get_tree().current_scene

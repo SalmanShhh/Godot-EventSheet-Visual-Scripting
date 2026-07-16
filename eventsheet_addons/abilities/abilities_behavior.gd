@@ -1,6 +1,6 @@
 ## @ace_category("Abilities")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/abilities/icon.svg")
 class_name SimpleAbilitiesBehavior
 extends Node
 
@@ -96,7 +96,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Create Ability")
 ## @ace_category("Abilities")
 ## @ace_description("Grants an empty ability (no cooldown, 1 stack, enabled). Fires On Ability Created if new.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.create_ability({id})")
 func create_ability(id: String) -> void:
 	if abilities.has(id):
@@ -109,7 +109,7 @@ func create_ability(id: String) -> void:
 ## @ace_name("Create Ability With Cooldown")
 ## @ace_category("Abilities")
 ## @ace_description("Grants an ability and sets its cooldown. reset_instantly=true starts it ready.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.create_ability_with_cooldown({id}, {seconds}, {reset_instantly})")
 func create_ability_with_cooldown(id: String, seconds: float, reset_instantly: bool) -> void:
 	var is_new: bool = not abilities.has(id)
@@ -124,7 +124,7 @@ func create_ability_with_cooldown(id: String, seconds: float, reset_instantly: b
 ## @ace_name("Create Ability With Cooldown And Stacks")
 ## @ace_category("Abilities")
 ## @ace_description("Grants a charge-based ability; each stack regenerates over `seconds`. reset_instantly=true starts full.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.create_ability_with_stacks({id}, {seconds}, {max_stacks}, {reset_instantly})")
 func create_ability_with_stacks(id: String, seconds: float, max_stacks: int, reset_instantly: bool) -> void:
 	var is_new: bool = not abilities.has(id)
@@ -141,7 +141,7 @@ func create_ability_with_stacks(id: String, seconds: float, max_stacks: int, res
 ## @ace_name("Create Temporary Ability")
 ## @ace_category("Abilities")
 ## @ace_description("Grants an ability that auto-removes after `seconds`. Calling again refreshes the timer.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.create_temporary_ability({id}, {seconds})")
 func create_temporary_ability(id: String, seconds: float) -> void:
 	var is_new: bool = not abilities.has(id)
@@ -156,7 +156,7 @@ func create_temporary_ability(id: String, seconds: float) -> void:
 ## @ace_name("Remove Ability After Duration")
 ## @ace_category("Abilities")
 ## @ace_description("Schedules removal of an existing ability after `seconds`.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.remove_ability_after({id}, {seconds})")
 func remove_ability_after(id: String, seconds: float) -> void:
 	if not abilities.has(id):
@@ -168,7 +168,7 @@ func remove_ability_after(id: String, seconds: float) -> void:
 ## @ace_name("Remove Ability")
 ## @ace_category("Abilities")
 ## @ace_description("Deletes an ability and all its data. Fires On Ability Removed.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.remove_ability({id})")
 func remove_ability(id: String) -> void:
 	if not abilities.has(id):
@@ -181,7 +181,7 @@ func remove_ability(id: String) -> void:
 ## @ace_name("Clear All Abilities")
 ## @ace_category("Abilities")
 ## @ace_description("Removes every ability. Fires On Ability Removed for each.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.clear_all_abilities()")
 func clear_all_abilities() -> void:
 	for id: String in abilities.keys():
@@ -193,7 +193,7 @@ func clear_all_abilities() -> void:
 ## @ace_name("Activate Ability")
 ## @ace_category("Abilities")
 ## @ace_description("Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.activate_ability({id})")
 func activate_ability(id: String) -> void:
 	if not abilities.has(id):
@@ -213,7 +213,7 @@ func activate_ability(id: String) -> void:
 ## @ace_name("Set Ability Cooldown")
 ## @ace_category("Abilities")
 ## @ace_description("Puts an ability on cooldown (scaled by the global cooldown multiplier).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_cooldown({id}, {seconds})")
 func set_cooldown(id: String, seconds: float) -> void:
 	if not abilities.has(id):
@@ -226,7 +226,7 @@ func set_cooldown(id: String, seconds: float) -> void:
 ## @ace_name("Reset Cooldown")
 ## @ace_category("Abilities")
 ## @ace_description("Refreshes an ability: clears its cooldown AND grants the next charge back, so a spent ability is ready again (readiness is charge-based). The kill-refresh / cooldown-reset mechanic. On a full ability it just clears the timer.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.reset_cooldown({id})")
 func reset_cooldown(id: String) -> void:
 	if not abilities.has(id):
@@ -244,7 +244,7 @@ func reset_cooldown(id: String) -> void:
 ## @ace_name("Set Max Stacks")
 ## @ace_category("Abilities")
 ## @ace_description("Changes max charges (current stacks clamp down).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_max_stacks({id}, {max_stacks})")
 func set_max_stacks(id: String, max_stacks: int) -> void:
 	if not abilities.has(id):
@@ -257,7 +257,7 @@ func set_max_stacks(id: String, max_stacks: int) -> void:
 ## @ace_name("Set Stacks")
 ## @ace_category("Abilities")
 ## @ace_description("Sets current charges (clamped 0..max).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_stacks({id}, {stacks})")
 func set_stacks(id: String, stacks: int) -> void:
 	if not abilities.has(id):
@@ -268,7 +268,7 @@ func set_stacks(id: String, stacks: int) -> void:
 ## @ace_name("Add Stacks")
 ## @ace_category("Abilities")
 ## @ace_description("Adds charges up to max. Fires On Stack Gained, and On Max Stacks Reached if it would overflow.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.add_stacks({id}, {count})")
 func add_stacks(id: String, count: int) -> void:
 	if not abilities.has(id):
@@ -287,7 +287,7 @@ func add_stacks(id: String, count: int) -> void:
 ## @ace_name("Consume Ability Stack")
 ## @ace_category("Abilities")
 ## @ace_description("Removes one charge without activating; starts regen if needed.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.consume_stack({id})")
 func consume_stack(id: String) -> void:
 	if not abilities.has(id):
@@ -305,7 +305,7 @@ func consume_stack(id: String) -> void:
 ## @ace_name("Set Ability Enabled")
 ## @ace_category("Abilities")
 ## @ace_description("Enables or disables activation.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_enabled({id}, {enabled})")
 func set_enabled(id: String, enabled: bool) -> void:
 	if abilities.has(id):
@@ -315,7 +315,7 @@ func set_enabled(id: String, enabled: bool) -> void:
 ## @ace_name("Set Ability Active")
 ## @ace_category("Abilities")
 ## @ace_description("Sets the active flag (for channeled / toggle abilities).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_active({id}, {active})")
 func set_active(id: String, active: bool) -> void:
 	if abilities.has(id):
@@ -325,7 +325,7 @@ func set_active(id: String, active: bool) -> void:
 ## @ace_name("Set Ability Data")
 ## @ace_category("Abilities")
 ## @ace_description("Stores a custom key/value (string) on an ability.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_ability_data({id}, {key}, {value})")
 func set_ability_data(id: String, key: String, value: String) -> void:
 	if abilities.has(id):
@@ -335,7 +335,7 @@ func set_ability_data(id: String, key: String, value: String) -> void:
 ## @ace_name("Add Tag")
 ## @ace_category("Abilities")
 ## @ace_description("Tags an ability (safe if it already has the tag).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.add_tag({id}, {tag})")
 func add_tag(id: String, tag: String) -> void:
 	if not abilities.has(id):
@@ -348,7 +348,7 @@ func add_tag(id: String, tag: String) -> void:
 ## @ace_name("Remove Tag")
 ## @ace_category("Abilities")
 ## @ace_description("Removes a tag from an ability.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.remove_tag({id}, {tag})")
 func remove_tag(id: String, tag: String) -> void:
 	if abilities.has(id):
@@ -358,7 +358,7 @@ func remove_tag(id: String, tag: String) -> void:
 ## @ace_name("Clear All Tags")
 ## @ace_category("Abilities")
 ## @ace_description("Removes every tag from an ability.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.clear_tags({id})")
 func clear_tags(id: String) -> void:
 	if abilities.has(id):
@@ -368,7 +368,7 @@ func clear_tags(id: String) -> void:
 ## @ace_name("Set Abilities With Tag Enabled")
 ## @ace_category("Abilities")
 ## @ace_description("Enables/disables every ability carrying a tag.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_tag_enabled({tag}, {enabled})")
 func set_tag_enabled(tag: String, enabled: bool) -> void:
 	for id: String in _ids_with_tag(tag):
@@ -378,7 +378,7 @@ func set_tag_enabled(tag: String, enabled: bool) -> void:
 ## @ace_name("Remove All Abilities With Tag")
 ## @ace_category("Abilities")
 ## @ace_description("Deletes every ability with a tag. Fires On Ability Removed for each.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.remove_abilities_with_tag({tag})")
 func remove_abilities_with_tag(tag: String) -> void:
 	for id: String in _ids_with_tag(tag):
@@ -390,7 +390,7 @@ func remove_abilities_with_tag(tag: String) -> void:
 ## @ace_name("Reset Cooldown For Abilities With Tag")
 ## @ace_category("Abilities")
 ## @ace_description("Refreshes every ability with a tag: clears each cooldown and grants a charge back, so a whole group is ready again.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.reset_cooldown_for_tag({tag})")
 func reset_cooldown_for_tag(tag: String) -> void:
 	for id: String in _ids_with_tag(tag):
@@ -407,7 +407,7 @@ func reset_cooldown_for_tag(tag: String) -> void:
 ## @ace_name("Set Cooldown Multiplier")
 ## @ace_category("Abilities")
 ## @ace_description("Global cooldown scaling for all future Set Cooldown calls (0.8 = 20% cooldown reduction).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.set_cooldown_multiplier({multiplier})")
 func set_cooldown_multiplier(multiplier: float) -> void:
 	cooldown_multiplier = maxf(0.0, multiplier)
@@ -416,7 +416,7 @@ func set_cooldown_multiplier(multiplier: float) -> void:
 ## @ace_name("Load Ability Set")
 ## @ace_category("Abilities")
 ## @ace_description("Creates every ability listed in an AbilitySetResource (.tres): id, cooldown, max stacks, temporary duration, and comma-separated tags. Each is granted ready. Drop the resource in the Inspector to auto-load on ready, or call this to swap loadouts at runtime.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.load_ability_set({resource})")
 func load_ability_set(resource: Resource) -> void:
 	if resource == null:
@@ -452,14 +452,14 @@ func load_ability_set(resource: Resource) -> void:
 
 ## @ace_condition
 ## @ace_name("Has Ability")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.has_ability({id})")
 func has_ability(id: String) -> bool:
 	return abilities.has(id)
 
 ## @ace_condition
 ## @ace_name("Is Ability Ready")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.is_ready({id})")
 func is_ready(id: String) -> bool:
 	if not abilities.has(id):
@@ -469,56 +469,56 @@ func is_ready(id: String) -> bool:
 
 ## @ace_condition
 ## @ace_name("Is Ability Active")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.is_active({id})")
 func is_active(id: String) -> bool:
 	return abilities.has(id) and (abilities[id] as AbilityData).active
 
 ## @ace_condition
 ## @ace_name("Is Ability Enabled")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.is_enabled({id})")
 func is_enabled(id: String) -> bool:
 	return abilities.has(id) and (abilities[id] as AbilityData).enabled
 
 ## @ace_condition
 ## @ace_name("Has Stacks Available")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.has_stacks({id})")
 func has_stacks(id: String) -> bool:
 	return abilities.has(id) and (abilities[id] as AbilityData).stacks > 0
 
 ## @ace_condition
 ## @ace_name("Ability Has Tag")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.ability_has_tag({id}, {tag})")
 func ability_has_tag(id: String, tag: String) -> bool:
 	return abilities.has(id) and (abilities[id] as AbilityData).tags.has(tag)
 
 ## @ace_condition
 ## @ace_name("Current Ability Is")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.current_ability_is({id})")
 func current_ability_is(id: String) -> bool:
 	return current_ability_id == id
 
 ## @ace_expression
 ## @ace_name("Current Ability ID")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.current_ability()")
 func current_ability() -> String:
 	return current_ability_id
 
 ## @ace_expression
 ## @ace_name("Cooldown Remaining")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_cooldown_remaining({id})")
 func get_cooldown_remaining(id: String) -> float:
 	return (abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0
 
 ## @ace_expression
 ## @ace_name("Cooldown Progress")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_cooldown_progress({id})")
 func get_cooldown_progress(id: String) -> float:
 	if not abilities.has(id) or (abilities[id] as AbilityData).max_cooldown <= 0.0:
@@ -527,42 +527,42 @@ func get_cooldown_progress(id: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Stacks")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_stacks({id})")
 func get_stacks(id: String) -> int:
 	return (abilities[id] as AbilityData).stacks if abilities.has(id) else 0
 
 ## @ace_expression
 ## @ace_name("Max Stacks")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_max_stacks({id})")
 func get_max_stacks(id: String) -> int:
 	return (abilities[id] as AbilityData).max_stacks if abilities.has(id) else 0
 
 ## @ace_expression
 ## @ace_name("Stack Cooldown Remaining")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_stack_cooldown_remaining({id})")
 func get_stack_cooldown_remaining(id: String) -> float:
 	return (abilities[id] as AbilityData).cooldown if abilities.has(id) else 0.0
 
 ## @ace_expression
 ## @ace_name("Stack Progress")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_stack_progress({id})")
 func get_stack_progress(id: String) -> float:
 	return get_cooldown_progress(id)
 
 ## @ace_expression
 ## @ace_name("Expiration Time")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_expiration_time({id})")
 func get_expiration_time(id: String) -> float:
 	return (abilities[id] as AbilityData).expiration if abilities.has(id) else 0.0
 
 ## @ace_expression
 ## @ace_name("Expiration Progress")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_expiration_progress({id})")
 func get_expiration_progress(id: String) -> float:
 	if not abilities.has(id) or (abilities[id] as AbilityData).max_expiration <= 0.0:
@@ -571,28 +571,28 @@ func get_expiration_progress(id: String) -> float:
 
 ## @ace_expression
 ## @ace_name("Max Expiration Time")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_max_expiration_time({id})")
 func get_max_expiration_time(id: String) -> float:
 	return (abilities[id] as AbilityData).max_expiration if abilities.has(id) else 0.0
 
 ## @ace_expression
 ## @ace_name("Ability Count")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ability_count()")
 func get_ability_count() -> int:
 	return abilities.size()
 
 ## @ace_expression
 ## @ace_name("List Active Abilities")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.list_active_abilities()")
 func list_active_abilities() -> String:
 	return ",".join(abilities.keys())
 
 ## @ace_expression
 ## @ace_name("Ready Abilities")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ready_abilities()")
 func get_ready_abilities() -> String:
 	var out: PackedStringArray = PackedStringArray()
@@ -603,7 +603,7 @@ func get_ready_abilities() -> String:
 
 ## @ace_expression
 ## @ace_name("Ability Data")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ability_data({id}, {key})")
 func get_ability_data(id: String, key: String) -> String:
 	if not abilities.has(id):
@@ -612,14 +612,14 @@ func get_ability_data(id: String, key: String) -> String:
 
 ## @ace_expression
 ## @ace_name("Count Abilities By Tag")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.count_abilities_by_tag({tag})")
 func count_abilities_by_tag(tag: String) -> int:
 	return _ids_with_tag(tag).size()
 
 ## @ace_expression
 ## @ace_name("Ability By Tag Index")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.get_ability_by_tag_index({tag}, {index})")
 func get_ability_by_tag_index(tag: String, index: int) -> String:
 	var ids: Array = _ids_with_tag(tag)
@@ -627,7 +627,7 @@ func get_ability_by_tag_index(tag: String, index: int) -> String:
 
 ## @ace_expression
 ## @ace_name("List Abilities By Tag")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.list_abilities_by_tag({tag})")
 func list_abilities_by_tag(tag: String) -> String:
 	return ",".join(_ids_with_tag(tag))

@@ -1,4 +1,4 @@
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/drawing_prefab_resource/icon.svg")
 class_name DrawingPrefabResource
 extends Resource
 ## A reusable drawing: an ordered grid of shape steps replayed by the Drawing Canvas's Draw Prefab action at any position, scale, and rotation. Fill the steps grid in the Inspector and save as a .tres.
@@ -15,6 +15,25 @@ extends Resource
 var _compiled: Array = []
 var _compiled_valid: bool = false
 var _compiled_size: int = -1
+
+## Returns steps pre-parsed to typed entries {kind, x, y, p1, p2, p3, color: Color, tex: Texture2D},
+## building and caching on first call and after any change. The size guard also rebuilds when steps
+## are appended or removed at runtime; an in-place value edit needs emit_changed() (the Inspector
+## does this automatically on every cell edit).
+func compiled_steps() -> Array:
+	if not changed.is_connected(_invalidate_compiled):
+		changed.connect(_invalidate_compiled)
+	if _compiled_valid and _compiled_size == steps.size():
+		return _compiled
+	_compiled = compile_steps(steps)
+	_compiled_size = steps.size()
+	_compiled_valid = true
+	return _compiled
+
+func _invalidate_compiled() -> void:
+	_compiled_valid = false
+	_compiled = []
+
 ## Parses raw steps (Dictionaries of strings) into typed entries - colors parsed once, stamp
 ## textures loaded once (main thread). The renderers use the SAME shape for their generic-Resource
 ## fallback, so a cached draw and an uncached draw are identical.
@@ -41,17 +60,3 @@ static func compile_steps(raw: Array) -> Array:
 			"tex": tex,
 		})
 	return out
-
-func compiled_steps() -> Array:
-	if not changed.is_connected(_invalidate_compiled):
-		changed.connect(_invalidate_compiled)
-	if _compiled_valid and _compiled_size == steps.size():
-		return _compiled
-	_compiled = compile_steps(steps)
-	_compiled_size = steps.size()
-	_compiled_valid = true
-	return _compiled
-
-func _invalidate_compiled() -> void:
-	_compiled_valid = false
-	_compiled = []

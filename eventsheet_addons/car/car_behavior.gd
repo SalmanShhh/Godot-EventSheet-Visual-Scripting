@@ -1,6 +1,6 @@
 ## @ace_category("Car")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/car/icon.svg")
 class_name CarBehavior
 extends Node
 
@@ -71,7 +71,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Stop Car")
 ## @ace_category("Car")
 ## @ace_description("Kills all momentum.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/car/icon.svg")
 ## @ace_codegen_template("$CarBehavior.stop_car()")
 func stop_car() -> void:
 	speed = 0.0

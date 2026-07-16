@@ -1,6 +1,6 @@
 ## @ace_tags(incremental, idle, prestige)
 ## @ace_category("Prestige")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/prestige/icon.svg")
 class_name PrestigeAddon
 extends Node
 
@@ -27,7 +27,7 @@ var _last_gain: int = 0
 ## @ace_name("Configure")
 ## @ace_category("Prestige")
 ## @ace_description("Sets the requirement (run earnings before you gain a point), the exponent (curve; 0.5 = square-root, the usual), and the bonus each banked point adds to Prestige Multiplier.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.configure({requirement}, {exponent}, {bonus_per_point})")
 func configure(requirement: float, exponent: float, bonus_per_point: float) -> void:
 	_requirement = maxf(requirement, 0.0)
@@ -38,7 +38,7 @@ func configure(requirement: float, exponent: float, bonus_per_point: float) -> v
 ## @ace_name("Track Earned")
 ## @ace_category("Prestige")
 ## @ace_description("Records earnings toward prestige - call it wherever the player earns the prestige currency. Feeds both the run total (drives the gain) and the all-time Total Earned.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.track_earned({amount})")
 func track_earned(amount: float) -> void:
 	var gained: float = maxf(amount, 0.0)
@@ -49,7 +49,7 @@ func track_earned(amount: float) -> void:
 ## @ace_name("Do Prestige")
 ## @ace_category("Prestige")
 ## @ace_description("Banks the current Prestige Gain, raises the prestige level, and clears the run total. Does nothing if the gain is 0. Reset your currencies and generators in the same event, reading Prestige Gain first.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.do_prestige()")
 func do_prestige() -> void:
 	var gain: int = _gain()
@@ -65,7 +65,7 @@ func do_prestige() -> void:
 ## @ace_name("Set Points")
 ## @ace_category("Prestige")
 ## @ace_description("Forces banked prestige points to a value (for a load or a cheat menu).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.set_points({points})")
 func set_points(points: float) -> void:
 	_points = maxf(points, 0.0)
@@ -74,7 +74,7 @@ func set_points(points: float) -> void:
 ## @ace_name("Hard Reset")
 ## @ace_category("Prestige")
 ## @ace_description("Wipes EVERYTHING - points, level, run and all-time earnings. A full new-game, not a prestige.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.hard_reset()")
 func hard_reset() -> void:
 	_run_earned = 0.0
@@ -87,7 +87,7 @@ func hard_reset() -> void:
 ## @ace_name("Can Prestige")
 ## @ace_category("Prestige")
 ## @ace_description("Whether prestiging now would bank at least one point.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.can_prestige()")
 func can_prestige() -> bool:
 	return _gain() > 0
@@ -96,7 +96,7 @@ func can_prestige() -> bool:
 ## @ace_name("Prestige Gain")
 ## @ace_category("Prestige")
 ## @ace_description("How many prestige points the current run would bank right now.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.prestige_gain()")
 func prestige_gain() -> int:
 	return _gain()
@@ -105,7 +105,7 @@ func prestige_gain() -> int:
 ## @ace_name("Prestige Points")
 ## @ace_category("Prestige")
 ## @ace_description("Banked prestige currency.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.prestige_points()")
 func prestige_points() -> float:
 	return _points
@@ -114,7 +114,7 @@ func prestige_points() -> float:
 ## @ace_name("Prestige Level")
 ## @ace_category("Prestige")
 ## @ace_description("How many times the player has prestiged.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.prestige_level()")
 func prestige_level() -> int:
 	return _level
@@ -123,7 +123,7 @@ func prestige_level() -> int:
 ## @ace_name("Prestige Multiplier")
 ## @ace_category("Prestige")
 ## @ace_description("The permanent production multiplier from banked points: 1 + points * bonus.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.prestige_multiplier()")
 func prestige_multiplier() -> float:
 	return 1.0 + _points * _bonus_per_point
@@ -132,7 +132,7 @@ func prestige_multiplier() -> float:
 ## @ace_name("Run Earned")
 ## @ace_category("Prestige")
 ## @ace_description("Earnings this run (resets on Do Prestige).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.run_earned()")
 func run_earned() -> float:
 	return _run_earned
@@ -141,7 +141,7 @@ func run_earned() -> float:
 ## @ace_name("Total Earned")
 ## @ace_category("Prestige")
 ## @ace_description("All-time earnings (never resets).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.total_earned()")
 func total_earned() -> float:
 	return _total_earned
@@ -150,7 +150,7 @@ func total_earned() -> float:
 ## @ace_name("Last Gain")
 ## @ace_category("Prestige")
 ## @ace_description("Points banked by the most recent Do Prestige (read inside On Prestige).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.last_gain()")
 func last_gain() -> int:
 	return _last_gain
@@ -159,7 +159,7 @@ func last_gain() -> int:
 ## @ace_name("Requirement")
 ## @ace_category("Prestige")
 ## @ace_description("The run earnings needed before the first point.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.requirement()")
 func requirement() -> float:
 	return _requirement
@@ -168,7 +168,7 @@ func requirement() -> float:
 ## @ace_name("Earned For Next Point")
 ## @ace_category("Prestige")
 ## @ace_description("The run earnings needed to reach the next prestige point.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.earned_for_next()")
 func earned_for_next() -> float:
 	var current: int = _gain()
@@ -180,7 +180,7 @@ func earned_for_next() -> float:
 ## @ace_name("Progress To Next")
 ## @ace_category("Prestige")
 ## @ace_description("How close this run is to the next point, 0 to 1 (for a progress bar).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.progress_to_next()")
 func progress_to_next() -> float:
 	var current: int = _gain()

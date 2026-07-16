@@ -1,6 +1,6 @@
 ## @ace_category("Sine 3D")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/sine_3d/icon.svg")
 class_name Sine3DBehavior
 extends Node
 
@@ -56,7 +56,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Set Sine 3D Active")
 ## @ace_category("Sine 3D")
 ## @ace_description("Pauses or resumes the oscillation.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/sine_3d/icon.svg")
 ## @ace_codegen_template("$Sine3DBehavior.set_sine3d_active({is_active})")
 func set_sine3d_active(is_active: bool) -> void:
 	active = is_active
@@ -65,7 +65,7 @@ func set_sine3d_active(is_active: bool) -> void:
 ## @ace_name("Set Phase")
 ## @ace_category("Sine 3D")
 ## @ace_description("Phase offset in degrees.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/sine_3d/icon.svg")
 ## @ace_codegen_template("$Sine3DBehavior.set_sine3d_phase({degrees})")
 func set_sine3d_phase(degrees: float) -> void:
 	phase_degrees = degrees
@@ -74,7 +74,7 @@ func set_sine3d_phase(degrees: float) -> void:
 ## @ace_name("Reset Sine 3D")
 ## @ace_category("Sine 3D")
 ## @ace_description("Restarts the wave from the current state.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/sine_3d/icon.svg")
 ## @ace_codegen_template("$Sine3DBehavior.reset_sine3d()")
 func reset_sine3d() -> void:
 	time = 0.0

@@ -1,4 +1,4 @@
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/stat_sheet_resource/icon.svg")
 class_name StatSheetResource
 extends Resource
 ## A stat loadout as a data asset: base values plus buff rows, edited as Inspector grids and applied with StatForge's Load Stat Sheet action. Author classes, enemy tiers, and difficulty presets as .tres files.

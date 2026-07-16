@@ -1,6 +1,6 @@
 ## @ace_category("UI")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 class_name DialogueKitBehavior
 extends Node
 
@@ -70,7 +70,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Queue Line")
 ## @ace_category("Dialogue")
 ## @ace_description("Appends a line (speaker + text) to the conversation queue.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.queue_line({speaker}, {text})")
 func queue_line(speaker: String, text: String) -> void:
 	line_queue.append({"speaker": speaker, "text": text})
@@ -79,7 +79,7 @@ func queue_line(speaker: String, text: String) -> void:
 ## @ace_name("Start Dialogue")
 ## @ace_category("Dialogue")
 ## @ace_description("Shows the panel and plays the queued lines from the top.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.start_dialogue()")
 func start_dialogue() -> void:
 	if dialogue_active or line_queue.is_empty():
@@ -93,7 +93,7 @@ func start_dialogue() -> void:
 ## @ace_name("Advance")
 ## @ace_category("Dialogue")
 ## @ace_description("Mid-line: completes the line instantly. Otherwise: next line, or ends the conversation.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.advance_dialogue()")
 func advance_dialogue() -> void:
 	if not dialogue_active:
@@ -110,7 +110,7 @@ func advance_dialogue() -> void:
 ## @ace_name("End Dialogue")
 ## @ace_category("Dialogue")
 ## @ace_description("Hides the panel, clears any remaining lines, and fires On Dialogue Finished.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.end_dialogue()")
 func end_dialogue() -> void:
 	if not dialogue_active:
@@ -123,42 +123,42 @@ func end_dialogue() -> void:
 
 ## @ace_condition
 ## @ace_name("Is Dialogue Active")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.is_dialogue_active()")
 func is_dialogue_active() -> bool:
 	return dialogue_active
 
 ## @ace_condition
 ## @ace_name("Is Typing")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.is_typing()")
 func is_typing() -> bool:
 	return typing
 
 ## @ace_condition
 ## @ace_name("Speaker Is")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.speaker_is({speaker})")
 func speaker_is(speaker: String) -> bool:
 	return current_speaker == speaker
 
 ## @ace_expression
 ## @ace_name("Current Speaker")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.current_speaker_value()")
 func current_speaker_value() -> String:
 	return current_speaker
 
 ## @ace_expression
 ## @ace_name("Current Text")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.current_text_value()")
 func current_text_value() -> String:
 	return current_text
 
 ## @ace_expression
 ## @ace_name("Lines Remaining")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.lines_remaining()")
 func lines_remaining() -> float:
 	return float(line_queue.size())

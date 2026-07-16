@@ -1,6 +1,6 @@
 ## @ace_category("Health")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/health/icon.svg")
 class_name SimpleHealthBehavior
 extends Node
 
@@ -86,7 +86,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Take Damage")
 ## @ace_category("Health")
 ## @ace_description("Applies damage; health pools absorb in ascending-priority order before real HP.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.take_damage({amount})")
 func take_damage(amount: float) -> void:
 	if amount <= 0.0 or invulnerable or is_dead_flag:
@@ -129,7 +129,7 @@ func take_damage(amount: float) -> void:
 ## @ace_name("Heal")
 ## @ace_category("Health")
 ## @ace_description("Restores health up to max_health.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.heal({amount})")
 func heal(amount: float) -> void:
 	if is_dead_flag:
@@ -143,7 +143,7 @@ func heal(amount: float) -> void:
 ## @ace_name("Set Health")
 ## @ace_category("Health")
 ## @ace_description("Sets current health directly, firing damage/heal/death as appropriate.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_health_value({amount})")
 func set_health_value(amount: float) -> void:
 	if is_dead_flag:
@@ -173,7 +173,7 @@ func set_health_value(amount: float) -> void:
 ## @ace_name("Set Max Health")
 ## @ace_category("Health")
 ## @ace_description("Sets max health (clamps current down if needed).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_max_health_value({amount})")
 func set_max_health_value(amount: float) -> void:
 	max_health = maxf(1.0, amount)
@@ -185,7 +185,7 @@ func set_max_health_value(amount: float) -> void:
 ## @ace_name("Set Invulnerable")
 ## @ace_category("Health")
 ## @ace_description("Toggles invulnerability (takeDamage no-op while true).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_invulnerable({state})")
 func set_invulnerable(state: bool) -> void:
 	invulnerable = state
@@ -194,7 +194,7 @@ func set_invulnerable(state: bool) -> void:
 ## @ace_name("Set Health Absorption Rate")
 ## @ace_category("Health")
 ## @ace_description("Damage multiplier for real HP (resistance); 0 = invulnerable.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_health_absorption_rate({rate})")
 func set_health_absorption_rate(rate: float) -> void:
 	health_absorption_rate = maxf(0.0, rate)
@@ -204,7 +204,7 @@ func set_health_absorption_rate(rate: float) -> void:
 ## @ace_name("Add Health Pool")
 ## @ace_category("Health")
 ## @ace_description("Adds to a named health pool (shield/armour).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.add_health_pool({type}, {amount})")
 func add_health_pool(type: String, amount: float) -> void:
 	if amount <= 0.0:
@@ -218,7 +218,7 @@ func add_health_pool(type: String, amount: float) -> void:
 ## @ace_name("Set Health Pool")
 ## @ace_category("Health")
 ## @ace_description("Sets a health pool amount (fires Added only when it increases).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool({type}, {amount})")
 func set_health_pool(type: String, amount: float) -> void:
 	var pool: HealthPool = _get_pool(type)
@@ -234,7 +234,7 @@ func set_health_pool(type: String, amount: float) -> void:
 ## @ace_name("Clear Health Pool")
 ## @ace_category("Health")
 ## @ace_description("Zeroes one named health pool.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.clear_health_pool({type})")
 func clear_health_pool(type: String) -> void:
 	if health_pools.has(type):
@@ -244,7 +244,7 @@ func clear_health_pool(type: String) -> void:
 ## @ace_name("Clear All Health Pools")
 ## @ace_category("Health")
 ## @ace_description("Zeroes every health pool.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.clear_all_health_pools()")
 func clear_all_health_pools() -> void:
 	for pool_name: String in health_pools.keys():
@@ -254,7 +254,7 @@ func clear_all_health_pools() -> void:
 ## @ace_name("Set Health Pool Decay Rate")
 ## @ace_category("Health")
 ## @ace_description("Sets a pool's per-second decay rate.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_decay_rate({type}, {rate})")
 func set_health_pool_decay_rate(type: String, rate: float) -> void:
 	_get_pool(type).decay_rate = maxf(0.0, rate)
@@ -263,7 +263,7 @@ func set_health_pool_decay_rate(type: String, rate: float) -> void:
 ## @ace_name("Set Health Pool Absorption Rate")
 ## @ace_category("Health")
 ## @ace_description("Sets a pool's absorption multiplier (how hard it spends to soak damage).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_absorption_rate({type}, {rate})")
 func set_health_pool_absorption_rate(type: String, rate: float) -> void:
 	_get_pool(type).absorption_rate = maxf(0.0, rate)
@@ -272,7 +272,7 @@ func set_health_pool_absorption_rate(type: String, rate: float) -> void:
 ## @ace_name("Set Health Pool Rates")
 ## @ace_category("Health")
 ## @ace_description("Sets a pool's decay and absorption rates at once.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_rates({type}, {decay_rate}, {absorption_rate})")
 func set_health_pool_rates(type: String, decay_rate: float, absorption_rate: float) -> void:
 	var pool: HealthPool = _get_pool(type)
@@ -283,7 +283,7 @@ func set_health_pool_rates(type: String, decay_rate: float, absorption_rate: flo
 ## @ace_name("Set Health Pool Priority")
 ## @ace_category("Health")
 ## @ace_description("Sets a pool's absorption priority (lower absorbs first).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_priority({type}, {priority})")
 func set_health_pool_priority(type: String, priority: float) -> void:
 	_get_pool(type).priority = priority
@@ -292,7 +292,7 @@ func set_health_pool_priority(type: String, priority: float) -> void:
 ## @ace_name("Setup Health Pool")
 ## @ace_category("Health")
 ## @ace_description("Creates/configures a health pool in one call.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.setup_health_pool({type}, {amount}, {decay_rate}, {absorption_rate}, {priority})")
 func setup_health_pool(type: String, amount: float, decay_rate: float, absorption_rate: float, priority: float) -> void:
 	var pool: HealthPool = _get_pool(type)
@@ -305,7 +305,7 @@ func setup_health_pool(type: String, amount: float, decay_rate: float, absorptio
 ## @ace_name("Revive")
 ## @ace_category("Health")
 ## @ace_description("Clears death and restores health (amount<=0 → full).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.revive({amount})")
 func revive(amount: float) -> void:
 	is_dead_flag = false
@@ -315,21 +315,21 @@ func revive(amount: float) -> void:
 
 ## @ace_condition
 ## @ace_name("Is Dead")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.is_dead()")
 func is_dead() -> bool:
 	return is_dead_flag
 
 ## @ace_condition
 ## @ace_name("Is Invulnerable")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.is_invulnerable()")
 func is_invulnerable() -> bool:
 	return invulnerable
 
 ## @ace_condition
 ## @ace_name("Has Any Health Pool")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.has_any_health_pool()")
 func has_any_health_pool() -> bool:
 	for pool_name: String in health_pools.keys():
@@ -339,98 +339,98 @@ func has_any_health_pool() -> bool:
 
 ## @ace_condition
 ## @ace_name("Has Health Pool")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.has_health_pool({type})")
 func has_health_pool(type: String) -> bool:
 	return health_pools.has(type) and (health_pools[type] as HealthPool).amount > 0.0
 
 ## @ace_condition
 ## @ace_name("Health Pool Is Type")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.is_health_pool_type({type})")
 func is_health_pool_type(type: String) -> bool:
 	return last_trigger_pool_type == type
 
 ## @ace_expression
 ## @ace_name("Current Health")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.current_health_value()")
 func current_health_value() -> float:
 	return current_health
 
 ## @ace_expression
 ## @ace_name("Max Health")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.max_health_value()")
 func max_health_value() -> float:
 	return max_health
 
 ## @ace_expression
 ## @ace_name("Health Percent")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.health_percent()")
 func health_percent() -> float:
 	return (current_health / max_health) * 100.0 if max_health != 0.0 else 0.0
 
 ## @ace_expression
 ## @ace_name("Health Absorption Rate")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.health_absorption_rate_value()")
 func health_absorption_rate_value() -> float:
 	return health_absorption_rate
 
 ## @ace_expression
 ## @ace_name("Last Damage")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.last_damage_value()")
 func last_damage_value() -> float:
 	return last_damage
 
 ## @ace_expression
 ## @ace_name("Last Heal")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.last_heal_value()")
 func last_heal_value() -> float:
 	return last_heal
 
 ## @ace_expression
 ## @ace_name("Health Pool")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.health_pool_value({type})")
 func health_pool_value(type: String) -> float:
 	return (health_pools[type] as HealthPool).amount if health_pools.has(type) else 0.0
 
 ## @ace_expression
 ## @ace_name("Health Pool Decay Rate")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.health_pool_decay_rate_value({type})")
 func health_pool_decay_rate_value(type: String) -> float:
 	return (health_pools[type] as HealthPool).decay_rate if health_pools.has(type) else 0.0
 
 ## @ace_expression
 ## @ace_name("Health Pool Absorption Rate")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.health_pool_absorption_rate_value({type})")
 func health_pool_absorption_rate_value(type: String) -> float:
 	return (health_pools[type] as HealthPool).absorption_rate if health_pools.has(type) else 1.0
 
 ## @ace_expression
 ## @ace_name("Health Pool Priority")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.health_pool_priority_value({type})")
 func health_pool_priority_value(type: String) -> float:
 	return (health_pools[type] as HealthPool).priority if health_pools.has(type) else 0.0
 
 ## @ace_expression
 ## @ace_name("Last Pool Damage Absorbed")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.last_pool_damage_absorbed_value()")
 func last_pool_damage_absorbed_value() -> float:
 	return last_pool_damage_absorbed
 
 ## @ace_expression
 ## @ace_name("Last Health Pool Type")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.last_health_pool_type_value()")
 func last_health_pool_type_value() -> String:
 	return last_trigger_pool_type

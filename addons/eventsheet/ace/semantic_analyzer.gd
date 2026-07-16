@@ -45,6 +45,7 @@ func parse_source_metadata(script: Script) -> Dictionary:
 		"expose_all_mode": "",
 		"default_category": "",
 		"default_icon": "",
+		"native_icon": "",
 		"unknown_annotations": [],
 		"signals": {},
 		"methods": {},
@@ -103,6 +104,15 @@ func parse_source_metadata(script: Script) -> Dictionary:
 		if stripped.begins_with("@ace_"):
 			pending_directives.append(stripped)
 			continue
+		if stripped.begins_with("@icon("):
+			# The native @icon class annotation doubles as the member-icon default (below an
+			# explicit class-level ## @ace_icon and a registrar pack_icon): every behaviour pack
+			# already ships one, so its reflected signals/properties/methods show the pack's own
+			# icon in the picker and on viewport object labels with zero extra annotations.
+			var native_icon: String = stripped.trim_prefix("@icon(").trim_suffix(")").strip_edges().trim_prefix("\"").trim_suffix("\"")
+			if native_icon.begins_with("res://"):
+				metadata["native_icon"] = native_icon
+			continue
 		if stripped.begins_with("@export"):
 			pending_export = true
 			var inline_property_name: String = _parse_var_name(stripped)
@@ -133,6 +143,8 @@ func parse_source_metadata(script: Script) -> Dictionary:
 			pending_directives.clear()
 			pending_export = false
 	_merge_registrar_metadata(script, metadata)
+	if str(metadata["default_icon"]).is_empty():
+		metadata["default_icon"] = str(metadata.get("native_icon", ""))
 	_apply_class_defaults(metadata)
 	_warn_unknown_annotations(script.resource_path, metadata)
 	return metadata

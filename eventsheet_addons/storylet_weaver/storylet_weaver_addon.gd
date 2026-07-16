@@ -1,6 +1,6 @@
 ## @ace_tags(narrative, storylet)
 ## @ace_category("Storylets")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 class_name StoryletsAddon
 extends Node
 
@@ -37,7 +37,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Define Storylet")
 ## @ace_category("Storylets")
 ## @ace_description("Registers (or replaces) a storylet: an id plus the title + body text your game shows.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.define_storylet({id}, {title}, {body})")
 func define_storylet(id: String, title: String, body: String) -> void:
 	_lib[id] = {"title": title, "body": body, "weight": 1.0, "cooldown": 0.0, "max_plays": -1.0, "reqs": [], "choices": []}
@@ -46,7 +46,7 @@ func define_storylet(id: String, title: String, body: String) -> void:
 ## @ace_name("Set Storylet Weight")
 ## @ace_category("Storylets")
 ## @ace_description("How strongly this storylet is preferred when several are eligible (higher = picked first / likelier).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.set_storylet_weight({id}, {weight})")
 func set_storylet_weight(id: String, weight: float) -> void:
 	_story(id).weight = maxf(weight, 0.0)
@@ -55,7 +55,7 @@ func set_storylet_weight(id: String, weight: float) -> void:
 ## @ace_name("Set Storylet Cooldown")
 ## @ace_category("Storylets")
 ## @ace_description("Seconds this storylet is ineligible after it plays (0 = no cooldown).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.set_storylet_cooldown({id}, {seconds})")
 func set_storylet_cooldown(id: String, seconds: float) -> void:
 	_story(id).cooldown = maxf(seconds, 0.0)
@@ -64,7 +64,7 @@ func set_storylet_cooldown(id: String, seconds: float) -> void:
 ## @ace_name("Set Max Plays")
 ## @ace_category("Storylets")
 ## @ace_description("How many times it may ever play (-1 = unlimited, 1 = a one-shot).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.set_storylet_max_plays({id}, {max_plays})")
 func set_storylet_max_plays(id: String, max_plays: float) -> void:
 	_story(id).max_plays = max_plays
@@ -74,7 +74,7 @@ func set_storylet_max_plays(id: String, max_plays: float) -> void:
 ## @ace_category("Storylets")
 ## @ace_description("A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "").")
 ## @ace_param_options(op >=, >, <=, <, =, !=)
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_requirement({id}, {quality_key}, {op}, {value})")
 func add_requirement(id: String, quality_key: String, op: String, value) -> void:
 	_story(id).reqs.append({"key": quality_key, "op": op, "value": value})
@@ -83,7 +83,7 @@ func add_requirement(id: String, quality_key: String, op: String, value) -> void
 ## @ace_name("Add Choice")
 ## @ace_category("Storylets")
 ## @ace_description("Adds a labelled choice the player can pick on this storylet (resolve it with Choose).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_choice({id}, {choice_id}, {text})")
 func add_choice(id: String, choice_id: String, text: String) -> void:
 	_story(id).choices.append({"id": choice_id, "text": text})
@@ -92,7 +92,7 @@ func add_choice(id: String, choice_id: String, text: String) -> void:
 ## @ace_name("Set Quality")
 ## @ace_category("Storylets")
 ## @ace_description("Stores a quality value (a number like courage=3, or text like location="tavern"). Requirements read these.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.set_quality({key}, {value})")
 func set_quality(key: String, value) -> void:
 	_qualities[key] = value
@@ -101,7 +101,7 @@ func set_quality(key: String, value) -> void:
 ## @ace_name("Increment Quality")
 ## @ace_category("Storylets")
 ## @ace_description("Adds to a numeric quality (creating it at 0 if new).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.increment_quality({key}, {amount})")
 func increment_quality(key: String, amount: float) -> void:
 	_qualities[key] = _num(_qualities.get(key, 0.0)) + amount
@@ -110,7 +110,7 @@ func increment_quality(key: String, amount: float) -> void:
 ## @ace_name("Clear Quality")
 ## @ace_category("Storylets")
 ## @ace_description("Removes a quality key.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.clear_quality({key})")
 func clear_quality(key: String) -> void:
 	_qualities.erase(key)
@@ -119,7 +119,7 @@ func clear_quality(key: String) -> void:
 ## @ace_name("Evaluate")
 ## @ace_category("Storylets")
 ## @ace_description("Rebuilds the available list: every eligible storylet, ordered by weight (highest first). Use the Available expressions to show a menu.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.evaluate()")
 func evaluate() -> void:
 	_available.clear()
@@ -132,7 +132,7 @@ func evaluate() -> void:
 ## @ace_name("Draw")
 ## @ace_category("Storylets")
 ## @ace_description("Evaluates, then activates the highest-weight eligible storylet and fires On Storylet Drawn (or On None Available if nothing qualifies).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.draw()")
 func draw() -> void:
 	evaluate()
@@ -145,7 +145,7 @@ func draw() -> void:
 ## @ace_name("Draw Weighted")
 ## @ace_category("Storylets")
 ## @ace_description("Like Draw, but picks randomly among the eligible storylets in proportion to their weight (for variety).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.draw_weighted()")
 func draw_weighted() -> void:
 	evaluate()
@@ -170,7 +170,7 @@ func draw_weighted() -> void:
 ## @ace_name("Choose")
 ## @ace_category("Storylets")
 ## @ace_description("Resolves the active storylet's choice by id (fires On Choice Made, then clears the active storylet). React inside On Choice Made.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.choose({choice_id})")
 func choose(choice_id: String) -> void:
 	if _active.is_empty():
@@ -183,7 +183,7 @@ func choose(choice_id: String) -> void:
 ## @ace_name("Use Advanced Random")
 ## @ace_category("Storylets")
 ## @ace_description("When on, Draw Weighted picks using the shared AdvancedRandom autoload instead of Godot's own randf(), so one seed drives your whole game's randomness. When off (the default) it uses randf(). Needs the Advanced Random pack installed (it safely falls back if not).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.use_advanced_random({enabled})")
 func use_advanced_random(enabled: bool) -> void:
 	_use_shared = enabled
@@ -192,7 +192,7 @@ func use_advanced_random(enabled: bool) -> void:
 ## @ace_name("Dismiss")
 ## @ace_category("Storylets")
 ## @ace_description("Clears the active storylet without making a choice (the play still counted).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.dismiss()")
 func dismiss() -> void:
 	_active = ""
@@ -201,7 +201,7 @@ func dismiss() -> void:
 ## @ace_name("Reset Play Count")
 ## @ace_category("Storylets")
 ## @ace_description("Lets a one-shot or limited storylet play again.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.reset_play_count({id})")
 func reset_play_count(id: String) -> void:
 	_plays.erase(id)
@@ -211,7 +211,7 @@ func reset_play_count(id: String) -> void:
 ## @ace_name("Reset All History")
 ## @ace_category("Storylets")
 ## @ace_description("Clears every play count + cooldown (e.g. on New Game).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.reset_all_history()")
 func reset_all_history() -> void:
 	_plays.clear()
@@ -221,7 +221,7 @@ func reset_all_history() -> void:
 ## @ace_name("Has Active Storylet")
 ## @ace_category("Storylets")
 ## @ace_description("Whether a storylet is currently active (drawn, not yet resolved).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.has_active()")
 func has_active() -> bool:
 	return not _active.is_empty()
@@ -230,7 +230,7 @@ func has_active() -> bool:
 ## @ace_name("Is Available")
 ## @ace_category("Storylets")
 ## @ace_description("Whether a storylet is in the current available list (call Evaluate first).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.is_available({id})")
 func is_available(id: String) -> bool:
 	return id in _available
@@ -239,7 +239,7 @@ func is_available(id: String) -> bool:
 ## @ace_name("Has Quality")
 ## @ace_category("Storylets")
 ## @ace_description("Whether a quality key has been set.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.has_quality({key})")
 func has_quality(key: String) -> bool:
 	return _qualities.has(key)
@@ -248,7 +248,7 @@ func has_quality(key: String) -> bool:
 ## @ace_name("Has Been Played")
 ## @ace_category("Storylets")
 ## @ace_description("Whether a storylet has played at least once.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.has_been_played({id})")
 func has_been_played(id: String) -> bool:
 	return _plays.get(id, 0) > 0
@@ -257,7 +257,7 @@ func has_been_played(id: String) -> bool:
 ## @ace_name("Is On Cooldown")
 ## @ace_category("Storylets")
 ## @ace_description("Whether a storylet is still cooling down.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.is_on_cooldown({id})")
 func is_on_cooldown(id: String) -> bool:
 	var s: Dictionary = _lib.get(id, {})
@@ -267,7 +267,7 @@ func is_on_cooldown(id: String) -> bool:
 ## @ace_name("Is Library Empty")
 ## @ace_category("Storylets")
 ## @ace_description("Whether no storylets are registered.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.is_library_empty()")
 func is_library_empty() -> bool:
 	return _lib.is_empty()
@@ -276,7 +276,7 @@ func is_library_empty() -> bool:
 ## @ace_name("Quality Number")
 ## @ace_category("Storylets")
 ## @ace_description("A quality as a number (0 if unset).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.quality_number({key})")
 func quality_number(key: String) -> float:
 	return _num(_qualities.get(key, 0.0))
@@ -285,7 +285,7 @@ func quality_number(key: String) -> float:
 ## @ace_name("Quality Text")
 ## @ace_category("Storylets")
 ## @ace_description("A quality as text ("" if unset).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.quality_text({key})")
 func quality_text(key: String) -> String:
 	return _text(_qualities.get(key, ""))
@@ -294,7 +294,7 @@ func quality_text(key: String) -> String:
 ## @ace_name("Available Count")
 ## @ace_category("Storylets")
 ## @ace_description("How many storylets are eligible (after Evaluate/Draw).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.available_count()")
 func available_count() -> int:
 	return _available.size()
@@ -303,7 +303,7 @@ func available_count() -> int:
 ## @ace_name("Available Id")
 ## @ace_category("Storylets")
 ## @ace_description("The eligible storylet id at a position ("" out of range).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.available_id({index})")
 func available_id(index: int) -> String:
 	return str(_available[index]) if index >= 0 and index < _available.size() else ""
@@ -312,7 +312,7 @@ func available_id(index: int) -> String:
 ## @ace_name("Available Title")
 ## @ace_category("Storylets")
 ## @ace_description("The title of the eligible storylet at a position.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.available_title({index})")
 func available_title(index: int) -> String:
 	return str(_lib[_available[index]].title) if index >= 0 and index < _available.size() else ""
@@ -321,7 +321,7 @@ func available_title(index: int) -> String:
 ## @ace_name("Active Id")
 ## @ace_category("Storylets")
 ## @ace_description("The active storylet id ("" if none).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.active_id()")
 func active_id() -> String:
 	return _active
@@ -330,7 +330,7 @@ func active_id() -> String:
 ## @ace_name("Active Title")
 ## @ace_category("Storylets")
 ## @ace_description("The active storylet's title.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.active_title()")
 func active_title() -> String:
 	return str(_lib[_active].title) if _lib.has(_active) else ""
@@ -339,7 +339,7 @@ func active_title() -> String:
 ## @ace_name("Active Body")
 ## @ace_category("Storylets")
 ## @ace_description("The active storylet's body text.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.active_body()")
 func active_body() -> String:
 	return str(_lib[_active].body) if _lib.has(_active) else ""
@@ -348,7 +348,7 @@ func active_body() -> String:
 ## @ace_name("Choice Count")
 ## @ace_category("Storylets")
 ## @ace_description("How many choices the active storylet offers.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.active_choice_count()")
 func active_choice_count() -> int:
 	return int(_lib[_active].choices.size()) if _lib.has(_active) else 0
@@ -357,7 +357,7 @@ func active_choice_count() -> int:
 ## @ace_name("Choice Id At")
 ## @ace_category("Storylets")
 ## @ace_description("The choice id at a position on the active storylet.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.choice_id_at({index})")
 func choice_id_at(index: int) -> String:
 	if not _lib.has(_active):
@@ -369,7 +369,7 @@ func choice_id_at(index: int) -> String:
 ## @ace_name("Choice Text At")
 ## @ace_category("Storylets")
 ## @ace_description("The choice label at a position on the active storylet.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.choice_text_at({index})")
 func choice_text_at(index: int) -> String:
 	if not _lib.has(_active):
@@ -381,7 +381,7 @@ func choice_text_at(index: int) -> String:
 ## @ace_name("Chosen Id")
 ## @ace_category("Storylets")
 ## @ace_description("The choice just picked (inside On Choice Made).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.chosen_id()")
 func chosen_id() -> String:
 	return _chosen
@@ -390,7 +390,7 @@ func chosen_id() -> String:
 ## @ace_name("Play Count")
 ## @ace_category("Storylets")
 ## @ace_description("How many times a storylet has played.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.play_count({id})")
 func play_count(id: String) -> int:
 	return _plays.get(id, 0)
@@ -399,7 +399,7 @@ func play_count(id: String) -> int:
 ## @ace_name("Cooldown Remaining")
 ## @ace_category("Storylets")
 ## @ace_description("Seconds left on a storylet's cooldown (0 if ready).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.cooldown_remaining({id})")
 func cooldown_remaining(id: String) -> float:
 	var s: Dictionary = _lib.get(id, {})
@@ -411,7 +411,7 @@ func cooldown_remaining(id: String) -> float:
 ## @ace_name("Storylet Count")
 ## @ace_category("Storylets")
 ## @ace_description("How many storylets are registered.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.storylet_count()")
 func storylet_count() -> int:
 	return _lib.size()

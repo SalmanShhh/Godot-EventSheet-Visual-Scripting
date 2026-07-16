@@ -1,6 +1,6 @@
 ## @ace_category("Orbit")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/orbit/icon.svg")
 class_name OrbitBehavior
 extends Node
 
@@ -49,7 +49,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Set Orbit Center")
 ## @ace_category("Orbit")
 ## @ace_description("Orbits around the given point from now on.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/orbit/icon.svg")
 ## @ace_codegen_template("$OrbitBehavior.set_orbit_center({x}, {y})")
 func set_orbit_center(x: float, y: float) -> void:
 	center_x = x
@@ -60,7 +60,7 @@ func set_orbit_center(x: float, y: float) -> void:
 ## @ace_name("Set Orbit Speed")
 ## @ace_category("Orbit")
 ## @ace_description("Degrees per second (negative reverses).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/orbit/icon.svg")
 ## @ace_codegen_template("$OrbitBehavior.set_orbit_speed({degrees_per_second})")
 func set_orbit_speed(degrees_per_second: float) -> void:
 	speed_degrees = degrees_per_second
@@ -69,7 +69,7 @@ func set_orbit_speed(degrees_per_second: float) -> void:
 ## @ace_name("Set Orbit Radii")
 ## @ace_category("Orbit")
 ## @ace_description("Primary/secondary radii (secondary 0 = circle).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/orbit/icon.svg")
 ## @ace_codegen_template("$OrbitBehavior.set_orbit_radii({primary}, {secondary})")
 func set_orbit_radii(primary: float, secondary: float) -> void:
 	primary_radius = primary

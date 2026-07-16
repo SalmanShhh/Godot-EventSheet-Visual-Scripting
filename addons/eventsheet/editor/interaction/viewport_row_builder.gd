@@ -2953,8 +2953,16 @@ func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 		# Not cached: the registry refreshes in place (addons may not be loaded yet when
 		# the first spans build), so a miss now can become a hit on the next rebuild.
 		return null
-	var icon: Texture2D = ACEPickerDialog.resolve_definition_icon(definition)
-	if icon == null and (provider_id.is_empty() or provider_id == "Core"):
+	var is_core: bool = provider_id.is_empty() or provider_id == "Core"
+	var icon: Texture2D = null
+	if is_core and definition != null:
+		# Builtin rows: the ACE's module icon leads (Audio rows get the speaker, Math the die,
+		# ..., same map as the picker's section headers), so resolve's kind-dot fallback only
+		# shows where no module mapping exists. Headless keeps the old look (editor icons null).
+		icon = ACEPickerDialog.category_header_icon(definition.category)
+	if icon == null:
+		icon = ACEPickerDialog.resolve_definition_icon(definition)
+	if icon == null and is_core:
 		icon = ACEPickerDialog.editor_icon("Tools")
 	_ace_icon_cache[cache_key] = icon
 	return icon

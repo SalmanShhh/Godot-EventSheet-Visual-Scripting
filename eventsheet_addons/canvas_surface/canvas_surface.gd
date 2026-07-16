@@ -1,4 +1,4 @@
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/canvas_surface/icon.svg")
 class_name CanvasSurface
 extends Node2D
 ## Shared 2D drawing runtime for the Drawing Canvas behaviour and the Draw ACEs: an offscreen render target, a command queue, and self-updating ribbons. One per host, cached on the host - call CanvasSurface.for_node(host).
@@ -17,7 +17,6 @@ var _drawer: Node2D = null
 var _display: Sprite2D = null
 var _commands: Array = []
 var _ribbons: Array = []
-
 ## Returns the host's canvas surface, creating (and attaching) one on first use. Cached on the host
 ## via metadata, so every "... on {node}" draw shares one surface. Null-safe.
 static func for_node(host: Node) -> CanvasSurface:
@@ -44,7 +43,6 @@ func texture() -> Texture2D:
 # --- Dashed shapes: ONE dash primitive turns any polyline into disjoint dash segments, drawn in a
 # single draw_multiline call. Line = 2 points, ring = a sampled circle, rect = 4 closed corners - the
 # same routine serves all three and any future dashed shape. ---
-
 ## Walks a polyline by arc length, carrying the dash phase across vertices so the rhythm stays
 ## continuous around ring and rect corners, and returns endpoint PAIRS for draw_multiline. dash_len
 ## is floored at 0.5 and gap at 0 so a zero-gap value degrades to a solid stroke, never an infinite loop.
@@ -77,6 +75,7 @@ static func _dash_polyline(points: PackedVector2Array, dash_len: float, gap_len:
 		phase = fmod(phase + seg_len, period)
 	return out
 
+## Applies configuration (from the behavior's exports) and rebuilds the surface if it already exists.
 func configure(width: int, height: int, clear_each_frame: bool, coords: String, show_on_host: bool) -> void:
 	canvas_width = width
 	canvas_height = height
@@ -91,6 +90,9 @@ func _ready() -> void:
 	set_physics_process(true)
 	_ensure()
 
+## Builds the offscreen render target once: a SubViewport holding the drawer whose draw signal
+## replays the queue. Clear mode is the whole persistence story - NEVER accumulates (paint), ALWAYS
+## wipes (live redraw), and clear() flips to ONCE.
 func _ensure() -> void:
 	if _viewport != null or not is_inside_tree():
 		return
@@ -110,6 +112,8 @@ func _ensure() -> void:
 	if not _commands.is_empty():
 		_drawer.queue_redraw()  # flush draws buffered before the surface entered the tree
 
+## World position -> canvas pixels: the canvas is centered on the host, so the mapping is a
+## translation. In canvas coordinate mode points pass through untouched.
 func to_canvas(point: Vector2) -> Vector2:
 	if coordinates != "world" or _host == null:
 		return point
@@ -243,6 +247,8 @@ func prefab(prefab_res: Resource, x: float, y: float, scale_factor: float, rotat
 				if texture != null:
 					stamp(texture, at.x, at.y, maxf(p1, 0.01) * scale_by, p2 + rotation_deg)
 
+## Typed draw entries for a prefab: the resource's cached compiled_steps() (parsed once, shared by
+## every draw) when it exposes one, else a raw parse of any Resource's steps into the same shape.
 func _prefab_entries(prefab_res: Resource) -> Array:
 	if prefab_res.has_method("compiled_steps"):
 		var compiled: Variant = prefab_res.compiled_steps()
@@ -253,6 +259,7 @@ func _prefab_entries(prefab_res: Resource) -> Array:
 		return []
 	return DrawingPrefabResource.compile_steps(raw)
 
+## Dashes a polyline and pushes the segments as one multiline command (a single draw call).
 func _push_dashes(points: PackedVector2Array, dash_length: float, gap_length: float, width: float, color: Color) -> void:
 	var segments: PackedVector2Array = _dash_polyline(points, dash_length, gap_length)
 	if segments.is_empty():

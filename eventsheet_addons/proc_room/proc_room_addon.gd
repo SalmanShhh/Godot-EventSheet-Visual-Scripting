@@ -1,6 +1,6 @@
 ## @ace_tags(procedural, roguelite)
 ## @ace_category("ProcRoom")
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/proc_room/icon.svg")
 class_name ProcRoomAddon
 extends Node
 
@@ -40,7 +40,7 @@ var _use_shared: bool = false
 ## @ace_name("Register Room Type")
 ## @ace_category("ProcRoom")
 ## @ace_description("Registers a room type that Generate may place: a weight (higher = commoner), the depth range it may appear in (max_depth -1 = anywhere), and a per-depth cap (-1 = no cap).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.register_room_type({type_id}, {weight}, {min_depth}, {max_depth}, {max_per_depth})")
 func register_room_type(type_id: String, weight: float, min_depth: int, max_depth: int, max_per_depth: int) -> void:
 	_types[type_id] = {"weight": maxf(weight, 0.0), "min_depth": min_depth, "max_depth": max_depth, "max_per_depth": max_per_depth}
@@ -49,7 +49,7 @@ func register_room_type(type_id: String, weight: float, min_depth: int, max_dept
 ## @ace_name("Set Start Type")
 ## @ace_category("ProcRoom")
 ## @ace_description("The type name given to the single depth-0 room (default "start").")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.set_start_type({type_id})")
 func set_start_type(type_id: String) -> void:
 	_start_type = type_id
@@ -58,7 +58,7 @@ func set_start_type(type_id: String) -> void:
 ## @ace_name("Set Boss Type")
 ## @ace_category("ProcRoom")
 ## @ace_description("The type name given to the single final-depth room (default "boss").")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.set_boss_type({type_id})")
 func set_boss_type(type_id: String) -> void:
 	_boss_type = type_id
@@ -67,7 +67,7 @@ func set_boss_type(type_id: String) -> void:
 ## @ace_name("Use Advanced Random")
 ## @ace_category("ProcRoom")
 ## @ace_description("When on, ProcRoom draws its randomness from the shared AdvancedRandom autoload, so one seed can drive every procedural system at once. When off (the default) it uses its own seeded generator. Set the AdvancedRandom seed before Generate for reproducible maps. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.use_advanced_random({enabled})")
 func use_advanced_random(enabled: bool) -> void:
 	_use_shared = enabled
@@ -76,7 +76,7 @@ func use_advanced_random(enabled: bool) -> void:
 ## @ace_name("Generate")
 ## @ace_category("ProcRoom")
 ## @ace_description("Builds a reproducible tiered map from a seed: `depths` tiers (start at 0, boss at the last), up to `max_rooms_per_depth` rooms per interior tier. Same seed = same map. Fires On Graph Generated.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.generate({seed_text}, {depths}, {max_rooms_per_depth})")
 func generate(seed_text: String, depths: int, max_rooms_per_depth: int) -> void:
 	_seed = seed_text
@@ -88,7 +88,7 @@ func generate(seed_text: String, depths: int, max_rooms_per_depth: int) -> void:
 ## @ace_name("Regenerate")
 ## @ace_category("ProcRoom")
 ## @ace_description("Rebuilds the map from the SAME seed + settings as the last Generate (a fresh run of the same layout).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.regenerate()")
 func regenerate() -> void:
 	if not _seed.is_empty():
@@ -98,7 +98,7 @@ func regenerate() -> void:
 ## @ace_name("Enter Room")
 ## @ace_category("ProcRoom")
 ## @ace_description("Moves to a room if it's connected forward from the current room and not locked; otherwise fires On Traversal Blocked (read Block Reason). On success marks it visited + fires On Room Entered.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.enter_room({room_id})")
 func enter_room(room_id: String) -> void:
 	if not _rooms.has(room_id):
@@ -125,7 +125,7 @@ func enter_room(room_id: String) -> void:
 ## @ace_name("Force Enter Room")
 ## @ace_category("ProcRoom")
 ## @ace_description("Moves to any room ignoring connection + lock checks (for teleports / debug). Fires On Room Entered.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.force_enter_room({room_id})")
 func force_enter_room(room_id: String) -> void:
 	if not _rooms.has(room_id):
@@ -142,7 +142,7 @@ func force_enter_room(room_id: String) -> void:
 ## @ace_name("Lock Room")
 ## @ace_category("ProcRoom")
 ## @ace_description("Locks a room so Enter Room is blocked until unlocked (a key door).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.lock_room({room_id})")
 func lock_room(room_id: String) -> void:
 	if _rooms.has(room_id):
@@ -152,7 +152,7 @@ func lock_room(room_id: String) -> void:
 ## @ace_name("Unlock Room")
 ## @ace_category("ProcRoom")
 ## @ace_description("Unlocks a locked room.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.unlock_room({room_id})")
 func unlock_room(room_id: String) -> void:
 	if _rooms.has(room_id):
@@ -162,7 +162,7 @@ func unlock_room(room_id: String) -> void:
 ## @ace_name("Reveal Room")
 ## @ace_category("ProcRoom")
 ## @ace_description("Marks a room as revealed (for fog-of-war maps).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.reveal_room({room_id})")
 func reveal_room(room_id: String) -> void:
 	if _rooms.has(room_id):
@@ -172,7 +172,7 @@ func reveal_room(room_id: String) -> void:
 ## @ace_name("Reset Traversal")
 ## @ace_category("ProcRoom")
 ## @ace_description("Clears visited/revealed/locked and returns to the start room, keeping the same map (a fresh run of the same layout).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.reset_traversal()")
 func reset_traversal() -> void:
 	for id: String in _rooms:
@@ -189,7 +189,7 @@ func reset_traversal() -> void:
 ## @ace_name("Is Graph Ready")
 ## @ace_category("ProcRoom")
 ## @ace_description("Whether a map has been generated.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.is_graph_ready()")
 func is_graph_ready() -> bool:
 	return not _rooms.is_empty()
@@ -198,7 +198,7 @@ func is_graph_ready() -> bool:
 ## @ace_name("Is Room Visited")
 ## @ace_category("ProcRoom")
 ## @ace_description("Whether a room has been entered.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.is_room_visited({room_id})")
 func is_room_visited(room_id: String) -> bool:
 	return _rooms.has(room_id) and bool(_rooms[room_id].visited)
@@ -207,7 +207,7 @@ func is_room_visited(room_id: String) -> bool:
 ## @ace_name("Is Room Available")
 ## @ace_category("ProcRoom")
 ## @ace_description("Whether a room can be entered right now (connected forward from current and unlocked).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.is_room_available({room_id})")
 func is_room_available(room_id: String) -> bool:
 	return _rooms.has(room_id) and room_id in (_rooms.get(_current, {"to": []}).to as Array) and not bool(_rooms[room_id].locked)
@@ -216,7 +216,7 @@ func is_room_available(room_id: String) -> bool:
 ## @ace_name("Is Room Locked")
 ## @ace_category("ProcRoom")
 ## @ace_description("Whether a room is locked.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.is_room_locked({room_id})")
 func is_room_locked(room_id: String) -> bool:
 	return _rooms.has(room_id) and bool(_rooms[room_id].locked)
@@ -225,7 +225,7 @@ func is_room_locked(room_id: String) -> bool:
 ## @ace_name("Is Room Connected")
 ## @ace_category("ProcRoom")
 ## @ace_description("Whether room A connects forward to room B.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.is_room_connected({from_id}, {to_id})")
 func is_room_connected(from_id: String, to_id: String) -> bool:
 	return _rooms.has(from_id) and to_id in (_rooms[from_id].to as Array)
@@ -234,7 +234,7 @@ func is_room_connected(from_id: String, to_id: String) -> bool:
 ## @ace_name("Graph Seed")
 ## @ace_category("ProcRoom")
 ## @ace_description("The seed of the current map.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.graph_seed()")
 func graph_seed() -> String:
 	return _seed
@@ -243,7 +243,7 @@ func graph_seed() -> String:
 ## @ace_name("Total Rooms")
 ## @ace_category("ProcRoom")
 ## @ace_description("How many rooms the map has.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.total_rooms()")
 func total_rooms() -> int:
 	return _rooms.size()
@@ -252,7 +252,7 @@ func total_rooms() -> int:
 ## @ace_name("Total Depths")
 ## @ace_category("ProcRoom")
 ## @ace_description("How many depth tiers the map has.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.total_depths()")
 func total_depths() -> int:
 	return _depths
@@ -261,7 +261,7 @@ func total_depths() -> int:
 ## @ace_name("Current Room")
 ## @ace_category("ProcRoom")
 ## @ace_description("The room the player is in ("" before entry).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.current_room()")
 func current_room() -> String:
 	return _current
@@ -270,7 +270,7 @@ func current_room() -> String:
 ## @ace_name("Current Room Type")
 ## @ace_category("ProcRoom")
 ## @ace_description("The type of the current room.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.current_room_type()")
 func current_room_type() -> String:
 	return str(_rooms[_current].type) if _rooms.has(_current) else ""
@@ -279,7 +279,7 @@ func current_room_type() -> String:
 ## @ace_name("Current Depth")
 ## @ace_category("ProcRoom")
 ## @ace_description("The depth tier of the current room.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.current_depth()")
 func current_depth() -> int:
 	return int(_rooms[_current].depth) if _rooms.has(_current) else 0
@@ -288,7 +288,7 @@ func current_depth() -> int:
 ## @ace_name("Previous Room")
 ## @ace_category("ProcRoom")
 ## @ace_description("The room entered just before the current one.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.previous_room()")
 func previous_room() -> String:
 	return _previous
@@ -297,7 +297,7 @@ func previous_room() -> String:
 ## @ace_name("Room Type")
 ## @ace_category("ProcRoom")
 ## @ace_description("A room's type ("" if unknown).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.room_type({room_id})")
 func room_type(room_id: String) -> String:
 	return str(_rooms[room_id].type) if _rooms.has(room_id) else ""
@@ -306,7 +306,7 @@ func room_type(room_id: String) -> String:
 ## @ace_name("Room Depth")
 ## @ace_category("ProcRoom")
 ## @ace_description("A room's depth tier (-1 if unknown).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.room_depth({room_id})")
 func room_depth(room_id: String) -> int:
 	return int(_rooms[room_id].depth) if _rooms.has(room_id) else -1
@@ -315,7 +315,7 @@ func room_depth(room_id: String) -> int:
 ## @ace_name("Rooms At Depth")
 ## @ace_category("ProcRoom")
 ## @ace_description("How many rooms are at a depth tier.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.rooms_at_depth({depth})")
 func rooms_at_depth(depth: int) -> int:
 	return int(_by_depth[depth].size()) if depth >= 0 and depth < _by_depth.size() else 0
@@ -324,7 +324,7 @@ func rooms_at_depth(depth: int) -> int:
 ## @ace_name("Room At Depth")
 ## @ace_category("ProcRoom")
 ## @ace_description("The room id at a depth + index ("" out of range).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.room_at_depth({depth}, {index})")
 func room_at_depth(depth: int, index: int) -> String:
 	if depth < 0 or depth >= _by_depth.size():
@@ -336,7 +336,7 @@ func room_at_depth(depth: int, index: int) -> String:
 ## @ace_name("Connections From")
 ## @ace_category("ProcRoom")
 ## @ace_description("How many rooms a room connects forward to.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.connections_from({room_id})")
 func connections_from(room_id: String) -> int:
 	return int(_rooms[room_id].to.size()) if _rooms.has(room_id) else 0
@@ -345,7 +345,7 @@ func connections_from(room_id: String) -> int:
 ## @ace_name("Connection From")
 ## @ace_category("ProcRoom")
 ## @ace_description("The Nth room a room connects forward to ("" out of range).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.connection_from({room_id}, {index})")
 func connection_from(room_id: String, index: int) -> String:
 	if not _rooms.has(room_id):
@@ -357,7 +357,7 @@ func connection_from(room_id: String, index: int) -> String:
 ## @ace_name("Visited Count")
 ## @ace_category("ProcRoom")
 ## @ace_description("How many rooms have been visited.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.visited_count()")
 func visited_count() -> int:
 	var n: int = 0
@@ -370,7 +370,7 @@ func visited_count() -> int:
 ## @ace_name("Entered Id")
 ## @ace_category("ProcRoom")
 ## @ace_description("The room just entered (inside On Room Entered).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.entered_id()")
 func entered_id() -> String:
 	return _entered_id
@@ -379,7 +379,7 @@ func entered_id() -> String:
 ## @ace_name("Entered Type")
 ## @ace_category("ProcRoom")
 ## @ace_description("The type of the room just entered (inside On Room Entered).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.entered_type()")
 func entered_type() -> String:
 	return _entered_type
@@ -388,7 +388,7 @@ func entered_type() -> String:
 ## @ace_name("Blocked Id")
 ## @ace_category("ProcRoom")
 ## @ace_description("The room that couldn't be entered (inside On Traversal Blocked).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.blocked_id()")
 func blocked_id() -> String:
 	return _blocked_id
@@ -397,7 +397,7 @@ func blocked_id() -> String:
 ## @ace_name("Block Reason")
 ## @ace_category("ProcRoom")
 ## @ace_description("Why entry was blocked - "locked" or "unreachable" (inside On Traversal Blocked).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.block_reason()")
 func block_reason() -> String:
 	return _block_reason

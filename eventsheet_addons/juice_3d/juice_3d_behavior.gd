@@ -1,7 +1,7 @@
 ## @ace_tags(camera, juice, 3d)
 ## @ace_category("Juice 3D")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/juice_3d/icon.svg")
 class_name Juice3DBehavior
 extends Node
 
@@ -135,7 +135,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Shake")
 ## @ace_category("Juice 3D")
 ## @ace_description("Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.shake({strength})")
 func shake(strength: float) -> void:
 	trauma = clampf(trauma + strength, 0.0, 1.0)
@@ -144,7 +144,7 @@ func shake(strength: float) -> void:
 ## @ace_name("Stop Shake")
 ## @ace_category("Juice 3D")
 ## @ace_description("Cancels any shake immediately (other effects keep running).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.stop_shake()")
 func stop_shake() -> void:
 	trauma = 0.0
@@ -155,7 +155,7 @@ func stop_shake() -> void:
 ## @ace_name("Recoil")
 ## @ace_category("Juice 3D")
 ## @ace_description("Weapon recoil: kicks the view UP by a pitch (degrees) plus a random side spread, then re-centres at the Recoil Recovery rate. Fire on every shot - kicks stack, so sustained fire climbs. Cosmetic (rides on top of mouse look; aim is untouched).")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.recoil({vertical_kick}, {horizontal_spread})")
 func recoil(vertical_kick: float, horizontal_spread: float) -> void:
 	_recoil_pitch += vertical_kick
@@ -165,7 +165,7 @@ func recoil(vertical_kick: float, horizontal_spread: float) -> void:
 ## @ace_name("Start Head Bob")
 ## @ace_category("Juice 3D")
 ## @ace_description("Starts a walking head-bob on the camera: a figure-8 (side sway at half rate, one downward dip per step). Amplitude is metres, frequency is steps per second. Call while your character moves; Stop Head Bob when they halt.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.start_head_bob({amplitude}, {frequency})")
 func start_head_bob(amplitude: float, frequency: float) -> void:
 	_bob_amplitude = amplitude
@@ -176,7 +176,7 @@ func start_head_bob(amplitude: float, frequency: float) -> void:
 ## @ace_name("Stop Head Bob")
 ## @ace_category("Juice 3D")
 ## @ace_description("Stops the head bob.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.stop_head_bob()")
 func stop_head_bob() -> void:
 	_bob_active = false
@@ -185,7 +185,7 @@ func stop_head_bob() -> void:
 ## @ace_name("Start Jitter")
 ## @ace_category("Juice 3D")
 ## @ace_description("Starts a continuous nervous wobble (position in metres + a touch of roll) that runs until Stop Jitter - unlike Shake it never decays. Engines idling, helicopters, low health, fear.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.start_jitter({position_amount}, {roll_degrees})")
 func start_jitter(position_amount: float, roll_degrees: float) -> void:
 	_jitter_offset = position_amount
@@ -196,7 +196,7 @@ func start_jitter(position_amount: float, roll_degrees: float) -> void:
 ## @ace_name("Stop Jitter")
 ## @ace_category("Juice 3D")
 ## @ace_description("Stops the jitter wobble.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.stop_jitter()")
 func stop_jitter() -> void:
 	_jitter_active = false
@@ -205,7 +205,7 @@ func stop_jitter() -> void:
 ## @ace_name("Lean")
 ## @ace_category("Juice 3D")
 ## @ace_description("Eases the camera roll to an angle (degrees) and HOLDS it - lean into a wall ride, peek a corner, bank with a turn. Lean back to 0 to level out. Emits On Lean Finished.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.lean({degrees}, {duration})")
 func lean(degrees: float, duration: float) -> void:
 	if _lean_tween != null:
@@ -219,7 +219,7 @@ func lean(degrees: float, duration: float) -> void:
 ## @ace_name("FOV Punch")
 ## @ace_category("Juice 3D")
 ## @ace_description("Kicks the field of view wider (positive, a speed boost / dash) or tighter (negative, an impact) by an amount in degrees, then eases back at the FOV Recovery rate. Fire-and-forget.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.fov_punch({amount})")
 func fov_punch(amount: float) -> void:
 	_fov_kick += amount
@@ -228,7 +228,7 @@ func fov_punch(amount: float) -> void:
 ## @ace_name("Zoom FOV To")
 ## @ace_category("Juice 3D")
 ## @ace_description("Smoothly changes the camera's base field of view to a value in degrees and keeps it there (an aim-down-sights zoom is FOV 40, back to 75 to unzoom). Emits On Zoom Finished.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.zoom_fov_to({fov}, {duration})")
 func zoom_fov_to(fov: float, duration: float) -> void:
 	var cam: Camera3D = _camera()
@@ -242,12 +242,14 @@ func zoom_fov_to(fov: float, duration: float) -> void:
 ## @ace_name("Use Camera")
 ## @ace_category("Juice 3D")
 ## @ace_description("Pin the effects to a specific Camera3D (by path). Leave it unused to auto-target whichever camera is active.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.use_camera({camera_path})")
 func use_camera(camera_path: NodePath) -> void:
 	_unapply()
 	_camera_override = get_node_or_null(camera_path) as Camera3D
 
+## Removes last frame's additive offsets from whichever camera received them, so this frame
+## starts from the pose the camera's OWNER (controller/animation) wrote.
 func _unapply() -> void:
 	if _last_camera == null or not is_instance_valid(_last_camera):
 		_applied_position = Vector3.ZERO
@@ -263,14 +265,14 @@ func _unapply() -> void:
 
 ## @ace_condition
 ## @ace_name("Is Shaking")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.is_shaking()")
 func is_shaking() -> bool:
 	return trauma > 0.0
 
 ## @ace_expression
 ## @ace_name("Trauma")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.current_trauma()")
 func current_trauma() -> float:
 	return trauma
@@ -291,7 +293,7 @@ func _ensure_tint_overlay() -> void:
 ## @ace_action
 ## @ace_name("Set Screen Tint")
 ## @ace_description("Washes the WHOLE SCREEN with a color at Strength opacity (0..1) over the 3D view - damage red, poison green, night blue. Call again to retune; strength 0 clears.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.set_screen_tint({color}, {strength})")
 func set_screen_tint(color: Color, strength: float) -> void:
 	_ensure_tint_overlay()
@@ -302,7 +304,7 @@ func set_screen_tint(color: Color, strength: float) -> void:
 ## @ace_action
 ## @ace_name("Fade Screen Tint")
 ## @ace_description("Fades the screen tint's strength to zero over the given seconds - the damage-flash pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.fade_screen_tint({seconds})")
 func fade_screen_tint(seconds: float) -> void:
 	if _tint_rect == null or not _tint_rect.visible:
@@ -312,7 +314,7 @@ func fade_screen_tint(seconds: float) -> void:
 ## @ace_action
 ## @ace_name("Clear Screen Tint")
 ## @ace_description("Removes the screen tint instantly.")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.clear_screen_tint()")
 func clear_screen_tint() -> void:
 	if _tint_rect != null:

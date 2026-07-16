@@ -1,6 +1,6 @@
 ## @ace_category("Line Of Sight 3D")
 ## @ace_expose_all(node)
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/line_of_sight_3d/icon.svg")
 class_name LOS3DBehavior
 extends Node
 
@@ -41,7 +41,7 @@ func _process(delta: float) -> void:
 
 ## @ace_condition
 ## @ace_name("Has Line Of Sight To")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/line_of_sight_3d/icon.svg")
 ## @ace_codegen_template("$LOS3DBehavior.has_los_to({point})")
 func has_los_to(point: Vector3) -> bool:
 	if host == null or host.global_position.distance_to(point) > sight_range:
@@ -55,7 +55,7 @@ func has_los_to(point: Vector3) -> bool:
 
 ## @ace_condition
 ## @ace_name("Has LOS Between")
-## @ace_icon("res://eventsheet_addons/behavior.svg")
+## @ace_icon("res://eventsheet_addons/line_of_sight_3d/icon.svg")
 ## @ace_codegen_template("$LOS3DBehavior.has_los_between({from_point}, {to_point})")
 func has_los_between(from_point: Vector3, to_point: Vector3) -> bool:
 	if host == null:

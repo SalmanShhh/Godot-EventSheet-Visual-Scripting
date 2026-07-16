@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Added - every behaviour pack has its own icon, shown everywhere names appear
+
+- **All 74 behaviour packs now ship a hand-tuned per-pack `icon.svg`** (house style: the familiar
+  rounded-square badge, colour-coded by family - blue movement, purple AI, red combat, gold economy,
+  teal drawing, green data, orange UI - with a distinctive glyph: a heart for Health, a sine wave for
+  Sine, an HTN tree for UHTN Planning, a chest for Loot Table, ...). The icon shows in Godot's Create
+  New Node dialog, the sheet banner, the ACE picker (rows AND section headers), and **as a prefix on
+  every object label in the event sheet viewport** - conditions, actions, and triggers all lead with
+  their pack's icon, the Construct reflex of seeing the object's icon next to its name everywhere.
+- **`save_pack` auto-detects a pack-local `icon.svg`**: drop the file beside the pack's .gd and rebuild -
+  no builder edit needed. The shared behaviour glyph stays as the fallback for icon-less packs.
+- **A provider's native `@icon("res://...")` annotation now doubles as its member-icon default**
+  (explicit class-level `## @ace_icon` and registrar `pack_icon()` still win): reflected signals,
+  properties, and methods inherit the class icon too, so `@ace_expose_all` packs and hand-written
+  provider scripts get fully iconed vocabularies with zero extra annotations. Property write-actions
+  (Set / Add To / Subtract From) previously hardcoded the generic marker and now inherit it as well.
+- **Builtin vocabulary modules got icons too**: every builtin category maps to a native editor-theme
+  icon (Audio to the speaker, Math & Random to the RNG die, Variables: Array to the Array type icon,
+  ..., `ACEPickerDialog.CATEGORY_EDITOR_ICONS`) - shown on the picker's section headers, its
+  sub-section folders, and viewport object labels for System rows. Headless and non-editor contexts
+  keep the previous look. Coverage is pinned by `tests/pack_icons_test.gd` so a new module can't
+  silently ship an icon-less section.
+
+### Fixed - the build-time function lift ate doc comments (and unknown @ace directives)
+
+- **Lifting a `func` out of a raw code block dropped any plain `##` doc comment above it** - the
+  build-path twin of the importer's doc-comment support: `_split_function_declarations` fed every
+  `##` line to the annotation parser, which only keeps recognized `## @ace_*` blocks. Rebuilding the
+  drawing packs silently stripped their helper docs. Doc lines above an un-annotated function now ride
+  onto the lifted EventFunction as its doc comment and re-emit verbatim; the pack rebuild restored the
+  eaten docs across nine shipped packs.
+- **A function led by `## @` directives the parser does NOT recognize (e.g. `@ace_name` without a
+  type marker) now stays verbatim instead of lifting** - lifting used to eat the unrecognized
+  directives silently, the standing annotation-eating trap.
+
 ### Added - UHTN Planning: Utility AI steering the HTN planner, data-driven
 
 - **A new `UHTN Planning` pack finally combines the two AI halves the separate HTN Agent and UtilityBrain

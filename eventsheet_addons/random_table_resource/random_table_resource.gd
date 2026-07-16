@@ -1,4 +1,4 @@
-@icon("res://eventsheet_addons/behavior.svg")
+@icon("res://eventsheet_addons/random_table_resource/icon.svg")
 class_name RandomTableResource
 extends Resource
 ## A weighted random table as a data asset. Fill the entries grid (value + weight) in the Inspector, save as a .tres, and draw from it with Advanced Random's Pick From Table.
