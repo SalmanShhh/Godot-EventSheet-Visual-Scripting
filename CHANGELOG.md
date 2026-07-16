@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - two internal specs: creator journeys and the public-release bar
+
+- **SPEC-editor-tools-and-custom-resources.md** - four beginner-friendly slices for building
+  EDITOR TOOLS and CUSTOM RESOURCES with sheets: an Editor Tool starter, a New Custom Resource
+  wizard (backed by a proposed EventSheets.resource_grid API so column-hint syntax gets one
+  owner), two Custom Block kinds (editor_button, resource_validator), and the docs glue.
+- **SPEC-gdscript-basics-release-bar.md** - the proposed first-public-release rule: everything
+  on Godot's GDScript-basics page authorable and readable in the condition/action model. Full
+  coverage audit inside (nearly all DONE) plus the 5-item release checklist: beginner phrasing
+  aliases, a {name}-placeholder Text From Pattern ACE, an operator-palette audit, the public
+  coverage receipt doc, and two documented out-of-scope calls.
+
+Both are proposals - nothing built until the slices are green-lit.
+
 ### Changed - the tempo badges are crisp vector marks now
 
 - **The trigger and every-tick badges (and the input/signal ones) draw as vector art** instead
