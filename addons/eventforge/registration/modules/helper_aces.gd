@@ -67,6 +67,18 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Picks one of two values depending on a condition, all in one line."))
 	descriptors.append(F.make_descriptor("Core", "ToggleBool", "Toggle Boolean", ACEDescriptor.ACEType.ACTION, "{var_name} = not {var_name}", "", [F.make_param("var_name", "String", "var", "Variable", "Boolean variable to flip.", "variable_reference")], CAT, "toggle {var_name}")
 		.described("Flips a true/false variable to its opposite value."))
+
+	# ── Lambdas & callables: little inline functions you can hand to signals, timers, sorters ──
+	# Two lambda shapes (return a value / run a statement) plus the two Callable staples (reference a
+	# method by name, pre-fill arguments). Expressions stay opaque strings, so these round-trip verbatim.
+	descriptors.append(F.make_descriptor("Core", "LambdaValue", "Lambda (returns a value)", ACEDescriptor.ACEType.EXPRESSION, "(func({params}): return {value})", "", [F.make_param("params", "String", "x", "Parameters", "Comma-separated parameter names (may be empty).", "expression"), F.make_param("value", "String", "x * 2", "Returns", "The expression the lambda returns.", "expression")], CAT, "func({params}): return {value}")
+		.described("A small inline function that computes and returns a value - hand it to sort(), map(), or filter()."))
+	descriptors.append(F.make_descriptor("Core", "LambdaStatement", "Lambda (runs a statement)", ACEDescriptor.ACEType.EXPRESSION, "(func({params}): {statement})", "", [F.make_param("params", "String", "x", "Parameters", "Comma-separated parameter names (may be empty).", "expression"), F.make_param("statement", "String", "print(x)", "Runs", "The single statement the lambda runs.", "expression")], CAT, "func({params}): {statement}")
+		.described("A small inline function that runs one statement - connect it to a signal or a timer."))
+	descriptors.append(F.make_descriptor("Core", "CallableFromMethod", "Callable of Method", ACEDescriptor.ACEType.EXPRESSION, "Callable({target}, \"{method}\")", "", [F.make_param("target", "String", "self", "Target", "Node/object expression that owns the method.", "expression"), F.make_param("method", "String", "queue_free", "Method", "The method name the callable will invoke.", "method_reference")], CAT, "Callable({target}, {method})")
+		.described("A reference to a named method you can pass around, connect, or call later."))
+	descriptors.append(F.make_descriptor("Core", "CallableBind", "Bind Arguments", ACEDescriptor.ACEType.EXPRESSION, "{callable}.bind({args})", "", [F.make_param("callable", "String", "Callable(self, \"queue_free\")", "Callable", "The callable to pre-fill (a lambda or Callable expression).", "expression"), F.make_param("args", "String", "0", "Arguments", "Comma-separated argument values to pre-fill.", "expression")], CAT, "{callable}.bind({args})")
+		.described("Pre-fills arguments of a callable, so the receiver can call it with fewer of its own."))
 	# Declares an event-local temp later actions in the same event body can reference.
 	descriptors.append(F.make_descriptor("Core", "SetLocalVar", "Set Local Variable", ACEDescriptor.ACEType.ACTION, "var {name} = {value}", "", [F.make_param("name", "String", "temp", "Name", "Local variable name (scoped to this event body)."), F.make_param("value", "String", "0", "Value", "Initial value expression.", "expression")], CAT, "var {name} = {value}")
 		.described("Creates a temporary variable used only within this event."))

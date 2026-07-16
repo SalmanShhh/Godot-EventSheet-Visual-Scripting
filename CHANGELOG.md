@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added - lambda and callable expressions in the picker
+
+- **Four new expressions make small inline functions pickable: Lambda (returns a value), Lambda (runs a
+  statement), Callable of Method, and Bind Arguments.** A beginner can now hand `func(x): return x * 2` to
+  `sort()`/`map()`/`filter()`, connect a one-liner to a signal or timer, reference a method by name
+  (`Callable(self, "reroll")`), or pre-fill arguments with `.bind(...)` - all from the picker, no raw code.
+  Expressions stay opaque GDScript, so a lambda baked into any value round-trips byte-identically.
+
 ### Added - Create Code Region on a multi-selection (+ a submenu relabel fix)
 
 - **Selecting several event blocks and right-clicking now offers "Create Code Region" directly in the
