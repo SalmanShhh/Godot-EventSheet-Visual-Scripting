@@ -215,6 +215,9 @@ const LANE_DIVIDER_GRAB_TOLERANCE := 5.0
 ## settable so headless tests can assert raw row counts/indices without the affordance
 ## shifting them, and so the dock can offer a "hide add-event rows" declutter option.
 var show_add_event_footers: bool = true
+## Object/module icons before names (rows + group folders). Toggleable (View menu) for users
+## who prefer a text-only sheet; span builds read it, so flipping it rebuilds via set_sheet.
+var show_object_icons: bool = true
 ## Event-sheet-style drag ghost: a faint label of the dragged content following the cursor.
 var _drag_ghost_label: String = ""
 var _drag_pointer_position: Vector2 = Vector2.ZERO

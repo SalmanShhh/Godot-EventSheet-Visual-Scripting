@@ -1755,6 +1755,24 @@ func _load_simple_mode_preference() -> void:
 
 ## Declutter toggle: show/hide the trailing "+ Add event…" affordance rows across every
 ## live view, and reflect the new state in the View menu checkbox.
+## View > Object Icons: show/hide the icons before object/module names (rows + group folders).
+## Icons live in span metadata, so a rebuild (set_sheet) applies the flip; the icon cache stays
+## warm for flipping back.
+func _toggle_object_icons(view_popup: PopupMenu) -> void:
+	var show_icons: bool = true
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		view.show_object_icons = not view.show_object_icons
+		show_icons = view.show_object_icons
+		view.set_sheet(_current_sheet)
+	if view_popup != null:
+		var icons_index: int = view_popup.get_item_index(15)
+		if icons_index >= 0:
+			view_popup.set_item_checked(icons_index, show_icons)
+	_set_status("Object icons shown." if show_icons else "Object icons hidden (text-only sheet).")
+
+
 func _toggle_add_event_rows(view_popup: PopupMenu) -> void:
 	var show_rows: bool = true
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:

@@ -1638,7 +1638,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 				"editable": true,
 				"edit_kind": "group_name",
 				"group_title": true,
-				"object_icon": _folder_icon(),
+				"object_icon": _folder_icon() if _viewport.show_object_icons else null,
 				"text_color": event_style.group_title_color
 			}
 		)
@@ -2033,6 +2033,20 @@ func _build_variable_row(
 # ── Event-span assembly (the "model → SemanticSpans" pass) ───────────────────────────────────────
 
 
+## Beginner-friendly display text for a raw trigger_id (the lifted / lifecycle path, which used
+## to print the id verbatim - "signal:on_damaged"). The registered definition's display name
+## wins ("On Damaged", including any @ace_name); an unresolved signal id still humanizes
+## ("signal:door_opened" -> "On Door Opened"). Display-only: the stored trigger_id (frozen API)
+## and the compiled output are untouched.
+func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
+	var definition: ACEDefinition = _viewport._find_definition(provider_id, trigger_id)
+	if definition != null and not definition.display_name.strip_edges().is_empty():
+		return definition.display_name
+	if trigger_id.begins_with("signal:"):
+		return "On %s" % trigger_id.trim_prefix("signal:").capitalize()
+	return trigger_id
+
+
 ## Sets the tempo glyph + hue on a trigger-badge meta from the event's trigger_id, and returns the glyph.
 ## SIGNAL keeps the shipped green ➜ from the event style - the common case stays
 ## byte-identical; every-tick (⟳) / input (⌨) / once (▶) get their own fill so how OFTEN an event runs
@@ -2124,7 +2138,7 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 		spans.append(_make_span(trigger_id_glyph, SemanticSpan.SpanType.KEYWORD, trigger_id_badge_meta))
 		spans.append(
 			_make_span(
-				event_row.trigger_id,
+				_trigger_display_text(event_row.trigger_provider_id, event_row.trigger_id),
 				SemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
@@ -2945,6 +2959,8 @@ var _ace_icon_cache: Dictionary = {}
 ## to its name everywhere). Resolution order matches the picker; Core/System falls back to
 ## the editor's Tools glyph. Null (headless / nothing matches) keeps the text-only look.
 func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
+	if not _viewport.show_object_icons:
+		return null  # user turned icons off; the cache stays warm for turning them back on
 	var cache_key: String = "%s::%s" % [provider_id, ace_id]
 	if _ace_icon_cache.has(cache_key):
 		return _ace_icon_cache[cache_key]

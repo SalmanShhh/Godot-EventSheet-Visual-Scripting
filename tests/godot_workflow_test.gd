@@ -377,7 +377,7 @@ static func run() -> bool:
 		sheet_menu != null and sheet_menu.get_popup().item_count == 14  # +New Behaviour Addon…, +Teach a Verb, +Inspector Designer
 		and add_menu != null and add_menu.get_popup().item_count == 6 + 1 + EventSheetBlockRegistry.addable_kinds().size()  # +separator +Code action, then +separator + one item per registered Custom Block kind
 		and edit_menu != null and edit_menu.get_popup().item_count == 10
-		and view_menu != null and view_menu.get_popup().item_count == 19, true) and all_passed  # +1: Open Sheets Panel, +1: Language submenu
+		and view_menu != null and view_menu.get_popup().item_count == 20, true) and all_passed  # +1: Open Sheets Panel, +1: Language submenu, +1: Object Icons toggle
 
 	# ── Welcome window: self-sizing dialog, margined, reopenable, checkbox synced ─
 	# The window now lives in the extracted EventSheetWelcomeWindow (dock/welcome_window.gd); the dock

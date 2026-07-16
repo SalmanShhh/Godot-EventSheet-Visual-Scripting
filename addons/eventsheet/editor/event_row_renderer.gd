@@ -16,10 +16,29 @@ const COLOR_TRIGGER = EventSheetPalette.COLOR_TRIGGER
 const COLOR_VALUE = EventSheetPalette.COLOR_VALUE
 const ROW_VERTICAL_CENTER_RATIO := 0.5
 const FONT_BASELINE_OFFSET_RATIO := 0.35
-# Object icon drawn before the object label in ACE cells (event-sheet grammar). The advance must
-# stay in sync with _measure_span_width in the viewport or hit-testing drifts.
+# Object icon drawn before the object label in ACE cells (event-sheet grammar). Construct-style
+# framing: the icon sits centred on a subtle rounded plate (the C3 "{my}" icon chip), so icons
+# read as a tidy column instead of loose glyphs. The advance must stay in sync with
+# _measure_span_width in the viewport or hit-testing drifts.
 const OBJECT_ICON_SIZE := 14.0
-const OBJECT_ICON_ADVANCE := 18.0
+const OBJECT_ICON_PLATE_SIZE := 18.0
+const OBJECT_ICON_ADVANCE := 23.0
+const OBJECT_ICON_PLATE_FILL := Color(1.0, 1.0, 1.0, 0.05)
+const OBJECT_ICON_PLATE_BORDER := Color(1.0, 1.0, 1.0, 0.13)
+
+# One shared plate StyleBox (this draws once per icon per frame on a virtualized canvas -
+# never allocate it inside the draw loop).
+static var _icon_plate_style: StyleBoxFlat = null
+
+
+static func _object_icon_plate_style() -> StyleBoxFlat:
+	if _icon_plate_style == null:
+		_icon_plate_style = StyleBoxFlat.new()
+		_icon_plate_style.bg_color = OBJECT_ICON_PLATE_FILL
+		_icon_plate_style.border_color = OBJECT_ICON_PLATE_BORDER
+		_icon_plate_style.set_border_width_all(1)
+		_icon_plate_style.set_corner_radius_all(3)
+	return _icon_plate_style
 const BADGE_FONT_SIZE_DELTA := 1
 const BADGE_MIN_HORIZONTAL_PADDING := 1.0
 const SELECTION_OUTLINE_LIGHTEN := 0.28
@@ -545,8 +564,13 @@ func _draw_spans(
 		# (e.g. "[icon] System  Is on floor").
 		var object_icon: Variant = metadata.get("object_icon")
 		if object_icon is Texture2D:
-			var icon_y: float = span.rect.position.y + (span.rect.size.y - OBJECT_ICON_SIZE) * 0.5
-			control.draw_texture_rect(object_icon as Texture2D, Rect2(text_x, icon_y, OBJECT_ICON_SIZE, OBJECT_ICON_SIZE), false)
+			# C3-style icon chip: a subtle rounded plate behind the icon so every row's icon
+			# reads as one tidy framed column (the Construct "{my}" look).
+			var plate_y: float = span.rect.position.y + (span.rect.size.y - OBJECT_ICON_PLATE_SIZE) * 0.5
+			var plate_rect := Rect2(text_x, plate_y, OBJECT_ICON_PLATE_SIZE, OBJECT_ICON_PLATE_SIZE)
+			control.draw_style_box(_object_icon_plate_style(), plate_rect)
+			var icon_inset: float = (OBJECT_ICON_PLATE_SIZE - OBJECT_ICON_SIZE) * 0.5
+			control.draw_texture_rect(object_icon as Texture2D, Rect2(text_x + icon_inset, plate_y + icon_inset, OBJECT_ICON_SIZE, OBJECT_ICON_SIZE), false)
 			text_x += OBJECT_ICON_ADVANCE
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var object_label: String = str(metadata.get("object_label", ""))

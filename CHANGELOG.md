@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - C3-style icon chips, friendly trigger names, and an Object Icons toggle
+
+- **Object icons now sit on a Construct-style framed chip** - a subtle rounded plate behind every
+  icon (the C3 "{my}" icon look), so the icon column reads as a tidy rail instead of loose glyphs.
+  One shared StyleBox, zero per-frame allocation.
+- **Raw signal triggers read like sentences**: a lifted / lifecycle trigger that used to print its
+  raw id ("signal:on_damaged") now shows the registered ACE's display name ("On Damaged", honouring
+  @ace_name), and an unregistered signal id still humanizes ("signal:door_opened" -> "On Door
+  Opened"). Display-only - stored ids and compiled output are untouched.
+- **View > Object Icons** toggles every icon in the sheet (rows and group folders) for a text-only
+  look; the icon cache stays warm so flipping back is instant.
+
 ### Added - the editor speaks 8 languages, translations hot-reload, and Language joined the View menu
 
 - **Korean, Japanese, Russian, and Simplified Chinese translations** for the whole plugin UI
