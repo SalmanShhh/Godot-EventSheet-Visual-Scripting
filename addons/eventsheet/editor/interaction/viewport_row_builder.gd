@@ -1392,8 +1392,12 @@ func _build_methods_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	for entry: Dictionary in body:
 		if str(entry.get("kind")) == "field":
 			field_count += 1
-		elif str(entry.get("text")).begins_with("\tfunc ") or str(entry.get("text")).begins_with("\tstatic func "):
+			continue
+		var member_text: String = str(entry.get("text"))
+		if member_text.begins_with("\tfunc ") or member_text.begins_with("\tstatic func "):
 			method_count += 1
+		elif member_text.begins_with("\t@export") or member_text.begins_with("\tconst "):
+			field_count += 1  # a one-tab @export / const member also counts toward the field cue
 	var header_spans: Array[SemanticSpan] = [
 		_make_span(header_text, SemanticSpan.SpanType.OBJECT, {
 			"lane": "condition", "editable": false, "kind": "raw_code", "line_index": 0,
