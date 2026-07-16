@@ -207,3 +207,104 @@ Next,Suivant
 Finish,Terminer
 ✓ Done - nice! Hit Next.,✓ Fait - bravo ! Cliquez sur Suivant.
 Hit Finish and go make something.,Cliquez sur Terminer et allez créer quelque chose.
+"A coloured section label drawn above this property in the Inspector.
+End with a #rrggbb to tint it. Editor decor only - plain comment in the code.","Un intitulé de section coloré affiché au-dessus de cette propriété dans l'Inspecteur.
+Terminez par un #rrggbb pour le teinter. Décor d'éditeur uniquement - simple commentaire dans le code."
+"A quiet info panel drawn above this property in the Inspector.
+Editor decor only - plain comment in the code.","Un panneau d'information discret affiché au-dessus de cette propriété dans l'Inspecteur.
+Décor d'éditeur uniquement - simple commentaire dans le code."
+"A shape over 0–1 (easing, falloff, ramps).","Une courbe sur 0–1 (easing, atténuation, rampes)."
+A whole number (no decimals) - stored as an int. Unticked stores a float.,"Un nombre entier (sans décimales) - stocké comme int. Décoché, stocké comme float."
+Access,Accès
+Advanced types,Types avancés
+Anatomy,Anatomie
+Any type - untyped (advanced; prefer a specific type when you can).,N'importe quel type - non typé (avancé ; préférez un type précis quand c'est possible).
+Clamp to range,Limiter à la plage
+Collapse the panel to a strip,Réduire le panneau en bandeau
+Default field,Champ par défaut
+Description,Description
+Dropped Node Preview,Aperçu du nœud déposé
+Easing curve (float: exponential ease handle),Courbe d'easing (float : poignée d'ease exponentielle)
+Edit an Array/Dictionary's items one per line instead of typing a literal.,Modifiez les éléments d'un Array/Dictionary ligne par ligne au lieu de saisir un littéral.
+Edit items…,Modifier les éléments…
+"Event-sheet-style quick add: type an event/condition/action (event-sheet phrasing works) plus optional parameter values, press Enter.","Ajout rapide façon feuille d'événements : tapez un événement/condition/action (la formulation feuille d'événements fonctionne) plus des valeurs de paramètres optionnelles, puis Entrée."
+Every sheet function at a glance (✦ = published as an ACE). Click to expand or collapse.,Toutes les fonctions de la feuille en un coup d'œil (✦ = publiée comme ACE). Cliquez pour déplier ou replier.
+Field button,Bouton de champ
+Flags,Drapeaux
+From enum,Depuis l'enum
+Group under heading,Grouper sous un intitulé
+"How this variable's field LOOKS in the Inspector - pickers, flags, layer grids... Plain fields need no choice here.","L'APPARENCE du champ de cette variable dans l'Inspecteur - sélecteurs, drapeaux, grilles de calques... Les champs simples n'ont rien à choisir ici."
+Info note,Note d'information
+"Inspector grouping, conditional show/lock, an on-changed callback, clamp, read-only - for variables that reference other variables or functions.","Regroupement dans l'Inspecteur, affichage/verrouillage conditionnel, rappel on-changed, limitation, lecture seule - pour les variables qui référencent d'autres variables ou fonctions."
+Inspector look,Apparence dans l'Inspecteur
+Inspector preview,Aperçu de l'Inspecteur
+Inspector section header (e.g. Combat),Intitulé de section de l'Inspecteur (ex. Combat)
+Lock unless,Verrouiller sauf si
+"Make this sheet's published verbs (its exposed ƒ functions) available in EVERY sheet's picker, node-targeted at $<ClassName>. Extract actions to a function first (right-click an event), then teach it here.","Rendez les verbes publiés de cette feuille (ses fonctions ƒ exposées) disponibles dans le sélecteur de TOUTES les feuilles, ciblés sur le nœud $<ClassName>. Extrayez d'abord des actions vers une fonction (clic droit sur un événement), puis enseignez-la ici."
+Match Editor (default),Éditeur de match (par défaut)
+Multiline (String: big text box),Multiligne (String : grande zone de texte)
+"No alpha (Color: solid RGB, no transparency)","Sans alpha (Color : RVB opaque, sans transparence)"
+No lower limit,Pas de limite basse
+No upper limit,Pas de limite haute
+On changed,À la modification
+On ready,À l'initialisation (ready)
+"On: a designer can tweak this per-instance in the Inspector (@export var).
+Off: internal script state - a plain private var (the default for a new variable).","Activé : un designer peut l'ajuster par instance dans l'Inspecteur (@export var).
+Désactivé : état interne du script - une simple var privée (le défaut pour une nouvelle variable)."
+"On: compiles to @onready var - the Default is a GDScript EXPRESSION evaluated when the node enters the tree (e.g. $Player, get_node(""UI/Score"")), not a literal.
+Use it to grab a node reference once the scene is ready.","Activé : compile en @onready var - le Défaut est une EXPRESSION GDScript évaluée quand le nœud entre dans l'arbre (ex. $Player, get_node(""UI/Score"")), pas un littéral.
+Utilisez-le pour saisir une référence de nœud une fois la scène prête."
+"One column per entry: name:type (String, int, float, bool, color for a swatch, or enum(a|b|c) for a dropdown).
+Each Array element becomes a row with these cells.","Une colonne par entrée : nom:type (String, int, float, bool, color pour un échantillon, ou enum(a|b|c) pour une liste déroulante).
+Chaque élément de l'Array devient une ligne avec ces cellules."
+Optional Inspector polish for exported globals - everything compiles to plain Godot annotations.,Finitions optionnelles de l'Inspecteur pour les globales exportées - tout compile en annotations Godot ordinaires.
+Options (combo),Options (combo)
+Pick the Inspector look from picture tiles instead of the list.,Choisissez l'apparence dans l'Inspecteur via des vignettes plutôt que la liste.
+Read-only,Lecture seule
+"Renders a small button with this field that calls the named sheet function.
+Needs a @tool sheet to act in-editor. Label optional (defaults to the function name).","Affiche un petit bouton avec ce champ qui appelle la fonction de feuille nommée.
+Nécessite une feuille @tool pour agir dans l'éditeur. Libellé optionnel (nom de la fonction par défaut)."
+Required (warn in the Inspector while unset),Requis (avertit dans l'Inspecteur tant que non défini)
+Save Studio…,Enregistrer le Studio…
+"Scaffold a ready-to-edit behaviour script in res://eventsheet_addons/ - its signals become triggers, methods become actions/conditions, and @export vars become properties, all auto-discovered as custom ACEs.","Génère un script de comportement prêt à modifier dans res://eventsheet_addons/ - ses signaux deviennent des déclencheurs, ses méthodes des actions/conditions, et ses @export var des propriétés, le tout auto-découvert comme ACE personnalisés."
+Section header,Intitulé de section
+"See the WHOLE sheet's Inspector as one live view - every exported variable with its decor, grouping, and widget, exactly as Godot will show it.","Voyez l'Inspecteur de TOUTE la feuille en une vue en direct - chaque variable exportée avec son décor, son regroupement et son widget, exactement comme Godot l'affichera."
+Show as,Afficher comme
+Show if,Afficher si
+Shown after the number in the Inspector (suffix:px).,Affiché après le nombre dans l'Inspecteur (suffixe:px).
+"Shows a red warning above the field until a value is assigned
+(a Resource left empty, a String left blank). Editor-only.","Affiche un avertissement rouge au-dessus du champ tant qu'aucune valeur n'est assignée
+(une Resource laissée vide, une String laissée blanche). Éditeur uniquement."
+Slider extras,Extras du curseur
+"Start editing this sheet here. From then on, Save (Ctrl+S) updates the file - or use Save As… to keep the original and save a copy.","Commencez à modifier cette feuille ici. Ensuite, Enregistrer (Ctrl+S) met à jour le fichier - ou utilisez Enregistrer sous… pour garder l'original et sauvegarder une copie."
+Sub-heading,Sous-intitulé
+"Swap the Inspector field for a richer drawer (dial, swatches, curve…).
+Graceful: a plain field without the editor plugin (parity preserved).","Remplacez le champ de l'Inspecteur par un widget plus riche (cadran, échantillons, courbe…).
+Dégradé élégant : un champ simple sans le plugin d'éditeur (parité préservée)."
+Table columns,Colonnes du tableau
+"The Inspector calls this function while the property is edited and shows
+the returned message above the field. Needs a @tool sheet to run in-editor.","L'Inspecteur appelle cette fonction pendant la modification de la propriété et affiche
+le message renvoyé au-dessus du champ. Nécessite une feuille @tool pour tourner dans l'éditeur."
+The slider stops at max but typing a bigger number is allowed (or_greater).,Le curseur s'arrête au max mais saisir un nombre plus grand est permis (or_greater).
+"The variable's type. For a node reference, type the node's class (Sprite2D, Label, Area2D…) or leave Variant.","Le type de la variable. Pour une référence de nœud, tapez la classe du nœud (Sprite2D, Label, Area2D…) ou laissez Variant."
+"Turn the MCP server (AI-assistant tools) on/off. When off, connected AI clients see no tools and can't read or change your sheets. Takes effect live - no reconnect needed.","Active/désactive le serveur MCP (outils d'assistant IA). Désactivé, les clients IA connectés ne voient aucun outil et ne peuvent ni lire ni modifier vos feuilles. Effet immédiat - aucune reconnexion nécessaire."
+Typing below min is allowed (or_less).,Saisir sous le min est permis (or_less).
+Validate with,Valider avec
+"Write this sheet's plain, standalone GDScript to a file you own. No plugin dependency - proof you can leave the addon anytime.",Écrit le GDScript autonome et ordinaire de cette feuille dans un fichier qui vous appartient. Aucune dépendance au plugin - la preuve que vous pouvez quitter l'extension à tout moment.
+accent label above (e.g. Combat #e06666),intitulé accentué au-dessus (ex. Combat #e06666)
+bool variable (hidden when false),variable bool (masqué quand false)
+bool variable (read-only when false),variable bool (lecture seule quand false)
+"columns, e.g. item:String, count:int, rare:bool","colonnes, ex. item:String, count:int, rare:bool"
+"comma-separated, e.g. easy, normal, hard (String only)","séparées par des virgules, ex. easy, normal, hard (String uniquement)"
+"function and button label, e.g. reroll_stats Reroll","fonction et libellé du bouton, ex. reroll_stats Relancer"
+grey hint shown when the field is empty,indication grise affichée quand le champ est vide
+"min, max, step (numeric: slider)","min, max, pas (numérique : curseur)"
+nested section under the group (e.g. Melee),section imbriquée sous le groupe (ex. Mêlée)
+note panel above (e.g. Shared resource - edits affect every user.),panneau de note au-dessus (ex. Ressource partagée - les modifications affectent tous les utilisateurs.)
+sheet function called after assignment,fonction de feuille appelée après l'assignation
+sheet function returning a warning String (empty = valid),fonction de feuille renvoyant une String d'avertissement (vide = valide)
+"type - e.g. Node2D, Label, Sprite2D (or Variant for any)","type - ex. Node2D, Label, Sprite2D (ou Variant pour tout)"
+"unit, e.g. px","unité, ex. px"
+what this variable is for - shown as its description in the Inspector,à quoi sert cette variable - affiché comme sa description dans l'Inspecteur
+"▸  Advanced (grouping, conditions, clamp…)","▸  Avancé (regroupement, conditions, limitation…)"
+"▸  More options (range, drawer, grouping…)","▸  Plus d'options (plage, widget, regroupement…)"

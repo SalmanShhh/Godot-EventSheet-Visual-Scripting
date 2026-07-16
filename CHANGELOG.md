@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - the bundled translations catch up with the editor
+
+- **French, Spanish, German, and Italian each gained 83 new translated strings** (291 keys per language,
+  fully filled), covering everything the editor grew since the last pass: the variable dialog's Inspector
+  polish (grouping, show/lock conditions, clamp, validation, drawers, table columns, required fields), the
+  Inspector look picker and preview, the quick-add bar, the functions strip, the MCP toggle, Teach a Verb,
+  and the export/scaffold descriptions. Extracted with the shipped `tools/extract_editor_strings.gd`;
+  Godot's own file-dialog vocabulary, theme preset names, and raw type names are deliberately left to the
+  engine/untranslated.
+
 ### Added - language blocks read slightly distinct from regular events
 
 - **Rows that render a GDScript construct - a data-class holder, a methods-class, a host binding, a lifted
