@@ -442,3 +442,47 @@ Trigger Badge Foreground Color,Vordergrundfarbe des Trigger-Badges
 Value Highlight Color,Werthervorhebungs-Farbe
 Vertical Padding,Vertikaler Innenabstand
 Width reserved for the trigger/condition badge column.,Für die Trigger-/Bedingungs-Badge-Spalte reservierte Breite.
+Add Comment Sub-Event,Kommentar-Unterereignis hinzufügen
+Add GDScript Action,GDScript-Aktion hinzufügen
+Add Match To Actions…,Match zu Aktionen hinzufügen…
+Add Pick Filter (For Each)…,Auswahlfilter hinzufügen (Für jedes)…
+Add Sub-Condition,Unterbedingung hinzufügen
+Add Sub-Event,Unterereignis hinzufügen
+Attach To Event Above,An Ereignis darüber anhängen
+Clear Else,Sonst (Else) entfernen
+Clear Else-If,Sonst-Wenn (Else-If) entfernen
+Close Group,Gruppe schließen
+Comment,Kommentar
+Convert to AND Block,In UND-Block umwandeln
+Convert to OR Block,In ODER-Block umwandeln
+Copy as Text,Als Text kopieren
+Cut,Ausschneiden
+Delete,Löschen
+Disable / Enable Selection,Auswahl deaktivieren / aktivieren
+Disable Row,Zeile deaktivieren
+Duplicate,Duplizieren
+Duplicate Selection,Auswahl duplizieren
+Edit Comment…,Kommentar bearbeiten…
+Edit Description…,Beschreibung bearbeiten…
+Enable Row,Zeile aktivieren
+Enum,Enum
+Event Above,Ereignis darüber
+Event Below,Ereignis darunter
+Find Usages (project),Verwendungen suchen (Projekt)
+GDScript Block,GDScript-Block
+Group,Gruppe
+Group Color…,Gruppenfarbe…
+Group Selection into New Group,Auswahl in neue Gruppe gruppieren
+Insert,Einfügen
+Make Else,Zu Sonst (Else) machen
+Make Else-If,Zu Sonst-Wenn (Else-If) machen
+More,Mehr
+Open / Close Group,Gruppe öffnen / schließen
+Open Group,Gruppe öffnen
+Open in Split,In geteilter Ansicht öffnen
+Runtime Toggleable,Zur Laufzeit umschaltbar
+Save Selection as Snippet…,Auswahl als Snippet speichern…
+Scope Actions To Node…,Aktionen auf Node begrenzen…
+Set Breakpoint Condition…,Haltepunkt-Bedingung festlegen…
+Signal Handler,Signal-Handler
+Variable,Variable

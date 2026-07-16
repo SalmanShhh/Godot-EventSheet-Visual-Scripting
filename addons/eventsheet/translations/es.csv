@@ -442,3 +442,47 @@ Trigger Badge Foreground Color,Color de primer plano de la insignia de disparado
 Value Highlight Color,Color de resaltado de valores
 Vertical Padding,Relleno vertical
 Width reserved for the trigger/condition badge column.,Ancho reservado para la columna de insignias de disparador/condición.
+Add Comment Sub-Event,Añadir subevento de comentario
+Add GDScript Action,Añadir acción GDScript
+Add Match To Actions…,Añadir un match a las acciones…
+Add Pick Filter (For Each)…,Añadir filtro de selección (Para cada)…
+Add Sub-Condition,Añadir subcondición
+Add Sub-Event,Añadir subevento
+Attach To Event Above,Adjuntar al evento de arriba
+Clear Else,Quitar el Si no (Else)
+Clear Else-If,Quitar el Si no-Si (Else-If)
+Close Group,Cerrar el grupo
+Comment,Comentario
+Convert to AND Block,Convertir en bloque Y
+Convert to OR Block,Convertir en bloque O
+Copy as Text,Copiar como texto
+Cut,Cortar
+Delete,Eliminar
+Disable / Enable Selection,Desactivar / Activar la selección
+Disable Row,Desactivar la fila
+Duplicate,Duplicar
+Duplicate Selection,Duplicar la selección
+Edit Comment…,Editar comentario…
+Edit Description…,Editar descripción…
+Enable Row,Activar la fila
+Enum,Enum
+Event Above,Evento arriba
+Event Below,Evento abajo
+Find Usages (project),Buscar usos (proyecto)
+GDScript Block,Bloque GDScript
+Group,Grupo
+Group Color…,Color del grupo…
+Group Selection into New Group,Agrupar la selección en un grupo nuevo
+Insert,Insertar
+Make Else,Convertir en Si no (Else)
+Make Else-If,Convertir en Si no-Si (Else-If)
+More,Más
+Open / Close Group,Abrir / Cerrar el grupo
+Open Group,Abrir el grupo
+Open in Split,Abrir en vista dividida
+Runtime Toggleable,Conmutable en ejecución
+Save Selection as Snippet…,Guardar la selección como fragmento…
+Scope Actions To Node…,Limitar las acciones a un nodo…
+Set Breakpoint Condition…,Definir la condición del punto de interrupción…
+Signal Handler,Manejador de señal
+Variable,Variable

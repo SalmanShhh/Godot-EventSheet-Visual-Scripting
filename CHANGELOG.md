@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - the Else block is now front-and-centre, like Construct
+
+- **"Make Else" and "Make Else-If" now sit top-level in an event's right-click menu - in Simple Mode too.**
+  The Else block itself was always supported (it compiles to a real `else:` / `elif:` chain, reads back with
+  the "Else" badge in the condition lane, and clicking again clears it), but the gesture was buried in the
+  Expert-only More ▸ submenu, so a Construct user in Simple Mode - the first-run default - could never find
+  it. The labels also flip to the live state ("Clear Else" / "Clear Else-If" when the selection already
+  carries that mode), matching the Disable Row / OR-block idiom. And since the row context menu is rebuilt
+  per right-click, its labels never reached the translators - the extraction tool now builds it in both
+  modes and all relabel states, and all 44 surfaced menu labels are translated (fr/es/de/it, 469 keys each).
+
 ### Added - Godot documentation comments on functions (with a BBCode field)
 
 - **A function's Godot documentation comment (the `##` block above it) now round-trips as an editable doc,

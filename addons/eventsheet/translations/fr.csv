@@ -442,3 +442,47 @@ Trigger Badge Foreground Color,Couleur de premier plan du badge de déclencheur
 Value Highlight Color,Couleur de surlignage des valeurs
 Vertical Padding,Marge verticale
 Width reserved for the trigger/condition badge column.,Largeur réservée à la colonne du badge de déclencheur/condition.
+Add Comment Sub-Event,Ajouter un sous-événement commentaire
+Add GDScript Action,Ajouter une action GDScript
+Add Match To Actions…,Ajouter un match aux actions…
+Add Pick Filter (For Each)…,Ajouter un filtre de sélection (Pour chaque)…
+Add Sub-Condition,Ajouter une sous-condition
+Add Sub-Event,Ajouter un sous-événement
+Attach To Event Above,Attacher à l'événement au-dessus
+Clear Else,Retirer le Sinon (Else)
+Clear Else-If,Retirer le Sinon-Si (Else-If)
+Close Group,Fermer le groupe
+Comment,Commentaire
+Convert to AND Block,Convertir en bloc ET
+Convert to OR Block,Convertir en bloc OU
+Copy as Text,Copier comme texte
+Cut,Couper
+Delete,Supprimer
+Disable / Enable Selection,Désactiver / Activer la sélection
+Disable Row,Désactiver la ligne
+Duplicate,Dupliquer
+Duplicate Selection,Dupliquer la sélection
+Edit Comment…,Modifier le commentaire…
+Edit Description…,Modifier la description…
+Enable Row,Activer la ligne
+Enum,Enum
+Event Above,Événement au-dessus
+Event Below,Événement en dessous
+Find Usages (project),Chercher les utilisations (projet)
+GDScript Block,Bloc GDScript
+Group,Groupe
+Group Color…,Couleur du groupe…
+Group Selection into New Group,Grouper la sélection dans un nouveau groupe
+Insert,Insérer
+Make Else,Transformer en Sinon (Else)
+Make Else-If,Transformer en Sinon-Si (Else-If)
+More,Plus
+Open / Close Group,Ouvrir / Fermer le groupe
+Open Group,Ouvrir le groupe
+Open in Split,Ouvrir dans une vue scindée
+Runtime Toggleable,Activable à l'exécution
+Save Selection as Snippet…,Enregistrer la sélection comme extrait…
+Scope Actions To Node…,Restreindre les actions à un nœud…
+Set Breakpoint Condition…,Définir la condition du point d'arrêt…
+Signal Handler,Gestionnaire de signal
+Variable,Variable

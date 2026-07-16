@@ -112,6 +112,11 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	if is_event:
 		menu.add_item("Add Sub-Event", _dock.ROW_MENU_ADD_SUB_EVENT)
 		menu.add_item("Convert to OR Block", _dock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
+		# The event-sheet Else block, top-level like the other event transforms (a C3 reflex, so it is
+		# NOT gated behind Expert mode). Clicking again clears it; _configure_context_menu relabels to
+		# the live state ("Clear Else" / "Clear Else-If").
+		menu.add_item("Make Else", _dock.ROW_MENU_MAKE_ELSE)
+		menu.add_item("Make Else-If", _dock.ROW_MENU_MAKE_ELIF)
 	elif is_group:
 		menu.add_item("Open / Close Group", _dock.ROW_MENU_TOGGLE_GROUP_FOLD)
 		menu.add_item("Edit Description…", _dock.ROW_MENU_EDIT_GROUP_DESC)
@@ -203,8 +208,7 @@ func _build_row_more_submenu(is_event: bool) -> void:
 	# and snippet reuse so a beginner's right-click stays short and unintimidating.
 	if is_event and not _dock._simple_mode:
 		m.add_item("Add Sub-Condition", _dock.ROW_MENU_ADD_SUB_CONDITION)
-		m.add_item("Make Else", _dock.ROW_MENU_MAKE_ELSE)
-		m.add_item("Make Else-If", _dock.ROW_MENU_MAKE_ELIF)
+		# Make Else / Make Else-If moved to the TOP-LEVEL event menu (a C3 reflex, Simple Mode included).
 		m.add_item("Extract All Actions to Function…", _dock.ROW_MENU_EXTRACT_GDSCRIPT_FN)
 		m.add_item("Add Comment Sub-Event", _dock.ROW_MENU_ADD_COMMENT_SUB_EVENT)
 		m.add_item("Add GDScript Action", _dock.ROW_MENU_ADD_GDSCRIPT_ACTION)
@@ -262,6 +266,24 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 						else "Convert to OR Block"
 					)
 				)
+		# Make Else / Make Else-If relabel to the live state: when every selected event already carries
+		# that mode, the click clears it (the toggle in _set_context_else_mode), so say so.
+		var else_index: int = menu.get_item_index(_dock.ROW_MENU_MAKE_ELSE)
+		var elif_index: int = menu.get_item_index(_dock.ROW_MENU_MAKE_ELIF)
+		if else_index >= 0 or elif_index >= 0:
+			var else_events: Array[EventRow] = _dock._get_selected_event_rows_from_context()
+			var has_else_events: bool = not else_events.is_empty()
+			var all_else: bool = has_else_events
+			var all_elif: bool = has_else_events
+			for else_event: EventRow in else_events:
+				all_else = all_else and else_event.else_mode == EventRow.ElseMode.ELSE
+				all_elif = all_elif and else_event.else_mode == EventRow.ElseMode.ELIF
+			if else_index >= 0:
+				menu.set_item_disabled(else_index, not has_else_events)
+				menu.set_item_text(else_index, "Clear Else" if all_else else "Make Else")
+			if elif_index >= 0:
+				menu.set_item_disabled(elif_index, not has_else_events)
+				menu.set_item_text(elif_index, "Clear Else-If" if all_elif else "Make Else-If")
 		var sub_condition_index: int = menu.get_item_index(_dock.ROW_MENU_ADD_SUB_CONDITION)
 		if sub_condition_index >= 0:
 			var context_event: EventRow = _dock._context_row.source_resource as EventRow if _dock._context_row != null else null

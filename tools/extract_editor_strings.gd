@@ -17,6 +17,7 @@ func _init() -> void:
 	_collect(dock, strings)
 	_collect_drawn_tables(strings)
 	_collect_theme_editor(dock, strings)
+	_collect_context_menus(dock, strings)
 	var keys: Array = strings.keys()
 	keys.sort()
 	var out_dir: String = "res://eventsheet_translations"
@@ -63,6 +64,36 @@ func _collect(node: Node, strings: Dictionary) -> void:
 			_remember(strings, (node as PopupMenu).get_item_text(index))
 	for child: Node in node.get_children(true):
 		_collect(child, strings)
+
+
+## The ROW context menu (and its Insert/More submenus) is rebuilt per right-click, so at extraction time
+## those PopupMenus are empty - build it here for a representative EVENT row, in BOTH Simple and Expert
+## modes and both live-state relabels (Clear Else / Enable Row ...), so every context-menu label surfaces.
+func _collect_context_menus(dock: Control, strings: Dictionary) -> void:
+	var event_row: EventRow = EventRow.new()
+	var probe: EventRowData = EventRowData.new()
+	probe.row_type = EventRowData.RowType.EVENT
+	probe.source_resource = event_row
+	dock._context_row = probe
+	for simple: bool in [true, false]:
+		dock._simple_mode = simple
+		for mode: int in [EventRow.ElseMode.NONE, EventRow.ElseMode.ELSE, EventRow.ElseMode.ELIF]:
+			event_row.else_mode = mode
+			dock._build_row_context_menu(probe)
+			dock._configure_context_menu(dock._row_context_menu)
+			for menu: PopupMenu in [dock._row_context_menu, dock._row_insert_submenu, dock._row_more_submenu]:
+				if menu == null:
+					continue
+				for index: int in range(menu.item_count):
+					_remember(strings, menu.get_item_text(index))
+	# The GROUP and COMMENT row variants carry their own type-specific leading items.
+	for row_type: int in [EventRowData.RowType.GROUP, EventRowData.RowType.COMMENT]:
+		var typed_probe: EventRowData = EventRowData.new()
+		typed_probe.row_type = row_type
+		dock._context_row = typed_probe
+		dock._build_row_context_menu(typed_probe)
+		for index: int in range(dock._row_context_menu.item_count):
+			_remember(strings, dock._row_context_menu.get_item_text(index))
 
 
 ## The Theme Editor is a lazy dialog (built only when opened), so it is not in the dock's tree at
