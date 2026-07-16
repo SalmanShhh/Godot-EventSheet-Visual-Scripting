@@ -1592,6 +1592,28 @@ static func _fingerprint_rows(rows: Array, counts: Dictionary) -> void:
 			_fingerprint_rows(nested.events if not nested.events.is_empty() else nested.rows, counts)
 
 
+## The folder icon prefixing every group title: the editor theme's Folder texture when the editor is
+## live, else a tiny generated folder shape (cached) - so the file-manager cue survives harnesses,
+## exports, and headless runs where EditorInterface is absent.
+static var _folder_icon_cache: Texture2D = null
+
+
+static func _folder_icon() -> Texture2D:
+	if _folder_icon_cache != null:
+		return _folder_icon_cache
+	var themed: Texture2D = ACEPickerDialog.editor_icon("Folder")
+	if themed != null:
+		_folder_icon_cache = themed
+		return themed
+	var image: Image = Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0, 0, 0, 0))
+	var folder_tone: Color = Color("#e8c06a")
+	image.fill_rect(Rect2i(1, 3, 7, 3), folder_tone)
+	image.fill_rect(Rect2i(1, 5, 14, 9), folder_tone)
+	_folder_icon_cache = ImageTexture.create_from_image(image)
+	return _folder_icon_cache
+
+
 func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var row_data := EventRowData.new()
@@ -1605,7 +1627,9 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
 	# The group's distinctive chrome (accent bar + tinted background, drawn from row_type == GROUP)
 	# already reads unmistakably as a group, so the old leading "Group" text badge was pure clutter -
-	# the header is now just the inline-editable title (plus an optional description line).
+	# the header is a FOLDER icon (the editor-theme Folder texture, the file-manager idiom) plus the
+	# inline-editable title (and an optional description line). Headless the icon resolves null and
+	# simply does not draw.
 	row_data.spans = [
 		_make_span(
 			_viewport._group_name(group),
@@ -1614,6 +1638,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 				"editable": true,
 				"edit_kind": "group_name",
 				"group_title": true,
+				"object_icon": _folder_icon(),
 				"text_color": event_style.group_title_color
 			}
 		)
