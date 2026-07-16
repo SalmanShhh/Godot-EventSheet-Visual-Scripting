@@ -106,6 +106,10 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	var bbcode_comment: CommentRow = CommentRow.new()
 	bbcode_comment.text = "[b]Bold[/b], [i]italic[/i] and [color=orange]colored[/color] BBCode"
 	sheet.events.append(bbcode_comment)
+	# A language block (a pure-data inner class) so the language_block_accent_color token shows live.
+	var language_sample: RawCodeRow = RawCodeRow.new()
+	language_sample.code = "class Sample:\n\tvar speed: float = 1.0"
+	sheet.events.append(language_sample)
 	var disabled_event: EventRow = EventRow.new()
 	disabled_event.trigger_provider_id = "Core"
 	disabled_event.trigger_id = "OnReady"
@@ -156,6 +160,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"value_highlight_color": "Parameter values (numbers, strings) highlighted inside ACE text.",
 	"cell_hover_color": "Tint over a single condition/action cell under the mouse.",
 	"behavior_accent_color": "The soft-purple 'this is a behavior' accent (banner, region default).",
+	"language_block_accent_color": "The stripe + wash on language blocks (a data class, a host binding, a switch case) so they read as code structure, not regular events.",
 	"event_corner_radius": "Corner roundness of the event block, in pixels (0 = square).",
 	"cell_corner_radius": "Corner roundness of individual condition/action cells.",
 	"group_corner_radius": "Corner roundness of group rows (0 = square bar).",

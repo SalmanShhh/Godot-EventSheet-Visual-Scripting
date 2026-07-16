@@ -46,6 +46,10 @@ extends Resource
 ## Accent for behavior sheets (identity banner / tab badge) - soft purple, the event-sheet-style
 ## "this is a behavior" color language.
 @export var behavior_accent_color: Color = Color("#8a7bd8")
+## Accent for LANGUAGE blocks - rows that render a GDScript construct (a data-class holder, a
+## methods-class, a host binding, a lifted switch case, a collapsed function) rather than a regular
+## ACE event. Drawn as a quiet left stripe + faint wash so the distinction reads at a glance.
+@export var language_block_accent_color: Color = EventSheetPalette.COLOR_LANGUAGE_BLOCK
 ## Corner roundness of the event BLOCK, in pixels. The LEFT side (including the always-
 ## rounded bottom-left) uses this full radius; the right side uses half of it, so blocks
 ## read as opening toward their actions. 0 = the classic square look.

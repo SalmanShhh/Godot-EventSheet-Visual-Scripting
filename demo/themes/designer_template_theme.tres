@@ -16,6 +16,7 @@ badge_extra_width = 10
 
 [sub_resource type="Resource" id="Resource_event"]
 script = ExtResource("2_event_style")
+language_block_accent_color = Color(0.5607843, 0.62352943, 0.8392157, 1)
 sheet_background_color = Color(0.12, 0.13, 0.16, 1)
 row_background_color = Color(0.12, 0.13, 0.16, 1)
 row_background_alt_color = Color(0.15, 0.16, 0.2, 1)

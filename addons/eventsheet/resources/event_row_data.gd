@@ -34,3 +34,8 @@ var bookmark_enabled: bool = false
 var disabled: bool = false
 # Per-row custom tint (event-sheet-style colored comments); alpha 0 = use the theme color.
 var custom_color: Color = Color(0, 0, 0, 0)
+# True on a row that renders a LANGUAGE construct (a data-class holder, a methods-class, a host binding,
+# a lifted switch case, a collapsed function...) rather than a regular ACE event. The renderer marks such
+# rows with a quiet indigo left stripe + faint wash so the distinction is visible at a glance without
+# dimming the row. Stamp via EventSheets.mark_language_block so custom blocks get the same cue for free.
+var language_block: bool = false

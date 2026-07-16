@@ -1020,6 +1020,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		# (host is baked into the file), so the class stays read-only here - double-click opens the code
 		# editor to change it (the RawCodeRow double-click at viewport_input.gd), keeping the byte round-trip.
 		row_data.line_count = 1
+		row_data.language_block = true  # generated host boilerplate - language structure, not an event
 		row_data.spans = [
 			_make_span("Host binding", SemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
@@ -1050,6 +1051,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var shell: Dictionary = define_shell_info(raw_row.code)
 	if not shell.is_empty():
 		row_data.line_count = 1  # visual collapse only - the underlying lines are all still there
+		row_data.language_block = true  # a published-verb annotation shell - language structure
 		var badge_colors: Dictionary = {
 			"action": [EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG],
 			"condition": [EventSheetPalette.COLOR_ACE_CONDITION_BADGE_BG, EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG],
@@ -1111,6 +1113,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var function_info: Dictionary = function_body_info(raw_row.code)
 	if not function_info.is_empty():
 		row_data.line_count = 1
+		row_data.language_block = true  # a collapsed function header - language structure, not an event
 		var function_spans: Array[SemanticSpan] = [
 			_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
@@ -1228,6 +1231,7 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	row_data.line_count = 1  # visual collapse only - the underlying lines are all still there
 	var data_class_name_str: String = str(model.get("class_name"))
 	row_data.row_uid = "data_class_%s" % (data_class_name_str if not data_class_name_str.is_empty() else str(raw_row.get_instance_id()))
+	row_data.language_block = true  # a class declaration, not a regular ACE event - gets the language stripe
 	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	var body: Array = model.get("body", [])
 	# Count what will render: every field plus every non-blank @export / const / comment line (all body
@@ -1301,6 +1305,7 @@ func _build_data_class_field_row(raw_row: RawCodeRow, class_name_str: String, fi
 	row_data.source_resource = null
 	row_data.line_count = 1
 	row_data.row_uid = "data_class_field_%s_%d" % [class_name_str, field_index]
+	row_data.language_block = true  # a field of a class block - carries the language stripe like its header
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
 	# Condition cell: what the field IS (name : type).
@@ -1352,6 +1357,7 @@ func _build_data_class_member_row(class_name_str: String, body_index: int, text:
 	row_data.source_resource = null
 	row_data.line_count = 1
 	row_data.row_uid = "data_class_member_%s_%d" % [class_name_str, body_index]
+	row_data.language_block = true  # a member of a class block - carries the language stripe like its header
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	row_data.spans = [
 		_make_span(text.strip_edges(), SemanticSpan.SpanType.VALUE, {
@@ -1378,6 +1384,7 @@ func _build_methods_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	row_data.line_count = 1
 	var class_name_str: String = str(model.get("class_name"))
 	row_data.row_uid = "methods_class_%s" % (class_name_str if not class_name_str.is_empty() else str(raw_row.get_instance_id()))
+	row_data.language_block = true  # a class declaration, not a regular ACE event - gets the language stripe
 	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	var body: Array = model.get("body", [])
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
@@ -1462,6 +1469,7 @@ func _build_class_method_row(class_name_str: String, child_index: int, method_li
 	row_data.source_resource = null
 	row_data.line_count = 1
 	row_data.row_uid = "methods_class_method_%s_%d" % [class_name_str, child_index]
+	row_data.language_block = true  # a method chip of a class block - carries the language stripe
 	var header_regex: RegEx = RegEx.new()
 	header_regex.compile("^(static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?: -> (.+))?:$")
 	var header_match: RegExMatch = header_regex.search(method_lines[0])
@@ -1715,7 +1723,9 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 			var body: PackedStringArray = _match_case_summary_lines(match_case.events)
 			if body.is_empty():
 				body = PackedStringArray(["pass"])
-			rows.append(_build_condition_action_row(str(match_case.pattern).strip_edges(), body, indent, match_row))
+			var case_row: EventRowData = _build_condition_action_row(str(match_case.pattern).strip_edges(), body, indent, match_row)
+			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
+			rows.append(case_row)
 	return rows
 
 

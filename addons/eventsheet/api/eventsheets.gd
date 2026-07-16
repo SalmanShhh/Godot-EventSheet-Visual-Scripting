@@ -170,6 +170,19 @@ static func build_condition_action_row(condition_text: String, action_lines: Pac
 	return view._row_builder._build_condition_action_row(condition_text, action_lines, indent, source)
 
 
+## Marks a row as a LANGUAGE block - a row that renders a GDScript construct (a class, a switch case, a
+## host binding...) rather than a regular ACE event. The viewport draws such rows with a quiet accent
+## stripe + faint wash (the theme's `language_block_accent_color`), so the distinction reads at a glance
+## without dimming the row. Returns the same row, so it chains:
+## `EventSheets.mark_language_block(EventSheets.build_condition_action_row("case X", lines))`.
+## Use it whenever a Custom Block or a feature renders language structure as event rows - every built-in
+## language block (data class, methods class, switch case, host binding) carries the same mark.
+static func mark_language_block(row: EventRowData) -> EventRowData:
+	if row != null:
+		row.language_block = true
+	return row
+
+
 ## Adds an entry to the Command Palette (Ctrl+P). `action` runs when picked. Re-register
 ## under the same title to replace; unregister_palette_command removes it. Works before
 ## the dock opens - entries appear once a palette exists.

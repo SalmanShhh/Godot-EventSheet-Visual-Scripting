@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - language blocks read slightly distinct from regular events
+
+- **Rows that render a GDScript construct - a data-class holder, a methods-class, a host binding, a lifted
+  switch case, a collapsed function - now carry a quiet indigo left stripe and a faint wash**, so at a glance
+  they read as language structure rather than regular ACE events, without being dimmed. The colour is a
+  proper theme token (`language_block_accent_color` on the event style): the Theme Editor shows it with a
+  live language-block row in its preview, the Godot-theme adapter keeps it readable on light editor themes,
+  and **every bundled theme preset sets its own accent from its palette's violet family** (Dracula purple,
+  Catppuccin lavender, Nord aurora, Gruvbox mauve, Monokai purple, Solarized violet, and friends). Custom
+  Blocks and future language features opt in with one call - the new public API
+  `EventSheets.mark_language_block(row)` chains with `build_condition_action_row`, so anything mapped onto
+  the condition/action model can read as a language block for free.
+
 ### Added - a methods-bearing inner class reads as a foldable class block
 
 - **An inner class that carries methods (not only data) now reads as a foldable, read-only class block**

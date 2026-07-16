@@ -24,6 +24,7 @@ badge_foreground_color = Color(0.5372549, 0.8627451, 0.92156863, 1)
 
 [sub_resource type="Resource" id="Resource_2i8fg"]
 script = ExtResource("2_fhpuu")
+language_block_accent_color = Color(0.7058824, 0.74509805, 0.99607843, 1)
 sheet_background_color = Color(0.11764706, 0.11764706, 0.18039216, 1)
 row_background_color = Color(0.11764706, 0.11764706, 0.18039216, 1)
 row_background_alt_color = Color(0.13725491, 0.13725491, 0.21176471, 1)

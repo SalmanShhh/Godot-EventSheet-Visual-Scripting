@@ -110,6 +110,14 @@ const COLOR_TEMPO_INPUT_FG = Color("#e3f0ff")
 const COLOR_TEMPO_ONCE_BG = Color("#6a54b0")        # ▶ muted violet - runs once
 const COLOR_TEMPO_ONCE_FG = Color("#efe8ff")
 
+# ── Language blocks ───────────────────────────────────────────────────────────
+# A row that renders a LANGUAGE construct (a data-class holder, a methods-class, a host binding, a lifted
+# switch case, a collapsed function...) instead of a regular ACE event: a quiet indigo left stripe + faint
+# wash mark the whole block. Indigo is deliberately clear of every loaded hue - error red, firing cyan,
+# condition teal, action amber, expression magenta, trigger/group purple - so "this row is language
+# structure" stays one hue with one meaning.
+const COLOR_LANGUAGE_BLOCK = Color("#8f9fd6")
+
 # ── Typed value tints ─────────────────────────────────────────────────────────
 # The value-highlight pass in cells tints parameter literals by TYPE so "where are the magic numbers"
 # is a colour question. Numbers keep the shipped value-green (COLOR_VALUE / event_style value colour);

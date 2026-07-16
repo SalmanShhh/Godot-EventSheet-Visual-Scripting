@@ -61,4 +61,11 @@ static func apply(
 	event_style.column_header_actions_color = Color(font_color.r, font_color.g, font_color.b, 0.75)
 	event_style.trigger_badge_background_color = accent
 	event_style.trigger_badge_foreground_color = dark_2
+	# Language blocks keep their own indigo (one hue = one meaning, independent of the accent so they
+	# never read as selection), darkened on a light editor theme so the stripe keeps its contrast.
+	event_style.language_block_accent_color = (
+		EventSheetPalette.COLOR_LANGUAGE_BLOCK.darkened(0.3)
+		if base.get_luminance() > 0.5
+		else EventSheetPalette.COLOR_LANGUAGE_BLOCK
+	)
 	return style

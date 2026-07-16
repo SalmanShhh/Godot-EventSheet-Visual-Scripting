@@ -259,6 +259,17 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(Rect2(border_left, row_rect.position.y, border_width, 1.0), block_border, true)
 		control.draw_rect(Rect2(border_left, row_rect.end.y - 1.0, border_width, 1.0), block_border, true)
 	_draw_indent_guides(control, row_rect, row_data.indent)
+	if row_data.language_block:
+		# A LANGUAGE block (a data-class holder, a methods-class, a host binding, a lifted switch case...)
+		# reads as an event row but is not a regular ACE event: a quiet indigo left stripe + faint wash mark
+		# the whole block without dimming it. Error / firing stripes below draw over it, so they still win.
+		var language_accent: Color = (
+			event_style.language_block_accent_color
+			if event_style != null
+			else EventSheetPalette.COLOR_LANGUAGE_BLOCK
+		)
+		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), Color(language_accent.r, language_accent.g, language_accent.b, 0.75), true)
+		control.draw_rect(row_rect, Color(language_accent.r, language_accent.g, language_accent.b, 0.05), true)
 	if not row_data.error_message.is_empty():
 		# Error → row deep-link: a red left stripe + faint wash flag the offending row (the
 		# message shows in the row tooltip). A fixed error red - not yet a theme token.
