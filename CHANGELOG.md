@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - the tempo badges are crisp vector marks now
+
+- **The trigger and every-tick badges (and the input/signal ones) draw as vector art** instead
+  of font glyphs: a refresh loop with an arrowhead for every-tick, a play triangle for
+  run-once, a keycap for input, and a clean arrow for signals. Font glyphs like the old
+  "⟳"/"➜" rendered fuzzy and differently per system font; the new marks scale with the badge
+  and look identical everywhere. Colours and the tempo language are unchanged, and any badge
+  without dedicated art still draws its text.
+
 ### Added - a draggable object column inside each lane (the C3 sub-lane)
 
 - **The gap between an object name and its display text is now a draggable divider** - in the

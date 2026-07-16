@@ -849,6 +849,10 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 	if badge_style in ["trigger", "negated"]:
 		var radius: float = min(badge_rect.size.x, badge_rect.size.y) * 0.45
 		control.draw_circle(badge_rect.get_center(), radius, badge_bg)
+		# Tempo glyphs draw as crisp vector art (font glyphs like ⟳/➜ render fuzzy and vary
+		# by system font); anything without dedicated art falls through to the text path.
+		if badge_style == "trigger" and _draw_tempo_glyph(control, badge_rect.get_center(), radius, span.text, badge_fg):
+			return
 	else:
 		var style: StyleBoxFlat = StyleBoxFlat.new()
 		style.bg_color = badge_bg
@@ -874,6 +878,64 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 		badge_font_size,
 		badge_fg
 	)
+
+
+## Vector art for the tempo badge glyphs, keyed by the glyph char the tempo classifier picked
+## (⟳ every tick, ▶ once, ⌨ input, ➜ signal). Antialiased primitives scaled to the badge
+## radius, so every size and font renders the same crisp mark. Returns false for unknown
+## glyphs - the caller then draws the text as before.
+func _draw_tempo_glyph(control: Control, center: Vector2, radius: float, glyph: String, color: Color) -> bool:
+	match glyph:
+		"⟳":
+			# Refresh loop: a 300-degree arc with a tangential arrowhead closing the circle.
+			var arc_radius: float = radius * 0.58
+			var line_width: float = maxf(radius * 0.22, 1.2)
+			var start_angle: float = -PI * 0.30
+			var end_angle: float = start_angle + PI * 1.66
+			control.draw_arc(center, arc_radius, start_angle, end_angle, 20, color, line_width, true)
+			var tip_angle: float = end_angle
+			var tip_base: Vector2 = center + Vector2(cos(tip_angle), sin(tip_angle)) * arc_radius
+			var tangent: Vector2 = Vector2(-sin(tip_angle), cos(tip_angle))
+			var outward: Vector2 = Vector2(cos(tip_angle), sin(tip_angle))
+			var head_length: float = radius * 0.52
+			var head_width: float = radius * 0.34
+			control.draw_colored_polygon(PackedVector2Array([
+				tip_base + tangent * head_length,
+				tip_base + outward * head_width,
+				tip_base - outward * head_width,
+			]), color)
+			return true
+		"▶":
+			# Play triangle, optically centred (nudged right so the mass sits in the middle).
+			var half_height: float = radius * 0.52
+			var left_x: float = center.x - radius * 0.34
+			control.draw_colored_polygon(PackedVector2Array([
+				Vector2(left_x, center.y - half_height),
+				Vector2(center.x + radius * 0.56, center.y),
+				Vector2(left_x, center.y + half_height),
+			]), color)
+			return true
+		"➜":
+			# Straight arrow: shaft + head, the "a signal fired" mark.
+			var shaft_left: Vector2 = center + Vector2(-radius * 0.52, 0.0)
+			var head_base_x: float = center.x + radius * 0.10
+			var line_width: float = maxf(radius * 0.24, 1.2)
+			control.draw_line(shaft_left, Vector2(head_base_x + 1.0, center.y), color, line_width, true)
+			control.draw_colored_polygon(PackedVector2Array([
+				Vector2(center.x + radius * 0.62, center.y),
+				Vector2(head_base_x, center.y - radius * 0.38),
+				Vector2(head_base_x, center.y + radius * 0.38),
+			]), color)
+			return true
+		"⌨":
+			# Input key: a rounded keycap outline with a centred dot.
+			var cap_width: float = radius * 1.15
+			var cap_height: float = radius * 0.92
+			var cap_rect := Rect2(center.x - cap_width * 0.5, center.y - cap_height * 0.5, cap_width, cap_height)
+			control.draw_rect(cap_rect, color, false, maxf(radius * 0.18, 1.0), true)
+			control.draw_circle(center, radius * 0.14, color)
+			return true
+	return false
 
 
 func _draw_debug_overlay(control: Control, row_rect: Rect2, font: Font, font_size: int, debug_text: String) -> void:
