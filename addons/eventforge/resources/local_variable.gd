@@ -29,6 +29,16 @@ extends Resource
 ## the importer when a source default was written unquoted; keeps such vars first-class rows instead
 ## of stranding them as GDScript blocks. Byte-verify gated.
 @export var expression_default: bool = false
+## Property SETTER body (the statements under `set(<setter_param>):`), verbatim, one statement per line,
+## dedented relative to the accessor header. Non-empty turns the variable into a GDScript property:
+## the declaration line gains a `:` suffix and the accessor blocks emit beneath it. Byte-gated on lift.
+@export_multiline var setter_body: String = ""
+## Property GETTER body (the statements under `get:`), verbatim, dedented. Either accessor may be
+## empty - a property can do both jobs or just one.
+@export_multiline var getter_body: String = ""
+## The setter's parameter name (`set(value):`). Hand-written code may use any name; keeping it
+## preserves the byte round-trip.
+@export var setter_param: String = "value"
 ## Event-sheet-style "Combo": allowed values for a String variable. When exported, compiles to
 ## @export_enum so the Inspector shows a dropdown; the value picker uses it too.
 @export var options: PackedStringArray = PackedStringArray()
@@ -42,3 +52,8 @@ extends Resource
 ## Stable row-kind identifier so the compiler/editor can treat tree-placed variables uniformly.
 func get_row_kind() -> String:
 	return "variable"
+
+
+## True when this variable is a PROPERTY (a setter and/or getter body is set).
+func has_property_accessors() -> bool:
+	return not setter_body.strip_edges().is_empty() or not getter_body.strip_edges().is_empty()

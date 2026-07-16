@@ -100,6 +100,16 @@ func import_external_source(source: String) -> EventSheetResource:
 			function_block.code = "\n".join(function_lines)
 			sheet.events.append(function_block)
 			continue
+		# A PROPERTY (a `var …:` declaration followed by indented `set(...)` / `get:` accessor blocks)
+		# lifts as a first-class variable with its accessor bodies, so a hand-written property reads and
+		# edits as a row instead of a code wall. Byte-gated inside; a non-canonical shape stays verbatim.
+		var lifted_property: Dictionary = _try_lift_property(lines, index)
+		if not lifted_property.is_empty():
+			_absorb_tree_variable_group(lifted_property["var"], pending, line)
+			_flush_pending(pending, sheet)
+			sheet.events.append(lifted_property["var"])
+			index += int(lifted_property["consumed"])
+			continue
 		var lifted: LocalVariable = _try_lift_variable(line)
 		if lifted != null:
 			_absorb_tree_variable_group(lifted, pending, line)
@@ -212,6 +222,88 @@ func import_external_source(source: String) -> EventSheetResource:
 	# by a byte-identical recompile and reverted otherwise (the lossless rule always wins).
 	EventSheetACELifter.attempt_lift(sheet, source)
 	return sheet
+
+
+## Lifts a PROPERTY (a `var …:`-suffixed declaration plus its indented `set(param):` / `get:` accessor
+## blocks) to a variable row carrying setter_body / getter_body. Returns {var, consumed} or {} when this
+## is not a property or the byte-gate fails. The declaration itself (minus the trailing `:`) reuses
+## _try_lift_variable so all the existing typing/@export/default handling applies; the accessor bodies are
+## stored verbatim + dedented, and the whole block is re-emitted and compared against the source lines -
+## a non-canonical shape (unusual spacing, extra members, a getter-before-setter order) degrades to raw.
+func _try_lift_property(lines: PackedStringArray, index: int) -> Dictionary:
+	var header: String = lines[index]
+	if not header.strip_edges().ends_with(":"):
+		return {}
+	# Only a plain/exported/onready var opens a property here (const/static properties are out of scope).
+	var declaration: String = header.substr(0, header.length() - 1)  # drop the trailing ':'
+	if not (declaration.begins_with("var ") or declaration.begins_with("@onready var ") or declaration.begins_with("@export")):
+		return {}
+	var lifted: LocalVariable = _try_lift_variable(declaration)
+	if lifted == null:
+		return {}
+	# Collect the indented accessor block: consecutive lines that begin with a tab (or a blank line
+	# INSIDE the block). Stops at the first column-0 line.
+	var block: PackedStringArray = PackedStringArray([header])
+	var scan: int = index + 1
+	while scan < lines.size():
+		var body_line: String = lines[scan]
+		if body_line.strip_edges().is_empty() or body_line.begins_with("\t"):
+			block.append(body_line)
+			scan += 1
+		else:
+			break
+	# Trailing blank lines belong to whatever follows, not to this property.
+	while block.size() > 1 and block[block.size() - 1].strip_edges().is_empty():
+		block.remove_at(block.size() - 1)
+		scan -= 1
+	var accessors: Dictionary = _parse_property_accessors(block)
+	if accessors.is_empty():
+		return {}
+	lifted.setter_body = str(accessors.get("setter_body", ""))
+	lifted.getter_body = str(accessors.get("getter_body", ""))
+	lifted.setter_param = str(accessors.get("setter_param", "value"))
+	# Byte-gate: the re-emitted property (declaration + accessors) must reproduce the collected block exactly.
+	if SheetCompiler._emit_tree_variable_line(lifted) != "\n".join(block):
+		return {}
+	return {"var": lifted, "consumed": scan - index}
+
+
+## Parses a property's accessor block (header line + indented body) into {setter_body, getter_body,
+## setter_param}. Recognizes the canonical `\tset(<param>):` and `\tget:` headers with `\t\t`-indented
+## bodies. Returns {} for any shape the emitter would not reproduce (so the byte-gate stays authoritative).
+func _parse_property_accessors(block: PackedStringArray) -> Dictionary:
+	var setter_lines: PackedStringArray = PackedStringArray()
+	var getter_lines: PackedStringArray = PackedStringArray()
+	var setter_param: String = "value"
+	var mode: String = ""  # "set" / "get"
+	var saw_setter: bool = false
+	var saw_getter: bool = false
+	for i: int in range(1, block.size()):
+		var line: String = block[i]
+		if line.begins_with("\tset(") and line.ends_with("):"):
+			mode = "set"
+			saw_setter = true
+			setter_param = line.substr(5, line.length() - 7)  # between "\tset(" and "):"
+		elif line == "\tget:":
+			mode = "get"
+			saw_getter = true
+		elif line.begins_with("\t\t") or line.strip_edges().is_empty():
+			var body: String = line.substr(2) if line.begins_with("\t\t") else line  # dedent two tabs
+			if mode == "set":
+				setter_lines.append(body)
+			elif mode == "get":
+				getter_lines.append(body)
+			else:
+				return {}  # a two-tab line before any accessor header - not our shape
+		else:
+			return {}  # an unexpected one-tab line (a second property member, etc.) - stay verbatim
+	if not saw_setter and not saw_getter:
+		return {}
+	return {
+		"setter_body": "\n".join(setter_lines),
+		"getter_body": "\n".join(getter_lines),
+		"setter_param": setter_param,
+	}
 
 
 ## Lifts a top-level variable declaration to an ordered tree-variable row, but ONLY when the

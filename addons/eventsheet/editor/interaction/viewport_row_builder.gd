@@ -1501,7 +1501,7 @@ func _build_class_method_row(class_name_str: String, child_index: int, method_li
 
 ## Builds a row for a variable placed directly in the event tree (movable like an event).
 func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowData:
-	return _build_variable_row(
+	var row_data: EventRowData = _build_variable_row(
 		"tree",
 		variable.name,
 		variable.type_name,
@@ -1518,6 +1518,31 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 			"row_uid": "variable_tree_%d" % variable.get_instance_id()
 		}
 	)
+	# A PROPERTY (setter and/or getter): read it as a language block - the variable identity stays the row,
+	# and each accessor folds under it as a condition/action child (`set(value)` / `get` in the condition
+	# cell, its body lines as actions). Double-click the variable row still opens the Variable dialog.
+	if variable.has_property_accessors():
+		row_data.language_block = true
+		var param: String = variable.setter_param.strip_edges() if not variable.setter_param.strip_edges().is_empty() else "value"
+		if not variable.setter_body.strip_edges().is_empty():
+			row_data.children.append(_build_property_accessor_row(variable, "set(%s)" % param, variable.setter_body, indent + 1, "set"))
+		if not variable.getter_body.strip_edges().is_empty():
+			row_data.children.append(_build_property_accessor_row(variable, "get", variable.getter_body, indent + 1, "get"))
+		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
+	return row_data
+
+
+## One accessor of a property variable (`set(value)` / `get`) as a read-only condition/action row: the
+## accessor header in the CONDITION cell, its body lines as ACTION cells. source_resource stays null so
+## select/drag/delete skip it; the parent variable row's double-click edits the property in the dialog.
+func _build_property_accessor_row(variable: LocalVariable, header: String, body: String, indent: int, accessor: String) -> EventRowData:
+	var body_lines: PackedStringArray = PackedStringArray()
+	for line: String in body.split("\n"):
+		body_lines.append(line)
+	var row: EventRowData = _build_condition_action_row(header, body_lines, indent, null)
+	row.language_block = true
+	row.row_uid = "property_accessor_%s_%d" % [accessor, variable.get_instance_id()]
+	return row
 
 
 ## A group's chapter fingerprint: "N events · ⟳a · ➜b · ⌨c · ▶d · ⚠e" - its child events

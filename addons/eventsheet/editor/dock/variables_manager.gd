@@ -127,6 +127,16 @@ func _create_variable_quickfix(variable_name: String) -> bool:
 ## drawer with its bounds) - the subset the tree-var emission supports. Keeps a reopened variable editable:
 ## the dialog populates these (via the edit context) and this stores back what the user changes, so they
 ## aren't stuck or cleared.
+## Copies the setter/getter accessor bodies from the dialog's `attributes` payload onto the variable's
+## first-class property fields (they ride the attributes dict from the dialog but are NOT serialized into
+## `attributes` - the whitelist in _tree_group_attributes drops them). A blank body clears the accessor.
+static func _apply_property_accessors(variable: LocalVariable, source: Dictionary) -> void:
+	variable.setter_body = str(source.get("setter_body", "")).strip_edges()
+	variable.getter_body = str(source.get("getter_body", "")).strip_edges()
+	var param: String = str(source.get("setter_param", "value")).strip_edges()
+	variable.setter_param = param if not param.is_empty() else "value"
+
+
 static func _tree_group_attributes(source: Dictionary) -> Dictionary:
 	var result: Dictionary = {}
 	for attr_key: String in ["tooltip", "group", "subgroup", "drawer", "header", "header_color", "info", "validate", "action", "action_label"]:
@@ -201,6 +211,7 @@ func _on_variable_dialog_confirmed(
 				existing.exported = exported
 				existing.attributes = _tree_group_attributes(attributes)
 				existing.onready = onready
+				_apply_property_accessors(existing, attributes)
 				message["text"] = "Updated variable %s." % var_name
 				return true
 			var tree_var: LocalVariable = LocalVariable.new()
@@ -212,6 +223,7 @@ func _on_variable_dialog_confirmed(
 			tree_var.exported = exported
 			tree_var.attributes = _tree_group_attributes(attributes)
 			tree_var.onready = onready
+			_apply_property_accessors(tree_var, attributes)
 			var anchor: Variant = context.get("insert_below", null)
 			if anchor is Resource:
 				var location: Dictionary = _dock._find_resource_location(anchor as Resource)
@@ -357,9 +369,16 @@ func _edit_context_variable() -> void:
 		if tree_var == null:
 			_dock._set_status("Could not resolve the variable to edit.", true)
 			return
+		# Surface the property accessors (first-class fields, not attributes) to the dialog's populate path
+		# by merging them into the attributes payload it reads; the confirm path copies them back out.
+		var edit_attributes: Dictionary = (tree_var.attributes as Dictionary).duplicate(true) if tree_var.attributes is Dictionary else {}
+		if tree_var.has_property_accessors():
+			edit_attributes["setter_body"] = tree_var.setter_body
+			edit_attributes["getter_body"] = tree_var.getter_body
+			edit_attributes["setter_param"] = tree_var.setter_param
 		_dock._variable_dlg.open_for_edit(
 			"tree",
-			{"editing": true, "variable_resource": tree_var, "attributes": tree_var.attributes},
+			{"editing": true, "variable_resource": tree_var, "attributes": edit_attributes},
 			tree_var.name,
 			tree_var.type_name,
 			tree_var.default_value,

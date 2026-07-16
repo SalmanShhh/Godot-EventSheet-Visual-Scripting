@@ -2292,9 +2292,32 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 		# first-class row instead of stranding it as a GDScript block over a quoted `"Vector2.ZERO"`.
 		var default_code: String = str(local_var.default_value) if local_var.expression_default else _to_code_literal(local_var.default_value)
 		var_line = "%svar %s: %s = %s" % [export_prefix, local_var.name, local_var.type_name, default_code]
+	# A property (setter and/or getter body set): suffix the declaration with `:` and emit the accessor
+	# blocks beneath it. The bodies are stored verbatim + dedented, so re-indenting them one/two tabs
+	# reproduces the source exactly (the lift byte-gate below refuses anything that does not).
+	if local_var.has_property_accessors():
+		var_line = _append_property_accessors(local_var, var_line)
 	# Inspector grouping rides in front, matching the dict-var path (_emit_variables) byte-for-byte so the
 	# round-trip lift can absorb it back onto the variable instead of stranding it as a GDScript block.
 	return _tree_variable_group_prefix(local_var) + var_line
+
+
+## Appends `set(param):` / `get:` accessor blocks under a property declaration. The declaration gains a
+## trailing `:`; each accessor body line is re-indented one tab under its header (two tabs total from the
+## var). Canonical order is setter then getter, matching what the property dialog authors and what the lift
+## re-emits, so a hand-written variant that differs fails the byte-gate and stays a verbatim block.
+static func _append_property_accessors(local_var: LocalVariable, declaration_line: String) -> String:
+	var out: PackedStringArray = PackedStringArray([declaration_line + ":"])
+	if not local_var.setter_body.strip_edges().is_empty():
+		var param: String = local_var.setter_param.strip_edges() if not local_var.setter_param.strip_edges().is_empty() else "value"
+		out.append("\tset(%s):" % param)
+		for body_line: String in local_var.setter_body.split("\n"):
+			out.append("\t\t%s" % body_line)
+	if not local_var.getter_body.strip_edges().is_empty():
+		out.append("\tget:")
+		for body_line: String in local_var.getter_body.split("\n"):
+			out.append("\t\t%s" % body_line)
+	return "\n".join(out)
 
 
 ## Decodes a table-column enum type token: "enum(circle|ring|rect)" -> ["circle", "ring", "rect"];

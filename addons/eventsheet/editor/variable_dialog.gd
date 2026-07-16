@@ -53,7 +53,7 @@ var _attr_advanced_section: VBoxContainer = null
 ## Attribute keys whose fields live in the nested Advanced tier. MUST mirror the fields parented under
 ## _attr_advanced_section in init_dialog - if you move a field between the Basic and Advanced tiers, update
 ## this too, or open_for_edit's auto-expand will disagree with where the field actually sits.
-const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "header", "info", "required", "validate", "action", "show_if", "lock_unless", "on_changed", "clamp", "read_only"]
+const _ADVANCED_ATTR_KEYS: Array[String] = ["group", "subgroup", "header", "info", "required", "validate", "action", "show_if", "lock_unless", "on_changed", "clamp", "read_only", "setter_body", "getter_body"]
 ## The Range field's placeholder per type - one source of truth so the initial build and the per-type swap in
 ## _refresh_contextual_rows can't drift. Vector2 prompts a single dial reach; numeric prompts min, max, step.
 const _RANGE_PLACEHOLDER_NUMERIC: String = "min, max, step (numeric: slider)"
@@ -75,6 +75,9 @@ var _attr_placeholder_row: Control = null
 var _attr_show_if_edit: LineEdit = null
 var _attr_lock_unless_edit: LineEdit = null
 var _attr_on_changed_edit: LineEdit = null
+var _attr_setter_edit: TextEdit = null
+var _attr_setter_param_edit: LineEdit = null
+var _attr_getter_edit: TextEdit = null
 var _attr_clamp_check: CheckBox = null
 var _attr_read_only_check: CheckBox = null
 var _attr_drawer_option: OptionButton = null
@@ -450,6 +453,23 @@ func init_dialog(parent_node: Node) -> void:
 	_attr_read_only_check.text = "Read-only"
 	attr_checks.add_child(_attr_read_only_check)
 	_attr_advanced_section.add_child(attr_checks)
+	# Setter / getter accessors: turn the variable into a GDScript property. Either body can be filled -
+	# both jobs or just one. The bodies are plain GDScript statements (one per line); `value` is the
+	# incoming value in the setter. Left blank, the variable stays a plain field.
+	_attr_setter_edit = TextEdit.new()
+	_attr_setter_edit.placeholder_text = "setter body, e.g.  health = clampi(value, 0, max_health)"
+	_attr_setter_edit.custom_minimum_size = Vector2(0.0, 54.0)
+	_attr_setter_edit.tooltip_text = "The statements that run when this variable is assigned (`set(value):`). Use `value` for the incoming value. Leave blank for no setter."
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Setter body", _attr_setter_edit))
+	_attr_setter_param_edit = LineEdit.new()
+	_attr_setter_param_edit.placeholder_text = "value"
+	_attr_setter_param_edit.tooltip_text = "The name of the setter's incoming-value parameter (defaults to `value`)."
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Setter parameter", _attr_setter_param_edit))
+	_attr_getter_edit = TextEdit.new()
+	_attr_getter_edit.placeholder_text = "getter body, e.g.  return _health"
+	_attr_getter_edit.custom_minimum_size = Vector2(0.0, 54.0)
+	_attr_getter_edit.tooltip_text = "The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter."
+	_attr_advanced_section.add_child(EventSheetPopupUI.form_row("Getter body", _attr_getter_edit))
 	_default_help = Label.new()
 	_default_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_default_help.custom_minimum_size = Vector2(380.0, 0.0)
@@ -841,6 +861,9 @@ func open_for_edit(
 	_attr_show_if_edit.text = str(existing_attributes.get("show_if", ""))
 	_attr_lock_unless_edit.text = str(existing_attributes.get("lock_unless", ""))
 	_attr_on_changed_edit.text = str(existing_attributes.get("on_changed", ""))
+	_attr_setter_edit.text = str(existing_attributes.get("setter_body", ""))
+	_attr_getter_edit.text = str(existing_attributes.get("getter_body", ""))
+	_attr_setter_param_edit.text = str(existing_attributes.get("setter_param", ""))
 	_attr_clamp_check.button_pressed = bool(existing_attributes.get("clamp", false))
 	_attr_read_only_check.button_pressed = bool(existing_attributes.get("read_only", false))
 	# Progressive disclosure: "More options" starts collapsed for new variables and auto-expands when the
@@ -1045,6 +1068,16 @@ func _on_confirmed() -> void:
 	if drawer_kind == "toggle_row" and type_name == "String" and not combo_options.is_empty():
 		attributes["toggle_options"] = Array(combo_options)
 		combo_options = PackedStringArray()
+	# Property accessors (a setter and/or getter turn the variable into a GDScript property). They ride the
+	# attributes payload to the receiver, which copies them onto the variable's first-class fields.
+	var setter_body: String = _attr_setter_edit.text.strip_edges()
+	var getter_body: String = _attr_getter_edit.text.strip_edges()
+	if not setter_body.is_empty():
+		attributes["setter_body"] = setter_body
+		var setter_param: String = _attr_setter_param_edit.text.strip_edges()
+		attributes["setter_param"] = setter_param if not setter_param.is_empty() else "value"
+	if not getter_body.is_empty():
+		attributes["getter_body"] = getter_body
 	variable_confirmed.emit(var_name, type_name, default_value, _scope, _context.duplicate(true), is_constant, exported, combo_options, attributes, false)
 
 

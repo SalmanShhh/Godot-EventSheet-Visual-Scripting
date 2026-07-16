@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - a setter/getter property reads and edits as an event block
+
+- **A GDScript property (a variable with a `set(value):` and/or `get:` accessor) now reads as a first-class
+  variable row with its accessors, instead of a code wall.** It maps onto the condition/action model: the
+  variable identity is the row, and each accessor folds under it as a condition/action child - `set(value)`
+  or `get` in the condition cell, its body lines as actions - marked as a language block. A property can do
+  both jobs or just one. Opening a hand-written `.gd` lifts its properties (byte-gated: canonical set-then-get
+  with the exact bodies; anything else stays a verbatim block), and the Variable dialog gained Setter body /
+  Setter parameter / Getter body fields (under Advanced) so you can add or edit accessors with UI help. The
+  existing clamp / on-changed / drawer setters are untouched.
+
 ### Added - lambda and callable expressions in the picker
 
 - **Four new expressions make small inline functions pickable: Lambda (returns a value), Lambda (runs a
