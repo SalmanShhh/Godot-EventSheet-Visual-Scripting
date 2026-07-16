@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added - the editor speaks 8 languages, translations hot-reload, and Language joined the View menu
+
+- **Korean, Japanese, Russian, and Simplified Chinese translations** for the whole plugin UI
+  (all 471 strings each, fully filled) join French, Spanish, German, and Italian - drop-in CSVs at
+  `addons/eventsheet/translations/{ko,ja,ru,zh_CN}.csv`, following each language's game-tool
+  conventions and the shared glossary (Event/Condition/Action/Trigger...).
+- **Drop-in translations now hot-reload**: drop (or edit, or delete) a translation CSV in
+  `addons/eventsheet/translations/` or `res://eventsheet_translations/` and the catalogs reload on
+  the editor's next filesystem scan - the new locale is instantly pickable, open UI re-translates
+  live, and removing the ACTIVE language's file falls back to English cleanly. A cheap
+  file-fingerprint check keeps the no-change case free. Pinned by `tests/l10n_dropin_reload_test.gd`.
+- **A Language submenu joined the View menu, right beside the Theme entries** (both are "how the
+  editor looks/reads" choices): radio-checked locales, rebuilt every open so a freshly dropped CSV
+  appears without reopening anything. The Welcome dialog's picker stays.
+
+### Changed - group headers are chapter bars: double height by default
+
+- **Group rows now render at twice the event-row height by default** - groups are the sheet's
+  chapters, and the taller bar carries the folder icon, title, and event-count fingerprint
+  comfortably, vertically centred (fold arrow included). The height is a **theme token**
+  (`group_row_height`, Theme Editor: "Height of a group header bar") so any theme can dial back to
+  the classic slim bar.
+
 ### Added - every behaviour pack has its own icon, shown everywhere names appear
 
 - **All 74 behaviour packs now ship a hand-tuned per-pack `icon.svg`** (house style: the familiar
@@ -1435,11 +1458,11 @@
 - **Two AI showcases**, one per bundled AI pack, each a self-driving demo that compiles to plain GDScript
   and round-trips byte-exactly (pinned in `tests/showcase_examples_test.gd`):
   - **Guard Brain** (Utility AI) - a guard with no input whose `UtilityBrain` scores patrol / chase / flee
-    from an oscillating threat signal and a stamina wave; each action is shaped by a response curve and the
-    highest score wins. Set Input -> Evaluate -> read Current Action, the whole utility loop.
+	from an oscillating threat signal and a stamina wave; each action is shaped by a response curve and the
+	highest score wins. Set Input -> Evaluate -> read Current Action, the whole utility loop.
   - **Chef Planner** (HTN Agent) - a planner with no input whose compound task `make_meal` decomposes (via
-    a method whose world-state condition holds) into an ordered plan gather -> cook -> serve, walked to the
-    end one primitive per tick. Add tasks + methods, Request Plan, Mark Complete, the whole HTN loop.
+	a method whose world-state condition holds) into an ordered plan gather -> cook -> serve, walked to the
+	end one primitive per tick. Add tasks + methods, Request Plan, Mark Complete, the whole HTN loop.
 - The style-guide gate no longer scans `demo/showcase`: the showcases are compiler output
   (`build_examples.gd` emits them like the packs, byte-pinned as round-trip artifacts), so they follow the
   emitter's single-blank contract, the same exemption `eventsheet_addons` and `demo/sheets` already have.
@@ -1654,17 +1677,17 @@ a milestone progress bar that regressed after latching - each now pinned in the 
 - **Two beginner-friendly additions to the public `EventSheets` API** (both a frozen compatibility
   promise, like every method there):
   - **`EventSheets.new_sheet(config)`** builds a ready-to-fill `EventSheetResource` from a plain
-    Dictionary (`class_name` / `host_class` / `behavior_mode` / `autoload_mode` / `tool_mode` /
-    `category` / `tags` / `description`) - the one public way to author a sheet, behavior, autoload, or
-    tool script from code. Append events and functions, then `compile()` it.
+	Dictionary (`class_name` / `host_class` / `behavior_mode` / `autoload_mode` / `tool_mode` /
+	`category` / `tags` / `description`) - the one public way to author a sheet, behavior, autoload, or
+	tool script from code. Append events and functions, then `compile()` it.
   - **`EventSheets.simple_block_kind(config)`** builds a whole Custom Block kind from a Dictionary (an
-    `emit` template with `{field}` placeholders, a `summary` template, and a `fields` schema) with **no
-    subclassing** - backed by the new `EventSheetSimpleBlockKind` helper. Forward emission and the
-    viewport summary work immediately; reverse recovery stays opt-in via a `lift` Callable, and without
-    one the block still emits perfectly and re-imports as a verbatim GDScript block (the safe
-    degrade-never-corrupt fallback).
+	`emit` template with `{field}` placeholders, a `summary` template, and a `fields` schema) with **no
+	subclassing** - backed by the new `EventSheetSimpleBlockKind` helper. Forward emission and the
+	viewport summary work immediately; reverse recovery stays opt-in via a `lift` Callable, and without
+	one the block still emits perfectly and re-imports as a verbatim GDScript block (the safe
+	degrade-never-corrupt fallback).
   - Both pinned in `tests/eventsheets_api_test.gd`; the Editor Tools ACEs pass the builtin-compile and
-    duplicate-id gates (checked=527, failed=0).
+	duplicate-id gates (checked=527, failed=0).
 
 ### Added - the ComboBox pack: an input-sequence detector
 
@@ -3096,7 +3119,7 @@ a milestone progress bar that regressed after latching - each now pinned in the 
   any future combo (e.g. comparison operators could read "equals" instead of `==`).
   - *Note:* the plain immediate **Print / Push Warning / Push Error** verbs are kept (not deprecated). The
 	reverse-lift is most-specific-first, so a *plain* `push_warning("x")` still lifts to Push Warning; the
-    combined **Log** stays distinct only because of its `# @ace:Core.ConsoleLog` marker (above).
+	combined **Log** stays distinct only because of its `# @ace:Core.ConsoleLog` marker (above).
 
 ### Added - Event groups round-trip through `.gd` (docs/GROUPS-ROUNDTRIP-SPEC.md)
 

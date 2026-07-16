@@ -3,6 +3,9 @@ class_name EventSheetPalette
 extends RefCounted
 
 const ROW_HEIGHT := 28
+# Group headers double the event row height by default: groups are the sheet's chapter bars
+# and taller bars carry the folder icon + title + fingerprint comfortably (themable per style).
+const GROUP_ROW_HEIGHT := 56
 const INDENT_WIDTH := 18
 const FONT_SIZE := 13
 const MIN_FONT_SIZE := 8

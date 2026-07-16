@@ -16,6 +16,9 @@ extends Resource
 @export_range(0, 32, 1) var action_lane_padding: int = int(EventSheetPalette.ACTION_LANE_PADDING)
 @export_range(1, 8, 1) var lane_divider_width: int = int(EventSheetPalette.LANE_DIVIDER_WIDTH)
 @export_range(28, 200, 1) var minimum_row_height: int = EventSheetPalette.ROW_HEIGHT
+## Height of GROUP header rows. Defaults to double the event row height so groups read as
+## strong section bars (a C3 reflex); themes can pull it back down to the classic slim bar.
+@export_range(28, 200, 1) var group_row_height: int = EventSheetPalette.GROUP_ROW_HEIGHT
 @export var trigger_badge_background_color: Color = EventSheetPalette.COLOR_TRIGGER_ARROW_BG
 @export var trigger_badge_foreground_color: Color = EventSheetPalette.COLOR_TRIGGER_ARROW_FG
 @export var group_background_color: Color = EventSheetPalette.COLOR_GROUP_BG

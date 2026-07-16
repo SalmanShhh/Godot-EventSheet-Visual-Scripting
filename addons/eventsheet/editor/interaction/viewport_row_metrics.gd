@@ -57,6 +57,12 @@ func _resolve_row_height(row_data: EventRowData) -> float:
 	if row_data.row_type == EventRowData.RowType.COMMENT:
 		# Comments wrap to the row width; the row is as tall as the wrapped text needs.
 		return _measure_comment_height(row_data)
+	if row_data.row_type == EventRowData.RowType.GROUP:
+		# Group headers are the sheet's chapter bars: a themable height, double an event row by
+		# default, never below the base row height (a squashed bar would clip its title).
+		var event_style: EventSheetEventStyle = _viewport._get_event_style()
+		var group_height: int = event_style.group_row_height if event_style != null else EventSheetPalette.GROUP_ROW_HEIGHT
+		return max(float(group_height), float(_viewport.ROW_HEIGHT))
 	if row_data.row_type != EventRowData.RowType.EVENT:
 		# Multi-line non-event rows (GDScript blocks) expand by their precomputed line count.
 		if row_data.line_count > 1:

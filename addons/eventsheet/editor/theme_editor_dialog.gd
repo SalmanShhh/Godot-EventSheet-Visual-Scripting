@@ -139,6 +139,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"action_lane_padding": "Inner padding on the actions lane, in pixels.",
 	"lane_divider_width": "Thickness of the conditions/actions divider line.",
 	"minimum_row_height": "Height of a single event row, in pixels - raise it for more breathing room.",
+	"group_row_height": "Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.",
 	"trigger_badge_background_color": "Fill of the trigger arrow badge (On Ready, On Signal...).",
 	"trigger_badge_foreground_color": "Icon/text colour on the trigger badge.",
 	"group_background_color": "Background of a group header row.",

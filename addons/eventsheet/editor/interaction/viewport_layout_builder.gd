@@ -62,7 +62,14 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var row_rect := Rect2(0.0, row_top, width, row_height)
 	var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, row_height)
 	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.INDENT_WIDTH)
-	var fold_rect: Rect2 = Rect2(x - 14.0, row_top + 6.0, 12.0, 16.0) if not row_data.children.is_empty() else Rect2()
+	# Group headers can be taller than a text line (group_row_height): centre the fold arrow and,
+	# below, the title spans in the bar instead of pinning them to its top edge.
+	var group_v_offset: float = (
+		max((row_height - line_height) * 0.5, 0.0)
+		if row_data.row_type == EventRowData.RowType.GROUP
+		else 0.0
+	)
+	var fold_rect: Rect2 = Rect2(x - 14.0, row_top + group_v_offset + 6.0, 12.0, 16.0) if not row_data.children.is_empty() else Rect2()
 	# No row-type glyph: the old colored square here said nothing the row itself doesn't
 	# (tempo badges, chips and labels carry the type). The 18px advance stays so every
 	# row's geometry - and every cached span position - is untouched.
@@ -125,7 +132,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			# left-to-right per line; without this every span stayed at the same X and
 			# overlapped. Multi-line rows stack via span line_index.
 			var flow_line: int = int(metadata.get("line_index", 0))
-			span_y = row_top + float(flow_line) * line_height + 3.0
+			span_y = row_top + group_v_offset + float(flow_line) * line_height + 3.0
 			span_x = float(non_event_line_x.get(flow_line, non_event_origin_x))
 			# Comment spans stack by accumulated WRAPPED height, not raw line index, so a
 			# multi-line wrapped span pushes the next one down past its full height.
