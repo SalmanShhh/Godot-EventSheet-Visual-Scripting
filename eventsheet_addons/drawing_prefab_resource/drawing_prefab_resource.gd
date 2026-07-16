@@ -15,9 +15,21 @@ extends Resource
 var _compiled: Array = []
 var _compiled_valid: bool = false
 var _compiled_size: int = -1
-## Parses raw steps (Dictionaries of strings) into typed entries - colors parsed once, stamp
-## textures loaded once (main thread). The renderers use the SAME shape for their generic-Resource
-## fallback, so a cached draw and an uncached draw are identical.
+
+func compiled_steps() -> Array:
+	if not changed.is_connected(_invalidate_compiled):
+		changed.connect(_invalidate_compiled)
+	if _compiled_valid and _compiled_size == steps.size():
+		return _compiled
+	_compiled = compile_steps(steps)
+	_compiled_size = steps.size()
+	_compiled_valid = true
+	return _compiled
+
+func _invalidate_compiled() -> void:
+	_compiled_valid = false
+	_compiled = []
+
 static func compile_steps(raw: Array) -> Array:
 	var out: Array = []
 	for step: Variant in raw:
@@ -41,17 +53,3 @@ static func compile_steps(raw: Array) -> Array:
 			"tex": tex,
 		})
 	return out
-
-func compiled_steps() -> Array:
-	if not changed.is_connected(_invalidate_compiled):
-		changed.connect(_invalidate_compiled)
-	if _compiled_valid and _compiled_size == steps.size():
-		return _compiled
-	_compiled = compile_steps(steps)
-	_compiled_size = steps.size()
-	_compiled_valid = true
-	return _compiled
-
-func _invalidate_compiled() -> void:
-	_compiled_valid = false
-	_compiled = []

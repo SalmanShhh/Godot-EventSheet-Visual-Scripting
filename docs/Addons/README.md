@@ -65,6 +65,7 @@ Attach to a node to move it.
 
 ## AI and logic
 
+- [UHTN Planning](UHTN-Planning.md) - Utility AI steering an HTN: response-curve scorers rank the planner's methods live, with the whole plan authorable as a UHTNPlanResource .tres of Inspector grids. Supersedes the two packs below.
 - [UtilityBrain](UtilityBrain.md) - score actions by considerations and response curves, then Evaluate; the best action wins.
 - [HTN Agent](HTN-Agent.md) - hierarchical task-network planning: goals decompose into ordered tasks.
 - [State Machine](State-Machine.md) - named states with enter/exit and transitions.

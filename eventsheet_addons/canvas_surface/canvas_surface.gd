@@ -17,7 +17,6 @@ var _drawer: Node2D = null
 var _display: Sprite2D = null
 var _commands: Array = []
 var _ribbons: Array = []
-
 ## Returns the host's canvas surface, creating (and attaching) one on first use. Cached on the host
 ## via metadata, so every "... on {node}" draw shares one surface. Null-safe.
 static func for_node(host: Node) -> CanvasSurface:
@@ -44,7 +43,6 @@ func texture() -> Texture2D:
 # --- Dashed shapes: ONE dash primitive turns any polyline into disjoint dash segments, drawn in a
 # single draw_multiline call. Line = 2 points, ring = a sampled circle, rect = 4 closed corners - the
 # same routine serves all three and any future dashed shape. ---
-
 ## Walks a polyline by arc length, carrying the dash phase across vertices so the rhythm stays
 ## continuous around ring and rect corners, and returns endpoint PAIRS for draw_multiline. dash_len
 ## is floored at 0.5 and gap at 0 so a zero-gap value degrades to a solid stroke, never an infinite loop.

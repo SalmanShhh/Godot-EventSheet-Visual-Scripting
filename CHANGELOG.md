@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - UHTN Planning: Utility AI steering the HTN planner, data-driven
+
+- **A new `UHTN Planning` pack finally combines the two AI halves the separate HTN Agent and UtilityBrain
+  packs kept apart** - the addon's original aim: HTN decomposition decides *how* (methods, preconditions,
+  ordered subtasks, backtracking) while **Utility AI decides *which* way is best right now** - response-curve
+  scorers (linear / inverse / quadratic / inverse-quadratic / logistic / threshold / bell) evaluated against
+  live world state rank the methods at plan time, so the same network patrols when the player is far and
+  flips to a chase when a closeness score overtakes it. A method without a scorer keeps a fixed utility
+  number, so simple networks stay simple. Force Task adds the scripted-override escape hatch.
+- **It is fully data-driven and beginner-friendly: a `UHTNPlanResource` (.tres) holds the whole plan as
+  Inspector grids** - Tasks, Methods, Conditions, and Scorer Inputs tables with dropdowns for task kinds,
+  comparison operators, and curve shapes, grouped sections, tooltips on every field, and a required-field
+  warning on the root task. Fill the grids, save, drop the asset onto the planner's Plan Resource slot - one
+  asset drives any number of agents, and variants are just more .tres files. Every grid row also has a
+  matching builder action for pure event-sheet authoring. Guide: docs/Addons/UHTN-Planning.md. The shipped
+  htn_agent and utility_ai packs stay for compatibility.
+
 ### Changed - Else reads as a CONDITION, exactly like Construct
 
 - **An Else block now leads its condition lane with a "System | Else" condition chip** - the same chip

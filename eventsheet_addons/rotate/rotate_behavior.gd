@@ -26,28 +26,6 @@ func _enter_tree() -> void:
 # The live speed (deg/s) - starts at the Speed knob, then Acceleration ramps it.
 var _current_speed: float = 0.0
 var _speed_primed: bool = false
-# Editor-preview contract (Tools > Preview Behaviors on Selected Node): pure angle math
-# over the Inspector values - angle(t) = speed*t + accel*t^2/2 - so the editor animates
-# the spin without running the behavior. Handles a Node2D's float rotation AND a
-# Node3D's Vector3 rotation from the same sample.
-static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
-	if not bool(params.get("rotate_enabled", true)):
-		return {}
-	var angle: float = deg_to_rad(float(params.get("speed", 90.0)) * time + 0.5 * float(params.get("acceleration", 0.0)) * time * time)
-	var base_rotation: Variant = base.get("rotation", 0.0)
-	var type: String = str(params.get("rotation_type", "2d"))
-	if type == "2d" and (base_rotation is float or base_rotation is int):
-		return {"rotation": float(base_rotation) + angle}
-	if base_rotation is Vector3:
-		var euler: Vector3 = base_rotation
-		match type:
-			"x":
-				return {"rotation": euler + Vector3(angle, 0.0, 0.0)}
-			"y":
-				return {"rotation": euler + Vector3(0.0, angle, 0.0)}
-			"z":
-				return {"rotation": euler + Vector3(0.0, 0.0, angle)}
-	return {}
 
 func _physics_process(delta: float) -> void:
 	if not rotate_enabled or host == null:
@@ -131,5 +109,28 @@ func reverse_rotation() -> void:
 		_speed_primed = true
 	_current_speed = -_current_speed
 	speed = _current_speed
+
+static func editor_preview_sample(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
+	# Editor-preview contract (Tools > Preview Behaviors on Selected Node): pure angle math
+	# over the Inspector values - angle(t) = speed*t + accel*t^2/2 - so the editor animates
+	# the spin without running the behavior. Handles a Node2D's float rotation AND a
+	# Node3D's Vector3 rotation from the same sample.
+	if not bool(params.get("rotate_enabled", true)):
+		return {}
+	var angle: float = deg_to_rad(float(params.get("speed", 90.0)) * time + 0.5 * float(params.get("acceleration", 0.0)) * time * time)
+	var base_rotation: Variant = base.get("rotation", 0.0)
+	var type: String = str(params.get("rotation_type", "2d"))
+	if type == "2d" and (base_rotation is float or base_rotation is int):
+		return {"rotation": float(base_rotation) + angle}
+	if base_rotation is Vector3:
+		var euler: Vector3 = base_rotation
+		match type:
+			"x":
+				return {"rotation": euler + Vector3(angle, 0.0, 0.0)}
+			"y":
+				return {"rotation": euler + Vector3(0.0, angle, 0.0)}
+			"z":
+				return {"rotation": euler + Vector3(0.0, 0.0, angle)}
+	return {}
 
 # Rotate behavior (event-sheet parity): spins the host at Speed degrees/second, ramping by Acceleration. Rotation Type covers a 2D node's rotation and a 3D node's X, Y, or Z axis - one pack for pickups, fans, planets, and drills. Set Rotation Enabled toggles it; Reverse flips direction. Previewable in the editor (Tools > Preview Behaviors on Selected Node). This pack is an event sheet - extend it by editing it.

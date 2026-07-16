@@ -25,9 +25,10 @@ extends Node2D
 	set(value):
 		prefab_rotation = value
 		queue_redraw()
-## Draws a DrawingPrefabResource's ordered steps onto any CanvasItem at an origin, scaled and
-## rotated as one - the shared vector renderer for the stamp node and the DrawingCanvas preview
-## gizmo. Sets the canvas transform once so every step draws in prefab-local space.
+
+func _draw() -> void:
+	draw_prefab_steps(self, prefab, Vector2.ZERO, prefab_scale, prefab_rotation)
+
 ## @ace_hidden
 static func draw_prefab_steps(canvas: CanvasItem, prefab_res: Resource, origin: Vector2, scale_by: float, rotation_deg: float) -> void:
 	if prefab_res == null:
@@ -66,9 +67,6 @@ static func draw_prefab_steps(canvas: CanvasItem, prefab_res: Resource, origin: 
 					canvas.draw_texture_rect(texture, Rect2(at - texture.get_size() * maxf(p1, 0.01) * 0.5, texture.get_size() * maxf(p1, 0.01)), false, tint)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-## Typed draw entries for a prefab: the resource's cached compiled_steps() (parsed once, shared by
-## every stamp) when it exposes one, else a raw parse of any Resource's steps into the same shape -
-## so the draw loop above is a single path and the generic "any Resource with steps" contract holds.
 ## @ace_hidden
 static func _prefab_entries(prefab_res: Resource) -> Array:
 	if prefab_res.has_method("compiled_steps"):
@@ -79,6 +77,3 @@ static func _prefab_entries(prefab_res: Resource) -> Array:
 	if not (steps is Array):
 		return []
 	return DrawingPrefabResource.compile_steps(steps)
-
-func _draw() -> void:
-	draw_prefab_steps(self, prefab, Vector2.ZERO, prefab_scale, prefab_rotation)
