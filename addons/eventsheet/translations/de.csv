@@ -308,3 +308,15 @@ sheet function returning a warning String (empty = valid),"Sheet-Funktion, die e
 what this variable is for - shown as its description in the Inspector,wofür diese Variable ist - im Inspektor als ihre Beschreibung angezeigt
 "▸  Advanced (grouping, conditions, clamp…)","▸  Erweitert (Gruppierung, Bedingungen, Begrenzung…)"
 "▸  More options (range, drawer, grouping…)","▸  Mehr Optionen (Bereich, Widget, Gruppierung…)"
+Create Code Region,Code-Region erstellen
+Create Code Region…,Code-Region erstellen…
+Doc comment,Doku-Kommentar
+Documentation shown above the function (## …). BBCode like [b]bold[/b] is allowed.,Dokumentation über der Funktion (## …). BBCode wie [b]fett[/b] ist erlaubt.
+Getter body,Getter-Rumpf
+Setter body,Setter-Rumpf
+Setter parameter,Setter-Parameter
+The name of the setter's incoming-value parameter (defaults to `value`).,Der Name des Parameters für den eingehenden Wert des Setters (Standard: `value`).
+The statements that run when this variable is assigned (`set(value):`). Use `value` for the incoming value. Leave blank for no setter.,"Die Anweisungen, die beim Zuweisen dieser Variable laufen (`set(value):`). Verwenden Sie `value` für den eingehenden Wert. Leer lassen für keinen Setter."
+"The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter.","Die Anweisungen, die beim Lesen dieser Variable laufen (`get:`), endend mit `return …`. Leer lassen für keinen Getter."
+"getter body, e.g.  return _health","Getter-Rumpf, z. B.  return _health"
+"setter body, e.g.  health = clampi(value, 0, max_health)","Setter-Rumpf, z. B.  health = clampi(value, 0, max_health)"

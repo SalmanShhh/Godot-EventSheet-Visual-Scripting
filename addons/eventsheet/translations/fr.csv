@@ -308,3 +308,15 @@ sheet function returning a warning String (empty = valid),fonction de feuille re
 what this variable is for - shown as its description in the Inspector,à quoi sert cette variable - affiché comme sa description dans l'Inspecteur
 "▸  Advanced (grouping, conditions, clamp…)","▸  Avancé (regroupement, conditions, limitation…)"
 "▸  More options (range, drawer, grouping…)","▸  Plus d'options (plage, widget, regroupement…)"
+Create Code Region,Créer une région de code
+Create Code Region…,Créer une région de code…
+Doc comment,Commentaire de doc
+Documentation shown above the function (## …). BBCode like [b]bold[/b] is allowed.,Documentation affichée au-dessus de la fonction (## …). Le BBCode comme [b]gras[/b] est autorisé.
+Getter body,Corps du getter
+Setter body,Corps du setter
+Setter parameter,Paramètre du setter
+The name of the setter's incoming-value parameter (defaults to `value`).,Le nom du paramètre de valeur entrante du setter (par défaut `value`).
+The statements that run when this variable is assigned (`set(value):`). Use `value` for the incoming value. Leave blank for no setter.,Les instructions exécutées quand cette variable est assignée (`set(value):`). Utilisez `value` pour la valeur entrante. Laissez vide pour aucun setter.
+"The statements that run when this variable is read (`get:`), ending in `return …`. Leave blank for no getter.","Les instructions exécutées quand cette variable est lue (`get:`), se terminant par `return …`. Laissez vide pour aucun getter."
+"getter body, e.g.  return _health","corps du getter, ex.  return _health"
+"setter body, e.g.  health = clampi(value, 0, max_health)","corps du setter, ex.  health = clampi(value, 0, max_health)"
