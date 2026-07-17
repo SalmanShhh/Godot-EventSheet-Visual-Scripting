@@ -310,6 +310,16 @@ func current_task_is(task_name: String) -> bool:
 func current_task() -> String:
 	return str(plan[plan_index]) if plan_index < plan.size() else ""
 
+func debugger_properties() -> Dictionary:
+	# Live Values debugger section (the debugger_properties seam): while the sheet hosting
+	# this planner streams live values, these show grouped under the planner's node name.
+	return {
+		"current_task": current_task(),
+		"plan": " > ".join(PackedStringArray(plan.slice(plan_index))),
+		"plan_step": "%d / %d" % [plan_index, plan.size()],
+		"world_state": world_state.duplicate(),
+	}
+
 ## @ace_expression
 ## @ace_name("Plan Length")
 ## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")

@@ -116,28 +116,86 @@ func update_values(values: Dictionary) -> void:
 			pane.set_live_values(values)
 	ensure_window()
 	label.text = "Streaming - double-click a value to edit it in the running game."
-	var value_keys: Array = values.keys()
-	value_keys.sort()
+	# Sheet variables list flat (editable); dotted keys ("Sine.phase" - a behavior's
+	# debugger_properties section, the Construct debugger idea) group under one read-only
+	# section per behavior child, after the variables.
+	var plan: Dictionary = build_display_plan(values)
+	var plain_keys: Array = plan.get("plain", [])
+	var sections: Dictionary = plan.get("sections", {})
+	var leaf_signature: String = str(plan.get("signature", ""))
 	# Rebuild only when the key set changes; otherwise update in place so an
 	# in-progress edit isn't stomped by the next frame.
-	var rebuild: bool = tree.get_root() == null or tree.get_root().get_child_count() != value_keys.size()
-	if rebuild:
+	if leaf_signature != _leaf_signature or tree.get_root() == null:
+		_leaf_signature = leaf_signature
 		tree.clear()
 		var root_item: TreeItem = tree.create_item()
-		for value_key: Variant in value_keys:
+		for value_key: Variant in plain_keys:
 			var item: TreeItem = tree.create_item(root_item)
 			item.set_text(0, str(value_key))
 			_fill_live_value_item(item, values[value_key])
+		for section_name: Variant in sections:
+			var section_item: TreeItem = tree.create_item(root_item)
+			section_item.set_text(0, str(section_name))
+			section_item.set_selectable(0, false)
+			section_item.set_selectable(1, false)
+			section_item.set_custom_color(0, Color("#8fb4e0"))
+			for full_key: Variant in sections[section_name]:
+				var leaf: TreeItem = tree.create_item(section_item)
+				leaf.set_text(0, str(full_key).get_slice(".", 1))
+				_fill_live_value_item(leaf, values[full_key])
+				leaf.set_editable(1, false)  # behavior sections are a read-only window
 	else:
 		var item: TreeItem = tree.get_root().get_first_child()
 		var index: int = 0
-		while item != null and index < value_keys.size():
-			item.set_text(0, str(value_keys[index]))
+		while item != null and index < plain_keys.size():
+			item.set_text(0, str(plain_keys[index]))
 			if tree.get_edited() != item:
-				_fill_live_value_item(item, values[value_keys[index]])
+				_fill_live_value_item(item, values[plain_keys[index]])
 			item = item.get_next()
 			index += 1
+		# `item` now walks the section headers, in the same insertion order as the plan.
+		for section_name: Variant in sections:
+			if item == null:
+				break
+			var leaf: TreeItem = item.get_first_child()
+			for full_key: Variant in sections[section_name]:
+				if leaf == null:
+					break
+				_fill_live_value_item(leaf, values[full_key])
+				leaf.set_editable(1, false)
+				leaf = leaf.get_next()
+			item = item.get_next()
 	_refresh_watches(values)
+
+
+var _leaf_signature: String = ""
+
+
+## Splits a streamed frame into flat sheet variables and per-behavior sections (dotted keys),
+## both sorted, plus a signature the tree rebuild keys on. Pure + static → unit-testable.
+static func build_display_plan(values: Dictionary) -> Dictionary:
+	var plain_keys: Array = []
+	var sections: Dictionary = {}
+	for key: Variant in values.keys():
+		var key_text: String = str(key)
+		if key_text.contains("."):
+			var section_name: String = key_text.get_slice(".", 0)
+			if not sections.has(section_name):
+				sections[section_name] = []
+			(sections[section_name] as Array).append(key_text)
+		else:
+			plain_keys.append(key_text)
+	plain_keys.sort()
+	var section_names: Array = sections.keys()
+	section_names.sort()
+	var ordered_sections: Dictionary = {}
+	var signature_parts: PackedStringArray = PackedStringArray(plain_keys)
+	for section_name: Variant in section_names:
+		var section_keys: Array = sections[section_name]
+		section_keys.sort()
+		ordered_sections[section_name] = section_keys
+		signature_parts.append_array(PackedStringArray(section_keys))
+	return {"plain": plain_keys, "sections": ordered_sections, "signature": ",".join(signature_parts)}
 
 
 ## One value -> one tree row. Dictionaries/Arrays expand into read-only subtrees
@@ -226,6 +284,10 @@ static func evaluate_watch(expression: String, values: Dictionary) -> Dictionary
 	var names: PackedStringArray = PackedStringArray()
 	var inputs: Array = []
 	for key: Variant in values.keys():
+		# Behavior debugger sections stream dotted keys ("Sine.phase") - not valid Expression
+		# identifiers, so they'd poison the parse for EVERY watch. Sheet variables only here.
+		if not str(key).is_valid_identifier():
+			continue
 		names.append(str(key))
 		inputs.append(values[key])
 	if expr.parse(expression, names) != OK:

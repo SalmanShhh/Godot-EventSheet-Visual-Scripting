@@ -452,7 +452,7 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		lines.append("\tif __live_values_timer >= 0.25 and EngineDebugger.is_active():")
 		lines.append("\t\t__live_values_timer = 0.0")
 		if not _live_values_payload.is_empty():
-			lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
+			_emit_live_values_send(lines)
 		if _emit_event_trace_flag:
 			lines.append("\t\tEngineDebugger.send_message(\"eventsheets:fired_events\", __eventsheets_fired)")
 			lines.append("\t\t__eventsheets_fired.clear()")
@@ -1145,7 +1145,7 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			lines.append("\tif __live_values_timer >= 0.25 and EngineDebugger.is_active():")
 			lines.append("\t\t__live_values_timer = 0.0")
 			if not _live_values_payload.is_empty():
-				lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", [%s])" % _live_values_payload)
+				_emit_live_values_send(lines)
 			if _emit_event_trace_flag:
 				lines.append("\t\tEngineDebugger.send_message(\"eventsheets:fired_events\", __eventsheets_fired)")
 				lines.append("\t\t__eventsheets_fired.clear()")
@@ -1941,6 +1941,23 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 ## raw blocks stay deferred until sub-events compile).
 ## Canonical single-line enum emission ("" when unnamed/empty/disabled). The importer's
 ## verify-lift depends on this exact form - change it only with a lifter update.
+## The throttled live-values SEND block (shared by both _process emission sites): builds the
+## frame from the sheet's baked variable pairs, then asks each CHILD node implementing
+## `debugger_properties() -> Dictionary` for its live section - the behavior-debugger seam
+## (Construct's GetDebuggerProperties idea). Keys arrive namespaced "ChildName.key" and the
+## Live Values panel groups them per behavior. Plain duck-typed GDScript: a pack opts in by
+## defining the method, with zero plugin coupling (parity covenant intact).
+static func _emit_live_values_send(lines: PackedStringArray) -> void:
+	lines.append("\t\tvar __live_frame: Array = [%s]" % _live_values_payload)
+	lines.append("\t\tfor __live_child in get_children():")
+	lines.append("\t\t\tif __live_child.has_method(\"debugger_properties\"):")
+	lines.append("\t\t\t\tvar __live_props: Dictionary = __live_child.debugger_properties()")
+	lines.append("\t\t\t\tfor __live_key in __live_props:")
+	lines.append("\t\t\t\t\t__live_frame.append(str(__live_child.name) + \".\" + str(__live_key))")
+	lines.append("\t\t\t\t\t__live_frame.append(__live_props[__live_key])")
+	lines.append("\t\tEngineDebugger.send_message(\"eventsheets:live_values\", __live_frame)")
+
+
 static func _emit_enum_line(enum_row: EnumRow) -> String:
 	# Single-line convenience (lint scaffolds, tests); multi-line rows join with newlines.
 	return "

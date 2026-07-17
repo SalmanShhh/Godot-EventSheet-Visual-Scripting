@@ -44,7 +44,8 @@ static func run() -> bool:
 	all_passed = _check("debug compiles declare the throttle member",
 		on_output.contains("var __live_values_timer: float = 0.0"), true) and all_passed
 	all_passed = _check("send block injects into the existing _process",
-		on_output.contains("EngineDebugger.send_message(\"eventsheets:live_values\", [\"hp\", hp])")
+		on_output.contains("var __live_frame: Array = [\"hp\", hp]")
+		and on_output.contains("EngineDebugger.send_message(\"eventsheets:live_values\", __live_frame)")
 		and on_output.find("send_message") < on_output.find("rotation += delta")
 		and on_output.count("func _process") == 1, true) and all_passed
 	var on_script: GDScript = GDScript.new()

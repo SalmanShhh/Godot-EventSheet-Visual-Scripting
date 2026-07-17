@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - behaviors report themselves to the debugger (Construct's debugger-properties idea)
+
+- **Any behavior can define `debugger_properties() -> Dictionary`** and, while its host sheet
+  streams Live Values, that section appears grouped under the behavior's node name in the
+  Live Values panel - read-only, updating on the same throttled frame. The seam is plain
+  duck-typed GDScript (the save_state / editor_preview_sample family): defining the method IS
+  opting in, zero plugin coupling in the generated code.
+- **The UHTN planner ships the first section**: current task, the remaining plan as a chain
+  ("patrol > salute"), the step counter, and the world state - watch an agent think without
+  adding a single debug row.
+- Sheet variables stay flat, editable, and first; behavior sections group after them; dotted
+  keys are excluded from Watch-expression parsing so a streaming behavior can never break a
+  watch. `tests/debugger_properties_test.gd` pins the emission, the grouping plan, the watch
+  guard, and the planner's section.
+
 ### Added - packs translate like the editor does (the Construct lang.json idea)
 
 - **A pack can ship `translations.csv` in its folder** and its vocabulary follows the editor
