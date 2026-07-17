@@ -355,6 +355,59 @@ static func open_gd_as_sheet(source: String) -> EventSheetResource:
 	return GDScriptImporter.new().import_external_source(source)
 
 
+## Publishes a behaviour sheet as an ADDON PACK .gd at base_path + ".gd" - the ONE pack
+## pipeline, shared by the bundled builders and the dock's Export Addon (they can never
+## drift apart). In order: a pack-local icon.svg beside base_path is adopted when the sheet
+## has no icon (then icon_path, when given); raw code de-codes into rows wherever it
+## recompiles byte-identically (function bodies, event bodies, trigger signals, helper
+## declarations - per-item byte-gated, unliftable code stays verbatim); row uids become
+## deterministic (same sheet, same bytes - version-control friendly); and the sheet compiles
+## banner-less, so the .gd IS the pack: the editable event sheet AND the runtime script.
+## MUTATES `sheet` (lifts + uids + icon) - pass a duplicate to keep an original untouched.
+## Returns the compile result Dictionary ({"success", "output", "warnings", ...}).
+static func publish_pack(sheet: EventSheetResource, base_path: String, icon_path: String = "") -> Dictionary:
+	if sheet == null:
+		return {"success": false, "errors": ["No sheet."]}
+	if sheet.custom_class_icon.strip_edges().is_empty():
+		var local_icon: String = base_path.get_base_dir() + "/icon.svg"
+		if FileAccess.file_exists(local_icon):
+			sheet.custom_class_icon = local_icon
+		elif not icon_path.strip_edges().is_empty():
+			sheet.custom_class_icon = icon_path
+	EventSheetACELifter.lift_function_bodies(sheet)
+	EventSheetACELifter.lift_event_bodies(sheet)
+	EventSheetACELifter.lift_signal_declarations(sheet, false)
+	EventSheetACELifter.lift_function_declarations(sheet, false)
+	stabilize_row_uids(sheet)
+	DirAccess.make_dir_recursive_absolute(base_path.get_base_dir())
+	return SheetCompiler.compile(sheet, base_path + ".gd", true)
+
+
+## Stamps deterministic row uids derived from each row's structural path, so an unchanged
+## sheet regenerates byte-for-byte (EventRow/EventGroup otherwise mint a random uid per
+## _init(), churning every regeneration). publish_pack calls this; generators that compile
+## sheets themselves (showcase builders) call it directly before compiling.
+static func stabilize_row_uids(sheet: EventSheetResource) -> void:
+	var class_seed: String = sheet.custom_class_name if not sheet.custom_class_name.is_empty() else "sheet"
+	_publish_assign_uids_in_list(sheet.events, class_seed + "/events")
+	for function_resource: Variant in sheet.functions:
+		if function_resource is EventFunction:
+			_publish_assign_uids_in_list((function_resource as EventFunction).events, class_seed + "/fn/" + (function_resource as EventFunction).function_name)
+
+
+static func _publish_assign_uids_in_list(rows: Array, path_prefix: String) -> void:
+	var index: int = 0
+	for row: Variant in rows:
+		var row_path: String = "%s/%d" % [path_prefix, index]
+		if row is EventRow:
+			(row as EventRow).event_uid = row_path.sha256_text().substr(0, 6)
+			_publish_assign_uids_in_list((row as EventRow).sub_events, row_path)
+		elif row is EventGroup:
+			(row as EventGroup).group_uid = row_path.sha256_text().substr(0, 6)
+			_publish_assign_uids_in_list((row as EventGroup).events, row_path)
+		index += 1
+
+
 ## The byte gate as a service: true when importing `source` and recompiling reproduces
 ## it byte-identically - the same covenant every built-in lift must satisfy. Use it to
 ## verify a custom block kind or an emission tweak can never corrupt user files.

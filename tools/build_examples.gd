@@ -117,7 +117,7 @@ func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) ->
 	EventSheetACELifter.lift_function_declarations(sheet, false)
 	# Deterministic row uids so rebuilding an unchanged showcase is byte-identical (no diff
 	# churn) - same fix the behavior-pack builder uses.
-	PackLib._assign_stable_uids(sheet)
+	EventSheets.stabilize_row_uids(sheet)
 	# .gd-only: the showcase .gd IS the sheet (no .tres companion), banner-less so it's hand-editable.
 	# Normal synthesizing compile - do NOT set external_source_path (that path is only for opening an
 	# existing .gd). Round-trip is covered by the showcase tests + import_external.

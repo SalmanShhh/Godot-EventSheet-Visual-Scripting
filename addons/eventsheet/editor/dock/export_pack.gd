@@ -48,17 +48,21 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
 	var base_path: String = "%s/%s" % [base_dir, folder_name]
 	DirAccess.make_dir_recursive_absolute(base_dir)
 	var pack_sheet: EventSheetResource = _dock._current_sheet.duplicate(true)
+	# The SAME pipeline the bundled packs are built with (EventSheets.publish_pack): pack-local
+	# icon auto-detect, the four byte-gated de-coding lifts (raw code becomes rows wherever it
+	# round-trips), deterministic row uids, and a banner-less .gd that IS the pack - a user's
+	# exported addon reads exactly like a shipped one when reopened as a sheet.
+	var compile_result: Dictionary = EventSheets.publish_pack(pack_sheet, base_path)
+	if not bool(compile_result.get("success", false)):
+		_dock._set_status("Export failed: the sheet doesn't compile (%s)." % str(compile_result.get("errors")), true)
+		return
+	# The .tres companion saves the PUBLISHED sheet (post-pipeline), so recompiling it
+	# reproduces the exported .gd byte-for-byte - the same no-drift rule the bundled packs obey.
 	var save_error: Error = ResourceSaver.save(pack_sheet, base_path + ".tres")
 	if save_error != OK:
 		_dock._set_status("Export failed: couldn't save %s.tres (error %d)." % [base_path, save_error], true)
 		return
-	# Adopt the saved path BEFORE compiling so the generated "# Source:" header matches a
-	# recompile of the exported .tres (the same no-drift rule the bundled packs follow).
 	pack_sheet.take_over_path(base_path + ".tres")
-	var compile_result: Dictionary = SheetCompiler.compile(pack_sheet, base_path + ".gd")
-	if not bool(compile_result.get("success", false)):
-		_dock._set_status("Export failed: the sheet doesn't compile (%s)." % str(compile_result.get("errors")), true)
-		return
 	# Auto-docs: shared packs are documented by default.
 	var readme_file: FileAccess = FileAccess.open("%s/README.md" % base_dir, FileAccess.WRITE)
 	if readme_file != null:

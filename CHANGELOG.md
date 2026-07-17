@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed - pack publishing is ONE public pipeline now (EventSheets.publish_pack)
+
+- **`EventSheets.publish_pack(sheet, base_path, icon_path)` joins the public API**: the whole
+  pack pipeline in one call - pack-local icon auto-detect, the four byte-gated de-coding
+  lifts (raw code becomes editable rows wherever it round-trips), deterministic row uids
+  (`EventSheets.stabilize_row_uids` is public too), and the banner-less compile where the
+  .gd IS the pack. The bundled builders' save_pack is now a thin wrapper over it - proven by
+  a byte-identical rebuild of all 75 packs.
+- **Sheet > Export Addon… publishes through the same pipeline**: a user's exported addon now
+  gets everything a shipped pack gets - the lifts, the stable uids, the icon detect - so it
+  reads exactly like a bundled pack when reopened as a sheet, and its .tres companion
+  recompiles to the exported .gd byte-for-byte. Third-party build tooling can call the same
+  API and can never drift from the builders.
+
 ### Changed - the featured sweep: 43 packs now star their hero verbs
 
 - **36 more packs mark their 1-3 hero verbs** (joining the 7 flagships): Activate Ability,
