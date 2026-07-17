@@ -17,6 +17,7 @@ static func build() -> bool:
 		"speed": {"type": "float", "default": 300.0, "exported": true, "description": "Travel speed in pixels per second."},
 		"acceleration": {"type": "float", "default": 0.0, "exported": true, "description": "Change in speed per second along the direction of motion."},
 		"gravity": {"type": "float", "default": 0.0, "exported": true, "description": "Downward pull added to vertical speed each second."},
+		"gravity_angle": {"type": "float", "default": 90.0, "exported": true, "description": "Direction gravity pulls, in degrees (90 = down, 270 = up, 0 = right) - arcs bend that way instead of downward.", "attributes": {"range": {"min": "0", "max": "360", "step": "1"}}},
 		"align_rotation": {"type": "bool", "default": true, "exported": true, "description": "Rotates the host to face its direction of motion."},
 		"enabled_movement": {"type": "bool", "default": true, "exported": true, "description": "When off, the bullet stops moving."},
 		"distance_travelled": {"type": "float", "default": 0.0, "exported": false},
@@ -41,7 +42,11 @@ static func build() -> bool:
 		"var direction := Vector2(vel_x, vel_y).normalized()",
 		"vel_x += direction.x * acceleration * delta",
 		"vel_y += direction.y * acceleration * delta",
-		"vel_y += gravity * delta",
+		"# Gravity pulls along gravity_angle; built from Vector2.DOWN.rotated so the default",
+		"# 90 degrees is EXACTLY (0, 1) - the plain vel_y pull this generalizes, bit for bit.",
+		"var gravity_pull := Vector2.DOWN.rotated(deg_to_rad(gravity_angle - 90.0)) * gravity * delta",
+		"vel_x += gravity_pull.x",
+		"vel_y += gravity_pull.y",
 		"var motion := Vector2(vel_x, vel_y) * delta",
 		"host.position += motion",
 		"distance_travelled += motion.length()",
@@ -92,6 +97,23 @@ static func build() -> bool:
 	]))
 	set_angle_of_motion_fn.events.append(set_angle_of_motion_fn_body)
 	sheet.functions.append(set_angle_of_motion_fn)
+
+	var set_gravity_angle_fn: EventFunction = EventFunction.new()
+	set_gravity_angle_fn.function_name = "set_gravity_angle"
+	set_gravity_angle_fn.expose_as_ace = true
+	set_gravity_angle_fn.ace_display_name = "Set Gravity Angle"
+	set_gravity_angle_fn.ace_category = "Bullet"
+	set_gravity_angle_fn.description = "Points gravity in a new direction, in degrees (90 = down, 270 = up, 0 = right) - the arc bends that way from now on. Magnet fields, wind wells, and upside-down zones in one action."
+	var set_gravity_angle_fn_angle: ACEParam = ACEParam.new()
+	set_gravity_angle_fn_angle.id = "angle"
+	set_gravity_angle_fn_angle.type_name = "float"
+	set_gravity_angle_fn.params.append(set_gravity_angle_fn_angle)
+	var set_gravity_angle_fn_body: RawCodeRow = RawCodeRow.new()
+	set_gravity_angle_fn_body.code = "\n".join(PackedStringArray([
+		"gravity_angle = wrapf(angle, 0.0, 360.0)"
+	]))
+	set_gravity_angle_fn.events.append(set_gravity_angle_fn_body)
+	sheet.functions.append(set_gravity_angle_fn)
 
 	var set_bullet_enabled_fn: EventFunction = EventFunction.new()
 	set_bullet_enabled_fn.function_name = "set_bullet_enabled"

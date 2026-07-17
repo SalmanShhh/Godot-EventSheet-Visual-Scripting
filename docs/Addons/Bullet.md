@@ -65,6 +65,7 @@ The mental model is small. Learn these ideas and the rest is Inspector tuning.
 | `speed` | `300.0` | Launch and travel speed in pixels per second. |
 | `acceleration` | `0.0` | Added along the current heading every second (positive speeds up, negative slows down). |
 | `gravity` | `0.0` | Downward pull added to the vertical velocity every second (arcs a straight shot). |
+| `gravity_angle` | `90.0` | Direction gravity pulls, in degrees (90 = down, 270 = up, 0 = right) - arcs bend that way instead of downward. |
 | `align_rotation` | `true` | Turn the node to face the direction it is actually moving. |
 | `enabled_movement` | `true` | Whether the behavior moves the node each frame (turn off to freeze). |
 
@@ -95,6 +96,7 @@ All ACEs live in the **Bullet** category and target the `BulletBehavior` on the 
 |---|---|---|
 | Set Bullet Speed | `value` (float) | Changes speed now, keeping the current direction (recomputes the velocity), so a flying bullet immediately speeds up or slows down. |
 | Set Angle Of Motion | `degrees` (float) | Redirects the bullet along an absolute angle in degrees (0 right, 90 down, 180 left, -90 up), keeping its current speed. |
+| Set Gravity Angle | `angle` (float) | Points gravity in a new direction in degrees (90 = down, 270 = up, 0 = right) - the arc bends that way from now on. Magnet fields, wind wells, and upside-down zones in one action. |
 | Set Bullet Enabled | `is_enabled` (bool) | Pauses the movement (`false`) or resumes it (`true`); a paused bullet keeps its velocity and simply holds position. |
 | Set Speed | `value` (float) | Writes the underlying speed value that feeds the launch and Set Angle Of Motion. For a live change on a bullet already in flight, prefer Set Bullet Speed. |
 | Add To Speed | `amount` (float) | Adds to the underlying speed value (see Set Speed). |

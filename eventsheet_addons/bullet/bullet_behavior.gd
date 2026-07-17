@@ -22,6 +22,8 @@ var distance_travelled: float = 0.0
 @export var enabled_movement: bool = true
 ## Downward pull added to vertical speed each second.
 @export var gravity: float = 0.0
+## Direction gravity pulls, in degrees (90 = down, 270 = up, 0 = right) - arcs bend that way instead of downward.
+@export_range(0, 360, 1) var gravity_angle: float = 90.0
 var launched: bool = false
 ## Travel speed in pixels per second.
 @export var speed: float = 300.0
@@ -38,7 +40,11 @@ func _process(delta: float) -> void:
 	var direction := Vector2(vel_x, vel_y).normalized()
 	vel_x += direction.x * acceleration * delta
 	vel_y += direction.y * acceleration * delta
-	vel_y += gravity * delta
+	# Gravity pulls along gravity_angle; built from Vector2.DOWN.rotated so the default
+	# 90 degrees is EXACTLY (0, 1) - the plain vel_y pull this generalizes, bit for bit.
+	var gravity_pull := Vector2.DOWN.rotated(deg_to_rad(gravity_angle - 90.0)) * gravity * delta
+	vel_x += gravity_pull.x
+	vel_y += gravity_pull.y
 	var motion := Vector2(vel_x, vel_y) * delta
 	host.position += motion
 	distance_travelled += motion.length()
@@ -70,6 +76,15 @@ func set_angle_of_motion(degrees: float) -> void:
 	vel_x = cos(deg_to_rad(degrees)) * speed
 	vel_y = sin(deg_to_rad(degrees)) * speed
 	launched = true
+
+## @ace_action
+## @ace_name("Set Gravity Angle")
+## @ace_category("Bullet")
+## @ace_description("Points gravity in a new direction, in degrees (90 = down, 270 = up, 0 = right) - the arc bends that way from now on. Magnet fields, wind wells, and upside-down zones in one action.")
+## @ace_icon("res://eventsheet_addons/bullet/icon.svg")
+## @ace_codegen_template("$BulletBehavior.set_gravity_angle({angle})")
+func set_gravity_angle(angle: float) -> void:
+	gravity_angle = wrapf(angle, 0.0, 360.0)
 
 ## @ace_action
 ## @ace_name("Set Bullet Enabled")

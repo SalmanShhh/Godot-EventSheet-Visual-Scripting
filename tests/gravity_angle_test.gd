@@ -58,6 +58,32 @@ static func run() -> bool:
 
 	behavior.free()
 	host.free()
+
+	# ---- the Bullet pack's 2D twin: arcs bend along gravity_angle ----
+	var bullet: Node = (load("res://eventsheet_addons/bullet/bullet_behavior.gd") as Script).new() as Node
+	var bullet_host: Node2D = Node2D.new()
+	bullet.set("host", bullet_host)
+	all_passed = _check("Bullet's default angle is 90 (straight down)", float(bullet.get("gravity_angle")), 90.0) and all_passed
+	# At the default angle the pull is EXACTLY (0, gravity * delta): a horizontal shot
+	# gains no sideways drift, bit for bit, so existing games play identically.
+	bullet.set("launched", true)
+	bullet.set("speed", 0.0)
+	bullet.set("gravity", 100.0)
+	bullet.set("align_rotation", false)
+	bullet.call("_process", 1.0)
+	all_passed = _check("default-angle pull is exactly vertical", float(bullet.get("vel_x")), 0.0) and all_passed
+	all_passed = _check("default-angle pull strength is unchanged", float(bullet.get("vel_y")), 100.0) and all_passed
+	# Under ceiling-gravity the same shot drifts UP instead.
+	bullet.set("vel_x", 0.0)
+	bullet.set("vel_y", 0.0)
+	bullet.set("gravity_angle", 270.0)
+	bullet.call("_process", 1.0)
+	all_passed = _check("ceiling-gravity pulls the arc up", float(bullet.get("vel_y")) < -99.0, true) and all_passed
+	bullet.call("set_gravity_angle", -90.0)
+	all_passed = _check("Bullet's Set Gravity Angle wraps -90 to 270", float(bullet.get("gravity_angle")), 270.0) and all_passed
+	bullet.free()
+	bullet_host.free()
+
 	return all_passed
 
 

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - Bullet arcs bend along a Gravity Angle
+
+- **`gravity_angle` property (0-360 degrees, default 90 = down)** on the Bullet pack: the
+  gravity pull rotates to the angle, so arcs bend sideways, upward, or anywhere between -
+  magnet fields, wind wells, and upside-down zones. At the default angle the pull is
+  EXACTLY the old vertical math (a horizontal shot gains zero sideways drift, bit for
+  bit), so existing games play identically. **Set Gravity Angle** action included (wraps
+  into 0-360).
+- 2D mover audit for the same knob: the top-down packs (8-Direction, Tile Movement, Slide,
+  Move To) are gravity-less by design and correctly stay that way; the Platformer already
+  has its angle; the pathfinding fallback driver follows in the pathfinding
+  gravity-awareness pass. `tests/gravity_angle_test.gd` pins the Bullet default's
+  bit-exactness, the up-bent arc, and wrapping.
+
 ### Added - Platformer Movement gets a Gravity Angle (walk on walls, flip the level)
 
 - **`gravity_angle` property (0-360 degrees, default 90 = down)** on the Platformer
