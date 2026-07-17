@@ -26,6 +26,7 @@ var _enum_dialog: ConfirmationDialog = null
 var _enum_name_edit: LineEdit = null
 var _enum_members_box: VBoxContainer = null
 var _enum_member_edits: Array[LineEdit] = []
+var _enum_multiline_check: CheckBox = null
 var _enum_target: EnumRow = null
 
 
@@ -44,6 +45,7 @@ func open_enum_dialog(enum_resource: Resource) -> void:
 func _populate_enum_dialog(enum_row: EnumRow) -> void:
 	_enum_target = enum_row
 	_enum_name_edit.text = enum_row.enum_name
+	_enum_multiline_check.button_pressed = enum_row.multiline
 	# One value field per existing member (at least one empty field so the list is never blank).
 	_clear_enum_member_rows()
 	if enum_row.members.is_empty():
@@ -80,6 +82,12 @@ func _ensure_enum_dialog() -> void:
 		var edit: LineEdit = _add_enum_member_row("")
 		edit.grab_focus())
 	form.add_child(add_button)
+	# Long enums with explicit values usually write one member per line - the toggle keeps the
+	# generated GDScript in that shape (and a lifted multi-line enum arrives with it already on).
+	_enum_multiline_check = CheckBox.new()
+	_enum_multiline_check.text = "Write one value per line (multi-line enum)"
+	_enum_multiline_check.tooltip_text = "Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers."
+	form.add_child(_enum_multiline_check)
 	_enum_dialog.add_child(EventSheetPopupUI.margined(form))
 	_enum_dialog.confirmed.connect(_on_enum_dialog_confirmed)
 	_dock.add_child(_enum_dialog)
@@ -144,9 +152,11 @@ func _on_enum_dialog_confirmed() -> void:
 	if new_members.is_empty():
 		_dock._set_status("Enums need a name and at least one value.", true)
 		return
+	var multiline_choice: bool = _enum_multiline_check.button_pressed
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Enum", func() -> bool:
 		target.enum_name = new_name
 		target.members = new_members
+		target.multiline = multiline_choice
 		return true
 	)
 	if changed:

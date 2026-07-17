@@ -35,13 +35,11 @@ byte-exactly: open the generated `.gd`, save it untouched, and you get the ident
 | Operators (incl. `**`, `%`, bit ops) | The operator palette, tooltip-explained | The ƒx expression builder's Operators row |
 | `@tool` / editor scripts | Tool-mode sheets + On Editor Run | Sheet > New Editor Tool… |
 | Preloads and constants-from-files | Preload Resource blocks | Add > Preload Resource… |
+| Multi-line enums (explicit values) | The same enum block, shape remembered | The enum dialog's "one value per line" toggle |
 | Inner classes (data shape) | The data-class block (fields editable) | Opens from lifted scripts; Add > data class |
 
 ## Scope notes (deliberate, not gaps)
 
-- **Enums with explicit values across multiple lines** open as a verbatim code block instead of
-  an enum row. They still round-trip byte-exactly - they are just not re-editable as a block.
-  Single-line enums (what the basics page shows) lift fully.
 - **Full inner classes with methods** read as a data-class block at the view level (fields
   editable); their method bodies stay verbatim code. Deliberate: a class-in-a-class is expert
   territory, and the covenant (never corrupt, always round-trip) holds either way.

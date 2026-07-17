@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - multi-line enums are enum blocks now, not code blobs
+
+- **Multi-line enums (the shape long enums with explicit values are written in) now lift into
+  the editable enum block** - the same block single-line enums use, with the written shape
+  remembered: `multiline` plus the trailing-comma style, so the file re-emits byte-exactly.
+  The enum dialog gained a "Write one value per line" toggle, and the coverage receipt's
+  scope note is retired. This lands the standing rule: a mappable construct never rests as a
+  verbatim GDScript block - blocks are an explicit user choice only.
+- Fixed along the way: the compiler's enum emission silently truncated any multi-line enum row
+  to its first line (`_emit_enum_line` kept `emitted[0]`); both emission sites now carry whole
+  blocks with correct source-map spans. `tests/multiline_enum_test.gd` pins both shapes, both
+  comma styles, explicit values, refusals (space indent, unclosed), and the full-file
+  round-trip arriving as an editable block.
+
 ### Added - Platform Info pack (the 75th): what is this game running on?
 
 - **A new `Platform Info` autoload pack** - Construct's Platform Info plugin, shaped to what

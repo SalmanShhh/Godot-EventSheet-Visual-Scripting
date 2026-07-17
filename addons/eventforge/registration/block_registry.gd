@@ -166,7 +166,9 @@ class EnumBlockKind extends EventSheetBlockKind:
 	func source_map_kind() -> String:
 		return "enum"
 
-	## Canonical single-line form; the importer's verify-lift depends on this exact shape.
+	## Canonical forms the verify-lift depends on: single-line `enum Name { A, B }`, or with
+	## multiline on, `enum Name {` / one tab-indented `MEMBER,` per line / `}` (the trailing
+	## comma on the LAST member follows trailing_comma, since both styles exist in the wild).
 	func emit_lines(entry: Resource) -> PackedStringArray:
 		var enum_row: EnumRow = entry as EnumRow
 		if enum_row == null or not enum_row.enabled or enum_row.enum_name.strip_edges().is_empty():
@@ -174,26 +176,72 @@ class EnumBlockKind extends EventSheetBlockKind:
 		var members: PackedStringArray = _clean_members(enum_row)
 		if members.is_empty():
 			return PackedStringArray()
-		return PackedStringArray(["enum %s { %s }" % [enum_row.enum_name.strip_edges(), ", ".join(members)]])
+		if not enum_row.multiline:
+			return PackedStringArray(["enum %s { %s }" % [enum_row.enum_name.strip_edges(), ", ".join(members)]])
+		var out: PackedStringArray = PackedStringArray(["enum %s {" % enum_row.enum_name.strip_edges()])
+		for member_index: int in members.size():
+			var is_last: bool = member_index == members.size() - 1
+			out.append("\t%s%s" % [members[member_index], "" if is_last and not enum_row.trailing_comma else ","])
+		out.append("}")
+		return out
 
 	func lift(lines: PackedStringArray, i: int) -> Dictionary:
 		var line: String = lines[i]
 		if not line.begins_with("enum "):
 			return {}
+		# Single-line form first (the compiler's classic shape).
 		var enum_regex: RegEx = RegEx.new()
 		if enum_regex.compile("^enum ([A-Za-z_][A-Za-z0-9_]*) \\{ (.+) \\}$") != OK:
 			return {}
 		var enum_match: RegExMatch = enum_regex.search(line)
-		if enum_match == null:
+		if enum_match != null:
+			var lifted: EnumRow = EnumRow.new()
+			lifted.enum_name = enum_match.get_string(1)
+			lifted.members = PackedStringArray(enum_match.get_string(2).split(", "))
+			# The resource-kind byte gate: re-emission must reproduce the line or the claim drops.
+			var emitted: PackedStringArray = emit_lines(lifted)
+			if emitted.size() != 1 or emitted[0] != line:
+				return {}
+			return {"resource": lifted, "consumed": 1}
+		# Multi-line form: `enum Name {` then one tab-indented member per line until `}`. Members
+		# keep their text verbatim ("HURT = 4" included); the last line's comma style is
+		# remembered so the block re-emits byte-identically - an enum only stays a raw code
+		# block when its shape genuinely isn't this one (or the user chose a block on purpose).
+		var header_regex: RegEx = RegEx.new()
+		if header_regex.compile("^enum ([A-Za-z_][A-Za-z0-9_]*) \\{$") != OK:
 			return {}
-		var lifted: EnumRow = EnumRow.new()
-		lifted.enum_name = enum_match.get_string(1)
-		lifted.members = PackedStringArray(enum_match.get_string(2).split(", "))
-		# The resource-kind byte gate: re-emission must reproduce the line or the claim drops.
-		var emitted: PackedStringArray = emit_lines(lifted)
-		if emitted.size() != 1 or emitted[0] != line:
+		var header_match: RegExMatch = header_regex.search(line)
+		if header_match == null:
 			return {}
-		return {"resource": lifted, "consumed": 1}
+		var multiline_row: EnumRow = EnumRow.new()
+		multiline_row.enum_name = header_match.get_string(1)
+		multiline_row.multiline = true
+		multiline_row.members = PackedStringArray()
+		var scan: int = i + 1
+		while scan < lines.size() and lines[scan] != "}":
+			var member_line: String = lines[scan]
+			if not member_line.begins_with("\t") or member_line.strip_edges().is_empty():
+				return {}
+			var member_text: String = member_line.substr(1)
+			if member_text.ends_with(","):
+				member_text = member_text.substr(0, member_text.length() - 1)
+				multiline_row.trailing_comma = true
+			else:
+				multiline_row.trailing_comma = false
+			if member_text.strip_edges().is_empty() or member_text.contains("\t"):
+				return {}
+			multiline_row.members.append(member_text)
+			scan += 1
+		if scan >= lines.size() or multiline_row.members.is_empty():
+			return {}
+		var consumed: int = scan - i + 1
+		var emitted_block: PackedStringArray = emit_lines(multiline_row)
+		if emitted_block.size() != consumed:
+			return {}
+		for check_index: int in consumed:
+			if emitted_block[check_index] != lines[i + check_index]:
+				return {}
+		return {"resource": multiline_row, "consumed": consumed}
 
 	func summary_for(entry: Resource) -> String:
 		var enum_row: EnumRow = entry as EnumRow

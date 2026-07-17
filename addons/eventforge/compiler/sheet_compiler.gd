@@ -209,11 +209,12 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 	if not enum_rows.is_empty():
 		lines.append("")
 		for enum_entry: Variant in enum_rows:
-			var enum_line: String = _emit_enum_line(enum_entry as EnumRow)
-			if enum_line.is_empty():
+			var enum_lines: PackedStringArray = _emit_enum_lines(enum_entry as EnumRow)
+			if enum_lines.is_empty():
 				continue
-			lines.append(enum_line)
-			source_map.append({"uid": str((enum_entry as EnumRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "enum"})
+			var enum_start: int = lines.size() + 1
+			lines.append_array(enum_lines)
+			source_map.append({"uid": str((enum_entry as EnumRow).get_instance_id()), "start": enum_start, "end": lines.size(), "kind": "enum"})
 	var signal_rows: Array = []
 	_collect_signal_rows(all_events, signal_rows)
 	if not signal_rows.is_empty():
@@ -571,10 +572,11 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		elif entry is CommentRow and (entry as CommentRow).enabled and not (entry as CommentRow).text.strip_edges().is_empty():
 			deferred_comment_lines_external.append_array((entry as CommentRow).text.split("\n"))
 		elif entry is EnumRow:
-			var external_enum_line: String = _emit_enum_line(entry as EnumRow)
-			if not external_enum_line.is_empty():
-				lines.append(external_enum_line)
-				source_map.append({"uid": str((entry as EnumRow).get_instance_id()), "start": lines.size(), "end": lines.size(), "kind": "enum"})
+			var external_enum_lines: PackedStringArray = _emit_enum_lines(entry as EnumRow)
+			if not external_enum_lines.is_empty():
+				var external_enum_start: int = lines.size() + 1
+				lines.append_array(external_enum_lines)
+				source_map.append({"uid": str((entry as EnumRow).get_instance_id()), "start": external_enum_start, "end": lines.size(), "kind": "enum"})
 		elif entry is SignalRow:
 			var external_signal_line: String = _emit_signal_line(entry as SignalRow)
 			if not external_signal_line.is_empty():
@@ -1937,13 +1939,19 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 ## Canonical single-line enum emission ("" when unnamed/empty/disabled). The importer's
 ## verify-lift depends on this exact form - change it only with a lifter update.
 static func _emit_enum_line(enum_row: EnumRow) -> String:
+	# Single-line convenience (lint scaffolds, tests); multi-line rows join with newlines.
+	return "
+".join(_emit_enum_lines(enum_row))
+
+
+static func _emit_enum_lines(enum_row: EnumRow) -> PackedStringArray:
 	# EnumRow is a registered RESOURCE kind on the Custom Block API - the compiler actively
-	# dispatches the built-in through the same emit contract pack kinds use.
+	# dispatches the built-in through the same emit contract pack kinds use. One line for the
+	# classic form, a whole block for a multiline enum (one member per line).
 	var kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(enum_row)
 	if kind == null:
-		return ""
-	var emitted: PackedStringArray = kind.emit_lines(enum_row)
-	return "" if emitted.is_empty() else emitted[0]
+		return PackedStringArray()
+	return kind.emit_lines(enum_row)
 
 
 ## Canonical single-line signal emission ("" when unnamed/disabled). The importer's
