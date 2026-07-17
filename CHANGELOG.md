@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - Platformer Movement gets a Gravity Angle (walk on walls, flip the level)
+
+- **`gravity_angle` property (0-360 degrees, default 90 = down)** on the Platformer
+  Movement pack: one knob rotates the whole movement frame - gravity pull, running,
+  jumping, wall kicks, the variable-jump cut, and floor detection (`up_direction`
+  follows automatically). At the default angle the math is EXACTLY the old fixed-down
+  code (the frame is built from `Vector2.DOWN.rotated`, zero float noise), so existing
+  games play identically.
+- **Set Gravity Angle** action (wraps into 0-360) and **Gravity Angle** expression join
+  the pack's vocabulary - flip a level upside down or run on walls from one event row.
+- Verified end to end: `tests/gravity_angle_test.gd` pins the frame math, the jump
+  kernel, the jump cut, and wrapping; a real-physics smoke confirmed a body under
+  90-degree gravity lands on floors as before while `gravity_angle = 0` falls RIGHT
+  onto a wall and registers it as the floor.
+
 ### Added - packs declare what they need (@ace_requires + a Doctor check)
 
 - **Formal pack dependencies**: a pack states its requirements in `addon_requires`

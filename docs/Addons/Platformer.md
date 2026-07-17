@@ -69,6 +69,7 @@ The mental model is small. Learn these ideas and the rest is Inspector tuning.
 | `move_speed` | `200.0` | Top horizontal run speed in px/s. |
 | `jump_velocity` | `-400.0` | Upward launch of a jump (negative is up). |
 | `gravity` | `980.0` | Downward acceleration in px/s squared. |
+| `gravity_angle` | `90.0` | Direction gravity pulls, in degrees (90 = down, 270 = up, 0 = right). The whole movement frame rotates with it - floor detection, running, and jumps follow. |
 | `acceleration` | `1500.0` | How fast you reach top speed when a direction is held. |
 | `deceleration` | `1800.0` | How fast you stop when no direction is held. |
 | `max_fall_speed` | `1000.0` | Terminal velocity - gravity never pulls faster than this. |
@@ -114,6 +115,7 @@ All ACEs live in the **Platformer** category and target the `PlatformerMovement`
 | Jump | (none) | Jumps from the floor or within coyote time, off a wall (if wall jump is enabled), or as a mid-air (double) jump if any remain. If none is available right now, the press is buffered and fires the instant a jump becomes possible. Call it on the raw jump-button press. |
 | Jump Released | (none) | Call when the jump button is released - cuts the rise short for variable jump height (hold to go higher). Only has an effect while variable jump height is on and the body is still rising. |
 | Set Move Speed | `speed` (float) | Changes the horizontal run speed live (for a sprint, a slow patch, a haste power-up). The Inspector `move_speed` is the starting value; set it back when the effect ends. |
+| Set Gravity Angle | `angle` (float) | Points gravity in a new direction in degrees (90 = down, 270 = up, 0 = right) and rotates the whole movement frame with it: floors, runs, and jumps follow. Flip a level upside down or walk on walls with one action. |
 | Reset Jumps | (none) | Refills the air-jump count, for example after grabbing a power-up or hitting a bounce pad. |
 
 ### Conditions
@@ -133,6 +135,7 @@ All ACEs live in the **Platformer** category and target the `PlatformerMovement`
 | Jumps Remaining | int | How many air (mid-air) jumps are left before the body must touch the ground again. |
 | Air Time | float | Seconds the body has been off the floor (resets to 0 on landing). Read it on landing for fall damage or hard-land effects. |
 | Facing Direction | int | The last horizontal facing: `1` for right, `-1` for left. Does not change while standing still. |
+| Gravity Angle | float | The current gravity direction in degrees (90 = down). Compare it to react differently while gravity is flipped. |
 
 ### Triggers
 
@@ -150,6 +153,7 @@ All ACEs live in the **Platformer** category and target the `PlatformerMovement`
 | `move_speed` | float | `200.0` | any |
 | `jump_velocity` | float | `-400.0` | any (negative is up) |
 | `gravity` | float | `980.0` | any |
+| `gravity_angle` | float | `90.0` | 0-360 degrees (90 = down) |
 | `acceleration` | float | `1500.0` | any |
 | `deceleration` | float | `1800.0` | any |
 | `max_fall_speed` | float | `1000.0` | any |

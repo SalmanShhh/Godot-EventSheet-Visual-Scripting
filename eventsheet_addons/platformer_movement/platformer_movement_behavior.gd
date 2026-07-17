@@ -49,6 +49,8 @@ var ai_move_axis: float = 0.0
 @export var enable_wall_slide: bool = false
 ## Downward acceleration (px/s²).
 @export var gravity: float = 980.0
+## Direction gravity pulls, in degrees (90 = down, 270 = up, 0 = right). Rotates the whole movement frame: floor detection, running, and jumps follow.
+@export_range(0, 360, 1) var gravity_angle: float = 90.0
 ## Press jump this many seconds early and it still fires on landing.
 @export var jump_buffer_time: float = 0.1
 ## Fraction of upward speed kept when jump is released early.
@@ -73,10 +75,18 @@ var ai_move_axis: float = 0.0
 func _physics_process(delta: float) -> void:
 	if host == null:
 		return
+	# One frame to rule the tick: velocity is split into its along-gravity and run
+	# components, updated, then recomposed - at the default 90 degrees this is exactly
+	# the old velocity.y / velocity.x math. up_direction keeps is_on_floor() honest.
+	var down := _gravity_down()
+	var right := _gravity_right()
+	host.up_direction = -down
+	var v_down := host.velocity.dot(down)
+	var v_right := host.velocity.dot(right)
 	var was_on_floor := _was_on_floor
 	var on_floor := host.is_on_floor()
 	if not on_floor:
-		host.velocity.y = minf(host.velocity.y + gravity * delta, max_fall_speed)
+		v_down = minf(v_down + gravity * delta, max_fall_speed)
 		_air_time += delta
 	else:
 		_air_time = 0.0
@@ -85,13 +95,14 @@ func _physics_process(delta: float) -> void:
 	var direction := ai_move_axis if ai_controlled else Input.get_axis("ui_left", "ui_right")
 	var target_speed := direction * move_speed
 	var rate := acceleration if not is_zero_approx(direction) else deceleration
-	host.velocity.x = move_toward(host.velocity.x, target_speed, rate * delta)
+	v_right = move_toward(v_right, target_speed, rate * delta)
 	if not is_zero_approx(direction):
 		_facing = 1 if direction > 0.0 else -1
 	_wall_sliding = false
-	if enable_wall_slide and not on_floor and host.is_on_wall() and host.velocity.y > 0.0 and not is_zero_approx(direction):
-		host.velocity.y = minf(host.velocity.y, wall_slide_speed)
+	if enable_wall_slide and not on_floor and host.is_on_wall() and v_down > 0.0 and not is_zero_approx(direction):
+		v_down = minf(v_down, wall_slide_speed)
 		_wall_sliding = true
+	host.velocity = right * v_right + down * v_down
 	if on_floor:
 		_coyote_timer = coyote_time
 		_jumps_left = maxi(max_jumps - 1, 0)
@@ -120,10 +131,10 @@ func jump() -> void:
 		_perform_jump(jump_velocity)
 		jumped.emit()
 	elif enable_wall_jump and host.is_on_wall():
-		host.velocity.y = wall_jump_velocity
-		host.velocity.x = host.get_wall_normal().x * wall_jump_push
+		var wall_push := host.get_wall_normal().dot(_gravity_right())
+		host.velocity = _gravity_right() * wall_push * wall_jump_push + _gravity_down() * wall_jump_velocity
 		_coyote_timer = 0.0
-		_facing = 1 if host.get_wall_normal().x > 0.0 else -1
+		_facing = 1 if wall_push > 0.0 else -1
 		wall_jumped.emit()
 	elif _jumps_left > 0:
 		_perform_jump(jump_velocity)
@@ -139,8 +150,19 @@ func jump() -> void:
 ## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.jump_released()")
 func jump_released() -> void:
-	if host != null and variable_jump_height and host.velocity.y < 0.0:
-		host.velocity.y *= jump_cut_factor
+	if host != null and variable_jump_height:
+		var rise := host.velocity.dot(_gravity_down())
+		if rise < 0.0:
+			_set_down_velocity(rise * jump_cut_factor)
+
+## @ace_action
+## @ace_name("Set Gravity Angle")
+## @ace_category("Platformer")
+## @ace_description("Points gravity in a new direction, in degrees (90 = down, 270 = up, 0 = right) - the whole movement frame rotates with it: floor detection, running, and jumps follow. Flip a level upside down or run on walls with one action.")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
+## @ace_codegen_template("$PlatformerMovement.set_gravity_angle({angle})")
+func set_gravity_angle(angle: float) -> void:
+	gravity_angle = wrapf(angle, 0.0, 360.0)
 
 ## @ace_action
 ## @ace_name("Set Move Speed")
@@ -165,21 +187,28 @@ func reset_jumps() -> void:
 ## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_moving()")
 func is_moving() -> bool:
-	return host != null and absf(host.velocity.x) > 1.0
+	return host != null and absf(host.velocity.dot(_gravity_right())) > 1.0
 
 ## @ace_condition
 ## @ace_name("Is Jumping")
 ## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_jumping()")
 func is_jumping() -> bool:
-	return host != null and not host.is_on_floor() and host.velocity.y < 0.0
+	return host != null and not host.is_on_floor() and host.velocity.dot(_gravity_down()) < 0.0
 
 ## @ace_condition
 ## @ace_name("Is Falling")
 ## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
 ## @ace_codegen_template("$PlatformerMovement.is_falling()")
 func is_falling() -> bool:
-	return host != null and not host.is_on_floor() and host.velocity.y > 0.0
+	return host != null and not host.is_on_floor() and host.velocity.dot(_gravity_down()) > 0.0
+
+## @ace_expression
+## @ace_name("Gravity Angle")
+## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
+## @ace_codegen_template("$PlatformerMovement.get_gravity_angle()")
+func get_gravity_angle() -> float:
+	return gravity_angle
 
 ## @ace_condition
 ## @ace_name("Is Wall Sliding")
@@ -218,13 +247,33 @@ func air_time() -> float:
 func facing_direction() -> int:
 	return _facing
 
+func _gravity_down() -> Vector2:
+	# The gravity frame: every velocity read/write goes through these two axes, so one
+	# angle knob rotates running, falling, jumping and floor detection together. Built
+	# from Vector2.DOWN.rotated so the default 90 degrees is EXACTLY (0, 1) - zero float
+	# noise, identical behavior to the fixed-down code it replaced.
+	return Vector2.DOWN.rotated(deg_to_rad(gravity_angle - 90.0))
+
+func _gravity_right() -> Vector2:
+	# The frame's "right": gravity-down rotated a quarter turn counter-clockwise, so at
+	# the default angle it is exactly (1, 0) and running stays screen-horizontal.
+	var down: Vector2 = _gravity_down()
+	return Vector2(down.y, -down.x)
+
+func _set_down_velocity(speed_along_down: float) -> void:
+	# Replaces the velocity component along gravity while preserving the run component -
+	# the frame-aware version of writing velocity.y.
+	var down: Vector2 = _gravity_down()
+	var right: Vector2 = _gravity_right()
+	host.velocity = right * host.velocity.dot(right) + down * speed_along_down
+
 func _perform_jump(velocity_y: float) -> void:
-	# Shared jump kernel: set the rise and spend the coyote window. _jumps_left counts
-	# only AIR jumps (it is decremented by the air-jump branch, not here), so falling off
-	# a ledge past the coyote window never grants a phantom jump.
+	# Shared jump kernel: set the rise (negative = against gravity) and spend the coyote
+	# window. _jumps_left counts only AIR jumps (it is decremented by the air-jump branch,
+	# not here), so falling off a ledge past the coyote window never grants a phantom jump.
 	if host == null:
 		return
-	host.velocity.y = velocity_y
+	_set_down_velocity(velocity_y)
 	_coyote_timer = 0.0
 
 # Platformer movement: attach under a CharacterBody2D. Run with ui_left/ui_right, call Jump (with coyote time + buffering), and turn on wall slide / wall jump / double jump in the Inspector. Call Jump Released when the player lets go of the jump button for variable jump height.
