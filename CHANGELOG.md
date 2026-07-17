@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - Platform Info pack (the 75th): what is this game running on?
+
+- **A new `Platform Info` autoload pack** - Construct's Platform Info plugin, shaped to what
+  Godot exposes: Is On Mobile / Desktop / Web, Has Touchscreen, Is Portrait, Is Debug Build,
+  and Has Feature Tag conditions, plus expressions for the OS, device model, locale, engine
+  version, the screen (size, DPI, refresh rate, count, scale, and all four safe-area insets
+  for notch-proof HUDs), the GPU (name, vendor, live rendering method), the CPU, and physical
+  memory. Every verb is a direct engine query - no caching, no state - so sheets switch
+  control schemes, scale UI, and pick quality presets per platform with single rows.
+  Guide: docs/Addons/Platform-Info.md (16 + 5 use cases);
+  `tests/platform_info_pack_test.gd` calls every verb headless.
+
 ### Added - Alt+Enter grows a parameter's expression box
 
 - **Alt+Enter in any expression field toggles a tall editing box** (the Construct reflex):
