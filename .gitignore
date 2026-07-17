@@ -40,3 +40,4 @@ event_sheet_generated.gd
 
 # One-shot patch scripts (session scratch; never commit)
 tools/_*.py
+/*_preview.png
