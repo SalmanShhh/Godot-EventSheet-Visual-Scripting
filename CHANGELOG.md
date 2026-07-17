@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - node-group params autocomplete from real groups (the "group_reference" rich param)
+
+- **A new `group_reference` param hint**: any ACE param hinted with it renders as a
+  suggest-combo listing the node groups that actually exist - the project's global groups
+  (Project Settings > Groups) plus every group used in the edited scene - as the quoted
+  literals templates expect. Free text stays allowed (expressions, variables, brand-new
+  names), and the list is enumerated when the dialog opens, so a group added a minute ago
+  appears without a restart.
+- **20 builtin group params now carry the hint** across the Groups, Nodes: Picking,
+  composition and Scene vocabularies (Add To Group, Nodes In Group, Nearest Node In Group,
+  Run On Tagged Entities' both group slots, Spawn Scene (Full)'s optional group, Has Group
+  Member, and friends). A regex capture-group index and the event-group activity toggles
+  deliberately stay plain expression fields - they are not node groups.
+- Pack authors get it for free: hint any String param `"group_reference"` and the picker
+  appears. `tests/group_reference_param_test.gd` pins the enumeration (quoted, sorted,
+  deduped, engine-internal `_groups` skipped) and the exact hinted-vs-not vocabulary split.
+
 ### Added - behaviors report themselves to the debugger (Construct's debugger-properties idea)
 
 - **Any behavior can define `debugger_properties() -> Dictionary`** and, while its host sheet

@@ -20,9 +20,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── Query a single group as a set of entities ──
-	descriptors.append(F.make_descriptor("Core", "NodesInGroup", "Entities In Group", ACEDescriptor.ACEType.EXPRESSION, "get_tree().get_nodes_in_group({group})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "The group name (your entity type).", "expression")], CAT, "entities in {group}")
+	descriptors.append(F.make_descriptor("Core", "NodesInGroup", "Entities In Group", ACEDescriptor.ACEType.EXPRESSION, "get_tree().get_nodes_in_group({group})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "The group name (your entity type).", "group_reference")], CAT, "entities in {group}")
 		.described("Every node in a group, as an array - loop it with For Each to run a system over that entity type.").featured())
-	descriptors.append(F.make_descriptor("Core", "AnyInGroup", "Any Entity In Group", ACEDescriptor.ACEType.CONDITION, "not get_tree().get_nodes_in_group({group}).is_empty()", "", [F.make_param("group", "String", "\"enemies\"", "Group", "The group name.", "expression")], CAT, "any entity in {group}")
+	descriptors.append(F.make_descriptor("Core", "AnyInGroup", "Any Entity In Group", ACEDescriptor.ACEType.CONDITION, "not get_tree().get_nodes_in_group({group}).is_empty()", "", [F.make_param("group", "String", "\"enemies\"", "Group", "The group name.", "group_reference")], CAT, "any entity in {group}")
 		.described("True when at least one node is in the group (any entity of that type exists)."))
 
 	# ── Archetype intersection: entities in BOTH groups (the "has both components" query) ──
@@ -36,7 +36,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True when an entity belongs to both groups (has both tags/components)."))
 
 	# ── A system in one row: call a method on every tagged entity ──
-	descriptors.append(F.make_descriptor("Core", "CallOnTagged", "Run On Tagged Entities", ACEDescriptor.ACEType.ACTION, "for __entity_{uid}: Node in get_tree().get_nodes_in_group({group}):\n\tif __entity_{uid}.is_in_group({tag}) and __entity_{uid}.has_method({method}):\n\t\t__entity_{uid}.call({method})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "The entity type to run over.", "expression"), F.make_param("tag", "String", "\"stunned\"", "Also In", "Only entities also in this group (leave as a tag/component).", "expression"), F.make_param("method", "String", "\"tick\"", "Method", "The method to call on each (your system's step).", "expression")], CAT, "run {method} on {group} that are {tag}")
+	descriptors.append(F.make_descriptor("Core", "CallOnTagged", "Run On Tagged Entities", ACEDescriptor.ACEType.ACTION, "for __entity_{uid}: Node in get_tree().get_nodes_in_group({group}):\n\tif __entity_{uid}.is_in_group({tag}) and __entity_{uid}.has_method({method}):\n\t\t__entity_{uid}.call({method})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "The entity type to run over.", "group_reference"), F.make_param("tag", "String", "\"stunned\"", "Also In", "Only entities also in this group (leave as a tag/component).", "group_reference"), F.make_param("method", "String", "\"tick\"", "Method", "The method to call on each (your system's step).", "expression")], CAT, "run {method} on {group} that are {tag}")
 		.described("Calls a method on every entity in a group that also has a tag - a whole system in one action."))
 
 	return descriptors

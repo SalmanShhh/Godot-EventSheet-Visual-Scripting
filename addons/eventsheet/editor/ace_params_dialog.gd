@@ -244,6 +244,7 @@ func _ensure_hint_factories() -> void:
 		_hint_factories = {
 			"key_capture": _create_key_capture_field,
 			"input_action": _create_input_action_field,
+			"group_reference": _create_group_reference_field,
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
 			"animation_reference": _create_animation_field,
@@ -444,6 +445,45 @@ static func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStr
 	if not any_added:
 		popup.add_item("(no match - keep typing)", -1)
 		popup.set_item_disabled(popup.item_count - 1, true)
+
+
+## Live node-group picker (hint "group_reference"): an editable suggest-combo listing the
+## groups that actually exist - the project's global groups (Project Settings > Groups) plus
+## every group used in the edited scene - as the quoted literals templates expect. Enumerated
+## when the dialog builds, so a group added a minute ago appears without a restart; free text
+## stays allowed (expressions, variables, brand-new names).
+func _create_group_reference_field(key: String, default_value: Variant) -> Control:
+	var scene_root: Node = animation_scene_root_override
+	if scene_root == null and Engine.is_editor_hint():
+		scene_root = EditorInterface.get_edited_scene_root()
+	return _create_autocomplete_field(key, group_choices(scene_root), default_value)
+
+
+## Every known node group, quoted: project-wide global groups first (they are the deliberate
+## vocabulary), then groups found on nodes in the given scene, sorted and deduped. Pure and
+## static (scene passed in), so tests pin it headless.
+static func group_choices(scene_root: Node) -> Array:
+	var names: Dictionary = {}
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var property_name: String = str(property_info.get("name", ""))
+		if property_name.begins_with("global_group/"):
+			names[property_name.trim_prefix("global_group/")] = true
+	if scene_root != null:
+		var pending: Array = [scene_root]
+		while not pending.is_empty():
+			var node: Node = pending.pop_back()
+			for group_name: StringName in node.get_groups():
+				# Skip engine-internal groups (leading underscore, e.g. _vp_canvas_items).
+				if not str(group_name).begins_with("_"):
+					names[str(group_name)] = true
+			for child: Node in node.get_children():
+				pending.append(child)
+	var sorted_names: Array = names.keys()
+	sorted_names.sort()
+	var choices: Array = []
+	for group_name: Variant in sorted_names:
+		choices.append("\"%s\"" % group_name)
+	return choices
 
 
 ## Live Input Map picker (hint "input_action"): an editable suggest-combo whose choices are

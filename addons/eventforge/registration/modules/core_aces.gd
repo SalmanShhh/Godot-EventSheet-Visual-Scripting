@@ -91,7 +91,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Always true, so its actions run every time the event is checked."))
 	descriptors.append(F.make_descriptor("Core", "IsOnFloor", "Is On Floor", ACEDescriptor.ACEType.CONDITION, "{host.}is_on_floor()", "", [], "General Conditions", "Is on floor", "CharacterBody2D")
 		.described("True when this 2D character body is standing on the ground, used to gate jumping."))
-	descriptors.append(F.make_descriptor("Core", "HasGroupMember", "Has Group Member", ACEDescriptor.ACEType.CONDITION, "is_in_group(&{group})", "", [F.make_param("group", "String", "", "Group", "Group name to test.")], "General Conditions", "In group {group}")
+	descriptors.append(F.make_descriptor("Core", "HasGroupMember", "Has Group Member", ACEDescriptor.ACEType.CONDITION, "is_in_group(&{group})", "", [F.make_param("group", "String", "", "Group", "Group name to test.", "group_reference")], "General Conditions", "In group {group}")
 		.described("True when this node belongs to the named group, for tagging and identifying objects."))
 	descriptors.append(F.make_descriptor("Core", "CompareVar", "Compare Variable", ACEDescriptor.ACEType.CONDITION, "{var_name} {op} {value}", "", [F.make_param("var_name", "String", "var", "Variable", "Variable name to compare.", "variable_reference"), F.make_param("op", "String", "==", "Operator", "Comparison operator.", "", F.COMPARISON_OPERATORS), F.make_param("value", "String", "0", "Value", "Comparison value.", "expression")], "Variables", "{var_name} {op} {value}")
 		.described("True when a variable compares against a value as you specify, for branching on game state."))
