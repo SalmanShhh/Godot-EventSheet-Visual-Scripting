@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - the public GDScript-basics coverage receipt (spec B complete)
+
+- **docs/GDSCRIPT-BASICS-COVERAGE.md**: every feature on Godot's official GDScript basics page,
+  mapped to how it reads and how you author it in the sheet - the public receipt that
+  EventSheets is a complete visual-scripting surface for the language's fundamentals. Includes
+  the two deliberate scope notes (multi-line valued enums and inner-class method bodies stay
+  verbatim - still byte-exact, just not block-editable).
+- **The receipt is suite-pinned** (`tests/gdscript_basics_coverage_test.gd`): every row's ACE
+  id, block kind, and resource seam is asserted to exist, so coverage can never silently
+  regress behind the published table. With this, all five release-bar items are shipped.
+
 ### Added - the release-bar polish pass (approved spec B, items 1-3)
 
 - **Text From Pattern** (featured, Text): builds text by filling {name} slots -
