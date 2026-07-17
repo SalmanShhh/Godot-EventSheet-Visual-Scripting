@@ -121,8 +121,9 @@ Addon…** (it scaffolds a ready-to-edit provider), and **`@ace_expose_all`** ex
 public API as ACEs at once. Full walkthrough: [GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE.md](GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE.md).
 Two routes:
 
-- **A behavior pack:** build the logic as an event sheet, then **Export Addon…** turns it into a
-  published pack folder.
+- **A behavior pack:** build the logic as an event sheet, then **Export Addon…** publishes it
+  through the same pipeline the bundled packs use - the exported `.gd` IS the pack (editable
+  sheet and runtime script in one), its verbs live in every picker.
 - **Custom ACEs from a script:** drop a `.gd` into `res://eventsheet_addons/`. Its `class_name`
   becomes the provider; methods/exported vars become Actions/Conditions/Expressions; annotated
   signals become Triggers. `@ace_param_options` / `@ace_param_autocomplete` / `@ace_param_hint`

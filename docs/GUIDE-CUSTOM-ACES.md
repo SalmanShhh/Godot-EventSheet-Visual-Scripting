@@ -669,7 +669,7 @@ The `hint` chooses the input widget in the parameter dialog. `expression` is by 
 | Hint | Widget shown | Use for |
 |------|--------------|---------|
 | *(empty)* | Plain text field (or a dropdown if `options` is set) | Literals and fixed dropdowns. |
-| `expression` | Text field with an `ƒx` button (the Insert Expression picker) | Any GDScript value or expression. The default choice. |
+| `expression` | Text field with an `ƒx` button (Find Expressions - the floating Expressions dictionary; the same verbs also autocomplete as you type) | Any GDScript value or expression. The default choice. |
 | `variable_reference` | Dropdown of sheet variables | A sheet variable name. |
 | `variable_reference:Array` (or `:Dictionary`, etc.) | Dropdown filtered to that variable type | A typed variable; only matching (or Variant) variables show. |
 | `color` | ColorPickerButton | A `Color`. |

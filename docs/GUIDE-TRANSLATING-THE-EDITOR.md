@@ -44,11 +44,17 @@ Output: `eventsheet_translations/eventsheet_editor_strings.template.csv` - renam
 column's header to your locale code and start filling cells. A starter with the most common
 strings also ships at `addons/eventsheet/translations/TEMPLATE.csv`.
 
-The plugin ships EFIGS out of the box: English is the built-in source language, and
+The plugin ships eight languages out of the box: English is the built-in source language, and
 `addons/eventsheet/translations/` carries `fr.csv` (French), `es.csv` (Spanish), `it.csv`
-(Italian), and `de.csv` (German), each translating the everyday surface (toolbar, menus,
+(Italian), `de.csv` (German), `ko.csv` (Korean), `ja.csv` (Japanese), `ru.csv` (Russian), and
+`zh_CN.csv` (Simplified Chinese), each translating the everyday surface (toolbar, menus,
 dialogs, the getting-started screens, the tour). They are why those languages already appear
-in the dropdown - and the files to copy when starting your own.
+in the picker - and the files to copy when starting your own.
+
+Two conveniences make drop-ins painless: translations **hot-reload** - drop, edit, or delete a
+CSV and the catalogs re-read on the editor's next filesystem scan, with open UI re-translating
+live (no restart) - and the language switch lives in **View > Language**, right beside the
+Theme entries (the Welcome screen's picker stays too).
 
 ## Where translation files are picked up
 

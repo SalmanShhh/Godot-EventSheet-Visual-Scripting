@@ -956,6 +956,42 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Collision Force** - Approximate impact speed of the latest collision (inside On Collided).
 - **Collision Angle** - Approximate impact direction in degrees (inside On Collided).
 
+### PlatformInfoAddon (`res://eventsheet_addons/platform_info/platform_info_addon.gd`)
+@ace_tags(platform, device, screen, system) @ace_category("Platform Info")
+
+#### Conditions
+- **Is On Mobile** - True on Android and iOS builds - the switch-to-touch-controls condition.
+- **Is On Desktop** - True on Windows, macOS, and Linux builds.
+- **Is On Web** - True in browser (HTML5) exports - hide quit buttons, mind autoplay rules.
+- **Has Touchscreen** - True when a touchscreen is available (mobile, or a touch laptop).
+- **Is Portrait** - True while the window is taller than it is wide - branch layouts on rotation.
+- **Is Debug Build** - True in editor runs and debug exports - gate cheats and dev overlays.
+- **Has Feature Tag** (`feature: String`) - True when the build has a feature tag - engine ones ("mobile", "web", "editor
+
+#### Expressions
+- **OS Name** - The operating system: "Windows", "macOS", "Linux", "Android", "iOS", "Web".
+- **OS Version** - The operating system's version string.
+- **Device Model** - The device model name (phones report their model; desktops report "GenericDevice
+- **Locale** - The player's full locale, like "en_US" - default your language picker to it.
+- **Locale Language** - Just the language part of the locale, like "en" or "ja".
+- **Engine Version** - The Godot version string, like "4.7.stable".
+- **Screen Width** - The current screen's width in pixels (the whole display, not the window).
+- **Screen Height** - The current screen's height in pixels.
+- **Screen DPI** - The screen's pixel density - scale touch buttons by it so they stay finger-sized.
+- **Screen Refresh Rate** - The screen's refresh rate in Hz (-1 when unknown) - cap or uncap smoothing with it.
+- **Screen Count** - How many displays are connected.
+- **Screen Scale** - The display's scale factor (2.0 on hiDPI/Retina screens; 1.0 elsewhere).
+- **Safe Area Top** - Pixels shaved off the screen's TOP by notches/status bars - pad your HUD down by it.
+- **Safe Area Left** - Pixels shaved off the screen's LEFT edge by cutouts.
+- **Safe Area Bottom Inset** - Pixels shaved off the BOTTOM (home indicators): screen height minus the safe area's end.
+- **Safe Area Right Inset** - Pixels shaved off the RIGHT edge: screen width minus the safe area's end.
+- **GPU Name** - The graphics adapter's name - match against known slow chips to pick a quality preset.
+- **GPU Vendor** - The graphics adapter's vendor ("NVIDIA", "AMD", "Intel", "Apple"...).
+- **Rendering Method** - Which renderer is live: "forward_plus", "mobile", or "gl_compatibility".
+- **CPU Thread Count** - How many CPU threads the machine has - budget background work with it.
+- **CPU Name** - The CPU's name string.
+- **Physical Memory (MB)** - The machine's physical RAM in megabytes (0 where the OS hides it) - drop texture quality under a threshold.
+
 ### PlatformerMovement (`res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd`)
 @ace_tags(movement, platformer) @ace_category("Platformer") @ace_expose_all(node)
 
@@ -1443,6 +1479,41 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Tween Rotation** (`degrees: float, duration: float`) - Rotates the host to the given degrees.
 - **Tween Alpha** (`alpha: float, duration: float`) - Fades the host's modulate alpha.
 - **Stop Tweens** - Kills the running tween (host stays where it is).
+
+### UHTNPlanner (`res://eventsheet_addons/uhtn_planning/uhtn_planning_behavior.gd`)
+@ace_tags(ai, planning, utility) @ace_category("UHTN Planning") @ace_expose_all(node)
+
+#### Triggers
+- **On Task Started** (`task_name: String`)
+
+#### Conditions
+- **Has Plan**
+- **Current Task Is** (`task_name: String`)
+
+#### Actions
+- **Set World State** (`key: String, value`) - Writes a fact - preconditions and scorer inputs read it.
+- **Clear World State** (`key: String`) - Removes a world-state key.
+- **Add Primitive Task** (`task_name: String`) - Registers a leaf task your sheet executes directly.
+- **Add Compound Task** (`task_name: String`) - Registers a task that decomposes via methods.
+- **Add Method** (`task_name: String, method_id: String, utility: float`) - Adds (or re-scores) a way to accomplish a compound task; the best-ranked applicable method wins.
+- **Add Method Condition** (`task_name: String, method_id: String, key: String, op: String, value`) - A precondition (world-state key, operator, value) the method needs to be chosen.
+- **Add Method Subtask** (`task_name: String, method_id: String, subtask: String`) - Appends a subtask (primitive or compound) to a method, in order.
+- **Add Scorer Input** (`scorer_id: String, input_key: String, curve: String, weight: float, center: float, slope: float`) - Feeds a world-state key through a response curve (linear / inverse / quadratic / inverse_quadratic / logistic / threshold / bell) into a named scorer. A scorer is the weighted average of its inputs.
+- **Set Method Scorer** (`task_name: String, method_id: String, scorer_id: String`) - Binds a utility scorer to a method - the method is then ranked by the scorer's LIVE value at plan time instead of its fixed utility.
+- **Clear Task Network** - Wipes all tasks, methods, and scorers (keeps world state).
+- **Load Plan Resource** (`resource: Resource`) - Loads a UHTNPlanResource (.tres): its tasks, methods, preconditions, and scorer inputs replace the current network, and its root task becomes the goal. Fires On Plan Loaded.
+- **Request Plan** - Decomposes the root task into a plan (best-ranked methods win) and starts the first task.
+- **Mark Task Complete** - Advances to the next task, or fires On Plan Complete at the end.
+- **Mark Task Failed** - Re-plans from the root (or fires On Plan Failed if auto-replan is off).
+- **Force Task** (`task_name: String`) - Pushes a task to the front of the plan and starts it - the scripted-override escape hatch (cutscene beats, staggers).
+- **Invalidate Plan** - Drops the current plan so the next Request Plan rebuilds it.
+
+#### Expressions
+- **Current Task**
+- **Plan Length**
+- **Plan Task At** (`index: int`)
+- **World Value** (`key: String`)
+- **Scorer Value** (`scorer_id: String`)
 
 ### UpgradesAddon (`res://eventsheet_addons/upgrades/upgrades_addon.gd`)
 @ace_tags(incremental, idle, upgrade) @ace_category("Upgrades")

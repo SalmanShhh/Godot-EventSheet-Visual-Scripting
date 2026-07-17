@@ -23,7 +23,9 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 - [Data-driven Addons with Custom Resources](GUIDE-DATA-DRIVEN-ADDONS.md) - author content as Inspector-edited `.tres` resources.
 - [Building a Data-driven Game](GUIDE-DATA-DRIVEN-GAMES.md) - drive whole games from Custom Resources.
 - [Building on EventSheets](GUIDE-BUILDING-ON-EVENTSHEETS.md) - the public `EventSheets` API for plugins, build tools, and CI.
-- [Making Custom Editor Tools](GUIDE-BUILDING-EDITOR-TOOLS.md) - compile a sheet into a Godot editor tool.
+- [Editor Tools](GUIDE-EDITOR-TOOLS.md) - one-click editor chores from Sheet > New Editor Tool: File > Run, Inspector buttons, undo done right.
+- [Custom Resources](GUIDE-CUSTOM-RESOURCES.md) - your own data assets from the three-question wizard: column language, validation, the .tres workflow.
+- [Making Editor Tools from Code](GUIDE-BUILDING-EDITOR-TOOLS.md) - the programmatic side: author tool sheets through the EventSheets API.
 
 ## Patterns
 
@@ -34,7 +36,8 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 ## Localization
 
 - [Translating Your Game](GUIDE-TRANSLATING-YOUR-GAME.md) - localise game text the Godot way (globe-marked params, POT, Set Language).
-- [Translating the Editor](GUIDE-TRANSLATING-THE-EDITOR.md) - drop in a CSV to localise the plugin UI itself.
+- [Translating the Editor](GUIDE-TRANSLATING-THE-EDITOR.md) - drop in a CSV to localise the plugin UI itself (8 languages ship built in).
+- [GDScript Basics Coverage](GDSCRIPT-BASICS-COVERAGE.md) - every fundamental on Godot's basics page, as sheet rows (the release-bar receipt).
 
 ## Working with your project
 

@@ -214,6 +214,10 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
 | Codegen | `open_gd_as_sheet(source: String)` | `EventSheetResource` | no |
 | Codegen | `round_trips(source: String)` | `bool` | no |
+| Codegen | `publish_pack(sheet, base_path, icon_path := "")` - the whole pack pipeline (icon detect, de-coding lifts, stable uids, banner-less compile); shared by the bundled builders and Export Addon | `Dictionary` | no |
+| Codegen | `stabilize_row_uids(sheet)` - deterministic row uids so regeneration is byte-stable | `void` | no |
+| Codegen | `resource_grid(columns, options := {})` - the Inspector-grid descriptor from plain column phrases ("kind: a|b|c" = a dropdown) | `Dictionary` | no |
+| Codegen | `attach_validator(sheet, variable_name)` - creates validate_<variable>() and wires the live-warning attribute | `String` | no |
 | Save | `save_state_code(fields: Array)` | `String` | no |
 | Save | `persistable_fields(script_path: String)` | `Array[Dictionary]` | no |
 | Save | `has_save_support(target)` (path / Script / Node) | `bool` | no |

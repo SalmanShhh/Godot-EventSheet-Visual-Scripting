@@ -24,7 +24,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 
 - **You're porting a C3 game by hand.** Migration is a sheet-by-sheet rebuild (faster than it sounds, because the grammar is the same), and every table here is a lookup for "what is X called now?"
 - **You keep typing C3 words into the picker.** Good - keep doing that. The picker's search understands C3 phrasing ("every tick", "on created", "spawn") via synonym aliases, so type what you know and the Godot equivalent surfaces.
-- **You leaned on a C3 behavior and want its twin.** 31 behavior packs are bundled, including faithful ports of custom C3 addons (Drag & Drop, Virtual Cursor, Health, HTN planner and more) - see [the three lanes](#6-behaviors-and-plugins---the-three-lanes).
+- **You leaned on a C3 behavior and want its twin.** 75 packs are bundled, including faithful ports of custom C3 addons (Drag & Drop, Virtual Cursor, Health, Platform Info, the UHTN planner and more) - see [the three lanes](#6-behaviors-and-plugins---the-three-lanes).
 - **Your events all start with "Every tick".** The single biggest mental shift from C3 is reacting to signals instead of polling; [section 4](#4-polling-vs-reacting---the-biggest-shift-from-c3) gives you the rule of thumb.
 - **You relied on the Dictionary / Array / JSON data plugins.** They're first-class variable types here, with their own picker groups - no addon needed.
 - **You're waiting for a `.c3p` importer.** Don't - it's a deliberate, permanent non-goal, and [section 9](#9-importing-c3-projects-directly---a-permanent-non-goal) explains why and what the supported path is.
@@ -71,6 +71,8 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | Simulate control (Platform) | PlatformerMovement behavior ACEs (`Jump`, `Set Move Speed`) |
 | Wait | An `await`-flagged action, or `await get_tree().create_timer(1.0).timeout` in a block |
 | Pick by comparison / For each | **Pick filters**: right-click an event → "Add Pick Filter (For Each)…" - loops a node group/children/any iterable with a GDScript `where` predicate and first-N; compiles to a plain `for` loop |
+| Repeat / While | The same pick-filter dialog: the Collection dropdown has **Repeat (count)** and **While (condition)** |
+| loopindex / loopindex("name") | Name the loop's **Loop index** field (convention: `loop_index`), then read the **Loop Index** expression; nested loops take distinct names and **Loop Index Of** reads an outer one - 0-based like C3, even over offset ranges |
 | random(a, b) | `randf_range(a, b)` / `randi_range(a, b)` |
 | dt | `delta` |
 | lerp(a, b, x) | `lerp(a, b, x)` |

@@ -21,6 +21,7 @@ Install as a single project-wide autoload you call from any sheet by name.
 - [ComboBox](ComboBox.md) - an input-sequence detector: register token sequences, fire On Combo Matched, with timing windows and wildcards.
 - [ObjectPool](ObjectPool.md) - reuse nodes instead of spawning and freeing them, so heavy scenes stay smooth.
 - [Save System](Save-System.md) - save and load your variables and progress to disk.
+- [Platform Info](Platform-Info.md) - what is this game running on: OS/device/screen/touch/locale/GPU/CPU conditions and expressions, safe-area insets included.
 - [Advanced Random](Advanced-Random.md) - richer randomness: weighted picks, shuffled bags, dice, and noise.
 
 ## Incremental and idle

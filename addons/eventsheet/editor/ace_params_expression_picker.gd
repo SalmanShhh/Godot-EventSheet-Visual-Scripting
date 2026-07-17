@@ -3,8 +3,8 @@ class_name ACEParamsExpressionPicker
 extends RefCounted
 # The "Insert Expression" picker opened by the ƒx button next to an expression field - a visual
 # expression builder. Lists EXPRESSION-type ACEs (grouped), the host object's reflected
-# properties/methods, and the sheet's own variables (with member chaining while searching), plus an
-# operator palette; picking one inserts its code fragment at the field's caret. Extracted from
+# properties/methods, and the sheet's own variables (with member chaining while searching);
+# picking one inserts its code fragment at the field's caret. Extracted from
 # ace_params_dialog.gd to keep that file maintainable; it owns its own widgets and reaches the host
 # ACEParamsDialog (the ACE registry, the host-class reflection, the value-bearing _fields, the live
 # ƒx validation) through the `_host` back-reference, the same pattern as the other editor helpers.
@@ -303,7 +303,7 @@ func _on_expression_activated() -> void:
 
 
 ## Inserts a snippet at the caret of the expression field that opened the picker (the CodeEdit for
-## _expression_target_key) and re-validates it. Shared by the tree results and the operator palette.
+## _expression_target_key) and re-validates it.
 func _insert_into_expression_target(snippet: String) -> void:
 	var target: Variant = _host._fields.get(_expression_target_key)
 	if target is TextEdit:  # CodeEdit extends TextEdit

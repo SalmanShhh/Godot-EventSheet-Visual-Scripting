@@ -32,7 +32,7 @@ byte-exactly: open the generated `.gd`, save it untouched, and you get the ident
 | Ternary (`x if c else y`) | Value If (one of two values) | The Helpers category |
 | String formatting | Text From Pattern ({name} slots) / Format String | The Text category (featured) |
 | `null` checks | Is Null / Is Valid conditions | The picker's null-check conditions |
-| Operators (incl. `**`, `%`, bit ops) | The operator palette, tooltip-explained | The ƒx expression builder's Operators row |
+| Operators (incl. `**`, `%`, bit ops) | Typed directly - plain GDScript operators | Any ƒx field; inside a call, a plain-word signature hint explains the parameters |
 | `@tool` / editor scripts | Tool-mode sheets + On Editor Run | Sheet > New Editor Tool… |
 | Preloads and constants-from-files | Preload Resource blocks | Add > Preload Resource… |
 | Multi-line enums (explicit values) | The same enum block, shape remembered | The enum dialog's "one value per line" toggle |

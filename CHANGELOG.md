@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed - documentation currency sweep
+
+- **The vocabulary doc regenerated** (+71 lines: LoopIndex, Text From Pattern, the Platform
+  Info verbs, featured stars, the Value If rename...).
+- **The indexes caught up**: docs/README.md lists the Editor Tools + Custom Resources guides
+  and the GDScript-basics coverage receipt (with the code-side editor-tools guide
+  re-titled to its actual scope); the addon index gains Platform Info.
+- **Stale claims fixed across the corpus** (two-agent audit of every guide): the C3 migration
+  guide now maps Repeat/While and loopindex (and says 75 packs, not 31); the editor
+  translation guide documents all eight languages, hot-reload, and View > Language; the API
+  reference gains publish_pack / stabilize_row_uids / resource_grid / attach_validator; the
+  coverage receipt and recipes drop the removed operator palette and the "pack folder"
+  phrasing; two leftover operator-palette code comments cleaned.
+
 ### Changed - translations topped up (518 keys x 8 languages) and calmer group headers
 
 - **All eight editor languages gained the newest UI strings** - 47 keys each (the Custom
