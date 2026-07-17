@@ -58,6 +58,11 @@ func build(root: Node) -> void:
 		sheet_popup.get_item_index(12),
 		"Start an editor-side tool sheet: its events run INSIDE the editor (script editor > File > Run), never in the game - batch renames, scene checks, one-click chores."
 	)
+	sheet_popup.add_item("New Custom Resource…", 13)
+	sheet_popup.set_item_tooltip(
+		sheet_popup.get_item_index(13),
+		"Make your own data asset in three questions: name one entry, list its columns, done - a Resource whose Inspector is a fill-in table, saved as .tres files designers edit."
+	)
 	sheet_popup.add_item("Teach a Verb - Share Published Verbs", 10)
 	sheet_popup.set_item_tooltip(
 		sheet_popup.get_item_index(10),
@@ -84,6 +89,7 @@ func build(root: Node) -> void:
 			10: _dock._share_verbs_with_project_requested()
 			11: _dock._open_inspector_designer()
 			12: _dock._starter._new_sheet_from_template(10)
+			13: _dock._new_resource_wizard.open()
 	)
 	_toolbar.add_child(sheet_menu)
 	_add_toolbar_button(_toolbar, "Save", _dock._on_save_requested, "Save the sheet - compile-on-save keeps its generated script fresh (Ctrl+S).", "Save")

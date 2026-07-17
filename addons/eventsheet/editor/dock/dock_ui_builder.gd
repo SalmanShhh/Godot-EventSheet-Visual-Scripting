@@ -384,6 +384,7 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._ace_params.back_requested.connect(_dock._on_ace_params_back_requested)
 	_dock._variable_dlg.init_dialog(_dock)
 	_dock._new_addon_panel.init(_dock)
+	_dock._new_resource_wizard.init(_dock)
 	_dock._welcome.init(_dock)
 	_dock._tour.init(_dock)
 	_dock._behavior_preview.init(_dock)

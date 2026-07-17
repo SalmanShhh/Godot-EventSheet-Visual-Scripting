@@ -263,6 +263,55 @@ static func variable_code(variable: LocalVariable) -> String:
 	return SheetCompiler._emit_tree_variable_line(variable)
 
 
+## Builds one Inspector-GRID variable descriptor (the `"drawer": "table"` payload) from plain
+## column phrases, so nobody hand-assembles the column-hint syntax: this is the ONE owner of
+## it - the Custom Resource wizard, pack builders, and extensions all converge here.
+##
+## Each column is a String phrase or a pass-through Dictionary:
+##   "name"                      -> {"name": "name", "type": "String"}
+##   "weight: float"             -> {"name": "weight", "type": "float"}   (float/int/bool/String)
+##   "kind: coin|gem|key"        -> {"name": "kind", "type": "enum(coin|gem|key)"} (a dropdown)
+## Options (all optional): tooltip, group, required (bool). Returns the full variable
+## descriptor - drop it into EventSheetResource.variables under the grid's name:
+##   sheet.variables["drops"] = EventSheets.resource_grid(["name", "kind: coin|gem|key",
+##       "weight: float"], {"tooltip": "One drop per row.", "group": "Loot"})
+static func resource_grid(columns: Array, options: Dictionary = {}) -> Dictionary:
+	var table_columns: Array = []
+	for column: Variant in columns:
+		if column is Dictionary:
+			table_columns.append((column as Dictionary).duplicate(true))
+			continue
+		var phrase: String = str(column).strip_edges()
+		if phrase.is_empty():
+			continue
+		var column_name: String = phrase
+		var column_type: String = "String"
+		var colon: int = phrase.find(":")
+		if colon >= 0:
+			column_name = phrase.substr(0, colon).strip_edges()
+			var kind: String = phrase.substr(colon + 1).strip_edges()
+			if kind.contains("|"):
+				# Plain choices become a dropdown column; spaces around the | are forgiven.
+				var choices: PackedStringArray = PackedStringArray()
+				for choice: String in kind.split("|"):
+					if not choice.strip_edges().is_empty():
+						choices.append(choice.strip_edges())
+				column_type = "enum(%s)" % "|".join(choices)
+			elif kind in ["float", "int", "bool", "String"]:
+				column_type = kind
+			elif not kind.is_empty():
+				column_type = kind  # already-formed hints (enum(...)) pass through untouched
+		table_columns.append({"name": column_name, "type": column_type})
+	var attributes: Dictionary = {"drawer": "table", "table_columns": table_columns}
+	if not str(options.get("tooltip", "")).is_empty():
+		attributes["tooltip"] = str(options.get("tooltip"))
+	if not str(options.get("group", "")).is_empty():
+		attributes["group"] = str(options.get("group"))
+	if bool(options.get("required", false)):
+		attributes["required"] = true
+	return {"type": "Array", "default": [], "exported": true, "attributes": attributes}
+
+
 ## Opens GDScript source as an editable sheet (the lossless external path: everything
 ## liftable lifts, everything else stays verbatim - never corrupted).
 static func open_gd_as_sheet(source: String) -> EventSheetResource:

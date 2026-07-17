@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - the Custom Resource wizard + the resource_grid API (approved spec, slice 2)
+
+- **Sheet > New Custom Resource…** builds your own data asset from three plain questions -
+  what is one entry called, what columns does an entry have (plain words for text, ": float"
+  for numbers, choices with | for a dropdown), and whether the table is required - and out
+  comes a Resource-host sheet whose Inspector IS the fill-in grid, .tres-ready, with a live
+  "Ships as" receipt in the dialog. The author never sees the column-hint syntax.
+- **`EventSheets.resource_grid(columns, options)` joins the public API** as the ONE owner of
+  the Inspector-grid payload: plain phrases in, the full `drawer: table` variable descriptor
+  out (tooltip/group/required options included; formed column dictionaries pass through).
+  The wizard is its first consumer; pack builders and extensions converge on it next.
+- `tests/resource_wizard_test.gd` pins the phrase parsing, the wizard's naming rules, and the
+  covenant: a wizard-built sheet compiles and round-trips byte-exactly.
+
 ### Added - editor tools are a first-class journey (approved spec, slice 1)
 
 - **Sheet > New Editor Tool…** scaffolds a ready-to-run editor-side tool sheet in one click:
