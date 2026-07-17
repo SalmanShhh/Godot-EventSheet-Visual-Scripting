@@ -103,4 +103,6 @@ static func build() -> bool:
 	Lib.append_function(sheet, "resume_slicer", "Resume", "Time Slicer", "Resumes draining the queue.",
 		[],
 		"_paused = false")
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["enqueue_items", "set_frame_budget"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/time_slicer/time_slicer_behavior")

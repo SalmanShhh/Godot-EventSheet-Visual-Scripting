@@ -6,6 +6,7 @@ extends Node
 ## Answers "what is this game running on?" from event rows: which OS and device, screen size, DPI, refresh rate and safe area, touch support, the player's locale, the GPU and processor - so sheets can switch controls, scale UI, and pick quality presets per platform. Direct engine queries, no state.
 
 ## @ace_condition
+## @ace_featured
 ## @ace_name("Is On Mobile")
 ## @ace_category("Platform Info")
 ## @ace_description("True on Android and iOS builds - the switch-to-touch-controls condition.")
@@ -70,6 +71,7 @@ func has_feature(feature: String) -> bool:
 	return OS.has_feature(feature)
 
 ## @ace_expression
+## @ace_featured
 ## @ace_name("OS Name")
 ## @ace_category("Platform Info")
 ## @ace_description("The operating system: "Windows", "macOS", "Linux", "Android", "iOS", "Web".")
@@ -142,6 +144,7 @@ func screen_height() -> int:
 	return DisplayServer.screen_get_size().y
 
 ## @ace_expression
+## @ace_featured
 ## @ace_name("Screen DPI")
 ## @ace_category("Platform Info")
 ## @ace_description("The screen's pixel density - scale touch buttons by it so they stay finger-sized.")

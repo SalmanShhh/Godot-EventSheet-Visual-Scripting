@@ -54,6 +54,7 @@ func _find_method(task_name: String, method_id: String) -> HTNMethod:
 	return null
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Set World State")
 ## @ace_category("HTN")
 ## @ace_description("Writes a fact the planner reads in method preconditions.")
@@ -156,6 +157,7 @@ func clear_network() -> void:
 	compounds.clear()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Request Plan")
 ## @ace_category("HTN")
 ## @ace_description("Decomposes the root task into a plan and starts the first task.")
@@ -170,6 +172,7 @@ func request_plan() -> void:
 		task_started.emit(str(plan[0]))
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Mark Task Complete")
 ## @ace_category("HTN")
 ## @ace_description("Advances to the next task, or fires On Plan Complete at the end.")

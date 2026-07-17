@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - the featured sweep: 43 packs now star their hero verbs
+
+- **36 more packs mark their 1-3 hero verbs** (joining the 7 flagships): Activate Ability,
+  Do Click, Register Combo, Queue Line, Buy One, Roll (Loot Table), Save/Load Game,
+  Fade To Scene, Spring To, Evaluate (UtilityBrain), Is On Mobile... - every pack whose verbs
+  are published sheet functions now leads its picker section starred + bold with the verbs a
+  new user should meet first. The remaining packs publish via reflection (@ace_expose_all)
+  and keep their flat listing for now.
+
 ### Added - packs can star their hero verbs (featured, end to end)
 
 - **Published pack verbs can be FEATURED**: `EventFunction.featured` emits `## @ace_featured`

@@ -683,4 +683,6 @@ static func build() -> bool:
 		"hover_mode = clampi(mode, 0, 1)"
 	])))
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["simulate_axis", "press_interact"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior")

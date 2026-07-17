@@ -311,6 +311,8 @@ static func build() -> bool:
 	]))
 	sheet.events.append(persistence)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["create_table", "add_entry", "roll"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/loot_table/loot_table_addon")
 
 

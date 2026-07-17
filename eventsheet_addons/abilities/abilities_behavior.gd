@@ -107,6 +107,7 @@ func create_ability(id: String) -> void:
 	on_ability_created.emit()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Create Ability With Cooldown")
 ## @ace_category("Abilities")
 ## @ace_description("Grants an ability and sets its cooldown. reset_instantly=true starts it ready.")
@@ -191,6 +192,7 @@ func clear_all_abilities() -> void:
 	abilities.clear()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Activate Ability")
 ## @ace_category("Abilities")
 ## @ace_description("Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated.")

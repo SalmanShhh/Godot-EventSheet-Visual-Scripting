@@ -173,4 +173,6 @@ static func build() -> bool:
 	]))
 	sheet.events.append(persistence)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["track_earned", "do_prestige", "prestige_gain"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/prestige/prestige_addon")

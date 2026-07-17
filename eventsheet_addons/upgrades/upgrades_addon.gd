@@ -22,6 +22,7 @@ var _last_id: String = ""
 var _last_ok: bool = false
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Define Upgrade")
 ## @ace_category("Upgrades")
 ## @ace_description("Creates (or resets) an upgrade: base cost, cost growth per level, max level (-1 = unlimited), effect per level, mode ("add" or "mult"), and a tag to group it for Total Multiplier / Total Bonus.")
@@ -42,6 +43,7 @@ func set_effect(id: String, per_level: float, mode: String) -> void:
 	record.mode = mode
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Try Purchase")
 ## @ace_category("Upgrades")
 ## @ace_description("Buys the next level if `budget` covers Cost Of and it is not maxed. On success records Last Cost and fires On Upgrade Bought (Spend Last Cost from your wallet); otherwise fires On Purchase Failed. Never touches the wallet itself.")
@@ -149,6 +151,7 @@ func max_level_of(id: String) -> int:
 	return int(_upgrades[id].max_level) if _upgrades.has(id) else 0
 
 ## @ace_expression
+## @ace_featured
 ## @ace_name("Effect Of")
 ## @ace_category("Upgrades")
 ## @ace_description("An upgrade's current stacked effect (level*per_level for add mode, per_level^level for mult mode).")

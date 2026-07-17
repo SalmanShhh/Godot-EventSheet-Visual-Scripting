@@ -48,6 +48,7 @@ func _process(delta: float) -> void:
 		on_cycle_complete.emit()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Buy One")
 ## @ace_category("Idle Generator")
 ## @ace_description("Adds one unit and records its price as Last Cost (Spend that from your wallet). Guard with Can Afford Next first.")
@@ -118,6 +119,7 @@ func set_output_multiplier(multiplier: float) -> void:
 	output_multiplier = multiplier
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Collect")
 ## @ace_category("Idle Generator")
 ## @ace_description("Cycle mode: hands you the banked output as Last Collected and clears the pending pile. Call it on On Cycle Complete (or from a manager) and credit Last Collected to your wallet.")
@@ -202,6 +204,7 @@ func cost_to_buy_max(budget: float) -> float:
 	return _cost_for_n(_max_affordable(budget))
 
 ## @ace_expression
+## @ace_featured
 ## @ace_name("Output Per Second")
 ## @ace_category("Idle Generator")
 ## @ace_description("Current production per second (owned * base_output * multiplier; in cycle mode, the lump divided by cycle time).")

@@ -90,6 +90,7 @@ func _physics_process(delta: float) -> void:
 			wrapped.emit("top")
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Set Wrap Enabled")
 ## @ace_category("Wrap")
 ## @ace_description("Turns wrapping on or off at runtime.")

@@ -22,6 +22,7 @@ func _ready() -> void:
 		_noise.seed = _rng.randi()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Set Seed")
 ## @ace_category("Advanced Random: Setup")
 ## @ace_description("Sets the seed for BOTH numbers and noise - same seed reproduces the same sequence.")
@@ -84,6 +85,7 @@ func generate_permutation(size: int) -> void:
 	_perm = PackedInt32Array(values)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Make Shuffle Bag")
 ## @ace_category("Advanced Random: Setup")
 ## @ace_description("Creates a named bag of items - Shuffle Bag Pick draws each once before any repeats.")

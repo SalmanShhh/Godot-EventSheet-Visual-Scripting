@@ -107,6 +107,7 @@ func _process(delta: float) -> void:
 			spring_reached.emit(str(color_name))
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Spring To")
 ## @ace_category("Spring")
 ## @ace_description("Springs the named value toward a target.")
@@ -150,6 +151,7 @@ func set_spring(spring_name: String, value: float) -> void:
 	entry.active = false
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Add Impulse")
 ## @ace_category("Spring")
 ## @ace_description("Kicks the named spring's velocity (instant juice).")

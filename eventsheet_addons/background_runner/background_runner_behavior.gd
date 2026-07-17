@@ -42,6 +42,7 @@ func _process(delta: float) -> void:
 			done.emit(__result)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Run In Background")
 ## @ace_category("Background")
 ## @ace_description("Runs a PURE callable off the main thread; On Done(result) fires when it finishes. WARNING: the callable must NOT touch nodes / the scene tree / non-thread-safe resources - data in, data out only.")

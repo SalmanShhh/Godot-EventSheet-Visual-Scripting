@@ -145,4 +145,6 @@ static func build() -> bool:
 	]))
 	sheet.events.append(persistence)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["do_click", "last_click"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/click_power/click_power_addon")

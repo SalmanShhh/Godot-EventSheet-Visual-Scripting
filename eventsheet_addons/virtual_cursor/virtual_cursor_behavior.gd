@@ -257,6 +257,7 @@ func _physics_process(delta: float) -> void:
 	report_vel = vel
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Press Interact")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Marks a named interact button held and fires On Interact Pressed.")
@@ -359,6 +360,7 @@ func simulate_mouse(target_x: float, target_y: float, smoothing: float) -> void:
 	has_mouse_target = true
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Simulate Axis")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Feeds an analog axis for this tick (accel/decel applies).")

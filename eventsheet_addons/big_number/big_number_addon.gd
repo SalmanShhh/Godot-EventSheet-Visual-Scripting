@@ -9,6 +9,7 @@ extends Node
 const SUFFIXES: Array = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"]
 
 ## @ace_expression
+## @ace_featured
 ## @ace_name("Format Short")
 ## @ace_category("Big Numbers")
 ## @ace_description("A compact string with a short-scale suffix: 1250 -> "1.25K", 1250000 -> "1.25M", on through Qa/Qi/.../Dc, then scientific past 1e36. Pass how many decimals.")
@@ -307,6 +308,7 @@ func dec_compare(a: Array, b: Array) -> int:
 	return _dcmp(a, b)
 
 ## @ace_expression
+## @ace_featured
 ## @ace_name("Format Big")
 ## @ace_category("Big Numbers")
 ## @ace_description("Formats a Decimal with a short-scale suffix, falling through to scientific past Dc: Make(1.5, 100) -> "1.50e100".")

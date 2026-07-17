@@ -49,6 +49,7 @@ class TransitionRunner:
 			get_tree().change_scene_to_file(target_path)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Fade To Scene")
 ## @ace_category("Scenes")
 ## @ace_description("Fades the screen out, changes to the scene, and fades back in (ignored while a transition runs).")

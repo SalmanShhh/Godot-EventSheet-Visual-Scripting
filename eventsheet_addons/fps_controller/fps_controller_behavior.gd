@@ -342,6 +342,7 @@ func look_pitch() -> float:
 	return pitch
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Crouch")
 ## @ace_category("FPS Controller")
 ## @ace_description("Crouches: the capsule shrinks to Crouch Height (feet stay planted), the Head drops, and movement slows to the crouch multiplier. Crouching at sprint speed starts a crouch slide (see Slide knobs). Fires On Crouched. Held Ctrl does this automatically.")
@@ -405,6 +406,7 @@ func stop_sliding() -> void:
 	slide_ended.emit()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Wall Jump")
 ## @ace_category("FPS Controller")
 ## @ace_description("Kicks off the wall the host is touching: Jump Velocity upward plus Wall Jump Push away from the wall (the push fades over about half a second). Ends any wall ride. Fires On Wall Jumped. Pressing jump mid-air against a wall does this automatically.")

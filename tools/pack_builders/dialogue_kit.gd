@@ -184,4 +184,6 @@ static func build() -> bool:
 		"on_dialogue_finished.emit()"
 	])))
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["queue_line", "start_dialogue", "advance_dialogue"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/dialogue_kit/dialogue_kit_behavior")

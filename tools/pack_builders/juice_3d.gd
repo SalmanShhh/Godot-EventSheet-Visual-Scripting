@@ -278,6 +278,8 @@ static func build() -> bool:
 	Lib.append_function(sheet, "use_camera", "Use Camera", "Juice 3D", "Pin the effects to a specific Camera3D (by path). Leave it unused to auto-target whichever camera is active.",
 		[["camera_path", "NodePath"]],
 		"_unapply()\n_camera_override = get_node_or_null(camera_path) as Camera3D")
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["shake", "fov_punch"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/juice_3d/juice_3d_behavior")
 
 

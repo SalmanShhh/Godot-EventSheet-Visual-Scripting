@@ -68,6 +68,7 @@ func _process(delta: float) -> void:
 		advance_dialogue()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Queue Line")
 ## @ace_category("Dialogue")
 ## @ace_description("Appends a line (speaker + text) to the conversation queue.")
@@ -77,6 +78,7 @@ func queue_line(speaker: String, text: String) -> void:
 	line_queue.append({"speaker": speaker, "text": text})
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Start Dialogue")
 ## @ace_category("Dialogue")
 ## @ace_description("Shows the panel and plays the queued lines from the top.")
@@ -91,6 +93,7 @@ func start_dialogue() -> void:
 	_show_next_line()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Advance")
 ## @ace_category("Dialogue")
 ## @ace_description("Mid-line: completes the line instantly. Otherwise: next line, or ends the conversation.")

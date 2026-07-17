@@ -133,6 +133,7 @@ func _process(delta: float) -> void:
 	_applied_fov = _fov_kick
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Shake")
 ## @ace_category("Juice 3D")
 ## @ace_description("Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.")
@@ -217,6 +218,7 @@ func lean(degrees: float, duration: float) -> void:
 	_lean_tween = tw
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("FOV Punch")
 ## @ace_category("Juice 3D")
 ## @ace_description("Kicks the field of view wider (positive, a speed boost / dash) or tighter (negative, an impact) by an amount in degrees, then eases back at the FOV Recovery rate. Fire-and-forget.")

@@ -303,6 +303,7 @@ func _physics_process(delta: float) -> void:
 		_refresh_debug()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Build Nav Graph From Tilemap")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK edges, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.")
@@ -363,6 +364,7 @@ func regenerate_nav_graph() -> void:
 	nav_graph_built.emit()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Find Path To")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails - it goes to the closest reachable node instead. Fires On Path Found / On Path Failed.")

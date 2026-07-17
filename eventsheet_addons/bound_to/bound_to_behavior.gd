@@ -73,6 +73,7 @@ func _physics_process(delta: float) -> void:
 		host.global_position = clamped
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Set Bound Enabled")
 ## @ace_category("Bound To")
 ## @ace_description("Turns the binding on or off at runtime (off = the host moves freely).")

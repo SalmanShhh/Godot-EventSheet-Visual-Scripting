@@ -43,6 +43,7 @@ func _ready() -> void:
 		start_fade()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Fade In")
 ## @ace_category("Fade")
 ## @ace_description("Fades the node from its current transparency up to fully visible over a duration, then fires On Faded In.")
@@ -57,6 +58,7 @@ func fade_in(duration: float) -> void:
 	_tween.finished.connect(func() -> void: on_faded_in.emit())
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Fade Out")
 ## @ace_category("Fade")
 ## @ace_description("Fades the node down to invisible over a duration (fires On Fade Out Started now, On Faded Out at the end). Frees the node afterwards if Free On Faded Out is on.")

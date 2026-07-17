@@ -306,6 +306,8 @@ static func build() -> bool:
 	_expr(sheet, "collision_angle", "Collision Angle", "Physics Car", "Approximate impact direction in degrees (inside On Collided).", [],
 		"return _collision_angle", TYPE_FLOAT)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["simulate_control", "drive_toward_position"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/physics_car/physics_car_behavior")
 
 

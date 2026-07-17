@@ -182,4 +182,6 @@ static func build() -> bool:
 	]))
 	sheet.events.append(persistence)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["define_upgrade", "try_purchase", "effect_of"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/upgrades/upgrades_addon")

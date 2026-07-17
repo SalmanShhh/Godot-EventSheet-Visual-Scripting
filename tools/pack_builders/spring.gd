@@ -223,4 +223,6 @@ static func build() -> bool:
 	Lib.append_function(sheet, "reset_springs", "Reset All Springs", "Spring", "Clears every spring on this behavior.",
 		[],
 		"springs.clear()\ncolor_springs.clear()")
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["spring_to", "add_impulse"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/spring/spring_behavior")

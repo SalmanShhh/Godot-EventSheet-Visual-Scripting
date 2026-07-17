@@ -135,6 +135,7 @@ func _physics_process(delta: float) -> void:
 		host.move_and_slide()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Find Path To")
 ## @ace_category("Nav Agent 3D")
 ## @ace_description("Routes to a world position across the baked navmesh and starts moving. Mode "reach" fails (On Path Failed) when the spot is off the mesh; "nearest" never fails - the agent goes to the closest point on the mesh instead. Fires On Path Found / On Path Failed.")

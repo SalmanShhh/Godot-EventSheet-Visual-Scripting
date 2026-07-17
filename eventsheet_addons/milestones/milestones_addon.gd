@@ -16,6 +16,7 @@ var _milestones: Dictionary = {}
 var _last_reached_id: String = ""
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Define Milestone")
 ## @ace_category("Milestones")
 ## @ace_description("Creates (or resets) a milestone: the threshold to cross and the reward it grants once reached.")
@@ -34,6 +35,7 @@ func set_threshold(id: String, threshold: float) -> void:
 	_ensure(id).threshold = threshold
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Update Progress")
 ## @ace_category("Milestones")
 ## @ace_description("Reports the current value of the tracked number. The first time it reaches the threshold the milestone latches and On Milestone Reached fires (read Last Reached / Reward there).")

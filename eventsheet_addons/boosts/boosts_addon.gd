@@ -37,6 +37,7 @@ func _process(delta: float) -> void:
 			on_boost_expired.emit()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Start Boost")
 ## @ace_category("Boosts")
 ## @ace_description("Starts (or restarts) a timed multiplier by id for `duration` seconds and fires On Boost Started.")
@@ -104,6 +105,7 @@ func any_active() -> bool:
 	return not _boosts.is_empty()
 
 ## @ace_expression
+## @ace_featured
 ## @ace_name("Total Multiplier")
 ## @ace_category("Boosts")
 ## @ace_description("The product of every active boost's multiplier (1.0 if none) - fold it into production.")

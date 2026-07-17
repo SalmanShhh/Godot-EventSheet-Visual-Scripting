@@ -113,6 +113,8 @@ static func build() -> bool:
 	_expr(sheet, "pool_size", "Pool Size", "Object Pool", "A pool's total nodes (free plus active).", [["pool_name", "String"]],
 		"return ((_pools[pool_name].free as Array).size() + (_pools[pool_name].active as Array).size()) if _pools.has(pool_name) else 0", TYPE_INT)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["create_pool", "despawn"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/object_pool/object_pool_addon")
 
 

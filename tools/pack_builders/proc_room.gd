@@ -287,6 +287,8 @@ static func build() -> bool:
 	]))
 	sheet.events.append(persistence)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["register_room_type", "generate"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/proc_room/proc_room_addon")
 
 

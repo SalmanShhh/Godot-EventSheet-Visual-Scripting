@@ -175,4 +175,6 @@ static func build() -> bool:
 		"fade.tween_callback(toast.queue_free)"
 	])))
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["set_text", "set_bar", "show_toast"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/hud_kit/hud_kit_behavior")

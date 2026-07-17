@@ -21,6 +21,7 @@ var _last_spawned: Node = null
 var _last_despawned: Node = null
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Create Pool")
 ## @ace_category("Object Pool")
 ## @ace_description("The easy way: makes a pool that spawns copies of a scene (a .tscn path), optionally pre-making some now so the first spawns never hitch.")
@@ -65,6 +66,7 @@ func prewarm(pool_name: String, count: int) -> void:
 		_stow(pool_name, (_pools[pool_name].scene as PackedScene).instantiate())
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Despawn")
 ## @ace_category("Object Pool")
 ## @ace_description("Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned.")

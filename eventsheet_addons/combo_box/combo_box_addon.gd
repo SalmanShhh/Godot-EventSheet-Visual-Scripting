@@ -51,6 +51,7 @@ func _process(delta: float) -> void:
 	_advance(delta)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Register Combo")
 ## @ace_category("ComboBox")
 ## @ace_description("Registers (or replaces) a combo: a unique id and its sequence as comma-separated tokens (for example "down,forward,punch"). timing_window is the seconds allowed between inputs (-1 = use the default, 0 = no time limit). Use "*" as a token to match any input.")
@@ -122,6 +123,7 @@ func set_buffer_length(length: int) -> void:
 		_buffer.remove_at(0)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Press Input")
 ## @ace_category("ComboBox")
 ## @ace_description("Pushes one input token into the buffer and checks every combo. Call this from your own input events (a key, a gamepad button, a swipe, a network packet). Fires On Combo Matched / On Partial Progress / On Combo Failed as needed.")

@@ -294,6 +294,8 @@ static func build() -> bool:
 	_expr(sheet, "combo_id_at", "Combo Id At", "ComboBox", "The registered combo id at an index (use with Combo Count to list them).", [["index", "int"]],
 		"return str(_combos.keys()[index]) if index >= 0 and index < _combos.size() else \"\"", TYPE_STRING)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["register_combo", "press_input"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/combo_box/combo_box_addon")
 
 

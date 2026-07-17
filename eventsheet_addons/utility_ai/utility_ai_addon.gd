@@ -93,6 +93,7 @@ func _process(delta: float) -> void:
 			on_cooldown_ended.emit()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Add Action")
 ## @ace_category("Utility AI")
 ## @ace_description("Registers a candidate action the brain can choose. cooldown = seconds it rests after Mark Action Complete (0 = none); interruptible = whether Interrupt can cancel it; priority = an overall weight multiplier (1 = normal).")
@@ -136,6 +137,7 @@ func set_action_enabled(action_name: String, enabled: bool) -> void:
 		_actions[action_name].enabled = enabled
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Set Input")
 ## @ace_category("Utility AI")
 ## @ace_description("Writes a world-state value considerations read by key (usually normalized 0-1, e.g. hp_ratio). Push these right before Evaluate; an unset key reads as 0.")
@@ -154,6 +156,7 @@ func clear_inputs() -> void:
 	_world.clear()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Evaluate")
 ## @ace_category("Utility AI")
 ## @ace_description("Scores every enabled, off-cooldown action from the current world state and picks a winner. Fires On Decision Made (plus On Action Changed + On Action Started when the choice changes), or On No Valid Action if nothing clears the minimum score. Call it on a timer or after a stimulus.")

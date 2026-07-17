@@ -78,6 +78,7 @@ func use_advanced_random(enabled: bool) -> void:
 	_use_shared = enabled
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Register Skin")
 ## @ace_category("SkinVault")
 ## @ace_description("Registers a skin: a unique id, a display name, its rarity (must be registered), a cost (0 = not purchasable), and comma-separated tags.")
@@ -113,6 +114,7 @@ func load_catalog(catalog: Resource) -> void:
 				register_skin(str((row as Dictionary).get("id", "")), str((row as Dictionary).get("name", "")), str((row as Dictionary).get("rarity", "")), float((row as Dictionary).get("cost", 0.0)), str((row as Dictionary).get("tags", "")))
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Roll")
 ## @ace_category("SkinVault")
 ## @ace_description("Rolls a weighted-random UNOWNED skin (optional tag filter; "" = any) and grants it. Applies pity, then fires On Skin Rolled and On Skin Unlocked. Fires On Pool Empty if nothing is left.")
@@ -171,6 +173,7 @@ func revoke(skin_id: String) -> void:
 		on_skin_revoked.emit()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Purchase")
 ## @ace_category("SkinVault")
 ## @ace_description("Starts a purchase: fires On Purchase Requested carrying the skin id + cost. Check your wallet there, then call Confirm or Cancel Purchase. (SkinVault never touches currency itself.)")

@@ -516,4 +516,6 @@ static func build() -> bool:
 		"return FileAccess.get_modified_time(_slot_path(slot_index)) if FileAccess.file_exists(_slot_path(slot_index)) else 0")
 	slot_time.return_type = TYPE_INT
 	sheet.functions.append(slot_time)
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["save_game", "load_game"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/save_system/save_system_addon")

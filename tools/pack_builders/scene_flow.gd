@@ -111,4 +111,6 @@ static func build() -> bool:
 		"get_tree().quit()"
 	])))
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["fade_to_scene"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/scene_flow/scene_flow_behavior")

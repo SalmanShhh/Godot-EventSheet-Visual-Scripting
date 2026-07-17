@@ -58,6 +58,7 @@ func enqueue_item(item) -> void:
 	_queue.append(item)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Enqueue Items")
 ## @ace_category("Time Slicer")
 ## @ace_description("Adds every element of an array to the work queue.")
@@ -85,6 +86,7 @@ func clear_queue() -> void:
 	_queue.clear()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Set Frame Budget")
 ## @ace_category("Time Slicer")
 ## @ace_description("Sets the per-frame millisecond budget at runtime (dial it down during heavy scenes).")

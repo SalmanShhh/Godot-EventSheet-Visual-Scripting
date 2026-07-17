@@ -35,6 +35,7 @@ func _process(delta: float) -> void:
 	_clock += delta
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Define Storylet")
 ## @ace_category("Storylets")
 ## @ace_description("Registers (or replaces) a storylet: an id plus the title + body text your game shows.")
@@ -130,6 +131,7 @@ func evaluate() -> void:
 	_available.sort_custom(func(a: String, b: String) -> bool: return _lib[a].weight > _lib[b].weight)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Draw")
 ## @ace_category("Storylets")
 ## @ace_description("Evaluates, then activates the highest-weight eligible storylet and fires On Storylet Drawn (or On None Available if nothing qualifies).")

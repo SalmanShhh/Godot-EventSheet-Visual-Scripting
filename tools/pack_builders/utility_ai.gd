@@ -317,6 +317,8 @@ static func build() -> bool:
 	_expr(sheet, "get_input", "Get Input", "Utility AI", "The current value of a world-state input (0 if unset).", [["key", "String"]],
 		"return float(_world.get(key, 0.0))", TYPE_FLOAT)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["add_action", "set_input", "evaluate"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/utility_ai/utility_ai_addon")
 
 

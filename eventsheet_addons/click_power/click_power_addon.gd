@@ -78,6 +78,7 @@ func set_crit(chance: float, multiplier: float) -> void:
 	_crit_multiplier = multiplier
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Do Click")
 ## @ace_category("Click Power")
 ## @ace_description("Resolves one tap: computes the yield (pass your current total production per second, or 0), rolls a crit, records Last Click / Was Crit, and fires On Click (and On Crit). Then Add Last Click to your wallet.")
@@ -113,6 +114,7 @@ func click_yield(current_cps: float) -> float:
 	return _yield(current_cps)
 
 ## @ace_expression
+## @ace_featured
 ## @ace_name("Last Click")
 ## @ace_category("Click Power")
 ## @ace_description("What the last Do Click earned (after any crit) - Add this to your wallet.")

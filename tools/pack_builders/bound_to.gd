@@ -119,4 +119,6 @@ static func build() -> bool:
 		[["new_half_width", "float"], ["new_half_height", "float"]],
 		"half_width = new_half_width\nhalf_height = new_half_height")
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["set_bound_enabled"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/bound_to/bound_to_behavior")

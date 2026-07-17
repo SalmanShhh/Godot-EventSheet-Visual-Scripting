@@ -36,6 +36,7 @@ func configure(requirement: float, exponent: float, bonus_per_point: float) -> v
 	_bonus_per_point = bonus_per_point
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Track Earned")
 ## @ace_category("Prestige")
 ## @ace_description("Records earnings toward prestige - call it wherever the player earns the prestige currency. Feeds both the run total (drives the gain) and the all-time Total Earned.")
@@ -47,6 +48,7 @@ func track_earned(amount: float) -> void:
 	_total_earned += gained
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Do Prestige")
 ## @ace_category("Prestige")
 ## @ace_description("Banks the current Prestige Gain, raises the prestige level, and clears the run total. Does nothing if the gain is 0. Reset your currencies and generators in the same event, reading Prestige Gain first.")
@@ -94,6 +96,7 @@ func can_prestige() -> bool:
 	return _gain() > 0
 
 ## @ace_expression
+## @ace_featured
 ## @ace_name("Prestige Gain")
 ## @ace_category("Prestige")
 ## @ace_description("How many prestige points the current run would bank right now.")

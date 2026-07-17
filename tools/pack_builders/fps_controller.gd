@@ -551,6 +551,8 @@ static func build() -> bool:
 		[],
 		"return host.get_wall_normal().z if host != null and host.is_on_wall() else 0.0")
 	_last_returns(sheet, TYPE_FLOAT)
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["do_crouch", "do_wall_jump"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/fps_controller/fps_controller_behavior")
 
 

@@ -38,6 +38,7 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _use_shared: bool = false
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Register Room Type")
 ## @ace_category("ProcRoom")
 ## @ace_description("Registers a room type that Generate may place: a weight (higher = commoner), the depth range it may appear in (max_depth -1 = anywhere), and a per-depth cap (-1 = no cap).")
@@ -74,6 +75,7 @@ func use_advanced_random(enabled: bool) -> void:
 	_use_shared = enabled
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Generate")
 ## @ace_category("ProcRoom")
 ## @ace_description("Builds a reproducible tiered map from a seed: `depths` tiers (start at 0, boss at the last), up to `max_rooms_per_depth` rooms per interior tier. Same seed = same map. Fires On Graph Generated.")

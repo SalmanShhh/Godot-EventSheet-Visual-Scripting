@@ -55,6 +55,7 @@ func connect_buttons() -> void:
 			button.pressed.connect(handler)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Set Text")
 ## @ace_category("UI")
 ## @ace_description("Sets the text of a named Label, RichTextLabel, Button or LineEdit.")
@@ -66,6 +67,7 @@ func set_text(control_name: String, text: String) -> void:
 		target.set("text", text)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Set Bar")
 ## @ace_category("UI")
 ## @ace_description("Sets a named ProgressBar/TextureProgressBar's value (max_value too when > 0).")
@@ -126,6 +128,7 @@ func switch_screen(panel_name: String) -> void:
 			(sibling as CanvasItem).visible = (sibling == target)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Show Toast")
 ## @ace_category("UI")
 ## @ace_description("Pops a bottom-centre message that fades out after toast_seconds.")

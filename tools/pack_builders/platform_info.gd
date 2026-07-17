@@ -118,4 +118,6 @@ static func build() -> bool:
 		"The machine's physical RAM in megabytes (0 where the OS hides it) - drop texture quality under a threshold.",
 		[], "return float(OS.get_memory_info().get(\"physical\", 0)) / 1048576.0", TYPE_FLOAT)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["is_mobile", "os_name", "screen_dpi"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/platform_info/platform_info_addon")

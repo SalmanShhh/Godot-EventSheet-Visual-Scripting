@@ -98,6 +98,8 @@ static func build() -> bool:
 		"_kill_tween()\n_set_alpha(alpha)")
 	_default(sheet, "alpha", "1.0")
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["fade_in", "fade_out"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/fade/fade_behavior")
 
 

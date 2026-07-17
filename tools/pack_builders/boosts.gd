@@ -144,4 +144,6 @@ static func build() -> bool:
 	]))
 	sheet.events.append(persistence)
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["start_boost", "total_multiplier"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/boosts/boosts_addon")

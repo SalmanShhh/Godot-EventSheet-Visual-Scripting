@@ -194,6 +194,7 @@ func delete_slot() -> void:
 		DirAccess.remove_absolute(_slot_path())
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Save Game")
 ## @ace_category("Save System")
 ## @ace_description("Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, then fires On Save Written.")
@@ -212,6 +213,7 @@ func save_game() -> void:
 		save_written.emit(slot)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Load Game")
 ## @ace_category("Save System")
 ## @ace_description("Restores every persist-group snapshot, then broadcasts On After Load so every sheet reads its state back.")

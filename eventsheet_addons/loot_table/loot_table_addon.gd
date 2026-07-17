@@ -40,6 +40,7 @@ func _ready() -> void:
 	_rng.randomize()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Create Table")
 ## @ace_category("Loot")
 ## @ace_description("Starts a fresh, empty loot table with this id (replaces any existing one).")
@@ -49,6 +50,7 @@ func create_table(table_id: String) -> void:
 	_tables[table_id] = {"entries": [], "guarantees": []}
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Add Entry")
 ## @ace_category("Loot")
 ## @ace_description("Adds an item to a table with a relative weight (higher = likelier). Quantity 1, no tags.")
@@ -160,6 +162,7 @@ func load_from_resource(loot_table: Resource) -> void:
 		set_pity(table_id, pity_tag_value, pity_threshold_value)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Roll")
 ## @ace_category("Loot")
 ## @ace_description("Rolls the table once, firing On Roll Result then On Roll Complete.")

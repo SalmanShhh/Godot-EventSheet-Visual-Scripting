@@ -292,4 +292,6 @@ static func build() -> bool:
 		[["a", "Array"], ["b", "Array"]],
 		"return _dcmp(a, b) >= 0")
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["fmt_short", "dec_format"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/big_number/big_number_addon")

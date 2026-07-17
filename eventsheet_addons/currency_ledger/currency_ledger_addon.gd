@@ -40,6 +40,7 @@ var _offline_id: String = ""
 var _offline_gain: float = 0.0
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Define Currency")
 ## @ace_category("Currency")
 ## @ace_description("Creates (or resets) a currency with a starting amount and a max (-1 = no cap). Min is 0 and there's no daily cap until you set one.")
@@ -93,6 +94,7 @@ func set_offline_rate(id: String, rate_per_second: float) -> void:
 	_ensure(id).offline_rate = rate_per_second
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Add")
 ## @ace_category("Currency")
 ## @ace_description("Adds a SIGNED amount (negative subtracts) and clamps to the currency's min and max. Positive amounts also respect the daily cap. Fires On Amount Changed, plus On Cap Hit / On Daily Cap Hit if a limit bit.")
@@ -128,6 +130,7 @@ func add(id: String, amount: float) -> void:
 		on_cap_hit.emit()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Spend")
 ## @ace_category("Currency")
 ## @ace_description("Subtracts the amount only if it can be afforded; otherwise nothing changes and On Spend Failed fires (read Failed Id / Requested Amount / Available Amount there).")
