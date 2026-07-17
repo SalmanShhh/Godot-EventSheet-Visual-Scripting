@@ -33,7 +33,8 @@ const KNOWN_ANNOTATIONS := {
 	"@ace_group": true,
 	"@ace_region": true,
 	"@ace_includes": true,
-	"@ace_uses": true
+	"@ace_uses": true,
+	"@ace_requires": true
 }
 
 

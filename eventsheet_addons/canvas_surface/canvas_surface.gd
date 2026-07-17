@@ -1,3 +1,4 @@
+## @ace_requires(DrawingPrefabResource)
 @icon("res://eventsheet_addons/canvas_surface/icon.svg")
 class_name CanvasSurface
 extends Node2D

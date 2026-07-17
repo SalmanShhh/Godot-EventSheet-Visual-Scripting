@@ -193,6 +193,19 @@ func import_external_source(source: String) -> EventSheetResource:
 	var family_regex: RegEx = RegEx.new()
 	if family_regex.compile("(?m)^## @ace_family\\(") == OK:
 		sheet.is_family = family_regex.search(source) != null
+	# Recover the dependency declaration (`## @ace_requires(a, b)`). Metadata only, HEADER
+	# scoped (a member-level occurrence must never become the class declaration), and the
+	# split+strip is the exact inverse of the emitter's ", ".join - or bytes drift.
+	var requires_regex: RegEx = RegEx.new()
+	if requires_regex.compile("(?m)^## @ace_requires\\(([^)]*)\\)") == OK:
+		var requires_match: RegExMatch = requires_regex.search(header)
+		if requires_match != null:
+			var recovered_requires: PackedStringArray = PackedStringArray()
+			for requires_token: String in requires_match.get_string(1).split(","):
+				var trimmed_requirement: String = requires_token.strip_edges()
+				if not trimmed_requirement.is_empty():
+					recovered_requires.append(trimmed_requirement)
+			sheet.addon_requires = recovered_requires
 	# Recover the class description: the `##` doc block immediately after `extends` (no blank
 	# between). The host-member doc and signal annotations are separated from `extends` by a blank
 	# line, so they never match. Metadata only in external mode (the lines stay verbatim).

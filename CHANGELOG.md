@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added - packs declare what they need (@ace_requires + a Doctor check)
+
+- **Formal pack dependencies**: a pack states its requirements in `addon_requires`
+  (Inspector field on sheet-built packs), emitted as one class-level
+  `## @ace_requires(a, b)` line - bare class names (`StatSheetResource`),
+  `autoload:Name` entries, or `pack:folder_name` entries. Metadata only, exactly the
+  @ace_tags family: no code emitted, byte-exact round-trip through the importer, and an
+  empty declaration emits nothing (all existing packs byte-identical).
+- **The Project Doctor audits them**: an IN-USE pack whose requirement is missing gets a
+  clickable warning naming the missing entries (an unused pack's unmet dependency stays
+  silent - it is noise, not a wiring gap). Bare names check engine AND project global
+  classes; autoload and pack forms are separate deliberately - installing a pack's files
+  does not register its autoload.
+- **Four shipped packs declare their real hard dependencies**: StatForge requires
+  StatSheetResource; Drawing Canvas, Canvas Surface, and Drawing Prefab Stamp declare
+  their CanvasSurface / DrawingPrefabResource links. `tests/addon_requires_test.gd` pins
+  emission position + round-trip recovery; `tests/pack_dependency_doctor_test.gd` pins
+  every resolver form, fires-when-missing (exact message), silent-when-present,
+  silent-when-unused, and the shipped declarations all resolving.
+
 ### Added - packs own their iteration verbs (@ace_looping, the Construct is-looping idea)
 
 - **Looping conditions**: annotate a collection-returning pack method with

@@ -19,6 +19,7 @@ static func build() -> bool:
 	sheet.class_description = "A texture your event sheet draws onto with verbs: lines, circles, rings, rects, cones, stamps, textured ribbons, and a raycast line-of-sight fan. Strokes can persist until cleared or auto-clear every frame, and the live texture is an expression you can feed to a TextureRect, shader, particle, or 3D Decal."
 	sheet.addon_category = "Drawing Canvas"
 	sheet.addon_tags = PackedStringArray(["drawing", "visual"])
+	sheet.addon_requires = PackedStringArray(["CanvasSurface", "DrawingPrefabResource"])
 	var about: CommentRow = CommentRow.new()
 	about.text = "Drawing Canvas behavior (event-sheet parity): a texture your sheet draws onto with verbs - lines, circles, rings, rects, cones, texture stamps, textured ribbons, and a raycast LINE OF SIGHT fan. Persistent mode keeps strokes until Clear Canvas (paint, blood splats, skid marks); Auto Clear redraws every frame (attack telegraphs, vision cones). Canvas Texture exposes the live texture for materials, UI, or a 3D Decal. The drawing plumbing lives in the shared CanvasSurface runtime; this pack is a thin event sheet - extend it by editing it."
 	sheet.events.append(about)

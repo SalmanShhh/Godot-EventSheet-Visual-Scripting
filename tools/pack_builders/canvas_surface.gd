@@ -14,6 +14,7 @@ static func build() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "CanvasSurface"
+	sheet.addon_requires = PackedStringArray(["DrawingPrefabResource"])
 	sheet.class_description = "Shared 2D drawing runtime for the Drawing Canvas behaviour and the Draw ACEs: an offscreen render target, a command queue, and self-updating ribbons. One per host, cached on the host - call CanvasSurface.for_node(host)."
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([

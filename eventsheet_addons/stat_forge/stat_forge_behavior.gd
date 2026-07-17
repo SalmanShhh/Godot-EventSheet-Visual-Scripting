@@ -1,5 +1,6 @@
 ## @ace_tags(stats, rpg, data)
 ## @ace_category("StatForge")
+## @ace_requires(StatSheetResource)
 @icon("res://eventsheet_addons/stat_forge/icon.svg")
 class_name StatForge
 extends Node

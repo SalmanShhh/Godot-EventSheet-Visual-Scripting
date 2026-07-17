@@ -58,6 +58,7 @@ static func run() -> Dictionary:
 	check_unbounded_loops(sheet_paths, findings)
 	check_coroutine_in_per_frame_trigger(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
+	check_pack_dependencies(sheet_paths, findings)
 	check_shadowed_variables(sheet_paths, findings)
 	check_untranslated_project(sheet_paths, findings)
 	check_required_fields(sheet_paths, findings)
@@ -614,6 +615,77 @@ static func check_unused_packs(sheet_paths: PackedStringArray, findings: Array[D
 			continue
 		_add(findings, "info", "unused-pack", script_path,
 			"Pack class %s is referenced by no sheet, scene or autoload - fine if you call it from hand-written GDScript." % pack_class)
+
+
+## Packs declare what they need with `## @ace_requires(a, b)` - class names,
+## "autoload:Name", or "pack:folder" entries. An IN-USE pack whose requirement is missing
+## gets a warning (an unused pack's unmet dependency is noise, so those stay silent).
+static func check_pack_dependencies(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var pack_scripts: Array[String] = EventSheetAddonScanner.list_addon_scripts()
+	if pack_scripts.is_empty():
+		return
+	# The same in-use corpus check_unused_packs builds: sheets (minus packs referencing
+	# themselves), scenes, and autoload targets.
+	var corpus_parts: PackedStringArray = PackedStringArray()
+	for sheet_path: String in sheet_paths:
+		if sheet_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		corpus_parts.append(_sheet_usage_text(sheet))
+		corpus_parts.append(" ".join(sheet.uses_addons) + " " + " ".join(sheet.requires_behaviors)
+			+ " " + " ".join(sheet.ace_provider_scripts) + " " + " ".join(sheet.includes))
+	for scene_path: String in _list_files_with_extension("tscn"):
+		corpus_parts.append(FileAccess.get_file_as_string(scene_path))
+	for property: Dictionary in ProjectSettings.get_property_list():
+		if str(property.get("name", "")).begins_with("autoload/"):
+			corpus_parts.append(str(ProjectSettings.get_setting(str(property.get("name")))))
+	var corpus: String = "\n".join(corpus_parts)
+	var class_regex: RegEx = RegEx.create_from_string("(?m)^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
+	var requires_regex: RegEx = RegEx.create_from_string("(?m)^## @ace_requires\\(([^)]*)\\)")
+	for script_path: String in pack_scripts:
+		var pack_source: String = FileAccess.get_file_as_string(script_path)
+		var requires_match: RegExMatch = requires_regex.search(pack_source)
+		if requires_match == null:
+			continue
+		var class_match: RegExMatch = class_regex.search(pack_source)
+		var pack_class: String = class_match.get_string(1) if class_match != null else script_path.get_file()
+		var in_use: bool = corpus.contains(script_path)
+		if not in_use and class_match != null:
+			in_use = RegEx.create_from_string("\\b%s\\b" % pack_class).search(corpus) != null
+		if not in_use:
+			continue
+		var missing: Array[String] = []
+		for requires_token: String in requires_match.get_string(1).split(","):
+			var requirement: String = requires_token.strip_edges()
+			if not requirement.is_empty() and not _requirement_present(requirement):
+				missing.append(requirement)
+		if missing.is_empty():
+			continue
+		missing.sort()
+		_add(findings, "warning", "pack-dependency", script_path,
+			"Pack class %s requires %s, which isn't present - install the pack it names (or register the autoload)." % [pack_class, ", ".join(missing)])
+
+
+## Whether one @ace_requires entry is satisfied: "autoload:Name" checks Project Settings,
+## "pack:folder" checks the installed pack folders, and a bare name checks engine AND
+## project global classes (ClassDB alone doesn't know user class_names).
+static func _requirement_present(requirement: String) -> bool:
+	if requirement.begins_with("autoload:"):
+		return ProjectSettings.has_setting("autoload/%s" % requirement.trim_prefix("autoload:").strip_edges())
+	if requirement.begins_with("pack:"):
+		var folder: String = requirement.trim_prefix("pack:").strip_edges()
+		for script_path: String in EventSheetAddonScanner.list_addon_scripts():
+			if script_path.begins_with("res://eventsheet_addons/%s/" % folder):
+				return true
+		return false
+	if ClassDB.class_exists(requirement):
+		return true
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == requirement:
+			return true
+	return false
 
 
 ## The class whose members a sheet's variables actually share a script with:

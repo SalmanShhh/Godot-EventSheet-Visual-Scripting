@@ -317,6 +317,7 @@ space-separated (`@ace_category(Combat)` and `@ace_category Combat` both work).
 | `@ace_param_autocomplete(param_name a,b,c)` | Give a parameter an editable suggestion list. |
 | `@ace_icon(name)` | Set a picker icon. |
 | `@ace_tags(a,b)` | Add search tags. |
+| `@ace_requires(a, b)` (class-level) | Declare what the pack needs installed: bare class names (`StatSheetResource`), `autoload:Name`, or `pack:folder_name`. The Project Doctor warns when an in-use pack's requirement is missing - the finding is clickable and opens the pack. Sheet-built packs set it via the sheet's `addon_requires` field. |
 
 ### A complete Path 1 example
 

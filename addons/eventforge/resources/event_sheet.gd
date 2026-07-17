@@ -68,6 +68,11 @@ extends Resource
 ## explicit "Add To Family" action (compiles to add_to_group) the family authors, NEVER auto-emitted code
 ## (which would double on re-import). Requires a custom_class_name.
 @export var is_family: bool = false
+## What this pack NEEDS to work: class names ("StatSheetResource"), "autoload:Name" entries,
+## or "pack:folder_name" entries. Emitted ONLY as a class-level `## @ace_requires(a, b)`
+## annotation (metadata, exactly like @ace_tags - no code, byte-exact round-trip; empty =
+## no line). The Project Doctor warns when an in-use pack's requirement is missing.
+@export var addon_requires: PackedStringArray = PackedStringArray()
 @export var events: Array[Resource] = []
 @export var variables: Dictionary = {}
 ## Compile-time includes (event-sheet-style): paths to other event sheets (res://….tres) whose

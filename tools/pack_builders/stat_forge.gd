@@ -19,6 +19,7 @@ static func build() -> bool:
 	sheet.class_description = "Real, modifiable stats for any node: every modifier that touches its numbers is a named buff that adds, multiplies, or overrides one stat, optionally tagged, sourced, and auto-expiring. Reading the computed result is always one expression - Stat Total."
 	sheet.addon_category = "StatForge"
 	sheet.addon_tags = PackedStringArray(["stats", "rpg", "data"])
+	sheet.addon_requires = PackedStringArray(["StatSheetResource"])
 	var about: CommentRow = CommentRow.new()
 	about.text = "StatForge behavior: stats as a per-node buff stack. Add Buff targets a stat with a value and a mode - add / multiply / override (highest override wins) - with optional TAGS, a SOURCE, and a DURATION that expires on its own. Stat Total computes (base + adds) * multipliers, clamped or wrapped by the overflow knobs. Remove by id, tag, or source; pause and refresh timers; threshold rules fire On Threshold Crossed when a stat crosses a value. Load whole loadouts from a StatSheetResource (.tres). Two verbs run an RPG stat; the rest scales with your game. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)

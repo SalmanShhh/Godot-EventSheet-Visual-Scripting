@@ -142,6 +142,10 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		# round-trips byte-exact and can never double-emit.
 		if sheet.is_family:
 			lines.append("## @ace_family(%s)" % sheet.custom_class_name.strip_edges())
+		# Dependency declaration (metadata only, same family as @ace_tags): what this pack
+		# needs installed - class names, autoload:Name, pack:folder - for the Doctor to audit.
+		if not sheet.addon_requires.is_empty():
+			lines.append("## @ace_requires(%s)" % ", ".join(sheet.addon_requires))
 		if not sheet.custom_class_icon.strip_edges().is_empty():
 			lines.append("@icon(\"%s\")" % sheet.custom_class_icon)
 		lines.append("class_name %s" % sheet.custom_class_name.strip_edges())

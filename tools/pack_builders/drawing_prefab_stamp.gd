@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.custom_class_name = "DrawingPrefabStamp"
 	sheet.addon_category = "Drawing Canvas"
 	sheet.addon_tags = PackedStringArray(["drawing", "visual"])
+	sheet.addon_requires = PackedStringArray(["DrawingPrefabResource"])
 	sheet.class_description = "Draws a DrawingPrefabResource in the 2D viewport (editor and game) - a placeable, previewable stamp of a prefab formation."
 	var block: RawCodeRow = RawCodeRow.new()
 	block.code = "\n".join(PackedStringArray([
