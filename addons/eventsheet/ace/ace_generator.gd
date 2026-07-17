@@ -352,6 +352,12 @@ func _build_method_definition(provider_id: String, method_name: String, method_i
 		"source_name": method_name,
 		"display_template": _build_method_display_template(display_name, parameter_definitions)
 	}
+	# A looping condition (@ace_looping): applying it becomes a pick filter over the method's
+	# returned collection, so the event's actions loop once per item. The iterator name rides
+	# along for the filter the dock creates.
+	if bool(overrides.get("looping", false)):
+		definition.metadata["looping"] = true
+		definition.metadata["looping_iterator"] = str(overrides.get("looping_iterator", "item"))
 	# Methods with primitive params (non-signal, non-hidden) can be editor-exposed.
 	definition.editor_exposed = bool(overrides.get("editor_exposed", _method_is_exposable(ace_type, return_type, parameter_definitions)))
 	definition.property_hint = int(overrides.get("property_hint", PROPERTY_HINT_NONE))

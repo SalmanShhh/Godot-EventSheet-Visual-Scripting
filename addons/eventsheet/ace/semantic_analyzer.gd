@@ -17,6 +17,7 @@ const KNOWN_ANNOTATIONS := {
 	"@ace_condition": true,
 	"@ace_expression": true,
 	"@ace_trigger": true,
+	"@ace_looping": true,
 	"@ace_display_template": true,
 	"@ace_codegen_template": true,
 	"@ace_param_options": true,
@@ -331,6 +332,15 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 				overrides["forced_ace_type"] = ACEDefinition.ACEType.EXPRESSION
 			"@ace_trigger":
 				overrides["forced_ace_type"] = ACEDefinition.ACEType.TRIGGER
+			"@ace_looping":
+				# `@ace_looping(buff)` - a LOOPING condition (the C3 idea): the method returns a
+				# collection and applying it loops the event's actions once per item, via the
+				# pick-filter machinery. The optional value names the iterator ("item" default).
+				overrides["looping"] = true
+				var iterator_value: String = _extract_annotation_value(directive).strip_edges()
+				overrides["looping_iterator"] = iterator_value if iterator_value.is_valid_identifier() else "item"
+				# Looping members sit with conditions in the picker regardless of return type.
+				overrides["forced_ace_type"] = ACEDefinition.ACEType.CONDITION
 			"@ace_display_template":
 				overrides["display_template"] = _extract_annotation_value(directive)
 			"@ace_codegen_template":

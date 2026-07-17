@@ -48,6 +48,12 @@ var _rules: Dictionary = {}
 var _last_totals: Dictionary = {}
 var _last_expired: String = ""
 var _last_rule: String = ""
+## Loops the event's actions once per applied buff id (a LOOPING condition: adding it
+## creates the loop) - read details per pass with Buff Value / Buff Time Left.
+## @ace_looping(buff_id)
+## @ace_name("For Each Buff")
+func each_buff() -> Array:
+	return _buffs.keys()
 
 func _physics_process(delta: float) -> void:
 	if auto_tick:

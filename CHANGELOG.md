@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - packs own their iteration verbs (@ace_looping, the Construct is-looping idea)
+
+- **Looping conditions**: annotate a collection-returning pack method with
+  `## @ace_looping(iterator)` and it appears with conditions in the picker, but ADDING it
+  loops the event's actions once per returned item - "For Each Buff", "For Each Waypoint",
+  "For Each Ally In Range" become one annotation. The optional value names the loop variable
+  actions read (`item` if omitted).
+- Applying one creates a pick filter over the baked call expression (params substituted), so
+  everything downstream is the existing loop machinery: the for-emission, the loop lane UI,
+  frame-spreading, the Doctor's loop checks, and round-trip lift all work like a built-in
+  For Each.
+- **StatForge ships "For Each Buff"** (`each_buff()`, iterator `buff_id`) - tick down or
+  display every applied buff with one row. `tests/looping_conditions_test.gd` pins the
+  annotation parse (iterator, item default, forced-condition placement), the collection
+  baking, and the compiled for-loop shape.
+
 ### Added - behaviors draw their setup in the editor (the Construct DrawInEditor idea)
 
 - **Behavior editor gizmos**: a behavior that ships

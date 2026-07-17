@@ -135,7 +135,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 					condition_event.trigger = _create_condition_from_definition(definition, params)
 					_bake_trigger_signature(condition_event, definition)
 				else:
-					condition_event.conditions.append(_create_condition_from_definition(definition, params))
+					_append_condition_entry(condition_event, definition, params)
 				var insert_into: Variant = context.get("insert_into", null)
 				if insert_into is EventGroup:
 					_group_children_array(insert_into as EventGroup).append(condition_event)
@@ -152,13 +152,17 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 						child_condition_event.trigger = _create_condition_from_definition(definition, params)
 						_bake_trigger_signature(child_condition_event, definition)
 					else:
-						child_condition_event.conditions.append(_create_condition_from_definition(definition, params))
+						_append_condition_entry(child_condition_event, definition, params)
 					(selected_resource as EventRow).sub_events.append(child_condition_event)
 					message["text"] = "Added sub-condition."
 					return true
 			"append_condition":
 				if selected_resource is EventRow:
 					var target_event: EventRow = selected_resource as EventRow
+					if _is_looping_condition(definition):
+						target_event.pick_filters.append(_create_pick_filter_from_definition(definition, params))
+						message["text"] = "Added loop."
+						return true
 					var condition_entry: ACECondition = _create_condition_from_definition(definition, params)
 					# Only use the trigger slot when the event has no trigger yet; otherwise
 					# append as a normal condition so an existing trigger (e.g. "Every tick")
@@ -202,7 +206,7 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 					event_row.trigger = _create_condition_from_definition(definition, params)
 					_bake_trigger_signature(event_row, definition)
 				elif definition.ace_type == ACEDefinition.ACEType.CONDITION:
-					event_row.conditions.append(_create_condition_from_definition(definition, params))
+					_append_condition_entry(event_row, definition, params)
 				elif definition.ace_type == ACEDefinition.ACEType.ACTION:
 					event_row.actions.append(_create_action_from_definition(definition, params))
 				_insert_row_below_selection(event_row)
@@ -246,6 +250,41 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 		gate.ace_id = "IsLocaleChangeNotification"
 		gate.codegen_template = "what == NOTIFICATION_TRANSLATION_CHANGED"
 		event_row.conditions.append(gate)
+
+
+## Routes a picked condition into the event: a LOOPING condition (@ace_looping) lands as a
+## pick filter (the event's actions run once per returned item), a plain one as an if-condition.
+func _append_condition_entry(event_row: EventRow, definition: ACEDefinition, params: Dictionary) -> void:
+	if _is_looping_condition(definition):
+		event_row.pick_filters.append(_create_pick_filter_from_definition(definition, params))
+	else:
+		event_row.conditions.append(_create_condition_from_definition(definition, params))
+
+
+func _is_looping_condition(definition: ACEDefinition) -> bool:
+	return definition != null and definition.ace_type == ACEDefinition.ACEType.CONDITION and bool(definition.metadata.get("looping", false))
+
+
+## A looping condition compiles through the existing pick machinery: the definition's call
+## template with the dialog's params baked in becomes the loop's collection expression, and
+## the annotation's iterator name scopes the loop variable. Everything downstream (the for
+## emission, the pick lane UI, frame-spreading, round-trip lift) comes for free.
+func _create_pick_filter_from_definition(definition: ACEDefinition, params: Dictionary) -> PickFilter:
+	var pick: PickFilter = PickFilter.new()
+	pick.collection_kind = PickFilter.CollectionKind.EXPRESSION
+	pick.collection_value = build_looping_collection(definition, _resolve_definition_params(definition, params))
+	pick.iterator_name = str(definition.metadata.get("looping_iterator", "item"))
+	return pick
+
+
+## The final collection expression for a looping condition: the baked call template with
+## every {param} token substituted. Static and pure, so tests pin it headless.
+static func build_looping_collection(definition: ACEDefinition, resolved_params: Dictionary) -> String:
+	var explicit: String = str(definition.metadata.get("codegen_template", ""))
+	var template: String = explicit if not explicit.strip_edges().is_empty() else definition.instance_backed_template()
+	for key: Variant in resolved_params.keys():
+		template = template.replace("{%s}" % str(key), str(resolved_params[key]))
+	return template
 
 
 func _create_condition_from_definition(definition: ACEDefinition, params: Dictionary) -> ACECondition:

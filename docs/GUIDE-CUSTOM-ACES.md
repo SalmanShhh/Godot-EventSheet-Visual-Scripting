@@ -308,6 +308,7 @@ space-separated (`@ace_category(Combat)` and `@ace_category Combat` both work).
 | `@ace_category(Text)` | Put the ACE in this picker category. |
 | `@ace_description(Text)` | The tooltip and help text. |
 | `@ace_action` / `@ace_condition` / `@ace_expression` / `@ace_trigger` | Force the ACE type instead of inferring it from the return type. |
+| `@ace_looping(iterator)` | A LOOPING condition: the method returns a collection (an Array of ids, nodes, anything iterable) and adding it to an event loops that event's actions once per item - your pack owns its own "For Each X" verb. The value names the loop variable actions read (`item` if omitted). Applies as a pick filter, so the loop lane, frame-spreading, and round-trip all work like a built-in For Each. |
 | `@ace_codegen_template(code)` | Replace the auto-generated call with your own GDScript (you own the whole template then). |
 | `@ace_display_template(text)` | Override the picker row phrasing. |
 | `@ace_param(name, hint: h, options: a\|b, autocomplete: a\|b, desc: "text")` | Everything about one parameter in a single line: widget hint, fixed dropdown, editable suggestions, and a description. Options and suggestions split on `\|`; quote a desc that contains commas. |
