@@ -1,6 +1,6 @@
 # Godot EventSheets - the first-time tour's step script.
 #
-# The tour is data-driven (EventSheetTourWindow.steps()): 6 steps teaching the core loop, each with
+# The tour is data-driven (EventSheetTourWindow.steps()): 7 steps teaching the core loop, each with
 # an optional live check the poll evaluates against the open sheet. This pins the content shape and
 # drives every check with synthetic sheets, so a tour regression names the exact step.
 @tool
@@ -11,13 +11,13 @@ extends RefCounted
 static func run() -> bool:
 	var passed: bool = true
 	var steps: Array[Dictionary] = EventSheetTourWindow.steps()
-	passed = _check("the tour is 6 steps", steps.size(), 6) and passed
+	passed = _check("the tour is 7 steps", steps.size(), 7) and passed
 	for index: int in range(steps.size()):
 		var step: Dictionary = steps[index]
 		passed = _check("step %d has a title, body and task" % (index + 1),
 			not str(step.get("title", "")).is_empty() and not str(step.get("body", "")).is_empty() and not str(step.get("task", "")).is_empty(), true) and passed
 
-	# The live checks: steps 2-4 watch the sheet for the asked-for edit; 1, 5 and 6 are read-only.
+	# The live checks: steps 2-4 watch the sheet for the asked-for edit; 1, 5, 6 and 7 are read-only.
 	var checked_steps: Array = []
 	for index: int in range(steps.size()):
 		if (steps[index]["check"] as Callable).is_valid():

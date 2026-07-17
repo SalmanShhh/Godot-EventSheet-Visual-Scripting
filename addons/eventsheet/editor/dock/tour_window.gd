@@ -60,6 +60,12 @@ static func steps() -> Array[Dictionary]:
 			"check": Callable(),
 		},
 		{
+			"title": "Make your own data asset",
+			"body": "Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.",
+			"task": "Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).",
+			"check": Callable(),
+		},
+		{
 			"title": "You know the loop",
 			"body": "Events + conditions + actions, compiled to code you can read. From here: Sheet > New From Template opens full starters, Tools > Welcome has the playable showcase, and Add > Variable gives your sheet memory. Take this tour again any time: Tools > Start the Tour. Have fun!",
 			"task": "Hit Finish and go make something.",

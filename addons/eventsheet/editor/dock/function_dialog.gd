@@ -51,6 +51,7 @@ func _open_function_dialog() -> void:
 	if not _dock._ensure_sheet_for_editing():
 		return
 	_ensure_dialog()
+	_function_dialog.set_tool_mode_context(_dock._current_sheet != null and _dock._current_sheet.tool_mode)
 	_function_dialog.open()
 
 
@@ -60,6 +61,7 @@ func _open_function_dialog_for(event_function: Resource) -> void:
 	if not (event_function is EventFunction) or _dock._current_sheet == null:
 		return
 	_ensure_dialog()
+	_function_dialog.set_tool_mode_context(_dock._current_sheet.tool_mode)
 	_function_dialog.open_for_edit(event_function as EventFunction)
 
 

@@ -53,6 +53,8 @@ var _preview_card: Control = null
 var _name_edit: LineEdit = null
 var _doc_comment_edit: TextEdit = null
 var _tool_button_edit: LineEdit = null
+# Shown when the OWNING sheet is an editor tool (tool_mode): this verb runs INSIDE the editor.
+var _tool_mode_hint: Label = null
 var _description_edit: LineEdit = null
 var _usable_option: OptionButton = null           # hidden backing model for the three cards
 var _usable_cards: Array = []                      # [{panel, title, examples, accent, kind}], index-aligned to USABLE_AS
@@ -111,6 +113,9 @@ func init_dialog(parent_node: Node) -> void:
 	_tool_button_edit.placeholder_text = "e.g. Re-bake  (empty = no Inspector button)"
 	_tool_button_edit.tooltip_text = "Show this function as a one-click button in the Inspector, labelled with this text. Pressing the button runs the function's rows - great for editor chores like re-baking, refilling, or validating."
 	form.add_child(EventSheetPopupUI.form_row("Inspector button", _tool_button_edit))
+	_tool_mode_hint = EventSheetPopupUI.hint_label("This sheet is an editor tool: this verb runs INSIDE the editor (File > Run or an Inspector button), never in the game.")
+	_tool_mode_hint.visible = false
+	form.add_child(_tool_mode_hint)
 
 	# Description is a picker/publish concern (grouped under Publish below), not a first thing a beginner
 	# naming a local helper needs - so it lives in the expose section, not the always-visible form.
@@ -205,6 +210,13 @@ func init_dialog(parent_node: Node) -> void:
 ## Names already taken on the sheet (functions + variables) - duplicates are refused.
 func set_taken_names_provider(provider: Callable) -> void:
 	_taken_names_provider = provider
+
+
+## The dock flips this per open: true when the current sheet is tool_mode, so the studio says
+## where the verb will run (an editor-context verb surprises people otherwise).
+func set_tool_mode_context(enabled: bool) -> void:
+	if _tool_mode_hint != null:
+		_tool_mode_hint.visible = enabled
 
 
 func open() -> void:

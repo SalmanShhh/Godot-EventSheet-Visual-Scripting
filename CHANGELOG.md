@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - the creator-journey docs + discoverability glue (approved spec, slice 4)
+
+- **docs/GUIDE-EDITOR-TOOLS.md** - building editor-side tools with sheets, at the house guide
+  standard (16 numbered use cases + 5 more): the 60-second starter, File > Run, the Editor
+  Tools vocabulary, Inspector buttons, live validation warnings, and undo done right (the
+  Doctor's nudge explained).
+- **docs/GUIDE-CUSTOM-RESOURCES.md** - building data assets with the wizard (16 + 5): the
+  column language, required + live validation, the Inspector Designer, functions on
+  Resources, the .tres workflow, and the pack-author APIs (resource_grid, attach_validator).
+- **The first-run tour gained a "Make your own data asset" stop** pointing at the two new
+  Sheet-menu entries (now 7 steps).
+- **The verb studio says where a verb runs**: on a tool-mode sheet, the function dialog shows
+  "this verb runs INSIDE the editor" - an editor-context verb no longer surprises anyone.
+
 ### Added - one-call validation for any variable (approved spec, slice 3 part 2)
 
 - **`EventSheets.attach_validator(sheet, variable_name)`** gives a variable a live Inspector
