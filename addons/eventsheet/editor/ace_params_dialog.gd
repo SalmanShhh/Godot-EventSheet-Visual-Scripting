@@ -1008,7 +1008,7 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	container.add_child(edit)
 	var fx_button: Button = Button.new()
 	fx_button.text = "ƒx"
-	fx_button.tooltip_text = "Insert a GDScript expression"
+	fx_button.tooltip_text = "Find Expressions - open the expressions dictionary (floating: double-click inserts, stays open until you close it)"
 	fx_button.pressed.connect(_open_expression_picker.bind(key))
 	container.add_child(fx_button)
 	var node_button: Button = Button.new()
@@ -1460,6 +1460,17 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 			str(candidate.get("label", "")),
 			str(candidate.get("label", ""))
 		)
+	# The expressions dictionary, while typing (Construct-style): every EXPRESSION verb the
+	# picker window lists also autocompletes right in the field - display name shown, the code
+	# fragment inserted. Skipped in member (`x.`) position, where only that type's members apply.
+	if _registry != null and not text_before_dot(before_caret):
+		for expression_definition: ACEDefinition in _registry.get_all_definitions():
+			if expression_definition.ace_type == ACEDefinition.ACEType.EXPRESSION:
+				edit.add_code_completion_option(
+					CodeEdit.KIND_FUNCTION,
+					expression_definition.display_name,
+					_expression_picker._expression_template(expression_definition)
+				)
 	# Right after a `$`, offer the edited scene's node paths so a path can be typed-and-picked, not only
 	# selected through the 🔍 picker. The `$` is already typed, so the inserted text is the bare path.
 	if before_caret.ends_with("$") and Engine.is_editor_hint():
@@ -1472,6 +1483,12 @@ func _populate_expression_completion(edit: CodeEdit) -> void:
 			edit.add_code_completion_option(CodeEdit.KIND_NODE_PATH, "%" + unique_name, unique_name)
 	edit.update_code_completion_options(true)
 	edit.set_code_hint(EventSheetGDScriptLint.signature_hint(before_caret, sheet))
+
+
+## True when the caret sits in member position (`token.`), where only that type's members
+## should complete - the dictionary's global verbs would be noise there.
+static func text_before_dot(before_caret: String) -> bool:
+	return before_caret.ends_with(".")
 
 
 ## Extract the typed value from a registered field node.

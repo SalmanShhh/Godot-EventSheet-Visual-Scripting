@@ -275,7 +275,50 @@ static func signature_hint(text_before_caret: String, sheet: EventSheetResource)
 				var arg_name: String = str((argument as Dictionary).get("name", ""))
 				arg_parts.append(arg_name if arg_type == TYPE_NIL else "%s: %s" % [arg_name, type_string(arg_type)])
 			return "%s(%s)" % [function_name, ", ".join(arg_parts)]
-	return ""
+	return str(GDSCRIPT_GLOBAL_HINTS.get(function_name, ""))
+
+
+## Signature + plain-word hints for the GDScript global functions an expression author reaches
+## for (the Construct-style "what goes in these parentheses" tooltip shown while typing inside
+## a call). Sheet functions and host methods resolve above from live reflection; these cover
+## the language's own math/utility globals, which reflection can't reach.
+const GDSCRIPT_GLOBAL_HINTS: Dictionary = {
+	"lerp": "lerp(from, to, weight 0-1) - blends from one value to the other",
+	"lerpf": "lerpf(from: float, to: float, weight 0-1)",
+	"lerp_angle": "lerp_angle(from: float, to: float, weight 0-1) - blends the SHORT way around a circle",
+	"clamp": "clamp(value, min, max) - keeps the value between min and max",
+	"clampf": "clampf(value: float, min: float, max: float)",
+	"clampi": "clampi(value: int, min: int, max: int)",
+	"abs": "abs(x) - the value without its minus sign",
+	"sign": "sign(x) - -1, 0, or 1",
+	"floor": "floor(x) - round DOWN",
+	"ceil": "ceil(x) - round UP",
+	"round": "round(x) - round to the nearest whole number",
+	"snapped": "snapped(x, step) - round to the nearest step (grids!)",
+	"min": "min(a, b, ...) - the smallest",
+	"max": "max(a, b, ...) - the largest",
+	"pow": "pow(base, exponent) - base to the power of exponent",
+	"sqrt": "sqrt(x) - square root",
+	"fmod": "fmod(x, y) - remainder of x / y, for floats",
+	"posmod": "posmod(x, y) - remainder that never goes negative (wrapping!)",
+	"wrapf": "wrapf(value, min, max) - wraps the value into the range",
+	"wrapi": "wrapi(value: int, min, max) - wraps a whole number into the range",
+	"remap": "remap(value, in_from, in_to, out_from, out_to) - rescales between ranges",
+	"move_toward": "move_toward(from, to, delta) - steps toward the target, never overshoots",
+	"deg_to_rad": "deg_to_rad(degrees) - degrees to radians",
+	"rad_to_deg": "rad_to_deg(radians) - radians to degrees",
+	"sin": "sin(angle in radians)",
+	"cos": "cos(angle in radians)",
+	"atan2": "atan2(y, x) - the angle to a point, in radians",
+	"randf": "randf() - a random float 0-1",
+	"randi": "randi() - a random whole number (huge; use % or randi_range)",
+	"randf_range": "randf_range(from, to) - a random float in the range",
+	"randi_range": "randi_range(from, to) - a random whole number in the range",
+	"str": "str(anything) - turns a value into text",
+	"int": "int(x) - to a whole number (drops decimals)",
+	"float": "float(x) - to a decimal number",
+	"is_instance_valid": "is_instance_valid(object) - true when it still exists (not freed)",
+}
 
 
 ## The scene root for $-completion: the injected provider (tests), else the editor's

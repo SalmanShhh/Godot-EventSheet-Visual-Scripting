@@ -42,8 +42,15 @@ func _ensure_expression_window() -> void:
 	if _expression_window != null:
 		return
 	_expression_window = AcceptDialog.new()
-	_expression_window.title = "Insert Expression"
+	# Construct-style: a floating EXPRESSIONS DICTIONARY, not a modal insert step. Non-exclusive
+	# so the params dialog underneath stays live (type in the field, dictionary at your side),
+	# and inserting keeps it OPEN - close with X, reopen any time with the field's ƒx
+	# (Find Expressions) button. Typing in the field itself pops the unfocused autocomplete;
+	# this window is the browsable catalog for when you don't know the name yet.
+	_expression_window.title = "Expressions dictionary"
 	_expression_window.visible = false
+	_expression_window.exclusive = false
+	_expression_window.dialog_hide_on_ok = false
 	_expression_window.min_size = Vector2i(480, 360)
 	_expression_window.ok_button_text = "Insert"
 	_expression_window.get_ok_button().disabled = true
@@ -57,48 +64,7 @@ func _ensure_expression_window() -> void:
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_expression_window.add_child(margin)
 
-	# Operator palette - click to drop an operator at the expression's caret, so a non-coder builds
-	# comparisons + maths (health > 10, score + 1) without hunting for punctuation. Inserts and stays
-	# open; pair it with the tree below to assemble a whole expression by clicking.
-	content.add_child(EventSheetPopupUI.section_header("Operators"))
-	var ops_flow: HFlowContainer = HFlowContainer.new()
-	# The full GDScript-basics operator set, each with a plain-word tooltip (the palette is how
-	# a non-coder discovers what an operator IS, not just where the punctuation lives).
-	var operator_entries: Array[Array] = [
-		["+", "add (numbers) / join (text)"],
-		["-", "subtract"],
-		["*", "multiply"],
-		["/", "divide"],
-		["%", "remainder after dividing (5 % 2 is 1)"],
-		["**", "to the power of (2 ** 3 is 8)"],
-		["==", "is equal to"],
-		["!=", "is NOT equal to"],
-		["<", "is less than"],
-		["<=", "is less than or equal to"],
-		[">", "is greater than"],
-		[">=", "is greater than or equal to"],
-		["and", "both sides must be true"],
-		["or", "either side can be true"],
-		["not", "flips true and false"],
-		["(", "open a bracket (group maths first)"],
-		[")", "close the bracket"],
-		["<<", "bit-shift left (x 2 per step; flags and masks)"],
-		[">>", "bit-shift right (/ 2 per step)"],
-		["&", "bitwise AND (keep shared flag bits)"],
-		["|", "bitwise OR (combine flag bits)"],
-		["^", "bitwise XOR (flip the other's bits)"],
-	]
-	for operator_entry: Array in operator_entries:
-		var op: String = str(operator_entry[0])
-		var op_button: Button = Button.new()
-		op_button.text = op
-		op_button.tooltip_text = "%s - insert  %s  at the cursor" % [str(operator_entry[1]), op]
-		op_button.focus_mode = Control.FOCUS_NONE  # don't steal the caret from the expression field
-		# Parentheses snug; everything else is space-padded so tokens never fuse (score+1 → score + 1).
-		var snippet: String = op if (op == "(" or op == ")") else " %s " % op
-		op_button.pressed.connect(_insert_into_expression_target.bind(snippet))
-		ops_flow.add_child(op_button)
-	content.add_child(ops_flow)
+	content.add_child(EventSheetPopupUI.hint_label("Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go."))
 
 	_expression_search = LineEdit.new()
 	_expression_search.placeholder_text = "Search expressions..."

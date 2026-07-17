@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Changed - expression authoring follows the Construct model
+
+- **The ƒx window is now the Expressions dictionary**: a floating, NON-modal catalog that
+  stays open while you type in the field underneath - double-click inserts at the cursor and
+  the window stays put so results chain; close it and reopen any time with the field's ƒx
+  (Find Expressions) button. The operator wall is gone (feedback: too verbose) - operators
+  are typed, the dictionary is for finding verbs.
+- **Every expression verb now autocompletes as you type**: the same catalog the dictionary
+  shows joins the field's unfocused completion popup (display names shown, code fragments
+  inserted), alongside the existing variable/member/node-path completion.
+- **Typing inside a call shows a plain-word signature hint**: sheet functions and host methods
+  already did; now ~35 GDScript globals do too - lerp, clamp, snapped, remap, move_toward,
+  randi_range... each phrased in beginner words ("clamp(value, min, max) - keeps the value
+  between min and max").
+
 ### Added - the public GDScript-basics coverage receipt (spec B complete)
 
 - **docs/GDSCRIPT-BASICS-COVERAGE.md**: every feature on Godot's official GDScript basics page,
