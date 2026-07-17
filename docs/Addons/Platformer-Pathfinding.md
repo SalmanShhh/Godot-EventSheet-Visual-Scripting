@@ -91,6 +91,13 @@ walks on, rides centered, and walks off at the far side. Waiting and riding legi
 waypoint progress, so the stuck watchdog holds off, and route refreshes are deferred mid-ride
 (a fresh route would start from a ground node and steer the rider off the shaft).
 
+**Pathfinding plans with straight-down gravity.** The graph, jump arcs, and steering all
+reason in screen x/y with gravity pulling down. PlatformerMovement's `gravity_angle` knob
+rotates that whole frame, and the planner does not follow it: leave the angle at its default
+`90` on any agent this pack drives. If the sibling movement's angle is anything else, the
+behavior warns once at runtime (and the Project Doctor flags scenes that combine the two) so
+a wrong-looking chase is never a silent mystery. Rotated-gravity planning is future work.
+
 ## Setup
 
 1. Your level is a `TileMapLayer` whose TileSet tiles carry physics collision polygons (the

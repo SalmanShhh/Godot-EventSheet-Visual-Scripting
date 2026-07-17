@@ -59,6 +59,7 @@ static func run() -> Dictionary:
 	check_coroutine_in_per_frame_trigger(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
 	check_pack_dependencies(sheet_paths, findings)
+	check_rotated_gravity_pathfinding(findings)
 	check_shadowed_variables(sheet_paths, findings)
 	check_untranslated_project(sheet_paths, findings)
 	check_required_fields(sheet_paths, findings)
@@ -666,6 +667,18 @@ static func check_pack_dependencies(sheet_paths: PackedStringArray, findings: Ar
 		missing.sort()
 		_add(findings, "warning", "pack-dependency", script_path,
 			"Pack class %s requires %s, which isn't present - install the pack it names (or register the autoload)." % [pack_class, ", ".join(missing)])
+
+
+## The movement packs' gravity_angle rotates the whole movement frame, but Platformer
+## Pathfinding plans in a straight-down frame (the graph, jump arcs, and steering are all
+## screen x/y) - rotated-gravity paths come out wrong. Advisory: the angle in the scene
+## might belong to a Bullet arc instead, so this only asks the author to check.
+static func check_rotated_gravity_pathfinding(findings: Array[Dictionary]) -> void:
+	for scene_path: String in _list_files_with_extension("tscn"):
+		var scene_text: String = FileAccess.get_file_as_string(scene_path)
+		if scene_text.contains("gravity_angle") and scene_text.contains("platformer_pathfinding"):
+			_add(findings, "info", "rotated-gravity-pathfinding", scene_path,
+				"This scene sets a gravity_angle and uses Platformer Pathfinding, which plans with straight-down gravity - if the angle is on the movement pack, planned paths will be wrong.")
 
 
 ## Whether one @ace_requires entry is satisfied: "autoload:Name" checks Project Settings,

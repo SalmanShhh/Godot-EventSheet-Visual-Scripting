@@ -80,6 +80,7 @@ signal nav_graph_built
 # --- Internal state (the graph lives per agent in P1) ---
 var _tilemap: TileMapLayer = null
 var _movement: Node = null
+var _gravity_angle_warned: bool = false
 ## Standable cells (the cell the agent's feet occupy) -> true.
 var _nodes: Dictionary = {}
 ## cell -> Array of {"to": Vector2i, "kind": "walk"/"jump"/"fall", "cost": float}.
@@ -131,6 +132,13 @@ func _find_movement() -> Node:
 	for child in host.get_children():
 		if child != self and child.has_method("jump") and child.get("move_speed") != null:
 			_movement = child
+			# The planner's frame is straight-down gravity: the graph, jump arcs, and
+			# steering all reason in screen x/y. A rotated movement frame would make
+			# every planned path wrong, so say so LOUDLY once instead of failing quietly.
+			var movement_angle: Variant = _movement.get("gravity_angle")
+			if movement_angle != null and not is_equal_approx(float(movement_angle), 90.0) and not _gravity_angle_warned:
+				_gravity_angle_warned = true
+				push_warning("[PlatformerPathfinding] The movement pack's gravity_angle is %.0f - pathfinding plans with straight-down gravity (90) and its paths will be wrong under rotated gravity." % float(movement_angle))
 			return _movement
 	return null
 ## Jump reach in CELLS, derived from the movement pack's physics (the overrides win when

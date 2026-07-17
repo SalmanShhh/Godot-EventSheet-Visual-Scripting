@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed - rotated gravity and pathfinding degrade loudly, never silently
+
+- **Platformer Pathfinding declares its frame**: the planner reasons in straight-down
+  gravity (the graph, jump arcs, and steering are all screen x/y), and the movement packs'
+  new gravity_angle rotates the movement frame out from under it. The combination now
+  announces itself instead of silently pathfinding wrong: the driver warns ONCE at runtime
+  when the sibling movement's angle is not 90, and a new advisory Doctor check flags
+  scenes that combine a gravity_angle with Platformer Pathfinding. The guide states the
+  limitation and that rotated-gravity planning is future work.
+- Driver audit for the gravity knobs: Move To / Move To 3D are gravity-free kinematics
+  (nothing to respect) and the nav-agent driver stays down-gravity by NavigationServer
+  design. `tests/pathfinding_gravity_guard_test.gd` pins the one-shot warning, the quiet
+  default, the Doctor finding, and the shipped scenes staying clean.
+
 ### Added - 3D packs get a Gravity Direction (ceiling walks, bent arcs)
 
 - **`gravity_direction: Vector3` (default `(0, -1, 0)`)** on Bullet 3D and the FPS
