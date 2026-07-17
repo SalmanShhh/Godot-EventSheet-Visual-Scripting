@@ -670,6 +670,8 @@ static var _preference_builders: Array[Callable] = []
 static var _simple_aces: Array[ACEDefinition] = []
 ## Editor-preview samplers: behavior script path -> Callable(params, base, time) -> Dictionary.
 static var _editor_preview_samplers: Dictionary = {}
+## Editor-gizmo drawers: behavior script path -> Callable(params, host, canvas) -> void.
+static var _editor_gizmo_drawers: Dictionary = {}
 
 
 ## Adds an entry to the right-click menu of event rows. `filter` receives the row's source
@@ -844,6 +846,23 @@ static func register_editor_preview(script_path: String, sampler: Callable) -> v
 
 static func editor_preview_sampler_for(script_path: String) -> Callable:
 	return _editor_preview_samplers.get(script_path, Callable())
+
+
+## In-editor behavior gizmos (select a node, its behaviors draw their setup in the 2D viewport):
+## a behavior opts in by shipping a pure static on its emitted script -
+##   static func editor_gizmo_draw(params: Dictionary, host: Node2D, canvas: CanvasItem) -> void
+## (params = the behavior node's live script variables, host = the parent Node2D, canvas = a
+## transient child of the host to draw_* on in host-local space; for world-space shapes first
+## canvas.draw_set_transform_matrix(host.get_global_transform().affine_inverse())). This call
+## registers a drawer for scripts that CANNOT ship the static (third-party or generated code you
+## don't control): `script_path` is the behavior script's resource path; `drawer` has the same
+## signature and takes priority over the static.
+static func register_editor_gizmo(script_path: String, drawer: Callable) -> void:
+	_editor_gizmo_drawers[script_path] = drawer
+
+
+static func editor_gizmo_drawer_for(script_path: String) -> Callable:
+	return _editor_gizmo_drawers.get(script_path, Callable())
 
 
 ## Toggles the behavior preview on the current scene-editor selection - the same entry the

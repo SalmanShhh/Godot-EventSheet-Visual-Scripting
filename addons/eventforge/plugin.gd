@@ -24,6 +24,7 @@ const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/
 const DRAWING_CANVAS_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_canvas_gizmo.gd"
 const DRAWING_PREFAB_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_gizmo.gd"
 const DRAWING_PREFAB_3D_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd"
+const BEHAVIOR_GIZMOS_PATH: String = "res://addons/eventsheet/editor/behavior_gizmos.gd"
 
 var _event_sheet_editor: Control = null
 var _export_integrity_plugin: EditorExportPlugin = null
@@ -40,6 +41,8 @@ var _drawing_canvas_gizmo: RefCounted = null
 # Selection-driven prefab gizmos: preview a referenced DrawingPrefabResource in the 2D / 3D viewport (loaded by path).
 var _drawing_prefab_gizmo: RefCounted = null
 var _drawing_prefab_3d_gizmo: RefCounted = null
+# Selection-driven behavior gizmos: a selected node's behaviors draw their editor_gizmo_draw overlays (loaded by path).
+var _behavior_gizmos: RefCounted = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
 var _new_sheet_dialog: RefCounted = null
@@ -264,6 +267,11 @@ func _enter_tree() -> void:
 	_drawing_prefab_gizmo.call("init", get_editor_interface())
 	_drawing_prefab_3d_gizmo = load(DRAWING_PREFAB_3D_GIZMO_PATH).new()
 	_drawing_prefab_3d_gizmo.call("init", get_editor_interface())
+	# Behavior gizmos: any behavior shipping an editor_gizmo_draw static (or registered via
+	# EventSheets.register_editor_gizmo) draws its setup overlay while its node is selected.
+	# Selection-driven (never _handles), transient owner-less canvas - can't hijack the workspace.
+	_behavior_gizmos = load(BEHAVIOR_GIZMOS_PATH).new()
+	_behavior_gizmos.call("init", get_editor_interface())
 	# The workspace editor (the ~3400-line dock, its ~45 delegates, every dialog, and the addon-folder
 	# vocabulary scans) is built LAZILY on first use - see _ensure_editor. Enabling the plugin, or
 	# opening a project that never touches event sheets, pays none of it. The top-strip tab still
@@ -346,6 +354,9 @@ func _exit_tree() -> void:
 	if _drawing_canvas_gizmo != null:
 		_drawing_canvas_gizmo.call("teardown")
 		_drawing_canvas_gizmo = null
+	if _behavior_gizmos != null:
+		_behavior_gizmos.call("teardown")
+		_behavior_gizmos = null
 	if _drawing_prefab_gizmo != null:
 		_drawing_prefab_gizmo.call("teardown")
 		_drawing_prefab_gizmo = null

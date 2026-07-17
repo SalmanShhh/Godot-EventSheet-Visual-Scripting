@@ -237,6 +237,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Seams | `register_preference(builder: Callable)` | `void` | no |
 | Seams | `register_tour(name, steps)` / `start_tour(steps)` | `void` / `bool` | start needs dock |
 | Seams | `register_editor_preview(script_path, sampler)` / `editor_preview_sampler_for(script_path)` | `void` / `Callable` | no |
+| Seams | `register_editor_gizmo(script_path, drawer)` / `editor_gizmo_drawer_for(script_path)` | `void` / `Callable` | no |
 | Seams | `preview_behaviors()` | `bool` | yes |
 | Seams | `verify_pack(pack_gd_path: String)` | `Dictionary` | no |
 | Localisation | `translate(text: String)` | `String` | no |
@@ -416,6 +417,27 @@ EventSheets.register_editor_preview("res://addons/thirdparty/bob.gd",
 	func(params: Dictionary, base: Dictionary, time: float) -> Dictionary:
 		return {"position": (base.get("position") as Vector2) + Vector2(0.0, sin(time * TAU) * 8.0)})
 ```
+
+**Editor gizmos** are the preview seam's sibling for STATIC setup: instead of animating the
+host over time, the behavior draws its configuration in the 2D viewport while its node is
+selected - a bounds rectangle, a sight cone, a patrol route. Ship a second pure static:
+
+```gdscript
+static func editor_gizmo_draw(params: Dictionary, host: Node2D, canvas: CanvasItem) -> void:
+	# params: the behavior node's script variables (exported knobs AND internal state), live.
+	# canvas: a transient child of the host - plain draw_* calls paint in HOST-LOCAL space.
+	# For world-space shapes, draw through the host's inverse transform first:
+	canvas.draw_set_transform_matrix(host.get_global_transform().affine_inverse())
+	canvas.draw_rect(params.get("patrol_area", Rect2()), Color.CYAN, false, 2.0)
+```
+
+Selecting the host draws every opted-in child behavior; selecting the behavior node draws just
+that one. The canvas is an owner-less transient child (never saved into the scene) that
+repaints every frame, so Inspector tweaks and host movement track live. The Bound To pack
+ships one - select any bound node and the bound rectangle appears, with a dashed inner line
+showing where the origin can reach under edge binding. For scripts you cannot edit, register
+the drawer externally with `EventSheets.register_editor_gizmo(script_path, drawer)` - same
+signature, takes priority over the static.
 
 ### 15. Add save support to your pack's node with one call
 

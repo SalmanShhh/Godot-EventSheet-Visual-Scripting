@@ -69,7 +69,32 @@ static func build() -> bool:
 		"\tvar viewport: Viewport = host.get_viewport() if host != null else null",
 		"\tif viewport == null:",
 		"\t\treturn custom_bounds",
-		"\treturn viewport.get_canvas_transform().affine_inverse() * viewport.get_visible_rect()"
+		"\treturn viewport.get_canvas_transform().affine_inverse() * viewport.get_visible_rect()",
+		"",
+		"static func editor_gizmo_draw(params: Dictionary, host: Node2D, canvas: CanvasItem) -> void:",
+		"\t# Editor-gizmo contract (select the host or this behavior in the editor): draws the",
+		"\t# bound rectangle in the 2D viewport - solid outer bound, dashed inner line where the",
+		"\t# ORIGIN can reach when edge binding subtracts the half-size. Pure knob math; the",
+		"\t# editor calls this static, the game never does.",
+		"\tif not bool(params.get(\"bound_enabled\", true)):",
+		"\t\treturn",
+		"\tvar rect: Rect2 = params.get(\"custom_bounds\", Rect2())",
+		"\tif str(params.get(\"bound_space\", \"screen\")) == \"screen\":",
+		"\t\t# The editor has no running camera - show the project's base view size from 0,0.",
+		"\t\trect = Rect2(0.0, 0.0, float(ProjectSettings.get_setting(\"display/window/size/viewport_width\", 1152)), float(ProjectSettings.get_setting(\"display/window/size/viewport_height\", 648)))",
+		"\t# The rect is world-space; the canvas rides the host, so draw through the inverse.",
+		"\tcanvas.draw_set_transform_matrix(host.get_global_transform().affine_inverse())",
+		"\tvar color: Color = Color(0.36, 0.78, 1.0, 0.9)",
+		"\tcanvas.draw_rect(rect, color, false, 2.0)",
+		"\tif bool(params.get(\"bound_by_edge\", true)):",
+		"\t\tvar extent: Vector2 = Vector2(float(params.get(\"half_width\", 16.0)), float(params.get(\"half_height\", 16.0)))",
+		"\t\tvar inner: Rect2 = Rect2(rect.position + extent, rect.size - extent * 2.0)",
+		"\t\tif inner.size.x > 0.0 and inner.size.y > 0.0:",
+		"\t\t\tvar faint: Color = Color(color, 0.45)",
+		"\t\t\tcanvas.draw_dashed_line(inner.position, inner.position + Vector2(inner.size.x, 0.0), faint, 1.0, 6.0)",
+		"\t\t\tcanvas.draw_dashed_line(inner.position + Vector2(inner.size.x, 0.0), inner.end, faint, 1.0, 6.0)",
+		"\t\t\tcanvas.draw_dashed_line(inner.end, inner.position + Vector2(0.0, inner.size.y), faint, 1.0, 6.0)",
+		"\t\t\tcanvas.draw_dashed_line(inner.position + Vector2(0.0, inner.size.y), inner.position, faint, 1.0, 6.0)"
 	]))
 	sheet.events.append(block)
 	var tick: EventRow = EventRow.new()

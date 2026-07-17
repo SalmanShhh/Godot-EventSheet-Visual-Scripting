@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added - behaviors draw their setup in the editor (the Construct DrawInEditor idea)
+
+- **Behavior editor gizmos**: a behavior that ships
+  `static func editor_gizmo_draw(params: Dictionary, host: Node2D, canvas: CanvasItem) -> void`
+  on its emitted script draws a live overlay in the 2D viewport while its node is selected -
+  a bounds rectangle, a sight cone, a patrol route. Selecting the host draws every opted-in
+  child behavior; selecting the behavior draws just that one. The surface is a transient
+  owner-less canvas child that repaints every frame, so Inspector tweaks and host movement
+  track live and the scene file is never touched. Selection-driven (never `_handles`), the
+  same anti-hijack discipline as the DrawingCanvas gizmo.
+- **The Bound To pack ships the first gizmo**: select any bound node and the bound rectangle
+  appears (screen = the project's base view size, custom = the live `custom_bounds`), with a
+  dashed inner line showing where the origin can reach under edge binding.
+- For scripts that cannot ship the static, `EventSheets.register_editor_gizmo(script_path,
+  drawer)` registers the same-signature drawer externally (takes priority), mirroring
+  `register_editor_preview`. `tests/editor_gizmos_test.gd` pins target resolution, drawer
+  precedence, live param capture, and the emitted Bound To static.
+
 ### Added - node-group params autocomplete from real groups (the "group_reference" rich param)
 
 - **A new `group_reference` param hint**: any ACE param hinted with it renders as a
