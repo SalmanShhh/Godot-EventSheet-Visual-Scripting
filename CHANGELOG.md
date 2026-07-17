@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - one-call validation for any variable (approved spec, slice 3 part 2)
+
+- **`EventSheets.attach_validator(sheet, variable_name)`** gives a variable a live Inspector
+  validation check in one call: it creates a ready-to-edit `validate_<variable>` sheet function
+  (returns a warning String, "" = fine - an Array grid starts with a working "add at least one
+  row" rule, anything else with a commented skeleton) and wires the variable's `validate`
+  attribute to it. Re-attaching reuses the function; the emitted script carries the decor and
+  round-trips byte-exactly.
+- **The Custom Resource wizard grew a fourth answer**: "Add a validation check" - tick it and
+  the new resource ships with the validator pre-wired, rules editable as ordinary rows.
+
 ### Added - any function can be an Inspector button (approved spec, slice 3 part 1)
 
 - **The function dialog gained an "Inspector button" field**: give a function a label and it

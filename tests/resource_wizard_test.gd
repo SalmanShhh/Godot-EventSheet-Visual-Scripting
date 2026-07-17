@@ -54,11 +54,28 @@ static func run() -> bool:
 	ok = _check(ok, EventSheetNewResourceWizard.class_name_for("", "Boss!") == "BossTable", "punctuation is stripped")
 	ok = _check(ok, EventSheetNewResourceWizard.grid_name_for("Dialogue Lines") == "dialogue_lines", "an already-plural entry is not double-pluralized")
 
+	# ---- attach_validator: the validate function + attribute wiring, in one call ----
+	var validator_name: String = EventSheets.attach_validator(sheet, "loot_drops")
+	ok = _check(ok, validator_name == "validate_loot_drops", "the validator function is named for the grid (got %s)" % validator_name)
+	var validator_found: EventFunction = null
+	for candidate: Resource in sheet.functions:
+		if candidate is EventFunction and (candidate as EventFunction).function_name == validator_name:
+			validator_found = candidate as EventFunction
+	ok = _check(ok, validator_found != null and validator_found.return_type == TYPE_STRING, "a String-returning validator function was created")
+	var grid_attributes: Dictionary = (sheet.variables.get("loot_drops", {}) as Dictionary).get("attributes", {})
+	ok = _check(ok, str(grid_attributes.get("validate", "")) == validator_name, "the grid's validate attribute points at it")
+	var function_count: int = sheet.functions.size()
+	EventSheets.attach_validator(sheet, "loot_drops")
+	ok = _check(ok, sheet.functions.size() == function_count, "re-attaching reuses the function (no duplicate)")
+	ok = _check(ok, EventSheets.attach_validator(sheet, "no_such_variable") == "", "an unknown variable attaches nothing")
+
 	# ---- the covenant: the wizard's output compiles and round-trips byte-exactly ----
 	var compiled: Dictionary = SheetCompiler.compile(sheet, "user://wizard_roundtrip.gd")
 	ok = _check(ok, bool(compiled.get("success", false)), "the wizard sheet compiles")
 	var source: String = str(compiled.get("output", ""))
 	ok = _check(ok, source.contains("class_name LootDropTable") and source.contains("extends Resource"), "output is a named Resource script")
+	ok = _check(ok, source.contains("# @inspector_validate validate_loot_drops"), "output carries the validate decor")
+	ok = _check(ok, source.contains("func validate_loot_drops() -> String:"), "output ships the validator function")
 	ok = _check(ok, EventSheets.round_trips(source), "the wizard sheet round-trips byte-exactly")
 	if FileAccess.file_exists("user://wizard_roundtrip.gd"):
 		DirAccess.remove_absolute("user://wizard_roundtrip.gd")

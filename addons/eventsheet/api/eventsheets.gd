@@ -312,6 +312,43 @@ static func resource_grid(columns: Array, options: Dictionary = {}) -> Dictionar
 	return {"type": "Array", "default": [], "exported": true, "attributes": attributes}
 
 
+## Gives a variable a LIVE validation check without the author learning the machinery: creates
+## a `validate_<variable>` sheet function (returns a warning String, "" = valid - the body is a
+## ready-to-edit condition/action skeleton) and wires the variable's `validate` attribute to it,
+## so the Inspector shows the returned message above the field while it is edited (@tool sheets).
+## Reuses an existing function of that name instead of duplicating. Returns the function name,
+## or "" when the sheet/variable doesn't exist. The Custom Resource wizard's "Add a validation
+## check" box calls this; packs and extensions can too.
+static func attach_validator(sheet: EventSheetResource, variable_name: String) -> String:
+	if sheet == null or not sheet.variables.has(variable_name):
+		return ""
+	var function_name: String = "validate_%s" % variable_name
+	var exists: bool = false
+	for candidate: Resource in sheet.functions:
+		if candidate is EventFunction and (candidate as EventFunction).function_name == function_name:
+			exists = true
+			break
+	if not exists:
+		var validator: EventFunction = EventFunction.new()
+		validator.function_name = function_name
+		validator.return_type = TYPE_STRING
+		validator.doc_comment = "Checked live while %s is edited in the Inspector: return a warning to show, or \"\" when the data is fine." % variable_name
+		var body: RawCodeRow = RawCodeRow.new()
+		var descriptor: Dictionary = sheet.variables.get(variable_name, {})
+		if str(descriptor.get("type", "")) == "Array":
+			body.code = "if %s.is_empty():\n\treturn \"Add at least one row.\"\nreturn \"\"" % variable_name
+		else:
+			body.code = "# Return a warning message when %s looks wrong, e.g.:\n# if %s == null:\n#\treturn \"Set %s first.\"\nreturn \"\"" % [variable_name, variable_name, variable_name]
+		validator.events.append(body)
+		sheet.functions.append(validator)
+	var variable_descriptor: Dictionary = sheet.variables.get(variable_name, {})
+	var variable_attributes: Dictionary = variable_descriptor.get("attributes", {})
+	variable_attributes["validate"] = function_name
+	variable_descriptor["attributes"] = variable_attributes
+	sheet.variables[variable_name] = variable_descriptor
+	return function_name
+
+
 ## Opens GDScript source as an editable sheet (the lossless external path: everything
 ## liftable lifts, everything else stays verbatim - never corrupted).
 static func open_gd_as_sheet(source: String) -> EventSheetResource:

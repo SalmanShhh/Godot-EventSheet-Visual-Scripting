@@ -21,6 +21,7 @@ var _entry_edit: LineEdit = null
 var _class_edit: LineEdit = null
 var _columns_edit: TextEdit = null
 var _required_check: CheckBox = null
+var _validator_check: CheckBox = null
 var _preview_label: Label = null
 
 
@@ -35,6 +36,7 @@ func open() -> void:
 	_class_edit.text = ""
 	_columns_edit.text = ""
 	_required_check.button_pressed = false
+	_validator_check.button_pressed = false
 	_refresh_preview()
 	if _dialog.is_inside_tree():  # headless tests: fields reset, no window to pop
 		_dialog.popup_centered(Vector2i(560, 600))
@@ -80,6 +82,10 @@ func _build_dialog() -> void:
 	_required_check.text = "Warn in the Inspector until the table has rows (required)"
 	_required_check.toggled.connect(func(_on: bool) -> void: _refresh_preview())
 	safety_box.add_child(_required_check)
+	_validator_check = CheckBox.new()
+	_validator_check.text = "Add a validation check (a function warning about bad data, live)"
+	_validator_check.tooltip_text = "Creates a ready-to-edit validate function: it runs while the table is edited in the Inspector and shows any warning it returns above the field. Add your own rules as condition rows."
+	safety_box.add_child(_validator_check)
 
 	_preview_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_preview_label)
@@ -134,6 +140,8 @@ func _on_create() -> void:
 		_dock._set_status("List at least one column (one per line).", true)
 		return
 	var sheet: EventSheetResource = build_wizard_sheet(_class_edit.text, entry_name, columns, _required_check.button_pressed)
+	if _validator_check.button_pressed:
+		EventSheets.attach_validator(sheet, grid_name_for(entry_name))
 	_dialog.hide()
 	_dock.setup(sheet)
 	_dock._current_sheet_path = ""
