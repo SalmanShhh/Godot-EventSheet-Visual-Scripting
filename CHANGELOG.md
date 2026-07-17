@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - the README catches up (and slims down)
+
+- **README refreshed for the whole unreleased wave**: a "Since v0.15" status block (8 languages
+  + hot-reload, the creator journeys, the C3 reflexes, one pack pipeline, the coverage
+  receipt, 75 packs), an in-repo milestones row, and updated counts throughout.
+- **The wall-of-text paragraphs are gone**: the doc-link run-on became a five-bullet
+  "what most people want first" list, the giant pack paragraph became a seven-family
+  overview, and the language paragraph was condensed - per the README structure standard.
+  Also fixed a stale con (Drawing Canvas exists now).
+
 ### Added - pack sheets say what they are (the Addon Pack chip)
 
 - **Opening a sheet that lives under `eventsheet_addons/` now shows a plated "Addon Pack"
