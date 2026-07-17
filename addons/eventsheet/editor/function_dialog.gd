@@ -52,6 +52,7 @@ var _guards_card: Control = null
 var _preview_card: Control = null
 var _name_edit: LineEdit = null
 var _doc_comment_edit: TextEdit = null
+var _tool_button_edit: LineEdit = null
 var _description_edit: LineEdit = null
 var _usable_option: OptionButton = null           # hidden backing model for the three cards
 var _usable_cards: Array = []                      # [{panel, title, examples, accent, kind}], index-aligned to USABLE_AS
@@ -102,6 +103,14 @@ func init_dialog(parent_node: Node) -> void:
 	form.add_child(EventSheetPopupUI.form_row("Doc comment", _doc_comment_edit))
 	# Highlight-to-format bar (same one the comment dialog uses) - BBCode renders in Godot's generated docs.
 	EventSheetBBCodeSelectionBar.attach(_doc_comment_edit)
+
+	# Inspector button: name a label and this function gets a one-click button in the Inspector
+	# (@export_tool_button) - the beginner path to editor tools: the button IS the function, its
+	# behavior stays real event rows. Empty = no button (the default; most functions).
+	_tool_button_edit = LineEdit.new()
+	_tool_button_edit.placeholder_text = "e.g. Re-bake  (empty = no Inspector button)"
+	_tool_button_edit.tooltip_text = "Show this function as a one-click button in the Inspector, labelled with this text. Pressing the button runs the function's rows - great for editor chores like re-baking, refilling, or validating."
+	form.add_child(EventSheetPopupUI.form_row("Inspector button", _tool_button_edit))
 
 	# Description is a picker/publish concern (grouped under Publish below), not a first thing a beginner
 	# naming a local helper needs - so it lives in the expose section, not the always-visible form.
@@ -207,6 +216,7 @@ func open() -> void:
 	_clear_rows(_guards_box)
 	_name_edit.text = ""
 	_doc_comment_edit.text = ""
+	_tool_button_edit.text = ""
 	_description_edit.text = ""
 	_expose_check.button_pressed = false
 	_expose_card.visible = false
@@ -235,6 +245,7 @@ func open_for_edit(event_function: EventFunction) -> void:
 	_guards_card.visible = false
 	_name_edit.text = event_function.function_name
 	_doc_comment_edit.text = event_function.doc_comment
+	_tool_button_edit.text = event_function.tool_button_label
 	_description_edit.text = event_function.description
 	# Represent whatever type this verb returns, using the compiler's own emitted type name as the truth.
 	# A custom / engine class (return_type_name set), OR a builtin Variant type with no card (Color, Array,
@@ -719,6 +730,7 @@ func build_function_data() -> Dictionary:
 		"params": params,
 		"guards": collect_guards(),
 		"doc_comment": _doc_comment_edit.text.strip_edges(),
+		"tool_button_label": _tool_button_edit.text.strip_edges(),
 		"description": _description_edit.text.strip_edges(),
 		"expose": _expose_check.button_pressed,
 		"ace_display_name": _expose_name_edit.text.strip_edges() if not _expose_name_edit.text.strip_edges().is_empty() else function_name.capitalize(),

@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - any function can be an Inspector button (approved spec, slice 3 part 1)
+
+- **The function dialog gained an "Inspector button" field**: give a function a label and it
+  shows as a one-click button in the Inspector (@export_tool_button) - press it and the
+  function's rows run. The beginner path to editor tools on Resources and behaviors: the
+  button IS the function, its behavior stays real condition/action rows, no annotation to
+  learn. Empty = no button (the default). The emission + byte-gated lift already existed on
+  EventFunction.tool_button_label; this closes the loop with UI, edit-fingerprint coverage
+  (a label-only change saves), and `tests/inspector_button_function_test.gd`.
+
 ### Added - the Custom Resource wizard + the resource_grid API (approved spec, slice 2)
 
 - **Sheet > New Custom Resource…** builds your own data asset from three plain questions -
