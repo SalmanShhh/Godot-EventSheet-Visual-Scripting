@@ -68,6 +68,7 @@ func _find_method_anywhere(method_id: String) -> HTNMethod:
 	return null
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Set World State")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Writes a fact - preconditions and scorer inputs read it.")
@@ -222,6 +223,7 @@ func load_plan(resource: Resource) -> void:
 	plan_loaded.emit(str(resource.get("plan_name")) if resource.get("plan_name") != null else "")
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Request Plan")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Decomposes the root task into a plan (best-ranked methods win) and starts the first task.")
@@ -236,6 +238,7 @@ func request_plan() -> void:
 		task_started.emit(str(plan[0]))
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Mark Task Complete")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Advances to the next task, or fires On Plan Complete at the end.")

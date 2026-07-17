@@ -39,6 +39,9 @@ extends Resource
 ## `## @ace_display_template("...")` and lifted back, so it round-trips. Empty = the row auto-derives
 ## a slot line from the name plus the humanized parameter ids.
 @export var display_template: String = ""
+## Featured verbs lead their picker section starred + bold (the pack's heroes). Emitted as
+## `## @ace_featured` and lifted back, so it round-trips.
+@export var featured: bool = false
 @export var params: Array[ACEParam] = []
 @export var parameters: Array[String] = [] # Backwards-compatible alias.
 @export var return_type: int = TYPE_NIL

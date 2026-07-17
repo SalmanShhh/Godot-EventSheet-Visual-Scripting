@@ -1703,6 +1703,9 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 			lines.append("## @ace_condition")
 		_:
 			lines.append("## @ace_expression")
+	# Featured rides directly on the expose directive (starred + bold in the picker).
+	if event_function.featured:
+		lines.append("## @ace_featured")
 	var display_name: String = event_function.ace_display_name.strip_edges()
 	if not display_name.is_empty():
 		lines.append("## @ace_name(\"%s\")" % display_name)

@@ -191,6 +191,7 @@ func _process(delta: float) -> void:
 			_apply_host_scale(_squash_value)
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Shake")
 ## @ace_category("Juice")
 ## @ace_description("Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.")
@@ -410,6 +411,7 @@ func clear_slowmo() -> void:
 	Engine.time_scale = 1.0
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Hitstop")
 ## @ace_category("Juice")
 ## @ace_description("The punchy hit-pause you feel on a connecting blow: freezes Engine.time_scale (0 = full stop) for a few frames, then snaps back to what it was. Uses a realtime timer so it un-freezes even at a full stop, ignores repeat hits already mid-freeze, pauses any active Slowmo for the duration, and emits On Hitstop Finished. Fire it the instant a hit lands.")

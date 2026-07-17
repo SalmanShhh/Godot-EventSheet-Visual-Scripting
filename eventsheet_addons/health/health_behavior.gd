@@ -84,6 +84,7 @@ func _process(delta: float) -> void:
 		on_health_pool_depleted.emit()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Take Damage")
 ## @ace_category("Health")
 ## @ace_description("Applies damage; health pools absorb in ascending-priority order before real HP.")
@@ -127,6 +128,7 @@ func take_damage(amount: float) -> void:
 		on_health_changed.emit()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Heal")
 ## @ace_category("Health")
 ## @ace_description("Restores health up to max_health.")

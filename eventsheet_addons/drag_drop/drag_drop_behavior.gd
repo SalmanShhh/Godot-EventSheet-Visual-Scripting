@@ -97,6 +97,7 @@ func _process(delta: float) -> void:
 		_end_drag(break_action != 1, "broke_distance")
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Start Drag")
 ## @ace_category("Drag & Drop")
 ## @ace_description("Begins a drag at a point. grab_mode 0 = keep offset from the host; 1 = centre on the point.")
@@ -131,6 +132,7 @@ func start_drag_at_object(target: Node2D, grab_mode: int) -> void:
 		follow_uid = target.get_instance_id()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Drop")
 ## @ace_category("Drag & Drop")
 ## @ace_description("Ends the drag. how 0 = apply throw/snap; 1 = cancel silently.")

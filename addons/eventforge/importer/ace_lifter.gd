@@ -836,6 +836,8 @@ static func _parse_annotations(code: String) -> Dictionary:
 			continue
 		if text == "## @ace_hidden":
 			recognized = true
+		elif text == "## @ace_featured":
+			fields["featured"] = true
 		elif text == "## @ace_action" or text == "## @ace_condition" or text == "## @ace_expression":
 			# Three-way expose (action / condition / expression). The exposed TYPE is re-derived from the
 			# function's return type on emit, so all three directives simply mark the function exposed.
@@ -945,6 +947,7 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	event_function.ace_category = str(annotations.get("category", ""))
 	event_function.description = str(annotations.get("description", ""))
 	event_function.display_template = str(annotations.get("display_template", ""))
+	event_function.featured = bool(annotations.get("featured", false))
 	# @ace_param_options / @ace_param_hint ride on the params themselves, so emission can
 	# ship them back out and the picker gets its dropdowns and widgets.
 	var lifted_param_options: Dictionary = annotations.get("param_options", {})

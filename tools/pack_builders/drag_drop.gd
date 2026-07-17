@@ -430,4 +430,6 @@ static func build() -> bool:
 		"magnet_strength = clampf(strength, 0.0, 1.0)"
 	])))
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["start_drag", "drop_drag"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/drag_drop/drag_drop_behavior")

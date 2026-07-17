@@ -224,4 +224,6 @@ static func build() -> bool:
 		[],
 		"_jumps_left = maxi(max_jumps - 1, 0)")
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["jump"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/platformer_movement/platformer_movement_behavior")

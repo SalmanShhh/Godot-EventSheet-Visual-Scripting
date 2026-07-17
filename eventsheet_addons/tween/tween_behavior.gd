@@ -28,6 +28,7 @@ signal tween_finished
 var _active_tween: Tween = null
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Tween Property")
 ## @ace_category("Tween")
 ## @ace_description("Tweens any host property (e.g. position:x) to a value.")

@@ -63,6 +63,7 @@ func _process(delta: float) -> void:
 			_burst_left = 0
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Fire")
 ## @ace_category("Weapon")
 ## @ace_description("Fires if ready (not reloading, off cooldown, has ammo). In burst mode it kicks off a burst; if the magazine is empty it triggers On Empty (and auto-reloads when enabled).")
@@ -82,6 +83,7 @@ func fire() -> void:
 	_fire_one()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Reload")
 ## @ace_category("Weapon")
 ## @ace_description("Starts a timed reload (if not full and reserve has rounds).")

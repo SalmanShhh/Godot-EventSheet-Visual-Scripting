@@ -316,4 +316,6 @@ static func build() -> bool:
 		[],
 		"plan = []\nplan_index = 0")
 
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["set_world_state", "request_plan", "mark_complete"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/uhtn_planning/uhtn_planning_behavior")

@@ -107,6 +107,7 @@ func _physics_process(delta: float) -> void:
 	host.move_and_slide()
 
 ## @ace_action
+## @ace_featured
 ## @ace_name("Jump")
 ## @ace_category("Platformer")
 ## @ace_description("Jumps: from the floor or within coyote time, off a wall (if enabled), or a mid-air (double) jump if any remain. If none are available right now, the press is buffered.")

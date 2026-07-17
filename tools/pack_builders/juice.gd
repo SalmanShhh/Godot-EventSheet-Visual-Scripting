@@ -423,6 +423,8 @@ static func build() -> bool:
 		"if _hitstop_active:\n\treturn\n_hitstop_active = true\n_hitstop_prev_scale = Engine.time_scale\nif _slowmo_tween != null and is_instance_valid(_slowmo_tween) and _slowmo_tween.is_running():\n\t_slowmo_tween.pause()\nEngine.time_scale = maxf(freeze_scale, 0.0)\nawait get_tree().create_timer(maxf(freeze_duration, 0.0), true, false, true).timeout\nif not _hitstop_active:\n\treturn\n_hitstop_active = false\nEngine.time_scale = _hitstop_prev_scale\nif _slowmo_tween != null and is_instance_valid(_slowmo_tween):\n\t_slowmo_tween.play()\nhitstop_finished.emit()")
 	_default(sheet, "freeze_duration", "0.06")
 	_default(sheet, "freeze_scale", "0.0")
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["shake", "hitstop"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_behavior")
 
 

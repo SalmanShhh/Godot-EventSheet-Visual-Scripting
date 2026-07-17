@@ -151,6 +151,19 @@ static func condition(sheet: EventSheetResource, function_name: String, display_
 	sheet.functions.append(fn)
 
 
+## Marks the named exposed functions FEATURED - the pack's hero verbs, starred + bold at the
+## top of their picker section. Call once at the end of a builder with the 1-3 verbs a new
+## user should meet first: Lib.feature_verbs(sheet, ["take_damage", "heal"]).
+static func feature_verbs(sheet: EventSheetResource, function_names: Array) -> void:
+	var missing: Array = function_names.duplicate()
+	for function_resource: Resource in sheet.functions:
+		if function_resource is EventFunction and function_names.has((function_resource as EventFunction).function_name):
+			(function_resource as EventFunction).featured = true
+			missing.erase((function_resource as EventFunction).function_name)
+	if not missing.is_empty():
+		push_warning("feature_verbs: no function named %s on this sheet (typo?)" % str(missing))
+
+
 ## Appends a value-returning exposed function - an Expression - with the given return type
 ## (TYPE_FLOAT / TYPE_INT / TYPE_STRING / TYPE_BOOL / TYPE_ARRAY / TYPE_VECTOR2 ...).
 static func number(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String, ret: int) -> void:

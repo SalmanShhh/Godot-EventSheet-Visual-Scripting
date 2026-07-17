@@ -91,4 +91,6 @@ static func build() -> bool:
 	Lib.append_function(sheet, "stop_tweens", "Stop Tweens", "Tween", "Kills the running tween (host stays where it is).",
 		[],
 		"if _active_tween != null:\n\t_active_tween.kill()\n\t_active_tween = null")
+	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.feature_verbs(sheet, ["tween_property_to"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/tween/tween_behavior")

@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - packs can star their hero verbs (featured, end to end)
+
+- **Published pack verbs can be FEATURED**: `EventFunction.featured` emits `## @ace_featured`
+  on the exposed function, the importer lifts it back byte-gated, and the picker stars + bolds
+  the verb at the top of its section. Builders mark heroes with one line -
+  `Lib.feature_verbs(sheet, ["take_damage", "heal"])` (typos warn at build time).
+- **Seven flagship packs lead with their heroes now**: Health (Take Damage, Heal), Tween
+  (Tween Property To), Weapon Kit (Fire, Reload), Drag & Drop (Start/Drop Drag), Juice
+  (Shake, Hitstop), Platformer Movement (Jump), and UHTN Planning (Set World State,
+  Request Plan, Mark Complete). The remaining packs pick theirs in a follow-up sweep.
+
 ### Added - multi-line enums are enum blocks now, not code blobs
 
 - **Multi-line enums (the shape long enums with explicit values are written in) now lift into
