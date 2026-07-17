@@ -129,6 +129,15 @@ const TYPE_HINTS: Dictionary = {
 	"Texture2D": "An image / sprite resource.",
 	"Curve": "A shape over 0–1 (easing, falloff, ramps).",
 	"Variant": "Any type - untyped (advanced; prefer a specific type when you can).",
+	"Array": "A list that can hold anything (mixed types allowed).",
+	"Array[int]": "A list of whole numbers (Array[int]) - scores, ids, tile indexes.",
+	"Array[float]": "A list of numbers (Array[float]) - weights, timings, chances.",
+	"Array[String]": "A list of text entries (Array[String]) - names, lines, tags.",
+	"Dictionary": "Named slots holding anything: look values up by a key.",
+	"Dictionary[String, int]": "Named whole numbers (by text key) - e.g. costs[\"sword\"] = 10.",
+	"Dictionary[String, float]": "Named numbers (by text key) - e.g. volumes[\"music\"] = 0.8.",
+	"Dictionary[String, String]": "Named text (by text key) - e.g. lines[\"greeting\"].",
+	"Dictionary[String, Variant]": "Named anything (by text key) - a flexible data bag.",
 }
 
 

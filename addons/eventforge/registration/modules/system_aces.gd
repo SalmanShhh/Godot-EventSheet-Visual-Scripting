@@ -34,6 +34,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetWindowHeight", "Window Height", ACEDescriptor.ACEType.EXPRESSION, "DisplayServer.window_get_size().y", "", [], "Display", "window height")
 		.described("Gives the current window height in pixels."))
 	# Text (event-sheet System string expressions -> direct String methods)
+	# The beginner text-building hero: {name} placeholders, no printf codes to learn ("%d" never
+	# appears). Compiles to String.format with a Dictionary - plain GDScript, zero runtime.
+	descriptors.append(F.make_descriptor("Core", "TextFromPattern", "Text From Pattern", ACEDescriptor.ACEType.EXPRESSION, "{pattern}.format({values})", "", [F.make_param("pattern", "String", "\"{score} points\"", "Pattern", "Text with {name} slots, e.g. \"{player} scored {score}!\".", "expression"), F.make_param("values", "String", "{\"score\": 100}", "Values", "What fills the slots: {\"name\": value, ...} - e.g. {\"player\": player_name, \"score\": score}.", "expression")], "Text", "text from {pattern}")
+		.described("Builds text by filling {name} slots in a pattern - \"{player} scored {score}!\" becomes \"Ada scored 300!\". The friendly way to mix words and values, no format codes.").featured())
 	descriptors.append(F.make_descriptor("Core", "TextTokenAt", "Token At", ACEDescriptor.ACEType.EXPRESSION, "{text}.get_slice({separator}, {index})", "", [F.make_param("text", "String", "text", "Text", "Source string.", "expression"), F.make_param("separator", "String", "\",\"", "Separator", "Token separator.", "expression"), F.make_param("index", "String", "0", "Index", "Token index.", "expression")], "Text", "tokenat({text}, {index})")
 		.described("Splits text by a separator and gives the chosen piece, like a CSV column."))
 	descriptors.append(F.make_descriptor("Core", "TextTokenCount", "Token Count", ACEDescriptor.ACEType.EXPRESSION, "{text}.get_slice_count({separator})", "", [F.make_param("text", "String", "text", "Text", "Source string.", "expression"), F.make_param("separator", "String", "\",\"", "Separator", "Token separator.", "expression")], "Text", "tokencount({text})")

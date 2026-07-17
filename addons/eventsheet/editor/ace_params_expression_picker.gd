@@ -62,10 +62,37 @@ func _ensure_expression_window() -> void:
 	# open; pair it with the tree below to assemble a whole expression by clicking.
 	content.add_child(EventSheetPopupUI.section_header("Operators"))
 	var ops_flow: HFlowContainer = HFlowContainer.new()
-	for op: String in ["+", "-", "*", "/", "%", "==", "!=", "<", ">", "and", "or", "not", "(", ")"]:
+	# The full GDScript-basics operator set, each with a plain-word tooltip (the palette is how
+	# a non-coder discovers what an operator IS, not just where the punctuation lives).
+	var operator_entries: Array[Array] = [
+		["+", "add (numbers) / join (text)"],
+		["-", "subtract"],
+		["*", "multiply"],
+		["/", "divide"],
+		["%", "remainder after dividing (5 % 2 is 1)"],
+		["**", "to the power of (2 ** 3 is 8)"],
+		["==", "is equal to"],
+		["!=", "is NOT equal to"],
+		["<", "is less than"],
+		["<=", "is less than or equal to"],
+		[">", "is greater than"],
+		[">=", "is greater than or equal to"],
+		["and", "both sides must be true"],
+		["or", "either side can be true"],
+		["not", "flips true and false"],
+		["(", "open a bracket (group maths first)"],
+		[")", "close the bracket"],
+		["<<", "bit-shift left (x 2 per step; flags and masks)"],
+		[">>", "bit-shift right (/ 2 per step)"],
+		["&", "bitwise AND (keep shared flag bits)"],
+		["|", "bitwise OR (combine flag bits)"],
+		["^", "bitwise XOR (flip the other's bits)"],
+	]
+	for operator_entry: Array in operator_entries:
+		var op: String = str(operator_entry[0])
 		var op_button: Button = Button.new()
 		op_button.text = op
-		op_button.tooltip_text = "Insert  %s  at the cursor" % op
+		op_button.tooltip_text = "%s - insert  %s  at the cursor" % [str(operator_entry[1]), op]
 		op_button.focus_mode = Control.FOCUS_NONE  # don't steal the caret from the expression field
 		# Parentheses snug; everything else is space-padded so tokens never fuse (score+1 → score + 1).
 		var snippet: String = op if (op == "(" or op == ")") else " %s " % op

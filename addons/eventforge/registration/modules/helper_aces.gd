@@ -63,7 +63,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns the result of any GDScript expression you type in."))
 
 	# ── Control-flow helpers that don't warrant a whole row structure ──
-	descriptors.append(F.make_descriptor("Core", "InlineIf", "Inline If (ternary)", ACEDescriptor.ACEType.EXPRESSION, "({true_value} if {condition} else {false_value})", "", [F.make_param("true_value", "String", "1", "If true", "Value when the condition holds.", "expression"), F.make_param("condition", "String", "true", "Condition", "Boolean expression.", "expression"), F.make_param("false_value", "String", "0", "If false", "Value otherwise.", "expression")], CAT, "{true_value} if {condition} else {false_value}")
+	descriptors.append(F.make_descriptor("Core", "InlineIf", "Value If (one of two values)", ACEDescriptor.ACEType.EXPRESSION, "({true_value} if {condition} else {false_value})", "", [F.make_param("true_value", "String", "1", "If true", "Value when the condition holds.", "expression"), F.make_param("condition", "String", "true", "Condition", "Boolean expression.", "expression"), F.make_param("false_value", "String", "0", "If false", "Value otherwise.", "expression")], CAT, "{true_value} if {condition} else {false_value}")
 		.described("Picks one of two values depending on a condition, all in one line."))
 	descriptors.append(F.make_descriptor("Core", "ToggleBool", "Toggle Boolean", ACEDescriptor.ACEType.ACTION, "{var_name} = not {var_name}", "", [F.make_param("var_name", "String", "var", "Variable", "Boolean variable to flip.", "variable_reference")], CAT, "toggle {var_name}")
 		.described("Flips a true/false variable to its opposite value."))

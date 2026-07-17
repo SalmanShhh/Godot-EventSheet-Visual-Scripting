@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - the release-bar polish pass (approved spec B, items 1-3)
+
+- **Text From Pattern** (featured, Text): builds text by filling {name} slots -
+  "{player} scored {score}!" plus {"player": player_name, "score": score} becomes
+  "Ada scored 300!". Compiles to plain String.format - the friendly way to mix words and
+  values; printf codes never appear.
+- **The operator palette teaches while it types**: every button now carries a plain-word
+  tooltip ("% - remainder after dividing", "and - both sides must be true"), and the palette
+  gained the missing GDScript operators - <=, >=, ** (to the power of), and the bit family
+  << >> & | ^ with flags-and-masks phrasing.
+- **Beginner aliases**: the ternary helper reads "Value If (one of two values)" in the picker
+  (same frozen ace_id), and every typed container in the variable dialog's Type dropdown now
+  has a plain-language hover hint ("Array[int] - a list of whole numbers: scores, ids...").
+
 ### Added - Construct-style loopindex on every loop kind
 
 - **Every loop can now count its passes like Construct**: For Each, Repeat, and While gained an
