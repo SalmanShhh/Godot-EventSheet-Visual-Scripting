@@ -34,6 +34,7 @@ var _manifest_segments: Array = []  # [{text, color}] - the non-empty role pills
 var _health_known: bool = false
 var _health_count: int = 0
 var _health_sheet: EventSheetResource = null
+var _is_addon_pack: bool = false
 
 
 ## The health chip {text, color} for the banner's right end: the calm "works" signal (green
@@ -129,8 +130,12 @@ func setup(viewport: EventSheetViewport) -> void:
 
 
 ## Refreshes the banner from the sheet; hides itself only when there is no sheet at all.
-func update_from_sheet(sheet: EventSheetResource) -> void:
+func update_from_sheet(sheet: EventSheetResource, sheet_path: String = "") -> void:
 	_icon = null
+	# ADDON PACK identity: a sheet living under eventsheet_addons/ IS a published pack - its
+	# verbs are in every picker, and saving it republishes them project-wide. The chip says so
+	# up front, so editing a pack never feels like editing a private sheet.
+	_is_addon_pack = sheet_path.begins_with("res://eventsheet_addons/")
 	# Every sheet gets its identity strip - INCLUDING the plain event sheets beginners make.
 	# Hiding it for exactly those sheets (the old rule) meant the newcomers who most needed the
 	# "what is this / click to configure" cue and the save-time health chip never saw either.
@@ -205,6 +210,18 @@ func _draw() -> void:
 		var glyph: String = str(EventSheetScriptIntent.display(_intent).get("glyph", "◆"))
 		draw_string(ThemeDB.fallback_font, Vector2(x, identity_baseline), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, accent)
 		x += 18.0
+	# Addon Pack chip: a small plated tag right before the label - the "this is a published
+	# pack" cue (same plate language as the icon chips in the rows).
+	if _is_addon_pack:
+		var pack_chip_text: String = EventSheetL10n.translate("Addon Pack")
+		var pack_chip_width: float = ThemeDB.fallback_font.get_string_size(pack_chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE).x + 12.0
+		var pack_chip_rect := Rect2(x, (BANNER_HEIGHT - 16.0) * 0.5, pack_chip_width, 16.0)
+		var pack_chip_bg: Color = accent
+		pack_chip_bg.a = 0.18
+		draw_rect(pack_chip_rect, pack_chip_bg, true)
+		draw_rect(pack_chip_rect.grow(-0.5), Color(accent.r, accent.g, accent.b, 0.55), false, 1.0)
+		draw_string(ThemeDB.fallback_font, Vector2(x + 6.0, identity_baseline - 1.0), pack_chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE, accent)
+		x += pack_chip_width + 8.0
 	# Health chip on the right end of the identity line (drawn first so the label reserves room for it).
 	var label_right: float = size.x - 8.0
 	if _health_known:

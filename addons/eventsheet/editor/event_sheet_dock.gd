@@ -3285,7 +3285,7 @@ func _refresh_title_strip() -> void:
 	_title_path_label.text = _format_sheet_path_hint(_current_sheet, _current_sheet_path)
 	_title_dirty_dot.visible = _dirty and _current_sheet != null
 	if _identity_banner != null:
-		_identity_banner.update_from_sheet(_current_sheet)
+		_identity_banner.update_from_sheet(_current_sheet, _current_sheet_path)
 	_refresh_preview_banner()
 
 

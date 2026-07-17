@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - pack sheets say what they are (the Addon Pack chip)
+
+- **Opening a sheet that lives under `eventsheet_addons/` now shows a plated "Addon Pack"
+  chip in the identity banner** - the up-front cue that this sheet IS a published pack:
+  its verbs are in every picker, and saving republishes them project-wide. The same sheet
+  from a private path shows no chip, so editing a pack never feels like editing a private
+  file by accident. Closes the pack-building experience arc: one publish pipeline
+  (EventSheets.publish_pack), packs that read as sheets, and now packs that announce
+  themselves.
+
 ### Changed - pack publishing is ONE public pipeline now (EventSheets.publish_pack)
 
 - **`EventSheets.publish_pack(sheet, base_path, icon_path)` joins the public API**: the whole
