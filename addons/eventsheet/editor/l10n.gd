@@ -59,7 +59,30 @@ static func rescan() -> void:
 			continue
 		for file_name: String in DirAccess.get_files_at(dir_path):
 			load_translation_file("%s/%s" % [dir_path, file_name])
+	# Pack-local translations (the Construct lang.json idea): a pack ships
+	# eventsheet_addons/<pack>/translations.csv - same drop-in CSV shape, one column per
+	# locale - and its display names/descriptions/templates localise everywhere they show
+	# (picker rows, tooltips, viewport sentences). Merged after the editor's own catalogs,
+	# so a pack can only ADD messages, never re-word the editor UI.
+	for pack_csv: String in _pack_translation_files():
+		load_translation_file(pack_csv)
 	_scan_stamp = scan_fingerprint()
+
+
+const PACKS_DIR := "res://eventsheet_addons"
+
+
+## Every pack-local translations.csv, sorted for a deterministic merge order.
+static func _pack_translation_files() -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	if not DirAccess.dir_exists_absolute(PACKS_DIR):
+		return out
+	for pack_dir: String in DirAccess.get_directories_at(PACKS_DIR):
+		var candidate: String = "%s/%s/translations.csv" % [PACKS_DIR, pack_dir]
+		if FileAccess.file_exists(candidate):
+			out.append(candidate)
+	out.sort()
+	return out
 
 
 ## What the scan folders currently hold (names + modified times), cheap enough to compare on
@@ -79,6 +102,8 @@ static func scan_fingerprint() -> String:
 				continue
 			var path: String = "%s/%s" % [dir_path, file_name]
 			parts.append("%s|%d" % [path, FileAccess.get_modified_time(path)])
+	for pack_csv: String in _pack_translation_files():
+		parts.append("%s|%d" % [pack_csv, FileAccess.get_modified_time(pack_csv)])
 	parts.sort()
 	return "\n".join(parts)
 

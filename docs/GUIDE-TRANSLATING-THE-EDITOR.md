@@ -56,6 +56,18 @@ CSV and the catalogs re-read on the editor's next filesystem scan, with open UI 
 live (no restart) - and the language switch lives in **View > Language**, right beside the
 Theme entries (the Welcome screen's picker stays too).
 
+## Translating an addon pack
+
+Packs localise the same way (the Construct lang.json idea): put a `translations.csv` in the
+pack's folder - `eventsheet_addons/<pack>/translations.csv`, same shape, one column per
+locale - and its vocabulary follows the editor language everywhere it shows: picker rows and
+tooltips, viewport sentences, trigger chips. The keys are the pack's ENGLISH display strings:
+display names ("Take Damage"), descriptions, and display templates with their `{slots}` kept
+verbatim ("take {amount} damage" translates as one key; every row using it follows). Ids,
+categories-as-ids, and the compiled GDScript never translate. Pack files hot-reload like the
+editor's own, and a pack can only ADD messages - it can never re-word the editor UI. The
+bundled Health pack ships one as a working example.
+
 ## Where translation files are picked up
 
 Both folders are scanned, so your translations survive plugin updates:

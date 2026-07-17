@@ -1,0 +1,13 @@
+keys,fr,es,de,it,ko,ja,ru,zh_CN
+Health,Santé,Salud,Gesundheit,Salute,체력,体力,Здоровье,生命值
+Take Damage,Subir des Dégâts,Recibir Daño,Schaden Nehmen,Subisci Danno,피해 입기,ダメージを受ける,Получить урон,受到伤害
+Heal,Soigner,Curar,Heilen,Cura,회복,回復,Исцелить,治疗
+On Damaged,Sur Dégâts,Al Recibir Daño,Bei Schaden,Al Danno,피해를 입으면,ダメージ時,При получении урона,受伤时
+On Death,À la Mort,Al Morir,Beim Tod,Alla Morte,사망하면,死亡時,При смерти,死亡时
+On Healed,Sur Soin,Al Curarse,Bei Heilung,Alla Cura,회복하면,回復時,При исцелении,治疗时
+On Revived,À la Résurrection,Al Revivir,Bei Wiederbelebung,Alla Resurrezione,부활하면,復活時,При возрождении,复活时
+Current Health,Santé Actuelle,Salud Actual,Aktuelle Gesundheit,Salute Attuale,현재 체력,現在の体力,Текущее здоровье,当前生命值
+Max Health,Santé Maximale,Salud Máxima,Maximale Gesundheit,Salute Massima,최대 체력,最大体力,Максимальное здоровье,最大生命值
+Health Percent,Pourcentage de Santé,Porcentaje de Salud,Gesundheitsprozent,Percentuale di Salute,체력 백분율,体力の割合,Процент здоровья,生命值百分比
+Is Dead,Est Mort,Está Muerto,Ist Tot,È Morto,사망 상태인가,死亡している,Мёртв ли,是否死亡
+Revive,Ressusciter,Revivir,Wiederbeleben,Resuscita,부활,復活させる,Возродить,复活

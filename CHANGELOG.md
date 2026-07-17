@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - packs translate like the editor does (the Construct lang.json idea)
+
+- **A pack can ship `translations.csv` in its folder** and its vocabulary follows the editor
+  language everywhere it shows - picker rows and tooltips, trigger chips, and whole viewport
+  sentences (display templates translate as one key with their {slots} kept, then substitute).
+  Pack files hot-reload like the editor's own, merge AFTER the editor catalogs (a pack can
+  only add messages, never re-word the UI), and English stays a byte-identical pass-through.
+- **The bundled Health pack ships a working example**: its core verbs and triggers in all
+  eight languages ("Take Damage" - "Subir des Dégâts" - "피해 입기" - "受到伤害"...).
+  `tests/pack_translations_test.gd` pins discovery, the template path, the editor-precedence
+  rule, and the hot-reload fingerprint; the translating guide gained the how-to section.
+
 ### Changed - documentation currency sweep
 
 - **The vocabulary doc regenerated** (+71 lines: LoopIndex, Text From Pattern, the Platform

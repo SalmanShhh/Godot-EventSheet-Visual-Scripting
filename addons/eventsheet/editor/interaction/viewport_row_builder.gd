@@ -1976,7 +1976,7 @@ func _build_variable_row(
 func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, trigger_id)
 	if definition != null and not definition.display_name.strip_edges().is_empty():
-		return definition.display_name
+		return EventSheetL10n.translate(definition.display_name)
 	if trigger_id.begins_with("signal:"):
 		return "On %s" % trigger_id.trim_prefix("signal:").capitalize()
 	return trigger_id
@@ -2613,12 +2613,10 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	var generated_definition: ACEDefinition = _viewport._find_definition(condition.provider_id, condition.ace_id)
-	if generated_definition != null:
-		return generated_definition.format_display(params_dict)
-	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
-	if descriptor == null:
+	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
+	if generated_definition == null and descriptor == null:
 		return condition.ace_id
-	return descriptor.format_display(params_dict)
+	return _format_display_translated(generated_definition, descriptor, params_dict)
 
 
 func _find_inline_trigger_condition_index(event_row: EventRow) -> int:
@@ -2689,12 +2687,10 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 			return verb
 	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
 	var generated_definition: ACEDefinition = _viewport._find_definition(action.provider_id, action.ace_id)
-	if generated_definition != null:
-		return generated_definition.format_display(params_dict)
-	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(action.provider_id, action.ace_id)
-	if descriptor == null:
+	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(action.provider_id, action.ace_id)
+	if generated_definition == null and descriptor == null:
 		return action.ace_id
-	return descriptor.format_display(params_dict)
+	return _format_display_translated(generated_definition, descriptor, params_dict)
 
 # ── Row-as-sentence hover ───────────────────────────────────────────────────────────
 const _SENTENCE_MAX_ACTIONS := 3
@@ -2861,6 +2857,49 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 				span.metadata["value_ranges"] = ranges
 	_pending_display_bbcode = false
 	return span
+
+
+## format_display, but the display TEMPLATE is translated FIRST (then {slots} substitute), so
+## a pack-shipped translations.csv localises whole viewport sentences - "take {amount} damage"
+## translates as one key and every row using it follows. Display-only: ids, params, and the
+## compiled output never translate. Handles both shapes (registry ACEDefinition metadata
+## templates and builtin ACEDescriptor display text); English or a missing key pass through,
+## so this is byte-identical to format_display until a catalog provides the template.
+func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescriptor, params_dict: Dictionary) -> String:
+	if definition != null:
+		var template: String = EventSheetL10n.translate(str(definition.metadata.get("display_template", definition.display_name)))
+		if template.is_empty():
+			return EventSheetL10n.translate(definition.display_name)
+		var output: String = template
+		for index: int in range(definition.parameters.size()):
+			var parameter: Variant = definition.parameters[index]
+			if not (parameter is Dictionary):
+				continue
+			var key: String = str((parameter as Dictionary).get("id", ""))
+			if key.is_empty():
+				continue
+			var fallback: Variant = (parameter as Dictionary).get("default_value", (parameter as Dictionary).get("default", ""))
+			var value: Variant = params_dict.get(key, fallback)
+			output = output.replace("{%d}" % index, str(value))
+			output = output.replace("{%s}" % key, str(value))
+		return output
+	if descriptor == null:
+		return ""
+	var descriptor_template: String = EventSheetL10n.translate(descriptor.get_display_text())
+	if descriptor_template.is_empty():
+		return descriptor.ace_id
+	var descriptor_output: String = descriptor_template
+	for i: int in range(descriptor.params.size()):
+		var param: ACEParam = descriptor.params[i]
+		if param == null:
+			continue
+		var param_key: String = param.id if not param.id.is_empty() else param.name
+		if param_key.is_empty():
+			continue
+		var param_value: Variant = params_dict.get(param_key, param.get_initial_value())
+		descriptor_output = descriptor_output.replace("{%d}" % i, str(param_value))
+		descriptor_output = descriptor_output.replace("{%s}" % param_key, str(param_value))
+	return descriptor_output
 
 
 ## True when an ACE's display TEMPLATE (not the substituted text) carries BBCode markup - the author opted
