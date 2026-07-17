@@ -1545,53 +1545,6 @@ func _build_property_accessor_row(variable: LocalVariable, header: String, body:
 	return row
 
 
-## A group's chapter fingerprint: "N events · ⟳a · ➜b · ⌨c · ▶d · ⚠e" - its child events
-## counted by trigger TEMPO class (reusing TriggerResolver.tempo_class_for) plus the RawCode (⚠) blocks
-## inside, so a collapsed group still shows its weight + hotness. Recurses nested groups/sub-events.
-## Static + pure → unit-testable; "" when the group holds no events or code.
-static func group_fingerprint(group: EventGroup) -> String:
-	if group == null:
-		return ""
-	var counts: Dictionary = {"events": 0, "every_tick": 0, "signal": 0, "input": 0, "once": 0, "raw": 0}
-	_fingerprint_rows(group.events if not group.events.is_empty() else group.rows, counts)
-	if int(counts["events"]) == 0 and int(counts["raw"]) == 0:
-		return ""
-	var parts: PackedStringArray = PackedStringArray()
-	parts.append("%d event%s" % [int(counts["events"]), "" if int(counts["events"]) == 1 else "s"])
-	if int(counts["every_tick"]) > 0:
-		parts.append("⟳%d" % int(counts["every_tick"]))
-	if int(counts["signal"]) > 0:
-		parts.append("➜%d" % int(counts["signal"]))
-	if int(counts["input"]) > 0:
-		parts.append("⌨%d" % int(counts["input"]))
-	if int(counts["once"]) > 0:
-		parts.append("▶%d" % int(counts["once"]))
-	if int(counts["raw"]) > 0:
-		parts.append("⚠%d" % int(counts["raw"]))
-	return " · ".join(parts)
-
-
-static func _fingerprint_rows(rows: Array, counts: Dictionary) -> void:
-	for row: Variant in rows:
-		if row is EventRow:
-			var event_row: EventRow = row as EventRow
-			counts["events"] = int(counts["events"]) + 1
-			# Only triggered rows carry a tempo (sub-events / else rows are still events, just untimed).
-			if not event_row.trigger_id.is_empty() or event_row.trigger != null:
-				var tempo: String = TriggerResolver.tempo_class_for(event_row.trigger_id)
-				counts[tempo] = int(counts.get(tempo, 0)) + 1
-			for action: Variant in event_row.actions:
-				if action is RawCodeRow and not (action as RawCodeRow).code.strip_edges().is_empty():
-					counts["raw"] = int(counts["raw"]) + 1
-			_fingerprint_rows(event_row.sub_events, counts)
-		elif row is RawCodeRow:
-			if not (row as RawCodeRow).code.strip_edges().is_empty():
-				counts["raw"] = int(counts["raw"]) + 1
-		elif row is EventGroup:
-			var nested: EventGroup = row as EventGroup
-			_fingerprint_rows(nested.events if not nested.events.is_empty() else nested.rows, counts)
-
-
 ## The folder icon prefixing every group title: the editor theme's Folder texture when the editor is
 ## live, else a tiny generated folder shape (cached) - so the file-manager cue survives harnesses,
 ## exports, and headless runs where EditorInterface is absent.
@@ -1643,24 +1596,6 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 			}
 		)
 	]
-	# Chapter fingerprint: a muted trailing span on the header line - child events by tempo
-	# class + ⚠-code blocks - so a COLLAPSED group still tells you its weight + hotness (fold-all becomes
-	# a real table of contents). Flows after the title on line 0, so it survives fold.
-	var fingerprint: String = group_fingerprint(group)
-	if not fingerprint.is_empty():
-		row_data.spans.append(
-			_make_span(
-				fingerprint,
-				SemanticSpan.SpanType.COMMENT,
-				{
-					"editable": false,
-					"hoverable": false,
-					"line_index": 0,
-					"font_size_delta": -1,
-					"text_color": EventSheetPalette.TEXT_MUTED
-				}
-			)
-		)
 	# Event-sheet-style group description: a muted second line on the header, inline-editable.
 	if not group.description.strip_edges().is_empty():
 		row_data.line_count = 2

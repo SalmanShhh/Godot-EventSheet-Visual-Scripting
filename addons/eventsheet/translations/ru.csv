@@ -488,3 +488,58 @@ Signal Handler,Обработчик сигнала
 Variable,Переменная
 Else,Иначе
 Else If,Иначе если
+"A list of numbers (Array[float]) - weights, timings, chances.","Список чисел (Array[float]) - веса, тайминги, шансы."
+"A list of text entries (Array[String]) - names, lines, tags.","Список текстовых записей (Array[String]) - имена, реплики, теги."
+"A list of whole numbers (Array[int]) - scores, ids, tile indexes.","Список целых чисел (Array[int]) - очки, id, индексы тайлов."
+A list that can hold anything (mixed types allowed).,"Список, который может хранить что угодно (смешанные типы разрешены)."
+Action Object Column Width,Ширина столбца объектов действий
+Condition Object Column Width,Ширина столбца объектов условий
+Designer Template,Шаблон дизайнера
+Fixed width of the object-name column in the actions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.,Фиксированная ширина столбца имени объекта в полосе действий (0 = текст идёт сразу после каждого имени). Также задаётся перетаскиванием промежутка имя/текст в строке.
+Fixed width of the object-name column in the conditions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.,Фиксированная ширина столбца имени объекта в полосе условий (0 = текст идёт сразу после каждого имени). Также задаётся перетаскиванием промежутка имя/текст в строке.
+Group Row Height,Высота строки группы
+"Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.",Высота заголовка группы в пикселях - по умолчанию вдвое выше строки события; уменьшите её для классической тонкой полосы.
+Language,Язык
+"Make your own data asset in three questions: name one entry, list its columns, done - a Resource whose Inspector is a fill-in table, saved as .tres files designers edit.","Создайте свой ассет данных за три вопроса: назовите одну запись, перечислите её столбцы, готово - Resource, чей Inspector становится таблицей для заполнения, сохраняемый как .tres файлы, которые редактируют дизайнеры."
+Named anything (by text key) - a flexible data bag.,Именованное что угодно (по текстовому ключу) - гибкий мешок данных.
+"Named numbers (by text key) - e.g. volumes[""music""] = 0.8.","Именованные числа (по текстовому ключу) - напр. volumes[""music""] = 0.8."
+Named slots holding anything: look values up by a key.,Именованные ячейки для чего угодно: значения ищутся по ключу.
+"Named text (by text key) - e.g. lines[""greeting""].","Именованный текст (по текстовому ключу) - напр. lines[""greeting""]."
+"Named whole numbers (by text key) - e.g. costs[""sword""] = 10.","Именованные целые числа (по текстовому ключу) - напр. costs[""sword""] = 10."
+New Custom Resource…,Новый пользовательский ресурс…
+New Editor Tool…,Новый инструмент редактора…
+Object Icons,Значки объектов
+"Start an editor-side tool sheet: its events run INSIDE the editor (script editor > File > Run), never in the game - batch renames, scene checks, one-click chores.","Начать лист-инструмент для редактора: его события выполняются ВНУТРИ редактора (редактор скриптов > File > Run), никогда в игре - пакетные переименования, проверки сцен, дела в один клик."
+Switch the EventSheets editor language. Drop a translation CSV into addons/eventsheet/translations/ and it appears here automatically.,Переключить язык редактора EventSheets. Положите CSV с переводом в addons/eventsheet/translations/ - и он появится здесь автоматически.
+"Makes your own data asset: a Resource with a table designers fill in the Inspector and save as .tres files - loot tables, dialogue lines, wave plans, anything that is rows of data. No annotations to learn; describe the rows and the sheet is generated.","Создаёт ваш собственный ассет данных: Resource с таблицей, которую дизайнеры заполняют в Inspector и сохраняют как .tres файлы - таблицы лута, реплики диалогов, планы волн, всё, что является строками данных. Никаких аннотаций учить не нужно; опишите строки - и лист будет сгенерирован."
+What are you making?,Что вы создаёте?
+One entry is a…,Одна запись - это…
+Resource name,Имя ресурса
+What does an entry have?,Что есть у записи?
+"One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
+
+name
+kind: coin|gem|key
+weight: float","Один столбец на строку. Обычные слова дают текстовый столбец; добавьте "": float"", "": int"" или "": bool"" для чисел и переключателей; перечислите варианты через | для выпадающего списка.
+
+name
+kind: coin|gem|key
+weight: float"
+Before it works,Прежде чем заработает
+Warn in the Inspector until the table has rows (required),"Предупреждать в Inspector, пока в таблице нет строк (обязательно)"
+"Add a validation check (a function warning about bad data, live)","Добавить проверку данных (функция, предупреждающая о плохих данных вживую)"
+Creates a ready-to-edit validate function: it runs while the table is edited in the Inspector and shows any warning it returns above the field. Add your own rules as condition rows.,"Создаёт готовую к правке функцию validate: она выполняется, пока таблица редактируется в Inspector, и показывает возвращённое предупреждение над полем. Добавляйте свои правила как строки условий."
+Inspector button,Кнопка в Inspector
+"Show this function as a one-click button in the Inspector, labelled with this text. Pressing the button runs the function's rows - great for editor chores like re-baking, refilling, or validating.","Показать эту функцию как кнопку в Inspector с этой надписью. Нажатие кнопки выполняет строки функции - отлично для дел редактора вроде повторной запечки, перезаполнения или проверки."
+Plain GDScript - anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members. Alt+Enter grows the box for a long expression (and shrinks it back).,"Обычный GDScript - здесь работает всё, что допустимо в выражении. Ctrl+Space дополняет переменные/функции листа и члены хоста. Alt+Enter увеличивает поле для длинного выражения (и сжимает обратно)."
+"Find Expressions - open the expressions dictionary (floating: double-click inserts, stays open until you close it)","Найти выражения - открыть словарь выражений (плавающее окно: двойной щелчок вставляет, остаётся открытым, пока вы его не закроете)"
+Expressions dictionary,Словарь выражений
+Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,"Двойной щелчок вставляет у курсора - словарь остаётся открытым, так что результаты можно связывать. Можно и просто печатать в поле: те же выражения дополняются по мере ввода."
+Loop index (optional),Индекс цикла (необязательно)
+"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","Назовите счётчик, идущий 0, 1, 2... на каждом проходе - loopindex из Construct. Читайте его выражением Loop Index; дайте вложенным циклам разные имена и читайте внешний через Loop Index Of."
+Write one value per line (multi-line enum),Записывать по одному значению на строку (многострочное перечисление)
+"Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","Выкл: enum State { IDLE, RUN }. Вкл: каждое значение на своей строке с отступом табуляцией - обычная форма для длинных перечислений с явными числами."
+Addon Pack,Пакет аддона
+Make your own data asset,Создайте свой ассет данных
+"Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","Листы нужны не только для геймплея: Sheet > New Custom Resource… задаёт три простых вопроса (как называется одна запись, какие у неё столбцы, обязательна ли она) и строит ассет данных, чей Inspector - таблица для заполнения - таблицы лута, реплики диалогов, планы волн. Дизайнеры заполняют строки и сохраняют варианты .tres; ваши листы их загружают. А Sheet > New Editor Tool… тем же способом делает дела редактора в один клик."
+Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,"Загляните в Sheet > New Custom Resource… (Esc закрывает его, ничего не создавая)."

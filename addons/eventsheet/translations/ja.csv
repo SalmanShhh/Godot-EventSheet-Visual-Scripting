@@ -488,3 +488,58 @@ Signal Handler,シグナルハンドラー
 Variable,変数
 Else,それ以外
 Else If,それ以外なら
+"A list of numbers (Array[float]) - weights, timings, chances.",数値のリスト (Array[float]) - 重み、タイミング、確率。
+"A list of text entries (Array[String]) - names, lines, tags.",テキスト項目のリスト (Array[String]) - 名前、セリフ、タグ。
+"A list of whole numbers (Array[int]) - scores, ids, tile indexes.",整数のリスト (Array[int]) - スコア、id、タイルインデックス。
+A list that can hold anything (mixed types allowed).,何でも入れられるリスト (型の混在が可能)。
+Action Object Column Width,アクションのオブジェクト列の幅
+Condition Object Column Width,条件のオブジェクト列の幅
+Designer Template,デザイナーテンプレート
+Fixed width of the object-name column in the actions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.,アクションレーンのオブジェクト名列の固定幅です (0 = 各名前の後にテキストが続く)。行内の名前/テキストの間をドラッグしても設定できます。
+Fixed width of the object-name column in the conditions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.,条件レーンのオブジェクト名列の固定幅です (0 = 各名前の後にテキストが続く)。行内の名前/テキストの間をドラッグしても設定できます。
+Group Row Height,グループ行の高さ
+"Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.",グループヘッダーバーの高さ (ピクセル) です - デフォルトはイベント行の 2 倍。クラシックなスリムバーにしたい場合は低くしてください。
+Language,言語
+"Make your own data asset in three questions: name one entry, list its columns, done - a Resource whose Inspector is a fill-in table, saved as .tres files designers edit.",3 つの質問で自分のデータアセットを作ります: エントリーの名前を決め、列を並べたら完成 - Inspector が記入式の表になる Resource で、デザイナーが編集する .tres ファイルとして保存されます。
+Named anything (by text key) - a flexible data bag.,名前付きの何でも (テキストキーで参照) - 柔軟なデータ入れ。
+"Named numbers (by text key) - e.g. volumes[""music""] = 0.8.","名前付きの数値 (テキストキーで参照) - 例: volumes[""music""] = 0.8。"
+Named slots holding anything: look values up by a key.,何でも入る名前付きスロット: キーで値を引きます。
+"Named text (by text key) - e.g. lines[""greeting""].","名前付きのテキスト (テキストキーで参照) - 例: lines[""greeting""]。"
+"Named whole numbers (by text key) - e.g. costs[""sword""] = 10.","名前付きの整数 (テキストキーで参照) - 例: costs[""sword""] = 10。"
+New Custom Resource…,新規カスタムリソース…
+New Editor Tool…,新規エディターツール…
+Object Icons,オブジェクトアイコン
+"Start an editor-side tool sheet: its events run INSIDE the editor (script editor > File > Run), never in the game - batch renames, scene checks, one-click chores.",エディター側のツールシートを開始します: そのイベントはゲーム内ではなくエディターの中で実行されます (スクリプトエディター > File > Run) - 一括リネーム、シーンチェック、ワンクリックの雑務に。
+Switch the EventSheets editor language. Drop a translation CSV into addons/eventsheet/translations/ and it appears here automatically.,EventSheets エディターの言語を切り替えます。翻訳 CSV を addons/eventsheet/translations/ に入れると自動的にここに表示されます。
+"Makes your own data asset: a Resource with a table designers fill in the Inspector and save as .tres files - loot tables, dialogue lines, wave plans, anything that is rows of data. No annotations to learn; describe the rows and the sheet is generated.",自分のデータアセットを作ります: デザイナーが Inspector で表を埋めて .tres ファイルとして保存する Resource です - ルートテーブル、セリフ、ウェーブ計画など、行データなら何でも。覚えるアノテーションはありません。行を記述すればシートが生成されます。
+What are you making?,何を作りますか?
+One entry is a…,1 つのエントリーは…
+Resource name,リソース名
+What does an entry have?,エントリーには何がありますか?
+"One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
+
+name
+kind: coin|gem|key
+weight: float","1 行に 1 列。普通の単語はテキスト列になり、数値やトグルには "": float""、"": int""、"": bool"" を付けます。選択肢を | で並べるとドロップダウンになります。
+
+name
+kind: coin|gem|key
+weight: float"
+Before it works,動作させる前に
+Warn in the Inspector until the table has rows (required),表に行が入るまで Inspector で警告する (必須)
+"Add a validation check (a function warning about bad data, live)",検証チェックを追加 (不正なデータをライブで警告する関数)
+Creates a ready-to-edit validate function: it runs while the table is edited in the Inspector and shows any warning it returns above the field. Add your own rules as condition rows.,すぐ編集できる validate 関数を作成します: Inspector で表を編集している間に実行され、返した警告をフィールドの上に表示します。自分のルールは条件行として追加してください。
+Inspector button,Inspector ボタン
+"Show this function as a one-click button in the Inspector, labelled with this text. Pressing the button runs the function's rows - great for editor chores like re-baking, refilling, or validating.",この関数を Inspector にワンクリックボタンとして表示し、このテキストをラベルにします。ボタンを押すと関数の行が実行されます - 再ベイク、再充填、検証などエディターの雑務に最適です。
+Plain GDScript - anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members. Alt+Enter grows the box for a long expression (and shrinks it back).,素の GDScript - 式として有効なものは何でもここで使えます。Ctrl+Space でシートの変数/関数とホストのメンバーを補完。Alt+Enter で長い式のためにボックスが広がります (元に戻すこともできます)。
+"Find Expressions - open the expressions dictionary (floating: double-click inserts, stays open until you close it)",式を探す - 式の辞書を開きます (フローティング: ダブルクリックで挿入、閉じるまで開いたまま)
+Expressions dictionary,式の辞書
+Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,ダブルクリックでカーソル位置に挿入します - 辞書は開いたままなので結果をつなげられます。フィールドに直接入力しても OK: 同じ式が入力に合わせて自動補完されます。
+Loop index (optional),ループインデックス (任意)
+"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","各パスで 0, 1, 2... と進むカウンターに名前を付けます - Construct の loopindex です。Loop Index 式で読み取り、ネストしたループには別々の名前を付けて、外側のループは Loop Index Of で読み取ります。"
+Write one value per line (multi-line enum),1 行に 1 値ずつ書く (複数行の列挙型)
+"Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","オフ: enum State { IDLE, RUN }。オン: 各値がタブでインデントされた 1 行ずつになります - 明示的な数値を持つ長い列挙型の定番の形です。"
+Addon Pack,アドオンパック
+Make your own data asset,自分のデータアセットを作る
+"Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.",シートはゲームプレイ専用ではありません: Sheet > New Custom Resource… は 3 つの簡単な質問 (エントリーを何と呼ぶか、どんな列があるか、必須かどうか) をして、Inspector が記入式の表になるデータアセットを作ります - ルートテーブル、セリフ、ウェーブ計画。デザイナーが行を埋めて .tres のバリエーションを保存し、シートがそれを読み込みます。Sheet > New Editor Tool… も同じやり方でワンクリックのエディター雑務を作れます。
+Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,Sheet > New Custom Resource… をのぞいてみましょう (Esc で何も作らずに閉じられます)。

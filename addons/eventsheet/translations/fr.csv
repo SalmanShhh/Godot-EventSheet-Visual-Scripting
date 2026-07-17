@@ -488,3 +488,58 @@ Signal Handler,Gestionnaire de signal
 Variable,Variable
 Else,Sinon
 Else If,Sinon Si
+"A list of numbers (Array[float]) - weights, timings, chances.","Une liste de nombres (Array[float]) - poids, minutages, probabilités."
+"A list of text entries (Array[String]) - names, lines, tags.","Une liste d'entrées de texte (Array[String]) - noms, répliques, étiquettes."
+"A list of whole numbers (Array[int]) - scores, ids, tile indexes.","Une liste de nombres entiers (Array[int]) - scores, ids, indices de tuiles."
+A list that can hold anything (mixed types allowed).,Une liste qui peut tout contenir (types mélangés autorisés).
+Action Object Column Width,Largeur de la colonne d'objet des actions
+Condition Object Column Width,Largeur de la colonne d'objet des conditions
+Designer Template,Modèle de concepteur
+Fixed width of the object-name column in the actions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.,Largeur fixe de la colonne des noms d'objets dans la voie des actions (0 = le texte suit chaque nom). Se règle aussi en faisant glisser l'espace nom/texte dans une ligne.
+Fixed width of the object-name column in the conditions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.,Largeur fixe de la colonne des noms d'objets dans la voie des conditions (0 = le texte suit chaque nom). Se règle aussi en faisant glisser l'espace nom/texte dans une ligne.
+Group Row Height,Hauteur des lignes de groupe
+"Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.","Hauteur d'une barre d'en-tête de groupe, en pixels - le double d'une ligne d'événement par défaut ; réduisez-la pour la barre fine classique."
+Language,Langue
+"Make your own data asset in three questions: name one entry, list its columns, done - a Resource whose Inspector is a fill-in table, saved as .tres files designers edit.","Créez votre propre asset de données en trois questions : nommez une entrée, listez ses colonnes, terminé - une Resource dont l'Inspector est un tableau à remplir, enregistrée dans des fichiers .tres que les designers modifient."
+Named anything (by text key) - a flexible data bag.,N'importe quoi nommé (par clé de texte) - un sac de données flexible.
+"Named numbers (by text key) - e.g. volumes[""music""] = 0.8.","Des nombres nommés (par clé de texte) - ex. volumes[""music""] = 0.8."
+Named slots holding anything: look values up by a key.,Des emplacements nommés contenant n'importe quoi : recherchez les valeurs par clé.
+"Named text (by text key) - e.g. lines[""greeting""].","Du texte nommé (par clé de texte) - ex. lines[""greeting""]."
+"Named whole numbers (by text key) - e.g. costs[""sword""] = 10.","Des nombres entiers nommés (par clé de texte) - ex. costs[""sword""] = 10."
+New Custom Resource…,Nouvelle ressource personnalisée…
+New Editor Tool…,Nouvel outil d'éditeur…
+Object Icons,Icônes des objets
+"Start an editor-side tool sheet: its events run INSIDE the editor (script editor > File > Run), never in the game - batch renames, scene checks, one-click chores.","Démarre une feuille d'outil côté éditeur : ses événements s'exécutent DANS l'éditeur (éditeur de script > File > Run), jamais dans le jeu - renommages en masse, vérifications de scènes, corvées en un clic."
+Switch the EventSheets editor language. Drop a translation CSV into addons/eventsheet/translations/ and it appears here automatically.,Change la langue de l'éditeur EventSheets. Déposez un CSV de traduction dans addons/eventsheet/translations/ et il apparaît ici automatiquement.
+"Makes your own data asset: a Resource with a table designers fill in the Inspector and save as .tres files - loot tables, dialogue lines, wave plans, anything that is rows of data. No annotations to learn; describe the rows and the sheet is generated.","Crée votre propre asset de données : une Resource avec un tableau que les designers remplissent dans l'Inspector et enregistrent en fichiers .tres - tables de butin, répliques de dialogue, plans de vagues, tout ce qui se présente en lignes de données. Aucune annotation à apprendre ; décrivez les lignes et la feuille est générée."
+What are you making?,Que créez-vous ?
+One entry is a…,Une entrée est un(e)…
+Resource name,Nom de la ressource
+What does an entry have?,Que contient une entrée ?
+"One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
+
+name
+kind: coin|gem|key
+weight: float","Une colonne par ligne. Des mots simples créent une colonne de texte ; ajoutez "": float"", "": int"" ou "": bool"" pour les nombres et les interrupteurs ; listez des choix avec | pour une liste déroulante.
+
+name
+kind: coin|gem|key
+weight: float"
+Before it works,Avant que ça fonctionne
+Warn in the Inspector until the table has rows (required),Avertir dans l'Inspector tant que le tableau n'a pas de lignes (requis)
+"Add a validation check (a function warning about bad data, live)","Ajouter un contrôle de validation (une fonction qui signale les données invalides, en direct)"
+Creates a ready-to-edit validate function: it runs while the table is edited in the Inspector and shows any warning it returns above the field. Add your own rules as condition rows.,Crée une fonction validate prête à éditer : elle s'exécute pendant l'édition du tableau dans l'Inspector et affiche au-dessus du champ tout avertissement qu'elle renvoie. Ajoutez vos propres règles comme lignes de condition.
+Inspector button,Bouton dans l'Inspector
+"Show this function as a one-click button in the Inspector, labelled with this text. Pressing the button runs the function's rows - great for editor chores like re-baking, refilling, or validating.","Affiche cette fonction comme un bouton en un clic dans l'Inspector, avec ce texte pour étiquette. Un appui sur le bouton exécute les lignes de la fonction - idéal pour les corvées d'éditeur comme re-baker, re-remplir ou valider."
+Plain GDScript - anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members. Alt+Enter grows the box for a long expression (and shrinks it back).,Du GDScript pur - tout ce qui est valide dans une expression fonctionne ici. Ctrl+Space complète les variables/fonctions de la feuille et les membres de l'hôte. Alt+Enter agrandit la zone pour une longue expression (et la réduit ensuite).
+"Find Expressions - open the expressions dictionary (floating: double-click inserts, stays open until you close it)","Trouver des expressions - ouvre le dictionnaire des expressions (flottant : un double-clic insère, il reste ouvert jusqu'à sa fermeture)"
+Expressions dictionary,Dictionnaire des expressions
+Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,Double-cliquez pour insérer au curseur - le dictionnaire reste ouvert pour enchaîner les résultats. Vous pouvez aussi taper directement dans le champ : les mêmes expressions s'autocomplètent au fil de la saisie.
+Loop index (optional),Indice de boucle (facultatif)
+"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","Nommez un compteur qui vaut 0, 1, 2... à chaque passage - le loopindex de Construct. Lisez-le avec l'expression Loop Index ; donnez des noms distincts aux boucles imbriquées et lisez une boucle externe avec Loop Index Of."
+Write one value per line (multi-line enum),Écrire une valeur par ligne (énumération multiligne)
+"Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","Désactivé : enum State { IDLE, RUN }. Activé : chaque valeur sur sa propre ligne indentée d'une tabulation - la forme habituelle des longues énumérations avec des nombres explicites."
+Addon Pack,Pack d'extension
+Make your own data asset,Créez votre propre asset de données
+"Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","Les feuilles ne servent pas qu'au gameplay : Sheet > New Custom Resource… pose trois questions simples (comment s'appelle une entrée, quelles colonnes elle a, si elle est requise) et construit un asset de données dont l'Inspector est un tableau à remplir - tables de butin, répliques de dialogue, plans de vagues. Les designers remplissent les lignes et enregistrent des variantes .tres ; vos feuilles les chargent. Et Sheet > New Editor Tool… crée de la même façon des corvées d'éditeur en un clic."
+Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,Jetez un œil à Sheet > New Custom Resource… (Esc le ferme sans rien créer).

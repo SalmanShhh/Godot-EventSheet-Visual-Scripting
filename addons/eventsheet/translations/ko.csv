@@ -488,3 +488,58 @@ Signal Handler,시그널 핸들러
 Variable,변수
 Else,아니면
 Else If,아니면 만약
+"A list of numbers (Array[float]) - weights, timings, chances.","숫자 목록 (Array[float]) - 가중치, 타이밍, 확률."
+"A list of text entries (Array[String]) - names, lines, tags.","텍스트 항목 목록 (Array[String]) - 이름, 대사, 태그."
+"A list of whole numbers (Array[int]) - scores, ids, tile indexes.","정수 목록 (Array[int]) - 점수, id, 타일 인덱스."
+A list that can hold anything (mixed types allowed).,무엇이든 담을 수 있는 목록입니다 (혼합 타입 허용).
+Action Object Column Width,액션 오브젝트 열 너비
+Condition Object Column Width,조건 오브젝트 열 너비
+Designer Template,디자이너 템플릿
+Fixed width of the object-name column in the actions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.,액션 레인에서 오브젝트 이름 열의 고정 너비입니다 (0 = 각 이름 뒤에 텍스트가 이어짐). 행에서 이름/텍스트 사이 간격을 드래그해도 설정됩니다.
+Fixed width of the object-name column in the conditions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.,조건 레인에서 오브젝트 이름 열의 고정 너비입니다 (0 = 각 이름 뒤에 텍스트가 이어짐). 행에서 이름/텍스트 사이 간격을 드래그해도 설정됩니다.
+Group Row Height,그룹 행 높이
+"Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.","그룹 헤더 바의 높이(픽셀)입니다 - 기본값은 이벤트 행의 두 배이며, 클래식한 슬림 바를 원하면 낮추세요."
+Language,언어
+"Make your own data asset in three questions: name one entry, list its columns, done - a Resource whose Inspector is a fill-in table, saved as .tres files designers edit.","세 가지 질문으로 나만의 데이터 애셋을 만듭니다: 항목 하나의 이름을 정하고, 열을 나열하면 끝 - Inspector가 채워 넣는 표가 되는 Resource로, 디자이너가 편집하는 .tres 파일로 저장됩니다."
+Named anything (by text key) - a flexible data bag.,이름 붙은 아무 값 (텍스트 키 기준) - 유연한 데이터 주머니.
+"Named numbers (by text key) - e.g. volumes[""music""] = 0.8.","이름 붙은 숫자 (텍스트 키 기준) - 예: volumes[""music""] = 0.8."
+Named slots holding anything: look values up by a key.,무엇이든 담는 이름 붙은 슬롯: 키로 값을 찾아봅니다.
+"Named text (by text key) - e.g. lines[""greeting""].","이름 붙은 텍스트 (텍스트 키 기준) - 예: lines[""greeting""]."
+"Named whole numbers (by text key) - e.g. costs[""sword""] = 10.","이름 붙은 정수 (텍스트 키 기준) - 예: costs[""sword""] = 10."
+New Custom Resource…,새 사용자 지정 리소스…
+New Editor Tool…,새 에디터 도구…
+Object Icons,오브젝트 아이콘
+"Start an editor-side tool sheet: its events run INSIDE the editor (script editor > File > Run), never in the game - batch renames, scene checks, one-click chores.","에디터 쪽 도구 시트를 시작합니다: 이 시트의 이벤트는 게임이 아니라 에디터 안에서 실행됩니다 (스크립트 에디터 > File > Run) - 일괄 이름 변경, 씬 점검, 원클릭 잡무에 좋습니다."
+Switch the EventSheets editor language. Drop a translation CSV into addons/eventsheet/translations/ and it appears here automatically.,EventSheets 에디터 언어를 전환합니다. 번역 CSV를 addons/eventsheet/translations/ 에 넣으면 자동으로 여기에 나타납니다.
+"Makes your own data asset: a Resource with a table designers fill in the Inspector and save as .tres files - loot tables, dialogue lines, wave plans, anything that is rows of data. No annotations to learn; describe the rows and the sheet is generated.","나만의 데이터 애셋을 만듭니다: 디자이너가 Inspector에서 표를 채우고 .tres 파일로 저장하는 Resource입니다 - 전리품 테이블, 대사, 웨이브 계획 등 행으로 이루어진 데이터라면 무엇이든. 배울 어노테이션은 없습니다. 행을 설명하면 시트가 생성됩니다."
+What are you making?,무엇을 만들고 있나요?
+One entry is a…,항목 하나는…
+Resource name,리소스 이름
+What does an entry have?,항목 하나에는 무엇이 있나요?
+"One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
+
+name
+kind: coin|gem|key
+weight: float","한 줄에 열 하나씩. 일반 단어는 텍스트 열이 되고, 숫자와 토글에는 "": float"", "": int"", "": bool""을 붙이세요. 선택지를 | 로 나열하면 드롭다운이 됩니다.
+
+name
+kind: coin|gem|key
+weight: float"
+Before it works,동작하기 전에
+Warn in the Inspector until the table has rows (required),표에 행이 생길 때까지 Inspector에서 경고 (필수)
+"Add a validation check (a function warning about bad data, live)",검증 검사 추가 (잘못된 데이터를 실시간으로 경고하는 함수)
+Creates a ready-to-edit validate function: it runs while the table is edited in the Inspector and shows any warning it returns above the field. Add your own rules as condition rows.,"바로 편집할 수 있는 validate 함수를 만듭니다: Inspector에서 표를 편집하는 동안 실행되고, 반환한 경고를 필드 위에 표시합니다. 자신의 규칙은 조건 행으로 추가하세요."
+Inspector button,Inspector 버튼
+"Show this function as a one-click button in the Inspector, labelled with this text. Pressing the button runs the function's rows - great for editor chores like re-baking, refilling, or validating.","이 함수를 Inspector에 원클릭 버튼으로 표시하고, 이 텍스트를 라벨로 사용합니다. 버튼을 누르면 함수의 행이 실행됩니다 - 다시 굽기, 다시 채우기, 검증 같은 에디터 잡무에 좋습니다."
+Plain GDScript - anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members. Alt+Enter grows the box for a long expression (and shrinks it back).,일반 GDScript - 표현식에서 유효한 것은 여기서 모두 동작합니다. Ctrl+Space 는 시트 변수/함수와 호스트 멤버를 자동 완성합니다. Alt+Enter 는 긴 표현식을 위해 입력란을 키웁니다 (다시 줄일 수도 있습니다).
+"Find Expressions - open the expressions dictionary (floating: double-click inserts, stays open until you close it)","표현식 찾기 - 표현식 사전을 엽니다 (떠 있는 창: 더블 클릭으로 삽입, 닫을 때까지 열려 있음)"
+Expressions dictionary,표현식 사전
+Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,더블 클릭하면 커서 위치에 삽입됩니다 - 사전이 계속 열려 있어 결과를 이어 붙일 수 있습니다. 필드에 그냥 입력해도 됩니다: 같은 표현식이 입력하는 대로 자동 완성됩니다.
+Loop index (optional),루프 인덱스 (선택 사항)
+"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","매 반복마다 0, 1, 2... 로 증가하는 카운터의 이름을 정합니다 - Construct의 loopindex 입니다. Loop Index 표현식으로 읽고, 중첩 루프에는 서로 다른 이름을 주고 바깥 루프는 Loop Index Of 로 읽으세요."
+Write one value per line (multi-line enum),한 줄에 값 하나씩 쓰기 (여러 줄 열거형)
+"Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","끄면: enum State { IDLE, RUN }. 켜면: 각 값이 탭 들여쓰기된 자기 줄에 놓입니다 - 명시적 숫자가 있는 긴 열거형의 일반적인 형태입니다."
+Addon Pack,애드온 팩
+Make your own data asset,나만의 데이터 애셋 만들기
+"Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","시트는 게임플레이만을 위한 것이 아닙니다: Sheet > New Custom Resource… 는 세 가지 쉬운 질문(항목 하나를 뭐라고 부를지, 어떤 열이 있는지, 필수인지)을 묻고 Inspector가 채워 넣는 표가 되는 데이터 애셋을 만듭니다 - 전리품 테이블, 대사, 웨이브 계획. 디자이너가 행을 채우고 .tres 변형을 저장하면 시트가 그것을 불러옵니다. Sheet > New Editor Tool… 도 같은 방식으로 원클릭 에디터 잡무를 만듭니다."
+Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,Sheet > New Custom Resource… 를 살짝 열어보세요 (Esc 를 누르면 아무것도 만들지 않고 닫힙니다).

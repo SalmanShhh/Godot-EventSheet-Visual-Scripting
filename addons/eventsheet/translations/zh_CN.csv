@@ -488,3 +488,58 @@ Signal Handler,信号处理器
 Variable,变量
 Else,否则
 Else If,否则如果
+"A list of numbers (Array[float]) - weights, timings, chances.",数字列表（Array[float]） - 权重、计时、几率。
+"A list of text entries (Array[String]) - names, lines, tags.",文本条目列表（Array[String]） - 名称、台词、标签。
+"A list of whole numbers (Array[int]) - scores, ids, tile indexes.",整数列表（Array[int]） - 分数、id、图块索引。
+A list that can hold anything (mixed types allowed).,可以容纳任何内容的列表（允许混合类型）。
+Action Object Column Width,动作对象列宽度
+Condition Object Column Width,条件对象列宽度
+Designer Template,设计师模板
+Fixed width of the object-name column in the actions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.,动作栏中对象名称列的固定宽度（0 = 文本紧跟在每个名称之后）。也可以通过拖动行内名称/文本之间的间隔来设置。
+Fixed width of the object-name column in the conditions lane (0 = text flows after each name). Also set by dragging the name/text gap in a row.,条件栏中对象名称列的固定宽度（0 = 文本紧跟在每个名称之后）。也可以通过拖动行内名称/文本之间的间隔来设置。
+Group Row Height,分组行高度
+"Height of a group header bar, in pixels - double an event row by default; lower it for the classic slim bar.",分组标题栏的高度（像素） - 默认是事件行的两倍；想要经典的窄条样式可以调低。
+Language,语言
+"Make your own data asset in three questions: name one entry, list its columns, done - a Resource whose Inspector is a fill-in table, saved as .tres files designers edit.",回答三个问题就能做出自己的数据资产：给一条条目命名、列出它的列，完成 - 一个 Inspector 变成填写表格的 Resource，保存为设计师可编辑的 .tres 文件。
+Named anything (by text key) - a flexible data bag.,命名的任意值（按文本键） - 灵活的数据袋。
+"Named numbers (by text key) - e.g. volumes[""music""] = 0.8.","命名的数字（按文本键） - 例如 volumes[""music""] = 0.8。"
+Named slots holding anything: look values up by a key.,可存放任何内容的命名槽位：按键查找值。
+"Named text (by text key) - e.g. lines[""greeting""].","命名的文本（按文本键） - 例如 lines[""greeting""]。"
+"Named whole numbers (by text key) - e.g. costs[""sword""] = 10.","命名的整数（按文本键） - 例如 costs[""sword""] = 10。"
+New Custom Resource…,新建自定义资源…
+New Editor Tool…,新建编辑器工具…
+Object Icons,对象图标
+"Start an editor-side tool sheet: its events run INSIDE the editor (script editor > File > Run), never in the game - batch renames, scene checks, one-click chores.",创建一个编辑器端工具事件表：它的事件在编辑器内部运行（脚本编辑器 > File > Run），绝不会在游戏中运行 - 适合批量重命名、场景检查、一键杂务。
+Switch the EventSheets editor language. Drop a translation CSV into addons/eventsheet/translations/ and it appears here automatically.,切换 EventSheets 编辑器语言。把翻译 CSV 放入 addons/eventsheet/translations/，它就会自动出现在这里。
+"Makes your own data asset: a Resource with a table designers fill in the Inspector and save as .tres files - loot tables, dialogue lines, wave plans, anything that is rows of data. No annotations to learn; describe the rows and the sheet is generated.",生成你自己的数据资产：一个带表格的 Resource，设计师在 Inspector 中填写并保存为 .tres 文件 - 掉落表、对话台词、波次计划，任何按行组织的数据都行。无需学习任何注解；描述好行，事件表就会自动生成。
+What are you making?,你要做什么？
+One entry is a…,一条条目是…
+Resource name,资源名称
+What does an entry have?,一条条目包含什么？
+"One column per line. Plain words make a text column; add "": float"", "": int"", or "": bool"" for numbers and toggles; list choices with | for a dropdown.
+
+name
+kind: coin|gem|key
+weight: float","每行一列。普通词语会成为文本列；加上 "": float""、"": int"" 或 "": bool"" 表示数字和开关；用 | 列出选项即可得到下拉框。
+
+name
+kind: coin|gem|key
+weight: float"
+Before it works,生效之前
+Warn in the Inspector until the table has rows (required),在表格有行之前，在 Inspector 中给出警告（必填）
+"Add a validation check (a function warning about bad data, live)",添加验证检查（实时警告错误数据的函数）
+Creates a ready-to-edit validate function: it runs while the table is edited in the Inspector and shows any warning it returns above the field. Add your own rules as condition rows.,创建一个可直接编辑的 validate 函数：在 Inspector 中编辑表格时它会运行，并把返回的警告显示在字段上方。用条件行添加你自己的规则。
+Inspector button,Inspector 按钮
+"Show this function as a one-click button in the Inspector, labelled with this text. Pressing the button runs the function's rows - great for editor chores like re-baking, refilling, or validating.",把这个函数显示为 Inspector 中的一键按钮，并用此文本作为标签。按下按钮会运行函数的行 - 非常适合重新烘焙、重新填充、验证等编辑器杂务。
+Plain GDScript - anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members. Alt+Enter grows the box for a long expression (and shrinks it back).,纯 GDScript - 表达式中有效的任何内容都可以在这里使用。Ctrl+Space 补全事件表变量/函数和宿主成员。Alt+Enter 会放大输入框以容纳长表达式（也能再缩回去）。
+"Find Expressions - open the expressions dictionary (floating: double-click inserts, stays open until you close it)",查找表达式 - 打开表达式字典（浮动窗口：双击插入，在你关闭之前一直保持打开）
+Expressions dictionary,表达式字典
+Double-click to insert at the cursor - the dictionary stays open so results chain. You can also just type in the field: the same expressions autocomplete as you go.,双击即可在光标处插入 - 字典保持打开，方便连续插入。你也可以直接在字段中输入：同样的表达式会随输入自动补全。
+Loop index (optional),循环索引（可选）
+"Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of.","给一个每轮从 0, 1, 2... 递增的计数器命名 - 即 Construct 的 loopindex。用 Loop Index 表达式读取它；给嵌套循环起不同的名字，用 Loop Index Of 读取外层循环。"
+Write one value per line (multi-line enum),每行写一个值（多行枚举）
+"Off: enum State { IDLE, RUN }. On: each value on its own tab-indented line - the usual shape for long enums with explicit numbers.","关闭时：enum State { IDLE, RUN }。开启时：每个值单独占一行并以制表符缩进 - 带显式数字的长枚举的常见写法。"
+Addon Pack,插件包
+Make your own data asset,制作你自己的数据资产
+"Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.",事件表不只服务于玩法：Sheet > New Custom Resource… 会问三个简单问题（一条条目叫什么、有哪些列、是否必填），然后构建一个 Inspector 变成填写表格的数据资产 - 掉落表、对话台词、波次计划。设计师填写行并保存 .tres 变体；你的事件表加载它们。Sheet > New Editor Tool… 也以同样的方式生成一键编辑器杂务。
+Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,看一眼 Sheet > New Custom Resource…（按 Esc 关闭，不会创建任何内容）。

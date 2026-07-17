@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - translations topped up (518 keys x 8 languages) and calmer group headers
+
+- **All eight editor languages gained the newest UI strings** - 47 keys each (the Custom
+  Resource wizard, the Language menu, the Expressions dictionary, Loop index, Inspector
+  button, the multi-line enum toggle, Object Icons, the Addon Pack chip, the typed-container
+  hints, the new theme tokens, the tour stop...) - every language now carries 518 fully
+  filled keys, appended byte-verified with the code literals and menu paths kept verbatim.
+- **Group headers dropped the trailing "N events · ⟳…" fingerprint** - a group bar is now
+  just the fold arrow, the folder icon, and the name (feedback: extra text). The counting
+  helper and its test went with it.
+
 ### Changed - the README catches up (and slims down)
 
 - **README refreshed for the whole unreleased wave**: a "Since v0.15" status block (8 languages

@@ -171,8 +171,7 @@ static func run() -> bool:
     var group_row: EventRowData = flat_rows[1].get("row")
     var event_row_data: EventRowData = flat_rows[2].get("row")
     all_passed = _check("comment rows render a single editable label span", comment_row_data.spans.size(), 1) and all_passed
-    # The group header leads with the editable title span (no redundant "Group" badge); a muted chapter
-    # fingerprint span may trail it when the group holds events.
+    # The group header leads with the editable title span (no redundant "Group" badge).
     all_passed = _check("group row leads with an editable title span (no redundant Group badge)",
         str((group_row.spans[0].metadata as Dictionary).get("edit_kind", "")) == "group_name" and not bool((group_row.spans[0].metadata as Dictionary).get("badge", false)), true) and all_passed
     all_passed = _check("group row tagged correctly", group_row.row_type, EventRowData.RowType.GROUP) and all_passed
