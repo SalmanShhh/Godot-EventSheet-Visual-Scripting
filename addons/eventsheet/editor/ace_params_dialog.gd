@@ -988,7 +988,18 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	# Expressions are plain GDScript - say so explicitly so event-sheet users learn there is no
 	# separate expression language to memorize.
 	edit.placeholder_text = "GDScript expression (e.g. health + 10)"
-	edit.tooltip_text = "Plain GDScript - anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members."
+	edit.tooltip_text = "Plain GDScript - anything valid in an expression works here. Ctrl+Space completes sheet variables/functions and host members. Alt+Enter grows the box for a long expression (and shrinks it back)."
+	# Alt+Enter toggles a TALL editing box (C3 reflex): the same one logical expression, just
+	# room to read it - wrap already fills the height. Plain Enter keeps confirming the dialog.
+	edit.gui_input.connect(func(event: InputEvent) -> void:
+		var key_event: InputEventKey = event as InputEventKey
+		if key_event == null or not key_event.pressed or not key_event.alt_pressed:
+			return
+		if key_event.keycode != KEY_ENTER and key_event.keycode != KEY_KP_ENTER:
+			return
+		var expanded: bool = edit.custom_minimum_size.y > 31.0
+		edit.custom_minimum_size = Vector2(0.0, 31.0 if expanded else 128.0)
+		edit.accept_event())
 	# Godot-native drag & drop: dropping a FileSystem file inserts its quoted res:// path,
 	# dropping a Scene-dock node inserts a $Path reference.
 	edit.set_drag_forwarding(Callable(), _can_drop_on_expression, _drop_on_expression.bind(edit))

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added - Alt+Enter grows a parameter's expression box
+
+- **Alt+Enter in any expression field toggles a tall editing box** (the Construct reflex):
+  the same one logical expression, just room to read it - wrap already fills the height, and
+  Alt+Enter again shrinks it back. Plain Enter keeps confirming the dialog. The field's
+  tooltip teaches the shortcut.
+
 ### Changed - expression authoring follows the Construct model
 
 - **The ƒx window is now the Expressions dictionary**: a floating, NON-modal catalog that
