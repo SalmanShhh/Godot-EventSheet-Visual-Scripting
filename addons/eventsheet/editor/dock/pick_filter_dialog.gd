@@ -13,6 +13,7 @@ extends RefCounted
 var _dock: Control = null
 var _pick_dialog: ConfirmationDialog = null
 var _pick_iterator_edit: LineEdit = null
+var _pick_index_edit: LineEdit = null
 var _pick_kind_option: OptionButton = null
 var _pick_collection_edit: LineEdit = null
 var _pick_predicate_edit: CodeEdit = null
@@ -41,6 +42,7 @@ func open(event_resource: Resource, pick_index: int = -1) -> void:
 	var editing: bool = pick_index >= 0 and pick_index < event_row.pick_filters.size()
 	var pick: PickFilter = event_row.pick_filters[pick_index] if editing else PickFilter.new()
 	_pick_iterator_edit.text = pick.iterator_name
+	_pick_index_edit.text = pick.index_name
 	_pick_kind_option.select(_pick_kind_to_option(pick.collection_kind))
 	_pick_collection_edit.text = pick.collection_value if not pick.collection_value.is_empty() else pick.source_expression
 	_pick_predicate_edit.text = pick.predicate_expression
@@ -61,6 +63,11 @@ func _ensure_pick_dialog() -> void:
 	form.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var loop_box: VBoxContainer = EventSheetPopupUI.form_box()
 	_pick_iterator_edit = _dock._add_sheet_type_field(loop_box, "Iterator name", "item")
+	# Construct-style loopindex, opt-in per loop: name it and the loop counts 0,1,2... in a
+	# local of that name (the Loop Index expressions read it). Distinct names on nested loops
+	# give C3's loopindex("name"). Empty = no counter (output unchanged).
+	_pick_index_edit = _dock._add_sheet_type_field(loop_box, "Loop index (optional)", "loop_index")
+	_pick_index_edit.tooltip_text = "Name a counter that runs 0, 1, 2... each pass - Construct's loopindex. Read it with the Loop Index expression; give nested loops distinct names and read an outer one with Loop Index Of."
 	var kind_row: HBoxContainer = HBoxContainer.new()
 	var kind_label: Label = Label.new()
 	kind_label.text = "Collection"
@@ -215,6 +222,7 @@ func _on_pick_filter_confirmed() -> void:
 	var event_row: EventRow = _pick_target_event
 	var target_index: int = _pick_target_index
 	var iterator: String = _pick_iterator_edit.text.strip_edges()
+	var index_name: String = _pick_index_edit.text.strip_edges()
 	var kind: int = _pick_option_to_kind(_pick_kind_option.selected)
 	var collection: String = _pick_collection_edit.text.strip_edges()
 	var predicate: String = _pick_predicate_edit.text.strip_edges()
@@ -222,6 +230,7 @@ func _on_pick_filter_confirmed() -> void:
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Pick Filter", func() -> bool:
 		var pick: PickFilter = event_row.pick_filters[target_index] if target_index >= 0 and target_index < event_row.pick_filters.size() else PickFilter.new()
 		pick.iterator_name = iterator if not iterator.is_empty() else "item"
+		pick.index_name = index_name
 		pick.collection_kind = kind
 		pick.collection_value = collection
 		pick.predicate_expression = predicate

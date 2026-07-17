@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - Construct-style loopindex on every loop kind
+
+- **Every loop can now count its passes like Construct**: For Each, Repeat, and While gained an
+  optional **Loop index** field - name it (the convention is `loop_index`) and the loop counts
+  0, 1, 2... in a local of that name. It stays 0-based even when a Repeat runs over an offset
+  range like range(2, 8), which is what makes it a real loopindex rather than "the iterator
+  again". Nested loops take distinct names - Construct's loopindex("name").
+- **Two new Loops expressions**: `Loop Index` (reads the conventional counter) and
+  `Loop Index Of` (reads a named outer loop's counter from inside a nested one). Both compile
+  to a plain local - parity, zero runtime.
+- The counter is pure opt-in: an unnamed index emits nothing, so every existing sheet's output
+  is byte-unchanged. The importer lifts the emitted declare/bump shape back into the loop's
+  field, so indexed loops round-trip byte-exactly and stay editable
+  (`tests/loop_index_test.gd` pins all kinds, nesting, the lift, and the budgeted-loop warning).
+
 ### Added - the creator-journey docs + discoverability glue (approved spec, slice 4)
 
 - **docs/GUIDE-EDITOR-TOOLS.md** - building editor-side tools with sheets, at the house guide

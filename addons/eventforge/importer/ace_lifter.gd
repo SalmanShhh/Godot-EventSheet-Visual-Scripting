@@ -1129,22 +1129,47 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		# grammar above, but the wrapper is a PickFilter, not conditions. _adopt_block_body folds the
 		# body (leading statements → actions, nested blocks → sub_events); a statement AFTER a nested
 		# block is unrepresentable (actions emit before sub-events) and falls to the lenient raw path.
-		var is_for: bool = at_this_depth and rest.begins_with("for ") and rest.contains(" in ") and rest.ends_with(":")
-		var is_while: bool = at_this_depth and rest.begins_with("while ") and rest.ends_with(":")
+		# Loop-index prelude (the emitter's exact three-line shape): `var X: int = -1` directly
+		# above a loop whose body's FIRST line is `X += 1` lifts back into PickFilter.index_name -
+		# the C3-style loopindex. All three lines must match or the var stays an ordinary statement.
+		var loop_index_lift: String = ""
+		if at_this_depth and index + 2 < lines.size():
+			var index_probe: RegEx = RegEx.new()
+			index_probe.compile("^var ([A-Za-z_][A-Za-z0-9_]*): int = -1$")
+			var index_match: RegExMatch = index_probe.search(rest)
+			if index_match != null:
+				var candidate_name: String = index_match.get_string(1)
+				var header_line: String = lines[index + 1]
+				var header_at_depth: bool = header_line.begins_with(indent) and not header_line.substr(depth).begins_with("\t")
+				var header_rest: String = header_line.substr(depth) if header_at_depth else ""
+				var header_is_loop: bool = header_at_depth and ((header_rest.begins_with("for ") and header_rest.contains(" in ")) or header_rest.begins_with("while ")) and header_rest.ends_with(":")
+				var bump_expected: String = "\t".repeat(depth + 1) + candidate_name + " += 1"
+				if header_is_loop and lines[index + 2] == bump_expected:
+					loop_index_lift = candidate_name
+					rest = header_rest
+					index += 1  # the loop header takes over as the current line; body starts past the bump
+		var is_for: bool = (at_this_depth or not loop_index_lift.is_empty()) and rest.begins_with("for ") and rest.contains(" in ") and rest.ends_with(":")
+		var is_while: bool = (at_this_depth or not loop_index_lift.is_empty()) and rest.begins_with("while ") and rest.ends_with(":")
 		if is_for or is_while:
 			var loop_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
-			loop_event.pick_filters.append(_loop_pick_filter(rest, is_while))
+			var lifted_pick: PickFilter = _loop_pick_filter(rest, is_while)
+			lifted_pick.index_name = loop_index_lift
+			loop_event.pick_filters.append(lifted_pick)
 			# The loop body IS a loop context: break/continue in it (or in an `if` nested in it) lift.
-			var loop_inner: Dictionary = _parse_body(lines, index + 1, depth + 1, "", "", "", "", reverse_entries, lenient_ifs, true)
+			# A lifted loop index skips its bump line - it regenerates from index_name on emit.
+			var loop_inner: Dictionary = _parse_body(lines, index + (2 if not loop_index_lift.is_empty() else 1), depth + 1, "", "", "", "", reverse_entries, lenient_ifs, true)
 			var loop_ok: bool = bool(loop_inner.get("ok", false)) and _adopt_block_body(loop_event, loop_inner.get("rows", []))
 			if not loop_ok:
 				if not lenient_ifs:
 					return {"ok": false}
 				# Raw fallback: the header joins the open collector; its deeper lines arrive
 				# through the statement branch below, tabs preserved (same as if/elif/else).
+				# A consumed loop-index prelude re-joins first so no source line is ever lost.
 				if current == null:
 					current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 					rows.append(current)
+				if not loop_index_lift.is_empty():
+					pending_raw.append("var %s: int = -1" % loop_index_lift)
 				pending_raw.append(rest)
 				index += 1
 				chain_open = false

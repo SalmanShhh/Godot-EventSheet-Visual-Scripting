@@ -1497,6 +1497,8 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 		if is_budgeted and (pick.collection_kind == PickFilter.CollectionKind.WHILE or pick.collection_kind == PickFilter.CollectionKind.REPEAT or not pick.order_by_expression.strip_edges().is_empty() or pick.pick_first_n > 0):
 			warnings.append("Frame-spreading ignored on this loop: not yet supported with While/Repeat, order-by, or pick-first-N - emitting a normal loop.")
 			is_budgeted = false
+		if is_budgeted and not pick.index_name.strip_edges().is_empty():
+			warnings.append("Loop index ignored on this loop: not yet supported with frame-spreading (the cursor would reset every frame).")
 		if is_budgeted:
 			var uid: String = "%s_%d" % [event_row.event_uid, pick_idx]
 			# A budgeted loop only resumes because its trigger re-fires every frame. Warn on the common
@@ -1525,6 +1527,16 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			lines.append("%sif %s is Object and not is_instance_valid(%s):" % [indent, iterator, iterator])
 			lines.append("%s\tcontinue" % indent)
 		else:
+			# Construct-style loop index (opt-in): a named 0-based counter - declared just above
+			# the loop, bumped as the body's FIRST statement. The importer lifts this exact
+			# three-line shape back into index_name, so it round-trips byte-identically. Kept
+			# 0-based independently of the iterator (a Repeat over range(2, 8) still counts from
+			# 0), which is what makes it the C3 loopindex rather than "the iterator again".
+			var loop_index_name: String = pick.index_name.strip_edges()
+			if not loop_index_name.is_valid_identifier():
+				loop_index_name = ""
+			if not loop_index_name.is_empty():
+				lines.append("%svar %s: int = -1" % [indent, loop_index_name])
 			if pick.pick_first_n > 0:
 				lines.append("%svar %s: int = 0" % [indent, counter_name])
 			if pick.collection_kind == PickFilter.CollectionKind.WHILE:
@@ -1545,6 +1557,8 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 				lines.append("%sfor %s in %s:" % [indent, iterator, collection])
 			body_depth += 1
 			indent = "\t".repeat(body_depth)
+			if not loop_index_name.is_empty():
+				lines.append("%s%s += 1" % [indent, loop_index_name])
 		var predicate: String = pick.predicate_expression.strip_edges()
 		if not predicate.is_empty():
 			lines.append("%sif not (%s):" % [indent, predicate])

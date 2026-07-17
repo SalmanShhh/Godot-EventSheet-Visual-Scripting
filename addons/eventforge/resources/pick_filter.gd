@@ -38,3 +38,9 @@ enum CollectionKind {
 ## from an unbounded one.
 @export var frame_spread_count: int = 0
 @export var frame_spread_budget_ms: float = 0.0
+## Construct-style loop index: name it and the loop counts 0, 1, 2... in a local of that name,
+## readable anywhere in the body (the Loop Index expression). Works on For Each, Repeat, and
+## While alike - and stays 0-based even when a Repeat's range starts elsewhere. Distinct names
+## on nested loops give the C3 loopindex("name") reflex. "" (the default) emits nothing, so
+## every existing loop's output is byte-unchanged. Ignored on budgeted (frame-spread) loops.
+@export var index_name: String = ""

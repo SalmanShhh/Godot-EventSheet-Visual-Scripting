@@ -121,12 +121,13 @@ static func _wrap(d: ACEDescriptor, params: Dictionary) -> String:
 	for l: String in body_lines:
 		body += "\t" + l + "\n"
 	# Stand-ins for the run context a real sheet provides: untyped `v` (a sheet variable of any
-	# type), `item` (a For-Each iterator), `event` (an input event), `text` (a string operand),
+	# type), `item` (a For-Each iterator), `loop_index` (the named loop counter), `event` (an
+	# input event), `text` (a string operand),
 	# `delta`, `sig` (a signal). Each is declared ONLY when the host doesn't already expose that
 	# member, so e.g. `var text` never collides with Label.text - the template then resolves
 	# against the host's own member instead.
 	var scaffold: String = ""
-	for sv: String in ["v", "item", "event", "text", "data", "delta"]:
+	for sv: String in ["v", "item", "loop_index", "event", "text", "data", "delta"]:
 		if not _host_has_member(host, sv):
 			scaffold += ("var %s := 0.0\n" % sv) if sv == "delta" else ("var %s\n" % sv)
 	if not _host_has_member(host, "sig"):
