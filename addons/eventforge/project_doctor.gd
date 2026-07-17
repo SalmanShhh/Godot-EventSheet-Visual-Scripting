@@ -62,6 +62,7 @@ static func run() -> Dictionary:
 	check_untranslated_project(sheet_paths, findings)
 	check_required_fields(sheet_paths, findings)
 	check_missing_save_support(sheet_paths, findings)
+	check_editor_tool_undo(sheet_paths, findings)
 	check_vocabulary_doc(findings)
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
@@ -302,6 +303,36 @@ static func check_missing_save_support(sheet_paths: PackedStringArray, findings:
 		var kind: String = "autoload" if sheet.autoload_mode else "behavior"
 		_add(findings, "info", "save-support", sheet_path,
 			"This %s holds %d State variable(s) but has no save_state/load_state seam, so its runtime state won't survive Save Game - Tools > Save Studio > Add Save Support generates the pair (ignore if the state is transient)." % [kind, state_vars])
+
+
+## Scene-mutating verbs an editor tool typically reaches for. If a tool sheet's output edits
+## the open scene through these WITHOUT registering undo, the user's Ctrl+Z can't take the
+## change back - the classic first-editor-tool mistake.
+const _SCENE_MUTATORS := ["add_child(", "queue_free(", "remove_child(", "reparent(", "set_owner(", ".owner = "]
+
+
+static func check_editor_tool_undo(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null or not sheet.tool_mode:
+			continue
+		var output_path: String = output_path_for(sheet_path)
+		if not FileAccess.file_exists(output_path):
+			continue  # the stale-output check owns the "not compiled yet" case
+		var output: String = FileAccess.get_file_as_string(output_path)
+		if not output.contains("get_edited_scene_root("):
+			continue  # not touching the open scene - nothing to undo
+		var mutates: bool = false
+		for mutator: String in _SCENE_MUTATORS:
+			if output.contains(mutator):
+				mutates = true
+				break
+		if not mutates:
+			continue
+		if output.contains("EditorUndoRedoManager") or output.contains("create_action("):
+			continue
+		_add(findings, "info", "editor-tool-undo", sheet_path,
+			"This editor tool changes the open scene (add/remove/reparent nodes) without registering undo, so Ctrl+Z can't take the change back. Wrap the edits in EditorInterface.get_editor_undo_redo() create_action/commit_action (ignore for one-off scripts you re-run freely).")
 
 
 ## The sheet a generated script belongs to - the inverse of output_path_for.

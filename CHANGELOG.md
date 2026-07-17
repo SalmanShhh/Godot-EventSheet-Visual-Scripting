@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - editor tools are a first-class journey (approved spec, slice 1)
+
+- **Sheet > New Editor Tool…** scaffolds a ready-to-run editor-side tool sheet in one click:
+  tool mode on, an On Editor Run event with a working sample chore (counts the open scene's
+  nodes), and a banner explaining that these events run INSIDE the editor via File > Run,
+  never in the game. (The same starter stays in the New Sheet template menu.)
+- **The Doctor now catches the classic first-editor-tool mistake**: a tool sheet whose
+  compiled script adds/removes/reparents nodes in the open scene WITHOUT registering undo
+  gets an info nudge pointing at create_action/commit_action - so Ctrl+Z keeps working for
+  tool users. Read-only tools and undo-registering tools pass clean
+  (`tests/editor_tool_undo_doctor_test.gd`).
+
 ### Added - every behaviour pack now describes itself (freshness sweep, part 1)
 
 - **All 74 packs ship a class description**: 65 builders gained a one-to-two-sentence
