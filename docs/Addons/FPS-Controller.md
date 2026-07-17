@@ -70,6 +70,7 @@ the behavior finds them by name and quietly skips what's missing.
 | Trigger | On Landed | Fires the frame the host touches the floor again. |
 | Trigger | On Camera Mode Changed | Fires when first/third person flips. |
 | Action | Jump | Launches upward with Jump Velocity (also fires On Jumped). |
+| Action | Set Gravity Direction | Points gravity along a new 3D direction (normalized for you). `(0, 1, 0)` walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal. |
 | Action | Add Look (x, y) | Turns the view by a mouse delta - the same verb the built-in mouse look calls. |
 | Action | Set Third Person (enabled) | Switches camera mode explicitly. |
 | Action | Toggle Camera Mode | Flips first/third person. |

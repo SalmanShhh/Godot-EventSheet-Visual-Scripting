@@ -23,12 +23,22 @@ var vel_x: float = 0.0
 var vel_y: float = 0.0
 var vel_z: float = 0.0
 
+# Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it
+# lives here). Any direction works - the arc bends toward it; normalized before use.
+## The direction gravity pulls the arc toward (default straight down).
+@export var gravity_direction: Vector3 = Vector3.DOWN
+
 func _process(delta: float) -> void:
 	if host == null:
 		return
 	if not launched:
 		launch_forward()
-	vel_y -= gravity * delta
+	# Gravity pulls along gravity_direction; the default Vector3.DOWN normalizes to
+	# itself exactly, so this is the plain vel_y drop it generalizes, bit for bit.
+	var gravity_pull := gravity_direction.normalized() * gravity * delta
+	vel_x += gravity_pull.x
+	vel_y += gravity_pull.y
+	vel_z += gravity_pull.z
 	var motion := Vector3(vel_x, vel_y, vel_z) * delta
 	host.position += motion
 	distance_travelled += motion.length()
@@ -63,5 +73,14 @@ func set_bullet3d_speed(value: float) -> void:
 	vel_y = direction.y * value
 	vel_z = direction.z * value
 	launched = true
+
+## @ace_action
+## @ace_name("Set Gravity Direction")
+## @ace_category("Bullet 3D")
+## @ace_description("Points gravity along a new 3D direction (it is normalized for you) - the arc bends that way from now on. (0, -1, 0) is normal down, (0, 1, 0) pulls up, (1, 0, 0) pulls along +X.")
+## @ace_icon("res://eventsheet_addons/bullet_3d/icon.svg")
+## @ace_codegen_template("$Bullet3DBehavior.set_gravity_direction({x}, {y}, {z})")
+func set_gravity_direction(x: float, y: float, z: float) -> void:
+	gravity_direction = Vector3(x, y, z)
 
 # Bullet 3D behavior (event-sheet-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled.

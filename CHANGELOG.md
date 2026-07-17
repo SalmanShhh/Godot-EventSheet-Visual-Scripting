@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - 3D packs get a Gravity Direction (ceiling walks, bent arcs)
+
+- **`gravity_direction: Vector3` (default `(0, -1, 0)`)** on Bullet 3D and the FPS
+  Controller, designed for 3D where a single angle cannot express the pull: point the
+  vector anywhere and gravity follows. At the default the math is EXACTLY the old
+  vertical code (Vector3.DOWN normalizes to itself), so existing games play identically.
+- **FPS Controller**: `up_direction` tracks the direction (a real-physics smoke confirmed
+  walking on the CEILING under `(0, 1, 0)` while a default twin lands normally), jumps
+  and wall jumps launch against gravity, the wall-ride fall-soften and the crouch
+  stand-up ceiling check are frame-aware. Vertical flips are exact; a tilted direction
+  pulls correctly but keeps the run plane world-horizontal (full wall-walking with
+  camera roll is future work). **Set Gravity Direction** actions on both packs.
+- The nav-agent driver keeps plain down-gravity deliberately - Godot navigation meshes
+  are Y-up by NavigationServer design. `tests/gravity_angle_test.gd` gained the 3D pins
+  (bit-exact defaults, inverted pulls, the jump-replacement math, the zero-vector guard).
+
 ### Added - Bullet arcs bend along a Gravity Angle
 
 - **`gravity_angle` property (0-360 degrees, default 90 = down)** on the Bullet pack: the

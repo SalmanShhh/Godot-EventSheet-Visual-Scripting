@@ -104,6 +104,19 @@ static func build() -> bool:
 	# Head lookup is one shared helper - both are plain class-level GDScript blocks.
 	var input_block: RawCodeRow = RawCodeRow.new()
 	input_block.code = "\n".join(PackedStringArray([
+		"# Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it lives",
+		"# here). Designed for vertical flips - DOWN and UP are exact (walk on ceilings); a",
+		"# tilted direction still pulls and floors correctly but the run plane stays world-",
+		"# horizontal (full wall-walking with camera roll is future work).",
+		"## The direction gravity pulls (default straight down; (0, 1, 0) walks on ceilings).",
+		"@export var gravity_direction: Vector3 = Vector3.DOWN",
+		"",
+		"# The normalized pull axis; a zeroed export falls back to plain down.",
+		"func _gravity_dir() -> Vector3:",
+		"\tvar pull := gravity_direction.normalized()",
+		"\treturn pull if pull != Vector3.ZERO else Vector3.DOWN",
+		"",
+		"",
 		"func _head() -> Node3D:",
 		"\treturn (host.get_node_or_null(\"Head\") as Node3D) if host != null else null",
 		"",
@@ -164,7 +177,7 @@ static func build() -> bool:
 		"\t\treturn true",
 		"\tvar params := PhysicsTestMotionParameters3D.new()",
 		"\tparams.from = host.global_transform",
-		"\tparams.motion = Vector3.UP * (standing_height - minf(crouch_height, standing_height))",
+		"\tparams.motion = -_gravity_dir() * (standing_height - minf(crouch_height, standing_height))",
 		"\treturn not PhysicsServer3D.body_test_motion(host.get_rid(), params)",
 		"",
 		"",
@@ -172,8 +185,12 @@ static func build() -> bool:
 		"func _start_wall_ride() -> void:",
 		"\twall_riding = true",
 		"\twall_ride_time = 0.0",
-		"\tif host != null and host.velocity.y < 0.0:",
-		"\t\thost.velocity.y *= 0.25",
+		"\tif host != null:",
+		"\t\t# Soften the fall (keep 25% of the along-gravity speed) - frame-aware, so it",
+		"\t\t# reads the same under flipped gravity.",
+		"\t\tvar fall := host.velocity.dot(_gravity_dir())",
+		"\t\tif fall > 0.0:",
+		"\t\t\thost.velocity -= _gravity_dir() * fall * 0.75",
 		"\twall_ride_started.emit()"
 	]))
 	sheet.events.append(input_block)
@@ -197,10 +214,13 @@ static func build() -> bool:
 	tick_body.code = "\n".join(PackedStringArray([
 		"if host == null:",
 		"\treturn",
+		"# up_direction tracks the gravity direction, so is_on_floor() means \"resting against",
+		"# whatever gravity presses you into\" - the ceiling under inverted gravity.",
+		"host.up_direction = -_gravity_dir()",
 		"var on_floor := host.is_on_floor()",
 		"# Gravity, softened while riding a wall so the slide down reads as a glide.",
 		"if not on_floor:",
-		"\thost.velocity.y -= gravity * (wall_ride_gravity_scale if wall_riding else 1.0) * delta",
+		"\thost.velocity += _gravity_dir() * gravity * (wall_ride_gravity_scale if wall_riding else 1.0) * delta",
 		"sprint_held = Input.is_key_pressed(KEY_SHIFT) and not crouching",
 		"# Crouch is hold-to-crouch (Ctrl); standing back up is ceiling-checked and retries",
 		"# every frame the key is up, so releasing under a low tunnel pops you up at the exit.",
@@ -269,7 +289,10 @@ static func build() -> bool:
 	jump_body.code = "\n".join(PackedStringArray([
 		"if host == null:",
 		"\treturn",
-		"host.velocity.y = jump_velocity",
+		"# Replace the along-gravity component with the jump - frame-aware, so \"up\" is",
+		"# whatever direction gravity opposes. At default gravity this is velocity.y = jump.",
+		"host.velocity -= _gravity_dir() * host.velocity.dot(_gravity_dir())",
+		"host.velocity += -_gravity_dir() * jump_velocity",
 		"jumped.emit()"
 	]))
 	jump_fn.events.append(jump_body)
@@ -514,7 +537,8 @@ static func build() -> bool:
 			"\tstop_wall_ride()",
 			"push_x = wall_normal.x * wall_jump_push",
 			"push_z = wall_normal.z * wall_jump_push",
-			"host.velocity.y = jump_velocity",
+			"host.velocity -= _gravity_dir() * host.velocity.dot(_gravity_dir())",
+			"host.velocity += -_gravity_dir() * jump_velocity",
 			"wall_jumped.emit()"
 		])))
 	Lib.append_function(sheet, "stop_wall_ride", "Stop Wall Ride", "FPS Controller",
@@ -552,6 +576,11 @@ static func build() -> bool:
 		"return host.get_wall_normal().z if host != null and host.is_on_wall() else 0.0")
 	_last_returns(sheet, TYPE_FLOAT)
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.append_function(sheet, "set_gravity_direction", "Set Gravity Direction", "FPS Controller",
+		"Points gravity along a new 3D direction (normalized for you). (0, -1, 0) is normal down; (0, 1, 0) walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal.",
+		[["x", "float"], ["y", "float"], ["z", "float"]],
+		"gravity_direction = Vector3(x, y, z)")
+
 	Lib.feature_verbs(sheet, ["do_crouch", "do_wall_jump"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/fps_controller/fps_controller_behavior")
 

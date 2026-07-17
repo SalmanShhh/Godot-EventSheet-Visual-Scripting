@@ -25,6 +25,14 @@ static func build() -> bool:
 	var about: CommentRow = CommentRow.new()
 	about.text = "Bullet 3D behavior (event-sheet-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."
 	sheet.events.append(about)
+	var gravity_block: RawCodeRow = RawCodeRow.new()
+	gravity_block.code = "\n".join(PackedStringArray([
+		"# Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it",
+		"# lives here). Any direction works - the arc bends toward it; normalized before use.",
+		"## The direction gravity pulls the arc toward (default straight down).",
+		"@export var gravity_direction: Vector3 = Vector3.DOWN"
+	]))
+	sheet.events.append(gravity_block)
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
@@ -34,7 +42,12 @@ static func build() -> bool:
 		"\treturn",
 		"if not launched:",
 		"\tlaunch_forward()",
-		"vel_y -= gravity * delta",
+		"# Gravity pulls along gravity_direction; the default Vector3.DOWN normalizes to",
+		"# itself exactly, so this is the plain vel_y drop it generalizes, bit for bit.",
+		"var gravity_pull := gravity_direction.normalized() * gravity * delta",
+		"vel_x += gravity_pull.x",
+		"vel_y += gravity_pull.y",
+		"vel_z += gravity_pull.z",
 		"var motion := Vector3(vel_x, vel_y, vel_z) * delta",
 		"host.position += motion",
 		"distance_travelled += motion.length()"
@@ -84,5 +97,23 @@ static func build() -> bool:
 	]))
 	set_bullet3d_speed_fn.events.append(set_bullet3d_speed_fn_body)
 	sheet.functions.append(set_bullet3d_speed_fn)
+
+	var set_gravity_direction_fn: EventFunction = EventFunction.new()
+	set_gravity_direction_fn.function_name = "set_gravity_direction"
+	set_gravity_direction_fn.expose_as_ace = true
+	set_gravity_direction_fn.ace_display_name = "Set Gravity Direction"
+	set_gravity_direction_fn.ace_category = "Bullet 3D"
+	set_gravity_direction_fn.description = "Points gravity along a new 3D direction (it is normalized for you) - the arc bends that way from now on. (0, -1, 0) is normal down, (0, 1, 0) pulls up, (1, 0, 0) pulls along +X."
+	for axis_name in ["x", "y", "z"]:
+		var axis_param: ACEParam = ACEParam.new()
+		axis_param.id = axis_name
+		axis_param.type_name = "float"
+		set_gravity_direction_fn.params.append(axis_param)
+	var set_gravity_direction_fn_body: RawCodeRow = RawCodeRow.new()
+	set_gravity_direction_fn_body.code = "\n".join(PackedStringArray([
+		"gravity_direction = Vector3(x, y, z)"
+	]))
+	set_gravity_direction_fn.events.append(set_gravity_direction_fn_body)
+	sheet.functions.append(set_gravity_direction_fn)
 
 	return Lib.save_pack(sheet, "res://eventsheet_addons/bullet_3d/bullet_3d_behavior")

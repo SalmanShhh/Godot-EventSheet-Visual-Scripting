@@ -84,6 +84,43 @@ static func run() -> bool:
 	bullet.free()
 	bullet_host.free()
 
+	# ---- Bullet 3D: gravity is a full 3D direction ----
+	var bullet_3d: Node = (load("res://eventsheet_addons/bullet_3d/bullet_3d_behavior.gd") as Script).new() as Node
+	var bullet_3d_host: Node3D = Node3D.new()
+	bullet_3d.set("host", bullet_3d_host)
+	all_passed = _check("Bullet 3D defaults to straight-down gravity", bullet_3d.get("gravity_direction"), Vector3.DOWN) and all_passed
+	bullet_3d.set("launched", true)
+	bullet_3d.set("speed", 0.0)
+	bullet_3d.set("gravity", 100.0)
+	bullet_3d.call("_process", 1.0)
+	all_passed = _check("Bullet 3D default pull is exactly the old vertical drop", Vector3(float(bullet_3d.get("vel_x")), float(bullet_3d.get("vel_y")), float(bullet_3d.get("vel_z"))), Vector3(0.0, -100.0, 0.0)) and all_passed
+	bullet_3d.set("vel_y", 0.0)
+	bullet_3d.call("set_gravity_direction", 0.0, 1.0, 0.0)
+	bullet_3d.call("_process", 1.0)
+	all_passed = _check("Bullet 3D inverted gravity pulls up", float(bullet_3d.get("vel_y")), 100.0) and all_passed
+	bullet_3d.free()
+	bullet_3d_host.free()
+
+	# ---- FPS Controller: jumps and the pull axis follow gravity_direction ----
+	var fps: Node = (load("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd") as Script).new() as Node
+	var fps_host: CharacterBody3D = CharacterBody3D.new()
+	fps.set("host", fps_host)
+	all_passed = _check("FPS defaults to straight-down gravity", fps.get("gravity_direction"), Vector3.DOWN) and all_passed
+	fps.set("jump_velocity", 4.5)
+	fps_host.velocity = Vector3(2.0, -3.0, 1.0)
+	fps.call("do_jump")
+	all_passed = _check("a default-gravity jump is exactly velocity.y = jump", fps_host.velocity, Vector3(2.0, 4.5, 1.0)) and all_passed
+	fps.call("set_gravity_direction", 0.0, 1.0, 0.0)
+	fps_host.velocity = Vector3.ZERO
+	fps.call("do_jump")
+	all_passed = _check("a ceiling-gravity jump launches screen-down", fps_host.velocity, Vector3(0.0, -4.5, 0.0)) and all_passed
+	fps.set("gravity_direction", Vector3.ZERO)
+	all_passed = _check("a zeroed direction falls back to plain down", fps.call("_gravity_dir"), Vector3.DOWN) and all_passed
+	var fps_emitted: String = FileAccess.get_file_as_string("res://eventsheet_addons/fps_controller/fps_controller_behavior.gd")
+	all_passed = _check("the FPS tick re-aims up_direction from the gravity direction", fps_emitted.contains("host.up_direction = -_gravity_dir()"), true) and all_passed
+	fps.free()
+	fps_host.free()
+
 	return all_passed
 
 

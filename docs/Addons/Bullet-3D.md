@@ -62,6 +62,7 @@ The behavior is small. Learn these ideas and everything in the ACE list is just 
 |---|---|---|
 | `speed` | `10.0` | Launch speed in units per second along the forward (-Z) direction. Read at launch. |
 | `gravity` | `0.0` | Downward pull applied to vertical velocity each frame. `0` = straight line; positive = arcs down; negative = drifts up. |
+| `gravity_direction` | `(0, -1, 0)` | The 3D direction gravity pulls the arc toward (normalized before use). Default is straight down; point it anywhere and the arc bends that way. |
 
 **3. Spawn it and go.** Because the shot launches itself on the first frame, the minimal projectile needs nothing but a speed and a gravity. Here is a flat, fast bolt:
 
@@ -84,6 +85,7 @@ All ACEs live in the **Bullet 3D** category and target the `Bullet3DBehavior` be
 | Action | Parameters | Description |
 |---|---|---|
 | Launch Forward | (none) | (Re)launches along the host's current forward (-Z) direction at the current speed. A new bullet auto-launches, so use this to relaunch a repositioned or re-aimed shot. |
+| Set Gravity Direction | `x`, `y`, `z` (float) | Points gravity along a new 3D direction (normalized for you) - the arc bends that way from now on. `(0, -1, 0)` is normal down, `(0, 1, 0)` pulls up. |
 | Set Bullet 3D Speed | `value` (float) | Changes speed while keeping the current heading, applied to the live velocity right away - the way to re-speed a bullet already in flight. |
 | Set Speed | `value` (float) | Writes the speed field directly. Read at launch time, so it sets the speed used by the next Launch Forward (not a bullet already flying). |
 | Add To Speed | `amount` (float) | Adds to the speed field (used by the next launch). |

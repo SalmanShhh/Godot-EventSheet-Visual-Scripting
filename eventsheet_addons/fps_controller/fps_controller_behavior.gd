@@ -120,6 +120,12 @@ var wall_riding: bool = false
 var was_on_floor: bool = true
 var yaw: float = 0.0
 
+# Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it lives
+# here). Designed for vertical flips - DOWN and UP are exact (walk on ceilings); a
+# tilted direction still pulls and floors correctly but the run plane stays world-
+# horizontal (full wall-walking with camera roll is future work).
+## The direction gravity pulls (default straight down; (0, 1, 0) walks on ceilings).
+@export var gravity_direction: Vector3 = Vector3.DOWN
 func _head() -> Node3D:
 	return (host.get_node_or_null("Head") as Node3D) if host != null else null
 ## The host's capsule collider (first CollisionShape3D child holding a CapsuleShape3D).
@@ -140,10 +146,13 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if host == null:
 		return
+	# up_direction tracks the gravity direction, so is_on_floor() means "resting against
+	# whatever gravity presses you into" - the ceiling under inverted gravity.
+	host.up_direction = -_gravity_dir()
 	var on_floor := host.is_on_floor()
 	# Gravity, softened while riding a wall so the slide down reads as a glide.
 	if not on_floor:
-		host.velocity.y -= gravity * (wall_ride_gravity_scale if wall_riding else 1.0) * delta
+		host.velocity += _gravity_dir() * gravity * (wall_ride_gravity_scale if wall_riding else 1.0) * delta
 	sprint_held = Input.is_key_pressed(KEY_SHIFT) and not crouching
 	# Crouch is hold-to-crouch (Ctrl); standing back up is ceiling-checked and retries
 	# every frame the key is up, so releasing under a low tunnel pops you up at the exit.
@@ -208,7 +217,10 @@ func _physics_process(delta: float) -> void:
 func do_jump() -> void:
 	if host == null:
 		return
-	host.velocity.y = jump_velocity
+	# Replace the along-gravity component with the jump - frame-aware, so "up" is
+	# whatever direction gravity opposes. At default gravity this is velocity.y = jump.
+	host.velocity -= _gravity_dir() * host.velocity.dot(_gravity_dir())
+	host.velocity += -_gravity_dir() * jump_velocity
 	jumped.emit()
 
 ## @ace_action
@@ -420,7 +432,8 @@ func do_wall_jump() -> void:
 		stop_wall_ride()
 	push_x = wall_normal.x * wall_jump_push
 	push_z = wall_normal.z * wall_jump_push
-	host.velocity.y = jump_velocity
+	host.velocity -= _gravity_dir() * host.velocity.dot(_gravity_dir())
+	host.velocity += -_gravity_dir() * jump_velocity
 	wall_jumped.emit()
 
 ## @ace_action
@@ -489,6 +502,20 @@ func wall_normal_x() -> float:
 func wall_normal_z() -> float:
 	return host.get_wall_normal().z if host != null and host.is_on_wall() else 0.0
 
+## @ace_action
+## @ace_name("Set Gravity Direction")
+## @ace_category("FPS Controller")
+## @ace_description("Points gravity along a new 3D direction (normalized for you). (0, -1, 0) is normal down; (0, 1, 0) walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.set_gravity_direction({x}, {y}, {z})")
+func set_gravity_direction(x: float, y: float, z: float) -> void:
+	gravity_direction = Vector3(x, y, z)
+
+func _gravity_dir() -> Vector3:
+	# The normalized pull axis; a zeroed export falls back to plain down.
+	var pull := gravity_direction.normalized()
+	return pull if pull != Vector3.ZERO else Vector3.DOWN
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		add_look((event as InputEventMouseMotion).relative.x, (event as InputEventMouseMotion).relative.y)
@@ -524,15 +551,19 @@ func _can_stand_up() -> bool:
 		return true
 	var params := PhysicsTestMotionParameters3D.new()
 	params.from = host.global_transform
-	params.motion = Vector3.UP * (standing_height - minf(crouch_height, standing_height))
+	params.motion = -_gravity_dir() * (standing_height - minf(crouch_height, standing_height))
 	return not PhysicsServer3D.body_test_motion(host.get_rid(), params)
 
 ## @ace_hidden
 func _start_wall_ride() -> void:
 	wall_riding = true
 	wall_ride_time = 0.0
-	if host != null and host.velocity.y < 0.0:
-		host.velocity.y *= 0.25
+	if host != null:
+		# Soften the fall (keep 25% of the along-gravity speed) - frame-aware, so it
+		# reads the same under flipped gravity.
+		var fall := host.velocity.dot(_gravity_dir())
+		if fall > 0.0:
+			host.velocity -= _gravity_dir() * fall * 0.75
 	wall_ride_started.emit()
 
 # FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person. Movement tech included: crouch (hold Ctrl, capsule shrinks, ceiling-checked stand), crouch slide (crouch while sprinting), wall ride (hold forward against a wall mid-air), and wall jump (jump off any wall mid-air).
