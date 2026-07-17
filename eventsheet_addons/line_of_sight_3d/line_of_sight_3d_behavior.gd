@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/line_of_sight_3d/icon.svg")
 class_name LOS3DBehavior
 extends Node
+## A per-node eye for 3D: casts a physics ray from the host Node3D to a target and reports whether the view is clear, optionally gated by a sight range and a forward vision cone. Build guard vision, break-line-of-sight chases, auto-targeting towers, and clear-shot checks without writing a raycast by hand.
 
 ## The node this behavior acts on (its parent). Required host: Node3D.
 var host: Node3D = null

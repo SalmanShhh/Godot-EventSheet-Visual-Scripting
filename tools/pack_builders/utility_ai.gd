@@ -23,6 +23,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "UtilityBrain"
+	sheet.class_description = "Scoring-based AI decisions that replace brittle if/else state machines. Register candidate actions, give each a few considerations (world-state inputs mapped through response curves), feed inputs with Set Input, call Evaluate, and the highest-scoring action wins and fires triggers your sheet reacts to."
 	sheet.addon_category = "Utility AI"
 	sheet.addon_tags = PackedStringArray(["ai", "decision"])
 	var about: CommentRow = CommentRow.new()

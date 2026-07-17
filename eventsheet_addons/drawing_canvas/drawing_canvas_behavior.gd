@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/drawing_canvas/icon.svg")
 class_name DrawingCanvas
 extends Node
+## A texture your event sheet draws onto with verbs: lines, circles, rings, rects, cones, stamps, textured ribbons, and a raycast line-of-sight fan. Strokes can persist until cleared or auto-clear every frame, and the live texture is an expression you can feed to a TextureRect, shader, particle, or 3D Decal.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

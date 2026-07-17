@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "PlatformerMovement"
+	sheet.class_description = "Full jump-and-run movement for a CharacterBody2D in one drop: acceleration and friction, gravity with a terminal velocity, coyote time, jump buffering, variable jump height, multi-jump, wall slide, and wall jump. You only fire Jump on the button press, tune the feel in the Inspector, and react to triggers like On Jumped and On Landed."
 	sheet.addon_category = "Platformer"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["movement", "platformer"])

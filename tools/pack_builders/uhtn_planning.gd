@@ -28,6 +28,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "UHTNPlanner"
+	sheet.class_description = "An HTN planner steered by Utility AI: tasks decompose into ordered steps through methods with preconditions and backtracking, while response-curve scorers rank the methods at plan time against live world state. Author the whole network in the sheet, or drop a UHTNPlanResource (.tres) onto the Plan Resource slot and drive a hundred agents from one asset."
 	sheet.addon_category = CAT
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["ai", "planning", "utility"])

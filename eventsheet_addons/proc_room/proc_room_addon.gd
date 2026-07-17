@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/proc_room/icon.svg")
 class_name ProcRoomAddon
 extends Node
+## Seeded procedural room-map generation as the ProcRoom autoload: register weighted room types, call Generate with a seed string, and read back a tiered graph with one start room, branching depths, and a single boss room at the end. It draws nothing - you read stable room ids and paint your own map, and the same seed always rebuilds the exact same run.
 
 ## @ace_trigger
 ## @ace_name("On Graph Generated")

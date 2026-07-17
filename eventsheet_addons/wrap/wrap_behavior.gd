@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/wrap/icon.svg")
 class_name WrapBehavior
 extends Node
+## Asteroids-style screen wrapping: once the host is fully outside one edge of the screen (or a custom rectangle) it teleports to the opposite edge - fly off the right, glide in from the left. Per-axis toggles, world- or camera-space, and On Wrapped tells you which side was crossed.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

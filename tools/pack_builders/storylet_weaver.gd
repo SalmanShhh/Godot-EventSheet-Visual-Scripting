@@ -22,6 +22,7 @@ static func build() -> bool:
 	sheet.autoload_name = "Storylets"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "StoryletsAddon"
+	sheet.class_description = "A quality-based narrative engine, shipped as the Storylets autoload singleton. Register many small storylets that each carry their own requirements, then call Draw to get the best eligible one - adding a story beat is one more storylet, not surgery on a giant if/else web."
 	sheet.addon_category = "Storylets"
 	sheet.addon_tags = PackedStringArray(["narrative", "storylet"])
 	var about: CommentRow = CommentRow.new()

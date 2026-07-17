@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/car/icon.svg")
 class_name CarBehavior
 extends Node
+## Turns a plain CharacterBody2D into a drivable top-down arcade car: arrow keys accelerate, reverse, and steer the moment you press play. Every handling knob (top speed, acceleration, coast, turn rate, grip, drift) is readable and settable live for boost pads, ice, and damage models.
 
 ## The node this behavior acts on (its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null

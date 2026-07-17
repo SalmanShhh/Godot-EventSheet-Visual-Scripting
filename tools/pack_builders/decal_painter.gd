@@ -13,6 +13,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "DecalPainter"
+	sheet.class_description = "Sheet-driven Godot Decal nodes: stamp splats, scorch marks, and target rings onto world surfaces with lifetimes and a FIFO cap. Also keeps a generated blob shadow ground-snapped under any character and can project a Drawing Canvas live texture onto the 3D world."
 	sheet.addon_category = "Decal Painter"
 	sheet.addon_tags = PackedStringArray(["3d", "drawing", "visual"])
 	var about: CommentRow = CommentRow.new()

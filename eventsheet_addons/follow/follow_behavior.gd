@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/follow/icon.svg")
 class_name FollowBehavior
 extends Node
+## Makes the host Node2D trail another node every frame, either easing smoothly toward it or replaying its path with a delay. Built for pets, homing shots, camera dummies, and snake tails without hand-writing lerp code on every object.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

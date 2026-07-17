@@ -4,6 +4,7 @@
 @icon("res://eventsheet_addons/tween/icon.svg")
 class_name TweenBehavior
 extends Node
+## Wraps Godot's tween system in plain event rows: pick the feel once in the Inspector (transition curve and easing), then one action slides, scales, spins, or fades the host, with a trigger when it finishes. Compiles down to a normal create_tween() with zero plugin dependency.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "DragDropBehavior"
+	sheet.class_description = "Makes any 2D node something you can pick up, move, snap into place, and throw, with follow lag, axis locking, magnetism, break-distance auto-drop, and a measured throw velocity on release. Event-driven: you feed it a drag point from any source (mouse, touch, gamepad, AI) and it handles the rest."
 	sheet.addon_category = "Drag & Drop"
 	sheet.ace_expose_all_mode = "node"
 	# Scalar / Array / Dictionary state goes through sheet.variables. Vector2 /

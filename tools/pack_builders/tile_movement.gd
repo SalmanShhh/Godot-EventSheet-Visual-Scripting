@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "TileMovementBehavior"
+	sheet.class_description = "Grid-locked movement that steps the host exactly one tile per press and slides smoothly into place. Arrow keys drive it out of the box, Simulate Step feeds it directions from touch buttons or AI, and On Step Finished fires each time a new cell is reached."
 	sheet.addon_category = "Tile Movement"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

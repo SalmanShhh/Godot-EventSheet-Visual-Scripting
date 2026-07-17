@@ -4,6 +4,7 @@
 @icon("res://eventsheet_addons/nav_agent_3d/icon.svg")
 class_name NavAgent3D
 extends Node
+## Navmesh pathfinding for 3D with zero wiring: attach under a CharacterBody3D, keep a NavigationRegion3D in the scene, and call Find Path To - a NavigationAgent3D child is inserted and tuned for you and the agent walks the baked navmesh. The verbs mirror the 2D Platformer Pathfinding pack, so learning one pack teaches both.
 
 ## The node this behavior acts on (its parent). Required host: CharacterBody3D.
 var host: CharacterBody3D = null

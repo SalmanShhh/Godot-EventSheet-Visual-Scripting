@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/fps_controller/icon.svg")
 class_name FPSController
 extends Node
+## A complete first / third person character controller you attach under a CharacterBody3D: mouse look, WASD movement, sprint, jump, crouch, crouch slide, wall ride, and wall jump. Each move fires its own triggers, so a camera lean or a sound is one event row away.
 
 ## The node this behavior acts on (its parent). Required host: CharacterBody3D.
 var host: CharacterBody3D = null

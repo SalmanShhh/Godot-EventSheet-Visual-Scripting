@@ -13,6 +13,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "HudKitBehavior"
+	sheet.class_description = "Drives a whole menu or HUD by node name with zero signal wiring. Attach it to your UI root and set labels, fill bars, show panels, flip screens, and pop toasts by passing the name string, while every descendant Button auto-wires into one On Button Pressed trigger."
 	sheet.addon_category = "UI"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

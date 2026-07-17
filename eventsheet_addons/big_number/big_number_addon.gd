@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/big_number/icon.svg")
 class_name BigNumberAddon
 extends Node
+## Number formatting for idle and incremental games: turns raw values into compact strings like 1.25M, plus durations and percents, and ships a Decimal type that keeps growing past a float ceiling. A bank of pure calculators - it never stores your numbers or draws your HUD.
 
 # Short-scale suffixes: index i covers 10^(3i). Past Dc (1e33) the formatters fall to scientific.
 const SUFFIXES: Array = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"]

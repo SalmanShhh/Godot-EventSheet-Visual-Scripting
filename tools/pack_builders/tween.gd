@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "TweenBehavior"
+	sheet.class_description = "Wraps Godot's tween system in plain event rows: pick the feel once in the Inspector (transition curve and easing), then one action slides, scales, spins, or fades the host, with a trigger when it finishes. Compiles down to a normal create_tween() with zero plugin dependency."
 	sheet.addon_category = "Tween"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["motion", "juice"])

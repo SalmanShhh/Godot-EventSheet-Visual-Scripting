@@ -22,6 +22,7 @@ static func build() -> bool:
 	sheet.autoload_name = "ComboBox"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "ComboBoxAddon"
+	sheet.class_description = "A headless input-sequence detector: feed it named tokens with Press Input, it matches them against the sequences you register, and On Combo Matched fires the moment one completes. Works with any input source - keys, gamepad, swipes, even AI - because it reads no hardware itself."
 	sheet.addon_category = "ComboBox"
 	sheet.addon_tags = PackedStringArray(["input", "combo"])
 	sheet.variables = {

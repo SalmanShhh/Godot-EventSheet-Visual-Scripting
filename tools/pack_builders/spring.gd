@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "SpringBehavior"
+	sheet.class_description = "A bank of named springs on a Node2D: numbers that chase a target with real velocity, overshoot, and settle instead of snapping. One-line helpers spring the host's position, angle, and scale, so squash-and-stretch juice is a single row."
 	sheet.addon_category = "Spring"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["motion", "juice"])

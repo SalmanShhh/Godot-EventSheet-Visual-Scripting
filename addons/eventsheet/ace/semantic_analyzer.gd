@@ -56,8 +56,19 @@ func parse_source_metadata(script: Script) -> Dictionary:
 	var source: String = FileAccess.get_file_as_string(script.resource_path)
 	var pending_directives: Array[String] = []
 	var pending_export: bool = false
+	# The compiler emits the class description as a `##` block right AFTER `extends` (Godot's
+	# doc position); capture that contiguous block too, so generated packs get a provider
+	# description without hand-annotating. The first blank/non-doc line ends the block - a
+	# member's own doc (always separated by a blank line) is never swallowed.
+	var awaiting_class_doc: bool = false
+	var class_doc_lines: PackedStringArray = PackedStringArray()
 	for raw_line in source.split("\n"):
 		var stripped: String = raw_line.strip_edges()
+		if awaiting_class_doc:
+			if stripped.begins_with("## ") and not stripped.begins_with("## @"):
+				class_doc_lines.append(stripped.trim_prefix("##").strip_edges())
+				continue
+			awaiting_class_doc = false
 		if stripped.is_empty():
 			continue
 		if stripped.begins_with("class_name ") or stripped.begins_with("extends "):
@@ -97,6 +108,8 @@ func parse_source_metadata(script: Script) -> Dictionary:
 			pending_export = false
 			if stripped.begins_with("class_name "):
 				metadata["class_name"] = stripped.trim_prefix("class_name ").strip_edges()
+			elif stripped.begins_with("extends "):
+				awaiting_class_doc = true
 			continue
 		if stripped.begins_with("##"):
 			pending_directives.append(stripped.trim_prefix("##").strip_edges())
@@ -142,6 +155,8 @@ func parse_source_metadata(script: Script) -> Dictionary:
 		if not stripped.begins_with("@"):
 			pending_directives.clear()
 			pending_export = false
+	if str(metadata["class_description"]).is_empty() and not class_doc_lines.is_empty():
+		metadata["class_description"] = " ".join(class_doc_lines).strip_edges()
 	_merge_registrar_metadata(script, metadata)
 	if str(metadata["default_icon"]).is_empty():
 		metadata["default_icon"] = str(metadata.get("native_icon", ""))

@@ -15,6 +15,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "Juice3DBehavior"
+	sheet.class_description = "3D camera game feel on the active Camera3D: trauma-based shake, weapon recoil, head bob, jitter, a held lean, and FOV punch/zoom. Every effect is an additive offset that is removed and re-applied around whoever owns the camera, so mouse look and animations keep the real pose and your aim is never touched."
 	sheet.addon_category = "Juice 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["camera", "juice", "3d"])

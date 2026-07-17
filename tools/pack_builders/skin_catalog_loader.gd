@@ -14,6 +14,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "SkinCatalogLoader"
+	sheet.class_description = "The data-driven bridge for the SkinVault pack: attach to a node, drop a Skin Catalog resource (.tres) onto it in the Inspector, and on ready it loads the whole catalog (rarities and skins) into the SkinVault autoload. The Inspector flags the required slot with a warning until a resource is attached."
 	sheet.addon_category = "SkinVault"
 	sheet.addon_tags = PackedStringArray(["cosmetics", "data"])
 	var about: CommentRow = CommentRow.new()

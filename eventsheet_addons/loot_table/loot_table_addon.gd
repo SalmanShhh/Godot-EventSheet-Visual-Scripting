@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/loot_table/icon.svg")
 class_name LootBoxAddon
 extends Node
+## A weighted drop roller as the LootBox autoload: register named tables of weighted entries once, roll a table by id from any sheet, and react to what fell out through triggers. Balancing your drops becomes editing weight numbers, not rewiring events.
 
 ## @ace_trigger
 ## @ace_name("On Roll Result")

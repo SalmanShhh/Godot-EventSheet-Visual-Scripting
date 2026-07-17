@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/object_pool/icon.svg")
 class_name ObjectPoolAddon
 extends Node
+## The ObjectPool autoload singleton: reuses nodes instead of creating and freeing them, so spawn-heavy games stop hitching. Create Pool from a scene (with optional prewarm), Spawn hands out a ready-made node, and Despawn parks it hidden with processing off until the next Spawn.
 
 ## @ace_trigger
 ## @ace_name("On Spawned")

@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/skin_vault/icon.svg")
 class_name SkinVaultAddon
 extends Node
+## Cosmetic-ownership manager for gacha, loot-box, and unlockable-skin systems, registered as the SkinVault autoload singleton. It owns what the player has, the weighted roll, and the pity streak - you build the shop and popups, it tells you what was won and when.
 
 ## @ace_trigger
 ## @ace_name("On Skin Rolled")

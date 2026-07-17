@@ -4,6 +4,7 @@
 @icon("res://eventsheet_addons/spring/icon.svg")
 class_name SpringBehavior
 extends Node
+## A bank of named springs on a Node2D: numbers that chase a target with real velocity, overshoot, and settle instead of snapping. One-line helpers spring the host's position, angle, and scale, so squash-and-stretch juice is a single row.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

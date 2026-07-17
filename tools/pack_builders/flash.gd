@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "FlashBehavior"
+	sheet.class_description = "Blinks the host node's visibility on and off for a duration, then snaps it back to fully visible and fires On Flash Finished. The classic damage-flicker and invincibility-frames effect, with a single interval knob you can change live."
 	sheet.addon_category = "Flash"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

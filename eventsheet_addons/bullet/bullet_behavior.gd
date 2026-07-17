@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/bullet/icon.svg")
 class_name BulletBehavior
 extends Node
+## Fire-and-forget projectile movement for a Node2D: the host launches in the direction it is facing and keeps flying every frame. Tune speed, acceleration, and gravity, redirect or pause it live, and read how far it has flown from plain event rows.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

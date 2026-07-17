@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/state_machine/icon.svg")
 class_name StateMachineBehavior
 extends Node
+## Gives a node one named "what am I doing right now" state and a clean way to switch it. Set State changes it, Is In State branches on it, and On State Changed fires on every switch with the state you left and the state you entered.
 
 ## The node this behavior acts on (its parent). Required host: Node.
 var host: Node = null

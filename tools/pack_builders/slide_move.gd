@@ -15,6 +15,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "SlideMove"
+	sheet.class_description = "Grid movement where a tap sends the host sliding until it slams into a wall - the feel of Tomb of the Mask. Give it a grid size and a wall physics layer; it glides to the farthest open tile at a constant speed and snaps to the grid when it stops."
 	sheet.addon_category = "Slide Movement"
 	sheet.addon_tags = PackedStringArray(["grid", "movement"])
 	var about: CommentRow = CommentRow.new()

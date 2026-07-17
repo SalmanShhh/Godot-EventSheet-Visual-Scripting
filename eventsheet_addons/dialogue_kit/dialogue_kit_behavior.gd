@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 class_name DialogueKitBehavior
 extends Node
+## Runs typewriter conversations in your UI: queue lines with a speaker and text, start the dialogue, and it types each line into named labels while waiting for the player to advance. It finds your panel and labels by name, and fires triggers as lines and conversations start and finish.
 
 ## The node this behavior acts on (its parent). Required host: Node.
 var host: Node = null

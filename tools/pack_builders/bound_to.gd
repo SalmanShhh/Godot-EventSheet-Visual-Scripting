@@ -13,6 +13,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "BoundToBehavior"
+	sheet.class_description = "Keeps a Node2D inside the screen or a custom rectangle, clamped every physics frame. Bind by edge or by origin, and On Hit Bound fires once per press against each side for easy bump feedback."
 	sheet.addon_category = "Bound To"
 	sheet.addon_tags = PackedStringArray(["movement", "screen"])
 	var about: CommentRow = CommentRow.new()

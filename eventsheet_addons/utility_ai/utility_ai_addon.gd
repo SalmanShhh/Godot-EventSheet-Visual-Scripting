@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/utility_ai/icon.svg")
 class_name UtilityBrain
 extends Node
+## Scoring-based AI decisions that replace brittle if/else state machines. Register candidate actions, give each a few considerations (world-state inputs mapped through response curves), feed inputs with Set Input, call Evaluate, and the highest-scoring action wins and fires triggers your sheet reacts to.
 
 ## The node this behavior acts on (its parent). Required host: Node.
 var host: Node = null

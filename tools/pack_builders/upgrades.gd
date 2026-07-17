@@ -17,6 +17,7 @@ static func build() -> bool:
 	sheet.autoload_name = "Upgrades"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "UpgradesAddon"
+	sheet.class_description = "The stacking buff engine an incremental game is built from, shipped as the Upgrades autoload singleton. Register upgrades by string id with cost curves, max levels, per-level effects, and tags, then buy levels, read the stacked effect, and roll every tagged upgrade into one number."
 	sheet.addon_category = "Upgrades"
 	sheet.addon_tags = PackedStringArray(["incremental", "idle", "upgrade"])
 	var about: CommentRow = CommentRow.new()

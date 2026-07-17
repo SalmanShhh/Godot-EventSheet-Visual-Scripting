@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "DrawingCanvas"
+	sheet.class_description = "A texture your event sheet draws onto with verbs: lines, circles, rings, rects, cones, stamps, textured ribbons, and a raycast line-of-sight fan. Strokes can persist until cleared or auto-clear every frame, and the live texture is an expression you can feed to a TextureRect, shader, particle, or 3D Decal."
 	sheet.addon_category = "Drawing Canvas"
 	sheet.addon_tags = PackedStringArray(["drawing", "visual"])
 	var about: CommentRow = CommentRow.new()

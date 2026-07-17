@@ -23,6 +23,7 @@ static func build() -> bool:
 	sheet.autoload_name = "LootBox"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "LootBoxAddon"
+	sheet.class_description = "A weighted drop roller as the LootBox autoload: register named tables of weighted entries once, roll a table by id from any sheet, and react to what fell out through triggers. Balancing your drops becomes editing weight numbers, not rewiring events."
 	sheet.addon_category = "Loot"
 	sheet.addon_tags = PackedStringArray(["loot", "random"])
 	var about: CommentRow = CommentRow.new()

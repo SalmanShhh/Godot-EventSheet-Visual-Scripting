@@ -14,6 +14,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "WeaponKit"
+	sheet.class_description = "Turns any Node2D into a gun: a magazine and reserve pool, a fire-rate cooldown, single / auto / burst modes, and timed or instant reloads with optional auto-reload. Fire spends a round and fires On Fire - inside that trigger you spawn the bullet or cast the hitscan however your game likes."
 	sheet.addon_tags = PackedStringArray(["combat", "shooter"])
 	# The terse-provider showcase: one class-level category + the expose-all(node) opt-in
 	# replace per-member @ace_category/@ace_codegen_template/type-marker annotations.

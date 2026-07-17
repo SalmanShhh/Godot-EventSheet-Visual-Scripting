@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "DialogueKitBehavior"
+	sheet.class_description = "Runs typewriter conversations in your UI: queue lines with a speaker and text, start the dialogue, and it types each line into named labels while waiting for the player to advance. It finds your panel and labels by name, and fires triggers as lines and conversations start and finish."
 	sheet.addon_category = "UI"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

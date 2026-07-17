@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/tile_movement/icon.svg")
 class_name TileMovementBehavior
 extends Node
+## Grid-locked movement that steps the host exactly one tile per press and slides smoothly into place. Arrow keys drive it out of the box, Simulate Step feeds it directions from touch buttons or AI, and On Step Finished fires each time a new cell is reached.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

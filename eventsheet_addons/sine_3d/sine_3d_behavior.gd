@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/sine_3d/icon.svg")
 class_name Sine3DBehavior
 extends Node
+## Automatic wobble, bob, and sway for a Node3D: pick an axis (move along x, y, or z, or turn around Y) and a wave shape, and the host oscillates around wherever it started. Runs straight from the Inspector with no event rows, and can be paused, retuned, or restarted live from the sheet.
 
 ## The node this behavior acts on (its parent). Required host: Node3D.
 var host: Node3D = null

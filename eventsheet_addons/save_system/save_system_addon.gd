@@ -2,6 +2,7 @@
 @icon("res://eventsheet_addons/save_system/icon.svg")
 class_name SaveSystemAddon
 extends Node
+## Slot-based persistence as the SaveSystem autoload: every sheet saves and loads values by name, each slot is its own file, and the location, format, and encryption are set once in the Inspector. Save Game fires On Before Save so every sheet writes its own piece, and Load Game fires On After Load so every sheet reads it back.
 
 ## @ace_trigger
 ## @ace_name("On Save Written")

@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "StatForge"
+	sheet.class_description = "Real, modifiable stats for any node: every modifier that touches its numbers is a named buff that adds, multiplies, or overrides one stat, optionally tagged, sourced, and auto-expiring. Reading the computed result is always one expression - Stat Total."
 	sheet.addon_category = "StatForge"
 	sheet.addon_tags = PackedStringArray(["stats", "rpg", "data"])
 	var about: CommentRow = CommentRow.new()

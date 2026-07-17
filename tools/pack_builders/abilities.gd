@@ -15,6 +15,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "SimpleAbilitiesBehavior"
+	sheet.class_description = "A small ability manager for any node: named abilities with their own cooldowns, regenerating charges, tags, and custom data. Grant, activate, and query abilities from plain event rows, with triggers that report which ability fired."
 	sheet.addon_category = "Abilities"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

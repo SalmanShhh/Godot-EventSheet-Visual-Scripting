@@ -4,6 +4,7 @@
 @icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 class_name PlatformerPathfinding
 extends Node
+## Jump-aware navigation for 2D platformers: builds a jump graph from your TileMapLayer so an enemy can actually chase through the level - walking where walking works and jumping where a jump is needed. Attach as a sibling of PlatformerMovement, build the graph once, and call Find Path To; jump reach is derived from the movement pack's real physics and the agent is driven through its ai_move_axis seam.
 
 ## The node this behavior acts on (its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null

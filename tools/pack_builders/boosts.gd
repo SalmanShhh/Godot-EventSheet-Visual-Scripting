@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.autoload_name = "Boost"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "BoostAddon"
+	sheet.class_description = "Temporary, timed multipliers that count themselves down - the golden-cookie layer of an idle game. Start a named boost with a multiplier and a duration, fold Total Multiplier into your production, and On Boost Expired fires the instant it runs out."
 	sheet.addon_category = "Boosts"
 	sheet.addon_tags = PackedStringArray(["incremental", "idle", "boost"])
 	var about: CommentRow = CommentRow.new()

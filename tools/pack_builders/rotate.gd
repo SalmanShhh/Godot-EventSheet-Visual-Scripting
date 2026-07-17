@@ -13,6 +13,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "RotateBehavior"
+	sheet.class_description = "Constant rotation for the host node: spins at Speed in degrees per second, optionally ramping by Acceleration, with one Rotation Type knob covering a 2D node's rotation and a 3D node's X, Y, or Z axis. Previewable in the editor via Tools > Preview Behaviors on Selected Node, no game run needed."
 	sheet.addon_category = "Rotate"
 	sheet.addon_tags = PackedStringArray(["movement", "visual"])
 	var about: CommentRow = CommentRow.new()

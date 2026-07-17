@@ -13,6 +13,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "SceneFlowBehavior"
+	sheet.class_description = "Polished scene changes from one node: fade to another scene, fade-reload the current one, jump or reload instantly, and quit the game. The fade overlay parents itself to the tree root instead of the dying scene, so the transition survives the swap instead of vanishing halfway through."
 	sheet.addon_category = "Scenes"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

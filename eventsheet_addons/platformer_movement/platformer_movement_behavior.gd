@@ -4,6 +4,7 @@
 @icon("res://eventsheet_addons/platformer_movement/icon.svg")
 class_name PlatformerMovement
 extends Node
+## Full jump-and-run movement for a CharacterBody2D in one drop: acceleration and friction, gravity with a terminal velocity, coyote time, jump buffering, variable jump height, multi-jump, wall slide, and wall jump. You only fire Jump on the button press, tune the feel in the Inspector, and react to triggers like On Jumped and On Landed.
 
 ## The node this behavior acts on (its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null

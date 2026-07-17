@@ -15,6 +15,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "LootTableLoader"
+	sheet.class_description = "The data-driven bridge for the Loot Table pack: attach it to a node, drop a LootTableResource (.tres) onto its slot in the Inspector, and on ready it loads that table into the LootBox autoload. The Scene dock warns until a resource is attached, so you cannot forget it."
 	sheet.addon_category = "Loot"
 	sheet.addon_tags = PackedStringArray(["loot", "data"])
 	var about: CommentRow = CommentRow.new()

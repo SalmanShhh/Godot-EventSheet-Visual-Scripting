@@ -4,6 +4,7 @@
 @icon("res://eventsheet_addons/background_runner/icon.svg")
 class_name BackgroundRunner
 extends Node
+## Runs a pure function on a worker thread so heavy computation never hitches the game. Call Run In Background with a callable, keep playing at full frame rate, and On Done hands the result back on the main thread.
 
 ## The node this behavior acts on (its parent). Required host: Node.
 var host: Node = null

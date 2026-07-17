@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/health/icon.svg")
 class_name SimpleHealthBehavior
 extends Node
+## Gives any Node2D a real health model: current health seeded from a max, damage and healing, a death latch, a resistance multiplier, and named shield/armour pools that intercept damage in priority order. Triggers fire on damage, death, and pool breaks so your sheet reacts without writing GDScript.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

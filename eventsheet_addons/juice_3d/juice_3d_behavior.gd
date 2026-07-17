@@ -4,6 +4,7 @@
 @icon("res://eventsheet_addons/juice_3d/icon.svg")
 class_name Juice3DBehavior
 extends Node
+## 3D camera game feel on the active Camera3D: trauma-based shake, weapon recoil, head bob, jitter, a held lean, and FOV punch/zoom. Every effect is an additive offset that is removed and re-applied around whoever owns the camera, so mouse look and animations keep the real pose and your aim is never touched.
 
 ## The node this behavior acts on (its parent). Required host: Node3D.
 var host: Node3D = null

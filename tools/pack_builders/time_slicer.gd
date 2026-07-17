@@ -15,6 +15,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "TimeSlicerBehavior"
+	sheet.class_description = "A managed work queue that spreads heavy work across frames: enqueue items in one event and the slicer drains them a slice at a time, firing On Process Item for each until the per-frame budget runs out. Spawning 500 enemies or carving a dungeon no longer freezes the frame."
 	sheet.addon_category = "Time Slicer"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["performance", "scheduling"])

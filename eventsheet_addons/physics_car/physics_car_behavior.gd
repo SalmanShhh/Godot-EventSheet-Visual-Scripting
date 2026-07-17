@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/physics_car/icon.svg")
 class_name PhysicsCar
 extends Node
+## Turns a RigidBody2D into a drivable arcade car: throttle, brake, and steering forces plus lateral grip and drift detection on top of the real physics body, so collisions and pushes stay fully physical. Drive it with Simulate Control, feed it analog Set Throttle / Set Steer values, or let it steer itself with Drive Toward Position.
 
 ## The node this behavior acts on (its parent). Required host: RigidBody2D.
 var host: RigidBody2D = null

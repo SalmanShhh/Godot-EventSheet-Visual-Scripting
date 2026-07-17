@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "FollowBehavior"
+	sheet.class_description = "Makes the host Node2D trail another node every frame, either easing smoothly toward it or replaying its path with a delay. Built for pets, homing shots, camera dummies, and snake tails without hand-writing lerp code on every object."
 	sheet.addon_category = "Follow"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

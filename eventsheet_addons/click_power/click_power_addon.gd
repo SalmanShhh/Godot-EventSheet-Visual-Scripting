@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/click_power/icon.svg")
 class_name ClickPowerAddon
 extends Node
+## The manual-tap income at the heart of a clicker: Do Click works out what a tap earns (base, flat bonus, a share of production, crits) and fires On Click and On Crit. It computes what a tap is worth - you read Last Click and add it to your own wallet.
 
 ## @ace_trigger
 ## @ace_name("On Click")

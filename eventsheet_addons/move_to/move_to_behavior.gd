@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/move_to/icon.svg")
 class_name MoveToBehavior
 extends Node
+## Glides the host Node2D to a point at a steady speed, walks queued waypoints in order, and fires On Arrived at the last stop. Smooth point-to-point movement for enemies, pickups, and cursor tokens without writing tween code.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

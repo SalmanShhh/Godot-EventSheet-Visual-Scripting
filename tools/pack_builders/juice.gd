@@ -17,6 +17,7 @@ static func build() -> bool:
 	# CanvasItem is the shared base of Node2D and Control, so Squash & Stretch works on sprites AND UI.
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "JuiceBehavior"
+	sheet.class_description = "Game feel from event rows: screenshake, recoil, head bob, zoom, squash and stretch, slowmo, and hitstop in one behavior. Camera effects find the active Camera2D on their own, and every effect is fire-and-forget with an On Finished trigger so you can chain the next beat."
 	sheet.addon_category = "Juice"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["camera", "juice"])

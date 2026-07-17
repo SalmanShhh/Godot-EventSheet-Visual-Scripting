@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 class_name StoryletsAddon
 extends Node
+## A quality-based narrative engine, shipped as the Storylets autoload singleton. Register many small storylets that each carry their own requirements, then call Draw to get the best eligible one - adding a story beat is one more storylet, not surgery on a giant if/else web.
 
 ## @ace_trigger
 ## @ace_name("On Storylet Drawn")

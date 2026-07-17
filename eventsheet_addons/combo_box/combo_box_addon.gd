@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/combo_box/icon.svg")
 class_name ComboBoxAddon
 extends Node
+## A headless input-sequence detector: feed it named tokens with Press Input, it matches them against the sequences you register, and On Combo Matched fires the moment one completes. Works with any input source - keys, gamepad, swipes, even AI - because it reads no hardware itself.
 
 ## @ace_trigger
 ## @ace_name("On Combo Matched")

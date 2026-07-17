@@ -4,6 +4,7 @@
 @icon("res://eventsheet_addons/htn_agent/icon.svg")
 class_name HTNAgent
 extends Node
+## A small hierarchical task planner on any Node2D: describe goals as compound tasks that break down into primitive steps through methods with preconditions and utility scores. Feed it world-state facts, request a plan, and run the ordered task list it hands back - re-plan when the situation changes instead of rewriting a state machine.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

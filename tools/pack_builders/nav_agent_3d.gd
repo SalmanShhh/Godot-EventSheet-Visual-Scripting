@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CharacterBody3D"
 	sheet.custom_class_name = "NavAgent3D"
+	sheet.class_description = "Navmesh pathfinding for 3D with zero wiring: attach under a CharacterBody3D, keep a NavigationRegion3D in the scene, and call Find Path To - a NavigationAgent3D child is inserted and tuned for you and the agent walks the baked navmesh. The verbs mirror the 2D Platformer Pathfinding pack, so learning one pack teaches both."
 	sheet.addon_category = "Nav Agent 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["movement", "3d", "ai", "pathfinding"])

@@ -13,6 +13,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "MoveToBehavior"
+	sheet.class_description = "Glides the host Node2D to a point at a steady speed, walks queued waypoints in order, and fires On Arrived at the last stop. Smooth point-to-point movement for enemies, pickups, and cursor tokens without writing tween code."
 	sheet.addon_category = "Move To"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

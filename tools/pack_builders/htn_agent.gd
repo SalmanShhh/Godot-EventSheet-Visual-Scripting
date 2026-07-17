@@ -22,6 +22,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "HTNAgent"
+	sheet.class_description = "A small hierarchical task planner on any Node2D: describe goals as compound tasks that break down into primitive steps through methods with preconditions and utility scores. Feed it world-state facts, request a plan, and run the ordered task list it hands back - re-plan when the situation changes instead of rewriting a state machine."
 	sheet.addon_category = "HTN"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["ai", "planning"])

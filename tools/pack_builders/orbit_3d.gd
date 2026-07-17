@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "Orbit3DBehavior"
+	sheet.class_description = "Sweeps a Node3D around a center point in the horizontal XZ plane every frame, keeping its height level like a moon over a planet. Set the radius and speed, retarget the center to move the whole ring, and retune everything live from the sheet."
 	sheet.addon_category = "Orbit 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

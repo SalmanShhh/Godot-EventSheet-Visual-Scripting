@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "VirtualCursor"
+	sheet.class_description = "Turns a CharacterBody2D into an input-agnostic pointer: it accelerates and decelerates, bumps into solids, bounces off walls, snaps to targets with a homing magnet, stays inside a play area, reports what it is hovering, and fires named interact buttons. Drive it with the mouse, keys, an analog axis, or scripted moves - it is any thing you steer, not the OS pointer."
 	sheet.addon_category = "Virtual Cursor"
 	sheet.ace_expose_all_mode = "node"
 	# Scalar / Array / Dictionary state via sheet.variables. The exported int enums

@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/upgrades/icon.svg")
 class_name UpgradesAddon
 extends Node
+## The stacking buff engine an incremental game is built from, shipped as the Upgrades autoload singleton. Register upgrades by string id with cost curves, max levels, per-level effects, and tags, then buy levels, read the stacked effect, and roll every tagged upgrade into one number.
 
 ## @ace_trigger
 ## @ace_name("On Upgrade Bought")

@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "SimpleHealthBehavior"
+	sheet.class_description = "Gives any Node2D a real health model: current health seeded from a max, damage and healing, a death latch, a resistance multiplier, and named shield/armour pools that intercept damage in priority order. Triggers fire on damage, death, and pool breaks so your sheet reacts without writing GDScript."
 	sheet.addon_category = "Health"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

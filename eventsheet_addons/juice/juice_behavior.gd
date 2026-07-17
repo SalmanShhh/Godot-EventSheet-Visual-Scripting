@@ -4,6 +4,7 @@
 @icon("res://eventsheet_addons/juice/icon.svg")
 class_name JuiceBehavior
 extends Node
+## Game feel from event rows: screenshake, recoil, head bob, zoom, squash and stretch, slowmo, and hitstop in one behavior. Camera effects find the active Camera2D on their own, and every effect is fire-and-forget with an On Finished trigger so you can chain the next beat.
 
 ## The node this behavior acts on (its parent). Required host: CanvasItem.
 var host: CanvasItem = null

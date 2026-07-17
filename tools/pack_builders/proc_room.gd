@@ -20,6 +20,7 @@ static func build() -> bool:
 	sheet.autoload_name = "ProcRoom"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "ProcRoomAddon"
+	sheet.class_description = "Seeded procedural room-map generation as the ProcRoom autoload: register weighted room types, call Generate with a seed string, and read back a tiered graph with one start room, branching depths, and a single boss room at the end. It draws nothing - you read stable room ids and paint your own map, and the same seed always rebuilds the exact same run."
 	sheet.addon_category = "ProcRoom"
 	sheet.addon_tags = PackedStringArray(["procedural", "roguelite"])
 	var about: CommentRow = CommentRow.new()

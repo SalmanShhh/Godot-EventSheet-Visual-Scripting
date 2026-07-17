@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/stat_forge/icon.svg")
 class_name StatForge
 extends Node
+## Real, modifiable stats for any node: every modifier that touches its numbers is a named buff that adds, multiplies, or overrides one stat, optionally tagged, sourced, and auto-expiring. Reading the computed result is always one expression - Stat Total.
 
 ## The node this behavior acts on (its parent). Required host: Node.
 var host: Node = null

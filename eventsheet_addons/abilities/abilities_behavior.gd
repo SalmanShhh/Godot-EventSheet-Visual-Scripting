@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/abilities/icon.svg")
 class_name SimpleAbilitiesBehavior
 extends Node
+## A small ability manager for any node: named abilities with their own cooldowns, regenerating charges, tags, and custom data. Grant, activate, and query abilities from plain event rows, with triggers that report which ability fired.
 
 ## The node this behavior acts on (its parent). Required host: Node.
 var host: Node = null

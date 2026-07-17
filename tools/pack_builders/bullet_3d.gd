@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "Bullet3DBehavior"
+	sheet.class_description = "Flies a Node3D forward every frame like a projectile: it launches along the host forward direction, then gravity bends the path into an arc. Tune speed and gravity in the Inspector or live from the sheet, and relaunch, retarget, or freeze a shot while the game runs."
 	sheet.addon_category = "Bullet 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

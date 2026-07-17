@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "WrapBehavior"
+	sheet.class_description = "Asteroids-style screen wrapping: once the host is fully outside one edge of the screen (or a custom rectangle) it teleports to the opposite edge - fly off the right, glide in from the left. Per-axis toggles, world- or camera-space, and On Wrapped tells you which side was crossed."
 	sheet.addon_category = "Wrap"
 	sheet.addon_tags = PackedStringArray(["movement", "screen"])
 	var about: CommentRow = CommentRow.new()

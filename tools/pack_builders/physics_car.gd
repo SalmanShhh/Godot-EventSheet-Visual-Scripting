@@ -20,6 +20,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "RigidBody2D"
 	sheet.custom_class_name = "PhysicsCar"
+	sheet.class_description = "Turns a RigidBody2D into a drivable arcade car: throttle, brake, and steering forces plus lateral grip and drift detection on top of the real physics body, so collisions and pushes stay fully physical. Drive it with Simulate Control, feed it analog Set Throttle / Set Steer values, or let it steer itself with Drive Toward Position."
 	sheet.addon_category = "Physics Car"
 	sheet.addon_tags = PackedStringArray(["vehicle", "physics"])
 	var about: CommentRow = CommentRow.new()

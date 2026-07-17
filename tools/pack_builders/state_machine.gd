@@ -13,6 +13,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "StateMachineBehavior"
+	sheet.class_description = "Gives a node one named \"what am I doing right now\" state and a clean way to switch it. Set State changes it, Is In State branches on it, and On State Changed fires on every switch with the state you left and the state you entered."
 	sheet.addon_category = "State Machine"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {"state": {"type": "String", "default": "idle", "exported": true, "description": "The machine's current state name; change it with Set State."}}

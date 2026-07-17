@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/sine/icon.svg")
 class_name SineBehavior
 extends Node
+## Makes a Node2D oscillate on its own: pick what the wave drives (position, scale, angle, or opacity), how far it swings, how long a cycle takes, and the wave shape (sine, triangle, sawtooth, or square). The fastest way to add the small, endless motion that makes a scene feel alive - no timeline or keyframes.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

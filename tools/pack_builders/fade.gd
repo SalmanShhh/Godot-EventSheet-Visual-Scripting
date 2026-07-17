@@ -15,6 +15,7 @@ static func build() -> bool:
 	# CanvasItem is the shared base of Node2D and Control, so fading works on sprites AND UI.
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "FadeBehavior"
+	sheet.class_description = "Fades any sprite or UI node in and out without tween code. Set fade-in, hold, and fade-out times in the Inspector and it runs the whole sequence on its own, optionally freeing the node when done and firing a trigger at each stage."
 	sheet.addon_category = "Fade"
 	sheet.addon_tags = PackedStringArray(["fade", "juice"])
 	var about: CommentRow = CommentRow.new()

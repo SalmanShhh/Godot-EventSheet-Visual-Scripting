@@ -18,6 +18,7 @@ static func build() -> bool:
 	sheet.autoload_name = "AdvancedRandom"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "AdvancedRandomAddon"
+	sheet.class_description = "A randomness toolkit driven from event rows: seeded generators, dice, bell curves, Perlin/Simplex noise, shuffle bags, weighted picks, and plain-language chance conditions. Ships as the AdvancedRandom autoload, so one shared seed can replay an entire run."
 	sheet.addon_tags = PackedStringArray(["random", "noise", "procedural"])
 	sheet.variables = {
 		"seed_on_start": {"type": "int", "default": 0, "exported": true, "description": "Seed applied on _ready - 0 gives a fresh random seed each run; any other value makes runs reproducible.",

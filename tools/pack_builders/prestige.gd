@@ -18,6 +18,7 @@ static func build() -> bool:
 	sheet.autoload_name = "Prestige"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "PrestigeAddon"
+	sheet.class_description = "The reset-for-a-permanent-multiplier loop of incremental games as the Prestige autoload: Track Earned feeds the run, the square-root chip formula previews the gain, and Do Prestige banks the points, raises the level, and clears the run total. It only tracks the prestige currency - resetting your wallets and generators stays your job in the same event."
 	sheet.addon_category = "Prestige"
 	sheet.addon_tags = PackedStringArray(["incremental", "idle", "prestige"])
 	var about: CommentRow = CommentRow.new()

@@ -15,6 +15,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CharacterBody3D"
 	sheet.custom_class_name = "FPSController"
+	sheet.class_description = "A complete first / third person character controller you attach under a CharacterBody3D: mouse look, WASD movement, sprint, jump, crouch, crouch slide, wall ride, and wall jump. Each move fires its own triggers, so a camera lean or a sound is one event row away."
 	sheet.addon_category = "FPS Controller"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

@@ -4,6 +4,7 @@
 @icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 class_name UHTNPlanner
 extends Node
+## An HTN planner steered by Utility AI: tasks decompose into ordered steps through methods with preconditions and backtracking, while response-curve scorers rank the methods at plan time against live world state. Author the whole network in the sheet, or drop a UHTNPlanResource (.tres) onto the Plan Resource slot and drive a hundred agents from one asset.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/bound_to/icon.svg")
 class_name BoundToBehavior
 extends Node
+## Keeps a Node2D inside the screen or a custom rectangle, clamped every physics frame. Bind by edge or by origin, and On Hit Bound fires once per press against each side for easy bump feedback.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

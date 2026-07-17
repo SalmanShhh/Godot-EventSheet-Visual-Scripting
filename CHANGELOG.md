@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - every behaviour pack now describes itself (freshness sweep, part 1)
+
+- **All 74 packs ship a class description**: 65 builders gained a one-to-two-sentence
+  `class_description` (condensed from each pack's guide), emitted as the Godot `##` doc comment
+  after `extends` - so hovering the class in the script editor explains the pack, and
+- **the ACE picker now shows pack descriptions too**: the semantic analyzer learned to read the
+  `##` block the compiler emits AFTER `extends` (Godot's doc position) as the provider
+  description - generated packs previously surfaced an empty one. Member docs stay untouched
+  (the first blank line ends the class block).
+
 ### Added - two internal specs: creator journeys and the public-release bar
 
 - **SPEC-editor-tools-and-custom-resources.md** - four beginner-friendly slices for building

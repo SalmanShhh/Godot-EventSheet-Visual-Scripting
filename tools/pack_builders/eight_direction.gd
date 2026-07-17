@@ -12,6 +12,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "EightDirectionMovement"
+	sheet.class_description = "Top-down eight-way movement with nothing to wire: attach under a CharacterBody2D and it reads the built-in ui_left/right/up/down actions every physics frame and moves the host. Arrow keys work the moment you press play; set, nudge, or read the move speed from the sheet."
 	sheet.addon_category = "Eight Direction"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

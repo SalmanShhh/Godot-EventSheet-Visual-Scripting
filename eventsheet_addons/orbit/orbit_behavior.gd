@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/orbit/icon.svg")
 class_name OrbitBehavior
 extends Node
+## Sweeps a Node2D around a center point every frame: attach to a moon, shield orb, or spinning hazard and it circles on a radius (or tilted ellipse) at a speed you can change live. The center is captured from wherever the node starts, and the node can face the direction it is travelling.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

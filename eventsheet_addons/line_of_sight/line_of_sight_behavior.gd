@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/line_of_sight/icon.svg")
 class_name LOSBehavior
 extends Node
+## Turns a Node2D into a sensor that answers whether it can actually see a target: it checks distance against sight range, a vision cone around the host's facing, then fires a physics raycast to make sure no wall is in the way. One pair of eyes per node - perfect for guards, turrets, and cameras.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

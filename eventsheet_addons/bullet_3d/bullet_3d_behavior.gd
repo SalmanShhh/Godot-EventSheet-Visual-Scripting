@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/bullet_3d/icon.svg")
 class_name Bullet3DBehavior
 extends Node
+## Flies a Node3D forward every frame like a projectile: it launches along the host forward direction, then gravity bends the path into an arc. Tune speed and gravity in the Inspector or live from the sheet, and relaunch, retarget, or freeze a shot while the game runs.
 
 ## The node this behavior acts on (its parent). Required host: Node3D.
 var host: Node3D = null

@@ -2,6 +2,7 @@
 @icon("res://eventsheet_addons/advanced_random/icon.svg")
 class_name AdvancedRandomAddon
 extends Node
+## A randomness toolkit driven from event rows: seeded generators, dice, bell curves, Perlin/Simplex noise, shuffle bags, weighted picks, and plain-language chance conditions. Ships as the AdvancedRandom autoload, so one shared seed can replay an entire run.
 
 ## Seed applied on _ready (0 = a fresh random seed each run; any other value = reproducible runs).
 @export_group("Advanced Random")

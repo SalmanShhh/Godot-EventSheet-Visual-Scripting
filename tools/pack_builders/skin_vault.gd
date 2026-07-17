@@ -20,6 +20,7 @@ static func build() -> bool:
 	sheet.autoload_name = "SkinVault"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "SkinVaultAddon"
+	sheet.class_description = "Cosmetic-ownership manager for gacha, loot-box, and unlockable-skin systems, registered as the SkinVault autoload singleton. It owns what the player has, the weighted roll, and the pity streak - you build the shop and popups, it tells you what was won and when."
 	sheet.addon_category = "SkinVault"
 	sheet.addon_tags = PackedStringArray(["cosmetics", "gacha"])
 	sheet.variables = {

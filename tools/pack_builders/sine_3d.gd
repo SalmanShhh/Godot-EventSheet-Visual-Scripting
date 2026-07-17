@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "Sine3DBehavior"
+	sheet.class_description = "Automatic wobble, bob, and sway for a Node3D: pick an axis (move along x, y, or z, or turn around Y) and a wave shape, and the host oscillates around wherever it started. Runs straight from the Inspector with no event rows, and can be paused, retuned, or restarted live from the sheet."
 	sheet.addon_category = "Sine 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

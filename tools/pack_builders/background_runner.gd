@@ -17,6 +17,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "BackgroundRunner"
+	sheet.class_description = "Runs a pure function on a worker thread so heavy computation never hitches the game. Call Run In Background with a callable, keep playing at full frame rate, and On Done hands the result back on the main thread."
 	sheet.addon_category = "Background"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["performance", "threading"])

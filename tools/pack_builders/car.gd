@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "CarBehavior"
+	sheet.class_description = "Turns a plain CharacterBody2D into a drivable top-down arcade car: arrow keys accelerate, reverse, and steer the moment you press play. Every handling knob (top speed, acceleration, coast, turn rate, grip, drift) is readable and settable live for boost pads, ice, and damage models."
 	sheet.addon_category = "Car"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

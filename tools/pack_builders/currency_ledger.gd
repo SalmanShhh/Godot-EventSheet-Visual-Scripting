@@ -20,6 +20,7 @@ static func build() -> bool:
 	sheet.autoload_name = "CurrencyLedger"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "CurrencyLedgerAddon"
+	sheet.class_description = "A data-driven economy: register named currencies (gold, gems, energy, reputation), then earn and spend them with single rows. It holds the numbers, enforces caps and floors, and fires a trigger on every meaningful change so your HUD and unlocks react instead of polling."
 	sheet.addon_category = "Currency"
 	sheet.addon_tags = PackedStringArray(["economy", "currency"])
 	var about: CommentRow = CommentRow.new()

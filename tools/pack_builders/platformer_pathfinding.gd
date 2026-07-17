@@ -16,6 +16,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "CharacterBody2D"
 	sheet.custom_class_name = "PlatformerPathfinding"
+	sheet.class_description = "Jump-aware navigation for 2D platformers: builds a jump graph from your TileMapLayer so an enemy can actually chase through the level - walking where walking works and jumping where a jump is needed. Attach as a sibling of PlatformerMovement, build the graph once, and call Find Path To; jump reach is derived from the movement pack's real physics and the agent is driven through its ai_move_axis seam."
 	sheet.addon_category = "Platformer Pathfinding"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["movement", "platformer", "ai", "pathfinding"])

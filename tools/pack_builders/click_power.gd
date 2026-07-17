@@ -17,6 +17,7 @@ static func build() -> bool:
 	sheet.autoload_name = "ClickPower"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "ClickPowerAddon"
+	sheet.class_description = "The manual-tap income at the heart of a clicker: Do Click works out what a tap earns (base, flat bonus, a share of production, crits) and fires On Click and On Crit. It computes what a tap is worth - you read Last Click and add it to your own wallet."
 	sheet.addon_category = "Click Power"
 	sheet.addon_tags = PackedStringArray(["incremental", "idle", "clicker"])
 	var about: CommentRow = CommentRow.new()

@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/move_to_3d/icon.svg")
 class_name MoveTo3DBehavior
 extends Node
+## Point-to-point movement for any Node3D: hand it Vector3 targets and it glides the host straight toward each one at a steady speed, popping waypoints off a queue and firing On Arrived at the last stop. Attach under a drone, elevator, pickup, or camera rig and tune the pace with the single max_speed knob.
 
 ## The node this behavior acts on (its parent). Required host: Node3D.
 var host: Node3D = null

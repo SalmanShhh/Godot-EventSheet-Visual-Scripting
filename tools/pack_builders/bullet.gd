@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "BulletBehavior"
+	sheet.class_description = "Fire-and-forget projectile movement for a Node2D: the host launches in the direction it is facing and keeps flying every frame. Tune speed, acceleration, and gravity, redirect or pause it live, and read how far it has flown from plain event rows."
 	sheet.addon_category = "Bullet"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

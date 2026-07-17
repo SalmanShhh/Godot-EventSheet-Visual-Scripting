@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/prestige/icon.svg")
 class_name PrestigeAddon
 extends Node
+## The reset-for-a-permanent-multiplier loop of incremental games as the Prestige autoload: Track Earned feeds the run, the square-root chip formula previews the gain, and Do Prestige banks the points, raises the level, and clears the run total. It only tracks the prestige currency - resetting your wallets and generators stays your job in the same event.
 
 ## @ace_trigger
 ## @ace_name("On Prestige")

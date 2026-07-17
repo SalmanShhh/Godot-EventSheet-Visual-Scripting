@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/boosts/icon.svg")
 class_name BoostAddon
 extends Node
+## Temporary, timed multipliers that count themselves down - the golden-cookie layer of an idle game. Start a named boost with a multiplier and a duration, fold Total Multiplier into your production, and On Boost Expired fires the instant it runs out.
 
 ## @ace_trigger
 ## @ace_name("On Boost Started")

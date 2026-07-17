@@ -10,6 +10,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node2D"
 	sheet.custom_class_name = "LOSBehavior"
+	sheet.class_description = "Turns a Node2D into a sensor that answers whether it can actually see a target: it checks distance against sight range, a vision cone around the host's facing, then fires a physics raycast to make sure no wall is in the way. One pair of eyes per node - perfect for guards, turrets, and cameras."
 	sheet.addon_category = "Line Of Sight"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

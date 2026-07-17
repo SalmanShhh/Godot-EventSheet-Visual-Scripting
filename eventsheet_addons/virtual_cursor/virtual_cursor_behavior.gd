@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 class_name VirtualCursor
 extends Node
+## Turns a CharacterBody2D into an input-agnostic pointer: it accelerates and decelerates, bumps into solids, bounces off walls, snaps to targets with a homing magnet, stays inside a play area, reports what it is hovering, and fires named interact buttons. Drive it with the mouse, keys, an analog axis, or scripted moves - it is any thing you steer, not the OS pointer.
 
 ## The node this behavior acts on (its parent). Required host: CharacterBody2D.
 var host: CharacterBody2D = null

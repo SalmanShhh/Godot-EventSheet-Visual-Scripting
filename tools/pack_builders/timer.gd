@@ -11,6 +11,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "TimerBehavior"
+	sheet.class_description = "A private countdown clock on any node: set the seconds, start it, and On Timer fires when it reaches zero. Turn on repeating for a fixed metronome beat, or leave it off to fire once and stop."
 	sheet.addon_category = "Timer"
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {

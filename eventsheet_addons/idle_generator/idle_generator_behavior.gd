@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/idle_generator/icon.svg")
 class_name IdleGeneratorBehavior
 extends Node
+## A buy-more-to-make-more producer for incremental games - the cursor, farm, or factory you buy in bulk. Costs grow on a geometric curve with exact closed-form bulk buying (Buy One / Buy Amount / Buy Max), a continuous output per second, and an optional fill-and-collect cycle mode; it records what a buy cost but spending from your wallet stays your sheet's job.
 
 ## The node this behavior acts on (its parent). Required host: Node.
 var host: Node = null

@@ -19,6 +19,7 @@ static func build() -> bool:
 	sheet.autoload_name = "SaveSystem"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "SaveSystemAddon"
+	sheet.class_description = "Slot-based persistence as the SaveSystem autoload: every sheet saves and loads values by name, each slot is its own file, and the location, format, and encryption are set once in the Inspector. Save Game fires On Before Save so every sheet writes its own piece, and Load Game fires On After Load so every sheet reads it back."
 	sheet.addon_tags = PackedStringArray(["persistence"])
 	sheet.variables = {
 		"slot": {"type": "int", "default": 0, "exported": true,

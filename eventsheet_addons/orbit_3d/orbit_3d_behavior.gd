@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/orbit_3d/icon.svg")
 class_name Orbit3DBehavior
 extends Node
+## Sweeps a Node3D around a center point in the horizontal XZ plane every frame, keeping its height level like a moon over a planet. Set the radius and speed, retarget the center to move the whole ring, and retune everything live from the sheet.
 
 ## The node this behavior acts on (its parent). Required host: Node3D.
 var host: Node3D = null

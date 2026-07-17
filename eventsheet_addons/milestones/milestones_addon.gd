@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/milestones/icon.svg")
 class_name MilestonesAddon
 extends Node
+## A threshold-achievement engine for incremental games, shipped as the Milestones autoload. Define milestones by id with a threshold and a reward, report the tracked number to Update Progress as it changes, and each milestone latches reached and fires a trigger once - Total Reward sums every reached reward into one number you fold into your production multiplier.
 
 ## @ace_trigger
 ## @ace_name("On Milestone Reached")

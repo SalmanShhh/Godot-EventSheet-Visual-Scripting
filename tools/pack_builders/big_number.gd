@@ -20,6 +20,7 @@ static func build() -> bool:
 	sheet.autoload_name = "BigNumber"
 	sheet.host_class = "Node"
 	sheet.custom_class_name = "BigNumberAddon"
+	sheet.class_description = "Number formatting for idle and incremental games: turns raw values into compact strings like 1.25M, plus durations and percents, and ships a Decimal type that keeps growing past a float ceiling. A bank of pure calculators - it never stores your numbers or draws your HUD."
 	sheet.addon_category = "Big Numbers"
 	sheet.addon_tags = PackedStringArray(["incremental", "idle", "format"])
 	var about: CommentRow = CommentRow.new()

@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/drag_drop/icon.svg")
 class_name DragDropBehavior
 extends Node
+## Makes any 2D node something you can pick up, move, snap into place, and throw, with follow lag, axis locking, magnetism, break-distance auto-drop, and a measured throw velocity on release. Event-driven: you feed it a drag point from any source (mouse, touch, gamepad, AI) and it handles the rest.
 
 ## The node this behavior acts on (its parent). Required host: Node2D.
 var host: Node2D = null

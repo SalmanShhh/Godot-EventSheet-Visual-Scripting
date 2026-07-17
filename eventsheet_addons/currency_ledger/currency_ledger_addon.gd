@@ -3,6 +3,7 @@
 @icon("res://eventsheet_addons/currency_ledger/icon.svg")
 class_name CurrencyLedgerAddon
 extends Node
+## A data-driven economy: register named currencies (gold, gems, energy, reputation), then earn and spend them with single rows. It holds the numbers, enforces caps and floors, and fires a trigger on every meaningful change so your HUD and unlocks react instead of polling.
 
 ## @ace_trigger
 ## @ace_name("On Amount Changed")
