@@ -15,7 +15,7 @@ Node script extending `CharacterBody2D`.
 ## Script packs
 
 ### SimpleAbilitiesBehavior (`res://eventsheet_addons/abilities/abilities_behavior.gd`)
-@ace_category("Abilities") @ace_expose_all(node)
+@ace_category("Abilities") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Ability Activated**
@@ -76,7 +76,7 @@ Node script extending `CharacterBody2D`.
 - **List Abilities By Tag** (`tag: String`)
 
 ### AdvancedRandomAddon (`res://eventsheet_addons/advanced_random/advanced_random_addon.gd`)
-@ace_tags(random, noise, procedural)
+@ace_tags(random, noise, procedural) @ace_version(1.0.0)
 
 #### Conditions
 - **Chance** (`percent: float`) - True roughly percent of the time (0-100) - e.g. Chance(5) for a 5% event.
@@ -108,7 +108,7 @@ Node script extending `CharacterBody2D`.
 - **Shuffle Bag Pick** (`bag_name: String`) - Draws the next item from a named bag - every item appears once before any repeat.
 
 ### BackgroundRunner (`res://eventsheet_addons/background_runner/background_runner_behavior.gd`)
-@ace_tags(performance, threading) @ace_category("Background") @ace_expose_all(node)
+@ace_tags(performance, threading) @ace_category("Background") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Done** (`result: Variant`)
@@ -124,7 +124,7 @@ Node script extending `CharacterBody2D`.
 - **Tasks Running**
 
 ### BigNumberAddon (`res://eventsheet_addons/big_number/big_number_addon.gd`)
-@ace_tags(incremental, idle, format) @ace_category("Big Numbers")
+@ace_tags(incremental, idle, format) @ace_category("Big Numbers") @ace_version(1.0.0)
 
 #### Conditions
 - **Is Bigger** (`a: Array, b: Array`) - Whether Decimal a is strictly bigger than Decimal b.
@@ -155,7 +155,7 @@ Node script extending `CharacterBody2D`.
 - **Format Big** (`decimal: Array, decimals: int`) - Formats a Decimal with a short-scale suffix, falling through to scientific past Dc: Make(1.5, 100) -> "1.50e100".
 
 ### BoostAddon (`res://eventsheet_addons/boosts/boosts_addon.gd`)
-@ace_tags(incremental, idle, boost) @ace_category("Boosts")
+@ace_tags(incremental, idle, boost) @ace_category("Boosts") @ace_version(1.0.0)
 
 #### Triggers
 - **On Boost Started**
@@ -180,7 +180,7 @@ Node script extending `CharacterBody2D`.
 - **Last Expired** - The id of the boost that just ran out (read inside On Boost Expired).
 
 ### BoundToBehavior (`res://eventsheet_addons/bound_to/bound_to_behavior.gd`)
-@ace_tags(movement, screen) @ace_category("Bound To")
+@ace_tags(movement, screen) @ace_category("Bound To") @ace_version(1.0.0)
 
 #### Triggers
 - **On Hit Bound** (`side: String`)
@@ -195,22 +195,24 @@ Node script extending `CharacterBody2D`.
 - **Set Bound Space** (`space: String`) - Switches what the host is kept inside: the on-screen camera view, or the custom rectangle.
 
 ### BulletBehavior (`res://eventsheet_addons/bullet/bullet_behavior.gd`)
-@ace_category("Bullet") @ace_expose_all(node)
+@ace_category("Bullet") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Actions
 - **Set Bullet Speed** (`value: float`) - Changes speed, keeping the current direction.
 - **Set Angle Of Motion** (`degrees: float`) - Redirects the bullet (degrees).
+- **Set Gravity Angle** (`angle: float`) - Points gravity in a new direction, in degrees (90 = down, 270 = up, 0 = right) - the arc bends that way from now on. Magnet fields, wind wells, and upside-down zones in one action.
 - **Set Bullet Enabled** (`is_enabled: bool`) - Pauses or resumes the movement.
 
 ### Bullet3DBehavior (`res://eventsheet_addons/bullet_3d/bullet_3d_behavior.gd`)
-@ace_category("Bullet 3D") @ace_expose_all(node)
+@ace_category("Bullet 3D") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Actions
 - **Launch Forward** - (Re)launches along the host's current forward direction.
 - **Set Bullet 3D Speed** (`value: float`) - Changes speed, keeping the current direction.
+- **Set Gravity Direction** (`x: float, y: float, z: float`) - Points gravity along a new 3D direction (it is normalized for you) - the arc bends that way from now on. (0, -1, 0) is normal down, (0, 1, 0) pulls up, (1, 0, 0) pulls along +X.
 
 ### CarBehavior (`res://eventsheet_addons/car/car_behavior.gd`)
-@ace_category("Car") @ace_expose_all(node)
+@ace_category("Car") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Drift Started**
@@ -219,7 +221,7 @@ Node script extending `CharacterBody2D`.
 - **Stop Car** - Kills all momentum.
 
 ### ClickPowerAddon (`res://eventsheet_addons/click_power/click_power_addon.gd`)
-@ace_tags(incremental, idle, clicker) @ace_category("Click Power")
+@ace_tags(incremental, idle, clicker) @ace_category("Click Power") @ace_version(1.0.0)
 
 #### Triggers
 - **On Click**
@@ -243,7 +245,7 @@ Node script extending `CharacterBody2D`.
 - **Crit Chance** - The current crit chance, 0 to 1.
 
 ### ComboBoxAddon (`res://eventsheet_addons/combo_box/combo_box_addon.gd`)
-@ace_tags(input, combo) @ace_category("ComboBox")
+@ace_tags(input, combo) @ace_category("ComboBox") @ace_version(1.0.0)
 
 #### Triggers
 - **On Combo Matched**
@@ -287,7 +289,7 @@ Node script extending `CharacterBody2D`.
 - **Combo Id At** (`index: int`) - The registered combo id at an index (use with Combo Count to list them).
 
 ### CurrencyLedgerAddon (`res://eventsheet_addons/currency_ledger/currency_ledger_addon.gd`)
-@ace_tags(economy, currency) @ace_category("Currency")
+@ace_tags(economy, currency) @ace_category("Currency") @ace_version(1.0.0)
 
 #### Triggers
 - **On Amount Changed**
@@ -331,7 +333,7 @@ Node script extending `CharacterBody2D`.
 - **Offline Gain** - The amount credited offline (inside On Offline Gain).
 
 ### DecalPainter (`res://eventsheet_addons/decal_painter/decal_painter_behavior.gd`)
-@ace_tags(3d, drawing, visual) @ace_category("Decal Painter")
+@ace_tags(3d, drawing, visual) @ace_category("Decal Painter") @ace_version(1.0.0)
 
 #### Actions
 - **Spawn Decal** (`texture: Texture2D, x: float, y: float, z: float, size: float, rotation_deg: float, lifetime: float`) - Stamps a decal onto the world at a position - splats, scorch marks, target rings. Lifetime 0 keeps it forever (until the max-decals cap recycles it).
@@ -345,7 +347,7 @@ Node script extending `CharacterBody2D`.
 - **Decal Count**
 
 ### DemoHealthAddon (`res://eventsheet_addons/demo_health_addon.gd`)
-Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ and their annotated members become project-wide ACEs automatically - no manifest, no JSON, no per-sheet setup. Provider name comes from class_name, this comment is the addon description, and @ace_* annotations customize each ACE.
+Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ and their annotated members become project-wide ACEs automatically - no manifest, no JSON, no per-sheet setup. Provider name comes from class_name, this comment is the addon description, and @ace_* annotations customize each ACE. @ace_version(1.0.0)
 
 #### Triggers
 - **On Healed** (`amount: int`) - Fires after health is restored.
@@ -358,7 +360,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Announce Heal** (`amount: int`) - Prints a heal announcement. No @ace_codegen_template on purpose: the generated script owns a DemoHealthAddon instance and calls this directly (instance-backed ACE - the zero-config default for template-less addon methods).
 
 ### DialogueKitBehavior (`res://eventsheet_addons/dialogue_kit/dialogue_kit_behavior.gd`)
-@ace_category("UI") @ace_expose_all(node)
+@ace_category("UI") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Dialogue Started**
@@ -380,7 +382,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Lines Remaining**
 
 ### DragDropBehavior (`res://eventsheet_addons/drag_drop/drag_drop_behavior.gd`)
-@ace_category("Drag & Drop") @ace_expose_all(node)
+@ace_category("Drag & Drop") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Drag Started**
@@ -422,7 +424,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Snapped Object UID**
 
 ### DrawingCanvas (`res://eventsheet_addons/drawing_canvas/drawing_canvas_behavior.gd`)
-@ace_tags(drawing, visual) @ace_category("Drawing Canvas")
+@ace_tags(drawing, visual) @ace_category("Drawing Canvas") @ace_requires(CanvasSurface, DrawingPrefabResource) @ace_version(1.0.0)
 
 #### Conditions
 - **Is Auto Clear**
@@ -450,13 +452,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Canvas Texture**
 
 ### EightDirectionMovement (`res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd`)
-@ace_category("Eight Direction") @ace_expose_all(node)
+@ace_category("Eight Direction") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Actions
 - **Set Move Speed** (`speed: float`) - Changes the movement speed.
 
 ### FadeBehavior (`res://eventsheet_addons/fade/fade_behavior.gd`)
-@ace_tags(fade, juice) @ace_category("Fade")
+@ace_tags(fade, juice) @ace_category("Fade") @ace_version(1.0.0)
 
 #### Triggers
 - **On Faded In**
@@ -475,7 +477,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Opacity**
 
 ### FlashBehavior (`res://eventsheet_addons/flash/flash_behavior.gd`)
-@ace_category("Flash") @ace_expose_all(node)
+@ace_category("Flash") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Flash Finished**
@@ -485,7 +487,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stop Flash** - Stops flashing and restores visibility.
 
 ### FollowBehavior (`res://eventsheet_addons/follow/follow_behavior.gd`)
-@ace_category("Follow") @ace_expose_all(node)
+@ace_category("Follow") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Reached Target**
@@ -495,7 +497,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stop Following** - Stops trailing the target.
 
 ### FPSController (`res://eventsheet_addons/fps_controller/fps_controller_behavior.gd`)
-@ace_category("FPS Controller") @ace_expose_all(node)
+@ace_category("FPS Controller") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Jumped**
@@ -524,6 +526,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stop Sliding** - Ends a crouch slide early (you stay crouched). Fires On Slide Ended.
 - **Wall Jump** - Kicks off the wall the host is touching: Jump Velocity upward plus Wall Jump Push away from the wall (the push fades over about half a second). Ends any wall ride. Fires On Wall Jumped. Pressing jump mid-air against a wall does this automatically.
 - **Stop Wall Ride** - Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.
+- **Set Gravity Direction** (`x: float, y: float, z: float`) - Points gravity along a new 3D direction (normalized for you). (0, -1, 0) is normal down; (0, 1, 0) walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal.
 
 #### Expressions
 - **Current Speed** - The host's horizontal speed right now (metres per second).
@@ -533,7 +536,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Wall Normal Z** - The touched wall's outward normal, Z component (zero when not on a wall).
 
 ### SimpleHealthBehavior (`res://eventsheet_addons/health/health_behavior.gd`)
-@ace_category("Health") @ace_expose_all(node)
+@ace_category("Health") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Damaged**
@@ -578,7 +581,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Health Pool Type**
 
 ### HTNAgent (`res://eventsheet_addons/htn_agent/htn_agent_behavior.gd`)
-@ace_tags(ai, planning) @ace_category("HTN") @ace_expose_all(node)
+@ace_tags(ai, planning) @ace_category("HTN") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Task Started** (`task_name: String`)
@@ -608,7 +611,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **World Value** (`key: String`)
 
 ### HudKitBehavior (`res://eventsheet_addons/hud_kit/hud_kit_behavior.gd`)
-@ace_category("UI") @ace_expose_all(node)
+@ace_category("UI") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Button Pressed**
@@ -632,7 +635,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Bar Value** (`bar_name: String`)
 
 ### IdleGeneratorBehavior (`res://eventsheet_addons/idle_generator/idle_generator_behavior.gd`)
-@ace_tags(incremental, idle, economy) @ace_category("Idle Generator")
+@ace_tags(incremental, idle, economy) @ace_category("Idle Generator") @ace_version(1.0.0)
 
 #### Triggers
 - **On Purchased**
@@ -666,7 +669,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Collected** - How much the last Collect handed you.
 
 ### JuiceBehavior (`res://eventsheet_addons/juice/juice_behavior.gd`)
-@ace_tags(camera, juice) @ace_category("Juice") @ace_expose_all(node)
+@ace_tags(camera, juice) @ace_category("Juice") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Shake Stopped**
@@ -703,7 +706,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Trauma**
 
 ### Juice3DBehavior (`res://eventsheet_addons/juice_3d/juice_3d_behavior.gd`)
-@ace_tags(camera, juice, 3d) @ace_category("Juice 3D") @ace_expose_all(node)
+@ace_tags(camera, juice, 3d) @ace_category("Juice 3D") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Shake Stopped**
@@ -731,7 +734,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Trauma**
 
 ### LOSBehavior (`res://eventsheet_addons/line_of_sight/line_of_sight_behavior.gd`)
-@ace_category("Line Of Sight") @ace_expose_all(node)
+@ace_category("Line Of Sight") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Conditions
 - **Has Line Of Sight To** (`point: Vector2`)
@@ -741,7 +744,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Nearest Visible In Group** (`group: String`)
 
 ### LOS3DBehavior (`res://eventsheet_addons/line_of_sight_3d/line_of_sight_3d_behavior.gd`)
-@ace_category("Line Of Sight 3D") @ace_expose_all(node)
+@ace_category("Line Of Sight 3D") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Conditions
 - **Has Line Of Sight To** (`point: Vector3`)
@@ -751,7 +754,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Nearest Visible In Group** (`group: String`)
 
 ### LootBoxAddon (`res://eventsheet_addons/loot_table/loot_table_addon.gd`)
-@ace_tags(loot, random) @ace_category("Loot")
+@ace_tags(loot, random) @ace_category("Loot") @ace_version(1.0.0)
 
 #### Triggers
 - **On Roll Result**
@@ -790,7 +793,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Pity Count At Trigger** - The miss streak when pity fired (inside On Pity Triggered).
 
 ### MilestonesAddon (`res://eventsheet_addons/milestones/milestones_addon.gd`)
-@ace_tags(incremental, idle, achievement) @ace_category("Milestones")
+@ace_tags(incremental, idle, achievement) @ace_category("Milestones") @ace_version(1.0.0)
 
 #### Triggers
 - **On Milestone Reached**
@@ -816,7 +819,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Nearest Unreached** - The id of the unreached milestone closest to its threshold (for a "next goal" display); "" if all reached.
 
 ### MoveToBehavior (`res://eventsheet_addons/move_to/move_to_behavior.gd`)
-@ace_category("Move To") @ace_expose_all(node)
+@ace_category("Move To") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Arrived**
@@ -827,7 +830,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stop Moving** - Clears the queue without firing On Arrived.
 
 ### MoveTo3DBehavior (`res://eventsheet_addons/move_to_3d/move_to_3d_behavior.gd`)
-@ace_category("Move To 3D") @ace_expose_all(node)
+@ace_category("Move To 3D") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Arrived (3D)**
@@ -838,7 +841,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stop Moving (3D)** - Clears the queue without firing On Arrived.
 
 ### NavAgent3D (`res://eventsheet_addons/nav_agent_3d/nav_agent_3d_behavior.gd`)
-@ace_tags(movement, 3d, ai, pathfinding) @ace_category("Nav Agent 3D") @ace_expose_all(node)
+@ace_tags(movement, 3d, ai, pathfinding) @ace_category("Nav Agent 3D") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Path Found**
@@ -865,7 +868,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Path Move Z**
 
 ### ObjectPoolAddon (`res://eventsheet_addons/object_pool/object_pool_addon.gd`)
-@ace_tags(performance, spawning) @ace_category("Object Pool")
+@ace_tags(performance, spawning) @ace_category("Object Pool") @ace_version(1.0.0)
 
 #### Triggers
 - **On Spawned**
@@ -891,7 +894,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Pool Size** (`pool_name: String`) - A pool's total nodes (free plus active).
 
 ### OrbitBehavior (`res://eventsheet_addons/orbit/orbit_behavior.gd`)
-@ace_category("Orbit") @ace_expose_all(node)
+@ace_category("Orbit") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Actions
 - **Set Orbit Center** (`x: float, y: float`) - Orbits around the given point from now on.
@@ -899,13 +902,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Orbit Radii** (`primary: float, secondary: float`) - Primary/secondary radii (secondary 0 = circle).
 
 ### Orbit3DBehavior (`res://eventsheet_addons/orbit_3d/orbit_3d_behavior.gd`)
-@ace_category("Orbit 3D") @ace_expose_all(node)
+@ace_category("Orbit 3D") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Actions
 - **Set Orbit 3D Center** (`x: float, y: float, z: float`) - Orbits around the given point from now on.
 
 ### PhysicsCar (`res://eventsheet_addons/physics_car/physics_car_behavior.gd`)
-@ace_tags(vehicle, physics) @ace_category("Physics Car")
+@ace_tags(vehicle, physics) @ace_category("Physics Car") @ace_version(1.0.0)
 
 #### Triggers
 - **On Collided**
@@ -957,7 +960,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Collision Angle** - Approximate impact direction in degrees (inside On Collided).
 
 ### PlatformInfoAddon (`res://eventsheet_addons/platform_info/platform_info_addon.gd`)
-@ace_tags(platform, device, screen, system) @ace_category("Platform Info")
+@ace_tags(platform, device, screen, system) @ace_category("Platform Info") @ace_version(1.0.0)
 
 #### Conditions
 - **Is On Mobile** - True on Android and iOS builds - the switch-to-touch-controls condition.
@@ -993,7 +996,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Physical Memory (MB)** - The machine's physical RAM in megabytes (0 where the OS hides it) - drop texture quality under a threshold.
 
 ### PlatformerMovement (`res://eventsheet_addons/platformer_movement/platformer_movement_behavior.gd`)
-@ace_tags(movement, platformer) @ace_category("Platformer") @ace_expose_all(node)
+@ace_tags(movement, platformer) @ace_category("Platformer") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Jumped**
@@ -1008,16 +1011,18 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Actions
 - **Jump** - Jumps: from the floor or within coyote time, off a wall (if enabled), or a mid-air (double) jump if any remain. If none are available right now, the press is buffered.
 - **Jump Released** - Call when the jump button is released - cuts the rise short for variable jump height (hold = higher).
+- **Set Gravity Angle** (`angle: float`) - Points gravity in a new direction, in degrees (90 = down, 270 = up, 0 = right) - the whole movement frame rotates with it: floor detection, running, and jumps follow. Flip a level upside down or run on walls with one action.
 - **Set Move Speed** (`speed: float`) - Changes the horizontal move speed.
 - **Reset Jumps** - Refills the air-jump count (e.g. after grabbing a power-up).
 
 #### Expressions
+- **Gravity Angle**
 - **Jumps Remaining**
 - **Air Time**
 - **Facing Direction**
 
 ### PlatformerPathfinding (`res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd`)
-@ace_tags(movement, platformer, ai, pathfinding) @ace_category("Platformer Pathfinding") @ace_expose_all(node)
+@ace_tags(movement, platformer, ai, pathfinding) @ace_category("Platformer Pathfinding") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Portal Taken**
@@ -1059,7 +1064,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Current Path Action**
 
 ### PrestigeAddon (`res://eventsheet_addons/prestige/prestige_addon.gd`)
-@ace_tags(incremental, idle, prestige) @ace_category("Prestige")
+@ace_tags(incremental, idle, prestige) @ace_category("Prestige") @ace_version(1.0.0)
 
 #### Triggers
 - **On Prestige**
@@ -1087,7 +1092,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Progress To Next** - How close this run is to the next point, 0 to 1 (for a progress bar).
 
 ### ProcRoomAddon (`res://eventsheet_addons/proc_room/proc_room_addon.gd`)
-@ace_tags(procedural, roguelite) @ace_category("ProcRoom")
+@ace_tags(procedural, roguelite) @ace_category("ProcRoom") @ace_version(1.0.0)
 
 #### Triggers
 - **On Graph Generated**
@@ -1134,7 +1139,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Block Reason** - Why entry was blocked - "locked" or "unreachable" (inside On Traversal Blocked).
 
 ### RotateBehavior (`res://eventsheet_addons/rotate/rotate_behavior.gd`)
-@ace_tags(movement, visual) @ace_category("Rotate")
+@ace_tags(movement, visual) @ace_category("Rotate") @ace_version(1.0.0)
 
 #### Conditions
 - **Is Rotating**
@@ -1150,7 +1155,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Rotation Speed**
 
 ### SaveSystemAddon (`res://eventsheet_addons/save_system/save_system_addon.gd`)
-@ace_tags(persistence)
+@ace_tags(persistence) @ace_version(1.0.0)
 
 #### Triggers
 - **On Save Written** (`slot_index: int`)
@@ -1187,7 +1192,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Slot Modified Time** (`slot_index: int`) - Unix mtime of the slot's file (0 when missing).
 
 ### SceneFlowBehavior (`res://eventsheet_addons/scene_flow/scene_flow_behavior.gd`)
-@ace_category("Scenes") @ace_expose_all(node)
+@ace_category("Scenes") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Conditions
 - **Is Transitioning**
@@ -1203,7 +1208,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Current Scene Path**
 
 ### SineBehavior (`res://eventsheet_addons/sine/sine_behavior.gd`)
-@ace_category("Sine") @ace_expose_all(node)
+@ace_category("Sine") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Actions
 - **Set Sine Active** (`is_active: bool`) - Pauses or resumes the oscillation.
@@ -1212,7 +1217,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Reset Sine** - Restarts the wave from the current state.
 
 ### Sine3DBehavior (`res://eventsheet_addons/sine_3d/sine_3d_behavior.gd`)
-@ace_category("Sine 3D") @ace_expose_all(node)
+@ace_category("Sine 3D") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Actions
 - **Set Sine 3D Active** (`is_active: bool`) - Pauses or resumes the oscillation.
@@ -1220,7 +1225,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Reset Sine 3D** - Restarts the wave from the current state.
 
 ### SkinVaultAddon (`res://eventsheet_addons/skin_vault/skin_vault_addon.gd`)
-@ace_tags(cosmetics, gacha) @ace_category("SkinVault")
+@ace_tags(cosmetics, gacha) @ace_category("SkinVault") @ace_version(1.0.0)
 
 #### Triggers
 - **On Skin Rolled**
@@ -1264,7 +1269,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Revoked Id** - The skin just revoked (inside On Skin Revoked).
 
 ### SlideMove (`res://eventsheet_addons/slide_move/slide_move_behavior.gd`)
-@ace_tags(grid, movement) @ace_category("Slide Movement")
+@ace_tags(grid, movement) @ace_category("Slide Movement") @ace_version(1.0.0)
 
 #### Triggers
 - **On Slide Started**
@@ -1286,7 +1291,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Tile Y** - The character's current row on the grid.
 
 ### SpringBehavior (`res://eventsheet_addons/spring/spring_behavior.gd`)
-@ace_tags(motion, juice) @ace_category("Spring") @ace_expose_all(node)
+@ace_tags(motion, juice) @ace_category("Spring") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Spring Reached** (`spring_name: String`)
@@ -1319,7 +1324,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Spring Progress** (`spring_name: String`)
 
 ### StatForge (`res://eventsheet_addons/stat_forge/stat_forge_behavior.gd`)
-@ace_tags(stats, rpg, data) @ace_category("StatForge")
+@ace_tags(stats, rpg, data) @ace_category("StatForge") @ace_requires(StatSheetResource) @ace_version(1.0.0)
 
 #### Triggers
 - **On Buff Added** (`buff_id: String, stat: String`)
@@ -1360,7 +1365,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Threshold Rule** - The rule that fired most recently - read it inside On Threshold Crossed.
 
 ### StateMachineBehavior (`res://eventsheet_addons/state_machine/state_machine_behavior.gd`)
-@ace_category("State Machine") @ace_expose_all(node)
+@ace_category("State Machine") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On State Changed** (`previous: String, next: String`)
@@ -1372,7 +1377,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set State** (`next: String`) - Switches to the given state and fires On State Changed.
 
 ### StoryletsAddon (`res://eventsheet_addons/storylet_weaver/storylet_weaver_addon.gd`)
-@ace_tags(narrative, storylet) @ace_category("Storylets")
+@ace_tags(narrative, storylet) @ace_category("Storylets") @ace_version(1.0.0)
 
 #### Triggers
 - **On Storylet Drawn**
@@ -1422,7 +1427,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Storylet Count** - How many storylets are registered.
 
 ### TileMovementBehavior (`res://eventsheet_addons/tile_movement/tile_movement_behavior.gd`)
-@ace_category("Tile Movement") @ace_expose_all(node)
+@ace_category("Tile Movement") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Step Finished**
@@ -1432,7 +1437,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Teleport To Tile** (`tile_x: float, tile_y: float`) - Snaps to a tile coordinate instantly.
 
 ### TimeSlicerBehavior (`res://eventsheet_addons/time_slicer/time_slicer_behavior.gd`)
-@ace_tags(performance, scheduling) @ace_category("Time Slicer") @ace_expose_all(node)
+@ace_tags(performance, scheduling) @ace_category("Time Slicer") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Process Item** (`item: Variant`)
@@ -1454,7 +1459,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Frame Item Count**
 
 ### TimerBehavior (`res://eventsheet_addons/timer/timer_behavior.gd`)
-@ace_category("Timer") @ace_expose_all(node)
+@ace_category("Timer") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Timer**
@@ -1464,7 +1469,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stop Timer** - Stops the countdown without firing On Timer.
 
 ### TweenBehavior (`res://eventsheet_addons/tween/tween_behavior.gd`)
-@ace_tags(motion, juice) @ace_category("Tween") @ace_expose_all(node)
+@ace_tags(motion, juice) @ace_category("Tween") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Tween Finished**
@@ -1481,7 +1486,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Stop Tweens** - Kills the running tween (host stays where it is).
 
 ### UHTNPlanner (`res://eventsheet_addons/uhtn_planning/uhtn_planning_behavior.gd`)
-@ace_tags(ai, planning, utility) @ace_category("UHTN Planning") @ace_expose_all(node)
+@ace_tags(ai, planning, utility) @ace_category("UHTN Planning") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Task Started** (`task_name: String`)
@@ -1516,7 +1521,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Scorer Value** (`scorer_id: String`)
 
 ### UpgradesAddon (`res://eventsheet_addons/upgrades/upgrades_addon.gd`)
-@ace_tags(incremental, idle, upgrade) @ace_category("Upgrades")
+@ace_tags(incremental, idle, upgrade) @ace_category("Upgrades") @ace_version(1.0.0)
 
 #### Triggers
 - **On Upgrade Bought**
@@ -1546,7 +1551,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Upgrade Count** - How many upgrades are defined.
 
 ### UtilityBrain (`res://eventsheet_addons/utility_ai/utility_ai_addon.gd`)
-@ace_tags(ai, decision) @ace_category("Utility AI")
+@ace_tags(ai, decision) @ace_category("Utility AI") @ace_version(1.0.0)
 
 #### Triggers
 - **On Decision Made**
@@ -1585,7 +1590,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Get Input** (`key: String`) - The current value of a world-state input (0 if unset).
 
 ### VirtualCursor (`res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior.gd`)
-@ace_category("Virtual Cursor") @ace_expose_all(node)
+@ace_category("Virtual Cursor") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Interact Pressed** (`id: String`)
@@ -1649,7 +1654,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Bounce Mode**
 
 ### WeaponKit (`res://eventsheet_addons/weapon_kit/weapon_kit_behavior.gd`)
-@ace_tags(combat, shooter) @ace_category("Weapon") @ace_expose_all(node)
+@ace_tags(combat, shooter) @ace_category("Weapon") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Fire**
@@ -1670,7 +1675,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Magazine Size** (`size: int`) - Changes the magazine size.
 
 ### WrapBehavior (`res://eventsheet_addons/wrap/wrap_behavior.gd`)
-@ace_tags(movement, screen) @ace_category("Wrap")
+@ace_tags(movement, screen) @ace_category("Wrap") @ace_version(1.0.0)
 
 #### Triggers
 - **On Wrapped** (`side: String`)
