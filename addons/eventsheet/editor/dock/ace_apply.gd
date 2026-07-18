@@ -119,6 +119,50 @@ func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, con
 			_dock._ace_picker.open(mode, false, selected_resource, {})
 
 
+## Batch param edit: every condition/action that appears MORE THAN ONCE across the given
+## rows (same provider + ace id + lane) is a batch group - edit its params once, apply to
+## every instance. Walks sub-events and group children so "across the selection" means the
+## whole selected subtree. Triggers are excluded (they edit through the picker) and so are
+## action-cell comments. Static and pure so tests pin the enumeration headless.
+static func batch_edit_groups(targets: Array) -> Array:
+	var groups: Dictionary = {}
+	_collect_batch_targets(targets, groups)
+	var result: Array = []
+	for key: Variant in groups.keys():
+		var group: Dictionary = groups[key]
+		if (group.get("targets", []) as Array).size() >= 2:
+			result.append(group)
+	return result
+
+
+static func _collect_batch_targets(rows: Array, groups: Dictionary) -> void:
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			_collect_batch_targets((entry as EventGroup).events if not (entry as EventGroup).events.is_empty() else (entry as EventGroup).rows, groups)
+			continue
+		if not (entry is EventRow):
+			continue
+		var event_row: EventRow = entry as EventRow
+		for condition_index: int in range(event_row.conditions.size()):
+			if event_row.conditions[condition_index] is ACECondition:
+				_record_batch_target(groups, "condition", event_row.conditions[condition_index], event_row, condition_index)
+		for action_index: int in range(event_row.actions.size()):
+			if event_row.actions[action_index] is ACEAction:
+				_record_batch_target(groups, "action", event_row.actions[action_index], event_row, action_index)
+		_collect_batch_targets(event_row.sub_events, groups)
+
+
+static func _record_batch_target(groups: Dictionary, kind: String, ace: Resource, event_row: EventRow, index: int) -> void:
+	var provider_id: String = str(ace.get("provider_id"))
+	var ace_id: String = str(ace.get("ace_id"))
+	if provider_id.is_empty() or ace_id.is_empty():
+		return
+	var key: String = "%s|%s|%s" % [kind, provider_id, ace_id]
+	if not groups.has(key):
+		groups[key] = {"kind": kind, "provider_id": provider_id, "ace_id": ace_id, "targets": []}
+	(groups[key].get("targets") as Array).append({"event": event_row, "index": index})
+
+
 func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, context: Dictionary) -> void:
 	if definition == null:
 		return
@@ -200,6 +244,35 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 						(selected_resource as EventRow).actions[action_index] = _create_action_from_definition(definition, params)
 						message["text"] = "Updated action."
 						return true
+			"batch_edit_params":
+				# One dialog, every matching instance: each target slot is re-verified at apply
+				# time (same lane, index still in range, same provider + ace id) so a slot that
+				# changed since the menu opened is skipped, never corrupted. Fresh resources per
+				# slot: stateful conditions each bake their own {uid}. All inside THIS one funnel
+				# call, so the whole sweep is a single undo step.
+				var kind: String = str(context.get("batch_kind", "action"))
+				var applied: int = 0
+				for target: Variant in context.get("batch_targets", []):
+					if not (target is Dictionary):
+						continue
+					var target_event: EventRow = (target as Dictionary).get("event", null) as EventRow
+					var slot_index: int = int((target as Dictionary).get("index", -1))
+					if target_event == null or slot_index < 0:
+						continue
+					var lane_array: Array = target_event.conditions if kind == "condition" else target_event.actions
+					if slot_index >= lane_array.size():
+						continue
+					var existing: Resource = lane_array[slot_index]
+					if existing == null or str(existing.get("provider_id")) != definition.provider_id or str(existing.get("ace_id")) != definition.id:
+						continue
+					if kind == "condition":
+						lane_array[slot_index] = _create_condition_from_definition(definition, params)
+					else:
+						lane_array[slot_index] = _create_action_from_definition(definition, params)
+					applied += 1
+				if applied > 0:
+					message["text"] = "Updated %d matching %s." % [applied, ("conditions" if applied != 1 else "condition") if kind == "condition" else ("actions" if applied != 1 else "action")]
+					return true
 			_:
 				var event_row: EventRow = EventRow.new()
 				if definition.ace_type == ACEDefinition.ACEType.TRIGGER:

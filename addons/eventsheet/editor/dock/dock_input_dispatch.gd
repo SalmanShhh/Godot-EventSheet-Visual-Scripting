@@ -72,6 +72,8 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._surround_selection_with_region()
 		_dock.ROW_MENU_REPLACE_OBJECT:
 			_dock._open_replace_object_dialog()
+		_dock.ROW_MENU_BATCH_EDIT_PARAMS:
+			_dock._open_batch_param_edit()
 		_dock.ROW_MENU_PASTE:
 			_dock._on_paste_requested()
 		_dock.ROW_MENU_DELETE:

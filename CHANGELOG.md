@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - batch param edit across the selection
+
+- **Right-click a multi-selection > Edit Values Across Selection...**: any action or
+  condition that appears more than once across the selected rows (sub-events and groups
+  included) can be edited ONCE - the params dialog opens pre-filled from the first
+  instance, states "applies to all N matching actions", and OK writes those values to
+  every instance as a single undo step. Several repeated ACEs? A small menu picks which
+  one to edit. Slots that changed since the menu opened are skipped, never corrupted,
+  and stateful conditions each re-bake their own {uid}. `tests/batch_param_edit_test.gd`
+  pins the enumeration walk, the apply-to-all values, and the stale-slot guard.
+
 ### Added - stable event numbers + Go to Event (the C3 margin)
 
 - **Every event row now shows its sheet-order number in the left margin** - flat and

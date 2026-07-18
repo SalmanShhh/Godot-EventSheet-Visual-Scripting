@@ -70,6 +70,7 @@ const ROW_MENU_EDIT_FUNCTION := 45
 const ROW_MENU_ADD_FUNCTION_PARAM := 46
 const ROW_MENU_MAKE_FUNCTION_EDITABLE := 47
 const ROW_MENU_REPLACE_OBJECT := 48
+const ROW_MENU_BATCH_EDIT_PARAMS := 49
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -1983,6 +1984,64 @@ func _open_replace_object_dialog() -> void:
 	add_child(_replace_object_dialog)
 	_replace_object_dialog.popup_centered(Vector2i(480, 260))
 	to_edit.grab_focus()
+
+
+var _batch_edit_menu: PopupMenu = null
+
+
+## Batch param edit (C3's edit-many reflex): any condition/action that appears more than
+## once across the selected rows can be edited ONCE - the params dialog opens pre-filled
+## from the first instance and OK applies those values to every matching instance as a
+## single undo step. With several repeated ACEs, a small menu picks which one to edit.
+func _open_batch_param_edit() -> void:
+	var targets: Array = _top_level_selected_resources()
+	if targets.is_empty() and _context_row != null and _context_row.source_resource != null:
+		targets = [_context_row.source_resource]
+	var groups: Array = EventSheetACEApply.batch_edit_groups(targets)
+	if groups.is_empty():
+		_set_status("No action or condition appears more than once across the selection.", true)
+		return
+	if groups.size() == 1:
+		_open_batch_param_group(groups[0])
+		return
+	if _batch_edit_menu != null and is_instance_valid(_batch_edit_menu):
+		_batch_edit_menu.queue_free()
+	_batch_edit_menu = PopupMenu.new()
+	for group_index: int in range(groups.size()):
+		var group: Dictionary = groups[group_index]
+		var definition: ACEDefinition = _find_definition(str(group.get("provider_id", "")), str(group.get("ace_id", "")))
+		var display: String = definition.display_name if definition != null else str(group.get("ace_id", ""))
+		_batch_edit_menu.add_item("%s (%d %s)" % [display, (group.get("targets", []) as Array).size(), str(group.get("kind", "action")) + "s"], group_index)
+	_batch_edit_menu.id_pressed.connect(func(id: int) -> void:
+		if id >= 0 and id < groups.size():
+			_open_batch_param_group(groups[id]))
+	add_child(_batch_edit_menu)
+	_batch_edit_menu.popup(Rect2i(Vector2i(get_global_mouse_position()), Vector2i.ONE))
+
+
+func _open_batch_param_group(group: Dictionary) -> void:
+	var definition: ACEDefinition = _find_definition(str(group.get("provider_id", "")), str(group.get("ace_id", "")))
+	if definition == null:
+		_set_status("Couldn't load this ACE's definition (is its pack still installed?).", true)
+		return
+	if definition.parameters.is_empty():
+		_set_status("%s has no parameters to edit." % definition.display_name, true)
+		return
+	var group_targets: Array = group.get("targets", [])
+	var first_params: Dictionary = {}
+	if not group_targets.is_empty():
+		var first_target: Dictionary = group_targets[0]
+		var first_event: EventRow = first_target.get("event", null) as EventRow
+		var first_index: int = int(first_target.get("index", -1))
+		var lane: Array = first_event.conditions if str(group.get("kind", "")) == "condition" else first_event.actions
+		if first_event != null and first_index >= 0 and first_index < lane.size():
+			first_params = (lane[first_index].get("params") as Dictionary).duplicate(true)
+	_ace_params.open_with_values(definition, {
+		"mode": "batch_edit_params",
+		"batch_kind": str(group.get("kind", "action")),
+		"batch_targets": group_targets,
+		"batch_count": group_targets.size()
+	}, first_params)
 
 
 ## Applies the live filter lens on the active viewport ("" clears) and reports the hidden

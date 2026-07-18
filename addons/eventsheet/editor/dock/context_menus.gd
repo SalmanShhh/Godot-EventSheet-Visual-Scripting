@@ -161,6 +161,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		# form stays under More): wraps the selected rows in a #region fence pair and opens the name editor.
 		menu.add_item("Create Code Region", _dock.ROW_MENU_SURROUND_REGION)
 		menu.add_item("Replace Object References…", _dock.ROW_MENU_REPLACE_OBJECT)
+		menu.add_item("Edit Values Across Selection…", _dock.ROW_MENU_BATCH_EDIT_PARAMS)
 	menu.add_separator()
 	_build_row_insert_submenu()
 	# Explicit ids: an id-less submenu item gets its INDEX as its id, which collided with

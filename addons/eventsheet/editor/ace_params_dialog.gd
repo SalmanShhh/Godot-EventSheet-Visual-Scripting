@@ -1943,6 +1943,12 @@ func _build_hint_text() -> String:
 			base = "Creating a nested sub-condition event."
 		"replace_condition", "replace_trigger", "replace_action":
 			base = "Editing this existing cell."
+		"batch_edit_params":
+			# The whole point of the batch flow, stated up front: one OK, many cells.
+			base = "Batch edit: OK applies these values to all %d matching %s across the selection." % [
+				int(_context.get("batch_count", 0)),
+				"conditions" if str(_context.get("batch_kind", "")) == "condition" else "actions"
+			]
 		"new_event", "new_condition_event":
 			base = "Creating a new event from this pick."
 	return "%s %s" % [
