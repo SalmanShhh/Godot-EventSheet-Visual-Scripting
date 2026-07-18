@@ -1882,6 +1882,21 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
 
 # ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ────────────────────
 var _find_bar: HBoxContainer = null
+var _lens_button: Button = null
+
+
+## Applies the live filter lens on the active viewport ("" clears) and reports the hidden
+## count in the status line, so the collapsed view never reads as missing data.
+func _apply_lens(query: String) -> void:
+	if _viewport == null:
+		return
+	_viewport.set_lens(query)
+	if _viewport.lens_active():
+		_set_status("Filter: showing only events matching \"%s\" - %d hidden. Esc clears." % [_viewport.lens_query(), _viewport.lens_hidden_count()])
+	else:
+		if _lens_button != null:
+			_lens_button.set_pressed_no_signal(false)
+		_set_status("Filter cleared - all events visible.")
 var _find_edit: LineEdit = null
 var _find_count_label: Label = null
 var _replace_edit: LineEdit = null

@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - the live filter lens + a project-search key
+
+- **Filter (the C3 live-filter reflex)**: the Ctrl+F find bar gained a **Filter** toggle -
+  instead of stepping through matches, the sheet collapses to ONLY the events whose rows
+  mention the search term (sub-event matches keep their parent visible). Pure view layer:
+  the sheet is never mutated, the status line reports how many events are hidden, and
+  **Esc** (or the toggle) restores everything.
+- **Ctrl+Shift+F** now opens the existing Find in Project panel from anywhere in the
+  workspace (rebindable "Search all sheets"), completing the search pair: filter within a
+  sheet, find across all of them. `tests/filter_lens_test.gd` pins the lens - matching
+  in/out, parent-of-matching-sub-event visibility, the hidden count, mutation-freedom,
+  and the clear.
+
 ### Added - the object-first Add flow (Construct's add-event gesture)
 
 - **Double-click empty sheet space now leads with OBJECT cards**: System first, then

@@ -87,6 +87,16 @@ func _ensure_find_bar() -> void:
 	split_match_button.tooltip_text = "Open the current match in the split pane."
 	split_match_button.pressed.connect(_dock._open_match_in_split)
 	_dock._find_bar.add_child(split_match_button)
+	# The C3 live filter: toggling FILTERS the sheet to matching events instead of just
+	# stepping through them - everything else hides until the lens clears (Esc / the bar).
+	var lens_button: Button = Button.new()
+	lens_button.text = "Filter"
+	lens_button.toggle_mode = true
+	lens_button.tooltip_text = "Show ONLY the events matching the search (C3-style live filter). Esc clears."
+	lens_button.toggled.connect(func(pressed: bool) -> void:
+		_dock._apply_lens(_dock._find_edit.text if pressed else ""))
+	_dock._find_bar.add_child(lens_button)
+	_dock._lens_button = lens_button
 	var close_button: Button = Button.new()
 	close_button.text = "✕"
 	close_button.flat = true

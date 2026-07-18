@@ -28,6 +28,7 @@ const DEFAULTS: Dictionary = {
 	"add_variable": "V",
 	"invert_condition": "I",
 	"replace_ace": "R",
+	"project_search": "Ctrl+Shift+F",
 	"history_back": "Alt+Left",
 	"history_forward": "Alt+Right",
 	"save": "Ctrl+S",
@@ -56,6 +57,7 @@ const LABELS: Dictionary = {
 	"add_sub_condition": "Add sub-event (picker)",
 	"add_variable": "Add variable",
 	"invert_condition": "Invert selected condition",
+	"project_search": "Search all sheets",
 	"replace_ace": "Replace selected trigger / condition / action",
 	"history_back": "Jump back (navigation history)",
 	"history_forward": "Jump forward (navigation history)",
@@ -77,7 +79,7 @@ const LABELS: Dictionary = {
 const ORDER: Array = [
 	"add_event", "add_condition", "add_action", "add_comment", "add_group", "toggle_enabled",
 	"add_blank_subevent", "add_sub_condition", "add_variable", "invert_condition", "replace_ace",
-	"history_back", "history_forward",
+	"project_search", "history_back", "history_forward",
 	"duplicate", "copy", "paste", "undo", "redo", "save", "save_as", "open",
 	"add_event_chord", "add_condition_chord", "add_action_chord", "add_variable_chord",
 ]

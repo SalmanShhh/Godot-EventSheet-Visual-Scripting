@@ -200,6 +200,11 @@ func unhandled_key_input(event: InputEvent) -> void:
 		_dock._ace_picker.close()
 		_dock.accept_event()
 		return
+	# Esc clears the live filter lens (after the picker check - closing a popup wins).
+	if key_event.keycode == KEY_ESCAPE and _dock._viewport != null and _dock._viewport.lens_active():
+		_dock._apply_lens("")
+		_dock.accept_event()
+		return
 	# Structural/letter shortcuts are suppressed while typing in a text field so authoring
 	# keys never fire mid-edit (text fields already consume their own text shortcuts).
 	var typing: bool = _dock._text_field_has_focus()
@@ -233,6 +238,7 @@ func unhandled_key_input(event: InputEvent) -> void:
 		["add_variable", true, _dock._on_add_global_variable_requested],
 		["invert_condition", true, _dock._on_invert_condition_key],
 		["replace_ace", true, _dock._on_replace_ace_key],
+		["project_search", false, _dock._open_project_find],
 		["history_back", true, _dock._navigate.go_back],
 		["history_forward", true, _dock._navigate.go_forward],
 	]:

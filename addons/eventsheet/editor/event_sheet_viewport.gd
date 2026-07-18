@@ -1056,6 +1056,34 @@ func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1)
 	return true
 
 
+# ── Live filter lens (view-only; see _refresh_rows) ─────────────────────────────
+var _lens_query: String = ""
+var _lens_hidden_count: int = 0
+
+
+## Applies (or with "" clears) the live filter lens: only top-level rows whose subtree
+## mentions the term stay visible. View-layer only - the sheet is never mutated.
+func set_lens(query: String) -> void:
+	_lens_query = query.strip_edges()
+	_refresh_rows()
+
+
+func clear_lens() -> void:
+	set_lens("")
+
+
+func lens_active() -> bool:
+	return not _lens_query.is_empty()
+
+
+func lens_query() -> String:
+	return _lens_query
+
+
+func lens_hidden_count() -> int:
+	return _lens_hidden_count
+
+
 ## Tree-wide search (the find bar's data source): walks the FULL row tree - including
 ## rows hidden inside folded groups - and returns matching source resources in order.
 func search_all(query: String) -> Array[Resource]:
@@ -1458,7 +1486,25 @@ func _refresh_rows() -> void:
 	_root_rows = _build_rows_from_sheet(_sheet)
 	_update_layout_style_signature(_get_font_size())
 	_flat_rows.clear()
-	for row_data in _root_rows:
+	# Live filter lens (the C3 "show only matching events" view): a non-mutating view
+	# predicate - top-level rows whose subtree never mentions the term are skipped at
+	# flatten time (the sheet itself is untouched; clearing the lens restores everything).
+	_lens_hidden_count = 0
+	var visible_roots: Array = _root_rows
+	if not _lens_query.is_empty():
+		visible_roots = []
+		var lens_needle: String = _lens_query.to_lower()
+		for root_candidate: EventRowData in _root_rows:
+			var lens_matches: Array[Resource] = []
+			_search_row_tree(root_candidate, lens_needle, lens_matches)
+			if lens_matches.is_empty():
+				# The count reports hidden EVENTS (what the user cares about); structural
+				# rows (variable headers, spacers) hide silently alongside them.
+				if root_candidate.source_resource is EventRow or root_candidate.source_resource is EventGroup:
+					_lens_hidden_count += 1
+			else:
+				visible_roots.append(root_candidate)
+	for row_data in visible_roots:
 		_flatten_row(row_data, null)
 	# Small/medium sheets build all spans up front (before metrics) so behavior is
 	# byte-identical to the non-virtualized path. Large sheets keep spans lazy.
