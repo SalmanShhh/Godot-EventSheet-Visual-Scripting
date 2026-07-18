@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - the Outline panel (the sheet's method list)
+
+- **View > Outline...** (also in the command palette): a slim jump tree of the sheet's
+  STRUCTURAL rows - groups (with nesting), #region fences, and published functions -
+  so a ballooning sheet navigates by the names you remember, not by scrolling. Clicking
+  an entry reveals + selects the row. Color-coded like the rest of the editor: amber
+  groups, blue regions, purple ƒ functions; closing #endregion fences are excluded.
+- `EventSheetOutlinePanel.outline_entries(sheet)` is the pure structural walk;
+  `tests/outline_panel_test.gd` pins order, kinds, depths, and the panel tree build.
+
 ### Changed - the Bookmarks panel, Construct-style
 
 - **View > Bookmarks is now the C3 bookmarks bar**: a Previous / Next / Clear All toolbar

@@ -36,6 +36,7 @@ func _command_palette_commands() -> Array[Dictionary]:
 		{"title": "Add Global Variable…", "run": _dock._on_add_global_variable_requested},
 		{"title": "Add Function…", "run": _dock._open_function_dialog},
 		{"title": "Go to Event Number…", "run": _dock._open_go_to_event_dialog},
+		{"title": "Outline (groups / regions / functions)…", "run": _dock._open_outline_panel},
 		{"title": "Toggle GDScript Panel", "run": _dock._toggle_code_panel},
 		{"title": "What Changed Since Save…", "run": func() -> void: _dock._sheet_diff.open()},
 		{"title": "Toggle Simple Mode", "run": func() -> void: _dock.set_simple_mode(not _dock._simple_mode)},

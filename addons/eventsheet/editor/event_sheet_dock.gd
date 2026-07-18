@@ -2549,6 +2549,25 @@ func _ensure_bookmarks_panel() -> EventSheetBookmarksPanel:
 		_bookmarks_panel = EventSheetBookmarksPanel.new(self)
 	return _bookmarks_panel
 
+# ── Outline panel - extracted to dock/outline_panel.gd ───────────────────────────────
+var _outline_panel: EventSheetOutlinePanel = null
+
+
+func _ensure_outline_panel() -> EventSheetOutlinePanel:
+	if _outline_panel == null:
+		_outline_panel = EventSheetOutlinePanel.new(self)
+	return _outline_panel
+
+
+func _open_outline_panel() -> void:
+	_ensure_outline_panel().open()
+
+
+var _outline_tree: Tree:
+	get: return _ensure_outline_panel().tree
+	set(value): _ensure_outline_panel().tree = value
+
+
 # Forwarding properties (tests reach these directly - keep them settable).
 var _bookmarks_window: Window:
 	get: return _ensure_bookmarks_panel().window
