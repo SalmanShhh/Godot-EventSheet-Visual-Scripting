@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - drag a property from the Inspector into the sheet
+
+- **Inspector property drop**: drag any property out of the Inspector and drop it on the
+  sheet. On a param VALUE it inserts the access expression (`$Sprite.visible`); anywhere
+  else it becomes a **Set Property** action - on the row it landed on, or as a new event -
+  targeting that node (`self` / `%Unique` / `$Path`, the same shortest-robust-reference
+  rules as node drops) with the property's CURRENT value pre-filled as a literal
+  (`false`, `Color(1, 0.4, 0.4, 1)`, `Vector2(0, 0)`; object-valued properties fall back
+  to the action's default for you to fill in).
+- The resolution is pure and pinned: `tests/property_drop_test.gd` covers the payload
+  recognition (Godot's `obj_property` drag shape), self-vs-path references, every literal
+  form, and the Set Property template contract.
+
 ### Added - connect signals to sheets from the Scene dock
 
 - **Connect Signal to Event Sheet...** on a node's right-click menu: pick any of the

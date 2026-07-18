@@ -178,6 +178,7 @@ func build_ui() -> void:
 	_dock._viewport.rows_drop_requested.connect(_dock._on_rows_drop_requested)
 	_dock._viewport.ace_preview_requested.connect(_dock._on_ace_preview_requested)
 	_dock._viewport.asset_dropped.connect(_dock._apply_asset_drop)
+	_dock._viewport.property_dropped.connect(_dock._apply_property_drop)
 	_dock._viewport.ace_picker_requested.connect(_dock._on_viewport_ace_picker_requested)
 	_dock._viewport.span_edit_requested.connect(_dock._on_viewport_span_edit_requested)
 	_dock._viewport.navigate_requested.connect(_dock._navigate.navigate)

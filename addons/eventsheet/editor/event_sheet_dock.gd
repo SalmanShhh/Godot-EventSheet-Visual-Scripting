@@ -2755,6 +2755,24 @@ func _refresh_clone_uids(resource: Resource) -> void:
 # a scene dropped on an event row spawns, a sound plays - pre-filled, undoable. ───────
 
 
+## Inspector property dropped on the sheet: build a Set Property action targeting that
+## node + property, current value pre-filled - on the row it landed on, or as a new event.
+func _apply_property_drop(target_event: Resource, node_reference: String, property_name: String, value_literal: String) -> void:
+	if property_name.is_empty() or not _ensure_sheet_for_editing():
+		return
+	var definition: ACEDefinition = _find_definition("Core", "SetProperty")
+	if definition == null:
+		_set_status("The Set Property action is unavailable - is the Helpers module disabled?", true)
+		return
+	var params: Dictionary = {
+		"target": node_reference,
+		"property": property_name,
+		"value": value_literal if not value_literal.is_empty() else str(definition.parameters[2].get("default_value", "null")),
+	}
+	var mode: String = "append_action" if target_event is EventRow else "new_event"
+	_ace_apply._apply_ace_definition(definition, params, {"mode": mode, "selected_resource": target_event})
+
+
 func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -> void:
 	if not (target_event is EventRow):
 		_set_status("Drop scenes or sounds onto an event row to add a pre-filled action.", true)

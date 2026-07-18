@@ -20,6 +20,9 @@ signal param_value_edit_at_rect_requested(ace: Resource, param_id: String, curre
 signal color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color)
 ## Dropping a scene-tree node onto a condition/action param VALUE - sets that param to the node reference.
 signal param_node_drop_requested(ace: Resource, param_id: String, node_reference: String)
+## Dropping an Inspector property onto the sheet - the dock builds a Set Property action
+## (on the row it landed on, or as a new event) targeting that node + property.
+signal property_dropped(target_event: Resource, node_reference: String, property_name: String, value_literal: String)
 signal ace_drop_requested(
 	source_entries: Array,
 	target_row: EventRowData,
@@ -2910,6 +2913,10 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	if _is_node_path_drag(data):
 		var node_target: Dictionary = _param_value_at(_to_logical_position(at_position))
 		return not node_target.is_empty() and _param_accepts_node_ref(node_target.get("ace"), str(node_target.get("param_id", "")))
+	# An Inspector property drag is welcome anywhere: on a param VALUE it inserts the
+	# access expression, anywhere else it becomes a Set Property action.
+	if is_property_drag(data):
+		return true
 	return not _resolve_dropped_source_objects(data).is_empty() \
 		or not _resolve_dropped_asset_paths(data).is_empty()
 
@@ -2924,6 +2931,20 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 			if not reference.is_empty():
 				param_node_drop_requested.emit(target.get("ace"), str(target.get("param_id", "")), reference)
 				return
+	# Inspector property drops: on a param VALUE that takes expressions, insert the access
+	# expression ($Sprite.modulate); anywhere else, the dock builds a Set Property action
+	# (on the row it landed on, or as a new event) with the CURRENT value pre-filled.
+	if is_property_drag(data):
+		var parts: Dictionary = property_drop_parts(data, EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface") else null)
+		var value_target: Dictionary = _param_value_at(_to_logical_position(at_position))
+		if not value_target.is_empty() and _param_accepts_node_ref(value_target.get("ace"), str(value_target.get("param_id", ""))):
+			param_node_drop_requested.emit(value_target.get("ace"), str(value_target.get("param_id", "")), str(parts.get("access", "")))
+			return
+		var property_row_index: int = _find_row_index_at_y(at_position.y)
+		var property_row: EventRowData = _row_at(property_row_index) if property_row_index >= 0 else null
+		property_dropped.emit(property_row.source_resource if property_row != null else null,
+			str(parts.get("reference", "")), str(parts.get("property", "")), str(parts.get("value", "")))
+		return
 	# FileSystem asset drops carry intent: a scene or sound dropped ON an event row
 	# becomes a pre-filled action (the dock builds it). Recognized assets are accepted
 	# anywhere on the canvas so an empty-space drop can explain itself instead of
@@ -2944,6 +2965,51 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if source_objects[0] is Node:
 		source_label = (source_objects[0] as Node).name
 	ace_preview_requested.emit(source_label, definitions)
+
+
+## True for Godot's Inspector property drag ({type: "obj_property", object, property})
+## when the dragged owner is a Node - the payload EditorProperty hands every drag.
+static func is_property_drag(data: Variant) -> bool:
+	if not (data is Dictionary):
+		return false
+	var payload: Dictionary = data as Dictionary
+	return str(payload.get("type", "")) == "obj_property" \
+		and payload.get("object") is Node \
+		and not str(payload.get("property", "")).is_empty()
+
+
+## Resolves an Inspector property drop into everything the sheet needs:
+## reference (the node as "self" / %Unique / $Path), property (bare name), access (the
+## read expression), and value (the property's CURRENT value as a GDScript literal, ""
+## when it has no literal form). Pure given a scene root, so tests pin it headless.
+static func property_drop_parts(data: Variant, scene_root: Node) -> Dictionary:
+	var payload: Dictionary = data as Dictionary
+	var node: Node = payload.get("object") as Node
+	var property_name: String = str(payload.get("property", ""))
+	var reference: String = "self"
+	if scene_root != null and node != scene_root:
+		reference = ACEParamsDialog._best_node_reference(scene_root, str(scene_root.get_path_to(node)))
+	elif scene_root == null:
+		reference = "$%s" % node.name
+	var access: String = property_name if reference == "self" else "%s.%s" % [reference, property_name]
+	return {
+		"reference": reference,
+		"property": property_name,
+		"access": access,
+		"value": property_value_literal(node.get(property_name)),
+	}
+
+
+## A property value as a GDScript literal the Set Property action can carry - primitives
+## and math types only ("" for objects/null/multi-line forms; the user fills those in).
+static func property_value_literal(value: Variant) -> String:
+	if value == null or value is Object:
+		return ""
+	var literal: String = var_to_str(value)
+	if literal.contains("\n"):
+		return ""
+	# var_to_str writes StringNames as &"x" and NodePaths as ^"x" - both valid GDScript.
+	return literal
 
 
 ## Scene/audio files in a FileSystem-dock drop payload - the asset kinds an event
