@@ -261,6 +261,8 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	if not _fired_intensity.is_empty():
+		_decay_firing(_delta)
 	var scroll_value: int = _get_scroll_offset()
 	if scroll_value != _last_scroll:
 		_last_scroll = scroll_value
@@ -1587,6 +1589,10 @@ var _row_diagnostics: Dictionary = {}
 var _first_diagnostic_uid: String = ""
 # Live event trace: uid set of events that fired in the latest streamed frame (transient highlight).
 var _fired_uids: Dictionary = {}
+# uid -> pulse intensity (1.0 on fire, decayed toward 0 in _process) - the fade that makes
+# a fire read as a flash instead of a hard blink.
+var _fired_intensity: Dictionary = {}
+const FIRING_FADE_SECONDS := 0.6
 
 
 func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
@@ -1613,8 +1619,9 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 		row_data = _build_event_row(entry as EventRow, indent)
 	if row_data != null and not _row_diagnostics.is_empty():
 		row_data.error_message = str(_row_diagnostics.get(str(entry.get_instance_id()), ""))
-	if row_data != null and not _fired_uids.is_empty() and entry is EventRow:
+	if row_data != null and entry is EventRow and (not _fired_uids.is_empty() or not _fired_intensity.is_empty()):
 		row_data.firing = _fired_uids.has((entry as EventRow).event_uid)
+		row_data.firing_intensity = float(_fired_intensity.get((entry as EventRow).event_uid, 0.0))
 	return row_data
 
 
@@ -1653,11 +1660,35 @@ func set_fired_events(uids: PackedStringArray) -> void:
 	_fired_uids.clear()
 	for uid: String in uids:
 		_fired_uids[uid] = true
+		_fired_intensity[uid] = 1.0
+	_apply_firing_to_rows()
+	queue_redraw()
+
+
+## Fades every pulse toward 0 and repaints while any is alive; an event still firing gets
+## re-bumped to 1.0 by each streamed batch, so sustained fire holds near full glow while a
+## stopped one fades out over FIRING_FADE_SECONDS.
+func _decay_firing(delta: float) -> void:
+	var faded: Array = []
+	for uid: Variant in _fired_intensity:
+		var next_intensity: float = float(_fired_intensity[uid]) - delta / FIRING_FADE_SECONDS
+		if next_intensity <= 0.0:
+			faded.append(uid)
+		else:
+			_fired_intensity[uid] = next_intensity
+	for uid: Variant in faded:
+		_fired_intensity.erase(uid)
+	_apply_firing_to_rows()
+	queue_redraw()
+
+
+func _apply_firing_to_rows() -> void:
 	for entry: Dictionary in get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
 		if row_data != null and row_data.source_resource is EventRow:
-			row_data.firing = _fired_uids.has((row_data.source_resource as EventRow).event_uid)
-	queue_redraw()
+			var uid: String = (row_data.source_resource as EventRow).event_uid
+			row_data.firing = _fired_uids.has(uid)
+			row_data.firing_intensity = float(_fired_intensity.get(uid, 0.0))
 
 
 ## Reveals (unfolds ancestors) + selects the first flagged row, so a failed compile lands you

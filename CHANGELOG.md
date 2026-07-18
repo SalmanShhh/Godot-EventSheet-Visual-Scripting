@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - the live event trace pulses instead of blinking
+
+- **Execution highlighting now fades**: rows in the open sheet pulse as their events fire
+  in the running game - full cyan glow the instant a fired frame lands, decaying to
+  nothing over ~0.6 seconds. A sustained per-frame event holds near full glow (each
+  streamed batch re-bumps it) while a one-shot reads as a fading flash, so you can see
+  WHAT just fired even after it stopped - previously the highlight snapped off with the
+  next 0.25s batch and brief fires were easy to miss entirely. Existing plumbing
+  unchanged (the emit_event_trace flag, the throttled eventsheets:fired_events stream,
+  the debug-residue Doctor check); the decay pins live in `tests/live_values_test.gd`.
+
 ### Added - drag a property from the Inspector into the sheet
 
 - **Inspector property drop**: drag any property out of the Inspector and drop it on the

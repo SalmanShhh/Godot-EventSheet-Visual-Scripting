@@ -28,6 +28,10 @@ var error_message: String = ""
 # Live event trace: true while this event is in the latest streamed "fired" frame - a transient
 # highlight so you can watch which events fire in real time during a debug run.
 var firing: bool = false
+# The pulse: 1.0 the moment a fired frame lands, decaying to 0 over ~half a second so a
+# fire reads as a fading flash instead of a hard blink (an event still firing re-bumps it
+# every streamed batch and holds near full glow).
+var firing_intensity: float = 0.0
 var line_number: int = 0
 var breakpoint_enabled: bool = false
 var bookmark_enabled: bool = false

@@ -263,6 +263,29 @@ static func run() -> bool:
 		if rd2 != null and rd2.source_resource == fire_event:
 			cleared_flag = rd2.firing
 	all_passed = _check("clearing fired events un-highlights", cleared_flag, false) and all_passed
+
+	# The pulse: a fire holds intensity 1.0, keeps fading after the flag clears (a flash,
+	# not a hard blink), decays over ~0.6s in _process, and vanishes at zero.
+	var pulse_after_clear: float = 0.0
+	for entry: Dictionary in fire_viewport.get_flat_rows():
+		var rd3: EventRowData = entry.get("row")
+		if rd3 != null and rd3.source_resource == fire_event:
+			pulse_after_clear = rd3.firing_intensity
+	all_passed = _check("the pulse keeps fading after the batch clears", pulse_after_clear, 1.0) and all_passed
+	fire_viewport._decay_firing(0.3)
+	var pulse_mid: float = 0.0
+	for entry: Dictionary in fire_viewport.get_flat_rows():
+		var rd4: EventRowData = entry.get("row")
+		if rd4 != null and rd4.source_resource == fire_event:
+			pulse_mid = rd4.firing_intensity
+	all_passed = _check("half the fade leaves roughly half the glow", absf(pulse_mid - 0.5) < 0.01, true) and all_passed
+	fire_viewport._decay_firing(0.4)
+	var pulse_done: float = 1.0
+	for entry: Dictionary in fire_viewport.get_flat_rows():
+		var rd5: EventRowData = entry.get("row")
+		if rd5 != null and rd5.source_resource == fire_event:
+			pulse_done = rd5.firing_intensity
+	all_passed = _check("the pulse dies at zero", pulse_done, 0.0) and all_passed
 	fire_viewport.free()
 
 	return all_passed
