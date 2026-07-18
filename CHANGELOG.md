@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - keyboard cell navigation (arrow through cells)
+
+- **Left / Right now walk the selected event's cells** - trigger, conditions, then
+  actions - once there is nothing to fold/unfold (folding keeps priority on group and
+  parent rows, Alt+arrows stay jump-history). **Enter** edits the focused cell exactly
+  as before (param cursor / inline edit), and **Esc** drops the cell focus back to the
+  row - with no cell focused, Esc keeps its other meanings. The ends clamp: stepping
+  past the last cell leaves the key to its usual behavior instead of wrapping.
+- New viewport API: `interactive_span_indices` / `step_cell_focus` / `clear_cell_focus`,
+  pinned in `tests/cell_navigation_test.gd` (lane order, clamped ends, Esc fallthrough).
+
 ### Changed - per-param batch edit
 
 - **Edit Values Across Selection now applies per parameter**: each field in the batch

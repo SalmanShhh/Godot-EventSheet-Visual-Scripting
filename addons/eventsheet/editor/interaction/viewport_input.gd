@@ -420,15 +420,21 @@ func handle_key(event: InputEventKey) -> void:
 			_viewport.accept_event()
 	elif event.keycode == KEY_LEFT and not event.alt_pressed:
 		# Plain Left folds; Alt+Left is the dock's jump-history Back and must pass through.
+		# With nothing to fold, Left walks the cell focus instead (C3's arrow-through-cells).
 		var left_row: EventRowData = _viewport._row_at(_viewport._selected_row_index)
 		if left_row != null and not left_row.children.is_empty() and not left_row.folded:
 			_viewport._toggle_row_fold(_viewport._selected_row_index)
 			_viewport.accept_event()
+		elif _viewport.step_cell_focus(-1):
+			_viewport.accept_event()
 	elif event.keycode == KEY_RIGHT and not event.alt_pressed:
-		# Plain Right unfolds; Alt+Right is the dock's jump-history Forward.
+		# Plain Right unfolds; Alt+Right is the dock's jump-history Forward. With nothing
+		# to unfold, Right walks the cell focus (Enter edits the focused cell, Esc drops back).
 		var right_row: EventRowData = _viewport._row_at(_viewport._selected_row_index)
 		if right_row != null and not right_row.children.is_empty() and right_row.folded:
 			_viewport._toggle_row_fold(_viewport._selected_row_index)
+			_viewport.accept_event()
+		elif _viewport.step_cell_focus(1):
 			_viewport.accept_event()
 	elif event.keycode == KEY_B and (event.ctrl_pressed or event.meta_pressed):
 		_viewport._toggle_breakpoint(_viewport._selected_row_index)
@@ -473,6 +479,11 @@ func handle_key(event: InputEventKey) -> void:
 	elif event.keycode == KEY_F2:
 		_viewport._begin_edit(_viewport._selected_row_index, _viewport._selected_span_index)
 		_viewport.accept_event()
+	elif event.keycode == KEY_ESCAPE:
+		# Esc from a focused cell drops back to row selection; with no cell focus the key
+		# passes through (lens clear, dialog close keep their meanings).
+		if _viewport.clear_cell_focus():
+			_viewport.accept_event()
 
 
 func handle_editing_key(event: InputEventKey) -> void:

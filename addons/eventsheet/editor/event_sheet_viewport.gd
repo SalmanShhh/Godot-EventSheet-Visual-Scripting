@@ -814,6 +814,51 @@ func select_resources(resources: Array) -> int:
 
 
 
+## The keyboard cell walk (C3's arrow-through-cells): the selected row's ACE cells -
+## trigger, conditions, actions - in span order. Left/Right move the cell focus through
+## them; Enter (the existing handler) edits the focused cell; Esc drops back to the row.
+func interactive_span_indices(row_data: EventRowData) -> Array[int]:
+	var indices: Array[int] = []
+	if row_data == null:
+		return indices
+	for span_index in range(row_data.spans.size()):
+		var span: SemanticSpan = row_data.spans[span_index]
+		if span != null and span.metadata is Dictionary and str(span.metadata.get("kind", "")) in ["trigger", "condition", "action"]:
+			indices.append(span_index)
+	return indices
+
+
+## Moves the cell focus one ACE cell left/right within the selected row. Returns false
+## when there is nothing to walk (no row, no cells, already at the end) so the caller can
+## leave the key to its other meaning (fold/unfold).
+func step_cell_focus(direction: int) -> bool:
+	var row_data: EventRowData = _row_at(_selected_row_index)
+	var cells: Array[int] = interactive_span_indices(row_data)
+	if cells.is_empty():
+		return false
+	var position: int = cells.find(_selected_span_index)
+	if position == -1:
+		position = 0 if direction >= 0 else cells.size() - 1
+	else:
+		var stepped: int = position + signi(direction)
+		if stepped < 0 or stepped >= cells.size():
+			return false
+		position = stepped
+	_select_row(_selected_row_index, cells[position])
+	queue_redraw()
+	return true
+
+
+## Esc from a focused cell back to plain row selection. Returns false when no cell focus
+## was active (so Esc keeps its other meanings - lens clear, dialog close).
+func clear_cell_focus() -> bool:
+	if _selected_row_index < 0 or _selected_span_index < 0:
+		return false
+	_select_row(_selected_row_index, -1)
+	queue_redraw()
+	return true
+
+
 const SLOW_CLICK_MIN_MS := 450   # beyond the OS double-click window
 const SLOW_CLICK_MAX_MS := 1600
 var _slow_click: Dictionary = {"row": -1, "span": -1, "msec": 0}
