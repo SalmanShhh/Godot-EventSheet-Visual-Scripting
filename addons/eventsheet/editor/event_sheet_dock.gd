@@ -2549,13 +2549,13 @@ func _ensure_bookmarks_panel() -> EventSheetBookmarksPanel:
 		_bookmarks_panel = EventSheetBookmarksPanel.new(self)
 	return _bookmarks_panel
 
-# Forwarding properties (tests assign these directly - keep them settable).
+# Forwarding properties (tests reach these directly - keep them settable).
 var _bookmarks_window: Window:
 	get: return _ensure_bookmarks_panel().window
 	set(value): _ensure_bookmarks_panel().window = value
-var _bookmarks_list: ItemList:
-	get: return _ensure_bookmarks_panel().list
-	set(value): _ensure_bookmarks_panel().list = value
+var _bookmarks_tree: Tree:
+	get: return _ensure_bookmarks_panel().tree
+	set(value): _ensure_bookmarks_panel().tree = value
 
 
 func _open_bookmarks_panel() -> void:

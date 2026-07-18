@@ -62,16 +62,18 @@ static func run() -> bool:
 	viewport._select_row(1, -1)
 	viewport.toggle_bookmark_selected()
 	editor._ensure_live_values_window()  # unrelated windows coexist
-	if editor._bookmarks_window == null:
-		editor._bookmarks_window = Window.new()
-		editor._bookmarks_list = ItemList.new()
-		editor._bookmarks_window.add_child(editor._bookmarks_list)
-		editor.add_child(editor._bookmarks_window)
+	editor._ensure_bookmarks_panel().build()
 	editor._refresh_bookmarks_list()
 	var listed: bool = false
-	for index in range(editor._bookmarks_list.item_count):
-		if editor._bookmarks_list.get_item_text(index).contains("remember this"):
-			listed = true
+	var bookmark_root: TreeItem = editor._bookmarks_tree.get_root()
+	var walker: TreeItem = bookmark_root.get_first_child() if bookmark_root != null else null
+	while walker != null:
+		var child: TreeItem = walker.get_first_child()
+		while child != null:
+			if child.get_text(0).contains("remember this"):
+				listed = true
+			child = child.get_next()
+		walker = walker.get_next()
 	all_passed = _check("bookmarks panel lists marked rows", listed, true) and all_passed
 
 	# Find -> split: the current match opens in the split pane.

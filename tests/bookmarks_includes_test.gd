@@ -50,6 +50,26 @@ static func run() -> bool:
 	editor._refresh_after_edit()
 	var refreshed_last: EventRowData = viewport.get_flat_rows()[2].get("row")
 	all_passed = _check("toggle-off survives refresh (central sync)", refreshed_last.bookmark_enabled, false) and all_passed
+
+	# ── The C3-style Bookmarks panel: grouped tree entries + Clear All ───────
+	var panel: EventSheetBookmarksPanel = editor._ensure_bookmarks_panel()
+	panel.build()
+	panel.refresh()
+	var panel_root: TreeItem = editor._bookmarks_tree.get_root()
+	var header: TreeItem = panel_root.get_first_child()
+	all_passed = _check("panel groups bookmarks under a sheet header", header != null and header.get_first_child() != null, true) and all_passed
+	all_passed = _check("the entry shows the bookmarked row's text", header.get_first_child().get_text(0).contains("row 0"), true) and all_passed
+	all_passed = _check("entries carry the jump target", header.get_first_child().get_metadata(0), sheet.events[0]) and all_passed
+	var numbered: EventRowData = EventRowData.new()
+	numbered.event_number = 12
+	var numbered_span: SemanticSpan = SemanticSpan.new()
+	numbered_span.text = "System OnReady"
+	numbered.spans.append(numbered_span)
+	all_passed = _check("event rows show their margin number (panel matches gutter)", EventSheetBookmarksPanel.entry_label(numbered), "12 · System OnReady") and all_passed
+	viewport.clear_bookmarks()
+	panel.refresh()
+	all_passed = _check("Clear All empties every bookmark", viewport.jump_to_bookmark(1), false) and all_passed
+	all_passed = _check("the cleared panel shows no entries", editor._bookmarks_tree.get_root().get_first_child(), null) and all_passed
 	editor.free()
 
 	# ── Includes ─────────────────────────────────────────────────────────────

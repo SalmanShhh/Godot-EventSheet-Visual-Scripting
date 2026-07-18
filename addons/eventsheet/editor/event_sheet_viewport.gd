@@ -1222,6 +1222,16 @@ func toggle_bookmark_selected() -> void:
 	queue_redraw()
 
 
+## Removes every session bookmark (the panel's Clear All).
+func clear_bookmarks() -> void:
+	_bookmark_rows.clear()
+	for index in range(_flat_rows.size()):
+		var row_data: EventRowData = _row_at(index)
+		if row_data != null:
+			row_data.bookmark_enabled = false
+	queue_redraw()
+
+
 ## Selects the next (direction >= 0) or previous bookmarked row, wrapping around.
 ## Returns false when nothing is bookmarked.
 func jump_to_bookmark(direction: int = 1) -> bool:

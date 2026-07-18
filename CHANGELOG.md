@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - the Bookmarks panel, Construct-style
+
+- **View > Bookmarks is now the C3 bookmarks bar**: a Previous / Next / Clear All toolbar
+  over a tree of every Ctrl+M'd row, grouped under a sheet header - each entry leads with
+  its margin event number ("12 · On Body Entered"), so the panel and the gutter agree on
+  what "event 12" is. Clicking an entry jumps to (reveals + selects) the row; Previous /
+  Next reuse the existing F4 / Shift+F4 cycling; Clear All wipes every mark. Icon-only
+  glyph cells are skipped when building the entry text, so entries read as words.
+- New viewport API: `clear_bookmarks()`. `tests/bookmarks_includes_test.gd` pins the
+  panel tree grouping, the jump metadata, the numbered entry label, and Clear All.
+
 ### Added - batch param edit across the selection
 
 - **Right-click a multi-selection > Edit Values Across Selection...**: any action or
