@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed - one autocomplete combo for the whole plugin (review cleanup)
+
+- **`EventSheetPopupUI.autocomplete_combo(edit, suggestions_provider)`** now owns the
+  editable suggest-combo wiring (rebuild-on-open, pick-inserts + caret return, focus
+  restore, Down-arrow opener with the dead-popup guard), replacing three near-verbatim
+  copies: the ACE params dialog, the Replace Object References To field, and the
+  match/switch case patterns. The provider is a Callable, so live lists (feature tags,
+  enum members) are read at open; picks resolve against the exact list shown. Bonus fix
+  from the dedup: the match/switch copy had drifted - it lacked the dead-popup guard,
+  which it now inherits. `ACEParamsDialog._rebuild_autocomplete_popup` stays as a thin
+  delegate for its external callers.
+
 ### Fixed - batch merge copies kept params by value (review hardening)
 
 - The per-param batch merge now deep-duplicates a kept Array/Dictionary value instead of

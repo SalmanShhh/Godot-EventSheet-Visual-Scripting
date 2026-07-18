@@ -416,57 +416,17 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 		if not suggestion_text.is_empty() and not suggestion_texts.has(suggestion_text):
 			suggestion_texts.append(suggestion_text)
 
-	var picker: MenuButton = MenuButton.new()
-	picker.text = "▾"
-	picker.tooltip_text = "Suggestions (you can still type any value)"
-	var popup: PopupMenu = picker.get_popup()
-	# Rebuild the (filtered) list each time it opens so what's typed narrows the choices.
-	popup.about_to_popup.connect(func() -> void:
-		_rebuild_autocomplete_popup(popup, suggestion_texts, edit.text))
-	# Whenever the suggestion popup closes (pick, Escape, click-away), return the caret to
-	# the field so Enter still confirms the dialog and typing continues seamlessly.
-	popup.popup_hide.connect(func() -> void: edit.grab_focus())
-	popup.id_pressed.connect(func(picked_id: int) -> void:
-		if picked_id >= 0 and picked_id < suggestion_texts.size():
-			edit.text = suggestion_texts[picked_id]
-			edit.caret_column = edit.text.length()
-			edit.grab_focus())
-	# Down-arrow from the field opens the suggestions (keyboard-first authoring).
-	# accept_event() (a Control method) stops the key here - this dialog is a RefCounted
-	# wrapper, so there is no get_viewport()/set_input_as_handled() to reach for.
-	edit.gui_input.connect(func(event: InputEvent) -> void:
-		var key_event: InputEventKey = event as InputEventKey
-		if key_event != null and key_event.pressed and key_event.keycode == KEY_DOWN:
-			_rebuild_autocomplete_popup(popup, suggestion_texts, edit.text)
-			# Don't pop a dead, disabled-only "(no match)" menu - keep the caret in the field.
-			if popup.item_count == 1 and popup.is_item_disabled(0):
-				edit.accept_event()
-				return
-			popup.position = Vector2i(edit.get_screen_position() + Vector2(0.0, edit.size.y))
-			popup.reset_size()
-			popup.popup()
-			edit.accept_event())
-	row.add_child(picker)
+	# One shared combo implementation for the whole plugin (popup_ui.gd): rebuild-on-open,
+	# pick-inserts, focus-return, Down-arrow opener with the dead-popup guard.
+	row.add_child(EventSheetPopupUI.autocomplete_combo(edit, func() -> PackedStringArray: return suggestion_texts))
 	_fields[key] = edit
 	return row
 
 
-## Fills `popup` with the suggestions whose text contains `filter_text` (case-insensitive;
-## empty filter shows all). Each item's id is its index into the FULL list, so a pick maps
-## back correctly even when filtered. Pure (no instance state) so it is static and shared - the
-## match/switch dialog reuses it for its case-pattern autocomplete.
+## Thin delegate kept for external callers (tests pin the filter through this name); the
+## shared implementation lives on EventSheetPopupUI beside the combo builder it feeds.
 static func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStringArray, filter_text: String) -> void:
-	popup.clear()
-	var needle: String = filter_text.strip_edges().to_lower()
-	var any_added: bool = false
-	for index: int in range(suggestions.size()):
-		var suggestion: String = suggestions[index]
-		if needle.is_empty() or suggestion.to_lower().contains(needle):
-			popup.add_item(suggestion, index)
-			any_added = true
-	if not any_added:
-		popup.add_item("(no match - keep typing)", -1)
-		popup.set_item_disabled(popup.item_count - 1, true)
+	EventSheetPopupUI.fill_suggestion_popup(popup, suggestions, filter_text)
 
 
 ## Rich-text param editor (hint "bbcode_text"): Discord-style formatting for BBCode-taking

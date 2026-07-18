@@ -336,27 +336,9 @@ func _add_match_case_row(pattern: String, body: String) -> Dictionary:
 	# members (State.IDLE, …), true / false for a bool, or any sheet enum otherwise - so the pattern is
 	# steered to a real value instead of typed by hand (and still freely editable). The list filters by what
 	# is typed (reusing the ACE param dialog's shared popup filter), and Down in the field opens it.
-	var pick: MenuButton = MenuButton.new()
-	pick.text = "▾"
+	var pick: MenuButton = EventSheetPopupUI.autocomplete_combo(pattern_edit, func() -> PackedStringArray: return PackedStringArray(_match_pattern_choices()))
 	pick.tooltip_text = "Pick a valid value for this branch (you can still type any)"
-	var pick_popup: PopupMenu = pick.get_popup()
-	pick_popup.about_to_popup.connect(func() -> void:
-		ACEParamsDialog._rebuild_autocomplete_popup(pick_popup, PackedStringArray(_match_pattern_choices()), pattern_edit.text))
-	pick_popup.id_pressed.connect(func(picked_id: int) -> void:
-		var choices: Array = _match_pattern_choices()
-		if picked_id >= 0 and picked_id < choices.size():
-			pattern_edit.text = str(choices[picked_id])
-			pattern_edit.caret_column = pattern_edit.text.length()
-			pattern_edit.grab_focus())
 	head.add_child(pick)
-	pattern_edit.gui_input.connect(func(event: InputEvent) -> void:
-		var key_event: InputEventKey = event as InputEventKey
-		if key_event != null and key_event.pressed and key_event.keycode == KEY_DOWN:
-			ACEParamsDialog._rebuild_autocomplete_popup(pick_popup, PackedStringArray(_match_pattern_choices()), pattern_edit.text)
-			pick_popup.position = Vector2i(pattern_edit.get_screen_position() + Vector2(0.0, pattern_edit.size.y))
-			pick_popup.reset_size()
-			pick_popup.popup()
-			pattern_edit.accept_event())
 	var remove_button: Button = Button.new()
 	remove_button.text = "✕"
 	remove_button.tooltip_text = "Remove this case"

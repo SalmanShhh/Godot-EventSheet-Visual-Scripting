@@ -146,3 +146,66 @@ static func inset_panel_stylebox() -> StyleBoxFlat:
 	box.set_border_width_all(1)
 	box.set_corner_radius_all(4)
 	return box
+
+
+## Fills `popup` with the suggestions whose text contains `filter_text` (case-insensitive;
+## empty filter shows all). Each item's id is its index into the FULL list, so a pick maps
+## back correctly even when filtered. The one shared filler behind every autocomplete
+## combo (ACE params, Replace Object References, the match/switch case patterns).
+static func fill_suggestion_popup(popup: PopupMenu, suggestions: PackedStringArray, filter_text: String) -> void:
+	popup.clear()
+	var needle: String = filter_text.strip_edges().to_lower()
+	var any_added: bool = false
+	for index: int in range(suggestions.size()):
+		var suggestion: String = suggestions[index]
+		if needle.is_empty() or suggestion.to_lower().contains(needle):
+			popup.add_item(suggestion, index)
+			any_added = true
+	if not any_added:
+		popup.add_item("(no match - keep typing)", -1)
+		popup.set_item_disabled(popup.item_count - 1, true)
+
+
+## The editable autocomplete combo's ▾ picker, fully wired to `edit` (event-sheet-style
+## "Combo" with free text): opening rebuilds the (filtered) list from suggestions_provider
+## - a Callable returning the CURRENT suggestions, so live lists (project feature tags,
+## enum members) are never stale - picking inserts the suggestion and returns the caret,
+## and Down-arrow in the field opens the popup (skipping a dead "(no match)"-only menu).
+## The caller parents the returned MenuButton beside its LineEdit. One implementation for
+## every combo in the plugin - the ACE params dialog, the Replace Object References To
+## field, and the match/switch case patterns all attach through here.
+static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable) -> MenuButton:
+	var picker: MenuButton = MenuButton.new()
+	picker.text = "▾"
+	picker.tooltip_text = "Suggestions (you can still type any value)"
+	var popup: PopupMenu = picker.get_popup()
+	# The pool shown last: item ids index into THIS array, so a pick resolves against
+	# exactly the list the user saw even if the live provider changes between calls.
+	var shown: Dictionary = {"pool": PackedStringArray()}
+	popup.about_to_popup.connect(func() -> void:
+		shown["pool"] = PackedStringArray(suggestions_provider.call())
+		fill_suggestion_popup(popup, shown["pool"], edit.text))
+	# Whenever the popup closes (pick, Escape, click-away), return the caret to the field
+	# so Enter still confirms the dialog and typing continues seamlessly.
+	popup.popup_hide.connect(func() -> void: edit.grab_focus())
+	popup.id_pressed.connect(func(picked_id: int) -> void:
+		var pool: PackedStringArray = shown["pool"]
+		if picked_id >= 0 and picked_id < pool.size():
+			edit.text = pool[picked_id]
+			edit.caret_column = edit.text.length()
+			edit.grab_focus())
+	# Down-arrow from the field opens the suggestions (keyboard-first authoring).
+	edit.gui_input.connect(func(event: InputEvent) -> void:
+		var key_event: InputEventKey = event as InputEventKey
+		if key_event != null and key_event.pressed and key_event.keycode == KEY_DOWN:
+			shown["pool"] = PackedStringArray(suggestions_provider.call())
+			fill_suggestion_popup(popup, shown["pool"], edit.text)
+			# Don't pop a dead, disabled-only "(no match)" menu - keep the caret in the field.
+			if popup.item_count == 1 and popup.is_item_disabled(0):
+				edit.accept_event()
+				return
+			popup.position = Vector2i(edit.get_screen_position() + Vector2(0.0, edit.size.y))
+			popup.reset_size()
+			popup.popup()
+			edit.accept_event())
+	return picker
