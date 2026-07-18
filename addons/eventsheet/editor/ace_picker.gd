@@ -211,10 +211,10 @@ const ITEM_COLOR_EXPRESSION := Color("#c79bf0") # soft purple
 
 var _window: ConfirmationDialog = null
 var _search: LineEdit = null
-# Object-first front page state: the cards grid, its scroll page, the tree's holder (to
-# swap visibility), the breadcrumb back button, and the active provider scope ("" = all).
-var _objects_page: ScrollContainer = null
-var _objects_grid: GridContainer = null
+# Object-first front page state: the object tree, its holder page, the breadcrumb back
+# button, the classic body's holder (to swap visibility), and the provider scope ("" = all).
+var _objects_page: Control = null
+var _objects_tree: Tree = null
 var _objects_back: Button = null
 var _body_holder: Control = null
 var _object_filter_provider: String = ""
@@ -313,21 +313,20 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	# the host's behaviors, packs, autoloads - shown before the category tree when the picker
 	# opens from a double-click on empty canvas. Picking a card scopes the tree to that
 	# object's vocabulary; typing anything drops straight into classic full search.
-	_objects_page = ScrollContainer.new()
+	# The object list is a Tree styled exactly like the classic category tree - section
+	# headers, SMALL native-size icons beside the text, row selection - so the object-first
+	# step looks and handles like the rest of this picker (single-click an object to browse
+	# its verbs; icons stay 16px, never scaled up).
+	_objects_page = Control.new()
 	_objects_page.custom_minimum_size = Vector2(0.0, 452.0)
 	_objects_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_objects_page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_objects_page.visible = false
-	_objects_grid = GridContainer.new()
-	_objects_grid.columns = 4
-	_objects_grid.add_theme_constant_override("h_separation", 10)
-	_objects_grid.add_theme_constant_override("v_separation", 10)
-	_objects_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# The same inset-panel plate the info panel uses, so the cards page reads as part of
-	# THIS dialog's visual language rather than a bare grid.
-	var objects_plate: PanelContainer = EventSheetPopupUI.panel_section(_objects_grid, 12.0)
-	objects_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_objects_page.add_child(objects_plate)
+	_objects_tree = Tree.new()
+	_objects_tree.hide_root = true
+	_objects_tree.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_objects_tree.item_selected.connect(_on_object_tree_selected)
+	_objects_page.add_child(_objects_tree)
 	content.add_child(_objects_page)
 	_objects_back = Button.new()
 	_objects_back.text = "◂ All objects"
@@ -673,75 +672,57 @@ static func object_cards_for(definitions: Array[ACEDefinition]) -> Array[Diction
 
 
 func _populate_object_cards() -> void:
-	for child: Node in _objects_grid.get_children():
-		child.queue_free()
-	if _registry == null:
+	if _objects_tree == null or _registry == null:
 		return
+	_objects_tree.clear()
+	var root: TreeItem = _objects_tree.create_item()
 	var definitions: Array[ACEDefinition] = _registry.get_all_definitions()
+	# System is one selectable row at the top (colored like a node-type header, it IS the
+	# whole Core vocabulary); every other object sits under one section header.
+	var objects_header: TreeItem = null
 	for card: Dictionary in object_cards_for(definitions):
 		var provider: String = str(card.get("provider"))
 		var label: String = str(card.get("label"))
-		# The provider's own icon when one of its ACEs ships a res:// texture; else themed glyphs.
-		var card_icon: Texture2D = null
+		var parent_item: TreeItem = root
+		if provider != "Core":
+			if objects_header == null:
+				objects_header = _objects_tree.create_item(root)
+				objects_header.set_text(0, "Objects & Behaviors")
+				objects_header.set_custom_color(0, GROUP_COLOR_CUSTOM)
+				objects_header.set_selectable(0, false)
+			parent_item = objects_header
+		var item: TreeItem = _objects_tree.create_item(parent_item)
+		if provider == "Core":
+			item.set_custom_color(0, GROUP_COLOR_NODE_TYPE)
+		item.set_text(0, label)
+		item.set_tooltip_text(0, "Browse %s's conditions, actions, and triggers." % label)
+		item.set_metadata(0, provider)
+		# Same icon discipline as the classic tree: the provider's own icon at 16px, never
+		# scaled up; System gets the Node glyph from the editor theme.
+		var item_icon: Texture2D = null
 		for definition: ACEDefinition in definitions:
 			if str(definition.provider_id) == provider and definition.icon.strip_edges().begins_with("res://"):
-				card_icon = resolve_definition_icon(definition)
-				if card_icon != null:
+				item_icon = resolve_definition_icon(definition)
+				if item_icon != null:
 					break
-		if card_icon == null:
-			card_icon = editor_icon("Node" if provider == "Core" else "Script")
-		_objects_grid.add_child(_make_object_card(provider, label, card_icon))
+		if item_icon == null:
+			item_icon = editor_icon("Node" if provider == "Core" else "Script")
+		if item_icon != null:
+			item.set_icon(0, item_icon)
+			item.set_icon_max_width(0, 16)
 
 
-## One object card, styled to this dialog's language: an inset plate that lights up with
-## the accent on hover, the object's icon large above its full name (Create-Node style).
-func _make_object_card(provider: String, label: String, card_icon: Texture2D) -> Button:
-	var button: Button = Button.new()
-	button.custom_minimum_size = Vector2(150.0, 92.0)
-	button.focus_mode = Control.FOCUS_ALL
-	var plate: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
-	plate.set_corner_radius_all(6)
-	plate.set_content_margin_all(8.0)
-	var plate_hover: StyleBoxFlat = plate.duplicate()
-	plate_hover.border_color = GROUP_COLOR_NEUTRAL
-	plate_hover.set_border_width_all(1)
-	var plate_pressed: StyleBoxFlat = plate_hover.duplicate()
-	plate_pressed.bg_color = plate_pressed.bg_color.lightened(0.05)
-	button.add_theme_stylebox_override("normal", plate)
-	button.add_theme_stylebox_override("hover", plate_hover)
-	button.add_theme_stylebox_override("pressed", plate_pressed)
-	button.add_theme_stylebox_override("focus", plate_hover)
-	# The card's face is a passive column (icon over name) so the Button keeps the whole
-	# hit area while the layout reads like the Create Node dialog's cards.
-	var face: VBoxContainer = VBoxContainer.new()
-	face.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	face.alignment = BoxContainer.ALIGNMENT_CENTER
-	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var icon_rect: TextureRect = TextureRect.new()
-	icon_rect.texture = card_icon
-	icon_rect.custom_minimum_size = Vector2(0.0, 34.0)
-	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	face.add_child(icon_rect)
-	var name_label: Label = Label.new()
-	name_label.text = label
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	name_label.tooltip_text = label
-	name_label.add_theme_font_size_override("font_size", 12)
-	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	face.add_child(name_label)
-	button.add_child(face)
-	button.tooltip_text = "Browse %s's conditions, actions, and triggers." % label
-	button.pressed.connect(func() -> void:
-		_object_filter_provider = provider
-		_objects_back.text = "◂ All objects · %s" % label
-		_show_classic(true)
-		_refresh_tree()
-		_select_first_match()
-		_search.grab_focus())
-	return button
+## Single-click an object (the C3 first step): scope the classic tree to its verbs.
+func _on_object_tree_selected() -> void:
+	var selected: TreeItem = _objects_tree.get_selected()
+	if selected == null or not (selected.get_metadata(0) is String):
+		return
+	_object_filter_provider = str(selected.get_metadata(0))
+	_objects_back.text = "◂ All objects · %s" % selected.get_text(0)
+	_show_classic(true)
+	_refresh_tree()
+	_select_first_match()
+	_search.grab_focus()
 
 
 func _refresh_tree() -> void:
