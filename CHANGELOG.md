@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed - verification-pass follow-ups on the gutter policy
+
+- Event-block border hairlines are measured from the INSET fill now, so they no longer
+  overhang into the gutter cell the fill deliberately avoids.
+- Bookmark pennants and breakpoint dots re-stamp on top of full-bleed rows: a bookmarked
+  comment or a breakpointed group keeps its indicator visible instead of the bar
+  covering it (the markers are extracted so the gutter and the re-stamp share one draw).
+
 ### Fixed - the ultra-review findings (15 reported, all actionable ones landed)
 
 - **Data-class field authoring is now actually reachable**: the dock's right-click

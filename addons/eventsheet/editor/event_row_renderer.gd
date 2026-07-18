@@ -284,6 +284,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, section_bg, true)
 		if row_data.custom_color.a > 0.01:
 			control.draw_rect(Rect2(row_rect.position, Vector2(3.0, row_rect.size.y)), Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, 0.9), true)
+	if not is_event_row and (breakpoint_enabled or row_data.bookmark_enabled):
+		# The full-bleed bar just covered the gutter - re-stamp only the MARKERS so a
+		# bookmarked comment / breakpointed group keeps its pennant and dot visible.
+		_draw_gutter_markers(control, gutter_rect, breakpoint_enabled, row_data.bookmark_enabled)
 	# The event block's silhouette: the LEFT edge (condition lane) carries the full corner
 	# radius - the bottom-left always rounds - and the RIGHT edge (action lane) half of it,
 	# so blocks read as opening toward their actions. Radius 0 = the classic square look.
@@ -302,12 +306,14 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			true
 		)
 	if row_data.row_type == EventRowData.RowType.EVENT and event_style != null:
-		# Border lines inset past the rounded corners so they never cut across the curve.
+		# Border lines inset past the rounded corners so they never cut across the curve -
+		# measured from the INSET fill (the block starts after the gutter cell), so the
+		# hairlines never overhang into the gutter the fill deliberately avoids.
 		var block_border: Color = event_style.row_border_color
-		var border_left: float = row_rect.position.x + float(block_radius)
-		var border_width: float = maxf(row_rect.size.x - float(block_radius + block_radius_right), 0.0)
-		control.draw_rect(Rect2(border_left, row_rect.position.y, border_width, 1.0), block_border, true)
-		control.draw_rect(Rect2(border_left, row_rect.end.y - 1.0, border_width, 1.0), block_border, true)
+		var border_left: float = row_fill_rect.position.x + float(block_radius)
+		var border_width: float = maxf(row_fill_rect.size.x - float(block_radius + block_radius_right), 0.0)
+		control.draw_rect(Rect2(border_left, row_fill_rect.position.y, border_width, 1.0), block_border, true)
+		control.draw_rect(Rect2(border_left, row_fill_rect.end.y - 1.0, border_width, 1.0), block_border, true)
 	_draw_indent_guides(control, row_rect, row_data.indent)
 	if row_data.language_block:
 		# A LANGUAGE block (a data-class holder, a methods-class, a host binding, a lifted switch case...)
@@ -390,6 +396,13 @@ func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakp
 		var text: String = str(line_number)
 		var baseline_y: float = gutter_rect.position.y + (gutter_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
 		_draw_text(control, Vector2(gutter_rect.position.x + 4.0, baseline_y), text, gutter_rect.size.x - 8.0, font, font_size - 1, gutter_text)
+	_draw_gutter_markers(control, gutter_rect, breakpoint_enabled, bookmark_enabled)
+
+
+## The breakpoint dot + bookmark pennant, separated so full-bleed rows (group/comment/
+## section - whose bars cover the whole gutter) can re-stamp JUST the markers on top:
+## a bookmarked comment or a breakpointed group must still show its indicator.
+func _draw_gutter_markers(control: Control, gutter_rect: Rect2, breakpoint_enabled: bool, bookmark_enabled: bool) -> void:
 	if breakpoint_enabled:
 		var center: Vector2 = Vector2(gutter_rect.position.x + 7.0, gutter_rect.get_center().y)
 		control.draw_circle(center, 3.5, EventSheetPalette.COLOR_BREAKPOINT)
