@@ -314,16 +314,20 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	# opens from a double-click on empty canvas. Picking a card scopes the tree to that
 	# object's vocabulary; typing anything drops straight into classic full search.
 	_objects_page = ScrollContainer.new()
-	_objects_page.custom_minimum_size = Vector2(0.0, 340.0)
+	_objects_page.custom_minimum_size = Vector2(0.0, 452.0)
 	_objects_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_objects_page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_objects_page.visible = false
 	_objects_grid = GridContainer.new()
 	_objects_grid.columns = 4
-	_objects_grid.add_theme_constant_override("h_separation", 8)
-	_objects_grid.add_theme_constant_override("v_separation", 8)
+	_objects_grid.add_theme_constant_override("h_separation", 10)
+	_objects_grid.add_theme_constant_override("v_separation", 10)
 	_objects_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_objects_page.add_child(_objects_grid)
+	# The same inset-panel plate the info panel uses, so the cards page reads as part of
+	# THIS dialog's visual language rather than a bare grid.
+	var objects_plate: PanelContainer = EventSheetPopupUI.panel_section(_objects_grid, 12.0)
+	objects_plate.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_objects_page.add_child(objects_plate)
 	content.add_child(_objects_page)
 	_objects_back = Button.new()
 	_objects_back.text = "◂ All objects"
@@ -629,6 +633,8 @@ func _show_objects_page() -> void:
 	_objects_back.visible = false
 	if _body_holder != null:
 		_body_holder.visible = false
+	if _info_panel != null:
+		_info_panel.visible = false
 
 
 ## Shows the classic search + tree; with a provider scope active the breadcrumb offers
@@ -640,6 +646,8 @@ func _show_classic(show_breadcrumb: bool) -> void:
 		_objects_back.visible = show_breadcrumb
 	if _body_holder != null:
 		_body_holder.visible = true
+	if _info_panel != null:
+		_info_panel.visible = true
 
 
 ## The distinct "objects" the front page offers, from an assembled definitions list:
@@ -672,27 +680,68 @@ func _populate_object_cards() -> void:
 	var definitions: Array[ACEDefinition] = _registry.get_all_definitions()
 	for card: Dictionary in object_cards_for(definitions):
 		var provider: String = str(card.get("provider"))
-		var button: Button = Button.new()
-		button.text = str(card.get("label"))
-		button.custom_minimum_size = Vector2(158.0, 64.0)
-		button.clip_text = true
-		# The provider's own icon when one of its ACEs ships a res:// texture; else the tag glyph.
+		var label: String = str(card.get("label"))
+		# The provider's own icon when one of its ACEs ships a res:// texture; else themed glyphs.
+		var card_icon: Texture2D = null
 		for definition: ACEDefinition in definitions:
 			if str(definition.provider_id) == provider and definition.icon.strip_edges().begins_with("res://"):
-				var icon_texture: Texture2D = resolve_definition_icon(definition)
-				if icon_texture != null:
-					button.icon = icon_texture
+				card_icon = resolve_definition_icon(definition)
+				if card_icon != null:
 					break
-		if button.icon == null and provider == "Core":
-			button.icon = editor_icon("Node")
-		button.pressed.connect(func() -> void:
-			_object_filter_provider = provider
-			_objects_back.text = "◂ All objects · %s" % str(card.get("label"))
-			_show_classic(true)
-			_refresh_tree()
-			_select_first_match()
-			_search.grab_focus())
-		_objects_grid.add_child(button)
+		if card_icon == null:
+			card_icon = editor_icon("Node" if provider == "Core" else "Script")
+		_objects_grid.add_child(_make_object_card(provider, label, card_icon))
+
+
+## One object card, styled to this dialog's language: an inset plate that lights up with
+## the accent on hover, the object's icon large above its full name (Create-Node style).
+func _make_object_card(provider: String, label: String, card_icon: Texture2D) -> Button:
+	var button: Button = Button.new()
+	button.custom_minimum_size = Vector2(150.0, 92.0)
+	button.focus_mode = Control.FOCUS_ALL
+	var plate: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
+	plate.set_corner_radius_all(6)
+	plate.set_content_margin_all(8.0)
+	var plate_hover: StyleBoxFlat = plate.duplicate()
+	plate_hover.border_color = GROUP_COLOR_NEUTRAL
+	plate_hover.set_border_width_all(1)
+	var plate_pressed: StyleBoxFlat = plate_hover.duplicate()
+	plate_pressed.bg_color = plate_pressed.bg_color.lightened(0.05)
+	button.add_theme_stylebox_override("normal", plate)
+	button.add_theme_stylebox_override("hover", plate_hover)
+	button.add_theme_stylebox_override("pressed", plate_pressed)
+	button.add_theme_stylebox_override("focus", plate_hover)
+	# The card's face is a passive column (icon over name) so the Button keeps the whole
+	# hit area while the layout reads like the Create Node dialog's cards.
+	var face: VBoxContainer = VBoxContainer.new()
+	face.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	face.alignment = BoxContainer.ALIGNMENT_CENTER
+	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var icon_rect: TextureRect = TextureRect.new()
+	icon_rect.texture = card_icon
+	icon_rect.custom_minimum_size = Vector2(0.0, 34.0)
+	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	face.add_child(icon_rect)
+	var name_label: Label = Label.new()
+	name_label.text = label
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_label.tooltip_text = label
+	name_label.add_theme_font_size_override("font_size", 12)
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	face.add_child(name_label)
+	button.add_child(face)
+	button.tooltip_text = "Browse %s's conditions, actions, and triggers." % label
+	button.pressed.connect(func() -> void:
+		_object_filter_provider = provider
+		_objects_back.text = "◂ All objects · %s" % label
+		_show_classic(true)
+		_refresh_tree()
+		_select_first_match()
+		_search.grab_focus())
+	return button
 
 
 func _refresh_tree() -> void:
