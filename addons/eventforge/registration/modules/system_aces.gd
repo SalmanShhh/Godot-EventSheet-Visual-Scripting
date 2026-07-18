@@ -121,8 +121,16 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Gives the current Unix timestamp in seconds, useful for saving real-world time."))
 	descriptors.append(F.make_descriptor("Core", "GetOSName", "OS Name", ACEDescriptor.ACEType.EXPRESSION, "OS.get_name()", "", [], "Platform", "os name")
 		.described("Gives the name of the operating system the game is running on."))
-	descriptors.append(F.make_descriptor("Core", "HasOSFeature", "Platform Has Feature", ACEDescriptor.ACEType.CONDITION, "OS.has_feature({feature})", "", [F.make_param("feature", "String", "\"mobile\"", "Feature", "Feature tag to test.", "", ["\"mobile\"", "\"pc\"", "\"web\"", "\"android\"", "\"ios\"", "\"editor\"", "\"debug\"", "\"release\""])], "Platform", "platform has {feature}")
-		.described("True when the current platform supports the given feature tag, like mobile or web."))
+	# Feature tags upgraded from a fixed 8-entry dropdown to an editable suggest combo: the
+	# full curated tag set is one pick away, and a CUSTOM tag (export presets can define
+	# any) is typeable - same ace_id, same template, same quoted-value shape, so every
+	# existing sheet compiles and lifts unchanged.
+	descriptors.append(F.make_descriptor("Core", "HasOSFeature", "Platform Has Feature", ACEDescriptor.ACEType.CONDITION, "OS.has_feature({feature})", "", [F.make_param("feature", "String", "\"mobile\"", "Feature", "Feature tag to test - pick a common one or type a custom tag from your export preset.", "", [], [
+		"\"mobile\"", "\"pc\"", "\"web\"", "\"android\"", "\"ios\"", "\"windows\"", "\"linux\"", "\"macos\"",
+		"\"editor\"", "\"debug\"", "\"release\"", "\"template\"", "\"template_debug\"", "\"template_release\"",
+		"\"movie\"", "\"threads\"", "\"touchscreen\"", "\"etc2\"", "\"s3tc\""
+	])], "Platform", "platform has {feature}")
+		.described("True when the current platform supports the given feature tag - mobile, web, editor, debug/release, a specific OS, or any custom tag your export preset defines."))
 	# Stateful conditions (the Every X seconds pattern): each applied instance owns a member;
 	# the prelude accumulates frame time (get_process_delta_time, defined on any Node) before the
 	# if, on_true rebases inside it. Compiles under any trigger; best used under a per-frame one.

@@ -68,8 +68,10 @@ static func run() -> bool:
 		by_id[descriptor.ace_id] = descriptor
 	all_passed = _check("shader/date/platform registered",
 		by_id.has("SetShaderParameter") and by_id.has("GetDatetimeString") and by_id.has("GetUnixTime") and by_id.has("GetOSName") and by_id.has("HasOSFeature"), true) and all_passed
-	all_passed = _check("platform feature is a dropdown",
-		((by_id["HasOSFeature"].params[0] as ACEParam).options as Array).size() >= 6, true) and all_passed
+	# Upgraded from a closed dropdown to an editable suggest combo (curated tags + free
+	# text for custom export-preset tags) - the suggestions carry the curated set now.
+	all_passed = _check("platform feature suggests the curated tags (editable combo)",
+		((by_id["HasOSFeature"].params[0] as ACEParam).autocomplete as Array).size() >= 12, true) and all_passed
 	all_passed = _check("shader template uses the StringName idiom",
 		str(by_id["SetShaderParameter"].codegen_template).contains("material.set_shader_parameter(&{param}, {value})"), true) and all_passed
 

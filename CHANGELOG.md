@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - Platform Has Feature covers the full feature-tag vocabulary
+
+- **The Feature param is now an editable suggest combo** (was a closed 8-entry dropdown):
+  the curated set covers platforms (windows / linux / macos / android / ios / web /
+  mobile / pc), build kinds (editor, debug, release, template, template_debug,
+  template_release), and capability tags (movie, threads, touchscreen, etc2, s3tc) -
+  and any CUSTOM tag your export preset defines is simply typeable. Same ace_id, same
+  frozen `OS.has_feature({feature})` template, so every existing sheet compiles and
+  lifts unchanged. Pinned in `tests/godot_workflow_test.gd` + `tests/debug_polish_test.gd`.
+
 ### Added - data-class fields author like actions
 
 - **Right-click a data-class block > Add Field...**: a small Name / Type / Default dialog

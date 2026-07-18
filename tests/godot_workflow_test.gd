@@ -677,6 +677,18 @@ static func run() -> bool:
 		_menu_labels(menu_editor._row_more_submenu).has("Add Pick Filter (For Each)…"), true) and all_passed
 	menu_editor.free()
 
+	# ── Feature tags: the Has Feature param is an editable suggest combo (curated tags +
+	# free text for custom export-preset tags), never a closed dropdown, and the template
+	# stays the frozen OS.has_feature shape.
+	var feature_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "HasOSFeature")
+	all_passed = _check("Has Feature keeps its frozen template",
+		feature_descriptor != null and feature_descriptor.codegen_template == "OS.has_feature({feature})", true) and all_passed
+	all_passed = _check("the feature param suggests the full curated tag set (typeable, not a closed dropdown)",
+		feature_descriptor != null and feature_descriptor.params[0].options.is_empty()
+		and feature_descriptor.params[0].autocomplete.has("\"windows\"")
+		and feature_descriptor.params[0].autocomplete.has("\"template_release\"")
+		and feature_descriptor.params[0].autocomplete.has("\"mobile\""), true) and all_passed
+
 	return all_passed
 
 
