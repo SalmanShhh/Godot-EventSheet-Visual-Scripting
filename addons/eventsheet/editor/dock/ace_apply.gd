@@ -298,10 +298,22 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 					var existing: Resource = lane_array[slot_index]
 					if existing == null or str(existing.get("provider_id")) != definition.provider_id or str(existing.get("ace_id")) != definition.id:
 						continue
+					var fresh: Resource
 					if kind == "condition":
-						lane_array[slot_index] = _create_condition_from_definition(definition, params)
+						fresh = _create_condition_from_definition(definition, params)
 					else:
-						lane_array[slot_index] = _create_action_from_definition(definition, params)
+						fresh = _create_action_from_definition(definition, params)
+					# Per-param apply: keys left unchecked in the dialog keep each instance's
+					# OWN value - only the checked ones take the dialog's value. An absent
+					# list means apply everything (the original whole-dialog behavior).
+					if context.has("batch_apply_params"):
+						var apply_keys: Array = context.get("batch_apply_params", [])
+						var existing_params: Dictionary = existing.get("params")
+						var fresh_params: Dictionary = fresh.get("params")
+						for param_key: Variant in fresh_params.keys():
+							if not apply_keys.has(str(param_key)) and existing_params.has(param_key):
+								fresh_params[param_key] = existing_params[param_key]
+					lane_array[slot_index] = fresh
 					applied += 1
 				if applied > 0:
 					message["text"] = "Updated %d matching %s." % [applied, ("conditions" if applied != 1 else "condition") if kind == "condition" else ("actions" if applied != 1 else "action")]

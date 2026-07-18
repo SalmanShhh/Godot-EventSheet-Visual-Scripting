@@ -84,6 +84,19 @@ static func run() -> bool:
 	all_passed = _check("the stale slot (ACE swapped after enumeration) is skipped, never corrupted", str((grouped.actions[0] as ACEAction).ace_id), "PushWarning") and all_passed
 	all_passed = _check("replaced instances re-bake the codegen template", (first.actions[0] as ACEAction).codegen_template.is_empty(), false) and all_passed
 
+	# ---- per-param apply: unchecked keys keep each instance's own value ----
+	# Retune only "level" across the survivors; "message" stays per-instance.
+	editor._apply_ace_definition(definition, {"message": "\"ignored\"", "level": "print_rich"}, {
+		"mode": "batch_edit_params",
+		"batch_kind": "action",
+		"batch_targets": batch.get("targets", []),
+		"batch_count": 4,
+		"batch_apply_params": ["level"]
+	})
+	all_passed = _check("the checked param applies everywhere", str((first.actions[0] as ACEAction).params.get("level", "")), "print_rich") and all_passed
+	all_passed = _check("the unchecked param keeps the instance's own value", str((first.actions[0] as ACEAction).params.get("message", "")), "\"batched\"") and all_passed
+	all_passed = _check("the sub-event instance also keeps its own unchecked value", str((nested.actions[0] as ACEAction).params.get("message", "")), "\"batched\"") and all_passed
+
 	# ---- Select All Matching: the walk + the viewport multi-select ----
 	# After the batch apply: ConsoleLog lives on first, second, and nested (grouped was
 	# swapped to PushWarning by the stale-slot setup). The walk descends sub-events + groups.

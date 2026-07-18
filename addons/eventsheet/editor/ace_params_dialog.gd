@@ -149,9 +149,13 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 var _single_param_form: bool = false
 
 
+var _batch_apply_checks: Dictionary = {}
+
+
 func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
 	_fields.clear()
 	_field_hints.clear()
+	_batch_apply_checks.clear()
 	_apply_blocked = false
 	_single_param_form = definition.parameters.size() == 1
 	for child in _form.get_children():
@@ -210,6 +214,15 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 		field = _create_field(param_dict, initial_values, key, hint)
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(field)
+	# Batch edit: each param gets its own "apply to all" checkbox, so one field can retune
+	# across the selection while the others keep each instance's own value.
+	if str(_context.get("mode", "")) == "batch_edit_params":
+		var apply_check: CheckBox = CheckBox.new()
+		apply_check.text = "all"
+		apply_check.button_pressed = true
+		apply_check.tooltip_text = "Checked: this value overwrites every matching instance.\nUnchecked: each instance keeps its own value for this parameter."
+		row.add_child(apply_check)
+		_batch_apply_checks[key] = apply_check
 	_form.add_child(row)
 	# Hover the label OR the field for the parameter's purpose (descriptions also
 	# render below, but tooltips answer "what is this?" without scanning down).
@@ -1817,6 +1830,15 @@ func _commit(chain: bool) -> void:
 	var context: Dictionary = _context.duplicate(true)
 	if chain:
 		context["chain_add"] = true
+	# Batch edit: only the checked params overwrite the other instances - the apply step
+	# leaves every unchecked key at each instance's own value.
+	if not _batch_apply_checks.is_empty():
+		var apply_keys: Array = []
+		for check_key: Variant in _batch_apply_checks.keys():
+			var check: CheckBox = _batch_apply_checks[check_key]
+			if is_instance_valid(check) and check.button_pressed:
+				apply_keys.append(str(check_key))
+		context["batch_apply_params"] = apply_keys
 	params_confirmed.emit(_definition, values, context)
 	_definition = null
 	_context.clear()

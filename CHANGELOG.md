@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - per-param batch edit
+
+- **Edit Values Across Selection now applies per parameter**: each field in the batch
+  dialog carries its own "all" checkbox. Checked fields overwrite every matching
+  instance; unchecked fields keep each instance's own value - so you can retune every
+  Play Sound's volume without unifying the sound names. Everything still lands as one
+  undo step, and the stale-slot guard is unchanged. Pinned in
+  `tests/batch_param_edit_test.gd` (mixed apply: one key everywhere, one key kept).
+
 ### Added - Select All Events Using This
 
 - **Right-click any condition or action cell > Select All Events Using This**: selects
