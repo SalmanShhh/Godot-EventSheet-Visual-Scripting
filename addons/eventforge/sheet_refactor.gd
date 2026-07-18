@@ -62,6 +62,125 @@ static func rename_symbol(sheet: EventSheetResource, old_name: String, new_name:
 	return int(counter["count"])
 
 
+## The node-reference token grammar shared by collect + replace: $Path, $"Quoted/Path",
+## and %UniqueName. `self` is handled separately (whole-value only - it appears inside
+## countless expressions where a blind swap would corrupt them).
+const NODE_REF_PATTERN := "\\$\"[^\"]*\"|\\$[A-Za-z_][A-Za-z0-9_/]*|%[A-Za-z_][A-Za-z0-9_]*"
+
+
+## Every node reference appearing in the given rows - params, With-Node scopes, pick
+## filters, raw GDScript - plus "self" when a whole param value is exactly that. Sorted;
+## this is the Replace Object dialog's "from" list.
+static func collect_node_references(rows: Array) -> Array[String]:
+	var found: Dictionary = {}
+	var token_regex: RegEx = RegEx.create_from_string(NODE_REF_PATTERN)
+	_collect_refs_in_rows(rows, token_regex, found)
+	var out: Array[String] = []
+	for reference: Variant in found:
+		out.append(str(reference))
+	out.sort()
+	return out
+
+
+static func _collect_refs_in_rows(rows: Array, token_regex: RegEx, found: Dictionary) -> void:
+	for row: Variant in rows:
+		if row is RawCodeRow:
+			_collect_refs_in_text((row as RawCodeRow).code, token_regex, found)
+		elif row is EventGroup:
+			var group: EventGroup = row
+			_collect_refs_in_rows(group.events if not group.events.is_empty() else group.rows, token_regex, found)
+		elif row is EventRow:
+			var event: EventRow = row
+			if not event.with_node_target.strip_edges().is_empty():
+				_collect_refs_in_text(event.with_node_target, token_regex, found)
+				if event.with_node_target.strip_edges() == "self":
+					found["self"] = true
+			for ace: Variant in event.conditions + event.actions:
+				if ace is RawCodeRow:
+					_collect_refs_in_text((ace as RawCodeRow).code, token_regex, found)
+				elif ace is Resource and ace.get("params") is Dictionary:
+					var params: Dictionary = ace.get("params")
+					for key: Variant in params:
+						if params[key] is String:
+							_collect_refs_in_text(str(params[key]), token_regex, found)
+							if str(params[key]).strip_edges() == "self":
+								found["self"] = true
+			for pick: Variant in event.pick_filters:
+				if pick is PickFilter:
+					_collect_refs_in_text((pick as PickFilter).collection_value, token_regex, found)
+					_collect_refs_in_text((pick as PickFilter).predicate_expression, token_regex, found)
+			_collect_refs_in_rows(event.sub_events, token_regex, found)
+
+
+static func _collect_refs_in_text(text: String, token_regex: RegEx, found: Dictionary) -> void:
+	for token_match: RegExMatch in token_regex.search_all(text):
+		found[token_match.get_string(0)] = true
+
+
+## Token-safe replace of ONE node reference across the rows (the Replace Object gesture):
+## $Enemy never touches $EnemySpawner (an identifier-boundary guard), quoted paths match
+## literally, and "self" swaps only where a whole value IS self - never inside an
+## expression. Returns the number of replacements.
+static func replace_node_reference(rows: Array, from_ref: String, to_ref: String) -> int:
+	if from_ref.strip_edges().is_empty() or from_ref == to_ref:
+		return 0
+	var counter: Dictionary = {"count": 0}
+	if from_ref == "self":
+		_replace_whole_value_refs(rows, "self", to_ref, counter)
+		return int(counter["count"])
+	var guarded: String = "%s(?![A-Za-z0-9_/])" % _regex_escape(from_ref)
+	var regex: RegEx = RegEx.create_from_string(guarded)
+	if regex == null:
+		return 0
+	_rename_in_rows(rows, regex, to_ref, counter)
+	_replace_scope_refs(rows, regex, to_ref, counter)
+	return int(counter["count"])
+
+
+## With-Node scopes sit outside _rename_in_rows' fields - swept separately.
+static func _replace_scope_refs(rows: Array, regex: RegEx, to_ref: String, counter: Dictionary) -> void:
+	for row: Variant in rows:
+		if row is EventGroup:
+			var group: EventGroup = row
+			_replace_scope_refs(group.events if not group.events.is_empty() else group.rows, regex, to_ref, counter)
+		elif row is EventRow:
+			var event: EventRow = row
+			event.with_node_target = _rename_text(event.with_node_target, regex, to_ref, counter)
+			_replace_scope_refs(event.sub_events, regex, to_ref, counter)
+
+
+## The conservative self-swap: only param values / scopes that ARE exactly "self".
+static func _replace_whole_value_refs(rows: Array, from_value: String, to_ref: String, counter: Dictionary) -> void:
+	for row: Variant in rows:
+		if row is EventGroup:
+			var group: EventGroup = row
+			_replace_whole_value_refs(group.events if not group.events.is_empty() else group.rows, from_value, to_ref, counter)
+		elif row is EventRow:
+			var event: EventRow = row
+			if event.with_node_target.strip_edges() == from_value:
+				event.with_node_target = to_ref
+				counter["count"] = int(counter["count"]) + 1
+			for ace: Variant in event.conditions + event.actions:
+				if ace is Resource and ace.get("params") is Dictionary:
+					var params: Dictionary = ace.get("params")
+					for key: Variant in params:
+						if params[key] is String and str(params[key]).strip_edges() == from_value:
+							params[key] = to_ref
+							counter["count"] = int(counter["count"]) + 1
+			_replace_whole_value_refs(event.sub_events, from_value, to_ref, counter)
+
+
+## Minimal regex escaping for reference tokens ($, quotes, and path characters).
+static func _regex_escape(text: String) -> String:
+	var escaped: String = ""
+	for character: String in text:
+		if character in ["\\", "^", "$", ".", "|", "?", "*", "+", "(", ")", "[", "]", "{", "}"]:
+			escaped += "\\" + character
+		else:
+			escaped += character
+	return escaped
+
+
 static func _rename_in_rows(rows: Array, regex: RegEx, new_name: String, counter: Dictionary) -> void:
 	for row: Variant in rows:
 		if row is CommentRow:
@@ -109,8 +228,15 @@ static func _rename_in_dictionary(values: Dictionary, regex: RegEx, new_name: St
 
 
 static func _rename_text(text: String, regex: RegEx, new_name: String, counter: Dictionary) -> String:
-	var matches: int = regex.search_all(text).size()
-	if matches == 0:
+	var found: Array[RegExMatch] = regex.search_all(text)
+	if found.is_empty():
 		return text
-	counter["count"] = int(counter["count"]) + matches
-	return regex.sub(text, new_name, true)
+	counter["count"] = int(counter["count"]) + found.size()
+	# Manual back-to-front splice instead of regex.sub: sub() treats "$" in the
+	# replacement as a backreference marker, which would eat node references like
+	# "$EliteEnemy". Renames are always literal here.
+	var out: String = text
+	for match_index: int in range(found.size() - 1, -1, -1):
+		var found_match: RegExMatch = found[match_index]
+		out = out.substr(0, found_match.get_start()) + new_name + out.substr(found_match.get_end())
+	return out

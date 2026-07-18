@@ -69,6 +69,7 @@ const ROW_MENU_ADD_EVENT_ABOVE := 44
 const ROW_MENU_EDIT_FUNCTION := 45
 const ROW_MENU_ADD_FUNCTION_PARAM := 46
 const ROW_MENU_MAKE_FUNCTION_EDITABLE := 47
+const ROW_MENU_REPLACE_OBJECT := 48
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -1883,6 +1884,63 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
 # ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ─# ── Godot-feel: find bar, keyboard row ops, editor-native defaults ────────────────────
 var _find_bar: HBoxContainer = null
 var _lens_button: Button = null
+
+
+var _replace_object_dialog: AcceptDialog = null
+
+
+## Replace Object References (the Construct gesture, param-aware): pick a reference the
+## selection actually uses, give the new one, and every matching token across the selected
+## rows' params, With-Node scopes, pick filters, and raw code rewrites - token-safe
+## ($Enemy never touches $EnemySpawner), one undo step.
+func _open_replace_object_dialog() -> void:
+	var targets: Array = _top_level_selected_resources()
+	if targets.is_empty() and _context_row != null and _context_row.source_resource != null:
+		targets = [_context_row.source_resource]
+	if targets.is_empty():
+		_set_status("Select the rows to retarget first.", true)
+		return
+	var references: Array[String] = EventSheetRefactor.collect_node_references(targets)
+	if references.is_empty():
+		_set_status("The selection has no node references ($Path, %Unique, self) to replace.", true)
+		return
+	if _replace_object_dialog != null and is_instance_valid(_replace_object_dialog):
+		_replace_object_dialog.queue_free()
+	_replace_object_dialog = AcceptDialog.new()
+	_replace_object_dialog.title = "Replace Object References"
+	_replace_object_dialog.ok_button_text = "Replace"
+	var content: VBoxContainer = VBoxContainer.new()
+	content.add_theme_constant_override("separation", 8)
+	content.add_child(EventSheetPopupUI.hint_label("Every matching reference across the %d selected row(s) rewrites - params, With-Node scopes, pick filters, and GDScript blocks. Token-safe: $Enemy never touches $EnemySpawner." % targets.size(), 420.0))
+	var from_options: OptionButton = OptionButton.new()
+	for reference: String in references:
+		from_options.add_item(reference)
+	content.add_child(EventSheetPopupUI.form_row("From", from_options))
+	var to_edit: LineEdit = LineEdit.new()
+	to_edit.placeholder_text = "$NewNode, %UniqueName, or self"
+	to_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_replace_object_dialog.register_text_enter(to_edit)
+	content.add_child(EventSheetPopupUI.form_row("To", to_edit))
+	_replace_object_dialog.add_child(EventSheetPopupUI.titled_card("Retarget the selection", content))
+	_replace_object_dialog.confirmed.connect(func() -> void:
+		var from_ref: String = from_options.get_item_text(from_options.selected) if from_options.selected >= 0 else ""
+		var to_ref: String = to_edit.text.strip_edges()
+		if from_ref.is_empty() or to_ref.is_empty():
+			_set_status("Pick a reference and give its replacement.", true)
+			return
+		var counter: Dictionary = {"count": 0}
+		var changed: bool = _perform_undoable_sheet_edit("Replace Object References", func() -> bool:
+			counter["count"] = EventSheetRefactor.replace_node_reference(targets, from_ref, to_ref)
+			return int(counter["count"]) > 0)
+		if changed:
+			_refresh_after_edit()
+			_mark_dirty("Replaced %d reference(s): %s becomes %s." % [int(counter["count"]), from_ref, to_ref])
+		else:
+			_set_status("Nothing matched %s in the selection." % from_ref, true))
+	EventSheetL10n.apply_to(_replace_object_dialog)
+	add_child(_replace_object_dialog)
+	_replace_object_dialog.popup_centered(Vector2i(480, 260))
+	to_edit.grab_focus()
 
 
 ## Applies the live filter lens on the active viewport ("" clears) and reports the hidden

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - Replace Object References (the Construct retarget gesture)
+
+- **Right-click a selection > Replace Object References...**: pick a reference the
+  selection actually uses (the From dropdown enumerates them - $paths, quoted paths,
+  %uniques, self) and give the new one; every matching token across the selected rows'
+  params, With-Node scopes, pick filters, and GDScript blocks rewrites as ONE undo step.
+  Token-safe by construction: $Enemy never touches $EnemySpawner (identifier-boundary
+  guard), quoted paths match literally, and `self` swaps only where a whole value IS
+  self - never inside an expression.
+- The sweep also fixed a latent bug in Rename Symbol: RegEx.sub treats `$` in a
+  replacement as a backreference marker, so renaming anything TO a $-reference would
+  have eaten it - renames now splice literally. `tests/replace_object_test.gd` pins the
+  enumeration, every guard, and the counts.
+
 ### Added - the live filter lens + a project-search key
 
 - **Filter (the C3 live-filter reflex)**: the Ctrl+F find bar gained a **Filter** toggle -
