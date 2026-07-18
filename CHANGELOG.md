@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - Select All Events Using This
+
+- **Right-click any condition or action cell > Select All Events Using This**: selects
+  every event in the sheet that uses the same ACE - as its trigger (baked ids included),
+  a condition, or an action - walking groups and sub-events. The natural feeder for the
+  selection tools: one click later, Replace Object References or Edit Values Across
+  Selection acts on exactly those rows. Pure view-layer, nothing mutates.
+- New viewport API: `select_resources(resources)` (first match anchors, the rest join as
+  a multi-select); `EventSheetACEApply.matching_event_rows` is the pure walk, pinned in
+  `tests/batch_param_edit_test.gd`.
+
 ### Added - the Outline panel (the sheet's method list)
 
 - **View > Outline...** (also in the command palette): a slim jump tree of the sheet's

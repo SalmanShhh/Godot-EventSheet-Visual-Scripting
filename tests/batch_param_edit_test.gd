@@ -83,6 +83,19 @@ static func run() -> bool:
 	all_passed = _check("a non-matching action in the same row is untouched", str((first.actions[1] as ACEAction).params.get("message", "")), "\"keep me\"") and all_passed
 	all_passed = _check("the stale slot (ACE swapped after enumeration) is skipped, never corrupted", str((grouped.actions[0] as ACEAction).ace_id), "PushWarning") and all_passed
 	all_passed = _check("replaced instances re-bake the codegen template", (first.actions[0] as ACEAction).codegen_template.is_empty(), false) and all_passed
+
+	# ---- Select All Matching: the walk + the viewport multi-select ----
+	# After the batch apply: ConsoleLog lives on first, second, and nested (grouped was
+	# swapped to PushWarning by the stale-slot setup). The walk descends sub-events + groups.
+	var matches: Array = EventSheetACEApply.matching_event_rows(sheet.events, "Core", "ConsoleLog")
+	all_passed = _check("matching walk finds every user (sub-event included, swapped row excluded)",
+		matches, [first, second, nested]) and all_passed
+	all_passed = _check("the group's swapped row matches its NEW ace",
+		EventSheetACEApply.matching_event_rows(sheet.events, "Core", "PushWarning"), [first, grouped]) and all_passed
+	var select_viewport: EventSheetViewport = editor.get_viewport_control()
+	var selected_count: int = select_viewport.select_resources(matches)
+	all_passed = _check("select_resources selects every match", selected_count, 3) and all_passed
+	all_passed = _check("the selection lands on the viewport rows", select_viewport.get_selected_rows().size() >= 3, true) and all_passed
 	editor.free()
 
 	return all_passed

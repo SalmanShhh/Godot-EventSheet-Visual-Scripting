@@ -16,6 +16,7 @@ const CONDITION_MENU_INVERT := 4
 const CONDITION_MENU_DELETE := 5
 const CONDITION_MENU_TOGGLE_ENABLED := 6
 const CONDITION_MENU_EDIT_ACE_COMMENT := 21
+const ACE_MENU_SELECT_ALL_MATCHING := 22  # shared by the condition + action cell menus
 const ACTION_MENU_EDIT := 1
 const ACTION_MENU_ADD := 2
 const ACTION_MENU_REPLACE := 3
@@ -2880,6 +2881,8 @@ func _on_condition_context_menu_id_pressed(id: int) -> void:
 			_open_ace_comment_dialog(_context_ace_resource("condition"))
 		CONDITION_MENU_TOGGLE_ENABLED:
 			_toggle_context_ace_enabled()
+		ACE_MENU_SELECT_ALL_MATCHING:
+			_select_all_matching_from_context("condition")
 		CONDITION_MENU_DELETE:
 			_delete_context_ace()
 
@@ -2903,6 +2906,8 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 			_open_ace_comment_dialog(_context_ace_resource("action"))
 		ACTION_MENU_TOGGLE_ENABLED:
 			_toggle_context_ace_enabled()
+		ACE_MENU_SELECT_ALL_MATCHING:
+			_select_all_matching_from_context("action")
 		ACTION_MENU_DETACH_COMMENT:
 			var detach_index: int = int(_context_hit.get("ace_index", -1))
 			var context_event: EventRow = _context_row.source_resource as EventRow
@@ -2918,6 +2923,35 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 
 func _on_row_context_menu_id_pressed(id: int) -> void:
 	_input_dispatch.on_row_context_menu_id_pressed(id)
+
+
+## Select All Matching (the C3 "find my other uses" reflex): selects every event in the
+## sheet that uses the right-clicked cell's ACE - as trigger, condition, or action - so
+## Replace Object References and Edit Values Across Selection have their rows one click
+## later. Pure view-layer: nothing is mutated.
+func _select_all_matching_from_context(lane: String) -> void:
+	if _current_sheet == null or _viewport == null:
+		return
+	var provider_id: String = ""
+	var ace_id: String = ""
+	var ace: Resource = _context_ace_resource(lane)
+	if ace != null:
+		provider_id = str(ace.get("provider_id"))
+		ace_id = str(ace.get("ace_id"))
+	elif lane == "condition" and _context_row != null and _context_row.source_resource is EventRow:
+		# A baked trigger row can have ids without a trigger resource - still matchable.
+		provider_id = (_context_row.source_resource as EventRow).trigger_provider_id
+		ace_id = (_context_row.source_resource as EventRow).trigger_id
+	if provider_id.is_empty() or ace_id.is_empty():
+		_set_status("Right-click a condition or action cell to select its other uses.", true)
+		return
+	var matches: Array = EventSheetACEApply.matching_event_rows(_current_sheet.events, provider_id, ace_id)
+	var selected: int = _viewport.select_resources(matches)
+	if selected == 0:
+		_set_status("No events use %s.%s." % [provider_id, ace_id], true)
+		return
+	var definition: ACEDefinition = _find_definition(provider_id, ace_id)
+	_set_status("Selected %d event(s) using %s." % [selected, definition.display_name if definition != null else ace_id])
 
 
 

@@ -163,6 +163,39 @@ static func _record_batch_target(groups: Dictionary, kind: String, ace: Resource
 	(groups[key].get("targets") as Array).append({"event": event_row, "index": index})
 
 
+## Select All Matching: every EventRow (walking groups and sub-events) that USES the given
+## ACE - as its trigger (resource or baked ids), a condition, or an action. Static and pure
+## so tests pin the walk; feeds the multi-select that Replace Object and batch edit act on.
+static func matching_event_rows(rows: Array, provider_id: String, ace_id: String) -> Array:
+	var matches: Array = []
+	for entry: Variant in rows:
+		if entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			matches.append_array(matching_event_rows(group.events if not group.events.is_empty() else group.rows, provider_id, ace_id))
+			continue
+		if not (entry is EventRow):
+			continue
+		var event_row: EventRow = entry as EventRow
+		if _event_uses_ace(event_row, provider_id, ace_id):
+			matches.append(event_row)
+		matches.append_array(matching_event_rows(event_row.sub_events, provider_id, ace_id))
+	return matches
+
+
+static func _event_uses_ace(event_row: EventRow, provider_id: String, ace_id: String) -> bool:
+	if event_row.trigger_provider_id == provider_id and event_row.trigger_id == ace_id:
+		return true
+	if event_row.trigger is ACECondition and (event_row.trigger as ACECondition).provider_id == provider_id and (event_row.trigger as ACECondition).ace_id == ace_id:
+		return true
+	for condition: Variant in event_row.conditions:
+		if condition is ACECondition and (condition as ACECondition).provider_id == provider_id and (condition as ACECondition).ace_id == ace_id:
+			return true
+	for action: Variant in event_row.actions:
+		if action is ACEAction and (action as ACEAction).provider_id == provider_id and (action as ACEAction).ace_id == ace_id:
+			return true
+	return false
+
+
 func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, context: Dictionary) -> void:
 	if definition == null:
 		return

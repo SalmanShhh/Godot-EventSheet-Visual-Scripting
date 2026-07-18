@@ -785,6 +785,35 @@ func select_resource(resource: Resource) -> bool:
 			return true
 	return false
 
+
+## Selects every flat row whose source_resource is in the given array (the Select All
+## Matching gesture): the first match anchors the selection like a click, the rest join
+## as a multi-select (descendants included, matching shift/ctrl selection semantics).
+func select_resources(resources: Array) -> int:
+	var count: int = 0
+	for index in range(_flat_rows.size()):
+		var row_data: EventRowData = _row_at(index)
+		if row_data == null or row_data.source_resource == null or not resources.has(row_data.source_resource):
+			continue
+		if count == 0:
+			_select_row(index, -1)
+			ensure_selection_visible()
+		else:
+			_selected_row_uids[row_data.row_uid] = true
+			for descendant_uid: Variant in _collect_descendant_row_uids(row_data):
+				_selected_row_uids[str(descendant_uid)] = true
+		count += 1
+	# The renderer reads row_data.selected (stamped by _refresh_rows on ordinary clicks) -
+	# re-stamp here or every row after the anchor stays visually unselected.
+	for stamp_index in range(_flat_rows.size()):
+		var stamp_row: EventRowData = _row_at(stamp_index)
+		if stamp_row != null:
+			stamp_row.selected = _selected_row_uids.has(stamp_row.row_uid)
+	queue_redraw()
+	return count
+
+
+
 const SLOW_CLICK_MIN_MS := 450   # beyond the OS double-click window
 const SLOW_CLICK_MAX_MS := 1600
 var _slow_click: Dictionary = {"row": -1, "span": -1, "msec": 0}
