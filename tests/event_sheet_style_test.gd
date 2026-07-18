@@ -29,6 +29,12 @@ static func run() -> bool:
 	passed = _check("style exposes group badge token", style.event_style.group_badge_background_color.a > 0.0, true) and passed
 	passed = _check("style exposes comment token", style.event_style.comment_text_color.a > 0.0, true) and passed
 	passed = _check("style exposes interaction token", style.event_style.selection_fill_color.a > 0.0, true) and passed
+	# The gutter (line + event numbers) is themeable: tokens exist and seed from the palette,
+	# so the auto-enumerating Theme Editor picks them up with sane defaults.
+	passed = _check("gutter background token seeds from the palette",
+		style.event_style.gutter_background_color, EventSheetPalette.COLOR_GUTTER_BG) and passed
+	passed = _check("gutter text token seeds from the palette",
+		style.event_style.gutter_text_color, EventSheetPalette.COLOR_GUTTER_TEXT) and passed
 	# Pin the seeded default look (the exact values ensure_defaults() bakes for a
 	# fresh style) so a regression in the defaults is caught, not just non-null-ness.
 	passed = _check(

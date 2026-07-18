@@ -55,6 +55,10 @@ extends Resource
 ## Accent for behavior sheets (identity banner / tab badge) - soft purple, the event-sheet-style
 ## "this is a behavior" color language.
 @export var behavior_accent_color: Color = Color("#8a7bd8")
+## The left gutter strip (line + event numbers, breakpoints, bookmark pennants).
+@export var gutter_background_color: Color = EventSheetPalette.COLOR_GUTTER_BG
+## Line and event numbers drawn in the gutter.
+@export var gutter_text_color: Color = EventSheetPalette.COLOR_GUTTER_TEXT
 ## Accent for LANGUAGE blocks - rows that render a GDScript construct (a data-class holder, a
 ## methods-class, a host binding, a lifted switch case, a collapsed function) rather than a regular
 ## ACE event. Drawn as a quiet left stripe + faint wash so the distinction reads at a glance.

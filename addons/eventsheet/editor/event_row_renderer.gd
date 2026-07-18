@@ -241,7 +241,7 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		else EventSheetPalette.COLOR_HOVER
 	)
 
-	_draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size)
+	_draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style)
 	if row_data.row_type == EventRowData.RowType.GROUP:
 		var group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 		if row_data.source_resource is EventGroup:
@@ -368,18 +368,21 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	if stable_event_number > 0 and bool(control.get("show_event_numbers")):
 		var number_font_size: int = font_size - 2
 		var number_baseline: float = gutter_rect.position.y + (gutter_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (number_font_size * FONT_BASELINE_OFFSET_RATIO)
-		_draw_text(control, Vector2(gutter_rect.position.x + 3.0, number_baseline), str(stable_event_number), gutter_rect.size.x - 4.0, font, number_font_size, EventSheetPalette.COLOR_GUTTER_TEXT)
+		var number_color: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
+		_draw_text(control, Vector2(gutter_rect.position.x + 3.0, number_baseline), str(stable_event_number), gutter_rect.size.x - 4.0, font, number_font_size, number_color)
 
 
-func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int) -> void:
+func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null) -> void:
 	if gutter_rect.size == Vector2.ZERO:
 		return
-	control.draw_rect(gutter_rect, EventSheetPalette.COLOR_GUTTER_BG, true)
+	var gutter_bg: Color = event_style.gutter_background_color if event_style != null else EventSheetPalette.COLOR_GUTTER_BG
+	var gutter_text: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
+	control.draw_rect(gutter_rect, gutter_bg, true)
 	control.draw_rect(Rect2(gutter_rect.end.x - 1.0, gutter_rect.position.y, 1.0, gutter_rect.size.y), EventSheetPalette.COLOR_GUTTER_RAIL, true)
 	if line_number > 0:
 		var text: String = str(line_number)
 		var baseline_y: float = gutter_rect.position.y + (gutter_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
-		_draw_text(control, Vector2(gutter_rect.position.x + 4.0, baseline_y), text, gutter_rect.size.x - 8.0, font, font_size - 1, EventSheetPalette.COLOR_GUTTER_TEXT)
+		_draw_text(control, Vector2(gutter_rect.position.x + 4.0, baseline_y), text, gutter_rect.size.x - 8.0, font, font_size - 1, gutter_text)
 	if breakpoint_enabled:
 		var center: Vector2 = Vector2(gutter_rect.position.x + 7.0, gutter_rect.get_center().y)
 		control.draw_circle(center, 3.5, EventSheetPalette.COLOR_BREAKPOINT)

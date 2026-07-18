@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - the gutter joins the theme system
+
+- **New theme tokens `gutter_background_color` and `gutter_text_color`** on the event
+  style: the left gutter strip and its line / event numbers now follow the active theme
+  (the auto-enumerating Theme Editor picks both up with palette-seeded defaults), instead
+  of being hardcoded palette constants. Theme audit outcome for the recent UI: the new
+  panels (Bookmarks, Outline) and dialogs already build from the shared popup helpers and
+  editor theme; the gutter was the one hardcoded surface.
+- `tests/event_sheet_style_test.gd` pins the new tokens' palette-seeded defaults.
+
 ### Docs - the C3 migration guide catches up with the editor
 
 - `docs/GUIDE-C3-MIGRATION.md` now walks the whole C3-parity gesture set: the object-first
