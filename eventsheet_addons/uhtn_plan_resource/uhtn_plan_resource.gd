@@ -1,3 +1,4 @@
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/uhtn_plan_resource/icon.svg")
 class_name UHTNPlanResource
 extends Resource

@@ -1,5 +1,6 @@
 ## @ace_category("Health")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/health/icon.svg")
 class_name SimpleHealthBehavior
 extends Node

@@ -1,5 +1,6 @@
 ## @ace_tags(incremental, idle, prestige)
 ## @ace_category("Prestige")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/prestige/icon.svg")
 class_name PrestigeAddon
 extends Node

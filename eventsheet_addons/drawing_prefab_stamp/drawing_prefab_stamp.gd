@@ -2,6 +2,7 @@
 ## @ace_tags(drawing, visual)
 ## @ace_category("Drawing Canvas")
 ## @ace_requires(DrawingPrefabResource)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/drawing_prefab_stamp/icon.svg")
 class_name DrawingPrefabStamp
 extends Node2D

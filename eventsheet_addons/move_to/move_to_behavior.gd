@@ -1,5 +1,6 @@
 ## @ace_category("Move To")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/move_to/icon.svg")
 class_name MoveToBehavior
 extends Node

@@ -1,5 +1,6 @@
 ## @ace_category("Line Of Sight 3D")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/line_of_sight_3d/icon.svg")
 class_name LOS3DBehavior
 extends Node

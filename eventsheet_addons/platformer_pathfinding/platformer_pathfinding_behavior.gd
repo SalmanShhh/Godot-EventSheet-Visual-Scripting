@@ -1,6 +1,7 @@
 ## @ace_tags(movement, platformer, ai, pathfinding)
 ## @ace_category("Platformer Pathfinding")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 class_name PlatformerPathfinding
 extends Node

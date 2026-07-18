@@ -206,6 +206,23 @@ func import_external_source(source: String) -> EventSheetResource:
 				if not trimmed_requirement.is_empty():
 					recovered_requires.append(trimmed_requirement)
 			sheet.addon_requires = recovered_requires
+	# Recover the pack identity metadata (version/author/help) - header-scoped and
+	# metadata-only like everything above, exact inverses of the emitter's forms.
+	var version_regex: RegEx = RegEx.new()
+	if version_regex.compile("(?m)^## @ace_version\\(([^)]*)\\)") == OK:
+		var version_match: RegExMatch = version_regex.search(header)
+		if version_match != null:
+			sheet.addon_version = version_match.get_string(1).strip_edges()
+	var author_regex: RegEx = RegEx.new()
+	if author_regex.compile("(?m)^## @ace_author\\(\"([^\"]*)\"\\)") == OK:
+		var author_match: RegExMatch = author_regex.search(header)
+		if author_match != null:
+			sheet.addon_author = author_match.get_string(1)
+	var help_regex: RegEx = RegEx.new()
+	if help_regex.compile("(?m)^## @ace_help\\(\"([^\"]*)\"\\)") == OK:
+		var help_match: RegExMatch = help_regex.search(header)
+		if help_match != null:
+			sheet.addon_help_url = help_match.get_string(1)
 	# Recover the class description: the `##` doc block immediately after `extends` (no blank
 	# between). The host-member doc and signal annotations are separated from `extends` by a blank
 	# line, so they never match. Metadata only in external mode (the lines stay verbatim).

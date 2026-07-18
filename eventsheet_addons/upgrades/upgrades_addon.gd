@@ -1,5 +1,6 @@
 ## @ace_tags(incremental, idle, upgrade)
 ## @ace_category("Upgrades")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/upgrades/icon.svg")
 class_name UpgradesAddon
 extends Node

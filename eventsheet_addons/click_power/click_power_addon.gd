@@ -1,5 +1,6 @@
 ## @ace_tags(incremental, idle, clicker)
 ## @ace_category("Click Power")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/click_power/icon.svg")
 class_name ClickPowerAddon
 extends Node

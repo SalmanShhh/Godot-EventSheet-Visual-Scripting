@@ -35,6 +35,8 @@ var _health_known: bool = false
 var _health_count: int = 0
 var _health_sheet: EventSheetResource = null
 var _is_addon_pack: bool = false
+## The pack's declared @ace_version, "" when undeclared - joins the Addon Pack chip text.
+var _addon_version: String = ""
 
 
 ## The health chip {text, color} for the banner's right end: the calm "works" signal (green
@@ -136,6 +138,7 @@ func update_from_sheet(sheet: EventSheetResource, sheet_path: String = "") -> vo
 	# verbs are in every picker, and saving it republishes them project-wide. The chip says so
 	# up front, so editing a pack never feels like editing a private sheet.
 	_is_addon_pack = sheet_path.begins_with("res://eventsheet_addons/")
+	_addon_version = sheet.addon_version.strip_edges() if sheet != null else ""
 	# Every sheet gets its identity strip - INCLUDING the plain event sheets beginners make.
 	# Hiding it for exactly those sheets (the old rule) meant the newcomers who most needed the
 	# "what is this / click to configure" cue and the save-time health chip never saw either.
@@ -214,6 +217,8 @@ func _draw() -> void:
 	# pack" cue (same plate language as the icon chips in the rows).
 	if _is_addon_pack:
 		var pack_chip_text: String = EventSheetL10n.translate("Addon Pack")
+		if not _addon_version.is_empty():
+			pack_chip_text += " v" + _addon_version
 		var pack_chip_width: float = ThemeDB.fallback_font.get_string_size(pack_chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE).x + 12.0
 		var pack_chip_rect := Rect2(x, (BANNER_HEIGHT - 16.0) * 0.5, pack_chip_width, 16.0)
 		var pack_chip_bg: Color = accent

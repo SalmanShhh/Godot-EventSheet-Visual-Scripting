@@ -1,5 +1,6 @@
 ## @ace_tags(loot, data)
 ## @ace_category("Loot")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/loot_loader/icon.svg")
 class_name LootTableLoader
 extends Node

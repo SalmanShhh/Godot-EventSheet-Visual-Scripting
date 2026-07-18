@@ -1,5 +1,6 @@
 ## @ace_tags(incremental, idle, economy)
 ## @ace_category("Idle Generator")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/idle_generator/icon.svg")
 class_name IdleGeneratorBehavior
 extends Node

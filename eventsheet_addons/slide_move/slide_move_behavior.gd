@@ -1,5 +1,6 @@
 ## @ace_tags(grid, movement)
 ## @ace_category("Slide Movement")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/slide_move/icon.svg")
 class_name SlideMove
 extends Node

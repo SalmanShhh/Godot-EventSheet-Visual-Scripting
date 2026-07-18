@@ -1,5 +1,6 @@
 ## @ace_category("Timer")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/timer/icon.svg")
 class_name TimerBehavior
 extends Node

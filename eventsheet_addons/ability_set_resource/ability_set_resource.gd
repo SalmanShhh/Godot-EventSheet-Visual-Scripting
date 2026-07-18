@@ -1,3 +1,4 @@
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/ability_set_resource/icon.svg")
 class_name AbilitySetResource
 extends Resource

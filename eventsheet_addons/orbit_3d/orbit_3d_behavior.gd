@@ -1,5 +1,6 @@
 ## @ace_category("Orbit 3D")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/orbit_3d/icon.svg")
 class_name Orbit3DBehavior
 extends Node

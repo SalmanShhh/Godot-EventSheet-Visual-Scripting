@@ -1,5 +1,6 @@
 ## @ace_tags(movement, screen)
 ## @ace_category("Bound To")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/bound_to/icon.svg")
 class_name BoundToBehavior
 extends Node

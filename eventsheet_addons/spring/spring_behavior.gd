@@ -1,6 +1,7 @@
 ## @ace_tags(motion, juice)
 ## @ace_category("Spring")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/spring/icon.svg")
 class_name SpringBehavior
 extends Node

@@ -1,5 +1,6 @@
 ## @ace_category("State Machine")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/state_machine/icon.svg")
 class_name StateMachineBehavior
 extends Node

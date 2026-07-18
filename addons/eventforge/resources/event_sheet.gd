@@ -73,6 +73,14 @@ extends Resource
 ## annotation (metadata, exactly like @ace_tags - no code, byte-exact round-trip; empty =
 ## no line). The Project Doctor warns when an in-use pack's requirement is missing.
 @export var addon_requires: PackedStringArray = PackedStringArray()
+## Pack identity metadata, all optional and all emitted ONLY as class-level annotations
+## (`## @ace_version(1.0.0)` / `## @ace_author("Name")` / `## @ace_help("https://...")`) -
+## the @ace_tags family: no code, byte-exact round-trip, empty = no line. Version is a
+## plain semver-ish string shown on the Addon Pack banner chip; help is a URL readers of
+## the pack can follow.
+@export var addon_version: String = ""
+@export var addon_author: String = ""
+@export var addon_help_url: String = ""
 @export var events: Array[Resource] = []
 @export var variables: Dictionary = {}
 ## Compile-time includes (event-sheet-style): paths to other event sheets (res://….tres) whose

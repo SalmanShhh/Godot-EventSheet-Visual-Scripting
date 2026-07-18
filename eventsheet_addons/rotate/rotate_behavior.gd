@@ -1,5 +1,6 @@
 ## @ace_tags(movement, visual)
 ## @ace_category("Rotate")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/rotate/icon.svg")
 class_name RotateBehavior
 extends Node

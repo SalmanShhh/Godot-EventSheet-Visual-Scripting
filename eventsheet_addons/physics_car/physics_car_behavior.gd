@@ -1,5 +1,6 @@
 ## @ace_tags(vehicle, physics)
 ## @ace_category("Physics Car")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/physics_car/icon.svg")
 class_name PhysicsCar
 extends Node

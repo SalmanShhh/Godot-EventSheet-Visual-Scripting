@@ -1,5 +1,6 @@
 ## @ace_tags(incremental, idle, achievement)
 ## @ace_category("Milestones")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/milestones/icon.svg")
 class_name MilestonesAddon
 extends Node

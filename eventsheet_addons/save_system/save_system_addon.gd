@@ -1,4 +1,5 @@
 ## @ace_tags(persistence)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/save_system/icon.svg")
 class_name SaveSystemAddon
 extends Node

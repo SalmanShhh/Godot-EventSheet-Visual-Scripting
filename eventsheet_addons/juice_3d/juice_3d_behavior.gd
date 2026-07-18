@@ -1,6 +1,7 @@
 ## @ace_tags(camera, juice, 3d)
 ## @ace_category("Juice 3D")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/juice_3d/icon.svg")
 class_name Juice3DBehavior
 extends Node

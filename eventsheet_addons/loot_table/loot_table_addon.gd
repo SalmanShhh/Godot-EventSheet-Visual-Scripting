@@ -1,5 +1,6 @@
 ## @ace_tags(loot, random)
 ## @ace_category("Loot")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/loot_table/icon.svg")
 class_name LootBoxAddon
 extends Node

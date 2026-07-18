@@ -2,6 +2,7 @@
 ## their annotated members become project-wide ACEs automatically - no manifest, no JSON,
 ## no per-sheet setup. Provider name comes from class_name, this comment is the addon
 ## description, and @ace_* annotations customize each ACE.
+## @ace_version(1.0.0)
 @tool
 class_name DemoHealthAddon
 extends RefCounted

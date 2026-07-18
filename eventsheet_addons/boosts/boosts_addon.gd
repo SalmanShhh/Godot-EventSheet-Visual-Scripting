@@ -1,5 +1,6 @@
 ## @ace_tags(incremental, idle, boost)
 ## @ace_category("Boosts")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/boosts/icon.svg")
 class_name BoostAddon
 extends Node

@@ -1,6 +1,7 @@
 ## @ace_tags(drawing, visual)
 ## @ace_category("Drawing Canvas")
 ## @ace_requires(CanvasSurface, DrawingPrefabResource)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/drawing_canvas/icon.svg")
 class_name DrawingCanvas
 extends Node

@@ -1,5 +1,6 @@
 ## @ace_category("Car")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/car/icon.svg")
 class_name CarBehavior
 extends Node

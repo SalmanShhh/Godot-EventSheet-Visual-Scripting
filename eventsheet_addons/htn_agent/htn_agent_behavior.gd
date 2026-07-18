@@ -1,6 +1,7 @@
 ## @ace_tags(ai, planning)
 ## @ace_category("HTN")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/htn_agent/icon.svg")
 class_name HTNAgent
 extends Node

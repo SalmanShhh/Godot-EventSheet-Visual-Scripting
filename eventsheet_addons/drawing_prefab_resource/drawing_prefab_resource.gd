@@ -1,3 +1,4 @@
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/drawing_prefab_resource/icon.svg")
 class_name DrawingPrefabResource
 extends Resource

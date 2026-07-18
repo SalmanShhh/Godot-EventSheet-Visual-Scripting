@@ -1,5 +1,6 @@
 ## @ace_tags(movement, screen)
 ## @ace_category("Wrap")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/wrap/icon.svg")
 class_name WrapBehavior
 extends Node

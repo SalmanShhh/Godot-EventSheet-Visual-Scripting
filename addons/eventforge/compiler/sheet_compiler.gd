@@ -146,6 +146,14 @@ static func compile(sheet: EventSheetResource, output_path: String = "", omit_ge
 		# needs installed - class names, autoload:Name, pack:folder - for the Doctor to audit.
 		if not sheet.addon_requires.is_empty():
 			lines.append("## @ace_requires(%s)" % ", ".join(sheet.addon_requires))
+		# Pack identity metadata (version/author/help), same family: metadata-only lines the
+		# importer recovers without removing, so they can never double-emit.
+		if not sheet.addon_version.strip_edges().is_empty():
+			lines.append("## @ace_version(%s)" % sheet.addon_version.strip_edges())
+		if not sheet.addon_author.strip_edges().is_empty():
+			lines.append("## @ace_author(\"%s\")" % sheet.addon_author.strip_edges())
+		if not sheet.addon_help_url.strip_edges().is_empty():
+			lines.append("## @ace_help(\"%s\")" % sheet.addon_help_url.strip_edges())
 		if not sheet.custom_class_icon.strip_edges().is_empty():
 			lines.append("@icon(\"%s\")" % sheet.custom_class_icon)
 		lines.append("class_name %s" % sheet.custom_class_name.strip_edges())

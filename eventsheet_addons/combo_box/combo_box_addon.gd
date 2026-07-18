@@ -1,5 +1,6 @@
 ## @ace_tags(input, combo)
 ## @ace_category("ComboBox")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/combo_box/icon.svg")
 class_name ComboBoxAddon
 extends Node

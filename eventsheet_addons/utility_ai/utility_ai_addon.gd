@@ -1,5 +1,6 @@
 ## @ace_tags(ai, decision)
 ## @ace_category("Utility AI")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/utility_ai/icon.svg")
 class_name UtilityBrain
 extends Node

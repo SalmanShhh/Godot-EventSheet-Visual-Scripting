@@ -1,5 +1,6 @@
 ## @ace_category("Virtual Cursor")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 class_name VirtualCursor
 extends Node

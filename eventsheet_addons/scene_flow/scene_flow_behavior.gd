@@ -1,5 +1,6 @@
 ## @ace_category("Scenes")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/scene_flow/icon.svg")
 class_name SceneFlowBehavior
 extends Node

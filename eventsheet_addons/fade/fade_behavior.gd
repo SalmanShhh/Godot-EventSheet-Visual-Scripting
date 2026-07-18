@@ -1,5 +1,6 @@
 ## @ace_tags(fade, juice)
 ## @ace_category("Fade")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/fade/icon.svg")
 class_name FadeBehavior
 extends Node

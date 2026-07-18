@@ -1,3 +1,4 @@
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/skin_catalog_resource/icon.svg")
 class_name SkinCatalogResource
 extends Resource

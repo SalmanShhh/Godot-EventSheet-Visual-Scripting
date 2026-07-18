@@ -1,6 +1,7 @@
 ## @ace_tags(movement, platformer)
 ## @ace_category("Platformer")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/platformer_movement/icon.svg")
 class_name PlatformerMovement
 extends Node

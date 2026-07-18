@@ -3,6 +3,7 @@
 # and it registers automatically - no manifest, no plugin edits. This one is a "Note" row: a
 # highlighted `## NOTE: <text>` line that opens as a first-class block instead of plain prelude
 # text. kind_ids from packs are namespaced "<pack>.<name>".
+## @ace_version(1.0.0)
 @tool
 extends EventSheetBlockKind
 

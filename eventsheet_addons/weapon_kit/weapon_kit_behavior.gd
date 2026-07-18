@@ -1,6 +1,7 @@
 ## @ace_tags(combat, shooter)
 ## @ace_category("Weapon")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/weapon_kit/icon.svg")
 class_name WeaponKit
 extends Node

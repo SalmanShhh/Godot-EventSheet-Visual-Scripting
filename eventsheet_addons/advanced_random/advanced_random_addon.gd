@@ -1,4 +1,5 @@
 ## @ace_tags(random, noise, procedural)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/advanced_random/icon.svg")
 class_name AdvancedRandomAddon
 extends Node

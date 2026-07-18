@@ -1,6 +1,7 @@
 ## @ace_tags(performance, scheduling)
 ## @ace_category("Time Slicer")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/time_slicer/icon.svg")
 class_name TimeSlicerBehavior
 extends Node

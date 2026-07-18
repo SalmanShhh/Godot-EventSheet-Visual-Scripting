@@ -1,5 +1,6 @@
 ## @ace_category("Bullet 3D")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/bullet_3d/icon.svg")
 class_name Bullet3DBehavior
 extends Node

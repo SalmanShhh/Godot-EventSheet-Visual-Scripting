@@ -1,5 +1,6 @@
 ## @ace_category("FPS Controller")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/fps_controller/icon.svg")
 class_name FPSController
 extends Node

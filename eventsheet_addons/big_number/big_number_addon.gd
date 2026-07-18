@@ -1,5 +1,6 @@
 ## @ace_tags(incremental, idle, format)
 ## @ace_category("Big Numbers")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/big_number/icon.svg")
 class_name BigNumberAddon
 extends Node

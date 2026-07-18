@@ -1,5 +1,6 @@
 ## @ace_tags(narrative, storylet)
 ## @ace_category("Storylets")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 class_name StoryletsAddon
 extends Node

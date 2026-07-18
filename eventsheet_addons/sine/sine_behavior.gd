@@ -1,5 +1,6 @@
 ## @ace_category("Sine")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/sine/icon.svg")
 class_name SineBehavior
 extends Node

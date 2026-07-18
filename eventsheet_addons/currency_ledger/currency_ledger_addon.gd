@@ -1,5 +1,6 @@
 ## @ace_tags(economy, currency)
 ## @ace_category("Currency")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/currency_ledger/icon.svg")
 class_name CurrencyLedgerAddon
 extends Node

@@ -1,5 +1,6 @@
 ## @ace_tags(platform, device, screen, system)
 ## @ace_category("Platform Info")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/platform_info/icon.svg")
 class_name PlatformInfoAddon
 extends Node

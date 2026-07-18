@@ -1,5 +1,6 @@
 ## @ace_category("Tile Movement")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/tile_movement/icon.svg")
 class_name TileMovementBehavior
 extends Node

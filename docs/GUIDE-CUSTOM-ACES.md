@@ -318,6 +318,7 @@ space-separated (`@ace_category(Combat)` and `@ace_category Combat` both work).
 | `@ace_icon(name)` | Set a picker icon. |
 | `@ace_tags(a,b)` | Add search tags. |
 | `@ace_requires(a, b)` (class-level) | Declare what the pack needs installed: bare class names (`StatSheetResource`), `autoload:Name`, or `pack:folder_name`. The Project Doctor warns when an in-use pack's requirement is missing - the finding is clickable and opens the pack. Sheet-built packs set it via the sheet's `addon_requires` field. |
+| `@ace_version(1.0.0)` / `@ace_author("Name")` / `@ace_help("https://...")` (class-level) | Pack identity metadata: the version joins the Addon Pack banner chip ("Addon Pack v1.0.0") and feeds future update tooling; author and help link document who made it and where its docs live. Sheet-built packs set them via `addon_version` / `addon_author` / `addon_help_url`; every bundled pack ships versioned. |
 
 ### A complete Path 1 example
 

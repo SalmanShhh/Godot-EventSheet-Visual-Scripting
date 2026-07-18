@@ -1,5 +1,6 @@
 ## @ace_tags(cosmetics, gacha)
 ## @ace_category("SkinVault")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/skin_vault/icon.svg")
 class_name SkinVaultAddon
 extends Node

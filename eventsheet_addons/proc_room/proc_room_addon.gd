@@ -1,5 +1,6 @@
 ## @ace_tags(procedural, roguelite)
 ## @ace_category("ProcRoom")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/proc_room/icon.svg")
 class_name ProcRoomAddon
 extends Node

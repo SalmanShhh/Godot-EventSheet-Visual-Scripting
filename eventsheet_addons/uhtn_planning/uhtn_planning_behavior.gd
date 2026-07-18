@@ -1,6 +1,7 @@
 ## @ace_tags(ai, planning, utility)
 ## @ace_category("UHTN Planning")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 class_name UHTNPlanner
 extends Node

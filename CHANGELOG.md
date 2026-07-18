@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - packs carry identity metadata (@ace_version / @ace_author / @ace_help)
+
+- **Pack identity fields** on sheets - `addon_version`, `addon_author`, `addon_help_url` -
+  emitted as class-level annotations in the @ace_tags family (metadata only, byte-exact
+  round-trip through the importer, empty defaults emit nothing). The version joins the
+  **Addon Pack banner chip** ("Addon Pack v1.0.0") so an opened pack states its version up
+  front, and gives future update tooling something to compare.
+- **Every bundled pack now ships versioned at 1.0.0** - the builder pipeline stamps the
+  floor version automatically, and the two hand-written demo provider scripts carry the
+  annotation directly. `tests/addon_version_test.gd` pins emission order and quoting, the
+  recovery round-trip, the empty-default rule, the typo-gate, the all-packs-versioned
+  sweep, and the banner pickup.
+
 ### Changed - rotated gravity and pathfinding degrade loudly, never silently
 
 - **Platformer Pathfinding declares its frame**: the planner reasons in straight-down

@@ -34,7 +34,10 @@ const KNOWN_ANNOTATIONS := {
 	"@ace_region": true,
 	"@ace_includes": true,
 	"@ace_uses": true,
-	"@ace_requires": true
+	"@ace_requires": true,
+	"@ace_version": true,
+	"@ace_author": true,
+	"@ace_help": true
 }
 
 

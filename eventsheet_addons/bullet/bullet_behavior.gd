@@ -1,5 +1,6 @@
 ## @ace_category("Bullet")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/bullet/icon.svg")
 class_name BulletBehavior
 extends Node

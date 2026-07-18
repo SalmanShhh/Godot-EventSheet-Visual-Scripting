@@ -16,6 +16,10 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	# third-party tooling all publish through one seam and can never drift apart. This wrapper
 	# only adds the builder conveniences: the shared behaviour icon as the default fallback,
 	# and the build-log line.
+	# Every bundled pack ships versioned (builders may set their own; 1.0.0 is the floor) -
+	# the Addon Pack banner chip shows it and future update tooling compares against it.
+	if sheet.addon_version.strip_edges().is_empty():
+		sheet.addon_version = "1.0.0"
 	var compile_result: Dictionary = EventSheets.publish_pack(sheet, base_path, icon_path)
 	if not bool(compile_result.get("success", false)):
 		push_error("Failed to compile %s.gd: %s" % [base_path, compile_result.get("errors")])

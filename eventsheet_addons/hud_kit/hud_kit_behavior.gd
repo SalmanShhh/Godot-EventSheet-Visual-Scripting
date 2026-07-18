@@ -1,5 +1,6 @@
 ## @ace_category("UI")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/hud_kit/icon.svg")
 class_name HudKitBehavior
 extends Node

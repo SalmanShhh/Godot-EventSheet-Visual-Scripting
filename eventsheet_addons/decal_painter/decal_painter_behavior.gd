@@ -1,5 +1,6 @@
 ## @ace_tags(3d, drawing, visual)
 ## @ace_category("Decal Painter")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/decal_painter/icon.svg")
 class_name DecalPainter
 extends Node

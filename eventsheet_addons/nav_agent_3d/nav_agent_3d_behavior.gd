@@ -1,6 +1,7 @@
 ## @ace_tags(movement, 3d, ai, pathfinding)
 ## @ace_category("Nav Agent 3D")
 ## @ace_expose_all(node)
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/nav_agent_3d/icon.svg")
 class_name NavAgent3D
 extends Node

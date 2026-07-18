@@ -1,5 +1,6 @@
 ## @ace_tags(cosmetics, data)
 ## @ace_category("SkinVault")
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/skin_catalog_loader/icon.svg")
 class_name SkinCatalogLoader
 extends Node
