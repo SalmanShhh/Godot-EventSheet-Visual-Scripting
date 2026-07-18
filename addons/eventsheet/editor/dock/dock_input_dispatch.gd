@@ -74,6 +74,10 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._open_replace_object_dialog()
 		_dock.ROW_MENU_BATCH_EDIT_PARAMS:
 			_dock._open_batch_param_edit()
+		_dock.ROW_MENU_DATA_CLASS_ADD_FIELD:
+			_dock._open_data_class_add_field()
+		_dock.ROW_MENU_DATA_CLASS_REMOVE_FIELD:
+			_dock._remove_data_class_field_from_context()
 		_dock.ROW_MENU_PASTE:
 			_dock._on_paste_requested()
 		_dock.ROW_MENU_DELETE:

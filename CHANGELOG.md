@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - data-class fields author like actions
+
+- **Right-click a data-class block > Add Field...**: a small Name / Type / Default dialog
+  appends a canonical `var name: Type = default` line through the structured model - the
+  same add-a-row gesture as conditions/actions, one undo step, no code typing. Right-click
+  a field row > **Remove Field** drops exactly that line. Both transforms refuse anything
+  unsafe: non-lifting classes, duplicate or invalid names, and non-field body lines
+  (comments survive) - degrade, never corrupt. Field rows now carry their identity on
+  every span, so the context menu works anywhere on the row.
+- `ViewportRowBuilder.data_class_add_field` / `data_class_remove_field` are the pure
+  transforms, pinned in `tests/data_class_edit_test.gd` (canonical emit, lift preserved,
+  refusals, add/remove round-trip).
+
 ### Added - autocomplete in Replace Object References
 
 - **The "To" field now suggests real targets**: a ▾ menu (also Down-arrow from the field)

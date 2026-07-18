@@ -103,6 +103,18 @@ static func run() -> bool:
 		syn_row != null and syn_row.children.size() == 2, true) and ok
 	dock2.free()
 
+	# ---- structured Add/Remove Field (the add-action gesture, for data classes) ----
+	var base_code: String = "class Stats:\n\tvar hp: int = 10\n\tvar armor: float"
+	var grown: String = ViewportRowBuilder.data_class_add_field(base_code, "speed", "float", "4.5")
+	ok = _check("Add Field appends one canonical line", grown, base_code + "\n\tvar speed: float = 4.5") and ok
+	ok = _check("the grown class still lifts (stays editable)", ViewportRowBuilder.data_class_lifts(grown), true) and ok
+	ok = _check("a duplicate field name is refused", ViewportRowBuilder.data_class_add_field(base_code, "hp", "int", ""), "") and ok
+	ok = _check("a non-identifier name is refused", ViewportRowBuilder.data_class_add_field(base_code, "not a name", "int", ""), "") and ok
+	ok = _check("Remove Field round-trips the add exactly", ViewportRowBuilder.data_class_remove_field(grown, 2), base_code) and ok
+	var with_comment: String = "class Notes:\n\t# keep me\n\tvar x: int"
+	ok = _check("removing a non-field body line is refused (comments survive)",
+		ViewportRowBuilder.data_class_remove_field(with_comment, 0), "") and ok
+
 	dock.free()
 	return ok
 

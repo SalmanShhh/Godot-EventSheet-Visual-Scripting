@@ -72,6 +72,8 @@ const ROW_MENU_ADD_FUNCTION_PARAM := 46
 const ROW_MENU_MAKE_FUNCTION_EDITABLE := 47
 const ROW_MENU_REPLACE_OBJECT := 48
 const ROW_MENU_BATCH_EDIT_PARAMS := 49
+const ROW_MENU_DATA_CLASS_ADD_FIELD := 50
+const ROW_MENU_DATA_CLASS_REMOVE_FIELD := 51
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -2019,6 +2021,82 @@ func _open_replace_object_dialog() -> void:
 
 
 var _batch_edit_menu: PopupMenu = null
+var _data_class_field_dialog: AcceptDialog = null
+
+
+## The data-class row this context click concerns: the holder row's own RawCodeRow, or the
+## raw_row a FIELD row's spans carry (field rows have a null source_resource by design).
+func _data_class_context_raw_row() -> RawCodeRow:
+	if _context_row != null and _context_row.source_resource is RawCodeRow:
+		return _context_row.source_resource as RawCodeRow
+	return _context_hit.get("span_metadata", {}).get("raw_row", null) as RawCodeRow
+
+
+## Add Field (the "add an action" gesture, for data classes): a small Name / Type / Default
+## dialog appends a canonical `var name: Type = default` line through the structured model,
+## as one undo step. The transform refuses non-lifting classes and duplicate names.
+func _open_data_class_add_field() -> void:
+	var raw_row: RawCodeRow = _data_class_context_raw_row()
+	if raw_row == null or not ViewportRowBuilder.data_class_lifts(raw_row.code):
+		_set_status("Right-click a data-class block to add a field.", true)
+		return
+	if _data_class_field_dialog != null and is_instance_valid(_data_class_field_dialog):
+		_data_class_field_dialog.queue_free()
+	_data_class_field_dialog = AcceptDialog.new()
+	_data_class_field_dialog.title = "Add Field"
+	_data_class_field_dialog.ok_button_text = "Add"
+	var content: VBoxContainer = VBoxContainer.new()
+	content.add_theme_constant_override("separation", 8)
+	var name_edit: LineEdit = LineEdit.new()
+	name_edit.placeholder_text = "field_name"
+	name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_child(EventSheetPopupUI.form_row("Name", name_edit))
+	var type_edit: LineEdit = LineEdit.new()
+	type_edit.text = "int"
+	type_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_child(EventSheetPopupUI.form_row("Type", type_edit))
+	var default_edit: LineEdit = LineEdit.new()
+	default_edit.placeholder_text = "(optional)"
+	default_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_data_class_field_dialog.register_text_enter(default_edit)
+	content.add_child(EventSheetPopupUI.form_row("Default", default_edit))
+	_data_class_field_dialog.add_child(EventSheetPopupUI.titled_card("New field on this data class", content))
+	_data_class_field_dialog.confirmed.connect(func() -> void:
+		var new_code: String = ViewportRowBuilder.data_class_add_field(raw_row.code, name_edit.text.strip_edges(), type_edit.text, default_edit.text.strip_edges())
+		if new_code.is_empty():
+			_set_status("Couldn't add the field - use a plain identifier name that isn't taken, and give a type.", true)
+			return
+		var changed: bool = _perform_undoable_sheet_edit("Add Field", func() -> bool:
+			var live_code: String = ViewportRowBuilder.data_class_add_field(raw_row.code, name_edit.text.strip_edges(), type_edit.text, default_edit.text.strip_edges())
+			if live_code.is_empty():
+				return false
+			raw_row.code = live_code
+			return true)
+		if changed:
+			_refresh_after_edit()
+			_mark_dirty("Added field %s." % name_edit.text.strip_edges()))
+	EventSheetL10n.apply_to(_data_class_field_dialog)
+	add_child(_data_class_field_dialog)
+	_data_class_field_dialog.popup_centered(Vector2i(420, 240))
+	name_edit.grab_focus()
+
+
+func _remove_data_class_field_from_context() -> void:
+	var metadata: Dictionary = _context_hit.get("span_metadata", {})
+	var raw_row: RawCodeRow = metadata.get("raw_row", null) as RawCodeRow
+	var field_index: int = int(metadata.get("field_index", -1))
+	if raw_row == null or field_index < 0:
+		_set_status("Right-click a field row to remove it.", true)
+		return
+	var changed: bool = _perform_undoable_sheet_edit("Remove Field", func() -> bool:
+		var live_code: String = ViewportRowBuilder.data_class_remove_field(raw_row.code, field_index)
+		if live_code.is_empty():
+			return false
+		raw_row.code = live_code
+		return true)
+	if changed:
+		_refresh_after_edit()
+		_mark_dirty("Removed the field.")
 
 
 ## Batch param edit (C3's edit-many reflex): any condition/action that appears more than

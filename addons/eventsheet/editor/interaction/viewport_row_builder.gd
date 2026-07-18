@@ -999,6 +999,40 @@ static func data_class_lifts(code: String) -> bool:
 	return emit_data_class(model) == code
 
 
+## Structured field ADD (the "add an action" gesture, for data classes): appends a canonical
+## `\tvar name: Type[ = default]` to the class body and re-emits. "" when the code is not a
+## LIFTING data class, the name is not a plain identifier, or a field with that name exists -
+## the caller leaves the code untouched (degrade, never corrupt). Static + pure for tests.
+static func data_class_add_field(code: String, field_name: String, field_type: String, default_value: String) -> String:
+	if not data_class_lifts(code) or not field_name.is_valid_identifier() or field_type.strip_edges().is_empty():
+		return ""
+	var model: Dictionary = parse_data_class(code)
+	for entry: Dictionary in model.get("body", []):
+		if str(entry.get("kind")) == "field" and str(entry.get("name")) == field_name:
+			return ""
+	(model["body"] as Array).append({
+		"kind": "field",
+		"name": field_name,
+		"type": field_type.strip_edges(),
+		"default": default_value,
+		"has_default": not default_value.is_empty()
+	})
+	return emit_data_class(model)
+
+
+## Structured field REMOVE: drops the body entry at field_index (must be a field) and
+## re-emits. "" when the code is not a lifting data class or the index is not a field.
+static func data_class_remove_field(code: String, field_index: int) -> String:
+	if not data_class_lifts(code):
+		return ""
+	var model: Dictionary = parse_data_class(code)
+	var body: Array = model.get("body", [])
+	if field_index < 0 or field_index >= body.size() or str((body[field_index] as Dictionary).get("kind")) != "field":
+		return ""
+	body.remove_at(field_index)
+	return emit_data_class(model)
+
+
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
 ## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
 ## A row that is purely a published-verb annotation shell renders as ONE Define-style header line
@@ -1309,19 +1343,25 @@ func _build_data_class_field_row(raw_row: RawCodeRow, class_name_str: String, fi
 	var condition_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
 	# Condition cell: what the field IS (name : type).
+	# Every span carries raw_row + field_index, so a right-click ANYWHERE on the field row
+	# resolves the field for the context menu's Remove Field (not just on the default value).
 	var spans: Array[SemanticSpan] = [
 		_make_span(str(field.get("name")), SemanticSpan.SpanType.OBJECT, {
 			"lane": "condition",
 			"editable": false,
 			"kind": "data_class_field",
+			"field_index": field_index,
+			"raw_row": raw_row,
 			"line_index": 0,
 			"text_color": _viewport._get_event_style().object_label_color
 		}.merged(condition_style, true)),
-		_make_span(":", SemanticSpan.SpanType.OPERATOR, {"lane": "condition", "editable": false, "kind": "data_class_field", "line_index": 0}.merged(condition_style, true)),
+		_make_span(":", SemanticSpan.SpanType.OPERATOR, {"lane": "condition", "editable": false, "kind": "data_class_field", "field_index": field_index, "raw_row": raw_row, "line_index": 0}.merged(condition_style, true)),
 		_make_span(str(field.get("type")), SemanticSpan.SpanType.VALUE, {
 			"lane": "condition",
 			"editable": false,
 			"kind": "data_class_field",
+			"field_index": field_index,
+			"raw_row": raw_row,
 			"line_index": 0,
 			"text_color": EventSheetPalette.TEXT_MUTED
 		}.merged(condition_style, true))

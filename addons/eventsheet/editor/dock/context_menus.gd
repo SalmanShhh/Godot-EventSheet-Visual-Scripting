@@ -140,6 +140,13 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 			var fn_name: String = (row_data.source_resource as EventFunction).function_name
 			var already: bool = _dock._active_view().is_function_body_editable_opt_in(fn_name)
 			menu.add_item("Lock Verb Body (read-only)" if already else "Make Verb Body Editable", _dock.ROW_MENU_MAKE_FUNCTION_EDITABLE)
+	elif (row_data != null and row_data.source_resource is RawCodeRow and ViewportRowBuilder.data_class_lifts((row_data.source_resource as RawCodeRow).code)) \
+			or _dock._context_hit.get("span_metadata", {}).get("raw_row", null) is RawCodeRow:
+		# A lifting data-class holder row, or one of its FIELD rows (which carry their
+		# raw_row in span metadata): field authoring follows the add/remove-action gesture.
+		menu.add_item("Add Field…", _dock.ROW_MENU_DATA_CLASS_ADD_FIELD)
+		if int(_dock._context_hit.get("span_metadata", {}).get("field_index", -1)) >= 0:
+			menu.add_item("Remove Field", _dock.ROW_MENU_DATA_CLASS_REMOVE_FIELD)
 	else:
 		# SECTION / unknown rows get only the universal items - no leading separator.
 		added_type_items = false
