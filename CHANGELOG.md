@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - the keyboard grammar is now Construct 3's, key for key
+
+- **Three keys close the C3 parity gap**: `S` adds a picker-backed sub-event under the
+  selection, `V` adds a variable, and toggle enabled/disabled moves from `X` to **`D`**
+  (Construct's key - rebind it back via Tools > Keyboard Shortcuts if your hands
+  disagree). The full C3 event-sheet grammar now works verbatim:
+  E / C / A / S / B / Q / G / V / D / I / R, all rebindable, all suppressed while typing.
+  The migration guide gained the keymap table, and the parity is suite-pinned key by key.
+
 ### Changed - translations topped up, the template is now complete
 
 - **13 new UI strings translated in all 8 languages** (531 keys each): the Connect Signal

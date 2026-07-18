@@ -204,6 +204,20 @@ i18n (Godot translations).
   plain GDScript converts to events automatically** when it contains trigger functions.
 - Behaviors are added to objects (here: child nodes via the Create Node dialog) and
   configured per-instance in the Inspector.
+- **Your C3 keyboard grammar works verbatim** (rebindable via Tools > Keyboard Shortcuts):
+
+  | Key | Action |
+  |---|---|
+  | `E` | Add event |
+  | `C` / `A` | Add condition / action (the type-a-sentence Ghost Row) |
+  | `S` | Add sub-event (picker) |
+  | `B` | Add blank sub-event |
+  | `Q` | Add comment |
+  | `G` | Add group |
+  | `V` | Add variable |
+  | `D` | Toggle disabled |
+  | `I` | Invert the selected condition |
+  | `R` | Replace the selected trigger / condition / action |
 
 ---
 

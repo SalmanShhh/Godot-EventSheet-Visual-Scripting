@@ -19,8 +19,13 @@ const DEFAULTS: Dictionary = {
 	"add_condition": "C",
 	"add_action": "A",
 	"add_group": "G",
-	"toggle_enabled": "X",
+	# D matches Construct 3's toggle-disabled key (was X; rebind via Tools - Keyboard Shortcuts).
+	"toggle_enabled": "D",
 	"add_blank_subevent": "B",
+	# S matches Construct 3's add-sub-event key: picker-backed sub-condition under the selection.
+	"add_sub_condition": "S",
+	# V matches Construct 3's add-variable key (the Ctrl+Shift+V chord remains as well).
+	"add_variable": "V",
 	"invert_condition": "I",
 	"replace_ace": "R",
 	"history_back": "Alt+Left",
@@ -48,6 +53,8 @@ const LABELS: Dictionary = {
 	"add_group": "Add group",
 	"toggle_enabled": "Toggle enabled / disabled",
 	"add_blank_subevent": "Add blank sub-event",
+	"add_sub_condition": "Add sub-event (picker)",
+	"add_variable": "Add variable",
 	"invert_condition": "Invert selected condition",
 	"replace_ace": "Replace selected trigger / condition / action",
 	"history_back": "Jump back (navigation history)",
@@ -69,7 +76,8 @@ const LABELS: Dictionary = {
 ## Display order for the editor (DEFAULTS key order isn't guaranteed stable).
 const ORDER: Array = [
 	"add_event", "add_condition", "add_action", "add_comment", "add_group", "toggle_enabled",
-	"add_blank_subevent", "invert_condition", "replace_ace", "history_back", "history_forward",
+	"add_blank_subevent", "add_sub_condition", "add_variable", "invert_condition", "replace_ace",
+	"history_back", "history_forward",
 	"duplicate", "copy", "paste", "undo", "redo", "save", "save_as", "open",
 	"add_event_chord", "add_condition_chord", "add_action_chord", "add_variable_chord",
 ]

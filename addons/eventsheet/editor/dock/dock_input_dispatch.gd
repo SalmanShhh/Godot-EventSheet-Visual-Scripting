@@ -229,6 +229,8 @@ func unhandled_key_input(event: InputEvent) -> void:
 		["add_group", true, _dock._on_add_group_requested],
 		["toggle_enabled", true, _dock._toggle_selected_enabled],
 		["add_blank_subevent", true, _dock._on_add_blank_subevent_key],
+		["add_sub_condition", true, _dock._on_add_sub_condition_key],
+		["add_variable", true, _dock._on_add_global_variable_requested],
 		["invert_condition", true, _dock._on_invert_condition_key],
 		["replace_ace", true, _dock._on_replace_ace_key],
 		["history_back", true, _dock._navigate.go_back],

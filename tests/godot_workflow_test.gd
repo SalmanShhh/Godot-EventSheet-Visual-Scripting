@@ -205,6 +205,18 @@ static func run() -> bool:
 	all_passed = _check("reset restores the default binding",
 		EventSheetShortcuts.binding_for("duplicate"), "Ctrl+D") and all_passed
 
+	# ── The Construct-parity key grammar: the defaults ARE C3's event-sheet keys ─
+	for c3_pair: Array in [["add_event", "E"], ["add_condition", "C"], ["add_action", "A"],
+			["add_comment", "Q"], ["add_group", "G"], ["toggle_enabled", "D"],
+			["add_blank_subevent", "B"], ["add_sub_condition", "S"], ["add_variable", "V"],
+			["invert_condition", "I"], ["replace_ace", "R"]]:
+		all_passed = _check("C3 key parity: %s is %s" % [str(c3_pair[0]), str(c3_pair[1])],
+			str(EventSheetShortcuts.DEFAULTS.get(str(c3_pair[0]), "")), str(c3_pair[1])) and all_passed
+	var bare_s: InputEventKey = InputEventKey.new()
+	bare_s.keycode = KEY_S
+	all_passed = _check("bare S routes to add-sub-event, not Save",
+		EventSheetShortcuts.matches(bare_s, "add_sub_condition") and not EventSheetShortcuts.matches(bare_s, "save"), true) and all_passed
+
 	# ── Go to Sheet Row + docs links ──────────────────────────────────────────────
 	all_passed = _check("class docs resolve to the engine help topic",
 		ACEParamsDialog.open_class_docs("CharacterBody2D"), "class_name:CharacterBody2D") and all_passed

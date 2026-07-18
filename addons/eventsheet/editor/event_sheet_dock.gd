@@ -3028,6 +3028,14 @@ func _on_add_blank_subevent_key() -> void:
 	_insert_child_event_for_context_row()
 
 
+## S - add a picker-backed sub-event under the selected event (Construct's add-sub-event key).
+func _on_add_sub_condition_key() -> void:
+	if not _seed_context_from_selection() or _context_row == null or not (_context_row.source_resource is EventRow):
+		_set_status("Select an event first - S adds a sub-event under it.", true)
+		return
+	_open_sub_condition_picker_for_context_row()
+
+
 ## I - invert the selected condition (click its cell, then press I; compiles as `not (…)`).
 func _on_invert_condition_key() -> void:
 	var kind: String = ""
