@@ -33,6 +33,9 @@ var firing: bool = false
 # every streamed batch and holds near full glow).
 var firing_intensity: float = 0.0
 var line_number: int = 0
+# The C3-style stable event number (1-based, sheet order through groups and sub-events);
+# 0 for non-event rows. View-only, recomputed per rebuild - never serialized.
+var event_number: int = 0
 var breakpoint_enabled: bool = false
 var bookmark_enabled: bool = false
 var disabled: bool = false

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - stable event numbers + Go to Event (the C3 margin)
+
+- **Every event row now shows its sheet-order number in the left margin** - flat and
+  sequential through groups and sub-events, computed from the SHEET (not the view), so
+  folding a group or filtering with the lens never renumbers anything: "check event 34"
+  in a forum reply stays meaningful forever. Comments, variables, and other non-event
+  rows stay unnumbered. Toggle under **View > Event Numbers** (default on).
+- **Go to Event Number...** in the command palette jumps straight to an event by its
+  margin number - it unfolds whatever hides it, scrolls it into view, and selects it.
+- `tests/event_numbers_test.gd` pins the numbering walk (groups descend, sub-events
+  count flat, comments skip), the lookup, and the row stamping.
+
 ### Added - Replace Object References (the Construct retarget gesture)
 
 - **Right-click a selection > Replace Object References...**: pick a reference the

@@ -1760,6 +1760,48 @@ func _load_simple_mode_preference() -> void:
 ## View > Object Icons: show/hide the icons before object/module names (rows + group folders).
 ## Icons live in span metadata, so a rebuild (set_sheet) applies the flip; the icon cache stays
 ## warm for flipping back.
+## View > Event Numbers: event rows show their stable C3-style sheet-order number in the
+## gutter (default); off restores the flat row index on every row.
+func _toggle_event_numbers(view_popup: PopupMenu) -> void:
+	var show_numbers: bool = true
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		view.show_event_numbers = not view.show_event_numbers
+		show_numbers = view.show_event_numbers
+		view.queue_redraw()
+	if view_popup != null:
+		view_popup.set_item_checked(view_popup.get_item_index(16), show_numbers)
+
+
+## Go to Event N (the Command Palette entry): jump to the stable event number.
+func _open_go_to_event_dialog() -> void:
+	if _current_sheet == null:
+		_set_status("Open a sheet first.", true)
+		return
+	var dialog: AcceptDialog = AcceptDialog.new()
+	dialog.title = "Go to Event"
+	dialog.ok_button_text = "Go"
+	var number_edit: SpinBox = SpinBox.new()
+	number_edit.min_value = 1
+	number_edit.max_value = 99999
+	number_edit.value = 1
+	dialog.add_child(EventSheetPopupUI.titled_card("Event number", EventSheetPopupUI.form_row("Go to", number_edit)))
+	dialog.confirmed.connect(func() -> void:
+		var target: EventRow = EventSheetViewport.event_by_number(_current_sheet.events, int(number_edit.value))
+		if target == null:
+			_set_status("There is no event %d." % int(number_edit.value), true)
+			return
+		if _viewport != null:
+			_viewport.reveal_resource(target)
+			_viewport.select_resource(target)
+		dialog.queue_free())
+	EventSheetL10n.apply_to(dialog)
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(320, 160))
+	number_edit.get_line_edit().grab_focus()
+
+
 func _toggle_object_icons(view_popup: PopupMenu) -> void:
 	var show_icons: bool = true
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:

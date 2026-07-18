@@ -1056,6 +1056,42 @@ func _maybe_begin_slow_edit(row_index: int, span_index: int, now_msec: int = -1)
 	return true
 
 
+# ── Event numbers (the C3 margin numbers; view-only, computed from the sheet) ──
+## Shown in the gutter for event rows when on (View menu); the numbers come from the
+## SHEET's order - flat and sequential through groups and sub-events - so folding or
+## filtering never renumbers anything and "check event 34" stays stable.
+var show_event_numbers: bool = true
+
+
+## instance-id -> 1-based event number, walking the sheet the way C3 counts: every
+## EventRow in order, descending into groups and sub-events. Pure and static.
+static func event_numbers_for(entries: Array) -> Dictionary:
+	var numbers: Dictionary = {}
+	var counter: Dictionary = {"next": 1}
+	_number_events(entries, numbers, counter)
+	return numbers
+
+
+static func _number_events(entries: Array, numbers: Dictionary, counter: Dictionary) -> void:
+	for entry: Variant in entries:
+		if entry is EventRow:
+			numbers[(entry as EventRow).get_instance_id()] = int(counter["next"])
+			counter["next"] = int(counter["next"]) + 1
+			_number_events((entry as EventRow).sub_events, numbers, counter)
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			_number_events(group.events if not group.events.is_empty() else group.rows, numbers, counter)
+
+
+## The EventRow carrying the given number ("Go to Event N"), or null.
+static func event_by_number(entries: Array, number: int) -> EventRow:
+	var numbers: Dictionary = event_numbers_for(entries)
+	for instance_id: Variant in numbers:
+		if int(numbers[instance_id]) == number:
+			return instance_from_id(int(instance_id)) as EventRow
+	return null
+
+
 # ── Live filter lens (view-only; see _refresh_rows) ─────────────────────────────
 var _lens_query: String = ""
 var _lens_hidden_count: int = 0
@@ -1512,11 +1548,13 @@ func _refresh_rows() -> void:
 		for entry in _flat_rows:
 			_ensure_event_spans(entry.get("row"))
 	_rebuild_row_metrics()
+	var event_numbers: Dictionary = event_numbers_for(_sheet.events if _sheet != null else [])
 	for index in range(_flat_rows.size()):
 		var line_row: EventRowData = _flat_rows[index].get("row")
 		if line_row == null:
 			continue
 		line_row.line_number = index + 1
+		line_row.event_number = int(event_numbers.get(line_row.source_resource.get_instance_id(), 0)) if line_row.source_resource != null else 0
 		if _breakpoint_rows.has(line_row.row_uid):
 			line_row.breakpoint_enabled = bool(_breakpoint_rows[line_row.row_uid])
 		line_row.bookmark_enabled = _bookmark_rows.has(line_row.row_uid)
