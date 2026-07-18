@@ -142,6 +142,56 @@ static func edit(label: String, mutation: Callable) -> bool:
 	return changed
 
 
+## Signal-to-sheet connect (the "wire a signal into events" flow the Node dock uses):
+## appends an On <Signal> trigger event to the CURRENT sheet. Core signals map to their
+## named triggers (body_entered becomes On Body Entered); anything else becomes a
+## signal:<name> trigger with the argument signature baked so the handler emits with the
+## right parameters. Returns false when the workspace is closed.
+static func add_trigger_for_signal(signal_name: String, args_signature: String = "") -> bool:
+	return edit("Connect Signal: %s" % signal_name, func(sheet: EventSheetResource) -> bool:
+		sheet.events.append(build_signal_trigger_event(signal_name, args_signature))
+		return true)
+
+
+## The trigger event for one signal - pure and static so tests pin the mapping. Core
+## signals get their named trigger id (no args needed - the compiler knows their
+## signatures); everything else rides the generic signal:<name> trigger with args baked.
+static func build_signal_trigger_event(signal_name: String, args_signature: String = "") -> EventRow:
+	var row: EventRow = EventRow.new()
+	if EventSheetACELifter.CORE_SIGNAL_TRIGGERS.has(signal_name):
+		row.trigger_provider_id = "Core"
+		row.trigger_id = str(EventSheetACELifter.CORE_SIGNAL_TRIGGERS[signal_name])
+	else:
+		row.trigger_provider_id = ""
+		row.trigger_id = "signal:%s" % signal_name
+		row.trigger_args = args_signature
+	return row
+
+
+## Every signal a node offers (script signals AND its native class's), each as
+## {"name": String, "args": String} where args is the baked handler signature
+## ("body: Node" style - the exact format trigger_args expects). The connect-signal
+## dialog lists these; also handy for tooling that reflects over a scene.
+static func signals_of(node: Object) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if node == null:
+		return out
+	for signal_info: Dictionary in node.get_signal_list():
+		var parts: PackedStringArray = PackedStringArray()
+		for arg: Dictionary in signal_info.get("args", []):
+			var arg_name: String = str(arg.get("name", ""))
+			var arg_type: int = int(arg.get("type", TYPE_NIL))
+			var arg_class: String = str(arg.get("class_name", ""))
+			if not arg_class.is_empty():
+				parts.append("%s: %s" % [arg_name, arg_class])
+			elif arg_type != TYPE_NIL:
+				parts.append("%s: %s" % [arg_name, type_string(arg_type)])
+			else:
+				parts.append(arg_name)
+		out.append({"name": str(signal_info.get("name", "")), "args": ", ".join(parts)})
+	return out
+
+
 ## Writes to the editor's status line (is_error tints it as a problem).
 static func set_status(text: String, is_error: bool = false) -> void:
 	if _dock_alive():

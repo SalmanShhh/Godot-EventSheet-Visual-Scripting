@@ -18,6 +18,7 @@ const WORKFLOW_PATH: String = "res://addons/eventforge/editor/workflow_entry_poi
 const PROJECT_DOCTOR_PATH: String = "res://addons/eventforge/project_doctor.gd"
 const STARTER_TEMPLATES_PATH: String = "res://addons/eventsheet/editor/dock/starter_templates.gd"
 const NEW_SHEET_DIALOG_PATH: String = "res://addons/eventsheet/editor/new_sheet_dialog.gd"
+const CONNECT_SIGNAL_DIALOG_PATH: String = "res://addons/eventsheet/editor/connect_signal_dialog.gd"
 const ACE_PARAM_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/ace_param_inspector_plugin.gd"
 const DRAWING_PREFAB_INSPECTOR_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_inspector_plugin.gd"
 const DRAWING_PREFAB_PREVIEW_GEN_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_preview_generator.gd"
@@ -46,6 +47,7 @@ var _behavior_gizmos: RefCounted = null
 var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
 var _new_sheet_dialog: RefCounted = null
+var _connect_signal_dialog: RefCounted = null
 
 
 ## Returns the display name of the plugin.
@@ -156,6 +158,22 @@ func _attach_sheet_to_node(node: Node) -> void:
 		push_warning("[Godot EventSheets] %s" % str(result.get("message")))
 
 
+## Right-clicked node -> Connect Signal to Event Sheet: resolve the node's sheet and open
+## the signal picker. A node without a sheet is pointed at Attach Event Sheet instead of
+## failing silently.
+func _connect_signal_from_node(node: Node) -> void:
+	if node == null:
+		return
+	var node_script: Script = node.get_script() as Script
+	var sheet_path: String = "" if node_script == null else str(load(PROJECT_DOCTOR_PATH).sheet_for_script(node_script.resource_path))
+	if sheet_path.is_empty():
+		push_warning("[Godot EventSheets] %s has no event sheet - use Attach Event Sheet first, then connect signals." % node.name)
+		return
+	if _connect_signal_dialog == null:
+		_connect_signal_dialog = load(CONNECT_SIGNAL_DIALOG_PATH).new()
+	_connect_signal_dialog.call("open", node, sheet_path, get_editor_interface().get_base_control())
+
+
 ## The FileSystem "Create New > Event Sheet..." entry: pop the name + starter dialog for the
 ## clicked folder. The dialog is parented to the editor's base control (always present), so it
 ## works even before the workspace editor has ever been built.
@@ -227,6 +245,7 @@ func _enter_tree() -> void:
 		menu.attach_sheet = _attach_sheet_to_node
 		menu.goto_row = _goto_sheet_row_from_script
 		menu.create_sheet = _create_sheet_in_directory
+		menu.connect_signal = _connect_signal_from_node
 		add_context_menu_plugin(slot, menu)
 		_context_menus.append(menu)
 	# Inspector: nodes whose script is sheet-generated get an "Edit Event Sheet" button.

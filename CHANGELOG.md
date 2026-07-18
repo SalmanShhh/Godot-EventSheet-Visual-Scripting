@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - connect signals to sheets from the Scene dock
+
+- **Connect Signal to Event Sheet...** on a node's right-click menu: pick any of the
+  node's signals - script-declared and native alike, searchable, signatures shown - and
+  an **On <Signal>** trigger event lands in the node's sheet, arguments pre-baked. The
+  same gesture as connecting a signal to a script method, except the handler is an event
+  row instead of a code stub. Core signals map to their named triggers (body_entered
+  becomes On Body Entered); everything else rides a signal:<name> trigger. A node without
+  a sheet is pointed at Attach Event Sheet.
+- The flow is API-first: `EventSheets.add_trigger_for_signal(name, args)` appends the
+  trigger through the undo funnel, with `build_signal_trigger_event` (the pure mapping)
+  and `signals_of(node)` (signal enumeration with baked signatures) alongside for
+  tooling. `tests/signal_connect_test.gd` pins the mapping, the enumeration format, the
+  compiled handler + self-connect shapes, and the byte round-trip.
+
 ### Fixed - an awaiting event no longer freezes its per-frame siblings (async parity complete)
 
 - **Sibling isolation**: in a shared per-frame handler, an event whose body awaits used to

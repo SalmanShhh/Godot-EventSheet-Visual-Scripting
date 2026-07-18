@@ -238,6 +238,8 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Seams | `register_tour(name, steps)` / `start_tour(steps)` | `void` / `bool` | start needs dock |
 | Seams | `register_editor_preview(script_path, sampler)` / `editor_preview_sampler_for(script_path)` | `void` / `Callable` | no |
 | Seams | `register_editor_gizmo(script_path, drawer)` / `editor_gizmo_drawer_for(script_path)` | `void` / `Callable` | no |
+| Editor | `add_trigger_for_signal(signal_name, args_signature)` | `bool` | yes |
+| Vocabulary | `build_signal_trigger_event(signal_name, args_signature)` / `signals_of(node)` | `EventRow` / `Array[Dictionary]` | no |
 | Seams | `preview_behaviors()` | `bool` | yes |
 | Seams | `verify_pack(pack_gd_path: String)` | `Dictionary` | no |
 | Localisation | `translate(text: String)` | `String` | no |
