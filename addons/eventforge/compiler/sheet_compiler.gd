@@ -1295,6 +1295,7 @@ static func _emit_event_body(
 		# not sit between an if and its elif - stateful events never chain).
 		var stateful_preludes: PackedStringArray = PackedStringArray()
 		var stateful_on_true: PackedStringArray = PackedStringArray()
+		var stateful_on_exit: PackedStringArray = PackedStringArray()
 		for condition: ACECondition in event_row.conditions:
 			if not condition.enabled:
 				continue
@@ -1306,6 +1307,8 @@ static func _emit_event_body(
 				warnings.append("Stateful conditions (Every X Seconds\u2026) can not be inverted; ignoring the negation.")
 			if not condition.codegen_on_true.is_empty():
 				stateful_on_true.append(_substitute_params(condition.codegen_on_true, condition.params))
+			if not condition.codegen_on_exit.is_empty():
+				stateful_on_exit.append(_substitute_params(condition.codegen_on_exit, condition.params))
 		for prelude_line: String in stateful_preludes:
 			lines.append(indent + prelude_line)
 			had_body = true
@@ -1437,6 +1440,14 @@ static func _emit_event_body(
 		if not event_row.sub_events.is_empty():
 			had_body = _emit_event_body(event_row.sub_events, lines, source_map, body_depth, warnings, effective_node_target) or had_body
 
+		# The run-finished hook (Once At A Time's reset): emitted INSIDE the event's block,
+		# after actions and sub-events - in a coroutine body this line runs when the last
+		# await has completed, which is exactly what "the run is over" means. Emitted at the
+		# CONDITION depth, not the pick depth, so a gated loop resets once per whole run.
+		if emitted_block and not stateful_on_exit.is_empty():
+			for on_exit_line: String in stateful_on_exit:
+				lines.append("\t".repeat(depth + 1) + on_exit_line)
+			had_body = true
 		# An if/elif/else block (or pick loop) whose body emitted nothing needs `pass` to
 		# stay valid GDScript (e.g. a condition-only event, or one whose actions all
 		# compiled to nothing).

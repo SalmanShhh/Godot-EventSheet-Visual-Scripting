@@ -23,6 +23,7 @@ static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefiniti
 		"member_template": descriptor.member_template,
 		"codegen_prelude": descriptor.codegen_prelude,
 		"codegen_on_true": descriptor.codegen_on_true,
+		"codegen_on_exit": descriptor.codegen_on_exit,
 		"evaluate_last": descriptor.evaluate_last,
 		"node_type": descriptor.node_type,
 		# Deprecation flows through metadata so the picker can hide it + the hover can flag it, without

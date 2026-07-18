@@ -537,6 +537,11 @@ static func check_coroutine_in_per_frame_trigger(sheet_paths: PackedStringArray,
 
 
 static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings: Array[Dictionary]) -> void:
+	# A Once At A Time gate makes the overlap impossible (the event skips itself while a
+	# previous run is still suspended), so the warning would be crying wolf - stay silent.
+	for condition: Variant in event.conditions:
+		if condition is ACECondition and (condition as ACECondition).enabled and (condition as ACECondition).ace_id == "SingleFlight":
+			return
 	for action: Variant in event.actions:
 		var flagged: String = ""
 		if action is ACEAction and COROUTINE_ACE_IDS.has((action as ACEAction).ace_id):

@@ -302,6 +302,7 @@ func _create_condition_from_definition(definition: ACEDefinition, params: Dictio
 		condition.member_declaration = member_template.replace("{uid}", stateful_uid)
 		condition.codegen_prelude = str(definition.metadata.get("codegen_prelude", "")).replace("{uid}", stateful_uid)
 		condition.codegen_on_true = str(definition.metadata.get("codegen_on_true", "")).replace("{uid}", stateful_uid)
+		condition.codegen_on_exit = str(definition.metadata.get("codegen_on_exit", "")).replace("{uid}", stateful_uid)
 		condition.codegen_template = condition.codegen_template.replace("{uid}", stateful_uid)
 	# Edge gates (Trigger Once style, descriptor .evaluated_last()): the compiler hoists the term to the
 	# end of the chain so any condition-cell position works. Baked so the flag rides the saved sheet.

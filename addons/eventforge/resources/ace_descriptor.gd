@@ -31,6 +31,9 @@ enum ACEType {
 var member_template: String = ""
 var codegen_prelude: String = ""
 var codegen_on_true: String = ""
+## Emitted after the event's whole body (actions + sub-events) - the "run finished" hook
+## stateful gates like Once At A Time reset on.
+var codegen_on_exit: String = ""
 ## Edge-gate conditions (Trigger Once style): the compiler HOISTS this term to the END of the emitted
 ## `and` chain regardless of which condition cell it occupies, so short-circuiting guarantees it is
 ## reached exactly when the row's other conditions are true - the property a "was I reached last
@@ -119,10 +122,11 @@ func featured() -> ACEDescriptor:
 ## a single statement emitted just inside it. All three receive the same {uid} and {param}
 ## substitutions as the main template. Chains like .described():
 ## `F.make_descriptor(...).stateful("var __t_{uid}: float = 0.0", "__t_{uid} += delta")`.
-func stateful(member: String, prelude: String = "", on_true: String = "") -> ACEDescriptor:
+func stateful(member: String, prelude: String = "", on_true: String = "", on_exit: String = "") -> ACEDescriptor:
 	member_template = member
 	codegen_prelude = prelude
 	codegen_on_true = on_true
+	codegen_on_exit = on_exit
 	return self
 
 

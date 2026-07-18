@@ -53,6 +53,50 @@ static func run() -> bool:
 	plain_action.codegen_template = "print({value})"
 	all_passed = _check("a plain action does not", ViewportRowBuilder.action_awaits(plain_action), false) and all_passed
 
+	# ---- single-flight: Once At A Time gates re-entry via the new on_exit hook ----
+	var gated: EventSheetResource = EventSheetResource.new()
+	gated.host_class = "Node"
+	var gated_row: EventRow = EventRow.new()
+	gated_row.trigger_provider_id = "Core"
+	gated_row.trigger_id = "OnProcess"
+	var gate: ACECondition = ACECondition.new()
+	gate.provider_id = "Core"
+	gate.ace_id = "SingleFlight"
+	gate.codegen_template = "not __busy_ab12"
+	gate.member_declaration = "var __busy_ab12: bool = false"
+	gate.codegen_on_true = "__busy_ab12 = true"
+	gate.codegen_on_exit = "__busy_ab12 = false"
+	gate.evaluate_last = true
+	gated_row.conditions.append(gate)
+	var gated_wait: ACEAction = ACEAction.new()
+	gated_wait.provider_id = "Core"
+	gated_wait.ace_id = "Wait"
+	gated_wait.params = {"seconds": "2.0"}
+	gated_row.actions.append(gated_wait)
+	gated.events.append(gated_row)
+	var gated_output: String = str(SheetCompiler.compile(gated, "user://async_sf_probe.gd").get("output", ""))
+	all_passed = _check("the busy latch declares as a member", gated_output.contains("var __busy_ab12: bool = false"), true) and all_passed
+	all_passed = _check("the gate guards the event", gated_output.contains("\tif not __busy_ab12:"), true) and all_passed
+	all_passed = _check("entry marks busy first", gated_output.contains("\t\t__busy_ab12 = true\n\t\tawait "), true) and all_passed
+	all_passed = _check("the run-finished hook resets AFTER the body", gated_output.find("__busy_ab12 = false") > gated_output.find("await "), true) and all_passed
+	all_passed = _check("the gated event round-trips byte-exact", EventSheets.round_trips(gated_output), true) and all_passed
+	var registry_descriptor: ACEDescriptor = ACERegistry.find_descriptor("Core", "SingleFlight")
+	all_passed = _check("Once At A Time is registered", registry_descriptor != null, true) and all_passed
+	if registry_descriptor != null:
+		all_passed = _check("its reset rides the on_exit channel", registry_descriptor.codegen_on_exit, "__busy_{uid} = false") and all_passed
+
+	# ---- the Doctor stays silent when the gate makes overlap impossible ----
+	var gated_findings: Array[Dictionary] = []
+	EventSheetProjectDoctor._scan_coroutine_misuse(gated_row, "res://probe.gd", gated_findings)
+	all_passed = _check("coroutine-in-per-frame stays silent under the gate", gated_findings.is_empty(), true) and all_passed
+	var ungated_row: EventRow = EventRow.new()
+	ungated_row.trigger_provider_id = "Core"
+	ungated_row.trigger_id = "OnProcess"
+	ungated_row.actions.append(gated_wait)
+	var ungated_findings: Array[Dictionary] = []
+	EventSheetProjectDoctor._scan_coroutine_misuse(ungated_row, "res://probe.gd", ungated_findings)
+	all_passed = _check("and still warns without it", ungated_findings.size(), 1) and all_passed
+
 	return all_passed
 
 

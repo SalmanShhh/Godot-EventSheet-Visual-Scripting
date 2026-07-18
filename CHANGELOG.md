@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - Once At A Time (single-flight) + the on_exit stateful hook
+
+- **Once At A Time** condition (Run Context): the event skips itself while a previous run
+  is still going - and a run that awaits counts as still going until it finishes, so a
+  per-frame event with a Wait runs one copy at a time instead of stacking a new coroutine
+  every frame. This closes the async-events footgun GDevelop leaves to "be careful"; the
+  coroutine-in-per-frame Doctor warning now stays silent when the gate is present (the
+  overlap it warns about is impossible) and still fires without it.
+- **The stateful-condition machinery grew an `on_exit` hook** (the fourth
+  `.stateful(member, prelude, on_true, on_exit)` slot, carried through descriptor,
+  definition metadata, apply-time uid baking, and the compiler): lines emitted INSIDE the
+  event's block after actions and sub-events - in a coroutine body that is after the last
+  await completes, which is exactly "the run finished". Pack authors get the same hook for
+  their own latch-style conditions. `tests/async_events_test.gd` pins the emitted shape
+  (latch member, guard, busy-first, reset-after-await), the byte round-trip, and both
+  Doctor behaviors.
+
 ### Added - async events grow GDevelop-grade safety (first two slices)
 
 - **Unpick-on-free**: when an event's body awaits (Wait, Wait For Signal, an awaited call),

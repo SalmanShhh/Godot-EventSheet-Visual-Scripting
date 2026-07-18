@@ -140,6 +140,14 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True only on the first tick each time the event's other conditions become true, and again after they have gone false. Works in any condition slot.")
 		.stateful("var __once_{uid}: int = 1\n\nfunc __trigger_once_{uid}() -> bool:\n\tvar ticks_since_last: int = __once_{uid}\n\t__once_{uid} = 0\n\treturn ticks_since_last > 1", "__once_{uid} += 1")
 		.evaluated_last())
+	# Once At A Time (single-flight, the async-events re-entry gate): a busy latch set on entry
+	# and cleared by the on_exit hook AFTER the whole body - in a coroutine body that reset runs
+	# when the last await completes, so a per-frame trigger with a Wait can't stack overlapping
+	# runs. The answer GDevelop's async events leave to "be careful".
+	descriptors.append(F.make_descriptor("Core", "SingleFlight", "Once At A Time", ACEDescriptor.ACEType.CONDITION, "not __busy_{uid}", "", [], "Run Context", "Once at a time (skip while still running)")
+		.described("Skips the event while a previous run is still going. A run that awaits (Wait, Wait For Signal) counts as still going until it finishes - so a per-frame event with a Wait runs one copy at a time instead of stacking a new one every frame.")
+		.stateful("var __busy_{uid}: bool = false", "", "__busy_{uid} = true", "__busy_{uid} = false")
+		.evaluated_last())
 	# Multi-statement template: spawns AND positions (locals get a per-instance uid).
 	descriptors.append(F.make_descriptor("Core", "SpawnSceneAt", "Spawn Scene At", ACEDescriptor.ACEType.ACTION, "var __spawn_{uid} = load({path}).instantiate()\n__spawn_{uid}.position = {position}\nadd_child(__spawn_{uid})", "", [F.make_param("path", "String", "\"res://enemy.tscn\"", "Scene", "Scene file to instance.", "scene_path"), F.make_param("position", "String", "Vector2(0, 0)", "Position", "Spawn position.", "expression")], "Scene", "Spawn {path} at {position}")
 		.described("Loads a scene and drops a copy into the world at a position."))
