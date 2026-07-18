@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed - batch merge copies kept params by value (review hardening)
+
+- The per-param batch merge now deep-duplicates a kept Array/Dictionary value instead of
+  copying the reference: every param is a String today, but a future container-valued
+  param copied by reference would silently alias the old instance (still alive in undo
+  snapshots) with the new one. Pinned with a synthetic container param in
+  `tests/batch_param_edit_test.gd`.
+
 ### Changed - Select All Matching internals (review cleanup)
 
 - `select_resources` now stamps row selection through the one shared

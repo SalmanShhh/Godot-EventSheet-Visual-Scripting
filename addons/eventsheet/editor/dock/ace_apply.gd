@@ -312,7 +312,11 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 						var fresh_params: Dictionary = fresh.get("params")
 						for param_key: Variant in fresh_params.keys():
 							if not apply_keys.has(str(param_key)) and existing_params.has(param_key):
-								fresh_params[param_key] = existing_params[param_key]
+								# Copy by VALUE: params are Strings today, but a container-
+								# valued param copied by reference would alias the old
+								# instance (alive in undo snapshots) with the new one.
+								var kept: Variant = existing_params[param_key]
+								fresh_params[param_key] = (kept as Array).duplicate(true) if kept is Array else ((kept as Dictionary).duplicate(true) if kept is Dictionary else kept)
 					lane_array[slot_index] = fresh
 					applied += 1
 				if applied > 0:

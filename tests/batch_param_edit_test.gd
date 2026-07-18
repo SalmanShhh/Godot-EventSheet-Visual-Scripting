@@ -97,6 +97,23 @@ static func run() -> bool:
 	all_passed = _check("the unchecked param keeps the instance's own value", str((first.actions[0] as ACEAction).params.get("message", "")), "\"batched\"") and all_passed
 	all_passed = _check("the sub-event instance also keeps its own unchecked value", str((nested.actions[0] as ACEAction).params.get("message", "")), "\"batched\"") and all_passed
 
+	# ---- kept values copy by VALUE (review hardening): a container-valued param kept
+	# per-instance must not alias between the old resource (alive in undo snapshots)
+	# and the fresh one ----
+	var container_param: Array = ["a", "b"]
+	(first.actions[0] as ACEAction).params["message"] = container_param
+	editor._apply_ace_definition(definition, {"message": "\"again\"", "level": "print"}, {
+		"mode": "batch_edit_params",
+		"batch_kind": "action",
+		"batch_targets": [{"event": first, "index": 0}],
+		"batch_count": 1,
+		"batch_apply_params": ["level"]
+	})
+	container_param.append("mutated-after-apply")
+	all_passed = _check("a kept container param is a deep copy, never an alias",
+		((first.actions[0] as ACEAction).params.get("message") as Array), ["a", "b"]) and all_passed
+	(first.actions[0] as ACEAction).params["message"] = "\"batched\""  # restore for the pins below
+
 	# ---- Select All Matching: the walk + the viewport multi-select ----
 	# After the batch apply: ConsoleLog lives on first, second, and nested (grouped was
 	# swapped to PushWarning by the stale-slot setup). The walk descends sub-events + groups.
