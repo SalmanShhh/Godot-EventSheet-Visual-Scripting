@@ -266,7 +266,15 @@ func _ensure_hint_factories() -> void:
 			"property_reference": _create_property_reference_field,
 			"physics_layer_2d": _create_physics_layer_2d_field,
 			"physics_layer_3d": _create_physics_layer_3d_field,
+			"feature_tag": _create_feature_tag_field,
 		}
+
+
+## Feature-tag combo, LIVE (the input_action lesson: never bake project state into the
+## descriptor): suggestions are read at dialog-open from the engine set + every export
+## preset's custom_features, so a tag added in Project > Export appears immediately.
+func _create_feature_tag_field(key: String, default_value: Variant) -> Control:
+	return _create_autocomplete_field(key, EventSheetFeatureTags.suggestions(), default_value)
 
 
 func _create_field(param_dict: Dictionary, initial_values: Dictionary, key: String, hint: String) -> Control:
@@ -1839,9 +1847,51 @@ func _commit(chain: bool) -> void:
 			if is_instance_valid(check) and check.button_pressed:
 				apply_keys.append(str(check_key))
 		context["batch_apply_params"] = apply_keys
-	params_confirmed.emit(_definition, values, context)
+	var emit_definition: ACEDefinition = _definition
 	_definition = null
 	_context.clear()
+	# Feature-tag nudge: a quoted tag no engine set or export preset defines would make
+	# OS.has_feature() silently false at runtime - offer to add it to the presets (or
+	# keep it, e.g. a tag the preset will gain later). Expressions are never flagged.
+	var unknown_tag: String = _first_unknown_feature_tag(values)
+	if not unknown_tag.is_empty() and _dialog != null and _dialog.is_inside_tree():
+		_prompt_unknown_feature_tag(unknown_tag, emit_definition, values, context)
+		return
+	params_confirmed.emit(emit_definition, values, context)
+
+
+var _feature_tag_nudge: ConfirmationDialog = null
+
+
+## The first feature_tag-hinted field whose committed value is a quoted literal that
+## neither the engine nor any export preset defines ("" when everything checks out).
+func _first_unknown_feature_tag(values: Dictionary) -> String:
+	for key: Variant in values.keys():
+		if str(_field_hints.get(key, "")) != "feature_tag":
+			continue
+		var tag: String = EventSheetFeatureTags.literal_tag(str(values[key]))
+		if not tag.is_empty() and not EventSheetFeatureTags.is_known(tag):
+			return tag
+	return ""
+
+
+func _prompt_unknown_feature_tag(tag: String, definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
+	if _feature_tag_nudge != null and is_instance_valid(_feature_tag_nudge):
+		_feature_tag_nudge.queue_free()
+	_feature_tag_nudge = ConfirmationDialog.new()
+	_feature_tag_nudge.title = "Unknown Feature Tag"
+	_feature_tag_nudge.dialog_text = "\"%s\" isn't defined by Godot or any export preset, so OS.has_feature(\"%s\") will be false at runtime.\n\nAdd it to your export preset(s) now? Presets manage feature tags under Project > Export > Features." % [tag, tag]
+	_feature_tag_nudge.ok_button_text = "Add To Preset(s)"
+	_feature_tag_nudge.cancel_button_text = "Keep As Is"
+	_feature_tag_nudge.confirmed.connect(func() -> void:
+		if EventSheetFeatureTags.add_custom_tag(tag) == 0:
+			push_warning("[EventSheets] No export_presets.cfg yet - open Project > Export, create a preset, and add \"%s\" under Features." % tag)
+		params_confirmed.emit(definition, values, context))
+	_feature_tag_nudge.canceled.connect(func() -> void:
+		params_confirmed.emit(definition, values, context))
+	_dialog.get_parent().add_child(_feature_tag_nudge)
+	EventSheetL10n.apply_to(_feature_tag_nudge)
+	_feature_tag_nudge.popup_centered(Vector2i(460, 200))
 
 
 func _on_custom_action(action: StringName) -> void:

@@ -125,7 +125,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# full curated tag set is one pick away, and a CUSTOM tag (export presets can define
 	# any) is typeable - same ace_id, same template, same quoted-value shape, so every
 	# existing sheet compiles and lifts unchanged.
-	descriptors.append(F.make_descriptor("Core", "HasOSFeature", "Platform Has Feature", ACEDescriptor.ACEType.CONDITION, "OS.has_feature({feature})", "", [F.make_param("feature", "String", "\"mobile\"", "Feature", "Feature tag to test - pick a common one or type a custom tag from your export preset.", "", [], [
+	descriptors.append(F.make_descriptor("Core", "HasOSFeature", "Platform Has Feature", ACEDescriptor.ACEType.CONDITION, "OS.has_feature({feature})", "", [F.make_param("feature", "String", "\"mobile\"", "Feature", "Feature tag to test - pick a common one or type a custom tag from your export preset.", "feature_tag", [], [
 		"\"mobile\"", "\"pc\"", "\"web\"", "\"android\"", "\"ios\"", "\"windows\"", "\"linux\"", "\"macos\"",
 		"\"editor\"", "\"debug\"", "\"release\"", "\"template\"", "\"template_debug\"", "\"template_release\"",
 		"\"movie\"", "\"threads\"", "\"touchscreen\"", "\"etc2\"", "\"s3tc\""

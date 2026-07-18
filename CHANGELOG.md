@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - live feature-tag awareness (Platform Has Feature)
+
+- **The Feature combo now reads the PROJECT's tags live** (the input_action lesson:
+  never bake project state): suggestions at dialog-open are every export preset's
+  custom_features from export_presets.cfg - listed first, they're what you defined on
+  purpose - plus the engine set. A tag added in Project > Export appears immediately.
+- **Unknown tags get a nudge instead of a silent false**: committing a quoted tag that
+  neither Godot nor any preset defines pops "Add To Preset(s) / Keep As Is" - Add
+  appends the tag to every preset's custom_features for you (with a pointer to
+  Project > Export > Features when no presets file exists yet). Expressions are never
+  flagged - only checkable literals.
+- `EventSheetFeatureTags` (engine set, live preset parse, is_known, add_custom_tag) is
+  pinned in `tests/feature_tags_test.gd` - parse/dedup, suggestion order, the add
+  round-trip, missing-file refusal, and the dialog's feature_tag hint factory.
+
 ### Fixed - three code-review findings in the C3-UX queue
 
 - **Data-class Add/Remove Field was unreachable**: data-class holder and field rows
