@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - the object-first Add flow (Construct's add-event gesture)
+
+- **Double-click empty sheet space now leads with OBJECT cards**: System first, then
+  every provider - packs, behaviors, autoloads - as its own icon card, alphabetized.
+  Picking a card scopes the picker's tree to that object's verbs (search then filters
+  WITHIN the object, exactly Construct's second step), with a "◂ All objects" breadcrumb
+  back. Typing anything drops straight into the classic full search, so the fast path
+  stays fast; the toolbar and footer Add buttons keep the classic tree untouched.
+- Cards enumerate live from the registry, so a newly installed pack appears with zero
+  wiring. `tests/object_first_picker_test.gd` pins the enumeration (distinct providers,
+  Core folded into a leading System card, alphabetical order, empty providers skipped).
+
 ### Changed - the keyboard grammar is now Construct 3's, key for key
 
 - **Three keys close the C3 parity gap**: `S` adds a picker-backed sub-event under the

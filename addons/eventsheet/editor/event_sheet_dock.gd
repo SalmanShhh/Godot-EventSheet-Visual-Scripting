@@ -2628,7 +2628,9 @@ func _on_viewport_empty_space_double_clicked() -> void:
 	# and the "+ Add event…" footer, so every "make a new event" path opens the same picker.
 	if _viewport != null:
 		_viewport.clear_selection()
-	_on_add_event_requested()
+	# The C3 gesture in full: double-click empty space leads with OBJECT cards (System,
+	# behaviors, packs), then that object's verbs. Toolbar/footer adds keep the classic tree.
+	_ace_picker.open("new_event", false, null, {"object_first": true})
 
 
 func _on_viewport_empty_space_context_menu_requested(global_position: Vector2) -> void:

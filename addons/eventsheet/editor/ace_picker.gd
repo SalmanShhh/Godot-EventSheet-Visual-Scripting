@@ -211,6 +211,13 @@ const ITEM_COLOR_EXPRESSION := Color("#c79bf0") # soft purple
 
 var _window: ConfirmationDialog = null
 var _search: LineEdit = null
+# Object-first front page state: the cards grid, its scroll page, the tree's holder (to
+# swap visibility), the breadcrumb back button, and the active provider scope ("" = all).
+var _objects_page: ScrollContainer = null
+var _objects_grid: GridContainer = null
+var _objects_back: Button = null
+var _body_holder: Control = null
+var _object_filter_provider: String = ""
 var _tree: Tree = null
 var _info_label: RichTextLabel = null
 var _info_panel: PanelContainer = null
@@ -268,6 +275,11 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_search.clear_button_enabled = true
 	_search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_search.text_changed.connect(func(_text: String) -> void:
+		# Typing on the object-cards page drops straight into classic full search - the
+		# fast path stays fast, cards are for browsing.
+		if _objects_page != null and _objects_page.visible and not _text.strip_edges().is_empty():
+			_object_filter_provider = ""
+			_show_classic(false)
 		_refresh_tree()
 		_select_first_match())
 	_search.text_submitted.connect(func(_text: String) -> void: _activate_first_match())
@@ -297,10 +309,35 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	# open thousands of px tall. A bare Control ignores its children's minimums and reports only
 	# its own, so the split fills it (anchored) and the trees scroll internally at a fixed height.
 	var body_holder: Control = Control.new()
+	# Object-first front page (the Construct add-event gesture): big object cards - System,
+	# the host's behaviors, packs, autoloads - shown before the category tree when the picker
+	# opens from a double-click on empty canvas. Picking a card scopes the tree to that
+	# object's vocabulary; typing anything drops straight into classic full search.
+	_objects_page = ScrollContainer.new()
+	_objects_page.custom_minimum_size = Vector2(0.0, 340.0)
+	_objects_page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_objects_page.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_objects_page.visible = false
+	_objects_grid = GridContainer.new()
+	_objects_grid.columns = 4
+	_objects_grid.add_theme_constant_override("h_separation", 8)
+	_objects_grid.add_theme_constant_override("v_separation", 8)
+	_objects_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_objects_page.add_child(_objects_grid)
+	content.add_child(_objects_page)
+	_objects_back = Button.new()
+	_objects_back.text = "◂ All objects"
+	_objects_back.visible = false
+	_objects_back.focus_mode = Control.FOCUS_NONE
+	_objects_back.pressed.connect(func() -> void:
+		_object_filter_provider = ""
+		_show_objects_page())
+	content.add_child(_objects_back)
 	body_holder.custom_minimum_size = Vector2(0.0, 340.0)
 	body_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body_holder.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(body_holder)
+	_body_holder = body_holder
 	var split: HSplitContainer = HSplitContainer.new()
 	split.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	split.split_offset = 200
@@ -436,6 +473,11 @@ func open(mode: String, signals_only: bool, selected_resource: Resource, extra_c
 	}
 	for key in extra_context.keys():
 		_context[key] = extra_context[key]
+	_object_filter_provider = ""
+	if bool(_context.get("object_first", false)) and not signals_only and mode in ["new_event", "new_condition_event", "new_sub_condition_event"]:
+		_show_objects_page()
+	else:
+		_show_classic(false)
 	var title: String = _title_for_mode(mode, signals_only)
 	_window.title = title
 	_search.text = ""
@@ -577,6 +619,82 @@ static func _c3_synonym_queries(query: String) -> Array[String]:
 	return extra
 
 
+## Shows the object-cards front page (and hides the tree) - the C3 "pick the object
+## first" step. Cards enumerate live from the registry so new packs appear untouched.
+func _show_objects_page() -> void:
+	if _objects_page == null:
+		return
+	_populate_object_cards()
+	_objects_page.visible = true
+	_objects_back.visible = false
+	if _body_holder != null:
+		_body_holder.visible = false
+
+
+## Shows the classic search + tree; with a provider scope active the breadcrumb offers
+## the way back to the cards.
+func _show_classic(show_breadcrumb: bool) -> void:
+	if _objects_page != null:
+		_objects_page.visible = false
+	if _objects_back != null:
+		_objects_back.visible = show_breadcrumb
+	if _body_holder != null:
+		_body_holder.visible = true
+
+
+## The distinct "objects" the front page offers, from an assembled definitions list:
+## one card per provider, Core folded into a leading "System" card (the C3 convention).
+## Pure and static so tests pin the enumeration.
+static func object_cards_for(definitions: Array[ACEDefinition]) -> Array[Dictionary]:
+	var seen: Dictionary = {}
+	var cards: Array[Dictionary] = []
+	for definition: ACEDefinition in definitions:
+		var provider: String = str(definition.provider_id)
+		if provider.is_empty() or seen.has(provider):
+			continue
+		seen[provider] = true
+		cards.append({"provider": provider, "label": "System" if provider == "Core" else provider})
+	cards.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		# System leads; the rest alphabetize - the stable order hands learn.
+		if str(a.get("provider")) == "Core":
+			return true
+		if str(b.get("provider")) == "Core":
+			return false
+		return str(a.get("label")) < str(b.get("label")))
+	return cards
+
+
+func _populate_object_cards() -> void:
+	for child: Node in _objects_grid.get_children():
+		child.queue_free()
+	if _registry == null:
+		return
+	var definitions: Array[ACEDefinition] = _registry.get_all_definitions()
+	for card: Dictionary in object_cards_for(definitions):
+		var provider: String = str(card.get("provider"))
+		var button: Button = Button.new()
+		button.text = str(card.get("label"))
+		button.custom_minimum_size = Vector2(158.0, 64.0)
+		button.clip_text = true
+		# The provider's own icon when one of its ACEs ships a res:// texture; else the tag glyph.
+		for definition: ACEDefinition in definitions:
+			if str(definition.provider_id) == provider and definition.icon.strip_edges().begins_with("res://"):
+				var icon_texture: Texture2D = resolve_definition_icon(definition)
+				if icon_texture != null:
+					button.icon = icon_texture
+					break
+		if button.icon == null and provider == "Core":
+			button.icon = editor_icon("Node")
+		button.pressed.connect(func() -> void:
+			_object_filter_provider = provider
+			_objects_back.text = "◂ All objects · %s" % str(card.get("label"))
+			_show_classic(true)
+			_refresh_tree()
+			_select_first_match()
+			_search.grab_focus())
+		_objects_grid.add_child(button)
+
+
 func _refresh_tree() -> void:
 	if _tree == null or _registry == null:
 		return
@@ -638,6 +756,14 @@ func _refresh_tree() -> void:
 		if not host_ace_hidden(str(host_candidate.provider_id), str(host_candidate.id), is_behavior_sheet):
 			host_filtered.append(host_candidate)
 	definitions = host_filtered
+	# Object-first scope: a picked object card narrows the tree to that provider's verbs
+	# (search still filters WITHIN the object, exactly the C3 second step).
+	if not _object_filter_provider.is_empty():
+		var provider_scoped: Array[ACEDefinition] = []
+		for scoped_candidate: ACEDefinition in definitions:
+			if str(scoped_candidate.provider_id) == _object_filter_provider:
+				provider_scoped.append(scoped_candidate)
+		definitions = provider_scoped
 	# Reactivity steering: surface a polling condition's reactive twin beside it (off the shared
 	# ACEDescriptor.REACTS_TO map), so "react instead?" is one keystroke away; _best_match_item then
 	# pre-selects it, and the mode filter below drops the trigger where it is not a valid choice.
