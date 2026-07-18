@@ -2602,7 +2602,8 @@ func _function_call_label(action: ACEAction) -> String:
 
 
 func _format_condition_descriptor(condition: ACECondition) -> String:
-	_pending_display_bbcode = _display_template_has_markup(condition.provider_id, condition.ace_id)
+	_pending_display_bbcode = _display_template_has_markup(condition.provider_id, condition.ace_id) \
+			or _param_markup_applies(condition.provider_id, condition.ace_id, condition.params)
 	var base_text: String = _format_condition_descriptor_base(condition)
 	var ace_note: String = str(condition.comment).strip_edges()
 	if not ace_note.is_empty():
@@ -2671,7 +2672,8 @@ func _match_case_summary_lines(events: Array) -> PackedStringArray:
 
 
 func _format_action_descriptor(action: ACEAction) -> String:
-	_pending_display_bbcode = _display_template_has_markup(action.provider_id, action.ace_id)
+	_pending_display_bbcode = _display_template_has_markup(action.provider_id, action.ace_id) \
+			or _param_markup_applies(action.provider_id, action.ace_id, action.params)
 	var base_text: String = _format_action_descriptor_base(action)
 	# Awaiting actions wear an hourglass (the GDevelop async-action cue): everything after
 	# this row in the SAME event waits for it, so the suspension point should be visible.
@@ -2917,6 +2919,35 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		descriptor_output = descriptor_output.replace("{%d}" % i, str(param_value))
 		descriptor_output = descriptor_output.replace("{%s}" % param_key, str(param_value))
 	return descriptor_output
+
+
+## True when a RICH-TEXT ACE's param values carry BBCode - the Rich Print family (a
+## bbcode_text-hinted param, a print_rich stream choice, or a print_rich template). Its
+## cell then renders the markup's EFFECT (bold / color) instead of the raw tags, so
+## `[b]Wave 2[/b]` reads as actual bold in the sheet. Ordinary string params keep their
+## brackets verbatim - `[b]` in a plain Print is data, not styling.
+func _param_markup_applies(provider_id: String, ace_id: String, params: Dictionary) -> bool:
+	var any_markup: bool = false
+	for value: Variant in params.values():
+		if EventSheetBBCodeLite.has_markup(str(value)):
+			any_markup = true
+			break
+	if not any_markup:
+		return false
+	if str(params.get("level", "")) == "print_rich":
+		return true
+	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
+	if definition != null:
+		for parameter: Variant in definition.parameters:
+			if parameter is Dictionary and str((parameter as Dictionary).get("hint", "")) == "bbcode_text":
+				return true
+		return str(definition.metadata.get("codegen_template", "")).contains("print_rich")
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+	if descriptor != null:
+		for param: ACEParam in descriptor.params:
+			if param != null and param.hint == "bbcode_text":
+				return true
+	return false
 
 
 ## True when an ACE's display TEMPLATE (not the substituted text) carries BBCode markup - the author opted

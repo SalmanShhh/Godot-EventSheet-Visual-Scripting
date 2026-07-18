@@ -46,6 +46,49 @@ static func run() -> bool:
 		_has_scope_pill(viewport._build_local_variable_rows(event, 1)), false) and all_passed
 
 	viewport.free()
+
+	# Rich-param rendering (the Rich Print rule): an ACE that IS rich text (print_rich
+	# stream / bbcode_text param) shows its BBCode's EFFECT in the cell; a plain string
+	# param keeps the tags verbatim - `[b]` in an ordinary Print is data, not styling.
+	var rich_event: EventRow = EventRow.new()
+	rich_event.trigger_provider_id = "Core"
+	rich_event.trigger_id = "OnReady"
+	var rich_action: ACEAction = ACEAction.new()
+	rich_action.provider_id = "Core"
+	rich_action.ace_id = "ConsoleLog"
+	rich_action.params = {"message": "\"[b]Wave 2[/b] begins\"", "level": "print_rich"}
+	rich_event.actions.append(rich_action)
+	var plain_action: ACEAction = ACEAction.new()
+	plain_action.provider_id = "Core"
+	plain_action.ace_id = "PushWarning"
+	plain_action.codegen_template = "push_warning({message})"
+	plain_action.params = {"message": "\"literal [b]tags[/b]\""}
+	rich_event.actions.append(plain_action)
+	var rich_sheet: EventSheetResource = EventSheetResource.new()
+	rich_sheet.events.append(rich_event)
+	var rich_editor: EventSheetEditor = EventSheetEditor.new()
+	rich_editor.setup(rich_sheet)
+	var rich_span: SemanticSpan = null
+	var plain_span: SemanticSpan = null
+	for flat_entry: Dictionary in rich_editor.get_viewport_control().get_flat_rows():
+		var row_data: EventRowData = flat_entry.get("row")
+		if row_data == null:
+			continue
+		for span: Variant in row_data.spans:
+			var meta: Dictionary = (span as SemanticSpan).metadata if (span as SemanticSpan).metadata is Dictionary else {}
+			if str(meta.get("kind", "")) == "action":
+				if int(meta.get("ace_index", -1)) == 0:
+					rich_span = span
+				elif int(meta.get("ace_index", -1)) == 1:
+					plain_span = span
+	all_passed = _check("a print_rich cell strips the tags from its display text",
+		rich_span != null and not rich_span.text.contains("[b]"), true) and all_passed
+	all_passed = _check("a print_rich cell carries styled segments",
+		rich_span != null and (rich_span.metadata.get("bbcode_segments", []) as Array).size() >= 2, true) and all_passed
+	all_passed = _check("a plain string param keeps its literal tags",
+		plain_span != null and plain_span.text.contains("[b]"), true) and all_passed
+	rich_editor.free()
+
 	return all_passed
 
 

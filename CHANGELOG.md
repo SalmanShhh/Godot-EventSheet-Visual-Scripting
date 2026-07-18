@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - BBCode effects render in Rich Print cells
+
+- **A rich-text ACE's cell now shows its BBCode's EFFECT, not the tags**: when a Log /
+  Print action targets the Rich text stream (print_rich) or carries a bbcode_text param,
+  `[b]Wave 2[/b] [color=#e0b070]begins[/color]` reads as actual bold and color in the
+  sheet - reusing the BBCode-lite segment renderer comments already use. Guardrail kept:
+  a plain string param's brackets are DATA, never styling - an ordinary Print shows
+  `[b]tags[/b]` verbatim. Pinned in `tests/bbcode_and_pill_test.gd` (rich cell strips +
+  styles, plain cell stays literal).
+
 ### Changed - the gutter joins the theme system
 
 - **New theme tokens `gutter_background_color` and `gutter_text_color`** on the event
