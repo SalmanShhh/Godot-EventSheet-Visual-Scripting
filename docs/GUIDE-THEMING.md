@@ -15,7 +15,8 @@ Current additions on top of the model below:
   with no theme assigned, the sheet derives its colors from your editor theme so it looks
   native in any Godot skin.
 - Newer semantic tokens include `object_label_color`, `value_highlight_color`,
-  `cell_hover_color`, `invert_marker_color`, and `behavior_accent_color` (the ⚙ behavior
+  `cell_hover_color`, `invert_marker_color`, `gutter_background_color` and
+  `gutter_text_color` (the left strip with its line and event numbers), and `behavior_accent_color` (the ⚙ behavior
   banner/tab accent).
 
 ## Core model

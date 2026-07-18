@@ -36,7 +36,7 @@ byte-exactly: open the generated `.gd`, save it untouched, and you get the ident
 | `@tool` / editor scripts | Tool-mode sheets + On Editor Run | Sheet > New Editor Tool… |
 | Preloads and constants-from-files | Preload Resource blocks | Add > Preload Resource… |
 | Multi-line enums (explicit values) | The same enum block, shape remembered | The enum dialog's "one value per line" toggle |
-| Inner classes (data shape) | The data-class block (fields editable) | Opens from lifted scripts; Add > data class |
+| Inner classes (data shape) | The data-class block (defaults edit inline; right-click adds/removes fields) | Opens from lifted scripts; Add > data class |
 
 ## Scope notes (deliberate, not gaps)
 

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Docs - freshness sweep for the C3-UX queue
+
+- README's editor feature tour now names the new gestures (event numbers + Go to Event,
+  Select All Events Using This, autocompleted Replace Object References, per-param batch
+  edit, the Filter lens, Ctrl+M bookmarks panel, arrow-through-cells, the Outline panel,
+  session restore). The theming guide lists the new gutter tokens; the GDScript coverage
+  table reflects data-class Add/Remove Field. The C3 migration guide was already brought
+  current in its own entry.
+
 ### Translations - top-up for the C3-UX queue
 
 - 24 new UI strings x 8 languages (de/es/fr/it/ja/ko/ru/zh_CN) + the TEMPLATE: event
