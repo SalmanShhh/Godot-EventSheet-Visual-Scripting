@@ -95,6 +95,15 @@ static func run() -> bool:
 	all_passed = _check("with a cell focused, Left belongs to the cell walk (no fold)", viewport.left_key_folds(), false) and all_passed
 	viewport.clear_cell_focus()
 	all_passed = _check("clearing the cell focus gives Left back to folding", viewport.left_key_folds(), true) and all_passed
+
+	# ---- Right vs unfold (the mirror): a folded parent still renders its OWN cells, so a
+	# focused cell must make Right step the walk, not unfold the row out from under it ----
+	viewport._toggle_row_fold(viewport._selected_row_index)
+	all_passed = _check("Right unfolds a folded parent at row scope", viewport.right_key_unfolds(), true) and all_passed
+	viewport.step_cell_focus(1)
+	all_passed = _check("with a cell focused, Right belongs to the cell walk (no unfold)", viewport.right_key_unfolds(), false) and all_passed
+	viewport.clear_cell_focus()
+	all_passed = _check("clearing the cell focus gives Right back to unfolding", viewport.right_key_unfolds(), true) and all_passed
 	editor.free()
 
 	return all_passed

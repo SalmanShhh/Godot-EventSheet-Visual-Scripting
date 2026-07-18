@@ -1368,7 +1368,7 @@ func _build_data_class_field_row(raw_row: RawCodeRow, class_name_str: String, fi
 	]
 	# Action cell: its default value (the editable part).
 	if bool(field.get("has_default", false)):
-		spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, {"lane": "action", "editable": false, "kind": "data_class_field", "line_index": 0}.merged(action_style, true)))
+		spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, {"lane": "action", "editable": false, "kind": "data_class_field", "field_index": field_index, "raw_row": raw_row, "line_index": 0}.merged(action_style, true)))
 		spans.append(_make_span(str(field.get("default")), SemanticSpan.SpanType.VALUE, {
 			"lane": "action",
 			"editable": false,
@@ -2962,11 +2962,13 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 
 
 ## True when a RICH-TEXT ACE's param values carry BBCode. Rich capability is DECLARED by
-## the ACE, never sniffed from param values: the descriptor's rich_text_when(param, value)
-## (the ConsoleLog "As: Rich text" choice, carried into definition metadata by the
-## adapter), a bbcode_text-hinted param, or a codegen template that hard-emits print_rich.
-## A qualifying cell renders the markup's EFFECT (bold / color) instead of the raw tags;
-## every other string param keeps its brackets verbatim - `[b]` in a plain Print is data.
+## the ACE, never inferred: the descriptor's rich_text_when(param, value) (the ConsoleLog
+## "As: Rich text" choice, carried into definition metadata by the adapter) or a
+## bbcode_text-hinted param. No template sniffing - a template merely CONTAINING
+## "print_rich" must not style foreign params (declare instead). A qualifying cell
+## renders the markup's EFFECT (bold / color); every other string param keeps its
+## brackets verbatim - `[b]` in a plain Print is data. Both lookup paths (definition,
+## descriptor) normalize into the ONE shared rule below so they can never drift.
 func _param_markup_applies(provider_id: String, ace_id: String, params: Dictionary) -> bool:
 	var any_markup: bool = false
 	for value: Variant in params.values():
@@ -2977,22 +2979,25 @@ func _param_markup_applies(provider_id: String, ace_id: String, params: Dictiona
 		return false
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
 	if definition != null:
-		var rich_param: String = str(definition.metadata.get("rich_when_param", ""))
-		if not rich_param.is_empty() and str(params.get(rich_param, "")) == str(definition.metadata.get("rich_when_value", "")):
-			return true
+		var definition_hints: PackedStringArray = PackedStringArray()
 		for parameter: Variant in definition.parameters:
-			if parameter is Dictionary and str((parameter as Dictionary).get("hint", "")) == "bbcode_text":
-				return true
-		return str(definition.metadata.get("codegen_template", "")).contains("print_rich")
+			if parameter is Dictionary:
+				definition_hints.append(str((parameter as Dictionary).get("hint", "")))
+		return _rich_capability_declared(str(definition.metadata.get("rich_when_param", "")), str(definition.metadata.get("rich_when_value", "")), definition_hints, params)
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
 	if descriptor != null:
-		if not descriptor.rich_when_param.is_empty() and str(params.get(descriptor.rich_when_param, "")) == descriptor.rich_when_value:
-			return true
+		var descriptor_hints: PackedStringArray = PackedStringArray()
 		for param: ACEParam in descriptor.params:
-			if param != null and param.hint == "bbcode_text":
-				return true
-		return str(descriptor.codegen_template).contains("print_rich")
+			if param != null:
+				descriptor_hints.append(param.hint)
+		return _rich_capability_declared(descriptor.rich_when_param, descriptor.rich_when_value, descriptor_hints, params)
 	return false
+
+
+static func _rich_capability_declared(rich_param: String, rich_value: String, param_hints: PackedStringArray, params: Dictionary) -> bool:
+	if not rich_param.is_empty() and str(params.get(rich_param, "")) == rich_value:
+		return true
+	return param_hints.has("bbcode_text")
 
 
 ## True when an ACE's display TEMPLATE (not the substituted text) carries BBCode markup - the author opted

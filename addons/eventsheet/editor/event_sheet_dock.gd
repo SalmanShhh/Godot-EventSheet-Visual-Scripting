@@ -1795,11 +1795,14 @@ func _open_go_to_event_dialog() -> void:
 		var target: EventRow = EventSheetViewport.event_by_number(_current_sheet.events, int(number_edit.value))
 		if target == null:
 			_set_status("There is no event %d." % int(number_edit.value), true)
-			return
-		if _viewport != null:
+		elif _viewport != null:
 			_viewport.reveal_resource(target)
-			_viewport.select_resource(target)
-		dialog.queue_free())
+			_viewport.select_resource(target))
+	# The dialog frees on ANY exit - confirm auto-hides, cancel/Esc, or the titlebar X.
+	# Freeing only on the success branch leaked one hidden AcceptDialog per dismissal.
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.close_requested.connect(dialog.queue_free)
 	EventSheetL10n.apply_to(dialog)
 	add_child(dialog)
 	dialog.popup_centered(Vector2i(320, 160))
@@ -2003,12 +2006,11 @@ var _batch_edit_menu: PopupMenu = null
 var _data_class_field_dialog: AcceptDialog = null
 
 
-## The data-class row this context click concerns: the holder row's own RawCodeRow, or the
-## raw_row a FIELD row's spans carry (field rows have a null source_resource by design).
+## The data-class row this context click concerns - delegates to the ONE resolver the menu
+## builder also uses (context_menus._data_class_row_target), so menu visibility and the
+## Add/Remove Field handlers can never disagree about the target.
 func _data_class_context_raw_row() -> RawCodeRow:
-	if _context_row != null and _context_row.source_resource is RawCodeRow:
-		return _context_row.source_resource as RawCodeRow
-	return _context_hit.get("span_metadata", {}).get("raw_row", null) as RawCodeRow
+	return _context_menus._data_class_row_target(_context_row)
 
 
 ## Add Field (the "add an action" gesture, for data classes): a small Name / Type / Default
@@ -2061,9 +2063,8 @@ func _open_data_class_add_field() -> void:
 
 
 func _remove_data_class_field_from_context() -> void:
-	var metadata: Dictionary = _context_hit.get("span_metadata", {})
-	var raw_row: RawCodeRow = metadata.get("raw_row", null) as RawCodeRow
-	var field_index: int = int(metadata.get("field_index", -1))
+	var raw_row: RawCodeRow = _data_class_context_raw_row()
+	var field_index: int = _context_menus._data_class_field_index(_context_row)
 	if raw_row == null or field_index < 0:
 		_set_status("Right-click a field row to remove it.", true)
 		return
@@ -2871,12 +2872,9 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 	if kind == "action":
 		_show_popup_menu(_action_context_menu, global_position)
 		return
-	# A "Data class" block field / member row is synthetic (source_resource null): it owns no sheet
-	# resource, so the row menu's Insert / Delete / Disable do not apply and would fall through to the sheet
-	# ROOT (a null anchor appends there). Editing is by double-clicking the default value, or the header's
-	# double-click-to-edit-in-code. Show no row menu rather than a menu that acts on the wrong target.
-	if kind == "data_class_field":
-		return
+	# Everything else - including data_class_field spans - routes to the row menu: the
+	# builder scopes a synthetic FIELD row's menu to Add/Remove Field only (an early
+	# return that used to swallow field-span clicks here left Remove Field unreachable).
 	_build_row_context_menu(row_data)
 	_show_popup_menu(_row_context_menu, global_position)
 

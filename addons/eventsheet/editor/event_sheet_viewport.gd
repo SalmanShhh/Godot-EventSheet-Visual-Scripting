@@ -861,6 +861,14 @@ func left_key_folds() -> bool:
 	return row_data != null and not row_data.children.is_empty() and not row_data.folded and _selected_span_index < 0
 
 
+## The Right-side mirror: plain Right UNFOLDS only at row scope. A folded parent still
+## renders its own cells, so clicking one sets a span focus while the row stays folded -
+## Right must then step the cell walk, not unfold the row out from under it.
+func right_key_unfolds() -> bool:
+	var row_data: EventRowData = _row_at(_selected_row_index)
+	return row_data != null and not row_data.children.is_empty() and row_data.folded and _selected_span_index < 0
+
+
 ## Esc from a focused cell back to plain row selection. Returns false when no cell focus
 ## was active (so Esc keeps its other meanings - lens clear, dialog close).
 func clear_cell_focus() -> bool:
@@ -1171,10 +1179,28 @@ static func _number_events(entries: Array, numbers: Dictionary, counter: Diction
 
 ## The EventRow carrying the given number ("Go to Event N"), or null.
 static func event_by_number(entries: Array, number: int) -> EventRow:
-	var numbers: Dictionary = event_numbers_for(entries)
-	for instance_id: Variant in numbers:
-		if int(numbers[instance_id]) == number:
-			return instance_from_id(int(instance_id)) as EventRow
+	# The SAME walk order as event_numbers_for, but counting straight to the Nth event -
+	# no whole-map allocation, no reverse value scan, no instance-id round-trip.
+	if number < 1:
+		return null
+	var counter: Dictionary = {"next": 1}
+	return _event_at_number(entries, number, counter)
+
+
+static func _event_at_number(entries: Array, number: int, counter: Dictionary) -> EventRow:
+	for entry: Variant in entries:
+		if entry is EventRow:
+			if int(counter["next"]) == number:
+				return entry as EventRow
+			counter["next"] = int(counter["next"]) + 1
+			var in_subs: EventRow = _event_at_number((entry as EventRow).sub_events, number, counter)
+			if in_subs != null:
+				return in_subs
+		elif entry is EventGroup:
+			var group: EventGroup = entry as EventGroup
+			var in_group: EventRow = _event_at_number(group.events if not group.events.is_empty() else group.rows, number, counter)
+			if in_group != null:
+				return in_group
 	return null
 
 
@@ -1395,6 +1421,9 @@ func _draw() -> void:
 		return
 	var font: Font = _get_font()
 	var font_size: int = _get_font_size()
+	# Read once per frame, not per row: the flag is constant across the frame and a
+	# dynamic control.get() per row is exactly the draw-loop lookup the repo rule forbids.
+	_renderer.show_event_numbers = show_event_numbers
 	for index in range(visible_range.x, visible_range.y + 1):
 		var row_info: Dictionary = _flat_rows[index]
 		var row_data: EventRowData = row_info.get("row")

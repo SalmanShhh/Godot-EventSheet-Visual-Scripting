@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Fixed - the ultra-review findings (15 reported, all actionable ones landed)
+
+- **Data-class field authoring is now actually reachable**: the dock's right-click
+  handler early-returned for field-row spans before the menu could build, leaving Remove
+  Field dead everywhere - field clicks now route to the row menu, ONE shared resolver
+  (menu visibility + action handlers) resolves the target from the span OR the row's own
+  spans (dead-space clicks work), the '=' span carries its identity, and a synthetic
+  field row's menu is scoped to field items only (no Cut/Delete acting on the sheet
+  root). Null-source EVENT-typed rows can never receive the real event menu.
+- **Gutter paint policy is structural now**: EVENT rows own a visible gutter cell -
+  their background, selection, and status washes start PAST it, so no fill can ever
+  cover the event number again - while GROUP/COMMENT/SECTION rows are full-bleed bars
+  that cover the gutter for the seamless C3 look, with their x=0 accent stripes
+  restored. The show-numbers flag is read once per frame (was a dynamic per-row
+  control.get in the draw loop).
+- **Right can't hijack the cell walk**: right_key_unfolds() mirrors left_key_folds -
+  a focused cell on a folded parent steps instead of unfolding.
+- **Feature tags**: ENGINE_TAGS now covers the full engine set (architectures, bitness,
+  precision, texture formats, BSD family, system_fonts) so the unknown-tag nudge stops
+  crying wolf; a failed export_presets.cfg write is reported instead of claimed
+  successful; the custom_features parser is shared by check + append.
+- **Commit-time validation is a public seam**: EventSheets.register_param_commit_validator
+  (hint, validator) - the dialog owns the deferred-commit prompt ONCE, delivering the
+  commit exactly once whichever way the prompt closes (confirm / cancel / Esc /
+  titlebar X, which previously dropped the edit) and freeing itself. The feature-tag
+  nudge is its first registrant.
+- **Leaks + structure**: the Go to Event dialog frees on every exit (was leaking one
+  hidden dialog per dismissal); the Outline tree uses explicit parent indices so a
+  region inside an event's sub-events can no longer mis-nest under an unrelated group;
+  event_by_number walks straight to the Nth event (no whole-map build + reverse scan);
+  the print_rich template sniff is gone - rich styling is declaration-only
+  (rich_text_when / bbcode_text), with the rule in ONE shared helper for both lookup
+  paths; batch-merge container copies and the status pluralization use small named
+  helpers.
+
 ### Changed - one autocomplete combo for the whole plugin (review cleanup)
 
 - **`EventSheetPopupUI.autocomplete_combo(edit, suggestions_provider)`** now owns the

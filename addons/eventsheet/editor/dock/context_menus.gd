@@ -104,7 +104,9 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	var menu: PopupMenu = _dock._row_context_menu
 	menu.clear()
 	var row_type: int = row_data.row_type if row_data != null else EventRowData.RowType.EVENT
-	var is_event: bool = row_type == EventRowData.RowType.EVENT
+	# A synthetic row (EVENT-typed but with no sheet resource - a data-class field row) must
+	# never get the real event menu: its items would act on a null anchor / the sheet root.
+	var is_event: bool = row_type == EventRowData.RowType.EVENT and (row_data == null or row_data.source_resource != null)
 	var is_group: bool = row_type == EventRowData.RowType.GROUP
 	var is_comment: bool = row_type == EventRowData.RowType.COMMENT
 	var multi: bool = _dock._get_selected_rows_from_context().size() > 1
@@ -116,11 +118,15 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	var added_type_items: bool = true
 	var data_class_raw: RawCodeRow = _data_class_row_target(row_data)
 	if data_class_raw != null:
-		# A lifting data-class holder row, or one of its FIELD rows (which carry their
-		# raw_row in span metadata): field authoring follows the add/remove-action gesture.
+		# A lifting data-class holder row, or one of its FIELD rows: field authoring
+		# follows the add/remove-action gesture (one resolver decides for menu + handlers).
 		menu.add_item("Add Field…", _dock.ROW_MENU_DATA_CLASS_ADD_FIELD)
-		if int(_dock._context_hit.get("span_metadata", {}).get("field_index", -1)) >= 0:
+		if _data_class_field_index(row_data) >= 0:
 			menu.add_item("Remove Field", _dock.ROW_MENU_DATA_CLASS_REMOVE_FIELD)
+		if row_data != null and row_data.source_resource == null:
+			# A FIELD row is synthetic (no sheet resource): the universal Cut / Insert /
+			# Delete items would act on the sheet root, so its menu stays field-only.
+			return
 	elif is_event:
 		menu.add_item("Add Sub-Event", _dock.ROW_MENU_ADD_SUB_EVENT)
 		menu.add_item("Convert to OR Block", _dock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
@@ -195,15 +201,38 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 			menu.add_item(str(extension_items[extension_index].get("label", "")), 900 + extension_index)
 
 
-## The RawCodeRow this context click's row belongs to, when it is a LIFTING data class:
-## the holder row's own source_resource, or the raw_row a FIELD row's spans carry (field
-## rows have a null source_resource by design). Null for everything else.
+## THE data-class resolver - the ONE answer to "which RawCodeRow does this context click
+## concern?", used by BOTH the menu builder (visibility) and the dock's Add/Remove Field
+## handlers (action targets), so the two can never disagree. Resolution order: the holder
+## row's own source_resource (lifting classes only), the clicked span's raw_row metadata,
+## then - for dead-space or metadata-less spans on a synthetic FIELD row (source null by
+## design) - any of the row's own spans carrying the identity.
 func _data_class_row_target(row_data: EventRowData) -> RawCodeRow:
 	if row_data != null and row_data.source_resource is RawCodeRow \
 			and ViewportRowBuilder.data_class_lifts((row_data.source_resource as RawCodeRow).code):
 		return row_data.source_resource as RawCodeRow
 	var span_raw: Variant = _dock._context_hit.get("span_metadata", {}).get("raw_row", null)
-	return span_raw as RawCodeRow if span_raw is RawCodeRow else null
+	if span_raw is RawCodeRow:
+		return span_raw as RawCodeRow
+	if row_data != null and row_data.source_resource == null:
+		for span: SemanticSpan in row_data.spans:
+			var row_span_raw: Variant = (span.metadata as Dictionary).get("raw_row", null) if span.metadata is Dictionary else null
+			if row_span_raw is RawCodeRow:
+				return row_span_raw as RawCodeRow
+	return null
+
+
+## The clicked field's index, resolved the same layered way (hit metadata first, then the
+## row's own spans for dead-space clicks). -1 = not a field (the holder row).
+func _data_class_field_index(row_data: EventRowData) -> int:
+	var hit_index: int = int(_dock._context_hit.get("span_metadata", {}).get("field_index", -1))
+	if hit_index >= 0:
+		return hit_index
+	if row_data != null and row_data.source_resource == null:
+		for span: SemanticSpan in row_data.spans:
+			if span.metadata is Dictionary and int((span.metadata as Dictionary).get("field_index", -1)) >= 0:
+				return int((span.metadata as Dictionary).get("field_index", -1))
+	return -1
 
 
 ## The Insert ▸ submenu - a sibling row of any type below the clicked one (plus Event Above,

@@ -64,6 +64,25 @@ static func run() -> bool:
 	all_passed = _check("the function closes the outline", group_item.get_next().get_text(0), "ƒ heal") and all_passed
 	editor.free()
 
+	# ---- explicit parentage (review regression): a region inside a SIBLING event's
+	# sub-events must NOT nest under the earlier group that happened to share its depth ----
+	var carrier: EventRow = EventRow.new()
+	carrier.trigger_provider_id = "Core"
+	carrier.trigger_id = "OnReady"
+	var nested_region: CustomBlockRow = CustomBlockRow.new()
+	nested_region.kind_id = "region"
+	nested_region.fields = {"label": "Inside Sub-Events"}
+	carrier.sub_events.append(nested_region)
+	sheet.events.append(carrier)
+	var reparent_entries: Array = EventSheetOutlinePanel.outline_entries(sheet)
+	var nested_entry: Dictionary = {}
+	for entry: Dictionary in reparent_entries:
+		if str(entry.get("label", "")) == "Inside Sub-Events":
+			nested_entry = entry
+	all_passed = _check("a sub-event region stays TOP-LEVEL, never under the unrelated group",
+		int(nested_entry.get("parent", -99)), -1) and all_passed
+
+
 	return all_passed
 
 

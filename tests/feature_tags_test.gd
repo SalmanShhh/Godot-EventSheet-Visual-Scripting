@@ -48,6 +48,9 @@ custom_features="demo_mode,itch"
 
 	# ---- is_known across both sources ----
 	all_passed = _check("engine tags are known", EventSheetFeatureTags.is_known("mobile", CFG), true) and all_passed
+	# The FULL engine set (review regression: missing genuine tags made the nudge cry wolf).
+	for engine_tag: String in ["x86_64", "arm64", "wasm32", "64", "double", "bptc", "astc", "linuxbsd"]:
+		all_passed = _check("genuine engine tag %s is known" % engine_tag, EventSheetFeatureTags.is_known(engine_tag, CFG), true) and all_passed
 	all_passed = _check("preset tags are known", EventSheetFeatureTags.is_known("steam", CFG), true) and all_passed
 	all_passed = _check("an undeclared tag is unknown", EventSheetFeatureTags.is_known("vr_build", CFG), false) and all_passed
 
@@ -62,6 +65,19 @@ custom_features="demo_mode,itch"
 	all_passed = _check("existing tags survive the append",
 		EventSheetFeatureTags.custom_tags(CFG).has("steam") and EventSheetFeatureTags.custom_tags(CFG).has("itch"), true) and all_passed
 	all_passed = _check("a missing presets file is never created", EventSheetFeatureTags.add_custom_tag("x", "user://does_not_exist.cfg"), 0) and all_passed
+
+	# ---- the commit-validator seam: registered per hint, feature_tag rides it ----
+	all_passed = _check("the feature_tag commit validator is registered through the API",
+		EventSheets.param_commit_validator_for("feature_tag").is_valid(), true) and all_passed
+	all_passed = _check("a known engine tag passes the validator silently",
+		EventSheetFeatureTags.commit_validator("\"x86_64\"").is_empty(), true) and all_passed
+	all_passed = _check("an expression is never prompted",
+		EventSheetFeatureTags.commit_validator("current_tag()").is_empty(), true) and all_passed
+	var validator_prompt: Dictionary = EventSheetFeatureTags.commit_validator("\"vr_build\"")
+	all_passed = _check("an unknown literal returns the prompt spec",
+		str(validator_prompt.get("confirm_text", "")), "Add To Preset(s)") and all_passed
+	all_passed = _check("the prompt carries its on_confirm action",
+		(validator_prompt.get("on_confirm", Callable()) as Callable).is_valid(), true) and all_passed
 
 	# ---- the dialog wires the hint to the LIVE combo ----
 	var dialog: ACEParamsDialog = ACEParamsDialog.new()

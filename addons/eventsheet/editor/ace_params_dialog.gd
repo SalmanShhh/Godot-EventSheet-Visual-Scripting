@@ -1810,48 +1810,61 @@ func _commit(chain: bool) -> void:
 	var emit_definition: ACEDefinition = _definition
 	_definition = null
 	_context.clear()
-	# Feature-tag nudge: a quoted tag no engine set or export preset defines would make
-	# OS.has_feature() silently false at runtime - offer to add it to the presets (or
-	# keep it, e.g. a tag the preset will gain later). Expressions are never flagged.
-	var unknown_tag: String = _first_unknown_feature_tag(values)
-	if not unknown_tag.is_empty() and _dialog != null and _dialog.is_inside_tree():
-		_prompt_unknown_feature_tag(unknown_tag, emit_definition, values, context)
+	# Commit-time validators (the generic per-hint seam - EventSheets.register_param_commit_
+	# validator): the first field whose validator asks for confirmation defers the emit
+	# into ONE shared prompt machinery. The feature-tag nudge registers through this seam.
+	var prompt: Dictionary = _first_commit_validation_prompt(values)
+	if not prompt.is_empty() and _dialog != null and _dialog.is_inside_tree():
+		_prompt_commit_validation(prompt, emit_definition, values, context)
 		return
 	params_confirmed.emit(emit_definition, values, context)
 
 
-var _feature_tag_nudge: ConfirmationDialog = null
+var _commit_validation_prompt: ConfirmationDialog = null
 
 
-## The first feature_tag-hinted field whose committed value is a quoted literal that
-## neither the engine nor any export preset defines ("" when everything checks out).
-func _first_unknown_feature_tag(values: Dictionary) -> String:
+## The first committed field whose hint-registered validator returns a prompt spec
+## ({} when every field passes). Validators see the raw committed String value.
+func _first_commit_validation_prompt(values: Dictionary) -> Dictionary:
 	for key: Variant in values.keys():
-		if str(_field_hints.get(key, "")) != "feature_tag":
+		var validator: Callable = EventSheets.param_commit_validator_for(str(_field_hints.get(key, "")))
+		if not validator.is_valid():
 			continue
-		var tag: String = EventSheetFeatureTags.literal_tag(str(values[key]))
-		if not tag.is_empty() and not EventSheetFeatureTags.is_known(tag):
-			return tag
-	return ""
+		var prompt: Variant = validator.call(str(values[key]))
+		if prompt is Dictionary and not (prompt as Dictionary).is_empty():
+			return prompt
+	return {}
 
 
-func _prompt_unknown_feature_tag(tag: String, definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
-	if _feature_tag_nudge != null and is_instance_valid(_feature_tag_nudge):
-		_feature_tag_nudge.queue_free()
-	_feature_tag_nudge = ConfirmationDialog.new()
-	_feature_tag_nudge.title = "Unknown Feature Tag"
-	_feature_tag_nudge.dialog_text = "\"%s\" isn't defined by Godot or any export preset, so OS.has_feature(\"%s\") will be false at runtime.\n\nAdd it to your export preset(s) now? Presets manage feature tags under Project > Export > Features." % [tag, tag]
-	_feature_tag_nudge.ok_button_text = "Add To Preset(s)"
-	_feature_tag_nudge.cancel_button_text = "Keep As Is"
-	_feature_tag_nudge.confirmed.connect(func() -> void:
-		if EventSheetFeatureTags.add_custom_tag(tag) == 0:
-			push_warning("[EventSheets] No export_presets.cfg yet - open Project > Export, create a preset, and add \"%s\" under Features." % tag)
-		params_confirmed.emit(definition, values, context))
-	_feature_tag_nudge.canceled.connect(func() -> void:
-		params_confirmed.emit(definition, values, context))
-	_dialog.get_parent().add_child(_feature_tag_nudge)
-	EventSheetL10n.apply_to(_feature_tag_nudge)
-	_feature_tag_nudge.popup_centered(Vector2i(460, 200))
+## The ONE deferred-commit prompt: whichever way it closes - confirm, cancel, Esc
+## (canceled), or the titlebar X (close_requested, which does NOT emit canceled) - the
+## deferred params_confirmed lands exactly once; on_confirm runs only on confirm.
+## Dropping any exit path would silently lose the user's already-committed edit.
+func _prompt_commit_validation(prompt: Dictionary, definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
+	if _commit_validation_prompt != null and is_instance_valid(_commit_validation_prompt):
+		_commit_validation_prompt.queue_free()
+	_commit_validation_prompt = ConfirmationDialog.new()
+	_commit_validation_prompt.title = str(prompt.get("title", "Check this value"))
+	_commit_validation_prompt.dialog_text = str(prompt.get("message", ""))
+	_commit_validation_prompt.ok_button_text = str(prompt.get("confirm_text", "OK"))
+	_commit_validation_prompt.cancel_button_text = str(prompt.get("cancel_text", "Keep As Is"))
+	var dialog_node: ConfirmationDialog = _commit_validation_prompt
+	var on_confirm: Callable = prompt.get("on_confirm", Callable())
+	var finished: Dictionary = {"done": false}
+	var finish_commit: Callable = func(confirmed_choice: bool) -> void:
+		if finished["done"]:
+			return
+		finished["done"] = true
+		if confirmed_choice and on_confirm.is_valid():
+			on_confirm.call()
+		params_confirmed.emit(definition, values, context)
+		dialog_node.queue_free()
+	_commit_validation_prompt.confirmed.connect(func() -> void: finish_commit.call(true))
+	_commit_validation_prompt.canceled.connect(func() -> void: finish_commit.call(false))
+	_commit_validation_prompt.close_requested.connect(func() -> void: finish_commit.call(false))
+	_dialog.get_parent().add_child(_commit_validation_prompt)
+	EventSheetL10n.apply_to(_commit_validation_prompt)
+	_commit_validation_prompt.popup_centered(Vector2i(460, 200))
 
 
 func _on_custom_action(action: StringName) -> void:

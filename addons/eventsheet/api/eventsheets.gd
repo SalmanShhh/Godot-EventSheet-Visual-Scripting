@@ -809,6 +809,33 @@ static func param_editor_for(tag: String) -> Callable:
 	return _param_editors.get(tag, Callable())
 
 
+## Commit-time validation for a param HINT (the generic seam the feature-tag nudge uses):
+## `validator(value: String) -> Dictionary` runs when the params dialog commits a field
+## with that hint. Return {} to let the commit pass, or a prompt spec to ask the user
+## first: {"title", "message", "confirm_text", "cancel_text", "on_confirm": Callable}.
+## The dialog owns the tricky part ONCE - the commit is deferred and then delivered
+## exactly one time whichever way the prompt closes (confirm, cancel, Esc, titlebar X),
+## with on_confirm invoked only on confirm. One validator per hint; last registration wins.
+static var _param_commit_validators: Dictionary = {}
+static var _builtin_validators_registered: bool = false
+
+
+static func register_param_commit_validator(hint: String, validator: Callable) -> void:
+	_param_commit_validators[hint] = validator
+
+
+static func param_commit_validator_for(hint: String) -> Callable:
+	_ensure_builtin_validators()
+	return _param_commit_validators.get(hint, Callable())
+
+
+static func _ensure_builtin_validators() -> void:
+	if _builtin_validators_registered:
+		return
+	_builtin_validators_registered = true
+	register_param_commit_validator("feature_tag", EventSheetFeatureTags.commit_validator)
+
+
 ## Adds a row to the Welcome window's Preferences card: `builder()` returns the Control (built
 ## fresh each time the Welcome first builds). Give your extension's setting a home without
 ## inventing a settings dialog.

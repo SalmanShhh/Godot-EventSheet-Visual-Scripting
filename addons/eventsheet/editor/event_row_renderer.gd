@@ -30,6 +30,11 @@ const OBJECT_ICON_PLATE_BORDER := Color(1.0, 1.0, 1.0, 0.13)
 # never allocate it inside the draw loop).
 static var _icon_plate_style: StyleBoxFlat = null
 
+# Stamped by the viewport ONCE per _draw frame (it is constant across the frame): the
+# per-row alternative - a dynamic control.get() in the draw loop - is exactly the lookup
+# the rule above forbids.
+var show_event_numbers: bool = true
+
 
 ## The fixed object-name column width for a span's lane (0 = flow, the classic behavior).
 ## One resolver shared by the draw, the width measure, and the text-origin hit-test so the
@@ -241,6 +246,19 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		else EventSheetPalette.COLOR_HOVER
 	)
 
+	# ── Gutter paint policy (structural, not paint-order): EVENT rows (and synthetic
+	# sub-rows) OWN a visible gutter cell, so their fills use row_fill_rect, which starts
+	# PAST the gutter - no later fill can cover the number, ever. GROUP/COMMENT/SECTION
+	# rows are full-bleed bars: they draw over the gutter for the seamless C3 look, with
+	# their x=0 accent stripes visible (they show no number, so nothing is lost).
+	# Event-number mode (default on, the C3 margin): event rows show their STABLE
+	# sheet-order number INSTEAD of the flat row index - never both, or the two digit
+	# strings smear whenever a comment/group/variable row makes them diverge. Off
+	# restores the flat index on every row (visible where fills don't cover the gutter).
+	var is_event_row: bool = row_data.row_type == EventRowData.RowType.EVENT
+	var row_fill_rect: Rect2 = Rect2(gutter_rect.end.x, row_rect.position.y, maxf(row_rect.size.x - gutter_rect.size.x, 0.0), row_rect.size.y) if is_event_row else row_rect
+	var gutter_number: int = int(layout.get("event_number", 0)) if show_event_numbers else line_number
+	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style)
 	if row_data.row_type == EventRowData.RowType.GROUP:
 		var group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 		if row_data.source_resource is EventGroup:
@@ -250,9 +268,9 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		# Per-comment colors (event-sheet parity): the row's custom tint wins over the theme token.
 		var comment_bg: Color = row_data.custom_color if row_data.custom_color.a > 0.01 else event_style.comment_row_background_color
 		control.draw_rect(row_rect, comment_bg, true)
-	elif row_data.row_type == EventRowData.RowType.EVENT and event_style != null:
+	elif is_event_row and event_style != null:
 		control.draw_rect(
-			row_rect,
+			row_fill_rect,
 			event_style.row_background_alt_color if alternating else event_style.row_background_color,
 			true
 		)
@@ -266,16 +284,6 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, section_bg, true)
 		if row_data.custom_color.a > 0.01:
 			control.draw_rect(Rect2(row_rect.position, Vector2(3.0, row_rect.size.y)), Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, 0.9), true)
-	# The gutter paints AFTER the row backgrounds: row_rect spans the full row width, so a
-	# themed row fill would otherwise cover the gutter's bg, numbers, breakpoint dots, and
-	# bookmark pennants (the original event-number invisibility bug). Structural, not
-	# positional: everything gutter-owned draws in one place, over any row fill.
-	# Event-number mode (default on, the C3 margin): event rows show their STABLE
-	# sheet-order number INSTEAD of the flat row index - never both, or the two digit
-	# strings smear whenever a comment/group/variable row makes them diverge. In this mode
-	# non-event rows show no number (C3 numbers only events); off restores the flat index.
-	var gutter_number: int = int(layout.get("event_number", 0)) if bool(control.get("show_event_numbers")) else line_number
-	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style)
 	# The event block's silhouette: the LEFT edge (condition lane) carries the full corner
 	# radius - the bottom-left always rounds - and the RIGHT edge (action lane) half of it,
 	# so blocks read as opening toward their actions. Radius 0 = the classic square look.
@@ -311,13 +319,13 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 			else EventSheetPalette.COLOR_LANGUAGE_BLOCK
 		)
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), Color(language_accent.r, language_accent.g, language_accent.b, 0.75), true)
-		control.draw_rect(row_rect, Color(language_accent.r, language_accent.g, language_accent.b, 0.05), true)
+		control.draw_rect(row_fill_rect, Color(language_accent.r, language_accent.g, language_accent.b, 0.05), true)
 	if not row_data.error_message.is_empty():
 		# Error → row deep-link: a red left stripe + faint wash flag the offending row (the
 		# message shows in the row tooltip). A fixed error red - not yet a theme token.
 		var error_stripe: Color = Color("#ff5555")
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), error_stripe, true)
-		control.draw_rect(row_rect, Color(error_stripe.r, error_stripe.g, error_stripe.b, 0.08), true)
+		control.draw_rect(row_fill_rect, Color(error_stripe.r, error_stripe.g, error_stripe.b, 0.08), true)
 	if row_data.firing or row_data.firing_intensity > 0.0:
 		# Live event trace: a cyan left stripe + faint wash on events firing right now (debug
 		# run), PULSING - the intensity decays after each fire so a one-shot reads as a fading
@@ -325,14 +333,14 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		var pulse: float = maxf(row_data.firing_intensity, 1.0 if row_data.firing and row_data.firing_intensity <= 0.0 else 0.0)
 		var firing_stripe: Color = Color("#4fd6ff")
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, pulse), true)
-		control.draw_rect(row_rect, Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, 0.10 * pulse), true)
+		control.draw_rect(row_fill_rect, Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, 0.10 * pulse), true)
 	if row_data.selected and not has_span_selection:
 		# Slightly tempered for single-cell rows (comments especially) - selection
 		# stays unmistakable via the outline, without the full-strength flood fill.
 		var row_selection: Color = selection_fill
 		if row_data.row_type != EventRowData.RowType.EVENT:
 			row_selection.a *= 0.75
-		control.draw_rect(row_rect, row_selection, true)
+		control.draw_rect(row_fill_rect, row_selection, true)
 		if row_data.row_type != EventRowData.RowType.EVENT:
 			_draw_row_outline(control, row_rect, selection_fill, SELECTION_OUTLINE_LIGHTEN, SELECTION_OUTLINE_ALPHA)
 	# Hover feedback: individual conditions/actions highlight per-cell (drawn in _draw_spans).

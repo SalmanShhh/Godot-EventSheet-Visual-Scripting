@@ -24,36 +24,42 @@ func _init(dock: Control) -> void:
 
 
 ## The structural walk: groups (with nesting), region openers, then the sheet's published
-## functions. Returns [{label, resource, depth, kind}] in sheet order - pure, so tests pin it.
+## functions. Returns [{label, resource, depth, kind, parent}] in sheet order, where
+## `parent` is the INDEX of the enclosing group's entry (-1 = top level) - explicit
+## parentage, so the tree rebuild can never mis-nest an entry whose depth came from
+## descending through an EventRow's sub_events rather than a group. Pure, so tests pin it.
 static func outline_entries(sheet: EventSheetResource) -> Array:
 	var entries: Array = []
 	if sheet == null:
 		return entries
-	_collect_outline(sheet.events, 0, entries)
+	_collect_outline(sheet.events, 0, -1, entries)
 	for function_entry: Variant in sheet.functions:
 		if function_entry is EventFunction:
 			entries.append({
 				"label": (function_entry as EventFunction).function_name,
 				"resource": function_entry,
 				"depth": 0,
-				"kind": "function"
+				"kind": "function",
+				"parent": -1
 			})
 	return entries
 
 
-static func _collect_outline(rows: Array, depth: int, entries: Array) -> void:
+static func _collect_outline(rows: Array, depth: int, parent_index: int, entries: Array) -> void:
 	for entry: Variant in rows:
 		if entry is EventGroup:
 			var group: EventGroup = entry as EventGroup
-			entries.append({"label": group.group_name, "resource": group, "depth": depth, "kind": "group"})
-			_collect_outline(group.events if not group.events.is_empty() else group.rows, depth + 1, entries)
+			entries.append({"label": group.group_name, "resource": group, "depth": depth, "kind": "group", "parent": parent_index})
+			_collect_outline(group.events if not group.events.is_empty() else group.rows, depth + 1, entries.size() - 1, entries)
 		elif entry is CustomBlockRow:
 			var block: CustomBlockRow = entry as CustomBlockRow
 			if block.kind_id == "region" and not bool(block.fields.get("is_end", false)):
 				var label: String = str(block.fields.get("label", "")).strip_edges()
-				entries.append({"label": label if not label.is_empty() else "(region)", "resource": block, "depth": depth, "kind": "region"})
+				entries.append({"label": label if not label.is_empty() else "(region)", "resource": block, "depth": depth, "kind": "region", "parent": parent_index})
 		elif entry is EventRow:
-			_collect_outline((entry as EventRow).sub_events, depth + 1, entries)
+			# Sub-events may hold nested regions/groups: they nest under the SAME outline
+			# parent (an event is not an outline node), whatever the visual depth.
+			_collect_outline((entry as EventRow).sub_events, depth + 1, parent_index, entries)
 
 
 ## Builds the window + tree without popping it (testable headless); open() pops it up.
@@ -99,18 +105,19 @@ func refresh() -> void:
 	tree.clear()
 	var root: TreeItem = tree.create_item()
 	var entries: Array = outline_entries(_dock._current_sheet)
-	# depth -> parent TreeItem, so nested groups indent naturally.
-	var parents: Dictionary = {0: root}
+	# Explicit parentage: each entry names its enclosing group's entry INDEX, so the tree
+	# mirrors the walk exactly (a depth-keyed map mis-nested entries reached through an
+	# EventRow's sub_events under whatever group happened to set that depth earlier).
+	var items: Array = []
 	for entry: Dictionary in entries:
-		var depth: int = int(entry.get("depth", 0))
-		var parent: TreeItem = parents.get(depth, root)
+		var parent_index: int = int(entry.get("parent", -1))
+		var parent: TreeItem = items[parent_index] if parent_index >= 0 and parent_index < items.size() else root
 		var item: TreeItem = tree.create_item(parent)
 		var kind: String = str(entry.get("kind", ""))
 		item.set_text(0, _entry_prefix(kind) + str(entry.get("label", "")))
 		item.set_custom_color(0, _entry_color(kind))
 		item.set_metadata(0, entry.get("resource", null))
-		if kind == "group":
-			parents[depth + 1] = item
+		items.append(item)
 	if _empty_hint != null:
 		_empty_hint.visible = entries.is_empty()
 

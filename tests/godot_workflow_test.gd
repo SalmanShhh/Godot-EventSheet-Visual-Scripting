@@ -641,6 +641,9 @@ static func run() -> bool:
 	menu_editor.set_undo_redo_manager(NoopUndoManager.new())
 	var event_row: EventRowData = EventRowData.new()
 	event_row.row_type = EventRowData.RowType.EVENT
+	# Real event rows always carry their EventRow; a null source now means SYNTHETIC
+	# (a data-class field row) and gets no event menu, so the fixture must be genuine.
+	event_row.source_resource = EventRow.new()
 	menu_editor._context_row = event_row
 	menu_editor._build_row_context_menu(event_row)
 	var event_labels: PackedStringArray = _menu_labels(menu_editor._row_context_menu)

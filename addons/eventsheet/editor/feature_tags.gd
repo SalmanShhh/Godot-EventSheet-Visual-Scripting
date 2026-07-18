@@ -13,11 +13,16 @@ extends RefCounted
 
 const PRESETS_PATH := "res://export_presets.cfg"
 
-## The engine's own tags (platforms, build kinds, capabilities) - always defined.
+## The engine's own tags - platforms, build kinds, architectures, bitness, precision, and
+## texture-compression formats (the Godot feature-tags reference set). A genuine tag
+## missing here makes the unknown-tag nudge cry wolf, so keep this complete.
 const ENGINE_TAGS: PackedStringArray = [
-	"mobile", "pc", "web", "android", "ios", "windows", "linux", "macos",
+	"mobile", "pc", "web", "android", "ios", "windows", "linux", "macos", "bsd", "linuxbsd",
 	"editor", "debug", "release", "template", "template_debug", "template_release",
-	"movie", "threads", "touchscreen", "etc2", "s3tc"
+	"movie", "threads", "touchscreen", "system_fonts",
+	"x86_64", "x86_32", "x86", "arm64", "arm32", "arm", "rv64", "ppc64", "ppc32", "wasm32",
+	"32", "64", "double", "single",
+	"etc", "etc2", "s3tc", "bptc", "astc"
 ]
 
 
@@ -30,10 +35,21 @@ static func custom_tags(presets_path: String = PRESETS_PATH) -> PackedStringArra
 	for section: String in presets.get_sections():
 		if not _is_preset_section(section):
 			continue
-		for tag: String in str(presets.get_value(section, "custom_features", "")).split(","):
-			var clean: String = tag.strip_edges()
-			if not clean.is_empty() and not tags.has(clean):
-				tags.append(clean)
+		for tag: String in _parse_features(str(presets.get_value(section, "custom_features", ""))):
+			if not tags.has(tag):
+				tags.append(tag)
+	return tags
+
+
+## ONE parser for a custom_features line (trim, drop empties) - custom_tags and
+## add_custom_tag both read through it, so "is this tag present?" can never disagree
+## between the nudge's check and the append.
+static func _parse_features(raw: String) -> PackedStringArray:
+	var tags: PackedStringArray = PackedStringArray()
+	for tag: String in raw.split(","):
+		var clean: String = tag.strip_edges()
+		if not clean.is_empty():
+			tags.append(clean)
 	return tags
 
 
@@ -79,19 +95,33 @@ static func add_custom_tag(tag: String, presets_path: String = PRESETS_PATH) -> 
 	for section: String in presets.get_sections():
 		if not _is_preset_section(section):
 			continue
-		var existing: String = str(presets.get_value(section, "custom_features", ""))
-		var tags: PackedStringArray = PackedStringArray()
-		for entry: String in existing.split(","):
-			if not entry.strip_edges().is_empty():
-				tags.append(entry.strip_edges())
+		var tags: PackedStringArray = _parse_features(str(presets.get_value(section, "custom_features", "")))
 		if tags.has(clean):
 			continue
 		tags.append(clean)
 		presets.set_value(section, "custom_features", ",".join(tags))
 		updated += 1
-	if updated > 0:
-		presets.save(presets_path)
+	if updated > 0 and presets.save(presets_path) != OK:
+		return 0  # a failed write (read-only / locked file) must never report success
 	return updated
+
+
+## The commit-time validator the params dialog runs for feature_tag fields (registered
+## through EventSheets.register_param_commit_validator - the generic seam). {} = fine;
+## an unknown quoted literal returns the prompt spec, whose on_confirm appends the tag.
+static func commit_validator(value: String) -> Dictionary:
+	var tag: String = literal_tag(value)
+	if tag.is_empty() or is_known(tag):
+		return {}
+	return {
+		"title": "Unknown Feature Tag",
+		"message": "\"%s\" isn't defined by Godot or any export preset, so OS.has_feature(\"%s\") will be false at runtime.\n\nAdd it to your export preset(s) now? Presets manage feature tags under Project > Export > Features." % [tag, tag],
+		"confirm_text": "Add To Preset(s)",
+		"cancel_text": "Keep As Is",
+		"on_confirm": func() -> void:
+			if add_custom_tag(tag) == 0:
+				push_warning("[EventSheets] Couldn't write the tag - if export_presets.cfg doesn't exist yet (or the Export dialog holds unsaved changes), add \"%s\" under Project > Export > Features." % tag)
+	}
 
 
 ## A top-level [preset.N] section (not its [preset.N.options] companion).

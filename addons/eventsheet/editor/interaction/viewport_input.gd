@@ -428,10 +428,10 @@ func handle_key(event: InputEventKey) -> void:
 		elif _viewport.step_cell_focus(-1):
 			_viewport.accept_event()
 	elif event.keycode == KEY_RIGHT and not event.alt_pressed:
-		# Plain Right unfolds; Alt+Right is the dock's jump-history Forward. With nothing
-		# to unfold, Right walks the cell focus (Enter edits the focused cell, Esc drops back).
-		var right_row: EventRowData = _viewport._row_at(_viewport._selected_row_index)
-		if right_row != null and not right_row.children.is_empty() and right_row.folded:
+		# Plain Right unfolds; Alt+Right is the dock's jump-history Forward. With a cell
+		# focused OR nothing to unfold, Right walks the cell focus instead - the mirror
+		# of left_key_folds, so folding can't hijack the walk from either side.
+		if _viewport.right_key_unfolds():
 			_viewport._toggle_row_fold(_viewport._selected_row_index)
 			_viewport.accept_event()
 		elif _viewport.step_cell_focus(1):

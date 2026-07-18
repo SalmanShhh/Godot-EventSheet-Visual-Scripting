@@ -115,6 +115,17 @@ static func run() -> bool:
 	dock._context_hit = {"span_metadata": {"kind": "data_class_field", "raw_row": class_row.source_resource, "field_index": 0}}
 	dock._build_row_context_menu(field_row)
 	ok = _check("a field row's menu offers Remove Field", _menu_has(dock._row_context_menu, "Remove Field"), true) and ok
+	# The synthetic field row's menu is SCOPED: universal Cut/Delete would act on the
+	# sheet root (source_resource is null), so they must not appear.
+	ok = _check("a field row's menu is field-only (no Cut)", _menu_has(dock._row_context_menu, "Cut"), false) and ok
+	ok = _check("a field row's menu is field-only (no Delete)", _menu_has(dock._row_context_menu, "Delete"), false) and ok
+	# DEAD-SPACE right-click (empty hit): the row's own spans carry the identity, so the
+	# field menu still appears - and the generic event menu (which would act on a
+	# null-source row) never does.
+	dock._context_hit = {}
+	dock._build_row_context_menu(field_row)
+	ok = _check("dead-space on a field row still offers Remove Field", _menu_has(dock._row_context_menu, "Remove Field"), true) and ok
+	ok = _check("dead-space on a field row never shows the event menu", _menu_has(dock._row_context_menu, "Add Sub-Event"), false) and ok
 
 	# ---- structured Add/Remove Field (the add-action gesture, for data classes) ----
 	var base_code: String = "class Stats:\n\tvar hp: int = 10\n\tvar armor: float"
