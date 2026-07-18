@@ -20,7 +20,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Prints a value to the Output console, useful for debugging what's happening."))
 	descriptors.append(F.make_descriptor("Core", "PrintLabeled", "Print Labeled", ACEDescriptor.ACEType.ACTION, "print({label}, {value})", "", [F.make_param("label", "String", "\"value:\"", "Label", "Leading label string.", "expression"), F.make_param("value", "String", "0", "Value", "Value/expression to print after the label.", "expression")], "Debug", "print {label} {value}")
 		.described("Prints a value preceded by a label so you can tell debug messages apart."))
-	descriptors.append(F.make_descriptor("Core", "PrintRich", "Print Rich (BBCode)", ACEDescriptor.ACEType.ACTION, "print_rich({value})", "", [F.make_param("value", "String", "\"[b]done[/b]\"", "Value", "BBCode string (colors/bold) for the Output console.", "expression")], "Debug", "print rich {value}")
+	descriptors.append(F.make_descriptor("Core", "PrintRich", "Print Rich (BBCode)", ACEDescriptor.ACEType.ACTION, "print_rich({value})", "", [F.make_param("value", "String", "\"[b]done[/b]\"", "Value", "BBCode string (colors/bold) for the Output console. Select text and hit B / I / U / S to format it.", "bbcode_text")], "Debug", "print rich {value}")
 		.described("Prints colored or bold text to the Output console using BBCode formatting."))
 	descriptors.append(F.make_descriptor("Core", "PushWarning", "Push Warning", ACEDescriptor.ACEType.ACTION, "push_warning({message})", "", [F.make_param("message", "String", "\"check this\"", "Message", "Warning text (shows in the debugger).", "expression")], "Debug", "warn {message}")
 		.described("Logs a warning message that appears in Godot's debugger panel."))

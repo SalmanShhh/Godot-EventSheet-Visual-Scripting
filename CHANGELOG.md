@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - Discord-style formatting on BBCode params (the bbcode_text hint)
+
+- **Rich-text param editing**: params hinted `bbcode_text` get a formatting toolbar and
+  shortcuts - select part of the text and hit **B / I / U / S** (or Ctrl+B / Ctrl+I /
+  Ctrl+U / Ctrl+Shift+S) and the selection wraps in the matching BBCode tag, toggling
+  back OFF when it is already wrapped, exactly the Discord gesture. A live preview under
+  the field renders the current BBCode as you type. The wrap kernel never breaks the
+  string literal the param compiles into - a selection crossing a quote is refused.
+- **Print Rich (BBCode)** ships the hint; pack authors get the editor by hinting any
+  String param `bbcode_text` (documented in the hint table, alongside the missing
+  `group_reference` row). `tests/bbcode_param_test.gd` pins the wrap kernel value by
+  value - wrap, both toggle-off shapes, caret-insert, quote refusal, arged tags closing
+  bare, reversed selections - plus the Print Rich wiring.
+
 ### Added - the Doctor spots obviously-wrong param literals
 
 - **A new advisory check** flags a param declared float/int/bool that holds a plain

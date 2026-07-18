@@ -245,6 +245,7 @@ func _ensure_hint_factories() -> void:
 			"key_capture": _create_key_capture_field,
 			"input_action": _create_input_action_field,
 			"group_reference": _create_group_reference_field,
+			"bbcode_text": _create_bbcode_field,
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
 			"animation_reference": _create_animation_field,
@@ -445,6 +446,108 @@ static func _rebuild_autocomplete_popup(popup: PopupMenu, suggestions: PackedStr
 	if not any_added:
 		popup.add_item("(no match - keep typing)", -1)
 		popup.set_item_disabled(popup.item_count - 1, true)
+
+
+## Rich-text param editor (hint "bbcode_text"): Discord-style formatting for BBCode-taking
+## params - select part of the text and hit B / I / U / S (buttons or Ctrl+B/I/U,
+## Ctrl+Shift+S) and the selection wraps in the matching tag, toggling back off when it is
+## already wrapped. A live preview underneath renders the current BBCode. The wrap logic
+## never touches the quotes of a string literal - a selection containing one is refused.
+func _create_bbcode_field(key: String, default_value: Variant) -> Control:
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", 4)
+	var toolbar: HBoxContainer = HBoxContainer.new()
+	toolbar.add_theme_constant_override("separation", 2)
+	var edit: LineEdit = LineEdit.new()
+	edit.text = str(default_value)
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if _dialog is AcceptDialog:
+		(_dialog as AcceptDialog).register_text_enter(edit)
+	var preview: RichTextLabel = RichTextLabel.new()
+	preview.bbcode_enabled = true
+	preview.fit_content = true
+	preview.scroll_active = false
+	preview.custom_minimum_size = Vector2(0.0, 24.0)
+	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var refresh_preview: Callable = func() -> void:
+		var inner: String = edit.text.strip_edges()
+		if inner.length() >= 2 and inner.begins_with("\"") and inner.ends_with("\""):
+			inner = inner.substr(1, inner.length() - 2)
+		preview.text = inner
+	var wrap_with: Callable = func(tag: String) -> void:
+		var wrapped: Dictionary = bbcode_wrap_selection(edit.text,
+			edit.get_selection_from_column() if edit.has_selection() else edit.caret_column,
+			edit.get_selection_to_column() if edit.has_selection() else edit.caret_column, tag)
+		edit.text = str(wrapped.get("text", edit.text))
+		edit.grab_focus()
+		edit.select(int(wrapped.get("from", 0)), int(wrapped.get("to", 0)))
+		edit.caret_column = int(wrapped.get("to", 0))
+		refresh_preview.call()
+	for entry: Array in [["B", "b", "Bold (Ctrl+B)"], ["I", "i", "Italic (Ctrl+I)"], ["U", "u", "Underline (Ctrl+U)"], ["S", "s", "Strikethrough (Ctrl+Shift+S)"]]:
+		var button: Button = Button.new()
+		button.text = str(entry[0])
+		button.tooltip_text = str(entry[2])
+		button.focus_mode = Control.FOCUS_NONE
+		button.pressed.connect(wrap_with.bind(str(entry[1])))
+		toolbar.add_child(button)
+	var color_button: Button = Button.new()
+	color_button.text = "Color"
+	color_button.tooltip_text = "Wrap the selection in [color=...] (edit the hex after)"
+	color_button.focus_mode = Control.FOCUS_NONE
+	color_button.pressed.connect(wrap_with.bind("color=yellow"))
+	toolbar.add_child(color_button)
+	edit.gui_input.connect(func(input_event: InputEvent) -> void:
+		if not (input_event is InputEventKey) or not (input_event as InputEventKey).pressed:
+			return
+		var key_event: InputEventKey = input_event as InputEventKey
+		if not key_event.is_command_or_control_pressed():
+			return
+		var handled: bool = true
+		match key_event.keycode:
+			KEY_B: wrap_with.call("b")
+			KEY_I: wrap_with.call("i")
+			KEY_U: wrap_with.call("u")
+			KEY_S:
+				if key_event.shift_pressed:
+					wrap_with.call("s")
+				else:
+					handled = false
+			_: handled = false
+		if handled:
+			edit.accept_event())
+	edit.text_changed.connect(func(_new_text: String) -> void: refresh_preview.call())
+	refresh_preview.call()
+	column.add_child(toolbar)
+	column.add_child(edit)
+	column.add_child(preview)
+	_fields[key] = edit
+	return column
+
+
+## The selection-wrap kernel, pure so tests pin it: wraps [from, to) of `text` in
+## [tag]...[/tag] (the tag may carry an arg, "color=yellow"; the closer uses the bare
+## name). Toggles OFF when the selection is already exactly wrapped or exactly surrounded.
+## No selection inserts an empty pair with the caret inside. A selection containing a
+## double quote is refused unchanged - wrapping across a string-literal boundary would
+## break the GDScript the param compiles into.
+static func bbcode_wrap_selection(text: String, from: int, to: int, tag: String) -> Dictionary:
+	var bare_tag: String = tag.split("=")[0]
+	var open_tag: String = "[%s]" % tag
+	var close_tag: String = "[/%s]" % bare_tag
+	var low: int = clampi(mini(from, to), 0, text.length())
+	var high: int = clampi(maxi(from, to), 0, text.length())
+	var selected: String = text.substr(low, high - low)
+	if selected.contains("\""):
+		return {"text": text, "from": low, "to": high}
+	# Toggle off - the selection IS the wrapped run.
+	if selected.begins_with(open_tag) and selected.ends_with(close_tag) and selected.length() >= open_tag.length() + close_tag.length():
+		var inner: String = selected.substr(open_tag.length(), selected.length() - open_tag.length() - close_tag.length())
+		return {"text": text.substr(0, low) + inner + text.substr(high), "from": low, "to": low + inner.length()}
+	# Toggle off - the tags sit just outside the selection.
+	if low >= open_tag.length() and text.substr(low - open_tag.length(), open_tag.length()) == open_tag and text.substr(high, close_tag.length()) == close_tag:
+		return {"text": text.substr(0, low - open_tag.length()) + selected + text.substr(high + close_tag.length()), "from": low - open_tag.length(), "to": low - open_tag.length() + selected.length()}
+	var wrapped_text: String = text.substr(0, low) + open_tag + selected + close_tag + text.substr(high)
+	return {"text": wrapped_text, "from": low + open_tag.length(), "to": low + open_tag.length() + selected.length()}
 
 
 ## Live node-group picker (hint "group_reference"): an editable suggest-combo listing the

@@ -678,6 +678,8 @@ The `hint` chooses the input widget in the parameter dialog. `expression` is by 
 | `color` | ColorPickerButton | A `Color`. |
 | `key_capture` | Press-a-key modal | A keyboard key (records the key you press). |
 | `input_action` | Editable picker of the project's Input Map actions (enumerated live at dialog-open, project actions first) | An existing input action, as a quoted literal. |
+| `group_reference` | Editable picker of the node groups that actually exist (project globals + the edited scene's groups) | A node group name, as a quoted literal. |
+| `bbcode_text` | Discord-style rich-text field: select text and hit B / I / U / S (or Ctrl+B/I/U, Ctrl+Shift+S) to wrap it in the matching BBCode tag - toggles off when already wrapped - with a live rendered preview underneath | A BBCode string (Print Rich uses it). |
 | `physics_layer_2d` / `physics_layer_3d` | Checkable list of the project's physics layers - NAMED layers (Project Settings > Layer Names) show their names, and the button reads the selection back ("Walls, Enemies") | A collision mask int. Params named `collision_mask` / `*_mask` (2D) or `*_mask_3d` (3D) get this picker by convention, no annotation needed. |
 | `audio_path` | Text field with a `▶` preview button | An audio file path. |
 | `scene_path` | Text field with a Browse button | A `.tscn` path. |
