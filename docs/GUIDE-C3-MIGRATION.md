@@ -68,7 +68,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | On collision / overlap | `On Body Entered` / `On Area Entered` (Area2D) - connections are generated |
 | Destroy | `Queue Free` |
 | Set position / angle | `Set Position` / `Set Rotation` (Node2D) |
-| Simulate control (Platform) | PlatformerMovement behavior ACEs (`Jump`, `Set Move Speed`) |
+| Simulate control (Platform) | PlatformerMovement behavior ACEs (`Jump`, `Set Move Speed`, `Set Gravity Angle`) |
 | Wait | An `await`-flagged action, or `await get_tree().create_timer(1.0).timeout` in a block |
 | Pick by comparison / For each | **Pick filters**: right-click an event → "Add Pick Filter (For Each)…" - loops a node group/children/any iterable with a GDScript `where` predicate and first-N; compiles to a plain `for` loop |
 | Repeat / While | The same pick-filter dialog: the Collection dropdown has **Repeat (count)** and **While (condition)** |
@@ -219,7 +219,8 @@ i18n (Godot translations).
   occlusion-correct "attack the nearest enemy I can actually see."
 - **Node-picking relief for Godot's deep trees:** pick child nodes **by type** (no path-hunting),
   one-click **"Make %unique"** to collapse a deep `$A/B/C` path to a reparent-proof `%Name`, or drag a
-  node from the Scene dock straight onto a parameter value to reference it.
+  node from the Scene dock straight onto a parameter value to reference it - or drag a PROPERTY
+  out of the Inspector onto the sheet for a pre-filled Set Property action (its current value baked in).
 - **Scenes replace layouts** and instancing replaces "create object by name" - spawn via
   `preload("res://enemy.tscn").instantiate()` in a block or action.
 
@@ -251,7 +252,7 @@ Your `Juice_Screenshake(cMagnitude, cDuration)` recreates as a sheet function wi
 
 ### 3. Wait-based cutscenes
 
-C3's "Wait 2 seconds" chains port directly: the Wait action compiles to `await`, and handlers are coroutines, so the timing style you know just works.
+C3's "Wait 2 seconds" chains port directly: the Wait action compiles to `await`, and handlers are coroutines, so the timing style you know just works. Awaiting actions wear an hourglass in the sheet, objects freed during a wait are skipped when the loop resumes, and the **Once At A Time** condition stops a re-firing event from stacking overlapping runs - C3's async-actions semantics, enforced by the compiler.
 
 ### 4. Families, approximately
 

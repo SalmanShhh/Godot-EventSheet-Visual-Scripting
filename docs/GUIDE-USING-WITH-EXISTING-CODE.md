@@ -111,6 +111,9 @@ GlobalUtils.ping(self)
 Triggers are how a sheet *reacts*. To react to your own code, use the signal triggers - they connect by
 name, with no need for the emitter to know anything about EventSheets.
 
+- **Connect Signal to Event Sheet** - the no-typing path: right-click the node in the Scene dock,
+  pick the signal from the searchable list (script signals and native ones alike), and an
+  **On <Signal>** trigger event lands in its sheet with the handler arguments pre-baked.
 - **On Signal** - the always-available escape hatch. Give it a **signal name** (free text) and a **source**:
   blank for `self`, a **node path**, or an **autoload** (`autoload:EventBus`). It compiles to a `connect`
   in `_ready` plus a generated handler:

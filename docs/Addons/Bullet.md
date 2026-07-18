@@ -88,7 +88,7 @@ That is a full projectile. Point the node the way you want it to go, the behavio
 
 ## ACE reference
 
-All ACEs live in the **Bullet** category and target the `BulletBehavior` on the node they are placed on. Each one has a leading "On node" target that defaults to the bullet's own behavior; retarget it with `$`-autocomplete to reach a bullet living elsewhere. The `Speed`, `Acceleration`, `Gravity`, `Align Rotation`, and `Enabled Movement` entries are generated automatically from the Inspector properties, so each exposes a matching read (expression) and write (Set, plus Add To / Subtract From for the numeric ones).
+All ACEs live in the **Bullet** category and target the `BulletBehavior` on the node they are placed on. Each one has a leading "On node" target that defaults to the bullet's own behavior; retarget it with `$`-autocomplete to reach a bullet living elsewhere. The `Speed`, `Acceleration`, `Gravity`, `Gravity Angle`, `Align Rotation`, and `Enabled Movement` entries are generated automatically from the Inspector properties, so each exposes a matching read (expression) and write (Set, plus Add To / Subtract From for the numeric ones).
 
 ### Actions
 
@@ -121,6 +121,7 @@ Bullet ships no dedicated conditions - it is a pure movement behavior. To gate l
 | Speed | float | The current launch/travel speed value in pixels per second. |
 | Acceleration | float | The current per-second acceleration. |
 | Gravity | float | The current per-second downward pull. |
+| Gravity Angle | float | The direction gravity pulls, in degrees (90 = down). |
 | Align Rotation | bool | Whether the node is being turned to face its heading. |
 | Enabled Movement | bool | Whether the behavior is moving the node (`false` while frozen). |
 
@@ -137,6 +138,7 @@ Bullet fires no triggers - it only moves the node. React to a projectile with yo
 | `speed` | float | `300.0` | any (pixels per second) |
 | `acceleration` | float | `0.0` | any (negative slows down) |
 | `gravity` | float | `0.0` | any (negative floats up) |
+| `gravity_angle` | float | `90.0` | 0-360 degrees (90 = down) |
 | `align_rotation` | bool | `true` | on / off |
 | `enabled_movement` | bool | `true` | on / off |
 

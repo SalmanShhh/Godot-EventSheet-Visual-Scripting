@@ -108,7 +108,7 @@ When something misbehaves, you have four tools - no `print()` required.
   expression over those variables each frame - e.g. `health <= 0` or `score + lives` - so you can
   see a condition flip in real time without adding a label.
 - **Event Trace.** Tools ▸ Event Trace highlights the rows whose events *fire* during a debug run
-  (a cyan marker, updated live) - so "is this event even running?" is answered at a glance. It
+  (a cyan PULSE: full glow the instant an event fires, fading over half a second, held bright while it keeps firing) - so "is this event even running?" AND "what just fired?" are answered at a glance. It
   rides the Live Values stream, so turn that on too.
 
 ---

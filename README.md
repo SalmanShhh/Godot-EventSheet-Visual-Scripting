@@ -5,7 +5,7 @@
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
 > [!NOTE]
-> **Early.** Every feature ships with tests (4,800+ CI-gated assertions, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
+> **Early.** Every feature ships with tests (4,900+ CI-gated assertions, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
@@ -86,7 +86,7 @@ Most visual scripting asks you to learn a model you'll throw away the day you wr
 
 ## Feature tour
 
-**The editor** - Two-lane condition/action rows, object icons + labels, flat cells, drag/drop with insertion arrows, groups, colored BBCode comments, inline colour-swatch picking, drag-a-node-onto-a-param, multi-select, copy/paste, full undo/redo. **Find & Replace (Ctrl+F)**, script-editor shortcuts (F9 breakpoints, Ctrl+/ toggle, Alt+↑↓ move), a **Command Palette (Ctrl+P)**, **Simple Mode**, multi-view (split/detached/linked), themeable down to every token (Dracula, Nord, Gruvbox, Monokai, Solarized, Catppuccin, + a Godot-adaptive default).
+**The editor** - Two-lane condition/action rows, object icons + labels, flat cells, drag/drop with insertion arrows, groups, colored BBCode comments, inline colour-swatch picking, drag-a-node-onto-a-param, drag-an-Inspector-property-into-a-row (a pre-filled Set Property action), right-click a node > **Connect Signal to Event Sheet**, multi-select, copy/paste, full undo/redo. **Find & Replace (Ctrl+F)**, script-editor shortcuts (F9 breakpoints, Ctrl+/ toggle, Alt+↑↓ move), a **Command Palette (Ctrl+P)**, **Simple Mode**, multi-view (split/detached/linked), themeable down to every token (Dracula, Nord, Gruvbox, Monokai, Solarized, Catppuccin, + a Godot-adaptive default).
 
 <img src="docs/previews/editor-ace-picker.png" alt="The ACE picker: live search across actions, conditions, and triggers, favorites and recents rails, and a plain-language description of the selected ACE with the GDScript it ships as." width="620">
 
@@ -110,7 +110,7 @@ Drop a `class_name` script in `eventsheet_addons/` and it becomes a provider - `
 
 **Abstraction that grows with you** - a row earns its place when it does MORE than a line: multi-line ACEs show a quiet **→N** ("compiles to N lines") cue, function calls read as **ƒ named verbs**, and the picker **leads with featured intention verbs** (Wait, Play Sound, Destroy, Move Toward...). Select actions and **Extract to Function** turns the pile into one reusable verb - captured locals become typed parameters automatically - then **Teach a Verb** publishes it to every sheet's picker in the project, node-targeted and retargetable, exactly like a built-in behavior.
 
-**Tooling** - A searchable node picker, export integrity + compile-on-save, git-`textconv` sheet diffs, a **Project Doctor** (dock/CLI/CI drift audit, extensible by packs), error→row deep-linking, live debugging (Live Values, Watch box, conditional breakpoints, Event Trace), a committed vocabulary doc, sheet backups, shareable snippets, a public **`EventSheets` API** for building plugins on top ([guide](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md)), and an opt-in MCP server for external tooling.
+**Tooling** - A searchable node picker, export integrity + compile-on-save, git-`textconv` sheet diffs, a **Project Doctor** (dock/CLI/CI drift audit, extensible by packs), error→row deep-linking, live debugging (Live Values, Watch box, conditional breakpoints, Event Trace with a live execution pulse - fired rows glow and fade), a committed vocabulary doc, sheet backups, shareable snippets, a public **`EventSheets` API** for building plugins on top ([guide](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md)), and an opt-in MCP server for external tooling.
 
 ## Current status
 
@@ -119,7 +119,8 @@ Drop a `class_name` script in `eventsheet_addons/` and it becomes a provider - `
 - **The editor speaks 8 languages** (EFIGS + Korean, Japanese, Russian, Simplified Chinese), translations **hot-reload** when a CSV is dropped in, and Language sits in the View menu.
 - **Beginner creator journeys**: a **Custom Resource wizard** (three questions → a data asset whose Inspector is a fill-in table), **Sheet > New Editor Tool**, one-call validation (`attach_validator`), and any function as an **Inspector button**.
 - **C3 reflexes everywhere**: `loopindex` on every loop, the floating **Expressions dictionary** with typed autocomplete + signature hints, Alt+Enter tall expression boxes, per-pack icons on framed chips, double-height group bars with folder icons, a draggable object column in each lane, vector tempo badges, and Else as a proper condition chip.
-- **One pack pipeline**: `EventSheets.publish_pack` powers the bundled builders AND Sheet > Export Addon; pack sheets announce themselves with an **Addon Pack** chip; 43 packs star their hero verbs; multi-line enums are editable enum blocks now.
+- **One pack pipeline**: `EventSheets.publish_pack` powers the bundled builders AND Sheet > Export Addon; pack sheets announce themselves with an **Addon Pack v1.0.0** chip (version/author/help identity); 43 packs star their hero verbs; multi-line enums are editable enum blocks now.
+- **This week's wave**: **Gravity Angle / Gravity Direction** on Platformer, Bullet, Bullet 3D, and the FPS Controller (walk on walls and ceilings, one knob, bit-exact defaults), formal **pack dependencies** (`@ace_requires` + a Doctor check) and **pack identity** (`@ace_version`/author/help, every pack stamped 1.0.0), **full async-events parity** (freed objects unpicked across waits, an hourglass on awaiting actions, the **Once At A Time** gate, and awaiting events split so per-frame siblings never freeze), plus **Connect Signal to Event Sheet**, **Inspector property drag-in**, the **live execution pulse**, and Discord-style **BBCode formatting** on rich params.
 - **The release bar**: [GDScript-basics coverage](docs/GDSCRIPT-BASICS-COVERAGE.md) - every fundamental on Godot's basics page as sheet rows, suite-pinned.
 - **Three new packs** (75 total): **UHTN Planning**, its **UHTNPlanResource**, and **Platform Info**.
 

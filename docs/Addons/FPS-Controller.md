@@ -94,7 +94,7 @@ the behavior finds them by name and quietly skips what's missing.
 | Expression | Wall Normal X / Z | The touched wall's outward normal (zero off-wall) - the wall-jump push direction; feed it to a camera lean. |
 
 Exported knobs (Inspector or sheet variables): Move Speed, Sprint Multiplier, Jump Velocity,
-Gravity, Mouse Sensitivity, Pitch Min/Max, Third Person, Camera Distance, Capture Mouse On Ready.
+Gravity, Gravity Direction, Mouse Sensitivity, Pitch Min/Max, Third Person, Camera Distance, Capture Mouse On Ready.
 Movement tech knobs: Crouch Height + Crouch Speed Multiplier; Slide Enabled + Slide Boost Speed +
 Slide Min Speed (the speed a crouch must be moving at to slide - default just above walking, so
 only a sprint-crouch slides) + Slide Duration; Wall Ride Enabled + Wall Ride Gravity Scale +

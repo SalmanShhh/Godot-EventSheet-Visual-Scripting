@@ -119,6 +119,7 @@ All ACEs live in the **Bullet 3D** category and target the `Bullet3DBehavior` be
 |---|---|---|
 | `speed` | float | `10.0` |
 | `gravity` | float | `0.0` |
+| `gravity_direction` | Vector3 | `(0, -1, 0)` |
 
 Note: the behavior also tracks how far it has flown internally, but there is no expression to read that distance. For range-based despawn, measure the node's position against its start yourself.
 
