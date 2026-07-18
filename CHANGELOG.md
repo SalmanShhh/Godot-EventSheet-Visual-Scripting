@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - async events grow GDevelop-grade safety (first two slices)
+
+- **Unpick-on-free**: when an event's body awaits (Wait, Wait For Signal, an awaited call),
+  every one of its pick loops now guards each iteration - an object freed while the handler
+  was suspended is skipped instead of crashing the resumed loop, matching GDevelop's
+  "deleted objects are unpicked" rule. The guard is one generated flat line: the importer
+  consumes it on lift and the compiler regenerates it on emit, so the round-trip stays
+  byte-exact and it can never double-emit. Non-awaiting loops are untouched.
+- **The async chip**: actions that suspend the handler wear an hourglass in the viewport,
+  so the point where "everything after this waits" is visible in the sheet - detection
+  covers the awaited-call flags, awaits in baked templates, and the builtin coroutine ids
+  (a lifted builtin action carries only its id). `tests/async_events_test.gd` pins the
+  guard emission, the round-trip symmetry, the no-await no-guard rule, and the chip values.
+
 ### Added - packs carry identity metadata (@ace_version / @ace_author / @ace_help)
 
 - **Pack identity fields** on sheets - `addon_version`, `addon_author`, `addon_help_url` -

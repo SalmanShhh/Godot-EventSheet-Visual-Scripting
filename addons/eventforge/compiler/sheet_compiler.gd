@@ -1489,6 +1489,7 @@ static func _emit_match_case_body(events: Array, indent: String, node_target: St
 static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, body_depth: int, warnings: Array) -> int:
 	var loop_index: int = 0
 	var pick_idx: int = -1
+	var event_awaits: bool = _subtree_awaits(event_row)
 	for filter_entry: Variant in event_row.pick_filters:
 		pick_idx += 1
 		if not (filter_entry is PickFilter) or not (filter_entry as PickFilter).enabled:
@@ -1573,6 +1574,12 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			indent = "\t".repeat(body_depth)
 			if not loop_index_name.is_empty():
 				lines.append("%s%s += 1" % [indent, loop_index_name])
+			# Unpick-on-free (the async-events rule): when this event's body awaits, an item
+			# can be freed while the handler is suspended - guard every iteration so freed
+			# objects are skipped, exactly like the budgeted loop's validity check. One flat
+			# line on purpose: it lifts as a plain leading statement and regenerates on emit.
+			if event_awaits and pick.collection_kind != PickFilter.CollectionKind.REPEAT:
+				lines.append("%sif %s is Object and not is_instance_valid(%s): continue" % [indent, iterator, iterator])
 		var predicate: String = pick.predicate_expression.strip_edges()
 		if not predicate.is_empty():
 			lines.append("%sif not (%s):" % [indent, predicate])
@@ -1587,6 +1594,27 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			lines.append("%s\tbreak" % indent)
 		loop_index += 1
 	return body_depth
+
+
+## Whether an event's body (actions, raw blocks, sub-events) contains an await - i.e. the
+## handler can suspend mid-loop and picked objects may be freed before it resumes. Checks
+## the baked template AND the builtin coroutine ids: a lifted builtin action carries only
+## its ace_id (the template re-resolves at emit), so the id list is load-bearing here.
+const _COROUTINE_ACE_IDS: Array[String] = ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget"]
+
+
+static func _subtree_awaits(event_row: EventRow) -> bool:
+	for action_item: Variant in event_row.actions:
+		if action_item is ACEAction:
+			var action: ACEAction = action_item as ACEAction
+			if action.is_awaited or action.await_call or action.codegen_template.contains("await ") or _COROUTINE_ACE_IDS.has(action.ace_id):
+				return true
+		elif action_item is RawCodeRow and (action_item as RawCodeRow).code.contains("await "):
+			return true
+	for sub: Variant in event_row.sub_events:
+		if sub is EventRow and _subtree_awaits(sub as EventRow):
+			return true
+	return false
 
 
 ## Compiles a pick filter's structured conditions into one iterator-scoped boolean guard.

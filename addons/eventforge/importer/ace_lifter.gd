@@ -1179,6 +1179,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				continue
 			_flush_raw(current, pending_raw)
 			current = null
+			_consume_pick_validity_guard(loop_event)
 			rows.append(loop_event)
 			index = int(loop_inner.get("next"))
 			chain_open = false  # a loop never opens an if/elif/else chain
@@ -1321,6 +1322,26 @@ static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
 ## sub_events, and its wrapper must survive _adopt_block_body / the _lift_function empty-row drop).
 static func _is_plain_collector(event: EventRow) -> bool:
 	return event != null and event.conditions.is_empty() and event.pick_filters.is_empty() and event.else_mode == EventRow.ElseMode.NONE
+
+
+## The compiler regenerates a validity guard as an awaiting loop body's first statement
+## ("if X is Object and not is_instance_valid(X): continue" - the unpick-on-free rule), so
+## the lift must CONSUME it or re-emission would double it. Consumed only when the lifted
+## body actually awaits - the exact condition under which the emitter re-adds it.
+static func _consume_pick_validity_guard(loop_event: EventRow) -> void:
+	if loop_event.pick_filters.is_empty() or loop_event.actions.is_empty():
+		return
+	if not SheetCompiler._subtree_awaits(loop_event):
+		return
+	var iterator: String = (loop_event.pick_filters[0] as PickFilter).iterator_name
+	var guard: String = "if %s is Object and not is_instance_valid(%s): continue" % [iterator, iterator]
+	var first: Variant = loop_event.actions[0]
+	if first is RawCodeRow:
+		var raw: RawCodeRow = first as RawCodeRow
+		if raw.code == guard:
+			loop_event.actions.remove_at(0)
+		elif raw.code.begins_with(guard + "\n"):
+			raw.code = raw.code.substr(guard.length() + 1)
 
 
 ## Builds the PickFilter for a `for`/`while` header (already stripped to this depth, trailing `:`).

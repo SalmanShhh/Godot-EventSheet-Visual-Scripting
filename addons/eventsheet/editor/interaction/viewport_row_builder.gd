@@ -2673,10 +2673,27 @@ func _match_case_summary_lines(events: Array) -> PackedStringArray:
 func _format_action_descriptor(action: ACEAction) -> String:
 	_pending_display_bbcode = _display_template_has_markup(action.provider_id, action.ace_id)
 	var base_text: String = _format_action_descriptor_base(action)
+	# Awaiting actions wear an hourglass (the GDevelop async-action cue): everything after
+	# this row in the SAME event waits for it, so the suspension point should be visible.
+	if action_awaits(action):
+		base_text = "⏳ " + base_text
 	var ace_note: String = str(action.comment).strip_edges()
 	if not ace_note.is_empty():
 		return "%s   ⊳ %s" % [base_text, ace_note]
 	return base_text
+
+
+## Whether an action suspends the handler: the awaited-call flags, an `await` anywhere in
+## its baked template, or a builtin coroutine id (a lifted builtin action carries only its
+## ace_id - the template re-resolves at compile time).
+static func action_awaits(action: ACEAction) -> bool:
+	if action == null:
+		return false
+	if action.is_awaited or action.await_call:
+		return true
+	if ["Wait", "AwaitSignal", "AwaitNextFrame", "AwaitIfOverBudget"].has(action.ace_id):
+		return true
+	return action.codegen_template.contains("await ")
 
 
 func _format_action_descriptor_base(action: ACEAction) -> String:
