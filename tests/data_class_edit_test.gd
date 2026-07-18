@@ -103,6 +103,19 @@ static func run() -> bool:
 		syn_row != null and syn_row.children.size() == 2, true) and ok
 	dock2.free()
 
+	# ---- menu reachability (review regression: data-class rows are EVENT-typed, so the
+	# field items must be dispatched BEFORE the is_event branch or they never appear) ----
+	dock._context_row = class_row
+	dock._context_hit = {}
+	dock._build_row_context_menu(class_row)
+	ok = _check("the holder row's menu leads with Add Field", _menu_has(dock._row_context_menu, "Add Field…"), true) and ok
+	ok = _check("the holder row's menu is not the generic event menu", _menu_has(dock._row_context_menu, "Add Sub-Event"), false) and ok
+	var field_row: EventRowData = class_row.children[0]
+	dock._context_row = field_row
+	dock._context_hit = {"span_metadata": {"kind": "data_class_field", "raw_row": class_row.source_resource, "field_index": 0}}
+	dock._build_row_context_menu(field_row)
+	ok = _check("a field row's menu offers Remove Field", _menu_has(dock._row_context_menu, "Remove Field"), true) and ok
+
 	# ---- structured Add/Remove Field (the add-action gesture, for data classes) ----
 	var base_code: String = "class Stats:\n\tvar hp: int = 10\n\tvar armor: float"
 	var grown: String = ViewportRowBuilder.data_class_add_field(base_code, "speed", "float", "4.5")
@@ -181,6 +194,13 @@ static func _reimport_field_default(sheet: EventSheetResource, field_name: Strin
 		if str(entry.get("kind")) == "field" and str(entry.get("name")) == field_name:
 			return str(entry.get("default"))
 	return "<no field>"
+
+
+static func _menu_has(menu: PopupMenu, label: String) -> bool:
+	for index in range(menu.item_count):
+		if menu.get_item_text(index) == label:
+			return true
+	return false
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

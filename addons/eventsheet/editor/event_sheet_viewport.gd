@@ -849,6 +849,15 @@ func step_cell_focus(direction: int) -> bool:
 	return true
 
 
+## Whether plain Left should FOLD the selected row: it has something to fold AND no cell
+## focus is active. With a cell focused, Left belongs to the cell walk (stepping back) -
+## without this gate, walking into an unfolded parent's cells was a one-way trip: Right
+## entered them but Left folded the row instead of stepping back.
+func left_key_folds() -> bool:
+	var row_data: EventRowData = _row_at(_selected_row_index)
+	return row_data != null and not row_data.children.is_empty() and not row_data.folded and _selected_span_index < 0
+
+
 ## Esc from a focused cell back to plain row selection. Returns false when no cell focus
 ## was active (so Esc keeps its other meanings - lens clear, dialog close).
 func clear_cell_focus() -> bool:

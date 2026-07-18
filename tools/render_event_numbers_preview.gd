@@ -46,6 +46,11 @@ func _init() -> void:
 	modern_style.ensure_defaults()
 	EventSheetGodotTheme.apply(modern_style, modern_base, modern_base.darkened(0.15), modern_base.darkened(0.25), Color("#569eff"), Color("#ced0d2"))
 	sheet.editor_style = modern_style
+	# The leading comment makes the flat row index diverge from the event number - the
+	# exact shape that used to smear two digits over each other in the gutter.
+	var leading_comment: CommentRow = CommentRow.new()
+	leading_comment.text = "setup - comments carry no event number"
+	sheet.events.append(leading_comment)
 	sheet.events.append(_make_event("OnReady", "\"health restored\""))
 	sheet.events.append(_make_event("OnProcess", "\"score ticks\""))
 	sheet.events.append(_make_event("OnBodyEntered", "\"health damage\""))

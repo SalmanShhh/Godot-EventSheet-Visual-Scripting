@@ -110,8 +110,18 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	var multi: bool = _dock._get_selected_rows_from_context().size() > 1
 	# Type-specific authoring first. (Open/Close Group and the disable label below are
 	# relabeled to the live state by _configure_context_menu before the popup shows.)
+	# Data-class rows are checked BEFORE the row-type chain: both the holder and its field
+	# rows report RowType.EVENT (they read like events), so an is_event-first dispatch
+	# would swallow them and the field-authoring items could never appear.
 	var added_type_items: bool = true
-	if is_event:
+	var data_class_raw: RawCodeRow = _data_class_row_target(row_data)
+	if data_class_raw != null:
+		# A lifting data-class holder row, or one of its FIELD rows (which carry their
+		# raw_row in span metadata): field authoring follows the add/remove-action gesture.
+		menu.add_item("Add Field…", _dock.ROW_MENU_DATA_CLASS_ADD_FIELD)
+		if int(_dock._context_hit.get("span_metadata", {}).get("field_index", -1)) >= 0:
+			menu.add_item("Remove Field", _dock.ROW_MENU_DATA_CLASS_REMOVE_FIELD)
+	elif is_event:
 		menu.add_item("Add Sub-Event", _dock.ROW_MENU_ADD_SUB_EVENT)
 		menu.add_item("Convert to OR Block", _dock.ROW_MENU_TOGGLE_CONDITION_BLOCK)
 		# The event-sheet Else block, top-level like the other event transforms (a C3 reflex, so it is
@@ -140,13 +150,6 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 			var fn_name: String = (row_data.source_resource as EventFunction).function_name
 			var already: bool = _dock._active_view().is_function_body_editable_opt_in(fn_name)
 			menu.add_item("Lock Verb Body (read-only)" if already else "Make Verb Body Editable", _dock.ROW_MENU_MAKE_FUNCTION_EDITABLE)
-	elif (row_data != null and row_data.source_resource is RawCodeRow and ViewportRowBuilder.data_class_lifts((row_data.source_resource as RawCodeRow).code)) \
-			or _dock._context_hit.get("span_metadata", {}).get("raw_row", null) is RawCodeRow:
-		# A lifting data-class holder row, or one of its FIELD rows (which carry their
-		# raw_row in span metadata): field authoring follows the add/remove-action gesture.
-		menu.add_item("Add Field…", _dock.ROW_MENU_DATA_CLASS_ADD_FIELD)
-		if int(_dock._context_hit.get("span_metadata", {}).get("field_index", -1)) >= 0:
-			menu.add_item("Remove Field", _dock.ROW_MENU_DATA_CLASS_REMOVE_FIELD)
 	else:
 		# SECTION / unknown rows get only the universal items - no leading separator.
 		added_type_items = false
@@ -190,6 +193,17 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 		menu.add_separator()
 		for extension_index: int in range(extension_items.size()):
 			menu.add_item(str(extension_items[extension_index].get("label", "")), 900 + extension_index)
+
+
+## The RawCodeRow this context click's row belongs to, when it is a LIFTING data class:
+## the holder row's own source_resource, or the raw_row a FIELD row's spans carry (field
+## rows have a null source_resource by design). Null for everything else.
+func _data_class_row_target(row_data: EventRowData) -> RawCodeRow:
+	if row_data != null and row_data.source_resource is RawCodeRow \
+			and ViewportRowBuilder.data_class_lifts((row_data.source_resource as RawCodeRow).code):
+		return row_data.source_resource as RawCodeRow
+	var span_raw: Variant = _dock._context_hit.get("span_metadata", {}).get("raw_row", null)
+	return span_raw as RawCodeRow if span_raw is RawCodeRow else null
 
 
 ## The Insert ▸ submenu - a sibling row of any type below the clicked one (plus Event Above,

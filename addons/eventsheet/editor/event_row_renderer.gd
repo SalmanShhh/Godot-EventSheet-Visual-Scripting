@@ -241,7 +241,6 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		else EventSheetPalette.COLOR_HOVER
 	)
 
-	_draw_gutter(control, gutter_rect, line_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style)
 	if row_data.row_type == EventRowData.RowType.GROUP:
 		var group_tint: Color = Color(0.0, 0.0, 0.0, 0.0)
 		if row_data.source_resource is EventGroup:
@@ -267,6 +266,16 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, section_bg, true)
 		if row_data.custom_color.a > 0.01:
 			control.draw_rect(Rect2(row_rect.position, Vector2(3.0, row_rect.size.y)), Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, 0.9), true)
+	# The gutter paints AFTER the row backgrounds: row_rect spans the full row width, so a
+	# themed row fill would otherwise cover the gutter's bg, numbers, breakpoint dots, and
+	# bookmark pennants (the original event-number invisibility bug). Structural, not
+	# positional: everything gutter-owned draws in one place, over any row fill.
+	# Event-number mode (default on, the C3 margin): event rows show their STABLE
+	# sheet-order number INSTEAD of the flat row index - never both, or the two digit
+	# strings smear whenever a comment/group/variable row makes them diverge. In this mode
+	# non-event rows show no number (C3 numbers only events); off restores the flat index.
+	var gutter_number: int = int(layout.get("event_number", 0)) if bool(control.get("show_event_numbers")) else line_number
+	_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style)
 	# The event block's silhouette: the LEFT edge (condition lane) carries the full corner
 	# radius - the bottom-left always rounds - and the RIGHT edge (action lane) half of it,
 	# so blocks read as opening toward their actions. Radius 0 = the classic square look.
@@ -360,16 +369,6 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		control.draw_rect(row_rect, EventSheetPalette.COLOR_DISABLED, true)
 	if not debug_text.is_empty():
 		_draw_debug_overlay(control, row_rect, font, font_size, debug_text)
-	# Event numbers (default on, the C3 margin): event rows show their STABLE sheet-order
-	# number at the row's left edge, painted LAST so no row fill can cover it. The number
-	# comes from the sheet walk, so folding or filtering never renumbers - "check event 34"
-	# stays meaningful. Toggled in View > Event Numbers.
-	var stable_event_number: int = int(layout.get("event_number", 0))
-	if stable_event_number > 0 and bool(control.get("show_event_numbers")):
-		var number_font_size: int = font_size - 2
-		var number_baseline: float = gutter_rect.position.y + (gutter_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + (number_font_size * FONT_BASELINE_OFFSET_RATIO)
-		var number_color: Color = event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT
-		_draw_text(control, Vector2(gutter_rect.position.x + 3.0, number_baseline), str(stable_event_number), gutter_rect.size.x - 4.0, font, number_font_size, number_color)
 
 
 func _draw_gutter(control: Control, gutter_rect: Rect2, line_number: int, breakpoint_enabled: bool, bookmark_enabled: bool, font: Font, font_size: int, event_style: EventSheetEventStyle = null) -> void:

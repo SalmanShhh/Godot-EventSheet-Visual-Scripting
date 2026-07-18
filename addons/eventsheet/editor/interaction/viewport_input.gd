@@ -420,9 +420,9 @@ func handle_key(event: InputEventKey) -> void:
 			_viewport.accept_event()
 	elif event.keycode == KEY_LEFT and not event.alt_pressed:
 		# Plain Left folds; Alt+Left is the dock's jump-history Back and must pass through.
-		# With nothing to fold, Left walks the cell focus instead (C3's arrow-through-cells).
-		var left_row: EventRowData = _viewport._row_at(_viewport._selected_row_index)
-		if left_row != null and not left_row.children.is_empty() and not left_row.folded:
+		# With a cell focused OR nothing to fold, Left walks the cell focus instead
+		# (C3's arrow-through-cells) - left_key_folds gates on both.
+		if _viewport.left_key_folds():
 			_viewport._toggle_row_fold(_viewport._selected_row_index)
 			_viewport.accept_event()
 		elif _viewport.step_cell_focus(-1):

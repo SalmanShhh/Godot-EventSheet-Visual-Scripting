@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed - three code-review findings in the C3-UX queue
+
+- **Data-class Add/Remove Field was unreachable**: data-class holder and field rows
+  report as EVENT rows, so the context menu's is_event branch swallowed them and the
+  field items never appeared. The data-class check now dispatches FIRST;
+  `tests/data_class_edit_test.gd` pins menu reachability for both row shapes.
+- **Gutter numbers could smear or vanish**: the flat line number and the stable event
+  number both drew in the same gutter cell (two different digits overlapping whenever a
+  comment/group made them diverge), and the whole gutter was painted BEFORE the row
+  background fills - which span the full row width - so themed fills covered its
+  numbers, breakpoint dots, and bookmark pennants. The gutter now paints once, AFTER
+  the fills (structural, not positional), showing the event number alone in
+  event-number mode (non-event rows unnumbered, C3-style) and the flat index when off.
+- **Left couldn't walk cell focus back on unfolded parent rows**: the fold path ran
+  before the cell walk whenever children existed. `left_key_folds()` now gates folding
+  on no active cell focus; pinned in `tests/cell_navigation_test.gd`.
+
 ### Docs - freshness sweep for the C3-UX queue
 
 - README's editor feature tour now names the new gestures (event numbers + Go to Event,

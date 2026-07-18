@@ -76,6 +76,25 @@ static func run() -> bool:
 	all_passed = _check("Esc clears the cell focus", viewport.clear_cell_focus(), true) and all_passed
 	all_passed = _check("the row selection survives the clear", viewport._selected_row_index, event_index) and all_passed
 	all_passed = _check("a second Esc has nothing to clear (key falls through)", viewport.clear_cell_focus(), false) and all_passed
+
+	# ---- Left vs fold (review regression): with a cell focused, Left steps back - it
+	# must NOT fold an unfolded parent row out from under the cell walk ----
+	var parent_row: EventRow = EventRow.new()
+	parent_row.trigger_provider_id = "Core"
+	parent_row.trigger_id = "OnProcess"
+	parent_row.actions.append(_action("\"tick\""))
+	var child_row: EventRow = EventRow.new()
+	child_row.trigger_provider_id = "Core"
+	child_row.trigger_id = "OnReady"
+	parent_row.sub_events.append(child_row)
+	sheet.events.append(parent_row)
+	editor._refresh_after_edit()
+	viewport.select_resource(parent_row)
+	all_passed = _check("Left folds an unfolded parent at row scope", viewport.left_key_folds(), true) and all_passed
+	viewport.step_cell_focus(1)
+	all_passed = _check("with a cell focused, Left belongs to the cell walk (no fold)", viewport.left_key_folds(), false) and all_passed
+	viewport.clear_cell_focus()
+	all_passed = _check("clearing the cell focus gives Left back to folding", viewport.left_key_folds(), true) and all_passed
 	editor.free()
 
 	return all_passed
