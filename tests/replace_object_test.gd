@@ -65,6 +65,30 @@ static func run() -> bool:
 	all_passed = _check("self inside an expression is NEVER touched", (row.actions[1] as ACEAction).params.get("value"), "self.visible and true") and all_passed
 	all_passed = _check("the self pass counted only the whole value", self_replaced, 1) and all_passed
 
+	# ---- autocomplete suggestion pool: sheet refs + scene nodes + self ----
+	var scene_root: Node = Node.new()
+	var plain_child: Node = Node.new()
+	plain_child.name = "EnemySpawner2"
+	scene_root.add_child(plain_child)
+	var spaced_child: Node = Node.new()
+	spaced_child.name = "Score Label 2"
+	scene_root.add_child(spaced_child)
+	var deep_holder: Node = Node.new()
+	deep_holder.name = "UI"
+	scene_root.add_child(deep_holder)
+	var unique_child: Node = Node.new()
+	unique_child.name = "HealthBar2"
+	deep_holder.add_child(unique_child)
+	unique_child.owner = scene_root
+	unique_child.unique_name_in_owner = true
+	var suggestions: Array[String] = EventSheetRefactor.reference_suggestions(rows, scene_root)
+	all_passed = _check("suggestions keep every sheet reference", suggestions.has("$EnemySpawner"), true) and all_passed
+	all_passed = _check("a plain scene child suggests as $Name", suggestions.has("$EnemySpawner2"), true) and all_passed
+	all_passed = _check("a spaced scene child suggests quoted", suggestions.has("$\"Score Label 2\""), true) and all_passed
+	all_passed = _check("a scene-unique node suggests as %Name (any depth)", suggestions.has("%HealthBar2"), true) and all_passed
+	all_passed = _check("self is always on offer", suggestions.has("self"), true) and all_passed
+	scene_root.free()
+
 	return all_passed
 
 

@@ -1964,7 +1964,38 @@ func _open_replace_object_dialog() -> void:
 	to_edit.placeholder_text = "$NewNode, %UniqueName, or self"
 	to_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_replace_object_dialog.register_text_enter(to_edit)
-	content.add_child(EventSheetPopupUI.form_row("To", to_edit))
+	# Autocomplete for the target: every reference the whole sheet uses + the edited
+	# scene's own nodes ($children, %uniques) + self - typed text filters, free text wins.
+	var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
+	var to_suggestions: PackedStringArray = PackedStringArray(EventSheetRefactor.reference_suggestions(_current_sheet.events if _current_sheet != null else [], scene_root))
+	var to_row: HBoxContainer = HBoxContainer.new()
+	to_row.add_theme_constant_override("separation", 4)
+	to_row.add_child(to_edit)
+	var to_picker: MenuButton = MenuButton.new()
+	to_picker.text = "▾"
+	to_picker.tooltip_text = "Suggestions: references this sheet uses + the open scene's nodes. You can still type any value."
+	var to_popup: PopupMenu = to_picker.get_popup()
+	to_popup.about_to_popup.connect(func() -> void:
+		ACEParamsDialog._rebuild_autocomplete_popup(to_popup, to_suggestions, to_edit.text))
+	to_popup.popup_hide.connect(func() -> void: to_edit.grab_focus())
+	to_popup.id_pressed.connect(func(picked_id: int) -> void:
+		if picked_id >= 0 and picked_id < to_suggestions.size():
+			to_edit.text = to_suggestions[picked_id]
+			to_edit.caret_column = to_edit.text.length()
+			to_edit.grab_focus())
+	to_edit.gui_input.connect(func(event: InputEvent) -> void:
+		var key_event: InputEventKey = event as InputEventKey
+		if key_event != null and key_event.pressed and key_event.keycode == KEY_DOWN:
+			ACEParamsDialog._rebuild_autocomplete_popup(to_popup, to_suggestions, to_edit.text)
+			if to_popup.item_count == 1 and to_popup.is_item_disabled(0):
+				to_edit.accept_event()
+				return
+			to_popup.position = Vector2i(to_edit.get_screen_position() + Vector2(0.0, to_edit.size.y))
+			to_popup.reset_size()
+			to_popup.popup()
+			to_edit.accept_event())
+	to_row.add_child(to_picker)
+	content.add_child(EventSheetPopupUI.form_row("To", to_row))
 	_replace_object_dialog.add_child(EventSheetPopupUI.titled_card("Retarget the selection", content))
 	_replace_object_dialog.confirmed.connect(func() -> void:
 		var from_ref: String = from_options.get_item_text(from_options.selected) if from_options.selected >= 0 else ""

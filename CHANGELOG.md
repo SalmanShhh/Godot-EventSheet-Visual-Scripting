@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - autocomplete in Replace Object References
+
+- **The "To" field now suggests real targets**: a ▾ menu (also Down-arrow from the field)
+  lists every reference the WHOLE sheet already uses, the open scene's own nodes - direct
+  children as `$Name` (auto-quoted when the name isn't an identifier) and every
+  scene-unique node as `%Name` at any depth - plus `self`. Typed text filters the list;
+  free text still wins, so any value remains typeable.
+- `EventSheetRefactor.reference_suggestions(rows, scene_root)` is the pure suggestion
+  pool, pinned in `tests/replace_object_test.gd` (sheet refs kept, `$Name` / quoted /
+  `%unique` shapes, self always offered).
+
 ### Added - BBCode effects render in Rich Print cells
 
 - **A rich-text ACE's cell now shows its BBCode's EFFECT, not the tags**: when a Log /

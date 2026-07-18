@@ -82,6 +82,39 @@ static func collect_node_references(rows: Array) -> Array[String]:
 	return out
 
 
+## The suggestion pool for retarget fields (the Replace Object References "To" box):
+## every reference the SHEET already uses, plus the edited scene's own nodes - direct
+## children as $Name (quoted when the name isn't a plain identifier) and every
+## scene-unique node as %Name - plus `self`. Pure given its inputs, so tests pin it
+## headless with a hand-built scene root.
+static func reference_suggestions(rows: Array, scene_root: Node = null) -> Array[String]:
+	var suggestions: Array[String] = collect_node_references(rows)
+	if scene_root != null:
+		for child: Node in scene_root.get_children():
+			var token: String = _node_reference_token(str(child.name))
+			if not suggestions.has(token):
+				suggestions.append(token)
+		_collect_unique_name_tokens(scene_root, suggestions)
+	if not suggestions.has("self"):
+		suggestions.append("self")
+	return suggestions
+
+
+static func _node_reference_token(node_name: String) -> String:
+	if node_name.is_valid_identifier():
+		return "$%s" % node_name
+	return "$\"%s\"" % node_name
+
+
+static func _collect_unique_name_tokens(node: Node, suggestions: Array[String]) -> void:
+	for child: Node in node.get_children():
+		if child.unique_name_in_owner:
+			var token: String = "%" + str(child.name)
+			if not suggestions.has(token):
+				suggestions.append(token)
+		_collect_unique_name_tokens(child, suggestions)
+
+
 static func _collect_refs_in_rows(rows: Array, token_regex: RegEx, found: Dictionary) -> void:
 	for row: Variant in rows:
 		if row is RawCodeRow:
