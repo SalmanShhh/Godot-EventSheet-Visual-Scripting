@@ -50,7 +50,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 			F.make_param("message", "String", "\"hello\"", "Message", "Value/expression to write to the console.", "expression"),
 			_level_param(),
 		], "Debug", "log {message}")
-		.described("Writes a message to the console as a Message, Warning, Error, or Rich text - one verb for all four."))
+		.described("Writes a message to the console as a Message, Warning, Error, or Rich text - one verb for all four.").rich_text_when("level", "print_rich"))
 
 	# Conditional log - write only when a test holds, without wrapping it in its own event row.
 	descriptors.append(F.make_descriptor("Core", "ConsoleLogIf", "Log If", ACEDescriptor.ACEType.ACTION,
@@ -60,7 +60,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 			F.make_param("message", "String", "\"low health\"", "Message", "Value/expression to write to the console.", "expression"),
 			_level_param(),
 		], "Debug", "log {message} if {condition}")
-		.described("Writes a message to the console only when a condition is true - as a Message, Warning, or Error."))
+		.described("Writes a message to the console only when a condition is true - as a Message, Warning, or Error.").rich_text_when("level", "print_rich"))
 
 	# Debug-builds-only log - compiled out of exported release games (the first OS.is_debug_build guard).
 	descriptors.append(F.make_descriptor("Core", "ConsoleDebugLog", "Log (Debug Builds Only)", ACEDescriptor.ACEType.ACTION,
@@ -69,7 +69,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 			F.make_param("message", "String", "\"trace\"", "Message", "Value/expression to write to the console.", "expression"),
 			_level_param(),
 		], "Debug", "log {message} (debug only)")
-		.described("Writes to the console only in debug builds - the line is skipped entirely in an exported release game."))
+		.described("Writes to the console only in debug builds - the line is skipped entirely in an exported release game.").rich_text_when("level", "print_rich"))
 
 	# Labeled value dump - "name = value" in one go, to any stream. Distinct `("%s = %s" % …)` shape.
 	descriptors.append(F.make_descriptor("Core", "ConsoleLogValue", "Log Value", ACEDescriptor.ACEType.ACTION,
@@ -79,7 +79,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 			F.make_param("value", "String", "0", "Value", "Value/expression to print after the label.", "expression"),
 			_level_param(),
 		], "Debug", "log {label} = {value}")
-		.described("Prints a value tagged with a name, e.g. \"health = 80\", so debug lines are easy to tell apart."))
+		.described("Prints a value tagged with a name, e.g. \"health = 80\", so debug lines are easy to tell apart.").rich_text_when("level", "print_rich"))
 
 	# Variant -> printable text, for building a readable log line out of any value.
 	descriptors.append(F.make_descriptor("Core", "Stringify", "To Text", ACEDescriptor.ACEType.EXPRESSION,

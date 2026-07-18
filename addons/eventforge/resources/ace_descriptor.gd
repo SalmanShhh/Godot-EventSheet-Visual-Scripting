@@ -39,6 +39,11 @@ var codegen_on_exit: String = ""
 ## reached exactly when the row's other conditions are true - the property a "was I reached last
 ## tick?" state test depends on. Set via the fluent `.evaluated_last()`.
 var evaluate_last: bool = false
+## Rich-text declaration (see rich_text_when): the sheet renders this ACE's string params
+## as BBCode effects when the param named rich_when_param holds exactly rich_when_value.
+## Blank = never value-triggered rich (a bbcode_text param hint still counts as rich).
+var rich_when_param: String = ""
+var rich_when_value: String = ""
 @export var nodeType: String = "" # event-sheet-style alias for node_type.
 @export var params: Array[ACEParam] = []
 @export var signal_name: String = ""
@@ -127,6 +132,18 @@ func stateful(member: String, prelude: String = "", on_true: String = "", on_exi
 	codegen_prelude = prelude
 	codegen_on_true = on_true
 	codegen_on_exit = on_exit
+	return self
+
+
+## Declares WHEN this ACE's string params render as RICH TEXT in the sheet (BBCode
+## effects instead of literal tags): when the param with this id holds exactly this
+## value (the ConsoleLog "As: Rich text" stream choice). Declared HERE - on the
+## descriptor - so the generic row builder checks a capability, never one provider's
+## param-value idiom. Chains like .described():
+## `F.make_descriptor(...).rich_text_when("level", "print_rich")`.
+func rich_text_when(param_id: String, value: String) -> ACEDescriptor:
+	rich_when_param = param_id
+	rich_when_value = value
 	return self
 
 

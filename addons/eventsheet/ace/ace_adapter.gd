@@ -32,7 +32,11 @@ static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefiniti
 		"deprecation_note": descriptor.deprecation_note(),
 		"replacement_ace_id": descriptor.replacement_ace_id,
 		# Featured (the everyday-verb highlight) rides the same metadata channel.
-		"featured": descriptor.is_featured
+		"featured": descriptor.is_featured,
+		# Rich-text capability (rich_text_when): the row builder styles BBCode in cells
+		# only for ACEs that DECLARE it - never by sniffing param values generically.
+		"rich_when_param": descriptor.rich_when_param,
+		"rich_when_value": descriptor.rich_when_value
 	}
 	return definition
 

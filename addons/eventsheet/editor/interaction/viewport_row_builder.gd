@@ -2961,11 +2961,12 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 	return descriptor_output
 
 
-## True when a RICH-TEXT ACE's param values carry BBCode - the Rich Print family (a
-## bbcode_text-hinted param, a print_rich stream choice, or a print_rich template). Its
-## cell then renders the markup's EFFECT (bold / color) instead of the raw tags, so
-## `[b]Wave 2[/b]` reads as actual bold in the sheet. Ordinary string params keep their
-## brackets verbatim - `[b]` in a plain Print is data, not styling.
+## True when a RICH-TEXT ACE's param values carry BBCode. Rich capability is DECLARED by
+## the ACE, never sniffed from param values: the descriptor's rich_text_when(param, value)
+## (the ConsoleLog "As: Rich text" choice, carried into definition metadata by the
+## adapter), a bbcode_text-hinted param, or a codegen template that hard-emits print_rich.
+## A qualifying cell renders the markup's EFFECT (bold / color) instead of the raw tags;
+## every other string param keeps its brackets verbatim - `[b]` in a plain Print is data.
 func _param_markup_applies(provider_id: String, ace_id: String, params: Dictionary) -> bool:
 	var any_markup: bool = false
 	for value: Variant in params.values():
@@ -2974,19 +2975,23 @@ func _param_markup_applies(provider_id: String, ace_id: String, params: Dictiona
 			break
 	if not any_markup:
 		return false
-	if str(params.get("level", "")) == "print_rich":
-		return true
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, ace_id)
 	if definition != null:
+		var rich_param: String = str(definition.metadata.get("rich_when_param", ""))
+		if not rich_param.is_empty() and str(params.get(rich_param, "")) == str(definition.metadata.get("rich_when_value", "")):
+			return true
 		for parameter: Variant in definition.parameters:
 			if parameter is Dictionary and str((parameter as Dictionary).get("hint", "")) == "bbcode_text":
 				return true
 		return str(definition.metadata.get("codegen_template", "")).contains("print_rich")
 	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
 	if descriptor != null:
+		if not descriptor.rich_when_param.is_empty() and str(params.get(descriptor.rich_when_param, "")) == descriptor.rich_when_value:
+			return true
 		for param: ACEParam in descriptor.params:
 			if param != null and param.hint == "bbcode_text":
 				return true
+		return str(descriptor.codegen_template).contains("print_rich")
 	return false
 
 

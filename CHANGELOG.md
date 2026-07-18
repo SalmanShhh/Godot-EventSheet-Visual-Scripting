@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - rich-text capability is declared, never sniffed
+
+- **`ACEDescriptor.rich_text_when(param, value)`**: an ACE now DECLARES when its cells
+  render BBCode effects (the Console verbs declare `("level", "print_rich")`), and the
+  row builder checks that declaration - the generic `level == "print_rich"` param-value
+  sniff is gone, so a foreign ACE whose param happens to share the name/value can no
+  longer be styled by accident (pinned in `tests/bbcode_and_pill_test.gd`). The other
+  two rich signals are unchanged: a `bbcode_text`-hinted param, or a template that
+  hard-emits `print_rich`. Public API: the new chained builder rides descriptors like
+  `.described()` / `.featured()`.
+
 ### Added - live feature-tag awareness (Platform Has Feature)
 
 - **The Feature combo now reads the PROJECT's tags live** (the input_action lesson:

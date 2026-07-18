@@ -64,12 +64,21 @@ static func run() -> bool:
 	plain_action.codegen_template = "push_warning({message})"
 	plain_action.params = {"message": "\"literal [b]tags[/b]\""}
 	rich_event.actions.append(plain_action)
+	# The review's accident scenario: a FOREIGN ACE whose param happens to be named
+	# "level" with the value "print_rich" declares nothing - it must NOT style.
+	var foreign_action: ACEAction = ACEAction.new()
+	foreign_action.provider_id = "TestPack"
+	foreign_action.ace_id = "FakeLog"
+	foreign_action.codegen_template = "fake_log({message}, {level})"
+	foreign_action.params = {"message": "\"[b]not styled[/b]\"", "level": "print_rich"}
+	rich_event.actions.append(foreign_action)
 	var rich_sheet: EventSheetResource = EventSheetResource.new()
 	rich_sheet.events.append(rich_event)
 	var rich_editor: EventSheetEditor = EventSheetEditor.new()
 	rich_editor.setup(rich_sheet)
 	var rich_span: SemanticSpan = null
 	var plain_span: SemanticSpan = null
+	var foreign_span: SemanticSpan = null
 	for flat_entry: Dictionary in rich_editor.get_viewport_control().get_flat_rows():
 		var row_data: EventRowData = flat_entry.get("row")
 		if row_data == null:
@@ -77,16 +86,23 @@ static func run() -> bool:
 		for span: Variant in row_data.spans:
 			var meta: Dictionary = (span as SemanticSpan).metadata if (span as SemanticSpan).metadata is Dictionary else {}
 			if str(meta.get("kind", "")) == "action":
-				if int(meta.get("ace_index", -1)) == 0:
-					rich_span = span
-				elif int(meta.get("ace_index", -1)) == 1:
-					plain_span = span
+				match int(meta.get("ace_index", -1)):
+					0:
+						rich_span = span
+					1:
+						plain_span = span
+					2:
+						foreign_span = span
 	all_passed = _check("a print_rich cell strips the tags from its display text",
 		rich_span != null and not rich_span.text.contains("[b]"), true) and all_passed
 	all_passed = _check("a print_rich cell carries styled segments",
 		rich_span != null and (rich_span.metadata.get("bbcode_segments", []) as Array).size() >= 2, true) and all_passed
 	all_passed = _check("a plain string param keeps its literal tags",
 		plain_span != null and plain_span.text.contains("[b]"), true) and all_passed
+	# (Its display collapses to the bare ace id, so the discriminator is the absence of
+	# styled segments - the old value-sniff would have attached them.)
+	all_passed = _check("a foreign ACE with level=print_rich but no declaration is never styled",
+		foreign_span != null and not foreign_span.metadata.has("bbcode_segments"), true) and all_passed
 	rich_editor.free()
 
 	return all_passed
