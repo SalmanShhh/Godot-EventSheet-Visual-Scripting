@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Docs - the C3 migration guide catches up with the editor
+
+- `docs/GUIDE-C3-MIGRATION.md` now walks the whole C3-parity gesture set: the object-first
+  double-click add flow explained as "C3's two-step add, but the objects are real Godot
+  nodes/autoloads", margin event numbers, the bookmarks bar, the Ctrl+F filter lens,
+  Select All Events Using This + Replace Object References + per-param batch edit as the
+  retune pipeline, arrow-through-cells, the Outline panel, and session restore. Bundled
+  pack count corrected to 75.
+
 ### Added - keyboard cell navigation (arrow through cells)
 
 - **Left / Right now walk the selected event's cells** - trigger, conditions, then

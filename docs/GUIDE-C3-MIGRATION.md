@@ -162,7 +162,7 @@ The picker wraps the native feature:
 
 ### Lane 2 - portable behaviors ship as event-sheet packs
 
-**68 are bundled**:
+**75 are bundled**:
 Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,
 Follow, Car, Tile Movement, Line of Sight (2D & 3D), Rotate, Fade, Bound To, Wrap** (Follow now
 emits On Reached Target, Car On Drift Started / Recovered; Bound To is C3's "Bound to layout",
@@ -198,6 +198,30 @@ i18n (Godot translations).
 
 ## 7. Habits That Transfer Directly
 
+- **Double-click empty space and you get C3's two-step add**: page one is *object cards* -
+  System first, then every behavior pack, autoload, and addon with its icon - and picking
+  one scopes the picker to that object's verbs, exactly like choosing an object then a
+  condition in C3. Typing at any point drops into full search, so the fast path stays fast.
+  The important difference to notice: what C3 calls an *object type* is here a **node with
+  a behavior attached, or an autoload** - the dialog is quietly teaching you Godot's own API.
+- **Event numbers live in the margin**, flat and sequential through groups and sub-events,
+  computed from the sheet - folding or filtering never renumbers, so "check event 34" in a
+  forum reply stays meaningful. Jump to one with the command palette's *Go to Event Number*.
+- **The bookmarks bar is C3's**: Ctrl+M marks a row, F4 / Shift+F4 cycle, and View >
+  Bookmarks opens the Previous / Next / Clear All panel whose entries lead with their
+  margin event number.
+- **Ctrl+F has a Filter toggle** (the C3 live-filter reflex): the sheet collapses to only
+  the events matching the search, the status line counts what's hidden, Esc restores.
+- **Right-click a cell > Select All Events Using This**, then retarget or retune the lot:
+  *Replace Object References* rewrites every `$Node` / `%Unique` / `self` token-safely, and
+  *Edit Values Across Selection* opens one params dialog whose per-field "all" checkboxes
+  decide what overwrites every instance and what stays per-instance - each as one undo step.
+- **Arrows walk cells**: with a row selected, Left / Right step through its trigger,
+  condition, and action cells, Enter edits the focused cell, Esc returns to the row.
+- **View > Outline** is the sheet's method list - groups, `#region` fences, and published
+  functions as a click-to-jump tree.
+- **Your open tabs come back**: the session (tabs + active sheet) restores on editor
+  restart, like C3 reopening your workspace.
 - Double-click empty space to add an event; right-click for context actions.
 - Drag conditions/actions to reorder; drag events onto events to nest sub-events.
 - Copy/paste works across projects (snippet text on the system clipboard) - and **pasting
