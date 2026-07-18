@@ -556,3 +556,27 @@ Underline (Ctrl+U),下線 (Ctrl+U)
 Strikethrough (Ctrl+Shift+S),取り消し線 (Ctrl+Shift+S)
 Wrap the selection in [color=...] (edit the hex after),選択範囲を [color=...] で囲みます（後で色を編集）
 Loaded: (unsaved EventSheet),読み込み: (未保存の EventSheet)
+Event Numbers,イベント番号
+Outline…,アウトライン…
+Outline,アウトライン
+Go to Event,イベントへ移動
+Go to Event Number…,イベント番号へ移動…
+Bookmarks,ブックマーク
+◂ Previous,◂ 前へ
+Next ▸,次へ ▸
+Clear All,すべて解除
+Current sheet,現在のシート
+Filter,フィルター
+Edit Values Across Selection…,選択範囲の値を一括編集…
+Select All Events Using This,これを使う全イベントを選択
+Replace Object References…,オブジェクト参照を置換…
+Replace Object References,オブジェクト参照を置換
+Retarget the selection,選択範囲の参照先を変更
+Replace,置換
+From,変更前
+To,変更後
+Add Field…,フィールドを追加…
+Remove Field,フィールドを削除
+Add Field,フィールドを追加
+New field on this data class,このデータクラスの新しいフィールド
+all,全て

@@ -556,3 +556,27 @@ Underline (Ctrl+U),下划线 (Ctrl+U)
 Strikethrough (Ctrl+Shift+S),删除线 (Ctrl+Shift+S)
 Wrap the selection in [color=...] (edit the hex after),用 [color=...] 包裹所选内容（之后可修改颜色）
 Loaded: (unsaved EventSheet),已加载：(未保存的 EventSheet)
+Event Numbers,事件编号
+Outline…,大纲…
+Outline,大纲
+Go to Event,跳转到事件
+Go to Event Number…,跳转到事件编号…
+Bookmarks,书签
+◂ Previous,◂ 上一个
+Next ▸,下一个 ▸
+Clear All,全部清除
+Current sheet,当前事件表
+Filter,筛选
+Edit Values Across Selection…,批量编辑所选值…
+Select All Events Using This,选择使用此项的所有事件
+Replace Object References…,替换对象引用…
+Replace Object References,替换对象引用
+Retarget the selection,重定向所选内容
+Replace,替换
+From,从
+To,到
+Add Field…,添加字段…
+Remove Field,移除字段
+Add Field,添加字段
+New field on this data class,此数据类的新字段
+all,全部

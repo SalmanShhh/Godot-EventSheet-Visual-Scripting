@@ -556,3 +556,27 @@ Underline (Ctrl+U),Sottolineato (Ctrl+U)
 Strikethrough (Ctrl+Shift+S),Barrato (Ctrl+Shift+S)
 Wrap the selection in [color=...] (edit the hex after),Racchiude la selezione in [color=...] (modifica il colore dopo)
 Loaded: (unsaved EventSheet),Caricato: (EventSheet non salvato)
+Event Numbers,Numeri degli eventi
+Outline…,Struttura…
+Outline,Struttura
+Go to Event,Vai all'evento
+Go to Event Number…,Vai al numero di evento…
+Bookmarks,Segnalibri
+◂ Previous,◂ Precedente
+Next ▸,Successivo ▸
+Clear All,Cancella tutto
+Current sheet,Foglio corrente
+Filter,Filtra
+Edit Values Across Selection…,Modifica i valori nella selezione…
+Select All Events Using This,Seleziona tutti gli eventi che lo usano
+Replace Object References…,Sostituisci i riferimenti agli oggetti…
+Replace Object References,Sostituisci i riferimenti agli oggetti
+Retarget the selection,Reindirizza la selezione
+Replace,Sostituisci
+From,Da
+To,A
+Add Field…,Aggiungi campo…
+Remove Field,Rimuovi campo
+Add Field,Aggiungi campo
+New field on this data class,Nuovo campo di questa classe dati
+all,tutti

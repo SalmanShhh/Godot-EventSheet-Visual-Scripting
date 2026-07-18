@@ -556,3 +556,27 @@ Underline (Ctrl+U),밑줄 (Ctrl+U)
 Strikethrough (Ctrl+Shift+S),취소선 (Ctrl+Shift+S)
 Wrap the selection in [color=...] (edit the hex after),선택 영역을 [color=...]로 감쌉니다 (이후 색상 수정)
 Loaded: (unsaved EventSheet),불러옴: (저장되지 않은 EventSheet)
+Event Numbers,이벤트 번호
+Outline…,개요…
+Outline,개요
+Go to Event,이벤트로 이동
+Go to Event Number…,이벤트 번호로 이동…
+Bookmarks,북마크
+◂ Previous,◂ 이전
+Next ▸,다음 ▸
+Clear All,모두 지우기
+Current sheet,현재 시트
+Filter,필터
+Edit Values Across Selection…,선택 영역의 값 일괄 편집…
+Select All Events Using This,이것을 사용하는 모든 이벤트 선택
+Replace Object References…,오브젝트 참조 바꾸기…
+Replace Object References,오브젝트 참조 바꾸기
+Retarget the selection,선택 영역 대상 변경
+Replace,바꾸기
+From,원본
+To,대상
+Add Field…,필드 추가…
+Remove Field,필드 제거
+Add Field,필드 추가
+New field on this data class,이 데이터 클래스의 새 필드
+all,전체

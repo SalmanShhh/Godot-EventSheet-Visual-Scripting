@@ -556,3 +556,27 @@ Underline (Ctrl+U),Подчеркнутый (Ctrl+U)
 Strikethrough (Ctrl+Shift+S),Зачеркнутый (Ctrl+Shift+S)
 Wrap the selection in [color=...] (edit the hex after),Оборачивает выделение в [color=...] (цвет можно изменить)
 Loaded: (unsaved EventSheet),Загружено: (несохраненный EventSheet)
+Event Numbers,Номера событий
+Outline…,Структура…
+Outline,Структура
+Go to Event,Перейти к событию
+Go to Event Number…,Перейти к номеру события…
+Bookmarks,Закладки
+◂ Previous,◂ Назад
+Next ▸,Вперёд ▸
+Clear All,Очистить все
+Current sheet,Текущий лист
+Filter,Фильтр
+Edit Values Across Selection…,Изменить значения в выделении…
+Select All Events Using This,Выделить все события с этим
+Replace Object References…,Заменить ссылки на объект…
+Replace Object References,Заменить ссылки на объект
+Retarget the selection,Перенацелить выделение
+Replace,Заменить
+From,Из
+To,В
+Add Field…,Добавить поле…
+Remove Field,Удалить поле
+Add Field,Добавить поле
+New field on this data class,Новое поле этого класса данных
+all,все

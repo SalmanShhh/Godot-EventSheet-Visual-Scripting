@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Translations - top-up for the C3-UX queue
+
+- 24 new UI strings x 8 languages (de/es/fr/it/ja/ko/ru/zh_CN) + the TEMPLATE: event
+  numbers + Go to Event, the Outline panel, the Bookmarks bar (Previous / Next / Clear
+  All), the find-bar Filter toggle, Select All Events Using This, Edit Values Across
+  Selection (and its "all" checkbox), Replace Object References (dialog + fields), and
+  the data-class Add / Remove Field authoring.
+
 ### Changed - Platform Has Feature covers the full feature-tag vocabulary
 
 - **The Feature param is now an editable suggest combo** (was a closed 8-entry dropdown):
