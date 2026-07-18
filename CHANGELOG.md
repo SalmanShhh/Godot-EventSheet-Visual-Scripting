@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - the Doctor spots obviously-wrong param literals
+
+- **A new advisory check** flags a param declared float/int/bool that holds a plain
+  literal of the wrong kind - a quoted string in a number slot ("200" where 200 was
+  meant), a number in a bool slot - naming the ACE, the param, and the value. The
+  conservatism is the contract: expressions, identifiers, and String-typed params are
+  NEVER judged (expressions are opaque by design), so the check cannot cry wolf.
+  `tests/param_type_lint_test.gd` pins every verdict including the must-NOT-fire cases,
+  the exact message, and sub-event recursion.
+
 ### Changed - the live event trace pulses instead of blinking
 
 - **Execution highlighting now fades**: rows in the open sheet pulse as their events fire

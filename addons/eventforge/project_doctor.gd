@@ -60,6 +60,7 @@ static func run() -> Dictionary:
 	check_unused_packs(sheet_paths, findings)
 	check_pack_dependencies(sheet_paths, findings)
 	check_rotated_gravity_pathfinding(findings)
+	check_param_type_mismatches(sheet_paths, findings)
 	check_shadowed_variables(sheet_paths, findings)
 	check_untranslated_project(sheet_paths, findings)
 	check_required_fields(sheet_paths, findings)
@@ -672,6 +673,67 @@ static func check_pack_dependencies(sheet_paths: PackedStringArray, findings: Ar
 		missing.sort()
 		_add(findings, "warning", "pack-dependency", script_path,
 			"Pack class %s requires %s, which isn't present - install the pack it names (or register the autoload)." % [pack_class, ", ".join(missing)])
+
+
+## Obvious param type mismatches, and ONLY obvious ones: a param declared float/int/bool
+## holding a plain literal of the wrong kind (a quoted string in a number slot, a number in
+## a bool slot). Expressions, identifiers, and String-typed params are NEVER judged -
+## expressions are opaque by design, and a String param legitimately holds anything. The
+## conservatism is the feature: this check must never cry wolf.
+static func check_param_type_mismatches(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		for entry: Variant in sheet.events:
+			if entry is EventRow:
+				_scan_param_types(entry as EventRow, sheet_path, findings)
+
+
+static func _scan_param_types(event: EventRow, sheet_path: String, findings: Array[Dictionary]) -> void:
+	var aces: Array = []
+	aces.append_array(event.conditions)
+	aces.append_array(event.actions)
+	if event.trigger != null:
+		aces.append(event.trigger)
+	for ace: Variant in aces:
+		if not (ace is ACECondition or ace is ACEAction):
+			continue
+		var descriptor: ACEDescriptor = ACERegistry.find_descriptor(str(ace.get("provider_id")), str(ace.get("ace_id")))
+		if descriptor == null:
+			continue
+		var params: Dictionary = ace.get("params") if ace.get("params") is Dictionary else {}
+		for param: ACEParam in descriptor.params:
+			var mismatch: String = literal_type_mismatch(str(param.type_name), str(params.get(param.id, "")))
+			if not mismatch.is_empty():
+				_add(findings, "info", "param-type", sheet_path,
+					"%s's \"%s\" expects %s but holds %s - double-check the value." % [descriptor.get_list_name(), param.id, str(param.type_name), mismatch])
+	for sub: Variant in event.sub_events:
+		if sub is EventRow:
+			_scan_param_types(sub as EventRow, sheet_path, findings)
+
+
+## "" when fine; otherwise a short description of the wrong literal. Judges ONLY
+## unambiguous whole-value literals against float/int/bool declarations.
+static func literal_type_mismatch(declared_type: String, value: String) -> String:
+	var trimmed: String = value.strip_edges()
+	if trimmed.is_empty():
+		return ""
+	var is_quoted: bool = trimmed.length() >= 2 and trimmed.begins_with("\"") and trimmed.ends_with("\"") and not trimmed.trim_prefix("\"").trim_suffix("\"").contains("\"")
+	var is_bool: bool = trimmed == "true" or trimmed == "false"
+	var is_number: bool = trimmed.is_valid_float()
+	match declared_type:
+		"float", "int":
+			if is_quoted:
+				return "a quoted string (%s)" % trimmed
+			if is_bool:
+				return "a bool (%s)" % trimmed
+		"bool":
+			if is_quoted:
+				return "a quoted string (%s)" % trimmed
+			if is_number:
+				return "a number (%s)" % trimmed
+	return ""
 
 
 ## The movement packs' gravity_angle rotates the whole movement frame, but Platformer
