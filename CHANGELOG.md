@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed - Select All Matching internals (review cleanup)
+
+- `select_resources` now stamps row selection through the one shared
+  `_sync_row_selection_flags` helper (the same path clicks and refreshes use - no
+  second copy to drift), and tests membership against a Dictionary set instead of
+  Array.has per row, dropping a rows-x-matches scan to linear. Behavior unchanged;
+  existing pins in `tests/batch_param_edit_test.gd` cover it.
+
 ### Changed - rich-text capability is declared, never sniffed
 
 - **`ACEDescriptor.rich_text_when(param, value)`**: an ACE now DECLARES when its cells

@@ -790,10 +790,16 @@ func select_resource(resource: Resource) -> bool:
 ## Matching gesture): the first match anchors the selection like a click, the rest join
 ## as a multi-select (descendants included, matching shift/ctrl selection semantics).
 func select_resources(resources: Array) -> int:
+	# Membership as a set: Array.has is a linear scan, and this runs once per flat row -
+	# on a big sheet with many matches that's rows x matches comparisons for one click.
+	var wanted: Dictionary = {}
+	for resource: Variant in resources:
+		if resource != null:
+			wanted[resource] = true
 	var count: int = 0
 	for index in range(_flat_rows.size()):
 		var row_data: EventRowData = _row_at(index)
-		if row_data == null or row_data.source_resource == null or not resources.has(row_data.source_resource):
+		if row_data == null or row_data.source_resource == null or not wanted.has(row_data.source_resource):
 			continue
 		if count == 0:
 			_select_row(index, -1)
@@ -803,12 +809,9 @@ func select_resources(resources: Array) -> int:
 			for descendant_uid: Variant in _collect_descendant_row_uids(row_data):
 				_selected_row_uids[str(descendant_uid)] = true
 		count += 1
-	# The renderer reads row_data.selected (stamped by _refresh_rows on ordinary clicks) -
-	# re-stamp here or every row after the anchor stays visually unselected.
-	for stamp_index in range(_flat_rows.size()):
-		var stamp_row: EventRowData = _row_at(stamp_index)
-		if stamp_row != null:
-			stamp_row.selected = _selected_row_uids.has(stamp_row.row_uid)
+	# The renderer reads row_data.selected - re-stamp through the ONE shared helper (the
+	# same one clicks and refreshes use), so stamping semantics can never drift here.
+	_sync_row_selection_flags()
 	queue_redraw()
 	return count
 
