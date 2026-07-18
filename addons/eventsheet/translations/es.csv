@@ -543,3 +543,16 @@ Addon Pack,Paquete de extensión
 Make your own data asset,Crea tu propio asset de datos
 "Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","Las hojas no son solo para el gameplay: Sheet > New Custom Resource… hace tres preguntas sencillas (cómo se llama una entrada, qué columnas tiene, si es obligatoria) y construye un asset de datos cuyo Inspector es una tabla para rellenar - tablas de botín, líneas de diálogo, planes de oleadas. Los diseñadores rellenan filas y guardan variantes .tres; tus hojas las cargan. Y Sheet > New Editor Tool… crea del mismo modo tareas de editor de un clic."
 Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,Echa un vistazo a Sheet > New Custom Resource… (Esc lo cierra sin crear nada).
+Connect Signal to Event Sheet,Conectar señal a la hoja de eventos
+Connect,Conectar
+%s - pick a signal,%s - elija una señal
+An On <Signal> event is added to the node's sheet; its actions run when the signal fires.,Se añade un evento On <Signal> a la hoja del nodo; sus acciones se ejecutan cuando se emite la señal.
+Filter signals...,Filtrar señales...
+Connected %s - add actions to the new event.,%s conectado - añada acciones al nuevo evento.
+Open the EventSheet workspace to connect signals.,Abra el espacio EventSheet para conectar señales.
+Bold (Ctrl+B),Negrita (Ctrl+B)
+Italic (Ctrl+I),Cursiva (Ctrl+I)
+Underline (Ctrl+U),Subrayado (Ctrl+U)
+Strikethrough (Ctrl+Shift+S),Tachado (Ctrl+Shift+S)
+Wrap the selection in [color=...] (edit the hex after),Envuelve la selección en [color=...] (edite el color después)
+Loaded: (unsaved EventSheet),Cargado: (EventSheet sin guardar)

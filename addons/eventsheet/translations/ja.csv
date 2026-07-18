@@ -543,3 +543,16 @@ Addon Pack,アドオンパック
 Make your own data asset,自分のデータアセットを作る
 "Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.",シートはゲームプレイ専用ではありません: Sheet > New Custom Resource… は 3 つの簡単な質問 (エントリーを何と呼ぶか、どんな列があるか、必須かどうか) をして、Inspector が記入式の表になるデータアセットを作ります - ルートテーブル、セリフ、ウェーブ計画。デザイナーが行を埋めて .tres のバリエーションを保存し、シートがそれを読み込みます。Sheet > New Editor Tool… も同じやり方でワンクリックのエディター雑務を作れます。
 Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,Sheet > New Custom Resource… をのぞいてみましょう (Esc で何も作らずに閉じられます)。
+Connect Signal to Event Sheet,シグナルをイベントシートに接続
+Connect,接続
+%s - pick a signal,%s - シグナルを選択
+An On <Signal> event is added to the node's sheet; its actions run when the signal fires.,On <Signal> イベントがノードのシートに追加され、シグナル発火時にアクションが実行されます。
+Filter signals...,シグナルを絞り込み...
+Connected %s - add actions to the new event.,%s を接続しました - 新しいイベントにアクションを追加してください。
+Open the EventSheet workspace to connect signals.,シグナルを接続するには EventSheet ワークスペースを開いてください。
+Bold (Ctrl+B),太字 (Ctrl+B)
+Italic (Ctrl+I),斜体 (Ctrl+I)
+Underline (Ctrl+U),下線 (Ctrl+U)
+Strikethrough (Ctrl+Shift+S),取り消し線 (Ctrl+Shift+S)
+Wrap the selection in [color=...] (edit the hex after),選択範囲を [color=...] で囲みます（後で色を編集）
+Loaded: (unsaved EventSheet),読み込み: (未保存の EventSheet)

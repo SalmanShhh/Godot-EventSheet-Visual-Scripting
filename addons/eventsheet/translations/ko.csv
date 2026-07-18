@@ -543,3 +543,16 @@ Addon Pack,애드온 팩
 Make your own data asset,나만의 데이터 애셋 만들기
 "Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","시트는 게임플레이만을 위한 것이 아닙니다: Sheet > New Custom Resource… 는 세 가지 쉬운 질문(항목 하나를 뭐라고 부를지, 어떤 열이 있는지, 필수인지)을 묻고 Inspector가 채워 넣는 표가 되는 데이터 애셋을 만듭니다 - 전리품 테이블, 대사, 웨이브 계획. 디자이너가 행을 채우고 .tres 변형을 저장하면 시트가 그것을 불러옵니다. Sheet > New Editor Tool… 도 같은 방식으로 원클릭 에디터 잡무를 만듭니다."
 Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,Sheet > New Custom Resource… 를 살짝 열어보세요 (Esc 를 누르면 아무것도 만들지 않고 닫힙니다).
+Connect Signal to Event Sheet,시그널을 이벤트 시트에 연결
+Connect,연결
+%s - pick a signal,%s - 시그널 선택
+An On <Signal> event is added to the node's sheet; its actions run when the signal fires.,"On <Signal> 이벤트가 노드의 시트에 추가되며, 시그널이 발생하면 액션이 실행됩니다."
+Filter signals...,시그널 필터...
+Connected %s - add actions to the new event.,%s 연결됨 - 새 이벤트에 액션을 추가하세요.
+Open the EventSheet workspace to connect signals.,시그널을 연결하려면 EventSheet 작업 공간을 여세요.
+Bold (Ctrl+B),굵게 (Ctrl+B)
+Italic (Ctrl+I),기울임 (Ctrl+I)
+Underline (Ctrl+U),밑줄 (Ctrl+U)
+Strikethrough (Ctrl+Shift+S),취소선 (Ctrl+Shift+S)
+Wrap the selection in [color=...] (edit the hex after),선택 영역을 [color=...]로 감쌉니다 (이후 색상 수정)
+Loaded: (unsaved EventSheet),불러옴: (저장되지 않은 EventSheet)

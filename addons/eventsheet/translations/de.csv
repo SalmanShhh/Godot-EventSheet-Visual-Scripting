@@ -543,3 +543,16 @@ Addon Pack,Erweiterungspaket
 Make your own data asset,Erstellen Sie Ihr eigenes Daten-Asset
 "Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","Blätter sind nicht nur für Gameplay da: Sheet > New Custom Resource… stellt drei einfache Fragen (wie ein Eintrag heißt, welche Spalten er hat, ob er erforderlich ist) und baut ein Daten-Asset, dessen Inspector eine Ausfülltabelle ist - Beutetabellen, Dialogzeilen, Wellenpläne. Designer füllen Zeilen aus und speichern .tres-Varianten; Ihre Blätter laden sie. Und Sheet > New Editor Tool… erstellt auf dieselbe Weise Ein-Klick-Editor-Aufgaben."
 Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,"Werfen Sie einen Blick auf Sheet > New Custom Resource… (Esc schließt es, ohne etwas zu erstellen)."
+Connect Signal to Event Sheet,Signal mit dem Ereignisblatt verbinden
+Connect,Verbinden
+%s - pick a signal,%s - Signal wählen
+An On <Signal> event is added to the node's sheet; its actions run when the signal fires.,"Ein On-<Signal>-Ereignis wird dem Blatt des Nodes hinzugefügt; seine Aktionen laufen, wenn das Signal ausgelöst wird."
+Filter signals...,Signale filtern...
+Connected %s - add actions to the new event.,%s verbunden - fügen Sie dem neuen Ereignis Aktionen hinzu.
+Open the EventSheet workspace to connect signals.,"Öffnen Sie den EventSheet-Arbeitsbereich, um Signale zu verbinden."
+Bold (Ctrl+B),Fett (Ctrl+B)
+Italic (Ctrl+I),Kursiv (Ctrl+I)
+Underline (Ctrl+U),Unterstrichen (Ctrl+U)
+Strikethrough (Ctrl+Shift+S),Durchgestrichen (Ctrl+Shift+S)
+Wrap the selection in [color=...] (edit the hex after),Umschließt die Auswahl mit [color=...] (Farbe danach anpassen)
+Loaded: (unsaved EventSheet),Geladen: (ungespeichertes EventSheet)

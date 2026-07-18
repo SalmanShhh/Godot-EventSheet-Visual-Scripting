@@ -50,6 +50,9 @@ func _build() -> void:
 	content.add_child(_list)
 	_dialog.add_child(EventSheetPopupUI.titled_card("%s - pick a signal" % _node.name, content))
 	_dialog.confirmed.connect(_on_confirmed)
+	# This dialog parents to the editor base control (outside the dock's translation
+	# domain), so it claims the plugin domain itself - its strings auto-translate.
+	EventSheetL10n.apply_to(_dialog)
 	_parent.add_child(_dialog)
 
 

@@ -41,8 +41,10 @@ editor currently shows:
 ```
 
 Output: `eventsheet_translations/eventsheet_editor_strings.template.csv` - rename the second
-column's header to your locale code and start filling cells. A starter with the most common
-strings also ships at `addons/eventsheet/translations/TEMPLATE.csv`.
+column's header to your locale code and start filling cells. A COMPLETE ready-to-fill
+template (every key the shipped languages translate, second column empty under a placeholder
+`xx` header) also ships at `addons/eventsheet/translations/TEMPLATE.csv` - copy it, rename
+the header to your locale, and fill.
 
 The plugin ships eight languages out of the box: English is the built-in source language, and
 `addons/eventsheet/translations/` carries `fr.csv` (French), `es.csv` (Spanish), `it.csv`

@@ -543,3 +543,16 @@ Addon Pack,插件包
 Make your own data asset,制作你自己的数据资产
 "Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.",事件表不只服务于玩法：Sheet > New Custom Resource… 会问三个简单问题（一条条目叫什么、有哪些列、是否必填），然后构建一个 Inspector 变成填写表格的数据资产 - 掉落表、对话台词、波次计划。设计师填写行并保存 .tres 变体；你的事件表加载它们。Sheet > New Editor Tool… 也以同样的方式生成一键编辑器杂务。
 Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,看一眼 Sheet > New Custom Resource…（按 Esc 关闭，不会创建任何内容）。
+Connect Signal to Event Sheet,将信号连接到事件表
+Connect,连接
+%s - pick a signal,%s - 选择信号
+An On <Signal> event is added to the node's sheet; its actions run when the signal fires.,On <Signal> 事件将添加到节点的事件表中；信号触发时执行其动作。
+Filter signals...,筛选信号...
+Connected %s - add actions to the new event.,已连接 %s - 请为新事件添加动作。
+Open the EventSheet workspace to connect signals.,请打开 EventSheet 工作区以连接信号。
+Bold (Ctrl+B),粗体 (Ctrl+B)
+Italic (Ctrl+I),斜体 (Ctrl+I)
+Underline (Ctrl+U),下划线 (Ctrl+U)
+Strikethrough (Ctrl+Shift+S),删除线 (Ctrl+Shift+S)
+Wrap the selection in [color=...] (edit the hex after),用 [color=...] 包裹所选内容（之后可修改颜色）
+Loaded: (unsaved EventSheet),已加载：(未保存的 EventSheet)

@@ -543,3 +543,16 @@ Addon Pack,Pack d'extension
 Make your own data asset,Créez votre propre asset de données
 "Sheets aren't only for gameplay: Sheet > New Custom Resource… asks three plain questions (what one entry is called, what columns it has, whether it's required) and builds a data asset whose Inspector is a fill-in table - loot tables, dialogue lines, wave plans. Designers fill rows and save .tres variants; your sheets load them. And Sheet > New Editor Tool… makes one-click editor chores the same way.","Les feuilles ne servent pas qu'au gameplay : Sheet > New Custom Resource… pose trois questions simples (comment s'appelle une entrée, quelles colonnes elle a, si elle est requise) et construit un asset de données dont l'Inspector est un tableau à remplir - tables de butin, répliques de dialogue, plans de vagues. Les designers remplissent les lignes et enregistrent des variantes .tres ; vos feuilles les chargent. Et Sheet > New Editor Tool… crée de la même façon des corvées d'éditeur en un clic."
 Peek at Sheet > New Custom Resource… (Esc closes it without creating anything).,Jetez un œil à Sheet > New Custom Resource… (Esc le ferme sans rien créer).
+Connect Signal to Event Sheet,Connecter un signal à la feuille d'événements
+Connect,Connecter
+%s - pick a signal,%s - choisissez un signal
+An On <Signal> event is added to the node's sheet; its actions run when the signal fires.,Un événement On <Signal> est ajouté à la feuille du nœud ; ses actions s'exécutent quand le signal est émis.
+Filter signals...,Filtrer les signaux...
+Connected %s - add actions to the new event.,%s connecté - ajoutez des actions au nouvel événement.
+Open the EventSheet workspace to connect signals.,Ouvrez l'espace EventSheet pour connecter des signaux.
+Bold (Ctrl+B),Gras (Ctrl+B)
+Italic (Ctrl+I),Italique (Ctrl+I)
+Underline (Ctrl+U),Souligné (Ctrl+U)
+Strikethrough (Ctrl+Shift+S),Barré (Ctrl+Shift+S)
+Wrap the selection in [color=...] (edit the hex after),Entoure la sélection de [color=...] (modifiez la couleur ensuite)
+Loaded: (unsaved EventSheet),Chargé : (EventSheet non enregistrée)

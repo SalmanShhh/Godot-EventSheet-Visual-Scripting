@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Changed - translations topped up, the template is now complete
+
+- **13 new UI strings translated in all 8 languages** (531 keys each): the Connect Signal
+  dialog end to end, the BBCode toolbar tooltips, and the unsaved-sheet status line. The
+  Connect Signal dialog also claims the plugin's translation domain explicitly (it parents
+  outside the dock, so it would otherwise stay English).
+- **`TEMPLATE.csv` is now the COMPLETE ready-to-fill template** - every key the shipped
+  languages translate (it had drifted to a 23-row starter), second column empty under a
+  placeholder `xx` header a translator renames to their locale. The translating guide
+  reflects the new shape.
+
 ### Added - Discord-style formatting on BBCode params (the bbcode_text hint)
 
 - **Rich-text param editing**: params hinted `bbcode_text` get a formatting toolbar and
