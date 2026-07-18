@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed - an awaiting event no longer freezes its per-frame siblings (async parity complete)
+
+- **Sibling isolation**: in a shared per-frame handler, an event whose body awaits used to
+  suspend the WHOLE function - every sibling event below it froze until the wait ended.
+  Such an event now compiles into its own coroutine
+  (`func _event_<uid>_async(delta)`) called fire-and-forget from the dispatcher, so
+  siblings run every frame regardless - GDevelop's "sibling events run normally" rule.
+  Gated to per-frame groups with 2+ events and no else-chains; a lone awaiting event
+  keeps the plain shape.
+- The importer lifts the split STRUCTURALLY: the dispatcher call inlines back as an event
+  (its uid preserved, so re-emission regenerates the identical func name) and the split
+  func is consumed - byte-exact round-trip both ways, pinned in
+  `tests/async_events_test.gd` alongside the parse, ordering, and lone-event rules. This
+  completes the four async-parity slices (unpick-on-free, async chip, Once At A Time,
+  sibling isolation).
+
 ### Added - Once At A Time (single-flight) + the on_exit stateful hook
 
 - **Once At A Time** condition (Run Context): the event skips itself while a previous run

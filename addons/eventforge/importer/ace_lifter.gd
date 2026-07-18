@@ -81,6 +81,20 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	# hairy body reverting the whole file. Only a trailing subset can lift at all: emission places
 	# sheet.functions after the in-place raw rows, so a raw leftover BETWEEN lifted functions would
 	# reorder the file (the byte-verify at the end still gates whatever the scan produced).
+	# Sibling-isolation inverse: the compiler splits an awaiting per-frame event into its own
+	# `func _event_<uid>_async(delta...)` coroutine, called fire-and-forget from the shared
+	# handler. Index those funcs up front so the handler lift can inline them back as events
+	# (uid preserved); a func the handler actually inlined is then CONSUMED below - emission
+	# regenerates both the call and the func, so keeping it would double it.
+	var async_funcs: Dictionary = {}
+	var async_header_regex: RegEx = RegEx.create_from_string("^func _event_([A-Za-z0-9_]+)_async\\(delta: float\\) -> void:$")
+	for scan_index in range(first_run_index, sheet.events.size()):
+		var scan_row: RawCodeRow = sheet.events[scan_index] as RawCodeRow
+		if scan_row != null and _run_row_kind(scan_row.code, lift_functions) == "func":
+			var async_match: RegExMatch = async_header_regex.search(scan_row.code.split("\n")[0])
+			if async_match != null:
+				async_funcs[async_match.get_string(1)] = scan_row.code
+	var inlined_async_uids: Dictionary = {}
 	var lifted_events: Array = []
 	var lifted_functions: Array = []
 	var lifted_comments: Array = []
@@ -115,6 +129,12 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 					lifted_comments.append(comment)
 			"func":
 				var header: String = row.code.split("\n")[0]
+				# A split-out async coroutine the handler above already inlined back as an
+				# event: consumed here (emission regenerates it, single-blank attached).
+				var consumed_async: RegExMatch = async_header_regex.search(header)
+				if consumed_async != null and inlined_async_uids.has(consumed_async.get_string(1)):
+					pending_blank_count = 0
+					continue
 				if LIFECYCLE_TRIGGERS.has(header) or _is_connected_handler(header, connections):
 					if not pending_annotations.is_empty() or not pending_annotation_lines.is_empty() or not pending_doc_comment.is_empty():
 						failed = true  # a lifecycle handler lifts to events, not an EventFunction, so it can't carry a doc
@@ -125,6 +145,8 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 						if bool(lift.get("ok", false)):
 							saw_function = true
 							var lift_events: Array = lift.get("events", [])
+							if not async_funcs.is_empty() and (header.begins_with("func _process(") or header.begins_with("func _physics_process(")):
+								lift_events = _inline_async_events(lift_events, header, async_funcs, connections, inlined_async_uids)
 							# Preserve the source's inter-function spacing: stamp the gap count onto this
 							# function's FIRST event (only when >1, so ordinary single-blank sources stay
 							# meta-free). The first lifted function's gap is owned by the boundary-detach path
@@ -1322,6 +1344,102 @@ static func _adopt_block_body(block_event: EventRow, inner_rows: Array) -> bool:
 ## sub_events, and its wrapper must survive _adopt_block_body / the _lift_function empty-row drop).
 static func _is_plain_collector(event: EventRow) -> bool:
 	return event != null and event.conditions.is_empty() and event.pick_filters.is_empty() and event.else_mode == EventRow.ElseMode.NONE
+
+
+## The sibling-isolation inverse: a lifted per-frame handler may contain fire-and-forget
+## dispatcher calls (`_event_<uid>_async(delta)`) whose bodies live in split-out coroutine
+## funcs. Each call statement is replaced by the lift of its func's body (as an event of
+## this handler's trigger, uid restored), and the func is marked consumed. A call whose
+## func is missing stays a plain statement; the byte-verify gates whatever this produces.
+static func _inline_async_events(lift_events: Array, handler_header: String, async_funcs: Dictionary, connections: Dictionary, inlined_async_uids: Dictionary) -> Array:
+	var call_regex: RegEx = RegEx.create_from_string("^_event_([A-Za-z0-9_]+)_async\\(delta\\)$")
+	var out: Array = []
+	for event_entry: Variant in lift_events:
+		var row: EventRow = event_entry as EventRow
+		# Only a plain collector row (no conditions, no chain, no loop) can hold the calls.
+		if row == null or not row.conditions.is_empty() or row.else_mode != EventRow.ElseMode.NONE or not row.pick_filters.is_empty():
+			out.append(event_entry)
+			continue
+		var rebuilt_actions: Array = []
+		var emitted_inline: bool = false
+		for action_item: Variant in row.actions:
+			# The dispatcher call usually reverse-matches as a Call Function ACE
+			# ("{function_name}({args})") rather than staying a raw statement.
+			if action_item is ACEAction and (action_item as ACEAction).ace_id == "CallFunction":
+				var called: String = str((action_item as ACEAction).params.get("function_name", ""))
+				var call_args: String = str((action_item as ACEAction).params.get("args", ""))
+				var name_match: RegExMatch = RegEx.create_from_string("^_event_([A-Za-z0-9_]+)_async$").search(called)
+				if name_match != null and call_args == "delta" and async_funcs.has(name_match.get_string(1)):
+					var inlined_from_call: EventRow = _lift_async_func_event(str(async_funcs[name_match.get_string(1)]), handler_header, connections, name_match.get_string(1))
+					if inlined_from_call != null:
+						if not rebuilt_actions.is_empty():
+							out.append(_collector_like(row, rebuilt_actions, PackedStringArray()))
+							rebuilt_actions = []
+						out.append(inlined_from_call)
+						emitted_inline = true
+						inlined_async_uids[name_match.get_string(1)] = true
+						continue
+			if not (action_item is RawCodeRow):
+				rebuilt_actions.append(action_item)
+				continue
+			var pending_lines: PackedStringArray = PackedStringArray()
+			for raw_line: String in (action_item as RawCodeRow).code.split("\n"):
+				var call_match: RegExMatch = call_regex.search(raw_line)
+				var inlined: EventRow = null
+				if call_match != null and async_funcs.has(call_match.get_string(1)):
+					inlined = _lift_async_func_event(str(async_funcs[call_match.get_string(1)]), handler_header, connections, call_match.get_string(1))
+				if inlined == null:
+					pending_lines.append(raw_line)
+					continue
+				# Flush statements collected before the call as their own collector row,
+				# then splice the inlined event - order preserved exactly.
+				if not pending_lines.is_empty() or not rebuilt_actions.is_empty():
+					out.append(_collector_like(row, rebuilt_actions, pending_lines))
+					rebuilt_actions = []
+					pending_lines = PackedStringArray()
+				out.append(inlined)
+				emitted_inline = true
+				inlined_async_uids[call_match.get_string(1)] = true
+			if not pending_lines.is_empty():
+				var residue: RawCodeRow = RawCodeRow.new()
+				residue.code = "\n".join(pending_lines)
+				rebuilt_actions.append(residue)
+		if not emitted_inline:
+			out.append(event_entry)
+		elif not rebuilt_actions.is_empty():
+			out.append(_collector_like(row, rebuilt_actions, PackedStringArray()))
+	return out
+
+
+## A collector row cloned from `like` (same trigger identity) holding the given actions
+## plus an optional trailing raw statement block.
+static func _collector_like(like: EventRow, actions: Array, extra_lines: PackedStringArray) -> EventRow:
+	var collector: EventRow = _make_event(like.trigger_id, like.trigger_provider_id, like.trigger_args, like.trigger_source_path)
+	for action_item: Variant in actions:
+		collector.actions.append(action_item)
+	if not extra_lines.is_empty():
+		var raw: RawCodeRow = RawCodeRow.new()
+		raw.code = "\n".join(extra_lines)
+		collector.actions.append(raw)
+	return collector
+
+
+## Lifts one split-out coroutine's body as a single event of the handler's trigger, with
+## the split uid restored so re-emission regenerates the same func name. Returns null when
+## the body doesn't lift to exactly one event (the caller keeps the call verbatim then).
+static func _lift_async_func_event(func_code: String, handler_header: String, connections: Dictionary, uid: String) -> EventRow:
+	var func_lines: PackedStringArray = func_code.split("\n")
+	var faked: PackedStringArray = PackedStringArray([handler_header])
+	for line_index: int in range(1, func_lines.size()):
+		faked.append(func_lines[line_index])
+	var lift: Dictionary = _lift_function(faked, connections, true)
+	if not bool(lift.get("ok", false)):
+		return null
+	var events: Array = lift.get("events", [])
+	if events.size() != 1 or not (events[0] is EventRow):
+		return null
+	(events[0] as EventRow).event_uid = uid
+	return events[0]
 
 
 ## The compiler regenerates a validity guard as an awaiting loop body's first statement

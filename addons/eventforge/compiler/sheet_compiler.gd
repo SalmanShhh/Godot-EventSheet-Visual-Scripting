@@ -1169,9 +1169,39 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			for connection_line: String in ready_connections:
 				lines.append(connection_line)
 			had_body = true
-		had_body = _emit_event_body(events, lines, source_map, 1, result["warnings"]) or had_body
+		# Sibling isolation (the async-events rule): in a SHARED per-frame handler, an await
+		# in one event would suspend the whole function - its sibling events below would
+		# freeze until the wait ends. An awaiting event therefore splits into its own
+		# coroutine, called WITHOUT await (fire-and-forget) so siblings never wait. Gated
+		# to per-frame groups with 2+ events and no else-chains (a chain crossing a split
+		# boundary has no meaning); single-event handlers keep the plain shape.
+		var split_events: Array = []
+		if function_name in ["_process", "_physics_process"] and events.size() > 1:
+			var group_chains: bool = false
+			for event_entry: Variant in events:
+				if event_entry is EventRow and (event_entry as EventRow).else_mode != EventRow.ElseMode.NONE:
+					group_chains = true
+			if not group_chains:
+				for event_entry: Variant in events:
+					if event_entry is EventRow and _subtree_awaits(event_entry as EventRow):
+						split_events.append(event_entry)
+		if split_events.is_empty():
+			had_body = _emit_event_body(events, lines, source_map, 1, result["warnings"]) or had_body
+		else:
+			for event_entry: Variant in events:
+				if split_events.has(event_entry):
+					lines.append("\t_event_%s_async(delta)" % (event_entry as EventRow).event_uid)
+					had_body = true
+				else:
+					had_body = _emit_event_body([event_entry], lines, source_map, 1, result["warnings"]) or had_body
 		if not had_body:
 			lines.append("\tpass")
+		# The split-out coroutines follow their dispatcher immediately, in event order.
+		for event_entry: Variant in split_events:
+			lines.append("")
+			lines.append("func _event_%s_async(delta: float) -> void:" % (event_entry as EventRow).event_uid)
+			if not _emit_event_body([event_entry], lines, source_map, 1, result["warnings"]):
+				lines.append("\tpass")
 
 
 ## Emits the condition/action body for a list of event rows, appending to lines.
