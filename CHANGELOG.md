@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added - Audio Server and Physics Server modules
+
+- **Audio Server** (category "Audio Server"): mute / solo / effects-bypass a bus by
+  NAME, flip a single prepared bus effect (the underwater-lowpass / cave-reverb trick,
+  featured), scale the global playback speed (pairs with Slowmo so audio pitch drops
+  with time, featured), a Bus Exists guard, Is Bus Effect Enabled, and the metering
+  expressions (bus peak dB for VU meters and ducking, playback speed, bus count, output
+  latency for rhythm-game timing). Bus volume and Is Bus Muted already live in the
+  Options Menu vocabulary and are not duplicated.
+- **Physics Server** (category "Physics Server"): runtime WORLD gravity strength and
+  direction for 2D and 3D (the documented `area_set_param` recipe on the current
+  viewport's world - low-gravity power-ups, gravity flips, walk-on-walls arenas,
+  featured), pause/resume a whole physics space (freeze the simulation without pausing
+  the tree), and the profiling expressions (active bodies, collision pairs, islands in
+  both dimensions, plus the physics interpolation fraction). Joints stay in the Joints
+  module; the tick rate stays Set Physics Rate in Time.
+- Both compile to plain server calls with zero plugin references; a suite probe
+  parse-resolves every template's engine constants, and the picker maps the two new
+  categories to editor icons.
+
 ### Added - the composable Juice wave (both packs)
 
 - **Juice (2D)** gains seven composable primitive groups, each multi-use and designed to
