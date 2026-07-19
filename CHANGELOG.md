@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - Preload Resource is a first-class row, static or dynamic
+
+- The preload block now reads like a variable row: `Name = res://path` with a green
+  `preload` pill (static: `const X := preload(...)`, resolved at parse time) or a blue
+  `load` pill (dynamic: `var X := load(...)`, loaded when the node is instantiated and
+  reassignable at runtime). One "When to load" dropdown flips between the two shapes;
+  both lift back to the same row byte-gated. The dynamic form used to be a stranded
+  verbatim GDScript block - the variable lifter's byte gate rejects the `:=`-inferred
+  line, so claiming it costs nothing.
+- The edit dialog gained a Browse button on the path (the editor's resource picker) via
+  two Custom Block API schema extensions any kind can use: `"options": [...]` on a
+  String field renders a dropdown, `"hint": "resource_path"` pairs the field with the
+  browser. A third hook, `display_spans(entry)`, lets any kind describe variable-style
+  row spans (name / operator / value / const- or scope-styled pills) instead of the
+  generic badge + summary line - the preload kind dogfoods all three.
+
 ### Added - canvas asset drops for more file types, on a public seam
 
 - Dropping files from the FileSystem dock onto the sheet canvas now covers images

@@ -557,23 +557,50 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 				{"text_color": Color(EventSheetPalette.TEXT_SECONDARY.r, EventSheetPalette.TEXT_SECONDARY.g, EventSheetPalette.TEXT_SECONDARY.b, 0.8)}
 			))
 		return row_data
-	var badge_text: String = kind.title if kind != null else "block"
-	var summary_text: String = kind.summary(block) if kind != null else block.kind_id
-	# Extension hooks: a kind may tint its badge (style) and flag bad fields live (validate).
-	var kind_style: Dictionary = kind.style(block) if kind != null else {}
-	var badge_color: Color = kind_style.get("accent", event_style.behavior_accent_color)
-	row_data.spans = [
-		_make_span(
-			badge_text,
-			SemanticSpan.SpanType.KEYWORD,
-			{"badge": true, "text_color": badge_color}
-		),
-		_make_span(
-			summary_text,
-			SemanticSpan.SpanType.VALUE,
-			{"kind": "custom_block_row", "text_color": event_style.object_label_color}
-		)
-	]
+	# First-class display: a kind may describe variable-style spans (name / operator / value /
+	# keyword pills) and its rows read like the plugin's own variable rows - the built-in
+	# preload kind ships through this hook, so it is load-bearing, not just an extension seam.
+	var described: Array[Dictionary] = kind.display_spans(block) if kind != null else []
+	if not described.is_empty():
+		row_data.spans = []
+		for span_descriptor: Dictionary in described:
+			var span_text: String = str(span_descriptor.get("text", ""))
+			match str(span_descriptor.get("role", "value")):
+				"name":
+					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.OBJECT, {"kind": "custom_block_row"}))
+				"operator":
+					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.OPERATOR, {"kind": "custom_block_row"}))
+				"type":
+					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.VALUE, {"kind": "custom_block_row"}))
+				"badge":
+					var is_const_style: bool = str(span_descriptor.get("badge_style", "scope")) == "const"
+					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.KEYWORD, {
+						"kind": "custom_block_row",
+						"badge": true,
+						"badge_style": "const" if is_const_style else "scope",
+						"badge_bg": EventSheetPalette.COLOR_CONST_BADGE_BG if is_const_style else EventSheetPalette.COLOR_GROUP_CHIP_BG,
+						"badge_fg": EventSheetPalette.COLOR_CONST_BADGE_FG if is_const_style else EventSheetPalette.COLOR_GROUP_CHIP_FG
+					}))
+				_:
+					row_data.spans.append(_make_span(span_text, SemanticSpan.SpanType.VALUE, {"kind": "custom_block_row", "text_color": event_style.object_label_color}))
+	else:
+		var badge_text: String = kind.title if kind != null else "block"
+		var summary_text: String = kind.summary(block) if kind != null else block.kind_id
+		# Extension hooks: a kind may tint its badge (style) and flag bad fields live (validate).
+		var kind_style: Dictionary = kind.style(block) if kind != null else {}
+		var badge_color: Color = kind_style.get("accent", event_style.behavior_accent_color)
+		row_data.spans = [
+			_make_span(
+				badge_text,
+				SemanticSpan.SpanType.KEYWORD,
+				{"badge": true, "text_color": badge_color}
+			),
+			_make_span(
+				summary_text,
+				SemanticSpan.SpanType.VALUE,
+				{"kind": "custom_block_row", "text_color": event_style.object_label_color}
+			)
+		]
 	var problem: String = kind.validate(block) if kind != null else ""
 	if not problem.is_empty():
 		row_data.spans.append(_make_span(

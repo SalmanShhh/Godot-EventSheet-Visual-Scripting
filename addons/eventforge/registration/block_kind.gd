@@ -64,6 +64,19 @@ func summary(_block: CustomBlockRow) -> String:
 	return title
 
 
+## Optional FIRST-CLASS row display: return span descriptors and the row renders them with
+## the plugin's variable-row styling (name / operator / value colors, keyword pills) instead
+## of the generic "badge + summary line" form. Each entry:
+##   {"text": String, "role": "name"|"operator"|"type"|"value"|"badge"}
+## and a "badge" entry may add {"badge_style": "const"|"scope"} to pick the pill colors the
+## variable rows use (const-green / scope-blue; scope is the default). Return [] to keep the
+## generic form. Display only - never affects emission or the byte round-trip. The built-in
+## preload kind renders through this (name = path + a preload/load pill), so the hook is
+## load-bearing, not just an extension point.
+func display_spans(_entry: Resource) -> Array[Dictionary]:
+	return []
+
+
 ## Optional hover tooltip for rows of this kind - what the block means, not just what it says
 ## (the viewport asks the kind before falling back to its generic tooltips). BBCode ([b]/[i]/
 ## [color]) renders styled. Return "" for the default behaviour.

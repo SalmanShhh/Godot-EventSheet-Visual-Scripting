@@ -64,9 +64,12 @@ func _open(kind: EventSheetBlockKind, block: CustomBlockRow) -> void:
 	for field: Dictionary in kind.fields():
 		var field_id: String = str(field.get("id", ""))
 		var current: Variant = block.fields.get(field_id, field.get("default")) if block != null else field.get("default")
-		var control: Control = _make_field_control(int(field.get("type", TYPE_STRING)), current)
+		var control: Control = _make_field_control(field, current)
 		_field_controls[field_id] = control
-		_fields_box.add_child(EventSheetPopupUI.form_row(str(field.get("label", field_id)), control))
+		# A resource_path field registers its LineEdit (so reads/tests see a normal text field)
+		# but the row shows the edit + its Browse button together.
+		var row_control: Control = control.get_parent() as Control if control.get_parent() is Control and control.has_meta("browse_wrapped") else control
+		_fields_box.add_child(EventSheetPopupUI.form_row(str(field.get("label", field_id)), row_control))
 	_dialog.popup_centered()
 	# Focus the first field so add flows are type-and-Enter.
 	if not kind.fields().is_empty():
@@ -75,7 +78,36 @@ func _open(kind: EventSheetBlockKind, block: CustomBlockRow) -> void:
 			first.grab_focus()
 
 
-func _make_field_control(field_type: int, current: Variant) -> Control:
+func _make_field_control(field: Dictionary, current: Variant) -> Control:
+	var field_type: int = int(field.get("type", TYPE_STRING))
+	# Schema extension: a String field with "options" becomes a dropdown (typed values stay
+	# possible via a plain field; options are for closed sets like the preload kind's mode).
+	var options: Array = field.get("options", []) if field.get("options") is Array else []
+	if field_type == TYPE_STRING and not options.is_empty():
+		var chooser: OptionButton = OptionButton.new()
+		for option: Variant in options:
+			chooser.add_item(str(option))
+			if str(option) == str(current):
+				chooser.selected = chooser.item_count - 1
+		return chooser
+	# Schema extension: hint "resource_path" pairs the text field with a Browse button that
+	# opens the editor's resource file dialog - the variable-dialog affordance, on any kind.
+	if field_type == TYPE_STRING and str(field.get("hint", "")) == "resource_path":
+		var path_row: HBoxContainer = HBoxContainer.new()
+		var path_edit: LineEdit = LineEdit.new()
+		path_edit.text = str(current) if current != null else ""
+		path_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		path_edit.set_meta("browse_wrapped", true)
+		path_edit.text_submitted.connect(func(_t: String) -> void:
+			_apply()
+			_dialog.hide()
+		)
+		var browse: Button = Button.new()
+		browse.text = "Browse…"
+		browse.pressed.connect(func() -> void: _open_resource_browser(path_edit))
+		path_row.add_child(path_edit)
+		path_row.add_child(browse)
+		return path_edit
 	match field_type:
 		TYPE_BOOL:
 			var check: CheckBox = CheckBox.new()
@@ -122,7 +154,10 @@ func _collect_fields(kind: EventSheetBlockKind) -> Dictionary:
 	for field: Dictionary in kind.fields():
 		var field_id: String = str(field.get("id", ""))
 		var control: Control = _field_controls.get(field_id, null)
-		if control is CheckBox:
+		if control is OptionButton:
+			var chooser: OptionButton = control as OptionButton
+			collected[field_id] = chooser.get_item_text(chooser.selected) if chooser.selected >= 0 else str(field.get("default", ""))
+		elif control is CheckBox:
 			collected[field_id] = (control as CheckBox).button_pressed
 		elif control is SpinBox:
 			var numeric: float = (control as SpinBox).value
@@ -134,6 +169,23 @@ func _collect_fields(kind: EventSheetBlockKind) -> Dictionary:
 			var picker: ColorPickerButton = (control as HBoxContainer).get_meta("picker")
 			collected[field_id] = ("#" + picker.color.to_html(picker.color.a < 1.0)) if use_check.button_pressed else ""
 	return collected
+
+
+## The editor's resource file picker, feeding the chosen res:// path back into the field.
+## Editor-only by construction (EditorFileDialog); headless/test runs just type the path.
+func _open_resource_browser(path_edit: LineEdit) -> void:
+	if not Engine.is_editor_hint():
+		return
+	var browser: EditorFileDialog = EditorFileDialog.new()
+	browser.file_mode = EditorFileDialog.FILE_MODE_OPEN_FILE
+	browser.access = EditorFileDialog.ACCESS_RESOURCES
+	browser.file_selected.connect(func(path: String) -> void:
+		path_edit.text = path
+		browser.call_deferred("queue_free")
+	)
+	browser.canceled.connect(func() -> void: browser.queue_free())
+	_dialog.add_child(browser)
+	browser.popup_centered_ratio(0.6)
 
 
 ## One-shot apply (guarded on the kind so confirmed + text_submitted can't double-fire).

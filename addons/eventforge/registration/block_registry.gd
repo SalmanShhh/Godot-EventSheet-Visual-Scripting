@@ -160,7 +160,12 @@ class PreloadBlockKind extends EventSheetBlockKind:
 	func fields() -> Array[Dictionary]:
 		return [
 			{"id": "name", "label": "Constant name", "type": TYPE_STRING, "default": "Res"},
-			{"id": "path", "label": "Resource path", "type": TYPE_STRING, "default": "res://"},
+			{"id": "path", "label": "Resource path", "type": TYPE_STRING, "default": "res://", "hint": "resource_path"},
+			# STATIC vs DYNAMIC: "preload" emits `const X := preload(...)` (resolved at parse
+			# time, the classic form); "load" emits `var X := load(...)` (loaded when the node
+			# is instantiated - a runtime reference the game can also reassign). Both shapes
+			# lift back to this SAME row kind, byte-gated.
+			{"id": "mode", "label": "When to load", "type": TYPE_STRING, "default": "preload", "options": ["preload", "load"]},
 		]
 
 	func emit(block: CustomBlockRow) -> PackedStringArray:
@@ -168,6 +173,8 @@ class PreloadBlockKind extends EventSheetBlockKind:
 		var path: String = str(block.fields.get("path", "res://")).strip_edges()
 		if const_name.is_empty() or path.is_empty():
 			return PackedStringArray()
+		if str(block.fields.get("mode", "preload")) == "load":
+			return PackedStringArray(["var %s := load(\"%s\")" % [const_name, path]])
 		return PackedStringArray(["const %s := preload(\"%s\")" % [const_name, path]])
 
 	func lift(lines: PackedStringArray, i: int) -> Dictionary:
@@ -175,12 +182,35 @@ class PreloadBlockKind extends EventSheetBlockKind:
 		if probe.compile("^const ([A-Za-z_][A-Za-z0-9_]*) := preload\\(\"([^\"]+)\"\\)$") != OK:
 			return {}
 		var found: RegExMatch = probe.search(lines[i])
-		if found == null:
+		if found != null:
+			return verified_claim({"name": found.get_string(1), "path": found.get_string(2), "mode": "preload"}, lines, i, 1)
+		# The dynamic form. Claiming it here does not shadow variable rows: the variable
+		# lifter's byte gate rejects the `:=`-inferred load line (it re-emits typed), so
+		# before this claim such lines were stranded VERBATIM blocks.
+		var dynamic_probe: RegEx = RegEx.new()
+		if dynamic_probe.compile("^var ([A-Za-z_][A-Za-z0-9_]*) := load\\(\"([^\"]+)\"\\)$") != OK:
 			return {}
-		return verified_claim({"name": found.get_string(1), "path": found.get_string(2)}, lines, i, 1)
+		var dynamic_found: RegExMatch = dynamic_probe.search(lines[i])
+		if dynamic_found == null:
+			return {}
+		return verified_claim({"name": dynamic_found.get_string(1), "path": dynamic_found.get_string(2), "mode": "load"}, lines, i, 1)
 
 	func summary(block: CustomBlockRow) -> String:
 		return "%s = %s" % [str(block.fields.get("name", "")), str(block.fields.get("path", ""))]
+
+	## First-class variable-style row: name = path plus a preload/load pill (green const
+	## styling for the static form, blue scope styling for the runtime form).
+	func display_spans(entry: Resource) -> Array[Dictionary]:
+		var block: CustomBlockRow = entry as CustomBlockRow
+		if block == null:
+			return []
+		var is_dynamic: bool = str(block.fields.get("mode", "preload")) == "load"
+		return [
+			{"text": str(block.fields.get("name", "Res")), "role": "name"},
+			{"text": "=", "role": "operator"},
+			{"text": str(block.fields.get("path", "res://")), "role": "value"},
+			{"text": "load" if is_dynamic else "preload", "role": "badge", "badge_style": "scope" if is_dynamic else "const"},
+		]
 
 
 # ── Built-in RESOURCE kind: enum rows (`enum Mode { IDLE, RUN }`) ──

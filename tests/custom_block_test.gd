@@ -121,9 +121,40 @@ static func run() -> bool:
 	view.set_sheet(sheet)
 	var block_row_data: EventRowData = view._build_row_from_resource(preload_row, 0)
 	all_passed = _check("custom block renders as a SECTION row", block_row_data.row_type, EventRowData.RowType.SECTION) and all_passed
-	all_passed = _check("row shows the kind badge", block_row_data.spans[0].text, "Preload Resource") and all_passed
-	all_passed = _check("row shows the kind summary", block_row_data.spans[1].text, "Sfx = res://sfx/jump.ogg") and all_passed
+	# The preload kind describes FIRST-CLASS spans (display_spans): the row reads like a
+	# variable row - name = path + a mode pill - instead of badge + summary text.
+	all_passed = _check("preload rows read variable-style: name first", block_row_data.spans[0].text, "Sfx") and all_passed
+	all_passed = _check("preload rows show their path as the value", block_row_data.spans[2].text, "res://sfx/jump.ogg") and all_passed
+	all_passed = _check("static preload rows wear the preload pill", block_row_data.spans[3].text, "preload") and all_passed
+	# Kinds WITHOUT display_spans keep the generic badge + summary form.
+	var note_row_data: EventRowData = view._build_row_from_resource(note_row, 0)
+	all_passed = _check("a plain kind still renders badge + summary", note_row_data.spans[0].text, note_kind.title) and all_passed
 	view.free()
+
+	# ── Static + dynamic: both load modes are ONE first-class row kind, byte-gated ──
+	var dynamic_src: String = "extends Node\n\nvar boss_music := load(\"res://music/boss.ogg\")\n"
+	var dynamic_sheet: EventSheetResource = importer.import_external_source(dynamic_src)
+	var dynamic_row: CustomBlockRow = null
+	for entry: Variant in dynamic_sheet.events:
+		if entry is CustomBlockRow:
+			dynamic_row = entry
+	all_passed = _check("a runtime load line lifts to the preload kind (dynamic mode)",
+		dynamic_row != null and str(dynamic_row.fields.get("mode", "")) == "load"
+		and str(dynamic_row.fields.get("name", "")) == "boss_music", true) and all_passed
+	dynamic_sheet.external_source_path = "user://dynamic_load_sample.gd"
+	all_passed = _check("the dynamic form round-trips byte-identically",
+		str(SheetCompiler.compile(dynamic_sheet, "user://dynamic_load_sample.gd").get("output", "")), dynamic_src) and all_passed
+	# Flipping the mode dropdown re-emits the other shape - static <-> dynamic is one edit.
+	var flipped: CustomBlockRow = CustomBlockRow.new()
+	flipped.kind_id = "preload"
+	flipped.fields = {"name": "BossMusic", "path": "res://music/boss.ogg", "mode": "preload"}
+	all_passed = _check("static mode emits const preload",
+		EventSheetBlockRegistry.get_kind("preload").emit(flipped),
+		PackedStringArray(["const BossMusic := preload(\"res://music/boss.ogg\")"])) and all_passed
+	flipped.fields["mode"] = "load"
+	all_passed = _check("dynamic mode emits var load",
+		EventSheetBlockRegistry.get_kind("preload").emit(flipped),
+		PackedStringArray(["var BossMusic := load(\"res://music/boss.ogg\")"])) and all_passed
 
 	# ── Undo-funnel compatibility: snapshot duplication preserves kind + fields ──
 	var clone: CustomBlockRow = preload_row.duplicate(true)
@@ -150,6 +181,11 @@ static func run() -> bool:
 	block_dialog.open_edit(live_target)
 	all_passed = _check("edit dialog prefills the constant name",
 		(block_dialog._field_controls.get("name") as LineEdit).text, "Music") and all_passed
+	# Schema extensions: an "options" String field builds a dropdown; a resource_path-hinted
+	# field stays a text edit (the Browse button rides beside it in the same row).
+	all_passed = _check("the mode field is a dropdown", block_dialog._field_controls.get("mode") is OptionButton, true) and all_passed
+	all_passed = _check("the path field stays a text edit",
+		block_dialog._field_controls.get("path") is LineEdit, true) and all_passed
 	(block_dialog._field_controls.get("path") as LineEdit).text = "res://music/boss.ogg"
 	block_dialog._apply()
 	# The undo funnel REPLACES resources on commit - re-fetch the live block from the live sheet.

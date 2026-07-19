@@ -124,11 +124,12 @@ Everything a kind can implement. Only `kind_id`, `title`, and the pieces your ki
 | `kind_id: String` | both | The stable public id. Compatibility covenant once shipped. |
 | `title: String` | both | The row badge text, the Add-menu entry, and the dialog title. |
 | `category: String` | both | Add-menu grouping (default "Blocks"). |
-| `fields() -> Array[Dictionary]` | schema | The schema: `{id, label, type: Variant.Type, default}` per field. Drives the auto-built dialog and defaults. |
+| `fields() -> Array[Dictionary]` | schema | The schema: `{id, label, type: Variant.Type, default}` per field. Drives the auto-built dialog and defaults. A String field may add `"options": ["a", "b"]` (renders a dropdown, stores the chosen text) or `"hint": "resource_path"` (adds a Browse button that opens the editor's resource picker beside the text field). |
 | `emit(block) -> PackedStringArray` | schema | The GDScript this block compiles to. **Must be pure**: same fields, same bytes. Empty array emits nothing. |
 | `lift(lines, i) -> Dictionary` | both | Claim source lines starting at `i`. Return `{}` (not yours), `{"fields": ..., "consumed": n}` (schema), or `{"resource": row, "consumed": n}` (resource kind). |
 | `verified_claim(fields, lines, i, consumed)` | schema | The one-line byte gate for `lift()`: builds the candidate, re-emits it, returns the claim only on an exact byte match. |
 | `summary(block) -> String` | schema | The row's one-line display next to the badge. |
+| `display_spans(entry) -> Array[Dictionary]` | both | Optional FIRST-CLASS display: return `{text, role}` descriptors (roles `name` / `operator` / `type` / `value` / `badge`, a badge may add `badge_style: "const"` or `"scope"`) and the row renders with the plugin's variable-row styling instead of badge + summary. The built-in preload kind renders through this (`Name = res://path` + a preload/load pill). Display only - never affects emission. |
 | `hover_text(entry) -> String` | both | Optional hover tooltip: what the block *means*. BBCode renders styled; `""` keeps the default. |
 | `handles(entry) -> bool` | resource | Claims a dedicated Resource class (`entry is EnumRow`). |
 | `emit_lines(entry) -> PackedStringArray` | resource | Emission for a handled Resource instance. |
