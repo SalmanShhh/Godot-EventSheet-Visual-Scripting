@@ -185,6 +185,17 @@ static func run() -> bool:
 	var plain_output: String = str(SheetCompiler.compile(rt_sheet, "user://eventsheets_rtgroup2.gd").get("output", ""))
 	all_passed = _check("non-toggleable groups stay zero-cost",
 		plain_output.contains("__group_combat_active"), false) and all_passed
+	# Review fix: a hostile group name must still produce a LEGAL guard identifier - the raw
+	# to_snake_case kept "!" and friends, emitting `var __group_wave_1!_active` (a parse error).
+	rt_group.runtime_toggleable = true
+	rt_group.group_name = "Wave 1!"
+	var hostile_output: String = str(SheetCompiler.compile(rt_sheet, "user://eventsheets_rtgroup3.gd").get("output", ""))
+	all_passed = _check("hostile group names sanitize into the guard identifier",
+		hostile_output.contains("var __group_wave_1_active: bool = true") and hostile_output.contains("if __group_wave_1_active:"), true) and all_passed
+	var hostile_script: GDScript = GDScript.new()
+	hostile_script.source_code = hostile_output
+	all_passed = _check("hostile-name runtime-group output parses", hostile_script.reload(true) == OK, true) and all_passed
+	rt_group.group_name = "Combat"
 	# The Set Group Active ACE compiles a dynamic set() (works from any sheet code).
 	var by_id: Dictionary = {}
 	for descriptor in EventForgeBuiltinACEs.get_descriptors():

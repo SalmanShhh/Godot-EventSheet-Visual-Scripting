@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed - remaining whole-plugin review items
+
+- **Runtime group guards are always legal identifiers**: a toggleable group named
+  "Wave 1!" emitted `var __group_wave_1!_active` - a parse error in the generated
+  script. The guard token now shares the group-marker slug sanitization (one
+  `_guard_token` helper); plain names like "Combat" emit exactly as before, and guards
+  stay name-addressed (no collision suffix) because Set/Is Group Active look them up by
+  name at runtime.
+- **Snippet names are filenames, not paths**: saving a snippet named "enemies/spawn" or
+  "../notes" quietly wrote the file outside the snippets folder, where the library never
+  listed it. Path-ish characters collapse to underscores now.
+- **The pack drift audit fails honestly and covers everything**: `tools/audit_addons.gd`
+  exits 1 on any DRIFT / PARSE FAIL / missing pack script (it always exited 0, so
+  exit-code checks saw success on a red gate) and now audits root-level single-file
+  packs too (they were silently skipped by the folder-only walk; audited went 75 -> 77).
+
 ### Fixed - viewport desyncs (whole-plugin review)
 
 - **Same-named class blocks no longer share a row uid**: two `class Stats:` blocks keyed

@@ -44,8 +44,19 @@ static func list_snippets() -> PackedStringArray:
 
 ## Writes serialized snippet text under the given name; an existing name gets a
 ## -2/-3 suffix (templates rule: never overwrite silently). Returns the path, or "".
+## The name becomes a FILENAME inside the snippets dir only: to_snake_case leaves "/",
+## "\" and "." alone, so a name like "enemies/spawn" or "../notes" quietly wrote the
+## file outside the folder (then never showed in the list). Path-ish characters
+## collapse to underscores instead.
 static func save_snippet(snippet_name: String, snippet_text: String) -> String:
 	var base_name: String = snippet_name.to_snake_case()
+	var sanitizer: RegEx = RegEx.new()
+	sanitizer.compile("[\\\\/:*?\"<>|.]+")
+	base_name = sanitizer.sub(base_name, "_", true)
+	while base_name.begins_with("_"):
+		base_name = base_name.substr(1)
+	while base_name.ends_with("_"):
+		base_name = base_name.substr(0, base_name.length() - 1)
 	if base_name.is_empty():
 		base_name = "snippet"
 	DirAccess.make_dir_recursive_absolute(snippets_dir())

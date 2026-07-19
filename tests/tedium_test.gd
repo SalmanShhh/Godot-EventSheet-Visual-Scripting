@@ -154,6 +154,15 @@ static func run() -> bool:
 	all_passed = _check("the library lists sorted snippets",
 		EventSheetSnippetLibrary.list_snippets(),
 		PackedStringArray(["user://snip_dir/combo_bump-2.txt", "user://snip_dir/combo_bump.txt"])) and all_passed
+	# Review fix: the name is a FILENAME, not a path - "enemies/spawn" or "../notes" used to
+	# write the file outside the snippets dir (then never showed in the list).
+	all_passed = _check("path separators in a snippet name collapse to underscores",
+		EventSheetSnippetLibrary.save_snippet("enemies/spawn", snippet_text), "user://snip_dir/enemies_spawn.txt") and all_passed
+	var dotty_path: String = EventSheetSnippetLibrary.save_snippet("../notes", snippet_text)
+	all_passed = _check("dot-dot names stay inside the snippets dir",
+		dotty_path, "user://snip_dir/notes.txt") and all_passed
+	DirAccess.remove_absolute("user://snip_dir/enemies_spawn.txt")
+	DirAccess.remove_absolute("user://snip_dir/notes.txt")
 	# Insert rides the normal snippet paste: fresh rows land on the open sheet.
 	var insert_editor: EventSheetEditor = EventSheetEditor.new()
 	var insert_sheet: EventSheetResource = EventSheetResource.new()
