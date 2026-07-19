@@ -96,10 +96,14 @@ static func run() -> bool:
 	var dev_output: String = str(SheetCompiler.compile(dev_sheet, "user://eventsheets_dev.gd").get("output", ""))
 	all_passed = _check("Add To Group compiles to the native call", dev_output.contains("self.add_to_group(\"enemies\")"), true) and all_passed
 	# Additional math idioms register under Math & Random.
-	for math: Array in [["Snapped", "Math & Random"], ["AngleDifference", "Math & Random"], ["IsEqualApprox", "Math & Random"], ["RotateTowardAngle", "Math & Random"], ["LerpAngle", "Math & Random"]]:
+	for math: Array in [["Snapped", "Math & Random"], ["AngleDifference", "Math & Random"], ["IsEqualApprox", "Math & Random"], ["RotateTowardAngle", "Math & Random"], ["LerpAngle", "Math & Random"], ["SmoothLerp", "Math & Random"], ["Atan2", "Math & Random"]]:
 		var math_id: String = str(math[0])
 		all_passed = _check("%s registered" % math_id, ids.has(math_id), true) and all_passed
 		all_passed = _check("%s in %s" % [math_id, str(math[1])], str(categories.get(math_id, "<missing>")), str(math[1])) and all_passed
+	# The eased-lerp and atan2 templates are valid GDScript that computes what they promise.
+	var math_probe: GDScript = GDScript.new()
+	math_probe.source_code = "extends Node\nfunc _t() -> void:\n\tvar a: float = lerpf(0.0, 10.0, smoothstep(0.0, 1.0, 0.5))\n\tvar b: float = atan2(1.0, 0.0)\n\tassert(is_equal_approx(a, 5.0))\n\tassert(is_equal_approx(b, PI / 2.0))\n"
+	all_passed = _check("SmoothLerp + Atan2 templates parse", math_probe.reload() == OK, true) and all_passed
 	# Color helper expressions register under Color, and their templates are valid GDScript.
 	for col: Array in [["ColorLighten", "Color"], ["ColorLerp", "Color"], ["ColorFromHSV", "Color"], ["ColorWithAlpha", "Color"]]:
 		var col_id: String = str(col[0])

@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Added - math expressions: Smooth Lerp and Angle Of (atan2)
+
+- **Smooth Lerp** blends between two values with the 0-to-1 weight eased through an S-curve
+  first, so motion starts and ends gently (distinct from the existing raw Smoothstep and
+  the constant-speed Lerp). **Angle Of (atan2)** turns a direction (x, y) into a heading in
+  radians, correct in all four quadrants. (Angle Lerp was already shipped as Lerp Angle.)
+
 ### Changed - function Define rows read as pure abstraction, no raw code
 
 - The published-verb "Define" rows no longer tack a raw `func name(params) -> Type`
