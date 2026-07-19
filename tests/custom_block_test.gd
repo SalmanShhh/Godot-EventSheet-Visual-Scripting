@@ -121,11 +121,13 @@ static func run() -> bool:
 	view.set_sheet(sheet)
 	var block_row_data: EventRowData = view._build_row_from_resource(preload_row, 0)
 	all_passed = _check("custom block renders as a SECTION row", block_row_data.row_type, EventRowData.RowType.SECTION) and all_passed
-	# The preload kind describes FIRST-CLASS spans (display_spans): the row reads like a
-	# variable row - name = path + a mode pill - instead of badge + summary text.
+	# The preload kind describes FIRST-CLASS spans (display_spans) in the VARIABLE row's
+	# exact shape - `name : Type [pill] = path` - so a preload reads at a glance the same
+	# way a variable does, with the pill in the const/@export position.
 	all_passed = _check("preload rows read variable-style: name first", block_row_data.spans[0].text, "Sfx") and all_passed
-	all_passed = _check("preload rows show their path as the value", block_row_data.spans[2].text, "res://sfx/jump.ogg") and all_passed
-	all_passed = _check("static preload rows wear the preload pill", block_row_data.spans[3].text, "preload") and all_passed
+	all_passed = _check("preload rows show an inferred resource type", block_row_data.spans[2].text, "AudioStream") and all_passed
+	all_passed = _check("static preload rows wear the preload pill in badge position", block_row_data.spans[3].text, "preload") and all_passed
+	all_passed = _check("the path takes the default-value slot", block_row_data.spans[5].text, "res://sfx/jump.ogg") and all_passed
 	# Kinds WITHOUT display_spans keep the generic badge + summary form.
 	var note_row_data: EventRowData = view._build_row_from_resource(note_row, 0)
 	all_passed = _check("a plain kind still renders badge + summary", note_row_data.spans[0].text, note_kind.title) and all_passed

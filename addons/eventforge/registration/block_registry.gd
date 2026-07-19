@@ -198,19 +198,48 @@ class PreloadBlockKind extends EventSheetBlockKind:
 	func summary(block: CustomBlockRow) -> String:
 		return "%s = %s" % [str(block.fields.get("name", "")), str(block.fields.get("path", ""))]
 
-	## First-class variable-style row: name = path plus a preload/load pill (green const
-	## styling for the static form, blue scope styling for the runtime form).
+	## First-class row in the VARIABLE row's exact shape - `name : Type [pill] = default` -
+	## so a preload reads at a glance the same way a variable does: the pill sits where
+	## const/@export pills sit (green "preload" for the static form, blue "load" for the
+	## runtime form), the resource TYPE is inferred from the file extension, and the path
+	## takes the default-value slot after "=".
 	func display_spans(entry: Resource) -> Array[Dictionary]:
 		var block: CustomBlockRow = entry as CustomBlockRow
 		if block == null:
 			return []
+		var path: String = str(block.fields.get("path", "res://"))
 		var is_dynamic: bool = str(block.fields.get("mode", "preload")) == "load"
 		return [
 			{"text": str(block.fields.get("name", "Res")), "role": "name"},
-			{"text": "=", "role": "operator"},
-			{"text": str(block.fields.get("path", "res://")), "role": "value"},
+			{"text": ":", "role": "operator"},
+			{"text": _resource_type_for(path), "role": "type"},
 			{"text": "load" if is_dynamic else "preload", "role": "badge", "badge_style": "scope" if is_dynamic else "const"},
+			{"text": "=", "role": "operator"},
+			{"text": path, "role": "value"},
 		]
+
+	## The display type a resource path implies (extension-based; "Resource" when unknown).
+	## Display only - emission never writes a type, so this can never affect the round-trip.
+	func _resource_type_for(path: String) -> String:
+		match path.get_extension().to_lower():
+			"tscn", "scn":
+				return "PackedScene"
+			"png", "jpg", "jpeg", "webp", "svg", "bmp", "tga", "ktx", "exr":
+				return "Texture2D"
+			"ogg", "wav", "mp3":
+				return "AudioStream"
+			"gd":
+				return "Script"
+			"gdshader":
+				return "Shader"
+			"ttf", "otf", "woff", "woff2":
+				return "FontFile"
+			"material":
+				return "Material"
+			"mesh", "obj", "glb", "gltf":
+				return "Mesh"
+			_:
+				return "Resource"
 
 
 # ── Built-in RESOURCE kind: enum rows (`enum Mode { IDLE, RUN }`) ──

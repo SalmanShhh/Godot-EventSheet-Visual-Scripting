@@ -16,13 +16,16 @@
 
 ### Added - Preload Resource is a first-class row, static or dynamic
 
-- The preload block now reads like a variable row: `Name = res://path` with a green
-  `preload` pill (static: `const X := preload(...)`, resolved at parse time) or a blue
-  `load` pill (dynamic: `var X := load(...)`, loaded when the node is instantiated and
-  reassignable at runtime). One "When to load" dropdown flips between the two shapes;
-  both lift back to the same row byte-gated. The dynamic form used to be a stranded
-  verbatim GDScript block - the variable lifter's byte gate rejects the `:=`-inferred
-  line, so claiming it costs nothing.
+- The preload block now reads in the variable row's exact grammar -
+  `Name : AudioStream [preload] = res://music/boss.ogg` - name : inferred resource type,
+  the mode pill in the const/@export position (green `preload` = static
+  `const X := preload(...)`, resolved at parse time; blue `load` = dynamic
+  `var X := load(...)`, loaded at instantiation and reassignable), and the path in the
+  default-value slot, so a preload is recognizable at the same glance a variable is.
+  One "When to load" dropdown flips between the two shapes; both lift back to the same
+  row byte-gated. The dynamic form used to be a stranded verbatim GDScript block - the
+  variable lifter's byte gate rejects the `:=`-inferred line, so claiming it costs
+  nothing.
 - The edit dialog gained a Browse button on the path (the editor's resource picker) via
   two Custom Block API schema extensions any kind can use: `"options": [...]` on a
   String field renders a dropdown, `"hint": "resource_path"` pairs the field with the
