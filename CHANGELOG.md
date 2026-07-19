@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - Rendering module (RenderingServer vocabulary)
+
+- A new built-in ACE module puts the RenderingServer on the sheet, category
+  "Rendering": Set Clear Color, Set Global Shader Parameter (drive weather / day-night /
+  damage-flash uniforms across every material, code-free) with its read-back expression,
+  MSAA 2D/3D and screen-space AA dropdowns, 3D resolution scale, debug draw modes
+  (wireframe / overdraw / unshaded), occlusion culling and debanding toggles, a
+  "Uses Modern Renderer" condition (Forward+/Mobile vs Compatibility gating), and the
+  perf-HUD expressions (draw calls, objects, primitives, video memory). Everything
+  compiles to plain RenderingServer calls on the current viewport's RID - zero plugin
+  references, dropdowns carry full engine constants verbatim.
+
 ### Added - Preload Resource is a first-class row, static or dynamic
 
 - The preload block now reads like a variable row: `Name = res://path` with a green
