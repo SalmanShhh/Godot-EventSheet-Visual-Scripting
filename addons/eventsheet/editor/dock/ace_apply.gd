@@ -370,6 +370,11 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 		var param_type: int = int((parameter as Dictionary).get("type", TYPE_NIL))
 		parts.append(param_id if param_type == TYPE_NIL else "%s: %s" % [param_id, type_string(param_type)])
 	event_row.trigger_args = ", ".join(parts)
+	# The trigger's VALUES must reach the compiler too: the resolver's On Signal arm reads
+	# event.trigger_params (signal_name / args), not the trigger condition resource - without
+	# this copy a picker-authored On Signal connected to a dummy "eventforge_signal" and the
+	# user's handler never fired. Baked for every trigger; non-signal arms simply ignore it.
+	event_row.trigger_params = event_row.trigger.params.duplicate(true) if event_row.trigger != null else {}
 	# On Language Changed compiles to the _notification virtual, which the engine
 	# calls for EVERY notification - so applying the trigger auto-adds its gate
 	# condition (visible in the sheet, deletable, round-trips as a plain condition).
@@ -379,6 +384,37 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 		gate.ace_id = "IsLocaleChangeNotification"
 		gate.codegen_template = "what == NOTIFICATION_TRANSLATION_CHANGED"
 		event_row.conditions.append(gate)
+
+
+## Bakes the trigger signature onto event_row FROM its already-built trigger condition -
+## the drag-drop and paste paths hand an ACECondition around WITHOUT its definition, and
+## the compiler keys emission on the BAKED trigger_id (an unbaked trigger made the whole
+## event silently vanish from generated code). Looks the definition back up by identity
+## and runs the same bake as picker authoring; with no definition (an uninstalled pack)
+## it bakes identity + params directly so the event still compiles.
+func bake_trigger_from_condition(event_row: EventRow) -> void:
+	if event_row == null or not (event_row.trigger is ACECondition):
+		return
+	var trigger_condition: ACECondition = event_row.trigger as ACECondition
+	var definition: ACEDefinition = _dock._find_definition(trigger_condition.provider_id, trigger_condition.ace_id)
+	if definition != null and definition.ace_type == ACEDefinition.ACEType.TRIGGER:
+		_bake_trigger_signature(event_row, definition)
+		return
+	event_row.trigger_provider_id = trigger_condition.provider_id
+	event_row.trigger_id = trigger_condition.ace_id
+	event_row.trigger_params = trigger_condition.params.duplicate(true)
+
+
+## The mirror: a trigger REMOVED from an event (dragged away) must clear the baked fields
+## too, or the compiler keeps firing the phantom trigger the editor no longer shows.
+func clear_baked_trigger(event_row: EventRow) -> void:
+	if event_row == null:
+		return
+	event_row.trigger_provider_id = ""
+	event_row.trigger_id = ""
+	event_row.trigger_args = ""
+	event_row.trigger_params = {}
+	event_row.trigger_source_path = ""
 
 
 ## Routes a picked condition into the event: a LOOPING condition (@ace_looping) lands as a
@@ -725,6 +761,10 @@ func _on_viewport_ace_drop_requested(
 					_remove_drag_entry_from_source(removal_entry)
 		if moved_trigger != null:
 			target_event.trigger = moved_trigger
+			# The compiler keys emission on the BAKED trigger_id - without this bake a
+			# dropped trigger left trigger_id empty and the whole event vanished from
+			# generated code while the editor rendered it as complete.
+			bake_trigger_from_condition(target_event)
 		var target_array: Array = _event_ace_array(target_event, target_lane)
 		var insertion_index: int = target_array.size()
 		if target_anchor != null:
@@ -775,6 +815,9 @@ func _remove_drag_entry_from_source(entry: Dictionary) -> void:
 		"trigger":
 			if source_event.trigger == entry.get("resource", null):
 				source_event.trigger = null
+				# Clear the baked identity too, or the compiler keeps firing the phantom
+				# trigger the editor no longer shows on this event.
+				clear_baked_trigger(source_event)
 		"condition":
 			if ace_index >= 0 and ace_index < source_event.conditions.size():
 				source_event.conditions.remove_at(ace_index)

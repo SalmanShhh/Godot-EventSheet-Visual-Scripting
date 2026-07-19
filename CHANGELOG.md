@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Fixed - triggers reach the compiler on every write path (whole-plugin review)
+
+- **Picker-authored On Signal events fire now**: applying a trigger also bakes the
+  trigger's VALUES onto the row (`trigger_params`) - the compiler's On Signal arm reads
+  only that field, so every picker-authored On Signal used to connect to a dummy
+  `eventforge_signal` and the user's handler never ran. Pinned through the REAL
+  authoring path in `tests/on_signal_args_test.gd` (declare signal, pick On Signal,
+  compile - the user's signal connects, the dummy never appears).
+- **Dragging or pasting a trigger compiles now**: both paths set only the trigger
+  resource, leaving the baked `trigger_id` empty - and the compiler keys emission on
+  the baked identity, so the WHOLE event (conditions and actions) silently vanished
+  from generated code while rendering as complete. A shared
+  `bake_trigger_from_condition` bakes identity + values on drop and paste (definition
+  looked up by identity; uninstalled packs bake directly), and dragging a trigger AWAY
+  clears the baked fields so no phantom trigger keeps firing on the source event.
+
 ### Fixed - verification-pass follow-ups on the gutter policy
 
 - Event-block border hairlines are measured from the INSET fill now, so they no longer

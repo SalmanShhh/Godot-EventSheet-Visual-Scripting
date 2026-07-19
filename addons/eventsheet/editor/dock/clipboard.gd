@@ -194,6 +194,9 @@ func _on_paste_requested() -> void:
 			"trigger":
 				if selected_resource is EventRow and payload is ACECondition:
 					(selected_resource as EventRow).trigger = (payload as ACECondition).duplicate(true)
+					# Bake the identity the compiler keys on - an unbaked pasted trigger
+					# rendered fine but compiled the whole event to nothing.
+					_dock._ace_apply.bake_trigger_from_condition(selected_resource as EventRow)
 					result["label"] = "Pasted trigger."
 					return true
 		return false
