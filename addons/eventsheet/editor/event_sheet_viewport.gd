@@ -594,6 +594,10 @@ func object_column_boundary_hit(local_position: Vector2) -> Dictionary:
 	var font: Font = _get_font()
 	var font_size: int = _get_font_size()
 	var anchor_x: float = span.rect.position.x
+	# The renderer starts chip spans at rect.x + padding_x - mirror it or the resize
+	# grab zone sits ~8px left of the drawn column boundary.
+	if bool(metadata.get("chip", false)):
+		anchor_x += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
 		anchor_x += EventRowRenderer.OBJECT_ICON_ADVANCE
 	var boundary_x: float = anchor_x
@@ -920,6 +924,11 @@ func _value_text_at(span: SemanticSpan, logical_x: float, font: Font, font_size:
 func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> float:
 	var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 	var origin_x: float = span.rect.position.x
+	# Chip spans draw their text padding_x inside the plate - the renderer starts at
+	# rect.x + padding_x, so the hit-test must too or every value click lands ~8px left
+	# of the value the user aimed at.
+	if bool(metadata.get("chip", false)):
+		origin_x += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
 		origin_x += EventRowRenderer.OBJECT_ICON_ADVANCE
 	var object_label: String = str(metadata.get("object_label", ""))
@@ -1687,6 +1696,19 @@ func _refresh_rows() -> void:
 			line_row.disabled = bool(_row_disabled_state[line_row.row_uid])
 	if _selected_row_index >= _flat_rows.size():
 		_selected_row_index = _flat_rows.size() - 1
+	# Re-derive the caret from the SELECTION when they disagree: after a delete/undo/fold the
+	# numeric index can land on a row that isn't selected, so arrow keys and single-key verbs
+	# then acted on a different row than the highlight showed. Keep the index when it already
+	# points at a selected row (multi-select caret position is meaningful); otherwise snap it
+	# to the first selected row.
+	if not _selected_row_uids.is_empty():
+		var caret_row: EventRowData = _flat_rows[_selected_row_index].get("row") if _selected_row_index >= 0 and _selected_row_index < _flat_rows.size() else null
+		if caret_row == null or not _selected_row_uids.has(caret_row.row_uid):
+			for index in range(_flat_rows.size()):
+				var candidate: EventRowData = _flat_rows[index].get("row")
+				if candidate != null and _selected_row_uids.has(candidate.row_uid):
+					_selected_row_index = index
+					break
 	for index in range(_flat_rows.size()):
 		var row_data_state: EventRowData = _flat_rows[index].get("row")
 		if row_data_state == null:
@@ -1700,6 +1722,9 @@ func _refresh_rows() -> void:
 
 func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	var root_rows: Array[EventRowData] = []
+	# Per-sweep class-uid counters: same-named class blocks suffix "-2"/"-3" in build order.
+	# Reset HERE (not lazily) so the suffixes stay stable across rebuilds.
+	_row_builder._class_uid_counts.clear()
 	if sheet == null:
 		return root_rows
 	root_rows.append_array(_build_global_variable_rows(sheet))

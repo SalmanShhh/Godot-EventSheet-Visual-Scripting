@@ -227,7 +227,10 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 	var hovered_span_index: int = int(layout.get("hovered_span_index", -1))
 	var total_selected_spans: int = int(layout.get("total_selected_spans", 0))
 	var line_number: int = int(layout.get("line_number", 0))
-	var breakpoint_enabled: bool = bool(layout.get("breakpoint_enabled", false))
+	# Read LIVE off row_data (like bookmark_enabled below) - the layout dict is cached, so a
+	# breakpoint toggled after the cache was built kept drawing its stale state until an
+	# unrelated relayout happened to rebuild it.
+	var breakpoint_enabled: bool = row_data.breakpoint_enabled
 	var disabled: bool = bool(layout.get("disabled", false))
 	var has_span_selection: bool = not selected_span_indices.is_empty()
 	var event_style: EventSheetEventStyle = (

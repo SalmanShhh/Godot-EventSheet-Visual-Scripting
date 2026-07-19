@@ -67,6 +67,10 @@ static func run() -> bool:
 	# ---- the drag-start boundary: flow mode grabs after the label, fixed grabs the column edge ----
 	viewport.get_row_layout_for_test(0, 900.0)  # position spans so rects are real
 	var anchor_x: float = span.rect.position.x
+	# Chip spans draw from rect.x + padding_x (review fix): the grab zone follows the DRAWN
+	# boundary, so the expected anchor mirrors the renderer's padding too.
+	if bool(metadata.get("chip", false)):
+		anchor_x += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
 		anchor_x += EventRowRenderer.OBJECT_ICON_ADVANCE
 	var boundary: Dictionary = viewport.object_column_boundary_hit(Vector2(anchor_x + 150.0, span.rect.position.y + span.rect.size.y * 0.5))

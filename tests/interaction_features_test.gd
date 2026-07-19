@@ -66,6 +66,47 @@ static func run() -> bool:
 		dock._row_context_menu.get_item_index(8) >= 0, true) and all_passed  # 8 = ROW_MENU_TOGGLE_CONDITION_BLOCK
 	dock.free()
 
+	# ── Review fixes: viewport uid / caret / hit-test desyncs ──
+	var vp_sheet: EventSheetResource = EventSheetResource.new()
+	vp_sheet.host_class = "Node"
+	var stats_a: RawCodeRow = RawCodeRow.new()
+	stats_a.code = "class Stats:\n\tvar hp: int = 1"
+	var stats_b: RawCodeRow = RawCodeRow.new()
+	stats_b.code = "class Stats:\n\tvar mp: int = 2"
+	vp_sheet.events.append(stats_a)
+	vp_sheet.events.append(stats_b)
+	var vp_editor: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	vp_editor.setup(vp_sheet)
+	var vp: EventSheetViewport = vp_editor.get_viewport_control()
+	# Two class blocks sharing one NAME used to share one row uid, so selecting or
+	# disabling one silently mirrored onto the other.
+	var header_uids: Dictionary = {}
+	var second_stats_index: int = -1
+	for flat_index in range(vp.get_flat_rows().size()):
+		var flat_row: EventRowData = vp.get_flat_rows()[flat_index].get("row")
+		if flat_row != null and flat_row.row_uid.begins_with("data_class_Stats"):
+			header_uids[flat_row.row_uid] = true
+			second_stats_index = flat_index
+	all_passed = _check("same-named class blocks get DISTINCT row uids", header_uids.size(), 2) and all_passed
+	# Caret re-derivation: select the second class by uid, corrupt the numeric index, refresh -
+	# the caret must snap back to the SELECTED row (arrow keys acted on the wrong row before).
+	vp._select_row(second_stats_index, -1)
+	var selected_uid: String = (vp.get_flat_rows()[second_stats_index].get("row") as EventRowData).row_uid
+	vp._selected_row_index = 0
+	vp._refresh_rows()
+	var caret_uid: String = ""
+	if vp._selected_row_index >= 0 and vp._selected_row_index < vp.get_flat_rows().size():
+		caret_uid = (vp.get_flat_rows()[vp._selected_row_index].get("row") as EventRowData).row_uid
+	all_passed = _check("the caret re-derives from the selected uid after a rebuild", caret_uid, selected_uid) and all_passed
+	# Chip spans draw their text at rect.x + padding_x - the hit-test must mirror that.
+	var chip_span: SemanticSpan = SemanticSpan.new()
+	chip_span.text = "42"
+	chip_span.rect = Rect2(100.0, 0.0, 60.0, 20.0)
+	chip_span.metadata = {"chip": true, "padding_x": 8.0}
+	all_passed = _check("chip hit-tests start at rect.x + padding_x",
+		vp._span_text_origin_x(chip_span, vp._get_font(), vp._get_font_size()), 108.0) and all_passed
+	vp_editor.free()
+
 	return all_passed
 
 

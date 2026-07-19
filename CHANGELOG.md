@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed - viewport desyncs (whole-plugin review)
+
+- **Same-named class blocks no longer share a row uid**: two `class Stats:` blocks keyed
+  their rows by class name alone, so selecting, disabling, or expanding one silently
+  mirrored onto the other. Repeats now suffix a per-build occurrence ("-2"), stable
+  across rebuilds so expand/disabled state still survives the undo funnel; the displayed
+  header keeps the plain class name.
+- **The keyboard caret follows the selection across rebuilds**: after a delete, undo, or
+  fold the numeric caret index could land on a row that wasn't selected - arrow keys and
+  the single-key verbs (C/A/E/...) then acted on a different row than the highlight
+  showed. The caret re-derives from the selected uid on every refresh.
+- **Breakpoint dots redraw immediately**: the renderer read the breakpoint flag from the
+  CACHED row layout, so a toggled breakpoint kept its stale dot until an unrelated
+  relayout; it reads live row state now, exactly like bookmarks.
+- **Value clicks and column-resize grabs match the drawn pixels on chip rows**: the
+  hit-tests started at the span rect while the renderer draws chip text at
+  rect.x + padding_x, so clicks resolved ~8px left of the value or boundary the user
+  aimed at (worst on narrow values like "0").
+
 ### Fixed - save safety (whole-plugin review)
 
 - **Atomic .gd writes**: the compiler writes generated/backed GDScript through a temp

@@ -34,6 +34,23 @@ var _viewport: Control = null
 # fold key ("label#n") that survives sessions - row uids are instance-based and cannot
 # (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
 var _region_occurrences: Dictionary = {}
+# Per-build occurrence counters for class-block row uids ("Stats" -> count). Class rows key
+# their uids by class NAME (stable across the undo funnel's resource rebuild, so expand /
+# disabled state survives edits) - but two blocks sharing a name then shared ONE uid, so
+# selecting/toggling one silently mirrored onto the other. The counter suffixes repeats
+# ("-2", "-3"); build order is stable, so a repeat maps to the same block next rebuild.
+# Reset by the viewport at the top of every _build_rows_from_sheet sweep.
+var _class_uid_counts: Dictionary = {}
+
+
+## The uid scope for one class block: the class name for the first occurrence (uids unchanged
+## for the common case), "-N"-suffixed for same-named repeats, instance-id fallback when the
+## block has no name at all.
+func _unique_class_scope(class_name_str: String, raw_row: RawCodeRow) -> String:
+	var base: String = class_name_str if not class_name_str.is_empty() else str(raw_row.get_instance_id())
+	var count: int = int(_class_uid_counts.get(base, 0)) + 1
+	_class_uid_counts[base] = count
+	return base if count == 1 else "%s-%d" % [base, count]
 
 
 func init(viewport: Control) -> void:
@@ -1263,8 +1280,11 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	row_data.row_type = EventRowData.RowType.EVENT  # reads like a regular event row (condition | action lanes), not a dimmed block
 	row_data.source_resource = raw_row
 	row_data.line_count = 1  # visual collapse only - the underlying lines are all still there
-	var data_class_name_str: String = str(model.get("class_name"))
-	row_data.row_uid = "data_class_%s" % (data_class_name_str if not data_class_name_str.is_empty() else str(raw_row.get_instance_id()))
+	var data_class_display_name: String = str(model.get("class_name"))
+	# Uid scope, NOT the display name: same-named repeats get a "-2" suffix so their rows
+	# never alias (selection/disabled state used to mirror between same-named classes).
+	var data_class_name_str: String = _unique_class_scope(data_class_display_name, raw_row)
+	row_data.row_uid = "data_class_%s" % data_class_name_str
 	row_data.language_block = true  # a class declaration, not a regular ACE event - gets the language stripe
 	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	var body: Array = model.get("body", [])
@@ -1286,7 +1306,7 @@ func _build_data_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var base: String = str(model.get("extends", ""))
-	var header_text: String = "class %s" % data_class_name_str
+	var header_text: String = "class %s" % data_class_display_name
 	if not base.is_empty():
 		header_text += " extends %s" % base
 	var header_spans: Array[SemanticSpan] = [
@@ -1422,8 +1442,10 @@ func _build_methods_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	row_data.row_type = EventRowData.RowType.EVENT
 	row_data.source_resource = raw_row
 	row_data.line_count = 1
-	var class_name_str: String = str(model.get("class_name"))
-	row_data.row_uid = "methods_class_%s" % (class_name_str if not class_name_str.is_empty() else str(raw_row.get_instance_id()))
+	var class_display_name: String = str(model.get("class_name"))
+	# Uid scope, NOT the display name (same-named repeats suffix "-2" so rows never alias).
+	var class_name_str: String = _unique_class_scope(class_display_name, raw_row)
+	row_data.row_uid = "methods_class_%s" % class_name_str
 	row_data.language_block = true  # a class declaration, not a regular ACE event - gets the language stripe
 	row_data.disabled = not raw_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	var body: Array = model.get("body", [])
@@ -1431,7 +1453,7 @@ func _build_methods_class_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	var action_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var base: String = str(model.get("extends", ""))
-	var header_text: String = "class %s" % class_name_str
+	var header_text: String = "class %s" % class_display_name
 	if not base.is_empty():
 		header_text += " extends %s" % base
 	var field_count: int = 0
