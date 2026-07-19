@@ -86,6 +86,17 @@ EventSheets.edit("Shout Comments", func(sheet: EventSheetResource) -> bool:
 
 Palette commands are the discoverability seam: `register_palette_command(title, action)` puts your tool in Ctrl+P next to the built-ins (re-register the same title to replace it, `unregister_palette_command` to remove it). Registration works even before a dock exists; entries appear once a palette opens.
 
+**Asset drops.** Files dragged from the FileSystem dock onto the sheet canvas become pre-filled rows, and the mapping is a registry you can extend. `register_asset_drop_handler(extensions, build)` takes a builder `build(asset_path: String, target_event: Resource) -> Resource`; registering it also lights up the drop cursor for those extensions with no other wiring. Return an `ACEAction` and it joins the event row the file landed on (or a fresh On Ready event on an empty-space drop) - an effect is always an action. Return any other row resource (a preload `CustomBlockRow`, a `RawCodeRow`) and it lands at the sheet's top level as a declaration. Return `null` to decline. The built-ins run through this same seam: scenes spawn, sounds play, images set the `texture` property, JSON loads into a variable, and `.tres`/`.res`/`.gd` become preload blocks.
+
+```gdscript
+# A .dialogue file starts a conversation when dropped on an event.
+EventSheets.register_asset_drop_handler(PackedStringArray(["dialogue"]),
+	func(asset_path: String, _target: Resource) -> Resource:
+		return EventSheets.builtin_action("SetVar", {"var_name": "conversation", "value": "load(%s)" % ("\"%s\"" % asset_path)}))
+```
+
+Two helpers do the heavy lifting inside a builder: `builtin_action(ace_id, params)` builds a picker-identical action from any built-in Core descriptor (`{uid}` baked fresh), and `preload_block_for(asset_path)` builds a `const Name := preload("res://...")` Custom Block row with a safe constant name.
+
 ## 5. Codegen Services
 
 The compiler and importer as plain services, dock-free, usable from tests and CI:
@@ -240,6 +251,10 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Seams | `register_editor_gizmo(script_path, drawer)` / `editor_gizmo_drawer_for(script_path)` | `void` / `Callable` | no |
 | Editor | `add_trigger_for_signal(signal_name, args_signature)` | `bool` | yes |
 | Vocabulary | `build_signal_trigger_event(signal_name, args_signature)` / `signals_of(node)` | `EventRow` / `Array[Dictionary]` | no |
+| Seams | `register_asset_drop_handler(extensions, build, description := "")` - files dropped on the canvas become rows (actions join the hit event; other rows land top-level) | `void` | no (fires when open) |
+| Seams | `asset_drop_builder_for(extension)` / `handled_asset_extensions()` | `Callable` / `PackedStringArray` | no |
+| Seams | `builtin_action(ace_id, params)` - a picker-identical ACEAction from a built-in descriptor, {uid} baked | `ACEAction` | no |
+| Seams | `preload_block_for(asset_path)` - a preload Custom Block row with a safe constant name | `CustomBlockRow` | no |
 | Seams | `preview_behaviors()` | `bool` | yes |
 | Seams | `verify_pack(pack_gd_path: String)` | `Dictionary` | no |
 | Localisation | `translate(text: String)` | `String` | no |

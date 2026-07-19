@@ -972,6 +972,116 @@ static func verify_pack(pack_gd_path: String) -> Dictionary:
 	return report
 
 
+# ── Asset drops (FileSystem files dragged onto the sheet canvas) ───────────────────────
+
+## extension (lowercase, no dot) -> {"build": Callable, "description": String}
+static var _asset_drop_handlers: Dictionary = {}
+static var _builtin_asset_drop_handlers_registered: bool = false
+
+
+## Registers a drop handler for FileSystem files dragged onto the sheet canvas.
+## `build(asset_path: String, target_event: Resource) -> Resource` returns:
+##   - an ACEAction: appended to the event row the file landed on, or to a fresh
+##     On Ready event when it landed on empty space (the effect maps onto the ACTION
+##     lane, like every effect in the event model);
+##   - any other sheet row resource (a CustomBlockRow such as the preload kind, a
+##     RawCodeRow, ...): inserted at the sheet's top level as a declaration;
+##   - null to decline this file (the drop reports nothing was added).
+## One handler per extension; last registration wins, so an extension can retarget a
+## built-in type. The built-in handlers (scenes spawn, sounds play, images set the
+## texture, JSON loads into a variable, resources/scripts preload) register through
+## this same seam.
+static func register_asset_drop_handler(extensions: PackedStringArray, build: Callable, description: String = "") -> void:
+	for extension: String in extensions:
+		_asset_drop_handlers[extension.to_lower().trim_prefix(".")] = {"build": build, "description": description}
+
+
+## The registered builder for one extension (an invalid Callable when unhandled).
+static func asset_drop_builder_for(extension: String) -> Callable:
+	_ensure_builtin_asset_drop_handlers()
+	return ((_asset_drop_handlers.get(extension.to_lower(), {}) as Dictionary).get("build", Callable()) as Callable)
+
+
+## Every extension the canvas accepts, sorted - the viewport's drop filter reads this,
+## so registering a handler makes the drop cursor light up with no other wiring.
+static func handled_asset_extensions() -> PackedStringArray:
+	_ensure_builtin_asset_drop_handlers()
+	var extensions: PackedStringArray = PackedStringArray()
+	for extension: Variant in _asset_drop_handlers.keys():
+		extensions.append(str(extension))
+	extensions.sort()
+	return extensions
+
+
+## A ready-to-insert ACEAction built from a built-in Core descriptor: identity and
+## template copied, {uid} baked fresh so stateful templates stay per-instance - exactly
+## what a picker apply produces. The building block asset-drop handlers (and any other
+## extension that inserts actions) use instead of re-implementing the apply path.
+static func builtin_action(ace_id: String, params: Dictionary) -> ACEAction:
+	for descriptor in EventForgeBuiltinACEs.get_descriptors():
+		if descriptor.ace_id == ace_id:
+			var action: ACEAction = ACEAction.new()
+			action.provider_id = descriptor.provider_id
+			action.ace_id = ace_id
+			action.params = params.duplicate(true)
+			action.codegen_template = str(descriptor.codegen_template)
+			if action.codegen_template.contains("{uid}"):
+				action.codegen_template = action.codegen_template.replace("{uid}", EventSheetDock._fresh_uid_token())
+			return action
+	return null
+
+
+## A preload Custom Block row (`const Name := preload("res://...")`) for a resource
+## path - runs on the Custom Block API's preload kind. The constant name derives from
+## the filename (PascalCase, illegal characters stripped, letter-prefixed).
+static func preload_block_for(asset_path: String) -> CustomBlockRow:
+	var block: CustomBlockRow = CustomBlockRow.new()
+	block.kind_id = "preload"
+	block.fields = {"name": _preload_constant_name(asset_path), "path": asset_path}
+	return block
+
+
+static func _preload_constant_name(asset_path: String) -> String:
+	var base: String = asset_path.get_file().get_basename().to_pascal_case()
+	var sanitizer: RegEx = RegEx.new()
+	sanitizer.compile("[^A-Za-z0-9_]")
+	base = sanitizer.sub(base, "", true)
+	if base.is_empty() or base[0].is_valid_int():
+		base = "Res" + base
+	return base
+
+
+static func _ensure_builtin_asset_drop_handlers() -> void:
+	if _builtin_asset_drop_handlers_registered:
+		return
+	_builtin_asset_drop_handlers_registered = true
+	register_asset_drop_handler(PackedStringArray(["tscn", "scn"]), _drop_build_spawn_scene, "Spawn the scene at a position")
+	register_asset_drop_handler(PackedStringArray(["ogg", "wav", "mp3"]), _drop_build_play_sound, "Play the sound")
+	register_asset_drop_handler(PackedStringArray(["json"]), _drop_build_load_json, "Load the JSON file into a variable")
+	register_asset_drop_handler(PackedStringArray(["png", "jpg", "jpeg", "webp", "svg", "bmp", "tga"]), _drop_build_set_texture, "Set the texture property")
+	register_asset_drop_handler(PackedStringArray(["tres", "res", "gd"]), _drop_build_preload, "Preload as a constant")
+
+
+static func _drop_build_spawn_scene(asset_path: String, _target_event: Resource) -> Resource:
+	return builtin_action("SpawnSceneAt", {"path": ACEParamsDialog.format_quoted_literal(asset_path), "position": "Vector2(0, 0)"})
+
+
+static func _drop_build_play_sound(asset_path: String, _target_event: Resource) -> Resource:
+	return builtin_action("PlaySound", {"path": ACEParamsDialog.format_quoted_literal(asset_path)})
+
+
+static func _drop_build_load_json(asset_path: String, _target_event: Resource) -> Resource:
+	return builtin_action("JsonLoadFile", {"var_name": "data", "path": ACEParamsDialog.format_quoted_literal(asset_path)})
+
+
+static func _drop_build_set_texture(asset_path: String, _target_event: Resource) -> Resource:
+	return builtin_action("SetProperty", {"target": "self", "property": "texture", "value": "load(%s)" % ACEParamsDialog.format_quoted_literal(asset_path)})
+
+
+static func _drop_build_preload(asset_path: String, _target_event: Resource) -> Resource:
+	return preload_block_for(asset_path)
+
+
 # ── Internal wiring (called by the plugin itself) ─────────────────────────────────────
 
 

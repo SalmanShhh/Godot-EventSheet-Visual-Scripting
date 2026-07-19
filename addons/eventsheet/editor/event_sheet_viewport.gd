@@ -3277,13 +3277,15 @@ static func property_value_literal(value: Variant) -> String:
 	return literal
 
 
-## Scene/audio files in a FileSystem-dock drop payload - the asset kinds an event
-## can act on directly (spawn / play).
+## FileSystem-dock drop payload files with a registered asset-drop handler (the
+## EventSheets seam - built-ins cover scenes/sounds/images/JSON/resources, and any
+## extension can register more, which lights up the drop cursor here automatically).
 static func _resolve_dropped_asset_paths(data: Variant) -> PackedStringArray:
 	var assets: PackedStringArray = PackedStringArray()
 	if data is Dictionary and str((data as Dictionary).get("type", "")) == "files":
+		var handled: PackedStringArray = EventSheets.handled_asset_extensions()
 		for file_path: Variant in ((data as Dictionary).get("files", []) as Array):
-			if str(file_path).get_extension().to_lower() in ["tscn", "scn", "ogg", "wav", "mp3"]:
+			if str(file_path).get_extension().to_lower() in handled:
 				assets.append(str(file_path))
 	return assets
 

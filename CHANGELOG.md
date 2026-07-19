@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - canvas asset drops for more file types, on a public seam
+
+- Dropping files from the FileSystem dock onto the sheet canvas now covers images
+  (`png/jpg/jpeg/webp/svg/bmp/tga` become a Set Property `texture` action), JSON
+  (loads into a variable), and resources/scripts (`tres/res/gd` become a preload
+  Custom Block row at the top level) - alongside the existing scene-spawn and
+  sound-play drops. Dropping on empty space starts a fresh On Ready event instead of
+  bouncing with a hint; multi-file drops share it, and everything is one undo step.
+- The mapping is a public EventSheets seam the built-ins themselves run through:
+  `register_asset_drop_handler(extensions, build)` makes any extension droppable (the
+  drop cursor lights up automatically); the builder returns an ACEAction (joins the
+  hit event - effects map onto the action lane) or any other row resource (lands
+  top-level as a declaration). Helpers: `builtin_action(ace_id, params)` builds a
+  picker-identical baked action from a built-in descriptor, and
+  `preload_block_for(path)` builds a preload block with a safe constant name.
+
 ### Fixed - remaining whole-plugin review items
 
 - **Runtime group guards are always legal identifiers**: a toggleable group named

@@ -3098,50 +3098,42 @@ func _apply_property_drop(target_event: Resource, node_reference: String, proper
 	_ace_apply._apply_ace_definition(definition, params, {"mode": mode, "selected_resource": target_event})
 
 
+## Routes each dropped file through the EventSheets asset-drop seam (the built-in
+## handlers register there too - scenes spawn, sounds play, images set the texture,
+## JSON loads, resources/scripts preload). ACEActions land on the event row the file
+## hit, or open a fresh On Ready event on an empty-space drop; any other row resource
+## (the preload block) is a top-level declaration. One undo step either way.
 func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -> void:
-	if not (target_event is EventRow):
-		_set_status("Drop scenes or sounds onto an event row to add a pre-filled action.", true)
-		return
 	if not _ensure_sheet_for_editing():
 		return
 	var counters: Dictionary = {"added": 0}
 	var changed: bool = _perform_undoable_sheet_edit("Drop Asset", func() -> bool:
+		var event_target: EventRow = target_event as EventRow
 		for asset_path: String in asset_paths:
-			var action: ACEAction = _action_for_asset(asset_path)
-			if action != null:
-				(target_event as EventRow).actions.append(action)
+			var build: Callable = EventSheets.asset_drop_builder_for(asset_path.get_extension())
+			if not build.is_valid():
+				continue
+			var built: Resource = build.call(asset_path, target_event)
+			if built is ACEAction:
+				# The effect maps onto the ACTION lane: dropped on a row it joins that
+				# event; on empty space it starts a fresh On Ready event (shared by every
+				# action in this drop, so a multi-file drop reads as one event).
+				if event_target == null:
+					event_target = EventRow.new()
+					event_target.trigger_provider_id = "Core"
+					event_target.trigger_id = "OnReady"
+					_current_sheet.events.append(event_target)
+				event_target.actions.append(built)
+				counters["added"] = int(counters["added"]) + 1
+			elif built != null:
+				# Non-action rows (preload blocks, ...) are declarations - top level.
+				_current_sheet.events.append(built)
 				counters["added"] = int(counters["added"]) + 1
 		return int(counters["added"]) > 0)
 	if changed:
-		_mark_dirty("Added %d pre-filled action(s) from the dropped asset(s)." % int(counters["added"]))
-
-
-## The pre-filled action for one dropped asset: scenes spawn (Spawn Scene At), sounds
-## play (Play Sound) - the builtin descriptor's template baked exactly like a picker
-## apply ({uid} re-baked per instance). Unknown extensions return null.
-func _action_for_asset(asset_path: String) -> ACEAction:
-	var extension: String = asset_path.get_extension().to_lower()
-	var ace_id: String = ""
-	var params: Dictionary = {}
-	if extension in ["tscn", "scn"]:
-		ace_id = "SpawnSceneAt"
-		params = {"path": ACEParamsDialog.format_quoted_literal(asset_path), "position": "Vector2(0, 0)"}
-	elif extension in ["ogg", "wav", "mp3"]:
-		ace_id = "PlaySound"
-		params = {"path": ACEParamsDialog.format_quoted_literal(asset_path)}
+		_mark_dirty("Added %d row(s) from the dropped asset(s)." % int(counters["added"]))
 	else:
-		return null
-	for descriptor in EventForgeBuiltinACEs.get_descriptors():
-		if descriptor.ace_id == ace_id:
-			var action: ACEAction = ACEAction.new()
-			action.provider_id = descriptor.provider_id
-			action.ace_id = ace_id
-			action.params = params
-			action.codegen_template = str(descriptor.codegen_template)
-			if action.codegen_template.contains("{uid}"):
-				action.codegen_template = action.codegen_template.replace("{uid}", _fresh_uid_token())
-			return action
-	return null
+		_set_status("Nothing to add for that file type - drop scenes, sounds, images, JSON, or resources.", true)
 
 # ── .gd preview / open-in-Godot / lift report - delegates to EventSheetPreviewGlue ────────
 # The read-only .gd-preview banner, the "Edit Events" unlock, the glue that hands scripts/paths to

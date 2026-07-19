@@ -255,9 +255,11 @@ static func run() -> bool:
 	gated_editor.free()
 
 	# ── Canvas asset drops with intent ────────────────────────────────────────────
+	# The drop filter reads the EventSheets handler registry, so every handled type
+	# resolves (a .png is droppable now) and unknown extensions still bounce.
 	all_passed = _check("file payloads resolve to droppable assets only",
-		EventSheetViewport._resolve_dropped_asset_paths({"type": "files", "files": ["res://a.tscn", "res://b.png", "res://c.ogg"]}),
-		PackedStringArray(["res://a.tscn", "res://c.ogg"])) and all_passed
+		EventSheetViewport._resolve_dropped_asset_paths({"type": "files", "files": ["res://a.tscn", "res://b.png", "res://c.ogg", "res://d.blend"]}),
+		PackedStringArray(["res://a.tscn", "res://b.png", "res://c.ogg"])) and all_passed
 	all_passed = _check("non-file payloads resolve to nothing",
 		EventSheetViewport._resolve_dropped_asset_paths({"type": "nodes", "nodes": []}), PackedStringArray()) and all_passed
 	var drop_event: EventRow = EventRow.new()
@@ -272,11 +274,46 @@ static func run() -> bool:
 		and (drop_event.actions[1] as ACEAction).ace_id == "PlaySound", true) and all_passed
 	all_passed = _check("multi-line drop templates bake a fresh uid",
 		(drop_event.actions[0] as ACEAction).codegen_template.contains("{uid}"), false) and all_passed
+	# New handled types: an image becomes a Set Property (texture) action, JSON loads
+	# into a variable - the effect always maps onto the action lane.
+	restored_editor._apply_asset_drop(drop_event, PackedStringArray(["res://hero.png", "res://waves.json"]))
+	all_passed = _check("an image drop sets the texture property",
+		drop_event.actions.size() == 4
+		and (drop_event.actions[2] as ACEAction).ace_id == "SetProperty"
+		and str((drop_event.actions[2] as ACEAction).params.get("property")) == "texture"
+		and str((drop_event.actions[2] as ACEAction).params.get("value")) == "load(\"res://hero.png\")", true) and all_passed
+	all_passed = _check("a JSON drop loads it into a variable",
+		(drop_event.actions[3] as ACEAction).ace_id, "JsonLoadFile") and all_passed
+	# Empty-space drops start a fresh On Ready event instead of bouncing with a hint.
+	var events_before: int = restored_editor._current_sheet.events.size()
 	restored_editor._apply_asset_drop(null, PackedStringArray(["res://x.tscn"]))
-	all_passed = _check("empty-space drops only hint",
-		drop_event.actions.size(), 2) and all_passed
-	all_passed = _check("unknown extensions build no action",
-		restored_editor._action_for_asset("res://image.png") == null, true) and all_passed
+	var fresh_event: EventRow = restored_editor._current_sheet.events.back() as EventRow
+	all_passed = _check("an empty-space drop starts a fresh On Ready event",
+		restored_editor._current_sheet.events.size() == events_before + 1
+		and fresh_event != null and fresh_event.trigger_id == "OnReady"
+		and fresh_event.actions.size() == 1 and (fresh_event.actions[0] as ACEAction).ace_id == "SpawnSceneAt", true) and all_passed
+	all_passed = _check("the row it was NOT dropped on is untouched",
+		drop_event.actions.size(), 4) and all_passed
+	# A resource/script drop is a DECLARATION: a preload Custom Block row at top level
+	# (the drop seam dogfoods the Custom Block API's preload kind).
+	restored_editor._apply_asset_drop(null, PackedStringArray(["res://loot_table.tres"]))
+	var preload_row: CustomBlockRow = restored_editor._current_sheet.events.back() as CustomBlockRow
+	all_passed = _check("a resource drop becomes a preload block",
+		preload_row != null and preload_row.kind_id == "preload"
+		and str(preload_row.fields.get("name", "")) == "LootTable"
+		and str(preload_row.fields.get("path", "")) == "res://loot_table.tres", true) and all_passed
+	all_passed = _check("preload constant names survive hostile filenames",
+		str(EventSheets.preload_block_for("res://3d mesh!.tres").fields.get("name", "")).begins_with("Res3"), true) and all_passed
+	# The extension seam itself: registering a handler makes a new extension droppable
+	# and its row lands top-level like any declaration.
+	EventSheets.register_asset_drop_handler(PackedStringArray(["txt"]), _drop_note_row, "Reference the note")
+	all_passed = _check("registering a handler lights up the drop filter",
+		EventSheets.handled_asset_extensions().has("txt"), true) and all_passed
+	restored_editor._apply_asset_drop(null, PackedStringArray(["res://notes.txt"]))
+	var note_row: RawCodeRow = restored_editor._current_sheet.events.back() as RawCodeRow
+	all_passed = _check("a custom handler's row lands on the sheet",
+		note_row != null and note_row.code.contains("res://notes.txt"), true) and all_passed
+	EventSheets._asset_drop_handlers.erase("txt")  # leave no session-wide residue for later tests
 	restored_editor.free()
 	DirAccess.remove_absolute("user://session_a.tres")
 	DirAccess.remove_absolute("user://eventsheets_session.cfg")
@@ -327,6 +364,13 @@ static func run() -> bool:
 	run_editor.free()
 
 	return all_passed
+
+
+## The custom asset-drop handler the seam pin registers for .txt files.
+static func _drop_note_row(asset_path: String, _target_event: Resource) -> Resource:
+	var raw: RawCodeRow = RawCodeRow.new()
+	raw.code = "# see %s" % asset_path
+	return raw
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
