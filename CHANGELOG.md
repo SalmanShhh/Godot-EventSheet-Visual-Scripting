@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Fixed - save safety (whole-plugin review)
+
+- **Atomic .gd writes**: the compiler writes generated/backed GDScript through a temp
+  file + rename (with a read-back check) - opening the target for writing truncated it
+  FIRST, so a crash, disk-full, or sync-lock mid-write could leave the user's sheet as
+  a zero-byte or half-written file with no way back.
+- **The backup ring covers GDScript-backed sheets**: saving a .gd sheet now rings its
+  pre-save bytes like .tres saves always did (Save As over an existing file too), the
+  ring lists .gd backups (it filtered to .tres, so such backups were invisible to
+  Restore), Restore re-imports a .gd backup through the lifter while keeping the open
+  sheet's source path, and identical re-backups dedup so no-op saves don't churn the
+  ring.
+- **Honest cross-sheet saves**: Replace in Project and rename-in-includers checked
+  nothing - a locked/read-only file was reported as updated while keeping the old text.
+  Both verify the save now (failures named in the status / a warning), and closed-sheet
+  overwrites ring a backup first since they have no undo.
+- Shortcut overrides, language preference, tab session, and picker recents warn when
+  their config file can't be written instead of losing the setting silently.
+
 ### Fixed - lifter covenant holes (whole-plugin review)
 
 - **Grouped non-if events keep their group on reopen**: the `# @group:<slug>` breadcrumb

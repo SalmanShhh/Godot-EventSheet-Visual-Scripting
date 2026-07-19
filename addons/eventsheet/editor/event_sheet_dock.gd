@@ -2578,7 +2578,17 @@ func _on_restore_backup_pressed() -> void:
 ## panel stay coherent), the user reviews and saves to keep it. Nothing on disk
 ## changes until that save, and the save itself backs up the pre-restore state.
 func _restore_backup_path(backup_path: String) -> void:
-	var backup: EventSheetResource = ResourceLoader.load(backup_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
+	var backup: EventSheetResource = null
+	if backup_path.get_extension() == "gd":
+		# A GDScript-backed sheet's backup IS plain source: re-import it through the lifter,
+		# then keep the OPEN sheet's source path + read-only state (the imported copy has
+		# neither, and the property loop below would otherwise blank them).
+		backup = GDScriptImporter.new().import_external_source(FileAccess.get_file_as_string(backup_path))
+		if backup != null:
+			backup.external_source_path = _current_sheet.external_source_path
+			backup.read_only = _current_sheet.read_only
+	else:
+		backup = ResourceLoader.load(backup_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
 	if backup == null:
 		_set_status("Couldn't load that backup.", true)
 		return

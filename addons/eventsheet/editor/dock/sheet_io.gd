@@ -87,6 +87,9 @@ func _open_new_sheet(path: String) -> void:
 ## sets a failure status when it does not). Shared by Save and "Open in Godot" so the latter can
 ## refuse to open a stale source when the sheet doesn't currently compile.
 func _save_backed_sheet() -> bool:
+	# The .gd IS the sheet on this path - it deserves the same backup ring a .tres save
+	# gets (pre-save bytes first; the ring dedups no-op saves so it doesn't churn).
+	EventSheetBackups.backup_sheet(_dock._current_sheet.external_source_path)
 	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, _dock._current_sheet.external_source_path)
 	EventSheets._notify_lifecycle("compiled", {"sheet": _dock._current_sheet, "path": _dock._current_sheet.external_source_path, "success": bool(compile_result.get("success", false))})
 	if not bool(compile_result.get("success", false)):
@@ -226,6 +229,8 @@ func _save_sheet_to_path(path: String) -> void:
 	var was_backed: bool = not _dock._current_sheet.external_source_path.is_empty()
 	if was_backed:
 		_dock._current_sheet.external_source_path = ""
+	# Save As over an EXISTING file is still an overwrite - ring its pre-save bytes too.
+	EventSheetBackups.backup_sheet(resolved_path)
 	var err: Error = ResourceSaver.save(_dock._current_sheet, resolved_path)
 	if err == OK:
 		_dock._current_sheet.take_over_path(resolved_path)
@@ -249,6 +254,8 @@ func _save_sheet_to_path(path: String) -> void:
 func _save_sheet_as_gdscript(path: String) -> bool:
 	# omit_generated_banner: this .gd is the user's hand-editable source of truth, NOT a regenerated
 	# companion - it must not carry the "DO NOT EDIT / regenerated on every compile" banner.
+	# Save As over an existing .gd overwrites it - ring its pre-save bytes first.
+	EventSheetBackups.backup_sheet(path)
 	var compile_result: Dictionary = SheetCompiler.compile(_dock._current_sheet, path, true)
 	if not bool(compile_result.get("success", false)):
 		_dock._set_status("Couldn't save as GDScript: %s" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)

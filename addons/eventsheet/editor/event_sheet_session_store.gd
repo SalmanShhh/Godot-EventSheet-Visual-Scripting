@@ -44,7 +44,8 @@ func persist() -> void:
 	session.set_value("session", "paths", paths)
 	session.set_value("session", "editable", editable_paths)
 	session.set_value("session", "active", active_in_saved)
-	session.save(SESSION_PATH)
+	if session.save(SESSION_PATH) != OK:
+		push_warning("EventSheets: couldn't save the tab session to %s - open tabs won't restore next launch." % SESSION_PATH)
 
 
 ## Reopens last session's tabs (missing files skipped silently - a deleted sheet shouldn't block

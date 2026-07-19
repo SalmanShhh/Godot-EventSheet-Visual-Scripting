@@ -123,7 +123,8 @@ static func _save_recents() -> void:
 	var config: ConfigFile = ConfigFile.new()
 	config.load(RECENTS_FILE)  # preserve other projects' recents already in the file
 	config.set_value("recents", _recents_project_key(), _recent_ace_ids)
-	config.save(RECENTS_FILE)
+	if config.save(RECENTS_FILE) != OK:
+		push_warning("EventSheets: couldn't save picker recents to %s - they last only this session." % RECENTS_FILE)
 
 ## Node-type sections pre-declared at the top of the "Add Event" picker, in order.
 const EVENT_PICKER_GROUPS: Array[String] = [

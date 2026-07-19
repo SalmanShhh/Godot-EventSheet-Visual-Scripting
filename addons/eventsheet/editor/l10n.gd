@@ -284,4 +284,5 @@ static func _save_language_preference() -> void:
 	var config: ConfigFile = ConfigFile.new()
 	config.load(LANGUAGE_FILE)  # preserve other projects' choices already in the file
 	config.set_value("language", _preference_key(), _locale)
-	config.save(LANGUAGE_FILE)
+	if config.save(LANGUAGE_FILE) != OK:
+		push_warning("EventSheets: couldn't save the language preference to %s - it lasts only this session." % LANGUAGE_FILE)

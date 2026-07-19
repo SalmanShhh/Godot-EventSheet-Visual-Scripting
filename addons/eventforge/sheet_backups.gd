@@ -1,7 +1,7 @@
 # Godot EventSheets - save-time backup ring for sheets
 #
-# Every save of an existing .tres first copies the file's pre-save bytes into a
-# per-sheet ring under user://eventsheet_backups/ (outside the project: no git noise,
+# Every save of an existing sheet (.tres, .res, or a GDScript-backed .gd) first copies the
+# file's pre-save bytes into a per-sheet ring under user://eventsheet_backups/ (outside the project: no git noise,
 # no export pollution). The ring keeps the newest N (eventsheets/editor/backup_count,
 # default 10; 0 disables) so a bad save, a wrong-sheet overwrite or an editor crash
 # never costs more than one save's worth of work - git-grade safety for the
@@ -40,7 +40,7 @@ static func list_backups(sheet_path: String) -> PackedStringArray:
 	dir.list_dir_begin()
 	var entry: String = dir.get_next()
 	while not entry.is_empty():
-		if not dir.current_is_dir() and entry.ends_with(".tres"):
+		if not dir.current_is_dir() and (entry.ends_with(".tres") or entry.ends_with(".res") or entry.ends_with(".gd")):
 			backups.append("%s/%s" % [dir_path, entry])
 		entry = dir.get_next()
 	dir.list_dir_end()
@@ -58,14 +58,19 @@ static func backup_sheet(sheet_path: String) -> String:
 	var dir_path: String = backup_dir_for(sheet_path)
 	DirAccess.make_dir_recursive_absolute(dir_path)
 	var existing: PackedStringArray = list_backups(sheet_path)
+	var current_bytes: PackedByteArray = FileAccess.get_file_as_bytes(sheet_path)
 	var next_index: int = 1
 	if not existing.is_empty():
+		# Identical to the newest backup: nothing new to protect - don't churn the ring
+		# (GDScript-backed sheets back up on EVERY save now, most of which are no-ops).
+		if FileAccess.get_file_as_bytes(existing[0]) == current_bytes:
+			return existing[0]
 		next_index = int(existing[0].get_file().get_slice(".", 0)) + 1
 	var backup_path: String = "%s/%04d.%s" % [dir_path, next_index, sheet_path.get_file()]
 	var out: FileAccess = FileAccess.open(backup_path, FileAccess.WRITE)
 	if out == null:
 		return ""
-	out.store_buffer(FileAccess.get_file_as_bytes(sheet_path))
+	out.store_buffer(current_bytes)
 	out.close()
 	var all_backups: PackedStringArray = list_backups(sheet_path)
 	for index in range(keep, all_backups.size()):

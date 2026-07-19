@@ -178,6 +178,12 @@ func rename_in_includers(old_name: String, new_name: String, candidate_paths: Pa
 		if other == null or not other.includes.has(_dock._current_sheet_path):
 			continue
 		if EventSheetRefactor.rename_symbol(other, old_name, new_name) > 0:
-			ResourceSaver.save(other, sheet_path)
-			touched.append(sheet_path.get_file())
+			# Claim the rename only when the save landed - an unchecked save reported the
+			# includer as renamed while the file still used the old symbol (silent breakage
+			# at the NEXT compile of that sheet). Closed sheets have no undo: ring first.
+			EventSheetBackups.backup_sheet(sheet_path)
+			if ResourceSaver.save(other, sheet_path) == OK:
+				touched.append(sheet_path.get_file())
+			else:
+				push_warning("EventSheets: rename could not save %s - it still uses '%s'." % [sheet_path, old_name])
 	return touched

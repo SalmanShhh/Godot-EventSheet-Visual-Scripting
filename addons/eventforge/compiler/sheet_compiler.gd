@@ -527,16 +527,30 @@ static func _output_is_current(path: String, output: String) -> bool:
 ## Writes `output` to `path` only when it differs from what is already on disk, so an unchanged
 ## recompile (sheet save, Attach to Node, Test Bench, export - all funnel through compile()) never
 ## touches the file and never trips Godot's external-change watcher. Returns true on success,
-## including the "already up to date" no-op; false only if a genuinely-needed write could not open.
+## including the "already up to date" no-op; false only if a genuinely-needed write failed.
+## The write is ATOMIC (temp file + rename): opening the target with FileAccess.WRITE truncates
+## it FIRST, so a crash / disk-full / OneDrive lock mid-write used to leave the user's sheet as a
+## zero-byte or half-written .gd with no way back. The rename either fully lands or leaves the
+## original untouched.
 static func _write_output_if_changed(path: String, output: String) -> bool:
 	if _output_is_current(path, output):
 		return true
-	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	var temp_path: String = path + ".efwrite.tmp"
+	var file: FileAccess = FileAccess.open(temp_path, FileAccess.WRITE)
 	if file == null:
 		return false
 	file.store_string(output)
 	file.flush()
 	file.close()
+	# Verify the temp landed whole before it replaces the real file (catches silent disk-full).
+	if FileAccess.get_file_as_string(temp_path) != output:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(temp_path))
+		return false
+	var absolute_temp: String = ProjectSettings.globalize_path(temp_path)
+	var absolute_path: String = ProjectSettings.globalize_path(path)
+	if DirAccess.rename_absolute(absolute_temp, absolute_path) != OK:
+		DirAccess.remove_absolute(absolute_temp)
+		return false
 	return true
 
 

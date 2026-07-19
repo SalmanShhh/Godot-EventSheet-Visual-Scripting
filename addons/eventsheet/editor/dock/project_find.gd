@@ -192,18 +192,27 @@ func _run_project_replace() -> void:
 		_dock._set_status("Type something to find first.", true)
 		return
 	var touched: PackedStringArray = PackedStringArray()
+	var failed: PackedStringArray = PackedStringArray()
 	for sheet_path: String in list_project_sheets():
 		if sheet_path == _dock._current_sheet_path:
 			continue
 		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
 		var counter: Dictionary = {"count": 0}
 		_dock._replace_in_rows(sheet.events, needle, replacement, counter)
 		for function_entry: Variant in sheet.functions:
 			if function_entry is EventFunction:
 				_dock._replace_in_rows((function_entry as EventFunction).events if not (function_entry as EventFunction).events.is_empty() else (function_entry as EventFunction).rows, needle, replacement, counter)
 		if int(counter.get("count", 0)) > 0:
-			ResourceSaver.save(sheet, sheet_path)
-			touched.append("%s (%d)" % [sheet_path.get_file(), int(counter.get("count", 0))])
+			# An unchecked save here reported the sheet as replaced while the file kept the
+			# OLD text (locked file, read-only checkout) - claim success only when it saved.
+			# Closed sheets have no undo, so ring their pre-save bytes first.
+			EventSheetBackups.backup_sheet(sheet_path)
+			if ResourceSaver.save(sheet, sheet_path) == OK:
+				touched.append("%s (%d)" % [sheet_path.get_file(), int(counter.get("count", 0))])
+			else:
+				failed.append(sheet_path.get_file())
 	# The open sheet goes through the undoable path.
 	if _dock._current_sheet != null:
 		_dock._ensure_find_bar()
@@ -211,5 +220,8 @@ func _run_project_replace() -> void:
 		_dock._replace_edit.text = replacement
 		_dock._replace_all_in_sheet()
 	_run_project_find()
+	if not failed.is_empty():
+		_dock._set_status("Replace in Project: %s - COULD NOT SAVE: %s (files unchanged)." % [", ".join(touched) if not touched.is_empty() else "no sheets saved", ", ".join(failed)], true)
+		return
 	_dock._set_status("Replace in Project: %s" % (", ".join(touched) if not touched.is_empty() else "only the open sheet had matches."))
 

@@ -115,7 +115,8 @@ static func _save_overrides() -> void:
 	var config: ConfigFile = ConfigFile.new()
 	for action: Variant in _overrides:
 		config.set_value("shortcuts", str(action), str(_overrides[action]))
-	config.save(OVERRIDES_FILE)
+	if config.save(OVERRIDES_FILE) != OK:
+		push_warning("EventSheets: couldn't save shortcut overrides to %s - the change lasts only this session." % OVERRIDES_FILE)
 
 
 static func binding_for(action: String) -> String:
