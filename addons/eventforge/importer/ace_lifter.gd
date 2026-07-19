@@ -945,7 +945,10 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 		event_function.return_type_name = return_name
 	else:
 		return {"ok": false}
-	for argument: String in header_match.get_string(3).split(", ", false):
+	# Top-level split: a typed collection like `scores: Dictionary[String, int]` is ONE argument -
+	# the naive split(", ") fragmented it into two params that still REJOINED byte-identically,
+	# so the round-trip gate passed while the picker showed garbage fields.
+	for argument: String in EventSheetBlockRegistry.split_params_top_level(header_match.get_string(3)):
 		var param: ACEParam = ACEParam.new()
 		var argument_text: String = argument
 		# Split off a default value (`amount: int = 5`) first, so it never leaks into the type name.
@@ -1119,9 +1122,6 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			elif is_elif:
 				expression = rest.substr(5, rest.length() - 6)
 			var block_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
-			if is_if and not pending_group_slug.is_empty():
-				block_event.set_meta("__group_slug", pending_group_slug)
-				pending_group_slug = ""
 			if not is_if:
 				block_event.else_mode = EventRow.ElseMode.ELSE
 			var representable: bool = expression.is_empty() or _parse_conditions(expression, block_event, reverse_entries)
@@ -1138,6 +1138,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				# lines arrive through the statement branch below, tabs preserved.
 				if current == null:
 					current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+					pending_group_slug = _stamp_group(current, pending_group_slug)
 					rows.append(current)
 				pending_raw.append(rest)
 				index += 1
@@ -1145,6 +1146,11 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				continue
 			_flush_raw(current, pending_raw)
 			current = null
+			if is_if:
+				# Stamp only once the lift is CONFIRMED - a failed if degrades to the raw
+				# collector above, which then carries the group instead. (elif/else rows never
+				# start a group; the compiler emits markers only before else_mode NONE events.)
+				pending_group_slug = _stamp_group(block_event, pending_group_slug)
 			rows.append(block_event)
 			index = int(inner.get("next"))
 			chain_open = true
@@ -1192,6 +1198,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				# A consumed loop-index prelude re-joins first so no source line is ever lost.
 				if current == null:
 					current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+					pending_group_slug = _stamp_group(current, pending_group_slug)
 					rows.append(current)
 				if not loop_index_lift.is_empty():
 					pending_raw.append("var %s: int = -1" % loop_index_lift)
@@ -1202,6 +1209,9 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			_flush_raw(current, pending_raw)
 			current = null
 			_consume_pick_validity_guard(loop_event)
+			# A grouped loop event carries its group too (the marker precedes ANY grouped
+			# event's first line, not just `if` headers). Stamped only after the lift held.
+			pending_group_slug = _stamp_group(loop_event, pending_group_slug)
 			rows.append(loop_event)
 			index = int(loop_inner.get("next"))
 			chain_open = false  # a loop never opens an if/elif/else chain
@@ -1222,8 +1232,14 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				branch_lines.append(branch_line.substr(depth + 1))  # strip body_indent + the arm tab
 				scan += 1
 			if not branch_lines.is_empty():
+				if current != null and not pending_group_slug.is_empty():
+					# A group marker right before the match starts a NEW grouped event - merging
+					# into the open collector would silently drop the group on round-trip.
+					_flush_raw(current, pending_raw)
+					current = null
 				if current == null:
 					current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+					pending_group_slug = _stamp_group(current, pending_group_slug)
 					rows.append(current)
 				_flush_raw(current, pending_raw)  # any raw before the match emits before it (order)
 				var match_row: MatchRow = MatchRow.new()
@@ -1241,8 +1257,14 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			# An empty arm list isn't our shape - fall through and treat `match …:` as a raw line.
 		# Statement at this depth (or deeper, inside an unlifted block): collect with
 		# relative indentation intact.
+		if current != null and not pending_group_slug.is_empty():
+			# A group marker between statements means a NEW grouped event starts here - the
+			# collector would otherwise merge it into the previous event and lose the group.
+			_flush_raw(current, pending_raw)
+			current = null
 		if current == null:
 			current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
+			pending_group_slug = _stamp_group(current, pending_group_slug)
 			rows.append(current)
 		if at_this_depth:
 			_consume_action_line(current, rest, 0, pending_raw, reverse_entries, in_loop)
@@ -1255,6 +1277,16 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		chain_open = false
 	_flush_raw(current, pending_raw)
 	return {"ok": true, "rows": rows, "next": index}
+
+
+## Stamps a pending `# @group:<slug>` breadcrumb onto a freshly lifted event (any row kind -
+## conditioned, loop, match-carrier, or plain action collector) and consumes it. Returns the new
+## pending value ("" when stamped) so call sites stay one line: `pending = _stamp_group(row, pending)`.
+static func _stamp_group(event: EventRow, pending_group_slug: String) -> String:
+	if event == null or pending_group_slug.is_empty():
+		return pending_group_slug
+	event.set_meta("__group_slug", pending_group_slug)
+	return ""
 
 
 ## Parses a match's dedented branch lines (patterns at column 0, bodies one tab deeper) into structured
@@ -1520,11 +1552,11 @@ static func _make_event(trigger_id: String, trigger_provider: String = "Core", t
 	return event
 
 
-## Splits a joined condition on a TOP-LEVEL separator (" and " or " or ") only - ignoring the separator
-## inside (), [], {} or a string literal - so a compound term like `f(a and b)`, `x == "a or b"`, or
-## `not (a and b)` stays ONE condition. The naive String.split(sep) fragmented these into garbage
-## Expression-Is-True rows ("f(a", "b)"); each piece still round-tripped when rejoined, but the structure
-## was nonsense. (Both separators start with a space, so the `c == " "` guard covers either.)
+## Splits a joined expression on a TOP-LEVEL separator (" and ", " or ", ", ") only - ignoring the
+## separator inside (), [], {} or a string literal - so a compound term like `f(a and b)`, `x == "a or b"`,
+## `not (a and b)`, or a typed collection `Dictionary[String, int]` stays ONE piece. The naive
+## String.split(sep) fragmented these into garbage; each piece still round-tripped when rejoined, but the
+## structure was nonsense.
 static func _split_top_level(expression: String, sep: String) -> PackedStringArray:
 	var parts: PackedStringArray = PackedStringArray()
 	var depth: int = 0
@@ -1551,7 +1583,7 @@ static func _split_top_level(expression: String, sep: String) -> PackedStringArr
 			depth += 1
 		elif c == ")" or c == "]" or c == "}":
 			depth -= 1
-		elif depth == 0 and c == " " and expression.substr(i, sep_len) == sep:
+		elif depth == 0 and c == sep[0] and expression.substr(i, sep_len) == sep:
 			parts.append(expression.substr(start, i - start))
 			i += sep_len
 			start = i
@@ -1563,17 +1595,22 @@ static func _split_top_level(expression: String, sep: String) -> PackedStringArr
 
 ## Splits a joined condition expression into terms and reverse-matches every term (supporting `not (...)`
 ## negation), setting the event's AND/OR condition_mode. All terms must match or the lift fails - though
-## the generic Expression Is True condition (bare {expr}) catches any term no specific ACE claims. A
-## top-level ` and ` takes precedence (GDScript binds `and` tighter than `or`), so ` or ` splitting fires
-## only for a PURELY-OR expression (`a or b or c`, no top-level ` and `), which lifts as OR'd conditions -
-## a C3-style "Or block". A mixed `a and b or c` keeps the ` and ` split, which still re-emits byte-exact.
+## the generic Expression Is True condition (bare {expr}) catches any term no specific ACE claims.
+## Top-level ` or ` splits FIRST (matching GDScript, where `or` binds loosest): any ` or ` at the top
+## makes a C3-style "Or block" whose terms keep their inner `and`s whole, and only a pure-AND
+## expression splits on ` and ` into AND'd conditions.
 static func _parse_conditions(expression: String, event: EventRow, reverse_entries: Array) -> bool:
-	var terms: PackedStringArray = _split_top_level(expression, " and ")
-	if terms.size() == 1:
-		var or_terms: PackedStringArray = _split_top_level(expression, " or ")
-		if or_terms.size() > 1:
-			terms = or_terms
-			event.condition_mode = EventRow.ConditionMode.OR
+	# Precedence-correct split order: `or` binds LOOSEST in GDScript, so `a and b or c`
+	# means `(a and b) or c` - split top-level ` or ` FIRST (an OR block whose terms keep
+	# their inner `and`s whole), and only a pure-AND expression splits on ` and `. The old
+	# and-first order lifted the mixed form as `a AND (b or c)`: the bytes round-tripped,
+	# but the reconstructed structure was semantically wrong, so editing a condition in
+	# the reopened sheet emitted different runtime behavior than the source expressed.
+	var terms: PackedStringArray = _split_top_level(expression, " or ")
+	if terms.size() > 1:
+		event.condition_mode = EventRow.ConditionMode.OR
+	else:
+		terms = _split_top_level(expression, " and ")
 	for term: String in terms:
 		var negated: bool = false
 		var candidate: String = term

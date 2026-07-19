@@ -54,7 +54,48 @@ static func run() -> bool:
 	var recompiled: String = str(SheetCompiler.compile(sheet2, "user://_group_rt_verify.gd").get("output", ""))
 	all_passed = _check("re-save is byte-identical (drift=0)", recompiled == output, true) and all_passed
 
+	# Review fix: the # @group marker precedes ANY grouped event's first line, but the lift only
+	# stamped `if` headers - a grouped action-only or loop event silently dropped out of its group
+	# on reopen. The bytes still matched (the verify strips markers on both sides), so ONLY these
+	# structural pins catch the loss. The ungrouped lead statement also proves the collector splits
+	# at a marker instead of merging the grouped event into the previous one.
+	var mixed: EventSheetResource = EventSheetResource.new()
+	mixed.host_class = "Node2D"
+	mixed.events.append(_raw_event("reset_hits()"))
+	var scoring: EventGroup = EventGroup.new()
+	scoring.group_name = "Scoring"
+	scoring.events = [_raw_event("score_total += 1"), _raw_event("for item in hit_list:\n\tprint(item)")]
+	mixed.events.append(scoring)
+	var mixed_out: String = str(SheetCompiler.compile(mixed, "user://_group_rt_mixed.gd").get("output", ""))
+	var mixed_in: EventSheetResource = GDScriptImporter.new().import_external_source(mixed_out)
+	var scoring_in: EventGroup = null
+	var loose_rows: int = 0
+	for row: Variant in mixed_in.events:
+		if row is EventGroup and (row as EventGroup).group_name == "Scoring":
+			scoring_in = row as EventGroup
+		elif row is EventRow:
+			loose_rows += 1
+	all_passed = _check("the group survives around non-if events", scoring_in != null, true) and all_passed
+	if scoring_in != null:
+		all_passed = _check("BOTH the action-only and the loop event stay grouped", scoring_in.events.size(), 2) and all_passed
+	all_passed = _check("the ungrouped lead event stays OUTSIDE the group", loose_rows, 1) and all_passed
+	mixed_in.external_source_path = "user://_group_rt_mixed_verify.gd"
+	var mixed_rt: String = str(SheetCompiler.compile(mixed_in, "user://_group_rt_mixed_verify.gd").get("output", ""))
+	all_passed = _check("mixed-kind grouped sheet re-saves byte-identically", mixed_rt == mixed_out, true) and all_passed
+
 	return all_passed
+
+
+## An action-only OnProcess event carrying one raw statement (or block) - no conditions, so its
+## first emitted line is NOT an `if` header and the group marker lands on a plain statement.
+static func _raw_event(code: String) -> EventRow:
+	var e: EventRow = EventRow.new()
+	e.trigger_provider_id = "Core"
+	e.trigger_id = "OnProcess"
+	var raw: RawCodeRow = RawCodeRow.new()
+	raw.code = code
+	e.actions.append(raw)
+	return e
 
 
 static func _event(negated: bool) -> EventRow:

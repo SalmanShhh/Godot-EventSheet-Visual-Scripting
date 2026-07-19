@@ -6,6 +6,8 @@
 class_name SignalRowLiftTest
 extends RefCounted
 
+const GDScriptImporter := preload("res://addons/eventforge/importer/gdscript_importer.gd")
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -65,6 +67,33 @@ static func run() -> bool:
 	ok = _check("zero-arg signal.emit() lifts to Emit Signal", emit_found, true) and ok
 	var after: String = str(SheetCompiler.compile(sheet2, "user://sr_emit_after.gd").get("output", ""))
 	ok = _check("emit lift round-trips byte-identically", after == before, true) and ok
+
+	# 3) Review fix: comma splits are TOP-LEVEL only. The naive split(", ") fragmented a typed
+	# collection (`Dictionary[String, int]`) into two garbage params that still REJOINED
+	# byte-identically, so the byte gate passed while the editor showed broken param fields.
+	var pieces: PackedStringArray = EventSheetBlockRegistry.split_params_top_level("a: int, b: Dictionary[String, int], c := f(1, 2)")
+	ok = _check("top-level split keeps brackets and calls whole", pieces.size(), 3) and ok
+	ok = _check("empty text splits to a no-param list", EventSheetBlockRegistry.split_params_top_level(" ").size(), 0) and ok
+	var typed_line: String = "signal scored(totals: Dictionary[String, int], label: String)"
+	var typed_signal: SignalRow = null
+	for kind: EventSheetBlockKind in EventSheetBlockRegistry.all_kinds():
+		var claim: Dictionary = kind.lift(PackedStringArray([typed_line]), 0)
+		if claim.get("resource") is SignalRow:
+			typed_signal = claim["resource"]
+	ok = _check("typed-collection signal lifts with TWO whole params", typed_signal != null and typed_signal.params.size() == 2, true) and ok
+	if typed_signal != null and typed_signal.params.size() == 2:
+		ok = _check("the Dictionary[String, int] param stays one piece", typed_signal.params[0], "totals: Dictionary[String, int]") and ok
+	var fn_src: String = "extends Node\n\n## @ace_hidden\nfunc tally(totals: Dictionary[String, int], label: String) -> int:\n\treturn 7\n"
+	var fn_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(fn_src)
+	var tally_fn: EventFunction = null
+	for lifted_function: EventFunction in fn_sheet.functions:
+		if lifted_function.function_name == "tally":
+			tally_fn = lifted_function
+	ok = _check("typed-collection function args lift as TWO params", tally_fn != null and tally_fn.params.size() == 2, true) and ok
+	if tally_fn != null and tally_fn.params.size() == 2:
+		ok = _check("the collection arg keeps its full type", tally_fn.params[0].type_name, "Dictionary[String, int]") and ok
+	fn_sheet.external_source_path = "user://sr_typed_fn.gd"
+	ok = _check("typed-collection function round-trips byte-identically", str(SheetCompiler.compile(fn_sheet, "user://sr_typed_fn.gd").get("output", "")) == fn_src, true) and ok
 
 	return ok
 

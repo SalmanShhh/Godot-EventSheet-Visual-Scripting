@@ -1,10 +1,11 @@
-# EventForge (gap G1) - a purely-OR `if` reverse-lifts as an OR block. `if a or b:` used to lift as ONE
+# EventForge (gap G1) - a top-level-OR `if` reverse-lifts as an OR block. `if a or b:` used to lift as ONE
 # opaque Expression-Is-True term (byte-exact but flattened); now each top-level ` or ` term becomes its own
-# condition and the event's condition_mode is set to OR, so the row reads as a C3-style "Or block". A top-
-# level ` and ` still takes precedence (GDScript binds `and` tighter than `or`): a mixed `a or b and c` keeps
-# the ` and ` split and stays AND-mode - byte-exact but not falsely restructured. The ` or ` split is top-
-# level only (inside parens / brackets / a string it does NOT fragment), and every reconstruction is gated by
-# the byte-identical recompile, so a `.gd` always round-trips.
+# condition and the event's condition_mode is set to OR, so the row reads as a C3-style "Or block". The
+# ` or ` split runs FIRST, matching GDScript precedence (`or` binds loosest): a mixed `a and b or c` is an
+# OR block of ["a and b", "c"] with each and-term kept whole - the old and-first order rebuilt it as
+# `a AND (b or c)`, byte-exact but semantically wrong. The ` or ` split is top-level only (inside parens /
+# brackets / a string it does NOT fragment), and every reconstruction is gated by the byte-identical
+# recompile, so a `.gd` always round-trips.
 @tool
 class_name OrConditionLiftTest
 extends RefCounted
@@ -16,9 +17,11 @@ static func run() -> bool:
 	ok = _case("plain OR splits into two OR'd conditions", "if a or b:\n\tfoo()", 2, true, false) and ok
 	ok = _case("three-way OR splits into three", "if a or b or c:\n\tfoo()", 3, true, false) and ok
 	ok = _case("plain AND stays AND-mode", "if a and b:\n\tfoo()", 2, false, false) and ok
-	# GDScript binds `and` tighter than `or`, so a mixed expression must NOT collapse to one condition_mode:
-	# the top-level ` and ` split wins (`a or b` | `c`), staying AND-mode. Byte-exact is all that is promised.
-	ok = _case("mixed and/or keeps the and split (and-mode)", "if a or b and c:\n\tfoo()", 2, false, false) and ok
+	# GDScript binds `or` LOOSEST, so a mixed expression is an OR of and-terms: `a or b and c` is
+	# `a OR (b and c)` and `a and b or c` is `(a and b) OR c` - two OR'd conditions each, with the
+	# and-term kept whole inside one Expression-Is-True condition.
+	ok = _case("mixed a or (b and c) lifts as an OR block", "if a or b and c:\n\tfoo()", 2, true, false) and ok
+	ok = _case("mixed (a and b) or c lifts as an OR block", "if a and b or c:\n\tfoo()", 2, true, false) and ok
 	# Top-level only: an ` or ` inside a call, a subscript, or a string literal never fragments the term.
 	ok = _case("or inside a call stays one term", "if f(a or b):\n\tfoo()", 1, false, false) and ok
 	ok = _case("or inside a string stays one term", "if x == \"a or b\":\n\tfoo()", 1, false, false) and ok

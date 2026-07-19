@@ -60,6 +60,48 @@ static func addable_kinds() -> Array[EventSheetBlockKind]:
 	return kinds
 
 
+## Splits a comma-joined declaration list at the TOP level only - a ", " inside (), [], {} or a
+## string literal stays put, so a typed collection like `scores: Dictionary[String, int]` survives
+## as ONE parameter. The naive String.split(", ") fragmented it into two garbage params that STILL
+## rejoined byte-identically, so the round-trip gate never saw the corruption - only the editor's
+## param fields did. Empty/whitespace input returns an empty array (a no-param list, not [""]).
+static func split_params_top_level(params_text: String) -> PackedStringArray:
+	if params_text.strip_edges().is_empty():
+		return PackedStringArray()
+	var parts: PackedStringArray = PackedStringArray()
+	var depth: int = 0
+	var in_string: bool = false
+	var quote: String = ""
+	var start: int = 0
+	var i: int = 0
+	var n: int = params_text.length()
+	while i < n:
+		var c: String = params_text[i]
+		if in_string:
+			if c == "\\":
+				i += 2  # skip the escaped char, whatever it is
+				continue
+			if c == quote:
+				in_string = false
+			i += 1
+			continue
+		if c == "\"" or c == "'":
+			in_string = true
+			quote = c
+		elif c == "(" or c == "[" or c == "{":
+			depth += 1
+		elif c == ")" or c == "]" or c == "}":
+			depth -= 1
+		elif depth == 0 and c == "," and params_text.substr(i, 2) == ", ":
+			parts.append(params_text.substr(start, i - start))
+			i += 2
+			start = i
+			continue
+		i += 1
+	parts.append(params_text.substr(start))
+	return parts
+
+
 static func _ensure_built_ins() -> void:
 	if _built_ins_registered:
 		return
@@ -197,7 +239,8 @@ class EnumBlockKind extends EventSheetBlockKind:
 		if enum_match != null:
 			var lifted: EnumRow = EnumRow.new()
 			lifted.enum_name = enum_match.get_string(1)
-			lifted.members = PackedStringArray(enum_match.get_string(2).split(", "))
+			# Top-level split: a member value with a call (`A = max(1, 2)`) stays ONE member.
+			lifted.members = EventSheetBlockRegistry.split_params_top_level(enum_match.get_string(2))
 			# The resource-kind byte gate: re-emission must reproduce the line or the claim drops.
 			var emitted: PackedStringArray = emit_lines(lifted)
 			if emitted.size() != 1 or emitted[0] != line:
@@ -305,7 +348,9 @@ class SignalBlockKind extends EventSheetBlockKind:
 		lifted.signal_name = signal_match.get_string(1)
 		var params_text: String = signal_match.get_string(2)
 		if not params_text.is_empty():
-			lifted.params = PackedStringArray(params_text.split(", "))
+			# Top-level split only: `scores: Dictionary[String, int]` is ONE param. The naive
+			# split fragmented it yet rejoined byte-identically, slipping past the gate below.
+			lifted.params = EventSheetBlockRegistry.split_params_top_level(params_text)
 		var emitted: PackedStringArray = emit_lines(lifted)
 		if emitted.size() != 1 or emitted[0] != line:
 			return {}

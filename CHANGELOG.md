@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Fixed - lifter covenant holes (whole-plugin review)
+
+- **Grouped non-if events keep their group on reopen**: the `# @group:<slug>` breadcrumb
+  precedes ANY grouped event's first line, but the lift only stamped `if` headers - a
+  grouped action-only, loop, or match event silently dropped out of its group (the bytes
+  still matched because the verify strips markers on both sides, hiding the loss). All
+  lifted row kinds stamp now, the statement collector splits at a marker instead of
+  merging the grouped event into the previous one, and a failed if/loop lift carries the
+  group into its raw fallback.
+- **Mixed `a and b or c` conditions lift with GDScript precedence**: `or` binds loosest,
+  so the expression is now an OR block of whole and-terms - the old and-first split
+  rebuilt it as `a AND (b or c)`, byte-exact but semantically wrong, so editing the
+  reopened row emitted different runtime behavior than the source expressed.
+- **Typed collections survive param splits**: `Dictionary[String, int]` in a signal
+  declaration, an enum member value with a call, or a lifted function's arguments used
+  to fragment at the inner comma - the pieces REJOINED byte-identically, so the round-trip
+  gate passed while the editor showed garbage param fields. One shared depth-aware
+  splitter (`EventSheetBlockRegistry.split_params_top_level`, public for custom block
+  kinds) replaces every naive `split(", ")`.
+
 ### Fixed - triggers reach the compiler on every write path (whole-plugin review)
 
 - **Picker-authored On Signal events fire now**: applying a trigger also bakes the
