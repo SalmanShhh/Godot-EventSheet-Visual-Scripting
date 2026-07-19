@@ -49,23 +49,30 @@ static func run() -> bool:
 	ok = _check("action badge", _span_text(action_row, 0), "Action") and ok
 	ok = _check("display name prefers @ace_name", _span_text(action_row, 1), "Take Damage") and ok
 	ok = _check("category chip rides along", _row_has_span_text(action_row, "Health"), true) and ok
-	ok = _check("an action has NO return chip", _row_has_span_text(action_row, "→ void"), false) and ok
+	ok = _check("a void action gives nothing back (no return chip)", _row_has_span_text(condition_row, "gives back yes/no") and not _row_has_span_text(action_row, "gives back"), true) and ok
 	ok = _check("condition badge", _span_text(condition_row, 0), "Condition") and ok
 	ok = _check("condition name falls back to the humanized function name", _span_text(condition_row, 1), "Is Dead") and ok
-	ok = _check("condition carries the → bool chip", _row_has_span_text(condition_row, "→ bool"), true) and ok
-	ok = _check("expression carries its typed chip", _row_has_span_text(expression_row, "→ float"), true) and ok
+	ok = _check("condition reads its return in plain words (bool -> yes/no)", _row_has_span_text(condition_row, "gives back yes/no"), true) and ok
+	ok = _check("expression reads its return in plain words (float -> number)", _row_has_span_text(expression_row, "gives back number"), true) and ok
 	ok = _check("an un-exposed helper is marked internal", _row_has_span_text(internal_row, "internal"), true) and ok
 	ok = _check("an exposed verb is NOT marked internal", _row_has_span_text(action_row, "internal"), false) and ok
-	ok = _check("the signature line is the compiler's own emission",
-		_row_has_span_text(action_row, "func take_damage(amount: float) -> void"), true) and ok
+	# The abstraction covenant: NO raw `func ... -> Type` signature leaks into the row - a reader with no
+	# GDScript knowledge sees the verb and its inputs, never the code.
+	ok = _check("no raw func signature leaks into the row",
+		_row_has_span_text(action_row, "func take_damage"), false) and ok
 
-	# ── The readable verb line: reads like an event-sheet action, with the real signature kept as a
-	# muted code cue below. Auto-derives the friendly param labels; an authored @ace_display_template
-	# fills its slots with those labels (a Define row shows the verb's shape, not call-site values).
-	ok = _check("the auto verb line lists the friendly param labels next to the name",
-		_row_has_span_text(action_row, "amount"), true) and ok
+	# ── The readable verb line: reads like an event-sheet action - the verb name plus first-class typed
+	# parameter chips (`name : friendly-type`), no raw signature. An authored @ace_display_template fills
+	# its slots with the friendly labels instead (a Define row shows the verb's shape, not call-site values).
+	ok = _check("params render as first-class typed chips (name : friendly-type)",
+		_row_has_span_text(action_row, "amount") and _row_has_span_text(action_row, " : number"), true) and ok
 	ok = _check("params humanize the id (underscores open out)",
 		ViewportRowBuilder.friendly_param_labels(_two_param_function()), "from x, to x") and ok
+	# GDScript types read as plain words so a non-coder learns what each input is.
+	ok = _check("String reads as text", ViewportRowBuilder.friendly_type_word("String"), "text") and ok
+	ok = _check("int/float read as number", ViewportRowBuilder.friendly_type_word("int"), "number") and ok
+	ok = _check("bool reads as yes/no", ViewportRowBuilder.friendly_type_word("bool"), "yes/no") and ok
+	ok = _check("a node class passes through", ViewportRowBuilder.friendly_type_word("Sprite2D"), "Sprite2D") and ok
 	var templated: EventFunction = _make_function("draw_line", TYPE_NIL, true, "Draw Line", "")
 	templated.params[0].id = "from_x"
 	templated.display_template = "Line to {from_x}"

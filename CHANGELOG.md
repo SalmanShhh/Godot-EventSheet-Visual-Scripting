@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Changed - function Define rows read as pure abstraction, no raw code
+
+- The published-verb "Define" rows no longer tack a raw `func name(params) -> Type`
+  GDScript signature onto the end. Instead the row reads entirely in the event model, the
+  way a Construct 3 function event does: the role badge (Action / Condition / Expression),
+  the verb name, and its inputs as first-class typed chips (`id : text`, `seconds : number`,
+  `reset instantly : yes/no`). GDScript types render as plain words (String -> text,
+  int/float -> number, bool -> yes/no, Vector2/3 -> point, node classes pass through) so a
+  reader with no coding knowledge learns what each input is. A Condition/Expression shows a
+  "gives back <type>" chip; a void Action gives nothing back, and its body's Return Value
+  actions (already lifted first-class) carry the intent. This keeps the sheet a faithful,
+  code-free translation of the underlying GDScript - the point of event sheets as an
+  abstraction layer.
+
 ### Added - Audio Server and Physics Server modules
 
 - **Audio Server** (category "Audio Server"): mute / solo / effects-bypass a bus by

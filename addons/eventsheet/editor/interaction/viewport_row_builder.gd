@@ -259,6 +259,57 @@ static func friendly_param_labels(event_function: EventFunction) -> String:
 	return ", ".join(labels)
 
 
+## A parameter's declared type read as plain words, not a GDScript type name: "String" -> "text",
+## "int"/"float" -> "number", "bool" -> "yes/no", "Vector2"/"Vector3" -> "point", Node classes and
+## anything else pass through. So a reader with no coding knowledge learns what each input IS.
+static func friendly_type_word(type_name: String) -> String:
+	match type_name.strip_edges():
+		"String", "StringName":
+			return "text"
+		"int", "float":
+			return "number"
+		"bool":
+			return "yes/no"
+		"Vector2", "Vector3":
+			return "point"
+		"Color":
+			return "color"
+		"", "Variant":
+			return "any"
+		_:
+			return type_name.strip_edges()
+
+
+## The return type read as plain words - the label the "gives back …" chip shows.
+static func _friendly_return_type(event_function: EventFunction) -> String:
+	return friendly_type_word(SheetCompiler._function_return_type_name(event_function))
+
+
+## Appends first-class typed parameter spans to a Define row: each parameter as `name : friendly-type`
+## (the variable-row grammar), comma-separated - so the row reads "Create Ability · id : text" rather
+## than a raw `func create_ability(id: String)` signature. Types come from ACEParam.type_name; a legacy
+## lifted verb with only string parameter names shows the names alone.
+func _append_define_param_spans(spans: Array[SemanticSpan], event_function: EventFunction) -> void:
+	var value_color: Color = _viewport._get_event_style().value_highlight_color
+	var muted: Color = Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.85)
+	var typed_params: Array[ACEParam] = []
+	for param: Variant in event_function.params:
+		if param is ACEParam:
+			typed_params.append(param as ACEParam)
+	if not typed_params.is_empty():
+		for index in range(typed_params.size()):
+			var param: ACEParam = typed_params[index]
+			if index > 0:
+				spans.append(_make_span(", ", SemanticSpan.SpanType.OPERATOR, {"editable": false, "kind": "define_function", "text_color": muted}))
+			spans.append(_make_span(friendly_param_label(param), SemanticSpan.SpanType.OBJECT, {"editable": false, "kind": "define_function", "text_color": value_color}))
+			spans.append(_make_span(" : %s" % friendly_type_word(param.type_name), SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "define_function", "text_color": muted}))
+		return
+	# Legacy lifted verb (no ACEParam metadata): show the bare friendly names.
+	var legacy_labels: String = friendly_param_labels(event_function)
+	if not legacy_labels.is_empty():
+		spans.append(_make_span(legacy_labels, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "define_function", "text_color": value_color}))
+
+
 ## An authored @ace_display_template with its {param_id} slots filled with the FRIENDLY LABELS (a
 ## Define row shows the verb's shape, not call-site values): "Draw line from ({from_x}, {from_y})" ->
 ## "Draw line from (from x, from y)". Empty when the verb has no display_template.
@@ -360,10 +411,11 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"kind": "define_function"
 		})
 	]
-	# The verb reads as an event-sheet line, not a raw signature: an authored @ace_display_template is
+	# The verb reads as an event-sheet line, NOT a raw signature: an authored @ace_display_template is
 	# the whole sentence (its {param} slots filled with each parameter's label); otherwise the friendly
-	# name plus a comma-joined slot list. The real `func ... -> Type` still follows as a muted code cue
-	# below, so the row stays code-adjacent and can never disagree with what compiles.
+	# name plus first-class typed parameter chips (`name : Type`, the same grammar a variable row uses).
+	# There is deliberately no trailing `func ... -> Type` code cue - the whole point is that a reader with
+	# no GDScript knowledge sees the abstraction (verb, its inputs, what it hands back), not the code.
 	# Slight per-role tint on the verb name so an Action / Condition / Expression reads distinctly at a
 	# glance among the inline verb rows (reinforces the role badge without a loud colour).
 	var name_color: Color = _define_role_name_color(role)
@@ -378,15 +430,12 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"kind": "define_function",
 			"text_color": name_color
 		}))
-		var param_labels: String = friendly_param_labels(event_function)
-		if not param_labels.is_empty():
-			spans.append(_make_span(param_labels, SemanticSpan.SpanType.VALUE, {
-				"editable": false,
-				"kind": "define_function",
-				"text_color": _viewport._get_event_style().value_highlight_color
-			}))
+		_append_define_param_spans(spans, event_function)
+	# The return reads in the event model: a Condition answers a question (→ true / false is implied by the
+	# role) and an Expression hands back a value, so the type shows as a "gives back Type" chip. A void
+	# Action returns nothing, so it shows no chip - its body's Return Value actions (if any) carry the intent.
 	if role != "action":
-		spans.append(_make_span("→ %s" % SheetCompiler._function_return_type_name(event_function), SemanticSpan.SpanType.KEYWORD, {
+		spans.append(_make_span("gives back %s" % _friendly_return_type(event_function), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
@@ -412,15 +461,6 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"badge_fg": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.9),
 			"kind": "define_function"
 		}))
-	spans.append(_make_span(
-		"func %s(%s) -> %s" % [
-			event_function.function_name,
-			SheetCompiler._emit_function_params(event_function),
-			SheetCompiler._function_return_type_name(event_function)
-		],
-		SemanticSpan.SpanType.VALUE,
-		{"editable": false, "kind": "define_function", "text_color": EventSheetPalette.TEXT_MUTED}
-	))
 	row_data.spans = spans
 	# Construct-style expandable block: the function BODY renders as foldable children (its conditions,
 	# actions, and raw GDScript blocks), built by the SAME dispatcher as sheet events, folding like a group.
