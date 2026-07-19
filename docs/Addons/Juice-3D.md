@@ -76,6 +76,18 @@ placed on.
 | Clear Screen Tint | (none) | Removes the wash instantly. |
 | Zoom FOV To | `fov` (float), `duration` (float) | Smoothly changes the camera's base FOV and keeps it there (aim-down-sights is 40; back to 75 to unzoom). Emits On Zoom Finished. Opens at 40, 0.15. |
 | Use Camera | `camera_path` (NodePath) | Pins the effects to a specific `Camera3D`. Leave unset to auto-target the active camera. |
+| Kick Camera Away From Point | `world_position` (Vector3), `strength` (float) | Shoves the camera AWAY from a world position (an explosion, a hit source) and re-centres at the Kick Recovery rate - Recoil's directional sibling. Opens at 0.12. |
+| Start Blinking | `times_per_second` (float) | Strobes the host's visibility - invulnerability frames, respawn grace, a targeted highlight. Runs until Stop Blinking. Opens at 8. |
+| Stop Blinking | (none) | Stops the blink and makes the host visible again. |
+| Punch Scale | `strength` (float), `duration` (float) | Kicks the host's scale up (or down, negative) and springs back elastically - pickups, flinches, beat pulses. Opens at 0.25, 0.35. |
+| Punch Position | `offset` (Vector3), `duration` (float) | Kicks the host's position (metres) and springs back - knockback reads, impact shoves. Opens at (0.2, 0, 0), 0.35. |
+| Pulse Vignette | `strength` (float), `color` (Color), `seconds` (float) | Darkens the screen edges to a color, then fades back out - taking damage, a near miss. Opens at 0.6, dark red, 0.5. |
+| Chromatic Kick | `strength` (float), `seconds` (float) | Splits the screen's color channels for an instant and settles back - the AAA impact frame. Opens at 0.5, 0.25. |
+| Set Speed Lines | `intensity` (float) | Radial anime-style speed streaks that HOLD until you set 0 - sprints, dashes, adrenaline. Pair with FOV Punch. Opens at 0.5. |
+| Play Sound Varied | `path` (String), `pitch_jitter` (float), `volume_jitter_db` (float) | Plays a sound with a random pitch/volume wobble - the cure for repetitive footsteps, hits, shots. Opens at 0.08, 2. |
+| Play Sound With Intensity | `path` (String), `intensity` (float) | Plays a sound scaled by a 0-1 intensity - drive it, Shake, and Punch Scale from ONE hit-power value. Opens at 0.5. |
+| Count To | `ticker_name` (String), `target` (float), `duration` (float) | Eases a named display value toward a target - scores ROLL instead of snapping. Read via Ticker Value. Opens at score, 100, 0.6. |
+| Set Ticker | `ticker_name` (String), `value` (float) | Sets a display value instantly (cancelling any roll). |
 
 ### Conditions and expressions
 
@@ -83,6 +95,7 @@ placed on.
 |---|---|---|
 | Condition | Is Shaking | Whether trauma is above zero. |
 | Expression | Trauma | The current trauma level, 0 to 1 - drive controller rumble from it. |
+| Expression | Ticker Value | What a ticker currently SHOWS - the eased value Count To is rolling (`ticker_name`). |
 
 ### Triggers
 
@@ -91,6 +104,8 @@ placed on.
 | On Shake Stopped | Trauma reaches zero after a shake. |
 | On Lean Finished | A Lean ease reaches its target roll. |
 | On Zoom Finished | A Zoom FOV To glide completes. |
+| On Punch Finished | A Punch Scale / Position has sprung back to rest. |
+| On Ticker Finished | A Count To roll lands on its target (carries the ticker's name). |
 
 ### Inspector properties
 

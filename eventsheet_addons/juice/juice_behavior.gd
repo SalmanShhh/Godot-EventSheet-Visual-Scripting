@@ -5,7 +5,7 @@
 @icon("res://eventsheet_addons/juice/icon.svg")
 class_name JuiceBehavior
 extends Node
-## Game feel from event rows: screenshake, recoil, head bob, zoom, squash and stretch, slowmo, and hitstop in one behavior. Camera effects find the active Camera2D on their own, and every effect is fire-and-forget with an On Finished trigger so you can chain the next beat.
+## Game feel from event rows: screenshake, recoil, head bob, zoom, squash and stretch, slowmo, hitstop, damage flash and blink, punch transforms, ghost trails, screen FX (vignette, chromatic kick, speed lines), varied one-shot audio, and eased score tickers in one behavior. Camera effects find the active Camera2D on their own, and every effect is fire-and-forget with an On Finished trigger so you can chain the next beat.
 
 ## The node this behavior acts on (its parent). Required host: CanvasItem.
 var host: CanvasItem = null
@@ -33,6 +33,15 @@ signal hitstop_finished
 ## @ace_trigger
 ## @ace_name("On Tilt Finished")
 signal tilt_finished
+## @ace_trigger
+## @ace_name("On Flash Finished")
+signal flash_finished
+## @ace_trigger
+## @ace_name("On Punch Finished")
+signal punch_finished
+## @ace_trigger
+## @ace_name("On Ticker Finished")
+signal ticker_finished(ticker_name: String)
 
 # --- Designer knobs (tune the FEEL in the Inspector) ---
 ## Peak camera shake offset, in pixels, at full trauma.
@@ -116,6 +125,63 @@ func _camera() -> Camera2D:
 var _tint_overlay: CanvasLayer = null
 var _tint_rect: ColorRect = null
 
+# Flash / blink state (modulate-based, so both compose with Set Host Tint).
+var _flash_tween: Tween = null
+var _flash_restore: Color = Color.WHITE
+var _blink_active: bool = false
+var _blink_time: float = 0.0
+var _blink_rate: float = 8.0
+var _blink_min_alpha: float = 0.15
+var _blink_base_alpha: float = 1.0
+# Punch state (kick out, spring back; rest captured per gesture so repeats never drift).
+var _punch_rot_tween: Tween = null
+var _punch_rot_rest: float = 0.0
+var _punch_pos_tween: Tween = null
+var _punch_pos_rest: Vector2 = Vector2.ZERO
+# Ghost-trail state (stamped fading sprite copies).
+var _trail_active: bool = false
+var _trail_interval: float = 0.05
+var _trail_fade: float = 0.4
+var _trail_tint: Color = Color.WHITE
+var _trail_timer: float = 0.0
+# Eased tickers (Count To): name -> displayed value / target / driving tween.
+var _tickers: Dictionary = {}
+var _ticker_targets: Dictionary = {}
+var _ticker_tweens: Dictionary = {}
+
+# The screen-FX overlay: one full-screen shader with three dials (vignette, chromatic
+# aberration, radial speed lines) built on first use, hidden whenever every dial is 0.
+var _fx_layer: CanvasLayer = null
+var _fx_rect: ColorRect = null
+var _fx_material: ShaderMaterial = null
+var _vignette_tween: Tween = null
+var _chroma_tween: Tween = null
+const _FX_SHADER: String = """
+shader_type canvas_item;
+uniform sampler2D screen_texture: hint_screen_texture, filter_linear_mipmap;
+uniform float vignette_strength = 0.0;
+uniform vec4 vignette_color: source_color = vec4(0.0, 0.0, 0.0, 1.0);
+uniform float chroma_strength = 0.0;
+uniform float speed_lines = 0.0;
+
+void fragment() {
+	vec2 uv = SCREEN_UV;
+	vec2 centered = uv - vec2(0.5);
+	vec2 chroma_offset = centered * chroma_strength * 0.03;
+	vec3 col = vec3(
+		texture(screen_texture, uv + chroma_offset).r,
+		texture(screen_texture, uv).g,
+		texture(screen_texture, uv - chroma_offset).b);
+	float vignette = smoothstep(0.35, 1.0, length(centered) * 1.5) * vignette_strength;
+	col = mix(col, vignette_color.rgb, clamp(vignette, 0.0, 1.0));
+	float angle = atan(centered.y, centered.x);
+	float streak = step(0.86, fract(sin(floor(angle * 60.0) + floor(TIME * 24.0) * 7.0) * 43758.545));
+	float ring = smoothstep(0.2, 0.65, length(centered));
+	col = mix(col, vec3(1.0), streak * ring * clamp(speed_lines, 0.0, 1.0) * 0.65);
+	COLOR = vec4(col, 1.0);
+}
+"""
+
 func _ready() -> void:
 	tree_exiting.connect(_on_tree_exiting)
 	_noise = FastNoiseLite.new()
@@ -190,6 +256,17 @@ func _process(delta: float) -> void:
 			squash_finished.emit()
 		else:
 			_apply_host_scale(_squash_value)
+	if _blink_active and host is CanvasItem:
+		_blink_time += delta * _blink_rate
+		var blink_item: CanvasItem = host as CanvasItem
+		var blink_color: Color = blink_item.modulate
+		blink_color.a = _blink_base_alpha if fmod(_blink_time, 1.0) < 0.5 else _blink_min_alpha
+		blink_item.modulate = blink_color
+	if _trail_active:
+		_trail_timer -= delta
+		if _trail_timer <= 0.0:
+			_trail_timer = maxf(_trail_interval, 0.01)
+			_stamp_ghost()
 
 ## @ace_action
 ## @ace_featured
@@ -435,6 +512,245 @@ func hitstop(freeze_duration: float, freeze_scale: float) -> void:
 		_slowmo_tween.play()
 	hitstop_finished.emit()
 
+## @ace_action
+## @ace_featured
+## @ace_name("Flash")
+## @ace_category("Juice")
+## @ace_description("Pops the host to a solid color, then fades back to how it looked (tints included) - THE damage-hit read. Fire with Hitstop + Shake for a complete hit-confirm. Emits On Flash Finished.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.flash({color}, {seconds})")
+func flash(color: Color, seconds: float) -> void:
+	var flash_item: CanvasItem = host as CanvasItem
+	if flash_item == null:
+		return
+	if _flash_tween != null and _flash_tween.is_valid():
+		_flash_tween.kill()
+	else:
+		_flash_restore = flash_item.modulate
+	flash_item.modulate = Color(color.r, color.g, color.b, _flash_restore.a)
+	var tw: Tween = create_tween()
+	tw.tween_property(flash_item, "modulate", _flash_restore, maxf(seconds, 0.01)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.finished.connect(func() -> void: flash_finished.emit())
+	_flash_tween = tw
+
+## @ace_action
+## @ace_name("Start Blinking")
+## @ace_category("Juice")
+## @ace_description("Strobes the host's opacity (full / faint) - the invulnerability-frames look, a low-health warning, an interactable highlight. Runs until Stop Blinking.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.start_blinking({times_per_second}, {min_alpha})")
+func start_blinking(times_per_second: float, min_alpha: float) -> void:
+	if host is CanvasItem and not _blink_active:
+		_blink_base_alpha = (host as CanvasItem).modulate.a
+	_blink_rate = maxf(times_per_second, 0.1)
+	_blink_min_alpha = clampf(min_alpha, 0.0, 1.0)
+	_blink_time = 0.0
+	_blink_active = true
+
+## @ace_action
+## @ace_name("Stop Blinking")
+## @ace_category("Juice")
+## @ace_description("Stops the blink and restores the host's opacity.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.stop_blinking()")
+func stop_blinking() -> void:
+	_blink_active = false
+	if host is CanvasItem:
+		var restored: Color = (host as CanvasItem).modulate
+		restored.a = _blink_base_alpha
+		(host as CanvasItem).modulate = restored
+
+## @ace_action
+## @ace_name("Punch Scale")
+## @ace_category("Juice")
+## @ace_description("Kicks the host's scale up (or down, negative) and springs it back elastically - button pops, pickups, flinches, beat pulses. Composes with Flash + Hitstop for melee hits. Emits On Punch Finished.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.punch_scale({strength}, {duration})")
+func punch_scale(strength: float, duration: float) -> void:
+	if host == null:
+		return
+	_apply_host_scale(_base_scale * (1.0 + clampf(strength, -0.9, 5.0)))
+	var tw: Tween = create_tween()
+	tw.tween_property(host, "scale", _base_scale, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw.finished.connect(func() -> void: punch_finished.emit())
+
+## @ace_action
+## @ace_name("Punch Rotation")
+## @ace_category("Juice")
+## @ace_description("Kicks the host's rotation by an angle (degrees) and springs it back elastically - wobbling signs, chest-opening jolts, portrait reactions. Emits On Punch Finished.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.punch_rotation({degrees}, {duration})")
+func punch_rotation(degrees: float, duration: float) -> void:
+	if not (host is CanvasItem):
+		return
+	if host is Control:
+		(host as Control).pivot_offset = (host as Control).size / 2.0
+	if _punch_rot_tween != null and _punch_rot_tween.is_valid():
+		_punch_rot_tween.kill()
+	else:
+		_punch_rot_rest = (host as CanvasItem).rotation
+	(host as CanvasItem).rotation = _punch_rot_rest + deg_to_rad(degrees)
+	var tw: Tween = create_tween()
+	tw.tween_property(host, "rotation", _punch_rot_rest, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw.finished.connect(func() -> void: punch_finished.emit())
+	_punch_rot_tween = tw
+
+## @ace_action
+## @ace_name("Punch Position")
+## @ace_category("Juice")
+## @ace_description("Kicks the host's position by an offset (pixels) and springs it back elastically - knockback reads, UI nudges, impact shoves away from an attacker. Emits On Punch Finished.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.punch_position({offset}, {duration})")
+func punch_position(offset: Vector2, duration: float) -> void:
+	if not (host is Node2D or host is Control):
+		return
+	if _punch_pos_tween != null and _punch_pos_tween.is_valid():
+		_punch_pos_tween.kill()
+	else:
+		_punch_pos_rest = host.position
+	host.position = _punch_pos_rest + offset
+	var tw: Tween = create_tween()
+	tw.tween_property(host, "position", _punch_pos_rest, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	tw.finished.connect(func() -> void: punch_finished.emit())
+	_punch_pos_tween = tw
+
+## @ace_action
+## @ace_name("Kick Camera Away From Point")
+## @ace_category("Juice")
+## @ace_description("Kicks the camera AWAY from a world position (an explosion, a hit source) and springs back - Recoil's directional sibling when you know the cause's location, so the kick always reads as pushback. Composes with Shake.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.kick_away_from({world_position}, {strength})")
+func kick_away_from(world_position: Vector2, strength: float) -> void:
+	var cam: Camera2D = _camera()
+	if cam == null:
+		return
+	var away: Vector2 = cam.get_screen_center_position() - world_position
+	away = away.normalized() if away.length() > 0.001 else Vector2.UP
+	_recoil_vec += away * strength
+
+## @ace_action
+## @ace_name("Start Ghost Trail")
+## @ace_category("Juice")
+## @ace_description("Starts stamping fading afterimages of the host's sprite behind it - dashes, teleports, speed power-ups, bullet-time evades. Works on a Sprite2D/AnimatedSprite2D host or the host's first Sprite2D child. Runs until Stop Ghost Trail.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.start_ghost_trail({stamps_per_second}, {fade_seconds}, {tint})")
+func start_ghost_trail(stamps_per_second: float, fade_seconds: float, tint: Color) -> void:
+	_trail_interval = 1.0 / maxf(stamps_per_second, 0.1)
+	_trail_fade = maxf(fade_seconds, 0.05)
+	_trail_tint = tint
+	_trail_timer = 0.0
+	_trail_active = true
+
+## @ace_action
+## @ace_name("Stop Ghost Trail")
+## @ace_category("Juice")
+## @ace_description("Stops stamping afterimages (the ones already out finish fading on their own).")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.stop_ghost_trail()")
+func stop_ghost_trail() -> void:
+	_trail_active = false
+
+## @ace_action
+## @ace_name("Pulse Vignette")
+## @ace_category("Juice")
+## @ace_description("Darkens the screen edges to a color at a strength (0..1), then fades back out - taking damage, a near miss, holding your breath. Composes with Slowmo + Fade Screen Tint for last-stand moments.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.pulse_vignette({strength}, {color}, {seconds})")
+func pulse_vignette(strength: float, color: Color, seconds: float) -> void:
+	_ensure_fx_overlay()
+	if _fx_material == null:
+		return
+	if _vignette_tween != null and _vignette_tween.is_valid():
+		_vignette_tween.kill()
+	_fx_material.set_shader_parameter("vignette_color", Color(color.r, color.g, color.b, 1.0))
+	_fx_material.set_shader_parameter("vignette_strength", clampf(strength, 0.0, 1.0))
+	_fx_rect.visible = true
+	var tw: Tween = create_tween()
+	tw.tween_property(_fx_material, "shader_parameter/vignette_strength", 0.0, maxf(seconds, 0.01)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.finished.connect(_fx_update_visibility)
+	_vignette_tween = tw
+
+## @ace_action
+## @ace_name("Chromatic Kick")
+## @ace_category("Juice")
+## @ace_description("Splits the screen's color channels for an instant and settles back - the AAA impact frame. Fire with Shake + Hitstop on explosions and heavy hits.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.chromatic_kick({strength}, {seconds})")
+func chromatic_kick(strength: float, seconds: float) -> void:
+	_ensure_fx_overlay()
+	if _fx_material == null:
+		return
+	if _chroma_tween != null and _chroma_tween.is_valid():
+		_chroma_tween.kill()
+	_fx_material.set_shader_parameter("chroma_strength", clampf(strength, 0.0, 1.0))
+	_fx_rect.visible = true
+	var tw: Tween = create_tween()
+	tw.tween_property(_fx_material, "shader_parameter/chroma_strength", 0.0, maxf(seconds, 0.01)).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	tw.finished.connect(_fx_update_visibility)
+	_chroma_tween = tw
+
+## @ace_action
+## @ace_name("Set Speed Lines")
+## @ace_category("Juice")
+## @ace_description("Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with Zoom By Percent or FOV punches for full sprint feel.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.set_speed_lines({intensity})")
+func set_speed_lines(intensity: float) -> void:
+	_ensure_fx_overlay()
+	if _fx_material == null:
+		return
+	_fx_material.set_shader_parameter("speed_lines", clampf(intensity, 0.0, 1.0))
+	_fx_update_visibility()
+
+## @ace_action
+## @ace_name("Play Sound Varied")
+## @ace_category("Juice")
+## @ace_description("Plays a sound with a random pitch and volume wobble around the base - the #1 trick against repetitive footsteps, hits, coins, and clicks. Fire-and-forget (the player frees itself).")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.play_sound_varied({path}, {pitch_jitter}, {volume_jitter_db})")
+func play_sound_varied(path: String, pitch_jitter: float, volume_jitter_db: float) -> void:
+	_spawn_one_shot(path, 1.0 + randf_range(-pitch_jitter, pitch_jitter), randf_range(-absf(volume_jitter_db), 0.0))
+
+## @ace_action
+## @ace_name("Play Sound With Intensity")
+## @ace_category("Juice")
+## @ace_description("Plays a sound scaled by an intensity (0..1): quiet + lower-pitched when light, full + brighter when heavy - drive it, Shake, and Punch Scale from ONE hit-power value so light and heavy hits differ by one number.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.play_sound_intensity({path}, {intensity})")
+func play_sound_intensity(path: String, intensity: float) -> void:
+	var power: float = clampf(intensity, 0.0, 1.0)
+	_spawn_one_shot(path, lerpf(0.85, 1.15, power) * (1.0 + randf_range(-0.03, 0.03)), lerpf(-14.0, 0.0, power))
+
+## @ace_action
+## @ace_name("Count To")
+## @ace_category("Juice")
+## @ace_description("Eases a named display value toward a target over a duration - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression; emits On Ticker Finished (with the name) when it lands.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.count_to({ticker_name}, {target}, {duration})")
+func count_to(ticker_name: String, target: float, duration: float) -> void:
+	var from: float = float(_tickers.get(ticker_name, 0.0))
+	_ticker_targets[ticker_name] = target
+	var old_tween: Tween = _ticker_tweens.get(ticker_name, null)
+	if old_tween != null and is_instance_valid(old_tween):
+		old_tween.kill()
+	var tw: Tween = create_tween()
+	tw.tween_method(func(v: float) -> void: _tickers[ticker_name] = v, from, target, maxf(duration, 0.001)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.finished.connect(_finish_ticker.bind(ticker_name))
+	_ticker_tweens[ticker_name] = tw
+
+## @ace_action
+## @ace_name("Set Ticker")
+## @ace_category("Juice")
+## @ace_description("Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.set_ticker({ticker_name}, {value})")
+func set_ticker(ticker_name: String, value: float) -> void:
+	var old_tween: Tween = _ticker_tweens.get(ticker_name, null)
+	if old_tween != null and is_instance_valid(old_tween):
+		old_tween.kill()
+	_tickers[ticker_name] = value
+	_ticker_targets[ticker_name] = value
+
 ## Drives an ANCHORED zoom: keeps _zoom_anchor pinned under the same screen point as the zoom
 ## interpolates (mouse-wheel-to-cursor feel). Called by Zoom Toward Point's tween each frame.
 func _zoom_anchored_step(f: float) -> void:
@@ -560,5 +876,112 @@ func fade_screen_tint(seconds: float) -> void:
 func clear_screen_tint() -> void:
 	if _tint_rect != null:
 		_tint_rect.visible = false
+
+## @ace_expression
+## @ace_name("Ticker Value")
+## @ace_description("What a ticker currently SHOWS - the eased value Count To is rolling toward its target. Print or draw this instead of the real variable and scores roll instead of snapping.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuiceBehavior.ticker_value({ticker_name})")
+func ticker_value(ticker_name: String) -> float:
+	return float(_tickers.get(ticker_name, 0.0))
+
+## @ace_hidden
+func _finish_ticker(ticker_name: String) -> void:
+	_tickers[ticker_name] = _ticker_targets.get(ticker_name, _tickers.get(ticker_name, 0.0))
+	ticker_finished.emit(ticker_name)
+
+## @ace_hidden
+func _stamp_ghost() -> void:
+	var source: Node2D = host as Node2D
+	if source == null or not is_inside_tree() or source.get_parent() == null:
+		return
+	var ghost: Sprite2D = Sprite2D.new()
+	var pose_source: Node2D = source
+	if source is Sprite2D:
+		var sprite: Sprite2D = source as Sprite2D
+		ghost.texture = sprite.texture
+		ghost.hframes = sprite.hframes
+		ghost.vframes = sprite.vframes
+		ghost.frame = sprite.frame
+		ghost.region_enabled = sprite.region_enabled
+		ghost.region_rect = sprite.region_rect
+		ghost.flip_h = sprite.flip_h
+		ghost.flip_v = sprite.flip_v
+		ghost.centered = sprite.centered
+		ghost.offset = sprite.offset
+	elif source is AnimatedSprite2D:
+		var animated: AnimatedSprite2D = source as AnimatedSprite2D
+		if animated.sprite_frames == null:
+			return
+		ghost.texture = animated.sprite_frames.get_frame_texture(animated.animation, animated.frame)
+		ghost.flip_h = animated.flip_h
+		ghost.flip_v = animated.flip_v
+		ghost.centered = animated.centered
+		ghost.offset = animated.offset
+	else:
+		var body_sprite: Sprite2D = null
+		for child in source.get_children():
+			if child is Sprite2D:
+				body_sprite = child as Sprite2D
+				break
+		if body_sprite == null or body_sprite.texture == null:
+			return
+		ghost.texture = body_sprite.texture
+		ghost.hframes = body_sprite.hframes
+		ghost.vframes = body_sprite.vframes
+		ghost.frame = body_sprite.frame
+		ghost.flip_h = body_sprite.flip_h
+		ghost.flip_v = body_sprite.flip_v
+		ghost.centered = body_sprite.centered
+		ghost.offset = body_sprite.offset
+		pose_source = body_sprite
+	if ghost.texture == null:
+		return
+	ghost.modulate = _trail_tint
+	ghost.z_index = pose_source.z_index - 1
+	source.get_parent().add_child(ghost)
+	ghost.global_transform = pose_source.global_transform
+	var tw: Tween = ghost.create_tween()
+	tw.tween_property(ghost, "modulate:a", 0.0, maxf(_trail_fade, 0.05))
+	tw.finished.connect(ghost.queue_free)
+
+## @ace_hidden
+func _spawn_one_shot(path: String, pitch: float, volume_db: float) -> void:
+	var stream: AudioStream = load(path) as AudioStream
+	if stream == null:
+		return
+	var player: AudioStreamPlayer = AudioStreamPlayer.new()
+	player.stream = stream
+	player.pitch_scale = maxf(pitch, 0.05)
+	player.volume_db = volume_db
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
+
+## @ace_hidden
+func _ensure_fx_overlay() -> void:
+	if _fx_layer != null or not is_inside_tree():
+		return
+	_fx_layer = CanvasLayer.new()
+	_fx_layer.layer = 91
+	add_child(_fx_layer)
+	_fx_rect = ColorRect.new()
+	_fx_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fx_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var fx_shader: Shader = Shader.new()
+	fx_shader.code = _FX_SHADER
+	_fx_material = ShaderMaterial.new()
+	_fx_material.shader = fx_shader
+	_fx_rect.material = _fx_material
+	_fx_rect.visible = false
+	_fx_layer.add_child(_fx_rect)
+
+## @ace_hidden
+func _fx_update_visibility() -> void:
+	if _fx_rect == null or _fx_material == null:
+		return
+	_fx_rect.visible = float(_fx_material.get_shader_parameter("vignette_strength")) > 0.001 \
+			or float(_fx_material.get_shader_parameter("chroma_strength")) > 0.001 \
+			or float(_fx_material.get_shader_parameter("speed_lines")) > 0.001
 
 # Game feel, batteries included: screenshake, recoil, head bob, jitter, camera tilt, smooth zoom, and squash & stretch. The camera is found automatically - attach this anywhere and call Shake / Recoil / Zoom; all camera effects compose around one rest pose. Squash & Stretch animates the node it's attached to. (3D camera? Use the Juice 3D pack - same verbs on the active Camera3D.)

@@ -15,7 +15,7 @@ static func build() -> bool:
 	sheet.behavior_mode = true
 	sheet.host_class = "Node3D"
 	sheet.custom_class_name = "Juice3DBehavior"
-	sheet.class_description = "3D camera game feel on the active Camera3D: trauma-based shake, weapon recoil, head bob, jitter, a held lean, and FOV punch/zoom. Every effect is an additive offset that is removed and re-applied around whoever owns the camera, so mouse look and animations keep the real pose and your aim is never touched."
+	sheet.class_description = "3D camera game feel on the active Camera3D: trauma-based shake, weapon recoil, directional kicks from a world point, head bob, jitter, a held lean, FOV punch/zoom, host blink and punches, screen FX (vignette, chromatic kick, speed lines), varied one-shot audio, and eased score tickers. Every camera effect is an additive offset that is removed and re-applied around whoever owns the camera, so mouse look and animations keep the real pose and your aim is never touched."
 	sheet.addon_category = "Juice 3D"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["camera", "juice", "3d"])
@@ -37,6 +37,8 @@ static func build() -> bool:
 		"@export_range(1.0, 360.0, 1.0) var recoil_recovery: float = 30.0",
 		"## How fast an FOV Punch returns to normal, in degrees per second.",
 		"@export_range(5.0, 500.0, 5.0) var fov_recovery: float = 60.0",
+		"## How fast a positional Kick (Kick Camera Away From Point) re-centres, in metres per second.",
+		"@export_range(0.05, 20.0, 0.05) var kick_recovery: float = 0.6",
 		"",
 		"# --- Internal state ---",
 		"var trauma: float = 0.0",
@@ -64,6 +66,54 @@ static func build() -> bool:
 		"var _lean_roll: float = 0.0",
 		"var _lean_tween: Tween = null",
 		"var _fov_kick: float = 0.0",
+		"# Positional camera kick (Kick Camera Away From Point) - recovers like recoil.",
+		"var _kick_vec: Vector3 = Vector3.ZERO",
+		"# Blink state (visibility strobe - the 3D take on invulnerability frames).",
+		"var _blink_active: bool = false",
+		"var _blink_time: float = 0.0",
+		"var _blink_rate: float = 8.0",
+		"# Punch state (kick out, spring back; rest captured per gesture so repeats never drift).",
+		"var _base_scale3: Vector3 = Vector3.ONE",
+		"var _punch_pos_tween: Tween = null",
+		"var _punch_pos_rest: Vector3 = Vector3.ZERO",
+		"# Eased tickers (Count To): name -> displayed value / target / driving tween.",
+		"var _tickers: Dictionary = {}",
+		"var _ticker_targets: Dictionary = {}",
+		"var _ticker_tweens: Dictionary = {}",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Punch Finished\")",
+		"signal punch_finished()",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Ticker Finished\")",
+		"signal ticker_finished(ticker_name: String)",
+		"",
+		"## What a ticker currently SHOWS - the eased value Count To is rolling toward its target.",
+		"## Print or draw this instead of the real variable and scores roll instead of snapping.",
+		"## @ace_expression",
+		"## @ace_name(\"Ticker Value\")",
+		"func ticker_value(ticker_name: String) -> float:",
+		"\treturn float(_tickers.get(ticker_name, 0.0))",
+		"",
+		"## @ace_hidden",
+		"func _finish_ticker(ticker_name: String) -> void:",
+		"\t_tickers[ticker_name] = _ticker_targets.get(ticker_name, _tickers.get(ticker_name, 0.0))",
+		"\tticker_finished.emit(ticker_name)",
+		"",
+		"## Spawns a throwaway one-shot AudioStreamPlayer (frees itself when done).",
+		"## @ace_hidden",
+		"func _spawn_one_shot(path: String, pitch: float, volume_db: float) -> void:",
+		"\tvar stream: AudioStream = load(path) as AudioStream",
+		"\tif stream == null:",
+		"\t\treturn",
+		"\tvar player: AudioStreamPlayer = AudioStreamPlayer.new()",
+		"\tplayer.stream = stream",
+		"\tplayer.pitch_scale = maxf(pitch, 0.05)",
+		"\tplayer.volume_db = volume_db",
+		"\tadd_child(player)",
+		"\tplayer.finished.connect(player.queue_free)",
+		"\tplayer.play()",
 		"",
 		"## @ace_trigger",
 		"## @ace_name(\"On Shake Stopped\")",
@@ -120,7 +170,9 @@ static func build() -> bool:
 		"_noise = FastNoiseLite.new()",
 		"_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH",
 		"_noise.frequency = 1.0",
-		"_noise.seed = randi()"
+		"_noise.seed = randi()",
+		"if host is Node3D:",
+		"\t_base_scale3 = (host as Node3D).scale"
 	]))
 	on_ready.actions.append(ready_body)
 	sheet.events.append(on_ready)
@@ -148,6 +200,10 @@ static func build() -> bool:
 		"_recoil_pitch = move_toward(_recoil_pitch, 0.0, recoil_recovery * delta)",
 		"_recoil_yaw = move_toward(_recoil_yaw, 0.0, recoil_recovery * delta)",
 		"_fov_kick = move_toward(_fov_kick, 0.0, fov_recovery * delta)",
+		"_kick_vec = _kick_vec.move_toward(Vector3.ZERO, kick_recovery * delta)",
+		"if _blink_active and host is Node3D:",
+		"\t_blink_time += delta * _blink_rate",
+		"\t(host as Node3D).visible = fmod(_blink_time, 1.0) < 0.5",
 		"if _bob_active:",
 		"\t_bob_time += delta * _bob_frequency",
 		"if _jitter_active:",
@@ -159,7 +215,7 @@ static func build() -> bool:
 		"if cam == null:",
 		"\treturn",
 		"_last_camera = cam",
-		"var fx_position: Vector3 = Vector3.ZERO",
+		"var fx_position: Vector3 = _kick_vec",
 		"var fx_rotation: Vector3 = Vector3(deg_to_rad(_recoil_pitch), deg_to_rad(_recoil_yaw), deg_to_rad(_lean_roll))",
 		"if trauma > 0.0:",
 		"\t# Square the trauma so the shake ramps in perceptually (Squirrel Eiserloh's model).",
@@ -232,6 +288,71 @@ static func build() -> bool:
 	]))
 	sheet.events.append(tint_block)
 
+	# ── Screen FX overlay: one bundled shader (vignette + chromatic + speed lines) - the
+	# CanvasLayer renders over the 3D view, so the same kit serves both packs. ──
+	var fx_block: RawCodeRow = RawCodeRow.new()
+	fx_block.code = "\n".join(PackedStringArray([
+		"# The screen-FX overlay: one full-screen shader with three dials (vignette, chromatic",
+		"# aberration, radial speed lines) built on first use, hidden whenever every dial is 0.",
+		"var _fx_layer: CanvasLayer = null",
+		"var _fx_rect: ColorRect = null",
+		"var _fx_material: ShaderMaterial = null",
+		"var _vignette_tween: Tween = null",
+		"var _chroma_tween: Tween = null",
+		"const _FX_SHADER: String = \"\"\"",
+		"shader_type canvas_item;",
+		"uniform sampler2D screen_texture: hint_screen_texture, filter_linear_mipmap;",
+		"uniform float vignette_strength = 0.0;",
+		"uniform vec4 vignette_color: source_color = vec4(0.0, 0.0, 0.0, 1.0);",
+		"uniform float chroma_strength = 0.0;",
+		"uniform float speed_lines = 0.0;",
+		"",
+		"void fragment() {",
+		"\tvec2 uv = SCREEN_UV;",
+		"\tvec2 centered = uv - vec2(0.5);",
+		"\tvec2 chroma_offset = centered * chroma_strength * 0.03;",
+		"\tvec3 col = vec3(",
+		"\t\ttexture(screen_texture, uv + chroma_offset).r,",
+		"\t\ttexture(screen_texture, uv).g,",
+		"\t\ttexture(screen_texture, uv - chroma_offset).b);",
+		"\tfloat vignette = smoothstep(0.35, 1.0, length(centered) * 1.5) * vignette_strength;",
+		"\tcol = mix(col, vignette_color.rgb, clamp(vignette, 0.0, 1.0));",
+		"\tfloat angle = atan(centered.y, centered.x);",
+		"\tfloat streak = step(0.86, fract(sin(floor(angle * 60.0) + floor(TIME * 24.0) * 7.0) * 43758.545));",
+		"\tfloat ring = smoothstep(0.2, 0.65, length(centered));",
+		"\tcol = mix(col, vec3(1.0), streak * ring * clamp(speed_lines, 0.0, 1.0) * 0.65);",
+		"\tCOLOR = vec4(col, 1.0);",
+		"}",
+		"\"\"\"",
+		"",
+		"## @ace_hidden",
+		"func _ensure_fx_overlay() -> void:",
+		"\tif _fx_layer != null or not is_inside_tree():",
+		"\t\treturn",
+		"\t_fx_layer = CanvasLayer.new()",
+		"\t_fx_layer.layer = 91",
+		"\tadd_child(_fx_layer)",
+		"\t_fx_rect = ColorRect.new()",
+		"\t_fx_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE",
+		"\t_fx_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)",
+		"\tvar fx_shader: Shader = Shader.new()",
+		"\tfx_shader.code = _FX_SHADER",
+		"\t_fx_material = ShaderMaterial.new()",
+		"\t_fx_material.shader = fx_shader",
+		"\t_fx_rect.material = _fx_material",
+		"\t_fx_rect.visible = false",
+		"\t_fx_layer.add_child(_fx_rect)",
+		"",
+		"## @ace_hidden",
+		"func _fx_update_visibility() -> void:",
+		"\tif _fx_rect == null or _fx_material == null:",
+		"\t\treturn",
+		"\t_fx_rect.visible = float(_fx_material.get_shader_parameter(\"vignette_strength\")) > 0.001 \\",
+		"\t\t\tor float(_fx_material.get_shader_parameter(\"chroma_strength\")) > 0.001 \\",
+		"\t\t\tor float(_fx_material.get_shader_parameter(\"speed_lines\")) > 0.001"
+	]))
+	sheet.events.append(fx_block)
+
 	# --- Actions (fire-and-forget, mirroring the 2D Juice verbs) ---
 	Lib.append_function(sheet, "shake", "Shake", "Juice 3D", "Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.",
 		[["strength", "float"]],
@@ -278,8 +399,79 @@ static func build() -> bool:
 	Lib.append_function(sheet, "use_camera", "Use Camera", "Juice 3D", "Pin the effects to a specific Camera3D (by path). Leave it unused to auto-target whichever camera is active.",
 		[["camera_path", "NodePath"]],
 		"_unapply()\n_camera_override = get_node_or_null(camera_path) as Camera3D")
+
+	# ── Directional camera kick from a world point ──
+	Lib.append_function(sheet, "kick_away_from", "Kick Camera Away From Point", "Juice 3D", "Shoves the camera AWAY from a world position (an explosion, a hit source) and re-centres at the Kick Recovery rate - Recoil's directional sibling when you know the cause's location. Cosmetic (additive; aim untouched). Composes with Shake.",
+		[["world_position", "Vector3"], ["strength", "float"]],
+		"var cam: Camera3D = _camera()\nif cam == null:\n\treturn\nvar away: Vector3 = cam.global_position - world_position\naway = away.normalized() if away.length() > 0.001 else Vector3.UP\n_kick_vec += away * strength")
+	_default(sheet, "strength", "0.12")
+
+	# ── Blink (visibility strobe - the 3D take on invulnerability frames) ──
+	Lib.append_function(sheet, "start_blinking", "Start Blinking", "Juice 3D", "Strobes the host's visibility - invulnerability frames, respawn grace, a targeted highlight. Runs until Stop Blinking.",
+		[["times_per_second", "float"]],
+		"_blink_rate = maxf(times_per_second, 0.1)\n_blink_time = 0.0\n_blink_active = true")
+	_default(sheet, "times_per_second", "8")
+	Lib.append_function(sheet, "stop_blinking", "Stop Blinking", "Juice 3D", "Stops the blink and makes the host visible again.",
+		[],
+		"_blink_active = false\nif host is Node3D:\n\t(host as Node3D).visible = true")
+
+	# ── Punch transforms (kick out, spring back) ──
+	Lib.append_function(sheet, "punch_scale", "Punch Scale", "Juice 3D", "Kicks the host's scale up (or down, negative) and springs it back elastically - pickups, flinches, beat pulses. Emits On Punch Finished.",
+		[["strength", "float"], ["duration", "float"]],
+		"var scaled: Node3D = host as Node3D\nif scaled == null:\n\treturn\nscaled.scale = _base_scale3 * (1.0 + clampf(strength, -0.9, 5.0))\nvar tw: Tween = create_tween()\ntw.tween_property(scaled, \"scale\", _base_scale3, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: punch_finished.emit())")
+	_default(sheet, "strength", "0.25")
+	_default(sheet, "duration", "0.35")
+	Lib.append_function(sheet, "punch_position", "Punch Position", "Juice 3D", "Kicks the host's position by an offset (metres) and springs it back elastically - knockback reads, impact shoves away from an attacker. Emits On Punch Finished.",
+		[["offset", "Vector3"], ["duration", "float"]],
+		"var shoved: Node3D = host as Node3D\nif shoved == null:\n\treturn\nif _punch_pos_tween != null and _punch_pos_tween.is_valid():\n\t_punch_pos_tween.kill()\nelse:\n\t_punch_pos_rest = shoved.position\nshoved.position = _punch_pos_rest + offset\nvar tw: Tween = create_tween()\ntw.tween_property(shoved, \"position\", _punch_pos_rest, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: punch_finished.emit())\n_punch_pos_tween = tw")
+	_default(sheet, "offset", "Vector3(0.2, 0, 0)")
+	_default(sheet, "duration", "0.35")
+
+	# ── Screen FX (one bundled shader: vignette + chromatic aberration + speed lines) ──
+	Lib.append_function(sheet, "pulse_vignette", "Pulse Vignette", "Juice 3D", "Darkens the screen edges to a color at a strength (0..1), then fades back out - taking damage, a near miss, holding your breath. Composes with Fade Screen Tint for last-stand moments.",
+		[["strength", "float"], ["color", "Color"], ["seconds", "float"]],
+		"_ensure_fx_overlay()\nif _fx_material == null:\n\treturn\nif _vignette_tween != null and _vignette_tween.is_valid():\n\t_vignette_tween.kill()\n_fx_material.set_shader_parameter(\"vignette_color\", Color(color.r, color.g, color.b, 1.0))\n_fx_material.set_shader_parameter(\"vignette_strength\", clampf(strength, 0.0, 1.0))\n_fx_rect.visible = true\nvar tw: Tween = create_tween()\ntw.tween_property(_fx_material, \"shader_parameter/vignette_strength\", 0.0, maxf(seconds, 0.01)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)\ntw.finished.connect(_fx_update_visibility)\n_vignette_tween = tw")
+	_default(sheet, "strength", "0.6")
+	_default(sheet, "color", "Color(0.4, 0, 0)")
+	_default(sheet, "seconds", "0.5")
+	Lib.append_function(sheet, "chromatic_kick", "Chromatic Kick", "Juice 3D", "Splits the screen's color channels for an instant and settles back - the AAA impact frame. Fire with Shake on explosions and heavy hits.",
+		[["strength", "float"], ["seconds", "float"]],
+		"_ensure_fx_overlay()\nif _fx_material == null:\n\treturn\nif _chroma_tween != null and _chroma_tween.is_valid():\n\t_chroma_tween.kill()\n_fx_material.set_shader_parameter(\"chroma_strength\", clampf(strength, 0.0, 1.0))\n_fx_rect.visible = true\nvar tw: Tween = create_tween()\ntw.tween_property(_fx_material, \"shader_parameter/chroma_strength\", 0.0, maxf(seconds, 0.01)).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)\ntw.finished.connect(_fx_update_visibility)\n_chroma_tween = tw")
+	_default(sheet, "strength", "0.5")
+	_default(sheet, "seconds", "0.25")
+	Lib.append_function(sheet, "set_speed_lines", "Set Speed Lines", "Juice 3D", "Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with FOV Punch for full sprint feel.",
+		[["intensity", "float"]],
+		"_ensure_fx_overlay()\nif _fx_material == null:\n\treturn\n_fx_material.set_shader_parameter(\"speed_lines\", clampf(intensity, 0.0, 1.0))\n_fx_update_visibility()")
+	_default(sheet, "intensity", "0.5")
+
+	# ── Audio juice ──
+	Lib.append_function(sheet, "play_sound_varied", "Play Sound Varied", "Juice 3D", "Plays a sound with a random pitch and volume wobble around the base - the #1 trick against repetitive footsteps, hits, and shots. Fire-and-forget (the player frees itself).",
+		[["path", "String"], ["pitch_jitter", "float"], ["volume_jitter_db", "float"]],
+		"_spawn_one_shot(path, 1.0 + randf_range(-pitch_jitter, pitch_jitter), randf_range(-absf(volume_jitter_db), 0.0))")
+	_default(sheet, "path", "res://sfx/hit.ogg")
+	_default(sheet, "pitch_jitter", "0.08")
+	_default(sheet, "volume_jitter_db", "2")
+	Lib.append_function(sheet, "play_sound_intensity", "Play Sound With Intensity", "Juice 3D", "Plays a sound scaled by an intensity (0..1): quiet + lower-pitched when light, full + brighter when heavy - drive it, Shake, and Punch Scale from ONE hit-power value so light and heavy hits differ by one number.",
+		[["path", "String"], ["intensity", "float"]],
+		"var power: float = clampf(intensity, 0.0, 1.0)\n_spawn_one_shot(path, lerpf(0.85, 1.15, power) * (1.0 + randf_range(-0.03, 0.03)), lerpf(-14.0, 0.0, power))")
+	_default(sheet, "path", "res://sfx/hit.ogg")
+	_default(sheet, "intensity", "0.5")
+
+	# ── Eased tickers (score roll-ups) ──
+	Lib.append_function(sheet, "count_to", "Count To", "Juice 3D", "Eases a named display value toward a target over a duration - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression; emits On Ticker Finished (with the name) when it lands.",
+		[["ticker_name", "String"], ["target", "float"], ["duration", "float"]],
+		"var from: float = float(_tickers.get(ticker_name, 0.0))\n_ticker_targets[ticker_name] = target\nvar old_tween: Tween = _ticker_tweens.get(ticker_name, null)\nif old_tween != null and is_instance_valid(old_tween):\n\told_tween.kill()\nvar tw: Tween = create_tween()\ntw.tween_method(func(v: float) -> void: _tickers[ticker_name] = v, from, target, maxf(duration, 0.001)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)\ntw.finished.connect(_finish_ticker.bind(ticker_name))\n_ticker_tweens[ticker_name] = tw")
+	_default(sheet, "ticker_name", "score")
+	_default(sheet, "target", "100")
+	_default(sheet, "duration", "0.6")
+	Lib.append_function(sheet, "set_ticker", "Set Ticker", "Juice 3D", "Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.",
+		[["ticker_name", "String"], ["value", "float"]],
+		"var old_tween: Tween = _ticker_tweens.get(ticker_name, null)\nif old_tween != null and is_instance_valid(old_tween):\n\told_tween.kill()\n_tickers[ticker_name] = value\n_ticker_targets[ticker_name] = value")
+	_default(sheet, "ticker_name", "score")
+	_default(sheet, "value", "0")
+
 	# The pack's hero verbs: starred + bold at the top of their picker section.
-	Lib.feature_verbs(sheet, ["shake", "fov_punch"])
+	Lib.feature_verbs(sheet, ["shake", "fov_punch", "chromatic_kick"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/juice_3d/juice_3d_behavior")
 
 

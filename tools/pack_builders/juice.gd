@@ -17,7 +17,7 @@ static func build() -> bool:
 	# CanvasItem is the shared base of Node2D and Control, so Squash & Stretch works on sprites AND UI.
 	sheet.host_class = "CanvasItem"
 	sheet.custom_class_name = "JuiceBehavior"
-	sheet.class_description = "Game feel from event rows: screenshake, recoil, head bob, zoom, squash and stretch, slowmo, and hitstop in one behavior. Camera effects find the active Camera2D on their own, and every effect is fire-and-forget with an On Finished trigger so you can chain the next beat."
+	sheet.class_description = "Game feel from event rows: screenshake, recoil, head bob, zoom, squash and stretch, slowmo, hitstop, damage flash and blink, punch transforms, ghost trails, screen FX (vignette, chromatic kick, speed lines), varied one-shot audio, and eased score tickers in one behavior. Camera effects find the active Camera2D on their own, and every effect is fire-and-forget with an On Finished trigger so you can chain the next beat."
 	sheet.addon_category = "Juice"
 	sheet.ace_expose_all_mode = "node"
 	sheet.addon_tags = PackedStringArray(["camera", "juice"])
@@ -348,6 +348,216 @@ static func build() -> bool:
 	]))
 	sheet.events.append(tint_block)
 
+	# ── Flash / blink / punches / ghost trail / tickers - shared state + helpers ──────
+	var extras_block: RawCodeRow = RawCodeRow.new()
+	extras_block.code = "\n".join(PackedStringArray([
+		"# Flash / blink state (modulate-based, so both compose with Set Host Tint).",
+		"var _flash_tween: Tween = null",
+		"var _flash_restore: Color = Color.WHITE",
+		"var _blink_active: bool = false",
+		"var _blink_time: float = 0.0",
+		"var _blink_rate: float = 8.0",
+		"var _blink_min_alpha: float = 0.15",
+		"var _blink_base_alpha: float = 1.0",
+		"# Punch state (kick out, spring back; rest captured per gesture so repeats never drift).",
+		"var _punch_rot_tween: Tween = null",
+		"var _punch_rot_rest: float = 0.0",
+		"var _punch_pos_tween: Tween = null",
+		"var _punch_pos_rest: Vector2 = Vector2.ZERO",
+		"# Ghost-trail state (stamped fading sprite copies).",
+		"var _trail_active: bool = false",
+		"var _trail_interval: float = 0.05",
+		"var _trail_fade: float = 0.4",
+		"var _trail_tint: Color = Color.WHITE",
+		"var _trail_timer: float = 0.0",
+		"# Eased tickers (Count To): name -> displayed value / target / driving tween.",
+		"var _tickers: Dictionary = {}",
+		"var _ticker_targets: Dictionary = {}",
+		"var _ticker_tweens: Dictionary = {}",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Flash Finished\")",
+		"signal flash_finished()",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Punch Finished\")",
+		"signal punch_finished()",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Ticker Finished\")",
+		"signal ticker_finished(ticker_name: String)",
+		"",
+		"## What a ticker currently SHOWS - the eased value Count To is rolling toward its target.",
+		"## Print or draw this instead of the real variable and scores roll instead of snapping.",
+		"## @ace_expression",
+		"## @ace_name(\"Ticker Value\")",
+		"func ticker_value(ticker_name: String) -> float:",
+		"\treturn float(_tickers.get(ticker_name, 0.0))",
+		"",
+		"## @ace_hidden",
+		"func _finish_ticker(ticker_name: String) -> void:",
+		"\t_tickers[ticker_name] = _ticker_targets.get(ticker_name, _tickers.get(ticker_name, 0.0))",
+		"\tticker_finished.emit(ticker_name)",
+		"",
+		"## Stamps one fading copy of the host's sprite (Sprite2D / AnimatedSprite2D, or the host's",
+		"## first Sprite2D child) into the parent - the trail's per-tick brush.",
+		"## @ace_hidden",
+		"func _stamp_ghost() -> void:",
+		"\tvar source: Node2D = host as Node2D",
+		"\tif source == null or not is_inside_tree() or source.get_parent() == null:",
+		"\t\treturn",
+		"\tvar ghost: Sprite2D = Sprite2D.new()",
+		"\tvar pose_source: Node2D = source",
+		"\tif source is Sprite2D:",
+		"\t\tvar sprite: Sprite2D = source as Sprite2D",
+		"\t\tghost.texture = sprite.texture",
+		"\t\tghost.hframes = sprite.hframes",
+		"\t\tghost.vframes = sprite.vframes",
+		"\t\tghost.frame = sprite.frame",
+		"\t\tghost.region_enabled = sprite.region_enabled",
+		"\t\tghost.region_rect = sprite.region_rect",
+		"\t\tghost.flip_h = sprite.flip_h",
+		"\t\tghost.flip_v = sprite.flip_v",
+		"\t\tghost.centered = sprite.centered",
+		"\t\tghost.offset = sprite.offset",
+		"\telif source is AnimatedSprite2D:",
+		"\t\tvar animated: AnimatedSprite2D = source as AnimatedSprite2D",
+		"\t\tif animated.sprite_frames == null:",
+		"\t\t\treturn",
+		"\t\tghost.texture = animated.sprite_frames.get_frame_texture(animated.animation, animated.frame)",
+		"\t\tghost.flip_h = animated.flip_h",
+		"\t\tghost.flip_v = animated.flip_v",
+		"\t\tghost.centered = animated.centered",
+		"\t\tghost.offset = animated.offset",
+		"\telse:",
+		"\t\tvar body_sprite: Sprite2D = null",
+		"\t\tfor child in source.get_children():",
+		"\t\t\tif child is Sprite2D:",
+		"\t\t\t\tbody_sprite = child as Sprite2D",
+		"\t\t\t\tbreak",
+		"\t\tif body_sprite == null or body_sprite.texture == null:",
+		"\t\t\treturn",
+		"\t\tghost.texture = body_sprite.texture",
+		"\t\tghost.hframes = body_sprite.hframes",
+		"\t\tghost.vframes = body_sprite.vframes",
+		"\t\tghost.frame = body_sprite.frame",
+		"\t\tghost.flip_h = body_sprite.flip_h",
+		"\t\tghost.flip_v = body_sprite.flip_v",
+		"\t\tghost.centered = body_sprite.centered",
+		"\t\tghost.offset = body_sprite.offset",
+		"\t\tpose_source = body_sprite",
+		"\tif ghost.texture == null:",
+		"\t\treturn",
+		"\tghost.modulate = _trail_tint",
+		"\tghost.z_index = pose_source.z_index - 1",
+		"\tsource.get_parent().add_child(ghost)",
+		"\tghost.global_transform = pose_source.global_transform",
+		"\tvar tw: Tween = ghost.create_tween()",
+		"\ttw.tween_property(ghost, \"modulate:a\", 0.0, maxf(_trail_fade, 0.05))",
+		"\ttw.finished.connect(ghost.queue_free)",
+		"",
+		"## Spawns a throwaway one-shot AudioStreamPlayer (frees itself when done).",
+		"## @ace_hidden",
+		"func _spawn_one_shot(path: String, pitch: float, volume_db: float) -> void:",
+		"\tvar stream: AudioStream = load(path) as AudioStream",
+		"\tif stream == null:",
+		"\t\treturn",
+		"\tvar player: AudioStreamPlayer = AudioStreamPlayer.new()",
+		"\tplayer.stream = stream",
+		"\tplayer.pitch_scale = maxf(pitch, 0.05)",
+		"\tplayer.volume_db = volume_db",
+		"\tadd_child(player)",
+		"\tplayer.finished.connect(player.queue_free)",
+		"\tplayer.play()"
+	]))
+	sheet.events.append(extras_block)
+
+	# ── Screen FX overlay: one bundled shader (vignette + chromatic + speed lines) ────
+	var fx_block: RawCodeRow = RawCodeRow.new()
+	fx_block.code = "\n".join(PackedStringArray([
+		"# The screen-FX overlay: one full-screen shader with three dials (vignette, chromatic",
+		"# aberration, radial speed lines) built on first use, hidden whenever every dial is 0.",
+		"var _fx_layer: CanvasLayer = null",
+		"var _fx_rect: ColorRect = null",
+		"var _fx_material: ShaderMaterial = null",
+		"var _vignette_tween: Tween = null",
+		"var _chroma_tween: Tween = null",
+		"const _FX_SHADER: String = \"\"\"",
+		"shader_type canvas_item;",
+		"uniform sampler2D screen_texture: hint_screen_texture, filter_linear_mipmap;",
+		"uniform float vignette_strength = 0.0;",
+		"uniform vec4 vignette_color: source_color = vec4(0.0, 0.0, 0.0, 1.0);",
+		"uniform float chroma_strength = 0.0;",
+		"uniform float speed_lines = 0.0;",
+		"",
+		"void fragment() {",
+		"\tvec2 uv = SCREEN_UV;",
+		"\tvec2 centered = uv - vec2(0.5);",
+		"\tvec2 chroma_offset = centered * chroma_strength * 0.03;",
+		"\tvec3 col = vec3(",
+		"\t\ttexture(screen_texture, uv + chroma_offset).r,",
+		"\t\ttexture(screen_texture, uv).g,",
+		"\t\ttexture(screen_texture, uv - chroma_offset).b);",
+		"\tfloat vignette = smoothstep(0.35, 1.0, length(centered) * 1.5) * vignette_strength;",
+		"\tcol = mix(col, vignette_color.rgb, clamp(vignette, 0.0, 1.0));",
+		"\tfloat angle = atan(centered.y, centered.x);",
+		"\tfloat streak = step(0.86, fract(sin(floor(angle * 60.0) + floor(TIME * 24.0) * 7.0) * 43758.545));",
+		"\tfloat ring = smoothstep(0.2, 0.65, length(centered));",
+		"\tcol = mix(col, vec3(1.0), streak * ring * clamp(speed_lines, 0.0, 1.0) * 0.65);",
+		"\tCOLOR = vec4(col, 1.0);",
+		"}",
+		"\"\"\"",
+		"",
+		"## @ace_hidden",
+		"func _ensure_fx_overlay() -> void:",
+		"\tif _fx_layer != null or not is_inside_tree():",
+		"\t\treturn",
+		"\t_fx_layer = CanvasLayer.new()",
+		"\t_fx_layer.layer = 91",
+		"\tadd_child(_fx_layer)",
+		"\t_fx_rect = ColorRect.new()",
+		"\t_fx_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE",
+		"\t_fx_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)",
+		"\tvar fx_shader: Shader = Shader.new()",
+		"\tfx_shader.code = _FX_SHADER",
+		"\t_fx_material = ShaderMaterial.new()",
+		"\t_fx_material.shader = fx_shader",
+		"\t_fx_rect.material = _fx_material",
+		"\t_fx_rect.visible = false",
+		"\t_fx_layer.add_child(_fx_rect)",
+		"",
+		"## @ace_hidden",
+		"func _fx_update_visibility() -> void:",
+		"\tif _fx_rect == null or _fx_material == null:",
+		"\t\treturn",
+		"\t_fx_rect.visible = float(_fx_material.get_shader_parameter(\"vignette_strength\")) > 0.001 \\",
+		"\t\t\tor float(_fx_material.get_shader_parameter(\"chroma_strength\")) > 0.001 \\",
+		"\t\t\tor float(_fx_material.get_shader_parameter(\"speed_lines\")) > 0.001"
+	]))
+	sheet.events.append(fx_block)
+
+	# Per-frame: blink strobe + ghost-trail stamping (a second _process event; the compiler
+	# appends it after the camera mixer above).
+	var tick_extras: EventRow = EventRow.new()
+	tick_extras.trigger_provider_id = "Core"
+	tick_extras.trigger_id = "OnProcess"
+	var tick_extras_body: RawCodeRow = RawCodeRow.new()
+	tick_extras_body.code = "\n".join(PackedStringArray([
+		"if _blink_active and host is CanvasItem:",
+		"\t_blink_time += delta * _blink_rate",
+		"\tvar blink_item: CanvasItem = host as CanvasItem",
+		"\tvar blink_color: Color = blink_item.modulate",
+		"\tblink_color.a = _blink_base_alpha if fmod(_blink_time, 1.0) < 0.5 else _blink_min_alpha",
+		"\tblink_item.modulate = blink_color",
+		"if _trail_active:",
+		"\t_trail_timer -= delta",
+		"\tif _trail_timer <= 0.0:",
+		"\t\t_trail_timer = maxf(_trail_interval, 0.01)",
+		"\t\t_stamp_ghost()"
+	]))
+	tick_extras.actions.append(tick_extras_body)
+	sheet.events.append(tick_extras)
+
 	# --- Actions (fire-and-forget) ---
 	Lib.append_function(sheet, "shake", "Shake", "Juice", "Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.",
 		[["strength", "float"]],
@@ -423,8 +633,101 @@ static func build() -> bool:
 		"if _hitstop_active:\n\treturn\n_hitstop_active = true\n_hitstop_prev_scale = Engine.time_scale\nif _slowmo_tween != null and is_instance_valid(_slowmo_tween) and _slowmo_tween.is_running():\n\t_slowmo_tween.pause()\nEngine.time_scale = maxf(freeze_scale, 0.0)\nawait get_tree().create_timer(maxf(freeze_duration, 0.0), true, false, true).timeout\nif not _hitstop_active:\n\treturn\n_hitstop_active = false\nEngine.time_scale = _hitstop_prev_scale\nif _slowmo_tween != null and is_instance_valid(_slowmo_tween):\n\t_slowmo_tween.play()\nhitstop_finished.emit()")
 	_default(sheet, "freeze_duration", "0.06")
 	_default(sheet, "freeze_scale", "0.0")
+
+	# ── Flash & blink ──
+	Lib.append_function(sheet, "flash", "Flash", "Juice", "Pops the host to a solid color, then fades back to how it looked (tints included) - THE damage-hit read. Fire with Hitstop + Shake for a complete hit-confirm. Emits On Flash Finished.",
+		[["color", "Color"], ["seconds", "float"]],
+		"var flash_item: CanvasItem = host as CanvasItem\nif flash_item == null:\n\treturn\nif _flash_tween != null and _flash_tween.is_valid():\n\t_flash_tween.kill()\nelse:\n\t_flash_restore = flash_item.modulate\nflash_item.modulate = Color(color.r, color.g, color.b, _flash_restore.a)\nvar tw: Tween = create_tween()\ntw.tween_property(flash_item, \"modulate\", _flash_restore, maxf(seconds, 0.01)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)\ntw.finished.connect(func() -> void: flash_finished.emit())\n_flash_tween = tw")
+	_default(sheet, "color", "Color.WHITE")
+	_default(sheet, "seconds", "0.12")
+	Lib.append_function(sheet, "start_blinking", "Start Blinking", "Juice", "Strobes the host's opacity (full / faint) - the invulnerability-frames look, a low-health warning, an interactable highlight. Runs until Stop Blinking.",
+		[["times_per_second", "float"], ["min_alpha", "float"]],
+		"if host is CanvasItem and not _blink_active:\n\t_blink_base_alpha = (host as CanvasItem).modulate.a\n_blink_rate = maxf(times_per_second, 0.1)\n_blink_min_alpha = clampf(min_alpha, 0.0, 1.0)\n_blink_time = 0.0\n_blink_active = true")
+	_default(sheet, "times_per_second", "8")
+	_default(sheet, "min_alpha", "0.15")
+	Lib.append_function(sheet, "stop_blinking", "Stop Blinking", "Juice", "Stops the blink and restores the host's opacity.",
+		[],
+		"_blink_active = false\nif host is CanvasItem:\n\tvar restored: Color = (host as CanvasItem).modulate\n\trestored.a = _blink_base_alpha\n\t(host as CanvasItem).modulate = restored")
+
+	# ── Punch transforms (kick out, spring back) ──
+	Lib.append_function(sheet, "punch_scale", "Punch Scale", "Juice", "Kicks the host's scale up (or down, negative) and springs it back elastically - button pops, pickups, flinches, beat pulses. Composes with Flash + Hitstop for melee hits. Emits On Punch Finished.",
+		[["strength", "float"], ["duration", "float"]],
+		"if host == null:\n\treturn\n_apply_host_scale(_base_scale * (1.0 + clampf(strength, -0.9, 5.0)))\nvar tw: Tween = create_tween()\ntw.tween_property(host, \"scale\", _base_scale, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: punch_finished.emit())")
+	_default(sheet, "strength", "0.25")
+	_default(sheet, "duration", "0.35")
+	Lib.append_function(sheet, "punch_rotation", "Punch Rotation", "Juice", "Kicks the host's rotation by an angle (degrees) and springs it back elastically - wobbling signs, chest-opening jolts, portrait reactions. Emits On Punch Finished.",
+		[["degrees", "float"], ["duration", "float"]],
+		"if not (host is CanvasItem):\n\treturn\nif host is Control:\n\t(host as Control).pivot_offset = (host as Control).size / 2.0\nif _punch_rot_tween != null and _punch_rot_tween.is_valid():\n\t_punch_rot_tween.kill()\nelse:\n\t_punch_rot_rest = (host as CanvasItem).rotation\n(host as CanvasItem).rotation = _punch_rot_rest + deg_to_rad(degrees)\nvar tw: Tween = create_tween()\ntw.tween_property(host, \"rotation\", _punch_rot_rest, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: punch_finished.emit())\n_punch_rot_tween = tw")
+	_default(sheet, "degrees", "8")
+	_default(sheet, "duration", "0.35")
+	Lib.append_function(sheet, "punch_position", "Punch Position", "Juice", "Kicks the host's position by an offset (pixels) and springs it back elastically - knockback reads, UI nudges, impact shoves away from an attacker. Emits On Punch Finished.",
+		[["offset", "Vector2"], ["duration", "float"]],
+		"if not (host is Node2D or host is Control):\n\treturn\nif _punch_pos_tween != null and _punch_pos_tween.is_valid():\n\t_punch_pos_tween.kill()\nelse:\n\t_punch_pos_rest = host.position\nhost.position = _punch_pos_rest + offset\nvar tw: Tween = create_tween()\ntw.tween_property(host, \"position\", _punch_pos_rest, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: punch_finished.emit())\n_punch_pos_tween = tw")
+	_default(sheet, "offset", "Vector2(6, 0)")
+	_default(sheet, "duration", "0.35")
+
+	# ── Directional camera kick from a world point ──
+	Lib.append_function(sheet, "kick_away_from", "Kick Camera Away From Point", "Juice", "Kicks the camera AWAY from a world position (an explosion, a hit source) and springs back - Recoil's directional sibling when you know the cause's location, so the kick always reads as pushback. Composes with Shake.",
+		[["world_position", "Vector2"], ["strength", "float"]],
+		"var cam: Camera2D = _camera()\nif cam == null:\n\treturn\nvar away: Vector2 = cam.get_screen_center_position() - world_position\naway = away.normalized() if away.length() > 0.001 else Vector2.UP\n_recoil_vec += away * strength")
+	_default(sheet, "strength", "14")
+
+	# ── Ghost trail ──
+	Lib.append_function(sheet, "start_ghost_trail", "Start Ghost Trail", "Juice", "Starts stamping fading afterimages of the host's sprite behind it - dashes, teleports, speed power-ups, bullet-time evades. Works on a Sprite2D/AnimatedSprite2D host or the host's first Sprite2D child. Runs until Stop Ghost Trail.",
+		[["stamps_per_second", "float"], ["fade_seconds", "float"], ["tint", "Color"]],
+		"_trail_interval = 1.0 / maxf(stamps_per_second, 0.1)\n_trail_fade = maxf(fade_seconds, 0.05)\n_trail_tint = tint\n_trail_timer = 0.0\n_trail_active = true")
+	_default(sheet, "stamps_per_second", "20")
+	_default(sheet, "fade_seconds", "0.4")
+	_default(sheet, "tint", "Color(1, 1, 1, 0.6)")
+	Lib.append_function(sheet, "stop_ghost_trail", "Stop Ghost Trail", "Juice", "Stops stamping afterimages (the ones already out finish fading on their own).",
+		[],
+		"_trail_active = false")
+
+	# ── Screen FX (one bundled shader: vignette + chromatic aberration + speed lines) ──
+	Lib.append_function(sheet, "pulse_vignette", "Pulse Vignette", "Juice", "Darkens the screen edges to a color at a strength (0..1), then fades back out - taking damage, a near miss, holding your breath. Composes with Slowmo + Fade Screen Tint for last-stand moments.",
+		[["strength", "float"], ["color", "Color"], ["seconds", "float"]],
+		"_ensure_fx_overlay()\nif _fx_material == null:\n\treturn\nif _vignette_tween != null and _vignette_tween.is_valid():\n\t_vignette_tween.kill()\n_fx_material.set_shader_parameter(\"vignette_color\", Color(color.r, color.g, color.b, 1.0))\n_fx_material.set_shader_parameter(\"vignette_strength\", clampf(strength, 0.0, 1.0))\n_fx_rect.visible = true\nvar tw: Tween = create_tween()\ntw.tween_property(_fx_material, \"shader_parameter/vignette_strength\", 0.0, maxf(seconds, 0.01)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)\ntw.finished.connect(_fx_update_visibility)\n_vignette_tween = tw")
+	_default(sheet, "strength", "0.6")
+	_default(sheet, "color", "Color(0.4, 0, 0)")
+	_default(sheet, "seconds", "0.5")
+	Lib.append_function(sheet, "chromatic_kick", "Chromatic Kick", "Juice", "Splits the screen's color channels for an instant and settles back - the AAA impact frame. Fire with Shake + Hitstop on explosions and heavy hits.",
+		[["strength", "float"], ["seconds", "float"]],
+		"_ensure_fx_overlay()\nif _fx_material == null:\n\treturn\nif _chroma_tween != null and _chroma_tween.is_valid():\n\t_chroma_tween.kill()\n_fx_material.set_shader_parameter(\"chroma_strength\", clampf(strength, 0.0, 1.0))\n_fx_rect.visible = true\nvar tw: Tween = create_tween()\ntw.tween_property(_fx_material, \"shader_parameter/chroma_strength\", 0.0, maxf(seconds, 0.01)).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)\ntw.finished.connect(_fx_update_visibility)\n_chroma_tween = tw")
+	_default(sheet, "strength", "0.5")
+	_default(sheet, "seconds", "0.25")
+	Lib.append_function(sheet, "set_speed_lines", "Set Speed Lines", "Juice", "Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with Zoom By Percent or FOV punches for full sprint feel.",
+		[["intensity", "float"]],
+		"_ensure_fx_overlay()\nif _fx_material == null:\n\treturn\n_fx_material.set_shader_parameter(\"speed_lines\", clampf(intensity, 0.0, 1.0))\n_fx_update_visibility()")
+	_default(sheet, "intensity", "0.5")
+
+	# ── Audio juice ──
+	Lib.append_function(sheet, "play_sound_varied", "Play Sound Varied", "Juice", "Plays a sound with a random pitch and volume wobble around the base - the #1 trick against repetitive footsteps, hits, coins, and clicks. Fire-and-forget (the player frees itself).",
+		[["path", "String"], ["pitch_jitter", "float"], ["volume_jitter_db", "float"]],
+		"_spawn_one_shot(path, 1.0 + randf_range(-pitch_jitter, pitch_jitter), randf_range(-absf(volume_jitter_db), 0.0))")
+	_default(sheet, "path", "res://sfx/hit.ogg")
+	_default(sheet, "pitch_jitter", "0.08")
+	_default(sheet, "volume_jitter_db", "2")
+	Lib.append_function(sheet, "play_sound_intensity", "Play Sound With Intensity", "Juice", "Plays a sound scaled by an intensity (0..1): quiet + lower-pitched when light, full + brighter when heavy - drive it, Shake, and Punch Scale from ONE hit-power value so light and heavy hits differ by one number.",
+		[["path", "String"], ["intensity", "float"]],
+		"var power: float = clampf(intensity, 0.0, 1.0)\n_spawn_one_shot(path, lerpf(0.85, 1.15, power) * (1.0 + randf_range(-0.03, 0.03)), lerpf(-14.0, 0.0, power))")
+	_default(sheet, "path", "res://sfx/hit.ogg")
+	_default(sheet, "intensity", "0.5")
+
+	# ── Eased tickers (score roll-ups) ──
+	Lib.append_function(sheet, "count_to", "Count To", "Juice", "Eases a named display value toward a target over a duration - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression; emits On Ticker Finished (with the name) when it lands.",
+		[["ticker_name", "String"], ["target", "float"], ["duration", "float"]],
+		"var from: float = float(_tickers.get(ticker_name, 0.0))\n_ticker_targets[ticker_name] = target\nvar old_tween: Tween = _ticker_tweens.get(ticker_name, null)\nif old_tween != null and is_instance_valid(old_tween):\n\told_tween.kill()\nvar tw: Tween = create_tween()\ntw.tween_method(func(v: float) -> void: _tickers[ticker_name] = v, from, target, maxf(duration, 0.001)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)\ntw.finished.connect(_finish_ticker.bind(ticker_name))\n_ticker_tweens[ticker_name] = tw")
+	_default(sheet, "ticker_name", "score")
+	_default(sheet, "target", "100")
+	_default(sheet, "duration", "0.6")
+	Lib.append_function(sheet, "set_ticker", "Set Ticker", "Juice", "Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.",
+		[["ticker_name", "String"], ["value", "float"]],
+		"var old_tween: Tween = _ticker_tweens.get(ticker_name, null)\nif old_tween != null and is_instance_valid(old_tween):\n\told_tween.kill()\n_tickers[ticker_name] = value\n_ticker_targets[ticker_name] = value")
+	_default(sheet, "ticker_name", "score")
+	_default(sheet, "value", "0")
+
 	# The pack's hero verbs: starred + bold at the top of their picker section.
-	Lib.feature_verbs(sheet, ["shake", "hitstop"])
+	Lib.feature_verbs(sheet, ["shake", "hitstop", "flash"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_behavior")
 
 

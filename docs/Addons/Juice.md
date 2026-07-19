@@ -115,6 +115,22 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Slowmo | `target_scale` (float), `hold_duration` (float), `duration_clock` (String) | Eases `Engine.time_scale` down to `target_scale`, holds for `hold_duration`, then eases back to normal. `duration_clock` picks `realtime` or `gametime` for the hold. Fade curves are Inspector knobs. Opens at 0.15, 0.25, realtime. |
 | Clear Slowmo | (none) | Cancels any slowmo and snaps `Engine.time_scale` back to 1.0 immediately (call on scene exit if a slowmo might still be running). |
 | Hitstop | `freeze_duration` (float), `freeze_scale` (float) | The punchy hit-pause on a connecting blow: freezes `Engine.time_scale` (0 = full stop) for `freeze_duration`, then snaps back to what it was. Ignores repeat hits already mid-freeze and pauses any active Slowmo. Opens at 0.06, 0.0. |
+| Flash | `color` (Color), `seconds` (float) | Pops the host to a solid color, then fades back to how it looked (tints included) - THE damage-hit read. Fire with Hitstop + Shake for a complete hit-confirm. Opens at white, 0.12. |
+| Start Blinking | `times_per_second` (float), `min_alpha` (float) | Strobes the host's opacity (full / faint) - invulnerability frames, low-health warnings, interactable highlights. Runs until Stop Blinking. Opens at 8, 0.15. |
+| Stop Blinking | (none) | Stops the blink and restores the host's opacity. |
+| Punch Scale | `strength` (float), `duration` (float) | Kicks the host's scale up (or down, negative) and springs back elastically - button pops, pickups, flinches, beat pulses. Opens at 0.25, 0.35. |
+| Punch Rotation | `degrees` (float), `duration` (float) | Kicks the host's rotation and springs back - wobbling signs, chest jolts, portrait reactions. Opens at 8, 0.35. |
+| Punch Position | `offset` (Vector2), `duration` (float) | Kicks the host's position and springs back - knockback reads, UI nudges, shoves away from an attacker. Opens at (6, 0), 0.35. |
+| Kick Camera Away From Point | `world_position` (Vector2), `strength` (float) | Kicks the camera AWAY from a world position (an explosion, a hit source) and springs back - Recoil's directional sibling when you know the cause's location. Opens at 14. |
+| Start Ghost Trail | `stamps_per_second` (float), `fade_seconds` (float), `tint` (Color) | Stamps fading afterimages of the host's sprite behind it - dashes, teleports, speed power-ups. Works on a Sprite2D/AnimatedSprite2D host or the host's first Sprite2D child. Opens at 20, 0.4, translucent white. |
+| Stop Ghost Trail | (none) | Stops stamping (the ghosts already out finish fading). |
+| Pulse Vignette | `strength` (float), `color` (Color), `seconds` (float) | Darkens the screen edges to a color, then fades back out - taking damage, a near miss. Opens at 0.6, dark red, 0.5. |
+| Chromatic Kick | `strength` (float), `seconds` (float) | Splits the screen's color channels for an instant and settles back - the AAA impact frame. Opens at 0.5, 0.25. |
+| Set Speed Lines | `intensity` (float) | Radial anime-style speed streaks that HOLD until you set 0 - sprints, dashes, adrenaline. Opens at 0.5. |
+| Play Sound Varied | `path` (String), `pitch_jitter` (float), `volume_jitter_db` (float) | Plays a sound with a random pitch/volume wobble - the #1 trick against repetitive footsteps, hits, coins, clicks. Opens at 0.08, 2. |
+| Play Sound With Intensity | `path` (String), `intensity` (float) | Plays a sound scaled by a 0-1 intensity: quiet and low when light, full and bright when heavy - drive it, Shake, and Punch Scale from ONE hit-power value. Opens at 0.5. |
+| Count To | `ticker_name` (String), `target` (float), `duration` (float) | Eases a named display value toward a target - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression. Opens at score, 100, 0.6. |
+| Set Ticker | `ticker_name` (String), `value` (float) | Sets a display value instantly (cancelling any roll) - initialise at 0, or snap on reset. |
 
 ### Conditions
 
@@ -128,6 +144,7 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 | Expression | Parameters | Returns | Description |
 |---|---|---|---|
 | Trauma | (none) | float | The current trauma level, 0 to 1 - drive a rumble strength or a shaking HUD element from it. |
+| Ticker Value | `ticker_name` (String) | float | What a ticker currently SHOWS - the eased value Count To is rolling. Print or draw this instead of the real variable. |
 
 ### Triggers
 
@@ -135,6 +152,9 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 |---|---|
 | On Shake Stopped | Trauma reaches zero and the camera settles back to rest after a shake. |
 | On Tilt Finished | A Tilt To ease reaches its target angle. |
+| On Flash Finished | A Flash has faded back to the host's own look. |
+| On Punch Finished | A Punch Scale / Rotation / Position has sprung back to rest. |
+| On Ticker Finished | A Count To roll lands on its target (carries the ticker's name). |
 | On Zoom Finished | Any of the three zoom actions finishes its glide. |
 | On Squash Finished | A Squash & Stretch tween or a Spring Squash spring settles back to rest. |
 | On Slowmo Finished | Slowmo has ramped back to normal time scale. |

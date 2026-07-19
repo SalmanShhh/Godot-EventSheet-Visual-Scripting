@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Added - the composable Juice wave (both packs)
+
+- **Juice (2D)** gains seven composable primitive groups, each multi-use and designed to
+  stack with the existing shake/hitstop/slowmo/tint vocabulary: Flash + Start/Stop
+  Blinking (damage pops, i-frames; modulate-based so they compose with tints), Punch
+  Scale/Rotation/Position (kick out, spring back elastically), Kick Camera Away From
+  Point (Recoil's directional sibling - feeds the same camera mixer), Start/Stop Ghost
+  Trail (fading afterimages from the host's sprite or its first Sprite2D child), a
+  bundled screen-FX shader with three dials (Pulse Vignette, Chromatic Kick, Set Speed
+  Lines - one overlay, hidden when idle), Play Sound Varied / Play Sound With Intensity
+  (pitch/volume wobble; one 0-1 hit-power value can drive sound + Shake + Punch
+  together), and eased tickers (Count To / Set Ticker / Ticker Value / On Ticker
+  Finished - scores roll instead of snapping). New triggers: On Flash Finished, On
+  Punch Finished, On Ticker Finished.
+- **Juice 3D** gains the direct transfers: Kick Camera Away From Point (additive, with
+  its own Kick Recovery knob - aim untouched), visibility Blinking, Punch
+  Scale/Position, the same screen-FX shader kit (the CanvasLayer renders over the 3D
+  view), the varied/intensity audio pair, and the eased tickers.
+- Both guides' ACE references cover the new verbs; runtime-smoked in a live tree
+  (shader compiles, flash restores, ghosts stamp, tickers land) plus headless-safe
+  no-camera/no-host pins in both pack tests.
+
 ### Added - Rendering module (RenderingServer vocabulary)
 
 - A new built-in ACE module puts the RenderingServer on the sheet, category

@@ -103,6 +103,36 @@ static func run() -> bool:
 	all_passed = _check("jitter stops", behavior._jitter_active, false) and all_passed
 	all_passed = _check("tilt action + On Tilt Finished trigger exist (tween needs a live tree)", behavior.has_method("tilt_to") and behavior.has_signal("tilt_finished"), true) and all_passed
 
+	# ── The composable wave: flash/blink, punches, kick-from-point, trail, screen FX,
+	# audio, tickers (tween-driven visuals need a live tree; state + safety pin here). ──
+	all_passed = _check("flash + punches + On Flash/Punch Finished exist",
+		behavior.has_method("flash") and behavior.has_method("punch_scale")
+		and behavior.has_method("punch_rotation") and behavior.has_method("punch_position")
+		and behavior.has_signal("flash_finished") and behavior.has_signal("punch_finished"), true) and all_passed
+	behavior.start_blinking(10.0, 0.2)
+	all_passed = _check("blink starts with its rate", behavior._blink_active and is_equal_approx(behavior._blink_rate, 10.0), true) and all_passed
+	behavior.stop_blinking()
+	all_passed = _check("blink stops", behavior._blink_active, false) and all_passed
+	behavior.start_ghost_trail(20.0, 0.4, Color(1, 1, 1, 0.5))
+	all_passed = _check("ghost trail starts (interval from stamps/second)", behavior._trail_active and is_equal_approx(behavior._trail_interval, 0.05), true) and all_passed
+	behavior._process(0.06)  # off-tree: the stamp must no-op safely, not crash
+	behavior.stop_ghost_trail()
+	all_passed = _check("ghost trail stops + stamping off-tree is safe", behavior._trail_active, false) and all_passed
+	behavior.kick_away_from(Vector2(100, 100), 14.0)
+	all_passed = _check("kick-from-point no-ops without a camera", (behavior._recoil_vec as Vector2), Vector2.ZERO) and all_passed
+	behavior.pulse_vignette(0.5, Color(0.4, 0, 0), 0.3)
+	behavior.chromatic_kick(0.5, 0.2)
+	behavior.set_speed_lines(0.5)
+	all_passed = _check("screen FX no-op safely off-tree (overlay defers to first in-tree use)", behavior._fx_layer == null, true) and all_passed
+	behavior.play_sound_varied("res://nonexistent.ogg", 0.1, 2.0)
+	behavior.play_sound_intensity("res://nonexistent.ogg", 0.8)
+	all_passed = _check("one-shot audio with a missing file is safe", true, true) and all_passed
+	behavior.set_ticker("score", 40.0)
+	all_passed = _check("set_ticker writes the displayed value", is_equal_approx(behavior.ticker_value("score"), 40.0), true) and all_passed
+	all_passed = _check("unknown tickers read 0", is_equal_approx(behavior.ticker_value("nope"), 0.0), true) and all_passed
+	all_passed = _check("count_to + On Ticker Finished exist (tween needs a live tree)",
+		behavior.has_method("count_to") and behavior.has_signal("ticker_finished"), true) and all_passed
+
 	# Engine.time_scale must not leak to other tests.
 	all_passed = _check("Engine.time_scale restored to 1.0", is_equal_approx(Engine.time_scale, 1.0), true) and all_passed
 

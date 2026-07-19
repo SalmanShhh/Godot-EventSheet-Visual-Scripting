@@ -85,6 +85,31 @@ static func run() -> bool:
 	# Teardown hands the camera back clean (a scene change mid-shake must not strand offsets).
 	all_passed = _check("a tree-exit teardown handler exists", behavior.has_method("_on_tree_exiting"), true) and all_passed
 
+	# ── The composable wave: kick-from-point, blink, punches, screen FX, audio, tickers ──
+	behavior.set("kick_recovery", 0.6)
+	behavior.kick_away_from(Vector3(0, -1, 0), 0.12)
+	all_passed = _check("kick-from-point no-ops without a camera", Vector3(behavior.get("_kick_vec")), Vector3.ZERO) and all_passed
+	behavior.set("_kick_vec", Vector3(0.12, 0.0, 0.0))
+	behavior._process(0.05)
+	all_passed = _check("a kick re-centres at the recovery rate",
+		is_equal_approx(Vector3(behavior.get("_kick_vec")).length(), 0.12 - 0.6 * 0.05), true) and all_passed
+	behavior.start_blinking(10.0)
+	all_passed = _check("blink starts", bool(behavior.get("_blink_active")), true) and all_passed
+	behavior.stop_blinking()
+	all_passed = _check("blink stops", bool(behavior.get("_blink_active")), false) and all_passed
+	all_passed = _check("punches + On Punch Finished exist",
+		behavior.has_method("punch_scale") and behavior.has_method("punch_position") and behavior.has_signal("punch_finished"), true) and all_passed
+	behavior.pulse_vignette(0.5, Color(0.4, 0, 0), 0.3)
+	behavior.chromatic_kick(0.5, 0.2)
+	behavior.set_speed_lines(0.5)
+	all_passed = _check("screen FX no-op safely off-tree (overlay defers to first in-tree use)", behavior.get("_fx_layer") == null, true) and all_passed
+	behavior.play_sound_varied("res://nonexistent.ogg", 0.1, 2.0)
+	behavior.play_sound_intensity("res://nonexistent.ogg", 0.8)
+	behavior.set_ticker("score", 40.0)
+	all_passed = _check("set_ticker writes the displayed value", is_equal_approx(float(behavior.ticker_value("score")), 40.0), true) and all_passed
+	all_passed = _check("count_to + On Ticker Finished exist (tween needs a live tree)",
+		behavior.has_method("count_to") and behavior.has_signal("ticker_finished"), true) and all_passed
+
 	camera.free()
 	behavior.free()
 	return all_passed
