@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - Mesh module, Gradient/Curve support
+
+- **Mesh** module: build 3D geometry from events - Make Box / Sphere / Cylinder / Plane /
+  Capsule / Prism / Torus Mesh (each creates a configured primitive and shows it on a
+  MeshInstance3D), Set Mesh Material, Clear Mesh, a Has Mesh guard, and the Mesh Surface
+  Count / Mesh Size read expressions.
+- **Gradient** is now an authorable variable type (Curve already was), so an exported
+  Gradient/Curve variable shows Godot's native ramp / curve editor in the Inspector -
+  full multi-stop colour ramps and hand-drawn curves with no plugin UI.
+- **Gradients & Curves** module: Make Gradient (build a quick two-colour ramp into a
+  variable), Sample Gradient (the smooth colour at a 0-1 position), and Sample Curve (a
+  designer-drawn curve's value at a 0-1 position) - turn a ramp or curve into a colour or
+  number from one line.
+
 ### Added - Camera FOV and Animation control modules
 
 - **Camera** module: Tween Camera FOV (smooth ease on the active 3D camera, guarded and

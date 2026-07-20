@@ -144,6 +144,8 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Animation": "AnimationPlayer",
 	"Audio": "AudioStreamPlayer",
 	"Camera": "Camera3D",
+	"Mesh": "MeshInstance3D",
+	"Gradients & Curves": "Gradient",
 	"Audio Server": "AudioBusLayout",
 	"Physics Server": "PhysicsMaterial",
 	"Behavior": "Node",

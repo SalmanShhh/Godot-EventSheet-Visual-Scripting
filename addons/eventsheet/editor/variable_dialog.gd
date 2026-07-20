@@ -107,7 +107,7 @@ var _ships_as_label: Label = null
 const TYPE_OPTIONS: PackedStringArray = [
 	"int", "float", "bool", "String",
 	# Common game-value types - also the hosts for the Tier 3 drawers (dial / swatches / texture / curve).
-	"Vector2", "Color", "Texture2D", "Curve",
+	"Vector2", "Color", "Texture2D", "Curve", "Gradient",
 	"Variant",
 	"Array", "Array[int]", "Array[float]", "Array[String]",
 	"Dictionary", "Dictionary[String, int]", "Dictionary[String, float]",
@@ -127,7 +127,8 @@ const TYPE_HINTS: Dictionary = {
 	"Vector2": "An x/y pair: a direction, velocity, or position.",
 	"Color": "An RGBA colour.",
 	"Texture2D": "An image / sprite resource.",
-	"Curve": "A shape over 0–1 (easing, falloff, ramps).",
+	"Curve": "A shape over 0–1 (easing, falloff, ramps). Edits in the Inspector's curve editor.",
+	"Gradient": "A smooth colour ramp (fire, sky, health bar). Edits in the Inspector's gradient editor.",
 	"Variant": "Any type - untyped (advanced; prefer a specific type when you can).",
 	"Array": "A list that can hold anything (mixed types allowed).",
 	"Array[int]": "A list of whole numbers (Array[int]) - scores, ids, tile indexes.",
@@ -1153,8 +1154,9 @@ static func _parse_default(type_name: String, raw: String) -> Variant:
 			if rgba.size() >= 3:
 				return Color(rgba[0].strip_edges().to_float(), rgba[1].strip_edges().to_float(), rgba[2].strip_edges().to_float(), rgba[3].strip_edges().to_float() if rgba.size() >= 4 else 1.0)
 			return Color.WHITE
-		"Texture2D", "Curve":
-			# Resource-typed exports default to null; the value is assigned in the Inspector (or via a drawer).
+		"Texture2D", "Curve", "Gradient":
+			# Resource-typed exports default to null; the value is assigned in the Inspector's native
+			# editor (the gradient ramp / curve editor) or dropped in.
 			return null
 		_:
 			return value
