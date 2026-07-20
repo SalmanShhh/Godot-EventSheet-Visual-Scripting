@@ -1245,6 +1245,19 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 ##
 ## When source_map is provided, records {uid, start, end, kind} (1-based inclusive lines)
 ## per emitted row so the editor can highlight a row's generated code.
+## Re-emits the author-facing blank lines a lifted body item carries (__source_body_blanks, stamped by
+## the lifter). They emit as truly-empty lines (no indent), mirroring the inter-function spacing
+## re-emitted from __source_leading_blanks - so a paragraph-formatted hand-written body round-trips
+## byte-exact instead of reverting to a verbatim wall. A no-op for every authored row (the meta only
+## ever originates at lift time), so ordinary emission is untouched.
+static func _emit_leading_body_blanks(item: Variant, lines: PackedStringArray) -> void:
+	if not (item is Resource):
+		return
+	var blanks: int = int((item as Resource).get_meta("__source_body_blanks", 0))
+	for _blank_index: int in range(blanks):
+		lines.append("")
+
+
 static func _emit_event_body(
 	events: Array,
 	lines: PackedStringArray,
@@ -1262,6 +1275,7 @@ static func _emit_event_body(
 		if event_item is RawCodeRow:
 			var raw_row: RawCodeRow = event_item as RawCodeRow
 			if raw_row.enabled and not raw_row.code.is_empty():
+				_emit_leading_body_blanks(raw_row, lines)
 				var raw_start: int = lines.size() + 1
 				for code_line: String in _indent_raw_lines(raw_row.code, depth):
 					lines.append(code_line)
@@ -1272,6 +1286,7 @@ static func _emit_event_body(
 		if event_item is CommentRow:
 			var comment_row: CommentRow = event_item as CommentRow
 			if comment_row.enabled and not comment_row.text.strip_edges().is_empty():
+				_emit_leading_body_blanks(comment_row, lines)
 				var comment_start: int = lines.size() + 1
 				for comment_line: String in comment_row.text.split("\n"):
 					lines.append("%s# %s" % [indent, comment_line])
@@ -1285,6 +1300,7 @@ static func _emit_event_body(
 			# as plain locals (with a warning so the author knows).
 			var local_variable: LocalVariable = event_item as LocalVariable
 			if not local_variable.name.strip_edges().is_empty():
+				_emit_leading_body_blanks(local_variable, lines)
 				if local_variable.exported or local_variable.is_constant:
 					warnings.append("Variable '%s' inside an event compiles as a plain local var." % local_variable.name)
 				lines.append("%svar %s: %s = %s" % [indent, local_variable.name, local_variable.type_name, _to_code_literal(local_variable.default_value)])
@@ -1297,6 +1313,8 @@ static func _emit_event_body(
 		var event_row: EventRow = event_item as EventRow
 		if not event_row.enabled:
 			continue
+		# A blank run captured before this block re-emits above its group marker / condition header.
+		_emit_leading_body_blanks(event_row, lines)
 		# "With node X:" scope: this row's own target (if set) wins, otherwise it inherits an enclosing
 		# With-node block's. Threaded into action codegen (blank/self targets inline to X) and down to
 		# sub-events. Empty = host-scoped, exactly as before.
@@ -1434,6 +1452,7 @@ static func _emit_event_body(
 				var action_line: String = ActionCodegen.generate_action(action_item, effective_node_target, _behavior_host_default)
 				if action_line.is_empty():
 					continue
+				_emit_leading_body_blanks(action_item, lines)
 				# Multi-statement templates (Spawn Scene At…) emit one line each; an awaited action
 				# awaits only its LAST statement (the actual call) - prefixing `await` onto the joined
 				# multi-line string would land it on a `var … =` declaration line (a parse error).
@@ -1450,6 +1469,7 @@ static func _emit_event_body(
 				var inline_raw: RawCodeRow = action_item as RawCodeRow
 				if not inline_raw.enabled or inline_raw.code.strip_edges().is_empty():
 					continue
+				_emit_leading_body_blanks(inline_raw, lines)
 				var inline_start: int = lines.size() + 1
 				for inline_line: String in inline_raw.code.split("\n"):
 					lines.append(body_indent + inline_line)
@@ -1462,6 +1482,7 @@ static func _emit_event_body(
 				var match_row: MatchRow = action_item as MatchRow
 				if not match_row.enabled or match_row.match_expression.strip_edges().is_empty():
 					continue
+				_emit_leading_body_blanks(match_row, lines)
 				var match_start: int = lines.size() + 1
 				lines.append(body_indent + "match %s:" % match_row.match_expression.strip_edges())
 				if not match_row.cases.is_empty():
@@ -1483,6 +1504,7 @@ static func _emit_event_body(
 				# Action-cell comment: annotates the flow, compiles to comment lines.
 				var action_comment: CommentRow = action_item as CommentRow
 				if action_comment.enabled and not action_comment.text.strip_edges().is_empty():
+					_emit_leading_body_blanks(action_comment, lines)
 					var action_comment_start: int = lines.size() + 1
 					for comment_line: String in action_comment.text.split("\n"):
 						lines.append("%s# %s" % [body_indent, comment_line])

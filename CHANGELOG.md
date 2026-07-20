@@ -2,7 +2,21 @@
 
 ## [Unreleased]
 
-### Internal - Juice pack builders deduplicated
+### Added - blank lines inside a function body now survive the lift
+
+- Opening a hand-written `.gd` as an event sheet used to collapse an ENTIRE function to a
+  gray verbatim code wall the moment its body contained a single blank line between two
+  statements - and paragraph breaks are near-universal in real Godot code, so ordinary
+  documented functions opened as walls instead of events. The lifter now records each
+  internal blank run and re-emits it as spacing, so a paragraph-formatted `_ready` /
+  `_process` / signal handler / helper function finally reads as clean condition/action
+  rows with the author's spacing preserved between them.
+- Fully subordinate to the byte-exact round-trip covenant: a blank run is carried as
+  transient meta onto the next row/action and re-emitted as truly-empty lines, mirroring the
+  existing inter-function `__source_leading_blanks` spacing. Any shape that can not reproduce
+  the source exactly (for example a whitespace-only "blank" line with a stray tab) still
+  degrades to today's verbatim block rather than corrupting the file. Generated packs are
+  untouched (`drifted=0`). Covered by `tests/body_blank_lift_test.gd`.
 
 - The Juice 2D and Juice 3D pack builders shared verbatim copies of the screen-FX overlay
   block (shader + overlay setup) and the pulse-vignette / chromatic-kick / speed-lines /

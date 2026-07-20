@@ -1099,11 +1099,34 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 	# real EventGroups from these. Skipping the line keeps it out of the lifted body; the group re-emits
 	# it on recompile and the byte-verify strips group markers, so it still round-trips.
 	var pending_group_slug: String = ""
+	# Author-facing blank lines inside a hand-written body: a run of empty lines between two statements
+	# (or before a nested block) is layout, not logic. We count each internal run and carry it onto the
+	# NEXT visible row/action as transient meta (__source_body_blanks), so the compiler re-emits the exact
+	# spacing and the whole-file byte-verify holds - turning a paragraph-formatted function into clean
+	# rows instead of reverting the entire body to a verbatim wall. Boxed (single-element Array) so the
+	# count survives across _flush_raw / _consume_action_line, which append the resource it must land on.
+	var blank_box: Array = [0]
 	var index: int = start
 	while index < lines.size():
 		var line: String = lines[index]
 		if line.strip_edges().is_empty():
-			return {"ok": false}  # blank inside a generated body never happens; bail to blocks
+			# Measure the whole run of consecutive blank lines.
+			var blank_run_start: int = index
+			var blank_run: int = 0
+			while index < lines.size() and lines[index].strip_edges().is_empty():
+				blank_run += 1
+				index += 1
+			# A blank whose following line dedents out of this body (or ends it) belongs to an OUTER
+			# scope, not here - rewind and break so the caller (or the function boundary) owns it. Only
+			# a blank still FOLLOWED by content at this depth is internal spacing we can round-trip.
+			if index >= lines.size() or not lines[index].begins_with(indent):
+				index = blank_run_start
+				break
+			# Internal run: close any open raw block first (so the blank lands at a clean row boundary),
+			# then carry the count onto whatever visible row/action comes next.
+			_flush_raw(current, pending_raw, blank_box)
+			blank_box[0] += blank_run
+			continue
 		if not line.begins_with(indent):
 			break  # dedent: this body is done; the caller resumes here
 		var rest: String = line.substr(depth)
@@ -1144,13 +1167,15 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				index += 1
 				chain_open = false
 				continue
-			_flush_raw(current, pending_raw)
+			_flush_raw(current, pending_raw, blank_box)
 			current = null
 			if is_if:
 				# Stamp only once the lift is CONFIRMED - a failed if degrades to the raw
 				# collector above, which then carries the group instead. (elif/else rows never
 				# start a group; the compiler emits markers only before else_mode NONE events.)
 				pending_group_slug = _stamp_group(block_event, pending_group_slug)
+			# A blank before this block re-emits above its `if`/`elif`/`else` header.
+			_stamp_body_blanks(block_event, blank_box)
 			rows.append(block_event)
 			index = int(inner.get("next"))
 			chain_open = true
@@ -1206,12 +1231,14 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				index += 1
 				chain_open = false
 				continue
-			_flush_raw(current, pending_raw)
+			_flush_raw(current, pending_raw, blank_box)
 			current = null
 			_consume_pick_validity_guard(loop_event)
 			# A grouped loop event carries its group too (the marker precedes ANY grouped
 			# event's first line, not just `if` headers). Stamped only after the lift held.
 			pending_group_slug = _stamp_group(loop_event, pending_group_slug)
+			# A blank before this loop re-emits above its `for`/`while` header.
+			_stamp_body_blanks(loop_event, blank_box)
 			rows.append(loop_event)
 			index = int(loop_inner.get("next"))
 			chain_open = false  # a loop never opens an if/elif/else chain
@@ -1235,13 +1262,13 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				if current != null and not pending_group_slug.is_empty():
 					# A group marker right before the match starts a NEW grouped event - merging
 					# into the open collector would silently drop the group on round-trip.
-					_flush_raw(current, pending_raw)
+					_flush_raw(current, pending_raw, blank_box)
 					current = null
 				if current == null:
 					current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 					pending_group_slug = _stamp_group(current, pending_group_slug)
 					rows.append(current)
-				_flush_raw(current, pending_raw)  # any raw before the match emits before it (order)
+				_flush_raw(current, pending_raw, blank_box)  # any raw before the match emits before it (order)
 				var match_row: MatchRow = MatchRow.new()
 				match_row.match_expression = rest.substr(6, rest.length() - 7)  # strip "match " and ":"
 				match_row.branches_text = "\n".join(branch_lines)
@@ -1250,6 +1277,8 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				# only taken when re-emitting them reproduces the branch text exactly; otherwise the verbatim
 				# branches_text stands (the raw fallback), so this never risks the round-trip.
 				match_row.cases = _structure_match_cases(branch_lines)
+				# A blank before the match re-emits above its `match EXPR:` line.
+				_stamp_body_blanks(match_row, blank_box)
 				current.actions.append(match_row)
 				index = scan
 				chain_open = false
@@ -1260,22 +1289,23 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 		if current != null and not pending_group_slug.is_empty():
 			# A group marker between statements means a NEW grouped event starts here - the
 			# collector would otherwise merge it into the previous event and lose the group.
-			_flush_raw(current, pending_raw)
+			_flush_raw(current, pending_raw, blank_box)
 			current = null
 		if current == null:
 			current = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 			pending_group_slug = _stamp_group(current, pending_group_slug)
 			rows.append(current)
 		if at_this_depth:
-			_consume_action_line(current, rest, 0, pending_raw, reverse_entries, in_loop)
+			_consume_action_line(current, rest, 0, pending_raw, reverse_entries, in_loop, blank_box)
 		else:
 			# A DEEPER line lives inside an unlifted control block above it. Template-matching it
 			# would tear it out as a standalone ACTION that re-emits at the event's depth - one tab
-			# shallower than the source - and fail the byte-verify. Keep it raw, tabs intact.
+			# shallower than the source - and fail the byte-verify. Keep it raw, tabs intact. A
+			# pending blank rides the box onto the raw block this line eventually flushes into.
 			pending_raw.append(rest)
 		index += 1
 		chain_open = false
-	_flush_raw(current, pending_raw)
+	_flush_raw(current, pending_raw, blank_box)
 	return {"ok": true, "rows": rows, "next": index}
 
 
@@ -1631,20 +1661,23 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 
 ## Action line → ACEAction when a template matches; otherwise queued as raw GDScript so the
 ## event still lifts (in-flow blocks re-emit verbatim at the body indent).
-static func _consume_action_line(event: EventRow, line: String, _depth: int, pending_raw: PackedStringArray, reverse_entries: Array, in_loop: bool = false) -> void:
+static func _consume_action_line(event: EventRow, line: String, _depth: int, pending_raw: PackedStringArray, reverse_entries: Array, in_loop: bool = false, blank_box: Array = []) -> void:
 	var matched: Dictionary = _match_entry(line, reverse_entries, "action", in_loop)
 	if matched.is_empty():
+		# No ACE claims it - defer to the raw block. Any pending blank rides along and lands on that
+		# block when it flushes (its position among the raw lines is what needs the spacing).
 		pending_raw.append(line)
 		return
-	_flush_raw(event, pending_raw)
+	_flush_raw(event, pending_raw, blank_box)
 	var action: ACEAction = ACEAction.new()
 	action.provider_id = str(matched.get("provider", ""))
 	action.ace_id = str(matched.get("ace_id", ""))
 	action.params = matched.get("params", {})
+	_stamp_body_blanks(action, blank_box)
 	event.actions.append(action)
 
 
-static func _flush_raw(event: EventRow, pending_raw: PackedStringArray) -> void:
+static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_box: Array = []) -> void:
 	if pending_raw.is_empty() or event == null:
 		return
 	var block: RawCodeRow = RawCodeRow.new()
@@ -1653,8 +1686,21 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray) -> void:
 	# (non-emitted - never affects the byte-exact round-trip) so the editor can show an
 	# actionable "stayed as code" hint instead of an opaque block. See RawCodeRow.lift_note.
 	block.lift_note = "no matching ACE template"
+	_stamp_body_blanks(block, blank_box)
 	event.actions.append(block)
 	pending_raw.clear()
+
+
+## Carries a captured run of author-facing blank lines onto the visible row/action that follows it,
+## as transient meta the compiler re-emits (see __source_body_blanks in _emit_event_body). The count
+## lives in a single-element box so it can survive across the append helpers above; stamping clears it
+## so exactly one row wears each run. A no-op when the box is empty or zero (the ordinary no-blank path,
+## and every authored sheet - the meta only ever originates here at lift time).
+static func _stamp_body_blanks(resource: Resource, blank_box: Array) -> void:
+	if resource == null or blank_box.is_empty() or int(blank_box[0]) <= 0:
+		return
+	resource.set_meta("__source_body_blanks", int(blank_box[0]))
+	blank_box[0] = 0
 
 
 ## Reverse index over builtin descriptors: template → anchored regex with named captures.
