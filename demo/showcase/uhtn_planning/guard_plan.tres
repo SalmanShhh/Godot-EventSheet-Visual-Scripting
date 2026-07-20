@@ -4,6 +4,8 @@
 
 [resource]
 script = ExtResource("1_snqqf")
+plan_name = "guard_post"
+root_task = "root"
 conditions = [{
 "key": "hurt",
 "method": "m_flee",
@@ -35,23 +37,6 @@ methods = [{
 "task": "engage",
 "utility": 1.0
 }]
-plan_name = "guard_post"
-root_task = "root"
-scorer_inputs = [{
-"center": 0.5,
-"curve": "linear",
-"input": "closeness",
-"scorer": "aggro",
-"slope": 0.2,
-"weight": 1.0
-}, {
-"center": 0.5,
-"curve": "inverse",
-"input": "health",
-"scorer": "fear",
-"slope": 0.2,
-"weight": 1.0
-}]
 tasks = [{
 "kind": "primitive",
 "name": "watch_step"
@@ -67,4 +52,19 @@ tasks = [{
 }, {
 "kind": "compound",
 "name": "engage"
+}]
+scorer_inputs = [{
+"center": 0.5,
+"curve": "linear",
+"input": "closeness",
+"scorer": "aggro",
+"slope": 0.2,
+"weight": 1.0
+}, {
+"center": 0.5,
+"curve": "inverse",
+"input": "health",
+"scorer": "fear",
+"slope": 0.2,
+"weight": 1.0
 }]

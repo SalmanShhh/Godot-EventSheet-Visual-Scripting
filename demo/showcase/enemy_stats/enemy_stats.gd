@@ -6,13 +6,10 @@ extends Resource
 @export_group("Combat")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:min_max:0:60") var combat_damage_range: Vector2 = Vector2(4.0, 11.0)
 ## Damage multiplier over distance.
-@export_group("Combat")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:curve_editor") var combat_falloff: Curve = null
 ## Drop table - one row per possible drop.
-@export_group("Combat")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:table:item=String,count=int,rare=bool") var combat_loot: Array = []
 ## Hit points - drag the bar.
-@export_group("Combat")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:200") var combat_max_health: int = 120:
 	set(value):
 		combat_max_health = clampi(value, 0, 200)
@@ -22,10 +19,8 @@ extends Resource
 @export_placeholder("e.g. Cave Rat") var id_display_name: String = "Cave Rat"
 # @inspector_required
 ## Bestiary portrait.
-@export_group("Identity")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:texture_preview") var id_portrait: Texture2D = null
 ## Body tint - click a swatch.
-@export_group("Identity")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var id_tint: Color = Color(0.54117649793625, 0.35294118523598, 0.23137255012989, 1.0)
 # @inspector_header Spawning
 # @inspector_info Shared resource - edits affect every enemy that references it.

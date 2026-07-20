@@ -8,19 +8,14 @@ extends Node2D
 @export_group("Body")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:texture_preview") var body_icon: Texture2D = null
 ## Hull colour - click a swatch.
-@export_group("Body")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var body_tint: Color = Color(0.22745098173618, 0.65098041296005, 0.87843137979507, 1.0)
 ## Pulse shape over time.
 @export_group("Stats")
 @export_subgroup("Tuning")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:curve_editor") var stat_curve: Curve = null
 ## Health - drag the bar.
-@export_group("Stats")
-@export_subgroup("Tuning")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:100") var stat_health: int = 80
 ## Drift amplitude - drag the bar.
-@export_group("Stats")
-@export_subgroup("Tuning")
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:progress_bar:0:200") var stat_speed: float = 90.0
 
 func _ready() -> void:
