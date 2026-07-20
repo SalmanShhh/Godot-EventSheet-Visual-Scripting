@@ -505,72 +505,7 @@ static func build() -> bool:
 
 	# ── Screen FX overlay: one bundled shader (vignette + chromatic + speed lines) ────
 	var fx_block: RawCodeRow = RawCodeRow.new()
-	fx_block.code = "\n".join(PackedStringArray([
-		"# The screen-FX overlay: one full-screen shader with three dials (vignette, chromatic",
-		"# aberration, radial speed lines) built on first use, hidden whenever every dial is 0.",
-		"var _fx_layer: CanvasLayer = null",
-		"var _fx_rect: ColorRect = null",
-		"var _fx_material: ShaderMaterial = null",
-		"var _vignette_tween: Tween = null",
-		"var _chroma_tween: Tween = null",
-		"const _FX_SHADER: String = \"\"\"",
-		"shader_type canvas_item;",
-		"uniform sampler2D screen_texture: hint_screen_texture, filter_linear_mipmap;",
-		"uniform float vignette_strength = 0.0;",
-		"uniform vec4 vignette_color: source_color = vec4(0.0, 0.0, 0.0, 1.0);",
-		"uniform float chroma_strength = 0.0;",
-		"uniform float speed_lines = 0.0;",
-		"",
-		"void fragment() {",
-		"\tvec2 uv = SCREEN_UV;",
-		"\tvec2 centered = uv - vec2(0.5);",
-		"\tvec2 chroma_offset = centered * chroma_strength * 0.03;",
-		"\tvec3 col = vec3(",
-		"\t\ttexture(screen_texture, uv + chroma_offset).r,",
-		"\t\ttexture(screen_texture, uv).g,",
-		"\t\ttexture(screen_texture, uv - chroma_offset).b);",
-		"\tfloat vignette = smoothstep(0.35, 1.0, length(centered) * 1.5) * vignette_strength;",
-		"\tcol = mix(col, vignette_color.rgb, clamp(vignette, 0.0, 1.0));",
-		"\tfloat angle = atan(centered.y, centered.x);",
-		"\tfloat streak = step(0.86, fract(sin(floor(angle * 60.0) + floor(TIME * 24.0) * 7.0) * 43758.545));",
-		"\tfloat ring = smoothstep(0.2, 0.65, length(centered));",
-		"\tcol = mix(col, vec3(1.0), streak * ring * clamp(speed_lines, 0.0, 1.0) * 0.65);",
-		"\tCOLOR = vec4(col, 1.0);",
-		"}",
-		"\"\"\"",
-		"",
-		"## @ace_hidden",
-		"func _ensure_fx_overlay() -> void:",
-		"\tif _fx_layer != null or not is_inside_tree():",
-		"\t\treturn",
-		"\t_fx_layer = CanvasLayer.new()",
-		"\t_fx_layer.layer = 91",
-		"\tadd_child(_fx_layer)",
-		"\t_fx_rect = ColorRect.new()",
-		"\t_fx_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE",
-		"\t_fx_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)",
-		"\tvar fx_shader: Shader = Shader.new()",
-		"\tfx_shader.code = _FX_SHADER",
-		"\t_fx_material = ShaderMaterial.new()",
-		"\t_fx_material.shader = fx_shader",
-		"\t# Seed every uniform so get_shader_parameter never returns null: reading an un-set uniform",
-		"\t# returns null (NOT the shader default), and _fx_update_visibility's float() would fault on it",
-		"\t# whenever only one of the three effects had been used.",
-		"\t_fx_material.set_shader_parameter(\"vignette_strength\", 0.0)",
-		"\t_fx_material.set_shader_parameter(\"chroma_strength\", 0.0)",
-		"\t_fx_material.set_shader_parameter(\"speed_lines\", 0.0)",
-		"\t_fx_rect.material = _fx_material",
-		"\t_fx_rect.visible = false",
-		"\t_fx_layer.add_child(_fx_rect)",
-		"",
-		"## @ace_hidden",
-		"func _fx_update_visibility() -> void:",
-		"\tif _fx_rect == null or _fx_material == null:",
-		"\t\treturn",
-		"\t_fx_rect.visible = float(_fx_material.get_shader_parameter(\"vignette_strength\")) > 0.001 \\",
-		"\t\t\tor float(_fx_material.get_shader_parameter(\"chroma_strength\")) > 0.001 \\",
-		"\t\t\tor float(_fx_material.get_shader_parameter(\"speed_lines\")) > 0.001"
-	]))
+	fx_block.code = "\n".join(Lib.juice_fx_overlay_lines())
 	sheet.events.append(fx_block)
 
 	# Per-frame: blink strobe + ghost-trail stamping (a second _process event; the compiler
@@ -723,43 +658,43 @@ static func build() -> bool:
 	# ── Screen FX (one bundled shader: vignette + chromatic aberration + speed lines) ──
 	Lib.append_function(sheet, "pulse_vignette", "Pulse Vignette", "Juice", "Darkens the screen edges to a color at a strength (0..1), then fades back out - taking damage, a near miss, holding your breath. Composes with Slowmo + Fade Screen Tint for last-stand moments.",
 		[["strength", "float"], ["color", "Color"], ["seconds", "float"]],
-		"_ensure_fx_overlay()\nif _fx_material == null:\n\treturn\nif _vignette_tween != null and _vignette_tween.is_valid():\n\t_vignette_tween.kill()\n_fx_material.set_shader_parameter(\"vignette_color\", Color(color.r, color.g, color.b, 1.0))\n_fx_material.set_shader_parameter(\"vignette_strength\", clampf(strength, 0.0, 1.0))\n_fx_rect.visible = true\nvar tw: Tween = create_tween()\ntw.tween_property(_fx_material, \"shader_parameter/vignette_strength\", 0.0, maxf(seconds, 0.01)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)\ntw.finished.connect(_fx_update_visibility)\n_vignette_tween = tw")
+		Lib.JUICE_PULSE_VIGNETTE_BODY)
 	_default(sheet, "strength", "0.6")
 	_default(sheet, "color", "Color(0.4, 0, 0)")
 	_default(sheet, "seconds", "0.5")
 	Lib.append_function(sheet, "chromatic_kick", "Chromatic Kick", "Juice", "Splits the screen's color channels for an instant and settles back - the AAA impact frame. Fire with Shake + Hitstop on explosions and heavy hits.",
 		[["strength", "float"], ["seconds", "float"]],
-		"_ensure_fx_overlay()\nif _fx_material == null:\n\treturn\nif _chroma_tween != null and _chroma_tween.is_valid():\n\t_chroma_tween.kill()\n_fx_material.set_shader_parameter(\"chroma_strength\", clampf(strength, 0.0, 1.0))\n_fx_rect.visible = true\nvar tw: Tween = create_tween()\ntw.tween_property(_fx_material, \"shader_parameter/chroma_strength\", 0.0, maxf(seconds, 0.01)).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)\ntw.finished.connect(_fx_update_visibility)\n_chroma_tween = tw")
+		Lib.JUICE_CHROMATIC_KICK_BODY)
 	_default(sheet, "strength", "0.5")
 	_default(sheet, "seconds", "0.25")
 	Lib.append_function(sheet, "set_speed_lines", "Set Speed Lines", "Juice", "Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with Zoom By Percent or FOV punches for full sprint feel.",
 		[["intensity", "float"]],
-		"_ensure_fx_overlay()\nif _fx_material == null:\n\treturn\n_fx_material.set_shader_parameter(\"speed_lines\", clampf(intensity, 0.0, 1.0))\n_fx_update_visibility()")
+		Lib.JUICE_SET_SPEED_LINES_BODY)
 	_default(sheet, "intensity", "0.5")
 
 	# ── Audio juice ──
 	Lib.append_function(sheet, "play_sound_varied", "Play Sound Varied", "Juice", "Plays a sound with a random pitch and volume wobble around the base - the #1 trick against repetitive footsteps, hits, coins, and clicks. Fire-and-forget (the player frees itself).",
 		[["path", "String"], ["pitch_jitter", "float"], ["volume_jitter_db", "float"]],
-		"_spawn_one_shot(path, 1.0 + randf_range(-pitch_jitter, pitch_jitter), randf_range(-absf(volume_jitter_db), 0.0))")
+		Lib.JUICE_PLAY_SOUND_VARIED_BODY)
 	_default(sheet, "path", "res://sfx/hit.ogg")
 	_default(sheet, "pitch_jitter", "0.08")
 	_default(sheet, "volume_jitter_db", "2")
 	Lib.append_function(sheet, "play_sound_intensity", "Play Sound With Intensity", "Juice", "Plays a sound scaled by an intensity (0..1): quiet + lower-pitched when light, full + brighter when heavy - drive it, Shake, and Punch Scale from ONE hit-power value so light and heavy hits differ by one number.",
 		[["path", "String"], ["intensity", "float"]],
-		"var power: float = clampf(intensity, 0.0, 1.0)\n_spawn_one_shot(path, lerpf(0.85, 1.15, power) * (1.0 + randf_range(-0.03, 0.03)), lerpf(-14.0, 0.0, power))")
+		Lib.JUICE_PLAY_SOUND_INTENSITY_BODY)
 	_default(sheet, "path", "res://sfx/hit.ogg")
 	_default(sheet, "intensity", "0.5")
 
 	# ── Eased tickers (score roll-ups) ──
 	Lib.append_function(sheet, "count_to", "Count To", "Juice", "Eases a named display value toward a target over a duration - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression; emits On Ticker Finished (with the name) when it lands.",
 		[["ticker_name", "String"], ["target", "float"], ["duration", "float"]],
-		"var from: float = float(_tickers.get(ticker_name, 0.0))\n_ticker_targets[ticker_name] = target\nvar old_tween: Tween = _ticker_tweens.get(ticker_name, null)\nif old_tween != null and is_instance_valid(old_tween):\n\told_tween.kill()\nvar tw: Tween = create_tween()\ntw.tween_method(func(v: float) -> void: _tickers[ticker_name] = v, from, target, maxf(duration, 0.001)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)\ntw.finished.connect(_finish_ticker.bind(ticker_name))\n_ticker_tweens[ticker_name] = tw")
+		Lib.JUICE_COUNT_TO_BODY)
 	_default(sheet, "ticker_name", "score")
 	_default(sheet, "target", "100")
 	_default(sheet, "duration", "0.6")
 	Lib.append_function(sheet, "set_ticker", "Set Ticker", "Juice", "Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.",
 		[["ticker_name", "String"], ["value", "float"]],
-		"var old_tween: Tween = _ticker_tweens.get(ticker_name, null)\nif old_tween != null and is_instance_valid(old_tween):\n\told_tween.kill()\n_tickers[ticker_name] = value\n_ticker_targets[ticker_name] = value")
+		Lib.JUICE_SET_TICKER_BODY)
 	_default(sheet, "ticker_name", "score")
 	_default(sheet, "value", "0")
 

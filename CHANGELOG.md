@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Internal - Juice pack builders deduplicated
+
+- The Juice 2D and Juice 3D pack builders shared verbatim copies of the screen-FX overlay
+  block (shader + overlay setup) and the pulse-vignette / chromatic-kick / speed-lines /
+  varied-and-intensity one-shot audio / count-to / set-ticker verb bodies. Those are now
+  single-sourced from `tools/pack_builders/_lib.gd` (`juice_fx_overlay_lines()` plus the
+  `JUICE_*_BODY` constants), so the shared FX-uniform-seeding fix and any future tweak land
+  in both packs from one place. The emitted `.gd` packs are byte-identical (`drifted=0`) -
+  a pure refactor of the builders, no output change.
+
 ### Fixed - more review findings on the new features
 
 - **A JuiceBehavior leaving the tree no longer stomps a slowmo it didn't start**: the
