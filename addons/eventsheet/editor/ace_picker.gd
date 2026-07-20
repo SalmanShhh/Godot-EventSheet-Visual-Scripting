@@ -143,6 +143,7 @@ const SUBCATEGORY_SEPARATOR: String = ": "
 const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Animation": "AnimationPlayer",
 	"Audio": "AudioStreamPlayer",
+	"Camera": "Camera3D",
 	"Audio Server": "AudioBusLayout",
 	"Physics Server": "PhysicsMaterial",
 	"Behavior": "Node",

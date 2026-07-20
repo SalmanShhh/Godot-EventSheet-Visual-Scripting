@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added - Camera FOV and Animation control modules
+
+- **Camera** module: Tween Camera FOV (smooth ease on the active 3D camera, guarded and
+  clamped legal), Adjust Camera FOV (relative nudge, clamped), and the Camera FOV read
+  expression. Set Camera FOV was already shipped. The tween is active-camera (not
+  node-scoped) on purpose so a retarget can never animate the wrong camera's fov.
+- **Animation** module: drive an AnimationPlayer beyond Play/Stop - Set Animation Speed,
+  Seek, Queue (auto-play the next clip when the current ends), Pause, Set Current
+  Animation, a Has Animation guard, and the Animation Position / Length / Speed read
+  expressions. Node-scoped to AnimationPlayer with an optional On node target.
+
 ### Added - math expressions: Smooth Lerp and Angle Of (atan2)
 
 - **Smooth Lerp** blends between two values with the 0-to-1 weight eased through an S-curve
