@@ -2155,7 +2155,9 @@ func _build_draw_lab() -> bool:
 	sheet.emit_live_values = false
 	sheet.variables = {
 		"facing_deg": {"type": "float", "default": 0.0, "exported": false},
-		"comet_angle": {"type": "float", "default": 0.0, "exported": false}
+		"comet_angle": {"type": "float", "default": 0.0, "exported": false},
+		"paste_timer": {"type": "float", "default": 0.0, "exported": false},
+		"baked": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "[b]Draw Lab[/b] - four Drawing Canvases with different jobs. The Player carries an AUTO-CLEAR canvas redrawing a raycast Line Of Sight fan every tick (the walls carve it); the Enemy carries one redrawing a rotating attack-telegraph cone; the whole-screen PERSISTENT canvas keeps everything drawn on it - the paint trail dripping under the Player and the target-marker DRAWING PREFABS (an ordered shape formation authored as a .tres, replayed by Draw Prefab at any position/scale/rotation - press Space to stamp one where you stand); and the center canvas ribbons the orbiting comet."
@@ -2171,7 +2173,19 @@ func _build_draw_lab() -> bool:
 		"$PaintLayer/Paint.draw_prefab(marker, 180.0, 140.0, 1.0, 0.0)",
 		"$PaintLayer/Paint.draw_prefab(marker, 980.0, 500.0, 0.6, 45.0)",
 		"$PaintLayer/Paint.draw_prefab(marker, 180.0, 520.0, 1.4, 15.0)",
-		"$FxLayer/Fx.start_ribbon($Comet, 34, 7.0, Color(0.45, 0.9, 1.0, 0.85))"
+		"$FxLayer/Fx.start_ribbon($Comet, 34, 7.0, Color(0.45, 0.9, 1.0, 0.85))",
+		"# Paste demo - build one gem texture and give the orbiting comet a gem icon. The tick leaves a",
+		"# Paste Node trail behind it and bakes a whole gem LAYER onto the canvas on its first run.",
+		"var gem_image: Image = Image.create(20, 20, false, Image.FORMAT_RGBA8)",
+		"gem_image.fill(Color(0.0, 0.0, 0.0, 0.0))",
+		"for gem_y: int in 20:",
+		"\tfor gem_x: int in 20:",
+		"\t\tif absi(gem_x - 10) + absi(gem_y - 10) <= 8:",
+		"\t\t\tgem_image.set_pixel(gem_x, gem_y, Color(1.0, 0.84, 0.32))",
+		"var comet_icon: Sprite2D = Sprite2D.new()",
+		"comet_icon.name = \"Icon\"",
+		"comet_icon.texture = ImageTexture.create_from_image(gem_image)",
+		"$Comet.add_child(comet_icon)"
 	]))
 	on_ready.actions.append(ready_body)
 	sheet.events.append(on_ready)
@@ -2188,7 +2202,28 @@ func _build_draw_lab() -> bool:
 		"$Player/Vision.draw_line_of_sight($Player.global_position.x, $Player.global_position.y, facing_deg, 80.0, 280.0, 1, Color(1.0, 0.92, 0.45, 0.3))",
 		"$Enemy/Telegraph.draw_canvas_cone($Enemy.global_position.x, $Enemy.global_position.y, -facing_deg * 1.5, 50.0, 170.0, Color(1.0, 0.3, 0.25, 0.4))",
 		"if Input.is_action_just_pressed(\"ui_accept\"):",
-		"\t$PaintLayer/Paint.draw_prefab(load(\"res://demo/showcase/draw_lab/target_marker.tres\"), $Player.global_position.x, $Player.global_position.y, 0.8, facing_deg)"
+		"\t$PaintLayer/Paint.draw_prefab(load(\"res://demo/showcase/draw_lab/target_marker.tres\"), $Player.global_position.x, $Player.global_position.y, 0.8, facing_deg)",
+		"# Paste Node the orbiting comet's gem onto the PERSISTENT canvas ~8x a second: a trail of baked",
+		"# gem stamps follows the orbit (the discrete-decal counterpart to the comet's live cyan ribbon).",
+		"paste_timer -= delta",
+		"if paste_timer <= 0.0 and $Comet.has_node(\"Icon\"):",
+		"\tpaste_timer = 0.12",
+		"\t$PaintLayer/Paint.paste_node($Comet/Icon)",
+		"# Paste Layer In Box (once, at load): scatter a gem LAYER, bake every gem inside the box onto the",
+		"# persistent canvas, then free the originals - one texture instead of N sprites. Done on the first",
+		"# live tick (an on-ready bake would buffer before the canvas surface exists).",
+		"if not baked and $Comet.has_node(\"Icon\"):",
+		"\tbaked = true",
+		"\tvar gem_texture: Texture2D = $Comet/Icon.texture",
+		"\tvar gems: Node2D = Node2D.new()",
+		"\tadd_child(gems)",
+		"\tfor gem_spot: Vector2 in [Vector2(80.0, 185.0), Vector2(150.0, 185.0), Vector2(220.0, 185.0), Vector2(290.0, 185.0), Vector2(360.0, 185.0)]:",
+		"\t\tvar gem: Sprite2D = Sprite2D.new()",
+		"\t\tgem.texture = gem_texture",
+		"\t\tgems.add_child(gem)",
+		"\t\tgem.global_position = gem_spot",
+		"\t$PaintLayer/Paint.paste_layer_in_box(gems, 50.0, 170.0, 340.0, 35.0)",
+		"\tgems.queue_free()"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -2301,7 +2336,7 @@ func _build_draw_lab() -> bool:
 	hud.name = "Hud"
 	hud.position = Vector2(24.0, 16.0)
 	hud.add_theme_font_size_override("font_size", 18)
-	hud.text = "Arrows move · Space stamps the target-marker PREFAB (a .tres formation) where you stand\nYellow fan = your live line of sight (walls carve it) · red wedge = the enemy telegraph\nCyan ribbon trails the comet · your steps drip paint - persistent vs auto-clear canvases"
+	hud.text = "Arrows move · Space stamps the target-marker PREFAB (a .tres formation) where you stand\nYellow fan = your live line of sight (walls carve it) · red wedge = the enemy telegraph\nCyan ribbon trails the comet · your steps drip paint - persistent vs auto-clear canvases\nGem cluster = a LAYER flattened onto the canvas with Paste Layer In Box · gem trail = the comet Pasted 8x a second"
 	hud_layer.add_child(hud)
 	hud.owner = root
 

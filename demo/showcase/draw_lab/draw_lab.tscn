@@ -138,4 +138,5 @@ offset_bottom = 16.0
 theme_override_font_sizes/font_size = 18
 text = "Arrows move · Space stamps the target-marker PREFAB (a .tres formation) where you stand
 Yellow fan = your live line of sight (walls carve it) · red wedge = the enemy telegraph
-Cyan ribbon trails the comet · your steps drip paint - persistent vs auto-clear canvases"
+Cyan ribbon trails the comet · your steps drip paint - persistent vs auto-clear canvases
+Gem cluster = a LAYER flattened onto the canvas with Paste Layer In Box · gem trail = the comet Pasted 8x a second"
