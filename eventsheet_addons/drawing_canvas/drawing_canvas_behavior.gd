@@ -211,4 +211,40 @@ func set_ribbon_texture(follow: Node, texture: Texture2D) -> void:
 func stop_ribbon(follow: Node) -> void:
 	CanvasSurface.for_node(host).stop_ribbon(follow)
 
+## @ace_action
+## @ace_name("Paste Node")
+## @ace_description("Bakes a node's CURRENT visual onto the canvas at its own world position - stamp a sprite, decal or icon permanently (persistent mode) or once per frame (auto clear). Non-destructive: the node stays, so pair it with Destroy to bake decor into one texture. Sprites, animated sprites and texture rects paste with their rotation, scale, flip, frame and tint; a node with no texture is skipped.")
+## @ace_display_template("Paste {node} onto the canvas")
+## @ace_icon("res://eventsheet_addons/drawing_canvas/icon.svg")
+## @ace_codegen_template("$DrawingCanvas.paste_node({node})")
+func paste_node(node: Node) -> void:
+	CanvasSurface.for_node(host).paste_node(node)
+
+## @ace_action
+## @ace_name("Paste Node At")
+## @ace_description("Bakes a node's visual at an EXPLICIT spot (read like the other draw coordinates), scaled and rotated - stamp an off-screen template sprite anywhere, any number of times.")
+## @ace_display_template("Paste {node} at ({x}, {y})")
+## @ace_icon("res://eventsheet_addons/drawing_canvas/icon.svg")
+## @ace_codegen_template("$DrawingCanvas.paste_node_at({node}, {x}, {y}, {scale_factor}, {rotation_deg})")
+func paste_node_at(node: Node, x: float, y: float, scale_factor: float, rotation_deg: float) -> void:
+	CanvasSurface.for_node(host).paste_node_at(node, x, y, scale_factor, rotation_deg)
+
+## @ace_action
+## @ace_name("Paste Layer On Screen")
+## @ace_description("Bakes every visible texture-bearing node under {layer} that is currently ON SCREEN onto the canvas - flatten a whole layer of decor into one texture (pair with Destroy for a performance bake). {layer} is any parent: a CanvasLayer, a container node, or the scene root.")
+## @ace_display_template("Paste everything on screen under {layer}")
+## @ace_icon("res://eventsheet_addons/drawing_canvas/icon.svg")
+## @ace_codegen_template("$DrawingCanvas.paste_layer_on_screen({layer})")
+func paste_layer_on_screen(layer: Node) -> void:
+	CanvasSurface.for_node(host).paste_layer_on_screen(layer)
+
+## @ace_action
+## @ace_name("Paste Layer In Box")
+## @ace_description("Bakes every visible texture-bearing node under {layer} whose world rect falls inside the box at ({x}, {y}) sized {width} by {height} (world coordinates) onto the canvas - flatten a region regardless of the camera.")
+## @ace_display_template("Paste everything under {layer} inside the box at ({x}, {y})")
+## @ace_icon("res://eventsheet_addons/drawing_canvas/icon.svg")
+## @ace_codegen_template("$DrawingCanvas.paste_layer_in_box({layer}, {x}, {y}, {width}, {height})")
+func paste_layer_in_box(layer: Node, x: float, y: float, width: float, height: float) -> void:
+	CanvasSurface.for_node(host).paste_layer_in_box(layer, x, y, width, height)
+
 # Drawing Canvas behavior (event-sheet parity): a texture your sheet draws onto with verbs - lines, circles, rings, rects, cones, texture stamps, textured ribbons, and a raycast LINE OF SIGHT fan. Persistent mode keeps strokes until Clear Canvas (paint, blood splats, skid marks); Auto Clear redraws every frame (attack telegraphs, vision cones). Canvas Texture exposes the live texture for materials, UI, or a 3D Decal. The drawing plumbing lives in the shared CanvasSurface runtime; this pack is a thin event sheet - extend it by editing it.

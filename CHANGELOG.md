@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - paste live nodes onto the Drawing Canvas
+
+- Four new Drawing Canvas actions bake a node's live visual straight onto the canvas as a
+  decal: **Paste Node** stamps a node at its own world transform; **Paste Node At** stamps
+  it at an explicit spot; **Paste Layer On Screen** and **Paste Layer In Box** flatten every
+  visible texture-bearing node under a layer (a CanvasLayer, a container, or the scene root) -
+  the first filtered to the camera, the second to a world-space box. Sprites, animated
+  sprites and texture rects paste with their rotation, scale, flip, region/frame and tint;
+  a node with no texture is skipped. Non-destructive by design - pair with `System: Destroy`
+  to truly flatten a decor layer into one texture for performance, or to leave a corpse decal
+  behind a freed enemy.
+- The engine work (a `node_stamp` draw command plus texture-capture and world-to-canvas
+  geometry) lives in the shared `CanvasSurface` runtime, so the Drawing Canvas verbs stay
+  thin one-line rows like every other Draw action. Covered by `tests/canvas_paste_test.gd`
+  (capture math on orphan nodes) and a non-headless render smoke (real sprites baked and read
+  back, with the layer box filter including/excluding the right nodes).
+
 ### Added - blank lines inside a function body now survive the lift
 
 - Opening a hand-written `.gd` as an event sheet used to collapse an ENTIRE function to a

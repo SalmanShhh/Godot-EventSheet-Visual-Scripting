@@ -42,6 +42,31 @@ static func for_node(host: Node) -> CanvasSurface:
 func texture() -> Texture2D:
 	_ensure()
 	return _viewport.get_texture() if _viewport != null else null
+## The camera's visible world rectangle (the screen corners mapped back through the canvas transform).
+## Zero when there is no viewport yet.
+func _visible_world_rect() -> Rect2:
+	if _host == null or not _host.is_inside_tree():
+		return Rect2()
+	var vp: Viewport = _host.get_viewport()
+	if vp == null:
+		return Rect2()
+	return _enclosing_rect(vp.get_canvas_transform().affine_inverse(), vp.get_visible_rect())
+## The world-space AABB of a node's drawable rect (its texture rect run through its global transform).
+## Zero when the node has no texture to paste.
+func _node_world_rect(node: CanvasItem) -> Rect2:
+	var info: Dictionary = _node_texture_info(node)
+	if info.is_empty():
+		return Rect2()
+	return _enclosing_rect(node.get_global_transform(), info["dest_rect"])
+## Axis-aligned rectangle enclosing the four corners of local_rect transformed by xform.
+func _enclosing_rect(xform: Transform2D, local_rect: Rect2) -> Rect2:
+	var c0: Vector2 = xform * local_rect.position
+	var c1: Vector2 = xform * (local_rect.position + Vector2(local_rect.size.x, 0.0))
+	var c2: Vector2 = xform * (local_rect.position + local_rect.size)
+	var c3: Vector2 = xform * (local_rect.position + Vector2(0.0, local_rect.size.y))
+	var min_p: Vector2 = c0.min(c1).min(c2).min(c3)
+	var max_p: Vector2 = c0.max(c1).max(c2).max(c3)
+	return Rect2(min_p, max_p - min_p)
 # --- Dashed shapes: ONE dash primitive turns any polyline into disjoint dash segments, drawn in a
 # single draw_multiline call. Line = 2 points, ring = a sampled circle, rect = 4 closed corners - the
 # same routine serves all three and any future dashed shape. ---
@@ -142,6 +167,16 @@ func _run_draw_commands() -> void:
 					_drawer.draw_set_transform(command["at"], command["rotation"], Vector2.ONE * float(command["scale"]))
 					_drawer.draw_texture(texture, -texture.get_size() * 0.5)
 					_drawer.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			"node_stamp":
+				var node_tex: Texture2D = command["texture"]
+				if node_tex != null:
+					_drawer.draw_set_transform_matrix(command["xform"])
+					var src_rect: Rect2 = command["src_rect"]
+					if src_rect.size.x > 0.0 and src_rect.size.y > 0.0:
+						_drawer.draw_texture_rect_region(node_tex, command["dest_rect"], src_rect, command["modulate"])
+					else:
+						_drawer.draw_texture_rect(node_tex, command["dest_rect"], false, command["modulate"])
+					_drawer.draw_set_transform_matrix(Transform2D.IDENTITY)
 	_commands.clear()
 
 func _push(command: Dictionary) -> void:
@@ -260,6 +295,140 @@ func _prefab_entries(prefab_res: Resource) -> Array:
 	if not (raw is Array):
 		return []
 	return DrawingPrefabResource.compile_steps(raw)
+
+## Bakes one node's current visual onto the canvas at its own world transform. No-op for a node with no
+## resolvable texture (a plain Node2D, a TileMap - nothing to paste).
+func paste_node(node: Node) -> void:
+	var command: Dictionary = _node_paste_command(node, null)
+	if not command.is_empty():
+		_push(command)
+
+## Bakes a node's visual at an EXPLICIT spot (x, y read the same way as the other draw verbs), scaled
+## and rotated - decouples the stamp from the node's own transform (paste an off-screen template).
+func paste_node_at(node: Node, x: float, y: float, scale_factor: float, rotation_deg: float) -> void:
+	# --- Paste: bake a live node's visual (or a whole layer's) onto the canvas as a decal. Texture-bearing
+	# CanvasItems (Sprite2D, AnimatedSprite2D, TextureRect, or anything exposing a `texture`) stamp at their
+	# exact world transform - rotation, scale, flip, region/frame and modulate preserved. Non-destructive: the
+	# original node stays, so pair with a Destroy/Hide verb to truly flatten a layer for performance. ---
+	if not (node is Node2D):
+		return
+	var placed: Transform2D = Transform2D(deg_to_rad(rotation_deg), Vector2.ONE * maxf(scale_factor, 0.01), 0.0, Vector2(x, y))
+	var command: Dictionary = _node_paste_command(node, placed)
+	if not command.is_empty():
+		_push(command)
+
+## Bakes every visible texture-bearing CanvasItem under `layer` that is currently ON SCREEN (its world
+## rect intersects the camera's visible rectangle). `layer` is any parent - a CanvasLayer, a container,
+## or the scene root.
+func paste_layer_on_screen(layer: Node) -> void:
+	var view_rect: Rect2 = _visible_world_rect()
+	if view_rect.size == Vector2.ZERO:
+		return
+	_paste_layer_in_rect(layer, view_rect)
+
+## Bakes every visible texture-bearing CanvasItem under `layer` whose world rect intersects the box
+## Rect2(x, y, width, height), in WORLD coordinates - flatten a region regardless of the camera.
+func paste_layer_in_box(layer: Node, x: float, y: float, width: float, height: float) -> void:
+	_paste_layer_in_rect(layer, Rect2(x, y, width, height))
+
+func _paste_layer_in_rect(layer: Node, world_rect: Rect2) -> void:
+	if layer == null:
+		return
+	for item: CanvasItem in _descendant_canvas_items(layer):
+		var item_rect: Rect2 = _node_world_rect(item)
+		if item_rect.size.x <= 0.0 or item_rect.size.y <= 0.0:
+			continue
+		if world_rect.intersects(item_rect):
+			paste_node(item)
+
+## Depth-first collect of every VISIBLE CanvasItem under root, skipping this surface's own drawer/display/
+## viewport so a layer paste never re-bakes the canvas onto itself. An invisible node prunes its subtree.
+func _descendant_canvas_items(root: Node) -> Array:
+	var out: Array = []
+	for child: Node in root.get_children():
+		if child == self or child == _display or child == _viewport:
+			continue
+		if child is CanvasItem and not (child as CanvasItem).visible:
+			continue
+		if child is CanvasItem:
+			out.append(child)
+		out.append_array(_descendant_canvas_items(child))
+	return out
+
+## Composes a node's world transform into canvas space and returns a "node_stamp" draw command, or {}
+## when the node has no resolvable texture. A Transform2D override places the stamp explicitly instead
+## of at the node's own transform.
+func _node_paste_command(node: Node, world_xform_override) -> Dictionary:
+	if not (node is CanvasItem):
+		return {}
+	var info: Dictionary = _node_texture_info(node as CanvasItem)
+	if info.is_empty():
+		return {}
+	var world_xform: Transform2D = (node as CanvasItem).get_global_transform()
+	if world_xform_override is Transform2D:
+		world_xform = world_xform_override
+	# World -> canvas is a pure translation (canvas centered on the host) in world mode, identity in canvas
+	# mode, so composing it just remaps the origin - rotation, scale and flip carry through untouched.
+	var canvas_xform: Transform2D = world_xform
+	canvas_xform.origin = to_canvas(world_xform.origin)
+	if bool(info["flip_h"]) or bool(info["flip_v"]):
+		var flip: Transform2D = Transform2D(Vector2(-1.0 if info["flip_h"] else 1.0, 0.0), Vector2(0.0, -1.0 if info["flip_v"] else 1.0), Vector2.ZERO)
+		canvas_xform = canvas_xform * flip
+	return {"kind": "node_stamp", "texture": info["texture"], "xform": canvas_xform, "src_rect": info["src_rect"], "dest_rect": info["dest_rect"], "modulate": info["modulate"]}
+
+## Pulls a drawable texture, source region, LOCAL destination rect, tint and flip flags from a node.
+## Handles Sprite2D (centered/offset/region/hframes/vframes/frame/flip), AnimatedSprite2D (current
+## frame), TextureRect (its rect), and any CanvasItem exposing a `texture` (drawn centered). {} when
+## there is nothing to draw.
+func _node_texture_info(node: CanvasItem) -> Dictionary:
+	var tint: Color = node.self_modulate * node.modulate
+	if node is Sprite2D:
+		return _sprite_info(node as Sprite2D, tint)
+	if node is AnimatedSprite2D:
+		return _animated_sprite_info(node as AnimatedSprite2D, tint)
+	if node is TextureRect and (node as TextureRect).texture != null:
+		var rect_node: TextureRect = node as TextureRect
+		return {"texture": rect_node.texture, "src_rect": Rect2(), "dest_rect": Rect2(Vector2.ZERO, rect_node.size), "modulate": tint, "flip_h": false, "flip_v": false}
+	var generic: Variant = node.get("texture")
+	if generic is Texture2D:
+		var generic_tex: Texture2D = generic
+		return {"texture": generic_tex, "src_rect": Rect2(), "dest_rect": Rect2(-generic_tex.get_size() * 0.5, generic_tex.get_size()), "modulate": tint, "flip_h": false, "flip_v": false}
+	return {}
+
+## Sprite2D current frame -> {texture, src_rect, local dest_rect (centered/offset applied), tint, flip}.
+func _sprite_info(sprite: Sprite2D, tint: Color) -> Dictionary:
+	if sprite.texture == null:
+		return {}
+	var tex: Texture2D = sprite.texture
+	var frame_size: Vector2 = tex.get_size()
+	var src: Rect2 = Rect2()
+	if sprite.region_enabled:
+		src = sprite.region_rect
+		frame_size = src.size
+	elif sprite.hframes > 1 or sprite.vframes > 1:
+		var cols: int = maxi(sprite.hframes, 1)
+		var rows: int = maxi(sprite.vframes, 1)
+		frame_size = Vector2(tex.get_width() / float(cols), tex.get_height() / float(rows))
+		var cell: int = sprite.frame
+		src = Rect2(Vector2(cell % cols, (cell / cols) % rows) * frame_size, frame_size)
+	var dest_pos: Vector2 = sprite.offset
+	if sprite.centered:
+		dest_pos -= frame_size * 0.5
+	return {"texture": tex, "src_rect": src, "dest_rect": Rect2(dest_pos, frame_size), "modulate": tint, "flip_h": sprite.flip_h, "flip_v": sprite.flip_v}
+
+## AnimatedSprite2D current frame -> the same info shape, read from the SpriteFrames.
+func _animated_sprite_info(sprite: AnimatedSprite2D, tint: Color) -> Dictionary:
+	var frames: SpriteFrames = sprite.sprite_frames
+	if frames == null or not frames.has_animation(sprite.animation):
+		return {}
+	var tex: Texture2D = frames.get_frame_texture(sprite.animation, sprite.frame)
+	if tex == null:
+		return {}
+	var frame_size: Vector2 = tex.get_size()
+	var dest_pos: Vector2 = sprite.offset
+	if sprite.centered:
+		dest_pos -= frame_size * 0.5
+	return {"texture": tex, "src_rect": Rect2(), "dest_rect": Rect2(dest_pos, frame_size), "modulate": tint, "flip_h": sprite.flip_h, "flip_v": sprite.flip_v}
 
 ## Dashes a polyline and pushes the segments as one multiline command (a single draw call).
 func _push_dashes(points: PackedVector2Array, dash_length: float, gap_length: float, width: float, color: Color) -> void:

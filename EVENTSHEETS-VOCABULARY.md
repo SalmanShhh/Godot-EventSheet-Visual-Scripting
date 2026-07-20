@@ -447,6 +447,10 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Start Ribbon** (`follow: Node, point_count: int, width: float, color: Color`) - Starts a textured ribbon trailing a node - sword swooshes, skid marks, comet tails. The ribbon follows for Point Count frames of history; Set Ribbon Texture skins it.
 - **Set Ribbon Texture** (`follow: Node, texture: Texture2D`) - Skins a running ribbon with a texture, stretched along its length.
 - **Stop Ribbon** (`follow: Node`) - Ends the ribbon trailing a node.
+- **Paste Node** (`node: Node`) - Bakes a node's CURRENT visual onto the canvas at its own world position - stamp a sprite, decal or icon permanently (persistent mode) or once per frame (auto clear). Non-destructive: the node stays, so pair it with Destroy to bake decor into one texture. Sprites, animated sprites and texture rects paste with their rotation, scale, flip, frame and tint; a node with no texture is skipped.
+- **Paste Node At** (`node: Node, x: float, y: float, scale_factor: float, rotation_deg: float`) - Bakes a node's visual at an EXPLICIT spot (read like the other draw coordinates), scaled and rotated - stamp an off-screen template sprite anywhere, any number of times.
+- **Paste Layer On Screen** (`layer: Node`) - Bakes every visible texture-bearing node under {layer} that is currently ON SCREEN onto the canvas - flatten a whole layer of decor into one texture (pair with Destroy for a performance bake). {layer} is any parent: a CanvasLayer, a container node, or the scene root.
+- **Paste Layer In Box** (`layer: Node, x: float, y: float, width: float, height: float`) - Bakes every visible texture-bearing node under {layer} whose world rect falls inside the box at ({x}, {y}) sized {width} by {height} (world coordinates) onto the canvas - flatten a region regardless of the camera.
 
 #### Expressions
 - **Canvas Texture**
@@ -511,7 +515,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Can Stand Up** - True when there is headroom to stand from the current crouch (no ceiling in the way).
 
 #### Actions
-- **Jump** - Launches the host upward with Jump Velocity and fires On Jumped.
+- **Jump** - Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor; call it yourself for a scripted jump.
+- **Air Jump** - Performs a mid-air (double) jump with Jump Velocity and fires On Air Jumped, regardless of the remaining jump budget. The tick calls this automatically when Max Jumps allows; call it yourself for a power-up jump.
 - **Add Look** (`x: float, y: float`) - Turns the view by a mouse delta (pixels): yaw rotates the host, pitch tilts the Head child, clamped to Pitch Min/Max.
 - **Set Third Person** (`enabled: bool`) - Switches between first person (off) and third person (on) and fires On Camera Mode Changed.
 - **Toggle Camera Mode** - Flips between first and third person.
@@ -525,6 +530,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Crouching** (`enabled: bool`) - Crouches (on) or stands (off) - the scripted version of holding/releasing Ctrl.
 - **Stop Sliding** - Ends a crouch slide early (you stay crouched). Fires On Slide Ended.
 - **Wall Jump** - Kicks off the wall the host is touching: Jump Velocity upward plus Wall Jump Push away from the wall (the push fades over about half a second). Ends any wall ride. Fires On Wall Jumped. Pressing jump mid-air against a wall does this automatically.
+- **Reset Jumps** - Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.
 - **Stop Wall Ride** - Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.
 - **Set Gravity Direction** (`x: float, y: float, z: float`) - Points gravity along a new 3D direction (normalized for you). (0, -1, 0) is normal down; (0, 1, 0) walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal.
 

@@ -56,6 +56,10 @@ Every tick     -> Player | Drawing Canvas: Draw Line Of Sight
 | Draw Stamp | `texture`, `x`, `y`, `scale_factor`, `rotation_deg` | Stamps a texture - bullet holes, footprints. |
 | Draw Line Of Sight | `origin_x`, `origin_y`, `facing_deg`, `fov_deg`, `max_range`, `collision_mask`, `color` | Raycast fan against the mask, filled - vision cones that hug the level. The mask param opens the layer PICKER (named project layers as checkboxes). |
 | Draw Prefab | `prefab` (Resource), `x`, `y`, `scale_factor`, `rotation_deg` | Replays a DrawingPrefabResource's steps IN ORDER at a position, scaled and rotated - reusable formations from a .tres. |
+| Paste Node | `node` (Node) | Bakes a node's CURRENT visual onto the canvas at its own world transform - rotation, scale, flip, frame and tint preserved. Non-destructive (the node stays). Sprites, animated sprites and texture rects; a textureless node is skipped. |
+| Paste Node At | `node` (Node), `x`, `y`, `scale_factor`, `rotation_deg` | Bakes a node's visual at an EXPLICIT spot (like the other draw coordinates) - stamp an off-screen template sprite anywhere, any number of times. |
+| Paste Layer On Screen | `layer` (Node) | Bakes every visible texture-bearing node under `layer` that is currently ON SCREEN - flatten a layer of decor into one texture. `layer` is any parent (a CanvasLayer, a container, or the scene root). |
+| Paste Layer In Box | `layer` (Node), `x`, `y`, `width`, `height` | Bakes every visible texture-bearing node under `layer` whose world rect falls inside the box (world coordinates) - flatten a region regardless of the camera. |
 | Start Ribbon | `follow` (Node), `point_count`, `width`, `color` | A trail following a node (last N frames of history). |
 | Set Ribbon Texture | `follow`, `texture` | Skins a running ribbon, stretched along its length. |
 | Stop Ribbon | `follow` | Ends that node's ribbon. |
@@ -284,6 +288,37 @@ Every tick
 Tint `place_color` red when the spot is blocked, green when it is clear. The dash length and gap are the
 last numbers before the color (rect takes a line width, ring/line take a width). All three dashed verbs -
 line, ring, rect - share one dash rhythm, so they read as a set.
+
+### 17. Flatten a layer of decor (performance bake)
+
+Hundreds of individual grass, rock, and prop sprites are cheap to author but cost draw calls. A level-wide
+persistent canvas on a static root bakes the whole decor layer into ONE texture at load, then you free the
+originals - the scene renders one sprite instead of hundreds.
+
+```
+On level ready
+  -> World | Drawing Canvas: Paste Layer On Screen  DecorLayer
+  -> World | System: Destroy  DecorLayer
+```
+
+`Paste Layer On Screen` walks every visible sprite under `DecorLayer` and stamps each at its exact
+position, rotation, scale, flip and tint; `System: Destroy` then removes the now-redundant nodes. Use
+`Paste Layer In Box` instead to bake only a region - a chunk you are about to stream out, say.
+
+### 18. A corpse that stays after the enemy is gone
+
+When an enemy dies, paste its current sprite onto a persistent battlefield canvas so the body lingers as a
+decal, then free the actual node - the corpse then costs nothing to keep on screen.
+
+```
+On enemy died
+  -> World | Drawing Canvas: Paste Node  the enemy
+  -> World | System: Destroy  the enemy
+```
+
+`Paste Node` bakes the enemy's last frame - facing, flip and death tint included - at its world spot. Pair
+it with a slow fade on the whole canvas texture for bodies that decay over time. `Paste Node At` does the
+same from an off-screen template sprite when you want the decal somewhere other than the node's position.
 
 ### Other use cases
 
