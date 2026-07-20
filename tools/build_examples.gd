@@ -2222,7 +2222,7 @@ func _build_draw_lab() -> bool:
 		"\t\tgem.texture = gem_texture",
 		"\t\tgems.add_child(gem)",
 		"\t\tgem.global_position = gem_spot",
-		"\t$PaintLayer/Paint.paste_layer_in_box(gems, 50.0, 170.0, 340.0, 35.0)",
+		"\t$DecorLayer/Decor.paste_layer_in_box(gems, 50.0, 170.0, 340.0, 35.0)",
 		"\tgems.queue_free()"
 	]))
 	tick.actions.append(tick_body)
@@ -2293,6 +2293,14 @@ func _build_draw_lab() -> bool:
 	root.add_child(fx_layer)
 	fx_layer.owner = root
 	_attach_behavior(fx_layer, "Fx", DRAWING_CANVAS, root, {"canvas_width": 1152, "canvas_height": 648, "auto_clear": true})
+	# A dedicated persistent canvas that only ever receives the one-shot decor bake (Paste Layer In Box) -
+	# keeping the flattened layer off the busy Paint canvas so it stays crisp.
+	var decor_layer: Node2D = Node2D.new()
+	decor_layer.name = "DecorLayer"
+	decor_layer.position = Vector2(576.0, 324.0)
+	root.add_child(decor_layer)
+	decor_layer.owner = root
+	_attach_behavior(decor_layer, "Decor", DRAWING_CANVAS, root, {"canvas_width": 1152, "canvas_height": 648})
 
 	# The Player: 8-Direction movement + an auto-clear vision canvas.
 	var player: CharacterBody2D = _chase_actor("Player", Vector2(280.0, 320.0), Color(0.35, 0.65, 1.0))

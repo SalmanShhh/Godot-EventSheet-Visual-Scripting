@@ -80,6 +80,14 @@ canvas_width = 1152
 canvas_height = 648
 auto_clear = true
 
+[node name="DecorLayer" type="Node2D" parent="."]
+position = Vector2(576, 324)
+
+[node name="Decor" type="Node" parent="DecorLayer"]
+script = ExtResource("2_xoypm")
+canvas_width = 1152
+canvas_height = 648
+
 [node name="Player" type="CharacterBody2D" parent="."]
 position = Vector2(280, 320)
 

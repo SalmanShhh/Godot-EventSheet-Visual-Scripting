@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 			gem.texture = gem_texture
 			gems.add_child(gem)
 			gem.global_position = gem_spot
-		$PaintLayer/Paint.paste_layer_in_box(gems, 50.0, 170.0, 340.0, 35.0)
+		$DecorLayer/Decor.paste_layer_in_box(gems, 50.0, 170.0, 340.0, 35.0)
 		gems.queue_free()
 
 
