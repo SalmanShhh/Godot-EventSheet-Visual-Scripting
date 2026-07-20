@@ -19,6 +19,7 @@ var _drawer: Node2D = null
 var _display: Sprite2D = null
 var _commands: Array = []
 var _ribbons: Array = []
+var _paste_textures: Array = []  # keeps pasted node textures alive - a freed source node (bake decor then Destroy) must not leave the persistent canvas re-drawing a dangling texture as a white block
 ## Returns the host's canvas surface, creating (and attaching) one on first use. Cached on the host
 ## via metadata, so every "... on {node}" draw shares one surface. Null-safe.
 static func for_node(host: Node) -> CanvasSurface:
@@ -182,6 +183,8 @@ func _run_draw_commands() -> void:
 func _push(command: Dictionary) -> void:
 	_ensure()
 	_commands.append(command)  # buffered even before the drawer exists; _ensure flushes it
+	if str(command.get("kind", "")) == "node_stamp" and command.get("texture") != null and not _paste_textures.has(command["texture"]):
+		_paste_textures.append(command["texture"])
 	if _drawer != null:
 		_drawer.queue_redraw()
 

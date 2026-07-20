@@ -101,6 +101,14 @@ static func run() -> bool:
 	# _node_world_rect: a centered 32px sprite at world (100,0) occupies world Rect2(84,-16,32,32).
 	ok = _check("node world rect is the transformed drawable rect", surface._node_world_rect(placed), Rect2(84, -16, 32, 32)) and ok
 
+	# Regression: pasting a node RETAINS its texture, so freeing the source node (the "bake decor then
+	# Destroy" use case) can't leave the persistent canvas re-drawing a dangling texture as a white block.
+	var doomed: Sprite2D = Sprite2D.new()
+	doomed.texture = tex
+	surface.paste_node(doomed)
+	doomed.free()
+	ok = _check("paste retains the source texture past the node's free", surface._paste_textures.has(tex), true) and ok
+
 	sprite.free()
 	region_sprite.free()
 	sheet_sprite.free()

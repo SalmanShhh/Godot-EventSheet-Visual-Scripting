@@ -19,6 +19,14 @@
   (capture math on orphan nodes) and a non-headless render smoke (real sprites baked and read
   back, with the layer box filter including/excluding the right nodes).
 
+### Fixed - a pasted node's texture survives freeing the source
+
+- Pasting a node onto a persistent canvas and then freeing it (the recommended "bake decor
+  then Destroy" flow) could leave the canvas re-drawing a now-dangling texture as a white
+  block. The `CanvasSurface` now holds a reference to every pasted texture for its own
+  lifetime, so a freed source node can never break the bake. Regression-pinned in
+  `tests/canvas_paste_test.gd`.
+
 ### Added - blank lines inside a function body now survive the lift
 
 - Opening a hand-written `.gd` as an event sheet used to collapse an ENTIRE function to a
