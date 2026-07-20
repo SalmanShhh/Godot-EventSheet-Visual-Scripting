@@ -60,58 +60,69 @@ signal wall_ride_ended
 signal wall_jumped
 
 var _jumps_left: int = 0
-## Reads the ai_move_x/z intents instead of the keyboard when on (for AI or cutscene drivers).
-@export var ai_controlled: bool = false
 var ai_move_x: float = 0.0
 var ai_move_z: float = 0.0
-## How far the camera pulls back in third person (the SpringArm3D length).
-@export var camera_distance: float = 3.5
-## Locks the mouse to the window for looking as soon as the scene starts.
-@export var capture_mouse_on_ready: bool = true
-## Capsule height while crouched (the feet stay planted).
-@export var crouch_height: float = 0.9
-## Multiplies move speed while crouched.
-@export var crouch_speed_multiplier: float = 0.5
 var crouching: bool = false
-## Downward acceleration pulling the host to the floor, in metres per second squared.
-@export var gravity: float = 9.8
 var head_base_y: float = 0.0
-## Upward velocity applied on a jump (and on a wall jump).
-@export var jump_velocity: float = 4.5
-## Total jumps before touching the floor again (1 = a single jump, 2 = double jump, 3 = triple). Extra jumps happen in mid-air.
-@export var max_jumps: int = 1
-## Look sensitivity in degrees turned per mouse pixel moved.
-@export var mouse_sensitivity: float = 0.12
-## Base walking speed in metres per second.
-@export var move_speed: float = 5.0
 var pitch: float = 0.0
-## Highest look angle in degrees (how far you can look up).
-@export var pitch_max: float = 80.0
-## Lowest look angle in degrees (how far you can look down).
-@export var pitch_min: float = -80.0
 var push_x: float = 0.0
 var push_z: float = 0.0
 var shape_base_y: float = 0.0
-## Starting speed of a crouch slide, decaying to crouch-walk pace.
-@export var slide_boost_speed: float = 9.0
 var slide_dir_x: float = 0.0
 var slide_dir_z: float = 0.0
+var slide_time: float = 0.0
+var sliding: bool = false
+var sprint_held: bool = false
+var standing_height: float = 0.0
+var standing_radius: float = 0.0
+var wall_ride_time: float = 0.0
+var wall_riding: bool = false
+var was_on_floor: bool = true
+var yaw: float = 0.0
+## Reads the ai_move_x/z intents instead of the keyboard when on (for AI or cutscene drivers).
+@export_group("AI Driver")
+@export var ai_controlled: bool = false
+## How far the camera pulls back in third person (the SpringArm3D length).
+@export_group("Camera")
+@export var camera_distance: float = 3.5
+## Locks the mouse to the window for looking as soon as the scene starts.
+@export var capture_mouse_on_ready: bool = true
+## Starts in third-person camera when on, first-person when off.
+@export var third_person: bool = false
+## Capsule height while crouched (the feet stay planted).
+@export_group("Crouch & Slide")
+@export var crouch_height: float = 0.9
+## Multiplies move speed while crouched.
+@export var crouch_speed_multiplier: float = 0.5
+## Starting speed of a crouch slide, decaying to crouch-walk pace.
+@export var slide_boost_speed: float = 9.0
 ## How long a crouch slide lasts, in seconds.
 @export var slide_duration: float = 0.9
 ## Allows a crouch slide when crouching at speed.
 @export var slide_enabled: bool = true
 ## Minimum horizontal speed needed to start a crouch slide.
 @export var slide_min_speed: float = 6.5
-var slide_time: float = 0.0
-var sliding: bool = false
-var sprint_held: bool = false
+## Upward velocity applied on a jump (and on a wall jump).
+@export_group("Jump")
+@export var jump_velocity: float = 4.5
+## Total jumps before touching the floor again (1 = a single jump, 2 = double jump, 3 = triple). Extra jumps happen in mid-air.
+@export var max_jumps: int = 1
+## Look sensitivity in degrees turned per mouse pixel moved.
+@export_group("Look")
+@export var mouse_sensitivity: float = 0.12
+## Highest look angle in degrees (how far you can look up).
+@export var pitch_max: float = 80.0
+## Lowest look angle in degrees (how far you can look down).
+@export var pitch_min: float = -80.0
+## Downward acceleration pulling the host to the floor, in metres per second squared.
+@export_group("Movement")
+@export var gravity: float = 9.8
+## Base walking speed in metres per second.
+@export var move_speed: float = 5.0
 ## Multiplies move speed while the sprint key (Shift) is held.
 @export var sprint_multiplier: float = 1.6
-var standing_height: float = 0.0
-var standing_radius: float = 0.0
-## Starts in third-person camera when on, first-person when off.
-@export var third_person: bool = false
 ## Allows jumping off a wall while airborne.
+@export_group("Wall Tech")
 @export var wall_jump_enabled: bool = true
 ## How hard a wall jump pushes away from the wall (the kick fades over about half a second).
 @export var wall_jump_push: float = 6.0
@@ -123,10 +134,6 @@ var standing_radius: float = 0.0
 @export var wall_ride_max_time: float = 1.5
 ## Minimum horizontal speed needed to start or keep a wall ride.
 @export var wall_ride_min_speed: float = 3.0
-var wall_ride_time: float = 0.0
-var wall_riding: bool = false
-var was_on_floor: bool = true
-var yaw: float = 0.0
 
 # Which way gravity pulls (a Vector3 cannot emit from the variables dict, so it lives
 # here). Designed for vertical flips - DOWN and UP are exact (walk on ceilings); a

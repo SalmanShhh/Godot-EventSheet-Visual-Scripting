@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed - grouped exports collapse into clean Inspector folds
+
+- Variables that share a group (or subgroup / category) now emit CONTIGUOUSLY with their
+  `@export_group` header written once, so the Godot Inspector shows one collapsible fold
+  per group instead of a header before every variable. A sheet with no groups keeps the
+  exact pure-alphabetical order (byte-identical). The FPS Character controller's ~22
+  Inspector properties are now grouped: Movement, Jump, Look, Camera, Crouch & Slide,
+  Wall Tech, AI Driver.
+
 ### Added - FPS Controller multiple jumps
 
 - The FPS Character controller gains a **Max Jumps** knob (1 = single, 2 = double, 3 =

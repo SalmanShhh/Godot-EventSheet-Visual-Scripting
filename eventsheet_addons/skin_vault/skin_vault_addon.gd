@@ -35,10 +35,8 @@ signal on_pool_empty
 @export_group("Pity")
 @export var enable_pity: bool = true
 ## The rarity (by name) that pity guarantees at or above.
-@export_group("Pity")
 @export var pity_rarity: String = "epic"
 ## Misses in a row before the next roll is guaranteed pity-rarity-or-better.
-@export_group("Pity")
 @export_range(1, 200, 1) var pity_threshold: int = 10
 
 # name -> {weight, tier}. Tier is an explicit rank so pity never depends on registration order.

@@ -1928,10 +1928,36 @@ static func _emit_function_params(event_function: EventFunction) -> String:
 
 
 ## Emits `@export var` lines from the sheet variables dictionary.
+## Compound sort key clustering a variable under its Inspector section: category, then group,
+## then subgroup, then name. The separator sorts before any normal character, so an EMPTY section
+## (ungrouped / uncategorized) sorts first - which means a sheet with no groups keeps the exact
+## pure-by-name order the compiler always used (byte-identical). Only sheets that opt into groups
+## get the clustered layout. Non-exported variables carry no section, so they stay among the
+## ungrouped, ordered by name, exactly as before.
+static func _variable_sort_key(variables: Dictionary, key: Variant) -> String:
+	var descriptor: Variant = variables[key]
+	var exported: bool = descriptor is Dictionary and bool(descriptor.get("exported", true))
+	var attributes: Dictionary = descriptor.get("attributes") if (descriptor is Dictionary and descriptor.get("attributes") is Dictionary) else {}
+	var category: String = str(attributes.get("category", "")).strip_edges() if exported else ""
+	var group: String = str(attributes.get("group", "")).strip_edges() if exported else ""
+	var subgroup: String = str(attributes.get("subgroup", "")).strip_edges() if exported else ""
+	return "%s%s%s%s" % [category, group, subgroup, str(key)]
+
+
 static func _emit_variables(variables: Dictionary, warnings: Array = [], function_names: Dictionary = {}) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray()
+	# Sort by (category, group, subgroup, name) so an Inspector section's variables emit
+	# CONTIGUOUSLY - the @export_group / @export_subgroup / @export_category header is then
+	# written ONCE per section (deduped below on change) instead of before every variable,
+	# which is what makes the Inspector collapse into clean folds rather than one section per
+	# var. Ungrouped/uncategorized variables sort first (empty keys), so a sheet with no groups
+	# emits byte-identically to the old pure-alphabetical order.
 	var keys: Array = variables.keys()
-	keys.sort()
+	keys.sort_custom(func(a: Variant, b: Variant) -> bool:
+		return _variable_sort_key(variables, a) < _variable_sort_key(variables, b))
+	var last_category: String = ""
+	var last_group: String = ""
+	var last_subgroup: String = ""
 	# Tier 2 conditions (Show If / Lock Unless) aggregate into ONE generated
 	# _validate_property below, in variable order - canonical shape, dialog-edited.
 	var property_conditions: Array = []
@@ -1960,16 +1986,32 @@ static func _emit_variables(variables: Dictionary, warnings: Array = [], functio
 				tooltip_text = str(descriptor.get("description", "")).strip_edges()
 			if exported and not tooltip_text.is_empty():
 				lines.append("## %s" % tooltip_text.replace("\n", " "))
-			# A category is the heaviest Inspector divider (its own header band); it precedes
-			# the group exactly as Godot applies them.
-			if exported and not str(attributes.get("category", "")).strip_edges().is_empty():
-				lines.append("@export_category(\"%s\")" % str(attributes.get("category")).strip_edges())
-			if exported and not str(attributes.get("group", "")).strip_edges().is_empty():
-				lines.append("@export_group(\"%s\")" % str(attributes.get("group")).strip_edges())
-			# Nested Inspector grouping for complex objects with many tunables: @export_subgroup follows the
-			# group and nests under it (Godot applies it to the following @export vars).
-			if exported and not str(attributes.get("subgroup", "")).strip_edges().is_empty():
-				lines.append("@export_subgroup(\"%s\")" % str(attributes.get("subgroup")).strip_edges())
+			# Section headers, emitted only when they CHANGE from the previous exported variable
+			# (the sort clustered same-section vars together), so each header lands ONCE and the
+			# Inspector shows one fold per group instead of a header per var. A category is the
+			# heaviest divider (its own band); it precedes the group exactly as Godot applies them.
+			# Entering a new category or group resets the nested trackers so a repeated subgroup
+			# name under a different parent still re-emits.
+			if exported:
+				var this_category: String = str(attributes.get("category", "")).strip_edges()
+				var this_group: String = str(attributes.get("group", "")).strip_edges()
+				var this_subgroup: String = str(attributes.get("subgroup", "")).strip_edges()
+				if this_category != last_category:
+					if not this_category.is_empty():
+						lines.append("@export_category(\"%s\")" % this_category)
+					last_category = this_category
+					last_group = ""
+					last_subgroup = ""
+				if this_group != last_group:
+					if not this_group.is_empty():
+						lines.append("@export_group(\"%s\")" % this_group)
+					last_group = this_group
+					last_subgroup = ""
+				# Nested Inspector grouping: @export_subgroup follows the group and nests under it.
+				if this_subgroup != last_subgroup:
+					if not this_subgroup.is_empty():
+						lines.append("@export_subgroup(\"%s\")" % this_subgroup)
+					last_subgroup = this_subgroup
 			if exported and type_name == "String" and not combo_options.is_empty():
 				for unsupported_key: String in ["clamp", "on_changed", "read_only", "show_if", "lock_unless", "drawer"]:
 					if attributes.has(unsupported_key):
