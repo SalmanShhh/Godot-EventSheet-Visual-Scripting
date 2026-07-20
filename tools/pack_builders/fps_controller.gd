@@ -22,6 +22,7 @@ static func build() -> bool:
 		"move_speed": {"type": "float", "default": 5.0, "exported": true, "description": "Base walking speed in metres per second."},
 		"sprint_multiplier": {"type": "float", "default": 1.6, "exported": true, "description": "Multiplies move speed while the sprint key (Shift) is held."},
 		"jump_velocity": {"type": "float", "default": 4.5, "exported": true, "description": "Upward velocity applied on a jump (and on a wall jump)."},
+		"max_jumps": {"type": "int", "default": 1, "exported": true, "description": "Total jumps before touching the floor again (1 = a single jump, 2 = double jump, 3 = triple). Extra jumps happen in mid-air."},
 		"gravity": {"type": "float", "default": 9.8, "exported": true, "description": "Downward acceleration pulling the host to the floor, in metres per second squared."},
 		"mouse_sensitivity": {"type": "float", "default": 0.12, "exported": true, "description": "Look sensitivity in degrees turned per mouse pixel moved."},
 		"pitch_min": {"type": "float", "default": -80.0, "exported": true, "description": "Lowest look angle in degrees (how far you can look down)."},
@@ -48,6 +49,7 @@ static func build() -> bool:
 		"pitch": {"type": "float", "default": 0.0, "exported": false},
 		"sprint_held": {"type": "bool", "default": false, "exported": false},
 		"was_on_floor": {"type": "bool", "default": true, "exported": false},
+		"_jumps_left": {"type": "int", "default": 0, "exported": false},
 		"crouching": {"type": "bool", "default": false, "exported": false},
 		"sliding": {"type": "bool", "default": false, "exported": false},
 		"slide_time": {"type": "float", "default": 0.0, "exported": false},
@@ -63,7 +65,7 @@ static func build() -> bool:
 		"push_z": {"type": "float", "default": 0.0, "exported": false},
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person. Movement tech included: crouch (hold Ctrl, capsule shrinks, ceiling-checked stand), crouch slide (crouch while sprinting), wall ride (hold forward against a wall mid-air), and wall jump (jump off any wall mid-air)."
+	about.text = "FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person. Set Max Jumps to 2 for a double jump (3 for a triple) - extra jumps happen in mid-air and fire On Air Jumped. Movement tech included: crouch (hold Ctrl, capsule shrinks, ceiling-checked stand), crouch slide (crouch while sprinting), wall ride (hold forward against a wall mid-air), and wall jump (jump off any wall mid-air)."
 	sheet.events.append(about)
 
 	var jumped_signal: SignalRow = SignalRow.new()
@@ -72,6 +74,12 @@ static func build() -> bool:
 	jumped_signal.ace_name = "On Jumped"
 	jumped_signal.ace_category = "FPS Controller"
 	sheet.events.append(jumped_signal)
+	var air_jumped_signal: SignalRow = SignalRow.new()
+	air_jumped_signal.signal_name = "air_jumped"
+	air_jumped_signal.trigger = true
+	air_jumped_signal.ace_name = "On Air Jumped"
+	air_jumped_signal.ace_category = "FPS Controller"
+	sheet.events.append(air_jumped_signal)
 	var landed_signal: SignalRow = SignalRow.new()
 	landed_signal.signal_name = "landed"
 	landed_signal.trigger = true
@@ -264,6 +272,10 @@ static func build() -> bool:
 		"\t\thost.velocity.z -= wall_normal.z * 1.5",
 		"elif wall_ride_enabled and not on_floor and host.is_on_wall() and input_vec.y < -0.2 and Vector2(host.velocity.x, host.velocity.z).length() >= wall_ride_min_speed:",
 		"\t_start_wall_ride()",
+		"# Refill the air-jump budget while grounded: max_jumps counts the floor jump too, so",
+		"# _jumps_left holds the EXTRA (mid-air) jumps still available (2 = one air jump left).",
+		"if on_floor:",
+		"\t_jumps_left = maxi(max_jumps - 1, 0)",
 		"if Input.is_action_just_pressed(\"ui_accept\"):",
 		"\tif on_floor:",
 		"\t\tif sliding:",
@@ -271,6 +283,9 @@ static func build() -> bool:
 		"\t\tdo_jump()",
 		"\telif wall_jump_enabled and host.is_on_wall():",
 		"\t\tdo_wall_jump()",
+		"\telif _jumps_left > 0:",
+		"\t\t_jumps_left -= 1",
+		"\t\tdo_air_jump()",
 		"host.move_and_slide()",
 		"if host.is_on_floor() and not was_on_floor:",
 		"\tlanded.emit()",
@@ -279,24 +294,52 @@ static func build() -> bool:
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
 
+	# The launch primitive both the ground jump and the mid-air jump share, so their physics can
+	# never drift apart. Private (not exposed): the exposed verbs are Jump / Air Jump below.
+	var launch_fn: EventFunction = EventFunction.new()
+	launch_fn.function_name = "_launch_jump"
+	launch_fn.expose_as_ace = false
+	var launch_body: RawCodeRow = RawCodeRow.new()
+	launch_body.code = "\n".join(PackedStringArray([
+		"# Replace the along-gravity component with the jump - frame-aware, so \"up\" is",
+		"# whatever direction gravity opposes. At default gravity this is velocity.y = jump.",
+		"host.velocity -= _gravity_dir() * host.velocity.dot(_gravity_dir())",
+		"host.velocity += -_gravity_dir() * jump_velocity"
+	]))
+	launch_fn.events.append(launch_body)
+	sheet.functions.append(launch_fn)
+
 	var jump_fn: EventFunction = EventFunction.new()
 	jump_fn.function_name = "do_jump"
 	jump_fn.expose_as_ace = true
 	jump_fn.ace_display_name = "Jump"
 	jump_fn.ace_category = "FPS Controller"
-	jump_fn.description = "Launches the host upward with Jump Velocity and fires On Jumped."
+	jump_fn.description = "Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor; call it yourself for a scripted jump."
 	var jump_body: RawCodeRow = RawCodeRow.new()
 	jump_body.code = "\n".join(PackedStringArray([
 		"if host == null:",
 		"\treturn",
-		"# Replace the along-gravity component with the jump - frame-aware, so \"up\" is",
-		"# whatever direction gravity opposes. At default gravity this is velocity.y = jump.",
-		"host.velocity -= _gravity_dir() * host.velocity.dot(_gravity_dir())",
-		"host.velocity += -_gravity_dir() * jump_velocity",
+		"_launch_jump()",
 		"jumped.emit()"
 	]))
 	jump_fn.events.append(jump_body)
 	sheet.functions.append(jump_fn)
+
+	var air_jump_fn: EventFunction = EventFunction.new()
+	air_jump_fn.function_name = "do_air_jump"
+	air_jump_fn.expose_as_ace = true
+	air_jump_fn.ace_display_name = "Air Jump"
+	air_jump_fn.ace_category = "FPS Controller"
+	air_jump_fn.description = "Performs a mid-air (double) jump with Jump Velocity and fires On Air Jumped, regardless of the remaining jump budget. The tick calls this automatically when Max Jumps allows; call it yourself for a power-up jump."
+	var air_jump_body: RawCodeRow = RawCodeRow.new()
+	air_jump_body.code = "\n".join(PackedStringArray([
+		"if host == null:",
+		"\treturn",
+		"_launch_jump()",
+		"air_jumped.emit()"
+	]))
+	air_jump_fn.events.append(air_jump_body)
+	sheet.functions.append(air_jump_fn)
 
 	var look_fn: EventFunction = EventFunction.new()
 	look_fn.function_name = "add_look"
@@ -541,6 +584,10 @@ static func build() -> bool:
 			"host.velocity += -_gravity_dir() * jump_velocity",
 			"wall_jumped.emit()"
 		])))
+	Lib.append_function(sheet, "reset_jumps", "Reset Jumps", "FPS Controller",
+		"Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.",
+		[],
+		"_jumps_left = maxi(max_jumps - 1, 0)")
 	Lib.append_function(sheet, "stop_wall_ride", "Stop Wall Ride", "FPS Controller",
 		"Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.",
 		[],

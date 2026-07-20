@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - FPS Controller multiple jumps
+
+- The FPS Character controller gains a **Max Jumps** knob (1 = single, 2 = double, 3 =
+  triple), mirroring the 2D Platformer Movement pack. Extra jumps happen in mid-air, the
+  budget refills on landing, and each mid-air jump fires a new **On Air Jumped** trigger
+  (distinct from On Jumped). New verbs: **Air Jump** (the mid-air launch) and **Reset
+  Jumps** (refill the budget for a power-up). The ground and air jumps share one launch
+  primitive so their physics can't drift apart.
+
 ### Added - Mesh module, Gradient/Curve support
 
 - **Mesh** module: build 3D geometry from events - Make Box / Sphere / Cylinder / Plane /

@@ -79,12 +79,15 @@ the behavior finds them by name and quietly skips what's missing.
 | Action | Set Move Speed / Set Sprint Multiplier / Set Mouse Sensitivity | Runtime feel tuning. |
 | Action | Crouch / Stand Up / Set Crouching (enabled) | Crouches (capsule shrinks to Crouch Height, Head drops, speed drops to the crouch multiplier) / stands - refused while a ceiling blocks the headroom. Held Ctrl drives these automatically. |
 | Action | Stop Sliding | Ends a crouch slide early (you stay crouched). |
+| Action | Jump / Air Jump | Launches up with Jump Velocity: Jump fires On Jumped, Air Jump is the mid-air (double) jump firing On Air Jumped. The tick calls the right one automatically; call them for scripted or power-up jumps. |
+| Action | Reset Jumps | Refills the mid-air jump budget now (e.g. a double-jump power-up) without landing. |
 | Action | Wall Jump | Kicks off the touched wall: Jump Velocity up + Wall Jump Push away (the push fades over ~0.5 s). Pressing jump mid-air against a wall does this automatically. |
 | Action | Stop Wall Ride | Detaches from the wall; full gravity resumes. |
 | Trigger | On Crouched / On Stood Up | Crouch state changes. |
 | Trigger | On Slide Started / On Slide Ended | The crouch slide window - great for a camera tilt. |
 | Trigger | On Wall Ride Started / On Wall Ride Ended | Wall contact glide begins/ends - lean the camera here. |
 | Trigger | On Wall Jumped | A wall jump launched. |
+| Trigger | On Air Jumped | A mid-air (double / triple) jump launched - fire dust or a sound here. |
 | Condition | Is Sprinting | True while Shift is held. |
 | Condition | Is First Person | True in first-person mode. |
 | Condition | Is Crouching / Is Sliding / Is Wall Riding | The movement-tech states. |
@@ -94,6 +97,7 @@ the behavior finds them by name and quietly skips what's missing.
 | Expression | Wall Normal X / Z | The touched wall's outward normal (zero off-wall) - the wall-jump push direction; feed it to a camera lean. |
 
 Exported knobs (Inspector or sheet variables): Move Speed, Sprint Multiplier, Jump Velocity,
+Max Jumps (1 = single, 2 = double jump, 3 = triple - the extras are mid-air),
 Gravity, Gravity Direction, Mouse Sensitivity, Pitch Min/Max, Third Person, Camera Distance, Capture Mouse On Ready.
 Movement tech knobs: Crouch Height + Crouch Speed Multiplier; Slide Enabled + Slide Boost Speed +
 Slide Min Speed (the speed a crouch must be moving at to slide - default just above walking, so

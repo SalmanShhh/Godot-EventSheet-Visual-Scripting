@@ -83,7 +83,30 @@ static func run() -> bool:
 	behavior.stop_sliding()
 	all_passed = _check("Stop Sliding is idempotent (no double signal)", events.count("slide_ended"), 1) and all_passed
 
+	# ── Multiple jumps (double / triple), the platformer's pattern on the FPS controller ──
+	for jump_member: String in ["do_jump", "do_air_jump", "reset_jumps", "_launch_jump"]:
+		all_passed = _check("member %s exists" % jump_member, behavior.has_method(jump_member), true) and all_passed
+	all_passed = _check("On Air Jumped signal exists", behavior.has_signal("air_jumped"), true) and all_passed
+	var air_events: Array = []
+	behavior.connect("jumped", func() -> void: air_events.append("ground"))
+	behavior.connect("air_jumped", func() -> void: air_events.append("air"))
+	behavior.set("max_jumps", 2)         # double jump
+	behavior.set("jump_velocity", 4.5)
+	behavior.set("_jumps_left", 1)       # one air jump banked (as the on-floor reset would leave it)
+	host.velocity = Vector3.ZERO
+	behavior.do_jump()
+	all_passed = _check("the ground jump launches up + fires On Jumped", host.velocity.y > 0.0 and air_events == ["ground"], true) and all_passed
+	behavior.do_air_jump()
+	all_passed = _check("the air jump launches up + fires On Air Jumped", air_events == ["ground", "air"], true) and all_passed
+	behavior.set("_jumps_left", 0)
+	behavior.reset_jumps()
+	all_passed = _check("Reset Jumps refills the air budget from Max Jumps", int(behavior.get("_jumps_left")), 1) and all_passed
+	behavior.set("max_jumps", 1)
+	behavior.reset_jumps()
+	all_passed = _check("Max Jumps 1 leaves no air jumps", int(behavior.get("_jumps_left")), 0) and all_passed
+
 	# ── Wall verbs without a wall: honest no-ops ──
+	host.velocity = Vector3.ZERO
 	behavior.do_wall_jump()
 	all_passed = _check("Wall Jump without a wall is a no-op", is_equal_approx(host.velocity.y, 0.0), true) and all_passed
 	all_passed = _check("Wall Normal X is zero off-wall", behavior.wall_normal_x(), 0.0) and all_passed

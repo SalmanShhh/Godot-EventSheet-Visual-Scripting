@@ -19,6 +19,10 @@ func _enter_tree() -> void:
 ## @ace_category("FPS Controller")
 signal jumped
 ## @ace_trigger
+## @ace_name("On Air Jumped")
+## @ace_category("FPS Controller")
+signal air_jumped
+## @ace_trigger
 ## @ace_name("On Landed")
 ## @ace_category("FPS Controller")
 signal landed
@@ -55,6 +59,7 @@ signal wall_ride_ended
 ## @ace_category("FPS Controller")
 signal wall_jumped
 
+var _jumps_left: int = 0
 ## Reads the ai_move_x/z intents instead of the keyboard when on (for AI or cutscene drivers).
 @export var ai_controlled: bool = false
 var ai_move_x: float = 0.0
@@ -73,6 +78,8 @@ var crouching: bool = false
 var head_base_y: float = 0.0
 ## Upward velocity applied on a jump (and on a wall jump).
 @export var jump_velocity: float = 4.5
+## Total jumps before touching the floor again (1 = a single jump, 2 = double jump, 3 = triple). Extra jumps happen in mid-air.
+@export var max_jumps: int = 1
 ## Look sensitivity in degrees turned per mouse pixel moved.
 @export var mouse_sensitivity: float = 0.12
 ## Base walking speed in metres per second.
@@ -197,6 +204,10 @@ func _physics_process(delta: float) -> void:
 			host.velocity.z -= wall_normal.z * 1.5
 	elif wall_ride_enabled and not on_floor and host.is_on_wall() and input_vec.y < -0.2 and Vector2(host.velocity.x, host.velocity.z).length() >= wall_ride_min_speed:
 		_start_wall_ride()
+	# Refill the air-jump budget while grounded: max_jumps counts the floor jump too, so
+	# _jumps_left holds the EXTRA (mid-air) jumps still available (2 = one air jump left).
+	if on_floor:
+		_jumps_left = maxi(max_jumps - 1, 0)
 	if Input.is_action_just_pressed("ui_accept"):
 		if on_floor:
 			if sliding:
@@ -204,25 +215,44 @@ func _physics_process(delta: float) -> void:
 			do_jump()
 		elif wall_jump_enabled and host.is_on_wall():
 			do_wall_jump()
+		elif _jumps_left > 0:
+			_jumps_left -= 1
+			do_air_jump()
 	host.move_and_slide()
 	if host.is_on_floor() and not was_on_floor:
 		landed.emit()
 	was_on_floor = host.is_on_floor()
 
+## @ace_hidden
+func _launch_jump() -> void:
+	# Replace the along-gravity component with the jump - frame-aware, so "up" is
+	# whatever direction gravity opposes. At default gravity this is velocity.y = jump.
+	host.velocity -= _gravity_dir() * host.velocity.dot(_gravity_dir())
+	host.velocity += -_gravity_dir() * jump_velocity
+
 ## @ace_action
 ## @ace_name("Jump")
 ## @ace_category("FPS Controller")
-## @ace_description("Launches the host upward with Jump Velocity and fires On Jumped.")
+## @ace_description("Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor; call it yourself for a scripted jump.")
 ## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
 ## @ace_codegen_template("$FPSController.do_jump()")
 func do_jump() -> void:
 	if host == null:
 		return
-	# Replace the along-gravity component with the jump - frame-aware, so "up" is
-	# whatever direction gravity opposes. At default gravity this is velocity.y = jump.
-	host.velocity -= _gravity_dir() * host.velocity.dot(_gravity_dir())
-	host.velocity += -_gravity_dir() * jump_velocity
+	_launch_jump()
 	jumped.emit()
+
+## @ace_action
+## @ace_name("Air Jump")
+## @ace_category("FPS Controller")
+## @ace_description("Performs a mid-air (double) jump with Jump Velocity and fires On Air Jumped, regardless of the remaining jump budget. The tick calls this automatically when Max Jumps allows; call it yourself for a power-up jump.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.do_air_jump()")
+func do_air_jump() -> void:
+	if host == null:
+		return
+	_launch_jump()
+	air_jumped.emit()
 
 ## @ace_action
 ## @ace_name("Add Look")
@@ -438,6 +468,15 @@ func do_wall_jump() -> void:
 	wall_jumped.emit()
 
 ## @ace_action
+## @ace_name("Reset Jumps")
+## @ace_category("FPS Controller")
+## @ace_description("Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.")
+## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
+## @ace_codegen_template("$FPSController.reset_jumps()")
+func reset_jumps() -> void:
+	_jumps_left = maxi(max_jumps - 1, 0)
+
+## @ace_action
 ## @ace_name("Stop Wall Ride")
 ## @ace_category("FPS Controller")
 ## @ace_description("Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.")
@@ -567,4 +606,4 @@ func _start_wall_ride() -> void:
 			host.velocity -= _gravity_dir() * fall * 0.75
 	wall_ride_started.emit()
 
-# FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person. Movement tech included: crouch (hold Ctrl, capsule shrinks, ceiling-checked stand), crouch slide (crouch while sprinting), wall ride (hold forward against a wall mid-air), and wall jump (jump off any wall mid-air).
+# FPS/TPS controller behavior: mouse look + WASD move + sprint + jump on the host CharacterBody3D; a SpringArm3D named Arm under a Head child switches first/third person. Set Max Jumps to 2 for a double jump (3 for a triple) - extra jumps happen in mid-air and fire On Air Jumped. Movement tech included: crouch (hold Ctrl, capsule shrinks, ceiling-checked stand), crouch slide (crouch while sprinting), wall ride (hold forward against a wall mid-air), and wall jump (jump off any wall mid-air).
