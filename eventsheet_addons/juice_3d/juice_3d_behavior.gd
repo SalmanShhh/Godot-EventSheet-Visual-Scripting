@@ -299,8 +299,13 @@ func zoom_fov_to(fov: float, duration: float) -> void:
 	var cam: Camera3D = _camera()
 	if cam == null:
 		return
+	# Clear any active FOV punch first (unapply this frame's kick, zero it) so the tween drives a CLEAN
+	# base to the exact target. Baking the current _applied_fov into the end value overshot permanently:
+	# the kick decays to ~0 during the tween, so the camera settled at fov + the initial kick.
+	_unapply()
+	_fov_kick = 0.0
 	var tw: Tween = create_tween()
-	tw.tween_property(cam, "fov", clampf(fov, 1.0, 179.0) + _applied_fov, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(cam, "fov", clampf(fov, 1.0, 179.0), maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.finished.connect(func() -> void: zoom_finished.emit())
 
 ## @ace_action

@@ -1018,22 +1018,36 @@ static func handled_asset_extensions() -> PackedStringArray:
 	return extensions
 
 
+## Static ace_id -> descriptor index, built once. Built-in descriptors are immutable after
+## generation (a standing contract), so a single scan/build is safe to cache - without this,
+## every builtin_action() call re-scanned the modules dir and rebuilt the ENTIRE vocabulary
+## (hundreds of allocations) just to find one id, so a multi-file drop paid it per file.
+static var _builtin_descriptor_index: Dictionary = {}
+
+
+static func _builtin_descriptor(ace_id: String) -> Variant:
+	if _builtin_descriptor_index.is_empty():
+		for descriptor in EventForgeBuiltinACEs.get_descriptors():
+			_builtin_descriptor_index[descriptor.ace_id] = descriptor
+	return _builtin_descriptor_index.get(ace_id, null)
+
+
 ## A ready-to-insert ACEAction built from a built-in Core descriptor: identity and
 ## template copied, {uid} baked fresh so stateful templates stay per-instance - exactly
 ## what a picker apply produces. The building block asset-drop handlers (and any other
 ## extension that inserts actions) use instead of re-implementing the apply path.
 static func builtin_action(ace_id: String, params: Dictionary) -> ACEAction:
-	for descriptor in EventForgeBuiltinACEs.get_descriptors():
-		if descriptor.ace_id == ace_id:
-			var action: ACEAction = ACEAction.new()
-			action.provider_id = descriptor.provider_id
-			action.ace_id = ace_id
-			action.params = params.duplicate(true)
-			action.codegen_template = str(descriptor.codegen_template)
-			if action.codegen_template.contains("{uid}"):
-				action.codegen_template = action.codegen_template.replace("{uid}", EventSheetDock._fresh_uid_token())
-			return action
-	return null
+	var descriptor: Variant = _builtin_descriptor(ace_id)
+	if descriptor == null:
+		return null
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = descriptor.provider_id
+	action.ace_id = ace_id
+	action.params = params.duplicate(true)
+	action.codegen_template = str(descriptor.codegen_template)
+	if action.codegen_template.contains("{uid}"):
+		action.codegen_template = action.codegen_template.replace("{uid}", EventSheetDock._fresh_uid_token())
+	return action
 
 
 ## A preload Custom Block row (`const Name := preload("res://...")`) for a resource

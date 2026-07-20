@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Fixed - more review findings on the new features
+
+- **A JuiceBehavior leaving the tree no longer stomps a slowmo it didn't start**: the
+  teardown restores the global `Engine.time_scale` only when this instance actually owns
+  it (a running slowmo or an active hitstop), so an enemy freed mid-bullet-time can't snap
+  the player's slow motion back to normal.
+- **Juice 3D Zoom FOV To no longer overshoots**: firing it during an active FOV punch used
+  to bake the decaying kick into the tween's target, so the base FOV settled wrong; it now
+  clears the kick and eases to the exact target. Verified in a live tree.
+- **Juice 2D camera effects survive a camera switch**: the mixer now hands the old camera
+  back to its rest pose and re-captures from the new one (matching the 3D pack), instead of
+  applying the old camera's base to the new one and stranding the old.
+- **The ghost trail is bounded**: the source sprite is resolved once at Start (not
+  re-scanned every stamp), and live ghosts are capped (oldest freed) so a high stamp rate
+  with a long fade can't pile up thousands of nodes.
+- **`EventSheets.builtin_action` caches its descriptor lookup** instead of rebuilding the
+  entire built-in vocabulary per call, so a multi-file drop no longer pays it per file.
+
 ### Fixed - review findings on the new features
 
 - **Screen-FX kit no longer faults on single-effect use** (Juice / Juice 3D): a shader

@@ -62,12 +62,16 @@ static func run() -> bool:
 	behavior._on_tree_exiting()
 	all_passed = _check("tree-exit teardown un-freezes a mid-hitstop game + clears the flag", is_equal_approx(Engine.time_scale, 1.0) and not behavior.is_hitstopped(), true) and all_passed
 
-	# Teardown safety (D1): leaving the tree mid-slowmo restores the GLOBAL Engine.time_scale, so a scene
-	# change during slow motion can't leave the whole game running slow.
+	# Teardown safety (review #5): a behavior only restores the GLOBAL Engine.time_scale when IT owns
+	# the change (a running slowmo or an active hitstop). An UNRELATED JuiceBehavior leaving the tree -
+	# an enemy freed mid-bullet-time - must NOT stomp the player's slowmo or a game-owned time_scale.
 	all_passed = _check("a tree-exit teardown handler exists", behavior.has_method("_on_tree_exiting"), true) and all_passed
-	Engine.time_scale = 0.25
+	behavior._hitstop_active = false          # this instance owns nothing
+	behavior._slowmo_tween = null
+	Engine.time_scale = 0.25                   # someone else (the game / another instance) owns this
 	behavior._on_tree_exiting()
-	all_passed = _check("tree-exit teardown restores Engine.time_scale", is_equal_approx(Engine.time_scale, 1.0), true) and all_passed
+	all_passed = _check("an unowned teardown leaves the game's time_scale untouched", is_equal_approx(Engine.time_scale, 0.25), true) and all_passed
+	Engine.time_scale = 1.0                    # restore for the leak check + other tests
 
 	# The spring-squash integrator springs the scale back to rest (the math runs in the tick; no live host needed).
 	behavior.squash_damping = 0.9

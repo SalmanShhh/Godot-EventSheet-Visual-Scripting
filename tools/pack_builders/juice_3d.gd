@@ -399,7 +399,7 @@ static func build() -> bool:
 	_default(sheet, "amount", "8")
 	Lib.append_function(sheet, "zoom_fov_to", "Zoom FOV To", "Juice 3D", "Smoothly changes the camera's base field of view to a value in degrees and keeps it there (an aim-down-sights zoom is FOV 40, back to 75 to unzoom). Emits On Zoom Finished.",
 		[["fov", "float"], ["duration", "float"]],
-		"var cam: Camera3D = _camera()\nif cam == null:\n\treturn\nvar tw: Tween = create_tween()\ntw.tween_property(cam, \"fov\", clampf(fov, 1.0, 179.0) + _applied_fov, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: zoom_finished.emit())")
+		"var cam: Camera3D = _camera()\nif cam == null:\n\treturn\n# Clear any active FOV punch first (unapply this frame's kick, zero it) so the tween drives a CLEAN\n# base to the exact target. Baking the current _applied_fov into the end value overshot permanently:\n# the kick decays to ~0 during the tween, so the camera settled at fov + the initial kick.\n_unapply()\n_fov_kick = 0.0\nvar tw: Tween = create_tween()\ntw.tween_property(cam, \"fov\", clampf(fov, 1.0, 179.0), maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\ntw.finished.connect(func() -> void: zoom_finished.emit())")
 	_default(sheet, "fov", "40")
 	_default(sheet, "duration", "0.15")
 	Lib.append_function(sheet, "use_camera", "Use Camera", "Juice 3D", "Pin the effects to a specific Camera3D (by path). Leave it unused to auto-target whichever camera is active.",

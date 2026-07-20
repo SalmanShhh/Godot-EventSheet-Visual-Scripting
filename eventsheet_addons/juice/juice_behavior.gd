@@ -96,6 +96,9 @@ var _base_rotation: float = 0.0
 var _base_scale: Vector2 = Vector2.ONE
 var _noise: FastNoiseLite = null
 var _camera_override: Camera2D = null
+# The camera the rest pose was captured from - if the active camera changes mid-effect, the old
+# one is handed back before the new one is driven (so it isn't left shaken, nor the new mis-based).
+var _last_camera: Camera2D = null
 # Anchored-zoom (Zoom Toward Point) interpolation state.
 var _zoom_from: Vector2 = Vector2.ONE
 var _zoom_to: Vector2 = Vector2.ONE
@@ -144,10 +147,26 @@ var _trail_interval: float = 0.05
 var _trail_fade: float = 0.4
 var _trail_tint: Color = Color.WHITE
 var _trail_timer: float = 0.0
+# The sprite to copy, resolved ONCE at Start (not re-scanned every stamp), and the live ghosts,
+# capped so a high stamp rate with a long fade can't pile up thousands of nodes.
+var _ghost_sprite: Node2D = null
+var _ghosts: Array = []
+const _MAX_GHOSTS: int = 48
 # Eased tickers (Count To): name -> displayed value / target / driving tween.
 var _tickers: Dictionary = {}
 var _ticker_targets: Dictionary = {}
 var _ticker_tweens: Dictionary = {}
+## Resolves the sprite the trail copies (host if it IS a sprite, else its first Sprite2D child),
+## cached at Start so it is not re-scanned every stamp. Null when the host has no sprite to trail.
+## @ace_hidden
+func _resolve_ghost_sprite() -> Node2D:
+	if host is Sprite2D or host is AnimatedSprite2D:
+		return host as Node2D
+	if host is Node2D:
+		for child in (host as Node2D).get_children():
+			if child is Sprite2D:
+				return child as Node2D
+	return null
 
 # The screen-FX overlay: one full-screen shader with three dials (vignette, chromatic
 # aberration, radial speed lines) built on first use, hidden whenever every dial is 0.
@@ -194,8 +213,13 @@ func _ready() -> void:
 		_base_scale = (host as Control).scale
 
 func _on_tree_exiting() -> void:
+	var __owned_time := _hitstop_active or (_slowmo_tween != null and is_instance_valid(_slowmo_tween) and _slowmo_tween.is_running())
 	_hitstop_active = false
-	clear_slowmo()
+	if _slowmo_tween != null and is_instance_valid(_slowmo_tween):
+		_slowmo_tween.kill()
+	_slowmo_tween = null
+	if __owned_time:
+		Engine.time_scale = 1.0
 
 func _process(delta: float) -> void:
 	# Effect STATE advances camera-or-not (headless-safe: trauma must decay and recoil must
@@ -215,12 +239,19 @@ func _process(delta: float) -> void:
 		_jitter_time += delta * shake_frequency
 	var cam: Camera2D = _camera()
 	if cam != null:
+		# The active camera changed while we were driving: return the OLD camera to the pose we found
+		# it in, and re-capture from the new one, so neither is left displaced.
+		if _cam_driving and _last_camera != null and is_instance_valid(_last_camera) and _last_camera != cam:
+			_last_camera.offset = _base_offset
+			_last_camera.rotation = _base_rotation
+			_cam_driving = false
 		# One mixer for every camera effect: all contributions sum around ONE captured rest pose,
 		# so shake + recoil + bob + jitter + tilt compose instead of fighting over the offset.
 		var cam_wants: bool = trauma > 0.0 or _bob_active or _jitter_active or _recoil_vec != Vector2.ZERO or absf(_tilt_roll) > 0.0001
 		if cam_wants:
 			if not _cam_driving:
 				_cam_driving = true
+				_last_camera = cam
 				_base_offset = cam.offset
 				_base_rotation = cam.rotation
 			var fx_offset: Vector2 = _recoil_vec
@@ -635,6 +666,7 @@ func kick_away_from(world_position: Vector2, strength: float) -> void:
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.start_ghost_trail({stamps_per_second}, {fade_seconds}, {tint})")
 func start_ghost_trail(stamps_per_second: float, fade_seconds: float, tint: Color) -> void:
+	_ghost_sprite = _resolve_ghost_sprite()
 	_trail_interval = 1.0 / maxf(stamps_per_second, 0.1)
 	_trail_fade = maxf(fade_seconds, 0.05)
 	_trail_tint = tint
@@ -892,13 +924,18 @@ func _finish_ticker(ticker_name: String) -> void:
 
 ## @ace_hidden
 func _stamp_ghost() -> void:
-	var source: Node2D = host as Node2D
-	if source == null or not is_inside_tree() or source.get_parent() == null:
+	var trail_host: Node2D = host as Node2D
+	if _ghost_sprite == null or not is_instance_valid(_ghost_sprite) or trail_host == null or not trail_host.is_inside_tree() or trail_host.get_parent() == null:
 		return
+	# Drop freed ghosts, then cap: free the oldest until there is room for one more.
+	_ghosts = _ghosts.filter(func(g: Variant) -> bool: return is_instance_valid(g))
+	while _ghosts.size() >= _MAX_GHOSTS:
+		var oldest: Node = _ghosts.pop_front()
+		if is_instance_valid(oldest):
+			oldest.queue_free()
 	var ghost: Sprite2D = Sprite2D.new()
-	var pose_source: Node2D = source
-	if source is Sprite2D:
-		var sprite: Sprite2D = source as Sprite2D
+	if _ghost_sprite is Sprite2D:
+		var sprite: Sprite2D = _ghost_sprite as Sprite2D
 		ghost.texture = sprite.texture
 		ghost.hframes = sprite.hframes
 		ghost.vframes = sprite.vframes
@@ -909,38 +946,26 @@ func _stamp_ghost() -> void:
 		ghost.flip_v = sprite.flip_v
 		ghost.centered = sprite.centered
 		ghost.offset = sprite.offset
-	elif source is AnimatedSprite2D:
-		var animated: AnimatedSprite2D = source as AnimatedSprite2D
+	elif _ghost_sprite is AnimatedSprite2D:
+		var animated: AnimatedSprite2D = _ghost_sprite as AnimatedSprite2D
 		if animated.sprite_frames == null:
+			ghost.queue_free()
 			return
 		ghost.texture = animated.sprite_frames.get_frame_texture(animated.animation, animated.frame)
 		ghost.flip_h = animated.flip_h
 		ghost.flip_v = animated.flip_v
 		ghost.centered = animated.centered
 		ghost.offset = animated.offset
-	else:
-		var body_sprite: Sprite2D = null
-		for child in source.get_children():
-			if child is Sprite2D:
-				body_sprite = child as Sprite2D
-				break
-		if body_sprite == null or body_sprite.texture == null:
-			return
-		ghost.texture = body_sprite.texture
-		ghost.hframes = body_sprite.hframes
-		ghost.vframes = body_sprite.vframes
-		ghost.frame = body_sprite.frame
-		ghost.flip_h = body_sprite.flip_h
-		ghost.flip_v = body_sprite.flip_v
-		ghost.centered = body_sprite.centered
-		ghost.offset = body_sprite.offset
-		pose_source = body_sprite
 	if ghost.texture == null:
+		ghost.queue_free()
 		return
 	ghost.modulate = _trail_tint
-	ghost.z_index = pose_source.z_index - 1
-	source.get_parent().add_child(ghost)
-	ghost.global_transform = pose_source.global_transform
+	ghost.z_index = _ghost_sprite.z_index - 1
+	# Parent to the host's parent (a sibling), NOT the sprite, so a ghost STAYS PUT as the host
+	# moves on - a trail behind it, positioned at the sprite's current world transform.
+	trail_host.get_parent().add_child(ghost)
+	ghost.global_transform = _ghost_sprite.global_transform
+	_ghosts.append(ghost)
 	var tw: Tween = ghost.create_tween()
 	tw.tween_property(ghost, "modulate:a", 0.0, maxf(_trail_fade, 0.05))
 	tw.finished.connect(ghost.queue_free)
