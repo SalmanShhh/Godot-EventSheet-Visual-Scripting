@@ -3099,10 +3099,12 @@ func _apply_property_drop(target_event: Resource, node_reference: String, proper
 
 
 ## Routes each dropped file through the EventSheets asset-drop seam (the built-in
-## handlers register there too - scenes spawn, sounds play, images set the texture,
-## JSON loads, resources/scripts preload). ACEActions land on the event row the file
-## hit, or open a fresh On Ready event on an empty-space drop; any other row resource
-## (the preload block) is a top-level declaration. One undo step either way.
+## handlers register there too - scenes spawn, sounds play, images and resources/scripts
+## preload, JSON loads into a variable). ACEActions land on the event row the file hit, or
+## open a fresh On Ready event on an empty-space drop; any other row resource (the preload
+## block) is a top-level declaration. One undo step either way. The generated sheet must
+## always compile, so an action that assigns to a variable auto-declares it, and a preload
+## const can never redefine an existing top-level name (deduped by path, suffixed on clash).
 func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -> void:
 	if not _ensure_sheet_for_editing():
 		return
@@ -3115,6 +3117,9 @@ func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -
 				continue
 			var built: Resource = build.call(asset_path, target_event)
 			if built is ACEAction:
+				# A dropped action can assign to a variable (Load JSON -> a variable); auto-declare
+				# any it names but the sheet doesn't have, so the generated script still compiles.
+				_ensure_action_variables_declared(built as ACEAction)
 				# The effect maps onto the ACTION lane: dropped on a row it joins that
 				# event; on empty space it starts a fresh On Ready event (shared by every
 				# action in this drop, so a multi-file drop reads as one event).
@@ -3125,8 +3130,13 @@ func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -
 					_current_sheet.events.append(event_target)
 				event_target.actions.append(built)
 				counters["added"] = int(counters["added"]) + 1
+			elif built is CustomBlockRow and (built as CustomBlockRow).kind_id == "preload":
+				# A preload declaration: skip an exact-path duplicate, and never let its const
+				# name redefine an existing declaration (suffix it), or the sheet won't compile.
+				if _adopt_preload_block(built as CustomBlockRow):
+					counters["added"] = int(counters["added"]) + 1
 			elif built != null:
-				# Non-action rows (preload blocks, ...) are declarations - top level.
+				# Any other declaration row - top level.
 				_current_sheet.events.append(built)
 				counters["added"] = int(counters["added"]) + 1
 		return int(counters["added"]) > 0)
@@ -3134,6 +3144,51 @@ func _apply_asset_drop(target_event: Resource, asset_paths: PackedStringArray) -
 		_mark_dirty("Added %d row(s) from the dropped asset(s)." % int(counters["added"]))
 	else:
 		_set_status("Nothing to add for that file type - drop scenes, sounds, images, JSON, or resources.", true)
+
+
+## Declares (as an internal Variant, null default) any variable an action ASSIGNS to via a
+## variable_reference param but the sheet doesn't already have - so a dropped Load JSON row
+## whose "data" target doesn't exist can't emit an assignment to an undeclared identifier.
+func _ensure_action_variables_declared(action: ACEAction) -> void:
+	var definition: ACEDefinition = _find_definition(action.provider_id, action.ace_id)
+	if definition == null:
+		return
+	for param: Dictionary in definition.parameters:
+		if not str(param.get("hint", "")).begins_with("variable_reference"):
+			continue
+		var var_name: String = str(action.params.get(str(param.get("id", "")), "")).strip_edges()
+		if var_name.is_empty() or not EventSheetIdentifierRules.is_valid(var_name):
+			continue
+		if not (_current_sheet.variables is Dictionary and (_current_sheet.variables as Dictionary).has(var_name)):
+			if not (_current_sheet.variables is Dictionary):
+				_current_sheet.variables = {}
+			_current_sheet.variables[var_name] = {"type": "Variant", "default": null, "exported": false}
+
+
+## Inserts a preload block unless the sheet already preloads that exact path (returns false,
+## nothing added); if only the const NAME collides with an existing top-level declaration, the
+## name is suffixed (_2, _3, ...) so `const X := preload(...)` can never be redefined.
+func _adopt_preload_block(block: CustomBlockRow) -> bool:
+	var path: String = str(block.fields.get("path", ""))
+	var taken_names: Dictionary = {}
+	for entry: Variant in _current_sheet.events:
+		if entry is CustomBlockRow and (entry as CustomBlockRow).kind_id == "preload":
+			if str((entry as CustomBlockRow).fields.get("path", "")) == path:
+				return false  # already preloaded - a second identical drop adds nothing
+			taken_names[str((entry as CustomBlockRow).fields.get("name", ""))] = true
+	if _current_sheet.variables is Dictionary:
+		for existing_name: Variant in (_current_sheet.variables as Dictionary).keys():
+			taken_names[str(existing_name)] = true
+	var base_name: String = str(block.fields.get("name", "Res"))
+	var unique_name: String = base_name
+	var suffix: int = 2
+	while taken_names.has(unique_name):
+		unique_name = "%s_%d" % [base_name, suffix]
+		suffix += 1
+	block.fields = block.fields.duplicate(true)
+	block.fields["name"] = unique_name
+	_current_sheet.events.append(block)
+	return true
 
 # ── .gd preview / open-in-Godot / lift report - delegates to EventSheetPreviewGlue ────────
 # The read-only .gd-preview banner, the "Edit Events" unlock, the glue that hands scripts/paths to

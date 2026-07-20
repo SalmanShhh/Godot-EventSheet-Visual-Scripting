@@ -988,10 +988,15 @@ static var _builtin_asset_drop_handlers_registered: bool = false
 ##     RawCodeRow, ...): inserted at the sheet's top level as a declaration;
 ##   - null to decline this file (the drop reports nothing was added).
 ## One handler per extension; last registration wins, so an extension can retarget a
-## built-in type. The built-in handlers (scenes spawn, sounds play, images set the
-## texture, JSON loads into a variable, resources/scripts preload) register through
-## this same seam.
+## built-in type. The built-in handlers (scenes spawn, sounds play, images and
+## resources/scripts preload, JSON loads into a variable) register through this same seam.
 static func register_asset_drop_handler(extensions: PackedStringArray, build: Callable, description: String = "") -> void:
+	# Register the built-ins FIRST so a caller retargeting a built-in extension lands AFTER
+	# them (last-wins). Without this, the built-ins registered lazily on the first drop and
+	# clobbered an extension's earlier registration - the exact opposite of the contract.
+	# Safe from recursion: _ensure sets its guard flag before its own register calls, so the
+	# nested calls short-circuit.
+	_ensure_builtin_asset_drop_handlers()
 	for extension: String in extensions:
 		_asset_drop_handlers[extension.to_lower().trim_prefix(".")] = {"build": build, "description": description}
 
@@ -1058,7 +1063,10 @@ static func _ensure_builtin_asset_drop_handlers() -> void:
 	register_asset_drop_handler(PackedStringArray(["tscn", "scn"]), _drop_build_spawn_scene, "Spawn the scene at a position")
 	register_asset_drop_handler(PackedStringArray(["ogg", "wav", "mp3"]), _drop_build_play_sound, "Play the sound")
 	register_asset_drop_handler(PackedStringArray(["json"]), _drop_build_load_json, "Load the JSON file into a variable")
-	register_asset_drop_handler(PackedStringArray(["png", "jpg", "jpeg", "webp", "svg", "bmp", "tga"]), _drop_build_set_texture, "Set the texture property")
+	# Images are Texture2D resources: a preload const compiles on ANY host and is referenceable,
+	# unlike a `self.texture = …` action that fails on a host with no texture member (Node, Node2D,
+	# CharacterBody2D, Control...) - which broke the whole sheet's compile.
+	register_asset_drop_handler(PackedStringArray(["png", "jpg", "jpeg", "webp", "svg", "bmp", "tga", "ktx", "exr"]), _drop_build_preload, "Preload the image as a constant")
 	register_asset_drop_handler(PackedStringArray(["tres", "res", "gd"]), _drop_build_preload, "Preload as a constant")
 
 
@@ -1072,10 +1080,6 @@ static func _drop_build_play_sound(asset_path: String, _target_event: Resource) 
 
 static func _drop_build_load_json(asset_path: String, _target_event: Resource) -> Resource:
 	return builtin_action("JsonLoadFile", {"var_name": "data", "path": ACEParamsDialog.format_quoted_literal(asset_path)})
-
-
-static func _drop_build_set_texture(asset_path: String, _target_event: Resource) -> Resource:
-	return builtin_action("SetProperty", {"target": "self", "property": "texture", "value": "load(%s)" % ACEParamsDialog.format_quoted_literal(asset_path)})
 
 
 static func _drop_build_preload(asset_path: String, _target_event: Resource) -> Resource:

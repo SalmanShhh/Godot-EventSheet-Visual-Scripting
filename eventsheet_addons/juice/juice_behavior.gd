@@ -972,6 +972,12 @@ func _ensure_fx_overlay() -> void:
 	fx_shader.code = _FX_SHADER
 	_fx_material = ShaderMaterial.new()
 	_fx_material.shader = fx_shader
+	# Seed every uniform so get_shader_parameter never returns null: reading an un-set uniform
+	# returns null (NOT the shader default), and _fx_update_visibility's float() would fault on it
+	# whenever only one of the three effects had been used.
+	_fx_material.set_shader_parameter("vignette_strength", 0.0)
+	_fx_material.set_shader_parameter("chroma_strength", 0.0)
+	_fx_material.set_shader_parameter("speed_lines", 0.0)
 	_fx_rect.material = _fx_material
 	_fx_rect.visible = false
 	_fx_layer.add_child(_fx_rect)

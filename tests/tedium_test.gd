@@ -274,16 +274,21 @@ static func run() -> bool:
 		and (drop_event.actions[1] as ACEAction).ace_id == "PlaySound", true) and all_passed
 	all_passed = _check("multi-line drop templates bake a fresh uid",
 		(drop_event.actions[0] as ACEAction).codegen_template.contains("{uid}"), false) and all_passed
-	# New handled types: an image becomes a Set Property (texture) action, JSON loads
-	# into a variable - the effect always maps onto the action lane.
-	restored_editor._apply_asset_drop(drop_event, PackedStringArray(["res://hero.png", "res://waves.json"]))
-	all_passed = _check("an image drop sets the texture property",
-		drop_event.actions.size() == 4
-		and (drop_event.actions[2] as ACEAction).ace_id == "SetProperty"
-		and str((drop_event.actions[2] as ACEAction).params.get("property")) == "texture"
-		and str((drop_event.actions[2] as ACEAction).params.get("value")) == "load(\"res://hero.png\")", true) and all_passed
-	all_passed = _check("a JSON drop loads it into a variable",
-		(drop_event.actions[3] as ACEAction).ace_id, "JsonLoadFile") and all_passed
+	# An image drop is a PRELOAD block (a Texture2D const compiles on any host - a `self.texture`
+	# action would break the sheet's compile on a host with no texture member). JSON loads into a
+	# variable AND auto-declares it so the generated script always compiles.
+	restored_editor._apply_asset_drop(drop_event, PackedStringArray(["res://waves.json"]))
+	all_passed = _check("a JSON drop loads it into a variable (action lane)",
+		drop_event.actions.size() == 3 and (drop_event.actions[2] as ACEAction).ace_id == "JsonLoadFile", true) and all_passed
+	all_passed = _check("the JSON target variable is auto-declared so the sheet compiles",
+		(restored_editor._current_sheet.variables as Dictionary).has("data"), true) and all_passed
+	restored_editor._apply_asset_drop(null, PackedStringArray(["res://hero.png"]))
+	var image_row: CustomBlockRow = restored_editor._current_sheet.events.back() as CustomBlockRow
+	all_passed = _check("an image drop becomes a preload block (compiles on any host)",
+		image_row != null and image_row.kind_id == "preload" and str(image_row.fields.get("path", "")) == "res://hero.png", true) and all_passed
+	# The whole sheet must actually COMPILE after these drops (the bug was non-compiling output).
+	all_passed = _check("the sheet with dropped rows compiles",
+		bool(SheetCompiler.compile(restored_editor._current_sheet, "user://drop_compile.gd").get("success", false)), true) and all_passed
 	# Empty-space drops start a fresh On Ready event instead of bouncing with a hint.
 	var events_before: int = restored_editor._current_sheet.events.size()
 	restored_editor._apply_asset_drop(null, PackedStringArray(["res://x.tscn"]))
@@ -293,7 +298,7 @@ static func run() -> bool:
 		and fresh_event != null and fresh_event.trigger_id == "OnReady"
 		and fresh_event.actions.size() == 1 and (fresh_event.actions[0] as ACEAction).ace_id == "SpawnSceneAt", true) and all_passed
 	all_passed = _check("the row it was NOT dropped on is untouched",
-		drop_event.actions.size(), 4) and all_passed
+		drop_event.actions.size(), 3) and all_passed
 	# A resource/script drop is a DECLARATION: a preload Custom Block row at top level
 	# (the drop seam dogfoods the Custom Block API's preload kind).
 	restored_editor._apply_asset_drop(null, PackedStringArray(["res://loot_table.tres"]))
@@ -304,6 +309,18 @@ static func run() -> bool:
 		and str(preload_row.fields.get("path", "")) == "res://loot_table.tres", true) and all_passed
 	all_passed = _check("preload constant names survive hostile filenames",
 		str(EventSheets.preload_block_for("res://3d mesh!.tres").fields.get("name", "")).begins_with("Res3"), true) and all_passed
+	# Duplicate-safety: the SAME path dropped twice adds nothing (no redefined const); a DIFFERENT
+	# path whose basename collides gets a suffixed const name so the sheet still compiles.
+	var before_dup: int = restored_editor._current_sheet.events.size()
+	restored_editor._apply_asset_drop(null, PackedStringArray(["res://loot_table.tres"]))
+	all_passed = _check("re-dropping the same resource adds no duplicate preload",
+		restored_editor._current_sheet.events.size(), before_dup) and all_passed
+	restored_editor._apply_asset_drop(null, PackedStringArray(["res://other/loot_table.tres"]))
+	var dup_name_row: CustomBlockRow = restored_editor._current_sheet.events.back() as CustomBlockRow
+	all_passed = _check("a same-named different-path resource gets a suffixed const",
+		dup_name_row != null and str(dup_name_row.fields.get("name", "")) == "LootTable_2", true) and all_passed
+	all_passed = _check("the sheet still compiles after the collision-suffixed preloads",
+		bool(SheetCompiler.compile(restored_editor._current_sheet, "user://drop_dedup.gd").get("success", false)), true) and all_passed
 	# The extension seam itself: registering a handler makes a new extension droppable
 	# and its row lands top-level like any declaration.
 	EventSheets.register_asset_drop_handler(PackedStringArray(["txt"]), _drop_note_row, "Reference the note")
@@ -314,6 +331,20 @@ static func run() -> bool:
 	all_passed = _check("a custom handler's row lands on the sheet",
 		note_row != null and note_row.code.contains("res://notes.txt"), true) and all_passed
 	EventSheets._asset_drop_handlers.erase("txt")  # leave no session-wide residue for later tests
+	# Registration-order safety: a handler that RETARGETS a built-in extension must win, even when it
+	# registers before the built-ins have lazily loaded. Reset the registry to that cold state.
+	var saved_handlers: Dictionary = EventSheets._asset_drop_handlers.duplicate(true)
+	var saved_flag: bool = EventSheets._builtin_asset_drop_handlers_registered
+	EventSheets._asset_drop_handlers = {}
+	EventSheets._builtin_asset_drop_handlers_registered = false
+	EventSheets.register_asset_drop_handler(PackedStringArray(["png"]), _drop_note_row, "custom png")
+	# The custom handler returns a RawCodeRow; the built-in png handler returns a preload block.
+	# If registration order is honoured, png resolves to the CUSTOM one.
+	var png_built: Variant = EventSheets.asset_drop_builder_for("png").call("res://p.png", null)
+	all_passed = _check("a retargeting handler wins over the lazily-registered built-in",
+		png_built is RawCodeRow, true) and all_passed
+	EventSheets._asset_drop_handlers = saved_handlers
+	EventSheets._builtin_asset_drop_handlers_registered = saved_flag
 	restored_editor.free()
 	DirAccess.remove_absolute("user://session_a.tres")
 	DirAccess.remove_absolute("user://eventsheets_session.cfg")

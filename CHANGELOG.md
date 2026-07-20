@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Fixed - review findings on the new features
+
+- **Screen-FX kit no longer faults on single-effect use** (Juice / Juice 3D): a shader
+  uniform read back before it was ever set returns `null` (not the shader default), and
+  the visibility check's `float(null)` faulted - so using only Pulse Vignette, or only Set
+  Speed Lines, errored (the overlay stuck or the effect never showed). Every uniform is now
+  seeded to 0 when the overlay is built. Verified in a live tree.
+- **Canvas drops always produce a compiling sheet**: an image drop now becomes a preload
+  block (a Texture2D `const` that compiles on any host) instead of a `self.texture = …`
+  action that broke sheets whose host has no texture member; a JSON drop auto-declares the
+  variable it loads into; a dropped preload can never redefine an existing top-level name
+  (deduped by path, suffixed on clash); and `register_asset_drop_handler` registers the
+  built-ins first so retargeting a built-in extension actually wins.
+
 ### Changed - grouped exports collapse into clean Inspector folds
 
 - Variables that share a group (or subgroup / category) now emit CONTIGUOUSLY with their
