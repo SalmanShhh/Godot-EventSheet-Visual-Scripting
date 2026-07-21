@@ -216,6 +216,13 @@ var _external_span_edit_handler_enabled: bool = false
 var _zoom_factor: float = 1.0
 var _layout_style_signature: String = ""
 var _dragging_lane_divider: bool = false
+# The full-sheet DIVIDER GUIDE (the Construct cue): the logical X of the column boundary under the
+# pointer, or the one being dragged. Negative = none. A per-row divider only ever paints inside its own
+# row band, so a boundary reads as a broken, dashed hint and the object-column boundary has no resting
+# line at all - this draws ONE continuous line through the whole sheet instead, faint while hovering
+# (so a grabbable boundary is discoverable) and solid while dragging (so the landing spot is exact).
+var _divider_guide_x: float = -1.0
+var _divider_guide_dragging: bool = false
 # C3-style object-column resize: dragging the gap between an object name and its display text
 # sets the lane's fixed object-column width ("condition"/"action"; "" = not dragging). The
 # anchor is where the column starts (span x + icon advance) so width = cursor x - anchor.
@@ -608,7 +615,8 @@ func object_column_boundary_hit(local_position: Vector2) -> Dictionary:
 		boundary_x += font.get_string_size(str(metadata.get("object_label", "")) + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, _span_draw_font_size(span, font_size)).x
 	if absf(local_position.x - boundary_x) > LANE_DIVIDER_GRAB_TOLERANCE:
 		return {}
-	return {"lane": lane, "anchor_x": anchor_x}
+	# boundary_x rides along so the hover guide can draw ON the boundary rather than under the cursor.
+	return {"lane": lane, "anchor_x": anchor_x, "boundary_x": boundary_x}
 
 
 ## Live object-column resize during the drag: width follows the cursor (clamped so the label
@@ -623,6 +631,8 @@ func _set_object_column_width_from_x(local_x: float) -> void:
 		event_style.condition_object_column_width = width
 	else:
 		event_style.action_object_column_width = width
+	# On the CLAMPED boundary, not the cursor, so the guide stops where the column stops.
+	set_divider_guide(_object_column_drag_anchor_x + float(width), true)
 	_update_layout_style_signature(_get_font_size())
 	_layout_cache.clear()
 	queue_redraw()
@@ -632,9 +642,27 @@ func _set_lane_ratio_from_x(local_x: float) -> void:
 	var content_left: float = EventSheetPalette.GUTTER_WIDTH
 	var content_width: float = max(_get_logical_canvas_width() - content_left, 120.0)
 	_get_event_style().condition_lane_ratio = clampf((local_x - content_left) / content_width, 0.2, 0.8)
+	# The guide follows the CLAMPED divider, not the raw cursor, so it stops where the lane actually
+	# stops instead of sliding on past the 20%/80% limit.
+	set_divider_guide(get_lane_divider_x(_get_logical_canvas_width()), true)
 	_update_layout_style_signature(_get_font_size())
 	_layout_cache.clear()
 	queue_redraw()
+
+
+## Positions the full-sheet divider guide. `dragging` paints it solid (a commitment to where the
+## boundary lands); otherwise it is the faint hover cue that the boundary can be grabbed at all.
+## Redraws only on an actual change, so plain mouse motion never thrashes the canvas.
+func set_divider_guide(guide_x: float, dragging: bool) -> void:
+	if is_equal_approx(_divider_guide_x, guide_x) and _divider_guide_dragging == dragging:
+		return
+	_divider_guide_x = guide_x
+	_divider_guide_dragging = dragging
+	queue_redraw()
+
+
+func clear_divider_guide() -> void:
+	set_divider_guide(-1.0, false)
 
 
 ## Swaps the active editor style and repaints without rebuilding the row list (cheap). Used
@@ -1452,8 +1480,34 @@ func _draw() -> void:
 	_draw_variable_group_bubbles(width)
 	_draw_region_bubbles(width)
 	_draw_box_selection_overlay()
+	_draw_divider_guide(width)
 	_draw_param_cursor(font, font_size)
 	_draw_drag_ghost(font, font_size)
+
+
+## The full-sheet DIVIDER GUIDE: one continuous vertical line at the column boundary under the pointer,
+## or the one being dragged - the Construct cue. Per-row dividers only paint inside their own row band,
+## so a boundary reads as a broken dashed hint, and the object-column boundary draws nothing at all at
+## rest; a single line spanning the whole canvas makes it obvious where the split IS and where a drag
+## will leave it. Faint while hovering (discoverable, not loud), solid and wider while dragging, with a
+## soft halo so it stays readable over both lane fills. Drawn over the rows, under the drag ghost.
+func _draw_divider_guide(width: float) -> void:
+	if _divider_guide_x < 0.0 or _divider_guide_x > width:
+		return
+	var accent: Color = _get_event_style().behavior_accent_color
+	# Span the taller of the viewport and the content, so the line reaches the bottom on a short sheet
+	# AND stays full-height while scrolled through a long one.
+	var height: float = maxf(size.y / max(_zoom_factor, 0.001), _row_metrics_helper.total_height())
+	var line_width: float = 2.0 if _divider_guide_dragging else 1.0
+	var line_alpha: float = 0.9 if _divider_guide_dragging else 0.4
+	if _divider_guide_dragging:
+		draw_rect(Rect2(_divider_guide_x - 3.0, 0.0, 6.0, height), Color(accent.r, accent.g, accent.b, 0.14), true)
+	draw_line(
+		Vector2(_divider_guide_x, 0.0),
+		Vector2(_divider_guide_x, height),
+		Color(accent.r, accent.g, accent.b, line_alpha),
+		line_width
+	)
 
 
 ## The variable-folder bubbles: one rounded outline + soft tint around each run of consecutive
