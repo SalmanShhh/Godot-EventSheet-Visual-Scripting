@@ -18,6 +18,10 @@
 - Every party (group, signal, handler) stays a visible literal on the row, so the wiring is
   greppable and traceable to a named group - decoupling the *reference*, not the visibility (no
   global event bus, no spooky-action-at-a-distance). See `docs/GUIDE-COMPOSITION-SYSTEMS.md`.
+- The **Follow** pack can target a **group** instead of a path: a new `target_group` export (and a
+  **Follow Group** verb) resolves the target with `get_first_node_in_group`, so a follower survives
+  its target being moved or renamed. The group wins when set; Start Following clears it, so the two
+  targeting modes stay predictable. (Line Of Sight already worked this way - Follow now matches.)
 - **Connect Signal (if not already)** / **Connect Signal (one-shot)**: plain Connect Signal is not
   idempotent - re-running it stacks a second handler and the response fires twice (the classic "my
   handler runs 40 times" bug). The first guards on `is_connected`, the second connects with

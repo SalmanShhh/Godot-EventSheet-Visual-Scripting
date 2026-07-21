@@ -30,17 +30,26 @@ var history: Array = []
 @export var min_distance: float = 0.0
 ## smooth lerps toward the target each frame; delayed replays the target's past positions.
 @export_enum("smooth", "delayed") var mode: String = "smooth"
+## Follow the first node in this GROUP instead of a path - no tree path, so it survives the target being moved or renamed. Takes priority over Target Path; leave blank to use the path.
+@export var target_group: String = ""
 ## Node path (relative to the host) of the node to follow; empty means idle.
 @export var target_path: String = ""
 
 func _process(delta: float) -> void:
-	if host == null or target_path == "":
+	if host == null:
 		return
-	var target := host.get_node_or_null(NodePath(target_path))
+	# Resolve by GROUP first (no tree path, so it survives the target being moved or renamed),
+	# otherwise fall back to the explicit path.
+	var target: Node = null
+	if target_group != "":
+		target = get_tree().get_first_node_in_group(target_group)
+	elif target_path != "":
+		target = host.get_node_or_null(NodePath(target_path))
 	if not (target is Node2D):
 		return
+	var target_2d := target as Node2D
 	clock += delta
-	history.append([clock, target.position])
+	history.append([clock, target_2d.position])
 	while history.size() > 2 and float(history[0][0]) < clock - delay - 1.0:
 		history.pop_front()
 	if not following:
@@ -52,13 +61,13 @@ func _process(delta: float) -> void:
 				host.position = entry[1]
 				break
 		return
-	if host.position.distance_to(target.position) <= min_distance:
+	if host.position.distance_to(target_2d.position) <= min_distance:
 		if not _reached:
 			_reached = true
 			reached_target.emit()
 		return
 	_reached = false
-	host.position = host.position.lerp(target.position, clampf(follow_speed * delta, 0.0, 1.0))
+	host.position = host.position.lerp(target_2d.position, clampf(follow_speed * delta, 0.0, 1.0))
 
 ## @ace_action
 ## @ace_name("Start Following")
@@ -68,6 +77,19 @@ func _process(delta: float) -> void:
 ## @ace_codegen_template("$FollowBehavior.start_following({path})")
 func start_following(path: String) -> void:
 	target_path = path
+	target_group = ""
+	following = true
+	history = []
+
+## @ace_action
+## @ace_name("Follow Group")
+## @ace_category("Follow")
+## @ace_description("Follows the first node in a group - no tree path, so it survives the target being moved or renamed.")
+## @ace_icon("res://eventsheet_addons/follow/icon.svg")
+## @ace_codegen_template("$FollowBehavior.follow_group({group})")
+func follow_group(group: String) -> void:
+	target_group = group
+	target_path = ""
 	following = true
 	history = []
 

@@ -15,6 +15,7 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"target_path": {"type": "String", "default": "", "exported": true, "description": "Node path (relative to the host) of the node to follow; empty means idle."},
+		"target_group": {"type": "String", "default": "", "exported": true, "description": "Follow the first node in this GROUP instead of a path - no tree path, so it survives the target being moved or renamed. Takes priority over Target Path; leave blank to use the path."},
 		"mode": {"type": "String", "default": "smooth", "exported": true, "options": ["smooth", "delayed"], "description": "smooth lerps toward the target each frame; delayed replays the target's past positions."},
 		"follow_speed": {"type": "float", "default": 5.0, "exported": true, "description": "In smooth mode, how quickly the host chases the target each second (higher is snappier)."},
 		"delay": {"type": "float", "default": 0.4, "exported": true, "description": "In delayed mode, how many seconds behind the target's recorded path the host trails."},
@@ -39,31 +40,38 @@ static func build() -> bool:
 	tick.trigger_id = "OnProcess"
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
-		"if host == null or target_path == \"\":",
-		"\treturn",
-		"var target := host.get_node_or_null(NodePath(target_path))",
+		"if host == null:",
+		"	return",
+		"# Resolve by GROUP first (no tree path, so it survives the target being moved or renamed),",
+		"# otherwise fall back to the explicit path.",
+		"var target: Node = null",
+		"if target_group != \"\":",
+		"	target = get_tree().get_first_node_in_group(target_group)",
+		"elif target_path != \"\":",
+		"	target = host.get_node_or_null(NodePath(target_path))",
 		"if not (target is Node2D):",
-		"\treturn",
+		"	return",
+		"var target_2d := target as Node2D",
 		"clock += delta",
-		"history.append([clock, target.position])",
+		"history.append([clock, target_2d.position])",
 		"while history.size() > 2 and float(history[0][0]) < clock - delay - 1.0:",
-		"\thistory.pop_front()",
+		"	history.pop_front()",
 		"if not following:",
-		"\treturn",
+		"	return",
 		"if mode == \"delayed\":",
-		"\tvar sample_time := clock - delay",
-		"\tfor entry: Array in history:",
-		"\t\tif float(entry[0]) >= sample_time:",
-		"\t\t\thost.position = entry[1]",
-		"\t\t\tbreak",
-		"\treturn",
-		"if host.position.distance_to(target.position) <= min_distance:",
-		"\tif not _reached:",
-		"\t\t_reached = true",
-		"\t\treached_target.emit()",
-		"\treturn",
+		"	var sample_time := clock - delay",
+		"	for entry: Array in history:",
+		"		if float(entry[0]) >= sample_time:",
+		"			host.position = entry[1]",
+		"			break",
+		"	return",
+		"if host.position.distance_to(target_2d.position) <= min_distance:",
+		"	if not _reached:",
+		"		_reached = true",
+		"		reached_target.emit()",
+		"	return",
 		"_reached = false",
-		"host.position = host.position.lerp(target.position, clampf(follow_speed * delta, 0.0, 1.0))"
+		"host.position = host.position.lerp(target_2d.position, clampf(follow_speed * delta, 0.0, 1.0))"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
@@ -81,11 +89,33 @@ static func build() -> bool:
 	var start_following_fn_body: RawCodeRow = RawCodeRow.new()
 	start_following_fn_body.code = "\n".join(PackedStringArray([
 		"target_path = path",
+			"target_group = \"\"",
 		"following = true",
 		"history = []"
 	]))
 	start_following_fn.events.append(start_following_fn_body)
 	sheet.functions.append(start_following_fn)
+
+	var follow_group_fn: EventFunction = EventFunction.new()
+	follow_group_fn.function_name = "follow_group"
+	follow_group_fn.expose_as_ace = true
+	follow_group_fn.ace_display_name = "Follow Group"
+	follow_group_fn.ace_category = "Follow"
+	follow_group_fn.description = "Follows the first node in a group - no tree path, so it survives the target being moved or renamed."
+	var follow_group_fn_group: ACEParam = ACEParam.new()
+	follow_group_fn_group.id = "group"
+	follow_group_fn_group.type_name = "String"
+	follow_group_fn.params.append(follow_group_fn_group)
+	var follow_group_fn_body: RawCodeRow = RawCodeRow.new()
+	follow_group_fn_body.code = "
+".join(PackedStringArray([
+		"target_group = group",
+		"target_path = \"\"",
+		"following = true",
+		"history = []"
+	]))
+	follow_group_fn.events.append(follow_group_fn_body)
+	sheet.functions.append(follow_group_fn)
 
 	var stop_following_fn: EventFunction = EventFunction.new()
 	stop_following_fn.function_name = "stop_following"
