@@ -124,7 +124,9 @@ func verb_definition_tooltip(event_function: EventFunction) -> String:
 	var title: String = event_function.ace_display_name.strip_edges()
 	if title.is_empty():
 		title = event_function.function_name.capitalize()
-	lines.append(title)
+	var category: String = event_function.ace_category.strip_edges()
+	# The category is not on the row (a pack files every verb under the same one), so it reads here.
+	lines.append("%s  ·  %s" % [title, category] if not category.is_empty() else title)
 	var description: String = event_function.description.strip_edges()
 	if description.is_empty():
 		description = event_function.doc_comment.strip_edges()

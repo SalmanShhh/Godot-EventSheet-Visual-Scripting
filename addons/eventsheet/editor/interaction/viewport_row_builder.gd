@@ -587,14 +587,12 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"text_color": name_color
 		}))
 		condition_lines = _append_define_param_spans(spans, event_function, 0) + 1
-	# The ACTION lane answers "and what do I get back?": the category the verb is filed under, the value it
-	# hands over (a Condition answers a question and an Expression yields a value, so the type shows as a
-	# "gives back Type" chip - a void Action returns nothing and shows none), then the markers that change
-	# how it is CALLED (waits = async) or who may call it (internal = not published as an ACE).
-	if not event_function.ace_category.strip_edges().is_empty():
-		spans.append(_define_chip(
-			event_function.ace_category.strip_edges(),
-			EventSheetPalette.COLOR_CAT_CHIP_BG, EventSheetPalette.COLOR_CAT_CHIP_FG, 0))
+	# The ACTION lane answers "and what do I get back?": the value it hands over (a Condition answers a
+	# question and an Expression yields a value, so the type shows as a "gives back Type" chip - a void
+	# Action returns nothing and shows none), then the markers that change how it is CALLED (waits =
+	# async) or who may call it (internal = not published as an ACE).
+	# The CATEGORY is deliberately NOT drawn: a pack files every one of its verbs under the same category,
+	# so the chip repeated the identical word down the whole sheet. It lives in the hover instead.
 	if role != "action":
 		spans.append(_define_chip(
 			"gives back %s" % _friendly_return_type(event_function),

@@ -48,7 +48,9 @@ static func run() -> bool:
 	var internal_row: EventRowData = define_rows[3] if define_rows.size() > 3 else null
 	ok = _check("action badge", _span_text(action_row, 0), "Action") and ok
 	ok = _check("display name prefers @ace_name", _span_text(action_row, 1), "Take Damage") and ok
-	ok = _check("category chip rides along", _row_has_span_text(action_row, "Health"), true) and ok
+	# The category is NOT on the row: a pack files every verb under the same one, so the chip repeated
+	# the identical word down the whole sheet. It reads in the hover instead.
+	ok = _check("the category is not repeated on every row", _row_has_span_text(action_row, "Health"), false) and ok
 	ok = _check("a void action gives nothing back (no return chip)", _row_has_span_text(condition_row, "gives back yes/no") and not _row_has_span_text(action_row, "gives back"), true) and ok
 	ok = _check("condition badge", _span_text(condition_row, 0), "Condition") and ok
 	ok = _check("condition name falls back to the humanized function name", _span_text(condition_row, 1), "Is Dead") and ok
@@ -89,7 +91,6 @@ static func run() -> bool:
 	ok = _check("the role badge sits in the CONDITION lane", _span_lane(action_row, 0), "condition") and ok
 	ok = _check("the verb's name sits in the CONDITION lane", _span_lane(action_row, 1), "condition") and ok
 	ok = _check("its typed input sits in the CONDITION lane too", _lane_of_span_text(action_row, "amount"), "condition") and ok
-	ok = _check("the category chip crosses to the ACTION lane", _lane_of_span_text(action_row, "Health"), "action") and ok
 	ok = _check("the return chip crosses to the ACTION lane", _lane_of_span_text(condition_row, "gives back yes/no"), "action") and ok
 	ok = _check("the 'internal' marker crosses to the ACTION lane", _lane_of_span_text(internal_row, "internal"), "action") and ok
 	# The role badge is a WORD ("Condition"), not the single glyph a condition row's badge column is

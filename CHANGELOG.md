@@ -21,6 +21,9 @@
 - Multi-input verbs stack one input per line (with ` = default` and `one of (…)` choices) instead of
   running off the row; hovering a verb shows its full declaration - name, description, and every
   parameter's type, default and blurb - since a long name clips inside the lane.
+- The **category chip is no longer drawn on the verb row**. A pack files every one of its verbs under
+  the same category, so the chip repeated the identical word down the entire sheet. It reads in the
+  hover instead, beside the verb's name.
 - **A verb's body is open on sight.** Verbs used to render collapsed behind a "double-click to open"
   hint, so a pack still read as a list of headings. They now open by default - the steps are the
   point. A verb nested inside a group or a `#region` stays folded, since the enclosing block owns the
