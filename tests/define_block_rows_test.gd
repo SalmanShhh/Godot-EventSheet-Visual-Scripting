@@ -66,8 +66,17 @@ static func run() -> bool:
 	# ── The readable verb line: reads like an event-sheet action - the verb name plus first-class typed
 	# parameter chips (`name : friendly-type`), no raw signature. An authored @ace_display_template fills
 	# its slots with the friendly labels instead (a Define row shows the verb's shape, not call-site values).
-	ok = _check("params render as first-class typed chips (name : friendly-type)",
-		_row_has_span_text(action_row, "amount") and _row_has_span_text(action_row, " : number"), true) and ok
+	# Each parameter is its OWN cell, built with the condition-cell grammar: the parameter's NAME is the
+	# cell's object_label (the bold lead a condition uses for its object) and the cell text is what the
+	# parameter accepts. Clicking one opens the verb's dialog focused on that parameter.
+	ok = _check("a parameter renders as a cell whose text is what it accepts",
+		_row_has_span_text(action_row, "number"), true) and ok
+	ok = _check("the parameter's name leads the cell as its object label",
+		_span_meta_of_kind(action_row, "verb_param", "object_label"), "amount") and ok
+	ok = _check("a parameter cell is a filled chip, like a condition cell",
+		_span_meta_of_kind(action_row, "verb_param", "chip"), true) and ok
+	ok = _check("the cell carries its parameter index, so a click knows which one to open",
+		_span_meta_of_kind(action_row, "verb_param", "param_index"), 0) and ok
 	ok = _check("params humanize the id (underscores open out)",
 		ViewportRowBuilder.friendly_param_labels(_two_param_function()), "from x, to x") and ok
 	# GDScript types read as plain words so a non-coder learns what each input is.
@@ -90,7 +99,7 @@ static func run() -> bool:
 		action_row.row_type if action_row != null else -1, EventRowData.RowType.EVENT) and ok
 	ok = _check("the role badge sits in the CONDITION lane", _span_lane(action_row, 0), "condition") and ok
 	ok = _check("the verb's name sits in the CONDITION lane", _span_lane(action_row, 1), "condition") and ok
-	ok = _check("its typed input sits in the CONDITION lane too", _lane_of_span_text(action_row, "amount"), "condition") and ok
+	ok = _check("its typed input sits in the CONDITION lane too", _lane_of_span_text(action_row, "number"), "condition") and ok
 	ok = _check("the return chip crosses to the ACTION lane", _lane_of_span_text(condition_row, "gives back yes/no"), "action") and ok
 	ok = _check("the 'internal' marker crosses to the ACTION lane", _lane_of_span_text(internal_row, "internal"), "action") and ok
 	# The role badge is a WORD ("Condition"), not the single glyph a condition row's badge column is
@@ -472,6 +481,18 @@ static func _lane_of_span_text(row_data: EventRowData, needle: String) -> String
 		if str(row_data.spans[index].text) == needle:
 			return _span_lane(row_data, index)
 	return ""
+
+
+## A metadata value off the first span of the given kind - how the param cells are inspected, since
+## their identity lives in metadata (object_label / param_index), not in the drawn text.
+static func _span_meta_of_kind(row_data: EventRowData, kind: String, key: String) -> Variant:
+	if row_data == null:
+		return null
+	for span: SemanticSpan in row_data.spans:
+		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		if str(metadata.get("kind", "")) == kind:
+			return metadata.get(key, null)
+	return null
 
 
 static func _span_meta(row_data: EventRowData, index: int, key: String) -> Variant:

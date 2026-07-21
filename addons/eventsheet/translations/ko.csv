@@ -113,6 +113,7 @@ Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints
 Toggle Live Values: running sheets stream their variables here (editable).,실시간 값을 켜고 끕니다: 실행 중인 시트의 변수가 여기로 스트리밍됩니다 (편집 가능).
 + Add action,+ 액션 추가
 + Add condition,+ 조건 추가
++ Add parameter,+ 매개변수 추가
 + Add event…,+ 이벤트 추가…
 Every Tick,매 틱마다
 Always,항상

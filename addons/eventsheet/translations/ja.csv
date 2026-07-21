@@ -113,6 +113,7 @@ Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints
 Toggle Live Values: running sheets stream their variables here (editable).,ライブ値を切り替えます: 実行中のシートの変数がここにストリーム表示されます (編集可能)。
 + Add action,+ アクションを追加
 + Add condition,+ 条件を追加
++ Add parameter,+ パラメータを追加
 + Add event…,+ イベントを追加…
 Every Tick,毎ティック
 Always,常に

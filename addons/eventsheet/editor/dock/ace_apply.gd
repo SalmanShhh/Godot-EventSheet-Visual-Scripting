@@ -79,7 +79,21 @@ func _on_viewport_ace_picker_requested(row_data: EventRowData, lane: String) -> 
 
 
 func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, metadata: Dictionary) -> void:
-	if row_data == null or not (row_data.source_resource is EventRow):
+	if row_data == null:
+		return
+	# A published verb's parameter cell: a parameter belongs to the verb's DEFINITION, so it opens the
+	# verb's own dialog (focused on that parameter, or on a fresh one) instead of the ACE params editor,
+	# which edits a CALL SITE. Checked before the EventRow gate - a verb row carries an EventFunction.
+	var verb_kind: String = str(metadata.get("kind", ""))
+	if verb_kind in ["verb_param", "verb_param_add"] and row_data.source_resource is EventFunction:
+		if verb_kind == "verb_param_add":
+			_dock._function_dialog_glue._open_function_dialog_add_param(row_data.source_resource)
+		else:
+			_dock._function_dialog_glue._open_function_dialog_for_param(
+				row_data.source_resource, int(metadata.get("param_index", -1))
+			)
+		return
+	if not (row_data.source_resource is EventRow):
 		return
 	var event_row: EventRow = row_data.source_resource as EventRow
 	# Action-cell comments edit in the comment dialog, not the ACE editor.

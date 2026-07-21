@@ -18,6 +18,13 @@
   read back-to-front against its own `.gd`. The canvas now mirrors the compiler exactly: the sheet's
   events first, a mid-file function spliced in at its own anchor slot, then the remaining verbs in
   `sheet.functions` order.
+- **A verb's parameters are real cells now**, built with the same grammar a condition cell uses: a
+  filled chip whose object label is the parameter's name and whose text is what it accepts
+  (`id  text`, `seconds  number`, `reset instantly  yes/no`), one per line. Clicking a parameter cell
+  opens the verb's own dialog focused on THAT parameter - the same "click the thing you want to
+  change" gesture a condition cell gives you. On a sheet whose verbs are authored locally, a faint
+  `+ Add parameter` cell closes the loop; an opened pack stays a read view and keeps its right-click
+  `Edit Verb…` route instead.
 - Multi-input verbs stack one input per line (with ` = default` and `one of (…)` choices) instead of
   running off the row; hovering a verb shows its full declaration - name, description, and every
   parameter's type, default and blurb - since a long name clips inside the lane.

@@ -289,6 +289,21 @@ func open_for_edit(event_function: EventFunction) -> void:
 	_refresh_studio()
 
 
+## Canvas entry point: clicking a verb row's parameter CELL opens the verb here with THAT parameter's
+## name field focused - the cell behaves like a condition cell, where clicking the thing you want to
+## change lands you in its editor. An out-of-range index just opens the verb unfocused.
+func open_for_edit_focus_param(event_function: EventFunction, param_index: int) -> void:
+	open_for_edit(event_function)
+	if param_index < 0 or param_index >= _params_box.get_child_count():
+		return
+	var row: Node = _params_box.get_child(param_index)
+	if row.get_child_count() > 0 and row.get_child(0) is LineEdit:
+		var name_field: LineEdit = row.get_child(0) as LineEdit
+		# The dialog is still popping up this frame; defer so focus lands after layout settles.
+		name_field.call_deferred("grab_focus")
+		name_field.call_deferred("select_all")
+
+
 ## Right-click ▸ "Add Parameter" entry point: opens the verb for editing, then appends a fresh
 ## parameter row and focuses its name field - so the whole "add an argument" gesture is a single
 ## right-click, and the user lands typing the new param's name (Name/Type/Default/Description follow).

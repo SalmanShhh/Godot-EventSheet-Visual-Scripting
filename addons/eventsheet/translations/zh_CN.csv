@@ -113,6 +113,7 @@ Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints
 Toggle Live Values: running sheets stream their variables here (editable).,切换实时值：运行中的事件表会将其变量实时显示在此处（可编辑）。
 + Add action,+ 添加动作
 + Add condition,+ 添加条件
++ Add parameter,+ 添加参数
 + Add event…,+ 添加事件…
 Every Tick,每帧
 Always,总是

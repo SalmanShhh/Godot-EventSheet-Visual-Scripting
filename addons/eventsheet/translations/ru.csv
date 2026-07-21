@@ -113,6 +113,7 @@ Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints
 Toggle Live Values: running sheets stream their variables here (editable).,Переключить живые значения: работающие листы передают сюда свои переменные (можно редактировать).
 + Add action,+ Добавить действие
 + Add condition,+ Добавить условие
++ Add parameter,+ Добавить параметр
 + Add event…,+ Добавить событие…
 Every Tick,Каждый тик
 Always,Всегда

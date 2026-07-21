@@ -74,6 +74,16 @@ func _open_function_dialog_add_param(event_function: Resource) -> void:
 	_function_dialog.open_for_edit_focus_new_param(event_function as EventFunction)
 
 
+## Click on a verb row's parameter CELL: the same edit dialog, pre-focused on THAT parameter, so a
+## parameter cell behaves like a condition cell - click the thing you want to change, land in its editor.
+func _open_function_dialog_for_param(event_function: Resource, param_index: int) -> void:
+	if not (event_function is EventFunction) or _dock._current_sheet == null:
+		return
+	_ensure_dialog()
+	_function_dialog.set_tool_mode_context(_dock._current_sheet.tool_mode)
+	_function_dialog.open_for_edit_focus_param(event_function as EventFunction, param_index)
+
+
 func _ensure_dialog() -> void:
 	if _function_dialog != null:
 		return

@@ -113,6 +113,7 @@ Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints
 Toggle Live Values: running sheets stream their variables here (editable).,Schaltet Live-Werte um: laufende Blätter übertragen ihre Variablen hierher (bearbeitbar).
 + Add action,+ Aktion hinzufügen
 + Add condition,+ Bedingung hinzufügen
++ Add parameter,+ Parameter hinzufügen
 + Add event…,+ Ereignis hinzufügen…
 Every Tick,Jeder Tick
 Always,Immer

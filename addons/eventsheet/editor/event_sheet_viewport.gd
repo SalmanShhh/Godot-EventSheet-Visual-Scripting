@@ -2699,7 +2699,10 @@ func _maybe_request_ace_edit(hit: Dictionary, row_index: int) -> bool:
 		var span: SemanticSpan = row_data.spans[span_index]
 		var metadata: Dictionary = span.metadata if span != null and span.metadata is Dictionary else {}
 		var kind: String = str(metadata.get("kind", ""))
-		if kind in ["condition", "trigger", "action"]:
+		# A published verb's parameter cells ride the SAME edit path as condition/action cells: clicking
+		# one opens the thing it names. The dock routes them to the verb's dialog rather than the ACE
+		# editor (a parameter is part of a DEFINITION, not a call site).
+		if kind in ["condition", "trigger", "action", "verb_param", "verb_param_add"]:
 			ace_edit_requested.emit(row_data, span_index, metadata.duplicate(true))
 			return true
 	return false

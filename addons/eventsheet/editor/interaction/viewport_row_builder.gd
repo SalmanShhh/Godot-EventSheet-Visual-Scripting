@@ -382,7 +382,6 @@ static func _friendly_return_type(event_function: EventFunction) -> String:
 ## Returns the last condition-lane line index used, so the caller can size the row.
 func _append_define_param_spans(spans: Array[SemanticSpan], event_function: EventFunction, verb_line: int) -> int:
 	var value_color: Color = _viewport._get_event_style().value_highlight_color
-	var muted: Color = Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.85)
 	var typed_params: Array[ACEParam] = []
 	for param: Variant in event_function.params:
 		if param is ACEParam:
@@ -396,32 +395,26 @@ func _append_define_param_spans(spans: Array[SemanticSpan], event_function: Even
 				"lane": "condition", "line_index": verb_line, "text_color": value_color
 			}))
 		return verb_line
-	var stacked: bool = typed_params.size() > 1
-	var line: int = verb_line
+	# Each parameter is its OWN cell, built with the same grammar a condition cell uses - a filled chip
+	# whose object_label is the parameter's name and whose text is what it accepts. Clicking one opens
+	# the verb's editor focused on that parameter, exactly as clicking a condition opens its editor.
+	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	for index in range(typed_params.size()):
 		var param: ACEParam = typed_params[index]
-		if stacked:
-			line = verb_line + 1 + index
-		elif index > 0:
-			spans.append(_make_span(", ", SemanticSpan.SpanType.OPERATOR, {
-				"editable": false, "kind": "define_function",
-				"lane": "condition", "line_index": line, "text_color": muted
-			}))
-		spans.append(_make_span(friendly_param_label(param), SemanticSpan.SpanType.OBJECT, {
-			"editable": false, "kind": "define_function",
-			"lane": "condition", "line_index": line, "text_color": value_color
-		}))
-		spans.append(_make_span(" : %s" % _define_param_type_word(param), SemanticSpan.SpanType.VALUE, {
-			"editable": false, "kind": "define_function",
-			"lane": "condition", "line_index": line, "text_color": muted
-		}))
+		var cell_text: String = _define_param_type_word(param)
 		var default_text: String = param.gdscript_default.strip_edges()
 		if not default_text.is_empty():
-			spans.append(_make_span(" = %s" % default_text, SemanticSpan.SpanType.VALUE, {
-				"editable": false, "kind": "define_function",
-				"lane": "condition", "line_index": line, "text_color": muted
-			}))
-	return line
+			cell_text += " = %s" % default_text
+		var cell_meta: Dictionary = {
+			"lane": "condition",
+			"kind": "verb_param",
+			"param_index": index,
+			"chip": true,
+			"line_index": verb_line + 1 + index,
+			"object_label": friendly_param_label(param)
+		}
+		spans.append(_make_span(cell_text, SemanticSpan.SpanType.CONDITION, cell_meta.merged(condition_style_meta, true)))
+	return verb_line + typed_params.size()
 
 
 ## A parameter's type read as plain words. A param with a fixed option list reads as the CHOICES it
@@ -587,6 +580,27 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"text_color": name_color
 		}))
 		condition_lines = _append_define_param_spans(spans, event_function, 0) + 1
+		# The mirror of "+ Add condition": adding an argument is the core authoring gesture on a verb, so
+		# it lives on the row. Only on a sheet whose verbs are actually authored here - an opened pack's
+		# vocabulary is a read view (its right-click "Edit Verb…" is still the way in), and a read-only
+		# preview edits nothing, so neither grows a row of affordances it cannot honour.
+		var owning_sheet: EventSheetResource = _viewport._sheet
+		if owning_sheet != null and not owning_sheet.read_only and owning_sheet.external_source_path.strip_edges().is_empty():
+			var add_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+			var add_color: Color = add_style_meta.get("text_color", EventSheetPalette.COLOR_CONDITION)
+			add_color.a *= 0.55
+			spans.append(_make_span(
+				EventSheetL10n.translate("+ Add parameter"),
+				SemanticSpan.SpanType.CONDITION,
+				{
+					"editable": false,
+					"kind": "verb_param_add",
+					"lane": "condition",
+					"line_index": condition_lines,
+					"text_color": add_color
+				}
+			))
+			condition_lines += 1
 	# The ACTION lane answers "and what do I get back?": the value it hands over (a Condition answers a
 	# question and an Expression yields a value, so the type shows as a "gives back Type" chip - a void
 	# Action returns nothing and shows none), then the markers that change how it is CALLED (waits =
@@ -641,15 +655,6 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 ## kind, and the add-cell click guards on a non-null source). Used for a published verb's body rows: they
 ## display the function's conditions/actions/raw blocks for reading, but their resources live in
 ## event_function.events, not sheet.events, so any write would alias or corrupt the .gd. Read-only reveal.
-## Flags a row and its whole subtree as living inside a published verb's body, so a condition-less
-## event reads "Always" (it runs when the verb is called) instead of the sheet-level "Every Tick"
-## (which is only true of the sheet's own events, since a sheet compiles into _process).
-func _mark_verb_body(row_data: EventRowData) -> void:
-	row_data.in_verb_body = true
-	for child: EventRowData in row_data.children:
-		_mark_verb_body(child)
-
-
 func _make_row_inert(row_data: EventRowData) -> void:
 	# Resolve the spans BEFORE dropping the resource. Event-row spans are built LAZILY, and
 	# _ensure_event_spans reads them off source_resource - so nulling first leaves the row permanently
@@ -658,6 +663,15 @@ func _make_row_inert(row_data: EventRowData) -> void:
 	row_data.source_resource = null
 	for child: EventRowData in row_data.children:
 		_make_row_inert(child)
+
+
+## Flags a row and its whole subtree as living inside a published verb's body, so a condition-less
+## event reads "Always" (it runs when the verb is called) instead of the sheet-level "Every Tick"
+## (which is only true of the sheet's own events, since a sheet compiles into _process).
+func _mark_verb_body(row_data: EventRowData) -> void:
+	row_data.in_verb_body = true
+	for child: EventRowData in row_data.children:
+		_mark_verb_body(child)
 
 
 ## True when a published verb's body should render as LIVE, editable event rows. On an AUTHORED sheet (one
