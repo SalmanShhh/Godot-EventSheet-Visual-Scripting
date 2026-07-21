@@ -243,6 +243,18 @@ func build_trailing_verb_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	return rows
 
 
+## Re-collapses the verbs that turn out to live INSIDE something - a group, or a #region range paired
+## after the rows were built. A verb at root stays open (its steps are the point); a nested one belongs
+## to the block that encloses it, so it folds with that block instead of forcing it open. Run once over
+## the finished root list, after the region fences are paired. A fold the user set by hand still wins.
+func fold_nested_verb_rows(rows: Array[EventRowData], nested: bool = false) -> void:
+	for row_data: EventRowData in rows:
+		if nested and row_data.source_resource is EventFunction and not row_data.children.is_empty():
+			row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+		if not row_data.children.is_empty():
+			fold_nested_verb_rows(row_data.children, true)
+
+
 ## The EventFunction a FunctionAnchorRow names, or null when the sheet carries no such verb (the
 ## anchor then keeps its muted "defined here" stub).
 static func find_function_by_name(sheet: EventSheetResource, function_name: String) -> EventFunction:
@@ -613,25 +625,13 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 				if not body_editable:
 					_make_row_inert(child_row)
 				row_data.children.append(child_row)
-	var action_lines: int = 1
 	if not row_data.children.is_empty():
-		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
-		# The fold affordance reads in words on the action lane's second line - how much the verb does and
-		# how to see it. Appended after the body build because it counts the children it just made.
-		var step_count: int = row_data.children.size()
-		spans.append(_make_span(
-			"%d step%s - double-click to open" % [step_count, "" if step_count == 1 else "s"],
-			SemanticSpan.SpanType.COMMENT,
-			{
-				"editable": false,
-				"kind": "define_function",
-				"lane": "action",
-				"line_index": 1,
-				"text_color": muted
-			}
-		))
-		action_lines = 2
-	row_data.line_count = maxi(maxi(condition_lines, action_lines), 1)
+		# A verb OPENS by default - its steps ARE the point, and a pack of collapsed rows reads as the spec
+		# table this row set out to stop being. A fold the user set by hand still wins, and
+		# fold_nested_verb_rows re-collapses a verb that turns out to sit inside a group or a #region,
+		# where the enclosing block owns the fold.
+		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
+	row_data.line_count = maxi(condition_lines, 1)
 	return row_data
 
 
@@ -641,6 +641,10 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 ## display the function's conditions/actions/raw blocks for reading, but their resources live in
 ## event_function.events, not sheet.events, so any write would alias or corrupt the .gd. Read-only reveal.
 func _make_row_inert(row_data: EventRowData) -> void:
+	# Resolve the spans BEFORE dropping the resource. Event-row spans are built LAZILY, and
+	# _ensure_event_spans reads them off source_resource - so nulling first leaves the row permanently
+	# blank. That went unseen only while verb bodies defaulted to folded and were never laid out.
+	_ensure_event_spans(row_data)
 	row_data.source_resource = null
 	for child: EventRowData in row_data.children:
 		_make_row_inert(child)

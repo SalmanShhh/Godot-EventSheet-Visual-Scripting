@@ -21,6 +21,17 @@
 - Multi-input verbs stack one input per line (with ` = default` and `one of (…)` choices) instead of
   running off the row; hovering a verb shows its full declaration - name, description, and every
   parameter's type, default and blurb - since a long name clips inside the lane.
+- **A verb's body is open on sight.** Verbs used to render collapsed behind a "double-click to open"
+  hint, so a pack still read as a list of headings. They now open by default - the steps are the
+  point. A verb nested inside a group or a `#region` stays folded, since the enclosing block owns the
+  fold, and a fold you set by hand always wins.
+
+### Fixed
+
+- **Function-body rows drew as blank bands.** A verb's body rows are made read-only by nulling their
+  `source_resource`, but event-row spans are built LAZILY *from* that resource - so the nulling ran
+  first and the spans were never built. The bodies were empty boxes; it went unseen only because they
+  defaulted to folded. Spans are now resolved before the row is made inert.
 - Still a pure READ view: a verb row is not a drag handle and not a drop target, and opening any pack
   as a sheet re-emits byte-identically with the view built and every body expanded.
 

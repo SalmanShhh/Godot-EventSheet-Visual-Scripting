@@ -177,6 +177,16 @@ static func run() -> bool:
 	var all_body_inert: bool = bool(body_check[1])
 	ok = _check("lifted functions render their body as child rows", body_rows_built > 0, true) and ok
 	ok = _check("every function-body row is inert (source nulled - no drag/delete/edit reaches it)", all_body_inert, true) and ok
+	# Regression: a row is made inert by NULLING source_resource, but event-row spans are built LAZILY
+	# and resolve FROM that resource - so nulling before building them left every body row drawing as a
+	# blank band. Invisible while verb bodies defaulted to folded; obvious the moment they open.
+	ok = _check("every function-body event row actually renders (spans built before it was made inert)",
+		_event_rows_have_spans(body_roots), true) and ok
+	# A verb at root OPENS by default - its steps are the point, and the fold hint is gone with it.
+	ok = _check("a verb opens by default (no click needed to read what it does)",
+		_first_with_children(pack_rows) != null and not _first_with_children(pack_rows).folded, true) and ok
+	ok = _check("no 'double-click to open' hint is left on the row",
+		_any_span_contains(pack_rows, "double-click"), false) and ok
 	# Anti-aliasing at the MODEL level: a function's body resources are never also in sheet.events, so a
 	# body row can never be moved/emitted into the sheet (the exact corruption the gate + _move_rows fix stop).
 	var body_leaked: bool = false
@@ -328,6 +338,40 @@ static func _count_and_check_inert(rows: Array) -> Array:
 		if not bool(sub[1]):
 			inert = false
 	return [count, inert]
+
+
+## True when every EVENT row in the subtree has spans. A span-less event row draws as an empty band -
+## exactly what nulling source_resource before the lazy span build used to produce. Only EVENT rows are
+## checked: a blank-line separator block legitimately carries no spans.
+static func _event_rows_have_spans(rows: Array) -> bool:
+	for entry: Variant in rows:
+		var row_data: EventRowData = entry
+		if row_data == null:
+			continue
+		if row_data.row_type == EventRowData.RowType.EVENT and row_data.spans.is_empty():
+			return false
+		if not _event_rows_have_spans(row_data.children):
+			return false
+	return true
+
+
+static func _first_with_children(rows: Array) -> EventRowData:
+	for entry: Variant in rows:
+		var row_data: EventRowData = entry
+		if row_data != null and not row_data.children.is_empty():
+			return row_data
+	return null
+
+
+static func _any_span_contains(rows: Array, needle: String) -> bool:
+	for entry: Variant in rows:
+		var row_data: EventRowData = entry
+		if row_data == null:
+			continue
+		for span: SemanticSpan in row_data.spans:
+			if str(span.text).contains(needle):
+				return true
+	return false
 
 
 static func _make_function(fn_name: String, return_type: int, exposed: bool, display: String, category: String) -> EventFunction:

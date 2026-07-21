@@ -1785,6 +1785,9 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# so a behaviour pack reads events-then-vocabulary exactly like its .gd. After the fence pairing (an
 	# unclosed #region must not swallow the vocabulary) and before the footer.
 	root_rows.append_array(_row_builder.build_trailing_verb_rows(sheet))
+	# Verbs open by default; this re-folds only the ones the fence pairing just moved inside a #region
+	# (or that sit inside a group), where the enclosing block owns the fold.
+	_row_builder.fold_nested_verb_rows(root_rows)
 	# Event-sheet-style trailing "Add event…" footer at the end of the sheet.
 	if show_add_event_footers:
 		root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
