@@ -24,8 +24,19 @@ func _init() -> void:
 	var passed: bool = true
 	for test_file: String in _test_files():
 		var script: GDScript = load(TESTS_DIR + test_file)
-		if script == null or not _has_static_run(script):
+		# A test file with a PARSE ERROR does not load as null - it loads as a GDScript with no methods
+		# that cannot be instantiated. That used to look exactly like a helper file with no run(), so a
+		# broken test VANISHED from the run and the suite still printed "All tests passed.": a false
+		# green hiding however many assertions went with it. can_instantiate() separates the two (every
+		# real test instantiates; only a broken parse does not). It prints a [FAIL] line as well as
+		# failing the verdict, so the usual grep-for-FAIL catches it too.
+		if script == null or not script.can_instantiate():
+			print("[FAIL] run_tests: %s failed to load - see the Parse Error above." % test_file)
+			push_error("Test %s failed to load (parse error?)." % test_file)
+			passed = false
 			continue
+		if not _has_static_run(script):
+			continue  # a shared helper living in tests/, not a test
 		var result: Variant = script.call("run")
 		if result is bool:
 			passed = bool(result) and passed

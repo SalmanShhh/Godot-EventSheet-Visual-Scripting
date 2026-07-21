@@ -35,6 +35,29 @@ static func run() -> bool:
 		style.event_style.gutter_background_color, EventSheetPalette.COLOR_GUTTER_BG) and passed
 	passed = _check("gutter text token seeds from the palette",
 		style.event_style.gutter_text_color, EventSheetPalette.COLOR_GUTTER_TEXT) and passed
+	# Published-verb tokens seed from the palette, so a fresh style keeps the shipped look.
+	passed = _check("verb role accents seed from the palette",
+		style.event_style.ace_action_accent_color == EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG
+		and style.event_style.ace_condition_accent_color == EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG
+		and style.event_style.ace_expression_accent_color == EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG, true) and passed
+	passed = _check("verb wash strength defaults to the tuned dark-sheet value",
+		is_equal_approx(style.event_style.verb_row_tint_strength, 0.10), true) and passed
+	# EVERY bundled preset dresses published verbs in ITS OWN palette. A preset that skipped them would
+	# fall back to EventForge's amber/teal/purple and stop looking like the theme it claims to be, so
+	# each one must set all three roles, and they must be distinguishable from each other.
+	for theme_path: String in EXAMPLE_THEME_PATHS:
+		var preset: EventSheetEditorStyle = load(theme_path) as EventSheetEditorStyle
+		if preset == null or preset.event_style == null:
+			passed = _check("preset loads: %s" % theme_path, false, true) and passed
+			continue
+		var preset_style: EventSheetEventStyle = preset.event_style
+		var theme_name: String = theme_path.get_file()
+		passed = _check("%s dresses verbs in its own palette (not the default amber)" % theme_name,
+			preset_style.ace_action_accent_color != EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG, true) and passed
+		passed = _check("%s keeps its three verb roles distinguishable" % theme_name,
+			preset_style.ace_action_accent_color != preset_style.ace_condition_accent_color
+			and preset_style.ace_condition_accent_color != preset_style.ace_expression_accent_color
+			and preset_style.ace_action_accent_color != preset_style.ace_expression_accent_color, true) and passed
 	# Pin the seeded default look (the exact values ensure_defaults() bakes for a
 	# fresh style) so a regression in the defaults is caught, not just non-null-ness.
 	passed = _check(

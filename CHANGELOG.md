@@ -34,6 +34,12 @@
 - The Theme editor's **live preview now contains published verbs** - one per role, with descriptions,
   parameter cells and the whole chip set - so the new tokens can actually be judged while restyling.
   It previously built `sheet.events` only and never touched `sheet.functions`.
+- **All nine bundled themes dress verbs in their own palette** - Dracula's orange/green/purple,
+  Nord's aurora, Gruvbox's yellow/green/purple, Monokai, Catppuccin's peach/green/mauve, Solarized's
+  yellow/green/violet, plus tuned sets for High Contrast, Soft Light and the Designer Template. The
+  role MEANING stays constant across themes (Action reads warm, Condition green, Expression violet);
+  only the hue changes, so a themed sheet stops falling back to EventForge's own amber/teal/purple.
+  A test now pins that every bundled preset sets all three roles and keeps them distinguishable.
 - **Quick Style** generates role colours too: on a light editor theme the accents darken and the badge
   pills lift toward the background, and the tint strengthens, instead of leaving three dark-theme
   badges on every verb. The bundled `solarized_light` preset (the only genuinely light one) carries
@@ -60,6 +66,13 @@
   fold, and a fold you set by hand always wins.
 
 ### Fixed
+
+- **The test suite could report success while a test file was silently missing.** A test with a parse
+  error does not load as null - it loads as a script with no methods that cannot be instantiated,
+  which looked exactly like a helper file with no `run()`, so it was skipped and the runner still
+  printed `All tests passed.` Found the hard way: a typo'd constant made a whole theme test vanish
+  and the suite stayed green. The runner now fails on any test file it cannot load, and prints a
+  `[FAIL]` line so a grep-for-FAIL catches it too.
 
 - **Function-body rows drew as blank bands.** A verb's body rows are made read-only by nulling their
   `source_resource`, but event-row spans are built LAZILY *from* that resource - so the nulling ran
