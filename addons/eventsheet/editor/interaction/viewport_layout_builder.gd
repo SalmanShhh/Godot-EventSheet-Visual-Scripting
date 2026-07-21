@@ -167,7 +167,16 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		if lane_divider_x > 0.0 and span_lane != "action":
 			var max_condition_right: float = lane_divider_x - float(event_style.condition_lane_padding)
 			if bool(metadata.get("badge", false)):
-				var badge_width: float = condition_badge_column_width if condition_badge_column_width > 0.0 else span_width
+				# Badges normally snap to the narrow badge COLUMN so every condition row's glyph lines up.
+				# A badge carrying badge_natural_width is a WORD, not a glyph (a published verb's
+				# "Condition" / "Expression" role badge), so it keeps its measured width instead of
+				# clipping to a stub.
+				var natural_badge: bool = bool(metadata.get("badge_natural_width", false))
+				var badge_width: float = (
+					span_width
+					if natural_badge or condition_badge_column_width <= 0.0
+					else condition_badge_column_width
+				)
 				span_width = max(min(badge_width, max_condition_right - span_x), _viewport.MIN_SPAN_WIDTH)
 			elif str(metadata.get("kind", "")) in ["condition", "trigger"]:
 				span_width = max(max_condition_right - span_x, _viewport.MIN_SPAN_WIDTH)

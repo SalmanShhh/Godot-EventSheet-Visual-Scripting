@@ -626,6 +626,11 @@ func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String,
 	var target_resource: Resource = target_row.source_resource
 	if target_resource == null:
 		return
+	# A published verb's row is a READ view of sheet.functions, whose array order IS the order the
+	# compiler emits the file in - so a verb is never a drop target and never a dragged payload. This is
+	# stated rather than left to the fact that _find_resource_location does not search sheet.functions.
+	if target_resource is EventFunction:
+		return
 	# A drag may reorder rows WITHIN one tree - the sheet's main event list (with its groups and
 	# sub-events) or a single editable function's body - but must never cross between them. Moving a main
 	# event into a verb body (or the reverse) would emit unintended code, e.g. a trigger row inside a plain
@@ -637,6 +642,8 @@ func _move_rows(source_rows: Array, target_row: EventRowData, drop_mode: String,
 			continue
 		var source_resource: Resource = (source_row as EventRowData).source_resource
 		if source_resource == null or source_resource == target_resource or source_resources.has(source_resource):
+			continue
+		if source_resource is EventFunction:
 			continue
 		if _row_tree_owner(source_resource) != target_owner:
 			_dock._set_status("Cannot move a row between the sheet and a function's body.", true)

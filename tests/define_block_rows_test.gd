@@ -81,6 +81,66 @@ static func run() -> bool:
 	ok = _check("no template yields an empty authored line (auto path used)",
 		ViewportRowBuilder.friendly_template_line(_make_function("f", TYPE_NIL, true, "", "")), "") and ok
 
+	# ── The verb reads as a REAL event row: two lanes, what-it-is on the left, what-it-hands-back on the
+	# right. This is the whole point - a published ACE must scan like the rest of the sheet, not like a
+	# spec table - so the row type and the lane each span lands in are pinned, not just the text.
+	ok = _check("a Define row is an EVENT row (so it gets the condition | action lanes)",
+		action_row.row_type if action_row != null else -1, EventRowData.RowType.EVENT) and ok
+	ok = _check("the role badge sits in the CONDITION lane", _span_lane(action_row, 0), "condition") and ok
+	ok = _check("the verb's name sits in the CONDITION lane", _span_lane(action_row, 1), "condition") and ok
+	ok = _check("its typed input sits in the CONDITION lane too", _lane_of_span_text(action_row, "amount"), "condition") and ok
+	ok = _check("the category chip crosses to the ACTION lane", _lane_of_span_text(action_row, "Health"), "action") and ok
+	ok = _check("the return chip crosses to the ACTION lane", _lane_of_span_text(condition_row, "gives back yes/no"), "action") and ok
+	ok = _check("the 'internal' marker crosses to the ACTION lane", _lane_of_span_text(internal_row, "internal"), "action") and ok
+	# The role badge is a WORD ("Condition"), not the single glyph a condition row's badge column is
+	# sized for, so it opts out of that column or it clips to a stub.
+	ok = _check("the role badge keeps its natural width", _span_meta(condition_row, 0, "badge_natural_width"), true) and ok
+	# A verb's row is a pure READ view of sheet.functions, whose order IS the file's emission order.
+	ok = _check("a verb row is never a drag handle", EventSheetViewport.is_event_drag_zone(action_row, -1), false) and ok
+
+	# ── The description the pack author already wrote finally renders: a caption row above the verb ──
+	var described_sheet: EventSheetResource = EventSheetResource.new()
+	described_sheet.host_class = "Node2D"
+	var described_fn: EventFunction = _make_function("heal", TYPE_NIL, true, "Heal", "Health")
+	described_fn.description = "Restores health, capped at the maximum."
+	described_sheet.functions.append(described_fn)
+	described_sheet.functions.append(_make_function("silent", TYPE_NIL, true, "Silent", ""))
+	var described_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	described_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	described_dock.setup(described_sheet)
+	var described_view: EventSheetViewport = described_dock._active_view()
+	var note_row: EventRowData = _find_row_by_uid_prefix(described_view, "verb_note_heal")
+	ok = _check("a described verb grows a caption row", note_row != null, true) and ok
+	ok = _check("the caption shows the authored @ace_description",
+		_span_text(note_row, 0), "Restores health, capped at the maximum.") and ok
+	ok = _check("the caption is inert (nothing to edit / drag / delete)",
+		note_row != null and note_row.source_resource == null, true) and ok
+	ok = _check("the caption is welded to the verb below it (no block gap between them)",
+		note_row != null and note_row.attached_below, true) and ok
+	ok = _check("an undescribed verb grows NO caption",
+		_find_row_by_uid_prefix(described_view, "verb_note_silent") == null, true) and ok
+	ok = _check("captions never collide with the define_fn_ prefix (still one Define row per verb)",
+		_find_rows_by_uid_prefix(described_view, "define_fn_").size(), 2) and ok
+	ok = _check("the caption sits directly ABOVE its verb",
+		_flat_index_of(described_view, "verb_note_heal") + 1, _flat_index_of(described_view, "define_fn_heal")) and ok
+	described_dock.free()
+
+	# ── Ordering: the canvas mirrors the COMPILER - the sheet's events first, then its vocabulary. The old
+	# view hoisted every verb above everything, so an opened pack read back-to-front against its own .gd.
+	var order_sheet: EventSheetResource = EventSheetResource.new()
+	order_sheet.host_class = "Node2D"
+	var main_code: RawCodeRow = RawCodeRow.new()
+	main_code.code = "print(\"main loop\")"
+	order_sheet.events.append(main_code)
+	order_sheet.functions.append(_make_function("later", TYPE_NIL, true, "Later", ""))
+	var order_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	order_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	order_dock.setup(order_sheet)
+	var order_view: EventSheetViewport = order_dock._active_view()
+	ok = _check("a sheet's events come BEFORE its verbs, exactly as the compiler emits them",
+		_flat_index_of(order_view, "define_fn_later") > 0, true) and ok
+	order_dock.free()
+
 	# ── A function-less sheet grows no verb rows ──
 	var empty_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	empty_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
@@ -99,6 +159,10 @@ static func run() -> bool:
 	var pack_rows: Array[EventRowData] = _find_rows_by_uid_prefix(dock._active_view(), "define_fn_")
 	ok = _check("the pack shows its verbs inline - one row per lifted function",
 		pack_rows.size(), opened.functions.size()) and ok
+	# A REAL pack's `## @ace_description(...)` blurbs reach the canvas. They already round-tripped through
+	# the compiler and the lifter; until the caption row they were simply never drawn.
+	ok = _check("an opened pack surfaces the descriptions its author wrote",
+		_find_rows_by_uid_prefix(dock._active_view(), "verb_note_").size() > 0, true) and ok
 	var reemitted: String = str(SheetCompiler.compile(opened, pack_path).get("output", ""))
 	ok = _check("round-trip stays byte-identical with the view built (drift=0)", reemitted == source, true) and ok
 
@@ -306,6 +370,42 @@ static func _find_rows_by_uid_prefix(view: EventSheetViewport, prefix: String) -
 		if row_data != null and row_data.row_uid.begins_with(prefix):
 			found.append(row_data)
 	return found
+
+
+## The lane a span lays out in ("condition" / "action") - the two-column model's whole point.
+static func _span_lane(row_data: EventRowData, index: int) -> String:
+	if row_data == null or index >= row_data.spans.size():
+		return ""
+	var metadata: Dictionary = row_data.spans[index].metadata if row_data.spans[index].metadata is Dictionary else {}
+	return str(metadata.get("lane", "condition"))
+
+
+## The lane of the first span whose text matches, or "" when the row carries no such span.
+static func _lane_of_span_text(row_data: EventRowData, needle: String) -> String:
+	if row_data == null:
+		return ""
+	for index in range(row_data.spans.size()):
+		if str(row_data.spans[index].text) == needle:
+			return _span_lane(row_data, index)
+	return ""
+
+
+static func _span_meta(row_data: EventRowData, index: int, key: String) -> Variant:
+	if row_data == null or index >= row_data.spans.size():
+		return null
+	var metadata: Dictionary = row_data.spans[index].metadata if row_data.spans[index].metadata is Dictionary else {}
+	return metadata.get(key, null)
+
+
+## Flat (visual) index of the first row whose uid starts with `prefix`, or -1 - so a test can assert
+## that one row sits directly above another, which is what "reads in source order" means on screen.
+static func _flat_index_of(view: EventSheetViewport, prefix: String) -> int:
+	var rows: Array = view.get_flat_rows()
+	for index in range(rows.size()):
+		var row_data: EventRowData = (rows[index] as Dictionary).get("row")
+		if row_data != null and row_data.row_uid.begins_with(prefix):
+			return index
+	return -1
 
 
 static func _span_text(row_data: EventRowData, index: int) -> String:

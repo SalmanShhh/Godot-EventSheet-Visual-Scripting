@@ -108,7 +108,13 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# never get the real event menu: its items would act on a null anchor / the sheet root.
 	var is_event: bool = row_type == EventRowData.RowType.EVENT and (row_data == null or row_data.source_resource != null)
 	var is_group: bool = row_type == EventRowData.RowType.GROUP
-	var is_comment: bool = row_type == EventRowData.RowType.COMMENT
+	# A published verb's description caption renders as a COMMENT row but has NO CommentRow behind it (it
+	# draws the verb's own @ace_description), so it must not offer Edit Comment / Attach To Event Above -
+	# both handlers cast source_resource to CommentRow and would act on null.
+	var is_comment: bool = (
+		row_type == EventRowData.RowType.COMMENT
+		and not (row_data != null and row_data.source_resource == null and row_data.row_uid.begins_with("verb_note_"))
+	)
 	var multi: bool = _dock._get_selected_rows_from_context().size() > 1
 	# Type-specific authoring first. (Open/Close Group and the disable label below are
 	# relabeled to the live state by _configure_context_menu before the popup shows.)
@@ -116,8 +122,26 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# rows report RowType.EVENT (they read like events), so an is_event-first dispatch
 	# would swallow them and the field-authoring items could never appear.
 	var added_type_items: bool = true
+	# A published verb (Define) row reads as an EVENT row so it lays out in the two-lane model, so it is
+	# checked BEFORE the row-type chain for the same reason data-class rows are: an is_event-first
+	# dispatch would swallow it, replacing verb authoring with Add Sub-Event / Make Else - whose handlers
+	# assume an EventRow anchor the verb does not have.
+	var verb_function: EventFunction = row_data.source_resource as EventFunction if row_data != null else null
 	var data_class_raw: RawCodeRow = _data_class_row_target(row_data)
-	if data_class_raw != null:
+	if verb_function != null:
+		# A published-verb (Define) header row: edit the verb, or add a parameter to it right here -
+		# the same right-click-to-add-an-argument gesture a visual event editor gives its functions.
+		menu.add_item("Edit Verb…", _dock.ROW_MENU_EDIT_FUNCTION)
+		menu.add_item("Add Parameter", _dock.ROW_MENU_ADD_FUNCTION_PARAM)
+		# On an OPENED behaviour pack a verb's body is read-only by default (protecting the .gd round-trip);
+		# offer a per-function opt-in to edit THIS verb's body. Authored sheets edit every body already, and
+		# a read-only preview edits nothing, so the toggle only appears for an editable opened pack.
+		var verb_sheet: EventSheetResource = _dock._current_sheet
+		if verb_sheet != null and not verb_sheet.read_only and not verb_sheet.external_source_path.strip_edges().is_empty():
+			var verb_name: String = verb_function.function_name
+			var already_editable: bool = _dock._active_view().is_function_body_editable_opt_in(verb_name)
+			menu.add_item("Lock Verb Body (read-only)" if already_editable else "Make Verb Body Editable", _dock.ROW_MENU_MAKE_FUNCTION_EDITABLE)
+	elif data_class_raw != null:
 		# A lifting data-class holder row, or one of its FIELD rows: field authoring
 		# follows the add/remove-action gesture (one resolver decides for menu + handlers).
 		menu.add_item("Add Field…", _dock.ROW_MENU_DATA_CLASS_ADD_FIELD)
@@ -143,19 +167,6 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	elif is_comment:
 		menu.add_item("Edit Comment…", _dock.ROW_MENU_EDIT_COMMENT)
 		menu.add_item("Attach To Event Above", _dock.ROW_MENU_ATTACH_COMMENT)
-	elif row_type == EventRowData.RowType.SECTION and row_data != null and row_data.source_resource is EventFunction:
-		# A published-verb (Define) header row: edit the verb, or add a parameter to it right here -
-		# the same right-click-to-add-an-argument gesture a visual event editor gives its functions.
-		menu.add_item("Edit Verb…", _dock.ROW_MENU_EDIT_FUNCTION)
-		menu.add_item("Add Parameter", _dock.ROW_MENU_ADD_FUNCTION_PARAM)
-		# On an OPENED behaviour pack a verb's body is read-only by default (protecting the .gd round-trip);
-		# offer a per-function opt-in to edit THIS verb's body. Authored sheets edit every body already, and
-		# a read-only preview edits nothing, so the toggle only appears for an editable opened pack.
-		var sheet: EventSheetResource = _dock._current_sheet
-		if sheet != null and not sheet.read_only and not sheet.external_source_path.strip_edges().is_empty():
-			var fn_name: String = (row_data.source_resource as EventFunction).function_name
-			var already: bool = _dock._active_view().is_function_body_editable_opt_in(fn_name)
-			menu.add_item("Lock Verb Body (read-only)" if already else "Make Verb Body Editable", _dock.ROW_MENU_MAKE_FUNCTION_EDITABLE)
 	else:
 		# SECTION / unknown rows get only the universal items - no leading separator.
 		added_type_items = false

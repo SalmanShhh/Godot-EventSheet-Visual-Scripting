@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Changed - a behaviour pack's published verbs read as event rows, not as a spec table
+
+- **Published verbs now use the condition/action model.** A pack's ACEs rendered as full-width
+  `SECTION` rows - a flat table of `Action | Create Ability | id : text | Abilities` lines - while the
+  very same sheet drew its `_process` logic correctly in two lanes. A Define row is now a real EVENT
+  row: **what the verb is** (kind badge, name, its typed inputs) in the condition lane, **what it
+  hands back** (category, `gives back <type>`, `waits` / `static` / `internal` / featured, and the
+  step count) in the action lane, washed and left-barred in its ACE-kind colour.
+- **The `@ace_description` an author already wrote is finally shown.** Every verb's
+  `## @ace_description("…")` round-tripped through the compiler and the lifter but was never drawn.
+  It now renders as a muted, wrapping caption directly above its verb (falling back to the first line
+  of the ordinary `##` doc comment), welded to the row beneath it so the two read as one block.
+- **The vocabulary is ordered like the file.** Verbs were hoisted above everything, so an opened pack
+  read back-to-front against its own `.gd`. The canvas now mirrors the compiler exactly: the sheet's
+  events first, a mid-file function spliced in at its own anchor slot, then the remaining verbs in
+  `sheet.functions` order.
+- Multi-input verbs stack one input per line (with ` = default` and `one of (…)` choices) instead of
+  running off the row; hovering a verb shows its full declaration - name, description, and every
+  parameter's type, default and blurb - since a long name clips inside the lane.
+- Still a pure READ view: a verb row is not a drag handle and not a drop target, and opening any pack
+  as a sheet re-emits byte-identically with the view built and every body expanded.
+
 ### Added - decoupled group messaging (react to and broadcast to a whole group, no references)
 
 - **Connect Group Signal** / **Disconnect Group Signal** (Actions): a listener wires itself to a

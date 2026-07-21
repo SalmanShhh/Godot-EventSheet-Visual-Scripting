@@ -33,15 +33,23 @@ func rebuild() -> void:
 	_row_metrics.clear()
 	var top: float = 0.0
 	var previous_indent: int = -1
+	var previous_attached: bool = false
 	for index in range(_viewport._flat_rows.size()):
 		var row_data: EventRowData = _viewport._row_at(index)
 		# Separate sibling/parent-level event blocks with a small gap, but keep a parent and
 		# its sub-events (a deeper indent) tight together so the nesting reads clearly.
+		# A row flagged attached_below OWNS the row beneath it (a published verb's description caption
+		# and its verb row), so the gap opens ABOVE the caption and is suppressed between the two.
 		if (
 			index > 0
 			and row_data != null
 			and row_data.indent <= previous_indent
-			and (row_data.row_type == EventRowData.RowType.EVENT or row_data.row_type == EventRowData.RowType.GROUP)
+			and not previous_attached
+			and (
+				row_data.row_type == EventRowData.RowType.EVENT
+				or row_data.row_type == EventRowData.RowType.GROUP
+				or row_data.attached_below
+			)
 		):
 			top += _viewport.EVENT_BLOCK_GAP
 		var height: float = _resolve_row_height(row_data)
@@ -49,6 +57,9 @@ func rebuild() -> void:
 		top += height
 		if row_data != null:
 			previous_indent = row_data.indent
+			previous_attached = row_data.attached_below
+		else:
+			previous_attached = false
 
 
 func _resolve_row_height(row_data: EventRowData) -> float:

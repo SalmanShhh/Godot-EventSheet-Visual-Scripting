@@ -113,6 +113,58 @@ func function_call_description(action: ACEAction) -> String:
 	return ""
 
 
+## Everything a published verb declares, for its Define row's hover: the full name (a long one clips
+## inside the condition lane, so the tooltip is where it is always readable), its description, each
+## parameter with type / default / choices / its own blurb, and the markers that change how it is called.
+## This is the overflow valve for the row - the row shows the shape, the tooltip shows the detail.
+func verb_definition_tooltip(event_function: EventFunction) -> String:
+	if event_function == null:
+		return ""
+	var lines: PackedStringArray = PackedStringArray()
+	var title: String = event_function.ace_display_name.strip_edges()
+	if title.is_empty():
+		title = event_function.function_name.capitalize()
+	lines.append(title)
+	var description: String = event_function.description.strip_edges()
+	if description.is_empty():
+		description = event_function.doc_comment.strip_edges()
+	if not description.is_empty():
+		lines.append("")
+		lines.append(description)
+	var typed_params: Array[ACEParam] = []
+	for entry: Variant in event_function.params:
+		if entry is ACEParam:
+			typed_params.append(entry as ACEParam)
+	if not typed_params.is_empty():
+		lines.append("")
+		for param: ACEParam in typed_params:
+			var detail: String = "  %s : %s" % [param.get_param_name(), param.type_name]
+			var default_text: String = param.gdscript_default.strip_edges()
+			if not default_text.is_empty():
+				detail += " = %s" % default_text
+			lines.append(detail)
+			var param_description: String = param.get_param_description().strip_edges()
+			if not param_description.is_empty():
+				lines.append("      %s" % param_description)
+	var markers: PackedStringArray = PackedStringArray()
+	if event_function.is_async:
+		markers.append("waits (async)")
+	if event_function.is_static:
+		markers.append("static")
+	if not event_function.expose_as_ace:
+		markers.append("internal - not published as an ACE")
+	if event_function.featured:
+		markers.append("featured")
+	for annotation: String in event_function.annotation_lines:
+		markers.append(annotation.strip_edges())
+	if not event_function.tool_button_label.strip_edges().is_empty():
+		markers.append("Inspector button: %s" % event_function.tool_button_label.strip_edges())
+	if not markers.is_empty():
+		lines.append("")
+		lines.append(" · ".join(markers))
+	return "\n".join(lines)
+
+
 ## The GDScript snippet an ACE compiles to: its codegen template with parameter values
 ## substituted (definition metadata first, then the base descriptor registry).
 func codegen_preview_for(provider_id: String, ace_id: String, params: Dictionary) -> String:

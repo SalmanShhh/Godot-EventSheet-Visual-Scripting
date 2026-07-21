@@ -100,7 +100,13 @@ Add a **Function** (name + typed parameters + a return type). The dialog is the 
 - **Is it true?** (returns a bool) → a **Condition** (e.g. `is_in_state(name)`)
 - **A value** (returns anything else) → an **Expression** (e.g. `health_percent()`)
 
-Tick **"expose as ACE"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ:
+Tick **"expose as ACE"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary.
+
+Each published verb reads on the canvas the same way every other row does: the **kind badge, the verb's name and its typed inputs on the left**, and **what it hands back on the right** - its category, `gives back <type>` for a Condition or Expression, markers like `waits` or `internal`, and the step count that opens its body. The `## @ace_description(...)` you wrote sits directly above it as the caption, and the whole block is washed in its ACE-kind colour. Hover a verb to read its full declaration, including each parameter's type, default and blurb.
+
+<img src="images/published-verb-rows.png" alt="Published verbs on the canvas: each Action row shows its description as a caption above it, the kind badge, name and stacked typed inputs on the left, and the category, featured star and step count on the right." width="580">
+
+Verbs appear in the order the file declares them - after the sheet's own events, exactly where the compiler writes them - so an opened pack reads top to bottom like its GDScript. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ:
 
 <img src="images/anatomy-panel.png" alt="The Anatomy panel: a behaviour's Properties, State, Triggers, and Actions listed as organs with role pills - the Health pack showing 3 knobs, 9 state values, 8 triggers, and 16 actions." width="340">
 

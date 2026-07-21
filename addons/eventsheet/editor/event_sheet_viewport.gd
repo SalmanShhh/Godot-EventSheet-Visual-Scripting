@@ -1597,7 +1597,14 @@ func _is_selection_hit(row_index: int, span_index: int) -> bool:
 ## so it is unit-testable without a live viewport. Groups/comments/variables aren't included: they're
 ## single-cell rows with no ambiguous empty band.
 static func is_event_drag_zone(row_data: EventRowData, span_index: int) -> bool:
-	return row_data != null and row_data.row_type == EventRowData.RowType.EVENT and span_index < 0
+	# A published verb (Define) row lays out as an EVENT row but is a pure READ view of sheet.functions -
+	# its order IS the file's emission order, so it is never a drag handle.
+	return (
+		row_data != null
+		and row_data.row_type == EventRowData.RowType.EVENT
+		and not (row_data.source_resource is EventFunction)
+		and span_index < 0
+	)
 
 
 func _begin_row_drag(row_index: int) -> void:
@@ -1728,9 +1735,6 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	if sheet == null:
 		return root_rows
 	root_rows.append_array(_build_global_variable_rows(sheet))
-	# The sheet's verbs (its functions) as INLINE role-tinted Define rows - without this, `sheet.functions`
-	# never appears on the canvas and a behaviour pack's vocabulary is invisible outside the Functions dialog.
-	root_rows.append_array(_row_builder._build_published_verbs_rows(sheet))
 	# Blocks spec P1 - collapse the LEADING run of class scaffolding (prelude / annotations /
 	# host-binding) into one foldable "Class setup" strip, so an opened .gd reads as logic, not
 	# boilerplate. The threshold is LINE-based, not row-based: the importer bundles a whole prelude into
@@ -1759,13 +1763,28 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 			root_rows.append(_build_scaffolding_strip_row(sheet, scaffold_rows))
 			event_start = scaffold_end
 	for entry_index in range(event_start, sheet.events.size()):
-		var row_data: EventRowData = _build_row_from_resource(sheet.events[entry_index], 0)
+		var entry: Resource = sheet.events[entry_index]
+		# A lifted MID-FILE function emits at its anchor slot, so the canvas splices the whole verb block
+		# in HERE too: the vocabulary reads where it actually lives in the file instead of being hoisted
+		# above everything. A missing verb keeps the anchor's muted "defined here" stub as the fallback.
+		if entry is FunctionAnchorRow:
+			var anchored: EventFunction = ViewportRowBuilder.find_function_by_name(
+				sheet, (entry as FunctionAnchorRow).function_name
+			)
+			if anchored != null:
+				root_rows.append_array(_row_builder.build_verb_block_rows(anchored, 0))
+				continue
+		var row_data: EventRowData = _build_row_from_resource(entry, 0)
 		if row_data != null:
 			root_rows.append(row_data)
 	# Pair #region/#endregion fences into foldable ranges (view layer only; the
 	# data model and emission stay flat). Runs before the footer so the trailing
 	# "Add event…" row can never be swallowed by an unclosed fence.
 	root_rows = _row_builder._pair_region_fences(root_rows)
+	# The remaining verbs, in sheet.functions order - the compiler's trailing-functions section mirrored,
+	# so a behaviour pack reads events-then-vocabulary exactly like its .gd. After the fence pairing (an
+	# unclosed #region must not swallow the vocabulary) and before the footer.
+	root_rows.append_array(_row_builder.build_trailing_verb_rows(sheet))
 	# Event-sheet-style trailing "Add event…" footer at the end of the sheet.
 	if show_add_event_footers:
 		root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
@@ -2530,6 +2549,13 @@ func _get_tooltip(at_position: Vector2) -> String:
 		if not preview_payload.is_empty():
 			_tooltip_helper.set_pending_inspector_preview(preview_payload)
 			return ViewportTooltipHelper.INSPECTOR_PREVIEW_SENTINEL
+	# A published verb's Define row: the row shows the verb's shape, but a long name clips inside the
+	# condition lane and the per-parameter detail has nowhere to go, so the hover carries the full
+	# declaration - name, description, every parameter with its type / default / blurb, and the markers.
+	if kind == "define_function":
+		var verb_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
+		if verb_row != null and verb_row.source_resource is EventFunction:
+			return _tooltip_helper.verb_definition_tooltip(verb_row.source_resource as EventFunction)
 	if kind in ["condition", "trigger", "action"]:
 		var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
 		if row_data != null and row_data.source_resource is EventRow:
