@@ -25,6 +25,12 @@
   change" gesture a condition cell gives you. On a sheet whose verbs are authored locally, a faint
   `+ Add parameter` cell closes the loop; an opened pack stays a read view and keeps its right-click
   `Edit Verb…` route instead.
+- Two new **EventSheets API** primitives, both dogfooded by the verb rows themselves so an extension's
+  rows and a built-in's are the same code path: `add_field_cell(row, label, text, metadata)` renders a
+  NAMED SLOT as a condition-style cell (any construct with named slots - a resource's fields, a block's
+  options - now reads as cells you click), and `build_caption_row(text, indent, uid, accent)` builds the
+  wrapping line of prose welded above the row it describes. The API reference table also grew the
+  `Rows` group it had been missing, covering `build_condition_action_row` and `mark_language_block` too.
 - Multi-input verbs stack one input per line (with ` = default` and `one of (…)` choices) instead of
   running off the row; hovering a verb shows its full declaration - name, description, and every
   parameter's type, default and blurb - since a long name clips inside the lane.

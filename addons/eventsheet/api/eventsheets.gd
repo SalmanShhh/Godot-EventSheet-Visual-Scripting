@@ -233,6 +233,37 @@ static func mark_language_block(row: EventRowData) -> EventRowData:
 	return row
 
 
+## Appends a condition-style CELL to a row: a filled chip whose `label` leads it (the bold lead a
+## condition uses for its object) and whose `text` says what the slot holds, stacked one per line down
+## the condition lane. Use it for any construct with NAMED SLOTS - a resource's fields, a block's
+## options - so they read as cells you click, not as text beside a title. A published verb's parameters
+## dogfood this exact call. `metadata` merges over the defaults: carry your own `kind` and an index
+## there, and the same `kind` in your row-menu / edit handling routes the click back. Chains:
+## `EventSheets.add_field_cell(EventSheets.add_field_cell(row, "id", "text"), "seconds", "number")`.
+static func add_field_cell(row: EventRowData, label: String, text: String, metadata: Dictionary = {}) -> EventRowData:
+	if row == null or not _dock_alive():
+		return row
+	var view: EventSheetViewport = _dock._active_view()
+	if view == null:
+		return row
+	return view._row_builder.append_field_cell(row, label, text, metadata)
+
+
+## Builds a muted, wrapping CAPTION row welded to the row directly below it - one line of prose above
+## the thing it describes, the way a published verb shows its `@ace_description`. Insert it immediately
+## before the row it explains; the inter-block gap then opens above the pair, so the two read as one
+## block. The caption is inert (no resource behind it), so nothing edits, drags or deletes it. Pass an
+## `accent` with a low alpha to tint it to whatever the subject's colour is. Returns null with no dock.
+static func build_caption_row(text: String, indent: int = 0, row_uid: String = "", accent: Color = Color(0, 0, 0, 0)) -> EventRowData:
+	if not _dock_alive():
+		return null
+	var view: EventSheetViewport = _dock._active_view()
+	if view == null:
+		return null
+	var uid: String = row_uid if not row_uid.strip_edges().is_empty() else "caption_%d" % text.hash()
+	return view._row_builder.build_caption_row(text, indent, uid, accent)
+
+
 ## Adds an entry to the Command Palette (Ctrl+P). `action` runs when picked. Re-register
 ## under the same title to replace; unregister_palette_command removes it. Works before
 ## the dock opens - entries appear once a palette exists.

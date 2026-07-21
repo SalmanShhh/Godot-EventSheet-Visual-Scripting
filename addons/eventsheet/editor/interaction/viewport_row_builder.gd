@@ -281,24 +281,60 @@ func _build_verb_note_row(event_function: EventFunction, role: String, indent: i
 				break
 	if note.is_empty():
 		return null
-	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var accent: Color = (define_role_badge_colors(role) as Array)[1]
+	var row_data: EventRowData = build_caption_row(
+		note, indent, "verb_note_%s" % event_function.function_name.strip_edges(),
+		Color(accent.r, accent.g, accent.b, 0.07)
+	)
+	row_data.disabled = not event_function.enabled
+	return row_data
+
+
+## A muted, wrapping CAPTION row welded to the row directly below it - the "one line of prose above the
+## thing it describes" pattern, which a published verb uses for its @ace_description. COMMENT is the row
+## type on purpose: it is the only one the metrics measure for word wrap, so a full sentence wraps
+## instead of clipping. source_resource stays null (there is no CommentRow behind it), so no edit / drag
+## / delete reaches it, and attached_below welds it to its subject so the block gap opens ABOVE the pair.
+func build_caption_row(text: String, indent: int, row_uid: String, accent: Color = Color(0, 0, 0, 0)) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent
 	row_data.row_type = EventRowData.RowType.COMMENT
 	row_data.source_resource = null
-	row_data.row_uid = "verb_note_%s" % event_function.function_name.strip_edges()
-	row_data.disabled = not event_function.enabled
-	# Owns the Define row below it, so the inter-block gap opens above the caption, not between them.
+	row_data.row_uid = row_uid
 	row_data.attached_below = true
-	var accent: Color = (define_role_badge_colors(role) as Array)[1]
-	row_data.custom_color = Color(accent.r, accent.g, accent.b, 0.07)
+	row_data.custom_color = accent
 	row_data.spans = [
-		_make_span(note, SemanticSpan.SpanType.COMMENT, {
+		_make_span(text, SemanticSpan.SpanType.COMMENT, {
 			"editable": false,
-			"kind": "verb_note",
-			"text_color": event_style.comment_text_color
+			"kind": "caption",
+			"text_color": _viewport._get_event_style().comment_text_color
 		})
 	]
+	return row_data
+
+
+## Appends a condition-style CELL to a row: a filled chip whose LABEL leads it (the bold lead a
+## condition uses for its object) and whose TEXT says what the slot holds, stacked one per line down the
+## condition lane. This is the grammar a published verb's parameters use, so any construct with named
+## slots reads identically. `metadata` merges over the defaults - carry a `kind` and an index there so a
+## click can route back to whatever the cell names. Returns the same row, so calls chain.
+func append_field_cell(row_data: EventRowData, label: String, text: String, metadata: Dictionary = {}) -> EventRowData:
+	if row_data == null:
+		return row_data
+	var next_line: int = 0
+	for span: SemanticSpan in row_data.spans:
+		var existing: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		if str(existing.get("lane", "condition")) == "condition":
+			next_line = maxi(next_line, int(existing.get("line_index", 0)) + 1)
+	var cell_meta: Dictionary = {
+		"lane": "condition",
+		"kind": "field_cell",
+		"chip": true,
+		"line_index": next_line,
+		"object_label": label
+	}.merged(_viewport._build_element_style_metadata(_viewport._get_condition_style()), true)
+	cell_meta.merge(metadata, true)
+	row_data.spans.append(_make_span(text, SemanticSpan.SpanType.CONDITION, cell_meta))
 	return row_data
 
 
@@ -395,25 +431,24 @@ func _append_define_param_spans(spans: Array[SemanticSpan], event_function: Even
 				"lane": "condition", "line_index": verb_line, "text_color": value_color
 			}))
 		return verb_line
-	# Each parameter is its OWN cell, built with the same grammar a condition cell uses - a filled chip
-	# whose object_label is the parameter's name and whose text is what it accepts. Clicking one opens
-	# the verb's editor focused on that parameter, exactly as clicking a condition opens its editor.
-	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	# Each parameter is its OWN cell, in the shared field-cell grammar (the same one a condition cell
+	# uses): the parameter's name leads the chip, its text says what it accepts. Clicking one opens the
+	# verb's editor focused on that parameter, exactly as clicking a condition opens its editor. Built
+	# through the public append_field_cell primitive so the built-in path and an extension's path are
+	# literally the same code.
+	var cell_host := EventRowData.new()
 	for index in range(typed_params.size()):
 		var param: ACEParam = typed_params[index]
 		var cell_text: String = _define_param_type_word(param)
 		var default_text: String = param.gdscript_default.strip_edges()
 		if not default_text.is_empty():
 			cell_text += " = %s" % default_text
-		var cell_meta: Dictionary = {
-			"lane": "condition",
+		append_field_cell(cell_host, friendly_param_label(param), cell_text, {
 			"kind": "verb_param",
 			"param_index": index,
-			"chip": true,
-			"line_index": verb_line + 1 + index,
-			"object_label": friendly_param_label(param)
-		}
-		spans.append(_make_span(cell_text, SemanticSpan.SpanType.CONDITION, cell_meta.merged(condition_style_meta, true)))
+			"line_index": verb_line + 1 + index
+		})
+	spans.append_array(cell_host.spans)
 	return verb_line + typed_params.size()
 
 

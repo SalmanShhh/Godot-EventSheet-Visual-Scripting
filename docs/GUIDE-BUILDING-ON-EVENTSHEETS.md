@@ -220,6 +220,10 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Editor | `palette_commands()` | `Array[Dictionary]` | no |
 | Editor | `build_inspector_preview(name, type_name, default_text, attributes, exported := true, constant := false)` | `Control` | no |
 | Editor | `describe_inspector(type_name, attributes, exported := true, constant := false)` | `String` | no |
+| Rows | `build_condition_action_row(condition_text, action_lines, indent := 0, source := null)` - the primitive for mapping any construct onto the event model | `EventRowData` | yes |
+| Rows | `add_field_cell(row, label, text, metadata := {})` - a named slot as a condition-style cell (label leads it, text says what it holds); a published verb's parameters use this exact call | `EventRowData` | yes |
+| Rows | `build_caption_row(text, indent := 0, row_uid := "", accent := Color(0,0,0,0))` - a wrapping line of prose welded above the row it describes | `EventRowData` | yes |
+| Rows | `mark_language_block(row)` - marks a row as GDScript structure (accent stripe + wash) | `EventRowData` | no |
 | Codegen | `new_sheet(config: Dictionary = {})` | `EventSheetResource` | no |
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
 | Codegen | `variable_code(variable: LocalVariable)` | `String` | no |

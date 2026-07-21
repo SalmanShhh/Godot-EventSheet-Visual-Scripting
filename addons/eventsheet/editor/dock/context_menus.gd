@@ -100,6 +100,15 @@ func build_all() -> void:
 ## type (event / group / comment) at the top, universal clipboard/lifecycle next, and
 ## the rest folded into Insert ▸ / More ▸ submenus - replacing the old flat ~30-item
 ## list shown for every row regardless of type.
+## True for a caption row - a prose line welded above the row it describes, drawn as a COMMENT row but
+## backed by no CommentRow. Identified by its span kind so it never depends on a uid convention.
+func _is_caption_row(row_data: EventRowData) -> bool:
+	if row_data == null or row_data.spans.is_empty():
+		return false
+	var metadata: Dictionary = row_data.spans[0].metadata if row_data.spans[0].metadata is Dictionary else {}
+	return str(metadata.get("kind", "")) == "caption"
+
+
 func _build_row_context_menu(row_data: EventRowData) -> void:
 	var menu: PopupMenu = _dock._row_context_menu
 	menu.clear()
@@ -108,13 +117,12 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# never get the real event menu: its items would act on a null anchor / the sheet root.
 	var is_event: bool = row_type == EventRowData.RowType.EVENT and (row_data == null or row_data.source_resource != null)
 	var is_group: bool = row_type == EventRowData.RowType.GROUP
-	# A published verb's description caption renders as a COMMENT row but has NO CommentRow behind it (it
-	# draws the verb's own @ace_description), so it must not offer Edit Comment / Attach To Event Above -
-	# both handlers cast source_resource to CommentRow and would act on null.
-	var is_comment: bool = (
-		row_type == EventRowData.RowType.COMMENT
-		and not (row_data != null and row_data.source_resource == null and row_data.row_uid.begins_with("verb_note_"))
-	)
+	# A CAPTION row (a published verb's @ace_description, or any caption an extension builds through
+	# EventSheets.build_caption_row) renders as a COMMENT row but has NO CommentRow behind it, so it must
+	# not offer Edit Comment / Attach To Event Above - both handlers cast source_resource to CommentRow
+	# and would act on null. Captions are identified by their span kind, not by a null resource: plenty
+	# of ordinary comment rows are built without one.
+	var is_comment: bool = row_type == EventRowData.RowType.COMMENT and not _is_caption_row(row_data)
 	var multi: bool = _dock._get_selected_rows_from_context().size() > 1
 	# Type-specific authoring first. (Open/Close Group and the disable label below are
 	# relabeled to the live state by _configure_context_menu before the popup shows.)
