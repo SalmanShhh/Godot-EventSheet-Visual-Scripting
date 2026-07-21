@@ -24,6 +24,10 @@
 - The **category chip is no longer drawn on the verb row**. A pack files every one of its verbs under
   the same category, so the chip repeated the identical word down the entire sheet. It reads in the
   hover instead, beside the verb's name.
+- **A condition-less row inside a verb body now reads "Always", not "Every Tick".** A sheet's own
+  events do run every frame (a sheet compiles into `_process`), but a verb's body runs when the verb
+  is CALLED - so the sheet-level placeholder was a plain lie about when those steps happen. The
+  sheet's own events are unchanged. Translated in all 8 shipped languages.
 - **A verb's body is open on sight.** Verbs used to render collapsed behind a "double-click to open"
   hint, so a pack still read as a list of headings. They now open by default - the steps are the
   point. A verb nested inside a group or a `#region` stays folded, since the enclosing block owns the

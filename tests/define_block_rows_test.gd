@@ -142,6 +142,37 @@ static func run() -> bool:
 		_flat_index_of(order_view, "define_fn_later") > 0, true) and ok
 	order_dock.free()
 
+	# ── A verb's body runs when the verb is CALLED, so a condition-less row inside it reads "Always".
+	# The SAME row on the sheet itself still reads "Every Tick" (a sheet compiles into _process), which
+	# is why the placeholder is context-dependent: "Every Tick" inside a function body is a plain lie
+	# about when those steps run.
+	var tick_sheet: EventSheetResource = EventSheetResource.new()
+	tick_sheet.host_class = "Node2D"
+	var sheet_level_event: EventRow = EventRow.new()
+	tick_sheet.events.append(sheet_level_event)
+	var body_verb: EventFunction = _make_function("do_it", TYPE_NIL, true, "Do It", "")
+	var verb_body_event: EventRow = EventRow.new()
+	body_verb.events.append(verb_body_event)
+	tick_sheet.functions.append(body_verb)
+	var tick_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	tick_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	tick_dock.setup(tick_sheet)
+	var tick_view: EventSheetViewport = tick_dock._active_view()
+	var verb_header: EventRowData = _find_row_by_uid_prefix(tick_view, "define_fn_do_it")
+	var verb_body_row: EventRowData = verb_header.children[0] if verb_header != null and not verb_header.children.is_empty() else null
+	if verb_body_row != null:
+		tick_view._ensure_event_spans(verb_body_row)
+	ok = _check("a condition-less row INSIDE a verb body reads 'Always'",
+		_row_has_span_text(verb_body_row, "Always"), true) and ok
+	ok = _check("it never claims to run 'Every Tick' inside a verb body",
+		_row_has_span_text(verb_body_row, "Every Tick"), false) and ok
+	var sheet_event_row: EventRowData = _find_row_by_resource(tick_view, sheet_level_event)
+	if sheet_event_row != null:
+		tick_view._ensure_event_spans(sheet_event_row)
+	ok = _check("the SHEET's own condition-less event still reads 'Every Tick'",
+		_row_has_span_text(sheet_event_row, "Every Tick"), true) and ok
+	tick_dock.free()
+
 	# ── A function-less sheet grows no verb rows ──
 	var empty_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	empty_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
@@ -404,6 +435,14 @@ static func _find_row_by_uid_prefix(view: EventSheetViewport, prefix: String) ->
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
 		if row_data != null and row_data.row_uid.begins_with(prefix):
+			return row_data
+	return null
+
+
+static func _find_row_by_resource(view: EventSheetViewport, resource: Resource) -> EventRowData:
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.source_resource == resource:
 			return row_data
 	return null
 

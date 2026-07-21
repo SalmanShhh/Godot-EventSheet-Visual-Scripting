@@ -115,6 +115,7 @@ Toggle Live Values: running sheets stream their variables here (editable).,切�
 + Add condition,+ 添加条件
 + Add event…,+ 添加事件…
 Every Tick,每帧
+Always,总是
 +  Add your first event,+  添加你的第一个事件
 New from template…,从模板新建…
 Create an event sheet…,创建事件表…

@@ -51,3 +51,7 @@ var language_block: bool = false
 # marks this row as STARTING that block, so the gap lands above the caption instead of between the
 # caption and its verb. View-only, never serialized.
 var attached_below: bool = false
+# True on a row rendered INSIDE a published verb's body. A sheet's own events run every frame, so a
+# condition-less event reads as "Every Tick" there - but a verb's body runs when the verb is CALLED, so
+# the same row must read "Always" instead. View-only, never serialized.
+var in_verb_body: bool = false

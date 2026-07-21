@@ -620,6 +620,9 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		if body_entry is Resource:
 			var child_row: EventRowData = _viewport._build_row_from_resource(body_entry as Resource, indent + 1)
 			if child_row != null:
+				# Mark the subtree BEFORE any span build: a condition-less row inside a verb body must
+				# read "Always" (it runs when the verb is called), not the sheet's "Every Tick".
+				_mark_verb_body(child_row)
 				if not body_editable:
 					_make_row_inert(child_row)
 				row_data.children.append(child_row)
@@ -638,6 +641,15 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 ## kind, and the add-cell click guards on a non-null source). Used for a published verb's body rows: they
 ## display the function's conditions/actions/raw blocks for reading, but their resources live in
 ## event_function.events, not sheet.events, so any write would alias or corrupt the .gd. Read-only reveal.
+## Flags a row and its whole subtree as living inside a published verb's body, so a condition-less
+## event reads "Always" (it runs when the verb is called) instead of the sheet-level "Every Tick"
+## (which is only true of the sheet's own events, since a sheet compiles into _process).
+func _mark_verb_body(row_data: EventRowData) -> void:
+	row_data.in_verb_body = true
+	for child: EventRowData in row_data.children:
+		_mark_verb_body(child)
+
+
 func _make_row_inert(row_data: EventRowData) -> void:
 	# Resolve the spans BEFORE dropping the resource. Event-row spans are built LAZILY, and
 	# _ensure_event_spans reads them off source_resource - so nulling first leaves the row permanently
@@ -2290,7 +2302,7 @@ func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, t
 			return "➜"
 
 
-func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
+func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
 	var condition_line_index: int = 0
 	var action_line_index: int = 0
@@ -2474,9 +2486,12 @@ func _build_event_spans(event_row: EventRow) -> Array[SemanticSpan]:
 	if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE:
 		# An event with no conditions reads as "every tick"; render it as a real cell (not bare
 		# text) so the condition lane still shows a clear, clickable empty event block.
+		# INSIDE a published verb's body it reads "Always" instead: a sheet's own events run every
+		# frame (a sheet compiles into _process), but a verb's body runs when the verb is CALLED, so
+		# "Every Tick" would be a plain lie about when those steps happen.
 		spans.append(
 			_make_span(
-				EventSheetL10n.translate("Every Tick"),
+				EventSheetL10n.translate("Always" if in_verb_body else "Every Tick"),
 				SemanticSpan.SpanType.CONDITION,
 				{
 					"lane": "condition",
@@ -2733,7 +2748,7 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 	if not row_data.spans.is_empty():
 		return
 	if row_data.source_resource is EventRow:
-		row_data.spans = _build_event_spans(row_data.source_resource as EventRow)
+		row_data.spans = _build_event_spans(row_data.source_resource as EventRow, row_data.in_verb_body)
 
 
 func _append_condition_prefix_spans(
