@@ -68,4 +68,31 @@ static func apply(
 		if base.get_luminance() > 0.5
 		else EventSheetPalette.COLOR_LANGUAGE_BLOCK
 	)
+	# Published verbs keep their per-ROLE hues for the same reason language blocks do - one hue means one
+	# kind of verb, independent of the editor accent. On a LIGHT editor theme the accents darken to hold
+	# contrast and the badge pills lift toward the background, or a generated light style would leave
+	# three dark badges sitting on every verb. The tint also strengthens, because a faint wash that reads
+	# on a dark sheet vanishes over a pale one.
+	var light_editor: bool = base.get_luminance() > 0.5
+	event_style.ace_action_accent_color = _role_accent(EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG, light_editor)
+	event_style.ace_condition_accent_color = _role_accent(EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG, light_editor)
+	event_style.ace_expression_accent_color = _role_accent(EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG, light_editor)
+	event_style.ace_action_badge_background_color = _role_badge(EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, base, light_editor)
+	event_style.ace_condition_badge_background_color = _role_badge(EventSheetPalette.COLOR_ACE_CONDITION_BADGE_BG, base, light_editor)
+	event_style.ace_expression_badge_background_color = _role_badge(EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG, base, light_editor)
+	event_style.verb_row_tint_strength = 0.16 if light_editor else 0.10
+	event_style.verb_chip_background_color = base.lerp(dark_1, 0.4)
+	event_style.verb_chip_foreground_color = Color(font_color.r, font_color.g, font_color.b, 0.7)
 	return style
+
+
+## A verb role's accent for a generated style: kept at its own hue, darkened on a light editor theme so
+## the badge text, verb name and accent bar all stay legible.
+static func _role_accent(role_accent: Color, light_editor: bool) -> Color:
+	return role_accent.darkened(0.3) if light_editor else role_accent
+
+
+## A verb role's badge pill for a generated style: lifted toward the sheet background on a light editor
+## theme, so a dark pill never sits on a pale row.
+static func _role_badge(role_badge: Color, base: Color, light_editor: bool) -> Color:
+	return role_badge.lerp(base, 0.7) if light_editor else role_badge

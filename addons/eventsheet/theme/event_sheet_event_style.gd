@@ -63,6 +63,25 @@ extends Resource
 ## methods-class, a host binding, a lifted switch case, a collapsed function) rather than a regular
 ## ACE event. Drawn as a quiet left stripe + faint wash so the distinction reads at a glance.
 @export var language_block_accent_color: Color = EventSheetPalette.COLOR_LANGUAGE_BLOCK
+## PUBLISHED VERB rows (a behaviour's own Actions / Conditions / Expressions, the vocabulary it
+## publishes) are tinted by which KIND of verb they are. Each role's ACCENT drives five surfaces at
+## once - the role badge's text, the verb name's tint, the row wash, the left accent bar, and the
+## description caption's band - so one colour re-skins that whole role. The BADGE background is the
+## pill behind the role word.
+@export var ace_action_badge_background_color: Color = EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG
+@export var ace_action_accent_color: Color = EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG
+@export var ace_condition_badge_background_color: Color = EventSheetPalette.COLOR_ACE_CONDITION_BADGE_BG
+@export var ace_condition_accent_color: Color = EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG
+@export var ace_expression_badge_background_color: Color = EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG
+@export var ace_expression_accent_color: Color = EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG
+## How loud a published verb's role tint is - the alpha of the wash behind the row (its description
+## caption uses 70% of it). The default is tuned for a dark sheet; a pale sheet usually needs more,
+## because a faint dark-on-dark wash disappears over a light row.
+@export_range(0.0, 0.4, 0.01) var verb_row_tint_strength: float = 0.10
+## The neutral chips on a published verb's ACTION lane - "gives back <type>", "waits", "static",
+## "internal", "featured". The de-emphasised chips (static / internal) derive from this pair.
+@export var verb_chip_background_color: Color = EventSheetPalette.COLOR_CHIP_BG
+@export var verb_chip_foreground_color: Color = EventSheetPalette.COLOR_CHIP_FG
 ## Corner roundness of the event BLOCK, in pixels. The LEFT side (including the always-
 ## rounded bottom-left) uses this full radius; the right side uses half of it, so blocks
 ## read as opening toward their actions. 0 = the classic square look.

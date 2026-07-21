@@ -25,6 +25,19 @@
   change" gesture a condition cell gives you. On a sheet whose verbs are authored locally, a faint
   `+ Add parameter` cell closes the loop; an opened pack stays a read view and keeps its right-click
   `Edit Verb…` route instead.
+- **The Theme editor covers published verbs.** Nine new tokens on the sheet/rows style: an accent and
+  a badge background per ACE role (`ace_action_*`, `ace_condition_*`, `ace_expression_*`), a
+  `verb_row_tint_strength` knob, and a `verb_chip_*` pair for the action-lane chips. Each role's ACCENT
+  drives five surfaces at once - its badge text, the verb's name, the row wash, the left accent bar and
+  the description caption's band - so one colour re-skins that whole role. Until now every one of those
+  was an `EventSheetPalette` constant: the entire identity of a verb row was unthemable.
+- The Theme editor's **live preview now contains published verbs** - one per role, with descriptions,
+  parameter cells and the whole chip set - so the new tokens can actually be judged while restyling.
+  It previously built `sheet.events` only and never touched `sheet.functions`.
+- **Quick Style** generates role colours too: on a light editor theme the accents darken and the badge
+  pills lift toward the background, and the tint strengthens, instead of leaving three dark-theme
+  badges on every verb. The bundled `solarized_light` preset (the only genuinely light one) carries
+  matching values; the eight dark presets keep the defaults.
 - Two new **EventSheets API** primitives, both dogfooded by the verb rows themselves so an extension's
   rows and a built-in's are the same code path: `add_field_cell(row, label, text, metadata)` renders a
   NAMED SLOT as a condition-style cell (any construct with named slots - a resource's fields, a block's

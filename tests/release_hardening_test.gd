@@ -47,6 +47,55 @@ static func run() -> bool:
 	var viewport: EventSheetViewport = EventSheetViewport.new()
 	viewport.set_sheet(sample)
 	all_passed = _check("preview viewport builds rows from the sample", viewport._flat_rows.size() > 0, true) and all_passed
+	# PUBLISHED VERBS must be previewable, or the verb tokens (role accents, wash strength, chips)
+	# cannot be judged while restyling. One per role, since each role's accent is its own token.
+	var sample_roles: Array[String] = []
+	for entry: Variant in sample.functions:
+		if entry is EventFunction:
+			sample_roles.append(ViewportRowBuilder.define_role_for(entry as EventFunction))
+	all_passed = _check("the sample previews an Action verb", sample_roles.has("action"), true) and all_passed
+	all_passed = _check("the sample previews a Condition verb", sample_roles.has("condition"), true) and all_passed
+	all_passed = _check("the sample previews an Expression verb", sample_roles.has("expression"), true) and all_passed
+	var sample_uids: Array[String] = []
+	for entry: Dictionary in viewport.get_flat_rows():
+		var sample_row: EventRowData = entry.get("row")
+		if sample_row != null:
+			sample_uids.append(sample_row.row_uid)
+	all_passed = _check("the verb row itself renders in the preview", sample_uids.has("define_fn_spawn_pickup"), true) and all_passed
+	all_passed = _check("so does its description caption", sample_uids.has("verb_note_spawn_pickup"), true) and all_passed
+
+	# The Theme editor's form is reflective, so a token only reaches the user if it is an @export.
+	all_passed = _check("the role accents are offered as tokens",
+		token_names.has("ace_action_accent_color") and token_names.has("ace_condition_accent_color")
+		and token_names.has("ace_expression_accent_color"), true) and all_passed
+	all_passed = _check("so are the wash strength and the verb chips",
+		token_names.has("verb_row_tint_strength") and token_names.has("verb_chip_background_color")
+		and token_names.has("verb_chip_foreground_color"), true) and all_passed
+
+	# Truthfulness: the Define row must read the STYLE, not EventSheetPalette. Restyle a role and a
+	# strength, rebuild, and check the row that comes out - that is the whole point of the tokens.
+	EventSheetThemeEditor.apply_token(working.event_style, "ace_condition_accent_color", Color.RED)
+	EventSheetThemeEditor.apply_token(working.event_style, "verb_row_tint_strength", 0.3)
+	var restyled: EventSheetResource = EventSheetThemeEditor.build_sample_sheet(working)
+	var restyled_view: EventSheetViewport = EventSheetViewport.new()
+	restyled_view.set_sheet(restyled)
+	var condition_verb_row: EventRowData = null
+	var action_verb_row: EventRowData = null
+	for entry: Dictionary in restyled_view.get_flat_rows():
+		var restyled_row: EventRowData = entry.get("row")
+		if restyled_row == null:
+			continue
+		if restyled_row.row_uid == "define_fn_can_afford":
+			condition_verb_row = restyled_row
+		elif restyled_row.row_uid == "define_fn_spawn_pickup":
+			action_verb_row = restyled_row
+	all_passed = _check("a restyled role accent reaches the verb's badge",
+		condition_verb_row != null and condition_verb_row.spans[0].metadata.get("badge_fg") == Color.RED, true) and all_passed
+	all_passed = _check("and tints the row's wash with it",
+		condition_verb_row != null and is_equal_approx(condition_verb_row.custom_color.r, 1.0), true) and all_passed
+	all_passed = _check("the wash STRENGTH is the token, not a baked literal",
+		action_verb_row != null and is_equal_approx(action_verb_row.custom_color.a, 0.3), true) and all_passed
+	restyled_view.free()
 	viewport.free()
 
 	# Preset saving produces a loadable .tres.

@@ -281,10 +281,12 @@ func _build_verb_note_row(event_function: EventFunction, role: String, indent: i
 				break
 	if note.is_empty():
 		return null
-	var accent: Color = (define_role_badge_colors(role) as Array)[1]
+	var accent: Color = (_define_role_colors(role) as Array)[1]
+	# The caption's band is a quieter echo of its verb's wash (70% of it), so the pair reads as one
+	# block with the prose sitting behind the row it describes.
 	var row_data: EventRowData = build_caption_row(
 		note, indent, "verb_note_%s" % event_function.function_name.strip_edges(),
-		Color(accent.r, accent.g, accent.b, 0.07)
+		Color(accent.r, accent.g, accent.b, _verb_tint_strength() * 0.7)
 	)
 	row_data.disabled = not event_function.enabled
 	return row_data
@@ -338,8 +340,9 @@ func append_field_cell(row_data: EventRowData, label: String, text: String, meta
 	return row_data
 
 
-## The [background, accent] pair a published verb's role paints with - shared by the Define row's badge,
-## its wash and accent bar, and its description caption, so all four always agree.
+## The [background, accent] pair a published verb's role paints with, from the PALETTE - the fallback
+## used when there is no live style to read (a headless build, a null style). Kept static because the
+## function dialog and other style-less callers use it directly.
 static func define_role_badge_colors(role: String) -> Array:
 	match role:
 		"condition":
@@ -347,6 +350,35 @@ static func define_role_badge_colors(role: String) -> Array:
 		"expression":
 			return [EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG, EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG]
 	return [EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG]
+
+
+## The [background, accent] pair for a role, read from the LIVE THEME so a restyle reaches every
+## surface the role drives (badge, verb name tint, row wash, accent bar, caption band). Falls back to
+## the palette pair when no style is loaded.
+func _define_role_colors(role: String) -> Array:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	if event_style == null:
+		return define_role_badge_colors(role)
+	match role:
+		"condition":
+			return [event_style.ace_condition_badge_background_color, event_style.ace_condition_accent_color]
+		"expression":
+			return [event_style.ace_expression_badge_background_color, event_style.ace_expression_accent_color]
+	return [event_style.ace_action_badge_background_color, event_style.ace_action_accent_color]
+
+
+## How loud the role tint is, from the theme (with the palette-era default when no style is loaded).
+func _verb_tint_strength() -> float:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	return event_style.verb_row_tint_strength if event_style != null else 0.10
+
+
+## The [background, foreground] pair the ACTION-lane chips paint with, from the theme.
+func _verb_chip_colors() -> Array:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	if event_style == null:
+		return [EventSheetPalette.COLOR_CHIP_BG, EventSheetPalette.COLOR_CHIP_FG]
+	return [event_style.verb_chip_background_color, event_style.verb_chip_foreground_color]
 
 
 ## Which verb kind a function publishes as, by its return type: void does something (Action),
@@ -538,13 +570,10 @@ static func strip_comment_prefix(line: String) -> String:
 ## A subtle per-role tint for a published-verb name - the object label lerped toward the role's badge
 ## accent, so Action / Condition / Expression read distinctly without a loud colour.
 func _define_role_name_color(role: String) -> Color:
-	var base: Color = _viewport._get_event_style().object_label_color
-	match role:
-		"condition":
-			return base.lerp(EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG, 0.55)
-		"expression":
-			return base.lerp(EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG, 0.55)
-	return base.lerp(EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG, 0.55)
+	# The object label lerped toward the ROLE'S THEMED accent, so restyling a role moves its verb names
+	# with its badge. The 0.55 strength stays a literal - it is a de-emphasis ratio against
+	# object_label_color (itself a token), not a colour choice.
+	return _viewport._get_event_style().object_label_color.lerp((_define_role_colors(role) as Array)[1], 0.55)
 
 
 ## One Define block, as a real two-lane event row rather than a spec-sheet line. The CONDITION lane
@@ -565,16 +594,22 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	row_data.row_uid = "define_fn_%s" % (fold_key if not fold_key.is_empty() else str(event_function.get_instance_id()))
 	row_data.disabled = not event_function.enabled
 	var role: String = define_role_for(event_function)
-	var badge_colors: Array = define_role_badge_colors(role)
-	# The whole verb reads as a Construct-style event block tinted by its ACE kind: a faint wash of the
-	# role's accent behind the row (drawn by the renderer's custom_color path) plus a left accent bar, so
-	# Action / Condition / Expression are distinguishable at a glance, not only by the badge word.
+	var badge_colors: Array = _define_role_colors(role)
+	# The whole verb reads as a Construct-style event block tinted by its ACE kind: a wash of the role's
+	# accent behind the row (drawn by the renderer, which takes its strength from this alpha) plus a left
+	# accent bar, so Action / Condition / Expression are distinguishable at a glance, not only by the
+	# badge word. The alpha IS the theme's verb_row_tint_strength - the renderer reads it back off
+	# custom_color rather than keeping a second literal that could drift out of step with this one.
 	var role_accent: Color = badge_colors[1]
-	row_data.custom_color = Color(role_accent.r, role_accent.g, role_accent.b, 0.16)
+	row_data.custom_color = Color(role_accent.r, role_accent.g, role_accent.b, _verb_tint_strength())
 	var display_name: String = event_function.ace_display_name.strip_edges()
 	if display_name.is_empty():
 		display_name = event_function.function_name.capitalize()
-	var muted: Color = Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.9)
+	var chip_bg: Color = _verb_chip_colors()[0]
+	var chip_fg: Color = _verb_chip_colors()[1]
+	# The de-emphasised chips (static / internal) are the chip pair mixed toward its own background, so
+	# they read as quieter WITHOUT a second theme token.
+	var muted: Color = chip_fg.lerp(chip_bg, 0.45)
 	var spans: Array[SemanticSpan] = [
 		_make_span(role.capitalize(), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
@@ -643,17 +678,15 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	# The CATEGORY is deliberately NOT drawn: a pack files every one of its verbs under the same category,
 	# so the chip repeated the identical word down the whole sheet. It lives in the hover instead.
 	if role != "action":
-		spans.append(_define_chip(
-			"gives back %s" % _friendly_return_type(event_function),
-			EventSheetPalette.COLOR_CHIP_BG, EventSheetPalette.COLOR_CHIP_FG, 0))
+		spans.append(_define_chip("gives back %s" % _friendly_return_type(event_function), chip_bg, chip_fg, 0))
 	if event_function.is_async:
-		spans.append(_define_chip("waits", EventSheetPalette.COLOR_CHIP_BG, EventSheetPalette.COLOR_CHIP_FG, 0))
+		spans.append(_define_chip("waits", chip_bg, chip_fg, 0))
 	if event_function.is_static:
-		spans.append(_define_chip("static", EventSheetPalette.COLOR_CHIP_BG, muted, 0))
+		spans.append(_define_chip("static", chip_bg, muted, 0))
 	if not event_function.expose_as_ace:
-		spans.append(_define_chip("internal", EventSheetPalette.COLOR_CHIP_BG, muted, 0))
+		spans.append(_define_chip("internal", chip_bg, muted, 0))
 	if event_function.featured:
-		spans.append(_define_chip("★ featured", EventSheetPalette.COLOR_CHIP_BG, EventSheetPalette.COLOR_CHIP_FG, 0))
+		spans.append(_define_chip("★ featured", chip_bg, chip_fg, 0))
 	row_data.spans = spans
 	# Construct-style expandable block: the function BODY renders as foldable children (its conditions,
 	# actions, and raw GDScript blocks), built by the SAME dispatcher as sheet events, folding like a group.

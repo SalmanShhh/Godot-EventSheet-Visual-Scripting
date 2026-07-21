@@ -119,6 +119,54 @@ static func build_sample_sheet(style: EventSheetEditorStyle) -> EventSheetResour
 	disabled_action.ace_id = "QueueFree"
 	disabled_event.actions.append(disabled_action)
 	sheet.events.append(disabled_event)
+	# PUBLISHED VERBS live in sheet.functions - a separate array from sheet.events - and render through
+	# build_trailing_verb_rows, so they need no anchor row here. One verb per ROLE, because a role's
+	# accent drives its badge, its verb name, the row wash, the accent bar AND its description caption:
+	# without all three present, two thirds of the verb tokens cannot be judged while restyling. The
+	# parameters exercise the field cells, and the chips cover waits / static / internal / featured.
+	var action_verb: EventFunction = EventFunction.new()
+	action_verb.function_name = "spawn_pickup"
+	action_verb.ace_display_name = "Spawn Pickup"
+	action_verb.description = "Drops a pickup at a point, after a short delay."
+	action_verb.return_type = TYPE_NIL
+	action_verb.expose_as_ace = true
+	action_verb.is_async = true
+	action_verb.featured = true
+	var where_param: ACEParam = ACEParam.new()
+	where_param.id = "where"
+	where_param.type_name = "Vector2"
+	action_verb.params.append(where_param)
+	var kind_param: ACEParam = ACEParam.new()
+	kind_param.id = "pickup_kind"
+	kind_param.type_name = "String"
+	kind_param.gdscript_default = "\"coin\""
+	action_verb.params.append(kind_param)
+	# A body row, so the verb's open block (and the in-body "Always" cell) restyles live too.
+	var verb_body_event: EventRow = EventRow.new()
+	var verb_body_action: ACEAction = ACEAction.new()
+	verb_body_action.provider_id = "Core"
+	verb_body_action.ace_id = "QueueFree"
+	verb_body_event.actions.append(verb_body_action)
+	action_verb.events.append(verb_body_event)
+	sheet.functions.append(action_verb)
+	var condition_verb: EventFunction = EventFunction.new()
+	condition_verb.function_name = "can_afford"
+	condition_verb.ace_display_name = "Can Afford"
+	condition_verb.description = "Answers whether the player can pay a price."
+	condition_verb.return_type = TYPE_BOOL
+	condition_verb.expose_as_ace = true
+	var cost_param: ACEParam = ACEParam.new()
+	cost_param.id = "cost"
+	cost_param.type_name = "int"
+	condition_verb.params.append(cost_param)
+	sheet.functions.append(condition_verb)
+	var expression_verb: EventFunction = EventFunction.new()
+	expression_verb.function_name = "distance_to_goal"
+	expression_verb.ace_display_name = "Distance To Goal"
+	expression_verb.return_type = TYPE_FLOAT
+	expression_verb.is_static = true
+	expression_verb.expose_as_ace = false
+	sheet.functions.append(expression_verb)
 	return sheet
 
 
@@ -129,6 +177,15 @@ const _TOKEN_DESCRIPTIONS := {
 	"row_background_color": "The background of a normal event row.",
 	"row_background_alt_color": "The background of every OTHER row (the zebra stripe).",
 	"row_border_color": "The thin line between rows.",
+	"ace_action_badge_background_color": "The pill behind the word \"Action\" on a published verb.",
+	"ace_action_accent_color": "The Action colour - its badge text, verb name, row wash, accent bar and description band.",
+	"ace_condition_badge_background_color": "The pill behind the word \"Condition\" on a published verb.",
+	"ace_condition_accent_color": "The Condition colour - its badge text, verb name, row wash, accent bar and description band.",
+	"ace_expression_badge_background_color": "The pill behind the word \"Expression\" on a published verb.",
+	"ace_expression_accent_color": "The Expression colour - its badge text, verb name, row wash, accent bar and description band.",
+	"verb_row_tint_strength": "How loud a published verb's role tint is. Raise it on a pale sheet, where a faint wash disappears.",
+	"verb_chip_background_color": "The pill behind a verb's \"gives back\", \"waits\", \"static\", \"internal\" and \"featured\" chips.",
+	"verb_chip_foreground_color": "The text on those chips. The quieter ones (static, internal) are mixed from this.",
 	"condition_lane_color": "A faint tint over the conditions (left) lane.",
 	"action_lane_color": "A faint tint over the actions (right) lane.",
 	"lane_divider_color": "The vertical line splitting conditions from actions.",

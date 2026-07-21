@@ -334,9 +334,12 @@ func draw_row(control: Control, layout: Dictionary, row_data: EventRowData, font
 		# the whole block. Drawn AFTER the lane fills (the same place the language-block cue draws) so the
 		# kind reads across both lanes instead of hiding under them. Error / firing stripes draw after this,
 		# so they still win. Regular event rows carry no custom_color and are untouched.
+		# The wash STRENGTH is the alpha the builder already baked in from the theme's
+		# verb_row_tint_strength - read it back rather than keeping a second literal here that could
+		# drift out of step with the one the caption band is derived from.
 		var role_accent: Color = row_data.custom_color
 		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), Color(role_accent.r, role_accent.g, role_accent.b, 0.9), true)
-		control.draw_rect(row_fill_rect, Color(role_accent.r, role_accent.g, role_accent.b, 0.10), true)
+		control.draw_rect(row_fill_rect, role_accent, true)
 	if not row_data.error_message.is_empty():
 		# Error → row deep-link: a red left stripe + faint wash flag the offending row (the
 		# message shows in the row tooltip). A fixed error red - not yet a theme token.
