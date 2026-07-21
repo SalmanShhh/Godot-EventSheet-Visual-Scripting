@@ -49,6 +49,22 @@ static func run() -> bool:
 	call_blank.params = {"group": "\"enemies\"", "method": "\"reset\"", "args": ""}
 	ok = _check("Call Group (with value) drops the comma when the value is blank", ActionCodegen.generate_action(call_blank, "", ""), "get_tree().call_group(\"enemies\", \"reset\")") and ok
 
+	# Safe single-node wiring: plain Connect Signal stacks a duplicate handler when re-run, so these two
+	# make re-running harmless - guard on is_connected, or let the connection fire once and drop itself.
+	var connect_unique: ACEAction = ACEAction.new()
+	connect_unique.provider_id = "Core"
+	connect_unique.ace_id = "ConnectSignalUnique"
+	connect_unique.enabled = true
+	connect_unique.params = {"source": "self", "signal": "pressed", "callable": "_on_pressed"}
+	ok = _check("Connect Signal (if not already) guards against a duplicate handler", ActionCodegen.generate_action(connect_unique, "", ""), "if not self.pressed.is_connected(_on_pressed):\n\tself.pressed.connect(_on_pressed)") and ok
+
+	var connect_once: ACEAction = ACEAction.new()
+	connect_once.provider_id = "Core"
+	connect_once.ace_id = "ConnectSignalOneShot"
+	connect_once.enabled = true
+	connect_once.params = {"source": "self", "signal": "pressed", "callable": "_on_pressed"}
+	ok = _check("Connect Signal (one-shot) drops itself after firing", ActionCodegen.generate_action(connect_once, "", ""), "self.pressed.connect(_on_pressed, CONNECT_ONE_SHOT)") and ok
+
 	return ok
 
 

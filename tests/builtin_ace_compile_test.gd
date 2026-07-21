@@ -29,6 +29,7 @@ const NOT_STANDALONE: Array[String] = [
 	"AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
 	"ConnectGroupSignal", "DisconnectGroupSignal",  # loop over a group and touch a user signal/callable - same as ConnectSignal
+	"ConnectSignalUnique", "ConnectSignalOneShot",  # same user-supplied signal/callable as ConnectSignal
 	"IsLocaleChangeNotification",  # references `what` - only exists inside _notification (its trigger's virtual)
 	"BehaviorHost", "BehaviorHostValid",  # read the behaviour-only `host` var (synthesized only when behavior_mode)
 ]

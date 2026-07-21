@@ -585,8 +585,9 @@ static func _note_node_refs(text: String, targets: Dictionary) -> void:
 	if text.strip_edges().is_empty():
 		return
 	for reference: String in ACEParamsDialog.node_references_in_expression(text):
-		if not reference.begins_with("/"):
-			targets["$" + reference] = true
+		# Absolute reaches count too: a god-sheet built entirely on /root/... paths is the WORST breadth,
+		# and excluding them let exactly that case report clean. Keyed bare so it reads as absolute.
+		targets[reference if reference.begins_with("/") else "$" + reference] = true
 	for unique_name: String in ACEParamsDialog.unique_names_in_expression(text):
 		targets["%" + unique_name] = true
 

@@ -117,6 +117,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Stops a signal from calling a method, so that response no longer fires."))
 	descriptors.append(F.make_descriptor("Core", "IsSignalConnected", "Signal Is Connected", ACEDescriptor.ACEType.CONDITION, "{source}.{signal}.is_connected({callable})", "", [F.make_param("source", "String", "self", "Source", "Object emitting the signal.", "expression"), F.make_param("signal", "String", "pressed", "Signal", "Signal name."), F.make_param("callable", "String", "_on_pressed", "Callable", "Method/Callable to test.", "expression")], CAT, "{source}.{signal} connected to {callable}")
 		.described("True when a method is currently hooked up to listen for that signal."))
+	# Plain Connect Signal is NOT idempotent: running it twice stacks a second handler and the response
+	# fires twice (the classic "my handler runs 40 times" bug). These two make re-running safe - guard on
+	# is_connected, or let the connection fire once and drop itself.
+	descriptors.append(F.make_descriptor("Core", "ConnectSignalUnique", "Connect Signal (if not already)", ACEDescriptor.ACEType.ACTION, "if not {source}.{signal}.is_connected({callable}):\n\t{source}.{signal}.connect({callable})", "", [F.make_param("source", "String", "self", "Source", "Object emitting the signal.", "expression"), F.make_param("signal", "String", "pressed", "Signal", "Signal name."), F.make_param("callable", "String", "_on_pressed", "Callable", "Method/Callable to connect.", "expression")], CAT, "connect {source}.{signal} -> {callable} (if not already)")
+		.described("Wires a signal only when it is not already wired, so re-running never stacks duplicate handlers."))
+	descriptors.append(F.make_descriptor("Core", "ConnectSignalOneShot", "Connect Signal (one-shot)", ACEDescriptor.ACEType.ACTION, "{source}.{signal}.connect({callable}, CONNECT_ONE_SHOT)", "", [F.make_param("source", "String", "self", "Source", "Object emitting the signal.", "expression"), F.make_param("signal", "String", "pressed", "Signal", "Signal name."), F.make_param("callable", "String", "_on_pressed", "Callable", "Method/Callable to run once.", "expression")], CAT, "connect {source}.{signal} -> {callable} (one-shot)")
+		.described("Wires a signal to run ONCE - the connection drops itself after it fires."))
 	# Modern Godot 4 form `target.signal.emit(args)` - `signal` is a BARE identifier (not a quoted
 	# string), which keeps the output parity-clean (the legacy `emit_signal("name")` matches a banned
 	# pattern in codegen_parity_test.gd) and idiomatic. Pairs with a trigger that receives the args.

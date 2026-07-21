@@ -18,6 +18,10 @@
 - Every party (group, signal, handler) stays a visible literal on the row, so the wiring is
   greppable and traceable to a named group - decoupling the *reference*, not the visibility (no
   global event bus, no spooky-action-at-a-distance). See `docs/GUIDE-COMPOSITION-SYSTEMS.md`.
+- **Connect Signal (if not already)** / **Connect Signal (one-shot)**: plain Connect Signal is not
+  idempotent - re-running it stacks a second handler and the response fires twice (the classic "my
+  handler runs 40 times" bug). The first guards on `is_connected`, the second connects with
+  `CONNECT_ONE_SHOT` so the connection drops itself after it fires.
 
 ### Changed - the Doctor flags fragile node paths, and coupling-teaching defaults point at groups
 
@@ -25,6 +29,8 @@
   `/root/...`) or climbs two-or-more parents (`../../..`), which breaks silently when a node moves
   or is renamed. Advisory (info) - a single `../Sibling` is fine and is not flagged - and it points
   at a group, a scene-unique node, or Connect Group Signal instead of a path.
+- The **fanout god-sheet** check now counts absolute reaches. It skipped any reference starting with
+  `/`, so a sheet built entirely on `/root/...` paths - the worst breadth there is - reported clean.
 - The starting defaults for node-targeting ACEs now model the decoupled pattern rather than teaching
   the anti-pattern: Overlaps Body/Area default to `get_tree().get_first_node_in_group(...)` (was
   `get_node("../Player")`), Remove/Move Child use `get_child(0)` (no hardcoded child name), and the
@@ -55,6 +61,9 @@
   block. The `CanvasSurface` now holds a reference to every pasted texture for its own
   lifetime, so a freed source node can never break the bake. Regression-pinned in
   `tests/canvas_paste_test.gd`.
+- The canvas display sprite is freed with its surface. It is parented to the **host**, not to the
+  surface, so freeing or re-creating a surface left a stray `Sprite2D` on the host still pointing at
+  a dead `ViewportTexture`. The surface now frees it in `_exit_tree`.
 
 ### Added - blank lines inside a function body now survive the lift
 
