@@ -122,6 +122,16 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	# pattern in codegen_parity_test.gd) and idiomatic. Pairs with a trigger that receives the args.
 	descriptors.append(F.make_descriptor("Core", "EmitSignalOn", "Emit Signal On", ACEDescriptor.ACEType.ACTION, "{target}.{signal}.emit({args})", "", [F.make_param("target", "String", "self", "Target", "Object that owns the signal.", "expression"), F.make_param("signal", "String", "died", "Signal", "Signal name (a bare identifier, e.g. died).", "signal_reference"), F.make_param("args", "String", "", "Arguments", "Optional signal arguments (comma-separated).")], CAT, "emit {target}.{signal}")
 		.described("Fires a signal on an object to notify everything listening for it."))
+	# Group-scoped signal wiring - the OBSERVER direction, decoupled. A listener wires ITSELF to a signal on
+	# every current member of a group at once, holding no direct reference to (and no tree path to) any
+	# emitter - the fix for "react to any enemy dying" without one Connect Signal per enemy. The is_connected
+	# guard makes re-runs idempotent (never stacks duplicate handlers). Pairs with the call_group broadcast.
+	# Connects only CURRENT members; nodes that join the group later are wired by re-running it or on spawn.
+	descriptors.append(F.make_descriptor("Core", "ConnectGroupSignal", "Connect Group Signal", ACEDescriptor.ACEType.ACTION, "for __emitter_{uid}: Node in get_tree().get_nodes_in_group({group}):\n\tif not __emitter_{uid}.{signal}.is_connected({callable}):\n\t\t__emitter_{uid}.{signal}.connect({callable})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Every current member of this group is wired - no per-node reference.", "group_reference"), F.make_param("signal", "String", "died", "Signal", "Signal name (a bare identifier, e.g. died) the members emit.", "signal_reference"), F.make_param("callable", "String", "_on_group_signal", "Callable", "Method/Callable to run when any member fires it.", "expression")], CAT, "connect {group}.{signal} -> {callable}")
+		.described("Listens to a signal on every current member of a group at once, with no reference to any of them.")
+		.featured())
+	descriptors.append(F.make_descriptor("Core", "DisconnectGroupSignal", "Disconnect Group Signal", ACEDescriptor.ACEType.ACTION, "for __emitter_{uid}: Node in get_tree().get_nodes_in_group({group}):\n\tif __emitter_{uid}.{signal}.is_connected({callable}):\n\t\t__emitter_{uid}.{signal}.disconnect({callable})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Every current member of this group is unwired.", "group_reference"), F.make_param("signal", "String", "died", "Signal", "Signal name (a bare identifier).", "signal_reference"), F.make_param("callable", "String", "_on_group_signal", "Callable", "Method/Callable to stop running.", "expression")], CAT, "disconnect {group}.{signal} -> {callable}")
+		.described("Stops listening to a signal on every current member of a group."))
 
 	# ── Math/string idioms not already covered (Clamp/Lerp/Choose/Random live in Core) ──
 	descriptors.append(F.make_descriptor("Core", "AbsValue", "Absolute Value", ACEDescriptor.ACEType.EXPRESSION, "abs({value})", "", [F.make_param("value", "String", "0", "Value", "Value.", "expression")], CAT, "abs({value})")

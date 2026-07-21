@@ -66,7 +66,7 @@ static func _make_node_scoped_targetable(descriptor: ACEDescriptor) -> void:
 		var lead_len: int = line.length() - line.lstrip(" \t").length()
 		out.append(line.substr(0, lead_len) + "{target.}" + line.substr(lead_len))
 	descriptor.codegen_template = "\n".join(out)
-	descriptor.params.append(EventForgeACEFactory.make_param("target", "String", "", "On node", "Act on another node instead of this one. Leave blank for this node, or pick a node / type a path like $Enemy or get_node(\"UI/Score\").", "expression"))
+	descriptor.params.append(EventForgeACEFactory.make_param("target", "String", "", "On node", "Act on another node instead of this one. Leave blank for this node, pick a node, or address one without a tree path - e.g. get_tree().get_first_node_in_group(\"player\").", "expression"))
 
 
 ## True when every non-blank template line is a simple member operation that survives a `<node>.` prefix

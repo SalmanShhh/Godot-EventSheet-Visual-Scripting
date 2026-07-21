@@ -28,6 +28,7 @@ const NOT_STANDALONE: Array[String] = [
 	"EveryXSeconds", "TriggerOnce", "SingleFlight",  # call sheet-synthesized companion state (an accumulator / an edge-test helper / a busy latch)
 	"AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
+	"ConnectGroupSignal", "DisconnectGroupSignal",  # loop over a group and touch a user signal/callable - same as ConnectSignal
 	"IsLocaleChangeNotification",  # references `what` - only exists inside _notification (its trigger's virtual)
 	"BehaviorHost", "BehaviorHostValid",  # read the behaviour-only `host` var (synthesized only when behavior_mode)
 ]

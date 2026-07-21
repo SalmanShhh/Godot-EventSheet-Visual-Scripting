@@ -33,9 +33,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns the surface direction from the character's last collision."))
 
 	# ── Area2D: overlap tests + lists (the common "am I touching X" queries) ──
-	descriptors.append(F.make_descriptor("Core", "OverlapsBody", "Overlaps Body", ACEDescriptor.ACEType.CONDITION, "overlaps_body({body})", "", [F.make_param("body", "String", "get_node(\"../Player\")", "Body", "The body node to test against (replace with your target - `self` never overlaps itself).", "expression")], "Collisions", "overlaps body {body}", "Area2D")
+	descriptors.append(F.make_descriptor("Core", "OverlapsBody", "Overlaps Body", ACEDescriptor.ACEType.CONDITION, "overlaps_body({body})", "", [F.make_param("body", "String", "get_tree().get_first_node_in_group(\"player\")", "Body", "The body to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression")], "Collisions", "overlaps body {body}", "Area2D")
 		.described("True when this Area2D is overlapping the given physics body."))
-	descriptors.append(F.make_descriptor("Core", "OverlapsArea", "Overlaps Area", ACEDescriptor.ACEType.CONDITION, "overlaps_area({area})", "", [F.make_param("area", "String", "get_node(\"../Trigger\")", "Area", "The area node to test against (replace with your target - `self` never overlaps itself).", "expression")], "Collisions", "overlaps area {area}", "Area2D")
+	descriptors.append(F.make_descriptor("Core", "OverlapsArea", "Overlaps Area", ACEDescriptor.ACEType.CONDITION, "overlaps_area({area})", "", [F.make_param("area", "String", "get_tree().get_first_node_in_group(\"triggers\")", "Area", "The area to test against - a group member here (no tree path), or pick a node. `self` never overlaps itself.", "expression")], "Collisions", "overlaps area {area}", "Area2D")
 		.described("True when this Area2D is overlapping the given other area."))
 	descriptors.append(F.make_descriptor("Core", "HasOverlappingBodies", "Has Overlapping Bodies", ACEDescriptor.ACEType.CONDITION, "has_overlapping_bodies()", "", [], "Collisions", "has overlapping bodies", "Area2D")
 		.described("True when this Area2D currently overlaps any physics body."))

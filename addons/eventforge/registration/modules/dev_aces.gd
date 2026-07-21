@@ -59,6 +59,11 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns the largest value of a property among all group members."))
 	descriptors.append(F.make_descriptor("Core", "CallGroup", "Call Method On Group", ACEDescriptor.ACEType.ACTION, "get_tree().call_group({group}, {method})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group name.", "group_reference"), F.make_param("method", "String", "\"reset\"", "Method", "Method name to call on every member.", "expression")], "Groups", "call {method} on {group}")
 		.described("Calls the named method on every node in a group at once."))
+	# The SEND direction with data: a decoupled broadcast that carries a value to every group member (bare
+	# call_group carries none, so passing data used to force get_node(sibling).method(x)). Leave Value blank
+	# for a no-arg call - the {, args} optional-comma drops cleanly.
+	descriptors.append(F.make_descriptor("Core", "CallGroupWith", "Call Method On Group (with value)", ACEDescriptor.ACEType.ACTION, "get_tree().call_group({group}, {method}{, args})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group name.", "group_reference"), F.make_param("method", "String", "\"take_damage\"", "Method", "Method to call on every member.", "expression"), F.make_param("args", "String", "10", "Value", "Value(s) passed to the method (comma-separated); leave blank for none.", "expression")], "Groups", "call {method}({args}) on {group}")
+		.described("Calls a method with a value on every member of a group at once - a decoupled broadcast that carries data."))
 
 	# ── Metadata: arbitrary key/value on any node (Godot's set_meta/get_meta) ──
 	descriptors.append(F.make_descriptor("Core", "SetMeta", "Set Metadata", ACEDescriptor.ACEType.ACTION, "{target}.set_meta({name}, {value})", "", [F.make_param("target", "String", "self", "Target", "Object to tag.", "expression"), F.make_param("name", "String", "\"key\"", "Name", "Metadata key.", "expression"), F.make_param("value", "String", "0", "Value", "Value to store.", "expression")], "Metadata", "set meta {name} = {value}")

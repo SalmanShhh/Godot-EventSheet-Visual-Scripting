@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Added - decoupled group messaging (react to and broadcast to a whole group, no references)
+
+- **Connect Group Signal** / **Disconnect Group Signal** (Actions): a listener wires itself to a
+  signal on *every current member* of a group at once - "when any node in `enemies` fires `died`,
+  run `_on_enemy_died`" - holding no direct reference to (and no tree path to) any emitter. This is
+  the observer-direction counterpart to the existing decoupled `call_group` broadcast, and the fix
+  for the "react to any enemy dying" case that used to force one Connect Signal (and one node
+  reference) per emitter. Compiles to a plain `get_nodes_in_group` + `is_connected`-guarded connect
+  loop (idempotent - re-runs never stack duplicate handlers); zero plugin dependency.
+- **Call Method On Group (with value)** (Action): the send direction that carries data -
+  `get_tree().call_group(group, method, value)` - so passing a payload to a whole group no longer
+  forces `get_node(sibling).method(x)`. Leave the value blank for a bare call (the `{, args}`
+  optional-comma drops cleanly).
+- Every party (group, signal, handler) stays a visible literal on the row, so the wiring is
+  greppable and traceable to a named group - decoupling the *reference*, not the visibility (no
+  global event bus, no spooky-action-at-a-distance). See `docs/GUIDE-COMPOSITION-SYSTEMS.md`.
+
+### Changed - the Doctor flags fragile node paths, and coupling-teaching defaults point at groups
+
+- New Doctor check **fragile-node-path**: flags a sheet that reaches the scene root (absolute
+  `/root/...`) or climbs two-or-more parents (`../../..`), which breaks silently when a node moves
+  or is renamed. Advisory (info) - a single `../Sibling` is fine and is not flagged - and it points
+  at a group, a scene-unique node, or Connect Group Signal instead of a path.
+- The starting defaults for node-targeting ACEs now model the decoupled pattern rather than teaching
+  the anti-pattern: Overlaps Body/Area default to `get_tree().get_first_node_in_group(...)` (was
+  `get_node("../Player")`), Remove/Move Child use `get_child(0)` (no hardcoded child name), and the
+  "On node" hint leads with a group example. Values only - every row still bakes its own, so no
+  frozen ace_id or generated output changes.
+
 ### Added - paste live nodes onto the Drawing Canvas
 
 - Four new Drawing Canvas actions bake a node's live visual straight onto the canvas as a

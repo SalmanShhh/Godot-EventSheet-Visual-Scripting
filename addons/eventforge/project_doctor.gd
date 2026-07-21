@@ -55,6 +55,7 @@ static func run() -> Dictionary:
 	check_unused_variables(sheet_paths, findings)
 	check_duplicated_globals(sheet_paths, findings)
 	check_fanout_god_sheets(sheet_paths, findings)
+	check_fragile_node_paths(sheet_paths, findings)
 	check_unbounded_loops(sheet_paths, findings)
 	check_coroutine_in_per_frame_trigger(sheet_paths, findings)
 	check_unused_packs(sheet_paths, findings)
@@ -588,6 +589,60 @@ static func _note_node_refs(text: String, targets: Dictionary) -> void:
 			targets["$" + reference] = true
 	for unique_name: String in ACEParamsDialog.unique_names_in_expression(text):
 		targets["%" + unique_name] = true
+
+
+## A node path that reaches the SCENE ROOT (absolute /root/...) or climbs TWO OR MORE parents (../../..)
+## is fragile: it assumes exactly where a node lives, so it breaks silently the moment a node is moved or
+## renamed - the "your nodes are too connected" smell. Advisory (info): a single ../Sibling is fine and is
+## NOT flagged; this only catches absolute and deep parent reaches, and points at a group / scene-unique
+## node / Connect Group Signal so the sheet reacts without depending on the tree shape.
+static func check_fragile_node_paths(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		if sheet_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		var fragile: Dictionary = {}
+		_collect_fragile_paths(sheet.events, fragile)
+		for function_entry: Variant in sheet.functions:
+			if function_entry is EventFunction:
+				var event_function: EventFunction = function_entry
+				_collect_fragile_paths(event_function.events if not event_function.events.is_empty() else event_function.rows, fragile)
+		if not fragile.is_empty():
+			var paths: Array = fragile.keys()
+			paths.sort()
+			_add(findings, "info", "fragile-node-path", sheet_path,
+				"This sheet reaches across the tree with %d fragile node path(s) (%s) - an absolute or multi-level parent path breaks silently when a node moves or is renamed. Prefer a group (get_first_node_in_group), a scene-unique node, or Connect Group Signal to react without depending on where a node lives." % [fragile.size(), ", ".join(PackedStringArray(paths))])
+
+
+## Same walk as _collect_external_targets, collecting only the FRAGILE references (absolute / deep parent).
+static func _collect_fragile_paths(rows: Array, fragile: Dictionary) -> void:
+	for row: Variant in rows:
+		if row is RawCodeRow:
+			_note_fragile_paths((row as RawCodeRow).code, fragile)
+		elif row is EventGroup:
+			var group: EventGroup = row
+			_collect_fragile_paths(group.events if not group.events.is_empty() else group.rows, fragile)
+		elif row is EventRow:
+			var event: EventRow = row
+			_note_fragile_paths(event.with_node_target, fragile)
+			for ace: Variant in event.conditions + event.actions:
+				if ace is RawCodeRow:
+					_note_fragile_paths((ace as RawCodeRow).code, fragile)
+				elif ace is Resource and ace.get("params") is Dictionary:
+					for value: Variant in (ace.get("params") as Dictionary).values():
+						_note_fragile_paths(str(value), fragile)
+			_collect_fragile_paths(event.sub_events, fragile)
+
+
+## Records a node reference only when it is absolute (leading /) or climbs two-or-more parents (../../..).
+static func _note_fragile_paths(text: String, fragile: Dictionary) -> void:
+	if text.strip_edges().is_empty():
+		return
+	for reference: String in ACEParamsDialog.node_references_in_expression(text):
+		if reference.begins_with("/") or reference.count("../") >= 2:
+			fragile[reference] = true
 
 
 ## Packs no sheet, scene or autoload references are removal candidates - advisory,

@@ -114,6 +114,34 @@ for __entity in get_tree().get_nodes_in_group("enemies"):
         __entity.call("recover")
 ```
 
+### Talk to a group without references
+
+Groups also give you **decoupled messaging** - reacting to, or broadcasting to, a whole set of nodes
+without holding a reference to any of them (the "your nodes are too connected" fix). Both directions read
+as one row and compile to plain GDScript:
+
+| Verb | Kind | What it does |
+|---|---|---|
+| **Connect Group Signal** | action | wire a handler to a signal on *every current member* of a group at once - "when any enemy fires `died`, run `_on_enemy_died`" - with no per-node reference. Idempotent (guarded by `is_connected`). |
+| **Call Method On Group (with value)** | action | the send direction that carries data: call a method with a value on every member (bare **Call Method On Group** carries none). |
+
+```
+On Ready   Connect Group Signal   group "enemies"   signal died   -> _on_enemy_died
+```
+
+compiles to a plain, guarded connect loop - no bus, no reference to any enemy, and every party (group,
+signal, handler) stays a visible literal on the row:
+
+```gdscript
+for __emitter in get_tree().get_nodes_in_group("enemies"):
+    if not __emitter.died.is_connected(_on_enemy_died):
+        __emitter.died.connect(_on_enemy_died)
+```
+
+This is the point to prefer over reaching across the tree: instead of `get_node("../../Enemy").died.connect(...)`
+per enemy (which breaks the moment a node moves), the listener names a *group*. The Doctor flags absolute
+`/root/...` and deep `../../` paths as fragile and points you here.
+
 ## 6. Archetypes: entities in two groups at once
 
 The query at the heart of composition is "everything that has these components" - an **archetype**. With
