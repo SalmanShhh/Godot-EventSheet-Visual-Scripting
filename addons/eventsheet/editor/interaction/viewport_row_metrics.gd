@@ -78,7 +78,14 @@ func _resolve_row_height(row_data: EventRowData) -> float:
 		# Multi-line non-event rows (GDScript blocks) expand by their precomputed line count.
 		if row_data.line_count > 1:
 			return float(row_data.line_count) * _viewport._get_event_line_height(_viewport._get_font_size())
-		return float(_viewport.ROW_HEIGHT)
+		# A SINGLE-line non-event row (a variable, a signal, a section) must still reserve the FONT's
+		# line height, floored by the base row height - not the bare constant. The layout gives these
+		# rows a font-derived rect (viewport_layout_builder line_height - 6.0), so reserving a fixed 28
+		# under-measures them the moment the editor font grows past ~17px, which is what a Retina Mac at
+		# 200% editor scale does: every such row bled ~10px into the row below and the neighbouring
+		# opaque band painted over it. At the default font this is still exactly 28, so 100%-scale
+		# editors are unchanged.
+		return maxf(float(_viewport.ROW_HEIGHT), _viewport._get_event_line_height(_viewport._get_font_size()))
 	var line_height: float = _viewport._get_event_line_height(_viewport._get_font_size())
 	# When spans are still lazy (not yet built), use the precomputed line count so
 	# metrics never trigger span building. Once built, the spans are authoritative.

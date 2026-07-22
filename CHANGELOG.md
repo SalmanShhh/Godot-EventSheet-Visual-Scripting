@@ -76,6 +76,21 @@
 - The guide tracks the CLAMPED boundary rather than the raw cursor, so it stops where the lane
   actually stops (the 20%/80% limit, or the object column's 24-480px range) instead of sliding past it.
 
+### Fixed - the event sheet on a HiDPI display (reported on a Retina Mac at 200% editor scale)
+
+- **Rows no longer overlap at a high editor scale.** A single-line non-event row (a variable, a
+  signal, a section) reserved the bare 28px `ROW_HEIGHT` constant while the layout gave it a
+  FONT-derived rect. Godot bakes the display scale into the editor theme, so at 200% the canvas font
+  arrives at ~28px instead of ~14 - and above ~17px the glyphs outgrow the reserved band, so every
+  such row bled into the row below and the next row's opaque background painted over it. Rows now
+  reserve the font's line height, floored by the constant, so a 100%-scale editor is bit-identical.
+- **The canvas no longer applies the display scale twice.** The dock zoomed the sheet by
+  `EditorInterface.get_editor_scale()`, but the canvas font already carries that scale from the editor
+  theme - so text drew about 1.8x the size of the surrounding editor chrome (1.8 rather than 2 because
+  the zoom clamp caught it, which also left Zoom In dead from the first frame). Zoom is a user control
+  again and starts at 1.0; HiDPI reaches the canvas through the font, as it does for every other
+  editor Control.
+
 ### Fixed
 
 - **The test suite could report success while a test file was silently missing.** A test with a parse

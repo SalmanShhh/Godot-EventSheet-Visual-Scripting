@@ -764,7 +764,7 @@ func _notification(what: int) -> void:
 		# The user switched their editor theme - re-derive the "Match Editor" default
 		# (no-op when an explicit sheet theme is active) and re-skin the code panel.
 		# apply_zoom=false: never reset the user's manual zoom on a theme change.
-		_apply_editor_native_defaults(false)
+		_apply_editor_native_defaults()
 		if _code_edit != null:
 			_apply_editor_code_settings(_code_edit)
 
@@ -2722,12 +2722,15 @@ func _move_selected_row(direction: int) -> void:
 	_move_rows([row_data], target_row, "before" if direction < 0 else "after")
 
 
-## Editor-native defaults: inherit the user's editor theme + display scale when no
-## explicit sheet theme was chosen (presets/per-sheet themes still override).
-## apply_zoom is true only for the initial setup - a live editor-theme change re-derives
-## the style but must NOT re-apply the editor-scale zoom (that would clobber whatever the
-## user manually zoomed to since opening the sheet).
-func _apply_editor_native_defaults(apply_zoom: bool = true) -> void:
+## Editor-native defaults: inherit the user's editor theme when no explicit sheet theme was chosen
+## (presets / per-sheet themes still override). DISPLAY SCALE is deliberately NOT applied here - the
+## canvas font comes from get_theme_default_font_size(), into which the editor theme has already
+## multiplied the display scale (Godot bakes EDSCALE into every fixed size it generates). Zooming the
+## canvas by the scale on top of that applied it TWICE: on a Retina Mac at 200% the sheet drew its text
+## about 1.8x the size of the surrounding editor chrome (1.8 rather than 2 because MAX_ZOOM_FACTOR
+## clamped it, which also left Zoom In dead from the very first frame). Zoom is a USER control and
+## starts at 1.0; HiDPI reaches the canvas through the font, as it does for every other editor Control.
+func _apply_editor_native_defaults() -> void:
 	if not Engine.is_editor_hint() or _viewport == null:
 		return
 	# The active style lives on EventSheetThemeManager now; read it through the getter to decide
@@ -2736,10 +2739,7 @@ func _apply_editor_native_defaults(apply_zoom: bool = true) -> void:
 		var derived: EventSheetEditorStyle = EventSheetEditorThemeDeriver.derive_from_editor()
 		if derived != null:
 			apply_theme_style(derived)
-	if apply_zoom:
-		var editor_scale: float = EditorInterface.get_editor_scale()
-		if editor_scale > 1.01:
-			_viewport.set_zoom_factor(editor_scale)
+
 
 # ── Quick-add bar ("type to insert") - bodies in EventSheetAuthorActions (dock/author_actions.gd).
 # The WIDGET stays declared here (menu_bar.gd builds it and assigns it back; its text_submitted

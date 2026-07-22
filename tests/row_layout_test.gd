@@ -59,6 +59,35 @@ static func run() -> bool:
 
 	all_passed = _check("a variable (section) row was laid out", saw_section, true) and all_passed
 	all_passed = _check("a group row was laid out", saw_group, true) and all_passed
+
+	# ── HiDPI regression (reported on a Retina Mac at 200% editor scale) ──
+	# Godot bakes the display scale into the editor theme, so on that machine the canvas font arrives
+	# at ~28px instead of ~14. The layout gives a single-line non-event row a FONT-derived rect, but
+	# _resolve_row_height used to reserve the bare 28px ROW_HEIGHT constant for it - so above ~17px font
+	# every variable row bled into the row below and the next row's opaque band painted over it.
+	# Driving a 28px theme font here reproduces that on any machine.
+	var hidpi_theme: Theme = Theme.new()
+	hidpi_theme.default_font_size = 28
+	viewport.theme = hidpi_theme
+	viewport.set_sheet(sheet)
+	all_passed = _check("the test drives a HiDPI-sized canvas font", viewport._get_font_size(), 28) and all_passed
+	var hidpi_line_height: float = viewport._get_event_line_height(viewport._get_font_size())
+	var hidpi_rows: Array[Dictionary] = viewport.get_flat_rows()
+	var checked_section: bool = false
+	for i in range(hidpi_rows.size()):
+		var hidpi_row: EventRowData = hidpi_rows[i].get("row")
+		if hidpi_row == null or hidpi_row.row_type != EventRowData.RowType.SECTION:
+			continue
+		if viewport._row_is_add_event_footer(hidpi_row) or hidpi_row.line_count > 1:
+			continue
+		var reserved: float = viewport._get_row_height(i)
+		all_passed = _check("a single-line row reserves the FONT's line height at a HiDPI font size",
+			reserved >= hidpi_line_height, true) and all_passed
+		all_passed = _check("so its reserved band exceeds the bare ROW_HEIGHT constant",
+			reserved > float(EventSheetPalette.ROW_HEIGHT), true) and all_passed
+		checked_section = true
+		break
+	all_passed = _check("a single-line row was available to check", checked_section, true) and all_passed
 	viewport.free()
 	return all_passed
 
