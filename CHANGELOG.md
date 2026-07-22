@@ -73,6 +73,12 @@
   drew nothing at all at rest - you had to find it by hunting for the resize cursor. A single guide
   now spans the entire canvas: faint while you hover a boundary, so it is discoverable before you
   grab it, and solid with a soft halo while you drag, so where the split will land is unambiguous.
+- **The object column now shows its split at rest**, the way Construct does. Its boundary previously
+  drew nothing at all until the cursor crossed it and the resize cursor appeared, so the sub-lane was
+  effectively undiscoverable. A hairline now sits on the same boundary the resize grab tests against,
+  in the column's own label colour: `lane_divider_color` is tuned to separate the lanes over the SHEET
+  BACKGROUND and, measured against a filled condition cell, lands within about six values of the fill -
+  drawn there it was invisible.
 - The guide tracks the CLAMPED boundary rather than the raw cursor, so it stops where the lane
   actually stops (the 20%/80% limit, or the object column's 24-480px range) instead of sliding past it.
 

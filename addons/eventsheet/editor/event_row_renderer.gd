@@ -39,6 +39,25 @@ var show_event_numbers: bool = true
 ## The fixed object-name column width for a span's lane (0 = flow, the classic behavior).
 ## One resolver shared by the draw, the width measure, and the text-origin hit-test so the
 ## three can never disagree about where display text starts.
+## The hairline that marks an object column's right edge inside a cell - Construct's permanent
+## sub-lane split. It sits ON the boundary the resize grab tests against, so what you see is exactly
+## what you can drag. Skipped for a cell too short to show it.
+##
+## It deliberately does NOT reuse lane_divider_color: that token is a dark grey-blue tuned to separate
+## the lanes over the SHEET BACKGROUND, and measured against a filled condition cell it lands within
+## about six values of the fill - drawn there it is invisible. The column's own label colour, faint,
+## reads on both the blue condition fill and the green action fill and still follows the theme.
+static func _draw_object_column_separator(control: CanvasItem, span: SemanticSpan, boundary_x: float, event_style: EventSheetEventStyle) -> void:
+	if event_style == null or span == null or span.rect.size.y <= 4.0:
+		return
+	var separator: Color = event_style.object_label_color
+	control.draw_rect(
+		Rect2(boundary_x - 3.0, span.rect.position.y + 1.0, 1.0, span.rect.size.y - 2.0),
+		Color(separator.r, separator.g, separator.b, 0.30),
+		true
+	)
+
+
 static func object_column_width_for(event_style: EventSheetEventStyle, lane: String) -> float:
 	if event_style == null:
 		return 0.0
@@ -654,6 +673,11 @@ func _draw_spans(
 			else:
 				_draw_text(control, Vector2(text_x, baseline_y), object_label, text_width, font, draw_font_size, object_color)
 				text_x += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+			# The object column's RESTING separator - a hairline on the same boundary the resize grab
+			# uses. Construct shows this split permanently, so the object column reads as a real column
+			# rather than as text that happens to start further along; without it the boundary was
+			# invisible until the cursor crossed it and the resize cursor appeared.
+			_draw_object_column_separator(control, span, text_x, event_style)
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var value_ranges: Array = metadata.get("value_ranges", []) if span_index != editing_span_index else []
 		var bbcode_segments: Array = metadata.get("bbcode_segments", []) if span_index != editing_span_index else []
