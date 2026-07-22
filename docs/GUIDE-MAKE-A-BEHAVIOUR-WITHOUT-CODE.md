@@ -106,7 +106,7 @@ Each published verb reads on the canvas the same way every other event row does:
 
 A verb's parameters render as condition-style cells beneath its name: click one and you get a small **Edit Parameter** dialog holding just that input - its name, type, optional default and description - with `Edit the whole verb…` inside it if the verb itself is what you meant. `+ Add parameter` opens the same small dialog, blank. A verb's body is **open by default** (only a verb nested inside a group or a `#region` starts folded), and a body row with no conditions reads **Always** - it runs whenever the verb is called, which is why it does not say "Every Tick" like a sheet-level event would. Hover a verb to read its full declaration, including its category and each parameter's type, default and blurb.
 
-<img src="images/published-verb-rows.png" alt="Published verbs on the canvas: each Action row shows its description as a caption above it, the kind badge and name on the left with clickable parameter cells beneath, and the featured star plus the gives-back marker on the right." width="580">
+<img src="images/published-verb-rows.png" alt="A published verb on the canvas: its description as a caption above it, the Action badge and name on the left with a clickable parameter cell per input (id: text, seconds: number, reset instantly: true/false), the featured star on the right, and its body open beneath as ordinary event rows starting from Always." width="580">
 
 Verbs appear in the order the file declares them - after the sheet's own events, exactly where the compiler writes them - so an opened pack reads top to bottom like its GDScript. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ:
 
