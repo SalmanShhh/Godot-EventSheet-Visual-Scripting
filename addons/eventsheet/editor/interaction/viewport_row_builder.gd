@@ -323,11 +323,15 @@ func build_caption_row(text: String, indent: int, row_uid: String, accent: Color
 func append_field_cell(row_data: EventRowData, label: String, text: String, metadata: Dictionary = {}) -> EventRowData:
 	if row_data == null:
 		return row_data
+	# Only derive the next free line when the caller has NOT already decided one - the verb-parameter
+	# path passes an explicit line_index that would overwrite whatever this computed, so scanning every
+	# existing span per cell was quadratic work thrown away.
 	var next_line: int = 0
-	for span: SemanticSpan in row_data.spans:
-		var existing: Dictionary = span.metadata if span.metadata is Dictionary else {}
-		if str(existing.get("lane", "condition")) == "condition":
-			next_line = maxi(next_line, int(existing.get("line_index", 0)) + 1)
+	if not metadata.has("line_index"):
+		for span: SemanticSpan in row_data.spans:
+			var existing: Dictionary = span.metadata if span.metadata is Dictionary else {}
+			if str(existing.get("lane", "condition")) == "condition":
+				next_line = maxi(next_line, int(existing.get("line_index", 0)) + 1)
 	var cell_meta: Dictionary = {
 		"lane": "condition",
 		"kind": "field_cell",
@@ -2889,7 +2893,8 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 	if not object_label.is_empty():
 		# Fixed object column (C3 sub-lane): the label occupies exactly the column width;
 		# flow mode occupies the label's own width. Must mirror the renderer's advance.
-		var object_column_width: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), str(metadata.get("lane", "")))
+		var measured_lane: String = str(metadata.get("lane", ""))
+		var object_column_width: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), measured_lane, _viewport.lane_width_for(measured_lane))
 		if object_column_width > 0.0:
 			span_width += object_column_width
 		else:

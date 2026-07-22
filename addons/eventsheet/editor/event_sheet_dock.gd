@@ -1814,9 +1814,11 @@ func _open_go_to_event_dialog() -> void:
 ## its check mark; the conditions lane is the one asked, since the toggle moves both together.
 func _object_columns_aligned() -> bool:
 	if _viewport == null:
-		return true
+		return false
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	return event_style == null or event_style.condition_object_column_width > 0
+	# No style means nothing is aligned. Reporting "aligned" here made the first click of the toggle
+	# switch TO flow on a sheet that was never aligned - the two functions must agree on what null is.
+	return event_style != null and event_style.condition_object_column_width > 0
 
 
 ## View ▾ "Aligned Object Columns": flips the C3-style object column between ALIGNED (the default -
@@ -1830,8 +1832,11 @@ func _toggle_object_column_alignment(view_popup: PopupMenu) -> void:
 		return
 	var aligning: bool = not _object_columns_aligned()
 	var width: int = EventSheetPalette.OBJECT_COLUMN_WIDTH if aligning else 0
+	if _current_sheet == null:
+		_set_status("Open a sheet first - there is nothing to store the column setting on.", true)
+		return
 	_on_viewport_object_column_width_changed("condition", width)
-	if _current_sheet != null and _current_sheet.editor_style != null:
+	if _current_sheet.editor_style != null:
 		_current_sheet.editor_style.get_event_style().action_object_column_width = width
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
 		if view == null:

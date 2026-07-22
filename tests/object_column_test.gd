@@ -62,11 +62,22 @@ static func run() -> bool:
 	live_style.condition_object_column_width = 150
 	var fixed_width: float = viewport._measure_span_width(span, display_text, font, font_size)
 	var fixed_origin: float = viewport._span_text_origin_x(span, font, font_size)
+	# The EFFECTIVE column, not the raw token: a column is bounded by the room its lane actually has,
+	# so a themed 150 on a narrow canvas resolves to less. Draw, measure and hit-test must all use this
+	# same bounded number - that agreement is what this test exists to protect.
+	var effective_column: float = EventRowRenderer.object_column_width_for(
+		live_style, "condition", viewport.lane_width_for("condition"))
+	ok = _check(ok, effective_column <= 150.0 and effective_column > 0.0,
+		"the effective column is the token bounded by its lane (%.1f)" % effective_column)
 
 	var label: String = str(metadata.get("object_label", ""))
 	var label_advance: float = font.get_string_size(label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-	ok = _check(ok, absf((fixed_width - flow_width) - (150.0 - label_advance)) < 0.5, "measure swaps label advance for the column width (delta %.1f vs %.1f)" % [fixed_width - flow_width, 150.0 - label_advance])
-	ok = _check(ok, absf((fixed_origin - flow_origin) - (150.0 - label_advance)) < 0.5, "text origin swaps identically (delta %.1f)" % (fixed_origin - flow_origin))
+	ok = _check(ok, absf((fixed_width - flow_width) - (effective_column - label_advance)) < 0.5, "measure swaps label advance for the column width (delta %.1f vs %.1f)" % [fixed_width - flow_width, effective_column - label_advance])
+	ok = _check(ok, absf((fixed_origin - flow_origin) - (effective_column - label_advance)) < 0.5, "text origin swaps identically (delta %.1f)" % (fixed_origin - flow_origin))
+	# The bound must never let the column push the display text past the lane divider - the failure the
+	# clamp exists to stop. Pinned as a VALUE relationship, not a count.
+	ok = _check(ok, fixed_origin < viewport.get_lane_divider_x(viewport._get_logical_canvas_width()),
+		"the column never pushes condition text past the lane divider")
 	ok = _check(ok, absf((fixed_width - fixed_origin) - (flow_width - flow_origin)) < 0.5, "display text keeps its full width either way (stays fully visible)")
 
 	# ---- the drag-start boundary: flow mode grabs after the label, fixed grabs the column edge ----
@@ -78,7 +89,7 @@ static func run() -> bool:
 		anchor_x += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
 		anchor_x += EventRowRenderer.OBJECT_ICON_ADVANCE
-	var boundary: Dictionary = viewport.object_column_boundary_hit(Vector2(anchor_x + 150.0, span.rect.position.y + span.rect.size.y * 0.5))
+	var boundary: Dictionary = viewport.object_column_boundary_hit(Vector2(anchor_x + effective_column, span.rect.position.y + span.rect.size.y * 0.5))
 	ok = _check(ok, str(boundary.get("lane", "")) == "condition", "the column edge is grabbable (got %s)" % str(boundary))
 	ok = _check(ok, absf(float(boundary.get("anchor_x", -1.0)) - anchor_x) < 0.5, "the drag anchor is the column start")
 	var miss: Dictionary = viewport.object_column_boundary_hit(Vector2(anchor_x + 320.0, span.rect.position.y + span.rect.size.y * 0.5))

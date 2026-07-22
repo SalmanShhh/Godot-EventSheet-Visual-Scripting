@@ -75,15 +75,27 @@ static func _draw_object_column_separator(control: CanvasItem, span: SemanticSpa
 	)
 
 
-static func object_column_width_for(event_style: EventSheetEventStyle, lane: String) -> float:
+## The object column actually in force for a lane. THE one resolver - draw, measure, hit-test and the
+## drag boundary all come through here, so they can never disagree about where the column ends.
+##
+## `lane_width` bounds it. A column is a themed/dragged number in logical pixels with no idea how much
+## lane it is being asked to occupy: the shipped 130px default against the 160px minimum conditions
+## lane pushed the display text 48px PAST the lane divider on a narrow sheet (measured at a 420px
+## canvas), so the text vanished on any docked panel or split view. The column may now take at most
+## 45% of its lane, leaving the majority for the text it is supposed to be labelling. Pass 0 (the
+## default) only where the lane is genuinely unknown - the bound is then skipped, as before.
+static func object_column_width_for(event_style: EventSheetEventStyle, lane: String, lane_width: float = 0.0) -> float:
 	if event_style == null:
 		return 0.0
+	var column: float = 0.0
 	match lane:
 		"condition":
-			return float(event_style.condition_object_column_width)
+			column = float(event_style.condition_object_column_width)
 		"action":
-			return float(event_style.action_object_column_width)
-	return 0.0
+			column = float(event_style.action_object_column_width)
+	if column <= 0.0:
+		return 0.0  # flow mode: text follows each label
+	return minf(column, lane_width * 0.45) if lane_width > 0.0 else column
 
 
 static func _object_icon_plate_style() -> StyleBoxFlat:
@@ -683,7 +695,12 @@ func _draw_spans(
 			# C3-style sub-lane: a fixed object column aligns every row's display text at the
 			# same edge (label clipped to the column); width 0 keeps the classic flow where
 			# text follows each label.
-			var object_column_width: float = object_column_width_for(event_style, str(metadata.get("lane", "")))
+			# The lane width comes back through the control (the same way zoom does above): _draw_spans
+			# does not receive the lane rects, and the column MUST be bounded by the same number the
+			# measure / hit-test twins use or draw and hit-test drift apart.
+			var drawn_lane: String = str(metadata.get("lane", ""))
+			var lane_bound: float = control.lane_width_for(drawn_lane) if control.has_method("lane_width_for") else 0.0
+			var object_column_width: float = object_column_width_for(event_style, drawn_lane, lane_bound)
 			if object_column_width > 0.0:
 				# A name too long for the column ELIDES ("CharacterBody2D" -> "CharacterBo…") rather than
 				# being sliced mid-glyph: draw_string's width argument clips, it does not ellipsize, and a
@@ -698,7 +715,10 @@ func _draw_spans(
 			# uses. Construct shows this split permanently, so the object column reads as a real column
 			# rather than as text that happens to start further along; without it the boundary was
 			# invisible until the cursor crossed it and the resize cursor appeared.
-			_draw_object_column_separator(control, span, text_x, event_style)
+			# ONLY in column mode: in flow mode there is no column, so a line after each label would
+			# just be a ragged staircase marking a boundary that does not exist.
+			if object_column_width > 0.0:
+				_draw_object_column_separator(control, span, text_x, event_style)
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var value_ranges: Array = metadata.get("value_ranges", []) if span_index != editing_span_index else []
 		var bbcode_segments: Array = metadata.get("bbcode_segments", []) if span_index != editing_span_index else []

@@ -570,6 +570,30 @@ func _has_event_rows() -> bool:
 	return false
 
 
+## The drawable width of a lane in logical pixels. Used to BOUND the object column, so a themed or
+## dragged column can never grow wider than the lane it lives in. Every consumer of
+## object_column_width_for goes through this, so draw, measure, hit-test and the drag boundary keep
+## agreeing about where the column ends even as the window resizes.
+func lane_width_for(lane: String) -> float:
+	var width: float = _get_logical_canvas_width()
+	var divider_x: float = get_lane_divider_x(width)
+	var event_style: EventSheetEventStyle = _get_event_style()
+	if lane == "action":
+		return maxf(width - divider_x - float(event_style.action_lane_padding), 1.0)
+	# What the column and the text actually SHARE - the lane minus its fixed lead-in (row padding,
+	# gutter, the row-type advance, the badge column and its gap). Measured against the whole lane
+	# instead, a 420px canvas still handed the column a share of room the text never had: the lead-in
+	# alone consumes most of the 160px minimum lane before the column starts.
+	var lead_in: float = (
+		EventSheetPalette.ROW_HORIZONTAL_PADDING
+		+ EventSheetPalette.GUTTER_WIDTH
+		+ 18.0
+		+ float(event_style.condition_badge_column_width)
+		+ EventSheetPalette.SPAN_GAP
+	)
+	return maxf(divider_x - lead_in, 1.0)
+
+
 ## True when a logical-space point sits over the draggable conditions/actions lane divider.
 func _is_near_lane_divider(local_position: Vector2) -> bool:
 	if not _has_event_rows():
@@ -608,7 +632,7 @@ func object_column_boundary_hit(local_position: Vector2) -> Dictionary:
 	if metadata.get("object_icon") is Texture2D:
 		anchor_x += EventRowRenderer.OBJECT_ICON_ADVANCE
 	var boundary_x: float = anchor_x
-	var column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), lane)
+	var column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane))
 	if column_width > 0.0:
 		boundary_x += column_width
 	else:
@@ -963,7 +987,8 @@ func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> floa
 	if not object_label.is_empty():
 		# Fixed object column (C3 sub-lane) advances by the column width; flow mode by the
 		# label's own width - mirrors the renderer exactly.
-		var object_column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), str(metadata.get("lane", "")))
+		var span_lane: String = str(metadata.get("lane", ""))
+		var object_column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), span_lane, lane_width_for(span_lane))
 		if object_column_width > 0.0:
 			origin_x += object_column_width
 		else:
@@ -1435,6 +1460,13 @@ func _notification(what: int) -> void:
 			_layout_cache.clear()
 		_update_canvas_min_size()
 		queue_redraw()
+	elif what == NOTIFICATION_MOUSE_EXIT:
+		# The divider guide is lit from mouse MOTION, so moving the pointer straight out of the canvas
+		# (to a dock, the Inspector, off-window) stops the motion events while the line is still drawn
+		# and strands it on the sheet. Leaving clears it; a drag in progress keeps it, because the
+		# button is still held and the pointer is expected to roam outside the control.
+		if not _dragging_lane_divider and _dragging_object_column_lane.is_empty():
+			clear_divider_guide()
 
 
 func _draw() -> void:

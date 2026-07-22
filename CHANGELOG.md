@@ -73,6 +73,15 @@
   drew nothing at all at rest - you had to find it by hunting for the resize cursor. A single guide
   now spans the entire canvas: faint while you hover a boundary, so it is discoverable before you
   grab it, and solid with a soft halo while you drag, so where the split will land is unambiguous.
+- The object column is now **bounded by the room its lane actually has**. It was a themed number in
+  logical pixels with no idea how much lane it was being asked to occupy, so at the narrowest canvas
+  the 130px default left the condition text about 27px - three or four characters. It now takes at
+  most 45% of what the column and text share (the lane minus its fixed lead-in), which is 78px of text
+  at the floor and the full 130 once there is room. Draw, measure, hit-test and the drag boundary all
+  read the same bounded number, so they cannot drift apart.
+- The resting column separator no longer draws in FLOW mode, where there is no column to mark.
+- The hover divider guide is cleared when the pointer leaves the canvas, instead of being stranded
+  on the sheet until the pointer returns and crosses a non-boundary area.
 - **View ▾ "Aligned Object Columns"** turns the alignment on and off without touching a theme file.
   It writes through the same path a divider DRAG uses, so flipping it promotes a default-themed sheet
   to a concrete style, persists, and marks the sheet dirty exactly as dragging the column would - and
