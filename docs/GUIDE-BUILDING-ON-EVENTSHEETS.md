@@ -482,6 +482,191 @@ EventSheets.register_doctor_check("my_pack.needs_save_support", func(sheet_paths
 			"path": hoard, "message": "Holds state but has no save_state/load_state seam."}))
 ```
 
+### 16. Lint every sheet the moment it is saved
+
+**Scenario:** a team rule says no sheet ships with a `TODO` comment row. Instead of a pre-commit hook nobody installs, the check rides the editor's own save funnel and reports in the status line the instant it happens.
+
+```gdscript
+EventSheets.on_sheet_saved(func(payload: Dictionary) -> void:
+	var sheet: EventSheetResource = payload.get("sheet")
+	var todos: int = 0
+	for row: Variant in sheet.events:
+		if row is CommentRow and str((row as CommentRow).text).begins_with("TODO"):
+			todos += 1
+	if todos > 0:
+		EventSheets.set_status("%d TODO comment(s) still in %s." % [todos, payload.get("path", "")], true))
+```
+
+`on_sheet_opened` and `on_sheet_compiled` carry the same payload shape, so a sync tool or exporter subscribes instead of polling the filesystem.
+
+### 17. Teach the canvas to accept your own asset type
+
+**Scenario:** your studio authors dialogue as `.dlg` files. Dropping one on a sheet should build the row a writer would have added by hand, not make them go looking through the picker.
+
+```gdscript
+EventSheets.register_asset_drop_handler(PackedStringArray(["dlg"]), func(path: String) -> Variant:
+	return EventSheets.builtin_action("CallMethod", {
+		"target": "DialogueRunner",
+		"method": "play",
+		"args": "\"%s\"" % path,
+	}), "Play a .dlg dialogue file")
+```
+
+Return an ACEAction to join the event that was dropped on, any other row resource to land at the top level, or `null` to decline the file.
+
+### 18. A domain-specific editor for one parameter
+
+**Scenario:** your pack's verbs take a `wave_id`, and typing it from memory is how typos ship. A custom editor turns that one field into a dropdown backed by your real wave table, while every other field stays a plain box.
+
+```gdscript
+EventSheets.register_param_editor("wave_id", func(param: Dictionary, initial_text: String) -> LineEdit:
+	var field := LineEdit.new()
+	field.text = initial_text
+	var pick := Button.new()
+	pick.text = "▾"
+	pick.pressed.connect(func() -> void: _open_wave_picker(field))
+	field.add_child(pick)
+	return field)
+```
+
+The dialog reads the final value from `.text`, so the control can be as rich as you like as long as it is a `LineEdit` subclass. This customises ACE parameters, not Custom Block schema fields.
+
+### 19. Ask before a parameter commits something destructive
+
+**Scenario:** a `save_slot` of `0` wipes the autosave. The value is legal, so it must not be blocked, but nobody should type it by accident.
+
+```gdscript
+EventSheets.register_param_commit_validator("save_slot", func(value: String) -> Dictionary:
+	if value.strip_edges() != "0":
+		return {}
+	return {
+		"title": "Overwrite the autosave?",
+		"message": "Slot 0 is the autosave. Writing to it replaces the player's rolling save.",
+		"confirm_text": "Use slot 0",
+		"cancel_text": "Pick another slot",
+	})
+```
+
+Return `{}` to let the commit through. The dialog owns the hard part: the commit is deferred and then delivered exactly once however the prompt closes, so you never get a double-apply or a silent drop.
+
+### 20. A right-click verb that only appears on your rows
+
+**Scenario:** your pack ships a state-machine row, and the natural gesture is "jump to the state this transitions to". A row-menu item puts it where a user right-clicks, filtered so it never clutters anyone else's rows.
+
+```gdscript
+EventSheets.register_row_menu_item("Go to Target State",
+	func(res: Resource) -> bool:
+		return res is CustomBlockRow and (res as CustomBlockRow).kind_id == "my_pack.transition",
+	func(res: Resource) -> void:
+		_focus_state(str((res as CustomBlockRow).fields.get("to", ""))))
+```
+
+The filter receives the row's source resource, so a block row is matched on its `kind_id` and an ACE row on whatever identifies it.
+
+### 21. Make the quick-add bar speak your team's words
+
+**Scenario:** your designers say "spawn a mob", the vocabulary says "Instantiate Scene". Rather than retraining people, map their words onto the verb.
+
+```gdscript
+EventSheets.register_quick_add_synonyms({
+	"spawn": "Instantiate Scene",
+	"mob": "Instantiate Scene",
+	"sfx": "Play Sound",
+	"shake": "Screen Shake",
+})
+```
+
+Typing "spawn a mob" into the quick-add bar now matches the real verb, so the team's habitual language stops being a barrier to finding vocabulary.
+
+### 22. A starter template so new sheets begin correct
+
+**Scenario:** every enemy in your project needs the same three rows to behave. A starter puts that skeleton in the **Create New > Event Sheet** dialog, so a new sheet begins right instead of being fixed later.
+
+```gdscript
+EventSheets.register_starter({
+	"label": "Enemy (my pack)",
+	"build": func() -> EventSheetResource:
+		var sheet: EventSheetResource = EventSheets.new_sheet({"host_class": "CharacterBody2D"})
+		sheet.variables = {"health": {"type": "int", "default": 30, "exported": true}}
+		var ready_row := EventRow.new()
+		ready_row.trigger_provider_id = "Core"
+		ready_row.trigger_id = "OnReady"
+		sheet.events.append(ready_row)
+		return sheet,
+})
+```
+
+The Callable runs fresh on every create, so two new sheets never share a resource instance.
+
+### 23. Draw your behaviour's setup in the 2D viewport
+
+**Scenario:** a patrol behaviour has a radius nobody can see until the game runs. A gizmo draws it while the node is selected, so tuning happens in the editor.
+
+```gdscript
+EventSheets.register_editor_gizmo("res://eventsheet_addons/patrol/patrol.gd",
+	func(node: Node2D, overlay: Control) -> void:
+		var radius: float = float(node.get("patrol_radius"))
+		overlay.draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, Color(0.4, 0.8, 1.0, 0.7), 2.0))
+```
+
+### 24. Ship your pack's vocabulary in your users' language
+
+**Scenario:** your pack is used by a Japanese studio. Its verb names should read in Japanese without forking the pack.
+
+```gdscript
+EventSheets.register_translation_file("res://addons/my_pack/i18n/ja.csv")
+```
+
+The file follows the editor's own drop-in CSV format (a `keys` column plus one column per locale), and `EventSheets.translate(text)` resolves through it, so the pack follows whatever language the editor is set to.
+
+### 25. An onboarding tour for a new teammate
+
+**Scenario:** a new hire opens the project on day one. A tour walks them through your team's conventions in the editor itself, and each step ticks itself off as they do it.
+
+```gdscript
+EventSheets.register_tour("My Studio Onboarding", [
+	{"title": "Open the enemy sheet", "body": "Every enemy lives in enemies/. Open one.",
+	 "task": "Open any sheet under enemies/",
+	 "check": func(sheet: EventSheetResource) -> bool: return sheet != null},
+	{"title": "Add a trigger", "body": "Enemies always start from On Ready.",
+	 "task": "Add an On Ready event",
+	 "check": func(sheet: EventSheetResource) -> bool: return not sheet.events.is_empty()},
+])
+```
+
+### 26. Give your plugin's setting a home
+
+**Scenario:** your extension has exactly one option, and it does not deserve its own settings dialog.
+
+```gdscript
+EventSheets.register_preference(func() -> Control:
+	var toggle := CheckBox.new()
+	toggle.text = "My Pack: verbose compile log"
+	toggle.button_pressed = ProjectSettings.get_setting("my_pack/verbose", false)
+	toggle.toggled.connect(func(on: bool) -> void:
+		ProjectSettings.set_setting("my_pack/verbose", on)
+		ProjectSettings.save())
+	return toggle)
+```
+
+The row joins the Welcome window's Preferences card, built fresh each time it opens.
+
+### 27. One verb, no provider file
+
+**Scenario:** you want to add a single action from a tool script or a test, without creating a provider script just to hold it.
+
+```gdscript
+EventSheets.register_simple_ace({
+	"id": "Dash", "kind": "action",
+	"display_name": "Dash Forward", "category": "My Pack",
+	"template": "velocity.x = {speed} * 2.0",
+	"params": [{"id": "speed", "type_name": "float", "default": "300.0"}],
+	"description": "Doubles horizontal speed for a burst.",
+})
+```
+
+It joins every sheet's picker for the session, so re-register on plugin load. The `id` is a contract the moment a sheet uses it: renaming it breaks saved sheets exactly as renaming an `ace_id` would.
+
 ## 9. Testing Your Extension
 
 The plugin's own API test (`tests/eventsheets_api_test.gd`) is a working template: codegen and vocabulary pins run dock-free; editor pins build a real dock (`EventSheetEditor.new()` then `setup(sheet)`) with a fake undo manager. For your extension, the highest-value pins are:

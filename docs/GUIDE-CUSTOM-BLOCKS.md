@@ -429,6 +429,148 @@ func emit(block: CustomBlockRow) -> PackedStringArray:
 
 Note: because emission is deterministic and gated, the attribution reads back identically on every open - a shipping constraint the byte gate enforces for free.
 
+### 15. A level's asset manifest
+
+**Scenario:** an artist keeps swapping which textures a level uses, and the programmer keeps re-editing preload lines. One manifest block owns the whole list, so the artist edits a form and the constants regenerate.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for entry: String in str(block.fields.get("paths", "")).split(",", false):
+		var path: String = entry.strip_edges()
+		lines.append("const %s := preload(\"%s\")" % [path.get_file().get_basename().to_pascal_case(), path])
+	return lines
+```
+
+### 16. Shader parameters a technical artist owns
+
+**Scenario:** a screen effect has four uniforms nobody remembers the names of. A block names them once, and the artist tunes values in a dialog rather than hunting through `material.set_shader_parameter` calls.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const SHADER_DEFAULTS := {\"bloom\": %s, \"vignette\": %s}" % [
+		str(block.fields.get("bloom", 0.0)), str(block.fields.get("vignette", 0.0))]])
+```
+
+### 17. An RPC contract the whole team can see
+
+**Scenario:** a multiplayer project needs its `@rpc` declarations to agree across sheets. A block makes each one a row with a mode dropdown, so a mismatch is visible in review instead of at runtime.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray([
+		"@rpc(\"%s\", \"call_local\")" % str(block.fields.get("mode", "authority")),
+		"func %s() -> void:" % str(block.fields.get("name", "sync_state")),
+		"\tpass",
+	])
+```
+
+### 18. An analytics event registry
+
+**Scenario:** the data team needs the exact event names a build emits. A block per event keeps the canonical string in one place, so the sheet is the source of truth and the spreadsheet stops drifting.
+
+```gdscript
+func summary(block: CustomBlockRow) -> String:
+	return "analytics: %s" % str(block.fields.get("event", ""))
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const ANALYTICS_%s := \"%s\"" % [
+		str(block.fields.get("event", "")).to_upper(), str(block.fields.get("event", ""))]])
+```
+
+### 19. A build stamp CI rewrites
+
+**Scenario:** QA needs to know exactly which build a bug came from. CI edits one block's fields and regenerates; because emission is deterministic, the diff is one line and never reformats the rest of the file.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const BUILD := \"%s\"  # %s" % [
+		str(block.fields.get("number", "0")), str(block.fields.get("branch", "main"))]])
+```
+
+### 20. A performance budget the Doctor enforces
+
+**Scenario:** a level has a frame budget the team keeps quietly exceeding. The block declares it, and a registered Doctor check reads the block back out so the budget is audited in CI rather than remembered.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const FRAME_BUDGET_MS := %s" % str(block.fields.get("ms", 16))])
+```
+
+Pair it with `EventSheets.register_doctor_check(...)`, which walks the sheet paths and flags any budget above your ceiling. The block is the declaration; the check is the enforcement.
+
+### 21. Audio bus routing, declared not guessed
+
+**Scenario:** sound designers keep asking which bus a scene's audio lands on. A block states it, so the answer is in the sheet instead of in someone's memory.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const AUDIO_BUS := \"%s\"" % str(block.fields.get("bus", "Master"))])
+```
+
+### 22. A spawn table a designer balances mid-playtest
+
+**Scenario:** the designer wants to retune wave composition between runs without opening a script. A table block gives them a form, and the generated constant is what the spawner reads.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const WAVE := {\"grunts\": %s, \"elites\": %s, \"interval\": %s}" % [
+		str(block.fields.get("grunts", 6)), str(block.fields.get("elites", 1)),
+		str(block.fields.get("interval", 3.0))]])
+```
+
+### 23. Tutorial steps that stay in step order
+
+**Scenario:** a tutorial's copy lives in five places and one always goes stale. A step block keeps the text next to the logic that triggers it, in the order it happens.
+
+```gdscript
+func summary(block: CustomBlockRow) -> String:
+	return "step %s: %s" % [str(block.fields.get("index", 1)), str(block.fields.get("copy", ""))]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## TUTORIAL %s: %s" % [
+		str(block.fields.get("index", 1)), str(block.fields.get("copy", ""))]])
+```
+
+### 24. An accessibility checklist that ships with the level
+
+**Scenario:** a studio commits to subtitles and a colour-blind-safe palette per level. A checklist block records what each level actually did, so the audit is a grep rather than a meeting.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## A11Y: subtitles=%s colourblind_safe=%s" % [
+		"yes" if bool(block.fields.get("subtitles")) else "no",
+		"yes" if bool(block.fields.get("cb_safe")) else "no"]])
+```
+
+### 25. A save-schema version marker
+
+**Scenario:** a live game's save format changes and old saves must migrate. A version block makes the current schema number a visible, reviewable row rather than a constant someone forgets to bump.
+
+```gdscript
+func validate(block: CustomBlockRow) -> String:
+	if int(block.fields.get("version", 0)) < 1:
+		return "Save schema version must be 1 or higher."
+	return ""
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const SAVE_SCHEMA := %d" % int(block.fields.get("version", 1))])
+```
+
+`validate` returning a non-empty String paints the message on the row while authoring, so a zero is caught before it reaches a player's save file.
+
+### 26. A pack dependency stated on the sheet
+
+**Scenario:** a sheet only works when another pack is installed, and the failure a user sees today is a missing-verb error. A dependency block says so out loud, and reads back on open.
+
+```gdscript
+func summary(block: CustomBlockRow) -> String:
+	return "needs: %s" % str(block.fields.get("pack", ""))
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## REQUIRES: %s" % str(block.fields.get("pack", ""))])
+```
+
 ### Other uses at a glance
 
 **License headers** as a one-field block that keeps the exact comment banner canonical across every generated file. **Signal-bus wiring notes** that document which autoload signals a sheet listens to. **Version stamps** for packs, one canonical `const PACK_VERSION := "1.2"` line each. **Spawn-point manifests** listing marker names a level script reads. **Asset checklists** that name the sounds and textures an event section expects.
