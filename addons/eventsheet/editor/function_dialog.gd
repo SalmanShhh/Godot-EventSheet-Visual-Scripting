@@ -9,9 +9,12 @@
 #    in other sheets' pickers - role badge, name, param chips, category chip - updating per keystroke.
 #  • A quiet "Ships as:" line shows the exact generated `func` signature (built from the SAME compiler
 #    formatters, so it can never disagree with the codegen) - the trust surface for a Godot dev.
-#  • Parameters are event-sheet rows: name · type · default value · description.
-#  • "Run only when" adds guard conditions (GDScript boolean expressions) that wrap the body in an `if`.
 #  • Expose-as-ACE publishes it into other sheets' pickers.
+#
+# NOT here, on purpose: a parameter list and a "run only when" card. Both duplicated, more weakly,
+# something the sheet already expresses - a parameter is a cell on the verb's own row, and a guard is a
+# CONDITION on an event inside the verb. The dialog still CARRIES the verb's existing parameters
+# (_carried_params) so saving an edit cannot write an empty list over them.
 #
 # The
 # `_usable_option` / `_value_type_option` OptionButtons remain the backing model (hidden) so
@@ -48,7 +51,6 @@ var _dialog: ConfirmationDialog = null
 # the taken-names check allows the function's own name, and the confirmed payload carries the original
 # name so the apply updates that function instead of appending a new one.
 var _original_name: String = ""
-var _guards_card: Control = null
 var _preview_card: Control = null
 var _name_edit: LineEdit = null
 var _doc_comment_edit: TextEdit = null
@@ -60,8 +62,11 @@ var _usable_option: OptionButton = null           # hidden backing model for the
 var _usable_cards: Array = []                      # [{panel, title, examples, accent, kind}], index-aligned to USABLE_AS
 var _value_type_row: Control = null
 var _value_type_option: OptionButton = null
-var _params_box: VBoxContainer = null
-var _guards_box: VBoxContainer = null
+## The parameters of the verb being edited, carried through untouched. The dialog no longer EDITS
+## parameters (the row's cells do), but build_function_data() still reports them, because the apply
+## assigns target.params wholesale - reporting an empty list would silently delete every parameter of
+## any verb someone opened and saved.
+var _carried_params: Array[Dictionary] = []
 var _expose_check: CheckBox = null
 var _expose_section: VBoxContainer = null
 var _expose_card: PanelContainer = null  # themed inset card wrapping _expose_section (shown when "Expose" is ticked)
@@ -149,30 +154,12 @@ func init_dialog(parent_node: Node) -> void:
 	_preview_card.visible = false
 	form.add_child(_preview_card)
 
-	# Parameters - a titled card holding the event-sheet-style rows (name · type · default · description).
-	var params_content: VBoxContainer = VBoxContainer.new()
-	params_content.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
-	_params_box = VBoxContainer.new()
-	params_content.add_child(_params_box)
-	var add_param_button: Button = Button.new()
-	add_param_button.text = "+ Add parameter"
-	add_param_button.tooltip_text = "Each parameter has a name, type, optional default value, and description."
-	add_param_button.pressed.connect(func() -> void: add_param_row())
-	params_content.add_child(add_param_button)
-	form.add_child(EventSheetPopupUI.titled_card("Parameters", params_content))
-
-	# Run only when - a titled card of guard conditions that wrap the function body in an `if`.
-	var guards_content: VBoxContainer = VBoxContainer.new()
-	guards_content.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
-	_guards_box = VBoxContainer.new()
-	guards_content.add_child(_guards_box)
-	var add_guard_button: Button = Button.new()
-	add_guard_button.text = "+ Add condition"
-	add_guard_button.tooltip_text = "A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled)."
-	add_guard_button.pressed.connect(func() -> void: add_guard_row())
-	guards_content.add_child(add_guard_button)
-	_guards_card = EventSheetPopupUI.titled_card("Run only when", guards_content)
-	form.add_child(_guards_card)
+	# NO parameter list and NO "run only when" card here on purpose. Both were second, weaker ways to
+	# author things the sheet already expresses: a parameter is a cell on the verb's own row (click it
+	# for the focused Edit Parameter dialog, or use its "+ Add parameter" cell), and a guard is simply a
+	# CONDITION on an event inside the verb - authored on the canvas like every other condition, where
+	# it is visible, editable and undoable. The guards card was never readable back anyway: it wrote a
+	# wrapper row on create and then hid itself in edit mode to avoid stacking a second one.
 
 	# Expose as an ACE other sheets can pick.
 	_expose_check = CheckBox.new()
@@ -229,9 +216,7 @@ func open() -> void:
 	_original_name = ""
 	_dialog.title = "Define a Verb"
 	_dialog.ok_button_text = "Create Function"
-	_guards_card.visible = true
-	_clear_rows(_params_box)
-	_clear_rows(_guards_box)
+	_carried_params = []
 	_name_edit.text = ""
 	_doc_comment_edit.text = ""
 	_tool_button_edit.text = ""
@@ -260,7 +245,6 @@ func open_for_edit(event_function: EventFunction) -> void:
 	_original_name = event_function.function_name
 	_dialog.title = "Edit Verb - %s" % event_function.function_name
 	_dialog.ok_button_text = "Save Changes"
-	_guards_card.visible = false
 	_name_edit.text = event_function.function_name
 	_doc_comment_edit.text = event_function.doc_comment
 	_tool_button_edit.text = event_function.tool_button_label
@@ -287,44 +271,17 @@ func open_for_edit(event_function: EventFunction) -> void:
 			_add_custom_value_type(SheetCompiler._function_return_type_name(event_function))
 		_select_usable(2)
 	for param: ACEParam in event_function.params:
-		add_param_row(param.id, param.type_name, param.gdscript_default, param.description)
+		_carried_params.append({
+			"id": param.id,
+			"type_name": param.type_name,
+			"default": param.gdscript_default,
+			"description": param.description,
+		})
 	_expose_check.button_pressed = event_function.expose_as_ace
 	_expose_card.visible = event_function.expose_as_ace
 	_expose_name_edit.text = event_function.ace_display_name
 	_expose_category_edit.text = event_function.ace_category
 	_refresh_studio()
-
-
-## Canvas entry point: clicking a verb row's parameter CELL opens the verb here with THAT parameter's
-## name field focused - the cell behaves like a condition cell, where clicking the thing you want to
-## change lands you in its editor. An out-of-range index just opens the verb unfocused.
-func open_for_edit_focus_param(event_function: EventFunction, param_index: int) -> void:
-	open_for_edit(event_function)
-	if param_index < 0 or param_index >= _params_box.get_child_count():
-		return
-	var row: Node = _params_box.get_child(param_index)
-	if row.get_child_count() > 0 and row.get_child(0) is LineEdit:
-		var name_field: LineEdit = row.get_child(0) as LineEdit
-		# The dialog is still popping up this frame; defer so focus lands after layout settles.
-		name_field.call_deferred("grab_focus")
-		name_field.call_deferred("select_all")
-
-
-## Right-click ▸ "Add Parameter" entry point: opens the verb for editing, then appends a fresh
-## parameter row and focuses its name field - so the whole "add an argument" gesture is a single
-## right-click, and the user lands typing the new param's name (Name/Type/Default/Description follow).
-func open_for_edit_focus_new_param(event_function: EventFunction) -> void:
-	open_for_edit(event_function)
-	add_param_row()
-	var row_count: int = _params_box.get_child_count()
-	if row_count == 0:
-		return
-	var last_row: Node = _params_box.get_child(row_count - 1)
-	if last_row.get_child_count() > 0 and last_row.get_child(0) is LineEdit:
-		var name_field: LineEdit = last_row.get_child(0) as LineEdit
-		# The dialog is still popping up this frame; defer so focus lands after layout settles.
-		name_field.call_deferred("grab_focus")
-		name_field.call_deferred("select_all")
 
 
 ## queue_free alone leaves children in the tree until end of frame, so a prefill added right after
@@ -617,110 +574,9 @@ func _usable_kind() -> String:
 	return str(USABLE_AS[maxi(_usable_option.selected, 0)].get("kind"))
 
 
-## One expanding row per parameter: name · type · default · description · remove. Field edits refresh
-## the live preview so the picker entry + signature track what's being typed. The optional trailing
-## args prefill the row (edit mode re-opens an existing verb's parameters).
-func add_param_row(suggested_name: String = "", type_name_value: String = "", default_value: String = "", description_value: String = "") -> void:
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	var param_name: LineEdit = LineEdit.new()
-	param_name.text = suggested_name if not suggested_name.is_empty() else _next_param_name()
-	param_name.custom_minimum_size = Vector2(110.0, 0.0)
-	param_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	param_name.text_changed.connect(func(_t: String) -> void: _refresh_studio())
-	row.add_child(param_name)
-	var param_type: OptionButton = OptionButton.new()
-	for type_name: String in PARAM_TYPES:
-		param_type.add_item(type_name)
-	var preset_type: int = PARAM_TYPES.find(type_name_value)
-	if preset_type >= 0:
-		param_type.select(preset_type)
-	param_type.item_selected.connect(func(_index: int) -> void: _refresh_studio())
-	row.add_child(param_type)
-	var param_default: LineEdit = LineEdit.new()
-	param_default.text = default_value
-	param_default.placeholder_text = "default"
-	param_default.tooltip_text = "Optional default value (a GDScript expression). Defaulted params must come last."
-	param_default.custom_minimum_size = Vector2(80.0, 0.0)
-	param_default.text_changed.connect(func(_t: String) -> void: _refresh_studio())
-	row.add_child(param_default)
-	var param_desc: LineEdit = LineEdit.new()
-	param_desc.text = description_value
-	param_desc.placeholder_text = "description"
-	param_desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(param_desc)
-	var remove_button: Button = Button.new()
-	remove_button.text = "✕"
-	remove_button.tooltip_text = "Remove this parameter."
-	remove_button.pressed.connect(func() -> void:
-		_params_box.remove_child(row)
-		row.queue_free()
-		_refresh_studio())
-	row.add_child(remove_button)
-	_params_box.add_child(row)
-	_refresh_studio()
-
-
-## One row per guard condition: a boolean expression + remove.
-func add_guard_row(expression: String = "") -> void:
-	var row: HBoxContainer = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	var guard_edit: LineEdit = LineEdit.new()
-	guard_edit.text = expression
-	guard_edit.placeholder_text = "e.g. host.enabled  or  is_active"
-	guard_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(guard_edit)
-	var remove_button: Button = Button.new()
-	remove_button.text = "✕"
-	remove_button.tooltip_text = "Remove this condition."
-	remove_button.pressed.connect(func() -> void:
-		_guards_box.remove_child(row)
-		row.queue_free())
-	row.add_child(remove_button)
-	_guards_box.add_child(row)
-
-
-func _next_param_name() -> String:
-	var taken: Dictionary = {}
-	for entry: Dictionary in collect_params():
-		taken[str(entry.get("id"))] = true
-	var index: int = 1
-	while taken.has("param_%d" % index):
-		index += 1
-	return "param_%d" % index
-
-
 ## The current param rows as [{id, type_name, default, description}] (names snake_cased + de-duplicated).
 func collect_params() -> Array[Dictionary]:
-	var params: Array[Dictionary] = []
-	var seen: Dictionary = {}
-	for row: Node in _params_box.get_children():
-		if row.get_child_count() < 4 or not (row.get_child(0) is LineEdit):
-			continue
-		var raw_name: String = (row.get_child(0) as LineEdit).text.strip_edges().to_snake_case()
-		if raw_name.is_empty() or not raw_name.is_valid_identifier() or seen.has(raw_name):
-			continue
-		seen[raw_name] = true
-		var type_option: OptionButton = row.get_child(1) as OptionButton
-		params.append({
-			"id": raw_name,
-			"type_name": type_option.get_item_text(type_option.selected),
-			"default": (row.get_child(2) as LineEdit).text.strip_edges(),
-			"description": (row.get_child(3) as LineEdit).text.strip_edges(),
-		})
-	return params
-
-
-## The current guard expressions (non-empty, in order).
-func collect_guards() -> PackedStringArray:
-	var guards: PackedStringArray = PackedStringArray()
-	for row: Node in _guards_box.get_children():
-		if row.get_child_count() < 1 or not (row.get_child(0) is LineEdit):
-			continue
-		var expression: String = (row.get_child(0) as LineEdit).text.strip_edges()
-		if not expression.is_empty():
-			guards.append(expression)
-	return guards
+	return _carried_params.duplicate(true)
 
 
 func _on_confirmed() -> void:
@@ -761,7 +617,6 @@ func build_function_data() -> Dictionary:
 		"return_type": _return_type_for_kind(_usable_kind()),
 		"return_type_name": _selected_return_type_name(),
 		"params": params,
-		"guards": collect_guards(),
 		"doc_comment": _doc_comment_edit.text.strip_edges(),
 		"tool_button_label": _tool_button_edit.text.strip_edges(),
 		"description": _description_edit.text.strip_edges(),

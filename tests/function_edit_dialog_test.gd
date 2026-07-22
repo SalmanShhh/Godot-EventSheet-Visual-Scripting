@@ -50,10 +50,14 @@ static func run() -> bool:
 	ok = _check("expose prefilled", dialog._expose_check.button_pressed, true) and ok
 	ok = _check("display name prefilled", dialog._expose_name_edit.text, "Heal") and ok
 	ok = _check("category prefilled", dialog._expose_category_edit.text, "Health") and ok
-	ok = _check("one param row prefilled", dialog.collect_params().size(), 1) and ok
-	ok = _check("param prefill carries id + type",
+	# The dialog no longer EDITS parameters, but it must still carry the verb's existing ones through
+	# untouched - the apply assigns target.params wholesale, so reporting an empty list here would
+	# silently delete every parameter of any verb someone opened and saved.
+	ok = _check("the verb's parameter is carried through", dialog.collect_params().size(), 1) and ok
+	ok = _check("carried parameter keeps its id + type",
 		str(dialog.collect_params()[0].get("id")) + ":" + str(dialog.collect_params()[0].get("type_name")), "amount:float") and ok
-	ok = _check("guards card hidden in edit mode (guards live in the body)", dialog._guards_card.visible, false) and ok
+	ok = _check("the payload carries it too, so an untouched save is a no-op",
+		(dialog.build_function_data().get("params") as Array).size(), 1) and ok
 
 	# ── Own name is not a collision; another taken name is ──
 	ok = _check("own name passes validation", str(dialog.build_function_data().get("problem", "")), "") and ok

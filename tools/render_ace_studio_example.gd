@@ -31,8 +31,6 @@ func _on_frame() -> void:
 		# A concrete Action verb: Take Damage(amount: float), guarded, published to Combat.
 		_dialog._name_edit.text = "Take Damage"
 		_dialog._description_edit.text = "Subtract an amount of health and react to it."
-		_dialog.add_param_row("amount", "float", "", "how much health to remove")
-		_dialog.add_guard_row("host.enabled")
 		_dialog._expose_check.button_pressed = true
 		_dialog._expose_card.visible = true
 		_dialog._expose_category_edit.text = "Combat"

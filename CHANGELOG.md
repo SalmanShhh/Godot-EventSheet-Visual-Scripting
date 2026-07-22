@@ -14,6 +14,27 @@
   leaves your machine unread. A test pins both halves: that the build facts are present, and that the
   identifying ones are not.
 
+### Changed - the verb dialog stops duplicating what the sheet already says
+
+- **The Parameters list and the "Run only when" card are gone from the Define a Verb dialog.** Both were
+  second, weaker ways to author something the sheet expresses natively: a parameter is a cell on the
+  verb's own row, and a guard is a **condition on an event inside the verb**. The guards card was never
+  even readable back - it wrote a wrapper row on create, then hid itself in edit mode to avoid stacking
+  a second one.
+- **The routes they leaned on had to be built first.** "+ Add parameter" was gated to sheets with no
+  backing file, which is nearly none of them - a `.gd` sheet is the default format - so the cell almost
+  never appeared; it now shows on any sheet that is not read-only. A verb body gained its own
+  **"+ Add event to <verb>"** footer (the same affordance a group has), because a freshly created verb
+  has an empty body and a guard needs an event to be a condition on. The ACE picker learned to insert
+  into an `EventFunction`.
+- **Editing a verb can no longer delete its parameters.** The apply assigns `target.params` wholesale,
+  so a dialog that stopped reporting them would have silently wiped every parameter of any verb opened
+  and saved. The dialog now carries the verb's existing parameters through untouched, which also keeps
+  the "Ships as:" signature honest and the no-op fingerprint intact for the byte-exact round trip.
+- **The trailing-default rule moved with the parameters.** GDScript requires defaulted parameters last;
+  that check lived in the verb dialog and would have been lost, letting the focused param dialog emit a
+  `func` that will not parse. It now guards the param dialog's apply path.
+
 ### Fixed - a group header no longer draws its description into the row below
 
 - **A region or group with a description clipped that description.** It is a two-line header, and both

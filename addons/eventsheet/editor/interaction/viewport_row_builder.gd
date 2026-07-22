@@ -666,11 +666,14 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		}))
 		condition_lines = _append_define_param_spans(spans, event_function, 0) + 1
 		# The mirror of "+ Add condition": adding an argument is the core authoring gesture on a verb, so
-		# it lives on the row. Only on a sheet whose verbs are actually authored here - an opened pack's
-		# vocabulary is a read view (its right-click "Edit Verb…" is still the way in), and a read-only
-		# preview edits nothing, so neither grows a row of affordances it cannot honour.
+		# it lives on the row - and since the verb dialog no longer carries a parameter list, this IS the
+		# way in. It must therefore appear wherever the dialog used to, which includes a .gd-backed sheet
+		# (the default format, where external_source_path is always set). Only a read-only sheet is
+		# excluded: it edits nothing, so it must not grow an affordance it cannot honour. Editing a
+		# verb's SIGNATURE is not the same as editing an opened pack's body - the body stays a read view
+		# behind its own per-function opt-in, while the signature has always been editable from here.
 		var owning_sheet: EventSheetResource = _viewport._sheet
-		if owning_sheet != null and not owning_sheet.read_only and owning_sheet.external_source_path.strip_edges().is_empty():
+		if owning_sheet != null and not owning_sheet.read_only:
 			var add_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 			var add_color: Color = add_style_meta.get("text_color", EventSheetPalette.COLOR_CONDITION)
 			add_color.a *= 0.55
@@ -723,6 +726,14 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 				if not body_editable:
 					_make_row_inert(child_row)
 				row_data.children.append(child_row)
+	# The way IN to a verb's body, mirroring a group's own footer. A freshly created verb has an empty
+	# body, so without this there is nowhere to put its first event - and since a "run only when" guard
+	# is just a condition on an event inside the verb, that first event is exactly what a guard needs.
+	if body_editable:
+		row_data.children.append(_build_add_event_footer_row(
+			event_function, indent + 1,
+			"+ Add event to '%s'…" % (display_name if not display_name.is_empty() else event_function.function_name)
+		))
 	if not row_data.children.is_empty():
 		# A verb OPENS by default - its steps ARE the point, and a pack of collapsed rows reads as the spec
 		# table this row set out to stop being. A fold the user set by hand still wins, and

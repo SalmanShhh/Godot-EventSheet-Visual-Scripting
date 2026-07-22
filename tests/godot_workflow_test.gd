@@ -500,16 +500,12 @@ static func run() -> bool:
 	function_dialog.set_taken_names_provider(func() -> PackedStringArray:
 		return PackedStringArray(["existing_fn"]))
 	function_dialog.open()
-	function_dialog.add_param_row()
-	function_dialog.add_param_row()
-	all_passed = _check("param rows auto-suggest unique names",
-		function_dialog.collect_params().size() == 2
-		and str(function_dialog.collect_params()[1].get("id")) == "param_2", true) and all_passed
+	# A NEW verb starts with no parameters - they are added from its row afterwards, where they live.
 	function_dialog._name_edit.text = "Deal Damage"
 	var built: Dictionary = function_dialog.build_function_data()
-	all_passed = _check("function names auto-snake_case and params carry types",
+	all_passed = _check("function names auto-snake_case and a new verb starts parameterless",
 		str(built.get("name")) == "deal_damage"
-		and (built.get("params") as Array).size() == 2
+		and (built.get("params") as Array).is_empty()
 		and str(built.get("problem")).is_empty(), true) and all_passed
 	function_dialog._name_edit.text = "existing_fn"
 	all_passed = _check("duplicate names are refused with the reason named",

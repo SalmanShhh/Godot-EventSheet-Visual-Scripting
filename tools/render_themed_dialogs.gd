@@ -34,8 +34,6 @@ func _on_frame() -> void:
 		_func_dialog.set_taken_names_provider(func() -> PackedStringArray: return PackedStringArray())
 		_func_dialog.init_dialog(root)
 		_func_dialog.open()
-		_func_dialog.add_param_row("damage")
-		_func_dialog.add_guard_row("host.enabled")
 		_func_dialog._expose_check.button_pressed = true
 		_func_dialog._expose_card.visible = true
 		return

@@ -125,6 +125,16 @@ func _apply_param_edit(data: Dictionary) -> void:
 	if not removed and new_id.is_empty():
 		_dock._set_status("A parameter needs a name.", true)
 		return
+	# GDScript requires defaulted parameters to be trailing, and this dialog is now the ONLY way to
+	# author them - the verb dialog's parameter list is gone. Without this check a default on an early
+	# parameter emits a `func` that will not parse, which the sheet would then fail to compile.
+	var target_now: EventFunction = _find_function(function_name)
+	if target_now != null and not _defaults_stay_trailing(target_now, data):
+		_dock._set_status(
+			"Parameters with a default value must come after those without - move this one down, or give the ones after it defaults too.",
+			true
+		)
+		return
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Parameter", func() -> bool:
 		var target: EventFunction = _find_function(function_name)
 		if target == null:
@@ -289,3 +299,29 @@ static func _function_fingerprint(function_name: String, return_type: int, retur
 	for param: ACEParam in params:
 		parts.append("%s|%s|%s|%s" % [param.id, param.type_name, param.gdscript_default, param.description])
 	return "\n".join(parts)
+
+
+## True when applying `data` to `target` leaves every defaulted parameter after every non-defaulted
+## one - GDScript's rule for a `func` signature. Simulates the edit rather than inspecting the stored
+## params, so it catches the case the user is about to create, not the one that already exists.
+func _defaults_stay_trailing(target: EventFunction, data: Dictionary) -> bool:
+	var index: int = int(data.get("index", -1))
+	var removed: bool = bool(data.get("removed", false))
+	var defaults: Array[bool] = []
+	for position in range(target.params.size()):
+		var param: ACEParam = target.params[position]
+		if position == index:
+			if removed:
+				continue
+			defaults.append(not str(data.get("default", "")).strip_edges().is_empty())
+			continue
+		defaults.append(not param.gdscript_default.strip_edges().is_empty())
+	if index < 0 and not removed:
+		defaults.append(not str(data.get("default", "")).strip_edges().is_empty())
+	var seen_default: bool = false
+	for has_default: bool in defaults:
+		if has_default:
+			seen_default = true
+		elif seen_default:
+			return false
+	return true

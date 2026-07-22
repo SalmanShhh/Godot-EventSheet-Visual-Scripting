@@ -240,6 +240,10 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 				var insert_into: Variant = context.get("insert_into", null)
 				if insert_into is EventGroup:
 					_group_children_array(insert_into as EventGroup).append(condition_event)
+				elif insert_into is EventFunction:
+					# A published verb's own body. This is the route a "run only when" guard takes: the
+					# guard is a CONDITION on an event inside the verb, authored like every other one.
+					(insert_into as EventFunction).events.append(condition_event)
 				elif insert_into is EventSheetResource:
 					(insert_into as EventSheetResource).events.append(condition_event)
 				else:
