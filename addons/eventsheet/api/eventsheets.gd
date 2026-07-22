@@ -651,7 +651,7 @@ static func save_capable_scripts() -> PackedStringArray:
 
 
 ## Renders a snapshot Dictionary to on-disk text through the REAL Save System backend in
-## the given format ("config", "json", "binary", "csv"), so tooling can show exactly what
+## the given format ("config", "json", "binary", "csv", "ini", "xml"), so tooling can show exactly what
 ## a save will look like before committing to a format. Returns the file text (a hex head
 ## for binary), or an explanatory line when the Save System pack is not installed.
 static func preview_save(data: Dictionary, format: String, key: String = "state") -> String:

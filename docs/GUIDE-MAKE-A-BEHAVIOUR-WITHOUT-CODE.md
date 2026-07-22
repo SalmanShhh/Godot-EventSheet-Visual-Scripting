@@ -102,9 +102,11 @@ Add a **Function** (name + typed parameters + a return type). The dialog is the 
 
 Tick **"expose as ACE"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary.
 
-Each published verb reads on the canvas the same way every other row does: the **kind badge, the verb's name and its typed inputs on the left**, and **what it hands back on the right** - its category, `gives back <type>` for a Condition or Expression, markers like `waits` or `internal`, and the step count that opens its body. The `## @ace_description(...)` you wrote sits directly above it as the caption, and the whole block is washed in its ACE-kind colour. Hover a verb to read its full declaration, including each parameter's type, default and blurb.
+Each published verb reads on the canvas the same way every other event row does: a two-lane row with the **kind badge and the verb's name on the left**, and on the right what it **hands back** - `gives back <type>` for a Condition or Expression, plus markers like `waits`, `static` or `internal`. The `## @ace_description(...)` you wrote sits directly above it as a caption, and the whole block is washed in its ACE-kind colour.
 
-<img src="images/published-verb-rows.png" alt="Published verbs on the canvas: each Action row shows its description as a caption above it, the kind badge, name and stacked typed inputs on the left, and the category, featured star and step count on the right." width="580">
+A verb's parameters render as condition-style cells beneath its name: click one to open the verb's dialog focused on that parameter, or click `+ Add parameter` to add another. A verb's body is **open by default** (only a verb nested inside a group or a `#region` starts folded), and a body row with no conditions reads **Always** - it runs whenever the verb is called, which is why it does not say "Every Tick" like a sheet-level event would. Hover a verb to read its full declaration, including its category and each parameter's type, default and blurb.
+
+<img src="images/published-verb-rows.png" alt="Published verbs on the canvas: each Action row shows its description as a caption above it, the kind badge and name on the left with clickable parameter cells beneath, and the featured star plus the gives-back marker on the right." width="580">
 
 Verbs appear in the order the file declares them - after the sheet's own events, exactly where the compiler writes them - so an opened pack reads top to bottom like its GDScript. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ:
 

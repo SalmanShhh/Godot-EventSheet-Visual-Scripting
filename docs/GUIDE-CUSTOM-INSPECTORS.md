@@ -2,7 +2,7 @@
 
 Make your event-sheet variables show up as **rich, designer-friendly controls in Godot's Inspector**: sliders, min-max ranges, direction dials, colour swatches, texture thumbnails, and inline curves, plus **decor** (accent section headers, info note panels) and every common `@export` option (ranges, dropdowns, multiline text, grouping, tooltips, read-only, alpha-free colours). It is a rich-inspector experience for Godot, authored entirely from the **Variable dialog** with no code, and it compiles to plain `@export` GDScript that round-trips losslessly. A teammate who never opens the event sheet still gets a tidy, tuned Inspector to play with - and **hovering any exported variable in the sheet shows a live preview** of exactly what they will get.
 
-![The six Inspector drawers plus the header and info-note decor](images/inspector-drawers.png)
+![Inspector drawers plus the header and info-note decor](images/inspector-drawers.png)
 
 ## Table of Contents
 
@@ -99,7 +99,7 @@ naming popup.
 
 ## 4. The Drawers (the rich controls)
 
-A **drawer** replaces a variable's plain Inspector field with a richer control, offered in the **"Show as"** dropdown for the types that can host one (the default is always "Default field", so a drawer is opt-in). Most types host one drawer; `Vector2` hosts two (the dial and the min-max range). All six are shown in the image at the top of this guide.
+A **drawer** replaces a variable's plain Inspector field with a richer control, offered in the **"Show as"** dropdown for the types that can host one (the default is always "Default field", so a drawer is opt-in). Most types host one drawer; `Vector2` hosts two (the dial and the min-max range). There are eight in total, each documented below; the image at the top of this guide shows a representative set, not all of them.
 
 ### Progress bar (int / float)
 

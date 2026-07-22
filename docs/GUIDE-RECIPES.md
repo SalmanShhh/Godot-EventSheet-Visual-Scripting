@@ -439,7 +439,7 @@ its type - no custom editor code.
    `@export_subgroup`) - they show a **"Group › Subgroup"** chip on the row and nest in the Inspector.
 4. Select the node and the Inspector shows the rich, grouped drawers; press Play and the game reads
    from those same designer-tweaked values. The **Inspector Playground** showcase
-   (`demo/showcase/inspector_playground/inspector_playground.tscn`) demonstrates all five drawers at once.
+   (`demo/showcase/inspector_playground/inspector_playground.tscn`) demonstrates five of the eight drawers at once - the curve editor, progress bar, swatch row, texture preview and vector dial.
 
 Without the editor plugin (or in an exported game) each property is just a plain field - the parity
 covenant is untouched. New here? The dialog starts simple (Basic "More options") and only unfurls the

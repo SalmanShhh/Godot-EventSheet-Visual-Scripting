@@ -9,7 +9,7 @@ ACEs define what a row can *do* inside events. **Custom blocks** define new *kin
 1. [Scenarios Where Custom Blocks Excel](#1-scenarios-where-custom-blocks-excel)
 2. [Core Concepts](#2-core-concepts)
 3. [Quick Start](#3-quick-start)
-4. [The Three Ways to Register a Kind](#4-the-three-ways-to-register-a-kind)
+4. [The Four Ways to Register a Kind](#4-the-four-ways-to-register-a-kind)
 5. [The Kind Contract Reference](#5-the-kind-contract-reference)
 6. [Schema Kinds vs Resource Kinds](#6-schema-kinds-vs-resource-kinds)
 7. [The UX Your Kind Gets for Free](#7-the-ux-your-kind-gets-for-free)
@@ -99,15 +99,18 @@ That is the entire integration. Immediately:
 
 ---
 
-## 4. The Three Ways to Register a Kind
+## 4. The Four Ways to Register a Kind
 
 | Path | Best for | What you do | Effort |
 |------|----------|-------------|--------|
-| **1. Folder scan** | Packs and projects | Drop a script extending `EventSheetBlockKind` into `res://eventsheet_addons/` | Lowest: zero registration code |
-| **2. Bridge (code)** | Other editor plugins/tools | `EventForgeBridgeRuntime.new().register_block_kind(my_kind)` | One call |
-| **3. Built-in** | Contributing kinds into the plugin | Register in `EventSheetBlockRegistry._ensure_built_ins()` | Plugin PR |
+| **1. Public API** | Plugins, tool scripts, tests | `EventSheets.register_block_kind(my_kind)` | One call, no bridge instance |
+| **2. Folder scan** | Packs and projects | Drop a script extending `EventSheetBlockKind` into `res://eventsheet_addons/` (scanned recursively, in sorted order) | Lowest: zero registration code |
+| **3. Bridge (code)** | Other editor plugins/tools | `EventForgeBridgeRuntime.new().register_block_kind(my_kind)` | One call |
+| **4. Built-in** | Contributing kinds into the plugin | Register in `EventSheetBlockRegistry._ensure_built_ins()` | Plugin PR |
 
-Rules shared by all three:
+The Add menu labels a kind with its `title`, run through the editor's translation table; `kind_id` is the on-disk identity and never localises.
+
+Rules shared by all four:
 
 - Duplicate `kind_id`s warn and keep the **first** registration; resolution is deterministic (the folder scan sorts paths).
 - A pack kind without a `.` in its id gets a warning nudging the `<pack>.<name>` namespace.
@@ -123,7 +126,7 @@ Everything a kind can implement. Only `kind_id`, `title`, and the pieces your ki
 |--------|-----------|--------------|
 | `kind_id: String` | both | The stable public id. Compatibility covenant once shipped. |
 | `title: String` | both | The row badge text, the Add-menu entry, and the dialog title. |
-| `category: String` | both | Add-menu grouping (default "Blocks"). |
+| `category: String` | both | A free-text label carried on the kind (default "Blocks"). Reserved for grouping: the Add menu currently lists every addable kind flat, so setting this changes nothing you can see yet. |
 | `fields() -> Array[Dictionary]` | schema | The schema: `{id, label, type: Variant.Type, default}` per field. Drives the auto-built dialog and defaults. A String field may add `"options": ["a", "b"]` (renders a dropdown, stores the chosen text) or `"hint": "resource_path"` (adds a Browse button that opens the editor's resource picker beside the text field). |
 | `emit(block) -> PackedStringArray` | schema | The GDScript this block compiles to. **Must be pure**: same fields, same bytes. Empty array emits nothing. |
 | `lift(lines, i) -> Dictionary` | both | Claim source lines starting at `i`. Return `{}` (not yours), `{"fields": ..., "consumed": n}` (schema), or `{"resource": row, "consumed": n}` (resource kind). |
@@ -137,7 +140,7 @@ Everything a kind can implement. Only `kind_id`, `title`, and the pieces your ki
 | `source_map_kind() -> String` | both | The tag line-to-row tooling sees (`"enum"`, default `"custom_block"`). |
 | `addable() -> bool` | both | Whether the generic Add surfaces offer this kind. Resource kinds return `false` (their classes have dedicated flows). |
 | `edit(dock, block) -> bool` | both | Open your own editor and return `true`, or return `false` for the generic schema dialog. |
-| `validate(block) -> PackedStringArray` | schema | Optional problems for the diagnostics lane. |
+| `validate(block) -> String` | both | Optional live validation. Return a short problem description, or `""` when the block is fine. The message renders inline on the row as a red `⚠ <message>`, so a bad field is caught while authoring instead of at compile time. |
 
 `CustomBlockRow` itself has three stored properties: `kind_id`, `fields`, and `enabled`.
 
@@ -180,7 +183,7 @@ The practical consequence: you cannot break a user's file with a bad kind. The w
 
 | Kind | `kind_id` | Emits | Notes |
 |------|-----------|-------|-------|
-| Preload Resource | `preload` | `const Name := preload("res://path")` | Schema kind; two fields (constant name, path). |
+| Preload Resource | `preload` | `const Name := preload("res://path")` in constant mode, or `var Name := load("res://path")` in dynamic mode | Schema kind; THREE fields (`name`, `path`, `mode`). It implements `display_spans()`, so the row reads `Name : Type ⟨preload⟩ = res://path` with no kind badge. |
 | Region | `region` | `#region Label` / `#endregion` (+ an optional `## @ace_region(#color, "description")` marker line above a styled opener) | Schema kind; fences are two independent single-line blocks. Matched pairs fold in the editor with a thin colored bubble around the range; the color and description edit in the fence's dialog. |
 | Enum row | `enum` | `enum Name { A, B }` | Resource kind over `EnumRow`; dedicated dialog; not in Add surfaces. |
 | Signal row | `signal` | `signal name(params)` | Resource kind over `SignalRow`; the trigger-annotation fold stays with the importer. |

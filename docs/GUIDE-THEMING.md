@@ -1,6 +1,6 @@
 # EventSheet Theme + Editability Guide
 
-> Updated 2026-06. A designer-friendly **visual theme editor** (live preview + grouped
+> Updated 2026-07. A designer-friendly **visual theme editor** (live preview + grouped
 > token controls) ships as the **Theme Editor dialog**.
 
 This editor uses Godot-native resources instead of runtime CSS. The goal is still the same as a Construct-style theme.css workflow: designers can duplicate a theme package, tune tokens, reload the editor, and keep shipping reusable presets.
@@ -18,6 +18,16 @@ Current additions on top of the model below:
   `cell_hover_color`, `invert_marker_color`, `gutter_background_color` and
   `gutter_text_color` (the left strip with its line and event numbers), and `behavior_accent_color` (the ⚙ behavior
   banner/tab accent).
+- **Published verbs** (a behaviour pack's own Actions / Conditions / Expressions) are tinted by which
+  KIND of verb they are, through nine tokens. Each role has an ACCENT and a BADGE background:
+  `ace_action_accent_color` / `ace_action_badge_background_color`, and the same pair for
+  `ace_condition_*` and `ace_expression_*`. The accent is the one with reach - it drives that role's
+  badge text, the verb name's tint, the row wash, the left accent bar AND the description caption's
+  band, so changing it re-skins the whole role. `verb_row_tint_strength` (0.0 - 0.4) is how loud that
+  wash is: raise it on a pale sheet, where a faint tint disappears. `verb_chip_background_color` and
+  `verb_chip_foreground_color` paint the action-lane chips (`gives back <type>`, `waits`, `static`,
+  `internal`, featured); the quieter chips are mixed from that pair. All nine bundled presets set
+  them, so copy one as a starting point rather than beginning from the palette defaults.
 
 ## Core model
 

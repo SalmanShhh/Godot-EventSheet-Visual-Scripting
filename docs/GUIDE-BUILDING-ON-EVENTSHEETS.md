@@ -199,7 +199,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 	print(pack_gd)
 ```
 
-`save_state_code` follows the repo convention exactly (int/float/bool/String/Dictionary/Array coercion, anything else passes through), and the generated pair is valid GDScript that round-trips a live node. `preview_save` runs the REAL Save System backend for the given format (`"config"`, `"json"`, `"binary"`, `"csv"`), so the text you show is byte-for-byte what ships - all four formats preserve exact types. When `eventsheet_addons/save_system/` is not installed, `preview_save` returns an explanatory line and `save_capable_scripts` returns empty rather than erroring.
+`save_state_code` follows the repo convention exactly (int/float/bool/String/Dictionary/Array coercion, anything else passes through), and the generated pair is valid GDScript that round-trips a live node. `preview_save` runs the REAL Save System backend for the given format (`"config"`, `"json"`, `"binary"`, `"csv"`, `"ini"`, `"xml"`), so the text you show is byte-for-byte what ships - all six formats preserve exact types. When `eventsheet_addons/save_system/` is not installed, `preview_save` returns an explanatory line and `save_capable_scripts` returns empty rather than erroring.
 
 ## 7. Full Reference
 
