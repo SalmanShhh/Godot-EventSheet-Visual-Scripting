@@ -1809,6 +1809,52 @@ func _open_go_to_event_dialog() -> void:
 	number_edit.get_line_edit().grab_focus()
 
 
+## True when the object-name column is ALIGNED (a fixed width, so every row's text starts at the same
+## edge) rather than in flow mode, where the text follows each label. Read by the View menu to seed
+## its check mark; the conditions lane is the one asked, since the toggle moves both together.
+func _object_columns_aligned() -> bool:
+	if _viewport == null:
+		return true
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	return event_style == null or event_style.condition_object_column_width > 0
+
+
+## View ▾ "Aligned Object Columns": flips the C3-style object column between ALIGNED (the default -
+## every row's text starts at the same edge, so a sheet scans as a table) and FLOW (each row's text
+## follows its own object name, so it starts somewhere different on every row). The condition lane is
+## written through the same handler a divider DRAG uses, so a default-themed sheet is promoted to a
+## concrete style, persisted and marked dirty exactly as dragging the column would; the actions lane
+## then rides that same promoted style. A hand-dragged width is what turning it back on restores to.
+func _toggle_object_column_alignment(view_popup: PopupMenu) -> void:
+	if _viewport == null:
+		return
+	var aligning: bool = not _object_columns_aligned()
+	var width: int = EventSheetPalette.OBJECT_COLUMN_WIDTH if aligning else 0
+	_on_viewport_object_column_width_changed("condition", width)
+	if _current_sheet != null and _current_sheet.editor_style != null:
+		_current_sheet.editor_style.get_event_style().action_object_column_width = width
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		var view_style: EventSheetEventStyle = view._get_event_style()
+		if view_style != null:
+			view_style.condition_object_column_width = width
+			view_style.action_object_column_width = width
+		# Geometry changed, spans did not - the same invalidation the live column drag uses.
+		view._update_layout_style_signature(view._get_font_size())
+		view._layout_cache.clear()
+		view.queue_redraw()
+	if view_popup != null:
+		var aligned_index: int = view_popup.get_item_index(18)
+		if aligned_index >= 0:
+			view_popup.set_item_checked(aligned_index, aligning)
+	_set_status(
+		"Object columns aligned - every row's text starts at the same edge."
+		if aligning
+		else "Object columns flow - each row's text follows its own object name."
+	)
+
+
 func _toggle_object_icons(view_popup: PopupMenu) -> void:
 	var show_icons: bool = true
 	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:

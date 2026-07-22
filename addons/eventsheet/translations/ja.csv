@@ -559,6 +559,7 @@ Strikethrough (Ctrl+Shift+S),取り消し線 (Ctrl+Shift+S)
 Wrap the selection in [color=...] (edit the hex after),選択範囲を [color=...] で囲みます（後で色を編集）
 Loaded: (unsaved EventSheet),読み込み: (未保存の EventSheet)
 Event Numbers,イベント番号
+Aligned Object Columns,オブジェクト列を揃える
 Outline…,アウトライン…
 Outline,アウトライン
 Go to Event,イベントへ移動

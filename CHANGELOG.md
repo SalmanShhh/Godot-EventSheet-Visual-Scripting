@@ -73,6 +73,10 @@
   drew nothing at all at rest - you had to find it by hunting for the resize cursor. A single guide
   now spans the entire canvas: faint while you hover a boundary, so it is discoverable before you
   grab it, and solid with a soft halo while you drag, so where the split will land is unambiguous.
+- **View ▾ "Aligned Object Columns"** turns the alignment on and off without touching a theme file.
+  It writes through the same path a divider DRAG uses, so flipping it promotes a default-themed sheet
+  to a concrete style, persists, and marks the sheet dirty exactly as dragging the column would - and
+  a width you set by hand is what turning it back on restores. Translated in all 8 shipped languages.
 - **The object column is ALIGNED by default**, the Construct look: every row's condition/action text
   starts at the same x, so a sheet scans as a table instead of each row starting wherever its own
   object name happens to end. Flow mode (text follows each label) is still there by setting the

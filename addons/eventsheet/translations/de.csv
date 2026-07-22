@@ -559,6 +559,7 @@ Strikethrough (Ctrl+Shift+S),Durchgestrichen (Ctrl+Shift+S)
 Wrap the selection in [color=...] (edit the hex after),Umschließt die Auswahl mit [color=...] (Farbe danach anpassen)
 Loaded: (unsaved EventSheet),Geladen: (ungespeichertes EventSheet)
 Event Numbers,Ereignisnummern
+Aligned Object Columns,Ausgerichtete Objektspalten
 Outline…,Gliederung…
 Outline,Gliederung
 Go to Event,Gehe zu Ereignis

@@ -559,6 +559,7 @@ Strikethrough (Ctrl+Shift+S),Barré (Ctrl+Shift+S)
 Wrap the selection in [color=...] (edit the hex after),Entoure la sélection de [color=...] (modifiez la couleur ensuite)
 Loaded: (unsaved EventSheet),Chargé : (EventSheet non enregistrée)
 Event Numbers,Numéros d'événement
+Aligned Object Columns,Colonnes d'objet alignées
 Outline…,Plan…
 Outline,Plan
 Go to Event,Aller à l'événement

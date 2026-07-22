@@ -85,6 +85,24 @@ static func run() -> bool:
 	ok = _check(ok, miss.is_empty(), "far from the boundary is not grabbable")
 
 	viewport.free()
+
+	# ---- the View ▾ "Aligned Object Columns" toggle: flips BOTH lanes, and back ----
+	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	dock.setup(EventSheetResource.new())
+	ok = _check(ok, dock._object_columns_aligned(), "a fresh sheet reports its columns aligned")
+	dock._toggle_object_column_alignment(null)
+	var flowed: EventSheetEventStyle = dock._active_view()._get_event_style()
+	ok = _check(ok, not dock._object_columns_aligned(), "the toggle switches to flow")
+	ok = _check(ok, flowed.condition_object_column_width == 0 and flowed.action_object_column_width == 0,
+		"flow clears BOTH lanes (they move together)")
+	dock._toggle_object_column_alignment(null)
+	var realigned: EventSheetEventStyle = dock._active_view()._get_event_style()
+	ok = _check(ok, dock._object_columns_aligned(), "toggling back re-aligns")
+	ok = _check(ok, realigned.condition_object_column_width == EventSheetPalette.OBJECT_COLUMN_WIDTH
+		and realigned.action_object_column_width == EventSheetPalette.OBJECT_COLUMN_WIDTH,
+		"re-aligning restores the shared default width on both lanes")
+	dock.free()
 	return ok
 
 

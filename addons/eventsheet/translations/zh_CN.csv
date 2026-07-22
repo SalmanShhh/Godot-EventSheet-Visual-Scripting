@@ -559,6 +559,7 @@ Strikethrough (Ctrl+Shift+S),删除线 (Ctrl+Shift+S)
 Wrap the selection in [color=...] (edit the hex after),用 [color=...] 包裹所选内容（之后可修改颜色）
 Loaded: (unsaved EventSheet),已加载：(未保存的 EventSheet)
 Event Numbers,事件编号
+Aligned Object Columns,对齐对象列
 Outline…,大纲…
 Outline,大纲
 Go to Event,跳转到事件

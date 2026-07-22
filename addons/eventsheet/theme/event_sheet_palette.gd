@@ -7,6 +7,9 @@ const ROW_HEIGHT := 28
 # and taller bars carry the folder icon + title + fingerprint comfortably (themable per style).
 const GROUP_ROW_HEIGHT := 56
 const INDENT_WIDTH := 18
+# Width of the C3-style object-name column when it is ALIGNED (the default). One source for the two
+# style tokens' defaults AND the View menu's align/flow toggle, so the two can never drift apart.
+const OBJECT_COLUMN_WIDTH := 130
 const FONT_SIZE := 13
 const MIN_FONT_SIZE := 8
 const GUTTER_WIDTH := 20

@@ -27,9 +27,9 @@ extends Resource
 ## The value is LOGICAL pixels, like every other geometry token here, so it does not grow with the
 ## editor's display scale - on a HiDPI editor a long name elides sooner, and the column can be dragged
 ## (or themed) wider to suit.
-@export_range(0, 480, 1) var condition_object_column_width: int = 130
+@export_range(0, 480, 1) var condition_object_column_width: int = EventSheetPalette.OBJECT_COLUMN_WIDTH
 ## Fixed width of the object-name column inside the ACTIONS lane, in pixels. 0 = flow.
-@export_range(0, 480, 1) var action_object_column_width: int = 130
+@export_range(0, 480, 1) var action_object_column_width: int = EventSheetPalette.OBJECT_COLUMN_WIDTH
 @export var trigger_badge_background_color: Color = EventSheetPalette.COLOR_TRIGGER_ARROW_BG
 @export var trigger_badge_foreground_color: Color = EventSheetPalette.COLOR_TRIGGER_ARROW_FG
 @export var group_background_color: Color = EventSheetPalette.COLOR_GROUP_BG
