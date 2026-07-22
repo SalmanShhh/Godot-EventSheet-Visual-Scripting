@@ -9,6 +9,7 @@ ACEs define what a row can *do* inside events. **Custom blocks** define new *kin
 1. [Scenarios Where Custom Blocks Excel](#1-scenarios-where-custom-blocks-excel)
 2. [Core Concepts](#2-core-concepts)
 3. [Quick Start](#3-quick-start)
+3b. [The No-Code Path: simple_block_kind](#3b-the-no-code-path-simple_block_kind)
 4. [The Four Ways to Register a Kind](#4-the-four-ways-to-register-a-kind)
 5. [The Kind Contract Reference](#5-the-kind-contract-reference)
 6. [Schema Kinds vs Resource Kinds](#6-schema-kinds-vs-resource-kinds)
@@ -96,6 +97,51 @@ That is the entire integration. Immediately:
 - **Add ▾ → Note…** and **Ctrl+P → "Add Note…"** create one through a dialog built from the schema.
 - Opening any `.gd` with a `## NOTE: tune this` line shows a highlighted **Note** row instead of prelude text.
 - Double-clicking the row edits it; saving writes the exact same line back.
+
+---
+
+## 3b. The No-Code Path: simple_block_kind
+
+You do not have to subclass anything. Hand `EventSheets.simple_block_kind()` a plain Dictionary and
+register what it hands back:
+
+```gdscript
+func _enter_tree() -> void:
+    EventSheets.register_block_kind(EventSheets.simple_block_kind({
+        "kind_id": "my_pack.todo",
+        "title": "TODO",
+        "fields": [
+            {"id": "text", "label": "What", "type": TYPE_STRING, "default": "fix this"},
+            {"id": "priority", "label": "Priority", "type": TYPE_INT, "default": 2},
+        ],
+        "emit": "# TODO(p{priority}): {text}",
+        "summary": "TODO p{priority}: {text}",
+    }))
+```
+
+That is a complete, shippable block kind: it appears in **Add ▾**, gets a dialog built from its
+fields, draws a row, and compiles to the `emit` line.
+
+| Key | Meaning |
+|-----|---------|
+| `kind_id` | On-disk identity. Frozen once shipped - sheets already saved reference it by this string. |
+| `title` | Add-menu label and the row's badge. Localised through the editor's translation table. |
+| `category` | Free-text label carried on the kind (default `"Blocks"`). Reserved: nothing groups by it yet. |
+| `fields` | Array of `{id, label, type, default}`. `type` is a Godot `TYPE_*` constant; the dialog picks the control from it. |
+| `emit` | The GDScript template. One output line per line of the string, with `{field_id}` placeholders. |
+| `summary` | The one-line row text, same `{field_id}` placeholders. |
+| `lift` | Optional `func(lines, index) -> Dictionary` for reading the block back out of a `.gd`. |
+
+Two things worth knowing before you reach for the subclass:
+
+**Omitting `lift` is safe.** Forward emission and the row are complete without it. What you lose is
+reverse recovery: reopening the generated `.gd` shows your line as a verbatim GDScript block rather
+than an editable form. The file still round-trips byte-for-byte either way, because a block that
+cannot be lifted is simply never claimed.
+
+**Graduate to a full `EventSheetBlockKind` subclass** the moment you need `style()`, `validate()`,
+`display_spans()`, `hover_text()` or `edit()`. None of those have config keys, and none of them can
+be expressed as a template - they are code by nature.
 
 ---
 
