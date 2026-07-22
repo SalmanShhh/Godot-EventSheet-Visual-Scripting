@@ -1,7 +1,8 @@
 # EventForge - visual render harness (dev tool) for the ACE Studio ("Define a Verb")
 # guide image. Builds the real dialog filled in with a concrete example (a Take Damage
-# action with an amount parameter, a guard, and published to the Combat category) so the
-# live preview and the "Ships as" line show a realistic signature. Run NON-headless:
+# action published to the Combat category) so the live preview and the "Ships as" line
+# show a realistic signature. Parameters and guards are NOT authored here - the dialog no
+# longer carries either; a parameter is a cell on the verb's row. Run NON-headless:
 #   godot --path . --script tools/render_ace_studio_example.gd
 @tool
 extends SceneTree
@@ -28,18 +29,23 @@ func _on_frame() -> void:
 		_dialog.set_taken_names_provider(func() -> PackedStringArray: return PackedStringArray())
 		_dialog.init_dialog(root)
 		_dialog.open()
-		# A concrete Action verb: Take Damage(amount: float), guarded, published to Combat.
+		# A concrete Action verb: Take Damage, published to Combat. Its doc comment shows as the
+		# authoring detail a real verb carries; parameters live on the verb's row, not here.
 		_dialog._name_edit.text = "Take Damage"
-		_dialog._description_edit.text = "Subtract an amount of health and react to it."
+		_dialog._doc_comment_edit.text = "Subtract an amount of health and react to it."
+		_dialog._description_edit.text = "Deals damage to this object."
 		_dialog._expose_check.button_pressed = true
 		_dialog._expose_card.visible = true
 		_dialog._expose_category_edit.text = "Combat"
 		_dialog._refresh_studio()
 		return
-	if _frames == 8 and _dialog != null:
+	if _frames == 4 and _dialog != null:
+		# Snug the window to its content so the buttons sit under the publish card, not below a band of
+		# dead space (removing the two cards left the min height taller than the content needs).
+		_dialog._dialog.size = _dialog._dialog.get_contents_minimum_size()
+		return
+	if _frames == 10 and _dialog != null:
 		var image: Image = _dialog._dialog.get_texture().get_image()
-		# Crop to the authoring content (the dialog reserves extra height for its buttons).
-		var cropped: Image = image.get_region(Rect2i(0, 0, mini(580, image.get_width()), mini(748, image.get_height())))
-		cropped.save_png("res://_ace_studio_example.png")
-		print("[ace_studio_example] saved res://_ace_studio_example.png (%dx%d)" % [cropped.get_width(), cropped.get_height()])
+		image.get_region(Rect2i(0, 0, mini(580, image.get_width()), image.get_height())).save_png("res://docs/images/ace-studio-example.png")
+		print("[ace_studio_example] saved docs/images/ace-studio-example.png (%dx%d)" % [image.get_width(), image.get_height()])
 		quit(0)

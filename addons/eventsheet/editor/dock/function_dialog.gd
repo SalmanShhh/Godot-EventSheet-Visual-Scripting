@@ -8,9 +8,10 @@ extends RefCounted
 #     editor/function_dialog.gd), feeds it the "taken names" provider (existing variables + function
 #     names, so the dialog blocks collisions), and connects its function_confirmed signal,
 #   • _apply_function_data: turns the validated dialog payload into an EventFunction on the sheet
-#     (undoable). Its "Run only when" guards become Expression-Is-True conditions on a wrapper row
-#     the body is authored under; the body itself is authored as rows afterwards, and CallFunction
-#     plus the publish surface pick the function up.
+#     (undoable). The body is authored as rows afterwards, and CallFunction plus the publish surface
+#     pick the function up. The payload MAY carry a "guards" array (a programmatic caller can pass one);
+#     each guard becomes an Expression-Is-True condition on a wrapper row. The dialog itself no longer
+#     produces guards - gating a verb is a condition on an event inside its body, authored on the canvas.
 #
 # NAMING: the widget already claims the class name EventSheetFunctionDialog (editor/function_dialog.gd),
 # so this glue helper is EventSheetFunctionDialogGlue - mirroring the EventSheetPreviewGlue sibling.

@@ -4,19 +4,18 @@ In an event sheet, a **verb** is a reusable function you define once and call an
 
 The word **ACE** is the plugin's name for the three things a sheet's picker can offer you: an **Action** (does something), a **Condition** (a yes/no test), and an **Expression** (returns a value). The ACE Studio lets you write any one of these as a verb, and optionally **publish** it so that every other sheet in your project can pick it. Everything you build here compiles to a plain GDScript function - the ACE Studio is a friendly front end, not a runtime layer that sits under your game.
 
-![The ACE Studio: Name, Doc comment and Inspector button rows, three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb with its Ships-as GDScript signature, a typed parameter row, the Run-only-when guards, and the Publish-to-the-picker tick revealing Description, Display name and Picker category.](images/ace-studio.png)
+![The ACE Studio: Name, Doc comment and Inspector button rows, three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb with its Ships-as GDScript signature, and the Publish-to-the-picker tick revealing Description, Display name and Picker category.](images/ace-studio.png)
 
 ## Table of Contents
 
 1. [Opening the ACE Studio](#1-opening-the-ace-studio)
 2. [Choosing What Kind of Verb](#2-choosing-what-kind-of-verb)
 3. [The Live Preview and the Ships-as Line](#3-the-live-preview-and-the-ships-as-line)
-4. [Adding Parameters](#4-adding-parameters)
-5. [Run Only When: Guard Conditions](#5-run-only-when-guard-conditions)
-6. [Publishing to the Picker](#6-publishing-to-the-picker)
-7. [After You Create the Verb](#7-after-you-create-the-verb)
-8. [Use Cases](#8-use-cases)
-9. [Tips and Common Mistakes](#9-tips-and-common-mistakes)
+4. [Parameters Live on the Verb's Row](#4-parameters-live-on-the-verbs-row)
+5. [Publishing to the Picker](#5-publishing-to-the-picker)
+6. [After You Create the Verb](#6-after-you-create-the-verb)
+7. [Use Cases](#7-use-cases)
+8. [Tips and Common Mistakes](#8-tips-and-common-mistakes)
 
 ---
 
@@ -30,7 +29,7 @@ There are three ways to open the ACE Studio to author a brand-new verb:
 
 All three open the same **"Define a Verb"** dialog with empty fields, ready for a new verb.
 
-To **edit an existing verb**, double-click its **Define block** on the sheet canvas. The dialog reopens pre-filled in edit mode: its title becomes **"Edit Verb - <name>"** and the confirm button becomes **"Save Changes"** instead of "Create Function". Editing lets you rename the verb, change its kind, adjust parameters, or change how it publishes - all without touching code.
+To **edit an existing verb**, double-click its **Define block** on the sheet canvas. The dialog reopens pre-filled in edit mode: its title becomes **"Edit Verb - <name>"** and the confirm button becomes **"Save Changes"** instead of "Create Function". Editing lets you rename the verb, change its kind, or change how it publishes - all without touching code. Its parameters are edited on the row itself, one cell at a time (see section 4).
 
 ---
 
@@ -39,7 +38,8 @@ To **edit an existing verb**, double-click its **Define block** on the sheet can
 The first fields you fill in describe the verb itself.
 
 - **Name** - the verb's name, for example `Take Damage`. You can type it in plain words with spaces and capitals; the ACE Studio turns it into a valid identifier automatically, so `Take Damage` becomes `take_damage`.
-- **Description** - what the verb does. This text is shown in the picker so other people (or future you) know what the verb is for.
+- **Doc comment** (optional) - Godot's own documentation for the verb, written above the function as `##` lines. It shows up in the editor's built-in help and when hovering the verb. BBCode like `[b]bold[/b]` is allowed.
+- **Inspector button** (optional) - name a label here and the verb also becomes a one-click button on the node's Inspector panel, handy for editor chores. Leave it empty (the usual case) and no button appears.
 
 Next comes **"What kind of verb is this?"** - three plain-language cards. Click one:
 
@@ -54,7 +54,7 @@ When - and only when - you pick **"A value"**, a second dropdown appears: **"Wha
 - **a number** (float)
 - **a whole number** (int)
 - **text** (String)
-- **yes / no** (bool)
+- **true / false** (bool)
 - **a point** (Vector2)
 - **a 3D point** (Vector3)
 - **anything** (Variant)
@@ -65,51 +65,38 @@ If you pick an Action or a Condition, this dropdown stays hidden, because their 
 
 ## 3. The Live Preview and the Ships-as Line
 
-![A filled-in ACE Studio: a Take Damage action with an amount parameter, the live preview showing the Action badge and param chip, the Ships-as line reading func take_damage(amount: float) -> void, a host.enabled guard, and the publish card set to the Combat category](images/ace-studio-example.png)
+![A filled-in ACE Studio: a Take Damage action with its description, the live preview showing the Action badge and display name, the Ships-as line reading func take_damage() -> void, and the publish card set to the Combat category](images/ace-studio-example.png)
 
 The card labelled **"This is what other people will see"** is a live preview that updates on every keystroke. It is there so you can shape a clear, picker-ready verb before you commit. It shows:
 
-- A mock picker entry with a **role badge** (Action, Condition, or Expression), the **display name**, a **chip for each parameter**, and a **category chip**.
+- A mock picker entry with a **role badge** (Action, Condition, or Expression), the **display name**, a **chip for each parameter the verb has**, and a **category chip**.
 - A one-line summary that reads like a real picker row, for example `Combat > Take Damage  amount`.
-- A **"SHIPS AS"** line showing the exact generated signature, for example `func take_damage(amount: float) -> void`.
+- A **"SHIPS AS"** line showing the exact generated signature. A brand-new verb has no parameters yet (you add those from its row afterwards - see section 4), so it reads `func take_damage() -> void`; reopen a verb that already has an `amount` parameter and the same line reads `func take_damage(amount: float) -> void`.
 
 The "Ships as" line is built from the compiler's own formatters - the same code that emits your final GDScript. That means the signature in the preview can never disagree with the code that actually ships. It is the honest bridge for anyone who wants to see the real function that will be generated, and it is the fastest way to hand a verb to a programmer teammate: they can read exactly what the call will look like in code.
 
 ---
 
-## 4. Adding Parameters
+## 4. Parameters Live on the Verb's Row
 
-Parameters are the values a verb takes in - the `amount` in Take Damage, or the direction and force in Knock Back.
+Parameters are the values a verb takes in - the `amount` in Take Damage, or the direction and force in Knock Back. You add and edit them **on the verb's own row**, not in this dialog. That keeps a parameter in the same place you read it: a brand-new verb starts with none, and you add them once its Define block is on the canvas.
 
-The **Parameters** card has a **"+ Add parameter"** button. Each time you click it, a row appears with four fields:
+The Define block shows one cell per parameter, in the same grammar a condition cell uses - `amount : number`, `force : number`. Two gestures:
 
-- **Name** - the parameter's name, for example `amount`.
-- **Type** - a dropdown: float, int, bool, String, Vector2, Vector3, or Variant.
-- **Default value** (optional) - a GDScript expression used when the caller does not supply the value, for example `10.0` or `Vector2.ZERO`.
-- **Description** - a short note about what the parameter is for.
+- **Click a parameter cell** to open a small **Edit Parameter** dialog: its **Name**, its **Type** (float, int, bool, String, Vector2, Vector3, or Variant), an optional **Default**, and a **Description**. It is the same idea as clicking a condition: click the thing you want to change and you land in its editor, not in a form that could restructure the whole verb. (There is an **"Edit the whole verb..."** button inside it for when you did mean the big dialog.)
+- **Click the "+ Add parameter" cell** on the row to add another, opening the same small dialog blank.
 
-A **remove button** clears a row you no longer want.
-
-One rule to remember: **parameters that have a default value must come after those that do not.** This mirrors how GDScript itself works - once one parameter has a default, every parameter after it needs one too. If you order them the other way around, the dialog refuses to confirm and shows a short problem message explaining what to fix.
+An optional default lets a caller skip the parameter. One rule carries over from GDScript: **parameters with a default must come after those without.** The Edit Parameter dialog refuses a change that would break that order and tells you what to fix.
 
 ---
 
-## 5. Run Only When: Guard Conditions
-
-The **"Run only when"** card lets you gate the verb so its body only runs in the right situation. It has a **"+ Add condition"** button; each click adds a guard row.
-
-Each guard is a **GDScript boolean expression**, for example `host.enabled` or `is_active`. The verb's body runs only when **every** guard is true. If any guard is false, the verb simply does nothing that call.
-
-This card is shown only when you are creating a new verb. It is **hidden when you are editing an existing verb**, because by that point the guards already live in the verb's body as condition rows wrapping the logic - you edit them there on the canvas rather than in the dialog.
-
----
-
-## 6. Publishing to the Picker
+## 5. Publishing to the Picker
 
 By default a verb is a private helper for the sheet you are on. To make it reusable across your whole project, tick the checkbox **"Publish to the picker (other sheets can use it)"**.
 
-Ticking it reveals two more fields:
+Ticking it reveals three more fields:
 
+- **Description** - what the verb does, shown beside it in the picker so other people (or future you) know what it is for.
 - **Display name** - the friendly name shown in the picker. It defaults from the verb's name, but you can polish it.
 - **Picker category** - the section the verb is filed under in the picker, for example `Combat`.
 
@@ -119,38 +106,38 @@ Only publish the verbs you actually mean to reuse. A verb that is only useful in
 
 ---
 
-## 7. After You Create the Verb
+## 6. After You Create the Verb
 
 When you press **"Create Function"** (or **"Save Changes"** in edit mode), a few things happen:
 
-- The verb appears among the sheet's functions as a **Define block**. You author its **body** as ordinary event rows underneath the block - the same conditions and actions you use anywhere else. Any **"Run only when"** guards you added become condition rows wrapping that body.
+- The verb appears among the sheet's functions as a **Define block**. You author its **body** as ordinary event rows underneath the block - the same conditions and actions you use anywhere else - and add its parameters from the row's cells (section 4). If the verb should only act in certain situations, put a condition on its first body row - an **Expression Is True** condition reading `host.enabled`, say - and the whole body runs only when that holds. That is an ordinary event row, visible and editable on the canvas, not a hidden dialog setting.
 - You call the verb from anywhere with the **Call Function** action.
 - If you published it, it shows up in **every sheet's picker** as an Action, Condition, or Expression, matching the preview.
 - Everything compiles to a **plain GDScript function**. The ACE Studio is a friendly front end, not a hidden runtime; the "Ships as" line is the bridge for a programmer who wants to see the real signature.
 
-Before the dialog will confirm, it checks a few things. The **name must be a valid identifier** and must **not collide** with an existing function or variable on the sheet, and **parameters with defaults must be trailing**. When something is wrong, the dialog shows a short problem message and stays open so you can fix it.
+Before the dialog will confirm, it checks that the **name is a valid identifier** and does **not collide** with an existing function or variable on the sheet. When something is wrong, the dialog shows a short problem message and stays open so you can fix it. (The trailing-default rule for parameters is checked where parameters are actually authored - the Edit Parameter dialog - not here.)
 
 This no-code path complements two other ways to add vocabulary. The **"Make a behaviour without code"** guide covers building a whole reusable behaviour out of rows, and the **"Custom ACEs"** guide covers the code-first annotation and registrar route for a pack author. For naming and picker craft, see the **"Designing user-friendly ACEs"** guide.
 
 ---
 
-## 8. Use Cases
+## 7. Use Cases
 
-1. **A Take Damage action shared across enemies.** Author a `Take Damage` verb as an Action with an `amount` parameter, publish it under Combat, and every enemy sheet can pick it. One definition, consistent damage handling everywhere.
+1. **A Take Damage action shared across enemies.** Author a `Take Damage` verb as an Action, add an `amount` parameter from its row, publish it under Combat, and every enemy sheet can pick it. One definition, consistent damage handling everywhere.
 
 2. **An Is Dead condition read from many sheets.** Author `Is Dead` as a Condition (the "Is it true?" card) that checks whether health has reached zero. Publish it, and any sheet - the enemy, the HUD, the score system - can test `Is Dead` without duplicating the check.
 
 3. **A Health % expression for a HUD bar.** Pick the "A value" card and choose **a number** (float). The verb returns current health divided by max health, times one hundred. A HUD sheet reads `Health %` straight into a progress bar's value.
 
-4. **A guarded verb that only runs while a behaviour is enabled.** Add a guard `host.enabled` in the "Run only when" card. The verb's body runs only when the host is switched on, so a disabled behaviour quietly does nothing instead of misfiring.
+4. **A guarded verb that only runs while a behaviour is enabled.** Put an **Expression Is True** condition reading `host.enabled` on the first row of the verb's body. The rest of the body runs only when the host is switched on, so a disabled behaviour quietly does nothing instead of misfiring.
 
-5. **A Knock Back action with a direction and force.** Author `Knock Back` as an Action with two parameters: `direction` of type Vector2 and `force` of type float. Publish it under Combat so every physics-driven enemy can be knocked back the same way.
+5. **A Knock Back action with a direction and force.** Author `Knock Back` as an Action, then add two parameters from its row: `direction` of type Vector2 and `force` of type float. Publish it under Combat so every physics-driven enemy can be knocked back the same way.
 
 6. **A project-wide Give Currency verb.** Author `Give Currency` as an Action with an `amount` parameter and publish it under an Economy category. Shops, quest rewards, and pickups all call the same verb, so the rule for granting currency lives in exactly one place.
 
 7. **A getter that returns a spawn point.** Pick "A value" and choose **a point** (Vector2). The verb computes and returns a spawn position. A spawner sheet reads it as an Expression wherever it needs a fresh spawn location.
 
-8. **Editing an existing verb by double-clicking its Define block.** You shipped `Take Damage` last week and now want it to also play a hurt sound. Double-click its Define block, the dialog reopens as "Edit Verb - Take Damage", adjust the parameters or publishing, press "Save Changes", then extend the body rows.
+8. **Editing an existing verb by double-clicking its Define block.** You shipped `Take Damage` last week and now want it to also play a hurt sound. Double-click its Define block, the dialog reopens as "Edit Verb - Take Damage", adjust its kind or publishing, press "Save Changes", then extend the body rows - and tweak any parameter straight from its cell on the row.
 
 9. **A Condition that keeps a designer out of GDScript.** A designer needs an `Is Full Health` test but does not write code. They pick the "Is it true?" card, describe it, and the ACE Studio produces a real boolean function without them ever typing `func` or `return`.
 
@@ -162,13 +149,14 @@ This no-code path complements two other ways to add vocabulary. The **"Make a be
 
 ---
 
-## 9. Tips and Common Mistakes
+## 8. Tips and Common Mistakes
 
-- **Defaulted parameters must be trailing.** If a parameter has a default value, every parameter after it must have one too. Put your no-default parameters first; otherwise the dialog refuses to confirm and tells you what to fix.
+- **Parameters live on the row, not in this dialog.** A brand-new verb has none; you add them from its Define block once it exists - click a `name : type` cell to edit one, or the "+ Add parameter" cell to add another.
+- **Defaulted parameters must be trailing.** If a parameter has a default value, every parameter after it must have one too. The Edit Parameter dialog refuses a change that would break that order and tells you what to fix.
 - **Names auto-convert to identifiers, and they can collide.** `Take Damage` becomes `take_damage` for you, but if a function or variable named `take_damage` already exists on the sheet, the dialog will stop and ask you to rename. Pick distinct names.
 - **The value-type dropdown only shows for "A value".** If you do not see a "What kind of value?" dropdown, you have picked an Action or a Condition, whose return types are already decided. Only the Expression card reveals it.
 - **Publish only the verbs meant to be reused.** Every published verb appears in every sheet's picker. Leave one-off helpers unpublished so the picker stays full of genuinely shared vocabulary.
-- **The guards card is hidden in edit mode on purpose.** When you reopen a verb to edit it, the "Run only when" card is gone because those guards now live in the verb's body as condition rows. Edit them on the canvas, not in the dialog.
+- **Gating lives in the body, not in the dialog.** A verb that should only act sometimes gets a condition row at the top of its body. That is an ordinary event row - visible, editable, and undoable - not a setting buried in a dialog.
 - **The Ships-as line always matches the real output.** It is generated from the same formatters the compiler uses, so trust it. If the "SHIPS AS" signature looks wrong, the fix is to change the verb's kind, name, or parameters - not to work around it in code later.
 - **Write a real Description.** The description is what other people read in the picker. A one-line "what it does" saves everyone from guessing, especially for published verbs.
 - **A verb is just a GDScript function.** Nothing here is magic. If you ever want to read or extend the generated code directly, it is plain, typed GDScript with the exact signature the preview showed you.

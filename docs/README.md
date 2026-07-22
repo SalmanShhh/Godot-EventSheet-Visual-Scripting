@@ -10,7 +10,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 ## The Studios (in-editor authoring tools)
 
-- [Using the ACE Studio](GUIDE-USING-THE-ACE-STUDIO.md) - the "Define a Verb" dialog: verb-kind cards, the live picker preview, the Ships-as signature, parameters, guards, and publishing.
+- [Using the ACE Studio](GUIDE-USING-THE-ACE-STUDIO.md) - the "Define a Verb" dialog: verb-kind cards, the live picker preview, the Ships-as signature, and publishing (parameters are edited from the verb row's cells, guards are condition rows in the body).
 - [Using the Save Studio](GUIDE-USING-THE-SAVE-STUDIO.md) - the save window: preview any format on disk, browse and export slots, and generate save support for your own scripts.
 
 ## Extend the plugin

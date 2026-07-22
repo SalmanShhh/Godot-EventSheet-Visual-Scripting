@@ -286,7 +286,7 @@ Movement becomes the Platformer pack, "every tick" phrases match in the picker's
 
 ### 2. C3 functions become typed functions
 
-Your `Juice_Screenshake(cMagnitude, cDuration)` recreates as a sheet function with typed params and a condition gating the body - same shape, now real GDScript underneath.
+Your `Juice_Screenshake(cMagnitude, cDuration)` recreates as a sheet function with typed params and a condition row gating the body - same shape, now real GDScript underneath.
 
 ### 3. Wait-based cutscenes
 

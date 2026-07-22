@@ -13,7 +13,7 @@ byte-exactly: open the generated `.gd`, save it untouched, and you get the ident
 | Variables (typed and inferred) | Variable rows with plain-language types | Add > Global/Local Variable (typed containers explained in the Type dropdown) |
 | Constants | A constant row / local constant action | The variable dialog's Constant toggle; Set Local Constant |
 | Enums | Enum blocks with per-value fields | Add > Enum (the "+" adds each value as a field) |
-| Functions, parameters, returns | Expandable ƒ Define blocks | Add > Function… (the verb studio) |
+| Functions, parameters, returns | Expandable ƒ Define blocks | Add > Function… (the verb studio); parameters from the Define row's cells |
 | Static functions and variables | static-marked rows | The Static toggle in the function/variable dialogs |
 | `if` / `elif` / `else` | Condition lane + System Else / Else If chips | Right-click an event > Make Else / Make Else-If |
 | `match` | A switch/case block | Right-click > the switch block (Simple Mode included) |

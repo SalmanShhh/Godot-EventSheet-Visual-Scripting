@@ -92,9 +92,9 @@ Inside the loop body, **Current Loop Item** is the iterator; **Break Loop** / **
 
 ## 8. Reusable Logic - Functions
 
-Add a **Function** (name + typed parameters + a return type). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to. The "Using the ACE Studio" guide walks through it field by field.
+Add a **Function** (a name and what kind of verb it is). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to. Its parameters are added afterwards from the Define block's own cells, not in the dialog. The "Using the ACE Studio" guide walks through it field by field.
 
-<img src="images/ace-studio.png" alt="The ACE Studio: Name, Doc comment and Inspector button rows, three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb with its Ships-as GDScript signature, a typed parameter row, the Run-only-when guards, and the Publish-to-the-picker tick revealing Description, Display name and Picker category." width="580">
+<img src="images/ace-studio.png" alt="The ACE Studio: Name, Doc comment and Inspector button rows, three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb with its Ships-as GDScript signature, and the Publish-to-the-picker tick revealing Description, Display name and Picker category." width="580">
 
 - **Does something** (returns nothing) → an **Action** (e.g. `jump()`, `start_timer(seconds)`)
 - **Is it true?** (returns a bool) → a **Condition** (e.g. `is_in_state(name)`)
