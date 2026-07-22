@@ -40,8 +40,11 @@ static func run() -> bool:
 		style.event_style.ace_action_accent_color == EventSheetPalette.COLOR_ACE_ACTION_BADGE_FG
 		and style.event_style.ace_condition_accent_color == EventSheetPalette.COLOR_ACE_CONDITION_BADGE_FG
 		and style.event_style.ace_expression_accent_color == EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG, true) and passed
-	passed = _check("verb wash strength defaults to the tuned dark-sheet value",
-		is_equal_approx(style.event_style.verb_row_tint_strength, 0.10), true) and passed
+	# OFF by default: a published verb is an ordinary event row, and washing every one in its role
+	# colour made a pack of verbs read as a wall of tinted blocks. The knob survives for anyone who
+	# wants the colour-coding back, so this pins the DEFAULT, not the capability.
+	passed = _check("verb wash is off by default",
+		is_equal_approx(style.event_style.verb_row_tint_strength, 0.0), true) and passed
 	# EVERY bundled preset dresses published verbs in ITS OWN palette. A preset that skipped them would
 	# fall back to EventForge's amber/teal/purple and stop looking like the theme it claims to be, so
 	# each one must set all three roles, and they must be distinguishable from each other.

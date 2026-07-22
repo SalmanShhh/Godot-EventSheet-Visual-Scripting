@@ -33,13 +33,27 @@ static func configure_code_editor(edit: CodeEdit) -> void:
 
 ## An aligned "Label   [field]" row - the consistent form layout for the plugin's dialogs. The
 ## label takes a fixed leading width so stacked rows align; the field expands to fill the rest.
-static func form_row(label_text: String, field: Control, label_min_width: float = LABEL_MIN_WIDTH) -> HBoxContainer:
+##
+## Pass `tooltip` and the row explains itself on hover. It lands on the LABEL as well as the field,
+## because the label is the part a puzzled user actually points at - a field name like "Inspector
+## button" is exactly the kind of term that means nothing until someone says what it does. Note the
+## mouse_filter: Godot Labels ignore the mouse by default, so a tooltip set on one never fires. Any
+## caller passing a tooltip would silently get nothing without this line.
+static func form_row(label_text: String, field: Control, label_min_width: float = LABEL_MIN_WIDTH,
+		tooltip: String = "") -> HBoxContainer:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", ROW_SEPARATION)
 	var label: Label = Label.new()
 	label.text = label_text
 	label.custom_minimum_size = Vector2(label_min_width, 0.0)
 	label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	if not tooltip.strip_edges().is_empty():
+		label.tooltip_text = tooltip
+		label.mouse_filter = Control.MOUSE_FILTER_STOP
+		# The field carries the same words, so hovering anywhere on the row answers the question - and
+		# a field that already explains itself in its own terms keeps that more specific text.
+		if field.tooltip_text.strip_edges().is_empty():
+			field.tooltip_text = tooltip
 	row.add_child(label)
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(field)

@@ -586,3 +586,50 @@ Remove Field,Rimuovi campo
 Add Field,Aggiungi campo
 New field on this data class,Nuovo campo di questa classe dati
 all,tutti
+Action,Azione
+Condition,Condizione
+Expression,Espressione
+Trigger,Innesco
+Signal,Segnale
+gives back %s,restituisce %s
+emits %s,emette %s
+waits,attende
+static,statico
+internal,interno
+★ featured,★ in evidenza
+text,testo
+number,numero
+true/false,vero/falso
+point,punto
+color,colore
+any,qualsiasi
+Edit Parameter,Modifica parametro
+Add Parameter,Aggiungi parametro
+Apply,Applica
+Delete this parameter,Elimina questo parametro
+Edit the whole verb…,Modifica l'intero verbo…
+e.g. amount,es. amount
+leave empty to make it required,lascia vuoto per renderlo obbligatorio
+what this input is for,a cosa serve questo ingresso
+A parameter needs a name.,Un parametro ha bisogno di un nome.
+Updated the parameter.,Parametro aggiornato.
+Removed the parameter.,Parametro rimosso.
+e.g. Re-bake  (empty = no button),es. Ricalcola  (vuoto = nessun pulsante)
+"What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.","Come si chiama questo verbo. Scrivilo con parole semplici: ""Take Damage"" diventa take_damage nel GDScript generato. Le altre righe chiamano il verbo con questo nome."
+Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,La documentazione di Godot per questo verbo. Viene scritta sopra la funzione come righe ## e compare nella guida integrata dell'editor e al passaggio del mouse sul verbo. Facoltativo.
+"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.","Aggiunge un pulsante cliccabile al pannello Inspector di questo nodo, con l'etichetta che scrivi qui. Premendolo il verbo viene eseguito direttamente nell'editor: comodo per compiti come ricalcolare un livello o inserire dati di prova. Lascialo vuoto (il caso normale) e non compare alcun pulsante."
+"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.","Il tipo di valore che questo verbo restituisce a chi lo chiede: un numero, del testo, un vero/falso, una posizione e così via. Scegli quello che corrisponde a ciò che il verbo calcola."
+"One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.","Una riga che dice cosa fa questo verbo. Compare accanto al verbo nel selettore, quindi è ciò che si legge quando si decide se è il verbo giusto."
+"The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","Il nome leggibile mostrato nel selettore al posto del nome della funzione: ""Deal Damage"" si legge meglio di deal_damage. Lascialo vuoto per ricavarlo dal nome del verbo."
+"Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.","In quale sezione del selettore viene archiviato questo verbo. I verbi della stessa categoria stanno insieme, quindi un pacchetto di solito mette tutti i suoi sotto una sola: il proprio nome va benissimo."
+"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the verb's row, so plain words beat abbreviations.","Come si chiama questo ingresso. Diventa il nome del parametro nel GDScript generato e l'etichetta sulla riga del verbo, quindi le parole chiare battono le abbreviazioni."
+"What kind of value this input accepts - a number (int / float), text (String), a true/false (bool), a position (Vector2 / Vector3), or Variant for anything at all.","Che tipo di valore accetta questo ingresso: un numero (int / float), testo (String), un vero/falso (bool), una posizione (Vector2 / Vector3) o Variant per qualsiasi cosa."
+"An optional starting value, so whoever uses the verb can skip this input. Written as GDScript (10, 1.5, ""idle"", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down.","Un valore iniziale facoltativo, così chi usa il verbo può saltare questo ingresso. Si scrive come GDScript (10, 1.5, ""idle"", true). GDScript richiede che gli ingressi CON un valore predefinito vengano per ultimi, quindi compilarlo può spostare il parametro in basso."
+"One line explaining this input. It shows in the picker beside the field, which is where somebody decides what to type into it.","Una riga che spiega questo ingresso. Compare nel selettore accanto al campo, cioè dove si decide cosa scriverci."
+Removes the input from the verb entirely. Anything already calling the verb loses the value it was passing here.,Rimuove del tutto l'ingresso dal verbo. Tutto ciò che chiama già il verbo perde il valore che passava qui.
+"Each parameter has a name, type, optional default value, and description.","Ogni parametro ha un nome, un tipo, un valore predefinito facoltativo e una descrizione."
+A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled).,Un'espressione booleana GDScript: il corpo viene eseguito solo quando valgono tutte (es. host.enabled).
+Publishes the verb into pickers as the chosen kind.,Pubblica il verbo nei selettori con il tipo scelto.
+Optional default value (a GDScript expression). Defaulted params must come last.,Valore predefinito facoltativo (un'espressione GDScript). I parametri con valore predefinito devono venire per ultimi.
+Remove this parameter.,Rimuovi questo parametro.
+Remove this condition.,Rimuovi questa condizione.

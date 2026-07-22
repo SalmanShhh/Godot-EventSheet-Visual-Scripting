@@ -65,23 +65,95 @@ func _open_function_dialog_for(event_function: Resource) -> void:
 	_function_dialog.open_for_edit(event_function as EventFunction)
 
 
-## Right-click ▸ "Add Parameter" on a Define row: the same edit dialog, but pre-focused on a fresh
-## parameter row so the user is naming the new argument immediately (nothing else has to be touched).
+## Right-click ▸ "Add Parameter" on a Define row, and the row's own "+ Add parameter" cell: the small
+## parameter dialog, blank. Adding an input is a four-field job; the whole verb dialog is not the ask.
 func _open_function_dialog_add_param(event_function: Resource) -> void:
 	if not (event_function is EventFunction) or _dock._current_sheet == null:
 		return
-	_ensure_dialog()
-	_function_dialog.open_for_edit_focus_new_param(event_function as EventFunction)
+	_ensure_param_dialog()
+	_param_dialog.open_for_new_param(event_function as EventFunction)
 
 
-## Click on a verb row's parameter CELL: the same edit dialog, pre-focused on THAT parameter, so a
-## parameter cell behaves like a condition cell - click the thing you want to change, land in its editor.
+## Click on a verb row's parameter CELL: the small parameter dialog, on THAT parameter - so a parameter
+## cell behaves like a condition cell (click the thing you want to change, land in ITS editor, not in a
+## form that can restructure the whole verb). "Edit the whole verb…" inside it is the way up.
 func _open_function_dialog_for_param(event_function: Resource, param_index: int) -> void:
 	if not (event_function is EventFunction) or _dock._current_sheet == null:
 		return
-	_ensure_dialog()
-	_function_dialog.set_tool_mode_context(_dock._current_sheet.tool_mode)
-	_function_dialog.open_for_edit_focus_param(event_function as EventFunction, param_index)
+	_ensure_param_dialog()
+	_param_dialog.open_for_param(event_function as EventFunction, param_index)
+
+
+# ── One parameter at a time: the focused dialog behind a verb row's param cells ───────
+var _param_dialog: EventSheetParamDialog = null
+
+
+func _ensure_param_dialog() -> void:
+	if _param_dialog != null:
+		return
+	_param_dialog = EventSheetParamDialog.new()
+	_param_dialog.init_dialog(_dock)
+	_param_dialog.param_confirmed.connect(_apply_param_edit)
+	# Its escape hatch: the reader wanted the verb, not the parameter. Route by NAME rather than by a
+	# captured resource - an undo-funnel commit replaces resources, so a held reference would go stale.
+	_param_dialog.full_editor_requested.connect(func(function_name: String) -> void:
+		var target: EventFunction = _find_function(function_name)
+		if target != null:
+			_open_function_dialog_for(target))
+
+
+## The verb of this name on the live sheet, or null. Always re-fetched: the undo funnel REPLACES
+## resources on commit, so any reference held across an edit points at a discarded snapshot.
+func _find_function(function_name: String) -> EventFunction:
+	if _dock._current_sheet == null:
+		return null
+	for function_entry: Variant in _dock._current_sheet.functions:
+		if function_entry is EventFunction and (function_entry as EventFunction).function_name == function_name:
+			return function_entry as EventFunction
+	return null
+
+
+## Applies one parameter's edit (or its deletion, or a fresh append) through the same undo funnel the
+## full verb dialog writes through, so the two dialogs are interchangeable and a param edit is a single
+## undo step. Returns silently when nothing actually changed - an open-and-Apply must not dirty the
+## sheet, which for an opened .gd would mean a rewrite that has to survive the byte-exact round trip.
+func _apply_param_edit(data: Dictionary) -> void:
+	var function_name: String = str(data.get("function", ""))
+	var param_index: int = int(data.get("index", -1))
+	var removed: bool = bool(data.get("removed", false))
+	var new_id: String = str(data.get("id", "")).strip_edges()
+	if not removed and new_id.is_empty():
+		_dock._set_status("A parameter needs a name.", true)
+		return
+	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Parameter", func() -> bool:
+		var target: EventFunction = _find_function(function_name)
+		if target == null:
+			return false
+		if removed:
+			if param_index < 0 or param_index >= target.params.size():
+				return false
+			target.params.remove_at(param_index)
+			return true
+		var param: ACEParam = null
+		if param_index < 0:
+			param = ACEParam.new()
+			target.params.append(param)
+		else:
+			if param_index >= target.params.size():
+				return false
+			param = target.params[param_index]
+			if param.id == new_id and param.type_name == str(data.get("type_name", "Variant")) \
+					and param.gdscript_default == str(data.get("default", "")) \
+					and param.description == str(data.get("description", "")):
+				return false
+		param.id = new_id
+		param.type_name = str(data.get("type_name", "Variant"))
+		param.gdscript_default = str(data.get("default", ""))
+		param.description = str(data.get("description", ""))
+		return true
+	)
+	if changed:
+		_dock._set_status("Removed the parameter." if removed else "Updated the parameter.")
 
 
 func _ensure_dialog() -> void:

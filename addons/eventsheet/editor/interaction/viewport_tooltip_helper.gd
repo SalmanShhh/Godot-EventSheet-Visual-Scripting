@@ -113,6 +113,22 @@ func function_call_description(action: ACEAction) -> String:
 	return ""
 
 
+## The `signal …` line a signal row compiles to, for that row's hover. The row itself reads by the
+## friendly published name and drops the code cue on purpose, but the identifier is exactly what
+## someone needs when they go to connect to it from a script - so it lives here rather than nowhere.
+## Static: it reads only the resource, so tests can call it without a live viewport.
+static func signal_declaration_tooltip(signal_row: SignalRow) -> String:
+	var declaration: String = "signal %s" % signal_row.signal_name
+	if not signal_row.params.is_empty():
+		declaration += "(%s)" % ", ".join(signal_row.params)
+	if not signal_row.trigger:
+		return declaration
+	var lines: PackedStringArray = PackedStringArray([declaration, "", "Published as a trigger."])
+	if not signal_row.ace_category.strip_edges().is_empty():
+		lines.append("Picker category: %s" % signal_row.ace_category.strip_edges())
+	return "\n".join(lines)
+
+
 ## Everything a published verb declares, for its Define row's hover: the full name (a long one clips
 ## inside the condition lane, so the tooltip is where it is always readable), its description, each
 ## parameter with type / default / choices / its own blurb, and the markers that change how it is called.

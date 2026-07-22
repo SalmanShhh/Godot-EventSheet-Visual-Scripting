@@ -586,3 +586,50 @@ Remove Field,Feld entfernen
 Add Field,Feld hinzufügen
 New field on this data class,Neues Feld dieser Datenklasse
 all,alle
+Action,Aktion
+Condition,Bedingung
+Expression,Ausdruck
+Trigger,Auslöser
+Signal,Signal
+gives back %s,gibt %s zurück
+emits %s,sendet %s
+waits,wartet
+static,statisch
+internal,intern
+★ featured,★ hervorgehoben
+text,Text
+number,Zahl
+true/false,wahr/falsch
+point,Punkt
+color,Farbe
+any,beliebig
+Edit Parameter,Parameter bearbeiten
+Add Parameter,Parameter hinzufügen
+Apply,Übernehmen
+Delete this parameter,Diesen Parameter löschen
+Edit the whole verb…,Ganzes Verb bearbeiten…
+e.g. amount,z. B. amount
+leave empty to make it required,"leer lassen, um ihn verpflichtend zu machen"
+what this input is for,wofür diese Eingabe da ist
+A parameter needs a name.,Ein Parameter braucht einen Namen.
+Updated the parameter.,Parameter aktualisiert.
+Removed the parameter.,Parameter entfernt.
+e.g. Re-bake  (empty = no button),z. B. Neu backen  (leer = keine Schaltfläche)
+"What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.","Wie dieses Verb heißt. Schreibe es in einfachen Worten - aus ""Take Damage"" wird take_damage im erzeugten GDScript. Andere Zeilen rufen das Verb unter diesem Namen auf."
+Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,Godots eigene Dokumentation für dieses Verb. Sie wird als ##-Zeilen über die Funktion geschrieben und erscheint in der integrierten Hilfe des Editors sowie beim Überfahren des Verbs. Optional.
+"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.","Setzt eine anklickbare Schaltfläche in das Inspector-Panel dieses Nodes, beschriftet mit dem, was du hier eingibst. Ein Klick führt dieses Verb direkt im Editor aus - praktisch für Aufgaben wie das Neuberechnen eines Levels oder das Einfüllen von Testdaten. Leer lassen (der Normalfall) heißt: keine Schaltfläche."
+"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.","Die Art von Wert, die dieses Verb zurückgibt - eine Zahl, Text, ein Wahr/Falsch, eine Position und so weiter. Wähle das, was das Verb tatsächlich ermittelt."
+"One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.","Eine Zeile darüber, was dieses Verb tut. Sie steht im Auswahlfenster neben dem Verb - also genau das, was jemand liest, während er entscheidet, ob es das gesuchte Verb ist."
+"The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","Der freundliche Name, der im Auswahlfenster statt des Funktionsnamens erscheint - ""Deal Damage"" liest sich besser als deal_damage. Leer lassen, um ihn aus dem Verbnamen abzuleiten."
+"Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.","In welchen Abschnitt des Auswahlfensters dieses Verb einsortiert wird. Verben derselben Kategorie stehen zusammen, daher legt ein Pack meist alle seine Verben unter eine - der eigene Name eignet sich gut."
+"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the verb's row, so plain words beat abbreviations.",Wie diese Eingabe heißt. Der Name wird zum Parameternamen im erzeugten GDScript und zur Beschriftung in der Verbzeile - einfache Wörter schlagen Abkürzungen.
+"What kind of value this input accepts - a number (int / float), text (String), a true/false (bool), a position (Vector2 / Vector3), or Variant for anything at all.","Welche Art von Wert diese Eingabe annimmt - eine Zahl (int / float), Text (String), ein Wahr/Falsch (bool), eine Position (Vector2 / Vector3) oder Variant für schlicht alles."
+"An optional starting value, so whoever uses the verb can skip this input. Written as GDScript (10, 1.5, ""idle"", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down.","Ein optionaler Startwert, damit man diese Eingabe beim Verwenden des Verbs weglassen kann. Als GDScript geschrieben (10, 1.5, ""idle"", true). GDScript verlangt, dass Eingaben MIT Standardwert am Ende stehen - das Ausfüllen kann den Parameter also nach hinten verschieben."
+"One line explaining this input. It shows in the picker beside the field, which is where somebody decides what to type into it.","Eine Zeile, die diese Eingabe erklärt. Sie erscheint im Auswahlfenster neben dem Feld - genau dort, wo jemand entscheidet, was er hineinschreibt."
+Removes the input from the verb entirely. Anything already calling the verb loses the value it was passing here.,"Entfernt die Eingabe vollständig aus dem Verb. Alles, was das Verb bereits aufruft, verliert den Wert, den es hier übergeben hat."
+"Each parameter has a name, type, optional default value, and description.","Jeder Parameter hat einen Namen, einen Typ, einen optionalen Standardwert und eine Beschreibung."
+A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled).,"Ein boolescher GDScript-Ausdruck - der Rumpf läuft nur, wenn alle zutreffen (z. B. host.enabled)."
+Publishes the verb into pickers as the chosen kind.,Veröffentlicht das Verb als gewählte Art in den Auswahlfenstern.
+Optional default value (a GDScript expression). Defaulted params must come last.,Optionaler Standardwert (ein GDScript-Ausdruck). Parameter mit Standardwert müssen zuletzt stehen.
+Remove this parameter.,Diesen Parameter entfernen.
+Remove this condition.,Diese Bedingung entfernen.

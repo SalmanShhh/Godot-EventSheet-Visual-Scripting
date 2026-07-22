@@ -80,7 +80,6 @@ static func apply(
 	event_style.ace_action_badge_background_color = _role_badge(EventSheetPalette.COLOR_ACE_ACTION_BADGE_BG, base, light_editor)
 	event_style.ace_condition_badge_background_color = _role_badge(EventSheetPalette.COLOR_ACE_CONDITION_BADGE_BG, base, light_editor)
 	event_style.ace_expression_badge_background_color = _role_badge(EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG, base, light_editor)
-	event_style.verb_row_tint_strength = 0.16 if light_editor else 0.10
 	event_style.verb_chip_background_color = base.lerp(dark_1, 0.4)
 	event_style.verb_chip_foreground_color = Color(font_color.r, font_color.g, font_color.b, 0.7)
 	return style

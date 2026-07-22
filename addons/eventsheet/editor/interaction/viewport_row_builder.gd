@@ -371,10 +371,11 @@ func _define_role_colors(role: String) -> Array:
 	return [event_style.ace_action_badge_background_color, event_style.ace_action_accent_color]
 
 
-## How loud the role tint is, from the theme (with the palette-era default when no style is loaded).
+## How loud the role tint is, from the theme. Zero (the shipped default) means a published verb draws
+## as an ordinary event row - no wash, no accent bar - which is the point: it IS an ordinary event row.
 func _verb_tint_strength() -> float:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
-	return event_style.verb_row_tint_strength if event_style != null else 0.10
+	return event_style.verb_row_tint_strength if event_style != null else 0.0
 
 
 ## The [background, foreground] pair the ACTION-lane chips paint with, from the theme.
@@ -427,20 +428,23 @@ static func friendly_param_labels(event_function: EventFunction) -> String:
 ## the field and the two GDScript emits, so the row teaches the literal they will actually use. The
 ## other words stay plain, because "text" and "number" cost a reader nothing that "String" and "int"
 ## would give them.
+## These words are DRAWN on the canvas, which auto-translation never reaches (it only touches Control
+## properties), so each one resolves explicitly. A type name with no plain word passes through as-is -
+## a class called HealthPool is the author's own noun and translating it would be wrong.
 static func friendly_type_word(type_name: String) -> String:
 	match type_name.strip_edges():
 		"String", "StringName":
-			return "text"
+			return EventSheetL10n.translate("text")
 		"int", "float":
-			return "number"
+			return EventSheetL10n.translate("number")
 		"bool":
-			return "true/false"
+			return EventSheetL10n.translate("true/false")
 		"Vector2", "Vector3":
-			return "point"
+			return EventSheetL10n.translate("point")
 		"Color":
-			return "color"
+			return EventSheetL10n.translate("color")
 		"", "Variant":
-			return "any"
+			return EventSheetL10n.translate("any")
 		_:
 			return type_name.strip_edges()
 
@@ -512,14 +516,15 @@ static func _define_param_type_word(param: ACEParam) -> String:
 
 ## One chip on a Define row's ACTION lane (category, return, waits / static / internal / featured) - the
 ## same badge grammar the row's role badge uses, on the lane that reads as "and what do I get back?".
-func _define_chip(text: String, background: Color, foreground: Color, line_index: int) -> SemanticSpan:
+func _define_chip(text: String, background: Color, foreground: Color, line_index: int,
+		kind: String = "define_function") -> SemanticSpan:
 	return _make_span(text, SemanticSpan.SpanType.KEYWORD, {
 		"editable": false,
 		"badge": true,
 		"badge_style": "scope",
 		"badge_bg": background,
 		"badge_fg": foreground,
-		"kind": "define_function",
+		"kind": kind,
 		"lane": "action",
 		"line_index": line_index
 	})
@@ -620,7 +625,7 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	# they read as quieter WITHOUT a second theme token.
 	var muted: Color = chip_fg.lerp(chip_bg, 0.45)
 	var spans: Array[SemanticSpan] = [
-		_make_span(role.capitalize(), SemanticSpan.SpanType.KEYWORD, {
+		_make_span(EventSheetL10n.translate(role.capitalize()), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
 			"badge_style": "scope",
@@ -687,15 +692,15 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	# The CATEGORY is deliberately NOT drawn: a pack files every one of its verbs under the same category,
 	# so the chip repeated the identical word down the whole sheet. It lives in the hover instead.
 	if role != "action":
-		spans.append(_define_chip("gives back %s" % _friendly_return_type(event_function), chip_bg, chip_fg, 0))
+		spans.append(_define_chip(EventSheetL10n.translate("gives back %s") % _friendly_return_type(event_function), chip_bg, chip_fg, 0))
 	if event_function.is_async:
-		spans.append(_define_chip("waits", chip_bg, chip_fg, 0))
+		spans.append(_define_chip(EventSheetL10n.translate("waits"), chip_bg, chip_fg, 0))
 	if event_function.is_static:
-		spans.append(_define_chip("static", chip_bg, muted, 0))
+		spans.append(_define_chip(EventSheetL10n.translate("static"), chip_bg, muted, 0))
 	if not event_function.expose_as_ace:
-		spans.append(_define_chip("internal", chip_bg, muted, 0))
+		spans.append(_define_chip(EventSheetL10n.translate("internal"), chip_bg, muted, 0))
 	if event_function.featured:
-		spans.append(_define_chip("★ featured", chip_bg, chip_fg, 0))
+		spans.append(_define_chip(EventSheetL10n.translate("★ featured"), chip_bg, chip_fg, 0))
 	row_data.spans = spans
 	# Construct-style expandable block: the function BODY renders as foldable children (its conditions,
 	# actions, and raw GDScript blocks), built by the SAME dispatcher as sheet events, folding like a group.
@@ -932,77 +937,91 @@ func _build_function_anchor_row(anchor: FunctionAnchorRow, indent: int) -> Event
 	return row_data
 
 
-## A signal row: rendered like a declaration ("signal  hit(damage: int)"); double-click
-## opens the signal dialog.
+## A signal row, in the same two-lane grammar every other row uses. A trigger IS a condition - it is
+## the thing on the LEFT that starts an event - so the condition lane carries what the trigger is (its
+## kind badge, the friendly published name, and one cell per value it passes along, in the shared
+## field-cell grammar); the action lane carries what a reader cannot see from the friendly name: the
+## real signal identifier that game code connects to, or "internal" for a plain signal that publishes
+## no trigger ACE at all. Deliberately no raw `signal name(damage: int)` declaration in either lane -
+## the same reason a Define row dropped its `func … ->` cue: the row is the abstraction, and the code
+## line lives in the hover for anyone who wants it. Double-click still opens the signal dialog.
 func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var row_data := EventRowData.new()
 	row_data.indent = indent
-	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.row_type = EventRowData.RowType.EVENT
 	row_data.source_resource = signal_row
 	row_data.row_uid = "signal_%s_%d" % [str(signal_row.get_instance_id()), indent]
 	row_data.disabled = not signal_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
-	# The declaration text comes from the registered "signal" resource kind - the same summary
-	# contract every Custom Block kind renders through.
-	var signal_kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(signal_row)
-	var declaration: String = signal_kind.summary_for(signal_row) if signal_kind != null else signal_row.signal_name
-	# A trigger signal (a `## @ace_trigger` block folded onto the row on import) is a first-class
-	# "declare a trigger ACE" block, NOT raw scaffolding: it renders like a Variable row - a "trigger"
-	# badge, the friendly ACE name, an optional category chip - with the underlying `signal …` declaration
-	# kept muted beside it so it's still obvious what emits. Double-click still opens the signal dialog.
-	if signal_row.trigger:
-		var trigger_title: String = signal_row.ace_name.strip_edges()
-		if trigger_title.is_empty():
-			trigger_title = signal_row.signal_name
-		row_data.spans = [
-			_make_span(
-				"trigger",
-				SemanticSpan.SpanType.KEYWORD,
-				{"badge": true, "text_color": event_style.behavior_accent_color, "kind": "signal_row"}
-			),
-			_make_span(
-				trigger_title,
-				SemanticSpan.SpanType.OBJECT,
-				{"kind": "signal_row", "text_color": event_style.object_label_color}
-			)
-		]
-		# Picker category chip (@ace_category), styled like the Variable row's Inspector-group chip.
-		if not signal_row.ace_category.strip_edges().is_empty():
-			row_data.spans.append(
-				_make_span(
-					signal_row.ace_category.strip_edges(),
-					SemanticSpan.SpanType.KEYWORD,
-					{
-						"badge": true,
-						"badge_style": "scope",
-						"badge_bg": EventSheetPalette.COLOR_CAT_CHIP_BG,
-						"badge_fg": EventSheetPalette.COLOR_CAT_CHIP_FG,
-						"kind": "signal_row"
-					}
-				)
-			)
-		row_data.spans.append(
-			_make_span(
-				"signal %s" % declaration,
-				SemanticSpan.SpanType.VALUE,
-				{"kind": "signal_row", "text_color": EventSheetPalette.TEXT_MUTED}
-			)
-		)
-		return row_data
-	row_data.spans = [
-		_make_span(
-			"signal",
-			SemanticSpan.SpanType.KEYWORD,
-			{"badge": true, "text_color": event_style.behavior_accent_color}
-		),
-		_make_span(
-			declaration,
-			SemanticSpan.SpanType.VALUE,
-			{"kind": "signal_row", "text_color": event_style.object_label_color}
-		)
+	var chip_bg: Color = _verb_chip_colors()[0]
+	var chip_fg: Color = _verb_chip_colors()[1]
+	# A published trigger reads by its friendly @ace_name; a plain signal has only its own name.
+	var title: String = signal_row.ace_name.strip_edges() if signal_row.trigger else ""
+	if title.is_empty():
+		title = signal_row.signal_name
+	var badge_word: String = EventSheetL10n.translate("Trigger" if signal_row.trigger else "Signal")
+	var spans: Array[SemanticSpan] = [
+		_make_span(badge_word, SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": chip_bg,
+			"badge_fg": event_style.behavior_accent_color,
+			# The kind WORD is the cue, so it keeps its measured width rather than snapping to the narrow
+			# single-glyph badge column a condition row uses - "Trigger" would clip.
+			"badge_natural_width": true,
+			"kind": "signal_row",
+			"lane": "condition",
+			"line_index": 0
+		}),
+		_make_span(title, SemanticSpan.SpanType.OBJECT, {
+			"kind": "signal_row",
+			"lane": "condition",
+			"line_index": 0,
+			"text_color": event_style.object_label_color
+		})
 	]
+	var condition_lines: int = _append_signal_param_spans(spans, signal_row) + 1
+	# The ACTION lane answers "and what actually fires?". For a trigger that is the underlying signal
+	# identifier - the friendly name hides it, but it is what game code connects to, and it is the one
+	# fact a reader cannot recover from the left lane. A plain signal's name IS its identifier, so
+	# repeating it would be noise; it says "internal" instead, the same word a Define row uses for a
+	# verb that is not published as an ACE.
+	if signal_row.trigger:
+		spans.append(_define_chip(EventSheetL10n.translate("emits %s") % signal_row.signal_name, chip_bg, chip_fg, 0, "signal_row"))
+	else:
+		spans.append(_define_chip(EventSheetL10n.translate("internal"), chip_bg, chip_fg.lerp(chip_bg, 0.45), 0, "signal_row"))
+	row_data.spans = spans
+	row_data.line_count = maxi(condition_lines, 1)
 	return row_data
+
+
+## One cell per value the signal passes to whoever handles it, in the shared field-cell grammar (the
+## same one a condition cell and a verb parameter use). SignalRow stores them as raw declaration text
+## ("damage" or "damage: int"), so the type is split off and read as a plain word - a handler author
+## needs to know a number is coming, not that GDScript spells it `int`. Returns the last line used.
+func _append_signal_param_spans(spans: Array[SemanticSpan], signal_row: SignalRow) -> int:
+	var line: int = 0
+	var cell_host := EventRowData.new()
+	for index in range(signal_row.params.size()):
+		var declaration: String = str(signal_row.params[index]).strip_edges()
+		if declaration.is_empty():
+			continue
+		var param_name: String = declaration
+		var type_word: String = friendly_type_word("")
+		var colon: int = declaration.find(":")
+		if colon >= 0:
+			param_name = declaration.substr(0, colon).strip_edges()
+			type_word = friendly_type_word(declaration.substr(colon + 1).strip_edges())
+		line += 1
+		append_field_cell(cell_host, param_name, type_word, {
+			"kind": "signal_row",
+			"param_index": index,
+			"line_index": line
+		})
+	spans.append_array(cell_host.spans)
+	return line
 
 
 ## The host class ("" when not a match) if a RawCodeRow is EXACTLY the compiler's generated

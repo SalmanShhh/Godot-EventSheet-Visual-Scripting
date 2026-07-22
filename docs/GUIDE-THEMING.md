@@ -22,9 +22,11 @@ Current additions on top of the model below:
   KIND of verb they are, through nine tokens. Each role has an ACCENT and a BADGE background:
   `ace_action_accent_color` / `ace_action_badge_background_color`, and the same pair for
   `ace_condition_*` and `ace_expression_*`. The accent is the one with reach - it drives that role's
-  badge text, the verb name's tint, the row wash, the left accent bar AND the description caption's
-  band, so changing it re-skins the whole role. `verb_row_tint_strength` (0.0 - 0.4) is how loud that
-  wash is: raise it on a pale sheet, where a faint tint disappears. `verb_chip_background_color` and
+  badge text and the verb name's tint, so changing it re-skins the whole role.
+  `verb_row_tint_strength` (0.0 - 0.4) additionally washes the WHOLE row - plus a left accent bar and
+  the description caption's band - in the role's colour. It ships at **0.0**: a published verb is an
+  ordinary event row, and tinting every one of them turned a pack into a wall of coloured blocks.
+  Raise it if you want the kinds colour-coded, higher on a pale sheet where a faint tint disappears. `verb_chip_background_color` and
   `verb_chip_foreground_color` paint the action-lane chips (`gives back <type>`, `waits`, `static`,
   `internal`, featured); the quieter chips are mixed from that pair. All nine bundled presets set
   them, so copy one as a starting point rather than beginning from the palette defaults.

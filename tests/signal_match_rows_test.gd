@@ -116,8 +116,26 @@ static func run() -> bool:
 			signal_row_data = row
 		elif row != null and row.source_resource == event:
 			match_event_row = row
-	all_passed = _check("signal renders as a row",
-		signal_row_data != null and signal_row_data.spans[1].text == "hit(damage: int)", true) and all_passed
+	# A signal reads in the SAME two lanes as every other row: a kind badge and the name on the left,
+	# one cell per value it passes (its type as a plain word, the name as the cell's label), and on the
+	# right what actually fires - "internal" for a plain signal that publishes no trigger ACE. Pins the
+	# span TEXT, not the span count, so adding a marker chip later does not spuriously fail this.
+	var signal_texts: PackedStringArray = PackedStringArray()
+	var signal_labels: PackedStringArray = PackedStringArray()
+	if signal_row_data != null:
+		for span: SemanticSpan in signal_row_data.spans:
+			signal_texts.append(span.text)
+			var span_meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
+			signal_labels.append(str(span_meta.get("object_label", "")))
+	all_passed = _check("signal row is an EVENT row",
+		signal_row_data != null and signal_row_data.row_type == EventRowData.RowType.EVENT, true) and all_passed
+	all_passed = _check("signal row badges its kind", Array(signal_texts).has("Signal"), true) and all_passed
+	all_passed = _check("signal row names the signal", Array(signal_texts).has("hit"), true) and all_passed
+	all_passed = _check("signal parameter reads as a typed cell",
+		Array(signal_texts).has("number") and Array(signal_labels).has("damage"), true) and all_passed
+	all_passed = _check("a plain signal publishes nothing", Array(signal_texts).has("internal"), true) and all_passed
+	all_passed = _check("the hover carries the real declaration",
+		ViewportTooltipHelper.signal_declaration_tooltip(hit), "signal hit(damage: int)") and all_passed
 	viewport._ensure_event_spans(match_event_row)
 	var match_span_found: bool = false
 	for span in match_event_row.spans:

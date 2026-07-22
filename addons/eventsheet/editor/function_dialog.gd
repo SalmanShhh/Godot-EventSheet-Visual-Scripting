@@ -93,7 +93,8 @@ func init_dialog(parent_node: Node) -> void:
 	_name_edit.placeholder_text = "Take Damage"
 	_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())
 	_dialog.register_text_enter(_name_edit)
-	form.add_child(EventSheetPopupUI.form_row("Name", _name_edit))
+	form.add_child(EventSheetPopupUI.form_row("Name", _name_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
+		"What this verb is called. Write it in plain words - \"Take Damage\" becomes take_damage in the generated GDScript. Other rows call the verb by this name."))
 
 	# Godot documentation comment (the `##` block above the function). BBCode is allowed - it renders in
 	# the generated docs and in-editor tooltips - so the same selection toolbar the comment dialog uses is
@@ -102,7 +103,8 @@ func init_dialog(parent_node: Node) -> void:
 	_doc_comment_edit.placeholder_text = "Documentation shown above the function (## …). BBCode like [b]bold[/b] is allowed."
 	_doc_comment_edit.custom_minimum_size = Vector2(0.0, 60.0)
 	_doc_comment_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
-	form.add_child(EventSheetPopupUI.form_row("Doc comment", _doc_comment_edit))
+	form.add_child(EventSheetPopupUI.form_row("Doc comment", _doc_comment_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
+		"Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional."))
 	# Highlight-to-format bar (same one the comment dialog uses) - BBCode renders in Godot's generated docs.
 	EventSheetBBCodeSelectionBar.attach(_doc_comment_edit)
 
@@ -110,9 +112,9 @@ func init_dialog(parent_node: Node) -> void:
 	# (@export_tool_button) - the beginner path to editor tools: the button IS the function, its
 	# behavior stays real event rows. Empty = no button (the default; most functions).
 	_tool_button_edit = LineEdit.new()
-	_tool_button_edit.placeholder_text = "e.g. Re-bake  (empty = no Inspector button)"
-	_tool_button_edit.tooltip_text = "Show this function as a one-click button in the Inspector, labelled with this text. Pressing the button runs the function's rows - great for editor chores like re-baking, refilling, or validating."
-	form.add_child(EventSheetPopupUI.form_row("Inspector button", _tool_button_edit))
+	_tool_button_edit.placeholder_text = "e.g. Re-bake  (empty = no button)"
+	form.add_child(EventSheetPopupUI.form_row("Inspector button", _tool_button_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
+		"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears."))
 	_tool_mode_hint = EventSheetPopupUI.hint_label("This sheet is an editor tool: this verb runs INSIDE the editor (File > Run or an Inspector button), never in the game.")
 	_tool_mode_hint.visible = false
 	form.add_child(_tool_mode_hint)
@@ -137,7 +139,8 @@ func init_dialog(parent_node: Node) -> void:
 	for entry: Dictionary in VALUE_TYPES:
 		_value_type_option.add_item(str(entry.get("friendly")))
 	_value_type_option.item_selected.connect(func(_index: int) -> void: _refresh_studio())
-	_value_type_row = EventSheetPopupUI.form_row("What kind of value?", _value_type_option)
+	_value_type_row = EventSheetPopupUI.form_row("What kind of value?", _value_type_option, EventSheetPopupUI.LABEL_MIN_WIDTH,
+		"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.")
 	form.add_child(_value_type_row)
 
 	# The live picker preview + "Ships as:" - only relevant when publishing ("what OTHER people see"),
@@ -182,15 +185,18 @@ func init_dialog(parent_node: Node) -> void:
 	form.add_child(_expose_check)
 	_expose_section = EventSheetPopupUI.form_box()
 	# Description sits with the other picker/publish fields (it is "shown in the picker").
-	_expose_section.add_child(EventSheetPopupUI.form_row("Description", _description_edit))
+	_expose_section.add_child(EventSheetPopupUI.form_row("Description", _description_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
+		"One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want."))
 	_expose_name_edit = LineEdit.new()
 	_expose_name_edit.placeholder_text = "defaults from the verb name"
 	_expose_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())
-	_expose_section.add_child(EventSheetPopupUI.form_row("Display name", _expose_name_edit))
+	_expose_section.add_child(EventSheetPopupUI.form_row("Display name", _expose_name_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
+		"The friendly name shown in the picker instead of the function name - \"Deal Damage\" reads better than deal_damage. Leave it empty to let it default from the verb name."))
 	_expose_category_edit = LineEdit.new()
 	_expose_category_edit.placeholder_text = "e.g. Combat"
 	_expose_category_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())
-	_expose_section.add_child(EventSheetPopupUI.form_row("Picker category", _expose_category_edit))
+	_expose_section.add_child(EventSheetPopupUI.form_row("Picker category", _expose_category_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
+		"Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well."))
 	# Themed inset card, shown only when "Expose" is ticked.
 	_expose_card = EventSheetPopupUI.panel_section(_expose_section)
 	_expose_card.visible = false

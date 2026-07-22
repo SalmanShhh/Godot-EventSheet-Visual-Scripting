@@ -586,3 +586,50 @@ Remove Field,移除字段
 Add Field,添加字段
 New field on this data class,此数据类的新字段
 all,全部
+Action,动作
+Condition,条件
+Expression,表达式
+Trigger,触发器
+Signal,信号
+gives back %s,返回 %s
+emits %s,发出 %s
+waits,等待
+static,静态
+internal,内部
+★ featured,★ 精选
+text,文本
+number,数字
+true/false,true/false
+point,坐标
+color,颜色
+any,任意
+Edit Parameter,编辑参数
+Add Parameter,添加参数
+Apply,应用
+Delete this parameter,删除此参数
+Edit the whole verb…,编辑整个动词…
+e.g. amount,例如 amount
+leave empty to make it required,留空表示必填
+what this input is for,此输入的用途
+A parameter needs a name.,参数需要一个名称。
+Updated the parameter.,已更新参数。
+Removed the parameter.,已删除参数。
+e.g. Re-bake  (empty = no button),例如 重新烘焙（留空 = 无按钮）
+"What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.","这个动词叫什么。用平实的词语书写 - ""Take Damage"" 在生成的 GDScript 中会变成 take_damage。其他行通过这个名称调用该动词。"
+Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,这个动词的 Godot 原生文档。它以 ## 行的形式写在函数上方，会出现在编辑器的内置帮助中，以及悬停该动词时。可选。
+"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.",在该节点的 Inspector 面板上放置一个可点击按钮，标签就是你在这里输入的文字。按下它会直接在编辑器中运行这个动词 - 适合重新烘焙关卡、填充测试数据这类杂活。留空（通常情况）则不会出现按钮。
+"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.",这个动词返回给调用方的值的类型 - 数字、文本、true/false、坐标等等。选择与该动词实际算出的东西相符的一项。
+"One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.",一句话说明这个动词做什么。它显示在选择器中动词的旁边，也就是别人判断这是不是自己要用的动词时读到的内容。
+"The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","在选择器中代替函数名显示的友好名称 - ""Deal Damage"" 比 deal_damage 更好读。留空则从动词名自动生成。"
+"Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.",这个动词归入选择器的哪个分区。同一分类的动词会归在一起，所以一个包通常把自己所有的动词放在同一个分类下 - 用包自己的名字就很合适。
+"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the verb's row, so plain words beat abbreviations.",这个输入叫什么。它会成为生成的 GDScript 中的参数名，以及动词行上的标签，所以平实的词语胜过缩写。
+"What kind of value this input accepts - a number (int / float), text (String), a true/false (bool), a position (Vector2 / Vector3), or Variant for anything at all.",这个输入接受什么类型的值 - 数字（int / float）、文本（String）、true/false（bool）、坐标（Vector2 / Vector3），或者用 Variant 接受任何东西。
+"An optional starting value, so whoever uses the verb can skip this input. Written as GDScript (10, 1.5, ""idle"", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down.","可选的初始值，让使用该动词的人可以跳过这个输入。按 GDScript 书写（10、1.5、""idle""、true）。GDScript 要求带默认值的输入排在最后，所以填了这里可能会把该参数往下移。"
+"One line explaining this input. It shows in the picker beside the field, which is where somebody decides what to type into it.",解释这个输入的一句话。它显示在选择器中该字段旁边，也就是别人决定往里填什么的地方。
+Removes the input from the verb entirely. Anything already calling the verb loses the value it was passing here.,将该输入从动词中彻底移除。已经在调用该动词的地方会失去原本传给这里的值。
+"Each parameter has a name, type, optional default value, and description.",每个参数都有名称、类型、可选的默认值和说明。
+A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled).,一个 GDScript 布尔表达式 - 只有全部成立时才会执行主体（例如 host.enabled）。
+Publishes the verb into pickers as the chosen kind.,以所选的种类把该动词发布到选择器中。
+Optional default value (a GDScript expression). Defaulted params must come last.,可选的默认值（一个 GDScript 表达式）。带默认值的参数必须排在最后。
+Remove this parameter.,移除此参数。
+Remove this condition.,移除此条件。

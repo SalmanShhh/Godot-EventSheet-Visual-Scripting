@@ -1684,11 +1684,14 @@ func _is_selection_hit(row_index: int, span_index: int) -> bool:
 ## single-cell rows with no ambiguous empty band.
 static func is_event_drag_zone(row_data: EventRowData, span_index: int) -> bool:
 	# A published verb (Define) row lays out as an EVENT row but is a pure READ view of sheet.functions -
-	# its order IS the file's emission order, so it is never a drag handle.
+	# its order IS the file's emission order, so it is never a drag handle. A signal/trigger row lays out
+	# in the same two lanes for readability, but it is a DECLARATION, not a step in the flow: it was never
+	# grabbable while it drew as a single-cell row, and reading in two lanes is not a reason to start.
 	return (
 		row_data != null
 		and row_data.row_type == EventRowData.RowType.EVENT
 		and not (row_data.source_resource is EventFunction)
+		and not (row_data.source_resource is SignalRow)
 		and span_index < 0
 	)
 
@@ -2645,6 +2648,12 @@ func _get_tooltip(at_position: Vector2) -> String:
 		var verb_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
 		if verb_row != null and verb_row.source_resource is EventFunction:
 			return _tooltip_helper.verb_definition_tooltip(verb_row.source_resource as EventFunction)
+	# A signal row reads by its friendly name, so the hover is where the actual `signal …` line lives -
+	# the thing a reader needs when they go to connect to it from code.
+	if kind == "signal_row":
+		var signal_row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+		if signal_row_data != null and signal_row_data.source_resource is SignalRow:
+			return ViewportTooltipHelper.signal_declaration_tooltip(signal_row_data.source_resource as SignalRow)
 	if kind in ["condition", "trigger", "action"]:
 		var row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
 		if row_data != null and row_data.source_resource is EventRow:

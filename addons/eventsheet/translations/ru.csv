@@ -586,3 +586,50 @@ Remove Field,Удалить поле
 Add Field,Добавить поле
 New field on this data class,Новое поле этого класса данных
 all,все
+Action,Действие
+Condition,Условие
+Expression,Выражение
+Trigger,Триггер
+Signal,Сигнал
+gives back %s,возвращает %s
+emits %s,отправляет %s
+waits,ожидает
+static,статический
+internal,внутренний
+★ featured,★ рекомендуемое
+text,текст
+number,число
+true/false,истина/ложь
+point,точка
+color,цвет
+any,любой
+Edit Parameter,Изменить параметр
+Add Parameter,Добавить параметр
+Apply,Применить
+Delete this parameter,Удалить этот параметр
+Edit the whole verb…,Изменить глагол целиком…
+e.g. amount,напр. amount
+leave empty to make it required,"оставьте пустым, чтобы сделать обязательным"
+what this input is for,для чего этот ввод
+A parameter needs a name.,Параметру нужно имя.
+Updated the parameter.,Параметр обновлён.
+Removed the parameter.,Параметр удалён.
+e.g. Re-bake  (empty = no button),напр. Пересчитать  (пусто = без кнопки)
+"What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.","Как называется этот глагол. Пишите обычными словами: ""Take Damage"" станет take_damage в сгенерированном GDScript. Другие строки вызывают глагол по этому имени."
+Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,Собственная документация Godot для этого глагола. Пишется над функцией строками ## и появляется во встроенной справке редактора и при наведении на глагол. Необязательно.
+"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.","Добавляет кнопку на панель Inspector этого узла с подписью, которую вы здесь введёте. Нажатие выполняет этот глагол прямо в редакторе - удобно для рутины вроде пересчёта уровня или заполнения тестовых данных. Оставьте пустым (обычный случай) - кнопки не будет."
+"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.","Тип значения, которое этот глагол возвращает вызывающему: число, текст, истина/ложь, координата и так далее. Выберите то, что глагол на самом деле вычисляет."
+"One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.","Одна строка о том, что делает этот глагол. Показывается рядом с глаголом в списке выбора - именно её читают, решая, тот ли это глагол."
+"The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","Понятное имя, показываемое в списке выбора вместо имени функции: ""Deal Damage"" читается лучше, чем deal_damage. Оставьте пустым, чтобы оно вывелось из имени глагола."
+"Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.","В какой раздел списка выбора попадёт этот глагол. Глаголы одной категории группируются вместе, поэтому пакет обычно помещает все свои под одну - его собственное имя подходит хорошо."
+"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the verb's row, so plain words beat abbreviations.","Как называется этот ввод. Имя становится именем параметра в сгенерированном GDScript и подписью в строке глагола, поэтому простые слова лучше сокращений."
+"What kind of value this input accepts - a number (int / float), text (String), a true/false (bool), a position (Vector2 / Vector3), or Variant for anything at all.","Какого типа значение принимает этот ввод: число (int / float), текст (String), истина/ложь (bool), координата (Vector2 / Vector3) или Variant для чего угодно."
+"An optional starting value, so whoever uses the verb can skip this input. Written as GDScript (10, 1.5, ""idle"", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down.","Необязательное начальное значение, чтобы тот, кто использует глагол, мог пропустить этот ввод. Пишется как GDScript (10, 1.5, ""idle"", true). GDScript требует, чтобы вводы СО значением по умолчанию шли последними, поэтому заполнение может сдвинуть параметр вниз."
+"One line explaining this input. It shows in the picker beside the field, which is where somebody decides what to type into it.","Одна строка с пояснением этого ввода. Показывается в списке выбора рядом с полем - там, где решают, что в него написать."
+Removes the input from the verb entirely. Anything already calling the verb loses the value it was passing here.,"Полностью убирает ввод из глагола. Всё, что уже вызывает глагол, теряет значение, которое сюда передавало."
+"Each parameter has a name, type, optional default value, and description.","У каждого параметра есть имя, тип, необязательное значение по умолчанию и описание."
+A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled).,"Логическое выражение GDScript - тело выполняется, только когда все истинны (напр. host.enabled)."
+Publishes the verb into pickers as the chosen kind.,Публикует глагол в списках выбора как выбранный вид.
+Optional default value (a GDScript expression). Defaulted params must come last.,Необязательное значение по умолчанию (выражение GDScript). Параметры со значением по умолчанию должны идти последними.
+Remove this parameter.,Удалить этот параметр.
+Remove this condition.,Удалить это условие.

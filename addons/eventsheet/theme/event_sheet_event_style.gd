@@ -80,9 +80,11 @@ extends Resource
 @export var ace_expression_badge_background_color: Color = EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_BG
 @export var ace_expression_accent_color: Color = EventSheetPalette.COLOR_ACE_EXPRESSION_BADGE_FG
 ## How loud a published verb's role tint is - the alpha of the wash behind the row (its description
-## caption uses 70% of it). The default is tuned for a dark sheet; a pale sheet usually needs more,
-## because a faint dark-on-dark wash disappears over a light row.
-@export_range(0.0, 0.4, 0.01) var verb_row_tint_strength: float = 0.10
+## caption uses 70% of it). OFF by default: a verb is an ordinary event row, and washing every one of
+## them in its role colour made a pack of verbs read as a wall of tinted blocks. The role badge already
+## says which kind it is. Raise this if you WANT the colour-coding back - a pale sheet needs more than
+## a dark one, because a faint dark-on-dark wash disappears over a light row.
+@export_range(0.0, 0.4, 0.01) var verb_row_tint_strength: float = 0.0
 ## The neutral chips on a published verb's ACTION lane - "gives back <type>", "waits", "static",
 ## "internal", "featured". The de-emphasised chips (static / internal) derive from this pair.
 @export var verb_chip_background_color: Color = EventSheetPalette.COLOR_CHIP_BG

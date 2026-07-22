@@ -14,6 +14,40 @@
   leaves your machine unread. A test pins both halves: that the build facts are present, and that the
   identifying ones are not.
 
+### Changed - triggers join the condition/action model, and verbs stop shouting
+
+- **A signal or trigger row now reads in the same two lanes as everything else.** It drew as a flat
+  strip - a `trigger` badge, a name, and the raw `signal on_ability_activated` declaration trailing
+  after it - while the sheet around it used lanes. A trigger IS a condition (it is the thing on the
+  left that starts an event), so the condition lane now carries its kind badge, its published name,
+  and one cell per value it passes along (typed in plain words, the same field-cell grammar a
+  condition uses); the action lane carries what a reader cannot recover from the friendly name - the
+  real signal identifier, as `emits on_ability_activated`, or `internal` for a plain signal that
+  publishes no trigger. The raw declaration moved into the hover, exactly as a verb's `func …` cue did.
+- **Published verbs are no longer washed in their role colour.** `verb_row_tint_strength` now ships at
+  **0.0**: colouring every verb's whole row turned an opened pack into a wall of tinted blocks, and
+  the kind badge already says which kind it is. The knob survives in the theme editor for anyone who
+  wants the colour-coding back, and the two demo themes no longer force it on.
+- **Clicking a parameter opens a parameter editor, not the whole verb.** A parameter cell opened the
+  full verb dialog - name, doc comment, Inspector button, kind cards, publish section, live preview -
+  with the cursor parked in one field. It now opens a small **Edit Parameter** dialog holding exactly
+  what a parameter is: name, type, optional default, description, and a delete tick. `Edit the whole
+  verb…` inside it is the way up for anyone who meant the big one. `+ Add parameter` opens the same
+  small dialog, blank. Both write through the same undo funnel, so a param edit is one undo step.
+
+### Fixed - form labels that explain themselves, and canvas words that translate
+
+- **Hovering a form label now tells you what the field is for.** Godot Labels ignore the mouse by
+  default, so a tooltip on one never fired - which is why "Inspector button" sat there unexplained.
+  `EventSheetPopupUI.form_row` takes a tooltip and puts it on the label as well as the field, and
+  every field of the verb dialog now has one written in plain language.
+- **The words drawn ON rows now go through the translation catalogue.** `Action` / `Condition` /
+  `Expression`, `Trigger` / `Signal`, `gives back …`, `emits …`, `waits`, `static`, `internal`,
+  `★ featured`, and the friendly type words (`text`, `number`, `true/false`, `point`, `color`, `any`)
+  were hardcoded English. Canvas text is drawn, not a Control, so auto-translation never reached it;
+  each now resolves explicitly. 47 new keys across all nine bundled translation files, including
+  several dialog tooltips that predate this pass and were simply never translated.
+
 ### Changed - a behaviour pack's published verbs read as event rows, not as a spec table
 
 - **Published verbs now use the condition/action model.** A pack's ACEs rendered as full-width

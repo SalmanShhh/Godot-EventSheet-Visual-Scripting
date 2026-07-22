@@ -183,7 +183,7 @@ const _TOKEN_DESCRIPTIONS := {
 	"ace_condition_accent_color": "The Condition colour - its badge text, verb name, row wash, accent bar and description band.",
 	"ace_expression_badge_background_color": "The pill behind the word \"Expression\" on a published verb.",
 	"ace_expression_accent_color": "The Expression colour - its badge text, verb name, row wash, accent bar and description band.",
-	"verb_row_tint_strength": "How loud a published verb's role tint is. Raise it on a pale sheet, where a faint wash disappears.",
+	"verb_row_tint_strength": "Colour-codes a published verb's whole row by its kind. Off by default - the role badge already says which kind it is, and tinting every verb made a pack read as a wall of blocks. Raise it to bring the colour-coding back.",
 	"verb_chip_background_color": "The pill behind a verb's \"gives back\", \"waits\", \"static\", \"internal\" and \"featured\" chips.",
 	"verb_chip_foreground_color": "The text on those chips. The quieter ones (static, internal) are mixed from this.",
 	"condition_lane_color": "A faint tint over the conditions (left) lane.",

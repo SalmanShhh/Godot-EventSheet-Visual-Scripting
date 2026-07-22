@@ -31,7 +31,6 @@ ace_condition_badge_background_color = Color(0.86039215, 0.86258825, 0.64094119,
 ace_condition_accent_color = Color(0.52156863, 0.6, 0, 1)
 ace_expression_badge_background_color = Color(0.83294117, 0.81866668, 0.85615688, 1)
 ace_expression_accent_color = Color(0.42352941, 0.44313725, 0.76862745, 1)
-verb_row_tint_strength = 0.16
 verb_chip_background_color = Color(0.90313724, 0.87733334, 0.79992158, 1)
 verb_chip_foreground_color = Color(0.37470589, 0.41039219, 0.41039219, 1)
 sheet_background_color = Color(0.99215686, 0.9647059, 0.8901961, 1)

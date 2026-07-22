@@ -586,3 +586,50 @@ Remove Field,필드 제거
 Add Field,필드 추가
 New field on this data class,이 데이터 클래스의 새 필드
 all,전체
+Action,액션
+Condition,조건
+Expression,표현식
+Trigger,트리거
+Signal,시그널
+gives back %s,%s 반환
+emits %s,%s 발신
+waits,대기
+static,정적
+internal,내부
+★ featured,★ 추천
+text,텍스트
+number,숫자
+true/false,true/false
+point,좌표
+color,색
+any,모두
+Edit Parameter,매개변수 편집
+Add Parameter,매개변수 추가
+Apply,적용
+Delete this parameter,이 매개변수 삭제
+Edit the whole verb…,동사 전체 편집…
+e.g. amount,예: amount
+leave empty to make it required,비워 두면 필수 항목이 됩니다
+what this input is for,이 입력의 용도
+A parameter needs a name.,매개변수에는 이름이 필요합니다.
+Updated the parameter.,매개변수를 업데이트했습니다.
+Removed the parameter.,매개변수를 제거했습니다.
+e.g. Re-bake  (empty = no button),예: 다시 굽기 (비우면 버튼 없음)
+"What this verb is called. Write it in plain words - ""Take Damage"" becomes take_damage in the generated GDScript. Other rows call the verb by this name.","이 동사의 이름입니다. ""Take Damage""처럼 쉬운 말로 쓰면 생성된 GDScript에서는 take_damage가 됩니다. 다른 행은 이 이름으로 동사를 호출합니다."
+Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional.,이 동사에 대한 Godot 자체 문서입니다. 함수 위에 ## 줄로 작성되며 에디터 내장 도움말과 동사에 마우스를 올렸을 때 표시됩니다. 선택 사항입니다.
+"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears.",이 노드의 Inspector 패널에 여기 입력한 문구를 라벨로 하는 버튼을 추가합니다. 누르면 이 동사가 에디터 안에서 바로 실행됩니다 - 레벨 다시 굽기나 테스트 데이터 채우기 같은 작업에 유용합니다. 비워 두면(보통의 경우) 버튼이 생기지 않습니다.
+"The kind of value this verb hands back to whoever asked - a number, some text, a true/false, a position, and so on. Pick the one that matches what the verb works out.","이 동사가 호출한 쪽에 돌려주는 값의 종류입니다 - 숫자, 텍스트, true/false, 좌표 등입니다. 동사가 실제로 계산하는 것에 맞는 것을 고르세요."
+"One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want.","이 동사가 무엇을 하는지 한 줄로 씁니다. 피커에서 동사 옆에 표시되므로, 원하는 동사인지 판단하는 사람이 읽게 되는 문장입니다."
+"The friendly name shown in the picker instead of the function name - ""Deal Damage"" reads better than deal_damage. Leave it empty to let it default from the verb name.","피커에서 함수 이름 대신 표시되는 친숙한 이름입니다 - ""Deal Damage""가 deal_damage보다 읽기 좋습니다. 비워 두면 동사 이름에서 자동으로 정해집니다."
+"Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well.","이 동사를 피커의 어느 구역에 넣을지입니다. 같은 카테고리의 동사끼리 묶이므로, 팩은 보통 자기 동사를 모두 하나에 넣습니다 - 팩 이름이 잘 어울립니다."
+"What this input is called. It becomes the parameter's name in the generated GDScript, and the label on the verb's row, so plain words beat abbreviations.","이 입력의 이름입니다. 생성된 GDScript에서는 매개변수 이름이 되고, 동사 행에서는 라벨이 됩니다. 줄임말보다 쉬운 말이 좋습니다."
+"What kind of value this input accepts - a number (int / float), text (String), a true/false (bool), a position (Vector2 / Vector3), or Variant for anything at all.","이 입력이 받는 값의 종류입니다 - 숫자(int / float), 텍스트(String), true/false(bool), 좌표(Vector2 / Vector3), 또는 무엇이든 받는 Variant입니다."
+"An optional starting value, so whoever uses the verb can skip this input. Written as GDScript (10, 1.5, ""idle"", true). GDScript requires inputs WITH a default to come last, so filling this in may move the parameter down.","선택적인 초기값으로, 동사를 쓰는 쪽이 이 입력을 생략할 수 있게 합니다. GDScript로 씁니다 (10, 1.5, ""idle"", true). GDScript는 기본값이 있는 입력을 뒤쪽에 두도록 요구하므로, 이걸 채우면 매개변수가 아래로 밀릴 수 있습니다."
+"One line explaining this input. It shows in the picker beside the field, which is where somebody decides what to type into it.","이 입력을 설명하는 한 줄입니다. 피커에서 입력란 옆에 표시되며, 바로 거기서 무엇을 입력할지 정하게 됩니다."
+Removes the input from the verb entirely. Anything already calling the verb loses the value it was passing here.,이 입력을 동사에서 완전히 제거합니다. 이미 이 동사를 호출하던 곳은 여기 넘기던 값을 잃게 됩니다.
+"Each parameter has a name, type, optional default value, and description.","각 매개변수에는 이름, 형식, 선택적 기본값, 설명이 있습니다."
+A GDScript boolean expression - the body runs only when all hold (e.g. host.enabled).,GDScript 불리언 식입니다 - 모두 참일 때만 본문이 실행됩니다(예: host.enabled).
+Publishes the verb into pickers as the chosen kind.,선택한 종류로 이 동사를 피커에 게시합니다.
+Optional default value (a GDScript expression). Defaulted params must come last.,선택적 기본값입니다(GDScript 식). 기본값이 있는 매개변수는 마지막에 와야 합니다.
+Remove this parameter.,이 매개변수를 제거합니다.
+Remove this condition.,이 조건을 제거합니다.
