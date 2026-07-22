@@ -73,6 +73,10 @@
   drew nothing at all at rest - you had to find it by hunting for the resize cursor. A single guide
   now spans the entire canvas: faint while you hover a boundary, so it is discoverable before you
   grab it, and solid with a soft halo while you drag, so where the split will land is unambiguous.
+- A boolean on a published verb row now reads **`true/false`**, not `yes/no` - those are the two
+  words a sheet author actually types into the field and the two GDScript emits, so the row teaches
+  the literal rather than a paraphrase of it. `text`, `number` and `point` are unchanged: those cost a
+  reader nothing that `String` and `int` would give them.
 - The object column is now **bounded by the room its lane actually has**. It was a themed number in
   logical pixels with no idea how much lane it was being asked to occupy, so at the narrowest canvas
   the 130px default left the condition text about 27px - three or four characters. It now takes at

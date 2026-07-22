@@ -51,10 +51,10 @@ static func run() -> bool:
 	# The category is NOT on the row: a pack files every verb under the same one, so the chip repeated
 	# the identical word down the whole sheet. It reads in the hover instead.
 	ok = _check("the category is not repeated on every row", _row_has_span_text(action_row, "Health"), false) and ok
-	ok = _check("a void action gives nothing back (no return chip)", _row_has_span_text(condition_row, "gives back yes/no") and not _row_has_span_text(action_row, "gives back"), true) and ok
+	ok = _check("a void action gives nothing back (no return chip)", _row_has_span_text(condition_row, "gives back true/false") and not _row_has_span_text(action_row, "gives back"), true) and ok
 	ok = _check("condition badge", _span_text(condition_row, 0), "Condition") and ok
 	ok = _check("condition name falls back to the humanized function name", _span_text(condition_row, 1), "Is Dead") and ok
-	ok = _check("condition reads its return in plain words (bool -> yes/no)", _row_has_span_text(condition_row, "gives back yes/no"), true) and ok
+	ok = _check("a condition reads its return as the literal it emits (bool -> true/false)", _row_has_span_text(condition_row, "gives back true/false"), true) and ok
 	ok = _check("expression reads its return in plain words (float -> number)", _row_has_span_text(expression_row, "gives back number"), true) and ok
 	ok = _check("an un-exposed helper is marked internal", _row_has_span_text(internal_row, "internal"), true) and ok
 	ok = _check("an exposed verb is NOT marked internal", _row_has_span_text(action_row, "internal"), false) and ok
@@ -82,7 +82,7 @@ static func run() -> bool:
 	# GDScript types read as plain words so a non-coder learns what each input is.
 	ok = _check("String reads as text", ViewportRowBuilder.friendly_type_word("String"), "text") and ok
 	ok = _check("int/float read as number", ViewportRowBuilder.friendly_type_word("int"), "number") and ok
-	ok = _check("bool reads as yes/no", ViewportRowBuilder.friendly_type_word("bool"), "yes/no") and ok
+	ok = _check("bool reads as true/false (the literal, not yes/no)", ViewportRowBuilder.friendly_type_word("bool"), "true/false") and ok
 	ok = _check("a node class passes through", ViewportRowBuilder.friendly_type_word("Sprite2D"), "Sprite2D") and ok
 	var templated: EventFunction = _make_function("draw_line", TYPE_NIL, true, "Draw Line", "")
 	templated.params[0].id = "from_x"
@@ -100,7 +100,7 @@ static func run() -> bool:
 	ok = _check("the role badge sits in the CONDITION lane", _span_lane(action_row, 0), "condition") and ok
 	ok = _check("the verb's name sits in the CONDITION lane", _span_lane(action_row, 1), "condition") and ok
 	ok = _check("its typed input sits in the CONDITION lane too", _lane_of_span_text(action_row, "number"), "condition") and ok
-	ok = _check("the return chip crosses to the ACTION lane", _lane_of_span_text(condition_row, "gives back yes/no"), "action") and ok
+	ok = _check("the return chip crosses to the ACTION lane", _lane_of_span_text(condition_row, "gives back true/false"), "action") and ok
 	ok = _check("the 'internal' marker crosses to the ACTION lane", _lane_of_span_text(internal_row, "internal"), "action") and ok
 	# The role badge is a WORD ("Condition"), not the single glyph a condition row's badge column is
 	# sized for, so it opts out of that column or it clips to a stub.

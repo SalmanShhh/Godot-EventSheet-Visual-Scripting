@@ -420,8 +420,13 @@ static func friendly_param_labels(event_function: EventFunction) -> String:
 
 
 ## A parameter's declared type read as plain words, not a GDScript type name: "String" -> "text",
-## "int"/"float" -> "number", "bool" -> "yes/no", "Vector2"/"Vector3" -> "point", Node classes and
-## anything else pass through. So a reader with no coding knowledge learns what each input IS.
+## "int"/"float" -> "number", "bool" -> "true/false", "Vector2"/"Vector3" -> "point", Node classes
+## and anything else pass through. So a reader with no coding knowledge learns what each input IS.
+##
+## A bool reads "true/false" rather than "yes/no": those ARE the two words a sheet author types into
+## the field and the two GDScript emits, so the row teaches the literal they will actually use. The
+## other words stay plain, because "text" and "number" cost a reader nothing that "String" and "int"
+## would give them.
 static func friendly_type_word(type_name: String) -> String:
 	match type_name.strip_edges():
 		"String", "StringName":
@@ -429,7 +434,7 @@ static func friendly_type_word(type_name: String) -> String:
 		"int", "float":
 			return "number"
 		"bool":
-			return "yes/no"
+			return "true/false"
 		"Vector2", "Vector3":
 			return "point"
 		"Color":
