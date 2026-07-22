@@ -2557,6 +2557,45 @@ func _open_shortcuts_help() -> void:
 	_shortcuts.open()
 
 
+## The addon's issue tracker. A plain constant rather than a project setting: it is where THIS
+## plugin's bugs go, and a fork that wants its own tracker is editing the plugin anyway.
+const ISSUES_URL: String = "https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/issues/new"
+
+
+## The report skeleton the tracker opens with. Static and pure so the exact text that travels is
+## testable without opening a browser. A report that names the plugin build, the Godot build and the
+## platform is one a maintainer can act on immediately; asking for them afterwards costs a round trip
+## and usually loses the reporter. Exactly those three facts travel - deliberately no project name,
+## no file paths, no user name, nothing out of the user's sheets.
+static func issue_report_body() -> String:
+	return "\n".join([
+		"### What happened",
+		"",
+		"",
+		"### What you expected instead",
+		"",
+		"",
+		"### Steps to reproduce",
+		"",
+		"1. ",
+		"2. ",
+		"",
+		"### Environment",
+		"",
+		"- EventSheets: %s" % SheetCompiler.VERSION,
+		"- Godot: %s" % str(Engine.get_version_info().get("string", "unknown")),
+		"- Platform: %s" % OS.get_name(),
+	])
+
+
+## Tools ▾ "Report an Issue…" (and the Welcome window's footer): opens the tracker in the browser
+## with the skeleton above pre-filled. The browser shows the whole report before anything is sent,
+## so nothing leaves the machine without the user reading it and pressing submit.
+func _report_issue() -> void:
+	OS.shell_open("%s?body=%s" % [ISSUES_URL, issue_report_body().uri_encode()])
+	_set_status("Opened the issue tracker in your browser - your Godot and plugin versions are pre-filled.")
+
+
 ## Writes the always-current project vocabulary reference (EventSheetVocabularyDoc) -
 ## the answer to "what can I say in this project?" as one committed markdown file.
 func _generate_vocabulary_doc() -> void:

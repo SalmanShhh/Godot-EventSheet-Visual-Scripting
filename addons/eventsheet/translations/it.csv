@@ -194,6 +194,9 @@ Simple mode - hide advanced rows & menu items,Modalità semplice - nascondi righ
 Open the GDScript panel with every sheet,Apri il pannello GDScript con ogni foglio
 Coming from another event-sheet tool?,Vieni da un altro strumento a fogli eventi?
 Open the migration guide,Apri la guida alla migrazione
+Report an Issue…,Segnala un problema…
+Something not working right?,Qualcosa non funziona?
+Report an issue,Segnala un problema
 Reopen this window any time: Tools → Welcome…,Riapri questa finestra quando vuoi: Strumenti → Benvenuto…
 Translations are plain CSV files - drop one into eventsheet_translations/ and its language appears here.,Le traduzioni sono semplici file CSV - lasciane uno in eventsheet_translations/ e la sua lingua appare qui.
 The 2-minute tour,Il tour di 2 minuti

@@ -289,6 +289,7 @@ func build(root: Node) -> void:
 	tools_popup.add_item("Welcome…", 13)
 	tools_popup.add_item("Start the Tour…", 17)
 	tools_popup.add_item("Keyboard Shortcuts", 16)
+	tools_popup.add_item("Report an Issue…", 20)
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
 			0: _dock._toggle_breakpoint_emission()
@@ -310,6 +311,7 @@ func build(root: Node) -> void:
 			13: _dock.show_welcome()
 			17: _dock.start_tour()
 			16: _dock._open_shortcuts_help()
+			20: _dock._report_issue()
 			14: _dock._run_diagnostics_action()
 	)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.")

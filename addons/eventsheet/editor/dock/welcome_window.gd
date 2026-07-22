@@ -160,6 +160,21 @@ func _build() -> void:
 		OS.shell_open(ProjectSettings.globalize_path("res://docs/GUIDE-C3-MIGRATION.md")))
 	migration_row.add_child(migration_button)
 	box.add_child(migration_row)
+	# Second footer row: somebody hitting a bug on day one should not have to work out where the
+	# project lives. The Tools menu carries the same action for people already past the Welcome.
+	var issue_row: HBoxContainer = HBoxContainer.new()
+	issue_row.add_theme_constant_override("separation", 8)
+	var issue_label: Label = Label.new()
+	issue_label.text = "Something not working right?"
+	issue_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.65))
+	issue_row.add_child(issue_label)
+	var issue_button: Button = Button.new()
+	issue_button.text = "Report an issue"
+	issue_button.flat = true
+	issue_button.tooltip_text = "Opens the plugin's issue tracker in your browser, with your Godot and plugin versions pre-filled."
+	issue_button.pressed.connect(func() -> void: _dock._report_issue())
+	issue_row.add_child(issue_button)
+	box.add_child(issue_row)
 	box.add_child(EventSheetPopupUI.hint_label("Reopen this window any time: Tools → Welcome…", 440.0))
 	dialog.add_child(EventSheetPopupUI.margined(box))
 	_dock.add_child(dialog)

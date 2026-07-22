@@ -194,6 +194,9 @@ Simple mode - hide advanced rows & menu items,Простой режим - скр
 Open the GDScript panel with every sheet,Открывать панель GDScript с каждым листом
 Coming from another event-sheet tool?,Переходите из другого инструмента событийных листов?
 Open the migration guide,Открыть руководство по миграции
+Report an Issue…,Сообщить о проблеме…
+Something not working right?,Что-то работает не так?
+Report an issue,Сообщить о проблеме
 Reopen this window any time: Tools → Welcome…,Это окно можно открыть снова: Инструменты → Добро пожаловать…
 Translations are plain CSV files - drop one into eventsheet_translations/ and its language appears here.,"Переводы - это обычные CSV-файлы: положите файл в eventsheet_translations/, и его язык появится здесь."
 The 2-minute tour,2-минутный тур

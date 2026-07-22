@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - reporting a bug is one click, from inside the editor
+
+- **Tools ▸ Report an Issue…** opens the plugin's issue tracker in your browser with a report
+  skeleton already written: what happened, what you expected, steps to reproduce, and an Environment
+  section carrying your EventSheets version, your Godot build and your platform. The Welcome window
+  gained the same action in its footer ("Something not working right?"), because the person most
+  likely to hit a wall on day one is the person still looking at that window.
+- Exactly those three environment facts travel. No project name, no file paths, no user name, nothing
+  out of your sheets - and your browser shows the whole report before you submit it, so nothing
+  leaves your machine unread. A test pins both halves: that the build facts are present, and that the
+  identifying ones are not.
+
 ### Changed - a behaviour pack's published verbs read as event rows, not as a spec table
 
 - **Published verbs now use the condition/action model.** A pack's ACEs rendered as full-width
