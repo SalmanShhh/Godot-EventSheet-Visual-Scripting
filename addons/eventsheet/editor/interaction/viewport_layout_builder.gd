@@ -63,9 +63,11 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, row_height)
 	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.INDENT_WIDTH)
 	# Group headers can be taller than a text line (group_row_height): centre the fold arrow and,
-	# below, the title spans in the bar instead of pinning them to its top edge.
+	# below, the title spans in the bar instead of pinning them to its top edge. Centre the WHOLE text
+	# block, not one line - a group with a description is two lines, and centring as though it were one
+	# pushed the second line half out of the bar, where the next row painted over it.
 	var group_v_offset: float = (
-		max((row_height - line_height) * 0.5, 0.0)
+		max((row_height - float(maxi(row_data.line_count, 1)) * line_height) * 0.5, 0.0)
 		if row_data.row_type == EventRowData.RowType.GROUP
 		else 0.0
 	)

@@ -14,6 +14,17 @@
   leaves your machine unread. A test pins both halves: that the build facts are present, and that the
   identifying ones are not.
 
+### Fixed - a group header no longer draws its description into the row below
+
+- **A region or group with a description clipped that description.** It is a two-line header, and both
+  halves of the layout treated it as one: the metrics pass returned the themed bar height flat without
+  consulting the row's line count, and the layout centred the text block as though it were a single
+  line - so the second line was pushed past the bar's bottom edge and the next row painted over it.
+  Found while regenerating a doc image, which is the only place it was visible at rest. The themed 56
+  is already under two lines of the default font, and the gap widens as the editor font grows, so this
+  is the same bleed single-line rows had on a Retina Mac. A test pins the invariant that matters: every
+  line of the header is drawn inside the header.
+
 ### Changed - triggers join the condition/action model, and verbs stop shouting
 
 - **A signal or trigger row now reads in the same two lanes as everything else.** It drew as a flat

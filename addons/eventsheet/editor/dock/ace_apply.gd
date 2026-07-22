@@ -82,7 +82,7 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 	if row_data == null:
 		return
 	# A published verb's parameter cell: a parameter belongs to the verb's DEFINITION, so it opens the
-	# verb's own dialog (focused on that parameter, or on a fresh one) instead of the ACE params editor,
+	# focused Edit Parameter dialog (that one parameter, or a fresh one) instead of the ACE params editor,
 	# which edits a CALL SITE. Checked before the EventRow gate - a verb row carries an EventFunction.
 	var verb_kind: String = str(metadata.get("kind", ""))
 	if verb_kind in ["verb_param", "verb_param_add"] and row_data.source_resource is EventFunction:

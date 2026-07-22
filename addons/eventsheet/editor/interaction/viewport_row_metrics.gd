@@ -73,7 +73,13 @@ func _resolve_row_height(row_data: EventRowData) -> float:
 		# default, never below the base row height (a squashed bar would clip its title).
 		var event_style: EventSheetEventStyle = _viewport._get_event_style()
 		var group_height: int = event_style.group_row_height if event_style != null else EventSheetPalette.GROUP_ROW_HEIGHT
-		return max(float(group_height), float(_viewport.ROW_HEIGHT))
+		# A group with a DESCRIPTION is a two-line header (the builder sets line_count = 2), so it must
+		# also clear the font's own two lines. The themed 56 is under 2 x the line height even at the
+		# default font, and badly under it once the editor font grows - so the description was drawn
+		# into the row below and painted over, the same bleed single-line rows had on a Retina Mac.
+		var text_height: float = float(maxi(row_data.line_count, 1)) \
+			* _viewport._get_event_line_height(_viewport._get_font_size())
+		return max(max(float(group_height), text_height), float(_viewport.ROW_HEIGHT))
 	if row_data.row_type != EventRowData.RowType.EVENT:
 		# Multi-line non-event rows (GDScript blocks) expand by their precomputed line count.
 		if row_data.line_count > 1:

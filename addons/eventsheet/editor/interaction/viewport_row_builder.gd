@@ -594,9 +594,10 @@ func _define_role_name_color(role: String) -> Color:
 ## carries what the verb IS - its role badge in the ACE-role colour, the friendly published name (or an
 ## authored display template), and its typed inputs. The ACTION lane carries what it HANDS BACK - the
 ## category chip, a "gives back <type>" chip for value-returning verbs, the async / static / internal /
-## featured markers, and the step count that doubles as the fold affordance. A faint wash of the role
-## accent plus a left accent bar tint the whole row, so Action / Condition / Expression read at a glance
-## and not only by the badge word. Pure READ view of sheet.functions - nothing here writes to the sheet.
+## featured markers, and the step count that doubles as the fold affordance. The role badge is the only
+## kind cue by default: a wash of the role accent plus a left accent bar is available behind the theme's
+## verb_row_tint_strength, but it ships at 0.0, because tinting every verb turned a pack into a wall of
+## coloured blocks. Pure READ view of sheet.functions - nothing here writes to the sheet.
 func _build_define_function_row(event_function: EventFunction, indent: int) -> EventRowData:
 	var row_data := EventRowData.new()
 	row_data.indent = indent

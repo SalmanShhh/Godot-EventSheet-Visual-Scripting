@@ -4,7 +4,7 @@ In an event sheet, a **verb** is a reusable function you define once and call an
 
 The word **ACE** is the plugin's name for the three things a sheet's picker can offer you: an **Action** (does something), a **Condition** (a yes/no test), and an **Expression** (returns a value). The ACE Studio lets you write any one of these as a verb, and optionally **publish** it so that every other sheet in your project can pick it. Everything you build here compiles to a plain GDScript function - the ACE Studio is a friendly front end, not a runtime layer that sits under your game.
 
-![The ACE Studio: three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb, and the GDScript signature it ships as](images/ace-studio.png)
+![The ACE Studio: Name, Doc comment and Inspector button rows, three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb with its Ships-as GDScript signature, a typed parameter row, the Run-only-when guards, and the Publish-to-the-picker tick revealing Description, Display name and Picker category.](images/ace-studio.png)
 
 ## Table of Contents
 

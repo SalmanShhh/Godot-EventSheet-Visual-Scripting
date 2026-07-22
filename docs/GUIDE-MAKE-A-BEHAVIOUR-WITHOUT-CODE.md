@@ -94,13 +94,13 @@ Inside the loop body, **Current Loop Item** is the iterator; **Break Loop** / **
 
 Add a **Function** (name + typed parameters + a return type). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to. The "Using the ACE Studio" guide walks through it field by field.
 
-<img src="images/ace-studio.png" alt="The ACE Studio: three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb, the Ships-as GDScript signature, typed parameters, guards, and the expose-as-ACE card." width="580">
+<img src="images/ace-studio.png" alt="The ACE Studio: Name, Doc comment and Inspector button rows, three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb with its Ships-as GDScript signature, a typed parameter row, the Run-only-when guards, and the Publish-to-the-picker tick revealing Description, Display name and Picker category." width="580">
 
 - **Does something** (returns nothing) → an **Action** (e.g. `jump()`, `start_timer(seconds)`)
 - **Is it true?** (returns a bool) → a **Condition** (e.g. `is_in_state(name)`)
 - **A value** (returns anything else) → an **Expression** (e.g. `health_percent()`)
 
-Tick **"expose as ACE"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary.
+Tick **"Publish to the picker"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary. Ticking it reveals the three fields that decide how it reads there: Description, Display name, and Picker category.
 
 Each published verb reads on the canvas the same way every other event row does: a two-lane row with the **kind badge and the verb's name on the left**, and on the right what it **hands back** - `gives back <type>` for a Condition or Expression, plus markers like `waits`, `static` or `internal`. The `## @ace_description(...)` you wrote sits directly above it as a caption. It is an ordinary event row, drawn like any other - the kind badge is the cue, not a colour wash. (If you WANT each kind colour-coded, `verb_row_tint_strength` in the theme editor turns the wash back on.)
 
@@ -186,7 +186,7 @@ Send an artist the Flash behaviour and they tune `flash_color` from a colour swa
 - **Choose export vs non-export deliberately.** Exported variables are the designer's surface (badge + Inspector drawer); internal state like `remaining` or a coyote timer should stay non-exported so it does not clutter the Inspector.
 - **Use Set Local Variable (typed) for scratch values.** A value that only matters inside one event does not need a sheet variable.
 - **A Signal row is not a trigger until you tick "trigger".** Only then does it publish as an *On ...* entry other sheets can react to.
-- **The return type decides how a function publishes.** void → Action, bool → Condition, anything else → Expression. Pick the return type for the ACE role you want, then tick "expose as ACE" or it stays sheet-private.
+- **The return type decides how a function publishes.** void → Action, bool → Condition, anything else → Expression. Pick the return type for the ACE role you want, then tick "Publish to the picker" or it stays sheet-private.
 - **Multiple conditions on a row are AND by default.** Switch the row to OR when you mean "any of these"; use Else (right-click or the chain keys) for if/else, not a duplicated inverted event.
 - **Big loops can hitch.** Reach for *Budgeted For Each* to spread a heavy loop across frames instead of processing everything in one tick.
 - **Do not force real code into rows.** Inner classes and continuous numeric math (`cos`/`sin`/spring kernels) read better as a GDScript block - the goal is zero *gratuitous* GDScript, not dogmatic zero.

@@ -10,7 +10,7 @@ naming, parameter design, descriptions, and picker UX that beginners can use fir
 [Designing user-friendly ACEs](GUIDE-DESIGNING-USER-FRIENDLY-ACES.md) alongside this one. For the
 in-editor, no-code way to author one verb from a dialog, see [Using the ACE Studio](GUIDE-USING-THE-ACE-STUDIO.md).
 
-![The ACE Studio: three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb, and the GDScript signature it ships as](images/ace-studio.png)
+![The ACE Studio: Name, Doc comment and Inspector button rows, three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb with its Ships-as GDScript signature, a typed parameter row, the Run-only-when guards, and the Publish-to-the-picker tick revealing Description, Display name and Picker category.](images/ace-studio.png)
 
 ## Table of Contents
 

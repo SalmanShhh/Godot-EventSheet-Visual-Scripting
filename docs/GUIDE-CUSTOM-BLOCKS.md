@@ -2,7 +2,7 @@
 
 ACEs define what a row can *do* inside events. **Custom blocks** define new *kinds of rows* that live between events: preloads, region markers, notes, config tables, pack-defined data blocks, anything a sheet needs that is not an event. This guide covers the whole Custom Block API: how to register a kind in one small script, the contract every kind implements, the add/edit UX your kind gets for free, and how the byte-gated round-trip guarantees a kind can never corrupt a file. Two block kinds ship built in, and the plugin's own enum and signal rows run on the same API, so everything here is the exact path the built-ins take.
 
-![A sheet's custom blocks between events: two Preload Resource rows, an enum, a signal, and a colored region wrapping an event - each a registered kind that compiles to plain GDScript](images/custom-blocks.png)
+![A sheet's custom blocks between events: two preload rows reading like variables (JumpSfx : AudioStream [preload] = res://sfx/jump.ogg), an enum, a two-lane signal row with its typed value on the left and an internal chip on the right, and a colored region wrapping an On Ready event - each a registered kind that compiles to plain GDScript](images/custom-blocks.png)
 
 ## Table of Contents
 
@@ -178,7 +178,7 @@ Everything a kind can implement. Only `kind_id`, `title`, and the pieces your ki
 | `lift(lines, i) -> Dictionary` | both | Claim source lines starting at `i`. Return `{}` (not yours), `{"fields": ..., "consumed": n}` (schema), or `{"resource": row, "consumed": n}` (resource kind). |
 | `verified_claim(fields, lines, i, consumed)` | schema | The one-line byte gate for `lift()`: builds the candidate, re-emits it, returns the claim only on an exact byte match. |
 | `summary(block) -> String` | schema | The row's one-line display next to the badge. |
-| `display_spans(entry) -> Array[Dictionary]` | both | Optional FIRST-CLASS display: return `{text, role}` descriptors (roles `name` / `operator` / `type` / `value` / `badge`, a badge may add `badge_style: "const"` or `"scope"`) and the row renders with the plugin's variable-row styling instead of badge + summary. The built-in preload kind renders through this (`Name = res://path` + a preload/load pill). Display only - never affects emission. |
+| `display_spans(entry) -> Array[Dictionary]` | both | Optional FIRST-CLASS display: return `{text, role}` descriptors (roles `name` / `operator` / `type` / `value` / `badge`, a badge may add `badge_style: "const"` or `"scope"`) and the row renders with the plugin's variable-row styling instead of badge + summary. The built-in preload kind renders through this, reading `Name : Type [preload] = res://path` - the resource type is inferred from the file extension. Display only - never affects emission. |
 | `hover_text(entry) -> String` | both | Optional hover tooltip: what the block *means*. BBCode renders styled; `""` keeps the default. |
 | `handles(entry) -> bool` | resource | Claims a dedicated Resource class (`entry is EnumRow`). |
 | `emit_lines(entry) -> PackedStringArray` | resource | Emission for a handled Resource instance. |
