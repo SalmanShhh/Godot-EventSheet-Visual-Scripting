@@ -242,14 +242,15 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Health | `doctor()` | `Dictionary` | no |
 | Health | `register_doctor_check(check_id: String, check: Callable)` | `void` | no |
 | Health | `unregister_doctor_check(check_id: String)` | `void` | no |
-| Seams | `register_row_menu_item(label, filter, action)` / `unregister_row_menu_item(label)` | `void` | no (shows when open) |
-| Seams | `register_simple_ace(config: Dictionary)` / `simple_ace(config)` | `ACEDefinition` | no (joins next refresh) |
-| Seams | `register_param_editor(tag: String, factory: Callable)` | `void` | no |
+| Seams | `register_row_menu_item(label, filter, action)` / `unregister_row_menu_item(label)` / `row_menu_items_for(resource)` | `void` / `Array[Dictionary]` | no (shows when open) |
+| Seams | `register_simple_ace(config: Dictionary)` / `simple_ace(config)` / `simple_aces()` | `ACEDefinition` / `Array[ACEDefinition]` | no (joins next refresh) |
+| Seams | `register_param_editor(tag: String, factory: Callable)` / `param_editor_for(tag)` | `void` / `Callable` | no |
+| Seams | `register_param_commit_validator(hint, validator)` / `param_commit_validator_for(hint)` - `validator(value) -> Dictionary` runs when the params dialog COMMITS a field with that hint; return `{}` to pass, or `{title, message, confirm_text, cancel_text, on_confirm}` to ask first (the dialog delivers the commit exactly once however the prompt closes) | `void` / `Callable` | no |
 | Seams | `on_sheet_opened/saved/compiled(callback: Callable)` | `void` | no |
-| Seams | `register_starter({label, build})` | `void` | no |
+| Seams | `register_starter({label, build})` / `registered_starters()` | `void` / `Array[Dictionary]` | no |
 | Seams | `register_quick_add_synonyms(map: Dictionary)` | `void` | no |
 | Seams | `register_section_description(name, blurb)` | `void` | no |
-| Seams | `register_preference(builder: Callable)` | `void` | no |
+| Seams | `register_preference(builder: Callable)` / `preference_builders()` | `void` / `Array[Callable]` | no |
 | Seams | `register_tour(name, steps)` / `start_tour(steps)` | `void` / `bool` | start needs dock |
 | Seams | `register_editor_preview(script_path, sampler)` / `editor_preview_sampler_for(script_path)` | `void` / `Callable` | no |
 | Seams | `register_editor_gizmo(script_path, drawer)` / `editor_gizmo_drawer_for(script_path)` | `void` / `Callable` | no |
