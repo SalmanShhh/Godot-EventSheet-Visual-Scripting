@@ -13,8 +13,13 @@ static func run() -> bool:
 
 	# ---- the resolver: per-lane token, 0 = flow, non-lanes never column ----
 	var event_style: EventSheetEventStyle = EventSheetEventStyle.new()
-	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 0.0, "condition lane defaults to flow (0)")
-	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "action") == 0.0, "action lane defaults to flow (0)")
+	# The column is ALIGNED by default (the Construct look): every row's text starts at the same x, so
+	# the sheet scans as a table instead of each row starting wherever its own object name happens to
+	# end. Flow mode is still reachable by setting the token to 0.
+	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 130.0, "condition lane is aligned by default")
+	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "action") == 130.0, "action lane is aligned by default")
+	event_style.condition_object_column_width = 0
+	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 0.0, "0 still means flow mode")
 	event_style.condition_object_column_width = 120
 	event_style.action_object_column_width = 90
 	ok = _check(ok, EventRowRenderer.object_column_width_for(event_style, "condition") == 120.0, "condition column reads its token")

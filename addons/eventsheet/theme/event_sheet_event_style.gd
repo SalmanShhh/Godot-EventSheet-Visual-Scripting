@@ -20,11 +20,16 @@ extends Resource
 ## strong section bars (a C3 reflex); themes can pull it back down to the classic slim bar.
 @export_range(28, 200, 1) var group_row_height: int = EventSheetPalette.GROUP_ROW_HEIGHT
 ## Fixed width of the object-name column inside the CONDITIONS lane, in pixels (the C3 sub-lane:
-## object names left, condition text aligned at the column edge). 0 = flow, text follows each
-## label. Set by dragging the gap between an object name and its text, or here / in a theme.
-@export_range(0, 480, 1) var condition_object_column_width: int = 0
+## object names left, condition text aligned at the column edge). Aligned by DEFAULT, so every row's
+## text starts at the same x and the sheet scans as a table - the Construct look. 0 = flow, where the
+## text instead follows each label and so starts at a different x on every row. Set by dragging the
+## gap between an object name and its text, or here / in a theme.
+## The value is LOGICAL pixels, like every other geometry token here, so it does not grow with the
+## editor's display scale - on a HiDPI editor a long name elides sooner, and the column can be dragged
+## (or themed) wider to suit.
+@export_range(0, 480, 1) var condition_object_column_width: int = 130
 ## Fixed width of the object-name column inside the ACTIONS lane, in pixels. 0 = flow.
-@export_range(0, 480, 1) var action_object_column_width: int = 0
+@export_range(0, 480, 1) var action_object_column_width: int = 130
 @export var trigger_badge_background_color: Color = EventSheetPalette.COLOR_TRIGGER_ARROW_BG
 @export var trigger_badge_foreground_color: Color = EventSheetPalette.COLOR_TRIGGER_ARROW_FG
 @export var group_background_color: Color = EventSheetPalette.COLOR_GROUP_BG

@@ -39,6 +39,23 @@ var show_event_numbers: bool = true
 ## The fixed object-name column width for a span's lane (0 = flow, the classic behavior).
 ## One resolver shared by the draw, the width measure, and the text-origin hit-test so the
 ## three can never disagree about where display text starts.
+## `text` shortened with a trailing ellipsis until it fits `max_width`. Godot's draw_string takes a
+## width but CLIPS at it - a name in a user-draggable column would be sliced through a glyph, which is
+## what Construct avoids by eliding. Returns the text untouched when it already fits (the common case),
+## so the measuring loop only ever runs on a name that is actually too long for its column.
+static func _elide(text: String, max_width: float, font: Font, font_size: int) -> String:
+	if max_width <= 0.0 or font == null:
+		return text
+	if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x <= max_width:
+		return text
+	var trimmed: String = text
+	while trimmed.length() > 1:
+		trimmed = trimmed.substr(0, trimmed.length() - 1)
+		if font.get_string_size(trimmed + "…", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x <= max_width:
+			return trimmed + "…"
+	return "…"
+
+
 ## The hairline that marks an object column's right edge inside a cell - Construct's permanent
 ## sub-lane split. It sits ON the boundary the resize grab tests against, so what you see is exactly
 ## what you can drag. Skipped for a cell too short to show it.
@@ -668,7 +685,11 @@ func _draw_spans(
 			# text follows each label.
 			var object_column_width: float = object_column_width_for(event_style, str(metadata.get("lane", "")))
 			if object_column_width > 0.0:
-				_draw_text(control, Vector2(text_x, baseline_y), object_label, min(object_column_width - 4.0, text_width), font, draw_font_size, object_color)
+				# A name too long for the column ELIDES ("CharacterBody2D" -> "CharacterBo…") rather than
+				# being sliced mid-glyph: draw_string's width argument clips, it does not ellipsize, and a
+				# column the user can drag narrow needs to degrade legibly at any width.
+				var label_limit: float = min(object_column_width - 6.0, text_width)
+				_draw_text(control, Vector2(text_x, baseline_y), _elide(object_label, label_limit, font, draw_font_size), label_limit, font, draw_font_size, object_color)
 				text_x += object_column_width
 			else:
 				_draw_text(control, Vector2(text_x, baseline_y), object_label, text_width, font, draw_font_size, object_color)

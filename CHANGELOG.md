@@ -73,6 +73,12 @@
   drew nothing at all at rest - you had to find it by hunting for the resize cursor. A single guide
   now spans the entire canvas: faint while you hover a boundary, so it is discoverable before you
   grab it, and solid with a soft halo while you drag, so where the split will land is unambiguous.
+- **The object column is ALIGNED by default**, the Construct look: every row's condition/action text
+  starts at the same x, so a sheet scans as a table instead of each row starting wherever its own
+  object name happens to end. Flow mode (text follows each label) is still there by setting the
+  column width to 0. A name too long for the column now ELIDES (`CharacterBody2D` reads
+  `CharacterBod…`) rather than being sliced mid-glyph - Godot's `draw_string` takes a width but clips
+  at it, and a column you can drag narrow has to degrade legibly at any width.
 - **The object column now shows its split at rest**, the way Construct does. Its boundary previously
   drew nothing at all until the cursor crossed it and the resize cursor appeared, so the sub-lane was
   effectively undiscoverable. A hairline now sits on the same boundary the resize grab tests against,
