@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added - Storylet Weaver catches up to the C3 addon's data-driven layer
+
+- The Storylet Weaver pack was ported from an earlier build of its Construct 3 sibling; this brings over
+  the features that addon has since gained, in the pack's own Godot-native style (discrete typed ACEs,
+  not JSON blobs; the auto-ticking clock and missing-quality-reads-as-0 stay). New vocabulary:
+  - **Effects** - **Add Effect** attaches a quality change (`set` / `inc` / `dec` / `toggle` / `delete`)
+    that applies automatically when a storylet is drawn, so a beat carries its own consequence.
+  - **Effect forecasts** - **Forecast Storylet Effects** / **Forecast Choice Effects** read those
+    changes as a plain string (`"gold -10, gate_open = 1"`) without applying them - a button can show
+    the cost before the player commits.
+  - **Choices grow up** - **Add Choice Requirement** hides a choice whose rule fails (and `Choice
+    Count` / `Choice Id At` only see eligible ones), and **Add Choice Effect** applies a consequence the
+    instant the choice is picked.
+  - **Meta payloads** - **Add Meta** attaches arbitrary data (a speaker, a portrait) read back with
+    **Active Meta** / **Storylet Meta** / **Available Meta**.
+  - **Richer requirements** - **Add Requirement (Key vs Key)** compares two qualities (`gold >= price`),
+    **Add Chance Requirement** is a probability gate, and **Add Recency Requirement** is an anti-repeat
+    gate over the draw history. The recency history saves and loads with the rest of the state.
+- Pack version bumped to 1.1.0. Suite-covered end to end; the emitted `.gd` stays byte-stable (drift=0).
+
 ### Changed - the verb dialog speaks Action / Condition / Expression, and its picker details move to the row
 
 - **The three kind cards headline the ACE kind.** "What kind of verb is this?" led with plain-language

@@ -101,6 +101,63 @@ static func run() -> bool:
 	all_passed = _check("the cooldown clears once enough game time passes",
 		not sw.is_on_cooldown("nap") and sw.is_available("nap"), true) and all_passed
 
+	# --- Effects + forecasts (data-driven consequences, ported from the C3 addon) ---
+	_reset(sw)
+	sw.define_storylet("gate", "The Gate", "Pay the toll.")
+	sw.add_effect("gate", "inc", "visits", 1)
+	sw.add_meta("gate", "speaker", "Gatekeeper")
+	all_passed = _check("Forecast Storylet Effects reads without mutating",
+		sw.forecast_storylet_effects("gate") == "visits +1" and not sw._qualities.has("visits"), true) and all_passed
+	all_passed = _check("Storylet Meta reads a stored payload", sw.storylet_meta("gate", "speaker"), "Gatekeeper") and all_passed
+	sw.draw()
+	all_passed = _check("a storylet's on-draw effect applies when it is drawn",
+		sw.active_id() == "gate" and is_equal_approx(sw.quality_number("visits"), 1.0), true) and all_passed
+	all_passed = _check("Active Meta reads the drawn storylet's payload", sw.active_meta("speaker"), "Gatekeeper") and all_passed
+
+	# --- Choice requirements + choice effects (only eligible choices show; picking applies the effect) ---
+	_reset(sw)
+	sw.define_storylet("toll", "Toll", "Pay to pass.")
+	sw.add_choice("toll", "pay", "Pay 10 gold.")
+	sw.add_choice_requirement("toll", "pay", "gold", ">=", 10)
+	sw.add_choice_effect("toll", "pay", "dec", "gold", 10)
+	sw.add_choice("toll", "leave", "Leave.")
+	sw.set_quality("gold", 5)
+	sw.draw()
+	all_passed = _check("a choice whose requirement fails is hidden", sw.active_choice_count(), 1) and all_passed
+	all_passed = _check("Forecast Choice Effects previews the consequence", sw.forecast_choice_effects("toll", "pay"), "gold -10") and all_passed
+	sw.dismiss()
+	sw.set_quality("gold", 20)
+	sw.reset_all_history()
+	sw.draw()
+	all_passed = _check("both choices show once the requirement passes", sw.active_choice_count(), 2) and all_passed
+	sw.choose("pay")
+	all_passed = _check("picking a choice applies its effect", is_equal_approx(sw.quality_number("gold"), 10.0), true) and all_passed
+
+	# --- Richer requirements: key-vs-key, chance, recency ---
+	_reset(sw)
+	sw.set_quality("gold", 20)
+	sw.set_quality("price", 15)
+	sw.define_storylet("afford", "Afford", "")
+	sw.add_requirement_key("afford", "gold", ">=", "price")
+	sw.define_storylet("cannot", "Cannot", "")
+	sw.add_requirement_key("cannot", "price", ">", "gold")
+	sw.define_storylet("never", "Never", "")
+	sw.add_chance_requirement("never", 0)
+	sw.evaluate()
+	all_passed = _check("key-vs-key compares two qualities (gold >= price passes, price > gold fails)",
+		sw.is_available("afford") and not sw.is_available("cannot"), true) and all_passed
+	all_passed = _check("a 0% chance requirement is never eligible", sw.is_available("never"), false) and all_passed
+
+	_reset(sw)
+	sw.define_storylet("anti", "Anti", "")
+	sw.add_recency_requirement("anti", "not_recent", 2)
+	sw.evaluate()
+	all_passed = _check("a not-recently-drawn storylet is eligible before it is drawn", sw.is_available("anti"), true) and all_passed
+	sw.draw()
+	sw.dismiss()
+	sw.evaluate()
+	all_passed = _check("the anti-repeat gate blocks it right after it was drawn", sw.is_available("anti"), false) and all_passed
+
 	sw.free()
 	return all_passed
 

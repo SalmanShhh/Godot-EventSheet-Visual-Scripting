@@ -1,6 +1,6 @@
 ## @ace_tags(narrative, storylet)
 ## @ace_category("Storylets")
-## @ace_version(1.0.0)
+## @ace_version(1.1.0)
 @icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 class_name StoryletsAddon
 extends Node
@@ -19,12 +19,16 @@ signal on_choice_made
 ## @ace_category("Storylets")
 signal on_none_available
 
-# id -> {title, body, weight, cooldown, max_plays (-1=unlimited), reqs:Array of {key,op,value}, choices:Array of {id,text}}.
+# id -> {title, body, weight, cooldown, max_plays (-1=unlimited),
+#        reqs:Array of {key,op,value,value_key(bool)}, choices:Array of {id,text,reqs,effects},
+#        effects:Array of {op,key,value}, meta:Dictionary}.
 var _lib: Dictionary = {}
 # Flat quality store (the mirror of game state the requirements read).
 var _qualities: Dictionary = {}
 var _plays: Dictionary = {}
 var _last_played: Dictionary = {}
+# Ids in the order they were drawn (most recent LAST) - the recency requirement reads this.
+var _selection_order: Array = []
 var _available: Array = []
 var _active: String = ""
 var _chosen: String = ""
@@ -43,7 +47,9 @@ func _process(delta: float) -> void:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.define_storylet({id}, {title}, {body})")
 func define_storylet(id: String, title: String, body: String) -> void:
-	_lib[id] = {"title": title, "body": body, "weight": 1.0, "cooldown": 0.0, "max_plays": -1.0, "reqs": [], "choices": []}
+	_lib[id] = _blank_story()
+	_lib[id].title = title
+	_lib[id].body = body
 
 ## @ace_action
 ## @ace_name("Set Storylet Weight")
@@ -89,7 +95,79 @@ func add_requirement(id: String, quality_key: String, op: String, value) -> void
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_choice({id}, {choice_id}, {text})")
 func add_choice(id: String, choice_id: String, text: String) -> void:
-	_story(id).choices.append({"id": choice_id, "text": text})
+	_story(id).choices.append({"id": choice_id, "text": text, "reqs": [], "effects": []})
+
+## @ace_action
+## @ace_name("Add Choice Requirement")
+## @ace_category("Storylets")
+## @ace_description("A rule that must pass for this choice to be OFFERED, e.g. quality "gold" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice.")
+## @ace_param_options(op >=, >, <=, <, =, !=)
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.add_choice_requirement({id}, {choice_id}, {quality_key}, {op}, {value})")
+func add_choice_requirement(id: String, choice_id: String, quality_key: String, op: String, value) -> void:
+	var c: Dictionary = _choice(id, choice_id)
+	if not c.is_empty():
+		c.reqs.append({"key": quality_key, "op": op, "value": value})
+
+## @ace_action
+## @ace_name("Add Choice Effect")
+## @ace_category("Storylets")
+## @ace_description("A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice.")
+## @ace_param_options(op { "key": "set", "label": "Set to" }, { "key": "inc", "label": "Increment by" }, { "key": "dec", "label": "Decrement by" }, { "key": "toggle", "label": "Toggle (0/1)" }, { "key": "delete", "label": "Delete key" })
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.add_choice_effect({id}, {choice_id}, {op}, {key}, {value})")
+func add_choice_effect(id: String, choice_id: String, op: String, key: String, value) -> void:
+	var c: Dictionary = _choice(id, choice_id)
+	if not c.is_empty():
+		c.effects.append({"op": op, "key": key, "value": value})
+
+## @ace_action
+## @ace_name("Add Effect")
+## @ace_category("Storylets")
+## @ace_description("A quality change applied automatically when this storylet is DRAWN - so a beat carries its own consequence. Define the storylet first.")
+## @ace_param_options(op { "key": "set", "label": "Set to" }, { "key": "inc", "label": "Increment by" }, { "key": "dec", "label": "Decrement by" }, { "key": "toggle", "label": "Toggle (0/1)" }, { "key": "delete", "label": "Delete key" })
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.add_effect({id}, {op}, {key}, {value})")
+func add_effect(id: String, op: String, key: String, value) -> void:
+	_story(id).effects.append({"op": op, "key": key, "value": value})
+
+## @ace_action
+## @ace_name("Add Meta")
+## @ace_category("Storylets")
+## @ace_description("Attaches an arbitrary key-value to a storylet (a speaker, a portrait, a sound). Read it back with Active Meta / Storylet Meta - the engine never interprets it.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.add_meta({id}, {key}, {value})")
+func add_meta(id: String, key: String, value) -> void:
+	_story(id).meta[key] = value
+
+## @ace_action
+## @ace_name("Add Requirement (Key vs Key)")
+## @ace_category("Storylets")
+## @ace_description("A rule comparing one quality against ANOTHER quality's value, e.g. gold >= price - so a storylet reacts to a relationship between stats without hard-coding the number.")
+## @ace_param_options(op >=, >, <=, <, =, !=)
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.add_requirement_key({id}, {quality_key}, {op}, {other_key})")
+func add_requirement_key(id: String, quality_key: String, op: String, other_key: String) -> void:
+	_story(id).reqs.append({"key": quality_key, "op": op, "value": other_key, "value_key": true})
+
+## @ace_action
+## @ace_name("Add Chance Requirement")
+## @ace_category("Storylets")
+## @ace_description("A probability gate: the storylet is eligible only percent% of the time, re-rolled on every Evaluate/Draw. Use it to make a beat show only sometimes.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.add_chance_requirement({id}, {percent})")
+func add_chance_requirement(id: String, percent: float) -> void:
+	_story(id).reqs.append({"op": "chance", "value": clampf(percent, 0.0, 100.0)})
+
+## @ace_action
+## @ace_name("Add Recency Requirement")
+## @ace_category("Storylets")
+## @ace_description("An anti-repeat (or must-be-recent) gate by DRAW history: eligible only when this storylet was / was not among the last N drawn storylets.")
+## @ace_param_options(mode { "key": "not_recent", "label": "was NOT drawn recently" }, { "key": "recent", "label": "was drawn recently" })
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.add_recency_requirement({id}, {mode}, {within})")
+func add_recency_requirement(id: String, mode: String, within: int) -> void:
+	_story(id).reqs.append({"op": mode, "value": within})
 
 ## @ace_action
 ## @ace_name("Set Quality")
@@ -173,12 +251,17 @@ func draw_weighted() -> void:
 ## @ace_action
 ## @ace_name("Choose")
 ## @ace_category("Storylets")
-## @ace_description("Resolves the active storylet's choice by id (fires On Choice Made, then clears the active storylet). React inside On Choice Made.")
+## @ace_description("Resolves the active storylet's choice by id: applies that choice's effects, fires On Choice Made, then clears the active storylet. Only an ELIGIBLE choice resolves. React inside On Choice Made.")
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.choose({choice_id})")
 func choose(choice_id: String) -> void:
 	if _active.is_empty():
 		return
+	var picked: Dictionary = _choice(_active, choice_id)
+	if picked.is_empty() or not _choice_ok(picked, _active):
+		return
+	for eff: Dictionary in picked.get("effects", []):
+		_apply_effect(eff)
 	_chosen = choice_id
 	on_choice_made.emit()
 	_active = ""
@@ -214,12 +297,13 @@ func reset_play_count(id: String) -> void:
 ## @ace_action
 ## @ace_name("Reset All History")
 ## @ace_category("Storylets")
-## @ace_description("Clears every play count + cooldown (e.g. on New Game).")
+## @ace_description("Clears every play count, cooldown, and the recency draw-history (e.g. on New Game).")
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.reset_all_history()")
 func reset_all_history() -> void:
 	_plays.clear()
 	_last_played.clear()
+	_selection_order.clear()
 
 ## @ace_condition
 ## @ace_name("Has Active Storylet")
@@ -351,34 +435,30 @@ func active_body() -> String:
 ## @ace_expression
 ## @ace_name("Choice Count")
 ## @ace_category("Storylets")
-## @ace_description("How many choices the active storylet offers.")
+## @ace_description("How many ELIGIBLE choices the active storylet offers (choices whose requirements fail are not counted).")
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.active_choice_count()")
 func active_choice_count() -> int:
-	return int(_lib[_active].choices.size()) if _lib.has(_active) else 0
+	return _active_choices().size()
 
 ## @ace_expression
 ## @ace_name("Choice Id At")
 ## @ace_category("Storylets")
-## @ace_description("The choice id at a position on the active storylet.")
+## @ace_description("The id of the eligible choice at a position on the active storylet.")
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.choice_id_at({index})")
 func choice_id_at(index: int) -> String:
-	if not _lib.has(_active):
-		return ""
-	var c: Array = _lib[_active].choices
+	var c: Array = _active_choices()
 	return str(c[index].id) if index >= 0 and index < c.size() else ""
 
 ## @ace_expression
 ## @ace_name("Choice Text At")
 ## @ace_category("Storylets")
-## @ace_description("The choice label at a position on the active storylet.")
+## @ace_description("The label of the eligible choice at a position on the active storylet.")
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.choice_text_at({index})")
 func choice_text_at(index: int) -> String:
-	if not _lib.has(_active):
-		return ""
-	var c: Array = _lib[_active].choices
+	var c: Array = _active_choices()
 	return str(c[index].text) if index >= 0 and index < c.size() else ""
 
 ## @ace_expression
@@ -389,6 +469,54 @@ func choice_text_at(index: int) -> String:
 ## @ace_codegen_template("Storylets.chosen_id()")
 func chosen_id() -> String:
 	return _chosen
+
+## @ace_expression
+## @ace_name("Forecast Storylet Effects")
+## @ace_category("Storylets")
+## @ace_description("A readable preview of the quality changes a storylet applies when drawn, e.g. "gold -10, gate_open = 1". Never changes anything - put it on a button.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.forecast_storylet_effects({id})")
+func forecast_storylet_effects(id: String) -> String:
+	return _forecast(_lib[id].get("effects", [])) if _lib.has(id) else ""
+
+## @ace_expression
+## @ace_name("Forecast Choice Effects")
+## @ace_category("Storylets")
+## @ace_description("A readable preview of the quality changes a choice applies when picked. Pass Active Id() for the current storylet. Never changes anything.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.forecast_choice_effects({id}, {choice_id})")
+func forecast_choice_effects(id: String, choice_id: String) -> String:
+	var c: Dictionary = _choice(id, choice_id)
+	return _forecast(c.get("effects", [])) if not c.is_empty() else ""
+
+## @ace_expression
+## @ace_name("Active Meta")
+## @ace_category("Storylets")
+## @ace_description("A meta value on the active storylet ("" if unset).")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.active_meta({key})")
+func active_meta(key: String) -> String:
+	return str(_lib[_active].meta.get(key, "")) if _lib.has(_active) else ""
+
+## @ace_expression
+## @ace_name("Storylet Meta")
+## @ace_category("Storylets")
+## @ace_description("A meta value on any registered storylet by id, without drawing it ("" if unset).")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.storylet_meta({id}, {key})")
+func storylet_meta(id: String, key: String) -> String:
+	return str(_lib[id].meta.get(key, "")) if _lib.has(id) else ""
+
+## @ace_expression
+## @ace_name("Available Meta")
+## @ace_category("Storylets")
+## @ace_description("A meta value on the eligible storylet at a position in the available list.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.available_meta({index}, {key})")
+func available_meta(index: int, key: String) -> String:
+	if index < 0 or index >= _available.size():
+		return ""
+	return str(_lib[_available[index]].meta.get(key, ""))
 
 ## @ace_expression
 ## @ace_name("Play Count")
@@ -429,10 +557,20 @@ func _rand_float() -> float:
 			return shared.random_value()
 	return randf()
 
+func _blank_story() -> Dictionary:
+	return {"title": "", "body": "", "weight": 1.0, "cooldown": 0.0, "max_plays": -1.0, "reqs": [], "choices": [], "effects": [], "meta": {}}
+
 func _story(id: String) -> Dictionary:
 	if not _lib.has(id):
-		_lib[id] = {"title": "", "body": "", "weight": 1.0, "cooldown": 0.0, "max_plays": -1.0, "reqs": [], "choices": []}
+		_lib[id] = _blank_story()
 	return _lib[id]
+
+func _choice(id: String, choice_id: String) -> Dictionary:
+	# The draft choice with this id on a storylet, or an empty dict.
+	for c: Dictionary in _story(id).choices:
+		if str(c.id) == choice_id:
+			return c
+	return {}
 
 func _num(v) -> float:
 	if v is float or v is int:
@@ -444,10 +582,19 @@ func _num(v) -> float:
 func _text(v) -> String:
 	return "" if v == null else str(v)
 
-func _req_ok(req: Dictionary) -> bool:
-	# One requirement against the current qualities. Missing quality = 0 / "".
+func _req_ok(req: Dictionary, id: String) -> bool:
+	# One requirement against the current qualities. Missing quality = 0 / "". `id` is the storylet
+	# being evaluated (recency reads it). chance re-rolls each call; recency reads the draw history;
+	# a key-vs-key rule (value_key) compares the quality against ANOTHER quality's current value.
+	match str(req.op):
+		"chance":
+			return _rand_float() * 100.0 < _num(req.value)
+		"recent", "not_recent":
+			var within: int = int(_num(req.value))
+			var recent: bool = _selection_order.slice(maxi(_selection_order.size() - within, 0)).has(id)
+			return recent if str(req.op) == "recent" else not recent
 	var have: Variant = _qualities.get(req.key, null)
-	var want: Variant = req.value
+	var want: Variant = _qualities.get(req.value, null) if bool(req.get("value_key", false)) else req.value
 	var textual: bool = want is String and not (want as String).is_valid_float()
 	match str(req.op):
 		"=":
@@ -472,14 +619,70 @@ func _eligible(id: String) -> bool:
 	if s.cooldown > 0.0 and _last_played.has(id) and _clock - _last_played[id] < s.cooldown:
 		return false
 	for req: Dictionary in s.reqs:
-		if not _req_ok(req):
+		if not _req_ok(req, id):
 			return false
 	return true
 
+func _apply_effect(eff: Dictionary) -> void:
+	# Applies one effect to the qualities store (the storylet/choice's declared consequence).
+	var key: String = str(eff.get("key", ""))
+	if key.is_empty():
+		return
+	match str(eff.get("op", "set")):
+		"set":
+			_qualities[key] = eff.get("value", 0)
+		"inc":
+			_qualities[key] = _num(_qualities.get(key, 0.0)) + _num(eff.get("value", 0))
+		"dec":
+			_qualities[key] = _num(_qualities.get(key, 0.0)) - _num(eff.get("value", 0))
+		"toggle":
+			_qualities[key] = 0.0 if _num(_qualities.get(key, 0.0)) != 0.0 else 1.0
+		"delete":
+			_qualities.erase(key)
+
+func _forecast(effects: Array) -> String:
+	# A readable one-line preview of a list of effects, e.g. "gold -10, gate_open = 1". Never mutates.
+	var parts: PackedStringArray = PackedStringArray()
+	for eff: Dictionary in effects:
+		var key: String = str(eff.get("key", ""))
+		match str(eff.get("op", "set")):
+			"set":
+				parts.append("%s = %s" % [key, str(eff.get("value", 0))])
+			"inc":
+				parts.append("%s +%s" % [key, str(eff.get("value", 0))])
+			"dec":
+				parts.append("%s -%s" % [key, str(eff.get("value", 0))])
+			"toggle":
+				parts.append("toggle %s" % key)
+			"delete":
+				parts.append("clear %s" % key)
+	return ", ".join(parts)
+
+func _choice_ok(choice: Dictionary, id: String) -> bool:
+	# Whether a choice's own requirements pass right now (only eligible choices are shown/pickable).
+	for req: Dictionary in choice.get("reqs", []):
+		if not _req_ok(req, id):
+			return false
+	return true
+
+func _active_choices() -> Array:
+	# The active storylet's choices that pass their requirements, in order.
+	if not _lib.has(_active):
+		return []
+	var out: Array = []
+	for c: Dictionary in _lib[_active].choices:
+		if _choice_ok(c, _active):
+			out.append(c)
+	return out
+
 func _activate(id: String) -> void:
-	# Marks a storylet as played now: records the play + cooldown start + active, fires the trigger.
+	# Marks a storylet as played now: records the play + cooldown start + active + draw history,
+	# applies its on-draw effects, and fires the trigger.
 	_plays[id] = _plays.get(id, 0) + 1
 	_last_played[id] = _clock
+	_selection_order.append(id)
+	for eff: Dictionary in _lib[id].get("effects", []):
+		_apply_effect(eff)
 	_active = id
 	on_storylet_drawn.emit()
 
@@ -489,7 +692,8 @@ func save_state() -> Dictionary:
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
 	return {
 		"qualities": _qualities.duplicate(true),
-		"plays": _plays.duplicate(true)
+		"plays": _plays.duplicate(true),
+		"selection_order": _selection_order.duplicate()
 	}
 
 ## @ace_hidden
@@ -498,5 +702,6 @@ func load_state(state: Dictionary) -> void:
 		return
 	_qualities = (state.get("qualities", {}) as Dictionary).duplicate(true)
 	_plays = (state.get("plays", {}) as Dictionary).duplicate(true)
+	_selection_order = (state.get("selection_order", []) as Array).duplicate()
 
 # Storylet Weaver: register as the Storylets autoload. Define small story fragments with Add Requirement rules, mirror your game state into qualities with Set Quality, then Draw to get the best eligible storylet and react with On Storylet Drawn. This pack is an event sheet - extend it by editing it.

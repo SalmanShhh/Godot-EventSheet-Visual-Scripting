@@ -94,7 +94,14 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | **Set Storylet Cooldown** | `id`, `seconds` | Seconds this storylet is ineligible after it plays (`0` = no cooldown). |
 | **Set Max Plays** | `id`, `max_plays` | How many times it may ever play (`-1` = unlimited, `1` = a one-shot). |
 | **Add Requirement** | `id`, `quality_key`, `op`, `value` | A rule this storylet needs to be eligible, e.g. quality `courage` `>=` `3`. `op` is a dropdown: `>=`, `>`, `<=`, `<`, `=`, `!=`. A missing quality counts as `0` (or `""`). |
+| **Add Requirement (Key vs Key)** | `id`, `quality_key`, `op`, `other_key` | A rule comparing one quality against ANOTHER quality's value, e.g. `gold >= price` - so a storylet reacts to a relationship between stats without hard-coding the number. |
+| **Add Chance Requirement** | `id`, `percent` | A probability gate: eligible only `percent`% of the time, re-rolled on every Evaluate/Draw. |
+| **Add Recency Requirement** | `id`, `mode`, `within` | An anti-repeat (or must-be-recent) gate by draw history: eligible only when this storylet `was NOT` / `was` among the last `within` drawn storylets. |
+| **Add Effect** | `id`, `op`, `key`, `value` | A quality change applied automatically when this storylet is **drawn** - so a beat carries its own consequence. `op`: `Set to`, `Increment by`, `Decrement by`, `Toggle (0/1)`, `Delete key`. |
+| **Add Meta** | `id`, `key`, `value` | Attaches an arbitrary key-value (a speaker, portrait, sound) to a storylet. Read it with Active Meta / Storylet Meta; the engine never interprets it. |
 | **Add Choice** | `id`, `choice_id`, `text` | Adds a labelled choice the player can pick on this storylet (resolve it with Choose). |
+| **Add Choice Requirement** | `id`, `choice_id`, `quality_key`, `op`, `value` | A rule that must pass for this choice to be **offered**; choices whose rules fail are hidden. Add the choice first. |
+| **Add Choice Effect** | `id`, `choice_id`, `op`, `key`, `value` | A quality change applied automatically when this choice is **picked** - so a choice carries its own consequence instead of a per-choice branch. Same `op` list as Add Effect. |
 | **Set Quality** | `key`, `value` | Stores a quality value (a number like `courage=3`, or text like `location="tavern"`). Requirements read these. |
 | **Increment Quality** | `key`, `amount` | Adds to a numeric quality (creating it at `0` if new). |
 | **Clear Quality** | `key` | Removes a quality key. |
@@ -129,10 +136,15 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | **Active Id** | (none) | String | The active storylet id (`""` if none). |
 | **Active Title** | (none) | String | The active storylet's title. |
 | **Active Body** | (none) | String | The active storylet's body text. |
-| **Choice Count** | (none) | int | How many choices the active storylet offers. |
-| **Choice Id At** | `index` | String | The choice id at a position on the active storylet. |
-| **Choice Text At** | `index` | String | The choice label at a position on the active storylet. |
+| **Choice Count** | (none) | int | How many **eligible** choices the active storylet offers (choices whose requirements fail are not counted). |
+| **Choice Id At** | `index` | String | The id of the eligible choice at a position on the active storylet. |
+| **Choice Text At** | `index` | String | The label of the eligible choice at a position on the active storylet. |
 | **Chosen Id** | (none) | String | The choice just picked (inside On Choice Made). |
+| **Forecast Storylet Effects** | `id` | String | A readable preview of the quality changes a storylet applies when drawn, e.g. `"gold -10, gate_open = 1"`. Never changes anything. |
+| **Forecast Choice Effects** | `id`, `choice_id` | String | A readable preview of a choice's effects. Pass `Active Id()` for the current storylet. Never changes anything. |
+| **Active Meta** | `key` | String | A meta value on the active storylet (`""` if unset). |
+| **Storylet Meta** | `id`, `key` | String | A meta value on any registered storylet by id, without drawing it. |
+| **Available Meta** | `index`, `key` | String | A meta value on the eligible storylet at a position in the available list. |
 | **Play Count** | `id` | int | How many times a storylet has played. |
 | **Cooldown Remaining** | `id` | float | Seconds left on a storylet's cooldown (`0` if ready). |
 | **Storylet Count** | (none) | int | How many storylets are registered. |
@@ -509,7 +521,8 @@ Pair a specific storylet's id with **Has Been Played** when you want tight contr
 - **Draw does everything at once.** **Draw** is evaluate + pick the best + activate + fire the trigger. You do not call **Evaluate** first and you do not manually select. Use **Evaluate** on its own only when you want the full **Available** list for a menu.
 - **The play is counted at Draw, not at Choose.** Drawing a storylet immediately records the play and starts its cooldown. **Dismiss** and **Choose** both clear the active slot but neither un-counts that play.
 - **Read Active values before you resolve.** **Choose** and **Dismiss** clear the active storylet, so `Active Title` / `Active Body` go empty afterward. Read them while the storylet is active, and read **Chosen Id** inside **On Choice Made**.
-- **Choices here are just id + text.** Unlike the Construct 3 version, **Add Choice** has no per-choice prerequisites. Gate an option by only adding it when a quality qualifies (see use case 5), or by checking `Quality Number(...)` before you apply its consequence.
+- **Choices can carry their own rules and consequences.** After **Add Choice**, gate an option with **Add Choice Requirement** (it is hidden and uncounted when its rule fails, and `Choice Count` / `Choice Id At` only ever see eligible choices) and give it a consequence with **Add Choice Effect** (applied the instant it is picked). You rarely need a per-choice branch in **On Choice Made** anymore - reserve that trigger for presentation work (hiding a panel, playing a sound).
+- **Let effects be data, and preview them.** **Add Effect** (on the storylet) and **Add Choice Effect** carry their own quality changes - `set` / `inc` / `dec` / `toggle` / `delete` - applied automatically when a beat is drawn or a choice is picked, so a consequence lives with the content instead of a matching branch elsewhere. **Forecast Storylet Effects** and **Forecast Choice Effects** read those changes as a plain string (`"gold -10, gate_open = 1"`) without applying them - drop one on a button so the player sees the cost before they commit.
 - **Build storylets with typed ACEs, not a JSON blob.** You assemble a storylet from discrete rows - **Define Storylet**, then **Add Requirement** / **Add Choice** / **Set Storylet Weight** and friends, all keyed by the same id. There is no JSON string to hand-write or mis-quote.
 - **Re-defining an id replaces it.** Calling **Define Storylet** with an existing id overwrites that storylet (and its requirements and choices reset, since you are starting it fresh). Use this to rebuild a storylet's rules from current game data before a Draw.
 - **Keep qualities in sync with your game.** Requirements only see what you mirror in. If a gate seems never to open, confirm you called **Set Quality** / **Increment Quality** for the key it checks; **Has Quality** and the **Quality Number** / **Quality Text** expressions help you verify the store.
