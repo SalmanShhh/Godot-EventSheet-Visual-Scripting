@@ -256,18 +256,21 @@ Inside On Choice Made, branch on **Chosen Id** to run each outcome (open the gat
 
 ### 5. A choice that is only offered when the player qualifies
 
-**Scenario:** The "pay" option should only appear if the player actually has the gold. This port's choices carry no built-in prereqs, so gate the choice when you build the storylet.
+**Scenario:** The "pay" option should only appear if the player actually has the gold.
 
 ```
+On Ready
+  -> Storylets: Define Storylet         "gate", "The Gatekeeper", "You must pay the toll to pass."
+  -> Storylets: Add Choice              "gate", "pay", "Pay 10 gold."
+  -> Storylets: Add Choice Requirement  "gate", "pay", "gold", ">=", 10
+  -> Storylets: Add Choice              "gate", "refuse", "I refuse."
+
 On reach gate
-  -> Storylets: Define Storylet  "gate", "The Gatekeeper", "You must pay the toll to pass."
-  -> Storylets: Add Choice       "gate", "refuse", "I refuse."
-  Storylets: Quality Number("gold") >= 10
-    -> Storylets: Add Choice     "gate", "pay", "Pay 10 gold."
+  -> Storylets: Set Quality  "gold", player_gold
   -> Storylets: Draw
 ```
 
-Because you re-define `gate` and add its choices right before drawing, the "pay" option is present only when `gold >= 10`. You can also just check `Storylets.Quality Number("gold") >= 10` inside On Choice Made before applying the cost.
+**Add Choice Requirement** hides the "pay" option whenever `gold < 10`. Only eligible choices are counted, so **Choice Count** and **Choice Text At(...)** skip the hidden ones for you - loop from `0` to `Choice Count() - 1` and you only ever build buttons for choices the player can actually take.
 
 ### 6. Cooldown-gated rumours
 
@@ -499,6 +502,150 @@ On enter throne room
 ```
 
 Pair a specific storylet's id with **Has Been Played** when you want tight control over a single beat rather than a pooled Draw. (Setting **Set Max Plays** `1` achieves the same automatically, without the manual check.)
+
+### 19. A choice that carries its own consequence
+
+**Scenario:** Paying the gatekeeper should cost 10 gold and open the gate. Instead of a per-choice branch in On Choice Made, let the choice apply its own outcome. (This is the Construct 3 guide's "gate toll" storylet, ported to the effects verbs.)
+
+```
+On Ready
+  -> Storylets: Define Storylet         "gate", "The Gatekeeper", "You must pay the toll to pass."
+  -> Storylets: Add Choice              "gate", "pay", "Pay 10 gold."
+  -> Storylets: Add Choice Requirement  "gate", "pay", "gold", ">=", 10
+  -> Storylets: Add Choice Effect       "gate", "pay", "Decrement by", "gold", 10
+  -> Storylets: Add Choice Effect       "gate", "pay", "Set to", "gate_open", 1
+  -> Storylets: Add Choice              "gate", "refuse", "I refuse."
+
+On choice button pressed
+  -> Storylets: Choose  button.choice_id
+
+On Choice Made
+  -> Hide dialogue panel
+```
+
+**Choose** applies the chosen option's effects to your qualities the instant it resolves - `gold` drops by 10 and `gate_open` becomes 1 - so On Choice Made is left to do only presentation work. No branch per choice id.
+
+### 20. Show the cost on the button before the player commits
+
+**Scenario:** The pay button should read "Pay 10 gold.  (gold -10, gate_open = 1)" so the outcome is visible up front. (The Construct 3 guide's effect-forecast pattern.)
+
+```
+On Storylet Drawn
+  For "i" from 0 to Storylets.Choice Count() - 1
+    -> Set choice button text  Storylets.Choice Text At(i)
+        + "  (" + Storylets.Forecast Choice Effects(Storylets.Active Id(), Storylets.Choice Id At(i)) + ")"
+```
+
+**Forecast Choice Effects** reads a choice's effects as a plain string without applying them, so it is safe to call while rendering. Use **Forecast Storylet Effects** the same way to preview a whole beat's on-draw consequences.
+
+### 21. A speaker and portrait per beat (meta)
+
+**Scenario:** Each storylet knows who is talking and which portrait to show, without the engine caring what those mean. (The Construct 3 guide's `meta` object.)
+
+```
+On Ready
+  -> Storylets: Define Storylet  "rumour", "", "Have you heard about the old mine?"
+  -> Storylets: Add Meta         "rumour", "speaker", "Merchant"
+  -> Storylets: Add Meta         "rumour", "portrait", "merchant_smile"
+
+On Storylet Drawn
+  -> Set speaker label  Storylets.Active Meta("speaker")
+  -> Set portrait       Storylets.Active Meta("portrait")
+  -> Show text          Storylets.Active Body()
+```
+
+**Add Meta** attaches arbitrary data the engine never interprets; **Active Meta** reads it back on the drawn storylet (and **Storylet Meta** / **Available Meta** read it without drawing).
+
+### 22. Can the player afford it? (key vs key)
+
+**Scenario:** A "buy" beat should only appear when the player's gold covers the current shop price - a moving target, not a fixed number. (The Construct 3 guide's `valueIsKey` comparison.)
+
+```
+On Ready
+  -> Storylets: Define Storylet              "afford", "The Trader", "You can afford the rare charm."
+  -> Storylets: Add Requirement (Key vs Key) "afford", "gold", ">=", "shop_price"
+
+On price changes
+  -> Storylets: Set Quality  "shop_price", current_price
+```
+
+**Add Requirement (Key vs Key)** compares `gold` against the live value of `shop_price` instead of a literal, so the same storylet reacts as either stat moves - no re-defining the rule when the price changes.
+
+### 23. A rare flavour line (chance)
+
+**Scenario:** Among the common ambient lines, a rare one should surface only about a quarter of the time it is eligible. (The Construct 3 guide's `chance` operator.)
+
+```
+On Ready
+  -> Storylets: Define Storylet          "rare_sighting", "", "A shooting star streaks overhead."
+  -> Storylets: Add Chance Requirement   "rare_sighting", 25
+
+On look up
+  -> Storylets: Draw Weighted
+```
+
+**Add Chance Requirement** re-rolls on every Evaluate/Draw, so `rare_sighting` is eligible roughly 25% of the time and blends into the pool the rest.
+
+### 24. Never the same line twice in a row (anti-repeat)
+
+**Scenario:** Ambient barks should feel varied - a line should not come back until a few others have played. (The Construct 3 guide's recency / `not_played_within` gate.)
+
+```
+On Ready
+  -> Storylets: Define Storylet         "bark_a", "", "Quiet day."
+  -> Storylets: Add Recency Requirement "bark_a", "was NOT drawn recently", 3
+  -> Storylets: Define Storylet         "bark_b", "", "Watch the skies."
+  -> Storylets: Add Recency Requirement "bark_b", "was NOT drawn recently", 3
+
+On idle tick
+  -> Storylets: Draw Weighted
+```
+
+**Add Recency Requirement** reads the draw history: a line is ineligible while it sits among the last 3 storylets drawn, so the pool rotates instead of repeating. The history saves and loads with the rest of the state.
+
+### 25. Escalating puzzle hints
+
+**Scenario:** A stuck player should see gentle nudges first and stronger guidance only after repeated failures - and never the same hint twice running. (The Construct 3 guide's tiered hint system.)
+
+```
+On Ready
+  -> Storylets: Define Storylet         "hint_soft", "Hint", "Have you looked behind the waterfall?"
+  -> Storylets: Add Requirement         "hint_soft", "fails", ">=", 2
+  -> Storylets: Add Recency Requirement "hint_soft", "was NOT drawn recently", 1
+  -> Storylets: Define Storylet         "hint_hard", "Hint", "The lever is behind the waterfall - pull it twice."
+  -> Storylets: Add Requirement         "hint_hard", "fails", ">=", 5
+  -> Storylets: Set Storylet Weight     "hint_hard", 5
+
+On puzzle failed
+  -> Storylets: Increment Quality  "fails", 1
+
+On hint requested
+  -> Storylets: Draw
+```
+
+Requirements gate each tier by the `fails` counter, the heavier weight makes the strong hint win once it unlocks, and the recency gate keeps the soft hint from repeating back to back.
+
+### 26. An achievement message that is always accurate (meta + effect)
+
+**Scenario:** Unlocking an achievement fires a storylet whose prerequisite confirms the exact triggering condition, carries its display data as meta, and flags itself as awarded so it never fires twice. (The Construct 3 guide's "achievement unlocks with context".)
+
+```
+On Ready
+  -> Storylets: Define Storylet  "ach_marathon", "Achievement Unlocked", "You ran 42 km in a single session."
+  -> Storylets: Add Requirement  "ach_marathon", "distance_km", ">=", 42
+  -> Storylets: Add Requirement  "ach_marathon", "ach_marathon_awarded", "!=", 1
+  -> Storylets: Add Meta         "ach_marathon", "icon", "medal_gold"
+  -> Storylets: Add Effect       "ach_marathon", "Set to", "ach_marathon_awarded", 1
+
+On distance changes
+  -> Storylets: Set Quality  "distance_km", total_km
+  -> Storylets: Draw
+
+On Storylet Drawn
+  -> Show achievement toast  Storylets.Active Title(), Storylets.Active Meta("icon")
+```
+
+The `awarded` prerequisite plus the on-draw **Add Effect** that sets it make this a one-shot that is impossible to double-fire even without **Set Max Plays**, and the meta carries the icon so the toast is self-contained.
 
 ### Other use cases
 
