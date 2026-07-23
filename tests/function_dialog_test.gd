@@ -10,18 +10,21 @@ extends RefCounted
 static func run() -> bool:
 	var ok: bool = true
 
-	# --- dialog build_function_data: Usable-as → return type, params, guards ---
+	# --- dialog build_function_data: kind → return type ---
 	var parent: Node = Node.new()
 	var dialog: EventSheetFunctionDialog = EventSheetFunctionDialog.new()
 	dialog.init_dialog(parent)
 	dialog._name_edit.text = "compute_score"
-	dialog._description_edit.text = "Computes the score."
 	dialog._usable_option.select(2)        # Expression
 	dialog._value_type_option.select(0)    # float
 	var data: Dictionary = dialog.build_function_data()
 	ok = _check("no validation problem", str(data.get("problem", "")), "") and ok
 	ok = _check("Expression maps to a float return", int(data.get("return_type")), TYPE_FLOAT) and ok
-	ok = _check("function description captured", str(data.get("description")), "Computes the score.") and ok
+	# A NEW function carries no picker metadata - description / display name / category are edited on
+	# the row afterwards, so the payload reports them empty (nothing extra is emitted).
+	ok = _check("a new function has no picker description", str(data.get("description")), "") and ok
+	ok = _check("a new function has no display name", str(data.get("ace_display_name")), "") and ok
+	ok = _check("a new function has no category", str(data.get("ace_category")), "") and ok
 	dialog._usable_option.select(0)
 	ok = _check("Action maps to void", int(dialog.build_function_data().get("return_type")), TYPE_NIL) and ok
 	dialog._usable_option.select(1)

@@ -1245,7 +1245,11 @@ static func run() -> bool:
     all_passed = _check("right-clicking empty space opens empty context menu", dock._empty_space_context_menu.visible, true) and all_passed
     all_passed = _check("empty context menu first item is new event", dock._empty_space_context_menu.get_item_text(0), "New Event") and all_passed
     all_passed = _check("empty context menu second item is new condition", dock._empty_space_context_menu.get_item_text(1), "New Condition") and all_passed
-    all_passed = _check("empty context menu third item is add variable", dock._empty_space_context_menu.get_item_text(2), "Add New Variable") and all_passed
+    all_passed = _check("empty context menu third item is the New Function submenu", dock._empty_space_context_menu.get_item_text(2), "New Function") and all_passed
+    all_passed = _check("the New Function submenu offers a plain helper + the three ACE kinds",
+        [dock._new_function_submenu.get_item_text(0), dock._new_function_submenu.get_item_text(1), dock._new_function_submenu.get_item_text(2), dock._new_function_submenu.get_item_text(3)],
+        ["Function", "Action", "Condition", "Expression"]) and all_passed
+    all_passed = _check("empty context menu fourth item is add variable", dock._empty_space_context_menu.get_item_text(3), "Add New Variable") and all_passed
     dock._on_empty_space_context_menu_id_pressed(EventSheetDock.EMPTY_MENU_NEW_EVENT)
     # "New Event" routes through the same ACE picker as the toolbar / double-click (new-event mode) now,
     # instead of dropping a blank event - so the event count holds until the user picks something.

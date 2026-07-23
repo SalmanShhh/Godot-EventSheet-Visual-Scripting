@@ -35,7 +35,7 @@ func _on_frame() -> void:
 		_func_dialog.init_dialog(root)
 		_func_dialog.open()
 		_func_dialog._expose_check.button_pressed = true
-		_func_dialog._expose_card.visible = true
+		_func_dialog._preview_card.visible = true
 		return
 	if _frames == 8 and _func_dialog != null:
 		var img: Image = _func_dialog._dialog.get_texture().get_image()

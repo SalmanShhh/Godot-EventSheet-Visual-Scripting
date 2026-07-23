@@ -4,7 +4,7 @@ In an event sheet, a **verb** is a reusable function you define once and call an
 
 The word **ACE** is the plugin's name for the three things a sheet's picker can offer you: an **Action** (does something), a **Condition** (a yes/no test), and an **Expression** (returns a value). The ACE Studio lets you write any one of these as a verb, and optionally **publish** it so that every other sheet in your project can pick it. Everything you build here compiles to a plain GDScript function - the ACE Studio is a friendly front end, not a runtime layer that sits under your game.
 
-![The ACE Studio: Name, Doc comment and Inspector button rows, three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb with its Ships-as GDScript signature, and the Publish-to-the-picker tick revealing Description, Display name and Picker category.](images/ace-studio.png)
+![The ACE Studio: Name, Doc comment and Inspector button rows, three cards headlining Action / Condition / Expression with a plain-language line each, a live picker preview of the published function with its Ships-as GDScript signature, and a plain Publish-to-the-picker checkbox.](images/ace-studio.png)
 
 ## Table of Contents
 
@@ -21,15 +21,16 @@ The word **ACE** is the plugin's name for the three things a sheet's picker can 
 
 ## 1. Opening the ACE Studio
 
-There are three ways to open the ACE Studio to author a brand-new verb:
+There are several ways to open the ACE Studio to author a brand-new function:
 
 - The **Add** menu in the event sheet dock has a **"Function..."** entry.
 - There is an **add-function button** in the sheet itself.
 - It is reachable from the **Command Palette** (Ctrl+P).
+- **Right-click empty canvas ▸ New Function** offers a submenu: **Function** (a plain, unpublished helper), or **Action** / **Condition** / **Expression** - the last three open the dialog with that kind's card already picked and **Publish to the picker** already ticked, so "I want a new Action" is one gesture.
 
-All three open the same **"Define a Verb"** dialog with empty fields, ready for a new verb.
+They all open the same **"New Function"** dialog, ready for a new function.
 
-To **edit an existing verb**, double-click its **Define block** on the sheet canvas. The dialog reopens pre-filled in edit mode: its title becomes **"Edit Verb - <name>"** and the confirm button becomes **"Save Changes"** instead of "Create Function". Editing lets you rename the verb, change its kind, or change how it publishes - all without touching code. Its parameters are edited on the row itself, one cell at a time (see section 4).
+To **edit an existing function**, double-click its **Define block** on the sheet canvas. The dialog reopens pre-filled in edit mode: its title becomes **"Edit Function - <name>"** and the confirm button becomes **"Save Changes"** instead of "Create Function". Editing lets you rename it, change its kind, or change whether it publishes - all without touching code. Its parameters and its picker details (display name, description, category) are edited on the row itself, one cell at a time (see sections 4 and 5).
 
 ---
 
@@ -41,11 +42,11 @@ The first fields you fill in describe the verb itself.
 - **Doc comment** (optional) - Godot's own documentation for the verb, written above the function as `##` lines. It shows up in the editor's built-in help and when hovering the verb. BBCode like `[b]bold[/b]` is allowed.
 - **Inspector button** (optional) - name a label here and the verb also becomes a one-click button on the node's Inspector panel, handy for editor chores. Leave it empty (the usual case) and no button appears.
 
-Next comes **"What kind of verb is this?"** - three plain-language cards. Click one:
+Next comes **"Action, Condition, or Expression?"** - three cards, each headlining the ACE kind with a plain-language line and examples underneath. Click one:
 
-- **"Does something"** (an **Action**, its glyph is a play triangle). Examples: Take Damage, Heal, Knock Back. An Action is a setter and returns nothing.
-- **"Is it true?"** (a **Condition**, its glyph is a question mark). Examples: Is Dead, Is Full Health. A Condition answers yes or no.
-- **"A value"** (an **Expression**, its glyph is `fx`). Examples: Health %, Remaining Shields. An Expression is a getter and returns a value.
+- **Action** - *Does something.* Examples: Take Damage, Heal, Knock Back. An Action is a setter and returns nothing. (Its glyph is a play triangle.)
+- **Condition** - *Is it true?* Examples: Is Dead, Is Full Health. A Condition answers yes or no. (Its glyph is a question mark.)
+- **Expression** - *A value.* Examples: Health %, Remaining Shields. An Expression is a getter and returns a value. (Its glyph is `fx`.)
 
 The card you pick quietly sets the return type behind the scenes: nothing for an Action, yes/no for a Condition, and the value type you choose for an Expression. You never have to type a return type yourself.
 
@@ -65,7 +66,7 @@ If you pick an Action or a Condition, this dropdown stays hidden, because their 
 
 ## 3. The Live Preview and the Ships-as Line
 
-![A filled-in ACE Studio: a Take Damage action with its description, the live preview showing the Action badge and display name, the Ships-as line reading func take_damage() -> void, and the publish card set to the Combat category](images/ace-studio-example.png)
+![A filled-in ACE Studio: a Take Damage function with its doc comment, the three kind cards with Action selected, the live preview showing the Action badge and the Ships-as line reading func take_damage() -> void, and the Publish-to-the-picker checkbox ticked](images/ace-studio-example.png)
 
 The card labelled **"This is what other people will see"** is a live preview that updates on every keystroke. It is there so you can shape a clear, picker-ready verb before you commit. It shows:
 
@@ -92,17 +93,19 @@ An optional default lets a caller skip the parameter. One rule carries over from
 
 ## 5. Publishing to the Picker
 
-By default a verb is a private helper for the sheet you are on. To make it reusable across your whole project, tick the checkbox **"Publish to the picker (other sheets can use it)"**.
+By default a function is a private helper for the sheet you are on. To make it reusable across your whole project, tick the checkbox **"Publish to the picker (other sheets can use it)"**. That is the whole control - a plain checkbox.
 
-Ticking it reveals three more fields:
+The three details that decide how a published function READS in the picker are edited **on its own row**, not in this dialog (the same idea as its parameters):
 
-- **Description** - what the verb does, shown beside it in the picker so other people (or future you) know what it is for.
-- **Display name** - the friendly name shown in the picker. It defaults from the verb's name, but you can polish it.
-- **Picker category** - the section the verb is filed under in the picker, for example `Combat`.
+- **Display name** - the friendly name shown in the picker. Double-click the name on the function's row to change it; clear it to fall back to the function name.
+- **Description** - what it does, shown beside it in the picker. Double-click the caption above the row (an unpublished-yet function shows a faint **"+ describe this function"** prompt).
+- **Picker category** - the section it is filed under, for example `Combat`. Double-click the muted category chip on the right of the row (an unset one shows **"+ category"**).
 
-Once published, the verb appears in **every** sheet's picker as the kind you chose - an Action, a Condition, or an Expression - exactly as the live preview showed it. Publishing is how a verb graduates from a one-sheet helper into shared project vocabulary that your whole team can reach for.
+Each maps to a `## @ace_name` / `## @ace_description` / `## @ace_category` line in the generated GDScript, so a programmer can read or set them there too.
 
-Only publish the verbs you actually mean to reuse. A verb that is only useful inside one sheet is better left unpublished, so the picker stays clean and full of genuinely reusable choices.
+Once published, the function appears in **every** sheet's picker as the kind you chose - an Action, a Condition, or an Expression - exactly as the live preview showed it. Publishing is how a function graduates from a one-sheet helper into shared project vocabulary that your whole team can reach for.
+
+Only publish the functions you actually mean to reuse. One that is only useful inside a single sheet is better left unpublished, so the picker stays clean and full of genuinely reusable choices.
 
 ---
 

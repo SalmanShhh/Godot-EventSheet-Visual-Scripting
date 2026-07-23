@@ -83,6 +83,12 @@ const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
 const EMPTY_MENU_INSERT_SNIPPET := 4
+# The "New Function" submenu on the empty-space menu. Its items open the function dialog pre-set:
+# a plain (unpublished) helper, or a published Action / Condition / Expression.
+const NEW_FUNCTION_MENU_PLAIN := 0
+const NEW_FUNCTION_MENU_ACTION := 1
+const NEW_FUNCTION_MENU_CONDITION := 2
+const NEW_FUNCTION_MENU_EXPRESSION := 3
 const ACE_DRAG_KINDS := ["condition", "action"]
 const SIDE_PANEL_MIN_WIDTH := 160.0
 const SIDE_PANEL_MAX_WIDTH := 220.0
@@ -210,6 +216,7 @@ var _row_insert_submenu: PopupMenu = null
 var _row_more_submenu: PopupMenu = null
 var _variable_context_menu: PopupMenu = null
 var _empty_space_context_menu: PopupMenu = null
+var _new_function_submenu: PopupMenu = null
 var _context_row: EventRowData = null
 var _context_hit: Dictionary = {}
 ## Simple mode (progressive disclosure for artist-first / first-time users): trims the
@@ -3034,6 +3041,20 @@ func _on_empty_space_context_menu_id_pressed(id: int) -> void:
 			_open_insert_snippet()
 
 
+## The "New Function ▸" submenu: a plain helper, or a published Action / Condition / Expression - each
+## opens the function dialog pre-configured, so "New Action" lands on the Action card with Publish ticked.
+func _on_new_function_submenu_id_pressed(id: int) -> void:
+	match id:
+		NEW_FUNCTION_MENU_PLAIN:
+			_function_dialog_glue._open_function_dialog_new("", false)
+		NEW_FUNCTION_MENU_ACTION:
+			_function_dialog_glue._open_function_dialog_new("action", true)
+		NEW_FUNCTION_MENU_CONDITION:
+			_function_dialog_glue._open_function_dialog_new("condition", true)
+		NEW_FUNCTION_MENU_EXPRESSION:
+			_function_dialog_glue._open_function_dialog_new("expression", true)
+
+
 # Context-menu popup + per-click configuration live in EventSheetContextMenus (dock/context_menus.gd).
 # Thin delegates: the viewport context-menu sites + tests still call _show_popup_menu / _configure_context_menu
 # on the dock by name. _configure_context_menu reads live dock state (_context_row, _context_hit,
@@ -3639,6 +3660,32 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 			"event_comment":
 				if row_data.source_resource is EventRow:
 					(row_data.source_resource as EventRow).comment = new_value
+					return true
+			# A published verb's picker metadata, edited inline on its row. The empty string is a valid
+			# new value (it clears the field, so the row and compiler fall back to the function name / no
+			# annotation). Each case compares against the CURRENT field, not old_value, because an empty
+			# field draws a "+ ..." placeholder whose span text is not the value - so the outer
+			# old==new guard cannot see a genuine no-op, and a spurious change would rewrite an opened .gd.
+			"verb_display_name":
+				if row_data.source_resource is EventFunction:
+					var fn_name: EventFunction = row_data.source_resource as EventFunction
+					if fn_name.ace_display_name == new_value.strip_edges():
+						return false
+					fn_name.ace_display_name = new_value.strip_edges()
+					return true
+			"verb_description":
+				if row_data.source_resource is EventFunction:
+					var fn_desc: EventFunction = row_data.source_resource as EventFunction
+					if fn_desc.description == new_value.strip_edges():
+						return false
+					fn_desc.description = new_value.strip_edges()
+					return true
+			"verb_category":
+				if row_data.source_resource is EventFunction:
+					var fn_cat: EventFunction = row_data.source_resource as EventFunction
+					if fn_cat.ace_category == new_value.strip_edges():
+						return false
+					fn_cat.ace_category = new_value.strip_edges()
 					return true
 		return false
 	)

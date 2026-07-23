@@ -56,6 +56,16 @@ func _open_function_dialog() -> void:
 	_function_dialog.open()
 
 
+## The right-click "New Function ▸" submenu entry point: opens the dialog pre-set to a kind and publish
+## state. `kind` is "" / "action" / "condition" / "expression"; `publish` pre-ticks the picker checkbox.
+func _open_function_dialog_new(kind: String, publish: bool) -> void:
+	if not _dock._ensure_sheet_for_editing():
+		return
+	_ensure_dialog()
+	_function_dialog.set_tool_mode_context(_dock._current_sheet != null and _dock._current_sheet.tool_mode)
+	_function_dialog.open(kind, publish)
+
+
 ## Double-clicking a Define block on the canvas edits that verb in the same dialog (edit mode:
 ## pre-filled fields, the apply updates the existing function instead of appending a new one).
 func _open_function_dialog_for(event_function: Resource) -> void:
@@ -251,12 +261,11 @@ func _apply_function_edit(data: Dictionary) -> void:
 			param.gdscript_default = str(param_entry.get("default", ""))
 			param.description = str(param_entry.get("description", ""))
 			new_params.append(param)
-		# build_function_data auto-defaults an empty display name to name.capitalize(); when the stored
-		# value is empty, that default is NOT an edit - normalize it back so an untouched open-and-OK
-		# compares equal (and stays byte-safe for reverse-lifted helpers).
+		# The display name / description / category are carried through the dialog untouched (they are
+		# edited inline on the row now), so the payload already reports the function's own stored values -
+		# no capitalize() fabrication to normalize back. An untouched open-and-save therefore fingerprints
+		# equal on its own.
 		var incoming_display: String = str(data.get("ace_display_name", ""))
-		if target.ace_display_name.is_empty() and incoming_display == str(data.get("name")).capitalize():
-			incoming_display = ""
 		if _function_fingerprint(target.function_name, target.return_type, target.return_type_name,
 				target.description, target.expose_as_ace, target.ace_display_name, target.ace_category, target.params, target.doc_comment, target.tool_button_label) \
 				== _function_fingerprint(str(data.get("name")), int(data.get("return_type", TYPE_NIL)),

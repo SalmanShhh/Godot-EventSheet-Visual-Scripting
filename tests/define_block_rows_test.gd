@@ -48,9 +48,12 @@ static func run() -> bool:
 	var internal_row: EventRowData = define_rows[3] if define_rows.size() > 3 else null
 	ok = _check("action badge", _span_text(action_row, 0), "Action") and ok
 	ok = _check("display name prefers @ace_name", _span_text(action_row, 1), "Take Damage") and ok
-	# The category is NOT on the row: a pack files every verb under the same one, so the chip repeated
-	# the identical word down the whole sheet. It reads in the hover instead.
-	ok = _check("the category is not repeated on every row", _row_has_span_text(action_row, "Health"), false) and ok
+	# The display name is inline-editable on the row (it maps to @ace_name).
+	ok = _check("the display name is inline-editable", _span_edit_kind(action_row, "Take Damage"), "verb_display_name") and ok
+	# The category is now an EDITABLE chip on a published verb of an authored sheet - a pack author can
+	# retitle its picker section straight from the row. It stays muted (an unset one prompts "+ category").
+	ok = _check("the category shows as a chip on a published verb", _row_has_span_text(action_row, "Health"), true) and ok
+	ok = _check("the category chip is inline-editable", _span_edit_kind(action_row, "Health"), "verb_category") and ok
 	ok = _check("a void action gives nothing back (no return chip)", _row_has_span_text(condition_row, "gives back true/false") and not _row_has_span_text(action_row, "gives back"), true) and ok
 	ok = _check("condition badge", _span_text(condition_row, 0), "Condition") and ok
 	ok = _check("condition name falls back to the humanized function name", _span_text(condition_row, 1), "Is Dead") and ok
@@ -123,12 +126,39 @@ static func run() -> bool:
 	ok = _check("a described verb grows a caption row", note_row != null, true) and ok
 	ok = _check("the caption shows the authored @ace_description",
 		_span_text(note_row, 0), "Restores health, capped at the maximum.") and ok
-	ok = _check("the caption is inert (nothing to edit / drag / delete)",
-		note_row != null and note_row.source_resource == null, true) and ok
+	# The caption is now inline-editable as the description on an authored sheet: it carries the
+	# EventFunction as its source (so the span-edit dispatch can reach it) and the verb_description
+	# edit_kind. Deleting it is still a no-op - a function source is not locatable in sheet.events.
+	ok = _check("the caption is inline-editable as the description",
+		note_row != null and note_row.source_resource is EventFunction, true) and ok
+	ok = _check("the caption's edit routes to the description",
+		_span_edit_kind(note_row, "Restores health, capped at the maximum."), "verb_description") and ok
 	ok = _check("the caption is welded to the verb below it (no block gap between them)",
 		note_row != null and note_row.attached_below, true) and ok
-	ok = _check("an undescribed verb grows NO caption",
-		_find_row_by_uid_prefix(described_view, "verb_note_silent") == null, true) and ok
+	# An undescribed verb on an authored sheet grows a faint "+ describe this function" prompt (the empty
+	# state of the editable caption), so a pack author can add a description straight from the row.
+	var silent_caption: EventRowData = _find_row_by_uid_prefix(described_view, "verb_note_silent")
+	ok = _check("an undescribed verb grows a '+ describe' prompt", silent_caption != null, true) and ok
+	ok = _check("the prompt is the editable description placeholder",
+		_span_edit_kind(silent_caption, _span_text(silent_caption, 0)), "verb_description") and ok
+
+	# A verb DOCUMENTED with a ## doc comment but no @ace_description: the caption shows the doc line, yet
+	# stays inline-editable as the description - otherwise (the dialog having no Description field) there
+	# would be no way to author @ace_description for a documented verb at all.
+	var documented_sheet: EventSheetResource = EventSheetResource.new()
+	documented_sheet.host_class = "Node2D"
+	var documented_fn: EventFunction = _make_function("charge", TYPE_NIL, true, "Charge", "")
+	documented_fn.doc_comment = "Builds up charge before releasing it."
+	documented_sheet.functions.append(documented_fn)
+	var documented_dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
+	documented_dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
+	documented_dock.setup(documented_sheet)
+	var doc_caption: EventRowData = _find_row_by_uid_prefix(documented_dock._active_view(), "verb_note_charge")
+	ok = _check("a documented verb's caption shows the doc line",
+		_span_text(doc_caption, 0), "Builds up charge before releasing it.") and ok
+	ok = _check("that caption is still editable as the description (only place to author @ace_description)",
+		_span_edit_kind(doc_caption, "Builds up charge before releasing it."), "verb_description") and ok
+	documented_dock.free()
 	ok = _check("captions never collide with the define_fn_ prefix (still one Define row per verb)",
 		_find_rows_by_uid_prefix(described_view, "define_fn_").size(), 2) and ok
 	ok = _check("the caption sits directly ABOVE its verb",
@@ -526,6 +556,16 @@ static func _row_has_span_text(row_data: EventRowData, needle: String) -> bool:
 		if str(span.text) == needle:
 			return true
 	return false
+
+
+## The edit_kind of the span whose text matches, or "" - so a test can pin that a cell is inline-editable.
+static func _span_edit_kind(row_data: EventRowData, needle: String) -> String:
+	if row_data == null:
+		return ""
+	for span: SemanticSpan in row_data.spans:
+		if str(span.text) == needle and span.metadata is Dictionary:
+			return str((span.metadata as Dictionary).get("edit_kind", ""))
+	return ""
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

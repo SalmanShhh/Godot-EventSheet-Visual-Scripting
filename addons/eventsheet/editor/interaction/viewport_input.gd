@@ -241,8 +241,26 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 				_viewport.signal_edit_requested.emit(row_data.source_resource)
 				_viewport.accept_event()
 				return
-			# Define blocks (published verbs) open the ACE Studio on that function.
+			# Define blocks (published verbs) and their description caption. Which double-click does what
+			# depends on the CELL: a parameter cell opens the focused param dialog, an inline-editable
+			# metadata cell (the name, the category chip, or the description caption) edits that field in
+			# place, and anywhere else on the row opens the whole Edit Function dialog. Checked BEFORE the
+			# generic open-the-dialog fallthrough, which would otherwise swallow every cell on the row.
 			if row_data != null and row_data.source_resource is EventFunction:
+				if str(double_click_meta.get("kind", "")) in ["verb_param", "verb_param_add"]:
+					if _viewport._maybe_request_ace_edit(hit, row_index):
+						_viewport.accept_event()
+						return
+				if str(double_click_meta.get("edit_kind", "")) in ["verb_display_name", "verb_description", "verb_category"]:
+					_viewport._begin_edit(row_index, span_index)
+					_viewport.accept_event()
+					return
+				# The description caption is a COMMENT row whose whole body is the description, so a
+				# double-click anywhere on it (not only the exact span) edits the description.
+				if row_data.row_type == EventRowData.RowType.COMMENT:
+					_viewport._begin_edit(row_index, span_index)
+					_viewport.accept_event()
+					return
 				_viewport.function_edit_requested.emit(row_data.source_resource)
 				_viewport.accept_event()
 				return

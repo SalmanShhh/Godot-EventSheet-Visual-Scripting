@@ -94,13 +94,13 @@ Inside the loop body, **Current Loop Item** is the iterator; **Break Loop** / **
 
 Add a **Function** (a name and what kind of verb it is). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to. Its parameters are added afterwards from the Define block's own cells, not in the dialog. The "Using the ACE Studio" guide walks through it field by field.
 
-<img src="images/ace-studio.png" alt="The ACE Studio: Name, Doc comment and Inspector button rows, three verb-kind cards (Does something / Is it true? / A value), a live picker preview of the published verb with its Ships-as GDScript signature, and the Publish-to-the-picker tick revealing Description, Display name and Picker category." width="580">
+<img src="images/ace-studio.png" alt="The ACE Studio: Name, Doc comment and Inspector button rows, three cards headlining Action / Condition / Expression with a plain-language line each, a live picker preview of the published function with its Ships-as GDScript signature, and a plain Publish-to-the-picker checkbox." width="580">
 
 - **Does something** (returns nothing) → an **Action** (e.g. `jump()`, `start_timer(seconds)`)
 - **Is it true?** (returns a bool) → a **Condition** (e.g. `is_in_state(name)`)
 - **A value** (returns anything else) → an **Expression** (e.g. `health_percent()`)
 
-Tick **"Publish to the picker"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary. Ticking it reveals the three fields that decide how it reads there: Description, Display name, and Picker category.
+Tick **"Publish to the picker"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary. The three details that decide how it reads there - its display name, description, and picker category - are edited inline on its own row (double-click the name, the caption above it, or the muted category chip), not in the dialog.
 
 Each published verb reads on the canvas the same way every other event row does: a two-lane row with the **kind badge and the verb's name on the left**, and on the right what it **hands back** - `gives back <type>` for a Condition or Expression, plus markers like `waits`, `static` or `internal`. The `## @ace_description(...)` you wrote sits directly above it as a caption. It is an ordinary event row, drawn like any other - the kind badge is the cue, not a colour wash. (If you WANT each kind colour-coded, `verb_row_tint_strength` in the theme editor turns the wash back on.)
 

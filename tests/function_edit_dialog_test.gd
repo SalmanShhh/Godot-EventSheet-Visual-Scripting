@@ -48,8 +48,12 @@ static func run() -> bool:
 	ok = _check("name prefilled", dialog._name_edit.text, "heal") and ok
 	ok = _check("Action card pre-selected for a void verb", dialog._usable_option.selected, 0) and ok
 	ok = _check("expose prefilled", dialog._expose_check.button_pressed, true) and ok
-	ok = _check("display name prefilled", dialog._expose_name_edit.text, "Heal") and ok
-	ok = _check("category prefilled", dialog._expose_category_edit.text, "Health") and ok
+	# The picker metadata is edited inline on the row now, not shown as fields - but the dialog must
+	# CARRY the function's existing values so an untouched save re-emits them byte-identically.
+	ok = _check("display name carried through", dialog._carried_display_name, "Heal") and ok
+	ok = _check("category carried through", dialog._carried_category, "Health") and ok
+	ok = _check("the payload carries the display name + category",
+		str(dialog.build_function_data().get("ace_display_name")) + "|" + str(dialog.build_function_data().get("ace_category")), "Heal|Health") and ok
 	# The dialog no longer EDITS parameters, but it must still carry the verb's existing ones through
 	# untouched - the apply assigns target.params wholesale, so reporting an empty list here would
 	# silently delete every parameter of any verb someone opened and saved.
@@ -91,11 +95,13 @@ static func run() -> bool:
 		untouched.lifted_unannotated if untouched != null else false, true) and ok
 
 	# ── A real change on the helper clears the suppression flag (it's authored now) ──
+	# The description is edited on the row now, so the dialog's "real change" here is the doc comment -
+	# still a field the dialog owns, and still part of the no-op fingerprint.
 	glue._open_function_dialog_for(_live_fn(dock, "recalc_cache"))
-	dialog._description_edit.text = "Recomputes the cached pool totals."
+	dialog._doc_comment_edit.text = "Recomputes the cached pool totals."
 	dialog._on_confirmed()
 	var authored: EventFunction = _live_fn(dock, "recalc_cache")
-	ok = _check("description applied", authored.description if authored != null else "", "Recomputes the cached pool totals.") and ok
+	ok = _check("doc comment applied", authored.doc_comment if authored != null else "", "Recomputes the cached pool totals.") and ok
 	ok = _check("a real edit clears lifted_unannotated", authored.lifted_unannotated if authored != null else true, false) and ok
 
 	dock.free()

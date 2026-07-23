@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+### Changed - the verb dialog speaks Action / Condition / Expression, and its picker details move to the row
+
+- **The three kind cards headline the ACE kind.** "What kind of verb is this?" led with plain-language
+  cards ("Does something") and buried the word Action underneath; it now reads "Action, Condition, or
+  Expression?" with the ACE kind as each card's headline and the plain-language line and examples as its
+  subtitle. The dialog no longer calls anything a "verb": it is "New Function" / "Edit Function - <name>".
+- **Right-click empty canvas ▸ New Function** offers a submenu - **Function** (a plain unpublished
+  helper), or **Action** / **Condition** / **Expression** (each opening the dialog with that card picked
+  and Publish already ticked). "I want a new Action" is one gesture.
+- **The Description / Display name / Picker category fields left the dialog.** Publishing is now a plain
+  checkbox; those three details are edited **inline on the function's own row** - double-click the name
+  (display name), the caption above it (description, with a faint "+ describe this function" when empty),
+  or the muted category chip on the right ("+ category" when unset). Each maps to a `## @ace_name` /
+  `## @ace_description` / `## @ace_category` line, so a programmer can still set them in the GDScript.
+  The dialog carries a function's existing values through untouched, so an open-and-save stays
+  byte-identical, and the inline edits are gated to non-read-only sheets.
+
+### Fixed - a published verb's parameter cells open their editor again
+
+- Double-clicking a parameter cell on a Define row opened the whole verb dialog instead of the focused
+  Edit Parameter dialog: the "open the dialog" branch fired for the whole row before the cell-specific
+  routing. The EventFunction double-click is now cell-aware - a parameter cell opens the param dialog, a
+  metadata cell edits inline, and only the rest of the row opens the dialog.
+
 ### Added - reporting a bug is one click, from inside the editor
 
 - **Tools ▸ Report an Issue…** opens the plugin's issue tracker in your browser with a report

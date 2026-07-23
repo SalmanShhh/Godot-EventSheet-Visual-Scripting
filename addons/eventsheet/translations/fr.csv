@@ -633,3 +633,11 @@ Publishes the verb into pickers as the chosen kind.,Publie le verbe dans les sé
 Optional default value (a GDScript expression). Defaulted params must come last.,Valeur par défaut facultative (une expression GDScript). Les paramètres avec valeur par défaut doivent venir en dernier.
 Remove this parameter.,Supprimer ce paramètre.
 Remove this condition.,Supprimer cette condition.
+New Function,Nouvelle fonction
+"Action, Condition, or Expression?","Action, condition ou expression ?"
+Function,Fonction
+Edit Function…,Modifier la fonction…
++ describe this function,+ décrire cette fonction
++ category,+ catégorie
+Function names must be valid identifiers (e.g. take_damage).,Les noms de fonction doivent être des identifiants valides (p. ex. take_damage).
+Publish to the picker (other sheets can use it),Publier dans le sélecteur (d'autres feuilles peuvent l'utiliser)

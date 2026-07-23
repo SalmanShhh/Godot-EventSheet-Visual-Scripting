@@ -87,6 +87,16 @@ func build_all() -> void:
 	_dock._empty_space_context_menu.name = "EventSheetEmptySpaceContextMenu"
 	_dock._empty_space_context_menu.add_item("New Event", _dock.EMPTY_MENU_NEW_EVENT)
 	_dock._empty_space_context_menu.add_item("New Condition", _dock.EMPTY_MENU_NEW_CONDITION)
+	# New Function ▸ a plain helper, or a published Action / Condition / Expression. A submenu owns its
+	# own id_pressed, so its four items route through _on_new_function_submenu_id_pressed, not the parent.
+	_dock._new_function_submenu = PopupMenu.new()
+	_dock._new_function_submenu.name = "EventSheetNewFunctionSubmenu"
+	_dock._new_function_submenu.add_item("Function", _dock.NEW_FUNCTION_MENU_PLAIN)
+	_dock._new_function_submenu.add_item("Action", _dock.NEW_FUNCTION_MENU_ACTION)
+	_dock._new_function_submenu.add_item("Condition", _dock.NEW_FUNCTION_MENU_CONDITION)
+	_dock._new_function_submenu.add_item("Expression", _dock.NEW_FUNCTION_MENU_EXPRESSION)
+	_dock._new_function_submenu.id_pressed.connect(_dock._on_new_function_submenu_id_pressed)
+	_dock._empty_space_context_menu.add_submenu_node_item("New Function", _dock._new_function_submenu)
 	_dock._empty_space_context_menu.add_item("Add New Variable", _dock.EMPTY_MENU_ADD_VARIABLE)
 	_dock._empty_space_context_menu.add_separator()
 	# Inserting a saved snippet is "add to the sheet" - it belongs on the canvas menu,
@@ -139,7 +149,7 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	if verb_function != null:
 		# A published-verb (Define) header row: edit the verb, or add a parameter to it right here -
 		# the same right-click-to-add-an-argument gesture a visual event editor gives its functions.
-		menu.add_item("Edit Verb…", _dock.ROW_MENU_EDIT_FUNCTION)
+		menu.add_item("Edit Function…", _dock.ROW_MENU_EDIT_FUNCTION)
 		menu.add_item("Add Parameter", _dock.ROW_MENU_ADD_FUNCTION_PARAM)
 		# On an OPENED behaviour pack a verb's body is read-only by default (protecting the .gd round-trip);
 		# offer a per-function opt-in to edit THIS verb's body. Authored sheets edit every body already, and

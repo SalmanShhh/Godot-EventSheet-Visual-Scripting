@@ -29,19 +29,18 @@ func _on_frame() -> void:
 		_dialog.set_taken_names_provider(func() -> PackedStringArray: return PackedStringArray())
 		_dialog.init_dialog(root)
 		_dialog.open()
-		# A concrete Action verb: Take Damage, published to Combat. Its doc comment shows as the
-		# authoring detail a real verb carries; parameters live on the verb's row, not here.
+		# A concrete Action published to the picker. Its doc comment is the authoring detail a real
+		# function carries; parameters and the picker metadata (display name, category, description) live
+		# on the function's own row, not here.
 		_dialog._name_edit.text = "Take Damage"
 		_dialog._doc_comment_edit.text = "Subtract an amount of health and react to it."
-		_dialog._description_edit.text = "Deals damage to this object."
 		_dialog._expose_check.button_pressed = true
-		_dialog._expose_card.visible = true
-		_dialog._expose_category_edit.text = "Combat"
+		_dialog._preview_card.visible = true
 		_dialog._refresh_studio()
 		return
 	if _frames == 4 and _dialog != null:
-		# Snug the window to its content so the buttons sit under the publish card, not below a band of
-		# dead space (removing the two cards left the min height taller than the content needs).
+		# Snug the window to its content so the buttons sit under the preview, not below a band of dead
+		# space (removing the cards left the min height taller than the content needs).
 		_dialog._dialog.size = _dialog._dialog.get_contents_minimum_size()
 		return
 	if _frames == 10 and _dialog != null:

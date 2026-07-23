@@ -273,14 +273,26 @@ static func find_function_by_name(sheet: EventSheetResource, function_name: Stri
 ## COMMENT is deliberate: it is the only row type the metrics measure for word wrap, so a full-sentence
 ## blurb wraps instead of clipping. source_resource stays null so no edit / drag / delete reaches it.
 func _build_verb_note_row(event_function: EventFunction, role: String, indent: int) -> EventRowData:
-	var note: String = event_function.description.strip_edges()
+	# The caption is the verb's DESCRIPTION (@ace_description). On a read-only view it falls back to the
+	# doc comment's first line so a documented verb still reads; on an EDITABLE sheet the caption is the
+	# only place to author @ace_description (the dialog no longer has a Description field), so it must
+	# always be editable there - including for a verb that has a doc comment but no description yet. The
+	# doc comment still shows (as the caption's starting text), so editing it just promotes that line to
+	# the picker description; typing over it sets a distinct one.
+	var description: String = event_function.description.strip_edges()
+	var editable: bool = _verb_metadata_editable()
+	var note: String = description
 	if note.is_empty():
 		for line: String in event_function.doc_comment.split("\n"):
 			if not line.strip_edges().is_empty():
 				note = line.strip_edges()
 				break
-	if note.is_empty():
+	var placeholder: bool = note.is_empty()
+	# Nothing to show and nowhere to add it (a read-only preview) - no caption at all.
+	if placeholder and not editable:
 		return null
+	if placeholder:
+		note = EventSheetL10n.translate("+ describe this function")
 	var accent: Color = (_define_role_colors(role) as Array)[1]
 	# The caption's band is a quieter echo of its verb's wash (70% of it), so the pair reads as one
 	# block with the prose sitting behind the row it describes.
@@ -289,6 +301,20 @@ func _build_verb_note_row(event_function: EventFunction, role: String, indent: i
 		Color(accent.r, accent.g, accent.b, _verb_tint_strength() * 0.7)
 	)
 	row_data.disabled = not event_function.enabled
+	# Inline-edit the description on an authored sheet - double-click the caption. The caption is a
+	# COMMENT row whose source is the EventFunction: the delete path already treats a function source as
+	# non-locatable (it lives in sheet.functions), so the caption cannot be deleted, and a COMMENT row is
+	# never a drag zone - so pointing it at the function is safe.
+	if editable:
+		row_data.source_resource = event_function
+		var span: SemanticSpan = row_data.spans[0]
+		var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
+		meta["editable"] = true
+		meta["edit_kind"] = "verb_description"
+		if placeholder:
+			meta["edit_placeholder"] = true
+			meta["text_color"] = EventSheetPalette.TEXT_MUTED
+		span.metadata = meta
 	return row_data
 
 
@@ -376,6 +402,14 @@ func _define_role_colors(role: String) -> Array:
 func _verb_tint_strength() -> float:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	return event_style.verb_row_tint_strength if event_style != null else 0.0
+
+
+## True when a verb's picker metadata (name, description, category) may be edited inline on its row -
+## the same gate the "+ Add parameter" cell uses: any sheet that is not read-only. A read-only preview
+## edits nothing, so it must not grow affordances it cannot honour.
+func _verb_metadata_editable() -> bool:
+	var sheet: EventSheetResource = _viewport._sheet
+	return sheet != null and not sheet.read_only
 
 
 ## The [background, foreground] pair the ACTION-lane chips paint with, from the theme.
@@ -658,12 +692,20 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			"text_color": name_color
 		}))
 	else:
-		spans.append(_make_span(display_name, SemanticSpan.SpanType.OBJECT, {
+		# The name is the verb's DISPLAY NAME, edited inline (double-click) on an authored sheet - the
+		# same field the old dialog's "Display name" box set. Clearing it falls the row and compiler back
+		# to the function name. Not editable on a read-only preview, and not on an authored @ace_display_-
+		# template line (that whole-sentence form is a GDScript concern), so only this plain branch opts in.
+		var name_meta: Dictionary = {
 			"kind": "define_function",
 			"lane": "condition",
 			"line_index": 0,
 			"text_color": name_color
-		}))
+		}
+		if _verb_metadata_editable():
+			name_meta["editable"] = true
+			name_meta["edit_kind"] = "verb_display_name"
+		spans.append(_make_span(display_name, SemanticSpan.SpanType.OBJECT, name_meta))
 		condition_lines = _append_define_param_spans(spans, event_function, 0) + 1
 		# The mirror of "+ Add condition": adding an argument is the core authoring gesture on a verb, so
 		# it lives on the row - and since the verb dialog no longer carries a parameter list, this IS the
@@ -693,8 +735,6 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	# question and an Expression yields a value, so the type shows as a "gives back Type" chip - a void
 	# Action returns nothing and shows none), then the markers that change how it is CALLED (waits =
 	# async) or who may call it (internal = not published as an ACE).
-	# The CATEGORY is deliberately NOT drawn: a pack files every one of its verbs under the same category,
-	# so the chip repeated the identical word down the whole sheet. It lives in the hover instead.
 	if role != "action":
 		spans.append(_define_chip(EventSheetL10n.translate("gives back %s") % _friendly_return_type(event_function), chip_bg, chip_fg, 0))
 	if event_function.is_async:
@@ -705,6 +745,28 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		spans.append(_define_chip(EventSheetL10n.translate("internal"), chip_bg, muted, 0))
 	if event_function.featured:
 		spans.append(_define_chip(EventSheetL10n.translate("★ featured"), chip_bg, chip_fg, 0))
+	# The picker CATEGORY as a muted, double-click-editable chip - the old dialog's "Picker category" box,
+	# now on the row. Only for a PUBLISHED verb on an authored sheet (an unpublished helper has no picker
+	# entry to file, and a read view must not offer an edit): an unset category shows a faint "+ category"
+	# placeholder. Kept muted so a pack filing every verb under one word does not read as a wall of chips.
+	if event_function.expose_as_ace and _verb_metadata_editable():
+		var category: String = event_function.ace_category.strip_edges()
+		var category_meta: Dictionary = {
+			"editable": true,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": chip_bg,
+			"badge_fg": muted if category.is_empty() else chip_fg,
+			"kind": "define_function",
+			"edit_kind": "verb_category",
+			"lane": "action",
+			"line_index": 0
+		}
+		if category.is_empty():
+			category_meta["edit_placeholder"] = true
+		spans.append(_make_span(
+			category if not category.is_empty() else EventSheetL10n.translate("+ category"),
+			SemanticSpan.SpanType.KEYWORD, category_meta))
 	row_data.spans = spans
 	# Construct-style expandable block: the function BODY renders as foldable children (its conditions,
 	# actions, and raw GDScript blocks), built by the SAME dispatcher as sheet events, folding like a group.

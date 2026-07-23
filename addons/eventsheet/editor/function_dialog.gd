@@ -1,20 +1,23 @@
 # Godot EventSheets - sheet-function dialog / "ACE Studio" (event-sheet style)
 #
 # Authors an EventFunction from a popup, the way an "Add function" dialog does - reframed so a
-# non-programmer designs a behaviour's PUBLIC VERB without meeting the words "func" or "return type":
-#  • "What kind of verb is this?" is three plain-language CARDS - Does something (Action) / Is it
-#    true? (Condition) / A value (Expression) - a friendly restyle of the old "Usable as" toggle. The
-#    chosen card sets the return type (void / bool / the chosen value type) exactly as before.
-#  • A LIVE PICKER PREVIEW ("this is what other people will see") renders the verb as it will appear
-#    in other sheets' pickers - role badge, name, param chips, category chip - updating per keystroke.
+# non-programmer designs a function without meeting the words "func" or "return type":
+#  • "What kind is it?" is three plain-language CARDS that HEADLINE the ACE kind - Action / Condition /
+#    Expression - each with a plain-language line and examples underneath (a friendly restyle of the old
+#    "Usable as" toggle). The chosen card sets the return type (void / bool / the chosen value type).
+#  • A LIVE PICKER PREVIEW ("this is what other people will see") renders the function as it will appear
+#    in other sheets' pickers - role badge, name, param chips, category chip - shown once Publish is on.
 #  • A quiet "Ships as:" line shows the exact generated `func` signature (built from the SAME compiler
 #    formatters, so it can never disagree with the codegen) - the trust surface for a Godot dev.
-#  • Expose-as-ACE publishes it into other sheets' pickers.
+#  • Publish-to-the-picker is a plain checkbox.
 #
-# NOT here, on purpose: a parameter list and a "run only when" card. Both duplicated, more weakly,
-# something the sheet already expresses - a parameter is a cell on the verb's own row, and a guard is a
-# CONDITION on an event inside the verb. The dialog still CARRIES the verb's existing parameters
-# (_carried_params) so saving an edit cannot write an empty list over them.
+# NOT here, on purpose: a parameter list, a "run only when" card, and the picker-metadata fields
+# (description / display name / category). Each duplicated, more weakly, something the sheet expresses
+# directly - a parameter is a cell on the function's own row, a guard is a CONDITION on an event inside
+# it, and the picker metadata is edited inline on the row (its name, its description caption, its
+# category chip). The dialog CARRIES the function's existing parameters (_carried_params) and picker
+# metadata (_carried_description / _carried_display_name / _carried_category) so saving an edit cannot
+# write empty values over them - an untouched open-and-save stays byte-identical.
 #
 # The
 # `_usable_option` / `_value_type_option` OptionButtons remain the backing model (hidden) so
@@ -28,9 +31,9 @@ signal function_confirmed(data: Dictionary)
 # "What kind of verb" → the EventFunction return type the three-way expose derives its directive from
 # (void = action, bool = condition, any other value = expression). `card_*` drive the friendly cards.
 const USABLE_AS: Array[Dictionary] = [
-	{"label": "Action (does something - a setter)", "kind": "action", "card_title": "Does something", "card_examples": "Take Damage, Heal, Knock Back", "glyph": "▶"},
-	{"label": "Condition (a yes/no test)", "kind": "condition", "card_title": "Is it true?", "card_examples": "Is Dead, Is Full Health", "glyph": "?"},
-	{"label": "Expression (returns a value - a getter)", "kind": "expression", "card_title": "A value", "card_examples": "Health %, Remaining Shields", "glyph": "ƒx"},
+	{"label": "Action (does something - a setter)", "kind": "action", "kind_label": "Action", "card_title": "Does something", "card_examples": "Take Damage, Heal, Knock Back", "glyph": "▶"},
+	{"label": "Condition (a yes/no test)", "kind": "condition", "kind_label": "Condition", "card_title": "Is it true?", "card_examples": "Is Dead, Is Full Health", "glyph": "?"},
+	{"label": "Expression (returns a value - a getter)", "kind": "expression", "kind_label": "Expression", "card_title": "A value", "card_examples": "Health %, Remaining Shields", "glyph": "ƒx"},
 ]
 # Value types offered when the verb is "A value" (Expression). `friendly` is the plain-English label
 # shown; `label` is the GDScript type name kept for reference. Order is index-stable (build_function_data
@@ -57,21 +60,19 @@ var _doc_comment_edit: TextEdit = null
 var _tool_button_edit: LineEdit = null
 # Shown when the OWNING sheet is an editor tool (tool_mode): this verb runs INSIDE the editor.
 var _tool_mode_hint: Label = null
-var _description_edit: LineEdit = null
 var _usable_option: OptionButton = null           # hidden backing model for the three cards
 var _usable_cards: Array = []                      # [{panel, title, examples, accent, kind}], index-aligned to USABLE_AS
 var _value_type_row: Control = null
 var _value_type_option: OptionButton = null
-## The parameters of the verb being edited, carried through untouched. The dialog no longer EDITS
-## parameters (the row's cells do), but build_function_data() still reports them, because the apply
-## assigns target.params wholesale - reporting an empty list would silently delete every parameter of
-## any verb someone opened and saved.
+## Values carried through an edit untouched. The dialog no longer EDITS parameters (the row's cells do)
+## or the picker metadata (edited inline on the row), but build_function_data() still reports them,
+## because the apply assigns each wholesale - reporting empty would silently wipe every parameter, the
+## description, the display name and the category of any function opened and saved.
 var _carried_params: Array[Dictionary] = []
+var _carried_description: String = ""
+var _carried_display_name: String = ""
+var _carried_category: String = ""
 var _expose_check: CheckBox = null
-var _expose_section: VBoxContainer = null
-var _expose_card: PanelContainer = null  # themed inset card wrapping _expose_section (shown when "Expose" is ticked)
-var _expose_name_edit: LineEdit = null
-var _expose_category_edit: LineEdit = null
 var _problem_label: Label = null
 var _taken_names_provider: Callable = Callable()
 # Live picker-preview widgets (the "this is what other people will see" pane + the "Ships as:" line).
@@ -86,7 +87,7 @@ func init_dialog(parent_node: Node) -> void:
 	if _dialog != null:
 		return
 	_dialog = ConfirmationDialog.new()
-	_dialog.title = "Define a Verb"
+	_dialog.title = "New Function"
 	_dialog.ok_button_text = "Create Function"
 	_dialog.confirmed.connect(_on_confirmed)
 	parent_node.add_child(_dialog)
@@ -99,7 +100,7 @@ func init_dialog(parent_node: Node) -> void:
 	_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())
 	_dialog.register_text_enter(_name_edit)
 	form.add_child(EventSheetPopupUI.form_row("Name", _name_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
-		"What this verb is called. Write it in plain words - \"Take Damage\" becomes take_damage in the generated GDScript. Other rows call the verb by this name."))
+		"What this function is called. Write it in plain words - \"Take Damage\" becomes take_damage in the generated GDScript. Other rows call it by this name."))
 
 	# Godot documentation comment (the `##` block above the function). BBCode is allowed - it renders in
 	# the generated docs and in-editor tooltips - so the same selection toolbar the comment dialog uses is
@@ -109,7 +110,7 @@ func init_dialog(parent_node: Node) -> void:
 	_doc_comment_edit.custom_minimum_size = Vector2(0.0, 60.0)
 	_doc_comment_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	form.add_child(EventSheetPopupUI.form_row("Doc comment", _doc_comment_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
-		"Godot's own documentation for this verb. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering the verb elsewhere. Optional."))
+		"Godot's own documentation for this function. It is written above the function as ## lines and shows up in the editor's built-in help and when hovering it elsewhere. Optional."))
 	# Highlight-to-format bar (same one the comment dialog uses) - BBCode renders in Godot's generated docs.
 	EventSheetBBCodeSelectionBar.attach(_doc_comment_edit)
 
@@ -119,18 +120,12 @@ func init_dialog(parent_node: Node) -> void:
 	_tool_button_edit = LineEdit.new()
 	_tool_button_edit.placeholder_text = "e.g. Re-bake  (empty = no button)"
 	form.add_child(EventSheetPopupUI.form_row("Inspector button", _tool_button_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
-		"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this verb right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears."))
-	_tool_mode_hint = EventSheetPopupUI.hint_label("This sheet is an editor tool: this verb runs INSIDE the editor (File > Run or an Inspector button), never in the game.")
+		"Puts a clickable button on this node's Inspector panel, labelled with whatever you type here. Pressing it runs this function right there in the editor - handy for chores like re-baking a level or filling in test data. Leave it empty (the usual case) and no button appears."))
+	_tool_mode_hint = EventSheetPopupUI.hint_label("This sheet is an editor tool: this function runs INSIDE the editor (File > Run or an Inspector button), never in the game.")
 	_tool_mode_hint.visible = false
 	form.add_child(_tool_mode_hint)
 
-	# Description is a picker/publish concern (grouped under Publish below), not a first thing a beginner
-	# naming a local helper needs - so it lives in the expose section, not the always-visible form.
-	_description_edit = LineEdit.new()
-	_description_edit.placeholder_text = "What this verb does (shown in the picker)."
-	_description_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())
-
-	# What kind of verb - three plain-language cards. The hidden _usable_option stays the backing model
+	# What kind - three cards headlining the ACE kind. The hidden _usable_option stays the backing model
 	# (build_function_data + the tests read it by index); the cards drive and mirror it.
 	_usable_option = OptionButton.new()
 	for entry: Dictionary in USABLE_AS:
@@ -161,33 +156,17 @@ func init_dialog(parent_node: Node) -> void:
 	# it is visible, editable and undoable. The guards card was never readable back anyway: it wrote a
 	# wrapper row on create and then hid itself in edit mode to avoid stacking a second one.
 
-	# Expose as an ACE other sheets can pick.
+	# Publish into other sheets' pickers - a plain checkbox. Its display name, description and category
+	# are NOT fields here: they are edited inline on the function's own row (the name, the description
+	# caption above it, and a category chip), so the dialog stays the essentials and the picker metadata
+	# lives where you read it. Ticking reveals the live preview so you can see how it will look.
 	_expose_check = CheckBox.new()
 	_expose_check.text = "Publish to the picker (other sheets can use it)"
-	_expose_check.tooltip_text = "Publishes the verb into pickers as the chosen kind."
+	_expose_check.tooltip_text = "Publishes the function into pickers as the chosen kind. Its display name, description and category are edited on the row afterwards."
 	_expose_check.toggled.connect(func(on: bool) -> void:
-		_expose_card.visible = on
 		_preview_card.visible = on
 		_refresh_studio())
 	form.add_child(_expose_check)
-	_expose_section = EventSheetPopupUI.form_box()
-	# Description sits with the other picker/publish fields (it is "shown in the picker").
-	_expose_section.add_child(EventSheetPopupUI.form_row("Description", _description_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
-		"One line saying what this verb does. It shows beside the verb in the picker, so it is what somebody reads when deciding whether this is the verb they want."))
-	_expose_name_edit = LineEdit.new()
-	_expose_name_edit.placeholder_text = "defaults from the verb name"
-	_expose_name_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())
-	_expose_section.add_child(EventSheetPopupUI.form_row("Display name", _expose_name_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
-		"The friendly name shown in the picker instead of the function name - \"Deal Damage\" reads better than deal_damage. Leave it empty to let it default from the verb name."))
-	_expose_category_edit = LineEdit.new()
-	_expose_category_edit.placeholder_text = "e.g. Combat"
-	_expose_category_edit.text_changed.connect(func(_t: String) -> void: _refresh_studio())
-	_expose_section.add_child(EventSheetPopupUI.form_row("Picker category", _expose_category_edit, EventSheetPopupUI.LABEL_MIN_WIDTH,
-		"Which section of the picker files this verb. Verbs sharing a category are grouped together, so a pack usually puts all of its verbs under one - its own name works well."))
-	# Themed inset card, shown only when "Expose" is ticked.
-	_expose_card = EventSheetPopupUI.panel_section(_expose_section)
-	_expose_card.visible = false
-	form.add_child(_expose_card)
 
 	_problem_label = Label.new()
 	_problem_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -212,43 +191,55 @@ func set_tool_mode_context(enabled: bool) -> void:
 		_tool_mode_hint.visible = enabled
 
 
-func open() -> void:
+## Opens the dialog for a NEW function. `kind` pre-selects a card ("action" / "condition" /
+## "expression", empty = Action); `publish` pre-ticks the publish checkbox. The right-click
+## "New Function" submenu passes these so a chosen "New Action" lands already set up.
+func open(kind: String = "", publish: bool = false) -> void:
 	_original_name = ""
-	_dialog.title = "Define a Verb"
+	_dialog.title = "New Function"
 	_dialog.ok_button_text = "Create Function"
 	_carried_params = []
+	_carried_description = ""
+	_carried_display_name = ""
+	_carried_category = ""
 	_name_edit.text = ""
 	_doc_comment_edit.text = ""
 	_tool_button_edit.text = ""
-	_description_edit.text = ""
-	_expose_check.button_pressed = false
-	_expose_card.visible = false
-	_expose_name_edit.text = ""
-	_expose_category_edit.text = ""
+	_expose_check.button_pressed = publish
+	_preview_card.visible = publish
 	_problem_label.visible = false
 	_reset_value_type_items()
 	_value_type_option.select(0)
-	_select_usable(0)
+	_select_usable(_usable_index_for_kind(kind))
 	if _dialog.is_inside_tree():
 		_dialog.popup_centered()
 		_name_edit.grab_focus()
 
 
+## The card index for a kind string; defaults to Action (0) for an empty/unknown kind.
+func _usable_index_for_kind(kind: String) -> int:
+	for index: int in range(USABLE_AS.size()):
+		if str(USABLE_AS[index].get("kind")) == kind:
+			return index
+	return 0
+
+
 ## Opens the dialog pre-filled from an existing function (edit mode) - the sheet's Define blocks
-## double-click into here. The verb-kind card is derived from the return type exactly the way the
-## canvas classifies it (void = Action, bool = Condition, typed = Expression), so the pre-selected
-## card always matches the badge the user clicked. The "Run only when" card is hidden: guards live
-## as condition rows inside the function's body, and re-emitting them from here would stack a second
-## wrapper row onto the body instead of editing the first.
+## double-click into here. The kind card is derived from the return type exactly the way the canvas
+## classifies it (void = Action, bool = Condition, typed = Expression), so the pre-selected card always
+## matches the badge the user clicked. The picker metadata (description / display name / category) is
+## carried through untouched rather than shown as fields - it is edited inline on the row.
 func open_for_edit(event_function: EventFunction) -> void:
 	open()
 	_original_name = event_function.function_name
-	_dialog.title = "Edit Verb - %s" % event_function.function_name
+	_dialog.title = "Edit Function - %s" % event_function.function_name
 	_dialog.ok_button_text = "Save Changes"
 	_name_edit.text = event_function.function_name
 	_doc_comment_edit.text = event_function.doc_comment
 	_tool_button_edit.text = event_function.tool_button_label
-	_description_edit.text = event_function.description
+	_carried_description = event_function.description
+	_carried_display_name = event_function.ace_display_name
+	_carried_category = event_function.ace_category
 	# Represent whatever type this verb returns, using the compiler's own emitted type name as the truth.
 	# A custom / engine class (return_type_name set), OR a builtin Variant type with no card (Color, Array,
 	# Dictionary, ...), rides in a dynamic Expression dropdown entry that shows that exact `-> Type`; only the
@@ -278,9 +269,7 @@ func open_for_edit(event_function: EventFunction) -> void:
 			"description": param.description,
 		})
 	_expose_check.button_pressed = event_function.expose_as_ace
-	_expose_card.visible = event_function.expose_as_ace
-	_expose_name_edit.text = event_function.ace_display_name
-	_expose_category_edit.text = event_function.ace_category
+	_preview_card.visible = event_function.expose_as_ace
 	_refresh_studio()
 
 
@@ -298,7 +287,7 @@ func _clear_rows(box: Container) -> void:
 ## card that drives the hidden _usable_option; _refresh_usable_cards() paints the selected one.
 func _build_verb_kind_section() -> Control:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
-	box.add_child(EventSheetPopupUI.section_header("What kind of verb is this?"))
+	box.add_child(EventSheetPopupUI.section_header("Action, Condition, or Expression?"))
 	var cards_row: HBoxContainer = HBoxContainer.new()
 	cards_row.add_theme_constant_override("separation", 8)
 	_usable_cards.clear()
@@ -310,7 +299,10 @@ func _build_verb_kind_section() -> Control:
 		card.focus_mode = Control.FOCUS_ALL
 		card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		var inner: VBoxContainer = VBoxContainer.new()
-		inner.add_theme_constant_override("separation", 3)
+		inner.add_theme_constant_override("separation", 2)
+		# The HEADLINE is the ACE kind (Action / Condition / Expression) - that is the word a user is
+		# choosing between. The old plain-language line ("Does something") and its examples drop to a
+		# muted subtitle underneath, so the card teaches what the kind means without leading with jargon.
 		var title_row: HBoxContainer = HBoxContainer.new()
 		title_row.add_theme_constant_override("separation", 6)
 		var glyph: Label = Label.new()
@@ -318,10 +310,15 @@ func _build_verb_kind_section() -> Control:
 		glyph.add_theme_color_override("font_color", accent)
 		title_row.add_child(glyph)
 		var title: Label = Label.new()
-		title.text = str(entry.get("card_title"))
-		title.add_theme_font_size_override("font_size", 14)
+		title.text = str(entry.get("kind_label"))
+		title.add_theme_font_size_override("font_size", 15)
 		title_row.add_child(title)
 		inner.add_child(title_row)
+		var subtitle: Label = Label.new()
+		subtitle.text = str(entry.get("card_title"))
+		subtitle.add_theme_font_size_override("font_size", 12)
+		subtitle.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
+		inner.add_child(subtitle)
 		var examples: Label = Label.new()
 		examples.text = str(entry.get("card_examples"))
 		examples.add_theme_font_size_override("font_size", 11)
@@ -331,7 +328,7 @@ func _build_verb_kind_section() -> Control:
 		var content_margin: MarginContainer = EventSheetPopupUI.margined(inner, 9)
 		# The card panel handles the click/keypress; its contents must be transparent to the mouse or
 		# a Label under the cursor would swallow the event before the panel's gui_input sees it.
-		for passthrough: Control in [content_margin, inner, title_row, glyph, title, examples]:
+		for passthrough: Control in [content_margin, inner, title_row, glyph, title, subtitle, examples]:
 			passthrough.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(content_margin)
 		var card_index: int = index
@@ -426,12 +423,14 @@ func _refresh_studio() -> void:
 	_preview_badge.text = str(style.get("label"))
 	_style_pill(_preview_badge, style.get("bg"), style.get("fg"))
 	var raw_name: String = _name_edit.text.strip_edges()
-	var display_name: String = _expose_name_edit.text.strip_edges()
+	# The preview shows the carried display name (from an edited function), falling back to the typed
+	# name - the same fallback the row and compiler use when no @ace_name is set.
+	var display_name: String = _carried_display_name.strip_edges()
 	if display_name.is_empty():
-		display_name = raw_name.capitalize() if not raw_name.is_empty() else "New verb"
+		display_name = raw_name.capitalize() if not raw_name.is_empty() else "New function"
 	_preview_name.text = display_name
 	var params: Array[Dictionary] = collect_params()
-	var category: String = _expose_category_edit.text.strip_edges()
+	var category: String = _carried_category.strip_edges()
 	# Param chips + the category chip.
 	for child: Node in _preview_chips.get_children():
 		child.queue_free()
@@ -446,7 +445,7 @@ func _refresh_studio() -> void:
 	# Signature - from the compiler's own formatters, so it can't disagree with what actually ships.
 	var signature_name: String = raw_name.to_snake_case()
 	if signature_name.is_empty() or not signature_name.is_valid_identifier():
-		signature_name = "new_verb"
+		signature_name = "new_function"
 	_preview_signature.text = format_signature(signature_name, _return_type_for_kind(kind), params, _selected_return_type_name())
 
 
@@ -596,7 +595,7 @@ func _on_confirmed() -> void:
 func build_function_data() -> Dictionary:
 	var function_name: String = _name_edit.text.strip_edges().to_snake_case()
 	if function_name.is_empty() or not function_name.is_valid_identifier():
-		return {"problem": "Verb names must be valid identifiers (e.g. take_damage)."}
+		return {"problem": "Function names must be valid identifiers (e.g. take_damage)."}
 	# In edit mode the function's own current name is not a collision - only OTHER taken names are.
 	if function_name != _original_name and _taken_names_provider.is_valid() \
 			and (_taken_names_provider.call() as PackedStringArray).has(function_name):
@@ -619,8 +618,12 @@ func build_function_data() -> Dictionary:
 		"params": params,
 		"doc_comment": _doc_comment_edit.text.strip_edges(),
 		"tool_button_label": _tool_button_edit.text.strip_edges(),
-		"description": _description_edit.text.strip_edges(),
+		# The picker metadata is CARRIED, not authored here - it is edited inline on the row. Empty for a
+		# new function (so nothing extra is emitted); the edited function's own values for an edit (so an
+		# untouched open-and-save stays byte-identical). No capitalize() fabrication - an empty display
+		# name lets the row and compiler fall back to the function name on their own.
+		"description": _carried_description,
 		"expose": _expose_check.button_pressed,
-		"ace_display_name": _expose_name_edit.text.strip_edges() if not _expose_name_edit.text.strip_edges().is_empty() else function_name.capitalize(),
-		"ace_category": _expose_category_edit.text.strip_edges(),
+		"ace_display_name": _carried_display_name,
+		"ace_category": _carried_category,
 	}

@@ -2434,7 +2434,9 @@ func _begin_edit(row_index: int, span_index: int) -> void:
 		return
 	_editing_row_index = row_index
 	_editing_span_index = resolved_span_index
-	_editing_buffer = span.text
+	# A placeholder span (an empty verb description / category showing "+ ...") starts the buffer EMPTY,
+	# not with the placeholder text - the user is filling in a blank field, not editing that prompt.
+	_editing_buffer = "" if bool(metadata.get("edit_placeholder", false)) else span.text
 	_editing_caret = _editing_buffer.length()
 	_editing_select_anchor = -1
 	_update_inline_format_bar()
