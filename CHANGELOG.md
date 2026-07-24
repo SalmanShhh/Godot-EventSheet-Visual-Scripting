@@ -74,6 +74,22 @@
   resource validators and also report a parse failure (with Godot's message), doubling as a JSON syntax
   check before a load. Suite-covered; Storylet Weaver pack bumped to 1.3.0.
 
+### Added - higher-order and typed-array operations for the Array vocabulary
+
+- New builtin ACEs under **Variables: Array** (module `array_functional_aces.gd`), filling the gaps in the
+  base Array set:
+  - **Filter / Map / Reduce** (expressions) and **Any Match / All Match** (conditions) wrap Godot's
+    higher-order `Array.filter` / `map` / `reduce` / `any` / `all`. The lambda signature is fixed
+    (`func(x)`, or `func(acc, x)` for reduce) so the author fills only the body through the `ƒx` field and
+    the emitted GDScript stays plain and parity-safe - e.g. `scores.filter(func(x): return x > 0)`.
+  - **Is Typed** (condition), **Assign (Type-Converting)** (action, `Array.assign` - the type-safe way to
+    fill an `Array[int]`/`Array[String]` from another array), and **Element Type** / **Element Class**
+    (expressions) for GDScript typed arrays.
+- The array operand uses the `variable_reference:Array` hint, so its dropdown offers Array-typed sheet
+  variables (a typed `Array[int]` qualifies too). Suite-covered: a new `array_functional_aces_test.gd`
+  proves each shipped template, run through the real codegen, behaves correctly, and the whole set passes
+  the standalone-compile guard.
+
 ### Changed - the verb dialog speaks Action / Condition / Expression, and its picker details move to the row
 
 - **The three kind cards headline the ACE kind.** "What kind of verb is this?" led with plain-language
