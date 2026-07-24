@@ -9,7 +9,8 @@ Storylet Weaver is a quality-based narrative (QBN) engine you drop into any Godo
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
 5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+6. [The data-driven path: a StoryletResource asset](#the-data-driven-path-a-storyletresource-asset)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -89,6 +90,7 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 
 | Action | Parameters | What it does |
 | --- | --- | --- |
+| **Load From Resource** | `resource` | Loads a whole **StoryletResource** (a `.tres` you filled in the Inspector) into the live library in one step - every storylet with its weight / cooldown / max plays, plus all requirements, choices, choice rules, effects and meta. See [The data-driven path](#the-data-driven-path-a-storyletresource-asset). |
 | **Define Storylet** | `id`, `title`, `body` | Registers (or replaces) a storylet: an id plus the title + body text your game shows. |
 | **Set Storylet Weight** | `id`, `weight` | How strongly this storylet is preferred when several are eligible (higher = picked first / likelier). |
 | **Set Storylet Cooldown** | `id`, `seconds` | Seconds this storylet is ineligible after it plays (`0` = no cooldown). |
@@ -661,6 +663,63 @@ The `awarded` prerequisite plus the on-draw **Add Effect** that sets it make thi
 
 ---
 
+## The data-driven path: a StoryletResource asset
+
+Everything above builds the library with discrete actions on a sheet - **Define Storylet**, then **Add Requirement** / **Add Choice** / **Add Effect** keyed by id. That is perfect for a handful of beats and for rules that come from live game state. But a large, mostly-static storybook is more comfortable to author as **data**: one file, filled in a table, versioned on its own. That is what **StoryletResource** is.
+
+A StoryletResource is a plain Godot `Resource` (it `extends Resource`, with zero plugin dependency at runtime) that you create and edit as a `.tres` in Godot's own Inspector - no sheet, no code. It holds a whole book: a **Storylets** grid plus parallel grids for **Requirements**, **Choices**, **Choice Requirements**, **Effects**, **Choice Effects**, and **Meta**. At runtime you hand it to **Load From Resource** and the autoload replays the whole thing into the live library in one step.
+
+### Why a resource instead of actions
+
+- **Author in a table, not a wall of rows.** A writer fills the Inspector grids and never opens a sheet; a fifty-storylet book is a spreadsheet, not fifty stacks of Define/Add actions.
+- **The book is a first-class file.** It lives as `some_book.tres`, diffs cleanly in version control, and a variant ("the hard-mode deck") is just another `.tres` you load instead.
+- **It seeds; ACEs still tweak.** Load a book at startup, then keep using the discrete actions to adjust it from live state - re-weight a beat, set a quality-driven cooldown, define a beat the resource did not cover.
+
+### How the grids fit together
+
+Inspector table cells hold one scalar each - a cell cannot nest an array - so a storylet's requirements, choices, effects and meta do **not** live inside its row. They live in **sibling grids joined by the `storylet` id column** (the same shape the UHTN planning resource uses). You fill the **Storylets** grid with one row per beat (`id`, `title`, `body`, `weight`, `cooldown`, `max_plays`), then in the **Requirements** grid you add rows whose `storylet` cell names the id they belong to. A choice's requirements and effects reference it by `storylet` + `choice_id`.
+
+Comparison and effect operators are **dropdowns of word tokens**, because a table cell cannot hold a symbol like `>=`:
+
+| Grid | `op` options | Meaning |
+| --- | --- | --- |
+| Requirements | `gte` `gt` `lte` `lt` `eq` `neq` | `>=` `>` `<=` `<` `=` `!=` |
+| Requirements (extra) | `chance` `recent` `not_recent` | `chance`: `value` is a 0-100 percent. `recent` / `not_recent`: `value` is a draw-count N (anti-repeat over the last N draws). |
+| Choice Requirements | `gte` `gt` `lte` `lt` `eq` `neq` | Same comparisons; hides the choice when the rule fails. |
+| Effects / Choice Effects | `set` `inc` `dec` `toggle` `delete` | Set to / increment / decrement / toggle 0-1 / delete the `key`. |
+
+For a comparison, `key` is the quality and `value` is what to compare against; tick **`value_is_key`** to compare against another quality's live value (`gold >= price`). Load From Resource maps every word token back to the runtime rule for you, so a loaded book behaves exactly like the same beats built with the discrete actions.
+
+### A worked example
+
+Fill a StoryletResource in the Inspector (this is the shape of the shipped sample, `demo/storylet_book/village_storylets.tres`):
+
+- **Storylets:** `gate` / "The Gatekeeper" / "Ten gold to pass." / weight `3`; `rumour` / "" / "Heard about the old mine?" / cooldown `30`.
+- **Requirements:** `rumour`, `gte`, `gold`, `1`, off - the rumour needs at least 1 gold.
+- **Choices:** `gate`, `pay`, "Pay 10 gold."; `gate`, `refuse`, "I refuse."
+- **Choice Requirements:** `gate`, `pay`, `gte`, `gold`, `10`, off - the pay option hides under 10 gold.
+- **Choice Effects:** `gate`, `pay`, `dec`, `gold`, `10`; `gate`, `pay`, `set`, `gate_open`, `1`.
+- **Meta:** `gate`, `speaker`, "Gatekeeper".
+
+Then load it once at startup and use the library exactly as before:
+
+```
+On Ready
+  -> Storylets: Load From Resource  preload("res://demo/storylet_book/village_storylets.tres")
+  -> Storylets: Set Quality         "gold", player_gold
+
+On reach gate
+  -> Storylets: Draw
+
+On Storylet Drawn
+  -> Set speaker label  Storylets.Active Meta("speaker")
+  -> Show text          Storylets.Active Body()
+```
+
+After **Load From Resource** the `gate` and `rumour` storylets, their rules, choices, effects and meta are all in the live library, so **Draw**, **Choose**, the **Active** / **Forecast** / **Meta** expressions, and every other ACE work identically to a book you built row by row. You can still call **Define Storylet** or **Set Storylet Weight** afterward to adjust anything the resource seeded.
+
+---
+
 ## Tips and common mistakes
 
 - **A missing quality reads as `0` (or `""`), not "undefined".** So `courage >= 3` on a quality you never set is simply **false**, and `location != "tavern"` on an unset `location` is **true**. This is friendlier than the original Construct 3 addon, where a missing value made every operator except `!=` fail. You still never have to pre-declare a quality: set it when it first matters.
@@ -671,6 +730,7 @@ The `awarded` prerequisite plus the on-draw **Add Effect** that sets it make thi
 - **Choices can carry their own rules and consequences.** After **Add Choice**, gate an option with **Add Choice Requirement** (it is hidden and uncounted when its rule fails, and `Choice Count` / `Choice Id At` only ever see eligible choices) and give it a consequence with **Add Choice Effect** (applied the instant it is picked). You rarely need a per-choice branch in **On Choice Made** anymore - reserve that trigger for presentation work (hiding a panel, playing a sound).
 - **Let effects be data, and preview them.** **Add Effect** (on the storylet) and **Add Choice Effect** carry their own quality changes - `set` / `inc` / `dec` / `toggle` / `delete` - applied automatically when a beat is drawn or a choice is picked, so a consequence lives with the content instead of a matching branch elsewhere. **Forecast Storylet Effects** and **Forecast Choice Effects** read those changes as a plain string (`"gold -10, gate_open = 1"`) without applying them - drop one on a button so the player sees the cost before they commit.
 - **Build storylets with typed ACEs, not a JSON blob.** You assemble a storylet from discrete rows - **Define Storylet**, then **Add Requirement** / **Add Choice** / **Set Storylet Weight** and friends, all keyed by the same id. There is no JSON string to hand-write or mis-quote.
+- **For a big, static book, author it as a StoryletResource.** When the library is large and mostly fixed, a `.tres` filled in the Inspector grids (loaded with **Load From Resource**) is easier to write and version than a wall of Define/Add actions - see [The data-driven path](#the-data-driven-path-a-storyletresource-asset). Reach for the discrete actions when a beat or rule comes from live game state; reach for the resource when it is content. The two mix freely: load a book, then tweak it with actions.
 - **Re-defining an id replaces it.** Calling **Define Storylet** with an existing id overwrites that storylet (and its requirements and choices reset, since you are starting it fresh). Use this to rebuild a storylet's rules from current game data before a Draw.
 - **Keep qualities in sync with your game.** Requirements only see what you mirror in. If a gate seems never to open, confirm you called **Set Quality** / **Increment Quality** for the key it checks; **Has Quality** and the **Quality Number** / **Quality Text** expressions help you verify the store.
 - **Weight sorts the eligible list; it does not gate.** A high weight makes a storylet lead the draw, but a storylet with no passing requirements is still ineligible no matter how heavy it is. Use **Add Requirement** to gate and **Set Storylet Weight** to rank.

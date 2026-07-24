@@ -276,6 +276,46 @@ func use_advanced_random(enabled: bool) -> void:
 	_use_shared = enabled
 
 ## @ace_action
+## @ace_name("Load From Resource")
+## @ace_category("Storylets")
+## @ace_description("Registers a whole storybook from a StoryletResource asset (a .tres you fill in the Inspector) in one step, instead of a wall of Define Storylet actions. Additive: it defines each storylet and adds its requirements, choices, effects and meta, so you can still tweak the library with the discrete actions afterwards.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.load_from_resource({resource})")
+func load_from_resource(resource: Resource) -> void:
+	if resource == null:
+		return
+	for row: Dictionary in _rows(resource, "storylets"):
+		var sid: String = str(row.get("id", ""))
+		if sid.is_empty():
+			continue
+		define_storylet(sid, str(row.get("title", "")), str(row.get("body", "")))
+		_lib[sid].weight = maxf(_num(row.get("weight", 1.0)), 0.0)
+		_lib[sid].cooldown = maxf(_num(row.get("cooldown", 0.0)), 0.0)
+		_lib[sid].max_plays = _num(row.get("max_plays", -1.0))
+	# Rows reference a storylet (or a choice on it) by id; a row naming an undefined storylet is
+	# skipped rather than conjuring a blank one.
+	for row: Dictionary in _rows(resource, "requirements"):
+		if _lib.has(str(row.get("storylet", ""))):
+			_lib[str(row.get("storylet", ""))].reqs.append(_req_from_row(row))
+	for row: Dictionary in _rows(resource, "choices"):
+		if _lib.has(str(row.get("storylet", ""))):
+			add_choice(str(row.get("storylet", "")), str(row.get("choice_id", "")), str(row.get("text", "")))
+	for row: Dictionary in _rows(resource, "choice_requirements"):
+		var cr: Dictionary = _choice(str(row.get("storylet", "")), str(row.get("choice_id", "")))
+		if not cr.is_empty():
+			cr.reqs.append(_req_from_row(row))
+	for row: Dictionary in _rows(resource, "effects"):
+		if _lib.has(str(row.get("storylet", ""))):
+			_lib[str(row.get("storylet", ""))].effects.append(_effect_from_row(row))
+	for row: Dictionary in _rows(resource, "choice_effects"):
+		var ce: Dictionary = _choice(str(row.get("storylet", "")), str(row.get("choice_id", "")))
+		if not ce.is_empty():
+			ce.effects.append(_effect_from_row(row))
+	for row: Dictionary in _rows(resource, "meta"):
+		if _lib.has(str(row.get("storylet", ""))):
+			_lib[str(row.get("storylet", ""))].meta[str(row.get("key", ""))] = row.get("value", "")
+
+## @ace_action
 ## @ace_name("Dismiss")
 ## @ace_category("Storylets")
 ## @ace_description("Clears the active storylet without making a choice (the play still counted).")
@@ -674,6 +714,42 @@ func _active_choices() -> Array:
 		if _choice_ok(c, _active):
 			out.append(c)
 	return out
+
+func _rows(resource: Object, field: String) -> Array:
+	# A grid field off a StoryletResource (or any duck-typed resource), as an Array of row dicts.
+	var v: Variant = resource.get(field)
+	return v if v is Array else []
+
+func _op_symbol(op: String) -> String:
+	# A StoryletResource op column stores a WORD token (a table dropdown cannot hold ">=", whose "="
+	# is a reserved marker char), so map it to the symbol the eligibility check uses. A symbol that
+	# arrives verbatim passes straight through.
+	match op:
+		"gte": return ">="
+		"gt": return ">"
+		"lte": return "<="
+		"lt": return "<"
+		"eq": return "="
+		"neq": return "!="
+	return op
+
+func _req_from_row(row: Dictionary) -> Dictionary:
+	# Turns one Requirements-grid row into a requirement dict the eligibility check understands -
+	# a comparison (optionally key-vs-key), a chance gate, or a recency gate.
+	var op: String = str(row.get("op", "gte"))
+	match op:
+		"chance":
+			return {"op": "chance", "value": _num(row.get("value", 0))}
+		"recent", "not_recent":
+			return {"op": op, "value": int(_num(row.get("value", 0)))}
+	var req: Dictionary = {"key": str(row.get("key", "")), "op": _op_symbol(op), "value": row.get("value", "")}
+	if bool(row.get("value_is_key", false)):
+		req["value_key"] = true
+	return req
+
+func _effect_from_row(row: Dictionary) -> Dictionary:
+	# Turns one Effects-grid row into an effect dict.
+	return {"op": str(row.get("op", "set")), "key": str(row.get("key", "")), "value": row.get("value", "")}
 
 func _activate(id: String) -> void:
 	# Marks a storylet as played now: records the play + cooldown start + active + draw history,

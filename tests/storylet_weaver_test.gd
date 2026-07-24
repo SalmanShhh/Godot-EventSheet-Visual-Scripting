@@ -158,6 +158,56 @@ static func run() -> bool:
 	sw.evaluate()
 	all_passed = _check("the anti-repeat gate blocks it right after it was drawn", sw.is_available("anti"), false) and all_passed
 
+	# --- Load From Resource: a whole storybook authored as a StoryletResource (.tres) grid ---
+	_reset(sw)
+	var res_script: GDScript = load("res://eventsheet_addons/storylet_resource/storylet_resource.gd")
+	all_passed = _check("storylet_resource pack loads + parses", res_script != null, true) and all_passed
+	if res_script != null:
+		var book: Resource = res_script.new()
+		book.storylets = [
+			{"id": "gate", "title": "The Gate", "body": "Pay the toll.", "weight": 2.0, "cooldown": 0.0, "max_plays": -1},
+			{"id": "afford", "title": "Afford", "body": "You can buy it.", "weight": 1.0, "cooldown": 0.0, "max_plays": -1},
+		]
+		# op stored as a WORD token (a table dropdown cannot hold ">="); the loader maps gte -> >=.
+		book.requirements = [{"storylet": "afford", "op": "gte", "key": "gold", "value": "price", "value_is_key": true}]
+		book.choices = [{"storylet": "gate", "choice_id": "pay", "text": "Pay 10 gold."}, {"storylet": "gate", "choice_id": "leave", "text": "Leave."}]
+		book.choice_requirements = [{"storylet": "gate", "choice_id": "pay", "op": "gte", "key": "gold", "value": "10", "value_is_key": false}]
+		book.effects = [{"storylet": "gate", "op": "inc", "key": "visits", "value": "1"}]
+		book.choice_effects = [{"storylet": "gate", "choice_id": "pay", "op": "dec", "key": "gold", "value": "10"}]
+		book.meta = [{"storylet": "gate", "key": "speaker", "value": "Gatekeeper"}]
+
+		sw.load_from_resource(book)
+		all_passed = _check("Load From Resource registers every storylet in the grid", sw.storylet_count(), 2) and all_passed
+		all_passed = _check("the loaded storylet's meta round-trips", sw.storylet_meta("gate", "speaker"), "Gatekeeper") and all_passed
+		all_passed = _check("the loaded on-draw effect is present (forecast reads it)", sw.forecast_storylet_effects("gate"), "visits +1") and all_passed
+
+		sw.set_quality("gold", 20)
+		sw.set_quality("price", 15)
+		sw.evaluate()
+		all_passed = _check("a loaded key-vs-key requirement gates on the live comparison (gold >= price)",
+			sw.is_available("gate") and sw.is_available("afford"), true) and all_passed
+
+		sw.set_quality("gold", 5)
+		sw.draw()
+		all_passed = _check("the loaded on-draw effect applies when the storylet is drawn",
+			sw.active_id() == "gate" and is_equal_approx(sw.quality_number("visits"), 1.0), true) and all_passed
+		all_passed = _check("a loaded choice requirement hides its choice", sw.active_choice_count(), 1) and all_passed
+		sw.dismiss()
+		sw.set_quality("gold", 20)
+		sw.reset_all_history()
+		sw.draw()
+		sw.choose("pay")
+		all_passed = _check("a loaded choice effect applies when the choice is picked",
+			is_equal_approx(sw.quality_number("gold"), 10.0), true) and all_passed
+
+	# Loading from an actual .tres on disk (the shipped sample) proves the grid columns serialize.
+	var sample: Resource = load("res://demo/storylet_book/village_storylets.tres")
+	all_passed = _check("the shipped sample .tres loads as a StoryletResource", sample != null, true) and all_passed
+	if sample != null:
+		_reset(sw)
+		sw.load_from_resource(sample)
+		all_passed = _check("the sample .tres registers its storylets", sw.storylet_count() > 0, true) and all_passed
+
 	sw.free()
 	return all_passed
 

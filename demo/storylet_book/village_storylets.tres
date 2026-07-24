@@ -1,0 +1,85 @@
+[gd_resource type="Resource" script_class="StoryletResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/storylet_resource/storylet_resource.gd" id="1_storylet"]
+
+[resource]
+script = ExtResource("1_storylet")
+book_name = "village"
+storylets = [{
+"body": "The gatekeeper blocks the road. \"Ten gold to pass.\"",
+"cooldown": 0.0,
+"id": "gate",
+"max_plays": -1,
+"title": "The Gatekeeper",
+"weight": 3.0
+}, {
+"body": "The merchant leans in. \"Heard about the old mine?\"",
+"cooldown": 30.0,
+"id": "rumour",
+"max_plays": -1,
+"title": "",
+"weight": 1.0
+}, {
+"body": "Watch your step - the cobbles are slick today.",
+"cooldown": 0.0,
+"id": "ambient",
+"max_plays": -1,
+"title": "",
+"weight": 1.0
+}]
+requirements = [{
+"key": "gold",
+"op": "gte",
+"storylet": "rumour",
+"value": "1",
+"value_is_key": false
+}, {
+"key": "",
+"op": "not_recent",
+"storylet": "ambient",
+"value": "2",
+"value_is_key": false
+}]
+choices = [{
+"choice_id": "pay",
+"storylet": "gate",
+"text": "Pay 10 gold."
+}, {
+"choice_id": "refuse",
+"storylet": "gate",
+"text": "I refuse."
+}]
+choice_requirements = [{
+"choice_id": "pay",
+"key": "gold",
+"op": "gte",
+"storylet": "gate",
+"value": "10",
+"value_is_key": false
+}]
+effects = [{
+"key": "gate_seen",
+"op": "set",
+"storylet": "gate",
+"value": "1"
+}]
+choice_effects = [{
+"key": "gold",
+"op": "dec",
+"storylet": "gate",
+"value": "10"
+}, {
+"key": "gate_open",
+"op": "set",
+"storylet": "gate",
+"value": "1"
+}]
+meta = [{
+"key": "speaker",
+"storylet": "gate",
+"value": "Gatekeeper"
+}, {
+"key": "speaker",
+"storylet": "rumour",
+"value": "Merchant"
+}]
