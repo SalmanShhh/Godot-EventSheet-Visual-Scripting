@@ -1,6 +1,6 @@
 ## @ace_tags(narrative, storylet)
 ## @ace_category("Storylets")
-## @ace_version(1.2.0)
+## @ace_version(1.3.0)
 @icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 class_name StoryletsAddon
 extends Node
@@ -35,16 +35,17 @@ var _chosen: String = ""
 # Internal monotonic clock (seconds), ticked in _process so cooldowns need no wiring.
 var _clock: float = 0.0
 var _use_shared: bool = false
-# Reads a StoryletResource's grids and lists the references Load From Resource would silently skip:
-# a row naming a storylet id (or a choice on it) that is not defined. Empty when the book is clean.
-func _validate_resource(resource: Object) -> PackedStringArray:
+# Reads a book source (a StoryletResource OR a parsed JSON object) and lists the references a load
+# would silently skip - a row naming a storylet id (or a choice on it) that is not defined - plus
+# blank and duplicate storylet ids. Empty when the book is clean. Shared by both validate ACEs.
+func _validate_book(source: Variant) -> PackedStringArray:
 	var problems: PackedStringArray = []
-	if resource == null:
-		problems.append("resource is null")
+	if source == null:
+		problems.append("no book (null)")
 		return problems
 	var ids: Dictionary = {}
 	var i: int = 0
-	for row: Dictionary in _rows(resource, "storylets"):
+	for row: Dictionary in _rows(source, "storylets"):
 		var sid: String = str(row.get("id", ""))
 		if sid.is_empty():
 			problems.append("storylets[%d]: blank id (row skipped)" % i)
@@ -55,7 +56,7 @@ func _validate_resource(resource: Object) -> PackedStringArray:
 		i += 1
 	var choices: Dictionary = {}
 	i = 0
-	for row: Dictionary in _rows(resource, "choices"):
+	for row: Dictionary in _rows(source, "choices"):
 		var sid2: String = str(row.get("storylet", ""))
 		if not ids.has(sid2):
 			problems.append("choices[%d]: unknown storylet '%s'" % [i, sid2])
@@ -66,20 +67,30 @@ func _validate_resource(resource: Object) -> PackedStringArray:
 		i += 1
 	for field: String in ["requirements", "effects", "meta"]:
 		i = 0
-		for row: Dictionary in _rows(resource, field):
+		for row: Dictionary in _rows(source, field):
 			var rid: String = str(row.get("storylet", ""))
 			if not ids.has(rid):
 				problems.append("%s[%d]: unknown storylet '%s'" % [field, i, rid])
 			i += 1
 	for field: String in ["choice_requirements", "choice_effects"]:
 		i = 0
-		for row: Dictionary in _rows(resource, field):
+		for row: Dictionary in _rows(source, field):
 			var rid2: String = str(row.get("storylet", ""))
 			var cid: String = str(row.get("choice_id", ""))
 			if not (choices.get(rid2, {}) as Dictionary).has(cid):
 				problems.append("%s[%d]: no choice '%s' on storylet '%s'" % [field, i, cid, rid2])
 			i += 1
 	return problems
+# Validates a JSON storybook: reports a parse failure (with Godot's message) or a non-object root,
+# else the same structural problems as _validate_book. Uses the instance JSON API so a bad string
+# is a returned error, not a console spew.
+func _validate_json(json_text: String) -> PackedStringArray:
+	var reader: JSON = JSON.new()
+	if reader.parse(json_text) != OK:
+		return PackedStringArray(["not valid JSON: " + reader.get_error_message()])
+	if not reader.data is Dictionary:
+		return PackedStringArray(["JSON root is not an object (expected { \"storylets\": [ ... ] })"])
+	return _validate_book(reader.data)
 
 func _process(delta: float) -> void:
 	_clock += delta
@@ -329,36 +340,16 @@ func use_advanced_random(enabled: bool) -> void:
 func load_from_resource(resource: Resource) -> void:
 	if resource == null:
 		return
-	for row: Dictionary in _rows(resource, "storylets"):
-		var sid: String = str(row.get("id", ""))
-		if sid.is_empty():
-			continue
-		define_storylet(sid, str(row.get("title", "")), str(row.get("body", "")))
-		_lib[sid].weight = maxf(_num(row.get("weight", 1.0)), 0.0)
-		_lib[sid].cooldown = maxf(_num(row.get("cooldown", 0.0)), 0.0)
-		_lib[sid].max_plays = _num(row.get("max_plays", -1.0))
-	# Rows reference a storylet (or a choice on it) by id; a row naming an undefined storylet is
-	# skipped rather than conjuring a blank one.
-	for row: Dictionary in _rows(resource, "requirements"):
-		if _lib.has(str(row.get("storylet", ""))):
-			_lib[str(row.get("storylet", ""))].reqs.append(_req_from_row(row))
-	for row: Dictionary in _rows(resource, "choices"):
-		if _lib.has(str(row.get("storylet", ""))):
-			add_choice(str(row.get("storylet", "")), str(row.get("choice_id", "")), str(row.get("text", "")))
-	for row: Dictionary in _rows(resource, "choice_requirements"):
-		var cr: Dictionary = _choice(str(row.get("storylet", "")), str(row.get("choice_id", "")))
-		if not cr.is_empty():
-			cr.reqs.append(_req_from_row(row))
-	for row: Dictionary in _rows(resource, "effects"):
-		if _lib.has(str(row.get("storylet", ""))):
-			_lib[str(row.get("storylet", ""))].effects.append(_effect_from_row(row))
-	for row: Dictionary in _rows(resource, "choice_effects"):
-		var ce: Dictionary = _choice(str(row.get("storylet", "")), str(row.get("choice_id", "")))
-		if not ce.is_empty():
-			ce.effects.append(_effect_from_row(row))
-	for row: Dictionary in _rows(resource, "meta"):
-		if _lib.has(str(row.get("storylet", ""))):
-			_lib[str(row.get("storylet", ""))].meta[str(row.get("key", ""))] = row.get("value", "")
+	_load_grids(resource)
+
+## @ace_action
+## @ace_name("Load From JSON")
+## @ace_category("Storylets")
+## @ace_description("Registers a whole storybook from a JSON string in one step - the same grid shape as a StoryletResource (an object with storylets / requirements / choices / choice_requirements / effects / choice_effects / meta arrays), so you can hot-reload narrative content or load user-made / downloaded books at runtime. Additive and forgiving like Load From Resource; ops may be symbols (>=) or word tokens (gte). Invalid or non-object JSON is ignored - check it first with Validate Book JSON.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.load_from_json({json})")
+func load_from_json(json: String) -> void:
+	_load_grids(_parse_book(json))
 
 ## @ace_action
 ## @ace_name("Dismiss")
@@ -452,7 +443,16 @@ func is_library_empty() -> bool:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.book_resource_is_valid({resource})")
 func book_resource_is_valid(resource: Resource) -> bool:
-	return _validate_resource(resource).is_empty()
+	return _validate_book(resource).is_empty()
+
+## @ace_condition
+## @ace_name("JSON Book Is Valid")
+## @ace_category("Storylets")
+## @ace_description("Whether a JSON storybook parses and is free of structural problems - the JSON equivalent of Book Resource Is Valid. Read the specific problems (including a parse failure) with Validate Book JSON.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.json_book_is_valid({json})")
+func json_book_is_valid(json: String) -> bool:
+	return _validate_json(json).is_empty()
 
 ## @ace_expression
 ## @ace_name("Quality Number")
@@ -649,7 +649,16 @@ func storylet_count() -> int:
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.validate_resource({resource})")
 func validate_resource(resource: Resource) -> String:
-	return "\n".join(_validate_resource(resource))
+	return "\n".join(_validate_book(resource))
+
+## @ace_expression
+## @ace_name("Validate Book JSON")
+## @ace_category("Storylets")
+## @ace_description("Checks a JSON storybook and returns each structural problem one per line, "" when clean - the JSON twin of Validate Book Resource. Also reports "not valid JSON" for a parse failure and a non-object root, so it doubles as a JSON syntax check before Load From JSON.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.validate_json({json})")
+func validate_json(json: String) -> String:
+	return "\n".join(_validate_json(json))
 
 func _rand_float() -> float:
 	# Randomness source: the shared AdvancedRandom autoload when Use Advanced Random is on and the
@@ -780,11 +789,11 @@ func _active_choices() -> Array:
 			out.append(c)
 	return out
 
-func _rows(resource: Object, field: String) -> Array:
-	# A grid field off a StoryletResource (or any duck-typed resource), as an Array of row dicts. A
-	# stray non-Dictionary element (a hand-corrupted .tres) is dropped rather than crashing the typed
-	# `for row: Dictionary in _rows(...)` loops - the loader skips it and the validator does the same.
-	var v: Variant = resource.get(field)
+func _rows(source, field: String) -> Array:
+	# A grid field off a book source - a StoryletResource (a property) OR a parsed JSON object (a key);
+	# both respond to .get(field). Returns an Array of row dicts; a stray non-Dictionary element (a
+	# hand-corrupted .tres or JSON) is dropped rather than crashing the typed `for row: Dictionary` loops.
+	var v: Variant = source.get(field)
 	if not v is Array:
 		return []
 	var out: Array = []
@@ -823,6 +832,47 @@ func _req_from_row(row: Dictionary) -> Dictionary:
 func _effect_from_row(row: Dictionary) -> Dictionary:
 	# Turns one Effects-grid row into an effect dict.
 	return {"op": str(row.get("op", "set")), "key": str(row.get("key", "")), "value": row.get("value", "")}
+
+func _load_grids(source) -> void:
+	# The shared loader core: reads the grids off a book source (a StoryletResource or a parsed JSON
+	# object) and replays them into the live library. Additive and forgiving - a row naming an undefined
+	# storylet (or a choice on it) is skipped, never conjuring a phantom (see _choice, which is read-only).
+	for row: Dictionary in _rows(source, "storylets"):
+		var sid: String = str(row.get("id", ""))
+		if sid.is_empty():
+			continue
+		define_storylet(sid, str(row.get("title", "")), str(row.get("body", "")))
+		_lib[sid].weight = maxf(_num(row.get("weight", 1.0)), 0.0)
+		_lib[sid].cooldown = maxf(_num(row.get("cooldown", 0.0)), 0.0)
+		_lib[sid].max_plays = _num(row.get("max_plays", -1.0))
+	for row: Dictionary in _rows(source, "requirements"):
+		if _lib.has(str(row.get("storylet", ""))):
+			_lib[str(row.get("storylet", ""))].reqs.append(_req_from_row(row))
+	for row: Dictionary in _rows(source, "choices"):
+		if _lib.has(str(row.get("storylet", ""))):
+			add_choice(str(row.get("storylet", "")), str(row.get("choice_id", "")), str(row.get("text", "")))
+	for row: Dictionary in _rows(source, "choice_requirements"):
+		var cr: Dictionary = _choice(str(row.get("storylet", "")), str(row.get("choice_id", "")))
+		if not cr.is_empty():
+			cr.reqs.append(_req_from_row(row))
+	for row: Dictionary in _rows(source, "effects"):
+		if _lib.has(str(row.get("storylet", ""))):
+			_lib[str(row.get("storylet", ""))].effects.append(_effect_from_row(row))
+	for row: Dictionary in _rows(source, "choice_effects"):
+		var ce: Dictionary = _choice(str(row.get("storylet", "")), str(row.get("choice_id", "")))
+		if not ce.is_empty():
+			ce.effects.append(_effect_from_row(row))
+	for row: Dictionary in _rows(source, "meta"):
+		if _lib.has(str(row.get("storylet", ""))):
+			_lib[str(row.get("storylet", ""))].meta[str(row.get("key", ""))] = row.get("value", "")
+
+func _parse_book(json_text: String) -> Dictionary:
+	# Parses a JSON storybook (the same grid shape as a StoryletResource: an object with storylets /
+	# requirements / choices / ... arrays) into a Dictionary, or {} when the text is not a JSON object.
+	var reader: JSON = JSON.new()
+	if reader.parse(json_text) != OK:
+		return {}
+	return reader.data if reader.data is Dictionary else {}
 
 func _activate(id: String) -> void:
 	# Marks a storylet as played now: records the play + cooldown start + active + draw history,

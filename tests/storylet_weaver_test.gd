@@ -255,6 +255,25 @@ static func run() -> bool:
 		sw.load_from_resource(corrupt)
 		all_passed = _check("a non-Dictionary grid row is ignored, not fatal", sw.storylet_count(), 1) and all_passed
 
+	# --- Load From JSON: the same grid shape as a string (hot-reload / user-made books) ---
+	_reset(sw)
+	var json_book: String = '{"storylets":[{"id":"gate","title":"Gate","body":"Pay.","weight":2}],"requirements":[{"storylet":"gate","op":">=","key":"gold","value":"1"}],"choices":[{"storylet":"gate","choice_id":"pay","text":"Pay."}],"choice_effects":[{"storylet":"gate","choice_id":"pay","op":"dec","key":"gold","value":"10"}],"effects":[{"storylet":"gate","op":"inc","key":"visits","value":"1"}],"meta":[{"storylet":"gate","key":"speaker","value":"Keeper"}]}'
+	sw.load_from_json(json_book)
+	all_passed = _check("Load From JSON registers the storylet", sw.storylet_count(), 1) and all_passed
+	all_passed = _check("Load From JSON reads meta", sw.storylet_meta("gate", "speaker"), "Keeper") and all_passed
+	all_passed = _check("Load From JSON maps a symbol op (>=) and its on-draw effect", sw.forecast_storylet_effects("gate"), "visits +1") and all_passed
+	all_passed = _check("a JSON choice effect loaded (forecast reads it)", sw.forecast_choice_effects("gate", "pay"), "gold -10") and all_passed
+	all_passed = _check("a clean JSON book validates", sw.validate_json(json_book) == "" and sw.json_book_is_valid(json_book), true) and all_passed
+
+	# Invalid JSON is ignored by the loader and reported by the validator (never a crash).
+	_reset(sw)
+	sw.load_from_json("{ not json")
+	all_passed = _check("invalid JSON loads nothing", sw.storylet_count(), 0) and all_passed
+	all_passed = _check("Validate Book JSON reports a parse failure", sw.validate_json("{ not json").contains("not valid JSON"), true) and all_passed
+	all_passed = _check("a JSON book that does not parse is invalid", sw.json_book_is_valid("{ not json"), false) and all_passed
+	all_passed = _check("Validate Book JSON reports a dangling storylet in JSON",
+		sw.validate_json('{"requirements":[{"storylet":"ghost","op":"gte","key":"x","value":"1"}]}').contains("unknown storylet 'ghost'"), true) and all_passed
+
 	sw.free()
 	return all_passed
 

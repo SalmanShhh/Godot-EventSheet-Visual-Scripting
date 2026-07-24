@@ -498,6 +498,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Actions
 - **Start Following** (`path: String`) - Follows the node at the given path.
+- **Follow Group** (`group: String`) - Follows the first node in a group - no tree path, so it survives the target being moved or renamed.
 - **Stop Following** - Stops trailing the target.
 
 ### FPSController (`res://eventsheet_addons/fps_controller/fps_controller_behavior.gd`)
@@ -1413,7 +1414,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set State** (`next: String`) - Switches to the given state and fires On State Changed.
 
 ### StoryletsAddon (`res://eventsheet_addons/storylet_weaver/storylet_weaver_addon.gd`)
-@ace_tags(narrative, storylet) @ace_category("Storylets") @ace_version(1.0.0)
+@ace_tags(narrative, storylet) @ace_category("Storylets") @ace_version(1.3.0)
 
 #### Triggers
 - **On Storylet Drawn**
@@ -1425,6 +1426,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Has Been Played** (`id: String`) - Whether a storylet has played at least once.
 - **Is On Cooldown** (`id: String`) - Whether a storylet is still cooling down.
 - **Is Library Empty** - Whether no storylets are registered.
+- **Book Resource Is Valid** (`resource: Resource`) - Whether a StoryletResource is free of structural problems - every requirement / choice / effect / meta row names a defined storylet, every choice-rule row names a real choice, and no storylet id is blank or duplicated. Read the specific problems with Validate Book Resource.
+- **JSON Book Is Valid** (`json: String`) - Whether a JSON storybook parses and is free of structural problems - the JSON equivalent of Book Resource Is Valid. Read the specific problems (including a parse failure) with Validate Book JSON.
 
 #### Actions
 - **Define Storylet** (`id: String, title: String, body: String`) - Registers (or replaces) a storylet: an id plus the title + body text your game shows.
@@ -1433,17 +1436,26 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Max Plays** (`id: String, max_plays: float`) - How many times it may ever play (-1 = unlimited, 1 = a one-shot).
 - **Add Requirement** (`id: String, quality_key: String, op: String, value`) - A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "
 - **Add Choice** (`id: String, choice_id: String, text: String`) - Adds a labelled choice the player can pick on this storylet (resolve it with Choose).
+- **Add Choice Requirement** (`id: String, choice_id: String, quality_key: String, op: String, value`) - A rule that must pass for this choice to be OFFERED, e.g. quality "gold" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice.
+- **Add Choice Effect** (`id: String, choice_id: String, op: String, key: String, value`) - A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice.
+- **Add Effect** (`id: String, op: String, key: String, value`) - A quality change applied automatically when this storylet is DRAWN - so a beat carries its own consequence. Define the storylet first.
+- **Add Meta** (`id: String, key: String, value`) - Attaches an arbitrary key-value to a storylet (a speaker, a portrait, a sound). Read it back with Active Meta / Storylet Meta - the engine never interprets it.
+- **Add Requirement (Key vs Key)** (`id: String, quality_key: String, op: String, other_key: String`) - A rule comparing one quality against ANOTHER quality's value, e.g. gold >= price - so a storylet reacts to a relationship between stats without hard-coding the number.
+- **Add Chance Requirement** (`id: String, percent: float`) - A probability gate: the storylet is eligible only percent% of the time, re-rolled on every Evaluate/Draw. Use it to make a beat show only sometimes.
+- **Add Recency Requirement** (`id: String, mode: String, within: int`) - An anti-repeat (or must-be-recent) gate by DRAW history: eligible only when this storylet was / was not among the last N drawn storylets.
 - **Set Quality** (`key: String, value`) - Stores a quality value (a number like courage=3, or text like location="tavern
 - **Increment Quality** (`key: String, amount: float`) - Adds to a numeric quality (creating it at 0 if new).
 - **Clear Quality** (`key: String`) - Removes a quality key.
 - **Evaluate** - Rebuilds the available list: every eligible storylet, ordered by weight (highest first). Use the Available expressions to show a menu.
 - **Draw** - Evaluates, then activates the highest-weight eligible storylet and fires On Storylet Drawn (or On None Available if nothing qualifies).
 - **Draw Weighted** - Like Draw, but picks randomly among the eligible storylets in proportion to their weight (for variety).
-- **Choose** (`choice_id: String`) - Resolves the active storylet's choice by id (fires On Choice Made, then clears the active storylet). React inside On Choice Made.
+- **Choose** (`choice_id: String`) - Resolves the active storylet's choice by id: applies that choice's effects, fires On Choice Made, then clears the active storylet. Only an ELIGIBLE choice resolves. React inside On Choice Made.
 - **Use Advanced Random** (`enabled: bool`) - When on, Draw Weighted picks using the shared AdvancedRandom autoload instead of Godot's own randf(), so one seed drives your whole game's randomness. When off (the default) it uses randf(). Needs the Advanced Random pack installed (it safely falls back if not).
+- **Load From Resource** (`resource: Resource`) - Registers a whole storybook from a StoryletResource asset (a .tres you fill in the Inspector) in one step, instead of a wall of Define Storylet actions. Additive: it defines each storylet and adds its requirements, choices, effects and meta, so you can still tweak the library with the discrete actions afterwards.
+- **Load From JSON** (`json: String`) - Registers a whole storybook from a JSON string in one step - the same grid shape as a StoryletResource (an object with storylets / requirements / choices / choice_requirements / effects / choice_effects / meta arrays), so you can hot-reload narrative content or load user-made / downloaded books at runtime. Additive and forgiving like Load From Resource; ops may be symbols (>=) or word tokens (gte). Invalid or non-object JSON is ignored - check it first with Validate Book JSON.
 - **Dismiss** - Clears the active storylet without making a choice (the play still counted).
 - **Reset Play Count** (`id: String`) - Lets a one-shot or limited storylet play again.
-- **Reset All History** - Clears every play count + cooldown (e.g. on New Game).
+- **Reset All History** - Clears every play count, cooldown, and the recency draw-history (e.g. on New Game).
 
 #### Expressions
 - **Quality Number** (`key: String`) - A quality as a number (0 if unset).
@@ -1454,13 +1466,20 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Active Id** - The active storylet id ("" if none).
 - **Active Title** - The active storylet's title.
 - **Active Body** - The active storylet's body text.
-- **Choice Count** - How many choices the active storylet offers.
-- **Choice Id At** (`index: int`) - The choice id at a position on the active storylet.
-- **Choice Text At** (`index: int`) - The choice label at a position on the active storylet.
+- **Choice Count** - How many ELIGIBLE choices the active storylet offers (choices whose requirements fail are not counted).
+- **Choice Id At** (`index: int`) - The id of the eligible choice at a position on the active storylet.
+- **Choice Text At** (`index: int`) - The label of the eligible choice at a position on the active storylet.
 - **Chosen Id** - The choice just picked (inside On Choice Made).
+- **Forecast Storylet Effects** (`id: String`) - A readable preview of the quality changes a storylet applies when drawn, e.g. "gold -10, gate_open = 1". Never changes anything - put it on a button.
+- **Forecast Choice Effects** (`id: String, choice_id: String`) - A readable preview of the quality changes a choice applies when picked. Pass Active Id() for the current storylet. Never changes anything.
+- **Active Meta** (`key: String`) - A meta value on the active storylet ("" if unset).
+- **Storylet Meta** (`id: String, key: String`) - A meta value on any registered storylet by id, without drawing it ("" if unset).
+- **Available Meta** (`index: int, key: String`) - A meta value on the eligible storylet at a position in the available list.
 - **Play Count** (`id: String`) - How many times a storylet has played.
 - **Cooldown Remaining** (`id: String`) - Seconds left on a storylet's cooldown (0 if ready).
 - **Storylet Count** - How many storylets are registered.
+- **Validate Book Resource** (`resource: Resource`) - Checks a StoryletResource's grids and returns each structural problem - a requirement / choice / effect / meta row naming a storylet (or choice) that does not exist, a blank storylet id, or a duplicate id that silently overrides an earlier storylet - one per line, "" when the book is clean. Print it while authoring to catch typos in the tables.
+- **Validate Book JSON** (`json: String`) - Checks a JSON storybook and returns each structural problem one per line, "" when clean - the JSON twin of Validate Book Resource. Also reports "not valid JSON" for a parse failure and a non-object root, so it doubles as a JSON syntax check before Load From JSON.
 
 ### TileMovementBehavior (`res://eventsheet_addons/tile_movement/tile_movement_behavior.gd`)
 @ace_category("Tile Movement") @ace_expose_all(node) @ace_version(1.0.0)

@@ -60,6 +60,20 @@
   (2) a hand-corrupted grid holding a non-Dictionary row crashed the typed row loops - `_rows()` now drops
   stray non-Dictionary elements instead. Storylet Weaver pack bumped to 1.2.0.
 
+### Added - Load From JSON (Storylet Weaver)
+
+- **Load From JSON** registers a whole storybook from a JSON string - the same grid shape as a
+  StoryletResource (an object with `storylets` / `requirements` / `choices` / `choice_requirements` /
+  `effects` / `choice_effects` / `meta` arrays), so a game can hot-reload narrative content or load
+  user-made / downloaded books at runtime without recompiling. Operators may be symbols (`>=`) or the
+  word tokens (`gte`); grids you do not use can be omitted.
+- It reuses the same core as Load From Resource: the loader (`_load_grids`) and the validator
+  (`_validate_book`) now read from any source that answers `.get(field)` - a `Resource` property or a
+  parsed-JSON `Dictionary` key - so JSON gets the identical additive, phantom-safe skip behavior for
+  nothing extra. **Validate Book JSON** (expression) and **JSON Book Is Valid** (condition) mirror the
+  resource validators and also report a parse failure (with Godot's message), doubling as a JSON syntax
+  check before a load. Suite-covered; Storylet Weaver pack bumped to 1.3.0.
+
 ### Changed - the verb dialog speaks Action / Condition / Expression, and its picker details move to the row
 
 - **The three kind cards headline the ACE kind.** "What kind of verb is this?" led with plain-language

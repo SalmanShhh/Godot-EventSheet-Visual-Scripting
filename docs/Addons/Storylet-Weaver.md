@@ -91,6 +91,7 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | Action | Parameters | What it does |
 | --- | --- | --- |
 | **Load From Resource** | `resource` | Loads a whole **StoryletResource** (a `.tres` you filled in the Inspector) into the live library in one step - every storylet with its weight / cooldown / max plays, plus all requirements, choices, choice rules, effects and meta. See [The data-driven path](#the-data-driven-path-a-storyletresource-asset). |
+| **Load From JSON** | `json` | Loads a whole storybook from a JSON string - the same grid shape as a StoryletResource. For hot-reloading narrative content or loading user-made / downloaded books at runtime. Operators may be symbols (`>=`) or word tokens (`gte`); unused grids can be omitted. Invalid JSON is ignored (check it first with **Validate Book JSON**). |
 | **Define Storylet** | `id`, `title`, `body` | Registers (or replaces) a storylet: an id plus the title + body text your game shows. |
 | **Set Storylet Weight** | `id`, `weight` | How strongly this storylet is preferred when several are eligible (higher = picked first / likelier). |
 | **Set Storylet Cooldown** | `id`, `seconds` | Seconds this storylet is ineligible after it plays (`0` = no cooldown). |
@@ -126,6 +127,7 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | **Is On Cooldown** | `id` | Whether a storylet is still cooling down. |
 | **Is Library Empty** | (none) | Whether no storylets are registered. |
 | **Book Resource Is Valid** | `resource` | Whether a **StoryletResource** is free of structural problems - every requirement / choice / effect / meta row names a defined storylet, every choice-rule row names a real choice, and no storylet id is blank or duplicated. Read the specific problems with **Validate Book Resource**. |
+| **JSON Book Is Valid** | `json` | The JSON twin of **Book Resource Is Valid**: whether a JSON storybook parses and has no structural problems. Read the specific problems (including a parse error) with **Validate Book JSON**. |
 
 ### Expressions
 
@@ -152,6 +154,7 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | **Cooldown Remaining** | `id` | float | Seconds left on a storylet's cooldown (`0` if ready). |
 | **Storylet Count** | (none) | int | How many storylets are registered. |
 | **Validate Book Resource** | `resource` | String | The structural problems a **StoryletResource** contains (a requirement / choice / effect / meta row naming a storylet or choice that does not exist, a blank storylet id, or a duplicate id that silently overrides an earlier storylet), one per line - `""` when the book is clean. Print it while authoring to catch typos in the tables before **Load From Resource** silently skips them. |
+| **Validate Book JSON** | `json` | String | The JSON twin of **Validate Book Resource**: the structural problems in a JSON storybook, one per line, `""` when clean. Also reports `not valid JSON` (with Godot's parse message) for malformed input, so it doubles as a JSON syntax check before **Load From JSON**. |
 
 ### Triggers
 
@@ -732,6 +735,36 @@ On Ready
 ```
 
 **Validate Book Resource** returns one problem per line - `requirements[2]: unknown storylet 'gto'`, `choice_effects[0]: no choice '' on storylet 'gate'` - or `""` when the book is clean. It also flags a blank storylet id (the loader skips that row) and a duplicate id (the second silently overrides the first, so the earlier storylet's data is lost). Drop it behind a debug flag while authoring and every structural problem shows up the moment you load the asset.
+
+### Or load it from JSON
+
+A `.tres` is the right home for a book that ships **inside** your project. When the book comes from **outside** it - hot-reloaded while you tune it, downloaded as DLC, made by players in a level editor - use **Load From JSON** instead. The JSON uses the very same grid shape (an object with `storylets`, `requirements`, `choices`, and the rest as arrays of rows), so everything you know about the resource carries over; grids you do not use can simply be left out, and operators can be plain symbols (`>=`) since JSON text has no table-cell restriction:
+
+```
+On new content downloaded
+  Storylets: JSON Book Is Valid  downloaded_text  is false
+    -> print  Storylets.Validate Book JSON(downloaded_text)
+  -> Storylets: Load From JSON   downloaded_text
+```
+
+```json
+{
+  "storylets": [
+    { "id": "gate", "title": "The Gatekeeper", "body": "Ten gold to pass.", "weight": 3 }
+  ],
+  "requirements": [
+    { "storylet": "gate", "op": ">=", "key": "reputation", "value": "1" }
+  ],
+  "choices": [
+    { "storylet": "gate", "choice_id": "pay", "text": "Pay 10 gold." }
+  ],
+  "choice_effects": [
+    { "storylet": "gate", "choice_id": "pay", "op": "dec", "key": "gold", "value": "10" }
+  ]
+}
+```
+
+**Load From JSON** is additive and phantom-safe exactly like Load From Resource - it silently skips any row that names a storylet or choice that does not exist - and **Validate Book JSON** / **JSON Book Is Valid** report the same structural problems, plus a `not valid JSON` line (with Godot's parse message) when the text itself is malformed. Read a book off disk with the file ACEs (or your own GDScript) and pass the string straight in.
 
 ---
 
