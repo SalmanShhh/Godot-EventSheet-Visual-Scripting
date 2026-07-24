@@ -274,6 +274,43 @@ static func run() -> bool:
 	all_passed = _check("Validate Book JSON reports a dangling storylet in JSON",
 		sw.validate_json('{"requirements":[{"storylet":"ghost","op":"gte","key":"x","value":"1"}]}').contains("unknown storylet 'ghost'"), true) and all_passed
 
+	# --- Regression (adversarial review): validate must AGREE with what a load actually does ---
+	# A grid that is not a list of rows loads as nothing, so it must not read as a clean book.
+	_reset(sw)
+	var wrong_shape: String = '{"storylets":{"id":"intro","title":"Hi"}}'
+	all_passed = _check("a grid that is an object instead of a list is reported, not called clean",
+		sw.validate_json(wrong_shape).contains("expected a list of rows"), true) and all_passed
+	all_passed = _check("that book is invalid (its content would silently vanish)", sw.json_book_is_valid(wrong_shape), false) and all_passed
+	sw.load_from_json(wrong_shape)
+	all_passed = _check("and it indeed loads nothing", sw.storylet_count(), 0) and all_passed
+	all_passed = _check("a stray non-row inside a grid is reported too",
+		sw.validate_json('{"storylets":[42,{"id":"ok"}]}').contains("storylets[0]: not a row"), true) and all_passed
+
+	# The loader is ADDITIVE, so a row may point at a storylet defined earlier - that is not dangling.
+	_reset(sw)
+	sw.define_storylet("intro", "Intro", "Body")
+	var additive: String = '{"choices":[{"storylet":"intro","choice_id":"go","text":"Go"}]}'
+	all_passed = _check("a row naming an ALREADY-registered storylet validates clean (the load applies it)",
+		sw.validate_json(additive) == "" and sw.json_book_is_valid(additive), true) and all_passed
+	sw.load_from_json(additive)
+	sw.draw()
+	all_passed = _check("and the additive choice really did load", sw.active_choice_count(), 1) and all_passed
+
+	# A present-but-null cell must fall back to its default, not read as 0 (max_plays 0 = never eligible).
+	_reset(sw)
+	sw.load_from_json('{"storylets":[{"id":"n","title":"N","body":"B","max_plays":null}]}')
+	sw.evaluate()
+	all_passed = _check("a null max_plays falls back to unlimited instead of trapping the storylet",
+		sw.is_available("n"), true) and all_passed
+
+	# A JSON number reads the same as the equivalent resource String cell (no trailing ".0").
+	_reset(sw)
+	sw.load_from_json('{"storylets":[{"id":"g","title":"G","body":"B"}],"effects":[{"storylet":"g","op":"dec","key":"gold","value":10}],"meta":[{"storylet":"g","key":"cost","value":10}]}')
+	all_passed = _check("a JSON number forecasts like a resource cell (gold -10, not -10.0)",
+		sw.forecast_storylet_effects("g"), "gold -10") and all_passed
+	all_passed = _check("a JSON number reads back from meta without a trailing .0",
+		sw.storylet_meta("g", "cost"), "10") and all_passed
+
 	sw.free()
 	return all_passed
 

@@ -43,40 +43,65 @@ func _validate_book(source: Variant) -> PackedStringArray:
 	if source == null:
 		problems.append("no book (null)")
 		return problems
-	var ids: Dictionary = {}
+	# A grid that is present but is not a list of rows loads as NOTHING. Report the shape, otherwise
+	# a book whose content silently vanishes (a JSON object where an array belongs) reads as clean.
+	for field: String in ["storylets", "requirements", "choices", "choice_requirements", "effects", "choice_effects", "meta"]:
+		var raw: Variant = source.get(field)
+		if raw == null:
+			continue
+		if not raw is Array:
+			problems.append("%s: expected a list of rows, got %s (the whole grid is skipped)" % [field, type_string(typeof(raw))])
+			continue
+		var at: int = 0
+		for entry: Variant in raw:
+			if not entry is Dictionary:
+				problems.append("%s[%d]: not a row, got %s (skipped)" % [field, at, type_string(typeof(entry))])
+			at += 1
+	# Ids a load would actually RESOLVE: the ones this book defines plus the ones already registered
+	# (the loader is additive), so a row pointing at a storylet from an earlier load or a Define
+	# Storylet action is not mis-reported as dangling. `book_ids` stays book-local for duplicate ids.
+	var known: Dictionary = {}
+	var choices: Dictionary = {}
+	for live_id: String in _lib:
+		known[live_id] = true
+		var live_choices: Dictionary = {}
+		for c: Dictionary in _lib[live_id].get("choices", []):
+			live_choices[str(c.get("id", ""))] = true
+		choices[live_id] = live_choices
+	var book_ids: Dictionary = {}
 	var i: int = 0
 	for row: Dictionary in _rows(source, "storylets"):
-		var sid: String = str(row.get("id", ""))
+		var sid: String = str(_cell(row, "id", ""))
 		if sid.is_empty():
 			problems.append("storylets[%d]: blank id (row skipped)" % i)
-		elif ids.has(sid):
-			problems.append("storylets[%d]: duplicate id '%s' (overrides the earlier one)" % [i, sid])
 		else:
-			ids[sid] = true
+			if book_ids.has(sid):
+				problems.append("storylets[%d]: duplicate id '%s' (overrides the earlier one)" % [i, sid])
+			book_ids[sid] = true
+			known[sid] = true
 		i += 1
-	var choices: Dictionary = {}
 	i = 0
 	for row: Dictionary in _rows(source, "choices"):
-		var sid2: String = str(row.get("storylet", ""))
-		if not ids.has(sid2):
+		var sid2: String = str(_cell(row, "storylet", ""))
+		if not known.has(sid2):
 			problems.append("choices[%d]: unknown storylet '%s'" % [i, sid2])
 		else:
 			if not choices.has(sid2):
 				choices[sid2] = {}
-			choices[sid2][str(row.get("choice_id", ""))] = true
+			choices[sid2][str(_cell(row, "choice_id", ""))] = true
 		i += 1
 	for field: String in ["requirements", "effects", "meta"]:
 		i = 0
 		for row: Dictionary in _rows(source, field):
-			var rid: String = str(row.get("storylet", ""))
-			if not ids.has(rid):
+			var rid: String = str(_cell(row, "storylet", ""))
+			if not known.has(rid):
 				problems.append("%s[%d]: unknown storylet '%s'" % [field, i, rid])
 			i += 1
 	for field: String in ["choice_requirements", "choice_effects"]:
 		i = 0
 		for row: Dictionary in _rows(source, field):
-			var rid2: String = str(row.get("storylet", ""))
-			var cid: String = str(row.get("choice_id", ""))
+			var rid2: String = str(_cell(row, "storylet", ""))
+			var cid: String = str(_cell(row, "choice_id", ""))
 			if not (choices.get(rid2, {}) as Dictionary).has(cid):
 				problems.append("%s[%d]: no choice '%s' on storylet '%s'" % [field, i, cid, rid2])
 			i += 1
@@ -802,6 +827,22 @@ func _rows(source, field: String) -> Array:
 			out.append(e)
 	return out
 
+func _cell(row: Dictionary, key: String, default) -> Variant:
+	# One cell off a row, treating a PRESENT-but-null value as missing so the default still applies.
+	# JSON writes an omitted field as null ("max_plays": null), and Dictionary.get only falls back to
+	# its default when the key is ABSENT - without this, such a cell would read as 0 and, for max_plays,
+	# silently make the storylet permanently ineligible.
+	var v: Variant = row.get(key, default)
+	return default if v == null else v
+
+func _norm_value(v) -> Variant:
+	# JSON numbers always parse as float, so an integral 10.0 would read as "10.0" where the equivalent
+	# resource String cell reads "10". Normalising an integral float to an int keeps a JSON book and a
+	# .tres book displaying identically (forecasts, meta reads) without changing any arithmetic.
+	if v is float and is_finite(v) and absf(v) < 9007199254740992.0 and v == floor(v):
+		return int(v)
+	return v
+
 func _op_symbol(op: String) -> String:
 	# A StoryletResource op column stores a WORD token (a table dropdown cannot hold ">=", whose "="
 	# is a reserved marker char), so map it to the symbol the eligibility check uses. A symbol that
@@ -818,53 +859,53 @@ func _op_symbol(op: String) -> String:
 func _req_from_row(row: Dictionary) -> Dictionary:
 	# Turns one Requirements-grid row into a requirement dict the eligibility check understands -
 	# a comparison (optionally key-vs-key), a chance gate, or a recency gate.
-	var op: String = str(row.get("op", "gte"))
+	var op: String = str(_cell(row, "op", "gte"))
 	match op:
 		"chance":
-			return {"op": "chance", "value": _num(row.get("value", 0))}
+			return {"op": "chance", "value": _num(_cell(row, "value", 0))}
 		"recent", "not_recent":
-			return {"op": op, "value": int(_num(row.get("value", 0)))}
-	var req: Dictionary = {"key": str(row.get("key", "")), "op": _op_symbol(op), "value": row.get("value", "")}
-	if bool(row.get("value_is_key", false)):
+			return {"op": op, "value": int(_num(_cell(row, "value", 0)))}
+	var req: Dictionary = {"key": str(_cell(row, "key", "")), "op": _op_symbol(op), "value": _norm_value(_cell(row, "value", ""))}
+	if bool(_cell(row, "value_is_key", false)):
 		req["value_key"] = true
 	return req
 
 func _effect_from_row(row: Dictionary) -> Dictionary:
 	# Turns one Effects-grid row into an effect dict.
-	return {"op": str(row.get("op", "set")), "key": str(row.get("key", "")), "value": row.get("value", "")}
+	return {"op": str(_cell(row, "op", "set")), "key": str(_cell(row, "key", "")), "value": _norm_value(_cell(row, "value", ""))}
 
 func _load_grids(source) -> void:
 	# The shared loader core: reads the grids off a book source (a StoryletResource or a parsed JSON
 	# object) and replays them into the live library. Additive and forgiving - a row naming an undefined
 	# storylet (or a choice on it) is skipped, never conjuring a phantom (see _choice, which is read-only).
 	for row: Dictionary in _rows(source, "storylets"):
-		var sid: String = str(row.get("id", ""))
+		var sid: String = str(_cell(row, "id", ""))
 		if sid.is_empty():
 			continue
-		define_storylet(sid, str(row.get("title", "")), str(row.get("body", "")))
-		_lib[sid].weight = maxf(_num(row.get("weight", 1.0)), 0.0)
-		_lib[sid].cooldown = maxf(_num(row.get("cooldown", 0.0)), 0.0)
-		_lib[sid].max_plays = _num(row.get("max_plays", -1.0))
+		define_storylet(sid, str(_cell(row, "title", "")), str(_cell(row, "body", "")))
+		_lib[sid].weight = maxf(_num(_cell(row, "weight", 1.0)), 0.0)
+		_lib[sid].cooldown = maxf(_num(_cell(row, "cooldown", 0.0)), 0.0)
+		_lib[sid].max_plays = _num(_cell(row, "max_plays", -1.0))
 	for row: Dictionary in _rows(source, "requirements"):
-		if _lib.has(str(row.get("storylet", ""))):
-			_lib[str(row.get("storylet", ""))].reqs.append(_req_from_row(row))
+		if _lib.has(str(_cell(row, "storylet", ""))):
+			_lib[str(_cell(row, "storylet", ""))].reqs.append(_req_from_row(row))
 	for row: Dictionary in _rows(source, "choices"):
-		if _lib.has(str(row.get("storylet", ""))):
-			add_choice(str(row.get("storylet", "")), str(row.get("choice_id", "")), str(row.get("text", "")))
+		if _lib.has(str(_cell(row, "storylet", ""))):
+			add_choice(str(_cell(row, "storylet", "")), str(_cell(row, "choice_id", "")), str(_cell(row, "text", "")))
 	for row: Dictionary in _rows(source, "choice_requirements"):
-		var cr: Dictionary = _choice(str(row.get("storylet", "")), str(row.get("choice_id", "")))
+		var cr: Dictionary = _choice(str(_cell(row, "storylet", "")), str(_cell(row, "choice_id", "")))
 		if not cr.is_empty():
 			cr.reqs.append(_req_from_row(row))
 	for row: Dictionary in _rows(source, "effects"):
-		if _lib.has(str(row.get("storylet", ""))):
-			_lib[str(row.get("storylet", ""))].effects.append(_effect_from_row(row))
+		if _lib.has(str(_cell(row, "storylet", ""))):
+			_lib[str(_cell(row, "storylet", ""))].effects.append(_effect_from_row(row))
 	for row: Dictionary in _rows(source, "choice_effects"):
-		var ce: Dictionary = _choice(str(row.get("storylet", "")), str(row.get("choice_id", "")))
+		var ce: Dictionary = _choice(str(_cell(row, "storylet", "")), str(_cell(row, "choice_id", "")))
 		if not ce.is_empty():
 			ce.effects.append(_effect_from_row(row))
 	for row: Dictionary in _rows(source, "meta"):
-		if _lib.has(str(row.get("storylet", ""))):
-			_lib[str(row.get("storylet", ""))].meta[str(row.get("key", ""))] = row.get("value", "")
+		if _lib.has(str(_cell(row, "storylet", ""))):
+			_lib[str(_cell(row, "storylet", ""))].meta[str(_cell(row, "key", ""))] = _norm_value(_cell(row, "value", ""))
 
 func _parse_book(json_text: String) -> Dictionary:
 	# Parses a JSON storybook (the same grid shape as a StoryletResource: an object with storylets /

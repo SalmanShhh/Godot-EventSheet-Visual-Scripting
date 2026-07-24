@@ -79,9 +79,12 @@
 - New builtin ACEs under **Variables: Array** (module `array_functional_aces.gd`), filling the gaps in the
   base Array set:
   - **Filter / Map / Reduce** (expressions) and **Any Match / All Match** (conditions) wrap Godot's
-    higher-order `Array.filter` / `map` / `reduce` / `any` / `all`. The lambda signature is fixed
-    (`func(x)`, or `func(acc, x)` for reduce) so the author fills only the body through the `ƒx` field and
-    the emitted GDScript stays plain and parity-safe - e.g. `scores.filter(func(x): return x > 0)`.
+    higher-order `Array.filter` / `map` / `reduce` / `any` / `all`. The author writes only the body through
+    the `ƒx` field and the emitted GDScript stays plain and parity-safe - e.g.
+    `scores.filter(func(x): return x > 0)`. The element is named by an **Element name** field (default
+    `x`, plus **Accumulator name** defaulting to `acc` on Reduce) rather than baked into the template: a
+    baked name would silently shadow a sheet variable of the same name, and GDScript issues no warning for
+    that, so the row would compile clean and quietly compute the wrong answer.
   - **Is Typed** (condition), **Assign (Type-Converting)** (action, `Array.assign` - the type-safe way to
     fill an `Array[int]`/`Array[String]` from another array), and **Element Type** / **Element Class**
     (expressions) for GDScript typed arrays.
@@ -89,6 +92,27 @@
   variables (a typed `Array[int]` qualifies too). Suite-covered: a new `array_functional_aces_test.gd`
   proves each shipped template, run through the real codegen, behaves correctly, and the whole set passes
   the standalone-compile guard.
+
+### Fixed - the book validators now agree with what a load actually does
+
+- An adversarial review of the JSON layer found three ways **Validate Book Resource / Validate Book JSON**
+  disagreed with the loader. All are fixed, and the loader itself is unchanged in the cases that already
+  worked:
+  - **A malformed grid read as clean.** A grid that is present but is not a list of rows (a JSON object
+    where an array belongs) loads as *nothing*, yet validation reported no problem - so a book whose
+    content silently vanished looked healthy. Both validators now report the grid's shape (and a stray
+    non-row inside an otherwise valid grid).
+  - **Additive loads reported false problems.** The loader is additive, so a row may reference a storylet
+    registered earlier (by a previous load or a Define Storylet action). Validation only knew the ids
+    inside the book being checked, so it called such a row a dangling reference even though the load
+    applies it correctly. It now resolves against the live library as well, while still flagging duplicate
+    ids *within* a book.
+  - **A null cell became a silent trap.** JSON writes an omitted field as `null`, and `Dictionary.get`
+    only falls back to its default when the key is *absent* - so `"max_plays": null` read as `0` and made
+    the storylet permanently ineligible, with validation calling the book clean. Cells now treat a
+    present-null as missing.
+- Also: a JSON number now reads like the equivalent resource cell (`gold -10`, not `gold -10.0`) in
+  forecasts and meta, since JSON parses every number as a float.
 
 ### Changed - the verb dialog speaks Action / Condition / Expression, and its picker details move to the row
 

@@ -734,7 +734,9 @@ On Ready
   -> Storylets: Load From Resource   preload("res://demo/storylet_book/village_storylets.tres")
 ```
 
-**Validate Book Resource** returns one problem per line - `requirements[2]: unknown storylet 'gto'`, `choice_effects[0]: no choice '' on storylet 'gate'` - or `""` when the book is clean. It also flags a blank storylet id (the loader skips that row) and a duplicate id (the second silently overrides the first, so the earlier storylet's data is lost). Drop it behind a debug flag while authoring and every structural problem shows up the moment you load the asset.
+**Validate Book Resource** returns one problem per line - `requirements[2]: unknown storylet 'gto'`, `choice_effects[0]: no choice '' on storylet 'gate'` - or `""` when the book is clean. It also flags a blank storylet id (the loader skips that row), a duplicate id (the second silently overrides the first, so the earlier storylet's data is lost), and a grid that is not a list of rows at all (which would load as nothing). Drop it behind a debug flag while authoring and every structural problem shows up the moment you load the asset.
+
+Because loading is **additive**, the check is done against your live library too: a row that references a storylet you defined earlier - in a previous load, or with a Define Storylet action - is correct, not dangling, and validation says so.
 
 ### Or load it from JSON
 
