@@ -109,7 +109,7 @@ const TYPE_OPTIONS: PackedStringArray = [
 	# Common game-value types - also the hosts for the Tier 3 drawers (dial / swatches / texture / curve).
 	"Vector2", "Color", "Texture2D", "Curve", "Gradient",
 	"Variant",
-	"Array", "Array[int]", "Array[float]", "Array[String]",
+	"Array", "Array[int]", "Array[float]", "Array[String]", "Array[Dictionary]",
 	"Dictionary", "Dictionary[String, int]", "Dictionary[String, float]",
 	"Dictionary[String, String]", "Dictionary[String, Variant]"
 ]
@@ -134,6 +134,7 @@ const TYPE_HINTS: Dictionary = {
 	"Array[int]": "A list of whole numbers (Array[int]) - scores, ids, tile indexes.",
 	"Array[float]": "A list of numbers (Array[float]) - weights, timings, chances.",
 	"Array[String]": "A list of text entries (Array[String]) - names, lines, tags.",
+	"Array[Dictionary]": "A list of rows (Array[Dictionary]) - the typed form of a table. Pair it with the Table drawer to edit it as a grid in the Inspector.",
 	"Dictionary": "Named slots holding anything: look values up by a key.",
 	"Dictionary[String, int]": "Named whole numbers (by text key) - e.g. costs[\"sword\"] = 10.",
 	"Dictionary[String, float]": "Named numbers (by text key) - e.g. volumes[\"music\"] = 0.8.",
@@ -1510,7 +1511,9 @@ static func _drawer_kinds_for_type(type_name: String) -> PackedStringArray:
 			return PackedStringArray(["progress_bar"])
 		"Vector2":
 			return PackedStringArray(["vector_dial", "min_max"])
-		"Array":
+		"Array", "Array[Dictionary]":
+			# A typed row list hosts the grid exactly as the untyped one does (both reach the drawer as
+			# TYPE_ARRAY); typed just adds the compile-time guarantee that every row really is a row.
 			return PackedStringArray(["table"])
 		"String":
 			return PackedStringArray(["toggle_row"])

@@ -227,6 +227,48 @@ static func run() -> bool:
 		[{"name": "item", "type": "String"}, {"name": "count", "type": "int"}, {"name": "odd", "type": "String"}]) and all_passed
 	all_passed = _eq("Array hosts the table drawer",
 		VariableDialog._drawer_kinds_for_type("Array"), PackedStringArray(["table"])) and all_passed
+
+	# --- A TYPED row list (Array[Dictionary]) hosts the grid exactly as the untyped one does. It reaches
+	# the drawer as TYPE_ARRAY either way, so the marker, the lift and the re-emission all match; a list
+	# typed to a non-Dictionary element cannot hold rows, so it still degrades to a plain field. ---
+	var typed_table_var: LocalVariable = LocalVariable.new()
+	typed_table_var.name = "loot"
+	typed_table_var.type_name = "Array[Dictionary]"
+	typed_table_var.default_value = []
+	typed_table_var.exported = true
+	typed_table_var.attributes = {"drawer": "table", "table_columns": [{"name": "item", "type": "String"}, {"name": "count", "type": "int"}]}
+	var typed_table_expected: String = "@export_custom(PROPERTY_HINT_NONE, \"eventsheet:table:item=String,count=int\") var loot: Array[Dictionary] = []"
+	all_passed = _eq("a typed row list emits the table marker",
+		SheetCompiler._emit_tree_variable_line(typed_table_var), typed_table_expected) and all_passed
+	all_passed = _eq("table on a list typed to a NON-row element emits no marker",
+		_emit_for("Array[int]", [], {"drawer": "table", "table_columns": [{"name": "hp", "type": "int"}]}).contains("eventsheet:"), false) and all_passed
+	var typed_table_sheet: EventSheetResource = GDScriptImporter.new().import_external_source("extends Node2D\n\n" + typed_table_expected + "\n")
+	var typed_table_lifted: LocalVariable = _find(typed_table_sheet, "loot")
+	all_passed = _eq("the lift keeps the typed row list's element type",
+		typed_table_lifted.type_name if typed_table_lifted != null else "", "Array[Dictionary]") and all_passed
+	all_passed = _eq("the lift recovers a typed row list's columns",
+		(typed_table_lifted.attributes as Dictionary).get("table_columns") if typed_table_lifted != null else null,
+		[{"name": "item", "type": "String"}, {"name": "count", "type": "int"}]) and all_passed
+	if typed_table_lifted != null:
+		all_passed = _eq("a typed table var re-emits byte-identically",
+			SheetCompiler._emit_tree_variable_line(typed_table_lifted), typed_table_expected) and all_passed
+	all_passed = _eq("Array[Dictionary] hosts the table drawer",
+		VariableDialog._drawer_kinds_for_type("Array[Dictionary]"), PackedStringArray(["table"])) and all_passed
+	all_passed = _eq("a scalar typed list hosts no drawer",
+		VariableDialog._drawer_kinds_for_type("Array[int]"), PackedStringArray()) and all_passed
+
+	# Plain typed lists round-trip byte-exact, and carry Inspector grouping like any other exported var.
+	all_passed = _type_roundtrip("Array[int]", "@export var scores: Array[int] = []", "scores") and all_passed
+	all_passed = _type_roundtrip("Array[String]", "@export var names: Array[String] = []", "names") and all_passed
+	var grouped_typed: LocalVariable = LocalVariable.new()
+	grouped_typed.name = "scores"
+	grouped_typed.type_name = "Array[int]"
+	grouped_typed.default_value = []
+	grouped_typed.exported = true
+	grouped_typed.attributes = {"group": "Scoring", "subgroup": "Totals"}
+	all_passed = _eq("a typed list carries its Inspector group and subgroup",
+		SheetCompiler._tree_variable_group_prefix(grouped_typed),
+		"@export_group(\"Scoring\")\n@export_subgroup(\"Totals\")\n") and all_passed
 	var table_grid: EventSheetDrawerWidgets.DrawerTable = EventSheetDrawerWidgets.DrawerTable.new([{"name": "hp", "type": "int"}])
 	table_grid.set_value([{"hp": 5}, {"hp": 9}])
 	table_grid._on_move_up(1)

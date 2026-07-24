@@ -2625,7 +2625,11 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 		"table":
 			# Array of Dictionary rows edited as a grid; the column schema (name=type pairs) rides
 			# the marker. Names that can't survive the joined form (separators, quotes) are skipped.
-			if type_name != "Array" or not (attributes.get("table_columns") is Array):
+			# Both the untyped list and its typed form (Array[Dictionary]) host the grid - a typed row
+			# list is the same data with a compile-time guarantee, and reaches the drawer as TYPE_ARRAY
+			# either way. A list typed to a NON-Dictionary element (Array[int]) cannot hold rows, so it
+			# still degrades to a plain field rather than emitting a grid it could never fill.
+			if not (type_name in ["Array", "Array[Dictionary]"]) or not (attributes.get("table_columns") is Array):
 				return ""
 			var column_pairs: PackedStringArray = PackedStringArray()
 			for column: Variant in attributes.get("table_columns"):
