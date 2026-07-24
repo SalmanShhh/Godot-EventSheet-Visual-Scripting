@@ -20,8 +20,9 @@ byte-exactly: open the generated `.gd`, save it untouched, and you get the ident
 | `for` / `while` loops | For Each / Repeat / While rows | Right-click > Add Pick Filter (For Each) |
 | `break` / `continue` | Break Loop / Continue Loop actions | The Loops category in the picker |
 | Loop counters | The Loop index field + Loop Index expressions | Name it on any loop; read with Loop Index / Loop Index Of |
-| Arrays and Dictionaries | 41 Variables: Array / Dictionary verbs | The picker's Variables sections |
-| Typed containers (`Array[int]`, ...) | Offered with plain-language hints | The variable dialog's Type dropdown |
+| Arrays and Dictionaries | 50 Variables: Array / Dictionary verbs | The picker's Variables sections |
+| Higher-order list functions (`filter` / `map` / `reduce` / `any` / `all`) | Filter / Map / Reduce expressions + Any Match / All Match conditions | Variables: Array; you write just the test or transform, over an element you name |
+| Typed containers (`Array[int]`, ...) | Offered with plain-language hints, and readable at runtime | The variable dialog's Type dropdown; Is Typed / Element Type / Element Class / Assign |
 | Signals (declare / emit / connect / await) | Signal rows + On Signal / Emit / Connect | Add > Signal Event…; the Signals category |
 | `await` / coroutines | Wait and await-marked actions | The Wait ACEs; the action's await toggle |
 | Lambdas and Callables | Lambda / Callable expressions | Helpers: Lambda Value, Callable From Method, Bind |

@@ -14,6 +14,8 @@ const REQUIRED_ACE_IDS: PackedStringArray = [
 	"EmitSignal", "ConnectSignal",         # signals
 	"Wait",                                # await / coroutines
 	"LambdaValue", "LambdaStatement", "CallableFromMethod", "CallableBind",  # lambdas / callables
+	"ArrayFilter", "ArrayMap", "ArrayReduce", "ArrayAny", "ArrayAll",        # higher-order list functions
+	"ArrayIsTyped", "ArrayAssign", "ArrayTypedBuiltin", "ArrayTypedClassName",  # typed containers, at runtime
 	"InlineIf",                            # ternary (Value If)
 	"TextFromPattern", "FormatString",     # string formatting
 	"IsNull",                              # null checks

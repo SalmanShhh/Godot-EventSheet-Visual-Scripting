@@ -5,6 +5,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 ## Learn by doing
 
 - [Recipes](GUIDE-RECIPES.md) - build a platformer, health, pickups, and debugging end to end.
+- [Working with Lists (Arrays)](GUIDE-WORKING-WITH-LISTS.md) - the whole Array vocabulary, including Filter / Map / Reduce / Any Match / All Match and typed lists.
 - [Make a Behaviour Without Writing Code](GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE.md) - author a whole reusable behaviour from event-sheet rows.
 - [Saving and Loading Your Game](GUIDE-SAVING-AND-LOADING.md) - the save story: six slot formats, the persist group, and the `save_state`/`load_state` seam any behaviour can join.
 
@@ -53,6 +54,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 ## Reference
 
+- [Engine-Level ACEs](REFERENCE-ENGINE-ACES.md) - the vocabulary that drives the engine itself: graphics settings, world gravity, audio mixing, runtime meshes, camera FOV, animation playback, gradients and curves.
 - [MCP Server](REFERENCE-MCP-SERVER.md) - the AI-tooling protocol (list, read, compile, lint, snippets, doctor).
 - [Performance](REFERENCE-PERFORMANCE.md) - frame-spreading and time-budgeting.
 
