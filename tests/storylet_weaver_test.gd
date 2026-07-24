@@ -207,6 +207,53 @@ static func run() -> bool:
 		_reset(sw)
 		sw.load_from_resource(sample)
 		all_passed = _check("the sample .tres registers its storylets", sw.storylet_count() > 0, true) and all_passed
+		all_passed = _check("the shipped sample validates clean", sw.book_resource_is_valid(sample), true) and all_passed
+
+	# --- Validation: the grid workflow's dangling references are reported, not silently loaded ---
+	if res_script != null:
+		var clean: Resource = res_script.new()
+		clean.storylets = [{"id": "a", "title": "", "body": "", "weight": 1.0, "cooldown": 0.0, "max_plays": -1}]
+		clean.choices = [{"storylet": "a", "choice_id": "go", "text": "Go"}]
+		clean.choice_effects = [{"storylet": "a", "choice_id": "go", "op": "inc", "key": "n", "value": "1"}]
+		all_passed = _check("a clean book validates (no problems, condition true)",
+			sw.validate_resource(clean) == "" and sw.book_resource_is_valid(clean), true) and all_passed
+
+		var broken: Resource = res_script.new()
+		broken.storylets = [{"id": "a", "title": "", "body": "", "weight": 1.0, "cooldown": 0.0, "max_plays": -1}]
+		# "ghost" is never defined, and the "go" choice does not exist on "a".
+		broken.requirements = [{"storylet": "ghost", "op": "gte", "key": "x", "value": "1", "value_is_key": false}]
+		broken.choice_effects = [{"storylet": "a", "choice_id": "go", "op": "inc", "key": "n", "value": "1"}]
+		var report: String = sw.validate_resource(broken)
+		all_passed = _check("a dangling storylet reference is reported", report.contains("unknown storylet 'ghost'"), true) and all_passed
+		all_passed = _check("a dangling choice reference is reported", report.contains("no choice 'go'"), true) and all_passed
+		all_passed = _check("a book with dangling references is invalid", sw.book_resource_is_valid(broken), false) and all_passed
+
+	# --- Regression (adversarial review): unknown references never conjure a phantom storylet ---
+	if res_script != null:
+		_reset(sw)
+		var phantom_book: Resource = res_script.new()
+		phantom_book.storylets = [{"id": "real", "title": "", "body": "", "weight": 1.0, "cooldown": 0.0, "max_plays": -1}]
+		# choice-rule and effect/meta rows all naming an UNDEFINED storylet: none may materialize it.
+		phantom_book.choice_requirements = [{"storylet": "ghost", "choice_id": "c", "op": "gte", "key": "x", "value": "1", "value_is_key": false}]
+		phantom_book.choice_effects = [{"storylet": "ghost", "choice_id": "c", "op": "set", "key": "y", "value": "1"}]
+		phantom_book.effects = [{"storylet": "ghost", "op": "set", "key": "z", "value": "1"}]
+		phantom_book.meta = [{"storylet": "ghost", "key": "who", "value": "nobody"}]
+		sw.load_from_resource(phantom_book)
+		all_passed = _check("an unknown-storylet choice rule does not conjure a phantom storylet",
+			sw.storylet_count() == 1 and not sw._lib.has("ghost"), true) and all_passed
+
+		# Forecast expressions are read-only: a bad id must return "" and create nothing.
+		var before: int = sw.storylet_count()
+		all_passed = _check("Forecast Choice Effects on an unknown id is empty and side-effect free",
+			sw.forecast_choice_effects("ghost", "c") == "" and sw.storylet_count() == before and not sw._lib.has("ghost"), true) and all_passed
+
+		# A hand-corrupted grid (a non-Dictionary row) is skipped, never a runtime crash.
+		_reset(sw)
+		var corrupt: Resource = res_script.new()
+		corrupt.storylets = [42, {"id": "ok", "title": "", "body": "", "weight": 1.0, "cooldown": 0.0, "max_plays": -1}]
+		var _r: String = sw.validate_resource(corrupt)  # must not crash on the stray int
+		sw.load_from_resource(corrupt)
+		all_passed = _check("a non-Dictionary grid row is ignored, not fatal", sw.storylet_count(), 1) and all_passed
 
 	sw.free()
 	return all_passed

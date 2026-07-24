@@ -1,6 +1,6 @@
 ## @ace_tags(narrative, storylet)
 ## @ace_category("Storylets")
-## @ace_version(1.1.0)
+## @ace_version(1.2.0)
 @icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 class_name StoryletsAddon
 extends Node
@@ -35,6 +35,51 @@ var _chosen: String = ""
 # Internal monotonic clock (seconds), ticked in _process so cooldowns need no wiring.
 var _clock: float = 0.0
 var _use_shared: bool = false
+# Reads a StoryletResource's grids and lists the references Load From Resource would silently skip:
+# a row naming a storylet id (or a choice on it) that is not defined. Empty when the book is clean.
+func _validate_resource(resource: Object) -> PackedStringArray:
+	var problems: PackedStringArray = []
+	if resource == null:
+		problems.append("resource is null")
+		return problems
+	var ids: Dictionary = {}
+	var i: int = 0
+	for row: Dictionary in _rows(resource, "storylets"):
+		var sid: String = str(row.get("id", ""))
+		if sid.is_empty():
+			problems.append("storylets[%d]: blank id (row skipped)" % i)
+		elif ids.has(sid):
+			problems.append("storylets[%d]: duplicate id '%s' (overrides the earlier one)" % [i, sid])
+		else:
+			ids[sid] = true
+		i += 1
+	var choices: Dictionary = {}
+	i = 0
+	for row: Dictionary in _rows(resource, "choices"):
+		var sid2: String = str(row.get("storylet", ""))
+		if not ids.has(sid2):
+			problems.append("choices[%d]: unknown storylet '%s'" % [i, sid2])
+		else:
+			if not choices.has(sid2):
+				choices[sid2] = {}
+			choices[sid2][str(row.get("choice_id", ""))] = true
+		i += 1
+	for field: String in ["requirements", "effects", "meta"]:
+		i = 0
+		for row: Dictionary in _rows(resource, field):
+			var rid: String = str(row.get("storylet", ""))
+			if not ids.has(rid):
+				problems.append("%s[%d]: unknown storylet '%s'" % [field, i, rid])
+			i += 1
+	for field: String in ["choice_requirements", "choice_effects"]:
+		i = 0
+		for row: Dictionary in _rows(resource, field):
+			var rid2: String = str(row.get("storylet", ""))
+			var cid: String = str(row.get("choice_id", ""))
+			if not (choices.get(rid2, {}) as Dictionary).has(cid):
+				problems.append("%s[%d]: no choice '%s' on storylet '%s'" % [field, i, cid, rid2])
+			i += 1
+	return problems
 
 func _process(delta: float) -> void:
 	_clock += delta
@@ -400,6 +445,15 @@ func is_on_cooldown(id: String) -> bool:
 func is_library_empty() -> bool:
 	return _lib.is_empty()
 
+## @ace_condition
+## @ace_name("Book Resource Is Valid")
+## @ace_category("Storylets")
+## @ace_description("Whether a StoryletResource is free of structural problems - every requirement / choice / effect / meta row names a defined storylet, every choice-rule row names a real choice, and no storylet id is blank or duplicated. Read the specific problems with Validate Book Resource.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.book_resource_is_valid({resource})")
+func book_resource_is_valid(resource: Resource) -> bool:
+	return _validate_resource(resource).is_empty()
+
 ## @ace_expression
 ## @ace_name("Quality Number")
 ## @ace_category("Storylets")
@@ -588,6 +642,15 @@ func cooldown_remaining(id: String) -> float:
 func storylet_count() -> int:
 	return _lib.size()
 
+## @ace_expression
+## @ace_name("Validate Book Resource")
+## @ace_category("Storylets")
+## @ace_description("Checks a StoryletResource's grids and returns each structural problem - a requirement / choice / effect / meta row naming a storylet (or choice) that does not exist, a blank storylet id, or a duplicate id that silently overrides an earlier storylet - one per line, "" when the book is clean. Print it while authoring to catch typos in the tables.")
+## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
+## @ace_codegen_template("Storylets.validate_resource({resource})")
+func validate_resource(resource: Resource) -> String:
+	return "\n".join(_validate_resource(resource))
+
 func _rand_float() -> float:
 	# Randomness source: the shared AdvancedRandom autoload when Use Advanced Random is on and the
 	# pack is installed, otherwise Godot's own randf() (the default - unchanged behaviour).
@@ -606,8 +669,10 @@ func _story(id: String) -> Dictionary:
 	return _lib[id]
 
 func _choice(id: String, choice_id: String) -> Dictionary:
-	# The draft choice with this id on a storylet, or an empty dict.
-	for c: Dictionary in _story(id).choices:
+	# The draft choice with this id on a storylet, or an empty dict. READ-ONLY: it must not create the
+	# storylet (a missing id simply yields no choice), so the loader and the forecast expressions never
+	# conjure a phantom storylet from an unknown reference - unlike _story(), which auto-vivifies.
+	for c: Dictionary in (_lib.get(id, {}) as Dictionary).get("choices", []):
 		if str(c.id) == choice_id:
 			return c
 	return {}
@@ -716,9 +781,17 @@ func _active_choices() -> Array:
 	return out
 
 func _rows(resource: Object, field: String) -> Array:
-	# A grid field off a StoryletResource (or any duck-typed resource), as an Array of row dicts.
+	# A grid field off a StoryletResource (or any duck-typed resource), as an Array of row dicts. A
+	# stray non-Dictionary element (a hand-corrupted .tres) is dropped rather than crashing the typed
+	# `for row: Dictionary in _rows(...)` loops - the loader skips it and the validator does the same.
 	var v: Variant = resource.get(field)
-	return v if v is Array else []
+	if not v is Array:
+		return []
+	var out: Array = []
+	for e: Variant in v:
+		if e is Dictionary:
+			out.append(e)
+	return out
 
 func _op_symbol(op: String) -> String:
 	# A StoryletResource op column stores a WORD token (a table dropdown cannot hold ">=", whose "="

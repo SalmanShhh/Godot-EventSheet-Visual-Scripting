@@ -64,11 +64,13 @@ effects = [{
 "value": "1"
 }]
 choice_effects = [{
+"choice_id": "pay",
 "key": "gold",
 "op": "dec",
 "storylet": "gate",
 "value": "10"
 }, {
+"choice_id": "pay",
 "key": "gate_open",
 "op": "set",
 "storylet": "gate",

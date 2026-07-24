@@ -27,7 +27,9 @@ static func build() -> bool:
 	sheet.addon_tags = PackedStringArray(["narrative", "storylet"])
 	# 1.1.0: ported the recently-updated C3 addon's data-driven layer - effects + forecasts, meta
 	# payloads, per-choice requirements/effects, and the chance / recency / key-vs-key requirements.
-	sheet.addon_version = "1.1.0"
+	# 1.2.0: Load From Resource (loads a StoryletResource .tres book) plus its validation safety net
+	# (Book Resource Is Valid / Validate Book Resource) that reports dangling references before a load.
+	sheet.addon_version = "1.2.0"
 	var about: CommentRow = CommentRow.new()
 	about.text = "Storylet Weaver: register as the Storylets autoload. Define small story fragments with Add Requirement rules, mirror your game state into qualities with Set Quality, then Draw to get the best eligible storylet and react with On Storylet Drawn. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)
@@ -82,9 +84,11 @@ static func build() -> bool:
 		"\t\t_lib[id] = _blank_story()",
 		"\treturn _lib[id]",
 		"",
-		"# The draft choice with this id on a storylet, or an empty dict.",
+		"# The draft choice with this id on a storylet, or an empty dict. READ-ONLY: it must not create the",
+		"# storylet (a missing id simply yields no choice), so the loader and the forecast expressions never",
+		"# conjure a phantom storylet from an unknown reference - unlike _story(), which auto-vivifies.",
 		"func _choice(id: String, choice_id: String) -> Dictionary:",
-		"\tfor c: Dictionary in _story(id).choices:",
+		"\tfor c: Dictionary in (_lib.get(id, {}) as Dictionary).get(\"choices\", []):",
 		"\t\tif str(c.id) == choice_id:",
 		"\t\t\treturn c",
 		"\treturn {}",
@@ -192,10 +196,18 @@ static func build() -> bool:
 		"\t\t\tout.append(c)",
 		"\treturn out",
 		"",
-		"# A grid field off a StoryletResource (or any duck-typed resource), as an Array of row dicts.",
+		"# A grid field off a StoryletResource (or any duck-typed resource), as an Array of row dicts. A",
+		"# stray non-Dictionary element (a hand-corrupted .tres) is dropped rather than crashing the typed",
+		"# `for row: Dictionary in _rows(...)` loops - the loader skips it and the validator does the same.",
 		"func _rows(resource: Object, field: String) -> Array:",
 		"\tvar v: Variant = resource.get(field)",
-		"\treturn v if v is Array else []",
+		"\tif not v is Array:",
+		"\t\treturn []",
+		"\tvar out: Array = []",
+		"\tfor e: Variant in v:",
+		"\t\tif e is Dictionary:",
+		"\t\t\tout.append(e)",
+		"\treturn out",
 		"",
 		"# A StoryletResource op column stores a WORD token (a table dropdown cannot hold \">=\", whose \"=\"",
 		"# is a reserved marker char), so map it to the symbol the eligibility check uses. A symbol that",
@@ -227,6 +239,52 @@ static func build() -> bool:
 		"# Turns one Effects-grid row into an effect dict.",
 		"func _effect_from_row(row: Dictionary) -> Dictionary:",
 		"\treturn {\"op\": str(row.get(\"op\", \"set\")), \"key\": str(row.get(\"key\", \"\")), \"value\": row.get(\"value\", \"\")}",
+		"",
+		"# Reads a StoryletResource's grids and lists the references Load From Resource would silently skip:",
+		"# a row naming a storylet id (or a choice on it) that is not defined. Empty when the book is clean.",
+		"func _validate_resource(resource: Object) -> PackedStringArray:",
+		"\tvar problems: PackedStringArray = []",
+		"\tif resource == null:",
+		"\t\tproblems.append(\"resource is null\")",
+		"\t\treturn problems",
+		"\tvar ids: Dictionary = {}",
+		"\tvar i: int = 0",
+		"\tfor row: Dictionary in _rows(resource, \"storylets\"):",
+		"\t\tvar sid: String = str(row.get(\"id\", \"\"))",
+		"\t\tif sid.is_empty():",
+		"\t\t\tproblems.append(\"storylets[%d]: blank id (row skipped)\" % i)",
+		"\t\telif ids.has(sid):",
+		"\t\t\tproblems.append(\"storylets[%d]: duplicate id '%s' (overrides the earlier one)\" % [i, sid])",
+		"\t\telse:",
+		"\t\t\tids[sid] = true",
+		"\t\ti += 1",
+		"\tvar choices: Dictionary = {}",
+		"\ti = 0",
+		"\tfor row: Dictionary in _rows(resource, \"choices\"):",
+		"\t\tvar sid2: String = str(row.get(\"storylet\", \"\"))",
+		"\t\tif not ids.has(sid2):",
+		"\t\t\tproblems.append(\"choices[%d]: unknown storylet '%s'\" % [i, sid2])",
+		"\t\telse:",
+		"\t\t\tif not choices.has(sid2):",
+		"\t\t\t\tchoices[sid2] = {}",
+		"\t\t\tchoices[sid2][str(row.get(\"choice_id\", \"\"))] = true",
+		"\t\ti += 1",
+		"\tfor field: String in [\"requirements\", \"effects\", \"meta\"]:",
+		"\t\ti = 0",
+		"\t\tfor row: Dictionary in _rows(resource, field):",
+		"\t\t\tvar rid: String = str(row.get(\"storylet\", \"\"))",
+		"\t\t\tif not ids.has(rid):",
+		"\t\t\t\tproblems.append(\"%s[%d]: unknown storylet '%s'\" % [field, i, rid])",
+		"\t\t\ti += 1",
+		"\tfor field: String in [\"choice_requirements\", \"choice_effects\"]:",
+		"\t\ti = 0",
+		"\t\tfor row: Dictionary in _rows(resource, field):",
+		"\t\t\tvar rid2: String = str(row.get(\"storylet\", \"\"))",
+		"\t\t\tvar cid: String = str(row.get(\"choice_id\", \"\"))",
+		"\t\t\tif not (choices.get(rid2, {}) as Dictionary).has(cid):",
+		"\t\t\t\tproblems.append(\"%s[%d]: no choice '%s' on storylet '%s'\" % [field, i, cid, rid2])",
+		"\t\t\ti += 1",
+		"\treturn problems",
 		"",
 		"# Marks a storylet as played now: records the play + cooldown start + active + draw history,",
 		"# applies its on-draw effects, and fires the trigger.",
@@ -427,6 +485,8 @@ static func build() -> bool:
 		"var s: Dictionary = _lib.get(id, {})\nreturn s.get(\"cooldown\", 0.0) > 0.0 and _last_played.has(id) and _clock - _last_played[id] < s.get(\"cooldown\", 0.0)")
 	_condition(sheet, "is_library_empty", "Is Library Empty", "Storylets", "Whether no storylets are registered.", [],
 		"return _lib.is_empty()")
+	_condition(sheet, "book_resource_is_valid", "Book Resource Is Valid", "Storylets", "Whether a StoryletResource is free of structural problems - every requirement / choice / effect / meta row names a defined storylet, every choice-rule row names a real choice, and no storylet id is blank or duplicated. Read the specific problems with Validate Book Resource.", [["resource", "Resource"]],
+		"return _validate_resource(resource).is_empty()")
 
 	# --- Expressions: qualities ---
 	_expr(sheet, "quality_number", "Quality Number", "Storylets", "A quality as a number (0 if unset).", [["key", "String"]],
@@ -474,6 +534,9 @@ static func build() -> bool:
 		"var s: Dictionary = _lib.get(id, {})\nif s.get(\"cooldown\", 0.0) <= 0.0 or not _last_played.has(id):\n\treturn 0.0\nreturn maxf(s.cooldown - (_clock - _last_played[id]), 0.0)", TYPE_FLOAT)
 	_expr(sheet, "storylet_count", "Storylet Count", "Storylets", "How many storylets are registered.", [],
 		"return _lib.size()", TYPE_INT)
+	# --- Expression: authoring safety net ---
+	_expr(sheet, "validate_resource", "Validate Book Resource", "Storylets", "Checks a StoryletResource's grids and returns each structural problem - a requirement / choice / effect / meta row naming a storylet (or choice) that does not exist, a blank storylet id, or a duplicate id that silently overrides an earlier storylet - one per line, \"\" when the book is clean. Print it while authoring to catch typos in the tables.", [["resource", "Resource"]],
+		"return \"\\n\".join(_validate_resource(resource))", TYPE_STRING)
 
 	# Save-state seam - deliberately unpublished; the Save System provides the user-facing verbs.
 	var persistence: RawCodeRow = RawCodeRow.new()

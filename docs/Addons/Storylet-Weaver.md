@@ -125,6 +125,7 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | **Has Been Played** | `id` | Whether a storylet has played at least once. |
 | **Is On Cooldown** | `id` | Whether a storylet is still cooling down. |
 | **Is Library Empty** | (none) | Whether no storylets are registered. |
+| **Book Resource Is Valid** | `resource` | Whether a **StoryletResource** is free of structural problems - every requirement / choice / effect / meta row names a defined storylet, every choice-rule row names a real choice, and no storylet id is blank or duplicated. Read the specific problems with **Validate Book Resource**. |
 
 ### Expressions
 
@@ -150,6 +151,7 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | **Play Count** | `id` | int | How many times a storylet has played. |
 | **Cooldown Remaining** | `id` | float | Seconds left on a storylet's cooldown (`0` if ready). |
 | **Storylet Count** | (none) | int | How many storylets are registered. |
+| **Validate Book Resource** | `resource` | String | The structural problems a **StoryletResource** contains (a requirement / choice / effect / meta row naming a storylet or choice that does not exist, a blank storylet id, or a duplicate id that silently overrides an earlier storylet), one per line - `""` when the book is clean. Print it while authoring to catch typos in the tables before **Load From Resource** silently skips them. |
 
 ### Triggers
 
@@ -717,6 +719,19 @@ On Storylet Drawn
 ```
 
 After **Load From Resource** the `gate` and `rumour` storylets, their rules, choices, effects and meta are all in the live library, so **Draw**, **Choose**, the **Active** / **Forecast** / **Meta** expressions, and every other ACE work identically to a book you built row by row. You can still call **Define Storylet** or **Set Storylet Weight** afterward to adjust anything the resource seeded.
+
+### Catch typos before they bite
+
+The one hazard of the parallel-grid shape is a mistyped id: a Requirements row that names `gto` instead of `gate`, or a Choice Effects row whose `choice_id` is blank, points at nothing. **Load From Resource is additive and forgiving** - it silently skips any row that references a storylet or choice that does not exist, rather than conjuring a blank one - so a typo does not crash, it just quietly does nothing. To surface those instead, check the book with **Validate Book Resource** (or gate on **Book Resource Is Valid**):
+
+```
+On Ready
+  Storylets: Book Resource Is Valid  preload("res://demo/storylet_book/village_storylets.tres")  is false
+    -> print  Storylets.Validate Book Resource(preload("res://demo/storylet_book/village_storylets.tres"))
+  -> Storylets: Load From Resource   preload("res://demo/storylet_book/village_storylets.tres")
+```
+
+**Validate Book Resource** returns one problem per line - `requirements[2]: unknown storylet 'gto'`, `choice_effects[0]: no choice '' on storylet 'gate'` - or `""` when the book is clean. It also flags a blank storylet id (the loader skips that row) and a duplicate id (the second silently overrides the first, so the earlier storylet's data is lost). Drop it behind a debug flag while authoring and every structural problem shows up the moment you load the asset.
 
 ---
 

@@ -41,6 +41,25 @@
   Suite-covered end to end (the loader round-trips a hand-built resource and the sample asset); both packs
   stay byte-stable (drift=0).
 
+### Added - a validation safety net for the StoryletResource grids
+
+- The parallel-grid shape has one hazard: a mistyped id (a Requirements row naming `gto` instead of
+  `gate`, a Choice Effects row with a blank `choice_id`) references nothing. Load From Resource stays
+  additive and forgiving - it silently skips a row that names an undefined storylet or choice - so a typo
+  never crashes; it just quietly does nothing. Two new ACEs surface those instead: **Validate Book
+  Resource** (expression) returns each dangling reference as a readable line (`requirements[2]: unknown
+  storylet 'gto'`), `""` when clean; **Book Resource Is Valid** (condition) gates on the same check. Drop
+  them behind a debug flag before a load and every typo in the tables shows up immediately.
+- This caught a real bug in the shipped sample: its `choice_effects` rows were missing the `choice_id`
+  field, so the pay choice's gold-cost effect never applied. Fixed the `.tres`; the suite now asserts the
+  sample validates clean.
+- An adversarial review then surfaced two more correctness bugs, now fixed: (1) `_choice()` routed through
+  `_story()`, which auto-vivifies, so a `choice_requirements` / `choice_effects` row (or the read-only
+  `forecast_choice_effects` expression) naming an undefined storylet silently conjured a blank **phantom
+  storylet** into the library - `_choice()` is now read-only, so unknown references are truly skipped; and
+  (2) a hand-corrupted grid holding a non-Dictionary row crashed the typed row loops - `_rows()` now drops
+  stray non-Dictionary elements instead. Storylet Weaver pack bumped to 1.2.0.
+
 ### Changed - the verb dialog speaks Action / Condition / Expression, and its picker details move to the row
 
 - **The three kind cards headline the ACE kind.** "What kind of verb is this?" led with plain-language
