@@ -11,7 +11,8 @@ Because it is an autoload, you write `LootBox: Roll  "chest"` from any sheet and
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
 5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+6. [The data-driven path: a LootTableResource asset](#the-data-driven-path-a-loottableresource-asset)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -95,6 +96,7 @@ Every row below is exactly what the pack exposes. Parameter names and types are 
 | Action | Parameters | Description |
 |---|---|---|
 | Create Table | `table_id` (String) | Starts a fresh, empty loot table with this id (replaces any existing one). |
+| Load From Resource | `loot_table` (Resource) | Loads a whole table from a **LootTableResource** (a `.tres` you filled in the Inspector) - its name, entries, and pity - in one step. The data-driven alternative to Create Table plus a string of Add Entry actions. Drop the **Loot Table Loader** behaviour on a node to load one automatically on ready. |
 | Add Entry | `table_id` (String), `item_id` (String), `weight` (float) | Adds an item to a table with a relative weight (higher = likelier). Quantity 1, no tags. |
 | Add Rare Entry | `table_id` (String), `item_id` (String), `weight` (float), `quantity` (float), `tags` (String) | Adds an item with a weight, a quantity, and comma-separated tags (tags drive guarantees + pity). |
 | Add Table Reference | `table_id` (String), `sub_table_id` (String), `weight` (float) | Adds an entry that rolls ANOTHER table inline when picked (shared common-loot pools). Depth-limited. |
@@ -482,6 +484,34 @@ On Roll Result
 **Carnival prize wheels.** A prize wheel is a single Roll on a table whose weights mirror the wedge sizes, so the plush toy stays rarer than the sticker. Dig-style pity on the grand-prize tag quietly ensures no player walks away empty after a long losing streak.
 
 **Seeded daily weather.** Roll a "weather" table each morning with Set Seed derived from the date, and every player in the world gets the same storm on the same day. Weighted entries keep rain common and the blood moon a genuine event, with Reset-free bookkeeping since the pack owns the RNG.
+
+---
+
+## The data-driven path: a LootTableResource asset
+
+Everything above builds a table with actions - `Create Table` then a run of `Add Entry`. That is ideal for a table whose contents depend on live game state. For a table that is mostly **content** - the chest drops, the boss table, the fishing pool - it is easier to author it as **data**: one file, filled in a table in the Inspector, versioned on its own.
+
+**LootTableResource** is a plain Godot `Resource` you create as a `.tres`. It holds:
+
+| Field | What it is |
+| --- | --- |
+| `table_name` | The id this table registers under when loaded. |
+| `entries` | One row per possible drop: `item` (the id), `weight` (higher = commoner), `tags` (comma-separated). |
+| `pity_tag` | Optional - a tag to guarantee after a streak of misses (blank = no pity). |
+| `pity_threshold` | How many misses before that tag is guaranteed (`0` = off). |
+
+There are two ways to get it into the LootBox:
+
+**As an action**, when you want to control the timing:
+
+```
+On Ready
+  -> LootBox: Load From Resource  preload("res://loot/chest_table.tres")
+```
+
+**As a behaviour**, when you just want it loaded before anything asks: attach the **Loot Table Loader** behaviour to any node, drop the `.tres` onto its `Loot Table` slot in the Inspector, and it registers the table on ready. The Scene dock shows a warning until a resource is attached, so you cannot ship a loader that loads nothing.
+
+Either way the result is identical to building the table by hand - `Roll`, `Roll With Pity`, the tag filters and every other verb work exactly the same, and you can still `Add Entry` afterwards to extend what the asset seeded. Variants are just other `.tres` files: a hard-mode table, a seasonal table, a per-biome table.
 
 ---
 

@@ -11,7 +11,8 @@ Because it is an autoload, you write `AdvancedRandom: Set Seed  12345` from any 
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
 5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+6. [Odds as a data asset: RandomTableResource](#odds-as-a-data-asset-randomtableresource)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -45,7 +46,7 @@ The whole pack is a handful of small ideas sitting on one shared generator. Once
 
 **Noise is smooth, not jumpy.** Plain random values have no relationship to each other - each is a fresh dice roll. Noise is different: nearby inputs give nearby outputs, so a line of `Noise 1D` samples looks like a gentle wavy curve, and a grid of `Noise 2D` looks like rolling terrain. All three noise expressions return a value in the -1 to 1 range. Three knobs shape it: **Set Noise Type** picks the algorithm (0 Simplex, 1 Simplex Smooth, 2 Cellular, 3 Perlin, 4 Value Cubic, 5 Value), **Set Noise Frequency** sets the scale (lower = smoother, larger features; higher = busier), and **Set Noise Octaves** layers in fine detail.
 
-**Picking from a list.** `Pick From` returns one uniformly-random element of an array - every option equally likely. `Weighted Index` instead returns an *index* chosen in proportion to a weights array, so heavier entries come up more often. You pass weights like `[70, 25, 5]` and it hands back 0, 1, or 2 in those proportions - you then use that index into your own parallel array of items.
+**Picking from a list.** `Pick From` returns one uniformly-random element of an array - every option equally likely. `Weighted Index` instead returns an *index* chosen in proportion to a weights array, so heavier entries come up more often. You pass weights like `[70, 25, 5]` and it hands back 0, 1, or 2 in those proportions - you then use that index into your own parallel array of items. When keeping those two arrays in step gets tiresome, author the odds as a **RandomTableResource** `.tres` instead (value and weight side by side in an Inspector table) and draw from it with `Pick From Table`.
 
 **Shuffle bags draw without repeats.** A shuffle bag is a named pool of items. `Make Shuffle Bag  "spawns", [...]` fills it; `Shuffle Bag Pick  "spawns"` draws one out. The trick: every item is drawn once before any repeats, and when the bag empties it silently refills. This gives "random but fair" sequences - great for enemy waves or music tracks where a real repeat feels like a bug.
 
@@ -119,6 +120,7 @@ Every row below is exactly what the pack exposes. Parameter names and types are 
 | Permutation Value | `index` (int) | int | Reads `index` (wrapped) from the permutation table - generate the table first. |
 | Pick From | `options` (Array) | Variant | A uniformly-random element of the array (null if empty). |
 | Weighted Index | `weights` (Array) | int | An index chosen in proportion to the weights array (heavier = likelier). |
+| Pick From Table | `table` (Resource) | String | A weighted-random value drawn from a **RandomTableResource** (a `.tres` whose value/weight pairs you fill in the Inspector), so your odds live in a data asset instead of parallel arrays in the sheet. `""` when the table is empty. |
 | Shuffle Bag Pick | `bag_name` (String) | Variant | Draws the next item from a named bag - every item appears once before any repeat. |
 
 ### Triggers
@@ -334,6 +336,28 @@ On enemy dodge
 **Cave wall texture from cellular noise.** Set Noise Type to Cellular and sample Noise 2D across a tile grid to carve cracked, cell-like rock patterns that read very differently from rolling Perlin hills.
 
 **Crowd variety.** When spawning background NPCs, Pick From chooses a skin, Random Range nudges the walk speed, and Random Sign flips which way each one faces, so a copy-pasted crowd stops looking cloned.
+
+---
+
+## Odds as a data asset: RandomTableResource
+
+`Weighted Index` works from a weights array you keep in step with a parallel array of items. That is fine for three outcomes and tiresome for thirty. **RandomTableResource** puts both columns in one file instead.
+
+It is a plain Godot `Resource` you create as a `.tres`, with a single `entries` grid you fill in the Inspector:
+
+| Column | What it is |
+| --- | --- |
+| `value` | The outcome - any string: an item id, a name, a scene path. |
+| `weight` | How common it is (higher = commoner). |
+
+Draw from it with the **Pick From Table** expression:
+
+```
+On chest opened
+  -> Set variable  reward = AdvancedRandom.Pick From Table(preload("res://tables/chest.tres"))
+```
+
+It draws through the same seeded generator as every other verb here, so a fixed seed still reproduces the whole run exactly. An empty table returns `""`. Variants are just other `.tres` files - a rare-chest table, a fishing table, a per-biome table - and a designer can retune the odds without opening a sheet.
 
 ---
 

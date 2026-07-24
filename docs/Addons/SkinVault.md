@@ -19,7 +19,8 @@ this pack exposes. Nothing is invented.
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
 5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+6. [The data-driven path: a SkinCatalogResource asset](#the-data-driven-path-a-skincatalogresource-asset)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 A quick note on the pseudocode in this guide. Rows read like the event sheet does:
 
@@ -140,6 +141,7 @@ grows.
 
 | Action | Description |
 |---|---|
+| Load Catalog  `catalog` (Resource) | Registers a whole catalog (rarities + skins) from a **SkinCatalogResource** (a `.tres` you filled in the Inspector) in one step - the data-driven alternative to a string of Register Rarity + Register Skin actions. Drop the **Skin Catalog Loader** behaviour on a node to load one automatically on ready. |
 | Register Rarity  `name`, `weight`, `tier` | Registers a rarity with a roll weight (higher = commoner) and a tier rank (higher = rarer; pity guarantees a tier at or above the pity rarity). |
 | Register Skin  `id`, `display_name`, `rarity`, `cost`, `tags` | Registers a skin: a unique id, a display name, its rarity (must be registered), a cost (0 = not purchasable), and comma-separated tags. |
 | Roll  `tag` | Rolls a weighted-random unowned skin (optional tag filter; `""` = any) and grants it. Applies pity, then fires On Skin Rolled and On Skin Unlocked. Fires On Pool Empty if nothing is left. |
@@ -543,6 +545,30 @@ designs, for example clearing the streak after a paid ten-pull.
 
 ---
 
+## The data-driven path: a SkinCatalogResource asset
+
+The Register actions above are perfect while a catalog is small or built from live data. A shipped cosmetics catalog is usually neither - it is a long, mostly-fixed list that a designer wants to edit without opening a sheet. For that, author it as **data**.
+
+**SkinCatalogResource** is a plain Godot `Resource` you create as a `.tres`, holding two grids you fill in the Inspector:
+
+| Grid | Columns |
+| --- | --- |
+| `rarities` | `name`, `weight` (higher = commoner), `tier` (higher = rarer; pity guarantees a tier at or above the pity rarity) |
+| `skins` | `id`, `name`, `rarity` (must match a rarity above), `cost` (`0` = not purchasable), `tags` (comma-separated) |
+
+Load it either way:
+
+```
+On Ready
+  -> SkinVault: Load Catalog  preload("res://cosmetics/catalog.tres")
+```
+
+or attach the **Skin Catalog Loader** behaviour to a node, drop the `.tres` onto its `Catalog` slot, and the whole catalog registers on ready - the Inspector flags the slot with a warning until a resource is attached.
+
+Loading is additive and equivalent to running the Register actions yourself, so rolls, pity, ownership and every expression behave identically, and you can still register extra rarities or skins afterwards (a seasonal drop, an event exclusive). Because ownership is stored separately, the save story is unchanged: re-register the catalog on load - from the asset - then `Load Owned` and `Set Pity Count`.
+
+---
+
 ## Tips and common mistakes
 
 - **Register rarities before skins.** A skin points at its rarity by name, so the rarity has to exist first.
@@ -570,5 +596,9 @@ designs, for example clearing the streak after a paid ten-pull.
   but colour is yours to map from the rarity name in your UI.
 - **Typed parameters, not JSON blobs.** Register Rarity and Register Skin take discrete typed fields, so you
   author the catalog as plain readable rows rather than hand-editing a JSON string.
+- **Or author the catalog as a data asset.** For a big or mostly-fixed catalog, fill a **SkinCatalogResource**
+  `.tres` in the Inspector (rarities and skins as editable tables) and register the whole thing with **Load
+  Catalog**, or drop the **Skin Catalog Loader** behaviour on a node to do it on ready. Loading is additive,
+  so you can still add or adjust entries with the Register actions afterwards.
 - **Check Is Pool Empty before charging for a roll.** A Roll on an empty pool fires On Pool Empty and grants
   nothing, so guard the button (and any currency spend) with Is Pool Empty first.
