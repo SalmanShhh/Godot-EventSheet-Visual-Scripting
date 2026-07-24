@@ -93,6 +93,47 @@
   proves each shipped template, run through the real codegen, behaves correctly, and the whole set passes
   the standalone-compile guard.
 
+### Added - a guide for working with lists
+
+- **[Working with Lists (Arrays)](docs/GUIDE-WORKING-WITH-LISTS.md)** documents the whole Array
+  vocabulary in one place - all 37 verbs, with the new **Filter / Map / Reduce / Any Match / All Match**
+  and the typed-list verbs (**Is Typed**, **Element Type**, **Element Class**, **Assign**) as the
+  centrepiece. It explains why the element name is a field rather than a baked-in `x`, has 16 worked use
+  cases, and closes with the traps (Filter and Map return new lists; an empty list answers Any Match false
+  and All Match true; Pop removes as well as returns; Assign converts where Append refuses). Linked from
+  the docs index.
+- The GDScript-basics coverage receipt is current again: the Array / Dictionary verb count moved from 41
+  to 50, typed containers are now listed as readable at runtime, and higher-order list functions have
+  their own row. The nine new ACE ids are pinned in `gdscript_basics_coverage_test.gd`, so the receipt
+  cannot silently regress.
+
+### Fixed - the vocabulary index was hiding most triggers, and cutting descriptions short
+
+- A documentation audit across all 76 packs found two bugs in the generator behind
+  `EVENTSHEETS-VOCABULARY.md`, each silently losing content from every pack it touched:
+  - **Only the FIRST trigger of each pack was listed.** The scanner split a pack into members on blank
+    lines, but compiler output separates consecutive `signal` declarations with a single newline - so a
+    whole run of triggers collapsed into one member and the rest were dropped. It now walks line by line,
+    pairing each run of `##` annotations with the declaration that closes it. The index went from **49
+    listed triggers to 164**: On Drift Recovered, On Combo Failed, On Spend Failed, On Cap Hit and 100+
+    others were invisible.
+  - **A description containing a quoted example was truncated at that quote.** `Registers a combo ... (for
+    example "down,forward,punch")` stopped dead at `punch`. The close of the annotation is now anchored to
+    the end of its line, so inner quotes pass through.
+
+### Fixed - typed lists reach the custom Inspector drawers
+
+- A typed list carrying a custom drawer **silently lost it**: the compiler's drawer gate accepted only the
+  exact type `Array`, so `Array[Dictionary]` with the Table drawer emitted a plain `@export` and the
+  Inspector fell back to Godot's default list field with no warning anywhere. The gate now accepts the
+  typed row list too - it reaches the drawer as `TYPE_ARRAY` either way, so the marker, the lift and the
+  byte-exact re-emission all match the untyped case. A list typed to something that cannot be a row
+  (`Array[int]`) still degrades to a plain field rather than emitting a grid it could never fill.
+- **`Array[Dictionary]` is now offered in the variable dialog's Type dropdown** (with its plain-language
+  hint), and the "Show as" picker offers the Table drawer for it.
+- Inspector **groups and subgroups** already applied to typed lists; that is now pinned by a test
+  alongside the new drawer coverage, so neither can regress silently.
+
 ### Fixed - the book validators now agree with what a load actually does
 
 - An adversarial review of the JSON layer found three ways **Validate Book Resource / Validate Book JSON**

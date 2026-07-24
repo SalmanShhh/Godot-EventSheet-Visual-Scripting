@@ -117,12 +117,29 @@ static func script_pack_surface(source: String) -> Dictionary:
 	var kind_regex: RegEx = RegEx.create_from_string("## @ace_(trigger|condition|action|expression)\\b")
 	var name_regex: RegEx = RegEx.create_from_string("## @ace_name\\(\"([^\"]+)\"\\)")
 	var category_regex: RegEx = RegEx.create_from_string("## @ace_category\\(\"([^\"]+)\"\\)")
-	var description_regex: RegEx = RegEx.create_from_string("(?s)## @ace_description\\(\"(.*?)\"\\)")
-	var symbol_regex: RegEx = RegEx.create_from_string("(?m)^(?:signal|func)\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*(?:\\(([^)]*)\\))?")
-	for chunk: String in source.split("\n\n"):
+	# The close is anchored to the end of its line so a description containing its own quoted example -
+	# ... (for example "down,forward,punch") - is not cut short at that inner quote.
+	var description_regex: RegEx = RegEx.create_from_string("(?sm)## @ace_description\\(\"(.*?)\"\\)\\s*$")
+	var symbol_regex: RegEx = RegEx.create_from_string("^(?:signal|func)\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*(?:\\(([^)]*)\\))?")
+	# A member is a run of `##` annotation lines closed by its signal/func declaration. Walking LINE BY
+	# LINE (rather than splitting the file on blank lines) is what keeps CONSECUTIVE members apart:
+	# compiler output separates them with a single newline, so a blank-line split swept a whole run of
+	# triggers into one chunk and recorded only the first of them.
+	var pending: PackedStringArray = PackedStringArray()
+	for line: String in source.split("\n"):
+		var stripped: String = line.strip_edges()
+		if stripped.begins_with("##"):
+			pending.append(stripped)
+			continue
+		if pending.is_empty():
+			continue
+		var chunk: String = "\n".join(pending)
+		pending = PackedStringArray()
+		var symbol_match: RegExMatch = symbol_regex.search(stripped)
+		if symbol_match == null:
+			continue
 		var kind_match: RegExMatch = kind_regex.search(chunk)
-		var symbol_match: RegExMatch = symbol_regex.search(chunk)
-		if kind_match == null or symbol_match == null:
+		if kind_match == null:
 			continue
 		var shown_match: RegExMatch = name_regex.search(chunk)
 		var category_match: RegExMatch = category_regex.search(chunk)

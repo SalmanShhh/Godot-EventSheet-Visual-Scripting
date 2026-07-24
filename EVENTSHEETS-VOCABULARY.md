@@ -19,6 +19,12 @@ Node script extending `CharacterBody2D`.
 
 #### Triggers
 - **On Ability Activated**
+- **On Ability Ready**
+- **On Ability Created**
+- **On Ability Removed**
+- **On Stack Consumed**
+- **On Stack Gained**
+- **On Max Stacks Reached**
 
 #### Conditions
 - **Has Ability** (`id: String`)
@@ -134,7 +140,7 @@ Node script extending `CharacterBody2D`.
 - **Format Short** (`value: float, decimals: int`) - A compact string with a short-scale suffix: 1250 -> "1.25K", 1250000 -> "1.25M", on through Qa/Qi/.../Dc, then scientific past 1e36. Pass how many decimals.
 - **Format Scientific** (`value: float, decimals: int`) - Scientific notation: 1250000 -> "1.25e6". Pass how many decimals for the mantissa.
 - **Format Engineering** (`value: float, decimals: int`) - Engineering notation - the exponent is always a multiple of 3: 1250000 -> "1.25e6", 12500 -> "12.50e3".
-- **Format Time** (`seconds: float`) - Seconds as a friendly duration: 3725 -> "1h 2m 5s". Drops leading zero units (90 -> "1m 30s
+- **Format Time** (`seconds: float`) - Seconds as a friendly duration: 3725 -> "1h 2m 5s". Drops leading zero units (90 -> "1m 30s").
 - **Format Time Short** (`seconds: float`) - Seconds as a clock: 3725 -> "1:02:05", 90 -> "1:30".
 - **Format Ordinal** (`number: int`) - An ordinal string: 1 -> "1st", 2 -> "2nd", 13 -> "13th", 21 -> "21st".
 - **Format Comma** (`value: float`) - Thousands separators on the whole-number part: 1234567 -> "1,234,567".
@@ -159,6 +165,7 @@ Node script extending `CharacterBody2D`.
 
 #### Triggers
 - **On Boost Started**
+- **On Boost Expired**
 
 #### Conditions
 - **Is Active** (`id: String`) - Whether a boost with this id is currently running.
@@ -166,7 +173,7 @@ Node script extending `CharacterBody2D`.
 
 #### Actions
 - **Start Boost** (`id: String, multiplier: float, duration: float`) - Starts (or restarts) a timed multiplier by id for `duration` seconds and fires On Boost Started.
-- **Start Tagged Boost** (`id: String, multiplier: float, duration: float, tag: String`) - Like Start Boost, but with a tag so Multiplier For Tag can group it (e.g. "production", "click
+- **Start Tagged Boost** (`id: String, multiplier: float, duration: float, tag: String`) - Like Start Boost, but with a tag so Multiplier For Tag can group it (e.g. "production", "click").
 - **Extend Boost** (`id: String, seconds: float`) - Adds seconds to an active boost's timer (does nothing if it is not active).
 - **Stop Boost** (`id: String`) - Ends a boost immediately (no On Boost Expired - that is for timers running out).
 - **Clear Boosts** - Ends every active boost at once.
@@ -216,6 +223,7 @@ Node script extending `CharacterBody2D`.
 
 #### Triggers
 - **On Drift Started**
+- **On Drift Recovered**
 
 #### Actions
 - **Stop Car** - Kills all momentum.
@@ -225,6 +233,7 @@ Node script extending `CharacterBody2D`.
 
 #### Triggers
 - **On Click**
+- **On Crit**
 
 #### Conditions
 - **Was Crit** - Whether the last click critted (read after Do Click / inside On Click).
@@ -249,6 +258,9 @@ Node script extending `CharacterBody2D`.
 
 #### Triggers
 - **On Combo Matched**
+- **On Combo Failed**
+- **On Partial Progress**
+- **On Buffer Cleared**
 
 #### Conditions
 - **Has Combo** (`id: String`) - Whether a combo id is registered.
@@ -257,8 +269,8 @@ Node script extending `CharacterBody2D`.
 - **Combo Has Tag** (`id: String, tag: String`) - Whether a combo carries a tag.
 
 #### Actions
-- **Register Combo** (`id: String, sequence: String, timing_window: float`) - Registers (or replaces) a combo: a unique id and its sequence as comma-separated tokens (for example "down,forward,punch
-- **Set Combo Tags** (`id: String, tags: String`) - Tags a registered combo with comma-separated tags, so you can enable or disable it in batches (for example "ground_move
+- **Register Combo** (`id: String, sequence: String, timing_window: float`) - Registers (or replaces) a combo: a unique id and its sequence as comma-separated tokens (for example "down,forward,punch"). timing_window is the seconds allowed between inputs (-1 = use the default, 0 = no time limit). Use "*" as a token to match any input.
+- **Set Combo Tags** (`id: String, tags: String`) - Tags a registered combo with comma-separated tags, so you can enable or disable it in batches (for example "ground_move").
 - **Set Combo Priority** (`id: String, priority: int`) - Sets a combo's priority. When more than one combo completes on the same input, the highest priority wins (ties go to the longest, then to the first registered).
 - **Set Combo Strict** (`id: String, strict: bool`) - When strict is on, the combo's inputs must be adjacent in the buffer (no unrelated input allowed between them). Off (the default) tolerates stray inputs in between, like a fighting-game motion.
 - **Set Default Timing** (`seconds: float`) - Sets the default seconds allowed between inputs, used by any combo whose own timing window is -1.
@@ -293,6 +305,10 @@ Node script extending `CharacterBody2D`.
 
 #### Triggers
 - **On Amount Changed**
+- **On Spend Failed**
+- **On Cap Hit**
+- **On Daily Cap Hit**
+- **On Offline Gain**
 
 #### Conditions
 - **Has Currency** (`id: String`) - Whether a currency with this id has been defined or touched.
@@ -321,7 +337,7 @@ Node script extending `CharacterBody2D`.
 - **Debt Floor** (`id: String`) - The minimum a currency may reach (0 unless Allow Debt was used).
 - **Currency Count** - How many currencies are defined.
 - **Currency Id At** (`index: int`) - The currency id at a position (for menus); "" out of range.
-- **Format Amount** (`value: float, decimals: int`) - A short display string with a K/M/B/T suffix (e.g. 12500 -> "12.5K
+- **Format Amount** (`value: float, decimals: int`) - A short display string with a K/M/B/T suffix (e.g. 12500 -> "12.5K").
 - **Changed Id** - The currency that changed (inside On Amount Changed).
 - **New Amount** - The amount after the change (inside On Amount Changed).
 - **Previous Amount** - The amount before the change (inside On Amount Changed).
@@ -364,6 +380,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Dialogue Started**
+- **On Dialogue Finished**
+- **On Line Started**
+- **On Line Finished**
 
 #### Conditions
 - **Is Dialogue Active**
@@ -386,6 +405,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Drag Started**
+- **On Dropped**
+- **On Drag Cancelled**
+- **On Snapped**
 
 #### Conditions
 - **Is Dragging**
@@ -466,6 +488,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Faded In**
+- **On Fade Out Started**
+- **On Faded Out**
 
 #### Conditions
 - **Is Fading**
@@ -506,6 +530,16 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Jumped**
+- **On Air Jumped**
+- **On Landed**
+- **On Camera Mode Changed**
+- **On Crouched**
+- **On Stood Up**
+- **On Slide Started**
+- **On Slide Ended**
+- **On Wall Ride Started**
+- **On Wall Ride Ended**
+- **On Wall Jumped**
 
 #### Conditions
 - **Is Sprinting** - True while the sprint key (Shift) is held.
@@ -547,6 +581,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Damaged**
+- **On Death**
+- **On Healed**
+- **On Health Changed**
+- **On Revived**
+- **On Health Pool Added**
+- **On Health Pool Absorbed**
+- **On Health Pool Depleted**
 
 #### Conditions
 - **Is Dead**
@@ -592,6 +633,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Task Started** (`task_name: String`)
+- **On Plan Complete**
+- **On Plan Failed**
 
 #### Conditions
 - **Has Plan**
@@ -646,6 +689,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Purchased**
+- **On Cycle Complete**
 
 #### Conditions
 - **Can Afford Next** (`budget: float`) - Whether `budget` covers the next single unit's price.
@@ -680,6 +724,14 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Shake Stopped**
+- **On Zoom Finished**
+- **On Squash Finished**
+- **On Slowmo Finished**
+- **On Hitstop Finished**
+- **On Tilt Finished**
+- **On Flash Finished**
+- **On Punch Finished**
+- **On Ticker Finished** (`ticker_name: String`)
 
 #### Conditions
 - **Is Shaking**
@@ -734,6 +786,10 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Punch Finished**
+- **On Ticker Finished** (`ticker_name: String`)
+- **On Shake Stopped**
+- **On Lean Finished**
+- **On Zoom Finished**
 
 #### Conditions
 - **Is Shaking**
@@ -795,6 +851,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Roll Result**
+- **On Roll Complete**
+- **On Pity Triggered**
 
 #### Conditions
 - **Has Table** (`table_id: String`) - Whether a table with this id is registered.
@@ -882,6 +940,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Path Found**
+- **On Path Failed**
+- **On Path Complete**
+- **On Waypoint Reached**
 
 #### Conditions
 - **Has Path**
@@ -909,6 +970,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Spawned**
+- **On Despawned**
 
 #### Conditions
 - **Has Pool** (`pool_name: String`) - Whether a pool with this name exists.
@@ -949,6 +1011,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Collided**
+- **On Drift Started**
+- **On Drift Ended**
+- **On Drive Target Reached**
 
 #### Conditions
 - **Is Moving** - Whether the car is above a small movement speed.
@@ -1006,12 +1071,12 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Has Touchscreen** - True when a touchscreen is available (mobile, or a touch laptop).
 - **Is Portrait** - True while the window is taller than it is wide - branch layouts on rotation.
 - **Is Debug Build** - True in editor runs and debug exports - gate cheats and dev overlays.
-- **Has Feature Tag** (`feature: String`) - True when the build has a feature tag - engine ones ("mobile", "web", "editor
+- **Has Feature Tag** (`feature: String`) - True when the build has a feature tag - engine ones ("mobile", "web", "editor") or your own custom export tags ("demo", "steam").
 
 #### Expressions
 - **OS Name** - The operating system: "Windows", "macOS", "Linux", "Android", "iOS", "Web".
 - **OS Version** - The operating system's version string.
-- **Device Model** - The device model name (phones report their model; desktops report "GenericDevice
+- **Device Model** - The device model name (phones report their model; desktops report "GenericDevice").
 - **Locale** - The player's full locale, like "en_US" - default your language picker to it.
 - **Locale Language** - Just the language part of the locale, like "en" or "ja".
 - **Engine Version** - The Godot version string, like "4.7.stable".
@@ -1037,6 +1102,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Jumped**
+- **On Landed**
+- **On Double Jumped**
+- **On Wall Jumped**
 
 #### Conditions
 - **Is Moving**
@@ -1063,6 +1131,14 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Portal Taken**
+- **On Waypoint Stuck**
+- **On Repath**
+- **On Hazard Entered**
+- **On Path Found**
+- **On Path Failed**
+- **On Path Complete**
+- **On Waypoint Reached**
+- **On Nav Graph Built**
 
 #### Conditions
 - **Is Path Pending**
@@ -1133,6 +1209,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Graph Generated**
+- **On Room Entered**
+- **On Traversal Blocked**
 
 #### Conditions
 - **Is Graph Ready** - Whether a map has been generated.
@@ -1143,8 +1221,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Actions
 - **Register Room Type** (`type_id: String, weight: float, min_depth: int, max_depth: int, max_per_depth: int`) - Registers a room type that Generate may place: a weight (higher = commoner), the depth range it may appear in (max_depth -1 = anywhere), and a per-depth cap (-1 = no cap).
-- **Set Start Type** (`type_id: String`) - The type name given to the single depth-0 room (default "start
-- **Set Boss Type** (`type_id: String`) - The type name given to the single final-depth room (default "boss
+- **Set Start Type** (`type_id: String`) - The type name given to the single depth-0 room (default "start").
+- **Set Boss Type** (`type_id: String`) - The type name given to the single final-depth room (default "boss").
 - **Use Advanced Random** (`enabled: bool`) - When on, ProcRoom draws its randomness from the shared AdvancedRandom autoload, so one seed can drive every procedural system at once. When off (the default) it uses its own seeded generator. Set the AdvancedRandom seed before Generate for reproducible maps. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).
 - **Generate** (`seed_text: String, depths: int, max_rooms_per_depth: int`) - Builds a reproducible tiered map from a seed: `depths` tiers (start at 0, boss at the last), up to `max_rooms_per_depth` rooms per interior tier. Same seed = same map. Fires On Graph Generated.
 - **Regenerate** - Rebuilds the map from the SAME seed + settings as the last Generate (a fresh run of the same layout).
@@ -1196,6 +1274,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Save Written** (`slot_index: int`)
+- **On Before Save** (`slot_index: int`)
+- **On After Load** (`slot_index: int`)
 
 #### Conditions
 - **Has Save Key** (`key: String`) - Whether the key exists in the active slot.
@@ -1266,6 +1346,11 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Skin Rolled**
+- **On Skin Unlocked**
+- **On Purchase Requested**
+- **On Purchase Cancelled**
+- **On Skin Revoked**
+- **On Pool Empty**
 
 #### Conditions
 - **Is Owned** (`skin_id: String`) - Whether the player owns a skin.
@@ -1282,7 +1367,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Grant** (`skin_id: String`) - Unlocks a skin for free (fires On Skin Unlocked). Does nothing if already owned.
 - **Revoke** (`skin_id: String`) - Removes a skin from the owned set (fires On Skin Revoked).
 - **Purchase** (`skin_id: String`) - Starts a purchase: fires On Purchase Requested carrying the skin id + cost. Check your wallet there, then call Confirm or Cancel Purchase. (SkinVault never touches currency itself.)
-- **Confirm Purchase** (`skin_id: String`) - Completes a purchase and grants the skin (fires On Skin Unlocked with method "purchase
+- **Confirm Purchase** (`skin_id: String`) - Completes a purchase and grants the skin (fires On Skin Unlocked with method "purchase").
 - **Cancel Purchase** (`skin_id: String`) - Cancels a pending purchase (fires On Purchase Cancelled).
 - **Reset Pity** - Sets the pity counter back to 0.
 - **Load Owned** (`owned_csv: String`) - Restores the owned set from a comma-separated id list (pair with the Owned Ids expression to save).
@@ -1310,6 +1395,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Slide Started**
+- **On Slide Stopped**
+- **On Hit Wall**
 
 #### Conditions
 - **Is Sliding** - Whether the character is mid-slide.
@@ -1323,7 +1410,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Grid Size** (`pixels: float`) - Changes the tile size in pixels at runtime.
 
 #### Expressions
-- **Slide Direction** - The direction of the current or last slide ("left" / "right" / "up" / "down
+- **Slide Direction** - The direction of the current or last slide ("left" / "right" / "up" / "down").
 - **Tile X** - The character's current column on the grid.
 - **Tile Y** - The character's current row on the grid.
 
@@ -1332,6 +1419,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Spring Reached** (`spring_name: String`)
+- **On Spring Started** (`spring_name: String`)
 
 #### Conditions
 - **Is Springing** (`spring_name: String`)
@@ -1365,6 +1453,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Buff Added** (`buff_id: String, stat: String`)
+- **On Buff Removed** (`buff_id: String, stat: String`)
+- **On Buff Expired** (`buff_id: String, stat: String`)
+- **On Threshold Crossed** (`rule_id: String, stat: String, total: float`)
 
 #### Conditions
 - **Has Buff** (`buff_id: String`)
@@ -1418,6 +1509,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Storylet Drawn**
+- **On Choice Made**
+- **On None Available**
 
 #### Conditions
 - **Has Active Storylet** - Whether a storylet is currently active (drawn, not yet resolved).
@@ -1434,7 +1527,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Storylet Weight** (`id: String, weight: float`) - How strongly this storylet is preferred when several are eligible (higher = picked first / likelier).
 - **Set Storylet Cooldown** (`id: String, seconds: float`) - Seconds this storylet is ineligible after it plays (0 = no cooldown).
 - **Set Max Plays** (`id: String, max_plays: float`) - How many times it may ever play (-1 = unlimited, 1 = a one-shot).
-- **Add Requirement** (`id: String, quality_key: String, op: String, value`) - A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "
+- **Add Requirement** (`id: String, quality_key: String, op: String, value`) - A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "").
 - **Add Choice** (`id: String, choice_id: String, text: String`) - Adds a labelled choice the player can pick on this storylet (resolve it with Choose).
 - **Add Choice Requirement** (`id: String, choice_id: String, quality_key: String, op: String, value`) - A rule that must pass for this choice to be OFFERED, e.g. quality "gold" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice.
 - **Add Choice Effect** (`id: String, choice_id: String, op: String, key: String, value`) - A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice.
@@ -1443,7 +1536,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Add Requirement (Key vs Key)** (`id: String, quality_key: String, op: String, other_key: String`) - A rule comparing one quality against ANOTHER quality's value, e.g. gold >= price - so a storylet reacts to a relationship between stats without hard-coding the number.
 - **Add Chance Requirement** (`id: String, percent: float`) - A probability gate: the storylet is eligible only percent% of the time, re-rolled on every Evaluate/Draw. Use it to make a beat show only sometimes.
 - **Add Recency Requirement** (`id: String, mode: String, within: int`) - An anti-repeat (or must-be-recent) gate by DRAW history: eligible only when this storylet was / was not among the last N drawn storylets.
-- **Set Quality** (`key: String, value`) - Stores a quality value (a number like courage=3, or text like location="tavern
+- **Set Quality** (`key: String, value`) - Stores a quality value (a number like courage=3, or text like location="tavern"). Requirements read these.
 - **Increment Quality** (`key: String, amount: float`) - Adds to a numeric quality (creating it at 0 if new).
 - **Clear Quality** (`key: String`) - Removes a quality key.
 - **Evaluate** - Rebuilds the available list: every eligible storylet, ordered by weight (highest first). Use the Available expressions to show a menu.
@@ -1496,6 +1589,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Process Item** (`item: Variant`)
+- **On Drained**
 
 #### Conditions
 - **Is Busy**
@@ -1545,6 +1639,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Task Started** (`task_name: String`)
+- **On Plan Complete**
+- **On Plan Failed**
+- **On Plan Loaded** (`plan_name: String`)
 
 #### Conditions
 - **Has Plan**
@@ -1580,6 +1677,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Upgrade Bought**
+- **On Purchase Failed**
 
 #### Conditions
 - **Is Maxed** (`id: String`) - Whether an upgrade is at its max level.
@@ -1587,7 +1685,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Purchase Succeeded** - Whether the last Try Purchase went through (read it right after, or in On Upgrade Bought).
 
 #### Actions
-- **Define Upgrade** (`id: String, base_cost: float, cost_growth: float, max_level: int, per_level: float, mode: String, tag: String`) - Creates (or resets) an upgrade: base cost, cost growth per level, max level (-1 = unlimited), effect per level, mode ("add" or "mult
+- **Define Upgrade** (`id: String, base_cost: float, cost_growth: float, max_level: int, per_level: float, mode: String, tag: String`) - Creates (or resets) an upgrade: base cost, cost growth per level, max level (-1 = unlimited), effect per level, mode ("add" or "mult"), and a tag to group it for Total Multiplier / Total Bonus.
 - **Set Effect** (`id: String, per_level: float, mode: String`) - Retunes an existing upgrade's per-level effect and mode without touching its level (for live balancing).
 - **Try Purchase** (`id: String, budget: float`) - Buys the next level if `budget` covers Cost Of and it is not maxed. On success records Last Cost and fires On Upgrade Bought (Spend Last Cost from your wallet); otherwise fires On Purchase Failed. Never touches the wallet itself.
 - **Grant Level** (`id: String`) - Adds one free level (a reward), up to the max. No cost, no budget check.
@@ -1610,6 +1708,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Decision Made**
+- **On Action Started**
+- **On Action Changed**
+- **On Action Completed**
+- **On Action Interrupted**
+- **On Cooldown Started**
+- **On Cooldown Ended**
+- **On No Valid Action**
 
 #### Conditions
 - **Is Running** (`action_name: String`) - Whether the brain's current action is this one.
@@ -1649,6 +1754,14 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Interact Pressed** (`id: String`)
+- **On Interact Released** (`id: String`)
+- **On Layout Edge Hit**
+- **On Cursor Arrived**
+- **On Homing Target Entered**
+- **On Homing Target Exited**
+- **On Homing Snapped**
+- **On Solid Hit**
+- **On Bounce**
 
 #### Conditions
 - **Is Interact Held** (`id: String`)
@@ -1713,6 +1826,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Fire**
+- **On Empty**
+- **Reload Started**
+- **On Reload Complete**
 
 #### Conditions
 - **Is Full**
