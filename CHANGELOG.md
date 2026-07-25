@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Fixed - full docs freshness sweep (48 stale claims)
+
+- Every doc audited against the live repo. Dead paths and broken examples: `demo/README` pointed at
+  showcase `.tres` sheets that stopped existing when showcases went `.gd`-first (including a
+  manual-compile snippet that would load null), and five table rows named flat paths that are all in
+  subfolders now. The `register_editor_gizmo` example used a 2-argument lambda against a 3-argument
+  call whose FIRST argument is the params Dictionary, not the node - so it errored and read the wrong
+  thing; the asset-drop example was 1-argument against a 2-argument call. GUIDE-THEMING told readers to
+  open element `.tscn` files that do not exist, and named a "Default Theme" menu item that does not
+  either.
+- Names that moved: the ACE Studio dialog is **New Function** / **Edit Function - <name>** ("Define a
+  Verb" appears nowhere in the plugin); Tools has **Project Doctor…**, never "Check Project";
+  **Bookmarks** is under Tools, not View; Health's verb is **Take Damage**; Loot Table has no "Roll
+  With Pity"; the FPS Controller's impulse is `do_jump()`. The **Every Frame** trigger was still
+  called "On Process" in 12 files (57 occurrences) - and since its physics twin DID keep its name, the
+  docs were mixing a live name with a retired one.
+- Claims the code contradicts: **On Signal DOES bind arguments** (it carries an Arguments field for the
+  signature) - two docs said the opposite and sent readers to a workaround they did not need;
+  Platformer Pathfinding drives Platformer Movement specifically, not 8-Direction or the FPS
+  Controller; Bullet gravity follows `gravity_angle` now; Sine's forwards-backwards drift follows the
+  heading captured when the wave STARTED. CONTRIBUTING claimed spaces in `addons/eventsheet/editor`
+  (zero survive), a pack-builder list to register in (they auto-register by glob), and that the lifter
+  goes by registry order (it sorts by specificity, with twelve Helpers catch-alls admitted at the
+  lowest).
+- Counts: the glossary said ~450 ACEs and 31 packs (872 and 76); Save System listed four formats of
+  six; Follow claimed five properties and two verbs (six and three).
+- Historical sections were left alone: CHANGELOG entries, release notes and milestone rows record what
+  a past release shipped, and are not stale for being old.
+
 ### Added - comparing values of every kind (31 ACEs)
 
 - Compare Variable and Compare Values already covered anything that compares with an operator. The new
