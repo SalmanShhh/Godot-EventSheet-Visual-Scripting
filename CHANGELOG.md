@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - the raycasting guide shows the labs
+
+- **Seeing What Is There (Raycasting)** gains a "See them running" section with both showcases,
+  screenshotted, and a table mapping each drawn colour back to the cast that produced it. A cast is
+  invisible, which is most of why it is hard to learn: when a ray "does not work" there is nothing on
+  screen to look at, so the guide now opens with somewhere to look.
+- The 3D picking section gains the trap that shaped the 3D showcase: **Cast Ray From Mouse Into**
+  needs the pointer FREE. A first-person controller captures the mouse, and a captured mouse has no
+  screen position to project through, so the picking ray never moves.
+
 ### Added - the Raycast Lab 3D showcase
 
 - `demo/showcase/raycast_lab_3d/` puts the 2D room's six casts one dimension up, and adds the two

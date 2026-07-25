@@ -7,15 +7,16 @@ Godot casts four different ways, and the picker has all four, in 2D and in 3D. T
 ## Table of Contents
 
 1. [Which cast do I want?](#which-cast-do-i-want)
-2. [The RayCast node](#the-raycast-node)
-3. [ShapeCast: a ray with thickness](#shapecast-a-ray-with-thickness)
-4. [Casting from anywhere, no node needed](#casting-from-anywhere-no-node-needed)
-5. [Reading a stored result](#reading-a-stored-result)
-6. [Point and volume queries](#point-and-volume-queries)
-7. [Clicking things in 3D](#clicking-things-in-3d)
-8. [Full ACE reference](#full-ace-reference)
-9. [Use cases](#use-cases)
-10. [Tips and common mistakes](#tips-and-common-mistakes)
+2. [See them running](#see-them-running)
+3. [The RayCast node](#the-raycast-node)
+4. [ShapeCast: a ray with thickness](#shapecast-a-ray-with-thickness)
+5. [Casting from anywhere, no node needed](#casting-from-anywhere-no-node-needed)
+6. [Reading a stored result](#reading-a-stored-result)
+7. [Point and volume queries](#point-and-volume-queries)
+8. [Clicking things in 3D](#clicking-things-in-3d)
+9. [Full ACE reference](#full-ace-reference)
+10. [Use cases](#use-cases)
+11. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -32,6 +33,43 @@ Godot casts four different ways, and the picker has all four, in 2D and in 3D. T
 | Know what the mouse is over | **Cast Ray From Mouse Into** (3D) or **Query Bodies Under Mouse** (2D) | The whole of click-to-select, in one row. |
 
 Picker categories: **Raycast 2D**, **Raycast 3D**, **Overlap 2D**, **Overlap 3D**.
+
+---
+
+## See them running
+
+A cast is invisible, which is most of why it is hard to learn: when a ray "does not work", there is nothing on screen to look at. Two showcases fix that by drawing every cast as it happens. Open either scene and press play.
+
+### Raycast Lab (2D) - `demo/showcase/raycast_lab/raycast_lab.tscn`
+
+![Six casts drawn at once in a walled 2D arena: a dim yellow line sweeping from the player, a cyan beam running to an orange target under the cursor with a ring marking the impact, a dashed green scan circle with rings on the three bodies it caught, a white ring around the picked target, a pink dashed probe ending in a circle short of the wall, and a dashed blue ShapeCast rail down the right-hand side](images/raycast-lab.png)
+
+Arrows move, the cursor aims the beam. Six casts run every frame:
+
+| What you see | The cast | What it teaches |
+| --- | --- | --- |
+| Dim yellow line, bright when it lands | **RayCast2D node**, swept by Point RayCast At | A node-based ray, re-aimed every tick. The white stub at the impact is the surface normal. |
+| Cyan beam to the cursor | **Cast Ray Into** + the **Ray Result** verbs | ONE cast, then the point, the normal and the group test are read off the stored result. The orange ring means it hit something in the `targets` group. |
+| Dashed green circle + rings | **Query Bodies In Circle** | Everything within 130px, collected into a variable. |
+| White ring under the pointer | **Query Bodies Under Mouse** | The 2D click-to-select idiom: a point query at the cursor. |
+| Pink dashed probe | **Cast Circle Motion Into** | How far an 18px disc could slide before it jams. The ring is where it stops. |
+| Dashed blue rail, far right | **ShapeCast2D node** | A ray with thickness. The disc parks at its safe fraction. |
+
+### Raycast Lab 3D - `demo/showcase/raycast_lab_3d/raycast_lab_3d.tscn`
+
+![The same six casts in a 3D arena: orange sphere targets and grey crates on a grey floor, a yellow beam from a turret to a crate, a pink beam to a marker, green rings hovering over the bodies a sphere query caught, a pale blue ShapeCast rail crossing the floor, and a cyan marker on bare floor with its surface normal standing straight up](images/raycast-lab-3d.png)
+
+Move the mouse to aim; Left/Right orbit the camera. The same six casts, plus the two that only exist in 3D:
+
+- **Cast Ray From Mouse Into** is the cyan marker. The camera projects a ray through your cursor and stores what it finds, which is the whole of click-to-select in 3D. The marker grows when the cursor is on a target.
+- **Ray Result Face Index** is the `face` number in the readout: which mesh TRIANGLE the ray struck. The floor is deliberately a concave trimesh, because that is the only kind of shape that has a face index. Point at a sphere target instead and it reads -1, correctly.
+
+Two details in that scene are worth stealing:
+
+- The camera **orbits** rather than being mouse-driven. A first-person controller captures the pointer, and a captured pointer has no screen position to project a picking ray through. If your own click-to-select never fires, check this first.
+- The beam drawn at the cursor is the **surface normal**, not the camera ray. You are looking straight down the camera ray, so drawing it renders as a stray line skidding over the floor.
+
+Both scenes are generated, and every cast in them is a real ACE row rather than hand-written code, so `raycast_lab.gd` and `raycast_lab_3d.gd` beside them are exactly what these verbs emit. Read either one next to its scene to see the whole vocabulary compiled.
 
 ---
 
@@ -180,6 +218,8 @@ On "click" pressed
 ```
 
 In 2D there is no projection to do, so it is a point query at the cursor: **Query Bodies Under Mouse**, which hands back everything under the pointer as a list.
+
+It needs a **current Camera3D**, and it needs the pointer to be **free**. A first-person controller captures the mouse, and a captured mouse has no screen position to project through, so the picking ray never moves. If you want both, release the pointer while a selection mode is active (`Input.mouse_mode = Input.MOUSE_MODE_VISIBLE`) and recapture it afterwards. The 3D showcase sidesteps it entirely by orbiting the camera on the arrow keys instead of the mouse.
 
 ---
 

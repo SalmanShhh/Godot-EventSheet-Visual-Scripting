@@ -6,7 +6,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 - [Recipes](GUIDE-RECIPES.md) - build a platformer, health, pickups, and debugging end to end.
 - [Working with Lists (Arrays)](GUIDE-WORKING-WITH-LISTS.md) - the whole Array vocabulary, including Filter / Map / Reduce / Any Match / All Match and typed lists.
-- [Seeing What Is There (Raycasting)](GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING.md) - line of sight, hitscan shots, ground checks, click-to-select, and explosion radii: all four kinds of cast in 2D and 3D.
+- [Seeing What Is There (Raycasting)](GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING.md) - line of sight, hitscan shots, ground checks, click-to-select, and explosion radii: all four kinds of cast in 2D and 3D, with two playable labs that draw every cast as it happens.
 - [Make a Behaviour Without Writing Code](GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE.md) - author a whole reusable behaviour from event-sheet rows.
 - [Saving and Loading Your Game](GUIDE-SAVING-AND-LOADING.md) - the save story: six slot formats, the persist group, and the `save_state`/`load_state` seam any behaviour can join.
 
