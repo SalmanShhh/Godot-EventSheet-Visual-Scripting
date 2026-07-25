@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+### Added - every kind of raycast, in both dimensions (88 ACEs)
+
+- Godot casts rays four ways and a sheet could only reach a slice of one of them: a RayCast node could
+  be READ but never aimed, ShapeCast did not exist at all, and 3D had no point query, no volume query,
+  and a one-off ray that could report only hit-or-not and where - never WHAT it hit or which way that
+  surface faced. New `Raycast 2D` / `Raycast 3D` / `Overlap 3D` vocabulary closes all of it:
+  - **RayCast2D / RayCast3D nodes** - Point RayCast At, Enable, Set Mask, Set Mask Layer, Ignore Node /
+	Stop Ignoring / Clear Exceptions, Detects Areas, Detects Bodies, Hits From Inside, Ignores Its
+	Parent, plus 3D's Hits Back Faces. New reads: **RayCast Hits Group** (the whole "did I shoot an
+	enemy?" test in one cell), Hit Shape Index, 3D's Hit Face Index, and Target.
+  - **ShapeCast2D / ShapeCast3D** - the swept-shape cast, previously absent entirely. A hairline ray
+	slips between fast movers and through floor seams; a shapecast cannot, and it reports EVERY hit
+	along the sweep. Is Colliding, Force Update, Point At, Enable, Hit Count, Collider / Hit Point /
+	Hit Normal At, **Safe Fraction** and Unsafe Fraction, Mask, Margin, Max Results, exceptions.
+  - **Cast Ray Into (2D/3D)** - the honest primitive. The single-shot expressions read well in one cell
+	but each one re-casts the ray, so asking for the point AND the collider was two casts. This fires
+	once, stores the result, and the new **Ray Result** verbs (Hit Something, Collider, Point, Normal,
+	Shape Index, 3D Face Index, Is In Group) read it for free. Mask, ignore-list and detect-areas are
+	all exposed, since Godot ignores Area nodes by default - the usual reason a ray "misses" a trigger.
+  - **Point and volume queries** - Query Bodies At Point (3D), Query Bodies In Sphere / Box (3D), and
+	Query Bodies Under Mouse (2D). 3D had none of these; 2D had point/circle/rect but no mouse pick.
+  - **Cast Circle / Sphere Motion Into** - how much of a move is clear, as a fraction, so a fast object
+	can be moved right up to a wall instead of tunnelling through it.
+  - **Camera picking** - **Cast Ray From Mouse Into (3D)** projects the cursor ray and stores what it
+	finds, making click-to-select one row instead of origin/direction vector maths. Single-shot Mouse
+	Ray Hits Something / Collider / Point come along for quick checks.
+- Guarded at the edges: the group tests check nothing-hit BEFORE touching the collider, so they are
+  safe on a clear ray; the motion casts fall back to "path clear" rather than indexing an empty
+  result; and the exception verbs default to a `CollisionObject2D`/`3D` cast, because `add_exception`
+  rejects a plain Node at compile time - a `self` default would have shipped rows that cannot compile.
+- The Dictionary keys the result readers use (`position`, `normal`, `collider`, `shape`, `face_index`)
+  were read back off live casts in both dimensions rather than assumed: a wrong key fails silently,
+  since `.get()` would just hand back the default forever. `raycast_aces_test` pins them as values.
+- New guide: **Seeing What Is There (Raycasting)** - which of the four casts to reach for, the local-vs-world
+  target trap, why rays skip trigger areas, and 18 worked use cases.
+
 ### Changed - the dock opens on an EMPTY sheet, not a fabricated example
 
 - Opening the EventSheet tab with nothing to restore used to seed a made-up example: `health` and

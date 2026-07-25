@@ -179,6 +179,7 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Movement": "Path2D",
 	"Nodes": "Node",
 	"Overlap 2D": "Area2D",
+	"Overlap 3D": "Area3D",
 	"Particles": "GPUParticles2D",
 	"Platform": "Godot",
 	"Procedural": "FastNoiseLite",
