@@ -126,6 +126,14 @@ Every verb below is called on the generator node it is attached to. Parameters a
 | On Purchased | After a Buy One / Buy Amount / Buy Max adds at least one unit. Read Last Cost and Last Bought inside it. |
 | On Cycle Complete | In cycle mode (Cycle Time above 0), each time a cycle fills and banks a lump into Pending. Call Collect to claim it. |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ---
 
 ## Use cases

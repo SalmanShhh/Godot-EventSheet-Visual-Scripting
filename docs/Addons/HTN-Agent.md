@@ -168,6 +168,14 @@ The `op` parameter of Add Method Condition accepts these strings:
 | `root_task` | String | `""` | The goal the planner decomposes on Request Plan (a compound or primitive task name). |
 | `auto_replan_on_fail` | bool | `true` | On: Mark Task Failed re-plans from the root. Off: it gives up and fires On Plan Failed. |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ---
 
 ## Use cases

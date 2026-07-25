@@ -120,6 +120,14 @@ Wall Ride Max Time + Wall Ride Min Speed; Wall Jump Enabled + Wall Jump Push.
 - **Wall jump** works from a ride or any mid-air wall touch: up at Jump Velocity, away at Wall
   Jump Push, and the push decays over about half a second so air control comes back smoothly.
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ## Use cases
 
 1. **Landing thud.** `On Landed → PlaySound "thud"` - two rows, no state tracking.

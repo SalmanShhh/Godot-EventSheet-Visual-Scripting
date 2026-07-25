@@ -143,6 +143,14 @@ All ACEs live in the **StatForge** category and target the `StatForge` behavior 
 | `min_value` | float | `-99999` | any float |
 | `max_value` | float | `99999` | any float |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ---
 
 ## Stat sheets as data (.tres)

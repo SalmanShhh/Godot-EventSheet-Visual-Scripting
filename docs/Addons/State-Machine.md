@@ -117,6 +117,14 @@ This pack ships no expression ACEs. To read the machine's current state, branch 
 |---|---|---|---|
 | `state` | String | `idle` | The machine's current state, and the value it starts in. Set it in the Inspector to choose the starting state; Set State overwrites it at runtime. |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ---
 
 ## Use cases

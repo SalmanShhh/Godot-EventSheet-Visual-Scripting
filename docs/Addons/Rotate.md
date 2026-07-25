@@ -49,6 +49,14 @@ On Overload       -> Fan | Rotate: Set Rotation Acceleration  180
 | `acceleration` | `0.0` | Degrees per second, per second. |
 | `rotation_type` | `2d` | 2D rotation, or the 3D X / Y / Z axis. |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ## Use cases
 
 ### 1. A coin carousel

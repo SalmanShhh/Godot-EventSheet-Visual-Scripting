@@ -107,6 +107,37 @@
   their own row. The nine new ACE ids are pinned in `gdscript_basics_coverage_test.gd`, so the receipt
   cannot silently regress.
 
+### Fixed - a reflected property ACE can no longer masquerade as an authored verb
+
+- A pack publishes two kinds of picker entry: the **authored** verbs it annotates, and the ACEs
+  **reflected** automatically from each `@export` property (a reader named after the property, a `Set ...`,
+  and `Add To ...` / `Subtract From ...` for numbers). When both landed on the same label the picker showed
+  two identical rows that did different things, and choosing wrong failed silently: ComboBox's `Buffer
+  Length` is an authored expression (tokens buffered right now) **and** a reflected one (the capacity, a
+  constant 12), so the wrong pick just returned 12; Drag And Drop had four such pairs, where the reflected
+  `Set Break Distance` / `Set Enabled` / `Set Follow Speed` / `Set Directions` write a raw value straight
+  past the authored verb's validation.
+- The authored verb now keeps the plain label and its reflected twin becomes **"<name> (property)"**. Only
+  the label moves: `ace_id`s and codegen templates are the frozen API, so every existing sheet keeps
+  compiling to exactly the same code. A reflected name with no authored twin is left alone.
+
+### Fixed - the quick-add suggestion list is now reproducible
+
+- Working on the collision fix surfaced a latent one next door: the Ghost Row / quick-add matcher broke
+  score ties with nothing but name length, and `sort_custom` is not stable. Several packs legitimately
+  publish the same verb name (three of the bundled ones ship a `Heal`), so which of them appeared first
+  for a typed word was arbitrary - and could change when an unrelated ACE was added elsewhere. Ties now
+  resolve explicitly: fewest parameters first (a verb the typed sentence can fill on its own beats one
+  that also needs a target), then provider and id, so the same query always offers the same list.
+
+### Documented - every guide now says that Inspector properties are ACEs too
+
+- The reflected property ACEs were missing from nearly every addon guide, so the guides under-reported what
+  the picker actually offers (and a few claimed to be exhaustive while doing it). Each guide's ACE reference
+  now ends with a short standard section explaining that every Inspector property is also readable and
+  writable from the picker, and the overclaiming sentences were narrowed to the authored verbs they
+  actually describe.
+
 ### Fixed - the vocabulary index was hiding most triggers, and cutting descriptions short
 
 - A documentation audit across all 76 packs found two bugs in the generator behind

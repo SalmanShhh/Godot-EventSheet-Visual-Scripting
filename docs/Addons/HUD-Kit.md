@@ -129,6 +129,14 @@ All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of
 | `auto_connect_buttons` | bool | `true` | on / off |
 | `toast_seconds` | float | `2.0` | 0.2 - 10 (step 0.1) |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ---
 
 ## Use cases

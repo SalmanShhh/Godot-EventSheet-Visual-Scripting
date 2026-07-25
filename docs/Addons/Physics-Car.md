@@ -169,6 +169,14 @@ The Drive Toward actions default `throttle_amount` to 1.0, `max_steer` to 1.0, a
 | `handbrake_grip` | float | `0.06` | Grip while the handbrake is held (low = easy to slide the back out). Range 0 to 1. |
 | `reach_distance` | float | `16.0` | How close (pixels) a Drive Toward target must be to count as reached. |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ---
 
 ## Use cases

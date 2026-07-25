@@ -83,7 +83,7 @@ On enemy killed
 
 ## ACE reference
 
-Every row below is exactly what the pack exposes. Parameter names and types are shown in order. Actions are called as `AdvancedRandom: <Action>  args`; expressions and conditions are read as `AdvancedRandom.<Name>(args)`.
+Every verb below is exactly what the pack publishes. Parameter names and types are shown in order. Actions are called as `AdvancedRandom: <Action>  args`; expressions and conditions are read as `AdvancedRandom.<Name>(args)`.
 
 ### Actions
 
@@ -132,6 +132,14 @@ Advanced Random ships no triggers. It is a pure query-and-set toolkit: you *call
 | Property | Type | Default | What it does |
 |---|---|---|---|
 | `seed_on_start` | int | `0` | Seed applied on startup. `0` = a fresh random seed each run; any other value = reproducible runs. |
+
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
 
 ---
 

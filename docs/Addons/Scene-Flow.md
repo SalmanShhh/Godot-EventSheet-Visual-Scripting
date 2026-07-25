@@ -114,6 +114,14 @@ Scene Flow ships no triggers of its own. You drive it from your own game events 
 | `fade_color` | Color | opaque black `Color(0, 0, 0, 1)` | any color | The cover color the screen fades through. |
 | `fade_seconds` | float | `0.4` | 0.05 - 5 (step 0.05) | Fade-out (and fade-in) duration, in seconds. |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ---
 
 ## Use cases

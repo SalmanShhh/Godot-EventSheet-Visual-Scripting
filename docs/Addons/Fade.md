@@ -102,6 +102,14 @@ Because Free On Faded Out frees the node, you can skip the manual "destroy" step
 | Free On Faded Out | off | Free (delete) the node once it has fully faded out. |
 | Start On Ready | off | Run the full sequence automatically when the node is ready. |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ## Use cases
 
 **1. Collectible coin pop.**

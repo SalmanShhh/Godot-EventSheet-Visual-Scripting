@@ -184,6 +184,14 @@ they are placed on.
 | `repath_interval` / `repath_threshold` | `0.5` / `24.0` | Follow-mode refresh rate and the movement needed to trigger it. |
 | `stuck_timeout` | `1.5` | No waypoint progress for this long fires On Waypoint Stuck + a self re-route. |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ## Use cases
 
 ### 1. The chaser

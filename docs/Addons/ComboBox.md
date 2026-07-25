@@ -86,7 +86,7 @@ Because the pack is a live event sheet, you can also open it and extend it direc
 
 ## ACE reference
 
-Every name below is exactly what appears in the picker. Parameters are listed in order.
+Every verb name below is exactly what appears in the picker. Parameters are listed in order.
 
 ### Actions
 
@@ -153,6 +153,14 @@ Select the ComboBox autoload node to see these; each also has a live-set action.
 | **buffer_length** | int | `12` | How many recent inputs to remember. Older inputs drop off so stale history cannot complete a combo. (Live: Set Buffer Length.) |
 | **default_timing** | float | `0.5` | Default seconds allowed between two inputs of a combo (`0` = no time limit). A combo can override this with its own `timing_window`. (Live: Set Default Timing.) |
 | **debug_logging** | bool | `false` | Print every input, buffer state, and match to the Output panel while tuning. |
+
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
 
 ---
 

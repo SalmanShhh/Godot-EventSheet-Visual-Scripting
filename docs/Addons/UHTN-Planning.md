@@ -142,6 +142,14 @@ Far away, `aggro` scores low and the fixed 0.2 patrol wins; up close it overtake
 | Root Task | The goal to plan for (a loaded resource overrides it with its own). |
 | Auto Replan On Fail | Mark Task Failed re-plans from the root instead of giving up. |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ## Use cases
 
 1. **Patrol-or-chase guard.** Two methods on one root; the chase method scored by a closeness curve. Far = patrol, near = chase, one network.

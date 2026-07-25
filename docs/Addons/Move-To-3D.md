@@ -122,6 +122,14 @@ This pack defines no expressions of its own. The host's own `position` is availa
 |---|---|---|---|
 | `max_speed` | float | `5.0` | Units per second the host travels toward the current waypoint. |
 
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
+
 ---
 
 ## Use cases

@@ -101,7 +101,7 @@ All ACEs live in the **Tween** category and target the `TweenBehavior` on the no
 
 | Expression | Parameters | Returns | Description |
 |---|---|---|---|
-| (none) | | | This pack exposes no expressions. Values you tween toward come from your own object properties and expressions. |
+| (none) | | | This pack publishes no authored expressions. Values you tween toward come from your own object properties and expressions. |
 
 ### Triggers
 
@@ -116,6 +116,14 @@ All ACEs live in the **Tween** category and target the `TweenBehavior` on the no
 | `default_duration` | float | `0.3` | 0.01 - 10 (step 0.01) |
 | `transition` | String | `sine` | `linear`, `sine`, `quad`, `cubic`, `quart`, `quint`, `expo`, `circ`, `elastic`, `back`, `bounce`, `spring` |
 | `easing` | String | `out` | `in`, `out`, `in_out`, `out_in` |
+
+### Inspector properties are ACEs too
+
+Every property this pack exposes in the Inspector is also reachable from the picker, generated for you:
+an expression named after the property reads it, a **Set ...** action writes it, and for number properties
+**Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
+alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
+change while the game runs.
 
 ---
 
