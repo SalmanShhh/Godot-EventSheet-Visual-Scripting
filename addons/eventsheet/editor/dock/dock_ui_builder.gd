@@ -245,7 +245,7 @@ func build_provider_dialog() -> void:
 	_dock._provider_dialog = Window.new()
 	_dock._provider_dialog.title = "Custom ACE Providers"
 	_dock._provider_dialog.visible = false
-	_dock._provider_dialog.min_size = Vector2i(460, 320)
+	_dock._provider_dialog.min_size = Vector2i(720, 620)
 	_dock._provider_dialog.close_requested.connect(func() -> void: _dock._provider_dialog.hide())
 	_dock.add_child(_dock._provider_dialog)
 
@@ -283,6 +283,48 @@ func build_provider_dialog() -> void:
 	var providers_card: PanelContainer = EventSheetPopupUI.titled_card("Providers", providers_box)
 	providers_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(providers_card)
+	_dock._provider_list.item_selected.connect(func(index: int) -> void:
+		var entry: Variant = _dock._provider_list.get_item_metadata(index)
+		var listed_path: String = str((entry as Dictionary).get("path", "")) if entry is Dictionary else ""
+		# Already registered, so this is a read of what it contributes - no Register button.
+		_dock._preview_provider_script(listed_path, false))
+
+	# "What it publishes": the scan of the highlighted (or just-browsed) script. Browsing previews only -
+	# Register is the second, deliberate click - so a script never joins the vocabulary unseen.
+	var preview_box: VBoxContainer = EventSheetPopupUI.form_box()
+	_dock._provider_preview_summary = EventSheetPopupUI.hint_label("Select a provider, or press Add to preview a script.")
+	preview_box.add_child(_dock._provider_preview_summary)
+	_dock._provider_preview_warnings = VBoxContainer.new()
+	_dock._provider_preview_warnings.add_theme_constant_override("separation", 2)
+	preview_box.add_child(_dock._provider_preview_warnings)
+	_dock._provider_preview_tree = Tree.new()
+	_dock._provider_preview_tree.columns = 4
+	_dock._provider_preview_tree.column_titles_visible = true
+	_dock._provider_preview_tree.set_column_title(0, "Kind")
+	_dock._provider_preview_tree.set_column_title(1, "Verb")
+	_dock._provider_preview_tree.set_column_title(2, "Parameters")
+	_dock._provider_preview_tree.set_column_title(3, "Emits")
+	_dock._provider_preview_tree.set_column_expand(0, false)
+	_dock._provider_preview_tree.set_column_custom_minimum_width(0, 90)
+	# The verb name is what the reader scans for, so it gets the room; the emitted code is the widest
+	# text but also the least urgent (the row's tooltip carries the full id and source member anyway).
+	_dock._provider_preview_tree.set_column_expand_ratio(1, 3)
+	_dock._provider_preview_tree.set_column_expand_ratio(2, 2)
+	_dock._provider_preview_tree.set_column_expand_ratio(3, 3)
+	_dock._provider_preview_tree.set_column_clip_content(3, true)
+	_dock._provider_preview_tree.hide_root = true
+	_dock._provider_preview_tree.custom_minimum_size = Vector2(0, 180)
+	_dock._provider_preview_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	preview_box.add_child(_dock._provider_preview_tree)
+	_dock._provider_register_button = Button.new()
+	_dock._provider_register_button.text = "Register This Script"
+	_dock._provider_register_button.visible = false
+	_dock._provider_register_button.tooltip_text = "Add the previewed script to this sheet's providers, so the verbs above join the picker."
+	_dock._provider_register_button.pressed.connect(_dock._on_provider_register_pressed)
+	preview_box.add_child(_dock._provider_register_button)
+	var preview_card: PanelContainer = EventSheetPopupUI.titled_card("What it publishes", preview_box)
+	preview_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content.add_child(preview_card)
 
 	_dock._provider_file_dialog = FileDialog.new()
 	_dock._provider_file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE

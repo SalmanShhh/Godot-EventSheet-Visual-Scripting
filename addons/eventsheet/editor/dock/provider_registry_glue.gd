@@ -117,7 +117,8 @@ func on_manage_ace_providers_requested() -> void:
 		return
 	_dock._build_provider_dialog()
 	_dock._refresh_provider_list()
-	_dock._provider_dialog.popup_centered(Vector2i(560, 420))
+	# Roomier than the old list-only dialog: it now carries the "what it publishes" preview table too.
+	_dock._provider_dialog.popup_centered(Vector2i(760, 640))
 
 
 func refresh_provider_list() -> void:
@@ -139,8 +140,52 @@ func on_provider_add_pressed() -> void:
 		_dock._provider_file_dialog.popup_centered(Vector2i(720, 520))
 
 
+## Browsing a script PREVIEWS it rather than registering it: the whole point of the preview is to see
+## what joins the picker before it does. Registering is the explicit second click (on_provider_register).
+## The public API (EventSheets.register_ace_provider) still registers outright - a caller in code is not
+## previewing anything.
 func on_provider_file_selected(path: String) -> void:
-	add_ace_provider_script(path)
+	preview_provider_script(path, true)
+
+
+## Renders EventSheetProviderPreview.scan() into the dialog. Thin on purpose: every decision (kinds,
+## labels, emitted code, which warnings fire) is made by the pure scan, which the suite pins - this only
+## puts it on screen. `offer_register` shows the Register button for a script that is not registered yet.
+func preview_provider_script(path: String, offer_register: bool) -> void:
+	if _dock._provider_preview_tree == null:
+		return
+	_dock._provider_pending_path = path if offer_register else ""
+	_dock._provider_preview_tree.clear()
+	for stale_warning: Node in _dock._provider_preview_warnings.get_children():
+		stale_warning.queue_free()
+	var scan: Dictionary = EventSheetProviderPreview.scan(path)
+	_dock._provider_preview_summary.text = "%s\n%s" % [path.get_file(), EventSheetProviderPreview.summary_line(scan)]
+	for warning: Variant in scan.get("warnings", []):
+		var warning_label: Label = EventSheetPopupUI.hint_label("! %s" % str((warning as Dictionary).get("text", "")))
+		warning_label.add_theme_color_override("font_color", Color("#e0a33a"))
+		_dock._provider_preview_warnings.add_child(warning_label)
+	var root: TreeItem = _dock._provider_preview_tree.create_item()
+	for entry: Variant in scan.get("entries", []):
+		var row: Dictionary = entry
+		var item: TreeItem = _dock._provider_preview_tree.create_item(root)
+		item.set_text(0, str(row.get("kind_label", "")))
+		item.set_text(1, str(row.get("label", "")))
+		item.set_text(2, ", ".join(PackedStringArray(row.get("params", []))))
+		# A method's template is baked when the row is applied, so it is empty at scan time. Say that
+		# rather than showing a blank cell that reads like something failed.
+		var emits: String = str(row.get("emits", ""))
+		item.set_text(3, emits if not emits.is_empty() else "(built when you add the row)")
+		item.set_tooltip_text(1, "%s - from %s `%s`" % [str(row.get("ace_id", "")), str(row.get("source", "")), str(row.get("member", ""))])
+	_dock._provider_register_button.visible = offer_register and bool(scan.get("ok", false)) and not (scan.get("entries", []) as Array).is_empty()
+
+
+## Commits the previewed script to this sheet's providers.
+func on_provider_register_pressed() -> void:
+	var pending: String = _dock._provider_pending_path
+	if pending.strip_edges().is_empty():
+		return
+	if add_ace_provider_script(pending):
+		preview_provider_script(pending, false)
 
 
 func on_provider_remove_pressed() -> void:

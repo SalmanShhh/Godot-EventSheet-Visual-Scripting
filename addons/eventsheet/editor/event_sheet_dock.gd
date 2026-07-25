@@ -104,6 +104,13 @@ var _theme_picker: OptionButton = null
 var _provider_dialog: Window = null
 var _provider_list: ItemList = null
 var _provider_file_dialog: FileDialog = null
+# The provider dialog's "what will this publish?" half: browsing a script PREVIEWS it (the scan is
+# read-only) and registering is a second, deliberate click, so nothing joins the vocabulary unseen.
+var _provider_preview_summary: Label = null
+var _provider_preview_warnings: VBoxContainer = null
+var _provider_preview_tree: Tree = null
+var _provider_register_button: Button = null
+var _provider_pending_path: String = ""
 var _split: HSplitContainer = null
 var _scroll: ScrollContainer = null
 # Open Sheets panel: a left in-workspace pane (the "Filter Scripts"-style list). _workspace_body
@@ -743,6 +750,16 @@ func _on_provider_add_pressed() -> void:
 
 func _on_provider_file_selected(path: String) -> void:
 	_providers_glue.on_provider_file_selected(path)
+
+
+## Renders "what this script publishes" into the provider dialog. offer_register is true for a script
+## the user just browsed to (not registered yet), false when reading an already-registered one.
+func _preview_provider_script(path: String, offer_register: bool) -> void:
+	_providers_glue.preview_provider_script(path, offer_register)
+
+
+func _on_provider_register_pressed() -> void:
+	_providers_glue.on_provider_register_pressed()
 
 
 
