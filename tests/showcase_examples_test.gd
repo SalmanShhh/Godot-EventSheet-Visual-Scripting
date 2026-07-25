@@ -104,6 +104,38 @@ static func run() -> bool:
 	passed = _check("raycast_lab targets keep their group in the packed scene",
 		FileAccess.get_file_as_string("res://demo/showcase/raycast_lab/raycast_lab.tscn").contains("groups=[\"targets\"]"), true) and passed
 
+	# Raycast Lab 3D - the same six casts one dimension up, plus the two verbs that only exist there:
+	# camera picking, and the mesh-triangle face index. The Vector3 variable declarations are pinned
+	# because a missing constructor literal emits a bare "(0, 0, 0)" that does not parse, and the
+	# compile reports SUCCESS while doing it.
+	passed = _check_sheet("raycast_lab_3d", "res://demo/showcase/raycast_lab_3d/raycast_lab_3d.gd", [
+		"class_name RaycastLab3DDemo",
+		"var pick_point: Vector3 = Vector3(0.0, 0.0, 0.0)",
+		"$Turret/Radar.target_position = Vector3(sin(deg_to_rad(turret_deg)), 0.0, cos(deg_to_rad(turret_deg))) * 14.0",
+		"$Turret/Radar.force_raycast_update()",
+		"if $Turret/Radar.is_colliding():",
+		"var __cam_pick := get_viewport().get_camera_3d()",
+		"var __to_pick := __from_pick + __cam_pick.project_ray_normal(__mouse_pick) * 200.0",
+		"pick = get_world_3d().direct_space_state.intersect_ray(__rq_pick)",
+		"pick_face = pick.get(\"face_index\", -1)",
+		"if (pick.get(\"collider\", null) != null and pick[\"collider\"].is_in_group(\"targets\")):",
+		"__sq_zone.transform = Transform3D(Basis(), $Turret.global_position)",
+		"direct_space_state.intersect_shape(__sq_zone, 16)",
+		"__bs_bay.size = Vector3(8.0, 4.0, 8.0)",
+		"__pq_spot.position = $Turret.global_position - Vector3(0.0, 1.05, 0.0)",
+		"var __cm_probe := get_world_3d().direct_space_state.cast_motion(__sq_probe)",
+		"$Sweep.force_shapecast_update()",
+		"$Sweep.get_closest_collision_safe_fraction()",
+		"func aim_beam(beam: Node3D, from: Vector3, to: Vector3) -> void:",
+	]) and passed
+	passed = _check("raycast_lab_3d bakes every per-row uid",
+		FileAccess.get_file_as_string("res://demo/showcase/raycast_lab_3d/raycast_lab_3d.gd").contains("{uid}"), false) and passed
+	passed = _check_scene("raycast_lab_3d scene wires the turret, the sweep, the camera and the markers",
+		"res://demo/showcase/raycast_lab_3d/raycast_lab_3d.tscn",
+		["Turret", "Radar", "Sweep", "CameraArm", "Camera", "Beams", "Markers", "ZoneMarks", "Pad", "Target1"]) and passed
+	passed = _check("raycast_lab_3d targets keep their group in the packed scene",
+		FileAccess.get_file_as_string("res://demo/showcase/raycast_lab_3d/raycast_lab_3d.tscn").contains("groups=[\"targets\"]"), true) and passed
+
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/carousel/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",

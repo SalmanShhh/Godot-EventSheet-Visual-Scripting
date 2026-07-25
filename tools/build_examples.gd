@@ -30,6 +30,7 @@ func _init() -> void:
 	all_ok = _build_path_chase() and all_ok
 	all_ok = _build_draw_lab() and all_ok
 	all_ok = _build_raycast_lab() and all_ok
+	all_ok = _build_raycast_lab_3d() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -2669,3 +2670,469 @@ func _build_raycast_lab() -> bool:
 	readout.owner = root
 
 	return _save_scene(root, "%s/raycast_lab.tscn" % RAYCAST_LAB_DIR)
+
+
+# ── 18. Raycast Lab 3D - the same six questions, asked in three dimensions ───
+const RAYCAST_LAB_3D_DIR := "res://demo/showcase/raycast_lab_3d"
+
+
+## The 3D half of the Raycast Lab. Same six casts as the 2D room, in the dimension where two of them
+## only exist: CAMERA PICKING (the screen-to-world ray under the cursor, which is the whole of
+## click-to-select) and FACE INDEX (which triangle of a mesh a ray struck).
+##
+## The camera ORBITS instead of being mouse-driven, on purpose: a first-person controller captures
+## the pointer, and a captured pointer has no screen position to project a picking ray through. A lab
+## about casting needs the cursor free.
+##
+## Visualising a cast in 3D has no Drawing Canvas to lean on, so the sheet moves real meshes: a thin
+## box stretched between two points is a beam, and a small sphere parked at a hit point is a marker.
+## That is plain Godot, and it keeps the generated script readable.
+func _build_raycast_lab_3d() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node3D"
+	sheet.custom_class_name = "RaycastLab3DDemo"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"turret_deg": {"type": "float", "default": 0.0, "exported": false},
+		"orbit_deg": {"type": "float", "default": 0.0, "exported": false},
+		"radar_hit": {"type": "bool", "default": false, "exported": false},
+		"radar_end": {"type": "Vector3", "default": Vector3.ZERO, "exported": false},
+		"radar_normal": {"type": "Vector3", "default": Vector3.ZERO, "exported": false},
+		"pick": {"type": "Dictionary", "default": {}, "exported": false},
+		"pick_point": {"type": "Vector3", "default": Vector3.ZERO, "exported": false},
+		"pick_normal": {"type": "Vector3", "default": Vector3.ZERO, "exported": false},
+		"pick_face": {"type": "int", "default": -1, "exported": false},
+		"pick_on_target": {"type": "bool", "default": false, "exported": false},
+		"nearby": {"type": "Array", "default": [], "exported": false},
+		"in_box": {"type": "Array", "default": [], "exported": false},
+		"at_point": {"type": "Array", "default": [], "exported": false},
+		"travel": {"type": "float", "default": 1.0, "exported": false},
+		"probe_end": {"type": "Vector3", "default": Vector3.ZERO, "exported": false},
+		"sweep_count": {"type": "int", "default": 0, "exported": false},
+		"sweep_travel": {"type": "float", "default": 1.0, "exported": false}
+	}
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Raycast Lab 3D[/b] - the same six questions as the 2D room, in the dimension where two of them only exist. [b]Cyan[/b] is [b]Cast Ray From Mouse Into[/b]: the camera projects a ray through your cursor and stores what it finds, which is the whole of click-to-select in 3D - the readout even names the mesh TRIANGLE it struck (Ray Result Face Index, a 3D-only fact). [b]Yellow[/b] is a RayCast3D NODE on the turning turret. [b]Blue[/b] is a ShapeCast3D sweeping with THICKNESS, parked at its safe fraction. [b]Pink[/b] is Cast Sphere Motion Into - how far a ball could roll before it jams. [b]Green[/b] rings mark what Query Bodies In Sphere caught. The camera orbits rather than being mouse-driven on purpose: a captured pointer has no screen position to project a picking ray through."
+	sheet.events.append(about)
+
+	# ── The casting tick. Every cast below is a real raycast ACE row. ──
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnPhysicsProcess"
+	tick.actions.append(_raw("\n".join(PackedStringArray([
+		"turret_deg = fmod(turret_deg + 40.0 * delta, 360.0)",
+		"orbit_deg += (Input.get_axis(\"ui_left\", \"ui_right\")) * 45.0 * delta",
+		"radar_hit = false",
+		"pick_on_target = false",
+		"pick_face = -1",
+		"$CameraArm.rotation_degrees = Vector3(0.0, orbit_deg, 0.0)"
+	]))))
+	# RAYCAST3D NODE on the turret: aim it, then force it to re-check THIS frame.
+	tick.actions.append(_action("Core", "RayCast3DSetTarget", _ace_template("RayCast3DSetTarget"),
+		{"target": "$Turret/Radar", "reach": "Vector3(sin(deg_to_rad(turret_deg)), 0.0, cos(deg_to_rad(turret_deg))) * 14.0"}))
+	tick.actions.append(_action("Core", "RayCast3DForceUpdate", _ace_template("RayCast3DForceUpdate"),
+		{"target": "$Turret/Radar"}))
+	tick.actions.append(_raw("radar_end = $Turret.global_position + Vector3(sin(deg_to_rad(turret_deg)), 0.0, cos(deg_to_rad(turret_deg))) * 14.0"))
+	# CAMERA PICKING: the screen-to-world ray under the cursor. This is the verb 2D has no need of.
+	tick.actions.append(_action("Core", "CastMouseRayInto3D", _ace_template("CastMouseRayInto3D", "pick"), {
+		"into": "pick",
+		"distance": "200.0",
+		"mask": "1",
+		"exclude": "[]",
+		"hit_areas": "false"
+	}))
+	# VOLUME + POINT queries: a sphere around the turret, a box over the far bay, and a pinprick
+	# straight down from the turret to name the floor tile under it.
+	tick.actions.append(_action("Core", "QueryBodiesInSphere3D", _ace_template("QueryBodiesInSphere3D", "zone"),
+		{"into": "nearby", "center": "$Turret.global_position", "radius": "7.0", "mask": "1", "max_results": "16"}))
+	tick.actions.append(_action("Core", "QueryBodiesInBox3D", _ace_template("QueryBodiesInBox3D", "bay"),
+		{"into": "in_box", "center": "Vector3(9.0, 1.0, -9.0)", "size": "Vector3(8.0, 4.0, 8.0)", "mask": "1", "max_results": "16"}))
+	tick.actions.append(_action("Core", "QueryBodiesAtPoint3D", _ace_template("QueryBodiesAtPoint3D", "spot"),
+		{"into": "at_point", "point": "$Turret.global_position - Vector3(0.0, 1.05, 0.0)", "hit_areas": "false", "max_results": "8"}))
+	# MOTION CAST: how far a 0.6m ball could roll from the turret before something stops it.
+	tick.actions.append(_action("Core", "CastSphereMotion3D", _ace_template("CastSphereMotion3D", "probe"), {
+		"into": "travel",
+		"from": "$Turret.global_position",
+		"motion": "Vector3(cos(deg_to_rad(turret_deg)), 0.0, -sin(deg_to_rad(turret_deg))) * 12.0",
+		"radius": "0.6",
+		"mask": "1"
+	}))
+	tick.actions.append(_raw("probe_end = $Turret.global_position + Vector3(cos(deg_to_rad(turret_deg)), 0.0, -sin(deg_to_rad(turret_deg))) * 12.0 * travel"))
+	# SHAPECAST3D NODE: the thick sweep down the corridor.
+	tick.actions.append(_action("Core", "ShapeCast3DForceUpdate", _ace_template("ShapeCast3DForceUpdate"),
+		{"target": "$Sweep"}))
+	tick.actions.append(_raw("\n".join(PackedStringArray([
+		"sweep_count = $Sweep.get_collision_count()",
+		"sweep_travel = $Sweep.get_closest_collision_safe_fraction()"
+	]))))
+	sheet.events.append(tick)
+
+	# Reading the RayCast3D node, only when it actually hit something.
+	var radar_row: EventRow = EventRow.new()
+	radar_row.trigger_provider_id = "Core"
+	radar_row.trigger_id = "OnPhysicsProcess"
+	radar_row.conditions.append(_condition("Core", "RayCast3DIsColliding",
+		_ace_template("RayCast3DIsColliding"), {"target": "$Turret/Radar"}))
+	radar_row.actions.append(_raw("\n".join(PackedStringArray([
+		"radar_hit = true",
+		"radar_end = $Turret/Radar.get_collision_point()",
+		"radar_normal = $Turret/Radar.get_collision_normal()"
+	]))))
+	sheet.events.append(radar_row)
+
+	# Reading the STORED pick: point, normal, the mesh triangle, and a group test. Four facts, and
+	# the cursor ray was cast exactly ONCE to get them.
+	var pick_row: EventRow = EventRow.new()
+	pick_row.trigger_provider_id = "Core"
+	pick_row.trigger_id = "OnPhysicsProcess"
+	pick_row.conditions.append(_condition("Core", "RayResultHit3D",
+		_ace_template("RayResultHit3D"), {"result": "pick"}))
+	pick_row.actions.append(_raw("\n".join(PackedStringArray([
+		"pick_point = pick.get(\"position\", Vector3.ZERO)",
+		"pick_normal = pick.get(\"normal\", Vector3.ZERO)",
+		"pick_face = pick.get(\"face_index\", -1)"
+	]))))
+	var pick_target: EventRow = EventRow.new()
+	pick_target.conditions.append(_condition("Core", "RayResultInGroup3D",
+		_ace_template("RayResultInGroup3D"), {"result": "pick", "group": "\"targets\""}))
+	pick_target.actions.append(_raw("pick_on_target = true"))
+	pick_row.sub_events.append(pick_target)
+	sheet.events.append(pick_row)
+
+	# ── Showing the answers. No Drawing Canvas in 3D, so the sheet moves real meshes: a thin box
+	# stretched between two points is a beam, a small sphere parked somewhere is a marker. ──
+	var show: EventRow = EventRow.new()
+	show.trigger_provider_id = "Core"
+	show.trigger_id = "OnProcess"
+	show.actions.append(_raw("\n".join(PackedStringArray([
+		"# The turning turret's ray: a yellow beam to whatever stopped it, and a marker on the spot.",
+		"aim_beam($Beams/RadarBeam, $Turret.global_position, radar_end)",
+		"$Markers/RadarMark.visible = radar_hit",
+		"$Markers/RadarMark.global_position = radar_end",
+		"# The cursor pick: the headline 3D cast. Cyan beam from the camera to whatever is under the",
+		"# pointer, and the marker turns orange when that thing is a target.",
+		"$Markers/PickMark.visible = not pick.is_empty()",
+		"$Markers/PickMark.global_position = pick_point",
+		"$Markers/PickMark.scale = Vector3.ONE * (1.6 if pick_on_target else 1.0)",
+		"# NOT a beam from the camera to the cursor: you are looking straight down that ray, so it draws",
+		"# as a stray line skidding over the floor. The surface NORMAL at the hit is the fact worth",
+		"# showing, and it stands up off whatever was struck.",
+		"aim_beam($Beams/PickBeam, pick_point, pick_point + pick_normal * 1.8)",
+		"# Where a rolling 0.6m ball would jam, and where the thick sweep runs out of clear road.",
+		"$Markers/ProbeMark.global_position = probe_end",
+		"aim_beam($Beams/ProbeBeam, $Turret.global_position, probe_end)",
+		"$Markers/SweepMark.global_position = $Sweep.global_position + $Sweep.target_position * sweep_travel",
+		"aim_beam($Beams/SweepBeam, $Sweep.global_position, $Sweep.global_position + $Sweep.target_position)",
+		"# Query Bodies In Sphere: park a ring of markers on whatever the sphere caught.",
+		"var ring: Node3D = $Markers/ZoneMarks",
+		"for slot: int in ring.get_child_count():",
+		"\tvar mark: Node3D = ring.get_child(slot)",
+		"\tmark.visible = slot < nearby.size()",
+		"\tif mark.visible:",
+		"\t\tmark.global_position = (nearby[slot] as Node3D).global_position + Vector3(0.0, 1.6, 0.0)",
+		"$HudLayer/Readout.text = \"cursor: %s   face %d   in sphere %d   in box %d   under turret %d   ball travel %.2f   sweep %.2f (%d)\" % [\"TARGET\" if pick_on_target else (\"scenery\" if not pick.is_empty() else \"sky\"), pick_face, nearby.size(), in_box.size(), at_point.size(), travel, sweep_travel, sweep_count]"
+	]))))
+	sheet.events.append(show)
+
+	# One helper, so the three beams do not repeat the same orientation maths three times.
+	var beam_fn: EventFunction = EventFunction.new()
+	beam_fn.function_name = "aim_beam"
+	beam_fn.enabled = true
+	beam_fn.description = "Stretches a unit-long beam mesh so it spans from one point to another."
+	var p_beam: ACEParam = ACEParam.new(); p_beam.id = "beam"; p_beam.type_name = "Node3D"; p_beam.type = TYPE_OBJECT
+	var p_from: ACEParam = ACEParam.new(); p_from.id = "from"; p_from.type_name = "Vector3"; p_from.type = TYPE_VECTOR3
+	var p_to: ACEParam = ACEParam.new(); p_to.id = "to"; p_to.type_name = "Vector3"; p_to.type = TYPE_VECTOR3
+	beam_fn.params = [p_beam, p_from, p_to]
+	beam_fn.events = [_raw("\n".join(PackedStringArray([
+		"var span: float = from.distance_to(to)",
+		"beam.visible = span > 0.05",
+		"if not beam.visible:",
+		"\treturn",
+		"beam.global_position = (from + to) * 0.5",
+		"beam.look_at(to, Vector3.UP)",
+		"# The mesh is a unit box on -Z, so scaling z by the span turns it into a beam of that length.",
+		"beam.scale = Vector3(1.0, 1.0, span)"
+	])))]
+	sheet.functions.append(beam_fn)
+
+	if not _compile(sheet, "%s/raycast_lab_3d.tres" % RAYCAST_LAB_3D_DIR, "%s/raycast_lab_3d.gd" % RAYCAST_LAB_3D_DIR):
+		return false
+	var emitted: String = FileAccess.get_file_as_string("%s/raycast_lab_3d.gd" % RAYCAST_LAB_3D_DIR)
+	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
+	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
+	var out: FileAccess = FileAccess.open("%s/raycast_lab_3d.gd" % RAYCAST_LAB_3D_DIR, FileAccess.WRITE)
+	out.store_string(emitted)
+	out.close()
+
+	# ── The scene ──
+	var root: Node3D = Node3D.new()
+	root.name = "RaycastLab3D"
+	root.set_script(load("%s/raycast_lab_3d.gd" % RAYCAST_LAB_3D_DIR))
+
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-55.0, -35.0, 0.0)
+	sun.shadow_enabled = true
+	root.add_child(sun)
+	sun.owner = root
+	var sky_env: WorldEnvironment = WorldEnvironment.new()
+	sky_env.name = "World"
+	var env: Environment = Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.07, 0.08, 0.11)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.45, 0.5, 0.62)
+	env.ambient_light_energy = 0.7
+	sky_env.environment = env
+	root.add_child(sky_env)
+	sky_env.owner = root
+
+	# The floor. A CONCAVE collision shape, deliberately: face index only means anything on one, so
+	# a box-shaped floor would make Ray Result Face Index read -1 forever.
+	var floor_body: StaticBody3D = StaticBody3D.new()
+	floor_body.name = "Floor"
+	floor_body.collision_layer = 1
+	root.add_child(floor_body)
+	floor_body.owner = root
+	var floor_plane: PlaneMesh = PlaneMesh.new()
+	floor_plane.size = Vector2(40.0, 40.0)
+	floor_plane.subdivide_width = 8
+	floor_plane.subdivide_depth = 8
+	var floor_material: StandardMaterial3D = StandardMaterial3D.new()
+	floor_material.albedo_color = Color(0.28, 0.32, 0.4, 1.0)
+	floor_plane.material = floor_material
+	var floor_mesh: MeshInstance3D = MeshInstance3D.new()
+	floor_mesh.name = "Mesh"
+	floor_mesh.mesh = floor_plane
+	floor_body.add_child(floor_mesh)
+	floor_mesh.owner = root
+	var floor_shape: CollisionShape3D = CollisionShape3D.new()
+	floor_shape.name = "Shape"
+	floor_shape.shape = floor_plane.create_trimesh_shape()
+	floor_body.add_child(floor_shape)
+	floor_shape.owner = root
+
+	# Crates: plain scenery for the casts to bite on.
+	var crate_material: StandardMaterial3D = StandardMaterial3D.new()
+	crate_material.albedo_color = Color(0.62, 0.66, 0.76, 1.0)
+	var crate_index: int = 0
+	for crate_spot: Vector3 in [Vector3(-6.0, 1.0, -4.0), Vector3(5.0, 1.0, 5.0), Vector3(-3.0, 1.0, 7.0),
+			Vector3(9.0, 1.0, -9.0), Vector3(7.0, 1.0, -10.5), Vector3(0.0, 1.0, -12.0)]:
+		crate_index += 1
+		var crate: StaticBody3D = StaticBody3D.new()
+		crate.name = "Crate%d" % crate_index
+		crate.position = crate_spot
+		crate.collision_layer = 1
+		root.add_child(crate)
+		crate.owner = root
+		var crate_box: BoxShape3D = BoxShape3D.new()
+		crate_box.size = Vector3(2.0, 2.0, 2.0)
+		var crate_shape: CollisionShape3D = CollisionShape3D.new()
+		crate_shape.name = "Shape"
+		crate_shape.shape = crate_box
+		crate.add_child(crate_shape)
+		crate_shape.owner = root
+		var crate_box_mesh: BoxMesh = BoxMesh.new()
+		crate_box_mesh.size = Vector3(2.0, 2.0, 2.0)
+		crate_box_mesh.material = crate_material
+		var crate_mesh: MeshInstance3D = MeshInstance3D.new()
+		crate_mesh.name = "Mesh"
+		crate_mesh.mesh = crate_box_mesh
+		crate.add_child(crate_mesh)
+		crate_mesh.owner = root
+
+	# Targets: same layer, but in the "targets" GROUP (persistent, or PackedScene drops it), which is
+	# what Ray Result Is In Group asks about when the cursor lands on one.
+	var target_material: StandardMaterial3D = StandardMaterial3D.new()
+	target_material.albedo_color = Color(0.95, 0.45, 0.25, 1.0)
+	var target_index: int = 0
+	for target_spot: Vector3 in [Vector3(3.0, 1.2, -6.0), Vector3(-8.0, 1.2, 3.0), Vector3(0.0, 1.2, 3.5)]:
+		target_index += 1
+		var target: StaticBody3D = StaticBody3D.new()
+		target.name = "Target%d" % target_index
+		target.position = target_spot
+		target.collision_layer = 1
+		target.add_to_group("targets", true)
+		root.add_child(target)
+		target.owner = root
+		var target_sphere: SphereShape3D = SphereShape3D.new()
+		target_sphere.radius = 1.2
+		var target_shape: CollisionShape3D = CollisionShape3D.new()
+		target_shape.name = "Shape"
+		target_shape.shape = target_sphere
+		target.add_child(target_shape)
+		target_shape.owner = root
+		var target_sphere_mesh: SphereMesh = SphereMesh.new()
+		target_sphere_mesh.radius = 1.2
+		target_sphere_mesh.height = 2.4
+		target_sphere_mesh.material = target_material
+		var target_mesh: MeshInstance3D = MeshInstance3D.new()
+		target_mesh.name = "Mesh"
+		target_mesh.mesh = target_sphere_mesh
+		target.add_child(target_mesh)
+		target_mesh.owner = root
+
+	# A solid pad under the turret. The point query asks what is directly beneath it, and the floor
+	# is a TRIMESH - a concave shape has no interior, so intersect_point can never report one. A
+	# convex box can be stood inside, which is what makes the question answerable at all.
+	var pad: StaticBody3D = StaticBody3D.new()
+	pad.name = "Pad"
+	pad.position = Vector3(0.0, 0.15, 0.0)
+	pad.collision_layer = 1
+	root.add_child(pad)
+	pad.owner = root
+	var pad_box: BoxShape3D = BoxShape3D.new()
+	pad_box.size = Vector3(3.0, 0.3, 3.0)
+	var pad_shape: CollisionShape3D = CollisionShape3D.new()
+	pad_shape.name = "Shape"
+	pad_shape.shape = pad_box
+	pad.add_child(pad_shape)
+	pad_shape.owner = root
+	var pad_box_mesh: BoxMesh = BoxMesh.new()
+	pad_box_mesh.size = Vector3(3.0, 0.3, 3.0)
+	var pad_material: StandardMaterial3D = StandardMaterial3D.new()
+	pad_material.albedo_color = Color(0.4, 0.44, 0.54, 1.0)
+	pad_box_mesh.material = pad_material
+	var pad_mesh: MeshInstance3D = MeshInstance3D.new()
+	pad_mesh.name = "Mesh"
+	pad_mesh.mesh = pad_box_mesh
+	pad.add_child(pad_mesh)
+	pad_mesh.owner = root
+
+	# The turret: the RayCast3D's host, turning so its ray sweeps the room.
+	var turret: Node3D = Node3D.new()
+	turret.name = "Turret"
+	turret.position = Vector3(0.0, 1.2, 0.0)
+	root.add_child(turret)
+	turret.owner = root
+	var turret_mesh: MeshInstance3D = MeshInstance3D.new()
+	turret_mesh.name = "Mesh"
+	var turret_cyl: CylinderMesh = CylinderMesh.new()
+	turret_cyl.top_radius = 0.35
+	turret_cyl.bottom_radius = 0.5
+	turret_cyl.height = 1.2
+	var turret_material: StandardMaterial3D = StandardMaterial3D.new()
+	turret_material.albedo_color = Color(0.35, 0.65, 1.0, 1.0)
+	turret_cyl.material = turret_material
+	turret_mesh.mesh = turret_cyl
+	turret.add_child(turret_mesh)
+	turret_mesh.owner = root
+	var radar: RayCast3D = RayCast3D.new()
+	radar.name = "Radar"
+	radar.target_position = Vector3(0.0, 0.0, -14.0)
+	radar.collision_mask = 1
+	radar.enabled = true
+	turret.add_child(radar)
+	radar.owner = root
+
+	# The Sweep: a ShapeCast3D running down the corridor, thick enough not to thread a gap.
+	var sweep: ShapeCast3D = ShapeCast3D.new()
+	sweep.name = "Sweep"
+	sweep.position = Vector3(-6.0, 1.2, -14.0)
+	sweep.target_position = Vector3(0.0, 0.0, 20.0)
+	sweep.collision_mask = 1
+	var sweep_shape: SphereShape3D = SphereShape3D.new()
+	sweep_shape.radius = 0.9
+	sweep.shape = sweep_shape
+	sweep.enabled = true
+	root.add_child(sweep)
+	sweep.owner = root
+
+	# The orbiting camera. NOT mouse-driven: the cursor has to stay free for the picking ray.
+	var camera_arm: Node3D = Node3D.new()
+	camera_arm.name = "CameraArm"
+	root.add_child(camera_arm)
+	camera_arm.owner = root
+	var camera: Camera3D = Camera3D.new()
+	camera.name = "Camera"
+	camera.position = Vector3(0.0, 12.0, 15.0)
+	camera.rotation_degrees = Vector3(-38.0, 0.0, 0.0)
+	camera.current = true
+	camera_arm.add_child(camera)
+	camera.owner = root
+
+	# Beams: unit boxes the sheet stretches between two points.
+	var beams: Node3D = Node3D.new()
+	beams.name = "Beams"
+	root.add_child(beams)
+	beams.owner = root
+	for beam_spec: Array in [["RadarBeam", Color(1.0, 0.85, 0.3)], ["PickBeam", Color(0.4, 0.85, 1.0)],
+			["ProbeBeam", Color(1.0, 0.45, 0.85)], ["SweepBeam", Color(0.5, 0.7, 1.0)]]:
+		var beam: MeshInstance3D = MeshInstance3D.new()
+		beam.name = beam_spec[0]
+		var beam_box: BoxMesh = BoxMesh.new()
+		beam_box.size = Vector3(0.08, 0.08, 1.0)
+		var beam_material: StandardMaterial3D = StandardMaterial3D.new()
+		beam_material.albedo_color = beam_spec[1]
+		beam_material.emission_enabled = true
+		beam_material.emission = beam_spec[1]
+		beam_material.emission_energy_multiplier = 1.4
+		beam_box.material = beam_material
+		beam.mesh = beam_box
+		beams.add_child(beam)
+		beam.owner = root
+
+	# Markers: small spheres the sheet parks on the answers.
+	var markers: Node3D = Node3D.new()
+	markers.name = "Markers"
+	root.add_child(markers)
+	markers.owner = root
+	for mark_spec: Array in [["RadarMark", Color(1.0, 0.85, 0.3), 0.35], ["PickMark", Color(0.4, 0.85, 1.0), 0.35],
+			["ProbeMark", Color(1.0, 0.45, 0.85), 0.6], ["SweepMark", Color(0.5, 0.7, 1.0), 0.9]]:
+		var mark: MeshInstance3D = MeshInstance3D.new()
+		mark.name = mark_spec[0]
+		var mark_sphere: SphereMesh = SphereMesh.new()
+		mark_sphere.radius = mark_spec[2]
+		mark_sphere.height = float(mark_spec[2]) * 2.0
+		var mark_material: StandardMaterial3D = StandardMaterial3D.new()
+		mark_material.albedo_color = mark_spec[1]
+		mark_material.emission_enabled = true
+		mark_material.emission = mark_spec[1]
+		mark_material.emission_energy_multiplier = 1.2
+		mark_sphere.material = mark_material
+		mark.mesh = mark_sphere
+		markers.add_child(mark)
+		mark.owner = root
+	# A fixed pool the sphere query parks on whatever it caught - sized to its own max_results, so a
+	# crowded frame can never ask for a marker that is not there.
+	var zone_marks: Node3D = Node3D.new()
+	zone_marks.name = "ZoneMarks"
+	markers.add_child(zone_marks)
+	zone_marks.owner = root
+	var zone_material: StandardMaterial3D = StandardMaterial3D.new()
+	zone_material.albedo_color = Color(0.45, 1.0, 0.6, 1.0)
+	zone_material.emission_enabled = true
+	zone_material.emission = Color(0.45, 1.0, 0.6)
+	for zone_index: int in range(16):
+		var zone_mark: MeshInstance3D = MeshInstance3D.new()
+		zone_mark.name = "Zone%d" % (zone_index + 1)
+		var zone_torus: TorusMesh = TorusMesh.new()
+		zone_torus.inner_radius = 0.5
+		zone_torus.outer_radius = 0.7
+		zone_torus.material = zone_material
+		zone_mark.mesh = zone_torus
+		zone_mark.visible = false
+		zone_marks.add_child(zone_mark)
+		zone_mark.owner = root
+
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HudLayer"
+	root.add_child(hud_layer)
+	hud_layer.owner = root
+	var hud: Label = Label.new()
+	hud.name = "Hud"
+	hud.position = Vector2(24.0, 16.0)
+	hud.add_theme_font_size_override("font_size", 17)
+	hud.text = "Move the mouse to aim the cyan pick ray - Left/Right arrows orbit the camera\nCyan = Cast Ray From Mouse Into (the marker grows when the cursor is on a target)\nYellow = a RayCast3D NODE on the turning turret - pink = Cast Sphere Motion Into\nBlue = a ShapeCast3D sweeping with thickness - green rings = Query Bodies In Sphere"
+	hud_layer.add_child(hud)
+	hud.owner = root
+	var readout: Label = Label.new()
+	readout.name = "Readout"
+	readout.position = Vector2(24.0, 604.0)
+	readout.add_theme_font_size_override("font_size", 17)
+	readout.text = "cursor: sky   face -1   in sphere 0   in box 0   under turret 0   ball travel 1.00   sweep 1.00 (0)"
+	hud_layer.add_child(readout)
+	readout.owner = root
+
+	return _save_scene(root, "%s/raycast_lab_3d.tscn" % RAYCAST_LAB_3D_DIR)

@@ -86,6 +86,46 @@ static func run() -> bool:
 	all_passed = _check("empty items -> empty array literal",
 		VariableDialog.items_to_collection_literal(PackedStringArray(), false), "[]") and all_passed
 
+	# ---- Constructor literals for the whole vector family ----
+	# A type with no entry in _to_code_literal falls through to str(), which for a Vector3 yields the
+	# bare tuple "(0, 0, 0)" - not GDScript. That failure is SILENT: the compile reports success and
+	# the emitted file simply does not parse, so a 3D sheet loses everything with no error to read.
+	# Vector2 and Color were handled; Vector3 was not, which is how a Vector3 variable shipped broken.
+	# Each case below is compiled for real and the whole output parsed, so a wrong literal cannot pass.
+	var vectors: EventSheetResource = EventSheetResource.new()
+	vectors.host_class = "Node3D"
+	vectors.variables = {
+		"v2": {"type": "Vector2", "default": Vector2(1.5, -2.0), "exported": false},
+		"v2i": {"type": "Vector2i", "default": Vector2i(3, 4), "exported": false},
+		"v3": {"type": "Vector3", "default": Vector3(1.0, 2.0, 3.0), "exported": false},
+		"v3i": {"type": "Vector3i", "default": Vector3i(5, 6, 7), "exported": false},
+		"v4": {"type": "Vector4", "default": Vector4(1.0, 2.0, 3.0, 4.0), "exported": false},
+		"v4i": {"type": "Vector4i", "default": Vector4i(8, 9, 10, 11), "exported": false},
+		"rect": {"type": "Rect2", "default": Rect2(1.0, 2.0, 3.0, 4.0), "exported": false},
+		"recti": {"type": "Rect2i", "default": Rect2i(1, 2, 3, 4), "exported": false},
+		"quat": {"type": "Quaternion", "default": Quaternion(0.0, 0.0, 0.0, 1.0), "exported": false},
+		"tint": {"type": "Color", "default": Color(1.0, 0.5, 0.25, 1.0), "exported": false}
+	}
+	var vector_result: Dictionary = SheetCompiler.compile(vectors, "user://vector_literals_test.gd")
+	var vector_output: String = str(vector_result.get("output", ""))
+	for expected_line: String in [
+		"var v2: Vector2 = Vector2(1.5, -2.0)",
+		"var v2i: Vector2i = Vector2i(3, 4)",
+		"var v3: Vector3 = Vector3(1.0, 2.0, 3.0)",
+		"var v3i: Vector3i = Vector3i(5, 6, 7)",
+		"var v4: Vector4 = Vector4(1.0, 2.0, 3.0, 4.0)",
+		"var v4i: Vector4i = Vector4i(8, 9, 10, 11)",
+		"var rect: Rect2 = Rect2(1.0, 2.0, 3.0, 4.0)",
+		"var recti: Rect2i = Rect2i(1, 2, 3, 4)",
+		"var quat: Quaternion = Quaternion(0.0, 0.0, 0.0, 1.0)",
+		"var tint: Color = Color(1.0, 0.5, 0.25, 1.0)"
+	]:
+		all_passed = _check("emits %s" % expected_line, vector_output.contains(expected_line), true) and all_passed
+	# The point of the constructor form: the result is loadable GDScript, not a tuple.
+	var vector_script: GDScript = GDScript.new()
+	vector_script.source_code = vector_output
+	all_passed = _check("a sheet of vector variables parses as GDScript", vector_script.reload(true), OK) and all_passed
+
 	return all_passed
 
 

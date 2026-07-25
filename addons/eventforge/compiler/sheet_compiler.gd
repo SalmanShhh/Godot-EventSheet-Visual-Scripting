@@ -2783,13 +2783,42 @@ static func _to_code_literal(value: Variant) -> String:
 			for key: Variant in dictionary_value.keys():
 				entries.append("%s: %s" % [_to_code_literal(key), _to_code_literal(dictionary_value[key])])
 			return "{%s}" % ", ".join(entries)
-		# Constructor literals for the common game-value types (so Vector2/Color variables emit valid,
+		# Constructor literals for the common game-value types (so Vector/Color variables emit valid,
 		# str_to_var-parseable GDScript that the importer round-trips - str(Vector2) would give "(0, 0)").
 		# Components reuse the float rule, whose str() form is shortest-round-trippable, keeping re-emission
 		# byte-stable.
+		#
+		# The WHOLE vector family is listed, not just the types someone happened to need: anything that
+		# falls through to str() below emits a bare "(0, 0, 0)", which is not GDScript. That is a silent
+		# fault - the compile reports success and the emitted file simply does not parse - so a missing
+		# entry here costs a 3D user their whole sheet.
 		TYPE_VECTOR2:
 			var v2: Vector2 = value
 			return "Vector2(%s, %s)" % [_to_code_literal(v2.x), _to_code_literal(v2.y)]
+		TYPE_VECTOR2I:
+			var v2i: Vector2i = value
+			return "Vector2i(%s, %s)" % [_to_code_literal(v2i.x), _to_code_literal(v2i.y)]
+		TYPE_VECTOR3:
+			var v3: Vector3 = value
+			return "Vector3(%s, %s, %s)" % [_to_code_literal(v3.x), _to_code_literal(v3.y), _to_code_literal(v3.z)]
+		TYPE_VECTOR3I:
+			var v3i: Vector3i = value
+			return "Vector3i(%s, %s, %s)" % [_to_code_literal(v3i.x), _to_code_literal(v3i.y), _to_code_literal(v3i.z)]
+		TYPE_VECTOR4:
+			var v4: Vector4 = value
+			return "Vector4(%s, %s, %s, %s)" % [_to_code_literal(v4.x), _to_code_literal(v4.y), _to_code_literal(v4.z), _to_code_literal(v4.w)]
+		TYPE_VECTOR4I:
+			var v4i: Vector4i = value
+			return "Vector4i(%s, %s, %s, %s)" % [_to_code_literal(v4i.x), _to_code_literal(v4i.y), _to_code_literal(v4i.z), _to_code_literal(v4i.w)]
+		TYPE_RECT2:
+			var r2: Rect2 = value
+			return "Rect2(%s, %s, %s, %s)" % [_to_code_literal(r2.position.x), _to_code_literal(r2.position.y), _to_code_literal(r2.size.x), _to_code_literal(r2.size.y)]
+		TYPE_RECT2I:
+			var r2i: Rect2i = value
+			return "Rect2i(%s, %s, %s, %s)" % [_to_code_literal(r2i.position.x), _to_code_literal(r2i.position.y), _to_code_literal(r2i.size.x), _to_code_literal(r2i.size.y)]
+		TYPE_QUATERNION:
+			var quat: Quaternion = value
+			return "Quaternion(%s, %s, %s, %s)" % [_to_code_literal(quat.x), _to_code_literal(quat.y), _to_code_literal(quat.z), _to_code_literal(quat.w)]
 		TYPE_COLOR:
 			var col: Color = value
 			return "Color(%s, %s, %s, %s)" % [_to_code_literal(col.r), _to_code_literal(col.g), _to_code_literal(col.b), _to_code_literal(col.a)]

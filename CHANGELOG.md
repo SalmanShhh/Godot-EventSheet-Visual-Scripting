@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Added - the Raycast Lab 3D showcase
+
+- `demo/showcase/raycast_lab_3d/` puts the 2D room's six casts one dimension up, and adds the two
+  verbs that only exist there: **Cast Ray From Mouse Into**, where the camera projects a ray through
+  the cursor (the whole of click-to-select in 3D), and **Ray Result Face Index**, which names the mesh
+  TRIANGLE a ray struck. The floor is deliberately a concave trimesh, because that is the only kind of
+  shape that has a face index at all - a box-shaped floor would report -1 forever.
+- The camera ORBITS rather than being mouse-driven, on purpose: a first-person controller captures the
+  pointer, and a captured pointer has no screen position to project a picking ray through. A lab about
+  casting needs the cursor free.
+- There is no Drawing Canvas in 3D, so the sheet moves real meshes instead: a unit box stretched
+  between two points is a beam, a small sphere parked on an answer is a marker. One `aim_beam()`
+  function does the orientation maths for all four beams. The pick beam deliberately shows the
+  surface NORMAL rather than the camera ray - you are looking straight down that ray, so drawing it
+  renders as a stray line skidding over the floor.
+- Its runtime smoke checks the cursor in TWO positions, because the two headline facts cannot both be
+  true at once: a sphere target proves the group test, and bare floor proves the face index.
+
+### Fixed - a Vector3 variable compiled to GDScript that does not parse
+
+- `_to_code_literal` had constructor literals for `Vector2` and `Color`, and everything else fell
+  through to `str()`. For a `Vector3` that yields the bare tuple `(0, 0, 0)`, so a sheet with a
+  Vector3 variable emitted `var v: Vector3 = (0, 0, 0)` - not GDScript. The failure was SILENT: the
+  compile reported success and the emitted file simply refused to load, which for a 3D sheet means
+  losing the lot with no error to read.
+- The whole vector family is now covered (`Vector2i`, `Vector3`, `Vector3i`, `Vector4`, `Vector4i`,
+  `Rect2`, `Rect2i`, `Quaternion`), not just the one type that surfaced it. No shipped sheet used any
+  of them, which is exactly why this survived: regenerating everything changes nothing (drift=0).
+- `collection_variables_test` now compiles a sheet holding one variable of every such type and parses
+  the whole output, so a missing entry cannot pass again.
+
 ### Added - the Raycast Lab showcase
 
 - `demo/showcase/raycast_lab/` runs six different casts at once, each drawn so the question being

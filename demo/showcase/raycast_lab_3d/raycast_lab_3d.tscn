@@ -1,0 +1,511 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/raycast_lab_3d/raycast_lab_3d.gd" id="1_bf88e"]
+
+[sub_resource type="Environment" id="Environment_2h85c"]
+background_mode = 1
+background_color = Color(0.07, 0.08, 0.11, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.45, 0.5, 0.62, 1)
+ambient_light_energy = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_658ii"]
+albedo_color = Color(0.28, 0.32, 0.4, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_kchl1"]
+material = SubResource("StandardMaterial3D_658ii")
+size = Vector2(40, 40)
+subdivide_width = 8
+subdivide_depth = 8
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_nmala"]
+data = PackedVector3Array(20, 0, 20, 15.555599, 0, 20, 20, 0, 15.555599, 15.555599, 0, 20, 15.555599, 0, 15.555599, 20, 0, 15.555599, 15.555599, 0, 20, 11.111099, 0, 20, 15.555599, 0, 15.555599, 11.111099, 0, 20, 11.111099, 0, 15.555599, 15.555599, 0, 15.555599, 11.111099, 0, 20, 6.6667, 0, 20, 11.111099, 0, 15.555599, 6.6667, 0, 20, 6.6667, 0, 15.555599, 11.111099, 0, 15.555599, 6.6667, 0, 20, 2.2222, 0, 20, 6.6667, 0, 15.555599, 2.2222, 0, 20, 2.2222, 0, 15.555599, 6.6667, 0, 15.555599, 2.2222, 0, 20, -2.2222, 0, 20, 2.2222, 0, 15.555599, -2.2222, 0, 20, -2.2222, 0, 15.555599, 2.2222, 0, 15.555599, -2.2222, 0, 20, -6.6667, 0, 20, -2.2222, 0, 15.555599, -6.6667, 0, 20, -6.6667, 0, 15.555599, -2.2222, 0, 15.555599, -6.6667, 0, 20, -11.111099, 0, 20, -6.6667, 0, 15.555599, -11.111099, 0, 20, -11.111099, 0, 15.555599, -6.6667, 0, 15.555599, -11.111099, 0, 20, -15.555599, 0, 20, -11.111099, 0, 15.555599, -15.555599, 0, 20, -15.555599, 0, 15.555599, -11.111099, 0, 15.555599, -15.555599, 0, 20, -20, 0, 20, -15.555599, 0, 15.555599, -20, 0, 20, -20, 0, 15.555599, -15.555599, 0, 15.555599, 20, 0, 15.555599, 15.555599, 0, 15.555599, 20, 0, 11.111099, 15.555599, 0, 15.555599, 15.555599, 0, 11.111099, 20, 0, 11.111099, 15.555599, 0, 15.555599, 11.111099, 0, 15.555599, 15.555599, 0, 11.111099, 11.111099, 0, 15.555599, 11.111099, 0, 11.111099, 15.555599, 0, 11.111099, 11.111099, 0, 15.555599, 6.6667, 0, 15.555599, 11.111099, 0, 11.111099, 6.6667, 0, 15.555599, 6.6667, 0, 11.111099, 11.111099, 0, 11.111099, 6.6667, 0, 15.555599, 2.2222, 0, 15.555599, 6.6667, 0, 11.111099, 2.2222, 0, 15.555599, 2.2222, 0, 11.111099, 6.6667, 0, 11.111099, 2.2222, 0, 15.555599, -2.2222, 0, 15.555599, 2.2222, 0, 11.111099, -2.2222, 0, 15.555599, -2.2222, 0, 11.111099, 2.2222, 0, 11.111099, -2.2222, 0, 15.555599, -6.6667, 0, 15.555599, -2.2222, 0, 11.111099, -6.6667, 0, 15.555599, -6.6667, 0, 11.111099, -2.2222, 0, 11.111099, -6.6667, 0, 15.555599, -11.111099, 0, 15.555599, -6.6667, 0, 11.111099, -11.111099, 0, 15.555599, -11.111099, 0, 11.111099, -6.6667, 0, 11.111099, -11.111099, 0, 15.555599, -15.555599, 0, 15.555599, -11.111099, 0, 11.111099, -15.555599, 0, 15.555599, -15.555599, 0, 11.111099, -11.111099, 0, 11.111099, -15.555599, 0, 15.555599, -20, 0, 15.555599, -15.555599, 0, 11.111099, -20, 0, 15.555599, -20, 0, 11.111099, -15.555599, 0, 11.111099, 20, 0, 11.111099, 15.555599, 0, 11.111099, 20, 0, 6.6667, 15.555599, 0, 11.111099, 15.555599, 0, 6.6667, 20, 0, 6.6667, 15.555599, 0, 11.111099, 11.111099, 0, 11.111099, 15.555599, 0, 6.6667, 11.111099, 0, 11.111099, 11.111099, 0, 6.6667, 15.555599, 0, 6.6667, 11.111099, 0, 11.111099, 6.6667, 0, 11.111099, 11.111099, 0, 6.6667, 6.6667, 0, 11.111099, 6.6667, 0, 6.6667, 11.111099, 0, 6.6667, 6.6667, 0, 11.111099, 2.2222, 0, 11.111099, 6.6667, 0, 6.6667, 2.2222, 0, 11.111099, 2.2222, 0, 6.6667, 6.6667, 0, 6.6667, 2.2222, 0, 11.111099, -2.2222, 0, 11.111099, 2.2222, 0, 6.6667, -2.2222, 0, 11.111099, -2.2222, 0, 6.6667, 2.2222, 0, 6.6667, -2.2222, 0, 11.111099, -6.6667, 0, 11.111099, -2.2222, 0, 6.6667, -6.6667, 0, 11.111099, -6.6667, 0, 6.6667, -2.2222, 0, 6.6667, -6.6667, 0, 11.111099, -11.111099, 0, 11.111099, -6.6667, 0, 6.6667, -11.111099, 0, 11.111099, -11.111099, 0, 6.6667, -6.6667, 0, 6.6667, -11.111099, 0, 11.111099, -15.555599, 0, 11.111099, -11.111099, 0, 6.6667, -15.555599, 0, 11.111099, -15.555599, 0, 6.6667, -11.111099, 0, 6.6667, -15.555599, 0, 11.111099, -20, 0, 11.111099, -15.555599, 0, 6.6667, -20, 0, 11.111099, -20, 0, 6.6667, -15.555599, 0, 6.6667, 20, 0, 6.6667, 15.555599, 0, 6.6667, 20, 0, 2.2222, 15.555599, 0, 6.6667, 15.555599, 0, 2.2222, 20, 0, 2.2222, 15.555599, 0, 6.6667, 11.111099, 0, 6.6667, 15.555599, 0, 2.2222, 11.111099, 0, 6.6667, 11.111099, 0, 2.2222, 15.555599, 0, 2.2222, 11.111099, 0, 6.6667, 6.6667, 0, 6.6667, 11.111099, 0, 2.2222, 6.6667, 0, 6.6667, 6.6667, 0, 2.2222, 11.111099, 0, 2.2222, 6.6667, 0, 6.6667, 2.2222, 0, 6.6667, 6.6667, 0, 2.2222, 2.2222, 0, 6.6667, 2.2222, 0, 2.2222, 6.6667, 0, 2.2222, 2.2222, 0, 6.6667, -2.2222, 0, 6.6667, 2.2222, 0, 2.2222, -2.2222, 0, 6.6667, -2.2222, 0, 2.2222, 2.2222, 0, 2.2222, -2.2222, 0, 6.6667, -6.6667, 0, 6.6667, -2.2222, 0, 2.2222, -6.6667, 0, 6.6667, -6.6667, 0, 2.2222, -2.2222, 0, 2.2222, -6.6667, 0, 6.6667, -11.111099, 0, 6.6667, -6.6667, 0, 2.2222, -11.111099, 0, 6.6667, -11.111099, 0, 2.2222, -6.6667, 0, 2.2222, -11.111099, 0, 6.6667, -15.555599, 0, 6.6667, -11.111099, 0, 2.2222, -15.555599, 0, 6.6667, -15.555599, 0, 2.2222, -11.111099, 0, 2.2222, -15.555599, 0, 6.6667, -20, 0, 6.6667, -15.555599, 0, 2.2222, -20, 0, 6.6667, -20, 0, 2.2222, -15.555599, 0, 2.2222, 20, 0, 2.2222, 15.555599, 0, 2.2222, 20, 0, -2.2222, 15.555599, 0, 2.2222, 15.555599, 0, -2.2222, 20, 0, -2.2222, 15.555599, 0, 2.2222, 11.111099, 0, 2.2222, 15.555599, 0, -2.2222, 11.111099, 0, 2.2222, 11.111099, 0, -2.2222, 15.555599, 0, -2.2222, 11.111099, 0, 2.2222, 6.6667, 0, 2.2222, 11.111099, 0, -2.2222, 6.6667, 0, 2.2222, 6.6667, 0, -2.2222, 11.111099, 0, -2.2222, 6.6667, 0, 2.2222, 2.2222, 0, 2.2222, 6.6667, 0, -2.2222, 2.2222, 0, 2.2222, 2.2222, 0, -2.2222, 6.6667, 0, -2.2222, 2.2222, 0, 2.2222, -2.2222, 0, 2.2222, 2.2222, 0, -2.2222, -2.2222, 0, 2.2222, -2.2222, 0, -2.2222, 2.2222, 0, -2.2222, -2.2222, 0, 2.2222, -6.6667, 0, 2.2222, -2.2222, 0, -2.2222, -6.6667, 0, 2.2222, -6.6667, 0, -2.2222, -2.2222, 0, -2.2222, -6.6667, 0, 2.2222, -11.111099, 0, 2.2222, -6.6667, 0, -2.2222, -11.111099, 0, 2.2222, -11.111099, 0, -2.2222, -6.6667, 0, -2.2222, -11.111099, 0, 2.2222, -15.555599, 0, 2.2222, -11.111099, 0, -2.2222, -15.555599, 0, 2.2222, -15.555599, 0, -2.2222, -11.111099, 0, -2.2222, -15.555599, 0, 2.2222, -20, 0, 2.2222, -15.555599, 0, -2.2222, -20, 0, 2.2222, -20, 0, -2.2222, -15.555599, 0, -2.2222, 20, 0, -2.2222, 15.555599, 0, -2.2222, 20, 0, -6.6667, 15.555599, 0, -2.2222, 15.555599, 0, -6.6667, 20, 0, -6.6667, 15.555599, 0, -2.2222, 11.111099, 0, -2.2222, 15.555599, 0, -6.6667, 11.111099, 0, -2.2222, 11.111099, 0, -6.6667, 15.555599, 0, -6.6667, 11.111099, 0, -2.2222, 6.6667, 0, -2.2222, 11.111099, 0, -6.6667, 6.6667, 0, -2.2222, 6.6667, 0, -6.6667, 11.111099, 0, -6.6667, 6.6667, 0, -2.2222, 2.2222, 0, -2.2222, 6.6667, 0, -6.6667, 2.2222, 0, -2.2222, 2.2222, 0, -6.6667, 6.6667, 0, -6.6667, 2.2222, 0, -2.2222, -2.2222, 0, -2.2222, 2.2222, 0, -6.6667, -2.2222, 0, -2.2222, -2.2222, 0, -6.6667, 2.2222, 0, -6.6667, -2.2222, 0, -2.2222, -6.6667, 0, -2.2222, -2.2222, 0, -6.6667, -6.6667, 0, -2.2222, -6.6667, 0, -6.6667, -2.2222, 0, -6.6667, -6.6667, 0, -2.2222, -11.111099, 0, -2.2222, -6.6667, 0, -6.6667, -11.111099, 0, -2.2222, -11.111099, 0, -6.6667, -6.6667, 0, -6.6667, -11.111099, 0, -2.2222, -15.555599, 0, -2.2222, -11.111099, 0, -6.6667, -15.555599, 0, -2.2222, -15.555599, 0, -6.6667, -11.111099, 0, -6.6667, -15.555599, 0, -2.2222, -20, 0, -2.2222, -15.555599, 0, -6.6667, -20, 0, -2.2222, -20, 0, -6.6667, -15.555599, 0, -6.6667, 20, 0, -6.6667, 15.555599, 0, -6.6667, 20, 0, -11.111099, 15.555599, 0, -6.6667, 15.555599, 0, -11.111099, 20, 0, -11.111099, 15.555599, 0, -6.6667, 11.111099, 0, -6.6667, 15.555599, 0, -11.111099, 11.111099, 0, -6.6667, 11.111099, 0, -11.111099, 15.555599, 0, -11.111099, 11.111099, 0, -6.6667, 6.6667, 0, -6.6667, 11.111099, 0, -11.111099, 6.6667, 0, -6.6667, 6.6667, 0, -11.111099, 11.111099, 0, -11.111099, 6.6667, 0, -6.6667, 2.2222, 0, -6.6667, 6.6667, 0, -11.111099, 2.2222, 0, -6.6667, 2.2222, 0, -11.111099, 6.6667, 0, -11.111099, 2.2222, 0, -6.6667, -2.2222, 0, -6.6667, 2.2222, 0, -11.111099, -2.2222, 0, -6.6667, -2.2222, 0, -11.111099, 2.2222, 0, -11.111099, -2.2222, 0, -6.6667, -6.6667, 0, -6.6667, -2.2222, 0, -11.111099, -6.6667, 0, -6.6667, -6.6667, 0, -11.111099, -2.2222, 0, -11.111099, -6.6667, 0, -6.6667, -11.111099, 0, -6.6667, -6.6667, 0, -11.111099, -11.111099, 0, -6.6667, -11.111099, 0, -11.111099, -6.6667, 0, -11.111099, -11.111099, 0, -6.6667, -15.555599, 0, -6.6667, -11.111099, 0, -11.111099, -15.555599, 0, -6.6667, -15.555599, 0, -11.111099, -11.111099, 0, -11.111099, -15.555599, 0, -6.6667, -20, 0, -6.6667, -15.555599, 0, -11.111099, -20, 0, -6.6667, -20, 0, -11.111099, -15.555599, 0, -11.111099, 20, 0, -11.111099, 15.555599, 0, -11.111099, 20, 0, -15.555599, 15.555599, 0, -11.111099, 15.555599, 0, -15.555599, 20, 0, -15.555599, 15.555599, 0, -11.111099, 11.111099, 0, -11.111099, 15.555599, 0, -15.555599, 11.111099, 0, -11.111099, 11.111099, 0, -15.555599, 15.555599, 0, -15.555599, 11.111099, 0, -11.111099, 6.6667, 0, -11.111099, 11.111099, 0, -15.555599, 6.6667, 0, -11.111099, 6.6667, 0, -15.555599, 11.111099, 0, -15.555599, 6.6667, 0, -11.111099, 2.2222, 0, -11.111099, 6.6667, 0, -15.555599, 2.2222, 0, -11.111099, 2.2222, 0, -15.555599, 6.6667, 0, -15.555599, 2.2222, 0, -11.111099, -2.2222, 0, -11.111099, 2.2222, 0, -15.555599, -2.2222, 0, -11.111099, -2.2222, 0, -15.555599, 2.2222, 0, -15.555599, -2.2222, 0, -11.111099, -6.6667, 0, -11.111099, -2.2222, 0, -15.555599, -6.6667, 0, -11.111099, -6.6667, 0, -15.555599, -2.2222, 0, -15.555599, -6.6667, 0, -11.111099, -11.111099, 0, -11.111099, -6.6667, 0, -15.555599, -11.111099, 0, -11.111099, -11.111099, 0, -15.555599, -6.6667, 0, -15.555599, -11.111099, 0, -11.111099, -15.555599, 0, -11.111099, -11.111099, 0, -15.555599, -15.555599, 0, -11.111099, -15.555599, 0, -15.555599, -11.111099, 0, -15.555599, -15.555599, 0, -11.111099, -20, 0, -11.111099, -15.555599, 0, -15.555599, -20, 0, -11.111099, -20, 0, -15.555599, -15.555599, 0, -15.555599, 20, 0, -15.555599, 15.555599, 0, -15.555599, 20, 0, -20, 15.555599, 0, -15.555599, 15.555599, 0, -20, 20, 0, -20, 15.555599, 0, -15.555599, 11.111099, 0, -15.555599, 15.555599, 0, -20, 11.111099, 0, -15.555599, 11.111099, 0, -20, 15.555599, 0, -20, 11.111099, 0, -15.555599, 6.6667, 0, -15.555599, 11.111099, 0, -20, 6.6667, 0, -15.555599, 6.6667, 0, -20, 11.111099, 0, -20, 6.6667, 0, -15.555599, 2.2222, 0, -15.555599, 6.6667, 0, -20, 2.2222, 0, -15.555599, 2.2222, 0, -20, 6.6667, 0, -20, 2.2222, 0, -15.555599, -2.2222, 0, -15.555599, 2.2222, 0, -20, -2.2222, 0, -15.555599, -2.2222, 0, -20, 2.2222, 0, -20, -2.2222, 0, -15.555599, -6.6667, 0, -15.555599, -2.2222, 0, -20, -6.6667, 0, -15.555599, -6.6667, 0, -20, -2.2222, 0, -20, -6.6667, 0, -15.555599, -11.111099, 0, -15.555599, -6.6667, 0, -20, -11.111099, 0, -15.555599, -11.111099, 0, -20, -6.6667, 0, -20, -11.111099, 0, -15.555599, -15.555599, 0, -15.555599, -11.111099, 0, -20, -15.555599, 0, -15.555599, -15.555599, 0, -20, -11.111099, 0, -20, -15.555599, 0, -15.555599, -20, 0, -15.555599, -15.555599, 0, -20, -20, 0, -15.555599, -20, 0, -20, -15.555599, 0, -20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yscl8"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xhm1k"]
+albedo_color = Color(0.62, 0.66, 0.76, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0krnp"]
+material = SubResource("StandardMaterial3D_xhm1k")
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gobxr"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_l1uuy"]
+material = SubResource("StandardMaterial3D_xhm1k")
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vmbag"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_mnyf8"]
+material = SubResource("StandardMaterial3D_xhm1k")
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_loqdk"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5jsjt"]
+material = SubResource("StandardMaterial3D_xhm1k")
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_t2n8i"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ja5tg"]
+material = SubResource("StandardMaterial3D_xhm1k")
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1j0la"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8gxa5"]
+material = SubResource("StandardMaterial3D_xhm1k")
+size = Vector3(2, 2, 2)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_yt433"]
+radius = 1.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ycj2k"]
+albedo_color = Color(0.95, 0.45, 0.25, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_fqiuy"]
+material = SubResource("StandardMaterial3D_ycj2k")
+radius = 1.2
+height = 2.4
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_fi3qe"]
+radius = 1.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_feh44"]
+material = SubResource("StandardMaterial3D_ycj2k")
+radius = 1.2
+height = 2.4
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_hm0gk"]
+radius = 1.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_r6p63"]
+material = SubResource("StandardMaterial3D_ycj2k")
+radius = 1.2
+height = 2.4
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_h6hqb"]
+size = Vector3(3, 0.3, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cnqmd"]
+albedo_color = Color(0.4, 0.44, 0.54, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ixmht"]
+material = SubResource("StandardMaterial3D_cnqmd")
+size = Vector3(3, 0.3, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tr7v6"]
+albedo_color = Color(0.35, 0.65, 1, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_as03j"]
+material = SubResource("StandardMaterial3D_tr7v6")
+top_radius = 0.35
+height = 1.2
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_wog6k"]
+radius = 0.9
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v70tr"]
+albedo_color = Color(1, 0.85, 0.3, 1)
+emission_enabled = true
+emission = Color(1, 0.85, 0.3, 1)
+emission_energy_multiplier = 1.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_fp37c"]
+material = SubResource("StandardMaterial3D_v70tr")
+size = Vector3(0.08, 0.08, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sg3p5"]
+albedo_color = Color(0.4, 0.85, 1, 1)
+emission_enabled = true
+emission = Color(0.4, 0.85, 1, 1)
+emission_energy_multiplier = 1.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_003ug"]
+material = SubResource("StandardMaterial3D_sg3p5")
+size = Vector3(0.08, 0.08, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bbxg3"]
+albedo_color = Color(1, 0.45, 0.85, 1)
+emission_enabled = true
+emission = Color(1, 0.45, 0.85, 1)
+emission_energy_multiplier = 1.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_jhpky"]
+material = SubResource("StandardMaterial3D_bbxg3")
+size = Vector3(0.08, 0.08, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_btydv"]
+albedo_color = Color(0.5, 0.7, 1, 1)
+emission_enabled = true
+emission = Color(0.5, 0.7, 1, 1)
+emission_energy_multiplier = 1.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_gkreu"]
+material = SubResource("StandardMaterial3D_btydv")
+size = Vector3(0.08, 0.08, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0r3ir"]
+albedo_color = Color(1, 0.85, 0.3, 1)
+emission_enabled = true
+emission = Color(1, 0.85, 0.3, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_tkbad"]
+material = SubResource("StandardMaterial3D_0r3ir")
+radius = 0.35
+height = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4buhk"]
+albedo_color = Color(0.4, 0.85, 1, 1)
+emission_enabled = true
+emission = Color(0.4, 0.85, 1, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_7c7a8"]
+material = SubResource("StandardMaterial3D_4buhk")
+radius = 0.35
+height = 0.7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rmat3"]
+albedo_color = Color(1, 0.45, 0.85, 1)
+emission_enabled = true
+emission = Color(1, 0.45, 0.85, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_6s87m"]
+material = SubResource("StandardMaterial3D_rmat3")
+radius = 0.6
+height = 1.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1ka8k"]
+albedo_color = Color(0.5, 0.7, 1, 1)
+emission_enabled = true
+emission = Color(0.5, 0.7, 1, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_n3k1b"]
+material = SubResource("StandardMaterial3D_1ka8k")
+radius = 0.9
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v81xo"]
+albedo_color = Color(0.45, 1, 0.6, 1)
+emission_enabled = true
+emission = Color(0.45, 1, 0.6, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_1xtru"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_dfl35"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_5aoch"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_l4c0p"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_iwq0j"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_u8jno"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_fqagx"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_l61gn"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_78qn5"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_h65s8"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_pwace"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_5i4p0"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_buq0g"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_ufegv"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_xdh5j"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[sub_resource type="TorusMesh" id="TorusMesh_w4sfi"]
+material = SubResource("StandardMaterial3D_v81xo")
+outer_radius = 0.7
+
+[node name="RaycastLab3D" type="Node3D"]
+script = ExtResource("1_bf88e")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.81915206, 0.46984634, -0.32898995, 0, 0.57357645, 0.81915206, 0.57357645, -0.6710101, 0.46984634, 0, 0, 0)
+shadow_enabled = true
+
+[node name="World" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_2h85c")
+
+[node name="Floor" type="StaticBody3D" parent="."]
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("PlaneMesh_kchl1")
+
+[node name="Shape" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("ConcavePolygonShape3D_nmala")
+
+[node name="Crate1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1, -4)
+
+[node name="Shape" type="CollisionShape3D" parent="Crate1"]
+shape = SubResource("BoxShape3D_yscl8")
+
+[node name="Mesh" type="MeshInstance3D" parent="Crate1"]
+mesh = SubResource("BoxMesh_0krnp")
+
+[node name="Crate2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 1, 5)
+
+[node name="Shape" type="CollisionShape3D" parent="Crate2"]
+shape = SubResource("BoxShape3D_gobxr")
+
+[node name="Mesh" type="MeshInstance3D" parent="Crate2"]
+mesh = SubResource("BoxMesh_l1uuy")
+
+[node name="Crate3" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1, 7)
+
+[node name="Shape" type="CollisionShape3D" parent="Crate3"]
+shape = SubResource("BoxShape3D_vmbag")
+
+[node name="Mesh" type="MeshInstance3D" parent="Crate3"]
+mesh = SubResource("BoxMesh_mnyf8")
+
+[node name="Crate4" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1, -9)
+
+[node name="Shape" type="CollisionShape3D" parent="Crate4"]
+shape = SubResource("BoxShape3D_loqdk")
+
+[node name="Mesh" type="MeshInstance3D" parent="Crate4"]
+mesh = SubResource("BoxMesh_5jsjt")
+
+[node name="Crate5" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 1, -10.5)
+
+[node name="Shape" type="CollisionShape3D" parent="Crate5"]
+shape = SubResource("BoxShape3D_t2n8i")
+
+[node name="Mesh" type="MeshInstance3D" parent="Crate5"]
+mesh = SubResource("BoxMesh_ja5tg")
+
+[node name="Crate6" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -12)
+
+[node name="Shape" type="CollisionShape3D" parent="Crate6"]
+shape = SubResource("BoxShape3D_1j0la")
+
+[node name="Mesh" type="MeshInstance3D" parent="Crate6"]
+mesh = SubResource("BoxMesh_8gxa5")
+
+[node name="Target1" type="StaticBody3D" parent="." groups=["targets"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1.2, -6)
+
+[node name="Shape" type="CollisionShape3D" parent="Target1"]
+shape = SubResource("SphereShape3D_yt433")
+
+[node name="Mesh" type="MeshInstance3D" parent="Target1"]
+mesh = SubResource("SphereMesh_fqiuy")
+
+[node name="Target2" type="StaticBody3D" parent="." groups=["targets"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.2, 3)
+
+[node name="Shape" type="CollisionShape3D" parent="Target2"]
+shape = SubResource("SphereShape3D_fi3qe")
+
+[node name="Mesh" type="MeshInstance3D" parent="Target2"]
+mesh = SubResource("SphereMesh_feh44")
+
+[node name="Target3" type="StaticBody3D" parent="." groups=["targets"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 3.5)
+
+[node name="Shape" type="CollisionShape3D" parent="Target3"]
+shape = SubResource("SphereShape3D_hm0gk")
+
+[node name="Mesh" type="MeshInstance3D" parent="Target3"]
+mesh = SubResource("SphereMesh_r6p63")
+
+[node name="Pad" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+
+[node name="Shape" type="CollisionShape3D" parent="Pad"]
+shape = SubResource("BoxShape3D_h6hqb")
+
+[node name="Mesh" type="MeshInstance3D" parent="Pad"]
+mesh = SubResource("BoxMesh_ixmht")
+
+[node name="Turret" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Turret"]
+mesh = SubResource("CylinderMesh_as03j")
+
+[node name="Radar" type="RayCast3D" parent="Turret"]
+target_position = Vector3(0, 0, -14)
+
+[node name="Sweep" type="ShapeCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.2, -14)
+shape = SubResource("SphereShape3D_wog6k")
+target_position = Vector3(0, 0, 20)
+
+[node name="CameraArm" type="Node3D" parent="."]
+
+[node name="Camera" type="Camera3D" parent="CameraArm"]
+transform = Transform3D(1, 0, 0, 0, 0.7880108, 0.6156615, 0, -0.6156615, 0.7880108, 0, 12, 15)
+current = true
+
+[node name="Beams" type="Node3D" parent="."]
+
+[node name="RadarBeam" type="MeshInstance3D" parent="Beams"]
+mesh = SubResource("BoxMesh_fp37c")
+
+[node name="PickBeam" type="MeshInstance3D" parent="Beams"]
+mesh = SubResource("BoxMesh_003ug")
+
+[node name="ProbeBeam" type="MeshInstance3D" parent="Beams"]
+mesh = SubResource("BoxMesh_jhpky")
+
+[node name="SweepBeam" type="MeshInstance3D" parent="Beams"]
+mesh = SubResource("BoxMesh_gkreu")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="RadarMark" type="MeshInstance3D" parent="Markers"]
+mesh = SubResource("SphereMesh_tkbad")
+
+[node name="PickMark" type="MeshInstance3D" parent="Markers"]
+mesh = SubResource("SphereMesh_7c7a8")
+
+[node name="ProbeMark" type="MeshInstance3D" parent="Markers"]
+mesh = SubResource("SphereMesh_6s87m")
+
+[node name="SweepMark" type="MeshInstance3D" parent="Markers"]
+mesh = SubResource("SphereMesh_n3k1b")
+
+[node name="ZoneMarks" type="Node3D" parent="Markers"]
+
+[node name="Zone1" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_1xtru")
+
+[node name="Zone2" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_dfl35")
+
+[node name="Zone3" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_5aoch")
+
+[node name="Zone4" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_l4c0p")
+
+[node name="Zone5" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_iwq0j")
+
+[node name="Zone6" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_u8jno")
+
+[node name="Zone7" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_fqagx")
+
+[node name="Zone8" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_l61gn")
+
+[node name="Zone9" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_78qn5")
+
+[node name="Zone10" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_h65s8")
+
+[node name="Zone11" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_pwace")
+
+[node name="Zone12" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_5i4p0")
+
+[node name="Zone13" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_buq0g")
+
+[node name="Zone14" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_ufegv")
+
+[node name="Zone15" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_xdh5j")
+
+[node name="Zone16" type="MeshInstance3D" parent="Markers/ZoneMarks"]
+visible = false
+mesh = SubResource("TorusMesh_w4sfi")
+
+[node name="HudLayer" type="CanvasLayer" parent="."]
+
+[node name="Hud" type="Label" parent="HudLayer"]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 24.0
+offset_bottom = 16.0
+theme_override_font_sizes/font_size = 17
+text = "Move the mouse to aim the cyan pick ray - Left/Right arrows orbit the camera
+Cyan = Cast Ray From Mouse Into (the marker grows when the cursor is on a target)
+Yellow = a RayCast3D NODE on the turning turret - pink = Cast Sphere Motion Into
+Blue = a ShapeCast3D sweeping with thickness - green rings = Query Bodies In Sphere"
+
+[node name="Readout" type="Label" parent="HudLayer"]
+offset_left = 24.0
+offset_top = 604.0
+offset_right = 24.0
+offset_bottom = 604.0
+theme_override_font_sizes/font_size = 17
+text = "cursor: sky   face -1   in sphere 0   in box 0   under turret 0   ball travel 1.00   sweep 1.00 (0)"
