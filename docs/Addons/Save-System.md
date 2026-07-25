@@ -165,7 +165,7 @@ Each trigger passes the slot number that was saved or loaded, so a handler can t
 | `save_directory` | String | `user://` | Folder the files live in. |
 | `file_pattern` | String | `save_{slot}.cfg` | File name; must contain `{slot}`. |
 | `section` | String | `save` | Config section / JSON namespace for the values. |
-| `format` | enum | `config` | `config`, `json`, `binary`, or `csv`. |
+| `format` | enum | `config` | `config`, `json`, `binary`, `csv`, `ini`, or `xml`. |
 | `persist_group` | String | `persist` | Scene-tree group Save Game snapshots (and Load Game restores) automatically. |
 | `encryption_key` | String | (empty) | Non-empty encrypts the saves. |
 | `autosave_interval` | float | `0` | Seconds between automatic Save Game calls (0 = off). |

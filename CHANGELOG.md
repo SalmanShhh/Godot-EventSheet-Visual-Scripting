@@ -2,6 +2,41 @@
 
 ## [Unreleased]
 
+### Added - comparing values of every kind (31 ACEs)
+
+- Compare Variable and Compare Values already covered anything that compares with an operator. The new
+  **Compare: Text / Numbers / Vectors / Types / Objects** groups are the rest - the comparisons that
+  need a method, a tolerance, or a type test, and which otherwise meant writing an fx expression:
+  - **Text** - equals ignoring case, begins with, empty, blank (empty OR only spaces - what a name box
+    actually wants), wildcard pattern match, is-one-of, alphabetical order, natural order ("item2"
+    before "item10").
+  - **Numbers** - **Values Are Near** (a tolerance, because `==` on decimals is a coin flip after any
+    arithmetic), outside-range, positive, negative, even, odd, multiple-of (guarded against a zero
+    divisor), whole-number, and a -1/0/1 compare result.
+  - **Vectors** - **Vectors Are Equal** and **Colors Are Equal** using Godot's approximate compare for
+    the same reason, plus within-distance, farther-than, points-the-same-way (a dot product with a
+    forgiveness knob), and longer-than.
+  - **Types** - is-of-type with a dropdown of the everyday Variant types, same-type, type name, and
+    is-a-class.
+  - **Objects** - same-object identity, **Object Still Exists** (`is_instance_valid`, which a null
+    check cannot replace: a freed node is not null, and touching it crashes), has-method (the
+    duck-typing check behind "anything with take_damage"), and has-property.
+
+### Added - turning nodes on and off, and pausing them (23 ACEs)
+
+- Pausing was whole-game only (`Set Game Paused`), and there was no way to stop ONE node running. The
+  new **Nodes: Activation** group covers both, because they are the same property wearing two hats:
+  - **Activate / Deactivate Node** (2D and 3D) - hide it and stop it running, along with everything
+    under it. The verb most people were looking for.
+  - **Pause Node / Unpause Node / Keep Node Running While Paused / Run Node Only While Paused /
+    Pause Node With The Game** - the five process modes as plain-English verbs, so a pause menu and
+    its music can stay alive while everything else freezes.
+  - **Node Is Running** answers the whole question with `can_process()`, taking the node's mode AND
+    the game pause into account, and **Node Is Frozen By The Game Pause** tells "paused" apart from
+    "paused but exempt".
+  - Finer grained: per-callback switches for the per-frame, physics and input work, their matching
+    conditions, the two process-order knobs, and Node Is Ready.
+
 ### Changed - README refreshed for the raycasting wave
 
 - The status list gains the raycasting vocabulary and both labs, the quick-start pointers name the

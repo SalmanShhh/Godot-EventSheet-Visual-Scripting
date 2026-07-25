@@ -77,19 +77,23 @@ Canonical forms live in `sheet_compiler.gd` (`_emit_enum_line`, `_emit_signal_li
   `addons/eventforge/registration/modules/` (`core_aces`, `system_aces`, `device_aces`,
   `audio_aces`, `native_3d_aces`, `collection_aces`, `collision_aces`, `ui_aces`, `particle_aces`,
   `tilemap_aces`, `physics_aces`, `loop_aces`, or `helper_aces`); `builtin_aces.gd`
-  concatenates them **in order** (order is API - the reverse-lifter tries templates in
-  registry order). Wrap NATIVE engine features (lane 1: the engine maintains the
+  auto-discovers them in sorted order with `helper_aces` forced last. Registry order is NOT
+  how the reverse-lifter picks: it matches the MOST SPECIFIC template first and only uses
+  registry order to break ties between equally specific twins. Wrap NATIVE engine features (lane 1: the engine maintains the
   implementation, we maintain vocabulary). Use `node_type` for picker grouping, C3 names
   as display names, and add picker synonyms in `ace_picker.gd` if C3 users call it
   something else. **Helpers** is the generic "structured escape hatch" module - it stays
-  registered LAST and is excluded from the reverse-lifter (`ace_lifter.gd` skips
-  `category == "Helpers"`) so its catch-all templates never shadow a specific ACE.
+  registered LAST and is kept out of the reverse index (`ace_lifter.gd` skips
+  `category == "Helpers"`) EXCEPT for the statement catch-alls (Set Property and its
+  compound-assign twins, Call Method, and the Set Local Variable/Constant families), which
+  are admitted at the LOWEST specificity so they still cannot shadow a specific ACE.
 - **An addon**: drop a script in `res://eventsheet_addons/` - see
   `demo_health_addon.gd` and the pack folders for every annotation in use.
 - **A behavior pack**: add a per-pack builder in `tools/pack_builders/<slug>.gd`
   (mirror `line_of_sight.gd` for conditions or `sine_3d.gd` for `@export` dropdowns +
-  exposed actions; `_lib.gd` has the `save_pack` helper), register the slug in
-  `tools/build_sample_behaviors.gd`, run it, then run `tools/audit_addons.gd` (must report
+  exposed actions; `_lib.gd` has the `save_pack` helper). The builder registers itself -
+  `tools/build_sample_behaviors.gd` globs the folder, so there is no list to edit. Run it,
+  then run `tools/audit_addons.gd` (must report
   `drifted=0` - the committed `.gd`/`.tres` must match a recompile). Add the pack path to
   `tests/sample_behavior_pack_test.gd` - the generic no-drift/load/publish asserts cover
   it automatically.
@@ -118,8 +122,7 @@ CHANGELOG `[Unreleased]` section into a dated version section in the same commit
 
 ## Code style
 
-Match the file you're in (tabs in `addons/eventforge/`, spaces in
-`addons/eventsheet/editor/` - yes, really; don't "fix" it). Comment for contributors:
+Tabs everywhere, enforced by the suite (`tests/style_guide_test.gd`). Comment for contributors:
 document schemas, extension points, and constraints the code can't show - not what the
 next line does.
 

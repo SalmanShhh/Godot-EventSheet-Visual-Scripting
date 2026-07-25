@@ -249,7 +249,7 @@ On Roll Result
 Show the player how close they are to pity without rolling anything, using the `Pity Count` expression.
 
 ```
-On Process
+Every Frame
   -> Set Label text: "5-star in " + str(90 - LootBox.Pity Count("pity_banner", "5star")) + " pulls"
 ```
 
@@ -511,7 +511,7 @@ On Ready
 
 **As a behaviour**, when you just want it loaded before anything asks: attach the **Loot Table Loader** behaviour to any node, drop the `.tres` onto its `Loot Table` slot in the Inspector, and it registers the table on ready. The Scene dock shows a warning until a resource is attached, so you cannot ship a loader that loads nothing.
 
-Either way the result is identical to building the table by hand - `Roll`, `Roll With Pity`, the tag filters and every other verb work exactly the same, and you can still `Add Entry` afterwards to extend what the asset seeded. Variants are just other `.tres` files: a hard-mode table, a seasonal table, a per-biome table.
+Either way the result is identical to building the table by hand - `Roll`, `Roll Times`, `Set Pity` and every other verb work exactly the same, and you can still `Add Entry` afterwards to extend what the asset seeded. Variants are just other `.tres` files: a hard-mode table, a seasonal table, a per-biome table.
 
 ---
 

@@ -475,7 +475,7 @@ On new run started
 **Scenario:** Show the player how long until a rumour is available again.
 
 ```
-On Process
+Every Frame
   Storylets: Is On Cooldown  "r_mine"
     -> Show text  "Next rumour in " + str(int(Storylets.Cooldown Remaining("r_mine"))) + "s"
   Else

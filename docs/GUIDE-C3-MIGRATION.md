@@ -61,7 +61,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 
 | Construct 3 | Godot EventSheets / generated GDScript |
 |---|---|
-| Every tick | `On Process` trigger (`_process(delta)`) - but if you're checking for an *event* (a collision, a timer ending, a key press), prefer the matching **signal** trigger instead; see [Polling vs reacting](#4-polling-vs-reacting---the-biggest-shift-from-c3) |
+| Every tick | **Every Frame** trigger (`_process(delta)`) - but if you're checking for an *event* (a collision, a timer ending, a key press), prefer the matching **signal** trigger instead; see [Polling vs reacting](#4-polling-vs-reacting---the-biggest-shift-from-c3) |
 | On start of layout | `On Ready` trigger (`_ready()`) |
 | Compare variable | Expression condition, e.g. `health < 50` (plain GDScript) |
 | Set variable / Add to | `Set Variable` / `Add To Variable` actions, or `health += 10` in ƒx |
@@ -71,7 +71,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 | Simulate control (Platform) | PlatformerMovement behavior ACEs (`Jump`, `Set Move Speed`, `Set Gravity Angle`) |
 | Wait | An `await`-flagged action, or `await get_tree().create_timer(1.0).timeout` in a block |
 | Pick by comparison / For each | **Pick filters**: right-click an event → "Add Pick Filter (For Each)…" - loops a node group/children/any iterable with a GDScript `where` predicate and first-N; compiles to a plain `for` loop |
-| Repeat / While | The same pick-filter dialog: the Collection dropdown has **Repeat (count)** and **While (condition)** |
+| Repeat / While | The same pick-filter dialog: the Collection dropdown has **Repeat N times** and **While (condition)** |
 | loopindex / loopindex("name") | Name the loop's **Loop index** field (convention: `loop_index`), then read the **Loop Index** expression; nested loops take distinct names and **Loop Index Of** reads an outer one - 0-based like C3, even over offset ranges |
 | random(a, b) | `randf_range(a, b)` / `randi_range(a, b)` |
 | dt | `delta` |
@@ -86,7 +86,7 @@ synonym aliases, so type what you know and the Godot equivalent surfaces.
 ## 4. Polling vs Reacting - The Biggest Shift from C3
 
 In Construct 3 the bread-and-butter pattern is **"every tick, check if X"** - one big event sheet
-asking questions 60 times a second. Godot can do exactly that (`On Process` + a condition), but its
+asking questions 60 times a second. Godot can do exactly that (**Every Frame** + a condition), but its
 *native* habit is the opposite: **react to a signal** - the engine tells you the moment something
 happens, so you don't have to keep asking. For a migrating C3 user this is the single biggest mental
 adjustment, and it's the one that makes a Godot project feel clean instead of like a polling soup.
@@ -99,7 +99,7 @@ adjustment, and it's the one that makes a Godot project feel clean instead of li
   re-checking every frame.
 
   ```text
-  C3 reflex (polling):    On Process  →  if Player overlaps Coin  →  collect    (runs 60×/sec)
+  C3 reflex (polling):    Every Frame  →  if Player overlaps Coin  →  collect    (runs 60×/sec)
   Godot idiom (reacting):  On Body Entered (Coin's Area2D)        →  collect    (fires once, on contact)
   ```
 
@@ -107,13 +107,13 @@ adjustment, and it's the one that makes a Godot project feel clean instead of li
   The picker increasingly nudges you here - when you reach for a polling condition that has a signal
   twin, it surfaces the reactive trigger first.
 
-- **Continuous value → polling in `On Process` is correct - don't contort it into a signal.** Camera
+- **Continuous value → polling in **Every Frame** is correct - don't contort it into a signal.** Camera
   follow, smoothing a position toward a target, reading the movement axis each frame, or
   `is_on_floor()` (Godot deliberately has *no* "landed" signal) are all genuinely per-frame work.
-  `On Process` is the right, idiomatic home for them. Per-frame is not a smell; *re-checking for an
+  **Every Frame** is the right, idiomatic home for them. Per-frame is not a smell; *re-checking for an
   event that already has a signal* is.
 
-**`On Process` vs `On Physics Process` (`_process` vs `_physics_process`):** if the logic moves a body
+****Every Frame** vs `On Physics Process` (`_process` vs `_physics_process`):** if the logic moves a body
 or touches physics (velocity, `move_and_slide`, raycasts), put it in **On Physics Process** - it runs
 on a fixed timestep so physics stays stable. Visual-only, UI, and non-physics logic belong in **On
 Process** (every rendered frame). When in doubt for *movement*, choose Physics Process.
@@ -126,7 +126,7 @@ Process** (every rendered frame). When in doubt for *movement*, choose Physics P
 | --- | --- |
 | **Dictionary** addon (Add key, Delete key, Has key, For each key…) | First-class: declare a `Dictionary` variable, then use the **Variables: Dictionary** picker group (Set Key, Delete Key, Has Key, Get/Keys/Values/Size). "For each key" = a pick filter over `your_dict.keys()`. |
 | **Array** addon (Push, Pop, Insert, Sort, Contains…) | First-class: declare an `Array` (or typed `Array[int]`) variable, then the **Variables: Array** group (Append, Insert At, Remove At, Erase, Sort, Shuffle, Contains, Value At, Pick Random). |
-| **JSON** plugin (Parse, Stringify, Load/Save) | The **Variables: JSON** group: To/From JSON Text, JSON Is Valid, Save/Load JSON File (`user://` paths survive exports). |
+| **JSON** plugin (Parse, Stringify, Load/Save) | The **JSON** group: To/From JSON Text, JSON Is Valid, Save/Load JSON File (`user://` paths survive exports). |
 | **XML** plugin | Intentionally unsupported - Godot has no XML writer/XPath. Use JSON. |
 
 Everything in these groups compiles to a single direct GDScript line (the tooltip shows
@@ -162,7 +162,7 @@ The picker wraps the native feature:
 
 ### Lane 2 - portable behaviors ship as event-sheet packs
 
-**75 are bundled**:
+**76 are bundled**:
 Platformer, 8-Direction, Timer, Flash, State Machine, **Sine, Orbit, Bullet, Move To,
 Follow, Car, Tile Movement, Line of Sight (2D & 3D), Rotate, Fade, Bound To, Wrap** (Follow now
 emits On Reached Target, Car On Drift Started / Recovered; Bound To is C3's "Bound to layout",
@@ -322,12 +322,12 @@ Mid-port you need a coworker to reuse the reload sequence you just rebuilt from 
 
 ## 11. Tips and Common Mistakes
 
-- **The polling reflex is the #1 imported habit.** Reaching for `On Process` to check for something that *happens at a moment* (a collision, a timer ending, a key press) re-checks 60 times a second for an event Godot already signals. Use the signal trigger; the picker surfaces it first when a polling condition has a signal twin.
-- **But don't contort continuous values into signals.** Camera follow, per-frame smoothing, reading the movement axis, `is_on_floor()` (Godot deliberately has no "landed" signal) are genuinely per-frame work - `On Process` is their correct, idiomatic home.
-- **Movement goes in On Physics Process, not On Process.** Anything touching velocity, `move_and_slide`, or raycasts belongs on the fixed timestep so physics stays stable. When in doubt for movement, choose Physics Process.
+- **The polling reflex is the #1 imported habit.** Reaching for **Every Frame** to check for something that *happens at a moment* (a collision, a timer ending, a key press) re-checks 60 times a second for an event Godot already signals. Use the signal trigger; the picker surfaces it first when a polling condition has a signal twin.
+- **But don't contort continuous values into signals.** Camera follow, per-frame smoothing, reading the movement axis, `is_on_floor()` (Godot deliberately has no "landed" signal) are genuinely per-frame work - **Every Frame** is their correct, idiomatic home.
+- **Movement goes in On Physics Process, not Every Frame.** Anything touching velocity, `move_and_slide`, or raycasts belongs on the fixed timestep so physics stays stable. When in doubt for movement, choose Physics Process.
 - **There is no separate expression language.** Every ƒx field is plain GDScript - don't hunt for a C3-style expression dictionary; if you can write it in GDScript, it works in the field.
 - **Solid / Jump-thru are scene setup, not events.** They map to Godot collision layers and one-way collision shapes configured on the scene, so don't look for them in the picker.
-- **XML is intentionally unsupported.** Godot has no XML writer/XPath; migrate that data to JSON (the **Variables: JSON** group covers parse, stringify, and file save/load).
+- **XML is intentionally unsupported.** Godot has no XML writer/XPath; migrate that data to JSON (the **JSON** group covers parse, stringify, and file save/load).
 - **Don't wait for a `.c3p` importer.** It's a permanent non-goal (proprietary, unversioned C3 internals); the supported path is the vocabulary map, the parity behavior packs, and text snippets.
 - **Most "pick" logic becomes explicit addressing** (paths, groups, signals) - but check **Nearest Node In Group** / **Furthest Node In Group** / **Nearest Visible In Group** before writing a loop; the common auto-targeting case needs none.
 - **Paste GDScript, get events.** Pasting plain GDScript that contains trigger functions converts to events automatically - handy when moving logic from tutorials or existing scripts.

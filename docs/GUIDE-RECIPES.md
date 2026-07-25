@@ -61,12 +61,12 @@ jump height, wall jump - all the juice).
 2. New sheet → **Sheet Type** → host class `CharacterBody2D`.
 3. Attach the **Platformer** pack as a child node (open the pack sheet and use Tools ▸ Attach to Selected Node, or drop the pack node in);
    set its speed/jump in the Inspector.
-4. One event: trigger **On Process** → action **Move And Slide**. The pack reads input and drives
+4. One event: trigger **Every Frame** → action **Move And Slide**. The pack reads input and drives
    `velocity`; Move And Slide applies it.
 5. **Save** - the sheet *is* the `.gd`; set it as the node's script and press Play.
 
-Want it from scratch instead of the pack? Three events: *On Process* → set horizontal velocity
-from input; *Is on floor* + *jump pressed* → set `velocity.y`; *On Process* → Move And Slide.
+Want it from scratch instead of the pack? Three events: *Every Frame* → set horizontal velocity
+from input; *Is on floor* + *jump pressed* → set `velocity.y`; *Every Frame* → Move And Slide.
 
 ---
 
@@ -89,7 +89,7 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 2. Give coins an `Area2D` in the `"coins"` group.
 3. Event: trigger **On Area Entered** (or condition **Overlaps Body**) → actions: *Add to
    variable* `score` by `1`, then *Queue Free* the coin.
-4. Show it: a `Label` + an event *On Process* → **Set Property** `text` = `"Score: %d" % score`.
+4. Show it: a `Label` + an event *Every Frame* → **Set Property** `text` = `"Score: %d" % score`.
 
 ---
 
@@ -223,11 +223,11 @@ func _ready() -> void:
 
 **2. The score lives in one place - an autoload.** Don't declare `score` in five sheets. New Sheet →
 **Game State (Autoload)**, add `score`, register it (Tools → Register Autoload). If you *do* sprinkle it
-around, the **Project Doctor** (Tools → Check Project) flags it: *"Global 'score' is declared in 3
+around, the **Project Doctor** (Tools → Project Doctor…) flags it: *"Global 'score' is declared in 3
 sheets - promote it to an autoload (one source of truth)."*
 
-**3. Internal state vs designer knobs.** When you add a variable, the **"Designer-tweakable in the
-Inspector (@export)"** box is *off* by default - so an internal `_combo_count` stays a private `var`,
+**3. Internal state vs designer knobs.** When you add a variable, the **"Editable in the Inspector
+(a designer property)"** box is *off* by default - so an internal `_combo_count` stays a private `var`,
 and you tick the box only for values a designer should tune. Your Inspector stays a clean panel of real
 knobs, not an everything-bucket.
 
@@ -304,14 +304,14 @@ camera, and a handful of fire-and-forget juice calls. Want it bouncier or snappi
 A wave of 800 enemies all recomputing their AI on one frame, a big level streaming in, a navmesh baking -
 do it all in a single frame and the game **stutters**. The fix is to spread the work across frames within a
 per-frame **budget**. Three tools, easiest first; pick by how heavy the work is. (Not sure a loop needs it?
-**Tools ▸ Check Project** flags a heavy For Each running every frame that isn't capped or budgeted.)
+**Tools ▸ Project Doctor…** flags a heavy For Each running every frame that isn't capped or budgeted.)
 
 **The easy path - the Time Slicer pack (no loop, no `await`).** Attach **Time Slicer** as a child (or make
 it an autoload for one global slicer). It owns a queue and drains it within a per-frame budget:
 
 1. **Enqueue** the work in one event - **Enqueue Group** `"enemies"` (every node in a group), **Enqueue
    Items** (an array), or **Enqueue Item** (one).
-2. **React** to **On Process Item(item)** in another event and do the per-item work - like reacting to a
+2. **React** to **Every Frame Item(item)** in another event and do the per-item work - like reacting to a
    signal. The slicer hands you items only as fast as the budget allows.
 3. **On Drained** fires the frame the queue empties.
 
@@ -330,7 +330,7 @@ func _on_time_slicer_process_item(item) -> void:
 **The one-liner - Budgeted For Each.** Already have a **For Each** loop? Don't attach anything - on the
 loop's pick filter set **frame_spread_count** (items/frame) and/or **frame_spread_budget_ms** (a wall-clock
 fence) in the Inspector. The loop then does a slice each frame and resumes on the next, over a snapshot
-taken once per pass, skipping anything freed mid-pass. Drive it from **On Process** (that's what re-enters
+taken once per pass, skipping anything freed mid-pass. Drive it from **Every Frame** (that's what re-enters
 the loop each frame to continue the pass):
 
 ```gdscript
@@ -476,7 +476,7 @@ Two ways to stop repeating yourself.
   stay untouched, a **GDScript block** row is still emitted as-is and round-trips.)
 - **Run In Background needs a pure callable.** No scene-tree or node access inside it - it runs off
   the main thread. Compute off-thread, then apply the result in the On Done handler (main thread).
-- **A Budgeted For Each only advances when re-entered.** Drive it from **On Process** - that's what
+- **A Budgeted For Each only advances when re-entered.** Drive it from **Every Frame** - that's what
   resumes the pass each frame. It works over a snapshot taken once per pass and skips anything freed
   mid-pass.
 - **Event Trace rides the Live Values stream.** If the cyan fire markers never appear, turn on

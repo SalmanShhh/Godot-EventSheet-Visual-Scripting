@@ -308,7 +308,7 @@ On Ready
   -> Ship | Sine: Set Period  2
 ```
 
-Rotate the ship and the drift follows its nose, because the mode reads the host's angle.
+The drift follows the heading captured when the wave STARTED, so after rotating the ship call Update Initial State (or Reset Sine) for the drift to follow its new nose.
 
 ### 12. A general oscillator in value-only mode
 

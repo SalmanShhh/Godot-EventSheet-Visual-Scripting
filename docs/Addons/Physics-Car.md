@@ -105,7 +105,7 @@ All ACEs live in the **Physics Car** category and target the `PhysicsCar` behavi
 | Reset Surface | (none) | Restores both terrain multipliers to 1 (call it when the car leaves a terrain zone). |
 | Set Reach Distance | `distance` (float) | Sets how close (pixels) a Drive Toward target must be to fire On Drive Target Reached. |
 
-The Drive Toward actions default `throttle_amount` to 1.0, `max_steer` to 1.0, and `tolerance` to 5.0. Simulate Control defaults `direction` to `up`.
+The Drive Toward actions take `throttle_amount`, `max_steer` and `tolerance` as plain numbers - fill them in on the row (1.0 / 1.0 / 5.0 are sensible starting values). Simulate Control defaults `direction` to `up`.
 
 ### Conditions
 

@@ -504,7 +504,7 @@ EventSheets.on_sheet_saved(func(payload: Dictionary) -> void:
 **Scenario:** your studio authors dialogue as `.dlg` files. Dropping one on a sheet should build the row a writer would have added by hand, not make them go looking through the picker.
 
 ```gdscript
-EventSheets.register_asset_drop_handler(PackedStringArray(["dlg"]), func(path: String) -> Variant:
+EventSheets.register_asset_drop_handler(PackedStringArray(["dlg"]), func(path: String, _target_event: Resource) -> Resource:
 	return EventSheets.builtin_action("CallMethod", {
 		"target": "DialogueRunner",
 		"method": "play",
@@ -604,9 +604,9 @@ The Callable runs fresh on every create, so two new sheets never share a resourc
 
 ```gdscript
 EventSheets.register_editor_gizmo("res://eventsheet_addons/patrol/patrol.gd",
-	func(node: Node2D, overlay: Control) -> void:
-		var radius: float = float(node.get("patrol_radius"))
-		overlay.draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, Color(0.4, 0.8, 1.0, 0.7), 2.0))
+	func(params: Dictionary, _host: Node2D, canvas: CanvasItem) -> void:
+		var radius: float = float(params.get("patrol_radius", 0.0))
+		canvas.draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, Color(0.4, 0.8, 1.0, 0.7), 2.0))
 ```
 
 ### 24. Ship your pack's vocabulary in your users' language

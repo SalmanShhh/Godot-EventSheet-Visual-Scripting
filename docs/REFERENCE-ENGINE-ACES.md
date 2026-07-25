@@ -181,7 +181,7 @@ Picker category: **Gradients & Curves**. Turn a designer-drawn ramp or curve int
 | **Sample Gradient** | Expression | The colour at a 0-to-1 position along a gradient - a health-bar tint, a day/night sky, a heat map, from one line. |
 | **Sample Curve** | Expression | A curve's value at a 0-to-1 position - turn a designer-drawn easing, falloff or difficulty curve into a number. |
 
-For a gradient or curve with many stops, author it as a variable with the Gradient / Curve Inspector drawer and sample it here.
+For a gradient or curve with many stops, author it as a Gradient variable (Godot's own ramp editor opens in the Inspector) or a Curve variable with the Curve drawer, and sample it here.
 
 ---
 

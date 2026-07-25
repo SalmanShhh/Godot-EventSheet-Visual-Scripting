@@ -80,7 +80,7 @@ Every ACE in a row acts on the `FollowBehavior` of the node named on the left (`
 
 ## ACE reference
 
-All ACEs live in the **Follow** category and target the `FollowBehavior` on the node the row is placed on. The five Inspector properties are exposed as get/set ACEs (and add/subtract for the numeric ones), plus the two authored verbs and the arrival trigger.
+All ACEs live in the **Follow** category and target the `FollowBehavior` on the node the row is placed on. The six Inspector properties are exposed as get/set ACEs (and add/subtract for the numeric ones), plus the three authored verbs (Start Following, Follow Group, Stop Following) and the arrival trigger.
 
 ### Actions
 

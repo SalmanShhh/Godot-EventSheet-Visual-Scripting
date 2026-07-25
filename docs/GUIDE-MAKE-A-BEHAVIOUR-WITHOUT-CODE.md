@@ -56,7 +56,7 @@ Typed knobs get a live Inspector **drawer** (direction dial, colour swatch, curv
 
 ## 4. React - Triggers
 
-- **On Ready / On Process / On Physics Process** - lifecycle triggers (the tick of your behaviour).
+- **On Ready / Every Frame / On Physics Process** - lifecycle triggers (the tick of your behaviour).
 - **A signal as a trigger** - add a **Signal row**, tick **"trigger"**, give it a name/category. It publishes as an *On ...* trigger other sheets can react to (this is how Flash fires *On Flash Finished*).
 
 ---
@@ -137,7 +137,7 @@ Some logic genuinely *is* code and reads better as a block (the escape hatch is 
 
 ### 1. A coin magnet from events only
 
-On Process + For Each coin in range + Move Toward host: a complete magnet behaviour, no code, reusable on any collector.
+Every Frame + For Each coin in range + Move Toward host: a complete magnet behaviour, no code, reusable on any collector.
 
 ### 2. One patrol, three enemies
 

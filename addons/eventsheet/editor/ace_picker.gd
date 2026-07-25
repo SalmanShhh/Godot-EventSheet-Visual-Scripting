@@ -151,6 +151,9 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Behavior": "Node",
 	"Collisions": "CollisionShape2D",
 	"Color": "Color",
+	# The one entry the five "Compare: …" sub-categories all inherit. Nothing derivable here: the name
+	# is not a class and the verbs are host-agnostic, which is exactly what this table is still for.
+	"Compare": "GuiChecked",
 	"Debug": "NodeWarning",
 	"Display": "Window",
 	"Drawing": "CanvasItem",

@@ -40,7 +40,7 @@ in the tutorial. Nothing forks.
 |---|---|---|---|
 | Platformer Movement | `ai_controlled` | `ai_move_axis` (-1..1) | `jump()`, `jump_released()` |
 | 8-Direction | `ai_controlled` | `ai_move_x`, `ai_move_y` | - |
-| FPS Controller | `ai_controlled` | `ai_move_x`, `ai_move_z` | `jump()` |
+| FPS Controller | `ai_controlled` | `ai_move_x`, `ai_move_z` | `do_jump()` |
 | Car | `ai_controlled` | `ai_throttle_axis`, `ai_steer_axis` | - |
 | Tile Movement | `ai_controlled` | `ai_move_x`, `ai_move_y` (a held axis steps once per completed step) | Simulate Step |
 | Slide Move | `ai_controlled` | `ai_move_x`, `ai_move_y` (dominant axis starts the slide) | `slide("left")` etc. |
@@ -48,8 +48,9 @@ in the tutorial. Nothing forks.
 | Drag & Drop | (always seam-driven) | you feed the drag point every tick - any source | Start Drag / Start Drag At Object / Drop |
 
 The flagship consumers already in the box: **Platformer Pathfinding** drives Platformer
-Movement (or 8-Direction, or the FPS Controller) through this exact seam, and **Nav Agent
-3D** does the same in 3D. Your sheets get the same privilege - the seam is public.
+Movement through this exact seam - it looks for a sibling with `jump()` and a `move_speed`,
+then writes `ai_move_axis`, so it pairs with that pack specifically - and **Nav Agent 3D**
+does the same for 3D movement. Your sheets get the same privilege - the seam is public.
 
 ## The three input styles
 

@@ -14,10 +14,13 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - Compiler (pipeline overview in its header comment): `res://addons/eventforge/compiler/sheet_compiler.gd`
 - Builtin ACE vocabularies: per-module files in `res://addons/eventforge/registration/modules/`
   (`core`/`system`/`device`/`audio`/`native_3d`/`collection`/`collision`/`ui`/`particle`/`tilemap`/`physics`/`loop`/`helper`) built via
-  `ace_factory.gd` (module contract documented there); `builtin_aces.gd` concatenates them
-  in registry order. `helper_aces.gd` is the generic "structured escape hatch" vocabulary -
-  registered LAST and excluded from the reverse-lifter so its catch-all templates
-  (`{target}.{method}(…)`, `Run GDScript {code}`) never shadow specific ACEs.
+  `ace_factory.gd` (module contract documented there); `builtin_aces.gd` auto-discovers them in
+  sorted order with `helper_aces` forced last. The reverse-lifter does NOT go by registry order - it
+  matches the most SPECIFIC template first, using registry order only to break ties.
+  `helper_aces.gd` is the generic "structured escape hatch" vocabulary - registered LAST and kept out
+  of the reverse index so its catch-alls never shadow specific ACEs, except the statement catch-alls
+  (Set Property + its compound-assign twins, Call Method, and the Set Local Variable/Constant
+  families), which ARE admitted, at the lowest specificity.
 - Importer/lifter (lossless GDScript pairing): `res://addons/eventforge/importer/` - the
   lifter sets `RawCodeRow.lift_note` ("no matching ACE template") on lines it can't lift,
   surfaced as an editor hint.
@@ -60,7 +63,7 @@ GodotEventSheet (EventForge) is a Godot 4.x plugin (verified through **Godot 4.7
 - `docs/GUIDE-TRANSLATING-YOUR-GAME.md` - localisation the Godot way (globe-marked params, POT, Set Language)
 - `docs/GUIDE-SAVING-AND-LOADING.md` - the save story (six slot formats, the persist group, the `save_state`/`load_state` seam every stateful pack ships, Save Studio)
 - `docs/GUIDE-USING-THE-SAVE-STUDIO.md` - the Save Studio window walkthrough (Format Preview, Save Slots, Add Save Support)
-- `docs/GUIDE-USING-THE-ACE-STUDIO.md` - the ACE Studio / "Define a Verb" dialog (verb-kind cards, live preview, Ships-as, publish; parameters are edited from the verb row's cells, guards are condition rows in the body)
+- `docs/GUIDE-USING-THE-ACE-STUDIO.md` - the ACE Studio / "New Function" dialog (verb-kind cards, live preview, Ships-as, publish; parameters are edited from the verb row's cells, guards are condition rows in the body)
 - `docs/REFERENCE-MCP-SERVER.md` - the AI-tooling protocol (list/read/compile/lint/snippets)
 - `docs/GUIDE-UNINSTALL.md` - clean-removal guide (keep/remove table; the zero-runtime-dependency covenant as a guided teardown)
 - `CONTRIBUTING.md` - dev setup, verification loop, house rules, gotcha list

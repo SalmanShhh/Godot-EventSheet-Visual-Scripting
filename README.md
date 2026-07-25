@@ -106,7 +106,7 @@ Most visual scripting asks you to learn a model you'll throw away the day you wr
 - **Drawing & UI** - Drawing Canvas (+ prefabs), Decal Painter, HUD Kit, Scene Flow, ComboBox, Virtual Cursor, Drag & Drop.
 - **System** - Save System, Timer, Time Slicer, Run In Background, ObjectPool, **Platform Info** (what is this running on - OS/screen/GPU/locale/safe areas).
 
-Drop a `class_name` script in `eventsheet_addons/` and it becomes a provider - `@ace_*` annotations shape everything, and `EventSheets.publish_pack` (the same pipeline the bundled packs use) publishes yours. Each pack has a deep-dive guide with 15+ worked use cases in [docs/Addons/](docs/Addons/README.md).
+Drop a `class_name` script in `eventsheet_addons/` and it becomes a provider - `@ace_*` annotations shape everything, and `EventSheets.publish_pack` (the same pipeline the bundled packs use) publishes yours. Every behavior pack has a deep-dive guide with 15+ worked use cases in [docs/Addons/](docs/Addons/README.md); the companion resource/loader packs are documented inside their partner pack's guide.
 
 **Abstraction that grows with you** - a row earns its place when it does MORE than a line: multi-line ACEs show a quiet **→N** ("compiles to N lines") cue, function calls read as **ƒ named verbs**, and the picker **leads with featured intention verbs** (Wait, Play Sound, Destroy, Move Toward...). Select actions and **Extract to Function** turns the pile into one reusable verb - captured locals become typed parameters automatically - then **Teach a Verb** publishes it to every sheet's picker in the project, node-targeted and retargetable, exactly like a built-in behavior.
 
@@ -183,7 +183,7 @@ _Recent releases before this:_ **v0.14.0** (Platformer Pathfinding + Nav Agent 3
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
 | `eventsheet_addons/` | Zero-config ACE addons + the 76 behavior packs |
-| `demo/` | 18 playable showcases (each a generated sheet + its compiled GDScript + scene) and the bundled themes |
+| `demo/` | 18 showcases (each a `.gd` that is BOTH the sheet and the compiled script, with a scene where it is playable) and the bundled themes |
 | `tests/` | Headless suite - `run_tests.gd` (full) and `run_perf.gd` (fast gate) |
 | `docs/` | Contract specs + guides (C3 migration, recipes, MCP, glossary, uninstall) |
 

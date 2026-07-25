@@ -1,6 +1,6 @@
 # Using the ACE Studio to Author a Verb
 
-In an event sheet, a **verb** is a reusable function you define once and call anywhere. The ACE Studio is the in-editor dialog that lets you author one of these verbs without ever meeting the words `func` or `return type`, while still producing plain, readable GDScript underneath. Its full title is **"Define a Verb"**, and it turns the low-level idea of "add a function" into plain-language cards, a live preview of how your verb will look to other people, and an honest **"Ships as"** line that shows the exact GDScript signature your verb generates.
+In an event sheet, a **verb** is a reusable function you define once and call anywhere. The ACE Studio is the in-editor dialog that lets you author one of these verbs without ever meeting the words `func` or `return type`, while still producing plain, readable GDScript underneath. Its title is **"New Function"** (and "Edit Function - <name>" when you reopen it on an existing verb), and it turns the low-level idea of "add a function" into plain-language cards, a live preview of how your verb will look to other people, and an honest **"Ships as"** line that shows the exact GDScript signature your verb generates.
 
 The word **ACE** is the plugin's name for the three things a sheet's picker can offer you: an **Action** (does something), a **Condition** (a yes/no test), and an **Expression** (returns a value). The ACE Studio lets you write any one of these as a verb, and optionally **publish** it so that every other sheet in your project can pick it. Everything you build here compiles to a plain GDScript function - the ACE Studio is a friendly front end, not a runtime layer that sits under your game.
 
@@ -140,7 +140,7 @@ This no-code path complements two other ways to add vocabulary. The **"Make a be
 
 7. **A getter that returns a spawn point.** Pick "A value" and choose **a point** (Vector2). The verb computes and returns a spawn position. A spawner sheet reads it as an Expression wherever it needs a fresh spawn location.
 
-8. **Editing an existing verb by double-clicking its Define block.** You shipped `Take Damage` last week and now want it to also play a hurt sound. Double-click its Define block, the dialog reopens as "Edit Verb - Take Damage", adjust its kind or publishing, press "Save Changes", then extend the body rows - and tweak any parameter straight from its cell on the row.
+8. **Editing an existing verb by double-clicking its Define block.** You shipped `Take Damage` last week and now want it to also play a hurt sound. Double-click its Define block, the dialog reopens as "Edit Function - take_damage", adjust its kind or publishing, press "Save Changes", then extend the body rows - and tweak any parameter straight from its cell on the row.
 
 9. **A Condition that keeps a designer out of GDScript.** A designer needs an `Is Full Health` test but does not write code. They pick the "Is it true?" card, describe it, and the ACE Studio produces a real boolean function without them ever typing `func` or `return`.
 

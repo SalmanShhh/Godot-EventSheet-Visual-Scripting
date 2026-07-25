@@ -47,7 +47,7 @@ It is also **fully data-driven**: a `UHTNPlanResource` (.tres) holds an entire p
 
 1. In the FileSystem dock: right-click, **Create New > Resource**, pick `UHTNPlanResource`, and save it (for example `guard_plan.tres`).
 2. Fill the Inspector grids:
-   - **Tasks**: every task name, with the kind dropdown (`primitive` or `compound`).
+   - **Tasks**: every task name, with a `kind` cell holding the word `primitive` or `compound`.
    - **Methods**: one row per way to do a compound task - the task, a unique method id, its ordered comma-separated subtasks, an optional scorer id, and the fixed utility used when no scorer is set.
    - **Conditions**: preconditions per method id (`key`, an operator from the dropdown, `value`).
    - **Scorer Inputs**: the utility half - each row feeds a world-state key through a curve (dropdown) into a named scorer, with weight, center, and slope.

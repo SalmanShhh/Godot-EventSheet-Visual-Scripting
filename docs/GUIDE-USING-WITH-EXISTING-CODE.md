@@ -137,14 +137,15 @@ name, with no need for the emitter to know anything about EventSheets.
   its signals show up in the trigger picker automatically, and these bake the signal's **real typed argument
   signature** so your handler receives the parameters (`func _on_generator_powered(level: int)`).
 
-- **Host lifecycle triggers** - *On Ready*, *On Process*, *On Physics Process*, *On Input*,
+- **Host lifecycle triggers** - *On Ready*, *Every Frame*, *On Physics Process*, *On Input*,
   *On Unhandled Input* compile straight to the engine callbacks (`_ready`, `_process`, …). No connection
   needed; they always work on the node the sheet runs on.
 
 > **Good to know:** a connection to *another* node's signal trusts the path/name you give it - it isn't
 > checked at compile time, so a wrong path or misspelled signal fails at runtime, not in the editor. And the
-> generic *On Signal* handler doesn't bind the signal's arguments - use a reflected `signal:NAME` trigger
-> when you need the typed parameters. For signals that cross scenes, route them through an autoload bus
+> generic *On Signal* handler binds arguments only once you tell it the shape: type the signature into its
+> **Arguments** field (e.g. `amount: int`) and the handler receives them. A reflected `signal:NAME` trigger
+> fills that in for you. For signals that cross scenes, route them through an autoload bus
 > rather than a scene-relative node path.
 
 ---
@@ -294,7 +295,7 @@ Interop is broad, but it isn't magic - here's the candid list so nothing surpris
   path/name is a runtime failure. (Only signals on `self` are checked and skipped-with-warning if missing.)
 - **An already-scripted node needs behavior mode** (a child node), not a plain sheet - see section 5.
 - **Cross-scene signal wiring** wants an autoload bus; `get_node("…")` connections are relative to the host.
-- **The generic *On Signal* handler doesn't bind the signal's arguments** - use a reflected `signal:NAME`
-  trigger when you need the typed parameters.
+- **The generic *On Signal* handler needs its Arguments field filled in to bind parameters** - type the
+  signal's signature there (e.g. `amount: int`); a reflected `signal:NAME` trigger fills it in for you.
 - **`host` binds in `_enter_tree`** - a behavior's calls before it enters the tree warn rather than act.
 - **Don't hand-edit the generated `.gd`** - it's overwritten on recompile; the sheet is the source of truth.

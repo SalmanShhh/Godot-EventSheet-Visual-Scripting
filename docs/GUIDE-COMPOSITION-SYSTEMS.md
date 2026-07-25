@@ -67,11 +67,11 @@ of components; see [section 9](#9-when-not-to-use-this) for where it stops payin
 ## 4. Systems are sheets that run over a group
 
 A system is a sheet - almost always an **autoload** so it runs once for the whole game - with an
-**On Process** (every frame) or **On Timer** (every so often) event that iterates a group and acts on
+**Every Frame** (every frame) or **On Timer** (every so often) event that iterates a group and acts on
 each member. The **Entity System (Autoload)** starter in the New... menu scaffolds exactly this:
 
 ```
-On Process
+Every Frame
   -> For Each entity in (Entities In Group "enemies")
        -> ... move / damage / update the entity ...
 ```
@@ -179,7 +179,7 @@ On area entered by a poison cloud
 **The poison system** (an autoload) ticks every poisoned enemy and cures them when a counter runs out:
 
 ```
-On Process
+Every Frame
   -> For Each e in (Entities In Both Groups "enemies" and "poisoned")
        -> e.health -= e.poison_dps * delta
        -> (optional) count down a timer, then Remove e From Group "poisoned"
@@ -199,7 +199,7 @@ build a bullet-hell with 50,000 particles on. Keep it fast:
   damage) should be a triggered event, not a per-frame group scan. Poll only for things that genuinely
   change every frame (movement, continuous damage).
 - **Tick slow things slowly.** A poison tick does not need 60 Hz. Run costly systems on an **On Timer**
-  (say 4-10 times a second) instead of **On Process**. Spread heavy per-entity work across frames with the
+  (say 4-10 times a second) instead of **Every Frame**. Spread heavy per-entity work across frames with the
   Time Slicer pack if a single frame's batch is too big.
 - **Query once per frame, not once per entity.** Call **Entities In Group** once and loop the result;
   do not re-query inside the loop.

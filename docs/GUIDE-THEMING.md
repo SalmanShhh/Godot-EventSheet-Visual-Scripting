@@ -44,7 +44,7 @@ Current additions on top of the model below:
 1. Duplicate `res://demo/themes/designer_template_theme.tres`.
 2. Optionally duplicate `res://demo/themes/designer_template_theme_manifest.cfg` so the package keeps its token notes.
 3. Edit the `.tres` resource in the Inspector for structural tokens such as sheet background, group/comment styling, and hover/selection fills.
-4. Open one of the element `.tscn` files in Godot when you want a more visual preview for lane and chip styling.
+4. Use the Theme Editor dialog's live preview for lane and chip styling - it is the visual preview path, since rows are painted by the renderer and there are no per-row scenes.
 5. Save the resource.
 6. Assign the style to `EventSheetResource.editor_style` or load it through the dock toolbar.
 
@@ -52,7 +52,7 @@ Current additions on top of the model below:
 
 - Toolbar actions in the EventSheet dock:
   - **Load Theme**: pick an `EventSheetEditorStyle` resource.
-  - **Default Theme**: clear the per-sheet override and use built-in defaults.
+  - To clear a per-sheet override, pick **Match Editor (default)** in the toolbar theme picker.
   - **Reload Theme**: reload the active style from disk.
 
 ### Bundled example themes

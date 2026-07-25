@@ -273,7 +273,7 @@ On Ready
   -> Enemy | Pathfinding: Build Nav Graph From Tilemap  $Level
   -> Enemy | Pathfinding: Add Hazard  704, 512, 160, 64, true      (deadly - never crossed)
   -> Enemy | Pathfinding: Add Moving Platform  $Elevator, 1088, 552, 1088, 200
-On Hazard Entered -> Enemy | Health: Apply Damage  10               (if it lands in one anyway)
+On Hazard Entered -> Enemy | Health: Take Damage  10               (if it lands in one anyway)
 ```
 
 The sheet animates `$Elevator` between those two endpoints with a pause at each end; the
@@ -324,7 +324,7 @@ Health pack ticks the burn when it cannot.
 On Ready -> Enemy | Pathfinding: Add Hazard  512, 448, 96, 32, false
 Every 0.5 seconds
   Condition: Enemy | Pathfinding: Is In Hazard
-    -> Enemy | Health: Apply Damage  5
+    -> Enemy | Health: Take Damage  5
 ```
 
 ### 12. Animations from the path leg

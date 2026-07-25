@@ -62,7 +62,7 @@ The model is small. Learn these five ideas and every ACE in the pack falls into 
 
 **3. Give it something to be blocked by.** Line of sight is only meaningful if there are obstacles. Make sure your walls are physics bodies on a layer that `collision_mask` includes. A world with no colliders on those layers means every target in range and in the cone is always visible.
 
-**4. Ask the question in your events.** This behavior does not run on its own or fire triggers - you check its Conditions and read its Expressions from your own events (`On Ready`, a timer, `On Process`, or any stimulus). Here is a complete first sensor - an enemy that chases the player only when it truly sees them:
+**4. Ask the question in your events.** This behavior does not run on its own or fire triggers - you check its Conditions and read its Expressions from your own events (`On Ready`, a timer, `Every Frame`, or any stimulus). Here is a complete first sensor - an enemy that chases the player only when it truly sees them:
 
 ```
 Every 0.2 seconds
@@ -117,7 +117,7 @@ The Actions and the plain-value Expressions below are generated automatically fr
 
 | Trigger | Fires when |
 |---|---|
-| (none) | This behavior publishes no triggers. It answers questions and computes values that you check inside your own events - a timer, `On Process`, `On Ready`, or any stimulus you already have. |
+| (none) | This behavior publishes no triggers. It answers questions and computes values that you check inside your own events - a timer, `Every Frame`, `On Ready`, or any stimulus you already have. |
 
 ### Inspector properties
 
@@ -131,7 +131,7 @@ The Actions and the plain-value Expressions below are generated automatically fr
 
 ## Use cases
 
-Each example targets the `LOSBehavior` behavior on the named node. Check the conditions and read the expressions from your own events - a timer, `On Process`, or a stimulus.
+Each example targets the `LOSBehavior` behavior on the named node. Check the conditions and read the expressions from your own events - a timer, `Every Frame`, or a stimulus.
 
 ### 1. Enemy chases only what it can see
 
@@ -346,5 +346,5 @@ Every 0.25 seconds
 - **Has LOS Between skips range and cone on purpose.** It is a pure obstacle check between two arbitrary points, so it will happily report a clear line across the whole level. Use it for line-of-fire and spot-to-spot checks; use `Has Line Of Sight To` when you want the sensor's own range and cone to matter.
 - **Nearest Visible In Group can return null - check for it.** When no group member is visible, the expression hands back `null`. Guard the result with a "not null" condition before you read `.global_position` off it, or you will touch a null.
 - **Sight range is in pixels, cone is in degrees.** They are easy to mix up. `sight_range` 400 is a distance; `cone_of_view_degrees` 90 is an angle. Setting a range of 90 makes a nearly blind enemy, and setting a cone of 400 just behaves like 360.
-- **Check on a timer, not every single frame, unless you need to.** A raycast per node per frame adds up with a big crowd. An `Every 0.2 seconds` check feels instant to the player and is far cheaper than `On Process`. Reserve per-frame checks for the handful of sensors that truly need them.
+- **Check on a timer, not every single frame, unless you need to.** A raycast per node per frame adds up with a big crowd. An `Every 0.2 seconds` check feels instant to the player and is far cheaper than `Every Frame`. Reserve per-frame checks for the handful of sensors that truly need them.
 - **Nothing fires automatically - you drive the checks.** This behavior has no triggers. It will not tell you "I just saw the player"; you ask it, in your own event, whenever you care. Pair it with a flag (like the first-sight bark example) when you want an edge, not a continuous state.

@@ -5,7 +5,7 @@ event sheet's condition/action lanes. This table is the receipt: each language f
 reads in a sheet, and how you author it. It states shipped facts only, and the test suite pins
 every row (`tests/gdscript_basics_coverage_test.gd`), so this coverage cannot silently regress.
 
-Two deliberate scope notes live at the bottom - everything else on the page round-trips
+One deliberate scope note lives at the bottom - everything else on the page round-trips
 byte-exactly: open the generated `.gd`, save it untouched, and you get the identical file.
 
 | GDScript feature | In the sheet | How you author it |
@@ -37,7 +37,7 @@ byte-exactly: open the generated `.gd`, save it untouched, and you get the ident
 | `@tool` / editor scripts | Tool-mode sheets + On Editor Run | Sheet > New Editor Tool… |
 | Preloads and constants-from-files | Preload Resource blocks | Add > Preload Resource… |
 | Multi-line enums (explicit values) | The same enum block, shape remembered | The enum dialog's "one value per line" toggle |
-| Inner classes (data shape) | The data-class block (defaults edit inline; right-click adds/removes fields) | Opens from lifted scripts; Add > data class |
+| Inner classes (data shape) | The data-class block (defaults edit inline; right-click adds/removes fields) | Opens from lifted scripts; right-click the block > Add Field… / Remove Field |
 
 ## Scope notes (deliberate, not gaps)
 

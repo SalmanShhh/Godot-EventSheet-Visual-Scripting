@@ -75,13 +75,13 @@ plugin's discovery) opens the flagship; the others are right there in the folder
   **is** the frame-spreading, while the FPS stays pinned. Tick `frame_spread_count` on any For Each and a
   heavy loop spreads itself across frames - no behavior, no await.
 
-Open any of the `.tres` files as a sheet to see the whole thing as a handful of event rows.
+Open any showcase's `.gd` as a sheet to see the whole thing as a handful of event rows - the `.gd` IS the sheet, there is no `.tres` companion.
 Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 
 ## Try it (five minutes)
 
 1. Open the repository root project in Godot **4.5+** → open the **EventSheet** tab.
-2. Open `demo/showcase/carousel/showcase_carousel.tres`. Double-click anything. Press Ctrl+F.
+2. Open `demo/showcase/carousel/showcase_carousel.gd`. Double-click anything. Press Ctrl+F.
    Right-click a row → **Open in Split**.
 3. Toolbar → **GDScript**: select a row and watch its generated lines highlight -
    click a line and the row that produced it selects back.
@@ -98,11 +98,11 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 
 | Path | What it is |
 |---|---|
-| `showcase/showcase_carousel.{tscn,tres,gd}` | **Flagship** - Carousel of Juice (functions, runtime group, if/elif/else, four behaviors) |
-| `showcase/starfall.{tscn,tres,gd}` + `star.tscn` | Starfall arcade game (enum/match FSM, pick-filter, spawner, Bullet behavior) |
-| `showcase/quest_fsm.{tscn,tres,gd}` | Quest & Inventory FSM (Dictionary/Array collections, signals, reused function, match) |
-| `showcase/platformer_shooter.{tscn,tres,gd}` + `shot.tscn` + `target.tscn` | Platformer + Weapon Kit packs combined (coyote-time jump, hold-fire, group cull) |
-| `showcase/swarm.{tscn,tres,gd}` + `dot.tscn` | **Swarm** - frame-spreading: a Budgeted For Each sweeping a spawned crowd |
+| `showcase/carousel/showcase_carousel.{tscn,gd}` | **Flagship** - Carousel of Juice (functions, runtime group, if/elif/else, four behaviors) |
+| `showcase/starfall/starfall.{tscn,gd}` + `star.tscn` | Starfall arcade game (enum/match FSM, pick-filter, spawner, Bullet behavior) |
+| `showcase/quest_fsm/quest_fsm.{tscn,gd}` | Quest & Inventory FSM (Dictionary/Array collections, signals, reused function, match) |
+| `showcase/platformer_shooter/platformer_shooter.{tscn,gd}` + `shot.tscn` + `target.tscn` | Platformer + Weapon Kit packs combined (coyote-time jump, hold-fire, group cull) |
+| `showcase/swarm/swarm.{tscn,gd}` + `dot.tscn` | **Swarm** - frame-spreading: a Budgeted For Each sweeping a spawned crowd |
 | `showcase/fps_arena/` | **FPS Arena** - the FPS Controller pack (mouse look, sprint, jump, crouch + slide, wall ride/jump, first/third person) + an orange Nav Agent 3D stalker that navmesh-paths to you |
 | `showcase/menu_starter/` | **Menu Starter** - a complete menu flow on one HUD Kit behavior (zero connected signals) |
 | `showcase/input_rebind/` | **Input Rebind** - a working rebind screen: click Rebind then press ANY key/mouse/gamepad input, live binding labels, gamepad name + vibration test |
@@ -140,7 +140,7 @@ What they're for:
 
 ## Milestones at a glance
 
-The release history runs through **v0.9.0** (Performance & Game Feel, plus the ACE-safety pass). To keep
+The release history runs through **v0.15.0** (Save Anything, Control Anything & BBcode it), with an unreleased wave on `main`. To keep
 this page from drifting, the milestone table now lives in one place - the
 [root README](../README.md#milestones) - with the feature-by-feature detail in the [CHANGELOG](../CHANGELOG.md).
 
@@ -149,7 +149,7 @@ Full ledger: [CHANGELOG.md](../CHANGELOG.md) · honest pros & cons: [README.md](
 ## Compile manually / regenerate the golden
 
 ```gdscript
-var sheet: EventSheetResource = load("res://demo/showcase/carousel/showcase_carousel.tres")
+var sheet: EventSheetResource = EventSheets.open_gd_as_sheet("res://demo/showcase/carousel/showcase_carousel.gd")
 var result: Dictionary = SheetCompiler.compile(sheet, "res://demo/showcase/carousel/showcase_carousel.gd")
 print(result.get("warnings"))
 ```
