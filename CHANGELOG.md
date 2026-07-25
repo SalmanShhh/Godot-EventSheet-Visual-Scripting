@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Changed - README refreshed for the raycasting wave
+
+- The status list gains the raycasting vocabulary and both labs, the quick-start pointers name the
+  raycasting guide alongside the lists guide, and the unreleased milestone row records the 88 verbs
+  plus the two showcases.
+- Stale counts corrected while there: native ACEs read **550+** when the real figure is 872, the pack
+  count still said 75 after `StoryletResource` shipped (76), and `demo/` was described as holding
+  "golden compiled output" after that fixture moved to `tests/fixtures/`. The v0.15.0 milestone rows
+  keep their "(70 packs)" because those record what that release shipped, not what is here now.
+
 ### Changed - the raycasting guide shows the labs
 
 - **Seeing What Is There (Raycasting)** gains a "See them running" section with both showcases,

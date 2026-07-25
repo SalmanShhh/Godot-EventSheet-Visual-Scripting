@@ -43,7 +43,7 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 ## Quick start
 
-1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 75 behavior packs. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
+1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 76 behavior packs. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
 2. **Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New… → Platformer Starter**, add events (live search understands C3 phrases like *"every tick"*), and Run.
@@ -51,7 +51,7 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 Everything is in the **[documentation index](docs/README.md)**. The ones most people want first:
 
 - **Coming from Construct?** The [C3 migration guide](docs/GUIDE-C3-MIGRATION.md) maps every concept, behavior, and plugin to its home here.
-- **Learning by building?** The [recipes](docs/GUIDE-RECIPES.md) walk a platformer, health, pickups, and debugging end to end. [GDScript-basics coverage](docs/GDSCRIPT-BASICS-COVERAGE.md) shows every language fundamental as sheet rows.
+- **Learning by building?** The [recipes](docs/GUIDE-RECIPES.md) walk a platformer, health, pickups, and debugging end to end. [GDScript-basics coverage](docs/GDSCRIPT-BASICS-COVERAGE.md) shows every language fundamental as sheet rows. [Working with lists](docs/GUIDE-WORKING-WITH-LISTS.md) and [raycasting](docs/GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING.md) are the two vocabularies most games reach for first - the raycasting guide ships two playable labs that draw every cast as it happens.
 - **Making your own stuff?** [Custom resources](docs/GUIDE-CUSTOM-RESOURCES.md) (data assets from a 3-question wizard), [editor tools](docs/GUIDE-EDITOR-TOOLS.md) (one-click chores), [Custom ACEs](docs/GUIDE-CUSTOM-ACES.md) + [Custom Blocks](docs/GUIDE-CUSTOM-BLOCKS.md) (the extension surfaces), and [the ACE Studio](docs/GUIDE-USING-THE-ACE-STUDIO.md) (define a verb without code).
 - **Systems + content:** [data-driven addons](docs/GUIDE-DATA-DRIVEN-ADDONS.md) and [games](docs/GUIDE-DATA-DRIVEN-GAMES.md), [composition/ECS-lite](docs/GUIDE-COMPOSITION-SYSTEMS.md), [procedural generation](docs/GUIDE-PROCEDURAL-GENERATION.md), [player-or-AI input](docs/GUIDE-PLAYER-AND-AI-INPUT.md), [saving and loading](docs/GUIDE-SAVING-AND-LOADING.md) + [the Save Studio](docs/GUIDE-USING-THE-SAVE-STUDIO.md).
 - **Existing project?** [Using EventSheets with your code](docs/GUIDE-USING-WITH-EXISTING-CODE.md) - sheets call (and are called by) your GDScript.
@@ -94,9 +94,9 @@ Most visual scripting asks you to learn a model you'll throw away the day you wr
 
 **The language** - Events, sub-events, Else/Else-If chips, the **full C3 loop & picking set** (For / For Each / ordered / Repeat / While, plus a C3-style **loopindex** on any loop), **functions** (typed params, custom returns, publishable as ACEs, one-field **Inspector buttons**), stateful conditions, enums (single- or multi-line), signals, match rows, setter/getter properties, doc comments with a BBCode bar, GDScript blocks, `await`, and Autoload sheets. Variables get **every Godot inspector option** in plain language with a live "Ships as:" strip, a **visually-designed Inspector** (eight drawers including editable tables), and Inspector grouping by drag. The **Custom Block API** registers your own non-ACE row kinds in ~30 lines - Add-menu, dialog, and byte-exact round-trip included.
 
-**550+ native ACEs** - Tween, Scene flow, Audio, sprites & cameras, Nav, Math & Random, Color, 2D/3D raycast & Collision queries, Nodes, Project/File utilities, runtime signal wiring, UI/menu, particles, AnimationTree, tilemaps, shaders, physics joints, input rebinding, seeded procedural generation, ECS-lite Systems queries over groups, and a **Helpers** escape hatch (Set/Get Property, Call Method, Run GDScript, Inline If) so unmapped code still stays an editable row.
+**870+ native ACEs** - Tween, Scene flow, Audio, sprites & cameras, Nav, Math & Random, Color, **every kind of raycast in 2D and 3D** (RayCast and ShapeCast nodes, one-off ray/point/shape/motion queries, camera picking) & Collision queries, Nodes, Project/File utilities, runtime signal wiring, UI/menu, particles, AnimationTree, tilemaps, shaders, physics joints, input rebinding, seeded procedural generation, ECS-lite Systems queries over groups, and a **Helpers** escape hatch (Set/Get Property, Call Method, Run GDScript, Inline If) so unmapped code still stays an editable row.
 
-**75 behavior packs**, all authored as event sheets, each with its own icon, class description, and starred hero verbs. By family:
+**76 behavior packs**, all authored as event sheets, each with its own icon, class description, and starred hero verbs. By family:
 
 - **Movement & feel** - Platformer (+ jump-graph **Platformer Pathfinding**), 8-Direction, Tile/Slide Movement, Car + **Physics Car**, Sine/Orbit/Bullet/Move To/Follow (with 3D twins + **Nav Agent 3D**), Spring, Tween, Fade, Flash, Rotate, Bound To + Wrap, **FPS Controller** (crouch/slide/wall tech), **Juice** 2D + 3D (shake/recoil/bob/zoom/slowmo/hitstop/tints).
 - **AI** - State Machine, Line of Sight 2D/3D, **UtilityBrain** (response-curve scoring), HTN Agent, and **UHTN Planning** (Utility AI ranking HTN methods live, whole plans as **UHTNPlanResource** `.tres` grids).
@@ -130,8 +130,18 @@ Drop a `class_name` script in `eventsheet_addons/` and it becomes a provider - `
   a `bool` reads **true/false** (the literal you actually type), form labels explain themselves on hover,
   and **Tools ▸ Report an Issue…** opens the tracker with your Godot and plugin versions pre-filled.
 - **This week's wave**: **Gravity Angle / Gravity Direction** on Platformer, Bullet, Bullet 3D, and the FPS Controller (walk on walls and ceilings, one knob, bit-exact defaults), formal **pack dependencies** (`@ace_requires` + a Doctor check) and **pack identity** (`@ace_version`/author/help, every pack stamped 1.0.0), **full async-events parity** (freed objects unpicked across waits, an hourglass on awaiting actions, the **Once At A Time** gate, and awaiting events split so per-frame siblings never freeze), plus **Connect Signal to Event Sheet**, **Inspector property drag-in**, the **live execution pulse**, and Discord-style **BBCode formatting** on rich params.
+- **Every kind of raycast, in both dimensions** (88 new verbs) - a RayCast node could be READ but never
+  aimed, ShapeCast was missing entirely, and 3D had no point query, no volume query, and a one-off ray
+  that could say *where* it hit but never *what*. Now: **RayCast2D/3D** aiming and masking, the whole
+  **ShapeCast2D/3D** swept-shape family (including Safe Fraction, for moving right up to a wall),
+  **Cast Ray Into** firing ONE cast whose stored result the **Ray Result** verbs read for point,
+  normal, shape and group, point/sphere/box queries, motion casts that stop a fast object tunnelling,
+  and **Cast Ray From Mouse Into** - click-to-select in 3D as a single row. Two showcases draw all of
+  it live: **Raycast Lab** (2D) and **Raycast Lab 3D**, whose generated GDScript *is* what these verbs
+  emit, since every cast in them is a real ACE row. See [the raycasting
+  guide](docs/GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING.md).
 - **The release bar**: [GDScript-basics coverage](docs/GDSCRIPT-BASICS-COVERAGE.md) - every fundamental on Godot's basics page as sheet rows, suite-pinned.
-- **Three new packs** (75 total): **UHTN Planning**, its **UHTNPlanResource**, and **Platform Info**.
+- **Four new packs** (76 total): **UHTN Planning**, its **UHTNPlanResource**, **Platform Info**, and the **StoryletResource** data asset.
 
 The latest tagged release, **`v0.15.0` - "Save Anything, Control Anything & BBcode it"**, is about persistence, control, and polish:
 
@@ -163,7 +173,7 @@ _Recent releases before this:_ **v0.14.0** (Platformer Pathfinding + Nav Agent 3
 | `v0.13.0` - **The Genre Toolkits Update**: a complete incremental/idle kit (Big Numbers + a Decimal type, Idle Generator, Click Power, Boosts, Upgrades, Prestige, Milestones), composition/ECS-lite Systems + Entity System starter, Advanced Random driving the procedural packs behind one seed + a stateless Procedural module for tools and resources, data-driven Simple Abilities loadouts + a RandomTableResource, and auto-registering pack builders (58 packs) | ✅ shipped |
 | `v0.14.0` - **The Pathfinding & Game-Feel Update**: Platformer Pathfinding (2D jump graphs with portals, patrol discipline, variable jumping, a stuck watchdog, follow mode, and a shared path budget) + Nav Agent 3D (navmesh, same verbs), the universal AI drive seam across the movement packs, FPS movement tech (crouch/slide/wall ride/wall jump), Juice camera verbs 2D + the Juice 3D pack, the live Input Map picker + the input vocabulary + the Input Rebind showcase, editor behavior previews, twelve API extension seams, EFIGS editor translations, and a ~21x faster boot (62 packs) | ✅ shipped |
 | `v0.15.0` - **Save Anything, Control Anything & BBcode it**: the `save_state`/`load_state` seam on 18 packs + persist-group automation + node/group/singleton verbs, six lossless save formats (config/JSON/binary/CSV/INI/XML) with read + format-detection helpers, the Save Studio (preview/export/generate) on a new `EventSheets` Save API + a Doctor check + data-loss hardening, the player-or-AI input seam on every input-reading pack + AI drag & drop, pathfinding hazards + moving platforms, a Discord-style BBCode bar in comments, StatForge stats, Juice color tints, rounded corners, the Rotate pack + circular Wrap, and two tool guides + a docs index (70 packs) | ✅ shipped |
-| _Unreleased on `main`_ - **The Creator Experience wave**: 8 editor languages + hot-reload, the Custom Resource wizard + editor-tool journey, loopindex + the Expressions dictionary, per-pack icons + featured hero verbs + the Addon Pack chip, `EventSheets.publish_pack`, multi-line enum blocks, the GDScript-basics coverage receipt, and the UHTN Planning / Platform Info packs (75 packs); then **the reads-like-code pass**: published verbs and triggers flipped into the two-lane condition/action model in file order, the focused Edit Parameter dialog, C3-aligned object columns + a full-height divider guide, self-explaining form labels, Report an Issue, and the macOS HiDPI fix | 🚧 in repo |
+| _Unreleased on `main`_ - **The Creator Experience wave**: 8 editor languages + hot-reload, the Custom Resource wizard + editor-tool journey, loopindex + the Expressions dictionary, per-pack icons + featured hero verbs + the Addon Pack chip, `EventSheets.publish_pack`, multi-line enum blocks, the GDScript-basics coverage receipt, and the UHTN Planning / Platform Info packs (76 packs); then **the reads-like-code pass**: published verbs and triggers flipped into the two-lane condition/action model in file order, the focused Edit Parameter dialog, C3-aligned object columns + a full-height divider guide, self-explaining form labels, Report an Issue, and the macOS HiDPI fix; then **every kind of raycast in 2D and 3D** (88 verbs: RayCast/ShapeCast nodes, one-off ray/point/shape/motion queries, camera picking) with the **Raycast Lab** and **Raycast Lab 3D** showcases | 🚧 in repo |
 | _Roadmap_ - community feedback, polish, and whatever you ask for next | 🗺 planned |
 
 ## Project layout
@@ -172,8 +182,8 @@ _Recent releases before this:_ **v0.14.0** (Platformer Pathfinding + Nav Agent 3
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
-| `eventsheet_addons/` | Zero-config ACE addons + the 75 behavior packs |
-| `demo/` | Demo sheets, themes, and golden compiled output |
+| `eventsheet_addons/` | Zero-config ACE addons + the 76 behavior packs |
+| `demo/` | 18 playable showcases (each a generated sheet + its compiled GDScript + scene) and the bundled themes |
 | `tests/` | Headless suite - `run_tests.gd` (full) and `run_perf.gd` (fast gate) |
 | `docs/` | Contract specs + guides (C3 migration, recipes, MCP, glossary, uninstall) |
 
