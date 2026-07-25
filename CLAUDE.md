@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Godot EventSheets (engine codename EventForge): a Godot 4 `@tool` plugin providing a Construct 3-style event sheet editor that compiles sheets to plain, typed GDScript. `addons/eventforge/` is the data model, compiler, importer, and builtin ACE vocabulary; `addons/eventsheet/` is the editor (dock, virtualized viewport, renderer, picker, themes, MCP server, drop-in CSV translations); `eventsheet_addons/` holds the 75 behavior packs (COMPILER OUTPUT, regenerated from `tools/pack_builders/` - builders auto-register by glob, no list to maintain); `demo/showcase/<name>/` holds the playable showcases (also generated - `tools/build_examples.gd`); `AGENTS.md` has the deeper architecture map and standing contracts.
+Godot EventSheets (engine codename EventForge): a Godot 4 `@tool` plugin providing a Construct 3-style event sheet editor that compiles sheets to plain, typed GDScript. `addons/eventforge/` is the data model, compiler, importer, and builtin ACE vocabulary; `addons/eventsheet/` is the editor (dock, virtualized viewport, renderer, picker, themes, MCP server, drop-in CSV translations); `eventsheet_addons/` holds the 76 behavior packs (COMPILER OUTPUT, regenerated from `tools/pack_builders/` - builders auto-register by glob, no list to maintain); `demo/showcase/<name>/` holds the playable showcases (also generated - `tools/build_examples.gd`); `AGENTS.md` has the deeper architecture map and standing contracts.
 
 ## Commands
 
@@ -35,6 +35,10 @@ GODOT="/c/Users/mrlig/OneDrive/Desktop/GameDev Programs/Godot_v4.7-stable_win64.
 - A parse error in one core file (e.g. `sheet_compiler.gd`) cascades as baffling "Nonexistent function in base Nil" errors in unrelated tests. Pinpoint with `--check-only --script <file>`.
 - Some tests deliberately lint invalid GDScript; "Parse Error" lines naming fixtures like `1 +` or identifier `this` mid-suite are expected noise.
 - A tail segfault AFTER the verdict line is a known harmless teardown flake.
+- **`builtin_ace_compile_test` fills each ACE's param DEFAULTS and compiles it inside its host class.** So a default naming something the host lacks (`global_position` on a plain `Node`, `velocity`, a bare `target`) FAILS the gate - correctly, since the default is what the row shows the moment it is dropped. Defaults must stand on their own.
+- **A node-scoped ACE's SHIPPED template is not the one you authored.** `_make_node_scoped_targetable` prefixes every line with `{target.}` and appends an "On node" param, so a test asserting the authored string fails. Assert the post-transform form. The prefix is only added when every line is a member operation, which is why a template leading with `not` / `and` / `is` gets no target at all.
+- **A builder must pre-bake `{uid}` itself** - the dock bakes it at apply time and the compiler never does, so an unbaked `{uid}` sails straight into the emitted GDScript. Fetch the shipped descriptor and `.replace("{uid}", <stable id>)`.
+- **`add_to_group(name)` is NOT persistent.** `PackedScene.pack()` saves persistent groups only, so a group added in a scene builder vanishes from the `.tscn` and every group-based check silently never fires. Pass `true`.
 
 ## Standing contracts (violating these breaks user projects)
 
