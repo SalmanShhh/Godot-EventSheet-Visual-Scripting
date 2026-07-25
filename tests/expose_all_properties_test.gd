@@ -66,6 +66,28 @@ static func run() -> bool:
 	var output: String = str(SheetCompiler.compile(sheet, "user://expose_all_properties_test.gd").get("output", ""))
 	ok = _check("the applied Set compiles to the retargeted assignment",
 		output.contains("$Enemy/AutoACESample.health = 42"), true) and ok
+
+	# ── A reflected name that collides with an AUTHORED verb is suffixed, so the picker never shows two
+	# identical rows that do different things. The authored verb keeps the plain label; only the LABEL
+	# moves, because ace_ids and codegen templates are the frozen API. ──
+	var combo: Node = load("res://eventsheet_addons/combo_box/combo_box_addon.gd").new()
+	var combo_definitions: Array[ACEDefinition] = generator.generate_from_object(combo)
+	var authored_length: ACEDefinition = _find(combo_definitions, "method:buffer_length_now")
+	var reflected_length: ACEDefinition = _find(combo_definitions, "property:buffer_length")
+	ok = _check("the authored verb keeps the plain label",
+		authored_length.display_name if authored_length != null else "", "Buffer Length") and ok
+	ok = _check("its reflected twin is suffixed instead of shadowing it",
+		reflected_length.display_name if reflected_length != null else "", "Buffer Length (property)") and ok
+	ok = _check("the reflected twin's ace_id is untouched (frozen API)",
+		reflected_length.id if reflected_length != null else "", "property:buffer_length") and ok
+	var reflected_setter: ACEDefinition = _find(combo_definitions, "set:buffer_length")
+	ok = _check("a colliding reflected ACTION is suffixed too, keeping its parameter tail",
+		str(reflected_setter.metadata.get("display_template", "")) if reflected_setter != null else "",
+		"Set Buffer Length (property) {value}") and ok
+	var uncontested: ACEDefinition = _find(combo_definitions, "property:debug_logging")
+	ok = _check("a reflected name with NO authored twin is left alone",
+		uncontested.display_name if uncontested != null else "", "Debug Logging") and ok
+	combo.free()
 	return ok
 
 

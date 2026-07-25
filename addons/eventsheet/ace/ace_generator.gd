@@ -96,6 +96,7 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
 		var method_definition: ACEDefinition = _build_method_definition(provider_id, method_name, method_info, method_entry_overrides)
 		_apply_deprecation_metadata(method_definition, method_entry_overrides)
 		output.append(method_definition)
+	_disambiguate_reflected_name_collisions(output)
 	# Provider description derives from the script's top doc comment (zero-config addons).
 	var class_description: String = str(source_metadata.get("class_description", ""))
 	if not class_description.is_empty():
@@ -106,6 +107,36 @@ func generate_from_object(target: Object) -> Array[ACEDefinition]:
 		for definition in output:
 			definition.metadata["tags"] = provider_tags.duplicate()
 	return output
+
+
+## Reflected property names that collide with an AUTHORED verb are suffixed so the picker can tell them
+## apart. A pack can legitimately ship both - ComboBox has a `Buffer Length` expression (how many tokens
+## are buffered right now) AND a `buffer_length` @export (the capacity), and Drag And Drop's authored
+## `Set Break Distance` verb (distance + action) shares its label with the property's raw one-value
+## setter. Two identical rows in the picker is a silent-wrong-answer trap: pick the wrong one and you
+## read the capacity instead of the live count, or write past the verb's validation.
+##
+## The AUTHORED verb keeps the plain name - it is the curated entry, with meaningful parameters - and the
+## reflected twin becomes "<name> (property)". Only the LABEL moves: ace_ids and codegen templates are the
+## frozen API, so every existing sheet keeps compiling to exactly the same code.
+static func _disambiguate_reflected_name_collisions(definitions: Array[ACEDefinition]) -> void:
+	const REFLECTED_KINDS: Array[String] = ["property", "property_action"]
+	var authored_labels: Dictionary = {}
+	for definition: ACEDefinition in definitions:
+		if not REFLECTED_KINDS.has(str(definition.metadata.get("source_kind", ""))):
+			authored_labels["%d|%s" % [definition.ace_type, definition.display_name]] = true
+	for definition: ACEDefinition in definitions:
+		if not REFLECTED_KINDS.has(str(definition.metadata.get("source_kind", ""))):
+			continue
+		var plain_label: String = definition.display_name
+		if not authored_labels.has("%d|%s" % [definition.ace_type, plain_label]):
+			continue
+		definition.display_name = "%s (property)" % plain_label
+		# The row's rendered text follows the label. An expression's template IS the label; an action's is
+		# "<label> {param}", so only the leading label is swapped and the parameter tail is left alone.
+		var template: String = str(definition.metadata.get("display_template", ""))
+		if template.begins_with(plain_label):
+			definition.metadata["display_template"] = definition.display_name + template.substr(plain_label.length())
 
 
 ## Applies the @ace_display_template / @ace_codegen_template overrides onto a definition's

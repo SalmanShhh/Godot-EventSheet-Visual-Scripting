@@ -52,8 +52,12 @@ const EXPECTED := [
 	"set:auto_reload|1|Set Auto Reload|Weapon|{target}.auto_reload = {value}",
 	"set:burst_count|1|Set Burst Count|Weapon|{target}.burst_count = {value}",
 	"set:current_ammo|1|Set Current Ammo|Weapon|{target}.current_ammo = {value}",
-	"set:fire_mode|1|Set Fire Mode|Weapon|{target}.fire_mode = {value}",
-	"set:fire_rate|1|Set Fire Rate|Weapon|{target}.fire_rate = {value}",
+	# Suffixed because this pack ALSO publishes authored "Set Fire Mode" / "Set Fire Rate" verbs: the
+	# reflected twin writes the property raw, the authored one is the curated entry, and two identically
+	# labelled rows in the picker is a silent-wrong-pick trap. Only the label differs - the ids and the
+	# templates below are the frozen API and are unchanged.
+	"set:fire_mode|1|Set Fire Mode (property)|Weapon|{target}.fire_mode = {value}",
+	"set:fire_rate|1|Set Fire Rate (property)|Weapon|{target}.fire_rate = {value}",
 	"set:infinite_reserve|1|Set Infinite Reserve|Weapon|{target}.infinite_reserve = {value}",
 	"set:max_ammo|1|Set Max Ammo|Weapon|{target}.max_ammo = {value}",
 	"set:reload_time|1|Set Reload Time|Weapon|{target}.reload_time = {value}",
