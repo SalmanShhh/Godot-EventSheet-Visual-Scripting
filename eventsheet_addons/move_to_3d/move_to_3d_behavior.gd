@@ -17,17 +17,28 @@ func _enter_tree() -> void:
 ## @ace_trigger
 ## @ace_name("On Arrived (3D)")
 signal arrived
+## @ace_trigger
+## @ace_name("On Path Blocked (3D)")
+signal path_blocked
 
 ## Units per second the host glides toward each waypoint.
 @export var max_speed: float = 5.0
 var moving: bool = false
+## Also stop the sweep on Area3D nodes, which it ignores by default.
+@export var step_hits_areas: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Sweep the path each frame instead of gliding straight to the next point, so a fast mover cannot pass through thin geometry between two frames.
+@export var stepping: bool = false
+## Drop the waypoint queue and stop when the path is blocked. Turn off to keep pushing at the obstacle and just report it.
+@export var stop_on_step_hit: bool = true
 var waypoints: Array = []
 
 func _process(delta: float) -> void:
 	if not moving or host == null or waypoints.is_empty():
 		return
 	var target: Vector3 = waypoints[0]
-	host.position = host.position.move_toward(target, max_speed * delta)
+	host.position = step_toward(host.position, host.position.move_toward(target, max_speed * delta))
 	if host.position.distance_to(target) < 0.05:
 		waypoints.pop_front()
 		if waypoints.is_empty():
@@ -63,5 +74,30 @@ func add_waypoint_3d(x: float, y: float, z: float) -> void:
 func stop_moving_3d() -> void:
 	moving = false
 	waypoints = []
+
+## The furthest point on the way to `to` that is actually reachable this frame.
+##
+## Gliding sets position outright, so at speed the host can cross thin geometry entirely between
+## two frames and never touch it. With Stepping on, a swept ray finds what the glide skipped and
+## returns the contact point instead. Positions are in the parent's space, so the sweep converts
+## by offsetting the host's global position by the same delta.
+func step_toward(from: Vector3, to: Vector3) -> Vector3:
+	if not stepping or from == to or host == null or not host.is_inside_tree():
+		return to
+	var world_from: Vector3 = host.global_position
+	var step_query := PhysicsRayQueryParameters3D.create(world_from, world_from + (to - from), step_mask, [])
+	step_query.collide_with_areas = step_hits_areas
+	var step_hit := host.get_world_3d().direct_space_state.intersect_ray(step_query)
+	if step_hit.is_empty():
+		return to
+	if stop_on_step_hit:
+		waypoints.clear()
+		moving = false
+	path_blocked.emit()
+	var contact: Vector3 = step_hit.get("position", world_from)
+	# Park just SHORT of the surface, never exactly on it: a ray that STARTS on a shape does not
+	# report that shape (hit-from-inside is off), so a host left touching the wall sails straight
+	# through on the next frame's sweep. A centimetre of clearance keeps the next ray honest.
+	return from + (contact - (to - from).normalized() * 0.01 - world_from)
 
 # Move To 3D behavior (event-sheet-style): glides through a queue of Vector3 waypoints and fires On Arrived at the final stop.

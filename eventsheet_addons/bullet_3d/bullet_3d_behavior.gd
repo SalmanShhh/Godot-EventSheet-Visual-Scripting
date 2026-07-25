@@ -64,7 +64,9 @@ func _process(delta: float) -> void:
 		step_query.collide_with_areas = step_hits_areas
 		var step_hit := host.get_world_3d().direct_space_state.intersect_ray(step_query)
 		if not step_hit.is_empty():
-			host.global_position = step_hit.get("position", step_from)
+			# Park just SHORT of the surface: a ray that STARTS on a shape does not report it, so a
+			# bullet left exactly touching the wall would sail through if it were ever restarted.
+			host.global_position = step_hit.get("position", step_from) - motion.normalized() * 0.01
 			distance_travelled += step_from.distance_to(host.global_position)
 			if stop_on_step_hit:
 				enabled_movement = false

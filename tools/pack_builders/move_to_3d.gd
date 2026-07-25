@@ -15,6 +15,10 @@ static func build() -> bool:
 	sheet.ace_expose_all_mode = "node"
 	sheet.variables = {
 		"max_speed": {"type": "float", "default": 5.0, "exported": true, "description": "Units per second the host glides toward each waypoint."},
+		"stepping": {"type": "bool", "default": false, "exported": true, "description": "Sweep the path each frame instead of gliding straight to the next point, so a fast mover cannot pass through thin geometry between two frames."},
+		"step_mask": {"type": "int", "default": 1, "exported": true, "description": "Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5."},
+		"step_hits_areas": {"type": "bool", "default": false, "exported": true, "description": "Also stop the sweep on Area3D nodes, which it ignores by default."},
+		"stop_on_step_hit": {"type": "bool", "default": true, "exported": true, "description": "Drop the waypoint queue and stop when the path is blocked. Turn off to keep pushing at the obstacle and just report it."},
 		"waypoints": {"type": "Array", "default": [], "exported": false},
 		"moving": {"type": "bool", "default": false, "exported": false}
 	}
@@ -25,7 +29,37 @@ static func build() -> bool:
 	signal_block.code = "\n".join(PackedStringArray([
 		"## @ace_trigger",
 		"## @ace_name(\"On Arrived (3D)\")",
-		"signal arrived"
+		"signal arrived",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Path Blocked (3D)\")",
+		"## @ace_description(\"Fires when Stepping finds something between the host and where it was about to glide to.\")",
+		"signal path_blocked",
+		"",
+		"## The furthest point on the way to `to` that is actually reachable this frame.",
+		"##",
+		"## Gliding sets position outright, so at speed the host can cross thin geometry entirely between",
+		"## two frames and never touch it. With Stepping on, a swept ray finds what the glide skipped and",
+		"## returns the contact point instead. Positions are in the parent's space, so the sweep converts",
+		"## by offsetting the host's global position by the same delta.",
+		"func step_toward(from: Vector3, to: Vector3) -> Vector3:",
+		"\tif not stepping or from == to or host == null or not host.is_inside_tree():",
+		"\t\treturn to",
+		"\tvar world_from: Vector3 = host.global_position",
+		"\tvar step_query := PhysicsRayQueryParameters3D.create(world_from, world_from + (to - from), step_mask, [])",
+		"\tstep_query.collide_with_areas = step_hits_areas",
+		"\tvar step_hit := host.get_world_3d().direct_space_state.intersect_ray(step_query)",
+		"\tif step_hit.is_empty():",
+		"\t\treturn to",
+		"\tif stop_on_step_hit:",
+		"\t\twaypoints.clear()",
+		"\t\tmoving = false",
+		"\tpath_blocked.emit()",
+		"\tvar contact: Vector3 = step_hit.get(\"position\", world_from)",
+		"\t# Park just SHORT of the surface, never exactly on it: a ray that STARTS on a shape does not",
+		"\t# report that shape (hit-from-inside is off), so a host left touching the wall sails straight",
+		"\t# through on the next frame's sweep. A centimetre of clearance keeps the next ray honest.",
+		"\treturn from + (contact - (to - from).normalized() * 0.01 - world_from)"
 	]))
 	sheet.events.append(signal_block)
 	var tick: EventRow = EventRow.new()
@@ -36,7 +70,7 @@ static func build() -> bool:
 		"if not moving or host == null or waypoints.is_empty():",
 		"\treturn",
 		"var target: Vector3 = waypoints[0]",
-		"host.position = host.position.move_toward(target, max_speed * delta)",
+		"host.position = step_toward(host.position, host.position.move_toward(target, max_speed * delta))",
 		"if host.position.distance_to(target) < 0.05:",
 		"\twaypoints.pop_front()",
 		"\tif waypoints.is_empty():",

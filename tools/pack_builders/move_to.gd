@@ -19,6 +19,10 @@ static func build() -> bool:
 	sheet.variables = {
 		"max_speed": {"type": "float", "default": 200.0, "exported": true, "description": "Pixels per second the host glides toward its target."},
 		"rotate_toward_motion": {"type": "bool", "default": false, "exported": true, "description": "When on, the host faces its direction of travel."},
+		"stepping": {"type": "bool", "default": false, "exported": true, "description": "Sweep the path each frame instead of gliding straight to the next point, so a fast mover cannot pass through a thin wall between two frames."},
+		"step_mask": {"type": "int", "default": 1, "exported": true, "description": "Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5."},
+		"step_hits_areas": {"type": "bool", "default": false, "exported": true, "description": "Also stop the sweep on Area2D nodes, which it ignores by default."},
+		"stop_on_step_hit": {"type": "bool", "default": true, "exported": true, "description": "Drop the waypoint queue and stop when the path is blocked. Turn off to keep pushing at the obstacle and just report it."},
 		"waypoints": {"type": "Array", "default": [], "exported": false},
 		"moving": {"type": "bool", "default": false, "exported": false}
 	}
@@ -33,6 +37,58 @@ static func build() -> bool:
 	arrived_signal.ace_category = "Move To"
 	sheet.events.append(arrived_signal)
 
+	var blocked_signal: SignalRow = SignalRow.new()
+	blocked_signal.signal_name = "path_blocked"
+	blocked_signal.trigger = true
+	blocked_signal.ace_name = "On Path Blocked"
+	blocked_signal.ace_category = "Move To"
+	sheet.events.append(blocked_signal)
+
+	# The sweep, as ACE ROWS like the rest of this pack - it carries a ZERO RawCode budget
+	# (tests/pack_rawcode_budget_test.gd), which is the point of it: the whole behaviour, sweep
+	# included, is expressible in the visual model. Off by default, in which case the first row
+	# returns the destination untouched and nothing about the glide changes.
+	var step_fn: EventFunction = EventFunction.new()
+	step_fn.function_name = "step_toward"
+	step_fn.description = "The furthest point on the way to `to` that is actually reachable this frame. Gliding sets position outright, so at speed the host can cross a thin wall entirely between two frames and never touch it; with Stepping on, a swept ray finds what the glide skipped."
+	step_fn.return_type = TYPE_VECTOR2
+	step_fn.params.append(_param("from", "Vector2"))
+	step_fn.params.append(_param("to", "Vector2"))
+
+	var step_off: EventRow = EventRow.new()
+	step_off.conditions.append(_cond("ExpressionIsTrue", {"expr": "not stepping or from == to or host == null or not host.is_inside_tree()"}))
+	step_off.actions.append(_action("ReturnValue", {"value": "to"}))
+	step_fn.events.append(step_off)
+
+	var step_cast: EventRow = EventRow.new()
+	# Positions arrive in the PARENT's space; the sweep works in world space, so it offsets the host's
+	# global position by the same delta rather than converting each point.
+	step_cast.actions.append(_action("SetLocalVarTyped", {"name": "world_from", "var_type": "Vector2", "value": "host.global_position"}))
+	step_cast.actions.append(_action("SetLocalVarInferred", {"name": "step_query", "value": "PhysicsRayQueryParameters2D.create(world_from, world_from + (to - from), step_mask, [])"}))
+	step_cast.actions.append(_action("SetProperty", {"target": "step_query", "property": "collide_with_areas", "value": "step_hits_areas"}))
+	step_cast.actions.append(_action("SetLocalVarInferred", {"name": "step_hit", "value": "host.get_world_2d().direct_space_state.intersect_ray(step_query)"}))
+	step_fn.events.append(step_cast)
+
+	var step_clear: EventRow = EventRow.new()
+	step_clear.conditions.append(_cond("ExpressionIsTrue", {"expr": "step_hit.is_empty()"}))
+	step_clear.actions.append(_action("ReturnValue", {"value": "to"}))
+	step_fn.events.append(step_clear)
+
+	var step_stop: EventRow = EventRow.new()
+	step_stop.conditions.append(_cond("ExpressionIsTrue", {"expr": "stop_on_step_hit"}))
+	step_stop.actions.append(_action("CallMethod", {"target": "waypoints", "method": "clear", "args": ""}))
+	step_stop.actions.append(_action("SetVar", {"var_name": "moving", "value": "false"}))
+	step_fn.events.append(step_stop)
+
+	var step_report: EventRow = EventRow.new()
+	step_report.actions.append(_action("EmitSignal", {"signal_name": "path_blocked", "args": ""}))
+	# Park just SHORT of the surface, never exactly on it: a ray that STARTS on a shape does not report
+	# that shape (hit-from-inside is off), so a host left touching the wall sails straight through on
+	# the next frame's sweep. Half a pixel of clearance keeps the next ray honest.
+	step_report.actions.append(_action("ReturnValue", {"value": "from + (step_hit.get(\"position\", world_from) - (to - from).normalized() * 0.5 - world_from)"}))
+	step_fn.events.append(step_report)
+	sheet.functions.append(step_fn)
+
 	# On Process: while moving with a live host and queued waypoints, glide toward the head waypoint;
 	# pop it on arrival and fire On Arrived when the queue empties.
 	var tick: EventRow = EventRow.new()
@@ -43,7 +99,7 @@ static func build() -> bool:
 	tick.conditions.append(_cond("ExpressionIsTrue", {"expr": "not waypoints.is_empty()"}))
 	tick.actions.append(_action("SetLocalVarTyped", {"name": "target", "var_type": "Vector2", "value": "waypoints[0]"}))
 	tick.actions.append(_action("SetLocalVarTyped", {"name": "previous", "var_type": "Vector2", "value": "host.position"}))
-	tick.actions.append(_action("SetProperty", {"target": "host", "property": "position", "value": "host.position.move_toward(target, max_speed * delta)"}))
+	tick.actions.append(_action("SetProperty", {"target": "host", "property": "position", "value": "step_toward(host.position, host.position.move_toward(target, max_speed * delta))"}))
 
 	var rotate: EventRow = EventRow.new()
 	rotate.conditions.append(_cond("ExpressionIsTrue", {"expr": "rotate_toward_motion and host.position != previous"}))

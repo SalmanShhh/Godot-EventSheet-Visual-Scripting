@@ -20,10 +20,14 @@ static func build() -> bool:
 		"follow_speed": {"type": "float", "default": 5.0, "exported": true, "description": "In smooth mode, how quickly the host chases the target each second (higher is snappier)."},
 		"delay": {"type": "float", "default": 0.4, "exported": true, "description": "In delayed mode, how many seconds behind the target's recorded path the host trails."},
 		"min_distance": {"type": "float", "default": 0.0, "exported": true, "description": "In smooth mode, stops and fires On Reached Target once within this many pixels of the target."},
+		"stepping": {"type": "bool", "default": false, "exported": true, "description": "In SMOOTH mode, sweep the path each frame instead of lerping straight there, so a fast chase cannot pass through a thin wall between two frames. Delayed mode ignores it, since retracing the target's recorded path is the point of that mode."},
+		"step_mask": {"type": "int", "default": 1, "exported": true, "description": "Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5."},
+		"step_hits_areas": {"type": "bool", "default": false, "exported": true, "description": "Also stop the sweep on Area2D nodes, which it ignores by default."},
 		"following": {"type": "bool", "default": true, "exported": false},
 		"history": {"type": "Array", "default": [], "exported": false},
 		"clock": {"type": "float", "default": 0.0, "exported": false},
-		"_reached": {"type": "bool", "default": false, "exported": false}
+		"_reached": {"type": "bool", "default": false, "exported": false},
+		"_blocked": {"type": "bool", "default": false, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Follow behavior (event-sheet parity): trails another node. mode smooth = lerp chase; mode delayed = replay the target's position history after a delay (the Follow behavior)."
@@ -32,7 +36,41 @@ static func build() -> bool:
 	signal_block.code = "\n".join(PackedStringArray([
 		"## @ace_trigger",
 		"## @ace_name(\"On Reached Target\")",
-		"signal reached_target"
+		"signal reached_target",
+		"",
+		"## @ace_trigger",
+		"## @ace_name(\"On Path Blocked\")",
+		"## @ace_description(\"Fires when Stepping finds something between the host and where the chase was about to put it.\")",
+		"signal path_blocked",
+		"",
+		"## The furthest point on the way to `to` that is actually reachable this frame.",
+		"##",
+		"## The smooth chase sets position outright, so a fast follow_speed can cross a thin wall entirely",
+		"## between two frames and never touch it. With Stepping on, a swept ray finds what the chase",
+		"## skipped and returns the contact point instead. Positions are in the parent's space, so the",
+		"## sweep converts by offsetting the host's global position by the same delta.",
+		"##",
+		"## Delayed mode never calls this: replaying the target's recorded path exactly IS that mode.",
+		"func step_toward(from: Vector2, to: Vector2) -> Vector2:",
+		"\tif not stepping or from == to or host == null or not host.is_inside_tree():",
+		"\t\treturn to",
+		"\tvar world_from: Vector2 = host.global_position",
+		"\tvar step_query := PhysicsRayQueryParameters2D.create(world_from, world_from + (to - from), step_mask, [])",
+		"\tstep_query.collide_with_areas = step_hits_areas",
+		"\tvar step_hit := host.get_world_2d().direct_space_state.intersect_ray(step_query)",
+		"\tif step_hit.is_empty():",
+		"\t\t_blocked = false",
+		"\t\treturn to",
+		"\t# EDGE-triggered, mirroring _reached above. A chase has no stop flag by design - it keeps",
+		"\t# pressing at the wall - so emitting on every blocked frame would make the trigger useless.",
+		"\tif not _blocked:",
+		"\t\t_blocked = true",
+		"\t\tpath_blocked.emit()",
+		"\tvar contact: Vector2 = step_hit.get(\"position\", world_from)",
+		"\t# Park just SHORT of the surface, never exactly on it: a ray that STARTS on a shape does not",
+		"\t# report that shape (hit-from-inside is off), so a chaser left touching the wall sails straight",
+		"\t# through on the next frame's sweep. Half a pixel of clearance keeps the next ray honest.",
+		"\treturn from + (contact - (to - from).normalized() * 0.5 - world_from)"
 	]))
 	sheet.events.append(signal_block)
 	var tick: EventRow = EventRow.new()
@@ -71,7 +109,7 @@ static func build() -> bool:
 		"		reached_target.emit()",
 		"	return",
 		"_reached = false",
-		"host.position = host.position.lerp(target_2d.position, clampf(follow_speed * delta, 0.0, 1.0))"
+		"host.position = step_toward(host.position, host.position.lerp(target_2d.position, clampf(follow_speed * delta, 0.0, 1.0)))"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)

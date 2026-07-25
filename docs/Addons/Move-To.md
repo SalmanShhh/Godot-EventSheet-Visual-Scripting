@@ -84,6 +84,26 @@ All ACEs live in the **Move To** category and target the `MoveToBehavior` on the
 
 The **Set Max Speed**, **Add To Max Speed**, **Subtract From Max Speed**, and **Set Rotate Toward Motion** actions, and the **Max Speed** and **Rotate Toward Motion** expressions, are generated automatically from the two exported Inspector properties - they let you read and change those knobs from the sheet at runtime.
 
+### Stepping: stopping a fast mover passing through walls
+
+Gliding sets position outright, so at speed the host can cross a thin wall **entirely between two
+frames** and never touch it - that is tunnelling, and it is why a fast mover ends up on the wrong side
+of level geometry.
+
+Tick **Stepping** and the path is swept each frame instead: if anything on `step_mask` lies between
+where the host is and where the glide was about to put it, the host stops just short of the contact
+point and fires **On Path Blocked**.
+
+- **Off by default**, so existing movers are unchanged.
+- `step_hits_areas` brings Area nodes into the sweep (ignored otherwise).
+- `stop_on_step_hit` drops the waypoint queue and stops. Turn it off to keep pushing at the obstacle
+  and just report it.
+- The host is parked half a pixel SHORT of the surface on purpose: a ray that starts exactly on a
+  shape does not report that shape, so a host left touching the wall would sail through on the next
+  frame's sweep.
+- It costs one ray per mover per frame, so leave it off for slow drifting things.
+
+
 ### Actions
 
 | Action | Parameters | Description |

@@ -18,19 +18,31 @@ func _enter_tree() -> void:
 ## @ace_name("On Arrived")
 ## @ace_category("Move To")
 signal arrived
+## @ace_trigger
+## @ace_name("On Path Blocked")
+## @ace_category("Move To")
+signal path_blocked
 
 ## Pixels per second the host glides toward its target.
 @export var max_speed: float = 200.0
 var moving: bool = false
 ## When on, the host faces its direction of travel.
 @export var rotate_toward_motion: bool = false
+## Also stop the sweep on Area2D nodes, which it ignores by default.
+@export var step_hits_areas: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Sweep the path each frame instead of gliding straight to the next point, so a fast mover cannot pass through a thin wall between two frames.
+@export var stepping: bool = false
+## Drop the waypoint queue and stop when the path is blocked. Turn off to keep pushing at the obstacle and just report it.
+@export var stop_on_step_hit: bool = true
 var waypoints: Array = []
 
 func _process(delta: float) -> void:
 	if moving and is_instance_valid(host) and not waypoints.is_empty():
 		var target: Vector2 = waypoints[0]
 		var previous: Vector2 = host.position
-		host.position = host.position.move_toward(target, max_speed * delta)
+		host.position = step_toward(host.position, host.position.move_toward(target, max_speed * delta))
 		if rotate_toward_motion and host.position != previous:
 			host.rotation = (host.position - previous).angle()
 		if host.position.distance_to(target) < 0.5:
@@ -38,6 +50,22 @@ func _process(delta: float) -> void:
 			if waypoints.is_empty():
 				moving = false
 				arrived.emit()
+
+## @ace_hidden
+func step_toward(from: Vector2, to: Vector2) -> Vector2:
+	if not stepping or from == to or host == null or not host.is_inside_tree():
+		return to
+	var world_from: Vector2 = host.global_position
+	var step_query := PhysicsRayQueryParameters2D.create(world_from, world_from + (to - from), step_mask, [])
+	step_query.collide_with_areas = step_hits_areas
+	var step_hit := host.get_world_2d().direct_space_state.intersect_ray(step_query)
+	if step_hit.is_empty():
+		return to
+	if stop_on_step_hit:
+		waypoints.clear()
+		moving = false
+	path_blocked.emit()
+	return from + (step_hit.get("position", world_from) - (to - from).normalized() * 0.5 - world_from)
 
 ## @ace_action
 ## @ace_name("Move To Position")

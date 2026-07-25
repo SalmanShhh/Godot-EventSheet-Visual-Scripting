@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-### Added - Stepping on the Bullet packs (anti-tunnelling)
+### Added - Stepping on the fast movement packs (anti-tunnelling)
 
 - A bullet moves by jumping its whole frame of travel at once. At 3000 px/s that is ~50 pixels a
   frame, so a 20-pixel wall can sit ENTIRELY between where it was and where it lands: never inside
@@ -22,6 +22,17 @@
 - Proved by a runtime smoke rather than inspection: two bullets at 6000 px/s against a 10px wall, one
   stepping and one not. Stepping off ends at y=2421 (straight through); stepping on stops at y=295,
   exactly the wall's near face, with On Bullet Hit reporting the collider, point and normal.
+- Also on **Move To**, **Move To 3D** and **Follow**, the other packs that set position outright and can
+  move fast enough to skip a wall. They gain the same three knobs plus **On Path Blocked**. Follow
+  applies it to the SMOOTH chase only: replaying the target's recorded path exactly is what delayed
+  mode is FOR, so sweeping it would fight the feature.
+- The smoke caught a real bug that inspection would not have: Follow fired On Path Blocked and then
+  went through the wall anyway. Parking the host exactly ON the contact point means the next frame's
+  ray STARTS on that surface - and a ray starting on a shape does not report it, so the sweep came back
+  clear. All five packs now park a hair short of the surface. Move To had only survived it by luck of
+  `stop_on_step_hit` clearing its queue.
+- Follow's trigger is edge-fired, mirroring its existing `_reached` flag: a chaser has no stop flag by
+  design, so emitting on every blocked frame would have made the trigger useless.
 
 ### Fixed - full docs freshness sweep (48 stale claims)
 
