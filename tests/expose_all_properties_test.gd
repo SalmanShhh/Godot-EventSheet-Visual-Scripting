@@ -88,6 +88,23 @@ static func run() -> bool:
 	ok = _check("a reflected name with NO authored twin is left alone",
 		uncontested.display_name if uncontested != null else "", "Debug Logging") and ok
 	combo.free()
+
+	# ── A provider with NO class_name falls back to its file name, and that id is interpolated into a
+	# GDScript IDENTIFIER for non-Node providers. capitalize() produced "Nameless Provider Fixture",
+	# emitting `__eventsheet_provider_Nameless Provider Fixture.high_score`, which the compiler's
+	# declaration scan read as `__eventsheet_provider_Nameless` and declared `Nameless.new()`. ──
+	var nameless: RefCounted = preload("res://tests/fixtures/nameless_provider_fixture.gd").new()
+	var nameless_definitions: Array[ACEDefinition] = generator.generate_from_object(nameless)
+	var nameless_setter: ACEDefinition = _find(nameless_definitions, "set:high_score")
+	ok = _check("a class_name-less provider id is a valid identifier",
+		nameless_setter.provider_id if nameless_setter != null else "", "NamelessProviderFixture") and ok
+	var nameless_template: String = str(nameless_setter.metadata.get("codegen_template", "")) if nameless_setter != null else ""
+	ok = _check("its owned-instance write emits no space in the identifier",
+		nameless_template, "__eventsheet_provider_NamelessProviderFixture.high_score = {value}") and ok
+	# The emitted line must also parse - the whole point of the identifier being legal.
+	var nameless_probe: GDScript = GDScript.new()
+	nameless_probe.source_code = "@tool\nextends Node\nvar __eventsheet_provider_NamelessProviderFixture\nfunc _t() -> void:\n\t%s\n" % nameless_template.replace("{value}", "7")
+	ok = _check("and the emitted assignment parses", nameless_probe.reload(), OK) and ok
 	return ok
 
 

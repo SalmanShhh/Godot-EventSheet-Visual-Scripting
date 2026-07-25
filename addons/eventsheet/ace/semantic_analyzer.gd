@@ -269,7 +269,12 @@ func get_provider_id(target: Object, source_metadata: Dictionary) -> String:
 		return class_name_text
 	var script: Script = target.get_script() as Script
 	if script != null and not script.resource_path.is_empty():
-		return script.resource_path.get_file().get_basename().capitalize()
+		# PASCAL case, not capitalize(): the provider id is interpolated into a GDScript IDENTIFIER for
+		# non-Node providers (`__eventsheet_provider_<id>.member`), so `score_keeper.gd` becoming
+		# "Score Keeper" emitted `__eventsheet_provider_Score Keeper.high_score` - which the compiler's
+		# declaration scan then read as `__eventsheet_provider_Score` and declared `Score.new()`. The Node
+		# path already pascal-cases the same fallback, so this also makes the two agree.
+		return script.resource_path.get_file().get_basename().to_pascal_case()
 	return target.get_class()
 
 
