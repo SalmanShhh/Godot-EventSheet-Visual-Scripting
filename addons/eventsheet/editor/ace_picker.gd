@@ -136,14 +136,14 @@ const EVENT_PICKER_GROUPS: Array[String] = [
 ## category "Parent: Sub" - no schema change. Node-type sections never sub-nest.
 const SUBCATEGORY_SEPARATOR: String = ": "
 
-## Builtin vocabulary sections lead with a native editor-theme icon (the object/module icon a
-## sheet user expects next to a name everywhere). Values are EditorIcons names - mostly class
-## icons, which every editor build ships. Unknown names and headless runs degrade to no icon.
-## A "Parent: Sub" category without its own entry inherits the parent's (category_header_icon).
+## Hand-picked icons for categories that DERIVATION cannot reach: abstract groupings whose name is
+## not a class and whose verbs have no host node ("Math & Random", "General Actions", "Helpers").
+## Everything else resolves automatically - see category_icon_name - so adding a category to the
+## vocabulary does NOT mean editing a table here. Values are EditorIcons names; unknown names and
+## headless runs degrade to no icon. Entries also OVERRIDE derivation, for the cases where a human
+## choice beats the derived one (an "Overlap" section reads better as an Area than a bare Node).
 const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Animation": "AnimationPlayer",
-	"Audio": "AudioStreamPlayer",
-	"Camera": "Camera3D",
 	"Mesh": "MeshInstance3D",
 	"Gradients & Curves": "Gradient",
 	"Audio Server": "AudioBusLayout",
@@ -169,7 +169,6 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Helpers": "GDScript",
 	"Input": "InputEvent",
 	"InputMap": "InputEventAction",
-	"JSON": "JSON",
 	"Joints": "PinJoint2D",
 	"Keyboard": "InputEventKey",
 	"Loops": "Loop",
@@ -180,23 +179,16 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 	"Nodes": "Node",
 	"Overlap 2D": "Area2D",
 	"Overlap 3D": "Area3D",
-	"Particles": "GPUParticles2D",
 	"Platform": "Godot",
 	"Procedural": "FastNoiseLite",
-	"Raycast 2D": "RayCast2D",
-	"Raycast 3D": "RayCast3D",
 	"Rendering": "Environment",
 	"Run Context": "PlayScene",
 	"Scene": "PackedScene",
 	"Signals / Scene / Input": "Signals",
 	"Systems": "Groups",
 	"Text": "String",
-	"Tilemap": "TileMap",
 	"Time": "Timer",
 	"Touch": "InputEventScreenTouch",
-	"Translation": "Translation",
-	"Tween": "Tween",
-	"UI": "Control",
 	"Utility": "Tools",
 	"Variables": "MemberProperty",
 	"Variables: Array": "Array",
@@ -877,9 +869,10 @@ func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> 
 	var group_item: TreeItem = _tree.create_item(root)
 	group_item.set_text(0, group_key)
 	# Every section shows its object/module icon next to its name (event-sheet users expect the
-	# icon everywhere): node-type sections use the class's editor icon, builtin vocabulary
-	# sections map through CATEGORY_EDITOR_ICONS. A pack class the editor theme doesn't know
-	# gets its icon later, from its first definition's own icon (see _rebuild_tree).
+	# icon everywhere): node-type sections use the class's editor icon, vocabulary sections resolve
+	# through category_icon_name, which DERIVES one from the category's name or its verbs' host
+	# rather than requiring the category to be listed anywhere. A pack class the editor theme
+	# doesn't know gets its icon later, from its first definition's own icon (see _rebuild_tree).
 	var header_icon: Texture2D = editor_icon(group_key) if is_node_type else category_header_icon(group_key)
 	if header_icon != null:
 		group_item.set_icon(0, header_icon)
@@ -891,22 +884,111 @@ func _make_group_item(root: TreeItem, group_key: String, is_node_type: bool) -> 
 
 ## The editor-theme icon for a builtin category header ("Math & Random" -> the
 ## RandomNumberGenerator icon). Null outside a live editor or for unmapped categories
-## (text-only header, exactly the pre-icon look).
-static func category_header_icon(group_key: String) -> Texture2D:
-	var icon_name: String = category_icon_name(group_key)
+## (text-only header, exactly the pre-icon look). `host_hint` is the category's own host class
+## when the caller knows it - a pack's definition carries one, and it lets a pack category
+## resolve an icon without ever being listed anywhere.
+static func category_header_icon(group_key: String, host_hint: String = "") -> Texture2D:
+	var icon_name: String = category_icon_name(group_key, host_hint)
 	return null if icon_name.is_empty() else editor_icon(icon_name)
 
 
-## Resolves a category to its EditorIcons name: an exact CATEGORY_EDITOR_ICONS entry wins,
-## else a "Parent: Sub" key inherits the parent's entry, else "". Pure + static so the
-## mapping is unit-testable without a display server.
-static func category_icon_name(group_key: String) -> String:
-	var icon_name: String = str(CATEGORY_EDITOR_ICONS.get(group_key, ""))
-	if icon_name.is_empty():
-		var parts: PackedStringArray = split_subcategory(group_key)
-		if not parts.is_empty():
-			icon_name = str(CATEGORY_EDITOR_ICONS.get(parts[0], ""))
-	return icon_name
+## Resolves a category to its EditorIcons name, DERIVING one wherever it can so that adding a
+## category to the vocabulary is not also a chore in this file. In order:
+##   1. an explicit CATEGORY_EDITOR_ICONS entry (a human choice, and the override),
+##   2. the category NAME read as a class, case-insensitively ("Raycast 2D" -> RayCast2D,
+##      "Tilemap" -> TileMap) - the name a category already has is usually the icon it wants,
+##   3. for a "Parent: Sub" key, the PARENT's explicit entry: a family whose icon someone chose
+##      deliberately keeps it across its sub-sections, rather than each sub drifting to its own
+##      derived host ("Nodes: Picking" stays on the Nodes icon, not Node2D),
+##   4. the host class its verbs actually operate on: the caller's `host_hint`, else the most
+##      specific host shared by the builtin ACEs in that category ("UI" -> Control),
+##   5. a "Parent: Sub" key inheriting whatever its parent DERIVES,
+##   6. "" - a text-only header, exactly the pre-icon look.
+## Pure + static so the mapping stays unit-testable without a display server.
+static func category_icon_name(group_key: String, host_hint: String = "") -> String:
+	var explicit: String = str(CATEGORY_EDITOR_ICONS.get(group_key, ""))
+	if not explicit.is_empty():
+		return explicit
+	var from_name: String = _class_named(group_key)
+	if not from_name.is_empty():
+		return from_name
+	var parts: PackedStringArray = split_subcategory(group_key)
+	if not parts.is_empty():
+		var parent_explicit: String = str(CATEGORY_EDITOR_ICONS.get(parts[0], ""))
+		if not parent_explicit.is_empty():
+			return parent_explicit
+	var from_hint: String = _class_named(host_hint)
+	if not from_hint.is_empty():
+		return from_hint
+	var derived: String = str(_category_host_classes().get(group_key, ""))
+	if not derived.is_empty():
+		return derived
+	if not parts.is_empty():
+		return category_icon_name(parts[0], host_hint)
+	return ""
+
+
+## The engine class a label names, ignoring case and spacing, or "" when it names none. Category
+## labels are written for humans ("Raycast 2D", "Tilemap") while classes are PascalCase with their
+## own capitalisation quirks (RayCast2D, TileMap), so an exact match would miss almost every one.
+static func _class_named(label: String) -> String:
+	var key: String = label.replace(" ", "").replace("&", "").replace("-", "").to_lower()
+	if key.is_empty():
+		return ""
+	return str(_class_names_by_lowercase().get(key, ""))
+
+
+## lowercase class name -> its exact ClassDB spelling. Built once: the class list is ~1000 entries
+## and this is consulted for every header drawn.
+static var _class_lookup: Dictionary = {}
+
+
+static func _class_names_by_lowercase() -> Dictionary:
+	if not _class_lookup.is_empty():
+		return _class_lookup
+	for class_id: String in ClassDB.get_class_list():
+		_class_lookup[class_id.to_lower()] = class_id
+	return _class_lookup
+
+
+## category -> the most specific host class its builtin verbs share, or "" when they are
+## host-agnostic (a "Math & Random" verb runs anywhere, so nothing is derivable and the explicit
+## table is the only answer). "Most specific" means the deepest in the inheritance chain that
+## still covers every hosted verb, so "Raycast 2D" lands on RayCast2D rather than Node2D even
+## though a few of its world-query verbs are plain Node2D.
+static var _category_hosts: Dictionary = {}
+
+
+static func _category_host_classes() -> Dictionary:
+	if not _category_hosts.is_empty():
+		return _category_hosts
+	var counts: Dictionary = {}
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		var host: String = str(descriptor.node_type).strip_edges()
+		if host.is_empty() or not ClassDB.class_exists(host):
+			continue
+		var category: String = str(descriptor.category)
+		if not counts.has(category):
+			counts[category] = {}
+		var per_category: Dictionary = counts[category]
+		per_category[host] = int(per_category.get(host, 0)) + 1
+	for category: String in counts:
+		_category_hosts[category] = _dominant_host(counts[category])
+	return _category_hosts
+
+
+## The host that best represents a category: the one used most, breaking ties toward the more
+## derived class (RayCast2D over Node2D) so the icon shows the specific thing the section is
+## about rather than the generic base every node shares.
+static func _dominant_host(host_counts: Dictionary) -> String:
+	var best: String = ""
+	var best_count: int = 0
+	for host: String in host_counts:
+		var count: int = int(host_counts[host])
+		if count > best_count or (count == best_count and ClassDB.is_parent_class(best, host)):
+			best = host
+			best_count = count
+	return best
 
 
 ## Resolves (creating as needed) the tree item a row hangs under. Categories using the

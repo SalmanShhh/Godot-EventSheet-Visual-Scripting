@@ -3495,7 +3495,9 @@ func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 		# Builtin rows: the ACE's module icon leads (Audio rows get the speaker, Math the die,
 		# ..., same map as the picker's section headers), so resolve's kind-dot fallback only
 		# shows where no module mapping exists. Headless keeps the old look (editor icons null).
-		icon = ACEPickerDialog.category_header_icon(definition.category)
+		# The definition's own host is passed along so a category nobody listed still resolves:
+		# an addon publishing "Turrets" on a Node2D gets the Node2D icon instead of a bare row.
+		icon = ACEPickerDialog.category_header_icon(definition.category, str(definition.node_type))
 	if icon == null:
 		icon = ACEPickerDialog.resolve_definition_icon(definition)
 	if icon == null and is_core:

@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Changed - category icons resolve themselves instead of being listed by hand
+
+- Adding a category to the vocabulary meant editing a 63-entry name-to-icon table in `ace_picker.gd`,
+  and forgetting to FAILED the suite - which is how the new `Overlap 3D` section announced itself.
+  `category_icon_name` now derives one:
+  - from the category NAME read as a class, case- and space-insensitively, so `Raycast 2D` finds
+    `RayCast2D` and `Tilemap` finds `TileMap` despite neither spelling matching;
+  - failing that, from the host class its verbs actually run on - the most specific one they share,
+    so a section lands on the thing it is about rather than the base every node inherits;
+  - failing that, from a host hint the caller passes, which is how an ADDON's own category resolves
+    without being listed anywhere: the row builder now hands over the definition's host.
+- The table stays, shrunk to 53 entries, but its job has changed: it is now an OVERRIDE list for
+  categories no derivation can reach (`Math & Random`, `General Actions`, `Helpers` - abstract
+  groupings whose verbs have no host) plus the handful where a human choice reads better than the
+  derived one. The ten entries derivation reproduced exactly were removed after diffing every
+  builtin category old-versus-new, rather than on assumption.
+- A `Parent: Sub` category still inherits its parent's explicit entry BEFORE deriving, so a family
+  whose icon someone chose deliberately keeps it across its sub-sections instead of each one
+  drifting to its own host. With nothing to go on, the header stays text-only - never a wrong guess.
+
 ### Added - every kind of raycast, in both dimensions (88 ACEs)
 
 - Godot casts rays four ways and a sheet could only reach a slice of one of them: a RayCast node could

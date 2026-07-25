@@ -67,15 +67,43 @@ static func run() -> bool:
 		var icon_name: String = ACEPickerDialog.category_icon_name(category)
 		ok = _check(ok, not icon_name.is_empty(), "builtin category \"%s\" maps to an editor icon" % category)
 
-	# ---- the mapping's own semantics: exact entry, parent inheritance, unmapped -> "" ----
+	# ---- the mapping's own semantics: explicit entry, derivation, inheritance, unknown -> "" ----
+	# 1. An explicit entry wins, and is how an abstract category (no class of that name, no host
+	#    node behind its verbs) gets an icon at all.
 	var math_icon: String = ACEPickerDialog.category_icon_name("Math & Random")
 	ok = _check(ok, math_icon == "RandomNumberGenerator", "Math & Random maps to RandomNumberGenerator (got %s)" % math_icon)
 	var array_icon: String = ACEPickerDialog.category_icon_name("Variables: Array")
 	ok = _check(ok, array_icon == "Array", "Variables: Array has its own entry (got %s)" % array_icon)
 	var dirs_icon: String = ACEPickerDialog.category_icon_name("Files: Directories")
 	ok = _check(ok, dirs_icon == "Folder", "Files: Directories has its own entry (got %s)" % dirs_icon)
+
+	# 2. DERIVED FROM THE NAME, case- and space-insensitively, so a category named after a class
+	#    needs no entry. These deliberately have none - if someone re-adds one, the derivation has
+	#    silently stopped being exercised.
+	var ray_icon: String = ACEPickerDialog.category_icon_name("Raycast 2D")
+	ok = _check(ok, ray_icon == "RayCast2D", "\"Raycast 2D\" derives RayCast2D from its name (got %s)" % ray_icon)
+	var tilemap_icon: String = ACEPickerDialog.category_icon_name("Tilemap")
+	ok = _check(ok, tilemap_icon == "TileMap", "\"Tilemap\" derives TileMap despite the capitalisation (got %s)" % tilemap_icon)
+	ok = _check(ok, not ACEPickerDialog.CATEGORY_EDITOR_ICONS.has("Raycast 2D"), "Raycast 2D is derived, not listed")
+	ok = _check(ok, not ACEPickerDialog.CATEGORY_EDITOR_ICONS.has("Tilemap"), "Tilemap is derived, not listed")
+
+	# 3. DERIVED FROM THE HOST its verbs run on, which is what rescues a category whose name is not
+	#    a class. "UI" is not a class; every UI verb hosts on a Control, so the Control icon it is.
+	var ui_icon: String = ACEPickerDialog.category_icon_name("UI")
+	ok = _check(ok, ui_icon == "Control", "\"UI\" derives Control from its verbs' host (got %s)" % ui_icon)
+	ok = _check(ok, not ACEPickerDialog.CATEGORY_EDITOR_ICONS.has("UI"), "UI is derived, not listed")
+	# A caller that knows the host passes it in, so an addon's own category resolves with no entry
+	# anywhere - the case that used to leave a pack section iconless.
+	var hinted: String = ACEPickerDialog.category_icon_name("Turrets", "Node2D")
+	ok = _check(ok, hinted == "Node2D", "an unlisted category resolves from the caller's host hint (got %s)" % hinted)
+
+	# 4. "Parent: Sub" inherits whatever the parent resolves to, derivation included.
 	var picking_icon: String = ACEPickerDialog.category_icon_name("Nodes: Picking")
 	ok = _check(ok, picking_icon == "Node", "Nodes: Picking inherits the Nodes entry (got %s)" % picking_icon)
+	var sub_derived: String = ACEPickerDialog.category_icon_name("Tilemap: Layers")
+	ok = _check(ok, sub_derived == "TileMap", "a sub-category inherits a DERIVED parent icon too (got %s)" % sub_derived)
+
+	# 5. Nothing to go on still means no icon - a text-only header, never a wrong guess.
 	var unknown_icon: String = ACEPickerDialog.category_icon_name("Not A Real Category")
 	ok = _check(ok, unknown_icon == "", "an unknown category resolves to empty (got %s)" % unknown_icon)
 
