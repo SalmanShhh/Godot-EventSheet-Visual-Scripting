@@ -45,6 +45,28 @@ static func run() -> bool:
 	all_passed = _check("PlaySoundAt frees a failed-stream player",
 		_tmpl(by_id, "PlaySoundAt").contains("if __sfx_") and _tmpl(by_id, "PlaySoundAt").contains("== null"), true) and all_passed
 
+	# The "On node" target every node-scoped ACE gets automatically is applied by PREFIXING each
+	# template line with `{target.}`. That is only valid when the line begins with a member operation.
+	# A condition reading `not thing.is_empty()` starts with a letter, so the identifier check waved it
+	# through - and a set target then emitted `$Node.not thing.is_empty()`, which does not parse. It
+	# never showed up in the compile gate, because that leaves the target BLANK and the prefix drops to
+	# nothing. Assert on the shipped templates directly: nothing carrying an On-node target may lead
+	# with a keyword that cannot follow a dot.
+	var unprefixable: Array[String] = []
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		var template: String = str(descriptor.codegen_template)
+		if not template.contains("{target.}"):
+			continue
+		for line: String in template.split("\n"):
+			var marker: int = line.find("{target.}")
+			if marker == -1:
+				continue
+			var head: String = line.substr(marker + 9).split("(")[0].split(" ")[0].split(".")[0].strip_edges()
+			if head in ["not", "and", "or", "in", "is", "true", "false", "null", "self", "super"]:
+				unprefixable.append("%s (%s)" % [str(descriptor.ace_id), head])
+	all_passed = _check("no auto-targeted template leads with a keyword a node prefix cannot precede",
+		unprefixable, [] as Array[String]) and all_passed
+
 	return all_passed
 
 

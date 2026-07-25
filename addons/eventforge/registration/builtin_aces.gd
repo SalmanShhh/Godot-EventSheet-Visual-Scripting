@@ -39,6 +39,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 ## a member operation, so it can never be safely prefixed with another node.
 const _STATEMENT_KEYWORDS: PackedStringArray = ["if", "elif", "else", "for", "while", "var", "const", "return", "match", "await", "pass", "break", "continue"]
 
+## Keywords that can lead an EXPRESSION but still cannot follow a `<node>.` prefix. A condition
+## reading `not thing.is_empty()` is a perfectly good template, and it starts with a letter, so the
+## identifier check waves it through - but prefixing it yields `$Node.not thing.is_empty()`, which
+## does not parse. These ACEs simply do not get an "On node" target; there is nothing to retarget,
+## since the node is already named inside the expression (or is not involved at all).
+const _EXPRESSION_KEYWORDS: PackedStringArray = ["not", "and", "or", "in", "is", "true", "false", "null", "self", "super"]
+
 
 ## In place: if `descriptor` is a host-only node-scoped ACE whose template is a simple member operation,
 ## prepend the optional-prefix `{target.}` to each line and append an optional "On node" target param.
@@ -83,7 +90,7 @@ static func _is_target_prefixable(template: String) -> bool:
 		if not (first == "_" or first.to_lower() != first.to_upper()):
 			return false  # must start with an identifier (letter or underscore)
 		var head_word: String = trimmed.split("(")[0].split(" ")[0].split(".")[0].split("=")[0].strip_edges()
-		if _STATEMENT_KEYWORDS.has(head_word):
+		if _STATEMENT_KEYWORDS.has(head_word) or _EXPRESSION_KEYWORDS.has(head_word):
 			return false
 		if not _assignment_rhs_is_target_safe(trimmed):
 			return false

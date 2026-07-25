@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed - an "On node" target could emit GDScript that does not parse
+
+- Every node-scoped ACE automatically gains an optional "On node" target, applied by prefixing each
+  template line with `{target.}`. That is only valid when the line begins with a member operation,
+  and the guard only rejected lines leading with a STATEMENT keyword (`if`, `for`, `return`, ...).
+  A condition template reading `not thing.is_empty()` begins with a letter, so it was waved through -
+  and setting its target emitted `$Node.not thing.is_empty()`, which does not parse.
+- Five shipped ACEs were affected: `WorldRaycastHit2D` and `WorldRaycastHit3D` (both long-standing),
+  plus `RayResultHit2D`, `RayResultHit3D` and `MouseRayHits3D` from this release. The compile gate
+  could not see it, because it leaves the target BLANK - and a blank target drops the prefix, which
+  is exactly the case that works.
+- The guard now also rejects the keywords that can lead an EXPRESSION without being able to follow a
+  dot (`not`, `and`, `or`, `in`, `is`, `true`, `false`, `null`, `self`, `super`). Those five ACEs
+  simply stop offering an On-node target, which is honest: the node they read is already named inside
+  the expression. Output for a blank target is byte-identical, so nothing regenerates (drift=0).
+- `ace_safety_test` now asserts no auto-targeted template leads with such a keyword.
+
 ### Changed - category icons resolve themselves instead of being listed by hand
 
 - Adding a category to the vocabulary meant editing a 63-entry name-to-icon table in `ace_picker.gd`,

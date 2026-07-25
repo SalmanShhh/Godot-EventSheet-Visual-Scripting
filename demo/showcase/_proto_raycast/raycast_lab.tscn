@@ -1,0 +1,200 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/_proto_raycast/raycast_lab.gd" id="1_2ugg0"]
+[ext_resource type="Script" path="res://eventsheet_addons/drawing_canvas/drawing_canvas_behavior.gd" id="2_g5m1j"]
+[ext_resource type="Script" path="res://eventsheet_addons/eight_direction/eight_direction_movement_behavior.gd" id="3_6c4nx"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_au4m5"]
+size = Vector2(420, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_58uo5"]
+size = Vector2(28, 240)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_368n8"]
+size = Vector2(28, 260)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8aytl"]
+size = Vector2(360, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gc3ft"]
+size = Vector2(44, 44)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rj7fa"]
+size = Vector2(44, 44)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tbobe"]
+size = Vector2(44, 44)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2hexg"]
+size = Vector2(44, 44)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_0sas2"]
+radius = 16.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0847a"]
+size = Vector2(22, 28)
+
+[node name="RaycastLab" type="Node2D"]
+script = ExtResource("1_2ugg0")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+offset_right = 1152.0
+offset_bottom = 648.0
+color = Color(0.075, 0.085, 0.11, 1)
+
+[node name="Wall0" type="StaticBody2D" parent="."]
+position = Vector2(576, 150)
+
+[node name="Shape" type="CollisionShape2D" parent="Wall0"]
+shape = SubResource("RectangleShape2D_au4m5")
+
+[node name="Visual" type="ColorRect" parent="Wall0"]
+offset_left = -210.0
+offset_top = -14.0
+offset_right = 210.0
+offset_bottom = 14.0
+color = Color(0.36, 0.4, 0.5, 1)
+
+[node name="Wall1" type="StaticBody2D" parent="."]
+position = Vector2(352, 330)
+
+[node name="Shape" type="CollisionShape2D" parent="Wall1"]
+shape = SubResource("RectangleShape2D_58uo5")
+
+[node name="Visual" type="ColorRect" parent="Wall1"]
+offset_left = -14.0
+offset_top = -120.0
+offset_right = 14.0
+offset_bottom = 120.0
+color = Color(0.36, 0.4, 0.5, 1)
+
+[node name="Wall2" type="StaticBody2D" parent="."]
+position = Vector2(830, 320)
+
+[node name="Shape" type="CollisionShape2D" parent="Wall2"]
+shape = SubResource("RectangleShape2D_368n8")
+
+[node name="Visual" type="ColorRect" parent="Wall2"]
+offset_left = -14.0
+offset_top = -130.0
+offset_right = 14.0
+offset_bottom = 130.0
+color = Color(0.36, 0.4, 0.5, 1)
+
+[node name="Wall3" type="StaticBody2D" parent="."]
+position = Vector2(600, 520)
+
+[node name="Shape" type="CollisionShape2D" parent="Wall3"]
+shape = SubResource("RectangleShape2D_8aytl")
+
+[node name="Visual" type="ColorRect" parent="Wall3"]
+offset_left = -180.0
+offset_top = -14.0
+offset_right = 180.0
+offset_bottom = 14.0
+color = Color(0.36, 0.4, 0.5, 1)
+
+[node name="Target0" type="StaticBody2D" parent="." groups=["targets"]]
+position = Vector2(520, 250)
+
+[node name="Shape" type="CollisionShape2D" parent="Target0"]
+shape = SubResource("RectangleShape2D_gc3ft")
+
+[node name="Visual" type="ColorRect" parent="Target0"]
+offset_left = -22.0
+offset_top = -22.0
+offset_right = 22.0
+offset_bottom = 22.0
+color = Color(0.85, 0.55, 0.22, 1)
+
+[node name="Target1" type="StaticBody2D" parent="." groups=["targets"]]
+position = Vector2(700, 400)
+
+[node name="Shape" type="CollisionShape2D" parent="Target1"]
+shape = SubResource("RectangleShape2D_rj7fa")
+
+[node name="Visual" type="ColorRect" parent="Target1"]
+offset_left = -22.0
+offset_top = -22.0
+offset_right = 22.0
+offset_bottom = 22.0
+color = Color(0.85, 0.55, 0.22, 1)
+
+[node name="Target2" type="StaticBody2D" parent="." groups=["targets"]]
+position = Vector2(960, 480)
+
+[node name="Shape" type="CollisionShape2D" parent="Target2"]
+shape = SubResource("RectangleShape2D_tbobe")
+
+[node name="Visual" type="ColorRect" parent="Target2"]
+offset_left = -22.0
+offset_top = -22.0
+offset_right = 22.0
+offset_bottom = 22.0
+color = Color(0.85, 0.55, 0.22, 1)
+
+[node name="Target3" type="StaticBody2D" parent="." groups=["targets"]]
+position = Vector2(250, 470)
+
+[node name="Shape" type="CollisionShape2D" parent="Target3"]
+shape = SubResource("RectangleShape2D_2hexg")
+
+[node name="Visual" type="ColorRect" parent="Target3"]
+offset_left = -22.0
+offset_top = -22.0
+offset_right = 22.0
+offset_bottom = 22.0
+color = Color(0.85, 0.55, 0.22, 1)
+
+[node name="InkLayer" type="Node2D" parent="."]
+position = Vector2(576, 324)
+
+[node name="Ink" type="Node" parent="InkLayer"]
+script = ExtResource("2_g5m1j")
+canvas_width = 1152
+canvas_height = 648
+auto_clear = true
+
+[node name="Gate" type="ShapeCast2D" parent="."]
+position = Vector2(120, 600)
+shape = SubResource("CircleShape2D_0sas2")
+target_position = Vector2(400, 0)
+collision_mask = 2
+
+[node name="Player" type="CharacterBody2D" parent="."]
+position = Vector2(250, 300)
+collision_layer = 2
+
+[node name="Collider" type="CollisionShape2D" parent="Player"]
+shape = SubResource("RectangleShape2D_0847a")
+
+[node name="Visual" type="ColorRect" parent="Player"]
+offset_left = -11.0
+offset_top = -14.0
+offset_right = 11.0
+offset_bottom = 14.0
+color = Color(0.35, 0.65, 1, 1)
+
+[node name="Movement" type="Node" parent="Player"]
+script = ExtResource("3_6c4nx")
+
+[node name="Radar" type="RayCast2D" parent="Player"]
+target_position = Vector2(0, -230)
+
+[node name="HudLayer" type="CanvasLayer" parent="."]
+
+[node name="Hud" type="Label" parent="HudLayer"]
+offset_left = 24.0
+offset_top = 14.0
+offset_right = 24.0
+offset_bottom = 14.0
+theme_override_font_sizes/font_size = 18
+text = "Arrows / WASD move - the mouse aims everything that points at the cursor"
+
+[node name="Readout" type="Label" parent="HudLayer"]
+offset_left = 24.0
+offset_top = 44.0
+offset_right = 24.0
+offset_bottom = 44.0
+theme_override_font_sizes/font_size = 16
+text = "under cursor 0"
