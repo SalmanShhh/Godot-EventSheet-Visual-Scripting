@@ -120,6 +120,32 @@ All ACEs live in the **Bullet 3D** category and target the `Bullet3DBehavior` be
 | `speed` | float | `10.0` |
 | `gravity` | float | `0.0` |
 | `gravity_direction` | Vector3 | `(0, -1, 0)` |
+| `enabled_movement` | bool | `true` |
+| `stepping` | bool | `false` |
+| `step_mask` | int | `1` |
+| `step_hits_areas` | bool | `false` |
+| `stop_on_step_hit` | bool | `true` |
+
+### Stepping: stopping a fast bullet passing through geometry
+
+A bullet moves by jumping its whole frame of travel at once, so at high speed a thin wall can sit
+**entirely between** where it was and where it lands - never touched on any frame, and therefore never
+detected. That is tunnelling.
+
+Tick **Stepping** and the bullet sweeps its path each frame instead: if anything on `step_mask` lies
+between the two points it stops at the exact contact point and fires **On Bullet Hit** with what it
+struck, the point, and the surface normal.
+
+```
+On Bullet Hit  (collider, point, normal)
+  -> Spawn  Impact  at (point)
+  -> Destroy  Self
+```
+
+Off by default, so existing projectiles are unchanged. `step_hits_areas` brings Area3D nodes into the
+sweep (ignored otherwise), and turning off `stop_on_step_hit` keeps the bullet flying while still
+reporting what it went through - a piercing shot. The cost is one ray per bullet per frame, so leave
+it off for slow projectiles.
 
 Note: the behavior also tracks how far it has flown internally, but there is no expression to read that distance. For range-based despawn, measure the node's position against its start yourself.
 

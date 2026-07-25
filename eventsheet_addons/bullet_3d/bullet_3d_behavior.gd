@@ -14,12 +14,26 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Bullet3DBehavior behavior requires a Node3D parent.")
 
+## @ace_trigger
+## @ace_name("On Bullet Hit")
+signal on_bullet_hit(collider: Object, point: Vector3, normal: Vector3)
+
 var distance_travelled: float = 0.0
+## When off, the bullet stops moving. Parity with the 2D pack, and what Stepping switches off when it parks the bullet on a hit.
+@export var enabled_movement: bool = true
 ## Downward acceleration pulling the bullet's vertical velocity down each second.
 @export var gravity: float = 0.0
 var launched: bool = false
 ## Units per second the bullet travels along the host's forward (-Z).
 @export var speed: float = 10.0
+## Also stop the sweep on Area3D nodes, which it ignores by default.
+@export var step_hits_areas: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Sweep the path each frame instead of jumping along it, so a fast bullet cannot pass through thin geometry between two frames.
+@export var stepping: bool = false
+## Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit.
+@export var stop_on_step_hit: bool = true
 var vel_x: float = 0.0
 var vel_y: float = 0.0
 var vel_z: float = 0.0
@@ -30,7 +44,7 @@ var vel_z: float = 0.0
 @export var gravity_direction: Vector3 = Vector3.DOWN
 
 func _process(delta: float) -> void:
-	if host == null:
+	if host == null or not enabled_movement:
 		return
 	if not launched:
 		launch_forward()
@@ -41,6 +55,21 @@ func _process(delta: float) -> void:
 	vel_y += gravity_pull.y
 	vel_z += gravity_pull.z
 	var motion := Vector3(vel_x, vel_y, vel_z) * delta
+	# STEPPING: a fast bullet covers more ground per frame than a thin wall is deep, so a plain
+	# teleport can land on the far side having touched nothing. Sweeping the frame's motion finds
+	# what the jump skipped. Off by default - the two lines below are the original path.
+	if stepping and motion != Vector3.ZERO and host.is_inside_tree():
+		var step_from := host.global_position
+		var step_query := PhysicsRayQueryParameters3D.create(step_from, step_from + motion, step_mask, [])
+		step_query.collide_with_areas = step_hits_areas
+		var step_hit := host.get_world_3d().direct_space_state.intersect_ray(step_query)
+		if not step_hit.is_empty():
+			host.global_position = step_hit.get("position", step_from)
+			distance_travelled += step_from.distance_to(host.global_position)
+			if stop_on_step_hit:
+				enabled_movement = false
+			on_bullet_hit.emit(step_hit.get("collider"), step_hit.get("position", step_from), step_hit.get("normal", Vector3.ZERO))
+			return
 	host.position += motion
 	distance_travelled += motion.length()
 

@@ -19,6 +19,10 @@ static func build() -> bool:
 		"gravity": {"type": "float", "default": 0.0, "exported": true, "description": "Downward pull added to vertical speed each second."},
 		"gravity_angle": {"type": "float", "default": 90.0, "exported": true, "description": "Direction gravity pulls, in degrees (90 = down, 270 = up, 0 = right) - arcs bend that way instead of downward.", "attributes": {"range": {"min": "0", "max": "360", "step": "1"}}},
 		"align_rotation": {"type": "bool", "default": true, "exported": true, "description": "Rotates the host to face its direction of motion."},
+		"stepping": {"type": "bool", "default": false, "exported": true, "description": "Sweep the path each frame instead of jumping along it, so a fast bullet cannot pass through a thin wall between two frames."},
+		"step_mask": {"type": "int", "default": 1, "exported": true, "description": "Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5."},
+		"step_hits_areas": {"type": "bool", "default": false, "exported": true, "description": "Also stop the sweep on Area2D nodes, which it ignores by default."},
+		"stop_on_step_hit": {"type": "bool", "default": true, "exported": true, "description": "Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit."},
 		"enabled_movement": {"type": "bool", "default": true, "exported": true, "description": "When off, the bullet stops moving."},
 		"distance_travelled": {"type": "float", "default": 0.0, "exported": false},
 		"vel_x": {"type": "float", "default": 0.0, "exported": false},
@@ -48,6 +52,23 @@ static func build() -> bool:
 		"vel_x += gravity_pull.x",
 		"vel_y += gravity_pull.y",
 		"var motion := Vector2(vel_x, vel_y) * delta",
+		"# STEPPING: at 3000 px/s a bullet covers 50px in a frame, so a 20px wall can sit entirely",
+		"# between where it was and where it lands and never be touched. Sweeping the frame's motion",
+		"# finds what a teleport skipped. Off by default - the two lines below are the original path.",
+		"if stepping and motion != Vector2.ZERO and host.is_inside_tree():",
+		"	var step_from := host.global_position",
+		"	var step_query := PhysicsRayQueryParameters2D.create(step_from, step_from + motion, step_mask, [])",
+		"	step_query.collide_with_areas = step_hits_areas",
+		"	var step_hit := host.get_world_2d().direct_space_state.intersect_ray(step_query)",
+		"	if not step_hit.is_empty():",
+		"		host.global_position = step_hit.get(\"position\", step_from)",
+		"		distance_travelled += step_from.distance_to(host.global_position)",
+		"		if align_rotation:",
+		"			host.rotation = motion.angle()",
+		"		if stop_on_step_hit:",
+		"			enabled_movement = false",
+		"		on_bullet_hit.emit(step_hit.get(\"collider\"), step_hit.get(\"position\", step_from), step_hit.get(\"normal\", Vector2.ZERO))",
+		"		return",
 		"host.position += motion",
 		"distance_travelled += motion.length()",
 		"if align_rotation and motion != Vector2.ZERO:",
@@ -55,6 +76,18 @@ static func build() -> bool:
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
+
+	# The trigger Stepping fires. Declared with its arguments so a sheet row receives what was hit,
+	# where, and which way that surface faces - everything an impact effect needs.
+	var signals_block: RawCodeRow = RawCodeRow.new()
+	signals_block.code = "
+".join(PackedStringArray([
+		"## @ace_trigger",
+		"## @ace_name(\"On Bullet Hit\")",
+		"## @ace_description(\"Fires when Stepping catches something in the bullet's path this frame. Hands back what was hit, the exact point, and the surface normal.\")",
+		"signal on_bullet_hit(collider: Object, point: Vector2, normal: Vector2)"
+	]))
+	sheet.events.append(signals_block)
 
 	var set_bullet_speed_fn: EventFunction = EventFunction.new()
 	set_bullet_speed_fn.function_name = "set_bullet_speed"

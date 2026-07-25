@@ -14,6 +14,10 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("BulletBehavior behavior requires a Node2D parent.")
 
+## @ace_trigger
+## @ace_name("On Bullet Hit")
+signal on_bullet_hit(collider: Object, point: Vector2, normal: Vector2)
+
 ## Change in speed per second along the direction of motion.
 @export var acceleration: float = 0.0
 ## Rotates the host to face its direction of motion.
@@ -28,6 +32,14 @@ var distance_travelled: float = 0.0
 var launched: bool = false
 ## Travel speed in pixels per second.
 @export var speed: float = 300.0
+## Also stop the sweep on Area2D nodes, which it ignores by default.
+@export var step_hits_areas: bool = false
+## Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5.
+@export var step_mask: int = 1
+## Sweep the path each frame instead of jumping along it, so a fast bullet cannot pass through a thin wall between two frames.
+@export var stepping: bool = false
+## Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit.
+@export var stop_on_step_hit: bool = true
 var vel_x: float = 0.0
 var vel_y: float = 0.0
 
@@ -47,6 +59,23 @@ func _process(delta: float) -> void:
 	vel_x += gravity_pull.x
 	vel_y += gravity_pull.y
 	var motion := Vector2(vel_x, vel_y) * delta
+	# STEPPING: at 3000 px/s a bullet covers 50px in a frame, so a 20px wall can sit entirely
+	# between where it was and where it lands and never be touched. Sweeping the frame's motion
+	# finds what a teleport skipped. Off by default - the two lines below are the original path.
+	if stepping and motion != Vector2.ZERO and host.is_inside_tree():
+		var step_from := host.global_position
+		var step_query := PhysicsRayQueryParameters2D.create(step_from, step_from + motion, step_mask, [])
+		step_query.collide_with_areas = step_hits_areas
+		var step_hit := host.get_world_2d().direct_space_state.intersect_ray(step_query)
+		if not step_hit.is_empty():
+			host.global_position = step_hit.get("position", step_from)
+			distance_travelled += step_from.distance_to(host.global_position)
+			if align_rotation:
+				host.rotation = motion.angle()
+			if stop_on_step_hit:
+				enabled_movement = false
+			on_bullet_hit.emit(step_hit.get("collider"), step_hit.get("position", step_from), step_hit.get("normal", Vector2.ZERO))
+			return
 	host.position += motion
 	distance_travelled += motion.length()
 	if align_rotation and motion != Vector2.ZERO:

@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added - Stepping on the Bullet packs (anti-tunnelling)
+
+- A bullet moves by jumping its whole frame of travel at once. At 3000 px/s that is ~50 pixels a
+  frame, so a 20-pixel wall can sit ENTIRELY between where it was and where it lands: never inside
+  the wall on any frame, so nothing ever detects it. That is why fast projectiles fly through solid
+  level geometry.
+- **Stepping** (Bullet and Bullet 3D) sweeps the frame's motion instead of teleporting along it. If
+  anything on `step_mask` lies between the two points, the bullet stops at the exact contact point
+  and fires the new **On Bullet Hit** trigger with what it struck, the point, and the surface normal -
+  everything an impact effect needs. `step_hits_areas` brings Area nodes into the sweep (ignored
+  otherwise), and turning off `stop_on_step_hit` keeps the bullet flying while still reporting what it
+  passed through, which is a piercing shot.
+- **Off by default**, and the non-stepping path is the original two lines untouched, so every existing
+  projectile behaves exactly as before. The cost is one ray per bullet per frame, so it is a knob, not
+  a default: leave it off for slow drifting things.
+- Bullet 3D gained `enabled_movement` in the process - it had no way to stop at all, unlike its 2D
+  twin, and Stepping needs something to switch off when it parks a bullet.
+- Proved by a runtime smoke rather than inspection: two bullets at 6000 px/s against a 10px wall, one
+  stepping and one not. Stepping off ends at y=2421 (straight through); stepping on stops at y=295,
+  exactly the wall's near face, with On Bullet Hit reporting the collider, point and normal.
+
 ### Fixed - full docs freshness sweep (48 stale claims)
 
 - Every doc audited against the live repo. Dead paths and broken examples: `demo/README` pointed at

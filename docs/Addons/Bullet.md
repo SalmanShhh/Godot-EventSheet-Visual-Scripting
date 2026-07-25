@@ -141,6 +141,38 @@ Bullet fires no triggers - it only moves the node. React to a projectile with yo
 | `gravity_angle` | float | `90.0` | 0-360 degrees (90 = down) |
 | `align_rotation` | bool | `true` | on / off |
 | `enabled_movement` | bool | `true` | on / off |
+| `stepping` | bool | `false` | on / off |
+| `step_mask` | int | `1` | collision layers as a bitmask |
+| `step_hits_areas` | bool | `false` | on / off |
+| `stop_on_step_hit` | bool | `true` | on / off |
+
+---
+
+## Stepping: stopping a fast bullet passing through walls
+
+A bullet moves by jumping its whole frame of travel at once. At 3000 px/s that is about 50 pixels per
+frame, so a 20-pixel wall can sit **entirely between** where the bullet was and where it lands - it is
+never inside the wall on any frame, so nothing ever detects it. This is tunnelling, and it is why a
+fast projectile appears to fly through solid level geometry.
+
+Tick **Stepping** and the bullet sweeps its path each frame instead of teleporting along it: if
+anything on `step_mask` lies between the two points, it stops at the exact contact point and fires
+**On Bullet Hit** with what it struck, where, and the surface normal.
+
+```
+On Bullet Hit  (collider, point, normal)
+  -> Spawn  Impact  at (point)
+  -> Set rotation  (normal).angle()
+  -> Destroy  Self
+```
+
+- **Off by default.** Existing projectiles behave exactly as before until you tick it.
+- **`step_mask`** decides what counts as solid. Layer 1 by default; areas are ignored unless you tick
+  **`step_hits_areas`**.
+- **`stop_on_step_hit`** parks the bullet at the contact point. Turn it off to keep flying and just
+  report what it passed through - useful for a piercing shot that damages everything on its line.
+- Slow projectiles do not need it. The cost is one ray per bullet per frame, so leave it off for a
+  hundred drifting bubbles and on for the hitscan-fast ones.
 
 ---
 

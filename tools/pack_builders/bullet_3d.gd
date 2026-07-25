@@ -16,11 +16,16 @@ static func build() -> bool:
 	sheet.variables = {
 		"speed": {"type": "float", "default": 10.0, "exported": true, "description": "Units per second the bullet travels along the host's forward (-Z)."},
 		"gravity": {"type": "float", "default": 0.0, "exported": true, "description": "Downward acceleration pulling the bullet's vertical velocity down each second."},
+		"stepping": {"type": "bool", "default": false, "exported": true, "description": "Sweep the path each frame instead of jumping along it, so a fast bullet cannot pass through thin geometry between two frames."},
+		"step_mask": {"type": "int", "default": 1, "exported": true, "description": "Collision layers the swept path tests against. Each layer is a bit, so layers 1 and 3 are 1 + 4 = 5."},
+		"step_hits_areas": {"type": "bool", "default": false, "exported": true, "description": "Also stop the sweep on Area3D nodes, which it ignores by default."},
+		"stop_on_step_hit": {"type": "bool", "default": true, "exported": true, "description": "Park the bullet at the point it struck and stop it. Turn off to keep flying and just report the hit."},
 		"distance_travelled": {"type": "float", "default": 0.0, "exported": false},
 		"vel_x": {"type": "float", "default": 0.0, "exported": false},
 		"vel_y": {"type": "float", "default": 0.0, "exported": false},
 		"vel_z": {"type": "float", "default": 0.0, "exported": false},
-		"launched": {"type": "bool", "default": false, "exported": false}
+		"launched": {"type": "bool", "default": false, "exported": false},
+		"enabled_movement": {"type": "bool", "default": true, "exported": true, "description": "When off, the bullet stops moving. Parity with the 2D pack, and what Stepping switches off when it parks the bullet on a hit."}
 	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Bullet 3D behavior (event-sheet-style): launches along the host's forward (-Z) with speed and gravity; tracks distance travelled."
@@ -38,7 +43,7 @@ static func build() -> bool:
 	tick.trigger_id = "OnProcess"
 	var tick_body: RawCodeRow = RawCodeRow.new()
 	tick_body.code = "\n".join(PackedStringArray([
-		"if host == null:",
+		"if host == null or not enabled_movement:",
 		"\treturn",
 		"if not launched:",
 		"\tlaunch_forward()",
@@ -49,11 +54,37 @@ static func build() -> bool:
 		"vel_y += gravity_pull.y",
 		"vel_z += gravity_pull.z",
 		"var motion := Vector3(vel_x, vel_y, vel_z) * delta",
+		"# STEPPING: a fast bullet covers more ground per frame than a thin wall is deep, so a plain",
+		"# teleport can land on the far side having touched nothing. Sweeping the frame's motion finds",
+		"# what the jump skipped. Off by default - the two lines below are the original path.",
+		"if stepping and motion != Vector3.ZERO and host.is_inside_tree():",
+		"\tvar step_from := host.global_position",
+		"\tvar step_query := PhysicsRayQueryParameters3D.create(step_from, step_from + motion, step_mask, [])",
+		"\tstep_query.collide_with_areas = step_hits_areas",
+		"\tvar step_hit := host.get_world_3d().direct_space_state.intersect_ray(step_query)",
+		"\tif not step_hit.is_empty():",
+		"\t\thost.global_position = step_hit.get(\"position\", step_from)",
+		"\t\tdistance_travelled += step_from.distance_to(host.global_position)",
+		"\t\tif stop_on_step_hit:",
+		"\t\t\tenabled_movement = false",
+		"\t\ton_bullet_hit.emit(step_hit.get(\"collider\"), step_hit.get(\"position\", step_from), step_hit.get(\"normal\", Vector3.ZERO))",
+		"\t\treturn",
 		"host.position += motion",
 		"distance_travelled += motion.length()"
 	]))
 	tick.actions.append(tick_body)
 	sheet.events.append(tick)
+
+	# The trigger Stepping fires, declared with its arguments so a sheet row receives what was hit,
+	# where, and which way that surface faces - everything an impact effect needs.
+	var signals_block: RawCodeRow = RawCodeRow.new()
+	signals_block.code = "\n".join(PackedStringArray([
+		"## @ace_trigger",
+		"## @ace_name(\"On Bullet Hit\")",
+		"## @ace_description(\"Fires when Stepping catches something in the bullet's path this frame. Hands back what was hit, the exact point, and the surface normal.\")",
+		"signal on_bullet_hit(collider: Object, point: Vector3, normal: Vector3)"
+	]))
+	sheet.events.append(signals_block)
 
 	var launch_forward_fn: EventFunction = EventFunction.new()
 	launch_forward_fn.function_name = "launch_forward"
