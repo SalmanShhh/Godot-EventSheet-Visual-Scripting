@@ -79,15 +79,15 @@
 - New builtin ACEs under **Variables: Array** (module `array_functional_aces.gd`), filling the gaps in the
   base Array set:
   - **Filter / Map / Reduce** (expressions) and **Any Match / All Match** (conditions) wrap Godot's
-    higher-order `Array.filter` / `map` / `reduce` / `any` / `all`. The author writes only the body through
-    the `ƒx` field and the emitted GDScript stays plain and parity-safe - e.g.
-    `scores.filter(func(x): return x > 0)`. The element is named by an **Element name** field (default
-    `x`, plus **Accumulator name** defaulting to `acc` on Reduce) rather than baked into the template: a
-    baked name would silently shadow a sheet variable of the same name, and GDScript issues no warning for
-    that, so the row would compile clean and quietly compute the wrong answer.
+	higher-order `Array.filter` / `map` / `reduce` / `any` / `all`. The author writes only the body through
+	the `ƒx` field and the emitted GDScript stays plain and parity-safe - e.g.
+	`scores.filter(func(x): return x > 0)`. The element is named by an **Element name** field (default
+	`x`, plus **Accumulator name** defaulting to `acc` on Reduce) rather than baked into the template: a
+	baked name would silently shadow a sheet variable of the same name, and GDScript issues no warning for
+	that, so the row would compile clean and quietly compute the wrong answer.
   - **Is Typed** (condition), **Assign (Type-Converting)** (action, `Array.assign` - the type-safe way to
-    fill an `Array[int]`/`Array[String]` from another array), and **Element Type** / **Element Class**
-    (expressions) for GDScript typed arrays.
+	fill an `Array[int]`/`Array[String]` from another array), and **Element Type** / **Element Class**
+	(expressions) for GDScript typed arrays.
 - The array operand uses the `variable_reference:Array` hint, so its dropdown offers Array-typed sheet
   variables (a typed `Array[int]` qualifies too). Suite-covered: a new `array_functional_aces_test.gd`
   proves each shipped template, run through the real codegen, behaves correctly, and the whole set passes
@@ -106,6 +106,35 @@
   to 50, typed containers are now listed as readable at runtime, and higher-order list functions have
   their own row. The nine new ACE ids are pinned in `gdscript_basics_coverage_test.gd`, so the receipt
   cannot silently regress.
+
+### Added - see what one of your own scripts will publish, before you register it
+
+- Pointing the picker at your own system (`res://systems/wave_manager.gd`) was an act of faith: you
+  registered it and found out afterwards what joined the vocabulary. **`EventSheetProviderPreview.scan()`**
+  answers it first - for any script path it reports every verb the script will publish (kind, picker label,
+  parameters, and the exact code that verb emits) plus plain-language warnings about what will disappoint.
+  It runs the SAME generator call the registry makes, so the preview cannot drift from what actually
+  ships, and it is a pure function over a path: it reads the file, never writes it, and never touches the
+  sheet or the registry.
+- The warnings are the part that stops a disappointing import, each phrased as the fix:
+  - an untyped `func is_ready():` publishes as an **Action**, not a Condition, and its parameters lose
+    their types - so the scan names those methods and says to add `-> bool` / `-> float`;
+  - no `class_name` means the provider id comes from the file name (and it says which name);
+  - more than 25 verbs from one script suggests marking the internal ones `## @ace_hidden`;
+  - nothing published explains what does qualify (own signals, `@export` properties, public methods);
+  - a Node script's verbs target a node in the scene, so its rows need that node present.
+- Groundwork for the ACE wizard (`docs/internal/SPEC-ace-wizard.md`): this is Phase 1, deliberately
+  read-only, so the preview model is proven before anything writes annotations into a user's file.
+
+### Fixed - a script with no class_name published an unusable verb
+
+- A non-Node provider without a `class_name` fell back to a provider id built with `capitalize()`, so
+  `score_keeper.gd` became `"Score Keeper"` - **with a space**. That id is interpolated into a GDScript
+  identifier for owned-instance providers, emitting `__eventsheet_provider_Score Keeper.high_score = 1`,
+  which the compiler's declaration scan then read as `__eventsheet_provider_Score` and declared
+  `Score.new()`. The fallback now pascal-cases, which also makes it agree with the Node path that already
+  did. The autoload mirror was updated in lockstep - its own comment warns that the two must match or
+  autoload trigger baking silently stops.
 
 ### Fixed - a reflected property ACE can no longer masquerade as an authored verb
 
@@ -171,8 +200,8 @@
   disagreed with the loader. All are fixed, and the loader itself is unchanged in the cases that already
   worked:
   - **A malformed grid read as clean.** A grid that is present but is not a list of rows (a JSON object
-    where an array belongs) loads as *nothing*, yet validation reported no problem - so a book whose
-    content silently vanished looked healthy. Both validators now report the grid's shape (and a stray
+	where an array belongs) loads as *nothing*, yet validation reported no problem - so a book whose
+	content silently vanished looked healthy. Both validators now report the grid's shape (and a stray
     non-row inside an otherwise valid grid).
   - **Additive loads reported false problems.** The loader is additive, so a row may reference a storylet
     registered earlier (by a previous load or a Define Storylet action). Validation only knew the ids
