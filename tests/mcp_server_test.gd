@@ -105,7 +105,7 @@ static func run() -> bool:
 	var after: EventSheetResource = ResourceLoader.load(fixture_path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
 	all_passed = _check("the saved sheet grew", after.events.size() > before_rows, true) and all_passed
 	all_passed = _check("mutation is .tres-only",
-		_call_raw(server, "apply_snippet", {"path": "res://demo/sheets/player_generated.gd", "text": gd_text}).get("isError", false), true) and all_passed
+		_call_raw(server, "apply_snippet", {"path": "res://tests/fixtures/compiler_golden_sheet_generated.gd", "text": gd_text}).get("isError", false), true) and all_passed
 
 	return all_passed
 

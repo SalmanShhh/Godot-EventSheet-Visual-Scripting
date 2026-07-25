@@ -145,10 +145,10 @@ static func run() -> bool:
 		EventSheetTemplates.list_templates(), PackedStringArray(["user://tpl_dir/boss_fight.tres"])) and all_passed
 	all_passed = _check("template paths are recognized",
 		EventSheetTemplates.is_template_path("user://tpl_dir/boss_fight.tres")
-		and not EventSheetTemplates.is_template_path("res://demo/sheets/player.tres"), true) and all_passed
+		and not EventSheetTemplates.is_template_path("res://tests/fixtures/compiler_golden_sheet.tres"), true) and all_passed
 	all_passed = _check("doctor/vocab filter drops only templates",
-		EventSheetTemplates.non_template_sheets(PackedStringArray(["user://tpl_dir/boss_fight.tres", "res://demo/sheets/player.tres"])),
-		PackedStringArray(["res://demo/sheets/player.tres"])) and all_passed
+		EventSheetTemplates.non_template_sheets(PackedStringArray(["user://tpl_dir/boss_fight.tres", "res://tests/fixtures/compiler_golden_sheet.tres"])),
+		PackedStringArray(["res://tests/fixtures/compiler_golden_sheet.tres"])) and all_passed
 	var copy: EventSheetResource = EventSheetTemplates.load_copy("user://tpl_dir/boss_fight.tres")
 	all_passed = _check("template copies are deep and path-less",
 		copy.resource_path.is_empty() and copy.custom_class_name == "BossFight"

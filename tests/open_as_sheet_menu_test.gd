@@ -17,7 +17,7 @@ static func run() -> bool:
 	all_passed = _check("FileSystem offers Open-as-Sheet for any .gd",
 		EventSheetContextMenu.should_offer_open_as_sheet(fs_slot, PackedStringArray(["res://addons/eventforge/plugin.gd"])), true) and all_passed
 	all_passed = _check("FileSystem offers it for an EventSheet .tres",
-		EventSheetContextMenu.should_offer_open_as_sheet(fs_slot, PackedStringArray(["res://demo/sheets/player.tres"])), true) and all_passed
+		EventSheetContextMenu.should_offer_open_as_sheet(fs_slot, PackedStringArray(["res://tests/fixtures/compiler_golden_sheet.tres"])), true) and all_passed
 	all_passed = _check("FileSystem does NOT offer it for a non-sheet file",
 		EventSheetContextMenu.should_offer_open_as_sheet(fs_slot, PackedStringArray(["res://icon.png"])), false) and all_passed
 	all_passed = _check("FileSystem offers it when ANY selected path qualifies",

@@ -3,7 +3,7 @@
 class_name DemoResourceReferenceTest
 extends RefCounted
 
-const DEMO_SHEET_PATH := "res://demo/sheets/player.tres"
+const DEMO_SHEET_PATH := "res://tests/fixtures/compiler_golden_sheet.tres"
 const INVALID_PARENT_DIR_PATH := "res://../addons/"
 
 

@@ -117,7 +117,7 @@ static func run() -> bool:
 
 	# ── Open as Event Sheet eligibility ───────────────────────────────────────────
 	all_passed = _check("sheet .tres files are openable",
-		EventSheetWorkflow.is_openable_as_sheet("res://demo/sheets/player.tres"), true) and all_passed
+		EventSheetWorkflow.is_openable_as_sheet("res://tests/fixtures/compiler_golden_sheet.tres"), true) and all_passed
 	all_passed = _check("non-sheet .tres files are not",
 		EventSheetWorkflow.is_openable_as_sheet("res://demo/themes/dracula_theme.tres"), false) and all_passed
 	all_passed = _check("any .gd opens (GDScript-backed sheets)",
@@ -347,12 +347,12 @@ static func run() -> bool:
 	DirAccess.remove_absolute("user://lift_roundtrip_back.gd")
 
 	# ── Sweep regression: the export-integrity pass skips template blueprints ─────
-	ProjectSettings.set_setting("eventsheets/project/templates_dir", "res://demo/sheets")
-	var filtered: Dictionary = EventSheetExportIntegrityPlugin.recompile_all_sheets("res://demo/sheets")
+	ProjectSettings.set_setting("eventsheets/project/templates_dir", "res://tests/fixtures")
+	var filtered: Dictionary = EventSheetExportIntegrityPlugin.recompile_all_sheets("res://tests/fixtures")
 	all_passed = _check("export pass never compiles template sheets",
 		int(filtered.get("compiled", -1)), 0) and all_passed
 	ProjectSettings.set_setting("eventsheets/project/templates_dir", null)
-	var unfiltered: Dictionary = EventSheetExportIntegrityPlugin.recompile_all_sheets("res://demo/sheets")
+	var unfiltered: Dictionary = EventSheetExportIntegrityPlugin.recompile_all_sheets("res://tests/fixtures")
 	all_passed = _check("non-template sheets still recompile at export",
 		int(unfiltered.get("compiled", 0)) >= 1, true) and all_passed
 

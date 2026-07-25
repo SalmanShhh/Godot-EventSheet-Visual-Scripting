@@ -76,7 +76,7 @@ static func run() -> bool:
 	spawn.provider_id = "Core"
 	spawn.ace_id = "SpawnSceneAt"
 	spawn.codegen_template = "var __spawn_a1 = load({path}).instantiate()\n__spawn_a1.position = {position}\nadd_child(__spawn_a1)"
-	spawn.params = {"path": "\"res://demo/scenes/player.tscn\"", "position": "Vector2(10, 20)"}
+	spawn.params = {"path": "\"res://demo/showcase/carousel/showcase_carousel.tscn\"", "position": "Vector2(10, 20)"}
 	var spawn_event: EventRow = EventRow.new()
 	spawn_event.trigger_provider_id = "Core"
 	spawn_event.trigger_id = "OnReady"
@@ -85,7 +85,7 @@ static func run() -> bool:
 	spawn_sheet.events.append(spawn_event)
 	var spawn_output: String = str(SheetCompiler.compile(spawn_sheet, "user://eventsheets_spawnat.gd").get("output", ""))
 	all_passed = _check("multi-line template emits each line indented",
-		spawn_output.contains("\tvar __spawn_a1 = load(\"res://demo/scenes/player.tscn\").instantiate()") and spawn_output.contains("\t__spawn_a1.position = Vector2(10, 20)") and spawn_output.contains("\tadd_child(__spawn_a1)"), true) and all_passed
+		spawn_output.contains("\tvar __spawn_a1 = load(\"res://demo/showcase/carousel/showcase_carousel.tscn\").instantiate()") and spawn_output.contains("\t__spawn_a1.position = Vector2(10, 20)") and spawn_output.contains("\tadd_child(__spawn_a1)"), true) and all_passed
 	var spawn_script: GDScript = GDScript.new()
 	spawn_script.source_code = spawn_output
 	all_passed = _check("spawn-at output parses", spawn_script.reload(true) == OK, true) and all_passed

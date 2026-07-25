@@ -146,7 +146,7 @@ static func run() -> bool:
 	# surfaces (so find and replace can never disagree).
 	var project_sheets: PackedStringArray = EventSheetEditor.list_project_sheets()
 	all_passed = _check("project scan finds the demo sheet",
-		project_sheets.has("res://demo/sheets/player.tres"), true) and all_passed
+		project_sheets.has("res://tests/fixtures/compiler_golden_sheet.tres"), true) and all_passed
 	var probe_sheet: EventSheetResource = EventSheetResource.new()
 	var probe_comment: CommentRow = CommentRow.new()
 	probe_comment.text = "the hidden treasure"

@@ -5,4 +5,4 @@ config_version=5
 
 [application]
 config/name="EventForge Demo"
-run/main_scene="res://scenes/player.tscn"
+run/main_scene="res://showcase/carousel/showcase_carousel.tscn"

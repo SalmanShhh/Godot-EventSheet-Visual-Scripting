@@ -12,9 +12,11 @@ extends RefCounted
 static func run() -> bool:
 	var all_passed: bool = true
 
-	# Export integrity: the demo sheet is discovered and recompiles cleanly.
-	var report: Dictionary = EventSheetExportIntegrityPlugin.recompile_all_sheets("res://demo")
-	all_passed = _check("export pass finds and compiles the demo sheet", int(report.get("compiled", 0)) >= 1, true) and all_passed
+	# Export integrity: a sheet on disk is discovered and recompiles cleanly. Scans tests/fixtures
+	# because that is where the compiler's golden sheet lives - the showcases under demo/ are .gd-first
+	# (their sheets are not shipped as .tres), so demo/ holds data assets and themes but no event sheet.
+	var report: Dictionary = EventSheetExportIntegrityPlugin.recompile_all_sheets("res://tests/fixtures")
+	all_passed = _check("export pass finds and compiles a sheet on disk", int(report.get("compiled", 0)) >= 1, true) and all_passed
 	all_passed = _check("export pass has no failures", int(report.get("failed", 0)), 0) and all_passed
 
 	# Theme editor primitives: token enumeration is reflective and typed.

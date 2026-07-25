@@ -14,8 +14,8 @@ static func run() -> bool:
 	# header-verified shipped sibling (<name>.gd) as fallback - ONE rule shared by the
 	# doctor, compile-on-save and the export-integrity pass.
 	all_passed = _check("demo sheet pairs with its _generated script",
-		EventSheetProjectDoctor.output_path_for("res://demo/sheets/player.tres"),
-		"res://demo/sheets/player_generated.gd") and all_passed
+		EventSheetProjectDoctor.output_path_for("res://tests/fixtures/compiler_golden_sheet.tres"),
+		"res://tests/fixtures/compiler_golden_sheet_generated.gd") and all_passed
 	all_passed = _check("a behaviour pack .gd is its own output (compiles in place, no .tres)",
 		EventSheetProjectDoctor.output_path_for("res://eventsheet_addons/spring/spring_behavior.gd"),
 		"res://eventsheet_addons/spring/spring_behavior.gd") and all_passed

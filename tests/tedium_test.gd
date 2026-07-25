@@ -353,9 +353,11 @@ static func run() -> bool:
 	all_passed = _check("reverse scene lookup pairs the showcase",
 		EventSheetProjectDoctor.scenes_attaching("res://demo/showcase/carousel/showcase_carousel.gd"),
 		PackedStringArray(["res://demo/showcase/carousel/showcase_carousel.tscn"])) and all_passed
-	all_passed = _check("reverse scene lookup pairs the demo player",
-		EventSheetProjectDoctor.scenes_attaching("res://demo/sheets/player_generated.gd"),
-		PackedStringArray(["res://demo/scenes/player.tscn"])) and all_passed
+	# A generated script that NO scene attaches reports nothing - the other half of the lookup above,
+	# and the honest answer for the compiler's golden fixture (it is a test asset, not a live script).
+	all_passed = _check("reverse scene lookup reports nothing for an unattached script",
+		EventSheetProjectDoctor.scenes_attaching("res://tests/fixtures/compiler_golden_sheet_generated.gd"),
+		PackedStringArray()) and all_passed
 	var behavior_sheet: EventSheetResource = EventSheetResource.new()
 	behavior_sheet.behavior_mode = true
 	behavior_sheet.host_class = "Node2D"

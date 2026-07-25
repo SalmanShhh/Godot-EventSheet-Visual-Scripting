@@ -4,10 +4,10 @@
 class_name CompileDemoTest
 extends RefCounted
 
-const SHEET_PATH: String = "res://demo/sheets/player.tres"
-const GOLDEN_PATH: String = "res://demo/sheets/player_generated.gd"
+const SHEET_PATH: String = "res://tests/fixtures/compiler_golden_sheet.tres"
+const GOLDEN_PATH: String = "res://tests/fixtures/compiler_golden_sheet_generated.gd"
 # user:// so the test never writes byproducts into the repo (the committed golden is
-# demo/sheets/player_generated.gd; regenerate it via tools/regenerate_demo_golden.gd).
+# tests/fixtures/compiler_golden_sheet_generated.gd; regenerate it via tools/regenerate_demo_golden.gd).
 const TEST_OUTPUT_PATH: String = "user://player_generated_test_output.gd"
 
 

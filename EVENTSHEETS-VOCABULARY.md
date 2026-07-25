@@ -5,7 +5,7 @@
 
 ## Sheets
 
-### player (`res://demo/sheets/player.tres`)
+### compiler_golden_sheet (`res://tests/fixtures/compiler_golden_sheet.tres`)
 Node script extending `CharacterBody2D`.
 
 #### Properties

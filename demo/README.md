@@ -68,8 +68,8 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 ## Try it (five minutes)
 
 1. Open the repository root project in Godot **4.5+** → open the **EventSheet** tab.
-2. Open `demo/sheets/player.tres`. Double-click anything. Press Ctrl+F. Right-click a
-   row → **Open in Split**.
+2. Open `demo/showcase/carousel/showcase_carousel.tres`. Double-click anything. Press Ctrl+F.
+   Right-click a row → **Open in Split**.
 3. Toolbar → **GDScript**: select a row and watch its generated lines highlight -
    click a line and the row that produced it selects back.
 4. Toolbar → theme switcher: try **Dracula**, **Nord**, **Catppuccin Mocha**…
@@ -78,16 +78,13 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 5. Add a node in a scene → attach `SineBehavior` from the Create Node dialog → set
    *movement* and *wave* from their Inspector dropdowns. That dropdown **is** a sheet
    feature (`@export_enum` combos).
-6. Compile. Read `sheets/player_generated.gd`. That's the whole trick - there is no
-   step 7.
+6. Compile. Read `showcase/carousel/showcase_carousel.gd` beside the sheet that made it. That's
+   the whole trick - there is no step 7.
 
 ## What's in this folder
 
 | Path | What it is |
 |---|---|
-| `sheets/player.tres` | The demo event sheet (variables, triggers, conditions, actions) |
-| `sheets/player_generated.gd` | Its compiled output - also the **golden file** the test suite byte-checks *and parses* |
-| `scenes/player.tscn` | A minimal CharacterBody2D with the generated script attached |
 | `showcase/showcase_carousel.{tscn,tres,gd}` | **Flagship** - Carousel of Juice (functions, runtime group, if/elif/else, four behaviors) |
 | `showcase/starfall.{tscn,tres,gd}` + `star.tscn` | Starfall arcade game (enum/match FSM, pick-filter, spawner, Bullet behavior) |
 | `showcase/quest_fsm.{tscn,tres,gd}` | Quest & Inventory FSM (Dictionary/Array collections, signals, reused function, match) |
@@ -137,13 +134,13 @@ Full ledger: [CHANGELOG.md](../CHANGELOG.md) · honest pros & cons: [README.md](
 ## Compile manually / regenerate the golden
 
 ```gdscript
-var sheet: EventSheetResource = load("res://demo/sheets/player.tres")
-var result: Dictionary = SheetCompiler.compile(sheet, "res://demo/sheets/player_generated.gd")
+var sheet: EventSheetResource = load("res://demo/showcase/carousel/showcase_carousel.tres")
+var result: Dictionary = SheetCompiler.compile(sheet, "res://demo/showcase/carousel/showcase_carousel.gd")
 print(result.get("warnings"))
 ```
 
 After an intentional codegen change:
-`godot --headless --script tools/regenerate_demo_golden.gd`
+`godot --headless --script tools/regenerate_demo_golden.gd` (regenerates the compiler golden fixture in `tests/fixtures/`)
 
 ## Themes
 

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="EventForge"
-run/main_scene="res://demo/scenes/player.tscn"
+run/main_scene="res://demo/showcase/carousel/showcase_carousel.tscn"
 config/features=PackedStringArray("4.7")
 
 [autoload]
