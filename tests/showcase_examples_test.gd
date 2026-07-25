@@ -70,6 +70,40 @@ static func run() -> bool:
 	passed = _check_scene("path_chase scene wires the Level + actors + the portal pair",
 		"res://demo/showcase/path_chase/path_chase.tscn", ["Level", "Player", "Chaser", "Movement", "Pathfinding", "PortalEntrance", "PortalExit"]) and passed
 
+	# Raycast Lab - all six ways to ask the physics world a question, each an ACE row using the
+	# SHIPPED template. These tokens ARE the raycasting vocabulary's emitted form, so if a frozen
+	# template ever drifts, this notices. The `$Player/Radar.` prefixes prove the "On node" target
+	# works: a Node2D-hosted sheet driving verbs whose host class is RayCast2D.
+	passed = _check_sheet("raycast_lab", "res://demo/showcase/raycast_lab/raycast_lab.gd", [
+		"class_name RaycastLabDemo",
+		"$Player/Radar.target_position = Vector2.from_angle(deg_to_rad(sweep_deg)) * 230.0",
+		"$Player/Radar.force_raycast_update()",
+		"if $Player/Radar.is_colliding():",
+		"$Player/Radar.get_collision_point()",
+		"PhysicsRayQueryParameters2D.create($Player.global_position, get_global_mouse_position(), 1, [$Player.get_rid()])",
+		"hit = get_world_2d().direct_space_state.intersect_ray(__rq_laser)",
+		"if not hit.is_empty():",
+		"hit.get(\"position\", Vector2.ZERO)",
+		"if (hit.get(\"collider\", null) != null and hit[\"collider\"].is_in_group(\"targets\")):",
+		"__pq_pick.position = get_global_mouse_position()",
+		"direct_space_state.intersect_point(__pq_pick, 8)",
+		"direct_space_state.intersect_shape(__sq_zone, 16)",
+		"var __cm_probe := get_world_2d().direct_space_state.cast_motion(__sq_probe)",
+		"travel = __cm_probe[0] if __cm_probe.size() > 0 else 1.0",
+		"$Gate.force_shapecast_update()",
+		"$Gate.get_closest_collision_safe_fraction()",
+	]) and passed
+	# No `{uid}` may survive into the emitted script: the dock bakes it at apply time and the
+	# compiler never does, so a builder that forgets ships a syntax error.
+	passed = _check("raycast_lab bakes every per-row uid",
+		FileAccess.get_file_as_string("res://demo/showcase/raycast_lab/raycast_lab.gd").contains("{uid}"), false) and passed
+	passed = _check_scene("raycast_lab scene wires the radar, the gate, the canvas and the targets",
+		"res://demo/showcase/raycast_lab/raycast_lab.tscn", ["Player", "Radar", "Gate", "InkLayer", "Ink", "Target1", "Readout"]) and passed
+	# Ray Result Is In Group can only fire if the group actually reached the packed scene, and
+	# PackedScene saves PERSISTENT groups only - a plain add_to_group() is a builder-only fact.
+	passed = _check("raycast_lab targets keep their group in the packed scene",
+		FileAccess.get_file_as_string("res://demo/showcase/raycast_lab/raycast_lab.tscn").contains("groups=[\"targets\"]"), true) and passed
+
 	# Flagship: Carousel of Juice - function reuse, runtime group, if/elif/else, behaviors.
 	passed = _check_sheet("showcase_carousel", "res://demo/showcase/carousel/showcase_carousel.gd", [
 		"func juice_tile(index: int, kick: float)",

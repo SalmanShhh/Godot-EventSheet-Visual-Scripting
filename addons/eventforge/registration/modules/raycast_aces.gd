@@ -45,7 +45,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 # ── 1. RayCast2D node: the existing vocabulary could only READ one. These aim and configure it,
 # so a sheet can swing a ray around (melee arcs, ledge probes, aim assist) without any GDScript. ──
 static func _add_raycast_node_2d(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "RayCast2DSetTarget", "Point RayCast At (2D)", ACEDescriptor.ACEType.ACTION, "target_position = {target}", "", [F.make_param("target", "String", "Vector2(0, 100)", "Target", "Where the ray reaches, RELATIVE to the RayCast2D node (its own local space) - not a world position.", "expression")], CAT_2D, "Point raycast at {target}", "RayCast2D")
+	descriptors.append(F.make_descriptor("Core", "RayCast2DSetTarget", "Point RayCast At (2D)", ACEDescriptor.ACEType.ACTION, "target_position = {reach}", "", [F.make_param("reach", "String", "Vector2(0, 100)", "Target", "Where the ray reaches, RELATIVE to the RayCast2D node (its own local space) - not a world position.", "expression")], CAT_2D, "Point raycast at {reach}", "RayCast2D")
 		.described("Aims the ray and sets how far it reaches. The target is measured from the raycast itself, so Vector2(0, 100) points 100 pixels down."))
 	descriptors.append(F.make_descriptor("Core", "RayCast2DSetEnabled", "Enable RayCast (2D)", ACEDescriptor.ACEType.ACTION, "enabled = {on}", "", [F.make_param("on", "String", "true", "Enabled", "true to cast every physics frame, false to switch it off.", "", ["true", "false"])], CAT_2D, "Set raycast enabled to {on}", "RayCast2D")
 		.described("Turns the ray on or off. A disabled raycast costs nothing and always reports no hit."))
@@ -78,7 +78,7 @@ static func _add_raycast_node_2d(descriptors: Array[ACEDescriptor]) -> void:
 # ── 2. RayCast3D node: the same aiming and configuring, plus the two options only 3D has
 # (which triangle of a mesh was hit, and whether back faces count). ──
 static func _add_raycast_node_3d(descriptors: Array[ACEDescriptor]) -> void:
-	descriptors.append(F.make_descriptor("Core", "RayCast3DSetTarget", "Point RayCast At (3D)", ACEDescriptor.ACEType.ACTION, "target_position = {target}", "", [F.make_param("target", "String", "Vector3(0, 0, -10)", "Target", "Where the ray reaches, RELATIVE to the RayCast3D node (its own local space) - not a world position.", "expression")], CAT_3D, "Point raycast at {target}", "RayCast3D")
+	descriptors.append(F.make_descriptor("Core", "RayCast3DSetTarget", "Point RayCast At (3D)", ACEDescriptor.ACEType.ACTION, "target_position = {reach}", "", [F.make_param("reach", "String", "Vector3(0, 0, -10)", "Target", "Where the ray reaches, RELATIVE to the RayCast3D node (its own local space) - not a world position.", "expression")], CAT_3D, "Point raycast at {reach}", "RayCast3D")
 		.described("Aims the ray and sets how far it reaches. The target is measured from the raycast itself, so Vector3(0, 0, -10) points 10 metres forward."))
 	descriptors.append(F.make_descriptor("Core", "RayCast3DSetEnabled", "Enable RayCast (3D)", ACEDescriptor.ACEType.ACTION, "enabled = {on}", "", [F.make_param("on", "String", "true", "Enabled", "true to cast every physics frame, false to switch it off.", "", ["true", "false"])], CAT_3D, "Set raycast enabled to {on}", "RayCast3D")
 		.described("Turns the ray on or off. A disabled raycast costs nothing and always reports no hit."))
@@ -119,7 +119,7 @@ static func _add_shapecast_2d(descriptors: Array[ACEDescriptor]) -> void:
 		.described("True when the swept shape is touching anything along its path.").featured())
 	descriptors.append(F.make_descriptor("Core", "ShapeCast2DForceUpdate", "Force ShapeCast Update (2D)", ACEDescriptor.ACEType.ACTION, "force_shapecast_update()", "", [], CAT_2D, "Force shapecast update", "ShapeCast2D")
 		.described("Re-runs the sweep immediately instead of waiting for the next physics frame - do this after moving or re-aiming it in the same frame you read it."))
-	descriptors.append(F.make_descriptor("Core", "ShapeCast2DSetTarget", "Point ShapeCast At (2D)", ACEDescriptor.ACEType.ACTION, "target_position = {target}", "", [F.make_param("target", "String", "Vector2(0, 100)", "Target", "How far and in which direction to sweep, RELATIVE to the ShapeCast2D node.", "expression")], CAT_2D, "Point shapecast at {target}", "ShapeCast2D")
+	descriptors.append(F.make_descriptor("Core", "ShapeCast2DSetTarget", "Point ShapeCast At (2D)", ACEDescriptor.ACEType.ACTION, "target_position = {reach}", "", [F.make_param("reach", "String", "Vector2(0, 100)", "Target", "How far and in which direction to sweep, RELATIVE to the ShapeCast2D node.", "expression")], CAT_2D, "Point shapecast at {reach}", "ShapeCast2D")
 		.described("Aims the sweep and sets its length, measured from the shapecast itself."))
 	descriptors.append(F.make_descriptor("Core", "ShapeCast2DSetEnabled", "Enable ShapeCast (2D)", ACEDescriptor.ACEType.ACTION, "enabled = {on}", "", [F.make_param("on", "String", "true", "Enabled", "true to sweep every physics frame.", "", ["true", "false"])], CAT_2D, "Set shapecast enabled to {on}", "ShapeCast2D")
 		.described("Turns the sweep on or off."))
@@ -154,7 +154,7 @@ static func _add_shapecast_3d(descriptors: Array[ACEDescriptor]) -> void:
 		.described("True when the swept shape is touching anything along its path.").featured())
 	descriptors.append(F.make_descriptor("Core", "ShapeCast3DForceUpdate", "Force ShapeCast Update (3D)", ACEDescriptor.ACEType.ACTION, "force_shapecast_update()", "", [], CAT_3D, "Force shapecast update", "ShapeCast3D")
 		.described("Re-runs the sweep immediately instead of waiting for the next physics frame - do this after moving or re-aiming it in the same frame you read it."))
-	descriptors.append(F.make_descriptor("Core", "ShapeCast3DSetTarget", "Point ShapeCast At (3D)", ACEDescriptor.ACEType.ACTION, "target_position = {target}", "", [F.make_param("target", "String", "Vector3(0, 0, -10)", "Target", "How far and in which direction to sweep, RELATIVE to the ShapeCast3D node.", "expression")], CAT_3D, "Point shapecast at {target}", "ShapeCast3D")
+	descriptors.append(F.make_descriptor("Core", "ShapeCast3DSetTarget", "Point ShapeCast At (3D)", ACEDescriptor.ACEType.ACTION, "target_position = {reach}", "", [F.make_param("reach", "String", "Vector3(0, 0, -10)", "Target", "How far and in which direction to sweep, RELATIVE to the ShapeCast3D node.", "expression")], CAT_3D, "Point shapecast at {reach}", "ShapeCast3D")
 		.described("Aims the sweep and sets its length, measured from the shapecast itself."))
 	descriptors.append(F.make_descriptor("Core", "ShapeCast3DSetEnabled", "Enable ShapeCast (3D)", ACEDescriptor.ACEType.ACTION, "enabled = {on}", "", [F.make_param("on", "String", "true", "Enabled", "true to sweep every physics frame.", "", ["true", "false"])], CAT_3D, "Set shapecast enabled to {on}", "ShapeCast3D")
 		.described("Turns the sweep on or off."))

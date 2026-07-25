@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Added - the Raycast Lab showcase
+
+- `demo/showcase/raycast_lab/` runs six different casts at once, each drawn so the question being
+  asked is visible: a sweeping **RayCast2D node**; a **Cast Ray Into** beam that follows the cursor,
+  whose stored result the **Ray Result** verbs read for the hit point, the surface normal and whether
+  it was a target (three facts, one cast); a **circle overlap**; a **point query** under the mouse; a
+  **motion cast** marking where an 18px disc would jam; and a **ShapeCast2D** sweeping a corridor,
+  parked at its safe fraction.
+- Every cast is a real ACE row built from the SHIPPED descriptor, not a pasted copy: a new
+  `_ace_template()` helper in the generator reads the live template and bakes its `{uid}`. The
+  generated GDScript beside the scene is therefore literally what the raycasting vocabulary emits,
+  and cannot drift from it. Only the DRAWING is hand-written, because visualising a cast is the
+  Drawing Canvas pack's job.
+- It also demonstrates the **"On node" target**: the sheet is hosted on `Node2D`, yet drives verbs
+  whose host class is `RayCast2D`, emitting `$Player/Radar.force_raycast_update()`. That is the
+  parameter whose prefix bug is fixed above.
+
+### Fixed - two faults the showcase surfaced in the raycast vocabulary
+
+- The four **Point RayCast/ShapeCast At** verbs named their own parameter `target`, which is the id
+  reserved for the automatic "On node" target. The collision made the transform skip them entirely,
+  so they were the only cast verbs that could NOT be pointed at another node - exactly the thing a
+  showcase needs. The parameter is now `reach` (its label is unchanged), and all four are targetable.
+  Emitted code for existing blank-target rows is unaffected.
+- Showcase targets used a plain `add_to_group()`, which is NOT persistent, so the group never reached
+  the packed scene and **Ray Result Is In Group** could never fire. Caught by a runtime smoke that
+  asserts what each cast found, rather than by anything static.
+
 ### Fixed - an "On node" target could emit GDScript that does not parse
 
 - Every node-scoped ACE automatically gains an optional "On node" target, applied by prefixing each

@@ -29,6 +29,7 @@ func _init() -> void:
 	all_ok = _build_input_rebind() and all_ok
 	all_ok = _build_path_chase() and all_ok
 	all_ok = _build_draw_lab() and all_ok
+	all_ok = _build_raycast_lab() and all_ok
 	print("[build_examples] ALL_OK=", all_ok)
 	quit(0 if all_ok else 1)
 
@@ -50,6 +51,20 @@ func _make_texture() -> ImageTexture:
 			elif dx <= 23.0 and dy <= 23.0:
 				img.set_pixel(x, y, Color(1, 1, 1, 0.55))
 	return ImageTexture.create_from_image(img)
+
+
+## The SHIPPED codegen template for a builtin ACE, with its per-row `{uid}` baked to `uid`.
+##
+## Reading the LIVE descriptor beats pasting a copy into a builder: the showcase then demonstrates the
+## vocabulary exactly as published, and cannot drift from it or quote it wrong. Baking has to happen
+## here because the dock bakes `{uid}` at APPLY time and the compiler never does - an unbaked `{uid}`
+## would sail straight into the emitted GDScript as a syntax error.
+func _ace_template(ace_id: String, uid: String = "") -> String:
+	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
+		if str(descriptor.ace_id) == ace_id:
+			return str(descriptor.codegen_template).replace("{uid}", uid)
+	push_error("[build_examples] no builtin ACE named %s" % ace_id)
+	return ""
 
 
 func _condition(provider: String, ace_id: String, template: String, params: Dictionary,
@@ -2349,3 +2364,308 @@ func _build_draw_lab() -> bool:
 	hud.owner = root
 
 	return _save_scene(root, "res://demo/showcase/draw_lab/draw_lab.tscn")
+
+
+# ── 17. Raycast Lab - every way to ask the physics world a question ──────────
+const RAYCAST_LAB_DIR := "res://demo/showcase/raycast_lab"
+
+
+## The Raycast Lab showcase: six different casts running at once, each drawn so you can SEE the
+## question being asked. A sweeping RayCast2D radar; a ShapeCast2D gate sweeping a corridor; a
+## Cast Ray Into beam that follows the cursor and reports what it struck; a circle overlap ring; a
+## point query under the cursor; and a swept-disc motion cast that stops short of the wall.
+##
+## Every cast is a real ACE row using the SHIPPED template (see _ace_template), so the generated
+## GDScript beside this scene is literally what the raycasting vocabulary emits - nothing hand-written.
+## The DRAWING is plain code, because visualising a cast is the Drawing Canvas pack's job, not the
+## raycaster's.
+func _build_raycast_lab() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "RaycastLabDemo"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"sweep_deg": {"type": "float", "default": 0.0, "exported": false},
+		"radar_hit": {"type": "bool", "default": false, "exported": false},
+		"radar_end": {"type": "Vector2", "default": Vector2.ZERO, "exported": false},
+		"radar_normal": {"type": "Vector2", "default": Vector2.ZERO, "exported": false},
+		"hit": {"type": "Dictionary", "default": {}, "exported": false},
+		"laser_end": {"type": "Vector2", "default": Vector2.ZERO, "exported": false},
+		"laser_normal": {"type": "Vector2", "default": Vector2.ZERO, "exported": false},
+		"laser_on_target": {"type": "bool", "default": false, "exported": false},
+		"picked": {"type": "Array", "default": [], "exported": false},
+		"nearby": {"type": "Array", "default": [], "exported": false},
+		"travel": {"type": "float", "default": 1.0, "exported": false},
+		"probe_end": {"type": "Vector2", "default": Vector2.ZERO, "exported": false},
+		"gate_count": {"type": "int", "default": 0, "exported": false},
+		"gate_travel": {"type": "float", "default": 1.0, "exported": false}
+	}
+
+	var about: CommentRow = CommentRow.new()
+	about.text = "[b]Raycast Lab[/b] - six ways to ask the physics world a question, all drawn live. [b]Yellow[/b] is a RayCast2D NODE sweeping for whatever it can see. [b]Cyan[/b] is Cast Ray Into, firing ONE ray at your cursor and storing the result, which the Ray Result verbs then read for the hit point, the surface normal, and whether it was a target - three facts, one cast. [b]Green[/b] is Query Bodies In Circle collecting everything within 130px; [b]white[/b] is Query Bodies Under Mouse. [b]Pink[/b] is Cast Circle Motion Into - how far a disc could slide before it jams, which is how you move something fast without it tunnelling through a wall. [b]Blue[/b] is a ShapeCast2D sweeping the corridor: a ray with THICKNESS, parked at its safe fraction."
+	sheet.events.append(about)
+
+	# ── The casting tick. Every cast below is a real raycast ACE row. ──
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnPhysicsProcess"
+	tick.actions.append(_raw("\n".join(PackedStringArray([
+		"sweep_deg = fmod(sweep_deg + 55.0 * delta, 360.0)",
+		"radar_hit = false",
+		"laser_on_target = false"
+	]))))
+	# RAYCAST2D NODE: aim it, then force it to re-check THIS frame - a raycast otherwise reports what
+	# it saw on the last physics frame, which is the classic "my ray is one frame behind" bug.
+	tick.actions.append(_action("Core", "RayCast2DSetTarget", _ace_template("RayCast2DSetTarget"),
+		{"target": "$Player/Radar", "reach": "Vector2.from_angle(deg_to_rad(sweep_deg)) * 230.0"}))
+	tick.actions.append(_action("Core", "RayCast2DForceUpdate", _ace_template("RayCast2DForceUpdate"),
+		{"target": "$Player/Radar"}))
+	tick.actions.append(_raw("radar_end = $Player.global_position + Vector2.from_angle(deg_to_rad(sweep_deg)) * 230.0"))
+	# CAST RAY INTO: ONE ray at the cursor, whole result stored. The exclude list drops the player's
+	# own body so the beam can never stop on the thing that fired it.
+	tick.actions.append(_action("Core", "CastRayInto2D", _ace_template("CastRayInto2D", "laser"), {
+		"into": "hit",
+		"from": "$Player.global_position",
+		"to": "get_global_mouse_position()",
+		"mask": "1",
+		"exclude": "[$Player.get_rid()]",
+		"hit_areas": "false"
+	}))
+	tick.actions.append(_raw("\n".join(PackedStringArray([
+		"laser_end = get_global_mouse_position()",
+		"laser_normal = Vector2.ZERO"
+	]))))
+	# A POINT query under the cursor, and a CIRCLE overlap around the player.
+	tick.actions.append(_action("Core", "QueryBodiesUnderMouse2D", _ace_template("QueryBodiesUnderMouse2D", "pick"),
+		{"into": "picked", "hit_areas": "false", "max_results": "8"}))
+	tick.actions.append(_action("Core", "QueryBodiesInCircle2D", _ace_template("QueryBodiesInCircle2D", "zone"),
+		{"into": "nearby", "center": "$Player.global_position", "radius": "130.0", "max_results": "16"}))
+	# MOTION CAST: how much of the trip to the cursor an 18px disc could actually make.
+	tick.actions.append(_action("Core", "CastCircleMotion2D", _ace_template("CastCircleMotion2D", "probe"), {
+		"into": "travel",
+		"from": "$Player.global_position",
+		"motion": "get_global_mouse_position() - $Player.global_position",
+		"radius": "18.0",
+		"mask": "1"
+	}))
+	tick.actions.append(_raw("probe_end = $Player.global_position + (get_global_mouse_position() - $Player.global_position) * travel"))
+	# SHAPECAST2D NODE: the swept shape, and how far along its rail it stays clear.
+	tick.actions.append(_action("Core", "ShapeCast2DForceUpdate", _ace_template("ShapeCast2DForceUpdate"),
+		{"target": "$Gate"}))
+	tick.actions.append(_raw("\n".join(PackedStringArray([
+		"gate_count = $Gate.get_collision_count()",
+		"gate_travel = $Gate.get_closest_collision_safe_fraction()"
+	]))))
+	sheet.events.append(tick)
+
+	# Reading the RayCast2D node: a CONDITION row, so the reads only happen when it actually hit.
+	var radar_row: EventRow = EventRow.new()
+	radar_row.trigger_provider_id = "Core"
+	radar_row.trigger_id = "OnPhysicsProcess"
+	radar_row.conditions.append(_condition("Core", "RayCast2DIsColliding",
+		_ace_template("RayCast2DIsColliding"), {"target": "$Player/Radar"}))
+	radar_row.actions.append(_raw("\n".join(PackedStringArray([
+		"radar_hit = true",
+		"radar_end = $Player/Radar.get_collision_point()",
+		"radar_normal = $Player/Radar.get_collision_normal()"
+	]))))
+	sheet.events.append(radar_row)
+
+	# Reading the STORED ray result: point, normal, and a group test - three facts off ONE cast, and
+	# the group test is safe on a clear ray because it checks for nothing-hit first.
+	var laser_row: EventRow = EventRow.new()
+	laser_row.trigger_provider_id = "Core"
+	laser_row.trigger_id = "OnPhysicsProcess"
+	laser_row.conditions.append(_condition("Core", "RayResultHit2D",
+		_ace_template("RayResultHit2D"), {"result": "hit"}))
+	laser_row.actions.append(_raw("\n".join(PackedStringArray([
+		"laser_end = hit.get(\"position\", Vector2.ZERO)",
+		"laser_normal = hit.get(\"normal\", Vector2.ZERO)"
+	]))))
+	var on_target: EventRow = EventRow.new()
+	on_target.conditions.append(_condition("Core", "RayResultInGroup2D",
+		_ace_template("RayResultInGroup2D"), {"result": "hit", "group": "\"targets\""}))
+	on_target.actions.append(_raw("laser_on_target = true"))
+	laser_row.sub_events.append(on_target)
+	sheet.events.append(laser_row)
+
+	# ── The drawing tick: pack verbs, not raycast verbs. Visualising a cast is the canvas's job. ──
+	var paint: EventRow = EventRow.new()
+	paint.trigger_provider_id = "Core"
+	paint.trigger_id = "OnProcess"
+	paint.actions.append(_raw("\n".join(PackedStringArray([
+		"var ink: DrawingCanvas = $InkLayer/Ink",
+		"var here: Vector2 = $Player.global_position",
+		"var mouse: Vector2 = get_global_mouse_position()",
+		"# RayCast2D node - dim to its full reach, bright to whatever stopped it.",
+		"ink.draw_canvas_line(here.x, here.y, radar_end.x, radar_end.y, 2.0, Color(1.0, 0.85, 0.3, 0.4))",
+		"if radar_hit:",
+		"\tink.draw_canvas_line(here.x, here.y, radar_end.x, radar_end.y, 3.0, Color(1.0, 0.85, 0.3, 0.95))",
+		"\tink.draw_canvas_ring(radar_end.x, radar_end.y, 9.0, 2.0, Color(1.0, 0.85, 0.3, 1.0))",
+		"\tink.draw_canvas_line(radar_end.x, radar_end.y, radar_end.x + radar_normal.x * 26.0, radar_end.y + radar_normal.y * 26.0, 2.0, Color(1.0, 1.0, 1.0, 0.75))",
+		"# Query Bodies In Circle - the scan ring, and a mark on everything it collected.",
+		"ink.draw_canvas_dashed_ring(here.x, here.y, 130.0, 9.0, 7.0, 1.0, Color(0.45, 1.0, 0.6, 0.45))",
+		"for body: Node2D in nearby:",
+		"\tink.draw_canvas_ring(body.global_position.x, body.global_position.y, 20.0, 2.0, Color(0.45, 1.0, 0.6, 0.75))",
+		"# Cast Ray Into - the cursor beam, stopped at the first thing in the way.",
+		"ink.draw_canvas_line(here.x, here.y, laser_end.x, laser_end.y, 2.0, Color(0.4, 0.85, 1.0, 0.9))",
+		"if laser_normal != Vector2.ZERO:",
+		"\tink.draw_canvas_ring(laser_end.x, laser_end.y, 7.0, 2.0, Color(0.4, 0.85, 1.0, 1.0))",
+		"\tink.draw_canvas_line(laser_end.x, laser_end.y, laser_end.x + laser_normal.x * 24.0, laser_end.y + laser_normal.y * 24.0, 2.0, Color(1.0, 1.0, 1.0, 0.7))",
+		"if laser_on_target:",
+		"\tink.draw_canvas_ring(laser_end.x, laser_end.y, 16.0, 3.0, Color(1.0, 0.55, 0.2, 1.0))",
+		"# Cast Circle Motion Into - where an 18px disc would jam on its way to the cursor.",
+		"ink.draw_canvas_dashed_line(here.x, here.y, probe_end.x, probe_end.y, 8.0, 6.0, 1.0, Color(1.0, 0.45, 0.85, 0.45))",
+		"ink.draw_canvas_ring(probe_end.x, probe_end.y, 18.0, 2.0, Color(1.0, 0.45, 0.85, 0.9))",
+		"# Query Bodies Under Mouse - a ring around whatever the cursor is sitting on.",
+		"ink.draw_canvas_ring(mouse.x, mouse.y, 5.0, 1.0, Color(1.0, 1.0, 1.0, 0.45))",
+		"for body: Node2D in picked:",
+		"\tink.draw_canvas_ring(body.global_position.x, body.global_position.y, 30.0, 3.0, Color(1.0, 1.0, 1.0, 0.9))",
+		"# ShapeCast2D node - the rail it sweeps, and the disc parked at its safe fraction.",
+		"var rail: Vector2 = $Gate.global_position",
+		"var reach: Vector2 = $Gate.target_position",
+		"ink.draw_canvas_dashed_line(rail.x, rail.y, rail.x + reach.x, rail.y + reach.y, 10.0, 8.0, 1.0, Color(0.5, 0.7, 1.0, 0.45))",
+		"ink.draw_canvas_ring(rail.x + reach.x * gate_travel, rail.y + reach.y * gate_travel, 16.0, 2.0, Color(0.5, 0.7, 1.0, 0.9))",
+		"$HudLayer/Readout.text = \"under cursor %d - in circle %d - disc travel %.2f - gate sweep %.2f - gate touching %d\" % [picked.size(), nearby.size(), travel, gate_travel, gate_count]"
+	]))))
+	sheet.events.append(paint)
+
+	if not _compile(sheet, "%s/raycast_lab.tres" % RAYCAST_LAB_DIR, "%s/raycast_lab.gd" % RAYCAST_LAB_DIR):
+		return false
+	var emitted: String = FileAccess.get_file_as_string("%s/raycast_lab.gd" % RAYCAST_LAB_DIR)
+	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
+	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
+	var out: FileAccess = FileAccess.open("%s/raycast_lab.gd" % RAYCAST_LAB_DIR, FileAccess.WRITE)
+	out.store_string(emitted)
+	out.close()
+
+	# ── The scene ──
+	var root: Node2D = Node2D.new()
+	root.name = "RaycastLab"
+	root.set_script(load("%s/raycast_lab.gd" % RAYCAST_LAB_DIR))
+	var backdrop: ColorRect = ColorRect.new()
+	backdrop.name = "Backdrop"
+	backdrop.color = Color(0.08, 0.09, 0.12)
+	backdrop.size = Vector2(1152.0, 648.0)
+	root.add_child(backdrop)
+	backdrop.owner = root
+
+	# The arena: a border plus interior blocks for every cast to bite on. Collision layer 1 is what
+	# every cast in the sheet masks against.
+	var walls: Array = [
+		[Vector2(576.0, 12.0), Vector2(1152.0, 24.0)], [Vector2(576.0, 636.0), Vector2(1152.0, 24.0)],
+		[Vector2(12.0, 324.0), Vector2(24.0, 648.0)], [Vector2(1140.0, 324.0), Vector2(24.0, 648.0)],
+		[Vector2(430.0, 190.0), Vector2(200.0, 28.0)], [Vector2(300.0, 470.0), Vector2(28.0, 180.0)],
+		[Vector2(700.0, 420.0), Vector2(240.0, 28.0)], [Vector2(880.0, 250.0), Vector2(28.0, 160.0)]
+	]
+	var wall_index: int = 0
+	for wall_spec: Array in walls:
+		wall_index += 1
+		var wall: StaticBody2D = StaticBody2D.new()
+		wall.name = "Wall%d" % wall_index
+		wall.position = wall_spec[0]
+		wall.collision_layer = 1
+		var wall_shape: CollisionShape2D = CollisionShape2D.new()
+		wall_shape.name = "Shape"
+		var wall_rect: RectangleShape2D = RectangleShape2D.new()
+		wall_rect.size = wall_spec[1]
+		wall_shape.shape = wall_rect
+		wall.add_child(wall_shape)
+		var wall_visual: ColorRect = ColorRect.new()
+		wall_visual.name = "Visual"
+		wall_visual.color = Color(0.34, 0.38, 0.47)
+		wall_visual.position = -(wall_spec[1] as Vector2) / 2.0
+		wall_visual.size = wall_spec[1]
+		wall.add_child(wall_visual)
+		root.add_child(wall)
+		_own_deep(wall, root)
+
+	# Targets: same collision layer, but in the "targets" GROUP - what Ray Result Is In Group asks
+	# about, so the beam can tell scenery from something worth shooting.
+	var target_index: int = 0
+	for spot: Vector2 in [Vector2(760.0, 150.0), Vector2(980.0, 500.0), Vector2(200.0, 250.0), Vector2(560.0, 560.0)]:
+		target_index += 1
+		var target: StaticBody2D = StaticBody2D.new()
+		target.name = "Target%d" % target_index
+		target.position = spot
+		target.collision_layer = 1
+		# persistent=true, or the group is a builder-only fact: PackedScene.pack() saves only
+		# PERSISTENT groups, so a non-persistent one vanishes and Ray Result Is In Group never fires.
+		target.add_to_group("targets", true)
+		var target_shape: CollisionShape2D = CollisionShape2D.new()
+		target_shape.name = "Shape"
+		var target_circle: CircleShape2D = CircleShape2D.new()
+		target_circle.radius = 20.0
+		target_shape.shape = target_circle
+		target.add_child(target_shape)
+		var target_visual: ColorRect = ColorRect.new()
+		target_visual.name = "Visual"
+		target_visual.color = Color(0.95, 0.45, 0.25)
+		# Sized to MATCH the 20px-radius collider. A smaller visual would make every ray stop in
+		# mid-air beside the target, which in a demo about "the ray stops exactly where it hit"
+		# reads as a bug in the raycasting rather than a mismatched sprite.
+		target_visual.position = Vector2(-20.0, -20.0)
+		target_visual.size = Vector2(40.0, 40.0)
+		target.add_child(target_visual)
+		root.add_child(target)
+		_own_deep(target, root)
+
+	# The canvas every cast draws itself on. AUTO-CLEAR: the picture is this frame's answers, not a
+	# smear of every frame's.
+	var ink_layer: Node2D = Node2D.new()
+	ink_layer.name = "InkLayer"
+	ink_layer.position = Vector2(576.0, 324.0)
+	root.add_child(ink_layer)
+	ink_layer.owner = root
+	_attach_behavior(ink_layer, "Ink", DRAWING_CANVAS, root, {"canvas_width": 1152, "canvas_height": 648, "auto_clear": true})
+
+	# The Player, carrying the RayCast2D the radar rows drive.
+	var player: CharacterBody2D = _chase_actor("Player", Vector2(430.0, 330.0), Color(0.35, 0.65, 1.0))
+	root.add_child(player)
+	_own_deep(player, root)
+	# Layer 2, not 1: every cast in the sheet masks layer 1 (walls + targets), so a player left on
+	# the default layer would answer its OWN overlap query and sit under its own cursor pick.
+	player.collision_layer = 2
+	player.collision_mask = 1
+	_attach_behavior(player, "Movement", EIGHT_DIRECTION, root)
+	var radar: RayCast2D = RayCast2D.new()
+	radar.name = "Radar"
+	radar.target_position = Vector2(0.0, -230.0)
+	radar.collision_mask = 1
+	radar.enabled = true
+	player.add_child(radar)
+	radar.owner = root
+
+	# The Gate: a ShapeCast2D sweeping the right-hand corridor, thick enough not to thread a gap.
+	var gate: ShapeCast2D = ShapeCast2D.new()
+	gate.name = "Gate"
+	gate.position = Vector2(1010.0, 90.0)
+	gate.target_position = Vector2(0.0, 420.0)
+	gate.collision_mask = 1
+	var gate_shape: CircleShape2D = CircleShape2D.new()
+	gate_shape.radius = 16.0
+	gate.shape = gate_shape
+	gate.enabled = true
+	root.add_child(gate)
+	gate.owner = root
+
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HudLayer"
+	root.add_child(hud_layer)
+	hud_layer.owner = root
+	var hud: Label = Label.new()
+	hud.name = "Hud"
+	hud.position = Vector2(24.0, 16.0)
+	hud.add_theme_font_size_override("font_size", 17)
+	hud.text = "Arrows move - the cursor aims the cyan beam\nYellow = a RayCast2D NODE sweeping - cyan = Cast Ray Into (orange ring = it hit a target)\nGreen = Query Bodies In Circle - white = Query Bodies Under Mouse\nPink = Cast Circle Motion Into (where an 18px disc would jam) - blue = a ShapeCast2D sweeping the corridor"
+	hud_layer.add_child(hud)
+	hud.owner = root
+	var readout: Label = Label.new()
+	readout.name = "Readout"
+	readout.position = Vector2(24.0, 604.0)
+	readout.add_theme_font_size_override("font_size", 17)
+	readout.text = "under cursor 0 - in circle 0 - disc travel 1.00 - gate sweep 1.00 - gate touching 0"
+	hud_layer.add_child(readout)
+	readout.owner = root
+
+	return _save_scene(root, "%s/raycast_lab.tscn" % RAYCAST_LAB_DIR)
