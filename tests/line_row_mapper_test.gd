@@ -83,7 +83,19 @@ static func run() -> bool:
 		var row_data: EventRowData = view.get_flat_rows()[index].get("row")
 		if row_data != null and row_data.source_resource == seed_event:
 			view._select_row(index)
-	dock._ghost_row._refresh("heal 25")  # a provider-instance ACE - its apply bakes the real template
+	# Apply through the real Ghost Row path, because a provider-instance ACE's template is baked at
+	# APPLY time (it is empty in the registry). The candidate is chosen BY IDENTITY rather than by
+	# trusting the top match: several packs publish a `Heal`, and which one a fuzzy query ranks first
+	# is a detail this test has no business depending on. What it needs is specifically the
+	# RefCounted-provider one, whose use makes the compiler declare an owned instance and shift the map.
+	dock._ghost_row._refresh("heal 25")
+	var wanted: Array = []
+	for candidate: Variant in dock._ghost_row._candidates:
+		if ((candidate as Dictionary).get("definition") as ACEDefinition).provider_id == "EventSheetDemoGameplayActor":
+			wanted.append(candidate)
+	ok = _check("the provider-instance Heal is among the matches", wanted.size(), 1) and ok
+	# Headless there is no list widget to highlight a row, so the apply takes candidate 0.
+	dock._ghost_row._candidates = wanted
 	dock._ghost_row._apply_selected()
 	var provider_event: EventRow = null
 	for row: Variant in dock.get_current_sheet().events:

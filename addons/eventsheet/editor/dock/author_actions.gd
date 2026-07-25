@@ -109,10 +109,21 @@ func _quick_match_ranked(query: String, limit: int = 5) -> Array:
 			if parameter is Dictionary:
 				params[str((parameter as Dictionary).get("id", ""))] = values[index]
 		candidates.append({"definition": definition, "params": params, "score": best_score, "name_length": best_name_length})
+	# Ties are broken EXPLICITLY, because several packs can publish the same verb name (three of the
+	# bundled packs ship a `Heal`) and sort_custom is not stable - without this the top suggestion for
+	# such a word could differ between sessions, and adding an unrelated ACE elsewhere could silently
+	# change it. Fewest parameters wins first: a verb the typed sentence can fill on its own beats one
+	# that also needs a target. Provider + id settle anything still level, so the list is reproducible.
 	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a["score"]) != int(b["score"]):
 			return int(a["score"]) > int(b["score"])
-		return int(a["name_length"]) < int(b["name_length"]))
+		if int(a["name_length"]) != int(b["name_length"]):
+			return int(a["name_length"]) < int(b["name_length"])
+		var a_definition: ACEDefinition = a["definition"]
+		var b_definition: ACEDefinition = b["definition"]
+		if a_definition.parameters.size() != b_definition.parameters.size():
+			return a_definition.parameters.size() < b_definition.parameters.size()
+		return "%s|%s" % [a_definition.provider_id, a_definition.id] < "%s|%s" % [b_definition.provider_id, b_definition.id])
 	return candidates.slice(0, limit)
 
 
