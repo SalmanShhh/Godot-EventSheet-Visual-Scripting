@@ -308,15 +308,15 @@ func _ready() -> void:
 	_ensure_editor_dialogs_initialized()
 	_refresh_ace_registry()
 	# Restore last session's tabs FIRST (editor only; headless tests drive setup() directly). Only fall
-	# back to a blank starting sheet when nothing came back - otherwise an untitled demo stacks on top of
-	# the user's real tabs. The plugin ALSO calls setup() right after add_child() (which already ran this
-	# _ready), so the setup() below is a no-op once tabs exist - see setup()'s guard. This is what stopped
-	# the "two untitled sheets on open" (a demo from _ready + a demo from the plugin's setup()).
+	# back to a blank starting sheet when nothing came back - otherwise an untitled sheet stacks on top
+	# of the user's real tabs. The plugin ALSO calls setup() right after add_child() (which already ran
+	# this _ready), so the setup() below is a no-op once tabs exist - see setup()'s guard. This is what
+	# stopped the "two untitled sheets on open" (one from _ready + one from the plugin's setup()).
 	if Engine.is_editor_hint() and is_inside_tree():
 		_restore_session()
 	if _open_tabs.is_empty():
 		if _current_sheet == null:
-			_current_sheet = _build_demo_sheet()
+			_current_sheet = _build_blank_sheet()
 			_viewport.set_debug_overlay_states({})
 		setup(_current_sheet)
 
@@ -335,10 +335,10 @@ func setup(sheet: EventSheetResource = null) -> void:
 	_ensure_editor_dialogs_initialized()
 	# Idempotent initial state: a null setup() asks for "a blank starting sheet". If tabs already exist
 	# (the plugin calls setup() right after add_child(), which already ran _ready), don't stack a second
-	# untitled demo - keep what's open. A null setup() with no tabs still seeds one demo, as before.
+	# untitled sheet - keep what is open. A null setup() with no tabs still seeds one blank sheet.
 	if sheet == null and not _open_tabs.is_empty():
 		return
-	var target_sheet: EventSheetResource = sheet if sheet != null else _build_demo_sheet()
+	var target_sheet: EventSheetResource = sheet if sheet != null else _build_blank_sheet()
 	var target_path: String = sheet.resource_path if sheet != null else ""
 	_open_sheet_in_tab(target_sheet, target_path)
 
@@ -3992,41 +3992,15 @@ func _build_default_ace_sources() -> Array[Object]:
 	return []
 
 
-func _build_demo_sheet() -> EventSheetResource:
-	var sheet := EventSheetResource.new()
-	sheet.host_class = "CharacterBody2D"
-	sheet.variables["health"] = {"type": "int", "default": 100}
-	sheet.variables["score"] = {"type": "int", "default": 0}
-
-	var intro_comment := CommentRow.new()
-	intro_comment.text = "Drag a node into the viewport to preview the actions and conditions it offers."
-	sheet.events.append(intro_comment)
-
-	# A tiny, fully code-free example that ALWAYS compiles, so the Generated GDScript panel matches
-	# exactly what you see. Built from Core ACEs with BAKED templates (the reflected demo-actor
-	# provider isn't in the compiler's registry, so its rows used to silently produce no code - the
-	# preview then disagreed with the sheet). The drag-a-node-to-preview flow still showcases AutoACE.
-	var tick := EventRow.new()
-	tick.event_uid = "demo_tick"
-	tick.trigger_provider_id = "Core"
-	tick.trigger_id = "OnProcess"
-	var score_up := _make_action("Core", "AddVar", {"var_name": "score", "amount": "1"})
-	score_up.codegen_template = "{var_name} += {amount}"
-	var health_down := _make_action("Core", "SubtractVar", {"var_name": "health", "amount": "1"})
-	health_down.codegen_template = "{var_name} -= {amount}"
-	tick.actions = [score_up, health_down]
-	tick.comment = "Auto-generated example - every row is an event, no GDScript"
-	sheet.events.append(tick)
-
-	return sheet
-
-
-func _make_action(provider_id: String, ace_id: String, params: Dictionary) -> ACEAction:
-	var action := ACEAction.new()
-	action.provider_id = provider_id
-	action.ace_id = ace_id
-	action.params = params.duplicate(true)
-	return action
+## The starting sheet when there is nothing to restore: EMPTY, on purpose.
+##
+## This used to hand back a fabricated example (health/score variables and an On Process row that
+## counted them), so the dock could never be seen empty - every fresh open landed on rows the user had
+## not written and had to delete before starting. An empty sheet lets the viewport's own empty state do
+## the teaching instead: it draws the "add your first event" call to action and the starter-template
+## shortcut, which is the guidance the example was standing in for.
+func _build_blank_sheet() -> EventSheetResource:
+	return EventSheetResource.new()
 
 
 func _release_ace_sources() -> void:

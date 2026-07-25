@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Changed - the dock opens on an EMPTY sheet, not a fabricated example
+
+- Opening the EventSheet tab with nothing to restore used to seed a made-up example: `health` and
+  `score` variables and an On Process row that counted them up and down. It was impossible to reach an
+  empty sheet - you had to delete someone else's events before writing your own, and the tab was dirty
+  from the first frame. The starting sheet is now literally `EventSheetResource.new()`, so what greets
+  you is the getting-started empty state that already ships: a heading, a clickable **+ Add your first
+  event**, a **New from template…** shortcut, and one tip.
+- Three editor tests were leaning on that fabricated content as their fixture (the every-tick tempo
+  badge, On Process compiling to `_process`, and the Generated GDScript panel agreeing with the rows).
+  Each now builds its own sheet and pins the same behavior, so the coverage survived the removal
+  instead of quietly going with it.
+
 ### Changed - the demo player sheet is now purely a test fixture
 
 - `demo/sheets/player.tres` was doing two unrelated jobs: a sample event sheet shown to newcomers, and

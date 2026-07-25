@@ -113,21 +113,45 @@ static func run() -> bool:
     all_passed = _check("title dirty indicator is present", title_dirty_dot is Label, true) and all_passed
     all_passed = _check("demo sheet title label defaults to untitled", title_tab_label.text, "Untitled EventSheet") and all_passed
     all_passed = _check("demo sheet path hint defaults to unsaved", title_path_label.text, "Unsaved (in-memory)") and all_passed
+    all_passed = _check("the reflected ace registry is populated", ace_registry.get_reflected_provider_ids().is_empty(), false) and all_passed
+
+    # The dock's STARTING sheet is deliberately empty (the viewport's empty state does the teaching),
+    # so the row-rendering and preview-matching checks below load their own sheet rather than leaning
+    # on whatever setup(null) produced - which is what they used to do, back when a fabricated demo
+    # sheet was seeded on open.
+    var seeded: EventSheetResource = EventSheetResource.new()
+    seeded.host_class = "CharacterBody2D"
+    seeded.variables["health"] = {"type": "int", "default": 100}
+    seeded.variables["score"] = {"type": "int", "default": 0}
+    var seeded_tick: EventRow = EventRow.new()
+    seeded_tick.trigger_provider_id = "Core"
+    seeded_tick.trigger_id = "OnProcess"
+    var seeded_up: ACEAction = ACEAction.new()
+    seeded_up.provider_id = "Core"
+    seeded_up.ace_id = "AddVar"
+    seeded_up.params = {"var_name": "score", "amount": "1"}
+    seeded_up.codegen_template = "{var_name} += {amount}"
+    var seeded_down: ACEAction = ACEAction.new()
+    seeded_down.provider_id = "Core"
+    seeded_down.ace_id = "SubtractVar"
+    seeded_down.params = {"var_name": "health", "amount": "1"}
+    seeded_down.codegen_template = "{var_name} -= {amount}"
+    seeded_tick.actions.append(seeded_up)
+    seeded_tick.actions.append(seeded_down)
+    seeded.events.append(seeded_tick)
+    dock.setup(seeded)
     var demo_rows: Array[Dictionary] = dock_viewport.get_flat_rows()
     var first_demo_row: EventRowData = demo_rows[0].get("row")
-    all_passed = _check("demo sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
-    all_passed = _check("demo flow exposes reflected ace registry", ace_registry.get_reflected_provider_ids().is_empty(), false) and all_passed
-    # The demo's trigger is On Process (every-tick), so its tempo badge is ⟳, not the
-    # signal ➜. A signal trigger would render ➜; every-tick/input/once each get their own glyph.
-    all_passed = _check("demo rows render the every-tick tempo badge", _rows_contain_text(demo_rows, "⟳"), true) and all_passed
-    # The demo's events must COMPILE so the Generated GDScript panel matches the sheet. The old demo
-    # used non-compiling reflected rows (and set .trigger instead of trigger_id), so the panel showed
-    # only the vars + a comment - the preview disagreed with the events shown. Its Core-ACE rows now
-    # emit real code.
+    all_passed = _check("a loaded sheet exposes semantic spans", first_demo_row.spans.size() > 0, true) and all_passed
+    # On Process is an every-tick trigger, so its tempo badge is ⟳, not the signal ➜. A signal trigger
+    # would render ➜; every-tick/input/once each get their own glyph.
+    all_passed = _check("every-tick rows render the tempo badge", _rows_contain_text(demo_rows, "⟳"), true) and all_passed
+    # The events must COMPILE so the Generated GDScript panel matches the sheet: rows whose templates
+    # emit nothing would leave the panel disagreeing with the events on screen.
     var demo_gd: String = str(SheetCompiler.compile(dock._current_sheet, "user://_demo_editor_verify.gd").get("output", ""))
-    all_passed = _check("demo event compiles to a _process function", demo_gd.contains("func _process(delta: float) -> void:"), true) and all_passed
-    all_passed = _check("demo's generated GDScript matches its rows", demo_gd.contains("score += 1") and demo_gd.contains("health -= 1"), true) and all_passed
-    all_passed = _check("demo rows do not expose debug overlay badges by default", _rows_have_debug_state(demo_rows), false) and all_passed
+    all_passed = _check("an On Process event compiles to a _process function", demo_gd.contains("func _process(delta: float) -> void:"), true) and all_passed
+    all_passed = _check("the generated GDScript matches its rows", demo_gd.contains("score += 1") and demo_gd.contains("health -= 1"), true) and all_passed
+    all_passed = _check("rows do not expose debug overlay badges by default", _rows_have_debug_state(demo_rows), false) and all_passed
     all_passed = _check("title formatter returns no-sheet fallback", EventSheetDock._format_sheet_title(null, ""), "No Sheet Loaded") and all_passed
     all_passed = _check("path formatter returns no-sheet fallback", EventSheetDock._format_sheet_path_hint(null, ""), "Open or create a sheet to begin") and all_passed
 
