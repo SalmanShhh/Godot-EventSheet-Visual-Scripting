@@ -163,7 +163,7 @@ func set_storylet_max_plays(id: String, max_plays: float) -> void:
 ## @ace_name("Add Requirement")
 ## @ace_category("Storylets")
 ## @ace_description("A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "").")
-## @ace_param_options(op >=, >, <=, <, =, !=)
+## @ace_param_options(op "="== (equal to), "!="=!= (not equal to), <=< (less than), "<="=<= (at most), >=> (greater than), ">="=>= (at least))
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_requirement({id}, {quality_key}, {op}, {value})")
 func add_requirement(id: String, quality_key: String, op: String, value) -> void:
@@ -182,7 +182,7 @@ func add_choice(id: String, choice_id: String, text: String) -> void:
 ## @ace_name("Add Choice Requirement")
 ## @ace_category("Storylets")
 ## @ace_description("A rule that must pass for this choice to be OFFERED, e.g. quality "gold" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice.")
-## @ace_param_options(op >=, >, <=, <, =, !=)
+## @ace_param_options(op "="== (equal to), "!="=!= (not equal to), <=< (less than), "<="=<= (at most), >=> (greater than), ">="=>= (at least))
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_choice_requirement({id}, {choice_id}, {quality_key}, {op}, {value})")
 func add_choice_requirement(id: String, choice_id: String, quality_key: String, op: String, value) -> void:
@@ -194,7 +194,7 @@ func add_choice_requirement(id: String, choice_id: String, quality_key: String, 
 ## @ace_name("Add Choice Effect")
 ## @ace_category("Storylets")
 ## @ace_description("A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice.")
-## @ace_param_options(op { "key": "set", "label": "Set to" }, { "key": "inc", "label": "Increment by" }, { "key": "dec", "label": "Decrement by" }, { "key": "toggle", "label": "Toggle (0/1)" }, { "key": "delete", "label": "Delete key" })
+## @ace_param_options(op set=Set to, inc=Increment by, dec=Decrement by, toggle=Toggle (0/1), delete=Delete key)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_choice_effect({id}, {choice_id}, {op}, {key}, {value})")
 func add_choice_effect(id: String, choice_id: String, op: String, key: String, value) -> void:
@@ -206,7 +206,7 @@ func add_choice_effect(id: String, choice_id: String, op: String, key: String, v
 ## @ace_name("Add Effect")
 ## @ace_category("Storylets")
 ## @ace_description("A quality change applied automatically when this storylet is DRAWN - so a beat carries its own consequence. Define the storylet first.")
-## @ace_param_options(op { "key": "set", "label": "Set to" }, { "key": "inc", "label": "Increment by" }, { "key": "dec", "label": "Decrement by" }, { "key": "toggle", "label": "Toggle (0/1)" }, { "key": "delete", "label": "Delete key" })
+## @ace_param_options(op set=Set to, inc=Increment by, dec=Decrement by, toggle=Toggle (0/1), delete=Delete key)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_effect({id}, {op}, {key}, {value})")
 func add_effect(id: String, op: String, key: String, value) -> void:
@@ -225,7 +225,7 @@ func add_meta(id: String, key: String, value) -> void:
 ## @ace_name("Add Requirement (Key vs Key)")
 ## @ace_category("Storylets")
 ## @ace_description("A rule comparing one quality against ANOTHER quality's value, e.g. gold >= price - so a storylet reacts to a relationship between stats without hard-coding the number.")
-## @ace_param_options(op >=, >, <=, <, =, !=)
+## @ace_param_options(op "="== (equal to), "!="=!= (not equal to), <=< (less than), "<="=<= (at most), >=> (greater than), ">="=>= (at least))
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_requirement_key({id}, {quality_key}, {op}, {other_key})")
 func add_requirement_key(id: String, quality_key: String, op: String, other_key: String) -> void:
@@ -244,7 +244,7 @@ func add_chance_requirement(id: String, percent: float) -> void:
 ## @ace_name("Add Recency Requirement")
 ## @ace_category("Storylets")
 ## @ace_description("An anti-repeat (or must-be-recent) gate by DRAW history: eligible only when this storylet was / was not among the last N drawn storylets.")
-## @ace_param_options(mode { "key": "not_recent", "label": "was NOT drawn recently" }, { "key": "recent", "label": "was drawn recently" })
+## @ace_param_options(mode not_recent=was NOT drawn recently, recent=was drawn recently)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_recency_requirement({id}, {mode}, {within})")
 func add_recency_requirement(id: String, mode: String, within: int) -> void:

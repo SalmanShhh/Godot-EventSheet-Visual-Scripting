@@ -356,26 +356,17 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 				overrides["codegen_template"] = _extract_annotation_value(directive)
 			"@ace_param_options":
 				# `@ace_param_options(movement horizontal, vertical, angle)` -> the param
-				# renders as a dropdown (a Combo) in the params dialog.
+				# renders as a dropdown (a Combo) in the params dialog. Entries are comma
+				# separated, and split only OUTSIDE quotes so a quoted key may contain one.
 				var options_value: String = _extract_annotation_value(directive)
 				var options_split: PackedStringArray = options_value.split(" ", false, 1)
 				if options_split.size() == 2:
 					var param_options: Dictionary = overrides.get("param_options", {})
 					var option_values: Array = []
-					for raw_option in options_split[1].split(","):
-						# `value=Label` labels an entry, so the dropdown reads as English while
-						# inserting the real token; a bare entry stays its own label.
-						var option_entry: String = raw_option.strip_edges()
-						if option_entry.is_empty():
-							continue
-						var label_at: int = option_entry.find("=")
-						if label_at > 0 and not option_entry.substr(label_at + 1).strip_edges().is_empty():
-							option_values.append({
-								"key": option_entry.substr(0, label_at).strip_edges(),
-								"label": option_entry.substr(label_at + 1).strip_edges()
-							})
-						else:
-							option_values.append({"key": option_entry, "label": option_entry})
+					for raw_option: String in _split_outside_quotes(options_split[1], ","):
+						var option_pair: Dictionary = _option_pair(raw_option)
+						if not option_pair.is_empty():
+							option_values.append(option_pair)
 					param_options[options_split[0].strip_edges()] = option_values
 					overrides["param_options"] = param_options
 			"@ace_param_autocomplete":
@@ -489,38 +480,51 @@ func _split_pipe_values(value: String) -> Array:
 
 ## The canonical comparison operators, as {key, label} pairs. `hint: comparison` on a param resolves
 ## to this list, so a provider condition never hand-types the six operators - which also sidesteps the
-## enum-option parser's dislike of a bare `=` and the word-token workarounds that produced.
-## Mirrors EventForgeACEFactory.COMPARISON_OPERATORS, in the same order.
-const COMPARISON_OPTIONS: Array = [
-	{"key": "==", "label": "= (equal to)"},
-	{"key": "!=", "label": "!= (not equal to)"},
-	{"key": "<", "label": "< (less than)"},
-	{"key": "<=", "label": "<= (at most)"},
-	{"key": ">", "label": "> (greater than)"},
-	{"key": ">=", "label": ">= (at least)"}
-]
+## enum-option parser's dislike of a bare `=` and the word-token workarounds that produced. Points at
+## the factory's list rather than restating it, so the builtin conditions and the provider shorthand
+## can never offer different operators or different wording.
+const COMPARISON_OPTIONS: Array = EventForgeACEFactory.COMPARISON_OPTIONS
 
 
 ## Splits an `options:` value into {key, label} pairs, so a dropdown can READ as English while
 ## INSERTING the real token. `a|b` stays plain (key == label); `set=Set it|inc=Increase it` labels
-## each. The `=` splits on the FIRST one only, so a key or label may itself contain one.
+## each. Splits outside quotes only, so a quoted key may contain the `|` separator.
 func _split_option_values(value: String) -> Array:
 	var output: Array = []
-	for raw_entry in value.split("|"):
-		var entry: String = raw_entry.strip_edges()
-		if entry.is_empty():
-			continue
-		var split_at: int = entry.find("=")
-		if split_at <= 0:
-			output.append({"key": entry, "label": entry})
-			continue
-		var key: String = entry.substr(0, split_at).strip_edges()
-		var label: String = entry.substr(split_at + 1).strip_edges()
-		if key.is_empty() or label.is_empty():
-			output.append({"key": entry, "label": entry})
-			continue
-		output.append({"key": key, "label": label})
+	for raw_entry: String in _split_outside_quotes(value, "|"):
+		var pair: Dictionary = _option_pair(raw_entry)
+		if not pair.is_empty():
+			output.append(pair)
 	return output
+
+
+## One dropdown entry -> {key, label}. `value=Label` labels it; a bare entry is its own label.
+##
+## A key that itself contains the `=` separator ships QUOTED - `"<="=<= (at most)` - because the
+## split is on the first `=` and every comparison operator would otherwise cut itself in half
+## (`>==>= (at least)` split to key `>`). That single limitation is what pushed data-driven packs
+## into smuggling operators as word tokens plus a symbol-mapper on the other side.
+func _option_pair(raw_entry: String) -> Dictionary:
+	var entry: String = raw_entry.strip_edges()
+	if entry.is_empty():
+		return {}
+	if entry.begins_with("\""):
+		var close_at: int = entry.find("\"", 1)
+		if close_at > 0:
+			var quoted_key: String = entry.substr(1, close_at - 1)
+			var remainder: String = entry.substr(close_at + 1).strip_edges()
+			var quoted_label: String = ""
+			if remainder.begins_with("="):
+				quoted_label = remainder.substr(1).strip_edges()
+			return {"key": quoted_key, "label": quoted_key if quoted_label.is_empty() else quoted_label}
+	var split_at: int = entry.find("=")
+	if split_at <= 0:
+		return {"key": entry, "label": entry}
+	var key: String = entry.substr(0, split_at).strip_edges()
+	var label: String = entry.substr(split_at + 1).strip_edges()
+	if key.is_empty() or label.is_empty():
+		return {"key": entry, "label": entry}
+	return {"key": key, "label": label}
 
 
 ## Splits on a separator only outside double quotes, so `desc: "Slow, steady"` keeps

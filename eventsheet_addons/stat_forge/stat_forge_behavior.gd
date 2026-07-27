@@ -189,7 +189,7 @@ func stat_is_at_least(stat: String, value: float) -> bool:
 ## @ace_action
 ## @ace_name("Add Buff")
 ## @ace_description("The one verb that runs the whole system: a named buff targeting a stat with a value and a mode (add / multiply / override - highest override wins). Tags are comma-separated labels for bulk ops, source names who applied it, duration in seconds expires it (0 = permanent). Re-adding an id REPLACES that buff.")
-## @ace_param_options(mode add, multiply, override)
+## @ace_param_options(mode add=Add to the stat, multiply=Multiply the stat, override=Override the stat)
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.add_buff({buff_id}, {stat}, {value}, {mode}, {tags}, {source}, {duration})")
 func add_buff(buff_id: String, stat: String, value: float, mode: String = "add", tags: String = "", source: String = "", duration: float = 0.0) -> void:
@@ -329,7 +329,7 @@ func advance_timers(seconds: float) -> void:
 ## @ace_action
 ## @ace_name("Add Threshold Rule")
 ## @ace_description("Watches a stat and fires On Threshold Crossed when its total crosses the value. Direction rising / falling / both; a repeating rule re-arms once the stat is back across, a one-shot stays spent until Re-Arm Threshold Rule.")
-## @ace_param_options(direction rising, falling, both)
+## @ace_param_options(direction rising=Rising past the value, falling=Falling past the value, both=Either direction)
 ## @ace_icon("res://eventsheet_addons/stat_forge/icon.svg")
 ## @ace_codegen_template("$StatForge.add_threshold_rule({rule_id}, {stat}, {value}, {direction}, {repeating})")
 func add_threshold_rule(rule_id: String, stat: String, value: float, direction: String = "rising", repeating: bool = true) -> void:

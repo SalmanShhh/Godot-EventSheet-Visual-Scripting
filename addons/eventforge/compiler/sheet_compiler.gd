@@ -1855,7 +1855,7 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 			if not ace_param.options.is_empty():
 				var option_texts: PackedStringArray = PackedStringArray()
 				for option_value in ace_param.options:
-					option_texts.append(str(option_value))
+					option_texts.append(_param_option_text(option_value))
 				lines.append("## @ace_param_options(%s %s)" % [ace_param.id, ", ".join(option_texts)])
 			if not ace_param.hint.strip_edges().is_empty():
 				lines.append("## @ace_param_hint(%s %s)" % [ace_param.id, ace_param.hint.strip_edges()])
@@ -1877,6 +1877,35 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 		# no node paths (the whole point of an autoload).
 		call_prefix = "%s." % sheet.autoload_name.strip_edges()
 	lines.append("## @ace_codegen_template(\"%s%s(%s)\")" % [call_prefix, event_function.function_name, ", ".join(argument_tokens)])
+
+
+## One dropdown option, in the form the provider scanner reads back out of the emitted pack.
+##
+## A `{"key", "label"}` option becomes `key=Label`, so the dropdown READS as English while
+## INSERTING the real token. Plain string options stay bare, which is what keeps every pack that
+## never labeled its options emitting byte-identically. str()-ing the dict instead baked raw
+## GDScript into the annotation, and since the scanner splits that list on commas, one labeled
+## option came back as several broken ones.
+##
+## A key that contains a separator ships QUOTED - `"<="=<= (at most)` - so the scanner can tell
+## where it ends. Every comparison operator needs this: the split is on the first `=`, so a bare
+## `>==>= (at least)` would come back as key `>`.
+##
+## Labels have no such escape (the entry itself is comma delimited), so a label containing a comma
+## degrades to its bare key rather than emitting an annotation that parses into garbage: the
+## dropdown still offers the right value, it just loses the prettier wording.
+static func _param_option_text(option_value: Variant) -> String:
+	if not option_value is Dictionary:
+		return str(option_value)
+	var pair: Dictionary = option_value as Dictionary
+	var key: String = str(pair.get("key", ""))
+	var label: String = str(pair.get("label", key))
+	var key_text: String = key
+	if key.contains("=") or key.contains(",") or key.contains("|") or key.begins_with("\""):
+		key_text = "\"%s\"" % key
+	if label == key or label.is_empty() or label.contains(","):
+		return key_text
+	return "%s=%s" % [key_text, label]
 
 
 ## The stub emitted for a function whose body has no rows yet ("published before implemented").

@@ -55,8 +55,33 @@ static func make_param(param_id: String, type_name: String, default_value: Varia
 	parameter.autocomplete = autocomplete.duplicate()
 	return parameter
 
-## Canonical comparison operators (CompareVar/CompareValues dropdowns).
+## THE canonical comparison dropdown, labeled - every operator picker in the plugin resolves here:
+## the builtin Compare Variable / Compare Values conditions, the `hint: comparison` provider
+## shorthand, and any pack builder that calls comparison_options(). One list, so a wording change
+## lands everywhere at once instead of drifting between copies.
+const COMPARISON_OPTIONS: Array = [
+	{"key": "==", "label": "= (equal to)"},
+	{"key": "!=", "label": "!= (not equal to)"},
+	{"key": "<", "label": "< (less than)"},
+	{"key": "<=", "label": "<= (at most)"},
+	{"key": ">", "label": "> (greater than)"},
+	{"key": ">=", "label": ">= (at least)"}
+]
+
+## The same six as bare inserted tokens, for callers that only need the values.
 const COMPARISON_OPERATORS: Array[String] = ["==", "!=", "<", "<=", ">", ">="]
+
+
+## The labeled comparison dropdown, with the equality token swapped for callers whose runtime
+## matches on something other than `==`. A data-driven pack that stores the operator and compares
+## it later (Storylet Weaver's requirement rows) uses a single `=`, and re-typing the whole list to
+## change one character is how the copies drifted apart in the first place.
+static func comparison_options(equal_token: String = "==") -> Array:
+	var output: Array = []
+	for option: Dictionary in COMPARISON_OPTIONS:
+		var key: String = str(option["key"])
+		output.append({"key": equal_token if key == "==" else key, "label": str(option["label"])})
+	return output
 
 
 ## InputMap action names (project actions + the ui_* defaults), quoted for templates.

@@ -64,7 +64,7 @@ static func build() -> bool:
 		"## Switches what the host wraps around: the on-screen camera view, or the custom rectangle.",
 		"## @ace_action",
 		"## @ace_name(\"Set Wrap Space\")",
-		"## @ace_param_options(space screen, custom)",
+		"## @ace_param_options(space screen=The on-screen camera view, custom=A custom rectangle)",
 		"func set_wrap_space(space: String) -> void:",
 		"\tif space in [\"screen\", \"custom\"]:",
 		"\t\twrap_space = space",

@@ -69,7 +69,7 @@ static func build() -> bool:
 		"## Switches what spins: a Node2D's rotation, or a Node3D's X / Y / Z axis.",
 		"## @ace_action",
 		"## @ace_name(\"Set Rotation Type\")",
-		"## @ace_param_options(type 2d, x, y, z)",
+		"## @ace_param_options(type 2d=2D rotation, x=3D X axis, y=3D Y axis, z=3D Z axis)",
 		"func set_rotation_type(type: String) -> void:",
 		"\tif type in [\"2d\", \"x\", \"y\", \"z\"]:",
 		"\t\trotation_type = type",

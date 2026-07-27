@@ -114,10 +114,12 @@ static func run() -> bool:
 		emitted.contains("## @ace_name(\"Add Buff\")"), true) and all_passed
 	all_passed = _check("doc comments fold into @ace_description",
 		emitted.contains("## @ace_description(\"The one verb that runs the whole system"), true) and all_passed
+	# The dropdowns are labeled now: the token still drives the math, but the author reads English
+	# instead of guessing what "override" does to a stat before picking it.
 	all_passed = _check("param options survive emission (mode dropdown)",
-		emitted.contains("## @ace_param_options(mode add, multiply, override)"), true) and all_passed
+		emitted.contains("## @ace_param_options(mode add=Add to the stat, multiply=Multiply the stat, override=Override the stat)"), true) and all_passed
 	all_passed = _check("param options survive emission (direction dropdown)",
-		emitted.contains("## @ace_param_options(direction rising, falling, both)"), true) and all_passed
+		emitted.contains("## @ace_param_options(direction rising=Rising past the value, falling=Falling past the value, both=Either direction)"), true) and all_passed
 
 	# ── Rounded corners: the theme tokens exist with the shipped defaults ──
 	var style: EventSheetEventStyle = EventSheetEventStyle.new()

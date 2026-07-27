@@ -636,11 +636,13 @@ static func build() -> bool:
 	return Lib.save_pack(sheet, "res://eventsheet_addons/storylet_weaver/storylet_weaver_addon")
 
 
-## Gives the requirement op parameter a friendly comparison dropdown.
+## Gives the requirement op parameter the shared comparison dropdown. _matches_requirement compares
+## the stored token with a single `=` for equality, so the list is asked for that spelling; the
+## labels are the plugin-wide ones, which is why this no longer hand-types the six operators.
 static func _op_options(fn: EventFunction, param_id: String) -> void:
 	for parameter: ACEParam in fn.params:
 		if parameter.id == param_id:
-			parameter.options = [">=", ">", "<=", "<", "=", "!="]
+			parameter.options = EventSheets.comparison_options("=")
 			parameter.default_value = ">="
 
 

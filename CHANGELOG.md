@@ -23,6 +23,33 @@ Three gaps where a bundled module could express something an `@ace_*` author cou
   reads as a sentence on drop. This also removes the reason packs hand-rolled word tokens plus a
   symbol mapper: the enum-option parser rejects a bare `=`, which the labeled form sidesteps.
 
+### Fixed - labeled dropdowns never survived a pack's own emission
+
+A pack's shipped `.gd` IS its provider, so an option only exists if it round-trips as an annotation.
+It did not. The emitter `str()`-ed a `{key, label}` option straight into the comment, baking raw
+GDScript where the scanner expected a list - and since the scanner splits that list on commas, one
+labeled option came back as several broken ones. Every dict-option dropdown in the shipped packs was
+quietly garbage (Storylet Weaver's effect and recency pickers offered `{ "key": "set"` as a choice).
+
+Options now emit as `key=Label`. A key that contains the `=` the grammar splits on ships QUOTED -
+`"<="=<= (at most)` - which is what finally makes comparison operators expressible: unquoted, `>=`
+came back as `>`, a wrong comparison rather than a cosmetic slip. That single limitation is the whole
+reason data-driven packs smuggled operators as word tokens with a symbol-mapper on the other side.
+Plain string options are untouched, so the 71 packs that never labeled anything emit byte-identically.
+
+### Changed - one comparison list, and packs that read as English
+
+- The six operators live in ONE place now. The `hint: comparison` shorthand, the builtin **Compare
+  Variable** / **Compare Values** conditions and any pack builder all resolve to the same labeled
+  list, so a wording change cannot land in one dropdown and miss the others. `EventSheets`
+  gained `comparison_options()` (with an `equal_token` for runtimes that store a single `=`) and
+  `combo_options()`, which builds the pair form from a `{value: label}` dictionary or a plain list.
+- Both builtin comparison conditions now show `>= (at least)` instead of a bare `>=`.
+- **Storylet Weaver** requirement rows use that shared dropdown rather than six hand-typed symbols.
+- **Bound To**, **Wrap**, **Rotate** and **StatForge** dropdowns read in English: "Left edge" over
+  `left`, "The on-screen camera view" over `screen`, "3D Y axis" over `y`, "Multiply the stat" over
+  `multiply`. The inserted token is unchanged, so existing sheets keep compiling to the same code.
+
 ### Added - Stepping on the fast movement packs (anti-tunnelling)
 
 - A bullet moves by jumping its whole frame of travel at once. At 3000 px/s that is ~50 pixels a

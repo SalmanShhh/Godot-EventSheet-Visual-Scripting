@@ -829,6 +829,31 @@ static func register_section_description(section_name: String, blurb: String) ->
 	EventSheetSectionInfo.register_description(section_name, blurb)
 
 
+## Builds dropdown options from `{value: label}` or a plain value list, in the shape a param's
+## `options` wants: {"key": <what gets inserted>, "label": <what the author reads>}. A dropdown
+## should read as English while still inserting the real token, and hand-building the pair dicts
+## at every call site is how half the packs ended up shipping raw tokens as their own labels.
+static func combo_options(source: Variant) -> Array:
+	var output: Array = []
+	if source is Dictionary:
+		for key: Variant in (source as Dictionary):
+			output.append({"key": str(key), "label": str((source as Dictionary)[key])})
+	elif source is Array or source is PackedStringArray:
+		for entry: Variant in source:
+			if entry is Dictionary:
+				var pair: Dictionary = entry as Dictionary
+				output.append({"key": str(pair.get("key", "")), "label": str(pair.get("label", pair.get("key", "")))})
+			else:
+				output.append({"key": str(entry), "label": str(entry)})
+	return output
+
+
+## THE comparison dropdown - the six operators, labeled in plain English. Pass `equal_token` when
+## the runtime stores and later matches the operator with a single `=` instead of `==`.
+static func comparison_options(equal_token: String = "==") -> Array:
+	return EventForgeACEFactory.comparison_options(equal_token)
+
+
 ## Registers a custom parameter editor. `tag` matches a param's hint (or its type_name when it
 ## has no hint); `factory(param_dict, initial_text)` must return a LineEdit (subclass and style
 ## it freely - add buttons, popups, validation - the dialog reads the final value from .text).

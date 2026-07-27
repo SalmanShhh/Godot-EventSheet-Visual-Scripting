@@ -13,6 +13,7 @@ class_name ParamAuthoringTest
 extends RefCounted
 
 const FIXTURE := "res://tests/fixtures/param_grammar_fixture.gd"
+const STORYLET_PACK := "res://eventsheet_addons/storylet_weaver/storylet_weaver_addon.gd"
 
 
 static func run() -> bool:
@@ -47,6 +48,47 @@ static func run() -> bool:
 		_option_labels(compares, "op"),
 		["= (equal to)", "!= (not equal to)", "< (less than)", "<= (at most)", "> (greater than)", ">= (at least)"]) and ok
 	ok = _check("it seeds == so the row reads as a sentence on drop", _default(compares, "op"), "==") and ok
+
+	# ---- 4. Labeled options survive the trip THROUGH an emitted pack ----
+	# A pack's shipped .gd IS its provider, so an option only really exists if it round-trips as an
+	# annotation. It did not: the emitter str()-ed the {key,label} dict, baking raw GDScript into the
+	# comment, and the scanner (which splits the list on commas) read one labeled option back as
+	# several broken ones. Every dict-option dropdown in the shipped packs was silently garbage.
+	var analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
+	var emitted: String = FileAccess.get_file_as_string(STORYLET_PACK)
+	ok = _check("a labeled option emits as key=Label",
+		emitted.contains("@ace_param_options(op set=Set to, inc=Increment by"), true) and ok
+	# The operators are the hard case: the key CONTAINS the `=` the grammar splits on, so it ships
+	# quoted. Without this `>=` came back as `>` - which is a wrong comparison, not a cosmetic bug.
+	ok = _check("an operator key ships quoted so it cannot cut itself in half",
+		emitted.contains("\">=\"=>= (at least)"), true) and ok
+	var scanned: Dictionary = analyzer._build_overrides([
+		"@ace_action",
+		"@ace_param_options(op \"=\"== (equal to), \"!=\"=!= (not equal to), <=< (less than), \"<=\"=<= (at most), >=> (greater than), \">=\"=>= (at least))"
+	])
+	var scanned_options: Array = (scanned.get("param_options", {}) as Dictionary).get("op", [])
+	var scanned_keys: Array = []
+	var scanned_labels: Array = []
+	for option: Variant in scanned_options:
+		scanned_keys.append(str((option as Dictionary).get("key", "")))
+		scanned_labels.append(str((option as Dictionary).get("label", "")))
+	ok = _check("and the scanner reads all six operators back intact",
+		scanned_keys, ["=", "!=", "<", "<=", ">", ">="]) and ok
+	ok = _check("with their labels", scanned_labels,
+		["= (equal to)", "!= (not equal to)", "< (less than)", "<= (at most)", "> (greater than)", ">= (at least)"]) and ok
+
+	# ---- 5. One canonical operator list, not a copy per surface ----
+	# The analyzer's shorthand, the builtin Compare conditions and any pack builder all resolve to
+	# the factory's list, so a wording change cannot land in one dropdown and miss the others.
+	ok = _check("the shorthand points at the factory list",
+		EventSheetSemanticAnalyzer.COMPARISON_OPTIONS, EventForgeACEFactory.COMPARISON_OPTIONS) and ok
+	ok = _check("and the bare-token list stays in step with it",
+		EventForgeACEFactory.COMPARISON_OPERATORS.size(), EventForgeACEFactory.COMPARISON_OPTIONS.size()) and ok
+	var single_equals: Array = EventSheets.comparison_options("=")
+	ok = _check("a pack whose runtime matches a single = gets that spelling",
+		str((single_equals[0] as Dictionary).get("key", "")), "=") and ok
+	ok = _check("without disturbing the rest",
+		str((single_equals[5] as Dictionary).get("key", "")), ">=") and ok
 
 	return ok
 

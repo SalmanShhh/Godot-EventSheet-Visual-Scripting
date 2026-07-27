@@ -134,7 +134,7 @@ func set_wrap_extents(new_half_width: float, new_half_height: float) -> void:
 ## @ace_action
 ## @ace_name("Set Wrap Space")
 ## @ace_description("Switches what the host wraps around: the on-screen camera view, or the custom rectangle.")
-## @ace_param_options(space screen, custom)
+## @ace_param_options(space screen=The on-screen camera view, custom=A custom rectangle)
 ## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
 ## @ace_codegen_template("$WrapBehavior.set_wrap_space({space})")
 func set_wrap_space(space: String) -> void:

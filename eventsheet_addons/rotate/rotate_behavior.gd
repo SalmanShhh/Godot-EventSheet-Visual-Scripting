@@ -93,7 +93,7 @@ func set_rotation_acceleration(degrees_per_second_squared: float) -> void:
 ## @ace_action
 ## @ace_name("Set Rotation Type")
 ## @ace_description("Switches what spins: a Node2D's rotation, or a Node3D's X / Y / Z axis.")
-## @ace_param_options(type 2d, x, y, z)
+## @ace_param_options(type 2d=2D rotation, x=3D X axis, y=3D Y axis, z=3D Z axis)
 ## @ace_icon("res://eventsheet_addons/rotate/icon.svg")
 ## @ace_codegen_template("$RotateBehavior.set_rotation_type({type})")
 func set_rotation_type(type: String) -> void:
