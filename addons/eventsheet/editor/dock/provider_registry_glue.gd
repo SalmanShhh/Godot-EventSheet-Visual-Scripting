@@ -30,6 +30,8 @@ var _param_specs: Dictionary = {}
 var _param_dialog: ConfirmationDialog = null
 var _param_rows: Array = []
 var _param_member: String = ""
+var _shim_dialog: ConfirmationDialog = null
+var _shim_old_name: LineEdit = null
 
 
 func init(dock: Control) -> void:
@@ -225,6 +227,8 @@ func preview_provider_script(path: String, offer_register: bool) -> void:
 		_dock._provider_curate_button.visible = has_entries
 	if _dock._provider_params_button != null:
 		_dock._provider_params_button.visible = has_entries
+	if _dock._provider_shim_button != null:
+		_dock._provider_shim_button.visible = has_entries
 
 
 ## The category the scan reported for a row, which is the BEFORE side of the Category column.
@@ -375,6 +379,53 @@ func _collect_param_dialog() -> void:
 			spec["default"] = default_text
 		set_param_spec(_param_member, str(entry["id"]), spec)
 	_dock._set_status("Parameter shapes recorded - press Curate Script to write them.")
+
+
+## Asks what the selected verb USED to be called, then shims it.
+func on_provider_shim_pressed() -> void:
+	if _dock._provider_preview_tree == null or _dock._provider_preview_tree.get_selected() == null:
+		_dock._set_status("Select the verb under its new name first.")
+		return
+	if _shim_dialog == null:
+		_shim_dialog = ConfirmationDialog.new()
+		_shim_dialog.title = "Keep the old name working"
+		_shim_dialog.ok_button_text = "Add Shim"
+		var body: VBoxContainer = EventSheetPopupUI.form_box()
+		body.add_child(EventSheetPopupUI.hint_label("Renaming a function changes the verb's identity, so sheets that already use it break - silently, because the old call is baked into each row and still compiles.
+Name what this function used to be called and a deprecated stand-in is added that forwards to it. Nothing existing is edited."))
+		_shim_old_name = LineEdit.new()
+		_shim_old_name.placeholder_text = "the previous function name"
+		body.add_child(EventSheetPopupUI.form_row("Used to be", _shim_old_name))
+		_shim_dialog.add_child(EventSheetPopupUI.margined(body))
+		_shim_dialog.confirmed.connect(func() -> void: on_provider_keep_old_name(_shim_old_name.text.strip_edges()))
+		_dock.add_child(_shim_dialog)
+	_shim_old_name.text = ""
+	_shim_dialog.popup_centered(Vector2i(520, 240))
+
+
+## Keeps a verb that has been RENAMED working for sheets that already use it.
+##
+## Select the verb under its NEW name and name what it used to be called; a deprecated forwarding
+## shim of the old name is appended. Nothing existing is edited. This exists because a rename fails
+## SILENTLY otherwise: the compiler prefers the template baked onto a row over any registry lookup,
+## so an orphaned row still emits the old call, compiles clean, and breaks at game runtime.
+func on_provider_keep_old_name(old_member: String) -> void:
+	var path: String = str(_dock._provider_preview_path)
+	var item: TreeItem = _dock._provider_preview_tree.get_selected() if _dock._provider_preview_tree != null else null
+	if path.strip_edges().is_empty() or item == null:
+		_dock._set_status("Select the verb under its new name first.", true)
+		return
+	var row: Dictionary = item.get_metadata(0) as Dictionary
+	if row == null or str(row.get("source", "")) != "method":
+		_dock._set_status("Only a method can carry a forwarding shim.", true)
+		return
+	var result: Dictionary = EventSheets.keep_old_verb_working(path, old_member, str(row.get("member", "")))
+	if not bool(result.get("ok", false)):
+		_dock._set_status(str(result.get("reason", "Could not add the shim.")), true)
+		return
+	_dock._set_status("Added a deprecated %s() that forwards to %s() - sheets using the old verb keep working, and it is hidden from the picker."
+		% [old_member, str(row.get("member", ""))])
+	preview_provider_script(path, false)
 
 
 ## Shows what will be written before anything is written. The wizard edits a file the user owns,

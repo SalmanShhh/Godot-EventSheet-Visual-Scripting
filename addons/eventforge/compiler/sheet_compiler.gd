@@ -2616,7 +2616,7 @@ static func table_enum_pair(entry: String) -> Dictionary:
 		var key: String = text.substr(0, split_at).strip_edges()
 		var label: String = text.substr(split_at + 1).strip_edges()
 		if _valid_enum_option(key) and _valid_enum_label(label):
-			return {"key": key, "label": label}
+			return {"key": key, "label": _unescape_marker_label(label)}
 	# Not a pair, so the whole entry is the key. It may carry `=` - that is exactly what makes
 	# `==`, `<=`, `>=` and `!=` storable - but nothing that would break one of the splits.
 	return {"key": text, "label": text} if _valid_enum_key(text) else {}
@@ -2669,7 +2669,7 @@ static func table_enum_entry(option: Variant) -> String:
 	var bare: bool = label.is_empty() or label == key or key.contains("=") or not _valid_enum_label(label)
 	if bare:
 		return key if str(table_enum_pair(key).get("key", "")) == key else ""
-	return "%s=%s" % [key, label]
+	return "%s=%s" % [key, _escape_marker_label(label)]
 
 
 ## A bare KEY may carry `=`, because table_enum_pair only treats one as a separator when both sides
@@ -2693,17 +2693,41 @@ static func _valid_enum_option(option: String) -> bool:
 	return not (cleaned.contains(",") or cleaned.contains("=") or cleaned.contains(":") or cleaned.contains("\"") or cleaned.contains("|") or cleaned.contains("(") or cleaned.contains(")"))
 
 
-## A LABEL may carry more than a key can, because it never has to survive a lookup - only the splits.
-## Each rejection traces to exactly one of them: `,` splits columns, `|` splits options, `:` splits
-## the marker segments, and `"` would terminate the GDScript string literal the marker lives inside.
-## `=` is fine after the first one (the pair splits on that), and so are parentheses - the wrapper is
-## stripped by index arithmetic that only ever consumes the final `)`. That is what makes
-## ">= (at least)" expressible.
+## The four characters a LABEL cannot carry literally, and the sequence each becomes. Every one is a
+## split the marker depends on: `,` splits columns, `|` splits options, `:` splits the marker
+## segments, and `"` would terminate the GDScript string literal the whole marker lives inside.
+##
+## `=` and parentheses are absent on purpose. A label needs both - ">= (at least)" is the motivating
+## case - and both are already safe: the pair splits on the FIRST `=`, and the enum wrapper is
+## stripped by index arithmetic that only ever consumes the final `)`.
+##
+## Escaping is applied to LABELS ONLY. A key is left exactly as it was, which is what keeps `<=` and
+## `==` emitting as themselves - escaping `=` in keys would rewrite every operator column on disk.
+const MARKER_ESCAPES: Dictionary = {",": "~2C", "|": "~7C", ":": "~3A", "\"": "~22"}
+
+
+## The tilde is never itself escaped, so `~` stays an ordinary character and the sequence list is
+## closed: exactly four spellings decode, everything else is literal text. That is what makes
+## decode(encode(x)) == x AND encode(decode(t)) == t hold together - if the lead-in were escapable,
+## two spellings would collapse to one value and the importer's byte gate would turn a working grid
+## into a verbatim block on the next open.
+static func _escape_marker_label(label: String) -> String:
+	var output: String = label
+	for literal: String in MARKER_ESCAPES:
+		output = output.replace(literal, str(MARKER_ESCAPES[literal]))
+	return output
+
+
+static func _unescape_marker_label(label: String) -> String:
+	var output: String = label
+	for literal: String in MARKER_ESCAPES:
+		output = output.replace(str(MARKER_ESCAPES[literal]), literal)
+	return output
+
+
+## With escaping in place a label only has to be non-empty - anything it carries is representable.
 static func _valid_enum_label(label: String) -> bool:
-	var cleaned: String = label.strip_edges()
-	if cleaned.is_empty():
-		return false
-	return not (cleaned.contains(",") or cleaned.contains("|") or cleaned.contains(":") or cleaned.contains("\""))
+	return not label.strip_edges().is_empty()
 
 
 ## Tier 3 custom-drawer @export_custom prefix. The `eventsheet:<drawer>`

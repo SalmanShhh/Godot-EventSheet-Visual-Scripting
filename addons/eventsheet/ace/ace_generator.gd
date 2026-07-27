@@ -219,6 +219,12 @@ static func _apply_deprecation_metadata(definition: ACEDefinition, overrides: Di
 	var note: String = "(Deprecated)"
 	if not message.is_empty():
 		note += " " + message
+	# The successor id, when the annotation named one. The hover and the compiler's deprecation
+	# warning both read this, so a shim can say where the verb went instead of only that it left.
+	var replacement: String = str(overrides.get("replacement_ace_id", "")).strip_edges()
+	if not replacement.is_empty():
+		definition.metadata["replacement_ace_id"] = replacement
+		note += " Use %s instead." % replacement
 	definition.metadata["deprecation_note"] = note
 
 

@@ -23,6 +23,24 @@ Three gaps where a bundled module could express something an `@ace_*` author cou
   reads as a sentence on drop. This also removes the reason packs hand-rolled word tokens plus a
   symbol mapper: the enum-option parser rejects a bare `=`, which the labeled form sidesteps.
 
+### Added - a renamed verb can keep working (Phase 3 completes)
+
+Renaming a provider function changes the verb's identity, so every sheet row that used it is
+orphaned. The dangerous part is that this fails **silently**: the compiler prefers the template baked
+onto a row at apply time over any registry lookup, so an orphaned row still emits the old call,
+compiles with zero errors and zero warnings, and breaks at game runtime.
+
+**Keep Old Name...** appends a deprecated forwarding stand-in of the previous name. That is the only
+construct that fixes both halves - the old id resolves again so rows render with their label and
+params, and the old call text baked into every already-compiled script stays valid. An id alias could
+not have done it, because a compiled `.gd` holds call text and no id at all. `@ace_deprecated` now
+takes an optional second argument naming the successor, so the hover says where the verb went, and
+the stand-in is hidden from the picker so it cannot be added to new work.
+
+Nothing existing is edited - no signature, no body, no call site. Automated member renaming is a far
+riskier operation than adding one function and is deliberately not offered: you rename in your own
+editor, and the wizard makes the old name keep working.
+
 ### Added - the ACE wizard shapes parameters too (Phase 3)
 
 Curation could rename and re-file a verb but said nothing about its parameters, so a provider's

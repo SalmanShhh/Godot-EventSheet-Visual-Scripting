@@ -214,6 +214,111 @@ static func annotation_lines(edit: Dictionary) -> PackedStringArray:
 	return output
 
 
+## Appends a deprecated forwarding shim so a verb that has been RENAMED keeps working.
+##
+## THE PROBLEM THIS SOLVES, precisely. An ace_id is derived from the member name, so renaming
+## `start_wave` to `begin_wave` changes the id from `method:start_wave` and orphans every row that
+## already used it. The dangerous part is not the editor - it is that the compiler prefers the
+## template BAKED onto the row at apply time over any registry lookup, so an orphaned row still
+## emits `$WaveManager.start_wave(3)` with no error and no warning. The sheet compiles green and the
+## game breaks at runtime, which is the worst possible place to find out.
+##
+## An id alias could not fix that: every already-compiled .gd holds the old CALL TEXT and no id at
+## all. Only a real member of the old name does. So the shim is the fix, not a workaround:
+##
+##     ## @ace_deprecated("Renamed to Begin Wave.", "method:begin_wave")
+##     ## @ace_name("Start Wave")
+##     func start_wave(count: int) -> void:
+##         begin_wave(count)
+##
+## It is APPENDED and nothing else is touched - no existing signature, no body, no call site. That
+## is deliberate: rewriting a user's declarations and every reference to them is a different and far
+## riskier operation than adding comments, and it is not what this module promises.
+static func forwarding_shim(source: String, old_member: String, new_member: String, message: String = "") -> Dictionary:
+	var result: Dictionary = {"ok": false, "source": source, "reason": ""}
+	var old_name: String = old_member.strip_edges()
+	var new_name: String = new_member.strip_edges()
+	if old_name.is_empty() or new_name.is_empty() or old_name == new_name:
+		result["reason"] = "A shim needs two different member names."
+		return result
+	var crlf: bool = source.contains("\r\n")
+	var lines: PackedStringArray = source.replace("\r\n", "\n").split("\n")
+	if find_declaration(lines, "method", old_name) >= 0:
+		# Already there (or never renamed) - adding a second one would not parse.
+		result["reason"] = "%s already exists in this script." % old_name
+		return result
+	var target: int = find_declaration(lines, "method", new_name)
+	if target < 0:
+		result["reason"] = "No function named %s to forward to." % new_name
+		return result
+
+	# The shim copies the target's signature verbatim with only the name swapped, so a caller that
+	# relied on a default argument keeps working exactly as it did.
+	var signature: String = lines[target].strip_edges()
+	var open_at: int = signature.find("(")
+	var close_at: int = signature.rfind(")")
+	if open_at < 0 or close_at < open_at:
+		result["reason"] = "Could not read %s's signature." % new_name
+		return result
+	var argument_text: String = signature.substr(open_at + 1, close_at - open_at - 1)
+	var tail: String = signature.substr(close_at + 1).strip_edges()
+	var returns_value: bool = not tail.begins_with("-> void") and tail.begins_with("->")
+	var call_prefix: String = "return " if returns_value else ""
+
+	var shim: PackedStringArray = PackedStringArray()
+	if not lines.is_empty() and not str(lines[lines.size() - 1]).strip_edges().is_empty():
+		shim.append("")
+	shim.append("")
+	var note: String = message.strip_edges()
+	if note.is_empty():
+		note = "Renamed to %s." % new_name
+	shim.append("## @ace_deprecated(\"%s\", \"method:%s\")" % [_quoted(note), new_name])
+	shim.append("func %s(%s)%s" % [old_name, argument_text, (" " + tail) if not tail.is_empty() else ":"])
+	shim.append("\t%s%s(%s)" % [call_prefix, new_name, ", ".join(_argument_names(argument_text))])
+
+	var rebuilt: PackedStringArray = lines.duplicate()
+	rebuilt.append_array(shim)
+	var joined: String = "\n".join(rebuilt)
+	result["source"] = joined.replace("\n", "\r\n") if crlf else joined
+	result["ok"] = true
+	return result
+
+
+## The bare names out of a parameter list, for the forwarding call. Splits only at depth zero, so a
+## default like `Vector2(0, 0)` or `Array[int]` does not look like two arguments.
+static func _argument_names(argument_text: String) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	var depth: int = 0
+	var current: String = ""
+	for index: int in range(argument_text.length()):
+		var character: String = argument_text.substr(index, 1)
+		if character in ["(", "[", "{"]:
+			depth += 1
+		elif character in [")", "]", "}"]:
+			depth -= 1
+		if character == "," and depth == 0:
+			names.append(_argument_name(current))
+			current = ""
+			continue
+		current += character
+	if not current.strip_edges().is_empty():
+		names.append(_argument_name(current))
+	var cleaned: PackedStringArray = PackedStringArray()
+	for name: String in names:
+		if not name.is_empty():
+			cleaned.append(name)
+	return cleaned
+
+
+static func _argument_name(argument: String) -> String:
+	var text: String = argument.strip_edges()
+	for separator: String in [":", "="]:
+		var at: int = text.find(separator)
+		if at > 0:
+			text = text.substr(0, at)
+	return text.strip_edges()
+
+
 static func _is_managed(trimmed_line: String) -> bool:
 	var body: String = trimmed_line.trim_prefix("##").strip_edges()
 	for annotation: String in MANAGED_ANNOTATIONS:

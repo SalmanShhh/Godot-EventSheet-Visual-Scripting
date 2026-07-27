@@ -346,6 +346,13 @@ func build_provider_dialog() -> void:
 	_dock._provider_params_button.tooltip_text = "Shape the selected verb's parameters: a hint (try 'comparison'), a fixed set of choices, and what the row shows the moment it is dropped."
 	_dock._provider_params_button.pressed.connect(_dock._on_provider_params_pressed)
 	preview_actions.add_child(_dock._provider_params_button)
+	_dock._provider_shim_button = Button.new()
+	_dock._provider_shim_button.text = "Keep Old Name…"
+	_dock._provider_shim_button.visible = false
+	_dock._provider_shim_button.tooltip_text = "Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.
+Nothing existing is edited - the stand-in just forwards."
+	_dock._provider_shim_button.pressed.connect(_dock._on_provider_shim_pressed)
+	preview_actions.add_child(_dock._provider_shim_button)
 	var preview_card: PanelContainer = EventSheetPopupUI.titled_card("What it publishes", preview_box)
 	preview_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(preview_card)

@@ -116,6 +116,7 @@ var _provider_pending_path: String = ""
 # so only members the user actually changed get annotated.
 var _provider_curate_button: Button = null
 var _provider_params_button: Button = null
+var _provider_shim_button: Button = null
 var _provider_preview_path: String = ""
 var _provider_preview_scan: Dictionary = {}
 var _split: HSplitContainer = null
@@ -777,6 +778,11 @@ func _on_provider_curate_pressed() -> void:
 
 func _on_provider_params_pressed() -> void:
 	_providers_glue.on_provider_params_pressed()
+
+
+
+func _on_provider_shim_pressed() -> void:
+	_providers_glue.on_provider_shim_pressed()
 
 
 

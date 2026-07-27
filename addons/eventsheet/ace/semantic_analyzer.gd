@@ -323,8 +323,14 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 			"@ace_deprecated":
 				# `## @ace_deprecated("Use knock_back() instead")` - the ACE keeps working (existing sheets
 				# compile) but is hidden from the picker and flagged on hover, mirroring built-in .deprecated().
+				# An optional SECOND argument names the successor - `@ace_deprecated("Renamed.",
+				# "method:begin_wave")` - which is what a forwarding shim writes so the hover can say
+				# where the verb went, matching ACEDescriptor.deprecated(message, replacement).
 				overrides["deprecated"] = true
-				overrides["deprecation_message"] = _extract_annotation_value(directive)
+				var deprecation_parts: Array[String] = _split_outside_quotes(_extract_annotation_parens_raw(directive), ",")
+				overrides["deprecation_message"] = _unquoted(deprecation_parts[0]) if deprecation_parts.size() > 0 else ""
+				if deprecation_parts.size() > 1:
+					overrides["replacement_ace_id"] = _unquoted(deprecation_parts[1])
 			"@ace_category":
 				overrides["category"] = _extract_annotation_value(directive)
 			"@ace_name":
@@ -544,6 +550,14 @@ func _split_outside_quotes(text: String, separator: String) -> Array[String]:
 		current += character
 	segments.append(current)
 	return segments
+
+
+## Strips one surrounding quote pair, for a value that arrived through the raw-parens extractor.
+func _unquoted(text: String) -> String:
+	var trimmed: String = text.strip_edges()
+	if trimmed.length() >= 2 and trimmed.begins_with("\"") and trimmed.ends_with("\""):
+		return trimmed.substr(1, trimmed.length() - 2)
+	return trimmed
 
 
 ## The raw parenthesized payload of an annotation, quotes preserved (unlike

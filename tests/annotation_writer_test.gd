@@ -192,8 +192,53 @@ static func run() -> bool:
 	var absent: Dictionary = EventSheets.curate_provider("user://no_such_provider_xyz.gd", [])
 	ok = _check("a missing file fails closed", absent.get("ok", false), false) and ok
 
+	# ---- 10. A renamed verb keeps working (the deprecation shim) ----
+	# Renaming a member changes its ace_id and orphans every row that used it - and the failure is
+	# SILENT, because the compiler prefers the template baked onto the row over any registry lookup.
+	# The sheet still emits the old call, compiles clean, and breaks at game runtime. An id alias
+	# cannot fix that: an already-compiled .gd holds the old call TEXT and no id at all. Only a real
+	# member of the old name does.
+	var shim_input: String = SOURCE.replace("func start_wave(count: int) -> void:", "func begin_wave(count: int) -> void:")
+	var shimmed: Dictionary = EventSheetACEAnnotationWriter.forwarding_shim(shim_input, "start_wave", "begin_wave")
+	ok = _check("the shim applies", shimmed.get("ok", false), true) and ok
+	var shim_source: String = str(shimmed.get("source", ""))
+	ok = _check("it forwards to the new name",
+		shim_source.contains("func start_wave(count: int) -> void:\n\tbegin_wave(count)"), true) and ok
+	ok = _check("and marks itself deprecated, naming the successor",
+		shim_source.contains("## @ace_deprecated(\"Renamed to begin_wave.\", \"method:begin_wave\")"), true) and ok
+	# Additive ONLY: rewriting a user's declarations and every reference to them is a different and
+	# far riskier operation than adding one function, and is deliberately not offered.
+	ok = _check("the renamed function is untouched",
+		shim_source.contains("func begin_wave(count: int) -> void:"), true) and ok
+	ok = _check("refusing to shim a name that still exists",
+		EventSheetACEAnnotationWriter.forwarding_shim(SOURCE, "start_wave", "begin_wave").get("ok", true), false) and ok
+	ok = _check("and one with no target to forward to",
+		EventSheetACEAnnotationWriter.forwarding_shim(shim_input, "start_wave", "nope").get("ok", true), false) and ok
+
+	# The proof: the orphaned id resolves again, through the same generator the registry uses.
+	var shim_path: String = "user://eventsheets_shim_probe.gd"
+	var shim_file: FileAccess = FileAccess.open(shim_path, FileAccess.WRITE)
+	shim_file.store_string(shim_source.replace("class_name WaveDirector\n", ""))
+	shim_file.close()
+	var shim_script: GDScript = load(shim_path)
+	var shim_instance: Node = shim_script.new()
+	var shim_ids: Dictionary = {}
+	for definition: ACEDefinition in EventSheetACEGenerator.new().generate_from_object(shim_instance):
+		shim_ids[str(definition.id)] = definition
+	ok = _check("the old id resolves again", shim_ids.has("method:start_wave"), true) and ok
+	ok = _check("alongside the new one", shim_ids.has("method:begin_wave"), true) and ok
+	var shim_definition: ACEDefinition = shim_ids.get("method:start_wave", null)
+	ok = _check("the old verb is flagged deprecated",
+		bool(shim_definition.metadata.get("deprecated", false)), true) and ok
+	# @ace_deprecated learned a second argument, so the hover can say WHERE the verb went rather
+	# than only that it left.
+	ok = _check("and names its successor",
+		str(shim_definition.metadata.get("replacement_ace_id", "")), "method:begin_wave") and ok
+	shim_instance.free()
+
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(probe_path))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(curate_path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(shim_path))
 
 	return ok
 

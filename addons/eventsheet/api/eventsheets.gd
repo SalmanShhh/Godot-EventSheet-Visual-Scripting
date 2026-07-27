@@ -870,6 +870,41 @@ static func curate_provider(script_path: String, edits: Array) -> Dictionary:
 	return result
 
 
+## Keeps a RENAMED verb working for sheets that already use it, by appending a deprecated
+## forwarding shim of the old name to the script.
+##
+## Renaming a member changes its ace_id, which orphans every row that used it - and the failure is
+## silent, because the compiler prefers the template baked onto the row over any registry lookup, so
+## the sheet still emits the OLD call, compiles clean, and breaks at game runtime. An id alias could
+## not fix that: every already-compiled .gd holds the old call TEXT and no id at all. Only a real
+## member of the old name does, which is what this writes.
+##
+## Additive: nothing existing is edited - no signature, no body, no call site. The file is backed up
+## first, and the shim carries `@ace_deprecated` so the old verb is hidden from the picker (it cannot
+## be added to new work) while still resolving for the rows that already hold it.
+static func keep_old_verb_working(script_path: String, old_member: String, new_member: String, message: String = "") -> Dictionary:
+	var result: Dictionary = {"ok": false, "reason": "", "backup": "", "source": ""}
+	var clean_path: String = script_path.strip_edges()
+	if not FileAccess.file_exists(clean_path):
+		result["reason"] = "No such script: %s" % clean_path
+		return result
+	var original: String = FileAccess.get_file_as_string(clean_path)
+	var written: Dictionary = EventSheetACEAnnotationWriter.forwarding_shim(original, old_member, new_member, message)
+	result["source"] = written.get("source", original)
+	if not bool(written.get("ok", false)):
+		result["reason"] = str(written.get("reason", "Could not build the shim."))
+		return result
+	result["backup"] = EventSheetBackups.backup_sheet(clean_path)
+	var handle: FileAccess = FileAccess.open(clean_path, FileAccess.WRITE)
+	if handle == null:
+		result["reason"] = "Could not open %s for writing (error %d)." % [clean_path, FileAccess.get_open_error()]
+		return result
+	handle.store_string(str(result["source"]))
+	handle.close()
+	result["ok"] = true
+	return result
+
+
 ## Builds dropdown options from `{value: label}` or a plain value list, in the shape a param's
 ## `options` wants: {"key": <what gets inserted>, "label": <what the author reads>}. A dropdown
 ## should read as English while still inserting the real token, and hand-building the pair dicts

@@ -1,7 +1,6 @@
 # SPEC - Generate ACEs from an existing script (the ACE Wizard)
 
-Status: Phases 0-2 built. Phase 3 partly enabled (the writer takes param hints/defaults; the table does
-not expose them yet) and deprecation-aware renames are still designed only.
+Status: Phases 0-3 built, with one deliberate limit - see Phase 3.
 
 ## The problem
 
@@ -141,11 +140,31 @@ Risks to handle: an idempotent writer (re-applying must not duplicate blocks); n
 bodies or signatures; `@ace_hidden` for opted-out members; and NOT routing foreign scripts through the
 sheet round-trip path, which stamps `@ace_hidden` on unexposed functions and refuses untyped `func`s.
 
-## Phase 3 - Polish (partly enabled)
+## Phase 3 - Polish (BUILT, with one deliberate limit)
 
-Parameter hints and defaults are already expressible - the writer emits `@ace_param(id, hint: …,
-options: …, default: …)` and the analyzer reads all three - but the curation table has no per-param
-editor yet, so today they can only be hand-written.
+**Parameter shaping** ships as the table's *Parameters...* action: a hint (including the `comparison`
+shorthand), labeled options, and a starting value per parameter, written as `@ace_param(id, hint: …,
+options: …, default: …)`. A param has no cell in the table, so its spec is held alongside and folded
+in at collection time - a member whose ONLY change is a param spec is still written.
 
-Still designed only: deprecation-aware renames using the existing `.deprecated(...)` machinery, so a
-renamed verb keeps working for sheets that already use it.
+**Deprecation-aware renames** ship as *Keep Old Name...*, and the design is not what the spec
+assumed. The assumption was that `.deprecated(message, replacement)` gave us a redirect to lean on.
+It does not: `replacement_ace_id` has exactly two readers and both are string formatting, and both id
+lookups (`ace_registry.gd:113` editor, eventforge `ace_registry.gd:92` built-ins) are plain
+exact-match gets. Deprecation is a warning plus picker-hiding, nothing more.
+
+Worse, the failure a rename causes is SILENT. `ActionCodegen.generate_action` (action_codegen.gd:17)
+prefers the template BAKED onto the row at apply time over any registry lookup, so an orphaned row
+still emits `$WaveManager.start_wave(3)`, compiles with zero errors and zero warnings, and fails at
+game runtime. An id alias could not have fixed that either - every already-compiled `.gd` holds the
+old CALL TEXT and no id at all.
+
+So the shipped answer is a deprecated forwarding shim, which is the only construct that satisfies
+both halves: `method:start_wave` becomes a real member again (rows resolve, render and carry params),
+and the baked call text in every compiled sheet stays valid. `@ace_deprecated` gained an optional
+second argument naming the successor, so the hover says where the verb went.
+
+THE DELIBERATE LIMIT: the shim is APPENDED and nothing existing is edited - no signature, no body, no
+call site. Automated member renaming (rewriting the declaration and every reference to it) is a
+different and far riskier operation than adding comments and one function, and it is not offered. The
+author renames in their own editor; the wizard makes the old name keep working.

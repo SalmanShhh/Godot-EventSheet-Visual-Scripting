@@ -317,10 +317,31 @@ static func run() -> bool:
 	# A label may hold `=` and parentheses (only the FINAL `)` is consumed by the wrapper strip), but
 	# never `,` `|` `:` or `"` - each of those breaks a specific split, so such an option degrades to
 	# its bare key rather than emitting a marker that would parse into garbage.
-	all_passed = _eq("a label carrying a list separator degrades to the bare key",
-		SheetCompiler.table_enum_type([{"key": "gte", "label": "at least, or more"}]), "enum(gte)") and all_passed
-	all_passed = _eq("a quote in a label cannot reach the GDScript literal",
-		SheetCompiler.table_enum_type([{"key": "gte", "label": "say \"hi\""}]), "enum(gte)") and all_passed
+	# The four characters a label cannot carry literally are escaped, so a label is never truncated
+	# and never degrades. Each escape exists for a split the marker depends on.
+	all_passed = _eq("a comma in a label cannot split the column list",
+		SheetCompiler.table_enum_type([{"key": "gte", "label": "at least, or more"}]),
+		"enum(gte=at least~2C or more)") and all_passed
+	all_passed = _eq("and comes back whole",
+		SheetCompiler.table_enum_options("enum(gte=at least~2C or more)"),
+		[{"key": "gte", "label": "at least, or more"}]) and all_passed
+	all_passed = _eq("a quote can never reach the GDScript literal it lives in",
+		SheetCompiler.table_enum_type([{"key": "gte", "label": "say \"hi\""}]),
+		"enum(gte=say ~22hi~22)") and all_passed
+	all_passed = _eq("a pipe cannot split the option list",
+		SheetCompiler.table_enum_type([{"key": "a", "label": "x|y"}]), "enum(a=x~7Cy)") and all_passed
+	all_passed = _eq("a colon cannot split the marker segments",
+		SheetCompiler.table_enum_type([{"key": "a", "label": "x:y"}]), "enum(a=x~3Ay)") and all_passed
+	# The tilde is NEVER escaped, which is what keeps the sequence list closed and the codec
+	# idempotent: if the lead-in were escapable, two spellings would collapse to one value and the
+	# importer's byte gate would turn a working grid into a verbatim block on the next open.
+	all_passed = _eq("a bare tilde stays literal text",
+		SheetCompiler.table_enum_type(SheetCompiler.table_enum_options("enum(a=fast~ish)")),
+		"enum(a=fast~ish)") and all_passed
+	for tricky: String in ["at least, or more", "say \"hi\"", "x|y", "x:y", "~ish", ">= (at least)"]:
+		all_passed = _eq("`%s` survives a full round-trip" % tricky,
+			SheetCompiler.table_enum_label(SheetCompiler.table_enum_options(
+				SheetCompiler.table_enum_type([{"key": "k", "label": tricky}]))[0]), tricky) and all_passed
 	# ── A comparison operator has to survive as a plain STORED VALUE ──
 	# `=` is the pair separator, so a naive split ate every operator that contains one: declaring
 	# enum(==|!=|<|<=|>|>=) kept only `<` and `>`, and the UHTN Plan Resource shipped exactly that
