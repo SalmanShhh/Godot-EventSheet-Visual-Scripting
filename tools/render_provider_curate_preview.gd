@@ -37,13 +37,23 @@ func _on_frame() -> void:
 		return
 	if _frames == 10:
 		_table = _capture(_dock._provider_dialog)
-		# The confirm is the last step before the file changes, so it is half the story.
-		_dock._on_provider_curate_pressed()
+		# Phase 3: shaping a parameter, which is the half the table cannot show on its own.
+		_select_member("method:start_wave")
+		_dock._on_provider_params_pressed()
 		return
 	if _frames < 20 or _table == null:
 		return
-	_save(_table, _capture(_dock._providers_glue._curate_confirm))
+	_save(_table, _capture(_dock._providers_glue._param_dialog))
 	quit(0)
+
+
+func _select_member(ace_id: String) -> void:
+	var item: TreeItem = _dock._provider_preview_tree.get_root().get_first_child()
+	while item != null:
+		if str((item.get_metadata(0) as Dictionary).get("ace_id", "")) == ace_id:
+			item.select(2)
+			return
+		item = item.get_next()
 
 
 ## Makes the edits a user would: the untyped bool method belongs in Conditions, and the raw
@@ -78,5 +88,5 @@ func _save(table: Image, confirm: Image) -> void:
 	composed.blit_rect(table, Rect2i(Vector2i.ZERO, table.get_size()), Vector2i.ZERO)
 	composed.blit_rect(confirm, Rect2i(Vector2i.ZERO, confirm.get_size()), Vector2i(0, table.get_height() + GAP))
 	composed.save_png("res://docs/images/provider-curation.png")
-	print("[preview] provider curation %dx%d (top: the table, bottom: the confirm)"
+	print("[preview] provider curation %dx%d (top: the curation table, bottom: the parameter editor)"
 		% [composed.get_width(), composed.get_height()])
