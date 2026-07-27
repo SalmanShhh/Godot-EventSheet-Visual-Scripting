@@ -218,6 +218,14 @@ i18n (Godot translations).
   decide what overwrites every instance and what stays per-instance - each as one undo step.
 - **Arrows walk cells**: with a row selected, Left / Right step through its trigger,
   condition, and action cells, Enter edits the focused cell, Esc returns to the row.
+- **Drag a parameter's NAME sideways to scrub its number.** Speeds, damage, durations and
+  angles are found by feel, and retyping them one guess at a time is the slowest loop in
+  event-sheet authoring. Hold Shift for a fine pass or Ctrl for a coarse one. The step
+  follows the value's own size, so a bullet speed of 3000 and an alpha of 0.5 both move
+  usefully under the same gesture. The drag only arms while the field holds a plain number,
+  so `health + 10` is never at risk - and it is the property name you drag, not the field,
+  which leaves click-to-place-caret and drag-to-select alone (the same gesture as Godot's
+  own Inspector).
 - **View > Outline** is the sheet's method list - groups, `#region` fences, and published
   functions as a click-to-jump tree.
 - **Your open tabs come back**: the session (tabs + active sheet) restores on editor

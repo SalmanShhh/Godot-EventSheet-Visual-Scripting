@@ -230,6 +230,12 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 	if not hover_text.is_empty():
 		label.tooltip_text = hover_text
 		field.tooltip_text = hover_text
+	# Drag the param's NAME to scrub its number (the Inspector gesture). Only arms while the field
+	# holds a plain number, so an expression can never be flattened into a literal by a stray drag.
+	EventSheetNumberScrub.attach(label, field)
+	if EventSheetNumberScrub.is_scrubbable(EventSheetNumberScrub.read_value(field)):
+		var scrub_hint: String = "Drag this label sideways to scrub the value (Shift = fine, Ctrl = coarse)."
+		label.tooltip_text = scrub_hint if hover_text.is_empty() else "%s\n\n%s" % [hover_text, scrub_hint]
 	# Dropdowns clip long entries instead of forcing the dialog wider.
 	if field is OptionButton:
 		(field as OptionButton).clip_text = true

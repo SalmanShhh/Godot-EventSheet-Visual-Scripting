@@ -57,6 +57,13 @@ static func form_row(label_text: String, field: Control, label_min_width: float 
 	row.add_child(label)
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(field)
+	# Every form row in the plugin gets number scrubbing for free: drag the label sideways to
+	# tune a numeric field. A no-op for controls that hold no number, so callers need no test.
+	EventSheetNumberScrub.attach(label, field)
+	if EventSheetNumberScrub.is_scrubbable(EventSheetNumberScrub.read_value(field)):
+		var scrub_hint: String = "Drag this label sideways to scrub the value (Shift = fine, Ctrl = coarse)."
+		label.tooltip_text = scrub_hint if label.tooltip_text.strip_edges().is_empty() else "%s\n\n%s" % [label.tooltip_text, scrub_hint]
+		label.mouse_filter = Control.MOUSE_FILTER_STOP
 	return row
 
 

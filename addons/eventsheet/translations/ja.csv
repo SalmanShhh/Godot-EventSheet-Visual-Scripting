@@ -641,3 +641,4 @@ Edit Function…,関数を編集…
 + category,+ カテゴリ
 Function names must be valid identifiers (e.g. take_damage).,関数名は有効な識別子である必要があります（例: take_damage）。
 Publish to the picker (other sheets can use it),ピッカーに公開（他のシートでも使えます）
+"Drag this label sideways to scrub the value (Shift = fine, Ctrl = coarse).",このラベルを左右にドラッグして値を調整します (Shift = 微調整、Ctrl = 粗調整)。

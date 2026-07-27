@@ -641,3 +641,4 @@ Edit Function…,함수 편집…
 + category,+ 카테고리
 Function names must be valid identifiers (e.g. take_damage).,함수 이름은 유효한 식별자여야 합니다(예: take_damage).
 Publish to the picker (other sheets can use it),피커에 게시(다른 시트에서 사용 가능)
+"Drag this label sideways to scrub the value (Shift = fine, Ctrl = coarse).","이 라벨을 좌우로 드래그하여 값을 조절합니다 (Shift = 미세, Ctrl = 거침)."

@@ -641,3 +641,4 @@ Edit Function…,编辑函数…
 + category,+ 分类
 Function names must be valid identifiers (e.g. take_damage).,函数名必须是有效的标识符（例如 take_damage）。
 Publish to the picker (other sheets can use it),发布到选择器（其他表可以使用）
+"Drag this label sideways to scrub the value (Shift = fine, Ctrl = coarse).","左右拖动此标签可调整数值 (Shift = 精细, Ctrl = 粗略)。"

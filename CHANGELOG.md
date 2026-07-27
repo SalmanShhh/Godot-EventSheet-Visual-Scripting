@@ -23,6 +23,28 @@ Three gaps where a bundled module could express something an `@ace_*` author cou
   reads as a sentence on drop. This also removes the reason packs hand-rolled word tokens plus a
   symbol mapper: the enum-option parser rejects a bare `=`, which the labeled form sidesteps.
 
+### Added - drag a parameter's name to scrub its number
+
+Tuning by select-all / retype / look / repeat is the slowest loop in event-sheet authoring: the
+numbers that matter (speed, damage, duration, angle) are found by feel, not calculated, and every
+guess costs a full edit cycle. Dragging a param's LABEL sideways now scrubs its value, with Shift
+for a fine pass and Ctrl for a coarse one.
+
+- **The step follows the value's own magnitude** - two significant digits of control - so a bullet
+  speed of 3000 (steps of 100) and an alpha of 0.5 (steps of 0.01) both move usefully under the
+  same gesture. A fixed increment can serve one or the other, never both. Integers never pick up a
+  fractional step, so a count stays a count.
+- **The label, not the field.** An ACE param is a GDScript expression, so its editor is usually a
+  CodeEdit - claiming left-drag there would cost click-to-place-caret and drag-to-select, which
+  authors use constantly. Dragging the property name is also what Godot's own Inspector does.
+- **An expression is never at risk**: the drag only arms while the field holds a plain number, so a
+  field reading `health + 10` is not scrubbable and its label keeps the ordinary cursor.
+- Wired into the shared form-row helper as well as the params dialog, so every dialog in the plugin
+  gets it, and it resolves through wrapper containers (an expression param is a CodeEdit sitting
+  next to its ƒx and node-picker buttons) rather than only matching bare controls.
+
+![Number scrubbing](docs/images/number-scrubbing.png)
+
 ### Fixed - labeled dropdowns never survived a pack's own emission
 
 A pack's shipped `.gd` IS its provider, so an option only exists if it round-trips as an annotation.

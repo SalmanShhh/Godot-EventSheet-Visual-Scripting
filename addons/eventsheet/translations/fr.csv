@@ -641,3 +641,4 @@ Edit Function…,Modifier la fonction…
 + category,+ catégorie
 Function names must be valid identifiers (e.g. take_damage).,Les noms de fonction doivent être des identifiants valides (p. ex. take_damage).
 Publish to the picker (other sheets can use it),Publier dans le sélecteur (d'autres feuilles peuvent l'utiliser)
+"Drag this label sideways to scrub the value (Shift = fine, Ctrl = coarse).","Faites glisser ce libelle lateralement pour ajuster la valeur (Maj = fin, Ctrl = grossier)."

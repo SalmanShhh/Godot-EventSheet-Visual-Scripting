@@ -641,3 +641,4 @@ Edit Function…,Изменить функцию…
 + category,+ категория
 Function names must be valid identifiers (e.g. take_damage).,Имена функций должны быть допустимыми идентификаторами (напр. take_damage).
 Publish to the picker (other sheets can use it),Опубликовать в списке выбора (доступно другим листам)
+"Drag this label sideways to scrub the value (Shift = fine, Ctrl = coarse).","Перетащите эту подпись вбок, чтобы изменить значение (Shift = точно, Ctrl = грубо)."
