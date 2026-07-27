@@ -829,6 +829,47 @@ static func register_section_description(section_name: String, blurb: String) ->
 	EventSheetSectionInfo.register_description(section_name, blurb)
 
 
+## Curates a provider script IN PLACE: writes `## @ace_*` annotations for the members described by
+## `edits`, so a script you already own publishes the vocabulary you want instead of whatever raw
+## reflection happened to infer. See EventSheetACEAnnotationWriter for the edit shape.
+##
+## Only `##` comment lines above a declaration are added or removed - no signature and no body is
+## ever touched, which is why a method's KIND is corrected with `@ace_condition` rather than by
+## bolting `-> bool` onto someone's function. The file is backed up first (Tools > Sheet Backups
+## restores it), and re-applying the same edits is a no-op rather than a second copy of the block.
+##
+## Returns {"ok", "reason", "changed", "skipped", "backup", "source"}. Nothing is written when
+## `ok` is false, or when the edits produce text identical to what is already on disk.
+static func curate_provider(script_path: String, edits: Array) -> Dictionary:
+	var result: Dictionary = {"ok": false, "reason": "", "changed": 0, "skipped": [], "backup": "", "source": ""}
+	var clean_path: String = script_path.strip_edges()
+	if not FileAccess.file_exists(clean_path):
+		result["reason"] = "No such script: %s" % clean_path
+		return result
+	var original: String = FileAccess.get_file_as_string(clean_path)
+	var written: Dictionary = EventSheetACEAnnotationWriter.apply(original, edits)
+	result["skipped"] = written.get("skipped", [])
+	result["changed"] = written.get("changed", 0)
+	result["source"] = written.get("source", original)
+	if not bool(written.get("ok", false)):
+		result["reason"] = str(written.get("reason", "Could not rewrite the annotations."))
+		return result
+	if str(result["source"]) == original:
+		# Idempotent re-apply: say so rather than churning a backup for an identical file.
+		result["ok"] = true
+		result["reason"] = "Already up to date."
+		return result
+	result["backup"] = EventSheetBackups.backup_sheet(clean_path)
+	var handle: FileAccess = FileAccess.open(clean_path, FileAccess.WRITE)
+	if handle == null:
+		result["reason"] = "Could not open %s for writing (error %d)." % [clean_path, FileAccess.get_open_error()]
+		return result
+	handle.store_string(str(result["source"]))
+	handle.close()
+	result["ok"] = true
+	return result
+
+
 ## Builds dropdown options from `{value: label}` or a plain value list, in the shape a param's
 ## `options` wants: {"key": <what gets inserted>, "label": <what the author reads>}. A dropdown
 ## should read as English while still inserting the real token, and hand-building the pair dicts
