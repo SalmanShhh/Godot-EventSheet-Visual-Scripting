@@ -38,6 +38,22 @@ static func run() -> bool:
 	var bare: Dictionary = EventSheets.resource_grid(["notes"])
 	ok = _check(ok, not (bare.get("attributes", {}) as Dictionary).has("required"), "no options -> no stray attributes")
 
+	# ---- the dropdown has to survive EMISSION, not just the descriptor ----
+	# Every assertion above stops at the descriptor, which is why nothing caught this: resource_grid
+	# builds the PRE-FORMED token shape {"type": "enum(a|b)"}, and the compiler's table branch only
+	# ever re-encoded the structured {"type": "enum", "options": [...]} shape - so an API-built
+	# dropdown was coerced to "String" and shipped as a plain text column, silently, in green suites.
+	var grid_variable: LocalVariable = LocalVariable.new()
+	grid_variable.name = "drops"
+	grid_variable.type_name = "Array"
+	grid_variable.default_value = []
+	grid_variable.exported = true
+	grid_variable.attributes = (descriptor.get("attributes", {}) as Dictionary)
+	var emitted_line: String = SheetCompiler._emit_tree_variable_line(grid_variable)
+	ok = _check(ok, emitted_line.contains("kind=enum(coin|gem|key)"),
+		"an API-built dropdown reaches the emitted marker (got %s)" % emitted_line)
+	ok = _check(ok, not emitted_line.contains("kind=String"), "and is not coerced to a plain column")
+
 	# ---- the wizard's pure builder ----
 	var sheet: EventSheetResource = EventSheetNewResourceWizard.build_wizard_sheet(
 		"", "Loot Drop", ["name", "kind: coin|gem|key", "weight: float"], true)

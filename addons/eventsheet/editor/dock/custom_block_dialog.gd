@@ -63,7 +63,7 @@ func _open(kind: EventSheetBlockKind, block: CustomBlockRow) -> void:
 	_field_controls.clear()
 	for field: Dictionary in kind.fields():
 		var field_id: String = str(field.get("id", ""))
-		var current: Variant = block.fields.get(field_id, field.get("default")) if block != null else field.get("default")
+		var current: Variant = block.fields.get(field_id, _field_default(field)) if block != null else _field_default(field)
 		var control: Control = _make_field_control(field, current)
 		_field_controls[field_id] = control
 		# A resource_path field registers its LineEdit (so reads/tests see a normal text field)
@@ -78,16 +78,32 @@ func _open(kind: EventSheetBlockKind, block: CustomBlockRow) -> void:
 			first.grab_focus()
 
 
+## A field's starting value. Two keys mean the same thing: a hand-written schema says `default`,
+## while EventSheets.param_spec normalizes to `default_value` - so reading only one of them left a
+## `hint: "comparison"` field on its auto-selected first item, silently storing the wrong operator.
+func _field_default(field: Dictionary) -> Variant:
+	return field.get("default", field.get("default_value", ""))
+
+
 func _make_field_control(field: Dictionary, current: Variant) -> Control:
 	var field_type: int = int(field.get("type", TYPE_STRING))
 	# Schema extension: a String field with "options" becomes a dropdown (typed values stay
 	# possible via a plain field; options are for closed sets like the preload kind's mode).
 	var options: Array = field.get("options", []) if field.get("options") is Array else []
 	if field_type == TYPE_STRING and not options.is_empty():
+		# Two dialects reach here. A hand-written kind lists plain strings; a kind built through
+		# EventSheets.simple_block_kind has been normalized by param_spec into {key, label} pairs.
+		# Rendering str(option) on a pair put the literal text `{ "key": "fast", "label": "Fast" }`
+		# into the field value, and from there straight into the user's emitted GDScript. The key
+		# rides as item metadata, exactly as the ACE params dialog does it, so the dropdown READS
+		# its label and STORES its key - and a plain string is its own key, so nothing shipped moves.
 		var chooser: OptionButton = OptionButton.new()
 		for option: Variant in options:
-			chooser.add_item(str(option))
-			if str(option) == str(current):
+			var option_key: String = str((option as Dictionary).get("key", "")) if option is Dictionary else str(option)
+			var option_label: String = str((option as Dictionary).get("label", option_key)) if option is Dictionary else option_key
+			chooser.add_item(option_label)
+			chooser.set_item_metadata(chooser.item_count - 1, option_key)
+			if option_key == str(current):
 				chooser.selected = chooser.item_count - 1
 		return chooser
 	# Schema extension: hint "resource_path" pairs the text field with a Browse button that
@@ -155,8 +171,14 @@ func _collect_fields(kind: EventSheetBlockKind) -> Dictionary:
 		var field_id: String = str(field.get("id", ""))
 		var control: Control = _field_controls.get(field_id, null)
 		if control is OptionButton:
+			# The KEY, off the item metadata - the item TEXT is the human label and must never be
+			# what gets substituted into the emit template.
 			var chooser: OptionButton = control as OptionButton
-			collected[field_id] = chooser.get_item_text(chooser.selected) if chooser.selected >= 0 else str(field.get("default", ""))
+			if chooser.selected >= 0:
+				var chosen: Variant = chooser.get_item_metadata(chooser.selected)
+				collected[field_id] = str(chosen) if chosen != null else chooser.get_item_text(chooser.selected)
+			else:
+				collected[field_id] = str(_field_default(field))
 		elif control is CheckBox:
 			collected[field_id] = (control as CheckBox).button_pressed
 		elif control is SpinBox:

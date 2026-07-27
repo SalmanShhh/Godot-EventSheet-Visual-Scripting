@@ -119,6 +119,33 @@ static func run() -> bool:
 		str(((built.parameters[0] as Dictionary).get("options", [])[0] as Dictionary).get("label", "")),
 		"= (equal to)") and ok
 
+	# ---- 7. …and the CUSTOM BLOCK dialog has to speak the normalized shape back ----
+	# Normalizing simple_block_kind's fields through param_spec turned every authored dropdown into
+	# {key, label} pairs - but the block dialog still rendered str(option) and read back the item
+	# TEXT, so the stored field value became the literal `{ "key": ..., "label": ... }` and went
+	# straight into the user's emitted GDScript through the emit template. Both dialects must work.
+	var kind: EventSheetBlockKind = EventSheets.simple_block_kind({
+		"kind_id": "test.speed", "title": "Speed",
+		"fields": [{"id": "mode", "type": TYPE_STRING, "default": "fast",
+			"options": {"fast": "Fast (no easing)", "slow": "Slow (eased)"}}],
+		"emit": "## speed: {mode}"})
+	var dialog: EventSheetCustomBlockDialog = EventSheetCustomBlockDialog.new()
+	var field_spec: Dictionary = kind.fields()[0]
+	var chooser: OptionButton = dialog._make_field_control(field_spec, "slow") as OptionButton
+	ok = _check("a block dropdown shows the label", chooser.get_item_text(0), "Fast (no easing)") and ok
+	ok = _check("and stores the key", str(chooser.get_item_metadata(0)), "fast") and ok
+	ok = _check("selecting by key finds the right item", chooser.selected, 1) and ok
+	dialog._field_controls = {"mode": chooser}
+	ok = _check("reading the form back yields the key, not the label",
+		dialog._collect_fields(kind).get("mode", ""), "slow") and ok
+	chooser.free()
+	# param_spec seeds `default_value`; a hand-written schema says `default`. Reading only one left a
+	# comparison field on its auto-selected first item, quietly storing the wrong operator.
+	ok = _check("a normalized default is still found",
+		str(dialog._field_default(EventSheets.param_spec({"id": "op", "hint": "comparison"}))), "==") and ok
+	ok = _check("and a hand-written one still is",
+		str(dialog._field_default({"id": "op", "default": "gte"})), "gte") and ok
+
 	return ok
 
 

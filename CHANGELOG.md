@@ -23,6 +23,46 @@ Three gaps where a bundled module could express something an `@ace_*` author cou
   reads as a sentence on drop. This also removes the reason packs hand-rolled word tokens plus a
   symbol mapper: the enum-option parser rejects a bare `=`, which the labeled form sidesteps.
 
+### Added - table columns can label their choices
+
+A grid column with fixed choices showed the stored token and nothing else, so a Storylet Weaver
+requirement row offered `gte` where it meant "at least". Options now carry an optional label -
+`enum(gte=>= (at least)|lt=< (less than))` - and the dropdown READS the label while STORING the key.
+
+The separator is `=`, and the reason that is safe rather than clever: a bare `=` has always been
+rejected inside an option, so no marker written before labels existed can contain one. The pair form
+is therefore unambiguous against every file already on disk with no escape character at all. That
+matters, because the obvious escapes are all unavailable here - `~` is legal in an option today, and
+the quoting trick the ACE param options use is fatal inside the double-quoted GDScript literal the
+marker rides in. A label that merely repeats its key emits bare, so all 76 packs re-emit identically.
+
+- **The Storylet grids read in English** ("at least", "Increment by", "NOT drawn in the last N") while
+  the cells keep the short tokens the runtime matches on. Deliberately not a token change: existing
+  `.tres` files store `gte`, and swapping the stored values would have blanked every saved row.
+- A label may hold `=` and parentheses but not `,` `|` `:` or `"` - each of those breaks a specific
+  split - and an option that would break one degrades to its bare key rather than emitting garbage.
+- **Comparison operators are storable at last.** An `=` only separates when both sides stand on their
+  own, so `<=` reads back whole instead of splitting into `<` plus an empty label.
+
+### Fixed - API-built dropdowns shipped as plain text columns
+
+`EventSheets.resource_grid` builds the pre-formed `{"type": "enum(a|b)"}` column shape, but the
+compiler only ever re-encoded the structured `{"type": "enum", "options": [...]}` one and coerced
+everything else to `String`. So a dropdown declared through the public API silently emitted a plain
+text column. The suite was green because the wizard test stops at the descriptor and never reads the
+emitted marker. **The shipped UHTN Plan Resource had three of these** - task kind, condition operator
+and curve - all now real dropdowns.
+
+### Fixed - a Custom Block dropdown wrote a Dictionary into your GDScript
+
+Regression from this release's own param normalization: `simple_block_kind` runs every field through
+`param_spec`, which rewrites `options` into `{key, label}` pairs, but the Custom Block dialog still
+rendered `str(option)` and read the item TEXT back. The stored field value became the literal
+`{ "key": "fast", "label": "Fast" }`, and the emit template put it straight into the user's script.
+The key now rides as item metadata exactly as the ACE params dialog does it. The same edit closes a
+second half: `param_spec` seeds `default_value` while the dialog read `default`, so a
+`hint: "comparison"` field quietly kept its auto-selected first item instead of the seeded `==`.
+
 ### Added - the ACE wizard can now curate a script, not just preview it
 
 Pointing the plugin at one of your own scripts used to be all-or-nothing: whatever raw reflection

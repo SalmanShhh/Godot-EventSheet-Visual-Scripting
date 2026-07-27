@@ -2581,37 +2581,129 @@ static func _append_property_accessors(local_var: LocalVariable, declaration_lin
 ## char ( , = : " ), so the option list survives the column/name/type/marker splits verbatim. Shared by
 ## the compiler emit, the importer lift, the editor drawer parse, and the variable dialog so all four
 ## agree on the encoding (a mismatch would silently downgrade an enum column to free text).
+## Returns {key, label} pairs - the same shape an ACE param's options use, so one convention covers
+## both. A bare entry is its own label, which is what every option shipped before labels existed is.
 static func table_enum_options(type_token: String) -> Array:
 	var token: String = type_token.strip_edges()
 	if not token.begins_with("enum(") or not token.ends_with(")"):
 		return []
 	var options: Array = []
-	for option: String in token.substr(5, token.length() - 6).split("|"):
-		if _valid_enum_option(option):
-			options.append(option.strip_edges())
+	for entry: String in token.substr(5, token.length() - 6).split("|"):
+		var pair: Dictionary = table_enum_pair(entry)
+		if not pair.is_empty():
+			options.append(pair)
 	return options
 
 
-## Encodes an option list into the marker type token: ["circle", "ring"] -> "enum(circle|ring)". Returns
-## "" when no option survives the reserved-char filter, so the column falls back to a plain String cell.
+## One marker entry -> {key, label}, or {} when it is unusable.
+##
+## `gte=>= (at least)` labels a choice, so the designer reads ">= (at least)" while the cell stores
+## `gte`. The separator is `=` for a reason that makes the whole scheme safe: a bare `=` has ALWAYS
+## been rejected inside an option (see _valid_enum_option), so no marker written before labels
+## existed can contain one. The pair form is therefore unambiguous against every file already on
+## disk, and needs no escape character - which matters, because the obvious escape lead-ins are all
+## either legal in options today or fatal inside the double-quoted GDScript literal the marker rides.
+## An `=` is a pair separator ONLY when both sides stand on their own. That one condition is what
+## lets a comparison operator still be a plain stored value: `<=` tries to split into key `<` and an
+## empty label, fails, and falls through to being the bare key `<=`. Without it, declaring
+## `enum(==|!=|<|<=|>|>=)` silently kept only `<` and `>`.
+static func table_enum_pair(entry: String) -> Dictionary:
+	var text: String = entry.strip_edges()
+	if text.is_empty():
+		return {}
+	var split_at: int = text.find("=")
+	if split_at > 0:
+		var key: String = text.substr(0, split_at).strip_edges()
+		var label: String = text.substr(split_at + 1).strip_edges()
+		if _valid_enum_option(key) and _valid_enum_label(label):
+			return {"key": key, "label": label}
+	# Not a pair, so the whole entry is the key. It may carry `=` - that is exactly what makes
+	# `==`, `<=`, `>=` and `!=` storable - but nothing that would break one of the splits.
+	return {"key": text, "label": text} if _valid_enum_key(text) else {}
+
+
+## The value an option stores in the user's data. Accepts either shape, so an extension that builds
+## table_columns by hand with plain strings keeps working.
+static func table_enum_key(option: Variant) -> String:
+	if option is Dictionary:
+		return str((option as Dictionary).get("key", ""))
+	return str(option)
+
+
+## The text an option shows in the dropdown.
+static func table_enum_label(option: Variant) -> String:
+	if option is Dictionary:
+		var pair: Dictionary = option as Dictionary
+		return str(pair.get("label", pair.get("key", "")))
+	return str(option)
+
+
+## Encodes an option list into the marker type token: ["circle", "ring"] -> "enum(circle|ring)".
+## Accepts plain strings or {key, label} pairs. A label that just repeats its key emits BARE, which
+## is what keeps every option shipped today byte-identical (and the pack drift gate at zero).
+## Returns "" when no option survives, so the column falls back to a plain String cell.
 static func table_enum_type(options: Array) -> String:
 	var clean: PackedStringArray = PackedStringArray()
 	for option: Variant in options:
-		if _valid_enum_option(str(option)):
-			clean.append(str(option).strip_edges())
+		var entry: String = table_enum_entry(option)
+		if not entry.is_empty():
+			clean.append(entry)
 	if clean.is_empty():
 		return ""
 	return "enum(%s)" % "|".join(clean)
 
 
-## One option is valid iff it is non-empty and carries no reserved marker char. Shared by BOTH codecs
-## so decode and encode agree - the dialog preview (which decodes free-typed text) can never show a
-## choice the emitter would silently drop.
+## One option -> its marker entry, or "" when the key cannot be written at all.
+##
+## The last guard is the load-bearing one: an entry is only emitted if reading it back yields the
+## key we started from. That makes the round-trip self-checking rather than something to reason
+## about case by case - a key like `a=b` would read back as the pair {a, b}, so it is refused
+## instead of being written as something that means something else on the way in.
+static func table_enum_entry(option: Variant) -> String:
+	var key: String = table_enum_key(option).strip_edges()
+	if not _valid_enum_key(key):
+		return ""
+	var label: String = table_enum_label(option).strip_edges()
+	# A key carrying `=` cannot also carry a label (the split would land in the wrong place), so it
+	# keeps its value and loses the prettier wording rather than losing the choice entirely.
+	var bare: bool = label.is_empty() or label == key or key.contains("=") or not _valid_enum_label(label)
+	if bare:
+		return key if str(table_enum_pair(key).get("key", "")) == key else ""
+	return "%s=%s" % [key, label]
+
+
+## A bare KEY may carry `=`, because table_enum_pair only treats one as a separator when both sides
+## stand on their own - so `<=` and `==` read back whole. Everything else that would break a split
+## is still refused, and table_enum_entry re-reads what it is about to write, so a key that WOULD be
+## mistaken for a pair is dropped rather than written.
+static func _valid_enum_key(key: String) -> bool:
+	var cleaned: String = key.strip_edges()
+	if cleaned.is_empty():
+		return false
+	return not (cleaned.contains(",") or cleaned.contains(":") or cleaned.contains("\"") or cleaned.contains("|") or cleaned.contains("(") or cleaned.contains(")"))
+
+
+## The stricter rule for the LEFT side of a labeled pair: a key that carries `=` cannot also carry a
+## label, because the split would land in the wrong place. Also the historical rule for an option,
+## which is what makes the pair form unambiguous against every marker written before labels existed.
 static func _valid_enum_option(option: String) -> bool:
 	var cleaned: String = option.strip_edges()
 	if cleaned.is_empty():
 		return false
 	return not (cleaned.contains(",") or cleaned.contains("=") or cleaned.contains(":") or cleaned.contains("\"") or cleaned.contains("|") or cleaned.contains("(") or cleaned.contains(")"))
+
+
+## A LABEL may carry more than a key can, because it never has to survive a lookup - only the splits.
+## Each rejection traces to exactly one of them: `,` splits columns, `|` splits options, `:` splits
+## the marker segments, and `"` would terminate the GDScript string literal the marker lives inside.
+## `=` is fine after the first one (the pair splits on that), and so are parentheses - the wrapper is
+## stripped by index arithmetic that only ever consumes the final `)`. That is what makes
+## ">= (at least)" expressible.
+static func _valid_enum_label(label: String) -> bool:
+	var cleaned: String = label.strip_edges()
+	if cleaned.is_empty():
+		return false
+	return not (cleaned.contains(",") or cleaned.contains("|") or cleaned.contains(":") or cleaned.contains("\""))
 
 
 ## Tier 3 custom-drawer @export_custom prefix. The `eventsheet:<drawer>`
@@ -2673,6 +2765,14 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 					# fully-invalid option list degrades to a plain String cell (never a broken marker).
 					var enum_token: String = table_enum_type((column as Dictionary).get("options", []))
 					column_type = enum_token if not enum_token.is_empty() else "String"
+				elif column_type.begins_with("enum("):
+					# A PRE-FORMED token, which is what EventSheets.resource_grid hands over. It used to
+					# fall through to the catch-all below and be coerced to "String", so an API-built
+					# dropdown silently shipped as a plain text column - and the suite never saw it,
+					# because the wizard test stops at the descriptor and never reads the emitted marker.
+					# Round-tripping it through the codec validates and canonicalises it instead.
+					var formed_token: String = table_enum_type(table_enum_options(column_type))
+					column_type = formed_token if not formed_token.is_empty() else "String"
 				elif not column_type in ["String", "int", "float", "bool", "color"]:
 					column_type = "String"
 				column_pairs.append("%s=%s" % [column_name, column_type])

@@ -412,8 +412,10 @@ class DrawerTable:
 			"bool":
 				return false
 			"enum":
+				# The KEY, not the label - this value is persisted into the designer's .tres the
+				# moment they click Add Row, and nothing downstream re-validates a stored cell.
 				var options: Array = column.get("options", []) if column.get("options") is Array else []
-				return str(options[0]) if not options.is_empty() else ""
+				return SheetCompiler.table_enum_key(options[0]) if not options.is_empty() else ""
 			"color":
 				return "#ffffff"
 		return ""
@@ -472,8 +474,10 @@ class DrawerTable:
 					value_changed.emit(get_value()))
 				return check
 			"enum":
-				# A fixed-choice cell: a dropdown of the column's options. The stored value stays the
-				# plain String choice, so the Array-of-Dictionary shape and .tres bytes are unchanged.
+				# A fixed-choice cell: a dropdown of the column's options. The dropdown READS its
+				# option's label and STORES its key, so a grid can offer ">= (at least)" while the
+				# cell keeps the short token the runtime matches on. An unlabeled option is its own
+				# label, so the stored value and the .tres bytes are unchanged for every existing grid.
 				var options: Array = column.get("options", []) if column.get("options") is Array else []
 				var choice: OptionButton = OptionButton.new()
 				choice.disabled = not editable
@@ -481,14 +485,14 @@ class DrawerTable:
 				var current: String = str(row.get(column_name, ""))
 				var selected_index: int = -1
 				for i: int in range(options.size()):
-					choice.add_item(str(options[i]))
-					if str(options[i]) == current:
+					choice.add_item(SheetCompiler.table_enum_label(options[i]))
+					if SheetCompiler.table_enum_key(options[i]) == current:
 						selected_index = i
 				# A legacy value outside the option list stays untouched (select nothing, don't coerce).
 				choice.select(selected_index)
 				choice.item_selected.connect(func(idx: int) -> void:
 					if idx >= 0 and idx < options.size():
-						row[column_name] = str(options[idx])
+						row[column_name] = SheetCompiler.table_enum_key(options[idx])
 						value_changed.emit(get_value()))
 				return choice
 			"color":

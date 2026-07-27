@@ -282,14 +282,78 @@ static func run() -> bool:
 	# --- Enum columns: a String column constrained to a fixed choice list, rendered as a dropdown.
 	# The stored cell value stays a plain String; only the marker gains an enum(a|b|c) token. The `|`
 	# option delimiter avoids every reserved marker char, so the whole thing round-trips byte-for-byte.
+	# Options decode to {key, label} pairs - the same shape an ACE param's options use, so one
+	# convention covers both. An unlabeled option is its own label, which is what every option
+	# written before labels existed is.
 	all_passed = _eq("the enum codec decodes an option list",
-		SheetCompiler.table_enum_options("enum(circle|ring|rect)"), ["circle", "ring", "rect"]) and all_passed
+		SheetCompiler.table_enum_options("enum(circle|ring|rect)"),
+		[{"key": "circle", "label": "circle"}, {"key": "ring", "label": "ring"}, {"key": "rect", "label": "rect"}]) and all_passed
 	all_passed = _eq("the enum codec ignores a non-enum token",
 		SheetCompiler.table_enum_options("String"), []) and all_passed
 	all_passed = _eq("the enum codec ignores a malformed token (no closing paren)",
 		SheetCompiler.table_enum_options("enum(circle|ring"), []) and all_passed
 	all_passed = _eq("the enum codec re-encodes an option list",
 		SheetCompiler.table_enum_type(["circle", "ring", "rect"]), "enum(circle|ring|rect)") and all_passed
+
+	# ── Labeled options: the cell READS English and STORES a token ──
+	# The separator is `=`, and the reason it is safe is that a bare `=` has ALWAYS been rejected
+	# inside an option, so no marker written before labels existed can contain one. That makes the
+	# pair form unambiguous against every file already on disk with no escape character at all -
+	# which matters, because "~" is legal in an option today and the marker rides inside a
+	# double-quoted GDScript literal that the importer reads by scanning to the NEXT quote.
+	all_passed = _eq("a labeled option decodes into key and label",
+		SheetCompiler.table_enum_options("enum(gte=>= (at least)|lt=< (less than))"),
+		[{"key": "gte", "label": ">= (at least)"}, {"key": "lt", "label": "< (less than)"}]) and all_passed
+	all_passed = _eq("and re-encodes to exactly what it came from",
+		SheetCompiler.table_enum_type([{"key": "gte", "label": ">= (at least)"}, {"key": "lt", "label": "< (less than)"}]),
+		"enum(gte=>= (at least)|lt=< (less than))") and all_passed
+	# THE byte-compatibility guarantee: a label that merely repeats its key emits BARE, so every one
+	# of the 76 shipped packs re-emits identically and the drift gate stays at zero.
+	all_passed = _eq("a label that repeats its key emits bare",
+		SheetCompiler.table_enum_type([{"key": "circle", "label": "circle"}]), "enum(circle)") and all_passed
+	all_passed = _eq("decode then encode is the identity for an unlabeled token",
+		SheetCompiler.table_enum_type(SheetCompiler.table_enum_options("enum(gte|gt|lte|lt|eq|neq)")),
+		"enum(gte|gt|lte|lt|eq|neq)") and all_passed
+	# A label may hold `=` and parentheses (only the FINAL `)` is consumed by the wrapper strip), but
+	# never `,` `|` `:` or `"` - each of those breaks a specific split, so such an option degrades to
+	# its bare key rather than emitting a marker that would parse into garbage.
+	all_passed = _eq("a label carrying a list separator degrades to the bare key",
+		SheetCompiler.table_enum_type([{"key": "gte", "label": "at least, or more"}]), "enum(gte)") and all_passed
+	all_passed = _eq("a quote in a label cannot reach the GDScript literal",
+		SheetCompiler.table_enum_type([{"key": "gte", "label": "say \"hi\""}]), "enum(gte)") and all_passed
+	# ── A comparison operator has to survive as a plain STORED VALUE ──
+	# `=` is the pair separator, so a naive split ate every operator that contains one: declaring
+	# enum(==|!=|<|<=|>|>=) kept only `<` and `>`, and the UHTN Plan Resource shipped exactly that
+	# declaration. An `=` only separates when BOTH sides stand on their own, so `<=` fails that test
+	# and falls through to being the bare key it looks like.
+	for operator: String in ["==", "!=", "<", "<=", ">", ">="]:
+		all_passed = _eq("`%s` survives as a stored value" % operator,
+			SheetCompiler.table_enum_type(SheetCompiler.table_enum_options("enum(%s)" % operator)),
+			"enum(%s)" % operator) and all_passed
+	all_passed = _eq("the whole operator set round-trips",
+		SheetCompiler.table_enum_type(SheetCompiler.table_enum_options("enum(==|!=|<|<=|>|>=)")),
+		"enum(==|!=|<|<=|>|>=)") and all_passed
+	# The self-check that makes the grammar safe rather than merely clever: an entry is written only
+	# if reading it back yields the key it started from. `a=b` would come back as the PAIR {a, b},
+	# so it is refused instead of being written as something that means something else on the way in.
+	all_passed = _eq("a key that would read back as a pair is refused",
+		SheetCompiler.table_enum_type([{"key": "a=b", "label": "a=b"}]), "") and all_passed
+	# A key carrying `=` keeps its value and loses the wording, rather than losing the choice.
+	all_passed = _eq("an operator key cannot also be labeled",
+		SheetCompiler.table_enum_type([{"key": ">=", "label": "at least"}]), "enum(>=)") and all_passed
+
+	# The reader helpers an extension uses, and the reason the drawer needs them: display and data
+	# used to be the SAME string, so a label would have been persisted into the designer's .tres.
+	all_passed = _eq("the key is what gets stored",
+		SheetCompiler.table_enum_key({"key": "gte", "label": ">= (at least)"}), "gte") and all_passed
+	all_passed = _eq("the label is what gets shown",
+		SheetCompiler.table_enum_label({"key": "gte", "label": ">= (at least)"}), ">= (at least)") and all_passed
+	all_passed = _eq("a plain string still reads as both",
+		SheetCompiler.table_enum_key("circle"), "circle") and all_passed
+	# A fresh row seeds the first option's KEY, never its label - nothing re-validates a stored cell.
+	all_passed = _eq("a new row seeds the key, not the label",
+		EventSheetDrawerWidgets.DrawerTable._default_for(
+			{"name": "op", "type": "enum", "options": [{"key": "gte", "label": ">= (at least)"}]}), "gte") and all_passed
 	var enum_var: LocalVariable = LocalVariable.new()
 	enum_var.name = "steps"
 	enum_var.type_name = "Array"
@@ -303,13 +367,17 @@ static func run() -> bool:
 	var enum_lifted: LocalVariable = _find(enum_sheet, "steps")
 	all_passed = _eq("the lift recovers the enum column as {type:enum, options}",
 		(enum_lifted.attributes as Dictionary).get("table_columns") if enum_lifted != null else null,
-		[{"name": "kind", "type": "enum", "options": ["circle", "ring", "rect"]}, {"name": "x", "type": "float"}]) and all_passed
+		[{"name": "kind", "type": "enum", "options": [
+			{"key": "circle", "label": "circle"}, {"key": "ring", "label": "ring"}, {"key": "rect", "label": "rect"}]},
+			{"name": "x", "type": "float"}]) and all_passed
 	if enum_lifted != null:
 		all_passed = _eq("an enum column re-emits byte-identically",
 			SheetCompiler._emit_tree_variable_line(enum_lifted), enum_expected) and all_passed
 	all_passed = _eq("the editor parse recovers an enum column (options captured)",
 		EventSheetAttributeDrawers.parse_table_columns("kind=enum(circle|ring),x=float"),
-		[{"name": "kind", "type": "enum", "options": ["circle", "ring"]}, {"name": "x", "type": "float"}]) and all_passed
+		[{"name": "kind", "type": "enum", "options": [
+			{"key": "circle", "label": "circle"}, {"key": "ring", "label": "ring"}]},
+			{"name": "x", "type": "float"}]) and all_passed
 	var enum_grid: EventSheetDrawerWidgets.DrawerTable = EventSheetDrawerWidgets.DrawerTable.new([{"name": "kind", "type": "enum", "options": ["circle", "ring"]}])
 	enum_grid._on_add_row()
 	all_passed = _eq("a fresh enum row seeds the first option", enum_grid.get_value(), [{"kind": "circle"}]) and all_passed

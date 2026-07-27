@@ -40,10 +40,10 @@ static func build() -> bool:
 					{"name": "max_plays", "type": "int"}]}},
 		"requirements": {"type": "Array", "default": [], "exported": true,
 			"attributes": {"group": "Requirements",
-				"tooltip": "Rules a storylet needs to be eligible (all must pass). `storylet` is the id from the Storylets grid. `op` is a word token (a table dropdown cannot hold `>=`): gte (>=), gt (>), lte (<=), lt (<), eq (=), neq (!=). For a comparison, `key` is a quality and `value` is what to compare against; tick `value_is_key` to compare against ANOTHER quality's value (gold >= price). For `chance`, put a 0-100 percent in `value` (key ignored). For `recent` / `not_recent`, put a draw count N in `value` - an anti-repeat gate over the last N draws.",
+				"tooltip": "Rules a storylet needs to be eligible (all must pass). `storylet` is the id from the Storylets grid. `op` picks the comparison from a dropdown; the cell stores a short token (gte, lt, eq...) that the runtime matches on. For a comparison, `key` is a quality and `value` is what to compare against; tick `value_is_key` to compare against ANOTHER quality's value (gold >= price). For `chance`, put a 0-100 percent in `value` (key ignored). For `recent` / `not_recent`, put a draw count N in `value` - an anti-repeat gate over the last N draws.",
 				"drawer": "table", "table_columns": [
 					{"name": "storylet", "type": "String"},
-					{"name": "op", "type": "enum", "options": ["gte", "gt", "lte", "lt", "eq", "neq", "chance", "recent", "not_recent"]},
+					{"name": "op", "type": "enum", "options": [{"key": "gte", "label": ">= (at least)"}, {"key": "gt", "label": "> (more than)"}, {"key": "lte", "label": "<= (at most)"}, {"key": "lt", "label": "< (less than)"}, {"key": "eq", "label": "= (equal to)"}, {"key": "neq", "label": "!= (not equal to)"}, {"key": "chance", "label": "Chance (0-100%)"}, {"key": "recent", "label": "Drawn in the last N"}, {"key": "not_recent", "label": "NOT drawn in the last N"}]},
 					{"name": "key", "type": "String"},
 					{"name": "value", "type": "String"},
 					{"name": "value_is_key", "type": "bool"}]}},
@@ -60,7 +60,7 @@ static func build() -> bool:
 				"drawer": "table", "table_columns": [
 					{"name": "storylet", "type": "String"},
 					{"name": "choice_id", "type": "String"},
-					{"name": "op", "type": "enum", "options": ["gte", "gt", "lte", "lt", "eq", "neq"]},
+					{"name": "op", "type": "enum", "options": [{"key": "gte", "label": ">= (at least)"}, {"key": "gt", "label": "> (more than)"}, {"key": "lte", "label": "<= (at most)"}, {"key": "lt", "label": "< (less than)"}, {"key": "eq", "label": "= (equal to)"}, {"key": "neq", "label": "!= (not equal to)"}]},
 					{"name": "key", "type": "String"},
 					{"name": "value", "type": "String"},
 					{"name": "value_is_key", "type": "bool"}]}},
@@ -69,7 +69,7 @@ static func build() -> bool:
 				"tooltip": "Quality changes applied automatically when a storylet is DRAWN. `op`: set / inc / dec / toggle / delete on `key`; `value` is the operand (ignored for toggle / delete).",
 				"drawer": "table", "table_columns": [
 					{"name": "storylet", "type": "String"},
-					{"name": "op", "type": "enum", "options": ["set", "inc", "dec", "toggle", "delete"]},
+					{"name": "op", "type": "enum", "options": [{"key": "set", "label": "Set to"}, {"key": "inc", "label": "Increment by"}, {"key": "dec", "label": "Decrement by"}, {"key": "toggle", "label": "Toggle (0/1)"}, {"key": "delete", "label": "Delete key"}]},
 					{"name": "key", "type": "String"},
 					{"name": "value", "type": "String"}]}},
 		"choice_effects": {"type": "Array", "default": [], "exported": true,
@@ -78,7 +78,7 @@ static func build() -> bool:
 				"drawer": "table", "table_columns": [
 					{"name": "storylet", "type": "String"},
 					{"name": "choice_id", "type": "String"},
-					{"name": "op", "type": "enum", "options": ["set", "inc", "dec", "toggle", "delete"]},
+					{"name": "op", "type": "enum", "options": [{"key": "set", "label": "Set to"}, {"key": "inc", "label": "Increment by"}, {"key": "dec", "label": "Decrement by"}, {"key": "toggle", "label": "Toggle (0/1)"}, {"key": "delete", "label": "Delete key"}]},
 					{"name": "key", "type": "String"},
 					{"name": "value", "type": "String"}]}},
 		"meta": {"type": "Array", "default": [], "exported": true,
