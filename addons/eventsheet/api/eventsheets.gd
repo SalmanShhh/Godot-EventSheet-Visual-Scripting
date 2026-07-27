@@ -81,7 +81,7 @@ static func simple_block_kind(config: Dictionary) -> EventSheetBlockKind:
 	var schema: Array[Dictionary] = []
 	for field: Variant in config.get("fields", []):
 		if field is Dictionary:
-			schema.append(field)
+			schema.append(param_spec(field as Dictionary))
 	kind.field_schema = schema
 	kind.emit_template = str(config.get("emit", ""))
 	kind.summary_template = str(config.get("summary", ""))
@@ -895,6 +895,36 @@ static func comparison_options(equal_token: String = "==") -> Array:
 	return EventForgeACEFactory.comparison_options(equal_token)
 
 
+## Normalizes one parameter (or custom-block field) config into the shape the params dialog reads,
+## so the three ways to author a param finally agree.
+##
+## A bundled module could always seed a starting value and label a dropdown; annotations gained it
+## with `@ace_param(id, default: …, options: a=A|b=B, hint: comparison)`; but a config passed to
+## simple_ace()/simple_block_kind() went through verbatim, so an author had to know that the key is
+## `default_value` and not `default`, and had to hand-build `{"key", "label"}` pairs. Both papercuts
+## produce a param that silently reads 0 or a dropdown of raw tokens.
+##
+## - `default` and `default_value` are accepted interchangeably.
+## - `options` accepts a plain list, a `{value: label}` dictionary, or ready-made pairs.
+## - `hint: "comparison"` expands to the whole operator dropdown, seeded to `==` - the same one word
+##   that works in an annotation.
+static func param_spec(config: Dictionary) -> Dictionary:
+	var spec: Dictionary = config.duplicate(true)
+	if spec.has("default") and not spec.has("default_value"):
+		spec["default_value"] = spec["default"]
+	if str(spec.get("hint", "")).to_lower() == "comparison":
+		if not spec.has("options"):
+			spec["options"] = comparison_options()
+		if not spec.has("default_value"):
+			spec["default_value"] = "=="
+		# The hint has done its job; leaving it on would send the dialog looking for a field factory
+		# registered under "comparison", which is not what a dropdown wants.
+		spec.erase("hint")
+	if spec.has("options"):
+		spec["options"] = combo_options(spec["options"])
+	return spec
+
+
 ## Registers a custom parameter editor. `tag` matches a param's hint (or its type_name when it
 ## has no hint); `factory(param_dict, initial_text)` must return a LineEdit (subclass and style
 ## it freely - add buttons, popups, validation - the dialog reads the final value from .text).
@@ -969,7 +999,7 @@ static func simple_ace(config: Dictionary) -> ACEDefinition:
 	definition.metadata["codegen_template"] = str(config.get("template", ""))
 	for param_config: Variant in (config.get("params", []) as Array):
 		if param_config is Dictionary:
-			definition.parameters.append((param_config as Dictionary).duplicate(true))
+			definition.parameters.append(param_spec(param_config as Dictionary))
 	return definition
 
 

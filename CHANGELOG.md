@@ -94,6 +94,13 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
   list, so a wording change cannot land in one dropdown and miss the others. `EventSheets`
   gained `comparison_options()` (with an `equal_token` for runtimes that store a single `=`) and
   `combo_options()`, which builds the pair form from a `{value: label}` dictionary or a plain list.
+- **All three ways to author a param now agree.** A bundled module could always seed a starting
+  value and label a dropdown; annotations gained it this release; but a config handed to
+  `EventSheets.simple_ace()` or `simple_block_kind()` went through verbatim, so an author had to
+  know the key is `default_value` and not `default`, and had to hand-build the `{key, label}` pairs
+  - both papercuts ending in a param that silently reads `0`, or a dropdown of raw tokens. The new
+  `EventSheets.param_spec()` normalizes all of it (and `hint: "comparison"` works there too), and
+  both builders run every param through it.
 - Both builtin comparison conditions now show `>= (at least)` instead of a bare `>=`.
 - **Storylet Weaver** requirement rows use that shared dropdown rather than six hand-typed symbols.
 - **Bound To**, **Wrap**, **Rotate** and **StatForge** dropdowns read in English: "Left edge" over

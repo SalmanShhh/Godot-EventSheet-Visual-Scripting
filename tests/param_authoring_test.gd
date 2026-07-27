@@ -90,6 +90,35 @@ static func run() -> bool:
 	ok = _check("without disturbing the rest",
 		str((single_equals[5] as Dictionary).get("key", "")), ">=") and ok
 
+	# ---- 6. The third authoring surface: a config passed to the public API ----
+	# A bundled module and an annotation could both express these; a Dictionary handed to
+	# simple_ace()/simple_block_kind() went through verbatim, so an author had to know the key is
+	# `default_value` and not `default`, and had to hand-build the {key, label} pairs. Both papercuts
+	# end as a param that silently reads 0, or a dropdown of raw tokens.
+	var shorthand: Dictionary = EventSheets.param_spec({"id": "op", "hint": "comparison"})
+	ok = _check("`hint: comparison` works through the API too",
+		(shorthand.get("options", []) as Array).size(), 6) and ok
+	ok = _check("seeded the same way", shorthand.get("default_value", ""), "==") and ok
+	# Leaving the hint on would send the dialog hunting for a field factory named "comparison".
+	ok = _check("and the hint is spent", shorthand.has("hint"), false) and ok
+	var dictionary_options: Dictionary = EventSheets.param_spec({
+		"id": "mode", "default": "set", "options": {"set": "Set to", "inc": "Increment by"}})
+	ok = _check("a {value: label} dictionary becomes pairs",
+		dictionary_options.get("options", []), [
+			{"key": "set", "label": "Set to"}, {"key": "inc", "label": "Increment by"}]) and ok
+	ok = _check("`default` is accepted as well as `default_value`",
+		dictionary_options.get("default_value", ""), "set") and ok
+	var plain: Dictionary = EventSheets.param_spec({"id": "axis", "options": ["x", "y"]})
+	ok = _check("a plain list still labels itself",
+		plain.get("options", []), [{"key": "x", "label": "x"}, {"key": "y", "label": "y"}]) and ok
+	# And the normalization has to actually reach the definitions the API builds.
+	var built: ACEDefinition = EventSheets.simple_ace({
+		"id": "Cmp", "template": "{a} {op} {b}",
+		"params": [{"id": "op", "hint": "comparison"}]})
+	ok = _check("simple_ace runs its params through it",
+		str(((built.parameters[0] as Dictionary).get("options", [])[0] as Dictionary).get("label", "")),
+		"= (equal to)") and ok
+
 	return ok
 
 
