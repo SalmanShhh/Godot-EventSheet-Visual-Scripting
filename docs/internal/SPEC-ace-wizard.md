@@ -1,6 +1,7 @@
 # SPEC - Generate ACEs from an existing script (the ACE Wizard)
 
-Status: Phase 1 in progress. Phases 2-3 designed, not built.
+Status: Phases 0-2 built. Phase 3 partly enabled (the writer takes param hints/defaults; the table does
+not expose them yet) and deprecation-aware renames are still designed only.
 
 ## The problem
 
@@ -112,10 +113,25 @@ safe to ship on its own and why it de-risks Phase 2 (it proves the preview model
 - Scan a non-instantiable script -> empty result plus a reason, no crash.
 - Register/unregister round-trip leaves the sheet resource as it was.
 
-## Phase 2 - Curate (designed, not built)
+## Phase 2 - Curate (BUILT)
 
-Tick which members publish; edit label, category, description, parameter defaults. **Apply** writes
+Tick which members publish; edit label, category and KIND in the preview table. **Apply** writes
 `## @ace_*` annotations into the user's file behind a diff preview and a backup.
+
+Built as `EventSheetACEAnnotationWriter` (pure text in, text out, pinned by `annotation_writer_test`)
+plus `EventSheets.curate_provider()` for the disk half, and the table itself in
+`dock_ui_builder.gd` / `provider_registry_glue.gd` (pinned by `provider_curate_test`).
+
+Two things the design did not anticipate, both found by tests rather than by reading:
+
+- **One declaration, several rows.** A numeric `@export` publishes FOUR verbs - read, set, add,
+  subtract - and all four are views of the same `var`, so all four share one annotation block. The
+  writer merges edits by declaration (opting out is sticky across them); anchoring treats
+  `property` / `set` / `add` / `subtract` alike, since the latter two were otherwise sent hunting
+  for a `func` of that name and reported the member as missing.
+- **The KIND is the headline edit.** Correcting an untyped method's lane by writing
+  `@ace_condition` - never by touching the signature - is what makes the untyped-code problem
+  solvable at all, and it needed no new machinery.
 
 Why annotations rather than a side store: they are the format the analyzer already reads, so "reopen and
 edit later" is round-trip by construction; they document the script for the user's teammates; and they
@@ -125,7 +141,11 @@ Risks to handle: an idempotent writer (re-applying must not duplicate blocks); n
 bodies or signatures; `@ace_hidden` for opted-out members; and NOT routing foreign scripts through the
 sheet round-trip path, which stamps `@ace_hidden` on unexposed functions and refuses untyped `func`s.
 
-## Phase 3 - Polish (designed, not built)
+## Phase 3 - Polish (partly enabled)
 
-Parameter hints and defaults; deprecation-aware renames using the existing `.deprecated(...)` machinery
-so a renamed verb keeps working for sheets that already use it.
+Parameter hints and defaults are already expressible - the writer emits `@ace_param(id, hint: …,
+options: …, default: …)` and the analyzer reads all three - but the curation table has no per-param
+editor yet, so today they can only be hand-written.
+
+Still designed only: deprecation-aware renames using the existing `.deprecated(...)` machinery, so a
+renamed verb keeps working for sheets that already use it.

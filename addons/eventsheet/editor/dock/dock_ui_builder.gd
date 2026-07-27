@@ -297,31 +297,49 @@ func build_provider_dialog() -> void:
 	_dock._provider_preview_warnings = VBoxContainer.new()
 	_dock._provider_preview_warnings.add_theme_constant_override("separation", 2)
 	preview_box.add_child(_dock._provider_preview_warnings)
+	# The table is the curation surface as well as the preview: Publish, Kind, Verb and Category are
+	# editable in place, and "Curate Script" writes the differences back as `## @ace_*` annotations.
+	# Raw reflection guesses these from the signature, which is wrong often enough on real game code
+	# (an untyped method reads as an Action) that "see it, fix it, keep it" has to be one flow.
 	_dock._provider_preview_tree = Tree.new()
-	_dock._provider_preview_tree.columns = 4
+	_dock._provider_preview_tree.columns = 6
 	_dock._provider_preview_tree.column_titles_visible = true
-	_dock._provider_preview_tree.set_column_title(0, "Kind")
-	_dock._provider_preview_tree.set_column_title(1, "Verb")
-	_dock._provider_preview_tree.set_column_title(2, "Parameters")
-	_dock._provider_preview_tree.set_column_title(3, "Emits")
+	_dock._provider_preview_tree.set_column_title(0, "Publish")
+	_dock._provider_preview_tree.set_column_title(1, "Kind")
+	_dock._provider_preview_tree.set_column_title(2, "Verb")
+	_dock._provider_preview_tree.set_column_title(3, "Category")
+	_dock._provider_preview_tree.set_column_title(4, "Parameters")
+	_dock._provider_preview_tree.set_column_title(5, "Emits")
 	_dock._provider_preview_tree.set_column_expand(0, false)
-	_dock._provider_preview_tree.set_column_custom_minimum_width(0, 90)
+	_dock._provider_preview_tree.set_column_custom_minimum_width(0, 62)
+	_dock._provider_preview_tree.set_column_expand(1, false)
+	_dock._provider_preview_tree.set_column_custom_minimum_width(1, 110)
 	# The verb name is what the reader scans for, so it gets the room; the emitted code is the widest
 	# text but also the least urgent (the row's tooltip carries the full id and source member anyway).
-	_dock._provider_preview_tree.set_column_expand_ratio(1, 3)
-	_dock._provider_preview_tree.set_column_expand_ratio(2, 2)
-	_dock._provider_preview_tree.set_column_expand_ratio(3, 3)
-	_dock._provider_preview_tree.set_column_clip_content(3, true)
+	_dock._provider_preview_tree.set_column_expand_ratio(2, 3)
+	_dock._provider_preview_tree.set_column_expand_ratio(3, 2)
+	_dock._provider_preview_tree.set_column_expand_ratio(4, 2)
+	_dock._provider_preview_tree.set_column_expand_ratio(5, 3)
+	_dock._provider_preview_tree.set_column_clip_content(5, true)
 	_dock._provider_preview_tree.hide_root = true
 	_dock._provider_preview_tree.custom_minimum_size = Vector2(0, 180)
 	_dock._provider_preview_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	preview_box.add_child(_dock._provider_preview_tree)
+	var preview_actions: HBoxContainer = HBoxContainer.new()
+	preview_actions.add_theme_constant_override("separation", 6)
+	preview_box.add_child(preview_actions)
 	_dock._provider_register_button = Button.new()
 	_dock._provider_register_button.text = "Register This Script"
 	_dock._provider_register_button.visible = false
 	_dock._provider_register_button.tooltip_text = "Add the previewed script to this sheet's providers, so the verbs above join the picker."
 	_dock._provider_register_button.pressed.connect(_dock._on_provider_register_pressed)
-	preview_box.add_child(_dock._provider_register_button)
+	preview_actions.add_child(_dock._provider_register_button)
+	_dock._provider_curate_button = Button.new()
+	_dock._provider_curate_button.text = "Curate Script…"
+	_dock._provider_curate_button.visible = false
+	_dock._provider_curate_button.tooltip_text = "Write your edits above into the script as `## @ace_*` comments, so it keeps publishing them.\nOnly comments are added - your signatures and bodies are never touched, and the file is backed up first."
+	_dock._provider_curate_button.pressed.connect(_dock._on_provider_curate_pressed)
+	preview_actions.add_child(_dock._provider_curate_button)
 	var preview_card: PanelContainer = EventSheetPopupUI.titled_card("What it publishes", preview_box)
 	preview_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(preview_card)

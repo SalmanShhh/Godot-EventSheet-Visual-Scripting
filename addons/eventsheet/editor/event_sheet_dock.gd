@@ -111,6 +111,12 @@ var _provider_preview_warnings: VBoxContainer = null
 var _provider_preview_tree: Tree = null
 var _provider_register_button: Button = null
 var _provider_pending_path: String = ""
+# Curation (the wizard's second half): the script currently shown in the preview, and the scan it
+# came from. The scan is the BEFORE side of the diff - what the table shows is compared against it,
+# so only members the user actually changed get annotated.
+var _provider_curate_button: Button = null
+var _provider_preview_path: String = ""
+var _provider_preview_scan: Dictionary = {}
 var _split: HSplitContainer = null
 var _scroll: ScrollContainer = null
 # Open Sheets panel: a left in-workspace pane (the "Filter Scripts"-style list). _workspace_body
@@ -760,6 +766,11 @@ func _preview_provider_script(path: String, offer_register: bool) -> void:
 
 func _on_provider_register_pressed() -> void:
 	_providers_glue.on_provider_register_pressed()
+
+
+
+func _on_provider_curate_pressed() -> void:
+	_providers_glue.on_provider_curate_pressed()
 
 
 

@@ -59,6 +59,8 @@ static func scan(script_path: String) -> Dictionary:
 			"kind": kind,
 			"kind_label": kind_label(kind),
 			"label": definition.display_name,
+			# The picker section this verb lands in - the BEFORE side of the wizard's Category column.
+			"category": str(definition.category),
 			"ace_id": definition.id,
 			"params": _param_names(definition),
 			# The literal code this row will emit. A method's template is baked at apply time, so it can

@@ -23,6 +23,34 @@ Three gaps where a bundled module could express something an `@ace_*` author cou
   reads as a sentence on drop. This also removes the reason packs hand-rolled word tokens plus a
   symbol mapper: the enum-option parser rejects a bare `=`, which the labeled form sidesteps.
 
+### Added - the ACE wizard can now curate a script, not just preview it
+
+Pointing the plugin at one of your own scripts used to be all-or-nothing: whatever raw reflection
+inferred is what joined the picker. That is a poor deal on real game code, because most of it is
+untyped - `func is_wave_active():` with no return type can only be read as an **Action**, and there
+was nothing to do about it short of editing the function.
+
+The preview table is now the editing surface. **Publish / Kind / Verb / Category** are editable in
+place, and **Curate Script** writes the differences back into the file as `## @ace_*` comments.
+
+- **The Kind dropdown is the point.** Moving that untyped method into the Conditions lane writes
+  `## @ace_condition` above it. Your signature is never rewritten - editing someone's function to
+  change how a picker groups it is not a trade worth offering.
+- **Only differences are written.** Annotating every member with what reflection already guessed
+  would bury the real decisions in a wall of comments that says nothing.
+- **You see the exact lines first.** Curate opens a confirm listing every comment that will be
+  added, per member, and the file is backed up before the write (Tools > Sheet Backups).
+- **Re-curating replaces rather than accumulates**, so a second visit to the dialog does not leave
+  two copies of the block for the analyzer to pick between. Annotations the wizard does not own
+  (`@ace_icon`, `@ace_deprecated`, your own doc comments) are preserved, and your prose stays above.
+- **A member that has been renamed since the scan is reported**, not silently skipped.
+
+One thing worth knowing: a numeric `@export` publishes four verbs (read, set, add, subtract) that
+all describe the same `var`, so they share one annotation block - unchecking any of them opts the
+whole property out.
+
+![Curating a provider](docs/images/provider-curation.png)
+
 ### Added - drag a parameter's name to scrub its number
 
 Tuning by select-all / retype / look / repeat is the slowest loop in event-sheet authoring: the

@@ -80,10 +80,30 @@ static func apply(source: String, edits: Array) -> Dictionary:
 			(result["skipped"] as Array).append(str(entry.get("member", "")))
 			continue
 		anchored.append({"anchor": anchor, "edit": entry})
-	anchored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["anchor"]) > int(b["anchor"]))
-
+	# Several edits can land on ONE declaration: an exported property publishes both a reader and a
+	# writer, and the curation table shows them as two rows. They share a `var`, so they share an
+	# annotation block - rewriting it twice would leave only the second edit's annotations.
+	var merged: Dictionary = {}
 	for item: Dictionary in anchored:
-		lines = _rewrite_block(lines, int(item["anchor"]), item["edit"] as Dictionary)
+		var anchor: int = int(item["anchor"])
+		var edit: Dictionary = item["edit"] as Dictionary
+		if not merged.has(anchor):
+			merged[anchor] = edit.duplicate(true)
+			continue
+		var combined: Dictionary = merged[anchor] as Dictionary
+		var was_hidden: bool = bool(combined.get("hidden", false))
+		combined.merge(edit, true)
+		# Opting out is sticky: hiding a property from one of its two rows must not be undone by
+		# the other row, which the user never touched.
+		if was_hidden or bool(edit.get("hidden", false)):
+			combined["hidden"] = true
+		merged[anchor] = combined
+
+	var anchors: Array = merged.keys()
+	anchors.sort()
+	anchors.reverse()
+	for anchor: int in anchors:
+		lines = _rewrite_block(lines, anchor, merged[anchor] as Dictionary)
 		result["changed"] = int(result["changed"]) + 1
 
 	var rebuilt: String = "\n".join(lines)
@@ -103,9 +123,14 @@ static func find_declaration(lines: PackedStringArray, source_kind: String, memb
 	match source_kind:
 		"signal":
 			pattern.compile("^signal\\s+%s\\s*[(:]?" % _escaped(member))
-		"property", "set":
+		"property", "set", "add", "subtract":
 			# `var speed`, `@export var speed`, `@export_range(0, 9) var speed` - the annotation may
 			# sit on the same line as the declaration or on its own line above it.
+			#
+			# All four kinds anchor here on purpose: ONE numeric `@export` publishes a reader, a
+			# setter, an add and a subtract, and every one of them is a view of the same `var`.
+			# Matching only "property" and "set" sent the other two hunting for a `func` of that
+			# name, so unchecking the Add row reported the member as missing.
 			pattern.compile("^(@\\w+(\\(.*\\))?\\s+)*(static\\s+)?var\\s+%s\\s*[:=]" % _escaped(member))
 		_:
 			pattern.compile("^(static\\s+)?func\\s+%s\\s*\\(" % _escaped(member))

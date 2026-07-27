@@ -8,7 +8,17 @@ extends RefCounted
 # dock; bodies moved verbatim behind the `_dock.` back-reference with one-line
 # delegates keeping the public API and every signal target in place.
 
+## The Kind dropdown's entries, in the order the range cell indexes them. Matches
+## EventSheetProviderPreview.kind_label, which is what fills the BEFORE side of the diff.
+const KIND_CHOICES: PackedStringArray = ["Action", "Condition", "Expression", "Trigger"]
+
+## The annotation each Kind writes, keyed the way EventSheetACEAnnotationWriter expects.
+const KIND_EDIT_KEYS: PackedStringArray = ["action", "condition", "expression", "trigger"]
+
 var _dock: Control = null
+var _curate_confirm: ConfirmationDialog = null
+var _curate_diff: CodeEdit = null
+var _curate_pending: Array = []
 
 
 func init(dock: Control) -> void:
@@ -155,10 +165,12 @@ func preview_provider_script(path: String, offer_register: bool) -> void:
 	if _dock._provider_preview_tree == null:
 		return
 	_dock._provider_pending_path = path if offer_register else ""
+	_dock._provider_preview_path = path
 	_dock._provider_preview_tree.clear()
 	for stale_warning: Node in _dock._provider_preview_warnings.get_children():
 		stale_warning.queue_free()
 	var scan: Dictionary = EventSheetProviderPreview.scan(path)
+	_dock._provider_preview_scan = scan
 	_dock._provider_preview_summary.text = "%s\n%s" % [path.get_file(), EventSheetProviderPreview.summary_line(scan)]
 	for warning: Variant in scan.get("warnings", []):
 		var warning_label: Label = EventSheetPopupUI.hint_label("! %s" % str((warning as Dictionary).get("text", "")))
@@ -168,15 +180,146 @@ func preview_provider_script(path: String, offer_register: bool) -> void:
 	for entry: Variant in scan.get("entries", []):
 		var row: Dictionary = entry
 		var item: TreeItem = _dock._provider_preview_tree.create_item(root)
-		item.set_text(0, str(row.get("kind_label", "")))
-		item.set_text(1, str(row.get("label", "")))
-		item.set_text(2, ", ".join(PackedStringArray(row.get("params", []))))
+		item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
+		item.set_checked(0, true)
+		item.set_editable(0, true)
+		item.set_tooltip_text(0, "Unchecked writes `## @ace_hidden`, so this member stops publishing a verb.")
+		# The kind dropdown is the point of curating: raw reflection reads an UNTYPED method as an
+		# Action, and this changes it by annotation - the signature is never rewritten.
+		item.set_cell_mode(1, TreeItem.CELL_MODE_RANGE)
+		item.set_text(1, ",".join(KIND_CHOICES))
+		item.set_range(1, maxf(0.0, float(KIND_CHOICES.find(str(row.get("kind_label", ""))))))
+		item.set_editable(1, true)
+		item.set_tooltip_text(1, "Which lane this verb belongs in. Changing it writes an annotation - your function signature is left alone.")
+		item.set_text(2, str(row.get("label", "")))
+		item.set_editable(2, true)
+		item.set_text(3, _category_of(scan, row))
+		item.set_editable(3, true)
+		item.set_text(4, ", ".join(PackedStringArray(row.get("params", []))))
 		# A method's template is baked when the row is applied, so it is empty at scan time. Say that
 		# rather than showing a blank cell that reads like something failed.
 		var emits: String = str(row.get("emits", ""))
-		item.set_text(3, emits if not emits.is_empty() else "(built when you add the row)")
-		item.set_tooltip_text(1, "%s - from %s `%s`" % [str(row.get("ace_id", "")), str(row.get("source", "")), str(row.get("member", ""))])
-	_dock._provider_register_button.visible = offer_register and bool(scan.get("ok", false)) and not (scan.get("entries", []) as Array).is_empty()
+		item.set_text(5, emits if not emits.is_empty() else "(built when you add the row)")
+		item.set_tooltip_text(2, "%s - from %s `%s`" % [str(row.get("ace_id", "")), str(row.get("source", "")), str(row.get("member", ""))])
+		item.set_metadata(0, row)
+	var has_entries: bool = bool(scan.get("ok", false)) and not (scan.get("entries", []) as Array).is_empty()
+	_dock._provider_register_button.visible = offer_register and has_entries
+	# Curation edits the file, so it is offered for any previewed script - registered or not.
+	if _dock._provider_curate_button != null:
+		_dock._provider_curate_button.visible = has_entries
+
+
+## The category the scan reported for a row, which is the BEFORE side of the Category column.
+func _category_of(_scan: Dictionary, row: Dictionary) -> String:
+	return str(row.get("category", ""))
+
+
+## Reads the curation table and returns one edit per member the user actually CHANGED.
+##
+## Only differences are written: annotating every member with whatever reflection already inferred
+## would bury the author's real decisions in a wall of comments that says nothing.
+func collect_curation_edits() -> Array:
+	var edits: Array = []
+	if _dock._provider_preview_tree == null:
+		return edits
+	var item: TreeItem = _dock._provider_preview_tree.get_root()
+	if item == null:
+		return edits
+	item = item.get_first_child()
+	while item != null:
+		var row: Dictionary = item.get_metadata(0) as Dictionary
+		if row == null:
+			item = item.get_next()
+			continue
+		var edit: Dictionary = {
+			"source_kind": str(row.get("source", "method")),
+			"member": str(row.get("member", ""))
+		}
+		var changed: bool = false
+		if not item.is_checked(0):
+			edit["hidden"] = true
+			changed = true
+		else:
+			var kind_index: int = int(item.get_range(1))
+			if kind_index >= 0 and kind_index < KIND_CHOICES.size() and KIND_CHOICES[kind_index] != str(row.get("kind_label", "")):
+				edit["kind"] = KIND_EDIT_KEYS[kind_index]
+				changed = true
+			if item.get_text(2) != str(row.get("label", "")):
+				edit["name"] = item.get_text(2)
+				changed = true
+			if item.get_text(3) != str(row.get("category", "")):
+				edit["category"] = item.get_text(3)
+				changed = true
+		if changed and not str(edit["member"]).is_empty():
+			edits.append(edit)
+		item = item.get_next()
+	return edits
+
+
+## Shows what will be written before anything is written. The wizard edits a file the user owns,
+## so the last step is always "here are the exact lines" rather than a silent save.
+func on_provider_curate_pressed() -> void:
+	var path: String = str(_dock._provider_preview_path)
+	if path.strip_edges().is_empty():
+		return
+	_curate_pending = collect_curation_edits()
+	if _curate_pending.is_empty():
+		_dock._set_status("Nothing to curate - change a Publish box, Kind, Verb or Category first.")
+		return
+	_ensure_curate_confirm()
+	_curate_diff.text = curation_diff_text(_curate_pending)
+	_curate_confirm.title = "Curate %s" % path.get_file()
+	_curate_confirm.popup_centered(Vector2i(720, 460))
+
+
+## A human-readable preview of the comment lines each member will gain.
+func curation_diff_text(edits: Array) -> String:
+	var blocks: PackedStringArray = PackedStringArray()
+	for entry: Variant in edits:
+		var edit: Dictionary = entry
+		var lines: PackedStringArray = PackedStringArray()
+		lines.append("%s %s" % [str(edit.get("source_kind", "")), str(edit.get("member", ""))])
+		for annotation: String in EventSheetACEAnnotationWriter.annotation_lines(edit):
+			lines.append("  + %s" % annotation)
+		blocks.append("\n".join(lines))
+	return "\n\n".join(blocks)
+
+
+func _ensure_curate_confirm() -> void:
+	if _curate_confirm != null:
+		return
+	_curate_confirm = ConfirmationDialog.new()
+	_curate_confirm.ok_button_text = "Write Annotations"
+	var body: VBoxContainer = EventSheetPopupUI.form_box()
+	body.add_child(EventSheetPopupUI.hint_label("These comment lines are added above the members named below.\nNothing else in the file changes - no signature, no body - and a backup is taken first (Tools > Sheet Backups)."))
+	_curate_diff = CodeEdit.new()
+	_curate_diff.editable = false
+	_curate_diff.custom_minimum_size = Vector2(0, 260)
+	_curate_diff.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	EventSheetPopupUI.configure_code_editor(_curate_diff)
+	body.add_child(_curate_diff)
+	_curate_confirm.add_child(EventSheetPopupUI.margined(body))
+	_curate_confirm.confirmed.connect(_apply_curation)
+	_dock.add_child(_curate_confirm)
+
+
+func _apply_curation() -> void:
+	var path: String = str(_dock._provider_preview_path)
+	var result: Dictionary = EventSheets.curate_provider(path, _curate_pending)
+	if not bool(result.get("ok", false)):
+		_dock._set_status(str(result.get("reason", "Could not curate the script.")), true)
+		return
+	var skipped: Array = result.get("skipped", [])
+	var message: String = "Curated %s - %d member%s annotated." % [
+		path.get_file(), int(result.get("changed", 0)), "" if int(result.get("changed", 0)) == 1 else "s"]
+	if not skipped.is_empty():
+		# A member renamed between the scan and the apply. Say which, rather than reporting a
+		# clean success for a partial write.
+		message += " Not found: %s." % ", ".join(PackedStringArray(skipped))
+	_dock._set_status(message, not skipped.is_empty())
+	_curate_pending = []
+	# Re-scan so the table shows what the file NOW publishes - the proof the write landed.
+	preview_provider_script(path, false)
 
 
 ## Commits the previewed script to this sheet's providers.

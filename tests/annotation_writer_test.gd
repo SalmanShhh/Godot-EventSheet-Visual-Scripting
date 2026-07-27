@@ -119,6 +119,26 @@ static func run() -> bool:
 	ok = _check("while the managed one is replaced", kept.contains("## @ace_name(\"Ping\")"), true) and ok
 	ok = _check("with no duplicate left behind", kept.contains("\"Old\""), false) and ok
 
+	# ---- 7b. Two edits, one declaration ----
+	# An exported property publishes a reader AND a writer, so the curation table shows it twice -
+	# but both rows share one `var`, and therefore one annotation block. Rewriting it twice would
+	# leave only the second edit's annotations, and unchecking one row while the other stayed
+	# checked would silently re-publish the member the author just opted out of.
+	var twice: String = str(EventSheetACEAnnotationWriter.apply(SOURCE, [
+		{"source_kind": "property", "member": "difficulty", "hidden": true},
+		{"source_kind": "set", "member": "difficulty", "name": "Difficulty"},
+	]).get("source", ""))
+	ok = _check("both rows collapse onto one block",
+		twice.count("@ace_hidden"), 1) and ok
+	ok = _check("and opting out is sticky", twice.contains("@ace_name(\"Difficulty\")"), false) and ok
+	# A numeric export publishes FOUR rows - read, set, add, subtract. All four are views of one
+	# `var`, so all four must anchor to it; sending add/subtract off to look for a `func` of that
+	# name reported the member as missing the moment a user unchecked the Add row.
+	for numeric_kind: String in ["property", "set", "add", "subtract"]:
+		var found: int = EventSheetACEAnnotationWriter.find_declaration(
+			SOURCE.split("\n"), numeric_kind, "difficulty")
+		ok = _check("`%s` anchors to the var it came from" % numeric_kind, found >= 0, true) and ok
+
 	# ---- 8. The round trip: does the SCANNER agree? ----
 	# Text that looks right is worth nothing if the analyzer reads it differently, so the written
 	# source is compiled and run back through the same generator call the registry makes. This is
