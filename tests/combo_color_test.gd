@@ -45,6 +45,8 @@ static func run() -> bool:
 
 	# @ace_param_options annotation -> addon param dropdowns.
 	var analyzer: EventSheetSemanticAnalyzer = EventSheetSemanticAnalyzer.new()
+	# Options parse into {key, label} pairs, so a dropdown can READ as English while INSERTING the
+	# real token. A bare entry is its own label, which is what keeps the plain form working.
 	var directives: Array[String] = [
 		"@ace_action",
 		"@ace_param_options(movement horizontal, vertical, angle)"
@@ -52,7 +54,20 @@ static func run() -> bool:
 	var overrides: Dictionary = analyzer._build_overrides(directives)
 	var parsed_options: Dictionary = overrides.get("param_options", {})
 	all_passed = _check("@ace_param_options parses",
-		parsed_options.get("movement", []) == ["horizontal", "vertical", "angle"], true) and all_passed
+		parsed_options.get("movement", []) == [
+			{"key": "horizontal", "label": "horizontal"},
+			{"key": "vertical", "label": "vertical"},
+			{"key": "angle", "label": "angle"}
+		], true) and all_passed
+	var labeled_overrides: Dictionary = analyzer._build_overrides([
+		"@ace_action",
+		"@ace_param_options(mode set=Set it, inc=Increase it)"
+	])
+	all_passed = _check("@ace_param_options labels a value=Label entry",
+		(labeled_overrides.get("param_options", {}) as Dictionary).get("mode", []) == [
+			{"key": "set", "label": "Set it"},
+			{"key": "inc", "label": "Increase it"}
+		], true) and all_passed
 
 	# Dialog: enum-driven dropdown + color picker + guardrails.
 	var state: EnumRow = EnumRow.new()

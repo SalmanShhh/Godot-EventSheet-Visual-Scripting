@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added - addon authors can shape a param as well as a builtin module can
+
+Three gaps where a bundled module could express something an `@ace_*` author could not:
+
+- **Param defaults.** Every provider param fell back to type-zero, so a freshly picked verb read
+  `0.0` and quietly did nothing until the author noticed. Now `@ace_param(power, default: 25.0)`
+  sets it - and with no annotation at all, the method's OWN GDScript default is used, so
+  `func fire(power: float = 25.0)` lands in the picker already reading 25.0. Godot reports
+  `default_args` for the trailing arguments only, so the alignment is computed rather than assumed:
+  an undefaulted leading argument still gets type-zero. Precedence is annotation, then signature,
+  then type-zero. (The Physics-Car guide documented defaults of 1.0/1.0/5.0 that did not exist -
+  that is now something a pack can actually say.)
+- **Labeled dropdown options.** Builtins pair a key with a label so a row reads "Balanced" while
+  inserting `med`; annotations could only emit raw tokens. Both option forms now take
+  `value=Label`, in `@ace_param(level, options: low=Potato|med=Balanced|high=Ultra)` and in
+  `@ace_param_options(mode set=Set it, inc=Increase it)`. A bare entry is still its own label.
+- **A comparison shorthand** (C3's `cmp` type). `@ace_param(op, hint: comparison)` is the whole
+  `=` / `!=` / `<` / `<=` / `>` / `>=` dropdown, labeled in English and seeded to `==` so the row
+  reads as a sentence on drop. This also removes the reason packs hand-rolled word tokens plus a
+  symbol mapper: the enum-option parser rejects a bare `=`, which the labeled form sidesteps.
+
 ### Added - Stepping on the fast movement packs (anti-tunnelling)
 
 - A bullet moves by jumping its whole frame of travel at once. At 3000 px/s that is ~50 pixels a

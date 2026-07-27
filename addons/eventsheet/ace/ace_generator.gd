@@ -356,7 +356,7 @@ static func _autoload_name_for(script: Script) -> String:
 
 
 func _build_method_definition(provider_id: String, method_name: String, method_info: Dictionary, overrides: Dictionary) -> ACEDefinition:
-	var parameter_definitions: Array = _build_parameter_definitions(method_info.get("args", []), overrides)
+	var parameter_definitions: Array = _build_parameter_definitions(method_info.get("args", []), overrides, method_info.get("default_args", []))
 	var parameter_types: Array = []
 	for parameter_definition in parameter_definitions:
 		parameter_types.append(parameter_definition.get("type", TYPE_NIL))
@@ -424,7 +424,11 @@ func _resolve_method_ace_type(return_type: int, overrides: Dictionary) -> int:
 	return ACEDefinition.ACEType.EXPRESSION
 
 
-func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {}) -> Array:
+## Builds the picker's parameter list. `default_args` is the method's OWN GDScript defaults, tail
+## aligned (Godot lists only the trailing defaulted arguments), so `func drive(t: float = 1.0)` gives
+## its row a sensible starting value with no annotation at all - an `@ace_param(t, default: …)`
+## still wins over it, and a param with neither falls back to type-zero as before.
+func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {}, default_args: Variant = []) -> Array:
 	var output: Array = []
 	if not (raw_args is Array):
 		return output
@@ -433,7 +437,14 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
 	var param_options: Dictionary = overrides.get("param_options", {})
 	var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
 	var param_descriptions: Dictionary = overrides.get("param_descriptions", {})
+	var param_defaults: Dictionary = overrides.get("param_defaults", {})
+	# Godot reports default_args for the LAST N arguments, so the first defaulted argument sits at
+	# index (arg_count - default_count). Anything before that genuinely has no default.
+	var gdscript_defaults: Array = default_args if default_args is Array else []
+	var first_defaulted: int = (raw_args as Array).size() - gdscript_defaults.size()
+	var argument_index: int = -1
 	for argument_info in raw_args:
+		argument_index += 1
 		if not (argument_info is Dictionary):
 			continue
 		var argument_dict: Dictionary = argument_info
@@ -454,12 +465,23 @@ func _build_parameter_definitions(raw_args: Variant, overrides: Dictionary = {})
 		var hint_value: String = str(parameter_override.get("hint", ""))
 		if hint_value.is_empty():
 			hint_value = _convention_hint(argument_name)
+		# Default resolution, most explicit first: an @ace_param(default:) the author wrote, then the
+		# method's own GDScript default, then type-zero. The middle step is what makes a plain
+		# `func fire(power: float = 25.0)` land in the picker already reading 25.0.
+		var default_text: Variant = parameter_override.get("default_value", null)
+		if default_text == null and param_defaults.has(argument_name):
+			default_text = str(param_defaults[argument_name])
+		if default_text == null and argument_index >= first_defaulted and first_defaulted >= 0:
+			var gdscript_default: Variant = gdscript_defaults[argument_index - first_defaulted]
+			default_text = SheetCompiler._to_code_literal(gdscript_default)
+		if default_text == null:
+			default_text = _default_value_for_type(param_type)
 		output.append({
 			"id": argument_name,
 			"display_name": str(parameter_override.get("display_name", _analyzer.build_property_display_name(argument_name))),
 			"description": str(parameter_override.get("description", param_descriptions.get(argument_name, ""))),
 			"type": param_type,
-			"default_value": parameter_override.get("default_value", _default_value_for_type(param_type)),
+			"default_value": default_text,
 			"property_hint": int(parameter_override.get("property_hint", PROPERTY_HINT_NONE)),
 			"hint": hint_value,
 			"hint_string": str(parameter_override.get("hint_string", "")),

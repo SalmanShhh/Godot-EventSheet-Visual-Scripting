@@ -363,8 +363,19 @@ func _build_overrides(directives: Array[String], exported: bool = false, metadat
 					var param_options: Dictionary = overrides.get("param_options", {})
 					var option_values: Array = []
 					for raw_option in options_split[1].split(","):
-						if not raw_option.strip_edges().is_empty():
-							option_values.append(raw_option.strip_edges())
+						# `value=Label` labels an entry, so the dropdown reads as English while
+						# inserting the real token; a bare entry stays its own label.
+						var option_entry: String = raw_option.strip_edges()
+						if option_entry.is_empty():
+							continue
+						var label_at: int = option_entry.find("=")
+						if label_at > 0 and not option_entry.substr(label_at + 1).strip_edges().is_empty():
+							option_values.append({
+								"key": option_entry.substr(0, label_at).strip_edges(),
+								"label": option_entry.substr(label_at + 1).strip_edges()
+							})
+						else:
+							option_values.append({"key": option_entry, "label": option_entry})
 					param_options[options_split[0].strip_edges()] = option_values
 					overrides["param_options"] = param_options
 			"@ace_param_autocomplete":
@@ -434,10 +445,30 @@ func _parse_param_spec(spec: String, overrides: Dictionary) -> void:
 				var param_hints: Dictionary = overrides.get("param_hints", {})
 				param_hints[param_name] = value
 				overrides["param_hints"] = param_hints
+				# `hint: comparison` is the whole operator dropdown in one word (C3's `cmp` type).
+				# It only SEEDS the options, so an explicit `options:` on the same param still wins.
+				if value.strip_edges().to_lower() == "comparison":
+					var comparison_options: Dictionary = overrides.get("param_options", {})
+					if not comparison_options.has(param_name):
+						comparison_options[param_name] = COMPARISON_OPTIONS.duplicate(true)
+						overrides["param_options"] = comparison_options
+					# Seed `==` as the starting operator, so the row reads as a complete sentence on
+					# drop rather than showing an empty cell the author must fill before it compiles.
+					var comparison_defaults: Dictionary = overrides.get("param_defaults", {})
+					if not comparison_defaults.has(param_name):
+						comparison_defaults[param_name] = str(COMPARISON_OPTIONS[0]["key"])
+						overrides["param_defaults"] = comparison_defaults
 			"options":
 				var param_options: Dictionary = overrides.get("param_options", {})
-				param_options[param_name] = _split_pipe_values(value)
+				param_options[param_name] = _split_option_values(value)
 				overrides["param_options"] = param_options
+			"default":
+				# What the row shows the MOMENT it is dropped. Without this the picker fell back to
+				# type-zero, so a param whose sensible value was 1.0 read as 0.0 and quietly did
+				# nothing until the author noticed.
+				var param_defaults: Dictionary = overrides.get("param_defaults", {})
+				param_defaults[param_name] = value.trim_prefix("\"").trim_suffix("\"")
+				overrides["param_defaults"] = param_defaults
 			"autocomplete":
 				var param_autocomplete: Dictionary = overrides.get("param_autocomplete", {})
 				param_autocomplete[param_name] = _split_pipe_values(value)
@@ -453,6 +484,42 @@ func _split_pipe_values(value: String) -> Array:
 	for raw_entry in value.split("|"):
 		if not raw_entry.strip_edges().is_empty():
 			output.append(raw_entry.strip_edges())
+	return output
+
+
+## The canonical comparison operators, as {key, label} pairs. `hint: comparison` on a param resolves
+## to this list, so a provider condition never hand-types the six operators - which also sidesteps the
+## enum-option parser's dislike of a bare `=` and the word-token workarounds that produced.
+## Mirrors EventForgeACEFactory.COMPARISON_OPERATORS, in the same order.
+const COMPARISON_OPTIONS: Array = [
+	{"key": "==", "label": "= (equal to)"},
+	{"key": "!=", "label": "!= (not equal to)"},
+	{"key": "<", "label": "< (less than)"},
+	{"key": "<=", "label": "<= (at most)"},
+	{"key": ">", "label": "> (greater than)"},
+	{"key": ">=", "label": ">= (at least)"}
+]
+
+
+## Splits an `options:` value into {key, label} pairs, so a dropdown can READ as English while
+## INSERTING the real token. `a|b` stays plain (key == label); `set=Set it|inc=Increase it` labels
+## each. The `=` splits on the FIRST one only, so a key or label may itself contain one.
+func _split_option_values(value: String) -> Array:
+	var output: Array = []
+	for raw_entry in value.split("|"):
+		var entry: String = raw_entry.strip_edges()
+		if entry.is_empty():
+			continue
+		var split_at: int = entry.find("=")
+		if split_at <= 0:
+			output.append({"key": entry, "label": entry})
+			continue
+		var key: String = entry.substr(0, split_at).strip_edges()
+		var label: String = entry.substr(split_at + 1).strip_edges()
+		if key.is_empty() or label.is_empty():
+			output.append({"key": entry, "label": entry})
+			continue
+		output.append({"key": key, "label": label})
 	return output
 
 
