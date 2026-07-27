@@ -23,6 +23,22 @@ Three gaps where a bundled module could express something an `@ace_*` author cou
   reads as a sentence on drop. This also removes the reason packs hand-rolled word tokens plus a
   symbol mapper: the enum-option parser rejects a bare `=`, which the labeled form sidesteps.
 
+### Fixed - the Custom Block byte gate was voluntary
+
+The Custom Block API documents that "you cannot break a user's file with a bad kind", but the gate
+lived only in `verified_claim()` - a helper a kind calls on ITSELF at the end of `lift()`. A kind
+that simply did not call it had its claim accepted unchecked, and on the next save the block
+re-emitted as whatever its `emit()` produced, rewriting source lines it had never reproduced.
+
+Worse, the no-code path could not opt in even when its author wanted to: a `lift` Callable written
+inline in a `simple_block_kind()` config has no kind instance to call the helper on.
+
+The importer now re-verifies every fields claim itself. `emit()` is contractually pure, so this is a
+no-op for the built-ins (which all still gate themselves) and only changes outcomes for the
+third-party kinds that could ever have broken the promise. A claim reaching past the end of the file
+is bounded rather than read out of bounds. Nothing in the repo changes behaviour; the guide now
+describes a guarantee the code actually enforces.
+
 ### Added - table columns can label their choices
 
 A grid column with fixed choices showed the stored token and nothing else, so a Storylet Weaver

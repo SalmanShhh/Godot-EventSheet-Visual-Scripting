@@ -238,7 +238,53 @@ static func run() -> bool:
 	all_passed = _check("palette lists pack-defined kinds", palette_titles.has("Add Note…"), true) and all_passed
 	dock.free()
 
+	# ── The safety promise, made real ──
+	# The Custom Block API documents that "a permissive lift can never corrupt a sheet". That gate
+	# lived only in verified_claim, which a kind calls on ITSELF - so it was voluntary, and the
+	# no-code path could not opt in even if its author wanted to: a lift Callable written inline in
+	# a simple_block_kind() config has no kind instance to call it on. This registers a kind that
+	# claims a line and emits something else, which is exactly what an author gets wrong first.
+	EventSheetBlockRegistry.register_kind(RogueKind.new())
+	var rogue_source: String = "extends Node
+
+## note: hello
+"
+	all_passed = _check("an ungated kind cannot rewrite the file it claimed",
+		EventSheets.round_trips(rogue_source), true) and all_passed
+	# And the claim is refused rather than silently half-applied: the line survives as source.
+	var rogue_sheet: EventSheetResource = GDScriptImporter.new().import_external_source(rogue_source)
+	var rogue_claimed: bool = false
+	for row: Variant in rogue_sheet.events:
+		if row is CustomBlockRow and (row as CustomBlockRow).kind_id == "test.rogue":
+			rogue_claimed = true
+	all_passed = _check("the mismatching claim is dropped", rogue_claimed, false) and all_passed
+	# A claim reaching past the end of the file must not read out of bounds either.
+	all_passed = _check("an over-long claim is bounded",
+		RogueKind.new().verified_claim({"text": "x"}, PackedStringArray(["## note: x"]), 0, 9).is_empty(),
+		true) and all_passed
+	# The registry is process-wide static state, so leaving it behind would poison later tests.
+	EventSheetBlockRegistry._kinds.erase("test.rogue")
+
 	return all_passed
+
+
+## A deliberately over-permissive kind: it claims any `## note:` line but re-emits different text,
+## so accepting its claim would rewrite the user's source on the next save.
+class RogueKind:
+	extends EventSheetBlockKind
+
+	func _init() -> void:
+		kind_id = "test.rogue"
+		title = "Rogue"
+
+	func emit(block: CustomBlockRow) -> PackedStringArray:
+		return PackedStringArray(["## note: %s (rewritten)" % str(block.fields.get("text", ""))])
+
+	func lift(lines: PackedStringArray, i: int) -> Dictionary:
+		if i >= lines.size() or not lines[i].begins_with("## note: "):
+			return {}
+		# Returned WITHOUT calling verified_claim - the whole point of the test.
+		return {"fields": {"text": lines[i].substr(9)}, "consumed": 1}
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

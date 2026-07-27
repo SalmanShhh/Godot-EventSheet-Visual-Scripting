@@ -217,7 +217,7 @@ Reach for a resource kind only when you genuinely need a dedicated Resource clas
 The plugin's core promise is that opening a `.gd` and saving it untouched reproduces the file **byte-identically**. Custom blocks inherit that promise mechanically:
 
 - `emit()` must be **deterministic**. No timestamps, no randomness, no environment reads. The importer and the compiler both rely on one canonical spelling per block state.
-- `lift()` claims are gated: `verified_claim()` re-emits the recovered fields and compares against the consumed source lines. A mismatch drops the claim silently and the lines stay a verbatim GDScript block. **Degradation, never corruption.**
+- `lift()` claims are gated **by the importer**, not by your good behaviour: it re-emits the recovered fields and compares against the consumed source lines before accepting the claim. A mismatch drops the claim silently and the lines stay a verbatim GDScript block. **Degradation, never corruption.** Ending your `lift()` with `verified_claim()` is still worth doing - it tells you early that a claim will not stick - but forgetting it cannot cost a user their file, and a `lift` written as a plain Callable in a `simple_block_kind()` config has no instance to call it on anyway.
 - Blocks emit **in position** on `.gd` sheets (the row's place in the sheet is the line's place in the file), so a lifted block writes back exactly where it came from.
 - A hand-written variant your canon cannot reproduce (odd spacing, reordered arguments) is not an error: it round-trips verbatim as code, and your kind simply does not claim it.
 

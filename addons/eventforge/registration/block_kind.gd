@@ -128,8 +128,14 @@ func edit(_dock: Control, _block: Resource) -> bool:
 
 
 ## A convenience for lift(): builds the fields Dictionary and verifies emit() reproduces the
-## consumed lines byte-exactly, returning {} on mismatch. Kinds normally end lift() with this.
+## consumed lines byte-exactly, returning {} on mismatch. Kinds normally end lift() with this so
+## they can tell early that a claim will not stick. It is NOT the safety gate - the importer
+## re-verifies every fields claim itself, because a lift written as a plain Callable (the no-code
+## simple_block_kind path) has no kind instance to call this on.
 func verified_claim(recovered_fields: Dictionary, source_lines: PackedStringArray, i: int, consumed: int) -> Dictionary:
+	# A claim reaching past the end of the file would read out of bounds in the compare loop below.
+	if i < 0 or consumed < 1 or i + consumed > source_lines.size():
+		return {}
 	var candidate: CustomBlockRow = CustomBlockRow.new()
 	candidate.kind_id = kind_id
 	candidate.fields = recovered_fields

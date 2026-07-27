@@ -767,23 +767,40 @@ func _extract_first_quoted(line: String) -> String:
 	return line.substr(open_quote + 1, close_quote - open_quote - 1)
 
 
-## Probes every registered Custom Block API kind at this line. Each claim is byte-verify-gated
-## by the kind itself (EventSheetBlockKind.verified_claim): re-emission must reproduce the
-## consumed source lines exactly, so a permissive kind can never corrupt a sheet - it just
-## fails to lift and the lines stay a verbatim GDScript block. Returns {} when no kind claims,
-## else {"row": CustomBlockRow, "consumed": int}.
+## Probes every registered Custom Block API kind at this line. Every fields claim is byte-verify
+## gated HERE: re-emission must reproduce the consumed source lines exactly, so a permissive kind
+## cannot corrupt a sheet - it just fails to lift and the lines stay a verbatim GDScript block.
+## Returns {} when no kind claims, else {"row": CustomBlockRow, "consumed": int}.
+##
+## The gate used to live only in EventSheetBlockKind.verified_claim, which a kind calls on ITSELF at
+## the end of lift(). That made the guarantee voluntary, and the no-code path could not opt in even
+## if its author wanted to: a lift Callable written inline in a simple_block_kind() config has no
+## kind instance to call it on. Re-verifying here costs one emit() per claim - contractually pure,
+## so it is a no-op for the built-ins, which all still gate themselves - and makes the promise real
+## for a third-party kind, which is the only kind that could ever have broken it.
 func _try_lift_custom_block(lines: PackedStringArray, index: int) -> Dictionary:
 	for kind: EventSheetBlockKind in EventSheetBlockRegistry.all_kinds():
 		var claim: Dictionary = kind.lift(lines, index)
 		if claim.is_empty():
 			continue
-		# Resource kinds hand back a ready row instance; schema kinds hand back field values.
+		# Resource kinds hand back a ready row instance, not fields, so there is nothing to re-emit
+		# from a schema - they own their own round-trip. This check must stay ABOVE the gate.
 		if claim.has("resource"):
 			return {"row": claim["resource"], "consumed": maxi(1, int(claim.get("consumed", 1)))}
+		var fields: Variant = claim.get("fields")
+		if not (fields is Dictionary):
+			continue
+		var consumed: int = maxi(1, int(claim.get("consumed", 1)))
+		# An inflated `consumed` comes from exactly the buggy kinds this gate exists to stop, so it
+		# is bounded before anything indexes with it.
+		if index + consumed > lines.size():
+			continue
+		if kind.verified_claim(fields as Dictionary, lines, index, consumed).is_empty():
+			continue
 		var block_row: CustomBlockRow = CustomBlockRow.new()
 		block_row.kind_id = kind.kind_id
-		block_row.fields = claim["fields"]
-		return {"row": block_row, "consumed": maxi(1, int(claim.get("consumed", 1)))}
+		block_row.fields = fields
+		return {"row": block_row, "consumed": consumed}
 	return {}
 
 
