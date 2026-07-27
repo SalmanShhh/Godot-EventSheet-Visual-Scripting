@@ -15,10 +15,21 @@ const KIND_CHOICES: PackedStringArray = ["Action", "Condition", "Expression", "T
 ## The annotation each Kind writes, keyed the way EventSheetACEAnnotationWriter expects.
 const KIND_EDIT_KEYS: PackedStringArray = ["action", "condition", "expression", "trigger"]
 
+## The param hints the curation editor offers. Not the whole vocabulary - any hint a provider can
+## name is still writable by hand - just the ones worth a dropdown. "comparison" leads because it is
+## the one that replaces six hand-typed operators with a word.
+const PARAM_HINTS: PackedStringArray = ["", "comparison", "expression", "color", "variable_reference", "input_action"]
+
 var _dock: Control = null
 var _curate_confirm: ConfirmationDialog = null
 var _curate_diff: CodeEdit = null
 var _curate_pending: Array = []
+## member -> {param_id -> {hint, options, default}}. Held aside from the Tree because a param spec
+## has no cell to live in, and re-scanning after an apply must not silently drop pending edits.
+var _param_specs: Dictionary = {}
+var _param_dialog: ConfirmationDialog = null
+var _param_rows: Array = []
+var _param_member: String = ""
 
 
 func init(dock: Control) -> void:
@@ -164,6 +175,11 @@ func on_provider_file_selected(path: String) -> void:
 func preview_provider_script(path: String, offer_register: bool) -> void:
 	if _dock._provider_preview_tree == null:
 		return
+	# Param specs are per-script; carrying them to a different provider would write a hint onto a
+	# member that merely shares a name. A re-scan of the SAME script keeps them, so the specs survive
+	# the refresh that follows an apply.
+	if str(_dock._provider_preview_path) != path:
+		_param_specs.clear()
 	_dock._provider_pending_path = path if offer_register else ""
 	_dock._provider_preview_path = path
 	_dock._provider_preview_tree.clear()
@@ -207,6 +223,8 @@ func preview_provider_script(path: String, offer_register: bool) -> void:
 	# Curation edits the file, so it is offered for any previewed script - registered or not.
 	if _dock._provider_curate_button != null:
 		_dock._provider_curate_button.visible = has_entries
+	if _dock._provider_params_button != null:
+		_dock._provider_params_button.visible = has_entries
 
 
 ## The category the scan reported for a row, which is the BEFORE side of the Category column.
@@ -250,10 +268,113 @@ func collect_curation_edits() -> Array:
 			if item.get_text(3) != str(row.get("category", "")):
 				edit["category"] = item.get_text(3)
 				changed = true
-		if changed and not str(edit["member"]).is_empty():
+		# Param specs live outside the Tree (a hint has no cell), so they fold in here. A member whose
+		# ONLY change is a param spec still counts - that is the whole point of the param editor.
+		var member: String = str(edit["member"])
+		if not bool(edit.get("hidden", false)) and _param_specs.has(member):
+			var specs: Dictionary = (_param_specs[member] as Dictionary).duplicate(true)
+			if not specs.is_empty():
+				edit["params"] = specs
+				changed = true
+		if changed and not member.is_empty():
 			edits.append(edit)
 		item = item.get_next()
 	return edits
+
+
+## Records one param's authored spec. An empty spec clears it, so unticking a hint really removes
+## the annotation rather than writing an empty one.
+func set_param_spec(member: String, param_id: String, spec: Dictionary) -> void:
+	var member_specs: Dictionary = _param_specs.get(member, {})
+	if spec.is_empty():
+		member_specs.erase(param_id)
+	else:
+		member_specs[param_id] = spec
+	if member_specs.is_empty():
+		_param_specs.erase(member)
+	else:
+		_param_specs[member] = member_specs
+
+
+func param_specs_for(member: String) -> Dictionary:
+	return _param_specs.get(member, {})
+
+
+## Opens the per-param editor for the selected verb: hint, options and starting value per parameter.
+## The annotation writer already emits all three, so this is the missing authoring surface rather
+## than new machinery.
+func on_provider_params_pressed() -> void:
+	if _dock._provider_preview_tree == null:
+		return
+	var item: TreeItem = _dock._provider_preview_tree.get_selected()
+	if item == null:
+		_dock._set_status("Select a verb first, then edit its parameters.")
+		return
+	var row: Dictionary = item.get_metadata(0) as Dictionary
+	if row == null:
+		return
+	var param_ids: Array = row.get("params", [])
+	if param_ids.is_empty():
+		_dock._set_status("%s has no parameters to shape." % str(row.get("label", "")))
+		return
+	_param_member = str(row.get("member", ""))
+	_build_param_dialog(str(row.get("label", "")), param_ids)
+
+
+func _build_param_dialog(verb_label: String, param_ids: Array) -> void:
+	if _param_dialog == null:
+		_param_dialog = ConfirmationDialog.new()
+		_param_dialog.ok_button_text = "Keep"
+		_param_dialog.confirmed.connect(_collect_param_dialog)
+		_dock.add_child(_param_dialog)
+	for stale: Node in _param_dialog.get_children():
+		if stale is MarginContainer:
+			stale.queue_free()
+	_param_rows.clear()
+	var body: VBoxContainer = EventSheetPopupUI.form_box()
+	body.add_child(EventSheetPopupUI.hint_label("How each parameter should be filled in when someone drops this verb into a sheet.\nHint 'comparison' is the whole operator dropdown in one word. Options read as `value=Label`, separated by |."))
+	var existing: Dictionary = param_specs_for(_param_member)
+	for param_id: Variant in param_ids:
+		var id_text: String = str(param_id)
+		var spec: Dictionary = existing.get(id_text, {}) as Dictionary
+		var card: VBoxContainer = EventSheetPopupUI.form_box()
+		var hint_option: OptionButton = OptionButton.new()
+		for hint_name: String in PARAM_HINTS:
+			hint_option.add_item("(plain)" if hint_name.is_empty() else hint_name)
+			hint_option.set_item_metadata(hint_option.item_count - 1, hint_name)
+			if hint_name == str(spec.get("hint", "")):
+				hint_option.select(hint_option.item_count - 1)
+		var options_edit: LineEdit = LineEdit.new()
+		options_edit.text = str(spec.get("options", ""))
+		options_edit.placeholder_text = "low=Potato|med=Balanced|high=Ultra"
+		var default_edit: LineEdit = LineEdit.new()
+		default_edit.text = str(spec.get("default", ""))
+		default_edit.placeholder_text = "what the row shows on drop"
+		card.add_child(EventSheetPopupUI.form_row("Hint", hint_option))
+		card.add_child(EventSheetPopupUI.form_row("Options", options_edit))
+		card.add_child(EventSheetPopupUI.form_row("Starting value", default_edit))
+		body.add_child(EventSheetPopupUI.titled_card(id_text, card))
+		_param_rows.append({"id": id_text, "hint": hint_option, "options": options_edit, "default": default_edit})
+	_param_dialog.add_child(EventSheetPopupUI.margined(body))
+	_param_dialog.title = "Parameters of %s" % verb_label
+	_param_dialog.popup_centered(Vector2i(560, 520))
+
+
+func _collect_param_dialog() -> void:
+	for entry: Dictionary in _param_rows:
+		var spec: Dictionary = {}
+		var hint_option: OptionButton = entry["hint"]
+		var hint_value: String = str(hint_option.get_item_metadata(hint_option.selected)) if hint_option.selected >= 0 else ""
+		if not hint_value.is_empty():
+			spec["hint"] = hint_value
+		var options_text: String = (entry["options"] as LineEdit).text.strip_edges()
+		if not options_text.is_empty():
+			spec["options"] = options_text
+		var default_text: String = (entry["default"] as LineEdit).text.strip_edges()
+		if not default_text.is_empty():
+			spec["default"] = default_text
+		set_param_spec(_param_member, str(entry["id"]), spec)
+	_dock._set_status("Parameter shapes recorded - press Curate Script to write them.")
 
 
 ## Shows what will be written before anything is written. The wizard edits a file the user owns,

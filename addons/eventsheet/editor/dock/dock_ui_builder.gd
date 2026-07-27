@@ -340,6 +340,12 @@ func build_provider_dialog() -> void:
 	_dock._provider_curate_button.tooltip_text = "Write your edits above into the script as `## @ace_*` comments, so it keeps publishing them.\nOnly comments are added - your signatures and bodies are never touched, and the file is backed up first."
 	_dock._provider_curate_button.pressed.connect(_dock._on_provider_curate_pressed)
 	preview_actions.add_child(_dock._provider_curate_button)
+	_dock._provider_params_button = Button.new()
+	_dock._provider_params_button.text = "Parameters…"
+	_dock._provider_params_button.visible = false
+	_dock._provider_params_button.tooltip_text = "Shape the selected verb's parameters: a hint (try 'comparison'), a fixed set of choices, and what the row shows the moment it is dropped."
+	_dock._provider_params_button.pressed.connect(_dock._on_provider_params_pressed)
+	preview_actions.add_child(_dock._provider_params_button)
 	var preview_card: PanelContainer = EventSheetPopupUI.titled_card("What it publishes", preview_box)
 	preview_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(preview_card)

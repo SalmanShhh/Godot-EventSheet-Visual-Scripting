@@ -115,6 +115,7 @@ var _provider_pending_path: String = ""
 # came from. The scan is the BEFORE side of the diff - what the table shows is compared against it,
 # so only members the user actually changed get annotated.
 var _provider_curate_button: Button = null
+var _provider_params_button: Button = null
 var _provider_preview_path: String = ""
 var _provider_preview_scan: Dictionary = {}
 var _split: HSplitContainer = null
@@ -771,6 +772,11 @@ func _on_provider_register_pressed() -> void:
 
 func _on_provider_curate_pressed() -> void:
 	_providers_glue.on_provider_curate_pressed()
+
+
+
+func _on_provider_params_pressed() -> void:
+	_providers_glue.on_provider_params_pressed()
 
 
 

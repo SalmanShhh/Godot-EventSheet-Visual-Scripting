@@ -23,6 +23,19 @@ Three gaps where a bundled module could express something an `@ace_*` author cou
   reads as a sentence on drop. This also removes the reason packs hand-rolled word tokens plus a
   symbol mapper: the enum-option parser rejects a bare `=`, which the labeled form sidesteps.
 
+### Added - the ACE wizard shapes parameters too (Phase 3)
+
+Curation could rename and re-file a verb but said nothing about its parameters, so a provider's
+params stayed at type-zero with no hint and no choices unless the author hand-wrote the annotation.
+**Parameters...** on a selected verb now offers, per parameter: a hint (including `comparison`, the
+whole operator dropdown in one word), a fixed set of choices as `value=Label`, and the starting value
+the row shows the moment it is dropped. They land as `## @ace_param(id, hint: ..., options: ...,
+default: ...)`, which the writer already emitted and the analyzer already read.
+
+A parameter has no cell in the table, so its spec is recorded alongside and folded in when the edits
+are collected - a member whose only change is a param spec is still written. Specs are per-script and
+clear when you preview a different one, so a hint cannot land on a member that merely shares a name.
+
 ### Fixed - the Custom Block byte gate was voluntary
 
 The Custom Block API documents that "you cannot break a user's file with a bad kind", but the gate

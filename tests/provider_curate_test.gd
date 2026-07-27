@@ -67,6 +67,32 @@ static func run() -> bool:
 	ok = _check("the fixture on disk is untouched",
 		FileAccess.get_file_as_string(UNTYPED).contains("@ace_"), false) and ok
 
+	# ── Phase 3: shaping a PARAMETER, not just the verb ──
+	# A param spec has no cell in the table (a hint is not a column), so it is recorded alongside and
+	# folded in at collection time. A member whose ONLY change is a param spec must still be written -
+	# that is the entire point of the editor.
+	glue.set_param_spec("start_wave", "index", {"hint": "comparison", "default": "0"})
+	var with_params: Array = glue.collect_curation_edits()
+	var start_wave_edit: Dictionary = {}
+	for edit: Variant in with_params:
+		if str((edit as Dictionary).get("member", "")) == "start_wave":
+			start_wave_edit = edit
+	ok = _check("a param-only change still produces an edit", start_wave_edit.is_empty(), false) and ok
+	ok = _check("carrying the param spec",
+		(start_wave_edit.get("params", {}) as Dictionary).get("index", {}),
+		{"hint": "comparison", "default": "0"}) and ok
+	# And it reaches the annotation the writer emits, which is what the analyzer reads back.
+	ok = _check("which becomes an @ace_param line",
+		glue.curation_diff_text([start_wave_edit]).contains("+ ## @ace_param(index, hint: comparison, default: 0)"),
+		true) and ok
+	# Clearing a spec removes it rather than writing an empty annotation.
+	glue.set_param_spec("start_wave", "index", {})
+	ok = _check("clearing a spec drops it", glue.param_specs_for("start_wave"), {}) and ok
+	# Specs are per-script: carrying them across would annotate a member that merely shares a name.
+	glue.set_param_spec("start_wave", "index", {"hint": "comparison"})
+	dock._preview_provider_script("res://tests/fixtures/typed_provider_fixture.gd", false)
+	ok = _check("switching provider clears pending specs", glue.param_specs_for("start_wave"), {}) and ok
+
 	dock.free()
 	return ok
 
