@@ -39,7 +39,6 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 - [Translating Your Game](GUIDE-TRANSLATING-YOUR-GAME.md) - localise game text the Godot way (globe-marked params, POT, Set Language).
 - [Translating the Editor](GUIDE-TRANSLATING-THE-EDITOR.md) - drop in a CSV to localise the plugin UI itself (8 languages ship built in).
-- [GDScript Basics Coverage](GDSCRIPT-BASICS-COVERAGE.md) - every fundamental on Godot's basics page, as sheet rows (the release-bar receipt).
 
 ## Working with your project
 
@@ -58,6 +57,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 - [Engine-Level ACEs](REFERENCE-ENGINE-ACES.md) - the vocabulary that drives the engine itself: graphics settings, world gravity, audio mixing, runtime meshes, camera FOV, animation playback, gradients and curves.
 - [MCP Server](REFERENCE-MCP-SERVER.md) - the AI-tooling protocol (list, read, compile, lint, snippets, doctor).
 - [Performance](REFERENCE-PERFORMANCE.md) - frame-spreading and time-budgeting.
+- [GDScript Basics Coverage](GDSCRIPT-BASICS-COVERAGE.md) - every fundamental on Godot's basics page, as sheet rows (the release-bar receipt).
 
 ## Addon packs
 

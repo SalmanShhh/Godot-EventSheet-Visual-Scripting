@@ -14,8 +14,9 @@ The word **ACE** is the plugin's name for the three things a sheet's picker can 
 4. [Parameters Live on the Verb's Row](#4-parameters-live-on-the-verbs-row)
 5. [Publishing to the Picker](#5-publishing-to-the-picker)
 6. [After You Create the Verb](#6-after-you-create-the-verb)
-7. [Use Cases](#7-use-cases)
-8. [Tips and Common Mistakes](#8-tips-and-common-mistakes)
+7. [Publishing Verbs From a Script You Already Have](#7-publishing-verbs-from-a-script-you-already-have)
+8. [Use Cases](#8-use-cases)
+9. [Tips and Common Mistakes](#9-tips-and-common-mistakes)
 
 ---
 
@@ -68,7 +69,7 @@ If you pick an Action or a Condition, this dropdown stays hidden, because their 
 
 ![A filled-in ACE Studio: a Take Damage function with its doc comment, the three kind cards with Action selected, the live preview showing the Action badge and the Ships-as line reading func take_damage() -> void, and the Publish-to-the-picker checkbox ticked](images/ace-studio-example.png)
 
-The card labelled **"This is what other people will see"** is a live preview that updates on every keystroke. It is there so you can shape a clear, picker-ready verb before you commit. It shows:
+The card labelled **"This is what other people will see"** appears once **Publish to the picker** is ticked - it is about what OTHER sheets will meet, so it stays out of the way while you are writing a private helper - and it updates on every keystroke. It is there so you can shape a clear, picker-ready verb before you commit. It shows:
 
 - A mock picker entry with a **role badge** (Action, Condition, or Expression), the **display name**, a **chip for each parameter the verb has**, and a **category chip**.
 - A one-line summary that reads like a real picker row, for example `Combat > Take Damage  amount`.
@@ -120,11 +121,25 @@ When you press **"Create Function"** (or **"Save Changes"** in edit mode), a few
 
 Before the dialog will confirm, it checks that the **name is a valid identifier** and does **not collide** with an existing function or variable on the sheet. When something is wrong, the dialog shows a short problem message and stays open so you can fix it. (The trailing-default rule for parameters is checked where parameters are actually authored - the Edit Parameter dialog - not here.)
 
-This no-code path complements two other ways to add vocabulary. The **"Make a behaviour without code"** guide covers building a whole reusable behaviour out of rows, and the **"Custom ACEs"** guide covers the code-first annotation and registrar route for a pack author. For naming and picker craft, see the **"Designing user-friendly ACEs"** guide.
+This no-code path complements the other ways to add vocabulary. The **"Make a behaviour without code"** guide covers building a whole reusable behaviour out of rows, and the **"Custom ACEs"** guide covers the code-first annotation and registrar route for a pack author. For naming and picker craft, see the **"Designing user-friendly ACEs"** guide.
 
 ---
 
-## 7. Use Cases
+## 7. Publishing Verbs From a Script You Already Have
+
+The ACE Studio authors a verb out of event rows. When the logic already exists as GDScript - a score keeper, a wave manager, an inventory you wrote long before you met this plugin - the same result is one dialog away: **Sheet ▸ Custom Actions...**, which opens the **Custom ACE Providers** window.
+
+Press **Add...** to browse to the `.gd` (or click one already listed) and the **What it publishes** table shows one row per verb the script would contribute: **Publish**, **Kind**, **Verb**, **Category**, **Parameters**, and the exact code it **Emits**. Looking registers nothing - **Register This Script** is a separate, deliberate click, so a script never joins the vocabulary unseen.
+
+The table is an editing surface too, and that matters because the kinds are inferred from each function's signature: an untyped `func is_wave_active():` with no `-> bool` reads as an Action rather than a Condition, which is exactly what most hand-written game code looks like. Untick the members you do not want published, correct the kind, verb name and category in place, then use one of the three actions beneath the table:
+
+- **Curate Script...** writes your edits back into the file as `## @ace_*` comment lines, so the script keeps publishing them the next time it is scanned. A preview of the exact lines each member will gain is shown first. Only `##` comments above a declaration are added or removed - no signature and no body is ever touched, which is why a wrong kind is corrected with an `@ace_condition` comment instead of by editing someone's function - the file is backed up first (**Tools ▸ Sheet Backups** restores it), and re-applying the same edits changes nothing.
+- **Parameters...** shapes the selected verb's inputs: a widget hint (try `comparison`, which is the whole six-operator dropdown in one word), a fixed set of choices written `value=Label` so the menu reads as English while the row inserts the real token, and the starting value the row shows the moment it is dropped. The shapes are recorded; press Curate Script to write them.
+- **Keep Old Name...** is the fix for a verb you renamed. Renaming a function changes the verb's identity, so sheets that already use it break - and silently, because the old call is baked into each row and still compiles clean, failing only when the game runs. Name what the function used to be called and a deprecated stand-in of the old name is added that forwards to the new one: rows that already hold it keep working, while the old name stays out of the picker. Nothing existing is edited.
+
+---
+
+## 8. Use Cases
 
 1. **A Take Damage action shared across enemies.** Author a `Take Damage` verb as an Action, add an `amount` parameter from its row, publish it under Combat, and every enemy sheet can pick it. One definition, consistent damage handling everywhere.
 
@@ -152,7 +167,7 @@ This no-code path complements two other ways to add vocabulary. The **"Make a be
 
 ---
 
-## 8. Tips and Common Mistakes
+## 9. Tips and Common Mistakes
 
 - **Parameters live on the row, not in this dialog.** A brand-new verb has none; you add them from its Define block once it exists - click a `name : type` cell to edit one, or the "+ Add parameter" cell to add another.
 - **Defaulted parameters must be trailing.** If a parameter has a default value, every parameter after it must have one too. The Edit Parameter dialog refuses a change that would break that order and tells you what to fix.

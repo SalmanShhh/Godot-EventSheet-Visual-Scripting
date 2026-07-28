@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Fixed - full docs freshness sweep
+
+Every user-facing guide re-verified against the code that shipped, with an independent pass over the
+result. 44 stale claims corrected across 18 files, then 7 more the sweep had missed.
+
+The ones that would actually have cost a reader time:
+
+- **A verb name that never existed.** The Time Slicer guide called its trigger "Every Frame Item" 23
+  times, including in the reference table. The registered name is **On Process Item**; the phantom
+  appears nowhere in the pack source, so anyone searching the picker for it found nothing.
+- **Two guides disagreed about a requirement.** One said an ACE provider must be a `@tool` script.
+  The real gate is only that the script is instantiable - 49 of the bundled behaviour packs ship
+  without `@tool` and reflect fine.
+- **A rationale this release made false.** The Storylet Weaver guide explained its word tokens by
+  saying a table cell cannot hold a symbol like `>=`. It can now; the cell stores the token and the
+  dropdown reads the label.
+- `register_palette_command` was documented with two parameters; it takes three.
+- The `resource_grid` row rendered as phantom columns, because unescaped pipes in a Markdown table
+  cell are cell separators.
+- The min-max slider was filed under int/float; it is a Vector2 drawer.
+- `.gitattributes` pointed at `docs/VERSION-CONTROL.md`, which does not exist, and carried the only
+  three em-dashes left in the repo outside the frozen compiler strings.
+
+### Fixed - a pre-formed enum column was double-wrapped
+
+Found while verifying a doc claim rather than by a test. `EventSheets.resource_grid` promised that an
+already-formed `enum(...)` token passes through untouched, but the plain-choices branch was checked
+first - and every multi-option token contains a `|` - so `"mode: enum(fast|slow)"` came back as
+`enum(enum(fast|slow))`. The promise only ever held for a single-option token. Formed tokens now go
+through the codec, which validates them and keeps a `key=Label` choice labeled.
+
 ### Added - addon authors can shape a param as well as a builtin module can
 
 Three gaps where a bundled module could express something an `@ace_*` author could not:

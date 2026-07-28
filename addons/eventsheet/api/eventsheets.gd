@@ -371,8 +371,17 @@ static func resource_grid(columns: Array, options: Dictionary = {}) -> Dictionar
 		if colon >= 0:
 			column_name = phrase.substr(0, colon).strip_edges()
 			var kind: String = phrase.substr(colon + 1).strip_edges()
-			if kind.contains("|"):
-				# Plain choices become a dropdown column; spaces around the | are forgiven.
+			if kind.begins_with("enum(") and kind.ends_with(")"):
+				# An ALREADY-FORMED token, checked before the plain-choices branch below because
+				# every multi-option token contains a `|` and would otherwise be split as if the
+				# wrapper were part of the first choice, yielding enum(enum(a|b)). Round-tripping
+				# it through the codec validates and canonicalises it, and keeps any `key=Label`
+				# choice labeled rather than flattening it.
+				var formed: String = SheetCompiler.table_enum_type(SheetCompiler.table_enum_options(kind))
+				column_type = formed if not formed.is_empty() else "String"
+			elif kind.contains("|"):
+				# Plain choices become a dropdown column; spaces around the | are forgiven, and a
+				# `key=Label` choice keeps its label (the codec reads the pair back out).
 				var choices: PackedStringArray = PackedStringArray()
 				for choice: String in kind.split("|"):
 					if not choice.strip_edges().is_empty():
@@ -381,7 +390,7 @@ static func resource_grid(columns: Array, options: Dictionary = {}) -> Dictionar
 			elif kind in ["float", "int", "bool", "String"]:
 				column_type = kind
 			elif not kind.is_empty():
-				column_type = kind  # already-formed hints (enum(...)) pass through untouched
+				column_type = kind
 		table_columns.append({"name": column_name, "type": column_type})
 	var attributes: Dictionary = {"drawer": "table", "table_columns": table_columns}
 	if not str(options.get("tooltip", "")).is_empty():
@@ -688,8 +697,8 @@ static func translate(text: String) -> String:
 	return EventSheetL10n.translate(text)
 
 
-## Registers an extension's own translation file (the drop-in CSV shape - see
-## docs/GUIDE-TRANSLATING-THE-EDITOR.md - or a ready-made Translation resource), merging its
+## Registers an extension's own translation file (a drop-in CSV whose first column is the English
+## source string and whose remaining columns are locale codes, or a ready-made Translation), merging its
 ## messages into the language catalogs and refreshing the active language live. Use this when
 ## a pack ships translations for its OWN display names/descriptions somewhere outside the
 ## auto-scanned folders. Returns false when the file contributed nothing.

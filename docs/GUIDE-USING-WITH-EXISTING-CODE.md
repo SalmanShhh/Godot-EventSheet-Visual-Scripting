@@ -32,7 +32,7 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
 - **Your code emits signals** and a sheet should react to them by name, with no changes on the emitting side.
 - **Your GDScript needs to call INTO a sheet** - read its exports, call its functions, await its signals like any class.
 - **You are migrating an existing codebase** and want your current `.gd` files to open as editable sheets (reverse-lift), not be rewritten.
-- **One system gets reached constantly** and deserves first-class vocabulary - the last section covers when wrapping pays off.
+- **One system gets reached constantly** and deserves first-class vocabulary - the last section covers when wrapping pays off, and the wizard that previews, curates and renames the verbs your own script publishes.
 
 ## 2. The Interop Map
 
@@ -83,7 +83,7 @@ Each one compiles to a single line of ordinary GDScript:
 | **Run GDScript** | `your code here` | Drop one raw statement |
 | **Evaluate GDScript / Expression** | `(your code)` | Use raw code as a condition or value |
 | **Connect Signal** | `source.signal.connect(callable)` | Wire an existing signal to a handler |
-| **Emit Signal On** | `target.emit_signal(signal, args)` | Fire a signal on another node |
+| **Emit Signal On** | `target.signal.emit(args)` | Fire a signal on another node |
 | **Call Method On Group** | `get_tree().call_group(group, method)` | Call a method on every node in a group |
 
 `target`, `method`, `property`, etc. are free-text fields - you type the real GDScript fragment. Defaults
@@ -236,6 +236,38 @@ or drop the file in `res://eventsheet_addons/`). Every public method/signal beco
 with **zero per-member annotations** - see the [Custom ACEs Guide](GUIDE-CUSTOM-ACES.md#5-path-1-auto-ace-provider-scripts).
 For a stateless helper (scoring, inventory math) use plain `## @ace_expose_all` (the owned-instance form).
 
+### See what a script will publish before you commit to it
+
+You never have to hand-write those annotations and hope. **Sheet ▸ Custom Actions…** opens the
+**Custom ACE Providers** window: press **Add…** to browse to a `.gd` (or click one already registered),
+and the **What it publishes** table lists one row per verb it would generate - *Publish*, *Kind*,
+*Verb*, *Category*, *Parameters*, and *Emits* (the exact GDScript that row compiles to). Browsing only
+previews; **Register This Script** is a second, deliberate click, so a script never joins the
+vocabulary unseen.
+
+The table is also the editing surface, which matters because raw reflection guesses wrong on ordinary
+game code: an untyped `func is_wave_active():` with no `-> bool` reads as an *Action* rather than a
+Condition. Correct it in the table, then use one of the three actions beside it:
+
+- **Curate Script…** writes your edits back into the file as `## @ace_*` comment lines. It shows you
+  the exact lines first, backs the file up before writing (Tools ▸ Sheet Backups restores it), and
+  re-applying the same edits is a no-op rather than a second copy of the block. **Only `##` comments
+  are added** - no signature and no body is ever touched, which is why a verb's lane is corrected with
+  `@ace_condition` instead of bolting `-> bool` onto your function.
+- **Parameters…** shapes the selected verb's parameters: a *Hint* (`comparison` is the whole labeled
+  operator dropdown in one word), *Options* written as `value=Label` separated by `|`, and a *Starting
+  value* - what the row shows the moment it is dropped. These land as
+  `## @ace_param(id, hint: …, options: …, default: …)`.
+- **Keep Old Name…** is for after you rename a function. A rename changes the verb's identity and
+  orphans every row that used it - *silently*, because each row carries the old call baked in, so the
+  sheet still compiles clean and only breaks at game runtime. Select the verb under its new name, type
+  what it used to be called, and a deprecated stand-in of the old name is appended that forwards to the
+  new one. Nothing existing is edited, and the old name is hidden from the picker so it cannot be added
+  to new work.
+
+The same three moves are scriptable: `EventSheets.curate_provider(script_path, edits)` and
+`EventSheets.keep_old_verb_working(script_path, old_member, new_member, message)`.
+
 
 ## 9. Use Cases
 
@@ -269,7 +301,7 @@ Two days before submission you need a combo meter on a fighter whose input scrip
 
 ### 8. Autoload event bus as the sheet's switchboard
 
-Your project already routes everything through an `EventBus` autoload. A sheet reacts to `EventBus.wave_cleared` via an `autoload:EventBus` On Signal source and fires `EventBus.emit_signal("spawn_boss")` back through Emit Signal On, so it plugs into the existing message flow without a single new wire on the emitting side.
+Your project already routes everything through an `EventBus` autoload. A sheet reacts to `EventBus.wave_cleared` via an `autoload:EventBus` On Signal source and fires `EventBus.spawn_boss.emit()` back through Emit Signal On, so it plugs into the existing message flow without a single new wire on the emitting side.
 
 ### 9. Boss encounter scripted without a new class
 
@@ -291,6 +323,10 @@ Interop is broad, but it isn't magic - here's the candid list so nothing surpris
   method, property, autoload, class, node path, or signal name compiles cleanly and only fails when the
   generated script loads or runs. The editor has an *advisory* lint, but it doesn't block. You don't get
   autocomplete-grade safety on an existing API you reach this way.
+- **Renaming a function in your own provider script breaks rows quietly.** A row bakes in its call text
+  when you drop it, so a call to a member the script no longer has still compiles clean and fails at game
+  runtime. **Tools ▸ Project Doctor…** catches exactly this (its *orphaned-verb* check), and **Keep Old
+  Name…** in the Custom ACE Providers window adds a forwarding stand-in so the existing rows keep working.
 - **Signal connections to other nodes aren't validated** against the engine's known signals - wrong
   path/name is a runtime failure. (Only signals on `self` are checked and skipped-with-warning if missing.)
 - **An already-scripted node needs behavior mode** (a child node), not a plain sheet - see section 5.

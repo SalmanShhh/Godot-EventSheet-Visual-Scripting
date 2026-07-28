@@ -116,7 +116,11 @@ Every parameter is a chance to go wrong. Spend design effort here:
   action registers, 0 to 1."
 - **Defaults make the dialog open USABLE.** The user should be able to press OK immediately
   and get sensible behavior (Shake opens at 0.4, Recoil at -90, 12). A default is
-  documentation: it teaches the value's scale.
+  documentation: it teaches the value's scale - and a numeric field is dialled from its
+  label (drag it sideways to scrub, Shift = fine, Ctrl = coarse), so a good starting number
+  is also the fastest route to the right one. On a provider script the default is
+  `@ace_param(strength, default: 0.4)`; leave it out and the field falls back to the
+  function's own GDScript default, and then to the type's zero.
 - **Pick, don't type.** The plugin has a field widget for almost every kind of value - use the
   hint that matches, because a picked value cannot be misspelled:
 
@@ -124,7 +128,8 @@ Every parameter is a chance to go wrong. Spend design effort here:
 |---|---|
 | an existing input action | hint `input_action` (a LIVE picker of the project's Input Map) |
 | a keyboard key | hint `key_capture` (press-a-key capture, no keycode tables) |
-| one of a fixed set | `options` (a dropdown; `{"key": ..., "label": ...}` entries let the menu read friendly while inserting real code) |
+| one of a fixed set | `options` (a dropdown; `{"key": ..., "label": ...}` entries let the menu read friendly while inserting real code - on a provider script, write them as `value=Label`) |
+| a comparison operator | hint `comparison` - the six operators, labeled ("`>=` (at least)") and seeded to `==`, in one word: `@ace_param(op, hint: comparison)` on a provider, `F.COMPARISON_OPTIONS` in a module. Never hand-type the six, and never smuggle them through as word tokens |
 | a suggestion, but free text allowed | `autocomplete` (an editable filter-combo) |
 | a sheet variable / signal / enum member | hint `variable_reference` / `signal_reference` / `enum:Name` |
 | a node's method / property / animation | hint `method_reference` / `property_reference` / `animation_reference` (reflected pickers) |

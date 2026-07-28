@@ -22,6 +22,7 @@ GODOT="/c/Users/mrlig/OneDrive/Desktop/GameDev Programs/Godot_v4.7-stable_win64.
 - Rebuild all packs after touching `tools/pack_builders/`: `"$GODOT" --headless --path . --script tools/build_sample_behaviors.gd` - then `--check-only --script` the emitted pack (the build + drift gates do NOT parse-check output).
 - Regenerate showcases after touching `tools/build_examples.gd`: `"$GODOT" --headless --path . --script tools/build_examples.gd` (regen must be byte-stable - verify by hashing the showcase folder across two runs, never with `git stash`).
 - Regenerate the vocabulary doc: `"$GODOT" --headless --path . --script tools/vocabulary_doc.gd`
+- Project health audit (prints `doctor: N error(s), N warning(s), N note(s)`): `"$GODOT" --headless --path . --script tools/project_doctor.gd`
 - Release ritual: bump `sheet_compiler.gd` `VERSION` + `addons/eventforge/plugin.cfg`, regenerate the compiler golden (`tools/regenerate_demo_golden.gd`, writes `tests/fixtures/compiler_golden_sheet_generated.gd`), finalize the CHANGELOG header + `docs/internal/RELEASE-NOTES-vX.md`, refresh README status/milestones + pack counts, delete shipped specs from `docs/internal/`, then commit + annotated tag `vX.Y.Z` + `git push --follow-tags`.
 - After adding a `class_name`, regenerate the editor class cache, then revert the churn:
   `"$GODOT" --editor --headless --path . --quit-after 3` followed by `git checkout -- project.godot`
@@ -39,6 +40,8 @@ GODOT="/c/Users/mrlig/OneDrive/Desktop/GameDev Programs/Godot_v4.7-stable_win64.
 - **A node-scoped ACE's SHIPPED template is not the one you authored.** `_make_node_scoped_targetable` prefixes every line with `{target.}` and appends an "On node" param, so a test asserting the authored string fails. Assert the post-transform form. The prefix is only added when every line is a member operation, which is why a template leading with `not` / `and` / `is` gets no target at all.
 - **A builder must pre-bake `{uid}` itself** - the dock bakes it at apply time and the compiler never does, so an unbaked `{uid}` sails straight into the emitted GDScript. Fetch the shipped descriptor and `.replace("{uid}", <stable id>)`.
 - **`add_to_group(name)` is NOT persistent.** `PackedScene.pack()` saves persistent groups only, so a group added in a scene builder vanishes from the `.tscn` and every group-based check silently never fires. Pass `true`.
+- **The analyzer reads `@ace_*` annotations off DISK** (`script.resource_path`). A `GDScript` built from a `source_code` string in memory has no file, so every annotation silently does nothing - an annotation round-trip test written that way PASSES for the wrong reason. Write a real file (`user://` is fine) and `load()` it.
+- **`EventSheetProjectFind.list_project_sheets()` only finds `.tres`**, but `.gd` is the default sheet format. Any Doctor check built on `sheet_paths` therefore skips most real projects while looking like it works. Check emitted output instead when the failure lives in emitted code.
 
 ## Standing contracts (violating these breaks user projects)
 

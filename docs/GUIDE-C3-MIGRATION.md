@@ -63,7 +63,7 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 |---|---|
 | Every tick | **Every Frame** trigger (`_process(delta)`) - but if you're checking for an *event* (a collision, a timer ending, a key press), prefer the matching **signal** trigger instead; see [Polling vs reacting](#4-polling-vs-reacting---the-biggest-shift-from-c3) |
 | On start of layout | `On Ready` trigger (`_ready()`) |
-| Compare variable | Expression condition, e.g. `health < 50` (plain GDScript) |
+| Compare variable | **Compare Variable** condition - variable, a labeled operator dropdown (`= (equal to)`, `>= (at least)`…), value; **Compare Values** for two arbitrary expressions. Or just type the condition: `health < 50` (plain GDScript) |
 | Set variable / Add to | `Set Variable` / `Add To Variable` actions, or `health += 10` in ƒx |
 | On collision / overlap | `On Body Entered` / `On Area Entered` (Area2D) - connections are generated |
 | Destroy | `Queue Free` |
@@ -207,8 +207,8 @@ i18n (Godot translations).
 - **Event numbers live in the margin**, flat and sequential through groups and sub-events,
   computed from the sheet - folding or filtering never renumbers, so "check event 34" in a
   forum reply stays meaningful. Jump to one with the command palette's *Go to Event Number*.
-- **The bookmarks bar is C3's**: Ctrl+M marks a row, F4 / Shift+F4 cycle, and View >
-  Bookmarks opens the Previous / Next / Clear All panel whose entries lead with their
+- **The bookmarks bar is C3's**: Ctrl+M marks a row, F4 / Shift+F4 cycle, and Tools >
+  Bookmarks… opens the Previous / Next / Clear All panel whose entries lead with their
   margin event number.
 - **Ctrl+F has a Filter toggle** (the C3 live-filter reflex): the sheet collapses to only
   the events matching the search, the status line counts what's hidden, Esc restores.

@@ -88,7 +88,7 @@ category is covenant-safe, because the category is display only).
 
 ## 3. Quick Start
 
-The fastest custom ACE is a plain script. Make a `@tool` script with a `class_name`, then point a
+The fastest custom ACE is a plain script. Make a script with a `class_name`, then point a
 sheet at it.
 
 ```gdscript
@@ -133,7 +133,7 @@ paths, and the schema they all share.
 
 | Path | Best for | What you write | Scope | Effort |
 |------|----------|----------------|-------|--------|
-| **1. Auto-ACE provider script** | Extending one project with your own game logic | A plain `@tool` script (methods, signals, `@export` vars), optionally annotated | Per sheet, or every script in `res://eventsheet_addons/` | Lowest: zero descriptors |
+| **1. Auto-ACE provider script** | Extending one project with your own game logic | A plain script (methods, signals, `@export` vars), optionally annotated | Per sheet, or every script in `res://eventsheet_addons/` | Lowest: zero descriptors |
 | **2. Custom descriptors (bridge)** | Tool authors, generated or dynamic vocabularies | A Dictionary (or `make_descriptor`) per ACE, returned from an autoload | Project-wide | Medium: full control |
 | **3. Built-in module** | Contributing ACEs into the plugin itself | `make_descriptor` calls in a module file | Shipped in the plugin | Medium: full control, permanent |
 
@@ -156,10 +156,12 @@ thing to "make an addon": you write normal Godot code, EventForge reflects over 
 
 ### Requirements
 
-- The script must be `@tool` (the editor instantiates it to reflect over it; non-`@tool` scripts are
-  skipped silently).
-- Give it a `class_name`. The class name becomes the `provider_id`. Without one, the filename is used,
-  which can collide with another script.
+- The script must be **instantiable**: the editor calls `script.new()` to reflect over it, so an
+  abstract or non-compiling script is skipped silently. `@tool` is *not* required - the bundled
+  behavior packs ship without it - but add it when the script's own code should also run in the
+  editor.
+- Give it a `class_name`. The class name becomes the `provider_id`. Without one, the filename is used
+  (PascalCased), which can collide with another script.
 
 ### How members map to ACEs
 
@@ -311,14 +313,49 @@ space-separated (`@ace_category(Combat)` and `@ace_category Combat` both work).
 | `@ace_looping(iterator)` | A LOOPING condition: the method returns a collection (an Array of ids, nodes, anything iterable) and adding it to an event loops that event's actions once per item - your pack owns its own "For Each X" verb. The value names the loop variable actions read (`item` if omitted). Applies as a pick filter, so the loop lane, frame-spreading, and round-trip all work like a built-in For Each. |
 | `@ace_codegen_template(code)` | Replace the auto-generated call with your own GDScript (you own the whole template then). |
 | `@ace_display_template(text)` | Override the picker row phrasing. |
-| `@ace_param(name, hint: h, options: a\|b, autocomplete: a\|b, desc: "text")` | Everything about one parameter in a single line: widget hint, fixed dropdown, editable suggestions, and a description. Options and suggestions split on `\|`; quote a desc that contains commas. |
+| `@ace_param(name, hint: h, default: v, options: a\|b, autocomplete: a\|b, desc: "text")` | Everything about one parameter in a single line: widget hint, the value the row shows the moment it is dropped, a fixed dropdown, editable suggestions, and a description. Options and suggestions split on `\|`; quote a desc that contains commas. See the [param grammar](#the-param-grammar-defaults-labels-and-comparison) below for `default:`, labeled options, and `hint: comparison`. |
 | `@ace_param_hint(param_name hint)` | Set a parameter's widget (see the [hint table](#parameter-hints-the-widget-vocabulary)). |
-| `@ace_param_options(param_name a,b,c)` | Give a parameter a fixed dropdown. |
+| `@ace_param_options(param_name a,b,c)` | Give a parameter a fixed dropdown. Entries may be labeled `value=Label` (`@ace_param_options(mode fit=Fit to screen, fill=Fill)`), so the menu reads as English while the row inserts the value. |
 | `@ace_param_autocomplete(param_name a,b,c)` | Give a parameter an editable suggestion list. |
 | `@ace_icon(name)` | Set a picker icon. |
 | `@ace_tags(a,b)` | Add search tags. |
 | `@ace_requires(a, b)` (class-level) | Declare what the pack needs installed: bare class names (`StatSheetResource`), `autoload:Name`, or `pack:folder_name`. The Project Doctor warns when an in-use pack's requirement is missing - the finding is clickable and opens the pack. Sheet-built packs set it via the sheet's `addon_requires` field. |
 | `@ace_version(1.0.0)` / `@ace_author("Name")` / `@ace_help("https://...")` (class-level) | Pack identity metadata: the version joins the Addon Pack banner chip ("Addon Pack v1.0.0") and feeds future update tooling; author and help link document who made it and where its docs live. Sheet-built packs set them via `addon_version` / `addon_author` / `addon_help_url`; every bundled pack ships versioned. |
+
+### The param grammar: defaults, labels, and comparison
+
+`@ace_param` shapes one parameter completely, and three of its keys decide how a row reads the moment
+it is dropped:
+
+```gdscript
+## @ace_param(seconds, default: 1.0, desc: "How long the shield holds.")
+## @ace_param(quality, options: low=Potato|med=Balanced|high=Ultra, default: med)
+## @ace_param(op, hint: comparison)
+func hold_shield(seconds: float, quality: String, op: String) -> void:
+	pass
+```
+
+- **`default:`** is what the row shows on drop. Resolution runs most-explicit-first: this annotation,
+  then the method's own GDScript default (`func fire(power: float = 25.0)` already lands reading
+  25.0), then the type's zero - so a parameter whose sensible value is `1.0` but has neither reads
+  `0.0` and quietly does nothing until someone notices. A quoted default has its quote pair stripped,
+  so write `default: "walk"` for a String.
+- **`options:`** entries may be `value=Label`: the dropdown READS the label and INSERTS the value.
+  Entries split on `|` here (so commas stay free for prose); `@ace_param_options` splits on `,`
+  instead. A key that itself contains `=` ships quoted - `"<="=at most` - because the split is on the
+  first `=`.
+- **`hint: comparison`** is the whole operator dropdown in one word: `==`, `!=`, `<`, `<=`, `>`, `>=`,
+  each labeled in plain English ("`>=` (at least)"), seeded to `==` so the row is a complete sentence
+  with nothing typed. It only SEEDS the list, so an explicit `options:` on the same param still wins.
+  It resolves to the same canonical list the built-in Compare conditions use, which is why a pack
+  never has to smuggle operators through as word tokens.
+
+The same three shapes are available from code. `EventSheets.param_spec(config)` normalizes one param
+or Custom Block field the same way - `default` and `default_value` are interchangeable, `options`
+accepts a plain list, a `{value: label}` dictionary or ready-made pairs, and `hint: "comparison"`
+expands to the seeded operator dropdown. `simple_ace()` and `simple_block_kind()` run every param
+through it, and `EventSheets.combo_options(source)` / `EventSheets.comparison_options(equal_token)`
+build the pair lists on their own.
 
 ### A complete Path 1 example
 
@@ -361,6 +398,37 @@ dropdown), and **Is Dead** (condition). `_internal_recalc` stays private.
   sheet (`EventSheetResource.ace_provider_scripts`) and de-duplicates on add. Remove it with
   `remove_ace_provider_script`.
 - **Project-wide by convention:** any `*.gd` in `res://eventsheet_addons/` is scanned automatically.
+- **From the editor:** **Sheet > Custom Actions...** browses to a script and previews it before
+  anything is registered (see below).
+
+### The provider wizard: preview, curate, keep old names
+
+**Sheet > Custom Actions...** opens the **Custom ACE Providers** window, the in-editor front end for
+everything above. Browsing to a `.gd` (press **Add...**) runs the same generation the registry runs, so
+its **What it publishes** table is what you will actually get: one row per verb, with **Publish**,
+**Kind**, **Verb**, **Category**, **Parameters**, and the exact code it **Emits**. Browsing previews
+only - **Register This Script** is a second, deliberate click, so nothing joins the vocabulary unseen.
+
+The table is also an editing surface, which matters because raw reflection guesses from the signature
+and most hand-written game code is untyped (a `func is_wave_active():` with no `-> bool` reads as an
+Action). Correct it in place, then press one of:
+
+- **Curate Script...** writes your differences into the file as `## @ace_*` comment lines - exactly the
+  dialect this guide documents, so you can reopen and adjust later, and a teammate reading the script
+  sees why it publishes what it does. A diff of the lines each member will gain is shown first; only
+  `##` comments above a declaration are added or removed (never a signature or a body, which is why a
+  wrong KIND is fixed with `@ace_condition` rather than by editing someone's function), the file is
+  backed up first (**Tools > Sheet Backups**), and re-applying the same edits is a no-op.
+- **Parameters...** shapes the selected verb's inputs - a hint (including `comparison`), labeled
+  `value=Label` options, and the starting value the row shows on drop. It records the spec; the next
+  Curate Script writes it as `@ace_param(id, hint: ..., options: ..., default: ...)`.
+- **Keep Old Name...** is the fix for a verb you RENAMED. A rename changes the ace_id and orphans every
+  row that used it, silently: the compiler prefers the template baked onto the row, so the sheet still
+  emits the old call, compiles clean, and fails when the player triggers it. Select the verb under its
+  new name, type what it used to be called, and a deprecated forwarding shim of the old name is
+  appended - existing rows resolve again, while the old name stays out of the picker. Nothing existing
+  is edited. (The Project Doctor's **orphaned-verb** check reports the same failure across the project
+  when it has already happened.)
 
 ---
 
@@ -642,7 +710,7 @@ for the editor), which is exactly why you should always write the name or, on th
 | `display_name` | String | The field label. Falls back to `param_id`. |
 | `description` | String | Tooltip and help text under the field. Strongly recommended. |
 | `hint` | String | The widget to show (see hint table). Empty means a plain field. |
-| `options` | Array[String] | A **fixed** dropdown: the user can only pick from these. |
+| `options` | Array | A **fixed** dropdown: the user can only pick from these. Entries are either plain strings or `{"key": <inserted>, "label": <shown>}` pairs, so the menu can read "Fill the screen" while the row inserts `fill`. |
 | `autocomplete` | Array[String] | An **editable** suggestion list: the user can type anything or pick. |
 
 If both `options` and `autocomplete` are set, `autocomplete` wins; use one or the other.
@@ -689,8 +757,13 @@ The `hint` chooses the input widget in the parameter dialog. `expression` is by 
 | `property_reference` | Autocomplete of the host's public properties | A property name. |
 | `enum:EnumName` | Dropdown of that sheet enum's members | A sheet enum member. |
 
-Two factory helpers cover common dropdowns: `F.COMPARISON_OPERATORS` (`==`, `!=`, `<`, `<=`, `>`,
-`>=`) and `F.input_action_options()` (every InputMap action plus the `ui_*` defaults).
+Factory helpers cover the common dropdowns, so nobody re-types them: `F.COMPARISON_OPTIONS` is the
+canonical labeled operator list (`==` reads "= (equal to)", `>=` reads ">= (at least)"), and
+`F.comparison_options(equal_token)` returns the same six with the equality token swapped for a runtime
+that stores a single `=`. `F.COMPARISON_OPERATORS` is the same six as bare tokens for callers that
+only need the values, and `F.input_action_options()` is every InputMap action plus the `ui_*`
+defaults. On a provider script, `@ace_param(op, hint: comparison)` is the one-word form of the same
+list.
 
 ---
 
@@ -825,9 +898,16 @@ Everyone on the team kept hand-writing the same raycast-from-mouse snippet sligh
 - **Templates are frozen once shipped.** Changing an `ace_id` or `codegen_template` breaks every sheet
   that used it. To change behavior, add a new ACE and **deprecate** the old one - on Path 1, annotate it
   `## @ace_deprecated("Use <NewName> instead")`: it keeps compiling in sheets that already use it (so
-  nothing breaks), but is hidden from the picker, flagged on hover with the replacement, and warned at
-  compile. (`@ace_hidden` only hides a member; use `@ace_deprecated` to retire one with a pointer to its
-  successor.) Do not edit the shipped template.
+  nothing breaks), but is hidden from the picker, flagged on hover, and warned at compile. An optional
+  SECOND argument names the successor - `## @ace_deprecated("Renamed.", "method:begin_wave")` - so the
+  hover says where the verb went. (`@ace_hidden` only hides a member; use `@ace_deprecated` to retire one
+  with a pointer to its successor.) Do not edit the shipped template.
+- **Renaming a provider function breaks sheets silently.** The member name IS the ace_id
+  (`method:start_wave`), and the compiler prefers the template baked onto the row over any registry
+  lookup, so an orphaned row still emits the old call, compiles with zero errors, and fails at game
+  runtime. Rename in your own editor, then add a forwarding shim under the old name (Sheet > Custom
+  Actions... > **Keep Old Name...**, or `EventSheets.keep_old_verb_working(path, old, new)`). The Project
+  Doctor's **orphaned-verb** check finds calls that have already been orphaned.
 - **Use tabs, not spaces, for nested template lines.** The compiler emits tabs; a space-indented line
   in a multi-line template produces mixed indentation and a parse error.
 - **Name every local with `{uid}`.** Two copies of a multi-line ACE in one event will collide on a
@@ -843,7 +923,9 @@ Everyone on the team kept hand-writing the same raycast-from-mouse snippet sligh
   integer orders. `ACEDescriptor.ACEType.ACTION` (Path 3) and `"action"` (Path 2) are unambiguous.
 - **`@export` is required for Path 1 properties.** A bare `var` is invisible to reflection; only
   `@export` vars become expressions and set/add/subtract actions.
-- **`@tool` and `class_name` are required for Path 1.** Without `@tool` the script is skipped; without
-  `class_name` the provider id falls back to the filename and can collide.
+- **Path 1 needs an instantiable script with a `class_name`.** The editor reflects by calling
+  `script.new()`, so an abstract or non-compiling script is skipped; without `class_name` the provider
+  id falls back to the PascalCased filename and can collide. `@tool` is optional (most bundled packs
+  omit it) - add it only when the script's own code should run in the editor too.
 - **`{, args}` drops only on the empty string.** `"0"` and `"false"` still emit the comma. Use it for
   genuinely optional trailing arguments, and remember it does not reverse-lift.

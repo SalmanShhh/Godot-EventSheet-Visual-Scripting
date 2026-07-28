@@ -684,7 +684,7 @@ A StoryletResource is a plain Godot `Resource` (it `extends Resource`, with zero
 
 Inspector table cells hold one scalar each - a cell cannot nest an array - so a storylet's requirements, choices, effects and meta do **not** live inside its row. They live in **sibling grids joined by the `storylet` id column** (the same shape the UHTN planning resource uses). You fill the **Storylets** grid with one row per beat (`id`, `title`, `body`, `weight`, `cooldown`, `max_plays`), then in the **Requirements** grid you add rows whose `storylet` cell names the id they belong to. A choice's requirements and effects reference it by `storylet` + `choice_id`.
 
-Comparison and effect operators are **dropdowns of word tokens**, because a table cell cannot hold a symbol like `>=`:
+Comparison and effect operators are **labeled dropdowns**: the cell stores a short token (`gte`, `lt`, `set`) while the dropdown reads the plain-English label (`>= (at least)`, `Increase by`):
 
 | Grid | `op` options | Meaning |
 | --- | --- | --- |

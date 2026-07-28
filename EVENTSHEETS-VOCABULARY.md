@@ -204,6 +204,9 @@ Node script extending `CharacterBody2D`.
 ### BulletBehavior (`res://eventsheet_addons/bullet/bullet_behavior.gd`)
 @ace_category("Bullet") @ace_expose_all(node) @ace_version(1.0.0)
 
+#### Triggers
+- **On Bullet Hit** (`collider: Object, point: Vector2, normal: Vector2`)
+
 #### Actions
 - **Set Bullet Speed** (`value: float`) - Changes speed, keeping the current direction.
 - **Set Angle Of Motion** (`degrees: float`) - Redirects the bullet (degrees).
@@ -212,6 +215,9 @@ Node script extending `CharacterBody2D`.
 
 ### Bullet3DBehavior (`res://eventsheet_addons/bullet_3d/bullet_3d_behavior.gd`)
 @ace_category("Bullet 3D") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Bullet Hit** (`collider: Object, point: Vector3, normal: Vector3`)
 
 #### Actions
 - **Launch Forward** - (Re)launches along the host's current forward direction.
@@ -519,6 +525,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Reached Target**
+- **On Path Blocked**
 
 #### Actions
 - **Start Following** (`path: String`) - Follows the node at the given path.
@@ -918,6 +925,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Arrived**
+- **On Path Blocked**
 
 #### Actions
 - **Move To Position** (`x: float, y: float`) - Replaces the queue and glides toward the point.
@@ -929,6 +937,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 
 #### Triggers
 - **On Arrived (3D)**
+- **On Path Blocked (3D)**
 
 #### Actions
 - **Move To Position (3D)** (`x: float, y: float, z: float`) - Replaces the queue and glides toward the point.

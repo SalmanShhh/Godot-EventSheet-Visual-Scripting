@@ -1,6 +1,6 @@
 # Time Slicer - Spread Heavy Work Across Frames, No Hitch
 
-Time Slicer is a Godot EventSheets behavior pack that turns "do this to a big pile of things" into "do a little of it every frame until it is done". You attach a `TimeSlicerBehavior` to a Node and it becomes a managed work queue. You **enqueue** items (nodes, numbers, dictionaries, positions - anything) in one event, and the slicer drains them a slice at a time each frame, emitting **Every Frame Item** for each one, until a per-frame **budget** runs out. Reacting to Every Frame Item feels exactly like reacting to a signal: you write the heavy per-item work once, and the slicer decides how many items to run this frame so the game never stalls. Spawning 500 enemies, deserializing a save, carving a dungeon, damaging a whole crowd - work that would freeze the frame if done all at once self-spreads across as many frames as the budget needs, with no manual loop, no `await`, and no coroutine bookkeeping. Attach one per node, or register a single `TimeSlicerBehavior` as an autoload for one global slicer the whole game shares.
+Time Slicer is a Godot EventSheets behavior pack that turns "do this to a big pile of things" into "do a little of it every frame until it is done". You attach a `TimeSlicerBehavior` to a Node and it becomes a managed work queue. You **enqueue** items (nodes, numbers, dictionaries, positions - anything) in one event, and the slicer drains them a slice at a time each frame, emitting **On Process Item** for each one, until a per-frame **budget** runs out. Reacting to On Process Item feels exactly like reacting to a signal: you write the heavy per-item work once, and the slicer decides how many items to run this frame so the game never stalls. Spawning 500 enemies, deserializing a save, carving a dungeon, damaging a whole crowd - work that would freeze the frame if done all at once self-spreads across as many frames as the budget needs, with no manual loop, no `await`, and no coroutine bookkeeping. Attach one per node, or register a single `TimeSlicerBehavior` as an autoload for one global slicer the whole game shares.
 
 ---
 
@@ -19,16 +19,16 @@ Time Slicer is a Godot EventSheets behavior pack that turns "do this to a big pi
 
 - **Spawning a big wave.** Enqueue 500 spawn requests and let a handful hatch each frame instead of instancing all of them in one hitch-inducing burst.
 - **Applying area damage to a crowd.** Push every enemy in a group through the queue so a nuke that hits 300 units spreads its damage math over a few frames rather than spiking one.
-- **Procedural generation.** Carve a dungeon room by room, or place tiles chunk by chunk, one queued step per Every Frame Item, and fire a "done" hook on On Drained.
+- **Procedural generation.** Carve a dungeon room by room, or place tiles chunk by chunk, one queued step per On Process Item, and fire a "done" hook on On Drained.
 - **Warming an object pool.** Pre-instance bullets, particles, or enemies at scene start over several frames so the loading beat stays smooth.
-- **Streaming a save file.** Enqueue each saved record and deserialize one per Every Frame Item, keeping the load screen animating while data comes in.
+- **Streaming a save file.** Enqueue each saved record and deserialize one per On Process Item, keeping the load screen animating while data comes in.
 - **Updating thousands of entities.** Refresh AI, pathfinding, or fog-of-war for a slice of your entity list each frame instead of the whole army at once.
 - **Loading-screen progress.** Drive a progress bar straight off Items Remaining and hide the screen on On Drained - the queue size is your progress meter for free.
 - **Batch node processing.** Run "do X to every node in this group" (open all doors, reset all pickups, rebake all lights) evenly across frames with Enqueue Group.
 - **Loot and pickup explosions.** Queue each drop from a slain boss so a hundred coins scatter over a few frames instead of one dropped-frame pop.
 - **Fixed-rate drip.** Set the mode to count and cap items per frame to release work at an exact, predictable pace (a steady spawner, a metered particle emitter).
 - **Deferred cross-scene work.** Register one slicer as an autoload and have any scene enqueue background jobs onto the single shared queue.
-- **Anything that currently freezes.** Any `for` loop over a big list that drops a frame is a candidate: enqueue the list, move the loop body into Every Frame Item, and the freeze becomes a smooth spread.
+- **Anything that currently freezes.** Any `for` loop over a big list that drops a frame is a candidate: enqueue the list, move the loop body into On Process Item, and the freeze becomes a smooth spread.
 
 ---
 
@@ -40,7 +40,7 @@ The whole pack is one idea - a queue that empties itself within a budget - plus 
 
 **Enqueue adds work.** You fill the queue with **Enqueue Item** (one item), **Enqueue Items** (a whole array at once), or **Enqueue Group** (every node in a scene-tree group). You can keep enqueuing at any time; new items land at the back of the line.
 
-**The drain loop runs every frame.** On its own, each frame, the slicer pulls items off the front of the queue and emits **Every Frame Item(item)** for each one. That trigger is where your heavy per-item work goes - spawn the enemy, apply the damage, place the tile. It reads like reacting to a signal: one item in, one reaction out.
+**The drain loop runs every frame.** On its own, each frame, the slicer pulls items off the front of the queue and emits **On Process Item(item)** for each one. That trigger is where your heavy per-item work goes - spawn the enemy, apply the damage, place the tile. It reads like reacting to a signal: one item in, one reaction out.
 
 **The budget decides how many run this frame.** The loop does not drain the whole queue in one frame; it stops when it hits the per-frame budget. Two limits govern it:
 
@@ -77,20 +77,20 @@ The whole pack is one idea - a queue that empties itself within a budget - plus 
 | `max_items_per_frame` | `64` | Hard cap on items processed per frame (used when the mode includes count). |
 | `mode` | `both` | Which limits apply: `both` stops at whichever comes first, `ms` uses only the time fence, `count` uses only the item cap. |
 
-**4. Wire the loop.** Two moves: enqueue the work, then react in Every Frame Item (and optionally On Drained). Here is a complete first slicer - spawn 500 enemies smoothly instead of all at once:
+**4. Wire the loop.** Two moves: enqueue the work, then react in On Process Item (and optionally On Drained). Here is a complete first slicer - spawn 500 enemies smoothly instead of all at once:
 
 ```
 On Ready
   -> Spawner | Time Slicer: Enqueue Items  range(500)
 
-Every Frame Item  (item)
+On Process Item  (item)
   -> Spawner: instance one enemy at a random point
 
 On Drained
   -> Spawner: print "wave fully spawned"
 ```
 
-`range(500)` drops 500 index items into the queue in one call. The slicer then hatches only as many per frame as the 4 ms budget allows, emitting Every Frame Item for each, and fires On Drained the frame the last one spawns. You never wrote a loop - the queue is the loop.
+`range(500)` drops 500 index items into the queue in one call. The slicer then hatches only as many per frame as the 4 ms budget allows, emitting On Process Item for each, and fires On Drained the frame the last one spawns. You never wrote a loop - the queue is the loop.
 
 ---
 
@@ -127,7 +127,7 @@ All ACEs live in the **Time Slicer** category and act on the `TimeSlicerBehavior
 
 | Trigger | Parameter | Fires when |
 |---|---|---|
-| Every Frame Item | `item` (Variant) | The loop pulls an item off the queue this frame. Runs once per item, up to the per-frame budget. Do the heavy per-item work here. |
+| On Process Item | `item` (Variant) | The loop pulls an item off the queue this frame. Runs once per item, up to the per-frame budget. Do the heavy per-item work here. |
 | On Drained | (none) | The queue becomes empty (the last pending item was just processed). |
 
 ### Inspector properties
@@ -150,7 +150,7 @@ change while the game runs.
 
 ## Use cases
 
-Each example acts on the `TimeSlicerBehavior` of the named node. Enqueue in one event, react in Every Frame Item, and use On Drained for the finish hook.
+Each example acts on the `TimeSlicerBehavior` of the named node. Enqueue in one event, react in On Process Item, and use On Drained for the finish hook.
 
 ### 1. Spawn a huge wave without a hitch
 
@@ -160,11 +160,11 @@ Instancing 300 enemies in one frame drops the frame. Queue them and let the budg
 On Wave Start
   -> Spawner | Time Slicer: Enqueue Items  range(300)
 
-Every Frame Item  (item)
+On Process Item  (item)
   -> Spawner: instance one enemy at a random spawn point
 ```
 
-Each Every Frame Item spawns exactly one enemy; the 4 ms budget decides how many that is per frame, so the wave fills in smoothly over a handful of frames.
+Each On Process Item spawns exactly one enemy; the 4 ms budget decides how many that is per frame, so the wave fills in smoothly over a handful of frames.
 
 ### 2. Process every node in a group evenly
 
@@ -174,11 +174,11 @@ Do something to all enemies (or all doors, all torches) without touching them al
 On Alarm Raised
   -> Manager | Time Slicer: Enqueue Group  "enemies"
 
-Every Frame Item  (item)
+On Process Item  (item)
   -> item: switch to alert state
 ```
 
-The `item` handed to each Every Frame Item is one node from the "enemies" group.
+The `item` handed to each On Process Item is one node from the "enemies" group.
 
 ### 3. Area damage to a crowd
 
@@ -188,7 +188,7 @@ A screen-clearing bomb hits everything, but resolving hundreds of damage calcula
 On Bomb Detonated
   -> Field | Time Slicer: Enqueue Group  "damageable"
 
-Every Frame Item  (item)
+On Process Item  (item)
   -> item: take 40 damage
 ```
 
@@ -202,7 +202,7 @@ Carve a dungeon a step at a time. Queue the room count, build one room per item,
 On Generate Level
   -> Dungeon | Time Slicer: Enqueue Items  range(40)
 
-Every Frame Item  (item)
+On Process Item  (item)
   -> Dungeon: carve room number item and connect its corridors
 
 On Drained
@@ -219,7 +219,7 @@ Pre-instance pooled objects across frames so the loading beat never stutters.
 On Ready
   -> Pool | Time Slicer: Enqueue Items  range(200)
 
-Every Frame Item  (item)
+On Process Item  (item)
   -> Pool: create one pooled bullet, hide it, add it to the free list
 ```
 
@@ -250,7 +250,7 @@ Deserialize one saved record per item so a big save never blocks the load screen
 On Continue Pressed
   -> SaveIO | Time Slicer: Enqueue Items  raw_record_list
 
-Every Frame Item  (item)
+On Process Item  (item)
   -> SaveIO: rebuild one entity from the record dictionary item
 ```
 
@@ -315,7 +315,7 @@ For an exact, predictable release pace, set `mode` to `count` and `max_items_per
 On Start Trickle Spawner
   -> Spawner | Time Slicer: Enqueue Items  range(120)
 
-Every Frame Item  (item)
+On Process Item  (item)
   -> Spawner: spawn one drone
 ```
 
@@ -329,7 +329,7 @@ When you just want the batch done as fast as the frame allows, set `mode` to `ms
 On Ready
   -> Baker | Time Slicer: Enqueue Items  range(5000)
 
-Every Frame Item  (item)
+On Process Item  (item)
   -> Baker: bake one lightmap cell
 ```
 
@@ -371,7 +371,7 @@ If the per-frame count is far higher than you want, drop `frame_budget_ms` or sw
 
 **Spreading fire or growth.** Each burning or growing tile processes as an item and enqueues its neighbors, so wildfire, vines, or corruption creep across the map at a smooth, controllable rate.
 
-**Hitch-free autosave capture.** Before writing a save, enqueue every entity and collect one state snapshot per Every Frame Item, then write the file On Drained, so the autosave moment stops being the stutter moment.
+**Hitch-free autosave capture.** Before writing a save, enqueue every entity and collect one state snapshot per On Process Item, then write the file On Drained, so the autosave moment stops being the stutter moment.
 
 **Domino and cascade pacing.** In count mode with a small cap, queued dominoes, chain reactions, or match-cascade pops resolve at a deliberate, readable rhythm instead of all at once.
 
@@ -382,8 +382,8 @@ If the per-frame count is far higher than you want, drop `frame_budget_ms` or sw
 ## Tips and common mistakes
 
 - **The node is the queue - there is no queue id.** Every Action, Condition, Expression, and Trigger acts on the `TimeSlicerBehavior` of the node it is placed on. Put the slicer on the object that owns the work (or use one autoload for a shared global queue) and address it directly.
-- **Do the heavy work in Every Frame Item, not in a loop.** The whole point is that you never write the `for` loop yourself. Move the loop body into Every Frame Item and enqueue the list - the slicer becomes the loop and paces it for you.
-- **Enqueue lightweight items, not finished results.** An item is just a token the slicer hands back to you (an index, a node, a position, a dictionary). Build the expensive thing inside Every Frame Item; do not do the heavy work up front and then enqueue the result, or you have spread nothing.
+- **Do the heavy work in On Process Item, not in a loop.** The whole point is that you never write the `for` loop yourself. Move the loop body into On Process Item and enqueue the list - the slicer becomes the loop and paces it for you.
+- **Enqueue lightweight items, not finished results.** An item is just a token the slicer hands back to you (an index, a node, a position, a dictionary). Build the expensive thing inside On Process Item; do not do the heavy work up front and then enqueue the result, or you have spread nothing.
 - **Pick the mode on purpose.** `both` is the safe default (never overruns time, never stampedes). Use `ms` when you want fastest completion within the frame. Use `count` when you want an exact, predictable number of items per frame. The wrong mode is the usual reason a spread "feels off".
 - **A tiny budget can stretch a batch across many frames.** At `frame_budget_ms` = 4 a 5000-item queue can take many frames to finish - that is the trade you asked for. If a batch feels too slow, raise `frame_budget_ms`, raise `max_items_per_frame`, or switch to `ms` mode; do not assume the slicer is stuck.
 - **On Drained fires once per empty, not once per batch.** It triggers the frame the queue reaches zero items. If you enqueue more before the current batch finishes, it drains as one continuous run and fires On Drained a single time at the end. Enqueue after a drain if you want a fresh On Drained per batch.

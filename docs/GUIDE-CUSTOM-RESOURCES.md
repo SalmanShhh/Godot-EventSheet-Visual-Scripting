@@ -72,7 +72,7 @@ Each line in the wizard's columns box (and each String in the `resource_grid` AP
 |---|---|
 | `name` | A text column named `name` (plain words = String). |
 | `weight: float` | A number column (decimals). `int` gives whole numbers, `bool` gives checkboxes, `String` is explicit text. |
-| `kind: coin|gem|key` | A **dropdown** column - each row picks one of the listed choices. Spaces around the `|` are forgiven. |
+| `kind: coin\|gem\|key` | A **dropdown** column - each row picks one of the listed choices. Spaces around the `\|` are forgiven. |
 | `tint: color` | Any other hint after the colon passes through as-is, for column types the shorthand does not name. |
 
 Some worked examples, straight from shipped resources:
@@ -102,7 +102,9 @@ line
 emotion: neutral|happy|angry|sad
 ```
 
-Column names become the keys of each row's Dictionary at runtime, so keep them short and snake_case-friendly (`weight`, not `How heavy is it`). Dropdown columns store the chosen text (`"gem"`), which your logic compares as a String.
+A dropdown choice can also carry a **label**, written `key=Label`, so the designer reads one thing and the data stores another: `rarity: rare=Rare drop|epic=Epic drop` shows "Rare drop" in the dropdown and keeps `rare` in the row. Rewording a choice then never touches the logic that compares it.
+
+Column names become the keys of each row's Dictionary at runtime, so keep them short and snake_case-friendly (`weight`, not `How heavy is it`). A plain dropdown column stores the chosen text (`"gem"`) and a labelled one stores the key (`"rare"`) - either way it is a String your logic compares.
 
 ---
 
@@ -370,7 +372,9 @@ x: float
 y: float
 p1: float
 p2: float
+p3: float
 color: color
+texture
 ```
 
 ### 16. An AI plan

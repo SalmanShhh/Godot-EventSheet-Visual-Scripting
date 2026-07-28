@@ -39,7 +39,7 @@ Every tool speaks the same budget language: a wall-clock millisecond fence, `Tim
 Attach the **Time Slicer** behavior as a child (or register it as an autoload for one global slicer). It owns a work queue and drains it within a per-frame budget - **time (ms)**, **count**, or both. You never write a loop or an `await`:
 
 1. **Enqueue** the work in one event - `Enqueue Item`, `Enqueue Items` (an array), or `Enqueue Group` (every node in a group).
-2. **React** to **Every Frame Item(item)** in another event and do the per-item work - exactly like reacting to a signal. The slicer hands you items only as fast as the budget allows.
+2. **React** to **On Process Item(item)** in another event and do the per-item work - exactly like reacting to a signal. The slicer hands you items only as fast as the budget allows.
 3. **On Drained** fires the frame the queue empties.
 
 Tune `frame_budget_ms` / `max_items_per_frame` / `mode` in the Inspector; `Set Frame Budget` changes it at runtime; `Pause`/`Resume` and `Is Busy` / `Items Remaining` round it out. A 50,000-item queue self-spreads across as many frames as the budget needs, with no hitch. This is the right tool for ~90% of frame-spreading needs.
@@ -56,9 +56,12 @@ if __loop_cursor_<id> >= __loop_items_<id>.size():
     __loop_cursor_<id> = 0                 # finished a pass - start over next frame
 if __loop_cursor_<id> == 0:
     __loop_items_<id> = Array(get_tree().get_nodes_in_group("enemies"))   # snapshot once per pass
-var __done_<id> := 0
+var __loop_end_<id>: int = Time.get_ticks_usec() + int(0.0 * 1000.0)   # the ms half of the fence
+var __done_<id>: int = 0
 while __loop_cursor_<id> < __loop_items_<id>.size():
-    if 50 > 0 and __done_<id> >= 50:       # this frame's slice is done
+    # This frame's slice is done - but only ever AFTER one item, so a ms budget already spent at
+    # loop entry can't break with the cursor unmoved and stall the pass forever.
+    if __done_<id> > 0 and ((50 > 0 and __done_<id> >= 50) or (0.0 > 0.0 and Time.get_ticks_usec() >= __loop_end_<id>)):
         break
     var enemy = __loop_items_<id>[__loop_cursor_<id>]
     __loop_cursor_<id> += 1
@@ -70,9 +73,11 @@ while __loop_cursor_<id> < __loop_items_<id>.size():
 
 > [!NOTE]
 > Drive a Budgeted For Each from a **per-frame** trigger (Every Frame) - that's what re-enters the loop each
-> frame to continue the pass; under a one-shot trigger it would only ever process the first slice. It isn't
-> yet combined with While/Repeat, order-by, or pick-first-N (those emit a normal same-frame loop and a
-> compile warning). The Project Doctor's unbounded-loop nudge goes quiet once a loop is budgeted this way.
+> frame to continue the pass; under a one-shot trigger it would only ever process the first slice (the
+> compiler warns when it can see that). It isn't yet combined with While/Repeat, order-by, or pick-first-N
+> (those emit a normal same-frame loop and a compile warning), nor with a named `loopindex` (the cursor
+> would reset every frame, so the index is dropped with a warning). The Project Doctor's unbounded-loop
+> nudge goes quiet once a loop is budgeted this way.
 
 ---
 
@@ -81,8 +86,8 @@ while __loop_cursor_<id> < __loop_items_<id>.size():
 For hand-rolling a spread loop with raw coroutine control, three actions live under the **Performance** category:
 
 - **Await Next Frame** - `await get_tree().process_frame`; the rest of the event resumes next frame.
-- **Begin Frame Budget (ms)** - arms a per-frame budget for the loop that follows.
-- **Await If Over Budget (ms)** - drop it at the bottom of a `For Each` body; when the budget is spent it yields to the next frame and re-arms. The loop self-paces to the budget.
+- **Begin Frame Budget** - arms a per-frame budget for the loop that follows.
+- **Await If Over Budget** - drop it at the bottom of a `For Each` body; when the budget is spent it yields to the next frame and re-arms. The loop self-paces to the budget.
 
 ```gdscript
 # On a one-shot trigger (On Ready / On Signal / a custom function):
@@ -126,7 +131,7 @@ $NavRegion.navigation_polygon = result
 
 | Tool | Level | Shape of the work | How it spreads |
 |---|---|---|---|
-| **Time Slicer** pack | Beginner, no caveats | A queue of items to process (items, arrays, whole groups) | Attached behavior drains its queue within a time and/or count budget; you react to *Every Frame Item* |
+| **Time Slicer** pack | Beginner, no caveats | A queue of items to process (items, arrays, whole groups) | Attached behavior drains its queue within a time and/or count budget; you react to *On Process Item* |
 | **Budgeted For Each** | In-place tick-box | An existing `For Each` that hitches | `frame_spread_count` / `frame_spread_budget_ms` on the pick filter; a slice per frame, resumes next frame |
 | **Budget ACEs** | Advanced | A hand-rolled loop under a one-shot trigger | *Begin Frame Budget* + *Await If Over Budget* make the handler a self-pacing coroutine |
 | **Run In Background** pack | Advanced | Genuinely CPU-bound, pure computation | `WorkerThreadPool` off the main thread; *On Done(result)* back on the main thread |
@@ -141,7 +146,7 @@ The Time Slicer is the right tool for ~90% of frame-spreading needs; reach furth
 - **Budget in milliseconds, not item counts,** when per-item cost varies (a raycast vs a `Set Variable`): the ms fence adapts; a fixed count doesn't.
 - **Reacting beats polling.** Prefer signals/triggers over per-frame `for` scans: a signal fires only when the event happens, so the work - and its frame cost - only occurs when it has to, instead of every tick.
 - **Budgeted For Each needs a per-frame trigger.** Every Frame is what re-enters the loop to continue the pass; under a one-shot trigger it only ever processes the first slice.
-- **Budgeted For Each does not yet combine with While/Repeat, order-by, or pick-first-N.** Those combinations emit a normal same-frame loop and a compile warning.
+- **Budgeted For Each does not yet combine with While/Repeat, order-by, or pick-first-N.** Those combinations emit a normal same-frame loop and a compile warning. A named `loopindex` is dropped for the same reason (it would reset every frame), also with a warning.
 - **Never use the budget ACEs inside Every Frame.** They make the handler an implicit coroutine; a re-firing trigger overlaps the suspended run and double-processes. One-shot triggers only, or gate the event with the **Once At A Time** condition (it skips re-entry while a previous run is still suspended).
 - **Keep Begin Frame Budget and Await If Over Budget in the same handler.** The budget fence is function-local; splitting them across handlers silently breaks the pacing.
 - **Run In Background callables must be pure.** Data in, data out - no scene-tree access, no Node methods, no non-thread-safe Resource touches. Nothing enforces this at compile time; violations crash or produce heisenbugs.

@@ -349,8 +349,7 @@ func build_provider_dialog() -> void:
 	_dock._provider_shim_button = Button.new()
 	_dock._provider_shim_button.text = "Keep Old Name…"
 	_dock._provider_shim_button.visible = false
-	_dock._provider_shim_button.tooltip_text = "Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.
-Nothing existing is edited - the stand-in just forwards."
+	_dock._provider_shim_button.tooltip_text = "Renamed this function? Add a deprecated stand-in under its old name so sheets that already use it keep working.\nNothing existing is edited - the stand-in just forwards."
 	_dock._provider_shim_button.pressed.connect(_dock._on_provider_shim_pressed)
 	preview_actions.add_child(_dock._provider_shim_button)
 	var preview_card: PanelContainer = EventSheetPopupUI.titled_card("What it publishes", preview_box)

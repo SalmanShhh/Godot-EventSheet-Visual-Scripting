@@ -391,8 +391,7 @@ func on_provider_shim_pressed() -> void:
 		_shim_dialog.title = "Keep the old name working"
 		_shim_dialog.ok_button_text = "Add Shim"
 		var body: VBoxContainer = EventSheetPopupUI.form_box()
-		body.add_child(EventSheetPopupUI.hint_label("Renaming a function changes the verb's identity, so sheets that already use it break - silently, because the old call is baked into each row and still compiles.
-Name what this function used to be called and a deprecated stand-in is added that forwards to it. Nothing existing is edited."))
+		body.add_child(EventSheetPopupUI.hint_label("Renaming a function changes the verb's identity, so sheets that already use it break - silently, because the old call is baked into each row and still compiles.\nName what this function used to be called and a deprecated stand-in is added that forwards to it. Nothing existing is edited."))
 		_shim_old_name = LineEdit.new()
 		_shim_old_name.placeholder_text = "the previous function name"
 		body.add_child(EventSheetPopupUI.form_row("Used to be", _shim_old_name))

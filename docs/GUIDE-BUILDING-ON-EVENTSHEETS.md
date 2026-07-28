@@ -61,7 +61,7 @@ These add words to the event sheet language. They work with or without the edito
 
 | Method | What it does |
 |--------|----------------|
-| `register_provider_script(path)` | A `@tool class_name` script becomes an ACE provider: public methods, signals, and `@export` vars become actions, conditions, expressions, and triggers. Annotate with `@ace_*` doc tokens or a static `_eventforge_register(reg)` hook (both dialects are covered in [GUIDE-CUSTOM-ACES.md](GUIDE-CUSTOM-ACES.md)). |
+| `register_provider_script(path)` | A `class_name` script becomes an ACE provider (it only has to be instantiable; `@tool` is optional and needed only when the script's own code should run in the editor): public methods, signals, and `@export` vars become actions, conditions, expressions, and triggers. Annotate with `@ace_*` doc tokens or a static `_eventforge_register(reg)` hook (both dialects are covered in [GUIDE-CUSTOM-ACES.md](GUIDE-CUSTOM-ACES.md)). |
 | `register_block_kind(kind)` | A new NON-ACE row type (markers, notes, data tables). The kind gets the Add menu, palette, edit dialog, compile and lift wiring for free; the contract is in [GUIDE-CUSTOM-BLOCKS.md](GUIDE-CUSTOM-BLOCKS.md). |
 | `simple_block_kind(config)` | Build a whole block kind from a Dictionary (an `emit` template with `{field}` placeholders, a `summary` template, a `fields` schema) with NO subclassing. Forward emission works immediately; reverse recovery is opt-in via a `lift` Callable, else the block re-imports as a verbatim GDScript block. Pass the result to `register_block_kind()`. |
 | `find_ace(provider_id, ace_id)` | Look a definition up in the live registry (editor only). Definitions are session-cached and shared: treat them as IMMUTABLE, bake changes into row copies. |
@@ -215,7 +215,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Editor | `edit(label: String, mutation: Callable)` | `bool` (changed) | yes |
 | Editor | `set_status(text: String, is_error := false)` | `void` | yes |
 | Editor | `refresh()` | `void` | yes |
-| Editor | `register_palette_command(title: String, action: Callable)` | `void` | no (shows when open) |
+| Editor | `register_palette_command(title: String, action: Callable, category := "")` - an optional `category` prefixes the display title ("My Pack: Reroll Loot") so a pack's commands group together in the palette's filter | `void` | no (shows when open) |
 | Editor | `unregister_palette_command(title: String)` | `void` | no |
 | Editor | `palette_commands()` | `Array[Dictionary]` | no |
 | Editor | `build_inspector_preview(name, type_name, default_text, attributes, exported := true, constant := false)` | `Control` | no |
@@ -231,7 +231,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Codegen | `round_trips(source: String)` | `bool` | no |
 | Codegen | `publish_pack(sheet, base_path, icon_path := "")` - the whole pack pipeline (icon detect, de-coding lifts, stable uids, banner-less compile); shared by the bundled builders and Export Addon | `Dictionary` | no |
 | Codegen | `stabilize_row_uids(sheet)` - deterministic row uids so regeneration is byte-stable | `void` | no |
-| Codegen | `resource_grid(columns, options := {})` - the Inspector-grid descriptor from plain column phrases ("kind: a|b|c" = a dropdown) | `Dictionary` | no |
+| Codegen | `resource_grid(columns, options := {})` - the Inspector-grid descriptor from plain column phrases (`"kind: coin\|gem\|key"` = a dropdown column; a choice written `key=Label` shows the label and stores the key) | `Dictionary` | no |
 | Codegen | `attach_validator(sheet, variable_name)` - creates validate_<variable>() and wires the live-warning attribute | `String` | no |
 | Save | `save_state_code(fields: Array)` | `String` | no |
 | Save | `persistable_fields(script_path: String)` | `Array[Dictionary]` | no |
@@ -247,6 +247,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Seams | `param_spec(config: Dictionary)` - normalizes one param/field config: `default` and `default_value` are interchangeable, `options` takes a plain list / a `{value: label}` dictionary / ready-made pairs, and `hint: "comparison"` expands to the whole labeled operator dropdown seeded to `==`. `simple_ace()` and `simple_block_kind()` run every param through it | `Dictionary` | no |
 | Seams | `combo_options(source)` / `comparison_options(equal_token := "==")` - dropdown options as `{key, label}` pairs, so a row READS as English while INSERTING the real token. Pass `equal_token` when your runtime stores a single `=` | `Array` | no |
 | Seams | `curate_provider(script_path, edits)` - writes `## @ace_*` annotations into a script you own (label, category, kind, opt-out, param specs). Only `##` comments are added or removed - never a signature or body - the file is backed up first, and re-applying the same edits is a no-op | `Dictionary` | no |
+| Seams | `keep_old_verb_working(script_path, old_member, new_member, message := "")` - appends a deprecated forwarding shim so a RENAMED verb keeps working for the sheets that already use it. Purely additive (no signature, body or call site is edited), backed up first, and the shim carries `@ace_deprecated` so the old name is hidden from the picker while still resolving | `Dictionary` | no |
 | Seams | `register_param_editor(tag: String, factory: Callable)` / `param_editor_for(tag)` | `void` / `Callable` | no |
 | Seams | `register_param_commit_validator(hint, validator)` / `param_commit_validator_for(hint)` - `validator(value) -> Dictionary` runs when the params dialog COMMITS a field with that hint; return `{}` to pass, or `{title, message, confirm_text, cancel_text, on_confirm}` to ask first (the dialog delivers the commit exactly once however the prompt closes) | `void` / `Callable` | no |
 | Seams | `on_sheet_opened/saved/compiled(callback: Callable)` | `void` | no |
@@ -399,6 +400,15 @@ EventSheets.edit("Migrate Inventory Verbs", func(sheet: EventSheetResource) -> b
 		changed = _rewrite_legacy_inventory_ace(row) or changed
 	return changed)
 ```
+
+A codemod only reaches the sheets someone opens. If you RENAMED a member on a provider script, also leave the old name standing, because renaming changes the `ace_id` and the compiler prefers the template baked onto the row: an untouched sheet still emits the OLD call, compiles clean, and fails at game runtime. One call writes a deprecated forwarding shim of the old name (additive, backed up first, hidden from the picker so nobody adds it to new work):
+
+```gdscript
+EventSheets.keep_old_verb_working("res://addons/my_pack/inventory.gd",
+	"give_item", "grant_item", "Renamed to grant_item in 2.0.")
+```
+
+The Doctor's `orphaned-verb` check is the safety net for the case you miss: it reports an error when a script calls a provider member that no longer exists.
 
 ### 13. A pre-merge round-trip sweep over every hand-edited script
 

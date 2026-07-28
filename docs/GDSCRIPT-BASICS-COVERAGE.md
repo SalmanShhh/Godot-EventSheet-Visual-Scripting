@@ -16,7 +16,7 @@ byte-exactly: open the generated `.gd`, save it untouched, and you get the ident
 | Functions, parameters, returns | Expandable ƒ Define blocks | Add > Function… (the verb studio); parameters from the Define row's cells |
 | Static functions and variables | static-marked rows | The Static toggle in the function/variable dialogs |
 | `if` / `elif` / `else` | Condition lane + System Else / Else If chips | Right-click an event > Make Else / Make Else-If |
-| `match` | A switch/case block | Right-click > the switch block (Simple Mode included) |
+| `match` | A Match row in the action lane: a subject expression plus one branch per case | Right-click an event > More > Add Match To Actions… (Expert mode; Simple Mode hides it) |
 | `for` / `while` loops | For Each / Repeat / While rows | Right-click > Add Pick Filter (For Each) |
 | `break` / `continue` | Break Loop / Continue Loop actions | The Loops category in the picker |
 | Loop counters | The Loop index field + Loop Index expressions | Name it on any loop; read with Loop Index / Loop Index Of |

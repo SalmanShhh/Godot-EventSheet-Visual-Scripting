@@ -37,7 +37,9 @@ drawer is what turns an `Array` into a spreadsheet in the Inspector.
 
 ## 2. The bundled examples
 
-Two packs ship data-driven already, and they are the template for your own.
+Two packs ship the whole pattern already - a Custom Resource plus a loader behavior - and they are
+the template for your own. (Several packs ship just the resource half, among them the ability set,
+stat sheet, storylet, drawing prefab, random table and UHTN plan assets.)
 
 **Loot Table.** Instead of Create Table plus a string of Add Entry actions, make a
 **LootTableResource** `.tres`, fill its entries grid (item / weight / tags) and its pity fields, then:
@@ -119,7 +121,12 @@ resource to drop in.
 ## 5. Tips
 
 - **Use the table drawer for lists.** An `Array` with `drawer: "table"` and `table_columns` becomes an
-  editable grid in the Inspector - the heart of data-driven authoring.
+  editable grid in the Inspector - the heart of data-driven authoring. A column's `type` is `String`,
+  `int`, `float`, `bool`, or `color` (a swatch cell storing `"#rrggbb"`).
+- **Make fixed choices a dropdown.** A column written
+  `{"name": "rarity", "type": "enum", "options": ["common", "rare"]}` renders as a dropdown, so a typo
+  cannot happen. An option given as `{"key": "rare", "label": "Rare drop"}` shows the label to the
+  designer while the row stores the key - reword the choice later without touching the code that reads it.
 - **Read fields dynamically** in the loader/action (`resource.get("name")`), so a pack never hard-depends
   on another pack's class name at build time.
 - **Reach the autoload dynamically** too (`get_node_or_null("/root/MyAutoload").call(...)`), so the loader

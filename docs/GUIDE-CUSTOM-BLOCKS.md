@@ -127,7 +127,7 @@ fields, draws a row, and compiles to the `emit` line.
 | `kind_id` | On-disk identity. Frozen once shipped - sheets already saved reference it by this string. |
 | `title` | Add-menu label and the row's badge. Localised through the editor's translation table. |
 | `category` | Free-text label carried on the kind (default `"Blocks"`). Reserved: nothing groups by it yet. |
-| `fields` | Array of `{id, label, type, default}`. `type` is a Godot `TYPE_*` constant; the dialog picks the control from it. |
+| `fields` | Array of `{id, label, type, default}`. `type` is a Godot `TYPE_*` constant; the dialog picks the control from it. Every entry is normalised by `EventSheets.param_spec` on the way in, so `default` and `default_value` are interchangeable, and a String field's `options` may be a plain list, a `{value: label}` Dictionary, or ready-made `{key, label}` pairs. |
 | `emit` | The GDScript template. One output line per line of the string, with `{field_id}` placeholders. |
 | `summary` | The one-line row text, same `{field_id}` placeholders. |
 | `lift` | Optional `func(lines, index) -> Dictionary` for reading the block back out of a `.gd`. |
@@ -173,7 +173,7 @@ Everything a kind can implement. Only `kind_id`, `title`, and the pieces your ki
 | `kind_id: String` | both | The stable public id. Compatibility covenant once shipped. |
 | `title: String` | both | The row badge text, the Add-menu entry, and the dialog title. |
 | `category: String` | both | A free-text label carried on the kind (default "Blocks"). Reserved for grouping: the Add menu currently lists every addable kind flat, so setting this changes nothing you can see yet. |
-| `fields() -> Array[Dictionary]` | schema | The schema: `{id, label, type: Variant.Type, default}` per field. Drives the auto-built dialog and defaults. A String field may add `"options": ["a", "b"]` (renders a dropdown, stores the chosen text) or `"hint": "resource_path"` (adds a Browse button that opens the editor's resource picker beside the text field). |
+| `fields() -> Array[Dictionary]` | schema | The schema: `{id, label, type: Variant.Type, default}` per field. Drives the auto-built dialog and defaults. A String field may add `"options"` (renders a dropdown) or `"hint": "resource_path"` (adds a Browse button that opens the editor's resource picker beside the text field). Options are either plain strings - each is its own label and stores that text - or `{key, label}` pairs, where the dropdown READS the label and the field STORES the key. A `TYPE_COLOR` field renders a "Tint" checkbox plus a colour picker and stores `"#rrggbb"` as a String (empty String = no colour), which is how the built-in Region kind carries its bubble colour. |
 | `emit(block) -> PackedStringArray` | schema | The GDScript this block compiles to. **Must be pure**: same fields, same bytes. Empty array emits nothing. |
 | `lift(lines, i) -> Dictionary` | both | Claim source lines starting at `i`. Return `{}` (not yours), `{"fields": ..., "consumed": n}` (schema), or `{"resource": row, "consumed": n}` (resource kind). |
 | `verified_claim(fields, lines, i, consumed)` | schema | The one-line byte gate for `lift()`: builds the candidate, re-emits it, returns the claim only on an exact byte match. |
@@ -206,7 +206,7 @@ Reach for a resource kind only when you genuinely need a dedicated Resource clas
 
 - **Add ▾ menu**: every `addable()` kind is listed under its category; choosing it opens the schema dialog with defaults filled in.
 - **Command palette**: Ctrl+P lists "Add <Title>…" for every addable kind, including ones registered after startup.
-- **The schema dialog**: one field control per schema entry: a `LineEdit` per String (Enter applies), a `CheckBox` per bool, a `SpinBox` per int/float. Add mode inserts below the selection; edit mode (double-click the row) prefills and rewrites. Both apply through the undo system, so Ctrl+Z works.
+- **The schema dialog**: one field control per schema entry: a `LineEdit` per String (Enter applies), a `CheckBox` per bool, a `SpinBox` per int/float, an `OptionButton` for a String field carrying `options`, a Browse button beside a `resource_path` String, and a tint checkbox plus colour picker per `TYPE_COLOR`. Add mode inserts below the selection; edit mode (double-click the row) prefills and rewrites. Both apply through the undo system, so Ctrl+Z works.
 - **The row**: a kind badge (your `title`) plus your `summary()` text, rendered by the same virtualized viewport as everything else. Disabled state and selection behave like built-in rows.
 - **A custom editor when you outgrow the schema**: override `edit(dock, block)`, open anything you like, and return `true`. The registry dispatches every block edit, so your dialog is reached exactly the way the built-in enum dialog is.
 

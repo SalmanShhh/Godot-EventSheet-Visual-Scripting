@@ -35,6 +35,19 @@ static func run() -> bool:
 	var forgiving_columns: Array = (forgiving.get("attributes", {}) as Dictionary).get("table_columns", [])
 	ok = _check(ok, forgiving_columns[0] == {"name": "op", "type": "enum(==|!=|<)"}, "spaces around | are stripped (got %s)" % str(forgiving_columns[0]))
 	ok = _check(ok, forgiving_columns[1] == {"name": "custom", "type": "enum(a|b)"}, "a formed column dictionary passes through")
+	# A pre-formed token written as a STRING phrase used to be intercepted by the plain-choices
+	# branch - every multi-option token contains a "|" - and came back double-wrapped as
+	# enum(enum(a|b)), so the "passes through untouched" promise only ever held for a single-option
+	# token. It now goes through the codec, which validates and canonicalises it.
+	var formed_phrase: Dictionary = EventSheets.resource_grid(["mode: enum(fast|slow)"])
+	ok = _check(ok, (formed_phrase.get("attributes", {}) as Dictionary).get("table_columns", [])[0]
+		== {"name": "mode", "type": "enum(fast|slow)"}, "a formed token phrase is not double-wrapped (got %s)"
+		% str((formed_phrase.get("attributes", {}) as Dictionary).get("table_columns", [])))
+	# And a labeled choice keeps its label rather than being flattened.
+	var labeled: Dictionary = EventSheets.resource_grid(["op: gte=>= (at least)|lt=< (less than)"])
+	ok = _check(ok, (labeled.get("attributes", {}) as Dictionary).get("table_columns", [])[0]
+		== {"name": "op", "type": "enum(gte=>= (at least)|lt=< (less than))"}, "a labeled choice keeps its label (got %s)"
+		% str((labeled.get("attributes", {}) as Dictionary).get("table_columns", [])))
 	var bare: Dictionary = EventSheets.resource_grid(["notes"])
 	ok = _check(ok, not (bare.get("attributes", {}) as Dictionary).has("required"), "no options -> no stray attributes")
 

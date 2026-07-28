@@ -126,8 +126,15 @@ Two routes:
   sheet and runtime script in one), its verbs live in every picker.
 - **Custom ACEs from a script:** drop a `.gd` into `res://eventsheet_addons/`. Its `class_name`
   becomes the provider; methods/exported vars become Actions/Conditions/Expressions; annotated
-  signals become Triggers. `@ace_param_options` / `@ace_param_autocomplete` / `@ace_param_hint`
-  shape the parameter fields. It registers project-wide automatically.
+  signals become Triggers. One `@ace_param(id, default: 1.0, options: low=Slow|high=Fast, hint: comparison)`
+  shapes a parameter field: what the row shows the moment it is dropped, a dropdown whose labels read
+  as English while the key is what gets inserted, and `hint: comparison` for the whole labeled
+  operator dropdown in one word. (`@ace_param_options` / `@ace_param_autocomplete` / `@ace_param_hint`
+  remain as the single-purpose spellings.) It registers project-wide automatically.
+
+Prefer to see the vocabulary before committing to it? **Sheet ▸ Custom Actions…** previews every verb a
+script would publish, lets you fix the kind, name and category in the table, and writes those choices
+back into the file as `## @ace_*` comments (with a diff and a backup first).
 
 ---
 
@@ -311,7 +318,7 @@ it an autoload for one global slicer). It owns a queue and drains it within a pe
 
 1. **Enqueue** the work in one event - **Enqueue Group** `"enemies"` (every node in a group), **Enqueue
    Items** (an array), or **Enqueue Item** (one).
-2. **React** to **Every Frame Item(item)** in another event and do the per-item work - like reacting to a
+2. **React** to **On Process Item(item)** in another event and do the per-item work - like reacting to a
    signal. The slicer hands you items only as fast as the budget allows.
 3. **On Drained** fires the frame the queue empties.
 
