@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-07-28
+
 ### Fixed - full docs freshness sweep
 
 Every user-facing guide re-verified against the code that shipped, with an independent pass over the
