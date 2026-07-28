@@ -67,6 +67,7 @@ static func run() -> Dictionary:
 	check_required_fields(sheet_paths, findings)
 	check_missing_save_support(sheet_paths, findings)
 	check_editor_tool_undo(sheet_paths, findings)
+	check_orphaned_provider_calls(sheet_paths, findings)
 	check_vocabulary_doc(findings)
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
 	# after the built-ins so their findings never reorder the established report.
@@ -955,6 +956,164 @@ static func _list_files_with_extension(extension: String) -> PackedStringArray:
 			entry = directory.get_next()
 		directory.list_dir_end()
 	return found
+
+
+## Calls to a behaviour verb that no longer exists - the ONE failure in this plugin that compiles
+## green and breaks at game runtime.
+##
+## Renaming a provider's function changes the verb's identity, so every row that used it is orphaned.
+## Nothing catches that today: ActionCodegen prefers the template BAKED onto the row at apply time
+## over any registry lookup, so the sheet still emits `$Player/WeaponKit.fire(...)` with zero errors
+## and zero warnings, and Godot only complains when the player pulls the trigger.
+##
+## This reads the EMITTED CALLS rather than the sheet model, for two reasons. The failure lives in
+## the emitted code, so that is where it is true. And `.gd` is the default sheet format but
+## list_project_sheets() only finds `.tres`, so a model-based check would miss most projects
+## outright - while a generated sheet is deliberately indistinguishable from hand-written GDScript
+## (the parity covenant), so there is no marker to filter on and no need for one: a script calling a
+## member that its provider does not have is wrong whoever wrote it.
+##
+## CONSERVATISM IS THE FEATURE - a lint that cries wolf gets switched off, and a false positive here
+## would accuse someone's working game of being broken. It reports ONLY when every one of these is
+## true: the class name resolves to a provider script we actually found, that script parses, and the
+## member is absent from its own API, its whole script-inheritance chain, AND its engine base class.
+## Anything unresolved is silence.
+##
+## THE ONE KNOWN LIMITATION: this reads raw source, so a provider call written inside a STRING
+## literal (a doc string, a code generator, a test fixture) looks exactly like a real one and is
+## flagged. Telling them apart needs a real GDScript parse, which is a far larger machine than the
+## problem justifies. Two smaller guards keep it honest instead - a node whose last path segment is
+## not a known provider class is ignored outright, and the report names the file so a false hit is
+## obvious at a glance rather than mysterious.
+static func check_orphaned_provider_calls(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var providers: Dictionary = _provider_member_index(sheet_paths)
+	if providers.is_empty():
+		return
+	for script_path: String in _project_scripts():
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if source.is_empty():
+			continue
+		for orphan: Dictionary in orphaned_calls_in_source(source, providers):
+			_add(findings, "error", "orphaned-verb", script_path,
+				"%s.%s() does not exist on %s - the call still compiles but will fail at runtime. If the function was renamed, open Sheet > Custom ACE Providers, select it under its new name and use \"Keep Old Name\" to add a stand-in."
+					% [str(orphan["provider"]), str(orphan["member"]), str(orphan["path"]).get_file()])
+
+
+## The orphaned calls in one script's SOURCE, as {provider, member, path}. Pure, so the rule can be
+## pinned without planting a deliberately broken fixture in the project - which would make the
+## Doctor report an error on this repo forever, the very noise the check exists to avoid.
+static func orphaned_calls_in_source(source: String, providers: Dictionary) -> Array[Dictionary]:
+	var orphans: Array[Dictionary] = []
+	# `$Player/WeaponKit.fire(` - a behaviour child node is named for its class, which is the
+	# convention the compiler emits against. Also `__eventsheet_provider_Score.add(` for the
+	# non-Node providers, where the prefix makes the class unambiguous.
+	var node_call: RegEx = RegEx.new()
+	node_call.compile("\\$([A-Za-z_][A-Za-z0-9_/]*)\\.([a-z_][A-Za-z0-9_]*)\\(")
+	var provider_call: RegEx = RegEx.new()
+	provider_call.compile("__eventsheet_provider_([A-Za-z_][A-Za-z0-9_]*)\\.([a-z_][A-Za-z0-9_]*)\\(")
+	var reported: Dictionary = {}
+	for regex: RegEx in [node_call, provider_call]:
+		for found: RegExMatch in regex.search_all(source):
+			var reference: String = found.get_string(1)
+			# For a node path the LAST segment is the behaviour node, and therefore the class.
+			var class_candidate: String = reference.get_slice("/", reference.get_slice_count("/") - 1)
+			var member: String = found.get_string(2)
+			# An unresolved class is silence: not knowing a thing is not evidence against it.
+			if not providers.has(class_candidate):
+				continue
+			var entry: Dictionary = providers[class_candidate]
+			if (entry["members"] as Dictionary).has(member):
+				continue
+			var key: String = "%s.%s" % [class_candidate, member]
+			if reported.has(key):
+				continue
+			reported[key] = true
+			orphans.append({"provider": class_candidate, "member": member, "path": str(entry["path"])})
+	return orphans
+
+
+## class name -> {members: Dictionary, path: String} for every provider script we can find and read.
+## A class that does not resolve is simply absent, which is what keeps the check silent about code it
+## does not understand.
+static func _provider_member_index(sheet_paths: PackedStringArray) -> Dictionary:
+	var candidate_paths: Dictionary = {}
+	for pack_script: String in EventSheetAddonScanner.list_addon_scripts():
+		candidate_paths[pack_script] = true
+	for taught: Variant in ProjectSettings.get_setting("eventsheets/vocabulary/taught_provider_scripts", PackedStringArray()):
+		candidate_paths[str(taught)] = true
+	for sheet_path: String in sheet_paths:
+		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		if sheet == null:
+			continue
+		for provider: Variant in sheet.ace_provider_scripts:
+			candidate_paths[str(provider)] = true
+
+	var index: Dictionary = {}
+	for path: Variant in candidate_paths:
+		var script_path: String = str(path)
+		if not ResourceLoader.exists(script_path):
+			continue
+		var script: GDScript = load(script_path) as GDScript
+		if script == null:
+			continue
+		# Matches how a provider id is derived (class_name, else the pascal-cased file name), so the
+		# key here is the same string the compiler emitted into the call.
+		var class_key: String = str(script.get_global_name())
+		if class_key.is_empty():
+			class_key = script_path.get_file().get_basename().to_pascal_case()
+		if class_key.is_empty() or index.has(class_key):
+			continue
+		index[class_key] = {"members": _script_member_names(script), "path": script_path}
+	return index
+
+
+## Every name a call on this script could legitimately reach: its own methods, properties and
+## signals, the same for every script it extends, and its engine base class through ClassDB. Missing
+## any of those lanes would turn an ordinary `$Behaviour.queue_free()` into a false accusation.
+static func _script_member_names(script: GDScript) -> Dictionary:
+	var names: Dictionary = {}
+	var current: GDScript = script
+	while current != null:
+		for method: Dictionary in current.get_script_method_list():
+			names[str(method.get("name", ""))] = true
+		for property: Dictionary in current.get_script_property_list():
+			names[str(property.get("name", ""))] = true
+		for signal_info: Dictionary in current.get_script_signal_list():
+			names[str(signal_info.get("name", ""))] = true
+		current = current.get_base_script() as GDScript
+	var base_type: String = script.get_instance_base_type()
+	if not base_type.is_empty() and ClassDB.class_exists(base_type):
+		for method: Dictionary in ClassDB.class_get_method_list(base_type, false):
+			names[str(method.get("name", ""))] = true
+		for property: Dictionary in ClassDB.class_get_property_list(base_type, false):
+			names[str(property.get("name", ""))] = true
+		for signal_info: Dictionary in ClassDB.class_get_signal_list(base_type, false):
+			names[str(signal_info.get("name", ""))] = true
+	return names
+
+
+## Every project GDScript, excluding addons/ (the plugin's own code is not a user's game).
+static func _project_scripts() -> PackedStringArray:
+	var scripts: PackedStringArray = PackedStringArray()
+	var pending: PackedStringArray = PackedStringArray(["res://"])
+	while not pending.is_empty():
+		var directory_path: String = pending[pending.size() - 1]
+		pending.remove_at(pending.size() - 1)
+		var directory: DirAccess = DirAccess.open(directory_path)
+		if directory == null:
+			continue
+		directory.list_dir_begin()
+		var entry: String = directory.get_next()
+		while not entry.is_empty():
+			var full_path: String = directory_path.path_join(entry)
+			if directory.current_is_dir():
+				if not entry.begins_with(".") and entry != "addons":
+					pending.append(full_path)
+			elif entry.ends_with(".gd"):
+				scripts.append(full_path)
+			entry = directory.get_next()
+		directory.list_dir_end()
+	return scripts
 
 
 static func _add(findings: Array[Dictionary], severity: String, check: String, path: String, message: String) -> void:

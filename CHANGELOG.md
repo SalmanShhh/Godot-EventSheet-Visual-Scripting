@@ -23,6 +23,27 @@ Three gaps where a bundled module could express something an `@ace_*` author cou
   reads as a sentence on drop. This also removes the reason packs hand-rolled word tokens plus a
   symbol mapper: the enum-option parser rejects a bare `=`, which the labeled form sidesteps.
 
+### Added - the Doctor catches a verb that no longer exists
+
+The one failure in this plugin that compiles green and breaks at game runtime. Renaming a provider's
+function orphans every row that used it, and nothing noticed: the compiler prefers the template baked
+onto the row over any registry lookup, so the sheet still emitted `$Player/WeaponKit.fire(...)` with
+zero errors and zero warnings, and Godot only complained when the player pulled the trigger.
+
+The new **orphaned-verb** check reads the emitted CALLS rather than sheet models, for two reasons.
+The failure lives in the emitted code, so that is where it is true - and `.gd` is the default sheet
+format while the Doctor's sheet list only finds `.tres`, so a model-based check would have missed
+most projects outright.
+
+It is built to stay quiet. A finding requires all of: the class name resolves to a provider script
+actually found on disk, that script parses, and the member is absent from its own API, its whole
+script-inheritance chain, *and* its engine base class through ClassDB. Anything unresolved is
+silence - not knowing a thing is not evidence against it. Run against this repo (76 packs, every
+showcase calling real behaviour verbs) it reports nothing, which is the test that ships with it.
+
+Known limit, stated rather than hidden: it reads raw source, so a provider call written inside a
+string literal is indistinguishable from a real one and will be flagged.
+
 ### Added - a renamed verb can keep working (Phase 3 completes)
 
 Renaming a provider function changes the verb's identity, so every sheet row that used it is

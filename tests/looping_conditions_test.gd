@@ -33,14 +33,18 @@ static func run() -> bool:
 	DirAccess.remove_absolute(probe_path)
 
 	# ---- the collection expression bakes the call with params substituted ----
+	# A deliberately fictional provider: this pins param substitution into the collection
+	# expression, and naming a REAL pack here would have the fixture impersonate one - the
+	# orphaned-verb Doctor check reads emitted calls, and would rightly report a call to a member
+	# that pack does not have.
 	var definition: ACEDefinition = ACEDefinition.new()
-	definition.provider_id = "StatForge"
+	definition.provider_id = "LoopProbe"
 	definition.id = "method:buffs_with_tag"
 	definition.ace_type = ACEDefinition.ACEType.CONDITION
-	definition.metadata = {"looping": true, "looping_iterator": "buff_id", "codegen_template": "__eventsheet_provider_StatForge.buffs_with_tag({tag})"}
+	definition.metadata = {"looping": true, "looping_iterator": "buff_id", "codegen_template": "__eventsheet_provider_LoopProbe.buffs_with_tag({tag})"}
 	var apply_script: Script = load("res://addons/eventsheet/editor/dock/ace_apply.gd")
 	var collection: String = apply_script.call("build_looping_collection", definition, {"tag": "\"poison\""})
-	all_passed = _check("params bake into the loop collection", collection, "__eventsheet_provider_StatForge.buffs_with_tag(\"poison\")") and all_passed
+	all_passed = _check("params bake into the loop collection", collection, "__eventsheet_provider_LoopProbe.buffs_with_tag(\"poison\")") and all_passed
 
 	# ---- the applied pick filter compiles to a plain for loop ----
 	var sheet: EventSheetResource = EventSheetResource.new()
