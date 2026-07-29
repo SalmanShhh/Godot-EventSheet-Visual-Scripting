@@ -15,6 +15,10 @@ It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary 
 sheet above *is* `platformer_shooter.gd`. Behaviours attach as child nodes and expose their knobs in
 the Inspector like any other node, so nothing here is a parallel universe you have to leave Godot for.
 
+And close up, a row at a time:
+
+![The event sheet canvas up close: two-lane condition/action rows, type-annotated variables with @export badges and an Inspector-grouping chip, a colored Combat region wrapping a Gameplay group, trigger arrows, a negated condition, an inline GDScript block, comments, and a sheet-built heal() function.](docs/previews/editor-event-sheet.png)
+
 ## What it compiles to
 
 A sheet isn't interpreted - it **compiles to a plain `.gd` script** you attach and ship. Rows like:
