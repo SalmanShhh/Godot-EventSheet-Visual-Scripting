@@ -2,6 +2,39 @@
 
 ## [Unreleased]
 
+### Fixed - three wrong claims in the v0.16.0 release notes
+
+Swept all 30 countable claims in `docs/internal/RELEASE-NOTES-v0.16.md` against the code rather than
+against other docs. 25 held. Three did not, and each was confirmed by re-deriving it directly:
+
+- **"Raycast Lab and Raycast Lab 3D each run six casts at once."** The 2D lab runs six; the 3D lab
+  runs **seven**. Counting the physics queries in the emitted showcase scripts: 2D fires
+  `force_raycast_update`, `intersect_ray`, `intersect_point`, `intersect_shape`, `cast_motion`,
+  `force_shapecast_update`; 3D fires those plus a second `intersect_shape` for Query Bodies In Box,
+  which has no 2D counterpart. "Six" traces to source comments that count question FAMILIES and fold
+  the sphere and box volume queries together. Related and also corrected: the 3D lab's box and point
+  queries are reported as counts in the readout, not drawn as markers, so "drawn and colour-coded"
+  covered six of seven.
+- **"Editor boot dropped from 1.8s to 85ms."** Real, but it shipped in **v0.14.0**, two releases
+  before this one. `git merge-base --is-ancestor 2160fa8 v0.14.0` is true, and the figure lives in the
+  `[0.14.0]` CHANGELOG section. Nothing in the v0.15.0..v0.16.0 range touches boot cost. The sentence
+  is removed rather than reworded; the README already credits it to v0.14.0 correctly. Worth noting
+  the numbers were never test-pinned either - `plugin_boot_lazy_test.gd` deliberately refuses to
+  assert milliseconds ("millisecond pins would be flaky") and enforces the structure instead.
+- **"compound assignments reverse-lift (`self.position += velocity` to Add To Property)."** The family
+  is real but the example is the one case that does not do this. Probed it directly: with hosts `Node`,
+  `Node2D` and `CharacterBody2D` alike, `self.position += velocity` lifts to **MoveBy2D** ("Move By"),
+  because `MoveBy2D`'s template IS `position += {offset}` and a specific verb outranks the generic
+  property twin. `$Sprite.modulate.a -= fade` gives Subtract From Property and `$Hud.custom_value += 7`
+  gives Add To Property, so the example was swapped for one of those.
+
+Two claims came back unverifiable-by-test and were kept, because both are backed by a repo record
+rather than by inspection: the 15-finding ultra-review (CHANGELOG line 1399) and the stepping smoke's
+6000 px/s / 10px-wall figures (commit `be4b156`, whose harness was deleted per the house rule).
+
+Also aligns the notes' ACE total with the README (925) and applies the same nine-languages-eight-
+translations correction described below.
+
 ### Fixed - the README's Milestones table still called v0.16.0 unreleased
 
 The table's last row was `_Unreleased on main_ ... 🚧 in repo` describing the exact wave that shipped
