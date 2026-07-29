@@ -962,15 +962,30 @@ static func _class_names_by_lowercase() -> Dictionary:
 static var _category_hosts: Dictionary = {}
 
 
+## The Godot class a vocabulary entry is scoped to, whichever shape the entry is.
+##
+## The builtin list holds BOTH kinds and always has: an ACEDescriptor keeps the host in `node_type`,
+## while an ACEDefinition - the shape a provider script and EventSheets.simple_ace produce - has no
+## such property and keeps it in `metadata`. Reading `.node_type` unconditionally therefore threw
+## once per definition, which is invisible headless (the definitions only join in a live editor) and
+## filled the Output dock the moment anyone opened a sheet.
+static func host_class_of(entry: Variant) -> String:
+	if entry is ACEDescriptor:
+		return str((entry as ACEDescriptor).node_type).strip_edges()
+	if entry is ACEDefinition:
+		return str(((entry as ACEDefinition).metadata as Dictionary).get("node_type", "")).strip_edges()
+	return ""
+
+
 static func _category_host_classes() -> Dictionary:
 	if not _category_hosts.is_empty():
 		return _category_hosts
 	var counts: Dictionary = {}
-	for descriptor: ACEDescriptor in EventForgeBuiltinACEs.get_descriptors():
-		var host: String = str(descriptor.node_type).strip_edges()
+	for entry: Variant in EventForgeBuiltinACEs.get_descriptors():
+		var host: String = host_class_of(entry)
 		if host.is_empty() or not ClassDB.class_exists(host):
 			continue
-		var category: String = str(descriptor.category)
+		var category: String = str(entry.get("category"))
 		if not counts.has(category):
 			counts[category] = {}
 		var per_category: Dictionary = counts[category]

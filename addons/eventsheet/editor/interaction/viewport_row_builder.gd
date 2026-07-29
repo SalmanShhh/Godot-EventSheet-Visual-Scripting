@@ -3497,7 +3497,10 @@ func _object_icon_for(provider_id: String, ace_id: String) -> Texture2D:
 		# shows where no module mapping exists. Headless keeps the old look (editor icons null).
 		# The definition's own host is passed along so a category nobody listed still resolves:
 		# an addon publishing "Turrets" on a Node2D gets the Node2D icon instead of a bare row.
-		icon = ACEPickerDialog.category_header_icon(definition.category, str(definition.node_type))
+		# host_class_of, not `.node_type`: an ACEDefinition has no such property (it keeps its host in
+		# metadata), so reading it directly threw once for EVERY row drawn - invisible headless,
+		# and it filled the Output dock the moment anyone opened a sheet in the real editor.
+		icon = ACEPickerDialog.category_header_icon(definition.category, ACEPickerDialog.host_class_of(definition))
 	if icon == null:
 		icon = ACEPickerDialog.resolve_definition_icon(definition)
 	if icon == null and is_core:

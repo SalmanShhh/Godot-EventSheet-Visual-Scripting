@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## [Unreleased]
+
+### Changed - the README screenshots are the real Godot editor now
+
+Every image on the README was a floating crop of plugin controls on a flat background, which showed
+the rows but never showed that this is a Godot workspace. All four are now 1080p captures of the
+actual editor - the EventSheet tab beside 2D / 3D / Script, the Scene dock showing behaviour children,
+the Inspector showing that behaviour's own knobs, the FileSystem dock underneath:
+
+- The hero is `platformer_shooter.gd` opened as events, which is the point: a plain script, read as
+  numbered two-lane rows calling `$Player/PlatformerMovement.jump()`.
+- The compiles-to section gained a shot of the Generated GDScript panel open beside the sheet.
+- The picker and the Create Variable dialog are shown over the editor rather than cut out of it.
+
+### Fixed - opening a sheet spammed the Output dock
+
+`Invalid access to property or key 'node_type' on ACEDefinition`, once per drawn row. The builtin
+vocabulary list holds both shapes: an `ACEDescriptor` keeps its host class in `node_type`, while an
+`ACEDefinition` (what a provider script and `simple_ace` produce) has no such property and keeps it in
+`metadata`. The row builder read `.node_type` unconditionally. Headless runs never saw it, because
+definitions only join the list in a live editor - it surfaced the moment the editor was actually
+driven, which is how it was found.
+
 ## [0.16.0] - 2026-07-28
 
 ### Fixed - full docs freshness sweep
@@ -315,8 +338,8 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
   **Compare: Text / Numbers / Vectors / Types / Objects** groups are the rest - the comparisons that
   need a method, a tolerance, or a type test, and which otherwise meant writing an fx expression:
   - **Text** - equals ignoring case, begins with, empty, blank (empty OR only spaces - what a name box
-    actually wants), wildcard pattern match, is-one-of, alphabetical order, natural order ("item2"
-    before "item10").
+	actually wants), wildcard pattern match, is-one-of, alphabetical order, natural order ("item2"
+	before "item10").
   - **Numbers** - **Values Are Near** (a tolerance, because `==` on decimals is a coin flip after any
     arithmetic), outside-range, positive, negative, even, odd, multiple-of (guarded against a zero
     divisor), whole-number, and a -1/0/1 compare result.
@@ -327,7 +350,7 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
     is-a-class.
   - **Objects** - same-object identity, **Object Still Exists** (`is_instance_valid`, which a null
     check cannot replace: a freed node is not null, and touching it crashes), has-method (the
-    duck-typing check behind "anything with take_damage"), and has-property.
+	duck-typing check behind "anything with take_damage"), and has-property.
 
 ### Added - turning nodes on and off, and pausing them (23 ACEs)
 
@@ -339,8 +362,8 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
     Pause Node With The Game** - the five process modes as plain-English verbs, so a pause menu and
     its music can stay alive while everything else freezes.
   - **Node Is Running** answers the whole question with `can_process()`, taking the node's mode AND
-    the game pause into account, and **Node Is Frozen By The Game Pause** tells "paused" apart from
-    "paused but exempt".
+	the game pause into account, and **Node Is Frozen By The Game Pause** tells "paused" apart from
+	"paused but exempt".
   - Finer grained: per-callback switches for the per-frame, physics and input work, their matching
     conditions, the two process-order knobs, and Node Is Ready.
 
@@ -702,7 +725,7 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
     listed triggers to 164**: On Drift Recovered, On Combo Failed, On Spend Failed, On Cap Hit and 100+
     others were invisible.
   - **A description containing a quoted example was truncated at that quote.** `Registers a combo ... (for
-    example "down,forward,punch")` stopped dead at `punch`. The close of the annotation is now anchored to
+	example "down,forward,punch")` stopped dead at `punch`. The close of the annotation is now anchored to
     the end of its line, so inner quotes pass through.
 
 ### Fixed - typed lists reach the custom Inspector drawers
@@ -733,7 +756,7 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
     applies it correctly. It now resolves against the live library as well, while still flagging duplicate
     ids *within* a book.
   - **A null cell became a silent trap.** JSON writes an omitted field as `null`, and `Dictionary.get`
-    only falls back to its default when the key is *absent* - so `"max_plays": null` read as `0` and made
+	only falls back to its default when the key is *absent* - so `"max_plays": null` read as `0` and made
     the storylet permanently ineligible, with validation calling the book clean. Cells now treat a
     present-null as missing.
 - Also: a JSON number now reads like the equivalent resource cell (`gold -10`, not `gold -10.0`) in

@@ -85,6 +85,22 @@ static func run() -> bool:
 	var tilemap_icon: String = ACEPickerDialog.category_icon_name("Tilemap")
 	ok = _check(ok, tilemap_icon == "TileMap", "\"Tilemap\" derives TileMap despite the capitalisation (got %s)" % tilemap_icon)
 	ok = _check(ok, not ACEPickerDialog.CATEGORY_EDITOR_ICONS.has("Raycast 2D"), "Raycast 2D is derived, not listed")
+
+	# 2b. The vocabulary list holds BOTH shapes, so the host lookup has to read both. An ACEDescriptor
+	# keeps its host in `node_type`; an ACEDefinition - what a provider script and simple_ace produce -
+	# has no such property and keeps it in `metadata`. Reading `.node_type` unconditionally threw once
+	# per definition, which headless runs never saw (definitions only join the list in a live editor)
+	# and which filled the Output dock the moment anyone opened a sheet.
+	var host_descriptor: ACEDescriptor = ACEDescriptor.new()
+	host_descriptor.node_type = "Area2D"
+	ok = _check(ok, ACEPickerDialog.host_class_of(host_descriptor) == "Area2D",
+		"a descriptor's host reads off node_type (got %s)" % ACEPickerDialog.host_class_of(host_descriptor))
+	var host_definition: ACEDefinition = ACEDefinition.new()
+	host_definition.metadata = {"node_type": "Timer"}
+	ok = _check(ok, ACEPickerDialog.host_class_of(host_definition) == "Timer",
+		"a definition's host reads off metadata (got %s)" % ACEPickerDialog.host_class_of(host_definition))
+	ok = _check(ok, ACEPickerDialog.host_class_of(ACEDefinition.new()) == "",
+		"and a definition with no host is empty, not an error")
 	ok = _check(ok, not ACEPickerDialog.CATEGORY_EDITOR_ICONS.has("Tilemap"), "Tilemap is derived, not listed")
 
 	# 3. DERIVED FROM THE HOST its verbs run on, which is what rescues a category whose name is not

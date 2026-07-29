@@ -9,7 +9,11 @@ The point is **speed-to-game**: whether you've never written code, want logic to
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
-![The event sheet editor: two-lane condition/action rows, type-annotated variables with @export badges and an Inspector-grouping chip, trigger arrows, a negated condition, BBCode in a comment, an inline GDScript block, and a sheet-built heal() function.](docs/previews/editor-event-sheet.png)
+![The EventSheet workspace inside the Godot editor: a plain platformer_shooter.gd opened as numbered two-lane event rows that call behaviour verbs like $Player/PlatformerMovement.jump() and $Player/WeaponKit.fire(), with the Scene dock showing the PlatformerMovement and WeaponKit behaviour children and the Inspector showing that behaviour's own knobs - Gravity Angle, Max Jumps, Coyote Time.](docs/previews/editor-hero.png)
+
+It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary `.gd` as events: the
+sheet above *is* `platformer_shooter.gd`. Behaviours attach as child nodes and expose their knobs in
+the Inspector like any other node, so nothing here is a parallel universe you have to leave Godot for.
 
 ## What it compiles to
 
@@ -40,6 +44,11 @@ func _on_body_entered(body: Node) -> void:
 ```
 
 Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync.
+
+You never have to take that on trust. **View > Generated GDScript** puts the compiled output beside the
+sheet, refreshed live as you edit, so the code you are shipping is always one panel away:
+
+![The same sheet with the Generated GDScript panel open beside it inside the Godot editor: on the left the numbered event rows, on the right the typed GDScript they compile to - class_name, an @export var, and a _physics_process reading Input.is_action_just_pressed - captioned as read-only and refreshed live as you edit.](docs/previews/editor-generated-code.png)
 
 ## Quick start
 
@@ -88,9 +97,9 @@ Most visual scripting asks you to learn a model you'll throw away the day you wr
 
 **The editor** - Two-lane condition/action rows, object icons + labels, stable **event numbers in the margin** (with Go to Event), flat cells, drag/drop with insertion arrows, groups, colored BBCode comments, inline colour-swatch picking, drag-a-node-onto-a-param, drag-an-Inspector-property-into-a-row (a pre-filled Set Property action), right-click a node > **Connect Signal to Event Sheet**, multi-select with **Select All Events Using This**, **Replace Object References** (autocompleted) and **per-param batch edit**, copy/paste, full undo/redo. **Find & Replace (Ctrl+F)** with a **live Filter lens**, script-editor shortcuts (F9 breakpoints, Ctrl+/ toggle, Alt+↑↓ move, Ctrl+M bookmarks with a C3-style panel, arrow-through-cells), an **Outline** jump panel, a **Command Palette (Ctrl+P)**, **Simple Mode**, session restore, multi-view (split/detached/linked), themeable down to every token, with nine bundled presets (Dracula, Nord, Gruvbox, Monokai, Solarized Light, Catppuccin Mocha, High Contrast, Soft Light and a Designer Template) plus a Godot-adaptive default - every one of them dresses published verbs in its own palette.
 
-<img src="docs/previews/editor-ace-picker.png" alt="The ACE picker: live search across actions, conditions, and triggers, favorites and recents rails, and a plain-language description of the selected ACE with the GDScript it ships as." width="620">
+![The Add Condition picker open over the Godot editor: a search box across every action, condition and trigger, Favorites and Recent rails, and the category tree - Compare, Run Context, Input, Variables, Node, ShapeCast2D, ShapeCast3D, Time, General Conditions and more.](docs/previews/editor-ace-picker.png)
 
-<img src="docs/images/variable-dialog.png" alt="The Variable dialog: a plain-language Number variable with a tooltip, a range, a Show as: Progress bar drawer with its live preview, and Inspector access - it ships as one @export_range line." width="547">
+![The Create Variable dialog over the Godot editor: plain-language fields - Scope, Name, Type: Number with a "Whole numbers only" tick, Default, Description, a Constant flag and "Editable in the Inspector (a designer property)" - no GDScript annotation to remember.](docs/previews/editor-variable-dialog.png)
 
 **The language** - Events, sub-events, Else/Else-If chips, the **full C3 loop & picking set** (For / For Each / ordered / Repeat / While, plus a C3-style **loopindex** on any loop), **functions** (typed params, custom returns, publishable as ACEs, one-field **Inspector buttons**), stateful conditions, enums (single- or multi-line), signals, match rows, setter/getter properties, doc comments with a BBCode bar, GDScript blocks, `await`, and Autoload sheets. Variables get **every Godot inspector option** in plain language with a live "Ships as:" strip, a **visually-designed Inspector** (eight drawers including editable tables), and Inspector grouping by drag. The **Custom Block API** registers your own non-ACE row kinds in ~30 lines - Add-menu, dialog, and byte-exact round-trip included.
 
