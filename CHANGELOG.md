@@ -2,7 +2,31 @@
 
 ## [Unreleased]
 
-## [Unreleased]
+### Fixed - the README's Milestones table still called v0.16.0 unreleased
+
+The table's last row was `_Unreleased on main_ ... 🚧 in repo` describing the exact wave that shipped
+as **v0.16.0** on 2026-07-28, so the README claimed the tagged release was still pending. That row is
+now the `v0.16.0` shipped row, matching the shape every previous release left behind (the unreleased
+row folds into a version row and only _Roadmap_ trails it).
+
+Every other count in the README was re-verified against the code rather than assumed:
+
+- **`920+ native ACEs` → `925+`.** `ACERegistry.get_all_descriptors()` returns **926**.
+- **`6,000+ assertions` → `6,100+ across 390 test files`.** 6,173 assertion call sites in `tests/`.
+- **"8 languages (EFIGS + Korean, Japanese, Russian, Simplified Chinese)" was self-contradictory** -
+  EFIGS already includes English, so the list named nine. `L10n.available_locales()` returns English
+  plus the eight shipped CSVs, so the picker offers **9**. Corrected in the README, the milestone row,
+  the translation guide (which claimed "eight languages" and then listed English plus eight CSVs) and
+  the docs index.
+- **Verified unchanged and left alone:** 76 packs (77 builders, one of which is `_lib`), 18 showcases,
+  18 `save_state` seams, 43 packs with `@ace_featured`, 9 bundled themes, 8 Inspector drawers, 64
+  Addons guides + 12 companion packs documented inside their partner's guide. Every pack directory is
+  accounted for in the family lists, and all 29 local README links resolve.
+
+Also folds in a duplicate `## [Unreleased]` header this file had grown, and brings the Feature tour up
+to the shipped release: number scrubbing on parameter labels, the `@ace_param` `default:` /
+`value=Label` / `hint: comparison` additions with the Custom Actions curation flow, and the Doctor's
+orphaned-verb check.
 
 ### Changed - the README screenshots are the real Godot editor now
 

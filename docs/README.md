@@ -38,7 +38,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 ## Localization
 
 - [Translating Your Game](GUIDE-TRANSLATING-YOUR-GAME.md) - localise game text the Godot way (globe-marked params, POT, Set Language).
-- [Translating the Editor](GUIDE-TRANSLATING-THE-EDITOR.md) - drop in a CSV to localise the plugin UI itself (8 languages ship built in).
+- [Translating the Editor](GUIDE-TRANSLATING-THE-EDITOR.md) - drop in a CSV to localise the plugin UI itself (eight translations ship built in, nine languages in all).
 
 ## Working with your project
 

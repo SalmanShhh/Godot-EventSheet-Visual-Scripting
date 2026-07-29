@@ -46,7 +46,8 @@ template (every key the shipped languages translate, second column empty under a
 `xx` header) also ships at `addons/eventsheet/translations/TEMPLATE.csv` - copy it, rename
 the header to your locale, and fill.
 
-The plugin ships eight languages out of the box: English is the built-in source language, and
+The plugin ships eight translations out of the box, so the picker offers nine languages in all.
+English is the built-in source language, and
 `addons/eventsheet/translations/` carries `fr.csv` (French), `es.csv` (Spanish), `it.csv`
 (Italian), `de.csv` (German), `ko.csv` (Korean), `ja.csv` (Japanese), `ru.csv` (Russian), and
 `zh_CN.csv` (Simplified Chinese), each translating the everyday surface (toolbar, menus,
