@@ -22,7 +22,14 @@ var _host: ACEParamsDialog = null
 var _expression_window: AcceptDialog = null
 var _expression_tree: Tree = null
 var _expression_search: LineEdit = null
+var _robust_checkbox: CheckBox = null
 var _expression_target_key: String = ""
+# Per-dialog-session cache of the Self section's derivation: typing in the search box only
+# re-FILTERS, so re-deriving the census + all 76 packs' behaviour groups per keystroke (~25ms on
+# a project-sized sheet) would be pure waste. Cleared on every open; the behaviour half also
+# keys on the robust toggle.
+var _self_section_cache: Dictionary = {}
+var _behaviour_groups_cache: Dictionary = {}  # {robust(bool): Array}
 
 
 func init(host: ACEParamsDialog) -> void:
@@ -32,10 +39,25 @@ func init(host: ACEParamsDialog) -> void:
 func _open_expression_picker(target_key: String) -> void:
 	_expression_target_key = target_key
 	_ensure_expression_window()
+	# Fresh derivation per open - the sheet may have changed since the dialog last showed.
+	_self_section_cache = {}
+	_behaviour_groups_cache = {}
+	# Spawn-heavy sheets DEFAULT to the robust behaviour access: their behaviours may attach at
+	# runtime, where a $-path to an auto-named child misses silently. Re-derived on every open so
+	# the default tracks the sheet as it grows; the checkbox stays a per-session user override.
+	if _robust_checkbox != null:
+		_robust_checkbox.set_pressed_no_signal(EventSheetSelfExpressions.is_spawn_heavy(_context_sheet()))
 	_refresh_expression_tree()
 	_expression_window.get_ok_button().disabled = true
 	_expression_window.popup_centered(Vector2i(560, 460))
 	_expression_search.grab_focus()
+
+
+## The sheet behind the open dialog (null headless / before setup) - the Self section's census input.
+func _context_sheet() -> EventSheetResource:
+	if not _host._lint_context_provider.is_valid():
+		return null
+	return _host._lint_context_provider.call() as EventSheetResource
 
 
 func _ensure_expression_window() -> void:
@@ -73,6 +95,14 @@ func _ensure_expression_window() -> void:
 	# Enter commits the first result (parity with the main ACE picker's type-and-Enter).
 	_expression_search.text_submitted.connect(func(_text: String) -> void: _activate_first_expression_match())
 	content.add_child(_expression_search)
+
+	# Behaviour access form: $Name (editor-attached child) vs get_node_or_null("Name") (survives a
+	# behaviour attached at runtime). Defaulted per sheet on open (spawn-heavy sheets start robust).
+	_robust_checkbox = CheckBox.new()
+	_robust_checkbox.text = "Robust behaviour lookups (get_node_or_null)"
+	_robust_checkbox.tooltip_text = "Behaviour entries insert get_node_or_null(\"Name\") instead of $Name - the access that keeps working when a behaviour is attached at runtime, where a $-path to an auto-named child misses silently. Defaults on for sheets that spawn objects."
+	_robust_checkbox.toggled.connect(func(_pressed: bool) -> void: _refresh_expression_tree())
+	content.add_child(_robust_checkbox)
 
 	_expression_tree = Tree.new()
 	_expression_tree.hide_root = true
@@ -139,15 +169,16 @@ func _refresh_expression_tree() -> void:
 ## The model (and its host gating) lives in EventSheetSelfExpressions, static + pure; this only
 ## draws it. Subgroups with no surviving entries are dropped, never shown empty.
 func _add_self_section(root: TreeItem, lowered_query: String) -> void:
-	var sheet: EventSheetResource = null
-	if _host._lint_context_provider.is_valid():
-		sheet = _host._lint_context_provider.call() as EventSheetResource
-	var section: Dictionary = EventSheetSelfExpressions.section_for(sheet, _host._host_class_for_context())
+	var sheet: EventSheetResource = _context_sheet()
+	if _self_section_cache.is_empty():
+		_self_section_cache = EventSheetSelfExpressions.section_for(sheet, _host._host_class_for_context())
+	var section: Dictionary = _self_section_cache
 	var self_item: TreeItem = null
 	for subgroup: Array in [
 		["Variables", section.get("variables", [])],
 		["Properties", section.get("properties", [])],
 		["Functions", section.get("functions", [])],
+		["Host", section.get("host", [])],
 	]:
 		var survivors: Array = []
 		for entry: Variant in (subgroup[1] as Array):
@@ -156,21 +187,58 @@ func _add_self_section(root: TreeItem, lowered_query: String) -> void:
 		if survivors.is_empty():
 			continue
 		if self_item == null:
-			self_item = _expression_tree.create_item(root)
-			self_item.set_text(0, "Self")
-			self_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE)
-			self_item.set_selectable(0, false)
-			self_item.set_tooltip_text(0, "What this sheet's object knows about itself - every entry inserts plain GDScript.")
+			self_item = _self_root(root)
 		var subgroup_item: TreeItem = _expression_tree.create_item(self_item)
 		subgroup_item.set_text(0, str(subgroup[0]))
 		subgroup_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NEUTRAL)
 		subgroup_item.set_selectable(0, false)
-		for entry: Dictionary in survivors:
-			var item: TreeItem = _expression_tree.create_item(subgroup_item)
-			item.set_text(0, str(entry.get("label", "")))
-			item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
-			item.set_tooltip_text(0, str(entry.get("tooltip", "")))
-			item.set_metadata(0, str(entry.get("fragment", "")))
+		_add_self_leaves(subgroup_item, survivors)
+	# Behaviours: one child group per pack, its knobs and value-returning verbs as $Pack.member
+	# chains. Used-by-this-sheet packs lead and stay open; the rest trail collapsed for browsing.
+	var robust: bool = _robust_checkbox != null and _robust_checkbox.button_pressed
+	if not _behaviour_groups_cache.has(robust):
+		_behaviour_groups_cache[robust] = EventSheetSelfExpressions.behaviour_groups(sheet, _host._registry, robust)
+	var behaviours_item: TreeItem = null
+	for pack: Dictionary in (_behaviour_groups_cache[robust] as Array):
+		var survivors: Array = []
+		for entry: Variant in pack.get("entries", []):
+			if entry is Dictionary and EventSheetSelfExpressions.entry_matches(entry, lowered_query):
+				survivors.append(entry)
+		if survivors.is_empty():
+			continue
+		if self_item == null:
+			self_item = _self_root(root)
+		if behaviours_item == null:
+			behaviours_item = _expression_tree.create_item(self_item)
+			behaviours_item.set_text(0, "Behaviours")
+			behaviours_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NEUTRAL)
+			behaviours_item.set_selectable(0, false)
+			behaviours_item.set_tooltip_text(0, "Attached behaviours' knobs and value verbs, reached through the child node. Retarget the inserted $Name if yours is named differently - it stays selected after insert.")
+		var pack_item: TreeItem = _expression_tree.create_item(behaviours_item)
+		pack_item.set_text(0, str(pack.get("provider")) + (" (used here)" if bool(pack.get("used")) else ""))
+		pack_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE)
+		pack_item.set_selectable(0, false)
+		# Browsing (no query): only the packs this sheet already uses open expanded.
+		pack_item.collapsed = lowered_query.is_empty() and not bool(pack.get("used"))
+		_add_self_leaves(pack_item, survivors)
+
+
+func _self_root(root: TreeItem) -> TreeItem:
+	var self_item: TreeItem = _expression_tree.create_item(root)
+	self_item.set_text(0, "Self")
+	self_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE)
+	self_item.set_selectable(0, false)
+	self_item.set_tooltip_text(0, "What this sheet's object knows about itself - every entry inserts plain GDScript.")
+	return self_item
+
+
+func _add_self_leaves(parent: TreeItem, entries: Array) -> void:
+	for entry: Dictionary in entries:
+		var item: TreeItem = _expression_tree.create_item(parent)
+		item.set_text(0, str(entry.get("label", "")))
+		item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
+		item.set_tooltip_text(0, str(entry.get("tooltip", "")))
+		item.set_metadata(0, str(entry.get("fragment", "")))
 
 
 ## Adds a reflected-members group to the expression picker; methods insert as `name()`,
@@ -314,15 +382,27 @@ func _on_expression_activated() -> void:
 
 
 ## Inserts a snippet at the caret of the expression field that opened the picker (the CodeEdit for
-## _expression_target_key) and re-validates it.
+## _expression_target_key) and re-validates it. A behaviour chain leaves its node token SELECTED
+## ($SineBehavior / the quoted name in get_node_or_null) so retargeting is one keystroke or a
+## node drag - the fields already accept node drops.
 func _insert_into_expression_target(snippet: String) -> void:
 	var target: Variant = _host._fields.get(_expression_target_key)
+	var span: Vector2i = EventSheetSelfExpressions.retarget_span(snippet) if not snippet.contains("\n") else Vector2i(-1, 0)
 	if target is TextEdit:  # CodeEdit extends TextEdit
-		(target as TextEdit).insert_text_at_caret(snippet)
-		_host._validate_expression_field(target as Control)
+		var edit: TextEdit = target as TextEdit
+		var caret_line: int = edit.get_caret_line()
+		var caret_column: int = edit.get_caret_column()
+		edit.insert_text_at_caret(snippet)
+		if span.x >= 0:
+			edit.select(caret_line, caret_column + span.x, caret_line, caret_column + span.x + span.y)
+		_host._validate_expression_field(edit)
 	elif target is LineEdit:
-		(target as LineEdit).insert_text_at_caret(snippet)
-		_host._validate_expression_field(target as Control)
+		var line_edit: LineEdit = target as LineEdit
+		var caret: int = line_edit.caret_column
+		line_edit.insert_text_at_caret(snippet)
+		if span.x >= 0:
+			line_edit.select(caret + span.x, caret + span.x + span.y)
+		_host._validate_expression_field(line_edit)
 
 
 ## Returns the code template inserted for an expression definition (with default params).

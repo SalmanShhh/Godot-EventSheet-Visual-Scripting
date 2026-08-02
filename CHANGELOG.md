@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+### Added - Self Phase 2: Behaviours, the Host subgroup, and robust lookups
+
+The Self section now reaches what C3's `Self.Platform.VectorX` reaches - the attached behaviours:
+
+- **Behaviours subgroup**: one group per behaviour pack, its knobs and value-returning verbs as
+  `$SineBehavior.magnitude` chains - the attached-child access the README teaches, deliberately
+  NOT the compiler's owned-instance seam. Fragments build ONLY from clean reflection metadata
+  (source_kind property/method); a baked multi-line template cannot be represented as a chain, so
+  it is skipped rather than guessed. Packs this sheet already uses lead expanded and read
+  "(used here)"; the rest trail collapsed for browsing.
+- **The inserted node token stays SELECTED** (`$SineBehavior`, or the quoted name inside the
+  robust form), so retargeting to your actual child name is one keystroke or a node drag.
+- **Robust behaviour lookups**: a window checkbox swaps every behaviour fragment to
+  `get_node_or_null("SineBehavior")` - the access that survives a behaviour attached at RUNTIME,
+  where a $-path to an auto-named child misses silently. It defaults ON for spawn-heavy sheets
+  (Spawn verbs or the ObjectPool vocabulary anywhere in the rows, sub-events included) and stays
+  a per-session override. Behaviour insertions get NO exemption from the fragile-node-path
+  Doctor check - they are plain text like a hand-typed path.
+- **Host subgroup** (behaviour mode only): the same C3 commons re-aimed through the `host`
+  binding every behaviour carries (`X · host.position.x`) - the behaviour author's "my object"
+  is the parent.
+
+Tested at project scale, not just in units: the suite reflects the full bundled pack fleet (76
+providers) plus a 300-row / 150-variable / 40-function sheet and pins correctness AND a time
+budget over twenty refreshes; all three fragment forms were compiled inside an emitted sheet and
+parse; and a scripted UI drive verified the spawn-heavy default, insertion, selection, and the
+robust toggle re-deriving live. Since typing in the search box only re-FILTERS, the derivation
+(census + 76 packs, ~25ms measured on a project-sized sheet) is cached per dialog-open and keyed
+on the robust toggle - a keystroke costs the filter, nothing else.
+
 ### Added - the Self section: C3's `Self.` reflex in the Expressions dictionary
 
 Type `self` or `Self.` in the Expressions dictionary and a pinned **Self** section answers the

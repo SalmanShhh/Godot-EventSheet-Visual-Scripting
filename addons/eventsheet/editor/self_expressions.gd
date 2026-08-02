@@ -38,34 +38,164 @@ const ALIAS_OVERRIDES: Array = [
 ]
 
 
-## The whole section model: {variables: [...], properties: [...], functions: [...]}, each entry
+## The whole section model: {variables, properties, functions, host}, each an entry list
 ## {label, fragment, tooltip}. `label` is what the tree shows, `fragment` is the GDScript inserted
-## at the caret. Pure - callers pass the sheet and the resolved host class name.
+## at the caret. `host` fills only in behaviour mode: the same C3 commons against the pack's HOST
+## through the `host` binding every behaviour carries (`host.position.x`) - the second audience
+## with C3 muscle memory is the behaviour author, whose "my object" is the parent.
+## Pure - callers pass the sheet and the resolved host class name.
 static func section_for(sheet: EventSheetResource, host_class: String) -> Dictionary:
+	var host_entries: Array = []
+	if sheet != null and sheet.behavior_mode:
+		host_entries = property_entries(host_class, "host.")
 	return {
 		"variables": variable_entries(sheet),
 		"properties": property_entries(host_class),
 		"functions": function_entries(sheet),
+		"host": host_entries,
 	}
 
 
 ## The host's C3-common properties, host-gated through ClassDB. A custom script class resolves to
 ## its nearest engine base first, so a `class_name PlayerBrain extends CharacterBody2D` host still
 ## receives X/Y/Angle. An unresolvable host keeps only the Object-level commons.
-static func property_entries(host_class: String) -> Array:
+## `fragment_prefix` re-aims the commons at another object ("host." for a behaviour's parent).
+static func property_entries(host_class: String, fragment_prefix: String = "") -> Array:
 	var engine_class: String = resolve_engine_class(host_class)
 	var out: Array = []
 	for alias: Dictionary in ALIAS_OVERRIDES:
 		var gate: String = str(alias.get("host"))
 		if not ClassDB.is_parent_class(engine_class, gate):
 			continue
-		var fragment: String = str(alias.get("fragment"))
+		var fragment: String = fragment_prefix + str(alias.get("fragment"))
 		out.append({
 			"label": "%s · %s" % [str(alias.get("label")), fragment],
 			"fragment": fragment,
 			"tooltip": "C3's Self.%s - inserts %s" % [str(alias.get("label")), fragment],
 		})
 	return out
+
+
+## The Behaviours subgroup: one group per behaviour pack, its knobs and value-returning verbs as
+## `$PackName.member` chains - the attached-child access the README teaches, NOT the compiler's
+## owned-instance seam. Only entries with CLEAN reflection metadata (source_kind property/method)
+## are listed; a baked multi-line template cannot be represented as a chain, so it is skipped
+## rather than guessed. Used-by-this-sheet packs sort first (the Uses census), the rest trail
+## alphabetically for browsing. `robust` swaps `$Name` for `get_node_or_null("Name")` - the form
+## that survives runtime attachment, defaulted on for spawn-heavy sheets.
+## Returns [{provider, used, entries: [{label, fragment, tooltip}]}].
+static func behaviour_groups(sheet: EventSheetResource, registry: EventSheetACERegistry, robust: bool = false) -> Array:
+	if registry == null:
+		return []
+	var used: Dictionary = {}
+	if sheet != null:
+		for organ: Dictionary in BehaviourAnatomyPanel.collect_anatomy(sheet):
+			if str(organ.get("id")) != "uses":
+				continue
+			for entry: Dictionary in organ.get("entries", []):
+				used[str(entry.get("provider", ""))] = true
+	var groups: Array = []
+	for provider_id: String in registry.get_reflected_provider_ids():
+		var entries: Array = []
+		for definition: ACEDefinition in registry.get_provider_definitions(provider_id):
+			if definition.ace_type != ACEDefinition.ACEType.EXPRESSION:
+				continue
+			if str(definition.metadata.get("semantic_source", "")) != "reflection":
+				continue
+			var source_name: String = str(definition.metadata.get("source_name", ""))
+			if source_name.is_empty():
+				continue
+			var member: String = ""
+			match str(definition.metadata.get("source_kind", "")):
+				"property":
+					member = source_name
+				"method":
+					var argument_names: PackedStringArray = PackedStringArray()
+					for parameter: Variant in definition.parameters:
+						if parameter is Dictionary:
+							argument_names.append(str((parameter as Dictionary).get("id", "")))
+					member = "%s(%s)" % [source_name, ", ".join(argument_names)]
+				_:
+					continue
+			var fragment: String = "$%s.%s" % [provider_id, member]
+			if robust:
+				fragment = robust_fragment(fragment)
+			entries.append({
+				"label": "%s · %s" % [definition.display_name, member],
+				"fragment": fragment,
+				"tooltip": definition.description if not definition.description.is_empty()
+					else "Reads %s from the attached %s behaviour." % [member, provider_id],
+			})
+		if entries.is_empty():
+			continue
+		groups.append({"provider": provider_id, "used": bool(used.get(provider_id, false)), "entries": entries})
+	groups.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if bool(a.get("used")) != bool(b.get("used")):
+			return bool(a.get("used"))
+		return str(a.get("provider")) < str(b.get("provider")))
+	return groups
+
+
+## `$Name.member` -> `get_node_or_null("Name").member` - the access that survives a behaviour
+## attached at RUNTIME (a $-path to an auto-named child misses silently). Non-$ fragments pass
+## through untouched. The node token may carry a path ("$A/B.x" keeps "A/B" whole).
+static func robust_fragment(fragment: String) -> String:
+	if not fragment.begins_with("$"):
+		return fragment
+	var dot: int = fragment.find(".")
+	var node_token: String = fragment.substr(1, (dot - 1) if dot >= 0 else fragment.length() - 1)
+	var tail: String = fragment.substr(dot) if dot >= 0 else ""
+	return "get_node_or_null(\"%s\")%s" % [node_token, tail]
+
+
+## The span a caller should leave SELECTED after inserting a behaviour fragment, as
+## (offset, length) into the snippet - the node token, so retargeting is one keystroke or a node
+## drag. `$SineBehavior.magnitude` selects `$SineBehavior`; the robust form selects the quoted
+## name inside get_node_or_null. (-1, 0) means nothing to select (not a node chain).
+static func retarget_span(snippet: String) -> Vector2i:
+	if snippet.begins_with("$"):
+		var dot: int = snippet.find(".")
+		return Vector2i(0, dot if dot >= 0 else snippet.length())
+	const ROBUST_HEAD: String = "get_node_or_null(\""
+	if snippet.begins_with(ROBUST_HEAD):
+		var quote_end: int = snippet.find("\"", ROBUST_HEAD.length())
+		if quote_end > ROBUST_HEAD.length():
+			return Vector2i(ROBUST_HEAD.length(), quote_end - ROBUST_HEAD.length())
+	return Vector2i(-1, 0)
+
+
+## Whether this sheet creates objects at runtime (Spawn verbs or the ObjectPool vocabulary) -
+## the sheets whose behaviour access should DEFAULT to the robust get_node_or_null form.
+static func is_spawn_heavy(sheet: EventSheetResource) -> bool:
+	if sheet == null:
+		return false
+	var rows: Array = []
+	rows.append_array(sheet.events)
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction:
+			var event_function: EventFunction = entry as EventFunction
+			rows.append_array(event_function.events if not event_function.events.is_empty() else event_function.rows)
+	return _rows_spawn(rows)
+
+
+static func _rows_spawn(rows: Array) -> bool:
+	for row: Variant in rows:
+		if row is EventGroup:
+			var group: EventGroup = row as EventGroup
+			if _rows_spawn(group.events if not group.events.is_empty() else group.rows):
+				return true
+		elif row is EventRow:
+			var event: EventRow = row as EventRow
+			for ace: Variant in event.conditions + event.actions:
+				if not (ace is Resource):
+					continue
+				if str((ace as Resource).get("ace_id")).begins_with("SpawnScene"):
+					return true
+				if str((ace as Resource).get("provider_id")) == "ObjectPool":
+					return true
+			if _rows_spawn(event.sub_events):
+				return true
+	return false
 
 
 ## Every reachable sheet variable as an entry inserting its bare name (C3's Self.MyVariable is a

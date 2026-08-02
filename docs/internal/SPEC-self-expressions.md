@@ -93,9 +93,11 @@ via `add_child()` at runtime may carry an auto-generated name, so:
 
 - Every Behaviours insertion is subject to the existing fragile-node-path Doctor check
   (`project_doctor.gd` `check_fragile_node_paths`) exactly like a hand-typed path - no exemption.
-- The entry's context menu offers **Insert robust lookup**, which inserts
-  `get_node_or_null("PlatformerMovement")` instead of `$PlatformerMovement`. When the sheet is
-  known spawn-heavy (it uses Spawn/pool verbs), the robust form becomes the DEFAULT insertion.
+- A **Robust behaviour lookups** checkbox in the dictionary window (SHIPPED as a window-level
+  toggle rather than the per-entry context menu first sketched here - one visible switch beats a
+  hidden menu) swaps every behaviour fragment to `get_node_or_null("PlatformerMovement")`. It
+  DEFAULTS ON when the sheet is spawn-heavy (`is_spawn_heavy`: Spawn verbs or the ObjectPool
+  vocabulary anywhere in its rows), re-derived on every open, user-overridable per session.
 - Group-based addressing stays the recommended pattern for spawned OBJECTS (SpawnSceneFull's Group
   param + the group query lane); Self never pretends to reach them - see Non-goals.
 
@@ -141,16 +143,29 @@ section dict), so it is headless-testable like `collect_anatomy`:
 
 ## Phasing
 
-1. **Phase 1 - Variables / Properties / Functions + aliases** (pure derivation, the override
-   table, pinned section, search bridge). No new seams; one sitting.
-2. **Phase 2 - Behaviours** (Uses-census fallback tier, robust lookup, Doctor coverage).
+1. **Phase 1 - Variables / Properties / Functions + aliases** - SHIPPED. Pure derivation, the
+   override table, pinned section, search bridge.
+2. **Phase 2 - Behaviours + Host + robust lookups** - SHIPPED. The Behaviours subgroup builds
+   `$Pack.member` chains ONLY from clean reflection metadata (source_kind property/method) - a
+   baked multi-line template cannot be represented as a chain, so it is skipped rather than
+   guessed, and deliberately NOT the compiler's `__eventsheet_provider_*` owned-instance seam
+   (Self teaches the attached-child access the README teaches). Used packs lead expanded, the
+   rest trail collapsed. Inserted chains leave the node token SELECTED (the `$Name` span, or the
+   quoted name inside get_node_or_null) so retargeting is one keystroke or a node drag. The
+   derivation is cached per dialog-open (typing only re-filters; re-deriving 76 packs per
+   keystroke measured ~25ms on a 300-row sheet, so the cache keys on the robust toggle and
+   clears on open).
 3. **Phase 3 - grounding** (selected-node tier; later, live grounding against a running instance
    through the debugger channel that already feeds Live Values).
 
+## Resolved questions
+
+- The HOST of a behaviour pack sheet DOES get its own subgroup (shipped in Phase 2): in behaviour
+  mode a **Host** subgroup re-aims the same C3 commons through the `host` binding every behaviour
+  carries (`X · host.position.x`) - the behaviour author is the second audience with C3 muscle
+  memory, and their "my object" is the parent.
+
 ## Open questions
 
-- Should the Properties commons also appear for the HOST of a behaviour pack sheet (i.e. a Self
-  section that reads "my host" inside behaviour mode, inserting `{host.}`-style access)? Leaning
-  yes in Phase 2, since behaviour authors are the second audience with C3 muscle memory.
 - Whether typing `Self.` should literally autocomplete inline (LSP-style) rather than open the
   picker - deferred until the picker-first version proves the derivation model.

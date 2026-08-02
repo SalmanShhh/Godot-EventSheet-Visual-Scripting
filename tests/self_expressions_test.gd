@@ -101,7 +101,135 @@ static func run() -> bool:
 	all_passed = _check("resource host: no X", _fragment_for(resource_section.get("properties", []), "X"), "") and all_passed
 	all_passed = _check("resource host: UID remains (Object-level)", _fragment_for(resource_section.get("properties", []), "UID"), "get_instance_id()") and all_passed
 
+	# ══ Phase 2 ══════════════════════════════════════════════════════════════════════════
+
+	# ── The Host subgroup: behaviour mode re-aims the commons through the host binding ───
+	var behaviour_sheet: EventSheetResource = EventSheetResource.new()
+	behaviour_sheet.host_class = "CharacterBody2D"
+	behaviour_sheet.behavior_mode = true
+	var host_entries: Array = EventSheetSelfExpressions.section_for(behaviour_sheet, "CharacterBody2D").get("host", [])
+	all_passed = _check("behaviour mode: Host X inserts host.position.x", _fragment_for(host_entries, "X"), "host.position.x") and all_passed
+	all_passed = _check("plain sheet has NO Host subgroup", (EventSheetSelfExpressions.section_for(sheet, "CharacterBody2D").get("host", []) as Array).is_empty(), true) and all_passed
+
+	# ── The robust transform + the retarget span (pure) ──────────────────────────────────
+	all_passed = _check("robust: simple chain", EventSheetSelfExpressions.robust_fragment("$Sine.amplitude"), "get_node_or_null(\"Sine\").amplitude") and all_passed
+	all_passed = _check("robust: pathed node token kept whole", EventSheetSelfExpressions.robust_fragment("$Player/Sine.amplitude"), "get_node_or_null(\"Player/Sine\").amplitude") and all_passed
+	all_passed = _check("robust: bare node ref", EventSheetSelfExpressions.robust_fragment("$Sine"), "get_node_or_null(\"Sine\")") and all_passed
+	all_passed = _check("robust: non-$ passes through", EventSheetSelfExpressions.robust_fragment("position.x"), "position.x") and all_passed
+	all_passed = _check("retarget span: $ chain selects the node token", EventSheetSelfExpressions.retarget_span("$SineBehavior.magnitude"), Vector2i(0, 13)) and all_passed
+	all_passed = _check("retarget span: robust form selects the quoted name", EventSheetSelfExpressions.retarget_span("get_node_or_null(\"SineBehavior\").magnitude"), Vector2i(18, 12)) and all_passed
+	all_passed = _check("retarget span: plain fragment selects nothing", EventSheetSelfExpressions.retarget_span("position.x"), Vector2i(-1, 0)) and all_passed
+
+	# ── Spawn-heavy detection (values, incl. nested rows) ────────────────────────────────
+	var spawner: EventSheetResource = EventSheetResource.new()
+	spawner.host_class = "Node2D"
+	var outer: EventRow = EventRow.new()
+	var inner: EventRow = EventRow.new()
+	var spawn_action: ACEAction = ACEAction.new()
+	spawn_action.provider_id = "Core"
+	spawn_action.ace_id = "SpawnSceneAt"
+	spawn_action.codegen_template = "x"
+	inner.actions.append(spawn_action)
+	outer.sub_events.append(inner)
+	spawner.events.append(outer)
+	all_passed = _check("SpawnSceneAt in a SUB-event marks the sheet spawn-heavy", EventSheetSelfExpressions.is_spawn_heavy(spawner), true) and all_passed
+	all_passed = _check("a plain sheet is not spawn-heavy", EventSheetSelfExpressions.is_spawn_heavy(sheet), false) and all_passed
+
+	# ── Behaviours: a REAL pack through the REAL registry (annotations read from disk) ───
+	var sine_instance: Node = (load("res://eventsheet_addons/sine/sine_behavior.gd") as GDScript).new()
+	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	registry.refresh_from_sources([sine_instance], false)
+	var user_sheet: EventSheetResource = EventSheetResource.new()
+	user_sheet.host_class = "Node2D"
+	var use_row: EventRow = EventRow.new()
+	var use_action: ACEAction = ACEAction.new()
+	use_action.provider_id = "SineBehavior"
+	use_action.ace_id = "SetMagnitude"
+	use_action.codegen_template = "x"
+	use_row.actions.append(use_action)
+	user_sheet.events.append(use_row)
+	var groups: Array = EventSheetSelfExpressions.behaviour_groups(user_sheet, registry, false)
+	var sine_group: Dictionary = _group_of(groups, "SineBehavior")
+	all_passed = _check("the pack publishes a behaviour group", sine_group.is_empty(), false) and all_passed
+	all_passed = _check("a knob reads as an attached-child chain", _fragment_for(sine_group.get("entries", []), "Magnitude"), "$SineBehavior.magnitude") and all_passed
+	all_passed = _check("the sheet that calls the pack marks it used", bool(sine_group.get("used")), true) and all_passed
+	var unused_groups: Array = EventSheetSelfExpressions.behaviour_groups(sheet, registry, false)
+	all_passed = _check("a sheet that never calls it marks it unused", bool(_group_of(unused_groups, "SineBehavior").get("used")), false) and all_passed
+	var robust_groups: Array = EventSheetSelfExpressions.behaviour_groups(user_sheet, registry, true)
+	all_passed = _check("robust mode transforms every fragment", _fragment_for(_group_of(robust_groups, "SineBehavior").get("entries", []), "Magnitude"), "get_node_or_null(\"SineBehavior\").magnitude") and all_passed
+	sine_instance.free()
+
+	# ── Scale: the census paths that run per KEYSTROKE, against project-sized inputs ─────
+	all_passed = _scale_checks() and all_passed
+
 	return all_passed
+
+
+## The refresh path re-derives the section on every keystroke, so it must stay flat against a
+## project-sized registry (all bundled packs) and a large sheet (hundreds of rows + variables).
+## Budgets are deliberately loose (CI machines vary); the point is catching an accidental
+## O(packs x rows) coupling, not micro-benchmarks.
+static func _scale_checks() -> bool:
+	var all_passed: bool = true
+	# Every bundled pack, reflected for real - the registry the editor actually carries.
+	var sources: Array[Object] = []
+	for pack_dir: String in DirAccess.get_directories_at("res://eventsheet_addons"):
+		for file: String in DirAccess.get_files_at("res://eventsheet_addons/" + pack_dir):
+			if not file.ends_with(".gd"):
+				continue
+			var script: GDScript = load("res://eventsheet_addons/%s/%s" % [pack_dir, file]) as GDScript
+			if script == null or not script.can_instantiate():
+				continue
+			var instance: Object = script.new()
+			if instance != null:
+				sources.append(instance)
+	var registry: EventSheetACERegistry = EventSheetACERegistry.new()
+	registry.refresh_from_sources(sources, false)
+	all_passed = _check("scale: the full pack fleet reflects (>= 60 providers)",
+		registry.get_reflected_provider_ids().size() >= 60, true) and all_passed
+	# A project-sized sheet: 300 events, 150 variables, 40 functions, deep nesting.
+	var big: EventSheetResource = EventSheetResource.new()
+	big.host_class = "CharacterBody2D"
+	for i: int in range(150):
+		big.variables["var_%d" % i] = {"type": "int"}
+	for i: int in range(40):
+		var fn: EventFunction = EventFunction.new()
+		fn.function_name = "calc_%d" % i
+		fn.return_type = TYPE_FLOAT
+		big.functions.append(fn)
+	for i: int in range(300):
+		var row: EventRow = EventRow.new()
+		var action: ACEAction = ACEAction.new()
+		action.provider_id = "SineBehavior" if i % 7 == 0 else "Core"
+		action.ace_id = "SetMagnitude" if i % 7 == 0 else "Print"
+		action.codegen_template = "x"
+		row.actions.append(action)
+		var sub: EventRow = EventRow.new()
+		sub.actions.append(action.duplicate())
+		row.sub_events.append(sub)
+		big.events.append(row)
+	var started: int = Time.get_ticks_usec()
+	var groups: Array = []
+	for _pass: int in range(20):  # twenty keystrokes' worth of refresh
+		var section: Dictionary = EventSheetSelfExpressions.section_for(big, "CharacterBody2D")
+		groups = EventSheetSelfExpressions.behaviour_groups(big, registry, false)
+		all_passed = (section.get("variables", []) as Array).size() == 150 and all_passed
+	var elapsed_ms: float = float(Time.get_ticks_usec() - started) / 1000.0
+	all_passed = _check("scale: correctness holds (150 vars, 40 fns, groups found)",
+		groups.size() >= 60 and bool(_group_of(groups, "SineBehavior").get("used")), true) and all_passed
+	all_passed = _check("scale: 20 refreshes over 300 rows x full fleet stay under 2000ms (took %.0fms)" % elapsed_ms,
+		elapsed_ms < 2000.0, true) and all_passed
+	for source: Object in sources:
+		if source is Node:
+			(source as Node).free()
+	return all_passed
+
+
+static func _group_of(groups: Array, provider: String) -> Dictionary:
+	for group: Variant in groups:
+		if group is Dictionary and str((group as Dictionary).get("provider")) == provider:
+			return group as Dictionary
+	return {}
 
 
 ## The fragment of the entry whose label STARTS with the given C3 name / variable name ("" when
