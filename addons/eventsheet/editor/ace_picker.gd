@@ -554,6 +554,10 @@ const SEARCH_SYNONYMS := {
 	"on start of layout": "ready",
 	"start of layout": "ready",
 	"every tick": "process",
+	# C3 Self.* property names whose Godot spelling genuinely differs (the Self expression
+	# section's alias table carries the full list; these bridge the MAIN picker's search too).
+	"angle": "rotation",
+	"opacity": "modulate",
 	"on created": "ready",
 	"spawn": "instantiate",
 	"create object": "instantiate",

@@ -99,6 +99,13 @@ func _refresh_expression_tree() -> void:
 	_expression_tree.clear()
 	var root: TreeItem = _expression_tree.create_item()
 	var query: String = _expression_search.text.strip_edges()
+	# The Self section pins FIRST - the C3 "what does my object know about itself" reflex. A
+	# self-scoped query ("self", "Self.X") filters WITHIN the section and hides the rest of the
+	# tree, mirroring how typing Self. in Construct scopes its panel to the object's own list.
+	var self_query: Dictionary = EventSheetSelfExpressions.normalize_query(query)
+	_add_self_section(root, str(self_query.get("remainder", "")))
+	if bool(self_query.get("self_scoped", false)):
+		return
 	var group_nodes: Dictionary = {}
 	for definition: ACEDefinition in _host._registry.search(query):
 		if definition.ace_type != ACEDefinition.ACEType.EXPRESSION:
@@ -125,6 +132,45 @@ func _refresh_expression_tree() -> void:
 	# Beyond `self`: the sheet's own variables as one-click leaves, plus - while searching - the typed
 	# members of any class-backed variable (enemy.health) so reflection isn't limited to the host.
 	_add_sheet_variable_expressions(root, query)
+
+
+## The pinned Self section: the sheet's own variables, the host's C3-common properties under
+## their C3 names, and the sheet's expression functions - each leaf inserting plain GDScript.
+## The model (and its host gating) lives in EventSheetSelfExpressions, static + pure; this only
+## draws it. Subgroups with no surviving entries are dropped, never shown empty.
+func _add_self_section(root: TreeItem, lowered_query: String) -> void:
+	var sheet: EventSheetResource = null
+	if _host._lint_context_provider.is_valid():
+		sheet = _host._lint_context_provider.call() as EventSheetResource
+	var section: Dictionary = EventSheetSelfExpressions.section_for(sheet, _host._host_class_for_context())
+	var self_item: TreeItem = null
+	for subgroup: Array in [
+		["Variables", section.get("variables", [])],
+		["Properties", section.get("properties", [])],
+		["Functions", section.get("functions", [])],
+	]:
+		var survivors: Array = []
+		for entry: Variant in (subgroup[1] as Array):
+			if entry is Dictionary and EventSheetSelfExpressions.entry_matches(entry, lowered_query):
+				survivors.append(entry)
+		if survivors.is_empty():
+			continue
+		if self_item == null:
+			self_item = _expression_tree.create_item(root)
+			self_item.set_text(0, "Self")
+			self_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE)
+			self_item.set_selectable(0, false)
+			self_item.set_tooltip_text(0, "What this sheet's object knows about itself - every entry inserts plain GDScript.")
+		var subgroup_item: TreeItem = _expression_tree.create_item(self_item)
+		subgroup_item.set_text(0, str(subgroup[0]))
+		subgroup_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NEUTRAL)
+		subgroup_item.set_selectable(0, false)
+		for entry: Dictionary in survivors:
+			var item: TreeItem = _expression_tree.create_item(subgroup_item)
+			item.set_text(0, str(entry.get("label", "")))
+			item.set_custom_color(0, ACEPickerDialog.ITEM_COLOR_EXPRESSION)
+			item.set_tooltip_text(0, str(entry.get("tooltip", "")))
+			item.set_metadata(0, str(entry.get("fragment", "")))
 
 
 ## Adds a reflected-members group to the expression picker; methods insert as `name()`,
@@ -206,46 +252,11 @@ func _add_sheet_variable_expressions(root: TreeItem, query: String) -> void:
 		_add_variable_member_group(root, str(entry.get("name", "")), vtype, lowered)
 
 
-## Every reachable sheet variable as [{name, type_name}], deduped by name (dict entry wins). Merges the
-## `variables` DICT (family/per-instance) with the TREE variables (LocalVariable rows recovered from an
-## opened .gd - @export, State, and the host binding), so the picker lists what the script can actually use.
+## Every reachable sheet variable as [{name, type_name}] - the census MOVED to
+## EventSheetSelfExpressions.gather_sheet_variables so the Self section and this group can never
+## drift apart; this stays as the delegate callers and tests already reach.
 func _gather_sheet_variables(sheet: EventSheetResource) -> Array:
-	var out: Array = []
-	var seen: Dictionary = {}
-	if sheet.variables is Dictionary:
-		for var_name: Variant in sheet.variables.keys():
-			var name_str: String = str(var_name).strip_edges()
-			if name_str.is_empty() or seen.has(name_str):
-				continue
-			seen[name_str] = true
-			var vdef: Variant = sheet.variables[var_name]
-			var vtype: String = str((vdef as Dictionary).get("type", "")).strip_edges() if vdef is Dictionary else ""
-			out.append({"name": name_str, "type_name": vtype})
-	var tree_vars: Array = []
-	_collect_tree_variables_into(sheet.events, tree_vars)
-	for tree_var: Variant in tree_vars:
-		if not (tree_var is LocalVariable):
-			continue
-		var lv: LocalVariable = tree_var as LocalVariable
-		var name_str: String = lv.name.strip_edges()
-		if name_str.is_empty() or seen.has(name_str):
-			continue
-		seen[name_str] = true
-		out.append({"name": name_str, "type_name": lv.type_name.strip_edges()})
-	return out
-
-
-## Recursively collect every LocalVariable row (top-level, inside groups, and nested in sub-events).
-## Mirrors SheetCompiler._collect_tree_variables so the picker stays self-contained (read-only).
-func _collect_tree_variables_into(entries: Array, into: Array) -> void:
-	for entry: Variant in entries:
-		if entry is LocalVariable:
-			into.append(entry)
-		elif entry is EventGroup:
-			var group: EventGroup = entry as EventGroup
-			_collect_tree_variables_into(group.events if not group.events.is_empty() else group.rows, into)
-		elif entry is EventRow:
-			_collect_tree_variables_into((entry as EventRow).sub_events, into)
+	return EventSheetSelfExpressions.gather_sheet_variables(sheet)
 
 
 ## A per-variable group of `varname.member` fragments (properties, then methods), filtered by the query.

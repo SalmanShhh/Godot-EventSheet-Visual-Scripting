@@ -2,6 +2,36 @@
 
 ## [Unreleased]
 
+### Added - the Self section: C3's `Self.` reflex in the Expressions dictionary
+
+Type `self` or `Self.` in the Expressions dictionary and a pinned **Self** section answers the
+Construct reflex "what does my object know about itself" - scoped to just that section while the
+query stays self-flavoured, the full catalog otherwise. Three subgroups, every entry inserting
+plain GDScript (the C3 name is only the label a migrating user scans for, so the section teaches
+the real language and obsoletes itself):
+
+- **Variables** - the sheet's own variables (dict + tree census, the same one the Sheet Variables
+  group uses - the census MOVED to the new `EventSheetSelfExpressions` model so the two listings
+  can never drift apart). `health : int` inserts `health`.
+- **Properties** - the host's C3-common properties under their C3 names: `X · position.x`,
+  `Angle · rotation`, `Opacity · modulate.a`, `Width · size.x`... Host-gated through ClassDB (a
+  custom `class_name` resolves to its engine base first): a Control gets Width/Height and X/Y, a
+  3D body gets Z but NO Angle (its `rotation` is a Vector3 - aliasing a scalar name to a vector
+  would insert a lie), a bare Node keeps only the Object-level `UID · get_instance_id()`. The
+  alias table is an OVERRIDE list on reflection, per SPEC-self-expressions - an alias exists only
+  when the C3 and Godot names genuinely differ.
+- **Functions** - the sheet's value-returning functions as ready calls (`damage_after(armor)`);
+  a bool function is a condition and a void one an action, so neither appears (the same
+  classifier the verb rows use).
+
+The main picker's search bridge gained `angle -> rotation` and `opacity -> modulate` (synonyms
+AUGMENT the query, so "angle" still finds Gravity Angle and AngleLerp). Search inside the section
+matches BOTH spellings - the C3 label and the GDScript fragment.
+
+Suite: `tests/self_expressions_test.gd` pins the model's VALUES (X maps to position.x on a 2D
+body, Angle absent on a 3D one, bool functions excluded, resource hosts keep variables but no
+node commons, an unresolvable host degrades to the Object commons - honest, never a guess).
+
 ### Fixed - the plugin's chrome now tracks the editor display scale (the real macOS HiDPI fix)
 
 On a Retina Mac the plugin's chrome drew at HALF the size of the surrounding editor - the
