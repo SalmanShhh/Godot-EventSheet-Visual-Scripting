@@ -48,7 +48,7 @@ func on_param_value_edit_requested(ace: Resource, param_id: String, current_text
 		# The bulk-retune hint, shown only when several rows are selected: Ctrl+Enter writes the value
 		# into the SAME verb's same param on every selected row - one undo step.
 		_param_edit_hint = Label.new()
-		_param_edit_hint.add_theme_font_size_override("font_size", 10)
+		_param_edit_hint.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		_param_edit_hint.modulate = Color(1.0, 1.0, 1.0, 0.65)
 		box.add_child(_param_edit_hint)
 		_param_edit_popup.add_child(box)

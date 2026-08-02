@@ -396,7 +396,7 @@ func init_dialog(parent_node: Node) -> void:
 	# own prefix builder so it can never drift from reality.
 	_ships_as_label = Label.new()
 	_ships_as_label.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
-	_ships_as_label.add_theme_font_size_override("font_size", 12)
+	_ships_as_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
 	_ships_as_label.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY
 	_attr_section.add_child(_ships_as_label)
 	# Everything the strip reads refreshes it live, so the taught annotation is never stale.
@@ -1720,7 +1720,7 @@ func _refresh_drawer_preview() -> void:
 			caption.text = "Drawer preview · %s–%s" % [_format_bound(bounds["min"]), _format_bound(bounds["max"])]
 		_:
 			caption.text = "Drawer preview"
-	caption.add_theme_font_size_override("font_size", 10)
+	caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	caption.modulate = Color(0.72, 0.76, 0.84)
 	_drawer_preview_box.add_child(caption)
 	var widget: Control = _make_drawer_preview_widget(kind)

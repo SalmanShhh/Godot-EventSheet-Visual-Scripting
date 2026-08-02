@@ -62,7 +62,7 @@ func build_all() -> void:
 	# what applies to the clicked row type + selection - it used to be a flat ~30-item
 	# list shown for everything. Insert/More are submenus, built the same way.
 	_dock._row_context_menu = PopupMenu.new()
-	_dock._row_context_menu.add_theme_font_size_override("font_size", 14)
+	_dock._row_context_menu.add_theme_font_size_override("font_size", EventSheetPalette.scaled(14))
 	_dock._row_context_menu.id_pressed.connect(_dock._on_row_context_menu_id_pressed)
 	_dock.add_child(_dock._row_context_menu)
 	_dock._row_insert_submenu = PopupMenu.new()

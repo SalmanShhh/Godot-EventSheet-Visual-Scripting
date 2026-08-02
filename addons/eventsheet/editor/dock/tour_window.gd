@@ -150,7 +150,7 @@ func _build() -> void:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	box.custom_minimum_size = Vector2(420.0, 0.0)
 	_title_label = Label.new()
-	_title_label.add_theme_font_size_override("font_size", 17)
+	_title_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(17))
 	box.add_child(_title_label)
 	_body_label = EventSheetPopupUI.hint_label("", 420.0)
 	box.add_child(_body_label)

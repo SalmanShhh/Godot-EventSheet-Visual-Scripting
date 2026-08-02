@@ -6,6 +6,8 @@
 class_name SheetColumnHeader
 extends Control
 
+# 1x design values - scaled by EventSheetPalette.ui_scale() at use time, so the band and its
+# labels track the editor's display scale like every built-in dock header does.
 const HEADER_HEIGHT := 22.0
 const LABEL_FONT_SIZE := 12
 # Fallbacks used only when no themed event style is available.
@@ -22,7 +24,7 @@ var _last_signature: String = ""
 func setup(viewport: EventSheetViewport) -> void:
 	_viewport = viewport
 	name = "SheetColumnHeader"
-	custom_minimum_size = Vector2(0.0, HEADER_HEIGHT)
+	custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(HEADER_HEIGHT))
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process(true)
 	queue_redraw()
@@ -70,28 +72,33 @@ func _draw() -> void:
 	var gutter_x: float = EventSheetPalette.GUTTER_WIDTH * zoom - h_scroll
 	# Vertical lane divider, mirroring the rows below.
 	draw_rect(Rect2(divider_x, 0.0, 2.0, height), divider_color, true)
-	var font: Font = ThemeDB.fallback_font
+	# The editor's own font (falls back outside a theme tree), at the display-scaled label size.
+	var font: Font = get_theme_default_font()
+	if font == null:
+		font = ThemeDB.fallback_font
 	if font == null:
 		return
-	var baseline: float = height * 0.5 + float(LABEL_FONT_SIZE) * 0.32
+	var label_size: int = EventSheetPalette.scaled(LABEL_FONT_SIZE)
+	var pad: float = EventSheetPalette.scaled_f(8.0)
+	var baseline: float = height * 0.5 + float(label_size) * 0.32
 	# Behavior sheets surface their host class here, so what the conditions act on is
 	# always visible while editing.
 	var host_suffix: String = _viewport.get_host_context_label() if _viewport.has_method("get_host_context_label") else ""
 	draw_string(
 		font,
-		Vector2(gutter_x + 8.0, baseline),
+		Vector2(gutter_x + pad, baseline),
 		"Conditions%s" % host_suffix,
 		HORIZONTAL_ALIGNMENT_LEFT,
-		max(divider_x - gutter_x - 12.0, 10.0),
-		LABEL_FONT_SIZE,
+		max(divider_x - gutter_x - pad - 4.0, 10.0),
+		label_size,
 		conditions_color
 	)
 	draw_string(
 		font,
-		Vector2(divider_x + 8.0, baseline),
+		Vector2(divider_x + pad, baseline),
 		"Actions",
 		HORIZONTAL_ALIGNMENT_LEFT,
-		max(width - divider_x - 12.0, 10.0),
-		LABEL_FONT_SIZE,
+		max(width - divider_x - pad - 4.0, 10.0),
+		label_size,
 		actions_color
 	)

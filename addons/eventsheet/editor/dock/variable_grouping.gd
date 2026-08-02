@@ -283,7 +283,7 @@ func open_rename_popup(group_name: String, is_subgroup: bool = false) -> void:
 		_rename_hint = Label.new()
 		var hint: Label = _rename_hint
 		hint.text = "⏎ names the group · empty ungroups"
-		hint.add_theme_font_size_override("font_size", 10)
+		hint.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		hint.modulate = Color(1.0, 1.0, 1.0, 0.65)
 		box.add_child(hint)
 		_rename_popup.add_child(box)

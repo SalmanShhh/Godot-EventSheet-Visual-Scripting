@@ -108,7 +108,7 @@ func rebuild_for_sheet(sheet: EventSheetResource) -> void:
 	var intro: Label = Label.new()
 	intro.text = "Every Inspector-visible variable, exactly as Godot will show it. ✎ edits a variable; ▲ moves a sheet variable up (top-level variables sort alphabetically)." if _edit_handler.is_valid() else "Every Inspector-visible variable, exactly as Godot will show it. Edit a variable from its row in the sheet (hover it there for this same preview)."
 	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intro.add_theme_font_size_override("font_size", 11)
+	intro.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	intro.modulate = Color(1.0, 1.0, 1.0, 0.65)
 	_column.add_child(intro)
 	var first_tree_entry: bool = true

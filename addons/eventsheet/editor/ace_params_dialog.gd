@@ -249,7 +249,7 @@ func _add_param_row(param_dict: Dictionary, initial_values: Dictionary) -> void:
 		description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		# Width-bound (no balloon on the zero-width pass) and a touch brighter for legibility.
 		description_label.custom_minimum_size = Vector2(EventSheetPopupUI.HINT_WRAP_WIDTH, 0.0)
-		description_label.add_theme_font_size_override("font_size", 11)
+		description_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 		description_label.add_theme_color_override("font_color", Color(0.74, 0.78, 0.86, 0.95))
 		_form.add_child(description_label)
 

@@ -164,7 +164,7 @@ class ShapeStepsEditor:
 		if _steps.is_empty():
 			var empty: Label = Label.new()
 			empty.text = "No shapes yet. Add one and pick its shape."
-			empty.add_theme_font_size_override("font_size", 11)
+			empty.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 			empty.modulate = Color(0.72, 0.76, 0.84)
 			add_child(empty)
 		for index: int in range(_steps.size()):
@@ -238,7 +238,7 @@ class ShapeStepsEditor:
 		box.add_theme_constant_override("separation", 3)
 		var label: Label = Label.new()
 		label.text = label_text
-		label.add_theme_font_size_override("font_size", 10)
+		label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		label.modulate = Color(0.72, 0.76, 0.84)
 		box.add_child(label)
 		box.add_child(control)

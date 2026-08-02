@@ -43,8 +43,18 @@ const _ORGAN_PILLS: Dictionary = {
 	"expressions": ["ƒ", Color("#3a2247"), Color("#d7a6ea")],
 	"uses": ["↗", Color("#2c313a"), Color("#9aa1ad")],
 }
+# 1x design heights - _header_height()/_entry_height() apply the editor display scale, and the
+# hit-testing below uses the same helpers so click targets always match what was drawn.
 const _HEADER_HEIGHT: float = 24.0
 const _ENTRY_HEIGHT: float = 20.0
+
+
+static func _header_height() -> float:
+	return EventSheetPalette.scaled_f(_HEADER_HEIGHT)
+
+
+static func _entry_height() -> float:
+	return EventSheetPalette.scaled_f(_ENTRY_HEIGHT)
 
 var _canvas: Control = null
 var _scroll: ScrollContainer = null
@@ -55,11 +65,11 @@ var _hover_index: int = -1
 
 func _init() -> void:
 	name = "Anatomy"
-	custom_minimum_size = Vector2(180.0, 120.0)
+	custom_minimum_size = Vector2(EventSheetPalette.scaled_f(180.0), EventSheetPalette.scaled_f(120.0))
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var title: Label = Label.new()
 	title.text = "Anatomy"
-	title.add_theme_font_size_override("font_size", 12)
+	title.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
 	title.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
 	add_child(title)
 	_scroll = ScrollContainer.new()
@@ -107,14 +117,14 @@ func refresh(sheet: EventSheetResource) -> void:
 func _row_offset(index: int) -> float:
 	var y: float = 0.0
 	for row_index: int in range(mini(index, _rows.size())):
-		y += _HEADER_HEIGHT if bool((_rows[row_index] as Dictionary).get("header")) else _ENTRY_HEIGHT
+		y += _header_height() if bool((_rows[row_index] as Dictionary).get("header")) else _entry_height()
 	return y
 
 
 func _row_index_at(y: float) -> int:
 	var cursor: float = 0.0
 	for index: int in range(_rows.size()):
-		cursor += _HEADER_HEIGHT if bool((_rows[index] as Dictionary).get("header")) else _ENTRY_HEIGHT
+		cursor += _header_height() if bool((_rows[index] as Dictionary).get("header")) else _entry_height()
 		if y < cursor:
 			return index
 	return -1
@@ -125,10 +135,15 @@ func _row_index_at(y: float) -> int:
 func _draw_rows() -> void:
 	var font: Font = get_theme_default_font()
 	var width: float = _canvas.size.x
+	# 1x-authored text sizes and offsets, scaled once per redraw so the rail tracks HiDPI.
+	var ui: float = EventSheetPalette.ui_scale()
+	var header_font: int = EventSheetPalette.scaled(12)
+	var label_font: int = EventSheetPalette.scaled(11)
+	var pill_font: int = EventSheetPalette.scaled(10)
 	var y: float = 0.0
 	for index: int in range(_rows.size()):
 		var row: Dictionary = _rows[index]
-		var height: float = _HEADER_HEIGHT if bool(row.get("header")) else _ENTRY_HEIGHT
+		var height: float = _header_height() if bool(row.get("header")) else _entry_height()
 		if index == _hover_index:
 			_canvas.draw_rect(Rect2(0.0, y, width, height), Color(1.0, 1.0, 1.0, 0.06), true)
 		if bool(row.get("header")):
@@ -136,18 +151,18 @@ func _draw_rows() -> void:
 			var header_text: String = "%s · %d" % [str(row.get("title")), int(row.get("count"))]
 			if bool(_folded.get(str(row.get("organ")), false)):
 				header_text = "▸ " + header_text
-			_canvas.draw_string(font, Vector2(4.0, y + 16.0), header_text, HORIZONTAL_ALIGNMENT_LEFT, width - 8.0, 12, accent)
-			_canvas.draw_rect(Rect2(4.0, y + height - 3.0, width - 8.0, 1.0), Color(accent.r, accent.g, accent.b, 0.35), true)
+			_canvas.draw_string(font, Vector2(4.0 * ui, y + 16.0 * ui), header_text, HORIZONTAL_ALIGNMENT_LEFT, width - 8.0 * ui, header_font, accent)
+			_canvas.draw_rect(Rect2(4.0 * ui, y + height - 3.0 * ui, width - 8.0 * ui, 1.0), Color(accent.r, accent.g, accent.b, 0.35), true)
 		else:
 			var pill: Array = _ORGAN_PILLS.get(str(row.get("organ")), ["·", Color("#2c313a"), Color("#9aa1ad")])
-			var pill_rect: Rect2 = Rect2(8.0, y + 3.0, 16.0, height - 6.0)
+			var pill_rect: Rect2 = Rect2(8.0 * ui, y + 3.0 * ui, 16.0 * ui, height - 6.0 * ui)
 			var pill_box: StyleBoxFlat = StyleBoxFlat.new()
 			pill_box.bg_color = pill[1]
 			pill_box.set_corner_radius_all(3)
 			pill_box.draw(_canvas.get_canvas_item(), pill_rect)
-			_canvas.draw_string(font, Vector2(pill_rect.position.x + 4.0, y + 14.0), str(pill[0]), HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, pill[2])
+			_canvas.draw_string(font, Vector2(pill_rect.position.x + 4.0 * ui, y + 14.0 * ui), str(pill[0]), HORIZONTAL_ALIGNMENT_LEFT, -1.0, pill_font, pill[2])
 			var label_color: Color = EventSheetPalette.TEXT_PRIMARY if row.get("resource") != null else EventSheetPalette.TEXT_SECONDARY
-			_canvas.draw_string(font, Vector2(30.0, y + 14.0), str(row.get("label")), HORIZONTAL_ALIGNMENT_LEFT, width - 34.0, 11, label_color)
+			_canvas.draw_string(font, Vector2(30.0 * ui, y + 14.0 * ui), str(row.get("label")), HORIZONTAL_ALIGNMENT_LEFT, width - 34.0 * ui, label_font, label_color)
 		y += height
 
 

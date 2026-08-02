@@ -2,6 +2,34 @@
 
 ## [Unreleased]
 
+### Fixed - the plugin's chrome now tracks the editor display scale (the real macOS HiDPI fix)
+
+On a Retina Mac the plugin's chrome drew at HALF the size of the surrounding editor - the
+Conditions/Actions lane header, the sheet identity banner, the Anatomy rail, hint captions,
+pills and chips - while ordinary Controls (toolbar, panels) and the canvas rows looked right.
+The v0.16.0 HiDPI fix covered the ROW text (it rides `get_theme_default_font_size()`, into
+which Godot bakes the display scale), but everything custom-drawn or size-overridden was still
+authored in literal 1x pixels: 32 `add_theme_font_size_override(..., <literal>)` sites - each
+of which REPLACES the editor's scaled size with an unscaled one - plus hardcoded `draw_string`
+sizes (a 12px lane header drawn with the fallback font, 10/11/12px anatomy rows with hardcoded
+pixel offsets and hit-testing to match, 13px banner text on a fixed 24px band). Invisible on
+every 100% Windows/Linux machine, half-size on every Mac.
+
+- **One bridge**: `EventSheetPalette.ui_scale()` / `scaled()` / `scaled_f()` - sizes stay
+  authored at 1x and multiply by the editor scale at use time (export-safe access, cached for
+  the session, `set_scale_override()` for tests and harnesses). Row text is deliberately NOT
+  routed through it - that would re-apply the scale the theme font already carries.
+- **Every offender swept**: all 32 override sites, the lane header (band height, label size,
+  paddings - and it now uses the editor's font, not the ThemeDB fallback), the identity banner
+  (both bands, the icon, the Addon Pack + health chips), the Anatomy rail (fonts, row heights,
+  pill boxes, offsets - and the click hit-testing scales with the drawing, so fold/jump targets
+  stay under the cursor), the Functions rail's minimum sizes, and the Inspector drawer widgets'
+  value/bound/coordinate labels.
+- **Suite-enforced**: `tests/ui_scale_test.gd` pins the bridge's math at 100%/150%/200% AND
+  lints every plugin script so a new literal font-size override or literal draw size cannot
+  ship again - the bug class is invisible on the machines the plugin is developed on, which is
+  exactly why it needs a gate instead of vigilance.
+
 ### Fixed - three wrong claims in the v0.16.0 release notes
 
 Swept all 30 countable claims in `docs/internal/RELEASE-NOTES-v0.16.md` against the code rather than

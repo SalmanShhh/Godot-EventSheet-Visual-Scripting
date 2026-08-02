@@ -121,7 +121,7 @@ static func panel_section(content: Control, pad: float = PANEL_SECTION_PAD) -> P
 static func section_header(text: String) -> Label:
 	var label: Label = Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(13))
 	var accent: Color = Color(0.58, 0.74, 1.0)
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
 		var editor_interface: Object = Engine.get_singleton("EditorInterface")

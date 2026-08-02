@@ -98,13 +98,13 @@ func _make_tile(look_id: String, label_text: String, sentence: String) -> Button
 	var name_label := Label.new()
 	name_label.text = label_text
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	name_label.add_theme_font_size_override("font_size", 13)
+	name_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(13))
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(name_label)
 	var sentence_label := Label.new()
 	sentence_label.text = sentence
 	sentence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	sentence_label.add_theme_font_size_override("font_size", 11)
+	sentence_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	sentence_label.modulate = Color(1.0, 1.0, 1.0, 0.65)
 	sentence_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(sentence_label)

@@ -27,7 +27,7 @@ const SWATCH_PRESETS: Array[Color] = [
 static func build_header_label(text: String, accent: String) -> Control:
 	var label: Label = Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(13))
 	label.add_theme_color_override("font_color", Color(accent) if not accent.is_empty() else Color(0.85, 0.88, 0.95))
 	var margin: MarginContainer = MarginContainer.new()
 	margin.add_theme_constant_override("margin_top", 8)
@@ -50,7 +50,7 @@ static func build_info_panel(text: String) -> Control:
 	var label: Label = Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	label.add_theme_color_override("font_color", Color(0.86, 0.9, 0.96))
 	panel.add_child(label)
 	return panel
@@ -69,7 +69,7 @@ class RequiredBadge:
 		_target = target
 		_property = property
 		text = "⚠ Required - assign a value"
-		add_theme_font_size_override("font_size", 11)
+		add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 		add_theme_color_override("font_color", Color("#e06666"))
 		_refresh()
 
@@ -131,7 +131,7 @@ class DrawerProgressBar:
 		var font: Font = ThemeDB.fallback_font
 		var rounded: float = roundf(_value)
 		var label: String = str(int(rounded)) if absf(_value - rounded) < 0.001 else str(snappedf(_value, 0.01))
-		draw_string(font, Vector2(6.0, h * 0.5 + 4.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 11, Color(1, 1, 1, 0.9))
+		draw_string(font, Vector2(6.0, h * 0.5 + 4.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(11), Color(1, 1, 1, 0.9))
 
 	func _gui_input(event: InputEvent) -> void:
 		if not editable:
@@ -199,12 +199,12 @@ class DrawerMinMaxSlider:
 		# current values - at the edges they would read as the track's fixed bounds instead.
 		var font: Font = ThemeDB.fallback_font
 		var low_label: String = _bound_label(_value.x)
-		var low_width: float = font.get_string_size(low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10).x
-		draw_string(font, Vector2(clampf(x_low - low_width * 0.5, 0.0, w - low_width), track_y - 7.0), low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, Color(1, 1, 1, 0.75))
+		var low_width: float = font.get_string_size(low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10)).x
+		draw_string(font, Vector2(clampf(x_low - low_width * 0.5, 0.0, w - low_width), track_y - 7.0), low_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), Color(1, 1, 1, 0.75))
 		var high_label: String = _bound_label(_value.y)
-		var high_width: float = font.get_string_size(high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10).x
+		var high_width: float = font.get_string_size(high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10)).x
 		if absf(x_high - x_low) > (low_width + high_width) * 0.5 + 4.0:
-			draw_string(font, Vector2(clampf(x_high - high_width * 0.5, 0.0, w - high_width), track_y - 7.0), high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, Color(1, 1, 1, 0.75))
+			draw_string(font, Vector2(clampf(x_high - high_width * 0.5, 0.0, w - high_width), track_y - 7.0), high_label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), Color(1, 1, 1, 0.75))
 
 	static func _bound_label(v: float) -> String:
 		return str(int(roundf(v))) if absf(v - roundf(v)) < 0.001 else str(snappedf(v, 0.01))
@@ -248,7 +248,7 @@ class ValidateBadge:
 		_function = validate_function
 		text = "⚠ validated by %s() while you edit" % (_function if not _function.is_empty() else "a sheet function")
 		autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		add_theme_font_size_override("font_size", 11)
+		add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 		add_theme_color_override("font_color", Color("#f0883e"))
 		_refresh()
 
@@ -291,7 +291,7 @@ class ActionButton:
 		_target = target
 		_function = action_function
 		text = label if not label.is_empty() else _function.capitalize()
-		add_theme_font_size_override("font_size", 11)
+		add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 		size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		if _target == null:
 			return  # mock: enabled-looking, wired to nothing
@@ -427,7 +427,7 @@ class DrawerTable:
 		for column: Dictionary in _columns:
 			var head: Label = Label.new()
 			head.text = str(column.get("name")).capitalize()
-			head.add_theme_font_size_override("font_size", 10)
+			head.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 			head.modulate = Color(0.72, 0.76, 0.84)
 			_grid.add_child(head)
 		_grid.add_child(Control.new())
@@ -577,7 +577,7 @@ class DrawerVectorDial:
 		draw_circle(handle, 5.5, Color(0.45, 0.74, 1.0))
 		draw_circle(c, 2.5, Color(1, 1, 1, 0.5))
 		var font: Font = ThemeDB.fallback_font
-		draw_string(font, Vector2(4.0, size.y - 5.0), "(%s, %s)" % [snappedf(_value.x, 0.1), snappedf(_value.y, 0.1)], HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, Color(1, 1, 1, 0.7))
+		draw_string(font, Vector2(4.0, size.y - 5.0), "(%s, %s)" % [snappedf(_value.x, 0.1), snappedf(_value.y, 0.1)], HORIZONTAL_ALIGNMENT_LEFT, -1.0, EventSheetPalette.scaled(10), Color(1, 1, 1, 0.7))
 
 	func _gui_input(event: InputEvent) -> void:
 		if not editable:
@@ -683,7 +683,7 @@ class DrawerTexturePreview:
 				draw_texture_rect(_texture, Rect2((size - draw_size) * 0.5, draw_size), false)
 		else:
 			var font: Font = ThemeDB.fallback_font
-			draw_string(font, Vector2(4.0, size.y * 0.5 + 4.0), "(no texture)", HORIZONTAL_ALIGNMENT_CENTER, size.x - 8.0, 10, Color(1, 1, 1, 0.45))
+			draw_string(font, Vector2(4.0, size.y * 0.5 + 4.0), "(no texture)", HORIZONTAL_ALIGNMENT_CENTER, size.x - 8.0, EventSheetPalette.scaled(10), Color(1, 1, 1, 0.45))
 		draw_rect(rect, Color(1, 1, 1, 0.18), false, 1.0)
 
 

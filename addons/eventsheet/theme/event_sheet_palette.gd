@@ -133,6 +133,51 @@ const COLOR_VALUE_STRING = Color("#79b8f2")  # text literals - a calm blue
 const COLOR_VALUE_BOOL = Color("#c99af0")    # true / false - a soft violet
 
 
+# ── Editor display scale ──────────────────────────────────────────────────────────────────────
+# Every literal size in the editor UI is authored for a 1x display. Godot bakes the display scale
+# into every size IT generates - theme fonts, icons, margins - so a Control override or a
+# draw_string that passes a literal 12 reads at HALF size beside the editor's own text on a
+# Retina Mac (200%). scaled()/scaled_f() are the one bridge: keep authoring sizes at 1x, multiply
+# at use time. The editor scale is fixed for the session (changing it prompts an editor restart),
+# so the factor is cached on first read; tests and render harnesses simulate HiDPI through
+# set_scale_override() with no editor running. Canvas ROW text is NOT routed through this - it
+# already inherits the scale through get_theme_default_font_size(), and scaling it again would
+# re-introduce the double-apply this model replaced.
+static var _ui_scale_override: float = 0.0
+static var _ui_scale_cache: float = 0.0
+
+
+## Tests + harnesses only: force the UI scale factor (0.0 clears back to auto-detect).
+static func set_scale_override(factor: float) -> void:
+	_ui_scale_override = factor
+	_ui_scale_cache = 0.0
+
+
+static func ui_scale() -> float:
+	if _ui_scale_override > 0.0:
+		return _ui_scale_override
+	if _ui_scale_cache > 0.0:
+		return _ui_scale_cache
+	_ui_scale_cache = 1.0
+	# Same export-safe access pattern as EventSheetGodotTheme.adapt_to_editor: never NAME the
+	# editor-only class, so a game build that ships the addons folder still parses this file.
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var editor_interface: Object = Engine.get_singleton("EditorInterface")
+		if editor_interface != null and editor_interface.has_method("get_editor_scale"):
+			_ui_scale_cache = maxf(0.5, float(editor_interface.call("get_editor_scale")))
+	return _ui_scale_cache
+
+
+## A 1x-authored font/UI size, scaled for the running editor (int, for font sizes).
+static func scaled(base_size: int) -> int:
+	return int(round(float(base_size) * ui_scale()))
+
+
+## A 1x-authored metric, scaled for the running editor (float, for heights/offsets/paddings).
+static func scaled_f(base_size: float) -> float:
+	return base_size * ui_scale()
+
+
 static func clamp_font_size(value: int) -> int:
 	return max(value, MIN_FONT_SIZE)
 

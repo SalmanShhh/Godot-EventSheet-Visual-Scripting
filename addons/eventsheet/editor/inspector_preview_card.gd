@@ -21,14 +21,14 @@ func _init() -> void:
 	add_child(column)
 	_caption = Label.new()
 	_caption.text = "Inspector preview"
-	_caption.add_theme_font_size_override("font_size", 10)
+	_caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	_caption.modulate = Color(1.0, 1.0, 1.0, 0.5)
 	column.add_child(_caption)
 	_rows = VBoxContainer.new()
 	column.add_child(_rows)
 	_sentence_label = Label.new()
 	_sentence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_sentence_label.add_theme_font_size_override("font_size", 11)
+	_sentence_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	_sentence_label.modulate = Color(1.0, 1.0, 1.0, 0.72)
 	column.add_child(_sentence_label)
 
@@ -70,13 +70,13 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	if not group_name.is_empty():
 		var group_label := Label.new()
 		group_label.text = group_name
-		group_label.add_theme_font_size_override("font_size", 12)
+		group_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
 		group_label.add_theme_color_override("font_color", Color(0.85, 0.87, 0.92))
 		_rows.add_child(group_label)
 	if not subgroup_name.is_empty():
 		var subgroup_label := Label.new()
 		subgroup_label.text = "    %s" % subgroup_name
-		subgroup_label.add_theme_font_size_override("font_size", 11)
+		subgroup_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 		subgroup_label.modulate = Color(1.0, 1.0, 1.0, 0.8)
 		_rows.add_child(subgroup_label)
 	var property_row := HBoxContainer.new()
@@ -87,7 +87,7 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	var name_label := Label.new()
 	name_label.text = variable_name.capitalize()
 	name_label.custom_minimum_size = Vector2(110.0, 0.0)
-	name_label.add_theme_font_size_override("font_size", 12)
+	name_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
 	property_row.add_child(name_label)
 	var widget: Control = _build_widget(type_name, default_text, attributes)
 	widget.size_flags_horizontal = Control.SIZE_EXPAND_FILL

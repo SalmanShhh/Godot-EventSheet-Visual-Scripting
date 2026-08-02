@@ -22,7 +22,7 @@ var _expanded: bool = false
 
 func _init() -> void:
 	name = "Functions"
-	custom_minimum_size = Vector2(180.0, 0.0)
+	custom_minimum_size = Vector2(EventSheetPalette.scaled_f(180.0), 0.0)
 	var header: HBoxContainer = HBoxContainer.new()
 	_header_button = Button.new()
 	_header_button.flat = true
@@ -40,7 +40,7 @@ func _init() -> void:
 	add_child(header)
 	list = ItemList.new()
 	list.name = "EventSheetFunctionsList"
-	list.custom_minimum_size = Vector2(0.0, 110.0)
+	list.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(110.0))
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	list.allow_reselect = true

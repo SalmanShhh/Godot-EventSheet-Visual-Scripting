@@ -311,17 +311,17 @@ func _build_verb_kind_section() -> Control:
 		title_row.add_child(glyph)
 		var title: Label = Label.new()
 		title.text = str(entry.get("kind_label"))
-		title.add_theme_font_size_override("font_size", 15)
+		title.add_theme_font_size_override("font_size", EventSheetPalette.scaled(15))
 		title_row.add_child(title)
 		inner.add_child(title_row)
 		var subtitle: Label = Label.new()
 		subtitle.text = str(entry.get("card_title"))
-		subtitle.add_theme_font_size_override("font_size", 12)
+		subtitle.add_theme_font_size_override("font_size", EventSheetPalette.scaled(12))
 		subtitle.add_theme_color_override("font_color", EventSheetPalette.TEXT_SECONDARY)
 		inner.add_child(subtitle)
 		var examples: Label = Label.new()
 		examples.text = str(entry.get("card_examples"))
-		examples.add_theme_font_size_override("font_size", 11)
+		examples.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 		examples.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
 		examples.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		inner.add_child(examples)
@@ -394,7 +394,7 @@ func _build_preview_card() -> Control:
 	entry.add_child(_preview_chips)
 	content.add_child(EventSheetPopupUI.panel_section(entry))
 	_preview_sub = Label.new()
-	_preview_sub.add_theme_font_size_override("font_size", 11)
+	_preview_sub.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	_preview_sub.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
 	content.add_child(_preview_sub)
 	# "Ships as:" - the exact generated signature (built from the compiler's own formatters).
@@ -402,7 +402,7 @@ func _build_preview_card() -> Control:
 	ships_box.add_theme_constant_override("separation", 1)
 	var ships_cap: Label = Label.new()
 	ships_cap.text = "SHIPS AS"
-	ships_cap.add_theme_font_size_override("font_size", 10)
+	ships_cap.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	ships_cap.add_theme_color_override("font_color", EventSheetPalette.TEXT_MUTED)
 	ships_box.add_child(ships_cap)
 	_preview_signature = Label.new()
@@ -453,7 +453,8 @@ func _refresh_studio() -> void:
 func _pill(text: String, bg: Color, fg: Color, font_size: int = 11) -> Label:
 	var label: Label = Label.new()
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", font_size)
+	# font_size is a 1x design value from every caller - scaled here so all pills track HiDPI.
+	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(font_size))
 	_style_pill(label, bg, fg)
 	label.text = text
 	return label

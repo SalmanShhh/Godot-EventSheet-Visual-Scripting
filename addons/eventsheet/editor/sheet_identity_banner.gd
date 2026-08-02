@@ -10,12 +10,15 @@ extends Control
 
 signal edit_requested
 
+# 1x design values - every use multiplies by EventSheetPalette.ui_scale(), so the bands, chips
+# and their text track the editor's display scale (a literal 12 reads half-size on a Retina Mac).
 const BANNER_HEIGHT := 24.0
 const ICON_SIZE := 14.0
 ## The Publishes Manifest: a second band listing what the behaviour PUBLISHES -
 ## its ACE dictionary pinned above the sheet. Role hues match the block/badge families elsewhere.
 const MANIFEST_HEIGHT := 18.0
 const MANIFEST_FONT_SIZE := 12
+const LABEL_FONT_SIZE := 13
 const _MANIFEST_TRIGGERS := EventSheetPalette.COLOR_MANIFEST_TRIGGERS
 const _MANIFEST_ACTIONS := EventSheetPalette.COLOR_MANIFEST_ACTIONS
 const _MANIFEST_CONDITIONS := EventSheetPalette.COLOR_MANIFEST_CONDITIONS
@@ -126,7 +129,7 @@ static func _build_manifest_segments(counts: Dictionary) -> Array:
 func setup(viewport: EventSheetViewport) -> void:
 	_viewport = viewport
 	name = "SheetIdentityBanner"
-	custom_minimum_size = Vector2(0.0, BANNER_HEIGHT)
+	custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(BANNER_HEIGHT))
 	tooltip_text = "Click to edit the sheet type (name, icon, host class)."
 	visible = false
 
@@ -181,7 +184,7 @@ func update_from_sheet(sheet: EventSheetResource, sheet_path: String = "") -> vo
 	# Publishes Manifest: what this behaviour exposes, pinned above the sheet.
 	_manifest_segments = _build_manifest_segments(manifest_for(sheet))
 	var total_height: float = BANNER_HEIGHT + (MANIFEST_HEIGHT if not _manifest_segments.is_empty() else 0.0)
-	custom_minimum_size = Vector2(0.0, total_height)
+	custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(total_height))
 	visible = true
 	queue_redraw()
 
@@ -198,56 +201,66 @@ func _draw() -> void:
 	var style: EventSheetEventStyle = _viewport.get_event_style()
 	var accent: Color = style.behavior_accent_color if _is_behavior else style.column_header_conditions_color
 	var background: Color = style.column_header_background_color
+	# All metrics below are 1x design values scaled once here (the editor's font is used over the
+	# ThemeDB fallback so the banner matches the surrounding chrome typeface too).
+	var ui: float = EventSheetPalette.ui_scale()
+	var font: Font = get_theme_default_font()
+	if font == null:
+		font = ThemeDB.fallback_font
+	var label_size: int = EventSheetPalette.scaled(LABEL_FONT_SIZE)
+	var chip_size: int = EventSheetPalette.scaled(MANIFEST_FONT_SIZE)
+	var banner_h: float = BANNER_HEIGHT * ui
+	var icon_size: float = ICON_SIZE * ui
 	draw_rect(Rect2(Vector2.ZERO, size), background, true)
-	draw_rect(Rect2(0.0, 0.0, 3.0, size.y), accent, true)
-	# Top band = identity; positions anchor to BANNER_HEIGHT (not size.y) so the manifest band below
-	# doesn't drag the identity line off-centre.
-	var identity_baseline: float = BANNER_HEIGHT * 0.5 + 5.0
-	var x: float = 10.0
+	draw_rect(Rect2(0.0, 0.0, 3.0 * ui, size.y), accent, true)
+	# Top band = identity; positions anchor to the banner height (not size.y) so the manifest band
+	# below doesn't drag the identity line off-centre.
+	var identity_baseline: float = banner_h * 0.5 + 5.0 * ui
+	var x: float = 10.0 * ui
 	if _icon != null:
-		var icon_y: float = (BANNER_HEIGHT - ICON_SIZE) * 0.5
-		draw_texture_rect(_icon, Rect2(x, icon_y, ICON_SIZE, ICON_SIZE), false)
-		x += ICON_SIZE + 6.0
+		var icon_y: float = (banner_h - icon_size) * 0.5
+		draw_texture_rect(_icon, Rect2(x, icon_y, icon_size, icon_size), false)
+		x += icon_size + 6.0 * ui
 	else:
 		# Fallback glyphs keep the types visually distinct without custom art (one per intent).
 		var glyph: String = str(EventSheetScriptIntent.display(_intent).get("glyph", "◆"))
-		draw_string(ThemeDB.fallback_font, Vector2(x, identity_baseline), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, accent)
-		x += 18.0
+		draw_string(font, Vector2(x, identity_baseline), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1.0, label_size, accent)
+		x += 18.0 * ui
 	# Addon Pack chip: a small plated tag right before the label - the "this is a published
 	# pack" cue (same plate language as the icon chips in the rows).
 	if _is_addon_pack:
 		var pack_chip_text: String = EventSheetL10n.translate("Addon Pack")
 		if not _addon_version.is_empty():
 			pack_chip_text += " v" + _addon_version
-		var pack_chip_width: float = ThemeDB.fallback_font.get_string_size(pack_chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE).x + 12.0
-		var pack_chip_rect := Rect2(x, (BANNER_HEIGHT - 16.0) * 0.5, pack_chip_width, 16.0)
+		var pack_chip_width: float = font.get_string_size(pack_chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, chip_size).x + 12.0 * ui
+		var pack_chip_height: float = 16.0 * ui
+		var pack_chip_rect := Rect2(x, (banner_h - pack_chip_height) * 0.5, pack_chip_width, pack_chip_height)
 		var pack_chip_bg: Color = accent
 		pack_chip_bg.a = 0.18
 		draw_rect(pack_chip_rect, pack_chip_bg, true)
 		draw_rect(pack_chip_rect.grow(-0.5), Color(accent.r, accent.g, accent.b, 0.55), false, 1.0)
-		draw_string(ThemeDB.fallback_font, Vector2(x + 6.0, identity_baseline - 1.0), pack_chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE, accent)
-		x += pack_chip_width + 8.0
+		draw_string(font, Vector2(x + 6.0 * ui, identity_baseline - 1.0 * ui), pack_chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, chip_size, accent)
+		x += pack_chip_width + 8.0 * ui
 	# Health chip on the right end of the identity line (drawn first so the label reserves room for it).
-	var label_right: float = size.x - 8.0
+	var label_right: float = size.x - 8.0 * ui
 	if _health_known:
 		var chip: Dictionary = health_chip(_health_count)
 		var chip_text: String = str(chip.get("text"))
-		var chip_width: float = ThemeDB.fallback_font.get_string_size(chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE).x
-		var chip_x: float = size.x - chip_width - 10.0
-		draw_string(ThemeDB.fallback_font, Vector2(chip_x, identity_baseline), chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE, chip.get("color"))
-		label_right = chip_x - 8.0
-	draw_string(ThemeDB.fallback_font, Vector2(x, identity_baseline), _label, HORIZONTAL_ALIGNMENT_LEFT, max(label_right - x, 10.0), 13, accent)
+		var chip_width: float = font.get_string_size(chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, chip_size).x
+		var chip_x: float = size.x - chip_width - 10.0 * ui
+		draw_string(font, Vector2(chip_x, identity_baseline), chip_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, chip_size, chip.get("color"))
+		label_right = chip_x - 8.0 * ui
+	draw_string(font, Vector2(x, identity_baseline), _label, HORIZONTAL_ALIGNMENT_LEFT, max(label_right - x, 10.0), label_size, accent)
 	# Second band - the Publishes Manifest pills, each in its role hue, " · "-separated.
 	if not _manifest_segments.is_empty():
-		var font: Font = ThemeDB.fallback_font
-		var mx: float = 12.0
-		var manifest_baseline: float = BANNER_HEIGHT + MANIFEST_HEIGHT * 0.5 + 4.0
+		var mx: float = 12.0 * ui
+		var manifest_baseline: float = banner_h + MANIFEST_HEIGHT * ui * 0.5 + 4.0 * ui
 		var separator_color: Color = EventSheetPalette.COLOR_BANNER_SEPARATOR
 		for segment_index: int in range(_manifest_segments.size()):
 			if segment_index > 0:
-				draw_string(font, Vector2(mx, manifest_baseline), " · ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE, separator_color)
-				mx += font.get_string_size(" · ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE).x
+				draw_string(font, Vector2(mx, manifest_baseline), " · ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, chip_size, separator_color)
+				mx += font.get_string_size(" · ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, chip_size).x
 			var segment: Dictionary = _manifest_segments[segment_index]
 			var segment_text: String = str(segment.get("text"))
-			draw_string(font, Vector2(mx, manifest_baseline), segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE, segment.get("color"))
-			mx += font.get_string_size(segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, MANIFEST_FONT_SIZE).x
+			draw_string(font, Vector2(mx, manifest_baseline), segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, chip_size, segment.get("color"))
+			mx += font.get_string_size(segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, chip_size).x

@@ -119,7 +119,7 @@ static func _build_preview_inner(look_id: String) -> Control:
 				link_box.add_child(axis_slider)
 			var link_label := Label.new()
 			link_label.text = "axes move together"
-			link_label.add_theme_font_size_override("font_size", 10)
+			link_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 			link_label.modulate = Color(1.0, 1.0, 1.0, 0.6)
 			link_box.add_child(link_label)
 			return link_box

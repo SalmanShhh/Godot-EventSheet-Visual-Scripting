@@ -62,7 +62,7 @@ func _ensure_popup() -> void:
 		_apply_selected())
 	box.add_child(_list)
 	var hint: Label = EventSheetPopupUI.hint_label("⏎ add  ·  ↑/↓ choose  ·  Ctrl+⏎ browse the full picker  ·  Esc cancel", 420.0)
-	hint.add_theme_font_size_override("font_size", 11)
+	hint.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	box.add_child(hint)
 	_popup.add_child(EventSheetPopupUI.margined(box))
 	_dock.add_child(_popup)
