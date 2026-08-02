@@ -78,15 +78,15 @@ static func property_entries(host_class: String, fragment_prefix: String = "") -
 
 ## The Behaviours subgroup: one group per behaviour pack, its knobs and value-returning verbs as
 ## `$PackName.member` chains - the attached-child access the README teaches, NOT the compiler's
-## owned-instance seam. Only entries with CLEAN reflection metadata (source_kind property/method)
-## are listed; a baked multi-line template cannot be represented as a chain, so it is skipped
-## rather than guessed. Used-by-this-sheet packs sort first (the Uses census), the rest trail
-## alphabetically for browsing. `robust` swaps `$Name` for `get_node_or_null("Name")` - the form
-## that survives runtime attachment, defaulted on for spawn-heavy sheets.
-## Returns [{provider, used, entries: [{label, fragment, tooltip}]}].
-static func behaviour_groups(sheet: EventSheetResource, registry: EventSheetACERegistry, robust: bool = false) -> Array:
-	if registry == null:
-		return []
+## owned-instance seam. Derivation is SCRIPT-LEVEL on purpose: inside the editor process a
+## non-@tool pack script cannot instantiate (can_instantiate() is tool-gated there), so any
+## instance-based reflection lists nothing in the one place this feature matters - the derivation
+## below reads get_script_property_list / get_script_method_list plus the `## @ace_*` annotations
+## from source, which behave identically in the editor, a harness, and headless CI.
+## Used-by-this-sheet packs sort first (the Uses census), the rest trail alphabetically. `robust`
+## swaps `$Name` for `get_node_or_null("Name")` - the form that survives runtime attachment.
+## Returns [{provider, node_name, used, grounded, entries: [{label, fragment, tooltip}]}].
+static func behaviour_groups(sheet: EventSheetResource, robust: bool = false) -> Array:
 	var used: Dictionary = {}
 	if sheet != null:
 		for organ: Dictionary in BehaviourAnatomyPanel.collect_anatomy(sheet):
@@ -95,45 +95,182 @@ static func behaviour_groups(sheet: EventSheetResource, registry: EventSheetACER
 			for entry: Dictionary in organ.get("entries", []):
 				used[str(entry.get("provider", ""))] = true
 	var groups: Array = []
-	for provider_id: String in registry.get_reflected_provider_ids():
-		var entries: Array = []
-		for definition: ACEDefinition in registry.get_provider_definitions(provider_id):
-			if definition.ace_type != ACEDefinition.ACEType.EXPRESSION:
-				continue
-			if str(definition.metadata.get("semantic_source", "")) != "reflection":
-				continue
-			var source_name: String = str(definition.metadata.get("source_name", ""))
-			if source_name.is_empty():
-				continue
-			var member: String = ""
-			match str(definition.metadata.get("source_kind", "")):
-				"property":
-					member = source_name
-				"method":
-					var argument_names: PackedStringArray = PackedStringArray()
-					for parameter: Variant in definition.parameters:
-						if parameter is Dictionary:
-							argument_names.append(str((parameter as Dictionary).get("id", "")))
-					member = "%s(%s)" % [source_name, ", ".join(argument_names)]
-				_:
-					continue
-			var fragment: String = "$%s.%s" % [provider_id, member]
-			if robust:
-				fragment = robust_fragment(fragment)
-			entries.append({
-				"label": "%s · %s" % [definition.display_name, member],
-				"fragment": fragment,
-				"tooltip": definition.description if not definition.description.is_empty()
-					else "Reads %s from the attached %s behaviour." % [member, provider_id],
-			})
+	for script_path: String in EventSheetAddonScanner.list_addon_scripts():
+		var script: Script = load(script_path) as Script
+		if script == null:
+			continue
+		var provider_id: String = str(script.get_global_name())
+		if provider_id.is_empty():
+			continue
+		var entries: Array = pack_entries_from_script(script, provider_id, robust)
 		if entries.is_empty():
 			continue
-		groups.append({"provider": provider_id, "used": bool(used.get(provider_id, false)), "entries": entries})
+		groups.append({"provider": provider_id, "node_name": provider_id, "used": bool(used.get(provider_id, false)), "grounded": false, "entries": entries})
 	groups.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if bool(a.get("used")) != bool(b.get("used")):
 			return bool(a.get("used"))
 		return str(a.get("provider")) < str(b.get("provider")))
 	return groups
+
+
+## The GROUNDED tier (SPEC-self-expressions Phase 3): the sheet's actual instance is selected in
+## the Scene dock, so stop guessing node names - reflect its real behaviour children. A child
+## counts when its script has a global class name AND publishes at least one entry; renamed
+## children keep their REAL name in every fragment (that is the point of grounding), and two
+## instances of the same pack become two groups their names tell apart. Direct children only -
+## that is where behaviours attach by convention, and a deep scan would list another object's
+## organs. Pure given the owner node, so headless tests build the tree themselves.
+static func grounded_children(owner: Node) -> Array:
+	var out: Array = []
+	if owner == null:
+		return out
+	for child: Node in owner.get_children():
+		var script: Script = child.get_script() as Script
+		if script == null:
+			continue
+		var provider_id: String = str(script.get_global_name())
+		if provider_id.is_empty():
+			continue
+		if pack_entries_from_script(script, provider_id, false).is_empty():
+			continue
+		out.append({"name": str(child.name), "provider": provider_id, "script_path": script.resource_path})
+	return out
+
+
+## Grounded children as behaviour groups - same shape as behaviour_groups so the tree draws both
+## tiers with one code path, but every fragment carries the child's REAL node name and the group
+## is marked grounded (the UI labels it as read off the selected node, and it is trivially
+## "used": it is literally attached).
+static func grounded_groups(children: Array, robust: bool = false) -> Array:
+	var groups: Array = []
+	for child: Variant in children:
+		if not (child is Dictionary):
+			continue
+		var provider_id: String = str((child as Dictionary).get("provider", ""))
+		var node_name: String = str((child as Dictionary).get("name", ""))
+		var script_path: String = str((child as Dictionary).get("script_path", ""))
+		if provider_id.is_empty() or node_name.is_empty():
+			continue
+		var script: Script = load(script_path) as Script if not script_path.is_empty() else null
+		if script == null:
+			continue
+		var entries: Array = pack_entries_from_script(script, node_name, robust)
+		if entries.is_empty():
+			continue
+		groups.append({"provider": provider_id, "node_name": node_name, "used": true, "grounded": true, "entries": entries})
+	groups.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return str(a.get("node_name")) < str(b.get("node_name")))
+	return groups
+
+
+## One pack SCRIPT's expression entries as `$<node_token>.member` chains - the shared derivation
+## behind both tiers. Knobs are the exported properties (script property list, EDITOR-usage
+## flagged); verbs are the value-returning public methods, curated by the same annotations the
+## registry honours: `## @ace_hidden` always excludes, `## @ace_internal` too, and a method
+## needs either an `## @ace_expression` mark or a pack-level `## @ace_expose_all` to publish
+## (a curated pack shows exactly what it curated). No instantiation anywhere.
+static func pack_entries_from_script(script: Script, node_token: String, robust: bool) -> Array:
+	var entries: Array = []
+	if script == null:
+		return entries
+	for member_info: Dictionary in _script_members(script):
+		entries.append(_chain_entry(node_token, str(member_info.get("member")),
+			str(member_info.get("display")), robust, str(member_info.get("tooltip"))))
+	return entries
+
+
+# Per-script member census, cached on path|mtime (the registry's own cache discipline): a
+# derivation over the whole pack fleet loads ~100 scripts and reads their SOURCE for annotations,
+# so only the first pass after a save ever pays. Saving a pack self-invalidates its entry.
+static var _script_members_cache: Dictionary = {}
+
+
+static func _script_members(script: Script) -> Array:
+	var path: String = script.resource_path
+	var cache_key: String = "%s|%d" % [path, FileAccess.get_modified_time(path)] if not path.is_empty() else ""
+	if not cache_key.is_empty() and _script_members_cache.has(cache_key):
+		return _script_members_cache[cache_key]
+	var members: Array = []
+	# Knobs: exported script variables, in declaration order.
+	for property_info: Dictionary in script.get_script_property_list():
+		var usage: int = int(property_info.get("usage", 0))
+		if usage & PROPERTY_USAGE_SCRIPT_VARIABLE == 0 or usage & PROPERTY_USAGE_EDITOR == 0:
+			continue
+		var property_name: String = str(property_info.get("name", ""))
+		if property_name.is_empty() or property_name.begins_with("_"):
+			continue
+		members.append({"member": property_name, "display": property_name.capitalize(),
+			"tooltip": "The %s knob on the attached behaviour." % property_name.capitalize()})
+	# Verbs: value-returning public methods, annotation-curated from SOURCE (annotations live on
+	# disk; a script's method list alone cannot see them).
+	var annotations: Dictionary = _method_annotations(path)
+	var expose_all: bool = bool(annotations.get("@expose_all", false))
+	for method_info: Dictionary in script.get_script_method_list():
+		var method_name: String = str(method_info.get("name", ""))
+		if method_name.is_empty() or method_name.begins_with("_"):
+			continue
+		var method_marks: Array = annotations.get(method_name, [])
+		if method_marks.has("hidden") or method_marks.has("internal"):
+			continue
+		if not (method_marks.has("expression") or expose_all):
+			continue
+		var return_type: int = int((method_info.get("return", {}) as Dictionary).get("type", TYPE_NIL))
+		if return_type == TYPE_NIL or return_type == TYPE_BOOL:
+			continue  # actions and conditions are not expressions
+		var argument_names: PackedStringArray = PackedStringArray()
+		for argument: Variant in method_info.get("args", []):
+			if argument is Dictionary:
+				argument_names.append(str((argument as Dictionary).get("name", "")))
+		members.append({"member": "%s(%s)" % [method_name, ", ".join(argument_names)],
+			"display": method_name.capitalize(), "tooltip": "Value-returning verb on the attached behaviour."})
+	if not cache_key.is_empty():
+		# One live entry per path: drop stale-mtime keys so an editing session never accumulates.
+		for existing_key: Variant in _script_members_cache.keys():
+			if str(existing_key).begins_with(path + "|"):
+				_script_members_cache.erase(existing_key)
+		_script_members_cache[cache_key] = members
+	return members
+
+
+static func _chain_entry(node_token: String, member: String, display: String, robust: bool, tooltip: String) -> Dictionary:
+	var fragment: String = "$%s.%s" % [node_token, member]
+	if robust:
+		fragment = robust_fragment(fragment)
+	return {"label": "%s · %s" % [display, member], "fragment": fragment, "tooltip": tooltip}
+
+
+## Per-method `## @ace_*` marks read from SOURCE: {method_name: ["hidden", "expression", ...]}
+## plus the pack-level "@expose_all" flag. A tiny purpose-built read (annotation lines directly
+## above each func), NOT a re-implementation of the analyzer - it only answers the three
+## questions this section asks: hidden? internal? expression-marked or expose_all?
+static func _method_annotations(script_path: String) -> Dictionary:
+	var out: Dictionary = {}
+	if script_path.is_empty():
+		return out
+	var pending: Array = []
+	for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
+		var stripped: String = line.strip_edges()
+		if stripped.begins_with("## @ace_expose_all") or stripped.begins_with("# @ace_expose_all"):
+			out["@expose_all"] = true
+			continue
+		if stripped.begins_with("## @ace_") or stripped.begins_with("# @ace_"):
+			var mark: String = stripped.trim_prefix("## @ace_").trim_prefix("# @ace_")
+			pending.append(mark.split("(")[0].split(" ")[0].strip_edges())
+			continue
+		if stripped.begins_with("func ") or stripped.begins_with("static func "):
+			var func_name: String = stripped.trim_prefix("static ").trim_prefix("func ").split("(")[0].strip_edges()
+			if not func_name.is_empty() and not pending.is_empty():
+				out[func_name] = pending.duplicate()
+			pending.clear()
+			continue
+		# Doc comments and engine annotations (@rpc, @onready) may stack above the func; anything
+		# else breaks the run - INCLUDING a var declaration, so a mark meant for an exported
+		# variable never leaks onto the function below it.
+		if stripped.begins_with("@") and not stripped.contains("var "):
+			continue
+		if not stripped.begins_with("#") and not stripped.is_empty():
+			pending.clear()
+	return out
 
 
 ## `$Name.member` -> `get_node_or_null("Name").member` - the access that survives a behaviour

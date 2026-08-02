@@ -75,16 +75,25 @@ on the sheet's host are dropped from the section, not shown disabled.
 A sheet is a script and does not know its scene instances at edit time, so grounding is best-effort
 and honest about it:
 
-1. **Grounded tier**: when the Scene dock's selected node carries this sheet's script (the same
-   seam the editor behaviour previews use), reflect its ACTUAL behaviour children. Insertions use
-   the real node names and paths.
-2. **Fallback tier**: no grounded node. List the packs the sheet already references (the Anatomy
-   "Uses" census first, all installed packs collapsed below). Insertion uses the pack's default
-   node name, and the inserted `$NodeName` span is left SELECTED so one keystroke or a node drag
-   (the fields already accept node drops) retargets it.
+1. **Grounded tier** (SHIPPED, Phase 3): when the Scene dock's selected node carries this sheet's
+   script, reflect its ACTUAL behaviour children - real node names in every fragment (a renamed
+   child inserts through its rename; two instances of one pack are two groups). Direct children
+   only: that is where behaviours attach by convention, and a deep scan would list another
+   object's organs. The subgroup labels itself "Behaviours (on the selected node)".
+2. **Fallback tier**: no grounded node. List the installed packs (the Anatomy "Uses" census first
+   and expanded, the rest collapsed below). Insertion uses the pack's class name, and the
+   inserted `$NodeName` span is left SELECTED so one keystroke or a node drag (the fields already
+   accept node drops) retargets it.
 
-Each pack's entries are its already-registered expression ACEs plus its exported knobs, read from
-the live registry. No new descriptors: Self re-groups registry data under a different heading.
+**Derivation is SCRIPT-LEVEL, never instance-level** - a constraint DISCOVERED by driving the real
+editor, not designed up front: inside the editor process a non-@tool script cannot instantiate
+(GDScript.can_instantiate() is tool-gated there), so any instance-reflection channel lists nothing
+exactly where this feature runs - headless tests and harnesses pass while the editor shows an
+empty subgroup. Entries come from get_script_property_list (exported knobs),
+get_script_method_list (value-returning public methods), and the `## @ace_*` annotations read
+from SOURCE (@ace_hidden / @ace_internal exclude; publishing needs @ace_expression or a
+pack-level @ace_expose_all). Per-script members are cached on path|mtime - the registry's own
+cache discipline - so only the first derivation after a save pays.
 
 ### Procedural robustness (runtime-attached behaviours)
 
@@ -155,8 +164,11 @@ section dict), so it is headless-testable like `collect_anatomy`:
    derivation is cached per dialog-open (typing only re-filters; re-deriving 76 packs per
    keystroke measured ~25ms on a 300-row sheet, so the cache keys on the robust toggle and
    clears on open).
-3. **Phase 3 - grounding** (selected-node tier; later, live grounding against a running instance
-   through the debugger channel that already feeds Live Values).
+3. **Phase 3 - grounding** - SHIPPED (selected-node tier). The end-to-end editor drive that
+   verified it also caught the instance-reflection channel being editor-dead (see the Behaviours
+   section) and forced the script-level derivation both tiers now share. Still later: live
+   grounding against a RUNNING instance through the debugger channel that already feeds Live
+   Values.
 
 ## Resolved questions
 

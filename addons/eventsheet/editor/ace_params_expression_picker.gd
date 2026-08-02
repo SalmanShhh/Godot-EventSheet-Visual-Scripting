@@ -30,6 +30,12 @@ var _expression_target_key: String = ""
 # keys on the robust toggle.
 var _self_section_cache: Dictionary = {}
 var _behaviour_groups_cache: Dictionary = {}  # {robust(bool): Array}
+# The grounded tier's input, derived once per open: the selected Scene-dock node that carries
+# THIS sheet's script, read through its behaviour children ([{name, provider}]). Empty = no
+# grounding, the fallback tier lists packs by class name. Tests and harnesses (no editor
+# selection to read) inject through grounded_children_override.
+var _grounded_children_cache: Array = []
+var grounded_children_override: Array = []
 
 
 func init(host: ACEParamsDialog) -> void:
@@ -39,9 +45,11 @@ func init(host: ACEParamsDialog) -> void:
 func _open_expression_picker(target_key: String) -> void:
 	_expression_target_key = target_key
 	_ensure_expression_window()
-	# Fresh derivation per open - the sheet may have changed since the dialog last showed.
+	# Fresh derivation per open - the sheet (and the Scene-dock selection) may have changed since
+	# the dialog last showed.
 	_self_section_cache = {}
 	_behaviour_groups_cache = {}
+	_grounded_children_cache = grounded_children_override if not grounded_children_override.is_empty() else _grounded_children_from_selection()
 	# Spawn-heavy sheets DEFAULT to the robust behaviour access: their behaviours may attach at
 	# runtime, where a $-path to an auto-named child misses silently. Re-derived on every open so
 	# the default tracks the sheet as it grows; the checkbox stays a per-session user override.
@@ -58,6 +66,36 @@ func _context_sheet() -> EventSheetResource:
 	if not _host._lint_context_provider.is_valid():
 		return null
 	return _host._lint_context_provider.call() as EventSheetResource
+
+
+## The grounded tier's probe: the Scene-dock selection, kept ONLY when a selected node carries
+## THIS sheet's script - grounding against someone else's node would list someone else's organs.
+## Export-safe editor access (same pattern as the palette's scale bridge); returns [] everywhere
+## an editor selection does not exist (headless tests, render harnesses, exported games).
+func _grounded_children_from_selection() -> Array:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return []
+	var sheet: EventSheetResource = _context_sheet()
+	if sheet == null:
+		return []
+	var sheet_script_path: String = sheet.external_source_path.strip_edges()
+	if sheet_script_path.is_empty():
+		sheet_script_path = sheet.resource_path.strip_edges()
+	if sheet_script_path.is_empty():
+		return []
+	var editor_interface: Object = Engine.get_singleton("EditorInterface")
+	if editor_interface == null or not editor_interface.has_method("get_selection"):
+		return []
+	var selection: Object = editor_interface.call("get_selection")
+	if selection == null or not selection.has_method("get_selected_nodes"):
+		return []
+	for node: Variant in selection.call("get_selected_nodes"):
+		if not (node is Node):
+			continue
+		var script: Script = (node as Node).get_script() as Script
+		if script != null and script.resource_path == sheet_script_path:
+			return EventSheetSelfExpressions.grounded_children(node as Node)
+	return []
 
 
 func _ensure_expression_window() -> void:
@@ -194,10 +232,14 @@ func _add_self_section(root: TreeItem, lowered_query: String) -> void:
 		subgroup_item.set_selectable(0, false)
 		_add_self_leaves(subgroup_item, survivors)
 	# Behaviours: one child group per pack, its knobs and value-returning verbs as $Pack.member
-	# chains. Used-by-this-sheet packs lead and stay open; the rest trail collapsed for browsing.
+	# chains. GROUNDED tier when the sheet's own instance is selected in the Scene dock (real
+	# child names, nothing guessed); otherwise the fallback tier lists packs by class name -
+	# used-by-this-sheet packs lead and stay open, the rest trail collapsed for browsing.
 	var robust: bool = _robust_checkbox != null and _robust_checkbox.button_pressed
+	var grounded: bool = not _grounded_children_cache.is_empty()
 	if not _behaviour_groups_cache.has(robust):
-		_behaviour_groups_cache[robust] = EventSheetSelfExpressions.behaviour_groups(sheet, _host._registry, robust)
+		_behaviour_groups_cache[robust] = EventSheetSelfExpressions.grounded_groups(_grounded_children_cache, robust) if grounded \
+			else EventSheetSelfExpressions.behaviour_groups(sheet, robust)
 	var behaviours_item: TreeItem = null
 	for pack: Dictionary in (_behaviour_groups_cache[robust] as Array):
 		var survivors: Array = []
@@ -210,15 +252,21 @@ func _add_self_section(root: TreeItem, lowered_query: String) -> void:
 			self_item = _self_root(root)
 		if behaviours_item == null:
 			behaviours_item = _expression_tree.create_item(self_item)
-			behaviours_item.set_text(0, "Behaviours")
+			behaviours_item.set_text(0, "Behaviours (on the selected node)" if grounded else "Behaviours")
 			behaviours_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NEUTRAL)
 			behaviours_item.set_selectable(0, false)
-			behaviours_item.set_tooltip_text(0, "Attached behaviours' knobs and value verbs, reached through the child node. Retarget the inserted $Name if yours is named differently - it stays selected after insert.")
+			behaviours_item.set_tooltip_text(0,
+				"Read off the node selected in the Scene dock - these are its actual behaviour children, under their real names." if grounded
+				else "Attached behaviours' knobs and value verbs, reached through the child node. Retarget the inserted $Name if yours is named differently - it stays selected after insert.")
 		var pack_item: TreeItem = _expression_tree.create_item(behaviours_item)
-		pack_item.set_text(0, str(pack.get("provider")) + (" (used here)" if bool(pack.get("used")) else ""))
+		if bool(pack.get("grounded", false)):
+			pack_item.set_text(0, "$%s (%s)" % [str(pack.get("node_name")), str(pack.get("provider"))])
+		else:
+			pack_item.set_text(0, str(pack.get("provider")) + (" (used here)" if bool(pack.get("used")) else ""))
 		pack_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NODE_TYPE)
 		pack_item.set_selectable(0, false)
-		# Browsing (no query): only the packs this sheet already uses open expanded.
+		# Browsing (no query): grounded groups are all real, so all open; in the fallback only
+		# the packs this sheet already uses open expanded.
 		pack_item.collapsed = lowered_query.is_empty() and not bool(pack.get("used"))
 		_add_self_leaves(pack_item, survivors)
 

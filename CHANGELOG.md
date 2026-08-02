@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Added - Self Phase 3: the grounded tier (and the bug the real editor exposed)
+
+Select your sheet's own instance in the Scene dock and the Self section stops guessing:
+**Behaviours (on the selected node)** reads that node's ACTUAL behaviour children - a renamed
+child inserts through its rename (`$Wobble.magnitude`, not `$SineBehavior.magnitude`), two
+instances of one pack are two groups their names tell apart, and non-behaviour children never
+leak in. Direct children only, grounding only when a selected node carries THIS sheet's script -
+grounding against someone else's node would list someone else's organs. No selection (or
+headless) falls back to the Phase 2 class-name tier unchanged.
+
+**The bug the end-to-end drive exposed**: driving the REAL editor showed the Behaviours subgroup
+empty where every headless test and harness passed - inside the editor process a non-@tool
+script cannot instantiate (`GDScript.can_instantiate()` is tool-gated there), so the
+instance-reflection channel Phase 2 derived from lists nothing exactly where the feature runs.
+Both tiers now derive at SCRIPT level - `get_script_property_list` for knobs,
+`get_script_method_list` for value-returning public verbs, and the `## @ace_*` annotations read
+from source for curation (`@ace_hidden`/`@ace_internal` exclude; publishing needs
+`@ace_expression` or a pack-level `@ace_expose_all`) - identical in the editor, a harness, and
+CI. Per-script members cache on path|mtime (the registry's own discipline), so only the first
+derivation after a save pays.
+
+Tested the way the bug demanded: the suite pins the renamed-child and duplicate-instance
+fragments, the publishing-vs-empty-pack census rule, and a crowded-instance scale case (100
+children, 30 behaviours across the whole fleet, budgeted); the 20-refresh project-scale budget
+still holds; and a scripted probe inside the REAL editor - scratch scene, real Scene-dock
+selection, real dialog - verified grounding, the tree labels, and real-name insertion, 6/6.
+
 ### Added - Self Phase 2: Behaviours, the Host subgroup, and robust lookups
 
 The Self section now reaches what C3's `Self.Platform.VectorX` reaches - the attached behaviours:
@@ -486,8 +513,8 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
 	actually wants), wildcard pattern match, is-one-of, alphabetical order, natural order ("item2"
 	before "item10").
   - **Numbers** - **Values Are Near** (a tolerance, because `==` on decimals is a coin flip after any
-    arithmetic), outside-range, positive, negative, even, odd, multiple-of (guarded against a zero
-    divisor), whole-number, and a -1/0/1 compare result.
+	arithmetic), outside-range, positive, negative, even, odd, multiple-of (guarded against a zero
+	divisor), whole-number, and a -1/0/1 compare result.
   - **Vectors** - **Vectors Are Equal** and **Colors Are Equal** using Godot's approximate compare for
     the same reason, plus within-distance, farther-than, points-the-same-way (a dot product with a
     forgiveness knob), and longer-than.
@@ -510,7 +537,7 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
 	the game pause into account, and **Node Is Frozen By The Game Pause** tells "paused" apart from
 	"paused but exempt".
   - Finer grained: per-callback switches for the per-frame, physics and input work, their matching
-    conditions, the two process-order knobs, and Node Is Ready.
+	conditions, the two process-order knobs, and Node Is Ready.
 
 ### Changed - README refreshed for the raycasting wave
 
@@ -614,11 +641,11 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
   and forgetting to FAILED the suite - which is how the new `Overlap 3D` section announced itself.
   `category_icon_name` now derives one:
   - from the category NAME read as a class, case- and space-insensitively, so `Raycast 2D` finds
-    `RayCast2D` and `Tilemap` finds `TileMap` despite neither spelling matching;
+	`RayCast2D` and `Tilemap` finds `TileMap` despite neither spelling matching;
   - failing that, from the host class its verbs actually run on - the most specific one they share,
-    so a section lands on the thing it is about rather than the base every node inherits;
+	so a section lands on the thing it is about rather than the base every node inherits;
   - failing that, from a host hint the caller passes, which is how an ADDON's own category resolves
-    without being listed anywhere: the row builder now hands over the definition's host.
+	without being listed anywhere: the row builder now hands over the definition's host.
 - The table stays, shrunk to 53 entries, but its job has changed: it is now an OVERRIDE list for
   categories no derivation can reach (`Math & Random`, `General Actions`, `Helpers` - abstract
   groupings whose verbs have no host) plus the handful where a human choice reads better than the
@@ -810,7 +837,7 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
   sheet or the registry.
 - The warnings are the part that stops a disappointing import, each phrased as the fix:
   - an untyped `func is_ready():` publishes as an **Action**, not a Condition, and its parameters lose
-    their types - so the scan names those methods and says to add `-> bool` / `-> float`;
+	their types - so the scan names those methods and says to add `-> bool` / `-> float`;
   - no `class_name` means the provider id comes from the file name (and it says which name);
   - more than 25 verbs from one script suggests marking the internal ones `## @ace_hidden`;
   - nothing published explains what does qualify (own signals, `@export` properties, public methods);
@@ -864,14 +891,14 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
 - A documentation audit across all 76 packs found two bugs in the generator behind
   `EVENTSHEETS-VOCABULARY.md`, each silently losing content from every pack it touched:
   - **Only the FIRST trigger of each pack was listed.** The scanner split a pack into members on blank
-    lines, but compiler output separates consecutive `signal` declarations with a single newline - so a
-    whole run of triggers collapsed into one member and the rest were dropped. It now walks line by line,
-    pairing each run of `##` annotations with the declaration that closes it. The index went from **49
-    listed triggers to 164**: On Drift Recovered, On Combo Failed, On Spend Failed, On Cap Hit and 100+
-    others were invisible.
+	lines, but compiler output separates consecutive `signal` declarations with a single newline - so a
+	whole run of triggers collapsed into one member and the rest were dropped. It now walks line by line,
+	pairing each run of `##` annotations with the declaration that closes it. The index went from **49
+	listed triggers to 164**: On Drift Recovered, On Combo Failed, On Spend Failed, On Cap Hit and 100+
+	others were invisible.
   - **A description containing a quoted example was truncated at that quote.** `Registers a combo ... (for
 	example "down,forward,punch")` stopped dead at `punch`. The close of the annotation is now anchored to
-    the end of its line, so inner quotes pass through.
+	the end of its line, so inner quotes pass through.
 
 ### Fixed - typed lists reach the custom Inspector drawers
 
@@ -894,16 +921,16 @@ Plain string options are untouched, so the 71 packs that never labeled anything 
   - **A malformed grid read as clean.** A grid that is present but is not a list of rows (a JSON object
 	where an array belongs) loads as *nothing*, yet validation reported no problem - so a book whose
 	content silently vanished looked healthy. Both validators now report the grid's shape (and a stray
-    non-row inside an otherwise valid grid).
+	non-row inside an otherwise valid grid).
   - **Additive loads reported false problems.** The loader is additive, so a row may reference a storylet
-    registered earlier (by a previous load or a Define Storylet action). Validation only knew the ids
-    inside the book being checked, so it called such a row a dangling reference even though the load
-    applies it correctly. It now resolves against the live library as well, while still flagging duplicate
-    ids *within* a book.
+	registered earlier (by a previous load or a Define Storylet action). Validation only knew the ids
+	inside the book being checked, so it called such a row a dangling reference even though the load
+	applies it correctly. It now resolves against the live library as well, while still flagging duplicate
+	ids *within* a book.
   - **A null cell became a silent trap.** JSON writes an omitted field as `null`, and `Dictionary.get`
 	only falls back to its default when the key is *absent* - so `"max_plays": null` read as `0` and made
-    the storylet permanently ineligible, with validation calling the book clean. Cells now treat a
-    present-null as missing.
+	the storylet permanently ineligible, with validation calling the book clean. Cells now treat a
+	present-null as missing.
 - Also: a JSON number now reads like the equivalent resource cell (`gold -10`, not `gold -10.0`) in
   forecasts and meta, since JSON parses every number as a float.
 
