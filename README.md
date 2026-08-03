@@ -227,3 +227,24 @@ This plugin stands on the shoulders of the tools that made visual, code-optional
 - **[Godot Engine](https://godotengine.org/)** - the open-source engine this is built on and for; every sheet compiles to plain, idiomatic GDScript that runs with zero dependency on this plugin.
 
 These are independent projects and trademarks of their respective owners; this plugin is not affiliated with or endorsed by any of them.
+
+## 🤖 AI Use Disclosure
+
+**This project is built with heavy use of AI.** The large majority of the plugin's code, the
+bundled behavior packs, the documentation, and the test suite were written with Anthropic's
+Claude (through Claude Code), working under my direction and review. Every change is gated by
+the project's own verification: the full test suite, byte-exact round-trip checks on generated
+code, and rendered previews of UI work. I want that to be completely clear up front, not
+something you discover later.
+
+It started as a pet project: an experiment to see whether a full visual-scripting solution
+could actually be built this way - pairing AI with deep domain-specific knowledge of event
+sheets (Construct, Clickteam Fusion, GDevelop lineage) and of Godot itself - and how far that
+approach could carry a real, working tool. This repository is the honest answer so far.
+
+**If you choose not to use this addon because of ethical concerns about AI, that is a
+completely legitimate choice and I respect it fully - no argument, no judgment, and no hard
+feelings.** People draw this line in different places for real reasons, and I do not fault
+anyone for drawing it somewhere other than where I did. The project is MIT licensed and will
+still be here if that ever changes; if it does not, I wish you well and thank you for reading
+this far.
