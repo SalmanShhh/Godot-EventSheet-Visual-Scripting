@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - guide skeletons carry the styled-sentences block
+
+`EventSheetAddonGuideScaffold` (and so `EventSheets.addon_guide_skeleton` + the CLI) now
+opens the generated ACE reference with the same "how the verbs read" block the shipped
+guides carry: every marked `@ace_display_template` rendered as a markdown bullet, values
+**bold**, node references *italic*. Plain templates are skipped on purpose - the viewport
+already bolds their values automatically, so the guide has nothing extra to show. The
+docs/Addons convention now survives future guide regeneration for free.
+
 ### Added - the inline colour picker remembers your palette (and advertises itself)
 
 Clicking a row's colour swatch has opened a ColorPicker in place (no params dialog, one
