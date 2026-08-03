@@ -114,6 +114,8 @@ sheet - every published verb, trigger, and exported knob rendered as the picker 
 it, live from the unsaved sheet. Rename a verb, move its category, or toggle featured, and
 its picker face updates there immediately.
 
+<img src="images/picker-preview-panel.png" alt="The Picker preview panel expanded on the Health pack: 44 entries, each with its action pill, the featured star on Take Damage and Heal, the parameter list in parentheses, and the Health category chip." width="300">
+
 ---
 
 ## 6. After You Create the Verb

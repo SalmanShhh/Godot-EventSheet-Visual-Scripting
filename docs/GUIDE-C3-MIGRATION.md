@@ -256,6 +256,8 @@ i18n (Godot translations).
   the verb you actually use wins the tie, the summoning key leans toward its own kind
   (`A` prefers actions), and every suggestion names the next parameter your sentence has
   not filled yet ("⚡ Heal · amount…") so you always know what the next word will do.
+
+  <img src="images/ghost-row-chips.png" alt="The Ghost Row popup twice: freshly opened with suggestion chips (Play Sound, Set Variable, Make Shuffle Bag, Set Seed) under the query field, and after typing 'heal' with the ranked list showing each Heal candidate naming its next unfilled parameter - amount, target." width="640">
 - **Repeated values are one pick, not a retype.** Parameter fields remember the last five
   values you committed for that exact verb-and-parameter across the whole project, offered
   from a small dropdown on the field's row - the third time an action needs `"jump"` or
@@ -263,6 +265,8 @@ i18n (Godot translations).
 - **You always know which group you are in.** On long sheets a slim breadcrumb strip
   ("Gameplay ▸ Combat") stays pinned under the column header while you scroll inside a
   group; click it to jump back to the group's own bar.
+
+  <img src="images/group-breadcrumb.png" alt="Scrolled deep inside a sheet: the slim Gameplay - Combat breadcrumb strip pinned above the rows, with events 8 and 9 visible beneath it." width="560">
 - **View > Compact Rows** tightens row padding for jam-speed scanning - text stays the same
   size, only the air shrinks - and toggling it off restores the roomier default. The choice
   is remembered per project.

@@ -127,12 +127,16 @@ before you save. Exported variables appear once each, labelled with the get / se
 subtract verbs they will publish, and a not-yet-lifted `## @ace_*` shell previews under its
 declared name too.
 
+<img src="images/picker-preview-panel.png" alt="The Picker preview panel expanded on the Health pack: 44 entries, each with its action pill, the featured star on Take Damage and Heal, the parameter list in parentheses, and the Health category chip." width="300">
+
 **When you ship an update, use Sheet > Publish New Version…** instead of hand-editing the
 `@ace_version` annotation. Pick Patch / Minor / Major, type a one-line change note, and the
 dialog shows the exact old → new version before you commit. It bumps the annotation in
 place, records the note as a doc comment directly beneath it (the file accumulates its own
 changelog), backs the script up first, and re-imports so the banner chip reads the new
 version at once. A pack with no version yet starts at 1.0.0 and bumps from there.
+
+<img src="images/publish-version-dialog.png" alt="The Publish New Version dialog: a Bump dropdown reading Patch - fixes, no new verbs, a one-line Change note field, the live 1.0.0 to 1.0.1 preview, and Publish / Cancel buttons." width="420">
 
 ---
 

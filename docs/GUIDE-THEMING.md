@@ -87,6 +87,8 @@ the comfortable default. The choice is per user and per project (editor metadata
 committed), independent of whichever theme is active, and it composes with the editor's
 display scale - a compact sheet on a HiDPI monitor stays crisp.
 
+<img src="images/compact-rows.png" alt="The same Health pack rows twice: Comfortable on the left, Compact on the right - the compact side fits more rows in the same height while every label stays the same text size." width="640">
+
 ## Theme token spec
 
 The Construct-inspired token list and field mapping now live in the **Theme Editor**
