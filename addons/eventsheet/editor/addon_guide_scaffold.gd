@@ -98,6 +98,13 @@ static func generate(script_path: String) -> String:
 	out.append("")
 	out.append("## ACE reference")
 	out.append("")
+	var sentences: Array = styled_sentences(source)
+	if not sentences.is_empty():
+		out.append("On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:")
+		out.append("")
+		for sentence: String in sentences:
+			out.append("- %s" % sentence)
+		out.append("")
 	_table(out, "Actions", actions)
 	_table(out, "Conditions", conditions)
 	_table(out, "Expressions", expressions)
@@ -169,6 +176,36 @@ static func _method_row(member_name: String, info: Dictionary) -> String:
 				type_string(int((argument as Dictionary).get("type", TYPE_NIL)))])
 	return "| `%s` | %s | (when to reach for it) |" % [
 		member_name, ", ".join(parameters) if not parameters.is_empty() else "-"]
+
+
+## The pack's MARKED display sentences as markdown bullets, in source order: every
+## `## @ace_display_template("...")` carrying BBCode-lite becomes its row read with
+## `[b]{x}[/b]` rendered **bold** and `[i]{x}[/i]` rendered *italic* (plain templates are
+## skipped - the viewport already bolds their values automatically, so the guide has nothing
+## extra to show). Static + pure over the source text, so the block can never disagree with
+## the annotations the picker reads.
+static func styled_sentences(source: String) -> Array:
+	var sentences: Array = []
+	for line: String in source.split("\n"):
+		var stripped: String = line.strip_edges()
+		if not stripped.begins_with("## @ace_display_template("):
+			continue
+		var open: int = stripped.find("(\"")
+		var close: int = stripped.rfind("\")")
+		if open < 0 or close <= open:
+			continue
+		var template: String = stripped.substr(open + 2, close - open - 2)
+		if not template.contains("[b]") and not template.contains("[i]"):
+			continue
+		var rendered: String = template
+		var bold: RegEx = RegEx.new()
+		bold.compile("\\[b\\]\\{([^}]+)\\}\\[/b\\]")
+		rendered = bold.sub(rendered, "**$1**", true)
+		var italic: RegEx = RegEx.new()
+		italic.compile("\\[i\\]\\{([^}]+)\\}\\[/i\\]")
+		rendered = italic.sub(rendered, "*$1*", true)
+		sentences.append(rendered)
+	return sentences
 
 
 ## The value inside `## @ace_xxx(value)` at pack level, "" when absent.

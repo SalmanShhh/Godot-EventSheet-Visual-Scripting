@@ -41,6 +41,32 @@ static func run() -> bool:
 	# The API surface delegates to the same generator.
 	all_passed = _check("EventSheets.addon_guide_skeleton delegates",
 		EventSheets.addon_guide_skeleton("res://eventsheet_addons/sine/sine_behavior.gd") == markdown, true) and all_passed
+
+	# Styled sentences: a marked @ace_display_template renders as the EXACT guide bullet
+	# ([b]{x}[/b] -> **x**, [i]{x}[/i] -> *x*), a plain template contributes nothing, and a
+	# pack with marked templates opens its ACE reference with the block (pinned on Health,
+	# whose 15 authored sentences ship marked).
+	var fixture: String = "\n".join(PackedStringArray([
+		"class_name ScaffoldSentenceFixture",
+		"extends Node",
+		"",
+		"",
+		"## @ace_action",
+		"## @ace_name(\"Push Toward\")",
+		"## @ace_display_template(\"Push [i]{node}[/i] toward [b]{target}[/b] at [b]{speed}[/b]\")",
+		"func push_toward(node: Node, target: float, speed: float) -> void:",
+		"\tpass",
+	]))
+	all_passed = _check("a marked template renders as the exact bullet",
+		EventSheetAddonGuideScaffold.styled_sentences(fixture),
+		["Push *node* toward **target** at **speed**"]) and all_passed
+	all_passed = _check("a plain template contributes no sentence",
+		EventSheetAddonGuideScaffold.styled_sentences("## @ace_display_template(\"Heal {amount} HP\")"), []) and all_passed
+	var health_markdown: String = EventSheetAddonGuideScaffold.generate("res://eventsheet_addons/health/health_behavior.gd")
+	all_passed = _check("a marked pack's skeleton opens the ACE reference with the block",
+		health_markdown.contains("read as styled sentences") and health_markdown.contains("- Take **amount** damage"), true) and all_passed
+	all_passed = _check("an unmarked pack's skeleton carries no sentence block",
+		markdown.contains("read as styled sentences"), false) and all_passed
 	return all_passed
 
 
