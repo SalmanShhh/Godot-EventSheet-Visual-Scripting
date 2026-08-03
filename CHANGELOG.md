@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - the sticky group breadcrumb
+
+Scrolled deep inside a group on a 1,000-row sheet, the sheet now tells you where you are: a slim
+**Gameplay - Combat** strip stays pinned under the column header while the enclosing group bars
+are out of sight, and CLICKING it jumps back to the innermost group's bar. Implemented as a draw
+pass inside the virtualized canvas (which already redraws on scroll), not a Control - so the
+strip appearing and disappearing can never reflow the scroll area or jitter at group boundaries,
+and it costs a map lookup per frame, never a scan (the enclosure map is one O(rows) pass, cached
+until the flat rows rebuild). A group bar still visible at the top maps to its PARENT, so the
+crumb never repeats the bar you can already see. `tests/group_breadcrumb_test.gd` pins the
+derivation values (nesting, sibling reset, group-at-top, top level), and the render check
+asserted the click actually lands on the group bar.
+
 ### Added - View > Compact Rows (a density toggle)
 
 Comfortable (the default) or Compact: one check item that trades vertical breathing room for

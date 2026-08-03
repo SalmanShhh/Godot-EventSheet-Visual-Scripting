@@ -256,6 +256,7 @@ func _init() -> void:
 	_drag.init(self)
 	_input_handlers.init(self)
 	_row_metrics_helper.init(self)
+	_group_breadcrumb.init(self)
 	_live_values_helper.init(self)
 	_tooltip_helper.init(self)
 	_empty_state_helper.init(self)
@@ -1516,6 +1517,7 @@ func _draw() -> void:
 	_draw_box_selection_overlay()
 	_draw_divider_guide(width)
 	_draw_param_cursor(font, font_size)
+	_group_breadcrumb.draw(width, font, font_size)
 	_draw_drag_ghost(font, font_size)
 
 
@@ -1633,7 +1635,13 @@ func _gui_input(event: InputEvent) -> void:
 		_handle_mouse_motion(event as InputEventMouseMotion)
 		return
 	if event is InputEventMouseButton:
-		_handle_mouse_button(event as InputEventMouseButton)
+		var mouse_button: InputEventMouseButton = event as InputEventMouseButton
+		# The sticky breadcrumb claims a plain left click on its strip (jump to the group bar)
+		# before the row hit-test can read the same click as a row selection underneath it.
+		if mouse_button.pressed and mouse_button.button_index == MOUSE_BUTTON_LEFT 				and _group_breadcrumb.handle_click(mouse_button.position):
+			accept_event()
+			return
+		_handle_mouse_button(mouse_button)
 		return
 	if event is InputEventKey:
 		_handle_key(event as InputEventKey)
@@ -1753,6 +1761,7 @@ func _refresh_rows() -> void:
 	_param_cursor = {}
 	_root_rows = _build_rows_from_sheet(_sheet)
 	_update_layout_style_signature(_get_font_size())
+	_group_breadcrumb.invalidate()
 	_flat_rows.clear()
 	# Live filter lens (the C3 "show only matching events" view): a non-mutating view
 	# predicate - top-level rows whose subtree never mentions the term are skipped at
@@ -2194,6 +2203,8 @@ func get_host_context_label() -> String:
 
 # ── Row metrics (per-row top/height vertical layout; see ViewportRowMetrics) ──
 var _row_metrics_helper: ViewportRowMetrics = ViewportRowMetrics.new()
+# ── Sticky group breadcrumb (a draw pass pinned at the scroll offset; see its file) ──
+var _group_breadcrumb: ViewportGroupBreadcrumb = ViewportGroupBreadcrumb.new()
 
 # ── Live values (rung 3): inline chips next to variable rows (see ViewportLiveValuesHelper) ──
 var _live_values_helper: ViewportLiveValuesHelper = ViewportLiveValuesHelper.new()
