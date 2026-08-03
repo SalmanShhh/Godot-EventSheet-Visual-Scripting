@@ -26,6 +26,16 @@ func init(viewport: Control) -> void:
 	_viewport = viewport
 
 
+## Whether the pointer sits on a cell's colour swatch (the clickable box that opens the
+## inline picker) - drives the hand-cursor affordance below.
+func _over_color_swatch(hit: Dictionary, local_position: Vector2) -> bool:
+	var metadata: Variant = hit.get("span_metadata", {})
+	if not (metadata is Dictionary):
+		return false
+	var swatch_rect: Variant = (metadata as Dictionary).get("swatch_rect")
+	return swatch_rect is Rect2 and (swatch_rect as Rect2).has_point(local_position)
+
+
 func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	# Ctrl-hover affordance: the hand cursor advertises the Ctrl+Click jump on resolvable cells.
 	if _viewport.navigation_probe.is_valid() and (event.ctrl_pressed or event.meta_pressed):
@@ -70,6 +80,10 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 	elif over_drag_zone:
 		_viewport.clear_divider_guide()
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_MOVE
+	elif _over_color_swatch(hit, local_position):
+		# The colour swatch is clickable (opens the inline picker) - advertise it like a link.
+		_viewport.clear_divider_guide()
+		_viewport.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	else:
 		_viewport.clear_divider_guide()
 		_viewport.mouse_default_cursor_shape = Control.CURSOR_ARROW

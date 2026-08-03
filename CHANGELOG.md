@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - the inline colour picker remembers your palette (and advertises itself)
+
+Clicking a row's colour swatch has opened a ColorPicker in place (no params dialog, one
+undo step on close) since v0.16; it now carries a **saved palette**: presets you save in
+the picker persist per project (editor metadata, never committed) and reappear in every
+session - the C3 swatch shelf. Saving or removing a preset in any picker updates the shelf
+live, deduped and capped at 30. Hovering the swatch now shows the **hand cursor**, so the
+click affordance is discoverable. Heavily verified: 16 value-pinned headless assertions
+(shelf dedupe/cap/removal, both signal directions, the hover predicate, and the full commit
+path through the real undo funnel onto the live sheet), plus a 6/6 real-editor probe that
+dispatches an ACTUAL click through the viewport's input path - popup opens seeded with the
+cell's colour and the saved shelf, and closing it commits the picked colour onto the live
+sheet.
+
 ### Added - every pack's featured verbs carry authored styled sentences
 
 The Health treatment, swept across the fleet: **36 more packs' featured verbs** (60 verbs)

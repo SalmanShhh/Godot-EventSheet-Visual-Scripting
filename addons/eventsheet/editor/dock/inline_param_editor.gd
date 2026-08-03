@@ -245,7 +245,10 @@ func _emit_data_class_default_edit(raw_row: Resource, field_index: int, new_valu
 
 ## Clicking a cell's colour swatch opens a ColorPicker right there (no params dialog), inline.
 ## The pick is committed once, when the popup closes - so dragging the picker is one clean undo step, not
-## one per colour change.
+## one per colour change. The picker carries the project's SAVED PALETTE (the C3 swatch shelf):
+## presets a user saves persist per project and reappear in every session; saving/removing one
+## in the picker updates the store live. Headless-safe: state arms and presets load, only the
+## window itself is skipped - tests drive the same commit path a real close takes.
 func on_color_swatch_edit_requested(ace: Resource, param_id: String, current_color: Color) -> void:
 	if _color_swatch_popup == null:
 		_color_swatch_popup = PopupPanel.new()
@@ -256,9 +259,15 @@ func on_color_swatch_edit_requested(ace: Resource, param_id: String, current_col
 		_dock.add_child(_color_swatch_popup)
 		# Commit once on close (final colour) rather than on every continuous color_changed.
 		_color_swatch_popup.popup_hide.connect(func() -> void: _commit_color_swatch_edit(_color_swatch_picker.color))
+		for preset: Color in EventSheetColorPresets.all():
+			_color_swatch_picker.add_preset(preset)
+		_color_swatch_picker.preset_added.connect(func(color: Color) -> void: EventSheetColorPresets.add(color))
+		_color_swatch_picker.preset_removed.connect(func(color: Color) -> void: EventSheetColorPresets.remove(color))
 	_color_swatch_target = ace
 	_color_swatch_key = param_id
 	_color_swatch_picker.color = current_color
+	if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
+		return
 	_color_swatch_popup.reset_size()
 	_color_swatch_popup.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), _color_swatch_popup.size))
 
