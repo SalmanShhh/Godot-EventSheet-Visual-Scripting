@@ -254,7 +254,7 @@ static func build() -> bool:
 		"else:",
 		"\ton_damaged.emit()",
 		"\ton_health_changed.emit()"
-	])))
+	])), "Take [b]{amount}[/b] damage")
 
 	Lib.append_function(sheet, "heal", "Heal", "Health",
 		"Restores health up to max_health.",
@@ -265,7 +265,7 @@ static func build() -> bool:
 		"current_health = minf(current_health + amount, max_health)",
 		"on_healed.emit()",
 		"on_health_changed.emit()"
-	])))
+	])), "Heal [b]{amount}[/b] HP")
 
 	Lib.append_function(sheet, "set_health_value", "Set Health", "Health",
 		"Sets current health directly, firing damage/heal/death as appropriate.",
@@ -292,7 +292,7 @@ static func build() -> bool:
 		"\tlast_heal = new_value - old_value",
 		"\ton_healed.emit()",
 		"\ton_health_changed.emit()"
-	])))
+	])), "Set health to [b]{amount}[/b]")
 
 	Lib.append_function(sheet, "set_max_health_value", "Set Max Health", "Health",
 		"Sets max health (clamps current down if needed).",
@@ -301,20 +301,20 @@ static func build() -> bool:
 		"if current_health > max_health:",
 		"\tcurrent_health = max_health",
 		"\ton_health_changed.emit()"
-	])))
+	])), "Set max health to [b]{amount}[/b]")
 
 	Lib.append_function(sheet, "set_invulnerable", "Set Invulnerable", "Health",
 		"Toggles invulnerability (takeDamage no-op while true).",
 		[["state", "bool"]], "\n".join(PackedStringArray([
 		"invulnerable = state"
-	])))
+	])), "Set invulnerable to [b]{state}[/b]")
 
 	Lib.append_function(sheet, "set_health_absorption_rate", "Set Health Absorption Rate", "Health",
 		"Damage multiplier for real HP (resistance); 0 = invulnerable.",
 		[["rate", "float"]], "\n".join(PackedStringArray([
 		"health_absorption_rate = maxf(0.0, rate)",
 		"invulnerable = (rate == 0.0)"
-	])))
+	])), "Set health absorption rate to [b]{rate}[/b]")
 
 	Lib.append_function(sheet, "add_health_pool", "Add Health Pool", "Health",
 		"Adds to a named health pool (shield/armour).",
@@ -325,7 +325,7 @@ static func build() -> bool:
 		"pool.amount = pool.amount + amount",
 		"last_trigger_pool_type = type",
 		"on_health_pool_added.emit()"
-	])))
+	])), "Add [b]{amount}[/b] to the [b]{type}[/b] pool")
 
 	Lib.append_function(sheet, "set_health_pool", "Set Health Pool", "Health",
 		"Sets a health pool amount (fires Added only when it increases).",
@@ -338,14 +338,14 @@ static func build() -> bool:
 		"\ton_health_pool_added.emit()",
 		"else:",
 		"\tpool.amount = new_amount"
-	])))
+	])), "Set the [b]{type}[/b] pool to [b]{amount}[/b]")
 
 	Lib.append_function(sheet, "clear_health_pool", "Clear Health Pool", "Health",
 		"Zeroes one named health pool.",
 		[["type", "String"]], "\n".join(PackedStringArray([
 		"if health_pools.has(type):",
 		"\t(health_pools[type] as HealthPool).amount = 0.0"
-	])))
+	])), "Clear the [b]{type}[/b] pool")
 
 	Lib.append_function(sheet, "clear_all_health_pools", "Clear All Health Pools", "Health",
 		"Zeroes every health pool.",
@@ -358,13 +358,13 @@ static func build() -> bool:
 		"Sets a pool's per-second decay rate.",
 		[["type", "String"], ["rate", "float"]], "\n".join(PackedStringArray([
 		"_get_pool(type).decay_rate = maxf(0.0, rate)"
-	])))
+	])), "Set [b]{type}[/b] pool decay rate to [b]{rate}[/b]")
 
 	Lib.append_function(sheet, "set_health_pool_absorption_rate", "Set Health Pool Absorption Rate", "Health",
 		"Sets a pool's absorption multiplier (how hard it spends to soak damage).",
 		[["type", "String"], ["rate", "float"]], "\n".join(PackedStringArray([
 		"_get_pool(type).absorption_rate = maxf(0.0, rate)"
-	])))
+	])), "Set [b]{type}[/b] pool absorption rate to [b]{rate}[/b]")
 
 	Lib.append_function(sheet, "set_health_pool_rates", "Set Health Pool Rates", "Health",
 		"Sets a pool's decay and absorption rates at once.",
@@ -372,13 +372,13 @@ static func build() -> bool:
 		"var pool: HealthPool = _get_pool(type)",
 		"pool.decay_rate = maxf(0.0, decay_rate)",
 		"pool.absorption_rate = maxf(0.0, absorption_rate)"
-	])))
+	])), "Set [b]{type}[/b] pool rates to decay [b]{decay_rate}[/b], absorption [b]{absorption_rate}[/b]")
 
 	Lib.append_function(sheet, "set_health_pool_priority", "Set Health Pool Priority", "Health",
 		"Sets a pool's absorption priority (lower absorbs first).",
 		[["type", "String"], ["priority", "float"]], "\n".join(PackedStringArray([
 		"_get_pool(type).priority = priority"
-	])))
+	])), "Set [b]{type}[/b] pool priority to [b]{priority}[/b]")
 
 	Lib.append_function(sheet, "setup_health_pool", "Setup Health Pool", "Health",
 		"Creates/configures a health pool in one call.",
@@ -388,7 +388,7 @@ static func build() -> bool:
 		"pool.decay_rate = maxf(0.0, decay_rate)",
 		"pool.absorption_rate = maxf(0.0, absorption_rate)",
 		"pool.priority = priority"
-	])))
+	])), "Setup [b]{type}[/b] pool: [b]{amount}[/b] HP, decay [b]{decay_rate}[/b], absorption [b]{absorption_rate}[/b], priority [b]{priority}[/b]")
 
 	Lib.append_function(sheet, "revive", "Revive", "Health",
 		"Clears death and restores health (amount<=0 → full).",
@@ -397,7 +397,7 @@ static func build() -> bool:
 		"current_health = minf(amount, max_health) if amount > 0.0 else max_health",
 		"on_revived.emit()",
 		"on_health_changed.emit()"
-	])))
+	])), "Revive with [b]{amount}[/b] HP")
 
 	var persistence: RawCodeRow = RawCodeRow.new()
 	persistence.code = "\n".join(PackedStringArray([

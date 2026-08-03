@@ -23,7 +23,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Spins a 3D node around an axis by an angle, often using speed times delta."))
 	descriptors.append(F.make_descriptor("Core", "SetRotationDeg3D", "Set Rotation (3D, Degrees)", ACEDescriptor.ACEType.ACTION, "rotation_degrees = {degrees}", "", [F.make_param("degrees", "String", "Vector3(0, 0, 0)", "Degrees", "Euler angles in degrees.", "expression")], "General Actions", "Set rotation to {degrees}", "Node3D")
 		.described("Sets a 3D node's rotation directly using degree angles."))
-	descriptors.append(F.make_descriptor("Core", "LookAt3D", "Look At", ACEDescriptor.ACEType.ACTION, "look_at({target})", "", [F.make_param("target", "String", "Vector3(0, 0, -1)", "Target", "World position to face. Must differ from this node's own position (and not be vertically aligned with it).", "expression")], "General Actions", "Look at {target}", "Node3D")
+	descriptors.append(F.make_descriptor("Core", "LookAt3D", "Look At", ACEDescriptor.ACEType.ACTION, "look_at({target})", "", [F.make_param("target", "String", "Vector3(0, 0, -1)", "Target", "World position to face. Must differ from this node's own position (and not be vertically aligned with it).", "expression")], "General Actions", "Look at [i]{target}[/i]", "Node3D")
 		.described("Turns a 3D node to face a world position (e.g. an enemy facing the player)."))
 	descriptors.append(F.make_descriptor("Core", "SetScale3D", "Set Scale (3D)", ACEDescriptor.ACEType.ACTION, "scale = {scale}", "", [F.make_param("scale", "String", "Vector3(1, 1, 1)", "Scale", "Scale factor.", "expression")], "General Actions", "Set scale to {scale}", "Node3D")
 		.described("Sets how big a 3D node is by changing its scale."))

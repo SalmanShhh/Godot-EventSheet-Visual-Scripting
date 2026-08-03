@@ -270,6 +270,10 @@ i18n (Godot translations).
 - **View > Compact Rows** tightens row padding for jam-speed scanning - text stays the same
   size, only the air shrinks - and toggling it off restores the roomier default. The choice
   is remembered per project.
+- **Rows read like C3's.** Every substituted parameter value draws **bold** inside its
+  sentence, node/object references draw *italic* in the verbs that take one ("add
+  *$Enemy* to **"enemies"**"), and numbers, strings and booleans keep their tints -
+  automatic for every built-in verb and behavior pack, no authoring required.
 - **Your C3 keyboard grammar works verbatim** (rebindable via Tools > Keyboard Shortcuts):
 
   | Key | Action |

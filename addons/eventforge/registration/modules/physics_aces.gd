@@ -15,9 +15,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── 2D joints ──
-	descriptors.append(F.make_descriptor("Core", "SetJointBodyA", "Set Joint Body A", ACEDescriptor.ACEType.ACTION, "node_a = {target}", "", [F.make_param("target", "String", "^\"../BodyA\"", "Body A", "NodePath of the first body.", "expression")], "Joints", "Set joint body A to {target}", "Joint2D")
+	descriptors.append(F.make_descriptor("Core", "SetJointBodyA", "Set Joint Body A", ACEDescriptor.ACEType.ACTION, "node_a = {target}", "", [F.make_param("target", "String", "^\"../BodyA\"", "Body A", "NodePath of the first body.", "expression")], "Joints", "Set joint body A to [i]{target}[/i]", "Joint2D")
 		.described("Sets the first physics body a joint connects to."))
-	descriptors.append(F.make_descriptor("Core", "SetJointBodyB", "Set Joint Body B", ACEDescriptor.ACEType.ACTION, "node_b = {target}", "", [F.make_param("target", "String", "^\"../BodyB\"", "Body B", "NodePath of the second body.", "expression")], "Joints", "Set joint body B to {target}", "Joint2D")
+	descriptors.append(F.make_descriptor("Core", "SetJointBodyB", "Set Joint Body B", ACEDescriptor.ACEType.ACTION, "node_b = {target}", "", [F.make_param("target", "String", "^\"../BodyB\"", "Body B", "NodePath of the second body.", "expression")], "Joints", "Set joint body B to [i]{target}[/i]", "Joint2D")
 		.described("Sets the second physics body a joint connects to."))
 	descriptors.append(F.make_descriptor("Core", "BreakJoint", "Break Joint", ACEDescriptor.ACEType.ACTION, "node_b = NodePath(\"\")", "", [], "Joints", "Break the joint", "Joint2D")
 		.described("Breaks a joint by clearing its second body, e.g. snapping a rope or chain."))
@@ -33,9 +33,9 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Sets how quickly a damped spring stops bouncing, controlling its wobble."))
 
 	# ── 3D joints ──
-	descriptors.append(F.make_descriptor("Core", "SetJointBodyA3D", "Set Joint Body A (3D)", ACEDescriptor.ACEType.ACTION, "node_a = {target}", "", [F.make_param("target", "String", "^\"../BodyA\"", "Body A", "NodePath of the first body.", "expression")], "Joints", "Set joint body A to {target}", "Joint3D")
+	descriptors.append(F.make_descriptor("Core", "SetJointBodyA3D", "Set Joint Body A (3D)", ACEDescriptor.ACEType.ACTION, "node_a = {target}", "", [F.make_param("target", "String", "^\"../BodyA\"", "Body A", "NodePath of the first body.", "expression")], "Joints", "Set joint body A to [i]{target}[/i]", "Joint3D")
 		.described("Picks the first 3D body a joint connects, wiring up what it links to."))
-	descriptors.append(F.make_descriptor("Core", "SetJointBodyB3D", "Set Joint Body B (3D)", ACEDescriptor.ACEType.ACTION, "node_b = {target}", "", [F.make_param("target", "String", "^\"../BodyB\"", "Body B", "NodePath of the second body.", "expression")], "Joints", "Set joint body B to {target}", "Joint3D")
+	descriptors.append(F.make_descriptor("Core", "SetJointBodyB3D", "Set Joint Body B (3D)", ACEDescriptor.ACEType.ACTION, "node_b = {target}", "", [F.make_param("target", "String", "^\"../BodyB\"", "Body B", "NodePath of the second body.", "expression")], "Joints", "Set joint body B to [i]{target}[/i]", "Joint3D")
 		.described("Picks the second 3D body a joint connects, completing the link."))
 	descriptors.append(F.make_descriptor("Core", "BreakJoint3D", "Break Joint (3D)", ACEDescriptor.ACEType.ACTION, "node_b = NodePath(\"\")", "", [], "Joints", "Break the joint", "Joint3D")
 		.described("Snaps a 3D joint apart by clearing its second body, releasing the connection."))

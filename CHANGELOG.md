@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Added - the bundled vocabulary adopts BBCode display styling (l10n-safe)
+
+The hand-authored layer on top of the automatic emphasis, the way a C3 addon styles its own
+ACEs. **42 built-in module display texts** now mark their slots explicitly - `[i]` italic
+around node/object references, `[b]` bold around the other parameters ("add *{target}* to
+**{group}**", "Look at *{target}*") - swept by display-argument position only and audited:
+a before/after dump of all 926 descriptors proves every change is tag-insertion (stripping
+the tags reproduces the old string byte-exactly) with zero codegen-template or display-name
+churn. **The Health pack's 15 verbs** carry authored marked sentences ("Take `[b]{amount}[/b]`
+damage", "Add `[b]{amount}[/b]` to the `[b]{type}[/b]` pool") via the new optional
+`display_template` argument on the pack builders' `append_function`, emitted as
+`## @ace_display_template(...)` and round-tripping byte-exactly (drift=0). Two foundations
+make the adoption safe: author-marked cells now KEEP the typed value tints (colour-less
+segments split at value-range boundaries, so `[b]{amount}[/b]` reads bold AND number-green),
+and template translation is BBCode-aware - a marked template that misses a locale's catalog
+retries the stripped sentence as the legacy key, so a translation authored before the styling
+still shows (plain, auto-bolded) instead of regressing to English. Both pinned in
+`tests/display_param_emphasis_test.gd` alongside the styled-branch arming rules.
+
 ### Added - C3-style bold parameter emphasis in every row sentence
 
 Rows now read like Construct 3's: every substituted parameter value draws **bold** inside

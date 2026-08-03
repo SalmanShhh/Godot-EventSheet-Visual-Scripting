@@ -29,7 +29,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Moves keyboard focus to the next control in tab order."))
 	descriptors.append(F.make_descriptor("Core", "FocusPrevious", "Focus Previous", ACEDescriptor.ACEType.ACTION, "var __p_{uid} = find_prev_valid_focus()\nif __p_{uid}: __p_{uid}.grab_focus()", "", [], "UI", "Focus previous control", "Control")
 		.described("Moves keyboard focus to the previous control in tab order."))
-	descriptors.append(F.make_descriptor("Core", "SetFocusNeighbor", "Set Focus Neighbor", ACEDescriptor.ACEType.ACTION, "set_focus_neighbor({side}, {target})", "", [F.make_param("side", "String", "SIDE_RIGHT", "Side", "Which neighbor to set.", "", ["SIDE_LEFT", "SIDE_TOP", "SIDE_RIGHT", "SIDE_BOTTOM"]), F.make_param("target", "String", "^\"../Sibling\"", "Target", "NodePath of the neighbor control.", "expression")], "UI", "Set {side} focus neighbor to {target}", "Control")
+	descriptors.append(F.make_descriptor("Core", "SetFocusNeighbor", "Set Focus Neighbor", ACEDescriptor.ACEType.ACTION, "set_focus_neighbor({side}, {target})", "", [F.make_param("side", "String", "SIDE_RIGHT", "Side", "Which neighbor to set.", "", ["SIDE_LEFT", "SIDE_TOP", "SIDE_RIGHT", "SIDE_BOTTOM"]), F.make_param("target", "String", "^\"../Sibling\"", "Target", "NodePath of the neighbor control.", "expression")], "UI", "Set [b]{side}[/b] focus neighbor to [i]{target}[/i]", "Control")
 		.described("Sets which control gets focus when arrowing in a given direction."))
 	descriptors.append(F.make_descriptor("Core", "HasFocus", "Has Focus", ACEDescriptor.ACEType.CONDITION, "has_focus()", "", [], "UI", "Has focus", "Control")
 		.described("True when this control currently holds keyboard focus."))

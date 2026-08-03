@@ -81,6 +81,47 @@ static func run() -> bool:
 	ok = _check("author BBCode wins: no param ranges on a styled cell", styled.metadata.has("param_ranges"), false) and ok
 	ok = _check("author BBCode still styles", styled.metadata.has("bbcode_segments"), true) and ok
 
+	# ── Author-marked cells KEEP the typed value tints (ranges on the stripped text) ──
+	view._pending_display_bbcode = true
+	var tinted: SemanticSpan = view._make_span("[b]Heal[/b] 5 \"x\"", SemanticSpan.SpanType.VALUE, {"kind": "action"})
+	ok = _check("a marked cell strips for layout", tinted.text, "Heal 5 \"x\"") and ok
+	ok = _check("a marked cell still carries value ranges on the stripped text",
+		tinted.metadata.get("value_ranges"), [[5, 1, "number"], [7, 3, "string"]]) and ok
+
+	# ── Translation safety: a marked template falls back to the locale's PLAIN key ──
+	var made_dir: bool = not DirAccess.dir_exists_absolute("res://eventsheet_translations")
+	if made_dir:
+		DirAccess.make_dir_recursive_absolute("res://eventsheet_translations")
+	var csv: FileAccess = FileAccess.open("res://eventsheet_translations/xx_emphasis_test.csv", FileAccess.WRITE)
+	csv.store_string("keys,xx\nMarked {value} demo,XX {value} fin\n")
+	csv.close()
+	EventSheetL10n.ensure_loaded()
+	var before_locale: String = EventSheetL10n.get_locale()
+	EventSheetL10n.reload_if_changed()
+	EventSheetL10n.set_locale("xx")
+	var marked_definition: ACEDefinition = ACEDefinition.new()
+	marked_definition.provider_id = "Test"
+	marked_definition.id = "MarkedDemo"
+	marked_definition.display_name = "Marked Demo"
+	marked_definition.metadata = {"display_template": "Marked [b]{value}[/b] demo"}
+	marked_definition.parameters = [{"id": "value"}]
+	var builder: ViewportRowBuilder = view._row_builder
+	var translated_out: String = builder._format_display_translated(marked_definition, null, {"value": "7"})
+	ok = _check("a locale that predates the markup gets its PLAIN sentence", translated_out, "XX 7 fin") and ok
+	ok = _check("the plain fallback never arms the styled branch", builder._pending_display_bbcode, false) and ok
+	builder._pending_param_ranges = {}
+	EventSheetL10n.set_locale("en")
+	var english_out: String = builder._format_display_translated(marked_definition, null, {"value": "7"})
+	ok = _check("English keeps the marked template substituted", english_out, "Marked [b]7[/b] demo") and ok
+	ok = _check("markup in the resolved template arms the styled branch", builder._pending_display_bbcode, true) and ok
+	builder._pending_display_bbcode = false
+	builder._pending_param_ranges = {}
+	DirAccess.remove_absolute("res://eventsheet_translations/xx_emphasis_test.csv")
+	if made_dir:
+		DirAccess.remove_absolute("res://eventsheet_translations")
+	EventSheetL10n.reload_if_changed()
+	EventSheetL10n.set_locale(before_locale)
+
 	editor.free()
 	return ok
 

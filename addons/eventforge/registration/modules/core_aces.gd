@@ -72,7 +72,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs after this node has been removed from the scene tree."))
 	descriptors.append(F.make_descriptor("Core", "OnRenamed", "On Renamed", ACEDescriptor.ACEType.TRIGGER, "", "renamed", [], "Signals / Scene / Input", "On renamed", "Node")
 		.described("Runs when this node's name changes in the scene tree."))
-	descriptors.append(F.make_descriptor("Core", "OnChildEnteredTree", "On Child Entered Tree", ACEDescriptor.ACEType.TRIGGER, "", "child_entered_tree", [F.make_param("node", "Node")], "Signals / Scene / Input", "On child entered {node}", "Node")
+	descriptors.append(F.make_descriptor("Core", "OnChildEnteredTree", "On Child Entered Tree", ACEDescriptor.ACEType.TRIGGER, "", "child_entered_tree", [F.make_param("node", "Node")], "Signals / Scene / Input", "On child entered [i]{node}[/i]", "Node")
 		.described("Runs when a child node is added beneath this one, e.g. reacting to spawned items."))
 
 	# HIDDEN-OPTIMIZATION RULE: templates may use expert idioms a beginner wouldn't type

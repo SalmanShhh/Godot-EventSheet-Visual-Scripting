@@ -28,14 +28,19 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 	return true
 
 
-## Shared shape for the spring/tween builders: one exposed-as-ACE function.
-static func append_function(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String) -> void:
+## Shared shape for the spring/tween builders: one exposed-as-ACE function. The optional
+## display_template is the authored row SENTENCE ("Heal [b]{amount}[/b] HP") - it round-trips
+## as `## @ace_display_template(...)` and may carry BBCode-lite ([b]/[i]) for the C3-style
+## styled read; empty keeps the auto-derived "Name {param}" form (which the viewport already
+## bolds automatically).
+static func append_function(sheet: EventSheetResource, function_name: String, display_name: String, category: String, description: String, params: Array, body: String, display_template: String = "") -> void:
 	var event_function: EventFunction = EventFunction.new()
 	event_function.function_name = function_name
 	event_function.expose_as_ace = true
 	event_function.ace_display_name = display_name
 	event_function.ace_category = category
 	event_function.description = description
+	event_function.display_template = display_template
 	for param_pair: Array in params:
 		var parameter: ACEParam = ACEParam.new()
 		parameter.id = str(param_pair[0])

@@ -3084,8 +3084,10 @@ func _function_call_label(action: ACEAction) -> String:
 
 
 func _format_condition_descriptor(condition: ACECondition) -> String:
-	_pending_display_bbcode = _display_template_has_markup(condition.provider_id, condition.ace_id) \
-			or _param_markup_applies(condition.provider_id, condition.ace_id, condition.params)
+	# Rich-param styling arms here; TEMPLATE markup arms inside _format_display_translated,
+	# where the template is RESOLVED - a locale whose catalog predates the markup translates
+	# the plain sentence, and that plain result must not enter the styled branch.
+	_pending_display_bbcode = _param_markup_applies(condition.provider_id, condition.ace_id, condition.params)
 	var base_text: String = _format_condition_descriptor_base(condition)
 	var ace_note: String = str(condition.comment).strip_edges()
 	if not ace_note.is_empty():
@@ -3154,8 +3156,9 @@ func _match_case_summary_lines(events: Array) -> PackedStringArray:
 
 
 func _format_action_descriptor(action: ACEAction) -> String:
-	_pending_display_bbcode = _display_template_has_markup(action.provider_id, action.ace_id) \
-			or _param_markup_applies(action.provider_id, action.ace_id, action.params)
+	# Same split as the condition formatter: rich-param styling arms here, template markup
+	# arms where the template resolves (translation-fallback aware).
+	_pending_display_bbcode = _param_markup_applies(action.provider_id, action.ace_id, action.params)
 	var base_text: String = _format_action_descriptor_base(action)
 	# Awaiting actions wear an hourglass (the GDevelop async-action cue): everything after
 	# this row in the SAME event waits for it, so the suspension point should be visible.
@@ -3355,10 +3358,14 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 	if str(span.metadata.get("kind", "")) in ["condition", "trigger", "action"] and not text.is_empty():
 		if _pending_display_bbcode:
 			# The author's display TEMPLATE carried markup - parse to styled segments and draw the STRIPPED
-			# text, so the cell width / colour swatch / hit-test all align with what's shown. The author's
-			# explicit styling supersedes the automatic value-highlight for this cell.
+			# text, so the cell width / colour swatch / hit-test all align with what's shown. The author
+			# owns EMPHASIS in this cell (no automatic parameter bold), but the typed value TINTS still
+			# apply: ranges computed on the stripped text colour any segment the author left colour-less.
 			span.metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(text, Color.WHITE)
 			span.text = EventSheetBBCodeLite.strip(text)
+			var stripped_ranges: Array = _value_ranges_for(span.text)
+			if not stripped_ranges.is_empty():
+				span.metadata["value_ranges"] = stripped_ranges
 		else:
 			var ranges: Array = _value_ranges_for(text)
 			if not ranges.is_empty():
@@ -3384,7 +3391,7 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 ## so this is byte-identical to format_display until a catalog provides the template.
 func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescriptor, params_dict: Dictionary) -> String:
 	if definition != null:
-		var template: String = EventSheetL10n.translate(str(definition.metadata.get("display_template", definition.display_name)))
+		var template: String = _resolve_template(str(definition.metadata.get("display_template", definition.display_name)))
 		if template.is_empty():
 			return EventSheetL10n.translate(definition.display_name)
 		var replacements: Array = []
@@ -3404,7 +3411,7 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		return str(substituted.get("text", ""))
 	if descriptor == null:
 		return ""
-	var descriptor_template: String = EventSheetL10n.translate(descriptor.get_display_text())
+	var descriptor_template: String = _resolve_template(descriptor.get_display_text())
 	if descriptor_template.is_empty():
 		return descriptor.ace_id
 	var descriptor_replacements: Array = []
@@ -3421,6 +3428,26 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 	var descriptor_substituted: Dictionary = substitute_display_tracking(descriptor_template, descriptor_replacements)
 	_pending_param_ranges = descriptor_substituted
 	return str(descriptor_substituted.get("text", ""))
+
+
+## Translates a display template, BBCode-aware. A marked-up template is its own translation
+## key; when a locale's catalog predates the markup, the STRIPPED sentence is retried as the
+## legacy key - a hit ships that locale's plain sentence (the automatic parameter emphasis
+## still applies to it), so adding styling to a template never regresses a translation to
+## English. Whatever resolves here also ARMS the styled branch when it carries markup - the
+## one-shot rides to _make_span exactly like the rich-param arm in the descriptor formatters.
+func _resolve_template(raw_template: String) -> String:
+	if raw_template.is_empty():
+		return raw_template
+	var translated: String = EventSheetL10n.translate(raw_template)
+	if EventSheetBBCodeLite.has_markup(raw_template) and translated == raw_template:
+		var plain: String = EventSheetBBCodeLite.strip(raw_template)
+		var translated_plain: String = EventSheetL10n.translate(plain)
+		if translated_plain != plain:
+			translated = translated_plain
+	if EventSheetBBCodeLite.has_markup(translated):
+		_pending_display_bbcode = true
+	return translated
 
 
 ## Substitutes display-template slots EXACTLY like the sequential String.replace chain above
