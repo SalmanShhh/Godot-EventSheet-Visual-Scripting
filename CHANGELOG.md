@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Added - recent values per parameter (the "I keep typing the same thing" fix)
+
+Every parameter now remembers the last five values COMMITTED to it across the project, most
+recent first, and offers them from a small `v` beside the field - so the third time an action
+needs `"jump"` or `res://sfx/hit.ogg`, it is one pick instead of a retype.
+
+- Attached in ONE post-pass over the finished form rather than inside each per-hint builder
+  (plain string, expression, audio_path, scene_path... a per-builder sprinkle misses whichever
+  field type is added next - the audio_path field proved it during the render check). Any
+  text-bearing field in a row gains the button once history exists; rows that already carry a
+  suggestions combo get their recents LEADING the declared choices instead of a second button.
+- Picking REPLACES the field (a recent value is a complete answer, unlike the ƒx dictionary's
+  compose-at-caret inserts) and re-validates expressions immediately.
+- The ring dedupes by exact text (re-commit moves to front), caps at five, never records
+  empty/whitespace, and keys on provider::ace::param so `amount` under Add Variable shares
+  nothing with `amount` under Set Variable. Stored as editor PROJECT METADATA - per-user,
+  per-project, never committed to the repo. `tests/recent_param_values_test.gd` pins the ring's
+  VALUES headless.
+
 ### Docs - the Self section covered everywhere it matters
 
 - **All 64 addon guides** gained a "Reading it from expressions - the Self section" chapter, each

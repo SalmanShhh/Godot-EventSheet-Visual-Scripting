@@ -130,6 +130,7 @@ func open_with_values(definition: ACEDefinition, context: Dictionary, initial_va
 	if initial_values.is_empty() and not _is_reedit_flow() and _remembered_values.has(definition.id):
 		form_values = (_remembered_values[definition.id] as Dictionary).duplicate(true)
 	_build_form(definition, form_values)
+	_attach_recent_value_combos()
 	_dialog.title = "%s Parameters%s" % [
 		definition.display_name,
 		" (Edit)" if _is_reedit_flow() else ""
@@ -150,6 +151,57 @@ var _single_param_form: bool = false
 
 
 var _batch_apply_checks: Dictionary = {}
+
+
+## Recent values, attached in ONE post-pass over the finished form rather than inside each of
+## the per-hint builders (plain string, expression, audio_path, scene_path... a per-builder
+## sprinkle misses whichever field type is added next). Any text-bearing field (LineEdit or
+## CodeEdit) sitting in a row container gains a ▾ listing the last values COMMITTED to that
+## exact parameter across the project; picking REPLACES the field (a recent value is a complete
+## answer). The button only appears once history exists - a dead dropdown on every fresh field
+## would be noise - and never doubles up on rows that already carry a suggestions combo (the
+## popup rebuilds on open there, with recents already leading its pool).
+func _attach_recent_value_combos() -> void:
+	if _definition == null:
+		return
+	var provider_id: String = _definition.provider_id
+	var ace_id: String = _definition.id
+	for key: Variant in _fields.keys():
+		var field: Variant = _fields[key]
+		if not (field is LineEdit or field is TextEdit):
+			continue
+		var row: Node = (field as Control).get_parent()
+		if not (row is HBoxContainer):
+			continue
+		var has_combo: bool = false
+		for sibling in row.get_children():
+			if sibling is MenuButton:
+				has_combo = true
+		if has_combo:
+			continue
+		var param_key: String = str(key)
+		if EventSheetRecentParamValues.recent_for(provider_id, ace_id, param_key).is_empty():
+			continue
+		var recents_button: MenuButton = MenuButton.new()
+		recents_button.text = "▾"
+		recents_button.tooltip_text = "Recent values for this parameter (you can still type any value)"
+		var recents_popup: PopupMenu = recents_button.get_popup()
+		var shown: Dictionary = {"pool": PackedStringArray()}
+		recents_popup.about_to_popup.connect(func() -> void:
+			shown["pool"] = EventSheetRecentParamValues.recent_for(provider_id, ace_id, param_key)
+			EventSheetPopupUI.fill_suggestion_popup(recents_popup, shown["pool"], ""))
+		recents_popup.id_pressed.connect(func(picked_id: int) -> void:
+			var pool: PackedStringArray = shown["pool"]
+			if picked_id < 0 or picked_id >= pool.size():
+				return
+			if field is LineEdit:
+				(field as LineEdit).text = pool[picked_id]
+				(field as LineEdit).caret_column = pool[picked_id].length()
+			else:
+				(field as TextEdit).text = pool[picked_id]
+			_validate_expression_field(field)
+			(field as Control).grab_focus())
+		row.add_child(recents_button)
 
 
 func _build_form(definition: ACEDefinition, initial_values: Dictionary) -> void:
@@ -423,8 +475,17 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 			suggestion_texts.append(suggestion_text)
 
 	# One shared combo implementation for the whole plugin (popup_ui.gd): rebuild-on-open,
-	# pick-inserts, focus-return, Down-arrow opener with the dead-popup guard.
-	row.add_child(EventSheetPopupUI.autocomplete_combo(edit, func() -> PackedStringArray: return suggestion_texts))
+	# pick-inserts, focus-return, Down-arrow opener with the dead-popup guard. Recent values
+	# for THIS parameter lead the declared suggestions (most recent first, no duplicates) -
+	# the combo rebuilds per open, so history committed this session shows immediately.
+	var recents_provider_id: String = _definition.provider_id if _definition != null else ""
+	var recents_ace_id: String = _definition.id if _definition != null else ""
+	row.add_child(EventSheetPopupUI.autocomplete_combo(edit, func() -> PackedStringArray:
+		var pool: PackedStringArray = EventSheetRecentParamValues.recent_for(recents_provider_id, recents_ace_id, key)
+		for suggestion_text: String in suggestion_texts:
+			if not pool.has(suggestion_text):
+				pool.append(suggestion_text)
+		return pool))
 	_fields[key] = edit
 	return row
 
@@ -1801,6 +1862,11 @@ func _commit(chain: bool) -> void:
 	for key: Variant in _fields.keys():
 		values[str(key)] = _extract_value(_fields[key])
 	_remembered_values[_definition.id] = values.duplicate(true)
+	# Recent values: every committed STRING value joins its parameter's project-wide ring, so the
+	# suggestion combo can offer it next time (bools/checkboxes have nothing worth ringing).
+	for key: Variant in values.keys():
+		if values[key] is String:
+			EventSheetRecentParamValues.record(_definition.provider_id, _definition.id, str(key), str(values[key]))
 	var context: Dictionary = _context.duplicate(true)
 	if chain:
 		context["chain_add"] = true
