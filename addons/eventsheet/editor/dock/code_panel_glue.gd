@@ -47,6 +47,8 @@ func toggle_open_sheets_panel(view_popup: PopupMenu) -> void:
 func refresh_anatomy_panel() -> void:
 	if _dock._anatomy_panel != null:
 		_dock._anatomy_panel.refresh(_dock._current_sheet)
+	if _dock._picker_preview_panel != null:
+		_dock._picker_preview_panel.refresh(_dock._current_sheet)
 
 
 func on_open_sheets_panel_collapsed(collapsed: bool) -> void:

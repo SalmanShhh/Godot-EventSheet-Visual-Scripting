@@ -149,6 +149,9 @@ func build_ui() -> void:
 	left_rail.add_child(_dock._open_sheets_panel)
 	left_rail.add_child(_dock._functions_panel)
 	left_rail.add_child(_dock._anatomy_panel)
+	# Picker preview: how the sheet's published verbs will read in the picker, live (rail-folded).
+	_dock._picker_preview_panel = EventSheetPickerPreviewPanel.new()
+	left_rail.add_child(_dock._picker_preview_panel)
 	_dock._workspace_body = HSplitContainer.new()
 	_dock._workspace_body.name = "EventSheetWorkspaceBody"
 	_dock._workspace_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL

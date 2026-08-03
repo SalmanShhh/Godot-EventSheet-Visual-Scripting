@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - the Picker Preview rail panel
+
+The Anatomy rail shows a sheet's census; what an author could not see without SAVING was how
+their verbs would actually read in the picker. The left rail's new fold-away **Picker preview**
+answers it live from the unsaved sheet: each published verb as the picker will show it - kind
+badge in the same colour language as everywhere else (action amber, condition teal, expression
+violet), the **featured star**, the display-name override, the parameter list, the category -
+plus annotation shells still living as raw code, signal triggers under their published names,
+and each exported knob once (labelled with the get/set/add/subtract it will publish). Refreshes
+with the Anatomy panel on every edit. `tests/picker_preview_test.gd` pins the census VALUES:
+kind classification, the overrides, the exposure gate (internal helpers never preview), both
+knob layers, and null failing closed.
+
 ### Added - Sheet > Publish New Version (the pack versioning ritual)
 
 Packs had identity but no versioning workflow - authors hand-edited `@ace_version` and forgot.
