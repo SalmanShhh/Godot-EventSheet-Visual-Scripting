@@ -95,6 +95,20 @@ extras. Lessons that generalize:
   expression field, live enumerations (input actions, node groups), key capture, rich
   BBCode editing, color. Enumerate live at dialog-open, never bake option lists at
   registration - baked lists go stale the moment the project changes.
+- **Row sentences deserve typography, and it layers in three tiers.** Tier one is
+  automatic: the display substitution tracks where each `{slot}`'s value lands (an exact
+  mirror of the replace chain, repeated slots and cross-slot shifts included) and the
+  renderer emboldens those runs - every verb everywhere gets the "values stand out" read
+  with zero template edits. Tier two is authored: a display template may carry light
+  markup (bold/italic/color) for custom emphasis, which supersedes the automatic tier for
+  that cell while typed value tints still apply. Tier three is decoration-safe attachment:
+  formatter prefixes/suffixes (an async hourglass, an inline note) shift the tracked
+  ranges by re-finding the substituted sentence inside the final text - and anything
+  unexpected degrades to no emphasis, never wrong emphasis. Two rules keep the stack
+  sound: a USER's literal markup inside a param value is data, never styling (gate on the
+  TEMPLATE, not the substituted text); and localization must survive markup - a marked
+  template that misses the catalog retries its stripped sentence as the legacy key, so
+  adding styling can never silently regress a translation to the source language.
 
 ### 2.3 Compiler to plain code
 
@@ -151,6 +165,20 @@ The machinery generalizes:
   re-emission doubles it. And beware the false positive: a byte-identical round trip does
   NOT prove consumption happened - a kept-verbatim line also re-emits identically - so
   test consumption directly.
+- **Lift greedily but re-anchor per unit.** A file whose tenth function resists lifting
+  must not drag the other nine down to verbatim. The lifter restarts after each failure
+  and lifts the longest cleanly-round-tripping TRAILING run (emission order forbids raw
+  rows between lifted ones, so only trailing subsets are honest). This one rule took the
+  bundled library from a handful of editable functions to the whole fleet.
+- **Editing a lifted unit relaxes the covenant honestly: the SIBLING guarantee.** Opening
+  a compiled file untouched must stay byte-identical - but once the user EDITS one lifted
+  function, that function re-emits from its model (annotations regenerate, hand
+  formatting inside it normalizes). The covenant to defend from then on is that every
+  OTHER function and the file's frame remain byte-identical, proven at whole-file level.
+  Gate the entry: bodies of files the user merely OPENED stay inert until an explicit
+  make-editable opt-in (per unit), so browsing can never dirty a file. And the inert
+  state must be real - inert rows refuse selection, deletion, drag, and inline edits at
+  the dispatch layer, or one stray click corrupts a file the user only wanted to read.
 
 ## 3. Targeting different languages and engines
 
@@ -223,11 +251,35 @@ which makes them testable headless and reusable by third-party tooling.
   from the scene dock, dragging a property from the Inspector, dropping a node onto a
   parameter - each maps an existing engine gesture onto a sheet mutation. These cost
   little (they are shells over the API) and do more for adoption than novel UI.
-- **Debugging rides the engine's debugger channel.** Compiled sheets optionally stream
-  throttled value frames and fired-row batches over the engine's debug messaging; the
-  editor maps uids back to rows (pulse the fired ones, fading over half a second) and
-  breakpoints compile to real breakpoint statements plus a row announcement. All of it is
-  opt-in flags on the sheet, with a doctor check that flags debug residue before release.
+- **Debugging rides the engine's debugger channel - and the channel is two-way.** Compiled
+  sheets optionally stream throttled value frames and fired-row batches over the engine's
+  debug messaging; the editor maps uids back to rows (pulse the fired ones, fading over
+  half a second) and breakpoints compile to real breakpoint statements plus a row
+  announcement. The same channel answers questions: the emitted receiver can respond to an
+  editor query about the RUNNING instance (its children, its attached behaviors), which
+  grounds pickers and autocomplete in live truth - runtime-attached components included -
+  with zero editor coupling in the generated code. All of it is opt-in flags on the sheet,
+  with a doctor check that flags debug residue before release.
+- **Editor-process reflection lies; derive from source and types.** In most engines,
+  scripts that are not editor-enabled cannot INSTANTIATE inside the editor process - so
+  any feature built on making an instance and asking it questions silently lists nothing
+  exactly where users run it, while headless tests (where instantiation works) stay
+  green. Derive everything from the script/type surface instead: declared property lists,
+  method lists, source-read annotations, statically-readable defaults. If the editor
+  offers an instance-free type cache, treat it as the only door.
+- **One scale bridge for all editor chrome.** Text should ride the editor's theme font
+  metrics; every OTHER pixel dimension (paddings, badges, strips, swatches) goes through
+  a single scaled() helper over the editor's display-scale value, enforced by a lint test
+  that forbids literal sizes elsewhere. Retrofitting HiDPI across a custom-drawn canvas
+  is a sweep of dozens of call sites; the bridge makes the next density feature (compact
+  row modes) a one-multiplier change.
+- **Small persistent stores make the editor learn its user.** Recent values per
+  parameter, per-verb usage counts feeding suggestion ranking, a saved color palette -
+  each is a tiny per-user, per-project store (never committed) behind a static class with
+  a test-reset seam. The pattern compounds: the third store costs an afternoon, and
+  together they are most of the difference between a picker and an assistant. One
+  discipline: anything ranking-sensitive must reset these stores in tests, or suite
+  ORDER starts deciding pass and fail.
 
 ## 6. The traps, generalized
 
@@ -261,6 +313,19 @@ Each of these cost real time here and will recur in any port:
 9. **Advisory checks must be conservative by contract.** Every doctor-style lint here
    ships with must-NOT-fire tests as prominent as its fire tests. The first false
    positive teaches users to ignore the whole panel.
+10. **In-editor instantiation is a mirage.** Non-editor-enabled scripts often cannot be
+    instantiated inside the editor process, so instance-based reflection returns nothing
+    exactly where the feature runs - while headless tests, where instantiation works,
+    pass. A feature can clear every test layer and still ship empty. Derive from
+    scripts/types (see section 5), and keep one verification layer that runs in the REAL
+    editor process.
+11. **Mass edits to files that mix frozen and editable strings.** Display sentences and
+    codegen templates live in the same registration files, and codegen templates are
+    frozen API. A sweep must anchor on the ARGUMENT POSITION of the editable string (and
+    skip anything shaped like code), then prove itself with a full before/after dump of
+    the derived registry: every change tag-insertion-only (stripping the addition
+    reproduces the old string byte-exactly), zero changes to frozen fields. Grep-and-
+    replace across such files is how a frozen surface breaks silently.
 
 ## 7. Where to start a port
 
