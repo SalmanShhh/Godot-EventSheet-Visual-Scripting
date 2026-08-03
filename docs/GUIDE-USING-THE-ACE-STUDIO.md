@@ -108,6 +108,12 @@ Once published, the function appears in **every** sheet's picker as the kind you
 
 Only publish the functions you actually mean to reuse. One that is only useful inside a single sheet is better left unpublished, so the picker stays clean and full of genuinely reusable choices.
 
+The dialog's live preview shows the one verb you are editing; the left rail's fold-away
+**Picker preview** panel (under the Anatomy panel) keeps the same promise for the WHOLE
+sheet - every published verb, trigger, and exported knob rendered as the picker will show
+it, live from the unsaved sheet. Rename a verb, move its category, or toggle featured, and
+its picker face updates there immediately.
+
 ---
 
 ## 6. After You Create the Verb

@@ -248,6 +248,24 @@ i18n (Godot translations).
   plain GDScript converts to events automatically** when it contains trigger functions.
 - Behaviors are added to objects (here: child nodes via the Create Node dialog) and
   configured per-instance in the Inspector.
+- **The add keys meet you before you type.** `E` / `C` / `A` open the Ghost Row - a small
+  type-a-sentence popup at the selected row - and it greets you with **suggestion chips**
+  of your most-used verbs for that key (the picker's featured verbs until you have habits).
+  One chip click adds the verb and hops straight into its first parameter, so a familiar
+  add is zero typing. Once you do type, the ranked list **learns**: at equal match quality
+  the verb you actually use wins the tie, the summoning key leans toward its own kind
+  (`A` prefers actions), and every suggestion names the next parameter your sentence has
+  not filled yet ("⚡ Heal · amount…") so you always know what the next word will do.
+- **Repeated values are one pick, not a retype.** Parameter fields remember the last five
+  values you committed for that exact verb-and-parameter across the whole project, offered
+  from a small dropdown on the field's row - the third time an action needs `"jump"` or
+  `res://sfx/hit.ogg`, it is a pick instead of a retype.
+- **You always know which group you are in.** On long sheets a slim breadcrumb strip
+  ("Gameplay ▸ Combat") stays pinned under the column header while you scroll inside a
+  group; click it to jump back to the group's own bar.
+- **View > Compact Rows** tightens row padding for jam-speed scanning - text stays the same
+  size, only the air shrinks - and toggling it off restores the roomier default. The choice
+  is remembered per project.
 - **Your C3 keyboard grammar works verbatim** (rebindable via Tools > Keyboard Shortcuts):
 
   | Key | Action |

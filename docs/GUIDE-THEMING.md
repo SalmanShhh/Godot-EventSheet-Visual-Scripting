@@ -78,6 +78,15 @@ These themes are bundled in `res://demo/themes/`:
 - **Reload Theme** forces a disk reload for external edits.
 - This is the closest practical equivalent to reloading a CSS theme file while staying fully native to Godot resources.
 
+## Row density (View > Compact Rows)
+
+Themes retune colours; density retunes metrics. **View > Compact Rows** shrinks row padding
+and block gaps to about three quarters of the default so more events fit on screen - text
+size never changes, only the air around it, so readability holds. Toggle it off to restore
+the comfortable default. The choice is per user and per project (editor metadata, never
+committed), independent of whichever theme is active, and it composes with the editor's
+display scale - a compact sheet on a HiDPI monitor stays crisp.
+
 ## Theme token spec
 
 The Construct-inspired token list and field mapping now live in the **Theme Editor**

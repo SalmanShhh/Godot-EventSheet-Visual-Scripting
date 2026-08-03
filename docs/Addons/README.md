@@ -18,6 +18,11 @@ godot --headless --path . --script tools/scaffold_addon_guide.gd -- eventsheet_a
 
 (or `EventSheets.addon_guide_skeleton(script_path)` from code.)
 
+Shipping an update to your pack? **Sheet > Publish New Version…** bumps its `@ace_version`
+(Patch / Minor / Major, with a live old → new preview) and records your one-line change note
+as a doc comment under the annotation, so the file accumulates its own changelog - or call
+`EventSheets.publish_pack_version(script_path, bump, note)` from tooling.
+
 For the plugin's guides and references (not the packs), see the [documentation index](../README.md).
 
 ## Systems (autoload singletons)

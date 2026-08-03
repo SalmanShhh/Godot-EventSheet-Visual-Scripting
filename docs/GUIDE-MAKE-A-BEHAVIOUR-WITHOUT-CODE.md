@@ -42,6 +42,13 @@ The bundled **Flash, 8-Direction Movement, Timer, State Machine, and Move To** b
 
 **New Behaviour** scaffolds a sheet in **behavior mode**: it compiles to a small node you attach under a host (a `CharacterBody2D`, `Node2D`, ...). Inside the sheet, **`host`** is that parent - node ACEs target it automatically (e.g. *Move And Slide* becomes `host.move_and_slide()`).
 
+The Sheet Type dialog's host field takes typing, the curated class menu - or a **drag**:
+drop any node from the Scene dock onto the dialog and the field takes that node's class
+(a script's `class_name` when it has one, the engine class otherwise), with the live
+"Ships as" line updating on the spot. The node you are building the behaviour FOR is
+usually already selected, so the drag is the fastest honest answer to "what should this
+extend?".
+
 Where each kind of value lives:
 
 | You need | Use | Example |
@@ -111,6 +118,21 @@ A verb's parameters render as condition-style cells beneath its name: click one 
 Verbs appear in the order the file declares them - after the sheet's own events, exactly where the compiler writes them - so an opened pack reads top to bottom like its GDScript. The left-rail **Anatomy panel** shows everything you've published at a glance, organ by organ:
 
 <img src="images/anatomy-panel.png" alt="The Anatomy panel: a behaviour's Properties, State, Triggers, and Actions listed as organs with role pills - the Health pack showing 3 knobs, 9 state values, 8 triggers, and 16 actions." width="340">
+
+Below the Anatomy panel, the fold-away **Picker preview** answers the question the census
+cannot: *how will my verbs actually read in the picker?* It renders every published entry
+live from the unsaved sheet - kind badge, display name, the featured star, the parameter
+list, the category - so a rename or a category change shows its picker face immediately,
+before you save. Exported variables appear once each, labelled with the get / set / add /
+subtract verbs they will publish, and a not-yet-lifted `## @ace_*` shell previews under its
+declared name too.
+
+**When you ship an update, use Sheet > Publish New Version…** instead of hand-editing the
+`@ace_version` annotation. Pick Patch / Minor / Major, type a one-line change note, and the
+dialog shows the exact old → new version before you commit. It bumps the annotation in
+place, records the note as a doc comment directly beneath it (the file accumulates its own
+changelog), backs the script up first, and re-imports so the banner chip reads the new
+version at once. A pack with no version yet starts at 1.0.0 and bumps from there.
 
 ---
 
