@@ -178,6 +178,25 @@ static func scaled_f(base_size: float) -> float:
 	return base_size * ui_scale()
 
 
+# ── Row density ───────────────────────────────────────────────────────────────────────────────
+# Comfortable (1.0, the default) or Compact: a user-chosen multiplier on the sheet's VERTICAL
+# breathing room - line padding, the minimum row height floor, and the gap between event blocks.
+# Text never scales (that is the theme font's job) and chrome never scales (that is ui_scale's
+# job); density only trades whitespace for rows-on-screen. At 1.0 every formula reduces to its
+# pre-density form, so Comfortable renders byte-identically to before the toggle existed.
+const COMPACT_ROW_DENSITY := 0.78
+
+static var _row_density: float = 1.0
+
+
+static func set_row_density(factor: float) -> void:
+	_row_density = clampf(factor, 0.5, 1.0)
+
+
+static func row_density() -> float:
+	return _row_density
+
+
 static func clamp_font_size(value: int) -> int:
 	return max(value, MIN_FONT_SIZE)
 

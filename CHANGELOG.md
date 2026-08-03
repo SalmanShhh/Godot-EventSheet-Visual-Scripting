@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - View > Compact Rows (a density toggle)
+
+Comfortable (the default) or Compact: one check item that trades vertical breathing room for
+rows on screen - measured 10.9% more content visible on a 10-event sheet. Density scales ONLY
+the whitespace (line padding, the minimum-row-height floor, the gap between event blocks):
+text never shrinks (that is the theme font's job) and dialogs/panels never shrink (that is the
+display scale's job). At the default density every formula reduces to its pre-toggle form, so
+Comfortable renders byte-identically to before - pinned by `tests/row_density_test.gd`, along
+with the never-below-the-font guarantee and the clamp that keeps a stray factor from collapsing
+the sheet. Per-user, per-project (editor metadata), applied before the first layout so a
+Compact project never flashes Comfortable.
+
 ### Added - recent values per parameter (the "I keep typing the same thing" fix)
 
 Every parameter now remembers the last five values COMMITTED to it across the project, most

@@ -705,7 +705,9 @@ func _get_event_line_height(base_font_size: int = FONT_SIZE) -> float:
 	var event_style: EventSheetEventStyle = _get_event_style()
 	var condition_height: float = _get_condition_style().resolve_line_height(base_font_size, event_style.minimum_row_height)
 	var action_height: float = _get_action_style().resolve_line_height(base_font_size, event_style.minimum_row_height)
-	return max(float(event_style.minimum_row_height), max(condition_height, action_height))
+	# The outer floor scales with density like the per-lane floors inside resolve_line_height do -
+	# an unscaled floor here would swallow Compact entirely on default-sized fonts.
+	return max(float(event_style.minimum_row_height) * EventSheetPalette.row_density(), max(condition_height, action_height))
 
 
 func _build_element_style_metadata(style: EventSheetElementStyle) -> Dictionary:

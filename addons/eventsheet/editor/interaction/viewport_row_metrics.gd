@@ -51,7 +51,7 @@ func rebuild() -> void:
 				or row_data.attached_below
 			)
 		):
-			top += _viewport.EVENT_BLOCK_GAP
+			top += _viewport.EVENT_BLOCK_GAP * EventSheetPalette.row_density()
 		var height: float = _resolve_row_height(row_data)
 		_row_metrics.append({"top": top, "height": height})
 		top += height

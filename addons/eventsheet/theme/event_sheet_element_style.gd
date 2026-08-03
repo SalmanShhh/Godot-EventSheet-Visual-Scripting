@@ -22,7 +22,11 @@ const MIN_LINE_HEIGHT_EXTRA := 10
 
 
 func resolve_line_height(base_font_size: int, base_row_height: int) -> float:
+	# Density scales the BREATHING ROOM (padding, the extra, the floor) and never the text -
+	# Compact trades whitespace for rows on screen, it does not shrink what you read. At the
+	# default density of 1.0 this is exactly the pre-density formula.
+	var density: float = EventSheetPalette.row_density()
 	return max(
-		float(base_row_height),
-		float(base_font_size + font_size_delta + (vertical_padding * 2) + MIN_LINE_HEIGHT_EXTRA)
+		float(base_row_height) * density,
+		float(base_font_size + font_size_delta) + float((vertical_padding * 2) + MIN_LINE_HEIGHT_EXTRA) * density
 	)

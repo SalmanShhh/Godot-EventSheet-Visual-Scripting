@@ -1804,6 +1804,9 @@ func _load_simple_mode_preference() -> void:
 	var settings: EditorSettings = EditorInterface.get_editor_settings()
 	if settings != null:
 		_simple_mode = bool(settings.get_project_metadata("eventsheets", "simple_mode", false))
+	# Row density rides the same startup read: applied before the first layout, so a
+	# Compact-preferring project never flashes Comfortable.
+	_apply_compact_rows_pref()
 
 
 ## Declutter toggle: show/hide the trailing "+ Add event…" affordance rows across every
@@ -1859,6 +1862,40 @@ func _open_go_to_event_dialog() -> void:
 ## True when the object-name column is ALIGNED (a fixed width, so every row's text starts at the same
 ## edge) rather than in flow mode, where the text follows each label. Read by the View menu to seed
 ## its check mark; the conditions lane is the one asked, since the toggle moves both together.
+## View ▾ "Compact Rows": Comfortable (default, byte-identical to the pre-toggle layout) or
+## Compact - EventSheetPalette.row_density() shrinks line padding, the row-height floor and the
+## event-block gap, never the text (theme font) and never the chrome (ui_scale). Per-project,
+## per-user (editor metadata, not repo state).
+func _compact_rows_enabled() -> bool:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		return bool(EditorInterface.get_editor_settings().get_project_metadata("eventsheets", "compact_rows", false))
+	return false
+
+
+func _apply_compact_rows_pref() -> void:
+	EventSheetPalette.set_row_density(EventSheetPalette.COMPACT_ROW_DENSITY if _compact_rows_enabled() else 1.0)
+
+
+func _toggle_compact_rows(view_popup: PopupMenu) -> void:
+	var compact: bool = not _compact_rows_enabled()
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_editor_settings().set_project_metadata("eventsheets", "compact_rows", compact)
+	EventSheetPalette.set_row_density(EventSheetPalette.COMPACT_ROW_DENSITY if compact else 1.0)
+	for view: EventSheetViewport in [_viewport, _multi_view._split_viewport, _detached_viewport]:
+		if view == null:
+			continue
+		# Geometry changed, spans did not - the same invalidation a live column drag uses.
+		view._update_layout_style_signature(view._get_font_size())
+		view._layout_cache.clear()
+		view.queue_redraw()
+	if view_popup != null:
+		var item_index: int = view_popup.get_item_index(19)
+		if item_index >= 0:
+			view_popup.set_item_checked(item_index, compact)
+	_set_status("Compact rows - more events on screen, same text size." if compact
+		else "Comfortable rows - the default breathing room.")
+
+
 func _object_columns_aligned() -> bool:
 	if _viewport == null:
 		return false
