@@ -17,7 +17,9 @@ var _dock: Control = null
 var _popup: PopupPanel = null
 var _edit: LineEdit = null
 var _list: ItemList = null
+var _chips: HBoxContainer = null
 var _candidates: Array = []      # the ranked {definition, params, score} entries backing the list
+var _chip_definitions: Array = []  # the suggestion chips' ACEDefinitions (kept for headless tests)
 var _origin: String = "action"   # which add key opened it: "event" / "condition" / "action"
 
 
@@ -33,6 +35,7 @@ func open(origin: String) -> void:
 	_origin = origin
 	_ensure_popup()
 	_edit.text = ""
+	_rebuild_chips()
 	_refresh("")
 	if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
 		return
@@ -55,6 +58,12 @@ func _ensure_popup() -> void:
 	_edit.text_submitted.connect(func(_text: String) -> void: _apply_selected())
 	_edit.gui_input.connect(_on_edit_input)
 	box.add_child(_edit)
+	# The suggestion chips: the user's most-used verbs of the summoning kind (featured verbs
+	# until habits exist), one click before any typing. Shown only while the query is empty -
+	# once a sentence starts, the ranked list below takes over.
+	_chips = HBoxContainer.new()
+	_chips.add_theme_constant_override("separation", EventSheetPalette.scaled(6))
+	box.add_child(_chips)
 	_list = ItemList.new()
 	_list.custom_minimum_size = Vector2(420.0, 118.0)
 	_list.item_activated.connect(func(index: int) -> void:
@@ -94,25 +103,72 @@ func _move_selection(delta: int) -> void:
 
 
 ## Rebuilds the suggestion list from the ranked quick-add candidates for the current query text.
+## The add key that summoned the ghost row nudges the ranking toward its own kind (A prefers
+## actions), and each item names the first parameter the sentence has not filled yet - so
+## "heal" reads "⚡ Heal · amount…" and the user knows what the next word will fill.
 func _refresh(query: String) -> void:
-	_candidates = _dock._quick_match_ranked(query, 5) if not query.strip_edges().is_empty() else []
+	var typing: bool = not query.strip_edges().is_empty()
+	_candidates = _dock._quick_match_ranked(query, 5, _prefer_type()) if typing else []
+	if _chips != null:
+		_chips.visible = not typing and _chips.get_child_count() > 0
 	if _list == null:
 		return
 	_list.clear()
 	for candidate: Dictionary in _candidates:
 		var definition: ACEDefinition = candidate.get("definition")
-		var glyph: String = "⚡"
-		if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
-			glyph = "➜"
-		elif definition.ace_type == ACEDefinition.ACEType.CONDITION:
-			glyph = "?"
 		var summary: String = ""
 		var params: Dictionary = candidate.get("params", {})
 		for key: Variant in params:
 			summary += "  %s" % str(params[key])
-		_list.add_item("%s  %s%s" % [glyph, definition.display_name, summary])
+		var needs: String = ""
+		for parameter: Variant in definition.parameters:
+			if parameter is Dictionary:
+				var param_id: String = str((parameter as Dictionary).get("id", ""))
+				if not param_id.is_empty() and not params.has(param_id):
+					var param_name: String = str((parameter as Dictionary).get("name", "")).strip_edges()
+					needs = "  · %s…" % (param_name if not param_name.is_empty() else param_id)
+					break
+		_list.add_item("%s  %s%s%s" % [_glyph_for(definition), definition.display_name, summary, needs])
 	if _list.item_count > 0:
 		_list.select(0)
+
+
+## The ACEType the summoning add key means, for the ranking's kind nudge (-1 = no preference).
+func _prefer_type() -> int:
+	match _origin:
+		"event":
+			return ACEDefinition.ACEType.TRIGGER
+		"condition":
+			return ACEDefinition.ACEType.CONDITION
+	return ACEDefinition.ACEType.ACTION
+
+
+static func _glyph_for(definition: ACEDefinition) -> String:
+	if definition.ace_type == ACEDefinition.ACEType.TRIGGER:
+		return "➜"
+	if definition.ace_type == ACEDefinition.ACEType.CONDITION:
+		return "?"
+	return "⚡"
+
+
+## Rebuilds the before-you-type suggestion chips for the current origin: most-used first,
+## featured verbs as the cold-start fallback. One click applies the verb with its defaults and
+## the post-insert continuation opens its first parameter - the zero-typing add.
+func _rebuild_chips() -> void:
+	_chip_definitions = _dock._quick_suggestions(_origin, 4)
+	if _chips == null:
+		return
+	for child: Node in _chips.get_children():
+		_chips.remove_child(child)
+		child.queue_free()
+	for definition: ACEDefinition in _chip_definitions:
+		var chip: Button = Button.new()
+		chip.text = "%s %s" % [_glyph_for(definition), definition.display_name]
+		chip.tooltip_text = definition.description if not definition.description.is_empty() else definition.display_name
+		chip.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+		chip.pressed.connect(func() -> void: _apply_definition(definition, {}))
+		_chips.add_child(chip)
+	_chips.visible = _chips.get_child_count() > 0
 
 
 ## Applies the highlighted candidate straight onto the sheet: a trigger/condition becomes a new
@@ -128,11 +184,18 @@ func _apply_selected() -> void:
 	if index < 0 or index >= _candidates.size():
 		index = 0
 	var candidate: Dictionary = _candidates[index]
-	var definition: ACEDefinition = candidate.get("definition")
+	_apply_definition(candidate.get("definition"), candidate.get("params", {}))
+
+
+## Lands a definition on the sheet - the shared tail of a list Enter and a suggestion-chip
+## click. Mode mirrors the classic picker flows: an action APPENDS to the selected event (mode
+## "" would fall into the apply's default branch and wrap it in a NEW event - only right with
+## no selection); a condition summoned by the C key also appends; triggers and the E key start
+## a new event. Ends in the post-insert continuation, so an unfilled param opens its editor.
+func _apply_definition(definition: ACEDefinition, params: Dictionary) -> void:
+	if definition == null:
+		return
 	var selected_resource: Resource = _dock._active_view().get_selected_context().get("source_resource", null)
-	# Mode mirrors the classic picker flows: an action APPENDS to the selected event (mode "" would
-	# fall into the apply's default branch and wrap it in a NEW event - only right with no selection);
-	# a condition summoned by the C key also appends; triggers and the E key start a new event.
 	var mode: String = "new_condition_event"
 	if definition.ace_type == ACEDefinition.ACEType.ACTION:
 		mode = "append_action" if selected_resource is EventRow else ""
@@ -144,8 +207,8 @@ func _apply_selected() -> void:
 	}
 	if _popup != null:
 		_popup.hide()
-	_dock._apply_ace_definition(definition, candidate.get("params", {}), context)
-	_continue_into_params(definition, candidate.get("params", {}))
+	_dock._apply_ace_definition(definition, params, context)
+	_continue_into_params(definition, params)
 
 # The just-applied ACE's first param the sentence did NOT fill, staged for the follow-up editor.
 # Kept as a member so tests can assert the continuation target without a window.

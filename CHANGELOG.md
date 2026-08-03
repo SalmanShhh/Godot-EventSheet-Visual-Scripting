@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - Ghost Row Part II: suggestion chips + learn-as-you-type ranking
+
+The zero-dialog add now meets you BEFORE you type. Opening the ghost row (E / C / A) shows a
+row of **suggestion chips** - your most-used verbs of that kind, or the picker's featured verbs
+until habits exist - and one click applies the verb with the post-insert continuation opening
+its first parameter: a complete add with zero typing. Every successful apply (picker, quick-add
+bar, ghost row) now records into a per-project usage store (editor metadata, never committed;
+bounded, most-used survive), and the quick-add ranking **learns from it**: at equal match
+quality the verb you actually use wins the tie, so "process" starts suggesting OnPhysicsProcess
+first once that is what you reach for. The summoning key also nudges its own kind (+5 inside a
+quality band, never across one - A prefers actions, C conditions, E triggers), and each ranked
+item now names the first parameter the sentence has not filled yet ("⚡ Heal · amount…"), so the
+next word to type is always announced. `tests/ghost_row_suggestions_test.gd` pins the store's
+values, the before/after tie-break flip, the exact +5, chip kinds per key, and the chip-apply
+flow; the existing ranking tests wipe the store first so suite order can never steer their pins.
+
 ### Added - drop a node onto the Sheet Type dialog to set its host
 
 The last of the Sheet Type dialog's backlog: drag a node from the Scene dock onto the dialog

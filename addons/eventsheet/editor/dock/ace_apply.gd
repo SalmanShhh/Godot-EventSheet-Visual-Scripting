@@ -363,6 +363,9 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 	)
 	if changed:
 		_dock._mark_dirty(str(message.get("text", "Applied.")))
+		# Every successful apply is the user choosing this verb - the counter feeds the ghost
+		# row's suggestion chips and the quick-add ranking's learned tie-break.
+		EventSheetAceUsageStats.record(definition.provider_id, definition.id)
 
 
 ## Bakes a trigger definition's identity + argument signature onto the event row, so the

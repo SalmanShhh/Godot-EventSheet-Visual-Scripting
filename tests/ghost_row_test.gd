@@ -9,6 +9,9 @@ extends RefCounted
 
 static func run() -> bool:
 	var ok: bool = true
+	# The learned tie-break reads the usage store; earlier tests in the same run may have
+	# applied ACEs (every apply records). A clean slate keeps these order pins suite-order-proof.
+	EventSheetAceUsageStats.reset_for_tests()
 
 	# ── The ranked matcher ──
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock

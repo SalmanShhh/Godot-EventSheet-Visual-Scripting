@@ -64,10 +64,13 @@ func _quick_match(query: String) -> Dictionary:
 ## The ranked quick-add candidates for a query - the same scoring _quick_match uses, kept as a LIST so
 ## the Ghost Row can offer the top matches while the quick-add bar takes the best. Each entry is
 ## {definition, params, score}: exact name = 100, name + trailing params = 90, name-prefix = 60,
-## substring = 40; higher scores first, and shorter matched names break ties (the query "process"
-## should rank OnProcess above OnPhysicsProcess). Trailing words fill each candidate's own parameters
-## positionally (quote-aware). Empty when nothing matches.
-func _quick_match_ranked(query: String, limit: int = 5) -> Array:
+## substring = 40; a candidate whose kind matches `prefer_type` (the add key that summoned the ghost
+## row: A prefers actions, C conditions, E triggers) earns +5 - a nudge WITHIN a quality band, never
+## across one. Higher scores first; at equal score the verb the user has applied more often wins
+## (learn-as-you-type), then shorter matched names (the query "process" should rank OnProcess above
+## OnPhysicsProcess). Trailing words fill each candidate's own parameters positionally (quote-aware).
+## Empty when nothing matches.
+func _quick_match_ranked(query: String, limit: int = 5, prefer_type: int = -1) -> Array:
 	var text: String = query.strip_edges().to_lower()
 	if text.is_empty() or _dock._ace_registry == null:
 		return []
@@ -102,13 +105,17 @@ func _quick_match_ranked(query: String, limit: int = 5) -> Array:
 					best_name_length = candidate_name.length()
 		if best_score == 0:
 			continue
+		if prefer_type >= 0 and definition.ace_type == prefer_type:
+			best_score += 5
 		var params: Dictionary = {}
 		var values: PackedStringArray = tokenize_quick_params(best_rest)
 		for index in range(mini(values.size(), definition.parameters.size())):
 			var parameter: Variant = definition.parameters[index]
 			if parameter is Dictionary:
 				params[str((parameter as Dictionary).get("id", ""))] = values[index]
-		candidates.append({"definition": definition, "params": params, "score": best_score, "name_length": best_name_length})
+		candidates.append({"definition": definition, "params": params, "score": best_score,
+			"name_length": best_name_length,
+			"usage": EventSheetAceUsageStats.count_for(definition.provider_id, definition.id)})
 	# Ties are broken EXPLICITLY, because several packs can publish the same verb name (three of the
 	# bundled packs ship a `Heal`) and sort_custom is not stable - without this the top suggestion for
 	# such a word could differ between sessions, and adding an unrelated ACE elsewhere could silently
@@ -117,6 +124,10 @@ func _quick_match_ranked(query: String, limit: int = 5) -> Array:
 	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a["score"]) != int(b["score"]):
 			return int(a["score"]) > int(b["score"])
+		# Learn-as-you-type: at equal match quality the verb the user actually applies wins.
+		# Deterministic for a given usage store, exactly like the provider|id tail below.
+		if int(a["usage"]) != int(b["usage"]):
+			return int(a["usage"]) > int(b["usage"])
 		if int(a["name_length"]) != int(b["name_length"]):
 			return int(a["name_length"]) < int(b["name_length"])
 		var a_definition: ACEDefinition = a["definition"]
@@ -150,6 +161,43 @@ static func tokenize_quick_params(rest: String) -> PackedStringArray:
 	if not current.is_empty():
 		tokens.append(current)
 	return tokens
+
+
+## The ghost row's before-you-type suggestions: the most-used verbs of the kind the add key
+## asked for ("event" = triggers, "condition" = conditions, anything else = actions), most
+## used first. With no usage history yet the picker's featured verbs of that kind stand in,
+## so the chips teach the everyday vocabulary from the first session. Deterministic: usage
+## desc, then featured first, then provider|id. Returns ACEDefinitions.
+func suggested_definitions(origin: String, limit: int = 4) -> Array:
+	if _dock._ace_registry == null:
+		return []
+	var wanted: int = ACEDefinition.ACEType.ACTION
+	if origin == "event":
+		wanted = ACEDefinition.ACEType.TRIGGER
+	elif origin == "condition":
+		wanted = ACEDefinition.ACEType.CONDITION
+	var scored: Array = []
+	for definition: ACEDefinition in _dock._ace_registry.get_all_definitions():
+		if definition.ace_type != wanted or bool(definition.metadata.get("hidden", false)):
+			continue
+		var usage: int = EventSheetAceUsageStats.count_for(definition.provider_id, definition.id)
+		var featured: bool = bool(definition.metadata.get("featured", false)) \
+			or ACEPickerDialog.FEATURED.has("%s/%s" % [definition.provider_id, definition.id])
+		if usage == 0 and not featured:
+			continue
+		scored.append({"definition": definition, "usage": usage, "featured": featured})
+	scored.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["usage"]) != int(b["usage"]):
+			return int(a["usage"]) > int(b["usage"])
+		if bool(a["featured"]) != bool(b["featured"]):
+			return bool(a["featured"])
+		var a_definition: ACEDefinition = a["definition"]
+		var b_definition: ACEDefinition = b["definition"]
+		return "%s|%s" % [a_definition.provider_id, a_definition.id] < "%s|%s" % [b_definition.provider_id, b_definition.id])
+	var out: Array = []
+	for entry: Dictionary in scored.slice(0, limit):
+		out.append(entry["definition"])
+	return out
 
 
 ## Applies the best match: triggers/conditions become a new event; actions append via the

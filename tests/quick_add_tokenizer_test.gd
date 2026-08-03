@@ -32,7 +32,9 @@ static func run() -> bool:
 	ok = _tokens("empty text yields nothing", "", []) and ok
 	ok = _tokens("runs of spaces collapse", "a   b", ["a", "b"]) and ok
 
-	# ── End-to-end through the real quick-add brain ──
+	# ── End-to-end through the real quick-add brain (clean usage slate: the learned tie-break
+	# must not let earlier tests' applies steer which pack's verb wins these pins) ──
+	EventSheetAceUsageStats.reset_for_tests()
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
 	editor.set_undo_redo_manager(NoopUndoManager.new())

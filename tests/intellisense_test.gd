@@ -68,7 +68,9 @@ static func run() -> bool:
 	all_passed = _check("host-method hint resolves", host_hint.begins_with("move_and_collide("), true) and all_passed
 	all_passed = _check("no call context, no hint", EventSheetGDScriptLint.signature_hint("health + 1", sheet), "") and all_passed
 
-	# Quick add: matcher + apply.
+	# Quick add: matcher + apply. Usage-store slate wiped first: the matcher's learned
+	# tie-break must not let earlier tests' applies steer these order pins.
+	EventSheetAceUsageStats.reset_for_tests()
 	var target_sheet: EventSheetResource = EventSheetResource.new()
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(target_sheet)

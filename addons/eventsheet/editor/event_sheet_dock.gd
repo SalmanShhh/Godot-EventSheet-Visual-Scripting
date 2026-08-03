@@ -2936,8 +2936,12 @@ func _quick_add(query: String) -> bool:  # menu_bar.gd quick-add closure + intel
 	return _author_actions._quick_add(query)
 
 
-func _quick_match_ranked(query: String, limit: int = 5) -> Array:  # dock/ghost_row.gd suggestion list
-	return _author_actions._quick_match_ranked(query, limit)
+func _quick_match_ranked(query: String, limit: int = 5, prefer_type: int = -1) -> Array:  # dock/ghost_row.gd suggestion list
+	return _author_actions._quick_match_ranked(query, limit, prefer_type)
+
+
+func _quick_suggestions(origin: String, limit: int = 4) -> Array:  # dock/ghost_row.gd chips
+	return _author_actions.suggested_definitions(origin, limit)
 
 
 # The E/C/A single keys open the Ghost Row (type-a-sentence add at the selected row, zero dialogs);
