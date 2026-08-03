@@ -2270,6 +2270,12 @@ var _live_values_window: Window:
 
 func set_live_values_debugger(debugger: EventSheetLiveValuesDebugger) -> void:
 	_ensure_live_values_panel().debugger = debugger
+	# Self live grounding: the Expressions dictionary queries the RUNNING game for the sheet's
+	# real behaviour children through the same session, and upgrades its Behaviours subgroup
+	# when the report lands.
+	if debugger != null:
+		_ace_params._expression_picker.live_query = debugger.send_query_children
+		debugger.children_report_received.connect(_ace_params._expression_picker._on_live_children_report)
 
 
 func _toggle_live_values() -> void:

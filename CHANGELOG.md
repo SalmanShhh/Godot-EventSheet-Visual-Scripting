@@ -2,6 +2,37 @@
 
 ## [Unreleased]
 
+### Added - Self live grounding: the running game answers
+
+The last tier of the Self section: while a Live Values session streams, opening the Expressions
+dictionary asks the RUNNING game for the sheet's real behaviour children, and the subgroup
+upgrades to **Behaviours (live - on <owner>)** - real runtime names, including behaviours
+attached at RUNTIME by spawners and loadouts, which no edit-time tier can see. A `1 of N
+running` note appears when several instances run the script; a report for another sheet, or one
+arriving after the dialog closed, is dropped as stale.
+
+- **Rides the channel Live Values already ships.** The emitted debug receiver (one per game,
+  first streaming sheet wins) gained a `query_children` branch: it walks the running tree, finds
+  the first node running the asked-for script, and reports its behaviour children over
+  `eventsheets:children_report`. No new runtime dependency, no autoload, parity intact - the
+  machinery lives in the compiled output exactly like the Live Values stream, round-trips
+  byte-identically as content (suite-pinned), and a NORMAL compile carries none of it (the
+  covenant, also pinned).
+- **Editor side**: the debugger bridge gained `send_query_children` + a children_report parser
+  (flat triples, truncated tails dropped, fails closed); the dock wires both to the dictionary
+  at the same point it wires the Live Values window.
+- The Variables census now skips `__`-prefixed names - a debug-compiled sheet's own
+  `__live_values_timer` is machinery, not "your variable".
+
+Verified in two REAL halves meeting at the same wire payload: a direct game harness ran the
+scene, its `_ready` attached a Sine behaviour named RuntimeWobble at runtime, and the emitted
+census walked the LIVE tree and produced the exact reply array; the real editor then consumed
+that exact array through the real parser and handler - wiring asserted, tree upgraded, staleness
+guard held, `$RuntimeWobble.magnitude` inserting under its runtime name. The editor-launches-game
+hop itself is not automatable in this sandbox (the child process never spawns - the same reason
+this repo's runtime smokes run scenes directly), and its two primitives are the ones Live Values
+has shipped on since v0.6.
+
 ### Added - Self Phase 3: the grounded tier (and the bug the real editor exposed)
 
 Select your sheet's own instance in the Scene dock and the Self section stops guessing:

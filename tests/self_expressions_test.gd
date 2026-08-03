@@ -46,9 +46,14 @@ static func run() -> bool:
 	tree_var.name = "combo"
 	tree_var.type_name = "int"
 	sheet.events.append(tree_var)
+	var machinery: LocalVariable = LocalVariable.new()
+	machinery.name = "__live_values_timer"
+	machinery.type_name = "float"
+	sheet.events.append(machinery)
 	var variables: Array = EventSheetSelfExpressions.variable_entries(sheet)
 	all_passed = _check("dict variable inserts its bare name", _fragment_for(variables, "health"), "health") and all_passed
 	all_passed = _check("tree variable inserts its bare name", _fragment_for(variables, "combo"), "combo") and all_passed
+	all_passed = _check("emitted machinery (__ prefix) never joins the census", _fragment_for(variables, "__live_values_timer"), "") and all_passed
 
 	# ── Functions: expression role only, call fragment carries the param names ───────────
 	var dps: EventFunction = EventFunction.new()
@@ -162,9 +167,65 @@ static func run() -> bool:
 	# ══ Phase 3: the grounded tier ═══════════════════════════════════════════════════════
 	all_passed = _grounded_checks() and all_passed
 
+	# ══ Live grounding: the running-instance tier over the Live Values channel ════════════
+	all_passed = _live_grounding_checks() and all_passed
+
 	# ── Scale: the census paths that run per KEYSTROKE, against project-sized inputs ─────
 	all_passed = _scale_checks() and all_passed
 
+	return all_passed
+
+
+## The live tier rides the SAME emitted receiver Live Values already ships: a debug-compiled
+## sheet answers query_children with the running node's behaviour children. Pins the emission,
+## the covenant (a normal compile carries NONE of it), the byte round-trip, the report parser,
+## and that a report's children slot straight into grounded_groups.
+static func _live_grounding_checks() -> bool:
+	var all_passed: bool = true
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.variables = {"hp": {"type": "int", "default": 100, "exported": true}}
+	sheet.emit_live_values = true
+	var row: EventRow = EventRow.new()
+	row.trigger_provider_id = "Core"
+	row.trigger_id = "OnProcess"
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "Core"
+	action.ace_id = "AddVar"
+	action.codegen_template = "{var_name} += {amount}"
+	action.params = {"var_name": "hp", "amount": "1"}
+	row.actions.append(action)
+	sheet.events.append(row)
+	var debug_output: String = str(SheetCompiler.compile(sheet, "user://live_ground.gd").get("output", ""))
+	all_passed = _check("debug compile answers query_children", debug_output.contains("query_children"), true) and all_passed
+	all_passed = _check("debug compile carries the reporter", debug_output.contains("__eventsheets_report_children"), true) and all_passed
+	all_passed = _check("the reply rides the eventsheets channel", debug_output.contains("eventsheets:children_report"), true) and all_passed
+	# The lossless contract: the debug machinery round-trips byte-identically as content.
+	var reimported: EventSheetResource = GDScriptImporter.new().import_external_source(debug_output)
+	reimported.external_source_path = "user://live_ground.gd"
+	var recompiled: String = str(SheetCompiler.compile(reimported, "user://live_ground.gd").get("output", ""))
+	all_passed = _check("live-grounding machinery round-trips byte-identically", recompiled == debug_output, true) and all_passed
+	# The covenant: a NORMAL compile carries none of it.
+	sheet.emit_live_values = false
+	var clean_output: String = str(SheetCompiler.compile(sheet, "user://live_ground.gd").get("output", ""))
+	all_passed = _check("normal compile has no live-grounding artifacts", clean_output.contains("query_children") or clean_output.contains("children_report"), false) and all_passed
+	# The report parser (flat triples after the header; a truncated tail drops, never errors).
+	var report: Dictionary = EventSheetLiveValuesDebugger.parse_children_report([
+		"res://player.gd", 3, "Player",
+		"RuntimeWobble", "SineBehavior", "res://eventsheet_addons/sine/sine_behavior.gd",
+		"Legs", "PlatformerMovement",  # truncated triple - dropped
+	])
+	all_passed = _check("report: script path", str(report.get("script_path")), "res://player.gd") and all_passed
+	all_passed = _check("report: instance count", int(report.get("instance_count")), 3) and all_passed
+	all_passed = _check("report: owner name", str(report.get("owner_name")), "Player") and all_passed
+	all_passed = _check("report: one whole triple kept, the truncated one dropped", (report.get("children") as Array).size(), 1) and all_passed
+	all_passed = _check("report: empty payload fails closed",
+		EventSheetLiveValuesDebugger.parse_children_report([]), {"script_path": "", "instance_count": 0, "owner_name": "", "children": []}) and all_passed
+	# A report's children ARE grounded_groups input - a runtime-attached behaviour under its
+	# runtime name inserts through that name.
+	var live_groups: Array = EventSheetSelfExpressions.grounded_groups(report.get("children", []), false)
+	all_passed = _check("a runtime-attached behaviour inserts under its runtime name",
+		_fragment_for(_group_named(live_groups, "RuntimeWobble").get("entries", []), "Magnitude"), "$RuntimeWobble.magnitude") and all_passed
 	return all_passed
 
 

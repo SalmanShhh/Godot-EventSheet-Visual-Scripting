@@ -343,6 +343,10 @@ static func variable_entries(sheet: EventSheetResource) -> Array:
 		return out
 	for entry: Dictionary in gather_sheet_variables(sheet):
 		var name_str: String = str(entry.get("name", ""))
+		# Emitted machinery (a debug-compiled sheet's __live_values_timer, async plumbing) is
+		# content, not "your variable" - it never belongs in the Self census.
+		if name_str.begins_with("__"):
+			continue
 		var type_name: String = str(entry.get("type_name", ""))
 		out.append({
 			"label": name_str if type_name.is_empty() else "%s : %s" % [name_str, type_name],

@@ -36,6 +36,14 @@ var _behaviour_groups_cache: Dictionary = {}  # {robust(bool): Array}
 # selection to read) inject through grounded_children_override.
 var _grounded_children_cache: Array = []
 var grounded_children_override: Array = []
+# LIVE grounding: while the game runs a Live Values session, the dictionary asks the RUNNING
+# instance for its behaviour children (dock wires live_query to the debugger's
+# send_query_children and routes children_report_received back here). The reply upgrades the
+# Behaviours subgroup asynchronously - real runtime names, including behaviours attached at
+# runtime, which no edit-time tier can see. Empty owner = no live report this open.
+var live_query: Callable = Callable()
+var _live_owner: String = ""
+var _live_instances: int = 0
 
 
 func init(host: ACEParamsDialog) -> void:
@@ -49,7 +57,13 @@ func _open_expression_picker(target_key: String) -> void:
 	# the dialog last showed.
 	_self_section_cache = {}
 	_behaviour_groups_cache = {}
+	_live_owner = ""
+	_live_instances = 0
 	_grounded_children_cache = grounded_children_override if not grounded_children_override.is_empty() else _grounded_children_from_selection()
+	# Live tier: ask the RUNNING game (if a Live Values session streams) for the real children.
+	# Async - the reply upgrades the tree when it lands; until then the edit-time tiers stand.
+	if live_query.is_valid():
+		live_query.call(_sheet_script_path())
 	# Spawn-heavy sheets DEFAULT to the robust behaviour access: their behaviours may attach at
 	# runtime, where a $-path to an auto-named child misses silently. Re-derived on every open so
 	# the default tracks the sheet as it grows; the checkbox stays a per-session user override.
@@ -68,6 +82,35 @@ func _context_sheet() -> EventSheetResource:
 	return _host._lint_context_provider.call() as EventSheetResource
 
 
+## The path a running/placed instance of this sheet carries as its script - the identity every
+## grounding tier matches on ("" when the sheet was never saved).
+func _sheet_script_path() -> String:
+	var sheet: EventSheetResource = _context_sheet()
+	if sheet == null:
+		return ""
+	var sheet_script_path: String = sheet.external_source_path.strip_edges()
+	return sheet_script_path if not sheet_script_path.is_empty() else sheet.resource_path.strip_edges()
+
+
+## The RUNNING game answered a query_children request. Adopt it only when it is OUR sheet's
+## report and the dictionary is still open - a stale reply after the dialog moved on is noise.
+## The live tier outranks the edit-time tiers: it is the only one that sees behaviours attached
+## at runtime, under their real runtime names.
+func _on_live_children_report(report: Dictionary) -> void:
+	if _expression_window == null or not _expression_window.visible:
+		return
+	if str(report.get("script_path", "")) != _sheet_script_path() or _sheet_script_path().is_empty():
+		return
+	var children: Array = report.get("children", [])
+	if children.is_empty():
+		return
+	_live_owner = str(report.get("owner_name", ""))
+	_live_instances = int(report.get("instance_count", 0))
+	_grounded_children_cache = children
+	_behaviour_groups_cache = {}
+	_refresh_expression_tree()
+
+
 ## The grounded tier's probe: the Scene-dock selection, kept ONLY when a selected node carries
 ## THIS sheet's script - grounding against someone else's node would list someone else's organs.
 ## Export-safe editor access (same pattern as the palette's scale bridge); returns [] everywhere
@@ -75,12 +118,7 @@ func _context_sheet() -> EventSheetResource:
 func _grounded_children_from_selection() -> Array:
 	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
 		return []
-	var sheet: EventSheetResource = _context_sheet()
-	if sheet == null:
-		return []
-	var sheet_script_path: String = sheet.external_source_path.strip_edges()
-	if sheet_script_path.is_empty():
-		sheet_script_path = sheet.resource_path.strip_edges()
+	var sheet_script_path: String = _sheet_script_path()
 	if sheet_script_path.is_empty():
 		return []
 	var editor_interface: Object = Engine.get_singleton("EditorInterface")
@@ -252,12 +290,20 @@ func _add_self_section(root: TreeItem, lowered_query: String) -> void:
 			self_item = _self_root(root)
 		if behaviours_item == null:
 			behaviours_item = _expression_tree.create_item(self_item)
-			behaviours_item.set_text(0, "Behaviours (on the selected node)" if grounded else "Behaviours")
+			var behaviours_label: String = "Behaviours"
+			var behaviours_tooltip: String = "Attached behaviours' knobs and value verbs, reached through the child node. Retarget the inserted $Name if yours is named differently - it stays selected after insert."
+			if not _live_owner.is_empty():
+				behaviours_label = "Behaviours (live · on %s)" % _live_owner
+				if _live_instances > 1:
+					behaviours_label += "  · 1 of %d running" % _live_instances
+				behaviours_tooltip = "Read from the RUNNING game - these are the instance's actual behaviour children right now, including ones attached at runtime."
+			elif grounded:
+				behaviours_label = "Behaviours (on the selected node)"
+				behaviours_tooltip = "Read off the node selected in the Scene dock - these are its actual behaviour children, under their real names."
+			behaviours_item.set_text(0, behaviours_label)
 			behaviours_item.set_custom_color(0, ACEPickerDialog.GROUP_COLOR_NEUTRAL)
 			behaviours_item.set_selectable(0, false)
-			behaviours_item.set_tooltip_text(0,
-				"Read off the node selected in the Scene dock - these are its actual behaviour children, under their real names." if grounded
-				else "Attached behaviours' knobs and value verbs, reached through the child node. Retarget the inserted $Name if yours is named differently - it stays selected after insert.")
+			behaviours_item.set_tooltip_text(0, behaviours_tooltip)
 		var pack_item: TreeItem = _expression_tree.create_item(behaviours_item)
 		if bool(pack.get("grounded", false)):
 			pack_item.set_text(0, "$%s (%s)" % [str(pack.get("node_name")), str(pack.get("provider"))])

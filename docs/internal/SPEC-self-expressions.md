@@ -166,9 +166,25 @@ section dict), so it is headless-testable like `collect_anatomy`:
    clears on open).
 3. **Phase 3 - grounding** - SHIPPED (selected-node tier). The end-to-end editor drive that
    verified it also caught the instance-reflection channel being editor-dead (see the Behaviours
-   section) and forced the script-level derivation both tiers now share. Still later: live
-   grounding against a RUNNING instance through the debugger channel that already feeds Live
-   Values.
+   section) and forced the script-level derivation both tiers now share.
+4. **Phase 4 - LIVE grounding** - SHIPPED. While a Live Values session streams, opening the
+   dictionary sends `eventsheets:query_children` with the sheet's script path; the emitted debug
+   receiver (the SAME one Live Values ships - one per game, first streaming sheet wins) walks the
+   running tree, and the first instance running that script reports its behaviour children -
+   REAL runtime names, including behaviours attached at runtime, which no edit-time tier can
+   see. The reply upgrades the subgroup asynchronously to "Behaviours (live · on <owner>)"
+   (+ "1 of N running" when instances repeat); a report for another sheet or a closed dialog is
+   dropped. Requires the sheet's Live Values toggle (the feature literally rides that channel);
+   no session degrades to the selection/fallback tiers silently. The debug machinery lives in
+   the compiled output and round-trips byte-identically as content (suite-pinned), and a normal
+   compile carries none of it (the covenant, also pinned). Verified in two REAL halves meeting
+   at the same wire payload: the emitted census run against a live scene tree with a
+   runtime-attached behaviour (direct game harness), and the editor pipeline (wiring, parse,
+   upgrade, staleness guard) driven inside the real editor - the editor-launches-child-game hop
+   itself is not automatable in this sandbox (child processes never spawn; the repo's runtime
+   smokes avoid editor-launched games for the same reason), and its two primitives
+   (EngineDebugger.send_message / EditorDebuggerPlugin._capture) are the ones Live Values
+   already ships on.
 
 ## Resolved questions
 

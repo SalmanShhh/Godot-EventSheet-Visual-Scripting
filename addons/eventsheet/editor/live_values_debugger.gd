@@ -15,6 +15,10 @@ signal fired_events_received(uids: PackedStringArray)
 ## announces its row uid right before the `breakpoint` statement (core debugger messages never reach
 ## editor plugins, so the code reports its own location), and the editor reveals that row.
 signal paused_row_received(uid: String)
+## Emitted when the running game answers a query_children request: the behaviour children of the
+## first node running the asked-for script (the Self section's LIVE grounding - real runtime
+## names, including behaviours attached at runtime).
+signal children_report_received(report: Dictionary)
 
 var _last_session_id: int = -1
 
@@ -34,6 +38,9 @@ func _capture(message: String, data: Array, session_id: int) -> bool:
 	if message == "eventsheets:paused_row":
 		paused_row_received.emit(parse_paused(data))
 		return true
+	if message == "eventsheets:children_report":
+		children_report_received.emit(parse_children_report(data))
+		return true
 	return false
 
 
@@ -50,6 +57,40 @@ static func parse_fired(data: Array) -> PackedStringArray:
 	for entry: Variant in data:
 		uids.append(str(entry))
 	return uids
+
+
+## Asks the running game for the behaviour children of the node running `script_path` (the Self
+## section's live grounding). False when no streaming session is active - callers treat that as
+## "no live tier", never an error.
+func send_query_children(script_path: String) -> bool:
+	if _last_session_id < 0:
+		return false
+	var session: EditorDebuggerSession = get_session(_last_session_id)
+	if session == null or not session.is_active():
+		return false
+	session.send_message("eventsheets:query_children", [script_path])
+	return true
+
+
+## The children_report payload: [script_path, instance_count, owner_name, (name, provider,
+## script_path)*] -> a Dictionary. Flat triples, tolerant of a truncated tail (a partial triple
+## is dropped rather than erroring mid-session). Static so tests drive it without an editor.
+static func parse_children_report(data: Array) -> Dictionary:
+	var report: Dictionary = {
+		"script_path": str(data[0]) if data.size() > 0 else "",
+		"instance_count": int(data[1]) if data.size() > 1 else 0,
+		"owner_name": str(data[2]) if data.size() > 2 else "",
+		"children": [],
+	}
+	var index: int = 3
+	while index + 2 < data.size():
+		(report["children"] as Array).append({
+			"name": str(data[index]),
+			"provider": str(data[index + 1]),
+			"script_path": str(data[index + 2]),
+		})
+		index += 3
+	return report
 
 
 ## Edit-back: pushes a value change into the running game (the streaming session).
