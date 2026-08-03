@@ -10,8 +10,9 @@ Sine is a Godot EventSheets behavior pack that makes a node oscillate. You attac
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -153,6 +154,22 @@ The live wave output itself is not a picker expression. Read it straight off the
 | `wave` | String | `sine` | The wave shape: `sine`, `triangle`, `sawtooth`, `reverse-sawtooth`, or `square`. |
 
 ---
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$SineBehavior.active` inserts the **Active** entry straight into any expression
+- `$SineBehavior.magnitude` inserts the **Magnitude** entry straight into any expression
+
+The `$SineBehavior` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("SineBehavior")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

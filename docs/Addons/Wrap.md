@@ -44,6 +44,22 @@ On Wrapped -> Ship | Fade Out: Fade In  0.15   (a soft blink as it re-enters)
 | `half_width` / `half_height` | `16` | Half the sprite - wraps only when fully outside. |
 | `wrap_enabled` | `true` | Master switch. |
 
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$WrapBehavior.wrap_space` inserts the **Wrap Space** entry straight into any expression
+- `$WrapBehavior.wrap_shape` inserts the **Wrap Shape** entry straight into any expression
+
+The `$WrapBehavior` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("WrapBehavior")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
+
 ## Use cases
 
 ### 1. Asteroids, complete

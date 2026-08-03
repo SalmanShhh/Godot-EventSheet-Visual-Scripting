@@ -10,8 +10,9 @@ Weapon Kit is a Godot EventSheets behavior pack that turns any Node2D into a gun
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -177,6 +178,22 @@ Every exported property is also readable by its friendly name:
 | `infinite_reserve` | bool | `false` | Reloads never spend reserve ammo. |
 
 ---
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$WeaponKit.auto_reload` inserts the **Auto Reload** entry straight into any expression
+- `$WeaponKit.burst_count` inserts the **Burst Count** entry straight into any expression
+
+The `$WeaponKit` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("WeaponKit")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

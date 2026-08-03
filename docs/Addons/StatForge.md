@@ -12,8 +12,9 @@ StatForge is a Godot EventSheets behavior pack that gives any node real, modifia
 4. [ACE reference](#ace-reference)
 5. [Stat sheets as data (.tres)](#stat-sheets-as-data-tres)
 6. [Scaling the complexity](#scaling-the-complexity)
-7. [Use cases](#use-cases)
-8. [Tips and common mistakes](#tips-and-common-mistakes)
+7. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+8. [Use cases](#use-cases)
+9. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -187,6 +188,22 @@ StatForge is deliberately front-loaded onto **two verbs**: Add Buff writes, Stat
 You never pay for the features you are not using: a node with two verbs on it is exactly as simple as a variable, except it already knows how to be buffed.
 
 ---
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$StatForge.auto_tick` inserts the **Auto Tick** entry straight into any expression
+- `$StatForge.overflow_mode` inserts the **Overflow Mode** entry straight into any expression
+
+The `$StatForge` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("StatForge")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

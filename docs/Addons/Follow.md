@@ -10,8 +10,9 @@ Follow is a Godot EventSheets behavior pack. You attach a `FollowBehavior` to a 
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -136,6 +137,22 @@ All ACEs live in the **Follow** category and target the `FollowBehavior` on the 
 | On Reached Target | The host arrives in smooth mode - its distance to the target drops to Min Distance or less. Fires once per arrival (it re-arms after the host moves back out of range). Delayed mode never fires this. |
 
 ---
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$FollowBehavior.delay` inserts the **Delay** entry straight into any expression
+- `$FollowBehavior.follow_speed` inserts the **Follow Speed** entry straight into any expression
+
+The `$FollowBehavior` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("FollowBehavior")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

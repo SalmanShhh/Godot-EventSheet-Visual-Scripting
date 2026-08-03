@@ -19,8 +19,9 @@ The bundled **FPS Arena** showcase has an orange Stalker that navmesh-paths to t
 1. [Where this pack shines](#where-this-pack-shines)
 2. [Setup](#setup)
 3. [ACE reference](#ace-reference)
-4. [Use cases](#use-cases)
-5. [Tips and common mistakes](#tips-and-common-mistakes)
+4. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+5. [Use cases](#use-cases)
+6. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -104,6 +105,22 @@ an expression named after the property reads it, a **Set ...** action writes it,
 **Add To ...** and **Subtract From ...** adjust it by an amount. They sit in the pack's own category
 alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$NavAgent3D.agent_height` inserts the **Agent Height** entry straight into any expression
+- `$NavAgent3D.agent_radius` inserts the **Agent Radius** entry straight into any expression
+
+The `$NavAgent3D` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("NavAgent3D")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

@@ -10,8 +10,9 @@ Scene Flow is a Godot EventSheets behavior pack that gives a whole menu (or a wh
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -123,6 +124,22 @@ alongside the verbs above, so any knob you can set in the Inspector is also some
 change while the game runs.
 
 ---
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$SceneFlowBehavior.fade_color` inserts the **Fade Color** entry straight into any expression
+- `$SceneFlowBehavior.fade_seconds` inserts the **Fade Seconds** entry straight into any expression
+
+The `$SceneFlowBehavior` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("SceneFlowBehavior")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

@@ -8,9 +8,10 @@ Storylet Weaver is a quality-based narrative (QBN) engine you drop into any Godo
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
-5. [Use cases](#use-cases)
-6. [The data-driven path: a StoryletResource asset](#the-data-driven-path-a-storyletresource-asset)
-7. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+6. [Use cases](#use-cases)
+7. [The data-driven path: a StoryletResource asset](#the-data-driven-path-a-storyletresource-asset)
+8. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -165,6 +166,22 @@ Every name below is exactly what appears in the picker. Parameters are listed in
 | **On None Available** | After Draw or Draw Weighted finds nothing eligible. | (nothing storylet-specific; use it for a fallback). |
 
 ---
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$StoryletsAddon.quality_number(key)` inserts the **Quality Number** entry straight into any expression
+- `$StoryletsAddon.quality_text(key)` inserts the **Quality Text** entry straight into any expression
+
+The `$StoryletsAddon` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("StoryletsAddon")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

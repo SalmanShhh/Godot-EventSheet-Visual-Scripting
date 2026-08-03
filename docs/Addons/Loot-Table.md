@@ -10,9 +10,10 @@ Because it is an autoload, you write `LootBox: Roll  "chest"` from any sheet and
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
-5. [Use cases](#use-cases)
-6. [The data-driven path: a LootTableResource asset](#the-data-driven-path-a-loottableresource-asset)
-7. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+6. [Use cases](#use-cases)
+7. [The data-driven path: a LootTableResource asset](#the-data-driven-path-a-loottableresource-asset)
+8. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -141,6 +142,22 @@ Every row below is exactly what the pack exposes. Parameter names and types are 
 | On Pity Triggered | Fires when a tag's miss streak reaches its threshold and a tagged drop is forced. Inside it, `Pity Table`, `Pity Tag`, and `Pity Count At Trigger` are valid. |
 
 ---
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$LootBoxAddon.table_count()` inserts the **Table Count** entry straight into any expression
+- `$LootBoxAddon.entry_count(table_id)` inserts the **Entry Count** entry straight into any expression
+
+The `$LootBoxAddon` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("LootBoxAddon")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Docs - the Self section covered everywhere it matters
+
+- **All 64 addon guides** gained a "Reading it from expressions - the Self section" chapter, each
+  DERIVED from its pack's real published entries through the shipped census
+  (`$PlatformerMovement.acceleration`, `$SimpleHealthBehavior.invulnerable`, ...), so an example
+  fragment can never be a phantom the picker does not offer. Tables of contents renumbered.
+- **C3 migration guide**: `Self.` leads the Habits That Transfer Directly list, with the short
+  mapping (`Self.X` is `position.x`, `Self.MyVariable` is the bare name,
+  `Self.Platform.VectorX` is `$PlatformerMovement.velocity.x` - a child node, because behaviours
+  here ARE child nodes).
+- **Glossary**: a Self section entry covering all four tiers, the robust-lookups toggle, and the
+  no-Self-token-in-your-code contract. **Recipes**: a "what can I even write here?" tip.
+  **Custom ACEs guide**: how `@ace_hidden` / `@ace_expression` / `@ace_expose_all` curate what a
+  pack publishes into Self - Behaviours, and that the derivation is script-level (works without
+  `@tool`). **Addons index** and the README's Feature tour + Milestones now name the feature.
+
 ### Added - Self live grounding: the running game answers
 
 The last tier of the Self section: while a Live Values session streams, opening the Expressions

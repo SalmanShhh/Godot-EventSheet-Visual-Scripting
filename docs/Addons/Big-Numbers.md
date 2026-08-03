@@ -8,8 +8,9 @@ Big Numbers is the number-formatting layer an idle or incremental game lives on,
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -120,6 +121,22 @@ This pack ships **no actions**. Big Numbers never mutates state - it only comput
 This pack ships **no triggers**. Formatting is pure and instant, so there is nothing to fire on. Drive your displays off your own game's triggers (`On Ready`, `Every 0.1 seconds`, a button press) or off the Currency Ledger pack's `On Amount Changed`, and call a Big Numbers expression inside the row.
 
 ---
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$BigNumberAddon.fmt_short(value, decimals)` inserts the **Fmt Short** entry straight into any expression
+- `$BigNumberAddon.fmt_scientific(value, decimals)` inserts the **Fmt Scientific** entry straight into any expression
+
+The `$BigNumberAddon` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("BigNumberAddon")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

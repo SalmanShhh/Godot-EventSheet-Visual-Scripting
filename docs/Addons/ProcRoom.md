@@ -8,8 +8,9 @@ ProcRoom is a seeded procedural room-map generator for Godot EventSheets. Regist
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -146,6 +147,22 @@ All names below are the exact display names you will see in the picker. Because 
 | **On Traversal Blocked** | Enter Room is refused because the room is unreachable or locked. Read Blocked Id and Block Reason inside it. |
 
 ---
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$ProcRoomAddon.graph_seed()` inserts the **Graph Seed** entry straight into any expression
+- `$ProcRoomAddon.total_rooms()` inserts the **Total Rooms** entry straight into any expression
+
+The `$ProcRoomAddon` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("ProcRoomAddon")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

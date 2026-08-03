@@ -10,8 +10,9 @@ Tile Movement is a Godot EventSheets behavior pack for grid-locked movement. It 
 2. [Core concepts](#core-concepts)
 3. [Setup](#setup)
 4. [ACE reference](#ace-reference)
-5. [Use cases](#use-cases)
-6. [Tips and common mistakes](#tips-and-common-mistakes)
+5. [Reading it from expressions - the Self section](#reading-it-from-expressions---the-self-section)
+6. [Use cases](#use-cases)
+7. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ---
 
@@ -129,6 +130,22 @@ All ACEs live in the **Tile Movement** category and act on the `TileMovementBeha
 | `ai_controlled` | bool | `false` | AI drive: read the held `ai_move_x`/`ai_move_y` intents instead of the arrow keys - a sheet or AI driver steps the host with the player's exact feel (see docs/GUIDE-PLAYER-AND-AI-INPUT.md). |
 
 ---
+
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$TileMovementBehavior.ai_controlled` inserts the **Ai Controlled** entry straight into any expression
+- `$TileMovementBehavior.default_controls` inserts the **Default Controls** entry straight into any expression
+
+The `$TileMovementBehavior` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("TileMovementBehavior")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
 
 ## Use cases
 

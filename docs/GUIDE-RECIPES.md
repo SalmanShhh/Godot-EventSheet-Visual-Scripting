@@ -474,6 +474,11 @@ Two ways to stop repeating yourself.
   warns + blocks** this as you type, and **Rename Everywhere…** fixes existing references safely.
 - **A ƒx expression that doesn't compile.** You'll see the red row marker (recipe 6). The ƒx field
   also has live validation + autocomplete as you type.
+- **"What can I even write here?"** Type `self` in the ƒx field (or press its ƒx button) and the
+  Expressions dictionary opens scoped to the **Self section** - your variables, your object's
+  common properties under both spellings (`X · position.x`), your value-returning functions, and
+  your attached behaviours as `$PackName.knob` chains. Double-click to insert; everything it
+  inserts is plain GDScript, so the section is also how you learn what to type by hand.
 - **"It compiled but nothing happens."** Check the script is actually **attached** to the node
   (Tools ▸ Attach to Selected Node) and the **host class** matches the node type.
 - **Editing the `.gd` in Godot's script editor.** Go ahead - a sheet *is* its `.gd`, so your edits

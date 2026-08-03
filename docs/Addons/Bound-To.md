@@ -51,6 +51,22 @@ an expression named after the property reads it, a **Set ...** action writes it,
 alongside the verbs above, so any knob you can set in the Inspector is also something a sheet can read and
 change while the game runs.
 
+## Reading it from expressions - the Self section
+
+Type `self` in any ƒx field, or open the ƒx **Expressions dictionary**, and **Self ▸ Behaviours**
+lists this pack's knobs and value verbs as ready-to-insert chains once the behaviour is attached:
+
+- `$BoundToBehavior.bound_space` inserts the **Bound Space** entry straight into any expression
+- `$BoundToBehavior.bound_by_edge` inserts the **Bound By Edge** entry straight into any expression
+
+The `$BoundToBehavior` token stays selected after insert, so retargeting to your child's actual name is one
+keystroke, or a node drag. Attaching this behaviour at runtime instead? Tick **Robust behaviour
+lookups** in the dictionary and the same entries insert as `get_node_or_null("BoundToBehavior")` chains,
+which survive auto-named children. While **Live Values** streams from a running game, the group
+upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
+attached at runtime included, under their real names. And with your node selected in the Scene
+dock, the section grounds to that node's actual children before you even press Run.
+
 ## Use cases
 
 ### 1. The arcade ship

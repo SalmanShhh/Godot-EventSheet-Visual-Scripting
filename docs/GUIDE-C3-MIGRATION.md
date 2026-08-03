@@ -198,6 +198,18 @@ i18n (Godot translations).
 
 ## 7. Habits That Transfer Directly
 
+- **Typing `Self.` still answers "what does my object know about itself"**: type `self` in any
+  ƒx field (or open the ƒx Expressions dictionary) and a pinned **Self** section lists your
+  variables, your host's common properties under their C3 names, your value-returning functions,
+  and your attached behaviours. Every entry shows both spellings and inserts plain GDScript -
+  `Self.X` is the label, `position.x` is what lands in the field, so the section teaches the
+  real language while your muscle memory still works. The mapping in short: `Self.X` is
+  `position.x`, `Self.Angle` is `rotation`, `Self.Opacity` is `modulate.a`, `Self.MyVariable` is
+  the bare `my_variable`, and `Self.Platform.VectorX` is `$PlatformerMovement.velocity.x` - a
+  child node, because behaviours here ARE child nodes. Select your node in the Scene dock and
+  the Behaviours group grounds to its actual children under their real names; while Live Values
+  streams from a running game it reads the RUNNING instance, behaviours attached at runtime
+  included.
 - **Double-click empty space and you get C3's two-step add**: page one is *object cards* -
   System first, then every behavior pack, autoload, and addon with its icon - and picking
   one scopes the picker to that object's verbs, exactly like choosing an object then a

@@ -1,8 +1,10 @@
 # Addon Guides
 
 Deep-dive guides for the bundled behavior packs in `eventsheet_addons/`. Each one covers when to reach
-for the pack, its full ACE reference (Actions, Conditions, Expressions, Triggers), a dozen worked use
-cases as event-sheet rows, and the tips and gotchas that bite in practice.
+for the pack, its full ACE reference (Actions, Conditions, Expressions, Triggers), how to read its
+knobs and values from any ƒx field through the **Self section** (type `self` and the attached pack's
+entries insert as `$PackName.member` chains), a dozen worked use cases as event-sheet rows, and the
+tips and gotchas that bite in practice.
 
 Every pack here is authored as an event sheet and compiles to plain GDScript with zero plugin
 dependency, just like your own sheets - open its `.gd` in the editor to read it as events.

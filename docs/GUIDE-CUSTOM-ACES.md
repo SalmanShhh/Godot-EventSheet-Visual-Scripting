@@ -302,6 +302,14 @@ Put `##` doc-comment lines with `@ace_*` directives directly above a member to o
 reflection chooses. Annotations are case-sensitive and the content can be parenthesized or
 space-separated (`@ace_category(Combat)` and `@ace_category Combat` both work).
 
+The same annotations also curate the ƒx dictionary's **Self ▸ Behaviours** group - the section a
+user sees when they type `self` in an expression field with your behaviour attached. Your exported
+variables list there as knobs (`$YourPack.knob_name`), and a value-returning public method lists
+when it carries `@ace_expression` or the pack declares `@ace_expose_all`; `@ace_hidden` and
+`@ace_internal` exclude a member from it exactly as they do from the picker. This derivation is
+SCRIPT-level (property list, method list, and these comments read from the file), so it works the
+same whether or not your script is `@tool`.
+
 | Annotation | Effect |
 |------------|--------|
 | `@ace_hidden` | Hide this member from the picker entirely. |
