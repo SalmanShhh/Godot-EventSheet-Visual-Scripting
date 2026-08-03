@@ -286,6 +286,57 @@ static func forwarding_shim(source: String, old_member: String, new_member: Stri
 
 ## The bare names out of a parameter list, for the forwarding call. Splits only at depth zero, so a
 ## default like `Vector2(0, 0)` or `Array[int]` does not look like two arguments.
+## The "Publish New Version" core: bumps the pack-level `## @ace_version(X.Y.Z)` (patch, minor
+## or major - minor resets patch, major resets both; a missing or short version reads as 1.0.0
+## first) and records the one-line change note as a PLAIN doc-comment line directly under the
+## version annotation (`## 1.0.1: fixed the wobble`), so the history reads in the class docs and
+## needs no new annotation vocabulary. Returns {source, old_version, new_version}. Pure - the
+## caller owns backups and writing.
+static func bump_version(source: String, bump: String, note: String) -> Dictionary:
+	var lines: PackedStringArray = source.split("
+")
+	var old_version: String = "1.0.0"
+	var version_line: int = -1
+	for i: int in range(lines.size()):
+		var stripped: String = lines[i].strip_edges()
+		if stripped.begins_with("## @ace_version") or stripped.begins_with("# @ace_version"):
+			version_line = i
+			var open: int = stripped.find("(")
+			var close: int = stripped.rfind(")")
+			if open >= 0 and close > open:
+				old_version = stripped.substr(open + 1, close - open - 1).strip_edges()
+			break
+	var parts: PackedInt32Array = PackedInt32Array([1, 0, 0])
+	var read: PackedStringArray = old_version.split(".")
+	for i: int in range(mini(read.size(), 3)):
+		parts[i] = maxi(int(read[i]), 0)
+	match bump:
+		"major":
+			parts[0] += 1
+			parts[1] = 0
+			parts[2] = 0
+		"minor":
+			parts[1] += 1
+			parts[2] = 0
+		_:
+			parts[2] += 1
+	var new_version: String = "%d.%d.%d" % [parts[0], parts[1], parts[2]]
+	var clean_note: String = note.replace("
+", " ").replace("", " ").strip_edges()
+	if clean_note.is_empty():
+		clean_note = "maintenance"
+	var note_line: String = "## %s: %s" % [new_version, clean_note]
+	if version_line >= 0:
+		lines[version_line] = "## @ace_version(%s)" % new_version
+		lines.insert(version_line + 1, note_line)
+	else:
+		# No identity yet: the version annotation (and its first note) open the file.
+		lines.insert(0, note_line)
+		lines.insert(0, "## @ace_version(%s)" % new_version)
+	return {"source": "
+".join(lines), "old_version": old_version, "new_version": new_version}
+
+
 static func _argument_names(argument_text: String) -> PackedStringArray:
 	var names: PackedStringArray = PackedStringArray()
 	var depth: int = 0

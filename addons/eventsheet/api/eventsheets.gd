@@ -879,6 +879,32 @@ static func curate_provider(script_path: String, edits: Array) -> Dictionary:
 	return result
 
 
+## The "Publish New Version" ritual for a pack script: bump `@ace_version` (patch/minor/major),
+## record the one-line change note as a doc comment under it, back the file up, write. Returns
+## {ok, reason, old_version, new_version, backup}. The pickers republish on the next registry
+## refresh - callers editing the open sheet should reopen it so the banner chip reads the new
+## version.
+static func publish_pack_version(script_path: String, bump: String, note: String) -> Dictionary:
+	var result: Dictionary = {"ok": false, "reason": "", "old_version": "", "new_version": "", "backup": ""}
+	var clean_path: String = script_path.strip_edges()
+	if not FileAccess.file_exists(clean_path):
+		result["reason"] = "No such script: %s" % clean_path
+		return result
+	var original: String = FileAccess.get_file_as_string(clean_path)
+	var bumped: Dictionary = EventSheetACEAnnotationWriter.bump_version(original, bump, note)
+	result["old_version"] = str(bumped.get("old_version", ""))
+	result["new_version"] = str(bumped.get("new_version", ""))
+	result["backup"] = EventSheetBackups.backup_sheet(clean_path)
+	var handle: FileAccess = FileAccess.open(clean_path, FileAccess.WRITE)
+	if handle == null:
+		result["reason"] = "Could not open %s for writing (error %d)." % [clean_path, FileAccess.get_open_error()]
+		return result
+	handle.store_string(str(bumped.get("source", original)))
+	handle.close()
+	result["ok"] = true
+	return result
+
+
 ## Keeps a RENAMED verb working for sheets that already use it, by appending a deprecated
 ## forwarding shim of the old name to the script.
 ##

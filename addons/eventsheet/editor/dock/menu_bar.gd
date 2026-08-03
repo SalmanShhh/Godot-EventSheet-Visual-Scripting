@@ -74,6 +74,8 @@ func build(root: Node) -> void:
 		"See the WHOLE sheet's Inspector as one live view - every exported variable with its decor, grouping, and widget, exactly as Godot will show it."
 	)
 	sheet_popup.add_item("Export Addon…", 6)
+	sheet_popup.add_item("Publish New Version…", 14)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(14), "Bump this pack's @ace_version (patch/minor/major) with a one-line change note recorded in its class docs - backed up first, republished on the spot.")
 	sheet_popup.id_pressed.connect(func(id: int) -> void:
 		match id:
 			0: _dock._open_template_menu()
@@ -83,6 +85,7 @@ func build(root: Node) -> void:
 			4: _dock._open_sheet_type_dialog()
 			5: _dock._on_manage_ace_providers_requested()
 			6: _dock._export_addon_pack()
+			14: _dock._open_publish_version_dialog()
 			7: _dock._export_gdscript_requested()
 			8: _dock._open_include_manager()
 			9: _dock._new_addon_panel.open()

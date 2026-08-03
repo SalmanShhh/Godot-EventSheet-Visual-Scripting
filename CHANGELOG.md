@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - Sheet > Publish New Version (the pack versioning ritual)
+
+Packs had identity but no versioning workflow - authors hand-edited `@ace_version` and forgot.
+Now it is a ritual: pick **patch / minor / major** (minor resets patch, major resets both), write
+the one-line change note, and see the real `1.0.0 -> 1.0.1` preview before confirming. The bump
+rewrites `@ace_version` in place and records the note as a PLAIN doc comment directly under it
+(`## 1.0.1: fixed the wobble`) - the pack's history reads in its own class docs with no new
+annotation vocabulary. The file is backed up first (the same Curate Script write path), the
+vocabulary republishes on the spot, and the reopened sheet's Addon Pack chip reads the new
+version. Offered only for sheets that ARE packs (under `eventsheet_addons/` or already
+declaring a version); `EventSheets.publish_pack_version()` exposes the same ritual to code.
+`tests/publish_version_test.gd` pins the bump VALUES (resets, the missing- and short-version
+reads, note placement and flattening, fail-closed writes) and the pickup that matters: the
+republished source imports with the new `addon_version`.
+
 ### Added - the addon guide scaffolder
 
 Writing a docs/Addons-grade guide for your own pack no longer starts from a blank page:
