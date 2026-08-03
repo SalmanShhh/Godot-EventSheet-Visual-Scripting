@@ -1231,6 +1231,15 @@ static func preload_block_for(asset_path: String) -> CustomBlockRow:
 	return block
 
 
+## Emits a docs/Addons-style guide SKELETON for a pack script: the factual tables (verbs,
+## knobs, signals, the Self section) pre-filled from the script itself, the human parts (the 15
+## use cases, the tips) left as prompts. "" when the script cannot be read. Loaded by path so
+## naming the scaffolder here never joins the editor's boot compile.
+static func addon_guide_skeleton(script_path: String) -> String:
+	var scaffold: GDScript = load("res://addons/eventsheet/editor/addon_guide_scaffold.gd")
+	return scaffold.generate(script_path)
+
+
 static func _preload_constant_name(asset_path: String) -> String:
 	var base: String = asset_path.get_file().get_basename().to_pascal_case()
 	var sanitizer: RegEx = RegEx.new()

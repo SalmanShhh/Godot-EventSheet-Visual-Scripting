@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - the addon guide scaffolder
+
+Writing a docs/Addons-grade guide for your own pack no longer starts from a blank page:
+`tools/scaffold_addon_guide.gd` (and `EventSheets.addon_guide_skeleton()` for code) emits the
+full guide skeleton with every FACTUAL section pre-filled from the script itself - the verb
+tables (actions/conditions/expressions/triggers, annotation-curated through the same reader the
+Self census uses, so a table can never name a verb the picker does not offer), the Inspector
+properties with real types and defaults, and the Self section with the pack's real `$Class.knob`
+chains. What remains is exactly the house standard's human half: 15 use-case blanks and 5
+one-liner prompts. The CLI refuses to overwrite an existing file - a finished guide can never be
+clobbered by a skeleton. `tests/addon_guide_scaffold_test.gd` pins the Sine output's VALUES
+(real verb row, real knob default, the blank counts, sequential TOC, fail-closed input).
+
 ### Added - the sticky group breadcrumb
 
 Scrolled deep inside a group on a 1,000-row sheet, the sheet now tells you where you are: a slim

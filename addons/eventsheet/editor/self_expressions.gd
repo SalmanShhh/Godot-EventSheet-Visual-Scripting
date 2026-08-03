@@ -239,6 +239,12 @@ static func _chain_entry(node_token: String, member: String, display: String, ro
 	return {"label": "%s · %s" % [display, member], "fragment": fragment, "tooltip": tooltip}
 
 
+## Public face of the per-method annotation reader (the guide scaffolder derives its verb
+## tables through the SAME reader the Self census uses, so the two can never disagree).
+static func method_annotations(script_path: String) -> Dictionary:
+	return _method_annotations(script_path)
+
+
 ## Per-method `## @ace_*` marks read from SOURCE: {method_name: ["hidden", "expression", ...]}
 ## plus the pack-level "@expose_all" flag. A tiny purpose-built read (annotation lines directly
 ## above each func), NOT a re-implementation of the analyzer - it only answers the three

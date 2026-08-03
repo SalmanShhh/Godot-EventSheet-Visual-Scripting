@@ -9,6 +9,15 @@ tips and gotchas that bite in practice.
 Every pack here is authored as an event sheet and compiles to plain GDScript with zero plugin
 dependency, just like your own sheets - open its `.gd` in the editor to read it as events.
 
+Writing a guide for YOUR pack? Scaffold it - the factual tables pre-filled from your script,
+only the use cases left to write:
+
+```
+godot --headless --path . --script tools/scaffold_addon_guide.gd -- eventsheet_addons/<your_pack>
+```
+
+(or `EventSheets.addon_guide_skeleton(script_path)` from code.)
+
 For the plugin's guides and references (not the packs), see the [documentation index](../README.md).
 
 ## Systems (autoload singletons)
