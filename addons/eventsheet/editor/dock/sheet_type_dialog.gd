@@ -234,6 +234,9 @@ func _ensure_sheet_type_dialog() -> void:
 	_sheet_type_dialog = ConfirmationDialog.new()
 	_sheet_type_dialog.title = "Sheet Type"
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
+	# Drop a Scene-dock node ANYWHERE on the dialog and the host field takes its class - the
+	# fastest honest answer to "what do I type in Controls / extends?" is the node you meant.
+	form.set_drag_forwarding(Callable(), _can_drop_node, _drop_node)
 	_sheet_type_option = OptionButton.new()
 	_sheet_type_option.add_item("Event Sheet")           # plain: compiles onto the host node
 	_sheet_type_option.add_item("Custom Node")           # class_name + @icon -> Create Node dialog
@@ -408,6 +411,35 @@ func _on_host_edit_input(event: InputEvent) -> void:
 
 
 ## The FileSystem picker for the class icon - browse res:// images instead of typing a path.
+## Scene-dock node drag payloads carry {type: "nodes", nodes: [NodePath...]}.
+func _can_drop_node(_at_position: Vector2, data: Variant) -> bool:
+	return data is Dictionary and str((data as Dictionary).get("type", "")) == "nodes" \
+		and not ((data as Dictionary).get("nodes", []) as Array).is_empty()
+
+
+func _drop_node(_at_position: Vector2, data: Variant) -> void:
+	var node_paths: Array = (data as Dictionary).get("nodes", [])
+	var dropped: Node = _dock.get_node_or_null(node_paths[0]) if not node_paths.is_empty() else null
+	if dropped == null:
+		return
+	# The host class the node ACTUALLY is: its script's class_name when it has one (that is the
+	# class a sheet would be controlling), else the engine class.
+	var host_class: String = ""
+	var node_script: Script = dropped.get_script() as Script
+	if node_script != null:
+		host_class = str(node_script.get_global_name())
+	if host_class.is_empty():
+		host_class = dropped.get_class()
+	var shown: Dictionary = field_visibility(_sheet_type_option.selected)
+	if not bool(shown.get("host", false)):
+		_dock._set_status("%s doesn't take a host class - the dropped node's %s was not applied." % [
+			_sheet_type_option.get_item_text(_sheet_type_option.selected), host_class], true)
+		return
+	_sheet_type_host_edit.text = host_class
+	_refresh_identity_preview()
+	_dock._set_status("Host set from the dropped node: %s (%s)." % [dropped.name, host_class])
+
+
 func _open_icon_file_dialog() -> void:
 	if _icon_file_dialog == null:
 		_icon_file_dialog = EditorFileDialog.new()

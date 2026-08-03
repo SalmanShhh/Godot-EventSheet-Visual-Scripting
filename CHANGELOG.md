@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - drop a node onto the Sheet Type dialog to set its host
+
+The last of the Sheet Type dialog's backlog: drag a node from the Scene dock onto the dialog
+(anywhere on it) and the **Controls / extends** field takes that node's class - a script's
+`class_name` when it has one (that IS the class a sheet would be controlling), the engine class
+otherwise - with the live "Ships as" line updating on the spot. Types that take no host (Editor
+Tool, Autoload, Custom Resource) refuse honestly with a status line instead of silently writing
+a hidden field, and junk drag payloads never arm the drop. Verified by a scripted harness drive
+(engine node, scripted node, the host-less guard, the payload gate). The backlog's other two
+tail items - the plain-sheet chip and the icon Browse button - turned out to have already
+shipped in earlier passes; the stale list is retired rather than re-implemented.
+
 ### Added - the Picker Preview rail panel
 
 The Anatomy rail shows a sheet's census; what an author could not see without SAVING was how
