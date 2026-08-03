@@ -262,6 +262,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Press Interact")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Marks a named interact button held and fires On Interact Pressed.")
+## @ace_display_template("Press interact [b]{id}[/b]")
 ## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.press_interact({id})")
 func press_interact(id: String) -> void:
@@ -365,6 +366,7 @@ func simulate_mouse(target_x: float, target_y: float, smoothing: float) -> void:
 ## @ace_name("Simulate Axis")
 ## @ace_category("Virtual Cursor")
 ## @ace_description("Feeds an analog axis for this tick (accel/decel applies).")
+## @ace_display_template("Simulate axis ([b]{x}[/b], [b]{y}[/b])")
 ## @ace_icon("res://eventsheet_addons/virtual_cursor/icon.svg")
 ## @ace_codegen_template("$VirtualCursor.simulate_axis({x}, {y})")
 func simulate_axis(x: float, y: float) -> void:

@@ -27,6 +27,7 @@ func _ready() -> void:
 ## @ace_name("Set Seed")
 ## @ace_category("Advanced Random: Setup")
 ## @ace_description("Sets the seed for BOTH numbers and noise - same seed reproduces the same sequence.")
+## @ace_display_template("Set random seed to [b]{seed_value}[/b]")
 ## @ace_icon("res://eventsheet_addons/advanced_random/icon.svg")
 ## @ace_codegen_template("AdvancedRandom.set_random_seed({seed_value})")
 func set_random_seed(seed_value: int) -> void:
@@ -90,6 +91,7 @@ func generate_permutation(size: int) -> void:
 ## @ace_name("Make Shuffle Bag")
 ## @ace_category("Advanced Random: Setup")
 ## @ace_description("Creates a named bag of items - Shuffle Bag Pick draws each once before any repeats.")
+## @ace_display_template("Make shuffle bag [b]{bag_name}[/b] from [b]{items}[/b]")
 ## @ace_icon("res://eventsheet_addons/advanced_random/icon.svg")
 ## @ace_codegen_template("AdvancedRandom.make_shuffle_bag({bag_name}, {items})")
 func make_shuffle_bag(bag_name: String, items: Array) -> void:

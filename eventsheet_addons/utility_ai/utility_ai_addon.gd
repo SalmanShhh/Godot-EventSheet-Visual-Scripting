@@ -98,6 +98,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Add Action")
 ## @ace_category("Utility AI")
 ## @ace_description("Registers a candidate action the brain can choose. cooldown = seconds it rests after Mark Action Complete (0 = none); interruptible = whether Interrupt can cancel it; priority = an overall weight multiplier (1 = normal).")
+## @ace_display_template("Add action [b]{action_name}[/b]: cooldown [b]{cooldown}[/b] s, priority [b]{priority}[/b]")
 ## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.add_action({action_name}, {cooldown}, {interruptible}, {priority})")
 func add_action(action_name: String, cooldown: float, interruptible: bool, priority: float) -> void:
@@ -142,6 +143,7 @@ func set_action_enabled(action_name: String, enabled: bool) -> void:
 ## @ace_name("Set Input")
 ## @ace_category("Utility AI")
 ## @ace_description("Writes a world-state value considerations read by key (usually normalized 0-1, e.g. hp_ratio). Push these right before Evaluate; an unset key reads as 0.")
+## @ace_display_template("Set input [b]{key}[/b] to [b]{value}[/b]")
 ## @ace_icon("res://eventsheet_addons/utility_ai/icon.svg")
 ## @ace_codegen_template("$UtilityBrain.set_input({key}, {value})")
 func set_input(key: String, value: float) -> void:

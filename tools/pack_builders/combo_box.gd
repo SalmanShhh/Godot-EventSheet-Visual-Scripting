@@ -295,6 +295,10 @@ static func build() -> bool:
 		"return str(_combos.keys()[index]) if index >= 0 and index < _combos.size() else \"\"", TYPE_STRING)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"press_input": "Press input [b]{token}[/b]",
+		"register_combo": "Register combo [b]{id}[/b]: [b]{sequence}[/b] within [b]{timing_window}[/b] s",
+	})
 	Lib.feature_verbs(sheet, ["register_combo", "press_input"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/combo_box/combo_box_addon")
 

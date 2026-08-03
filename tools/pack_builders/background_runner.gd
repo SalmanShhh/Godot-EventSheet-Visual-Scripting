@@ -101,5 +101,8 @@ static func build() -> bool:
 		"\trun_in_background(work.bind(__item))"
 	])))
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"run_in_background": "Run [b]{work}[/b] in the background",
+	})
 	Lib.feature_verbs(sheet, ["run_in_background"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/background_runner/background_runner_behavior")

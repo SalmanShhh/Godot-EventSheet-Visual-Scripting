@@ -54,6 +54,7 @@ class TransitionRunner:
 ## @ace_name("Fade To Scene")
 ## @ace_category("Scenes")
 ## @ace_description("Fades the screen out, changes to the scene, and fades back in (ignored while a transition runs).")
+## @ace_display_template("Fade to scene [b]{path}[/b]")
 ## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
 ## @ace_codegen_template("$SceneFlowBehavior.fade_to_scene({path})")
 func fade_to_scene(path: String) -> void:

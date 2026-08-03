@@ -59,6 +59,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Slide")
 ## @ace_category("Slide Movement")
 ## @ace_description("Starts a slide in a direction (left / right / up / down): the character glides until the tile ahead is a wall, then stops snapped to the grid. Ignored while already sliding; fires On Hit Wall immediately if the very next tile is a wall.")
+## @ace_display_template("Slide [b]{direction}[/b]")
 ## @ace_param_options(direction left, right, up, down)
 ## @ace_icon("res://eventsheet_addons/slide_move/icon.svg")
 ## @ace_codegen_template("$SlideMove.slide({direction})")

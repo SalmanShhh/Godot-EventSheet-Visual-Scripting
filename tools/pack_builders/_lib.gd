@@ -93,6 +93,20 @@ static func condition(sheet: EventSheetResource, function_name: String, display_
 	sheet.functions.append(fn)
 
 
+## Sets authored display SENTENCES on named exposed verbs - the BBCode-styled row read
+## ("Heal [b]{amount}[/b] HP": [b] bold around values, [i] italic around node params).
+## Round-trips as `## @ace_display_template(...)`. Same name-addressing as feature_verbs;
+## call it right beside it: Lib.verb_sentences(sheet, {"heal": "Heal [b]{amount}[/b] HP"}).
+static func verb_sentences(sheet: EventSheetResource, sentences: Dictionary) -> void:
+	var missing: Array = sentences.keys()
+	for function_resource: Resource in sheet.functions:
+		if function_resource is EventFunction and sentences.has((function_resource as EventFunction).function_name):
+			(function_resource as EventFunction).display_template = str(sentences[(function_resource as EventFunction).function_name])
+			missing.erase((function_resource as EventFunction).function_name)
+	if not missing.is_empty():
+		push_warning("verb_sentences: no function named %s on this sheet (typo?)" % str(missing))
+
+
 ## Marks the named exposed functions FEATURED - the pack's hero verbs, starred + bold at the
 ## top of their picker section. Call once at the end of a builder with the 1-3 verbs a new
 ## user should meet first: Lib.feature_verbs(sheet, ["take_damage", "heal"]).

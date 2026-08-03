@@ -431,5 +431,9 @@ static func build() -> bool:
 	])))
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"drop_drag": "Drop with mode [b]{how}[/b]",
+		"start_drag": "Start drag at ([b]{drag_point_x}[/b], [b]{drag_point_y}[/b]) grab mode [b]{grab_mode}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["start_drag", "drop_drag"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/drag_drop/drag_drop_behavior")

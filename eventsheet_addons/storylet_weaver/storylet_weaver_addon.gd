@@ -125,6 +125,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Define Storylet")
 ## @ace_category("Storylets")
 ## @ace_description("Registers (or replaces) a storylet: an id plus the title + body text your game shows.")
+## @ace_display_template("Define storylet [b]{id}[/b] titled [b]{title}[/b]")
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.define_storylet({id}, {title}, {body})")
 func define_storylet(id: String, title: String, body: String) -> void:

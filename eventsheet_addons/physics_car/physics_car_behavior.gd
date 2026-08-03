@@ -128,6 +128,7 @@ func set_steer(amount: float) -> void:
 ## @ace_name("Simulate Control")
 ## @ace_category("Physics Car")
 ## @ace_description("The keyboard-style control: pass "up" / "down" / "left" / "right" while the key is held, or "stop" to release. Call it every frame the key is down (pair with Stop when no key is down).")
+## @ace_display_template("Drive [b]{direction}[/b]")
 ## @ace_param_options(direction up, down, left, right, stop)
 ## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.simulate_control({direction})")
@@ -184,6 +185,7 @@ func drive_toward_angle(target_angle: float, throttle_amount: float, max_steer: 
 ## @ace_name("Drive Toward Position")
 ## @ace_category("Physics Car")
 ## @ace_description("Auto-steers toward a world position and applies throttle. Call it each frame (for example toward a waypoint). Fires On Drive Target Reached inside the reach distance. Sets the Is Driving Toward Position mode.")
+## @ace_display_template("Drive toward ([b]{x}[/b], [b]{y}[/b]) at throttle [b]{throttle_amount}[/b], max steer [b]{max_steer}[/b], tolerance [b]{tolerance}[/b]")
 ## @ace_icon("res://eventsheet_addons/physics_car/icon.svg")
 ## @ace_codegen_template("$PhysicsCar.drive_toward_position({x}, {y}, {throttle_amount}, {max_steer}, {tolerance})")
 func drive_toward_position(x: float, y: float, throttle_amount: float, max_steer: float, tolerance: float) -> void:

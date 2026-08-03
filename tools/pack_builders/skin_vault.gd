@@ -281,6 +281,11 @@ static func build() -> bool:
 	sheet.events.append(persistence)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"purchase": "Purchase skin [b]{skin_id}[/b]",
+		"register_skin": "Register skin [b]{id}[/b] ([b]{display_name}[/b]): rarity [b]{rarity}[/b], cost [b]{cost}[/b], tags [b]{tags}[/b]",
+		"roll": "Roll an unowned skin tagged [b]{tag}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["register_skin", "roll", "purchase"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/skin_vault/skin_vault_addon")
 

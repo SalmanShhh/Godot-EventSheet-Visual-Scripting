@@ -78,6 +78,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Set Bound Enabled")
 ## @ace_category("Bound To")
 ## @ace_description("Turns the binding on or off at runtime (off = the host moves freely).")
+## @ace_display_template("Set bound to [b]{enabled}[/b]")
 ## @ace_icon("res://eventsheet_addons/bound_to/icon.svg")
 ## @ace_codegen_template("$BoundToBehavior.set_bound_enabled({enabled})")
 func set_bound_enabled(enabled: bool) -> void:

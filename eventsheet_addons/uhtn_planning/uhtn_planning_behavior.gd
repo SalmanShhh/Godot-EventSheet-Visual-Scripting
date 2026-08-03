@@ -73,6 +73,7 @@ func _find_method_anywhere(method_id: String) -> HTNMethod:
 ## @ace_name("Set World State")
 ## @ace_category("UHTN Planning")
 ## @ace_description("Writes a fact - preconditions and scorer inputs read it.")
+## @ace_display_template("Set world fact [b]{key}[/b] to [b]{value}[/b]")
 ## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.set_world_state({key}, {value})")
 func set_world_state(key: String, value) -> void:

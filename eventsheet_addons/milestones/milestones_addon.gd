@@ -21,6 +21,7 @@ var _last_reached_id: String = ""
 ## @ace_name("Define Milestone")
 ## @ace_category("Milestones")
 ## @ace_description("Creates (or resets) a milestone: the threshold to cross and the reward it grants once reached.")
+## @ace_display_template("Define milestone [b]{id}[/b] at [b]{threshold}[/b] rewarding [b]{reward}[/b]")
 ## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.define_milestone({id}, {threshold}, {reward})")
 func define_milestone(id: String, threshold: float, reward: float) -> void:
@@ -40,6 +41,7 @@ func set_threshold(id: String, threshold: float) -> void:
 ## @ace_name("Update Progress")
 ## @ace_category("Milestones")
 ## @ace_description("Reports the current value of the tracked number. The first time it reaches the threshold the milestone latches and On Milestone Reached fires (read Last Reached / Reward there).")
+## @ace_display_template("Update [b]{id}[/b] progress to [b]{value}[/b]")
 ## @ace_icon("res://eventsheet_addons/milestones/icon.svg")
 ## @ace_codegen_template("Milestones.update_progress({id}, {value})")
 func update_progress(id: String, value: float) -> void:

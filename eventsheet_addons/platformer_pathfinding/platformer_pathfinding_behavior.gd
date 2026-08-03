@@ -316,6 +316,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Build Nav Graph From Tilemap")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK edges, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.")
+## @ace_display_template("Build nav graph from [i]{tilemap}[/i]")
 ## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.build_nav_graph({tilemap})")
 func build_nav_graph(tilemap: Node) -> void:
@@ -377,6 +378,7 @@ func regenerate_nav_graph() -> void:
 ## @ace_name("Find Path To")
 ## @ace_category("Platformer Pathfinding")
 ## @ace_description("Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails - it goes to the closest reachable node instead. Fires On Path Found / On Path Failed.")
+## @ace_display_template("Find path to ([b]{x}[/b], [b]{y}[/b]) mode [b]{mode}[/b]")
 ## @ace_param_options(mode nearest, reach)
 ## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 ## @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, {mode})")

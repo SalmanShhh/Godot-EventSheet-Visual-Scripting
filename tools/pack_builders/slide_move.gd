@@ -172,6 +172,9 @@ static func build() -> bool:
 		"return roundi((host as Node2D).global_position.y / grid_size) if host is Node2D else 0", TYPE_INT)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"slide": "Slide [b]{direction}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["slide"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/slide_move/slide_move_behavior")
 

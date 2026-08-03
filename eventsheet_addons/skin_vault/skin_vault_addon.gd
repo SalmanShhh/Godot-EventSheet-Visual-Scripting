@@ -81,6 +81,7 @@ func use_advanced_random(enabled: bool) -> void:
 ## @ace_name("Register Skin")
 ## @ace_category("SkinVault")
 ## @ace_description("Registers a skin: a unique id, a display name, its rarity (must be registered), a cost (0 = not purchasable), and comma-separated tags.")
+## @ace_display_template("Register skin [b]{id}[/b] ([b]{display_name}[/b]): rarity [b]{rarity}[/b], cost [b]{cost}[/b], tags [b]{tags}[/b]")
 ## @ace_icon("res://eventsheet_addons/skin_vault/icon.svg")
 ## @ace_codegen_template("SkinVault.register_skin({id}, {display_name}, {rarity}, {cost}, {tags})")
 func register_skin(id: String, display_name: String, rarity: String, cost: float, tags: String) -> void:
@@ -117,6 +118,7 @@ func load_catalog(catalog: Resource) -> void:
 ## @ace_name("Roll")
 ## @ace_category("SkinVault")
 ## @ace_description("Rolls a weighted-random UNOWNED skin (optional tag filter; "" = any) and grants it. Applies pity, then fires On Skin Rolled and On Skin Unlocked. Fires On Pool Empty if nothing is left.")
+## @ace_display_template("Roll an unowned skin tagged [b]{tag}[/b]")
 ## @ace_icon("res://eventsheet_addons/skin_vault/icon.svg")
 ## @ace_codegen_template("SkinVault.roll({tag})")
 func roll(tag: String) -> void:
@@ -176,6 +178,7 @@ func revoke(skin_id: String) -> void:
 ## @ace_name("Purchase")
 ## @ace_category("SkinVault")
 ## @ace_description("Starts a purchase: fires On Purchase Requested carrying the skin id + cost. Check your wallet there, then call Confirm or Cancel Purchase. (SkinVault never touches currency itself.)")
+## @ace_display_template("Purchase skin [b]{skin_id}[/b]")
 ## @ace_icon("res://eventsheet_addons/skin_vault/icon.svg")
 ## @ace_codegen_template("SkinVault.purchase({skin_id})")
 func purchase(skin_id: String) -> void:

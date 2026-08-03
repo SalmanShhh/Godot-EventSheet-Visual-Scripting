@@ -271,6 +271,9 @@ static func build() -> bool:
 		"if region is NavigationRegion3D:\n\t(region as NavigationRegion3D).bake_navigation_mesh()")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"find_path_to": "Find path to ([b]{x}[/b], [b]{y}[/b], [b]{z}[/b]) mode [b]{mode}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["find_path_to"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/nav_agent_3d/nav_agent_3d_behavior")
 

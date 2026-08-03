@@ -73,6 +73,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Queue Line")
 ## @ace_category("Dialogue")
 ## @ace_description("Appends a line (speaker + text) to the conversation queue.")
+## @ace_display_template("Queue line [b]{speaker}[/b]: [b]{text}[/b]")
 ## @ace_icon("res://eventsheet_addons/dialogue_kit/icon.svg")
 ## @ace_codegen_template("$DialogueKitBehavior.queue_line({speaker}, {text})")
 func queue_line(speaker: String, text: String) -> void:

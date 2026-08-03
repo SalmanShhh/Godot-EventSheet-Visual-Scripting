@@ -48,6 +48,7 @@ func _ready() -> void:
 ## @ace_name("Fade In")
 ## @ace_category("Fade")
 ## @ace_description("Fades the node from its current transparency up to fully visible over a duration, then fires On Faded In.")
+## @ace_display_template("Fade in over [b]{duration}[/b] s")
 ## @ace_icon("res://eventsheet_addons/fade/icon.svg")
 ## @ace_codegen_template("$FadeBehavior.fade_in({duration})")
 func fade_in(duration: float) -> void:
@@ -63,6 +64,7 @@ func fade_in(duration: float) -> void:
 ## @ace_name("Fade Out")
 ## @ace_category("Fade")
 ## @ace_description("Fades the node down to invisible over a duration (fires On Fade Out Started now, On Faded Out at the end). Frees the node afterwards if Free On Faded Out is on.")
+## @ace_display_template("Fade out over [b]{duration}[/b] s")
 ## @ace_icon("res://eventsheet_addons/fade/icon.svg")
 ## @ace_codegen_template("$FadeBehavior.fade_out({duration})")
 func fade_out(duration: float) -> void:

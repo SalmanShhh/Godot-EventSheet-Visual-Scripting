@@ -83,6 +83,7 @@ func set_crit(chance: float, multiplier: float) -> void:
 ## @ace_name("Do Click")
 ## @ace_category("Click Power")
 ## @ace_description("Resolves one tap: computes the yield (pass your current total production per second, or 0), rolls a crit, records Last Click / Was Crit, and fires On Click (and On Crit). Then Add Last Click to your wallet.")
+## @ace_display_template("Click with [b]{current_cps}[/b] production per second")
 ## @ace_icon("res://eventsheet_addons/click_power/icon.svg")
 ## @ace_codegen_template("ClickPower.do_click({current_cps})")
 func do_click(current_cps: float) -> void:

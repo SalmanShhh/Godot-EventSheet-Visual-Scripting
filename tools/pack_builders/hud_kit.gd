@@ -176,5 +176,10 @@ static func build() -> bool:
 	])))
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"set_bar": "Set bar [b]{bar_name}[/b] to [b]{value}[/b] of [b]{max_value}[/b]",
+		"set_text": "Set text of [b]{control_name}[/b] to [b]{text}[/b]",
+		"show_toast": "Show toast [b]{text}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["set_text", "set_bar", "show_toast"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/hud_kit/hud_kit_behavior")

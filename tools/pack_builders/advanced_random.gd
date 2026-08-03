@@ -186,6 +186,10 @@ static func build() -> bool:
 	sheet.events.append(persistence)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"make_shuffle_bag": "Make shuffle bag [b]{bag_name}[/b] from [b]{items}[/b]",
+		"set_random_seed": "Set random seed to [b]{seed_value}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["set_random_seed", "make_shuffle_bag"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/advanced_random/advanced_random_addon")
 

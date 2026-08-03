@@ -224,5 +224,9 @@ static func build() -> bool:
 		[],
 		"springs.clear()\ncolor_springs.clear()")
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"add_impulse": "Kick spring [b]{spring_name}[/b] by [b]{amount}[/b]",
+		"spring_to": "Spring [b]{spring_name}[/b] to [b]{target}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["spring_to", "add_impulse"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/spring/spring_behavior")

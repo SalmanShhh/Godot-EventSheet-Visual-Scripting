@@ -112,6 +112,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Spring To")
 ## @ace_category("Spring")
 ## @ace_description("Springs the named value toward a target.")
+## @ace_display_template("Spring [b]{spring_name}[/b] to [b]{target}[/b]")
 ## @ace_icon("res://eventsheet_addons/spring/icon.svg")
 ## @ace_codegen_template("$SpringBehavior.spring_to({spring_name}, {target})")
 func spring_to(spring_name: String, target: float) -> void:
@@ -156,6 +157,7 @@ func set_spring(spring_name: String, value: float) -> void:
 ## @ace_name("Add Impulse")
 ## @ace_category("Spring")
 ## @ace_description("Kicks the named spring's velocity (instant juice).")
+## @ace_display_template("Kick spring [b]{spring_name}[/b] by [b]{amount}[/b]")
 ## @ace_icon("res://eventsheet_addons/spring/icon.svg")
 ## @ace_codegen_template("$SpringBehavior.add_impulse({spring_name}, {amount})")
 func add_impulse(spring_name: String, amount: float) -> void:

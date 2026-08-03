@@ -304,6 +304,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Shake")
 ## @ace_category("Juice")
 ## @ace_description("Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.")
+## @ace_display_template("Shake at [b]{strength}[/b]")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.shake({strength})")
 func shake(strength: float) -> void:
@@ -524,6 +525,7 @@ func clear_slowmo() -> void:
 ## @ace_name("Hitstop")
 ## @ace_category("Juice")
 ## @ace_description("The punchy hit-pause you feel on a connecting blow: freezes Engine.time_scale (0 = full stop) for a few frames, then snaps back to what it was. Uses a realtime timer so it un-freezes even at a full stop, ignores repeat hits already mid-freeze, pauses any active Slowmo for the duration, and emits On Hitstop Finished. Fire it the instant a hit lands.")
+## @ace_display_template("Hitstop for [b]{freeze_duration}[/b] s at scale [b]{freeze_scale}[/b]")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.hitstop({freeze_duration}, {freeze_scale})")
 func hitstop(freeze_duration: float, freeze_scale: float) -> void:
@@ -548,6 +550,7 @@ func hitstop(freeze_duration: float, freeze_scale: float) -> void:
 ## @ace_name("Flash")
 ## @ace_category("Juice")
 ## @ace_description("Pops the host to a solid color, then fades back to how it looked (tints included) - THE damage-hit read. Fire with Hitstop + Shake for a complete hit-confirm. Emits On Flash Finished.")
+## @ace_display_template("Flash [b]{color}[/b] for [b]{seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuiceBehavior.flash({color}, {seconds})")
 func flash(color: Color, seconds: float) -> void:

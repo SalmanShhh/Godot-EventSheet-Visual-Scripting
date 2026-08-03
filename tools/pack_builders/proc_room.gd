@@ -288,6 +288,10 @@ static func build() -> bool:
 	sheet.events.append(persistence)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"generate": "Generate from seed [b]{seed_text}[/b]: [b]{depths}[/b] depths, max [b]{max_rooms_per_depth}[/b] rooms each",
+		"register_room_type": "Register room type [b]{type_id}[/b]: weight [b]{weight}[/b], depths [b]{min_depth}[/b] to [b]{max_depth}[/b], max [b]{max_per_depth}[/b] per depth",
+	})
 	Lib.feature_verbs(sheet, ["register_room_type", "generate"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/proc_room/proc_room_addon")
 

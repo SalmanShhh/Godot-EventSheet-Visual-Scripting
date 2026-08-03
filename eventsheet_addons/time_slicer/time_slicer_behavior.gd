@@ -63,6 +63,7 @@ func enqueue_item(item) -> void:
 ## @ace_name("Enqueue Items")
 ## @ace_category("Time Slicer")
 ## @ace_description("Adds every element of an array to the work queue.")
+## @ace_display_template("Enqueue [b]{items}[/b]")
 ## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.enqueue_items({items})")
 func enqueue_items(items: Array) -> void:
@@ -91,6 +92,7 @@ func clear_queue() -> void:
 ## @ace_name("Set Frame Budget")
 ## @ace_category("Time Slicer")
 ## @ace_description("Sets the per-frame millisecond budget at runtime (dial it down during heavy scenes).")
+## @ace_display_template("Set frame budget to [b]{ms}[/b] ms")
 ## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.set_frame_budget({ms})")
 func set_frame_budget(ms: float) -> void:

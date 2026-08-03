@@ -699,6 +699,11 @@ static func build() -> bool:
 	_default(sheet, "value", "0")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"flash": "Flash [b]{color}[/b] for [b]{seconds}[/b] s",
+		"hitstop": "Hitstop for [b]{freeze_duration}[/b] s at scale [b]{freeze_scale}[/b]",
+		"shake": "Shake at [b]{strength}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["shake", "hitstop", "flash"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_behavior")
 

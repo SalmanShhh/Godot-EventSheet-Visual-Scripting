@@ -869,6 +869,10 @@ static func build() -> bool:
 		"debug_draw = enabled\n_refresh_debug()")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"build_nav_graph": "Build nav graph from [i]{tilemap}[/i]",
+		"find_path_to": "Find path to ([b]{x}[/b], [b]{y}[/b]) mode [b]{mode}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["build_nav_graph", "find_path_to"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior")
 

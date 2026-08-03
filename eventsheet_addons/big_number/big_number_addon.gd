@@ -14,6 +14,7 @@ const SUFFIXES: Array = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "
 ## @ace_name("Format Short")
 ## @ace_category("Big Numbers")
 ## @ace_description("A compact string with a short-scale suffix: 1250 -> "1.25K", 1250000 -> "1.25M", on through Qa/Qi/.../Dc, then scientific past 1e36. Pass how many decimals.")
+## @ace_display_template("Format [b]{value}[/b] short with [b]{decimals}[/b] decimals")
 ## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.fmt_short({value}, {decimals})")
 func fmt_short(value: float, decimals: int) -> String:
@@ -313,6 +314,7 @@ func dec_compare(a: Array, b: Array) -> int:
 ## @ace_name("Format Big")
 ## @ace_category("Big Numbers")
 ## @ace_description("Formats a Decimal with a short-scale suffix, falling through to scientific past Dc: Make(1.5, 100) -> "1.50e100".")
+## @ace_display_template("Format big [b]{decimal}[/b] with [b]{decimals}[/b] decimals")
 ## @ace_icon("res://eventsheet_addons/big_number/icon.svg")
 ## @ace_codegen_template("BigNumber.dec_format({decimal}, {decimals})")
 func dec_format(decimal: Array, decimals: int) -> String:

@@ -293,5 +293,9 @@ static func build() -> bool:
 		"return _dcmp(a, b) >= 0")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"dec_format": "Format big [b]{decimal}[/b] with [b]{decimals}[/b] decimals",
+		"fmt_short": "Format [b]{value}[/b] short with [b]{decimals}[/b] decimals",
+	})
 	Lib.feature_verbs(sheet, ["fmt_short", "dec_format"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/big_number/big_number_addon")

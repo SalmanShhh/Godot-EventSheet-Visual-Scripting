@@ -307,6 +307,10 @@ static func build() -> bool:
 		"return _collision_angle", TYPE_FLOAT)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"drive_toward_position": "Drive toward ([b]{x}[/b], [b]{y}[/b]) at throttle [b]{throttle_amount}[/b], max steer [b]{max_steer}[/b], tolerance [b]{tolerance}[/b]",
+		"simulate_control": "Drive [b]{direction}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["simulate_control", "drive_toward_position"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/physics_car/physics_car_behavior")
 

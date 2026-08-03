@@ -684,5 +684,9 @@ static func build() -> bool:
 	])))
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"press_interact": "Press interact [b]{id}[/b]",
+		"simulate_axis": "Simulate axis ([b]{x}[/b], [b]{y}[/b])",
+	})
 	Lib.feature_verbs(sheet, ["simulate_axis", "press_interact"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/virtual_cursor/virtual_cursor_behavior")

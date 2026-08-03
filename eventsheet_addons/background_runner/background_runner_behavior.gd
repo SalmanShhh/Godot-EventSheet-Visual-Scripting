@@ -47,6 +47,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Run In Background")
 ## @ace_category("Background")
 ## @ace_description("Runs a PURE callable off the main thread; On Done(result) fires when it finishes. WARNING: the callable must NOT touch nodes / the scene tree / non-thread-safe resources - data in, data out only.")
+## @ace_display_template("Run [b]{work}[/b] in the background")
 ## @ace_icon("res://eventsheet_addons/background_runner/icon.svg")
 ## @ace_codegen_template("$BackgroundRunner.run_in_background({work})")
 func run_in_background(work: Callable) -> void:

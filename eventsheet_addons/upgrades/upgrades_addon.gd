@@ -27,6 +27,7 @@ var _last_ok: bool = false
 ## @ace_name("Define Upgrade")
 ## @ace_category("Upgrades")
 ## @ace_description("Creates (or resets) an upgrade: base cost, cost growth per level, max level (-1 = unlimited), effect per level, mode ("add" or "mult"), and a tag to group it for Total Multiplier / Total Bonus.")
+## @ace_display_template("Define upgrade [b]{id}[/b]: base cost [b]{base_cost}[/b] growing [b]{cost_growth}[/b]x, max level [b]{max_level}[/b], [b]{per_level}[/b] per level ([b]{mode}[/b])")
 ## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
 ## @ace_codegen_template("Upgrades.define_upgrade({id}, {base_cost}, {cost_growth}, {max_level}, {per_level}, {mode}, {tag})")
 func define_upgrade(id: String, base_cost: float, cost_growth: float, max_level: int, per_level: float, mode: String, tag: String) -> void:
@@ -48,6 +49,7 @@ func set_effect(id: String, per_level: float, mode: String) -> void:
 ## @ace_name("Try Purchase")
 ## @ace_category("Upgrades")
 ## @ace_description("Buys the next level if `budget` covers Cost Of and it is not maxed. On success records Last Cost and fires On Upgrade Bought (Spend Last Cost from your wallet); otherwise fires On Purchase Failed. Never touches the wallet itself.")
+## @ace_display_template("Try purchase [b]{id}[/b] with budget [b]{budget}[/b]")
 ## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
 ## @ace_codegen_template("Upgrades.try_purchase({id}, {budget})")
 func try_purchase(id: String, budget: float) -> void:
@@ -156,6 +158,7 @@ func max_level_of(id: String) -> int:
 ## @ace_name("Effect Of")
 ## @ace_category("Upgrades")
 ## @ace_description("An upgrade's current stacked effect (level*per_level for add mode, per_level^level for mult mode).")
+## @ace_display_template("Effect of [b]{id}[/b]")
 ## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
 ## @ace_codegen_template("Upgrades.effect_of({id})")
 func effect_of(id: String) -> float:

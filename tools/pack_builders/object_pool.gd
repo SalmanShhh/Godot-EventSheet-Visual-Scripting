@@ -114,6 +114,10 @@ static func build() -> bool:
 		"return ((_pools[pool_name].free as Array).size() + (_pools[pool_name].active as Array).size()) if _pools.has(pool_name) else 0", TYPE_INT)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"create_pool": "Create pool [b]{pool_name}[/b] of [b]{scene_path}[/b], prewarm [b]{prewarm}[/b]",
+		"despawn": "Despawn [i]{node}[/i]",
+	})
 	Lib.feature_verbs(sheet, ["create_pool", "despawn"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/object_pool/object_pool_addon")
 

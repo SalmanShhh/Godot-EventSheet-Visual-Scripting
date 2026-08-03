@@ -26,6 +26,7 @@ var _last_despawned: Node = null
 ## @ace_name("Create Pool")
 ## @ace_category("Object Pool")
 ## @ace_description("The easy way: makes a pool that spawns copies of a scene (a .tscn path), optionally pre-making some now so the first spawns never hitch.")
+## @ace_display_template("Create pool [b]{pool_name}[/b] of [b]{scene_path}[/b], prewarm [b]{prewarm}[/b]")
 ## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.create_pool({pool_name}, {scene_path}, {prewarm})")
 func create_pool(pool_name: String, scene_path: String, prewarm: int) -> void:
@@ -71,6 +72,7 @@ func prewarm(pool_name: String, count: int) -> void:
 ## @ace_name("Despawn")
 ## @ace_category("Object Pool")
 ## @ace_description("Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned.")
+## @ace_display_template("Despawn [i]{node}[/i]")
 ## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
 ## @ace_codegen_template("ObjectPool.despawn({node})")
 func despawn(node: Node) -> void:

@@ -95,6 +95,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Set Wrap Enabled")
 ## @ace_category("Wrap")
 ## @ace_description("Turns wrapping on or off at runtime.")
+## @ace_display_template("Set wrap to [b]{enabled}[/b]")
 ## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
 ## @ace_codegen_template("$WrapBehavior.set_wrap_enabled({enabled})")
 func set_wrap_enabled(enabled: bool) -> void:

@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added - every pack's featured verbs carry authored styled sentences
+
+The Health treatment, swept across the fleet: **36 more packs' featured verbs** (60 verbs)
+now read as hand-authored sentences - "Start boost **{id}** at **{multiplier}**x for
+**{duration}** s", "Tween **{property_path}** to **{final_value}** over **{duration}** s",
+"Despawn *{node}*" - via the new `Lib.verb_sentences(sheet, {name: sentence})` builder
+helper (same name-addressing as `feature_verbs`, one call per builder). Emitted as
+`## @ace_display_template(...)`, round-tripping byte-exactly (drift=0), every touched
+builder and emitted pack parse-checked. Featured verbs with no parameters keep their plain
+display names on purpose - a sentence with no slot styles nothing the name does not already
+say.
+
 ### Added - the bundled vocabulary adopts BBCode display styling (l10n-safe)
 
 The hand-authored layer on top of the automatic emphasis, the way a C3 addon styles its own

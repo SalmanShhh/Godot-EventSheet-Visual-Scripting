@@ -312,6 +312,11 @@ static func build() -> bool:
 	sheet.events.append(persistence)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"add_entry": "Add [b]{item_id}[/b] to [b]{table_id}[/b] with weight [b]{weight}[/b]",
+		"create_table": "Create loot table [b]{table_id}[/b]",
+		"roll": "Roll [b]{table_id}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["create_table", "add_entry", "roll"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/loot_table/loot_table_addon")
 

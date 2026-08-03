@@ -43,6 +43,7 @@ var _use_shared: bool = false
 ## @ace_name("Register Room Type")
 ## @ace_category("ProcRoom")
 ## @ace_description("Registers a room type that Generate may place: a weight (higher = commoner), the depth range it may appear in (max_depth -1 = anywhere), and a per-depth cap (-1 = no cap).")
+## @ace_display_template("Register room type [b]{type_id}[/b]: weight [b]{weight}[/b], depths [b]{min_depth}[/b] to [b]{max_depth}[/b], max [b]{max_per_depth}[/b] per depth")
 ## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.register_room_type({type_id}, {weight}, {min_depth}, {max_depth}, {max_per_depth})")
 func register_room_type(type_id: String, weight: float, min_depth: int, max_depth: int, max_per_depth: int) -> void:
@@ -80,6 +81,7 @@ func use_advanced_random(enabled: bool) -> void:
 ## @ace_name("Generate")
 ## @ace_category("ProcRoom")
 ## @ace_description("Builds a reproducible tiered map from a seed: `depths` tiers (start at 0, boss at the last), up to `max_rooms_per_depth` rooms per interior tier. Same seed = same map. Fires On Graph Generated.")
+## @ace_display_template("Generate from seed [b]{seed_text}[/b]: [b]{depths}[/b] depths, max [b]{max_rooms_per_depth}[/b] rooms each")
 ## @ace_icon("res://eventsheet_addons/proc_room/icon.svg")
 ## @ace_codegen_template("ProcRoom.generate({seed_text}, {depths}, {max_rooms_per_depth})")
 func generate(seed_text: String, depths: int, max_rooms_per_depth: int) -> void:

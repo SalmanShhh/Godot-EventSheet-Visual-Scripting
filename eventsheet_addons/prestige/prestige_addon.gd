@@ -41,6 +41,7 @@ func configure(requirement: float, exponent: float, bonus_per_point: float) -> v
 ## @ace_name("Track Earned")
 ## @ace_category("Prestige")
 ## @ace_description("Records earnings toward prestige - call it wherever the player earns the prestige currency. Feeds both the run total (drives the gain) and the all-time Total Earned.")
+## @ace_display_template("Track [b]{amount}[/b] earned")
 ## @ace_icon("res://eventsheet_addons/prestige/icon.svg")
 ## @ace_codegen_template("Prestige.track_earned({amount})")
 func track_earned(amount: float) -> void:

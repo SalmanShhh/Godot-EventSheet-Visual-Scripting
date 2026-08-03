@@ -45,6 +45,7 @@ func _ready() -> void:
 ## @ace_name("Create Table")
 ## @ace_category("Loot")
 ## @ace_description("Starts a fresh, empty loot table with this id (replaces any existing one).")
+## @ace_display_template("Create loot table [b]{table_id}[/b]")
 ## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
 ## @ace_codegen_template("LootBox.create_table({table_id})")
 func create_table(table_id: String) -> void:
@@ -55,6 +56,7 @@ func create_table(table_id: String) -> void:
 ## @ace_name("Add Entry")
 ## @ace_category("Loot")
 ## @ace_description("Adds an item to a table with a relative weight (higher = likelier). Quantity 1, no tags.")
+## @ace_display_template("Add [b]{item_id}[/b] to [b]{table_id}[/b] with weight [b]{weight}[/b]")
 ## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
 ## @ace_codegen_template("LootBox.add_entry({table_id}, {item_id}, {weight})")
 func add_entry(table_id: String, item_id: String, weight: float) -> void:
@@ -167,6 +169,7 @@ func load_from_resource(loot_table: Resource) -> void:
 ## @ace_name("Roll")
 ## @ace_category("Loot")
 ## @ace_description("Rolls the table once, firing On Roll Result then On Roll Complete.")
+## @ace_display_template("Roll [b]{table_id}[/b]")
 ## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
 ## @ace_codegen_template("LootBox.roll({table_id})")
 func roll(table_id: String) -> void:

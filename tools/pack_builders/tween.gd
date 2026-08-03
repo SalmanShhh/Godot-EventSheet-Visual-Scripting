@@ -92,5 +92,8 @@ static func build() -> bool:
 		[],
 		"if _active_tween != null:\n\t_active_tween.kill()\n\t_active_tween = null")
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"tween_property_to": "Tween [b]{property_path}[/b] to [b]{final_value}[/b] over [b]{duration}[/b] s",
+	})
 	Lib.feature_verbs(sheet, ["tween_property_to"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/tween/tween_behavior")

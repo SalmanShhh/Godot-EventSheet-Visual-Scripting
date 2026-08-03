@@ -59,6 +59,7 @@ func _find_method(task_name: String, method_id: String) -> HTNMethod:
 ## @ace_name("Set World State")
 ## @ace_category("HTN")
 ## @ace_description("Writes a fact the planner reads in method preconditions.")
+## @ace_display_template("Set world fact [b]{key}[/b] to [b]{value}[/b]")
 ## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
 ## @ace_codegen_template("$HTNAgent.set_world_state({key}, {value})")
 func set_world_state(key: String, value) -> void:

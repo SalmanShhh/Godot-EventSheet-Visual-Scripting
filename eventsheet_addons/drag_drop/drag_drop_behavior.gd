@@ -102,6 +102,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Start Drag")
 ## @ace_category("Drag & Drop")
 ## @ace_description("Begins a drag at a point. grab_mode 0 = keep offset from the host; 1 = centre on the point.")
+## @ace_display_template("Start drag at ([b]{drag_point_x}[/b], [b]{drag_point_y}[/b]) grab mode [b]{grab_mode}[/b]")
 ## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
 ## @ace_codegen_template("$DragDropBehavior.start_drag({drag_point_x}, {drag_point_y}, {grab_mode})")
 func start_drag(drag_point_x: float, drag_point_y: float, grab_mode: int) -> void:
@@ -137,6 +138,7 @@ func start_drag_at_object(target: Node2D, grab_mode: int) -> void:
 ## @ace_name("Drop")
 ## @ace_category("Drag & Drop")
 ## @ace_description("Ends the drag. how 0 = apply throw/snap; 1 = cancel silently.")
+## @ace_display_template("Drop with mode [b]{how}[/b]")
 ## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
 ## @ace_codegen_template("$DragDropBehavior.drop_drag({how})")
 func drop_drag(how: int) -> void:

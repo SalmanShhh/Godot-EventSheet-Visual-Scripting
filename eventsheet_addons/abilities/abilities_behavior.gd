@@ -112,6 +112,7 @@ func create_ability(id: String) -> void:
 ## @ace_name("Create Ability With Cooldown")
 ## @ace_category("Abilities")
 ## @ace_description("Grants an ability and sets its cooldown. reset_instantly=true starts it ready.")
+## @ace_display_template("Create ability [b]{id}[/b] with [b]{seconds}[/b] s cooldown, reset instantly [b]{reset_instantly}[/b]")
 ## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.create_ability_with_cooldown({id}, {seconds}, {reset_instantly})")
 func create_ability_with_cooldown(id: String, seconds: float, reset_instantly: bool) -> void:
@@ -197,6 +198,7 @@ func clear_all_abilities() -> void:
 ## @ace_name("Activate Ability")
 ## @ace_category("Abilities")
 ## @ace_description("Activates an ability if it is ready: consumes a stack, starts regen, fires On Ability Activated.")
+## @ace_display_template("Activate ability [b]{id}[/b]")
 ## @ace_icon("res://eventsheet_addons/abilities/icon.svg")
 ## @ace_codegen_template("$SimpleAbilitiesBehavior.activate_ability({id})")
 func activate_ability(id: String) -> void:

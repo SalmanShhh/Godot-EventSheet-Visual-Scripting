@@ -155,5 +155,9 @@ static func build() -> bool:
 	sheet.events.append(persistence)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"define_milestone": "Define milestone [b]{id}[/b] at [b]{threshold}[/b] rewarding [b]{reward}[/b]",
+		"update_progress": "Update [b]{id}[/b] progress to [b]{value}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["define_milestone", "update_progress"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/milestones/milestones_addon")

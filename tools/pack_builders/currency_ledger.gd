@@ -245,6 +245,11 @@ static func build() -> bool:
 	sheet.events.append(persistence)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"add": "Add [b]{amount}[/b] [b]{id}[/b]",
+		"define_currency": "Define currency [b]{id}[/b] starting at [b]{starting_amount}[/b], max [b]{max_amount}[/b]",
+		"spend": "Spend [b]{amount}[/b] [b]{id}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["define_currency", "add", "spend"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/currency_ledger/currency_ledger_addon")
 

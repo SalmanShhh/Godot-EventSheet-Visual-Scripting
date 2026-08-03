@@ -318,6 +318,10 @@ static func build() -> bool:
 		"return float(_world.get(key, 0.0))", TYPE_FLOAT)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"add_action": "Add action [b]{action_name}[/b]: cooldown [b]{cooldown}[/b] s, priority [b]{priority}[/b]",
+		"set_input": "Set input [b]{key}[/b] to [b]{value}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["add_action", "set_input", "evaluate"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/utility_ai/utility_ai_addon")
 

@@ -185,5 +185,8 @@ static func build() -> bool:
 	])))
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"queue_line": "Queue line [b]{speaker}[/b]: [b]{text}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["queue_line", "start_dialogue", "advance_dialogue"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/dialogue_kit/dialogue_kit_behavior")

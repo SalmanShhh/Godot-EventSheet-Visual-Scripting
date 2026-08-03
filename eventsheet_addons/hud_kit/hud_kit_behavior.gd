@@ -60,6 +60,7 @@ func connect_buttons() -> void:
 ## @ace_name("Set Text")
 ## @ace_category("UI")
 ## @ace_description("Sets the text of a named Label, RichTextLabel, Button or LineEdit.")
+## @ace_display_template("Set text of [b]{control_name}[/b] to [b]{text}[/b]")
 ## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
 ## @ace_codegen_template("$HudKitBehavior.set_text({control_name}, {text})")
 func set_text(control_name: String, text: String) -> void:
@@ -72,6 +73,7 @@ func set_text(control_name: String, text: String) -> void:
 ## @ace_name("Set Bar")
 ## @ace_category("UI")
 ## @ace_description("Sets a named ProgressBar/TextureProgressBar's value (max_value too when > 0).")
+## @ace_display_template("Set bar [b]{bar_name}[/b] to [b]{value}[/b] of [b]{max_value}[/b]")
 ## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
 ## @ace_codegen_template("$HudKitBehavior.set_bar({bar_name}, {value}, {max_value})")
 func set_bar(bar_name: String, value: float, max_value: float) -> void:
@@ -133,6 +135,7 @@ func switch_screen(panel_name: String) -> void:
 ## @ace_name("Show Toast")
 ## @ace_category("UI")
 ## @ace_description("Pops a bottom-centre message that fades out after toast_seconds.")
+## @ace_display_template("Show toast [b]{text}[/b]")
 ## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
 ## @ace_codegen_template("$HudKitBehavior.show_toast({text})")
 func show_toast(text: String) -> void:

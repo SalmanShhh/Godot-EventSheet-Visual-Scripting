@@ -140,6 +140,7 @@ func _physics_process(delta: float) -> void:
 ## @ace_name("Find Path To")
 ## @ace_category("Nav Agent 3D")
 ## @ace_description("Routes to a world position across the baked navmesh and starts moving. Mode "reach" fails (On Path Failed) when the spot is off the mesh; "nearest" never fails - the agent goes to the closest point on the mesh instead. Fires On Path Found / On Path Failed.")
+## @ace_display_template("Find path to ([b]{x}[/b], [b]{y}[/b], [b]{z}[/b]) mode [b]{mode}[/b]")
 ## @ace_param_options(mode nearest, reach)
 ## @ace_icon("res://eventsheet_addons/nav_agent_3d/icon.svg")
 ## @ace_codegen_template("$NavAgent3D.find_path_to({x}, {y}, {z}, {mode})")

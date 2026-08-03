@@ -33,6 +33,7 @@ var _active_tween: Tween = null
 ## @ace_name("Tween Property")
 ## @ace_category("Tween")
 ## @ace_description("Tweens any host property (e.g. position:x) to a value.")
+## @ace_display_template("Tween [b]{property_path}[/b] to [b]{final_value}[/b] over [b]{duration}[/b] s")
 ## @ace_icon("res://eventsheet_addons/tween/icon.svg")
 ## @ace_codegen_template("$TweenBehavior.tween_property_to({property_path}, {final_value}, {duration})")
 func tween_property_to(property_path: String, final_value: float, duration: float) -> void:

@@ -199,6 +199,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Shake")
 ## @ace_category("Juice 3D")
 ## @ace_description("Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.")
+## @ace_display_template("Shake at [b]{strength}[/b]")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.shake({strength})")
 func shake(strength: float) -> void:
@@ -284,6 +285,7 @@ func lean(degrees: float, duration: float) -> void:
 ## @ace_name("FOV Punch")
 ## @ace_category("Juice 3D")
 ## @ace_description("Kicks the field of view wider (positive, a speed boost / dash) or tighter (negative, an impact) by an amount in degrees, then eases back at the FOV Recovery rate. Fire-and-forget.")
+## @ace_display_template("Punch FOV by [b]{amount}[/b]")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.fov_punch({amount})")
 func fov_punch(amount: float) -> void:
@@ -414,6 +416,7 @@ func pulse_vignette(strength: float, color: Color, seconds: float) -> void:
 ## @ace_name("Chromatic Kick")
 ## @ace_category("Juice 3D")
 ## @ace_description("Splits the screen's color channels for an instant and settles back - the AAA impact frame. Fire with Shake on explosions and heavy hits.")
+## @ace_display_template("Chromatic kick at [b]{strength}[/b] for [b]{seconds}[/b] s")
 ## @ace_icon("res://eventsheet_addons/juice_3d/icon.svg")
 ## @ace_codegen_template("$Juice3DBehavior.chromatic_kick({strength}, {seconds})")
 func chromatic_kick(strength: float, seconds: float) -> void:

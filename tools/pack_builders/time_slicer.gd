@@ -104,5 +104,9 @@ static func build() -> bool:
 		[],
 		"_paused = false")
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"enqueue_items": "Enqueue [b]{items}[/b]",
+		"set_frame_budget": "Set frame budget to [b]{ms}[/b] ms",
+	})
 	Lib.feature_verbs(sheet, ["enqueue_items", "set_frame_budget"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/time_slicer/time_slicer_behavior")

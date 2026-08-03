@@ -45,6 +45,7 @@ var _offline_gain: float = 0.0
 ## @ace_name("Define Currency")
 ## @ace_category("Currency")
 ## @ace_description("Creates (or resets) a currency with a starting amount and a max (-1 = no cap). Min is 0 and there's no daily cap until you set one.")
+## @ace_display_template("Define currency [b]{id}[/b] starting at [b]{starting_amount}[/b], max [b]{max_amount}[/b]")
 ## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.define_currency({id}, {starting_amount}, {max_amount})")
 func define_currency(id: String, starting_amount: float, max_amount: float) -> void:
@@ -99,6 +100,7 @@ func set_offline_rate(id: String, rate_per_second: float) -> void:
 ## @ace_name("Add")
 ## @ace_category("Currency")
 ## @ace_description("Adds a SIGNED amount (negative subtracts) and clamps to the currency's min and max. Positive amounts also respect the daily cap. Fires On Amount Changed, plus On Cap Hit / On Daily Cap Hit if a limit bit.")
+## @ace_display_template("Add [b]{amount}[/b] [b]{id}[/b]")
 ## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.add({id}, {amount})")
 func add(id: String, amount: float) -> void:
@@ -135,6 +137,7 @@ func add(id: String, amount: float) -> void:
 ## @ace_name("Spend")
 ## @ace_category("Currency")
 ## @ace_description("Subtracts the amount only if it can be afforded; otherwise nothing changes and On Spend Failed fires (read Failed Id / Requested Amount / Available Amount there).")
+## @ace_display_template("Spend [b]{amount}[/b] [b]{id}[/b]")
 ## @ace_icon("res://eventsheet_addons/currency_ledger/icon.svg")
 ## @ace_codegen_template("CurrencyLedger.spend({id}, {amount})")
 func spend(id: String, amount: float) -> void:

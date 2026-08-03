@@ -412,6 +412,11 @@ static func build() -> bool:
 	_default(sheet, "value", "0")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"chromatic_kick": "Chromatic kick at [b]{strength}[/b] for [b]{seconds}[/b] s",
+		"fov_punch": "Punch FOV by [b]{amount}[/b]",
+		"shake": "Shake at [b]{strength}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["shake", "fov_punch", "chromatic_kick"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/juice_3d/juice_3d_behavior")
 

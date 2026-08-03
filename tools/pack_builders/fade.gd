@@ -99,6 +99,10 @@ static func build() -> bool:
 	_default(sheet, "alpha", "1.0")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"fade_in": "Fade in over [b]{duration}[/b] s",
+		"fade_out": "Fade out over [b]{duration}[/b] s",
+	})
 	Lib.feature_verbs(sheet, ["fade_in", "fade_out"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/fade/fade_behavior")
 

@@ -42,6 +42,7 @@ func _process(delta: float) -> void:
 ## @ace_name("Start Boost")
 ## @ace_category("Boosts")
 ## @ace_description("Starts (or restarts) a timed multiplier by id for `duration` seconds and fires On Boost Started.")
+## @ace_display_template("Start boost [b]{id}[/b] at [b]{multiplier}[/b]x for [b]{duration}[/b] s")
 ## @ace_icon("res://eventsheet_addons/boosts/icon.svg")
 ## @ace_codegen_template("Boost.start_boost({id}, {multiplier}, {duration})")
 func start_boost(id: String, multiplier: float, duration: float) -> void:

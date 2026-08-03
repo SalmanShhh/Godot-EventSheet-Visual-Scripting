@@ -149,5 +149,8 @@ static func build() -> bool:
 		"half_width = new_half_width\nhalf_height = new_half_height")
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
+	Lib.verb_sentences(sheet, {
+		"set_wrap_enabled": "Set wrap to [b]{enabled}[/b]",
+	})
 	Lib.feature_verbs(sheet, ["set_wrap_enabled"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/wrap/wrap_behavior")
