@@ -63,6 +63,11 @@ Because Free On Faded Out frees the node, you can skip the manual "destroy" step
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Fade in over **duration** s
+- Fade out over **duration** s
+
 ### Actions
 
 | Action | Parameters | Description |

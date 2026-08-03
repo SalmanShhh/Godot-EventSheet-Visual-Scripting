@@ -84,6 +84,11 @@ On enemy killed
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Set random seed to **seed_value**
+- Make shuffle bag **bag_name** from **items**
+
 Every verb below is exactly what the pack publishes. Parameter names and types are shown in order. Actions are called as `AdvancedRandom: <Action>  args`; expressions and conditions are read as `AdvancedRandom.<Name>(args)`.
 
 ### Actions

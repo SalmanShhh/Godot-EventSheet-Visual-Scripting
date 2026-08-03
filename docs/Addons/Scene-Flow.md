@@ -80,6 +80,10 @@ That is the entire menu. `Menu` is the node the behavior is attached to; `On Pla
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Fade to scene **path**
+
 All ACEs live in the **Scenes** category and target the `SceneFlowBehavior` behavior on the node they are placed on. Every action operates on the running scene tree, so it does not matter which node inside the scene hosts the behavior.
 
 ### Actions

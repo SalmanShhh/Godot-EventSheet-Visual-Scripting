@@ -60,6 +60,10 @@ Press play. The agent routes to the player across the mesh and re-routes as they
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Find path to (**x**, **y**, **z**) mode **mode**
+
 All ACEs live in the **Nav Agent 3D** category and target the behavior on the node they are
 placed on.
 

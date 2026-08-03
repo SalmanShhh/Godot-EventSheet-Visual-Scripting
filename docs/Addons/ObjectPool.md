@@ -63,6 +63,11 @@ Bullet lifetime over  (in the bullet's own logic)
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Create pool **pool_name** of **scene_path**, prewarm **prewarm**
+- Despawn *node*
+
 ### Actions
 
 | Action | Parameters | Description |

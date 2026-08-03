@@ -23,6 +23,10 @@ On Wrapped -> Ship | Fade Out: Fade In  0.15   (a soft blink as it re-enters)
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Set wrap to **enabled**
+
 | Kind | Name | Parameters | Description |
 |---|---|---|---|
 | Action | Set Wrap Enabled | `enabled` | On/off at runtime. |

@@ -138,6 +138,12 @@ grows.
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Register skin **id** (**display_name**): rarity **rarity**, cost **cost**, tags **tags**
+- Roll an unowned skin tagged **tag**
+- Purchase skin **skin_id**
+
 ### Actions
 
 | Action | Description |

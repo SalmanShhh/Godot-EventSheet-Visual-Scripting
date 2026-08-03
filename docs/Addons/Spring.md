@@ -90,6 +90,11 @@ On Spring Reached
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Spring **spring_name** to **target**
+- Kick spring **spring_name** by **amount**
+
 All ACEs live in the **Spring** category and act on the `SpringBehavior` of the node they are placed on. Spring names are plain strings you choose - the same name always refers to the same spring on that behavior.
 
 ### Actions

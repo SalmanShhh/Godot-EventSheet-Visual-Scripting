@@ -84,6 +84,24 @@ Take Damage lowers current health by 25. If it survives, On Damaged fires and La
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Take **amount** damage
+- Heal **amount** HP
+- Set health to **amount**
+- Set max health to **amount**
+- Set invulnerable to **state**
+- Set health absorption rate to **rate**
+- Add **amount** to the **type** pool
+- Set the **type** pool to **amount**
+- Clear the **type** pool
+- Set **type** pool decay rate to **rate**
+- Set **type** pool absorption rate to **rate**
+- Set **type** pool rates to decay **decay_rate**, absorption **absorption_rate**
+- Set **type** pool priority to **priority**
+- Setup **type** pool: **amount** HP, decay **decay_rate**, absorption **absorption_rate**, priority **priority**
+- Revive with **amount** HP
+
 All ACEs live in the **Health** category and target the `SimpleHealthBehavior` behavior on the node they are placed on. There is no entity-id parameter anywhere. Health pools are addressed by a `type` string you pick.
 
 ### Actions

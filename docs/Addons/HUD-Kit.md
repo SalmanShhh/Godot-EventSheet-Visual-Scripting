@@ -88,6 +88,12 @@ Because `auto_connect_buttons` is on, the `StartButton` wired itself at startup 
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Set text of **control_name** to **text**
+- Set bar **bar_name** to **value** of **max_value**
+- Show toast **text**
+
 All ACEs live in the **UI** category and act on the `HudKitBehavior` behavior of the node they are placed on. Every target is passed by its node name string; the lookup is recursive under the host and cached.
 
 ### Actions

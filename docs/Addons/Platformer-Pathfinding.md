@@ -121,6 +121,11 @@ Press play. The agent routes to the player and re-routes every second as the pla
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Build nav graph from *tilemap*
+- Find path to (**x**, **y**) mode **mode**
+
 All ACEs live in the **Platformer Pathfinding** category and target the behavior on the node
 they are placed on.
 

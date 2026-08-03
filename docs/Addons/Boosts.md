@@ -77,6 +77,10 @@ That is the whole loop: start a boost with one row, multiply production by Total
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Start boost **id** at **multiplier**x for **duration** s
+
 Every id and tag below is a string. Multipliers and durations are numbers (seconds). All names are the exact display names from the pack.
 
 ### Actions

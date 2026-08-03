@@ -85,6 +85,10 @@ Because the pack is a live event sheet, you can also open it and extend it direc
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Define storylet **id** titled **title**
+
 Every name below is exactly what appears in the picker. Parameters are listed in order.
 
 ### Actions

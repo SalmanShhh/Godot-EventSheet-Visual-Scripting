@@ -82,6 +82,10 @@ That is the whole loop: configure once, feed earnings, and reset when the gain i
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Track **amount** earned
+
 Every name below is the exact display name from the pack. Amounts are numbers.
 
 ### Actions

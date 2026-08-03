@@ -85,6 +85,10 @@ That is the whole loop: configure once, Do Click on the tap, and credit Last Cli
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Click with **current_cps** production per second
+
 All names below are the exact display names from the pack. Numbers are floats unless noted.
 
 ### Actions

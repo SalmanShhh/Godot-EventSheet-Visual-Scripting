@@ -97,6 +97,11 @@ On Drained
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Enqueue **items**
+- Set frame budget to **ms** ms
+
 All ACEs live in the **Time Slicer** category and act on the `TimeSlicerBehavior` of the node they are placed on (or on your autoload slicer if you registered one). There is no queue-id parameter - the node is the queue.
 
 ### Actions

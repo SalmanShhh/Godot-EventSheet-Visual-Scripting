@@ -109,6 +109,11 @@ The cursor drives itself from the arrow keys or stick; Set Constrain To Layout k
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Press interact **id**
+- Simulate axis (**x**, **y**)
+
 All ACEs live in the **Virtual Cursor** category and target the `VirtualCursor` behavior on the node they are placed on (a `CharacterBody2D`). There is no cursor-id parameter anywhere.
 
 ### Actions

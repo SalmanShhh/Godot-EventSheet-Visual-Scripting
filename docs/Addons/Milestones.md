@@ -79,6 +79,11 @@ That is the whole loop: define once, report the number on every change, and let 
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Define milestone **id** at **threshold** rewarding **reward**
+- Update **id** progress to **value**
+
 Every id below is a string. Thresholds, values, and rewards are numbers. All names are the exact display names from the pack.
 
 ### Actions

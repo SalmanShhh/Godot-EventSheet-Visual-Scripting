@@ -84,6 +84,11 @@ Each held key pushes one axis: `up` sets full throttle, `left` and `right` set s
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Drive **direction**
+- Drive toward (**x**, **y**) at throttle **throttle_amount**, max steer **max_steer**, tolerance **tolerance**
+
 All ACEs live in the **Physics Car** category and target the `PhysicsCar` behavior on the node they are placed on. There is no car-id parameter anywhere - the node is the car.
 
 ### Actions

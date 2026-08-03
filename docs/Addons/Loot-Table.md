@@ -90,6 +90,12 @@ On Roll Complete
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Create loot table **table_id**
+- Add **item_id** to **table_id** with weight **weight**
+- Roll **table_id**
+
 Every row below is exactly what the pack exposes. Parameter names and types are shown in order.
 
 ### Actions

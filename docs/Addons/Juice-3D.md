@@ -56,6 +56,12 @@ so what you learned there carries over.
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Shake at **strength**
+- Punch FOV by **amount**
+- Chromatic kick at **strength** for **seconds** s
+
 All ACEs live in the **Juice 3D** category and target the `Juice3DBehavior` on the node they are
 placed on.
 

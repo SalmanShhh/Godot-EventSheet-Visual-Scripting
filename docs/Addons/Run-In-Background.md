@@ -78,6 +78,10 @@ On Done
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Run **work** in the background
+
 All ACEs live in the **Background** category and target the `BackgroundRunner` behavior on the node it is attached to. There is no task-id parameter anywhere; you start work on the behavior and react to its On Done.
 
 ### Actions

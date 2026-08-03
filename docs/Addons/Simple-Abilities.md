@@ -123,6 +123,11 @@ Each row of the resource becomes a live ability exactly as if you had called the
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Create ability **id** with **seconds** s cooldown, reset instantly **reset_instantly**
+- Activate ability **id**
+
 All ACEs live in the **Abilities** category and target the `SimpleAbilitiesBehavior` on the node they are placed on. Almost every one takes an ability `id` string as its first parameter; the tag actions take a `tag` instead.
 
 ### Actions

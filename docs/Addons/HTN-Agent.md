@@ -106,6 +106,10 @@ On Plan Complete
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Set world fact **key** to **value**
+
 All ACEs live in the **HTN** category and target the `HTNAgent` behavior on the node they are placed on. There is no agent-id parameter anywhere.
 
 ### Actions

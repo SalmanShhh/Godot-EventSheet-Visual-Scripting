@@ -25,6 +25,10 @@ On Hit Bound -> Ship | Juice: Shake Screen  4, 0.15   (side is the trigger's par
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Set bound to **enabled**
+
 | Kind | Name | Parameters | Description |
 |---|---|---|---|
 | Action | Set Bound Enabled | `enabled` | On/off at runtime (off = moves freely). |

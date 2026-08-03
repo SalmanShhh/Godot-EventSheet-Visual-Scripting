@@ -90,6 +90,11 @@ On "grab" released
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Start drag at (**drag_point_x**, **drag_point_y**) grab mode **grab_mode**
+- Drop with mode **how**
+
 All ACEs live in the **Drag & Drop** category and target the `DragDropBehavior` behavior on the node they are placed on. There is no drag-id parameter anywhere.
 
 ### Actions

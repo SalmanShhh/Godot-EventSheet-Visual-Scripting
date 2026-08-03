@@ -61,6 +61,10 @@ The player presses the Advance Action (ui_accept by default) to move through the
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Queue line **speaker**: **text**
+
 ### Actions
 
 | Action | Parameters | Description |

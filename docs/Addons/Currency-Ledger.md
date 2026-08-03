@@ -80,6 +80,12 @@ That is the whole loop: define once, earn and spend with single rows, and let On
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Define currency **id** starting at **starting_amount**, max **max_amount**
+- Add **amount** **id**
+- Spend **amount** **id**
+
 Every id below is a string. Amounts are numbers. All names are the exact display names from the pack.
 
 ### Actions

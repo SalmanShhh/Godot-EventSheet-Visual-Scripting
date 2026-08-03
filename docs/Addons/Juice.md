@@ -88,6 +88,12 @@ Shake adds trauma to the auto-found camera and it decays by itself; Spring Squas
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Shake at **strength**
+- Hitstop for **freeze_duration** s at scale **freeze_scale**
+- Flash **color** for **seconds** s
+
 All ACEs live in the **Juice** category and target the `JuiceBehavior` on the node they are placed on. The camera actions act on the active camera; the squash actions act on the host node. The numbers shown in parameter descriptions are the values the picker opens with; you can change any of them per row.
 
 ### Actions

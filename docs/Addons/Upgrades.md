@@ -81,6 +81,12 @@ That is the whole loop: define once, buy against your balance, and pay the recor
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Define upgrade **id**: base cost **base_cost** growing **cost_growth**x, max level **max_level**, **per_level** per level (**mode**)
+- Try purchase **id** with budget **budget**
+- Effect of **id**
+
 Every id and tag below is a string. Costs, budgets, and effects are numbers. All names are the exact display names from the pack.
 
 ### Actions

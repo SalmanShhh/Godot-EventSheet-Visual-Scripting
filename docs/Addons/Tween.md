@@ -79,6 +79,10 @@ The chest starts flat, springs up to 1.2 scale, and On Tween Finished settles it
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Tween **property_path** to **final_value** over **duration** s
+
 All ACEs live in the **Tween** category and target the `TweenBehavior` on the node they are placed on. Every `duration` is in seconds, and passing `0` uses the `default_duration` Inspector value.
 
 ### Actions

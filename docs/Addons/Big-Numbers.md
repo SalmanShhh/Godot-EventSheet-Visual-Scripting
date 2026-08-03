@@ -76,6 +76,11 @@ That is the pattern for the whole pack: keep the number yourself, and call a `Fo
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Format **value** short with **decimals** decimals
+- Format big **decimal** with **decimals** decimals
+
 Every formatter takes a value (and usually a `decimals` count) and returns a string; the Decimal verbs take and return `Array` Decimals. All names are the exact display names from the pack.
 
 ### Actions

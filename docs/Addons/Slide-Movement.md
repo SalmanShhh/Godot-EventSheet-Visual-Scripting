@@ -60,6 +60,10 @@ Character On Hit Wall
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Slide **direction**
+
 ### Actions
 
 | Action | Parameters | Description |

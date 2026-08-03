@@ -108,6 +108,11 @@ On Action Started
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Add action **action_name**: cooldown **cooldown** s, priority **priority**
+- Set input **key** to **value**
+
 All ACEs live in the **Utility AI** category and target the `UtilityBrain` behavior on the node they are placed on. There is no agent-id parameter anywhere.
 
 ### Actions

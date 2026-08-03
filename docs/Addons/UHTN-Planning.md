@@ -84,6 +84,10 @@ Far away, `aggro` scores low and the fixed 0.2 patrol wins; up close it overtake
 
 ## ACE reference
 
+On the canvas these verbs read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
+
+- Set world fact **key** to **value**
+
 ### Actions
 
 | Action | What it does |
