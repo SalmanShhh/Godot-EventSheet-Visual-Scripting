@@ -3210,10 +3210,17 @@ static func _value_ranges_for(text: String) -> Array:
 # test needs no edit. Nothing internal reads this var.
 var _pending_display_bbcode: bool = false
 
+# Same bridge for the builder's _pending_param_ranges one-shot (the C3 parameter emphasis):
+# tests poke this then call the delegate; the real render path never crosses here.
+var _pending_param_ranges: Dictionary = {}
+
 
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
 	_row_builder._pending_display_bbcode = _pending_display_bbcode
 	_pending_display_bbcode = false
+	if not _pending_param_ranges.is_empty():
+		_row_builder._pending_param_ranges = _pending_param_ranges
+		_pending_param_ranges = {}
 	return _row_builder._make_span(text, span_type, metadata)
 
 

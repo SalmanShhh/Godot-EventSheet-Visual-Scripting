@@ -3336,6 +3336,13 @@ static func _value_ranges_for(text: String) -> Array:
 # silently stripped/styled in the cell. PRIVATE to this layer: writers + reader all live here.
 var _pending_display_bbcode: bool = false
 
+# One-shot record from the LAST display substitution: {"text": the substituted sentence, "ranges":
+# [[start, length], ...] marking where each parameter's value landed}. _make_span consumes + clears it
+# to bold the substituted parameters (the C3 emphasis) - but only after re-finding the recorded text
+# inside the span's final text, so a formatter suffix (an ACE note) or prefix (the await hourglass)
+# shifts the ranges instead of mis-bolding, and any other post-processing degrades to no emphasis.
+var _pending_param_ranges: Dictionary = {}
+
 
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
 	var span := SemanticSpan.new()
@@ -3356,7 +3363,16 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Sema
 			var ranges: Array = _value_ranges_for(text)
 			if not ranges.is_empty():
 				span.metadata["value_ranges"] = ranges
+			var pending_text: String = str(_pending_param_ranges.get("text", ""))
+			if not pending_text.is_empty() and not (_pending_param_ranges.get("ranges", []) as Array).is_empty():
+				var at: int = text.find(pending_text)
+				if at >= 0:
+					var shifted: Array = []
+					for entry: Variant in _pending_param_ranges.get("ranges", []):
+						shifted.append([int(entry[0]) + at, int(entry[1])])
+					span.metadata["param_ranges"] = shifted
 	_pending_display_bbcode = false
+	_pending_param_ranges = {}
 	return span
 
 
@@ -3371,7 +3387,7 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		var template: String = EventSheetL10n.translate(str(definition.metadata.get("display_template", definition.display_name)))
 		if template.is_empty():
 			return EventSheetL10n.translate(definition.display_name)
-		var output: String = template
+		var replacements: Array = []
 		for index: int in range(definition.parameters.size()):
 			var parameter: Variant = definition.parameters[index]
 			if not (parameter is Dictionary):
@@ -3381,15 +3397,17 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 				continue
 			var fallback: Variant = (parameter as Dictionary).get("default_value", (parameter as Dictionary).get("default", ""))
 			var value: Variant = params_dict.get(key, fallback)
-			output = output.replace("{%d}" % index, str(value))
-			output = output.replace("{%s}" % key, str(value))
-		return output
+			replacements.append(["{%d}" % index, str(value)])
+			replacements.append(["{%s}" % key, str(value)])
+		var substituted: Dictionary = substitute_display_tracking(template, replacements)
+		_pending_param_ranges = substituted
+		return str(substituted.get("text", ""))
 	if descriptor == null:
 		return ""
 	var descriptor_template: String = EventSheetL10n.translate(descriptor.get_display_text())
 	if descriptor_template.is_empty():
 		return descriptor.ace_id
-	var descriptor_output: String = descriptor_template
+	var descriptor_replacements: Array = []
 	for i: int in range(descriptor.params.size()):
 		var param: ACEParam = descriptor.params[i]
 		if param == null:
@@ -3398,9 +3416,61 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		if param_key.is_empty():
 			continue
 		var param_value: Variant = params_dict.get(param_key, param.get_initial_value())
-		descriptor_output = descriptor_output.replace("{%d}" % i, str(param_value))
-		descriptor_output = descriptor_output.replace("{%s}" % param_key, str(param_value))
-	return descriptor_output
+		descriptor_replacements.append(["{%d}" % i, str(param_value)])
+		descriptor_replacements.append(["{%s}" % param_key, str(param_value)])
+	var descriptor_substituted: Dictionary = substitute_display_tracking(descriptor_template, descriptor_replacements)
+	_pending_param_ranges = descriptor_substituted
+	return str(descriptor_substituted.get("text", ""))
+
+
+## Substitutes display-template slots EXACTLY like the sequential String.replace chain above
+## always did, while tracking where each substituted value landed in the final text - the
+## ranges the renderer bolds (the C3 parameter emphasis). `replacements` is an ordered list
+## of [token, value] pairs; every occurrence of each token substitutes (left to right,
+## non-overlapping, like String.replace). Returns {"text": String, "ranges": [[start, length],
+## ...] sorted}. A range a LATER substitution rewrites through is dropped - the degenerate
+## case of a param value that itself contained a slot token. Static + pure.
+static func substitute_display_tracking(template: String, replacements: Array) -> Dictionary:
+	var text: String = template
+	var ranges: Array = []
+	for pair: Variant in replacements:
+		if not (pair is Array) or (pair as Array).size() < 2:
+			continue
+		var token: String = str((pair as Array)[0])
+		var value: String = str((pair as Array)[1])
+		if token.is_empty() or not text.contains(token):
+			continue
+		var occurrences: Array = []
+		var cursor: int = 0
+		while true:
+			var hit: int = text.find(token, cursor)
+			if hit == -1:
+				break
+			occurrences.append(hit)
+			cursor = hit + token.length()
+		var diff: int = value.length() - token.length()
+		var kept: Array = []
+		for entry: Variant in ranges:
+			var start: int = int((entry as Array)[0])
+			var length: int = int((entry as Array)[1])
+			var shift: int = 0
+			var overlapped: bool = false
+			for occurrence: Variant in occurrences:
+				var occ: int = int(occurrence)
+				if occ + token.length() <= start:
+					shift += diff
+				elif occ < start + length:
+					overlapped = true
+					break
+			if not overlapped:
+				kept.append([start + shift, length])
+		ranges = kept
+		if not value.is_empty():
+			for index: int in range(occurrences.size()):
+				ranges.append([int(occurrences[index]) + index * diff, value.length()])
+		text = text.replace(token, value)
+	ranges.sort_custom(func(a: Variant, b: Variant) -> bool: return int((a as Array)[0]) < int((b as Array)[0]))
+	return {"text": text, "ranges": ranges}
 
 
 ## True when a RICH-TEXT ACE's param values carry BBCode. Rich capability is DECLARED by

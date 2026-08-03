@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - C3-style bold parameter emphasis in every row sentence
+
+Rows now read like Construct 3's: every substituted parameter value draws **bold** inside
+its sentence - "Set variable **LayoutScale** to **lerp(LayoutScale, 1.0, 15.0 * delta)**",
+"Play sound **"res://sfx/jump.ogg"**" - composing with the existing typed value tints
+(numbers, strings, booleans keep their hues, now emboldened where they are parameters).
+Fully automatic across all built-in module ACEs AND every behaviour pack's verbs: the
+display substitution now tracks exactly where each `{slot}`'s value lands (a byte-exact
+mirror of the replace chain, including repeated slots and cross-slot shifts), and the
+renderer re-draws those runs with the same 0.7px double-draw the BBCode cells use - layout
+metrics, hit-tests, and translations untouched, zero pack or template edits. Decorated
+sentences (the await hourglass prefix, an ACE note suffix) shift the ranges instead of
+mis-bolding, and an author's explicit `@ace_display_template` BBCode still supersedes the
+automatic emphasis. `tests/display_param_emphasis_test.gd` pins the tracking VALUES (exact
+starts/lengths, the overlap-drop degenerate), the real-formatter span attach, and the
+precedence rule.
+
 ### Added - Ghost Row Part II: suggestion chips + learn-as-you-type ranking
 
 The zero-dialog add now meets you BEFORE you type. Opening the ghost row (E / C / A) shows a

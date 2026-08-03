@@ -152,6 +152,62 @@ func _draw_insert_marker_arrows(control: Control, line_rect: Rect2, color: Color
 ## base colour, value segments (numbers / quoted strings / booleans, precomputed at span
 ## build) use the value colour. Segments advance by measured logical width and stop at the
 ## clip width.
+## Bold overlay for the substituted parameter runs: each [start, length] re-draws its text
+## 0.7px right of the base pass (the BBCode cells' bold trick - layout metrics untouched).
+## A run is split at value-range boundaries so every piece re-draws in the colour the base
+## pass gave it: tinted values stay tinted, plain expressions stay the base colour.
+func _draw_param_emphasis(
+	control: Control,
+	baseline: Vector2,
+	text: String,
+	param_ranges: Array,
+	value_ranges: Array,
+	max_width: float,
+	font: Font,
+	font_size: int,
+	base_color: Color,
+	value_color: Color,
+	string_color: Color,
+	bool_color: Color
+) -> void:
+	var limit: float = baseline.x + max_width
+	for entry: Variant in param_ranges:
+		if not (entry is Array) or (entry as Array).size() < 2:
+			continue
+		var start: int = int((entry as Array)[0])
+		var length: int = int((entry as Array)[1])
+		if start < 0 or length <= 0 or start >= text.length():
+			continue
+		length = mini(length, text.length() - start)
+		var cursor: int = start
+		var end: int = start + length
+		while cursor < end:
+			var run_end: int = end
+			var run_color: Color = base_color
+			for value_range: Variant in value_ranges:
+				if not (value_range is Array) or (value_range as Array).size() < 2:
+					continue
+				var value_start: int = int((value_range as Array)[0])
+				var value_end: int = value_start + int((value_range as Array)[1])
+				if cursor >= value_start and cursor < value_end:
+					run_end = mini(end, value_end)
+					var kind: String = str((value_range as Array)[2]) if (value_range as Array).size() >= 3 else ""
+					if kind == "string":
+						run_color = string_color
+					elif kind == "bool":
+						run_color = bool_color
+					else:
+						run_color = value_color
+					break
+				elif value_start > cursor:
+					run_end = mini(run_end, value_start)
+			var run_text: String = text.substr(cursor, run_end - cursor)
+			var x: float = baseline.x + font.get_string_size(text.substr(0, cursor), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+			if x < limit and not run_text.is_empty():
+				_draw_text(control, Vector2(x + 0.7, baseline.y), run_text, limit - x, font, font_size, run_color)
+			cursor = maxi(run_end, cursor + 1)
+
+
 func _draw_text_with_values(
 	control: Control,
 	baseline: Vector2,
@@ -721,6 +777,7 @@ func _draw_spans(
 				_draw_object_column_separator(control, span, text_x, event_style)
 			text_width = max(span.rect.size.x - (text_x - span.rect.position.x) - right_padding, 1.0)
 		var value_ranges: Array = metadata.get("value_ranges", []) if span_index != editing_span_index else []
+		var param_ranges: Array = metadata.get("param_ranges", []) if span_index != editing_span_index else []
 		var bbcode_segments: Array = metadata.get("bbcode_segments", []) if span_index != editing_span_index else []
 		if not bbcode_segments.is_empty():
 			# BBCode-lite comments: sequential styled segments (bold = double-draw).
@@ -751,6 +808,14 @@ func _draw_spans(
 		else:
 			var value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
 			_draw_text_with_values(control, Vector2(text_x, baseline_y), draw_text, value_ranges, text_width, font, draw_font_size, color, value_color, EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
+		# The C3 parameter emphasis: every substituted parameter value re-draws 0.7px over -
+		# the same double-draw bold the BBCode cells use - in whatever colour that run already
+		# has, so the typed value tints never wash out.
+		if not param_ranges.is_empty() and bbcode_segments.is_empty() and not bool(metadata.get("comment_wrap", false)):
+			var emphasis_value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
+			_draw_param_emphasis(control, Vector2(text_x, baseline_y), draw_text, param_ranges, value_ranges,
+				text_width, font, draw_font_size, color, emphasis_value_color,
+				EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
 		# Color params get a small swatch right after the text (event-sheet-style color preview).
 		var swatch: Variant = metadata.get("swatch_color")
 		if swatch is Color:
