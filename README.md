@@ -230,17 +230,20 @@ These are independent projects and trademarks of their respective owners; this p
 
 ## 🤖 AI Use Disclosure
 
-**This project is built with heavy use of AI.** The large majority of the plugin's code, the
-bundled behavior packs, the documentation, and the test suite were written with Anthropic's
-Claude (through Claude Code), working under my direction and review. Every change is gated by
-the project's own verification: the full test suite, byte-exact round-trip checks on generated
-code, and rendered previews of UI work. I want that to be completely clear up front, not
-something you discover later.
+**This project is built with heavy use of AI tooling, and I want that to be completely clear
+up front - not something you discover later.** Much of the implementation work across the
+plugin's code, the bundled behavior packs, the documentation, and the test suite was produced
+with large language models. The direction, design, and domain knowledge are mine: what to
+build, how event sheets should feel, which C3 conventions matter and why, what is correct
+Godot practice, and what ships versus what gets rejected. Every change is reviewed and gated
+by the project's own verification: the full test suite, byte-exact round-trip checks on
+generated code, and rendered previews of UI work.
 
-It started as a pet project: an experiment to see whether a full visual-scripting solution
-could actually be built this way - pairing AI with deep domain-specific knowledge of event
-sheets (Construct, Clickteam Fusion, GDevelop lineage) and of Godot itself - and how far that
-approach could carry a real, working tool. This repository is the honest answer so far.
+It started as a pet project and it still is one: an experiment to see whether a full
+visual-scripting solution could actually be built this way - steering AI with deep
+domain-specific knowledge of event sheets (Construct, Clickteam Fusion, GDevelop lineage)
+and of Godot itself - and how far that approach could carry a real, working tool. This
+repository is the honest answer so far.
 
 **If you choose not to use this addon because of ethical concerns about AI, that is a
 completely legitimate choice and I respect it fully - no argument, no judgment, and no hard
