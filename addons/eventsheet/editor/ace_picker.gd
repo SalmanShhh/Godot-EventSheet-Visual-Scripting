@@ -716,6 +716,51 @@ func _populate_object_cards() -> void:
 		if item_icon != null:
 			item.set_icon(0, item_icon)
 			item.set_icon_max_width(0, 16)
+	_populate_project_cards(root)
+
+
+## Your Project: the game's OWN classes and autoloads as object cards, so code you wrote
+## yourself is one pick away with no annotations, no wizard, and no moving files. Picking a
+## card scopes the tree exactly like a pack's card does - the members are reflected on
+## demand (script-level, never instanced) by _project_definitions_for.
+##
+## Kept as its own section, never merged into the vocabulary categories: unannotated project
+## members are a large, uncurated surface, and dumping them among the curated verbs is the
+## "silent vocabulary pollution" the autoload provider path already refuses.
+func _populate_project_cards(root: TreeItem) -> void:
+	var entries: Array = EventSheetProjectScanner.list_project_classes()
+	if entries.is_empty():
+		return
+	var header: TreeItem = _objects_tree.create_item(root)
+	header.set_text(0, "Your Project")
+	header.set_custom_color(0, GROUP_COLOR_CUSTOM)
+	header.set_selectable(0, false)
+	for entry: Dictionary in entries:
+		var entry_name: String = str(entry.get("name", ""))
+		var singleton: String = str(entry.get("autoload", ""))
+		var item: TreeItem = _objects_tree.create_item(header)
+		item.set_text(0, entry_name if singleton.is_empty() else "%s (autoload)" % entry_name)
+		item.set_tooltip_text(0, "Browse %s's methods, properties and signals - reflected from %s." % [
+			entry_name, str(entry.get("path", ""))])
+		# The metadata is the provider id the scoped tree filters on, which for a reflected
+		# class IS the class name (see EventSheetClassDBSource).
+		item.set_metadata(0, entry_name)
+		var project_icon: Texture2D = editor_icon("Script")
+		if project_icon != null:
+			item.set_icon(0, project_icon)
+			item.set_icon_max_width(0, 16)
+
+
+## The reflected verbs for a scoped project class, or [] when the scope is not one of the
+## project's own classes. Autoloads emit `Singleton.member()`; everything else keeps the
+## retargetable `{target.}member()` shape.
+func _project_definitions_for(provider: String) -> Array[ACEDefinition]:
+	if provider.strip_edges().is_empty():
+		return []
+	for entry: Dictionary in EventSheetProjectScanner.list_project_classes():
+		if str(entry.get("name", "")) == provider:
+			return EventSheetClassDBSource.definitions_for_class(provider, str(entry.get("autoload", "")))
+	return []
 
 
 ## Single-click an object (the C3 first step): scope the classic tree to its verbs.
@@ -795,6 +840,12 @@ func _refresh_tree() -> void:
 	# Object-first scope: a picked object card narrows the tree to that provider's verbs
 	# (search still filters WITHIN the object, exactly the C3 second step).
 	if not _object_filter_provider.is_empty():
+		# A "Your Project" card scopes to a class the registry has no definitions for - its
+		# verbs are reflected on demand here, so they exist to be scoped to. Reflection is
+		# cached per class, so re-entering the same object costs a dictionary lookup.
+		for project_definition: ACEDefinition in _project_definitions_for(_object_filter_provider):
+			if not definitions.has(project_definition):
+				definitions.append(project_definition)
 		var provider_scoped: Array[ACEDefinition] = []
 		for scoped_candidate: ACEDefinition in definitions:
 			if str(scoped_candidate.provider_id) == _object_filter_provider:

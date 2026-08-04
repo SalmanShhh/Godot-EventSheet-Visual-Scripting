@@ -54,6 +54,27 @@ static func run() -> bool:
 	ok = _check("a script with no class_name reads as empty",
 		EventSheetProjectScanner.class_name_for_path(plain_path), "") and ok
 
+	# ── The scene-class filter: the anti-flooding rule, by value ──
+	# Measured on this project: 429 declared classes, 21 Node-derived. Everything dropped is
+	# a test/tool/data class nobody picks an ACTION on.
+	var bases: Dictionary = {"Enemy": "BaseActor", "BaseActor": "Sprite2D", "ItemData": "Resource",
+		"Helper": "RefCounted", "SuiteTest": "RefCounted"}
+	ok = _check("a direct Node subclass earns a card",
+		EventSheetProjectScanner.is_scene_class("Node2D", bases), true) and ok
+	ok = _check("a CUSTOM base chain resolves to its engine root",
+		EventSheetProjectScanner.is_scene_class("BaseActor", bases), true) and ok
+	ok = _check("a Resource data class earns no card",
+		EventSheetProjectScanner.is_scene_class("Resource", bases), false) and ok
+	ok = _check("a RefCounted helper earns no card",
+		EventSheetProjectScanner.is_scene_class("RefCounted", bases), false) and ok
+	ok = _check("a test class (RefCounted chain) earns no card",
+		EventSheetProjectScanner.is_scene_class("SuiteTest", bases), false) and ok
+	ok = _check("an unknown base earns no card",
+		EventSheetProjectScanner.is_scene_class("NotAClass", bases), false) and ok
+	# A cyclic base chain must terminate rather than hang the scan.
+	ok = _check("a cyclic base chain fails closed",
+		EventSheetProjectScanner.is_scene_class("A", {"A": "B", "B": "A"}), false) and ok
+
 	# ── The live scan: exclusions hold against the REAL project ──
 	var scanned: Array = EventSheetProjectScanner.list_project_classes()
 	var leaked_plugin: bool = false

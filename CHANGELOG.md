@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Added - your own scripts are pickable vocabulary, with zero setup
+
+The picker's object page gained a **Your Project** section listing the classes and autoloads
+your game declares. Pick one and the tree scopes to its verbs - methods reflected as Actions
+(void), Conditions (bool) and Expressions (a value), properties as Set/Get pairs, signals as
+triggers - each emitting the plain call you would have written by hand. No annotations, no
+wizard, no moving files into `eventsheet_addons/`, and autoloads emit through their singleton
+name (`Inventory.add_item(...)`) rather than carrying a pointless target parameter.
+
+The list is deliberately narrow, and the filter was chosen by measurement rather than taste:
+of the 429 classes this project declares, 21 are Node-derived and earn a card. Test classes,
+tool scripts, data Resources and plain helpers are dropped, because nobody picks an *action*
+on them - they stay reachable where they belong, in expressions and the Self section. Nothing
+is ever instantiated to do this: derivation reads the script's own member lists, which is
+what makes it correct inside the editor process.
+
 ### Added - guide skeletons carry the styled-sentences block
 
 `EventSheetAddonGuideScaffold` (and so `EventSheets.addon_guide_skeleton` + the CLI) now

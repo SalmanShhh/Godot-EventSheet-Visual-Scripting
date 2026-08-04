@@ -34,20 +34,25 @@ const METHOD_SKIP := {
 }
 
 
-static func definitions_for_class(target_class: String) -> Array[ACEDefinition]:
-	if _cache.has(target_class):
-		return _cache[target_class]
+## `target_prefix` names a SINGLETON to call through ("GameState" -> `GameState.member()`)
+## instead of the retargetable `{target.}member()` shape. Autoloads are the case: they are
+## reached by name from anywhere, so a target parameter would be noise. Cached per
+## class+prefix, since the two shapes are different (immutable) definition sets.
+static func definitions_for_class(target_class: String, target_prefix: String = "") -> Array[ACEDefinition]:
+	var cache_key: String = target_class if target_prefix.is_empty() else "%s|%s" % [target_class, target_prefix]
+	if _cache.has(cache_key):
+		return _cache[cache_key]
 	var output: Array[ACEDefinition] = []
 	if not ClassDB.class_exists(target_class):
 		# User `class_name` classes reflect the same way, from their script's own
 		# member lists - a game's custom nodes are vocabulary too.
 		var user_script: Script = _script_for_class(target_class)
 		if user_script == null:
-			_cache[target_class] = output
+			_cache[cache_key] = output
 			return output
 		_ensure_curated_templates()
 		for method_info: Dictionary in user_script.get_script_method_list():
-			var method_definition: ACEDefinition = _method_definition(target_class, method_info)
+			var method_definition: ACEDefinition = _method_definition(target_class, method_info, target_prefix)
 			if method_definition != null:
 				output.append(method_definition)
 		for signal_info: Dictionary in user_script.get_script_signal_list():
@@ -55,12 +60,12 @@ static func definitions_for_class(target_class: String) -> Array[ACEDefinition]:
 			if signal_trigger != null:
 				output.append(signal_trigger)
 		for property_info: Dictionary in user_script.get_script_property_list():
-			output.append_array(_property_definitions(target_class, property_info))
-		_cache[target_class] = output
+			output.append_array(_property_definitions(target_class, property_info, target_prefix))
+		_cache[cache_key] = output
 		return output
 	_ensure_curated_templates()
 	for method_info: Dictionary in ClassDB.class_get_method_list(target_class, true):
-		var definition: ACEDefinition = _method_definition(target_class, method_info)
+		var definition: ACEDefinition = _method_definition(target_class, method_info, target_prefix)
 		if definition != null:
 			output.append(definition)
 	for signal_info: Dictionary in ClassDB.class_get_signal_list(target_class, true):
@@ -68,14 +73,20 @@ static func definitions_for_class(target_class: String) -> Array[ACEDefinition]:
 		if trigger != null:
 			output.append(trigger)
 	for property_info: Dictionary in ClassDB.class_get_property_list(target_class, true):
-		output.append_array(_property_definitions(target_class, property_info))
-	_cache[target_class] = output
+		output.append_array(_property_definitions(target_class, property_info, target_prefix))
+	_cache[cache_key] = output
 	return output
+
+
+## The member-access prefix for the emitted call: a singleton name reads `GameState.` and
+## everything else keeps the retargetable `{target.}` marker. Static + pure.
+static func member_prefix(target_prefix: String) -> String:
+	return "{target.}" if target_prefix.strip_edges().is_empty() else "%s." % target_prefix.strip_edges()
 
 
 ## An editor-visible property reflects as a Set action + a Get expression, the
 ## same `{target.}prop` shapes the curated vocabulary and the helpers emit.
-static func _property_definitions(target_class: String, property_info: Dictionary) -> Array[ACEDefinition]:
+static func _property_definitions(target_class: String, property_info: Dictionary, target_prefix: String = "") -> Array[ACEDefinition]:
 	var output: Array[ACEDefinition] = []
 	var property_name: String = str(property_info.get("name", ""))
 	var usage: int = int(property_info.get("usage", 0))
@@ -85,7 +96,8 @@ static func _property_definitions(target_class: String, property_info: Dictionar
 		return output
 	if not (usage & PROPERTY_USAGE_EDITOR):
 		return output
-	var set_template: String = "{target.}%s = {value}" % property_name
+	var prefix: String = member_prefix(target_prefix)
+	var set_template: String = "%s%s = {value}" % [prefix, property_name]
 	if not _curated_templates.has(set_template):
 		var setter: ACEDefinition = ACEDefinition.new()
 		setter.provider_id = target_class
@@ -107,7 +119,7 @@ static func _property_definitions(target_class: String, property_info: Dictionar
 		setter.icon = "action"
 		setter.metadata = {"codegen_template": set_template, "reflected": true, "reflect_class": target_class}
 		output.append(setter)
-	var get_template: String = "{target.}%s" % property_name
+	var get_template: String = "%s%s" % [prefix, property_name]
 	if not _curated_templates.has(get_template):
 		var getter: ACEDefinition = ACEDefinition.new()
 		getter.provider_id = target_class
@@ -123,7 +135,7 @@ static func _property_definitions(target_class: String, property_info: Dictionar
 	return output
 
 
-static func _method_definition(target_class: String, method_info: Dictionary) -> ACEDefinition:
+static func _method_definition(target_class: String, method_info: Dictionary, target_prefix: String = "") -> ACEDefinition:
 	var method_name: String = str(method_info.get("name", ""))
 	if method_name.is_empty() or method_name.begins_with("_") or METHOD_SKIP.has(method_name):
 		return null
@@ -146,7 +158,7 @@ static func _method_definition(target_class: String, method_info: Dictionary) ->
 			"options": [],
 			"autocomplete": [],
 		})
-	var codegen: String = "{target.}%s(%s)" % [method_name, ", ".join(arg_names)]
+	var codegen: String = "%s%s(%s)" % [member_prefix(target_prefix), method_name, ", ".join(arg_names)]
 	if _curated_templates.has(codegen):
 		return null
 	var return_type: int = int((method_info.get("return", {}) as Dictionary).get("type", TYPE_NIL))
