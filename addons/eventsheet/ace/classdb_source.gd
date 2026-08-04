@@ -112,12 +112,13 @@ static func _property_definitions(target_class: String, property_info: Dictionar
 			"description": "",
 			"type": TYPE_STRING,
 			"default_value": _default_literal_for(int(property_info.get("type", TYPE_NIL))),
-			"hint": "expression",
+			"hint": EventSheetVocabularyInference.param_hint_for(property_name, int(property_info.get("type", TYPE_NIL))),
 			"options": [],
 			"autocomplete": [],
 		}]
 		setter.icon = "action"
-		setter.metadata = {"codegen_template": set_template, "reflected": true, "reflect_class": target_class}
+		setter.metadata = {"codegen_template": set_template, "reflected": true, "reflect_class": target_class,
+			"display_template": EventSheetVocabularyInference.display_template_for(setter.display_name, ["value"])}
 		output.append(setter)
 	var get_template: String = "%s%s" % [prefix, property_name]
 	if not _curated_templates.has(get_template):
@@ -145,28 +146,26 @@ static func _method_definition(target_class: String, method_info: Dictionary, ta
 	var args: Array = method_info.get("args", [])
 	var arg_names: Array[String] = []
 	var parameters: Array = []
+	var param_ids: Array = []
 	for arg_info: Dictionary in args:
 		var arg_name: String = str(arg_info.get("name", "arg"))
+		var arg_type: int = int(arg_info.get("type", TYPE_NIL))
 		arg_names.append("{%s}" % arg_name)
+		param_ids.append(arg_name)
 		parameters.append({
 			"id": arg_name,
 			"display_name": arg_name.capitalize(),
 			"description": "",
 			"type": TYPE_STRING,
-			"default_value": _default_literal_for(int(arg_info.get("type", TYPE_NIL))),
-			"hint": "expression",
+			"default_value": _default_literal_for(arg_type),
+			"hint": EventSheetVocabularyInference.param_hint_for(arg_name, arg_type),
 			"options": [],
 			"autocomplete": [],
 		})
 	var codegen: String = "%s%s(%s)" % [member_prefix(target_prefix), method_name, ", ".join(arg_names)]
 	if _curated_templates.has(codegen):
 		return null
-	var return_type: int = int((method_info.get("return", {}) as Dictionary).get("type", TYPE_NIL))
-	var ace_type: int = ACEDefinition.ACEType.ACTION
-	if return_type == TYPE_BOOL:
-		ace_type = ACEDefinition.ACEType.CONDITION
-	elif return_type != TYPE_NIL:
-		ace_type = ACEDefinition.ACEType.EXPRESSION
+	var ace_type: int = EventSheetVocabularyInference.ace_type_for_return(method_info.get("return", {}))
 	var definition: ACEDefinition = ACEDefinition.new()
 	definition.provider_id = target_class
 	definition.id = "method:%s" % method_name
@@ -178,6 +177,10 @@ static func _method_definition(target_class: String, method_info: Dictionary, ta
 	definition.icon = "action" if ace_type == ACEDefinition.ACEType.ACTION else ("condition" if ace_type == ACEDefinition.ACEType.CONDITION else "expression")
 	definition.metadata = {
 		"codegen_template": codegen,
+		# Without a sentence a reflected row shows only the verb name, hiding the values the
+		# user just typed. This gives it the same "name + slots" read an annotated verb has
+		# (and the viewport's automatic emphasis then bolds the substituted values).
+		"display_template": EventSheetVocabularyInference.display_template_for(definition.display_name, param_ids),
 		"reflected": true,
 		"reflect_class": target_class,
 	}

@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added - reflected verbs read and edit like curated ones
+
+Vocabulary reflected from a class (yours or the engine's) no longer arrives bare. Each verb
+now carries a **row sentence**, so a row shows the values you typed - "Add Item **"potion"**,
+**3**" instead of just "Add Item" - with the same automatic emphasis every other row gets.
+Parameters infer their **widget** from the name and declared type: a `Color` gets the swatch
+and saved palette, a sound path gets the audio picker, a scene path the scene picker, an
+input action the live Input Map picker, a group name the group picker. Verified on real
+reflection: `Add To Group` offers the group picker, `Set Scene File Path` the scene picker.
+
+Inference stays deliberately conservative - a wrong widget is worse than a plain field - so
+name rules apply only to text arguments (an `int` called `action_index` is not an input
+action) and anything uncertain keeps the expression field it has today.
+
+### Fixed - an untyped method no longer reflects as an Action
+
+`func pick():` with no declared return reports the same "nil" type as `-> void`, so it was
+published as an Action - wrong for a helper that returns a value. Untyped returns are now
+Expressions (the kind that misleads in none of the places it can be used). Existing rows are
+unaffected: a row bakes its call when applied, so only the picker's classification changes.
+
 ### Added - your own scripts are pickable vocabulary, with zero setup
 
 The picker's object page gained a **Your Project** section listing the classes and autoloads
