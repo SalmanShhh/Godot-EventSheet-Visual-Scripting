@@ -43,6 +43,34 @@ var widget_hint: String = ""
 var category_override: String = ""
 
 
+## A full copy of this definition.
+##
+## Use this, NEVER `Resource.duplicate()`: every field above is a plain `var` rather than an
+## `@export`, and duplicate() only copies exported properties - so it returns a BLANK
+## definition (empty id, no template) that looks valid and silently publishes nothing. The
+## fields are deliberately unexported (definitions are built in code, never edited as .tres),
+## so this method is the supported way to derive one definition from another, e.g. when a
+## refinement must not mutate the shared cached instance.
+func copy() -> ACEDefinition:
+	var clone: ACEDefinition = ACEDefinition.new()
+	clone.provider_id = provider_id
+	clone.id = id
+	clone.display_name = display_name
+	clone.category = category
+	clone.ace_type = ace_type
+	clone.description = description
+	clone.parameters = parameters.duplicate(true)
+	clone.return_type = return_type
+	clone.icon = icon
+	clone.metadata = metadata.duplicate(true)
+	clone.editor_exposed = editor_exposed
+	clone.property_hint = property_hint
+	clone.hint_string = hint_string
+	clone.widget_hint = widget_hint
+	clone.category_override = category_override
+	return clone
+
+
 func get_identifier() -> String:
 	return "%s::%s" % [provider_id, id]
 

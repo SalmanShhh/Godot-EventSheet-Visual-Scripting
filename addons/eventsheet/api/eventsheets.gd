@@ -106,6 +106,31 @@ static func class_vocabulary(target_class: String) -> Array[ACEDefinition]:
 	return EventSheetClassDBSource.definitions_for_class(target_class)
 
 
+## The classes THIS project publishes (global `class_name` scripts + autoloads) as scan
+## entries {name, path, kind, autoload} - the input set behind the picker's Your Project
+## section. Node-derived only: data classes and helpers are reachable in expressions, but
+## nobody picks an action on them.
+static func project_classes() -> Array:
+	return EventSheetProjectScanner.list_project_classes()
+
+
+## Refines how a REFLECTED verb presents - `{"display_name": "Deal Damage"}`,
+## `{"category": "Combat"}`, `{"hidden": true}` - stored in the project's override catalog,
+## never in the user's script. Passing null (or "") for a field clears it.
+##
+## Presentation only: ids and emitted calls never change, so deleting the catalog restores
+## the inferred vocabulary and leaves every compiled sheet byte-identical. A verb whose
+## identity comes from `@ace_*` annotations is not affected - the source outranks the
+## catalog.
+static func override_verb(provider_id: String, ace_id: String, edits: Dictionary) -> void:
+	EventSheetVocabularyCatalog.set_override(provider_id, ace_id, edits)
+
+
+## Hides (or restores) a whole reflected class: its card and all its verbs.
+static func exclude_class(class_id: String, excluded: bool = true) -> void:
+	EventSheetVocabularyCatalog.set_class_excluded(class_id, excluded)
+
+
 # ── Editor ─────────────────────────────────────────────────────────────────────────────
 
 

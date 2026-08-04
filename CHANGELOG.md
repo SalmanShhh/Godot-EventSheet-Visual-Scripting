@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added - rename, recategorize or hide a reflected verb, without touching your script
+
+Reflected vocabulary can now be refined through a project override catalog
+(`res://eventsheet_vocabulary.tres`): rename a verb, move it to a category that suits your
+game, hide one you never use, or drop a whole class from the picker. Nothing is written into
+your source file, and the catalog stores only the differences from what inference produced.
+
+Its defining property, and the one pinned hardest by tests: **deleting the catalog can never
+break a sheet.** Overrides change presentation only - ids and emitted calls are never touched
+- so a project that loses the file falls back to the inferred vocabulary and keeps compiling
+byte-identically. A verb whose identity comes from `@ace_*` annotations ignores the catalog
+entirely: the source outranks the side file.
+
+New API: `EventSheets.project_classes()`, `EventSheets.override_verb(provider, ace, edits)`
+and `EventSheets.exclude_class(name)`.
+
+### Fixed - deriving one ACE definition from another silently produced a blank
+
+`ACEDefinition` extends Resource but declares plain `var` fields, so `duplicate()` copied
+none of them and returned an empty definition - valid-looking, publishing nothing. A
+documented `copy()` now does it properly, and the doc comment says why `duplicate()` must
+never be used here.
+
 ### Added - reflected verbs read and edit like curated ones
 
 Vocabulary reflected from a class (yours or the engine's) no longer arrives bare. Each verb

@@ -738,6 +738,8 @@ func _populate_project_cards(root: TreeItem) -> void:
 	for entry: Dictionary in entries:
 		var entry_name: String = str(entry.get("name", ""))
 		var singleton: String = str(entry.get("autoload", ""))
+		if EventSheetVocabularyCatalog.is_class_excluded(entry_name):
+			continue
 		var item: TreeItem = _objects_tree.create_item(header)
 		item.set_text(0, entry_name if singleton.is_empty() else "%s (autoload)" % entry_name)
 		item.set_tooltip_text(0, "Browse %s's methods, properties and signals - reflected from %s." % [
@@ -759,7 +761,11 @@ func _project_definitions_for(provider: String) -> Array[ACEDefinition]:
 		return []
 	for entry: Dictionary in EventSheetProjectScanner.list_project_classes():
 		if str(entry.get("name", "")) == provider:
-			return EventSheetClassDBSource.definitions_for_class(provider, str(entry.get("autoload", "")))
+			# The catalog refines presentation only (renames, categories, hidden entries);
+			# ids and emitted calls come through untouched, which is what lets a project
+			# delete the catalog without changing a single compiled sheet.
+			return EventSheetVocabularyCatalog.apply(
+				EventSheetClassDBSource.definitions_for_class(provider, str(entry.get("autoload", ""))))
 	return []
 
 
