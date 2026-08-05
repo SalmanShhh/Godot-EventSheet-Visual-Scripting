@@ -105,7 +105,7 @@ static func _property_definitions(target_class: String, property_info: Dictionar
 		setter.ace_type = ACEDefinition.ACEType.ACTION
 		setter.display_name = "Set %s" % property_name.capitalize()
 		setter.category = "All of %s" % target_class
-		setter.description = "Sets %s.%s - reflected from the engine." % [target_class, property_name]
+		setter.description = "Sets %s.%s - reflected from %s." % [target_class, property_name, _source_label(target_class)]
 		setter.parameters = [{
 			"id": "value",
 			"display_name": "Value",
@@ -128,12 +128,18 @@ static func _property_definitions(target_class: String, property_info: Dictionar
 		getter.ace_type = ACEDefinition.ACEType.EXPRESSION
 		getter.display_name = property_name.capitalize()
 		getter.category = "All of %s" % target_class
-		getter.description = "Reads %s.%s - reflected from the engine." % [target_class, property_name]
+		getter.description = "Reads %s.%s - reflected from %s." % [target_class, property_name, _source_label(target_class)]
 		getter.parameters = []
 		getter.icon = "expression"
 		getter.metadata = {"codegen_template": get_template, "reflected": true, "reflect_class": target_class}
 		output.append(getter)
 	return output
+
+
+## Where a reflected member came from, for its description. A user's own class is NOT "the
+## engine" - saying so in the picker is a small lie that makes the whole panel feel generic.
+static func _source_label(target_class: String) -> String:
+	return "the engine" if ClassDB.class_exists(target_class) else "your script"
 
 
 static func _method_definition(target_class: String, method_info: Dictionary, target_prefix: String = "") -> ACEDefinition:
@@ -172,7 +178,7 @@ static func _method_definition(target_class: String, method_info: Dictionary, ta
 	definition.ace_type = ace_type
 	definition.display_name = method_name.capitalize()
 	definition.category = "All of %s" % target_class
-	definition.description = "%s.%s - reflected from the engine; emits the plain call." % [target_class, method_name]
+	definition.description = "%s.%s - reflected from %s; emits the plain call." % [target_class, method_name, _source_label(target_class)]
 	definition.parameters = parameters
 	definition.icon = "action" if ace_type == ACEDefinition.ACEType.ACTION else ("condition" if ace_type == ACEDefinition.ACEType.CONDITION else "expression")
 	definition.metadata = {
@@ -211,7 +217,7 @@ static func _signal_definition(target_class: String, signal_info: Dictionary) ->
 	definition.ace_type = ACEDefinition.ACEType.TRIGGER
 	definition.display_name = "On %s" % signal_name.capitalize()
 	definition.category = "All of %s" % target_class
-	definition.description = "The %s.%s signal, reflected from the engine." % [target_class, signal_name]
+	definition.description = "The %s.%s signal, reflected from %s." % [target_class, signal_name, _source_label(target_class)]
 	definition.parameters = parameters
 	definition.icon = "trigger"
 	definition.metadata = {

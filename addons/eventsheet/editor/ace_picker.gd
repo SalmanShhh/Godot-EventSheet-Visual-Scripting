@@ -1224,6 +1224,12 @@ func _item_tooltip(definition: ACEDefinition) -> String:
 	var note: String = str(definition.metadata.get("deprecation_note", ""))
 	if not note.is_empty():
 		tip += "\n" + note
+	# Provenance: a verb derived from the user's own script says so, and says it can be
+	# changed - otherwise an inferred name reads as if the plugin decided it and there is
+	# no visible way to disagree.
+	var provenance: String = EventSheetVocabularyCatalog.provenance_note(definition)
+	if not provenance.is_empty():
+		tip += "\n" + provenance
 	return tip
 
 
@@ -1404,10 +1410,49 @@ func _open_tree_context_menu(definition: ACEDefinition) -> void:
 	_tree_context_definition = definition
 	_tree_context_menu.clear()
 	_tree_context_menu.add_item("Pin / Unpin Favorite", 0)
+	# Refinement for DERIVED verbs only: an authored verb's identity lives in its script, and
+	# the catalog deliberately never overrules source (it would be an invisible second truth).
+	if not EventSheetVocabularyCatalog.provenance_of(definition).is_empty():
+		_tree_context_menu.add_separator()
+		_tree_context_menu.add_item("Rename this verb…", 3)
+		_tree_context_menu.add_item("Set its category…", 4)
+		_tree_context_menu.add_item("Hide this verb", 5)
+		_tree_context_menu.add_item("Hide everything from %s" % definition.provider_id, 6)
+		if EventSheetVocabularyCatalog.provenance_of(definition) == "curated":
+			_tree_context_menu.add_item("Reset to the inferred name", 7)
 	_tree_context_menu.add_separator()
 	_tree_context_menu.add_item("Copy annotation stub", 1)
 	_tree_context_menu.add_item("Copy registrar snippet", 2)
 	_tree_context_menu.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i.ZERO))
+
+
+## One-field prompt used by the rename / recategorize actions. Built with the shared popup
+## helpers so it reads like every other dialog, and committed on Enter or OK.
+func _prompt_override(definition: ACEDefinition, field: String, title: String, seed_value: String) -> void:
+	var window: AcceptDialog = AcceptDialog.new()
+	window.title = title
+	window.ok_button_text = "Apply"
+	var box: VBoxContainer = EventSheetPopupUI.form_box()
+	var edit: LineEdit = LineEdit.new()
+	edit.text = seed_value
+	edit.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(320.0), 0.0)
+	edit.select_all()
+	box.add_child(EventSheetPopupUI.hint_label(
+		"Stored in this project's vocabulary catalog - your script is not touched.", 320.0))
+	box.add_child(edit)
+	window.add_child(EventSheetPopupUI.margined(box))
+	var commit: Callable = func() -> void:
+		EventSheetVocabularyCatalog.set_override(definition.provider_id, definition.id, {field: edit.text})
+		_refresh_tree()
+		if _info_label != null:
+			_info_label.text = "Updated %s - delete eventsheet_vocabulary.tres to undo every override." % definition.display_name
+		window.queue_free()
+	window.confirmed.connect(commit)
+	edit.text_submitted.connect(func(_text: String) -> void: commit.call(); window.hide())
+	window.canceled.connect(func() -> void: window.queue_free())
+	_window.add_child(window)
+	window.popup_centered()
+	edit.grab_focus()
 
 
 func _on_tree_context_menu_pressed(item_id: int) -> void:
@@ -1430,6 +1475,28 @@ func _on_tree_context_menu_pressed(item_id: int) -> void:
 			DisplayServer.clipboard_set(EventSheetACEAnnotationStub.registrar_stub(definition))
 			if _info_label != null:
 				_info_label.text = "Copied the registrar snippet for %s - paste it into a provider script." % definition.display_name
+		3:
+			_prompt_override(definition, "display_name", "Rename verb", definition.display_name)
+		4:
+			_prompt_override(definition, "category", "Set category", definition.category)
+		5:
+			EventSheetVocabularyCatalog.set_override(definition.provider_id, definition.id, {"hidden": true})
+			_refresh_tree()
+			if _info_label != null:
+				_info_label.text = "Hid %s - delete eventsheet_vocabulary.tres to restore every hidden verb." % definition.display_name
+		6:
+			EventSheetVocabularyCatalog.set_class_excluded(definition.provider_id, true)
+			_populate_object_cards()
+			_refresh_tree()
+			if _info_label != null:
+				_info_label.text = "Hid everything from %s." % definition.provider_id
+		7:
+			# Clearing every field drops the entry, which restores the inferred identity.
+			EventSheetVocabularyCatalog.set_override(definition.provider_id, definition.id,
+				{"display_name": null, "category": null, "hidden": null})
+			_refresh_tree()
+			if _info_label != null:
+				_info_label.text = "Reset %s to its inferred name." % definition.id
 
 
 ## Enter in the search box applies the first concrete match - type-and-Enter, no mouse.

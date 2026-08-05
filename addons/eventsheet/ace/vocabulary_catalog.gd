@@ -145,6 +145,31 @@ static func apply(definitions: Array) -> Array[ACEDefinition]:
 	return out
 
 
+## Where a verb's identity came from, so the picker can SAY so rather than leaving the user
+## to guess whether a name was authored or derived:
+##   "curated"  - reflected, and you renamed/recategorized it here
+##   "inferred" - reflected from a script, nobody has refined it
+##   ""         - authored vocabulary (a builtin or an annotated provider), the baseline
+##                that needs no label
+## Static + pure; the empty case is deliberate - chips exist to mark DERIVED entries, and
+## labelling everything would just add noise to the 900+ curated verbs.
+static func provenance_of(definition: ACEDefinition) -> String:
+	if definition == null or not bool(definition.metadata.get("reflected", false)):
+		return ""
+	return "curated" if bool(definition.metadata.get("curated", false)) else "inferred"
+
+
+## The tooltip line for a derived verb: what it is, where it came from, and that the user
+## can change it. "" for authored vocabulary.
+static func provenance_note(definition: ACEDefinition) -> String:
+	match provenance_of(definition):
+		"curated":
+			return "From your project's %s - renamed by you. Right-click to edit or hide." % definition.provider_id
+		"inferred":
+			return "From your project's %s - inferred from the script, not curated. Right-click to rename or hide." % definition.provider_id
+	return ""
+
+
 ## Tests only: a clean slate pointed at a scratch path, so a run never touches the project's
 ## real catalog.
 static func reset_for_tests(path_override: String = "") -> void:

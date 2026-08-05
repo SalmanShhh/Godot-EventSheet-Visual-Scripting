@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Added - the picker says where a verb's name came from, and lets you disagree
+
+A verb derived from your own code now carries its provenance in the tooltip - "From your
+project's Enemy - inferred from the script, not curated. Right-click to rename or hide." -
+so an inferred name never reads as something the plugin decided behind your back. Once you
+refine one it says "renamed by you" instead.
+
+Right-clicking a derived verb offers **Rename this verb…**, **Set its category…**, **Hide
+this verb**, **Hide everything from <Class>**, and (once refined) **Reset to the inferred
+name**. Each writes to the project's override catalog, never to your script, and the prompt
+says so. Authored verbs deliberately offer none of this: their identity lives in their own
+`@ace_*` annotations, and a side file that could overrule source would be an invisible
+second truth.
+
+### Fixed - a verb from your own class no longer claims to come "from the engine"
+
+Reflected descriptions were hardcoded to say "reflected from the engine", including for
+classes you wrote yourself. They now name the real source ("reflected from your script").
+
 ### Added - rename, recategorize or hide a reflected verb, without touching your script
 
 Reflected vocabulary can now be refined through a project override catalog
