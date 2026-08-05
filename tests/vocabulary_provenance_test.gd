@@ -1,4 +1,4 @@
-# EventSheet - provenance for derived vocabulary (interop P3b). A user must be able to tell
+# EventSheet - provenance for derived vocabulary. A user must be able to tell
 # whether a verb's name was AUTHORED or INFERRED, and see that they can disagree with it.
 # Pins the classification by value, the tooltip note that carries it into the picker, and the
 # rule that only derived verbs offer overrides (an authored verb's identity lives in its

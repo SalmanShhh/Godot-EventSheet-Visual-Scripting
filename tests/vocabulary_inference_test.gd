@@ -1,4 +1,4 @@
-# EventSheet - inference for reflected vocabulary (interop P2). Pins the table BY VALUE,
+# EventSheet - inference for reflected vocabulary. Pins the table BY VALUE,
 # including the conservatism rules that decide whether the feature is trustworthy: a wrong
 # widget or a wrong verb kind is worse than a plain expression field.
 #

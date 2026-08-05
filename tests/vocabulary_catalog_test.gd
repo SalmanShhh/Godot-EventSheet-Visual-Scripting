@@ -1,4 +1,4 @@
-# EventSheet - the vocabulary override catalog (interop P3). The headline assertion is the
+# EventSheet - the vocabulary override catalog. The headline assertion is the
 # DELETE-SAFETY property the whole design rests on: removing the catalog restores the
 # inferred vocabulary with every id and every emitted call byte-identical, so a project that
 # loses the file keeps compiling exactly the same. Also pins the resolution order (source

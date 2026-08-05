@@ -1,4 +1,4 @@
-# EventSheet - refactor-following (interop P4). When a renamed member orphans a row, the
+# EventSheet - refactor-following. When a renamed member orphans a row, the
 # Doctor should name the member you almost certainly renamed it to. The MUST-NOT-FIRE cases
 # are as prominent as the fire cases here, on purpose: a confident wrong suggestion sends
 # someone to "fix" a call that was never the problem, and one such miss teaches users to

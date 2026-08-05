@@ -1,4 +1,4 @@
-# EventSheet - the vocabulary override catalog (interop phase 3).
+# EventSheet - the vocabulary override catalog.
 #
 # Refinement for REFLECTED verbs - rename one, recategorize it, hide it, or drop a whole
 # class - without touching the user's source file. One project resource holds only the

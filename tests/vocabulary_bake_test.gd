@@ -1,4 +1,4 @@
-# EventSheet - baking catalog overrides into the source (interop P4b). The catalog keeps a
+# EventSheet - baking catalog overrides into the source. The catalog keeps a
 # user's script untouched by default; bake is the opt-out for teams who want the script to
 # describe itself. Pins the id -> member translation, the edit shape handed to the writer,
 # and the end-to-end write: annotations appear, the code is untouched, and the now-redundant

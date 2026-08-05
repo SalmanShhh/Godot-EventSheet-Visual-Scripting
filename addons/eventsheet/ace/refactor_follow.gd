@@ -1,4 +1,4 @@
-# EventSheet - refactor-following (interop phase 4).
+# EventSheet - refactor-following.
 #
 # Renaming a member of your own script is the most ordinary thing a developer does, and it is
 # exactly what breaks sheets: the verb's identity changes, every row that used it still emits

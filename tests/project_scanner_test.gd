@@ -1,4 +1,4 @@
-# EventSheet - the project-code scanner (interop phase 1). Pins the ANTI-FLOODING contract
+# EventSheet - the project-code scanner. Pins the ANTI-FLOODING contract
 # by value: the plugin's own scripts and the bundled packs are never listed, `_`-private and
 # class_name-less scripts stay out of the automatic set, autoload entries carry their
 # singleton name (the emission target), and an opted-in extra path joins on demand. Also

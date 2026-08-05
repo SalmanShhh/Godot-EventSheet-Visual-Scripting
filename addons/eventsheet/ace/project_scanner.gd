@@ -1,4 +1,4 @@
-# EventSheet - the project's OWN code as vocabulary (interop phase 1).
+# EventSheet - the project's OWN code as vocabulary.
 #
 # Lists the classes a user's project publishes - global `class_name` scripts and registered
 # autoloads - so their members can be offered as verbs with ZERO setup: no annotations, no

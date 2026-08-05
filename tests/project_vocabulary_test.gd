@@ -1,4 +1,4 @@
-# EventSheet - the project's own code as pickable vocabulary (interop P1b). Pins the VALUES
+# EventSheet - the project's own code as pickable vocabulary. Pins the VALUES
 # that decide whether a user's script is usable with zero setup: a real project class
 # reflects into typed verbs from its SCRIPT (never an instance), the emitted call is the
 # plain one a human would write, an autoload emits through its singleton name while a plain

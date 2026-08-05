@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added - "this raw call looks like one of your verbs - convert it?"
+
+A row that reached your sheet as a bare **Call Method** - hand-written code you opened as a
+sheet, or a call typed before the class was scanned - can usually be named.
+`$Inventory.add_item("potion", 3)` IS your Inventory pack's **Add Item**. Right-click such a
+row and, when it matches exactly one of your project's verbs, the menu offers **Convert to
+Inventory ▸ Add Item**. Converting names the row, gives it that verb's real parameter fields,
+and emits exactly the same code as before.
+
+The offer only appears when the answer is certain: the target must be a plain reference (an
+expression with a call or an index in it names nothing), the method must exist on that class,
+and the argument count must match exactly - converting can never drop or invent an argument.
+Argument splitting is quote- and bracket-aware, so `Vector2(1, 2)` and `"a, b"` each stay one
+argument. Two candidates means no offer.
+
+Notably, this deliberately does **not** live in the importer. Teaching the lifter to match
+project vocabulary would make lifting depend on mutable editor state, when today it is a pure
+function of the file's bytes - and the drift audit compares bytes, so a row that silently
+changed which verb it names would sail through green. Attribution stays a decision you make,
+applied through the ordinary path that bakes the call at apply time.
+
 ### Fixed - the project-vocabulary stack, after an adversarial review
 
 An independent review of the interop work confirmed 21 defects; these are the ones that

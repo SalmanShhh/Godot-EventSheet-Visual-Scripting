@@ -22,6 +22,8 @@ const ACTION_MENU_ADD := 2
 const ACTION_MENU_REPLACE := 3
 const ACTION_MENU_DELETE := 4
 const ACTION_MENU_EXTRACT_FN := 40
+## "This raw call looks like one of your own verbs - name it."
+const ACTION_MENU_CONVERT_TO_VERB := 41
 const ACTION_MENU_TOGGLE_ENABLED := 5
 const ACTION_MENU_EDIT_ACE_COMMENT := 21
 const ROW_MENU_ADD_SUB_EVENT := 1
@@ -3065,6 +3067,7 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 		_show_popup_menu(_condition_context_menu, global_position)
 		return
 	if kind == "action":
+		_refresh_convert_to_verb_item()
 		_show_popup_menu(_action_context_menu, global_position)
 		return
 	# Everything else - including data_class_field spans - routes to the row menu: the
@@ -3182,6 +3185,74 @@ func _on_condition_context_menu_id_pressed(id: int) -> void:
 			_delete_context_ace()
 
 
+## Shows "Convert to <verb>" only when the right-clicked raw call matches exactly one of the
+## project's own verbs - a permanently greyed item on every other action would be clutter,
+## and a wrong offer is worse than none.
+func _refresh_convert_to_verb_item() -> void:
+	if _action_context_menu == null:
+		return
+	var existing: int = _action_context_menu.get_item_index(ACTION_MENU_CONVERT_TO_VERB)
+	if existing >= 0:
+		_action_context_menu.remove_item(existing)
+	var suggestion: Dictionary = suggested_verb_for_action(_context_ace_resource("action"))
+	if suggestion.is_empty():
+		return
+	_action_context_menu.add_item("Convert to %s ▸ %s" % [str(suggestion["provider_id"]),
+		str(suggestion["display_name"])], ACTION_MENU_CONVERT_TO_VERB)
+	_action_context_menu.set_item_tooltip(_action_context_menu.get_item_index(ACTION_MENU_CONVERT_TO_VERB),
+		"This raw call matches one of your project's verbs. Converting names the row and gives it that verb's parameter fields; the emitted code is unchanged.")
+
+
+## The project verb a raw Call Method row looks like, or {} when there is no single answer.
+## Reads the action's own params, so it works on any generic call however it got here (typed
+## by hand, pasted, or lifted from foreign GDScript).
+func suggested_verb_for_action(action: Resource) -> Dictionary:
+	if action == null or str(action.get("ace_id")) != "CallMethod":
+		return {}
+	var params: Dictionary = action.get("params")
+	var candidates: Array = []
+	for entry: Dictionary in EventSheetProjectScanner.list_project_classes():
+		if str(entry.get("name", "")) != EventSheetVerbSuggestion.class_from_target(str(params.get("target", ""))):
+			continue
+		candidates = EventSheetVocabularyCatalog.apply(
+			EventSheetClassDBSource.definitions_for_class(str(entry.get("name")), str(entry.get("autoload", ""))))
+		break
+	if candidates.is_empty():
+		return {}
+	return EventSheetVerbSuggestion.suggest(str(params.get("target", "")), str(params.get("method", "")),
+		str(params.get("args", "")), candidates)
+
+
+## Converts the right-clicked raw call into the verb it matches, through the ORDINARY apply
+## path - so the template bakes at apply time and the row is indistinguishable from one
+## picked out of the picker. One undo step, and never automatic: the user asked for it.
+func _convert_context_action_to_verb() -> void:
+	var action: Resource = _context_ace_resource("action")
+	var suggestion: Dictionary = suggested_verb_for_action(action)
+	if suggestion.is_empty():
+		return
+	var definition: ACEDefinition = _ace_registry.find_definition(
+		str(suggestion["provider_id"]), str(suggestion["ace_id"]))
+	if definition == null:
+		# Reflected verbs are not in the registry - resolve from the same source the
+		# suggestion came from.
+		for candidate: ACEDefinition in EventSheetClassDBSource.definitions_for_class(str(suggestion["provider_id"])):
+			if str(candidate.id) == str(suggestion["ace_id"]):
+				definition = candidate
+				break
+	if definition == null:
+		return
+	var params: Dictionary = EventSheetVerbSuggestion.mapped_params(definition, suggestion["arguments"])
+	if params.is_empty() and definition.parameters.size() > 0:
+		return
+	_apply_ace_definition(definition, params, {
+		"mode": "replace_action",
+		"selected_resource": _context_row.source_resource,
+		"ace_index": int(_context_hit.get("ace_index", -1)),
+	})
+	_set_status("Converted to %s." % str(suggestion["display_name"]))
+
+
 func _on_action_context_menu_id_pressed(id: int) -> void:
 	if _context_row == null or not (_context_row.source_resource is EventRow):
 		return
@@ -3197,6 +3268,8 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 				if replace_def != null:
 					replace_context["preselect_ace_id"] = replace_def.id
 				_ace_picker.open("replace_action", false, _context_row.source_resource, replace_context)
+		ACTION_MENU_CONVERT_TO_VERB:
+			_convert_context_action_to_verb()
 		ACTION_MENU_EDIT_ACE_COMMENT:
 			_open_ace_comment_dialog(_context_ace_resource("action"))
 		ACTION_MENU_TOGGLE_ENABLED:

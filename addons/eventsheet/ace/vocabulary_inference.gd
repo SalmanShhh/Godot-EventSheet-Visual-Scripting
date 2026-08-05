@@ -1,4 +1,4 @@
-# EventSheet - inference for reflected vocabulary (interop phase 2).
+# EventSheet - inference for reflected vocabulary.
 #
 # Turns a bare reflected member into something that READS and EDITS like curated vocabulary,
 # without the author writing a single annotation: the row sentence that shows the parameter
