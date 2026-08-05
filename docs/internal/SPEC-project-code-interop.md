@@ -69,10 +69,12 @@ this script" modal anywhere in this design.
   field stops being a normal workflow.
 - **Tier B becomes the default state.** Publishing is what happens automatically; the
   wizard becomes the refinement surface (L3), not the entry fee.
-- **Tier A compounds.** Because the lifter matches emitted shapes against known templates,
-  a wider vocabulary means opening foreign GDScript lifts more calls as named verb rows
-  instead of verbatim blocks. Doing all three is not 3x work: L1/L2 multiply Tier A's
-  coverage for free (section 5.9).
+- **Tier A is INDEPENDENT** (corrected 2026-08-05). The original draft claimed a wider
+  vocabulary would make the lifter cover more foreign code. Reading the lifter disproved it:
+  a call like `$Inventory.add_item(...)` already lifts as an editable row through the
+  generic-call path, with no vocabulary lookup involved. Tiers B and C still stand on their
+  own; they simply do not multiply Tier A. See 5.9 for the declined phase this premise
+  produced - a reminder to verify a motivating claim against the code before building on it.
 
 **Architecturally there is no new row kind, no new emission path and no new lift path.**
 An L1/L2 verb is an ordinary synthesized `ACEDefinition` - the same thing
@@ -203,13 +205,39 @@ sheet's referenced `provider::ace_id` set against the live scan:
 Conservatism law applies: the fix is always an OFFER, never automatic, and must ship with
 must-not-fire tests as prominent as its fire tests.
 
-### 5.9 Lifter integration (Tier A compounding)
+### 5.9 Lifter integration - DECLINED (2026-08-05)
 
-The lifter consults the project vocabulary when matching statement shapes, so
-`$Inventory.add_item("potion", 1)` in hand-written code lifts as the named verb row instead
-of a verbatim block. Gated exactly like every other lift: re-emit and byte-compare, degrade
-on mismatch. The pack drift audit must remain at zero throughout (a new match arm that
-changes emission for any existing pack is a bug, not a feature).
+**Original proposal:** the lifter consults the project vocabulary when matching statement
+shapes, so `$Inventory.add_item("potion", 1)` lifts as the named verb row instead of a
+verbatim block.
+
+**Decision: do not build it.** An adversarial review that read the lifter found the
+motivation false and the design unsafe:
+
+1. **The premise was wrong.** Such a call does NOT become a verbatim block today - the
+   existing generic-call handling already lifts it as an editable row. The phase was
+   proposed to fix something that is not broken, so section 4's "Tier A compounds" claim
+   (that a wider vocabulary makes the lifter cover more) is corrected here too: it does not.
+2. **It would break a property nothing else breaks.** A lift is currently a pure function of
+   the file's bytes. Consulting project vocabulary makes it depend on mutable editor state -
+   the scan, the reflection caches, and the catalog (whose `hidden` flags genuinely change
+   the entry set). The same file would lift differently on two machines, or after a rename.
+3. **The gate everyone would cite cannot detect the damage.** The pack drift audit compares
+   BYTES, and a re-attributed row re-emits identical bytes: `drifted=0` would stay green
+   while every row in a file silently named a different verb.
+
+**The safer design that captures the remaining value (candidate P5'):** leave the lifter
+untouched. In the RENDERER, when a generic-call row's target + method + arity resolve to
+exactly one project-vocabulary verb, show that verb's inferred sentence and a provenance
+chip ("looks like Inventory > Add Item") with a one-click **Convert to this verb** that goes
+through the ordinary apply path (which bakes the template at apply time, satisfying the
+existing covenants). Attribution becomes a user act rather than a guess - the same
+"offer, never automatic" law P4's refactor-following follows - and lift stays a pure
+function of the file.
+
+If P5' is built, its gate is a row-IDENTITY snapshot (the ordered `provider::ace_id` per row
+for every pack and showcase, checked in and compared), because byte-drift alone cannot see
+attribution changes.
 
 ## 6. Public API additions (frozen once shipped)
 
@@ -238,7 +266,8 @@ changes emission for any existing pack is a bug, not a feature).
 | **P2** | `inference` layer (kind, sentence, category, hints) | Value-pinned inference table incl. must-NOT-infer-condition cases; sentences pinned as strings |
 | **P3** | Catalog + provenance chips + inline edit routing | Resolution order pinned; **delete-the-catalog test**: ids, templates and emitted output byte-identical before/after deletion |
 | **P4** | Bake / extract + refactor-following | Bake is backup-gated and idempotent; drift fix updates N rows in ONE undo step; must-not-fire suite for the matcher |
-| **P5** | Lifter consults the vocabulary | Byte-gated lift; pack drift audit still `drifted=0` |
+| **P5** | ~~Lifter consults the vocabulary~~ **DECLINED** (5.9): premise falsified, and it would make lift depend on mutable editor state while the byte-drift gate could not detect the damage | - |
+| **P5'** | *Candidate:* renderer-side "looks like X, convert?" affordance on generic-call rows, lifter untouched | Row-IDENTITY snapshot per pack/showcase (bytes cannot see attribution changes) |
 
 ## 9. Traps this feature will hit (pre-paid from this repo's history)
 
