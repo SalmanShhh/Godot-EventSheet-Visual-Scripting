@@ -8,10 +8,13 @@ Godot EventSheets (engine codename EventForge): a Godot 4 `@tool` plugin providi
 
 ## Commands
 
-Godot 4.7 lives at a nested path on this machine (the folder is named like the exe):
+Every command below runs through `$GODOT`, the Godot 4.7 binary. Point it at your own install
+first - on Windows use the `_console.exe` variant so stdout reaches the terminal, and note that
+the extracted folder is often named like the exe, so the binary sits one level deeper than you
+expect:
 
 ```
-GODOT="/c/Users/mrlig/OneDrive/Desktop/GameDev Programs/Godot_v4.7-stable_win64.exe/Godot_v4.7-stable_win64_console.exe"
+GODOT="/path/to/Godot_v4.7-stable_win64.exe/Godot_v4.7-stable_win64_console.exe"
 ```
 
 - Full test suite (auto-discovers `tests/*_test.gd` with `static func run() -> bool`):
