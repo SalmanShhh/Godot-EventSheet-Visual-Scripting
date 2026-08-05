@@ -63,6 +63,7 @@ GODOT="/path/to/Godot_v4.7-stable_win64.exe/Godot_v4.7-stable_win64_console.exe"
 
 - **GDScript style guide is suite-enforced** (`tests/style_guide_test.gd`): tabs, `class_name` before `extends`, two blank lines around functions, snake_case. New files must pass it. Compiler OUTPUT keeps single-blank formatting by design.
 - **No em-dashes anywhere in repo text** (docs, changelog, commit messages, code comments, emitted strings). Use " - ".
+- **Never put an absolute path out of anyone's home directory into repo text.** This repo is public: `C:\Users\<who>\...`, `/c/Users/<who>/...`, `/home/<who>/` and `/Users/<who>/` publish an account name and a folder layout, and help nobody but the one machine they came from. Write a placeholder or an env var instead. `tests/personal_paths_test.gd` sweeps every text file and fails the suite on a real one.
 - **Code never references documentation files** (no "see docs/X.md" in comments); state the point inline.
 - **Every feature lands with**: tests (suite green), a `CHANGELOG.md` `[Unreleased]` entry, and for UI features a rendered preview image shown to the user (delete the temp harness before committing).
 - Commit conventional-style directly to `main` and push proactively (split unrelated work into separate commits).
