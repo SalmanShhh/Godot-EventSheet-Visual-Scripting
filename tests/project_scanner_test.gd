@@ -140,18 +140,22 @@ static func run() -> bool:
 	ok = _check("a class_name-less script is identified by its file name",
 		plain_named, "ScratchPlain") and ok
 
-	# ── An ANNOTATED script belongs to its annotations, never to this scan ──
+	# ── A script the provider system ALREADY publishes never joins this scan ──
 	# Reflecting it again would list every public member a second time and defeat @ace_hidden.
+	# The test is MEMBERSHIP, not annotations: a script can carry @ace_* comments and still
+	# publish nothing (they only take effect for scanned providers), and treating those as
+	# published left such a class reachable from nowhere at all.
+	var pack_script: String = EventSheetAddonScanner.list_addon_scripts()[0]
+	ok = _check("a scanned pack script is a published provider",
+		EventSheetProjectScanner.is_published_provider(pack_script), true) and ok
 	var annotated_path: String = TEMP_DIR + "/scratch_annotated.gd"
 	var annotated: FileAccess = FileAccess.open(annotated_path, FileAccess.WRITE)
 	annotated.store_string("## @ace_category(\"Scratch\")\nclass_name ScratchAnnotated\nextends Node\n")
 	annotated.close()
-	ok = _check("an annotated script is recognised as a provider",
-		EventSheetProjectScanner.is_annotated_provider(annotated_path), true) and ok
-	ok = _check("a plain script is not",
-		EventSheetProjectScanner.is_annotated_provider(plain_path), false) and ok
-	ok = _check("a passing mention of @ace_ in prose does not count",
-		EventSheetProjectScanner.is_annotated_provider(TEMP_SCRIPT), false) and ok
+	ok = _check("annotations ALONE do not make a script a published provider",
+		EventSheetProjectScanner.is_published_provider(annotated_path), false) and ok
+	ok = _check("a plain project script is not one either",
+		EventSheetProjectScanner.is_published_provider(plain_path), false) and ok
 	DirAccess.remove_absolute(annotated_path)
 
 	# ── Cleanup: the setting and the scratch files must not survive the test ──

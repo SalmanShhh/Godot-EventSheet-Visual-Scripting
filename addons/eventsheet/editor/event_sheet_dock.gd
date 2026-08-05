@@ -3210,13 +3210,25 @@ func suggested_verb_for_action(action: Resource) -> Dictionary:
 	if action == null or str(action.get("ace_id")) != "CallMethod":
 		return {}
 	var params: Dictionary = action.get("params")
+	var class_id: String = EventSheetVerbSuggestion.class_from_target(str(params.get("target", "")))
+	if class_id.is_empty():
+		return {}
 	var candidates: Array = []
-	for entry: Dictionary in EventSheetProjectScanner.list_project_classes():
-		if str(entry.get("name", "")) != EventSheetVerbSuggestion.class_from_target(str(params.get("target", ""))):
-			continue
-		candidates = EventSheetVocabularyCatalog.apply(
-			EventSheetClassDBSource.definitions_for_class(str(entry.get("name")), str(entry.get("autoload", ""))))
-		break
+	# A class that publishes through `@ace_*` annotations (a behaviour pack, or your own
+	# annotated script) is NOT in the reflected scan - it is already in the registry, with the
+	# author's own names. Those are the best conversions available, so they are searched
+	# first: `$Health.take_damage(10)` should become the Health pack's own Take Damage.
+	if _ace_registry != null:
+		for definition: ACEDefinition in _ace_registry.get_all_definitions():
+			if str(definition.provider_id) == class_id:
+				candidates.append(definition)
+	if candidates.is_empty():
+		for entry: Dictionary in EventSheetProjectScanner.list_project_classes():
+			if str(entry.get("name", "")) != class_id:
+				continue
+			candidates = EventSheetVocabularyCatalog.apply(
+				EventSheetClassDBSource.definitions_for_class(class_id, str(entry.get("autoload", ""))))
+			break
 	if candidates.is_empty():
 		return {}
 	return EventSheetVerbSuggestion.suggest(str(params.get("target", "")), str(params.get("method", "")),
@@ -3232,7 +3244,7 @@ func _convert_context_action_to_verb() -> void:
 	if suggestion.is_empty():
 		return
 	var definition: ACEDefinition = _ace_registry.find_definition(
-		str(suggestion["provider_id"]), str(suggestion["ace_id"]))
+		str(suggestion["provider_id"]), str(suggestion["ace_id"])) if _ace_registry != null else null
 	if definition == null:
 		# Reflected verbs are not in the registry - resolve from the same source the
 		# suggestion came from.

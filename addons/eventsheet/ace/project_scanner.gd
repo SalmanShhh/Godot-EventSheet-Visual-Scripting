@@ -23,6 +23,8 @@ extends RefCounted
 ## Opt-in extra folders/scripts (PackedStringArray). Empty by default: the declared-class
 ## and autoload sets are the safe automatic surface; this covers class_name-less code.
 const EXTRA_PATHS_SETTING: String = "eventsheets/vocabulary/extra_paths"
+## Scripts taught to the vocabulary explicitly; they publish through the provider system.
+const TAUGHT_PROVIDERS_SETTING: String = "eventsheets/vocabulary/taught_provider_scripts"
 
 const _PLUGIN_PREFIX: String = "res://addons/"
 const _PACK_PREFIX: String = "res://eventsheet_addons/"
@@ -49,11 +51,7 @@ static func list_project_classes() -> Array:
 			continue
 		if not is_scene_class(str(class_info.get("base", "")), bases):
 			continue
-		# A script that already carries `@ace_*` annotations publishes through the provider
-		# system with the author's OWN names, kinds and hidden marks. Reflecting it again here
-		# would list every public member a second time and quietly defeat `@ace_hidden`, so
-		# annotated scripts belong to their annotations, not to this scan.
-		if is_annotated_provider(path):
+		if is_published_provider(path):
 			continue
 		by_path[path] = {"name": declared, "path": path, "kind": "class", "autoload": ""}
 	# Autoloads win over the plain-class entry for the same script: a singleton emits
@@ -102,15 +100,20 @@ static func list_autoloads() -> Array:
 	return out
 
 
-## True when a script publishes its own vocabulary through `## @ace_*` annotations. Anchored
-## on the annotation FORM (a `##` line whose first token is an @ace_ directive) so a passing
-## mention in prose does not count.
-static func is_annotated_provider(path: String) -> bool:
-	if not ResourceLoader.exists(path):
-		return false
-	for line: String in FileAccess.get_file_as_string(path).split("\n"):
-		var stripped: String = line.strip_edges()
-		if stripped.begins_with("##") and stripped.trim_prefix("##").strip_edges().begins_with("@ace_"):
+## True when the provider system ALREADY publishes this script's members - it lives in the
+## scanned addons folder, or was registered/taught explicitly. Those verbs reach the picker
+## with the author's own names, kinds and hidden marks, so reflecting them again would list
+## everything twice and quietly defeat `@ace_hidden`.
+##
+## Membership, not annotations, is the test. A script can carry `@ace_*` comments and still
+## publish NOTHING (they only take effect for scanned providers), and excluding those left
+## such a class reachable from nowhere at all.
+static func is_published_provider(path: String) -> bool:
+	for provider_path: String in EventSheetAddonScanner.list_addon_scripts():
+		if provider_path == path:
+			return true
+	for taught: Variant in ProjectSettings.get_setting(TAUGHT_PROVIDERS_SETTING, PackedStringArray()):
+		if str(taught) == path:
 			return true
 	return false
 

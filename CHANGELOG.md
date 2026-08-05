@@ -42,8 +42,11 @@ would have reached you.
   the session, so a method you just added never appeared. Reflection is now keyed on the
   script's modification time.
 - **An autoload without a `class_name` got an empty card** (its script was only resolvable
-  through the global class list), and **a class carrying `@ace_*` annotations was published
-  twice**, quietly defeating `@ace_hidden`.
+  through the global class list), and **a script that already publishes as a provider was
+  published twice**, quietly defeating `@ace_hidden`. The test is membership in the provider
+  set, not the presence of annotations: a script can carry `@ace_*` comments and still publish
+  nothing at all (they only take effect for scanned providers), and counting those as
+  published left such a class reachable from nowhere.
 - **Non-scalar parameter defaults baked `null`** into rows - uncompilable for arrays,
   dictionaries, transforms and the rest, which now get real empty values.
 - A verb refined in one section could **appear twice** with the same identity; hiding a class
