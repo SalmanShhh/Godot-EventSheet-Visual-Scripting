@@ -994,9 +994,16 @@ static func check_orphaned_provider_calls(sheet_paths: PackedStringArray, findin
 		if source.is_empty():
 			continue
 		for orphan: Dictionary in orphaned_calls_in_source(source, providers):
+			# Refactor-following: when one current member is CLEARLY the renamed one, name it.
+			# Silence when nothing is close or two candidates tie - a confident wrong guess
+			# sends someone to fix a call that was never the problem.
+			var hint: String = EventSheetRefactorFollow.rename_hint(str(orphan["member"]),
+				EventSheetRefactorFollow.member_names(providers.get(str(orphan["provider"]), {})))
+			if hint.is_empty():
+				hint = " If the function was renamed, open Sheet > Custom ACE Providers, select it under its new name and use \"Keep Old Name\" to add a stand-in."
 			_add(findings, "error", "orphaned-verb", script_path,
-				"%s.%s() does not exist on %s - the call still compiles but will fail at runtime. If the function was renamed, open Sheet > Custom ACE Providers, select it under its new name and use \"Keep Old Name\" to add a stand-in."
-					% [str(orphan["provider"]), str(orphan["member"]), str(orphan["path"]).get_file()])
+				"%s.%s() does not exist on %s - the call still compiles but will fail at runtime.%s"
+					% [str(orphan["provider"]), str(orphan["member"]), str(orphan["path"]).get_file(), hint])
 
 
 ## The orphaned calls in one script's SOURCE, as {provider, member, path}. Pure, so the rule can be

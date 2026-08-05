@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added - the Doctor follows your renames instead of just reporting them
+
+Renaming a member of your own script orphans every row that used it - the one failure here
+that compiles green and breaks at runtime. The orphaned-verb check now names the member you
+almost certainly renamed it to: "`WeaponKit.start_fire()` does not exist... Did you rename it
+to `begin_fire()`?"
+
+It stays quiet whenever it is not sure, which is the point: no suggestion when nothing is
+close, and none when two members look equally plausible (sibling names like `set_valve` and
+`set_valid` score identically, and guessing between them is how a lint loses trust). The
+similarity thresholds are set from measured scores rather than intuition - a swapped verb
+prefix scores only 0.44, well below where it feels like it should - and the numbers are
+recorded in the code beside the constants.
+
 ### Added - the picker says where a verb's name came from, and lets you disagree
 
 A verb derived from your own code now carries its provenance in the tooltip - "From your
