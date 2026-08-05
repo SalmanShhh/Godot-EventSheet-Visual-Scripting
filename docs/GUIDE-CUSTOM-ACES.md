@@ -4,11 +4,21 @@ EventForge ships hundreds of built-in **ACEs** (Actions, Conditions, Expressions
 the real power is that you can add your own. A custom ACE turns a piece of your game logic, or a whole
 reusable system, into a drag-and-drop block in the event sheet. It compiles to plain GDScript like
 every built-in ACE, so there is zero runtime dependency and nothing to ship alongside your game. This
-guide covers the three ways to author custom ACEs, the schema and template language they share, how
+guide covers the ways to AUTHOR custom ACEs, the schema and template language they share, how
 they appear in the picker, and how to test them so they never fail silently. For the CRAFT side -
 naming, parameter design, descriptions, and picker UX that beginners can use first try - read
 [Designing user-friendly ACEs](GUIDE-DESIGNING-USER-FRIENDLY-ACES.md) alongside this one. For the
 in-editor, no-code way to author one verb from a dialog, see [Using the ACE Studio](GUIDE-USING-THE-ACE-STUDIO.md).
+
+**Before you author anything, check whether you need to.** Your project's own `Node`-derived
+classes and autoloads are already pickable - they appear under **Your Project** on the
+picker's object page, with their methods classified as Actions, Conditions and Expressions,
+their properties as Set/Get pairs, and their signals as triggers. That costs nothing and
+needs no annotations, and you can rename or hide any of it from the picker's right-click
+menu. Author an ACE when you want a curated verb: a friendlier sentence than the method name,
+parameter widgets (a colour swatch, an input-action dropdown), a description, or a template
+that is more than a single call. See [Using EventSheets with your existing
+code](GUIDE-USING-WITH-EXISTING-CODE.md) for the zero-setup route.
 
 ![The ACE Studio: Name, Doc comment and Inspector button rows, three cards headlining Action / Condition / Expression with a plain-language line each, a live picker preview of the published function with its Ships-as GDScript signature, and a plain Publish-to-the-picker checkbox.](images/ace-studio.png)
 

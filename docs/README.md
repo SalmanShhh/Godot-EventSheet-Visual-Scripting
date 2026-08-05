@@ -17,7 +17,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 ## Extend the plugin
 
-- [Custom ACEs](GUIDE-CUSTOM-ACES.md) - the three ways to turn your logic into pickable Actions, Conditions, and Expressions.
+- [Custom ACEs](GUIDE-CUSTOM-ACES.md) - turning your logic into curated Actions, Conditions, and Expressions (your own classes are already pickable without this - see the existing-code guide).
 - [Designing User-Friendly ACEs](GUIDE-DESIGNING-USER-FRIENDLY-ACES.md) - the craft: naming, parameters, descriptions, and picker UX beginners can use first try.
 - [Creating Custom ACE Modules](GUIDE-CREATING-CUSTOM-MODULES.md) - package your own vocabulary as a scanned module.
 - [Custom Blocks](GUIDE-CUSTOM-BLOCKS.md) - register new non-ACE row kinds with byte-gated round-trip.
@@ -42,7 +42,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 ## Working with your project
 
-- [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md) - how sheets call, and are called by, your GDScript.
+- [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md) - how sheets call, and are called by, your GDScript - including your own classes appearing in the picker with zero setup, renaming or hiding those verbs without touching your source, and naming a raw call you already have.
 - [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md) - diffing, merging, and committing sheets.
 - [Theme and Editability](GUIDE-THEMING.md) - restyle the editor, or lock a sheet down for a team.
 - [Removing Godot EventSheets](GUIDE-UNINSTALL.md) - a clean, guided teardown that leaves your game running.

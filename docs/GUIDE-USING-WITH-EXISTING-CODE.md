@@ -33,6 +33,7 @@ existing code are just GDScript talking to GDScript - there's no runtime bridge 
 - **Your GDScript needs to call INTO a sheet** - read its exports, call its functions, await its signals like any class.
 - **You are migrating an existing codebase** and want your current `.gd` files to open as editable sheets (reverse-lift), not be rewritten.
 - **One system gets reached constantly** and deserves first-class vocabulary - the last section covers when wrapping pays off, and the wizard that previews, curates and renames the verbs your own script publishes.
+- **You just want your own classes in the picker** with no annotations and no wrapper - see section 2b.
 
 ## 2. The Interop Map
 
@@ -40,10 +41,87 @@ Each row is covered below with the exact code it compiles to.
 
 | You want to… | How | No ACE needed? |
 | --- | --- | --- |
+| Pick your own classes' methods from the picker | **Your Project** section on the object page - zero setup (2b) | ✅ |
 | Call your existing code from a sheet | ƒx expressions are real GDScript + the **Helpers** ACEs + RawCode blocks | ✅ |
 | React to a signal your code emits | **On Signal** trigger (any node / autoload / `self`) | ✅ |
 | Put a sheet on a node that already has a script | **Behavior mode** - attach the sheet as a child node | ✅ |
 | Call a sheet from your existing code | Hold a typed reference and call it like any class (parity contract) | ✅ |
+
+## 2b. Your Own Classes Are Already Vocabulary
+
+Open the picker's object page and, under **Your Project**, you will find the classes and
+autoloads your game declares.
+
+<img src="images/interop-your-project.png" alt="The Add Event picker's object page: a System card, a collapsed Objects and Behaviors section, and a Your Project section listing the game's own classes - AutoACESample, CarouselOfJuice, Enemy, FamilyArena and more." width="620">
+
+Pick one and the tree scopes to its verbs: methods that return
+nothing are Actions, methods returning `bool` are Conditions, anything else is an Expression,
+its editor properties become Set/Get pairs, and its signals become triggers. Each emits the
+plain call you would have written by hand:
+
+```gdscript
+$Inventory.add_item("potion", 3)          # picked from Your Project > Inventory
+Inventory.add_item("potion", 3)           # an autoload emits through its own name
+```
+
+<img src="images/interop-scoped-verbs.png" alt="The Add Event dialog scoped to the Enemy class: the tree lists the engine classes it inherits from - CharacterBody2D, Area2D, Node2D, RigidBody2D, Timer, AnimationPlayer - followed by an All of Enemy section holding the script's own verbs." width="620">
+
+**Nothing is required of you** - no annotations, no moving files into `eventsheet_addons/`,
+no wizard. The list is derived from your scripts (never by running them), so it is correct
+inside the editor, and it updates when you edit a script rather than at the next restart.
+
+**What is listed, and what is not.** Only classes that ultimately derive from `Node` earn a
+card: those are the things a sheet acts on. Data `Resource`s, `RefCounted` helpers, tool
+scripts and test classes are deliberately excluded - you would never pick an *action* on
+them, and listing everything would bury the verbs you actually want. They stay reachable
+where they belong, in expressions and the Self section. A script that already publishes as a
+provider - it lives in `eventsheet_addons/`, or you taught it explicitly - is skipped too: its
+verbs already reach the picker with your own names, kinds and hidden marks, so reflecting it
+again would list everything twice.
+
+To include a folder of scripts without a `class_name`, add it to the
+`eventsheets/vocabulary/extra_paths` project setting; such scripts are identified by their
+file name.
+
+### Making them read the way you want
+
+Right-click any of these verbs in the picker:
+
+- **Rename this verb…** / **Set its category…** - fix a name that reads badly in a row.
+- **Hide this verb** / **Hide everything from `<Class>`** - trim what you never use. A hidden
+  class stays listed greyed out; select it to bring it back.
+- **Reset to the inferred name** - undo one refinement.
+
+These are stored in `res://eventsheet_vocabulary.tres`, **never written into your script**,
+and they change presentation only - ids and emitted calls are untouched. Delete that file and
+every verb returns to its inferred name with no sheet affected. If you would rather your
+script describe itself (so a teammate reading the file sees the same vocabulary), call
+`EventSheets.bake_overrides(script_path, class_name)` to write them in as `## @ace_*`
+comments; the file is backed up first and only comment lines are ever added.
+
+The tooltip tells you which layer a name came from: *"From your project's Inventory -
+inferred from the script, not curated"*, or *"renamed by you"* once you have refined it.
+
+### Naming a raw call you already have
+
+A row that came in as a bare **Call Method** - typed by hand, or lifted from existing
+GDScript - can usually be named. Right-click it and, when it matches exactly one of your
+verbs, the menu offers **Convert to Inventory ▸ Add Item**. Converting gives the row that
+verb's proper parameter fields and emits exactly the same code as before.
+
+The offer appears only when the match is certain: the target must be a plain reference (not
+`get_node("Inventory")` or `bags[0]`), and the argument count must match exactly, so a
+conversion can never drop or invent an argument.
+
+<img src="images/interop-convert-menu.png" alt="A row reading $Enemy.take_damage(25.0) with its right-click menu open; the last entry reads Convert to Enemy - Take Damage." width="620">
+
+### When you rename a method
+
+Renaming a member of your script orphans every row that used it - the one failure here that
+compiles green and breaks at runtime. The **Project Doctor** catches it and, when one current
+member is clearly the one you renamed to, names it: *"`WeaponKit.start_fire()` does not
+exist… Did you rename it to `begin_fire()`?"* It stays quiet when two members look equally
+plausible, because guessing between them would send you to fix the wrong call.
 
 ---
 
