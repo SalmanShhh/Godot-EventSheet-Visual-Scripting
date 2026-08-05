@@ -1,0 +1,113 @@
+# EventSheet - baking catalog overrides into the source (interop P4b). The catalog keeps a
+# user's script untouched by default; bake is the opt-out for teams who want the script to
+# describe itself. Pins the id -> member translation, the edit shape handed to the writer,
+# and the end-to-end write: annotations appear, the code is untouched, and the now-redundant
+# overrides are dropped so source stays the single truth.
+@tool
+class_name VocabularyBakeTest
+extends RefCounted
+
+const SCRATCH_CATALOG: String = "user://scratch_bake_catalog.tres"
+const SCRATCH_SCRIPT: String = "user://scratch_bake_provider.gd"
+
+const SOURCE: String = """class_name ScratchBakeProvider
+extends Node
+
+
+func take_damage(amount: float) -> void:
+	pass
+
+
+func heal(amount: float) -> void:
+	pass
+"""
+
+
+static func run() -> bool:
+	var ok: bool = true
+	EventSheetVocabularyCatalog.reset_for_tests(SCRATCH_CATALOG)
+
+	# ── id -> member translation (every shape the reflection produces) ──
+	ok = _check("a method id names its method",
+		EventSheetVocabularyCatalog.member_from_ace_id("method:take_damage"),
+		{"source_kind": "method", "member": "take_damage"}) and ok
+	ok = _check("a signal id names its signal",
+		EventSheetVocabularyCatalog.member_from_ace_id("signal:on_died"),
+		{"source_kind": "signal", "member": "on_died"}) and ok
+	ok = _check("a property setter id names the property",
+		EventSheetVocabularyCatalog.member_from_ace_id("property:set:health"),
+		{"source_kind": "property", "member": "health"}) and ok
+	ok = _check("a property getter id names the same property",
+		EventSheetVocabularyCatalog.member_from_ace_id("property:get:health"),
+		{"source_kind": "property", "member": "health"}) and ok
+	# An unrecognised shape must NOT be guessed at - writing an annotation onto the wrong
+	# declaration would corrupt someone's script.
+	ok = _check("an unknown id shape is not bakeable",
+		EventSheetVocabularyCatalog.member_from_ace_id("weird:thing"), {}) and ok
+
+	# ── Overrides translate to the writer's edit shape, scoped to one class ──
+	EventSheetVocabularyCatalog.set_override("ScratchBakeProvider", "method:take_damage",
+		{"display_name": "Wound", "category": "Combat"})
+	EventSheetVocabularyCatalog.set_override("ScratchBakeProvider", "method:heal", {"hidden": true})
+	EventSheetVocabularyCatalog.set_override("OtherClass", "method:zzz", {"display_name": "Nope"})
+	var edits: Array = EventSheetVocabularyCatalog.bake_edits_for("ScratchBakeProvider")
+	ok = _check("only this class's overrides are baked", edits.size(), 2) and ok
+	var by_member: Dictionary = {}
+	for edit: Dictionary in edits:
+		by_member[str(edit.get("member"))] = edit
+	ok = _check("a rename becomes a name edit", str((by_member["take_damage"] as Dictionary).get("name")), "Wound") and ok
+	ok = _check("a category rides along", str((by_member["take_damage"] as Dictionary).get("category")), "Combat") and ok
+	ok = _check("a hidden verb becomes a hidden edit", bool((by_member["heal"] as Dictionary).get("hidden")), true) and ok
+	ok = _check("the declaration kind is carried", str((by_member["heal"] as Dictionary).get("source_kind")), "method") and ok
+
+	# ── End to end: the annotations land, the CODE is untouched, overrides are dropped ──
+	var file: FileAccess = FileAccess.open(SCRATCH_SCRIPT, FileAccess.WRITE)
+	file.store_string(SOURCE)
+	file.close()
+	var result: Dictionary = EventSheets.bake_overrides(SCRATCH_SCRIPT, "ScratchBakeProvider")
+	ok = _check("the bake reports success", bool(result.get("ok")), true) and ok
+	ok = _check("both overrides were baked", int(result.get("baked", 0)), 2) and ok
+	var baked: String = FileAccess.get_file_as_string(SCRATCH_SCRIPT)
+	ok = _check("the rename is now in the script", baked.contains("## @ace_name(\"Wound\")"), true) and ok
+	ok = _check("the category is now in the script", baked.contains("## @ace_category(\"Combat\")"), true) and ok
+	ok = _check("the hidden verb is marked in the script", baked.contains("## @ace_hidden"), true) and ok
+	# The covenant of every annotation write: comments only.
+	for code_line: String in ["func take_damage(amount: float) -> void:", "func heal(amount: float) -> void:",
+			"class_name ScratchBakeProvider", "extends Node"]:
+		ok = _check("the code line survives verbatim: %s" % code_line, baked.contains(code_line), true) and ok
+	ok = _check("no statement was added or altered",
+		_code_lines(baked), _code_lines(SOURCE)) and ok
+	# Source now owns these facts, so the catalog must not keep a silent duplicate.
+	ok = _check("baked overrides leave the catalog",
+		EventSheetVocabularyCatalog.bake_edits_for("ScratchBakeProvider").size(), 0) and ok
+	ok = _check("another class's override is untouched",
+		EventSheetVocabularyCatalog.bake_edits_for("OtherClass").size(), 1) and ok
+
+	# Nothing to bake is a clean no-op, not an error.
+	var empty: Dictionary = EventSheets.bake_overrides(SCRATCH_SCRIPT, "ScratchBakeProvider")
+	ok = _check("baking with no overrides is a clean no-op", bool(empty.get("ok")), true) and ok
+	ok = _check("and reports nothing baked", int(empty.get("baked", 0)), 0) and ok
+
+	DirAccess.remove_absolute(SCRATCH_SCRIPT)
+	if ResourceLoader.exists(SCRATCH_CATALOG):
+		DirAccess.remove_absolute(SCRATCH_CATALOG)
+	EventSheetVocabularyCatalog.reset_for_tests()
+	return ok
+
+
+## Every non-blank, non-`##` line: the CODE. Baking may only add comment lines, so this count
+## must be identical before and after.
+static func _code_lines(source: String) -> Array:
+	var code: Array = []
+	for line: String in source.split("\n"):
+		var stripped: String = line.strip_edges()
+		if not stripped.is_empty() and not stripped.begins_with("##"):
+			code.append(stripped)
+	return code
+
+
+static func _check(label: String, actual: Variant, expected: Variant) -> bool:
+	if actual == expected:
+		return true
+	print("[FAIL] vocabulary_bake_test: %s - expected %s, got %s" % [label, str(expected), str(actual)])
+	return false

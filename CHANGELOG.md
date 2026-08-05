@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - bake your overrides into the script, when you want the script to say it
+
+The catalog keeps your source untouched by default. `EventSheets.bake_overrides(path, class)`
+is the opt-out for teams who would rather the script describe itself: it writes the renames,
+categories and hidden marks in as `## @ace_*` annotations, so a teammate reading the file (or
+anyone who never opens this editor) sees the same vocabulary you do.
+
+It takes the same safe write every curation takes - backed up first, only `##` comment lines
+added or removed, no signature or body touched, re-applying is a no-op - and the test proves
+the code survives line for line. Baked overrides are then dropped from the catalog, because
+the source owns those facts now and source outranks the catalog; keeping both would be a
+second truth that silently does nothing.
+
 ### Added - the Doctor follows your renames instead of just reporting them
 
 Renaming a member of your own script orphans every row that used it - the one failure here

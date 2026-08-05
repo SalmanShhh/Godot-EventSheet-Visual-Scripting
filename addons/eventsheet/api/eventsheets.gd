@@ -131,6 +131,29 @@ static func exclude_class(class_id: String, excluded: bool = true) -> void:
 	EventSheetVocabularyCatalog.set_class_excluded(class_id, excluded)
 
 
+## Writes a class's catalog overrides INTO its script as `## @ace_*` annotations, making the
+## script self-describing for teammates and for anyone who never opens this editor.
+##
+## Uses the same safe write every curation takes - the file is backed up first, only `##`
+## comment lines are added or removed, no signature or body is touched, and re-applying is a
+## no-op. On success the baked overrides are dropped from the catalog, because the source now
+## owns those facts and source outranks the catalog; keeping both would be a second truth
+## that silently does nothing.
+##
+## Returns curate_provider's result ({ok, reason, changed, skipped, backup}), plus "baked":
+## how many overrides were translated.
+static func bake_overrides(script_path: String, class_id: String) -> Dictionary:
+	var edits: Array = EventSheetVocabularyCatalog.bake_edits_for(class_id)
+	if edits.is_empty():
+		return {"ok": true, "reason": "Nothing to bake - this class has no overrides.", "baked": 0,
+			"changed": 0, "skipped": [], "backup": ""}
+	var result: Dictionary = curate_provider(script_path, edits)
+	result["baked"] = edits.size() if bool(result.get("ok", false)) else 0
+	if bool(result.get("ok", false)):
+		EventSheetVocabularyCatalog.clear_class_overrides(class_id)
+	return result
+
+
 # ── Editor ─────────────────────────────────────────────────────────────────────────────
 
 

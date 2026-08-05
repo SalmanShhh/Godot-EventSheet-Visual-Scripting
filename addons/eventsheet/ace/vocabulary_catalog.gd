@@ -170,6 +170,64 @@ static func provenance_note(definition: ACEDefinition) -> String:
 	return ""
 
 
+## The curation edits that would write this class's overrides INTO its script, as the
+## annotation writer's edit shape. Static + pure - the caller does the file write, so the
+## translation can be pinned without touching a file.
+##
+## Only the facets the catalog owns are translated: a rename becomes `@ace_name`, a category
+## becomes `@ace_category`, a hidden verb becomes `@ace_hidden`. The member name and its
+## declaration kind are recovered from the reflected id (`method:take_damage`), which is the
+## same shape the writer anchors on.
+static func bake_edits_for(class_id: String) -> Array:
+	var catalog: EventSheetVocabularyCatalog = load_catalog()
+	var edits: Array = []
+	for key: Variant in catalog.overrides.keys():
+		var parts: PackedStringArray = str(key).split("::", true, 1)
+		if parts.size() != 2 or parts[0] != class_id:
+			continue
+		var member_info: Dictionary = member_from_ace_id(parts[1])
+		if member_info.is_empty():
+			continue
+		var entry: Dictionary = catalog.overrides[key]
+		var edit: Dictionary = {"source_kind": str(member_info["source_kind"]), "member": str(member_info["member"])}
+		if entry.has("display_name"):
+			edit["name"] = str(entry["display_name"])
+		if entry.has("category"):
+			edit["category"] = str(entry["category"])
+		if bool(entry.get("hidden", false)):
+			edit["hidden"] = true
+		edits.append(edit)
+	return edits
+
+
+## The member + declaration kind behind a reflected ace id: `method:take_damage` ->
+## {"source_kind": "method", "member": "take_damage"}; `property:set:health` and
+## `property:get:health` both name the property. {} for anything unrecognised, so a future id
+## shape degrades to "not bakeable" rather than writing an annotation onto the wrong line.
+static func member_from_ace_id(ace_id: String) -> Dictionary:
+	if ace_id.begins_with("method:"):
+		return {"source_kind": "method", "member": ace_id.trim_prefix("method:")}
+	if ace_id.begins_with("signal:"):
+		return {"source_kind": "signal", "member": ace_id.trim_prefix("signal:")}
+	if ace_id.begins_with("property:set:"):
+		return {"source_kind": "property", "member": ace_id.trim_prefix("property:set:")}
+	if ace_id.begins_with("property:get:"):
+		return {"source_kind": "property", "member": ace_id.trim_prefix("property:get:")}
+	return {}
+
+
+## Drops every override for a class - used after a successful bake, because the source now
+## owns those facts and source outranks the catalog. Leaving both would be a second truth
+## that silently does nothing.
+static func clear_class_overrides(class_id: String) -> void:
+	var catalog: EventSheetVocabularyCatalog = load_catalog()
+	for key: Variant in catalog.overrides.keys().duplicate():
+		var parts: PackedStringArray = str(key).split("::", true, 1)
+		if parts.size() == 2 and parts[0] == class_id:
+			catalog.overrides.erase(key)
+	save_catalog(catalog)
+
+
 ## Tests only: a clean slate pointed at a scratch path, so a run never touches the project's
 ## real catalog.
 static func reset_for_tests(path_override: String = "") -> void:
