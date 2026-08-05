@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Fixed - the project-vocabulary stack, after an adversarial review
+
+An independent review of the interop work confirmed 21 defects; these are the ones that
+would have reached you.
+
+- **Renaming or hiding a verb from the "All of &lt;class&gt;" section did nothing** while reporting
+  success. That section (the sheet's own host class, the one most people meet) never passed
+  through the override catalog, so every refinement applied there was a silent no-op.
+- **Baking could destroy overrides it never wrote.** A member the writer could not find was
+  reported as skipped but still counted as baked and cleared from the catalog - and with the
+  wrong script path, *every* override for the class was deleted on a success path, with no
+  backup taken. Clearing is now per-member and driven by what the writer confirms it wrote.
+- **Deleting `eventsheet_vocabulary.tres` - the undo the UI documents - did nothing** in a
+  running session, and the next override rewrote everything you thought you had deleted. The
+  catalog now validates its cache against the file.
+- **Editing your own script was invisible until restart**: reflected vocabulary was cached for
+  the session, so a method you just added never appeared. Reflection is now keyed on the
+  script's modification time.
+- **An autoload without a `class_name` got an empty card** (its script was only resolvable
+  through the global class list), and **a class carrying `@ace_*` annotations was published
+  twice**, quietly defeating `@ace_hidden`.
+- **Non-scalar parameter defaults baked `null`** into rows - uncompilable for arrays,
+  dictionaries, transforms and the rest, which now get real empty values.
+- A verb refined in one section could **appear twice** with the same identity; hiding a class
+  was a **one-way door** (hidden classes are now listed greyed, and selecting one restores
+  it); confirming a rename dialog **without editing anything** stamped the verb "renamed by
+  you"; and the extra-paths opt-in **could not admit a `class_name`-less script**, which was
+  its entire purpose.
+
 ### Added - bake your overrides into the script, when you want the script to say it
 
 The catalog keeps your source untouched by default. `EventSheets.bake_overrides(path, class)`

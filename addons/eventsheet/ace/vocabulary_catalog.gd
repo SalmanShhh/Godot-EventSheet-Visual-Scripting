@@ -32,14 +32,24 @@ const DEFAULT_PATH: String = "res://eventsheet_vocabulary.tres"
 static var _cache: EventSheetVocabularyCatalog = null
 static var _loaded: bool = false
 static var _path_override: String = ""
+## The file signature the cache was built from ("" = the file was absent). Deleting the
+## catalog on disk is the undo the UI documents, so the cache must notice.
+static var _cache_signature: String = ""
 
 
 ## The project's catalog, or an empty one when the file does not exist (the normal state -
 ## the catalog is created on first override, never required).
+##
+## The cache is validated against the FILE each call: a plain in-memory cache made the
+## documented undo ("delete eventsheet_vocabulary.tres") do nothing in a live session, and
+## worse, the next override rewrote every entry the user thought they had deleted. Reading a
+## small modification time is cheap next to being wrong about the user's intent.
 static func load_catalog() -> EventSheetVocabularyCatalog:
-	if _loaded and _cache != null:
+	var signature: String = _file_signature()
+	if _loaded and _cache != null and signature == _cache_signature:
 		return _cache
 	_loaded = true
+	_cache_signature = signature
 	var path: String = catalog_path()
 	if ResourceLoader.exists(path):
 		var loaded: Resource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)
@@ -48,6 +58,15 @@ static func load_catalog() -> EventSheetVocabularyCatalog:
 			return _cache
 	_cache = EventSheetVocabularyCatalog.new()
 	return _cache
+
+
+## "" when the catalog file is absent, else a path+mtime stamp. Any change (edited outside
+## the editor, deleted, restored from version control) produces a different signature.
+static func _file_signature() -> String:
+	var path: String = catalog_path()
+	if not FileAccess.file_exists(path):
+		return ""
+	return "%s|%d" % [path, FileAccess.get_modified_time(path)]
 
 
 ## Writes the catalog, or DELETES it when nothing is overridden any more - an empty file
@@ -59,8 +78,13 @@ static func save_catalog(catalog: EventSheetVocabularyCatalog) -> bool:
 	if catalog.overrides.is_empty() and catalog.excluded_classes.is_empty():
 		if ResourceLoader.exists(path):
 			DirAccess.remove_absolute(path)
+		_cache_signature = _file_signature()
 		return true
-	return ResourceSaver.save(catalog, path) == OK
+	var saved: bool = ResourceSaver.save(catalog, path) == OK
+	# Stamp the signature from the file we just wrote, so the very next read does not
+	# needlessly reload what is already in hand.
+	_cache_signature = _file_signature()
+	return saved
 
 
 static func catalog_path() -> String:
@@ -188,6 +212,13 @@ static func bake_edits_for(class_id: String) -> Array:
 		var member_info: Dictionary = member_from_ace_id(parts[1])
 		if member_info.is_empty():
 			continue
+		# A property publishes as TWO verbs (a Set action and a Get expression) but has ONE
+		# declaration, so both would write to the same annotation block and the second would
+		# overwrite the first. Rather than silently lose a rename, only the getter - the verb
+		# named after the property itself - bakes; the setter's override stays in the catalog,
+		# where it keeps working and stays visible.
+		if str(parts[1]).begins_with("property:set:"):
+			continue
 		var entry: Dictionary = catalog.overrides[key]
 		var edit: Dictionary = {"source_kind": str(member_info["source_kind"]), "member": str(member_info["member"])}
 		if entry.has("display_name"):
@@ -216,14 +247,24 @@ static func member_from_ace_id(ace_id: String) -> Dictionary:
 	return {}
 
 
-## Drops every override for a class - used after a successful bake, because the source now
-## owns those facts and source outranks the catalog. Leaving both would be a second truth
-## that silently does nothing.
-static func clear_class_overrides(class_id: String) -> void:
+## Drops the overrides that were ACTUALLY written into the source, given the writer's own
+## list of applied edits. Source owns those facts now, so keeping them here too would be a
+## silent second truth - but an override whose member the writer could not find never reached
+## the file, and dropping it would be data loss on a success path. Hence per-member, never
+## per-class.
+static func clear_baked_overrides(class_id: String, written_edits: Array) -> void:
+	if written_edits.is_empty():
+		return
 	var catalog: EventSheetVocabularyCatalog = load_catalog()
+	var members: Dictionary = {}
+	for edit: Variant in written_edits:
+		members[str((edit as Dictionary).get("member", ""))] = true
 	for key: Variant in catalog.overrides.keys().duplicate():
 		var parts: PackedStringArray = str(key).split("::", true, 1)
-		if parts.size() == 2 and parts[0] == class_id:
+		if parts.size() != 2 or parts[0] != class_id:
+			continue
+		var member_info: Dictionary = member_from_ace_id(parts[1])
+		if not member_info.is_empty() and members.has(str(member_info["member"])):
 			catalog.overrides.erase(key)
 	save_catalog(catalog)
 
@@ -233,4 +274,5 @@ static func clear_class_overrides(class_id: String) -> void:
 static func reset_for_tests(path_override: String = "") -> void:
 	_cache = null
 	_loaded = false
+	_cache_signature = ""
 	_path_override = path_override

@@ -82,10 +82,12 @@ static func run() -> bool:
 	for definition: ACEDefinition in EventSheetVocabularyCatalog.apply(source):
 		before_ids.append("%s::%s" % [definition.provider_id, definition.id])
 		before_templates.append(str(definition.metadata.get("codegen_template", "")))
-	# Delete the file the way a user would, and forget the in-memory copy.
+	# Delete the file the way a user actually would: from disk, with the editor still running.
+	# The earlier version of this test also called reset_for_tests() here, which cleared a
+	# static cache no real user can reach - so it proved nothing about the documented undo,
+	# and the live session happily kept serving (and re-saving) the deleted overrides.
 	if ResourceLoader.exists(SCRATCH_PATH):
 		DirAccess.remove_absolute(SCRATCH_PATH)
-	EventSheetVocabularyCatalog.reset_for_tests(SCRATCH_PATH)
 	var after_ids: Array = []
 	var after_templates: Array = []
 	for definition: ACEDefinition in EventSheetVocabularyCatalog.apply(source):
@@ -93,6 +95,15 @@ static func run() -> bool:
 		after_templates.append(str(definition.metadata.get("codegen_template", "")))
 	ok = _check("deleting the catalog keeps every verb id", after_ids, before_ids) and ok
 	ok = _check("deleting the catalog keeps every emitted call", after_templates, before_templates) and ok
+	# The undo the UI documents must actually undo: the rename is gone WITHOUT any test-only
+	# cache reset, and writing a new override must not resurrect the deleted ones.
+	var post_delete: ACEDefinition = _find(EventSheetVocabularyCatalog.apply(source), "method:add_to_group")
+	ok = _check("deleting the file really drops the override in a live session",
+		post_delete != null and post_delete.display_name == original_name, true) and ok
+	EventSheetVocabularyCatalog.set_override("Node", "method:remove_from_group", {"display_name": "Untag"})
+	ok = _check("a later override does not resurrect the deleted ones",
+		_find(EventSheetVocabularyCatalog.apply(source), "method:add_to_group").display_name, original_name) and ok
+	EventSheetVocabularyCatalog.set_override("Node", "method:remove_from_group", {"display_name": null})
 
 	# ── Persistence round-trip: an override survives a reload from disk ──
 	EventSheetVocabularyCatalog.set_override("Node", "method:add_to_group", {"display_name": "Persisted"})

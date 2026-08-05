@@ -76,7 +76,11 @@ static func run() -> bool:
 		EventSheetProjectScanner.is_scene_class("A", {"A": "B", "B": "A"}), false) and ok
 
 	# ── The live scan: exclusions hold against the REAL project ──
+	# Every assertion below passes vacuously on an empty array, so the scan is first proven
+	# NON-empty: this repo declares Node-derived classes (the showcases), and a scanner that
+	# silently returned nothing would otherwise look perfectly healthy here.
 	var scanned: Array = EventSheetProjectScanner.list_project_classes()
+	ok = _check("the live scan actually finds this project's classes", scanned.size() > 0, true) and ok
 	var leaked_plugin: bool = false
 	var leaked_pack: bool = false
 	var shapes_ok: bool = true
@@ -124,8 +128,31 @@ static func run() -> bool:
 		if str(entry.get("path")) == plain_path:
 			found_plain = true
 	ok = _check("an opted-in folder's declared class joins the scan", found_scratch, true) and ok
-	ok = _check("the opt-in never publishes a class_name-less script", found_plain, false) and ok
-	ok = _check("the opt-in adds exactly the qualifying script", after.size(), before + 1) and ok
+	# Admitting a class_name-LESS script is the opt-in's whole stated purpose: it is the only
+	# route for such code, and it identifies the script by its PascalCase file name (the same
+	# identity the provider system already assigns).
+	ok = _check("the opt-in DOES admit a class_name-less script (its stated purpose)", found_plain, true) and ok
+	ok = _check("the opt-in adds both scripts in the folder", after.size(), before + 2) and ok
+	var plain_named: String = ""
+	for entry: Dictionary in after:
+		if str(entry.get("path")) == plain_path:
+			plain_named = str(entry.get("name"))
+	ok = _check("a class_name-less script is identified by its file name",
+		plain_named, "ScratchPlain") and ok
+
+	# ── An ANNOTATED script belongs to its annotations, never to this scan ──
+	# Reflecting it again would list every public member a second time and defeat @ace_hidden.
+	var annotated_path: String = TEMP_DIR + "/scratch_annotated.gd"
+	var annotated: FileAccess = FileAccess.open(annotated_path, FileAccess.WRITE)
+	annotated.store_string("## @ace_category(\"Scratch\")\nclass_name ScratchAnnotated\nextends Node\n")
+	annotated.close()
+	ok = _check("an annotated script is recognised as a provider",
+		EventSheetProjectScanner.is_annotated_provider(annotated_path), true) and ok
+	ok = _check("a plain script is not",
+		EventSheetProjectScanner.is_annotated_provider(plain_path), false) and ok
+	ok = _check("a passing mention of @ace_ in prose does not count",
+		EventSheetProjectScanner.is_annotated_provider(TEMP_SCRIPT), false) and ok
+	DirAccess.remove_absolute(annotated_path)
 
 	# ── Cleanup: the setting and the scratch files must not survive the test ──
 	ProjectSettings.set_setting(EventSheetProjectScanner.EXTRA_PATHS_SETTING, PackedStringArray())

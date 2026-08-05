@@ -40,6 +40,13 @@ const METHOD_SKIP := {
 ## class+prefix, since the two shapes are different (immutable) definition sets.
 static func definitions_for_class(target_class: String, target_prefix: String = "") -> Array[ACEDefinition]:
 	var cache_key: String = target_class if target_prefix.is_empty() else "%s|%s" % [target_class, target_prefix]
+	# A USER's class is a file that changes while the editor is open: add a method, and a
+	# purely session-scoped cache would hide it until restart - the single most confusing
+	# thing this feature could do to someone iterating on their own script. Engine classes
+	# cannot change, so they keep the free path.
+	var stamp: String = _script_stamp(target_class)
+	if not stamp.is_empty():
+		cache_key += "@" + stamp
 	if _cache.has(cache_key):
 		return _cache[cache_key]
 	var output: Array[ACEDefinition] = []
@@ -227,12 +234,43 @@ static func _signal_definition(target_class: String, signal_info: Dictionary) ->
 	return definition
 
 
-## Resolves a `class_name` to its script via the project's global class list.
-static func _script_for_class(target_class: String) -> Script:
+## The modification stamp of the SCRIPT behind a user class, or "" for an engine class (whose
+## members cannot change at runtime). Part of the cache key, so editing your script
+## invalidates only that class's reflection rather than needing an editor restart.
+static func _script_stamp(target_class: String) -> String:
+	if ClassDB.class_exists(target_class):
+		return ""
+	var path: String = _script_path_for_class(target_class)
+	if path.is_empty() or not FileAccess.file_exists(path):
+		return ""
+	return str(FileAccess.get_modified_time(path))
+
+
+## The script path a class name resolves to: the project's global class list first, then the
+## registered autoloads - an autoload script need not declare a `class_name`, and resolving
+## only through the class list left such a class reflecting NOTHING (an empty card).
+static func _script_path_for_class(target_class: String) -> String:
 	for class_info: Dictionary in ProjectSettings.get_global_class_list():
 		if str(class_info.get("class", "")) == target_class:
-			return load(str(class_info.get("path", ""))) as Script
-	return null
+			return str(class_info.get("path", ""))
+	for property_info: Dictionary in ProjectSettings.get_property_list():
+		var setting: String = str(property_info.get("name", ""))
+		if not setting.begins_with("autoload/"):
+			continue
+		var autoload_path: String = str(ProjectSettings.get_setting(setting, "")).trim_prefix("*")
+		if not autoload_path.ends_with(".gd"):
+			continue
+		# Match either the singleton name or the path-derived name the scanner assigns.
+		if setting.trim_prefix("autoload/") == target_class \
+				or autoload_path.get_file().get_basename().to_pascal_case() == target_class:
+			return autoload_path
+	return ""
+
+
+## Resolves a `class_name` (or an autoload name) to its script.
+static func _script_for_class(target_class: String) -> Script:
+	var path: String = _script_path_for_class(target_class)
+	return load(path) as Script if not path.is_empty() and ResourceLoader.exists(path) else null
 
 
 ## The shadow filter's needle set: every curated builtin codegen template, exact.
@@ -263,5 +301,43 @@ static func _default_literal_for(arg_type: int) -> String:
 			return "Vector3.ZERO"
 		TYPE_COLOR:
 			return "Color.WHITE"
+		# The remaining common shapes get a real, compilable empty value. `null` used to be
+		# the catch-all, which reads fine in the dialog and then bakes a row that crashes the
+		# moment it runs (`for x in null`, `null.size()`), so every type we can name honestly
+		# gets its own zero value.
+		TYPE_ARRAY, TYPE_PACKED_STRING_ARRAY, TYPE_PACKED_INT32_ARRAY, TYPE_PACKED_INT64_ARRAY, \
+		TYPE_PACKED_FLOAT32_ARRAY, TYPE_PACKED_FLOAT64_ARRAY, TYPE_PACKED_VECTOR2_ARRAY, \
+		TYPE_PACKED_VECTOR3_ARRAY, TYPE_PACKED_COLOR_ARRAY, TYPE_PACKED_BYTE_ARRAY:
+			return "[]"
+		TYPE_DICTIONARY:
+			return "{}"
+		TYPE_VECTOR2I:
+			return "Vector2i.ZERO"
+		TYPE_VECTOR3I:
+			return "Vector3i.ZERO"
+		TYPE_VECTOR4:
+			return "Vector4.ZERO"
+		TYPE_RECT2:
+			return "Rect2()"
+		TYPE_RECT2I:
+			return "Rect2i()"
+		TYPE_TRANSFORM2D:
+			return "Transform2D.IDENTITY"
+		TYPE_TRANSFORM3D:
+			return "Transform3D.IDENTITY"
+		TYPE_BASIS:
+			return "Basis.IDENTITY"
+		TYPE_QUATERNION:
+			return "Quaternion.IDENTITY"
+		TYPE_PLANE:
+			return "Plane()"
+		TYPE_AABB:
+			return "AABB()"
+		TYPE_NODE_PATH:
+			return "^\"\""
+		TYPE_CALLABLE:
+			return "Callable()"
 		_:
+			# Objects/RIDs and anything unnamed: `null` IS the honest empty value here, and
+			# the user picks a real reference from the field.
 			return "null"

@@ -61,10 +61,11 @@ static func run() -> bool:
 	var script: Script = load(TEMP_SCRIPT) as Script
 	var kinds: Dictionary = {}
 	var templates: Dictionary = {}
+	# NOTE: the loop deliberately does NOT pre-filter `_`-private members - the production
+	# code owns that rule, and skipping them here would make the privacy assertion below a
+	# tautology that passes even if reflection started publishing private members.
 	for method_info: Dictionary in script.get_script_method_list():
 		var member: String = str(method_info.get("name", ""))
-		if member.begins_with("_"):
-			continue
 		var definition: ACEDefinition = EventSheetClassDBSource._method_definition("ScratchVocabSource", method_info)
 		if definition != null:
 			kinds[member] = definition.ace_type

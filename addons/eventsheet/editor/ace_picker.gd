@@ -31,6 +31,8 @@ const RECENTS_FILE := "user://eventforge_picker_recents.cfg"
 ## ⭐ Favorites persist in ProjectSettings - per-project and PR-shareable, like the
 ## composition policy. Right-click a picker entry to pin/unpin.
 const FAVORITES_SETTING := "eventsheets/picker/favorites"
+## Marks an object-card entry as "hidden class, select to restore" rather than a scope target.
+const UNHIDE_PREFIX := "unhide:"
 
 ## Simple Mode (the newcomer view) hides the advanced "drop to code" + debug ACEs from the picker,
 ## so beginners aren't shown Run GDScript / Evaluate / Breakpoint / Assert / Print Rich. Keyed by
@@ -735,10 +737,14 @@ func _populate_project_cards(root: TreeItem) -> void:
 	header.set_text(0, "Your Project")
 	header.set_custom_color(0, GROUP_COLOR_CUSTOM)
 	header.set_selectable(0, false)
+	# Hidden classes are listed too, greyed and marked - hiding must not be a one-way door
+	# with no path back, and a card the user cannot see is a card they cannot restore.
+	var hidden_names: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in entries:
 		var entry_name: String = str(entry.get("name", ""))
 		var singleton: String = str(entry.get("autoload", ""))
 		if EventSheetVocabularyCatalog.is_class_excluded(entry_name):
+			hidden_names.append(entry_name)
 			continue
 		var item: TreeItem = _objects_tree.create_item(header)
 		item.set_text(0, entry_name if singleton.is_empty() else "%s (autoload)" % entry_name)
@@ -751,6 +757,27 @@ func _populate_project_cards(root: TreeItem) -> void:
 		if project_icon != null:
 			item.set_icon(0, project_icon)
 			item.set_icon_max_width(0, 16)
+	for hidden_name: String in hidden_names:
+		var hidden_item: TreeItem = _objects_tree.create_item(header)
+		hidden_item.set_text(0, "%s (hidden)" % hidden_name)
+		hidden_item.set_custom_color(0, GROUP_COLOR_NEUTRAL)
+		hidden_item.set_tooltip_text(0, "You hid %s. Select it to show it again." % hidden_name)
+		# The metadata carries the restore intent; selecting it un-hides rather than scoping.
+		hidden_item.set_metadata(0, "%s%s" % [UNHIDE_PREFIX, hidden_name])
+
+
+## Identity-safe membership: two reflected contributions of the SAME verb can be different
+## objects, because the catalog hands back a COPY for any verb it refined. Comparing by
+## reference let a renamed verb appear beside its un-renamed twin (same provider::id, two
+## rows), so membership is decided by identifier.
+static func _contains_definition(definitions: Array, candidate: ACEDefinition) -> bool:
+	if candidate == null:
+		return true
+	var identifier: String = candidate.get_identifier()
+	for existing: ACEDefinition in definitions:
+		if existing != null and existing.get_identifier() == identifier:
+			return true
+	return false
 
 
 ## The reflected verbs for a scoped project class, or [] when the scope is not one of the
@@ -773,6 +800,15 @@ func _project_definitions_for(provider: String) -> Array[ACEDefinition]:
 func _on_object_tree_selected() -> void:
 	var selected: TreeItem = _objects_tree.get_selected()
 	if selected == null or not (selected.get_metadata(0) is String):
+		return
+	# The way back from "Hide everything from X": selecting the greyed card restores it.
+	var chosen: String = str(selected.get_metadata(0))
+	if chosen.begins_with(UNHIDE_PREFIX):
+		var restored: String = chosen.trim_prefix(UNHIDE_PREFIX)
+		EventSheetVocabularyCatalog.set_class_excluded(restored, false)
+		_populate_object_cards()
+		if _info_label != null:
+			_info_label.text = "%s is visible again." % restored
 		return
 	_object_filter_provider = str(selected.get_metadata(0))
 	_objects_back.text = "◂ All objects · %s" % selected.get_text(0)
@@ -817,10 +853,14 @@ func _refresh_tree() -> void:
 		var simple: bool = _simple_mode_provider.is_valid() and bool(_simple_mode_provider.call())
 		if not simple:
 			var query_lower: String = query.to_lower()
-			for reflected: ACEDefinition in EventSheetClassDBSource.definitions_for_class(str(_reflect_class_provider.call())):
+			# The catalog applies HERE too. Without it every Rename / Hide offered on this
+			# section was a silent no-op that still reported success, and this is the section
+			# a user meets most (it is the sheet's own host class).
+			for reflected: ACEDefinition in EventSheetVocabularyCatalog.apply(
+					EventSheetClassDBSource.definitions_for_class(str(_reflect_class_provider.call()))):
 				if filtering and not reflected.display_name.to_lower().contains(query_lower):
 					continue
-				if not definitions.has(reflected):
+				if not _contains_definition(definitions, reflected):
 					definitions.append(reflected)
 	# Fuzzy fallback ("stt" -> Set Time Scale): subsequence matches on the display name
 	# join AFTER exact + synonym hits, capped so noise never buries real matches.
@@ -850,7 +890,7 @@ func _refresh_tree() -> void:
 		# verbs are reflected on demand here, so they exist to be scoped to. Reflection is
 		# cached per class, so re-entering the same object costs a dictionary lookup.
 		for project_definition: ACEDefinition in _project_definitions_for(_object_filter_provider):
-			if not definitions.has(project_definition):
+			if not _contains_definition(definitions, project_definition):
 				definitions.append(project_definition)
 		var provider_scoped: Array[ACEDefinition] = []
 		for scoped_candidate: ACEDefinition in definitions:
@@ -1442,10 +1482,15 @@ func _prompt_override(definition: ACEDefinition, field: String, title: String, s
 	box.add_child(edit)
 	window.add_child(EventSheetPopupUI.margined(box))
 	var commit: Callable = func() -> void:
+		# Confirming without changing anything must not stamp the verb "renamed by you" -
+		# that badge is a claim about the user's intent, and an unchanged field states none.
+		if edit.text == seed_value:
+			window.queue_free()
+			return
 		EventSheetVocabularyCatalog.set_override(definition.provider_id, definition.id, {field: edit.text})
 		_refresh_tree()
 		if _info_label != null:
-			_info_label.text = "Updated %s - delete eventsheet_vocabulary.tres to undo every override." % definition.display_name
+			_info_label.text = "Updated %s - right-click it again to reset, or delete eventsheet_vocabulary.tres to undo every override." % definition.display_name
 		window.queue_free()
 	window.confirmed.connect(commit)
 	edit.text_submitted.connect(func(_text: String) -> void: commit.call(); window.hide())

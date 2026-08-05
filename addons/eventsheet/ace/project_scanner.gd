@@ -49,6 +49,12 @@ static func list_project_classes() -> Array:
 			continue
 		if not is_scene_class(str(class_info.get("base", "")), bases):
 			continue
+		# A script that already carries `@ace_*` annotations publishes through the provider
+		# system with the author's OWN names, kinds and hidden marks. Reflecting it again here
+		# would list every public member a second time and quietly defeat `@ace_hidden`, so
+		# annotated scripts belong to their annotations, not to this scan.
+		if is_annotated_provider(path):
+			continue
 		by_path[path] = {"name": declared, "path": path, "kind": "class", "autoload": ""}
 	# Autoloads win over the plain-class entry for the same script: a singleton emits
 	# `Name.member()` with no target param, which is a different (and better) shape.
@@ -57,7 +63,14 @@ static func list_project_classes() -> Array:
 	for extra_path: String in _extra_script_paths():
 		if by_path.has(extra_path) or not is_project_script_path(extra_path):
 			continue
+		# Opting a folder in is an explicit statement of intent, so this path deliberately
+		# skips BOTH automatic filters: the Node-derived rule, and the requirement for a
+		# declared class_name. The latter is the whole stated purpose of the setting - a
+		# class_name-less script falls back to its PascalCase file name, the same identity
+		# the provider system already assigns such scripts.
 		var extra_name: String = class_name_for_path(extra_path)
+		if extra_name.is_empty():
+			extra_name = extra_path.get_file().get_basename().to_pascal_case()
 		if is_publishable_class_name(extra_name):
 			by_path[extra_path] = {"name": extra_name, "path": extra_path, "kind": "class", "autoload": ""}
 	var out: Array = []
@@ -87,6 +100,19 @@ static func list_autoloads() -> Array:
 			"path": path, "kind": "autoload", "autoload": singleton})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return str(a["name"]) < str(b["name"]))
 	return out
+
+
+## True when a script publishes its own vocabulary through `## @ace_*` annotations. Anchored
+## on the annotation FORM (a `##` line whose first token is an @ace_ directive) so a passing
+## mention in prose does not count.
+static func is_annotated_provider(path: String) -> bool:
+	if not ResourceLoader.exists(path):
+		return false
+	for line: String in FileAccess.get_file_as_string(path).split("\n"):
+		var stripped: String = line.strip_edges()
+		if stripped.begins_with("##") and stripped.trim_prefix("##").strip_edges().begins_with("@ace_"):
+			return true
+	return false
 
 
 ## class_name -> its declared base, for resolving a custom base chain to an engine class.

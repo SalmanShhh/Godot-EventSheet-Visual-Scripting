@@ -103,7 +103,10 @@ static func find_ace(provider_id: String, ace_id: String) -> ACEDefinition:
 ## classify by return type, signals become triggers, editor properties become Set/Get
 ## pairs. Session-cached shared instances; treat the definitions as IMMUTABLE.
 static func class_vocabulary(target_class: String) -> Array[ACEDefinition]:
-	return EventSheetClassDBSource.definitions_for_class(target_class)
+	# A COPY of the session cache's array: the definitions themselves are shared and
+	# immutable by contract, but handing out the backing array let a caller's append or
+	# clear corrupt the cache for every other consumer.
+	return EventSheetClassDBSource.definitions_for_class(target_class).duplicate()
 
 
 ## The classes THIS project publishes (global `class_name` scripts + autoloads) as scan
@@ -141,16 +144,35 @@ static func exclude_class(class_id: String, excluded: bool = true) -> void:
 ## that silently does nothing.
 ##
 ## Returns curate_provider's result ({ok, reason, changed, skipped, backup}), plus "baked":
-## how many overrides were translated.
+## how many overrides were actually WRITTEN into the file.
+##
+## Only the members the writer could anchor are cleared from the catalog. The writer reports
+## a member it could not find in `skipped` while still returning ok (a partial write is not a
+## failure), so clearing the whole class on ok would DESTROY curation that never reached the
+## file - and with the wrong script_path, every edit skips, the source is unchanged, the
+## write short-circuits as "Already up to date", and the entire class's overrides would go
+## with no backup taken. Data loss on a success path is the worst failure this feature could
+## have, so the clear is per-member and driven by what the writer confirms it wrote.
 static func bake_overrides(script_path: String, class_id: String) -> Dictionary:
 	var edits: Array = EventSheetVocabularyCatalog.bake_edits_for(class_id)
 	if edits.is_empty():
 		return {"ok": true, "reason": "Nothing to bake - this class has no overrides.", "baked": 0,
 			"changed": 0, "skipped": [], "backup": ""}
 	var result: Dictionary = curate_provider(script_path, edits)
-	result["baked"] = edits.size() if bool(result.get("ok", false)) else 0
-	if bool(result.get("ok", false)):
-		EventSheetVocabularyCatalog.clear_class_overrides(class_id)
+	if not bool(result.get("ok", false)):
+		result["baked"] = 0
+		return result
+	var skipped: Array = result.get("skipped", [])
+	var written: Array = []
+	for edit: Variant in edits:
+		if not skipped.has(str((edit as Dictionary).get("member", ""))):
+			written.append(edit)
+	result["baked"] = written.size()
+	EventSheetVocabularyCatalog.clear_baked_overrides(class_id, written)
+	if written.is_empty():
+		result["reason"] = "Nothing was written: none of those members were found in %s, so every override was kept." % script_path.get_file()
+	elif not skipped.is_empty():
+		result["reason"] = "Baked %d; kept %d whose member was not found in the script." % [written.size(), skipped.size()]
 	return result
 
 
