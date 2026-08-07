@@ -48,6 +48,12 @@ static func run() -> bool:
 		ViewportRowBuilder.function_body_info("func stub() -> void:").is_empty(), true) and ok
 	ok = _check("a non-func block is not a function row",
 		ViewportRowBuilder.function_body_info("health += 5\nqueue_free()").is_empty(), true) and ok
+	# A static helper is a function too. Tool and utility scripts are largely static, so while the
+	# prefix was unrecognized those files rendered as walls of code next to tidy non-static rows.
+	var shared: Dictionary = ViewportRowBuilder.function_body_info("static func shared(id: String) -> Array[Dictionary]:\n\treturn []")
+	ok = _check("a static func is a function row", str(shared.get("name", "")), "shared") and ok
+	ok = _check("its typed-collection return is recorded", str(shared.get("return_type", "")), "Array[Dictionary]") and ok
+	ok = _check("its params are captured", str(shared.get("params", "")), "id: String") and ok
 
 	# ── is_comment_only_block + strip_comment_prefix: a pure-comment block reads as a clean note (no
 	# "setup"/code badge, no leading #), while any real code keeps the GDScript block treatment. ──

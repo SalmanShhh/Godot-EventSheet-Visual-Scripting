@@ -1182,8 +1182,11 @@ static func function_body_info(code: String) -> Dictionary:
 			break
 	if header_index < 0:
 		return {}
+	# `static func` reads as a function too. Without the optional prefix every static helper in a
+	# hand-written file - and tool/utility scripts are mostly static - rendered as a raw GDScript
+	# wall while its non-static neighbour beside it rendered as a tidy row.
 	var header_regex: RegEx = RegEx.new()
-	if header_regex.compile("^func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?: -> (.+))?:$") != OK:
+	if header_regex.compile("^(?:static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\)(?: -> (.+))?:$") != OK:
 		return {}
 	var header_match: RegExMatch = header_regex.search(lines[header_index])
 	if header_match == null:
