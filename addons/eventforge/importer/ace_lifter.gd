@@ -108,13 +108,21 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	for index in range(first_run_index, sheet.events.size()):
 		var row: RawCodeRow = sheet.events[index] as RawCodeRow
 		var failed: bool = false
-		match _run_row_kind(row.code, lift_functions):
+		var row_kind: String = _run_row_kind(row.code, lift_functions)
+		match row_kind:
 			"blank":
 				# N blank lines import as a joined "\n"*(N-1) block, so size() == N. Stamped onto the next
 				# lifted function's first event below; the compiler re-emits it on the external path.
 				pending_blank_count = row.code.split("\n").size()
 				continue  # separator; emission re-adds it
 			"annotations":
+				# The gap before a DOCUMENTED function lives here, not in a "blank" row: the import
+				# groups contiguous non-func lines, so the separating blanks and the `##` block arrive
+				# as one row. Its leading blanks are therefore this function's gap and must ride
+				# through - without this the count was dropped and emission re-added a single blank,
+				# so every style-guide file (two blanks between top-level functions) failed the
+				# byte-verify and reverted to raw blocks, one line short per documented function.
+				pending_blank_count = _leading_blank_count(row.code)
 				pending_annotations = _parse_annotations(row.code)
 				pending_annotation_lines = _collect_gd_annotation_lines(row.code)
 				pending_doc_comment = _collect_doc_comment_text(row.code)
@@ -189,8 +197,10 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			saw_function = false
 			anchor_index = index + 1
 		# A blank separator's count was just consumed by (or is irrelevant to) this non-blank row - clear it
-		# so it never leaks onto a later function. The "blank" branch continues past here, keeping its count.
-		pending_blank_count = 0
+		# so it never leaks onto a later function. The "blank" branch continues past here, keeping its
+		# count, and an "annotations" row carries the gap it owns forward to the function it documents.
+		if row_kind != "annotations":
+			pending_blank_count = 0
 	var trailing_lifted: bool = saw_function and not (lifted_events.is_empty() and lifted_functions.is_empty())
 	var backup: Array[Resource] = sheet.events.duplicate()
 	var functions_backup: Array[Resource] = sheet.functions.duplicate()
@@ -302,6 +312,16 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	if boundary != null:
 		boundary.code = boundary_code
 	return _retry_or_fail(sheet, source, lift_functions)
+
+
+## How many blank lines a row opens with - the inter-function gap an annotation row carries.
+static func _leading_blank_count(code: String) -> int:
+	var count: int = 0
+	for line: String in code.split("\n"):
+		if not line.strip_edges().is_empty():
+			break
+		count += 1
+	return count
 
 
 ## Godot engine virtual callbacks by header name - excluded from the mid-file anchor lift (they
@@ -919,7 +939,13 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 	var unannotated: bool = annotations.is_empty()
 	var header_regex: RegEx = RegEx.new()
 	# Optional non-emitting `(static )?` prefix (group 1) shifts the name/args/return captures to 2/3/4.
-	header_regex.compile("^(static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> ([A-Za-z_][A-Za-z0-9_]*):$")
+	# The return capture admits a TYPED COLLECTION (`Array[Dictionary]`, `Dictionary[String, int]`,
+	# nested forms) as well as a bare name. Those are ordinary modern GDScript, and while the regex
+	# refused them the header matched nothing at all: the helper stayed a block AND, because a
+	# failure re-anchors the trailing run, it took every function above it down with it. Such a
+	# return is not a Variant.Type, so it resolves through the verbatim return_type_name branch
+	# below - which means only the individually byte-gated anchor path claims it.
+	header_regex.compile("^(static )?func ([A-Za-z_][A-Za-z0-9_]*)\\((.*)\\) -> ([A-Za-z_][A-Za-z0-9_]*(?:\\[[A-Za-z_][A-Za-z0-9_, \\[\\]]*\\])?):$")
 	var header_match: RegExMatch = header_regex.search(function_lines[0])
 	if header_match == null:
 		return {"ok": false}

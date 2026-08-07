@@ -2,6 +2,39 @@
 
 ## [Unreleased]
 
+### Fixed - hand-written GDScript now actually opens as rows
+
+Opening someone else's `.gd` as a sheet was supposed to give you events and functions, with
+verbatim blocks only where no structure could be recovered. Measured over 206 hand-written
+files in this repo, **88.1% of all code lines were landing in verbatim blocks**. Two causes,
+both spelling rather than semantics, and each one able to revert a whole file on its own:
+
+- **The style guide's two blank lines between functions.** The import groups contiguous
+  non-function lines, so the gap before a *documented* function arrives inside that function's
+  `##` block rather than as a blank row of its own - and that row's blank count was dropped.
+  Emission re-added a single blank, the whole-file byte-verify came up exactly one line short
+  per documented function, and the lift reverted **everything** to blocks. Since the official
+  GDScript style guide asks for two blank lines, this hit essentially every hand-written file.
+- **A typed-collection return type.** `func rows() -> Array[Dictionary]:` is ordinary modern
+  GDScript, but the header pattern accepted only a bare identifier there, so it matched
+  nothing at all. Worse, a failed function re-anchors the trailing run, so a single such
+  helper also took every function above it down with it.
+
+Same 206 files, after: raw code lines **21,655 -> 17,440**, lifted functions **167 -> 440**,
+lifted events **585 -> 1,936**. Every byte-exactness gate is unchanged - the lift is still
+all-or-nothing per file and still reverts rather than risk a single altered byte.
+
+### Fixed - opening a file could inject code that was never in it
+
+The compiler declares an owned member for each instance-backed provider it sees called in the
+emitted lines. That scan was purely textual, so a file whose **comments merely discussed the
+convention** was read as calling it: opening such a `.gd` and saving added
+`var __eventsheet_provider_Score := Score.new()` to a hand-written script. That is a rewrite of
+someone's file, which the lossless rule exists to forbid. A use site is now required to be a
+real member access (`__eventsheet_provider_Score.add(...)`, the form every emitter of the
+convention writes, and the one the Project Doctor's matching check already required), and
+comment lines are skipped. All 78 packs still re-emit byte-identically.
+
 ### Added - "this raw call looks like one of your verbs - convert it?"
 
 A row that reached your sheet as a bare **Call Method** - hand-written code you opened as a
