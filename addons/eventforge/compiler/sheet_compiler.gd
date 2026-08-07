@@ -827,11 +827,19 @@ static func _order_stateful_members(members: Array) -> PackedStringArray:
 
 
 static func _insert_provider_member_declarations(lines: PackedStringArray, result: Dictionary) -> void:
+	# A real use-site is always a MEMBER ACCESS - every emitter of this convention writes
+	# `__eventsheet_provider_<Class>.<member>` (the Project Doctor's matching check already
+	# requires the dot). Requiring it here too stops prose from being read as code: an opened
+	# .gd whose COMMENTS merely discuss the convention was having provider declarations
+	# injected into it on save, which silently rewrote a hand-written file - the one thing the
+	# lossless rule forbids. Comment lines are skipped for the same reason.
 	var member_regex: RegEx = RegEx.new()
-	if member_regex.compile("__eventsheet_provider_([A-Za-z_][A-Za-z0-9_]*)") != OK:
+	if member_regex.compile("__eventsheet_provider_([A-Za-z_][A-Za-z0-9_]*)(?=\\.)") != OK:
 		return
 	var providers: Dictionary = {}  # member name -> class name, deduped
 	for line: String in lines:
+		if line.strip_edges().begins_with("#"):
+			continue
 		for regex_match: RegExMatch in member_regex.search_all(line):
 			providers[regex_match.get_string(0)] = regex_match.get_string(1)
 	if providers.is_empty():
