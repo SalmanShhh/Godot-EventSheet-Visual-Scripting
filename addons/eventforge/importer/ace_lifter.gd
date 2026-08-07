@@ -990,8 +990,10 @@ static func _lift_sheet_function(function_lines: PackedStringArray, annotations:
 			param.id = argument_text
 			# An untyped parameter must STAY untyped: ACEParam defaults type_name to "String", which
 			# would re-emit `final_value: String` for a source `final_value` and fail the byte-verify.
-			# "Variant" is the emitter's render-bare sentinel, so the header round-trips exactly.
-			param.type_name = "Variant"
+			# EMPTY is the emitter's render-bare sentinel, so the header round-trips exactly. It is
+			# deliberately not "Variant": that is a type a parameter can actually be annotated with,
+			# and using it to mean "no annotation" made the two forms impossible to tell apart.
+			param.type_name = ""
 		event_function.params.append(param)
 	event_function.expose_as_ace = bool(annotations.get("expose", false))
 	event_function.ace_display_name = str(annotations.get("name", ""))

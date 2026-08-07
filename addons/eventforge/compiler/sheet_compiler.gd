@@ -1995,8 +1995,12 @@ static func _emit_function_params(event_function: EventFunction) -> String:
 			var param_id: String = param.id if not param.id.is_empty() else param.name
 			if param_id.is_empty():
 				continue
+			# An EMPTY type is the bare-parameter sentinel; a named one always renders, "Variant"
+			# included. Treating "Variant" as bare made an explicit `row: Variant` annotation
+			# indistinguishable from no annotation, so a lifted helper re-emitted `row` and failed
+			# the whole-file byte-verify - taking every other function in that file down with it.
 			var type_name: String = param.type_name
-			var rendered: String = param_id if (type_name.is_empty() or type_name == "Variant") else "%s: %s" % [param_id, type_name]
+			var rendered: String = param_id if type_name.is_empty() else "%s: %s" % [param_id, type_name]
 			# Optional GDScript default argument (`amount: int = 5`) - a dedicated field, NOT the picker
 			# pre-fill default_value. GDScript requires defaulted params to be trailing; the function
 			# dialog enforces that on author.

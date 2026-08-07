@@ -81,6 +81,15 @@ func halved(value: float) -> float:
 	return value * 0.5
 """
 
+## An explicitly `: Variant`-annotated parameter beside ordinary typed and untyped ones. "Variant"
+## used to double as the emitter's render-bare sentinel, so this header re-emitted `row` and the
+## whole file reverted - one such helper cost every function in the file.
+const VARIANT_PARAM_SOURCE := """extends Node
+
+static func collect(row: Variant, organs: Dictionary, bare) -> void:
+	print(row, organs, bare)
+"""
+
 ## A file whose COMMENTS discuss the instance-backed provider convention. The compiler declares
 ## a provider member for every such reference it finds in the emitted lines, and it used to read
 ## these comments as real call sites - so merely opening this file and saving it injected two
@@ -143,6 +152,17 @@ static func run() -> bool:
 		str(SheetCompiler.compile(typed_sheet, "user://style_lift_typed.gd").get("output", "")),
 		TYPED_RETURN_SOURCE) and all_passed
 
+	# ── An explicit `: Variant` annotation is not the same as no annotation ──
+	var variant_sheet: EventSheetResource = importer.import_external_source(VARIANT_PARAM_SOURCE)
+	variant_sheet.external_source_path = "user://style_lift_variant.gd"
+	all_passed = _check("a helper with a Variant-annotated param lifts",
+		_function_names(variant_sheet), ["collect"]) and all_passed
+	all_passed = _check("the annotated param keeps its type, the bare one stays bare",
+		_param_types_of(variant_sheet, "collect"), ["Variant", "Dictionary", ""]) and all_passed
+	all_passed = _check("the Variant-param file reproduces byte-identically",
+		str(SheetCompiler.compile(variant_sheet, "user://style_lift_variant.gd").get("output", "")),
+		VARIANT_PARAM_SOURCE) and all_passed
+
 	# ── Prose about the provider convention must not be compiled as a call site ──
 	var prose_sheet: EventSheetResource = importer.import_external_source(PROVIDER_PROSE_SOURCE)
 	prose_sheet.external_source_path = "user://style_lift_prose.gd"
@@ -163,6 +183,17 @@ static func _function_names(sheet: EventSheetResource) -> Array:
 			names.append((entry as EventFunction).function_name)
 	names.sort()
 	return names
+
+
+## Each parameter's declared type in order, "" for one that carries no annotation at all.
+static func _param_types_of(sheet: EventSheetResource, function_name: String) -> Array:
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction and (entry as EventFunction).function_name == function_name:
+			var types: Array = []
+			for param: ACEParam in (entry as EventFunction).params:
+				types.append(param.type_name)
+			return types
+	return ["<no such function>"]
 
 
 static func _doc_comment_of(sheet: EventSheetResource, function_name: String) -> String:

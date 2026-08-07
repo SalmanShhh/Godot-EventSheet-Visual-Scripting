@@ -20,9 +20,23 @@ both spelling rather than semantics, and each one able to revert a whole file on
   nothing at all. Worse, a failed function re-anchors the trailing run, so a single such
   helper also took every function above it down with it.
 
-Same 206 files, after: raw code lines **21,655 -> 17,440**, lifted functions **167 -> 440**,
-lifted events **585 -> 1,936**. Every byte-exactness gate is unchanged - the lift is still
-all-or-nothing per file and still reverts rather than risk a single altered byte.
+A third cause was worth more than both: **an explicit `: Variant` parameter annotation.**
+`Variant` doubled as the emitter's sentinel for "this parameter has no annotation, render it
+bare", so `func collect(row: Variant, ...)` re-emitted as `func collect(row, ...)`. Since the
+lift is all-or-nothing per file, ONE such helper reverted every function in its file - which is
+why so many perfectly liftable functions were still arriving as code. An empty type is now the
+bare sentinel, and a named type always renders, `Variant` included.
+
+Measured over the same corpus, cumulatively: raw code lines **88.1% -> 42.3%**, lifted
+functions **167 -> 813**, lifted events **585 -> 3,554**, with byte-exactness at **207/207**
+files. Every gate is unchanged - the lift is still all-or-nothing per file and still reverts
+rather than risk a single altered byte.
+
+Finally, a `static func` that could not be lifted now renders as a collapsed `ƒ name(...)`
+function row rather than a wall of code. The row renderer recognized only `func`, so in
+tool-style scripts (which are mostly static) a static helper looked like raw GDScript sitting
+beside its non-static neighbour rendered as a tidy row. Nothing about the underlying row
+changes - it is a view, so editing and the byte round-trip are untouched.
 
 ### Fixed - opening a file could inject code that was never in it
 
