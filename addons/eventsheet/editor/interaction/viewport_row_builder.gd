@@ -1186,6 +1186,33 @@ static func _string_interior_mask(lines: PackedStringArray) -> PackedInt32Array:
 ## the ordinary action chrome the rows around it use, rather than the GDScript code-cell
 ## treatment that exists for a wall of several statements. The row itself is unchanged, so the
 ## byte round-trip is untouched and double-click still opens the code editor.
+## The net change in bracket depth a line makes, ignoring anything inside a string literal or
+## after a `#` comment. A statement CONTINUES while brackets are open, so a wrapped call spanning
+## several lines is one statement and reads as one row.
+static func _bracket_delta(line: String) -> int:
+	var depth: int = 0
+	var quote: String = ""
+	var index: int = 0
+	while index < line.length():
+		var character: String = line[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "#":
+			break
+		elif character == "(" or character == "[" or character == "{":
+			depth += 1
+		elif character == ")" or character == "]" or character == "}":
+			depth -= 1
+		index += 1
+	return depth
+
+
 static func is_single_statement(code: String) -> bool:
 	var lines: PackedStringArray = code.split("\n")
 	# The row's OWN shallowest indent is the statement level: a row collected from inside an
@@ -1202,9 +1229,13 @@ static func is_single_statement(code: String) -> bool:
 		return false
 	var interior: PackedInt32Array = _string_interior_mask(lines)
 	var seen_statement: bool = false
+	var open_brackets: int = 0
 	for line_index: int in lines.size():
 		var line: String = lines[line_index]
-		if line.strip_edges().is_empty() or interior[line_index] == 1:
+		var was_open: int = open_brackets
+		if interior[line_index] == 0:
+			open_brackets = maxi(open_brackets + _bracket_delta(line), 0)
+		if line.strip_edges().is_empty() or interior[line_index] == 1 or was_open > 0:
 			continue
 		if line.length() - line.lstrip("\t ").length() > base_indent:
 			continue  # a continuation of the statement above it

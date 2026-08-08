@@ -1400,6 +1400,19 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				index = literal_end + 1
 				chain_open = false
 				continue
+			# A line whose BRACKETS are still open does not end here - the rest of the call or collection
+			# is on the lines below it. Matching an ACE on the opening line alone consumed it and left the
+			# continuation stranded, so the run that followed began mid-expression with a lone `)` as its
+			# shallowest line - which then made the real statements around it look like continuations of
+			# nothing. Take the whole bracketed run as one statement instead.
+			var bracket_end: int = _bracket_run_close(lines, index)
+			if bracket_end > index:
+				for bracket_index: int in range(index, bracket_end + 1):
+					pending_raw.append(lines[bracket_index].substr(depth))
+				_flush_raw(current, pending_raw, blank_box)
+				index = bracket_end + 1
+				chain_open = false
+				continue
 			_consume_action_line(current, rest, 0, pending_raw, reverse_entries, in_loop, blank_box)
 		else:
 			# A DEEPER line lives inside an unlifted control block above it. Template-matching it
@@ -1464,9 +1477,7 @@ static func _structure_match_cases(branch_lines: PackedStringArray) -> Array[Mat
 static func _finish_match_case(match_case: MatchCase, body: PackedStringArray) -> void:
 	if body.is_empty():
 		return
-	var raw: RawCodeRow = RawCodeRow.new()
-	raw.code = "\n".join(body)
-	match_case.events = [raw]
+	match_case.events = _statement_rows(body)
 
 
 ## Rebuilds the dedented branch-line text from structured cases (the inverse of _structure_match_cases): each
@@ -1567,9 +1578,8 @@ static func _inline_async_events(lift_events: Array, handler_header: String, asy
 				emitted_inline = true
 				inlined_async_uids[call_match.get_string(1)] = true
 			if not pending_lines.is_empty():
-				var residue: RawCodeRow = RawCodeRow.new()
-				residue.code = "\n".join(pending_lines)
-				rebuilt_actions.append(residue)
+				for residue: RawCodeRow in _statement_rows(pending_lines):
+					rebuilt_actions.append(residue)
 		if not emitted_inline:
 			out.append(event_entry)
 		elif not rebuilt_actions.is_empty():
@@ -1584,9 +1594,8 @@ static func _collector_like(like: EventRow, actions: Array, extra_lines: PackedS
 	for action_item: Variant in actions:
 		collector.actions.append(action_item)
 	if not extra_lines.is_empty():
-		var raw: RawCodeRow = RawCodeRow.new()
-		raw.code = "\n".join(extra_lines)
-		collector.actions.append(raw)
+		for extra_row: RawCodeRow in _statement_rows(extra_lines):
+			collector.actions.append(extra_row)
 	return collector
 
 
@@ -1763,6 +1772,20 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 	return true
 
 
+## The index of the line on which a bracketed run STARTING at `start` closes, or -1 when the line
+## is already balanced. Mirrors GDScript: a statement continues while `(`/`[`/`{` are open, so the
+## whole run is one statement and must be kept together.
+static func _bracket_run_close(lines: PackedStringArray, start: int) -> int:
+	var depth: int = _bracket_delta(lines[start])
+	if depth <= 0:
+		return -1
+	for scan: int in range(start + 1, lines.size()):
+		depth += _bracket_delta(lines[scan])
+		if depth <= 0:
+			return scan
+	return -1
+
+
 ## The index of the line closing a multi-line collection literal that STARTS at `start` inside a
 ## function body at `depth`, or -1 when none does. Mirrors the top-level rule: the head sits at
 ## the body depth and ends on `{` or `[` (a bare `(` is a wrapped call), the lines between are
@@ -1896,6 +1919,50 @@ static func _string_interior_mask(lines: PackedStringArray) -> PackedInt32Array:
 	return mask
 
 
+## One verbatim row PER STATEMENT for a run of lines. Every place that parks unmatched code on an
+## event goes through this, so a match-case body, an inlined-async residue and an ordinary run all
+## produce the same thing: rows, not a wall. Byte-neutral - the rows re-emit by appending their
+## lines in order, so the run reproduces exactly.
+static func _statement_rows(run: PackedStringArray) -> Array[RawCodeRow]:
+	var rows: Array[RawCodeRow] = []
+	for piece: PackedStringArray in _split_statements(run):
+		var row: RawCodeRow = RawCodeRow.new()
+		row.code = "
+".join(piece)
+		row.lift_note = "no matching ACE template"
+		rows.append(row)
+	return rows
+
+
+## The net change in bracket depth a line makes, ignoring anything inside a string literal or
+## after a `#` comment. A statement CONTINUES while brackets are open, so a wrapped call or a
+## multi-line collection is one statement however many lines it spans - without this a split
+## lands inside the brackets and leaves rows holding a fragment of one expression, with its
+## closing bracket stranded on a row of its own.
+static func _bracket_delta(line: String) -> int:
+	var depth: int = 0
+	var quote: String = ""
+	var index: int = 0
+	while index < line.length():
+		var character: String = line[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "#":
+			break
+		elif character == "(" or character == "[" or character == "{":
+			depth += 1
+		elif character == ")" or character == "]" or character == "}":
+			depth -= 1
+		index += 1
+	return depth
+
+
 ## Splits a run of verbatim body lines into ONE PIECE PER STATEMENT. The run's own shallowest
 ## indent is the statement level - not column 0 - because a run collected from inside an unlifted
 ## `if` or `for` is entirely indented, and measuring from column 0 would see no statements there
@@ -1915,15 +1982,18 @@ static func _split_statements(pending_raw: PackedStringArray) -> Array[PackedStr
 		return [pending_raw]
 	var pieces: Array[PackedStringArray] = []
 	var current: PackedStringArray = PackedStringArray()
+	var open_brackets: int = 0
 	for line_index: int in pending_raw.size():
 		var line: String = pending_raw[line_index]
 		var line_indent: int = line.length() - line.lstrip("\t ").length()
-		var at_statement_level: bool = line_indent == base_indent and interior[line_index] == 0
+		var at_statement_level: bool = line_indent == base_indent and interior[line_index] == 0 and open_brackets == 0
 		var starts_statement: bool = not line.strip_edges().is_empty() and at_statement_level
 		if starts_statement and not current.is_empty():
 			pieces.append(current)
 			current = PackedStringArray()
 		current.append(line)
+		if interior[line_index] == 0:
+			open_brackets = maxi(open_brackets + _bracket_delta(line), 0)
 	if not current.is_empty():
 		pieces.append(current)
 	return pieces

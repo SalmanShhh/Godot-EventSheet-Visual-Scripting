@@ -53,23 +53,24 @@ const FUNCTION_FLOOR: int = 70
 ## for the `: Variant` bug), while the tolerance keeps one awkward new helper from breaking a build.
 const RAW_FUNCTION_ROW_CEILING: int = 2
 
-## ...and almost nothing should still LOOK like code. Across these files 1733 non-blank lines
-## produce SIX that reach the plain GDScript-block rendering (0.3%) - everything else arrives as a
-## function, an event, an action, a note, a declaration or the folded Class setup strip.
+## ...and NOTHING should still look like a wall of code. Across these files not one of 1733
+## non-blank lines reaches the plain GDScript-block rendering: every one arrives as a function, an
+## event, an action, a note, a declaration or the folded Class setup strip. Over the wider sweep of
+## 208 hand-written files the figure is 13 lines in 26403 (0.05%).
 ##
 ## What legitimately remains is code with no structured equivalent: an arbitrary call, an
 ## assignment, the interior of a multi-line string. Those are honest GDScript and are meant to
 ## stay that way.
 ##
 ## The ceiling was SET BY EXPERIMENT, not taste: switching off the collapsed-function view takes
-## switching off the one-statement-one-action rendering takes this from 6 to well past the
-## ceiling, and an early version of this gate sat at 60 - loose enough to watch a real regression
-## walk past. Headroom is fine; a ceiling that nothing can ever reach is decoration. Note also that not every
+## switching off the one-statement-one-action rendering takes this straight past the ceiling, and
+## an early version of this gate sat at 60 - loose enough to watch a real regression walk by.
+## Headroom is fine; a ceiling nothing can ever reach is decoration. Note also that not every
 ## regression pushes this number UP - reintroducing the `: Variant` bug reverts whole functions to
 ## raw function blocks, which this metric counts as function rows and so reads as 25. That one is
 ## caught by the raw-function ceiling below; the two assertions cover different failures and both
 ## are needed.
-const BLOCK_LINE_CEILING: int = 20
+const BLOCK_LINE_CEILING: int = 5
 
 
 static func run() -> bool:

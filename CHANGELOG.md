@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Fixed - a statement continues while its brackets are open
+
+The last code walls came from a single upstream mistake: an ACE was matched on the OPENING line
+of a multi-line call, consuming it and stranding the rest. The run that followed therefore began
+mid-expression, with a lone `)` as its shallowest line - and since statement level is measured
+from a run's shallowest line, the real statements around it were then read as continuations of
+nothing and merged back into one block. Three separate downstream fixes failed to move the figure
+at all, because the damage was already done before they ran.
+
+A line whose brackets are still open is now taken with the rest of its expression, as one
+statement. A collection literal is still split per entry, since its entries are things you want to
+read and reorder - so that rule is checked first and a wrapped call takes the new path.
+
+Measured over 208 hand-written files, lines still reaching the plain GDScript-block rendering:
+**13 of 26,403 (0.05%)**, from 1.5% before this change and **14.1%** when the work started.
+Byte-exactness stayed at **208/208** throughout, and pack drift at 0. Not one of the gate's 1733
+sample lines renders as a block any more.
+
 ### Fixed - a split must never land inside a class body or a string
 
 Two defects in the splitting above, both of which produced rows that were fragments of something
