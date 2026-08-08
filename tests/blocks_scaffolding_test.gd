@@ -22,6 +22,15 @@ static func run() -> bool:
 	all_passed = _check("the host-binding _enter_tree is scaffolding",
 		EventSheetViewport.is_scaffolding_code("func _enter_tree() -> void:\n\thost = get_parent() as CharacterBody2D"), true) and all_passed
 	all_passed = _check("a blank separator is scaffolding", EventSheetViewport.is_scaffolding_code("\n  \n"), true) and all_passed
+	# The shape a hand-written script actually opens with: a plain `#` header comment above the
+	# prelude. Only `##` was accepted, so that one line made the whole prelude read as real content
+	# and every such file opened showing a GDScript block instead of the collapsed strip.
+	all_passed = _check("a plain # file header above the prelude is scaffolding",
+		EventSheetViewport.is_scaffolding_code("# EventForge - Variable parser\n#\n# Parses declarations.\n@tool\nclass_name VariableParser\nextends RefCounted"), true) and all_passed
+	all_passed = _check("a lone # note is scaffolding",
+		EventSheetViewport.is_scaffolding_code("# just a note"), true) and all_passed
+	all_passed = _check("a # comment sitting above real logic does NOT make it scaffolding",
+		EventSheetViewport.is_scaffolding_code("# bump the score\nscore += 1"), false) and all_passed
 
 	# ── is_scaffolding_code: real logic is NOT scaffolding (never hidden) ──
 	all_passed = _check("game logic is NOT scaffolding",

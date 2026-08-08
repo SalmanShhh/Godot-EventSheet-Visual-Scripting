@@ -2085,9 +2085,13 @@ static func is_scaffolding_code(code: String) -> bool:
 		var line: String = raw_line.strip_edges()
 		if line.is_empty():
 			continue  # blank separator
-		# Prelude declarations + any doc/annotation comment (`##`, `## @ace_*`).
+		# Prelude declarations + any comment. Plain `#` counts as well as `##`: a hand-written
+		# script almost always opens with a `#` file-header comment, and while only `##` was
+		# accepted that one line made the whole prelude "real content" - so every such file
+		# opened with its header, @tool, class_name and extends showing as a GDScript block
+		# instead of the collapsed Class setup strip. A comment is never logic.
 		if line.begins_with("class_name ") or line.begins_with("extends ") \
-				or line.begins_with("@icon") or line.begins_with("@tool") or line.begins_with("##"):
+				or line.begins_with("@icon") or line.begins_with("@tool") or line.begins_with("#"):
 			continue
 		# The generated host binding (behaviour sheets): `func _enter_tree(): host = get_parent() as X`.
 		if line.begins_with("func _enter_tree") or line.begins_with("host = get_parent"):

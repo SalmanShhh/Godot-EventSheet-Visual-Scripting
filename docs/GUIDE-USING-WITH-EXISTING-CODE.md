@@ -298,6 +298,22 @@ editing it either way. It de-codes function bodies, `if/elif/else`, `for`/`while
 into structured rows - so a `.gd` you already have opens as real events, not an opaque block, and round-trips
 losslessly.
 
+Here is an ordinary hand-written helper from this plugin's own source - nothing was written or reformatted
+for the picture - opened as a sheet:
+
+<img src="images/interop-opened-gd.png" alt="A hand-written GDScript file opened as an event sheet: a collapsed Class setup strip, an Expression verb named Parse with a source parameter and a gives back Dictionary badge, then condition and action rows including a For each raw_line loop with nested sub-events." width="720">
+
+Note what the file became: the header comment, `@tool`, `class_name` and `extends` fold into one **Class
+setup** strip; the function becomes a real verb row with a named parameter and a return badge; and its body
+becomes conditions and actions, including the `for` loop as a condition with its own sub-events. What still
+has no structured equivalent stays an in-flow GDScript block - honest, editable, and byte-for-byte
+unchanged when you save.
+
+Two spelling details used to defeat this on almost every hand-written file, and both are fixed: the two
+blank lines the official style guide puts between functions, and an explicit `: Variant` parameter
+annotation. Either one could revert an entire file to blocks, so if you tried this before and got a wall of
+code, try it again.
+
 ---
 
 ## 8. When to Wrap Existing Code in Your Own ACEs

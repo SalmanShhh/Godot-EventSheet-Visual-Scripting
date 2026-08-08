@@ -32,6 +32,13 @@ functions **167 -> 813**, lifted events **585 -> 3,554**, with byte-exactness at
 files. Every gate is unchanged - the lift is still all-or-nothing per file and still reverts
 rather than risk a single altered byte.
 
+The **Class setup** strip - the fold that hides class boilerplate so an opened file reads as
+logic - also stopped firing on the exact shape a hand-written script has. It accepted `##` doc
+comments but not plain `#` ones, and a `#` file-header comment is how nearly every script
+opens, so that single line made the whole prelude count as real content: the header, `@tool`,
+`class_name` and `extends` all showed as a GDScript block at the top of every file. A comment
+is never logic, so plain `#` now counts too.
+
 Finally, a `static func` that could not be lifted now renders as a collapsed `ƒ name(...)`
 function row rather than a wall of code. The row renderer recognized only `func`, so in
 tool-style scripts (which are mostly static) a static helper looked like raw GDScript sitting
