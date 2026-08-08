@@ -1406,7 +1406,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			# would tear it out as a standalone ACTION that re-emits at the event's depth - one tab
 			# shallower than the source - and fail the byte-verify. Keep it raw, tabs intact. A
 			# pending blank rides the box onto the raw block this line eventually flushes into.
-			pending_raw.append(rest)
+			_append_raw_line(current, pending_raw, blank_box, rest)
 		index += 1
 		chain_open = false
 	_flush_raw(current, pending_raw, blank_box)
@@ -1798,7 +1798,7 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	if matched.is_empty():
 		# No ACE claims it - defer to the raw block. Any pending blank rides along and lands on that
 		# block when it flushes (its position among the raw lines is what needs the spacing).
-		pending_raw.append(line)
+		_append_raw_line(event, pending_raw, blank_box, line)
 		return
 	_flush_raw(event, pending_raw, blank_box)
 	var action: ACEAction = ACEAction.new()
@@ -1807,6 +1807,19 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	action.params = matched.get("params", {})
 	_stamp_body_blanks(action, blank_box)
 	event.actions.append(action)
+
+
+## Appends a verbatim line, closing a pending COMMENT run first when this line does not continue
+## it. Without this a note and the code beneath it accumulate into one block, and a block that is
+## part comment and part code can be neither - which is why most comments in real bodies were
+## still rendering as code even after comment runs learned to lift.
+static func _append_raw_line(event: EventRow, pending_raw: PackedStringArray, blank_box: Array, line: String) -> void:
+	if not pending_raw.is_empty() and not _shared_comment_marker(pending_raw).is_empty():
+		var joined: PackedStringArray = pending_raw.duplicate()
+		joined.append(line)
+		if _shared_comment_marker(joined).is_empty():
+			_flush_raw(event, pending_raw, blank_box)
+	pending_raw.append(line)
 
 
 static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_box: Array = []) -> void:
@@ -1818,13 +1831,18 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 	# `<indent># <text>`, which is byte-identical only for lines starting with exactly "# ";
 	# anything else (a `#comment` with no space, a `##` doc line) stays verbatim rather than risk
 	# the round-trip.
-	if _is_plain_comment_run(pending_raw):
+	var comment_marker: String = _shared_comment_marker(pending_raw)
+	if not comment_marker.is_empty():
 		var note: CommentRow = CommentRow.new()
 		var note_lines: PackedStringArray = PackedStringArray()
 		for comment_line: String in pending_raw:
-			note_lines.append(comment_line.substr(2))
+			note_lines.append(comment_line.substr(comment_marker.length()))
 		note.text = "
 ".join(note_lines)
+		# Recording the marker is what lets an unusual one be claimed at all: emission writes it
+		# back verbatim, so `#no space` and `## doc` reproduce as written instead of gaining or
+		# losing a character. Left empty for the ordinary "# ", which every authored comment uses.
+		note.source_marker = "" if comment_marker == "# " else comment_marker
 		_stamp_body_blanks(note, blank_box)
 		event.actions.append(note)
 		pending_raw.clear()
@@ -1841,15 +1859,29 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 	pending_raw.clear()
 
 
-## True when every line of a run is a plain `# ` comment at the body depth - the only shape a
-## CommentRow can reproduce byte-for-byte (emission always writes back "# " + text).
-static func _is_plain_comment_run(pending_raw: PackedStringArray) -> bool:
+## The comment marker EVERY line of a run shares, or "" when the run is not all comments (or the
+## lines disagree). A run must be uniform, because emission writes one marker before every line -
+## claiming a mixed run would rewrite half of it. `#` with no space, `# `, `## ` and `##` are all
+## reproducible once the marker rides on the row.
+static func _shared_comment_marker(pending_raw: PackedStringArray) -> String:
 	if pending_raw.is_empty():
-		return false
+		return ""
+	var marker: String = ""
 	for line: String in pending_raw:
-		if not line.begins_with("# "):
-			return false
-	return true
+		if not line.begins_with("#"):
+			return ""
+		var line_marker: String = "#"
+		if line.begins_with("## "):
+			line_marker = "## "
+		elif line.begins_with("##"):
+			line_marker = "##"
+		elif line.begins_with("# "):
+			line_marker = "# "
+		if marker.is_empty():
+			marker = line_marker
+		elif marker != line_marker:
+			return ""
+	return marker
 
 
 ## Carries a captured run of author-facing blank lines onto the visible row/action that follows it,

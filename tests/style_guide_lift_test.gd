@@ -131,8 +131,8 @@ func _ready() -> void:
 
 ## A `#` note inside a function body. It becomes a real CommentRow action - the same resource a
 ## comment authored in the sheet uses - so it drags, disables and converts like any other comment
-## instead of being a code block that merely looks like one. A note that emission could not
-## reproduce exactly (no space after the hash) has to stay verbatim instead.
+## instead of being a code block that merely looks like one. An unusual marker (`#` with no space)
+## is claimed too: the row records it, so emission writes it back exactly as it was written.
 const BODY_NOTE_SOURCE := """extends Node
 
 func _ready() -> void:
@@ -248,12 +248,14 @@ static func run() -> bool:
 	all_passed = _check("the body-note file reproduces byte-identically",
 		str(SheetCompiler.compile(note_body, "user://style_lift_body_note.gd").get("output", "")),
 		BODY_NOTE_SOURCE) and all_passed
-	# Emission always writes back "# " + text, so a marker it cannot reproduce must stay verbatim
-	# rather than round-trip with an inserted space.
+	# The marker rides on the row, so a `#no space` note is claimed as a comment too and re-emits
+	# exactly as written instead of gaining a space.
 	var odd_note: EventSheetResource = importer.import_external_source(ODD_NOTE_SOURCE)
 	odd_note.external_source_path = "user://style_lift_odd_note.gd"
-	all_passed = _check("a note emission cannot reproduce stays verbatim",
-		_action_kinds(odd_note), ["RawCodeRow", "ACEAction"]) and all_passed
+	all_passed = _check("an unusual marker is claimed too, and recorded",
+		_action_kinds(odd_note), ["CommentRow", "ACEAction"]) and all_passed
+	all_passed = _check("the marker rides on the row so it re-emits as written",
+		_first_comment_marker(odd_note), "#") and all_passed
 	all_passed = _check("the odd-note file still reproduces byte-identically",
 		str(SheetCompiler.compile(odd_note, "user://style_lift_odd_note.gd").get("output", "")),
 		ODD_NOTE_SOURCE) and all_passed
@@ -301,6 +303,15 @@ static func _action_kinds(sheet: EventSheetResource) -> Array:
 			for action: Variant in (entry as EventRow).actions:
 				kinds.append("CommentRow" if action is CommentRow else ("RawCodeRow" if action is RawCodeRow else "ACEAction"))
 	return kinds
+
+
+static func _first_comment_marker(sheet: EventSheetResource) -> String:
+	for entry: Variant in sheet.events:
+		if entry is EventRow:
+			for action: Variant in (entry as EventRow).actions:
+				if action is CommentRow:
+					return (action as CommentRow).source_marker
+	return "<no comment row>"
 
 
 static func _first_comment_text(sheet: EventSheetResource) -> String:

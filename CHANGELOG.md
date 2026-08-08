@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Fixed - the last shapes that still read as code
+
+Following the block work above, the residue was measured rather than guessed: of every non-blank
+line across 208 hand-written files, **12.0% still reach the plain GDScript-block rendering**, down
+from 14.1%, with byte-exactness at 208/208. Three shapes were closed to get there.
+
+- **A comment now carries its own marker.** `CommentRow` gained a `source_marker`, so a note is
+  re-emitted exactly as it was written. That is what lets an unusual marker be claimed at all:
+  `#no space` and `## doc` lines become real comment rows instead of staying verbatim, where
+  before only the exact `# ` form could be.
+- **A note above code no longer merges with it.** A comment run closes before unrelated code joins
+  it, at both the body and the file level. A block that is part note and part code can be
+  recognised as neither, which is why most comments in real files were still rendering as code
+  even once comment runs could lift. Comment lines in blocks fell from 600 to 103.
+- **A typed default no longer costs a declaration its row.** `@export var max_offset: Vector2 =
+  Vector2(24, 16)` parses to a real Vector2 and re-emits canonically as `Vector2(24.0, 16.0)` - the
+  same value, different bytes - so the whole declaration stayed a block. It now falls back to
+  keeping the source text as a bare expression, the treatment `Vector2.ZERO` already had. Arrays
+  and dictionaries deliberately do NOT take this path: kept as text they would lose the structured
+  collection editor, which is a worse row than a code block.
+
+The hand-written gate now pins this directly: **almost nothing may still render as a block**. The
+ceiling was set by experiment - switching off the collapsed-function view moves the figure from 34
+to 55, so the obvious ceiling of 60 would have watched that regression go past.
+
 ### Added - comments read as notes, and data tables collapse to one row
 
 Two kinds of block are no longer rendered as code, because neither one is logic.

@@ -1543,8 +1543,11 @@ static func _emit_event_body(
 				if action_comment.enabled and not action_comment.text.strip_edges().is_empty():
 					_emit_leading_body_blanks(action_comment, lines)
 					var action_comment_start: int = lines.size() + 1
+					# The marker is whatever the source used, so a `#no space` note re-emits as written rather
+					# than gaining a space. Authored comments carry none and get the ordinary "# ".
+					var comment_marker: String = action_comment.emit_marker()
 					for comment_line: String in action_comment.text.split("\n"):
-						lines.append("%s# %s" % [body_indent, comment_line])
+						lines.append("%s%s%s" % [body_indent, comment_marker, comment_line])
 					had_body = true
 					source_map.append({"uid": str(action_comment.get_instance_id()), "start": action_comment_start, "end": lines.size(), "kind": "comment"})
 			elif action_item is Resource and action_item.has_method("get_row_kind"):

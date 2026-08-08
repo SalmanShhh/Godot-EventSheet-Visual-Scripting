@@ -53,11 +53,29 @@ const FUNCTION_FLOOR: int = 70
 ## for the `: Variant` bug), while the tolerance keeps one awkward new helper from breaking a build.
 const RAW_FUNCTION_ROW_CEILING: int = 2
 
+## ...and almost nothing should still LOOK like code. Across these files 1733 non-blank lines
+## produce 34 that reach the plain GDScript-block rendering (2.0%) - everything else arrives as a
+## function, an event, an action, a note, a declaration or the folded Class setup strip.
+##
+## What legitimately remains is code with no structured equivalent: an arbitrary call, an
+## assignment, the interior of a multi-line string. Those are honest GDScript and are meant to
+## stay that way.
+##
+## The ceiling was SET BY EXPERIMENT, not taste: switching off the collapsed-function view takes
+## this from 34 to 55, so a ceiling of 60 would have watched that regression go by. 45 catches it
+## and still leaves a third more headroom than the current figure needs. Note also that not every
+## regression pushes this number UP - reintroducing the `: Variant` bug reverts whole functions to
+## raw function blocks, which this metric counts as function rows and so reads as 25. That one is
+## caught by the raw-function ceiling below; the two assertions cover different failures and both
+## are needed.
+const BLOCK_LINE_CEILING: int = 45
+
 
 static func run() -> bool:
 	var all_passed: bool = true
 	var total_functions: int = 0
 	var raw_function_rows: int = 0
+	var block_lines: int = 0
 	var missing: PackedStringArray = PackedStringArray()
 	var drifted: PackedStringArray = PackedStringArray()
 	for path: String in SAMPLES:
@@ -74,6 +92,10 @@ static func run() -> bool:
 			if item is RawCodeRow and ((item as RawCodeRow).code.begins_with("func ") \
 					or (item as RawCodeRow).code.begins_with("static func ")):
 				raw_function_rows += 1
+		block_lines += _block_line_count(sheet.events, true)
+		for function_entry: Variant in sheet.functions:
+			if function_entry is EventFunction:
+				block_lines += _block_line_count((function_entry as EventFunction).events, false)
 		if str(SheetCompiler.compile(sheet, "user://_handwritten_lift_gate.gd").get("output", "")) != source:
 			drifted.append(path)
 	# A renamed or deleted sample would make every count below pass vacuously.
@@ -82,10 +104,55 @@ static func run() -> bool:
 		drifted, PackedStringArray()) and all_passed
 	all_passed = _check("hand-written functions come back as functions (floor %d, have %d)"
 		% [FUNCTION_FLOOR, total_functions], total_functions >= FUNCTION_FLOOR, true) and all_passed
+	# The shape of the whole thing: how much of these files still READS as code rather than rows.
+	all_passed = _check("almost nothing still renders as a GDScript block (ceiling %d, have %d)"
+		% [BLOCK_LINE_CEILING, block_lines], block_lines <= BLOCK_LINE_CEILING, true) and all_passed
 	all_passed = _check("almost no function is left as a raw block (ceiling %d, have %d)"
 		% [RAW_FUNCTION_ROW_CEILING, raw_function_rows],
 		raw_function_rows <= RAW_FUNCTION_ROW_CEILING, true) and all_passed
 	return all_passed
+
+
+## Lines that reach the plain GDScript-block rendering - everything the canvas has no structured
+## view for. Mirrors the renderer's own dispatch order, so it measures what a reader actually sees
+## rather than how the rows happen to be stored.
+static func _block_line_count(items: Array, top_level: bool) -> int:
+	var total: int = 0
+	for item: Variant in items:
+		if item is RawCodeRow:
+			if not _renders_as_block(item as RawCodeRow, top_level):
+				continue
+			for line: String in (item as RawCodeRow).code.split("
+"):
+				if not line.strip_edges().is_empty():
+					total += 1
+		elif item is EventRow:
+			total += _block_line_count((item as EventRow).actions, false)
+			total += _block_line_count((item as EventRow).sub_events, false)
+		elif item is EventFunction:
+			total += _block_line_count((item as EventFunction).events, false)
+		elif item is EventGroup:
+			total += _block_line_count((item as EventGroup).events, top_level)
+	return total
+
+
+## True when a verbatim row falls through every structured view the canvas offers it.
+static func _renders_as_block(raw: RawCodeRow, top_level: bool) -> bool:
+	var code_lines: PackedStringArray = raw.code.split("
+")
+	if ViewportRowBuilder.is_comment_only_block(code_lines) or ViewportRowBuilder.is_blank_block(code_lines):
+		return false
+	if ViewportRowBuilder.is_literal_part(raw.code):
+		return false
+	if not ViewportRowBuilder.data_literal_info(raw.code).is_empty():
+		return false
+	if not ViewportRowBuilder.function_body_info(raw.code).is_empty():
+		return false
+	if not ViewportRowBuilder.define_shell_info(raw.code).is_empty():
+		return false
+	if top_level and EventSheetViewport.is_scaffolding_code(raw.code):
+		return false
+	return true
 
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:

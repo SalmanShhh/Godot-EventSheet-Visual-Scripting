@@ -387,7 +387,24 @@ func _try_lift_variable(line: String) -> LocalVariable:
 			and line.contains("= %s" % str(lifted.default_value)) and not line.contains("\"%s\"" % str(lifted.default_value)):
 		lifted.expression_default = true
 	if SheetCompiler._emit_tree_variable_line(lifted) != line:
-		return null
+		# A typed default the parser turned into a real VALUE (`Vector2(24, 16)` becomes a Vector2)
+		# re-emits in canonical form (`Vector2(24.0, 16.0)`) - the same value, different bytes, so the
+		# whole declaration used to stay a code block. Fall back to keeping the SOURCE text as a bare
+		# expression, the treatment `Vector2.ZERO` already gets: the line then round-trips exactly and
+		# the row still edits as a variable. Strictly safe - it only ever rescues a line that was
+		# going to stay raw, and only when the re-emission matches byte-for-byte.
+		# NOT for a collection: an Array or Dictionary kept as text would lose the structured
+		# collection editor the variable dialog gives it, which is a worse row than a code block.
+		# Those keep the documented behaviour of staying verbatim until they are written canonically.
+		if typeof(lifted.default_value) == TYPE_ARRAY or typeof(lifted.default_value) == TYPE_DICTIONARY:
+			return null
+		var equals: int = line.find(" = ")
+		if equals < 0:
+			return null
+		lifted.default_value = line.substr(equals + 3)
+		lifted.expression_default = true
+		if SheetCompiler._emit_tree_variable_line(lifted) != line:
+			return null
 	_extract_drawer_from_hint(lifted, line)
 	_extract_color_no_alpha(lifted, line)
 	_extract_exp_easing(lifted, line)
@@ -917,24 +934,43 @@ func _flush_pending(pending: PackedStringArray, sheet: EventSheetResource) -> vo
 	pending.clear()
 
 
-## Splits a run of verbatim lines into pieces, giving each column-0 multi-line collection literal
-## a piece of its own. Returns a single piece when there is nothing to split. Line-preserving: the
-## concatenation of the pieces is always the input, which is what makes the caller's guard hold.
+## Splits a run of verbatim lines into pieces so each one can be recognised for what it is: a
+## column-0 multi-line collection literal gets a piece of its own, and a run of COMMENTS is
+## separated from the code around it. A block that is part note and part code can be read as
+## neither, which is why comments sitting above a declaration were still rendering as code.
+##
+## Line-preserving: the concatenation of the pieces is always the input, which is what makes the
+## caller's byte guard hold. Blank lines stay with the piece they are already in.
 func _split_literal_blocks(pending: PackedStringArray) -> Array[PackedStringArray]:
 	var pieces: Array[PackedStringArray] = []
 	var current: PackedStringArray = PackedStringArray()
+	var piece_has_code: bool = false
+	var piece_has_comment: bool = false
 	var index: int = 0
 	while index < pending.size():
 		var close_index: int = _literal_close_index(pending, index)
-		if close_index < 0:
-			current.append(pending[index])
-			index += 1
+		if close_index >= 0:
+			if not current.is_empty():
+				pieces.append(current)
+				current = PackedStringArray()
+				piece_has_code = false
+				piece_has_comment = false
+			pieces.append(pending.slice(index, close_index + 1))
+			index = close_index + 1
 			continue
-		if not current.is_empty():
+		var text: String = pending[index].strip_edges()
+		var is_comment: bool = text.begins_with("#")
+		var is_code: bool = not text.is_empty() and not is_comment
+		# Break when the run changes character: code joining a note, or a note joining code.
+		if (is_code and piece_has_comment and not piece_has_code) or (is_comment and piece_has_code):
 			pieces.append(current)
 			current = PackedStringArray()
-		pieces.append(pending.slice(index, close_index + 1))
-		index = close_index + 1
+			piece_has_code = false
+			piece_has_comment = false
+		current.append(pending[index])
+		piece_has_code = piece_has_code or is_code
+		piece_has_comment = piece_has_comment or is_comment
+		index += 1
 	if not current.is_empty():
 		pieces.append(current)
 	return pieces
