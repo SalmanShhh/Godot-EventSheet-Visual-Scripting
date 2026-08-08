@@ -105,6 +105,11 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	# It survives ONLY from a "blank" row to the immediately following row (the "blank" branch continues
 	# past the end-of-body reset below); every other row type clears it.
 	var pending_blank_count: int = 0
+	# The gap measured immediately before the FIRST section this run produces (-1 = none seen).
+	# The per-section stamping below only records a gap WIDER than emission's default separator;
+	# this carries the narrow ones too, so a run that re-anchors onto a boundary ending in text
+	# can state "no blank here" instead of silently inheriting that default.
+	var first_section_blanks: int = -1
 	for index in range(first_run_index, sheet.events.size()):
 		var row: RawCodeRow = sheet.events[index] as RawCodeRow
 		var failed: bool = false
@@ -129,12 +134,21 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 				if pending_annotations.is_empty() and pending_annotation_lines.is_empty() and pending_doc_comment.is_empty():
 					failed = true
 			"comments":
-				# Trailing top-level comments (deferred emission): one CommentRow per
-				# blank-separated chunk.
-				for chunk: String in row.code.strip_edges().split("\n\n"):
-					var comment: CommentRow = CommentRow.new()
-					comment.text = chunk.trim_prefix("# ").replace("\n# ", "\n")
-					lifted_comments.append(comment)
+				# TRAILING top-level comments (deferred emission): one CommentRow per
+				# blank-separated chunk. Comments lifted this way emit at the END of the file, so
+				# this is only correct when nothing but comments follows. A plain `#` note above a
+				# function - the ordinary way anyone annotates one - would otherwise be relocated
+				# to the file's end, fail the whole-file verify, and revert every function in the
+				# file (twelve of them, in one dock helper). Re-anchoring instead leaves the note
+				# where it is and lets the functions below it lift, and the mid-file anchor pass
+				# can still claim the ones above it in place.
+				if _run_has_later_code(sheet, index, lift_functions):
+					failed = true
+				else:
+					for chunk: String in row.code.strip_edges().split("\n\n"):
+						var comment: CommentRow = CommentRow.new()
+						comment.text = chunk.trim_prefix("# ").replace("\n# ", "\n")
+						lifted_comments.append(comment)
 			"func":
 				var header: String = row.code.split("\n")[0]
 				# A split-out async coroutine the handler above already inlined back as an
@@ -161,6 +175,8 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 							# below, so this only governs gaps BETWEEN lifted sections and never double-counts.
 							if pending_blank_count > 1 and not lift_events.is_empty() and lift_events[0] is EventRow:
 								(lift_events[0] as EventRow).set_meta("__source_leading_blanks", pending_blank_count)
+							if lifted_events.is_empty() and lifted_functions.is_empty():
+								first_section_blanks = pending_blank_count
 							lifted_events.append_array(lift_events)
 						else:
 							failed = true
@@ -181,6 +197,8 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 							# never a "blank" row here, so it is never stamped and can't double-count.
 							if pending_blank_count > 1 and lifted_function is EventFunction:
 								(lifted_function as EventFunction).set_meta("__source_leading_blanks", pending_blank_count)
+							if lifted_events.is_empty() and lifted_functions.is_empty():
+								first_section_blanks = pending_blank_count
 							lifted_functions.append(lifted_function)
 						else:
 							failed = true
@@ -195,6 +213,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			pending_annotation_lines = PackedStringArray()
 			pending_doc_comment = ""
 			saw_function = false
+			first_section_blanks = -1
 			anchor_index = index + 1
 		# A blank separator's count was just consumed by (or is irrelevant to) this non-blank row - clear it
 		# so it never leaks onto a later function. The "blank" branch continues past here, keeping its
@@ -225,6 +244,13 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 				boundary.code = boundary.code.substr(0, boundary.code.length() - 1)
 			elif boundary.code.strip_edges().is_empty():
 				sheet.events.remove_at(sheet.events.size() - 1)
+			else:
+				# The boundary ends on real TEXT, so it carries no trailing blank for the strip above
+				# to hand back - whatever gap exists was measured by the scan instead, and emission
+				# must reproduce exactly that rather than fall back to its default separator. A `#`
+				# note written directly above a function measures 0, which the default would turn
+				# into a line the file never had.
+				_stamp_leading_blanks(lifted_events, lifted_functions, maxi(first_section_blanks, 0))
 		# Reconstruct event groups from the recovered `## @ace_group` declarations + the per-row `# @group:`
 		# tags the lift captured (transient meta on the rows). A no-op when the source declares no groups.
 		lifted_events = _reconstruct_groups(lifted_events, _recover_group_declarations(source))
@@ -312,6 +338,37 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 	if boundary != null:
 		boundary.code = boundary_code
 	return _retry_or_fail(sheet, source, lift_functions)
+
+
+## Records the source's blank-line gap before the FIRST section a lift produced, so emission
+## reproduces it instead of falling back to its default single separator. Events emit before
+## trailing functions on the opened-file path, so the first event wins when there is one.
+static func _stamp_leading_blanks(lift_events: Array, lift_functions: Array, count: int) -> void:
+	var target: Resource = null
+	if not lift_events.is_empty() and lift_events[0] is EventRow:
+		target = lift_events[0] as Resource
+	elif not lift_functions.is_empty() and lift_functions[0] is EventFunction:
+		target = lift_functions[0] as Resource
+	# A gap the run actually MEASURED always wins. The scan sees a real blank row between the
+	# boundary and the first lifted function and records its count there; this call only fills in
+	# the case where the scan measured nothing, so it must never overwrite that.
+	if target == null or target.has_meta("__source_leading_blanks"):
+		return
+	target.set_meta("__source_leading_blanks", count)
+
+
+## True when any row after `index` still carries code rather than comments or blank separators.
+## Deferred comment emission moves a comment to the file's end, so it is only safe for a comment
+## block with nothing but comments behind it.
+static func _run_has_later_code(sheet: EventSheetResource, index: int, lift_functions: bool) -> bool:
+	for later_index in range(index + 1, sheet.events.size()):
+		var later_row: RawCodeRow = sheet.events[later_index] as RawCodeRow
+		if later_row == null:
+			return true
+		var later_kind: String = _run_row_kind(later_row.code, lift_functions)
+		if later_kind != "comments" and later_kind != "blank":
+			return true
+	return false
 
 
 ## How many blank lines a row opens with - the inter-function gap an annotation row carries.

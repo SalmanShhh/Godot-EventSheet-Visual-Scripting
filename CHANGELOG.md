@@ -27,8 +27,16 @@ lift is all-or-nothing per file, ONE such helper reverted every function in its 
 why so many perfectly liftable functions were still arriving as code. An empty type is now the
 bare sentinel, and a named type always renders, `Variant` included.
 
-Measured over the same corpus, cumulatively: raw code lines **88.1% -> 42.3%**, lifted
-functions **167 -> 813**, lifted events **585 -> 3,554**, with byte-exactness at **207/207**
+A fourth: **a plain `#` note written directly above a function**, which is simply how people
+annotate one. Comments claimed by the trailing run emit at the *end* of the file - that path
+exists for genuinely trailing notes - so a mid-file note was relocated there, failed the
+whole-file verify, and reverted every function in its file. One dock helper lost all twelve of
+its functions to a single comment. Such a note now leaves the run to re-anchor, so the note
+stays where it is and the functions around it lift; emission also records a gap of zero rather
+than inserting a separator line the file never had.
+
+Measured over the same corpus, cumulatively: raw code lines **88.1% -> 38.4%**, lifted
+functions **167 -> 879**, lifted events **585 -> 3,789**, with byte-exactness at **207/207**
 files. Every gate is unchanged - the lift is still all-or-nothing per file and still reverts
 rather than risk a single altered byte.
 

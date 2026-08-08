@@ -692,7 +692,10 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		# honors the function's captured source blank spacing (__source_leading_blanks) - a hand-written
 		# two-blank gap before a helper round-trips instead of reverting. Default 1 (a lifted function with
 		# no captured multi-blank gap, and every generated pack, which emits via the main path) is unchanged.
-		var function_blanks: int = maxi(int(event_function.get_meta("__source_leading_blanks", 1)), 1)
+		# Floor 0, not 1: a lift can legitimately record that the source had NO blank here (a `#`
+		# note written directly above the function). Absent meta still defaults to a single blank,
+		# so every generated file and every pack is unchanged.
+		var function_blanks: int = maxi(int(event_function.get_meta("__source_leading_blanks", 1)), 0)
 		for _blank_index: int in range(function_blanks):
 			lines.append("")
 		_emit_function_block(event_function, sheet, lines, source_map, result)

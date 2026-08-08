@@ -90,6 +90,31 @@ static func collect(row: Variant, organs: Dictionary, bare) -> void:
 	print(row, organs, bare)
 """
 
+## A plain `#` note written directly above a function - the ordinary way anyone annotates one.
+## Comments lifted by the trailing run emit at the END of the file (that path exists for genuinely
+## trailing notes), so this one was relocated there, failed the whole-file verify, and reverted
+## every function in the file. One dock helper lost all twelve of its functions to a single note.
+const MIDFILE_NOTE_SOURCE := """extends Node
+
+func first() -> void:
+	pass
+
+
+# Second half lives elsewhere; this note keeps the wiring obvious.
+func second() -> void:
+	pass
+"""
+
+## The same shape with genuinely TRAILING comments, which the deferred path is for. Pinned so
+## fixing the mid-file case does not quietly disable it.
+const TRAILING_NOTE_SOURCE := """extends Node
+
+func only() -> void:
+	pass
+
+# A closing note with nothing after it.
+"""
+
 ## A file whose COMMENTS discuss the instance-backed provider convention. The compiler declares
 ## a provider member for every such reference it finds in the emitted lines, and it used to read
 ## these comments as real call sites - so merely opening this file and saving it injected two
@@ -162,6 +187,24 @@ static func run() -> bool:
 	all_passed = _check("the Variant-param file reproduces byte-identically",
 		str(SheetCompiler.compile(variant_sheet, "user://style_lift_variant.gd").get("output", "")),
 		VARIANT_PARAM_SOURCE) and all_passed
+
+	# ── A `#` note above a function must not relocate to the end of the file ──
+	var note_sheet: EventSheetResource = importer.import_external_source(MIDFILE_NOTE_SOURCE)
+	note_sheet.external_source_path = "user://style_lift_note.gd"
+	all_passed = _check("both functions lift despite the note between them",
+		_function_names(note_sheet), ["first", "second"]) and all_passed
+	all_passed = _check("the mid-file note file reproduces byte-identically",
+		str(SheetCompiler.compile(note_sheet, "user://style_lift_note.gd").get("output", "")),
+		MIDFILE_NOTE_SOURCE) and all_passed
+
+	# ...while a genuinely trailing note still uses the deferred path it was written for.
+	var trailing_sheet: EventSheetResource = importer.import_external_source(TRAILING_NOTE_SOURCE)
+	trailing_sheet.external_source_path = "user://style_lift_trailing.gd"
+	all_passed = _check("a trailing note still lifts its function",
+		_function_names(trailing_sheet), ["only"]) and all_passed
+	all_passed = _check("the trailing note file reproduces byte-identically",
+		str(SheetCompiler.compile(trailing_sheet, "user://style_lift_trailing.gd").get("output", "")),
+		TRAILING_NOTE_SOURCE) and all_passed
 
 	# ── Prose about the provider convention must not be compiled as a call site ──
 	var prose_sheet: EventSheetResource = importer.import_external_source(PROVIDER_PROSE_SOURCE)
