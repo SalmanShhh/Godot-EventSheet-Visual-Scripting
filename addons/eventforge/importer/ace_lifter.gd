@@ -1847,22 +1847,75 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 		event.actions.append(note)
 		pending_raw.clear()
 		return
-	var block: RawCodeRow = RawCodeRow.new()
-	block.code = "
-".join(pending_raw)
-	# Import triage: these lines matched no ACE template, so they stayed verbatim. Record why
-	# (non-emitted - never affects the byte-exact round-trip) so the editor can show an
-	# actionable "stayed as code" hint instead of an opaque block. See RawCodeRow.lift_note.
-	block.lift_note = "no matching ACE template"
-	_stamp_body_blanks(block, blank_box)
-	event.actions.append(block)
+	# One STATEMENT, one action. A run of unmatched lines used to arrive as a single wall of code;
+	# split at statement boundaries each line becomes its own action row - selectable, disableable
+	# and draggable into a different order - which is what the condition/action model means. A
+	# statement that OWNS indented lines (a `for` header, a multi-line string) keeps them, because
+	# they are one statement and separating them would be a lie about the code.
+	#
+	# Byte-neutral: consecutive verbatim rows re-emit by appending their lines in order, so the
+	# pieces re-join exactly. The guard re-joins them and falls back to the single block if they
+	# ever do not.
+	var statements: Array[PackedStringArray] = _split_statements(pending_raw)
+	var rejoined: PackedStringArray = PackedStringArray()
+	for piece: PackedStringArray in statements:
+		rejoined.append_array(piece)
+	if statements.size() < 2 or rejoined != pending_raw:
+		var block: RawCodeRow = RawCodeRow.new()
+		block.code = "\n".join(pending_raw)
+		# Import triage: these lines matched no ACE template, so they stayed verbatim. Record why
+		# (non-emitted - never affects the byte-exact round-trip) so the editor can show an
+		# actionable "stayed as code" hint instead of an opaque block. See RawCodeRow.lift_note.
+		block.lift_note = "no matching ACE template"
+		_stamp_body_blanks(block, blank_box)
+		event.actions.append(block)
+		pending_raw.clear()
+		return
+	var first: bool = true
+	for piece: PackedStringArray in statements:
+		var statement_row: RawCodeRow = RawCodeRow.new()
+		statement_row.code = "\n".join(piece)
+		statement_row.lift_note = "no matching ACE template"
+		if first:
+			_stamp_body_blanks(statement_row, blank_box)
+			first = false
+		event.actions.append(statement_row)
 	pending_raw.clear()
+
+
+## Splits a run of verbatim body lines into ONE PIECE PER STATEMENT. The run's own shallowest
+## indent is the statement level - not column 0 - because a run collected from inside an unlifted
+## `if` or `for` is entirely indented, and measuring from column 0 would see no statements there
+## at all and leave the whole nested body as one wall. A statement takes every following
+## deeper-indented line with it (its block body, or the rest of a multi-line string), and blank
+## lines ride with the statement they follow. Line-preserving: the pieces always concatenate back
+## to the input, which is what lets the caller prove the split changed no bytes.
+static func _split_statements(pending_raw: PackedStringArray) -> Array[PackedStringArray]:
+	var base_indent: int = -1
+	for line: String in pending_raw:
+		if line.strip_edges().is_empty():
+			continue
+		var indent: int = line.length() - line.lstrip("\t ").length()
+		base_indent = indent if base_indent < 0 else mini(base_indent, indent)
+	if base_indent < 0:
+		return [pending_raw]
+	var pieces: Array[PackedStringArray] = []
+	var current: PackedStringArray = PackedStringArray()
+	for line: String in pending_raw:
+		var line_indent: int = line.length() - line.lstrip("\t ").length()
+		var starts_statement: bool = not line.strip_edges().is_empty() and line_indent == base_indent
+		if starts_statement and not current.is_empty():
+			pieces.append(current)
+			current = PackedStringArray()
+		current.append(line)
+	if not current.is_empty():
+		pieces.append(current)
+	return pieces
 
 
 ## The comment marker EVERY line of a run shares, or "" when the run is not all comments (or the
 ## lines disagree). A run must be uniform, because emission writes one marker before every line -
-## claiming a mixed run would rewrite half of it. `#` with no space, `# `, `## ` and `##` are all
-## reproducible once the marker rides on the row.
+## claiming a mixed run would rewrite half of it.
 static func _shared_comment_marker(pending_raw: PackedStringArray) -> String:
 	if pending_raw.is_empty():
 		return ""

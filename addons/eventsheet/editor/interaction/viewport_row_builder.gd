@@ -1167,6 +1167,36 @@ static func _annotation_string_arg(line: String) -> String:
 	return line.substr(open_quote + 1, close_quote - open_quote - 1)
 
 
+## True when a verbatim row is a SINGLE statement - one line, or a header plus the lines it owns
+## that the canvas cannot show any other way. A single statement is an action: it renders with
+## the ordinary action chrome the rows around it use, rather than the GDScript code-cell
+## treatment that exists for a wall of several statements. The row itself is unchanged, so the
+## byte round-trip is untouched and double-click still opens the code editor.
+static func is_single_statement(code: String) -> bool:
+	var lines: PackedStringArray = code.split("\n")
+	# The row's OWN shallowest indent is the statement level: a row collected from inside an
+	# unlifted `if` or `for` is entirely indented, and measuring from column 0 would find no
+	# statement in it at all and render a single nested line as a wall of code.
+	var base_indent: int = -1
+	for line: String in lines:
+		if line.strip_edges().is_empty():
+			continue
+		var indent: int = line.length() - line.lstrip("\t ").length()
+		base_indent = indent if base_indent < 0 else mini(base_indent, indent)
+	if base_indent < 0:
+		return false
+	var seen_statement: bool = false
+	for line: String in lines:
+		if line.strip_edges().is_empty():
+			continue
+		if line.length() - line.lstrip("\t ").length() > base_indent:
+			continue  # a continuation of the statement above it
+		if seen_statement:
+			return false  # a second statement at this level - a block, not a statement
+		seen_statement = true
+	return seen_statement
+
+
 ## True when a one-line code row is part of a multi-line collection literal: its declaration head
 ## (`var waves := {`), one of its entries (indented), or the bracket that closes it. Those rows are
 ## data, not statements, so they render with ordinary action chrome instead of the GDScript code
@@ -2940,7 +2970,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 				# Rows that are part of a collection literal read as data, so they wear ordinary action
 				# chrome: no GDScript badge and no code cell. Splitting the literal per line was only
 				# worth doing if the entries then look and behave like the actions around them.
-				var inline_is_literal_part: bool = is_literal_part(inline_raw.code)
+				# ONE statement is one action, so it wears the ordinary action chrome the rows around it use.
+				# The GDScript code cell exists to hold a WALL of several statements together; using it for a
+				# single line made ordinary code look like an escape hatch instead of a step in the flow.
+				var inline_is_literal_part: bool = is_literal_part(inline_raw.code) or is_single_statement(inline_raw.code)
 				if not inline_literal.is_empty():
 					inline_lines = PackedStringArray(["%s %s   %d entries" % [
 						str(inline_literal.get("head")), str(inline_literal.get("close")),

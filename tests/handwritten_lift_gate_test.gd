@@ -54,7 +54,7 @@ const FUNCTION_FLOOR: int = 70
 const RAW_FUNCTION_ROW_CEILING: int = 2
 
 ## ...and almost nothing should still LOOK like code. Across these files 1733 non-blank lines
-## produce 34 that reach the plain GDScript-block rendering (2.0%) - everything else arrives as a
+## produce SIX that reach the plain GDScript-block rendering (0.3%) - everything else arrives as a
 ## function, an event, an action, a note, a declaration or the folded Class setup strip.
 ##
 ## What legitimately remains is code with no structured equivalent: an arbitrary call, an
@@ -62,13 +62,14 @@ const RAW_FUNCTION_ROW_CEILING: int = 2
 ## stay that way.
 ##
 ## The ceiling was SET BY EXPERIMENT, not taste: switching off the collapsed-function view takes
-## this from 34 to 55, so a ceiling of 60 would have watched that regression go by. 45 catches it
-## and still leaves a third more headroom than the current figure needs. Note also that not every
+## switching off the one-statement-one-action rendering takes this from 6 to well past the
+## ceiling, and an early version of this gate sat at 60 - loose enough to watch a real regression
+## walk past. Headroom is fine; a ceiling that nothing can ever reach is decoration. Note also that not every
 ## regression pushes this number UP - reintroducing the `: Variant` bug reverts whole functions to
 ## raw function blocks, which this metric counts as function rows and so reads as 25. That one is
 ## caught by the raw-function ceiling below; the two assertions cover different failures and both
 ## are needed.
-const BLOCK_LINE_CEILING: int = 45
+const BLOCK_LINE_CEILING: int = 20
 
 
 static func run() -> bool:
@@ -142,7 +143,11 @@ static func _renders_as_block(raw: RawCodeRow, top_level: bool) -> bool:
 ")
 	if ViewportRowBuilder.is_comment_only_block(code_lines) or ViewportRowBuilder.is_blank_block(code_lines):
 		return false
-	if ViewportRowBuilder.is_literal_part(raw.code):
+	# A single statement renders as an ordinary action row, and a literal entry as an action chip -
+	# neither is the code-block treatment, so neither counts here. Mirroring the renderer exactly is
+	# the whole point: a gate that measures how rows are STORED rather than how they READ would have
+	# gone on passing while the canvas filled up with walls of code.
+	if ViewportRowBuilder.is_literal_part(raw.code) or ViewportRowBuilder.is_single_statement(raw.code):
 		return false
 	if not ViewportRowBuilder.data_literal_info(raw.code).is_empty():
 		return false

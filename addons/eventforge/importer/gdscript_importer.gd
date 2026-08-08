@@ -967,6 +967,22 @@ func _split_literal_blocks(pending: PackedStringArray) -> Array[PackedStringArra
 			current = PackedStringArray()
 			piece_has_code = false
 			piece_has_comment = false
+		# A new column-0 statement starts a new piece: one declaration per row, so a prelude or a run
+		# of leftovers reads as rows rather than one wall. Byte-neutral - verbatim rows re-emit by
+		# appending their lines, and the caller re-joins them to prove it before keeping the split.
+		var at_column_zero: bool = not pending[index].begins_with("	") and not pending[index].begins_with(" ")
+		# An `@rpc` / `@warning_ignore` annotation BINDS FORWARD to the declaration under it, so never
+		# break directly after one - separated, a stacked pair arrives as two annotation rows and the
+		# second silently replaces the first.
+		var previous_binds_forward: bool = false
+		for earlier: String in current:
+			if not earlier.strip_edges().is_empty():
+				previous_binds_forward = earlier.strip_edges().begins_with("@")
+		if is_code and at_column_zero and piece_has_code and not previous_binds_forward and not current.is_empty():
+			pieces.append(current)
+			current = PackedStringArray()
+			piece_has_code = false
+			piece_has_comment = false
 		current.append(pending[index])
 		piece_has_code = piece_has_code or is_code
 		piece_has_comment = piece_has_comment or is_comment

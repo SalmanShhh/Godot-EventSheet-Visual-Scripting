@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Changed - one statement is one action
+
+The remaining code walls were not code that resisted structure; they were structure nobody had
+split. A run of statements the lift could not match arrived as a single multi-line block, when the
+condition/action model says each statement is an action. They now arrive as one action row per
+statement - selectable, disableable, and draggable into a different order - rendered with the same
+chrome as the actions around them rather than the GDScript code cell, which exists to hold a WALL
+of statements together and made ordinary code look like an escape hatch.
+
+A statement that owns indented lines (a `for` header, a multi-line string) keeps them, because
+they are one statement and separating them would misrepresent the code. Statement level is the
+run's OWN shallowest indent rather than column 0, so a run collected from inside an unlifted `if`
+stays readable instead of being measured against a margin it never had.
+
+Measured over 208 hand-written files, lines still reaching the plain block rendering fell from
+**14.1% to 3.1%**, byte-exact **208/208** throughout - splitting is safe by construction, because
+consecutive verbatim rows re-emit by appending their lines in order, and each split is re-joined
+and compared before it is kept.
+
+What remains is code with no structured equivalent: the interior of a multi-line string, a run the
+lifter has to keep intact. Those are honest GDScript and are meant to stay that way.
+
 ### Fixed - the last shapes that still read as code
 
 Following the block work above, the residue was measured rather than guessed: of every non-blank
