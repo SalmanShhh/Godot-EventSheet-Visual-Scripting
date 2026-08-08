@@ -1167,6 +1167,38 @@ static func _annotation_string_arg(line: String) -> String:
 	return line.substr(open_quote + 1, close_quote - open_quote - 1)
 
 
+## True when a one-line code row is part of a multi-line collection literal: its declaration head
+## (`var waves := {`), one of its entries (indented), or the bracket that closes it. Those rows are
+## data, not statements, so they render with ordinary action chrome instead of the GDScript code
+## cell - the point of splitting a literal per line was to make the entries read and drag like any
+## other action.
+static func is_literal_part(code: String) -> bool:
+	if code.contains("
+"):
+		return false
+	var text: String = code.strip_edges()
+	if text.is_empty():
+		return false
+	if code.begins_with("	"):
+		return true
+	if _is_closer_line(code):
+		return true
+	return text.ends_with("{") or text.ends_with("[")
+
+
+## True when a line carries nothing but closing brackets - the `}` that ends a literal split into
+## one action per line. It closes the statement above rather than starting one, so it wears no
+## badge of its own.
+static func _is_closer_line(line: String) -> bool:
+	var text: String = line.strip_edges()
+	if text.is_empty():
+		return false
+	for character: String in text:
+		if not (character in "}]),"):
+			return false
+	return true
+
+
 ## The badge an in-body block wears: none for a pure comment note (it is already visibly a
 ## comment), the bracket for a collapsed collection literal, and the code badge otherwise.
 static func _inline_block_label(is_note: bool, literal_info: Dictionary) -> String:
@@ -2902,6 +2934,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 				# value rather than a run of statements. Both are pure views over the unchanged row, so the
 				# byte round-trip holds and double-click still opens the code editor.
 				var inline_literal: Dictionary = data_literal_info(inline_raw.code)
+				# A single INDENTED line is a continuation of the statement above it - an entry of the
+				# literal that was just split into one action per line. Repeating the code badge down every
+				# entry of a defaults table is noise, and the indentation already says what the row is.
+				# Rows that are part of a collection literal read as data, so they wear ordinary action
+				# chrome: no GDScript badge and no code cell. Splitting the literal per line was only
+				# worth doing if the entries then look and behave like the actions around them.
+				var inline_is_literal_part: bool = is_literal_part(inline_raw.code)
 				if not inline_literal.is_empty():
 					inline_lines = PackedStringArray(["%s %s   %d entries" % [
 						str(inline_literal.get("head")), str(inline_literal.get("close")),
@@ -2923,12 +2962,12 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 								# The renderer merges block lines into ONE code cell
 								# (left stripe, continuous background) - per-line
 								# spans stay the layout/hit-test truth.
-								"code_cell": true,
+								"code_cell": not inline_is_literal_part,
 								"block_lines": inline_total,
 								"block_line": inline_line_index,
 								"line_index": action_line_index,
 								"text_color": _viewport._get_event_style().comment_text_color if inline_is_note else action_style_meta.get("text_color", EventSheetPalette.TEXT_PRIMARY),
-								"object_label": _inline_block_label(inline_is_note, inline_literal) if inline_line_index == 0 else ""
+								"object_label": "" if inline_is_literal_part else (_inline_block_label(inline_is_note, inline_literal) if inline_line_index == 0 else "")
 							}.merged(action_style_meta, true)
 						)
 					)

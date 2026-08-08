@@ -115,6 +115,38 @@ func only() -> void:
 # A closing note with nothing after it.
 """
 
+## A multi-line dictionary inside a function body. Its opening line used to be matched as an
+## ACTION on its own, stranding the entries in a block below it; now the whole literal is
+## recognised and split at its line boundaries, so each entry is an action row you can read and
+## drag. Consecutive code rows re-emit by appending their lines, so this stays byte-exact.
+const BODY_LITERAL_SOURCE := """extends Node
+
+func _ready() -> void:
+	var waves := {
+		"calm": 3,
+		"busy": 8,
+	}
+	print(waves)
+"""
+
+## A `#` note inside a function body. It becomes a real CommentRow action - the same resource a
+## comment authored in the sheet uses - so it drags, disables and converts like any other comment
+## instead of being a code block that merely looks like one. A note that emission could not
+## reproduce exactly (no space after the hash) has to stay verbatim instead.
+const BODY_NOTE_SOURCE := """extends Node
+
+func _ready() -> void:
+	# Bank the streak before the reset below.
+	print("hi")
+"""
+
+const ODD_NOTE_SOURCE := """extends Node
+
+func _ready() -> void:
+	#no space after the hash
+	print("hi")
+"""
+
 ## A file whose COMMENTS discuss the instance-backed provider convention. The compiler declares
 ## a provider member for every such reference it finds in the emitted lines, and it used to read
 ## these comments as real call sites - so merely opening this file and saving it injected two
@@ -206,6 +238,38 @@ static func run() -> bool:
 		str(SheetCompiler.compile(trailing_sheet, "user://style_lift_trailing.gd").get("output", "")),
 		TRAILING_NOTE_SOURCE) and all_passed
 
+	# -- A body note becomes a real comment row, not a code block that looks like one --
+	var note_body: EventSheetResource = importer.import_external_source(BODY_NOTE_SOURCE)
+	note_body.external_source_path = "user://style_lift_body_note.gd"
+	all_passed = _check("a body note lifts to a CommentRow action",
+		_action_kinds(note_body), ["CommentRow", "ACEAction"]) and all_passed
+	all_passed = _check("its text drops the comment marker",
+		_first_comment_text(note_body), "Bank the streak before the reset below.") and all_passed
+	all_passed = _check("the body-note file reproduces byte-identically",
+		str(SheetCompiler.compile(note_body, "user://style_lift_body_note.gd").get("output", "")),
+		BODY_NOTE_SOURCE) and all_passed
+	# Emission always writes back "# " + text, so a marker it cannot reproduce must stay verbatim
+	# rather than round-trip with an inserted space.
+	var odd_note: EventSheetResource = importer.import_external_source(ODD_NOTE_SOURCE)
+	odd_note.external_source_path = "user://style_lift_odd_note.gd"
+	all_passed = _check("a note emission cannot reproduce stays verbatim",
+		_action_kinds(odd_note), ["RawCodeRow", "ACEAction"]) and all_passed
+	all_passed = _check("the odd-note file still reproduces byte-identically",
+		str(SheetCompiler.compile(odd_note, "user://style_lift_odd_note.gd").get("output", "")),
+		ODD_NOTE_SOURCE) and all_passed
+
+	# -- A body literal lands as one action per line, and still round-trips --
+	var body_sheet: EventSheetResource = importer.import_external_source(BODY_LITERAL_SOURCE)
+	body_sheet.external_source_path = "user://style_lift_body_literal.gd"
+	# Four lines of literal (head, two entries, close) become four separate code actions, so the
+	# entries are individually selectable rather than one opaque wall - and the head is no longer
+	# torn off as an action of its own with its entries orphaned below it.
+	all_passed = _check("each literal line is its own action row",
+		_raw_action_texts(body_sheet), ["var waves := {", "	\"calm\": 3,", "	\"busy\": 8,", "}"]) and all_passed
+	all_passed = _check("the body-literal file reproduces byte-identically",
+		str(SheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")),
+		BODY_LITERAL_SOURCE) and all_passed
+
 	# ── Prose about the provider convention must not be compiled as a call site ──
 	var prose_sheet: EventSheetResource = importer.import_external_source(PROVIDER_PROSE_SOURCE)
 	prose_sheet.external_source_path = "user://style_lift_prose.gd"
@@ -226,6 +290,38 @@ static func _function_names(sheet: EventSheetResource) -> Array:
 			names.append((entry as EventFunction).function_name)
 	names.sort()
 	return names
+
+
+## The class of each action across the sheet's events, in order - the VALUE that says whether a
+## note arrived as a real comment resource or as a block of code.
+static func _action_kinds(sheet: EventSheetResource) -> Array:
+	var kinds: Array = []
+	for entry: Variant in sheet.events:
+		if entry is EventRow:
+			for action: Variant in (entry as EventRow).actions:
+				kinds.append("CommentRow" if action is CommentRow else ("RawCodeRow" if action is RawCodeRow else "ACEAction"))
+	return kinds
+
+
+static func _first_comment_text(sheet: EventSheetResource) -> String:
+	for entry: Variant in sheet.events:
+		if entry is EventRow:
+			for action: Variant in (entry as EventRow).actions:
+				if action is CommentRow:
+					return (action as CommentRow).text
+	return "<no comment row>"
+
+
+## Every verbatim code action in the sheet, in order, as its literal text - the VALUE that says
+## whether a literal arrived as separate rows or as one wall.
+static func _raw_action_texts(sheet: EventSheetResource) -> Array:
+	var texts: Array = []
+	for entry: Variant in sheet.events:
+		if entry is EventRow:
+			for action: Variant in (entry as EventRow).actions:
+				if action is RawCodeRow:
+					texts.append((action as RawCodeRow).code)
+	return texts
 
 
 ## Each parameter's declared type in order, "" for one that carries no annotation at all.

@@ -6,23 +6,33 @@
 
 Two kinds of block are no longer rendered as code, because neither one is logic.
 
-**A run of comments is a note.** It loses the `GDScript` badge and reads as a plain comment -
-including inside a function body, which is where most comments actually live and which was the
-single largest category of code-looking content left after the lift.
+**A run of comments becomes a real comment row.** Inside a function body it lifts to the same
+comment resource a sheet-authored comment uses, so it drags, disables and converts like any other
+comment rather than being a code block that merely looks like one. Comments were the single
+largest category of code-looking content left after the lift. A marker emission cannot reproduce
+exactly (`#no space`, a `##` doc line) stays verbatim rather than risk the round-trip.
 
-**A multi-line collection literal collapses to one row.** A defaults table or a lookup
-dictionary is one *value*, not fifteen statements, so it now reads as
-`var waves := { }  3 entries` behind a `{}` badge. This also fixed a genuine mis-lift: the
-opening line of such a literal was being matched as an ACTION on its own, stranding the entries
-in a separate block below it - the plugin's own annotation table showed as thirty-one orphaned
-strings. A literal is now kept whole, and it is split into a block of its own so the comment
-above it can be recognised as the note it is.
+**A multi-line collection literal becomes one action per entry.** A defaults table inside a
+function arrives as a row for the declaration and a row for each entry, so the entries can be
+read at a glance and dragged into the order you want. Entry rows carry no badge of their own -
+the indentation already says they continue the line above. At file scope, where entries are not
+actions, such a table collapses to a single `const RULES := { }  31 entries` row instead. Entry
+rows wear ordinary action chrome rather than a GDScript badge, because splitting the literal was
+only worth doing if the entries then read and behave like the actions around them.
 
-Both are **pure views**: the block is unchanged, the file still round-trips byte-for-byte, and
-double-click still opens the code editor on the real lines. The collapse is deliberately fussy
-about what it will hide - a wrapped function call (a bare `(` opens arguments, not a value), a
-literal with a statement after it, and one with a comment above its head all keep their full
-code rendering, because in each of those cases something other than the value would vanish.
+This also fixed a genuine mis-lift: the opening line of such a literal was being matched as an
+ACTION on its own, stranding the entries in a separate block below it - the plugin's own
+annotation table showed as thirty-one orphaned strings, which was the largest single category
+of in-body code left after the lift. The literal is now recognised whole, then split at its own
+line boundaries, which is also what lets the comment above it be seen as the note it is.
+
+Saving an untouched file still reproduces it byte-for-byte: comment notes are a pure view over an
+unchanged block, and splitting a literal into per-entry rows is safe because consecutive code
+rows re-emit by appending their lines in order. Double-click still opens the code editor on the
+real lines. Recognising a literal is deliberately fussy - a wrapped function call (a bare `(`
+opens arguments, not a value), a literal with a statement after it, and one with a comment above
+its head are all left as ordinary code, because in each of those cases something other than the
+value would be affected.
 
 ### Fixed - hand-written GDScript now actually opens as rows
 

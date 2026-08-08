@@ -318,20 +318,26 @@ code, try it again.
 
 Two kinds of block are no longer shown as code at all, because neither one is logic:
 
-- **A run of comments is a note.** It loses the `GDScript` badge and reads as a plain comment, wherever
-  it sits - including inside a function body, which is where most comments actually live.
-- **A multi-line collection literal collapses to one row.** A defaults table or a lookup dictionary is a
-  single *value*, not fifteen statements, so it shows as `var waves := { }  3 entries` with a `{}` badge.
+- **A run of comments becomes a real comment row.** Inside a function body it lifts to the same comment
+  resource a sheet-authored comment uses, so it drags, disables and converts like any other comment - not a
+  code block that merely looks like one. (A marker emission cannot reproduce exactly, such as `#no space`,
+  stays verbatim rather than risk the round-trip.)
+- **A multi-line collection literal becomes one action per entry.** A defaults table arrives as a row for
+  the declaration and a row for each entry, each with ordinary action chrome rather than a GDScript badge,
+  so you can read them at a glance and drag them into the order you want. (At file scope, where entries are
+  not actions, such a table still collapses to a single `const RULES := { }  31 entries` row instead.)
 
 <img src="images/block-views-before.png" alt="Before: a function body showing a GDScript badge over two comment lines, a System action for the opening line of a dictionary, and the dictionary entries stranded in a separate code block." width="720">
 
-<img src="images/block-views-after.png" alt="After: the same body with the comments shown as plain notes, the whole dictionary collapsed to one row reading var waves := { } 3 entries, and the remaining statements as Set variable and Print action rows." width="720">
+<img src="images/block-views-after.png" alt="After: the same body with the comments shown as plain notes, the dictionary declaration and each of its three entries on their own action rows, and the remaining statements as Set variable and Print action rows." width="720">
 
-Both are **pure views**: the block itself is untouched, so the file still round-trips byte-for-byte and
-double-click still opens the code editor on the real lines. The collapse is deliberately fussy about what
-it will hide - a wrapped function call, a literal with a statement after it, or one with a comment above
-its head all keep their full code rendering, because in those cases something other than the value would
-be hidden.
+Both keep the file byte-for-byte identical when you save it untouched: comment notes are a pure view over
+an unchanged block, and splitting a literal into per-entry rows is safe because consecutive code rows
+re-emit by appending their lines in order. Double-click any row to open the code editor on the real lines.
+
+Recognising a literal is deliberately fussy - a wrapped function call (a bare `(` opens arguments, not a
+value), a literal with a statement after it, and one with a comment above its head are all left as ordinary
+code, because in each of those cases something other than the value would be affected.
 
 On real code the effect compounds. Here is the plugin's own semantic analyzer, whose annotation table is
 31 entries long:

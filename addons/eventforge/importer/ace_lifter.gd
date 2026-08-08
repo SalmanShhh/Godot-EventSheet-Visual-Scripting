@@ -1381,11 +1381,14 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			pending_group_slug = _stamp_group(current, pending_group_slug)
 			rows.append(current)
 		if at_this_depth:
-			# A line that OPENS a multi-line collection literal takes the whole literal with it. Matching
-			# only its head published `var metadata := {` as an action and stranded its entries in a
-			# separate block, so a table of defaults rendered as a wall of orphaned strings - the single
-			# largest category of in-body code left after the lift. Kept whole, it is one raw block the
-			# canvas can collapse to a summary row.
+			# A line that OPENS a multi-line collection literal takes the whole literal with it, then
+			# lands as ONE ACTION PER LINE. Matching only its head published `var metadata := {` as an
+			# action and stranded the entries in a block below it, so a table of defaults read as a wall
+			# of orphaned strings - the largest category of in-body code left after the lift.
+			#
+			# Per line rather than one block, because entries you can see one-per-row are entries you can
+			# read and drag to reorder. Byte-neutral either way: consecutive raw actions re-emit by
+			# appending their lines in order, so an untouched file still reproduces exactly.
 			var literal_end: int = _body_literal_close(lines, index, depth)
 			if literal_end > index:
 				# Close whatever was pending first: a comment run above the literal is a note in its own
@@ -1393,7 +1396,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 				_flush_raw(current, pending_raw, blank_box)
 				for literal_index: int in range(index, literal_end + 1):
 					pending_raw.append(lines[literal_index].substr(depth))
-				_flush_raw(current, pending_raw, blank_box)
+					_flush_raw(current, pending_raw, blank_box)
 				index = literal_end + 1
 				chain_open = false
 				continue
@@ -1809,8 +1812,26 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_box: Array = []) -> void:
 	if pending_raw.is_empty() or event == null:
 		return
+	# A run that is ENTIRELY `# ` comments becomes a real CommentRow - the same resource a comment
+	# authored in the sheet uses - so it drags, disables and converts like any other comment rather
+	# than being a code block that merely looks like one. Emission writes it back as
+	# `<indent># <text>`, which is byte-identical only for lines starting with exactly "# ";
+	# anything else (a `#comment` with no space, a `##` doc line) stays verbatim rather than risk
+	# the round-trip.
+	if _is_plain_comment_run(pending_raw):
+		var note: CommentRow = CommentRow.new()
+		var note_lines: PackedStringArray = PackedStringArray()
+		for comment_line: String in pending_raw:
+			note_lines.append(comment_line.substr(2))
+		note.text = "
+".join(note_lines)
+		_stamp_body_blanks(note, blank_box)
+		event.actions.append(note)
+		pending_raw.clear()
+		return
 	var block: RawCodeRow = RawCodeRow.new()
-	block.code = "\n".join(pending_raw)
+	block.code = "
+".join(pending_raw)
 	# Import triage: these lines matched no ACE template, so they stayed verbatim. Record why
 	# (non-emitted - never affects the byte-exact round-trip) so the editor can show an
 	# actionable "stayed as code" hint instead of an opaque block. See RawCodeRow.lift_note.
@@ -1818,6 +1839,17 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 	_stamp_body_blanks(block, blank_box)
 	event.actions.append(block)
 	pending_raw.clear()
+
+
+## True when every line of a run is a plain `# ` comment at the body depth - the only shape a
+## CommentRow can reproduce byte-for-byte (emission always writes back "# " + text).
+static func _is_plain_comment_run(pending_raw: PackedStringArray) -> bool:
+	if pending_raw.is_empty():
+		return false
+	for line: String in pending_raw:
+		if not line.begins_with("# "):
+			return false
+	return true
 
 
 ## Carries a captured run of author-facing blank lines onto the visible row/action that follows it,
