@@ -934,6 +934,19 @@ func _flush_pending(pending: PackedStringArray, sheet: EventSheetResource) -> vo
 	pending.clear()
 
 
+## Which lines sit INSIDE a triple-quoted string. A multi-line string is ONE value however its
+## content is indented, and its body routinely starts at column 0 - so without this a split point
+## lands in the middle of a string literal and leaves rows that are fragments of one value.
+func _string_interior_mask(pending: PackedStringArray) -> PackedInt32Array:
+	var mask: PackedInt32Array = PackedInt32Array()
+	var inside: bool = false
+	for line: String in pending:
+		mask.append(1 if inside else 0)
+		if line.count("\"\"\"") % 2 == 1:
+			inside = not inside
+	return mask
+
+
 ## Splits a run of verbatim lines into pieces so each one can be recognised for what it is: a
 ## column-0 multi-line collection literal gets a piece of its own, and a run of COMMENTS is
 ## separated from the code around it. A block that is part note and part code can be read as
@@ -946,9 +959,10 @@ func _split_literal_blocks(pending: PackedStringArray) -> Array[PackedStringArra
 	var current: PackedStringArray = PackedStringArray()
 	var piece_has_code: bool = false
 	var piece_has_comment: bool = false
+	var interior: PackedInt32Array = _string_interior_mask(pending)
 	var index: int = 0
 	while index < pending.size():
-		var close_index: int = _literal_close_index(pending, index)
+		var close_index: int = -1 if interior[index] == 1 else _literal_close_index(pending, index)
 		if close_index >= 0:
 			if not current.is_empty():
 				pieces.append(current)
@@ -962,7 +976,11 @@ func _split_literal_blocks(pending: PackedStringArray) -> Array[PackedStringArra
 		var is_comment: bool = text.begins_with("#")
 		var is_code: bool = not text.is_empty() and not is_comment
 		# Break when the run changes character: code joining a note, or a note joining code.
-		if (is_code and piece_has_comment and not piece_has_code) or (is_comment and piece_has_code):
+		# Only ever break at the RUN's own column 0. An indented line continues the statement above it -
+		# the body of a `class`, most often - and breaking inside one leaves fragments that are neither
+		# a class the canvas can render structurally nor a statement it can render as a row.
+		var at_column_zero: bool = not pending[index].begins_with("	") and not pending[index].begins_with(" ") and interior[index] == 0
+		if at_column_zero and ((is_code and piece_has_comment and not piece_has_code) or (is_comment and piece_has_code)):
 			pieces.append(current)
 			current = PackedStringArray()
 			piece_has_code = false
@@ -970,7 +988,6 @@ func _split_literal_blocks(pending: PackedStringArray) -> Array[PackedStringArra
 		# A new column-0 statement starts a new piece: one declaration per row, so a prelude or a run
 		# of leftovers reads as rows rather than one wall. Byte-neutral - verbatim rows re-emit by
 		# appending their lines, and the caller re-joins them to prove it before keeping the split.
-		var at_column_zero: bool = not pending[index].begins_with("	") and not pending[index].begins_with(" ")
 		# An `@rpc` / `@warning_ignore` annotation BINDS FORWARD to the declaration under it, so never
 		# break directly after one - separated, a stacked pair arrives as two annotation rows and the
 		# second silently replaces the first.

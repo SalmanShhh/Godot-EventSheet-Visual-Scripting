@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Fixed - a split must never land inside a class body or a string
+
+Two defects in the splitting above, both of which produced rows that were fragments of something
+larger rather than statements:
+
+- **A note inside a `class` body split the class apart.** Only column-0 breaks are taken now. An
+  indented line continues the statement above it - usually a class body - and breaking inside one
+  left pieces that were neither a class the canvas can render structurally nor a statement it can
+  render as a row. This was the single largest remaining source of code walls.
+- **A multi-line string could be split down the middle.** A `"""` body routinely starts at column
+  0, so its content read as a wall of separate statements and was a legal split point. Both the
+  importer and the lifter now track string interiors and never break inside one, and the renderer
+  counts such a row as the one statement it is.
+
+Measured over 208 hand-written files, lines still reaching the plain block rendering fell from
+**3.1% to 1.5%** - cumulatively **14.1% to 1.5%** - with byte-exactness at **208/208** throughout.
+
 ### Changed - one statement is one action
 
 The remaining code walls were not code that resisted structure; they were structure nobody had

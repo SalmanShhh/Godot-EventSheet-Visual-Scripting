@@ -1167,6 +1167,20 @@ static func _annotation_string_arg(line: String) -> String:
 	return line.substr(open_quote + 1, close_quote - open_quote - 1)
 
 
+## Which lines sit INSIDE a triple-quoted string, so they are never mistaken for statements of
+## their own. A multi-line string is one statement no matter how its content is indented, and its
+## body routinely starts at column 0 - which read as a wall of separate statements.
+static func _string_interior_mask(lines: PackedStringArray) -> PackedInt32Array:
+	var mask: PackedInt32Array = PackedInt32Array()
+	var inside: bool = false
+	for line: String in lines:
+		# A line INSIDE the string is not a statement of its own, and must never be a split point.
+		mask.append(1 if inside else 0)
+		if line.count("\"\"\"") % 2 == 1:
+			inside = not inside
+	return mask
+
+
 ## True when a verbatim row is a SINGLE statement - one line, or a header plus the lines it owns
 ## that the canvas cannot show any other way. A single statement is an action: it renders with
 ## the ordinary action chrome the rows around it use, rather than the GDScript code-cell
@@ -1178,16 +1192,19 @@ static func is_single_statement(code: String) -> bool:
 	# unlifted `if` or `for` is entirely indented, and measuring from column 0 would find no
 	# statement in it at all and render a single nested line as a wall of code.
 	var base_indent: int = -1
-	for line: String in lines:
-		if line.strip_edges().is_empty():
+	var indent_mask: PackedInt32Array = _string_interior_mask(lines)
+	for scan_index: int in lines.size():
+		if lines[scan_index].strip_edges().is_empty() or indent_mask[scan_index] == 1:
 			continue
-		var indent: int = line.length() - line.lstrip("\t ").length()
+		var indent: int = lines[scan_index].length() - lines[scan_index].lstrip("\t ").length()
 		base_indent = indent if base_indent < 0 else mini(base_indent, indent)
 	if base_indent < 0:
 		return false
+	var interior: PackedInt32Array = _string_interior_mask(lines)
 	var seen_statement: bool = false
-	for line: String in lines:
-		if line.strip_edges().is_empty():
+	for line_index: int in lines.size():
+		var line: String = lines[line_index]
+		if line.strip_edges().is_empty() or interior[line_index] == 1:
 			continue
 		if line.length() - line.lstrip("\t ").length() > base_indent:
 			continue  # a continuation of the statement above it

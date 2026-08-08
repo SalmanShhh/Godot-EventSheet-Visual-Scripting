@@ -1883,6 +1883,19 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 	pending_raw.clear()
 
 
+## Which lines sit INSIDE a triple-quoted string. A multi-line string is ONE statement however its
+## content is indented, and its body routinely starts at column 0 - so without this a split point
+## can land in the middle of a string literal, leaving rows that are fragments of one value.
+static func _string_interior_mask(lines: PackedStringArray) -> PackedInt32Array:
+	var mask: PackedInt32Array = PackedInt32Array()
+	var inside: bool = false
+	for line: String in lines:
+		mask.append(1 if inside else 0)
+		if line.count("\"\"\"") % 2 == 1:
+			inside = not inside
+	return mask
+
+
 ## Splits a run of verbatim body lines into ONE PIECE PER STATEMENT. The run's own shallowest
 ## indent is the statement level - not column 0 - because a run collected from inside an unlifted
 ## `if` or `for` is entirely indented, and measuring from column 0 would see no statements there
@@ -1891,19 +1904,22 @@ static func _flush_raw(event: EventRow, pending_raw: PackedStringArray, blank_bo
 ## lines ride with the statement they follow. Line-preserving: the pieces always concatenate back
 ## to the input, which is what lets the caller prove the split changed no bytes.
 static func _split_statements(pending_raw: PackedStringArray) -> Array[PackedStringArray]:
+	var interior: PackedInt32Array = _string_interior_mask(pending_raw)
 	var base_indent: int = -1
-	for line: String in pending_raw:
-		if line.strip_edges().is_empty():
+	for scan_index: int in pending_raw.size():
+		if pending_raw[scan_index].strip_edges().is_empty() or interior[scan_index] == 1:
 			continue
-		var indent: int = line.length() - line.lstrip("\t ").length()
+		var indent: int = pending_raw[scan_index].length() - pending_raw[scan_index].lstrip("\t ").length()
 		base_indent = indent if base_indent < 0 else mini(base_indent, indent)
 	if base_indent < 0:
 		return [pending_raw]
 	var pieces: Array[PackedStringArray] = []
 	var current: PackedStringArray = PackedStringArray()
-	for line: String in pending_raw:
+	for line_index: int in pending_raw.size():
+		var line: String = pending_raw[line_index]
 		var line_indent: int = line.length() - line.lstrip("\t ").length()
-		var starts_statement: bool = not line.strip_edges().is_empty() and line_indent == base_indent
+		var at_statement_level: bool = line_indent == base_indent and interior[line_index] == 0
+		var starts_statement: bool = not line.strip_edges().is_empty() and at_statement_level
 		if starts_statement and not current.is_empty():
 			pieces.append(current)
 			current = PackedStringArray()
