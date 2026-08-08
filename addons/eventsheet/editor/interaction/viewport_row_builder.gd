@@ -1683,14 +1683,25 @@ func _build_collection_decl_row(decl: CollectionDeclRow, indent: int) -> EventRo
 	row_data.line_count = 1 + decl.entry_values.size()
 	var decl_style: EventSheetEventStyle = _viewport._get_event_style()
 	var spans: Array[SemanticSpan] = []
-	spans.append(_make_span("Declare %s   -   %s%s, %d %s" % [decl.variable_name(),
-		"const " if decl.is_constant() else "", "Dictionary" if decl.is_dictionary() else "Array",
-		decl.entry_values.size(), "entry" if decl.entry_values.size() == 1 else "entries"],
-		SemanticSpan.SpanType.OBJECT, {
+	spans.append(_make_span("Declare", SemanticSpan.SpanType.VALUE, {
+		"editable": false,
+		"kind": "collection_decl",
+		"line_index": 0
+	}))
+	spans.append(_make_span(decl.variable_name(), SemanticSpan.SpanType.VALUE, {
 		"editable": false,
 		"kind": "collection_decl",
 		"line_index": 0,
 		"text_color": EventSheetPalette.TEXT_PRIMARY
+	}))
+	spans.append(_make_span("%s%s - %d %s" % ["const " if decl.is_constant() else "",
+		"Dictionary" if decl.is_dictionary() else "Array", decl.entry_values.size(),
+		"entry" if decl.entry_values.size() == 1 else "entries"],
+		SemanticSpan.SpanType.VALUE, {
+		"editable": false,
+		"kind": "collection_decl",
+		"line_index": 0,
+		"text_color": decl_style.comment_text_color
 	}))
 	for entry_index: int in decl.entry_values.size():
 		var entry_key: String = decl.entry_keys[entry_index] if entry_index < decl.entry_keys.size() else ""
@@ -3046,17 +3057,25 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 				# (edit_kind carries the action and entry index, since the span-edit signal passes no
 				# metadata); the commit re-parses `key = value`, so either side can be changed.
 				var decl: CollectionDeclRow = action_resource as CollectionDeclRow
-				spans.append(_make_span("Declare %s   -   %s, %d %s" % [decl.variable_name(),
-					"Dictionary" if decl.is_dictionary() else "Array", decl.entry_values.size(),
-					"entry" if decl.entry_values.size() == 1 else "entries"],
-					SemanticSpan.SpanType.VALUE, {
+				# The header reads as three CHIPS (Declare / name / type - count): the look the single-cell
+				# pass lost and the user asked back. Only the last chip stretches to close the lane, so the
+				# cell background still runs edge to edge; the entry lines below stay single cells.
+				var decl_head_meta: Dictionary = {
 					"lane": "action",
 					"kind": "action",
 					"ace_index": action_index,
 					"ace_enabled": decl.enabled,
 					"chip": true,
 					"line_index": action_line_index
-				}.merged(action_style_meta, false)))
+				}
+				spans.append(_make_span("Declare", SemanticSpan.SpanType.VALUE,
+					decl_head_meta.duplicate().merged({"natural_width": true}, true).merged(action_style_meta, false)))
+				spans.append(_make_span(decl.variable_name(), SemanticSpan.SpanType.VALUE,
+					decl_head_meta.duplicate().merged({"natural_width": true, "text_color": EventSheetPalette.TEXT_PRIMARY}, true).merged(action_style_meta, false)))
+				spans.append(_make_span("%s - %d %s" % ["Dictionary" if decl.is_dictionary() else "Array",
+					decl.entry_values.size(), "entry" if decl.entry_values.size() == 1 else "entries"],
+					SemanticSpan.SpanType.VALUE,
+					decl_head_meta.duplicate().merged({"text_color": _viewport._get_event_style().comment_text_color}, true).merged(action_style_meta, false)))
 				action_line_index += 1
 				for entry_index: int in decl.entry_values.size():
 					var entry_key: String = decl.entry_keys[entry_index] if entry_index < decl.entry_keys.size() else ""

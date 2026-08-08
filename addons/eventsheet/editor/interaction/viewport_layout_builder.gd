@@ -198,7 +198,10 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				)
 			else:
 				var max_action_width: float = reserved_start - max(_viewport._get_span_gap(span), EventSheetPalette.SPAN_GAP) - span_x
-				if str(metadata.get("kind", "")) == "action":
+				# An action cell fills the lane - EXCEPT a span flagged natural_width, which keeps its
+				# measured size so several spans can flow on one action line (a Declare row's header
+				# chips). Mirrors badge_natural_width in the condition lane.
+				if str(metadata.get("kind", "")) == "action" and not bool(metadata.get("natural_width", false)):
 					span_width = max(max_action_width, 1.0)
 				else:
 					span_width = max(min(span_width, max_action_width), 1.0)

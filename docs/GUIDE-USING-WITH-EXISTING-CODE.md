@@ -335,7 +335,7 @@ Two kinds of block are no longer shown as code at all, because neither one is lo
   File scope gets the same treatment: a `const` table opens as a Declare row too, bare final comma and
   all, with the same menu and inline editing.
 
-<img src="images/decl-row-canvas.png" alt="A function body whose dictionary lifted to a Declare waves action: a single-cell header reading Declare waves - Dictionary, 3 entries, then calm = 3, busy = 8 and swarm = 20 as single-cell rows, followed by ordinary Set variable and Print actions." width="720">
+<img src="images/decl-row-canvas.png" alt="A function body whose dictionary lifted to a Declare waves action: a header of three chips reading Declare, waves, Dictionary - 3 entries, then calm = 3, busy = 8 and swarm = 20 as single-cell rows, followed by ordinary Set variable and Print actions." width="720">
 
 <img src="images/decl-top-canvas.png" alt="The plugin's own semantic analyzer opened as a sheet: Declare KNOWN_ANNOTATIONS - const Dictionary, 31 entries, with every annotation token as its own editable row." width="720">
 
