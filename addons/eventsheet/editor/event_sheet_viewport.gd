@@ -2627,6 +2627,9 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
 		return
 	var metadata: Dictionary = span.metadata as Dictionary
 	var edit_kind: String = str(metadata.get("edit_kind", ""))
+	if edit_kind.begins_with("decl_entry_line:") and row_data.source_resource is EventRow:
+		_apply_decl_entry_edit(row_data.source_resource as EventRow, edit_kind, value)
+		return
 	match edit_kind:
 		"group_name":
 			if row_data.source_resource is EventGroup:
@@ -2639,6 +2642,24 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
 		"event_comment":
 			if row_data.source_resource is EventRow:
 				(row_data.source_resource as EventRow).comment = value
+
+
+## Shared by the internal span-edit fallback and the dock handler: applies one edited entry
+## LINE of a collection declaration (`"calm" = 12` - either side may have changed). The indexes
+## ride in edit_kind ("decl_entry_line:<action>:<entry>") because the span-edit signal carries
+## no metadata. Whatever would break the one-entry-per-line shape is refused by the row itself.
+static func _apply_decl_entry_edit(event_row: EventRow, edit_kind: String, value: String) -> bool:
+	var parts: PackedStringArray = edit_kind.split(":")
+	if parts.size() != 3 or event_row == null:
+		return false
+	var action_index: int = int(parts[1])
+	var entry_index: int = int(parts[2])
+	if action_index < 0 or action_index >= event_row.actions.size():
+		return false
+	var decl: CollectionDeclRow = event_row.actions[action_index] as CollectionDeclRow
+	if decl == null or entry_index < 0 or entry_index >= decl.entry_values.size():
+		return false
+	return decl.set_entry_text(entry_index, value.strip_edges().trim_suffix(","))
 
 
 ## Hovering a condition/action/trigger shows the GDScript it compiles to (the codegen

@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Added - a body dictionary is a "Declare" action with editable entry rows
+
+A canonical function-local collection literal now lifts past per-line rows into real structure:
+`var waves := { ... }` becomes one **Declare waves - Dictionary - 3 entries** action whose entries
+are rows of their own, and the bracket lines are gone from the canvas entirely - they are
+re-emitted around the entries on save. Three surfaces land together:
+
+- **The row itself.** Entries read as `"calm" = 3` in the same single-cell shape as every other
+  action, with the automatic value tinting doing the emphasis - no separate chips, which read as
+  fragments rather than a row.
+- **The menu.** Right-click offers **Add Entry…**, and on an entry line **Edit Entry…** and
+  **Remove Entry**; the dialog holds the key's SOURCE text (quotes included), so `"calm"` and a
+  bare enum constant are both legal and neither is guessed at.
+- **The inline edit.** Double-click an entry and type - the whole line edits in place
+  (`"calm" = 12`, either side may change; pasting source form `"calm": 12` works too), landing
+  through the same undoable funnel as every other sheet mutation. Whatever would break the
+  one-entry-per-line shape (a blank, a missing key, an embedded newline) is refused.
+
+One mutation path serves all of it: `CollectionDeclRow.set_entry`, also reachable for extensions
+as **`EventSheets.collection_decl(name, entries, dictionary)`** - the API grows because building
+this feature needed exactly that seam, and anything an asset-drop handler wants to seed with a
+defaults table needs it too.
+
+The byte gate is the resource's own `parse()`: a literal is claimed only when re-emitting the
+structured model reproduces the source exactly (`emit_lines()` is shared by the compiler and the
+gate, so they can never disagree). No trailing comma, a nested multi-line value, an inline
+comment - each falls back to the per-line rows this replaces, and the whole-file verify still
+gates everything.
+
 ### Fixed - a statement continues while its brackets are open
 
 The last code walls came from a single upstream mistake: an ACE was matched on the OPENING line

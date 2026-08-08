@@ -1376,6 +1376,36 @@ static func _drop_build_preload(asset_path: String, _target_event: Resource) -> 
 	return preload_block_for(asset_path)
 
 
+# ── Collection declarations (a function-local `var x := {...}` held as structure) ──────
+
+
+## Builds a structured in-body collection declaration - the row an opened `.gd`'s canonical
+## multi-line dictionary or array lifts into, offered here so extensions and asset-drop
+## handlers can CREATE one too instead of assembling raw code text. `entries` is an Array of
+## [key, value] pairs for a dictionary ("calm" keys carry their own quotes: `"calm"`), or of
+## plain value strings for an array. Returns null when the name is not an identifier or any
+## entry is refused (blank value, keyless dictionary entry). Append the result to an
+## EventRow's actions like any other action; it emits as the literal, brackets and all, and
+## its entries stay individually editable rows on the canvas.
+static func collection_decl(variable_name: String, entries: Array, dictionary: bool = true) -> CollectionDeclRow:
+	var name: String = variable_name.strip_edges()
+	var name_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$")
+	if name_regex.search(name) == null:
+		return null
+	var decl: CollectionDeclRow = CollectionDeclRow.new()
+	decl.head = "var %s := %s" % [name, "{" if dictionary else "["]
+	decl.close = "}" if dictionary else "]"
+	for entry: Variant in entries:
+		var accepted: bool = false
+		if dictionary and entry is Array and (entry as Array).size() == 2:
+			accepted = decl.set_entry(-1, str((entry as Array)[0]), str((entry as Array)[1]))
+		elif not dictionary:
+			accepted = decl.set_entry(-1, "", str(entry))
+		if not accepted:
+			return null
+	return decl
+
+
 # ── Internal wiring (called by the plugin itself) ─────────────────────────────────────
 
 

@@ -322,10 +322,16 @@ Two kinds of block are no longer shown as code at all, because neither one is lo
   resource a sheet-authored comment uses, so it drags, disables and converts like any other comment - not a
   code block that merely looks like one. (A marker emission cannot reproduce exactly, such as `#no space`,
   stays verbatim rather than risk the round-trip.)
-- **A multi-line collection literal becomes one action per entry.** A defaults table arrives as a row for
-  the declaration and a row for each entry, each with ordinary action chrome rather than a GDScript badge,
-  so you can read them at a glance and drag them into the order you want. (At file scope, where entries are
-  not actions, such a table still collapses to a single `const RULES := { }  31 entries` row instead.)
+- **A multi-line collection literal lifts to a real "Declare" action.** A canonical
+  `var waves := { ... }` becomes one `Declare waves - Dictionary - 3 entries` action whose entries are
+  rows of their own - no bracket lines anywhere; they are re-emitted around the entries on save.
+  Double-click an entry to edit its line in place (`"calm" = 12` - either side may change), and right-click the row for
+  **Add Entry… / Edit Entry… / Remove Entry**. Extensions can build one too:
+  `EventSheets.collection_decl("waves", [["\"calm\"", "3"]])`. A literal the emitter cannot reproduce
+  byte-for-byte (no trailing commas, a nested multi-line value) stays as per-line rows instead, and at
+  file scope a table still collapses to a single `const RULES := { }  31 entries` row.
+
+<img src="images/decl-row-canvas.png" alt="A function body whose dictionary lifted to a Declare waves action: a single-cell header reading Declare waves - Dictionary, 3 entries, then calm = 3, busy = 8 and swarm = 20 as single-cell rows, followed by ordinary Set variable and Print actions." width="720">
 
 <img src="images/block-views-before.png" alt="Before: a function body showing a GDScript badge over two comment lines, a System action for the opening line of a dictionary, and the dictionary entries stranded in a separate code block." width="720">
 

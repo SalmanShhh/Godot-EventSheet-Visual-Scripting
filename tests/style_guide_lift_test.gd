@@ -260,17 +260,55 @@ static func run() -> bool:
 		str(SheetCompiler.compile(odd_note, "user://style_lift_odd_note.gd").get("output", "")),
 		ODD_NOTE_SOURCE) and all_passed
 
-	# -- A body literal lands as one action per line, and still round-trips --
+	# -- A body literal lifts as ONE structured Declare action, and still round-trips --
 	var body_sheet: EventSheetResource = importer.import_external_source(BODY_LITERAL_SOURCE)
 	body_sheet.external_source_path = "user://style_lift_body_literal.gd"
-	# Four lines of literal (head, two entries, close) become four separate code actions, so the
-	# entries are individually selectable rather than one opaque wall - and the head is no longer
-	# torn off as an action of its own with its entries orphaned below it.
-	all_passed = _check("each literal line is its own action row",
-		_raw_action_texts(body_sheet), ["var waves := {", "	\"calm\": 3,", "	\"busy\": 8,", "}"]) and all_passed
+	var body_decl: CollectionDeclRow = _first_decl(body_sheet)
+	all_passed = _check("a canonical body literal lifts to a Declare row", body_decl != null, true) and all_passed
+	all_passed = _check("it knows its name", body_decl.variable_name() if body_decl != null else "", "waves") and all_passed
+	all_passed = _check("its entries are structured values",
+		[Array(body_decl.entry_keys), Array(body_decl.entry_values)] if body_decl != null else [],
+		[["\"calm\"", "\"busy\""], ["3", "8"]]) and all_passed
 	all_passed = _check("the body-literal file reproduces byte-identically",
 		str(SheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")),
 		BODY_LITERAL_SOURCE) and all_passed
+	# Option 3: the inline value edit (indexes ride in edit_kind). The emitted line must change
+	# and the file must stay parseable - the round-trip contract only covers UNTOUCHED files.
+	var body_event: EventRow = null
+	for entry: Variant in body_sheet.events:
+		if entry is EventRow and (entry as EventRow).actions.has(body_decl):
+			body_event = entry
+	var decl_action_index: int = body_event.actions.find(body_decl) if body_event != null else -1
+	all_passed = _check("the inline line edit rewrites one entry",
+		EventSheetViewport._apply_decl_entry_edit(body_event, "decl_entry_line:%d:0" % decl_action_index, "\"calm\" = 12"), true) and all_passed
+	all_passed = _check("the edited entry emits its new value",
+		str(SheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")).contains("		\"calm\": 12,"), true) and all_passed
+	all_passed = _check("a blank inline line is refused",
+		EventSheetViewport._apply_decl_entry_edit(body_event, "decl_entry_line:%d:0" % decl_action_index, "   "), false) and all_passed
+	all_passed = _check("a dictionary line with no separator is refused",
+		EventSheetViewport._apply_decl_entry_edit(body_event, "decl_entry_line:%d:0" % decl_action_index, "just_a_value"), false) and all_passed
+	# Option 2's dialog path shares one static mutation: add, edit, and the refusals.
+	all_passed = _check("Add Entry appends a keyed entry",
+		EventSheetQuickPromptDialogs.set_collection_entry(body_decl, -1, "\"swarm\"", "20"), true) and all_passed
+	all_passed = _check("the added entry emits",
+		str(SheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")).contains("		\"swarm\": 20,"), true) and all_passed
+	all_passed = _check("a dictionary entry with no key is refused",
+		EventSheetQuickPromptDialogs.set_collection_entry(body_decl, -1, "", "9"), false) and all_passed
+	all_passed = _check("a blank value is refused by the dialog path too",
+		EventSheetQuickPromptDialogs.set_collection_entry(body_decl, 0, "\"calm\"", ""), false) and all_passed
+	# Removal is the third menu verb; the entry must vanish from emission.
+	body_decl.entry_keys.remove_at(2)
+	body_decl.entry_values.remove_at(2)
+	all_passed = _check("a removed entry no longer emits",
+		str(SheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")).contains("swarm"), false) and all_passed
+	# A NON-canonical literal (no trailing comma) must refuse the structured lift and fall back
+	# to per-line rows - claiming it would re-emit a comma the file never had.
+	var loose: EventSheetResource = importer.import_external_source("extends Node\n\nfunc _ready() -> void:\n\tvar odd := {\n\t\t\"a\": 1\n\t}\n\tprint(odd)\n")
+	loose.external_source_path = "user://style_lift_loose.gd"
+	all_passed = _check("a literal without trailing commas stays per-line rows",
+		_first_decl(loose) == null, true) and all_passed
+	all_passed = _check("...and still reproduces byte-identically",
+		str(SheetCompiler.compile(loose, "user://style_lift_loose.gd").get("output", "")).contains("var odd := {"), true) and all_passed
 
 	# ── Prose about the provider convention must not be compiled as a call site ──
 	var prose_sheet: EventSheetResource = importer.import_external_source(PROVIDER_PROSE_SOURCE)
@@ -321,6 +359,16 @@ static func _first_comment_text(sheet: EventSheetResource) -> String:
 				if action is CommentRow:
 					return (action as CommentRow).text
 	return "<no comment row>"
+
+
+## The first structured collection declaration anywhere in the sheet's events, or null.
+static func _first_decl(sheet: EventSheetResource) -> CollectionDeclRow:
+	for entry: Variant in sheet.events:
+		if entry is EventRow:
+			for action: Variant in (entry as EventRow).actions:
+				if action is CollectionDeclRow:
+					return action
+	return null
 
 
 ## Every verbatim code action in the sheet, in order, as its literal text - the VALUE that says

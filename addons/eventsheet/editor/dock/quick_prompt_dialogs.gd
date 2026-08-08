@@ -195,3 +195,74 @@ static func set_group_fields(group: EventGroup, new_name: String, new_desc: Stri
 	group.group_name = resolved_name
 	group.description = new_desc.strip_edges()
 	return resolved_name
+
+
+# ── Collection-declaration entry prompt (Add Entry… / Edit Entry… on a Declare row) ──
+var _entry_dialog: ConfirmationDialog = null
+var _entry_key_edit: LineEdit = null
+var _entry_key_row: Control = null
+var _entry_value_edit: LineEdit = null
+var _entry_target: CollectionDeclRow = null
+var _entry_index: int = -1
+
+
+## Add (entry_index -1) or edit one entry of a Declare row. The key field shows only for a
+## dictionary, and string keys must include their own quotes - the field holds the SOURCE text
+## of the key, so `"calm"` and a bare enum constant are both legal and neither is guessed at.
+func prompt_collection_entry(decl: CollectionDeclRow, entry_index: int) -> void:
+	if decl == null:
+		return
+	if _entry_dialog == null:
+		_entry_dialog = ConfirmationDialog.new()
+		_entry_dialog.ok_button_text = "Apply"
+		_entry_dialog.min_size = Vector2i(420, 0)
+		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		_entry_key_edit = LineEdit.new()
+		_entry_key_edit.placeholder_text = "\"key\" (quotes included) or a constant"
+		_entry_key_row = EventSheetPopupUI.form_row("Key", _entry_key_edit)
+		box.add_child(_entry_key_row)
+		_entry_value_edit = LineEdit.new()
+		_entry_value_edit.placeholder_text = "Value expression, e.g. 3 or Vector2(1, 2)"
+		_entry_value_edit.text_submitted.connect(func(_submitted: String) -> void:
+			_apply_collection_entry()
+			_entry_dialog.hide()
+		)
+		box.add_child(EventSheetPopupUI.form_row("Value", _entry_value_edit))
+		_entry_dialog.add_child(EventSheetPopupUI.margined(box))
+		_entry_dialog.confirmed.connect(_apply_collection_entry)
+		_dock.add_child(_entry_dialog)
+	_entry_target = decl
+	_entry_index = entry_index
+	_entry_dialog.title = "Edit Entry" if entry_index >= 0 else "Add Entry"
+	_entry_key_row.visible = decl.is_dictionary()
+	_entry_key_edit.text = decl.entry_keys[entry_index] if entry_index >= 0 and entry_index < decl.entry_keys.size() else ""
+	_entry_value_edit.text = decl.entry_values[entry_index] if entry_index >= 0 and entry_index < decl.entry_values.size() else ""
+	_entry_dialog.popup_centered()
+	if decl.is_dictionary() and entry_index < 0:
+		_entry_key_edit.grab_focus()
+	else:
+		_entry_value_edit.grab_focus()
+		_entry_value_edit.select_all()
+
+
+## One-shot apply: nulls the target first so a text-submit + dialog-OK pair can never double-apply.
+func _apply_collection_entry() -> void:
+	if _entry_target == null:
+		return
+	var target: CollectionDeclRow = _entry_target
+	_entry_target = null
+	var target_index: int = _entry_index
+	_entry_index = -1
+	var applied: bool = _dock._perform_undoable_sheet_edit("Edit Entry", func() -> bool:
+		return set_collection_entry(target, target_index, _entry_key_edit.text, _entry_value_edit.text)
+	)
+	if applied:
+		_dock._mark_dirty("Updated entry." if target_index >= 0 else "Added entry.")
+
+
+## Thin delegate: the mutation itself lives on CollectionDeclRow.set_entry, the single path the
+## entry dialog, the inline value edit, and the public API all share.
+static func set_collection_entry(decl: CollectionDeclRow, entry_index: int, key_text: String, value_text: String) -> bool:
+	if decl == null:
+		return false
+	return decl.set_entry(entry_index, key_text, value_text)

@@ -1512,6 +1512,20 @@ static func _emit_event_body(
 					lines.append(body_indent + inline_line)
 				had_body = true
 				source_map.append({"uid": str(inline_raw.get_instance_id()), "start": inline_start, "end": lines.size(), "kind": "raw"})
+			elif action_item is CollectionDeclRow:
+				# A structured in-body collection declaration (Declare <name> with entry rows). The
+				# brackets exist only HERE: emit_lines() writes them back around the entries, and it is
+				# the same function the importer's parse() byte-gate compares against, so the two can
+				# never disagree about what an untouched declaration looks like on disk.
+				var decl: CollectionDeclRow = action_item as CollectionDeclRow
+				if not decl.enabled:
+					continue
+				_emit_leading_body_blanks(decl, lines)
+				var decl_start: int = lines.size() + 1
+				for decl_line: String in decl.emit_lines():
+					lines.append(body_indent + decl_line)
+				had_body = true
+				source_map.append({"uid": str(decl.get_instance_id()), "start": decl_start, "end": lines.size(), "kind": "collection_decl"})
 			elif action_item is MatchRow:
 				# A GDScript `match` as a structured action row (the switch idiom): subject + branches one
 				# level deeper. Structured `cases` (each an editable action body) win when present; otherwise

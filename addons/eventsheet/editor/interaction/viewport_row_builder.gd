@@ -2999,6 +2999,43 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 							}
 						)
 					)
+			elif action_resource is CollectionDeclRow:
+				# Option 1 of the collection-declaration work: ONE "Declare <name>" action row with each
+				# entry on a single-cell line of its own - no bracket rows, and the same one-span cell
+				# every other action uses, so the automatic value tinting reads `"calm" = 3` exactly like
+				# `Set variable score to 0`. Double-clicking an entry edits the whole line in place
+				# (edit_kind carries the action and entry index, since the span-edit signal passes no
+				# metadata); the commit re-parses `key = value`, so either side can be changed.
+				var decl: CollectionDeclRow = action_resource as CollectionDeclRow
+				spans.append(_make_span("Declare %s   -   %s, %d %s" % [decl.variable_name(),
+					"Dictionary" if decl.is_dictionary() else "Array", decl.entry_values.size(),
+					"entry" if decl.entry_values.size() == 1 else "entries"],
+					SemanticSpan.SpanType.VALUE, {
+					"lane": "action",
+					"kind": "action",
+					"ace_index": action_index,
+					"ace_enabled": decl.enabled,
+					"chip": true,
+					"line_index": action_line_index
+				}.merged(action_style_meta, false)))
+				action_line_index += 1
+				for entry_index: int in decl.entry_values.size():
+					var entry_key: String = decl.entry_keys[entry_index] if entry_index < decl.entry_keys.size() else ""
+					var entry_text: String = "        %s" % decl.entry_values[entry_index]
+					if not entry_key.is_empty():
+						entry_text = "        %s = %s" % [entry_key, decl.entry_values[entry_index]]
+					spans.append(_make_span(entry_text, SemanticSpan.SpanType.VALUE, {
+						"lane": "action",
+						"kind": "action",
+						"ace_index": action_index,
+						"ace_enabled": decl.enabled,
+						"chip": true,
+						"decl_entry_index": entry_index,
+						"editable": true,
+						"edit_kind": "decl_entry_line:%d:%d" % [action_index, entry_index],
+						"line_index": action_line_index
+					}.merged(action_style_meta, false)))
+					action_line_index += 1
 			elif action_resource is RawCodeRow:
 				# In-flow GDScript block: one action-lane cell per code line. All lines share
 				# the block's ace_index, so click/drag/delete treat the block as one action.
@@ -3167,6 +3204,9 @@ func _count_event_lines(event_row: EventRow) -> int:
 			action_count += 1
 		elif action_resource is RawCodeRow:
 			action_count += maxi((action_resource as RawCodeRow).code.split("\n").size(), 1)
+		elif action_resource is CollectionDeclRow:
+			# Header line + one line per entry; the brackets never render, so they never count.
+			action_count += 1 + (action_resource as CollectionDeclRow).entry_values.size()
 		elif action_resource is MatchRow:
 			var match_resource: MatchRow = action_resource as MatchRow
 			if not match_resource.cases.is_empty():

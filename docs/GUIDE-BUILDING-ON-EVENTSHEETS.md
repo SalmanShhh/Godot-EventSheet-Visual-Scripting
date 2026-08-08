@@ -272,6 +272,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Seams | `preload_block_for(asset_path)` - a preload Custom Block row with a safe constant name | `CustomBlockRow` | no |
 | Seams | `preview_behaviors()` | `bool` | yes |
 | Seams | `verify_pack(pack_gd_path: String)` | `Dictionary` | no |
+| Rows | `collection_decl(variable_name: String, entries: Array, dictionary := true)` | `CollectionDeclRow` | no |
 | Localisation | `translate(text: String)` | `String` | no |
 | Localisation | `register_translation_file(path: String)` | `bool` | no |
 | Localisation | `available_languages()` | `PackedStringArray` | no |

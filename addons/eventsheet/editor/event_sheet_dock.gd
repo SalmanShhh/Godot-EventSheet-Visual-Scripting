@@ -24,6 +24,12 @@ const ACTION_MENU_DELETE := 4
 const ACTION_MENU_EXTRACT_FN := 40
 ## "This raw call looks like one of your own verbs - name it."
 const ACTION_MENU_CONVERT_TO_VERB := 41
+# Collection-declaration rows (Declare <name> with entry rows) - shown only when the
+# right-clicked action IS one; the entry items additionally need the click to have landed
+# on an entry line (the span carries decl_entry_index).
+const ACTION_MENU_DECL_ADD_ENTRY := 60
+const ACTION_MENU_DECL_EDIT_ENTRY := 61
+const ACTION_MENU_DECL_REMOVE_ENTRY := 62
 const ACTION_MENU_TOGGLE_ENABLED := 5
 const ACTION_MENU_EDIT_ACE_COMMENT := 21
 const ROW_MENU_ADD_SUB_EVENT := 1
@@ -3068,6 +3074,7 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 		return
 	if kind == "action":
 		_refresh_convert_to_verb_item()
+		_refresh_collection_decl_items()
 		_show_popup_menu(_action_context_menu, global_position)
 		return
 	# Everything else - including data_class_field spans - routes to the row menu: the
@@ -3203,6 +3210,48 @@ func _refresh_convert_to_verb_item() -> void:
 		"This raw call matches one of your project's verbs. Converting names the row and gives it that verb's parameter fields; the emitted code is unchanged.")
 
 
+## Option 2 of the collection-declaration work: entry verbs on the action menu, shown only
+## when the right-clicked action IS a Declare row (a permanently greyed trio elsewhere would
+## be clutter). Edit/Remove appear only when the click landed on an entry line.
+func _refresh_collection_decl_items() -> void:
+	if _action_context_menu == null:
+		return
+	for decl_id: int in [ACTION_MENU_DECL_ADD_ENTRY, ACTION_MENU_DECL_EDIT_ENTRY, ACTION_MENU_DECL_REMOVE_ENTRY]:
+		var existing_index: int = _action_context_menu.get_item_index(decl_id)
+		if existing_index >= 0:
+			_action_context_menu.remove_item(existing_index)
+	var decl: CollectionDeclRow = _context_ace_resource("action") as CollectionDeclRow
+	if decl == null:
+		return
+	_action_context_menu.add_item("Add Entry…", ACTION_MENU_DECL_ADD_ENTRY)
+	var entry_index: int = _context_decl_entry_index()
+	if entry_index >= 0 and entry_index < decl.entry_values.size():
+		_action_context_menu.add_item("Edit Entry…", ACTION_MENU_DECL_EDIT_ENTRY)
+		_action_context_menu.add_item("Remove Entry", ACTION_MENU_DECL_REMOVE_ENTRY)
+
+
+## The entry line the context click landed on, or -1 (the header line carries no entry index).
+func _context_decl_entry_index() -> int:
+	var metadata: Variant = _context_hit.get("span_metadata", {})
+	if not (metadata is Dictionary):
+		return -1
+	return int((metadata as Dictionary).get("decl_entry_index", -1))
+
+
+## Removes one entry of a Declare row undoably. Add/Edit go through the quick-prompt dialog;
+## removal needs no input, so it applies directly.
+func _remove_collection_entry(decl: CollectionDeclRow, entry_index: int) -> void:
+	if decl == null or entry_index < 0 or entry_index >= decl.entry_values.size():
+		return
+	var removed: bool = _perform_undoable_sheet_edit("Remove Entry", func() -> bool:
+		decl.entry_keys.remove_at(entry_index)
+		decl.entry_values.remove_at(entry_index)
+		return true
+	)
+	if removed:
+		_mark_dirty("Removed entry.")
+
+
 ## The project verb a raw Call Method row looks like, or {} when there is no single answer.
 ## Reads the action's own params, so it works on any generic call however it got here (typed
 ## by hand, pasted, or lifted from foreign GDScript).
@@ -3299,6 +3348,12 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 			_delete_context_ace()
 		ACTION_MENU_EXTRACT_FN:
 			_extract_to_function_requested()
+		ACTION_MENU_DECL_ADD_ENTRY:
+			_quick_prompts.prompt_collection_entry(_context_ace_resource("action") as CollectionDeclRow, -1)
+		ACTION_MENU_DECL_EDIT_ENTRY:
+			_quick_prompts.prompt_collection_entry(_context_ace_resource("action") as CollectionDeclRow, _context_decl_entry_index())
+		ACTION_MENU_DECL_REMOVE_ENTRY:
+			_remove_collection_entry(_context_ace_resource("action") as CollectionDeclRow, _context_decl_entry_index())
 
 
 func _on_row_context_menu_id_pressed(id: int) -> void:
@@ -3813,6 +3868,15 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 	if row_data == null or row_data.source_resource == null:
 		return
 	if old_value == new_value:
+		return
+	if edit_kind.begins_with("decl_entry_line:"):
+		var entry_updated: bool = _perform_undoable_sheet_edit("Edit Entry", func() -> bool:
+			if not (row_data.source_resource is EventRow):
+				return false
+			return EventSheetViewport._apply_decl_entry_edit(row_data.source_resource as EventRow, edit_kind, new_value)
+		)
+		if entry_updated:
+			_mark_dirty("Updated entry.")
 		return
 	var updated: bool = _perform_undoable_sheet_edit("Edit Row Text", func() -> bool:
 		match edit_kind:

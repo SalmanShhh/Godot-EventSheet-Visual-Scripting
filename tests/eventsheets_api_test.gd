@@ -198,6 +198,19 @@ static func run() -> bool:
 		EventSheets.palette_commands().filter(func(c: Dictionary) -> bool: return str(c.get("title", "")) == "API Test Command").is_empty(), true) and ok
 
 	dock.free()
+
+	# -- collection_decl: build a structured in-body literal without assembling code text --
+	var built_decl: CollectionDeclRow = EventSheets.collection_decl("waves", [["\"calm\"", "3"], ["\"busy\"", "8"]])
+	ok = _check("collection_decl returns a row", built_decl != null, true) and ok
+	ok = _check("collection_decl builds a dictionary declaration",
+		Array(built_decl.emit_lines()) if built_decl != null else [], ["var waves := {", "\t\"calm\": 3,", "\t\"busy\": 8,", "}"]) and ok
+	var built_array: CollectionDeclRow = EventSheets.collection_decl("ids", ["1", "2"], false)
+	ok = _check("collection_decl builds an array declaration",
+		Array(built_array.emit_lines()) if built_array != null else [], ["var ids := [", "\t1,", "\t2,", "]"]) and ok
+	ok = _check("a non-identifier name is refused", EventSheets.collection_decl("not a name", []) == null, true) and ok
+	ok = _check("a keyless dictionary entry is refused",
+		EventSheets.collection_decl("x", [["", "3"]]) == null, true) and ok
+
 	return ok
 
 

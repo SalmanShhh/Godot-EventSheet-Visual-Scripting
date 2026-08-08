@@ -1381,22 +1381,29 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			pending_group_slug = _stamp_group(current, pending_group_slug)
 			rows.append(current)
 		if at_this_depth:
-			# A line that OPENS a multi-line collection literal takes the whole literal with it, then
-			# lands as ONE ACTION PER LINE. Matching only its head published `var metadata := {` as an
-			# action and stranded the entries in a block below it, so a table of defaults read as a wall
-			# of orphaned strings - the largest category of in-body code left after the lift.
-			#
-			# Per line rather than one block, because entries you can see one-per-row are entries you can
-			# read and drag to reorder. Byte-neutral either way: consecutive raw actions re-emit by
-			# appending their lines in order, so an untouched file still reproduces exactly.
+			# A line that OPENS a multi-line collection literal takes the whole literal with it.
+			# Matching only its head once published `var metadata := {` as an action and stranded the
+			# entries in a block below it, so a table of defaults read as a wall of orphaned strings.
 			var literal_end: int = _body_literal_close(lines, index, depth)
 			if literal_end > index:
 				# Close whatever was pending first: a comment run above the literal is a note in its own
 				# right, and merged into the same block neither it nor the literal can be recognised.
 				_flush_raw(current, pending_raw, blank_box)
+				var decl_lines: PackedStringArray = PackedStringArray()
 				for literal_index: int in range(index, literal_end + 1):
-					pending_raw.append(lines[literal_index].substr(depth))
-					_flush_raw(current, pending_raw, blank_box)
+					decl_lines.append(lines[literal_index].substr(depth))
+				# STRUCTURED first: a canonical `var name := { ... }` becomes ONE Declare action whose
+				# entries are rows of their own - no bracket rows at all. parse() carries its own byte
+				# gate (emit_lines() must reproduce the source exactly), so anything it cannot claim
+				# falls to the per-line rows below, and the whole-file verify still gates everything.
+				var decl: CollectionDeclRow = CollectionDeclRow.parse(decl_lines)
+				if decl != null:
+					_stamp_body_blanks(decl, blank_box)
+					current.actions.append(decl)
+				else:
+					for decl_line: String in decl_lines:
+						pending_raw.append(decl_line)
+						_flush_raw(current, pending_raw, blank_box)
 				index = literal_end + 1
 				chain_open = false
 				continue
