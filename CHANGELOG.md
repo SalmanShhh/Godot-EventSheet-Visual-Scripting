@@ -25,6 +25,13 @@ as **`EventSheets.collection_decl(name, entries, dictionary)`** - the API grows 
 this feature needed exactly that seam, and anything an asset-drop handler wants to seed with a
 defaults table needs it too.
 
+**File scope gets the same treatment.** A top-level `const` table or `var` default set opens as
+the same Declare row - the plugin's own 31-entry annotation table now reads as
+`Declare KNOWN_ANNOTATIONS - const Dictionary, 31 entries` with every token on an editable row -
+with the same menu and the same inline editing (the edit routes by the row itself rather than an
+action index). A bare FINAL comma is recognised as the ordinary style it is and reproduced as
+written; adding an entry after one gives it the comma GDScript then requires.
+
 The byte gate is the resource's own `parse()`: a literal is claimed only when re-emitting the
 structured model reproduces the source exactly (`emit_lines()` is shared by the compiler and the
 gate, so they can never disagree). No trailing comma, a nested multi-line value, an inline
