@@ -40,6 +40,14 @@ functions **167 -> 879**, lifted events **585 -> 3,789**, with byte-exactness at
 files. Every gate is unchanged - the lift is still all-or-nothing per file and still reverts
 rather than risk a single altered byte.
 
+**None of this was visible to the test suite, which stayed green throughout.** Every other lift
+test builds its own fixture, and a fixture written to suit the lifter cannot notice that real
+code does not look like it. There is now a gate that opens real hand-written files - the
+plugin's own source, ordinary style-guide GDScript nobody wrote for a test - and pins both
+byte-exact round-trips and a floor on how many functions come back as functions. Each of the
+four bugs above was reintroduced one at a time to confirm the gate actually fails; the first
+version of it caught only three, which is exactly why that check is worth running.
+
 The **Class setup** strip - the fold that hides class boilerplate so an opened file reads as
 logic - also stopped firing on the exact shape a hand-written script has. It accepted `##` doc
 comments but not plain `#` ones, and a `#` file-header comment is how nearly every script
