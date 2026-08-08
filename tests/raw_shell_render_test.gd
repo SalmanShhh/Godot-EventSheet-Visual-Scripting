@@ -55,6 +55,36 @@ static func run() -> bool:
 	ok = _check("its typed-collection return is recorded", str(shared.get("return_type", "")), "Array[Dictionary]") and ok
 	ok = _check("its params are captured", str(shared.get("params", "")), "id: String") and ok
 
+	# -- data_literal_info: a multi-line collection is ONE value, so it collapses to one row --
+	# A table of constants rendered as fifteen lines of code makes data look like logic and buries
+	# the rows around it. The collapse is a pure view: the block is unchanged, so the byte
+	# round-trip is untouched and double-click still opens the code editor on the real entries.
+	var table: Dictionary = ViewportRowBuilder.data_literal_info(
+		"const RULES := {\n\t\"a\": 1,\n\t\"b\": 2,\n}")
+	ok = _check("a dictionary literal collapses", str(table.get("head", "")), "const RULES := {") and ok
+	ok = _check("its entries are counted", int(table.get("entries", -1)), 2) and ok
+	ok = _check("its closing bracket is kept", str(table.get("close", "")), "}") and ok
+	var typed: Dictionary = ViewportRowBuilder.data_literal_info(
+		"var rows: Array[Dictionary] = [\n\t{\"x\": 1},\n\t{\"y\": 2},\n]")
+	ok = _check("a typed array literal collapses too", int(typed.get("entries", -1)), 2) and ok
+	# A nested value closes with its OWN `},` line - counting that as an entry reported a
+	# two-key dictionary as three.
+	var nested: Dictionary = ViewportRowBuilder.data_literal_info(
+		"const M := {\n\t\"a\": {\n\t\t\"deep\": 1,\n\t},\n\t\"b\": 2,\n}")
+	ok = _check("a nested value counts as ONE entry, not its closing line",
+		int(nested.get("entries", -1)), 2) and ok
+	# ...and the refusals, which are what keep the collapse from ever hiding real code.
+	ok = _check("a WRAPPED CALL is not a literal (a bare `(` opens arguments)",
+		ViewportRowBuilder.data_literal_info("add_child(\n\tnode,\n)").is_empty(), true) and ok
+	ok = _check("a statement after the closing bracket refuses the collapse",
+		ViewportRowBuilder.data_literal_info("const X := {\n\t\"a\": 1,\n}\nprint(X)").is_empty(), true) and ok
+	ok = _check("a comment above the head refuses it (the note would be hidden)",
+		ViewportRowBuilder.data_literal_info("# table\nconst X := {\n\t\"a\": 1,\n}").is_empty(), true) and ok
+	ok = _check("a one-line literal is left alone (already readable)",
+		ViewportRowBuilder.data_literal_info("const X := {\"a\": 1}").is_empty(), true) and ok
+	ok = _check("an if block is not a literal",
+		ViewportRowBuilder.data_literal_info("if ready:\n\tpass\n\treturn").is_empty(), true) and ok
+
 	# ── is_comment_only_block + strip_comment_prefix: a pure-comment block reads as a clean note (no
 	# "setup"/code badge, no leading #), while any real code keeps the GDScript block treatment. ──
 	ok = _check("a block of only ## comments is comment-only",

@@ -1381,6 +1381,22 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			pending_group_slug = _stamp_group(current, pending_group_slug)
 			rows.append(current)
 		if at_this_depth:
+			# A line that OPENS a multi-line collection literal takes the whole literal with it. Matching
+			# only its head published `var metadata := {` as an action and stranded its entries in a
+			# separate block, so a table of defaults rendered as a wall of orphaned strings - the single
+			# largest category of in-body code left after the lift. Kept whole, it is one raw block the
+			# canvas can collapse to a summary row.
+			var literal_end: int = _body_literal_close(lines, index, depth)
+			if literal_end > index:
+				# Close whatever was pending first: a comment run above the literal is a note in its own
+				# right, and merged into the same block neither it nor the literal can be recognised.
+				_flush_raw(current, pending_raw, blank_box)
+				for literal_index: int in range(index, literal_end + 1):
+					pending_raw.append(lines[literal_index].substr(depth))
+				_flush_raw(current, pending_raw, blank_box)
+				index = literal_end + 1
+				chain_open = false
+				continue
 			_consume_action_line(current, rest, 0, pending_raw, reverse_entries, in_loop, blank_box)
 		else:
 			# A DEEPER line lives inside an unlifted control block above it. Template-matching it
@@ -1742,6 +1758,34 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		condition.negated = negated
 		event.conditions.append(condition)
 	return true
+
+
+## The index of the line closing a multi-line collection literal that STARTS at `start` inside a
+## function body at `depth`, or -1 when none does. Mirrors the top-level rule: the head sits at
+## the body depth and ends on `{` or `[` (a bare `(` is a wrapped call), the lines between are
+## indented deeper and non-blank, and the closing line returns to the body depth carrying only
+## bracket characters.
+static func _body_literal_close(lines: PackedStringArray, start: int, depth: int) -> int:
+	var indent: String = "	".repeat(depth)
+	var head: String = lines[start]
+	if not head.begins_with(indent) or head.substr(depth).begins_with("	"):
+		return -1
+	var head_text: String = head.strip_edges()
+	if not (head_text.ends_with("{") or head_text.ends_with("[")):
+		return -1
+	for scan: int in range(start + 1, lines.size()):
+		var line: String = lines[scan]
+		if line.strip_edges().is_empty():
+			return -1
+		if not line.begins_with(indent):
+			return -1
+		if line.substr(depth).begins_with("	"):
+			continue
+		for character: String in line.strip_edges():
+			if not (character in "}]),"):
+				return -1
+		return scan if scan > start + 1 else -1
+	return -1
 
 
 ## Action line → ACEAction when a template matches; otherwise queued as raw GDScript so the

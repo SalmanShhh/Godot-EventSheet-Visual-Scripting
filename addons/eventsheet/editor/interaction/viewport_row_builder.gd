@@ -1167,6 +1167,97 @@ static func _annotation_string_arg(line: String) -> String:
 	return line.substr(open_quote + 1, close_quote - open_quote - 1)
 
 
+## The badge an in-body block wears: none for a pure comment note (it is already visibly a
+## comment), the bracket for a collapsed collection literal, and the code badge otherwise.
+static func _inline_block_label(is_note: bool, literal_info: Dictionary) -> String:
+	if is_note:
+		return ""
+	if not literal_info.is_empty():
+		return "{}" if str(literal_info.get("head", "")).ends_with("{") else "[]"
+	return "GDScript"
+
+
+## The collapsed view of a RawCodeRow that is EXACTLY one multi-line collection literal: a head
+## line opening a `{` or `[` (`const RULES := {`, `var rows: Array[Dictionary] = [`, `return [`),
+## entry lines indented under it, and a last line that only closes the bracket. Returns
+## {head, close, entries, line_count} when it qualifies, else {}.
+##
+## A data literal is ONE VALUE, not a sequence of statements, so rendering it as fifteen lines of
+## code makes a table of constants look like logic. Collapsed, it reads as the single thing it is
+## and the rows around it become findable again. Pure view: the RawCodeRow is untouched, so the
+## byte round-trip is unaffected and double-click still opens the code editor to see or change it.
+##
+## Deliberately NOT matched: a head ending in a bare `(`, which is a wrapped function CALL rather
+## than a literal, and any block with a statement after the closing bracket. Static + pure, so the
+## classifier is unit-testable without a viewport.
+static func data_literal_info(code: String) -> Dictionary:
+	var lines: PackedStringArray = code.split("
+")
+	while lines.size() > 0 and lines[lines.size() - 1].strip_edges().is_empty():
+		lines.remove_at(lines.size() - 1)
+	# Head, at least one entry, and a closing line - anything shorter already reads fine as code.
+	if lines.size() < 3:
+		return {}
+	var head_index: int = -1
+	for index: int in lines.size():
+		if not lines[index].strip_edges().is_empty():
+			head_index = index
+			break
+	# Only blank lines may precede the head: a comment above it is content of its own, and hiding
+	# it inside a collapsed summary would lose the one line that explains the table.
+	if head_index != 0:
+		return {}
+	var head: String = lines[0]
+	var head_text: String = head.strip_edges()
+	var opens: bool = false
+	for opener: String in ["{", "[", "({", "(["]:
+		if head_text.ends_with(opener):
+			opens = true
+	if not opens:
+		return {}
+	var base_indent: String = head.substr(0, head.length() - head.lstrip("	 ").length())
+	var close_text: String = lines[lines.size() - 1].strip_edges()
+	# The closing line must sit at the head's own indent and carry nothing but bracket characters.
+	if lines[lines.size() - 1].substr(0, base_indent.length()) != base_indent:
+		return {}
+	if lines[lines.size() - 1].strip_edges() != lines[lines.size() - 1].substr(base_indent.length()):
+		return {}
+	if close_text.is_empty():
+		return {}
+	for character: String in close_text:
+		if not (character in "}]),"):
+			return {}
+	# Every entry line must be indented DEEPER than the head, or the block holds more than the literal.
+	var entry_indents: Array = []
+	for index: int in range(1, lines.size() - 1):
+		if lines[index].strip_edges().is_empty():
+			continue
+		var indent: String = lines[index].substr(0, lines[index].length() - lines[index].lstrip("	 ").length())
+		if indent.length() <= base_indent.length() or not indent.begins_with(base_indent):
+			return {}
+		# A line that is only closing brackets belongs to a NESTED value, not to this literal - counting
+		# it would report a dictionary of two keys as three entries.
+		var entry_text: String = lines[index].strip_edges()
+		var closer_only: bool = true
+		for character: String in entry_text:
+			if not (character in "}]),"):
+				closer_only = false
+				break
+		entry_indents.append([indent.length(), closer_only])
+	if entry_indents.is_empty():
+		return {}
+	# Count only the SHALLOWEST entry lines, so a nested dictionary reports its own entries rather
+	# than every line of its children.
+	var shallowest: int = int((entry_indents[0] as Array)[0])
+	for entry: Variant in entry_indents:
+		shallowest = mini(shallowest, int((entry as Array)[0]))
+	var entries: int = 0
+	for entry: Variant in entry_indents:
+		if int((entry as Array)[0]) == shallowest and not bool((entry as Array)[1]):
+			entries += 1
+	return {"head": head_text, "close": close_text, "entries": entries, "line_count": lines.size()}
+
+
 ## A RawCodeRow that is ONE top-level function definition (a private helper the importer could not lift
 ## into an ACE, or any func body opened from a .gd) - the header line plus an indented body, nothing else
 ## at column 0. Returns {name, params, return_type, body_lines, line_count} so the row renders as a
@@ -1580,6 +1671,39 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# A lone top-level function (a helper the importer could not lift) collapses to a `ƒ name(params) ->
 	# Type` header + line count, so it reads as a FUNCTION, not a raw GDScript wall - the same view-only
 	# collapse as host-binding and annotation shells above. Double-click still opens the code dialog.
+	# A multi-line collection literal (a table of constants, a defaults dictionary) collapses to its
+	# head line plus an entry count, so a value reads as one value instead of a wall of code. Pure
+	# view over the unchanged row - double-click opens the code editor to read or edit the entries.
+	var literal_info: Dictionary = data_literal_info(raw_row.code)
+	if not literal_info.is_empty():
+		row_data.line_count = 1
+		row_data.language_block = true
+		var literal_style: EventSheetEventStyle = _viewport._get_event_style()
+		row_data.spans = [
+			_make_span("{}" if str(literal_info.get("head")).ends_with("{") else "[]", SemanticSpan.SpanType.KEYWORD, {
+				"editable": false,
+				"badge": true,
+				"badge_style": "scope",
+				"badge_bg": EventSheetPalette.COLOR_CODE_BADGE_BG,
+				"badge_fg": EventSheetPalette.COLOR_CODE_BADGE_FG,
+				"kind": "raw_code",
+				"line_index": 0
+			}),
+			_make_span("%s %s" % [str(literal_info.get("head")), str(literal_info.get("close"))],
+				SemanticSpan.SpanType.OBJECT, {
+					"editable": false,
+					"kind": "raw_code",
+					"line_index": 0,
+					"text_color": EventSheetPalette.TEXT_PRIMARY
+				}),
+			_make_span("%d entries" % int(literal_info.get("entries", 0)), SemanticSpan.SpanType.COMMENT, {
+				"editable": false,
+				"kind": "raw_code",
+				"line_index": 0,
+				"text_color": literal_style.comment_text_color
+			})
+		]
+		return row_data
 	var function_info: Dictionary = function_body_info(raw_row.code)
 	if not function_info.is_empty():
 		row_data.line_count = 1
@@ -2770,6 +2894,18 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 				# the block's ace_index, so click/drag/delete treat the block as one action.
 				var inline_raw: RawCodeRow = action_resource as RawCodeRow
 				var inline_lines: PackedStringArray = inline_raw.code.split("\n")
+				# A block that is ENTIRELY comments is a note, not code - the same treatment a top-level
+				# comment block already gets, applied INSIDE a function body, where comments were the
+				# single largest thing still rendering as a GDScript wall.
+				var inline_is_note: bool = is_comment_only_block(inline_lines)
+				# ...and a multi-line collection literal collapses to one summary cell, because it is one
+				# value rather than a run of statements. Both are pure views over the unchanged row, so the
+				# byte round-trip holds and double-click still opens the code editor.
+				var inline_literal: Dictionary = data_literal_info(inline_raw.code)
+				if not inline_literal.is_empty():
+					inline_lines = PackedStringArray(["%s %s   %d entries" % [
+						str(inline_literal.get("head")), str(inline_literal.get("close")),
+						int(inline_literal.get("entries", 0))]])
 				var inline_total: int = maxi(inline_lines.size(), 1)
 				for inline_line_index in range(inline_total):
 					var inline_text: String = inline_lines[inline_line_index] if inline_line_index < inline_lines.size() else " "
@@ -2791,7 +2927,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 								"block_lines": inline_total,
 								"block_line": inline_line_index,
 								"line_index": action_line_index,
-								"object_label": "GDScript" if inline_line_index == 0 else ""
+								"text_color": _viewport._get_event_style().comment_text_color if inline_is_note else action_style_meta.get("text_color", EventSheetPalette.TEXT_PRIMARY),
+								"object_label": _inline_block_label(inline_is_note, inline_literal) if inline_line_index == 0 else ""
 							}.merged(action_style_meta, true)
 						)
 					)

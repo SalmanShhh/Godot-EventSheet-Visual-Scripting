@@ -314,6 +314,30 @@ blank lines the official style guide puts between functions, and an explicit `: 
 annotation. Either one could revert an entire file to blocks, so if you tried this before and got a wall of
 code, try it again.
 
+### What stays code still reads as what it is
+
+Two kinds of block are no longer shown as code at all, because neither one is logic:
+
+- **A run of comments is a note.** It loses the `GDScript` badge and reads as a plain comment, wherever
+  it sits - including inside a function body, which is where most comments actually live.
+- **A multi-line collection literal collapses to one row.** A defaults table or a lookup dictionary is a
+  single *value*, not fifteen statements, so it shows as `var waves := { }  3 entries` with a `{}` badge.
+
+<img src="images/block-views-before.png" alt="Before: a function body showing a GDScript badge over two comment lines, a System action for the opening line of a dictionary, and the dictionary entries stranded in a separate code block." width="720">
+
+<img src="images/block-views-after.png" alt="After: the same body with the comments shown as plain notes, the whole dictionary collapsed to one row reading var waves := { } 3 entries, and the remaining statements as Set variable and Print action rows." width="720">
+
+Both are **pure views**: the block itself is untouched, so the file still round-trips byte-for-byte and
+double-click still opens the code editor on the real lines. The collapse is deliberately fussy about what
+it will hide - a wrapped function call, a literal with a statement after it, or one with a comment above
+its head all keep their full code rendering, because in those cases something other than the value would
+be hidden.
+
+On real code the effect compounds. Here is the plugin's own semantic analyzer, whose annotation table is
+31 entries long:
+
+<img src="images/block-views-real-file.png" alt="A real source file opened as a sheet: a folded Class setup strip, a one-row collapsed const KNOWN_ANNOTATIONS table reading 31 entries, and a function whose body is an Expression verb row with condition and action rows." width="720">
+
 ---
 
 ## 8. When to Wrap Existing Code in Your Own ACEs

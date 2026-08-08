@@ -884,13 +884,84 @@ func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedString
 		pending.remove_at(pending.size() - 1)
 
 
+## Flushes the accumulated verbatim lines as block rows. A multi-line COLLECTION LITERAL (a
+## `const RULES := {` table, an array of defaults) is split off into a row of its own, because a
+## literal is one value and deserves to be one row - merged into the surrounding prelude it is
+## just more lines in a wall, and the editor can neither collapse nor select it on its own.
+##
+## Splitting is byte-neutral BY CONSTRUCTION: consecutive RawCodeRows emit by appending their
+## lines with no separator, so the pieces re-join exactly. The guard below re-joins them anyway
+## and falls back to the single original block if they ever do not - the lossless rule outranks
+## any presentation win.
 func _flush_pending(pending: PackedStringArray, sheet: EventSheetResource) -> void:
 	if pending.is_empty():
 		return
-	var block: RawCodeRow = RawCodeRow.new()
-	block.code = "\n".join(pending)
-	sheet.events.append(block)
+	var joined: String = "
+".join(pending)
+	var pieces: Array[PackedStringArray] = _split_literal_blocks(pending)
+	var rejoined: PackedStringArray = PackedStringArray()
+	for piece: PackedStringArray in pieces:
+		rejoined.append_array(piece)
+	if pieces.size() < 2 or "
+".join(rejoined) != joined:
+		var block: RawCodeRow = RawCodeRow.new()
+		block.code = joined
+		sheet.events.append(block)
+		pending.clear()
+		return
+	for piece: PackedStringArray in pieces:
+		var piece_row: RawCodeRow = RawCodeRow.new()
+		piece_row.code = "
+".join(piece)
+		sheet.events.append(piece_row)
 	pending.clear()
+
+
+## Splits a run of verbatim lines into pieces, giving each column-0 multi-line collection literal
+## a piece of its own. Returns a single piece when there is nothing to split. Line-preserving: the
+## concatenation of the pieces is always the input, which is what makes the caller's guard hold.
+func _split_literal_blocks(pending: PackedStringArray) -> Array[PackedStringArray]:
+	var pieces: Array[PackedStringArray] = []
+	var current: PackedStringArray = PackedStringArray()
+	var index: int = 0
+	while index < pending.size():
+		var close_index: int = _literal_close_index(pending, index)
+		if close_index < 0:
+			current.append(pending[index])
+			index += 1
+			continue
+		if not current.is_empty():
+			pieces.append(current)
+			current = PackedStringArray()
+		pieces.append(pending.slice(index, close_index + 1))
+		index = close_index + 1
+	if not current.is_empty():
+		pieces.append(current)
+	return pieces
+
+
+## The index of the line closing a column-0 multi-line collection literal STARTING at `start`, or
+## -1 when no literal starts there. The head must sit at column 0 and end on `{` or `[` (a bare
+## `(` is a wrapped call, not a literal), every line between must be indented and non-blank, and
+## the closing line must sit at column 0 carrying only bracket characters.
+func _literal_close_index(pending: PackedStringArray, start: int) -> int:
+	var head: String = pending[start]
+	if head.is_empty() or head.begins_with("	") or head.begins_with(" "):
+		return -1
+	var head_text: String = head.strip_edges()
+	if not (head_text.ends_with("{") or head_text.ends_with("[")):
+		return -1
+	for scan: int in range(start + 1, pending.size()):
+		var line: String = pending[scan]
+		if line.strip_edges().is_empty():
+			return -1
+		if line.begins_with("	") or line.begins_with(" "):
+			continue
+		for character: String in line.strip_edges():
+			if not (character in "}]),"):
+				return -1
+		return scan if scan > start + 1 else -1
+	return -1
 
 
 func import_source(source: String) -> EventSheetResource:

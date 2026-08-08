@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Added - comments read as notes, and data tables collapse to one row
+
+Two kinds of block are no longer rendered as code, because neither one is logic.
+
+**A run of comments is a note.** It loses the `GDScript` badge and reads as a plain comment -
+including inside a function body, which is where most comments actually live and which was the
+single largest category of code-looking content left after the lift.
+
+**A multi-line collection literal collapses to one row.** A defaults table or a lookup
+dictionary is one *value*, not fifteen statements, so it now reads as
+`var waves := { }  3 entries` behind a `{}` badge. This also fixed a genuine mis-lift: the
+opening line of such a literal was being matched as an ACTION on its own, stranding the entries
+in a separate block below it - the plugin's own annotation table showed as thirty-one orphaned
+strings. A literal is now kept whole, and it is split into a block of its own so the comment
+above it can be recognised as the note it is.
+
+Both are **pure views**: the block is unchanged, the file still round-trips byte-for-byte, and
+double-click still opens the code editor on the real lines. The collapse is deliberately fussy
+about what it will hide - a wrapped function call (a bare `(` opens arguments, not a value), a
+literal with a statement after it, and one with a comment above its head all keep their full
+code rendering, because in each of those cases something other than the value would vanish.
+
 ### Fixed - hand-written GDScript now actually opens as rows
 
 Opening someone else's `.gd` as a sheet was supposed to give you events and functions, with
