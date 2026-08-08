@@ -614,6 +614,14 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 			for declaration_line: String in _emit_tree_variable_line(entry as LocalVariable).split("\n"):
 				lines.append(declaration_line)
 			source_map.append({"uid": str((entry as LocalVariable).get_instance_id()), "start": variable_start, "end": lines.size(), "kind": "variable"})
+		elif entry is CollectionDeclRow:
+			# A top-level structured collection declaration (a const table, a var default set): the
+			# brackets exist only in this emission, which parse() byte-gates against.
+			var decl_top: CollectionDeclRow = entry as CollectionDeclRow
+			var decl_top_start: int = lines.size() + 1
+			for decl_top_line: String in decl_top.emit_lines():
+				lines.append(decl_top_line)
+			source_map.append({"uid": str(decl_top.get_instance_id()), "start": decl_top_start, "end": lines.size(), "kind": "collection_decl"})
 		elif entry is RawCodeRow:
 			var block_start: int = lines.size() + 1
 			for code_line: String in (entry as RawCodeRow).code.split("\n"):

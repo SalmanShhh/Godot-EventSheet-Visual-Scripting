@@ -919,14 +919,17 @@ func _flush_pending(pending: PackedStringArray, sheet: EventSheetResource) -> vo
 	var rejoined: PackedStringArray = PackedStringArray()
 	for piece: PackedStringArray in pieces:
 		rejoined.append_array(piece)
-	if pieces.size() < 2 or "
+	if "
 ".join(rejoined) != joined:
-		var block: RawCodeRow = RawCodeRow.new()
-		block.code = joined
-		sheet.events.append(block)
-		pending.clear()
-		return
+		pieces = [pending.duplicate()]
 	for piece: PackedStringArray in pieces:
+		# A canonical top-level literal becomes the same structured Declare row a body literal
+		# does - one row per entry, no bracket lines, const included. parse() carries its own
+		# byte gate, so anything it cannot reproduce exactly stays a verbatim block.
+		var decl: CollectionDeclRow = CollectionDeclRow.parse(piece)
+		if decl != null:
+			sheet.events.append(decl)
+			continue
 		var piece_row: RawCodeRow = RawCodeRow.new()
 		piece_row.code = "
 ".join(piece)

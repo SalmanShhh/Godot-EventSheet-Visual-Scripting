@@ -144,6 +144,17 @@ func _build_row_context_menu(row_data: EventRowData) -> void:
 	# checked BEFORE the row-type chain for the same reason data-class rows are: an is_event-first
 	# dispatch would swallow it, replacing verb authoring with Add Sub-Event / Make Else - whose handlers
 	# assume an EventRow anchor the verb does not have.
+	# A top-level structured collection declaration gets a scoped menu: its whole vocabulary is
+	# entries. Checked before the row-type chain for the same reason verb and data-class rows
+	# are - it reads as a SECTION row, and the generic items would act on the wrong anchor.
+	var decl_row: CollectionDeclRow = row_data.source_resource as CollectionDeclRow if row_data != null else null
+	if decl_row != null:
+		menu.add_item("Add Entry…", _dock.ACTION_MENU_DECL_ADD_ENTRY)
+		var decl_entry: int = _dock._context_decl_entry_index()
+		if decl_entry >= 0 and decl_entry < decl_row.entry_values.size():
+			menu.add_item("Edit Entry…", _dock.ACTION_MENU_DECL_EDIT_ENTRY)
+			menu.add_item("Remove Entry", _dock.ACTION_MENU_DECL_REMOVE_ENTRY)
+		return
 	var verb_function: EventFunction = row_data.source_resource as EventFunction if row_data != null else null
 	var data_class_raw: RawCodeRow = _data_class_row_target(row_data)
 	if verb_function != null:

@@ -1670,6 +1670,45 @@ static func data_class_remove_field(code: String, field_index: int) -> String:
 	return emit_data_class(model)
 
 
+## A TOP-LEVEL structured collection declaration (a const table, a var default set): the same
+## Declare treatment its in-body sibling gets - a header line, one single-cell line per entry,
+## no bracket rows. Entries edit in place (edit_kind "decl_entry_line:-1:<entry>" - the -1 says
+## the row's own resource IS the declaration), and the row menu offers Add/Edit/Remove Entry.
+func _build_collection_decl_row(decl: CollectionDeclRow, indent: int) -> EventRowData:
+	var row_data := EventRowData.new()
+	row_data.indent = indent
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = decl
+	row_data.row_uid = "collection_decl_%d" % decl.get_instance_id()
+	row_data.line_count = 1 + decl.entry_values.size()
+	var decl_style: EventSheetEventStyle = _viewport._get_event_style()
+	var spans: Array[SemanticSpan] = []
+	spans.append(_make_span("Declare %s   -   %s%s, %d %s" % [decl.variable_name(),
+		"const " if decl.is_constant() else "", "Dictionary" if decl.is_dictionary() else "Array",
+		decl.entry_values.size(), "entry" if decl.entry_values.size() == 1 else "entries"],
+		SemanticSpan.SpanType.OBJECT, {
+		"editable": false,
+		"kind": "collection_decl",
+		"line_index": 0,
+		"text_color": EventSheetPalette.TEXT_PRIMARY
+	}))
+	for entry_index: int in decl.entry_values.size():
+		var entry_key: String = decl.entry_keys[entry_index] if entry_index < decl.entry_keys.size() else ""
+		var entry_text: String = "        %s" % decl.entry_values[entry_index]
+		if not entry_key.is_empty():
+			entry_text = "        %s = %s" % [entry_key, decl.entry_values[entry_index]]
+		spans.append(_make_span(entry_text, SemanticSpan.SpanType.VALUE, {
+			"kind": "collection_decl",
+			"decl_entry_index": entry_index,
+			"editable": true,
+			"edit_kind": "decl_entry_line:-1:%d" % entry_index,
+			"line_index": entry_index + 1,
+			"text_color": decl_style.value_highlight_color
+		}))
+	row_data.spans = spans
+	return row_data
+
+
 ## A GDScript block row: verbatim code shown line-by-line, edited via the dock's code dialog
 ## (double-click), compiled at class level. The event-sheet-style "inline code" escape hatch.
 ## A row that is purely a published-verb annotation shell renders as ONE Define-style header line

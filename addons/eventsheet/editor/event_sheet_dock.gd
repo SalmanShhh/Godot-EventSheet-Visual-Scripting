@@ -3230,6 +3230,18 @@ func _refresh_collection_decl_items() -> void:
 		_action_context_menu.add_item("Remove Entry", ACTION_MENU_DECL_REMOVE_ENTRY)
 
 
+## The declaration the context click targets: the right-clicked ACTION when it is one (the
+## in-body form), else the row's own resource (the top-level form). One resolver so the action
+## menu and the row menu share the same three handlers.
+func _context_decl() -> CollectionDeclRow:
+	var action_decl: CollectionDeclRow = _context_ace_resource("action") as CollectionDeclRow
+	if action_decl != null:
+		return action_decl
+	if _context_row != null:
+		return _context_row.source_resource as CollectionDeclRow
+	return null
+
+
 ## The entry line the context click landed on, or -1 (the header line carries no entry index).
 func _context_decl_entry_index() -> int:
 	var metadata: Variant = _context_hit.get("span_metadata", {})
@@ -3349,11 +3361,11 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 		ACTION_MENU_EXTRACT_FN:
 			_extract_to_function_requested()
 		ACTION_MENU_DECL_ADD_ENTRY:
-			_quick_prompts.prompt_collection_entry(_context_ace_resource("action") as CollectionDeclRow, -1)
+			_quick_prompts.prompt_collection_entry(_context_decl(), -1)
 		ACTION_MENU_DECL_EDIT_ENTRY:
-			_quick_prompts.prompt_collection_entry(_context_ace_resource("action") as CollectionDeclRow, _context_decl_entry_index())
+			_quick_prompts.prompt_collection_entry(_context_decl(), _context_decl_entry_index())
 		ACTION_MENU_DECL_REMOVE_ENTRY:
-			_remove_collection_entry(_context_ace_resource("action") as CollectionDeclRow, _context_decl_entry_index())
+			_remove_collection_entry(_context_decl(), _context_decl_entry_index())
 
 
 func _on_row_context_menu_id_pressed(id: int) -> void:
@@ -3871,9 +3883,7 @@ func _on_viewport_span_edit_requested(row_data: EventRowData, edit_kind: String,
 		return
 	if edit_kind.begins_with("decl_entry_line:"):
 		var entry_updated: bool = _perform_undoable_sheet_edit("Edit Entry", func() -> bool:
-			if not (row_data.source_resource is EventRow):
-				return false
-			return EventSheetViewport._apply_decl_entry_edit(row_data.source_resource as EventRow, edit_kind, new_value)
+			return EventSheetViewport._apply_decl_entry_edit(row_data.source_resource, edit_kind, new_value)
 		)
 		if entry_updated:
 			_mark_dirty("Updated entry.")

@@ -32,6 +32,10 @@ extends Resource
 @export var entry_keys: PackedStringArray = PackedStringArray()
 ## Entry value expressions, verbatim.
 @export var entry_values: PackedStringArray = PackedStringArray()
+## Whether the FINAL entry was written without a trailing comma - both styles are common, and
+## emission must reproduce whichever the file used. Adding an entry after a bare last one gives
+## it the comma GDScript then requires; that byte change rides the user's own edit.
+@export var last_entry_bare: bool = false
 
 
 ## Returns the stable row kind identifier.
@@ -43,9 +47,13 @@ func is_dictionary() -> bool:
 	return head.strip_edges().ends_with("{")
 
 
-## The declared variable's name, parsed from the head (`var waves := {` -> "waves").
+func is_constant() -> bool:
+	return head.begins_with("const ")
+
+
+## The declared name, parsed from the head (`var waves := {` / `const RULES := {`).
 func variable_name() -> String:
-	var name_regex: RegEx = RegEx.create_from_string("^var ([A-Za-z_][A-Za-z0-9_]*)")
+	var name_regex: RegEx = RegEx.create_from_string("^(?:var|const) ([A-Za-z_][A-Za-z0-9_]*)")
 	var found: RegExMatch = name_regex.search(head.strip_edges())
 	return found.get_string(1) if found != null else "?"
 
@@ -57,10 +65,11 @@ func emit_lines() -> PackedStringArray:
 	out.append(head)
 	for entry_index: int in entry_values.size():
 		var key: String = entry_keys[entry_index] if entry_index < entry_keys.size() else ""
+		var comma: String = "" if last_entry_bare and entry_index == entry_values.size() - 1 else ","
 		if key.is_empty():
-			out.append("\t%s," % entry_values[entry_index])
+			out.append("\t%s%s" % [entry_values[entry_index], comma])
 		else:
-			out.append("\t%s: %s," % [key, entry_values[entry_index]])
+			out.append("\t%s: %s%s" % [key, entry_values[entry_index], comma])
 	out.append(close)
 	return out
 
@@ -114,7 +123,10 @@ static func parse(lines: PackedStringArray) -> CollectionDeclRow:
 	if lines.size() < 3:
 		return null
 	var head_text: String = lines[0]
-	if head_text.begins_with("\t") or head_text.begins_with(" ") or not head_text.begins_with("var "):
+	if head_text.begins_with("\t") or head_text.begins_with(" "):
+		return null
+	# `var` in a body, `var` or `const` at file scope - the same structure either way.
+	if not (head_text.begins_with("var ") or head_text.begins_with("const ")):
 		return null
 	var stripped_head: String = head_text.strip_edges()
 	if not (stripped_head.ends_with("{") or stripped_head.ends_with("[")):
@@ -130,9 +142,12 @@ static func parse(lines: PackedStringArray) -> CollectionDeclRow:
 		if not line.begins_with("\t") or line.begins_with("\t\t"):
 			return null
 		var body: String = line.substr(1)
-		if not body.ends_with(","):
+		if body.ends_with(","):
+			body = body.substr(0, body.length() - 1)
+		elif line_index == lines.size() - 2:
+			row.last_entry_bare = true  # a bare FINAL entry is ordinary style; middle ones are not
+		else:
 			return null
-		body = body.substr(0, body.length() - 1)
 		if body.strip_edges() != body or body.is_empty():
 			return null
 		if wants_key:

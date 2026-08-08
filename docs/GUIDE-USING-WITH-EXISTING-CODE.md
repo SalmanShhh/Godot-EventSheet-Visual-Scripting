@@ -328,10 +328,13 @@ Two kinds of block are no longer shown as code at all, because neither one is lo
   Double-click an entry to edit its line in place (`"calm" = 12` - either side may change), and right-click the row for
   **Add Entry… / Edit Entry… / Remove Entry**. Extensions can build one too:
   `EventSheets.collection_decl("waves", [["\"calm\"", "3"]])`. A literal the emitter cannot reproduce
-  byte-for-byte (no trailing commas, a nested multi-line value) stays as per-line rows instead, and at
-  file scope a table still collapses to a single `const RULES := { }  31 entries` row.
+  byte-for-byte (a comma missing mid-table, a nested multi-line value) stays as per-line rows instead.
+  File scope gets the same treatment: a `const` table opens as a Declare row too, bare final comma and
+  all, with the same menu and inline editing.
 
 <img src="images/decl-row-canvas.png" alt="A function body whose dictionary lifted to a Declare waves action: a single-cell header reading Declare waves - Dictionary, 3 entries, then calm = 3, busy = 8 and swarm = 20 as single-cell rows, followed by ordinary Set variable and Print actions." width="720">
+
+<img src="images/decl-top-canvas.png" alt="The plugin's own semantic analyzer opened as a sheet: Declare KNOWN_ANNOTATIONS - const Dictionary, 31 entries, with every annotation token as its own editable row." width="720">
 
 <img src="images/block-views-before.png" alt="Before: a function body showing a GDScript badge over two comment lines, a System action for the opening line of a dictionary, and the dictionary entries stranded in a separate code block." width="720">
 

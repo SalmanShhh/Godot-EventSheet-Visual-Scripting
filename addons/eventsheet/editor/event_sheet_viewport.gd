@@ -1969,6 +1969,8 @@ func _build_row_from_resource(entry: Resource, indent: int) -> EventRowData:
 		row_data = _build_signal_row(entry as SignalRow, indent)
 	elif entry is CustomBlockRow:
 		row_data = _row_builder._build_custom_block_row(entry as CustomBlockRow, indent)
+	elif entry is CollectionDeclRow:
+		row_data = _row_builder._build_collection_decl_row(entry as CollectionDeclRow, indent)
 	elif entry is FunctionAnchorRow:
 		row_data = _row_builder._build_function_anchor_row(entry as FunctionAnchorRow, indent)
 	elif entry is EventRow:
@@ -2627,8 +2629,8 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
 		return
 	var metadata: Dictionary = span.metadata as Dictionary
 	var edit_kind: String = str(metadata.get("edit_kind", ""))
-	if edit_kind.begins_with("decl_entry_line:") and row_data.source_resource is EventRow:
-		_apply_decl_entry_edit(row_data.source_resource as EventRow, edit_kind, value)
+	if edit_kind.begins_with("decl_entry_line:"):
+		_apply_decl_entry_edit(row_data.source_resource, edit_kind, value)
 		return
 	match edit_kind:
 		"group_name":
@@ -2648,15 +2650,19 @@ func _apply_span_edit(row_data: EventRowData, span: SemanticSpan, value: String)
 ## LINE of a collection declaration (`"calm" = 12` - either side may have changed). The indexes
 ## ride in edit_kind ("decl_entry_line:<action>:<entry>") because the span-edit signal carries
 ## no metadata. Whatever would break the one-entry-per-line shape is refused by the row itself.
-static func _apply_decl_entry_edit(event_row: EventRow, edit_kind: String, value: String) -> bool:
+static func _apply_decl_entry_edit(source: Resource, edit_kind: String, value: String) -> bool:
 	var parts: PackedStringArray = edit_kind.split(":")
-	if parts.size() != 3 or event_row == null:
+	if parts.size() != 3 or source == null:
 		return false
 	var action_index: int = int(parts[1])
 	var entry_index: int = int(parts[2])
-	if action_index < 0 or action_index >= event_row.actions.size():
-		return false
-	var decl: CollectionDeclRow = event_row.actions[action_index] as CollectionDeclRow
+	# An action index of -1 is the TOP-LEVEL form: the row's own resource is the declaration
+	# (a const table has no enclosing event to index into).
+	var decl: CollectionDeclRow = null
+	if action_index < 0:
+		decl = source as CollectionDeclRow
+	elif source is EventRow and action_index < (source as EventRow).actions.size():
+		decl = (source as EventRow).actions[action_index] as CollectionDeclRow
 	if decl == null or entry_index < 0 or entry_index >= decl.entry_values.size():
 		return false
 	return decl.set_entry_text(entry_index, value.strip_edges().trim_suffix(","))

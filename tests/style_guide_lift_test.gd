@@ -301,14 +301,46 @@ static func run() -> bool:
 	body_decl.entry_values.remove_at(2)
 	all_passed = _check("a removed entry no longer emits",
 		str(SheetCompiler.compile(body_sheet, "user://style_lift_body_literal.gd").get("output", "")).contains("swarm"), false) and all_passed
-	# A NON-canonical literal (no trailing comma) must refuse the structured lift and fall back
-	# to per-line rows - claiming it would re-emit a comma the file never had.
-	var loose: EventSheetResource = importer.import_external_source("extends Node\n\nfunc _ready() -> void:\n\tvar odd := {\n\t\t\"a\": 1\n\t}\n\tprint(odd)\n")
+	# A NON-canonical literal - a MIDDLE entry without its comma - must refuse the structured
+	# lift and fall back to per-line rows: claiming it would re-emit a comma the file never had.
+	# (A bare FINAL entry is ordinary style and lifts; that case is pinned above.)
+	var loose: EventSheetResource = importer.import_external_source("extends Node\n\nfunc _ready() -> void:\n\tvar odd := {\n\t\t\"a\": 1\n\t\t\"b\": 2,\n\t}\n\tprint(odd)\n")
 	loose.external_source_path = "user://style_lift_loose.gd"
 	all_passed = _check("a literal without trailing commas stays per-line rows",
 		_first_decl(loose) == null, true) and all_passed
 	all_passed = _check("...and still reproduces byte-identically",
 		str(SheetCompiler.compile(loose, "user://style_lift_loose.gd").get("output", "")).contains("var odd := {"), true) and all_passed
+
+	# -- A FILE-SCOPE const table gets the same Declare treatment --
+	var top_source: String = "extends Node\n\nconst RULES := {\n\t\"a\": 1,\n\t\"b\": 2,\n}\n"
+	var top_sheet: EventSheetResource = importer.import_external_source(top_source)
+	top_sheet.external_source_path = "user://style_lift_top.gd"
+	var top_decl: CollectionDeclRow = null
+	for top_entry: Variant in top_sheet.events:
+		if top_entry is CollectionDeclRow:
+			top_decl = top_entry
+	all_passed = _check("a top-level const table lifts to a Declare row", top_decl != null, true) and all_passed
+	all_passed = _check("it knows it is a constant", top_decl.is_constant() if top_decl != null else false, true) and all_passed
+	all_passed = _check("the top-level file reproduces byte-identically",
+		str(SheetCompiler.compile(top_sheet, "user://style_lift_top.gd").get("output", "")), top_source) and all_passed
+	# The -1 edit form: the row's own resource IS the declaration (no enclosing event to index).
+	all_passed = _check("a top-level entry edits through the -1 form",
+		EventSheetViewport._apply_decl_entry_edit(top_decl, "decl_entry_line:-1:1", "\"b\" = 5"), true) and all_passed
+	# A BARE final entry (no trailing comma) is ordinary style and must round-trip as written -
+	# the plugin's own 31-entry annotation table is exactly this shape.
+	var bare_source: String = "extends Node\n\nconst FLAGS := {\n\t\"x\": 1,\n\t\"y\": 2\n}\n"
+	var bare_sheet: EventSheetResource = importer.import_external_source(bare_source)
+	bare_sheet.external_source_path = "user://style_lift_bare.gd"
+	var bare_decl: CollectionDeclRow = null
+	for bare_entry: Variant in bare_sheet.events:
+		if bare_entry is CollectionDeclRow:
+			bare_decl = bare_entry
+	all_passed = _check("a bare final entry still lifts", bare_decl != null, true) and all_passed
+	all_passed = _check("...and records its style", bare_decl.last_entry_bare if bare_decl != null else false, true) and all_passed
+	all_passed = _check("...and reproduces byte-identically",
+		str(SheetCompiler.compile(bare_sheet, "user://style_lift_bare.gd").get("output", "")), bare_source) and all_passed
+	all_passed = _check("the top-level edit emits",
+		str(SheetCompiler.compile(top_sheet, "user://style_lift_top.gd").get("output", "")).contains("\t\"b\": 5,"), true) and all_passed
 
 	# ── Prose about the provider convention must not be compiled as a call site ──
 	var prose_sheet: EventSheetResource = importer.import_external_source(PROVIDER_PROSE_SOURCE)

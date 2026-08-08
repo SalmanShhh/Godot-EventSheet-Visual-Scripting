@@ -37,6 +37,12 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 				action.call(_dock._context_row.source_resource)
 		return
 	match id:
+		_dock.ACTION_MENU_DECL_ADD_ENTRY:
+			_dock._quick_prompts.prompt_collection_entry(_dock._context_decl(), -1)
+		_dock.ACTION_MENU_DECL_EDIT_ENTRY:
+			_dock._quick_prompts.prompt_collection_entry(_dock._context_decl(), _dock._context_decl_entry_index())
+		_dock.ACTION_MENU_DECL_REMOVE_ENTRY:
+			_dock._remove_collection_entry(_dock._context_decl(), _dock._context_decl_entry_index())
 		_dock.ROW_MENU_ADD_SUB_EVENT:
 			_dock._insert_child_event_for_context_row()
 		_dock.ROW_MENU_ADD_COMMENT_SUB_EVENT:
