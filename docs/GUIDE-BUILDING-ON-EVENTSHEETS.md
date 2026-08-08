@@ -224,6 +224,7 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Rows | `add_field_cell(row, label, text, metadata := {})` - a named slot as a condition-style cell (label leads it, text says what it holds); a published verb's parameters use this exact call | `EventRowData` | yes |
 | Rows | `build_caption_row(text, indent := 0, row_uid := "", accent := Color(0,0,0,0))` - a wrapping line of prose welded above the row it describes | `EventRowData` | yes |
 | Rows | `mark_language_block(row)` - marks a row as GDScript structure (accent stripe + wash) | `EventRowData` | no |
+| Rows | `collection_decl(variable_name, entries, dictionary := true)` - a structured multi-line collection declaration (`var waves := { ... }`), the row an opened `.gd`'s canonical literal lifts into. `entries` is `[key, value]` pairs for a dictionary (keys carry their own quotes) or plain values for an array. Append it to an `EventRow`'s actions, or to `sheet.events` for a file-scope table; entries stay individually editable rows. Returns `null` when the name is not an identifier or an entry is refused | `CollectionDeclRow` | no |
 | Codegen | `new_sheet(config: Dictionary = {})` | `EventSheetResource` | no |
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` | `Dictionary` | no |
 | Codegen | `variable_code(variable: LocalVariable)` | `String` | no |
@@ -272,7 +273,6 @@ for pack_gd: String in EventSheets.save_capable_scripts():
 | Seams | `preload_block_for(asset_path)` - a preload Custom Block row with a safe constant name | `CustomBlockRow` | no |
 | Seams | `preview_behaviors()` | `bool` | yes |
 | Seams | `verify_pack(pack_gd_path: String)` | `Dictionary` | no |
-| Rows | `collection_decl(variable_name: String, entries: Array, dictionary := true)` | `CollectionDeclRow` | no |
 | Localisation | `translate(text: String)` | `String` | no |
 | Localisation | `register_translation_file(path: String)` | `bool` | no |
 | Localisation | `available_languages()` | `PackedStringArray` | no |

@@ -45,6 +45,7 @@ Before the API, every structural row kind (enums, signals, variables) was hand-w
 - **The byte gate.** A kind's `lift()` claim is kept only when re-emitting the recovered block reproduces the source lines **byte-for-byte**. A permissive or buggy lift cannot corrupt a file; it just fails to claim, and the lines stay a plain GDScript block.
 - **Graceful degradation.** Emitted lines are plain GDScript. If the sheet opens somewhere the kind is not registered, the lines simply do not lift: they render as a readable code block, compile fine, and are preserved verbatim on save.
 - **`kind_id` is public API.** Once a kind ships and sheets use it, its id and emitted shape are a compatibility promise, the same covenant `ace_id`s carry.
+- **A worked example ships in the plugin.** `CollectionDeclRow` (a multi-line `var x := { ... }` held as a head, a closer and per-entry values) is the same contract in miniature, if you want to read one end to end: its `parse()` IS the byte gate - it claims a literal only when `emit_lines()` reproduces the source exactly, and `emit_lines()` is the *same* function the compiler emits from, so the gate and the output can never disagree. Its mutations live on the resource (`set_entry`, `set_entry_text`), so the entry dialog, the inline row edit and the public `EventSheets.collection_decl()` builder all share one path. It is a built-in kind rather than a Custom Block - wired the five-file way this API exists to save you from - so read it for the *contract*, not the plumbing.
 
 ### Key concepts at a glance
 

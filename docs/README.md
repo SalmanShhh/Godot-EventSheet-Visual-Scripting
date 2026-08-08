@@ -42,7 +42,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 
 ## Working with your project
 
-- [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md) - how sheets call, and are called by, your GDScript - including your own classes appearing in the picker with zero setup, renaming or hiding those verbs without touching your source, and naming a raw call you already have.
+- [Using EventSheets with Your Existing Code](GUIDE-USING-WITH-EXISTING-CODE.md) - how sheets call, and are called by, your GDScript; what a hand-written `.gd` actually looks like when you open it as a sheet (functions, condition/action rows, notes, Declare rows for data tables); your own classes appearing in the picker with zero setup, renaming or hiding those verbs without touching your source, and naming a raw call you already have.
 - [Version Control for Event Sheets](GUIDE-VERSION-CONTROL.md) - diffing, merging, and committing sheets.
 - [Theme and Editability](GUIDE-THEMING.md) - restyle the editor, or lock a sheet down for a team.
 - [Removing Godot EventSheets](GUIDE-UNINSTALL.md) - a clean, guided teardown that leaves your game running.

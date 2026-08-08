@@ -309,10 +309,13 @@ becomes conditions and actions, including the `for` loop as a condition with its
 has no structured equivalent stays an in-flow GDScript block - honest, editable, and byte-for-byte
 unchanged when you save.
 
-Two spelling details used to defeat this on almost every hand-written file, and both are fixed: the two
-blank lines the official style guide puts between functions, and an explicit `: Variant` parameter
-annotation. Either one could revert an entire file to blocks, so if you tried this before and got a wall of
-code, try it again.
+**If you tried this before and got a wall of code, try it again.** Opening a hand-written file used to
+leave 88.1% of its lines as verbatim blocks; it now leaves 0.05% (measured across 206 real files in this
+repo, byte-exact on every one). Most of that was spelling, not semantics - the two blank lines the official
+style guide puts between functions, an explicit `: Variant` parameter, a typed-collection return, a `#` note
+above a function - and any ONE of them could revert an entire file, because the lift is all-or-nothing per
+file. The rest was structure nobody had split: a run of statements is now one action row per statement,
+which you can select, disable and drag like any other.
 
 ### What stays code still reads as what it is
 
@@ -323,7 +326,7 @@ Two kinds of block are no longer shown as code at all, because neither one is lo
   code block that merely looks like one. (A marker emission cannot reproduce exactly, such as `#no space`,
   stays verbatim rather than risk the round-trip.)
 - **A multi-line collection literal lifts to a real "Declare" action.** A canonical
-  `var waves := { ... }` becomes one `Declare waves - Dictionary - 3 entries` action whose entries are
+  `var waves := { ... }` becomes one `Declare waves - Dictionary, 3 entries` action whose entries are
   rows of their own - no bracket lines anywhere; they are re-emitted around the entries on save.
   Double-click an entry to edit its line in place (`"calm" = 12` - either side may change), and right-click the row for
   **Add Entry… / Edit Entry… / Remove Entry**. Extensions can build one too:
