@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Fixed - the corpus's last wall of code is gone (0 block lines, from 88.1%)
+
+The one remaining multi-statement block in the whole repo was the body of a `for` loop iterating
+an inline multi-line list - a header no loop template matches, so it stays a bracket-kept
+statement, and the body behind it merged with the statements that followed into a single wall.
+A leading deeper-than-base run now re-splits at its OWN shallowest indent (the same rule every
+other run already gets), so the body lands as ordinary statement rows under the header row.
+
+Measured over 206 hand-written files: **0 of 25,974 code lines** still reach the plain
+GDScript-block rendering, from 88.1% when the adoption campaign started - with byte-exact
+round-trips on all 206 throughout.
+
+
 ### Added - a body dictionary is a "Declare" action with editable entry rows
 
 A canonical function-local collection literal now lifts past per-line rows into real structure:

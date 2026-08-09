@@ -2003,7 +2003,28 @@ static func _split_statements(pending_raw: PackedStringArray) -> Array[PackedStr
 			open_brackets = maxi(open_brackets + _bracket_delta(line), 0)
 	if not current.is_empty():
 		pieces.append(current)
+	# A LEADING run of deeper-than-base lines is the body of an unlifted control block above the
+	# run (only the first piece can have this shape - every later piece starts with a base-level
+	# statement). Left as one piece it renders as the last wall of code in the corpus; re-split at
+	# its OWN shallowest indent it becomes ordinary statement rows under the header row, exactly
+	# the rule everything else already gets. Recursion terminates because the sub-run's base is
+	# strictly deeper, and the result is still line-preserving.
+	if pieces.size() > 0 and _no_line_at_indent(pieces[0], base_indent, _string_interior_mask(pieces[0])):
+		var lead_pieces: Array[PackedStringArray] = _split_statements(pieces[0])
+		if lead_pieces.size() > 1:
+			pieces = lead_pieces + pieces.slice(1)
 	return pieces
+
+
+## True when NO non-blank line of the run sits at `indent` (outside string interiors) - the
+## orphan-continuation shape the re-split above exists for.
+static func _no_line_at_indent(run: PackedStringArray, indent: int, interior: PackedInt32Array) -> bool:
+	for line_index: int in run.size():
+		if run[line_index].strip_edges().is_empty() or interior[line_index] == 1:
+			continue
+		if run[line_index].length() - run[line_index].lstrip("	 ").length() == indent:
+			return false
+	return true
 
 
 ## The comment marker EVERY line of a run shares, or "" when the run is not all comments (or the

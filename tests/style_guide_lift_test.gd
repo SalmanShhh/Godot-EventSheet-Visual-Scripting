@@ -260,6 +260,22 @@ static func run() -> bool:
 		str(SheetCompiler.compile(odd_note, "user://style_lift_odd_note.gd").get("output", "")),
 		ODD_NOTE_SOURCE) and all_passed
 
+	# -- The body of an UNLIFTED loop header splits into statements too --
+	# A for over an inline multi-line list matches no loop template, so its header stays a
+	# bracket-kept statement; the body behind it used to merge with the statements that followed
+	# and survive as the corpus's last wall of code. A leading deeper-than-base run now re-splits
+	# at its own indent, so every line lands as a row.
+	var orphan_source: String = "extends Node\n\nvar total: int = 0\n\n\nfunc _ready() -> void:\n\tfor pair: Array in [\n\t\t[\"a\", 1],\n\t\t[\"b\", 2],\n\t]:\n\t\tvar amount: int = pair[1]\n\t\tif amount > 1:\n\t\t\tcontinue\n\t\ttotal = total + amount\n\t_finish()\n\n\nfunc _finish() -> void:\n\tpass\n"
+	var orphan_sheet: EventSheetResource = importer.import_external_source(orphan_source)
+	orphan_sheet.external_source_path = "user://style_lift_orphan.gd"
+	var orphan_walls: int = 0
+	for orphan_fn: Variant in orphan_sheet.functions:
+		if orphan_fn is EventFunction:
+			orphan_walls += _wall_count((orphan_fn as EventFunction).events)
+	all_passed = _check("an unlifted loop's body leaves no multi-statement wall", orphan_walls, 0) and all_passed
+	all_passed = _check("the orphan-body file reproduces byte-identically",
+		str(SheetCompiler.compile(orphan_sheet, "user://style_lift_orphan.gd").get("output", "")), orphan_source) and all_passed
+
 	# -- A body literal lifts as ONE structured Declare action, and still round-trips --
 	var body_sheet: EventSheetResource = importer.import_external_source(BODY_LITERAL_SOURCE)
 	body_sheet.external_source_path = "user://style_lift_body_literal.gd"
@@ -391,6 +407,21 @@ static func _first_comment_text(sheet: EventSheetResource) -> String:
 				if action is CommentRow:
 					return (action as CommentRow).text
 	return "<no comment row>"
+
+
+## Multi-statement verbatim rows anywhere under the given rows - the "wall of code" count.
+static func _wall_count(items: Array) -> int:
+	var walls: int = 0
+	for item: Variant in items:
+		if item is RawCodeRow:
+			var block_lines: PackedStringArray = (item as RawCodeRow).code.split("\n")
+			if block_lines.size() >= 2 and not ViewportRowBuilder.is_comment_only_block(block_lines) \
+					and not ViewportRowBuilder.is_single_statement((item as RawCodeRow).code):
+				walls += 1
+		elif item is EventRow:
+			walls += _wall_count((item as EventRow).actions)
+			walls += _wall_count((item as EventRow).sub_events)
+	return walls
 
 
 ## The first structured collection declaration anywhere in the sheet's events, or null.
