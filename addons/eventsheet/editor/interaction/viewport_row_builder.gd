@@ -1413,6 +1413,279 @@ static func function_body_info(code: String) -> Dictionary:
 	}
 
 
+## The Construct-3 sentence a single GDScript statement reads as: `score += wave[1]` becomes
+## "Add wave[1] to score", `var label := wave[0]` becomes "Let label = wave[0]". Returns
+## {indent, segments} - each segment {text, tone} with tone "plain" | "name" | "value" - or {} when
+## the line is not one of the shapes below.
+##
+## A person reading a sheet is reading STEPS, and an operator glyph is the one part of a step that
+## has to be decoded rather than read. Naming the operation removes that decode without hiding
+## anything: the row is the same RawCodeRow, so double-click still opens the real code and the byte
+## round-trip is untouched. The type annotation is deliberately dropped from the "Let" sentence -
+## it is one hover away and it is never the point of the step.
+##
+## Strictness is the whole value here: a sentence that is ALMOST right is worse than the code it
+## replaced. Only single-line statements are claimed, operators must be found at the TOP level
+## (never inside a string or brackets) and in their SPACED form (so ` == `, ` != `, ` <= ` can not
+## be mistaken for an assignment), and a left side with a space or a `(` in it is a call rather
+## than a simple target and is refused. Static + pure, so it is unit-testable without a viewport.
+static func statement_sentence(code: String) -> Dictionary:
+	if code.contains("\n"):
+		return {}
+	var indent: int = code.length() - code.lstrip("\t").length()
+	var text: String = code.strip_edges()
+	if text.is_empty() or text.begins_with("#"):
+		return {}
+	var keyword: String = _leading_word(text)
+	# Control flow is a BRANCH, not a step, and it already renders as its own structure elsewhere.
+	# `await` hides a suspension point, which no sentence should ever paper over.
+	if keyword in ["if", "elif", "else", "for", "while", "match", "pass", "break", "continue", "await"]:
+		return {}
+	if keyword == "return":
+		if text == "return":
+			return {"indent": indent, "segments": [{"text": "Return", "tone": "plain"}]}
+		var returned: String = text.substr(7).strip_edges()
+		if returned.is_empty():
+			return {}
+		return {"indent": indent, "segments": [
+			{"text": "Return ", "tone": "plain"},
+			{"text": returned, "tone": "value"}
+		]}
+	if keyword == "var":
+		return _declaration_sentence(text, indent)
+	# Compound assignment reads as the arithmetic verb it IS. The spaced token is what keeps
+	# `x <= y` and friends out: none of them contain " += " and none of them contain " = ".
+	for operator: String in [" += ", " -= ", " *= ", " /= "]:
+		var operator_at: int = _top_level_operator(text, operator)
+		if operator_at < 0:
+			continue
+		var compound_target: String = text.substr(0, operator_at).strip_edges()
+		var amount: String = text.substr(operator_at + operator.length()).strip_edges()
+		if not _is_simple_target(compound_target) or amount.is_empty():
+			return {}
+		match operator:
+			" += ":
+				return {"indent": indent, "segments": [
+					{"text": "Add ", "tone": "plain"},
+					{"text": amount, "tone": "value"},
+					{"text": " to ", "tone": "plain"},
+					{"text": compound_target, "tone": "name"}
+				]}
+			" -= ":
+				return {"indent": indent, "segments": [
+					{"text": "Subtract ", "tone": "plain"},
+					{"text": amount, "tone": "value"},
+					{"text": " from ", "tone": "plain"},
+					{"text": compound_target, "tone": "name"}
+				]}
+			" *= ":
+				return {"indent": indent, "segments": [
+					{"text": "Multiply ", "tone": "plain"},
+					{"text": compound_target, "tone": "name"},
+					{"text": " by ", "tone": "plain"},
+					{"text": amount, "tone": "value"}
+				]}
+			_:
+				return {"indent": indent, "segments": [
+					{"text": "Divide ", "tone": "plain"},
+					{"text": compound_target, "tone": "name"},
+					{"text": " by ", "tone": "plain"},
+					{"text": amount, "tone": "value"}
+				]}
+	var assign_at: int = _top_level_operator(text, " = ")
+	if assign_at < 0:
+		return {}
+	var assign_target: String = text.substr(0, assign_at).strip_edges()
+	var assigned: String = text.substr(assign_at + 3).strip_edges()
+	if not _is_simple_target(assign_target) or assigned.is_empty():
+		return {}
+	return {"indent": indent, "segments": [
+		{"text": "Set ", "tone": "plain"},
+		{"text": assign_target, "tone": "name"},
+		{"text": " to ", "tone": "plain"},
+		{"text": assigned, "tone": "value"}
+	]}
+
+
+## The "Let name = value" sentence for a `var` declaration, shared by both spellings (`var x = 1`,
+## `var x := 1`, `var x: int = 1`). Split out so the shapes stay readable one beside the other.
+static func _declaration_sentence(text: String, indent: int) -> Dictionary:
+	var rest: String = text.substr(4)
+	var walrus_at: int = _top_level_operator(rest, " := ")
+	var equals_at: int = _top_level_operator(rest, " = ")
+	var name_text: String = ""
+	var value_text: String = ""
+	if walrus_at >= 0 and (equals_at < 0 or walrus_at < equals_at):
+		name_text = rest.substr(0, walrus_at).strip_edges()
+		value_text = rest.substr(walrus_at + 4).strip_edges()
+	elif equals_at >= 0:
+		name_text = rest.substr(0, equals_at).strip_edges()
+		value_text = rest.substr(equals_at + 3).strip_edges()
+	else:
+		return {}
+	# `var label: String = x` names the variable "label": the declared type is one hover away in the
+	# code, and showing it would put a compiler detail in the middle of an English sentence.
+	var colon_at: int = name_text.find(":")
+	if colon_at >= 0:
+		name_text = name_text.substr(0, colon_at).strip_edges()
+	if value_text.is_empty() or not _is_identifier(name_text):
+		return {}
+	return {"indent": indent, "segments": [
+		{"text": "Let ", "tone": "plain"},
+		{"text": name_text, "tone": "name"},
+		{"text": " = ", "tone": "plain"},
+		{"text": value_text, "tone": "value"}
+	]}
+
+
+## The Object / Verb / parameters split of a statement that is EXACTLY one call:
+## `subgroup_item.set_text(0, str(x))` returns {indent, target "subgroup_item", verb "Set Text",
+## args ["0", "str(x)"]}, and a call with no receiver reports the target "self". Returns {} for
+## anything else.
+##
+## This is the shape every ACE row on the canvas already has - an object, a verb, and its
+## parameters - so a lifted call that could not become a real ACE at least READS like one instead
+## of standing out as code. The verb is the method with a single leading `_` trimmed and then
+## capitalized, which is exactly how the project-vocabulary picker names reflected methods
+## (`set_text` reads "Set Text"), so the same call looks the same wherever it is shown.
+##
+## Refused: a line with a top-level ` = ` (that is an assignment and belongs to statement_sentence),
+## `await`/`return` prefixes, comments, multi-line rows, a target holding a space or a `(`
+## (`foo().bar()` is a chain, not an object), and anything after the closing `)`. Static + pure.
+static func call_parts(code: String) -> Dictionary:
+	if code.contains("\n"):
+		return {}
+	var indent: int = code.length() - code.lstrip("\t").length()
+	var text: String = code.strip_edges()
+	if text.is_empty() or text.begins_with("#"):
+		return {}
+	if text.begins_with("await ") or text.begins_with("return ") or text == "return":
+		return {}
+	if _top_level_operator(text, " = ") >= 0:
+		return {}
+	if not text.ends_with(")"):
+		return {}
+	var open_at: int = _first_open_paren(text)
+	if open_at <= 0:
+		return {}
+	# The argument list must run to the very END of the line: `foo(1) + 1` is an expression around a
+	# call, and calling it "Foo(1)" would silently drop the arithmetic.
+	if _closing_paren(text, open_at) != text.length() - 1:
+		return {}
+	var head: String = text.substr(0, open_at).strip_edges()
+	var target: String = "self"
+	var method: String = head
+	var dot_at: int = head.rfind(".")
+	if dot_at >= 0:
+		target = head.substr(0, dot_at).strip_edges()
+		method = head.substr(dot_at + 1).strip_edges()
+	if not _is_simple_target(target) or not _is_identifier(method):
+		return {}
+	var inner: String = text.substr(open_at + 1, text.length() - open_at - 2)
+	var args: PackedStringArray = PackedStringArray()
+	for argument: String in EventSheetBlockRegistry.split_params_top_level(inner):
+		args.append(argument.strip_edges())
+	return {
+		"indent": indent,
+		"target": target,
+		"verb": method.trim_prefix("_").capitalize(),
+		"args": args
+	}
+
+
+## The leading identifier word of a line (`if`, `var`, `return`, or an assignment target's first
+## word). Matching the WORD rather than a begins_with prefix is what keeps `elsewhere = 1` from
+## reading as an `else` and being refused.
+static func _leading_word(text: String) -> String:
+	var word_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*")
+	var found: RegExMatch = word_regex.search(text)
+	return found.get_string(0) if found != null else ""
+
+
+## True when `text` is a plain identifier - the only thing a "Let <name>" sentence may name.
+static func _is_identifier(text: String) -> bool:
+	var identifier_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$")
+	return identifier_regex.search(text) != null
+
+
+## True when a left-hand side is a SIMPLE target: `hp`, `item.text`, `scores[0]`, `$HUD/Bar`,
+## `%Unique`. A space or a `(` means something is being called, and no "Set X to Y" sentence can
+## honestly describe assigning through a call.
+static func _is_simple_target(text: String) -> bool:
+	return not text.is_empty() and not text.contains(" ") and not text.contains("(")
+
+
+## The index of the first `operator` at bracket/quote depth 0, or -1. A plain find() would split on
+## the ` = ` inside `x = "a = b"` and produce a confidently wrong sentence.
+static func _top_level_operator(text: String, operator: String) -> int:
+	var depth: int = 0
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "(" or character == "[" or character == "{":
+			depth += 1
+		elif character == ")" or character == "]" or character == "}":
+			depth -= 1
+		elif depth == 0 and text.substr(index, operator.length()) == operator:
+			return index
+		index += 1
+	return -1
+
+
+## The index of the first `(` outside any string literal, or -1 - where a call's head ends.
+static func _first_open_paren(text: String) -> int:
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "(":
+			return index
+		index += 1
+	return -1
+
+
+## The index of the `)` that closes the `(` at `open_at`, or -1 when the line is unbalanced.
+static func _closing_paren(text: String, open_at: int) -> int:
+	var depth: int = 0
+	var quote: String = ""
+	var index: int = open_at
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+		elif character == "\"" or character == "'":
+			quote = character
+		elif character == "(" or character == "[" or character == "{":
+			depth += 1
+		elif character == ")" or character == "]" or character == "}":
+			depth -= 1
+			if depth == 0:
+				return index
+		index += 1
+	return -1
+
+
 ## The class name ("" when not a match) if a RawCodeRow is EXACTLY a pure-data inner class: an optional
 ## leading prelude of blank/comment lines, then `class Name[ extends Base]:`, then a body of only typed
 ## fields (`var`/`const`/`@export`) and comments - no methods, no nested classes, no top-level code after
@@ -3122,6 +3395,14 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 						str(inline_literal.get("head")), str(inline_literal.get("close")),
 						int(inline_literal.get("entries", 0))]])
 				var inline_total: int = maxi(inline_lines.size(), 1)
+				# ONE statement also reads as a SENTENCE ("Add 1 to score") or as an Object/Verb/params chip
+				# run, when a pure classifier claims the line - the same shape every ACE row on the canvas
+				# already has. Zeroing the line total skips the per-line default below; the sentence occupies
+				# the single line this row consumes, and the RawCodeRow itself is untouched.
+				if not inline_is_note and inline_literal.is_empty() and is_single_statement(inline_raw.code):
+					if _append_sentence_spans(spans, inline_raw, action_index, action_line_index, action_style_meta):
+						inline_total = 0
+						action_line_index += 1
 				for inline_line_index in range(inline_total):
 					var inline_text: String = inline_lines[inline_line_index] if inline_line_index < inline_lines.size() else " "
 					spans.append(
@@ -3157,7 +3438,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 				for comment_line_index in range(action_comment_lines.size()):
 					spans.append(
 						_make_span(
-							"# " + action_comment_lines[comment_line_index],
+						action_comment_lines[comment_line_index] if _viewport.reading_mode else "# " + action_comment_lines[comment_line_index],
 							SemanticSpan.SpanType.COMMENT,
 							{
 								"lane": "action",
@@ -3173,7 +3454,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 								"block_lines": action_comment_lines.size(),
 								"block_line": comment_line_index,
 								"line_index": action_line_index,
-								"text_color": _viewport._get_event_style().comment_text_color
+							"text_color": _viewport._get_event_style().comment_text_color,
+							# Reading Mode: the note reads as an italic CAPTION - intent first, mechanics under
+							# it - and drops its # marker (the row is already visibly a comment). View state only.
+							"bbcode_segments": EventSheetBBCodeLite.parse("[i]%s[/i]" % action_comment_lines[comment_line_index], _viewport._get_event_style().comment_text_color) if _viewport.reading_mode else []
 							}.merged(action_style_meta, false)
 						)
 					)
@@ -3551,6 +3835,20 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 	var generated_definition: ACEDefinition = _viewport._find_definition(action.provider_id, action.ace_id)
 	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(action.provider_id, action.ace_id)
 	if generated_definition == null and descriptor == null:
+		# A reflected verb (method:<name>) must read as its sentence even when the registry has no
+		# definition to offer RIGHT NOW - reflected vocabulary is generated on demand, so a row can
+		# outlive any given registry build. Rows never need the registry to compile (their template
+		# is baked); with this, they no longer need it to READ either. `set_collapsed` -> the same
+		# "Set Collapsed" the picker names it, with the row's own values in call order.
+		if action.ace_id.begins_with("method:"):
+			var member: String = action.ace_id.trim_prefix("method:")
+			var shown: PackedStringArray = PackedStringArray()
+			for param_key: Variant in params_dict.keys():
+				if str(param_key) == "target":
+					continue
+				shown.append(str(params_dict[param_key]))
+			var member_label: String = member.trim_prefix("_").capitalize()
+			return member_label if shown.is_empty() else "%s ( %s )" % [member_label, ", ".join(shown)]
 		return action.ace_id
 	return _format_display_translated(generated_definition, descriptor, params_dict)
 
@@ -3703,6 +4001,82 @@ var _pending_display_bbcode: bool = false
 # inside the span's final text, so a formatter suffix (an ACE note) or prefix (the await hourglass)
 # shifts the ranges instead of mis-bolding, and any other post-processing degrades to no emphasis.
 var _pending_param_ranges: Dictionary = {}
+
+
+## Appends the flowing spans that make a single-statement raw row read as a Construct-3 sentence
+## ("Add 1 to score") or as an Object / Verb / parameters chip run, and returns true when it did.
+## The caller then skips its per-line default for that action.
+##
+## Purely a VIEW: the RawCodeRow is unchanged, so emission and the byte round-trip cannot move. The
+## spans carry `raw_action` and `code_cell: false` so selection, the row context menu, and
+## double-click-opens-the-code-editor behave exactly as they do for any other raw row. Only the LAST
+## span omits `natural_width`, so it stretches to close the action cell the way the Declare header
+## does - without that, the cell background would stop mid-row.
+func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, line_index: int, action_style_meta: Dictionary) -> bool:
+	var pieces: Array = []
+	var indent: int = 0
+	var sentence: Dictionary = statement_sentence(raw.code)
+	if not sentence.is_empty():
+		indent = int(sentence.get("indent", 0))
+		for segment: Variant in (sentence.get("segments", []) as Array):
+			var part: Dictionary = segment
+			pieces.append([str(part.get("text", "")), str(part.get("tone", "plain"))])
+	else:
+		var call_info: Dictionary = call_parts(raw.code)
+		if call_info.is_empty():
+			return false
+		indent = int(call_info.get("indent", 0))
+		pieces.append([str(call_info.get("target", "")) + "  ", "object"])
+		pieces.append([str(call_info.get("verb", "")), "name"])
+		var args: PackedStringArray = call_info.get("args", PackedStringArray())
+		if args.is_empty():
+			pieces.append(["  ( )", "plain"])
+		else:
+			pieces.append(["  ( ", "plain"])
+			for argument_index: int in args.size():
+				if argument_index > 0:
+					pieces.append([", ", "plain"])
+				pieces.append([args[argument_index], "value"])
+			pieces.append([" )", "plain"])
+	if pieces.is_empty():
+		return false
+	# ONE span, tinted by BBCode segments, so the sentence reads as a single continuous cell -
+	# separate flowing spans each painted their own chip and the row read as a strip of boxes,
+	# the exact fragmented look the entry rows were already reworked away from. Four spaces per
+	# source tab keeps deeper statements visually nested like the code they came from.
+	var sentence_text: String = "    ".repeat(indent)
+	# Segments are built DIRECTLY, never round-tripped through the BBCode parser: code text is
+	# full of square brackets (`wave[1]`, `[]`), and a parser would eat them as tags - the first
+	# render lost every array value exactly that way.
+	var sentence_segments: Array[Dictionary] = []
+	if indent > 0:
+		sentence_segments.append({"text": "    ".repeat(indent), "color": null, "bold": false, "italic": false})
+	for piece: Array in pieces:
+		var text: String = str(piece[0])
+		sentence_text += text
+		var tone_color: Variant = null
+		var tone_bold: bool = false
+		match str(piece[1]):
+			"name":
+				tone_color = EventSheetPalette.TEXT_PRIMARY
+				tone_bold = true
+			"value":
+				tone_color = _viewport._get_event_style().value_highlight_color
+			"object":
+				tone_color = EventSheetPalette.COLOR_OBJECT
+		sentence_segments.append({"text": text, "color": tone_color, "bold": tone_bold, "italic": false})
+	spans.append(_make_span(sentence_text, SemanticSpan.SpanType.VALUE, {
+		"lane": "action",
+		"kind": "action",
+		"ace_index": action_index,
+		"ace_enabled": raw.enabled,
+		"chip": true,
+		"raw_action": true,
+		"code_cell": false,
+		"line_index": line_index,
+		"bbcode_segments": sentence_segments
+	}.merged(action_style_meta, false)))
+	return true
 
 
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:

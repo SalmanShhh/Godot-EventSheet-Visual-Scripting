@@ -214,6 +214,11 @@ var _focused_lane: String = "condition"
 var _selection_anchor_index: int = -1
 var _external_span_edit_handler_enabled: bool = false
 var _zoom_factor: float = 1.0
+## Reading Mode (the Simple Mode pill's lens): comment rows in an event body render as italic
+## captions, so a beginner reads the author's INTENT line before the mechanics under it. View
+## state only - nothing about the rows changes, and programmers who never toggle the pill
+## never see it.
+var reading_mode: bool = false
 var _layout_style_signature: String = ""
 var _dragging_lane_divider: bool = false
 # The full-sheet DIVIDER GUIDE (the Construct cue): the logical X of the column boundary under the
@@ -301,6 +306,14 @@ func adopt_shared_state(state: EventSheetViewState) -> void:
 	_breakpoint_rows = state.breakpoint_rows
 	_bookmark_rows = state.bookmark_rows
 	_row_disabled_state = state.row_disabled_state
+
+
+func set_reading_mode(enabled: bool) -> void:
+	if reading_mode == enabled:
+		return
+	reading_mode = enabled
+	_refresh_rows()
+	queue_redraw()
 
 
 func set_sheet(sheet: EventSheetResource) -> void:
@@ -2680,6 +2693,15 @@ func _get_tooltip(at_position: Vector2) -> String:
 		return "⚠ %s" % hovered_error_row.error_message
 	var metadata: Dictionary = hit.get("span_metadata", {}) if hit.get("span_metadata", {}) is Dictionary else {}
 	var kind: String = str(metadata.get("kind", ""))
+	# A sentence or chip view over a raw statement keeps the CODE one hover away - the flat exit
+	# ramp in miniature. Resolved through the action index so the tooltip always shows the very
+	# line the row is, not a reconstruction of it.
+	if bool(metadata.get("raw_action", false)) and str(metadata.get("kind", "")) == "action":
+		var raw_row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
+		if raw_row_data != null and raw_row_data.source_resource is EventRow:
+			var raw_source: Resource = _resolve_ace_resource(raw_row_data.source_resource, "action", int(metadata.get("ace_index", -1)))
+			if raw_source is RawCodeRow:
+				return (raw_source as RawCodeRow).code
 	# An EXPORTED variable row hovers as a live mock of its Inspector (drawers, decor, grouping) -
 	# the payload stages here and _make_custom_tooltip swaps the sentinel for the preview card.
 	if kind == "variable":

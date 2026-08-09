@@ -194,6 +194,111 @@ static func run() -> bool:
 	var code_reemit: String = str(SheetCompiler.compile(code_imported, "user://_code_block_rt.gd").get("output", ""))
 	ok = _check("a genuine code block round-trips byte-identically", code_reemit == code_source, true) and ok
 
+	# -- statement_sentence + call_parts: a single lifted statement READS as a step --
+	# `score += wave[1]` shown as "Add wave[1] to score" removes the one part of a line a reader has
+	# to decode. Both classifiers are pure views over the unchanged RawCodeRow, so nothing here can
+	# touch emission; the refusals below are what keep an ALMOST-right sentence off the canvas.
+	ok = _check("compound add reads as a sentence", _sentence_text("score += wave[1]"), "Add wave[1] to score") and ok
+	var add_sentence: Dictionary = ViewportRowBuilder.statement_sentence("score += wave[1]")
+	ok = _check("the added amount is tinted as a value",
+		str(((add_sentence.get("segments", []) as Array)[1] as Dictionary).get("tone", "")), "value") and ok
+	ok = _check("a typed declaration reads as Let (the type stays in the code)",
+		_sentence_text("var label: String = wave[0]"), "Let label = wave[0]") and ok
+	ok = _check("an inferred declaration reads the same", _sentence_text("var n := 3"), "Let n = 3") and ok
+	ok = _check("plain assignment reads as Set", _sentence_text("x = 5"), "Set x to 5") and ok
+	ok = _check("compound subtract reads as Subtract", _sentence_text("hp -= dmg"), "Subtract dmg from hp") and ok
+	ok = _check("compound multiply names the target first", _sentence_text("speed *= 2"), "Multiply speed by 2") and ok
+	ok = _check("compound divide names the target first", _sentence_text("speed /= 2"), "Divide speed by 2") and ok
+	ok = _check("a returned value reads as Return", _sentence_text("return rows"), "Return rows") and ok
+	ok = _check("a bare return is one word", _sentence_text("return"), "Return") and ok
+	# ...and the refusals. A comparison is NOT an assignment, control flow is a branch rather than a
+	# step, and a call belongs to the Object/Verb view below.
+	ok = _check("a comparison is never mistaken for an assignment",
+		ViewportRowBuilder.statement_sentence("x == y").is_empty(), true) and ok
+	ok = _check("a <= comparison stays out too",
+		ViewportRowBuilder.statement_sentence("x <= y").is_empty(), true) and ok
+	ok = _check("control flow is refused", ViewportRowBuilder.statement_sentence("if ready:").is_empty(), true) and ok
+	ok = _check("a call is not a sentence (it is the Object/Verb view)",
+		ViewportRowBuilder.statement_sentence("emit_signal(\"hit\")").is_empty(), true) and ok
+	ok = _check("await is never papered over",
+		ViewportRowBuilder.statement_sentence("await ready_signal").is_empty(), true) and ok
+	ok = _check("a multi-line block is refused",
+		ViewportRowBuilder.statement_sentence("x = 1\ny = 2").is_empty(), true) and ok
+	# An ` = ` inside a STRING must not split the line - a plain find() would report `x = "a` here.
+	ok = _check("an ` = ` inside a string does not fool the split",
+		_sentence_text("x = \"a = b\""), "Set x to \"a = b\"") and ok
+	# A row lifted from inside an unlifted block keeps its depth, shown as four spaces per tab.
+	var indented: Dictionary = ViewportRowBuilder.statement_sentence("\tscore += 1")
+	ok = _check("a tab-indented statement records its indent", int(indented.get("indent", -1)), 1) and ok
+	ok = _check("...and still claims the sentence", _sentence_text("\tscore += 1"), "Add 1 to score") and ok
+
+	# call_parts: object · verb · parameters, the shape every ACE row already has.
+	var set_text: Dictionary = ViewportRowBuilder.call_parts("subgroup_item.set_text(0, str(subgroup[0]))")
+	ok = _check("the receiver is the object", str(set_text.get("target", "")), "subgroup_item") and ok
+	ok = _check("the method reads as a verb", str(set_text.get("verb", "")), "Set Text") and ok
+	ok = _check("its arguments split at the top level",
+		Array(set_text.get("args", PackedStringArray()) as PackedStringArray), ["0", "str(subgroup[0])"]) and ok
+	var bare_call: Dictionary = ViewportRowBuilder.call_parts("_add_self_leaves(a, b)")
+	ok = _check("a receiverless call belongs to self", str(bare_call.get("target", "")), "self") and ok
+	ok = _check("a leading underscore is trimmed from the verb", str(bare_call.get("verb", "")), "Add Self Leaves") and ok
+	ok = _check("a node path is a legal object",
+		str(ViewportRowBuilder.call_parts("$HUD/Bar.update_value(hp)").get("target", "")), "$HUD/Bar") and ok
+	ok = _check("a no-argument call still claims",
+		str(ViewportRowBuilder.call_parts("queue_free()").get("verb", "")), "Queue Free") and ok
+	ok = _check("an assignment is not a call row",
+		ViewportRowBuilder.call_parts("x = foo()").is_empty(), true) and ok
+	ok = _check("a chained call has no single object",
+		ViewportRowBuilder.call_parts("foo().bar()").is_empty(), true) and ok
+	ok = _check("arithmetic after the call refuses it",
+		ViewportRowBuilder.call_parts("foo(1) + 1").is_empty(), true) and ok
+	ok = _check("an awaited call is refused",
+		ViewportRowBuilder.call_parts("await thing()").is_empty(), true) and ok
+
+	# -- Reading Mode: a body comment renders as an italic caption, marker dropped --
+	# View state only: the CommentRow is unchanged, so toggling the pill back restores the
+	# programmer view and the byte round-trip never notices.
+	var caption_sheet: EventSheetResource = EventSheetResource.new()
+	caption_sheet.host_class = "Node"
+	var caption_event: EventRow = EventRow.new()
+	caption_event.trigger_provider_id = "Core"
+	caption_event.trigger_id = "OnReady"
+	var caption_note: CommentRow = CommentRow.new()
+	caption_note.text = "Keep only the entries that match."
+	caption_event.actions.append(caption_note)
+	caption_sheet.events.append(caption_event)
+	var caption_view: EventSheetViewport = EventSheetViewport.new()
+	caption_view.set_ace_registry(EventSheetACERegistry.new())
+	caption_view.size = Vector2(900, 400)
+	caption_view.set_sheet(caption_sheet)
+	caption_view.set_reading_mode(true)
+	var caption_text: String = ""
+	var caption_italic: bool = false
+	for row_index: int in 10:
+		var row_data: EventRowData = caption_view._row_at(row_index)
+		if row_data == null:
+			break
+		for span: SemanticSpan in row_data.spans:
+			var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
+			if bool(meta.get("action_comment", false)):
+				caption_text = span.text
+				var segments: Array = meta.get("bbcode_segments", [])
+				if segments.size() > 0 and bool((segments[0] as Dictionary).get("italic", false)):
+					caption_italic = true
+	ok = _check("Reading Mode drops the comment marker", caption_text, "Keep only the entries that match.") and ok
+	ok = _check("...and the caption is italic", caption_italic, true) and ok
+	caption_view.set_reading_mode(false)
+	var plain_text: String = ""
+	for row_index: int in 10:
+		var row_data: EventRowData = caption_view._row_at(row_index)
+		if row_data == null:
+			break
+		for span: SemanticSpan in row_data.spans:
+			var meta: Dictionary = span.metadata if span.metadata is Dictionary else {}
+			if bool(meta.get("action_comment", false)):
+				plain_text = span.text
+	ok = _check("toggling the pill off restores the # marker", plain_text, "# Keep only the entries that match.") and ok
+	caption_view.free()
+
 	return ok
 
 
@@ -205,3 +310,14 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	print("  expected: %s" % str(expected))
 	print("  actual:   %s" % str(actual))
 	return false
+
+
+## The sentence a statement reads as, segments joined - one VALUE to compare per check.
+static func _sentence_text(code: String) -> String:
+	var sentence: Dictionary = ViewportRowBuilder.statement_sentence(code)
+	if sentence.is_empty():
+		return ""
+	var text: String = ""
+	for segment: Variant in (sentence.get("segments", []) as Array):
+		text += str((segment as Dictionary).get("text", ""))
+	return text
