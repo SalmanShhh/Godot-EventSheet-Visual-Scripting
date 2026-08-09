@@ -233,6 +233,7 @@ var _find_bar_glue: EventSheetFindBar = EventSheetFindBar.new()  # Ctrl+F find b
 var _clipboard_glue: EventSheetClipboard = EventSheetClipboard.new()  # copy/paste: internal clipboard + portable snippets + raw-GDScript paste (owns _clipboard state) (dock/clipboard.gd)
 var _quick_prompts: EventSheetQuickPromptDialogs = EventSheetQuickPromptDialogs.new()  # one-field prompt popups: Extract-to-Function name + Conditional Breakpoint + Group editor (dock/quick_prompt_dialogs.gd)
 var _custom_block_dialog: EventSheetCustomBlockDialog = EventSheetCustomBlockDialog.new()  # Custom Block API: schema-driven add/edit dialog for registered kinds (dock/custom_block_dialog.gd)
+var _raw_call_namer: EventSheetRawCallNamer = EventSheetRawCallNamer.new()  # Sheet ▸ Name Raw Calls: binds raw one-call code rows to existing vocabulary, byte-gated (dock/raw_call_namer.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -298,6 +299,7 @@ func _init() -> void:
 	# Theme-manager MUST be wired before _build_ui() too: _build_ui() calls
 	# _theme_manager.build_theme_file_dialog() (via the dock delegate). init() only stores _dock.
 	_theme_manager.init(self)
+	_raw_call_namer.init(self)
 	_build_ui()
 
 var _editor_dialogs_initialized: bool = false
@@ -1790,6 +1792,12 @@ func set_simple_mode(enabled: bool) -> void:
 			_view_popup.set_item_checked(idx, enabled)
 	if _simple_mode_button != null:
 		_simple_mode_button.set_pressed_no_signal(enabled)
+	# Simple Mode doubles as the READING lens: body comments render as italic captions (intent
+	# first, mechanics under it) on every open view. View state only - toggling back restores
+	# the programmer look instantly and no row is touched.
+	for reading_view: EventSheetViewport in _multi_view.all_views():
+		if reading_view != null:
+			reading_view.set_reading_mode(enabled)
 	_apply_simple_mode_gates()
 	_set_status("Simple mode ON - advanced entries hidden." if enabled else "Expert mode - all entries shown.")
 
@@ -3324,6 +3332,13 @@ func _convert_context_action_to_verb() -> void:
 		"ace_index": int(_context_hit.get("ace_index", -1)),
 	})
 	_set_status("Converted to %s." % str(suggestion["display_name"]))
+
+
+## Sheet > Name Raw Calls...: the whole-sheet twin of the row-by-row conversion above. Same
+## conservatism (one candidate or nothing), plus a per-row byte gate, one undo step, and a
+## count of what it left alone. Never automatic - the user asks for it.
+func _name_raw_calls_requested() -> void:
+	_raw_call_namer.run()
 
 
 func _on_action_context_menu_id_pressed(id: int) -> void:

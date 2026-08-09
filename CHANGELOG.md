@@ -2,6 +2,51 @@
 
 ## [Unreleased]
 
+### Added - statements read as sentences, calls read as Object then Verb
+
+The adoption campaign put every line of a hand-written `.gd` on its own row; this makes those
+rows READ the way the rest of the sheet does. Two always-on views, both derived from the code
+itself at render time - nothing is stored, nothing appears in the picker, and hovering any of
+them shows the exact GDScript line it is:
+
+- **Statement sentences.** `score += wave[1]` reads **Add wave[1] to score**; `var label := x`
+  reads **Let label = x**; plain assignment reads **Set x to y**; subtraction, multiplication,
+  division and `return` follow. The patterns are deliberately few and exact - operator finds are
+  quote- and bracket-aware, `==`/`<=`/`:=` can never false-match, and anything unrecognized keeps
+  its code text, because a sentence that is almost right is worse than code.
+- **Object-Verb call rows.** An unmatched call renders as its target, the humanized method name,
+  and its arguments - `subgroup_item.set_text(0, str(x))` reads
+  **subgroup_item Set Text ( 0, str(x) )** - the same naming the project-vocabulary picker uses.
+  One continuous cell with tinted words, not a strip of boxes (segments are built directly, never
+  round-tripped through the BBCode parser - code text is full of square brackets, and a parser
+  eats them as tags).
+
+### Added - Reading Mode: the Simple Mode pill is now a lens
+
+Simple Mode used to only hide the code-authoring buttons. It now also turns body comments into
+italic CAPTIONS with their `#` marker dropped - a beginner reads the author's intent line first,
+the mechanics under it - across every open pane. View state only: toggle the pill off and the
+programmer look is back instantly, and no row is ever touched.
+
+
+### Added - Sheet ▸ Name Raw Calls: give raw one-call code rows their real verb name
+
+A sheet accumulates escape-hatch rows - a call typed into a GDScript block, or a line the lifter
+could not attribute because its class had not been scanned. **Sheet ▸ Name Raw Calls…** sweeps the
+open sheet and binds each of those to vocabulary you ALREADY have (an engine class through ClassDB
+reflection, one of your own scripts, an installed pack), so `item.set_collapsed(true)` becomes a
+real action row with an editable parameter field instead of grey code.
+
+- **Byte-gated per row.** Each replacement is emitted through the very call the compiler uses and
+  kept only when it reproduces the raw line character for character. Anything else is dropped and
+  the row is left exactly as it was, so naming can never change what a sheet compiles to.
+- **Ambiguity is skipped.** Zero matches or two matches both mean the tool does not actually know
+  which verb this is, and a confidently wrong name is worse than none - it would still compile, so
+  no gate could catch it. A local's declared type (`var item: TreeItem`), a typed local-variable
+  row, and a helper's typed parameters are all read to resolve a plain identifier's class.
+- **Never automatic.** It is a command you run, one undo step for the whole sweep, and it reports
+  how many rows it named and how many it left alone.
+
 ### Fixed - the corpus's last wall of code is gone (0 block lines, from 88.1%)
 
 The one remaining multi-statement block in the whole repo was the body of a `for` loop iterating

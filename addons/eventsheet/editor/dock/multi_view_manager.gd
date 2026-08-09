@@ -24,6 +24,12 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
+## Every live pane (primary + split + detached), for callers that apply a view setting across
+## all of them. Nulls are skipped by the caller; the list mirrors _mirror_selection's.
+func all_views() -> Array:
+	return [_dock._viewport, _split_viewport, _dock._detached_viewport]
+
+
 ## Toggles a second, read/navigate-only pane over the SAME sheet (debugging, reading,
 ## comparing distant regions). Breakpoints/bookmarks/disabled state are shared by
 ## reference; scroll/zoom/selection/folds are per-pane.
