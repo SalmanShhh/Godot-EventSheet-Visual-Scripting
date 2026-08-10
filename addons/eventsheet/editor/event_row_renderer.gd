@@ -1053,11 +1053,20 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 	)
 	if badge_style in ["trigger", "negated"]:
 		var radius: float = min(badge_rect.size.x, badge_rect.size.y) * 0.45
-		control.draw_circle(badge_rect.get_center(), radius, badge_bg)
-		# Tempo glyphs draw as crisp vector art (font glyphs like ⟳/➜ render fuzzy and vary
-		# by system font); anything without dedicated art falls through to the text path.
-		if badge_style == "trigger" and _draw_tempo_glyph(control, badge_rect.get_center(), radius, span.text, badge_fg):
-			return
+		control.draw_circle(badge_rect.get_center(), radius, badge_bg, true, -1.0, true)
+		# Badge marks are SVG art rasterized at the EXACT pixel size this badge draws at (cached
+		# per size), so every zoom and HiDPI scale gets a designed, pixel-crisp icon - no texture
+		# files, no import-time resolution to outgrow. The primitive draws below remain as the
+		# fallback if the rasterizer ever refuses a string.
+		if badge_style == "trigger":
+			var icon_side: float = radius * 1.9
+			var icon: Texture2D = _badge_icon(span.text, int(round(icon_side)))
+			if icon != null:
+				var icon_rect := Rect2(badge_rect.get_center() - Vector2(icon_side, icon_side) * 0.5, Vector2(icon_side, icon_side))
+				control.draw_texture_rect(icon, icon_rect, false, badge_fg)
+				return
+			if _draw_tempo_glyph(control, badge_rect.get_center(), radius, span.text, badge_fg):
+				return
 	else:
 		var style: StyleBoxFlat = StyleBoxFlat.new()
 		style.bg_color = badge_bg
@@ -1083,6 +1092,38 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 		badge_font_size,
 		badge_fg
 	)
+
+
+## The badge marks as SVG, keyed by the glyph char the tempo classifier picked (⟳ every tick,
+## ▶ once, ⌨ input, ➜ signal, ◆ state). White art on a 24-unit canvas; the draw call tints it
+## with the badge's foreground color, so one SVG serves every theme.
+const BADGE_MARK_SVGS: Dictionary = {
+	"⟳": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M18.9 12a6.9 6.9 0 1 1-2.02-4.88\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.7\" stroke-linecap=\"round\"/><path d=\"M17.8 2.6 L18.6 8.6 L12.6 7.8 Z\" fill=\"#fff\"/></svg>",
+	"▶": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M8.2 5.2 L19 12 L8.2 18.8 Z\" fill=\"#fff\"/></svg>",
+	"➜": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M4 12h10.4\" stroke=\"#fff\" stroke-width=\"2.8\" stroke-linecap=\"round\"/><path d=\"M12.6 6.4 L20.2 12 L12.6 17.6 Z\" fill=\"#fff\"/></svg>",
+	"⌨": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"4\" y=\"7\" width=\"16\" height=\"10\" rx=\"2.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.2\"/><circle cx=\"12\" cy=\"12\" r=\"1.7\" fill=\"#fff\"/></svg>",
+	"◆": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M12 4.2 L19.8 12 L12 19.8 L4.2 12 Z\" fill=\"#fff\"/></svg>",
+}
+
+## SVG textures rasterized per (glyph, pixel size) - a handful of tiny images per session.
+static var _badge_icon_cache: Dictionary = {}
+
+
+## The badge mark for `glyph` rasterized at exactly `side_px`, or null when the glyph has no SVG
+## (or the rasterizer refuses it - the caller falls back to the primitive draws).
+static func _badge_icon(glyph: String, side_px: int) -> Texture2D:
+	if side_px < 2 or not BADGE_MARK_SVGS.has(glyph):
+		return null
+	var cache_key: String = "%s|%d" % [glyph, side_px]
+	if _badge_icon_cache.has(cache_key):
+		return _badge_icon_cache[cache_key]
+	var image: Image = Image.new()
+	if image.load_svg_from_string(str(BADGE_MARK_SVGS[glyph]), float(side_px) / 24.0) != OK:
+		_badge_icon_cache[cache_key] = null
+		return null
+	var texture: ImageTexture = ImageTexture.create_from_image(image)
+	_badge_icon_cache[cache_key] = texture
+	return texture
 
 
 ## Vector art for the tempo badge glyphs, keyed by the glyph char the tempo classifier picked
@@ -1139,6 +1180,16 @@ func _draw_tempo_glyph(control: Control, center: Vector2, radius: float, glyph: 
 			var cap_rect := Rect2(center.x - cap_width * 0.5, center.y - cap_height * 0.5, cap_width, cap_height)
 			control.draw_rect(cap_rect, color, false, maxf(radius * 0.18, 1.0), true)
 			control.draw_circle(center, radius * 0.14, color)
+			return true
+		"◆":
+			# State diamond: a rotated square, the "you are in this state" mark.
+			var reach: float = radius * 0.62
+			control.draw_colored_polygon(PackedVector2Array([
+				center + Vector2(0.0, -reach),
+				center + Vector2(reach, 0.0),
+				center + Vector2(0.0, reach),
+				center + Vector2(-reach, 0.0),
+			]), color)
 			return true
 	return false
 
