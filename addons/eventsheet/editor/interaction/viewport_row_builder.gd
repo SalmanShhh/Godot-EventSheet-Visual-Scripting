@@ -2991,9 +2991,11 @@ func _joined_call_args(call: Dictionary) -> String:
 
 
 ## A guard's plain-language reading: a bare self-call humanizes to its verb the way every
-## method name already does ("can_see_player()" reads "Can See Player" - a beginner should
-## never meet parentheses in a condition cell), `not` reads as the word Not, and value
-## comparisons ("hp < 20") keep their values. Display-only; the hover carries the code.
+## method name already does ("can_see_player()" reads "ƒ Can See Player" - a beginner should
+## never meet parentheses in a condition cell, but the ƒ mark says this is a computed CHECK,
+## not a bool variable; ƒ is the same symbol collapsed functions already wear, so the sheet
+## teaches one symbol once). `not` reads as the word Not, and value comparisons ("hp < 20")
+## keep their values. Display-only; the hover carries the code.
 func _friendly_guard_text(guard: String) -> String:
 	var text: String = guard.strip_edges()
 	var negated: bool = text.begins_with("not ")
@@ -3004,6 +3006,7 @@ func _friendly_guard_text(guard: String) -> String:
 	if not call.is_empty() and (str(call.get("target", "")).is_empty() or str(call.get("target", "")) == "self"):
 		var args_text: String = _joined_call_args(call)
 		friendly = str(call.get("verb", "")) if args_text.strip_edges().is_empty() else "%s ( %s )" % [str(call.get("verb", "")), args_text]
+		friendly = "ƒ %s" % friendly
 	if negated:
 		return "%s %s" % [EventSheetL10n.translate("Not"), friendly]
 	return friendly
