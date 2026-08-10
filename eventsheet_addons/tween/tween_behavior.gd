@@ -115,7 +115,7 @@ func _ease_id() -> int:
 		"out_in": return Tween.EASE_OUT_IN
 	return Tween.EASE_OUT
 
-func _start_tween(property_path: String, final_value, duration: float) -> void:
+func _start_tween(property_path: String, final_value: Variant, duration: float) -> void:
 	if host == null:
 		return
 	var seconds: float = duration if duration > 0.0 else default_duration

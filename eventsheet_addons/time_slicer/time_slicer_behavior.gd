@@ -55,7 +55,7 @@ func _process(delta: float) -> void:
 ## @ace_description("Adds one item to the work queue (processed later within the per-frame budget).")
 ## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
 ## @ace_codegen_template("$TimeSlicerBehavior.enqueue_item({item})")
-func enqueue_item(item) -> void:
+func enqueue_item(item: Variant) -> void:
 	_queue.append(item)
 
 ## @ace_action

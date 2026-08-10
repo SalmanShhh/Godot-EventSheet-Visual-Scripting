@@ -369,7 +369,7 @@ func _descendant_canvas_items(root: Node) -> Array:
 ## Composes a node's world transform into canvas space and returns a "node_stamp" draw command, or {}
 ## when the node has no resolvable texture. A Transform2D override places the stamp explicitly instead
 ## of at the node's own transform.
-func _node_paste_command(node: Node, world_xform_override) -> Dictionary:
+func _node_paste_command(node: Node, world_xform_override: Variant) -> Dictionary:
 	if not (node is CanvasItem):
 		return {}
 	var info: Dictionary = _node_texture_info(node as CanvasItem)

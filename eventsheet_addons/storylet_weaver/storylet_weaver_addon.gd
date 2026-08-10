@@ -167,7 +167,7 @@ func set_storylet_max_plays(id: String, max_plays: float) -> void:
 ## @ace_param_options(op "="== (equal to), "!="=!= (not equal to), <=< (less than), "<="=<= (at most), >=> (greater than), ">="=>= (at least))
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_requirement({id}, {quality_key}, {op}, {value})")
-func add_requirement(id: String, quality_key: String, op: String, value) -> void:
+func add_requirement(id: String, quality_key: String, op: String, value: Variant) -> void:
 	_story(id).reqs.append({"key": quality_key, "op": op, "value": value})
 
 ## @ace_action
@@ -186,7 +186,7 @@ func add_choice(id: String, choice_id: String, text: String) -> void:
 ## @ace_param_options(op "="== (equal to), "!="=!= (not equal to), <=< (less than), "<="=<= (at most), >=> (greater than), ">="=>= (at least))
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_choice_requirement({id}, {choice_id}, {quality_key}, {op}, {value})")
-func add_choice_requirement(id: String, choice_id: String, quality_key: String, op: String, value) -> void:
+func add_choice_requirement(id: String, choice_id: String, quality_key: String, op: String, value: Variant) -> void:
 	var c: Dictionary = _choice(id, choice_id)
 	if not c.is_empty():
 		c.reqs.append({"key": quality_key, "op": op, "value": value})
@@ -198,7 +198,7 @@ func add_choice_requirement(id: String, choice_id: String, quality_key: String, 
 ## @ace_param_options(op set=Set to, inc=Increment by, dec=Decrement by, toggle=Toggle (0/1), delete=Delete key)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_choice_effect({id}, {choice_id}, {op}, {key}, {value})")
-func add_choice_effect(id: String, choice_id: String, op: String, key: String, value) -> void:
+func add_choice_effect(id: String, choice_id: String, op: String, key: String, value: Variant) -> void:
 	var c: Dictionary = _choice(id, choice_id)
 	if not c.is_empty():
 		c.effects.append({"op": op, "key": key, "value": value})
@@ -210,7 +210,7 @@ func add_choice_effect(id: String, choice_id: String, op: String, key: String, v
 ## @ace_param_options(op set=Set to, inc=Increment by, dec=Decrement by, toggle=Toggle (0/1), delete=Delete key)
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_effect({id}, {op}, {key}, {value})")
-func add_effect(id: String, op: String, key: String, value) -> void:
+func add_effect(id: String, op: String, key: String, value: Variant) -> void:
 	_story(id).effects.append({"op": op, "key": key, "value": value})
 
 ## @ace_action
@@ -219,7 +219,7 @@ func add_effect(id: String, op: String, key: String, value) -> void:
 ## @ace_description("Attaches an arbitrary key-value to a storylet (a speaker, a portrait, a sound). Read it back with Active Meta / Storylet Meta - the engine never interprets it.")
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.add_meta({id}, {key}, {value})")
-func add_meta(id: String, key: String, value) -> void:
+func add_meta(id: String, key: String, value: Variant) -> void:
 	_story(id).meta[key] = value
 
 ## @ace_action
@@ -257,7 +257,7 @@ func add_recency_requirement(id: String, mode: String, within: int) -> void:
 ## @ace_description("Stores a quality value (a number like courage=3, or text like location="tavern"). Requirements read these.")
 ## @ace_icon("res://eventsheet_addons/storylet_weaver/icon.svg")
 ## @ace_codegen_template("Storylets.set_quality({key}, {value})")
-func set_quality(key: String, value) -> void:
+func set_quality(key: String, value: Variant) -> void:
 	_qualities[key] = value
 
 ## @ace_action
@@ -712,14 +712,14 @@ func _choice(id: String, choice_id: String) -> Dictionary:
 			return c
 	return {}
 
-func _num(v) -> float:
+func _num(v: Variant) -> float:
 	if v is float or v is int:
 		return float(v)
 	if v is String and (v as String).is_valid_float():
 		return (v as String).to_float()
 	return 0.0
 
-func _text(v) -> String:
+func _text(v: Variant) -> String:
 	return "" if v == null else str(v)
 
 func _req_ok(req: Dictionary, id: String) -> bool:
@@ -815,7 +815,7 @@ func _active_choices() -> Array:
 			out.append(c)
 	return out
 
-func _rows(source, field: String) -> Array:
+func _rows(source: Variant, field: String) -> Array:
 	# A grid field off a book source - a StoryletResource (a property) OR a parsed JSON object (a key);
 	# both respond to .get(field). Returns an Array of row dicts; a stray non-Dictionary element (a
 	# hand-corrupted .tres or JSON) is dropped rather than crashing the typed `for row: Dictionary` loops.
@@ -828,7 +828,7 @@ func _rows(source, field: String) -> Array:
 			out.append(e)
 	return out
 
-func _cell(row: Dictionary, key: String, default) -> Variant:
+func _cell(row: Dictionary, key: String, default: Variant) -> Variant:
 	# One cell off a row, treating a PRESENT-but-null value as missing so the default still applies.
 	# JSON writes an omitted field as null ("max_plays": null), and Dictionary.get only falls back to
 	# its default when the key is ABSENT - without this, such a cell would read as 0 and, for max_plays,
@@ -836,7 +836,7 @@ func _cell(row: Dictionary, key: String, default) -> Variant:
 	var v: Variant = row.get(key, default)
 	return default if v == null else v
 
-func _norm_value(v) -> Variant:
+func _norm_value(v: Variant) -> Variant:
 	# JSON numbers always parse as float, so an integral 10.0 would read as "10.0" where the equivalent
 	# resource String cell reads "10". Normalising an integral float to an int keeps a JSON book and a
 	# .tres book displaying identically (forecasts, meta reads) without changing any arithmetic.
@@ -875,7 +875,7 @@ func _effect_from_row(row: Dictionary) -> Dictionary:
 	# Turns one Effects-grid row into an effect dict.
 	return {"op": str(_cell(row, "op", "set")), "key": str(_cell(row, "key", "")), "value": _norm_value(_cell(row, "value", ""))}
 
-func _load_grids(source) -> void:
+func _load_grids(source: Variant) -> void:
 	# The shared loader core: reads the grids off a book source (a StoryletResource or a parsed JSON
 	# object) and replays them into the live library. Additive and forgiving - a row naming an undefined
 	# storylet (or a choice on it) is skipped, never conjuring a phantom (see _choice, which is read-only).

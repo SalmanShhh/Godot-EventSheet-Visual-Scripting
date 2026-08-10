@@ -68,7 +68,7 @@ func _process(delta: float) -> void:
 ## @ace_description("Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.")
 ## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.save_value({key}, {value})")
-func save_value(key: String, value) -> void:
+func save_value(key: String, value: Variant) -> void:
 	var data: Dictionary = _read_all()
 	if not _last_read_ok:
 		push_error("Save System: slot %d exists but could not be read - refusing to overwrite it." % slot)
@@ -82,7 +82,7 @@ func save_value(key: String, value) -> void:
 ## @ace_description("Reads any value (your default when missing).")
 ## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
 ## @ace_codegen_template("SaveSystem.load_value({key}, {default_value})")
-func load_value(key: String, default_value) -> Variant:
+func load_value(key: String, default_value: Variant) -> Variant:
 	return _read_all().get(key, default_value)
 
 ## @ace_action
@@ -321,7 +321,7 @@ func _slot_path(target_slot: int = -1) -> String:
 	var chosen: int = slot if target_slot < 0 else target_slot
 	return save_directory.path_join(file_pattern.replace("{slot}", str(chosen)))
 
-func _to_jsonable(value) -> Variant:
+func _to_jsonable(value: Variant) -> Variant:
 	match typeof(value):
 		TYPE_NIL, TYPE_BOOL, TYPE_FLOAT, TYPE_STRING:
 			return value
@@ -340,7 +340,7 @@ func _to_jsonable(value) -> Variant:
 		_:
 			return {VAR_WRAPPER_KEY: var_to_str(value)}
 
-func _from_jsonable(value) -> Variant:
+func _from_jsonable(value: Variant) -> Variant:
 	if value is Dictionary:
 		var dict: Dictionary = value
 		if dict.size() == 1 and dict.has(VAR_WRAPPER_KEY):

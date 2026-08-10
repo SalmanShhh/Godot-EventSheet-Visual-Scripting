@@ -76,7 +76,7 @@ func _find_method_anywhere(method_id: String) -> HTNMethod:
 ## @ace_display_template("Set world fact [b]{key}[/b] to [b]{value}[/b]")
 ## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.set_world_state({key}, {value})")
-func set_world_state(key: String, value) -> void:
+func set_world_state(key: String, value: Variant) -> void:
 	world_state[key] = value
 
 ## @ace_action
@@ -131,7 +131,7 @@ func add_method(task_name: String, method_id: String, utility: float) -> void:
 ## @ace_description("A precondition (world-state key, operator, value) the method needs to be chosen.")
 ## @ace_icon("res://eventsheet_addons/uhtn_planning/icon.svg")
 ## @ace_codegen_template("$UHTNPlanner.add_method_condition({task_name}, {method_id}, {key}, {op}, {value})")
-func add_method_condition(task_name: String, method_id: String, key: String, op: String, value) -> void:
+func add_method_condition(task_name: String, method_id: String, key: String, op: String, value: Variant) -> void:
 	var method: HTNMethod = _find_method(task_name, method_id)
 	if method != null:
 		var c: HTNCondition = HTNCondition.new()
@@ -354,17 +354,17 @@ func _ready() -> void:
 	if plan_resource != null:
 		load_plan(plan_resource)
 
-func _to_number(value) -> float:
+func _to_number(value: Variant) -> float:
 	if value is float or value is int:
 		return float(value)
 	return str(value).to_float()
 
-func _loose_equal(a, b) -> bool:
+func _loose_equal(a: Variant, b: Variant) -> bool:
 	if (a is float or a is int) and (b is float or b is int):
 		return is_equal_approx(float(a), float(b))
 	return str(a) == str(b)
 
-func _compare_values(a, op: String, b) -> bool:
+func _compare_values(a: Variant, op: String, b: Variant) -> bool:
 	if op == "==": return _loose_equal(a, b)
 	if op == "!=": return not _loose_equal(a, b)
 	if op == "<": return _to_number(a) < _to_number(b)
