@@ -14,6 +14,14 @@ non-Node host compiles with a warning instead of broken code. The generated trio
 name-addressed: reopening the emitted `.gd` as a sheet lifts it into ordinary rows, and saving
 again emits no second copy - the reopen cycle stays byte-identical.
 
+### Added - identity rows read as BARS: state headers, Class setup, Host binding
+
+The rows that say what something IS (a state header, the sheet's inheritance, a behavior's
+host) now reserve 1.5x height with their content centered, and Class setup + Host binding wear
+the accent band with a left accent edge - the Construct Includes-bar presence. A state header,
+a Host binding, or the Class setup bar can never be mistaken for a variable row again, and the
+Host binding word pill is replaced by the host class's own editor icon.
+
 ### Added - the enum block and Class setup read at rest, open into lists
 
 Both prelude blocks now share one rhythm - a single readable line closed, a list open, one fold

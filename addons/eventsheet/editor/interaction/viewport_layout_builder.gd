@@ -60,6 +60,9 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var row_top: float = _viewport._get_row_top(index)
 	var row_height: float = _viewport._get_row_height(index)
 	var row_rect := Rect2(0.0, row_top, width, row_height)
+	# A height-scaled header row centers its content in the taller rect (the extra space
+	# splits above and below), so the bar presence never reads as misaligned text.
+	var scale_pad: float = row_height * (1.0 - 1.0 / row_data.height_scale) * 0.5 if row_data.height_scale > 1.0 else 0.0
 	var gutter_rect := Rect2(0.0, row_top, EventSheetPalette.GUTTER_WIDTH, row_height)
 	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.INDENT_WIDTH)
 	# Group headers can be taller than a text line (group_row_height): centre the fold arrow and,
@@ -128,13 +131,13 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		var span_lane: String = _viewport._resolve_span_lane(span)
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		var span_x: float = x
-		var span_y: float = row_top + 3.0
+		var span_y: float = row_top + scale_pad + 3.0
 		if lane_divider_x <= 0.0:
 			# Non-event rows (group / variable / comment / GDScript block) flow their spans
 			# left-to-right per line; without this every span stayed at the same X and
 			# overlapped. Multi-line rows stack via span line_index.
 			var flow_line: int = int(metadata.get("line_index", 0))
-			span_y = row_top + group_v_offset + float(flow_line) * line_height + 3.0
+			span_y = row_top + scale_pad + group_v_offset + float(flow_line) * line_height + 3.0
 			span_x = float(non_event_line_x.get(flow_line, non_event_origin_x))
 			# Comment spans stack by accumulated WRAPPED height, not raw line index, so a
 			# multi-line wrapped span pushes the next one down past its full height.
@@ -142,7 +145,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				span_y = row_top + float(comment_line_tops[span_index]) * line_height + 3.0
 		elif span_lane == "action":
 			var action_line_index: int = int(metadata.get("line_index", 0))
-			span_y = row_top + float(action_line_index) * line_height + 3.0
+			span_y = row_top + scale_pad + float(action_line_index) * line_height + 3.0
 			if bool(metadata.get("align_right", false)) and action_lane_rect.size.x > 0.0:
 				span_x = action_lane_rect.end.x - float(event_style.action_lane_padding)
 			else:
@@ -163,7 +166,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 						condition_badge_next_x.get(line_index, condition_text_start_x)
 					)
 				span_x = float(condition_line_x[line_index])
-			span_y = row_top + float(line_index) * line_height + 3.0
+			span_y = row_top + scale_pad + float(line_index) * line_height + 3.0
 		var display_text: String = _viewport._editing_buffer if index == _viewport._editing_row_index and span_index == _viewport._editing_span_index else span.text
 		var span_width: float = _viewport._measure_span_width(span, display_text, font, font_size)
 		if lane_divider_x > 0.0 and span_lane != "action":

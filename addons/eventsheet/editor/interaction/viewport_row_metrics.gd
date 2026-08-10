@@ -63,6 +63,12 @@ func rebuild() -> void:
 
 
 func _resolve_row_height(row_data: EventRowData) -> float:
+	# Header-like rows reserve height_scale times their natural height (state headers, the
+	# Class setup bar, Host binding - the C3 Includes-bar presence); layout re-centers content.
+	return _resolve_row_height_natural(row_data) * clampf(row_data.height_scale if row_data != null else 1.0, 1.0, 3.0)
+
+
+func _resolve_row_height_natural(row_data: EventRowData) -> float:
 	if row_data == null:
 		return float(_viewport.ROW_HEIGHT)
 	if row_data.row_type == EventRowData.RowType.COMMENT:

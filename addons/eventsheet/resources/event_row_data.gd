@@ -46,6 +46,11 @@ var custom_color: Color = Color(0, 0, 0, 0)
 # rows with a quiet indigo left stripe + faint wash so the distinction is visible at a glance without
 # dimming the row. Stamp via EventSheets.mark_language_block so custom blocks get the same cue for free.
 var language_block: bool = false
+
+## Vertical presence multiplier (1.0 = normal). Header-like rows (state headers, the Class
+## setup bar, Host binding) reserve extra height so they read as BARS, the way Construct's
+## Includes strip does; content re-centers inside the taller rect at layout time.
+var height_scale: float = 1.0
 # True when the row DIRECTLY BELOW belongs to this one and must not be pushed away by the inter-block
 # gap - a published verb's description caption and the verb row it describes read as one block. It also
 # marks this row as STARTING that block, so the gap lands above the caption instead of between the

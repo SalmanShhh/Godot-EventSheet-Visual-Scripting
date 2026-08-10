@@ -208,6 +208,7 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 	# a BAR like a group header (and stand apart from every grey code row), not blend in.
 	var strip_accent: Color = _viewport._get_event_style().behavior_accent_color
 	row_data.custom_color = Color(strip_accent.r, strip_accent.g, strip_accent.b, 0.22)
+	row_data.height_scale = 1.5
 	var spans: Array[SemanticSpan] = [_make_span("▣", SemanticSpan.SpanType.KEYWORD, badge_meta)]
 	if crumb_prefix.is_empty() and leaf_name.is_empty():
 		spans.append(_make_span("class_name, host binding & annotations - %d lines" % line_total, SemanticSpan.SpanType.COMMENT, {
@@ -2158,15 +2159,31 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 		# editor to change it (the RawCodeRow double-click at viewport_input.gd), keeping the byte round-trip.
 		row_data.line_count = 1
 		row_data.language_block = true  # generated host boilerplate - language structure, not an event
+		# The same bar treatment the Class setup strip wears (band + 1.5x height + the host
+		# class's own editor icon in the badge slot): these identity rows must never be mistaken
+		# for a variable row - and the word pill is gone here too.
+		row_data.height_scale = 1.5
+		var host_accent: Color = _viewport._get_event_style().behavior_accent_color
+		row_data.custom_color = Color(host_accent.r, host_accent.g, host_accent.b, 0.22)
+		var host_badge_meta: Dictionary = {
+			"editable": false,
+			"badge": true,
+			"badge_style": "trigger",
+			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
+			"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
+			"kind": "raw_code",
+			"line_index": 0
+		}
+		var host_icon: Texture2D = ACEPickerDialog.editor_icon(host_class)
+		if host_icon != null:
+			host_badge_meta["badge_icon"] = host_icon
 		row_data.spans = [
-			_make_span("Host binding", SemanticSpan.SpanType.KEYWORD, {
+			_make_span("▣", SemanticSpan.SpanType.KEYWORD, host_badge_meta),
+			_make_span(EventSheetL10n.translate("Host binding"), SemanticSpan.SpanType.VALUE, {
 				"editable": false,
-				"badge": true,
-				"badge_style": "scope",
-				"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
-				"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
 				"kind": "raw_code",
-				"line_index": 0
+				"line_index": 0,
+				"text_color": EventSheetPalette.TEXT_PRIMARY
 			}),
 			_make_span(host_class, SemanticSpan.SpanType.KEYWORD, {
 				"editable": false,
@@ -2861,6 +2878,11 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	# line count (which drives row height/metrics) is computed cheaply up front so
 	# the whole sheet can be flattened and measured without building any spans.
 	row_data.line_count = _count_event_lines(event_row)
+	# An authored state header (an Is In State condition) gets the same 1.5x bar presence a
+	# lifted match case gets - one grammar for "you are looking at a state".
+	for header_condition: ACECondition in event_row.conditions:
+		if _is_state_header_condition(header_condition):
+			row_data.height_scale = 1.5
 	for local_variable_row in _build_local_variable_rows(event_row, indent + 1):
 		row_data.children.append(local_variable_row)
 	for child in event_row.sub_events:
@@ -2903,6 +2925,8 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
 			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row)
 			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
+			if state_shaped and pattern_text != "_":
+				case_row.height_scale = 1.5  # a state header is a BAR, not a line
 			if state_shaped and pattern_text != "_" and not case_row.spans.is_empty():
 				var case_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 				case_badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
