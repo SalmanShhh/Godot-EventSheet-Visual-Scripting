@@ -22,7 +22,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Runs once when this node first enters the scene, ideal for setup and initial values."))
 	descriptors.append(F.make_descriptor("Core", "OnProcess", "Every Frame", ACEDescriptor.ACEType.TRIGGER, "", "_process", [], "Run Context", "Run every tick")
 		.described("Runs every rendered frame, perfect for continuous movement, timers, or polling input."))
-	descriptors.append(F.make_descriptor("Core", "OnPhysicsProcess", "On Physics Process", ACEDescriptor.ACEType.TRIGGER, "", "_physics_process", [], "Run Context", "Run on physics process")
+	descriptors.append(F.make_descriptor("Core", "OnPhysicsProcess", "Every Physics Tick", ACEDescriptor.ACEType.TRIGGER, "", "_physics_process", [], "Run Context", "Run every physics tick")
 		.described("Runs every fixed physics step, the right place for physics-based movement and forces."))
 	descriptors.append(F.make_descriptor("Core", "OnPostTick", "After Every Frame (post-tick)", ACEDescriptor.ACEType.TRIGGER, "", "process_frame", [], "Run Context", "Run after every frame", "Node")
 		.described("Runs once AFTER every node has processed this frame - for logic that must come last, like a camera that follows after movement, or end-of-frame cleanup."))

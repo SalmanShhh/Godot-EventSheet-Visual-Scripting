@@ -129,7 +129,9 @@ static func run() -> bool:
 			signal_labels.append(str(span_meta.get("object_label", "")))
 	all_passed = _check("signal row is an EVENT row",
 		signal_row_data != null and signal_row_data.row_type == EventRowData.RowType.EVENT, true) and all_passed
-	all_passed = _check("signal row badges its kind", Array(signal_texts).has("Signal"), true) and all_passed
+	# The kind cue is the narrow glyph badge (the "Signal"/"Trigger" word pill was retired - a
+	# word in a box reads as a pill); the action lane's "internal"/"emits X" carries the kind.
+	all_passed = _check("signal row badges its kind with the glyph", Array(signal_texts).has("➜"), true) and all_passed
 	all_passed = _check("signal row names the signal", Array(signal_texts).has("hit"), true) and all_passed
 	all_passed = _check("signal parameter reads as a typed cell",
 		Array(signal_texts).has("number") and Array(signal_labels).has("damage"), true) and all_passed

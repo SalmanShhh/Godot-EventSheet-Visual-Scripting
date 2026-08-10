@@ -1034,17 +1034,17 @@ func _build_signal_row(signal_row: SignalRow, indent: int) -> EventRowData:
 	var title: String = signal_row.ace_name.strip_edges() if signal_row.trigger else ""
 	if title.is_empty():
 		title = signal_row.signal_name
-	var badge_word: String = EventSheetL10n.translate("Trigger" if signal_row.trigger else "Signal")
+	# The kind cue is a single glyph in the same narrow badge column every event row uses - the
+	# fired-signal arrow for a published trigger, a dimmed one for an internal signal (the action
+	# lane already spells out "emits X" vs "internal"). A word in a box here reads as a pill, and
+	# pills lost that argument some time ago.
 	var spans: Array[SemanticSpan] = [
-		_make_span(badge_word, SemanticSpan.SpanType.KEYWORD, {
+		_make_span("➜", SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
 			"badge": true,
-			"badge_style": "scope",
+			"badge_style": "trigger",
 			"badge_bg": chip_bg,
-			"badge_fg": event_style.behavior_accent_color,
-			# The kind WORD is the cue, so it keeps its measured width rather than snapping to the narrow
-			# single-glyph badge column a condition row uses - "Trigger" would clip.
-			"badge_natural_width": true,
+			"badge_fg": event_style.behavior_accent_color if signal_row.trigger else event_style.behavior_accent_color.lerp(chip_bg, 0.45),
 			"kind": "signal_row",
 			"lane": "condition",
 			"line_index": 0
@@ -3015,6 +3015,12 @@ func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
 	var definition: ACEDefinition = _viewport._find_definition(provider_id, trigger_id)
 	if definition != null and not definition.display_name.strip_edges().is_empty():
 		return EventSheetL10n.translate(definition.display_name)
+	# Same fallback the condition path uses: when no built definition exists yet, the static
+	# descriptor registry still knows the friendly name ("Every Physics Tick", not
+	# "OnPhysicsProcess") - without it a lifted trigger prints its raw id.
+	var descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, trigger_id)
+	if descriptor != null and not descriptor.display_name.strip_edges().is_empty():
+		return EventSheetL10n.translate(descriptor.display_name)
 	if trigger_id.begins_with("signal:"):
 		return "On %s" % trigger_id.trim_prefix("signal:").capitalize()
 	return trigger_id
@@ -3739,6 +3745,17 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 
 func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	# An Is In State condition reads as a state header - "◆ State: patrol" - instead of a call
+	# sentence. Keyed on the method SHAPE (an is_in_state verb carrying a state_name param), not
+	# on any one pack's name, so every state-machine-like behavior gets the reading for free.
+	# The value shows verbatim minus quotes (state strings are case-sensitive - no prettifying).
+	# Display-only: the stored row and the compiled call are untouched.
+	if condition.ace_id == "method:is_in_state" and params_dict.has("state_name"):
+		var state_value: String = str(params_dict.get("state_name", "")).strip_edges()
+		if state_value.length() >= 2 and state_value.begins_with("\"") and state_value.ends_with("\""):
+			state_value = state_value.substr(1, state_value.length() - 2)
+		if not state_value.is_empty():
+			return "◆ %s: %s" % [EventSheetL10n.translate("State"), state_value]
 	var generated_definition: ACEDefinition = _viewport._find_definition(condition.provider_id, condition.ace_id)
 	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	if generated_definition == null and descriptor == null:

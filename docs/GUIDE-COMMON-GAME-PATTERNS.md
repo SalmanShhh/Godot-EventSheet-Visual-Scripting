@@ -75,7 +75,7 @@ statement, and transition bookkeeping becomes vocabulary:
   then go back" is `Time In State > 2` then `Set State previous_state`.
 - **previous_state** always holds where you came from.
 
-![The State Machine pack opened as a sheet](images/code-patterns-state-machine.png)
+![A state machine as a consumer writes it: one group, state headers, guarded transitions](images/code-patterns-state-machine.png)
 
 ## Pick one node out of a group
 

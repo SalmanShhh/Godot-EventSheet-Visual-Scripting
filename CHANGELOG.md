@@ -14,6 +14,18 @@ non-Node host compiles with a warning instead of broken code. The generated trio
 name-addressed: reopening the emitted `.gd` as a sheet lifts it into ordinary rows, and saving
 again emits no second copy - the reopen cycle stays byte-identical.
 
+### Added - state machines read like state machines
+
+Three display-only views (rows and compiled output untouched):
+
+- An **Is In State** condition renders as a state header - `◆ State: patrol` - keyed on the
+  method shape, so any state-machine-like behavior gets the reading, not just the bundled pack.
+- **Every Physics Tick** is now that trigger's name everywhere (was "On Physics Process"), and a
+  lifted trigger id resolves its friendly name through the same descriptor fallback conditions
+  always had - no more raw `OnPhysicsProcess` in the condition lane.
+- A published signal row's kind cue is the narrow glyph badge every event row uses; the
+  "Trigger"/"Signal" word pill is gone.
+
 ### Added - the Common Game Patterns guide, with screenshots
 
 `docs/GUIDE-COMMON-GAME-PATTERNS.md` maps the patterns every game needs - run every X seconds,

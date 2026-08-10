@@ -73,6 +73,70 @@ func _build_patterns_sheet() -> EventSheetResource:
 	return sheet
 
 
+## The guide's state-machine sheet, as a CONSUMER writes it: a named group holding one event per
+## state (the Is In State condition renders as the "◆ State:" header), transitions guarded by
+## their own conditions, and the pack's On State Changed trigger closing the loop.
+func _build_state_machine_sheet() -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var machine: EventGroup = EventGroup.new()
+	machine.name = "State Machine · Enemy ( patrol · chase · flee )"
+
+	var patrol: EventRow = EventRow.new()
+	patrol.trigger_id = "OnPhysicsProcess"
+	patrol.trigger_provider_id = "Core"
+	patrol.conditions.append(_sm_cond("patrol"))
+	patrol.actions.append(_pack_act("method:patrol_step", {"delta": "delta"}))
+	machine.events.append(patrol)
+
+	var spot: EventRow = EventRow.new()
+	spot.trigger_id = "OnPhysicsProcess"
+	spot.trigger_provider_id = "Core"
+	spot.conditions.append(_sm_cond("patrol"))
+	spot.conditions.append(_cond("ExpressionIsTrue", {"expr": "can_see_player()"}))
+	spot.actions.append(_pack_act("method:set_state", {"next": "\"chase\""}))
+	machine.events.append(spot)
+
+	var flee: EventRow = EventRow.new()
+	flee.trigger_id = "OnPhysicsProcess"
+	flee.trigger_provider_id = "Core"
+	flee.conditions.append(_sm_cond("chase"))
+	flee.conditions.append(_cond("ExpressionIsTrue", {"expr": "hp < 20"}))
+	flee.actions.append(_pack_act("method:set_state", {"next": "\"flee\""}))
+	machine.events.append(flee)
+
+	var calm_down: EventRow = EventRow.new()
+	calm_down.trigger_id = "OnPhysicsProcess"
+	calm_down.trigger_provider_id = "Core"
+	calm_down.conditions.append(_sm_cond("flee"))
+	calm_down.conditions.append(_cond("ExpressionIsTrue", {"expr": "time_in_state() > 2.0"}))
+	calm_down.actions.append(_pack_act("method:set_state", {"next": "previous_state"}))
+	machine.events.append(calm_down)
+
+	var yelp: EventRow = EventRow.new()
+	yelp.trigger_id = "signal:state_changed"
+	yelp.actions.append(_act("Wait", {"seconds": "0.2"}))
+	machine.events.append(yelp)
+
+	sheet.events.append(machine)
+	return sheet
+
+
+static func _sm_cond(state_name: String) -> ACECondition:
+	var condition: ACECondition = ACECondition.new()
+	condition.provider_id = "StateMachineBehavior"
+	condition.ace_id = "method:is_in_state"
+	condition.params = {"state_name": "\"%s\"" % state_name}
+	return condition
+
+
+static func _pack_act(ace_id: String, params: Dictionary) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "StateMachineBehavior"
+	action.ace_id = ace_id
+	action.params = params
+	return action
+
+
 static func _cond(ace_id: String, params: Dictionary) -> ACECondition:
 	var condition: ACECondition = ACECondition.new()
 	condition.provider_id = "Core"
@@ -99,7 +163,7 @@ func _on_frame() -> void:
 		print("[preview] patterns sheet %dx%d" % [img.get_width(), img.get_height()])
 		_stage = 1
 		_frames = 0
-		_apply_sheet(GDScriptImporter.new().import_external("res://eventsheet_addons/state_machine/state_machine_behavior.gd"))
+		_apply_sheet(_build_state_machine_sheet())
 		return
 	img.save_png("res://docs/images/code-patterns-state-machine.png")
 	print("[preview] state machine sheet %dx%d" % [img.get_width(), img.get_height()])
