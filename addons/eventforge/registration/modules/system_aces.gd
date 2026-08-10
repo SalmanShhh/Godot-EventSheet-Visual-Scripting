@@ -148,6 +148,22 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True only on the first tick each time the event's other conditions become true, and again after they have gone false. Works in any condition slot.")
 		.stateful("var __once_{uid}: int = 1\n\nfunc __trigger_once_{uid}() -> bool:\n\tvar ticks_since_last: int = __once_{uid}\n\t__once_{uid} = 0\n\treturn ticks_since_last > 1", "__once_{uid} += 1")
 		.evaluated_last())
+	# Has Changed: the "value watcher" edge gate. A per-instance previous-value slot plus a helper
+	# that compares and rebases in one call, so the term is a plain bool expression usable in any
+	# condition cell. The first tick after the row starts running only SEEDS the slot (returns false),
+	# which is why a value that starts different from null does not fire spuriously on frame one.
+	descriptors.append(F.make_descriptor("Core", "HasChanged", "Has Changed", ACEDescriptor.ACEType.CONDITION, "__has_changed_{uid}({value})", "", [F.make_param("value", "String", "0", "Value", "The value to watch - true on the tick it becomes different.", "expression")], "Run Context", "{value} has changed")
+		.described("True on any tick where the watched value differs from the tick before (needs a per-frame trigger).")
+		.stateful("var __changed_prev_{uid}: Variant = null\nvar __changed_seen_{uid}: bool = false\n\nfunc __has_changed_{uid}(current: Variant) -> bool:\n\tif not __changed_seen_{uid}:\n\t\t__changed_seen_{uid} = true\n\t\t__changed_prev_{uid} = current\n\t\treturn false\n\tif current == __changed_prev_{uid}:\n\t\treturn false\n\t__changed_prev_{uid} = current\n\treturn true"))
+	# Cooldowns: named, stateless, and shared across every row on the host - the deadline lives in
+	# node metadata keyed by name, so Start Cooldown here and Cooldown Is Ready in a different event
+	# (or a different sheet on the same node) agree without any wiring. No members, no {uid}.
+	descriptors.append(F.make_descriptor("Core", "StartCooldown", "Start Cooldown", ACEDescriptor.ACEType.ACTION, "set_meta(&\"__ef_cool_\" + str({name}), Time.get_ticks_msec() + int(maxf({seconds}, 0.0) * 1000.0))", "", [F.make_param("name", "String", "\"dash\"", "Name", "Cooldown name - any label you also use in Cooldown Is Ready.", "expression"), F.make_param("seconds", "String", "1.0", "Seconds", "How long the cooldown lasts.", "expression")], "Time", "start cooldown {name} for {seconds}s")
+		.described("Starts (or restarts) a named cooldown that lasts the given number of seconds."))
+	descriptors.append(F.make_descriptor("Core", "CooldownReady", "Cooldown Is Ready", ACEDescriptor.ACEType.CONDITION, "Time.get_ticks_msec() >= int(get_meta(&\"__ef_cool_\" + str({name}), 0))", "", [F.make_param("name", "String", "\"dash\"", "Name", "Cooldown name, matching a Start Cooldown action.", "expression")], "Time", "cooldown {name} is ready")
+		.described("True when the named cooldown has finished. A cooldown that was never started counts as ready, so the first use is always allowed."))
+	descriptors.append(F.make_descriptor("Core", "CooldownTimeLeft", "Cooldown Time Left", ACEDescriptor.ACEType.EXPRESSION, "(maxf(0.0, float(int(get_meta(&\"__ef_cool_\" + str({name}), 0)) - Time.get_ticks_msec()) / 1000.0))", "", [F.make_param("name", "String", "\"dash\"", "Name", "Cooldown name, matching a Start Cooldown action.", "expression")], "Time", "cooldown {name} time left")
+		.described("Gives the seconds left on a named cooldown, or 0 when it is ready - handy for a HUD readout."))
 	# Once At A Time (single-flight, the async-events re-entry gate): a busy latch set on entry
 	# and cleared by the on_exit hook AFTER the whole body - in a coroutine body that reset runs
 	# when the last await completes, so a per-frame trigger with a Wait can't stack overlapping

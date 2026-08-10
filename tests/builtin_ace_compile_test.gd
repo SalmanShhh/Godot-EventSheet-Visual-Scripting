@@ -25,7 +25,7 @@ extends RefCounted
 ## Their templates are exercised by their own feature tests; here they are listed, not dropped.
 const NOT_STANDALONE: Array[String] = [
 	"LoopBreak", "LoopContinue", "ReturnValue",
-	"EveryXSeconds", "TriggerOnce", "SingleFlight",  # call sheet-synthesized companion state (an accumulator / an edge-test helper / a busy latch)
+	"EveryXSeconds", "TriggerOnce", "SingleFlight", "HasChanged",  # call sheet-synthesized companion state (an accumulator / an edge-test helper / a busy latch / a previous-value slot)
 	"AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
 	"ConnectGroupSignal", "DisconnectGroupSignal",  # loop over a group and touch a user signal/callable - same as ConnectSignal
