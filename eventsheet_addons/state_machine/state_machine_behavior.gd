@@ -19,6 +19,8 @@ func _enter_tree() -> void:
 ## @ace_category("State Machine")
 signal state_changed(previous: String, next: String)
 
+var _state_entered_ticks: int = 0
+var previous_state: String = ""
 ## The machine's current state name; change it with Set State.
 @export var state: String = "idle"
 
@@ -41,7 +43,18 @@ func set_state(next: String) -> void:
 	if state != next:
 		var previous: String = state
 		state = next
+		previous_state = previous
+		_state_entered_ticks = Time.get_ticks_msec()
 		state_changed.emit(previous, next)
+
+## @ace_expression
+## @ace_name("Time In State")
+## @ace_category("State Machine")
+## @ace_description("How many seconds the machine has been in its current state.")
+## @ace_icon("res://eventsheet_addons/state_machine/icon.svg")
+## @ace_codegen_template("$StateMachineBehavior.time_in_state()")
+func time_in_state() -> float:
+	return (float(Time.get_ticks_msec() - _state_entered_ticks) / 1000.0)
 
 ## @ace_hidden
 func save_state() -> Dictionary:
