@@ -2975,13 +2975,38 @@ func _friendly_statement_text(line: String) -> String:
 	if not call.is_empty():
 		var call_target: String = str(call.get("target", ""))
 		var lead: String = "" if call_target.is_empty() or call_target == "self" else "%s " % call_target
-		# args arrives as one entry per argument - joined here, never stringified as an Array.
-		var args_value: Variant = call.get("args", [])
-		var args_text: String = ", ".join(PackedStringArray(args_value)) if args_value is Array or args_value is PackedStringArray else str(args_value)
+		var args_text: String = _joined_call_args(call)
 		if args_text.strip_edges().is_empty():
 			return "%s%s" % [lead, str(call.get("verb", ""))]
 		return "%s%s ( %s )" % [lead, str(call.get("verb", "")), args_text]
 	return text
+
+
+## args arrives as one entry per argument - joined here, never stringified as an Array.
+func _joined_call_args(call: Dictionary) -> String:
+	var args_value: Variant = call.get("args", [])
+	if args_value is Array or args_value is PackedStringArray:
+		return ", ".join(PackedStringArray(args_value))
+	return str(args_value)
+
+
+## A guard's plain-language reading: a bare self-call humanizes to its verb the way every
+## method name already does ("can_see_player()" reads "Can See Player" - a beginner should
+## never meet parentheses in a condition cell), `not` reads as the word Not, and value
+## comparisons ("hp < 20") keep their values. Display-only; the hover carries the code.
+func _friendly_guard_text(guard: String) -> String:
+	var text: String = guard.strip_edges()
+	var negated: bool = text.begins_with("not ")
+	if negated:
+		text = text.substr(4).strip_edges()
+	var friendly: String = text
+	var call: Dictionary = ViewportRowBuilder.call_parts(text)
+	if not call.is_empty() and (str(call.get("target", "")).is_empty() or str(call.get("target", "")) == "self"):
+		var args_text: String = _joined_call_args(call)
+		friendly = str(call.get("verb", "")) if args_text.strip_edges().is_empty() else "%s ( %s )" % [str(call.get("verb", "")), args_text]
+	if negated:
+		return "%s %s" % [EventSheetL10n.translate("Not"), friendly]
+	return friendly
 
 
 ## A body-level `if <guard>:` block inside a match case IS a condition, so it renders as a
@@ -3005,7 +3030,7 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 		if inner_line.begins_with("\t") or inner_line.begins_with("elif") or inner_line.begins_with("else"):
 			return null
 		inner.append(_friendly_statement_text(inner_line))
-	var child: EventRowData = _build_condition_action_row(guard, inner, indent, match_row)
+	var child: EventRowData = _build_condition_action_row(_friendly_guard_text(guard), inner, indent, match_row)
 	child.language_block = true
 	return child
 

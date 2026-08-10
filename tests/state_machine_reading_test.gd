@@ -86,6 +86,24 @@ static func run() -> bool:
 	var plain_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("a non-state match keeps its pattern", plain_rows[0].spans[0].text, "State.PATROL") and ok
 
+	# 5. A case body's if block is a nested CONDITION row whose guard SPEAKS: a bare self-call
+	# humanizes ("Can See Player"), `not` reads as the word Not - a beginner never meets
+	# parentheses in a condition cell.
+	lifted_match.match_expression = "state"
+	var spot: RawCodeRow = RawCodeRow.new()
+	spot.code = "if can_see_player():
+	state = State.CHASE"
+	patrol_case.events = [patrol_body, spot]
+	var guarded_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
+	ok = _check("the transition is a child row of its state", guarded_rows[0].children.size(), 1) and ok
+	var transition: EventRowData = guarded_rows[0].children[0]
+	ok = _check("the guard humanizes in the condition cell", transition.spans[0].text, "Can See Player") and ok
+	ok = _check("the effect reads as a sentence in the action cell", transition.spans[1].text, "Set state to State.CHASE") and ok
+	spot.code = "if not can_see_player():
+	state = State.PATROL"
+	var negated_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
+	ok = _check("a negated guard reads as the word Not", negated_rows[0].children[0].spans[0].text, "Not Can See Player") and ok
+
 	viewport.free()
 	return ok
 
