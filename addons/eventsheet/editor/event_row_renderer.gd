@@ -1110,6 +1110,7 @@ const BADGE_MARK_SVGS: Dictionary = {
 	"➜": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M4 12h10.4\" stroke=\"#fff\" stroke-width=\"2.8\" stroke-linecap=\"round\"/><path d=\"M12.6 6.4 L20.2 12 L12.6 17.6 Z\" fill=\"#fff\"/></svg>",
 	"⌨": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"4\" y=\"7\" width=\"16\" height=\"10\" rx=\"2.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.2\"/><circle cx=\"12\" cy=\"12\" r=\"1.7\" fill=\"#fff\"/></svg>",
 	"◆": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M12 4.2 L19.8 12 L12 19.8 L4.2 12 Z\" fill=\"#fff\"/></svg>",
+	"ƒ": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M15.8 4.4c-2.1-.3-3.5.7-3.9 2.9l-.5 2.7H8.6v2.2h2.4l-1.1 6c-.2 1.2-.8 1.6-2.1 1.4v2c2.6.4 4.2-.7 4.6-3.2l1.1-6.2h2.9V10h-2.5l.4-2.3c.2-1 .7-1.3 1.9-1.1z\" fill=\"#fff\"/></svg>",
 	"≡": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M5 7.5h14M5 12h14M5 16.5h10\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\"/></svg>",
 	"▣": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"4.5\" y=\"4.5\" width=\"15\" height=\"15\" rx=\"3\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.2\"/><rect x=\"9.4\" y=\"9.4\" width=\"5.2\" height=\"5.2\" rx=\"1\" fill=\"#fff\"/></svg>",
 }

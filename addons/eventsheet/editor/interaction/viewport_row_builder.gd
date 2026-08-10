@@ -2991,10 +2991,10 @@ func _joined_call_args(call: Dictionary) -> String:
 
 
 ## A guard's plain-language reading: a bare self-call humanizes to its verb the way every
-## method name already does ("can_see_player()" reads "ƒ Can See Player" - a beginner should
-## never meet parentheses in a condition cell, but the ƒ mark says this is a computed CHECK,
-## not a bool variable; ƒ is the same symbol collapsed functions already wear, so the sheet
-## teaches one symbol once). `not` reads as the word Not, and value comparisons ("hp < 20")
+## method name already does ("can_see_player()" reads "Can See Player" - a beginner should
+## never meet parentheses in a condition cell). The computed-check cue is the ƒ SVG BADGE the
+## caller adds in the icon column (the same ƒ collapsed functions wear, one symbol taught
+## once), never inline text. `not` reads as the word Not, and value comparisons ("hp < 20")
 ## keep their values. Display-only; the hover carries the code.
 func _friendly_guard_text(guard: String) -> String:
 	var text: String = guard.strip_edges()
@@ -3006,7 +3006,6 @@ func _friendly_guard_text(guard: String) -> String:
 	if not call.is_empty() and (str(call.get("target", "")).is_empty() or str(call.get("target", "")) == "self"):
 		var args_text: String = _joined_call_args(call)
 		friendly = str(call.get("verb", "")) if args_text.strip_edges().is_empty() else "%s ( %s )" % [str(call.get("verb", "")), args_text]
-		friendly = "ƒ %s" % friendly
 	if negated:
 		return "%s %s" % [EventSheetL10n.translate("Not"), friendly]
 	return friendly
@@ -3035,7 +3034,27 @@ func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row
 		inner.append(_friendly_statement_text(inner_line))
 	var child: EventRowData = _build_condition_action_row(_friendly_guard_text(guard), inner, indent, match_row)
 	child.language_block = true
+	# A computed-check guard wears the ƒ SVG badge in the icon column - the reader learns at a
+	# glance the value comes from a FUNCTION, not a bool variable, without meeting parentheses.
+	if _guard_is_call(guard):
+		var guard_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+		guard_badge_meta["badge_bg"] = EventSheetPalette.COLOR_CODE_BADGE_BG
+		guard_badge_meta["badge_fg"] = EventSheetPalette.COLOR_CODE_BADGE_FG
+		guard_badge_meta["badge_style"] = "trigger"
+		guard_badge_meta["lane"] = "condition"
+		guard_badge_meta["line_index"] = 0
+		child.spans.insert(0, _make_span("ƒ", SemanticSpan.SpanType.KEYWORD, guard_badge_meta))
 	return child
+
+
+## Whether a guard's core (after any leading `not`) is a bare self-call - the shape that earns
+## the ƒ computed-check badge.
+func _guard_is_call(guard: String) -> bool:
+	var text: String = guard.strip_edges()
+	if text.begins_with("not "):
+		text = text.substr(4).strip_edges()
+	var call: Dictionary = ViewportRowBuilder.call_parts(text)
+	return not call.is_empty() and (str(call.get("target", "")).is_empty() or str(call.get("target", "")) == "self")
 
 
 ## Whether a match subject is state-shaped: its trailing identifier (after any `.`/`(`) contains

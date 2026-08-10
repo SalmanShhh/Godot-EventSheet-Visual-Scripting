@@ -97,12 +97,14 @@ static func run() -> bool:
 	var guarded_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
 	ok = _check("the transition is a child row of its state", guarded_rows[0].children.size(), 1) and ok
 	var transition: EventRowData = guarded_rows[0].children[0]
-	ok = _check("the guard humanizes with the function mark", transition.spans[0].text, "ƒ Can See Player") and ok
-	ok = _check("the effect reads as a sentence in the action cell", transition.spans[1].text, "Set state to State.CHASE") and ok
+	ok = _check("the guard leads with the ƒ badge", transition.spans[0].text, "ƒ") and ok
+	ok = _check("the ƒ is a badge span, not text", bool((transition.spans[0].metadata as Dictionary).get("badge", false)), true) and ok
+	ok = _check("the guard humanizes in the condition cell", transition.spans[1].text, "Can See Player") and ok
+	ok = _check("the effect reads as a sentence in the action cell", transition.spans[2].text, "Set state to State.CHASE") and ok
 	spot.code = "if not can_see_player():
 	state = State.PATROL"
 	var negated_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
-	ok = _check("a negated guard reads as the word Not", negated_rows[0].children[0].spans[0].text, "Not ƒ Can See Player") and ok
+	ok = _check("a negated guard reads as the word Not", negated_rows[0].children[0].spans[1].text, "Not Can See Player") and ok
 
 	viewport.free()
 	return ok
