@@ -89,5 +89,16 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns the closest member of a group to this node, e.g. the nearest enemy."))
 	descriptors.append(F.make_descriptor("Core", "FurthestInGroup", "Furthest Node In Group", ACEDescriptor.ACEType.EXPRESSION, "get_tree().get_nodes_in_group({group}).reduce(func(__acc, __n): return __n if __acc == null or global_position.distance_to(__n.global_position) > global_position.distance_to(__acc.global_position) else __acc, null)", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group to pick the farthest member of (by distance to this node). Returns null if the group is empty.", "group_reference")], "Nodes: Picking", "furthest node in group {group}", "Node2D")
 		.described("Returns the farthest member of a group from this node by distance."))
+	# The empty-safe sibling of Random Node In Group: Array.pick_random() ERRORS on an empty array, so
+	# this one asks first and hands back nothing instead. Plain Node host - no distance math involved.
+	descriptors.append(F.make_descriptor("Core", "RandomInGroup", "Random Node In Group (empty-safe)", ACEDescriptor.ACEType.EXPRESSION, "get_tree().get_nodes_in_group({group}).pick_random() if not get_tree().get_nodes_in_group({group}).is_empty() else null", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group to pick a random member from. Returns nothing when the group is empty (instead of erroring).", "group_reference")], "Nodes: Picking", "random node in group {group} (or nothing)")
+		.described("Returns a random member of a group, or nothing at all when the group is empty."))
+	# Pick by a PROPERTY rather than by distance: lowest health, highest score, cheapest item. Same
+	# reduce() idiom (Godot 4 Array has no min_by/max_by); get() reads the named property off each
+	# member, so any group of nodes that carries it works. Empty group → null.
+	descriptors.append(F.make_descriptor("Core", "SmallestInGroup", "Group Member With Smallest Property", ACEDescriptor.ACEType.EXPRESSION, "get_tree().get_nodes_in_group({group}).reduce(func(__acc, __n): return __n if __acc == null or __n.get({property}) < __acc.get({property}) else __acc, null)", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group to search. Returns nothing if the group is empty.", "group_reference"), F.make_param("property", "String", "\"hp\"", "Property", "Name of the property to compare, e.g. hp or score.")], "Nodes: Picking", "group {group} member with smallest {property}")
+		.described("Returns the group member whose named property is lowest, e.g. the weakest enemy."))
+	descriptors.append(F.make_descriptor("Core", "LargestInGroup", "Group Member With Largest Property", ACEDescriptor.ACEType.EXPRESSION, "get_tree().get_nodes_in_group({group}).reduce(func(__acc, __n): return __n if __acc == null or __n.get({property}) > __acc.get({property}) else __acc, null)", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group to search. Returns nothing if the group is empty.", "group_reference"), F.make_param("property", "String", "\"hp\"", "Property", "Name of the property to compare, e.g. hp or score.")], "Nodes: Picking", "group {group} member with largest {property}")
+		.described("Returns the group member whose named property is highest, e.g. the toughest enemy."))
 
 	return descriptors
