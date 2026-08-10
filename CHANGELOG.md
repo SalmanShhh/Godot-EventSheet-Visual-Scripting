@@ -14,6 +14,19 @@ non-Node host compiles with a warning instead of broken code. The generated trio
 name-addressed: reopening the emitted `.gd` as a sheet lifts it into ordinary rows, and saving
 again emits no second copy - the reopen cycle stays byte-identical.
 
+### Added - the Common Game Patterns guide, with screenshots
+
+`docs/GUIDE-COMMON-GAME-PATTERNS.md` maps the patterns every game needs - run every X seconds,
+react on change, cooldowns, wait-then-continue, remembering variables, state machines, picking
+one node from a group, chance, tweens, and self-connecting signals - to the exact rows that
+replace them, with rendered previews (`tools/render_code_patterns_preview.gd`).
+
+### Fixed - editor translations caught up with the newer menu items
+
+Eight UI strings that had accumulated untranslated (Publish New Version, Name Raw Calls,
+Compact Rows, Remember Between Runs, the Declare entry menu, Lock Verb Body) now ship in all
+eight bundled locales plus the template.
+
 ### Added - Has Changed condition and named cooldowns
 
 Four new Core ACEs for the two timing patterns beginners fake with scratch variables:

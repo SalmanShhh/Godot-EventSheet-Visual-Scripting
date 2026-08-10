@@ -5,6 +5,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 ## Learn by doing
 
 - [Recipes](GUIDE-RECIPES.md) - build a platformer, health, pickups, and debugging end to end.
+- [Common Game Patterns Without Code](GUIDE-COMMON-GAME-PATTERNS.md) - state machines, timers, cooldowns, remembering variables, tweens, and randomness as rows.
 - [Working with Lists (Arrays)](GUIDE-WORKING-WITH-LISTS.md) - the whole Array vocabulary, including Filter / Map / Reduce / Any Match / All Match and typed lists.
 - [Seeing What Is There (Raycasting)](GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING.md) - line of sight, hitscan shots, ground checks, click-to-select, and explosion radii: all four kinds of cast in 2D and 3D, with two playable labs that draw every cast as it happens.
 - [Make a Behaviour Without Writing Code](GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE.md) - author a whole reusable behaviour from event-sheet rows.
