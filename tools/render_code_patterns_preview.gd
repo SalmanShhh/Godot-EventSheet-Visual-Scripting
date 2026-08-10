@@ -81,40 +81,40 @@ func _build_state_machine_sheet() -> EventSheetResource:
 	var machine: EventGroup = EventGroup.new()
 	machine.name = "State Machine · Enemy ( patrol · chase · flee )"
 
-	# Each STATE is one parent event (trigger + the "◆ State:" condition); what the state does
-	# and when it leaves are SUB-EVENTS beneath it, each with its own condition lane - the
-	# mockup's structure, straight from the model's own nesting.
+	# ONE "Every Physics Tick" parent - the sheet's mirror of the single _physics_process a
+	# hand-written machine lives in - with each STATE as a sub-event under it (its condition
+	# renders as the "◆ State:" header) and each transition nested one level deeper.
+	var tick: EventRow = EventRow.new()
+	tick.trigger_id = "OnPhysicsProcess"
+	tick.trigger_provider_id = "Core"
+
 	var patrol: EventRow = EventRow.new()
-	patrol.trigger_id = "OnPhysicsProcess"
-	patrol.trigger_provider_id = "Core"
 	patrol.conditions.append(_sm_cond("patrol"))
 	patrol.actions.append(_pack_act("method:patrol_step", {"delta": "delta"}))
 	var spot: EventRow = EventRow.new()
 	spot.conditions.append(_cond("ExpressionIsTrue", {"expr": "can_see_player()"}))
 	spot.actions.append(_pack_act("method:set_state", {"next": "\"chase\""}))
 	patrol.sub_events.append(spot)
-	machine.events.append(patrol)
+	tick.sub_events.append(patrol)
 
 	var chase: EventRow = EventRow.new()
-	chase.trigger_id = "OnPhysicsProcess"
-	chase.trigger_provider_id = "Core"
 	chase.conditions.append(_sm_cond("chase"))
 	chase.actions.append(_pack_act("method:chase_step", {"delta": "delta"}))
 	var flee: EventRow = EventRow.new()
 	flee.conditions.append(_cond("ExpressionIsTrue", {"expr": "hp < 20"}))
 	flee.actions.append(_pack_act("method:set_state", {"next": "\"flee\""}))
 	chase.sub_events.append(flee)
-	machine.events.append(chase)
+	tick.sub_events.append(chase)
 
 	var fleeing: EventRow = EventRow.new()
-	fleeing.trigger_id = "OnPhysicsProcess"
-	fleeing.trigger_provider_id = "Core"
 	fleeing.conditions.append(_sm_cond("flee"))
 	var calm_down: EventRow = EventRow.new()
 	calm_down.conditions.append(_cond("ExpressionIsTrue", {"expr": "time_in_state() > 2.0"}))
 	calm_down.actions.append(_pack_act("method:set_state", {"next": "previous_state"}))
 	fleeing.sub_events.append(calm_down)
-	machine.events.append(fleeing)
+	tick.sub_events.append(fleeing)
+
+	machine.events.append(tick)
 
 	var yelp: EventRow = EventRow.new()
 	yelp.trigger_id = "signal:state_changed"

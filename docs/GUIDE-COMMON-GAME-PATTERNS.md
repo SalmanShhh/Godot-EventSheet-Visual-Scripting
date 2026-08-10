@@ -75,12 +75,14 @@ statement, and transition bookkeeping becomes vocabulary:
   then go back" is `Time In State > 2` then `Set State previous_state`.
 - **previous_state** always holds where you came from.
 
-The shape that reads best: one named group for the machine, one PARENT event per state (its
-condition renders as the `◆ State:` header), and everything the state does or leaves through as
-SUB-EVENTS beneath it - each transition gets its own condition lane, so piling on more guards
-later ("and cooldown ready", "and player still visible") never means restructuring.
+The shape that reads best: one named group for the machine, ONE **Every Physics Tick** event,
+each STATE as a sub-event under it (its condition renders as the `◆ State:` header), and each
+transition nested one level deeper with its own condition lane - so piling on more guards later
+("and cooldown ready", "and player still visible") never means restructuring. The nesting is
+exactly the code's own indentation: the tick event is `_physics_process`, each state sub-event
+is a `match` branch one tab in, each transition the `if` one tab deeper.
 
-![A state machine as a consumer writes it: one group, state parents, transitions as sub-events](images/code-patterns-state-machine.png)
+![A state machine as a consumer writes it: one tick event, states as sub-events, transitions nested deeper](images/code-patterns-state-machine.png)
 
 ## Pick one node out of a group
 
