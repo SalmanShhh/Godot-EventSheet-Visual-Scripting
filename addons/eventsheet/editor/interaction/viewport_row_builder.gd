@@ -3179,6 +3179,17 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 				display_index,
 				displayed_condition_indices.size()
 			)
+			# A state-header condition carries its ◆ in the BADGE column - the same slot trigger
+			# and tempo icons use - never inline in the text (an icon glued into a sentence reads
+			# as clutter next to rows whose icons sit in the column).
+			if _is_state_header_condition(condition):
+				var state_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+				state_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
+				state_badge_meta["badge_fg"] = event_style.trigger_badge_foreground_color
+				state_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+				state_badge_meta["line_index"] = line_index
+				state_badge_meta["badge_style"] = "trigger"
+				spans.append(_make_span("◆", SemanticSpan.SpanType.KEYWORD, state_badge_meta))
 			spans.append(
 				_make_span(
 					_format_condition_descriptor(condition),
@@ -3743,19 +3754,29 @@ func _format_condition_descriptor(condition: ACECondition) -> String:
 	return base_text
 
 
+## True when this condition is the state-header shape (an is_in_state verb carrying a non-empty
+## state value) - the span builder badges it with the ◆ diamond in the trigger-icon column and
+## the descriptor formats it as "State: <name>".
+func _is_state_header_condition(condition: ACECondition) -> bool:
+	if condition == null or condition.ace_id != "method:is_in_state":
+		return false
+	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	return not str(params_dict.get("state_name", "")).strip_edges().is_empty()
+
+
 func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
-	# An Is In State condition reads as a state header - "◆ State: patrol" - instead of a call
-	# sentence. Keyed on the method SHAPE (an is_in_state verb carrying a state_name param), not
+	# An Is In State condition reads as a state header - "State: patrol", with the ◆ diamond
+	# rendered as a BADGE by the span builder (the same column trigger icons use, never inline
+	# text). Keyed on the method SHAPE (an is_in_state verb carrying a state_name param), not
 	# on any one pack's name, so every state-machine-like behavior gets the reading for free.
 	# The value shows verbatim minus quotes (state strings are case-sensitive - no prettifying).
 	# Display-only: the stored row and the compiled call are untouched.
-	if condition.ace_id == "method:is_in_state" and params_dict.has("state_name"):
+	if _is_state_header_condition(condition):
 		var state_value: String = str(params_dict.get("state_name", "")).strip_edges()
 		if state_value.length() >= 2 and state_value.begins_with("\"") and state_value.ends_with("\""):
 			state_value = state_value.substr(1, state_value.length() - 2)
-		if not state_value.is_empty():
-			return "◆ %s: %s" % [EventSheetL10n.translate("State"), state_value]
+		return "%s: %s" % [EventSheetL10n.translate("State"), state_value]
 	var generated_definition: ACEDefinition = _viewport._find_definition(condition.provider_id, condition.ace_id)
 	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	if generated_definition == null and descriptor == null:

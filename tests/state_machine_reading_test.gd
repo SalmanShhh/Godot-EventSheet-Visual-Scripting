@@ -18,16 +18,28 @@ static func run() -> bool:
 	viewport.set_ace_registry(EventSheetACERegistry.new())
 	var builder: ViewportRowBuilder = viewport._row_builder
 
-	# 1. The state header view.
+	# 1. The state header view: plain "State: <name>" text, the ◆ diamond as a BADGE span in the
+	# trigger-icon column (never inline in the sentence).
 	var in_state: ACECondition = ACECondition.new()
 	in_state.provider_id = "StateMachineBehavior"
 	in_state.ace_id = "method:is_in_state"
 	in_state.params = {"state_name": "\"patrol\""}
-	ok = _check("Is In State reads as a state header", builder._format_condition_descriptor_base(in_state), "◆ State: patrol") and ok
+	ok = _check("Is In State reads as a state header", builder._format_condition_descriptor_base(in_state), "State: patrol") and ok
 	in_state.params = {"state_name": "previous_state"}
-	ok = _check("an unquoted state expression shows verbatim", builder._format_condition_descriptor_base(in_state), "◆ State: previous_state") and ok
+	ok = _check("an unquoted state expression shows verbatim", builder._format_condition_descriptor_base(in_state), "State: previous_state") and ok
 	in_state.params = {"state_name": ""}
-	ok = _check("an empty state falls through to normal formatting", builder._format_condition_descriptor_base(in_state).begins_with("◆"), false) and ok
+	ok = _check("an empty state falls through to normal formatting", builder._format_condition_descriptor_base(in_state).begins_with("State:"), false) and ok
+	in_state.params = {"state_name": "\"patrol\""}
+	var header_row: EventRow = EventRow.new()
+	header_row.conditions.append(in_state)
+	var header_texts: PackedStringArray = PackedStringArray()
+	var diamond_is_badge: bool = false
+	for span: SemanticSpan in builder._build_event_spans(header_row):
+		header_texts.append(span.text)
+		if span.text == "◆" and bool((span.metadata as Dictionary).get("badge", false)):
+			diamond_is_badge = true
+	ok = _check("the diamond renders as a badge span", diamond_is_badge, true) and ok
+	ok = _check("the diamond never rides inside the text", Array(header_texts).has("◆ State: patrol"), false) and ok
 
 	# 2. Trigger ids resolve friendly names through the descriptor fallback.
 	ok = _check("physics trigger reads in words", builder._trigger_display_text("Core", "OnPhysicsProcess"), "Every Physics Tick") and ok
