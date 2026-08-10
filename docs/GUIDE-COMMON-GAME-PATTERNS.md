@@ -75,7 +75,12 @@ statement, and transition bookkeeping becomes vocabulary:
   then go back" is `Time In State > 2` then `Set State previous_state`.
 - **previous_state** always holds where you came from.
 
-![A state machine as a consumer writes it: one group, state headers, guarded transitions](images/code-patterns-state-machine.png)
+The shape that reads best: one named group for the machine, one PARENT event per state (its
+condition renders as the `◆ State:` header), and everything the state does or leaves through as
+SUB-EVENTS beneath it - each transition gets its own condition lane, so piling on more guards
+later ("and cooldown ready", "and player still visible") never means restructuring.
+
+![A state machine as a consumer writes it: one group, state parents, transitions as sub-events](images/code-patterns-state-machine.png)
 
 ## Pick one node out of a group
 
