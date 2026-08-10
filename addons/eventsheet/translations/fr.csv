@@ -675,3 +675,52 @@ states below,états ci-dessous
 decides by,décide selon
 branches below,branches ci-dessous
 Not,Pas
+(animations),(animations)
+(no backups yet - they appear from the second save on),(pas encore de sauvegardes - elles apparaissent à partir du deuxième enregistrement)
+(no enums on this sheet),(aucune énumération sur cette feuille)
+(no match - keep typing),(aucune correspondance - continuez à taper)
+(or choose),(ou choisissez)
+(or type your own...),(ou saisissez le vôtre...)
+(plain),(simple)
+Autoload (always-on singleton),Autoload (singleton toujours actif)
+Behavior (acts on parent),Comportement (agit sur le parent)
+Behavior Component (signal-driven),Composant de comportement (piloté par signaux)
+Blank Sheet,Feuille vierge
+Children,Enfants
+Copy annotation stub,Copier le squelette d'annotation
+Copy registrar snippet,Copier l'extrait d'enregistrement
+Custom Node,Nœud personnalisé
+Custom Resource (data + logic),Ressource personnalisée (données + logique)
+Custom Resource (data asset),Ressource personnalisée (asset de données)
+Editor Tool,Outil d'éditeur
+Editor Tool (one-click chore),Outil d'éditeur (corvée en un clic)
+Entity System (Autoload),Système d'entités (Autoload)
+Event Bus (Autoload),Bus d'événements (Autoload)
+Event Sheet,Feuille d'événements
+Fast (60),Rapide (60)
+First-Person Controller (3D),Contrôleur à la première personne (3D)
+GDScript iterable,Itérable GDScript
+Game State (Autoload),État du jeu (Autoload)
+Hide this verb,Masquer ce verbe
+Major - breaking changes,Majeure - changements incompatibles
+"Minor - new verbs, nothing breaks","Mineure - nouveaux verbes, rien ne casse"
+No actions or conditions were found on the dropped node.,Aucune action ni condition trouvée sur le nœud déposé.
+No sheets open,Aucune feuille ouverte
+Node group,Groupe de nœuds
+"Patch - fixes, no new verbs","Correctif - corrections, pas de nouveaux verbes"
+Pin / Unpin Favorite,Épingler / détacher le favori
+Platformer Starter,Base de jeu de plateforme
+Recently closed,Récemment fermées
+Repeat N times,Répéter N fois
+Reset to the inferred name,Rétablir le nom déduit
+Save System (Autoload),Système de sauvegarde (Autoload)
+Slow (30),Lent (30)
+Third-Person Mover (3D),Déplacement à la troisième personne (3D)
+Top-down Starter,Base vue de dessus
+While (condition),Tant que (condition)
+bow,arc
+keep format,conserver le format
+potion,potion
+sword,épée
+Rename this verb…,Renommer ce verbe…
+Set its category…,Définir sa catégorie…

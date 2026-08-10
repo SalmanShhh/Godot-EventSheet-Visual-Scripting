@@ -675,3 +675,52 @@ states below,个状态
 decides by,按以下决定
 branches below,个分支
 Not,非
+(animations),（动画）
+(no backups yet - they appear from the second save on),（尚无备份 - 从第二次保存开始出现）
+(no enums on this sheet),（此表中没有枚举）
+(no match - keep typing),（无匹配 - 继续输入）
+(or choose),（或选择）
+(or type your own...),（或自行输入...）
+(plain),（普通）
+Autoload (always-on singleton),自动加载（常驻单例）
+Behavior (acts on parent),行为（作用于父节点）
+Behavior Component (signal-driven),行为组件（信号驱动）
+Blank Sheet,空白表
+Children,子节点
+Copy annotation stub,复制注解模板
+Copy registrar snippet,复制注册代码片段
+Custom Node,自定义节点
+Custom Resource (data + logic),自定义资源（数据+逻辑）
+Custom Resource (data asset),自定义资源（数据资产）
+Editor Tool,编辑器工具
+Editor Tool (one-click chore),编辑器工具（一键任务）
+Entity System (Autoload),实体系统（自动加载）
+Event Bus (Autoload),事件总线（自动加载）
+Event Sheet,事件表
+Fast (60),快（60）
+First-Person Controller (3D),第一人称控制器（3D）
+GDScript iterable,GDScript 可迭代对象
+Game State (Autoload),游戏状态（自动加载）
+Hide this verb,隐藏此动词
+Major - breaking changes,主版本 - 不兼容变更
+"Minor - new verbs, nothing breaks",次版本 - 新动词，不破坏兼容
+No actions or conditions were found on the dropped node.,在拖放的节点上未找到动作或条件。
+No sheets open,没有打开的表
+Node group,节点组
+"Patch - fixes, no new verbs",补丁 - 仅修复，无新动词
+Pin / Unpin Favorite,固定/取消收藏
+Platformer Starter,平台跳跃入门
+Recently closed,最近关闭
+Repeat N times,重复 N 次
+Reset to the inferred name,重置为推断名称
+Save System (Autoload),存档系统（自动加载）
+Slow (30),慢（30）
+Third-Person Mover (3D),第三人称移动（3D）
+Top-down Starter,俯视角入门
+While (condition),While（条件）
+bow,弓
+keep format,保留格式
+potion,药水
+sword,剑
+Rename this verb…,重命名此动词…
+Set its category…,设置其分类…

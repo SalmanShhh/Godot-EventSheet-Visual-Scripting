@@ -675,3 +675,52 @@ states below,stati sotto
 decides by,decide in base a
 branches below,rami sotto
 Not,Non
+(animations),(animazioni)
+(no backups yet - they appear from the second save on),(ancora nessun backup - compaiono dal secondo salvataggio)
+(no enums on this sheet),(nessun enum in questo foglio)
+(no match - keep typing),(nessuna corrispondenza - continua a digitare)
+(or choose),(o scegli)
+(or type your own...),(o scrivi il tuo...)
+(plain),(semplice)
+Autoload (always-on singleton),Autoload (singleton sempre attivo)
+Behavior (acts on parent),Comportamento (agisce sul genitore)
+Behavior Component (signal-driven),Componente comportamento (guidato da segnali)
+Blank Sheet,Foglio vuoto
+Children,Figli
+Copy annotation stub,Copia stub di annotazione
+Copy registrar snippet,Copia snippet di registrazione
+Custom Node,Nodo personalizzato
+Custom Resource (data + logic),Risorsa personalizzata (dati + logica)
+Custom Resource (data asset),Risorsa personalizzata (asset di dati)
+Editor Tool,Strumento editor
+Editor Tool (one-click chore),Strumento editor (attività a un clic)
+Entity System (Autoload),Sistema di entità (Autoload)
+Event Bus (Autoload),Bus di eventi (Autoload)
+Event Sheet,Foglio eventi
+Fast (60),Veloce (60)
+First-Person Controller (3D),Controller in prima persona (3D)
+GDScript iterable,Iterabile GDScript
+Game State (Autoload),Stato di gioco (Autoload)
+Hide this verb,Nascondi questo verbo
+Major - breaking changes,Major - modifiche incompatibili
+"Minor - new verbs, nothing breaks","Minor - nuovi verbi, niente si rompe"
+No actions or conditions were found on the dropped node.,Nessuna azione o condizione trovata sul nodo rilasciato.
+No sheets open,Nessun foglio aperto
+Node group,Gruppo di nodi
+"Patch - fixes, no new verbs","Patch - correzioni, nessun nuovo verbo"
+Pin / Unpin Favorite,Fissa / sblocca preferito
+Platformer Starter,Base platformer
+Recently closed,Chiuse di recente
+Repeat N times,Ripeti N volte
+Reset to the inferred name,Ripristina il nome dedotto
+Save System (Autoload),Sistema di salvataggio (Autoload)
+Slow (30),Lento (30)
+Third-Person Mover (3D),Movimento in terza persona (3D)
+Top-down Starter,Base top-down
+While (condition),Mentre (condizione)
+bow,arco
+keep format,mantieni formato
+potion,pozione
+sword,spada
+Rename this verb…,Rinomina questo verbo…
+Set its category…,Imposta la categoria…

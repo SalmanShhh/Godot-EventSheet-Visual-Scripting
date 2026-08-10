@@ -675,3 +675,52 @@ states below,個の状態
 decides by,で分岐:
 branches below,個の分岐
 Not,でない:
+(animations),（アニメーション）
+(no backups yet - they appear from the second save on),（バックアップはまだありません - 2回目の保存から表示されます）
+(no enums on this sheet),（このシートに列挙型はありません）
+(no match - keep typing),（一致なし - 入力を続けてください）
+(or choose),（または選択）
+(or type your own...),（または独自に入力...）
+(plain),（プレーン）
+Autoload (always-on singleton),オートロード（常時有効なシングルトン）
+Behavior (acts on parent),ビヘイビア（親に作用）
+Behavior Component (signal-driven),ビヘイビアコンポーネント（シグナル駆動）
+Blank Sheet,空のシート
+Children,子ノード
+Copy annotation stub,アノテーションのひな形をコピー
+Copy registrar snippet,登録スニペットをコピー
+Custom Node,カスタムノード
+Custom Resource (data + logic),カスタムリソース（データ＋ロジック）
+Custom Resource (data asset),カスタムリソース（データアセット）
+Editor Tool,エディタツール
+Editor Tool (one-click chore),エディタツール（ワンクリック作業）
+Entity System (Autoload),エンティティシステム（オートロード）
+Event Bus (Autoload),イベントバス（オートロード）
+Event Sheet,イベントシート
+Fast (60),高速（60）
+First-Person Controller (3D),一人称コントローラー（3D）
+GDScript iterable,GDScriptのイテラブル
+Game State (Autoload),ゲームステート（オートロード）
+Hide this verb,この動詞を非表示
+Major - breaking changes,メジャー - 互換性のない変更
+"Minor - new verbs, nothing breaks",マイナー - 新しい動詞、互換性維持
+No actions or conditions were found on the dropped node.,ドロップしたノードにアクションや条件が見つかりませんでした。
+No sheets open,開いているシートはありません
+Node group,ノードグループ
+"Patch - fixes, no new verbs",パッチ - 修正のみ、新しい動詞なし
+Pin / Unpin Favorite,お気に入りを固定/解除
+Platformer Starter,プラットフォーマー・スターター
+Recently closed,最近閉じたシート
+Repeat N times,N回繰り返す
+Reset to the inferred name,推定された名前に戻す
+Save System (Autoload),セーブシステム（オートロード）
+Slow (30),低速（30）
+Third-Person Mover (3D),三人称ムーバー（3D）
+Top-down Starter,トップダウン・スターター
+While (condition),While（条件）
+bow,弓
+keep format,形式を維持
+potion,ポーション
+sword,剣
+Rename this verb…,この動詞の名前を変更…
+Set its category…,カテゴリを設定…

@@ -675,3 +675,52 @@ states below,состояний ниже
 decides by,выбирает по
 branches below,ветвей ниже
 Not,Не
+(animations),(анимации)
+(no backups yet - they appear from the second save on),(резервных копий пока нет - появятся со второго сохранения)
+(no enums on this sheet),(на этом листе нет перечислений)
+(no match - keep typing),(нет совпадений - продолжайте вводить)
+(or choose),(или выберите)
+(or type your own...),(или введите свой...)
+(plain),(обычный)
+Autoload (always-on singleton),Автозагрузка (постоянный синглтон)
+Behavior (acts on parent),Поведение (действует на родителя)
+Behavior Component (signal-driven),Компонент поведения (на сигналах)
+Blank Sheet,Пустой лист
+Children,Дочерние
+Copy annotation stub,Копировать заготовку аннотации
+Copy registrar snippet,Копировать сниппет регистрации
+Custom Node,Свой узел
+Custom Resource (data + logic),Свой ресурс (данные + логика)
+Custom Resource (data asset),Свой ресурс (ассет данных)
+Editor Tool,Инструмент редактора
+Editor Tool (one-click chore),Инструмент редактора (в один клик)
+Entity System (Autoload),Система сущностей (автозагрузка)
+Event Bus (Autoload),Шина событий (автозагрузка)
+Event Sheet,Лист событий
+Fast (60),Быстро (60)
+First-Person Controller (3D),Контроллер от первого лица (3D)
+GDScript iterable,GDScript-итерируемое
+Game State (Autoload),Состояние игры (автозагрузка)
+Hide this verb,Скрыть этот глагол
+Major - breaking changes,Мажорная - ломающие изменения
+"Minor - new verbs, nothing breaks","Минорная - новые глаголы, ничего не ломается"
+No actions or conditions were found on the dropped node.,На перетащенном узле не найдено действий или условий.
+No sheets open,Нет открытых листов
+Node group,Группа узлов
+"Patch - fixes, no new verbs","Патч - исправления, без новых глаголов"
+Pin / Unpin Favorite,Закрепить / открепить избранное
+Platformer Starter,Стартовый платформер
+Recently closed,Недавно закрытые
+Repeat N times,Повторить N раз
+Reset to the inferred name,Вернуть выведенное имя
+Save System (Autoload),Система сохранений (автозагрузка)
+Slow (30),Медленно (30)
+Third-Person Mover (3D),Движение от третьего лица (3D)
+Top-down Starter,Стартовый top-down
+While (condition),Пока (условие)
+bow,лук
+keep format,сохранить формат
+potion,зелье
+sword,меч
+Rename this verb…,Переименовать этот глагол…
+Set its category…,Задать категорию…

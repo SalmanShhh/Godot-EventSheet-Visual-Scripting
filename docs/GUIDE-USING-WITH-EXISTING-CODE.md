@@ -351,6 +351,26 @@ Recognising a literal is deliberately fussy - a wrapped function call (a bare `(
 value), a literal with a statement after it, and one with a comment above its head are all left as ordinary
 code, because in each of those cases something other than the value would be affected.
 
+### Beginner spellings and the reading layer
+
+The lift does not require style-guide code. Beginner spellings round-trip byte-exactly too:
+
+- **Inferred `:=` variables** (`var hp := 100`, `const SPEED := 2.5`) lift to first-class variable
+  rows that re-emit the walrus exactly as written.
+- **Untyped lifecycle headers** (`func _physics_process(delta):` - no return arrow) lift to their
+  trigger events carrying the source spelling, so saving changes nothing.
+- **The prelude reads as the sheet's identity**: a Class setup bar showing the inheritance
+  breadcrumb (`Node ▸ CharacterBody2D ▸ YourClass`, with the base class's own editor icon), whose
+  dropdown lists the facts - `@tool`, remembered variables, setup line count - with the raw lines
+  behind a double-click, and an enum reads as a sentence ("State is one of PATROL, CHASE or FLEE")
+  that opens into one row per value.
+
+And a hand-written `enum` + `match` state machine opens READING like a state machine: the tick
+event's lane says "decides by state - 3 states below", each case is a `◆ State:` row whose plain
+statements read as sentences and verbs, and each transition is a nested CONDITION row - the guard
+in plain words in the condition cell (`Can See Player`, with a small ƒ badge marking a computed
+check), the state change as its action. Branching never renders in the action lane.
+
 On real code the effect compounds. Here is the plugin's own semantic analyzer, whose annotation table is
 31 entries long:
 

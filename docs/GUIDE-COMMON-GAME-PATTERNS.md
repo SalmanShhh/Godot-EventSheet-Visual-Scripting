@@ -86,8 +86,18 @@ is a `match` branch one tab in, each transition the `if` one tab deeper.
 
 And the door swings both ways: a hand-written `enum` + `match` machine OPENS in this shape.
 The `match` lifts into structured cases (byte-exact, like every lift), and because the match
-subject is named `state`, each case reads as a `◆ State:` row - your existing GDScript state
-machines arrive looking like the sheet above with zero conversion work:
+subject is named `state`, the whole machine reads in plain words with zero conversion work:
+
+- The enum shows as the machine's identity bar ("State is one of PATROL, CHASE or FLEE" -
+  click it open for one row per value).
+- The tick event's lane says **decides by state - 3 states below** instead of `match state:`.
+- Each case is a `◆ State:` row; its plain statements read as sentences and verbs
+  (`Patrol Step ( delta )`).
+- Each transition is a NESTED CONDITION ROW - the guard in the condition cell, in plain words
+  (`Can See Player`, `Not Can See Player`, `hp < 20`), the state change as its action
+  (`Set state to State.CHASE`). A small ƒ badge marks a guard that is a computed check rather
+  than a variable. Branching never appears in the action lane - anywhere.
+- Hovering any of it shows the exact GDScript line; saving reproduces the file byte-for-byte.
 
 ![A hand-written enum + match machine opened as a sheet](images/code-patterns-lifted-machine.png)
 

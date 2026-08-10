@@ -675,3 +675,52 @@ states below,개 상태
 decides by,에 따라 결정:
 branches below,개 분기
 Not,아님:
+(animations),(애니메이션)
+(no backups yet - they appear from the second save on),(아직 백업 없음 - 두 번째 저장부터 표시됩니다)
+(no enums on this sheet),(이 시트에 열거형 없음)
+(no match - keep typing),(일치 없음 - 계속 입력)
+(or choose),(또는 선택)
+(or type your own...),(또는 직접 입력...)
+(plain),(일반)
+Autoload (always-on singleton),오토로드(항상 켜진 싱글톤)
+Behavior (acts on parent),비헤이비어(부모에 작용)
+Behavior Component (signal-driven),비헤이비어 컴포넌트(시그널 기반)
+Blank Sheet,빈 시트
+Children,자식
+Copy annotation stub,주석 스텁 복사
+Copy registrar snippet,등록 스니펫 복사
+Custom Node,커스텀 노드
+Custom Resource (data + logic),커스텀 리소스(데이터+로직)
+Custom Resource (data asset),커스텀 리소스(데이터 애셋)
+Editor Tool,에디터 도구
+Editor Tool (one-click chore),에디터 도구(원클릭 작업)
+Entity System (Autoload),엔티티 시스템(오토로드)
+Event Bus (Autoload),이벤트 버스(오토로드)
+Event Sheet,이벤트 시트
+Fast (60),빠름(60)
+First-Person Controller (3D),1인칭 컨트롤러(3D)
+GDScript iterable,GDScript 이터러블
+Game State (Autoload),게임 상태(오토로드)
+Hide this verb,이 동사 숨기기
+Major - breaking changes,메이저 - 호환성 깨짐
+"Minor - new verbs, nothing breaks","마이너 - 새 동사, 호환성 유지"
+No actions or conditions were found on the dropped node.,드롭한 노드에서 액션이나 조건을 찾지 못했습니다.
+No sheets open,열린 시트 없음
+Node group,노드 그룹
+"Patch - fixes, no new verbs","패치 - 수정만, 새 동사 없음"
+Pin / Unpin Favorite,즐겨찾기 고정/해제
+Platformer Starter,플랫포머 스타터
+Recently closed,최근에 닫음
+Repeat N times,N번 반복
+Reset to the inferred name,유추된 이름으로 재설정
+Save System (Autoload),저장 시스템(오토로드)
+Slow (30),느림(30)
+Third-Person Mover (3D),3인칭 무버(3D)
+Top-down Starter,탑다운 스타터
+While (condition),While(조건)
+bow,활
+keep format,형식 유지
+potion,물약
+sword,검
+Rename this verb…,이 동사 이름 바꾸기…
+Set its category…,카테고리 설정…

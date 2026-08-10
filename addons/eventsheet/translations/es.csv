@@ -675,3 +675,52 @@ states below,estados abajo
 decides by,decide según
 branches below,ramas abajo
 Not,No
+(animations),(animaciones)
+(no backups yet - they appear from the second save on),(aún no hay copias - aparecen a partir del segundo guardado)
+(no enums on this sheet),(no hay enums en esta hoja)
+(no match - keep typing),(sin coincidencias - siga escribiendo)
+(or choose),(o elija)
+(or type your own...),(o escriba el suyo...)
+(plain),(simple)
+Autoload (always-on singleton),Autoload (singleton siempre activo)
+Behavior (acts on parent),Comportamiento (actúa sobre el padre)
+Behavior Component (signal-driven),Componente de comportamiento (por señales)
+Blank Sheet,Hoja en blanco
+Children,Hijos
+Copy annotation stub,Copiar plantilla de anotación
+Copy registrar snippet,Copiar fragmento de registro
+Custom Node,Nodo personalizado
+Custom Resource (data + logic),Recurso personalizado (datos + lógica)
+Custom Resource (data asset),Recurso personalizado (asset de datos)
+Editor Tool,Herramienta del editor
+Editor Tool (one-click chore),Herramienta del editor (tarea de un clic)
+Entity System (Autoload),Sistema de entidades (Autoload)
+Event Bus (Autoload),Bus de eventos (Autoload)
+Event Sheet,Hoja de eventos
+Fast (60),Rápido (60)
+First-Person Controller (3D),Controlador en primera persona (3D)
+GDScript iterable,Iterable de GDScript
+Game State (Autoload),Estado del juego (Autoload)
+Hide this verb,Ocultar este verbo
+Major - breaking changes,Mayor - cambios incompatibles
+"Minor - new verbs, nothing breaks","Menor - verbos nuevos, nada se rompe"
+No actions or conditions were found on the dropped node.,No se encontraron acciones ni condiciones en el nodo soltado.
+No sheets open,No hay hojas abiertas
+Node group,Grupo de nodos
+"Patch - fixes, no new verbs","Parche - correcciones, sin verbos nuevos"
+Pin / Unpin Favorite,Fijar / soltar favorito
+Platformer Starter,Inicio de plataformas
+Recently closed,Cerradas recientemente
+Repeat N times,Repetir N veces
+Reset to the inferred name,Restablecer al nombre inferido
+Save System (Autoload),Sistema de guardado (Autoload)
+Slow (30),Lento (30)
+Third-Person Mover (3D),Movimiento en tercera persona (3D)
+Top-down Starter,Inicio vista cenital
+While (condition),Mientras (condición)
+bow,arco
+keep format,mantener formato
+potion,poción
+sword,espada
+Rename this verb…,Renombrar este verbo…
+Set its category…,Definir su categoría…
