@@ -197,7 +197,7 @@ var state := State.PATROL
 var hp := 100
 
 
-func _physics_process(delta: float) -> void:
+func _physics_process(delta):
 	match state:
 		State.PATROL:
 			patrol_step(delta)

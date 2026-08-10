@@ -48,8 +48,9 @@ static func run() -> bool:
 	all_passed = _check("host class parsed for lint/completion", sheet.host_class, "CharacterBody2D") and all_passed
 	all_passed = _check("no generated header on external files", output.contains("AUTO-GENERATED"), false) and all_passed
 
-	# Verify-lift: the canonical `var` and `const` lift to variable rows; non-canonical declarations
-	# (the inferred-type `speed :=` and the odd-spaced `weird_spacing`) stay verbatim.
+	# Verify-lift: the canonical `var`, the inferred-type `speed :=` (the walrus spelling is
+	# recorded and re-emitted verbatim - beginner files declare everything this way), and the
+	# `const` all lift to variable rows; the odd-spaced `weird_spacing` stays verbatim.
 	var lifted_names: Array[String] = []
 	var function_blocks: int = 0
 	var const_is_marked: bool = false
@@ -60,7 +61,7 @@ static func run() -> bool:
 				const_is_marked = (entry as LocalVariable).is_constant
 		elif entry is RawCodeRow and (entry as RawCodeRow).code.begins_with("func "):
 			function_blocks += 1
-	all_passed = _check("canonical var + const lift to variable rows", lifted_names, ["hp", "MAX_HP"] as Array[String]) and all_passed
+	all_passed = _check("canonical + walrus vars and const lift to variable rows", lifted_names, ["hp", "speed", "MAX_HP"] as Array[String]) and all_passed
 	all_passed = _check("a lifted const restores is_constant", const_is_marked, true) and all_passed
 	# Phase 1: hand-written helper functions reverse-lift to un-exposed sheet functions, not blocks.
 	all_passed = _check("plain functions lift to sheet functions, not blocks", function_blocks, 0) and all_passed

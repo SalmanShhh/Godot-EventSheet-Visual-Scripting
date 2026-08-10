@@ -1858,13 +1858,21 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# prelude isn't built twice.
 	var scaffold_end: int = 0
 	var scaffold_lines: int = 0
+	var scaffold_has_identity: bool = false
 	while scaffold_end < sheet.events.size() \
 			and sheet.events[scaffold_end] is RawCodeRow \
 			and is_scaffolding_code((sheet.events[scaffold_end] as RawCodeRow).code):
+		for scaffold_line: String in (sheet.events[scaffold_end] as RawCodeRow).code.split("\n"):
+			# An identity line means this run IS the prelude, so even a lone `extends X` folds -
+			# after the beginner-style lifts, that one line is often all that remains up top, and
+			# a naked GDScript row there reads as unfinished business. A comment-only run still
+			# needs the 3-line threshold (a short note is content, not scaffolding).
+			if scaffold_line.strip_edges().begins_with("extends ") or scaffold_line.strip_edges().begins_with("class_name "):
+				scaffold_has_identity = true
 		scaffold_lines += maxi((sheet.events[scaffold_end] as RawCodeRow).code.split("\n").size(), 1)
 		scaffold_end += 1
 	var event_start: int = 0
-	if scaffold_lines >= 3:
+	if scaffold_lines >= 3 or (scaffold_has_identity and scaffold_lines >= 1):
 		var scaffold_rows: Array[EventRowData] = []
 		for scaffold_index in range(scaffold_end):
 			# Build children through the shared dispatcher (not _build_raw_code_row directly) so a

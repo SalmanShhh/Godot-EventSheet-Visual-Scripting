@@ -157,7 +157,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 				if consumed_async != null and inlined_async_uids.has(consumed_async.get_string(1)):
 					pending_blank_count = 0
 					continue
-				if LIFECYCLE_TRIGGERS.has(header) or _is_connected_handler(header, connections):
+				if _is_lifecycle_header(header) or _is_connected_handler(header, connections):
 					if not pending_annotations.is_empty() or not pending_annotation_lines.is_empty() or not pending_doc_comment.is_empty():
 						failed = true  # a lifecycle handler lifts to events, not an EventFunction, so it can't carry a doc
 					else:
@@ -275,7 +275,7 @@ static func attempt_lift(sheet: EventSheetResource, source: String, lift_functio
 			if mid_row == null or not (mid_row.code.begins_with("func ") or mid_row.code.begins_with("static func ")):
 				continue
 			var mid_header: String = mid_row.code.split("\n")[0]
-			if LIFECYCLE_TRIGGERS.has(mid_header) or _is_connected_handler(mid_header, connections):
+			if _is_lifecycle_header(mid_header) or _is_connected_handler(mid_header, connections):
 				continue
 			# Engine virtual callbacks are STRUCTURE, not sheet vocabulary: `_enter_tree` is the
 			# host binding (folds to metadata on open), `_get_configuration_warnings` is the
@@ -1119,6 +1119,19 @@ static func _parse_connections(ready_lines: PackedStringArray) -> Dictionary:
 ## (Core signals reverse to their trigger ids; others become "signal:<name>" triggers with
 ## the handler's argument signature baked as trigger_args and the connect's source node as
 ## trigger_source_path). `_ready`'s connect lines are skipped: emission regenerates them.
+## True when a header names a lifecycle handler in ANY spelling - the canonical typed table
+## entry, or the loose beginner form (`func _physics_process(delta):` - untyped param, no return
+## arrow). Both dispatch to the event lift; the loose form carries its source header as meta so
+## emission reproduces it exactly.
+static func _is_lifecycle_header(header: String) -> bool:
+	return LIFECYCLE_TRIGGERS.has(header) or _loose_lifecycle_match(header) != null
+
+
+static func _loose_lifecycle_match(header: String) -> RegExMatch:
+	var loose_regex: RegEx = RegEx.create_from_string("^func (_ready|_process|_physics_process|_input|_unhandled_input)\\((.*)\\)(?: -> void)?:$")
+	return loose_regex.search(header)
+
+
 static func _lift_function(function_lines: PackedStringArray, connections: Dictionary = {}, lenient_ifs: bool = false) -> Dictionary:
 	if function_lines.is_empty():
 		return {"ok": false}
@@ -1127,8 +1140,24 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	var trigger_args: String = ""
 	var trigger_source: String = ""
 	var index: int = 1
-	if LIFECYCLE_TRIGGERS.has(function_lines[0]):
-		trigger_id = str(LIFECYCLE_TRIGGERS[function_lines[0]])
+	# A lifecycle header the canonical table missed but that still NAMES a lifecycle function is
+	# beginner spelling (`func _physics_process(delta):` - untyped param, no return arrow). It
+	# lifts to the same trigger with the source header carried as meta, so emission reproduces
+	# the exact spelling and the byte gate holds on files no style guide ever touched.
+	var source_header: String = ""
+	var loose_lifecycle: RegExMatch = null
+	if not LIFECYCLE_TRIGGERS.has(function_lines[0]):
+		loose_lifecycle = _loose_lifecycle_match(function_lines[0])
+	if LIFECYCLE_TRIGGERS.has(function_lines[0]) or loose_lifecycle != null:
+		if loose_lifecycle != null:
+			var loose_map: Dictionary = {
+				"_ready": "OnReady", "_process": "OnProcess", "_physics_process": "OnPhysicsProcess",
+				"_input": "OnInput", "_unhandled_input": "OnUnhandledInput",
+			}
+			trigger_id = str(loose_map[loose_lifecycle.get_string(1)])
+			source_header = function_lines[0]
+		else:
+			trigger_id = str(LIFECYCLE_TRIGGERS[function_lines[0]])
 		if function_lines[0].begins_with("func _ready()"):
 			# Skip the regenerated connect lines; what remains is the OnReady body.
 			while index < function_lines.size() and _is_connect_line(function_lines[index]):
@@ -1158,6 +1187,11 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	for event: Variant in events:
 		if _is_plain_collector(event as EventRow) and (event as EventRow).actions.is_empty():
 			return {"ok": false}
+	if not source_header.is_empty():
+		# Every event of this handler carries the source spelling - the section emitter reads
+		# it off whichever event leads the group, so top-of-sheet reordering cannot lose it.
+		for event: Variant in events:
+			(event as EventRow).set_meta("__source_trigger_header", source_header)
 	return {"ok": true, "events": events}
 
 

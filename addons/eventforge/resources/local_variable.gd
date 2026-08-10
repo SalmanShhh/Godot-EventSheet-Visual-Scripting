@@ -29,6 +29,12 @@ extends Resource
 ## the importer when a source default was written unquoted; keeps such vars first-class rows instead
 ## of stranding them as GDScript blocks. Byte-verify gated.
 @export var expression_default: bool = false
+## When true, the declaration was written with the inferred-type walrus (`var hp := 100`) and
+## emission reproduces exactly that spelling - beginner-style files use `:=` everywhere, and
+## without this flag every such variable stranded as a GDScript block. The default is kept as
+## verbatim source text. Byte-verify gated like every lift; editing the type in the dialog
+## clears the flag and the byte change rides the user's own edit.
+@export var inferred_type: bool = false
 ## Property SETTER body (the statements under `set(<setter_param>):`), verbatim, one statement per line,
 ## dedented relative to the accessor header. Non-empty turns the variable into a GDScript property:
 ## the declaration line gains a `:` suffix and the accessor blocks emit beneath it. Byte-gated on lift.

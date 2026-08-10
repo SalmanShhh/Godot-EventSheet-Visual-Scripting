@@ -1259,7 +1259,13 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			leading_blanks = maxi(int((events[0] as EventRow).get_meta("__source_leading_blanks", 1)), 1)
 		for _blank_index: int in range(leading_blanks):
 			lines.append("")
-		if args.is_empty():
+		# A lifted handler whose SOURCE spelled the signature differently (beginner-style
+		# `func _physics_process(delta):` - untyped param, no return arrow) re-emits that exact
+		# header. Stamped at lift time; the whole-file byte gate verifies it like everything else.
+		var source_header: String = str((events[0] as EventRow).get_meta("__source_trigger_header", "")) if events[0] is EventRow else ""
+		if not source_header.is_empty():
+			lines.append(source_header)
+		elif args.is_empty():
 			lines.append("func %s() -> void:" % function_name)
 		else:
 			lines.append("func %s(%s) -> void:" % [function_name, args])
@@ -2617,7 +2623,19 @@ static func _emit_tree_variable_line(local_var: LocalVariable) -> String:
 	if local_var.exported and local_var.attributes is Dictionary:
 		drawer_prefix = _drawer_export_prefix(local_var.attributes, local_var.type_name)
 	var var_line: String
-	if local_var.is_constant:
+	# The inferred-type walrus spelling (`var hp := 100`) re-emits exactly as written - the
+	# default is verbatim source text. Wins over every hint branch: a `:=` declaration carries
+	# no type to hang a hint on, and the byte gate rejects any other rendering of it.
+	if local_var.inferred_type:
+		var walrus_prefix: String = ""
+		if local_var.onready:
+			walrus_prefix = "@onready "
+		elif local_var.is_static:
+			walrus_prefix = "static "
+		elif local_var.exported:
+			walrus_prefix = "@export "
+		var_line = "%s%s %s := %s" % [walrus_prefix, "const" if local_var.is_constant else "var", local_var.name, str(local_var.default_value)]
+	elif local_var.is_constant:
 		var_line = "const %s: %s = %s" % [local_var.name, local_var.type_name, _to_code_literal(local_var.default_value)]
 	# @onready: deferred init (node refs like $Path). The default is a raw EXPRESSION, emitted
 	# verbatim (not a quoted literal) so `$Sprite2D` / `get_node(...)` stay code, not strings.

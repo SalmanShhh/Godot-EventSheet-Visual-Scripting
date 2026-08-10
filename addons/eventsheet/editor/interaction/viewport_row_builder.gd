@@ -163,6 +163,30 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 	var line_total: int = 0
 	for child: EventRowData in scaffold_rows:
 		line_total += child.line_count
+	# The strip reads like Construct's Includes bar: one block naming what this sheet IS built
+	# on. The extends target (and class_name, when present) are pulled from the children's own
+	# code, so the header says "Inherits CharacterBody2D" instead of a generic label; the raw
+	# lines stay the foldable children underneath, unchanged.
+	var extends_target: String = ""
+	var declared_class: String = ""
+	for child: EventRowData in scaffold_rows:
+		if not (child.source_resource is RawCodeRow):
+			continue
+		for scaffold_line: String in (child.source_resource as RawCodeRow).code.split("\n"):
+			var trimmed: String = scaffold_line.strip_edges()
+			if trimmed.begins_with("extends ") and extends_target.is_empty():
+				extends_target = trimmed.trim_prefix("extends ").strip_edges()
+			elif trimmed.begins_with("class_name ") and declared_class.is_empty():
+				declared_class = trimmed.trim_prefix("class_name ").strip_edges()
+	var strip_summary: String
+	if not extends_target.is_empty():
+		strip_summary = "%s %s" % [EventSheetL10n.translate("Inherits"), extends_target]
+		if not declared_class.is_empty():
+			strip_summary = "%s · %s" % [declared_class, strip_summary]
+		if line_total > 2:
+			strip_summary += " · %d lines" % line_total
+	else:
+		strip_summary = "class_name, host binding & annotations - %d lines" % line_total
 	row_data.spans = [
 		_make_span("Class setup", SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
@@ -173,7 +197,7 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 			"kind": "scaffolding_strip",
 			"line_index": 0
 		}),
-		_make_span("class_name, host binding & annotations - %d lines" % line_total, SemanticSpan.SpanType.COMMENT, {
+		_make_span(strip_summary, SemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "scaffolding_strip",
 			"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.8)
@@ -2552,6 +2576,7 @@ func _build_tree_variable_row(variable: LocalVariable, indent: int) -> EventRowD
 			# shown as the "Group › Subgroup" chip, so a reopened grouped variable still reads as grouped.
 			"group": str((variable.attributes as Dictionary).get("group", "")) if variable.exported and variable.attributes is Dictionary else "",
 			"subgroup": str((variable.attributes as Dictionary).get("subgroup", "")) if variable.exported and variable.attributes is Dictionary else "",
+			"expression_default": variable.expression_default or variable.inferred_type or variable.onready,
 			"source_resource": variable,
 			"row_uid": "variable_tree_%d" % variable.get_instance_id()
 		}
@@ -3034,9 +3059,12 @@ func _build_variable_row(
 			)
 		)
 	row_data.spans.append(_make_span("=", SemanticSpan.SpanType.OPERATOR, variable_meta.merged({"editable": false}, true)))
+	# An expression default (`State.PATROL`, `Vector2.ZERO`, a walrus var's verbatim `100`) is
+	# CODE stored as text - quoting it would misread it as a string literal.
+	var value_text: String = str(default_value) if bool(options.get("expression_default", false)) else _format_variable_value(default_value)
 	row_data.spans.append(
 		_make_span(
-			_format_variable_value(default_value),
+			value_text,
 			SemanticSpan.SpanType.VALUE,
 			variable_meta.merged({"editable": false}, true)
 		)

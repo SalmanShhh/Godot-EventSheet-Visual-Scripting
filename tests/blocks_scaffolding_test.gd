@@ -70,8 +70,11 @@ static func run() -> bool:
 	var lone: EventSheetResource = EventSheetResource.new()
 	lone.events.append(_raw("extends Node"))  # 1 line
 	lone.events.append(_raw("velocity.y += gravity"))
-	all_passed = _check("a sub-threshold (<3 line) scaffold row stays inline (no strip)",
-		_first_strip(viewport._build_rows_from_sheet(lone)) == null, true) and all_passed
+	# An identity line (`extends` / `class_name`) folds even alone - after the beginner-style
+	# lifts, a lone `extends X` is often the whole prelude, and a naked GDScript row up top
+	# reads as unfinished business. Comment-only short runs still need the 3-line threshold.
+	all_passed = _check("a lone extends folds into the strip (identity rule)",
+		_first_strip(viewport._build_rows_from_sheet(lone)) != null, true) and all_passed
 
 	# ── A compile-error marker on a prelude block SURVIVES into the collapsed strip (not dropped) ──
 	var flagged_sheet: EventSheetResource = EventSheetResource.new()

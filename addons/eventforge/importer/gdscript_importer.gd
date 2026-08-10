@@ -362,6 +362,45 @@ func _try_lift_variable(line: String) -> LocalVariable:
 	# setter-suffixed var (`@export_custom(...) var hp: int = 120:`) and re-emits it byte-exactly.
 	if static_prefixed and declaration.strip_edges().ends_with(":"):
 		return null
+	# The inferred-type walrus (`var hp := 100`, `const SPEED := 2.5`, `@export var x := ...`):
+	# beginner-style files declare everything this way, and the typed parser cannot represent it.
+	# Keep the default as verbatim source text and flag the spelling so emission reproduces it;
+	# the byte-verify at the end gates the round-trip exactly like the typed path.
+	var walrus_at: int = declaration.find(" := ")
+	if walrus_at > 0 and not declaration.strip_edges().ends_with(":"):
+		var walrus_keyword: String = ""
+		var walrus_exported: bool = false
+		if declaration.begins_with("var "):
+			walrus_keyword = "var "
+		elif declaration.begins_with("const "):
+			walrus_keyword = "const "
+		elif declaration.begins_with("@export var "):
+			walrus_keyword = "@export var "
+			walrus_exported = true
+		if not walrus_keyword.is_empty():
+			var walrus_name: String = declaration.substr(walrus_keyword.length(), walrus_at - walrus_keyword.length()).strip_edges()
+			var walrus_default: String = declaration.substr(walrus_at + 4)
+			# Shapes other lifts own stay theirs: a default ending in an OPEN bracket is the head
+			# of a multi-line collection literal (the Declare row's lift), and a preload default
+			# is the preload row's. Claiming either here would strand their structured editors.
+			var walrus_trimmed: String = walrus_default.strip_edges()
+			if walrus_trimmed.ends_with("{") or walrus_trimmed.ends_with("[") \
+					or walrus_trimmed.begins_with("preload(") or walrus_trimmed.begins_with("load("):
+				return null
+			if walrus_name.is_valid_identifier() and not walrus_trimmed.is_empty():
+				var inferred: LocalVariable = LocalVariable.new()
+				inferred.name = walrus_name
+				inferred.type_name = "Variant"
+				inferred.default_value = walrus_default
+				inferred.expression_default = true
+				inferred.inferred_type = true
+				inferred.is_constant = walrus_keyword == "const "
+				inferred.exported = walrus_exported
+				inferred.onready = onready_prefixed
+				inferred.is_static = static_prefixed
+				if SheetCompiler._emit_tree_variable_line(inferred) == line:
+					return inferred
+				return null
 	var parsed: Dictionary = VariableParser.new().parse(declaration)
 	if parsed.size() != 1:
 		return null

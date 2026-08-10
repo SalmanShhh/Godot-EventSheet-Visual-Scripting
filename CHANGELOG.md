@@ -14,6 +14,23 @@ non-Node host compiles with a warning instead of broken code. The generated trio
 name-addressed: reopening the emitted `.gd` as a sheet lifts it into ordinary rows, and saving
 again emits no second copy - the reopen cycle stays byte-identical.
 
+### Added - beginner-style GDScript gets the same structured open as style-guide code
+
+The zero-blocks number was measured on style-guide sources; beginner files spell things
+differently, and each spelling now lifts with its byte recorded:
+
+- **Inferred `:=` variables** (`var hp := 100`, `const SPEED := 2.5`, `@export var x := ...`)
+  lift to first-class variable rows that re-emit the walrus exactly. Shapes other lifts own
+  stay theirs: collection heads keep the Declare row, preload/load lines keep the preload row.
+- **Untyped lifecycle headers** (`func _physics_process(delta):` - no return arrow) lift to
+  their triggers with the source header carried along, so emission reproduces the exact
+  spelling. The whole enum + match machine in a beginner file now opens fully structured.
+- **The prelude reads like Construct's Includes bar**: the Class setup strip names what the
+  sheet is built on ("Inherits CharacterBody2D", plus the class name when declared), and an
+  identity line folds into it even alone - no more naked `extends` row up top.
+- Expression defaults on variable rows display as code, not quoted strings
+  (`= State.PATROL`, not `= "State.PATROL"`).
+
 ### Added - a hand-written enum + match machine opens in the state-machine shape
 
 Opening a `.gd` whose `_physics_process` holds a `match state:` now lands the full reading:
