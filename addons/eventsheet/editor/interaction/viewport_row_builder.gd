@@ -965,6 +965,11 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 	row_data.disabled = not enum_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
 	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+	# The enum block is an IDENTITY bar (it is the state list a state machine runs on): the same
+	# 1.5x height + accent band the Class setup and Host binding bars wear. Event rows stay at
+	# normal height - the presence belongs to the DEFINITION, not to every row that uses it.
+	row_data.height_scale = 1.5
+	row_data.custom_color = Color(event_style.behavior_accent_color.r, event_style.behavior_accent_color.g, event_style.behavior_accent_color.b, 0.22)
 	var badge_meta: Dictionary = {
 		"editable": false,
 		"badge": true,
@@ -2878,11 +2883,6 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	# line count (which drives row height/metrics) is computed cheaply up front so
 	# the whole sheet can be flattened and measured without building any spans.
 	row_data.line_count = _count_event_lines(event_row)
-	# An authored state header (an Is In State condition) gets the same 1.5x bar presence a
-	# lifted match case gets - one grammar for "you are looking at a state".
-	for header_condition: ACECondition in event_row.conditions:
-		if _is_state_header_condition(header_condition):
-			row_data.height_scale = 1.5
 	for local_variable_row in _build_local_variable_rows(event_row, indent + 1):
 		row_data.children.append(local_variable_row)
 	for child in event_row.sub_events:
@@ -2925,8 +2925,6 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
 			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row)
 			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
-			if state_shaped and pattern_text != "_":
-				case_row.height_scale = 1.5  # a state header is a BAR, not a line
 			if state_shaped and pattern_text != "_" and not case_row.spans.is_empty():
 				var case_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 				case_badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
