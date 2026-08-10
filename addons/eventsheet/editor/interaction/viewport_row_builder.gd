@@ -2916,15 +2916,38 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 		for match_case: MatchCase in match_row.cases:
 			if match_case == null:
 				continue
-			var body: PackedStringArray = _match_case_summary_lines(match_case.events)
-			if body.is_empty():
+			# A case body splits by the condition/action covenant: a body-level `if` block IS a
+			# condition, so it becomes a nested condition/action CHILD row (guard in the
+			# condition cell); plain statements stay in the case's action lane, read as the same
+			# sentences and Object ▸ Verb calls every other row gets.
+			var body: PackedStringArray = PackedStringArray()
+			var transition_children: Array[EventRowData] = []
+			for case_item: Variant in match_case.events:
+				if case_item is RawCodeRow:
+					var case_lines: PackedStringArray = (case_item as RawCodeRow).code.split("\n")
+					var guard_row: EventRowData = _transition_child_row(case_lines, indent + 1, match_row)
+					if guard_row != null:
+						transition_children.append(guard_row)
+						continue
+					for case_line: String in case_lines:
+						body.append(_friendly_statement_text(case_line))
+				elif case_item is ACEAction:
+					body.append(_format_action_descriptor(case_item as ACEAction))
+				elif case_item is CommentRow:
+					for comment_line: String in (case_item as CommentRow).text.split("\n"):
+						body.append("# " + comment_line)
+			if body.is_empty() and transition_children.is_empty():
 				body = PackedStringArray(["pass"])
+			elif body.is_empty():
+				body = PackedStringArray([" "])
 			var pattern_text: String = str(match_case.pattern).strip_edges()
 			var case_label: String = pattern_text
 			if state_shaped and pattern_text != "_":
 				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
 			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row)
 			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
+			for transition_child: EventRowData in transition_children:
+				case_row.children.append(transition_child)
 			if state_shaped and pattern_text != "_" and not case_row.spans.is_empty():
 				var case_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 				case_badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
@@ -2935,6 +2958,56 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 				case_row.spans.insert(0, _make_span("◆", SemanticSpan.SpanType.KEYWORD, case_badge_meta))
 			rows.append(case_row)
 	return rows
+
+
+## The friendly one-line reading of a case-body statement: a sentence when the statement
+## grammar knows it ("Set state to State.CHASE"), Object ▸ Verb for a call
+## ("Patrol Step ( delta )"), the code text verbatim otherwise. Text-only, display-only.
+func _friendly_statement_text(line: String) -> String:
+	var text: String = line.strip_edges()
+	var sentence: Dictionary = ViewportRowBuilder.statement_sentence(text)
+	if not sentence.is_empty() and sentence.get("segments") is Array:
+		var spoken: String = ""
+		for segment: Variant in (sentence.get("segments") as Array):
+			spoken += str((segment as Dictionary).get("text", ""))
+		return spoken
+	var call: Dictionary = ViewportRowBuilder.call_parts(text)
+	if not call.is_empty():
+		var call_target: String = str(call.get("target", ""))
+		var lead: String = "" if call_target.is_empty() or call_target == "self" else "%s " % call_target
+		# args arrives as one entry per argument - joined here, never stringified as an Array.
+		var args_value: Variant = call.get("args", [])
+		var args_text: String = ", ".join(PackedStringArray(args_value)) if args_value is Array or args_value is PackedStringArray else str(args_value)
+		if args_text.strip_edges().is_empty():
+			return "%s%s" % [lead, str(call.get("verb", ""))]
+		return "%s%s ( %s )" % [lead, str(call.get("verb", "")), args_text]
+	return text
+
+
+## A body-level `if <guard>:` block inside a match case IS a condition, so it renders as a
+## nested condition/action CHILD row - the guard in the condition cell, its statements as the
+## actions. Branching never sits in the action lane. Conservative recognition: one `if` header,
+## every following line exactly one tab deeper, no elif/else - anything else stays inline text.
+func _transition_child_row(case_lines: PackedStringArray, indent: int, match_row: MatchRow) -> EventRowData:
+	if case_lines.size() < 2:
+		return null
+	var head: String = case_lines[0]
+	if not head.begins_with("if ") or not head.ends_with(":"):
+		return null
+	var guard: String = head.substr(3, head.length() - 4).strip_edges()
+	if guard.is_empty():
+		return null
+	var inner: PackedStringArray = PackedStringArray()
+	for line_index: int in range(1, case_lines.size()):
+		if not case_lines[line_index].begins_with("\t"):
+			return null
+		var inner_line: String = case_lines[line_index].substr(1)
+		if inner_line.begins_with("\t") or inner_line.begins_with("elif") or inner_line.begins_with("else"):
+			return null
+		inner.append(_friendly_statement_text(inner_line))
+	var child: EventRowData = _build_condition_action_row(guard, inner, indent, match_row)
+	child.language_block = true
+	return child
 
 
 ## Whether a match subject is state-shaped: its trailing identifier (after any `.`/`(`) contains
@@ -3527,10 +3600,21 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 				# branches_text and the dialog edits the text. Either way match_action drives the editor.
 				var match_resource: MatchRow = action_resource as MatchRow
 				var structured_match: bool = not match_resource.cases.is_empty()
-				var match_lines: PackedStringArray = PackedStringArray(["match %s:" % match_resource.match_expression])
-				# Structured cases render as their OWN condition/action child rows (built in
-				# _build_event_row); this header stays one line. Only a raw-text match shows branches here.
-				if not structured_match:
+				# A STRUCTURED match's header is a muted caption in plain words - `match state:`
+				# is code where a reader expects meaning, and the case rows below already say it.
+				# The raw-text form keeps its code lines (that IS its escape-hatch reading).
+				var match_lines: PackedStringArray
+				if structured_match:
+					var enabled_cases: int = 0
+					for counted_case: MatchCase in match_resource.cases:
+						if counted_case != null and counted_case.enabled:
+							enabled_cases += 1
+					if _is_state_shaped_subject(match_resource.match_expression):
+						match_lines = PackedStringArray(["%s · %d %s" % [EventSheetL10n.translate("decides by state"), enabled_cases, EventSheetL10n.translate("states below")]])
+					else:
+						match_lines = PackedStringArray(["%s %s · %d %s" % [EventSheetL10n.translate("decides by"), match_resource.match_expression, enabled_cases, EventSheetL10n.translate("branches below")]])
+				else:
+					match_lines = PackedStringArray(["match %s:" % match_resource.match_expression])
 					for branch_line: String in match_resource.branches_text.split("\n"):
 						match_lines.append("\t" + branch_line)
 				for match_line_index in range(match_lines.size()):
@@ -3546,7 +3630,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 								# line_index stacks each match line on its own row (the action lane lays spans
 								# out vertically by line_index); without it every branch overlapped at line 0.
 								"line_index": match_line_index,
-								"text_color": event_style.value_highlight_color
+								# The structured caption reads as an explanation (muted), never as code.
+								"text_color": EventSheetPalette.TEXT_MUTED if structured_match else event_style.value_highlight_color
 							}
 						)
 					)

@@ -53,7 +53,9 @@ static func run() -> bool:
 		if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("match_action", false)):
 			match_action_texts.append(str(span.text))
 
-	ok = _check("the event shows just the match header in its action lane", texts.has("match phase:"), true) and ok
+	# A structured match's header is a muted plain-words caption, never the raw `match x:` line.
+	ok = _check("the structured match header reads as a caption", texts.has("decides by phase · 2 branches below"), true) and ok
+	ok = _check("the raw match line is not shown for structured cases", texts.has("match phase:"), false) and ok
 	ok = _check("branches_text is not shown when cases exist", _any_contains(texts, "SHOULD_NOT_SHOW"), false) and ok
 	ok = _check("the match header opens the editor on double-click (match_action)", not match_action_texts.is_empty(), true) and ok
 
@@ -68,7 +70,8 @@ static func run() -> bool:
 		ok = _check("a case row is an EVENT row (so it gets the condition | action lanes)",
 			(case_rows[0] as EventRowData).row_type == EventRowData.RowType.EVENT, true) and ok
 		ok = _check("the first case's PATTERN is in the condition cell", _lane_text(case_rows[0], "condition"), "0") and ok
-		ok = _check("the first case's BODY is in the action cell", _lane_text(case_rows[0], "action"), "velocity = Vector2.ZERO") and ok
+		# Case bodies read as sentences (the same view every raw statement row gets).
+		ok = _check("the first case's BODY is in the action cell", _lane_text(case_rows[0], "action"), "Set velocity to Vector2.ZERO") and ok
 		ok = _check("the default case's pattern is in the condition cell", _lane_text(case_rows[1], "condition"), "_") and ok
 		ok = _check("an empty case reads as a `pass` action", _lane_text(case_rows[1], "action"), "pass") and ok
 

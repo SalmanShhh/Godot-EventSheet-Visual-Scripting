@@ -670,3 +670,7 @@ Remembered variables,Запоминаемые переменные
 Setup lines,Строки настройки
 double-click to edit in code,двойной щелчок - править в коде
 Host binding,Привязка к хосту
+decides by state,выбирает по состоянию
+states below,состояний ниже
+decides by,выбирает по
+branches below,ветвей ниже
