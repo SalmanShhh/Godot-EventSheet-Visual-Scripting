@@ -84,6 +84,13 @@ is a `match` branch one tab in, each transition the `if` one tab deeper.
 
 ![A state machine as a consumer writes it: one tick event, states as sub-events, transitions nested deeper](images/code-patterns-state-machine.png)
 
+And the door swings both ways: a hand-written `enum` + `match` machine OPENS in this shape.
+The `match` lifts into structured cases (byte-exact, like every lift), and because the match
+subject is named `state`, each case reads as a `◆ State:` row - your existing GDScript state
+machines arrive looking like the sheet above with zero conversion work:
+
+![A hand-written enum + match machine opened as a sheet](images/code-patterns-lifted-machine.png)
+
 ## Pick one node out of a group
 
 The code version is a `for` loop with a `best` variable and a comparison - easy to get subtly

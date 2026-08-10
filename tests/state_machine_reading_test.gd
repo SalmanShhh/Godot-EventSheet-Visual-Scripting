@@ -60,6 +60,32 @@ static func run() -> bool:
 	ok = _check("no Trigger/Signal word pill remains", has_word_pill, false) and ok
 	ok = _check("the friendly name still shows", row_data.spans[1].text, "On State Changed") and ok
 
+	# 4. A lifted `match` on a state-shaped subject reads in the same grammar: case rows carry
+	# the ◆ badge and "State: <leaf>" text; other matches (and the `_` default) keep their
+	# pattern text untouched.
+	ok = _check("state subject detected", builder._is_state_shaped_subject("state"), true) and ok
+	ok = _check("dotted state subject detected", builder._is_state_shaped_subject("machine.current_state"), true) and ok
+	ok = _check("non-state subject passes through", builder._is_state_shaped_subject("damage_type"), false) and ok
+	ok = _check("enum pattern leafs", builder._pattern_leaf("State.PATROL"), "PATROL") and ok
+	ok = _check("quoted pattern leafs", builder._pattern_leaf("\"patrol\""), "patrol") and ok
+	var match_event: EventRow = EventRow.new()
+	var lifted_match: MatchRow = MatchRow.new()
+	lifted_match.match_expression = "state"
+	var patrol_case: MatchCase = MatchCase.new()
+	patrol_case.pattern = "State.PATROL"
+	var patrol_body: RawCodeRow = RawCodeRow.new()
+	patrol_body.code = "patrol_step(delta)"
+	patrol_case.events = [patrol_body]
+	lifted_match.cases.append(patrol_case)
+	match_event.actions.append(lifted_match)
+	var case_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
+	ok = _check("one case row built", case_rows.size(), 1) and ok
+	ok = _check("case row leads with the state badge", case_rows[0].spans[0].text, "◆") and ok
+	ok = _check("case row reads State: leaf", case_rows[0].spans[1].text, "State: PATROL") and ok
+	lifted_match.match_expression = "damage_type"
+	var plain_rows: Array[EventRowData] = builder._build_match_case_rows(match_event, 1)
+	ok = _check("a non-state match keeps its pattern", plain_rows[0].spans[0].text, "State.PATROL") and ok
+
 	viewport.free()
 	return ok
 

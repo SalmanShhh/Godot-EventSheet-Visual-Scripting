@@ -14,6 +14,16 @@ non-Node host compiles with a warning instead of broken code. The generated trio
 name-addressed: reopening the emitted `.gd` as a sheet lifts it into ordinary rows, and saving
 again emits no second copy - the reopen cycle stays byte-identical.
 
+### Added - a hand-written enum + match machine opens in the state-machine shape
+
+Opening a `.gd` whose `_physics_process` holds a `match state:` now lands the full reading:
+the tick event, one `◆ State: <name>` case row per branch (the badge in the icon column), the
+branch bodies as its actions - recognition of the code's own indentation tree, byte-exact like
+every lift. The grammar keys on the match SUBJECT being state-shaped (`state`,
+`current_state`, `machine.state`); a match on anything else keeps its plain pattern text, and
+the `_` default is never relabeled. Badge marks across the editor are now SVG art rasterized
+at the exact pixel size they draw at, so every icon stays crisp at every zoom and HiDPI scale.
+
 ### Added - state machines read like state machines
 
 Three display-only views (rows and compiled output untouched):

@@ -169,6 +169,45 @@ func _on_frame() -> void:
 		_frames = 0
 		_apply_sheet(_build_state_machine_sheet())
 		return
-	img.save_png("res://docs/images/code-patterns-state-machine.png")
-	print("[preview] state machine sheet %dx%d" % [img.get_width(), img.get_height()])
+	if _stage == 1:
+		img.save_png("res://docs/images/code-patterns-state-machine.png")
+		print("[preview] state machine sheet %dx%d" % [img.get_width(), img.get_height()])
+		_stage = 2
+		_frames = 0
+		# The deep lift (trigger events, ACE matching, structured match cases) runs on the
+		# file-based import path only - write the sample out and open it the way the dock does.
+		var sample: FileAccess = FileAccess.open("user://code_patterns_handwritten.gd", FileAccess.WRITE)
+		sample.store_string(HANDWRITTEN_MACHINE)
+		sample.close()
+		_apply_sheet(GDScriptImporter.new().import_external("user://code_patterns_handwritten.gd"))
+		return
+	img.save_png("res://docs/images/code-patterns-lifted-machine.png")
+	print("[preview] lifted machine %dx%d" % [img.get_width(), img.get_height()])
 	quit(0)
+
+
+## A hand-written state machine, exactly as a GDScript user writes one - the lift screenshot
+## shows what opening this file as a sheet produces (enum row, tick event, one child row per
+## match case).
+const HANDWRITTEN_MACHINE := """extends CharacterBody2D
+
+enum State { PATROL, CHASE, FLEE }
+
+var state := State.PATROL
+var hp := 100
+
+
+func _physics_process(delta: float) -> void:
+	match state:
+		State.PATROL:
+			patrol_step(delta)
+			if can_see_player():
+				state = State.CHASE
+		State.CHASE:
+			chase_step(delta)
+			if hp < 20:
+				state = State.FLEE
+		State.FLEE:
+			if not can_see_player():
+				state = State.PATROL
+"""

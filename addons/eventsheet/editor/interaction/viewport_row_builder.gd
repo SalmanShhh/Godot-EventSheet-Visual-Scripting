@@ -2740,16 +2740,56 @@ func _build_match_case_rows(event_row: EventRow, indent: int) -> Array[EventRowD
 		var match_row: MatchRow = action_item as MatchRow
 		if match_row.cases.is_empty():
 			continue
+		# A match whose SUBJECT is state-shaped (its trailing identifier says "state") reads in
+		# the state-machine grammar: each case gets the ◆ badge in the icon column and the text
+		# "State: <pattern leaf>" - the same reading an authored Is In State header gets, derived
+		# from the code's own names rather than any pack. Other matches keep their pattern text.
+		var state_shaped: bool = _is_state_shaped_subject(match_row.match_expression)
 		for match_case: MatchCase in match_row.cases:
 			if match_case == null:
 				continue
 			var body: PackedStringArray = _match_case_summary_lines(match_case.events)
 			if body.is_empty():
 				body = PackedStringArray(["pass"])
-			var case_row: EventRowData = _build_condition_action_row(str(match_case.pattern).strip_edges(), body, indent, match_row)
+			var pattern_text: String = str(match_case.pattern).strip_edges()
+			var case_label: String = pattern_text
+			if state_shaped and pattern_text != "_":
+				case_label = "%s: %s" % [EventSheetL10n.translate("State"), _pattern_leaf(pattern_text)]
+			var case_row: EventRowData = _build_condition_action_row(case_label, body, indent, match_row)
 			case_row.language_block = true  # a switch case - a language construct, not a regular ACE event
+			if state_shaped and pattern_text != "_" and not case_row.spans.is_empty():
+				var case_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+				case_badge_meta["badge_bg"] = _viewport._get_event_style().trigger_badge_background_color
+				case_badge_meta["badge_fg"] = _viewport._get_event_style().trigger_badge_foreground_color
+				case_badge_meta["line_index"] = 0
+				case_badge_meta["badge_style"] = "trigger"
+				case_badge_meta["lane"] = "condition"
+				case_row.spans.insert(0, _make_span("◆", SemanticSpan.SpanType.KEYWORD, case_badge_meta))
 			rows.append(case_row)
 	return rows
+
+
+## Whether a match subject is state-shaped: its trailing identifier (after any `.`/`(`) contains
+## the word "state" - `state`, `current_state`, `machine.state`. Derived from the code's own
+## naming; display-only.
+func _is_state_shaped_subject(match_expression: String) -> bool:
+	var subject: String = match_expression.strip_edges().to_lower()
+	var last_dot: int = subject.rfind(".")
+	if last_dot >= 0:
+		subject = subject.substr(last_dot + 1)
+	return subject.contains("state")
+
+
+## The display leaf of a match pattern: `State.PATROL` -> `PATROL`, `"patrol"` -> `patrol`,
+## anything else verbatim. Display-only - the pattern itself is untouched.
+func _pattern_leaf(pattern_text: String) -> String:
+	var leaf: String = pattern_text
+	if leaf.length() >= 2 and leaf.begins_with("\"") and leaf.ends_with("\""):
+		return leaf.substr(1, leaf.length() - 2)
+	var last_dot: int = leaf.rfind(".")
+	if last_dot >= 0 and last_dot < leaf.length() - 1:
+		return leaf.substr(last_dot + 1)
+	return leaf
 
 
 ## Builds a synthetic event-model row: a CONDITION cell (condition_text) on the left, ACTION cells
