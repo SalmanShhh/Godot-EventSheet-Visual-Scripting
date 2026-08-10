@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+### Added - Remember Between Runs: one toggle makes a variable survive closing the game
+
+Right-click any sheet variable and pick **Remember Between Runs**. The compiler then emits the
+whole persistence ritual for you - the variable loads its last saved value when the node is
+ready, and every remembered variable saves back to `user://remembered.cfg` when the node leaves
+the tree (scene change or quit). What used to be fifteen lines of ConfigFile boilerplate is now
+one bit on the variable. A sheet with its own class name saves under that name, so two sheets'
+variables never collide. Constants and locals refuse the toggle with a plain explanation, and a
+non-Node host compiles with a warning instead of broken code. The generated trio is
+name-addressed: reopening the emitted `.gd` as a sheet lifts it into ordinary rows, and saving
+again emits no second copy - the reopen cycle stays byte-identical.
+
+### Added - Has Changed condition and named cooldowns
+
+Four new Core ACEs for the two timing patterns beginners fake with scratch variables:
+
+- **Has Changed** (condition, Run Context) - true on the tick its watched value becomes
+  different, silent otherwise. The prev/now bookkeeping compiles behind the row the same way
+  Trigger Once's does; pair it with Every Frame to update a HUD only when the score moves.
+- **Start Cooldown / Cooldown Is Ready / Cooldown Time Left** (Time) - named cooldowns with no
+  timer variables to invent: `Start Cooldown "dash" for 1.5s`, then gate the dash event on
+  `Cooldown "dash" is ready`. A cooldown that was never started counts as ready, and Time Left
+  feeds progress bars directly.
+
+### Added - group picking completes: random member and best-by-property
+
+**Random Node In Group (empty-safe)** returns null on an empty group instead of erroring the
+way a bare `pick_random()` does, and **Group Member With Smallest/Largest Property** pick the
+weakest or strongest member by any property name (`hp`, `speed`, ...) - the argmin loop as one
+expression, joining Nearest/Furthest to finish the picking family.
+
+### Added - the State Machine behavior tells time
+
+The State Machine pack now records **previous_state** and exposes **Time In State** (seconds
+since the current state began), so "flee for two seconds then return to what I was doing" is
+two rows: `Time In State > 2` -> `Set State previous_state`.
+
 ### Added - statements read as sentences, calls read as Object then Verb
 
 The adoption campaign put every line of a hand-written `.gd` on its own row; this makes those

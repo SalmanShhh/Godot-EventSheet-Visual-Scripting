@@ -94,6 +94,8 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_convert_context_variable_scope()
 		_dock.VARIABLE_MENU_TOGGLE_CONST:
 			_toggle_context_variable_constant()
+		_dock.VARIABLE_MENU_REMEMBER:
+			_toggle_context_variable_remember()
 		_dock.VARIABLE_MENU_GROUP:
 			_group_context_selection()
 
@@ -463,6 +465,46 @@ func _toggle_context_variable_constant() -> void:
 	if changed:
 		_dock._mark_dirty("%s variable %s as constant." % ["Marked" if new_constant else "Unmarked", var_name])
 		_context_variable["is_constant"] = new_constant
+
+
+## "Remember Between Runs": flips the variable's `remember` attribute. The compiler then emits
+## the persistence trio (recall at ready, save on tree exit via user://remembered.cfg) - one
+## toggle instead of fifteen lines of ConfigFile ritual. Sheet-scope variables only: a local
+## lives and dies with its event, so there is nothing durable to remember.
+func _toggle_context_variable_remember() -> void:
+	if _context_variable.is_empty():
+		return
+	var scope: String = str(_context_variable.get("scope", "global"))
+	var var_name: String = str(_context_variable.get("name", ""))
+	if scope != "global":
+		_dock._set_status("Remember Between Runs works on sheet variables - convert the local to a sheet variable first.", true)
+		return
+	if bool(_context_variable.get("is_constant", false)):
+		_dock._set_status("A constant never changes, so there is nothing to remember - make it a variable first.", true)
+		return
+	var currently: bool = false
+	var existing: Dictionary = _dock._current_sheet.variables.get(var_name, {}) if _dock._current_sheet != null else {}
+	if existing.get("attributes") is Dictionary:
+		currently = bool((existing.get("attributes") as Dictionary).get("remember", false))
+	var new_remember: bool = not currently
+	var changed: bool = _dock._perform_undoable_sheet_edit("Toggle Remember Between Runs", func() -> bool:
+		var descriptor: Dictionary = _dock._current_sheet.variables.get(var_name, {})
+		if descriptor.is_empty():
+			return false
+		var attributes: Dictionary = descriptor.get("attributes") if descriptor.get("attributes") is Dictionary else {}
+		if new_remember:
+			attributes["remember"] = true
+		else:
+			attributes.erase("remember")
+		if attributes.is_empty():
+			descriptor.erase("attributes")
+		else:
+			descriptor["attributes"] = attributes
+		_dock._current_sheet.variables[var_name] = descriptor
+		return true
+	)
+	if changed:
+		_dock._mark_dirty("%s %s between runs." % ["Now remembering" if new_remember else "No longer remembering", var_name])
 
 
 func _prompt_convert_global_variable_to_local(entry: Dictionary) -> void:

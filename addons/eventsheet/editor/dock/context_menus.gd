@@ -79,6 +79,7 @@ func build_all() -> void:
 	_dock._variable_context_menu.add_item("Rename Everywhere…", _dock.VARIABLE_MENU_RENAME)
 	_dock._variable_context_menu.add_item("Convert Scope", _dock.VARIABLE_MENU_CONVERT_SCOPE)
 	_dock._variable_context_menu.add_item("Toggle Constant", _dock.VARIABLE_MENU_TOGGLE_CONST)
+	_dock._variable_context_menu.add_item("Remember Between Runs", _dock.VARIABLE_MENU_REMEMBER)
 	_dock._variable_context_menu.add_item("Group Under a Heading…", _dock.VARIABLE_MENU_GROUP)
 	_dock._variable_context_menu.id_pressed.connect(_dock._on_variable_context_menu_id_pressed)
 	_dock.add_child(_dock._variable_context_menu)
