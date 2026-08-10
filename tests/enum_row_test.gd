@@ -105,8 +105,14 @@ static func run() -> bool:
 			enum_row_data = row
 	all_passed = _check("enum renders as a row", enum_row_data != null, true) and all_passed
 	if enum_row_data != null:
-		all_passed = _check("enum row shows the declaration",
-			enum_row_data.spans[1].text, "State { IDLE, RUN, HURT = 4 }") and all_passed
+		# The closed enum reads as a sentence: bold name, then each member name as a tinted
+		# word - never the braces text.
+		var enum_span_texts: Array[String] = []
+		for enum_span in enum_row_data.spans:
+			enum_span_texts.append(str(enum_span.text))
+		all_passed = _check("enum row leads with its name", enum_row_data.spans[1].text, "State") and all_passed
+		all_passed = _check("enum sentence speaks the members", enum_span_texts.has("HURT"), true) and all_passed
+		all_passed = _check("enum sentence drops the braces", enum_span_texts.has("State { IDLE, RUN, HURT = 4 }"), false) and all_passed
 	editor._struct_rows._ensure_enum_dialog()
 	editor._struct_rows._enum_target = state
 	editor._struct_rows._enum_name_edit.text = "PlayerState"

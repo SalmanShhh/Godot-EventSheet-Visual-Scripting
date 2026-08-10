@@ -50,7 +50,13 @@ static func run() -> bool:
 	var strip: EventRowData = _first_strip(rows)
 	all_passed = _check("a leading run of ≥2 scaffolding rows collapses into a strip", strip != null, true) and all_passed
 	if strip != null:
-		all_passed = _check("the strip holds the 2 scaffolding rows as children", strip.children.size() == 2, true) and all_passed
+		# Children = the facts dropdown (label+value rows) followed by the raw scaffolding rows;
+		# the raw rows keep their identity (source_resource), the facts are inert.
+		var raw_children: int = 0
+		for strip_child: EventRowData in strip.children:
+			if strip_child.source_resource is RawCodeRow:
+				raw_children += 1
+		all_passed = _check("the strip holds the 2 scaffolding rows as children", raw_children == 2, true) and all_passed
 		all_passed = _check("the strip is folded by default (boilerplate hidden)", strip.folded, true) and all_passed
 	all_passed = _check("the logic row is NOT swallowed by the strip",
 		_has_raw_row_with(rows, "velocity.y += gravity"), true) and all_passed
@@ -83,8 +89,11 @@ static func run() -> bool:
 	flagged_sheet.events.append(_raw("position += velocity"))
 	viewport._row_diagnostics = {str(flagged_prelude.get_instance_id()): "boom"}
 	var flagged_strip: EventRowData = _first_strip(viewport._build_rows_from_sheet(flagged_sheet))
-	var marker_survived: bool = flagged_strip != null and not flagged_strip.children.is_empty() \
-		and flagged_strip.children[0].error_message == "boom"
+	var marker_survived: bool = false
+	if flagged_strip != null:
+		for flagged_child: EventRowData in flagged_strip.children:
+			if flagged_child.error_message == "boom":
+				marker_survived = true
 	all_passed = _check("a diagnostic on a prelude block survives into the strip", marker_survived, true) and all_passed
 	viewport.free()
 

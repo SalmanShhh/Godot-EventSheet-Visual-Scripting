@@ -658,3 +658,14 @@ Edit Entry…,Изменить запись…
 Remove Entry,Удалить запись
 Lock Verb Body (read-only),Заблокировать тело глагола (только чтение)
 State,Состояние
+is one of,одно из
+or,или
+and,и
+more,ещё
+values,значений
+default,по умолчанию
++ Add value…,+ Добавить значение…
+Runs in editor,Работает в редакторе
+Remembered variables,Запоминаемые переменные
+Setup lines,Строки настройки
+double-click to edit in code,двойной щелчок - править в коде

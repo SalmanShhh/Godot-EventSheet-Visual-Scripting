@@ -658,3 +658,14 @@ Edit Entry…,编辑条目…
 Remove Entry,移除条目
 Lock Verb Body (read-only),锁定动词主体（只读）
 State,状态
+is one of,是以下之一
+or,或
+and,和
+more,更多
+values,个值
+default,默认
++ Add value…,+ 添加值…
+Runs in editor,在编辑器中运行
+Remembered variables,记住的变量
+Setup lines,设置行数
+double-click to edit in code,双击以在代码中编辑

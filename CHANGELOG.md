@@ -14,6 +14,23 @@ non-Node host compiles with a warning instead of broken code. The generated trio
 name-addressed: reopening the emitted `.gd` as a sheet lifts it into ordinary rows, and saving
 again emits no second copy - the reopen cycle stays byte-identical.
 
+### Added - the enum block and Class setup read at rest, open into lists
+
+Both prelude blocks now share one rhythm - a single readable line closed, a list open, one fold
+arrow between them (display-only; rows and emission untouched):
+
+- **Enum block**: closed it reads as a sentence - `State is one of PATROL, CHASE or FLEE`
+  (tinted words, no braces, no boxes; long enums say "and N more"). Open it lists one row per
+  value with its number (`PATROL = 0 · default`) and an Add value footer. Double-click
+  anywhere still opens the enum editor.
+- **Class setup**: closed it is the inheritance breadcrumb - `Node ▸ CharacterBody2D ▸
+  ExternalSample` - with the editor's own class icon in the badge slot (SVG mark fallback
+  outside the editor). Open, the secondary facts drop down as label + value rows (Runs in
+  editor, Remembered variables, Setup lines) above the raw prelude lines, never crammed
+  inline on the bar. The word pill is gone.
+
+All eleven new UI strings ship translated in the eight bundled locales.
+
 ### Added - beginner-style GDScript gets the same structured open as style-guide code
 
 The zero-blocks number was measured on style-guide sources; beginner files spell things

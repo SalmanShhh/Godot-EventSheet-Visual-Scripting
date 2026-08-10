@@ -658,3 +658,14 @@ Edit Entry…,항목 편집…
 Remove Entry,항목 제거
 Lock Verb Body (read-only),동사 본문 잠금(읽기 전용)
 State,상태
+is one of,다음 중 하나
+or,또는
+and,및
+more,개 더
+values,개 값
+default,기본값
++ Add value…,+ 값 추가…
+Runs in editor,에디터에서 실행
+Remembered variables,기억된 변수
+Setup lines,설정 줄
+double-click to edit in code,더블 클릭하여 코드에서 편집

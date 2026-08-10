@@ -1060,6 +1060,13 @@ func _draw_badge_span(control: Control, span: SemanticSpan, font: Font, font_siz
 		# fallback if the rasterizer ever refuses a string.
 		if badge_style == "trigger":
 			var icon_side: float = radius * 1.9
+			# A row can supply a real texture for the badge slot (the Class setup strip passes
+			# the editor's own icon for the base class); the SVG marks below are the default.
+			var supplied_icon: Variant = metadata.get("badge_icon")
+			if supplied_icon is Texture2D:
+				var supplied_rect := Rect2(badge_rect.get_center() - Vector2(icon_side, icon_side) * 0.5, Vector2(icon_side, icon_side))
+				control.draw_texture_rect(supplied_icon, supplied_rect, false)
+				return
 			var icon: Texture2D = _badge_icon(span.text, int(round(icon_side)))
 			if icon != null:
 				var icon_rect := Rect2(badge_rect.get_center() - Vector2(icon_side, icon_side) * 0.5, Vector2(icon_side, icon_side))
@@ -1103,6 +1110,8 @@ const BADGE_MARK_SVGS: Dictionary = {
 	"➜": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M4 12h10.4\" stroke=\"#fff\" stroke-width=\"2.8\" stroke-linecap=\"round\"/><path d=\"M12.6 6.4 L20.2 12 L12.6 17.6 Z\" fill=\"#fff\"/></svg>",
 	"⌨": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"4\" y=\"7\" width=\"16\" height=\"10\" rx=\"2.6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.2\"/><circle cx=\"12\" cy=\"12\" r=\"1.7\" fill=\"#fff\"/></svg>",
 	"◆": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M12 4.2 L19.8 12 L12 19.8 L4.2 12 Z\" fill=\"#fff\"/></svg>",
+	"≡": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M5 7.5h14M5 12h14M5 16.5h10\" stroke=\"#fff\" stroke-width=\"2.4\" stroke-linecap=\"round\"/></svg>",
+	"▣": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><rect x=\"4.5\" y=\"4.5\" width=\"15\" height=\"15\" rx=\"3\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.2\"/><rect x=\"9.4\" y=\"9.4\" width=\"5.2\" height=\"5.2\" rx=\"1\" fill=\"#fff\"/></svg>",
 }
 
 ## SVG textures rasterized per (glyph, pixel size) - a handful of tiny images per session.

@@ -163,12 +163,13 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 	var line_total: int = 0
 	for child: EventRowData in scaffold_rows:
 		line_total += child.line_count
-	# The strip reads like Construct's Includes bar: one block naming what this sheet IS built
-	# on. The extends target (and class_name, when present) are pulled from the children's own
-	# code, so the header says "Inherits CharacterBody2D" instead of a generic label; the raw
-	# lines stay the foldable children underneath, unchanged.
+	# The strip is the sheet's IDENTITY, read like Construct's Includes bar: closed, just the
+	# inheritance breadcrumb (Node ▸ CharacterBody2D ▸ ExternalSample - the chain a beginner
+	# learns from); open, the secondary facts as a label+value LIST (never crammed inline on the
+	# bar), with the raw prelude lines as the last children, editable as before.
 	var extends_target: String = ""
 	var declared_class: String = ""
+	var has_tool: bool = false
 	for child: EventRowData in scaffold_rows:
 		if not (child.source_resource is RawCodeRow):
 			continue
@@ -178,32 +179,80 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 				extends_target = trimmed.trim_prefix("extends ").strip_edges()
 			elif trimmed.begins_with("class_name ") and declared_class.is_empty():
 				declared_class = trimmed.trim_prefix("class_name ").strip_edges()
-	var strip_summary: String
+			elif trimmed == "@tool":
+				has_tool = true
+	# The breadcrumb: Node ▸ <base> ▸ <this sheet>. The chain stays short on purpose - the full
+	# ClassDB ladder (CanvasItem, CollisionObject2D, ...) is trivia; base and root are the lesson.
+	var leaf_name: String = declared_class
+	if leaf_name.is_empty() and sheet != null and not str(sheet.external_source_path).is_empty():
+		leaf_name = str(sheet.external_source_path).get_file().get_basename()
+	var crumbs: PackedStringArray = PackedStringArray()
+	if not extends_target.is_empty() and extends_target != "Node" and not extends_target.begins_with("\""):
+		crumbs.append("Node")
 	if not extends_target.is_empty():
-		strip_summary = "%s %s" % [EventSheetL10n.translate("Inherits"), extends_target]
-		if not declared_class.is_empty():
-			strip_summary = "%s · %s" % [declared_class, strip_summary]
-		if line_total > 2:
-			strip_summary += " · %d lines" % line_total
-	else:
-		strip_summary = "class_name, host binding & annotations - %d lines" % line_total
-	row_data.spans = [
-		_make_span("Class setup", SemanticSpan.SpanType.KEYWORD, {
-			"editable": false,
-			"badge": true,
-			"badge_style": "scope",
-			"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
-			"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
-			"kind": "scaffolding_strip",
-			"line_index": 0
-		}),
-		_make_span(strip_summary, SemanticSpan.SpanType.COMMENT, {
+		crumbs.append(extends_target)
+	var crumb_prefix: String = " ▸ ".join(crumbs)
+	var badge_meta: Dictionary = {
+		"editable": false,
+		"badge": true,
+		"badge_style": "trigger",
+		"badge_bg": EventSheetPalette.COLOR_SETUP_BADGE_BG,
+		"badge_fg": EventSheetPalette.COLOR_SETUP_BADGE_FG,
+		"kind": "scaffolding_strip",
+		"line_index": 0
+	}
+	var class_icon: Texture2D = ACEPickerDialog.editor_icon(extends_target) if not extends_target.is_empty() else null
+	if class_icon != null:
+		badge_meta["badge_icon"] = class_icon
+	var spans: Array[SemanticSpan] = [_make_span("▣", SemanticSpan.SpanType.KEYWORD, badge_meta)]
+	if crumb_prefix.is_empty() and leaf_name.is_empty():
+		spans.append(_make_span("class_name, host binding & annotations - %d lines" % line_total, SemanticSpan.SpanType.COMMENT, {
 			"editable": false,
 			"kind": "scaffolding_strip",
 			"text_color": Color(EventSheetPalette.TEXT_MUTED.r, EventSheetPalette.TEXT_MUTED.g, EventSheetPalette.TEXT_MUTED.b, 0.8)
-		})
-	]
+		}))
+	else:
+		if not crumb_prefix.is_empty():
+			var crumb_text: String = crumb_prefix + (" ▸" if not leaf_name.is_empty() else "")
+			spans.append(_make_span(crumb_text, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffolding_strip", "text_color": EventSheetPalette.TEXT_MUTED}))
+		if not leaf_name.is_empty():
+			spans.append(_make_span(leaf_name, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffolding_strip", "text_color": EventSheetPalette.TEXT_PRIMARY}))
+	row_data.spans = spans
+	# The dropdown facts, prepended above the raw prelude children. Label + value per row; only
+	# facts that exist get a row (no "@tool: no" noise).
+	var facts: Array[EventRowData] = []
+	if has_tool:
+		facts.append(_build_setup_fact_row(EventSheetL10n.translate("Runs in editor"), "@tool", 0))
+	var remembered_names: PackedStringArray = PackedStringArray()
+	if sheet != null:
+		for var_key: Variant in sheet.variables.keys():
+			var descriptor: Variant = sheet.variables.get(var_key)
+			if descriptor is Dictionary and (descriptor as Dictionary).get("attributes") is Dictionary \
+					and bool(((descriptor as Dictionary).get("attributes") as Dictionary).get("remember", false)):
+				remembered_names.append(str(var_key))
+	if not remembered_names.is_empty():
+		facts.append(_build_setup_fact_row(EventSheetL10n.translate("Remembered variables"), "%d ( %s )" % [remembered_names.size(), ", ".join(remembered_names)], 1))
+	facts.append(_build_setup_fact_row(EventSheetL10n.translate("Setup lines"), "%d · %s" % [line_total, EventSheetL10n.translate("double-click to edit in code")], 2))
+	var all_children: Array[EventRowData] = []
+	all_children.append_array(facts)
+	all_children.append_array(scaffold_rows)
+	row_data.children = all_children
 	return row_data
+
+
+## One fact of the Class setup dropdown: a muted label and its value, inert (no source
+## resource - selection, drag and delete all skip it, like the add-event footer).
+func _build_setup_fact_row(label: String, value: String, fact_index: int) -> EventRowData:
+	var row := EventRowData.new()
+	row.indent = 1
+	row.row_type = EventRowData.RowType.SECTION
+	row.source_resource = null
+	row.row_uid = "scaffold_fact_%d_%s" % [fact_index, label]
+	row.spans = [
+		_make_span(label, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffold_fact", "text_color": EventSheetPalette.TEXT_MUTED, "line_index": 0}),
+		_make_span(value, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffold_fact", "line_index": 0})
+	]
+	return row
 
 
 ## A clickable footer row that appends a new event into owner_resource (a group or the
@@ -885,6 +934,11 @@ func _first_color_in_params(ace: Resource) -> Variant:
 
 ## An enum row: rendered like a variable declaration ("enum  State { IDLE, RUN }");
 ## double-click opens the enum dialog.
+## The enum block, two states behind one fold arrow: CLOSED it reads as a sentence
+## ("State is one of PATROL, CHASE or FLEE" - tinted words, no braces, no boxes), OPEN it lists
+## one row per value with its number plus an Add value footer. Display-only: the EnumRow and its
+## emission are untouched, and double-click anywhere (header, value, footer) opens the enum
+## editor as before.
 func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var row_data := EventRowData.new()
@@ -894,21 +948,71 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 	row_data.row_uid = "enum_%s_%d" % [str(enum_row.get_instance_id()), indent]
 	row_data.disabled = not enum_row.enabled or bool(_viewport._row_disabled_state.get(row_data.row_uid, false))
 	row_data.breakpoint_enabled = bool(_viewport._breakpoint_rows.get(row_data.row_uid, false))
-	# The display text comes from the registered "enum" resource kind - the same summary
-	# contract every Custom Block kind renders through.
-	var enum_kind: EventSheetBlockKind = EventSheetBlockRegistry.kind_for(enum_row)
-	row_data.spans = [
-		_make_span(
-			"enum",
-			SemanticSpan.SpanType.KEYWORD,
-			{"badge": true, "text_color": event_style.behavior_accent_color}
-		),
-		_make_span(
-			enum_kind.summary_for(enum_row) if enum_kind != null else enum_row.enum_name,
-			SemanticSpan.SpanType.VALUE,
-			{"kind": "enum_row", "text_color": event_style.object_label_color}
-		)
+	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+	var badge_meta: Dictionary = {
+		"editable": false,
+		"badge": true,
+		"badge_style": "trigger",
+		"badge_bg": event_style.behavior_accent_color.lerp(EventSheetPalette.COLOR_LANE_DIVIDER, 0.45),
+		"badge_fg": event_style.trigger_badge_foreground_color,
+		"kind": "enum_row",
+		"line_index": 0
+	}
+	var names: PackedStringArray = PackedStringArray()
+	for member: String in enum_row.members:
+		var eq: int = member.find("=")
+		names.append(member.substr(0, eq).strip_edges() if eq > 0 else member.strip_edges())
+	var spans: Array[SemanticSpan] = [
+		_make_span("≡", SemanticSpan.SpanType.KEYWORD, badge_meta),
+		_make_span(enum_row.enum_name, SemanticSpan.SpanType.VALUE, {"kind": "enum_row", "text_color": event_style.object_label_color})
 	]
+	if row_data.folded:
+		# The sentence: up to five values spelled out, the rest counted - a long enum never
+		# walls the sheet at rest.
+		var spoken: int = mini(names.size(), 5)
+		spans.append(_make_span(EventSheetL10n.translate("is one of"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": EventSheetPalette.TEXT_MUTED}))
+		for name_index: int in range(spoken):
+			if name_index > 0 and name_index == spoken - 1 and names.size() <= spoken:
+				spans.append(_make_span(EventSheetL10n.translate("or"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": EventSheetPalette.TEXT_MUTED}))
+			# The comma rides INSIDE the value span - spans are auto-spaced, and "PATROL ," is
+			# exactly the boxed-fragment look the sentence exists to avoid.
+			var needs_comma: bool = name_index < spoken - 1 and not (name_index == spoken - 2 and names.size() <= spoken)
+			spans.append(_make_span(names[name_index] + ("," if needs_comma else ""), SemanticSpan.SpanType.VALUE, {"kind": "enum_row"}))
+		if names.size() > spoken:
+			spans.append(_make_span("%s %d %s" % [EventSheetL10n.translate("and"), names.size() - spoken, EventSheetL10n.translate("more")], SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": EventSheetPalette.TEXT_MUTED}))
+	else:
+		spans.append(_make_span("- %d %s" % [names.size(), EventSheetL10n.translate("values")], SemanticSpan.SpanType.COMMENT, {"kind": "enum_row", "text_color": EventSheetPalette.TEXT_MUTED}))
+		var next_value: int = 0
+		var member_index: int = 0
+		for member: String in enum_row.members:
+			var eq: int = member.find("=")
+			var member_name: String = member.substr(0, eq).strip_edges() if eq > 0 else member.strip_edges()
+			if eq > 0 and str(member.substr(eq + 1).strip_edges()).is_valid_int():
+				next_value = int(member.substr(eq + 1).strip_edges())
+			var entry := EventRowData.new()
+			entry.indent = indent + 1
+			entry.row_type = EventRowData.RowType.SECTION
+			entry.source_resource = enum_row
+			entry.row_uid = "enum_value_%s_%s" % [str(enum_row.get_instance_id()), member_name]
+			# The first member is what an uninitialized variable of this enum holds - worth saying.
+			var entry_note: String = "= %d" % next_value
+			if member_index == 0:
+				entry_note += " · %s" % EventSheetL10n.translate("default")
+			entry.spans = [
+				_make_span(member_name, SemanticSpan.SpanType.VALUE, {"kind": "enum_value", "line_index": 0}),
+				_make_span(entry_note, SemanticSpan.SpanType.COMMENT, {"kind": "enum_value", "text_color": EventSheetPalette.TEXT_MUTED})
+			]
+			row_data.children.append(entry)
+			next_value += 1
+			member_index += 1
+		var add_row := EventRowData.new()
+		add_row.indent = indent + 1
+		add_row.row_type = EventRowData.RowType.SECTION
+		add_row.source_resource = enum_row
+		add_row.row_uid = "enum_add_%s" % str(enum_row.get_instance_id())
+		add_row.spans = [_make_span(EventSheetL10n.translate("+ Add value…"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_add", "text_color": EventSheetPalette.TEXT_MUTED})]
+		row_data.children.append(add_row)
+	row_data.spans = spans
 	return row_data
 
 

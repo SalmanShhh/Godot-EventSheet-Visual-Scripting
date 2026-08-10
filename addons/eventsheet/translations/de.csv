@@ -658,3 +658,14 @@ Edit Entry…,Eintrag bearbeiten…
 Remove Entry,Eintrag entfernen
 Lock Verb Body (read-only),Verb-Rumpf sperren (schreibgeschützt)
 State,Zustand
+is one of,ist eines von
+or,oder
+and,und
+more,weitere
+values,Werte
+default,Standard
++ Add value…,+ Wert hinzufügen…
+Runs in editor,Läuft im Editor
+Remembered variables,Gemerkte Variablen
+Setup lines,Setup-Zeilen
+double-click to edit in code,Doppelklick zum Bearbeiten im Code

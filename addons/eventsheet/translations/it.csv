@@ -658,3 +658,14 @@ Edit Entry…,Modifica voce…
 Remove Entry,Rimuovi voce
 Lock Verb Body (read-only),Blocca corpo del verbo (sola lettura)
 State,Stato
+is one of,è uno di
+or,o
+and,e
+more,altri
+values,valori
+default,predefinito
++ Add value…,+ Aggiungi valore…
+Runs in editor,Gira nell'editor
+Remembered variables,Variabili ricordate
+Setup lines,Righe di setup
+double-click to edit in code,doppio clic per modificare nel codice
