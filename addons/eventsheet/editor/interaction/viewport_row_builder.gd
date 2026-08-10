@@ -204,6 +204,10 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 	var class_icon: Texture2D = ACEPickerDialog.editor_icon(extends_target) if not extends_target.is_empty() else null
 	if class_icon != null:
 		badge_meta["badge_icon"] = class_icon
+	# The bar wears the accent as an Includes-strip band - the sheet's identity should read as
+	# a BAR like a group header (and stand apart from every grey code row), not blend in.
+	var strip_accent: Color = _viewport._get_event_style().behavior_accent_color
+	row_data.custom_color = Color(strip_accent.r, strip_accent.g, strip_accent.b, 0.22)
 	var spans: Array[SemanticSpan] = [_make_span("▣", SemanticSpan.SpanType.KEYWORD, badge_meta)]
 	if crumb_prefix.is_empty() and leaf_name.is_empty():
 		spans.append(_make_span("class_name, host binding & annotations - %d lines" % line_total, SemanticSpan.SpanType.COMMENT, {
@@ -232,10 +236,20 @@ func _build_scaffolding_strip_row(sheet: EventSheetResource, scaffold_rows: Arra
 				remembered_names.append(str(var_key))
 	if not remembered_names.is_empty():
 		facts.append(_build_setup_fact_row(EventSheetL10n.translate("Remembered variables"), "%d ( %s )" % [remembered_names.size(), ", ".join(remembered_names)], 1))
-	facts.append(_build_setup_fact_row(EventSheetL10n.translate("Setup lines"), "%d · %s" % [line_total, EventSheetL10n.translate("double-click to edit in code")], 2))
+	var setup_lines_fact: EventRowData = _build_setup_fact_row(EventSheetL10n.translate("Setup lines"), "%d · %s" % [line_total, EventSheetL10n.translate("double-click to edit in code")], 2)
+	# The Setup lines row IS the door to the raw code: it carries the first prelude block as its
+	# resource, so double-click opens the code dialog exactly as the old visible rows did.
+	if not scaffold_rows.is_empty():
+		setup_lines_fact.source_resource = scaffold_rows[0].source_resource
+	facts.append(setup_lines_fact)
+	# The dropdown shows FACTS, not code: a clean prelude line stays behind "double-click to
+	# edit" (the mockup's whole point - no grey code wall inside the dropdown). A prelude row
+	# carrying a diagnostic still surfaces, error marker and all - problems are never hidden.
 	var all_children: Array[EventRowData] = []
 	all_children.append_array(facts)
-	all_children.append_array(scaffold_rows)
+	for scaffold_child: EventRowData in scaffold_rows:
+		if not scaffold_child.error_message.strip_edges().is_empty():
+			all_children.append(scaffold_child)
 	row_data.children = all_children
 	return row_data
 
@@ -250,7 +264,8 @@ func _build_setup_fact_row(label: String, value: String, fact_index: int) -> Eve
 	row.row_uid = "scaffold_fact_%d_%s" % [fact_index, label]
 	row.spans = [
 		_make_span(label, SemanticSpan.SpanType.COMMENT, {"editable": false, "kind": "scaffold_fact", "text_color": EventSheetPalette.TEXT_MUTED, "line_index": 0}),
-		_make_span(value, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffold_fact", "line_index": 0})
+		# The VALUE is the readable half - full-strength text, never the muted code grey.
+		_make_span(value, SemanticSpan.SpanType.VALUE, {"editable": false, "kind": "scaffold_fact", "line_index": 0, "text_color": EventSheetPalette.TEXT_PRIMARY})
 	]
 	return row
 
@@ -2327,19 +2342,21 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	# Type-aware styling: boilerplate reads dimmer (no label) while real logic keeps the brighter
 	# "GDScript" badge + primary text. Same row, no codegen change.
 	var is_scaffold: bool = _viewport.is_scaffolding_code(raw_row.code)
-	var badge_label: String = "GDScript"
-	var badge_fg: Color = EventSheetPalette.COLOR_SETUP_BADGE_FG if is_scaffold else EventSheetPalette.COLOR_CODE_BADGE_FG
 	var line_fg: Color = EventSheetPalette.TEXT_MUTED if is_scaffold else EventSheetPalette.TEXT_PRIMARY
 	var spans: Array[SemanticSpan] = []
-	spans.append(_make_span(badge_label, SemanticSpan.SpanType.KEYWORD, {
-		"editable": false,
-		"badge": true,
-		"badge_style": "scope",
-		"badge_bg": EventSheetPalette.COLOR_CODE_BADGE_BG,
-		"badge_fg": badge_fg,
-		"kind": "raw_code",
-		"line_index": 0
-	}))
+	# Scaffold blocks carry NO "GDScript" pill: they live under the Class setup dropdown, whose
+	# facts already say what they are - the pill was pure noise there (and a word in a box). The
+	# pill stays on REAL logic blocks only, where it marks the escape hatch.
+	if not is_scaffold:
+		spans.append(_make_span("GDScript", SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": EventSheetPalette.COLOR_CODE_BADGE_BG,
+			"badge_fg": EventSheetPalette.COLOR_CODE_BADGE_FG,
+			"kind": "raw_code",
+			"line_index": 0
+		}))
 	# The importer sets lift_note on a block it could NOT lift into structured rows ("no matching ACE
 	# template"). Surface it as an inline amber badge - the actionable "why this stayed code" cue - in
 	# addition to the hover tooltip, so a wall of blocks becomes a triage list at a glance.

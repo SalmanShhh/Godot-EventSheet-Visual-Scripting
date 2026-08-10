@@ -50,13 +50,15 @@ static func run() -> bool:
 	var strip: EventRowData = _first_strip(rows)
 	all_passed = _check("a leading run of ≥2 scaffolding rows collapses into a strip", strip != null, true) and all_passed
 	if strip != null:
-		# Children = the facts dropdown (label+value rows) followed by the raw scaffolding rows;
-		# the raw rows keep their identity (source_resource), the facts are inert.
+		# Children = ONLY the facts dropdown for a clean prelude - raw rows stay behind the
+		# Setup lines row's double-click; a row carrying a diagnostic still surfaces (below).
+		# Fact rows are identified by uid (the Setup lines fact CARRIES the first prelude
+		# resource for double-click, so a type check would miscount it as a code row).
 		var raw_children: int = 0
 		for strip_child: EventRowData in strip.children:
-			if strip_child.source_resource is RawCodeRow:
+			if not strip_child.row_uid.begins_with("scaffold_fact_"):
 				raw_children += 1
-		all_passed = _check("the strip holds the 2 scaffolding rows as children", raw_children == 2, true) and all_passed
+		all_passed = _check("a clean prelude hides its raw rows behind the facts (dropdown shows no code)", raw_children == 0, true) and all_passed
 		all_passed = _check("the strip is folded by default (boilerplate hidden)", strip.folded, true) and all_passed
 	all_passed = _check("the logic row is NOT swallowed by the strip",
 		_has_raw_row_with(rows, "velocity.y += gravity"), true) and all_passed
