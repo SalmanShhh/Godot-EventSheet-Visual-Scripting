@@ -64,7 +64,11 @@ static func build() -> bool:
 		"\tif node is CanvasItem:",
 		"\t\t(node as CanvasItem).visible = true",
 		"\tnode.set_process(true)",
-		"\tnode.set_physics_process(true)"
+		"\tnode.set_physics_process(true)",
+		"\t# The reset seam: a pooled scene that defines reset() gets it called on every",
+		"\t# spawn, so velocity/hp/timers clear without the pool knowing any of them.",
+		"\tif node.has_method(&\"reset\"):",
+		"\t\tnode.call(&\"reset\")"
 	]))
 	sheet.events.append(block)
 

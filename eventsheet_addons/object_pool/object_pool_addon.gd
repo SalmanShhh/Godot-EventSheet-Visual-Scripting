@@ -215,5 +215,9 @@ func _wake(node: Node) -> void:
 		(node as CanvasItem).visible = true
 	node.set_process(true)
 	node.set_physics_process(true)
+	# The reset seam: a pooled scene that defines reset() gets it called on every
+	# spawn, so velocity/hp/timers clear without the pool knowing any of them.
+	if node.has_method(&"reset"):
+		node.call(&"reset")
 
 # ObjectPool: register as the ObjectPool autoload. Create Pool from a scene (or Create Empty Pool + Add To Pool your own nodes), then Spawn to get a ready node and Despawn to hand it back. Reusing nodes keeps heavy scenes smooth. This pack is an event sheet - extend it by editing it.
