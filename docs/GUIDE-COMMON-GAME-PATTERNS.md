@@ -165,6 +165,34 @@ Ten more spellings of everyday game code, shipped the same way:
 
 ![The Object Pool in use: Create Pool on ready, Spawn on a random cadence, Despawn on screen exited](images/pattern-pool.png)
 
+## The third wave - game feel and directors
+
+![The third wave: buffered coyote jumping, the wave director, knockback with i-frames and floating text, and the motion verbs](images/pattern-wave3.png)
+
+- **Coyote time + input buffering.** The Platformer pack already ships both as Inspector
+  feel-numbers (`coyote_time`, `jump_buffer_time`) - most users just tune. For custom
+  controllers the generic rows exist: **Buffer Press / Press Is Buffered / Clear Buffer**
+  (Time) and **Was Recently True** (Run Context) - `is_on_floor() was true within 0.1s` IS
+  coyote time, spelled as a condition.
+- **The wave director.** **On Group Emptied** fires the tick the last member leaves a group
+  (never on a still-empty group at startup); **On Group Gains First Member** covers the other
+  edge. `wave += 1`, `Start Wave ( wave )` - the whole rounds loop in one event.
+- **Knockback.** **Push Away From** sets the impulse; **Apply Pushes** under Every Frame moves
+  and decays it with the same honest exp form Move Toward uses.
+- **Springs.** Already a whole pack: the **Spring** behavior gives named springs with real
+  velocity, overshoot and settle - squash-and-stretch juice as single rows.
+- **Magnet, orbit, charge.** **Pull Group Toward** (the vacuum-pickup loop), **Orbit Around**
+  (the sin/cos pair, angle hidden in node metadata), **Charge Toward** (hold-to-charge that
+  clamps itself).
+- **I-frames.** The Health pack's **Grant Invincibility / Is Invincible** - and its own Take
+  Damage respects them, so an invincible hit never lands and never fires On Damaged. The Flash
+  pack is the flicker.
+- **Progress Of / Percent Of** (Math & Random) - the `inverse_lerp` nobody finds, clamped,
+  feeding bars directly.
+- **Repeat With Delay** (Time) - `5 times, 0.1s apart:` burst fire; suspends like Wait.
+- **Pop Floating Text** (HUD Kit) - the score popup's label, drift tween and cleanup as one
+  verb.
+
 ## Where these live
 
 Everything above except the State Machine, Advanced Random, and HUD Kit sections is built into

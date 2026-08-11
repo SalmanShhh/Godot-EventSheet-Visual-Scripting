@@ -98,9 +98,80 @@ func _on_frame() -> void:
 		_frames = 0
 		_apply_pool_sheet()
 		return
-	root.get_texture().get_image().save_png("res://docs/images/pattern-pool.png")
-	print("[preview] pattern pool saved")
+	if _stage == 1:
+		root.get_texture().get_image().save_png("res://docs/images/pattern-pool.png")
+		print("[preview] pattern pool saved")
+		_stage = 2
+		_frames = 0
+		_apply_wave3_sheet()
+		return
+	root.get_texture().get_image().save_png("res://docs/images/pattern-wave3.png")
+	print("[preview] pattern wave3 saved")
 	quit(0)
+
+
+## Stage 3: the third wave - buffered coyote jumping, the wave director, knockback with
+## i-frames and floating text, and the per-frame motion verbs.
+func _apply_wave3_sheet() -> void:
+	var sheet: EventSheetResource = EventSheetResource.new()
+
+	var press: EventRow = EventRow.new()
+	press.trigger_id = "signal:jump_pressed"
+	press.actions.append(_act("BufferPress", {"name": "\"jump\"", "seconds": "0.12"}))
+	sheet.events.append(press)
+
+	var jump: EventRow = EventRow.new()
+	jump.trigger_id = "OnProcess"
+	jump.trigger_provider_id = "Core"
+	jump.conditions.append(_cond("PressIsBuffered", {"name": "\"jump\""}))
+	jump.conditions.append(_cond("WasRecentlyTrue", {"value": "is_on_floor()", "window": "0.1"}))
+	var jump_call: RawCodeRow = RawCodeRow.new()
+	jump_call.code = "jump()"
+	jump.actions.append(jump_call)
+	jump.actions.append(_act("ClearBuffer", {"name": "\"jump\""}))
+	sheet.events.append(jump)
+
+	var waves: EventRow = EventRow.new()
+	waves.trigger_id = "OnProcess"
+	waves.trigger_provider_id = "Core"
+	waves.conditions.append(_cond("OnGroupEmptied", {"group": "\"enemies\""}))
+	var bump: RawCodeRow = RawCodeRow.new()
+	bump.code = "wave += 1"
+	waves.actions.append(bump)
+	var start_wave: RawCodeRow = RawCodeRow.new()
+	start_wave.code = "start_wave(wave)"
+	waves.actions.append(start_wave)
+	sheet.events.append(waves)
+
+	var hurt: EventRow = EventRow.new()
+	hurt.trigger_id = "signal:hurt"
+	hurt.actions.append(_act("PushAwayFrom", {"source": "player", "strength": "300.0", "target": ""}))
+	var iframe: ACEAction = ACEAction.new()
+	iframe.provider_id = "HealthBehavior"
+	iframe.ace_id = "method:grant_invincibility"
+	iframe.params = {"seconds": "1.0"}
+	hurt.actions.append(iframe)
+	var popup: ACEAction = ACEAction.new()
+	popup.provider_id = "HudKitBehavior"
+	popup.ace_id = "method:pop_floating_text"
+	popup.params = {"text": "\"-10\"", "at": "global_position", "color": "Color.RED"}
+	hurt.actions.append(popup)
+	sheet.events.append(hurt)
+
+	var motion: EventRow = EventRow.new()
+	motion.trigger_id = "OnProcess"
+	motion.trigger_provider_id = "Core"
+	motion.actions.append(_act("ApplyPushes", {"friction": "8.0"}))
+	motion.actions.append(_act("PullGroupToward", {"group": "\"coins\"", "radius": "96.0", "speed": "400.0"}))
+	motion.actions.append(_act("OrbitAround", {"center": "player", "radius": "40.0", "degrees_per_second": "90.0"}))
+	sheet.events.append(motion)
+
+	var modern_base := Color("#252525")
+	var modern_style := EventSheetEditorStyle.new()
+	modern_style.ensure_defaults()
+	EventSheetGodotTheme.apply(modern_style, modern_base, modern_base.darkened(0.15), modern_base.darkened(0.25), Color("#569eff"), Color("#ced0d2"))
+	sheet.editor_style = modern_style
+	_viewport.set_sheet(sheet)
 
 
 ## Stage 2: the Object Pool as a consumer uses it - create on ready, spawn on a cadence,

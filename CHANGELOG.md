@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added - the third pattern wave: game feel and directors
+
+Fourteen additions turn game FEEL into rows. Generic timing: **Buffer Press / Press Is
+Buffered / Clear Buffer** (input buffering by name) and **Was Recently True** - coyote time as
+a condition (`is_on_floor() was true within 0.1s`); the Platformer pack already shipped both
+as Inspector feel-numbers. Directors: **On Group Emptied** (fires the tick the last member
+leaves - the wave director's trigger; never on a still-empty group at startup) and **On Group
+Gains First Member**. Motion: **Push Away From + Apply Pushes** (knockback that decays with
+the honest exp form), **Pull Group Toward** (the vacuum-pickup loop), **Orbit Around**,
+**Charge Toward**. Math: **Progress Of / Percent Of** (clamped inverse_lerp). **Repeat With
+Delay** (`5 times, 0.1s apart:` - suspends like Wait). Packs: the Health behavior gains
+**Grant Invincibility / Is Invincible** with its own Take Damage respecting them (an
+invincible hit never lands and never fires On Damaged; the Flash pack is the flicker), and
+HUD Kit gains **Pop Floating Text** (label, drift tween, cleanup - one verb). New linkable
+doc: **Everyday Patterns As Vocabulary** (`docs/EVERYDAY-PATTERNS-AS-VOCABULARY.md`) - the
+case for event-sheet visual scripting, pattern by pattern.
+
 ### Added - the second pattern wave: eight verbs, the Timeline block, the pool reset seam
 
 Eight new Core ACEs turn more everyday code into words: **Move Toward (smooth)** (the
