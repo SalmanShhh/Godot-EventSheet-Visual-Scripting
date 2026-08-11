@@ -237,4 +237,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetShaderParameter", "Shader Parameter", ACEDescriptor.ACEType.EXPRESSION, "material.get_shader_parameter(&{param})", "", [F.make_param("param", "String", "\"strength\"", "Parameter", "Shader uniform name.")], "Rendering", "shader param {param}", "CanvasItem")
 		.described("Gives the current value of a named shader uniform on this node."))
 
+
+	# Trigger Once, but across RUNS: the first true ever (per key, per machine) - tutorial hints
+	# and first-time cutscenes. State lives in the same user://remembered.cfg Remember Between
+	# Runs uses, cached in a member after the first read so the file is touched once per session.
+	descriptors.append(F.make_descriptor("Core", "OnlyOnceEver", "Only Once Ever", ACEDescriptor.ACEType.CONDITION, "__once_ever_{uid}({key})", "", [F.make_param("key", "String", "\"hint_dash\"", "Name", "The memory's name - one true per name, ever.", "expression")], "Run Context", "only once ever ( {key} )")
+		.described("True exactly once, ever - even across closing the game. Show a tutorial hint the first time and never again; Forget First Time resets it for testing (takes effect next run).")
+		.stateful("var __onceever_{uid}: int = -1\n\nfunc __once_ever_{uid}(key: String) -> bool:\n\tif __onceever_{uid} == -1:\n\t\tvar __cfg: ConfigFile = ConfigFile.new()\n\t\t__cfg.load(\"user://remembered.cfg\")\n\t\t__onceever_{uid} = 1 if bool(__cfg.get_value(\"OnceEver\", key, false)) else 0\n\tif __onceever_{uid} == 1:\n\t\treturn false\n\t__onceever_{uid} = 1\n\tvar __save: ConfigFile = ConfigFile.new()\n\t__save.load(\"user://remembered.cfg\")\n\t__save.set_value(\"OnceEver\", key, true)\n\t__save.save(\"user://remembered.cfg\")\n\treturn true"))
+	descriptors.append(F.make_descriptor("Core", "ForgetOnce", "Forget First Time", ACEDescriptor.ACEType.ACTION, "var __forget_{uid}: ConfigFile = ConfigFile.new()\n__forget_{uid}.load(\"user://remembered.cfg\")\n__forget_{uid}.set_value(\"OnceEver\", {key}, false)\n__forget_{uid}.save(\"user://remembered.cfg\")", "", [F.make_param("key", "String", "\"hint_dash\"", "Name", "The Only Once Ever name to reset.", "expression")], "Run Context", "forget first time ( {key} )")
+		.described("Resets an Only Once Ever memory so it fires again - for testing, or for New Game+. Rows already running this session keep their cached answer until the next run."))
 	return descriptors

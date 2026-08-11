@@ -387,4 +387,16 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "GetTreeParam", "Tree Parameter", ACEDescriptor.ACEType.EXPRESSION, "get({path})", "", [F.make_param("path", "String", "\"parameters/TimeScale/scale\"", "Param Path", "AnimationTree parameter path.")], "Animation", "param {path}", "AnimationTree")
 		.described("Returns the current value of an AnimationTree parameter."))
 
+
+	# The difficulty curve as a value: start, drift per minute, hard limit - drops into any
+	# number param so a spawner literally accelerates over the run. Zeroed by Start Ramp Clock
+	# (otherwise minutes count from engine start).
+	descriptors.append(F.make_descriptor("Core", "RampedValue", "Ramped", ACEDescriptor.ACEType.EXPRESSION, "clampf({start} + {per_minute} * (float(Time.get_ticks_msec()) / 60000.0 - float(get_meta(&\"__ramp_zero\", 0.0))), minf({start}, {limit}), maxf({start}, {limit}))", "", [F.make_param("start", "String", "2.0", "Start", "The value at minute zero.", "expression"), F.make_param("per_minute", "String", "-0.3", "Per Minute", "Drift per minute - negative ramps down.", "expression"), F.make_param("limit", "String", "0.5", "Limit", "The value never passes this.", "expression")], "Math & Random", "ramped from {start} by {per_minute}/min, limit {limit}")
+		.described("A value that drifts over time and stops at a limit - 'Every Ramped(2, -0.3, 0.5) seconds' is a spawner that speeds up as the run goes on. Call Start Ramp Clock when the run begins."))
+	descriptors.append(F.make_descriptor("Core", "StartRampClock", "Start Ramp Clock", ACEDescriptor.ACEType.ACTION, "set_meta(&\"__ramp_zero\", float(Time.get_ticks_msec()) / 60000.0)", "", [], "Time", "start the ramp clock")
+		.described("Marks minute zero for this node's Ramped values - call it when the run actually starts, not in menus."))
+	# Tiles as a unit: distances in tile counts, sized by ONE project setting - so 'within
+	# Tiles(3)' reads the way a grid game thinks.
+	descriptors.append(F.make_descriptor("Core", "TilesUnit", "Tiles", ACEDescriptor.ACEType.EXPRESSION, "({count} * float(ProjectSettings.get_setting(\"eventforge/tile_size\", 16.0)))", "", [F.make_param("count", "String", "3", "Tiles", "How many tiles.", "expression")], "Math & Random", "Tiles({count})")
+		.described("A distance in tiles: Tiles(3) is three tiles in pixels, sized by the eventforge/tile_size project setting (default 16). Set it once and every distance can speak in tiles."))
 	return descriptors
