@@ -101,4 +101,26 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "LargestInGroup", "Group Member With Largest Property", ACEDescriptor.ACEType.EXPRESSION, "get_tree().get_nodes_in_group({group}).reduce(func(__acc, __n): return __n if __acc == null or __n.get({property}) > __acc.get({property}) else __acc, null)", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group to search. Returns nothing if the group is empty.", "group_reference"), F.make_param("property", "String", "\"hp\"", "Property", "Name of the property to compare, e.g. hp or score.")], "Nodes: Picking", "group {group} member with largest {property}")
 		.described("Returns the group member whose named property is highest, e.g. the toughest enemy."))
 
+	# ── 2D spatial patterns (the everyday distance / aim / screen-wrap / hover verbs) ──
+	# Four things a 2D game asks for constantly and that otherwise force a GDScript block: "is that
+	# thing close enough?", "aim at it over time", "come back on the other side", "hover in place".
+	# All four register for Node2D hosts (they read global_position / position / the viewport rect).
+	# The `other` / `target` defaults are get_parent() so the row stands on its own the moment it is
+	# dropped - a bare identifier like `player` would not exist on a plain Node2D. The proximity test
+	# is NODE-to-node (the point-to-point "Is Within Distance" under Vectors takes two positions).
+	descriptors.append(F.make_descriptor("Core", "IsNodeWithinDistance", "Is Within Distance (of a node)", ACEDescriptor.ACEType.CONDITION, "global_position.distance_to({other}.global_position) <= maxf({distance}, 0.0)", "", [F.make_param("other", "String", "get_parent()", "Of", "The other node.", "expression"), F.make_param("distance", "String", "64.0", "Distance", "In pixels.", "expression")], "Movement", "is within {distance} px of {other}", "Node2D")
+		.described("True when another node is closer than the given number of pixels. The proximity test behind prompts, pickups and aggro ranges - pick the node, type the pixels, no parentheses-math to write."))
+	descriptors.append(F.make_descriptor("Core", "TurnToward", "Turn Toward", ACEDescriptor.ACEType.ACTION, "rotation = rotate_toward(rotation, ({target}.global_position - global_position).angle(), deg_to_rad(maxf({degrees_per_second}, 0.0)) * get_process_delta_time())", "", [F.make_param("target", "String", "get_parent()", "Target", "Node to aim at.", "expression"), F.make_param("degrees_per_second", "String", "180.0", "Turn Speed", "Degrees per second.", "expression")], "Movement", "turn toward {target} at {degrees_per_second} deg/s", "Node2D")
+		.described("Aims this node at another one, turning at a real speed instead of snapping - the turret and the chasing enemy. Frame-rate independent; for an instant snap, give it a huge turn speed."))
+	# Screen wrap: get_viewport_rect().size read once into a {uid} local (unique per row, baked by the
+	# dock at apply time) so both axes share one measurement. The leading `var` line means this
+	# template is never given an "On node" prefix - a self-verb, which is exactly right here.
+	descriptors.append(F.make_descriptor("Core", "WrapInsideScreen", "Wrap Inside The Screen", ACEDescriptor.ACEType.ACTION, "var __wrap_size_{uid}: Vector2 = get_viewport_rect().size\nposition = Vector2(wrapf(position.x, 0.0, __wrap_size_{uid}.x), wrapf(position.y, 0.0, __wrap_size_{uid}.y))", "", [], "Movement", "wrap inside the screen", "Node2D")
+		.described("The Asteroids rule: leave the right edge and come back on the left, off the top and back at the bottom. Nothing ever escapes the screen."))
+	# Bob: the resting height is remembered in node metadata on the first run (the stateless-state
+	# trick the cooldown ACEs use), so the sine rides the position the node already had - no exported
+	# var, no _ready wiring, and dropping the row anywhere just works.
+	descriptors.append(F.make_descriptor("Core", "BobUpAndDown", "Bob Up And Down", ACEDescriptor.ACEType.ACTION, "if not has_meta(&\"__bob_base_{uid}\"):\n\tset_meta(&\"__bob_base_{uid}\", position.y)\nposition.y = float(get_meta(&\"__bob_base_{uid}\")) + sin(Time.get_ticks_msec() / 1000.0 * TAU / maxf({period}, 0.01)) * {height}", "", [F.make_param("height", "String", "6.0", "Height", "Pixels above and below the resting point.", "expression"), F.make_param("period", "String", "2.0", "Period", "Seconds for one full bob.", "expression")], "Movement", "bob up and down {height} px every {period}s", "Node2D")
+		.described("Floats the node gently up and down around wherever it was resting - pickups, idle hover, a breathing menu icon. No sin() to write; run it under a per-frame trigger."))
+
 	return descriptors
