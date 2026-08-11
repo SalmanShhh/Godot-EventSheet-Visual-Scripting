@@ -672,7 +672,11 @@ func _set_object_column_width_from_x(local_x: float) -> void:
 	# On the CLAMPED boundary, not the cursor, so the guide stops where the column stops.
 	set_divider_guide(_object_column_drag_anchor_x + float(width), true)
 	_update_layout_style_signature(_get_font_size())
+	# Cell text wraps to the lane, so moving a lane boundary can change row HEIGHTS, not
+	# just span rects - rebuild metrics live or rows clip until the next full rebuild.
+	_rebuild_row_metrics()
 	_layout_cache.clear()
+	_update_canvas_min_size()
 	queue_redraw()
 
 
@@ -684,7 +688,11 @@ func _set_lane_ratio_from_x(local_x: float) -> void:
 	# stops instead of sliding on past the 20%/80% limit.
 	set_divider_guide(get_lane_divider_x(_get_logical_canvas_width()), true)
 	_update_layout_style_signature(_get_font_size())
+	# Condition/action cells wrap to their lane, so dragging the divider changes row
+	# heights too - rebuild metrics live so the canvas grows/shrinks under the cursor.
+	_rebuild_row_metrics()
 	_layout_cache.clear()
+	_update_canvas_min_size()
 	queue_redraw()
 
 

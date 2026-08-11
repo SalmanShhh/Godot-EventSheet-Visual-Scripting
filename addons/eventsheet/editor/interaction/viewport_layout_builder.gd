@@ -103,6 +103,13 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	)
 	var action_line_x: Dictionary = {}
 	var action_line_reservations: Dictionary = _viewport._build_action_line_reservations(row_data, action_lane_rect, font, font_size)
+	# Wrapping (the Construct rule - cells grow, text never clips): the SAME extents walk
+	# the height metrics used, so drawn positions always fit the reserved height.
+	var event_extents: Dictionary = _viewport._row_metrics_helper.event_line_extents(row_data, width, font, font_size) if row_data.row_type == EventRowData.RowType.EVENT else {}
+	var cond_line_tops: Dictionary = event_extents.get("cond_top", {})
+	var act_line_tops: Dictionary = event_extents.get("act_top", {})
+	var cond_line_counts: Dictionary = event_extents.get("cond_count", {})
+	var act_line_counts: Dictionary = event_extents.get("act_count", {})
 	# Running X per line for non-event rows (group / variable / comment / GDScript block),
 	# which lay out left-to-right; multi-line rows stack by span line_index.
 	var non_event_origin_x: float = x
@@ -145,7 +152,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				span_y = row_top + float(comment_line_tops[span_index]) * line_height + 3.0
 		elif span_lane == "action":
 			var action_line_index: int = int(metadata.get("line_index", 0))
-			span_y = row_top + scale_pad + float(action_line_index) * line_height + 3.0
+			span_y = row_top + scale_pad + float(act_line_tops.get(action_line_index, action_line_index)) * line_height + 3.0
 			if bool(metadata.get("align_right", false)) and action_lane_rect.size.x > 0.0:
 				span_x = action_lane_rect.end.x - float(event_style.action_lane_padding)
 			else:
@@ -166,7 +173,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 						condition_badge_next_x.get(line_index, condition_text_start_x)
 					)
 				span_x = float(condition_line_x[line_index])
-			span_y = row_top + scale_pad + float(line_index) * line_height + 3.0
+			span_y = row_top + scale_pad + float(cond_line_tops.get(line_index, line_index)) * line_height + 3.0
 		var display_text: String = _viewport._editing_buffer if index == _viewport._editing_row_index and span_index == _viewport._editing_span_index else span.text
 		var span_width: float = _viewport._measure_span_width(span, display_text, font, font_size)
 		if lane_divider_x > 0.0 and span_lane != "action":
@@ -216,11 +223,36 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			# -2.0 accounts for the +2.0 the rect adds below, so non-event spans (variables,
 			# blocks) never bleed past the row's right padding.
 			span_width = max(min(span_width, row_right_limit - span_x - 2.0), 1.0)
+		# A fill cell whose text wraps grows to its visual-line count (the reserved height
+		# already covers it). Plain cells take the renderer's wrapped-text path (comment_wrap);
+		# styled cells get the shared greedy break points stamped so the renderer slices the
+		# segment run at the exact offsets the height was counted with. The cell being edited
+		# keeps single-line caret math.
+		var span_visual_lines: int = 1
+		var span_is_editing: bool = index == _viewport._editing_row_index and span_index == _viewport._editing_span_index
+		if row_data.row_type == EventRowData.RowType.EVENT and not span_is_editing:
+			var wrap_line: int = int(metadata.get("line_index", 0))
+			if span_lane == "action" and str(metadata.get("kind", "")) == "action" and not bool(metadata.get("natural_width", false)) and not bool(metadata.get("align_right", false)):
+				span_visual_lines = maxi(int(act_line_counts.get(wrap_line, 1)), 1)
+			elif span_lane != "action" and not bool(metadata.get("badge", false)) and str(metadata.get("kind", "")) in ["condition", "trigger"]:
+				span_visual_lines = maxi(int(cond_line_counts.get(wrap_line, 1)), 1)
+		if span_visual_lines > 1:
+			metadata["comment_line_height"] = line_height
+			if (metadata.get("bbcode_segments", []) as Array).is_empty():
+				metadata["comment_wrap"] = true
+				metadata.erase("segment_wrap_breaks")
+			else:
+				var styled_wrap_width: float = _viewport._row_metrics_helper._fill_text_wrap_width(metadata, span_width + 2.0, font, font_size)
+				metadata["segment_wrap_breaks"] = ViewportRowMetrics.wrap_break_points(span.text, styled_wrap_width, font, font_size)
+				metadata.erase("comment_wrap")
+		elif not is_comment_row:
+			metadata.erase("comment_wrap")
+			metadata.erase("segment_wrap_breaks")
 		# Event-sheet-style contiguous cells: chip cells (conditions/actions/comments) fill their full
 		# line minus a 1px hairline, so stacked cells read as one solid block. Badges and
 		# plain text keep the original vertical inset.
 		if bool(metadata.get("chip", false)):
-			span.rect = Rect2(span_x, span_y - 2.5, span_width + 2.0, line_height - 1.0)
+			span.rect = Rect2(span_x, span_y - 2.5, span_width + 2.0, float(span_visual_lines) * line_height - 1.0)
 		elif is_comment_row and span_index < comment_line_counts.size():
 			# A wrapped comment span is as tall as its visual-line count; flag it so the
 			# renderer draws it with word-wrapping instead of a single clipped line.
@@ -230,7 +262,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				metadata["comment_wrap"] = true
 				metadata["comment_line_height"] = line_height
 		else:
-			span.rect = Rect2(span_x, span_y, span_width + 2.0, line_height - 6.0)
+			span.rect = Rect2(span_x, span_y, span_width + 2.0, float(span_visual_lines) * line_height - 6.0)
 		# Store absolute X for the next span start on this line.
 		var next_span_start_x: float = span.rect.end.x + _viewport._get_span_gap(span)
 		if lane_divider_x <= 0.0:

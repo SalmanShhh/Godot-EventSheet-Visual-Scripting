@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+### Added - condition/action cells wrap instead of clipping (the Construct rule)
+
+A cell whose text is wider than its lane now grows the row and wraps the text - no more
+sentences cut off mid-word when the lane divider (or the object column) is dragged inward.
+One shared extents walk feeds BOTH the row-height metrics and the layout pass, so the
+reserved height and the drawn rects can never disagree; each lane wraps independently (a
+short action stays one line beside a four-line condition) and the row covers the taller
+lane. Plain cells wrap on TextServer word breaks (the comment path's renderer); styled
+cells - bold verbs, tinted values - wrap on shared greedy break points that slice the
+styled run per visual line, keeping every color and bold across lines. Dragging the lane
+divider or an object column rebuilds row heights live, so the canvas grows and shrinks
+under the cursor. The cell being edited keeps single-line caret math.
+
 ### Added - the fourth pattern wave: goals, places, and firsts (five new packs)
 
 Five packs turn "a mechanic demo" into "a game with goals". **Quest** (autoload + QuestResource

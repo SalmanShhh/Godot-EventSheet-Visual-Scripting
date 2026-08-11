@@ -103,13 +103,141 @@ func _resolve_row_height_natural(row_data: EventRowData) -> float:
 	# metrics never trigger span building. Once built, the spans are authoritative.
 	if row_data.spans.is_empty():
 		return float(maxi(row_data.line_count, 1)) * line_height
-	var max_line_index: int = 0
-	for span in row_data.spans:
+	# Wrapped cells grow the row: the shared extents walk (also used by the layout pass)
+	# counts each lane's visual lines, and the row covers the taller lane.
+	var extents: Dictionary = event_line_extents(row_data, _viewport._get_logical_canvas_width(), _viewport._get_font(), _viewport._get_font_size())
+	return float(maxi(int(extents.get("total", 1)), 1)) * line_height
+
+
+## Per-lane visual-line layout for an EVENT row once cell text WRAPS to its lane - the
+## Construct rule: the cell grows taller, the text never clips. Returns, per logical line,
+## the visual line each lane's cells start at (cond_top / act_top), how many visual lines each
+## fill cell needs (cond_count / act_count), and the row's visual-line total. ONE function
+## shared by the height metrics and the layout pass, so the reserved height and the drawn
+## positions can never disagree (the comment path mirrors by hand; events share instead).
+## Plain cells wrap on TextServer word breaks; styled (bbcode-segment) cells wrap on the
+## shared greedy break points (wrap_break_points), which the layout stamps for the renderer.
+func event_line_extents(row_data: EventRowData, width: float, font: Font, font_size: int) -> Dictionary:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH + float(row_data.indent * _viewport.INDENT_WIDTH) + 18.0
+	var lane_divider_x: float = _viewport.get_lane_divider_x(width)
+	var condition_lane_rect := Rect2(x, 0.0, maxf(lane_divider_x - x, 1.0), 1.0)
+	var action_lane_rect := Rect2(lane_divider_x + float(event_style.lane_divider_width), 0.0, maxf(width - lane_divider_x - float(event_style.lane_divider_width), 1.0), 1.0)
+	var condition_x: float = _viewport._get_condition_track_start(row_data, x, condition_lane_rect)
+	var badge_column: float = maxf(float(event_style.condition_badge_column_width), 0.0)
+	var badge_gap: float = EventSheetPalette.SPAN_GAP if badge_column > 0.0 else 0.0
+	var condition_text_start_x: float = condition_x + badge_column + badge_gap
+	var max_condition_right: float = lane_divider_x - float(event_style.condition_lane_padding)
+	var action_x: float = lane_divider_x + float(event_style.lane_divider_width) + float(event_style.action_lane_padding)
+	var reservations: Dictionary = _viewport._build_action_line_reservations(row_data, action_lane_rect, font, font_size)
+	var cond_badge_x: Dictionary = {}
+	var cond_text_x: Dictionary = {}
+	var act_x: Dictionary = {}
+	var cond_count: Dictionary = {}
+	var act_count: Dictionary = {}
+	var max_line: int = 0
+	for span: SemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
 			continue
 		var metadata: Dictionary = span.metadata as Dictionary
-		max_line_index = maxi(max_line_index, int(metadata.get("line_index", 0)))
-	return float((max_line_index + 1) * line_height)
+		var line: int = int(metadata.get("line_index", 0))
+		max_line = maxi(max_line, line)
+		var lane: String = _viewport._resolve_span_lane(span)
+		var measured: float = _viewport._measure_span_width(span, span.text, font, font_size)
+		if lane == "action":
+			if bool(metadata.get("align_right", false)):
+				continue
+			var start_x: float = float(act_x.get(line, action_x))
+			if str(metadata.get("kind", "")) == "action" and not bool(metadata.get("natural_width", false)):
+				var reserved: float = float(reservations.get(line, action_lane_rect.end.x - float(event_style.action_lane_padding)))
+				var available: float = maxf(reserved - maxf(_viewport._get_span_gap(span), EventSheetPalette.SPAN_GAP) - start_x, 1.0)
+				act_count[line] = maxi(int(act_count.get(line, 1)), _fill_cell_line_count(span, metadata, available + 2.0, font, font_size))
+				act_x[line] = start_x + available + 2.0 + _viewport._get_span_gap(span)
+			else:
+				act_x[line] = start_x + measured + 2.0 + _viewport._get_span_gap(span)
+		else:
+			if bool(metadata.get("badge", false)):
+				var natural_badge: bool = bool(metadata.get("badge_natural_width", false))
+				var badge_width: float = measured if natural_badge or badge_column <= 0.0 else badge_column
+				var badge_start: float = float(cond_badge_x.get(line, condition_x))
+				cond_badge_x[line] = badge_start + maxf(minf(badge_width, max_condition_right - badge_start), _viewport.MIN_SPAN_WIDTH) + 2.0 + _viewport._get_span_gap(span)
+			else:
+				var text_start: float = float(cond_text_x.get(line, float(cond_badge_x.get(line, condition_text_start_x))))
+				if str(metadata.get("kind", "")) in ["condition", "trigger"]:
+					var available_c: float = maxf(max_condition_right - text_start, _viewport.MIN_SPAN_WIDTH)
+					cond_count[line] = maxi(int(cond_count.get(line, 1)), _fill_cell_line_count(span, metadata, available_c + 2.0, font, font_size))
+					cond_text_x[line] = text_start + available_c + 2.0 + _viewport._get_span_gap(span)
+				else:
+					var chip_width: float = maxf(minf(measured, max_condition_right - text_start), _viewport.MIN_SPAN_WIDTH)
+					cond_text_x[line] = text_start + chip_width + 2.0 + _viewport._get_span_gap(span)
+	var cond_top: Dictionary = {}
+	var act_top: Dictionary = {}
+	var cond_cursor: int = 0
+	var act_cursor: int = 0
+	for line_cursor: int in range(max_line + 1):
+		cond_top[line_cursor] = cond_cursor
+		act_top[line_cursor] = act_cursor
+		cond_cursor += maxi(int(cond_count.get(line_cursor, 1)), 1)
+		act_cursor += maxi(int(act_count.get(line_cursor, 1)), 1)
+	return {"cond_top": cond_top, "act_top": act_top, "cond_count": cond_count, "act_count": act_count, "total": maxi(maxi(cond_cursor, act_cursor), 1)}
+
+
+## Visual lines one condition/action FILL cell needs at its cell rect width. Plain text wraps
+## on TextServer breaks (wrapped_line_count); styled cells wrap on the shared greedy break
+## points, so this count always equals the number of lines the renderer will actually draw.
+func _fill_cell_line_count(span: SemanticSpan, metadata: Dictionary, cell_rect_width: float, font: Font, font_size: int) -> int:
+	var wrap_width: float = _fill_text_wrap_width(metadata, cell_rect_width, font, font_size)
+	if (metadata.get("bbcode_segments", []) as Array).is_empty():
+		return wrapped_line_count(span.text, wrap_width, font, font_size)
+	return wrap_break_points(span.text, wrap_width, font, font_size).size()
+
+
+## The width the renderer actually wraps a fill cell's TEXT inside: the cell rect minus the
+## chip padding and the leading object icon/label column the renderer advances past before
+## drawing text. Must mirror the renderer's text_x/right_padding math or the counted lines
+## and the drawn lines drift apart.
+func _fill_text_wrap_width(metadata: Dictionary, cell_rect_width: float, font: Font, font_size: int) -> float:
+	var is_chip: bool = bool(metadata.get("chip", false))
+	var pad: float = float(metadata.get("padding_x", 0.0)) if is_chip else 0.0
+	var trail: float = pad if is_chip else 2.0
+	var lead: float = pad
+	if metadata.get("object_icon") is Texture2D:
+		lead += EventRowRenderer.OBJECT_ICON_ADVANCE
+	var object_label: String = str(metadata.get("object_label", ""))
+	if not object_label.is_empty():
+		var lane: String = str(metadata.get("lane", ""))
+		var column: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane))
+		if column > 0.0:
+			lead += column
+		else:
+			var draw_font_size: int = EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
+			lead += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+	return maxf(cell_rect_width - lead - trail, 1.0)
+
+
+## Greedy word-wrap break points for STYLED (bbcode-segment) cells: character offsets where
+## each visual line starts (first is always 0). The renderer slices the segment run at these
+## exact offsets, so the counted lines and the drawn lines are the same by construction. A
+## single word wider than the line hard-breaks mid-word rather than overflowing.
+static func wrap_break_points(text: String, wrap_width: float, font: Font, font_size: int) -> PackedInt32Array:
+	var starts := PackedInt32Array([0])
+	if font == null or wrap_width <= 1.0 or text.strip_edges().is_empty():
+		return starts
+	var line_start: int = 0
+	var last_break: int = -1
+	var cursor: int = 0
+	while cursor < text.length():
+		var piece: String = text.substr(line_start, cursor - line_start + 1)
+		if font.get_string_size(piece, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x > wrap_width and cursor > line_start:
+			line_start = last_break if last_break > line_start else cursor
+			starts.append(line_start)
+			cursor = line_start
+			last_break = -1
+			continue
+		if text[cursor] == " ":
+			last_break = cursor + 1
+		cursor += 1
+	return starts
 
 
 ## Total height of a comment row once each of its logical lines is wrapped to the row width.

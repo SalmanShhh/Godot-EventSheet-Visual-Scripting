@@ -784,44 +784,69 @@ func _draw_spans(
 			# author left colour-less still shows the typed value TINTS - its text is split at
 			# the value-range boundaries (offsets into the stripped text) and each piece draws
 			# in its range's hue, so `[b]{amount}[/b]` reads bold AND number-green.
+			# When the layout stamped segment_wrap_breaks (the cell is taller than one line),
+			# the segment run is sliced at those exact offsets and drawn as stacked visual
+			# lines - the Construct rule: the cell grows, styled text never clips.
 			var bbcode_value_color: Color = event_style.value_highlight_color if event_style != null else COLOR_VALUE
-			var segment_x: float = text_x
-			var segment_offset: int = 0
-			for segment: Dictionary in bbcode_segments:
-				var segment_text: String = str(segment.get("text", ""))
-				if segment_text.is_empty():
-					continue
-				var has_author_color: bool = segment.get("color") is Color
-				var segment_color: Color = segment.get("color") if has_author_color else color
-				if bool(segment.get("italic", false)):
-					segment_color = Color(segment_color, segment_color.a * 0.85)
-				var remaining: float = text_width - (segment_x - text_x)
-				if remaining <= 1.0:
-					break
-				if has_author_color or value_ranges.is_empty():
-					_draw_text(control, Vector2(segment_x, baseline_y), segment_text, remaining, font, draw_font_size, segment_color)
-					if bool(segment.get("bold", false)):
-						_draw_text(control, Vector2(segment_x + 0.7, baseline_y), segment_text, remaining, font, draw_font_size, segment_color)
-				else:
-					var shifted_ranges: Array = []
-					for value_range: Variant in value_ranges:
-						if value_range is Array and (value_range as Array).size() >= 2:
-							var local_start: int = int((value_range as Array)[0]) - segment_offset
-							if local_start + int((value_range as Array)[1]) > 0 and local_start < segment_text.length():
-								var kept: Array = [maxi(local_start, 0),
-									mini(local_start + int((value_range as Array)[1]), segment_text.length()) - maxi(local_start, 0)]
-								if (value_range as Array).size() >= 3:
-									kept.append((value_range as Array)[2])
-								shifted_ranges.append(kept)
-					_draw_text_with_values(control, Vector2(segment_x, baseline_y), segment_text, shifted_ranges,
-						remaining, font, draw_font_size, segment_color, bbcode_value_color,
-						EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
-					if bool(segment.get("bold", false)):
-						_draw_text_with_values(control, Vector2(segment_x + 0.7, baseline_y), segment_text, shifted_ranges,
+			var seg_breaks: PackedInt32Array = metadata.get("segment_wrap_breaks", PackedInt32Array()) if span_index != editing_span_index else PackedInt32Array()
+			if seg_breaks.is_empty():
+				seg_breaks = PackedInt32Array([0])
+			var total_length: int = 0
+			for length_segment: Dictionary in bbcode_segments:
+				total_length += str(length_segment.get("text", "")).length()
+			var seg_line_h: float = float(metadata.get("comment_line_height", draw_font_size + 6))
+			var first_baseline_y: float = baseline_y
+			if seg_breaks.size() > 1:
+				# Multi-line: start from a first-line baseline (baseline_y centers on the whole
+				# multi-line rect), same recompute the wrapped-comment path does.
+				first_baseline_y = span.rect.position.y + (seg_line_h * ROW_VERTICAL_CENTER_RATIO) + (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
+			for break_index in range(seg_breaks.size()):
+				var seg_line_start: int = seg_breaks[break_index]
+				var seg_line_end: int = seg_breaks[break_index + 1] if break_index + 1 < seg_breaks.size() else total_length
+				var line_baseline_y: float = first_baseline_y + float(break_index) * seg_line_h
+				var segment_x: float = text_x
+				var segment_offset: int = 0
+				for segment: Dictionary in bbcode_segments:
+					var full_segment_text: String = str(segment.get("text", ""))
+					var segment_start: int = segment_offset
+					segment_offset += full_segment_text.length()
+					if full_segment_text.is_empty() or segment_offset <= seg_line_start or segment_start >= seg_line_end:
+						continue
+					var piece_from: int = maxi(segment_start, seg_line_start)
+					var piece_offset_shift: int = piece_from
+					var segment_text: String = full_segment_text.substr(piece_from - segment_start, mini(segment_offset, seg_line_end) - piece_from)
+					if segment_text.is_empty():
+						continue
+					var has_author_color: bool = segment.get("color") is Color
+					var segment_color: Color = segment.get("color") if has_author_color else color
+					if bool(segment.get("italic", false)):
+						segment_color = Color(segment_color, segment_color.a * 0.85)
+					var remaining: float = text_width - (segment_x - text_x)
+					if remaining <= 1.0:
+						break
+					if has_author_color or value_ranges.is_empty():
+						_draw_text(control, Vector2(segment_x, line_baseline_y), segment_text, remaining, font, draw_font_size, segment_color)
+						if bool(segment.get("bold", false)):
+							_draw_text(control, Vector2(segment_x + 0.7, line_baseline_y), segment_text, remaining, font, draw_font_size, segment_color)
+					else:
+						var shifted_ranges: Array = []
+						for value_range: Variant in value_ranges:
+							if value_range is Array and (value_range as Array).size() >= 2:
+								var local_start: int = int((value_range as Array)[0]) - piece_offset_shift
+								if local_start + int((value_range as Array)[1]) > 0 and local_start < segment_text.length():
+									var kept: Array = [maxi(local_start, 0),
+										mini(local_start + int((value_range as Array)[1]), segment_text.length()) - maxi(local_start, 0)]
+									if (value_range as Array).size() >= 3:
+										kept.append((value_range as Array)[2])
+									shifted_ranges.append(kept)
+						_draw_text_with_values(control, Vector2(segment_x, line_baseline_y), segment_text, shifted_ranges,
 							remaining, font, draw_font_size, segment_color, bbcode_value_color,
 							EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
-				segment_x += font.get_string_size(segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
-				segment_offset += segment_text.length()
+						if bool(segment.get("bold", false)):
+							_draw_text_with_values(control, Vector2(segment_x + 0.7, line_baseline_y), segment_text, shifted_ranges,
+								remaining, font, draw_font_size, segment_color, bbcode_value_color,
+								EventSheetPalette.COLOR_VALUE_STRING, EventSheetPalette.COLOR_VALUE_BOOL)
+					segment_x += font.get_string_size(segment_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 		elif bool(metadata.get("comment_wrap", false)) and span_index != editing_span_index:
 			# Wrapped comment: draw from the top of the (multi-line-tall) cell so the whole
 			# note reads vertically. baseline_y centers on the WHOLE rect, so recompute a
