@@ -61,6 +61,14 @@ people get wrong.
 | `Progress of hp from 0 to max_hp` | `inverse_lerp` (the function beginners never find) |
 | `As Clock Time (seconds)` | `"%02d:%02d" %` formatting |
 | `Pop floating text "+10" at position` | a label scene, a tween, and cleanup |
+| the **Quest** pack (quests as `.tres` assets) | objective counters, journal text, chains, and their save/load |
+| the **Checkpoint** pack | position saving, death handling, and the reset half of it everyone forgets |
+| the **Interaction** pack | nearest-in-range focus, prompt bookkeeping, which-one-wins |
+| the **Phase Cycle** pack | the day/night timer everyone polls |
+| `Is beyond home ( 300, Horizontal only )` | leash logic - with a METRIC dropdown (grid steps, king moves...) so one condition fits platformers, roguelikes and strategy games |
+| `Only once ever ( "hint_dash" )` | the seen-flags ConfigFile ritual for tutorial hints |
+| `Vanish, respawn in 10s` | the pickup hide/disable/await/restore dance |
+| `Ramped ( 2, -0.3, 0.5 )` | the difficulty curve's clamp-and-drift arithmetic |
 
 ![Game feel as rows: buffered coyote jumping, the wave director, knockback with i-frames](images/pattern-wave3.png)
 

@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added - the fourth pattern wave: goals, places, and firsts (five new packs)
+
+Five packs turn "a mechanic demo" into "a game with goals". **Quest** (autoload + QuestResource
+`.tres` data assets: objectives with counts, chains via Register + next_quest, reward notes;
+started/objective/completed triggers; "3/5" journal text one expression away; Save/Load in the
+Remember file). **Checkpoint** (set here/at, Respawn At Checkpoint restoring position and
+calling the host's `reset()` - the Object Pool's wake seam - plus On Respawned). **Interaction**
+(focus the nearest interactable in range, Interact With Focus with the `interact()` seam, On
+Focus Changed / On Interacted). **Phase Cycle** (self-ticking day/night phases with On Phase
+Changed and a 0-1 Phase Progress). **Home & Leash** (home point, Return Home with arrival
+trigger, and Is Beyond Home with FIVE metric geometries). Vocabulary: **Is Within Distance
+(choose metric)** - one dropdown for straight line / horizontal / vertical / grid steps / king
+moves - **Tiles(n)** sized by the `eventforge/tile_size` setting, **Only Once Ever** (Trigger
+Once across runs, in the Remember file) + **Forget First Time**, **Vanish Respawn In**,
+**Ramped** + **Start Ramp Clock**. Each pack ships its own icon, addon guide (15+ use cases),
+and a runtime-proven test; signal triggers named `on_*` no longer read "On On ..." in the
+condition lane. 82 behavior packs total.
+
 ### Added - the third pattern wave: game feel and directors
 
 Fourteen additions turn game FEEL into rows. Generic timing: **Buffer Press / Press Is

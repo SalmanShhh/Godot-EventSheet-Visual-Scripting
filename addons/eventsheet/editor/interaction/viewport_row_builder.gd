@@ -3385,7 +3385,8 @@ func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
 	if descriptor != null and not descriptor.display_name.strip_edges().is_empty():
 		return EventSheetL10n.translate(descriptor.display_name)
 	if trigger_id.begins_with("signal:"):
-		return "On %s" % trigger_id.trim_prefix("signal:").capitalize()
+		# A signal already NAMED on_* must not read "On On ..." - strip the prefix first.
+		return "On %s" % trigger_id.trim_prefix("signal:").trim_prefix("on_").capitalize()
 	return trigger_id
 
 

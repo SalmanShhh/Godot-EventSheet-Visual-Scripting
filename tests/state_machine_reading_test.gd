@@ -45,6 +45,7 @@ static func run() -> bool:
 	ok = _check("physics trigger reads in words", builder._trigger_display_text("Core", "OnPhysicsProcess"), "Every Physics Tick") and ok
 	ok = _check("update trigger reads in words", builder._trigger_display_text("Core", "OnProcess"), "Every Frame") and ok
 	ok = _check("unknown signal ids still humanize", builder._trigger_display_text("", "signal:door_opened"), "On Door Opened") and ok
+	ok = _check("an on_-named signal never reads On On", builder._trigger_display_text("", "signal:on_quest_completed"), "On Quest Completed") and ok
 
 	# 3. The signal row's kind cue is a glyph badge, never a word pill.
 	var signal_row: SignalRow = SignalRow.new()

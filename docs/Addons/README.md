@@ -37,6 +37,8 @@ Install as a single project-wide autoload you call from any sheet by name.
 - [ComboBox](ComboBox.md) - an input-sequence detector: register token sequences, fire On Combo Matched, with timing windows and wildcards.
 - [ObjectPool](ObjectPool.md) - reuse nodes instead of spawning and freeing them, so heavy scenes stay smooth.
 - [Save System](Save-System.md) - save and load your variables and progress to disk.
+- [Quest](Quest.md) - quests as .tres data assets: objectives, chains, rewards, and triggers, with the "3/5" journal text one expression away.
+- [Phase Cycle](Phase-Cycle.md) - day/night and any repeating phases: cycle, react on change, and read the 0-1 progress for sun dials.
 - [Platform Info](Platform-Info.md) - what is this game running on: OS/device/screen/touch/locale/GPU/CPU conditions and expressions, safe-area insets included.
 - [Advanced Random](Advanced-Random.md) - richer randomness: weighted picks, shuffled bags, dice, and noise.
 
@@ -86,10 +88,14 @@ Attach to a node to move it.
 - [UtilityBrain](UtilityBrain.md) - score actions by considerations and response curves, then Evaluate; the best action wins.
 - [HTN Agent](HTN-Agent.md) - hierarchical task-network planning: goals decompose into ordered tasks.
 - [State Machine](State-Machine.md) - named states with enter/exit and transitions.
+- [Home & Leash](Home-And-Leash.md) - a home point, a leash distance with five geometry metrics, and a return-home walk with its arrival trigger.
 - [Line Of Sight](Line-Of-Sight.md) - can this node see a target (2D raycast, cone, range).
 - [Line Of Sight 3D](Line-Of-Sight-3D.md) - the same, in 3D.
 
 ## Combat and gameplay
+
+- [Checkpoint](Checkpoint.md) - set a checkpoint, respawn at it, and let the shared reset() seam clear velocity and hp.
+- [Interaction](Interaction.md) - focus the nearest interactable in range, press to interact, and let each thing answer On Interacted.
 
 - [Physics Car](Physics-Car.md) - a force-driven arcade car on a RigidBody2D, with grip and drift.
 - [Weapon Kit](Weapon-Kit.md) - fire rates, ammo, reloads, and spread for a weapon.

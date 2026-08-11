@@ -193,6 +193,33 @@ Ten more spellings of everyday game code, shipped the same way:
 - **Pop Floating Text** (HUD Kit) - the score popup's label, drift tween and cleanup as one
   verb.
 
+## The fourth wave - goals, places, and firsts
+
+![The fourth wave: a quest advancing, checkpoints, interaction focus, a phase cycle, the metric distance and Only Once Ever](images/pattern-wave4.png)
+
+- **The Quest pack** - quests as `.tres` data assets (objectives, chains, reward notes,
+  authored in the Inspector): `Start Quest`, `Advance Objective "gems"`, triggers for
+  started/objective/completed, and `Objective Text` ("3/5") feeding the journal. Register a
+  chained quest first; Save/Load ride the Remember file.
+- **Checkpoint** - `Set Checkpoint Here`, `Respawn At Checkpoint` (restores position and calls
+  the host's `reset()` - the same seam the Object Pool wake uses), `On Respawned` for the
+  camera snap.
+- **Interaction** - `Focus Nearest Interactable` under Every Frame, `Interact With Focus` on
+  the press, `On Interacted` on the thing's own sheet - a chest, a door and an NPC differ only
+  in what their On Interacted does.
+- **Phase Cycle** - `Cycle Phases "day,night" every 60s`, `On Phase Changed`, and
+  `Phase Progress` (0-1) for sun dials.
+- **Home & Leash** - a home point, `Is Beyond Home` and `Distance From Home` with FIVE metric
+  geometries (straight line, horizontal/vertical only, grid steps, king moves), `Return Home`
+  with its arrival trigger.
+- **Is Within Distance (choose metric)** - the same five-geometry dropdown on the generic
+  condition, and `Tiles(3)` sizes any distance by the `eventforge/tile_size` project setting.
+- **Only Once Ever** - Trigger Once across RUNS (tutorial hints), stored in the Remember file;
+  `Forget First Time` re-arms it.
+- **Vanish, Respawn In** - the pickup that comes back, reset seam included.
+- **Ramped** - the difficulty curve as a value (`Every Ramped(2, -0.3, 0.5) seconds` is a
+  spawner that speeds up); `Start Ramp Clock` marks minute zero.
+
 ## Where these live
 
 Everything above except the State Machine, Advanced Random, and HUD Kit sections is built into

@@ -105,9 +105,81 @@ func _on_frame() -> void:
 		_frames = 0
 		_apply_wave3_sheet()
 		return
-	root.get_texture().get_image().save_png("res://docs/images/pattern-wave3.png")
-	print("[preview] pattern wave3 saved")
+	if _stage == 2:
+		root.get_texture().get_image().save_png("res://docs/images/pattern-wave3.png")
+		print("[preview] pattern wave3 saved")
+		_stage = 3
+		_frames = 0
+		_apply_wave4_sheet()
+		return
+	root.get_texture().get_image().save_png("res://docs/images/pattern-wave4.png")
+	print("[preview] pattern wave4 saved")
 	quit(0)
+
+
+## Stage 4: the fourth wave - quests, checkpoints, interaction focus, phase cycles, the
+## metric distance, and Only Once Ever.
+func _apply_wave4_sheet() -> void:
+	var sheet: EventSheetResource = EventSheetResource.new()
+
+	var boot: EventRow = EventRow.new()
+	boot.trigger_id = "OnReady"
+	boot.trigger_provider_id = "Core"
+	boot.actions.append(_pk("QuestPackAddon", "method:start_quest", {"quest": "preload(\"res://quests/herbalist.tres\")"}))
+	boot.actions.append(_pk("PhaseCycleAddon", "method:cycle_phases", {"phases": "\"day,night\"", "seconds_each": "60.0"}))
+	sheet.events.append(boot)
+
+	var gem: EventRow = EventRow.new()
+	gem.trigger_id = "signal:gem_collected"
+	gem.actions.append(_pk("QuestPackAddon", "method:advance_objective", {"quest_id": "\"herbalist\"", "objective": "\"gems\"", "amount": "1"}))
+	sheet.events.append(gem)
+
+	var done: EventRow = EventRow.new()
+	done.trigger_id = "signal:on_quest_completed"
+	var reward: RawCodeRow = RawCodeRow.new()
+	reward.code = "open_door()"
+	done.actions.append(reward)
+	sheet.events.append(done)
+
+	var flag: EventRow = EventRow.new()
+	flag.trigger_id = "signal:reached_flag"
+	flag.actions.append(_pk("CheckpointBehavior", "method:set_checkpoint_here", {}))
+	flag.conditions.append(_cond("OnlyOnceEver", {"key": "\"first_flag_hint\""}))
+	sheet.events.append(flag)
+
+	var died: EventRow = EventRow.new()
+	died.trigger_id = "signal:died"
+	died.actions.append(_pk("CheckpointBehavior", "method:respawn", {}))
+	sheet.events.append(died)
+
+	var focus: EventRow = EventRow.new()
+	focus.trigger_id = "OnProcess"
+	focus.trigger_provider_id = "Core"
+	focus.conditions.append(_cond("IsWithinDistanceMetric", {"other": "chest", "distance": "Tiles(3)", "metric": "3", "target": ""}))
+	focus.actions.append(_pk("InteractionBehavior", "method:focus_nearest", {"group_name": "\"interactable\"", "within": "48.0"}))
+	sheet.events.append(focus)
+
+	var night: EventRow = EventRow.new()
+	night.trigger_id = "signal:on_phase_changed"
+	var wolves: RawCodeRow = RawCodeRow.new()
+	wolves.code = "spawn_wolves()"
+	night.actions.append(wolves)
+	sheet.events.append(night)
+
+	var modern_base := Color("#252525")
+	var modern_style := EventSheetEditorStyle.new()
+	modern_style.ensure_defaults()
+	EventSheetGodotTheme.apply(modern_style, modern_base, modern_base.darkened(0.15), modern_base.darkened(0.25), Color("#569eff"), Color("#ced0d2"))
+	sheet.editor_style = modern_style
+	_viewport.set_sheet(sheet)
+
+
+static func _pk(provider: String, ace_id: String, params: Dictionary) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = provider
+	action.ace_id = ace_id
+	action.params = params
+	return action
 
 
 ## Stage 3: the third wave - buffered coyote jumping, the wave director, knockback with
