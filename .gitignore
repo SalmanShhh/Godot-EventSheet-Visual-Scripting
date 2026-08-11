@@ -42,3 +42,7 @@ event_sheet_generated.gd
 tools/_*.py
 /*_preview.png
 /eventsheet_translations/
+
+# AI assistant working dirs - skills and docs belong in docs/internal/skills/
+.claude/
+.cursor/
