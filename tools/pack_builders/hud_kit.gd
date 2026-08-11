@@ -175,11 +175,42 @@ static func build() -> bool:
 		"fade.tween_callback(toast.queue_free)"
 	])))
 
+	# A spawned label has no name to look up, so this one skips _ui() and parents the new
+	# Label onto the host (the UI root) itself, at the position it was asked for.
+	Lib.append_function(sheet, "pop_floating_text", "Pop Floating Text", "UI",
+		"Pops a damage number or score popup at a position: it drifts up, fades out and frees itself. No label to place, no tween to write, no cleanup to remember.",
+		[["text", "String"], ["at", "Vector2"], ["color", "Color"]], "\n".join(PackedStringArray([
+		"var label: Label = Label.new()",
+		"label.text = text",
+		"label.modulate = color",
+		"label.position = at",
+		"if host != null:",
+		"\thost.add_child(label)",
+		"else:",
+		"\tadd_child(label)",
+		"var pop: Tween = label.create_tween()",
+		"pop.set_parallel(true)",
+		"pop.tween_property(label, \"position:y\", at.y - 24.0, 0.7)",
+		"pop.tween_property(label, \"modulate:a\", 0.0, 0.7)",
+		"pop.set_parallel(false)",
+		"pop.tween_callback(label.queue_free)"
+	])))
+	_default(sheet, "color", "Color.WHITE")
+
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {
 		"set_bar": "Set bar [b]{bar_name}[/b] to [b]{value}[/b] of [b]{max_value}[/b]",
 		"set_text": "Set text of [b]{control_name}[/b] to [b]{text}[/b]",
 		"show_toast": "Show toast [b]{text}[/b]",
+		"pop_floating_text": "Pop floating text [b]{text}[/b] at [b]{at}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["set_text", "set_bar", "show_toast"])
 	return Lib.save_pack(sheet, "res://eventsheet_addons/hud_kit/hud_kit_behavior")
+
+
+## Pre-fills the last-appended ACE's parameter default (authoring-time metadata only).
+static func _default(sheet: EventSheetResource, param_id: String, value: String) -> void:
+	var fn: EventFunction = sheet.functions[sheet.functions.size() - 1]
+	for parameter: ACEParam in fn.params:
+		if parameter.id == param_id:
+			parameter.default_value = value

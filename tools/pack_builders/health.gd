@@ -24,10 +24,11 @@ static func build() -> bool:
 		"health_absorption_rate": {"type": "float", "default": 1.0, "exported": false},
 		"health_pools": {"type": "Dictionary", "default": {}, "exported": false},
 		"last_trigger_pool_type": {"type": "String", "default": "", "exported": false},
-		"last_pool_damage_absorbed": {"type": "float", "default": 0.0, "exported": false}
+		"last_pool_damage_absorbed": {"type": "float", "default": 0.0, "exported": false},
+		"_invincible_until": {"type": "int", "default": 0, "exported": false}
 	}
 	var about: CommentRow = CommentRow.new()
-	about.text = "Simple Health behavior (event-sheet parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. current_health seeds to max_health On Ready."
+	about.text = "Simple Health behavior (event-sheet parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. Grant Invincibility opens a timed i-frame window - damage is ignored while invincible, and On Damaged does not fire. current_health seeds to max_health On Ready."
 	sheet.events.append(about)
 
 	# Triggers (signals) + conditions + expressions + non-exposed helpers, all as
@@ -217,9 +218,9 @@ static func build() -> bool:
 
 	# Actions (EventFunction with expose_as_ace=true → auto-generated codegen templates).
 	Lib.append_function(sheet, "take_damage", "Take Damage", "Health",
-		"Applies damage; health pools absorb in ascending-priority order before real HP.",
+		"Applies damage; health pools absorb in ascending-priority order before real HP. Ignored entirely while invincible (no HP lost, no On Damaged).",
 		[["amount", "float"]], "\n".join(PackedStringArray([
-		"if amount <= 0.0 or invulnerable or is_dead_flag:",
+		"if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():",
 		"\treturn",
 		"var remaining: float = amount",
 		"for pool_name: String in _sorted_pool_keys():",
@@ -308,6 +309,21 @@ static func build() -> bool:
 		[["state", "bool"]], "\n".join(PackedStringArray([
 		"invulnerable = state"
 	])), "Set invulnerable to [b]{state}[/b]")
+
+	# Timed invincibility frames: one stamp on the clock, read back by the Take Damage gate.
+	# The flicker is deliberately NOT here - pair this with the Flash pack for the visuals.
+	Lib.append_function(sheet, "grant_invincibility", "Grant Invincibility", "Health",
+		"Opens an invincibility window for the given seconds: Take Damage is ignored (no HP lost, no On Damaged) until it closes. Pair it with the Flash pack for the classic i-frame flicker.",
+		[["seconds", "float"]], "\n".join(PackedStringArray([
+		"_invincible_until = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)"
+	])), "Grant [b]{seconds}[/b] s of invincibility")
+
+	# A bool-returning sheet function publishes as a CONDITION (the three-way function expose).
+	Lib.condition(sheet, "is_invincible", "Is Invincible", "Health",
+		"True while an invincibility window granted by Grant Invincibility is still open.",
+		[], "\n".join(PackedStringArray([
+		"return Time.get_ticks_msec() < _invincible_until"
+	])))
 
 	Lib.append_function(sheet, "set_health_absorption_rate", "Set Health Absorption Rate", "Health",
 		"Damage multiplier for real HP (resistance); 0 = invulnerable.",

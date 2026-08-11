@@ -39,6 +39,7 @@ signal on_health_pool_absorbed
 ## @ace_name("On Health Pool Depleted")
 signal on_health_pool_depleted
 
+var _invincible_until: int = 0
 var current_health: float = 100.0
 ## queue_free the host the moment health reaches 0 (after On Death fires).
 @export var destroy_on_death: bool = false
@@ -88,12 +89,12 @@ func _process(delta: float) -> void:
 ## @ace_featured
 ## @ace_name("Take Damage")
 ## @ace_category("Health")
-## @ace_description("Applies damage; health pools absorb in ascending-priority order before real HP.")
+## @ace_description("Applies damage; health pools absorb in ascending-priority order before real HP. Ignored entirely while invincible (no HP lost, no On Damaged).")
 ## @ace_display_template("Take [b]{amount}[/b] damage")
 ## @ace_icon("res://eventsheet_addons/health/icon.svg")
 ## @ace_codegen_template("$SimpleHealthBehavior.take_damage({amount})")
 func take_damage(amount: float) -> void:
-	if amount <= 0.0 or invulnerable or is_dead_flag:
+	if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():
 		return
 	var remaining: float = amount
 	for pool_name: String in _sorted_pool_keys():
@@ -198,6 +199,25 @@ func set_max_health_value(amount: float) -> void:
 ## @ace_codegen_template("$SimpleHealthBehavior.set_invulnerable({state})")
 func set_invulnerable(state: bool) -> void:
 	invulnerable = state
+
+## @ace_action
+## @ace_name("Grant Invincibility")
+## @ace_category("Health")
+## @ace_description("Opens an invincibility window for the given seconds: Take Damage is ignored (no HP lost, no On Damaged) until it closes. Pair it with the Flash pack for the classic i-frame flicker.")
+## @ace_display_template("Grant [b]{seconds}[/b] s of invincibility")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.grant_invincibility({seconds})")
+func grant_invincibility(seconds: float) -> void:
+	_invincible_until = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)
+
+## @ace_condition
+## @ace_name("Is Invincible")
+## @ace_category("Health")
+## @ace_description("True while an invincibility window granted by Grant Invincibility is still open.")
+## @ace_icon("res://eventsheet_addons/health/icon.svg")
+## @ace_codegen_template("$SimpleHealthBehavior.is_invincible()")
+func is_invincible() -> bool:
+	return Time.get_ticks_msec() < _invincible_until
 
 ## @ace_action
 ## @ace_name("Set Health Absorption Rate")
@@ -501,4 +521,4 @@ func load_state(state: Dictionary) -> void:
 		pool.priority = float(data.get("priority", 0.0))
 		health_pools[pool_name] = pool
 
-# Simple Health behavior (event-sheet parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. current_health seeds to max_health On Ready.
+# Simple Health behavior (event-sheet parity): damage/heal/death with a damage-absorption (resistance) multiplier, plus named health pools (shields/armour) that intercept damage in ascending-priority order, decay over time, and fire their own triggers. Grant Invincibility opens a timed i-frame window - damage is ignored while invincible, and On Damaged does not fire. current_health seeds to max_health On Ready.

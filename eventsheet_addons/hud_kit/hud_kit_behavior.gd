@@ -156,6 +156,29 @@ func show_toast(text: String) -> void:
 	fade.tween_property(toast, "modulate:a", 0.0, 0.35)
 	fade.tween_callback(toast.queue_free)
 
+## @ace_action
+## @ace_name("Pop Floating Text")
+## @ace_category("UI")
+## @ace_description("Pops a damage number or score popup at a position: it drifts up, fades out and frees itself. No label to place, no tween to write, no cleanup to remember.")
+## @ace_display_template("Pop floating text [b]{text}[/b] at [b]{at}[/b]")
+## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
+## @ace_codegen_template("$HudKitBehavior.pop_floating_text({text}, {at}, {color})")
+func pop_floating_text(text: String, at: Vector2, color: Color) -> void:
+	var label: Label = Label.new()
+	label.text = text
+	label.modulate = color
+	label.position = at
+	if host != null:
+		host.add_child(label)
+	else:
+		add_child(label)
+	var pop: Tween = label.create_tween()
+	pop.set_parallel(true)
+	pop.tween_property(label, "position:y", at.y - 24.0, 0.7)
+	pop.tween_property(label, "modulate:a", 0.0, 0.7)
+	pop.set_parallel(false)
+	pop.tween_callback(label.queue_free)
+
 ## @ace_condition
 ## @ace_name("Button Is")
 ## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
