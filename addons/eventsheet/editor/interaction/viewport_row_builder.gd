@@ -3603,7 +3603,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 					"kind": "pick_filter",
 					"pick_index": pick_index,
 					"chip": true,
-					"line_index": condition_line_index
+					"line_index": condition_line_index,
+					# Loops are System's, like in Construct - and the label puts the line in the
+					# shared object sub-lane, so its text aligns with the cells above it.
+					"object_label": _object_label_for("Core", "")
 				}.merged(condition_style_meta, true)
 			)
 		)
@@ -4050,6 +4053,11 @@ func _measure_span_width(span: SemanticSpan, display_text: String, font: Font, f
 		var measured_lane: String = str(metadata.get("lane", ""))
 		var object_column_width: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), measured_lane, _viewport.lane_width_for(measured_lane))
 		if object_column_width > 0.0:
+			# The layout stamps the aligned per-span column (the shared-separator rule); the
+			# measured advance must match the DRAWN advance or natural chips lose text room.
+			var measured_aligned: Variant = metadata.get("object_column_px")
+			if measured_aligned is float and is_equal_approx(float(metadata.get("object_column_base", -1.0)), object_column_width):
+				object_column_width = measured_aligned
 			span_width += object_column_width
 		else:
 			span_width += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x

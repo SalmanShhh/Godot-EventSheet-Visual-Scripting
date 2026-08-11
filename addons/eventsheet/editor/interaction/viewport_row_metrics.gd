@@ -151,7 +151,7 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 			if str(metadata.get("kind", "")) == "action" and not bool(metadata.get("natural_width", false)):
 				var reserved: float = float(reservations.get(line, action_lane_rect.end.x - float(event_style.action_lane_padding)))
 				var available: float = maxf(reserved - maxf(_viewport._get_span_gap(span), EventSheetPalette.SPAN_GAP) - start_x, 1.0)
-				act_count[line] = maxi(int(act_count.get(line, 1)), _fill_cell_line_count(span, metadata, available + 2.0, font, font_size))
+				act_count[line] = maxi(int(act_count.get(line, 1)), _fill_cell_line_count(span, metadata, available + 2.0, font, font_size, object_column_override(metadata, action_x, start_x)))
 				act_x[line] = start_x + available + 2.0 + _viewport._get_span_gap(span)
 			else:
 				act_x[line] = start_x + measured + 2.0 + _viewport._get_span_gap(span)
@@ -165,7 +165,7 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 				var text_start: float = float(cond_text_x.get(line, float(cond_badge_x.get(line, condition_text_start_x))))
 				if str(metadata.get("kind", "")) in ["condition", "trigger"]:
 					var available_c: float = maxf(max_condition_right - text_start, _viewport.MIN_SPAN_WIDTH)
-					cond_count[line] = maxi(int(cond_count.get(line, 1)), _fill_cell_line_count(span, metadata, available_c + 2.0, font, font_size))
+					cond_count[line] = maxi(int(cond_count.get(line, 1)), _fill_cell_line_count(span, metadata, available_c + 2.0, font, font_size, object_column_override(metadata, condition_text_start_x, text_start)))
 					cond_text_x[line] = text_start + available_c + 2.0 + _viewport._get_span_gap(span)
 				else:
 					var chip_width: float = maxf(minf(measured, max_condition_right - text_start), _viewport.MIN_SPAN_WIDTH)
@@ -185,8 +185,8 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 ## Visual lines one condition/action FILL cell needs at its cell rect width. Plain text wraps
 ## on TextServer breaks (wrapped_line_count); styled cells wrap on the shared greedy break
 ## points, so this count always equals the number of lines the renderer will actually draw.
-func _fill_cell_line_count(span: SemanticSpan, metadata: Dictionary, cell_rect_width: float, font: Font, font_size: int) -> int:
-	var wrap_width: float = _fill_text_wrap_width(metadata, cell_rect_width, font, font_size)
+func _fill_cell_line_count(span: SemanticSpan, metadata: Dictionary, cell_rect_width: float, font: Font, font_size: int, column_override: float = -1.0) -> int:
+	var wrap_width: float = _fill_text_wrap_width(metadata, cell_rect_width, font, font_size, column_override)
 	if (metadata.get("bbcode_segments", []) as Array).is_empty():
 		return wrapped_line_count(span.text, wrap_width, font, font_size)
 	return wrap_break_points(span.text, wrap_width, font, font_size).size()
@@ -195,8 +195,9 @@ func _fill_cell_line_count(span: SemanticSpan, metadata: Dictionary, cell_rect_w
 ## The width the renderer actually wraps a fill cell's TEXT inside: the cell rect minus the
 ## chip padding and the leading object icon/label column the renderer advances past before
 ## drawing text. Must mirror the renderer's text_x/right_padding math or the counted lines
-## and the drawn lines drift apart.
-func _fill_text_wrap_width(metadata: Dictionary, cell_rect_width: float, font: Font, font_size: int) -> float:
+## and the drawn lines drift apart. `column_override` is the per-span aligned column width
+## (see object_column_override); -1.0 falls back to the style's base column.
+func _fill_text_wrap_width(metadata: Dictionary, cell_rect_width: float, font: Font, font_size: int, column_override: float = -1.0) -> float:
 	var is_chip: bool = bool(metadata.get("chip", false))
 	var pad: float = float(metadata.get("padding_x", 0.0)) if is_chip else 0.0
 	var trail: float = pad if is_chip else 2.0
@@ -207,12 +208,36 @@ func _fill_text_wrap_width(metadata: Dictionary, cell_rect_width: float, font: F
 	if not object_label.is_empty():
 		var lane: String = str(metadata.get("lane", ""))
 		var column: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane))
-		if column > 0.0:
+		if column_override >= 0.0:
+			lead += column_override
+		elif column > 0.0:
 			lead += column
 		else:
 			var draw_font_size: int = EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
 			lead += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
 	return maxf(cell_rect_width - lead - trail, 1.0)
+
+
+## The C3 sub-lane rule: within a lane, every cell's object-column SEPARATOR sits at the same
+## absolute x, regardless of where that cell starts (a badge on the trigger line shifts its
+## cell right; without this, its separator drifted a few px from the lines below - the
+## "awkward and misaligned" middle). The shared boundary always reserves the object ICON slot
+## (icon + label are ONE column, like Construct), so an icon-bearing cell keeps its full
+## label room and an iconless one simply gets a slightly wider label area at the same edge.
+## Returns the column width THIS span must use so its boundary lands there, or -1.0 when the
+## span has no label or the lane is in flow mode. Floored at 24px so a cell starting
+## unusually far right never collapses its label to nothing.
+func object_column_override(metadata: Dictionary, lane_origin_x: float, span_x: float) -> float:
+	if str(metadata.get("object_label", "")).is_empty():
+		return -1.0
+	var lane: String = str(metadata.get("lane", ""))
+	var column: float = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), lane, _viewport.lane_width_for(lane))
+	if column <= 0.0:
+		return -1.0
+	var lead: float = float(metadata.get("padding_x", 0.0)) if bool(metadata.get("chip", false)) else 0.0
+	if metadata.get("object_icon") is Texture2D:
+		lead += EventRowRenderer.OBJECT_ICON_ADVANCE
+	return maxf(lane_origin_x + EventRowRenderer.OBJECT_ICON_ADVANCE + column - (span_x + lead), 24.0)
 
 
 ## Greedy word-wrap break points for STYLED (bbcode-segment) cells: character offsets where

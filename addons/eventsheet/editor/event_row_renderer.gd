@@ -757,6 +757,12 @@ func _draw_spans(
 			var drawn_lane: String = str(metadata.get("lane", ""))
 			var lane_bound: float = control.lane_width_for(drawn_lane) if control.has_method("lane_width_for") else 0.0
 			var object_column_width: float = object_column_width_for(event_style, drawn_lane, lane_bound)
+			# Sub-lane alignment: the layout stamps the per-span column width whose boundary
+			# lands on the lane's SHARED separator x (a badge shifts a cell's start; the fixed
+			# style width would drift its separator off the lines below). Prefer it when set.
+			var aligned_column: Variant = metadata.get("object_column_px")
+			if object_column_width > 0.0 and aligned_column is float and is_equal_approx(float(metadata.get("object_column_base", -1.0)), object_column_width):
+				object_column_width = aligned_column
 			if object_column_width > 0.0:
 				# A name too long for the column ELIDES ("CharacterBody2D" -> "CharacterBo…") rather than
 				# being sliced mid-glyph: draw_string's width argument clips, it does not ellipsize, and a

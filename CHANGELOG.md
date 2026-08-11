@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed - the object sub-column separator aligns across every cell (both lanes)
+
+Within a lane, every cell's object-column separator (the middle line between "System" and
+the sentence) now sits at ONE shared x, instead of drifting a few pixels per line because
+each cell measured its column from its own left edge (a trigger badge shifts that edge).
+The shared boundary reserves the object icon slot - icon and label are one column, like
+Construct - so icon-bearing cells keep their label room and iconless cells simply get a
+slightly wider label area at the same edge. Applies to trigger lines, condition cells, loop
+lines (which now carry their System label), signal parameter cells, and action cells; the
+resize grab, hit-test origin, and measured widths all follow the drawn boundary, and the
+stamp self-invalidates when the column token changes.
+
 ### Added - Mockup Slate theme preset
 
 A tenth bundled theme matching the design-mockup look the recent features were designed

@@ -174,6 +174,21 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 					)
 				span_x = float(condition_line_x[line_index])
 			span_y = row_top + scale_pad + float(cond_line_tops.get(line_index, line_index)) * line_height + 3.0
+		# The C3 sub-lane rule: every cell's object-column separator sits at ONE shared x per
+		# lane. Stamp the per-span aligned column width so the renderer, the resize hit-test,
+		# and the wrap math all land the boundary on the same line.
+		if lane_divider_x > 0.0:
+			var aligned_column: float = _viewport._row_metrics_helper.object_column_override(metadata, action_x if span_lane == "action" else condition_text_start_x, span_x)
+			if aligned_column >= 0.0:
+				metadata["object_column_px"] = aligned_column
+				# The base the stamp was computed from: consumers honor the stamp only while
+				# this still matches the live style, so a token change between layout builds
+				# falls back to the base width instead of drawing/measuring a stale stamp.
+				var stamp_lane: String = str(metadata.get("lane", ""))
+				metadata["object_column_base"] = EventRowRenderer.object_column_width_for(_viewport._get_event_style(), stamp_lane, _viewport.lane_width_for(stamp_lane))
+			else:
+				metadata.erase("object_column_px")
+				metadata.erase("object_column_base")
 		var display_text: String = _viewport._editing_buffer if index == _viewport._editing_row_index and span_index == _viewport._editing_span_index else span.text
 		var span_width: float = _viewport._measure_span_width(span, display_text, font, font_size)
 		if lane_divider_x > 0.0 and span_lane != "action":
@@ -242,7 +257,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				metadata["comment_wrap"] = true
 				metadata.erase("segment_wrap_breaks")
 			else:
-				var styled_wrap_width: float = _viewport._row_metrics_helper._fill_text_wrap_width(metadata, span_width + 2.0, font, font_size)
+				var styled_wrap_width: float = _viewport._row_metrics_helper._fill_text_wrap_width(metadata, span_width + 2.0, font, font_size, float(metadata.get("object_column_px", -1.0)))
 				metadata["segment_wrap_breaks"] = ViewportRowMetrics.wrap_break_points(span.text, styled_wrap_width, font, font_size)
 				metadata.erase("comment_wrap")
 		elif not is_comment_row:

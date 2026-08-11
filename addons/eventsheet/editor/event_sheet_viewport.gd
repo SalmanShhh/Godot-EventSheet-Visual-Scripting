@@ -647,6 +647,11 @@ func object_column_boundary_hit(local_position: Vector2) -> Dictionary:
 		anchor_x += EventRowRenderer.OBJECT_ICON_ADVANCE
 	var boundary_x: float = anchor_x
 	var column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), lane, lane_width_for(lane))
+	# The layout stamps the aligned per-span column (shared separator x); grab where it is
+	# actually drawn, not where the raw style width would put it.
+	var aligned_column: Variant = metadata.get("object_column_px")
+	if column_width > 0.0 and aligned_column is float and is_equal_approx(float(metadata.get("object_column_base", -1.0)), column_width):
+		column_width = aligned_column
 	if column_width > 0.0:
 		boundary_x += column_width
 	else:
@@ -1014,6 +1019,11 @@ func _span_text_origin_x(span: SemanticSpan, font: Font, font_size: int) -> floa
 		var span_lane: String = str(metadata.get("lane", ""))
 		var object_column_width: float = EventRowRenderer.object_column_width_for(_get_event_style(), span_lane, lane_width_for(span_lane))
 		if object_column_width > 0.0:
+			# The layout stamps the aligned per-span column (shared-separator rule); the
+			# hit-test origin must advance by the DRAWN column or value clicks drift.
+			var origin_aligned: Variant = metadata.get("object_column_px")
+			if origin_aligned is float and is_equal_approx(float(metadata.get("object_column_base", -1.0)), object_column_width):
+				object_column_width = origin_aligned
 			origin_x += object_column_width
 		else:
 			origin_x += font.get_string_size(object_label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, _span_draw_font_size(span, font_size)).x

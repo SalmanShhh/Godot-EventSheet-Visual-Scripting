@@ -72,8 +72,16 @@ static func run() -> bool:
 
 	var label: String = str(metadata.get("object_label", ""))
 	var label_advance: float = font.get_string_size(label + "  ", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
-	ok = _check(ok, absf((fixed_width - flow_width) - (effective_column - label_advance)) < 0.5, "measure swaps label advance for the column width (delta %.1f vs %.1f)" % [fixed_width - flow_width, effective_column - label_advance])
-	ok = _check(ok, absf((fixed_origin - flow_origin) - (effective_column - label_advance)) < 0.5, "text origin swaps identically (delta %.1f)" % (fixed_origin - flow_origin))
+	# The layout may have stamped the ALIGNED per-span column (the shared-separator rule);
+	# when its recorded base still matches the live effective column, that stamp IS the drawn
+	# advance, and the measure/origin twins must both swap to it - the agreement this test
+	# protects is with what is DRAWN, whichever width that is.
+	var measured_drawn_column: float = effective_column
+	var column_stamp: Variant = metadata.get("object_column_px")
+	if column_stamp is float and is_equal_approx(float(metadata.get("object_column_base", -1.0)), effective_column):
+		measured_drawn_column = column_stamp
+	ok = _check(ok, absf((fixed_width - flow_width) - (measured_drawn_column - label_advance)) < 0.5, "measure swaps label advance for the column width (delta %.1f vs %.1f)" % [fixed_width - flow_width, measured_drawn_column - label_advance])
+	ok = _check(ok, absf((fixed_origin - flow_origin) - (measured_drawn_column - label_advance)) < 0.5, "text origin swaps identically (delta %.1f)" % (fixed_origin - flow_origin))
 	# The bound must never let the column push the display text past the lane divider - the failure the
 	# clamp exists to stop. Pinned as a VALUE relationship, not a count.
 	ok = _check(ok, fixed_origin < viewport.get_lane_divider_x(viewport._get_logical_canvas_width()),
@@ -81,7 +89,9 @@ static func run() -> bool:
 	ok = _check(ok, absf((fixed_width - fixed_origin) - (flow_width - flow_origin)) < 0.5, "display text keeps its full width either way (stays fully visible)")
 
 	# ---- the drag-start boundary: flow mode grabs after the label, fixed grabs the column edge ----
-	viewport.get_row_layout_for_test(0, 900.0)  # position spans so rects are real
+	# Build at the LIVE width so the layout the hit-test rebuilds matches these rects exactly
+	# (cell heights and the stamped aligned column both depend on width now).
+	viewport.get_row_layout_for_test(0, viewport._get_logical_canvas_width())
 	var anchor_x: float = span.rect.position.x
 	# Chip spans draw from rect.x + padding_x (review fix): the grab zone follows the DRAWN
 	# boundary, so the expected anchor mirrors the renderer's padding too.
@@ -89,7 +99,10 @@ static func run() -> bool:
 		anchor_x += float(metadata.get("padding_x", 0.0))
 	if metadata.get("object_icon") is Texture2D:
 		anchor_x += EventRowRenderer.OBJECT_ICON_ADVANCE
-	var boundary: Dictionary = viewport.object_column_boundary_hit(Vector2(anchor_x + effective_column, span.rect.position.y + span.rect.size.y * 0.5))
+	# The DRAWN column is the aligned per-span width the layout stamped (the shared-separator
+	# rule), falling back to the style column when no stamp exists. Grab where it is drawn.
+	var drawn_column: float = float(metadata.get("object_column_px", effective_column))
+	var boundary: Dictionary = viewport.object_column_boundary_hit(Vector2(anchor_x + drawn_column, span.rect.position.y + span.rect.size.y * 0.5))
 	ok = _check(ok, str(boundary.get("lane", "")) == "condition", "the column edge is grabbable (got %s)" % str(boundary))
 	ok = _check(ok, absf(float(boundary.get("anchor_x", -1.0)) - anchor_x) < 0.5, "the drag anchor is the column start")
 	var miss: Dictionary = viewport.object_column_boundary_hit(Vector2(anchor_x + 320.0, span.rect.position.y + span.rect.size.y * 0.5))
