@@ -145,6 +145,8 @@ member of a group to a handler in one action. Declaring your own signal on a she
 
 Ten more spellings of everyday game code, shipped the same way:
 
+![The second wave live: a Timeline with its beats as condition/action rows, Every 2 to 5 seconds, smooth damping, aiming, wrap, bob, toggle and a distance check](images/pattern-verbs.png)
+
 - **Move Toward (smooth)** (Variables) - the frame-rate-INDEPENDENT damping (`1 - exp(-k*dt)`)
   compiled for you; works on numbers, vectors and colors. Drag the speed under Live Values to
   feel it.
@@ -160,6 +162,8 @@ Ten more spellings of everyday game code, shipped the same way:
 - **The Timeline block** - "at 0.0s Show Ready, at 1.0s Show GO": Insert > Timeline, then
   Add Step on the block; each beat is a condition/action row (the WHEN left, the WHAT right)
   and the compiled form is the await-chain you would have written.
+
+![The Object Pool in use: Create Pool on ready, Spawn on a random cadence, Despawn on screen exited](images/pattern-pool.png)
 
 ## Where these live
 

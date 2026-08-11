@@ -5,6 +5,10 @@ MEANING, and the two lanes carry the covenant** - branching on the left, effects
 This page is the field guide: each block style, what it looks like, what it is for, and how it
 behaves. Hovering any row always shows the exact GDScript behind it.
 
+![Several styles at once: the identity bars, a state-machine reading with diamond badges, and sentence rows](images/code-patterns-lifted-machine.png)
+
+![The Timeline block and the pattern verbs: beats as condition/action child rows, sentences in the action lane](images/pattern-verbs.png)
+
 ## The icon legend
 
 The round badges in the icon column are the sheet's alphabet - each is drawn as crisp SVG art

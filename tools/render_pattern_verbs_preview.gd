@@ -6,6 +6,7 @@
 extends SceneTree
 
 var _frames: int = 0
+var _stage: int = 0
 var _viewport: EventSheetViewport = null
 
 
@@ -90,6 +91,52 @@ func _on_frame() -> void:
 	_frames += 1
 	if _frames < 8:
 		return
-	root.get_texture().get_image().save_png("res://docs/images/pattern-verbs.png")
-	print("[preview] pattern verbs saved")
+	if _stage == 0:
+		root.get_texture().get_image().save_png("res://docs/images/pattern-verbs.png")
+		print("[preview] pattern verbs saved")
+		_stage = 1
+		_frames = 0
+		_apply_pool_sheet()
+		return
+	root.get_texture().get_image().save_png("res://docs/images/pattern-pool.png")
+	print("[preview] pattern pool saved")
 	quit(0)
+
+
+## Stage 2: the Object Pool as a consumer uses it - create on ready, spawn on a cadence,
+## despawn when done. Pack verbs are method: ACEs, humanized by the registry-free fallback.
+func _apply_pool_sheet() -> void:
+	var sheet: EventSheetResource = EventSheetResource.new()
+
+	var setup: EventRow = EventRow.new()
+	setup.trigger_id = "OnReady"
+	setup.trigger_provider_id = "Core"
+	setup.actions.append(_pool_act("method:create_pool", {"pool_name": "\"bullets\"", "scene_path": "\"res://bullet.tscn\"", "prewarm": "8"}))
+	sheet.events.append(setup)
+
+	var shoot: EventRow = EventRow.new()
+	shoot.trigger_id = "OnProcess"
+	shoot.trigger_provider_id = "Core"
+	shoot.conditions.append(_cond("EveryRandomSeconds", {"min_seconds": "0.2", "max_seconds": "0.4"}))
+	shoot.actions.append(_pool_act("method:spawn", {"pool_name": "\"bullets\""}))
+	sheet.events.append(shoot)
+
+	var done: EventRow = EventRow.new()
+	done.trigger_id = "signal:screen_exited"
+	done.actions.append(_pool_act("method:despawn", {"node": "bullet"}))
+	sheet.events.append(done)
+
+	var modern_base := Color("#252525")
+	var modern_style := EventSheetEditorStyle.new()
+	modern_style.ensure_defaults()
+	EventSheetGodotTheme.apply(modern_style, modern_base, modern_base.darkened(0.15), modern_base.darkened(0.25), Color("#569eff"), Color("#ced0d2"))
+	sheet.editor_style = modern_style
+	_viewport.set_sheet(sheet)
+
+
+static func _pool_act(ace_id: String, params: Dictionary) -> ACEAction:
+	var action: ACEAction = ACEAction.new()
+	action.provider_id = "ObjectPoolAddon"
+	action.ace_id = ace_id
+	action.params = params
+	return action
