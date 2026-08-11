@@ -246,6 +246,17 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "ColorInverted", "Invert Color", ACEDescriptor.ACEType.EXPRESSION, "({color}).inverted()", "", [F.make_param("color", "String", "Color(1, 1, 1, 1)", "Color", "Colour to invert.", "color")], "Color", "invert {color}")
 		.described("Returns the opposite colour, useful for highlight or negative effects."))
 
+	# ── Variable easing / flipping (the two beginner patterns that always come out wrong by hand) ──
+	# Move Toward is the frame-rate INDEPENDENT damping form: the exponential decay means the same
+	# Speed lands the same distance per SECOND no matter the frame rate, unlike the naive
+	# `lerp(a, b, 0.1)` written straight into a per-frame event.
+	descriptors.append(F.make_descriptor("Core", "SmoothMoveToward", "Move Toward (smooth)", ACEDescriptor.ACEType.ACTION, "{var_name} = lerp({var_name}, {target}, 1.0 - exp(-maxf({speed}, 0.0) * get_process_delta_time()))", "", [F.make_param("var_name", "String", "value", "Variable", "Variable to ease.", "variable_reference"), F.make_param("target", "String", "1.0", "Toward", "The value to approach.", "expression"), F.make_param("speed", "String", "8.0", "Speed", "How fast it closes the gap - higher is snappier, around 8 feels like a firm camera follow.", "expression")], "Variables", "Move {var_name} toward {target} at speed {speed}")
+		.described("Eases a variable smoothly toward a target instead of snapping to it. Works on numbers, Vector2/Vector3 and Colors alike (lerp is generic). It is frame-rate independent - the exponential form behaves the same at 30 and 144 fps."))
+	descriptors.append(F.make_descriptor("Core", "ToggleVar", "Toggle", ACEDescriptor.ACEType.ACTION, "{var_name} = not {var_name}", "", [F.make_param("var_name", "String", "enabled_flag", "Variable", "Boolean variable to flip.", "variable_reference")], "Variables", "Toggle {var_name}")
+		.described("Flips a true/false variable to its opposite - on becomes off, off becomes on."))
+	descriptors.append(F.make_descriptor("Core", "AsClockTime", "As Clock Time", ACEDescriptor.ACEType.EXPRESSION, "(\"%02d:%02d\" % [int(maxf({seconds}, 0.0)) / 60, int(maxf({seconds}, 0.0)) % 60])", "", [F.make_param("seconds", "String", "90.0", "Seconds", "A duration in seconds.", "expression")], "Text", "as clock time ({seconds})")
+		.described("Turns a number of seconds into minutes:seconds text - 90 seconds reads \"01:30\". For countdown timers, lap times and speedrun clocks."))
+
 	# Expressions
 	descriptors.append(F.make_descriptor("Core", "GetVar", "Get Variable", ACEDescriptor.ACEType.EXPRESSION, "{var_name}", "", [F.make_param("var_name", "String", "var", "Variable", "Variable to read.", "variable_reference")], "Variables", "{var_name}")
 		.described("Returns the current value stored in the named variable."))

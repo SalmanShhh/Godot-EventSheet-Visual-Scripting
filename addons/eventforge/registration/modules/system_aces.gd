@@ -137,6 +137,13 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "EveryXSeconds", "Every X Seconds", ACEDescriptor.ACEType.CONDITION, "__every_{uid} >= maxf({seconds}, 0.001)", "", [F.make_param("seconds", "String", "1.0", "Seconds", "Interval between runs (needs a per-frame trigger).", "expression")], "Time", "Every {seconds} seconds")
 		.described("True once each time the chosen number of seconds passes, for repeating timers.")
 		.stateful("var __every_{uid}: float = 0.0", "__every_{uid} += get_process_delta_time()", "__every_{uid} = fmod(__every_{uid}, maxf({seconds}, 0.001))"))
+	# Every X To Y Seconds: the varied-cadence sibling of Every X Seconds. Two members per instance -
+	# the accumulator and the interval that was rolled for THIS wait - so the helper can fire and
+	# immediately re-roll the next gap. The -1 sentinel means "no interval rolled yet", which keeps the
+	# very first wait random too instead of always using the minimum.
+	descriptors.append(F.make_descriptor("Core", "EveryRandomSeconds", "Every X To Y Seconds", ACEDescriptor.ACEType.CONDITION, "__everyr_{uid}(maxf({min_seconds}, 0.001), maxf({max_seconds}, 0.001))", "", [F.make_param("min_seconds", "String", "2.0", "From", "Shortest wait between runs.", "expression"), F.make_param("max_seconds", "String", "5.0", "To", "Longest wait between runs.", "expression")], "Time", "Every {min_seconds} to {max_seconds} seconds")
+		.described("True once each time a random wait between the two lengths passes - spawner and idle-chatter cadence that never looks metronomic. Needs a per-frame trigger, like Every X Seconds; each firing re-rolls the next wait.")
+		.stateful("var __everyr_time_{uid}: float = 0.0\nvar __everyr_next_{uid}: float = -1.0\n\nfunc __everyr_{uid}(min_seconds: float, max_seconds: float) -> bool:\n\tif __everyr_next_{uid} < 0.0:\n\t\t__everyr_next_{uid} = randf_range(min_seconds, maxf(max_seconds, min_seconds))\n\tif __everyr_time_{uid} < __everyr_next_{uid}:\n\t\treturn false\n\t__everyr_time_{uid} = 0.0\n\t__everyr_next_{uid} = randf_range(min_seconds, maxf(max_seconds, min_seconds))\n\treturn true", "__everyr_time_{uid} += get_process_delta_time()"))
 	# Trigger Once: run the event only on the FIRST tick of each stretch where the row's OTHER conditions
 	# hold, re-arming once they go false again. .evaluated_last() HOISTS the term to the end of the emitted
 	# `and` chain no matter which condition cell it sits in, so short-circuiting guarantees it is reached
