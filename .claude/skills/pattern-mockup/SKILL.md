@@ -46,6 +46,13 @@ file/API it extends). Proposed-but-nonexistent menu items must read as proposals
 
 Group suggestions under h2 headers (A., B., C., ...) with the tier tag beside the title.
 
+When a suggestion touches gameplay or content (anything a shipped pack could serve), add a
+fourth section: a compact "WORKS WITH (EXISTING PACKS)" box (green left border, small-caps
+label) holding 2-5 chips - each a REAL pack display name (verify the builder exists in
+`tools/pack_builders/`) plus a few words on the division of labor ("Dialogue Kit - plays
+the lines this authors"). The point is pairing with shipped packs instead of reinventing
+them; only list pairings that genuinely make sense.
+
 ## 3. The settled sheet design language (follow EXACTLY)
 
 CSS tokens:
