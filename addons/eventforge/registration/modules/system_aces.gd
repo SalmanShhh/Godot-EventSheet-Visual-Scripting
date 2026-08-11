@@ -171,6 +171,30 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("True when the named cooldown has finished. A cooldown that was never started counts as ready, so the first use is always allowed."))
 	descriptors.append(F.make_descriptor("Core", "CooldownTimeLeft", "Cooldown Time Left", ACEDescriptor.ACEType.EXPRESSION, "(maxf(0.0, float(int(get_meta(&\"__ef_cool_\" + str({name}), 0)) - Time.get_ticks_msec()) / 1000.0))", "", [F.make_param("name", "String", "\"dash\"", "Name", "Cooldown name, matching a Start Cooldown action.", "expression")], "Time", "cooldown {name} time left")
 		.described("Gives the seconds left on a named cooldown, or 0 when it is ready - handy for a HUD readout."))
+	# Input buffering: the same name-keyed metadata trick as the cooldowns above, read the other way
+	# round - a deadline in the FUTURE means the press still counts. Stateless and shared across the
+	# host, so the buffer is written in the input event and read wherever the act actually happens.
+	descriptors.append(F.make_descriptor("Core", "BufferPress", "Buffer Press", ACEDescriptor.ACEType.ACTION, "set_meta(&\"__ef_buffer_\" + str({name}), Time.get_ticks_msec() + int(maxf({seconds}, 0.0) * 1000.0))", "", [F.make_param("name", "String", "\"jump\"", "Name", "Buffer name - any label you also use in Press Is Buffered.", "expression"), F.make_param("seconds", "String", "0.12", "Seconds", "How long the press stays remembered.", "expression")], "Time", "buffer press {name} for {seconds}s")
+		.described("Remembers a press for a fraction of a second, so an input made slightly too early still counts. Record it when the button goes down, check Press Is Buffered where the act happens, then Clear Buffer."))
+	descriptors.append(F.make_descriptor("Core", "PressIsBuffered", "Press Is Buffered", ACEDescriptor.ACEType.CONDITION, "Time.get_ticks_msec() <= int(get_meta(&\"__ef_buffer_\" + str({name}), 0))", "", [F.make_param("name", "String", "\"jump\"", "Name", "Buffer name, matching a Buffer Press action.", "expression")], "Time", "press {name} is buffered")
+		.described("True while a recently buffered press is still valid - the player pressed jump just before landing, and it should still fire."))
+	descriptors.append(F.make_descriptor("Core", "ClearBuffer", "Clear Buffer", ACEDescriptor.ACEType.ACTION, "set_meta(&\"__ef_buffer_\" + str({name}), 0)", "", [F.make_param("name", "String", "\"jump\"", "Name", "Buffer name, matching a Buffer Press action.", "expression")], "Time", "clear buffered press {name}")
+		.described("Forgets a buffered press. Consume the buffer right after acting on it so one press never fires twice."))
+	# Was Recently True: coyote time, said plainly. The helper stamps the moment the watched value was
+	# last true and answers "recently?" for the window after it - so "is_on_floor() was true within
+	# 0.1s" IS the forgiving jump, with no hand-rolled timer member in the sheet.
+	descriptors.append(F.make_descriptor("Core", "WasRecentlyTrue", "Was Recently True", ACEDescriptor.ACEType.CONDITION, "__recent_{uid}(bool({value}), maxf({window}, 0.0))", "", [F.make_param("value", "String", "true", "Value", "The condition to remember, e.g. is_on_floor().", "expression"), F.make_param("window", "String", "0.1", "For Seconds", "How long after it goes false it still counts.", "expression")], "Run Context", "{value} was true within {window}s")
+		.described("True while the watched condition is true, and for a moment after it stops. This is coyote time: \"is_on_floor() was true within 0.1s\" lets a player jump just after walking off a ledge. Needs a per-frame trigger so the moment gets stamped.")
+		.stateful("var __recent_at_{uid}: int = -1000000\n\nfunc __recent_{uid}(current: bool, window: float) -> bool:\n\tif current:\n\t\t__recent_at_{uid} = Time.get_ticks_msec()\n\t\treturn true\n\treturn Time.get_ticks_msec() - __recent_at_{uid} <= int(window * 1000.0)"))
+	# Group population edges: one member remembers last tick's count, so the helper can answer "did
+	# this group just empty / just fill?" - the wave director's two triggers. The -1 start means a group
+	# that is already empty on the first tick does NOT count as having just emptied.
+	descriptors.append(F.make_descriptor("Core", "OnGroupEmptied", "On Group Emptied", ACEDescriptor.ACEType.CONDITION, "__group_emptied_{uid}({group})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group to watch.", "group_reference")], "Run Context", "on group {group} emptied")
+		.described("True on the single tick a watched group's last member leaves or dies - the wave director's trigger, without counting nodes by hand. A group that is already empty at startup never fires it. Needs a per-frame trigger.")
+		.stateful("var __gcount_{uid}: int = -1\n\nfunc __group_emptied_{uid}(group_name: String) -> bool:\n\tvar count: int = get_tree().get_nodes_in_group(group_name).size()\n\tvar previous: int = __gcount_{uid}\n\t__gcount_{uid} = count\n\treturn previous > 0 and count == 0"))
+	descriptors.append(F.make_descriptor("Core", "OnGroupFirstMember", "On Group Gains First Member", ACEDescriptor.ACEType.CONDITION, "__group_first_{uid}({group})", "", [F.make_param("group", "String", "\"enemies\"", "Group", "Group to watch.", "group_reference")], "Run Context", "on group {group} gains its first member")
+		.described("True on the single tick a watched group goes from empty to holding something - the wave STARTED, the first pickup spawned, combat just began. Needs a per-frame trigger.")
+		.stateful("var __gfirst_{uid}: int = -1\n\nfunc __group_first_{uid}(group_name: String) -> bool:\n\tvar count: int = get_tree().get_nodes_in_group(group_name).size()\n\tvar previous: int = __gfirst_{uid}\n\t__gfirst_{uid} = count\n\treturn previous == 0 and count > 0"))
 	# Once At A Time (single-flight, the async-events re-entry gate): a busy latch set on entry
 	# and cleared by the on_exit hook AFTER the whole body - in a coroutine body that reset runs
 	# when the last await completes, so a per-frame trigger with a Wait can't stack overlapping

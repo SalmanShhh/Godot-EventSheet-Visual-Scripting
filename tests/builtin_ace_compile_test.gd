@@ -27,6 +27,8 @@ const NOT_STANDALONE: Array[String] = [
 	"LoopBreak", "LoopContinue", "ReturnValue",
 	"EveryXSeconds", "TriggerOnce", "SingleFlight", "HasChanged",  # call sheet-synthesized companion state (an accumulator / an edge-test helper / a busy latch / a previous-value slot)
 	"EveryRandomSeconds",  # calls a sheet-synthesized helper over its own accumulator + rolled-interval slots
+	"WasRecentlyTrue",  # calls a sheet-synthesized helper over its own last-true timestamp slot
+	"OnGroupEmptied", "OnGroupFirstMember",  # call sheet-synthesized helpers over their own previous-count slots
 	"AwaitIfOverBudget", "BeginFrameBudget", "AwaitNextFrame",
 	"CallFunction", "CallMethod", "CallMethodValue", "ConnectSignal", "DisconnectSignal", "IsSignalConnected",
 	"ConnectGroupSignal", "DisconnectGroupSignal",  # loop over a group and touch a user signal/callable - same as ConnectSignal
