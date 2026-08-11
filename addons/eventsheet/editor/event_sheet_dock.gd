@@ -30,6 +30,7 @@ const ACTION_MENU_CONVERT_TO_VERB := 41
 const ACTION_MENU_DECL_ADD_ENTRY := 60
 const ACTION_MENU_DECL_EDIT_ENTRY := 61
 const ACTION_MENU_DECL_REMOVE_ENTRY := 62
+const ACTION_MENU_TIMELINE_ADD_STEP := 63
 const ACTION_MENU_TOGGLE_ENABLED := 5
 const ACTION_MENU_EDIT_ACE_COMMENT := 21
 const ROW_MENU_ADD_SUB_EVENT := 1
@@ -82,6 +83,7 @@ const ROW_MENU_REPLACE_OBJECT := 48
 const ROW_MENU_BATCH_EDIT_PARAMS := 49
 const ROW_MENU_DATA_CLASS_ADD_FIELD := 50
 const ROW_MENU_DATA_CLASS_REMOVE_FIELD := 51
+const ROW_MENU_ADD_TIMELINE_BELOW := 52
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
@@ -3084,6 +3086,7 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 	if kind == "action":
 		_refresh_convert_to_verb_item()
 		_refresh_collection_decl_items()
+		_refresh_timeline_items()
 		_show_popup_menu(_action_context_menu, global_position)
 		return
 	# Everything else - including data_class_field spans - routes to the row menu: the
@@ -3239,6 +3242,43 @@ func _refresh_collection_decl_items() -> void:
 		_action_context_menu.add_item("Remove Entry", ACTION_MENU_DECL_REMOVE_ENTRY)
 
 
+## "Add Step..." appears on the action menu whenever the context click targets a Timeline
+## (its caption or one of its beat rows). Mirrors the Declare entry-menu wiring.
+func _refresh_timeline_items() -> void:
+	if _action_context_menu == null:
+		return
+	var existing_index: int = _action_context_menu.get_item_index(ACTION_MENU_TIMELINE_ADD_STEP)
+	if existing_index >= 0:
+		_action_context_menu.remove_item(existing_index)
+	if _context_timeline() == null:
+		return
+	_action_context_menu.add_item("Add Step…", ACTION_MENU_TIMELINE_ADD_STEP)
+
+
+## The Timeline the context click targets: the right-clicked ACTION when it is one, else the
+## row's own resource (a beat child row carries its TimelineRow as source_resource).
+func _context_timeline() -> TimelineRow:
+	var action_timeline: TimelineRow = _context_ace_resource("action") as TimelineRow
+	if action_timeline != null:
+		return action_timeline
+	if _context_row != null:
+		return _context_row.source_resource as TimelineRow
+	return null
+
+
+## Appends one beat through the undo funnel; the schedule stays time-sorted.
+func _apply_timeline_step(timeline: TimelineRow, at_seconds: float, code_line: String) -> void:
+	if timeline == null or code_line.strip_edges().is_empty():
+		return
+	var changed: bool = _perform_undoable_sheet_edit("Add Timeline Step", func() -> bool:
+		var step_action: RawCodeRow = RawCodeRow.new()
+		step_action.code = code_line.strip_edges()
+		timeline.add_step(maxf(at_seconds, 0.0), step_action)
+		return true)
+	if changed:
+		_mark_dirty("Added a timeline step.")
+
+
 ## The declaration the context click targets: the right-clicked ACTION when it is one (the
 ## in-body form), else the row's own resource (the top-level form). One resolver so the action
 ## menu and the row menu share the same three handlers.
@@ -3382,6 +3422,8 @@ func _on_action_context_menu_id_pressed(id: int) -> void:
 			_quick_prompts.prompt_collection_entry(_context_decl(), _context_decl_entry_index())
 		ACTION_MENU_DECL_REMOVE_ENTRY:
 			_remove_collection_entry(_context_decl(), _context_decl_entry_index())
+		ACTION_MENU_TIMELINE_ADD_STEP:
+			_quick_prompts.prompt_timeline_step(_context_timeline())
 
 
 func _on_row_context_menu_id_pressed(id: int) -> void:

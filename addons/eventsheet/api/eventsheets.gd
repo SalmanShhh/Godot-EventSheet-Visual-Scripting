@@ -1387,6 +1387,22 @@ static func _drop_build_preload(asset_path: String, _target_event: Resource) -> 
 ## entry is refused (blank value, keyless dictionary entry). Append the result to an
 ## EventRow's actions like any other action; it emits as the literal, brackets and all, and
 ## its entries stay individually editable rows on the canvas.
+## Builds a Timeline block from [[at_seconds, gdscript_line], ...] pairs - the schedule-as-rows
+## companion to collection_decl. Steps sort by time; a malformed pair returns null.
+static func timeline(steps: Array = []) -> TimelineRow:
+	var row: TimelineRow = TimelineRow.new()
+	for entry: Variant in steps:
+		if not (entry is Array) or (entry as Array).size() != 2:
+			return null
+		var code_line: String = str((entry as Array)[1]).strip_edges()
+		if code_line.is_empty():
+			return null
+		var action: RawCodeRow = RawCodeRow.new()
+		action.code = code_line
+		row.add_step(maxf(float((entry as Array)[0]), 0.0), action)
+	return row
+
+
 static func collection_decl(variable_name: String, entries: Array, dictionary: bool = true) -> CollectionDeclRow:
 	var name: String = variable_name.strip_edges()
 	var name_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$")

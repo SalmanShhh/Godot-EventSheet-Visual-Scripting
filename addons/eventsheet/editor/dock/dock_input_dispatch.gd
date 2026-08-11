@@ -62,6 +62,18 @@ func on_row_context_menu_id_pressed(id: int) -> void:
 			_dock._insert_context_row_below(comment, "Added comment.")
 		_dock.ROW_MENU_ADD_VARIABLE_BELOW:
 			_dock._add_tree_variable_below_context_row()
+		_dock.ROW_MENU_ADD_TIMELINE_BELOW:
+			# A Timeline suspends, so it arrives inside its own ready-trigger event with one
+			# starter beat; right-click the beat (or the caption) for "Add Step...".
+			var timeline_event: EventRow = EventRow.new()
+			timeline_event.trigger_id = "OnReady"
+			timeline_event.trigger_provider_id = "Core"
+			var timeline: TimelineRow = TimelineRow.new()
+			var starter: RawCodeRow = RawCodeRow.new()
+			starter.code = "print(\"timeline started\")"
+			timeline.add_step(0.0, starter)
+			timeline_event.actions.append(timeline)
+			_dock._insert_context_row_below(timeline_event, "Added timeline.")
 		_dock.ROW_MENU_ADD_GDSCRIPT_BELOW:
 			var raw_block: RawCodeRow = RawCodeRow.new()
 			raw_block.code = "# GDScript - emitted verbatim at class level"

@@ -27,6 +27,12 @@ var _extract_function_callback: Callable = Callable()
 ## Prompts for the function name, then invokes callback(name). Pre-filled with a unique default (so Enter
 ## just works) but selected - the user is nudged to type a real, meaningful name, because naming the
 ## concept ("Apply Physics") is the whole point of extracting.
+var _timeline_step_dialog: ConfirmationDialog = null
+var _timeline_step_at_edit: LineEdit = null
+var _timeline_step_code_edit: LineEdit = null
+var _timeline_step_target: TimelineRow = null
+
+
 func prompt_extract_function_name(callback: Callable) -> void:
 	if _extract_function_name_dialog == null:
 		_extract_function_name_dialog = ConfirmationDialog.new()
@@ -209,6 +215,35 @@ var _entry_index: int = -1
 ## Add (entry_index -1) or edit one entry of a Declare row. The key field shows only for a
 ## dictionary, and string keys must include their own quotes - the field holds the SOURCE text
 ## of the key, so `"calm"` and a bare enum constant are both legal and neither is guessed at.
+## "Add Step..." on a Timeline: WHEN (seconds) and WHAT (one GDScript line - a call or a Set,
+## which the beat row then reads back in plain words). Same card grammar as the entry dialog.
+func prompt_timeline_step(timeline: TimelineRow) -> void:
+	if timeline == null:
+		return
+	if _timeline_step_dialog == null:
+		_timeline_step_dialog = ConfirmationDialog.new()
+		_timeline_step_dialog.title = "Add Timeline Step"
+		_timeline_step_dialog.ok_button_text = "Add"
+		_timeline_step_dialog.min_size = Vector2i(380, 0)
+		var box: VBoxContainer = EventSheetPopupUI.form_box()
+		_timeline_step_at_edit = LineEdit.new()
+		_timeline_step_at_edit.placeholder_text = "0.5"
+		box.add_child(EventSheetPopupUI.form_row("At (seconds)", _timeline_step_at_edit))
+		_timeline_step_code_edit = LineEdit.new()
+		_timeline_step_code_edit.placeholder_text = "show_message(\"GO!\")"
+		box.add_child(EventSheetPopupUI.form_row("Do", _timeline_step_code_edit))
+		_timeline_step_dialog.add_child(EventSheetPopupUI.margined(box))
+		_timeline_step_dialog.confirmed.connect(func() -> void:
+			_dock._apply_timeline_step(_timeline_step_target, float(_timeline_step_at_edit.text) if _timeline_step_at_edit.text.strip_edges().is_valid_float() else 0.0, _timeline_step_code_edit.text)
+		)
+		_dock.add_child(_timeline_step_dialog)
+	_timeline_step_target = timeline
+	_timeline_step_at_edit.text = ""
+	_timeline_step_code_edit.text = ""
+	_timeline_step_dialog.popup_centered()
+	_timeline_step_at_edit.grab_focus()
+
+
 func prompt_collection_entry(decl: CollectionDeclRow, entry_index: int) -> void:
 	if decl == null:
 		return

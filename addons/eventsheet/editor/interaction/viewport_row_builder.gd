@@ -2893,7 +2893,39 @@ func _build_event_row(event_row: EventRow, indent: int) -> EventRowData:
 	# own condition/action child row (the pattern in the condition cell, the body in the action cells).
 	for case_row: EventRowData in _build_match_case_rows(event_row, indent + 1):
 		row_data.children.append(case_row)
+	for timeline_row: EventRowData in _build_timeline_step_rows(event_row, indent + 1):
+		row_data.children.append(timeline_row)
 	return row_data
+
+
+## One child row per beat of any Timeline in this event's actions: "at 0.5s" reads as the
+## condition (the WHEN), the step's action as the action (the WHAT) - the schedule in the
+## sheet's own two-lane grammar. Rows carry the TimelineRow for double-click routing.
+func _build_timeline_step_rows(event_row: EventRow, indent: int) -> Array[EventRowData]:
+	var rows: Array[EventRowData] = []
+	for action_item: Variant in event_row.actions:
+		if not (action_item is TimelineRow):
+			continue
+		var timeline: TimelineRow = action_item as TimelineRow
+		for step: TimelineStep in timeline.steps:
+			if step == null or not step.enabled or step.action == null:
+				continue
+			var step_text: String = ""
+			if step.action is ACEAction:
+				step_text = _format_action_descriptor(step.action as ACEAction)
+			elif step.action is RawCodeRow:
+				step_text = _friendly_statement_text((step.action as RawCodeRow).code)
+			elif step.action is CommentRow:
+				step_text = "# " + (step.action as CommentRow).text
+			var step_row: EventRowData = _build_condition_action_row(
+				"%s %ss" % [EventSheetL10n.translate("at"), var_to_str(step.at)],
+				PackedStringArray([step_text]),
+				indent,
+				timeline
+			)
+			step_row.language_block = true
+			rows.append(step_row)
+	return rows
 
 
 ## One condition/action child row per case of any structured MatchRow in this event's actions - the switch
@@ -3682,6 +3714,27 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 							}
 						)
 					)
+			elif action_resource is TimelineRow:
+				# A Timeline's header is a muted caption; the beats render as child rows below
+				# ("at 0.5s" in the condition cell, the action in the action cell).
+				var timeline_resource: TimelineRow = action_resource as TimelineRow
+				var timeline_beats: int = 0
+				for timeline_step: TimelineStep in timeline_resource.steps:
+					if timeline_step != null and timeline_step.enabled:
+						timeline_beats += 1
+				spans.append(
+					_make_span(
+						"%s · %d %s" % [EventSheetL10n.translate("timeline"), timeline_beats, EventSheetL10n.translate("steps")],
+						SemanticSpan.SpanType.VALUE,
+						{
+							"lane": "action",
+							"kind": "action",
+							"ace_index": action_index,
+							"line_index": 0,
+							"text_color": EventSheetPalette.TEXT_MUTED
+						}
+					)
+				)
 			elif action_resource is CollectionDeclRow:
 				# Option 1 of the collection-declaration work: ONE "Declare <name>" action row with each
 				# entry on a single-cell line of its own - no bracket rows, and the same one-span cell

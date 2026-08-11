@@ -1615,6 +1615,27 @@ static func _emit_event_body(
 						lines.append(body_indent + "\t" + branch_line)
 				had_body = true
 				source_map.append({"uid": str(match_row.get_instance_id()), "start": match_start, "end": lines.size(), "kind": "match"})
+			elif action_item is TimelineRow:
+				# A Timeline: the schedule as an await-chain, exactly what a GDScript author would
+				# write by hand. Steps emit in stored order; only FORWARD gaps await, so equal
+				# times run back to back. The whole chain suspends - same contract as Wait.
+				var timeline: TimelineRow = action_item as TimelineRow
+				if not timeline.enabled or timeline.steps.is_empty():
+					continue
+				_emit_leading_body_blanks(timeline, lines)
+				var timeline_start: int = lines.size() + 1
+				var timeline_cursor: float = 0.0
+				for step: TimelineStep in timeline.steps:
+					if step == null or not step.enabled or step.action == null:
+						continue
+					if step.at > timeline_cursor + 0.0001:
+						# snappedf keeps 1.2 - 1.0 reading "0.2", not "0.19999999999999996".
+						lines.append(body_indent + "await get_tree().create_timer(%s).timeout" % var_to_str(snappedf(step.at - timeline_cursor, 0.001)))
+						timeline_cursor = step.at
+					var step_lines: PackedStringArray = _emit_match_case_body([step.action], body_indent, effective_node_target)
+					lines.append_array(step_lines)
+				had_body = true
+				source_map.append({"uid": str(timeline.get_instance_id()), "start": timeline_start, "end": lines.size(), "kind": "timeline"})
 			elif action_item is CommentRow:
 				# Action-cell comment: annotates the flow, compiles to comment lines.
 				var action_comment: CommentRow = action_item as CommentRow

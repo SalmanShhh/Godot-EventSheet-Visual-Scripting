@@ -286,6 +286,7 @@ func _build_row_insert_submenu() -> void:
 	m.add_item("Group", _dock.ROW_MENU_ADD_GROUP_BELOW)
 	m.add_item("Comment", _dock.ROW_MENU_ADD_COMMENT_BELOW)
 	m.add_item("Variable", _dock.ROW_MENU_ADD_VARIABLE_BELOW)
+	m.add_item("Timeline", _dock.ROW_MENU_ADD_TIMELINE_BELOW)
 	if _dock._simple_mode:
 		# Simple mode keeps Insert to the four everyday row types; the code-leaning ones
 		# (raw GDScript, signal handlers, enums) stay available in Expert mode.
