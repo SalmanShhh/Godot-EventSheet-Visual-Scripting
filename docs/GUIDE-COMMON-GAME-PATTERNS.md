@@ -141,6 +141,26 @@ button by name, no wiring), and **Connect Group Signal** (System, Signals) wires
 member of a group to a handler in one action. Declaring your own signal on a sheet publishes an
 **On <signal>** trigger for other sheets automatically.
 
+## The second wave - more patterns as verbs
+
+Ten more spellings of everyday game code, shipped the same way:
+
+- **Move Toward (smooth)** (Variables) - the frame-rate-INDEPENDENT damping (`1 - exp(-k*dt)`)
+  compiled for you; works on numbers, vectors and colors. Drag the speed under Live Values to
+  feel it.
+- **Toggle** (Variables) - `paused = not paused` in one word.
+- **As Clock Time** (Text expression) - 90 seconds reads "01:30".
+- **Every X To Y Seconds** (Time) - spawner cadence that re-rolls each firing.
+- **Is Within Distance / Turn Toward / Wrap Inside The Screen / Bob Up And Down** (Movement,
+  2D) - prompts and aggro ranges, turret aiming with a real turn speed, the Asteroids rule,
+  floating pickups - all without transform math or sin().
+- **The Object Pool pack** - named pools with Create Pool / Spawn / Despawn / Prewarm, spawn
+  and despawn triggers, and a `reset()` seam: a pooled scene that defines `reset()` gets it
+  called on every spawn, so velocity and hp clear without the pool knowing them.
+- **The Timeline block** - "at 0.0s Show Ready, at 1.0s Show GO": Insert > Timeline, then
+  Add Step on the block; each beat is a condition/action row (the WHEN left, the WHAT right)
+  and the compiled form is the await-chain you would have written.
+
 ## Where these live
 
 Everything above except the State Machine, Advanced Random, and HUD Kit sections is built into

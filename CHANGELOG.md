@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added - the second pattern wave: eight verbs, the Timeline block, the pool reset seam
+
+Eight new Core ACEs turn more everyday code into words: **Move Toward (smooth)** (the
+frame-rate-independent damping, compiled correctly so nobody ever writes the exp form),
+**Toggle**, **As Clock Time** ("01:30" from 90 seconds), **Every X To Y Seconds** (spawner
+cadence that re-rolls each firing), and four 2D Movement verbs - **Is Within Distance (of a
+node)**, **Turn Toward** (degrees-per-second aiming), **Wrap Inside The Screen**, and **Bob Up
+And Down**. The **Timeline block** is a schedule as rows: a muted "timeline · N steps" caption
+with one condition/action child row per beat ("at 1.0s" left, the action right), compiling to
+the await-chain you would have written - Insert > Timeline drops one in, "Add Step…" on the
+block appends beats, and `EventSheets.timeline()` builds one from code. The shipped Object
+Pool pack gains the **reset() seam**: a pooled scene that defines `reset()` has it called on
+every spawn. New guide: **Block Styles - How To Read Every Row** (`docs/GUIDE-BLOCK-STYLES.md`),
+the field guide to every block kind and the icon legend.
+
 ### Added - Remember Between Runs: one toggle makes a variable survive closing the game
 
 Right-click any sheet variable and pick **Remember Between Runs**. The compiler then emits the
