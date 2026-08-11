@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added - Mockup Slate theme preset
+
+A tenth bundled theme matching the design-mockup look the recent features were designed
+against: deep slate background, flat panel cells with hairline borders (no translucent lane
+tints), blue condition badges, purple action badges, a round green trigger badge, amber
+object labels, and lime value highlights. Rounded event shells (6px) with 4px cells. Pick it
+from the toolbar theme switcher; every token remains editable in the Theme Editor, which
+already exposes the full token set reflectively - no new knobs were needed.
+
 ### Added - condition/action cells wrap instead of clipping (the Construct rule)
 
 A cell whose text is wider than its lane now grows the row and wraps the text - no more

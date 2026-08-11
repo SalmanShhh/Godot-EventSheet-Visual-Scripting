@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="EventSheetEditorStyle" format=3]
+
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_element_style.gd" id="1_mksl1"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_event_style.gd" id="2_mksl2"]
+[ext_resource type="Script" path="res://addons/eventsheet/theme/event_sheet_editor_style.gd" id="3_mksl3"]
+
+[sub_resource type="Resource" id="Resource_mkslc"]
+script = ExtResource("1_mksl1")
+text_color = Color(0.847059, 0.866667, 0.894118, 1)
+chip_background_color = Color(0.168627, 0.196078, 0.235294, 1)
+chip_border_color = Color(0.227451, 0.262745, 0.309804, 1)
+chip_hover_color = Color(0.2, 0.231373, 0.278431, 1)
+badge_background_color = Color(0.309804, 0.560784, 0.866667, 1)
+badge_foreground_color = Color(1, 1, 1, 1)
+
+[sub_resource type="Resource" id="Resource_mksla"]
+script = ExtResource("1_mksl1")
+text_color = Color(0.847059, 0.866667, 0.894118, 1)
+chip_background_color = Color(0.184314, 0.215686, 0.262745, 1)
+chip_border_color = Color(0.227451, 0.262745, 0.309804, 1)
+chip_hover_color = Color(0.223529, 0.254902, 0.301961, 1)
+badge_background_color = Color(0.478431, 0.388235, 0.788235, 1)
+badge_foreground_color = Color(1, 1, 1, 1)
+
+[sub_resource type="Resource" id="Resource_mksle"]
+script = ExtResource("2_mksl2")
+language_block_accent_color = Color(0.352941, 0.419608, 0.509804, 1)
+ace_action_badge_background_color = Color(0.478431, 0.388235, 0.788235, 1)
+ace_action_accent_color = Color(1, 1, 1, 1)
+ace_condition_badge_background_color = Color(0.309804, 0.560784, 0.866667, 1)
+ace_condition_accent_color = Color(1, 1, 1, 1)
+ace_expression_badge_background_color = Color(0.788235, 0.603922, 0.305882, 1)
+ace_expression_accent_color = Color(0.078431, 0.090196, 0.105882, 1)
+verb_chip_background_color = Color(0.2, 0.231373, 0.278431, 1)
+verb_chip_foreground_color = Color(0.811765, 0.890196, 1, 1)
+sheet_background_color = Color(0.098039, 0.113725, 0.133333, 1)
+row_background_color = Color(0.129412, 0.14902, 0.176471, 1)
+row_background_alt_color = Color(0.137255, 0.160784, 0.192157, 1)
+row_border_color = Color(0.223529, 0.254902, 0.301961, 1)
+condition_lane_color = Color(0.14902, 0.172549, 0.207843, 1)
+action_lane_color = Color(0.168627, 0.196078, 0.235294, 1)
+lane_divider_color = Color(0.223529, 0.254902, 0.301961, 1)
+trigger_badge_background_color = Color(0.345098, 0.752941, 0.541176, 1)
+trigger_badge_foreground_color = Color(1, 1, 1, 1)
+group_background_color = Color(0.180392, 0.223529, 0.278431, 1)
+group_background_alt_color = Color(0.196078, 0.239216, 0.294118, 1)
+group_accent_color = Color(0.345098, 0.752941, 0.541176, 1)
+group_title_color = Color(0.803922, 0.839216, 0.886275, 1)
+group_badge_background_color = Color(0.345098, 0.752941, 0.541176, 1)
+group_badge_foreground_color = Color(0.098039, 0.113725, 0.133333, 1)
+group_fold_background_color = Color(0.14902, 0.184314, 0.235294, 1)
+comment_row_background_color = Color(0.117647, 0.137255, 0.164706, 1)
+comment_text_color = Color(0.596078, 0.627451, 0.674510, 1)
+selection_fill_color = Color(0.309804, 0.560784, 0.866667, 0.22)
+hover_fill_color = Color(0.309804, 0.560784, 0.866667, 0.08)
+column_header_background_color = Color(0.129412, 0.14902, 0.176471, 1)
+column_header_conditions_color = Color(0.427451, 0.701961, 0.94902, 1)
+column_header_actions_color = Color(0.643137, 0.576471, 0.878431, 1)
+object_label_color = Color(0.847059, 0.639216, 0.352941, 1)
+value_highlight_color = Color(0.623529, 0.831373, 0.478431, 1)
+cell_hover_color = Color(1, 1, 1, 0.1)
+behavior_accent_color = Color(0.478431, 0.388235, 0.788235, 1)
+gutter_background_color = Color(0.098039, 0.113725, 0.133333, 1)
+gutter_text_color = Color(0.545098, 0.580392, 0.631373, 1)
+event_corner_radius = 6
+cell_corner_radius = 4
+group_corner_radius = 0
+region_corner_radius = 6
+
+[resource]
+script = ExtResource("3_mksl3")
+event_style = SubResource("Resource_mksle")
+condition_style = SubResource("Resource_mkslc")
+action_style = SubResource("Resource_mksla")
