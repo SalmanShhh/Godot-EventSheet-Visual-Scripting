@@ -947,3 +947,10 @@ Everyone on the team kept hand-writing the same raycast-from-mouse snippet sligh
   omit it) - add it only when the script's own code should run in the editor too.
 - **`{, args}` drops only on the empty string.** `"0"` and `"false"` still emit the comma. Use it for
   genuinely optional trailing arguments, and remember it does not reverse-lift.
+
+## A step-by-step method for wrapping code you already wrote
+
+This guide is the reference. When the job is "I have working GDScript, make it droppable in a
+sheet", `docs/internal/skills/turn-existing-gdscript-into-aces.md` is the working method:
+route selection, one worked example per code pattern (computed checks, state, dropdowns, async,
+looping, node-scoped targeting), and the verification ritual in order.

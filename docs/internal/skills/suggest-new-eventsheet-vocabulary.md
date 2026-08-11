@@ -1,9 +1,9 @@
 ---
-name: pattern-mockup
+name: suggest-new-eventsheet-vocabulary
 description: Generate an HTML mockup of 15+ code-pattern suggestions for EventSheets in the settled sheet design language - each with event-sheet rows, the editor click path, and the code (@ace_*) authoring route. Use when the user asks for pattern/vocabulary suggestions for a theme (game feel, tool dev, UI, a genre) as a visual mockup.
 ---
 
-# Pattern-suggestion mockup generator
+# Suggest new event sheet vocabulary (as a visual mockup)
 
 Produce ONE self-contained HTML file mocking up pattern suggestions for the theme given in
 the arguments (e.g. "tool dev experience", "juice and game feel", "roguelike vocabulary").
