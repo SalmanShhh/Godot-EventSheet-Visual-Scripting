@@ -2,6 +2,59 @@
 
 ## [Unreleased]
 
+### Added - 72 verbs for values, text, tables, resources and copying
+
+The first half of a vocabulary wave drawn from a design mockup, in five new modules plus
+two existing ones. Every verb is proven twice in tests: the emitted code is pinned, and the
+behavior is run for real including the edge case each verb exists for.
+
+**Asking what a value is** - **Text Is A Number** / **Text Is A Whole Number** answer before
+you convert, and **Number From Text** / **Whole Number From Text** convert with a fallback
+YOU choose. The shipped To Integer / To Decimal / Text To Int / Text To Float answer 0 for
+"abc", for "" and for "0" alike, so a typo in an amount box arrives as a real-looking bet of
+nothing; those templates are frozen and untouched, the checked pair sits beside them.
+**Is Nothing** / **Has Something** ask "is there anything there" across every type at once
+(a 0 is deliberately NOT nothing - a score of zero is a real value). **Contains Any Of** /
+**All Of** / **None Of** test text against a whole list in one row.
+
+**Values with a fallback and named parts** - **Number Or** / **Text Or** / **List Or** /
+**Record Or** / **Value Or**, and **Part Of** / **Set Part Of** which name the parts of a
+Vector, a Color or a record in words instead of `.x` / `.y`.
+
+**Text that fits and reads** - **Shorten To Fit** and **Shorten To Whole Words**,
+**With Thousands Separators**, **As Percent Text**, **As Duration**, **Align Left** /
+**Align Right** / **Center In Width** for lined-up columns, **As Title Text** /
+**As Sentence Text**, and **Translated Text From Pattern** (plus a Set Text twin) which
+keeps the translation KEY rather than baking the literal.
+
+**Reading text apart** - **Text Before** / **Text After** / **Text Between** and **Number In
+Text** do beginner-legible extraction with no regex jargon, **Split Keeping Quotes** respects
+quoted commas, and **Explain JSON Problem** / **Explain Table Problem** / **Missing Fields**
+turn a parse failure into a sentence naming what went wrong instead of a null.
+
+**Tables** - **Table From File** / **Table From Text** turn a spreadsheet into a list of
+records with a header row (quoted commas, CRLF endings, a missing trailing newline and
+duplicate header names are all handled and all pinned), with **Column Of Table**, **Row
+Where**, and looping conditions **For Each Line In Text** / **For Each Part In Text** /
+**For Each Resource In Folder**.
+
+**Resources** - **Resources In Folder** / **Resource In Folder** / **Load Resource Or
+Default** / **Count Of Resources In**, the copy pair that makes the real trap legible
+(**Copy Resource (Independent)** vs **Copy Resource (Share Sub-Resources)**, with Deep Copy
+for lists and records), **Copy Values From** / **Fill Blanks From** / **Apply Preset To
+Node** / **Matches Properties Of**, and the migration trio **Data Is Older Than Version** /
+**Rename Field** / **Stamp Data Version**.
+
+**Copying and sharing** - **Share Code For** / **Value From Share Code** / **Share Code Is
+Valid** round-trip any value through one pasteable string, **Copy Share Code To Clipboard**
+and the clipboard read side (**Clipboard Has Text** / **Has Image** / **Clipboard Image** /
+**Clipboard Text Is**), **Clone Into**, and the per-run memory **Remember Value As** /
+**Restore Value Into** / **Remembered Value** / **Has Remembered** / **Forget Remembered**.
+
+A param can now opt into showing its option LABEL in the row sentence
+(`display_option_labels`), so "set the up/down part of velocity" no longer reads as
+`set the "y" part of velocity` while still emitting the exact key.
+
 ### Added - Priced Tables and Encounter Timeline (two packs, four addons)
 
 **Priced Tables** is the general priced-interaction table - vendors, upgrade kiosks, toll
