@@ -41,6 +41,25 @@ static func run() -> bool:
 	ok = _check("the diamond renders as a badge span", diamond_is_badge, true) and ok
 	ok = _check("the diamond never rides inside the text", Array(header_texts).has("◆ State: patrol"), false) and ok
 
+	# 1b. A reflected verb reads in WORDS in the condition lane too, not as its raw id. The
+	# action lane always had this registry-free fallback; the condition lane leaked
+	# "method:can_afford_entry" into the first cell a beginner reads. Pinned against a provider
+	# the registry does NOT know, so the fallback itself is what runs (a registered pack
+	# resolves its real display name one branch earlier).
+	var reflected: ACECondition = ACECondition.new()
+	reflected.provider_id = "NoSuchProviderForTest"
+	reflected.ace_id = "method:can_afford_entry"
+	reflected.params = {"entry_id": "slot_id"}
+	ok = _check("a reflected condition reads as a sentence", builder._format_condition_descriptor_base(reflected), "Can Afford Entry ( slot_id )") and ok
+	var reflected_bare: ACECondition = ACECondition.new()
+	reflected_bare.provider_id = "NoSuchProviderForTest"
+	reflected_bare.ace_id = "method:is_sold_out"
+	ok = _check("a param-less reflected condition is just its name", builder._format_condition_descriptor_base(reflected_bare), "Is Sold Out") and ok
+	var unknown: ACECondition = ACECondition.new()
+	unknown.provider_id = "NoSuchProviderForTest"
+	unknown.ace_id = "NotAMethodId"
+	ok = _check("a non-reflected unknown id is left alone", builder._format_condition_descriptor_base(unknown), "NotAMethodId") and ok
+
 	# 2. Trigger ids resolve friendly names through the descriptor fallback.
 	ok = _check("physics trigger reads in words", builder._trigger_display_text("Core", "OnPhysicsProcess"), "Every Physics Tick") and ok
 	ok = _check("update trigger reads in words", builder._trigger_display_text("Core", "OnProcess"), "Every Frame") and ok

@@ -4185,8 +4185,29 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	var generated_definition: ACEDefinition = _viewport._find_definition(condition.provider_id, condition.ace_id)
 	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	if generated_definition == null and descriptor == null:
-		return condition.ace_id
+		# Same registry-free reading the ACTION path gets: a reflected verb (method:<name>) must
+		# still read as words when the registry has no definition to offer right now. Without
+		# this a pack condition fell back to the raw id and the cell showed
+		# "method:can_afford_entry" beside actions that read "Buy" - the id leaking into the one
+		# lane a beginner reads first.
+		return _reflected_member_sentence(condition.ace_id, params_dict)
 	return _format_display_translated(generated_definition, descriptor, params_dict)
+
+
+## A reflected `method:<name>` id as a readable sentence with the row's own values in call
+## order ("Can Afford Entry ( slot_id )"). Shared by the condition and action fallbacks so
+## both lanes read the same way when the registry has no definition; returns the id
+## unchanged for anything that is not a reflected member.
+func _reflected_member_sentence(ace_id: String, params_dict: Dictionary) -> String:
+	if not ace_id.begins_with("method:"):
+		return ace_id
+	var shown: PackedStringArray = PackedStringArray()
+	for param_key: Variant in params_dict.keys():
+		if str(param_key) == "target":
+			continue
+		shown.append(str(params_dict[param_key]))
+	var member_label: String = ace_id.trim_prefix("method:").trim_prefix("_").capitalize()
+	return member_label if shown.is_empty() else "%s ( %s )" % [member_label, ", ".join(shown)]
 
 
 func _find_inline_trigger_condition_index(event_row: EventRow) -> int:
@@ -4283,16 +4304,7 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 		# outlive any given registry build. Rows never need the registry to compile (their template
 		# is baked); with this, they no longer need it to READ either. `set_collapsed` -> the same
 		# "Set Collapsed" the picker names it, with the row's own values in call order.
-		if action.ace_id.begins_with("method:"):
-			var member: String = action.ace_id.trim_prefix("method:")
-			var shown: PackedStringArray = PackedStringArray()
-			for param_key: Variant in params_dict.keys():
-				if str(param_key) == "target":
-					continue
-				shown.append(str(params_dict[param_key]))
-			var member_label: String = member.trim_prefix("_").capitalize()
-			return member_label if shown.is_empty() else "%s ( %s )" % [member_label, ", ".join(shown)]
-		return action.ace_id
+		return _reflected_member_sentence(action.ace_id, params_dict)
 	return _format_display_translated(generated_definition, descriptor, params_dict)
 
 # ── Row-as-sentence hover ───────────────────────────────────────────────────────────
