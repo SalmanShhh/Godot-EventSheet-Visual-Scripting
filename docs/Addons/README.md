@@ -96,6 +96,8 @@ Attach to a node to move it.
 
 - [Checkpoint](Checkpoint.md) - set a checkpoint, respawn at it, and let the shared reset() seam clear velocity and hp.
 - [Interaction](Interaction.md) - focus the nearest interactable in range, press to interact, and let each thing answer On Interacted.
+- [Priced Tables](Priced-Tables.md) - the priced-interaction table (vendors, kiosks, toll gates, skill trees) as a .tres of entries: prices, stock, unlock gates, and one Buy Entry row that spends through whatever wallet answers.
+- [Encounter Timeline](Encounter-Timeline.md) - spawn beats on a schedule (waves, boss phases, tutorial pacing, ambient traffic) from a .tres, pooled when a pool is there, with a derived plain-text report of the plan and its density.
 
 - [Physics Car](Physics-Car.md) - a force-driven arcade car on a RigidBody2D, with grip and drift.
 - [Weapon Kit](Weapon-Kit.md) - fire rates, ammo, reloads, and spread for a weapon.
