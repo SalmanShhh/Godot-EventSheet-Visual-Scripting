@@ -1466,6 +1466,16 @@ func _open_tree_context_menu(definition: ACEDefinition) -> void:
 	_tree_context_menu.popup(Rect2i(Vector2i(DisplayServer.mouse_get_position()), Vector2i.ZERO))
 
 
+## A stub whose dialect cannot express everything this ACE does leads with plain `#` notes
+## (per-row state, a multi-line template, node scoping, looping, a starting value). Those notes
+## are the part a reader most needs and the part most easily pasted past, so the status line
+## says they are there.
+static func _stub_note_hint(stub_text: String) -> String:
+	if not stub_text.begins_with("#") or stub_text.begins_with("##"):
+		return ""
+	return " Read the # notes on top first - this one needs more than the dialect can declare."
+
+
 ## One-field prompt used by the rename / recategorize actions. Built with the shared popup
 ## helpers so it reads like every other dialog, and committed on Enter or OK.
 func _prompt_override(definition: ACEDefinition, field: String, title: String, seed_value: String) -> void:
@@ -1513,13 +1523,15 @@ func _on_tree_context_menu_pressed(item_id: int) -> void:
 				_favorite_button.set_pressed_no_signal(pinned)
 			_refresh_side_panes()
 		1:
-			DisplayServer.clipboard_set(EventSheetACEAnnotationStub.comment_stub(definition))
+			var comment_stub: String = EventSheetACEAnnotationStub.comment_stub(definition)
+			DisplayServer.clipboard_set(comment_stub)
 			if _info_label != null:
-				_info_label.text = "Copied the ## @ace_* stub for %s - paste it into a provider script." % definition.display_name
+				_info_label.text = "Copied the ## @ace_* stub for %s - paste it into a provider script.%s" % [definition.display_name, _stub_note_hint(comment_stub)]
 		2:
-			DisplayServer.clipboard_set(EventSheetACEAnnotationStub.registrar_stub(definition))
+			var registrar_stub: String = EventSheetACEAnnotationStub.registrar_stub(definition)
+			DisplayServer.clipboard_set(registrar_stub)
 			if _info_label != null:
-				_info_label.text = "Copied the registrar snippet for %s - paste it into a provider script." % definition.display_name
+				_info_label.text = "Copied the registrar snippet for %s - paste it into a provider script.%s" % [definition.display_name, _stub_note_hint(registrar_stub)]
 		3:
 			_prompt_override(definition, "display_name", "Rename verb", definition.display_name)
 		4:

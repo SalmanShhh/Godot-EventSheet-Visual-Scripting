@@ -952,5 +952,16 @@ Everyone on the team kept hand-writing the same raycast-from-mouse snippet sligh
 
 This guide is the reference. When the job is "I have working GDScript, make it droppable in a
 sheet", `docs/internal/skills/turn-existing-gdscript-into-aces.md` is the working method:
-route selection, one worked example per code pattern (computed checks, state, dropdowns, async,
-looping, node-scoped targeting), and the verification ritual in order.
+the id/name survey, a route decision table, the annotation grammar rules that bite (verbatim
+annotation values, one line per annotation, comma splitting inside `@ace_param`), one worked
+example per code pattern (computed checks, cheap meta-keyed state versus stateful members,
+dropdowns and the single-pass rule, async, triggers, looping, node-scoped and host-targeted
+templates, persistence, the lambda traps), and the verification ritual in order.
+
+The fastest way to learn either dialect is still the picker: right-click any ACE and
+**Copy annotation stub** / **Copy registrar snippet**. Stubs are generated from the live
+definition, so they carry that ACE's real labeled options, starting values, row caption,
+looping annotation and shipped node-target form - and when the dialect cannot express
+something (per-row state, a multi-line template, node scoping, a starting value in the
+registrar), the stub leads with `#` notes that say so and hand over the descriptor chain
+that can.
