@@ -1465,26 +1465,51 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Save Written** (`slot_index: int`)
 - **On Before Save** (`slot_index: int`)
 - **On After Load** (`slot_index: int`)
+- **On Autosave Due** (`slot_index: int`)
+- **On Save Needs Upgrade** (`save_data: Dictionary, from_version: int`)
+- **On Load Failed** (`slot_index: int, reason: String`)
+- **On Save Failed** (`slot_index: int, reason: String`)
+- **On New Run Started** (`slot_index: int, run_number: int`)
 
 #### Conditions
+- **For Each Saved Slot**
+- **For Each Saveable Addon**
+- **For Each Backup Of Slot** (`slot_index: int`)
 - **Has Save Key** (`key: String`) - Whether the key exists in the active slot.
 - **Save File Is Format** (`path: String, expected_format: String`) - Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).
 - **Save Format Is** (`expected_format: String`) - Whether the active save format (the Inspector format property) equals the given one.
 - **Slot Exists** (`slot_index: int`) - Whether the slot has a save file.
+- **Autosave Is Paused** - Whether Pause Autosave is currently holding the clock.
+- **Safe To Save Now** - Whether writing the active slot right now would lose nothing: the slot either has no file yet, or its file reads back cleanly. Guard Save Game with it (and read it inside On Autosave Due before you commit to a write).
+- **Slot Is Readable** (`slot_index: int`) - Whether that slot's file opens and parses. A slot with NO file reads as false, so pair it with Slot Exists to tell a slot with no save yet apart from a damaged one.
+- **Addon Saves Itself** (`addon_name: String`) - Whether that autoload takes part in Save All Addons (it exposes save_state, itself or through a behavior child). Invert it to catch the pack somebody forgot to give a save seam.
 
 #### Actions
 - **Save Value** (`key: String, value: Variant`) - Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.
 - **Save Number** (`key: String, value: float`) - Writes a number under the key (active slot).
 - **Save Text** (`key: String, value: String`) - Writes a string under the key (active slot).
-- **Delete Slot** - Removes the active slot's save file.
-- **Save Game** - Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, then fires On Save Written.
-- **Load Game** - Restores every persist-group snapshot, then broadcasts On After Load so every sheet reads its state back.
+- **Delete Slot** - Removes the active slot's save file (and its slot picture, which lives beside it).
+- **Save Game** - Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, stamps the slot card, then fires On Save Written (or On Save Failed).
+- **Load Game** - Reads the slot, gives migration rows their moment (On Save Needs Upgrade) when an older build wrote it, restores every persist-group snapshot, then broadcasts On After Load. A file it cannot read fires On Load Failed instead.
 - **Save Node State** (`node: Node, key: String`) - Snapshots a node and its behaviors (any child with save_state) under the key.
 - **Load Node State** (`node: Node, key: String`) - Restores a node and its behaviors from the key's snapshot.
 - **Save Group State** (`group: String, key: String`) - Snapshots every node in the scene-tree group (and their behaviors) under the key.
 - **Load Group State** (`key: String`) - Restores the group snapshot saved under the key (nodes matched by scene path).
 - **Save Singleton State** (`singleton_name: String, key: String`) - Snapshots an autoload addon (Currency Ledger, Upgrades, Prestige...) by its autoload name.
 - **Load Singleton State** (`singleton_name: String, key: String`) - Restores an autoload addon's snapshot from the key.
+- **Set Slot Detail** (`detail_name: String, value: Variant`) - Writes one line of the active slot's card - the header a load menu reads without ever calling Load Game (chapter, hero name, percent, difficulty...). Playtime rides along automatically.
+- **Capture Slot Thumbnail** (`width: int, height: int`) - Photographs the viewport, shrinks it to tile size and writes it beside the active slot's file, so the picture travels with the save - Copy Slot brings it along, Delete Slot takes it away, and an encryption key covers the picture exactly as it covers the save. Hide your pause menu first.
+- **Copy Slot** (`from_slot: int, to_slot: int`) - Duplicates one slot's save file (and its picture) onto another slot - branching a save as one row. The destination is overwritten.
+- **Delay Autosave By** (`seconds: float`) - Pushes the next autosave out by this many seconds. The beat is deferred, never dropped - use it in the not-now branch of On Autosave Due.
+- **Pause Autosave** - Stops the autosave clock without losing the interval - for a boss fight, a cutscene, or a scene transition. Resume Autosave starts it again.
+- **Resume Autosave** - Starts the autosave clock again after Pause Autosave, from a fresh interval.
+- **Use Upgraded Save** (`save_data: Dictionary`) - Writes the record the migration rows just fixed back to the slot, stamped with the current Save Version, and lets Load Game carry on with it. Run it once at the end of On Save Needs Upgrade - the stamp makes the trigger stop firing for that file.
+- **Save All Addons** - Snapshots every autoload that exposes the save_state seam - Currency Ledger, Upgrades, Prestige, Skin Vault, StatForge and anything you wrote - each under its own autoload name. There is no list to maintain: install a pack, register it, and it is in the save.
+- **Load All Addons** - Restores every autoload snapshot Save All Addons wrote, matched by autoload name. An addon the save knows but this build does not have is reported, never dropped in silence.
+- **Never Save This Key** (`key: String`) - Keeps this key out of every save from now on - cached node lists, scratch buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.
+- **Restore Slot From Backup** (`slot_index: int, how_many_back: int`) - Puts an earlier version of the slot back (1 = the save before this one, 2 = the one before that). The CURRENT file is backed up first, so a restore is never a one-way door. Needs Backup Count above 0.
+- **Carry Value Into Next Run** (`key: String`) - Marks one key to survive Start New Run - unlocked skins, a best time, the settings. Everything not marked is wiped. Marks last for the session, so declare them right before the reset.
+- **Start New Run** (`slot_index: int`) - Wipes the slot and writes back ONLY the carried keys, its slot card, and a run counter one higher than before, then fires On New Run Started. New Game Plus, a chapter reset, a seasonal wipe, or the Reset Progress button that must keep the settings.
 
 #### Expressions
 - **Load Value** (`key: String, default_value: Variant`) - Reads any value (your default when missing).
@@ -1496,6 +1521,18 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Save File Format** (`path: String`) - Detects the format of the save file at the path (config/json/binary/csv/ini/xml), or "" when it is missing or unrecognised. Feed it to Read Save File.
 - **List Slots** - Slot numbers that have save files (for menus).
 - **Slot Modified Time** (`slot_index: int`) - Unix mtime of the slot's file (0 when missing).
+- **Slot Detail** (`slot_index: int, detail_name: String, fallback: Variant`) - Reads one card field of any slot straight off disk (your fallback when that slot has no such detail). Nothing is loaded and nothing is applied - safe to call for every tile of a load menu.
+- **Slot Playtime** (`slot_index: int`) - Seconds played on that slot, accumulated by this pack and stamped on every save (0 when the slot has none). Feed it to Format Time for a 4h12m tile.
+- **Slot Thumbnail** (`slot_index: int`) - The picture saved beside that slot, ready to drop into a TextureRect (null when the slot has none). Read off disk, so a load menu never loads a game to draw its tiles.
+- **Slot Path** (`slot_index: int`) - Where that slot's file lives (built from the Save Directory and File Pattern properties). Feed it to Read Save File, File Size or Copy File - the paths the pack uses are no longer private.
+- **Seconds Until Autosave** - How long until the next autosave beat - for a countdown pip in the corner. 0 when autosave is off or paused.
+- **Slot Save Version** (`slot_index: int`) - Which Save Version wrote that slot's file. A file with no stamp counts as 1, so saves written before you ever bumped the number still answer.
+- **Last Save Problem** - The last save or load failure as one readable sentence ("" when both worked). Show it in a label, or log it.
+- **Slot Problem** (`slot_index: int`) - What is wrong with that slot's file, as one readable sentence ("" when it reads fine or does not exist) - the tooltip for a greyed-out Continue button.
+- **Save Size** - How many bytes the active slot's file takes on disk (0 when there is none) - the number nobody sees until a player reports a 40MB save.
+- **Save Report** - A plain-text breakdown of the active save: total bytes, key count, then the heaviest keys in order. Log it, or show it in a debug overlay when a player reports a save that will not stop growing. The total is the real size of the file on disk; the per-key numbers are relative WEIGHTS (each value written out as text, measured in characters), so they rank the keys against one another rather than adding up to the total.
+- **Slot Backup Count** (`slot_index: int`) - How many earlier versions of that slot are kept right now (0 when backups are off or nothing has been overwritten yet).
+- **Run Number** - 1 on a fresh save, 2 after the first New Game Plus, and so on - the number every NG+ banner, difficulty curve and you-have-beaten-this-N-times line is really asking for.
 
 ### SceneFlowBehavior (`res://eventsheet_addons/scene_flow/scene_flow_behavior.gd`)
 @ace_category("Scenes") @ace_expose_all(node) @ace_version(1.0.0)
@@ -1647,6 +1684,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Threshold Crossed** (`rule_id: String, stat: String, total: float`)
 
 #### Conditions
+- **For Each Buff**
 - **Has Buff** (`buff_id: String`)
 - **Buff Is Active** (`buff_id: String`)
 - **Has Buffs With Tag** (`tag: String`)

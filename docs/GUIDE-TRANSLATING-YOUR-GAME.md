@@ -15,9 +15,10 @@ Contents:
 3. [Generate the translation template (POT)](#3-generate-the-translation-template-pot)
 4. [Add a language](#4-add-a-language)
 5. [Switch languages from events](#5-switch-languages-from-events)
-6. [The Translation vocabulary](#6-the-translation-vocabulary)
-7. [Use cases](#7-use-cases)
-8. [Tips and common mistakes](#8-tips-and-common-mistakes)
+6. [Sentences with slots: translate first, fill second](#6-sentences-with-slots-translate-first-fill-second)
+7. [The Translation vocabulary](#7-the-translation-vocabulary)
+8. [Use cases](#8-use-cases)
+9. [Tips and common mistakes](#9-tips-and-common-mistakes)
 
 ## 1. Scenarios where this excels
 
@@ -88,7 +89,53 @@ reminds you if sheets translate text while the project has no catalog registered
 - **Current Language** returns the active locale code, e.g. to highlight the current
   choice in an options menu.
 
-## 6. The Translation vocabulary
+## 6. Sentences with slots: translate first, fill second
+
+Most player-facing text has a value in the middle of it: "You have 7 coins", "Ilsa: hello",
+"Chapter 3 of 12". The natural way to build that is the shipped **Text From Pattern**, and the
+natural way to translate it is to wrap the result in **Translate**. That combination silently does
+not work, and it is worth understanding exactly why:
+
+```
+Translate(Text From Pattern("You have {coins} coins", {"coins": 7}))
+```
+
+Text From Pattern runs first, so `tr()` is handed `"You have 7 coins"` - a string that appears in no
+catalog, because a catalog holds the PATTERN, not one filled-in instance of it. The lookup misses,
+`tr()` returns its argument unchanged, and the label reads in the source language forever. Nothing
+errors and nothing warns; the text is simply never translated.
+
+Two verbs do it in the order that works - look the whole sentence up FIRST, fill the slots second:
+
+- **Translated Text From Pattern** (Expression, folder **Translation**) - emits
+  `tr(pattern).format(values)`.
+- **Set Text (translated pattern)** (Action, folder **Translation**) - the Label twin of the same
+  thing.
+
+```
+Function   On refresh_hud
+  -> Set Text (translated pattern)   "You have {coins} coins"   with   {"coins": coins}
+  -> Set Text of "Wallet"   Translated Text From Pattern("{name}: {amount}", {"name": wallet_name, "amount": amount})
+
+On Language Changed
+  -> Call Function   refresh_hud()
+
+Has Changed   coins
+  -> Call Function   refresh_hud()
+```
+
+Three things follow from this:
+
+- **The pattern IS the key.** `You have {coins} coins`, braces and all, is the exact line that goes in
+  your CSV or POT - so a translator sees the slot and can move it, which is the whole point in a
+  language with a different word order.
+- **Re-run it on a language change.** A Label filled from an expression is not auto-translated by
+  Godot, so refresh it under **On Language Changed** (the example above routes both the language
+  switch and the value change through one function).
+- **The slot names travel.** `{coins}` must survive translation. A translator who renames the slot
+  breaks the fill, so keep slot names short and obviously technical.
+
+## 7. The Translation vocabulary
 
 | ACE | Kind | Emits |
 |---|---|---|
@@ -97,6 +144,8 @@ reminds you if sheets translate text while the project has no catalog registered
 | Translate | Expression | `tr(text)` |
 | Translate With Context | Expression | `tr(text, context)` |
 | Translate Plural | Expression | `tr_n(singular, plural, count)` |
+| Translated Text From Pattern | Expression | `tr(pattern).format(values)` |
+| Set Text (translated pattern) | Action | `text = tr(pattern).format(values)` |
 | Language Just Changed | Condition | `what == NOTIFICATION_TRANSLATION_CHANGED` |
 | On Language Changed | Trigger | the `_notification` virtual + the gate above |
 
@@ -104,7 +153,7 @@ Context disambiguates strings that read the same but translate differently ("May
 month vs the verb). Plural picks the right form for a count per language, including
 languages with more than two plural forms.
 
-## 7. Use cases
+## 8. Use cases
 
 ### 1. A jam game in two languages by Sunday
 
@@ -154,7 +203,7 @@ A community offers a Polish translation after launch: you regenerate the POT, ha
 
 An in-game store shows "1 gem" versus "5 gems" and reuses "Free" for both price and shipping; the plural-aware ACE handles the count and Translate With Context keeps the two "Free" entries apart so translators are never guessing.
 
-## 8. Tips and common mistakes
+## 9. Tips and common mistakes
 
 - **Never wrap a variable's DEFAULT in tr()**. Defaults initialize before translations
   load, and `@export` defaults are data, not display text. Mark the text where it is
@@ -171,3 +220,7 @@ An in-game store shows "1 gem" versus "5 gems" and reuses "Free" for both price 
   identifiers breaks lookups. The globe defaults to off for a reason.
 - **Test a language quickly**: add a Set Language action on a debug key press, or set
   Project Settings > Internationalization > Locale > Test to force one at startup.
+- **Never fill a sentence's slots before translating it.** `Translate(Text From Pattern(...))` looks
+  up a string that already has your values in it, which no catalog contains, so the label stays in
+  the source language and nothing warns. Use **Translated Text From Pattern** (or the Set Text twin),
+  which translates the pattern first and fills second.

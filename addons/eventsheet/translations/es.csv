@@ -108,6 +108,7 @@ Welcome…,Bienvenida…
 Start the Tour…,Comenzar el recorrido…
 Keyboard Shortcuts,Atajos de teclado
 Rename Everywhere…,Renombrar en todas partes…
+Change Type Everywhere…,Cambiar el tipo en todas partes…
 Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,Analiza cada expresión ƒx y bloque GDScript; marca las filas con problemas y salta a la primera.
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,Alterna la emisión de puntos de interrupción: las hojas compiladas en depuración se detienen en las filas marcadas.
 Toggle Live Values: running sheets stream their variables here (editable).,Alterna los valores en vivo: las hojas en ejecución transmiten sus variables aquí (editables).
@@ -172,6 +173,8 @@ Edit Events,Editar los eventos
 Insert Snippet…,Insertar un fragmento…
 Extract All Actions to Function…,Extraer todas las acciones a una función…
 Group Under a Heading…,Agrupar bajo un título…
+Export Grid to CSV…,Exportar la tabla a CSV…
+Import Grid from CSV…,Importar la tabla desde CSV…
 Detach Comment To Row,Separar el comentario en una fila
 Convert Scope,Convertir el ámbito
 Toggle Constant,Alternar constante
@@ -576,6 +579,7 @@ Filter,Filtrar
 Edit Values Across Selection…,Editar valores en la selección…
 Select All Events Using This,Seleccionar todos los eventos que lo usan
 Replace Object References…,Reemplazar referencias de objeto…
+Paste Special…,Pegado especial…
 Replace Object References,Reemplazar referencias de objeto
 Retarget the selection,Reorientar la selección
 Replace,Reemplazar
@@ -741,3 +745,402 @@ Export Is Debug,La exportación es de depuración
 True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,Verdadero cuando la exportación que disparó este paso de horneado es una compilación de depuración. Úselo dentro de Al exportar el proyecto para mantener el contenido de prueba fuera de las versiones finales.
 Export Has Feature,La exportación tiene la característica
 "True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.","Verdadero cuando el preajuste de exportación que disparó este paso de horneado lleva la etiqueta de característica indicada: la forma de hornear datos distintos para móvil, web o escritorio."
+Share Code For,Código para compartir de
+"Turns any value into one compact line of text a player can paste anywhere - a seed, a loadout, a whole save. Read it back with Value From Share Code.","Convierte cualquier valor en una línea compacta de texto que un jugador puede pegar en cualquier sitio: una semilla, un equipamiento, una partida entera. Se vuelve a leer con Valor desde código para compartir."
+Utility: Window,Utilidades: Ventana
+share code for [b]{value}[/b],código para compartir de [b]{value}[/b]
+Value,Valor
+"Anything - a run seed, a loadout list, a colour, a whole save record.","Cualquier cosa: una semilla de partida, una lista de equipamiento, un color, un registro de guardado completo."
+Copy Share Code To Clipboard,Copiar código para compartir al portapapeles
+"Encodes any value as a share code and puts it straight on the operating system clipboard, ready to paste.","Codifica cualquier valor como código para compartir y lo deja directamente en el portapapeles del sistema, listo para pegar."
+copy share code for [b]{value}[/b] to clipboard,copiar el código para compartir de [b]{value}[/b] al portapapeles
+"Anything - a run seed, a loadout list, a whole save record.","Cualquier cosa: una semilla de partida, una lista de equipamiento, un registro de guardado completo."
+Share Code Is Valid,El código para compartir es válido
+"True when the text really is a share code that decodes cleanly, so a paste box can refuse garbage before it reaches the game. Ask it when the pasted text CHANGES (a Paste button, On Text Changed) rather than every frame: a code mangled in transit can still reach the decoder, and the engine logs a line each time it is refused. A code that was made from nothing at all also reads as invalid.","Verdadero cuando el texto es realmente un código para compartir que se decodifica limpiamente, de modo que una caja de pegado puede rechazar basura antes de que llegue al juego. Pregúntalo cuando el texto pegado CAMBIE (un botón Pegar, Al cambiar el texto), no en cada fotograma: un código dañado en tránsito sí llega al decodificador, y el motor escribe una línea cada vez que lo rechaza. Un código hecho a partir de nada también se lee como no válido."
+[b]{code}[/b] is a valid share code,[b]{code}[/b] es un código para compartir válido
+Code,Código
+The pasted text to test - usually Clipboard Text or a paste box's text.,El texto pegado que se comprueba: normalmente Texto del portapapeles o el texto de una caja de pegado.
+Value From Share Code,Valor desde código para compartir
+"Reads the value back out of a share code, giving nothing when the text is not a valid code.","Vuelve a leer el valor de un código para compartir, y no devuelve nada cuando el texto no es un código válido."
+value from share code [b]{code}[/b],valor desde el código para compartir [b]{code}[/b]
+The share code text to read - check it with Share Code Is Valid first.,El texto del código para compartir que se lee: compruébalo antes con El código para compartir es válido.
+Clipboard Has Text,El portapapeles tiene texto
+True when the operating system clipboard currently holds any text - gate a paste box on it.,Verdadero cuando el portapapeles del sistema contiene algún texto ahora mismo: úsalo para habilitar una caja de pegado.
+clipboard has text,el portapapeles tiene texto
+Clipboard Has Image,El portapapeles tiene una imagen
+"True when the operating system clipboard currently holds an image, such as a screenshot the player just copied.","Verdadero cuando el portapapeles del sistema contiene una imagen ahora mismo, como una captura que el jugador acaba de copiar."
+clipboard has an image,el portapapeles tiene una imagen
+Clipboard Image,Imagen del portapapeles
+The image currently on the operating system clipboard - feed it to ImageTexture.create_from_image to show it.,La imagen que hay ahora mismo en el portapapeles del sistema: pásala a ImageTexture.create_from_image para mostrarla.
+clipboard image,imagen del portapapeles
+Clipboard Text Is,El texto del portapapeles es
+"Compares whatever text is on the clipboard against a value, with your choice of operator.","Compara el texto que haya en el portapapeles con un valor, usando el operador que elijas."
+clipboard text {op} [b]{value}[/b],texto del portapapeles {op} [b]{value}[/b]
+Operator,Operador
+Comparison.,Comparación.
+= (equal to),= (igual a)
+!= (not equal to),!= (distinto de)
+< (less than),< (menor que)
+<= (at most),<= (como mucho)
+> (greater than),> (mayor que)
+>= (at least),>= (al menos)
+Text to compare the clipboard against.,Texto con el que se compara el portapapeles.
+Clone Into,Clonar en
+"Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.","Copia un nodo vivo, añade la copia a un padre, la coloca y opcionalmente la mete en un grupo: la forma de una sola fila de Duplicar nodo más Añadir hijo más Fijar posición. Si partes de un archivo .tscn, usa Generar escena."
+Nodes,Nodos
+"clone [i]{source}[/i] into [i]{parent}[/i] at [b]{at}[/b], group [b]{group}[/b]","clonar [i]{source}[/i] en [i]{parent}[/i] en [b]{at}[/b], grupo [b]{group}[/b]"
+The live node to copy.,El nodo vivo que se copia.
+Into,En
+Where the copy is added.,Dónde se añade la copia.
+At,En
+World position for the copy (a Vector3 for a 3D node). Only used when the copy has a position.,Posición en el mundo para la copia (un Vector3 si el nodo es 3D). Solo se usa cuando la copia tiene posición.
+Optional group for the copy (blank = none).,Grupo opcional para la copia (en blanco = ninguno).
+Remember Value As,Recordar valor como
+"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game use Remember Between Runs on the variable, or the Save System pack.","Guarda cualquier valor aparte bajo un nombre, en memoria, durante esta partida: el valor previo para una vista previa, una mejora o una escena. Para memoria que sobreviva al cierre del juego usa Recordar entre partidas en la variable, o el paquete Sistema de guardado."
+Run Context,Contexto de ejecución
+remember [b]{value}[/b] as [b]{name}[/b],recordar [b]{value}[/b] como [b]{name}[/b]
+Any label you also use in Restore Value Into.,Cualquier etiqueta que uses también en Restaurar valor en.
+The value to copy aside.,El valor que se guarda aparte.
+Restore Value Into,Restaurar valor en
+Pours a remembered value back into a variable. When nothing was remembered under that name the variable keeps what it already had.,"Vuelca un valor recordado de nuevo en una variable. Si no se recordó nada bajo ese nombre, la variable conserva lo que ya tenía."
+restore [b]{name}[/b] into [b]{var_name}[/b],restaurar [b]{name}[/b] en [b]{var_name}[/b]
+The label used in Remember Value As.,La etiqueta usada en Recordar valor como.
+Into Variable,En la variable
+Variable that receives the remembered value (left alone when nothing was remembered).,Variable que recibe el valor recordado (se deja intacta si no se recordó nada).
+Remembered Value,Valor recordado
+"The value remembered under a name this run, or your fallback when there is none - read it without pouring it back.","El valor recordado bajo un nombre en esta partida, o tu valor de reserva si no hay ninguno: leerlo sin volcarlo de vuelta."
+remembered [b]{name}[/b] or [b]{fallback}[/b],recordado [b]{name}[/b] o [b]{fallback}[/b]
+Or,O
+What you get when nothing was remembered under that name.,Lo que obtienes si no se recordó nada bajo ese nombre.
+Has Remembered,Tiene recordado
+True when something was remembered under that name this run - the gate on a Cancel button that should only undo a preview it actually took.,Verdadero cuando en esta partida se recordó algo bajo ese nombre: la condición de un botón Cancelar que solo debe deshacer una vista previa que realmente tomó.
+has remembered [b]{name}[/b],tiene recordado [b]{name}[/b]
+Forget Remembered,Olvidar lo recordado
+"Drops a remembered value, so Has Remembered reads false again. Forgetting a name that was never remembered is harmless.","Descarta un valor recordado, de modo que Tiene recordado vuelve a ser falso. Olvidar un nombre que nunca se recordó es inofensivo."
+forget remembered [b]{name}[/b],olvidar lo recordado [b]{name}[/b]
+Resources In Folder,Recursos en la carpeta
+"Loads every data asset (.tres) in a folder as a list, so a folder of files becomes your content - items, enemies, levels, or a mod folder. A missing folder gives an empty list, and a file that fails to load is left out rather than arriving as nothing.","Carga como lista todos los recursos de datos (.tres) de una carpeta, de modo que una carpeta de archivos se convierte en tu contenido: objetos, enemigos, niveles o una carpeta de mods. Una carpeta que no existe da una lista vacía, y un archivo que no se puede cargar se descarta en vez de llegar como nada."
+Files,Archivos
+resources in [b]{folder}[/b],recursos en [b]{folder}[/b]
+Folder,Carpeta
+"Folder to scan (not recursive). Every .tres / .res inside it is loaded, in the folder's own order.","Carpeta que se explora (no recursiva). Se carga cada .tres / .res que hay dentro, en el orden propio de la carpeta."
+Resource In Folder,Recurso en la carpeta
+"Fetches one data asset out of a folder by its file name, or nothing at all when there is no such file - no red error.","Saca un único recurso de datos de una carpeta por su nombre de archivo, o nada en absoluto si ese archivo no existe: sin error en rojo."
+resource [b]{name}[/b] in [b]{folder}[/b],recurso [b]{name}[/b] en [b]{folder}[/b]
+Folder holding the data assets.,Carpeta que contiene los recursos de datos.
+"File name WITHOUT the .tres extension - ""rusty_sword"" finds rusty_sword.tres.","Nombre de archivo SIN la extensión .tres: ""rusty_sword"" encuentra rusty_sword.tres."
+Load Resource Or Default,Cargar recurso o valor por defecto
+"Loads a file and hands back your fallback when it is missing, so a deleted or mod-supplied file never crashes the game.","Carga un archivo y devuelve tu valor de reserva cuando falta, de modo que un archivo borrado o aportado por un mod nunca hace fallar el juego."
+load [b]{path}[/b] or [i]{fallback}[/i],cargar [b]{path}[/b] o [i]{fallback}[/i]
+Path,Ruta
+Full path to the resource or scene to load.,Ruta completa al recurso o escena que se carga.
+Fallback,Valor de reserva
+"What to use instead when the file is not there (a preloaded default, or null).","Qué usar en su lugar cuando el archivo no está (un valor por defecto precargado, o null)."
+Count Of Resources In,Número de recursos en
+"How many data assets a folder holds, counted without loading any of them - zero if the folder is missing.","Cuántos recursos de datos contiene una carpeta, contados sin cargar ninguno: cero si la carpeta no existe."
+count of resources in [b]{folder}[/b],número de recursos en [b]{folder}[/b]
+Folder to count data assets in (not recursive).,Carpeta en la que se cuentan los recursos de datos (no recursiva).
+Copy Resource (Independent),Copiar recurso (independiente)
+"Makes a private copy of a resource, right down to the resources inside it, so writing to the copy never changes the .tres on disk or any other node holding it. Use this before a node edits its own stats.","Hace una copia privada de un recurso, hasta los recursos que lleva dentro, de modo que escribir en la copia nunca cambia el .tres del disco ni ningún otro nodo que lo tenga. Úsalo antes de que un nodo edite sus propias estadísticas."
+Helpers,Ayudantes
+independent copy of [i]{resource}[/i],copia independiente de [i]{resource}[/i]
+Resource,Recurso
+The resource to copy. Anything that is not a resource (including nothing at all) gives nothing back.,El recurso que se copia. Cualquier cosa que no sea un recurso (incluido nada en absoluto) no devuelve nada.
+Copy Resource (Share Sub-Resources),Copiar recurso (compartir subrecursos)
+Makes a cheap copy whose own fields are separate but whose inner resources and lists are still SHARED with the original. Pick this only when you want that sharing - otherwise use Copy Resource (Independent).,"Hace una copia barata cuyos campos propios están separados pero cuyos recursos y listas internos siguen COMPARTIDOS con el original. Elígelo solo si quieres ese uso compartido; si no, usa Copiar recurso (independiente)."
+copy of [i]{resource}[/i] (sub-resources shared),copia de [i]{resource}[/i] (subrecursos compartidos)
+Deep Copy,Copia profunda
+"Copies the array AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Array only copies the outer level.","Copia el array Y cada lista o diccionario anidado dentro, de modo que editar la copia no puede alcanzar al original. Copiar array solo copia el nivel exterior."
+Variables: Array,Variables: Array
+deep copy of [b]{var_name}[/b],copia profunda de [b]{var_name}[/b]
+Array,Array
+Array variable to copy right through.,Variable de array que se copia por completo.
+"Copies the dictionary AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Dictionary only copies the outer level.","Copia el diccionario Y cada lista o diccionario anidado dentro, de modo que editar la copia no puede alcanzar al original. Copiar diccionario solo copia el nivel exterior."
+Variables: Dictionary,Variables: Diccionario
+Dictionary,Diccionario
+Dictionary variable to copy right through.,Variable de diccionario que se copia por completo.
+Copy Values From,Copiar valores de
+"Pours a list of values off another object onto this one, in one row instead of one row per property. Names the target does not have are skipped, so a single preset can serve several kinds of node.","Vuelca una lista de valores de otro objeto sobre este, en una sola fila en vez de una fila por propiedad. Los nombres que el destino no tiene se omiten, así un mismo ajuste sirve para varios tipos de nodo."
+copy [b]{names}[/b] from [i]{source}[/i] into [i]{target}[/i],copiar [b]{names}[/b] de [i]{source}[/i] a [i]{target}[/i]
+The object being written to - it is what changes.,El objeto en el que se escribe: es lo que cambia.
+The object to read from - a node OR a resource.,El objeto del que se lee: un nodo O un recurso.
+Names,Nombres
+Comma-separated property names. Leave blank to copy every variable the source's script declares.,Nombres de propiedades separados por comas. Déjalo en blanco para copiar todas las variables que declara el script del origen.
+Fill Blanks From,Rellenar huecos desde
+"Writes a base's values ONLY into fields this object left empty, leaving everything you did fill in alone. That is the override chain: a base item plus a rarity variant, or a shipped table plus a mod file. Empty means nothing there: no value at all, blank text, an empty list or an empty record - a 0 and a false are real values and are kept, exactly as Is Nothing and Missing Fields read them.","Escribe los valores de una base SOLO en los campos que este objeto dejó vacíos, sin tocar nada de lo que sí rellenaste. Esa es la cadena de sobrescritura: un objeto base más una variante por rareza, o una tabla incluida más un archivo de mod. Vacío significa que no hay nada: ningún valor, texto en blanco, una lista vacía o un registro vacío. Un 0 y un falso son valores reales y se conservan, igual que los leen Es nada y Campos que faltan."
+fill blanks in [i]{target}[/i] from [i]{base}[/i],rellenar huecos en [i]{target}[/i] desde [i]{base}[/i]
+Fill,Rellenar
+The one being completed - it is what changes.,El que se completa: es lo que cambia.
+Where the missing values come from.,De dónde salen los valores que faltan.
+Apply Preset To Node,Aplicar ajuste a un nodo
+"Pours a data asset's fields onto the same-named properties of a node, so difficulty tiers, weapon tunings and boss phases become a data edit instead of a wall of rows.","Vuelca los campos de un recurso de datos sobre las propiedades del mismo nombre de un nodo, de modo que los niveles de dificultad, los ajustes de armas y las fases de jefe pasan a ser una edición de datos en vez de un muro de filas."
+apply preset [b]{preset}[/b] to [i]{target}[/i],aplicar el ajuste [b]{preset}[/b] a [i]{target}[/i]
+Preset,Ajuste
+The data asset to pour on (a .tres you filled in the Inspector). Nothing happens if it is empty.,"El recurso de datos que se vuelca (un .tres que rellenaste en el Inspector). Si está vacío, no pasa nada."
+The node to apply it to.,El nodo al que se aplica.
+Matches Properties Of,Coincide en propiedades con
+"True while the listed properties hold the same values on both objects - the cheap 'is this ghost still in sync' or 'has anything changed' check. A name neither object has reads as NOT matching, so a typo shows up instead of quietly passing, and either side being gone reads as not matching too.","Verdadero mientras las propiedades listadas tengan los mismos valores en ambos objetos: la comprobación barata de 'sigue este fantasma sincronizado' o 'ha cambiado algo'. Un nombre que ninguno de los dos objetos tiene se lee como NO coincidente, así que una errata salta a la vista en vez de pasar en silencio; y si falta cualquiera de los dos lados, tampoco coincide."
+[i]{target}[/i] matches [b]{names}[/b] of [i]{other}[/i],[i]{target}[/i] coincide en [b]{names}[/b] con [i]{other}[/i]
+Object,Objeto
+The object to test.,El objeto que se comprueba.
+"Comma-separated property names to compare. A blank list has nothing to compare, so it is true.","Nombres de propiedades separados por comas que se comparan. Una lista vacía no tiene nada que comparar, así que es verdadera."
+Of,De
+The object to compare against.,El objeto con el que se compara.
+Data Is Older Than Version,Los datos son anteriores a la versión
+"True when a loaded record was written by an older build than this one - the gate a migration sits under. A record with NO version field counts as 0, so the very first format upgrades too, and so does one whose version field is empty or is not a number at all.","Verdadero cuando un registro cargado lo escribió una compilación anterior a esta: la condición bajo la que va una migración. Un registro SIN campo de versión cuenta como 0, así que también se actualiza el primerísimo formato, igual que uno cuyo campo de versión está vacío o no es un número."
+[b]{record}[/b] is older than version [b]{version}[/b],[b]{record}[/b] es anterior a la versión [b]{version}[/b]
+Record,Registro
+"The parsed record (a save file, a payload, a manifest).","El registro ya analizado (un archivo de guardado, una carga de datos, un manifiesto)."
+Field,Campo
+Which field holds the version number.,Qué campo contiene el número de versión.
+Version,Versión
+The version this build writes.,La versión que escribe esta compilación.
+Rename Field,Renombrar campo
+"Moves a value to its new field name, and does nothing at all when the old name is not there - so a migration is safe to run twice.","Mueve un valor a su nuevo nombre de campo, y no hace nada en absoluto cuando el nombre antiguo no está: así una migración se puede ejecutar dos veces sin peligro."
+rename [b]{from_field}[/b] to [b]{to_field}[/b] in [i]{record}[/i],renombrar [b]{from_field}[/b] a [b]{to_field}[/b] en [i]{record}[/i]
+"The record to migrate, edited in place.","El registro que se migra, editado en el sitio."
+The old field name.,El nombre de campo antiguo.
+The new field name (overwritten if it is already there).,El nombre de campo nuevo (se sobrescribe si ya existe).
+Stamp Data Version,Sellar la versión de los datos
+"Writes the current format number onto a record, so the next load knows it has already been migrated. Data Is Older Than Version reads it back, and reads it as 0 when it is missing or is not a number.","Escribe el número de formato actual en un registro, de modo que la siguiente carga sepa que ya se migró. Los datos son anteriores a la versión lo vuelve a leer, y lo lee como 0 cuando falta o no es un número."
+stamp [i]{record}[/i] as version [b]{version}[/b],sellar [i]{record}[/i] como versión [b]{version}[/b]
+The record to stamp.,El registro que se sella.
+The version this build writes - a whole number.,La versión que escribe esta compilación: un número entero.
+Table From File,Tabla desde archivo
+"Reads a .csv whose FIRST line is the column names and gives you one record per row, each field reachable by column name - row[""price""]. Quoted cells may contain the separator, Windows line endings are fine, and a missing file simply gives no rows. Store it in an Array variable, then walk it with a For Each pick filter.","Lee un .csv cuya PRIMERA línea son los nombres de columna y te da un registro por fila, con cada campo accesible por nombre de columna: row[""price""]. Las celdas entrecomilladas pueden contener el separador, los finales de línea de Windows no son problema, y un archivo que falta simplemente no da filas. Guárdalo en una variable de array y luego recórrelo con un filtro de selección Para cada."
+Files: Tables,Archivos: Tablas
+rows of [b]{path}[/b],filas de [b]{path}[/b]
+File,Archivo
+The .csv to read. Its FIRST line must be the column names.,El .csv que se lee. Su PRIMERA línea deben ser los nombres de columna.
+Separator,Separador
+What separates the columns in that file.,Qué separa las columnas en ese archivo.
+Comma,Coma
+Semicolon,Punto y coma
+Tab,Tabulación
+Table From Text,Tabla desde texto
+"The same column-names-first parse as Table From File, but over text you already hold instead of a file on disk.","El mismo análisis con los nombres de columna en la primera línea que Tabla desde archivo, pero sobre texto que ya tienes en vez de un archivo en disco."
+rows in [b]{text}[/b],filas en [b]{text}[/b]
+"Spreadsheet text you already have - a pasted blob, a downloaded body, a file you read earlier. FIRST line = the column names.","Texto de hoja de cálculo que ya tienes: un bloque pegado, un cuerpo descargado, un archivo que leíste antes. PRIMERA línea = los nombres de columna."
+Column Of Table,Columna de la tabla
+"Gives one whole column as a list, in row order - handy for a dropdown's items, a weights list, or a quick sum. A row missing that column contributes empty text.","Da una columna entera como lista, en orden de fila: práctico para los elementos de un desplegable, una lista de pesos o una suma rápida. Una fila a la que le falte esa columna aporta texto vacío."
+column [b]{column}[/b] of [b]{table}[/b],columna [b]{column}[/b] de [b]{table}[/b]
+Table,Tabla
+The rows-of-records variable a Table From File (or Table From Text) expression filled.,La variable de filas como registros que llenó una expresión Tabla desde archivo (o Tabla desde texto).
+Column,Columna
+"The column name to read, exactly as it is spelled in the header row.","El nombre de columna que se lee, escrito exactamente como en la fila de cabecera."
+Row Where,Fila donde
+"Finds the FIRST record whose column holds this value - the single-item lookup, e.g. the row for item ""sword"". Gives an empty record when nothing matches, so check it with Dictionary Is Empty before reading fields.","Encuentra el PRIMER registro cuya columna contiene este valor: la búsqueda de un solo elemento, por ejemplo la fila del objeto ""sword"". Si no coincide nada devuelve un registro vacío, así que compruébalo con Diccionario está vacío antes de leer campos."
+row of [b]{table}[/b] where [b]{column}[/b] is [b]{value}[/b],fila de [b]{table}[/b] donde [b]{column}[/b] es [b]{value}[/b]
+"The column to match on, exactly as it is spelled in the header row.","La columna con la que se compara, escrita exactamente como en la fila de cabecera."
+Is,Es
+"The value to look for. Compared as text, so 25 and ""25"" both match a cell reading 25.","El valor que se busca. Se compara como texto, así que tanto 25 como ""25"" coinciden con una celda que pone 25."
+For Each Line In Text,Para cada línea del texto
+"Runs this event's actions once per LINE of the text, skipping blank ones. Windows (CRLF) and old-Mac (CR) endings are handled, so no line arrives with a stray carriage return. Read the current one as `line`.","Ejecuta las acciones de este evento una vez por LÍNEA del texto, saltándose las vacías. Los finales de Windows (CRLF) y de Mac antiguo (CR) se tratan, así que ninguna línea llega con un retorno de carro suelto. La actual se lee como `line`."
+Loops,Bucles
+for each line in [b]{text}[/b],para cada línea de [b]{text}[/b]
+"The text to walk line by line - a file you read, a pasted blob, a leaderboard body.","El texto que se recorre línea a línea: un archivo que leíste, un bloque pegado, el cuerpo de una tabla de puntuaciones."
+For Each Part In Text,Para cada parte del texto
+"Runs this event's actions once per PIECE of the text. Each piece arrives with its surrounding spaces trimmed, and empty pieces are skipped, so ""sword; shield;; bow"" is three parts. Read the current one as `part`.","Ejecuta las acciones de este evento una vez por TROZO del texto. Cada trozo llega sin los espacios que lo rodean, y los trozos vacíos se saltan, así que ""sword; shield;; bow"" son tres partes. El actual se lee como `part`."
+for each part of [b]{text}[/b] split by [b]{separator}[/b],para cada parte de [b]{text}[/b] separada por [b]{separator}[/b]
+"The text to break up - a tag list, a chat command's arguments, one cell of a spreadsheet.","El texto que se trocea: una lista de etiquetas, los argumentos de un comando de chat, una celda de una hoja de cálculo."
+Split by,Separar por
+"What separates the pieces, e.g. "","" or "";"" or "" "".","Qué separa los trozos, por ejemplo "","" o "";"" o "" ""."
+For Each Resource In Folder,Para cada recurso de la carpeta
+"Runs this event's actions once per data asset (.tres / .res) in a folder, already loaded - the ""a folder of items IS my item list"" setup, with no list to maintain. A folder that is not there walks nothing (quietly - it is checked first, so a loop that runs every frame cannot spam errors), and anything that fails to load is skipped rather than arriving as null. Read the current one as `entry`.","Ejecuta las acciones de este evento una vez por recurso de datos (.tres / .res) de una carpeta, ya cargado: el montaje ""una carpeta de objetos ES mi lista de objetos"", sin lista que mantener. Una carpeta que no existe no recorre nada (en silencio: se comprueba antes, así que un bucle por fotograma no puede llenar la consola de errores), y lo que no se puede cargar se omite en vez de llegar como null. El actual se lee como `entry`."
+for each resource in [b]{folder}[/b],para cada recurso de [b]{folder}[/b]
+Folder of data assets to walk. Only .tres / .res files are loaded; anything else in there is ignored.,Carpeta de recursos de datos que se recorre. Solo se cargan archivos .tres / .res; cualquier otra cosa se ignora.
+Text Before,Texto antes de
+"The part of the text before the first marker: Text Before(""Ada [angry]: hi"", "" ["") is ""Ada"". When the marker is not there you get the whole text back, so nothing is silently lost.","La parte del texto anterior a la primera marca: Texto antes de(""Ada [angry]: hi"", "" ["") es ""Ada"". Si la marca no está, recuperas el texto entero, así que no se pierde nada en silencio."
+the part of {text} before {marker},la parte de {text} antes de {marker}
+The line to read a piece out of.,La línea de la que se lee un trozo.
+Before,Antes de
+The marker to stop at (the first one wins).,La marca en la que se para (gana la primera).
+Text After,Texto después de
+"Everything after the first marker: Text After(""Ada [angry]: hi"", ""]: "") is ""hi"". Empty when the marker is not there, because then there is no ""after"".","Todo lo que hay después de la primera marca: Texto después de(""Ada [angry]: hi"", ""]: "") es ""hi"". Vacío si la marca no está, porque entonces no hay ""después""."
+the part of {text} after {marker},la parte de {text} después de {marker}
+After,Después de
+The marker to start after (the first one wins).,La marca tras la que se empieza (gana la primera).
+Text Between,Texto entre
+"The part between two markers: Text Between(""Ada [angry]: hi"", ""["", ""]"") is ""angry"". Empty when the opening marker is missing, and the rest of the text when the closing one is.","La parte entre dos marcas: Texto entre(""Ada [angry]: hi"", ""["", ""]"") es ""angry"". Vacío si falta la marca de apertura, y el resto del texto si falta la de cierre."
+the part of {text} between {open} and {close},la parte de {text} entre {open} y {close}
+The opening marker.,La marca de apertura.
+The closing marker.,La marca de cierre.
+Number In Text,Número en el texto
+"The first number found anywhere in the text, whole or decimal: ""Chapter 3"" gives 3, ""v1.25-beta"" gives 1.25. You get 0 when there is no number at all, and you never write a pattern.","El primer número que aparece en cualquier parte del texto, entero o decimal: ""Chapter 3"" da 3, ""v1.25-beta"" da 1.25. Si no hay ningún número obtienes 0, y nunca escribes un patrón."
+the first number in {text},el primer número de {text}
+Text that has a number somewhere in it.,Texto que tiene un número en alguna parte.
+Split Keeping Quotes,Dividir respetando comillas
+"Splits text on a separator but keeps anything inside ""double quotes"" together as one piece, and drops the quotes: give ""iron sword"" 2 is three pieces, not four. Empty pieces are skipped, so runs of separators never produce blanks.","Divide el texto por un separador pero mantiene junto como un solo trozo todo lo que va entre ""comillas dobles"", y quita las comillas: give ""iron sword"" 2 son tres trozos, no cuatro. Los trozos vacíos se saltan, así que las series de separadores nunca producen huecos."
+"pieces of {text}, keeping quotes together","trozos de {text}, manteniendo juntas las comillas"
+"The line to split - a console entry, a search box, a pasted cell.","La línea que se divide: una entrada de consola, una caja de búsqueda, una celda pegada."
+What separates the pieces OUTSIDE quotes.,Qué separa los trozos FUERA de las comillas.
+Explain JSON Problem,Explicar el problema del JSON
+"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","Por qué este JSON no se pudo analizar, con la línea: ""line 4: Expected ':'"". Vacío cuando se analiza bien, así que un resultado vacío ES el visto bueno. Regístralo y el informe de fallo se escribe solo. Ramifica según el vacío de ESTE verbo (El texto está en blanco, invertido) en vez de con JSON es válido: esa condición lee como no válido un archivo que solo contiene la palabra null, y este verbo no tiene nada que decir al respecto, así que juntarlos registra un error sin motivo."
+JSON,JSON
+why {text} is not valid JSON,por qué {text} no es JSON válido
+"The JSON text to check - a file you read, a paste, a server reply.","El texto JSON que se comprueba: un archivo que leíste, algo pegado, una respuesta del servidor."
+Explain Table Problem,Explicar el problema de la tabla
+"The first cell of a table that should be a number and is not, said out loud: ""row 12, column ""price"": ""abc"" is not a number"". Rows are counted from 1 over the rows you hold - Table From File has already used up the header line, so row 12 is line 13 of the file. A row that is not a record at all is reported too. Empty when every listed column checks out.","La primera celda de una tabla que debería ser un número y no lo es, dicha en voz alta: ""row 12, column ""price"": ""abc"" is not a number"". Las filas se cuentan desde 1 sobre las filas que tienes: Tabla desde archivo ya gastó la línea de cabecera, así que la fila 12 es la línea 13 del archivo. También se informa de una fila que no sea un registro. Vacío cuando todas las columnas listadas están bien."
+what is wrong in {records},qué falla en {records}
+Rows,Filas
+"A list of records - one per row, each field reachable by column name.","Una lista de registros: uno por fila, con cada campo accesible por nombre de columna."
+Number columns,Columnas numéricas
+The columns that must hold numbers.,Las columnas que deben contener números.
+Missing Fields,Campos que faltan
+"The listed fields that are missing or left blank, comma-separated, and empty when the record is complete. Blank means nothing there: null, empty text, an empty list or an empty record - a 0 is a real value and is never reported.","Los campos listados que faltan o quedaron en blanco, separados por comas, y vacío cuando el registro está completo. En blanco significa que no hay nada: null, texto vacío, una lista vacía o un registro vacío. Un 0 es un valor real y nunca se informa."
+the fields missing from {record},los campos que faltan en {record}
+A record or a resource to check.,Un registro o un recurso que se comprueba.
+Fields,Campos
+"The fields it must have filled in, separated by commas.","Los campos que debe tener rellenados, separados por comas."
+Shorten To Fit,Acortar para que quepa
+"Trims text to a maximum number of characters and marks the cut with the ending you choose, so a clipped name never reads as the whole name. Text that already fits comes back untouched, and the result never runs past the width you gave - a width too narrow to hold the ending simply cuts without one. Cuts mid-word: use Shorten To Whole Words when the cut should land on a word boundary.","Recorta el texto a un número máximo de caracteres y marca el corte con la terminación que elijas, de modo que un nombre cortado nunca se lea como el nombre entero. El texto que ya cabe vuelve intacto, y el resultado nunca pasa del ancho que diste: un ancho demasiado estrecho para la terminación simplemente corta sin ella. Corta a mitad de palabra: usa Acortar por palabras completas cuando el corte deba caer en un límite de palabra."
+shorten [b]{text}[/b] to [b]{max_chars}[/b] characters,acortar [b]{text}[/b] a [b]{max_chars}[/b] caracteres
+The text that has to fit.,El texto que tiene que caber.
+Max characters,Máximo de caracteres
+"The widest the result may get, in characters, counting the ending below.","Lo más ancho que puede llegar a ser el resultado, en caracteres, contando la terminación de abajo."
+Ending,Terminación
+"What marks the cut, e.g. ""..."" or a single ellipsis character. Its own length is taken out of the budget.","Lo que marca el corte, por ejemplo ""..."" o un único carácter de puntos suspensivos. Su propia longitud se descuenta del presupuesto."
+Shorten To Whole Words,Acortar por palabras completas
+"Like Shorten To Fit, but backs up to the last complete word before cutting, so ""Ancient Sword of Thorns"" reads ""Ancient Sword..."" instead of ""Ancient Sword of Th"". When the budget holds no whole word (one very long word) it falls back to cutting by characters, and when it is too narrow to hold the ending at all it cuts without one - so the result is never just the ending, and never wider than you asked for.","Como Acortar para que quepa, pero retrocede hasta la última palabra completa antes de cortar, de modo que ""Ancient Sword of Thorns"" se lee ""Ancient Sword..."" en vez de ""Ancient Sword of Th"". Si en el presupuesto no cabe ninguna palabra completa (una sola palabra muy larga), recurre a cortar por caracteres, y si es demasiado estrecho para la terminación corta sin ella: así el resultado nunca es solo la terminación ni más ancho de lo que pediste."
+shorten [b]{text}[/b] to whole words within [b]{max_chars}[/b],acortar [b]{text}[/b] por palabras completas dentro de [b]{max_chars}[/b]
+With Thousands Separators,Con separadores de miles
+"Turns a number into grouped digits a player can take in at a glance: 1234567 reads ""1,234,567"". Whole numbers only (the fraction is dropped); a negative keeps its minus sign. For idle-game scale (1.23e15, ""1.23 Qa"") reach for the Big Numbers pack instead.","Convierte un número en dígitos agrupados que un jugador capta de un vistazo: 1234567 se lee ""1,234,567"". Solo números enteros (la parte decimal se descarta); un negativo conserva su signo menos. Para escalas de juego idle (1.23e15, ""1.23 Qa"") recurre al paquete Números grandes."
+[b]{value}[/b] with thousands separators,[b]{value}[/b] con separadores de miles
+The number to make readable. Anything after the decimal point is dropped.,El número que se hace legible. Todo lo que hay tras el punto decimal se descarta.
+As Percent Text,Como texto de porcentaje
+"Turns a fraction into percent TEXT with the sign on it: 0.73 reads ""73%"". Feed it a 0-to-1 value (Percent Of already returns 0-to-100, so divide that by 100 or use the raw fraction).","Convierte una fracción en TEXTO de porcentaje con el signo puesto: 0.73 se lee ""73%"". Dale un valor de 0 a 1 (Porcentaje de ya devuelve de 0 a 100, así que divídelo entre 100 o usa la fracción cruda)."
+[b]{value}[/b] as a percent,[b]{value}[/b] como porcentaje
+Fraction,Fracción
+"A fraction where 1.0 means full, e.g. health / max_health.","Una fracción donde 1.0 significa lleno, por ejemplo health / max_health."
+Decimals,Decimales
+Digits after the decimal point. 0 gives a whole percent.,Dígitos tras el punto decimal. 0 da un porcentaje entero.
+As Duration,Como duración
+"Seconds as a duration that survives passing an hour: 3725 reads ""1h 02m"" and 90 reads ""1m 30s"". A negative duration reads as zero. Use As Clock Time when you want strict mm:ss (it rolls an hour into ""60:00"").","Segundos como duración que aguanta pasar de una hora: 3725 se lee ""1h 02m"" y 90 se lee ""1m 30s"". Una duración negativa se lee como cero. Usa Como reloj cuando quieras mm:ss estricto (allí una hora se convierte en ""60:00"")."
+[b]{seconds}[/b] as a duration,[b]{seconds}[/b] como duración
+Seconds,Segundos
+A duration in seconds.,Una duración en segundos.
+Align Left,Alinear a la izquierda
+"Pads text out on the RIGHT to a fixed width, so every row starts on the same edge and reads as a column. Text longer than the width is left alone (it is never cut - shorten it first). Give the Label a MONOSPACE theme font or the column will still drift.","Rellena el texto por la DERECHA hasta un ancho fijo, de modo que cada fila empieza en el mismo borde y se lee como una columna. El texto más largo que el ancho se deja tal cual (nunca se corta: acórtalo antes). Dale a la etiqueta una fuente MONOESPACIADA en el tema o la columna seguirá bailando."
+[b]{text}[/b] aligned left in [b]{width}[/b],[b]{text}[/b] alineado a la izquierda en [b]{width}[/b]
+The text to pad out.,El texto que se rellena.
+Width,Ancho
+Column width in characters. Shorter text is padded; longer text is left as it is.,Ancho de columna en caracteres. El texto más corto se rellena; el más largo se deja tal cual.
+Fill with,Rellenar con
+"What fills the gap: a space, or ""."" for a dotted leader. One character.","Qué rellena el hueco: un espacio, o ""."" para una guía de puntos. Un solo carácter."
+Align Right,Alinear a la derecha
+"Pads text out on the LEFT to a fixed width, so numbers END on the same edge and read as a column of figures. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the column will still drift.","Rellena el texto por la IZQUIERDA hasta un ancho fijo, de modo que los números TERMINAN en el mismo borde y se leen como una columna de cifras. El texto más largo que el ancho se deja tal cual. Dale a la etiqueta una fuente MONOESPACIADA en el tema o la columna seguirá bailando."
+[b]{text}[/b] aligned right in [b]{width}[/b],[b]{text}[/b] alineado a la derecha en [b]{width}[/b]
+The text to pad out - str() a number first.,El texto que se rellena: pasa antes un número por str().
+Center In Width,Centrar en el ancho
+"Pads text on BOTH sides to a fixed width, so a heading sits in the middle of a column. An odd leftover space goes on the right. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the centering will still drift.","Rellena el texto por AMBOS lados hasta un ancho fijo, de modo que un encabezado queda en el centro de una columna. El hueco sobrante impar va a la derecha. El texto más largo que el ancho se deja tal cual. Dale a la etiqueta una fuente MONOESPACIADA en el tema o el centrado seguirá bailando."
+[b]{text}[/b] centered in [b]{width}[/b],[b]{text}[/b] centrado en [b]{width}[/b]
+The text to center.,El texto que se centra.
+As Title Text,Como texto de título
+"Turns a machine id into a readable name: ""fire_sword"" reads ""Fire Sword"", ""maxHealth"" reads ""Max Health"". Use it wherever a key has to be shown to a player, so ids and labels never drift apart in two places.","Convierte un identificador de máquina en un nombre legible: ""fire_sword"" se lee ""Fire Sword"" y ""maxHealth"" se lee ""Max Health"". Úsalo allí donde haya que mostrar una clave al jugador, para que los identificadores y las etiquetas nunca se separen en dos sitios."
+[b]{text}[/b] as title text,[b]{text}[/b] como texto de título
+"An id or key, e.g. fire_sword or maxHealth.","Un identificador o clave, por ejemplo fire_sword o maxHealth."
+As Sentence Text,Como texto de frase
+"Raises the FIRST letter only and leaves the rest of the text exactly as it is, so ""NPC"" and ""HP"" keep their capitals. Empty text stays empty.","Sube SOLO la primera letra y deja el resto del texto exactamente igual, de modo que ""NPC"" y ""HP"" conservan sus mayúsculas. El texto vacío sigue vacío."
+[b]{text}[/b] as sentence text,[b]{text}[/b] como texto de frase
+A sentence that needs its first letter raised.,Una frase cuya primera letra hay que poner en mayúscula.
+Translated Text From Pattern,Texto traducido desde un patrón
+"Looks the whole sentence up in the current language FIRST, then fills its {slots}. The pattern you type here - slots and all - is the translation key, so it is what goes in the catalog. Filling the slots first (Translate around Text From Pattern) produces a string no catalog can contain, and the text then never translates.","PRIMERO busca la frase entera en el idioma actual y luego rellena sus {slots}. El patrón que escribes aquí, huecos incluidos, es la clave de traducción, así que es lo que va al catálogo. Rellenar los huecos primero (Traducir alrededor de Texto desde un patrón) produce una cadena que ningún catálogo puede contener, y entonces el texto no se traduce nunca."
+Translation,Traducción
+translated text from [b]{pattern}[/b],texto traducido desde [b]{pattern}[/b]
+Pattern,Patrón
+"The source sentence, with {name} slots. This exact string, slots and all, is the translation key that goes in the catalog.","La frase original, con huecos {name}. Esta cadena exacta, huecos incluidos, es la clave de traducción que va al catálogo."
+Values,Valores
+"What fills the slots: {""name"": value, ...} - e.g. {""coins"": coins}.","Lo que rellena los huecos: {""name"": value, ...} - por ejemplo {""coins"": coins}."
+Set Text (translated pattern),Fijar el texto (patrón traducido)
+Sets this Label's text from a pattern that is translated FIRST and filled second. The pattern - slots and all - is the translation key. Re-run it under On Language Changed so the label follows a live language switch.,"Fija el texto de esta etiqueta a partir de un patrón que PRIMERO se traduce y luego se rellena. El patrón, huecos incluidos, es la clave de traducción. Vuelve a ejecutarlo bajo Al cambiar de idioma para que la etiqueta siga un cambio de idioma en vivo."
+set text to translated [b]{pattern}[/b],fijar el texto al [b]{pattern}[/b] traducido
+Text Is A Number,El texto es un número
+"True when this text would convert to a number cleanly. Ask it BEFORE converting, so a typo can never arrive as a silent 0 and the sheet bet nothing. Spaces around the number are ignored; empty text is not a number.","Verdadero cuando este texto se convertiría a número limpiamente. Pregúntalo ANTES de convertir, para que una errata nunca llegue como un 0 silencioso y la hoja apueste nada. Los espacios alrededor del número se ignoran; el texto vacío no es un número."
+Compare: Text,Comparar: Texto
+{text} is a number,{text} es un número
+"Text to test - a typed-in field, a value read back out of a save, a CSV or JSON cell.","Texto que se comprueba: un campo escrito a mano, un valor releído de un guardado, una celda de CSV o JSON."
+Text Is A Whole Number,El texto es un número entero
+"True when this text would convert to a WHOLE number cleanly - a count, a level, a slot index. ""12"" passes and ""12.5"" does not, which is the only difference from Text Is A Number.","Verdadero cuando este texto se convertiría limpiamente a un número ENTERO: una cuenta, un nivel, un índice de ranura. ""12"" pasa y ""12.5"" no, que es la única diferencia con El texto es un número."
+{text} is a whole number,{text} es un número entero
+"Text to test - a count, a level number, a save slot, a seed.","Texto que se comprueba: una cuenta, un número de nivel, una ranura de guardado, una semilla."
+Contains Any Of,Contiene alguno de
+"True when the text contains at least ONE of the listed pieces - a chat filter, a keyword-triggered line, a tag-gated card. Unlike Text Is One Of, which needs the WHOLE text to equal an entry, this looks INSIDE the text. Matching is case-sensitive, and an empty list is never a match.","Verdadero cuando el texto contiene al menos UNO de los trozos listados: un filtro de chat, una línea disparada por palabra clave, una carta condicionada por etiqueta. A diferencia de El texto es uno de, que exige que TODO el texto sea igual a una entrada, esto mira DENTRO del texto. Distingue mayúsculas y minúsculas, y una lista vacía nunca coincide."
+{text} contains any of {options},{text} contiene alguno de {options}
+Text to search.,Texto en el que se busca.
+Any Of,Alguno de
+"List of pieces to look for - written here, or a sheet variable someone can edit without touching this row.","Lista de trozos que se buscan: escrita aquí, o una variable de hoja que alguien pueda editar sin tocar esta fila."
+Contains All Of,Contiene todos de
+"True only when the text contains EVERY listed piece - a combo whose rule text names two keywords, a search box where all the words must match. An empty list counts as true, because nothing is missing.","Verdadero solo cuando el texto contiene TODOS los trozos listados: un combo cuyo texto de regla nombra dos palabras clave, una caja de búsqueda donde todas las palabras deben coincidir. Una lista vacía cuenta como verdadera, porque no falta nada."
+{text} contains all of {options},{text} contiene todos de {options}
+All Of,Todos de
+List of pieces that must ALL appear.,Lista de trozos que deben aparecer TODOS.
+Contains None Of,No contiene ninguno de
+"True when the text contains none of the listed pieces - the accept-this-name branch, written as the thing you want to act on instead of an Else. An empty list always passes.","Verdadero cuando el texto no contiene ninguno de los trozos listados: la rama de 'aceptar este nombre', escrita como aquello sobre lo que quieres actuar en vez de como un Si no. Una lista vacía siempre pasa."
+{text} contains none of {options},{text} no contiene ninguno de {options}
+None Of,Ninguno de
+List of pieces that must NOT appear.,Lista de trozos que NO deben aparecer.
+Number From Text,Número desde texto
+"Reads a number out of text, or hands back the fallback YOU chose - never a surprise zero. Pair it with Text Is A Number when the two cases need different rows. The text is read twice in the emitted line, so keep it a plain read and not something that changes the game.","Lee un número a partir de texto, o devuelve el valor de reserva que TÚ elegiste: nunca un cero por sorpresa. Combínalo con El texto es un número cuando los dos casos necesiten filas distintas. El texto se lee dos veces en la línea generada, así que déjalo en una lectura simple y no en algo que cambie el juego."
+Variables: String,Variables: Texto
+number from {text} (or {fallback}),número desde {text} (o {fallback})
+Text to read a number out of.,Texto del que se lee un número.
+What you get back when the text is not a number.,Lo que recibes cuando el texto no es un número.
+Whole Number From Text,Número entero desde texto
+"Reads a whole number out of text, or hands back your fallback. ""12.5"" is not a whole number, so it lands on the fallback rather than quietly becoming 12 - when you want that rounding, use Number From Text and round the result yourself.","Lee un número entero a partir de texto, o devuelve tu valor de reserva. ""12.5"" no es un número entero, así que cae en el valor de reserva en vez de convertirse en 12 en silencio: si quieres ese redondeo, usa Número desde texto y redondea el resultado tú mismo."
+whole number from {text} (or {fallback}),número entero desde {text} (o {fallback})
+Text to read a whole number out of.,Texto del que se lee un número entero.
+What you get back when the text is not a whole number.,Lo que recibes cuando el texto no es un número entero.
+Is Nothing,Es nada
+"True when there is nothing there: no value at all, empty text, an empty list (including an empty Split Text result), or an empty record - one row whatever the value turns out to be. A 0 is NOT nothing, because a score of zero is a real value, and neither is text made only of spaces (that is Text Is Blank).","Verdadero cuando no hay nada: ningún valor, texto vacío, una lista vacía (incluido un resultado vacío de Dividir texto) o un registro vacío: una sola fila sea cual sea el tipo del valor. Un 0 NO es nada, porque una puntuación de cero es un valor real, y tampoco lo es un texto hecho solo de espacios (eso es El texto está en blanco)."
+Compare: Types,Comparar: Tipos
+{value} is nothing,{value} es nada
+"Anything - text, a list, a record, a reference.","Cualquier cosa: texto, una lista, un registro, una referencia."
+Has Something,Tiene algo
+"True when there IS something there - a name was typed, the inventory has items, the save slot was written, the item slot is filled. The exact opposite of Is Nothing, for the times the filled case is the one you want to act on.","Verdadero cuando SÍ hay algo: se escribió un nombre, el inventario tiene objetos, la ranura de guardado se escribió, el hueco de objeto está lleno. Justo lo contrario de Es nada, para las veces en que el caso lleno es aquel sobre el que quieres actuar."
+{value} has something,{value} tiene algo
+Number Or,Número o
+"The value when it really is a number, or your own default when it is missing, null, text, or anything else. A zero counts as a real number and is kept. Use it to put a loaded value straight into a whole-number or decimal variable without a guard row first. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","El valor cuando de verdad es un número, o tu propio valor por defecto cuando falta, es null, es texto o es cualquier otra cosa. Un cero cuenta como número real y se conserva. Úsalo para meter un valor cargado directamente en una variable entera o decimal sin una fila de guarda previa. El valor se lee dos veces en la línea generada, así que déjalo en una lectura simple y no en algo que cambie el juego."
+Variables,Variables
+"{value} as a number, or {fallback}","{value} como número, o {fallback}"
+"The untyped value to check - a save slot read, a JSON field, a Dictionary key.","El valor sin tipo que se comprueba: una lectura de ranura de guardado, un campo JSON, una clave de diccionario."
+What you get back when it is not a number.,Lo que recibes cuando no es un número.
+Text Or,Texto o
+"The value when it really is text with something in it, or your own default when it is missing, null, blank, or another kind of value. The classic use is a saved player name that falls back to ""Player"". The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","El valor cuando de verdad es texto con algo dentro, o tu propio valor por defecto cuando falta, es null, está en blanco o es otro tipo de valor. El uso clásico es un nombre de jugador guardado que recae en ""Player"". El valor se lee dos veces en la línea generada, así que déjalo en una lectura simple y no en algo que cambie el juego."
+"{value} as text, or {fallback}","{value} como texto, o {fallback}"
+"What you get back when it is not text, or is blank.","Lo que recibes cuando no es texto, o está en blanco."
+List Or,Lista o
+"The value when it really is a list with items in it, or your own default when it is missing, null, empty, or another kind of value. A Split Text result counts as a list. Safe to feed straight into a For Each. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","El valor cuando de verdad es una lista con elementos, o tu propio valor por defecto cuando falta, es null, está vacío o es otro tipo de valor. Un resultado de Dividir texto cuenta como lista. Es seguro pasarlo directamente a un Para cada. El valor se lee dos veces en la línea generada, así que déjalo en una lectura simple y no en algo que cambie el juego."
+"{value} as a list, or {fallback}","{value} como lista, o {fallback}"
+"The untyped value to check - a loaded inventory, a JSON array, a Split Text result, a Dictionary key.","El valor sin tipo que se comprueba: un inventario cargado, un array JSON, un resultado de Dividir texto, una clave de diccionario."
+"What you get back when it is not a list, or is empty.","Lo que recibes cuando no es una lista, o está vacía."
+Record Or,Registro o
+"The value when it really is a record (a dictionary) with keys in it, or your own default when it is missing, null, empty, or another kind of value. Pair it with Get Key so a whole missing settings block reads as defaults. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","El valor cuando de verdad es un registro (un diccionario) con claves, o tu propio valor por defecto cuando falta, es null, está vacío o es otro tipo de valor. Combínalo con Obtener clave para que todo un bloque de ajustes ausente se lea como valores por defecto. El valor se lee dos veces en la línea generada, así que déjalo en una lectura simple y no en algo que cambie el juego."
+"{value} as a record, or {fallback}","{value} como registro, o {fallback}"
+"The untyped value to check - a loaded settings block, a JSON object, a Dictionary key.","El valor sin tipo que se comprueba: un bloque de ajustes cargado, un objeto JSON, una clave de diccionario."
+"What you get back when it is not a record, or is empty.","Lo que recibes cuando no es un registro, o está vacío."
+Value Or,Valor o
+"The value unless it is null, in which case your own default. This one guards nothing else: a zero, a blank text and an empty list all count as real values here. Use it for a method that can hand back null. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","El valor salvo que sea null, en cuyo caso tu propio valor por defecto. Este no vigila nada más: un cero, un texto en blanco y una lista vacía cuentan aquí como valores reales. Úsalo para un método que pueda devolver null. El valor se lee dos veces en la línea generada, así que déjalo en una lectura simple y no en algo que cambie el juego."
+"{value}, or {fallback} when it is nothing","{value}, o {fallback} cuando no hay nada"
+"Anything that might be null - a method result, a freed reference, a missing key.","Cualquier cosa que pueda ser null: el resultado de un método, una referencia liberada, una clave que falta."
+What you get back when it is null.,Lo que recibes cuando es null.
+Part Of,Parte de
+"One named piece of a pair, a triple, a colour or a record: the up/down part of a velocity (the jump-or-fall test), the see-through part of a tint, the forward/back part of a 3D direction. Reads as a sentence instead of a typed-in .y. Pick a part the value actually has - a record that might be missing the field is the shipped Get Key (with default)'s job, because that one takes a fallback and this one does not.","Una pieza con nombre de un par, un triple, un color o un registro: la parte arriba/abajo de una velocidad (la prueba de saltar o caer), la parte transparente de un tinte, la parte adelante/atrás de una dirección 3D. Se lee como una frase en vez de un .y escrito a mano. Elige una parte que el valor tenga de verdad: un registro al que le pueda faltar el campo es tarea de Obtener clave (con valor por defecto), porque esa acepta un valor de reserva y esta no."
+Variables: Vector,Variables: Vector
+the {part} part of {value},la parte {part} de {value}
+"A Vector2, Vector3, Color or record to read one part of.","Un Vector2, Vector3, Color o registro del que se lee una parte."
+Part,Parte
+Which named part to read.,Qué parte con nombre se lee.
+X (left / right),X (izquierda / derecha)
+Y (up / down),Y (arriba / abajo)
+Z (forward / back),Z (adelante / atrás)
+Red,Rojo
+Green,Verde
+Blue,Azul
+Alpha (see-through),Alfa (transparencia)
+Set Part Of,Fijar la parte de
+"Changes one named part and leaves the rest alone: zero the vertical speed on landing and keep the horizontal, flatten a 3D direction to the ground plane, fade only the see-through part of a tint. Writing a part a record does not have yet ADDS it.","Cambia una parte con nombre y deja el resto en paz: poner a cero la velocidad vertical al aterrizar conservando la horizontal, aplanar una dirección 3D al plano del suelo, desvanecer solo la parte transparente de un tinte. Escribir una parte que un registro aún no tiene la AÑADE."
+set the {part} part of {var_name} to {value},fijar la parte {part} de {var_name} a {value}
+Variable or property,Variable o propiedad
+"What to change one part of: a node's own member (velocity, modulate, position) picked from the list, or the name of a sheet variable holding a Vector, Color or record.","Aquello de lo que se cambia una parte: un miembro propio del nodo (velocity, modulate, position) elegido de la lista, o el nombre de una variable de hoja que contenga un vector, un color o un registro."
+Which named part to write.,Qué parte con nombre se escribe.
+The new value for that one part.,El nuevo valor para esa única parte.

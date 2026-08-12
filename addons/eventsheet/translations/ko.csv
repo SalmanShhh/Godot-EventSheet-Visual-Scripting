@@ -108,6 +108,7 @@ Welcome…,시작 화면…
 Start the Tour…,둘러보기 시작…
 Keyboard Shortcuts,키보드 단축키
 Rename Everywhere…,모든 곳에서 이름 바꾸기…
+Change Type Everywhere…,모든 곳에서 형식 바꾸기…
 Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,모든 ƒx 표현식과 GDScript 블록을 검사하여 문제가 있는 행을 표시하고 첫 번째 행으로 이동합니다.
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,중단점 출력을 켜고 끕니다: 디버그로 컴파일된 시트는 중단점이 있는 행에서 일시 정지합니다.
 Toggle Live Values: running sheets stream their variables here (editable).,실시간 값을 켜고 끕니다: 실행 중인 시트의 변수가 여기로 스트리밍됩니다 (편집 가능).
@@ -172,6 +173,8 @@ Edit Events,이벤트 편집
 Insert Snippet…,스니펫 삽입…
 Extract All Actions to Function…,모든 액션을 함수로 추출…
 Group Under a Heading…,제목 아래로 그룹화…
+Export Grid to CSV…,표를 CSV로 내보내기…
+Import Grid from CSV…,표를 CSV에서 가져오기…
 Detach Comment To Row,주석을 행으로 분리
 Convert Scope,범위 변환
 Toggle Constant,상수 전환
@@ -576,6 +579,7 @@ Filter,필터
 Edit Values Across Selection…,선택 영역의 값 일괄 편집…
 Select All Events Using This,이것을 사용하는 모든 이벤트 선택
 Replace Object References…,오브젝트 참조 바꾸기…
+Paste Special…,선택하여 붙여넣기…
 Replace Object References,오브젝트 참조 바꾸기
 Retarget the selection,선택 영역 대상 변경
 Replace,바꾸기
@@ -741,3 +745,402 @@ Export Is Debug,내보내기가 디버그
 True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,이 굽기 단계를 일으킨 내보내기가 디버그 빌드일 때 참입니다. 프로젝트 내보내기 시 안에서 써서 테스트 콘텐츠를 릴리스 빌드 밖에 둡니다.
 Export Has Feature,내보내기에 기능 있음
 "True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.","이 굽기 단계를 일으킨 내보내기 프리셋이 지정한 기능 태그를 가질 때 참입니다. 모바일, 웹, 데스크톱에 서로 다른 데이터를 굽는 방법입니다."
+Share Code For,공유 코드
+"Turns any value into one compact line of text a player can paste anywhere - a seed, a loadout, a whole save. Read it back with Value From Share Code.","임의의 값을 플레이어가 어디에나 붙여넣을 수 있는 한 줄짜리 텍스트로 바꿉니다 - 시드, 장비 구성, 세이브 전체까지. 공유 코드의 값 으로 다시 읽습니다."
+Utility: Window,유틸리티: 창
+share code for [b]{value}[/b],[b]{value}[/b] 의 공유 코드
+Value,값
+"Anything - a run seed, a loadout list, a colour, a whole save record.","무엇이든 - 런 시드, 장비 목록, 색, 세이브 레코드 전체까지."
+Copy Share Code To Clipboard,공유 코드를 클립보드에 복사
+"Encodes any value as a share code and puts it straight on the operating system clipboard, ready to paste.",임의의 값을 공유 코드로 인코딩해 운영체제 클립보드에 바로 올립니다. 붙여넣기만 하면 됩니다.
+copy share code for [b]{value}[/b] to clipboard,[b]{value}[/b] 의 공유 코드를 클립보드에 복사
+"Anything - a run seed, a loadout list, a whole save record.","무엇이든 - 런 시드, 장비 목록, 세이브 레코드 전체까지."
+Share Code Is Valid,공유 코드가 유효함
+"True when the text really is a share code that decodes cleanly, so a paste box can refuse garbage before it reaches the game. Ask it when the pasted text CHANGES (a Paste button, On Text Changed) rather than every frame: a code mangled in transit can still reach the decoder, and the engine logs a line each time it is refused. A code that was made from nothing at all also reads as invalid.","텍스트가 정말 공유 코드이고 깔끔하게 디코딩될 때 참입니다. 덕분에 붙여넣기 칸이 쓰레기 값을 게임에 닿기 전에 거절할 수 있습니다. 매 프레임이 아니라 붙여넣은 텍스트가 바뀔 때 (붙여넣기 버튼, 텍스트 변경 시) 물어보세요. 전송 중 망가진 코드는 디코더까지 도달할 수 있고, 거절될 때마다 엔진이 한 줄을 기록합니다. 아무것도 없는 값으로 만든 코드도 무효로 읽힙니다."
+[b]{code}[/b] is a valid share code,[b]{code}[/b] 는 유효한 공유 코드
+Code,코드
+The pasted text to test - usually Clipboard Text or a paste box's text.,검사할 붙여넣기 텍스트 - 보통 클립보드 텍스트 또는 붙여넣기 칸의 텍스트입니다.
+Value From Share Code,공유 코드의 값
+"Reads the value back out of a share code, giving nothing when the text is not a valid code.",공유 코드에서 값을 다시 읽습니다. 텍스트가 유효한 코드가 아니면 아무것도 주지 않습니다.
+value from share code [b]{code}[/b],공유 코드 [b]{code}[/b] 의 값
+The share code text to read - check it with Share Code Is Valid first.,읽을 공유 코드 텍스트 - 먼저 공유 코드가 유효함 으로 확인하세요.
+Clipboard Has Text,클립보드에 텍스트가 있음
+True when the operating system clipboard currently holds any text - gate a paste box on it.,운영체제 클립보드에 지금 텍스트가 들어 있으면 참입니다 - 붙여넣기 칸을 이 조건으로 여세요.
+clipboard has text,클립보드에 텍스트가 있음
+Clipboard Has Image,클립보드에 이미지가 있음
+"True when the operating system clipboard currently holds an image, such as a screenshot the player just copied.",운영체제 클립보드에 지금 이미지가 들어 있으면 참입니다. 플레이어가 방금 복사한 스크린샷 같은 것입니다.
+clipboard has an image,클립보드에 이미지가 있음
+Clipboard Image,클립보드 이미지
+The image currently on the operating system clipboard - feed it to ImageTexture.create_from_image to show it.,지금 운영체제 클립보드에 있는 이미지 - 화면에 보여주려면 ImageTexture.create_from_image 에 넘기세요.
+clipboard image,클립보드 이미지
+Clipboard Text Is,클립보드 텍스트가
+"Compares whatever text is on the clipboard against a value, with your choice of operator.",클립보드에 있는 텍스트를 고른 연산자로 값과 비교합니다.
+clipboard text {op} [b]{value}[/b],클립보드 텍스트 {op} [b]{value}[/b]
+Operator,연산자
+Comparison.,비교.
+= (equal to),= (같음)
+!= (not equal to),!= (같지 않음)
+< (less than),< (보다 작음)
+<= (at most),<= (이하)
+> (greater than),> (보다 큼)
+>= (at least),>= (이상)
+Text to compare the clipboard against.,클립보드와 비교할 텍스트.
+Clone Into,복제해 넣기
+"Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.","살아 있는 노드를 복사하고, 사본을 부모에 추가하고, 위치를 잡고, 원하면 그룹에도 넣습니다 - 노드 복제 + 자식 추가 + 위치 설정 을 한 줄로 만든 형태입니다. .tscn 파일에서 시작한다면 씬 생성 을 쓰세요."
+Nodes,노드
+"clone [i]{source}[/i] into [i]{parent}[/i] at [b]{at}[/b], group [b]{group}[/b]","[i]{source}[/i] 를 [i]{parent}[/i] 안 [b]{at}[/b] 위치에 복제, 그룹 [b]{group}[/b]"
+The live node to copy.,복사할 살아 있는 노드.
+Into,넣을 곳
+Where the copy is added.,사본을 추가할 위치.
+At,위치
+World position for the copy (a Vector3 for a 3D node). Only used when the copy has a position.,사본의 월드 위치 (3D 노드라면 Vector3). 사본에 위치가 있을 때만 사용됩니다.
+Optional group for the copy (blank = none).,사본에 붙일 선택적 그룹 (비우면 없음).
+Remember Value As,값을 이름으로 기억
+"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game use Remember Between Runs on the variable, or the Save System pack.","임의의 값을 이름을 붙여 메모리에 따로 보관합니다. 이번 실행 동안만 유지되며, 미리보기나 버프, 컷신의 '이전 값'으로 쓰입니다. 게임을 껐다 켜도 남는 기억이 필요하면 변수의 실행 간 기억 이나 세이브 시스템 팩을 쓰세요."
+Run Context,실행 컨텍스트
+remember [b]{value}[/b] as [b]{name}[/b],[b]{value}[/b] 를 [b]{name}[/b] 로 기억
+Any label you also use in Restore Value Into.,값을 되돌려 넣기 에서도 같이 쓰는 아무 이름표.
+The value to copy aside.,따로 보관할 값.
+Restore Value Into,값을 되돌려 넣기
+Pours a remembered value back into a variable. When nothing was remembered under that name the variable keeps what it already had.,기억해 둔 값을 변수에 다시 부어 넣습니다. 그 이름으로 기억한 것이 없으면 변수는 원래 값을 그대로 유지합니다.
+restore [b]{name}[/b] into [b]{var_name}[/b],[b]{name}[/b] 를 [b]{var_name}[/b] 에 되돌리기
+The label used in Remember Value As.,값을 이름으로 기억 에서 쓴 이름표.
+Into Variable,대상 변수
+Variable that receives the remembered value (left alone when nothing was remembered).,기억한 값을 받을 변수 (기억한 것이 없으면 건드리지 않습니다).
+Remembered Value,기억된 값
+"The value remembered under a name this run, or your fallback when there is none - read it without pouring it back.","이번 실행에서 그 이름으로 기억한 값, 없으면 지정한 대체 값 - 되돌리지 않고 읽기만 합니다."
+remembered [b]{name}[/b] or [b]{fallback}[/b],기억된 [b]{name}[/b] 또는 [b]{fallback}[/b]
+Or,없으면
+What you get when nothing was remembered under that name.,그 이름으로 기억한 것이 없을 때 받게 되는 값.
+Has Remembered,기억하고 있음
+True when something was remembered under that name this run - the gate on a Cancel button that should only undo a preview it actually took.,이번 실행에서 그 이름으로 무언가를 기억했으면 참입니다 - 실제로 찍어 둔 미리보기만 되돌리는 취소 버튼의 조건입니다.
+has remembered [b]{name}[/b],[b]{name}[/b] 를 기억하고 있음
+Forget Remembered,기억한 값 잊기
+"Drops a remembered value, so Has Remembered reads false again. Forgetting a name that was never remembered is harmless.",기억한 값을 버려서 기억하고 있음 이 다시 거짓이 됩니다. 기억한 적 없는 이름을 잊어도 아무 문제 없습니다.
+forget remembered [b]{name}[/b],기억한 [b]{name}[/b] 잊기
+Resources In Folder,폴더 안의 리소스
+"Loads every data asset (.tres) in a folder as a list, so a folder of files becomes your content - items, enemies, levels, or a mod folder. A missing folder gives an empty list, and a file that fails to load is left out rather than arriving as nothing.","폴더 안의 모든 데이터 애셋(.tres)을 목록으로 불러옵니다. 파일이 든 폴더가 곧 콘텐츠가 됩니다 - 아이템, 적, 레벨, 모드 폴더까지. 폴더가 없으면 빈 목록이고, 불러오기에 실패한 파일은 빈 값으로 오지 않고 그냥 빠집니다."
+Files,파일
+resources in [b]{folder}[/b],[b]{folder}[/b] 안의 리소스
+Folder,폴더
+"Folder to scan (not recursive). Every .tres / .res inside it is loaded, in the folder's own order.",훑어볼 폴더 (하위 폴더는 보지 않음). 안에 있는 .tres / .res 를 폴더 자체 순서대로 모두 불러옵니다.
+Resource In Folder,폴더 안의 리소스 하나
+"Fetches one data asset out of a folder by its file name, or nothing at all when there is no such file - no red error.",폴더에서 파일 이름으로 데이터 애셋 하나를 가져옵니다. 그런 파일이 없으면 아무것도 주지 않습니다 - 빨간 오류도 없습니다.
+resource [b]{name}[/b] in [b]{folder}[/b],[b]{folder}[/b] 안의 리소스 [b]{name}[/b]
+Folder holding the data assets.,데이터 애셋이 들어 있는 폴더.
+"File name WITHOUT the .tres extension - ""rusty_sword"" finds rusty_sword.tres.",".tres 확장자를 뺀 파일 이름 - ""rusty_sword"" 는 rusty_sword.tres 를 찾습니다."
+Load Resource Or Default,리소스 불러오기 또는 기본값
+"Loads a file and hands back your fallback when it is missing, so a deleted or mod-supplied file never crashes the game.","파일을 불러오고, 없으면 지정한 대체 값을 돌려줍니다. 삭제된 파일이나 모드가 넣은 파일 때문에 게임이 죽지 않습니다."
+load [b]{path}[/b] or [i]{fallback}[/i],"[b]{path}[/b] 불러오기, 없으면 [i]{fallback}[/i]"
+Path,경로
+Full path to the resource or scene to load.,불러올 리소스나 씬의 전체 경로.
+Fallback,대체 값
+"What to use instead when the file is not there (a preloaded default, or null).",파일이 없을 때 대신 쓸 값 (미리 불러 둔 기본값 또는 null).
+Count Of Resources In,리소스 개수
+"How many data assets a folder holds, counted without loading any of them - zero if the folder is missing.","폴더가 가진 데이터 애셋 개수를, 하나도 불러오지 않고 셉니다 - 폴더가 없으면 0 입니다."
+count of resources in [b]{folder}[/b],[b]{folder}[/b] 안의 리소스 개수
+Folder to count data assets in (not recursive).,데이터 애셋을 셀 폴더 (하위 폴더 제외).
+Copy Resource (Independent),리소스 복사 (독립)
+"Makes a private copy of a resource, right down to the resources inside it, so writing to the copy never changes the .tres on disk or any other node holding it. Use this before a node edits its own stats.",리소스를 그 안에 든 리소스까지 포함해 개인 사본으로 만듭니다. 사본에 써도 디스크의 .tres 나 같은 리소스를 들고 있는 다른 노드가 절대 바뀌지 않습니다. 노드가 자기 스탯을 고치기 전에 쓰세요.
+Helpers,도우미
+independent copy of [i]{resource}[/i],[i]{resource}[/i] 의 독립 사본
+Resource,리소스
+The resource to copy. Anything that is not a resource (including nothing at all) gives nothing back.,복사할 리소스. 리소스가 아닌 것(아무것도 없는 경우 포함)은 아무것도 돌려주지 않습니다.
+Copy Resource (Share Sub-Resources),리소스 복사 (하위 리소스 공유)
+Makes a cheap copy whose own fields are separate but whose inner resources and lists are still SHARED with the original. Pick this only when you want that sharing - otherwise use Copy Resource (Independent).,자기 필드만 분리한 값싼 사본을 만듭니다. 내부 리소스와 목록은 원본과 그대로 '공유' 됩니다. 그 공유가 필요할 때만 고르세요 - 아니면 리소스 복사 (독립) 을 쓰세요.
+copy of [i]{resource}[/i] (sub-resources shared),[i]{resource}[/i] 의 사본 (하위 리소스 공유)
+Deep Copy,깊은 복사
+"Copies the array AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Array only copies the outer level.",배열과 그 안에 중첩된 모든 목록·사전까지 복사합니다. 사본을 고쳐도 원본에 닿지 않습니다. 배열 복사 는 바깥쪽만 복사합니다.
+Variables: Array,변수: 배열
+deep copy of [b]{var_name}[/b],[b]{var_name}[/b] 의 깊은 복사
+Array,배열
+Array variable to copy right through.,끝까지 복사할 배열 변수.
+"Copies the dictionary AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Dictionary only copies the outer level.",사전과 그 안에 중첩된 모든 목록·사전까지 복사합니다. 사본을 고쳐도 원본에 닿지 않습니다. 사전 복사 는 바깥쪽만 복사합니다.
+Variables: Dictionary,변수: 사전
+Dictionary,사전
+Dictionary variable to copy right through.,끝까지 복사할 사전 변수.
+Copy Values From,값 가져오기
+"Pours a list of values off another object onto this one, in one row instead of one row per property. Names the target does not have are skipped, so a single preset can serve several kinds of node.",다른 오브젝트의 값 목록을 이 오브젝트로 부어 넣습니다. 속성마다 한 줄이 아니라 한 줄이면 됩니다. 대상이 갖고 있지 않은 이름은 건너뛰므로 프리셋 하나로 여러 종류의 노드를 다룰 수 있습니다.
+copy [b]{names}[/b] from [i]{source}[/i] into [i]{target}[/i],[i]{source}[/i] 의 [b]{names}[/b] 를 [i]{target}[/i] 로 복사
+The object being written to - it is what changes.,값이 쓰이는 대상 오브젝트 - 바뀌는 쪽입니다.
+The object to read from - a node OR a resource.,값을 읽어 올 오브젝트 - 노드 또는 리소스.
+Names,이름 목록
+Comma-separated property names. Leave blank to copy every variable the source's script declares.,쉼표로 구분한 속성 이름들. 비워 두면 원본 스크립트가 선언한 모든 변수를 복사합니다.
+Fill Blanks From,빈 칸 채우기 출처
+"Writes a base's values ONLY into fields this object left empty, leaving everything you did fill in alone. That is the override chain: a base item plus a rarity variant, or a shipped table plus a mod file. Empty means nothing there: no value at all, blank text, an empty list or an empty record - a 0 and a false are real values and are kept, exactly as Is Nothing and Missing Fields read them.","베이스의 값을 이 오브젝트가 비워 둔 칸에만 씁니다. 채워 넣은 것은 그대로 둡니다. 그것이 덮어쓰기 사슬입니다 - 기본 아이템 + 희귀도 변형, 기본 제공 표 + 모드 파일. 비었다는 것은 아무것도 없다는 뜻입니다: 값 없음, 빈 텍스트, 빈 목록, 빈 레코드. 0 과 false 는 진짜 값이라 그대로 남습니다 - 아무것도 아님 과 빠진 항목 이 읽는 방식과 같습니다."
+fill blanks in [i]{target}[/i] from [i]{base}[/i],[i]{base}[/i] 로 [i]{target}[/i] 의 빈 칸 채우기
+Fill,채울 대상
+The one being completed - it is what changes.,채워지는 쪽 - 바뀌는 쪽입니다.
+Where the missing values come from.,빠진 값을 가져올 곳.
+Apply Preset To Node,프리셋을 노드에 적용
+"Pours a data asset's fields onto the same-named properties of a node, so difficulty tiers, weapon tunings and boss phases become a data edit instead of a wall of rows.","데이터 애셋의 필드를 같은 이름의 노드 속성에 부어 넣습니다. 난이도 단계, 무기 수치, 보스 페이즈가 줄 더미가 아니라 데이터 수정이 됩니다."
+apply preset [b]{preset}[/b] to [i]{target}[/i],프리셋 [b]{preset}[/b] 을 [i]{target}[/i] 에 적용
+Preset,프리셋
+The data asset to pour on (a .tres you filled in the Inspector). Nothing happens if it is empty.,부어 넣을 데이터 애셋 (인스펙터에서 채운 .tres). 비어 있으면 아무 일도 일어나지 않습니다.
+The node to apply it to.,적용할 노드.
+Matches Properties Of,속성이 일치함
+"True while the listed properties hold the same values on both objects - the cheap 'is this ghost still in sync' or 'has anything changed' check. A name neither object has reads as NOT matching, so a typo shows up instead of quietly passing, and either side being gone reads as not matching too.","나열한 속성이 두 오브젝트에서 같은 값을 가지는 동안 참입니다 - '이 고스트가 아직 동기화돼 있나', '뭔가 바뀌었나' 를 싸게 확인하는 조건입니다. 어느 쪽도 갖고 있지 않은 이름은 '일치하지 않음' 으로 읽히므로 오타가 조용히 통과하지 않고 드러납니다. 한쪽이 사라진 경우도 일치하지 않음입니다."
+[i]{target}[/i] matches [b]{names}[/b] of [i]{other}[/i],[i]{target}[/i] 가 [i]{other}[/i] 의 [b]{names}[/b] 와 일치
+Object,오브젝트
+The object to test.,검사할 오브젝트.
+"Comma-separated property names to compare. A blank list has nothing to compare, so it is true.",비교할 속성 이름을 쉼표로 구분해 적습니다. 빈 목록은 비교할 것이 없으므로 참입니다.
+Of,비교 대상
+The object to compare against.,비교 상대가 될 오브젝트.
+Data Is Older Than Version,데이터가 지정 버전보다 오래됨
+"True when a loaded record was written by an older build than this one - the gate a migration sits under. A record with NO version field counts as 0, so the very first format upgrades too, and so does one whose version field is empty or is not a number at all.","불러온 레코드가 지금 빌드보다 오래된 빌드에서 쓰였을 때 참입니다 - 마이그레이션을 놓는 조건입니다. 버전 필드가 '없는' 레코드는 0 으로 세므로 최초 형식도 함께 갱신되고, 버전 필드가 비었거나 숫자가 아닌 경우도 마찬가지입니다."
+[b]{record}[/b] is older than version [b]{version}[/b],[b]{record}[/b] 는 버전 [b]{version}[/b] 보다 오래됨
+Record,레코드
+"The parsed record (a save file, a payload, a manifest).","이미 파싱된 레코드 (세이브 파일, 페이로드, 매니페스트)."
+Field,필드
+Which field holds the version number.,버전 번호가 들어 있는 필드.
+Version,버전
+The version this build writes.,이 빌드가 기록하는 버전.
+Rename Field,필드 이름 바꾸기
+"Moves a value to its new field name, and does nothing at all when the old name is not there - so a migration is safe to run twice.",값을 새 필드 이름으로 옮깁니다. 옛 이름이 없으면 아무 일도 하지 않으므로 마이그레이션을 두 번 돌려도 안전합니다.
+rename [b]{from_field}[/b] to [b]{to_field}[/b] in [i]{record}[/i],[i]{record}[/i] 에서 [b]{from_field}[/b] 를 [b]{to_field}[/b] 로 변경
+"The record to migrate, edited in place.",마이그레이션할 레코드. 제자리에서 수정됩니다.
+The old field name.,옛 필드 이름.
+The new field name (overwritten if it is already there).,새 필드 이름 (이미 있으면 덮어씁니다).
+Stamp Data Version,데이터 버전 찍기
+"Writes the current format number onto a record, so the next load knows it has already been migrated. Data Is Older Than Version reads it back, and reads it as 0 when it is missing or is not a number.","현재 형식 번호를 레코드에 기록해, 다음 불러오기에서 이미 마이그레이션되었음을 알 수 있게 합니다. 데이터가 지정 버전보다 오래됨 이 이를 다시 읽고, 값이 없거나 숫자가 아니면 0 으로 읽습니다."
+stamp [i]{record}[/i] as version [b]{version}[/b],[i]{record}[/i] 에 버전 [b]{version}[/b] 찍기
+The record to stamp.,버전을 찍을 레코드.
+The version this build writes - a whole number.,이 빌드가 기록하는 버전 - 정수입니다.
+Table From File,파일에서 표 읽기
+"Reads a .csv whose FIRST line is the column names and gives you one record per row, each field reachable by column name - row[""price""]. Quoted cells may contain the separator, Windows line endings are fine, and a missing file simply gives no rows. Store it in an Array variable, then walk it with a For Each pick filter.","첫 줄이 열 이름인 .csv 를 읽어 한 행마다 레코드 하나를 줍니다. 각 필드는 열 이름으로 꺼냅니다 - row[""price""]. 따옴표로 감싼 칸에는 구분자가 들어가도 되고, 윈도우 줄바꿈도 괜찮으며, 파일이 없으면 그냥 행이 없습니다. 결과를 배열 변수에 담고 For Each 픽 필터로 훑으세요."
+Files: Tables,파일: 표
+rows of [b]{path}[/b],[b]{path}[/b] 의 행
+File,파일
+The .csv to read. Its FIRST line must be the column names.,읽을 .csv. 첫 줄이 반드시 열 이름이어야 합니다.
+Separator,구분자
+What separates the columns in that file.,그 파일에서 열을 나누는 문자.
+Comma,쉼표
+Semicolon,세미콜론
+Tab,탭
+Table From Text,텍스트에서 표 읽기
+"The same column-names-first parse as Table From File, but over text you already hold instead of a file on disk.","파일에서 표 읽기 와 같은 '첫 줄이 열 이름' 해석을, 디스크의 파일이 아니라 이미 갖고 있는 텍스트에 대해 수행합니다."
+rows in [b]{text}[/b],[b]{text}[/b] 안의 행
+"Spreadsheet text you already have - a pasted blob, a downloaded body, a file you read earlier. FIRST line = the column names.","이미 갖고 있는 스프레드시트 텍스트 - 붙여넣은 덩어리, 내려받은 본문, 앞서 읽은 파일 등. 첫 줄 = 열 이름."
+Column Of Table,표의 열
+"Gives one whole column as a list, in row order - handy for a dropdown's items, a weights list, or a quick sum. A row missing that column contributes empty text.","한 열 전체를 행 순서대로 목록으로 줍니다 - 드롭다운 항목, 가중치 목록, 빠른 합계에 편합니다. 그 열이 없는 행은 빈 텍스트를 냅니다."
+column [b]{column}[/b] of [b]{table}[/b],[b]{table}[/b] 의 열 [b]{column}[/b]
+Table,표
+The rows-of-records variable a Table From File (or Table From Text) expression filled.,"파일에서 표 읽기 (또는 텍스트에서 표 읽기) 식이 채운, 레코드 행들이 담긴 변수."
+Column,열
+"The column name to read, exactly as it is spelled in the header row.",읽을 열 이름. 머리글 행과 철자가 정확히 같아야 합니다.
+Row Where,조건에 맞는 행
+"Finds the FIRST record whose column holds this value - the single-item lookup, e.g. the row for item ""sword"". Gives an empty record when nothing matches, so check it with Dictionary Is Empty before reading fields.","해당 열이 이 값을 가진 ""첫"" 레코드를 찾습니다 - 단일 항목 조회, 예를 들어 아이템 ""sword"" 의 행입니다. 맞는 것이 없으면 빈 레코드를 주므로 필드를 읽기 전에 사전이 비어 있음 으로 확인하세요."
+row of [b]{table}[/b] where [b]{column}[/b] is [b]{value}[/b],[b]{table}[/b] 에서 [b]{column}[/b] 가 [b]{value}[/b] 인 행
+"The column to match on, exactly as it is spelled in the header row.",대조에 쓸 열. 머리글 행과 철자가 정확히 같아야 합니다.
+Is,가 다음과 같음
+"The value to look for. Compared as text, so 25 and ""25"" both match a cell reading 25.","찾을 값. 텍스트로 비교하므로 25 와 ""25"" 둘 다 25 라고 적힌 칸에 맞습니다."
+For Each Line In Text,텍스트의 각 줄마다
+"Runs this event's actions once per LINE of the text, skipping blank ones. Windows (CRLF) and old-Mac (CR) endings are handled, so no line arrives with a stray carriage return. Read the current one as `line`.",텍스트의 한 줄마다 이 이벤트의 액션을 한 번씩 실행합니다. 빈 줄은 건너뜁니다. 윈도우(CRLF)와 옛 맥(CR) 줄바꿈을 모두 처리하므로 캐리지 리턴이 남은 줄은 오지 않습니다. 현재 줄은 `line` 으로 읽습니다.
+Loops,반복
+for each line in [b]{text}[/b],[b]{text}[/b] 의 각 줄마다
+"The text to walk line by line - a file you read, a pasted blob, a leaderboard body.","한 줄씩 훑어갈 텍스트 - 읽어 온 파일, 붙여넣은 덩어리, 순위표 본문 등."
+For Each Part In Text,텍스트의 각 조각마다
+"Runs this event's actions once per PIECE of the text. Each piece arrives with its surrounding spaces trimmed, and empty pieces are skipped, so ""sword; shield;; bow"" is three parts. Read the current one as `part`.","텍스트의 조각마다 이 이벤트의 액션을 한 번씩 실행합니다. 각 조각은 앞뒤 공백이 잘린 채 오고 빈 조각은 건너뛰므로 ""sword; shield;; bow"" 는 세 조각입니다. 현재 조각은 `part` 로 읽습니다."
+for each part of [b]{text}[/b] split by [b]{separator}[/b],[b]{separator}[/b] 로 나눈 [b]{text}[/b] 의 각 조각마다
+"The text to break up - a tag list, a chat command's arguments, one cell of a spreadsheet.","쪼갤 텍스트 - 태그 목록, 채팅 명령의 인자, 스프레드시트의 한 칸 등."
+Split by,구분 기준
+"What separates the pieces, e.g. "","" or "";"" or "" "".","조각을 나누는 문자. 예를 들어 "","" 나 "";"" 나 "" "" 입니다."
+For Each Resource In Folder,폴더 안의 각 리소스마다
+"Runs this event's actions once per data asset (.tres / .res) in a folder, already loaded - the ""a folder of items IS my item list"" setup, with no list to maintain. A folder that is not there walks nothing (quietly - it is checked first, so a loop that runs every frame cannot spam errors), and anything that fails to load is skipped rather than arriving as null. Read the current one as `entry`.","폴더 안의 데이터 애셋(.tres / .res)마다 이미 불러온 상태로 이 이벤트의 액션을 한 번씩 실행합니다 - ""아이템 폴더가 곧 아이템 목록"" 방식이라 따로 관리할 목록이 없습니다. 폴더가 없으면 아무것도 돌지 않습니다(조용히 - 먼저 확인하므로 매 프레임 도는 반복도 오류를 쏟아내지 않습니다). 불러오기에 실패한 것은 null 로 오지 않고 건너뜁니다. 현재 것은 `entry` 로 읽습니다."
+for each resource in [b]{folder}[/b],[b]{folder}[/b] 안의 각 리소스마다
+Folder of data assets to walk. Only .tres / .res files are loaded; anything else in there is ignored.,훑어갈 데이터 애셋 폴더. .tres / .res 파일만 불러오고 나머지는 무시합니다.
+Text Before,앞쪽 텍스트
+"The part of the text before the first marker: Text Before(""Ada [angry]: hi"", "" ["") is ""Ada"". When the marker is not there you get the whole text back, so nothing is silently lost.","첫 표시자 앞부분: 앞쪽 텍스트(""Ada [angry]: hi"", "" ["") 는 ""Ada"" 입니다. 표시자가 없으면 텍스트 전체가 돌아오므로 조용히 사라지는 것은 없습니다."
+the part of {text} before {marker},{text} 중 {marker} 앞부분
+The line to read a piece out of.,일부를 뽑아낼 원본 줄.
+Before,앞
+The marker to stop at (the first one wins).,여기서 멈출 표시자 (처음 것이 우선).
+Text After,뒤쪽 텍스트
+"Everything after the first marker: Text After(""Ada [angry]: hi"", ""]: "") is ""hi"". Empty when the marker is not there, because then there is no ""after"".","첫 표시자 뒤의 모든 것: 뒤쪽 텍스트(""Ada [angry]: hi"", ""]: "") 는 ""hi"" 입니다. 표시자가 없으면 ""뒤"" 라는 것이 없으므로 빈 값입니다."
+the part of {text} after {marker},{text} 중 {marker} 뒷부분
+After,뒤
+The marker to start after (the first one wins).,그 뒤부터 시작할 표시자 (처음 것이 우선).
+Text Between,사이 텍스트
+"The part between two markers: Text Between(""Ada [angry]: hi"", ""["", ""]"") is ""angry"". Empty when the opening marker is missing, and the rest of the text when the closing one is.","두 표시자 사이의 부분: 사이 텍스트(""Ada [angry]: hi"", ""["", ""]"") 는 ""angry"" 입니다. 여는 표시자가 없으면 빈 값이고, 닫는 표시자가 없으면 나머지 텍스트 전부입니다."
+the part of {text} between {open} and {close},{text} 중 {open} 와 {close} 사이
+The opening marker.,여는 표시자.
+The closing marker.,닫는 표시자.
+Number In Text,텍스트 속 숫자
+"The first number found anywhere in the text, whole or decimal: ""Chapter 3"" gives 3, ""v1.25-beta"" gives 1.25. You get 0 when there is no number at all, and you never write a pattern.","텍스트 어딘가에서 처음 찾은 숫자 (정수든 소수든): ""Chapter 3"" 은 3, ""v1.25-beta"" 는 1.25 입니다. 숫자가 하나도 없으면 0 이 나오고, 패턴을 쓸 일은 전혀 없습니다."
+the first number in {text},{text} 속 첫 숫자
+Text that has a number somewhere in it.,어딘가에 숫자가 들어 있는 텍스트.
+Split Keeping Quotes,따옴표를 지키며 나누기
+"Splits text on a separator but keeps anything inside ""double quotes"" together as one piece, and drops the quotes: give ""iron sword"" 2 is three pieces, not four. Empty pieces are skipped, so runs of separators never produce blanks.","구분자로 나누되 ""큰따옴표"" 안의 내용은 한 조각으로 묶어 두고 따옴표는 떼어냅니다: give ""iron sword"" 2 는 네 조각이 아니라 세 조각입니다. 빈 조각은 건너뛰므로 구분자가 연달아 나와도 빈 칸이 생기지 않습니다."
+"pieces of {text}, keeping quotes together",{text} 의 조각들 (따옴표 안은 한 덩어리)
+"The line to split - a console entry, a search box, a pasted cell.","나눌 줄 - 콘솔 입력, 검색창, 붙여넣은 칸 등."
+What separates the pieces OUTSIDE quotes.,따옴표 '바깥' 에서 조각을 나누는 문자.
+Explain JSON Problem,JSON 문제 설명
+"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","이 JSON 이 왜 파싱에 실패했는지 줄 번호와 함께 알려 줍니다: ""line 4: Expected ':'"". 잘 파싱되면 빈 값이므로, 빈 결과가 곧 ""이상 없음"" 입니다. 로그로 남기면 버그 리포트가 저절로 써집니다. 분기는 JSON 이 유효함 이 아니라 이 동사 자신의 빈 여부(텍스트가 비어 있음 의 반대)로 하세요. 그 조건은 null 이라는 단어만 든 파일을 무효로 읽지만 이 동사는 그것에 대해 할 말이 없어서, 둘을 짝지으면 이유가 빈 오류가 기록됩니다."
+JSON,JSON
+why {text} is not valid JSON,{text} 가 유효한 JSON 이 아닌 이유
+"The JSON text to check - a file you read, a paste, a server reply.","검사할 JSON 텍스트 - 읽어 온 파일, 붙여넣기, 서버 응답 등."
+Explain Table Problem,표 문제 설명
+"The first cell of a table that should be a number and is not, said out loud: ""row 12, column ""price"": ""abc"" is not a number"". Rows are counted from 1 over the rows you hold - Table From File has already used up the header line, so row 12 is line 13 of the file. A row that is not a record at all is reported too. Empty when every listed column checks out.","숫자여야 하는데 아닌, 표의 첫 번째 칸을 문장으로 말해 줍니다: ""row 12, column ""price"": ""abc"" is not a number"". 행 번호는 손에 든 행들을 1 부터 셉니다 - 파일에서 표 읽기 가 머리글 줄을 이미 썼으므로 row 12 는 파일의 13 번째 줄입니다. 아예 레코드가 아닌 행도 보고합니다. 나열한 열이 모두 멀쩡하면 빈 값입니다."
+what is wrong in {records},{records} 에서 무엇이 잘못됐는지
+Rows,행
+"A list of records - one per row, each field reachable by column name.","레코드 목록 - 한 행에 하나씩, 각 필드는 열 이름으로 꺼냅니다."
+Number columns,숫자 열
+The columns that must hold numbers.,숫자가 들어 있어야 하는 열들.
+Missing Fields,빠진 항목
+"The listed fields that are missing or left blank, comma-separated, and empty when the record is complete. Blank means nothing there: null, empty text, an empty list or an empty record - a 0 is a real value and is never reported.","나열한 항목 중 없거나 비어 있는 것들을 쉼표로 이어 줍니다. 레코드가 완전하면 빈 값입니다. 비었다는 것은 아무것도 없다는 뜻입니다: null, 빈 텍스트, 빈 목록, 빈 레코드. 0 은 진짜 값이라 절대 보고되지 않습니다."
+the fields missing from {record},{record} 에서 빠진 항목
+A record or a resource to check.,검사할 레코드 또는 리소스.
+Fields,항목
+"The fields it must have filled in, separated by commas.",반드시 채워져 있어야 하는 항목들을 쉼표로 구분해 적습니다.
+Shorten To Fit,맞게 줄이기
+"Trims text to a maximum number of characters and marks the cut with the ending you choose, so a clipped name never reads as the whole name. Text that already fits comes back untouched, and the result never runs past the width you gave - a width too narrow to hold the ending simply cuts without one. Cuts mid-word: use Shorten To Whole Words when the cut should land on a word boundary.","텍스트를 최대 글자 수까지 잘라내고, 고른 끝맺음 기호로 잘렸음을 표시합니다. 그래서 잘린 이름이 온전한 이름처럼 보이는 일이 없습니다. 이미 들어가는 텍스트는 그대로 돌아오고, 결과가 지정한 폭을 넘는 일은 없습니다 - 끝맺음 기호조차 못 넣을 만큼 좁으면 기호 없이 자릅니다. 단어 중간에서 자르므로, 단어 경계에서 자르고 싶으면 단어 단위로 줄이기 를 쓰세요."
+shorten [b]{text}[/b] to [b]{max_chars}[/b] characters,[b]{text}[/b] 를 [b]{max_chars}[/b] 글자로 줄이기
+The text that has to fit.,안에 들어가야 하는 텍스트.
+Max characters,최대 글자 수
+"The widest the result may get, in characters, counting the ending below.",결과가 가질 수 있는 최대 폭(글자 수). 아래의 끝맺음 기호도 포함해 셉니다.
+Ending,끝맺음
+"What marks the cut, e.g. ""..."" or a single ellipsis character. Its own length is taken out of the budget.","잘렸음을 표시하는 것. 예를 들어 ""..."" 또는 말줄임표 한 글자입니다. 그 길이만큼 예산에서 빠집니다."
+Shorten To Whole Words,단어 단위로 줄이기
+"Like Shorten To Fit, but backs up to the last complete word before cutting, so ""Ancient Sword of Thorns"" reads ""Ancient Sword..."" instead of ""Ancient Sword of Th"". When the budget holds no whole word (one very long word) it falls back to cutting by characters, and when it is too narrow to hold the ending at all it cuts without one - so the result is never just the ending, and never wider than you asked for.","맞게 줄이기 와 같지만, 자르기 전에 마지막 완전한 단어까지 되돌아갑니다. 그래서 ""Ancient Sword of Thorns"" 는 ""Ancient Sword of Th"" 가 아니라 ""Ancient Sword..."" 로 읽힙니다. 예산 안에 완전한 단어가 하나도 없으면(아주 긴 단어 하나 같은 경우) 글자 단위 자르기로 물러나고, 끝맺음 기호조차 못 넣을 만큼 좁으면 기호 없이 자릅니다 - 그래서 결과가 끝맺음 기호만 남거나 요청한 폭보다 넓어지는 일이 없습니다."
+shorten [b]{text}[/b] to whole words within [b]{max_chars}[/b],[b]{text}[/b] 를 [b]{max_chars}[/b] 안에서 단어 단위로 줄이기
+With Thousands Separators,천 단위 구분 기호 포함
+"Turns a number into grouped digits a player can take in at a glance: 1234567 reads ""1,234,567"". Whole numbers only (the fraction is dropped); a negative keeps its minus sign. For idle-game scale (1.23e15, ""1.23 Qa"") reach for the Big Numbers pack instead.","숫자를 플레이어가 한눈에 파악할 수 있는 자릿수 구분 표기로 바꿉니다: 1234567 은 ""1,234,567"" 로 읽힙니다. 정수만 다루며(소수부는 버립니다), 음수는 마이너스 기호를 유지합니다. 방치형 규모(1.23e15, ""1.23 Qa"")에는 큰 수 팩을 쓰세요."
+[b]{value}[/b] with thousands separators,천 단위 구분 기호를 넣은 [b]{value}[/b]
+The number to make readable. Anything after the decimal point is dropped.,읽기 좋게 만들 숫자. 소수점 아래는 버립니다.
+As Percent Text,퍼센트 텍스트로
+"Turns a fraction into percent TEXT with the sign on it: 0.73 reads ""73%"". Feed it a 0-to-1 value (Percent Of already returns 0-to-100, so divide that by 100 or use the raw fraction).","비율을 퍼센트 기호가 붙은 ""텍스트"" 로 만듭니다: 0.73 은 ""73%"" 로 읽힙니다. 0 에서 1 사이 값을 주세요 (퍼센트 는 이미 0 에서 100 을 돌려주므로 100 으로 나누거나 원래 비율을 쓰세요)."
+[b]{value}[/b] as a percent,[b]{value}[/b] 를 퍼센트로
+Fraction,비율
+"A fraction where 1.0 means full, e.g. health / max_health.",1.0 이 가득 참을 뜻하는 비율. 예를 들어 health / max_health.
+Decimals,소수 자릿수
+Digits after the decimal point. 0 gives a whole percent.,소수점 아래 자릿수. 0 이면 정수 퍼센트가 됩니다.
+As Duration,지속 시간으로
+"Seconds as a duration that survives passing an hour: 3725 reads ""1h 02m"" and 90 reads ""1m 30s"". A negative duration reads as zero. Use As Clock Time when you want strict mm:ss (it rolls an hour into ""60:00"").","한 시간을 넘겨도 무너지지 않는 지속 시간 표기: 3725 는 ""1h 02m"", 90 은 ""1m 30s"" 로 읽힙니다. 음수 길이는 0 으로 읽힙니다. 엄격한 mm:ss 가 필요하면 시계 표기 를 쓰세요 (거기서는 한 시간이 ""60:00"" 이 됩니다)."
+[b]{seconds}[/b] as a duration,[b]{seconds}[/b] 를 지속 시간으로
+Seconds,초
+A duration in seconds.,초 단위 길이.
+Align Left,왼쪽 정렬
+"Pads text out on the RIGHT to a fixed width, so every row starts on the same edge and reads as a column. Text longer than the width is left alone (it is never cut - shorten it first). Give the Label a MONOSPACE theme font or the column will still drift.",텍스트의 '오른쪽' 을 채워 고정 폭으로 만듭니다. 모든 행이 같은 가장자리에서 시작해 하나의 열처럼 읽힙니다. 폭보다 긴 텍스트는 그대로 둡니다(자르지 않습니다 - 먼저 줄이세요). Label 의 테마 글꼴을 고정폭으로 하지 않으면 열은 여전히 어긋납니다.
+[b]{text}[/b] aligned left in [b]{width}[/b],[b]{width}[/b] 폭에서 왼쪽 정렬한 [b]{text}[/b]
+The text to pad out.,채워서 넓힐 텍스트.
+Width,폭
+Column width in characters. Shorter text is padded; longer text is left as it is.,"열 폭(글자 수). 짧은 텍스트는 채워지고, 긴 텍스트는 그대로 둡니다."
+Fill with,채울 문자
+"What fills the gap: a space, or ""."" for a dotted leader. One character.","빈 자리를 채울 문자: 공백, 또는 점선을 만들려면 ""."" 입니다. 한 글자."
+Align Right,오른쪽 정렬
+"Pads text out on the LEFT to a fixed width, so numbers END on the same edge and read as a column of figures. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the column will still drift.",텍스트의 '왼쪽' 을 채워 고정 폭으로 만듭니다. 숫자가 같은 가장자리에서 '끝나' 숫자 열처럼 읽힙니다. 폭보다 긴 텍스트는 그대로 둡니다. Label 의 테마 글꼴을 고정폭으로 하지 않으면 열은 여전히 어긋납니다.
+[b]{text}[/b] aligned right in [b]{width}[/b],[b]{width}[/b] 폭에서 오른쪽 정렬한 [b]{text}[/b]
+The text to pad out - str() a number first.,채워서 넓힐 텍스트 - 숫자는 먼저 str() 로 감싸세요.
+Center In Width,폭 안에서 가운데 정렬
+"Pads text on BOTH sides to a fixed width, so a heading sits in the middle of a column. An odd leftover space goes on the right. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the centering will still drift.",텍스트의 '양쪽' 을 채워 고정 폭으로 만듭니다. 제목이 열 가운데에 놓입니다. 홀수로 남는 칸은 오른쪽으로 갑니다. 폭보다 긴 텍스트는 그대로 둡니다. Label 의 테마 글꼴을 고정폭으로 하지 않으면 가운데 정렬은 여전히 어긋납니다.
+[b]{text}[/b] centered in [b]{width}[/b],[b]{width}[/b] 폭 가운데에 놓은 [b]{text}[/b]
+The text to center.,가운데에 놓을 텍스트.
+As Title Text,제목용 텍스트로
+"Turns a machine id into a readable name: ""fire_sword"" reads ""Fire Sword"", ""maxHealth"" reads ""Max Health"". Use it wherever a key has to be shown to a player, so ids and labels never drift apart in two places.","기계용 id 를 사람이 읽을 이름으로 바꿉니다: ""fire_sword"" 는 ""Fire Sword"", ""maxHealth"" 는 ""Max Health"" 로 읽힙니다. 키를 플레이어에게 보여줘야 하는 곳마다 쓰면 id 와 표시 이름이 두 군데에서 어긋나는 일이 없습니다."
+[b]{text}[/b] as title text,제목용으로 만든 [b]{text}[/b]
+"An id or key, e.g. fire_sword or maxHealth.",id 나 키. 예를 들어 fire_sword 나 maxHealth.
+As Sentence Text,문장용 텍스트로
+"Raises the FIRST letter only and leaves the rest of the text exactly as it is, so ""NPC"" and ""HP"" keep their capitals. Empty text stays empty.","""첫 글자만"" 대문자로 올리고 나머지는 그대로 둡니다. 그래서 ""NPC"" 와 ""HP"" 는 대문자를 유지합니다. 빈 텍스트는 빈 채로 남습니다."
+[b]{text}[/b] as sentence text,문장용으로 만든 [b]{text}[/b]
+A sentence that needs its first letter raised.,첫 글자를 대문자로 올려야 하는 문장.
+Translated Text From Pattern,패턴에서 만든 번역 텍스트
+"Looks the whole sentence up in the current language FIRST, then fills its {slots}. The pattern you type here - slots and all - is the translation key, so it is what goes in the catalog. Filling the slots first (Translate around Text From Pattern) produces a string no catalog can contain, and the text then never translates.","먼저 문장 전체를 현재 언어로 '찾은' 다음 그 {slots} 를 채웁니다. 여기 적은 패턴이 슬롯까지 포함해 그대로 번역 키이므로, 카탈로그에 넣는 것도 이것입니다. 슬롯을 먼저 채우면(패턴에서 텍스트 를 번역 으로 감싸는 방식) 어떤 카탈로그에도 존재할 수 없는 문자열이 만들어지고, 그 텍스트는 영영 번역되지 않습니다."
+Translation,번역
+translated text from [b]{pattern}[/b],[b]{pattern}[/b] 에서 만든 번역 텍스트
+Pattern,패턴
+"The source sentence, with {name} slots. This exact string, slots and all, is the translation key that goes in the catalog.","원본 문장. {name} 슬롯을 포함합니다. 이 문자열 그대로가, 슬롯까지 포함해 카탈로그에 들어갈 번역 키입니다."
+Values,값들
+"What fills the slots: {""name"": value, ...} - e.g. {""coins"": coins}.","슬롯을 채울 값: {""name"": value, ...} - 예를 들어 {""coins"": coins}."
+Set Text (translated pattern),텍스트 설정 (번역 패턴)
+Sets this Label's text from a pattern that is translated FIRST and filled second. The pattern - slots and all - is the translation key. Re-run it under On Language Changed so the label follows a live language switch.,이 Label 의 텍스트를 먼저 번역한 뒤 채우는 패턴으로 설정합니다. 패턴은 슬롯까지 포함해 그대로 번역 키입니다. 언어가 바뀌었을 때 아래에서 다시 실행하면 실행 중 언어 전환을 라벨이 따라갑니다.
+set text to translated [b]{pattern}[/b],텍스트를 번역한 [b]{pattern}[/b] 로 설정
+Text Is A Number,텍스트가 숫자임
+"True when this text would convert to a number cleanly. Ask it BEFORE converting, so a typo can never arrive as a silent 0 and the sheet bet nothing. Spaces around the number are ignored; empty text is not a number.","이 텍스트가 깔끔하게 숫자로 변환될 수 있으면 참입니다. 변환하기 '전에' 물어보세요. 그래야 오타가 조용히 0 으로 도착해 시트가 아무것도 걸지 않는 일이 없습니다. 숫자 앞뒤 공백은 무시하며, 빈 텍스트는 숫자가 아닙니다."
+Compare: Text,비교: 텍스트
+{text} is a number,{text} 가 숫자
+"Text to test - a typed-in field, a value read back out of a save, a CSV or JSON cell.","검사할 텍스트 - 직접 입력한 칸, 세이브에서 다시 읽은 값, CSV 나 JSON 의 한 칸 등."
+Text Is A Whole Number,텍스트가 정수임
+"True when this text would convert to a WHOLE number cleanly - a count, a level, a slot index. ""12"" passes and ""12.5"" does not, which is the only difference from Text Is A Number.","이 텍스트가 깔끔하게 ""정수"" 로 변환될 수 있으면 참입니다 - 개수, 레벨, 슬롯 번호 등. ""12"" 는 통과하고 ""12.5"" 는 통과하지 못합니다. 텍스트가 숫자임 과의 차이는 그것뿐입니다."
+{text} is a whole number,{text} 가 정수
+"Text to test - a count, a level number, a save slot, a seed.","검사할 텍스트 - 개수, 레벨 번호, 세이브 슬롯, 시드 등."
+Contains Any Of,다음 중 하나를 포함
+"True when the text contains at least ONE of the listed pieces - a chat filter, a keyword-triggered line, a tag-gated card. Unlike Text Is One Of, which needs the WHOLE text to equal an entry, this looks INSIDE the text. Matching is case-sensitive, and an empty list is never a match.","나열한 조각 중 '적어도 하나' 를 텍스트가 포함하면 참입니다 - 채팅 필터, 키워드로 뜨는 대사, 태그로 열리는 카드 등. 텍스트 '전체' 가 항목과 같아야 하는 텍스트가 다음 중 하나임 과 달리, 이쪽은 텍스트 '안' 을 봅니다. 대소문자를 구분하며, 빈 목록은 절대 일치하지 않습니다."
+{text} contains any of {options},{text} 가 {options} 중 하나를 포함
+Text to search.,검색할 텍스트.
+Any Of,다음 중 하나
+"List of pieces to look for - written here, or a sheet variable someone can edit without touching this row.","찾을 조각들의 목록 - 여기에 바로 적어도 되고, 이 행을 건드리지 않고도 누군가 고칠 수 있는 시트 변수로 둬도 됩니다."
+Contains All Of,다음을 모두 포함
+"True only when the text contains EVERY listed piece - a combo whose rule text names two keywords, a search box where all the words must match. An empty list counts as true, because nothing is missing.","나열한 조각을 '전부' 포함할 때만 참입니다 - 규칙 문구에 키워드 두 개가 적힌 콤보, 모든 단어가 맞아야 하는 검색창 등. 빈 목록은 빠진 것이 없으므로 참으로 칩니다."
+{text} contains all of {options},{text} 가 {options} 를 모두 포함
+All Of,다음 모두
+List of pieces that must ALL appear.,모두 나타나야 하는 조각들의 목록.
+Contains None Of,다음 중 아무것도 포함하지 않음
+"True when the text contains none of the listed pieces - the accept-this-name branch, written as the thing you want to act on instead of an Else. An empty list always passes.","나열한 조각을 하나도 포함하지 않을 때 참입니다 - '이 이름을 받아들인다' 는 분기를, Else 가 아니라 실제로 처리하고 싶은 쪽으로 쓸 수 있습니다. 빈 목록은 항상 통과합니다."
+{text} contains none of {options},{text} 가 {options} 중 아무것도 포함하지 않음
+None Of,다음 중 아무것도
+List of pieces that must NOT appear.,나타나면 안 되는 조각들의 목록.
+Number From Text,텍스트에서 숫자
+"Reads a number out of text, or hands back the fallback YOU chose - never a surprise zero. Pair it with Text Is A Number when the two cases need different rows. The text is read twice in the emitted line, so keep it a plain read and not something that changes the game.","텍스트에서 숫자를 읽습니다. 못 읽으면 '당신이 고른' 대체 값을 돌려주며, 예상 밖의 0 이 나오지 않습니다. 두 경우에 각각 다른 행이 필요하면 텍스트가 숫자임 과 짝지으세요. 생성된 줄에서 텍스트를 두 번 읽으므로, 게임 상태를 바꾸는 것이 아니라 단순한 읽기로 두세요."
+Variables: String,변수: 문자열
+number from {text} (or {fallback}),{text} 에서 얻은 숫자 (없으면 {fallback})
+Text to read a number out of.,숫자를 읽어 낼 텍스트.
+What you get back when the text is not a number.,텍스트가 숫자가 아닐 때 받게 되는 값.
+Whole Number From Text,텍스트에서 정수
+"Reads a whole number out of text, or hands back your fallback. ""12.5"" is not a whole number, so it lands on the fallback rather than quietly becoming 12 - when you want that rounding, use Number From Text and round the result yourself.","텍스트에서 정수를 읽습니다. 못 읽으면 지정한 대체 값을 돌려줍니다. ""12.5"" 는 정수가 아니므로 조용히 12 가 되지 않고 대체 값으로 갑니다 - 그 반올림이 필요하면 텍스트에서 숫자 를 쓰고 결과를 직접 반올림하세요."
+whole number from {text} (or {fallback}),{text} 에서 얻은 정수 (없으면 {fallback})
+Text to read a whole number out of.,정수를 읽어 낼 텍스트.
+What you get back when the text is not a whole number.,텍스트가 정수가 아닐 때 받게 되는 값.
+Is Nothing,아무것도 아님
+"True when there is nothing there: no value at all, empty text, an empty list (including an empty Split Text result), or an empty record - one row whatever the value turns out to be. A 0 is NOT nothing, because a score of zero is a real value, and neither is text made only of spaces (that is Text Is Blank).","거기에 아무것도 없을 때 참입니다: 값 자체가 없음, 빈 텍스트, 빈 목록(텍스트 나누기 의 빈 결과 포함), 빈 레코드 - 값이 어떤 형이든 한 줄이면 됩니다. 0 은 '아무것도 아님' 이 아닙니다. 점수 0 은 진짜 값이니까요. 공백만 있는 텍스트도 아닙니다(그건 텍스트가 비어 있음 입니다)."
+Compare: Types,비교: 형
+{value} is nothing,{value} 가 아무것도 아님
+"Anything - text, a list, a record, a reference.","무엇이든 - 텍스트, 목록, 레코드, 참조 등."
+Has Something,무언가 있음
+"True when there IS something there - a name was typed, the inventory has items, the save slot was written, the item slot is filled. The exact opposite of Is Nothing, for the times the filled case is the one you want to act on.","거기에 무언가가 '있을' 때 참입니다 - 이름이 입력됨, 인벤토리에 아이템이 있음, 세이브 슬롯이 기록됨, 아이템 칸이 채워짐. 아무것도 아님 의 정확한 반대이며, 채워진 쪽을 처리하고 싶을 때 씁니다."
+{value} has something,{value} 에 무언가 있음
+Number Or,"숫자, 아니면"
+"The value when it really is a number, or your own default when it is missing, null, text, or anything else. A zero counts as a real number and is kept. Use it to put a loaded value straight into a whole-number or decimal variable without a guard row first. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","정말로 숫자일 때는 그 값을, 없거나 null 이거나 텍스트이거나 그 밖의 무엇일 때는 당신이 정한 기본값을 돌려줍니다. 0 은 진짜 숫자로 쳐서 그대로 유지합니다. 불러온 값을 가드 행 없이 바로 정수나 실수 변수에 넣을 때 쓰세요. 생성된 줄에서 값을 두 번 읽으므로, 게임 상태를 바꾸는 것이 아니라 단순한 읽기로 두세요."
+Variables,변수
+"{value} as a number, or {fallback}","{value} 를 숫자로, 아니면 {fallback}"
+"The untyped value to check - a save slot read, a JSON field, a Dictionary key.","검사할 형 없는 값 - 세이브 슬롯에서 읽은 값, JSON 필드, 사전 키 등."
+What you get back when it is not a number.,숫자가 아닐 때 받게 되는 값.
+Text Or,"텍스트, 아니면"
+"The value when it really is text with something in it, or your own default when it is missing, null, blank, or another kind of value. The classic use is a saved player name that falls back to ""Player"". The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","정말로 내용이 있는 텍스트일 때는 그 값을, 없거나 null 이거나 비었거나 다른 종류의 값일 때는 당신이 정한 기본값을 돌려줍니다. 대표적인 용도는 저장된 플레이어 이름이 없을 때 ""Player"" 로 되돌아가는 것입니다. 생성된 줄에서 값을 두 번 읽으므로, 게임 상태를 바꾸는 것이 아니라 단순한 읽기로 두세요."
+"{value} as text, or {fallback}","{value} 를 텍스트로, 아니면 {fallback}"
+"What you get back when it is not text, or is blank.",텍스트가 아니거나 비었을 때 받게 되는 값.
+List Or,"목록, 아니면"
+"The value when it really is a list with items in it, or your own default when it is missing, null, empty, or another kind of value. A Split Text result counts as a list. Safe to feed straight into a For Each. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","정말로 항목이 든 목록일 때는 그 값을, 없거나 null 이거나 비었거나 다른 종류의 값일 때는 당신이 정한 기본값을 돌려줍니다. 텍스트 나누기 의 결과도 목록으로 칩니다. 바로 For Each 에 넣어도 안전합니다. 생성된 줄에서 값을 두 번 읽으므로, 게임 상태를 바꾸는 것이 아니라 단순한 읽기로 두세요."
+"{value} as a list, or {fallback}","{value} 를 목록으로, 아니면 {fallback}"
+"The untyped value to check - a loaded inventory, a JSON array, a Split Text result, a Dictionary key.","검사할 형 없는 값 - 불러온 인벤토리, JSON 배열, 텍스트 나누기 의 결과, 사전 키 등."
+"What you get back when it is not a list, or is empty.",목록이 아니거나 비었을 때 받게 되는 값.
+Record Or,"레코드, 아니면"
+"The value when it really is a record (a dictionary) with keys in it, or your own default when it is missing, null, empty, or another kind of value. Pair it with Get Key so a whole missing settings block reads as defaults. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","정말로 키가 든 레코드(사전)일 때는 그 값을, 없거나 null 이거나 비었거나 다른 종류의 값일 때는 당신이 정한 기본값을 돌려줍니다. 키 가져오기 와 짝지으면 설정 블록이 통째로 없어도 기본값으로 읽힙니다. 생성된 줄에서 값을 두 번 읽으므로, 게임 상태를 바꾸는 것이 아니라 단순한 읽기로 두세요."
+"{value} as a record, or {fallback}","{value} 를 레코드로, 아니면 {fallback}"
+"The untyped value to check - a loaded settings block, a JSON object, a Dictionary key.","검사할 형 없는 값 - 불러온 설정 블록, JSON 객체, 사전 키 등."
+"What you get back when it is not a record, or is empty.",레코드가 아니거나 비었을 때 받게 되는 값.
+Value Or,"값, 아니면"
+"The value unless it is null, in which case your own default. This one guards nothing else: a zero, a blank text and an empty list all count as real values here. Use it for a method that can hand back null. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","null 이 아닌 한 그 값을 주고, null 일 때만 당신이 정한 기본값을 줍니다. 이것은 그 밖의 것은 전혀 지키지 않습니다 - 0, 빈 텍스트, 빈 목록 모두 여기서는 진짜 값입니다. null 을 돌려줄 수 있는 메서드에 쓰세요. 생성된 줄에서 값을 두 번 읽으므로, 게임 상태를 바꾸는 것이 아니라 단순한 읽기로 두세요."
+"{value}, or {fallback} when it is nothing","{value}, 아무것도 없으면 {fallback}"
+"Anything that might be null - a method result, a freed reference, a missing key.","null 일 수 있는 무엇이든 - 메서드 결과, 해제된 참조, 없는 키 등."
+What you get back when it is null.,null 일 때 받게 되는 값.
+Part Of,…의 성분
+"One named piece of a pair, a triple, a colour or a record: the up/down part of a velocity (the jump-or-fall test), the see-through part of a tint, the forward/back part of a 3D direction. Reads as a sentence instead of a typed-in .y. Pick a part the value actually has - a record that might be missing the field is the shipped Get Key (with default)'s job, because that one takes a fallback and this one does not.","쌍, 삼중값, 색, 레코드의 이름이 붙은 한 조각입니다: 속도의 위/아래 성분(점프 중인지 낙하 중인지 판정), 색조의 투명도 성분, 3D 방향의 앞/뒤 성분 등. 손으로 적은 .y 대신 문장처럼 읽힙니다. 값이 실제로 가진 성분을 고르세요 - 필드가 없을 수도 있는 레코드는 키 가져오기(기본값 포함) 의 몫입니다. 그쪽은 대체 값을 받지만 이쪽은 받지 않습니다."
+Variables: Vector,변수: 벡터
+the {part} part of {value},{value} 의 {part} 성분
+"A Vector2, Vector3, Color or record to read one part of.","한 성분을 읽어 낼 Vector2, Vector3, Color 또는 레코드."
+Part,성분
+Which named part to read.,어떤 이름의 성분을 읽을지.
+X (left / right),X (좌우)
+Y (up / down),Y (위아래)
+Z (forward / back),Z (앞뒤)
+Red,빨강
+Green,초록
+Blue,파랑
+Alpha (see-through),알파 (투명도)
+Set Part Of,성분 설정
+"Changes one named part and leaves the rest alone: zero the vertical speed on landing and keep the horizontal, flatten a 3D direction to the ground plane, fade only the see-through part of a tint. Writing a part a record does not have yet ADDS it.","이름이 붙은 한 성분만 바꾸고 나머지는 그대로 둡니다: 착지할 때 수직 속도만 0 으로 만들고 수평은 유지, 3D 방향을 지면 평면으로 눌러 펴기, 색조의 투명도 성분만 서서히 지우기 등. 레코드가 아직 갖고 있지 않은 성분에 쓰면 그 성분이 '추가' 됩니다."
+set the {part} part of {var_name} to {value},{var_name} 의 {part} 성분을 {value} 로 설정
+Variable or property,변수 또는 속성
+"What to change one part of: a node's own member (velocity, modulate, position) picked from the list, or the name of a sheet variable holding a Vector, Color or record.","한 성분을 바꿀 대상: 목록에서 고른 노드 자신의 멤버(velocity, modulate, position), 또는 벡터·색·레코드를 담은 시트 변수의 이름."
+Which named part to write.,어떤 이름의 성분에 쓸지.
+The new value for that one part.,그 한 성분에 넣을 새 값.

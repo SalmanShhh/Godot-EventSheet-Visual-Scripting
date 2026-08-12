@@ -9,9 +9,11 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 - [Everyday Patterns As Vocabulary](EVERYDAY-PATTERNS-AS-VOCABULARY.md) - the linkable case for event-sheet visual scripting: what a beginner skips, pattern by pattern, and what an expert keeps.
 - [Block Styles - How To Read Every Row](GUIDE-BLOCK-STYLES.md) - the field guide to every block kind and the icon legend.
 - [Working with Lists (Arrays)](GUIDE-WORKING-WITH-LISTS.md) - the whole Array vocabulary, including Filter / Map / Reduce / Any Match / All Match and typed lists.
+- [Working with Text (and Reading Data Out of It)](GUIDE-WORKING-WITH-TEXT.md) - fitting text to a label, readable numbers, lined-up columns, pulling a piece out of a line, quote-aware splitting, a spreadsheet read as records end to end, and turning a parse failure into a sentence.
+- [Working with Values (and Copying Them Around)](GUIDE-WORKING-WITH-VALUES.md) - loaded values that might be missing or the wrong shape: emptiness across types, one-row fallbacks, checked conversions, named parts, the shared-.tres copy trap, presets, share codes and the clipboard, and remember/restore.
 - [Seeing What Is There (Raycasting)](GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING.md) - line of sight, hitscan shots, ground checks, click-to-select, and explosion radii: all four kinds of cast in 2D and 3D, with two playable labs that draw every cast as it happens.
 - [Make a Behaviour Without Writing Code](GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE.md) - author a whole reusable behaviour from event-sheet rows.
-- [Saving and Loading Your Game](GUIDE-SAVING-AND-LOADING.md) - the save story: six slot formats, the persist group, and the `save_state`/`load_state` seam any behaviour can join.
+- [Saving and Loading Your Game](GUIDE-SAVING-AND-LOADING.md) - the save story: six slot formats, the persist group, the `save_state`/`load_state` seam any behaviour can join, slot cards a load menu reads without loading, an autosave the sheet can veto, save migration, a backup ring, and New Game Plus.
 
 ## The Studios (in-editor authoring tools)
 

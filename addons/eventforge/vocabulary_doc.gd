@@ -114,7 +114,11 @@ static func script_pack_section(script_path: String) -> PackedStringArray:
 ## collect_publish_surface returns, so one renderer serves both.
 static func script_pack_surface(source: String) -> Dictionary:
 	var surface: Dictionary = {"actions": [], "triggers": [], "conditions": [], "expressions": [], "properties": []}
-	var kind_regex: RegEx = RegEx.create_from_string("## @ace_(trigger|condition|action|expression)\\b")
+	# A LOOPING condition carries `@ace_looping(item)` instead of `@ace_condition` - the annotation
+	# is what names the loop variable, so it replaces the plain one rather than joining it. Scanning
+	# for the four plain kinds therefore missed every looping verb ever shipped, leaving a whole
+	# family absent from the reference while looking complete.
+	var kind_regex: RegEx = RegEx.create_from_string("## @ace_(trigger|condition|action|expression|looping)\\b")
 	var name_regex: RegEx = RegEx.create_from_string("## @ace_name\\(\"([^\"]+)\"\\)")
 	var category_regex: RegEx = RegEx.create_from_string("## @ace_category\\(\"([^\"]+)\"\\)")
 	# The close is anchored to the end of its line so a description containing its own quoted example -
@@ -144,7 +148,10 @@ static func script_pack_surface(source: String) -> Dictionary:
 		var shown_match: RegExMatch = name_regex.search(chunk)
 		var category_match: RegExMatch = category_regex.search(chunk)
 		var description_match: RegExMatch = description_regex.search(chunk)
-		(surface[kind_match.get_string(1) + "s"] as Array).append({
+		# A looping verb IS a condition in the picker (adding it to an event repeats the actions), so
+		# it is listed among them; each one's own description opens by saying that it repeats.
+		var bucket: String = "conditions" if kind_match.get_string(1) == "looping" else kind_match.get_string(1) + "s"
+		(surface[bucket] as Array).append({
 			"name": shown_match.get_string(1) if shown_match != null else symbol_match.get_string(1).capitalize(),
 			"params": symbol_match.get_string(2).strip_edges(),
 			"category": category_match.get_string(1) if category_match != null else "",

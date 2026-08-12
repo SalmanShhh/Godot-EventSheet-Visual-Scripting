@@ -108,6 +108,7 @@ Welcome…,Добро пожаловать…
 Start the Tour…,Начать тур…
 Keyboard Shortcuts,Горячие клавиши
 Rename Everywhere…,Переименовать везде…
+Change Type Everywhere…,Изменить тип везде…
 Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,Проверить каждое выражение ƒx и блок GDScript; пометить проблемные строки и перейти к первой.
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,"Переключить эмиссию точек останова: листы, скомпилированные в режиме отладки, останавливаются на строках с точками останова."
 Toggle Live Values: running sheets stream their variables here (editable).,Переключить живые значения: работающие листы передают сюда свои переменные (можно редактировать).
@@ -172,6 +173,8 @@ Edit Events,Изменить события
 Insert Snippet…,Вставить сниппет…
 Extract All Actions to Function…,Извлечь все действия в функцию…
 Group Under a Heading…,Сгруппировать под заголовком…
+Export Grid to CSV…,Экспортировать таблицу в CSV…
+Import Grid from CSV…,Импортировать таблицу из CSV…
 Detach Comment To Row,Вынести комментарий в отдельную строку
 Convert Scope,Изменить область видимости
 Toggle Constant,Переключить константу
@@ -576,6 +579,7 @@ Filter,Фильтр
 Edit Values Across Selection…,Изменить значения в выделении…
 Select All Events Using This,Выделить все события с этим
 Replace Object References…,Заменить ссылки на объект…
+Paste Special…,Специальная вставка…
 Replace Object References,Заменить ссылки на объект
 Retarget the selection,Перенацелить выделение
 Replace,Заменить
@@ -741,3 +745,402 @@ Export Is Debug,Экспорт отладочный
 True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,"Истинно, когда экспорт, запустивший этот шаг запекания, является отладочной сборкой. Используйте внутри При экспорте проекта, чтобы тестовое содержимое не попадало в релизные сборки."
 Export Has Feature,У экспорта есть функция
 "True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.","Истинно, когда пресет экспорта, запустивший этот шаг запекания, несёт указанный тег функции: так запекают разные данные для мобильных, веба или настольных систем."
+Share Code For,Код обмена для
+"Turns any value into one compact line of text a player can paste anywhere - a seed, a loadout, a whole save. Read it back with Value From Share Code.","Превращает любое значение в одну компактную строку текста, которую игрок может вставить куда угодно - зерно, набор снаряжения, целое сохранение. Читается обратно через Значение из кода обмена."
+Utility: Window,Утилиты: окно
+share code for [b]{value}[/b],код обмена для [b]{value}[/b]
+Value,Значение
+"Anything - a run seed, a loadout list, a colour, a whole save record.","Что угодно - зерно забега, список снаряжения, цвет, целая запись сохранения."
+Copy Share Code To Clipboard,Скопировать код обмена в буфер
+"Encodes any value as a share code and puts it straight on the operating system clipboard, ready to paste.","Кодирует любое значение как код обмена и кладёт его прямо в буфер обмена системы, готовым для вставки."
+copy share code for [b]{value}[/b] to clipboard,скопировать код обмена для [b]{value}[/b] в буфер
+"Anything - a run seed, a loadout list, a whole save record.","Что угодно - зерно забега, список снаряжения, целая запись сохранения."
+Share Code Is Valid,Код обмена корректен
+"True when the text really is a share code that decodes cleanly, so a paste box can refuse garbage before it reaches the game. Ask it when the pasted text CHANGES (a Paste button, On Text Changed) rather than every frame: a code mangled in transit can still reach the decoder, and the engine logs a line each time it is refused. A code that was made from nothing at all also reads as invalid.","Истинно, когда текст действительно является кодом обмена и раскодируется без ошибок, так что поле вставки может отклонить мусор до того, как он попадёт в игру. Спрашивайте это при ИЗМЕНЕНИИ вставленного текста (кнопка Вставить, При изменении текста), а не каждый кадр: испорченный при пересылке код всё равно доходит до декодера, и движок пишет строку при каждом отказе. Код, сделанный вообще из ничего, тоже читается как некорректный."
+[b]{code}[/b] is a valid share code,[b]{code}[/b] - корректный код обмена
+Code,Код
+The pasted text to test - usually Clipboard Text or a paste box's text.,Вставленный текст для проверки - обычно Текст буфера обмена или текст поля вставки.
+Value From Share Code,Значение из кода обмена
+"Reads the value back out of a share code, giving nothing when the text is not a valid code.","Читает значение обратно из кода обмена и не даёт ничего, если текст не является корректным кодом."
+value from share code [b]{code}[/b],значение из кода обмена [b]{code}[/b]
+The share code text to read - check it with Share Code Is Valid first.,Текст кода обмена для чтения - сначала проверьте его через Код обмена корректен.
+Clipboard Has Text,В буфере обмена есть текст
+True when the operating system clipboard currently holds any text - gate a paste box on it.,"Истинно, когда в буфере обмена системы сейчас есть какой-либо текст - используйте как условие для поля вставки."
+clipboard has text,в буфере обмена есть текст
+Clipboard Has Image,В буфере обмена есть изображение
+"True when the operating system clipboard currently holds an image, such as a screenshot the player just copied.","Истинно, когда в буфере обмена системы сейчас есть изображение, например только что скопированный игроком снимок экрана."
+clipboard has an image,в буфере обмена есть изображение
+Clipboard Image,Изображение из буфера обмена
+The image currently on the operating system clipboard - feed it to ImageTexture.create_from_image to show it.,"Изображение, находящееся сейчас в буфере обмена системы - передайте его в ImageTexture.create_from_image, чтобы показать."
+clipboard image,изображение из буфера обмена
+Clipboard Text Is,Текст буфера обмена
+"Compares whatever text is on the clipboard against a value, with your choice of operator.","Сравнивает текст, лежащий в буфере обмена, со значением выбранным вами оператором."
+clipboard text {op} [b]{value}[/b],текст буфера обмена {op} [b]{value}[/b]
+Operator,Оператор
+Comparison.,Сравнение.
+= (equal to),= (равно)
+!= (not equal to),!= (не равно)
+< (less than),< (меньше)
+<= (at most),<= (не больше)
+> (greater than),> (больше)
+>= (at least),>= (не меньше)
+Text to compare the clipboard against.,"Текст, с которым сравнивается буфер обмена."
+Clone Into,Клонировать в
+"Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.","Копирует живой узел, добавляет копию к родителю, размещает её и при желании кладёт в группу - однострочная форма Дублировать узел плюс Добавить потомка плюс Задать позицию. Если вы начинаете с файла .tscn, возьмите Породить сцену."
+Nodes,Узлы
+"clone [i]{source}[/i] into [i]{parent}[/i] at [b]{at}[/b], group [b]{group}[/b]","клонировать [i]{source}[/i] в [i]{parent}[/i] в точке [b]{at}[/b], группа [b]{group}[/b]"
+The live node to copy.,"Живой узел, который копируется."
+Into,Куда
+Where the copy is added.,Куда добавляется копия.
+At,В точке
+World position for the copy (a Vector3 for a 3D node). Only used when the copy has a position.,Мировая позиция копии (Vector3 для 3D-узла). Используется только если у копии вообще есть позиция.
+Optional group for the copy (blank = none).,Необязательная группа для копии (пусто = без группы).
+Remember Value As,Запомнить значение как
+"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game use Remember Between Runs on the variable, or the Save System pack.","Откладывает любое значение под именем в памяти на время этого запуска - значение «до» для предпросмотра, бафа или катсцены. Для памяти, переживающей закрытие игры, включите на переменной Помнить между запусками или возьмите пак Системы сохранений."
+Run Context,Контекст запуска
+remember [b]{value}[/b] as [b]{name}[/b],запомнить [b]{value}[/b] как [b]{name}[/b]
+Any label you also use in Restore Value Into.,"Любая метка, которую вы используете и в Вернуть значение в."
+The value to copy aside.,"Значение, которое откладывается."
+Restore Value Into,Вернуть значение в
+Pours a remembered value back into a variable. When nothing was remembered under that name the variable keeps what it already had.,"Возвращает запомненное значение обратно в переменную. Если под этим именем ничего не запоминали, переменная сохраняет то, что в ней было."
+restore [b]{name}[/b] into [b]{var_name}[/b],вернуть [b]{name}[/b] в [b]{var_name}[/b]
+The label used in Remember Value As.,"Метка, использованная в Запомнить значение как."
+Into Variable,В переменную
+Variable that receives the remembered value (left alone when nothing was remembered).,"Переменная, получающая запомненное значение (остаётся нетронутой, если ничего не запоминали)."
+Remembered Value,Запомненное значение
+"The value remembered under a name this run, or your fallback when there is none - read it without pouring it back.","Значение, запомненное под именем в этом запуске, или ваш запасной вариант, если его нет - читает, не возвращая обратно."
+remembered [b]{name}[/b] or [b]{fallback}[/b],запомненное [b]{name}[/b] или [b]{fallback}[/b]
+Or,Иначе
+What you get when nothing was remembered under that name.,"Что вы получите, если под этим именем ничего не запоминали."
+Has Remembered,Есть запомненное
+True when something was remembered under that name this run - the gate on a Cancel button that should only undo a preview it actually took.,"Истинно, когда в этом запуске под этим именем что-то запомнили - условие для кнопки Отмена, которая должна отменять только реально сделанный предпросмотр."
+has remembered [b]{name}[/b],есть запомненное [b]{name}[/b]
+Forget Remembered,Забыть запомненное
+"Drops a remembered value, so Has Remembered reads false again. Forgetting a name that was never remembered is harmless.","Сбрасывает запомненное значение, так что Есть запомненное снова становится ложным. Забыть имя, которое никогда не запоминали, безвредно."
+forget remembered [b]{name}[/b],забыть запомненное [b]{name}[/b]
+Resources In Folder,Ресурсы в папке
+"Loads every data asset (.tres) in a folder as a list, so a folder of files becomes your content - items, enemies, levels, or a mod folder. A missing folder gives an empty list, and a file that fails to load is left out rather than arriving as nothing.","Загружает все ресурсы данных (.tres) из папки как список, так что папка с файлами становится вашим контентом - предметы, враги, уровни или папка модов. Отсутствующая папка даёт пустой список, а файл, который не удалось загрузить, отбрасывается, а не приходит пустым."
+Files,Файлы
+resources in [b]{folder}[/b],ресурсы в [b]{folder}[/b]
+Folder,Папка
+"Folder to scan (not recursive). Every .tres / .res inside it is loaded, in the folder's own order.",Папка для просмотра (без вложенных). Каждый .tres / .res внутри загружается в порядке самой папки.
+Resource In Folder,Ресурс в папке
+"Fetches one data asset out of a folder by its file name, or nothing at all when there is no such file - no red error.","Достаёт один ресурс данных из папки по имени файла, либо ничего, если такого файла нет - без красной ошибки."
+resource [b]{name}[/b] in [b]{folder}[/b],ресурс [b]{name}[/b] в [b]{folder}[/b]
+Folder holding the data assets.,"Папка, в которой лежат ресурсы данных."
+"File name WITHOUT the .tres extension - ""rusty_sword"" finds rusty_sword.tres.","Имя файла БЕЗ расширения .tres - ""rusty_sword"" находит rusty_sword.tres."
+Load Resource Or Default,Загрузить ресурс или запасной
+"Loads a file and hands back your fallback when it is missing, so a deleted or mod-supplied file never crashes the game.","Загружает файл, а если его нет - выдаёт ваш запасной вариант, так что удалённый или принесённый модом файл никогда не роняет игру."
+load [b]{path}[/b] or [i]{fallback}[/i],загрузить [b]{path}[/b] или [i]{fallback}[/i]
+Path,Путь
+Full path to the resource or scene to load.,Полный путь к загружаемому ресурсу или сцене.
+Fallback,Запасной вариант
+"What to use instead when the file is not there (a preloaded default, or null).","Что использовать вместо файла, если его нет (предзагруженное значение по умолчанию или null)."
+Count Of Resources In,Количество ресурсов в
+"How many data assets a folder holds, counted without loading any of them - zero if the folder is missing.","Сколько ресурсов данных лежит в папке, подсчитано без загрузки хотя бы одного - ноль, если папки нет."
+count of resources in [b]{folder}[/b],количество ресурсов в [b]{folder}[/b]
+Folder to count data assets in (not recursive).,"Папка, в которой считаются ресурсы данных (без вложенных)."
+Copy Resource (Independent),Копировать ресурс (независимо)
+"Makes a private copy of a resource, right down to the resources inside it, so writing to the copy never changes the .tres on disk or any other node holding it. Use this before a node edits its own stats.","Делает частную копию ресурса вплоть до вложенных в него ресурсов, так что запись в копию никогда не меняет .tres на диске и любой другой узел, который его держит. Применяйте перед тем, как узел начнёт править свои характеристики."
+Helpers,Помощники
+independent copy of [i]{resource}[/i],независимая копия [i]{resource}[/i]
+Resource,Ресурс
+The resource to copy. Anything that is not a resource (including nothing at all) gives nothing back.,"Ресурс для копирования. Всё, что ресурсом не является (в том числе пустота), ничего не вернёт."
+Copy Resource (Share Sub-Resources),Копировать ресурс (подресурсы общие)
+Makes a cheap copy whose own fields are separate but whose inner resources and lists are still SHARED with the original. Pick this only when you want that sharing - otherwise use Copy Resource (Independent).,"Делает дешёвую копию: её собственные поля отдельные, но вложенные ресурсы и списки по-прежнему ОБЩИЕ с оригиналом. Берите только если это разделение вам нужно - иначе используйте Копировать ресурс (независимо)."
+copy of [i]{resource}[/i] (sub-resources shared),копия [i]{resource}[/i] (подресурсы общие)
+Deep Copy,Глубокая копия
+"Copies the array AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Array only copies the outer level.","Копирует массив И каждый вложенный в него список или словарь, так что правка копии не дотянется до оригинала. Копировать массив копирует только внешний уровень."
+Variables: Array,Переменные: массив
+deep copy of [b]{var_name}[/b],глубокая копия [b]{var_name}[/b]
+Array,Массив
+Array variable to copy right through.,"Переменная-массив, копируемая насквозь."
+"Copies the dictionary AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Dictionary only copies the outer level.","Копирует словарь И каждый вложенный в него список или словарь, так что правка копии не дотянется до оригинала. Копировать словарь копирует только внешний уровень."
+Variables: Dictionary,Переменные: словарь
+Dictionary,Словарь
+Dictionary variable to copy right through.,"Переменная-словарь, копируемая насквозь."
+Copy Values From,Скопировать значения из
+"Pours a list of values off another object onto this one, in one row instead of one row per property. Names the target does not have are skipped, so a single preset can serve several kinds of node.","Переливает список значений с другого объекта на этот - одной строкой вместо строки на каждое свойство. Имена, которых у получателя нет, пропускаются, поэтому один пресет годится для нескольких видов узлов."
+copy [b]{names}[/b] from [i]{source}[/i] into [i]{target}[/i],скопировать [b]{names}[/b] из [i]{source}[/i] в [i]{target}[/i]
+The object being written to - it is what changes.,"Объект, в который пишут - именно он изменяется."
+The object to read from - a node OR a resource.,"Объект, из которого читают - узел ИЛИ ресурс."
+Names,Имена
+Comma-separated property names. Leave blank to copy every variable the source's script declares.,"Имена свойств через запятую. Оставьте пустым, чтобы скопировать все переменные, объявленные скриптом источника."
+Fill Blanks From,Заполнить пустоты из
+"Writes a base's values ONLY into fields this object left empty, leaving everything you did fill in alone. That is the override chain: a base item plus a rarity variant, or a shipped table plus a mod file. Empty means nothing there: no value at all, blank text, an empty list or an empty record - a 0 and a false are real values and are kept, exactly as Is Nothing and Missing Fields read them.","Записывает значения базы ТОЛЬКО в поля, которые этот объект оставил пустыми, не трогая заполненное вами. Это и есть цепочка переопределения: базовый предмет плюс вариант по редкости, или поставляемая таблица плюс файл мода. Пусто значит, что там ничего нет: никакого значения, пустой текст, пустой список или пустая запись. Ноль и ложь - настоящие значения и сохраняются, ровно так же, как их читают Ничего нет и Отсутствующие поля."
+fill blanks in [i]{target}[/i] from [i]{base}[/i],заполнить пустоты в [i]{target}[/i] из [i]{base}[/i]
+Fill,Заполнить
+The one being completed - it is what changes.,"Тот, кого дополняют - именно он изменяется."
+Where the missing values come from.,Откуда берутся недостающие значения.
+Apply Preset To Node,Применить пресет к узлу
+"Pours a data asset's fields onto the same-named properties of a node, so difficulty tiers, weapon tunings and boss phases become a data edit instead of a wall of rows.","Переливает поля ресурса данных в одноимённые свойства узла, так что уровни сложности, настройки оружия и фазы босса становятся правкой данных, а не стеной строк."
+apply preset [b]{preset}[/b] to [i]{target}[/i],применить пресет [b]{preset}[/b] к [i]{target}[/i]
+Preset,Пресет
+The data asset to pour on (a .tres you filled in the Inspector). Nothing happens if it is empty.,"Ресурс данных, который переливаем (заполненный вами в инспекторе .tres). Если он пуст, ничего не произойдёт."
+The node to apply it to.,"Узел, к которому это применяется."
+Matches Properties Of,Совпадает по свойствам с
+"True while the listed properties hold the same values on both objects - the cheap 'is this ghost still in sync' or 'has anything changed' check. A name neither object has reads as NOT matching, so a typo shows up instead of quietly passing, and either side being gone reads as not matching too.","Истинно, пока перечисленные свойства держат одинаковые значения на обоих объектах - дешёвая проверка «призрак ещё синхронен» или «что-то изменилось». Имя, которого нет ни у одного из объектов, читается как НЕ совпадение, так что опечатка видна, а не проходит молча; исчезновение любой из сторон тоже читается как несовпадение."
+[i]{target}[/i] matches [b]{names}[/b] of [i]{other}[/i],[i]{target}[/i] совпадает по [b]{names}[/b] с [i]{other}[/i]
+Object,Объект
+The object to test.,Проверяемый объект.
+"Comma-separated property names to compare. A blank list has nothing to compare, so it is true.","Имена свойств для сравнения через запятую. Пустому списку нечего сравнивать, поэтому он истинен."
+Of,У кого
+The object to compare against.,"Объект, с которым сравнивают."
+Data Is Older Than Version,Данные старее версии
+"True when a loaded record was written by an older build than this one - the gate a migration sits under. A record with NO version field counts as 0, so the very first format upgrades too, and so does one whose version field is empty or is not a number at all.","Истинно, когда загруженная запись была написана более старой сборкой, чем эта - условие, под которым живёт миграция. Запись БЕЗ поля версии считается за 0, поэтому самый первый формат тоже обновляется, как и запись с пустым или нечисловым полем версии."
+[b]{record}[/b] is older than version [b]{version}[/b],[b]{record}[/b] старее версии [b]{version}[/b]
+Record,Запись
+"The parsed record (a save file, a payload, a manifest).","Разобранная запись (файл сохранения, полезная нагрузка, манифест)."
+Field,Поле
+Which field holds the version number.,В каком поле лежит номер версии.
+Version,Версия
+The version this build writes.,"Версия, которую пишет эта сборка."
+Rename Field,Переименовать поле
+"Moves a value to its new field name, and does nothing at all when the old name is not there - so a migration is safe to run twice.","Переносит значение под новое имя поля и не делает вообще ничего, если старого имени нет - поэтому миграцию безопасно запускать дважды."
+rename [b]{from_field}[/b] to [b]{to_field}[/b] in [i]{record}[/i],переименовать [b]{from_field}[/b] в [b]{to_field}[/b] в [i]{record}[/i]
+"The record to migrate, edited in place.","Запись для миграции, изменяемая на месте."
+The old field name.,Старое имя поля.
+The new field name (overwritten if it is already there).,"Новое имя поля (перезаписывается, если оно уже есть)."
+Stamp Data Version,Проставить версию данных
+"Writes the current format number onto a record, so the next load knows it has already been migrated. Data Is Older Than Version reads it back, and reads it as 0 when it is missing or is not a number.","Записывает в запись текущий номер формата, чтобы следующая загрузка знала, что миграция уже прошла. Данные старее версии читает его обратно и читает как 0, когда он отсутствует или не является числом."
+stamp [i]{record}[/i] as version [b]{version}[/b],проставить [i]{record}[/i] версию [b]{version}[/b]
+The record to stamp.,"Запись, которой проставляют версию."
+The version this build writes - a whole number.,"Версия, которую пишет эта сборка - целое число."
+Table From File,Таблица из файла
+"Reads a .csv whose FIRST line is the column names and gives you one record per row, each field reachable by column name - row[""price""]. Quoted cells may contain the separator, Windows line endings are fine, and a missing file simply gives no rows. Store it in an Array variable, then walk it with a For Each pick filter.","Читает .csv, ПЕРВАЯ строка которого - имена столбцов, и даёт по записи на строку, где каждое поле доступно по имени столбца - row[""price""]. Ячейки в кавычках могут содержать разделитель, окончания строк Windows не мешают, а отсутствующий файл просто не даёт строк. Положите результат в переменную-массив, а потом пройдитесь по нему фильтром выбора Для каждого."
+Files: Tables,Файлы: таблицы
+rows of [b]{path}[/b],строки [b]{path}[/b]
+File,Файл
+The .csv to read. Its FIRST line must be the column names.,Читаемый .csv. Его ПЕРВАЯ строка должна быть именами столбцов.
+Separator,Разделитель
+What separates the columns in that file.,Чем разделены столбцы в этом файле.
+Comma,Запятая
+Semicolon,Точка с запятой
+Tab,Табуляция
+Table From Text,Таблица из текста
+"The same column-names-first parse as Table From File, but over text you already hold instead of a file on disk.","Тот же разбор с именами столбцов в первой строке, что и в Таблице из файла, но по тексту, который у вас уже есть, а не по файлу на диске."
+rows in [b]{text}[/b],строки в [b]{text}[/b]
+"Spreadsheet text you already have - a pasted blob, a downloaded body, a file you read earlier. FIRST line = the column names.","Табличный текст, который у вас уже есть - вставленный блок, скачанное тело ответа, прочитанный ранее файл. ПЕРВАЯ строка = имена столбцов."
+Column Of Table,Столбец таблицы
+"Gives one whole column as a list, in row order - handy for a dropdown's items, a weights list, or a quick sum. A row missing that column contributes empty text.","Даёт целый столбец как список в порядке строк - удобно для пунктов выпадающего списка, списка весов или быстрой суммы. Строка без этого столбца вносит пустой текст."
+column [b]{column}[/b] of [b]{table}[/b],столбец [b]{column}[/b] таблицы [b]{table}[/b]
+Table,Таблица
+The rows-of-records variable a Table From File (or Table From Text) expression filled.,"Переменная со строками-записями, которую заполнило выражение Таблица из файла (или Таблица из текста)."
+Column,Столбец
+"The column name to read, exactly as it is spelled in the header row.","Имя читаемого столбца, написанное точно как в строке заголовка."
+Row Where,"Строка, где"
+"Finds the FIRST record whose column holds this value - the single-item lookup, e.g. the row for item ""sword"". Gives an empty record when nothing matches, so check it with Dictionary Is Empty before reading fields.","Находит ПЕРВУЮ запись, у которой в столбце лежит это значение - поиск одного элемента, например строка предмета ""sword"". Если ничего не совпало, вернётся пустая запись, поэтому проверьте её через Словарь пуст, прежде чем читать поля."
+row of [b]{table}[/b] where [b]{column}[/b] is [b]{value}[/b],"строка [b]{table}[/b], где [b]{column}[/b] равно [b]{value}[/b]"
+"The column to match on, exactly as it is spelled in the header row.","Столбец для сравнения, написанный точно как в строке заголовка."
+Is,Равно
+"The value to look for. Compared as text, so 25 and ""25"" both match a cell reading 25.","Искомое значение. Сравнение идёт как с текстом, поэтому и 25, и ""25"" совпадут с ячейкой, где написано 25."
+For Each Line In Text,Для каждой строки текста
+"Runs this event's actions once per LINE of the text, skipping blank ones. Windows (CRLF) and old-Mac (CR) endings are handled, so no line arrives with a stray carriage return. Read the current one as `line`.","Выполняет действия этого события по одному разу на КАЖДУЮ строку текста, пропуская пустые. Окончания Windows (CRLF) и старого Mac (CR) обрабатываются, так что ни одна строка не придёт с лишним возвратом каретки. Текущую читайте как `line`."
+Loops,Циклы
+for each line in [b]{text}[/b],для каждой строки в [b]{text}[/b]
+"The text to walk line by line - a file you read, a pasted blob, a leaderboard body.","Текст, который проходится построчно - прочитанный файл, вставленный блок, тело таблицы рекордов."
+For Each Part In Text,Для каждой части текста
+"Runs this event's actions once per PIECE of the text. Each piece arrives with its surrounding spaces trimmed, and empty pieces are skipped, so ""sword; shield;; bow"" is three parts. Read the current one as `part`.","Выполняет действия этого события по одному разу на КАЖДЫЙ кусок текста. Каждый кусок приходит без окружающих пробелов, а пустые пропускаются, так что ""sword; shield;; bow"" - это три части. Текущую читайте как `part`."
+for each part of [b]{text}[/b] split by [b]{separator}[/b],"для каждой части [b]{text}[/b], разделённой [b]{separator}[/b]"
+"The text to break up - a tag list, a chat command's arguments, one cell of a spreadsheet.","Текст, который разбивается - список тегов, аргументы чат-команды, одна ячейка таблицы."
+Split by,Разделять по
+"What separates the pieces, e.g. "","" or "";"" or "" "".","Чем разделены куски, например "","" или "";"" или "" ""."
+For Each Resource In Folder,Для каждого ресурса в папке
+"Runs this event's actions once per data asset (.tres / .res) in a folder, already loaded - the ""a folder of items IS my item list"" setup, with no list to maintain. A folder that is not there walks nothing (quietly - it is checked first, so a loop that runs every frame cannot spam errors), and anything that fails to load is skipped rather than arriving as null. Read the current one as `entry`.","Выполняет действия этого события по одному разу на каждый ресурс данных (.tres / .res) в папке, уже загруженный - схема ""папка предметов И ЕСТЬ мой список предметов"", без списка, который надо вести. Отсутствующая папка не обходит ничего (тихо - она проверяется первой, так что цикл, идущий каждый кадр, не засыпает консоль ошибками), а то, что не загрузилось, пропускается, а не приходит как null. Текущий читайте как `entry`."
+for each resource in [b]{folder}[/b],для каждого ресурса в [b]{folder}[/b]
+Folder of data assets to walk. Only .tres / .res files are loaded; anything else in there is ignored.,"Папка с ресурсами данных для обхода. Загружаются только файлы .tres / .res, всё остальное игнорируется."
+Text Before,Текст до
+"The part of the text before the first marker: Text Before(""Ada [angry]: hi"", "" ["") is ""Ada"". When the marker is not there you get the whole text back, so nothing is silently lost.","Часть текста до первого маркера: Текст до(""Ada [angry]: hi"", "" ["") - это ""Ada"". Если маркера нет, вы получаете весь текст обратно, так что ничего не теряется молча."
+the part of {text} before {marker},часть {text} до {marker}
+The line to read a piece out of.,"Строка, из которой берётся кусок."
+Before,До
+The marker to stop at (the first one wins).,"Маркер, на котором остановиться (побеждает первый)."
+Text After,Текст после
+"Everything after the first marker: Text After(""Ada [angry]: hi"", ""]: "") is ""hi"". Empty when the marker is not there, because then there is no ""after"".","Всё, что идёт после первого маркера: Текст после(""Ada [angry]: hi"", ""]: "") - это ""hi"". Пусто, когда маркера нет, потому что тогда никакого ""после"" не существует."
+the part of {text} after {marker},часть {text} после {marker}
+After,После
+The marker to start after (the first one wins).,"Маркер, после которого начинать (побеждает первый)."
+Text Between,Текст между
+"The part between two markers: Text Between(""Ada [angry]: hi"", ""["", ""]"") is ""angry"". Empty when the opening marker is missing, and the rest of the text when the closing one is.","Часть между двумя маркерами: Текст между(""Ada [angry]: hi"", ""["", ""]"") - это ""angry"". Пусто, когда нет открывающего маркера, и остаток текста, когда нет закрывающего."
+the part of {text} between {open} and {close},часть {text} между {open} и {close}
+The opening marker.,Открывающий маркер.
+The closing marker.,Закрывающий маркер.
+Number In Text,Число в тексте
+"The first number found anywhere in the text, whole or decimal: ""Chapter 3"" gives 3, ""v1.25-beta"" gives 1.25. You get 0 when there is no number at all, and you never write a pattern.","Первое число, найденное где угодно в тексте, целое или дробное: ""Chapter 3"" даёт 3, ""v1.25-beta"" даёт 1.25. Если числа нет вовсе, вы получите 0, и вам никогда не приходится писать шаблон."
+the first number in {text},первое число в {text}
+Text that has a number somewhere in it.,"Текст, в котором где-то есть число."
+Split Keeping Quotes,Разбить с учётом кавычек
+"Splits text on a separator but keeps anything inside ""double quotes"" together as one piece, and drops the quotes: give ""iron sword"" 2 is three pieces, not four. Empty pieces are skipped, so runs of separators never produce blanks.","Разбивает текст по разделителю, но всё внутри ""двойных кавычек"" держит одним куском и сами кавычки убирает: give ""iron sword"" 2 - это три куска, а не четыре. Пустые куски пропускаются, поэтому вереница разделителей никогда не даёт пустышек."
+"pieces of {text}, keeping quotes together",куски {text} с сохранением кавычек целиком
+"The line to split - a console entry, a search box, a pasted cell.","Разбиваемая строка - ввод консоли, поле поиска, вставленная ячейка."
+What separates the pieces OUTSIDE quotes.,Чем разделены куски ВНЕ кавычек.
+Explain JSON Problem,Объяснить проблему JSON
+"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","Почему этот JSON не разобрался, с номером строки: ""line 4: Expected ':'"". Пусто, когда разбор прошёл успешно, так что пустой результат И ЕСТЬ отбой тревоги. Запишите его в лог, и отчёт об ошибке напишется сам. Ветвитесь по пустоте ЭТОГО глагола (Текст пуст, с отрицанием), а не по JSON корректен: то условие читает файл, где лежит одно слово null, как некорректный, а этому глаголу сказать о нём нечего, поэтому вместе они запишут ошибку с пустой причиной."
+JSON,JSON
+why {text} is not valid JSON,почему {text} - не корректный JSON
+"The JSON text to check - a file you read, a paste, a server reply.","Проверяемый JSON-текст - прочитанный файл, вставка, ответ сервера."
+Explain Table Problem,Объяснить проблему таблицы
+"The first cell of a table that should be a number and is not, said out loud: ""row 12, column ""price"": ""abc"" is not a number"". Rows are counted from 1 over the rows you hold - Table From File has already used up the header line, so row 12 is line 13 of the file. A row that is not a record at all is reported too. Empty when every listed column checks out.","Первая ячейка таблицы, которая должна быть числом и им не является, сказанная словами: ""row 12, column ""price"": ""abc"" is not a number"". Строки считаются с 1 по тем строкам, что у вас на руках - Таблица из файла уже израсходовала строку заголовка, поэтому row 12 - это 13-я строка файла. Строка, которая вообще не является записью, тоже попадёт в отчёт. Пусто, когда каждый перечисленный столбец в порядке."
+what is wrong in {records},что не так в {records}
+Rows,Строки
+"A list of records - one per row, each field reachable by column name.","Список записей - по одной на строку, каждое поле доступно по имени столбца."
+Number columns,Числовые столбцы
+The columns that must hold numbers.,"Столбцы, в которых обязаны быть числа."
+Missing Fields,Отсутствующие поля
+"The listed fields that are missing or left blank, comma-separated, and empty when the record is complete. Blank means nothing there: null, empty text, an empty list or an empty record - a 0 is a real value and is never reported.","Перечисленные поля, которых нет или которые оставили пустыми, через запятую, и пусто, когда запись полная. Пусто значит, что там ничего нет: null, пустой текст, пустой список или пустая запись. Ноль - настоящее значение и никогда не попадает в отчёт."
+the fields missing from {record},"поля, отсутствующие в {record}"
+A record or a resource to check.,Запись или ресурс для проверки.
+Fields,Поля
+"The fields it must have filled in, separated by commas.","Поля, которые должны быть заполнены, через запятую."
+Shorten To Fit,Укоротить под ширину
+"Trims text to a maximum number of characters and marks the cut with the ending you choose, so a clipped name never reads as the whole name. Text that already fits comes back untouched, and the result never runs past the width you gave - a width too narrow to hold the ending simply cuts without one. Cuts mid-word: use Shorten To Whole Words when the cut should land on a word boundary.","Обрезает текст до максимального числа символов и помечает срез выбранным окончанием, так что обрезанное имя никогда не читается как имя целиком. Текст, который и так помещается, возвращается нетронутым, а результат никогда не выходит за заданную ширину - слишком узкая для окончания ширина просто режет без него. Режет посреди слова: возьмите Укоротить по целым словам, если срез должен попасть на границу слова."
+shorten [b]{text}[/b] to [b]{max_chars}[/b] characters,укоротить [b]{text}[/b] до [b]{max_chars}[/b] символов
+The text that has to fit.,"Текст, который должен поместиться."
+Max characters,Максимум символов
+"The widest the result may get, in characters, counting the ending below.","Наибольшая ширина результата в символах, включая окончание ниже."
+Ending,Окончание
+"What marks the cut, e.g. ""..."" or a single ellipsis character. Its own length is taken out of the budget.","Чем помечается срез, например ""..."" или один символ многоточия. Его собственная длина вычитается из бюджета."
+Shorten To Whole Words,Укоротить по целым словам
+"Like Shorten To Fit, but backs up to the last complete word before cutting, so ""Ancient Sword of Thorns"" reads ""Ancient Sword..."" instead of ""Ancient Sword of Th"". When the budget holds no whole word (one very long word) it falls back to cutting by characters, and when it is too narrow to hold the ending at all it cuts without one - so the result is never just the ending, and never wider than you asked for.","Как Укоротить под ширину, но перед срезом отступает до последнего целого слова, так что ""Ancient Sword of Thorns"" читается как ""Ancient Sword..."" вместо ""Ancient Sword of Th"". Когда в бюджет не влезает ни одно целое слово (одно очень длинное слово), он откатывается к обрезке по символам, а когда бюджет слишком узок даже для окончания - режет без него, так что результат никогда не оказывается одним окончанием и никогда не шире запрошенного."
+shorten [b]{text}[/b] to whole words within [b]{max_chars}[/b],укоротить [b]{text}[/b] по целым словам в пределах [b]{max_chars}[/b]
+With Thousands Separators,С разделителями тысяч
+"Turns a number into grouped digits a player can take in at a glance: 1234567 reads ""1,234,567"". Whole numbers only (the fraction is dropped); a negative keeps its minus sign. For idle-game scale (1.23e15, ""1.23 Qa"") reach for the Big Numbers pack instead.","Превращает число в сгруппированные цифры, которые игрок схватывает с одного взгляда: 1234567 читается как ""1,234,567"". Только целые числа (дробная часть отбрасывается); отрицательное сохраняет минус. Для масштабов idle-игр (1.23e15, ""1.23 Qa"") берите пак Больших чисел."
+[b]{value}[/b] with thousands separators,[b]{value}[/b] с разделителями тысяч
+The number to make readable. Anything after the decimal point is dropped.,"Число, которое делаем читаемым. Всё после десятичной точки отбрасывается."
+As Percent Text,Как текст с процентом
+"Turns a fraction into percent TEXT with the sign on it: 0.73 reads ""73%"". Feed it a 0-to-1 value (Percent Of already returns 0-to-100, so divide that by 100 or use the raw fraction).","Превращает долю в ТЕКСТ с процентом и знаком: 0.73 читается как ""73%"". Подавайте значение от 0 до 1 (Процент от уже возвращает от 0 до 100, так что поделите на 100 или возьмите исходную долю)."
+[b]{value}[/b] as a percent,[b]{value}[/b] в процентах
+Fraction,Доля
+"A fraction where 1.0 means full, e.g. health / max_health.","Доля, где 1.0 означает полностью, например health / max_health."
+Decimals,Знаков после точки
+Digits after the decimal point. 0 gives a whole percent.,Знаков после десятичной точки. 0 даёт целый процент.
+As Duration,Как длительность
+"Seconds as a duration that survives passing an hour: 3725 reads ""1h 02m"" and 90 reads ""1m 30s"". A negative duration reads as zero. Use As Clock Time when you want strict mm:ss (it rolls an hour into ""60:00"").","Секунды как длительность, которая не ломается после часа: 3725 читается как ""1h 02m"", а 90 - как ""1m 30s"". Отрицательная длительность читается нулём. Возьмите Как время на часах, если нужен строгий mm:ss (там час превращается в ""60:00"")."
+[b]{seconds}[/b] as a duration,[b]{seconds}[/b] как длительность
+Seconds,Секунды
+A duration in seconds.,Длительность в секундах.
+Align Left,Выровнять влево
+"Pads text out on the RIGHT to a fixed width, so every row starts on the same edge and reads as a column. Text longer than the width is left alone (it is never cut - shorten it first). Give the Label a MONOSPACE theme font or the column will still drift.","Дополняет текст СПРАВА до фиксированной ширины, так что каждая строка начинается с одного края и читается как столбец. Текст длиннее ширины остаётся как есть (он никогда не режется - укоротите его заранее). Задайте Label МОНОШИРИННЫЙ шрифт в теме, иначе столбец всё равно поплывёт."
+[b]{text}[/b] aligned left in [b]{width}[/b],[b]{text}[/b] по левому краю в [b]{width}[/b]
+The text to pad out.,"Текст, который дополняем."
+Width,Ширина
+Column width in characters. Shorter text is padded; longer text is left as it is.,"Ширина столбца в символах. Более короткий текст дополняется, более длинный остаётся как есть."
+Fill with,Заполнять чем
+"What fills the gap: a space, or ""."" for a dotted leader. One character.","Чем заполняется промежуток: пробел или ""."" для точечной линии. Один символ."
+Align Right,Выровнять вправо
+"Pads text out on the LEFT to a fixed width, so numbers END on the same edge and read as a column of figures. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the column will still drift.","Дополняет текст СЛЕВА до фиксированной ширины, так что числа ЗАКАНЧИВАЮТСЯ на одном краю и читаются как столбец цифр. Текст длиннее ширины остаётся как есть. Задайте Label МОНОШИРИННЫЙ шрифт в теме, иначе столбец всё равно поплывёт."
+[b]{text}[/b] aligned right in [b]{width}[/b],[b]{text}[/b] по правому краю в [b]{width}[/b]
+The text to pad out - str() a number first.,"Текст, который дополняем - число сначала пропустите через str()."
+Center In Width,Центрировать по ширине
+"Pads text on BOTH sides to a fixed width, so a heading sits in the middle of a column. An odd leftover space goes on the right. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the centering will still drift.","Дополняет текст С ОБЕИХ сторон до фиксированной ширины, так что заголовок оказывается посреди столбца. Нечётный остаток уходит вправо. Текст длиннее ширины остаётся как есть. Задайте Label МОНОШИРИННЫЙ шрифт в теме, иначе центрирование всё равно поплывёт."
+[b]{text}[/b] centered in [b]{width}[/b],[b]{text}[/b] по центру в [b]{width}[/b]
+The text to center.,"Текст, который центрируем."
+As Title Text,Как заголовочный текст
+"Turns a machine id into a readable name: ""fire_sword"" reads ""Fire Sword"", ""maxHealth"" reads ""Max Health"". Use it wherever a key has to be shown to a player, so ids and labels never drift apart in two places.","Превращает машинный id в читаемое имя: ""fire_sword"" читается как ""Fire Sword"", ""maxHealth"" - как ""Max Health"". Применяйте везде, где ключ надо показать игроку, чтобы id и подписи никогда не расходились в двух местах."
+[b]{text}[/b] as title text,[b]{text}[/b] как заголовочный текст
+"An id or key, e.g. fire_sword or maxHealth.","Идентификатор или ключ, например fire_sword или maxHealth."
+As Sentence Text,Как текст предложения
+"Raises the FIRST letter only and leaves the rest of the text exactly as it is, so ""NPC"" and ""HP"" keep their capitals. Empty text stays empty.","Поднимает ТОЛЬКО первую букву, а остальной текст оставляет ровно как есть, так что ""NPC"" и ""HP"" сохраняют свои заглавные. Пустой текст остаётся пустым."
+[b]{text}[/b] as sentence text,[b]{text}[/b] как текст предложения
+A sentence that needs its first letter raised.,"Предложение, у которого нужно поднять первую букву."
+Translated Text From Pattern,Переведённый текст из шаблона
+"Looks the whole sentence up in the current language FIRST, then fills its {slots}. The pattern you type here - slots and all - is the translation key, so it is what goes in the catalog. Filling the slots first (Translate around Text From Pattern) produces a string no catalog can contain, and the text then never translates.","СНАЧАЛА ищет всё предложение в текущем языке, а потом заполняет его {slots}. Шаблон, который вы здесь набираете - вместе с местами подстановки - И ЕСТЬ ключ перевода, именно он идёт в каталог. Если сначала заполнить подстановки (Перевести вокруг Текста по шаблону), получится строка, которой не может быть ни в одном каталоге, и текст тогда не переведётся никогда."
+Translation,Перевод
+translated text from [b]{pattern}[/b],переведённый текст из [b]{pattern}[/b]
+Pattern,Шаблон
+"The source sentence, with {name} slots. This exact string, slots and all, is the translation key that goes in the catalog.","Исходное предложение с местами подстановки {name}. Именно эта строка, вместе с подстановками, и есть ключ перевода, который идёт в каталог."
+Values,Значения
+"What fills the slots: {""name"": value, ...} - e.g. {""coins"": coins}.","Чем заполняются подстановки: {""name"": value, ...} - например {""coins"": coins}."
+Set Text (translated pattern),Задать текст (переведённый шаблон)
+Sets this Label's text from a pattern that is translated FIRST and filled second. The pattern - slots and all - is the translation key. Re-run it under On Language Changed so the label follows a live language switch.,"Задаёт текст этого Label из шаблона, который СНАЧАЛА переводится и лишь потом заполняется. Шаблон вместе с подстановками и есть ключ перевода. Перезапустите его в При смене языка, чтобы подпись следовала за переключением языка на лету."
+set text to translated [b]{pattern}[/b],задать текст переведённым [b]{pattern}[/b]
+Text Is A Number,Текст - число
+"True when this text would convert to a number cleanly. Ask it BEFORE converting, so a typo can never arrive as a silent 0 and the sheet bet nothing. Spaces around the number are ignored; empty text is not a number.","Истинно, когда этот текст преобразовался бы в число без огрехов. Спрашивайте это ДО преобразования, чтобы опечатка никогда не приходила молчаливым нулём и лист не ставил пустоту. Пробелы вокруг числа игнорируются; пустой текст числом не является."
+Compare: Text,Сравнение: текст
+{text} is a number,{text} - число
+"Text to test - a typed-in field, a value read back out of a save, a CSV or JSON cell.","Проверяемый текст - введённое поле, значение, прочитанное обратно из сохранения, ячейка CSV или JSON."
+Text Is A Whole Number,Текст - целое число
+"True when this text would convert to a WHOLE number cleanly - a count, a level, a slot index. ""12"" passes and ""12.5"" does not, which is the only difference from Text Is A Number.","Истинно, когда этот текст преобразовался бы в ЦЕЛОЕ число без огрехов - количество, уровень, номер слота. ""12"" проходит, а ""12.5"" нет, и это единственное отличие от Текст - число."
+{text} is a whole number,{text} - целое число
+"Text to test - a count, a level number, a save slot, a seed.","Проверяемый текст - количество, номер уровня, слот сохранения, зерно."
+Contains Any Of,Содержит любое из
+"True when the text contains at least ONE of the listed pieces - a chat filter, a keyword-triggered line, a tag-gated card. Unlike Text Is One Of, which needs the WHOLE text to equal an entry, this looks INSIDE the text. Matching is case-sensitive, and an empty list is never a match.","Истинно, когда текст содержит хотя бы ОДИН из перечисленных кусков - фильтр чата, реплика по ключевому слову, карта, открываемая тегом. В отличие от Текст - один из, где ВЕСЬ текст должен равняться записи, это смотрит ВНУТРЬ текста. Регистр учитывается, а пустой список не совпадает никогда."
+{text} contains any of {options},{text} содержит любое из {options}
+Text to search.,"Текст, в котором ищем."
+Any Of,Любое из
+"List of pieces to look for - written here, or a sheet variable someone can edit without touching this row.","Список искомых кусков - записанный прямо здесь или в переменной листа, которую кто-то сможет править, не трогая эту строку."
+Contains All Of,Содержит все из
+"True only when the text contains EVERY listed piece - a combo whose rule text names two keywords, a search box where all the words must match. An empty list counts as true, because nothing is missing.","Истинно только когда текст содержит КАЖДЫЙ из перечисленных кусков - комбо, в тексте правила которого названы два ключевых слова, поле поиска, где должны совпасть все слова. Пустой список считается истиной, потому что ничего не пропущено."
+{text} contains all of {options},{text} содержит все из {options}
+All Of,Все из
+List of pieces that must ALL appear.,"Список кусков, которые должны встретиться ВСЕ."
+Contains None Of,Не содержит ни одного из
+"True when the text contains none of the listed pieces - the accept-this-name branch, written as the thing you want to act on instead of an Else. An empty list always passes.","Истинно, когда текст не содержит ни одного из перечисленных кусков - ветка «принять это имя», написанная как то, на что вы хотите реагировать, а не как Иначе. Пустой список проходит всегда."
+{text} contains none of {options},{text} не содержит ни одного из {options}
+None Of,Ни одного из
+List of pieces that must NOT appear.,"Список кусков, которых быть НЕ должно."
+Number From Text,Число из текста
+"Reads a number out of text, or hands back the fallback YOU chose - never a surprise zero. Pair it with Text Is A Number when the two cases need different rows. The text is read twice in the emitted line, so keep it a plain read and not something that changes the game.","Читает число из текста или возвращает запасной вариант, который выбрали ВЫ - никаких неожиданных нулей. Соедините его с Текст - число, когда двум случаям нужны разные строки. В сгенерированной строке текст читается дважды, поэтому держите там простое чтение, а не то, что меняет игру."
+Variables: String,Переменные: строка
+number from {text} (or {fallback}),число из {text} (или {fallback})
+Text to read a number out of.,"Текст, из которого читается число."
+What you get back when the text is not a number.,"Что вы получите, если текст не является числом."
+Whole Number From Text,Целое число из текста
+"Reads a whole number out of text, or hands back your fallback. ""12.5"" is not a whole number, so it lands on the fallback rather than quietly becoming 12 - when you want that rounding, use Number From Text and round the result yourself.","Читает целое число из текста или возвращает ваш запасной вариант. ""12.5"" целым числом не является, поэтому попадает на запасной вариант, а не превращается молча в 12 - если нужно такое округление, возьмите Число из текста и округлите результат сами."
+whole number from {text} (or {fallback}),целое число из {text} (или {fallback})
+Text to read a whole number out of.,"Текст, из которого читается целое число."
+What you get back when the text is not a whole number.,"Что вы получите, если текст не является целым числом."
+Is Nothing,Ничего нет
+"True when there is nothing there: no value at all, empty text, an empty list (including an empty Split Text result), or an empty record - one row whatever the value turns out to be. A 0 is NOT nothing, because a score of zero is a real value, and neither is text made only of spaces (that is Text Is Blank).","Истинно, когда там ничего нет: значения нет вовсе, пустой текст, пустой список (включая пустой результат Разбить текст) или пустая запись - одна строка, каким бы ни оказался тип значения. Ноль - это НЕ ничего, потому что счёт в ноль настоящее значение; и текст из одних пробелов тоже нет (это Текст пуст)."
+Compare: Types,Сравнение: типы
+{value} is nothing,в {value} ничего нет
+"Anything - text, a list, a record, a reference.","Что угодно - текст, список, запись, ссылка."
+Has Something,Что-то есть
+"True when there IS something there - a name was typed, the inventory has items, the save slot was written, the item slot is filled. The exact opposite of Is Nothing, for the times the filled case is the one you want to act on.","Истинно, когда там что-то ЕСТЬ - имя было введено, в инвентаре есть предметы, слот сохранения записан, ячейка предмета занята. Полная противоположность Ничего нет, для случаев, когда действовать нужно как раз по заполненному варианту."
+{value} has something,в {value} что-то есть
+Number Or,Число или
+"The value when it really is a number, or your own default when it is missing, null, text, or anything else. A zero counts as a real number and is kept. Use it to put a loaded value straight into a whole-number or decimal variable without a guard row first. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","Значение, если оно действительно число, либо ваше собственное значение по умолчанию, когда его нет, оно null, текст или что угодно ещё. Ноль считается настоящим числом и сохраняется. Используйте, чтобы положить загруженное значение прямо в целочисленную или дробную переменную без строки-охранника. В сгенерированной строке значение читается дважды, поэтому держите там простое чтение, а не то, что меняет игру."
+Variables,Переменные
+"{value} as a number, or {fallback}","{value} как число, иначе {fallback}"
+"The untyped value to check - a save slot read, a JSON field, a Dictionary key.","Нетипизированное значение для проверки - чтение слота сохранения, поле JSON, ключ словаря."
+What you get back when it is not a number.,"Что вы получите, если это не число."
+Text Or,Текст или
+"The value when it really is text with something in it, or your own default when it is missing, null, blank, or another kind of value. The classic use is a saved player name that falls back to ""Player"". The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","Значение, если это действительно текст, в котором что-то есть, либо ваше значение по умолчанию, когда его нет, оно null, пустое или другого рода. Классический случай - сохранённое имя игрока, откатывающееся к ""Player"". В сгенерированной строке значение читается дважды, поэтому держите там простое чтение, а не то, что меняет игру."
+"{value} as text, or {fallback}","{value} как текст, иначе {fallback}"
+"What you get back when it is not text, or is blank.","Что вы получите, если это не текст или он пуст."
+List Or,Список или
+"The value when it really is a list with items in it, or your own default when it is missing, null, empty, or another kind of value. A Split Text result counts as a list. Safe to feed straight into a For Each. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","Значение, если это действительно список с элементами, либо ваше значение по умолчанию, когда его нет, оно null, пусто или другого рода. Результат Разбить текст считается списком. Его безопасно подавать прямо в Для каждого. В сгенерированной строке значение читается дважды, поэтому держите там простое чтение, а не то, что меняет игру."
+"{value} as a list, or {fallback}","{value} как список, иначе {fallback}"
+"The untyped value to check - a loaded inventory, a JSON array, a Split Text result, a Dictionary key.","Нетипизированное значение для проверки - загруженный инвентарь, массив JSON, результат Разбить текст, ключ словаря."
+"What you get back when it is not a list, or is empty.","Что вы получите, если это не список или он пуст."
+Record Or,Запись или
+"The value when it really is a record (a dictionary) with keys in it, or your own default when it is missing, null, empty, or another kind of value. Pair it with Get Key so a whole missing settings block reads as defaults. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","Значение, если это действительно запись (словарь) с ключами, либо ваше значение по умолчанию, когда его нет, оно null, пусто или другого рода. Соедините его с Взять ключ, чтобы целиком отсутствующий блок настроек читался как значения по умолчанию. В сгенерированной строке значение читается дважды, поэтому держите там простое чтение, а не то, что меняет игру."
+"{value} as a record, or {fallback}","{value} как запись, иначе {fallback}"
+"The untyped value to check - a loaded settings block, a JSON object, a Dictionary key.","Нетипизированное значение для проверки - загруженный блок настроек, объект JSON, ключ словаря."
+"What you get back when it is not a record, or is empty.","Что вы получите, если это не запись или она пуста."
+Value Or,Значение или
+"The value unless it is null, in which case your own default. This one guards nothing else: a zero, a blank text and an empty list all count as real values here. Use it for a method that can hand back null. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","Значение, если только оно не null - тогда ваше собственное значение по умолчанию. Этот больше ничего не стережёт: ноль, пустой текст и пустой список здесь считаются настоящими значениями. Берите его для метода, который может вернуть null. В сгенерированной строке значение читается дважды, поэтому держите там простое чтение, а не то, что меняет игру."
+"{value}, or {fallback} when it is nothing","{value}, иначе {fallback}, когда ничего нет"
+"Anything that might be null - a method result, a freed reference, a missing key.","Что угодно, что может оказаться null - результат метода, освобождённая ссылка, отсутствующий ключ."
+What you get back when it is null.,"Что вы получите, если это null."
+Part Of,Часть
+"One named piece of a pair, a triple, a colour or a record: the up/down part of a velocity (the jump-or-fall test), the see-through part of a tint, the forward/back part of a 3D direction. Reads as a sentence instead of a typed-in .y. Pick a part the value actually has - a record that might be missing the field is the shipped Get Key (with default)'s job, because that one takes a fallback and this one does not.","Одна именованная часть пары, тройки, цвета или записи: часть вверх/вниз у скорости (проверка «прыгает или падает»), часть прозрачности у оттенка, часть вперёд/назад у 3D-направления. Читается как предложение вместо набранного вручную .y. Выбирайте часть, которая у значения действительно есть - запись, где поля может не быть, это работа Взять ключ (со значением по умолчанию), потому что тот принимает запасной вариант, а этот нет."
+Variables: Vector,Переменные: вектор
+the {part} part of {value},часть {part} у {value}
+"A Vector2, Vector3, Color or record to read one part of.","Vector2, Vector3, Color или запись, из которой читается одна часть."
+Part,Часть
+Which named part to read.,Какую именованную часть читать.
+X (left / right),X (влево / вправо)
+Y (up / down),Y (вверх / вниз)
+Z (forward / back),Z (вперёд / назад)
+Red,Красный
+Green,Зелёный
+Blue,Синий
+Alpha (see-through),Альфа (прозрачность)
+Set Part Of,Задать часть
+"Changes one named part and leaves the rest alone: zero the vertical speed on landing and keep the horizontal, flatten a 3D direction to the ground plane, fade only the see-through part of a tint. Writing a part a record does not have yet ADDS it.","Меняет одну именованную часть, а остальное не трогает: обнулить вертикальную скорость при приземлении, сохранив горизонтальную; сплющить 3D-направление в плоскость земли; гасить только прозрачную часть оттенка. Запись части, которой у записи ещё нет, ДОБАВЛЯЕТ её."
+set the {part} part of {var_name} to {value},задать часть {part} у {var_name} значение {value}
+Variable or property,Переменная или свойство
+"What to change one part of: a node's own member (velocity, modulate, position) picked from the list, or the name of a sheet variable holding a Vector, Color or record.","То, у чего меняется одна часть: собственный член узла (velocity, modulate, position), выбранный из списка, или имя переменной листа, хранящей вектор, цвет или запись."
+Which named part to write.,Какую именованную часть записывать.
+The new value for that one part.,Новое значение именно для этой части.

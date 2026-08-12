@@ -15,9 +15,10 @@ This guide covers the wizard, the column language, validation, designing the who
 5. [Designing the whole Inspector](#5-designing-the-whole-inspector)
 6. [Adding logic: functions on a resource](#6-adding-logic-functions-on-a-resource)
 7. [The .tres workflow](#7-the-tres-workflow)
-8. [Use cases](#8-use-cases)
-9. [For pack authors: the APIs behind the wizard](#9-for-pack-authors-the-apis-behind-the-wizard)
-10. [Troubleshooting](#10-troubleshooting)
+8. [Reading and copying assets at runtime](#8-reading-and-copying-assets-at-runtime)
+9. [Use cases](#9-use-cases)
+10. [For pack authors: the APIs behind the wizard](#10-for-pack-authors-the-apis-behind-the-wizard)
+11. [Troubleshooting](#11-troubleshooting)
 
 ---
 
@@ -132,7 +133,7 @@ func validate_loot_drops() -> String:
 
 Rules like "the boss wave must come last", "no two entries may share a name", "the total must sum to 100" all fit this shape: loop the rows, return a sentence when something is off. Designers see the sentence the moment they type the mistake, in the exact place they are typing it.
 
-You can attach a validator to any variable later, too - see [section 9](#9-for-pack-authors-the-apis-behind-the-wizard) for `EventSheets.attach_validator`.
+You can attach a validator to any variable later, too - see [section 10](#10-for-pack-authors-the-apis-behind-the-wizard) for `EventSheets.attach_validator`.
 
 ---
 
@@ -189,7 +190,99 @@ Two habits that pay off:
 
 ---
 
-## 8. Use cases
+## 8. Reading and copying assets at runtime
+
+Authoring the asset is half the job. The other half is a sheet reading a folder of them, and not
+corrupting them once it does.
+
+### A folder of assets IS your content
+
+Four expressions in the **Files** picker folder mean there is no registry to maintain: adding an item
+is dropping a `.tres` in a folder.
+
+| Verb | Gives you |
+| --- | --- |
+| **Resources In Folder** | every `.tres` / `.res` in a folder, already loaded, as a list |
+| **Resource In Folder** | one of them by file name, or nothing when there is no such file |
+| **Load Resource Or Default** | a load that hands back your fallback instead of a red error |
+| **Count Of Resources In** | how many there are, counted without loading any |
+
+```
+On Ready
+  -> Set Property   "weapon" of Player to Resource In Folder("res://data/weapons", "rusty_sword")
+  -> Set Property   "stats" of Boss   to Load Resource Or Default("res://mods/boss.tres", fallback_stats)
+```
+
+The looping form is **For Each Resource In Folder** (folder: **Loops**), which walks the folder as a
+real loop row with the current asset available as `entry`. A folder that does not exist walks nothing
+quietly, and a file that fails to load is skipped rather than arriving as nothing.
+
+### The trap: a .tres on ten nodes is ONE object
+
+This is the single most expensive thing to learn late. Writing to a resource at runtime edits the
+asset every holder sees - and in a `@tool` sheet, it writes back to disk:
+
+```
+Enemy   On Ready
+  -> Set Property   "stats.health" of Enemy to stats.health * difficulty_scale   # WRONG
+```
+
+That line just scaled every enemy in the game, and your repository's copy of `enemy_stats.tres` with
+it. Take a private copy first:
+
+```
+Enemy   On Ready
+  -> Set Property   "stats" of Enemy to Copy Resource (Independent) of enemy_stats
+  -> Set Property   "stats.health" of Enemy to stats.health * difficulty_scale   # safe
+```
+
+- **Copy Resource (Independent)** (folder: **Helpers**) copies the resource AND the resources inside
+  it, so nothing the copy does can reach the asset.
+- **Copy Resource (Share Sub-Resources)** is the cheap copy whose inner resources stay shared - pick
+  it only when you want that sharing.
+- **Is The Same Object** (Add Condition › **Compare: Objects**) is the detector: point it at a node's
+  resource and the asset, and a true means edits would leak.
+
+### Presets: pouring an asset onto a node
+
+**Apply Preset To Node** (folder: **Helpers**) writes a resource's fields onto the same-named
+properties of a node, so difficulty tiers, weapon tunings and boss phases become a data edit rather
+than a wall of Set Property rows. **Fill Blanks From** writes only into fields the target left empty,
+which is the base-plus-variant override chain.
+
+```
+Enemy   On Ready
+  -> Apply preset     difficulty_presets[chosen_difficulty]   to Enemy
+  -> Fill blanks in   Enemy   from base_enemy_tuning
+```
+
+Both address fields by NAME and skip a name the receiving node does not have, so one preset can serve
+several kinds of node.
+
+### Assets written by an older build
+
+When you rename a field on a resource, the `.tres` files a designer already saved still carry the old
+name. **Data Is Older Than Version**, **Rename Field** and **Stamp Data Version** (folder:
+**Variables: Dictionary**) are the three-row migration for that, and they read and write a
+**record** - a Dictionary. Point them at the Dictionary field the old data lives in (the rows a
+grid property holds, the record a save handed you), one row per entry:
+
+```
+On loaded a data asset
+  Data Is Older Than Version   entry   version   2
+  -> Rename Field   entry   "hp"   "health"
+  -> Stamp Data Version   entry   version   2
+```
+
+They are not object verbs: `Rename Field` emits `has`/`erase` and `Data Is Older Than Version` emits
+a two-argument `get`, none of which a Resource answers to. To version the resource ITSELF, add a
+plain exported `data_version` integer to your class and compare it with an ordinary condition row
+(**Compare Variable**), then fix the fields with **Set Property** rows. The three verbs above stay
+for the Dictionary records inside it.
+
+---
+
+## 9. Use cases
 
 Each one is a real shape you can build with the wizard today. The column sketch is exactly what you would type into the wizard's columns box.
 
@@ -400,7 +493,7 @@ kind: primitive|compound
 
 ---
 
-## 9. For pack authors: the APIs behind the wizard
+## 10. For pack authors: the APIs behind the wizard
 
 Everything the wizard does goes through two static methods on the `EventSheets` API (`addons/eventsheet/api/eventsheets.gd`), so pack builders, editor extensions, and tests can build the same assets in code. Like the rest of the API, their shapes are stable once shipped.
 
@@ -438,7 +531,7 @@ A data-driven pack usually ships three pieces: the resource sheet (a grid built 
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 **My class does not appear under New Resource… in the FileSystem dock.**
 The class exists only after the sheet compiles and the generated `.gd` is saved. Compile first; if it still does not show, check the sheet has a class name (the wizard's Resource name field) and that its host is `Resource`. A freshly added `class_name` can also need an editor restart to enter Godot's class cache.

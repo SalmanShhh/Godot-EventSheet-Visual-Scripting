@@ -67,7 +67,35 @@ The `format` Inspector property picks how bytes hit the disk. All six round-trip
 - **ini** writes a plain, portable `[section]` header with `key=value` lines. It is the format other tools and INI libraries can read the structure of, while still preserving exact types.
 - **xml** writes structured `<entry key="...">value</entry>` tags inside a `<save>` root. It is the pick when a pipeline, importer, or external tool expects XML.
 
-Related Inspector properties: `encryption_key` (any non-empty value turns on encrypted saves), `slot` (which numbered file to use), `save_directory` (defaults to `user://`), `file_pattern` (the filename template, which must contain `{slot}`), `section` (the section/namespace name), and `autosave_interval` (seconds between automatic saves, `0` means off).
+Related Inspector properties: `encryption_key` (any non-empty value turns on encrypted saves, and covers the slot picture too), `slot` (which numbered file to use), `save_directory` (defaults to `user://`), `file_pattern` (the filename template, which must contain `{slot}`), `section` (the section/namespace name), `autosave_interval` (seconds between automatic saves, `0` means off), `save_version` (the shape number this build writes - see "Shipping an update that changes the save" below, `1` means nothing to migrate), and `backup_count` (how many earlier versions of each slot to keep, `0` means off).
+
+### A load menu that never loads the game
+
+A save file carries a small **card** beside the game's own keys: the header a menu tile shows. **Set Slot Detail** writes one line of it (chapter, hero name, percent), **Slot Detail** reads one line of ANY slot straight off disk, and **Slot Playtime** answers with the seconds that slot has been played - the pack accumulates that itself, per slot, so nobody wires a timer. **Capture Slot Thumbnail** photographs the viewport into a picture beside the save (which Copy Slot brings along and Delete Slot takes away), and **Slot Thumbnail** hands it back as a texture. Nothing here loads a game or applies anything, so a menu can draw every tile from one pass.
+
+`For Each Saved Slot` is that menu as one row: it runs its actions once per slot that has a file, with the slot number to hand. **Copy Slot** branches a save onto another slot, and **Slot Path** gives out the path the pack uses so File Size or Read Save File can work on it.
+
+### An autosave the sheet can veto
+
+Connect **On Autosave Due** and the interval stops saving by itself: the trigger fires instead, and the event's conditions decide whether now is a good moment (mid boss phase, mid cutscene). With nothing connected the pack saves on the interval exactly as it always did. In the not-now branch, **Delay Autosave By** defers the beat without dropping it, **Pause Autosave** / **Resume Autosave** hold and release the clock, **Seconds Until Autosave** feeds a countdown pip, and **Safe To Save Now** answers whether writing right now would lose nothing.
+
+### Shipping an update that changes the save
+
+Bump `save_version` whenever your saved data changes shape. Load Game then fires **On Save Needs Upgrade** for every older file BEFORE anything reads it, handing your rows the raw record and the version that wrote it. Fix it with the record verbs (**Data Is Older Than Version**, **Rename Field**, **Stamp Data Version**), then finish with **Use Upgraded Save** - the one write that stamps the file as current, so the trigger stops firing for it. **Slot Save Version** asks what wrote a slot. An ordinary write never stamps: a settings save from the main menu cannot mark an un-migrated file as migrated.
+
+### When a save goes wrong, out loud
+
+A failed read has always refused to overwrite a good file; now it says so. **On Load Failed** and **On Save Failed** carry a plain sentence, **Slot Is Readable** and **Slot Problem** answer for one tile (the tooltip on a greyed-out Continue button), and **Last Save Problem** holds the most recent failure - and clears itself the moment a save or load works again.
+
+### Autoloads, backups, and what the file costs
+
+**Save All Addons** snapshots every autoload exposing the `save_state` seam, each under its own autoload name, with no list to maintain; **Load All Addons** puts them back and **Addon Saves Itself** (or `For Each Saveable Addon`) tells you which packs take part. The current scene is deliberately not one of them - scene state belongs to the persist group, keyed by node path.
+
+Set `backup_count` above `0` and every write copies the slot's previous bytes into a ring beside the save. **Restore Slot From Backup** puts an earlier version back (`1` is the save before this one), reading the backup back first so a damaged entry leaves the live slot alone; the current file is backed up before the swap, so a restore is never one-way. **Slot Backup Count** and `For Each Backup Of Slot` report the ring. **Never Save This Key** keeps a scratch key out of every write, **Save Size** gives the file's real byte count, and **Save Report** ranks the heaviest keys.
+
+### New Game Plus
+
+**Carry Value Into Next Run** marks the keys that survive (unlocked skins, a best time, the settings), then **Start New Run** wipes the slot, writes back only those, bumps the run counter and fires **On New Run Started**. **Run Number** is `1` on a fresh save, `2` after the first NG+.
 
 ### Reading a whole save
 

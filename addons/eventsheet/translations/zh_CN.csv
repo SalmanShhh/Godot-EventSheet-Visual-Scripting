@@ -108,6 +108,7 @@ Welcome…,欢迎…
 Start the Tour…,开始导览…
 Keyboard Shortcuts,键盘快捷键
 Rename Everywhere…,全局重命名…
+Change Type Everywhere…,全局更改类型…
 Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,检查每个 ƒx 表达式和 GDScript 代码块；标记有问题的行并跳转到第一处。
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,切换断点输出：以调试模式编译的事件表会在带断点的行暂停。
 Toggle Live Values: running sheets stream their variables here (editable).,切换实时值：运行中的事件表会将其变量实时显示在此处（可编辑）。
@@ -172,6 +173,8 @@ Edit Events,编辑事件
 Insert Snippet…,插入片段…
 Extract All Actions to Function…,将全部动作提取为函数…
 Group Under a Heading…,归入标题分组…
+Export Grid to CSV…,将表格导出为 CSV…
+Import Grid from CSV…,从 CSV 导入表格…
 Detach Comment To Row,将注释拆分为独立行
 Convert Scope,转换作用域
 Toggle Constant,切换常量
@@ -576,6 +579,7 @@ Filter,筛选
 Edit Values Across Selection…,批量编辑所选值…
 Select All Events Using This,选择使用此项的所有事件
 Replace Object References…,替换对象引用…
+Paste Special…,选择性粘贴…
 Replace Object References,替换对象引用
 Retarget the selection,重定向所选内容
 Replace,替换
@@ -741,3 +745,402 @@ Export Is Debug,导出是调试版
 True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,当触发这一烘焙步骤的导出是调试构建时为真。放在项目导出时里面使用，把测试内容挡在正式构建之外。
 Export Has Feature,导出带有特性
 "True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.",当触发这一烘焙步骤的导出预设带有指定的特性标签时为真：这是为移动端、网页或桌面端烘焙不同数据的方式。
+Share Code For,分享码
+"Turns any value into one compact line of text a player can paste anywhere - a seed, a loadout, a whole save. Read it back with Value From Share Code.",把任意值变成一行紧凑的文本，玩家可以粘贴到任何地方 - 一个随机种子、一套配装、整个存档。用 分享码的值 读回来。
+Utility: Window,工具: 窗口
+share code for [b]{value}[/b],[b]{value}[/b] 的分享码
+Value,值
+"Anything - a run seed, a loadout list, a colour, a whole save record.",任何东西 - 一次游戏的种子、一份配装清单、一个颜色、一整条存档记录。
+Copy Share Code To Clipboard,复制分享码到剪贴板
+"Encodes any value as a share code and puts it straight on the operating system clipboard, ready to paste.",把任意值编码成分享码，并直接放进操作系统剪贴板，随时可以粘贴。
+copy share code for [b]{value}[/b] to clipboard,复制 [b]{value}[/b] 的分享码到剪贴板
+"Anything - a run seed, a loadout list, a whole save record.",任何东西 - 一次游戏的种子、一份配装清单、一整条存档记录。
+Share Code Is Valid,分享码有效
+"True when the text really is a share code that decodes cleanly, so a paste box can refuse garbage before it reaches the game. Ask it when the pasted text CHANGES (a Paste button, On Text Changed) rather than every frame: a code mangled in transit can still reach the decoder, and the engine logs a line each time it is refused. A code that was made from nothing at all also reads as invalid.",当这段文本确实是一个能够干净解码的分享码时为真，这样粘贴框就能在垃圾内容进入游戏之前把它拒之门外。请在粘贴的文本「发生变化」时询问（粘贴按钮、文本变化时），而不是每一帧都问：传输中被截断的码仍会到达解码器，而引擎每次拒绝都会打印一行。由空值生成的码同样读作无效。
+[b]{code}[/b] is a valid share code,[b]{code}[/b] 是有效的分享码
+Code,码
+The pasted text to test - usually Clipboard Text or a paste box's text.,要检查的粘贴文本 - 通常是 剪贴板文本 或粘贴框里的文本。
+Value From Share Code,分享码的值
+"Reads the value back out of a share code, giving nothing when the text is not a valid code.",从分享码里把值读回来；文本不是有效的码时什么也不给。
+value from share code [b]{code}[/b],分享码 [b]{code}[/b] 的值
+The share code text to read - check it with Share Code Is Valid first.,要读取的分享码文本 - 请先用 分享码有效 检查它。
+Clipboard Has Text,剪贴板中有文本
+True when the operating system clipboard currently holds any text - gate a paste box on it.,当操作系统剪贴板中当前有任何文本时为真 - 用它来决定粘贴框是否可用。
+clipboard has text,剪贴板中有文本
+Clipboard Has Image,剪贴板中有图片
+"True when the operating system clipboard currently holds an image, such as a screenshot the player just copied.",当操作系统剪贴板中当前有图片时为真，例如玩家刚刚复制的截图。
+clipboard has an image,剪贴板中有图片
+Clipboard Image,剪贴板图片
+The image currently on the operating system clipboard - feed it to ImageTexture.create_from_image to show it.,当前位于操作系统剪贴板中的图片 - 交给 ImageTexture.create_from_image 即可显示。
+clipboard image,剪贴板图片
+Clipboard Text Is,剪贴板文本为
+"Compares whatever text is on the clipboard against a value, with your choice of operator.",用你选择的运算符，把剪贴板中的文本与一个值作比较。
+clipboard text {op} [b]{value}[/b],剪贴板文本 {op} [b]{value}[/b]
+Operator,运算符
+Comparison.,比较。
+= (equal to),= (等于)
+!= (not equal to),!= (不等于)
+< (less than),< (小于)
+<= (at most),<= (至多)
+> (greater than),> (大于)
+>= (at least),>= (至少)
+Text to compare the clipboard against.,用来与剪贴板比较的文本。
+Clone Into,克隆到
+"Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.",复制一个活的节点，把副本加到某个父节点下，摆好位置，还可以顺便加入一个组 - 相当于 复制节点 加 添加子节点 加 设置位置 的一行写法。如果你是从 .tscn 文件出发，请改用 生成场景。
+Nodes,节点
+"clone [i]{source}[/i] into [i]{parent}[/i] at [b]{at}[/b], group [b]{group}[/b]",把 [i]{source}[/i] 克隆到 [i]{parent}[/i] 的 [b]{at}[/b]，组 [b]{group}[/b]
+The live node to copy.,要复制的活节点。
+Into,放入
+Where the copy is added.,副本添加到哪里。
+At,位置
+World position for the copy (a Vector3 for a 3D node). Only used when the copy has a position.,副本的世界坐标（3D 节点用 Vector3）。只有当副本本身带位置时才会使用。
+Optional group for the copy (blank = none).,副本可选加入的组（留空表示不加）。
+Remember Value As,记住值为
+"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game use Remember Between Runs on the variable, or the Save System pack.",把任意值以一个名字暂存在内存里，只在本次运行期间有效 - 预览、增益或过场动画之前的那个值。若需要关掉游戏后仍然保留，请在变量上使用 跨次运行记住，或使用存档系统包。
+Run Context,运行上下文
+remember [b]{value}[/b] as [b]{name}[/b],把 [b]{value}[/b] 记为 [b]{name}[/b]
+Any label you also use in Restore Value Into.,任意标签，在 恢复值到 中要用同一个。
+The value to copy aside.,要暂存起来的值。
+Restore Value Into,恢复值到
+Pours a remembered value back into a variable. When nothing was remembered under that name the variable keeps what it already had.,把记住的值倒回变量里。如果这个名字下什么都没记过，变量保持原样。
+restore [b]{name}[/b] into [b]{var_name}[/b],把 [b]{name}[/b] 恢复到 [b]{var_name}[/b]
+The label used in Remember Value As.,在 记住值为 中使用的标签。
+Into Variable,写入变量
+Variable that receives the remembered value (left alone when nothing was remembered).,接收记住值的变量（如果没有记过，则原样不动）。
+Remembered Value,记住的值
+"The value remembered under a name this run, or your fallback when there is none - read it without pouring it back.",本次运行中以该名字记住的值；没有就给你指定的备用值 - 只读取，不倒回去。
+remembered [b]{name}[/b] or [b]{fallback}[/b],记住的 [b]{name}[/b] 或 [b]{fallback}[/b]
+Or,否则
+What you get when nothing was remembered under that name.,该名字下什么都没记过时，你会得到的值。
+Has Remembered,已记住
+True when something was remembered under that name this run - the gate on a Cancel button that should only undo a preview it actually took.,本次运行中该名字下确实记过东西时为真 - 用作「取消」按钮的条件，只撤销真正做过的预览。
+has remembered [b]{name}[/b],已记住 [b]{name}[/b]
+Forget Remembered,忘记记住的值
+"Drops a remembered value, so Has Remembered reads false again. Forgetting a name that was never remembered is harmless.",丢掉一个记住的值，于是 已记住 又变回假。忘记一个从未记过的名字没有任何副作用。
+forget remembered [b]{name}[/b],忘记记住的 [b]{name}[/b]
+Resources In Folder,文件夹中的资源
+"Loads every data asset (.tres) in a folder as a list, so a folder of files becomes your content - items, enemies, levels, or a mod folder. A missing folder gives an empty list, and a file that fails to load is left out rather than arriving as nothing.",把一个文件夹里所有数据资产（.tres）作为列表加载，于是「一个文件夹」就是你的内容 - 道具、敌人、关卡，或者玩家放 MOD 的目录。文件夹不存在就给空列表；加载失败的文件会被剔除，而不是变成一个空值混进来。
+Files,文件
+resources in [b]{folder}[/b],[b]{folder}[/b] 中的资源
+Folder,文件夹
+"Folder to scan (not recursive). Every .tres / .res inside it is loaded, in the folder's own order.",要扫描的文件夹（不递归）。其中每个 .tres / .res 都会按文件夹自身顺序加载。
+Resource In Folder,文件夹中的某个资源
+"Fetches one data asset out of a folder by its file name, or nothing at all when there is no such file - no red error.",按文件名从文件夹里取出一个数据资产；没有这个文件就什么也不给 - 不会报红色错误。
+resource [b]{name}[/b] in [b]{folder}[/b],[b]{folder}[/b] 中的资源 [b]{name}[/b]
+Folder holding the data assets.,存放数据资产的文件夹。
+"File name WITHOUT the .tres extension - ""rusty_sword"" finds rusty_sword.tres.","不带 .tres 扩展名的文件名 - ""rusty_sword"" 会找到 rusty_sword.tres。"
+Load Resource Or Default,加载资源否则用默认值
+"Loads a file and hands back your fallback when it is missing, so a deleted or mod-supplied file never crashes the game.",加载一个文件；文件不在时返回你指定的备用值，这样被删掉的或 MOD 提供的文件永远不会让游戏崩溃。
+load [b]{path}[/b] or [i]{fallback}[/i],加载 [b]{path}[/b] 否则用 [i]{fallback}[/i]
+Path,路径
+Full path to the resource or scene to load.,要加载的资源或场景的完整路径。
+Fallback,备用值
+"What to use instead when the file is not there (a preloaded default, or null).",文件不存在时改用什么（一个预加载的默认值，或 null）。
+Count Of Resources In,资源数量
+"How many data assets a folder holds, counted without loading any of them - zero if the folder is missing.",一个文件夹里有多少数据资产，数的时候一个都不加载 - 文件夹不存在则为 0。
+count of resources in [b]{folder}[/b],[b]{folder}[/b] 中的资源数量
+Folder to count data assets in (not recursive).,在其中统计数据资产的文件夹（不递归）。
+Copy Resource (Independent),复制资源（独立）
+"Makes a private copy of a resource, right down to the resources inside it, so writing to the copy never changes the .tres on disk or any other node holding it. Use this before a node edits its own stats.",为资源做一份私有副本，连它内部的子资源一起复制，因此写副本永远不会改动磁盘上的 .tres，也不会影响持有同一份资源的其他节点。让节点改自己的数值之前，先来这一步。
+Helpers,辅助
+independent copy of [i]{resource}[/i],[i]{resource}[/i] 的独立副本
+Resource,资源
+The resource to copy. Anything that is not a resource (including nothing at all) gives nothing back.,要复制的资源。凡是不是资源的东西（包括空值）都不会返回任何内容。
+Copy Resource (Share Sub-Resources),复制资源（共享子资源）
+Makes a cheap copy whose own fields are separate but whose inner resources and lists are still SHARED with the original. Pick this only when you want that sharing - otherwise use Copy Resource (Independent).,做一份廉价副本：它自己的字段是独立的，但内部的子资源和列表仍与原件「共享」。只有确实需要这种共享时才选它 - 否则请用 复制资源（独立）。
+copy of [i]{resource}[/i] (sub-resources shared),[i]{resource}[/i] 的副本（共享子资源）
+Deep Copy,深拷贝
+"Copies the array AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Array only copies the outer level.",复制数组以及其中嵌套的每一个列表和字典，因此改副本绝不会波及原件。复制数组 只复制最外层。
+Variables: Array,变量: 数组
+deep copy of [b]{var_name}[/b],[b]{var_name}[/b] 的深拷贝
+Array,数组
+Array variable to copy right through.,要彻底复制的数组变量。
+"Copies the dictionary AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Dictionary only copies the outer level.",复制字典以及其中嵌套的每一个列表和字典，因此改副本绝不会波及原件。复制字典 只复制最外层。
+Variables: Dictionary,变量: 字典
+Dictionary,字典
+Dictionary variable to copy right through.,要彻底复制的字典变量。
+Copy Values From,从…复制数值
+"Pours a list of values off another object onto this one, in one row instead of one row per property. Names the target does not have are skipped, so a single preset can serve several kinds of node.",把另一个对象上的一串数值倒到这个对象上，一行搞定，而不是每个属性写一行。目标没有的名字会跳过，因此同一份预设可以服务多种节点。
+copy [b]{names}[/b] from [i]{source}[/i] into [i]{target}[/i],把 [i]{source}[/i] 的 [b]{names}[/b] 复制到 [i]{target}[/i]
+The object being written to - it is what changes.,被写入的对象 - 发生变化的是它。
+The object to read from - a node OR a resource.,读取来源对象 - 可以是节点，也可以是资源。
+Names,名称
+Comma-separated property names. Leave blank to copy every variable the source's script declares.,用逗号分隔的属性名。留空则复制来源脚本声明的所有变量。
+Fill Blanks From,从…填补空缺
+"Writes a base's values ONLY into fields this object left empty, leaving everything you did fill in alone. That is the override chain: a base item plus a rarity variant, or a shipped table plus a mod file. Empty means nothing there: no value at all, blank text, an empty list or an empty record - a 0 and a false are real values and are kept, exactly as Is Nothing and Missing Fields read them.",只把基准对象的值写进这个对象留空的字段，你已经填好的一律不动。这就是覆盖链：基础道具加稀有度变体，或内置表格加 MOD 文件。「空」指的是什么都没有：没有值、空文本、空列表、空记录。0 和 false 是真实的值，会被保留 - 与 什么都没有 和 缺失的字段 的读法完全一致。
+fill blanks in [i]{target}[/i] from [i]{base}[/i],用 [i]{base}[/i] 填补 [i]{target}[/i] 的空缺
+Fill,填补
+The one being completed - it is what changes.,被补全的那个 - 发生变化的是它。
+Where the missing values come from.,缺失的值从哪里来。
+Apply Preset To Node,把预设应用到节点
+"Pours a data asset's fields onto the same-named properties of a node, so difficulty tiers, weapon tunings and boss phases become a data edit instead of a wall of rows.",把数据资产里的字段倒进节点上同名的属性，于是难度档位、武器数值、Boss 阶段变成改数据，而不是堆一墙的行。
+apply preset [b]{preset}[/b] to [i]{target}[/i],把预设 [b]{preset}[/b] 应用到 [i]{target}[/i]
+Preset,预设
+The data asset to pour on (a .tres you filled in the Inspector). Nothing happens if it is empty.,要倒进去的数据资产（你在检查器里填好的 .tres）。为空则什么都不做。
+The node to apply it to.,要应用到的节点。
+Matches Properties Of,属性与…一致
+"True while the listed properties hold the same values on both objects - the cheap 'is this ghost still in sync' or 'has anything changed' check. A name neither object has reads as NOT matching, so a typo shows up instead of quietly passing, and either side being gone reads as not matching too.",只要列出的属性在两个对象上取值相同就为真 - 这是「这个残影还同步吗」「有什么变了吗」的廉价检查。两个对象都没有的名字读作「不匹配」，所以拼错会暴露出来而不是悄悄通过；任何一边已经消失也读作不匹配。
+[i]{target}[/i] matches [b]{names}[/b] of [i]{other}[/i],[i]{target}[/i] 的 [b]{names}[/b] 与 [i]{other}[/i] 一致
+Object,对象
+The object to test.,要检查的对象。
+"Comma-separated property names to compare. A blank list has nothing to compare, so it is true.",用逗号分隔、要比较的属性名。空列表没有可比的内容，因此为真。
+Of,对照对象
+The object to compare against.,用来对照的对象。
+Data Is Older Than Version,数据早于版本
+"True when a loaded record was written by an older build than this one - the gate a migration sits under. A record with NO version field counts as 0, so the very first format upgrades too, and so does one whose version field is empty or is not a number at all.",当加载到的记录是由比当前更旧的构建写下时为真 - 迁移就挂在这个条件下。「没有」版本字段的记录按 0 计，所以最初的那版格式也会被升级；版本字段为空或根本不是数字时同理。
+[b]{record}[/b] is older than version [b]{version}[/b],[b]{record}[/b] 早于版本 [b]{version}[/b]
+Record,记录
+"The parsed record (a save file, a payload, a manifest).",已解析的记录（存档文件、传输载荷、清单）。
+Field,字段
+Which field holds the version number.,哪个字段存放版本号。
+Version,版本
+The version this build writes.,当前构建写入的版本。
+Rename Field,重命名字段
+"Moves a value to its new field name, and does nothing at all when the old name is not there - so a migration is safe to run twice.",把一个值搬到新的字段名下；旧名字不存在时什么都不做 - 所以迁移跑两遍也安全。
+rename [b]{from_field}[/b] to [b]{to_field}[/b] in [i]{record}[/i],在 [i]{record}[/i] 中把 [b]{from_field}[/b] 改名为 [b]{to_field}[/b]
+"The record to migrate, edited in place.",要迁移的记录，就地修改。
+The old field name.,旧字段名。
+The new field name (overwritten if it is already there).,新的字段名（如果已存在会被覆盖）。
+Stamp Data Version,标记数据版本
+"Writes the current format number onto a record, so the next load knows it has already been migrated. Data Is Older Than Version reads it back, and reads it as 0 when it is missing or is not a number.",把当前格式号写到记录上，这样下次加载就知道它已经迁移过了。数据早于版本 会读回这个号；缺失或不是数字时按 0 读。
+stamp [i]{record}[/i] as version [b]{version}[/b],把 [i]{record}[/i] 标记为版本 [b]{version}[/b]
+The record to stamp.,要标记的记录。
+The version this build writes - a whole number.,当前构建写入的版本 - 一个整数。
+Table From File,从文件读表
+"Reads a .csv whose FIRST line is the column names and gives you one record per row, each field reachable by column name - row[""price""]. Quoted cells may contain the separator, Windows line endings are fine, and a missing file simply gives no rows. Store it in an Array variable, then walk it with a For Each pick filter.","读取「第一行是列名」的 .csv，每行给你一条记录，每个字段都能按列名取用 - row[""price""]。带引号的单元格里可以含分隔符，Windows 换行没问题，文件不存在就是没有行。把结果存进数组变量，再用 For Each 挑选过滤器逐行处理。"
+Files: Tables,文件: 表格
+rows of [b]{path}[/b],[b]{path}[/b] 的行
+File,文件
+The .csv to read. Its FIRST line must be the column names.,要读取的 .csv。它的第一行必须是列名。
+Separator,分隔符
+What separates the columns in that file.,该文件中用什么分隔各列。
+Comma,逗号
+Semicolon,分号
+Tab,制表符
+Table From Text,从文本读表
+"The same column-names-first parse as Table From File, but over text you already hold instead of a file on disk.",与 从文件读表 相同的「首行是列名」解析，只是作用在你手上已有的文本，而不是磁盘上的文件。
+rows in [b]{text}[/b],[b]{text}[/b] 中的行
+"Spreadsheet text you already have - a pasted blob, a downloaded body, a file you read earlier. FIRST line = the column names.",你手上已有的表格文本 - 粘贴进来的一大块、下载到的正文、之前读进来的文件。第一行 = 列名。
+Column Of Table,表的某一列
+"Gives one whole column as a list, in row order - handy for a dropdown's items, a weights list, or a quick sum. A row missing that column contributes empty text.",把一整列按行序作为列表返回 - 用来填下拉菜单、权重列表或快速求和都很顺手。缺这一列的行贡献一个空文本。
+column [b]{column}[/b] of [b]{table}[/b],[b]{table}[/b] 的列 [b]{column}[/b]
+Table,表格
+The rows-of-records variable a Table From File (or Table From Text) expression filled.,由 从文件读表（或 从文本读表）表达式填好的「一行一记录」变量。
+Column,列
+"The column name to read, exactly as it is spelled in the header row.",要读取的列名，拼写要与表头行完全一致。
+Row Where,满足条件的行
+"Finds the FIRST record whose column holds this value - the single-item lookup, e.g. the row for item ""sword"". Gives an empty record when nothing matches, so check it with Dictionary Is Empty before reading fields.","找出该列取值等于这个值的「第一条」记录 - 单条查询，比如道具 ""sword"" 那一行。没有匹配时返回空记录，所以读取字段前请用 字典为空 检查一下。"
+row of [b]{table}[/b] where [b]{column}[/b] is [b]{value}[/b],[b]{table}[/b] 中 [b]{column}[/b] 为 [b]{value}[/b] 的行
+"The column to match on, exactly as it is spelled in the header row.",用来匹配的列，拼写要与表头行完全一致。
+Is,为
+"The value to look for. Compared as text, so 25 and ""25"" both match a cell reading 25.","要查找的值。按文本比较，所以 25 和 ""25"" 都能匹配写着 25 的单元格。"
+For Each Line In Text,对文本中的每一行
+"Runs this event's actions once per LINE of the text, skipping blank ones. Windows (CRLF) and old-Mac (CR) endings are handled, so no line arrives with a stray carriage return. Read the current one as `line`.",对文本的每一「行」执行一次本事件的动作，空行跳过。Windows（CRLF）和旧 Mac（CR）换行都会处理，所以不会有行带着多余的回车符进来。当前行读作 `line`。
+Loops,循环
+for each line in [b]{text}[/b],对 [b]{text}[/b] 中的每一行
+"The text to walk line by line - a file you read, a pasted blob, a leaderboard body.",要逐行遍历的文本 - 读进来的文件、粘贴的一大块、排行榜正文等。
+For Each Part In Text,对文本中的每一段
+"Runs this event's actions once per PIECE of the text. Each piece arrives with its surrounding spaces trimmed, and empty pieces are skipped, so ""sword; shield;; bow"" is three parts. Read the current one as `part`.","对文本的每一「段」执行一次本事件的动作。每段到手时已去掉前后空格，空段会跳过，所以 ""sword; shield;; bow"" 是三段。当前段读作 `part`。"
+for each part of [b]{text}[/b] split by [b]{separator}[/b],对以 [b]{separator}[/b] 分隔的 [b]{text}[/b] 的每一段
+"The text to break up - a tag list, a chat command's arguments, one cell of a spreadsheet.",要拆开的文本 - 一串标签、一条聊天指令的参数、表格中的一个单元格。
+Split by,分隔符
+"What separates the pieces, e.g. "","" or "";"" or "" "".","用什么分隔各段，例如 "","" 或 "";"" 或 "" ""。"
+For Each Resource In Folder,对文件夹中的每个资源
+"Runs this event's actions once per data asset (.tres / .res) in a folder, already loaded - the ""a folder of items IS my item list"" setup, with no list to maintain. A folder that is not there walks nothing (quietly - it is checked first, so a loop that runs every frame cannot spam errors), and anything that fails to load is skipped rather than arriving as null. Read the current one as `entry`.",对文件夹里每个数据资产（.tres / .res）执行一次本事件的动作，并且已经加载好 - 这就是「一个道具文件夹就是我的道具清单」的做法，没有清单需要维护。文件夹不存在时什么也不遍历（而且很安静 - 会先检查，所以每帧运行的循环也不会刷屏报错）；加载失败的会被跳过，而不是变成 null 送进来。当前项读作 `entry`。
+for each resource in [b]{folder}[/b],对 [b]{folder}[/b] 中的每个资源
+Folder of data assets to walk. Only .tres / .res files are loaded; anything else in there is ignored.,要遍历的数据资产文件夹。只加载 .tres / .res 文件，其他一律忽略。
+Text Before,之前的文本
+"The part of the text before the first marker: Text Before(""Ada [angry]: hi"", "" ["") is ""Ada"". When the marker is not there you get the whole text back, so nothing is silently lost.","第一个标记之前的那部分文本：之前的文本(""Ada [angry]: hi"", "" ["") 是 ""Ada""。标记不存在时会把整段文本还给你，所以不会悄悄丢东西。"
+the part of {text} before {marker},{text} 中 {marker} 之前的部分
+The line to read a piece out of.,要从中取出一段的那一行。
+Before,之前
+The marker to stop at (the first one wins).,在此停下的标记（以第一个为准）。
+Text After,之后的文本
+"Everything after the first marker: Text After(""Ada [angry]: hi"", ""]: "") is ""hi"". Empty when the marker is not there, because then there is no ""after"".","第一个标记之后的全部内容：之后的文本(""Ada [angry]: hi"", ""]: "") 是 ""hi""。标记不存在时为空，因为那时根本没有「之后」。"
+the part of {text} after {marker},{text} 中 {marker} 之后的部分
+After,之后
+The marker to start after (the first one wins).,从其之后开始的标记（以第一个为准）。
+Text Between,之间的文本
+"The part between two markers: Text Between(""Ada [angry]: hi"", ""["", ""]"") is ""angry"". Empty when the opening marker is missing, and the rest of the text when the closing one is.","两个标记之间的那部分：之间的文本(""Ada [angry]: hi"", ""["", ""]"") 是 ""angry""。缺开头标记时为空；缺结尾标记时给你余下的全部文本。"
+the part of {text} between {open} and {close},{text} 中 {open} 与 {close} 之间的部分
+The opening marker.,开头标记。
+The closing marker.,结尾标记。
+Number In Text,文本中的数字
+"The first number found anywhere in the text, whole or decimal: ""Chapter 3"" gives 3, ""v1.25-beta"" gives 1.25. You get 0 when there is no number at all, and you never write a pattern.","文本中任何位置出现的第一个数字，整数或小数皆可：""Chapter 3"" 得到 3，""v1.25-beta"" 得到 1.25。完全没有数字时得到 0，而且你永远不用写正则。"
+the first number in {text},{text} 中的第一个数字
+Text that has a number somewhere in it.,某处含有数字的文本。
+Split Keeping Quotes,拆分并保留引号内内容
+"Splits text on a separator but keeps anything inside ""double quotes"" together as one piece, and drops the quotes: give ""iron sword"" 2 is three pieces, not four. Empty pieces are skipped, so runs of separators never produce blanks.","按分隔符拆分文本，但把 ""双引号"" 里的内容当作一整块保留下来，并去掉引号：give ""iron sword"" 2 是三段而不是四段。空段会被跳过，所以连续的分隔符不会产生空白项。"
+"pieces of {text}, keeping quotes together",{text} 的各段（引号内保持完整）
+"The line to split - a console entry, a search box, a pasted cell.",要拆分的那一行 - 控制台输入、搜索框、粘贴过来的单元格。
+What separates the pieces OUTSIDE quotes.,在引号「之外」用什么分隔各段。
+Explain JSON Problem,解释 JSON 的问题
+"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","这段 JSON 为什么解析失败，并带上行号：""line 4: Expected ':'""。解析正常时为空，所以「空结果」就是一切正常。把它打进日志，缺陷报告等于自己写好了。请按「本动词自身是否为空」来分支（文本为空白 取反），而不要用 JSON 有效：那个条件把只写着 null 一个词的文件读作无效，而本动词对此无话可说，两者搭配就会记下一条没有原因的错误。"
+JSON,JSON
+why {text} is not valid JSON,{text} 为何不是有效的 JSON
+"The JSON text to check - a file you read, a paste, a server reply.",要检查的 JSON 文本 - 读进来的文件、粘贴的内容、服务器返回的响应。
+Explain Table Problem,解释表格的问题
+"The first cell of a table that should be a number and is not, said out loud: ""row 12, column ""price"": ""abc"" is not a number"". Rows are counted from 1 over the rows you hold - Table From File has already used up the header line, so row 12 is line 13 of the file. A row that is not a record at all is reported too. Empty when every listed column checks out.","表格中第一个「本该是数字却不是」的单元格，用一句话说出来：""row 12, column ""price"": ""abc"" is not a number""。行号是对你手上的行从 1 开始数的 - 从文件读表 已经用掉了表头那一行，所以 row 12 是文件的第 13 行。压根不是记录的行也会被报出来。列出的每一列都没问题时结果为空。"
+what is wrong in {records},{records} 里哪里有问题
+Rows,行
+"A list of records - one per row, each field reachable by column name.",一串记录 - 每行一条，每个字段都能按列名取用。
+Number columns,数值列
+The columns that must hold numbers.,必须存放数字的那些列。
+Missing Fields,缺失的字段
+"The listed fields that are missing or left blank, comma-separated, and empty when the record is complete. Blank means nothing there: null, empty text, an empty list or an empty record - a 0 is a real value and is never reported.",列出的字段中缺失或留空的那些，用逗号连起来；记录完整时结果为空。「空」指的是什么都没有：null、空文本、空列表、空记录。0 是真实的值，永远不会被报出来。
+the fields missing from {record},{record} 中缺失的字段
+A record or a resource to check.,要检查的记录或资源。
+Fields,字段
+"The fields it must have filled in, separated by commas.",它必须填好的字段，用逗号分隔。
+Shorten To Fit,缩短到放得下
+"Trims text to a maximum number of characters and marks the cut with the ending you choose, so a clipped name never reads as the whole name. Text that already fits comes back untouched, and the result never runs past the width you gave - a width too narrow to hold the ending simply cuts without one. Cuts mid-word: use Shorten To Whole Words when the cut should land on a word boundary.",把文本裁到最多多少个字符，并用你选的结尾符号标出裁切，这样被截断的名字绝不会读起来像完整的名字。本来就放得下的文本原样返回，结果也绝不会超出你给的宽度 - 窄到连结尾符号都放不下时，就直接不带符号裁掉。它会从词中间裁开：想让裁切落在词边界上，请用 按整词缩短。
+shorten [b]{text}[/b] to [b]{max_chars}[/b] characters,把 [b]{text}[/b] 缩短到 [b]{max_chars}[/b] 个字符
+The text that has to fit.,必须放得下的那段文本。
+Max characters,最多字符数
+"The widest the result may get, in characters, counting the ending below.",结果最多可以有多宽（按字符数），并把下面的结尾符号算在内。
+Ending,结尾符号
+"What marks the cut, e.g. ""..."" or a single ellipsis character. Its own length is taken out of the budget.","用什么标示裁切，例如 ""..."" 或一个省略号字符。它自身的长度会从预算里扣掉。"
+Shorten To Whole Words,按整词缩短
+"Like Shorten To Fit, but backs up to the last complete word before cutting, so ""Ancient Sword of Thorns"" reads ""Ancient Sword..."" instead of ""Ancient Sword of Th"". When the budget holds no whole word (one very long word) it falls back to cutting by characters, and when it is too narrow to hold the ending at all it cuts without one - so the result is never just the ending, and never wider than you asked for.","与 缩短到放得下 一样，但在裁切前会退回到最后一个完整单词，因此 ""Ancient Sword of Thorns"" 读作 ""Ancient Sword..."" 而不是 ""Ancient Sword of Th""。当预算里放不下任何完整单词时（比如只有一个很长的单词），它退回到按字符裁切；窄到连结尾符号都放不下时就不带符号裁 - 所以结果绝不会只剩结尾符号，也绝不会超过你要求的宽度。"
+shorten [b]{text}[/b] to whole words within [b]{max_chars}[/b],在 [b]{max_chars}[/b] 之内把 [b]{text}[/b] 按整词缩短
+With Thousands Separators,带千位分隔符
+"Turns a number into grouped digits a player can take in at a glance: 1234567 reads ""1,234,567"". Whole numbers only (the fraction is dropped); a negative keeps its minus sign. For idle-game scale (1.23e15, ""1.23 Qa"") reach for the Big Numbers pack instead.","把数字变成玩家一眼就能读懂的分组数位：1234567 读作 ""1,234,567""。只处理整数（小数部分会被丢弃）；负数保留减号。要处理放置类游戏的量级（1.23e15、""1.23 Qa""），请改用「大数字」包。"
+[b]{value}[/b] with thousands separators,带千位分隔符的 [b]{value}[/b]
+The number to make readable. Anything after the decimal point is dropped.,要变得易读的数字。小数点后的部分会被丢弃。
+As Percent Text,转成百分比文本
+"Turns a fraction into percent TEXT with the sign on it: 0.73 reads ""73%"". Feed it a 0-to-1 value (Percent Of already returns 0-to-100, so divide that by 100 or use the raw fraction).","把一个比例变成带百分号的「文本」：0.73 读作 ""73%""。请喂给它 0 到 1 之间的值（占比 已经返回 0 到 100，所以要么除以 100，要么直接用原始比例）。"
+[b]{value}[/b] as a percent,[b]{value}[/b] 的百分比
+Fraction,比例
+"A fraction where 1.0 means full, e.g. health / max_health.",以 1.0 表示满的比例，例如 health / max_health。
+Decimals,小数位数
+Digits after the decimal point. 0 gives a whole percent.,小数点后保留几位。0 表示取整的百分比。
+As Duration,转成时长
+"Seconds as a duration that survives passing an hour: 3725 reads ""1h 02m"" and 90 reads ""1m 30s"". A negative duration reads as zero. Use As Clock Time when you want strict mm:ss (it rolls an hour into ""60:00"").","把秒数写成超过一小时也不出错的时长：3725 读作 ""1h 02m""，90 读作 ""1m 30s""。负的时长按零读。想要严格的 mm:ss，请用 时钟时间（在那里一小时会变成 ""60:00""）。"
+[b]{seconds}[/b] as a duration,[b]{seconds}[/b] 的时长
+Seconds,秒
+A duration in seconds.,以秒为单位的时长。
+Align Left,左对齐
+"Pads text out on the RIGHT to a fixed width, so every row starts on the same edge and reads as a column. Text longer than the width is left alone (it is never cut - shorten it first). Give the Label a MONOSPACE theme font or the column will still drift.",把文本在「右侧」补齐到固定宽度，于是每一行都从同一条边开始，读起来像一列。比宽度还长的文本原样保留（永远不裁 - 请先缩短）。要给 Label 设置等宽主题字体，否则这一列还是会歪。
+[b]{text}[/b] aligned left in [b]{width}[/b],在 [b]{width}[/b] 宽度内左对齐的 [b]{text}[/b]
+The text to pad out.,要补齐的文本。
+Width,宽度
+Column width in characters. Shorter text is padded; longer text is left as it is.,列宽（按字符数）。较短的文本会补齐，较长的原样保留。
+Fill with,填充字符
+"What fills the gap: a space, or ""."" for a dotted leader. One character.","用什么填补空隙：空格，或者用 ""."" 做点线引导。只能是一个字符。"
+Align Right,右对齐
+"Pads text out on the LEFT to a fixed width, so numbers END on the same edge and read as a column of figures. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the column will still drift.",把文本在「左侧」补齐到固定宽度，于是数字都在同一条边「结束」，读起来像一列数目。比宽度还长的文本原样保留。要给 Label 设置等宽主题字体，否则这一列还是会歪。
+[b]{text}[/b] aligned right in [b]{width}[/b],在 [b]{width}[/b] 宽度内右对齐的 [b]{text}[/b]
+The text to pad out - str() a number first.,要补齐的文本 - 数字请先用 str() 转成文本。
+Center In Width,在宽度内居中
+"Pads text on BOTH sides to a fixed width, so a heading sits in the middle of a column. An odd leftover space goes on the right. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the centering will still drift.",把文本在「两侧」补齐到固定宽度，于是标题落在一列的正中。多出来的那一格奇数空位放到右边。比宽度还长的文本原样保留。要给 Label 设置等宽主题字体，否则居中还是会歪。
+[b]{text}[/b] centered in [b]{width}[/b],在 [b]{width}[/b] 宽度内居中的 [b]{text}[/b]
+The text to center.,要居中的文本。
+As Title Text,转成标题文本
+"Turns a machine id into a readable name: ""fire_sword"" reads ""Fire Sword"", ""maxHealth"" reads ""Max Health"". Use it wherever a key has to be shown to a player, so ids and labels never drift apart in two places.","把机器用的 id 变成可读的名字：""fire_sword"" 读作 ""Fire Sword""，""maxHealth"" 读作 ""Max Health""。凡是要把键展示给玩家的地方都用它，id 和显示名就不会在两处各走各的。"
+[b]{text}[/b] as title text,作为标题文本的 [b]{text}[/b]
+"An id or key, e.g. fire_sword or maxHealth.",一个 id 或键，例如 fire_sword 或 maxHealth。
+As Sentence Text,转成句首大写文本
+"Raises the FIRST letter only and leaves the rest of the text exactly as it is, so ""NPC"" and ""HP"" keep their capitals. Empty text stays empty.","只把「第一个字母」变成大写，其余原封不动，因此 ""NPC"" 和 ""HP"" 仍保留它们的大写。空文本仍为空。"
+[b]{text}[/b] as sentence text,作为句首大写文本的 [b]{text}[/b]
+A sentence that needs its first letter raised.,需要把首字母改成大写的句子。
+Translated Text From Pattern,由模板生成的译文
+"Looks the whole sentence up in the current language FIRST, then fills its {slots}. The pattern you type here - slots and all - is the translation key, so it is what goes in the catalog. Filling the slots first (Translate around Text From Pattern) produces a string no catalog can contain, and the text then never translates.",先用当前语言把整句话「查」出来，然后再填它的 {slots}。你在这里写下的模板 - 连同占位槽 - 就是翻译键，也正是要放进词条表的东西。先填槽再翻译（用 翻译 包住 由模板生成文本）会产生任何词条表都不可能包含的字符串，那段文字从此永远不会被翻译。
+Translation,翻译
+translated text from [b]{pattern}[/b],由 [b]{pattern}[/b] 生成的译文
+Pattern,模板
+"The source sentence, with {name} slots. This exact string, slots and all, is the translation key that goes in the catalog.",源句子，带 {name} 占位槽。这个字符串原封不动（含占位槽）就是要写进词条表的翻译键。
+Values,值
+"What fills the slots: {""name"": value, ...} - e.g. {""coins"": coins}.","用什么填充占位槽：{""name"": value, ...} - 例如 {""coins"": coins}。"
+Set Text (translated pattern),设置文本（翻译模板）
+Sets this Label's text from a pattern that is translated FIRST and filled second. The pattern - slots and all - is the translation key. Re-run it under On Language Changed so the label follows a live language switch.,用「先翻译、后填槽」的模板来设置这个 Label 的文本。模板（连同占位槽）就是翻译键。把它放在 语言变化时 下再跑一次，标签就能跟上运行中的语言切换。
+set text to translated [b]{pattern}[/b],把文本设为翻译后的 [b]{pattern}[/b]
+Text Is A Number,文本是数字
+"True when this text would convert to a number cleanly. Ask it BEFORE converting, so a typo can never arrive as a silent 0 and the sheet bet nothing. Spaces around the number are ignored; empty text is not a number.",当这段文本能够干净地转成数字时为真。请在转换「之前」先问，这样打错的输入就不会悄悄变成 0，让整张表押上了个「什么都没有」。数字前后的空格会忽略；空文本不是数字。
+Compare: Text,比较: 文本
+{text} is a number,{text} 是数字
+"Text to test - a typed-in field, a value read back out of a save, a CSV or JSON cell.",要检查的文本 - 手输的输入框、从存档读回的值、CSV 或 JSON 里的一格。
+Text Is A Whole Number,文本是整数
+"True when this text would convert to a WHOLE number cleanly - a count, a level, a slot index. ""12"" passes and ""12.5"" does not, which is the only difference from Text Is A Number.","当这段文本能够干净地转成「整数」时为真 - 数量、等级、槽位序号。""12"" 通过而 ""12.5"" 不通过，这也是它与 文本是数字 唯一的差别。"
+{text} is a whole number,{text} 是整数
+"Text to test - a count, a level number, a save slot, a seed.",要检查的文本 - 数量、关卡编号、存档槽、随机种子。
+Contains Any Of,包含其中任一
+"True when the text contains at least ONE of the listed pieces - a chat filter, a keyword-triggered line, a tag-gated card. Unlike Text Is One Of, which needs the WHOLE text to equal an entry, this looks INSIDE the text. Matching is case-sensitive, and an empty list is never a match.",当文本包含所列片段中的「至少一个」时为真 - 聊天过滤、由关键词触发的台词、靠标签解锁的卡牌。与要求「整段文本」等于某一项的 文本是其中之一 不同，这个是往文本「里面」看。匹配区分大小写，空列表永远不算命中。
+{text} contains any of {options},{text} 包含 {options} 中任一
+Text to search.,要在其中查找的文本。
+Any Of,其中任一
+"List of pieces to look for - written here, or a sheet variable someone can edit without touching this row.",要查找的片段列表 - 可以直接写在这里，也可以放进一个表变量，让别人不用碰这一行就能改。
+Contains All Of,包含其中全部
+"True only when the text contains EVERY listed piece - a combo whose rule text names two keywords, a search box where all the words must match. An empty list counts as true, because nothing is missing.",只有当文本包含所列的「每一个」片段时才为真 - 规则文本里点名两个关键词的连招、要求所有词都命中的搜索框。空列表算作真，因为没有任何东西缺席。
+{text} contains all of {options},{text} 包含 {options} 中全部
+All Of,其中全部
+List of pieces that must ALL appear.,必须「全部」出现的片段列表。
+Contains None Of,不包含其中任何一个
+"True when the text contains none of the listed pieces - the accept-this-name branch, written as the thing you want to act on instead of an Else. An empty list always passes.",当文本不包含所列的任何片段时为真 - 这是「接受这个名字」的分支，直接写成你想处理的那一侧，而不是写成 Else。空列表总是通过。
+{text} contains none of {options},{text} 不包含 {options} 中任何一个
+None Of,其中任何一个
+List of pieces that must NOT appear.,「不得」出现的片段列表。
+Number From Text,从文本取数字
+"Reads a number out of text, or hands back the fallback YOU chose - never a surprise zero. Pair it with Text Is A Number when the two cases need different rows. The text is read twice in the emitted line, so keep it a plain read and not something that changes the game.",从文本里读出一个数字，读不出来就返回「你自己选的」备用值 - 绝不会冒出一个意外的 0。两种情况需要分成不同的行时，请与 文本是数字 搭配。生成的那行里这段文本会被读两次，所以请保持它是纯读取，而不是会改变游戏状态的东西。
+Variables: String,变量: 字符串
+number from {text} (or {fallback}),从 {text} 取的数字（否则 {fallback}）
+Text to read a number out of.,要从中读出数字的文本。
+What you get back when the text is not a number.,文本不是数字时你会得到的值。
+Whole Number From Text,从文本取整数
+"Reads a whole number out of text, or hands back your fallback. ""12.5"" is not a whole number, so it lands on the fallback rather than quietly becoming 12 - when you want that rounding, use Number From Text and round the result yourself.","从文本里读出一个整数，读不出来就返回你的备用值。""12.5"" 不是整数，所以它会落到备用值，而不是悄悄变成 12 - 想要那种取整，请用 从文本取数字 再自己取整。"
+whole number from {text} (or {fallback}),从 {text} 取的整数（否则 {fallback}）
+Text to read a whole number out of.,要从中读出整数的文本。
+What you get back when the text is not a whole number.,文本不是整数时你会得到的值。
+Is Nothing,什么都没有
+"True when there is nothing there: no value at all, empty text, an empty list (including an empty Split Text result), or an empty record - one row whatever the value turns out to be. A 0 is NOT nothing, because a score of zero is a real value, and neither is text made only of spaces (that is Text Is Blank).",当那里什么都没有时为真：根本没有值、空文本、空列表（包括 拆分文本 得到的空结果）、空记录 - 无论值最终是什么类型，都只要这一行。0 「不是」什么都没有，因为 0 分是真实的值；只由空格组成的文本也不算（那是 文本为空白）。
+Compare: Types,比较: 类型
+{value} is nothing,{value} 什么都没有
+"Anything - text, a list, a record, a reference.",任何东西 - 文本、列表、记录、引用。
+Has Something,有内容
+"True when there IS something there - a name was typed, the inventory has items, the save slot was written, the item slot is filled. The exact opposite of Is Nothing, for the times the filled case is the one you want to act on.",当那里「确实有」东西时为真 - 名字填过了、背包里有物品、存档槽写过了、道具格是满的。它是 什么都没有 的完全反面，适合你想处理「有内容」那一侧的时候。
+{value} has something,{value} 有内容
+Number Or,数字否则
+"The value when it really is a number, or your own default when it is missing, null, text, or anything else. A zero counts as a real number and is kept. Use it to put a loaded value straight into a whole-number or decimal variable without a guard row first. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.",当它确实是数字时给出该值；缺失、为 null、是文本或是别的什么时，给出你自己指定的默认值。0 算作真实的数字并保留下来。用它可以把加载到的值直接放进整数或小数变量，而不用先写一行守卫。生成的那行里这个值会被读两次，所以请保持它是纯读取，而不是会改变游戏状态的东西。
+Variables,变量
+"{value} as a number, or {fallback}",{value} 作为数字，否则 {fallback}
+"The untyped value to check - a save slot read, a JSON field, a Dictionary key.",要检查的无类型值 - 从存档槽读到的东西、JSON 字段、字典的键。
+What you get back when it is not a number.,它不是数字时你会得到的值。
+Text Or,文本否则
+"The value when it really is text with something in it, or your own default when it is missing, null, blank, or another kind of value. The classic use is a saved player name that falls back to ""Player"". The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","当它确实是有内容的文本时给出该值；缺失、为 null、为空或是别的类型时，给出你自己指定的默认值。最经典的用法是存档里的玩家名字缺失时回退到 ""Player""。生成的那行里这个值会被读两次，所以请保持它是纯读取，而不是会改变游戏状态的东西。"
+"{value} as text, or {fallback}",{value} 作为文本，否则 {fallback}
+"What you get back when it is not text, or is blank.",它不是文本或为空时你会得到的值。
+List Or,列表否则
+"The value when it really is a list with items in it, or your own default when it is missing, null, empty, or another kind of value. A Split Text result counts as a list. Safe to feed straight into a For Each. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.",当它确实是有元素的列表时给出该值；缺失、为 null、为空或是别的类型时，给出你自己指定的默认值。拆分文本 的结果也算列表。可以放心直接喂给 For Each。生成的那行里这个值会被读两次，所以请保持它是纯读取，而不是会改变游戏状态的东西。
+"{value} as a list, or {fallback}",{value} 作为列表，否则 {fallback}
+"The untyped value to check - a loaded inventory, a JSON array, a Split Text result, a Dictionary key.",要检查的无类型值 - 加载进来的背包、JSON 数组、拆分文本 的结果、字典的键。
+"What you get back when it is not a list, or is empty.",它不是列表或为空时你会得到的值。
+Record Or,记录否则
+"The value when it really is a record (a dictionary) with keys in it, or your own default when it is missing, null, empty, or another kind of value. Pair it with Get Key so a whole missing settings block reads as defaults. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.",当它确实是带键的记录（字典）时给出该值；缺失、为 null、为空或是别的类型时，给出你自己指定的默认值。与 取键 搭配，整块设置即使完全缺失也会按默认值读出来。生成的那行里这个值会被读两次，所以请保持它是纯读取，而不是会改变游戏状态的东西。
+"{value} as a record, or {fallback}",{value} 作为记录，否则 {fallback}
+"The untyped value to check - a loaded settings block, a JSON object, a Dictionary key.",要检查的无类型值 - 加载进来的设置块、JSON 对象、字典的键。
+"What you get back when it is not a record, or is empty.",它不是记录或为空时你会得到的值。
+Value Or,值否则
+"The value unless it is null, in which case your own default. This one guards nothing else: a zero, a blank text and an empty list all count as real values here. Use it for a method that can hand back null. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.",只要它不是 null 就给出该值；是 null 时才给出你自己指定的默认值。这一个不管别的：0、空文本、空列表在这里都算真实的值。适合用在可能返回 null 的方法上。生成的那行里这个值会被读两次，所以请保持它是纯读取，而不是会改变游戏状态的东西。
+"{value}, or {fallback} when it is nothing",{value}，什么都没有时用 {fallback}
+"Anything that might be null - a method result, a freed reference, a missing key.",任何可能是 null 的东西 - 方法的返回值、已释放的引用、不存在的键。
+What you get back when it is null.,它是 null 时你会得到的值。
+Part Of,…的分量
+"One named piece of a pair, a triple, a colour or a record: the up/down part of a velocity (the jump-or-fall test), the see-through part of a tint, the forward/back part of a 3D direction. Reads as a sentence instead of a typed-in .y. Pick a part the value actually has - a record that might be missing the field is the shipped Get Key (with default)'s job, because that one takes a fallback and this one does not.",二元、三元、颜色或记录中一个有名字的分量：速度的上下分量（判断在跳还是在落）、色调的透明分量、3D 方向的前后分量。它读起来是一句话，而不是手写的 .y。请挑值确实拥有的分量 - 可能缺字段的记录归 取键（带默认值） 管，因为那一个接受备用值，而这一个不接受。
+Variables: Vector,变量: 向量
+the {part} part of {value},{value} 的 {part} 分量
+"A Vector2, Vector3, Color or record to read one part of.",要从中读取一个分量的 Vector2、Vector3、Color 或记录。
+Part,分量
+Which named part to read.,读取哪个具名分量。
+X (left / right),X（左 / 右）
+Y (up / down),Y（上 / 下）
+Z (forward / back),Z（前 / 后）
+Red,红
+Green,绿
+Blue,蓝
+Alpha (see-through),Alpha（透明度）
+Set Part Of,设置…的分量
+"Changes one named part and leaves the rest alone: zero the vertical speed on landing and keep the horizontal, flatten a 3D direction to the ground plane, fade only the see-through part of a tint. Writing a part a record does not have yet ADDS it.",只改一个具名分量，其余保持不动：落地时把垂直速度归零而保留水平速度、把 3D 方向压平到地面、只淡出色调的透明分量。往记录里写一个它还没有的分量，会把这个分量「添加」进去。
+set the {part} part of {var_name} to {value},把 {var_name} 的 {part} 分量设为 {value}
+Variable or property,变量或属性
+"What to change one part of: a node's own member (velocity, modulate, position) picked from the list, or the name of a sheet variable holding a Vector, Color or record.",要改动其中一个分量的对象：从列表里挑的节点自身成员（velocity、modulate、position），或某个存放向量、颜色或记录的表变量名。
+Which named part to write.,写入哪个具名分量。
+The new value for that one part.,该分量的新值。

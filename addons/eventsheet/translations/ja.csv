@@ -108,6 +108,7 @@ Welcome…,ようこそ…
 Start the Tour…,ツアーを開始…
 Keyboard Shortcuts,キーボードショートカット
 Rename Everywhere…,すべての場所で名前を変更…
+Change Type Everywhere…,すべての場所で型を変更…
 Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.,すべての ƒx 式と GDScript ブロックをリントし、問題のある行をマークして最初の行へジャンプします。
 Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.,ブレークポイント出力を切り替えます: デバッグコンパイルされたシートはブレークポイントのある行で一時停止します。
 Toggle Live Values: running sheets stream their variables here (editable).,ライブ値を切り替えます: 実行中のシートの変数がここにストリーム表示されます (編集可能)。
@@ -172,6 +173,8 @@ Edit Events,イベントを編集
 Insert Snippet…,スニペットを挿入…
 Extract All Actions to Function…,すべてのアクションを関数へ抽出…
 Group Under a Heading…,見出しの下にグループ化…
+Export Grid to CSV…,表を CSV に書き出し…
+Import Grid from CSV…,表を CSV から読み込み…
 Detach Comment To Row,コメントを行として分離
 Convert Scope,スコープを変換
 Toggle Constant,定数を切り替え
@@ -576,6 +579,7 @@ Filter,フィルター
 Edit Values Across Selection…,選択範囲の値を一括編集…
 Select All Events Using This,これを使う全イベントを選択
 Replace Object References…,オブジェクト参照を置換…
+Paste Special…,形式を選択して貼り付け…
 Replace Object References,オブジェクト参照を置換
 Retarget the selection,選択範囲の参照先を変更
 Replace,置換
@@ -741,3 +745,402 @@ Export Is Debug,書き出しがデバッグ
 True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,この焼き込みステップを起動した書き出しがデバッグビルドのとき真になります。プロジェクト書き出し時の中で使い、テスト用コンテンツをリリースビルドから外します。
 Export Has Feature,書き出しが機能を持つ
 "True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.",この焼き込みステップを起動した書き出しプリセットが指定の機能タグを持つとき真になります。モバイル、ウェブ、デスクトップで異なるデータを焼き込む方法です。
+Share Code For,共有コード
+"Turns any value into one compact line of text a player can paste anywhere - a seed, a loadout, a whole save. Read it back with Value From Share Code.",任意の値を、プレイヤーがどこにでも貼り付けられる 1 行のテキストに変換します - シード、装備一式、セーブデータ全体など。共有コードからの値 で読み戻せます。
+Utility: Window,ユーティリティ: ウィンドウ
+share code for [b]{value}[/b],[b]{value}[/b] の共有コード
+Value,値
+"Anything - a run seed, a loadout list, a colour, a whole save record.",何でも構いません - ランのシード、装備リスト、色、セーブレコード全体など。
+Copy Share Code To Clipboard,共有コードをクリップボードにコピー
+"Encodes any value as a share code and puts it straight on the operating system clipboard, ready to paste.",任意の値を共有コードにエンコードし、そのまま OS のクリップボードへ置きます。すぐ貼り付けられます。
+copy share code for [b]{value}[/b] to clipboard,[b]{value}[/b] の共有コードをクリップボードにコピー
+"Anything - a run seed, a loadout list, a whole save record.",何でも構いません - ランのシード、装備リスト、セーブレコード全体など。
+Share Code Is Valid,共有コードが有効
+"True when the text really is a share code that decodes cleanly, so a paste box can refuse garbage before it reaches the game. Ask it when the pasted text CHANGES (a Paste button, On Text Changed) rather than every frame: a code mangled in transit can still reach the decoder, and the engine logs a line each time it is refused. A code that was made from nothing at all also reads as invalid.",テキストが本当に共有コードで、きれいにデコードできるときに真になります。ゲームへ届く前に貼り付け欄でゴミを拒否できます。毎フレームではなく、貼り付けたテキストが「変わったとき」(貼り付けボタン、テキスト変更時) に尋ねてください。転送中に壊れたコードはデコーダーまで届くことがあり、拒否のたびにエンジンがログを 1 行出します。何もない値から作られたコードも無効と判定されます。
+[b]{code}[/b] is a valid share code,[b]{code}[/b] は有効な共有コード
+Code,コード
+The pasted text to test - usually Clipboard Text or a paste box's text.,検査する貼り付けテキスト - 通常は クリップボードのテキスト か貼り付け欄のテキストです。
+Value From Share Code,共有コードからの値
+"Reads the value back out of a share code, giving nothing when the text is not a valid code.",共有コードから値を読み戻します。テキストが有効なコードでない場合は何も返しません。
+value from share code [b]{code}[/b],共有コード [b]{code}[/b] からの値
+The share code text to read - check it with Share Code Is Valid first.,読み取る共有コードのテキスト - まず 共有コードが有効 で確認してください。
+Clipboard Has Text,クリップボードにテキストがある
+True when the operating system clipboard currently holds any text - gate a paste box on it.,OS のクリップボードに現在なんらかのテキストがあるとき真になります - 貼り付け欄の有効化条件に使えます。
+clipboard has text,クリップボードにテキストがある
+Clipboard Has Image,クリップボードに画像がある
+"True when the operating system clipboard currently holds an image, such as a screenshot the player just copied.",OS のクリップボードに現在画像があるとき真になります。たとえばプレイヤーがコピーしたばかりのスクリーンショットなどです。
+clipboard has an image,クリップボードに画像がある
+Clipboard Image,クリップボードの画像
+The image currently on the operating system clipboard - feed it to ImageTexture.create_from_image to show it.,現在 OS のクリップボードにある画像 - 表示するには ImageTexture.create_from_image に渡してください。
+clipboard image,クリップボードの画像
+Clipboard Text Is,クリップボードのテキストが
+"Compares whatever text is on the clipboard against a value, with your choice of operator.",クリップボードにあるテキストを、選んだ演算子で値と比較します。
+clipboard text {op} [b]{value}[/b],クリップボードのテキスト {op} [b]{value}[/b]
+Operator,演算子
+Comparison.,比較。
+= (equal to),= (等しい)
+!= (not equal to),!= (等しくない)
+< (less than),< (より小さい)
+<= (at most),<= (以下)
+> (greater than),> (より大きい)
+>= (at least),>= (以上)
+Text to compare the clipboard against.,クリップボードと比較するテキスト。
+Clone Into,複製して追加
+"Copies a live node, adds the copy to a parent, places it and optionally puts it in a group - the one-row form of Duplicate Node plus Add Child plus Set Position. Use Spawn Scene when you are starting from a .tscn file instead.",生きているノードをコピーし、そのコピーを親に追加し、位置を決め、必要ならグループにも入れます - ノードを複製 + 子を追加 + 位置を設定 を 1 行にまとめた形です。.tscn ファイルから始める場合は シーンを生成 を使ってください。
+Nodes,ノード
+"clone [i]{source}[/i] into [i]{parent}[/i] at [b]{at}[/b], group [b]{group}[/b]",[i]{source}[/i] を [i]{parent}[/i] に [b]{at}[/b] で複製、グループ [b]{group}[/b]
+The live node to copy.,コピーする、生きているノード。
+Into,追加先
+Where the copy is added.,コピーを追加する先。
+At,位置
+World position for the copy (a Vector3 for a 3D node). Only used when the copy has a position.,コピーのワールド座標 (3D ノードなら Vector3)。コピーが位置を持つ場合にのみ使われます。
+Optional group for the copy (blank = none).,コピー用の任意のグループ (空 = なし)。
+Remember Value As,値を名前を付けて覚える
+"Copies any value aside under a name, in memory, for this run - the before-value for a preview, a buff or a cutscene. For memory that survives closing the game use Remember Between Runs on the variable, or the Save System pack.",任意の値を名前を付けてメモリに退避します。このラン限りで、プレビュー・バフ・カットシーンの「前の値」に使えます。ゲームを閉じても残る記憶が必要なら、変数の ラン間で記憶 かセーブシステムのパックを使ってください。
+Run Context,実行コンテキスト
+remember [b]{value}[/b] as [b]{name}[/b],[b]{value}[/b] を [b]{name}[/b] として覚える
+Any label you also use in Restore Value Into.,値を戻す先 でも同じものを使う、任意のラベル。
+The value to copy aside.,退避しておく値。
+Restore Value Into,値を戻す先
+Pours a remembered value back into a variable. When nothing was remembered under that name the variable keeps what it already had.,覚えておいた値を変数へ戻します。その名前で何も覚えていない場合、変数はもとの値のままです。
+restore [b]{name}[/b] into [b]{var_name}[/b],[b]{name}[/b] を [b]{var_name}[/b] に戻す
+The label used in Remember Value As.,値を名前を付けて覚える で使ったラベル。
+Into Variable,戻す変数
+Variable that receives the remembered value (left alone when nothing was remembered).,覚えた値を受け取る変数 (何も覚えていなければそのまま)。
+Remembered Value,覚えている値
+"The value remembered under a name this run, or your fallback when there is none - read it without pouring it back.",このランで名前を付けて覚えた値、なければ指定した代わりの値 - 戻さずに読むだけです。
+remembered [b]{name}[/b] or [b]{fallback}[/b],覚えている [b]{name}[/b] または [b]{fallback}[/b]
+Or,なければ
+What you get when nothing was remembered under that name.,その名前で何も覚えていないときに返る値。
+Has Remembered,覚えているか
+True when something was remembered under that name this run - the gate on a Cancel button that should only undo a preview it actually took.,このランでその名前に何かを覚えているとき真になります - 実際に取ったプレビューだけを取り消すキャンセルボタンの条件です。
+has remembered [b]{name}[/b],[b]{name}[/b] を覚えている
+Forget Remembered,覚えた値を忘れる
+"Drops a remembered value, so Has Remembered reads false again. Forgetting a name that was never remembered is harmless.",覚えた値を捨て、覚えているか がふたたび偽になります。覚えていない名前を忘れても害はありません。
+forget remembered [b]{name}[/b],覚えた [b]{name}[/b] を忘れる
+Resources In Folder,フォルダー内のリソース
+"Loads every data asset (.tres) in a folder as a list, so a folder of files becomes your content - items, enemies, levels, or a mod folder. A missing folder gives an empty list, and a file that fails to load is left out rather than arriving as nothing.",フォルダー内のデータアセット (.tres) をすべてリストとして読み込みます。フォルダーがそのままコンテンツになります - アイテム、敵、レベル、MOD フォルダーなど。フォルダーが無ければ空のリスト、読み込みに失敗したファイルは null として届くのではなく除外されます。
+Files,ファイル
+resources in [b]{folder}[/b],[b]{folder}[/b] 内のリソース
+Folder,フォルダー
+"Folder to scan (not recursive). Every .tres / .res inside it is loaded, in the folder's own order.",走査するフォルダー (再帰しません)。中の .tres / .res をフォルダー自身の順序ですべて読み込みます。
+Resource In Folder,フォルダー内のリソース 1 件
+"Fetches one data asset out of a folder by its file name, or nothing at all when there is no such file - no red error.",フォルダーからファイル名でデータアセットを 1 件取り出します。そのファイルが無ければ何も返しません - 赤いエラーは出ません。
+resource [b]{name}[/b] in [b]{folder}[/b],[b]{folder}[/b] 内のリソース [b]{name}[/b]
+Folder holding the data assets.,データアセットが入っているフォルダー。
+"File name WITHOUT the .tres extension - ""rusty_sword"" finds rusty_sword.tres.",".tres 拡張子を除いたファイル名 - ""rusty_sword"" は rusty_sword.tres を見つけます。"
+Load Resource Or Default,リソースを読み込む、無ければ既定値
+"Loads a file and hands back your fallback when it is missing, so a deleted or mod-supplied file never crashes the game.",ファイルを読み込み、無ければ指定した代わりの値を返します。削除されたファイルや MOD 由来のファイルでゲームが落ちることはありません。
+load [b]{path}[/b] or [i]{fallback}[/i],[b]{path}[/b] を読み込む、無ければ [i]{fallback}[/i]
+Path,パス
+Full path to the resource or scene to load.,読み込むリソースまたはシーンのフルパス。
+Fallback,代わりの値
+"What to use instead when the file is not there (a preloaded default, or null).",ファイルが無いときに代わりに使うもの (プリロードした既定値、または null)。
+Count Of Resources In,リソースの個数
+"How many data assets a folder holds, counted without loading any of them - zero if the folder is missing.",フォルダーが持つデータアセットの数を、どれも読み込まずに数えます - フォルダーが無ければ 0 です。
+count of resources in [b]{folder}[/b],[b]{folder}[/b] 内のリソース数
+Folder to count data assets in (not recursive).,データアセットを数えるフォルダー (再帰しません)。
+Copy Resource (Independent),リソースをコピー (独立)
+"Makes a private copy of a resource, right down to the resources inside it, so writing to the copy never changes the .tres on disk or any other node holding it. Use this before a node edits its own stats.",リソースを、その内部のリソースまで含めて完全に独立したコピーにします。コピーへ書き込んでも、ディスク上の .tres や同じものを持つ他のノードには一切影響しません。ノードが自分のステータスを書き換える前に使ってください。
+Helpers,ヘルパー
+independent copy of [i]{resource}[/i],[i]{resource}[/i] の独立したコピー
+Resource,リソース
+The resource to copy. Anything that is not a resource (including nothing at all) gives nothing back.,コピーするリソース。リソースでないもの (何も無い場合を含む) は何も返しません。
+Copy Resource (Share Sub-Resources),リソースをコピー (サブリソース共有)
+Makes a cheap copy whose own fields are separate but whose inner resources and lists are still SHARED with the original. Pick this only when you want that sharing - otherwise use Copy Resource (Independent).,自分のフィールドだけを分離した安価なコピーを作ります。内部のリソースやリストは元と「共有」されたままです。その共有が欲しいときだけ選んでください - そうでなければ リソースをコピー (独立) を使います。
+copy of [i]{resource}[/i] (sub-resources shared),[i]{resource}[/i] のコピー (サブリソース共有)
+Deep Copy,深いコピー
+"Copies the array AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Array only copies the outer level.",配列と、その中に入れ子になったすべてのリスト・辞書までコピーします。コピーを編集しても元には届きません。配列をコピー は外側だけをコピーします。
+Variables: Array,変数: 配列
+deep copy of [b]{var_name}[/b],[b]{var_name}[/b] の深いコピー
+Array,配列
+Array variable to copy right through.,まるごとコピーする配列変数。
+"Copies the dictionary AND every list or dictionary nested inside it, so editing the copy cannot reach back into the original. Copy Dictionary only copies the outer level.",辞書と、その中に入れ子になったすべてのリスト・辞書までコピーします。コピーを編集しても元には届きません。辞書をコピー は外側だけをコピーします。
+Variables: Dictionary,変数: 辞書
+Dictionary,辞書
+Dictionary variable to copy right through.,まるごとコピーする辞書変数。
+Copy Values From,値をコピー元から取り込む
+"Pours a list of values off another object onto this one, in one row instead of one row per property. Names the target does not have are skipped, so a single preset can serve several kinds of node.",他のオブジェクトから値のリストをこのオブジェクトへ流し込みます。プロパティごとに 1 行ではなく 1 行で済みます。相手が持たない名前は飛ばすので、1 つのプリセットで複数種類のノードに使えます。
+copy [b]{names}[/b] from [i]{source}[/i] into [i]{target}[/i],[i]{source}[/i] の [b]{names}[/b] を [i]{target}[/i] にコピー
+The object being written to - it is what changes.,書き込まれる側のオブジェクト - 変わるのはこちらです。
+The object to read from - a node OR a resource.,読み取り元のオブジェクト - ノードでもリソースでも構いません。
+Names,名前
+Comma-separated property names. Leave blank to copy every variable the source's script declares.,カンマ区切りのプロパティ名。空にすると、コピー元スクリプトが宣言するすべての変数をコピーします。
+Fill Blanks From,空欄を埋める元
+"Writes a base's values ONLY into fields this object left empty, leaving everything you did fill in alone. That is the override chain: a base item plus a rarity variant, or a shipped table plus a mod file. Empty means nothing there: no value at all, blank text, an empty list or an empty record - a 0 and a false are real values and are kept, exactly as Is Nothing and Missing Fields read them.",ベースの値を、このオブジェクトが空のままにした項目だけに書き込みます。あなたが埋めた項目には触れません。これが上書きの連鎖です - ベースアイテム + レアリティ違い、同梱テーブル + MOD ファイルなど。空とは何も無いこと、つまり値なし・空文字・空のリスト・空のレコードです。0 と false は本物の値なので保持されます。何も無い と 欠けている項目 の読み方と同じです。
+fill blanks in [i]{target}[/i] from [i]{base}[/i],[i]{base}[/i] から [i]{target}[/i] の空欄を埋める
+Fill,埋める対象
+The one being completed - it is what changes.,補完される側 - 変わるのはこちらです。
+Where the missing values come from.,足りない値の取得元。
+Apply Preset To Node,プリセットをノードに適用
+"Pours a data asset's fields onto the same-named properties of a node, so difficulty tiers, weapon tunings and boss phases become a data edit instead of a wall of rows.",データアセットの各項目を、同名のノードのプロパティへ流し込みます。難易度段階、武器の調整値、ボスのフェーズが、行の壁ではなくデータ編集になります。
+apply preset [b]{preset}[/b] to [i]{target}[/i],プリセット [b]{preset}[/b] を [i]{target}[/i] に適用
+Preset,プリセット
+The data asset to pour on (a .tres you filled in the Inspector). Nothing happens if it is empty.,流し込むデータアセット (インスペクターで入力した .tres)。空なら何も起こりません。
+The node to apply it to.,適用先のノード。
+Matches Properties Of,プロパティが一致する
+"True while the listed properties hold the same values on both objects - the cheap 'is this ghost still in sync' or 'has anything changed' check. A name neither object has reads as NOT matching, so a typo shows up instead of quietly passing, and either side being gone reads as not matching too.",列挙したプロパティが両方のオブジェクトで同じ値である間、真になります - 「このゴーストはまだ同期しているか」「何か変わったか」を安く確かめる条件です。どちらのオブジェクトも持たない名前は「一致しない」と読まれるので、打ち間違いが黙って通らずに表に出ます。どちらか一方が消えている場合も一致しません。
+[i]{target}[/i] matches [b]{names}[/b] of [i]{other}[/i],[i]{target}[/i] は [i]{other}[/i] の [b]{names}[/b] と一致する
+Object,オブジェクト
+The object to test.,検査するオブジェクト。
+"Comma-separated property names to compare. A blank list has nothing to compare, so it is true.",比較するプロパティ名をカンマ区切りで。空のリストは比べるものが無いので真になります。
+Of,比較対象
+The object to compare against.,比較の相手となるオブジェクト。
+Data Is Older Than Version,データが指定バージョンより古い
+"True when a loaded record was written by an older build than this one - the gate a migration sits under. A record with NO version field counts as 0, so the very first format upgrades too, and so does one whose version field is empty or is not a number at all.",読み込んだレコードが、このビルドより古いビルドで書かれたときに真になります - マイグレーションを置く条件です。バージョン項目が「無い」レコードは 0 として数えるので、いちばん最初の形式も更新されます。バージョン項目が空だったり数値でない場合も同様です。
+[b]{record}[/b] is older than version [b]{version}[/b],[b]{record}[/b] はバージョン [b]{version}[/b] より古い
+Record,レコード
+"The parsed record (a save file, a payload, a manifest).",解析済みのレコード (セーブファイル、ペイロード、マニフェスト)。
+Field,項目
+Which field holds the version number.,バージョン番号が入っている項目。
+Version,バージョン
+The version this build writes.,このビルドが書き込むバージョン。
+Rename Field,項目名を変更
+"Moves a value to its new field name, and does nothing at all when the old name is not there - so a migration is safe to run twice.",値を新しい項目名へ移します。古い名前が無ければ何もしないので、マイグレーションを 2 回実行しても安全です。
+rename [b]{from_field}[/b] to [b]{to_field}[/b] in [i]{record}[/i],[i]{record}[/i] の [b]{from_field}[/b] を [b]{to_field}[/b] に改名
+"The record to migrate, edited in place.",移行するレコード。その場で書き換えられます。
+The old field name.,古い項目名。
+The new field name (overwritten if it is already there).,新しい項目名 (すでにある場合は上書きされます)。
+Stamp Data Version,データバージョンを刻む
+"Writes the current format number onto a record, so the next load knows it has already been migrated. Data Is Older Than Version reads it back, and reads it as 0 when it is missing or is not a number.",現在のフォーマット番号をレコードに書き込み、次回の読み込みで「すでに移行済み」と分かるようにします。データが指定バージョンより古い が読み戻し、値が無い場合や数値でない場合は 0 として読みます。
+stamp [i]{record}[/i] as version [b]{version}[/b],[i]{record}[/i] にバージョン [b]{version}[/b] を刻む
+The record to stamp.,刻む対象のレコード。
+The version this build writes - a whole number.,このビルドが書き込むバージョン - 整数です。
+Table From File,ファイルからの表
+"Reads a .csv whose FIRST line is the column names and gives you one record per row, each field reachable by column name - row[""price""]. Quoted cells may contain the separator, Windows line endings are fine, and a missing file simply gives no rows. Store it in an Array variable, then walk it with a For Each pick filter.","最初の行が列名になっている .csv を読み、1 行につき 1 レコードを返します。各項目は列名で取り出せます - row[""price""]。引用符で囲んだセルには区切り文字を入れられ、Windows の改行も問題なく、ファイルが無ければ単に行が 0 件になります。結果は配列変数に入れ、For Each のピックフィルターで回してください。"
+Files: Tables,ファイル: 表
+rows of [b]{path}[/b],[b]{path}[/b] の行
+File,ファイル
+The .csv to read. Its FIRST line must be the column names.,読み込む .csv。最初の行が列名でなければなりません。
+Separator,区切り文字
+What separates the columns in that file.,そのファイルで列を区切っているもの。
+Comma,カンマ
+Semicolon,セミコロン
+Tab,タブ
+Table From Text,テキストからの表
+"The same column-names-first parse as Table From File, but over text you already hold instead of a file on disk.",ファイルからの表 と同じ「1 行目が列名」の解析を、ディスク上のファイルではなく手元のテキストに対して行います。
+rows in [b]{text}[/b],[b]{text}[/b] 内の行
+"Spreadsheet text you already have - a pasted blob, a downloaded body, a file you read earlier. FIRST line = the column names.",すでに手元にある表計算のテキスト - 貼り付けた塊、ダウンロードした本文、先に読み込んだファイルなど。最初の行 = 列名です。
+Column Of Table,表の列
+"Gives one whole column as a list, in row order - handy for a dropdown's items, a weights list, or a quick sum. A row missing that column contributes empty text.",1 列まるごとを行順のリストとして返します - ドロップダウンの項目、重みのリスト、手早い合計に便利です。その列が無い行は空文字を返します。
+column [b]{column}[/b] of [b]{table}[/b],[b]{table}[/b] の列 [b]{column}[/b]
+Table,表
+The rows-of-records variable a Table From File (or Table From Text) expression filled.,ファイルからの表 (または テキストからの表) の式が詰めた、レコードの行を持つ変数。
+Column,列
+"The column name to read, exactly as it is spelled in the header row.",読み取る列名。見出し行と全く同じつづりで書いてください。
+Row Where,条件に合う行
+"Finds the FIRST record whose column holds this value - the single-item lookup, e.g. the row for item ""sword"". Gives an empty record when nothing matches, so check it with Dictionary Is Empty before reading fields.","指定した列がこの値を持つ「最初の」レコードを探します - 単一項目の検索、たとえばアイテム ""sword"" の行です。一致が無ければ空のレコードを返すので、項目を読む前に 辞書が空 で確認してください。"
+row of [b]{table}[/b] where [b]{column}[/b] is [b]{value}[/b],[b]{table}[/b] のうち [b]{column}[/b] が [b]{value}[/b] の行
+"The column to match on, exactly as it is spelled in the header row.",照合に使う列。見出し行と全く同じつづりで書いてください。
+Is,が
+"The value to look for. Compared as text, so 25 and ""25"" both match a cell reading 25.","探す値。テキストとして比較するので、25 でも ""25"" でも 25 と書かれたセルに一致します。"
+For Each Line In Text,テキストの各行について
+"Runs this event's actions once per LINE of the text, skipping blank ones. Windows (CRLF) and old-Mac (CR) endings are handled, so no line arrives with a stray carriage return. Read the current one as `line`.",テキストの 1 行ごとに、このイベントのアクションを 1 回ずつ実行します。空行は飛ばします。Windows (CRLF) や旧 Mac (CR) の改行にも対応するので、余分な復帰文字が付いた行は来ません。現在の行は `line` で読めます。
+Loops,ループ
+for each line in [b]{text}[/b],[b]{text}[/b] の各行について
+"The text to walk line by line - a file you read, a pasted blob, a leaderboard body.",1 行ずつたどるテキスト - 読み込んだファイル、貼り付けた塊、ランキングの本文など。
+For Each Part In Text,テキストの各部分について
+"Runs this event's actions once per PIECE of the text. Each piece arrives with its surrounding spaces trimmed, and empty pieces are skipped, so ""sword; shield;; bow"" is three parts. Read the current one as `part`.","テキストの 1 かたまりごとに、このイベントのアクションを 1 回ずつ実行します。各かたまりは前後の空白が取り除かれて届き、空のかたまりは飛ばすので ""sword; shield;; bow"" は 3 つの部分になります。現在の部分は `part` で読めます。"
+for each part of [b]{text}[/b] split by [b]{separator}[/b],[b]{separator}[/b] で区切った [b]{text}[/b] の各部分について
+"The text to break up - a tag list, a chat command's arguments, one cell of a spreadsheet.",分割するテキスト - タグの一覧、チャットコマンドの引数、表計算の 1 セルなど。
+Split by,区切り文字
+"What separates the pieces, e.g. "","" or "";"" or "" "".","かたまりを区切るもの。たとえば "","" や "";"" や "" "" です。"
+For Each Resource In Folder,フォルダー内の各リソースについて
+"Runs this event's actions once per data asset (.tres / .res) in a folder, already loaded - the ""a folder of items IS my item list"" setup, with no list to maintain. A folder that is not there walks nothing (quietly - it is checked first, so a loop that runs every frame cannot spam errors), and anything that fails to load is skipped rather than arriving as null. Read the current one as `entry`.",フォルダー内のデータアセット (.tres / .res) ごとに、読み込み済みの状態でこのイベントのアクションを 1 回ずつ実行します - 「アイテムのフォルダーがそのままアイテム一覧」という作り方で、維持すべきリストはありません。フォルダーが無い場合は何も回りません (静かに - 先に存在を確認するので、毎フレーム走るループでもエラーを撒き散らしません)。読み込みに失敗したものは null として届かず、飛ばされます。現在のものは `entry` で読めます。
+for each resource in [b]{folder}[/b],[b]{folder}[/b] 内の各リソースについて
+Folder of data assets to walk. Only .tres / .res files are loaded; anything else in there is ignored.,たどるデータアセットのフォルダー。読み込まれるのは .tres / .res のみで、それ以外は無視されます。
+Text Before,手前のテキスト
+"The part of the text before the first marker: Text Before(""Ada [angry]: hi"", "" ["") is ""Ada"". When the marker is not there you get the whole text back, so nothing is silently lost.","最初の目印より手前の部分: 手前のテキスト(""Ada [angry]: hi"", "" ["") は ""Ada"" です。目印が無い場合はテキスト全体が返るので、黙って失われるものはありません。"
+the part of {text} before {marker},{text} のうち {marker} より手前
+The line to read a piece out of.,一部分を取り出す元の行。
+Before,手前
+The marker to stop at (the first one wins).,そこで止まる目印 (最初のものが優先)。
+Text After,その後のテキスト
+"Everything after the first marker: Text After(""Ada [angry]: hi"", ""]: "") is ""hi"". Empty when the marker is not there, because then there is no ""after"".","最初の目印より後ろのすべて: その後のテキスト(""Ada [angry]: hi"", ""]: "") は ""hi"" です。目印が無い場合は「その後」が存在しないので空になります。"
+the part of {text} after {marker},{text} のうち {marker} より後ろ
+After,その後
+The marker to start after (the first one wins).,その後ろから始める目印 (最初のものが優先)。
+Text Between,あいだのテキスト
+"The part between two markers: Text Between(""Ada [angry]: hi"", ""["", ""]"") is ""angry"". Empty when the opening marker is missing, and the rest of the text when the closing one is.","2 つの目印にはさまれた部分: あいだのテキスト(""Ada [angry]: hi"", ""["", ""]"") は ""angry"" です。開き目印が無ければ空、閉じ目印が無ければ残りのテキスト全部になります。"
+the part of {text} between {open} and {close},{text} のうち {open} と {close} のあいだ
+The opening marker.,開きの目印。
+The closing marker.,閉じの目印。
+Number In Text,テキスト中の数値
+"The first number found anywhere in the text, whole or decimal: ""Chapter 3"" gives 3, ""v1.25-beta"" gives 1.25. You get 0 when there is no number at all, and you never write a pattern.","テキストのどこかにある最初の数値 (整数でも小数でも): ""Chapter 3"" は 3、""v1.25-beta"" は 1.25 になります。数値が 1 つも無ければ 0 が返り、パターンを書く必要は一切ありません。"
+the first number in {text},{text} 中の最初の数値
+Text that has a number somewhere in it.,どこかに数値が入っているテキスト。
+Split Keeping Quotes,引用符を保って分割
+"Splits text on a separator but keeps anything inside ""double quotes"" together as one piece, and drops the quotes: give ""iron sword"" 2 is three pieces, not four. Empty pieces are skipped, so runs of separators never produce blanks.","区切り文字で分割しますが、""二重引用符"" の中はひとかたまりのまま保ち、引用符自体は取り除きます: give ""iron sword"" 2 は 4 つではなく 3 つの部分です。空の部分は飛ばすので、区切り文字が連続しても空欄は生まれません。"
+"pieces of {text}, keeping quotes together",{text} の各部分 (引用符内はひとまとめ)
+"The line to split - a console entry, a search box, a pasted cell.",分割する行 - コンソール入力、検索欄、貼り付けたセルなど。
+What separates the pieces OUTSIDE quotes.,引用符の「外側」で各部分を区切るもの。
+Explain JSON Problem,JSON の問題を説明
+"Why this JSON failed to parse, with the line: ""line 4: Expected ':'"". Empty when it parses fine, so an empty result IS the all-clear. Log it and the bug report writes itself. Branch on this verb's own emptiness (Text Is Blank, inverted) rather than on JSON Is Valid: that condition reads a file holding just the word null as invalid, and this one has nothing to say about it, so pairing them logs an error with a blank reason.","この JSON が読み取れなかった理由を行番号つきで返します: ""line 4: Expected ':'""。正しく読めたときは空になるので、空の結果が「問題なし」を意味します。ログに出せば不具合報告がそのまま書き上がります。分岐は JSON が有効 ではなく、この動詞自身の空かどうか (テキストが空白 の否定) で行ってください。あの条件は null という語だけのファイルを無効と読みますが、この動詞はそれについて何も言うことがないため、組み合わせると理由が空のエラーが記録されます。"
+JSON,JSON
+why {text} is not valid JSON,{text} が有効な JSON でない理由
+"The JSON text to check - a file you read, a paste, a server reply.",検査する JSON テキスト - 読み込んだファイル、貼り付け、サーバーの応答など。
+Explain Table Problem,表の問題を説明
+"The first cell of a table that should be a number and is not, said out loud: ""row 12, column ""price"": ""abc"" is not a number"". Rows are counted from 1 over the rows you hold - Table From File has already used up the header line, so row 12 is line 13 of the file. A row that is not a record at all is reported too. Empty when every listed column checks out.","数値であるべきなのにそうでない、表の最初のセルを言葉で伝えます: ""row 12, column ""price"": ""abc"" is not a number""。行番号は手元の行を 1 から数えます - ファイルからの表 はすでに見出し行を使っているので、row 12 はファイルの 13 行目です。そもそもレコードでない行も報告されます。挙げた列がすべて問題なければ空になります。"
+what is wrong in {records},{records} のどこが問題か
+Rows,行
+"A list of records - one per row, each field reachable by column name.",レコードのリスト - 1 行につき 1 件、各項目は列名で取り出せます。
+Number columns,数値の列
+The columns that must hold numbers.,数値が入っていなければならない列。
+Missing Fields,欠けている項目
+"The listed fields that are missing or left blank, comma-separated, and empty when the record is complete. Blank means nothing there: null, empty text, an empty list or an empty record - a 0 is a real value and is never reported.",挙げた項目のうち、無いか空のままのものをカンマ区切りで返します。レコードが揃っていれば空です。空とは何も無いこと、つまり null・空文字・空のリスト・空のレコードです。0 は本物の値なので報告されません。
+the fields missing from {record},{record} に欠けている項目
+A record or a resource to check.,検査するレコードまたはリソース。
+Fields,項目
+"The fields it must have filled in, separated by commas.",埋まっていなければならない項目を、カンマ区切りで。
+Shorten To Fit,収まるように短縮
+"Trims text to a maximum number of characters and marks the cut with the ending you choose, so a clipped name never reads as the whole name. Text that already fits comes back untouched, and the result never runs past the width you gave - a width too narrow to hold the ending simply cuts without one. Cuts mid-word: use Shorten To Whole Words when the cut should land on a word boundary.",テキストを最大文字数まで切り詰め、選んだ末尾記号で切断を示します。切られた名前が丸ごとの名前に見えることはありません。すでに収まっているテキストはそのまま返り、結果が指定した幅を超えることはありません - 末尾記号すら入らない幅なら、記号なしで切ります。単語の途中で切るので、単語の切れ目で切りたいときは 単語単位で短縮 を使ってください。
+shorten [b]{text}[/b] to [b]{max_chars}[/b] characters,[b]{text}[/b] を [b]{max_chars}[/b] 文字に短縮
+The text that has to fit.,収める必要があるテキスト。
+Max characters,最大文字数
+"The widest the result may get, in characters, counting the ending below.",結果が取ってよい最大の幅 (文字数)。下の末尾記号も数に含みます。
+Ending,末尾記号
+"What marks the cut, e.g. ""..."" or a single ellipsis character. Its own length is taken out of the budget.","切断を示すもの。たとえば ""..."" や三点リーダー 1 文字です。その長さ自体が予算から差し引かれます。"
+Shorten To Whole Words,単語単位で短縮
+"Like Shorten To Fit, but backs up to the last complete word before cutting, so ""Ancient Sword of Thorns"" reads ""Ancient Sword..."" instead of ""Ancient Sword of Th"". When the budget holds no whole word (one very long word) it falls back to cutting by characters, and when it is too narrow to hold the ending at all it cuts without one - so the result is never just the ending, and never wider than you asked for.","収まるように短縮 と同じですが、切る前に最後の完全な単語まで戻ります。そのため ""Ancient Sword of Thorns"" は ""Ancient Sword of Th"" ではなく ""Ancient Sword..."" と表示されます。予算に完全な単語が 1 つも入らない場合 (とても長い単語 1 語など) は文字単位の切り詰めに切り替わり、末尾記号すら入らないほど狭い場合は記号なしで切ります - つまり結果が末尾記号だけになることも、指定より広くなることもありません。"
+shorten [b]{text}[/b] to whole words within [b]{max_chars}[/b],[b]{text}[/b] を [b]{max_chars}[/b] 以内で単語単位に短縮
+With Thousands Separators,桁区切りつき
+"Turns a number into grouped digits a player can take in at a glance: 1234567 reads ""1,234,567"". Whole numbers only (the fraction is dropped); a negative keeps its minus sign. For idle-game scale (1.23e15, ""1.23 Qa"") reach for the Big Numbers pack instead.","数値を、プレイヤーが一目でつかめる桁区切りの表記にします: 1234567 は ""1,234,567"" になります。整数のみ (小数部は捨てられます)。負の値はマイナス記号を保ちます。放置ゲーム規模 (1.23e15、""1.23 Qa"") には 大きな数 パックを使ってください。"
+[b]{value}[/b] with thousands separators,桁区切りつきの [b]{value}[/b]
+The number to make readable. Anything after the decimal point is dropped.,読みやすくする数値。小数点以下は捨てられます。
+As Percent Text,パーセント表記
+"Turns a fraction into percent TEXT with the sign on it: 0.73 reads ""73%"". Feed it a 0-to-1 value (Percent Of already returns 0-to-100, so divide that by 100 or use the raw fraction).","割合をパーセント記号つきの「テキスト」にします: 0.73 は ""73%"" になります。0 から 1 の値を渡してください (パーセント は 0 から 100 を返すので、100 で割るか生の割合を使います)。"
+[b]{value}[/b] as a percent,[b]{value}[/b] をパーセントで
+Fraction,割合
+"A fraction where 1.0 means full, e.g. health / max_health.",1.0 が満杯を意味する割合。たとえば health / max_health です。
+Decimals,小数桁数
+Digits after the decimal point. 0 gives a whole percent.,小数点以下の桁数。0 なら整数のパーセントになります。
+As Duration,経過時間表記
+"Seconds as a duration that survives passing an hour: 3725 reads ""1h 02m"" and 90 reads ""1m 30s"". A negative duration reads as zero. Use As Clock Time when you want strict mm:ss (it rolls an hour into ""60:00"").","1 時間を超えても破綻しない経過時間表記: 3725 は ""1h 02m""、90 は ""1m 30s"" になります。負の長さは 0 として読まれます。厳密な mm:ss が欲しいときは 時計表記 を使ってください (そちらは 1 時間を ""60:00"" にします)。"
+[b]{seconds}[/b] as a duration,[b]{seconds}[/b] を経過時間で
+Seconds,秒
+A duration in seconds.,秒単位の長さ。
+Align Left,左揃え
+"Pads text out on the RIGHT to a fixed width, so every row starts on the same edge and reads as a column. Text longer than the width is left alone (it is never cut - shorten it first). Give the Label a MONOSPACE theme font or the column will still drift.",テキストの「右側」を埋めて固定幅にします。どの行も同じ端から始まり、列として読めます。幅より長いテキストはそのままです (切りません - 先に短縮してください)。Label のテーマフォントを等幅にしないと、列はやはりずれます。
+[b]{text}[/b] aligned left in [b]{width}[/b],[b]{width}[/b] 幅で左揃えの [b]{text}[/b]
+The text to pad out.,埋めて広げるテキスト。
+Width,幅
+Column width in characters. Shorter text is padded; longer text is left as it is.,列の幅 (文字数)。短いテキストは埋められ、長いテキストはそのままです。
+Fill with,埋める文字
+"What fills the gap: a space, or ""."" for a dotted leader. One character.","隙間を埋めるもの: 空白、または点線にするなら "".""。1 文字です。"
+Align Right,右揃え
+"Pads text out on the LEFT to a fixed width, so numbers END on the same edge and read as a column of figures. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the column will still drift.",テキストの「左側」を埋めて固定幅にします。数値が同じ端で「終わり」、数字の列として読めます。幅より長いテキストはそのままです。Label のテーマフォントを等幅にしないと、列はやはりずれます。
+[b]{text}[/b] aligned right in [b]{width}[/b],[b]{width}[/b] 幅で右揃えの [b]{text}[/b]
+The text to pad out - str() a number first.,埋めて広げるテキスト - 数値はまず str() で文字列にしてください。
+Center In Width,幅の中で中央揃え
+"Pads text on BOTH sides to a fixed width, so a heading sits in the middle of a column. An odd leftover space goes on the right. Text longer than the width is left alone. Give the Label a MONOSPACE theme font or the centering will still drift.",テキストの「両側」を埋めて固定幅にします。見出しが列の中央に置かれます。余りが奇数のときは右側に回ります。幅より長いテキストはそのままです。Label のテーマフォントを等幅にしないと、中央揃えはやはりずれます。
+[b]{text}[/b] centered in [b]{width}[/b],[b]{width}[/b] 幅の中央に置いた [b]{text}[/b]
+The text to center.,中央に置くテキスト。
+As Title Text,見出し用テキストに
+"Turns a machine id into a readable name: ""fire_sword"" reads ""Fire Sword"", ""maxHealth"" reads ""Max Health"". Use it wherever a key has to be shown to a player, so ids and labels never drift apart in two places.","機械向けの id を読みやすい名前にします: ""fire_sword"" は ""Fire Sword""、""maxHealth"" は ""Max Health"" になります。キーをプレイヤーに見せる場所すべてで使えば、id と表示名が 2 か所でずれることがありません。"
+[b]{text}[/b] as title text,見出し用にした [b]{text}[/b]
+"An id or key, e.g. fire_sword or maxHealth.",id やキー。たとえば fire_sword や maxHealth です。
+As Sentence Text,文頭を大文字に
+"Raises the FIRST letter only and leaves the rest of the text exactly as it is, so ""NPC"" and ""HP"" keep their capitals. Empty text stays empty.","「最初の 1 文字だけ」を大文字にし、残りはそのままにします。だから ""NPC"" や ""HP"" は大文字のまま保たれます。空のテキストは空のままです。"
+[b]{text}[/b] as sentence text,文頭を大文字にした [b]{text}[/b]
+A sentence that needs its first letter raised.,最初の 1 文字を大文字にしたい文。
+Translated Text From Pattern,パターンからの翻訳テキスト
+"Looks the whole sentence up in the current language FIRST, then fills its {slots}. The pattern you type here - slots and all - is the translation key, so it is what goes in the catalog. Filling the slots first (Translate around Text From Pattern) produces a string no catalog can contain, and the text then never translates.",まず文全体を現在の言語で「引いて」から、その {slots} を埋めます。ここに書いたパターンは、スロットも含めてそのまま翻訳キーになるので、カタログにはこれを載せます。先にスロットを埋めてしまうと (パターンからのテキスト を 翻訳 で包む書き方) どのカタログにも存在しない文字列ができ、そのテキストは二度と翻訳されません。
+Translation,翻訳
+translated text from [b]{pattern}[/b],[b]{pattern}[/b] からの翻訳テキスト
+Pattern,パターン
+"The source sentence, with {name} slots. This exact string, slots and all, is the translation key that goes in the catalog.",元となる文。{name} のスロットを含みます。この文字列そのものが、スロットも含めてカタログに載る翻訳キーです。
+Values,値
+"What fills the slots: {""name"": value, ...} - e.g. {""coins"": coins}.","スロットを埋めるもの: {""name"": value, ...} - たとえば {""coins"": coins} です。"
+Set Text (translated pattern),テキストを設定 (翻訳パターン)
+Sets this Label's text from a pattern that is translated FIRST and filled second. The pattern - slots and all - is the translation key. Re-run it under On Language Changed so the label follows a live language switch.,この Label のテキストを、先に翻訳してから埋めるパターンで設定します。パターンは、スロットも含めてそのまま翻訳キーです。言語が変わったとき の下でもう一度実行すれば、実行中の言語切り替えにラベルが追従します。
+set text to translated [b]{pattern}[/b],テキストを翻訳した [b]{pattern}[/b] に設定
+Text Is A Number,テキストが数値
+"True when this text would convert to a number cleanly. Ask it BEFORE converting, so a typo can never arrive as a silent 0 and the sheet bet nothing. Spaces around the number are ignored; empty text is not a number.",このテキストがきれいに数値へ変換できるとき真になります。変換する「前に」尋ねてください。そうすれば打ち間違いが黙って 0 になり、シートが何も賭けていない状態になることを防げます。数値の前後の空白は無視され、空のテキストは数値ではありません。
+Compare: Text,比較: テキスト
+{text} is a number,{text} が数値
+"Text to test - a typed-in field, a value read back out of a save, a CSV or JSON cell.",検査するテキスト - 手入力の欄、セーブから読み戻した値、CSV や JSON のセルなど。
+Text Is A Whole Number,テキストが整数
+"True when this text would convert to a WHOLE number cleanly - a count, a level, a slot index. ""12"" passes and ""12.5"" does not, which is the only difference from Text Is A Number.","このテキストがきれいに「整数」へ変換できるとき真になります - 個数、レベル、スロット番号など。""12"" は通り、""12.5"" は通りません。テキストが数値 との違いはそこだけです。"
+{text} is a whole number,{text} が整数
+"Text to test - a count, a level number, a save slot, a seed.",検査するテキスト - 個数、レベル番号、セーブスロット、シードなど。
+Contains Any Of,いずれかを含む
+"True when the text contains at least ONE of the listed pieces - a chat filter, a keyword-triggered line, a tag-gated card. Unlike Text Is One Of, which needs the WHOLE text to equal an entry, this looks INSIDE the text. Matching is case-sensitive, and an empty list is never a match.",列挙した断片のうち「少なくとも 1 つ」をテキストが含むとき真になります - チャットのフィルター、キーワードで出るセリフ、タグで開くカードなど。テキスト全体が項目と等しいことを求める テキストがいずれかと一致 と違い、こちらはテキストの「中」を見ます。大文字小文字は区別し、空のリストは決して一致しません。
+{text} contains any of {options},{text} が {options} のいずれかを含む
+Text to search.,検索するテキスト。
+Any Of,いずれか
+"List of pieces to look for - written here, or a sheet variable someone can edit without touching this row.",探す断片のリスト - ここに直接書いても、この行に触れずに誰かが編集できるシート変数にしても構いません。
+Contains All Of,すべてを含む
+"True only when the text contains EVERY listed piece - a combo whose rule text names two keywords, a search box where all the words must match. An empty list counts as true, because nothing is missing.",列挙した断片を「すべて」含むときにだけ真になります - ルール文に 2 つのキーワードが並ぶコンボ、すべての語が一致しなければならない検索欄など。空のリストは、欠けているものが無いので真とみなされます。
+{text} contains all of {options},{text} が {options} をすべて含む
+All Of,すべて
+List of pieces that must ALL appear.,すべて現れなければならない断片のリスト。
+Contains None Of,いずれも含まない
+"True when the text contains none of the listed pieces - the accept-this-name branch, written as the thing you want to act on instead of an Else. An empty list always passes.",列挙した断片をどれも含まないとき真になります - 「この名前を受け入れる」分岐を、Else ではなく実際に処理したい側として書けます。空のリストは常に通ります。
+{text} contains none of {options},{text} が {options} をいずれも含まない
+None Of,いずれも
+List of pieces that must NOT appear.,現れてはならない断片のリスト。
+Number From Text,テキストからの数値
+"Reads a number out of text, or hands back the fallback YOU chose - never a surprise zero. Pair it with Text Is A Number when the two cases need different rows. The text is read twice in the emitted line, so keep it a plain read and not something that changes the game.",テキストから数値を読み取ります。読めない場合は「あなたが選んだ」代わりの値を返し、不意の 0 になることはありません。2 つの場合で行を分けたいときは テキストが数値 と組み合わせてください。生成される行の中でテキストは 2 回読まれるので、単なる読み取りにとどめ、ゲームの状態を変えるものは渡さないでください。
+Variables: String,変数: 文字列
+number from {text} (or {fallback}),{text} からの数値 ({fallback} でも可)
+Text to read a number out of.,数値を読み取る元のテキスト。
+What you get back when the text is not a number.,テキストが数値でないときに返る値。
+Whole Number From Text,テキストからの整数
+"Reads a whole number out of text, or hands back your fallback. ""12.5"" is not a whole number, so it lands on the fallback rather than quietly becoming 12 - when you want that rounding, use Number From Text and round the result yourself.","テキストから整数を読み取ります。読めない場合は指定した代わりの値を返します。""12.5"" は整数ではないので、黙って 12 になるのではなく代わりの値になります - その丸めが欲しいときは テキストからの数値 を使い、自分で丸めてください。"
+whole number from {text} (or {fallback}),{text} からの整数 ({fallback} でも可)
+Text to read a whole number out of.,整数を読み取る元のテキスト。
+What you get back when the text is not a whole number.,テキストが整数でないときに返る値。
+Is Nothing,何も無い
+"True when there is nothing there: no value at all, empty text, an empty list (including an empty Split Text result), or an empty record - one row whatever the value turns out to be. A 0 is NOT nothing, because a score of zero is a real value, and neither is text made only of spaces (that is Text Is Blank).",そこに何も無いとき真になります: 値そのものが無い、空のテキスト、空のリスト (テキストを分割 の空の結果を含む)、空のレコード - 値がどの型でも 1 行で済みます。0 は「何も無い」ではありません。スコア 0 は本物の値だからです。空白だけのテキストも該当しません (それは テキストが空白 です)。
+Compare: Types,比較: 型
+{value} is nothing,{value} は何も無い
+"Anything - text, a list, a record, a reference.",何でも - テキスト、リスト、レコード、参照など。
+Has Something,何かが入っている
+"True when there IS something there - a name was typed, the inventory has items, the save slot was written, the item slot is filled. The exact opposite of Is Nothing, for the times the filled case is the one you want to act on.",そこに何かが「ある」とき真になります - 名前が入力された、インベントリにアイテムがある、セーブスロットが書き込まれている、装備欄が埋まっている、など。何も無い のちょうど反対で、埋まっている側を処理したいときに使います。
+{value} has something,{value} に何かが入っている
+Number Or,数値、なければ
+"The value when it really is a number, or your own default when it is missing, null, text, or anything else. A zero counts as a real number and is kept. Use it to put a loaded value straight into a whole-number or decimal variable without a guard row first. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.",本当に数値であればその値を、そうでなければ (無い・null・テキスト・その他) あなたが決めた既定値を返します。0 は本物の数値として保持されます。読み込んだ値を、ガード行なしでそのまま整数や小数の変数へ入れるのに使えます。生成される行の中で値は 2 回読まれるので、単なる読み取りにとどめ、ゲームの状態を変えるものは渡さないでください。
+Variables,変数
+"{value} as a number, or {fallback}",{value} を数値として、なければ {fallback}
+"The untyped value to check - a save slot read, a JSON field, a Dictionary key.",検査する型なしの値 - セーブスロットの読み取り、JSON の項目、辞書のキーなど。
+What you get back when it is not a number.,数値でないときに返る値。
+Text Or,テキスト、なければ
+"The value when it really is text with something in it, or your own default when it is missing, null, blank, or another kind of value. The classic use is a saved player name that falls back to ""Player"". The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.","本当に中身のあるテキストであればその値を、そうでなければ (無い・null・空・別の種類の値) あなたが決めた既定値を返します。典型的な用途は、保存したプレイヤー名が無いときに ""Player"" に戻すことです。生成される行の中で値は 2 回読まれるので、単なる読み取りにとどめ、ゲームの状態を変えるものは渡さないでください。"
+"{value} as text, or {fallback}",{value} をテキストとして、なければ {fallback}
+"What you get back when it is not text, or is blank.",テキストでない、または空のときに返る値。
+List Or,リスト、なければ
+"The value when it really is a list with items in it, or your own default when it is missing, null, empty, or another kind of value. A Split Text result counts as a list. Safe to feed straight into a For Each. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.",本当に要素の入ったリストであればその値を、そうでなければ (無い・null・空・別の種類の値) あなたが決めた既定値を返します。テキストを分割 の結果もリストとして数えます。そのまま For Each に渡しても安全です。生成される行の中で値は 2 回読まれるので、単なる読み取りにとどめ、ゲームの状態を変えるものは渡さないでください。
+"{value} as a list, or {fallback}",{value} をリストとして、なければ {fallback}
+"The untyped value to check - a loaded inventory, a JSON array, a Split Text result, a Dictionary key.",検査する型なしの値 - 読み込んだインベントリ、JSON の配列、テキストを分割 の結果、辞書のキーなど。
+"What you get back when it is not a list, or is empty.",リストでない、または空のときに返る値。
+Record Or,レコード、なければ
+"The value when it really is a record (a dictionary) with keys in it, or your own default when it is missing, null, empty, or another kind of value. Pair it with Get Key so a whole missing settings block reads as defaults. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.",本当にキーの入ったレコード (辞書) であればその値を、そうでなければ (無い・null・空・別の種類の値) あなたが決めた既定値を返します。キーを取得 と組み合わせれば、設定ブロックがまるごと無くても既定値として読めます。生成される行の中で値は 2 回読まれるので、単なる読み取りにとどめ、ゲームの状態を変えるものは渡さないでください。
+"{value} as a record, or {fallback}",{value} をレコードとして、なければ {fallback}
+"The untyped value to check - a loaded settings block, a JSON object, a Dictionary key.",検査する型なしの値 - 読み込んだ設定ブロック、JSON のオブジェクト、辞書のキーなど。
+"What you get back when it is not a record, or is empty.",レコードでない、または空のときに返る値。
+Value Or,値、なければ
+"The value unless it is null, in which case your own default. This one guards nothing else: a zero, a blank text and an empty list all count as real values here. Use it for a method that can hand back null. The value is read twice in the emitted line, so keep it a plain read and not something that changes the game.",null でない限りその値を返し、null のときだけあなたが決めた既定値を返します。これはそれ以外を一切見張りません - 0、空のテキスト、空のリストはいずれもここでは本物の値です。null を返しうるメソッドに使ってください。生成される行の中で値は 2 回読まれるので、単なる読み取りにとどめ、ゲームの状態を変えるものは渡さないでください。
+"{value}, or {fallback} when it is nothing",{value}、何も無ければ {fallback}
+"Anything that might be null - a method result, a freed reference, a missing key.",null になりうるもの - メソッドの戻り値、解放された参照、存在しないキーなど。
+What you get back when it is null.,null のときに返る値。
+Part Of,…の成分
+"One named piece of a pair, a triple, a colour or a record: the up/down part of a velocity (the jump-or-fall test), the see-through part of a tint, the forward/back part of a 3D direction. Reads as a sentence instead of a typed-in .y. Pick a part the value actually has - a record that might be missing the field is the shipped Get Key (with default)'s job, because that one takes a fallback and this one does not.",ペア・トリプル・色・レコードの、名前の付いた 1 成分です: 速度の上下成分 (ジャンプ中か落下中かの判定)、色合いの透明度成分、3D の向きの前後成分など。手で書いた .y ではなく、文として読めます。値が実際に持っている成分を選んでください - 項目が無いかもしれないレコードは キーを取得 (既定値つき) の担当です。あちらは代わりの値を取りますが、これは取りません。
+Variables: Vector,変数: ベクトル
+the {part} part of {value},{value} の {part} 成分
+"A Vector2, Vector3, Color or record to read one part of.",1 成分を読み取る Vector2 / Vector3 / Color / レコード。
+Part,成分
+Which named part to read.,どの名前の成分を読むか。
+X (left / right),X (左右)
+Y (up / down),Y (上下)
+Z (forward / back),Z (前後)
+Red,赤
+Green,緑
+Blue,青
+Alpha (see-through),アルファ (透明度)
+Set Part Of,成分を設定
+"Changes one named part and leaves the rest alone: zero the vertical speed on landing and keep the horizontal, flatten a 3D direction to the ground plane, fade only the see-through part of a tint. Writing a part a record does not have yet ADDS it.",名前の付いた 1 成分だけを変え、残りはそのままにします: 着地時に垂直方向の速度を 0 にして水平方向は保つ、3D の向きを地面の平面に押しつぶす、色合いの透明度成分だけをフェードさせる、など。レコードがまだ持っていない成分に書き込むと、その成分が「追加」されます。
+set the {part} part of {var_name} to {value},{var_name} の {part} 成分を {value} にする
+Variable or property,変数またはプロパティ
+"What to change one part of: a node's own member (velocity, modulate, position) picked from the list, or the name of a sheet variable holding a Vector, Color or record.",1 成分を変える対象: リストから選んだノード自身のメンバー (velocity、modulate、position など)、またはベクトル・色・レコードを保持するシート変数の名前。
+Which named part to write.,どの名前の成分に書き込むか。
+The new value for that one part.,その 1 成分に入れる新しい値。

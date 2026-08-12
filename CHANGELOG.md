@@ -2,6 +2,64 @@
 
 ## [Unreleased]
 
+### Added - save slots, runs and recovery (39 verbs on the Save System pack)
+
+The second half of the vocabulary wave, built ON the shipped Save System pack rather than
+beside it: every existing trigger still fires the same way, and every new behavior is inert
+at its defaults.
+
+**A load menu without loading the game.** A reserved header inside the slot file holds
+chapter, hero, percent and the playtime the pack now accumulates itself, read straight off
+disk by **Slot Detail** / **Slot Playtime**, with **Capture Slot Thumbnail** / **Slot
+Thumbnail** for the picture, **Copy Slot**, **Slot Path**, and **For Each Saved Slot** as
+the menu's loop.
+
+**An autosave the sheet can veto.** The Inspector interval now fires **On Autosave Due**
+when a handler is connected, so a boss fight can defer it; with nothing connected it saves
+exactly as before. Around it: **Delay Autosave By**, **Pause** / **Resume Autosave**,
+**Seconds Until Autosave**, **Autosave Is Paused** and **Safe To Save Now**.
+
+**Old saves and broken saves stop being silent.** **On Save Needs Upgrade** fires between
+reading a file and applying it, so the wave-1 migration verbs run in that gap (they are
+reused, not duplicated). The corrupt-read guard used to only push_error; now **On Load
+Failed** / **On Save Failed** fire, **Slot Is Readable** guards a menu tile, and **Slot
+Problem** / **Last Save Problem** give the reason as a sentence.
+
+**Everything saved, with no list to maintain.** **Save All Addons** / **Load All Addons**
+walk the duck-typed save seam that 27 packs already implement, **Addon Saves Itself** catches
+the pack that forgot one, and an addon in the save that the build no longer has is warned
+about rather than dropped.
+
+**What stays out, and what it costs.** **Never Save This Key** drops a key whichever row
+wrote it, **Save Size** and **Save Report** show total bytes, key count and the heaviest keys.
+
+**Recovery and new runs.** A backup ring (off by default) modeled on the sheet backup ring,
+with **Restore Slot From Backup** which backs up the current file first so a restore is never
+one-way, plus **Carry Value Into Next Run** / **Start New Run** / **Run Number** for new
+game plus. An unreadable slot is refused, never reset.
+
+### Added - three editor seams: retype a variable, grids to CSV, paste retargeted
+
+**Change Type Everywhere** turns a variable's type change into a guided, previewed, single
+undoable step instead of leaving every row holding the old shape. **Grid to CSV and back**
+exports a data-asset grid and re-imports it with a real answer about whether it saved.
+**Paste Special** pastes copied rows retargeted to another object in one step.
+
+### Added - a Doctor check for values read back that nothing ever saves
+
+The existing save-support check asks only whether the save seam exists. This one reads the
+emitted scripts and compares what a project READS BACK against what it WRITES, so a value
+you expect to persist but never save is named before a player loses it. Not crying wolf is
+the feature: a write counted from any route (another sheet, a pack's own save_state, the
+Remember Between Runs toggle) clears the key, and the clean cases are pinned in tests.
+
+### Added - two guides, and the localization sweep for the whole wave
+
+**Working with Values (and Copying Them Around)** and **Working with Text (and Reading Data
+Out of It)** document the wave end to end with worked examples. Every new builtin display
+name, template, parameter and dropdown label is translated across all nine bundled languages,
+and the vocabulary catalog is regenerated.
+
 ### Added - 72 verbs for values, text, tables, resources and copying
 
 The first half of a vocabulary wave drawn from a design mockup, in five new modules plus
