@@ -729,3 +729,15 @@ steps,passi
 at,a
 Add Step…,Aggiungi passo…
 Timeline,Timeline
+Render Scene To Image,Renderizza la scena in immagine
+"Instantiates a scene into an off-screen viewport, lets it settle for a frame, and saves what it shows as a PNG - thumbnails, store shots, doc figures, baked sprites. Needs a windowed editor: a headless run has no renderer, so it warns and writes nothing.","Istanzia una scena in un viewport fuori schermo, la lascia assestare per un fotogramma e salva ciò che mostra come PNG: miniature, scatti per lo store, figure di documentazione, sprite precalcolati. Richiede un editor con finestra: un'esecuzione headless non ha renderer, quindi avvisa e non scrive nulla."
+Preview Table Rolls,Anteprima dei tiri della tabella
+"Rolls a weighted table many times and reports what actually came out: per entry the rolled percent, the percent its weight implies, and the gap between them. Pure maths - it runs anywhere, and the same seed always gives the same numbers.","Tira molte volte da una tabella pesata e riporta cosa è uscito davvero: per voce la percentuale ottenuta, la percentuale implicata dal suo peso e la differenza tra le due. Matematica pura: funziona ovunque e lo stesso seme dà sempre gli stessi numeri."
+On Project Export,All'esportazione del progetto
+"Runs while a project export is starting, before the files are written - the place to stamp a build number, bake a data file, or strip debug content.","Viene eseguito all'avvio di un'esportazione del progetto, prima che i file siano scritti: il posto per imprimere un numero di build, precalcolare un file di dati o togliere contenuti di debug."
+Write Version Stamp,Scrivi il timbro di versione
+"Writes a small build stamp file: the version string plus the date and time the stamp was written. The timestamp is read when the tool runs, so the generated code stays identical every save.","Scrive un piccolo file di timbro della build: la stringa di versione più la data e l'ora in cui il timbro è stato scritto. L'orario viene letto quando lo strumento gira, quindi il codice generato resta identico a ogni salvataggio."
+Export Is Debug,L'esportazione è di debug
+True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,Vero quando l'esportazione che ha innescato questo passo è una build di debug. Usalo dentro All'esportazione del progetto per tenere i contenuti di prova fuori dalle build finali.
+Export Has Feature,L'esportazione ha la funzionalità
+"True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.","Vero quando il preset di esportazione che ha innescato questo passo porta l'etichetta di funzionalità indicata: il modo per precalcolare dati diversi per mobile, web o desktop."

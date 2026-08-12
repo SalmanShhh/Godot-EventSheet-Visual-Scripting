@@ -67,6 +67,26 @@ static func run() -> bool:
 	all_passed = _check("no auto-targeted template leads with a keyword a node prefix cannot precede",
 		unprefixable, [] as Array[String]) and all_passed
 
+	# Every brace pair in a codegen template is read as a PARAMETER PLACEHOLDER: the reverse-lifter
+	# turns each one into a named regex capture, "(?<name>.+?)". A pair that does not spell an
+	# identifier - GDScript's empty-dictionary literal `{}` above all - would inject an illegal group
+	# name, and the whole pattern then fails to compile: the ACE drops out of the reverse index
+	# silently AND every import prints a PCRE error, once per lifted function. The builder treats such
+	# a pair as literal text; this pins that it does, and that no shipped template defeats it.
+	var lifter: GDScript = load("res://addons/eventforge/importer/ace_lifter.gd")
+	all_passed = _check("a literal {} in a template is matched as text, not as a capture",
+		lifter._template_to_regex("var d: Dictionary = e if e is Dictionary else {}") != null, true) and all_passed
+	var unliftable: Array[String] = []
+	for descriptor: ACEDescriptor in ACERegistry.get_all_descriptors():
+		var template: String = str(descriptor.codegen_template).strip_edges()
+		if template.is_empty():
+			continue
+		for variant: String in lifter._optional_prefix_variants(template):
+			if lifter._template_to_regex(variant) == null:
+				unliftable.append(str(descriptor.ace_id))
+	all_passed = _check("every registered template builds a legal reverse-lift pattern",
+		unliftable, [] as Array[String]) and all_passed
+
 	return all_passed
 
 

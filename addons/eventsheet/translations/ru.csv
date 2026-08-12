@@ -729,3 +729,15 @@ steps,шагов
 at,в
 Add Step…,Добавить шаг…
 Timeline,Таймлайн
+Render Scene To Image,Отрисовать сцену в изображение
+"Instantiates a scene into an off-screen viewport, lets it settle for a frame, and saves what it shows as a PNG - thumbnails, store shots, doc figures, baked sprites. Needs a windowed editor: a headless run has no renderer, so it warns and writes nothing.","Создаёт сцену во внеэкранном вьюпорте, даёт ей устояться один кадр и сохраняет показанное в PNG: миниатюры, кадры для витрины, иллюстрации к документации, запечённые спрайты. Нужен редактор с окном: в headless-запуске нет рендерера, поэтому выводится предупреждение и ничего не пишется."
+Preview Table Rolls,Предпросмотр бросков таблицы
+"Rolls a weighted table many times and reports what actually came out: per entry the rolled percent, the percent its weight implies, and the gap between them. Pure maths - it runs anywhere, and the same seed always gives the same numbers.","Много раз бросает взвешенную таблицу и сообщает, что выпало на самом деле: по каждой записи выпавший процент, процент, который подразумевает её вес, и разницу между ними. Чистая арифметика: работает где угодно, и одно и то же зерно всегда даёт одни и те же числа."
+On Project Export,При экспорте проекта
+"Runs while a project export is starting, before the files are written - the place to stamp a build number, bake a data file, or strip debug content.","Выполняется в начале экспорта проекта, до записи файлов: место, где ставят номер сборки, запекают файл данных или убирают отладочное содержимое."
+Write Version Stamp,Записать штамп версии
+"Writes a small build stamp file: the version string plus the date and time the stamp was written. The timestamp is read when the tool runs, so the generated code stays identical every save.","Записывает небольшой файл штампа сборки: строку версии плюс дату и время записи штампа. Время читается при запуске инструмента, поэтому генерируемый код остаётся одинаковым при каждом сохранении."
+Export Is Debug,Экспорт отладочный
+True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,"Истинно, когда экспорт, запустивший этот шаг запекания, является отладочной сборкой. Используйте внутри При экспорте проекта, чтобы тестовое содержимое не попадало в релизные сборки."
+Export Has Feature,У экспорта есть функция
+"True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.","Истинно, когда пресет экспорта, запустивший этот шаг запекания, несёт указанный тег функции: так запекают разные данные для мобильных, веба или настольных систем."

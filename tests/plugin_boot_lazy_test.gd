@@ -30,6 +30,11 @@ const FORBIDDEN := {
 	"res://addons/eventforge/editor/export_integrity_plugin.gd": [
 		"SheetCompiler", "EventSheetTemplates",
 	],
+	# The export bake step registers at editor boot like the integrity hook, so it stays on plain
+	# engine classes (DirAccess / FileAccess / Script) and never names a plugin class.
+	"res://addons/eventforge/editor/export_tools_plugin.gd": [
+		"SheetCompiler", "EventSheetWorkflow", "EventSheetProjectFind", "EventSheetTemplates",
+	],
 }
 
 ## Every path the boot scripts lazily load - each must exist, or the deferred feature breaks
@@ -42,6 +47,7 @@ const LAZY_PATHS := [
 	"res://addons/eventsheet/editor/inspector/ace_param_inspector_plugin.gd",
 	"res://addons/eventforge/compiler/sheet_compiler.gd",
 	"res://addons/eventforge/sheet_templates.gd",
+	"res://addons/eventforge/editor/export_tools_plugin.gd",
 ]
 
 

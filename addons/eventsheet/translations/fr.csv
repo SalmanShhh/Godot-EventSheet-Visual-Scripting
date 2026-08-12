@@ -729,3 +729,15 @@ steps,étapes
 at,à
 Add Step…,Ajouter une étape…
 Timeline,Chronologie
+Render Scene To Image,Rendre la scène en image
+"Instantiates a scene into an off-screen viewport, lets it settle for a frame, and saves what it shows as a PNG - thumbnails, store shots, doc figures, baked sprites. Needs a windowed editor: a headless run has no renderer, so it warns and writes nothing.","Instancie une scène dans une fenêtre de rendu hors écran, la laisse se stabiliser une image, puis enregistre ce qu'elle affiche en PNG : vignettes, captures de boutique, figures de documentation, sprites précalculés. Nécessite un éditeur avec fenêtre : une exécution headless n'a pas de moteur de rendu, elle avertit donc et n'écrit rien."
+Preview Table Rolls,Prévisualiser les tirages de table
+"Rolls a weighted table many times and reports what actually came out: per entry the rolled percent, the percent its weight implies, and the gap between them. Pure maths - it runs anywhere, and the same seed always gives the same numbers.","Tire de nombreuses fois dans une table pondérée et rapporte ce qui est réellement sorti : par entrée le pourcentage tiré, le pourcentage impliqué par son poids, et l'écart entre les deux. Des maths pures : cela fonctionne partout, et la même graine donne toujours les mêmes nombres."
+On Project Export,À l'export du projet
+"Runs while a project export is starting, before the files are written - the place to stamp a build number, bake a data file, or strip debug content.","S'exécute au démarrage d'un export du projet, avant l'écriture des fichiers : l'endroit pour estampiller un numéro de build, précalculer un fichier de données ou retirer le contenu de débogage."
+Write Version Stamp,Écrire le tampon de version
+"Writes a small build stamp file: the version string plus the date and time the stamp was written. The timestamp is read when the tool runs, so the generated code stays identical every save.","Écrit un petit fichier de tampon de build : la chaîne de version plus la date et l'heure d'écriture du tampon. L'horodatage est lu à l'exécution de l'outil, donc le code généré reste identique à chaque enregistrement."
+Export Is Debug,L'export est en débogage
+True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,Vrai quand l'export qui a déclenché cette étape est une build de débogage. À utiliser dans À l'export du projet pour garder le contenu de test hors des versions finales.
+Export Has Feature,L'export a la fonctionnalité
+"True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.","Vrai quand le préréglage d'export qui a déclenché cette étape porte l'étiquette de fonctionnalité donnée : la manière de précalculer des données différentes pour mobile, web ou bureau."

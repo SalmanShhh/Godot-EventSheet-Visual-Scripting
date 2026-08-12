@@ -49,7 +49,9 @@ static func run() -> bool:
 	ok = _check("registrar stub carries the category", registrar_stub.contains(".category(\"Weapons\")"), true) and ok
 	var aim_definition: ACEDefinition = comment_registry.find_definition("TerseProviderSample", "method:aim")
 	var aim_stub: String = EventSheetACEAnnotationStub.comment_stub(aim_definition)
-	ok = _check("comment stub emits one-line params", aim_stub.contains("## @ace_param(mode, hint: expression)"), true) and ok
+	# The per-param description rides the same one-line spec (quoted, so a comma in the prose
+	# cannot split it) - dropping it used to lose the only help text the params dialog shows.
+	ok = _check("comment stub emits one-line params", aim_stub.contains("## @ace_param(mode, hint: expression, desc: \"How to aim, roughly.\")"), true) and ok
 	ok = _check("comment stub emits pipe options", aim_stub.contains("## @ace_param(stance, options: crouch|stand|prone)"), true) and ok
 
 	comment_sample.free()

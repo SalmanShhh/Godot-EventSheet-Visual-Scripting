@@ -27,7 +27,21 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _physics_process(delta: float) -> void:": "OnPhysicsProcess",
 	"func _input(event: InputEvent) -> void:": "OnInput",
 	"func _unhandled_input(event: InputEvent) -> void:": "OnUnhandledInput",
-	"func _run() -> void:": "OnEditorRun"
+	"func _run() -> void:": "OnEditorRun",
+	"func _on_project_export(is_debug: bool, features: PackedStringArray) -> void:": "OnProjectExport"
+}
+
+## ACEs whose template reads its TRIGGER'S OWN ARGUMENTS rather than the host, mapped to the trigger
+## that supplies them. Such a template only compiles inside that handler, so it may only lift there:
+## `is_debug` is a bare identifier with nine literal characters, so admitted to the index globally it
+## outranks every generic reading and would claim `if is_debug:` in any game script, labelling the row
+## "the export is a debug build". _match_entry drops a scoped entry everywhere else, which hands the
+## line back to the generic conditions that used to take it (`is_debug` reads as Expression Is True,
+## `features.has(x)` as Dict Has Key) - a wrong row is worse than a plain one.
+## (Condition lifting carries the scope today; a scoped ACTION would simply never claim a line.)
+const TRIGGER_SCOPED_ACES: Dictionary = {
+	"ExportIsDebug": "OnProjectExport",
+	"ExportHasFeature": "OnProjectExport",
 }
 
 
@@ -1180,7 +1194,9 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			trigger_provider = ""
 			trigger_args = header_match.get_string(2)
 	var reverse_entries: Array = _build_reverse_entries()
-	var parsed: Dictionary = _parse_body(function_lines, index, 1, trigger_id, trigger_provider, trigger_args, trigger_source, reverse_entries, lenient_ifs)
+	# The trigger id doubles as the lift SCOPE: an ACE reading this handler's own arguments is only in
+	# the running here (see TRIGGER_SCOPED_ACES), and the scope rides every nested block with it.
+	var parsed: Dictionary = _parse_body(function_lines, index, 1, trigger_id, trigger_provider, trigger_args, trigger_source, reverse_entries, lenient_ifs, false, trigger_id)
 	if not bool(parsed.get("ok", false)) or int(parsed.get("next", 0)) < function_lines.size():
 		return {"ok": false}  # dedented/blank content inside a function - not our shape
 	var events: Array = parsed.get("rows", [])
@@ -1207,7 +1223,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 ## recompile in attempt_lift gates every shape this parser produces.
 ## Returns {ok, rows: Array[EventRow], next: int}; a "plain collector" row (no
 ## conditions, no else_mode) holds the statements between blocks.
-static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigger_id: String, trigger_provider: String, trigger_args: String, trigger_source: String, reverse_entries: Array, lenient_ifs: bool, in_loop: bool = false) -> Dictionary:
+static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigger_id: String, trigger_provider: String, trigger_args: String, trigger_source: String, reverse_entries: Array, lenient_ifs: bool, in_loop: bool = false, scope_trigger: String = "") -> Dictionary:
 	var indent: String = "\t".repeat(depth)
 	var rows: Array = []
 	var current: EventRow = null
@@ -1266,12 +1282,12 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			var block_event: EventRow = _make_event(trigger_id, trigger_provider, trigger_args, trigger_source)
 			if not is_if:
 				block_event.else_mode = EventRow.ElseMode.ELSE
-			var representable: bool = expression.is_empty() or _parse_conditions(expression, block_event, reverse_entries)
+			var representable: bool = expression.is_empty() or _parse_conditions(expression, block_event, reverse_entries, scope_trigger)
 			var inner: Dictionary = {}
 			if representable:
 				# An `if` inherits the loop context of its parent (a break/continue inside it belongs to the
 				# enclosing loop), so pass in_loop straight through.
-				inner = _parse_body(lines, index + 1, depth + 1, "", "", "", "", reverse_entries, lenient_ifs, in_loop)
+				inner = _parse_body(lines, index + 1, depth + 1, "", "", "", "", reverse_entries, lenient_ifs, in_loop, scope_trigger)
 				representable = bool(inner.get("ok", false)) and _adopt_block_body(block_event, inner.get("rows", []))
 			if not representable:
 				if not lenient_ifs:
@@ -1332,7 +1348,7 @@ static func _parse_body(lines: PackedStringArray, start: int, depth: int, trigge
 			loop_event.pick_filters.append(lifted_pick)
 			# The loop body IS a loop context: break/continue in it (or in an `if` nested in it) lift.
 			# A lifted loop index skips its bump line - it regenerates from index_name on emit.
-			var loop_inner: Dictionary = _parse_body(lines, index + (2 if not loop_index_lift.is_empty() else 1), depth + 1, "", "", "", "", reverse_entries, lenient_ifs, true)
+			var loop_inner: Dictionary = _parse_body(lines, index + (2 if not loop_index_lift.is_empty() else 1), depth + 1, "", "", "", "", reverse_entries, lenient_ifs, true, scope_trigger)
 			var loop_ok: bool = bool(loop_inner.get("ok", false)) and _adopt_block_body(loop_event, loop_inner.get("rows", []))
 			if not loop_ok:
 				if not lenient_ifs:
@@ -1783,7 +1799,7 @@ static func _split_top_level(expression: String, sep: String) -> PackedStringArr
 ## Top-level ` or ` splits FIRST (matching GDScript, where `or` binds loosest): any ` or ` at the top
 ## makes a C3-style "Or block" whose terms keep their inner `and`s whole, and only a pure-AND
 ## expression splits on ` and ` into AND'd conditions.
-static func _parse_conditions(expression: String, event: EventRow, reverse_entries: Array) -> bool:
+static func _parse_conditions(expression: String, event: EventRow, reverse_entries: Array, scope_trigger: String = "") -> bool:
 	# Precedence-correct split order: `or` binds LOOSEST in GDScript, so `a and b or c`
 	# means `(a and b) or c` - split top-level ` or ` FIRST (an OR block whose terms keep
 	# their inner `and`s whole), and only a pure-AND expression splits on ` and `. The old
@@ -1801,7 +1817,7 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		if candidate.begins_with("not (") and candidate.ends_with(")"):
 			negated = true
 			candidate = candidate.substr(5, candidate.length() - 6)
-		var matched: Dictionary = _match_entry(candidate, reverse_entries, "condition")
+		var matched: Dictionary = _match_entry(candidate, reverse_entries, "condition", true, scope_trigger)
 		if matched.is_empty():
 			return false
 		var condition: ACECondition = ACECondition.new()
@@ -2152,7 +2168,7 @@ static func _build_reverse_entries() -> Array:
 			# eats `const FMT = "a: b = c"` into name=`FMT = "a`). Flag it so _match_entry rejects any match
 			# whose captured name is not a bare identifier, letting the plain (correct) template win.
 			var decl_name: bool = variant.begins_with("var ") or variant.begins_with("const ")
-			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name})
+			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name, "scope_trigger": str(TRIGGER_SCOPED_ACES.get(descriptor.ace_id, ""))})
 	# Try SPECIFIC templates before generic catch-alls. The Core generics (SetVar `{var_name} = {value}`,
 	# CallFunction `{function_name}({args})`, …) use lazy `.+?` captures that match almost any
 	# assignment/call, so in raw registry order they SHADOW every specific node ACE (`position = …`
@@ -2163,12 +2179,17 @@ static func _build_reverse_entries() -> Array:
 	return entries
 
 
-static func _match_entry(line: String, reverse_entries: Array, kind: String, in_loop: bool = true) -> Dictionary:
+static func _match_entry(line: String, reverse_entries: Array, kind: String, in_loop: bool = true, scope_trigger: String = "") -> Dictionary:
 	for entry: Variant in reverse_entries:
 		if str((entry as Dictionary).get("kind", "")) != kind:
 			continue
 		# A loop-control action (`break`/`continue`) is only valid - and only lifts - inside a loop body.
 		if bool((entry as Dictionary).get("loop_control", false)) and not in_loop:
+			continue
+		# A trigger-scoped entry reads that trigger's arguments (see TRIGGER_SCOPED_ACES), so it is only
+		# in the running inside that handler - elsewhere the same text is ordinary game code.
+		var entry_scope: String = str((entry as Dictionary).get("scope_trigger", ""))
+		if not entry_scope.is_empty() and entry_scope != scope_trigger:
 			continue
 		var regex: RegEx = (entry as Dictionary).get("regex")
 		var regex_match: RegExMatch = regex.search(line)
@@ -2233,6 +2254,14 @@ static func _template_to_regex(template: String) -> RegEx:
 			break
 		pattern += _escape_regex(template.substr(cursor, open - cursor))
 		var param_name: String = template.substr(open + 1, close - open - 1)
+		# A brace pair that does not spell a parameter NAME is literal code, not a capture - GDScript's
+		# empty-dictionary literal `{}` above all. Injected raw it becomes an illegal group name
+		# (`(?<>.+?)`), which fails the whole compile: the ACE drops out of the reverse index and every
+		# lift attempt prints a PCRE error. Matching it as text keeps both the pattern and the console clean.
+		if not _is_bare_identifier(param_name):
+			pattern += _escape_regex(template.substr(open, close - open + 1))
+			cursor = close + 1
+			continue
 		# Call-argument captures may legitimately be empty - a zero-arg call like `landed.emit()`,
 		# `jump()` or `super()` - so `{args}` uses a zero-or-more lazy capture; every other placeholder
 		# (value, expression, target…) still requires at least one char. An empty match can only land

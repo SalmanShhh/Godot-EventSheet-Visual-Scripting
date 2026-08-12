@@ -3,8 +3,12 @@
 # The everyday editor-automation calls you reach for when a sheet is a tool rather than a game
 # script: open / save / play a scene, rescan the project, select or inspect a node, save a resource,
 # make a folder, and two combined builders (add a node to the edited scene, or pack a node into a
-# .tscn) that would otherwise be three lines each. They compile to the exact plain Godot the editor
-# exposes - EditorInterface, ResourceSaver, DirAccess, Engine - with ZERO plugin references, honouring
+# .tscn) that would otherwise be three lines each. On top of those sit three heavier chores that are
+# still one pickable row: render a scene to a PNG, preview a weighted table's real odds, and stamp a
+# build version - plus the On Project Export trigger and its two flag conditions, which turn a tool
+# sheet into a bake step the exporter runs. They compile to the exact plain Godot the editor
+# exposes - EditorInterface, ResourceSaver, DirAccess, Engine, plus SubViewport / RenderingServer,
+# RandomNumberGenerator and ConfigFile for the three heavy ones - with ZERO plugin references, honouring
 # the parity covenant. These are editor-only: use them in a Tool sheet (Sheet Type -> Tool, which
 # emits @tool + extends EditorScript + On Editor Run). Grouped under "Editor Tools".
 @tool
@@ -63,4 +67,129 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "EditorUiScale", "Editor Scale", ACEDescriptor.ACEType.EXPRESSION, "EditorInterface.get_editor_scale()", "", [], CAT, "editor scale")
 		.described("Returns the editor's display scale (1.0 at 100%), for sizing tool UI."))
 
+	# ── Rendering + data previews (the heavy chores that stay one pickable row) ──
+	descriptors.append(F.make_descriptor("Core", "RenderSceneToImage", "Render Scene To Image", ACEDescriptor.ACEType.ACTION, _render_scene_template(), "", [F.make_param("scene_path", "String", "\"res://scene.tscn\"", "Scene", "The scene to render. It needs its own camera (or a Control layout) - the renderer photographs what that scene shows.", "scene_path"), F.make_param("width", "int", "512", "Width", "Image width in pixels.", "expression"), F.make_param("height", "int", "512", "Height", "Image height in pixels.", "expression"), F.make_param("save_path", "String", "\"res://thumbnail.png\"", "Save To", "Where to write the PNG.", "expression")], CAT, "render {scene_path} to {save_path} at {width}x{height}")
+		.described("Instantiates a scene into an off-screen viewport, lets it settle for a frame, and saves what it shows as a PNG - thumbnails, store shots, doc figures, baked sprites. Needs a windowed editor: a headless run has no renderer, so it warns and writes nothing."))
+	descriptors.append(F.make_descriptor("Core", "PreviewTableRolls", "Preview Table Rolls", ACEDescriptor.ACEType.ACTION, _preview_table_rolls_template(), "", [F.make_param("table", "String", "\"res://loot_table.tres\"", "Table", "A weighted table: the path to a table resource, the resource itself, or a plain Dictionary of value to weight.", "expression"), F.make_param("rolls", "int", "1000", "Rolls", "How many draws to simulate.", "expression"), F.make_param("seed", "int", "12345", "Seed", "The random seed. The same seed always produces the same report.", "expression"), F.make_param("save_path", "String", "\"\"", "Save To", "Optional file to write the report to. Leave empty to print it to the Output panel only.", "expression")], CAT, "preview {rolls} rolls of {table}")
+		.described("Rolls a weighted table many times and reports what actually came out: per entry the rolled percent, the percent its weight implies, and the gap between them. Pure maths - it runs anywhere, and the same seed always gives the same numbers."))
+
+	# ── Project export bake step (the trigger + the flags the exporter hands it) ──
+	descriptors.append(F.make_descriptor("Core", "OnProjectExport", "On Project Export", ACEDescriptor.ACEType.TRIGGER, "", "_on_project_export", [], CAT, "On project export (bake step)")
+		.described("Runs while a project export is starting, before the files are written - the place to stamp a build number, bake a data file, or strip debug content."))
+	descriptors.append(F.make_descriptor("Core", "WriteVersionStamp", "Write Version Stamp", ACEDescriptor.ACEType.ACTION, _write_version_stamp_template(), "", [F.make_param("path", "String", "\"res://build_stamp.cfg\"", "Save To", "Where to write the stamp file (a ConfigFile the game reads back with ConfigFile.load).", "expression"), F.make_param("version", "String", "ProjectSettings.get_setting(\"application/config/version\", \"0.0.0\")", "Version", "The version string to record. Defaults to the project's own version setting.", "expression")], CAT, "write version stamp to {path}")
+		.described("Writes a small build stamp file: the version string plus the date and time the stamp was written. The timestamp is read when the tool runs, so the generated code stays identical every save."))
+	descriptors.append(F.make_descriptor("Core", "ExportIsDebug", "Export Is Debug", ACEDescriptor.ACEType.CONDITION, "is_debug", "", [], CAT, "the export is a debug build")
+		.described("True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds."))
+	descriptors.append(F.make_descriptor("Core", "ExportHasFeature", "Export Has Feature", ACEDescriptor.ACEType.CONDITION, "features.has({feature})", "", [F.make_param("feature", "String", "\"mobile\"", "Feature", "A feature tag of the export preset (mobile, web, windows, or one you added yourself).", "feature_tag")], CAT, "the export has feature {feature}")
+		.described("True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop."))
+
 	return descriptors
+
+
+## Render Scene To Image. Honest degradation first: a headless run (the test suite, a CI export, any
+## `--headless` invocation) has no renderer at all, so the emitted code SAYS so and writes nothing
+## rather than silently saving a blank or crashing on a null texture - the same rule the repo's own
+## preview harnesses live by. The viewport is parented to the editor's base control because that is
+## the one Control an EditorScript can always reach, and it is freed again on the way out.
+static func _render_scene_template() -> String:
+	return "\n".join(PackedStringArray([
+		"var __shot_{uid}: PackedScene = (load({scene_path}) as PackedScene) if ResourceLoader.exists({scene_path}) else null",
+		"if DisplayServer.get_name() == \"headless\":",
+		"\tpush_warning(\"[Render Scene To Image] This run has no display - rendering needs a windowed editor, so nothing was written to %s.\" % {save_path})",
+		"elif __shot_{uid} == null:",
+		"\tpush_warning(\"[Render Scene To Image] No scene at %s - nothing rendered.\" % {scene_path})",
+		"else:",
+		"\tvar __shot_view_{uid} := SubViewport.new()",
+		"\t__shot_view_{uid}.size = Vector2i(int({width}), int({height}))",
+		"\t__shot_view_{uid}.transparent_bg = true",
+		"\t__shot_view_{uid}.own_world_3d = true",
+		"\t__shot_view_{uid}.render_target_update_mode = SubViewport.UPDATE_ALWAYS",
+		"\tEditorInterface.get_base_control().add_child(__shot_view_{uid})",
+		"\t__shot_view_{uid}.add_child(__shot_{uid}.instantiate())",
+		"\tawait __shot_view_{uid}.get_tree().process_frame",
+		"\tawait RenderingServer.frame_post_draw",
+		"\t__shot_view_{uid}.get_texture().get_image().save_png({save_path})",
+		"\t__shot_view_{uid}.queue_free()",
+	]))
+
+
+## Preview Table Rolls. Reads BOTH shipped weighted-table shapes and the hand-written one:
+## a table resource exposing an `entries` Array of {value|item|id, weight} dictionaries (what
+## RandomTableResource and LootTableResource save), and a plain Dictionary of value to weight.
+## A String is treated as a path and loaded - and a path that resolves to nothing is NAMED in the
+## report, so "nothing to roll" never has to be guessed at. Everything after that is arithmetic over
+## a seeded RandomNumberGenerator, so the report is identical on every machine and in a headless run.
+##
+## One authoring rule this template had to learn: a codegen template may not contain a literal `{}`.
+## Every brace pair in a template is read as a parameter placeholder - by the reverse-lifter, which
+## turns each one into a named regex capture - so an empty pair compiles to `(?<>.+?)` and makes the
+## whole pattern invalid, spamming the console on every import. Build the empty dictionary with
+## `Dictionary()` instead.
+static func _preview_table_rolls_template() -> String:
+	return "\n".join(PackedStringArray([
+		"var __tbl_{uid}: Variant = {table}",
+		"var __tbl_from_{uid}: String = str(__tbl_{uid}) if __tbl_{uid} is String else \"\"",
+		"if __tbl_{uid} is String:",
+		"\t__tbl_{uid} = load(__tbl_{uid}) if ResourceLoader.exists(__tbl_{uid}) else null",
+		"var __tbl_src_{uid}: Variant = (__tbl_{uid} as Object).get(\"entries\") if __tbl_{uid} is Object else __tbl_{uid}",
+		"var __tbl_rows_{uid}: Array = []",
+		"if __tbl_src_{uid} is Dictionary:",
+		"\tfor __tbl_key_{uid}: Variant in (__tbl_src_{uid} as Dictionary):",
+		"\t\t__tbl_rows_{uid}.append([str(__tbl_key_{uid}), maxf(float((__tbl_src_{uid} as Dictionary)[__tbl_key_{uid}]), 0.0)])",
+		"elif __tbl_src_{uid} is Array:",
+		"\tfor __tbl_entry_{uid}: Variant in (__tbl_src_{uid} as Array):",
+		"\t\tvar __tbl_dict_{uid}: Dictionary = __tbl_entry_{uid} if __tbl_entry_{uid} is Dictionary else Dictionary()",
+		"\t\tvar __tbl_name_{uid}: String = str(__tbl_dict_{uid}.get(\"value\", __tbl_dict_{uid}.get(\"item\", __tbl_dict_{uid}.get(\"id\", \"entry %d\" % __tbl_rows_{uid}.size()))))",
+		"\t\t__tbl_rows_{uid}.append([__tbl_name_{uid}, maxf(float(__tbl_dict_{uid}.get(\"weight\", 0.0)), 0.0)])",
+		"var __tbl_total_{uid}: float = 0.0",
+		"for __tbl_row_{uid}: Array in __tbl_rows_{uid}:",
+		"\t__tbl_total_{uid} += float(__tbl_row_{uid}[1])",
+		"var __tbl_out_{uid}: PackedStringArray = PackedStringArray()",
+		"__tbl_out_{uid}.append(\"Table roll preview - %d rolls, seed %d\" % [maxi(int({rolls}), 0), int({seed})])",
+		"if __tbl_total_{uid} <= 0.0:",
+		"\tif __tbl_{uid} == null and not __tbl_from_{uid}.is_empty():",
+		"\t\t__tbl_out_{uid}.append(\"(no table at %s - nothing to roll)\" % __tbl_from_{uid})",
+		"\telse:",
+		"\t\t__tbl_out_{uid}.append(\"(no entry has a weight above zero - nothing to roll)\")",
+		"else:",
+		"\tvar __tbl_rng_{uid} := RandomNumberGenerator.new()",
+		"\t__tbl_rng_{uid}.seed = int({seed})",
+		"\tvar __tbl_hits_{uid}: PackedInt32Array = PackedInt32Array()",
+		"\t__tbl_hits_{uid}.resize(__tbl_rows_{uid}.size())",
+		"\tfor __tbl_i_{uid}: int in maxi(int({rolls}), 0):",
+		"\t\tvar __tbl_pick_{uid}: float = __tbl_rng_{uid}.randf() * __tbl_total_{uid}",
+		"\t\tvar __tbl_walk_{uid}: float = 0.0",
+		"\t\tfor __tbl_j_{uid}: int in __tbl_rows_{uid}.size():",
+		"\t\t\t__tbl_walk_{uid} += float((__tbl_rows_{uid}[__tbl_j_{uid}] as Array)[1])",
+		"\t\t\tif __tbl_pick_{uid} < __tbl_walk_{uid}:",
+		"\t\t\t\t__tbl_hits_{uid}[__tbl_j_{uid}] += 1",
+		"\t\t\t\tbreak",
+		"\t__tbl_out_{uid}.append(\"entry | rolled | expected | delta\")",
+		"\tfor __tbl_k_{uid}: int in __tbl_rows_{uid}.size():",
+		"\t\tvar __tbl_got_{uid}: float = 100.0 * float(__tbl_hits_{uid}[__tbl_k_{uid}]) / float(maxi(int({rolls}), 1))",
+		"\t\tvar __tbl_want_{uid}: float = 100.0 * float((__tbl_rows_{uid}[__tbl_k_{uid}] as Array)[1]) / __tbl_total_{uid}",
+		"\t\t__tbl_out_{uid}.append(\"%s | %.2f%% | %.2f%% | %+.2f%%\" % [str((__tbl_rows_{uid}[__tbl_k_{uid}] as Array)[0]), __tbl_got_{uid}, __tbl_want_{uid}, __tbl_got_{uid} - __tbl_want_{uid}])",
+		"print(\"\\n\".join(__tbl_out_{uid}))",
+		"if not str({save_path}).is_empty():",
+		"\tvar __tbl_file_{uid} := FileAccess.open({save_path}, FileAccess.WRITE)",
+		"\tif __tbl_file_{uid} != null:",
+		"\t\t__tbl_file_{uid}.store_string(\"\\n\".join(__tbl_out_{uid}) + \"\\n\")",
+		"\t\t__tbl_file_{uid}.close()",
+	]))
+
+
+## Write Version Stamp. The parity covenant forbids nondeterministic EMISSION, so nothing about the
+## build is baked into the generated code: the code asks the clock at run time, which is also what a
+## build stamp actually wants. ConfigFile because the game reads it back in three lines and it stays
+## readable in a diff. The save error is READ, not discarded: a stamp aimed at a folder that does not
+## exist (or a read-only res:// in a CI export) would otherwise write nothing at all while the export
+## reported success, and the game would ship reading a stale stamp.
+static func _write_version_stamp_template() -> String:
+	return "\n".join(PackedStringArray([
+		"var __stamp_{uid} := ConfigFile.new()",
+		"__stamp_{uid}.set_value(\"build\", \"version\", {version})",
+		"__stamp_{uid}.set_value(\"build\", \"stamped_at\", Time.get_datetime_string_from_system(true))",
+		"var __stamp_err_{uid} := __stamp_{uid}.save({path})",
+		"if __stamp_err_{uid} != OK:",
+		"\tpush_warning(\"[Write Version Stamp] Could not write %s (%s) - the build carries no stamp.\" % [{path}, error_string(__stamp_err_{uid})])",
+	]))

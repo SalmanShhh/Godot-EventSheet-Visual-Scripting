@@ -729,3 +729,15 @@ steps,个步骤
 at,在
 Add Step…,添加步骤…
 Timeline,时间轴
+Render Scene To Image,把场景渲染成图片
+"Instantiates a scene into an off-screen viewport, lets it settle for a frame, and saves what it shows as a PNG - thumbnails, store shots, doc figures, baked sprites. Needs a windowed editor: a headless run has no renderer, so it warns and writes nothing.",把场景实例化到一个屏幕外视口中，让它稳定一帧，再把显示出来的画面保存为 PNG：缩略图、商店截图、文档配图、烘焙精灵。需要带窗口的编辑器：无头运行没有渲染器，因此只会给出警告，不写入任何文件。
+Preview Table Rolls,预览表格抽取
+"Rolls a weighted table many times and reports what actually came out: per entry the rolled percent, the percent its weight implies, and the gap between them. Pure maths - it runs anywhere, and the same seed always gives the same numbers.",对一张带权重的表格反复抽取，并报告实际抽到了什么：每一条给出抽中的百分比、权重所对应的百分比，以及两者之间的差距。纯粹的算术：到哪里都能跑，同一个种子永远给出同样的数字。
+On Project Export,项目导出时
+"Runs while a project export is starting, before the files are written - the place to stamp a build number, bake a data file, or strip debug content.",在项目导出开始、文件写出之前运行：用来打上构建号、烘焙数据文件，或剔除调试内容的地方。
+Write Version Stamp,写入版本戳
+"Writes a small build stamp file: the version string plus the date and time the stamp was written. The timestamp is read when the tool runs, so the generated code stays identical every save.",写出一个小小的构建戳文件：版本字符串，加上写入戳记的日期和时间。时间在工具运行时才读取，所以每次保存生成的代码都完全一致。
+Export Is Debug,导出是调试版
+True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,当触发这一烘焙步骤的导出是调试构建时为真。放在项目导出时里面使用，把测试内容挡在正式构建之外。
+Export Has Feature,导出带有特性
+"True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.",当触发这一烘焙步骤的导出预设带有指定的特性标签时为真：这是为移动端、网页或桌面端烘焙不同数据的方式。

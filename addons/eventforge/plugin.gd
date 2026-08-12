@@ -26,9 +26,13 @@ const DRAWING_CANVAS_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawin
 const DRAWING_PREFAB_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_gizmo.gd"
 const DRAWING_PREFAB_3D_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd"
 const BEHAVIOR_GIZMOS_PATH: String = "res://addons/eventsheet/editor/behavior_gizmos.gd"
+const EXPORT_TOOLS_PLUGIN_PATH: String = "res://addons/eventforge/editor/export_tools_plugin.gd"
 
 var _event_sheet_editor: Control = null
 var _export_integrity_plugin: EditorExportPlugin = null
+# The On Project Export bake step. Loaded by path (it has no class_name on purpose, so registering it
+# never widens the boot compile) and typed as the engine base class.
+var _export_tools_plugin: EditorExportPlugin = null
 var _live_values_debugger: EventSheetLiveValuesDebugger = null
 # Typed loosely on purpose (see the path consts above): their concrete class names must not
 # appear in this file, or their subtrees join the boot compile.
@@ -256,6 +260,12 @@ func _enter_tree() -> void:
 	# scripts can never ship (see export_integrity_plugin.gd).
 	_export_integrity_plugin = EventSheetExportIntegrityPlugin.new()
 	add_export_plugin(_export_integrity_plugin)
+	# The export bake step: Editor Tool sheets that declared the On Project Export trigger get their
+	# handler called as the export begins, so a build stamp or a baked data file is part of the export
+	# instead of a chore somebody has to remember. Loaded by path - it carries no class_name, so this
+	# registration adds nothing to the boot compile.
+	_export_tools_plugin = load(EXPORT_TOOLS_PLUGIN_PATH).new()
+	add_export_plugin(_export_tools_plugin)
 	# Live Values (debugging rung 2): capture the values frames debug-compiled sheets
 	# stream, and feed them to the workspace editor's Live Values window.
 	_live_values_debugger = EventSheetLiveValuesDebugger.new()
@@ -388,6 +398,9 @@ func _exit_tree() -> void:
 	if _export_integrity_plugin != null:
 		remove_export_plugin(_export_integrity_plugin)
 		_export_integrity_plugin = null
+	if _export_tools_plugin != null:
+		remove_export_plugin(_export_tools_plugin)
+		_export_tools_plugin = null
 	if _live_values_debugger != null:
 		remove_debugger_plugin(_live_values_debugger)
 		_live_values_debugger = null

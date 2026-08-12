@@ -39,7 +39,9 @@ Under the hood this sets `tool_mode = true` and `host_class = "EditorScript"` on
 
 ### Step 2 - add the entry point
 
-A Tool sheet has one special trigger: **On Editor Run**. It is the sheet's front door - everything under it runs when you Run the tool. Add an event and pick **On Editor Run** as its trigger. It lives in the **Editor Tools** category of the picker.
+A Tool sheet has two special triggers, both in the **Editor Tools** category of the picker. **On Editor Run** is the one you want here: it is the sheet's front door - everything under it runs when you Run the tool. Add an event and pick it as the trigger.
+
+The other one, **On Project Export**, is the same idea on a different doorbell: everything under it runs when a project export starts, so a tool sheet can also be a bake step (section 3 covers it). One sheet can carry both, and they stay independent - pressing Run never triggers the export step, and exporting never triggers the Run step.
 
 ### Step 3 - add an action
 
@@ -69,7 +71,7 @@ That is the loop: build events under **On Editor Run**, save, and Run from the S
 
 ## 3. The Editor Tools ACEs
 
-The **Editor Tools** module is the vocabulary you build tool sheets from. Every entry compiles to the plain editor API Godot already exposes (`EditorInterface`, `ResourceSaver`, `DirAccess`, `Engine`) with zero plugin references, so the generated tool is ordinary code you could have typed yourself. There are 17 of them, in five groups.
+The **Editor Tools** module is the vocabulary you build tool sheets from. Every entry compiles to the plain editor API Godot already exposes (`EditorInterface`, `ResourceSaver`, `DirAccess`, `SubViewport`, `RandomNumberGenerator`, `ConfigFile`, `Engine`) with zero plugin references, so the generated tool is ordinary code you could have typed yourself. There are 23 of them, in seven groups.
 
 Types: **Action** does something, **Condition** answers true/false (use it in an event's condition slot), **Expression** returns a value (use it inside a parameter).
 
@@ -114,6 +116,30 @@ Types: **Action** does something, **Condition** answers true/false (use it in an
 | **Edited Scene Root** | Expression | The root node of the scene currently open in the editor. |
 | **Selected Nodes** | Expression | The array of nodes currently selected in the Scene dock. |
 | **Editor Scale** | Expression | The editor's display scale (`1.0` at 100%), handy for sizing tool UI. |
+
+### Rendering and data previews - the heavy chores, still one row
+
+| Editor Tools verb | Type | What it does |
+|-------------------|------|--------------|
+| **Render Scene To Image** | Action | Instantiates a scene (parameter: **Scene**) into an off-screen `SubViewport` at **Width** x **Height**, lets it settle a frame, and saves what it shows to **Save To** as a PNG. |
+| **Preview Table Rolls** | Action | Rolls a weighted **Table** (a table resource, its path, or a plain value-to-weight Dictionary) **Rolls** times from a fixed **Seed**, and reports rolled percent vs weight-implied percent per entry. Optional **Save To** writes the report to a file. |
+
+**Render Scene To Image needs two things.** The scene must contain whatever is doing the looking - a `Camera2D`, a `Camera3D` plus a light, or just a `Control` layout - because the action photographs what that scene shows. And the editor must have a window: rendering is GPU work, and a headless run has no renderer, so the emitted code probes `DisplayServer` first and pushes a clear warning instead of saving a blank image. That check is part of the generated code, not the plugin, so a tool you hand to a teammate degrades the same way on their machine.
+
+**Preview Table Rolls is pure arithmetic**, which is why it is the one heavy verb that works everywhere, headless included. It reads both shipped weighted-table shapes (any resource exposing an `entries` list of value/weight rows) and a Dictionary you type inline, and it is seeded, so two runs of the same table give the same report - change a weight, re-run, and the diff is the balance change alone.
+
+### Project export - the bake step
+
+| Editor Tools verb | Type | What it does |
+|-------------------|------|--------------|
+| **On Project Export** | Trigger | Fires as a project export starts, before the files are written. Compiles to `_on_project_export(is_debug: bool, features: PackedStringArray)`. |
+| **Write Version Stamp** | Action | Writes a `ConfigFile` build stamp to **Save To**: the **Version** string plus the date and time it was written. |
+| **Export Is Debug** | Condition | True when the export that triggered the bake step is a debug build. |
+| **Export Has Feature** | Condition | True when the export preset carries the given **Feature** tag (`mobile`, `web`, or one you added in Project > Export). |
+
+**How the seam works, in one paragraph.** The trigger compiles to a plain function on your Editor Tool script - nothing engine-virtual, nothing plugin-flavoured. When an export begins, the plugin's export hook walks the project for compiled scripts that declare that function, instantiates each one, and calls it with the export's debug flag and feature tags; **Export Is Debug** and **Export Has Feature** are just those two arguments read as conditions. Scripts hosted on a `Node` are refused (instantiating one would leak a node into the editor) with a warning naming the file, and the tools run in sorted path order so a chain of bake steps behaves identically on your machine and in CI. Because both sides are ordinary GDScript, an exported project carries no trace of any of it, and the handler simply sits unused if the plugin is ever removed.
+
+**Determinism still applies.** The parity covenant says generated code may not vary between saves, so **Write Version Stamp** bakes no timestamp into the script - it asks the clock when the tool *runs*. That is also what you want: the stamp records when the build was made, not when you last edited the sheet.
 
 **Why Is In Editor matters.** The Editor Tools verbs call editor-only APIs. In a Tool sheet that is fine - it only ever runs in the editor. But if you sprinkle one of these into a `@tool` **node** script (a sheet that also runs in your game), guard it with **Is In Editor** so it does not try to touch `EditorInterface` in an exported build where that does not exist.
 
@@ -360,6 +386,58 @@ Any sheet function can carry an **Inspector button** label (the field is in the 
 
 That is a real, clickable button in the Inspector (Godot 4.4+). Because the button runs in the editor, the sheet must be a Tool sheet (or otherwise `@tool`) - if you add an Inspector button label without turning on Tool mode, the compiler warns: "Tool buttons need a @tool sheet to run in the editor - enable Tool in the Sheet Type dialog." Turn on Tool in the Sheet Type dialog and the warning clears.
 
+### 13. Bake a thumbnail sheet for the level select (Tool sheet)
+
+**Scenario:** the level-select screen shows a card per level, and every art pass makes the cards wrong.
+
+```
+On Editor Run
+    → For Each level in ["forest", "caves", "summit"]
+        → Render Scene To Image
+             Scene: "res://levels/%s.tscn" % level
+             Width: 320   Height: 180
+             Save To: "res://ui/thumbs/%s.png" % level
+    → Rescan Project Files
+```
+
+Each level scene frames its own shot with its own camera, so the tool never has to know where to point. The same row is how you bake store screenshots (1920x1080), documentation figures, or a 2D icon rendered from a 3D prop.
+
+### 14. Turn a weights table into a report you can read (Tool sheet)
+
+**Scenario:** the drop table looks fair on paper and feels wrong in play.
+
+```
+On Editor Run
+    → Preview Table Rolls
+         Table: "res://data/boss_drops.tres"
+         Rolls: 10000   Seed: 1
+         Save To: "res://data/boss_drops_odds.txt"
+```
+
+The Output panel gets the histogram immediately; the file keeps it for the next balance pass. Same seed, one weight changed, diff the two files: everything that moved is a consequence of that edit. When the odds are still an idea rather than an asset, put a Dictionary in the Table field instead - `{"nothing": 70, "coin": 25, "relic": 5}`.
+
+### 15. A bake step that stamps the build and strips test content (Tool sheet)
+
+**Scenario:** every release should carry its version, and no release should carry the debug unlocks.
+
+```
+On Project Export
+    → Write Version Stamp
+         Save To: "res://build_stamp.cfg"
+         Version: ProjectSettings.get_setting("application/config/version", "0.0.0")
+
+On Project Export
+    Condition: (invert) Export Is Debug
+        → GDScript block:
+          DirAccess.remove_absolute("res://data/debug_unlocks.tres")
+
+On Project Export
+    Condition: Export Has Feature   "mobile"
+        → Save Resource To File   resource: load("res://data/quality_low.tres")   path: "res://data/quality.tres"
+```
+
+Three events, one sheet, and nothing in the game's own code knows any of it happened. Read the stamp back on the title screen with `ConfigFile.load("res://build_stamp.cfg")`.
+
 ## 6. Tips and Common Mistakes
 
 - **Editor Tools verbs only work in the editor.** They call `EditorInterface`, `ResourceSaver`, `DirAccess`, and `Engine`, which exist while you are building, not in an exported game. Keep them in a Tool sheet, or - if they live in a `@tool` node script that also runs at play time - guard them behind an **Is In Editor** condition so an exported build never touches editor-only APIs.
@@ -370,4 +448,10 @@ That is a real, clickable button in the Inspector (Godot 4.4+). Because the butt
 - **Never write inside `res://` from a Doctor check.** A health check reads and reports; it must not mutate the project. Send any scratch work to `user://`. (Tools that *generate* files are a different job - those legitimately write to `res://`.)
 - **Reach the plugin only through the `EventSheets` facade.** Dock internals (the `_`-prefixed members) get renamed and relocated freely between releases. `EventSheets` is the one surface with a stability promise - use it and nothing else.
 - **Read `compile()`'s result from `"output"`, not `"source"`.** The wrong key returns an empty string that quietly compares equal to other empty strings, which makes broken tooling look like it works.
+- **Rendering needs a window; the maths does not.** **Render Scene To Image** cannot work in a headless run - there is no renderer - so its generated code says so and writes nothing. **Preview Table Rolls** is arithmetic and runs anywhere, headless included. If a tool has to work in CI, keep the rendering step out of that path.
+- **A scene with no camera renders empty.** That is not a bug in the action; a `SubViewport` shows what the scene shows. Give the scene a `Camera2D`, or a `Camera3D` and a light, or render a `Control`.
+- **Seed your table previews with a plain number.** The point of the seed parameter is that two runs are comparable. Feeding it something that changes (`randi()`, a clock reading) throws that away and every diff becomes noise.
+- **On Project Export belongs on an Editor Tool sheet.** The export hook refuses `Node`-hosted scripts - instantiating one would leak an orphan node into the editor - and says so in the Output panel. Set Sheet Type to Editor Tool and it runs.
+- **A bake step must not `await`.** An export never waits for a coroutine: the moment the handler suspends, the exporter carries on packaging and everything after the `await` may miss the build. That rules **Render Scene To Image** (it waits for a drawn frame) out of On Project Export - render from File > Run instead. The hook reports any tool that paused, so the Output panel names the problem rather than shipping half a bake.
+- **Never bake a build fact into the emitted code.** Emission must be deterministic, so a version stamp reads the clock at run time rather than embedding a timestamp in the script. The same rule blocks any "current date" or "random id" in a template: compute it when the tool runs.
 - **Return `false` from an `edit()` mutation that changed nothing.** Otherwise the user gets an undo step that does nothing. And never cache a row across `edit()` calls - re-fetch from `current_sheet()`, because the commit swaps resources for snapshot duplicates.

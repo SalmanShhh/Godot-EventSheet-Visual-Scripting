@@ -234,6 +234,20 @@ Node script extending `CharacterBody2D`.
 #### Actions
 - **Stop Car** - Kills all momentum.
 
+### CheckpointBehavior (`res://eventsheet_addons/checkpoint/checkpoint_behavior.gd`)
+@ace_category("Checkpoint") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Respawned**
+
+#### Actions
+- **Set Checkpoint Here** - Marks the spot the host is standing on right now as its checkpoint.
+- **Set Checkpoint At** (`point: Vector2`) - Marks any point in the world as the checkpoint, without moving the host.
+- **Respawn At Checkpoint** - Teleports the host back to its checkpoint and fires On Respawned. If the host defines a reset() method it is called too - the same duck-typed seam the Object Pool uses when it wakes a pooled node - so velocity, health, and timers clear without this behavior knowing about them.
+
+#### Expressions
+- **Checkpoint Position** - The point the host respawns at.
+
 ### ClickPowerAddon (`res://eventsheet_addons/click_power/click_power_addon.gd`)
 @ace_tags(incremental, idle, clicker) @ace_category("Click Power") @ace_version(1.0.0)
 
@@ -489,6 +503,43 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Actions
 - **Set Move Speed** (`speed: float`) - Changes the movement speed.
 
+### EncounterTimelineBehavior (`res://eventsheet_addons/encounter_timeline/encounter_timeline_behavior.gd`)
+@ace_tags(spawning, waves, pacing, encounter) @ace_category("Encounter Timeline") @ace_version(1.0.0)
+
+#### Triggers
+- **On Entry Spawned** (`node: Node, group_name: String`)
+- **On Encounter Finished**
+
+#### Conditions
+- **Encounter Is Running** - True between Start Encounter and the last beat (or Stop Encounter) - the guard that stops a second wave being started on top of the first.
+- **Encounter Is Finished** - True once the last beat has played and the encounter has stopped itself - the "wave cleared, open the door" branch. False while it runs, false after Stop Encounter cut it short, and false again the moment Start Encounter rewinds it.
+- **Encounter Is Empty** - True when no plan is loaded at all - the check for "did the designer forget the .tres".
+
+#### Actions
+- **Load Encounter** (`resource: Resource`) - Loads a whole plan from an EncounterResource (.tres) - every beat with its time, scene, count, group and note - REPLACING whatever was loaded before and rewinding the clock. Rows may be written in any order; they are sorted by time as they load.
+- **Add Encounter Entry** (`at_seconds: float, scene_path: String, count: int, group_name: String, note: String`) - Adds one beat from a sheet, for an encounter built at runtime - a wave scaled to the player's level, a boss phase queued by the fight itself. It lands in time order wherever it belongs, even mid-encounter (a beat added before the clock has passed it still plays).
+- **Clear Encounter** - Empties the plan and rewinds everything - no beats, clock at 0, nothing running. Load Encounter does this for you; call it yourself before building a plan out of Add Encounter Entry rows.
+- **Start Encounter** - Runs the plan from the top: the clock restarts at 0, the spawn tally resets, and each beat fires as its time arrives. An encounter with no beats finishes on its very next frame, so On Encounter Finished still tells you the wave is over.
+- **Stop Encounter** - Freezes the encounter where it stands - the clock stops and no further beat spawns. Already-spawned nodes are left alone (they are yours). Elapsed Seconds keeps its value, so a paused wave can be inspected; Start Encounter restarts from the top.
+- **Use Object Pool Node** (`node: Node`) - Spawns through THIS pool node instead of searching for the ObjectPool autoload - for a per-arena pool, or a pool you wrote yourself. The contract is three functions: has_pool(name), create_pool(name, scene_path, prewarm) and spawn(name); a node missing any of them is ignored and the timeline instantiates scenes as usual. Pass nothing to go back to the autoload.
+- **Skip To** (`seconds: float`) - Jumps the clock to a time WITHOUT spawning anything it passes - the debug verb for checking a late beat, or for a director that fast-forwards a tutorial the player already knows. Beats before that time are marked as played.
+- **Write Encounter Report** (`path: String`) - Saves the Encounter Report to a text file - user://encounter_report.txt is the usual path, and lands in the app's user folder (the editor opens it from Project > Open User Data Folder). Everything in it is derived from the loaded beats, so it always matches the plan; it writes with plain file access and no editor at all, so a build server can produce it too. Warns in the output if the path cannot be written.
+
+#### Expressions
+- **Elapsed Seconds** - How far into the encounter the clock has run - the number behind a wave timer.
+- **Encounter Duration** - When the LAST beat happens, in seconds (0 for an empty plan) - the length of the whole encounter.
+- **Next Entry Seconds** - When the next beat is due, in seconds from the start of the encounter (-1 when none is left) - subtract Elapsed Seconds for a countdown to the next wave.
+- **Entry Count** - How many beats the loaded plan holds.
+- **Planned Spawn Count** - How many nodes the whole plan intends to spawn - every beat's count added up.
+- **Spawned Count** - How many nodes this run has actually spawned so far - compare it with Planned Spawn Count to see how much of the wave is out.
+- **Spawns Between** (`from_seconds: float, to_seconds: float`) - How many spawns the plan schedules in a window of time - from `from_seconds` (included) up to `to_seconds` (excluded). This is the pacing primitive: the density block of the Encounter Report is built out of it, so a graph you draw yourself agrees with the report exactly.
+- **Entry Note At** (`index: int`) - The designer's note on the beat at a position, in time order ("" out of range) - the plain-language reminder written beside the row.
+- **Entry Seconds At** (`index: int`) - When the beat at a position happens, in time order (-1 out of range).
+- **Encounter Name** - The readable name written on the loaded encounter resource ("Wave 3") - the banner over an arena.
+- **Last Spawned Node** - The node spawned most recently, or nothing before the first one - place it, aim it, or hand it to another pack right inside On Entry Spawned.
+- **Last Spawned Group** - The group the most recent spawn was added to ("" when its beat named none).
+- **Encounter Report** - The whole plan as plain text: the beat table (time, count, scene, group, note), the totals, everything the data does not say clearly, and the spawn density per 30 seconds. Every line is DERIVED from the loaded beats - nothing is written down twice - so it can never fall out of step with the encounter. Print it, show it in a debug overlay, or save it with Write Encounter Report.
+
 ### FadeBehavior (`res://eventsheet_addons/fade/fade_behavior.gd`)
 @ace_tags(fade, juice) @ace_category("Fade") @ace_version(1.0.0)
 
@@ -597,6 +648,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **On Health Pool Depleted**
 
 #### Conditions
+- **Is Invincible** - True while an invincibility window granted by Grant Invincibility is still open.
 - **Is Dead**
 - **Is Invulnerable**
 - **Has Any Health Pool**
@@ -604,11 +656,12 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Health Pool Is Type** (`type: String`)
 
 #### Actions
-- **Take Damage** (`amount: float`) - Applies damage; health pools absorb in ascending-priority order before real HP.
+- **Take Damage** (`amount: float`) - Applies damage; health pools absorb in ascending-priority order before real HP. Ignored entirely while invincible (no HP lost, no On Damaged).
 - **Heal** (`amount: float`) - Restores health up to max_health.
 - **Set Health** (`amount: float`) - Sets current health directly, firing damage/heal/death as appropriate.
 - **Set Max Health** (`amount: float`) - Sets max health (clamps current down if needed).
 - **Set Invulnerable** (`state: bool`) - Toggles invulnerability (takeDamage no-op while true).
+- **Grant Invincibility** (`seconds: float`) - Opens an invincibility window for the given seconds: Take Damage is ignored (no HP lost, no On Damaged) until it closes. Pair it with the Flash pack for the classic i-frame flicker.
 - **Set Health Absorption Rate** (`rate: float`) - Damage multiplier for real HP (resistance); 0 = invulnerable.
 - **Add Health Pool** (`type: String, amount: float`) - Adds to a named health pool (shield/armour).
 - **Set Health Pool** (`type: String, amount: float`) - Sets a health pool amount (fires Added only when it increases).
@@ -635,6 +688,23 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Pool Damage Absorbed**
 - **Last Health Pool Type**
 
+### HomeLeashBehavior (`res://eventsheet_addons/home_leash/home_leash_behavior.gd`)
+@ace_category("Home & Leash") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Arrived Home**
+
+#### Conditions
+- **Is Beyond Home** (`distance: float, metric: int`) - True while the host has wandered further than this from home, in the distance metric you pick.
+
+#### Actions
+- **Set Home Here** - Plants home on the spot the host is standing on right now.
+- **Set Home At** (`point: Vector2`) - Plants home on any point in the world, without moving the host.
+- **Return Home** (`speed: float, delta: float`) - Walks the host one step back toward home - run it under a per-frame trigger and pass that trigger's delta. Fires On Arrived Home once, on the step that lands (within a pixel of home), not on every frame the host sits there.
+
+#### Expressions
+- **Distance From Home** (`metric: int`) - How far the host is from its home point, measured the way you pick: straight line, one axis only, grid steps (across plus down), or king moves (the larger of the two).
+
 ### HTNAgent (`res://eventsheet_addons/htn_agent/htn_agent_behavior.gd`)
 @ace_tags(ai, planning) @ace_category("HTN") @ace_expose_all(node) @ace_version(1.0.0)
 
@@ -648,12 +718,12 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Current Task Is** (`task_name: String`)
 
 #### Actions
-- **Set World State** (`key: String, value`) - Writes a fact the planner reads in method preconditions.
+- **Set World State** (`key: String, value: Variant`) - Writes a fact the planner reads in method preconditions.
 - **Clear World State** (`key: String`) - Removes a world-state key.
 - **Add Primitive Task** (`task_name: String`) - Registers a leaf task your sheet executes directly.
 - **Add Compound Task** (`task_name: String`) - Registers a task that decomposes via methods.
 - **Add Method** (`task_name: String, method_id: String, utility: float`) - Adds (or re-scores) a way to accomplish a compound task; highest utility wins.
-- **Add Method Condition** (`task_name: String, method_id: String, key: String, op: String, value`) - A precondition (world-state key, operator, value) the method needs to be chosen.
+- **Add Method Condition** (`task_name: String, method_id: String, key: String, op: String, value: Variant`) - A precondition (world-state key, operator, value) the method needs to be chosen.
 - **Add Method Subtask** (`task_name: String, method_id: String, subtask: String`) - Appends a subtask (primitive or compound) to a method, in order.
 - **Set Method Utility** (`task_name: String, method_id: String, utility: float`) - Updates a method's utility at runtime (utility-driven re-prioritising).
 - **Clear Task Network** - Wipes all tasks/methods (keeps world state).
@@ -686,6 +756,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Toggle Panel** (`panel_name: String`) - Flips a named panel's visibility.
 - **Switch Screen** (`panel_name: String`) - Shows the named panel and hides its sibling panels - one call flips a whole menu screen.
 - **Show Toast** (`text: String`) - Pops a bottom-centre message that fades out after toast_seconds.
+- **Pop Floating Text** (`text: String, at: Vector2, color: Color`) - Pops a damage number or score popup at a position: it drifts up, fades out and frees itself. No label to place, no tween to write, no cleanup to remember.
 
 #### Expressions
 - **Last Button Name**
@@ -725,6 +796,24 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Last Cost** - What the last Buy cost - Spend this from your wallet.
 - **Last Bought** - How many units the last Buy added (0 if Buy Max could not afford any).
 - **Last Collected** - How much the last Collect handed you.
+
+### InteractionBehavior (`res://eventsheet_addons/interaction/interaction_behavior.gd`)
+@ace_tags(interaction, focus, prompt) @ace_category("Interaction") @ace_expose_all(node) @ace_version(1.0.0)
+
+#### Triggers
+- **On Focus Changed** (`node: Node`)
+- **On Interacted** (`node: Node`)
+
+#### Conditions
+- **Has Focus** - True while something interactable is in focus - the condition that shows and hides your "Press E" prompt.
+
+#### Actions
+- **Focus Nearest Interactable** (`group_name: String, within: float`) - Focuses the nearest node in the given group that is within reach (in pixels), or nothing at all when none are. Run this under a per-frame trigger (On Every Tick) - it re-picks every tick, but On Focus Changed only fires when the focused node actually changes, including when it becomes nothing.
+- **Interact With Focus** - Interacts with the focused node: if it has a function named interact(), that function is called. On Interacted fires either way, so a thing with no interact() of its own can still be handled entirely from a sheet.
+- **Clear Focus** - Drops the current focus (firing On Focus Changed with nothing) - for cutscenes, menus, and death, where the prompt should disappear even though the player has not moved.
+
+#### Expressions
+- **Focused Node** - The node currently in focus, or nothing when none is. Feed it to the Juice pack's Start Blinking to highlight it, or read a name off it for the prompt text.
 
 ### JuiceBehavior (`res://eventsheet_addons/juice/juice_behavior.gd`)
 @ace_tags(camera, juice) @ace_category("Juice") @ace_expose_all(node) @ace_version(1.0.0)
@@ -1015,6 +1104,24 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Actions
 - **Set Orbit 3D Center** (`x: float, y: float, z: float`) - Orbits around the given point from now on.
 
+### PhaseCycleAddon (`res://eventsheet_addons/phase_cycle/phase_cycle_addon.gd`)
+@ace_tags(time, day-night, cycle) @ace_category("Phase Cycle") @ace_version(1.0.0)
+
+#### Triggers
+- **On Phase Changed** (`previous: String, next: String`)
+
+#### Conditions
+- **Phase Is** (`phase_name: String`) - True while the cycle is on the named phase - the branch for "only spawn ghosts at night". Names are matched exactly, so keep the spelling identical to the list you passed Cycle Phases.
+
+#### Actions
+- **Cycle Phases** (`phases: String, seconds_each: float`) - Starts (or restarts) the cycle from a comma-separated list of phase names - "day,night" or "spring,summer,autumn,winter" - with each phase lasting seconds_each. Begins on the first name and fires On Phase Changed for it right away, so the systems listening set themselves up correctly on the first frame.
+- **Stop Cycle** - Freezes the cycle where it stands. The current phase and its progress keep their values (Phase Is and Phase Progress still read them) - only the clock stops. Call Cycle Phases again to start over.
+
+#### Expressions
+- **Current Phase** - The name of the phase the cycle is on right now (nothing at all before Cycle Phases runs) - print it straight into a HUD label.
+- **Phase Progress** - How far through the current phase the cycle is, from 0 at its start to 1 at its end. Feed it to a sun dial's rotation, a light's colour blend, or a Progress Of style bar.
+- **Phases Count** - How many phases the cycle holds - useful for a "day 3 of 4" readout or for stepping a dial in even slices.
+
 ### PhysicsCar (`res://eventsheet_addons/physics_car/physics_car_behavior.gd`)
 @ace_tags(vehicle, physics) @ace_category("Physics Car") @ace_version(1.0.0)
 
@@ -1213,6 +1320,49 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Earned For Next Point** - The run earnings needed to reach the next prestige point.
 - **Progress To Next** - How close this run is to the next point, 0 to 1 (for a progress bar).
 
+### PricedTableBehavior (`res://eventsheet_addons/priced_table/priced_table_behavior.gd`)
+@ace_tags(shop, economy, purchase, unlock) @ace_category("Priced Tables") @ace_version(1.0.0)
+
+#### Triggers
+- **On Purchased** (`entry_id: String, price: float`)
+- **On Purchase Refused** (`entry_id: String, reason: String`)
+
+#### Conditions
+- **Can Afford Entry** (`entry_id: String`) - True when the wallet covers this entry's price right now - the condition that greys out a shop button before the player clicks it. Reads through the same seam the purchase uses, so it can never disagree with Buy Entry.
+- **Entry In Stock** (`entry_id: String`) - True while the entry has something left to sell. An unlimited entry (-1) is always in stock; an unknown id never is.
+- **Entry Is Unlocked** (`entry_id: String`) - True when the entry is open for business - the gate behind a tier, a prerequisite or a story beat.
+- **Has Entry** (`entry_id: String`) - Whether the table holds an entry with this id at all - the guard that tells a typo apart from a sold-out row.
+- **Table Is Sold Out** - True when nothing in the table can be bought any more: every entry is either at 0 stock or locked. An empty table counts as sold out.
+
+#### Actions
+- **Load Price Table** (`table: Resource`) - Stocks this table from a PriceTableResource (.tres) - every entry with its price, currency, stock, locked flag and requirement note - in one step instead of a wall of Add Entry actions. Entries that share an id with one already stocked are REPLACED (so loading a second table re-prices rather than duplicating); ids it has never seen are appended.
+- **Add Entry** (`entry_id: String, label: String, price: float, currency: String, stock: int`) - Adds (or replaces) one entry from a sheet, for a table built at runtime - a shop whose stock is rolled per visit, a skill tree grown as the player levels. A stock of -1 is unlimited; the entry starts unlocked with no requirement note (set those with Set Entry Unlocked and the resource's requires column).
+- **Clear Table** - Empties the table - every entry, price and stock count. Use it before loading a different table when you do NOT want the two merged by id.
+- **Buy Entry** (`entry_id: String`) - The whole purchase in one row: refuses (firing On Purchase Refused with a reason) when the id is unknown, the entry is locked, its stock is 0, or the wallet cannot cover the price; otherwise it takes the price through whatever wallet answers, counts the stock down by one, and fires On Purchased with the id and what was paid. Hand over the goods in On Purchased - the pack never guesses what an entry means.
+- **Restock Entry** (`entry_id: String, amount: int`) - Adds to one entry's remaining stock (a delivery, a daily refill). An unlimited entry (-1) is left alone, and stock never falls below 0.
+- **Restock All** - Puts every entry back to the stock its table shipped with - the one row behind "the shop restocks each morning". Prices, locks and requirement notes are untouched.
+- **Set Stock** (`entry_id: String, stock: int`) - Forces one entry's remaining stock to an exact number. -1 makes it unlimited, 0 sells it out.
+- **Set Price** (`entry_id: String, price: float`) - Re-prices one entry while the game runs - a sale, a haggle, a reputation discount. Negative prices are clamped to 0 (a free entry still goes through the whole purchase, so its trigger still fires).
+- **Set Entry Unlocked** (`entry_id: String, unlocked: bool`) - Opens (or closes) one entry. A locked entry still shows in the table - Entry Is Unlocked greys it out in your UI, and buying it is refused with the reason "locked" - which is how a tier gate, a skill-tree prerequisite or a story unlock is expressed without deleting the row.
+- **Use Wallet Node** (`node: Node`) - Points this table at ONE wallet node, tried before anything else - the direct way when the purse is already in hand (the player's own wallet node, a shared bank, a per-faction till). The contract is two functions, balance(currency) and spend(currency, amount); a node missing either is ignored, so a wrong drag can never silently swallow the money. Pass nothing to go back to searching the wallet group and then the CurrencyLedger autoload.
+- **Set Local Wallet** (`amount: float`) - Sets the fallback purse - the number this table spends from when no wallet node and no CurrencyLedger autoload answer. It is deliberately the ONLY money verb here: as soon as your game has a real economy, install one and this number stops being consulted.
+
+#### Expressions
+- **Price Of** (`entry_id: String`) - What one entry costs (-1 when the table has no such id, so a missing price never reads as free).
+- **Stock Of** (`entry_id: String`) - How many of one entry are left: -1 for unlimited, 0 for sold out (which is also what an unknown id reads).
+- **Currency Of** (`entry_id: String`) - The currency id one entry is priced in - pass it to your wallet's own expressions to show the right icon.
+- **Label Of** (`entry_id: String`) - The player-facing name of one entry ("Iron Sword"), for the shop row's text.
+- **Requirement Of** (`entry_id: String`) - The plain-language requirement note written on one entry ("needs the guild badge"), for the tooltip on a locked row. The pack never interprets it - YOUR game decides when to call Set Entry Unlocked.
+- **Entry Count** - How many entries the table holds - the row count for a shop list.
+- **Entry Id At** (`index: int`) - The entry id at a position, in table order ("" out of range) - walk 0..Entry Count to build the shop UI.
+- **Table Name** - The readable name written on the loaded table resource ("Blacksmith") - the shop window's title.
+- **Wallet Balance** (`currency: String`) - What the buyer can spend of one currency, read through the same seam a purchase uses: the node given to Use Wallet Node, else a wallet node in the wallet group, else the CurrencyLedger autoload, else this table's Local Wallet number (which is currency-blind).
+- **Last Purchased Id** - The entry bought most recently ("" before the first one) - readable long after On Purchased, for a receipt line.
+- **Last Price Paid** - What the last purchase actually cost - the number to show in "-25 gold" feedback.
+- **Last Currency Paid** - The currency the last purchase was paid in.
+- **Refused Entry Id** - The entry of the most recent refusal ("" if none yet).
+- **Refused Reason** - Why the most recent purchase was refused, as plain words you can show: "unknown entry", "locked", "out of stock" or "too expensive".
+
 ### ProcRoomAddon (`res://eventsheet_addons/proc_room/proc_room_addon.gd`)
 @ace_tags(procedural, roguelite) @ace_category("ProcRoom") @ace_version(1.0.0)
 
@@ -1262,6 +1412,36 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Blocked Id** - The room that couldn't be entered (inside On Traversal Blocked).
 - **Block Reason** - Why entry was blocked - "locked" or "unreachable" (inside On Traversal Blocked).
 
+### QuestPackAddon (`res://eventsheet_addons/quest/quest_addon.gd`)
+@ace_tags(quest, objective, progression) @ace_category("Quest") @ace_version(1.0.0)
+
+#### Triggers
+- **On Quest Started** (`quest_id: String`)
+- **On Objective Completed** (`quest_id: String, objective: String`)
+- **On Quest Completed** (`quest_id: String`)
+
+#### Conditions
+- **Quest Is Active** (`quest_id: String`) - Whether this quest is being tracked right now (started, not yet completed or abandoned).
+- **Quest Is Completed** (`quest_id: String`) - Whether this quest has been finished (every objective filled).
+- **Objective Is Done** (`quest_id: String, objective: String`) - Whether one objective of an active quest has reached its needed count.
+
+#### Actions
+- **Start Quest** (`quest: Resource`) - Begins a quest from a Quest resource (a .tres you filled in the Inspector): every objective starts at 0 and On Quest Started fires. Starting a quest again resets its progress.
+- **Register Quest** (`quest: Resource`) - Teaches the tracker a quest WITHOUT starting it, so another quest can chain into it through its Next Quest field (and so Quest Title / Quest Reward Note can read it). Register the later quests of a questline once at startup.
+- **Advance Objective** (`quest_id: String, objective: String, amount: int`) - Counts progress on one objective of an active quest. Progress stops at the needed count, so an extra call can never double-fire: On Objective Completed fires the moment it fills, and once every objective is full the quest completes (On Quest Completed) and its Next Quest starts automatically.
+- **Abandon Quest** (`quest_id: String`) - Drops an active quest and forgets its progress. It does NOT count as completed, and no trigger fires - start it again to try over.
+- **Reset All Quests** - Clears every active quest and the completed list (e.g. on New Game). Registered quest definitions are kept, so a chain still works.
+- **Save Quests** - Writes the active quests and the completed list into user://remembered.cfg (the same file the Remember Between Runs variable option uses) under a "Quests" section. Call it when the player saves or the level ends.
+- **Load Quests** - Reads the active quests and the completed list back out of user://remembered.cfg (the Remember Between Runs store), replacing whatever is tracked now. Nothing happens if there is no save yet. Register your quest resources first if you want chains to keep working.
+
+#### Expressions
+- **Objective Text** (`quest_id: String, objective: String`) - An objective's progress as readable text, e.g. "3/5" - drop it straight into a quest-log label. "" if the quest is not active or has no such objective.
+- **Objective Progress** (`quest_id: String, objective: String`) - An objective's progress as 0-1 - feed it straight to a progress bar's Progress Of. 0 if the quest is not active or has no such objective.
+- **Active Quest Count** - How many quests are being tracked right now.
+- **Completed Quest Count** - How many quests have been finished.
+- **Quest Title** (`quest_id: String`) - The player-facing title of a started or registered quest ("" if the tracker has never seen it).
+- **Quest Reward Note** (`quest_id: String`) - The reward note written on the quest resource - show it in your log and hand the reward out yourself in On Quest Completed.
+
 ### RotateBehavior (`res://eventsheet_addons/rotate/rotate_behavior.gd`)
 @ace_tags(movement, visual) @ace_category("Rotate") @ace_version(1.0.0)
 
@@ -1293,7 +1473,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Slot Exists** (`slot_index: int`) - Whether the slot has a save file.
 
 #### Actions
-- **Save Value** (`key: String, value`) - Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.
+- **Save Value** (`key: String, value: Variant`) - Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.
 - **Save Number** (`key: String, value: float`) - Writes a number under the key (active slot).
 - **Save Text** (`key: String, value: String`) - Writes a string under the key (active slot).
 - **Delete Slot** - Removes the active slot's save file.
@@ -1307,7 +1487,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Load Singleton State** (`singleton_name: String, key: String`) - Restores an autoload addon's snapshot from the key.
 
 #### Expressions
-- **Load Value** (`key: String, default_value`) - Reads any value (your default when missing).
+- **Load Value** (`key: String, default_value: Variant`) - Reads any value (your default when missing).
 - **Load Number** (`key: String`) - Reads a number (0 when missing).
 - **Load Text** (`key: String`) - Reads a string ("" when missing).
 - **Read All** - Reads the whole active slot as one Dictionary (every saved key and value).
@@ -1513,6 +1693,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 #### Actions
 - **Set State** (`next: String`) - Switches to the given state and fires On State Changed.
 
+#### Expressions
+- **Time In State** - How many seconds the machine has been in its current state.
+
 ### StoryletsAddon (`res://eventsheet_addons/storylet_weaver/storylet_weaver_addon.gd`)
 @ace_tags(narrative, storylet) @ace_category("Storylets") @ace_version(1.3.0)
 
@@ -1536,16 +1719,16 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Storylet Weight** (`id: String, weight: float`) - How strongly this storylet is preferred when several are eligible (higher = picked first / likelier).
 - **Set Storylet Cooldown** (`id: String, seconds: float`) - Seconds this storylet is ineligible after it plays (0 = no cooldown).
 - **Set Max Plays** (`id: String, max_plays: float`) - How many times it may ever play (-1 = unlimited, 1 = a one-shot).
-- **Add Requirement** (`id: String, quality_key: String, op: String, value`) - A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "").
+- **Add Requirement** (`id: String, quality_key: String, op: String, value: Variant`) - A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "").
 - **Add Choice** (`id: String, choice_id: String, text: String`) - Adds a labelled choice the player can pick on this storylet (resolve it with Choose).
-- **Add Choice Requirement** (`id: String, choice_id: String, quality_key: String, op: String, value`) - A rule that must pass for this choice to be OFFERED, e.g. quality "gold" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice.
-- **Add Choice Effect** (`id: String, choice_id: String, op: String, key: String, value`) - A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice.
-- **Add Effect** (`id: String, op: String, key: String, value`) - A quality change applied automatically when this storylet is DRAWN - so a beat carries its own consequence. Define the storylet first.
-- **Add Meta** (`id: String, key: String, value`) - Attaches an arbitrary key-value to a storylet (a speaker, a portrait, a sound). Read it back with Active Meta / Storylet Meta - the engine never interprets it.
+- **Add Choice Requirement** (`id: String, choice_id: String, quality_key: String, op: String, value: Variant`) - A rule that must pass for this choice to be OFFERED, e.g. quality "gold" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice.
+- **Add Choice Effect** (`id: String, choice_id: String, op: String, key: String, value: Variant`) - A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice.
+- **Add Effect** (`id: String, op: String, key: String, value: Variant`) - A quality change applied automatically when this storylet is DRAWN - so a beat carries its own consequence. Define the storylet first.
+- **Add Meta** (`id: String, key: String, value: Variant`) - Attaches an arbitrary key-value to a storylet (a speaker, a portrait, a sound). Read it back with Active Meta / Storylet Meta - the engine never interprets it.
 - **Add Requirement (Key vs Key)** (`id: String, quality_key: String, op: String, other_key: String`) - A rule comparing one quality against ANOTHER quality's value, e.g. gold >= price - so a storylet reacts to a relationship between stats without hard-coding the number.
 - **Add Chance Requirement** (`id: String, percent: float`) - A probability gate: the storylet is eligible only percent% of the time, re-rolled on every Evaluate/Draw. Use it to make a beat show only sometimes.
 - **Add Recency Requirement** (`id: String, mode: String, within: int`) - An anti-repeat (or must-be-recent) gate by DRAW history: eligible only when this storylet was / was not among the last N drawn storylets.
-- **Set Quality** (`key: String, value`) - Stores a quality value (a number like courage=3, or text like location="tavern"). Requirements read these.
+- **Set Quality** (`key: String, value: Variant`) - Stores a quality value (a number like courage=3, or text like location="tavern"). Requirements read these.
 - **Increment Quality** (`key: String, amount: float`) - Adds to a numeric quality (creating it at 0 if new).
 - **Clear Quality** (`key: String`) - Removes a quality key.
 - **Evaluate** - Rebuilds the available list: every eligible storylet, ordered by weight (highest first). Use the Available expressions to show a menu.
@@ -1604,7 +1787,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Is Busy**
 
 #### Actions
-- **Enqueue Item** (`item`) - Adds one item to the work queue (processed later within the per-frame budget).
+- **Enqueue Item** (`item: Variant`) - Adds one item to the work queue (processed later within the per-frame budget).
 - **Enqueue Items** (`items: Array`) - Adds every element of an array to the work queue.
 - **Enqueue Group** (`group: String`) - Adds every node in a group to the work queue (e.g. process all enemies, spread over frames).
 - **Clear Queue** - Drops all pending items without processing them.
@@ -1657,12 +1840,12 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Current Task Is** (`task_name: String`)
 
 #### Actions
-- **Set World State** (`key: String, value`) - Writes a fact - preconditions and scorer inputs read it.
+- **Set World State** (`key: String, value: Variant`) - Writes a fact - preconditions and scorer inputs read it.
 - **Clear World State** (`key: String`) - Removes a world-state key.
 - **Add Primitive Task** (`task_name: String`) - Registers a leaf task your sheet executes directly.
 - **Add Compound Task** (`task_name: String`) - Registers a task that decomposes via methods.
 - **Add Method** (`task_name: String, method_id: String, utility: float`) - Adds (or re-scores) a way to accomplish a compound task; the best-ranked applicable method wins.
-- **Add Method Condition** (`task_name: String, method_id: String, key: String, op: String, value`) - A precondition (world-state key, operator, value) the method needs to be chosen.
+- **Add Method Condition** (`task_name: String, method_id: String, key: String, op: String, value: Variant`) - A precondition (world-state key, operator, value) the method needs to be chosen.
 - **Add Method Subtask** (`task_name: String, method_id: String, subtask: String`) - Appends a subtask (primitive or compound) to a method, in order.
 - **Add Scorer Input** (`scorer_id: String, input_key: String, curve: String, weight: float, center: float, slope: float`) - Feeds a world-state key through a response curve (linear / inverse / quadratic / inverse_quadratic / logistic / threshold / bell) into a named scorer. A scorer is the weighted average of its inputs.
 - **Set Method Scorer** (`task_name: String, method_id: String, scorer_id: String`) - Binds a utility scorer to a method - the method is then ranked by the scorer's LIVE value at plan time instead of its fixed utility.

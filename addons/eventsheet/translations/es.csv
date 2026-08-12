@@ -729,3 +729,15 @@ steps,pasos
 at,a los
 Add Step…,Añadir paso…
 Timeline,Línea de tiempo
+Render Scene To Image,Renderizar escena a imagen
+"Instantiates a scene into an off-screen viewport, lets it settle for a frame, and saves what it shows as a PNG - thumbnails, store shots, doc figures, baked sprites. Needs a windowed editor: a headless run has no renderer, so it warns and writes nothing.","Instancia una escena en un viewport fuera de pantalla, la deja asentarse un fotograma y guarda lo que muestra como PNG: miniaturas, capturas para la tienda, figuras de documentación, sprites horneados. Necesita un editor con ventana: una ejecución headless no tiene renderizador, así que avisa y no escribe nada."
+Preview Table Rolls,Previsualizar tiradas de tabla
+"Rolls a weighted table many times and reports what actually came out: per entry the rolled percent, the percent its weight implies, and the gap between them. Pure maths - it runs anywhere, and the same seed always gives the same numbers.","Tira muchas veces de una tabla ponderada e informa de lo que salió realmente: por entrada el porcentaje obtenido, el porcentaje que implica su peso y la diferencia entre ambos. Matemática pura: funciona en cualquier parte, y la misma semilla siempre da los mismos números."
+On Project Export,Al exportar el proyecto
+"Runs while a project export is starting, before the files are written - the place to stamp a build number, bake a data file, or strip debug content.","Se ejecuta cuando comienza una exportación del proyecto, antes de escribir los archivos: el sitio para sellar un número de compilación, hornear un archivo de datos o quitar contenido de depuración."
+Write Version Stamp,Escribir sello de versión
+"Writes a small build stamp file: the version string plus the date and time the stamp was written. The timestamp is read when the tool runs, so the generated code stays identical every save.","Escribe un pequeño archivo de sello de compilación: la cadena de versión más la fecha y hora en que se escribió el sello. La marca de tiempo se lee al ejecutar la herramienta, así que el código generado es idéntico en cada guardado."
+Export Is Debug,La exportación es de depuración
+True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,Verdadero cuando la exportación que disparó este paso de horneado es una compilación de depuración. Úselo dentro de Al exportar el proyecto para mantener el contenido de prueba fuera de las versiones finales.
+Export Has Feature,La exportación tiene la característica
+"True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.","Verdadero cuando el preajuste de exportación que disparó este paso de horneado lleva la etiqueta de característica indicada: la forma de hornear datos distintos para móvil, web o escritorio."

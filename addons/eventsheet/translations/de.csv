@@ -729,3 +729,15 @@ steps,Schritte
 at,bei
 Add Step…,Schritt hinzufügen…
 Timeline,Timeline
+Render Scene To Image,Szene als Bild rendern
+"Instantiates a scene into an off-screen viewport, lets it settle for a frame, and saves what it shows as a PNG - thumbnails, store shots, doc figures, baked sprites. Needs a windowed editor: a headless run has no renderer, so it warns and writes nothing.","Instanziiert eine Szene in einem Viewport außerhalb des Bildschirms, lässt sie einen Frame lang einschwingen und speichert das Ergebnis als PNG - Miniaturbilder, Store-Aufnahmen, Dokumentationsbilder, gebackene Sprites. Braucht einen Editor mit Fenster: ein Headless-Lauf hat keinen Renderer, also warnt sie und schreibt nichts."
+Preview Table Rolls,Tabellenwürfe vorschauen
+"Rolls a weighted table many times and reports what actually came out: per entry the rolled percent, the percent its weight implies, and the gap between them. Pure maths - it runs anywhere, and the same seed always gives the same numbers.","Würfelt viele Male auf einer gewichteten Tabelle und meldet, was wirklich herauskam: pro Eintrag den gewürfelten Prozentsatz, den von der Gewichtung erwarteten Prozentsatz und den Abstand dazwischen. Reine Mathematik - läuft überall, und derselbe Startwert liefert immer dieselben Zahlen."
+On Project Export,Beim Projekt-Export
+"Runs while a project export is starting, before the files are written - the place to stamp a build number, bake a data file, or strip debug content.","Läuft, während ein Projekt-Export startet, bevor die Dateien geschrieben werden - der Ort, um eine Build-Nummer zu stempeln, eine Datendatei zu backen oder Debug-Inhalte zu entfernen."
+Write Version Stamp,Versionsstempel schreiben
+"Writes a small build stamp file: the version string plus the date and time the stamp was written. The timestamp is read when the tool runs, so the generated code stays identical every save.","Schreibt eine kleine Build-Stempeldatei: die Versionszeichenkette plus Datum und Uhrzeit des Stempelns. Der Zeitstempel wird beim Ausführen des Werkzeugs gelesen, damit der erzeugte Code bei jedem Speichern gleich bleibt."
+Export Is Debug,Export ist Debug
+True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,"Wahr, wenn der Export, der diesen Backschritt ausgelöst hat, ein Debug-Build ist. In Beim Projekt-Export verwenden, um Testinhalte aus Release-Builds herauszuhalten."
+Export Has Feature,Export hat Feature
+"True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.","Wahr, wenn die Export-Vorlage, die diesen Backschritt ausgelöst hat, das angegebene Feature-Tag trägt - so backt man unterschiedliche Daten für Mobil, Web oder Desktop."

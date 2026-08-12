@@ -37,6 +37,13 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_unhandled_input", "event: InputEvent")
 		"OnEditorRun":
 			return _lifecycle("_run", "")
+		"OnProjectExport":
+			# The project-export bake step. Not an engine virtual: the editor's export hook calls this
+			# function by name on the compiled Editor Tool script (that is the whole seam), and hands it
+			# the two facts a bake step needs - whether the export is a debug build, and the preset's
+			# feature tags. Plain GDScript on both sides, so the emitted script keeps zero plugin
+			# dependency and simply does nothing when nobody calls it.
+			return _lifecycle("_on_project_export", "is_debug: bool, features: PackedStringArray")
 		"OnPostTick":
 			# Godot's "post-tick": SceneTree.process_frame fires ONCE after every node's _process this
 			# frame - for logic that must run after everything else updated (a camera that follows after
@@ -113,7 +120,7 @@ static func tempo_class_for(trigger_id: String) -> String:
 			return TEMPO_EVERY_TICK
 		"OnInput", "OnUnhandledInput":
 			return TEMPO_INPUT
-		"OnReady", "OnEditorRun":
+		"OnReady", "OnEditorRun", "OnProjectExport":
 			return TEMPO_ONCE
 		_:
 			return TEMPO_SIGNAL

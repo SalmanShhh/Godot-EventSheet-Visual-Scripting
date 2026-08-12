@@ -75,13 +75,14 @@ That is the whole loop: edit rows, save, File > Run, read the Output panel. Ever
 
 ## 4. The vocabulary - Editor Tools ACEs
 
-Open the picker inside an On Editor Run event and the **Editor Tools** category has the everyday editor-automation verbs. They compile to the exact plain Godot the editor exposes - `EditorInterface`, `ResourceSaver`, `DirAccess`, `Engine` - with zero plugin references, so the generated script works in any Godot project.
+Open the picker inside an On Editor Run event and the **Editor Tools** category has the everyday editor-automation verbs. They compile to the exact plain Godot the editor exposes - `EditorInterface`, `ResourceSaver`, `DirAccess`, `Engine`, plus `SubViewport` / `RenderingServer` for Render Scene To Image, `RandomNumberGenerator` for Preview Table Rolls and `ConfigFile` for Write Version Stamp - with zero plugin references, so the generated script works in any Godot project.
 
 ### Trigger
 
 | Trigger | Fires when |
 |---|---|
 | On Editor Run | You run the compiled script from the script editor with File > Run (Ctrl+Shift+X). Compiles to `_run()`. Runs once per invocation. |
+| On Project Export | A project export starts, before the files are written. Compiles to `_on_project_export(is_debug, features)`. Runs once per export - see "The export bake step" below. |
 
 ### Actions
 
@@ -99,6 +100,9 @@ Open the picker inside an On Editor Run event and the **Editor Tools** category 
 | Make Sure Folder Exists | `path` | Creates a folder (and any missing parents) so a tool can write into it. |
 | Add Node To Edited Scene | `node`, `parent` | Adds a new node under a parent AND sets its owner to the edited scene root, so it is saved with the scene. Three lines of scene-building in one pickable row. |
 | Save Node As Scene | `node`, `path` | Packs a node and its children into a `PackedScene` and saves it as a `.tscn`. |
+| Render Scene To Image | `scene_path`, `width`, `height`, `save_path` | Instantiates a scene into an off-screen viewport, lets it settle a frame, and saves what it shows as a PNG. |
+| Preview Table Rolls | `table`, `rolls`, `seed`, `save_path` | Rolls a weighted table N times and reports rolled percent vs the percent each weight implies, plus the gap. |
+| Write Version Stamp | `path`, `version` | Writes a small `ConfigFile` build stamp: the version string plus the date and time it was written. |
 
 ### Conditions
 
@@ -106,6 +110,8 @@ Open the picker inside an On Editor Run event and the **Editor Tools** category 
 |---|---|---|
 | Resource Exists | `path` | A resource file already exists at the given path - the guard for "create the default file only once". |
 | Is In Editor | (none) | The script is running inside the editor (`Engine.is_editor_hint()`), not the running game. The guard for @tool node sheets. |
+| Export Is Debug | (none) | The export that triggered this bake step is a debug build. Only inside On Project Export. |
+| Export Has Feature | `feature` | The export preset carries the given feature tag (`mobile`, `web`, one of your own). Only inside On Project Export. |
 
 ### Expressions
 
@@ -116,6 +122,58 @@ Open the picker inside an On Editor Run event and the **Editor Tools** category 
 | Editor Scale | float | The editor's display scale (1.0 at 100%), for sizing tool UI. |
 
 The one trap in this table: adding a node to the edited scene by hand needs *three* steps (create, `add_child`, set `owner`), and forgetting the owner means the node silently vanishes when the scene saves. **Add Node To Edited Scene** exists so you never hit that - it does all three.
+
+### Render Scene To Image - and what it does when there is no screen
+
+Point it at a `.tscn`, give it a size and a save path, and you get a PNG: a level-select thumbnail, a store screenshot, a figure for your design doc, a sprite baked out of a 3D model. Under the hood it does what a hand-written screenshot script does - instantiate the scene into a `SubViewport`, wait one frame for it to settle, wait for the frame to actually be drawn, then `save_png` the viewport texture - and then frees the viewport again.
+
+Two things decide whether you get a picture:
+
+- **The scene needs its own camera.** The renderer photographs what that scene shows. A `Node2D` scene wants a `Camera2D`, a 3D scene wants a `Camera3D` (and a light), and a `Control` scene just needs a layout. A scene with no camera renders as empty, which is the picture it honestly has to give.
+- **The editor needs a window.** Rendering is done by the GPU, and a headless run (`--headless`, a CI job, the plugin's own test suite) has no renderer at all. The action checks for that first and pushes a clear warning - "this run has no display, so nothing was written" - instead of saving a blank image or crashing on a null texture. Run it from a normal editor and it works; run it headless and it tells you why it did not.
+
+### Preview Table Rolls - see the odds you actually shipped
+
+Weights are easy to write and hard to feel. "Common 60, rare 30, epic 9, legendary 1" looks reasonable until you play for an hour and never see an epic. This action rolls the table for you - a thousand times by default - and prints a small report:
+
+```
+Table roll preview - 1000 rolls, seed 12345
+entry | rolled | expected | delta
+common | 59.70% | 60.00% | -0.30%
+rare | 30.40% | 30.00% | +0.40%
+epic | 8.90% | 9.00% | -0.10%
+legendary | 1.00% | 1.00% | +0.00%
+```
+
+Per entry: the percent that actually came out, the percent its weight implies, and the gap. It reads the weighted-table resources the plugin ships (any resource with an `entries` list of value/weight rows - a Random Table, a Loot Table) *and* a plain Dictionary you type into the field, like `{"common": 60, "rare": 30, "epic": 9, "legendary": 1}`. Pass a resource path as a String and it loads it for you.
+
+It is pure arithmetic - no renderer, no scene - so it runs anywhere, including headless. The seed is a parameter, so the same seed always gives the same report: change a weight, re-run with the same seed, and the difference you see is the weight change and nothing else. Leave **Save To** empty to print to the Output panel only, or give it a path to keep the report as a file you can diff between balance passes.
+
+It is not only for loot. Gacha pity tables, crit chances, encounter tables, biome weights in a procedural generator, dialogue variation picks - anything you wrote as weights can be checked before a player finds the bug for you.
+
+### The export bake step - On Project Export
+
+**On Project Export** is the second trigger an Editor Tool sheet can use. It fires when you press Export (or run an export from the command line), before the exported files are written, so whatever it writes is part of the build instead of a chore somebody has to remember. It receives two facts about the export, and two conditions read them:
+
+- **Export Is Debug** - true for a debug build. Guard your test content with it and the release build never sees it.
+- **Export Has Feature** - true when the export preset carries a feature tag (`mobile`, `web`, `windows`, or a custom tag you added in Project > Export). Bake different data per platform without a second sheet.
+
+**Write Version Stamp** is the verb that makes it useful on day one: it writes a tiny `ConfigFile` holding your version string and the moment the stamp was written, which the game reads back in three lines:
+
+```gdscript
+var stamp := ConfigFile.new()
+stamp.load("res://build_stamp.cfg")
+print(stamp.get_value("build", "version"), " built ", stamp.get_value("build", "stamped_at"))
+```
+
+The timestamp is read when the tool *runs*, never baked into the generated script, so saving the sheet twice produces identical code - the same determinism rule every compiled sheet follows.
+
+Four practical notes:
+
+- **Keep a bake step synchronous.** An export cannot wait for a row that waits: the moment the handler hits an `await`, the exporter carries on packaging files, and anything after that point may miss the build. The one Editor Tools verb that waits is **Render Scene To Image** (it waits for a drawn frame), so a thumbnail belongs in a File > Run tool rather than in a bake step. If a bake step does pause, the Output panel says so: "N tool(s) paused on an await and did not finish before the export continued."
+- **The sheet must be an Editor Tool sheet** (Sheet Type > Editor Tool, so it compiles to `@tool` + `extends EditorScript`). A node sheet that declares the trigger is skipped with a warning naming the file, because instantiating a node script during an export would leak a node into the editor.
+- **Create the file once before you rely on it.** The bake step rewrites the file at export time, and an export reads what is on disk - but a path the project has never seen may not be in the export's file list yet. Run the tool once (File > Run), let the FileSystem dock pick the file up, and every export after that refreshes its contents.
+- **Several bake steps run in path order.** If two tools touch the same file, that order is the same on your machine and in CI.
 
 ---
 
@@ -437,6 +495,65 @@ On Editor Run
 
 Each check is a sheet function (so the audit reads as a table of contents), and because nothing mutates, it is safe to run on any scene at any time.
 
+### 17. Thumbnails for every level, in one run
+
+The level-select screen wants a picture per level, and taking them by hand is the chore nobody does twice.
+
+```
+On Editor Run
+  -> For Each level in ["forest", "caves", "summit"]
+       -> Editor Tools: Render Scene To Image
+            scene_path: "res://levels/%s.tscn" % level
+            width: 320   height: 180
+            save_path: "res://ui/thumbs/%s.png" % level
+  -> Editor Tools: Rescan Project Files
+```
+
+Each level scene needs its own camera framing the shot. Re-run after any art change and every card in the menu is current again. The same row bakes store screenshots at 1920x1080, or renders a 3D prop at 128x128 to use as a 2D icon.
+
+### 18. Check the loot odds before a player does
+
+You wrote the weights. This tells you what they mean.
+
+```
+On Editor Run
+  -> Editor Tools: Preview Table Rolls
+       table: "res://data/boss_drops.tres"
+       rolls: 10000   seed: 1
+       save_path: "res://data/boss_drops_odds.txt"
+```
+
+Read the report in the Output panel, then keep the file next to the table. Change a weight, run again with the same seed, and diff the two reports: only the balance change moved. A Dictionary works just as well when the odds still live in your head - `{"nothing": 70, "coin": 25, "relic": 5}`.
+
+### 19. Stamp the build number into every export
+
+The support question "which build are you on?" answered by the build itself.
+
+```
+On Project Export
+  -> Editor Tools: Write Version Stamp   path: "res://build_stamp.cfg"   version: ProjectSettings.get_setting("application/config/version", "0.0.0")
+```
+
+Read it back on your title screen and show it in the corner. Because the trigger fires on every export, the stamp can never be stale - there is no step to forget. And if the file cannot be written (a folder that does not exist, a read-only checkout), the action warns with the reason rather than leaving you reading yesterday's build number.
+
+### 20. Ship different data to mobile, and no test content to release
+
+One bake step, two guards, three outcomes.
+
+```
+On Project Export
+  Condition: Editor Tools: Export Has Feature   "mobile"
+    -> Editor Tools: Save Resource To File   resource: load("res://data/quality_low.tres")   path: "res://data/quality.tres"
+
+On Project Export
+  Condition: (invert) Editor Tools: Export Is Debug
+    -> GDScript block:
+       DirAccess.remove_absolute("res://data/debug_unlocks.tres")
+       print("release export - debug unlocks removed")
+```
+
+The mobile preset gets the low-quality settings resource; the release build loses the debug unlocks; the debug build keeps everything. No branch of this lives in your game code.
+
 ### Other use cases
 
 - **Placeholder sweeper.** Walk the open scene for nodes in a `placeholder` group, print each one's path, and Select Node In Editor the first - the pre-ship "did we leave any grey boxes in" button.
@@ -458,3 +575,9 @@ Each check is a sheet function (so the audit reads as a table of contents), and 
 - **The Doctor flagged "editor-tool-undo" - do I have to fix it?** It is an info finding, not an error. For a one-off script you re-run freely, ignore it. For a tool other people click, wrap the scene edits in `EditorInterface.get_editor_undo_redo()` `create_action` / `commit_action` as shown in section 7, and the finding goes away.
 - **Editor Tools actions crash in the running game.** `EditorInterface` exists only in the editor process. Keep Editor Tools verbs in Tool sheets; in a @tool node sheet that also runs in-game, gate editor-only rows behind the **Is In Editor** condition.
 - **Ctrl+Z after a run undoes nothing.** Direct mutations (plain `add_child`, plain property sets) bypass the editor's undo history by design. Only changes registered through `create_action` / `add_do_*` / `add_undo_*` / `commit_action` are undoable.
+- **Render Scene To Image wrote nothing and warned about a display.** You ran it in a headless Godot (`--headless`, a CI job). There is no renderer there, so the action refuses rather than saving a blank file. Run it from the normal editor.
+- **The rendered PNG is empty (or transparent).** The scene has nothing photographing it. Add a `Camera2D` / `Camera3D` to the scene you are rendering (a 3D scene also needs a light), or render a `Control` scene, which needs neither.
+- **Preview Table Rolls printed "no entry has a weight above zero".** The table it read had entries, but every weight was zero or negative - fill in the resource's `entries` grid. If the path is the problem instead, the report says that in its own words: "no table at res://...", naming the path it could not find.
+- **The rolled percentages change every run.** They should not - the seed is a parameter. If they move, the **Seed** field is being fed something that changes (a call to `randi()`, a time value). Put a plain number in it.
+- **My On Project Export step never ran.** Three things to check, in order: the sheet's type is **Editor Tool** (a node sheet is skipped, with a warning naming the file in the Output panel); the sheet has been saved since you added the trigger, so the compiled `.gd` actually declares the handler; and the file you are exporting to is a *project* export, not a "play the scene" run.
+- **The file my bake step writes is not in the exported build.** The export reads what is on disk, so a file the project has never seen may not be in its file list yet. Run the tool once with File > Run, let the FileSystem dock index the new file, and later exports pick up the refreshed contents.

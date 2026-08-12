@@ -34,6 +34,7 @@ const NOT_STANDALONE: Array[String] = [
 	"ConnectGroupSignal", "DisconnectGroupSignal",  # loop over a group and touch a user signal/callable - same as ConnectSignal
 	"ConnectSignalUnique", "ConnectSignalOneShot",  # same user-supplied signal/callable as ConnectSignal
 	"IsLocaleChangeNotification",  # references `what` - only exists inside _notification (its trigger's virtual)
+	"ExportIsDebug", "ExportHasFeature",  # read `is_debug` / `features` - the arguments On Project Export's handler receives
 	"BehaviorHost", "BehaviorHostValid",  # read the behaviour-only `host` var (synthesized only when behavior_mode)
 ]
 

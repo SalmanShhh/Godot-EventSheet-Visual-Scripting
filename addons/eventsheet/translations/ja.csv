@@ -729,3 +729,15 @@ steps,ステップ
 at,時点
 Add Step…,ステップを追加…
 Timeline,タイムライン
+Render Scene To Image,シーンを画像に描画
+"Instantiates a scene into an off-screen viewport, lets it settle for a frame, and saves what it shows as a PNG - thumbnails, store shots, doc figures, baked sprites. Needs a windowed editor: a headless run has no renderer, so it warns and writes nothing.",シーンを画面外のビューポートに生成し、1フレーム落ち着かせてから、表示内容をPNGとして保存します。サムネイル、ストア画像、ドキュメント図、焼き込みスプライトに使えます。ウィンドウ付きのエディタが必要です。ヘッドレス実行にはレンダラーがないため、警告を出して何も書き込みません。
+Preview Table Rolls,テーブル抽選のプレビュー
+"Rolls a weighted table many times and reports what actually came out: per entry the rolled percent, the percent its weight implies, and the gap between them. Pure maths - it runs anywhere, and the same seed always gives the same numbers.",重み付きテーブルを何度も抽選し、実際に何が出たかを報告します。項目ごとに、出た割合、重みから期待される割合、そしてその差を示します。純粋な計算なのでどこでも動き、同じシードなら常に同じ数値になります。
+On Project Export,プロジェクト書き出し時
+"Runs while a project export is starting, before the files are written - the place to stamp a build number, bake a data file, or strip debug content.",プロジェクトの書き出しが始まり、ファイルが書かれる前に実行されます。ビルド番号の刻印、データファイルの焼き込み、デバッグ用コンテンツの除去を行う場所です。
+Write Version Stamp,バージョン刻印を書き出す
+"Writes a small build stamp file: the version string plus the date and time the stamp was written. The timestamp is read when the tool runs, so the generated code stays identical every save.",小さなビルド刻印ファイルを書き出します。バージョン文字列に加えて、刻印した日時を記録します。日時はツール実行時に読み取るため、生成されるコードは保存のたびに同一のままです。
+Export Is Debug,書き出しがデバッグ
+True when the export that triggered this bake step is a debug build. Use it inside On Project Export to keep test content out of release builds.,この焼き込みステップを起動した書き出しがデバッグビルドのとき真になります。プロジェクト書き出し時の中で使い、テスト用コンテンツをリリースビルドから外します。
+Export Has Feature,書き出しが機能を持つ
+"True when the export preset that triggered this bake step carries the given feature tag - the way to bake different data for mobile, web or desktop.",この焼き込みステップを起動した書き出しプリセットが指定の機能タグを持つとき真になります。モバイル、ウェブ、デスクトップで異なるデータを焼き込む方法です。
