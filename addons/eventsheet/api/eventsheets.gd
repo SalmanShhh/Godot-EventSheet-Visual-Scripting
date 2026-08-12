@@ -579,6 +579,63 @@ static func round_trips(source: String) -> bool:
 	return str(compile(sheet, sheet.external_source_path).get("output", "")) == source
 
 
+# ── Data tables (a spreadsheet read exactly the way the Table From File verb reads it) ─
+#
+# The Table From File / Table From Text verbs parse a .csv whose first line is the column
+# names into an Array of Dictionaries, and their parse policy is a genuinely fiddly frozen
+# artifact: quoted cells may contain the separator, a doubled "" is one literal quote, CRLF
+# and lone-CR endings normalise, blank lines drop, a short row fills with "", a repeated
+# column name keeps the first, and an unbalanced quote splits plainly instead of eating the
+# rest of the line. A pack builder, an editor tool or a Doctor check that wants the SAME
+# records had no way to get them but to write that parse a second time - and a second
+# implementation of a frozen artifact is a drift waiting to happen.
+#
+# These run the verb's own template, so they cannot drift by construction: the template is
+# compiled into a throwaway script and called. Editor/tool-side only (nothing is emitted, so
+# the parity covenant is untouched); the compiled parser is cached per separator.
+
+## The compiled parser for one separator. The template is frozen, so one compile serves the
+## whole session.
+static var _table_parsers: Dictionary = {}
+
+
+## Reads a .csv (first line = column names) as an Array of Dictionaries, one record per row,
+## every field reachable by column name: rows[0]["price"]. Identical to what the Table From
+## File verb compiles to. A missing or unreadable file reads as no rows, never an error.
+static func table_from_file(path: String, separator: String = ",") -> Array:
+	# Existence is checked first only to keep a missing data file from spamming the console:
+	# the verb's own template reads a missing file as "" and so as no rows, same as this.
+	if not FileAccess.file_exists(path):
+		return []
+	return table_from_text(FileAccess.get_file_as_string(path), separator)
+
+
+## The same column-names-first parse over text you already hold (a pasted blob, a downloaded
+## body, a file read earlier) - the Table From Text verb as a service. Returns [] when the
+## text is empty or the parser could not be built.
+static func table_from_text(text: String, separator: String = ",") -> Array:
+	var parser: GDScript = _table_parser(separator)
+	if parser == null:
+		return []
+	var rows: Variant = parser.parse(text)
+	return rows if rows is Array else []
+
+
+static func _table_parser(separator: String) -> GDScript:
+	if _table_parsers.has(separator):
+		return _table_parsers[separator]
+	# By path, so naming the table module here never joins the editor's boot compile.
+	var module: GDScript = load("res://addons/eventforge/registration/modules/table_aces.gd")
+	var script: GDScript = GDScript.new()
+	script.source_code = "extends RefCounted\n\n\nstatic func parse(__text: String) -> Array:\n\treturn %s\n" \
+		% module.table_expression("__text", "\"%s\"" % separator.c_escape())
+	if script.reload() != OK:
+		push_warning("[EventSheets] could not build the table parser for separator %s." % separator)
+		return null
+	_table_parsers[separator] = script
+	return script
+
+
 # ── Save support (build the save_state seam into any script or tool) ───────────────────
 #
 # A node persists across a save by exposing two plain methods - `save_state() ->
@@ -754,6 +811,21 @@ static func preview_save(data: Dictionary, format: String, key: String = "state"
 	return text
 
 
+## What one script's SOURCE says about save keys: {"saved", "slot_keys", "loaded", "remembered"},
+## each a sorted PackedStringArray of the literal keys it writes, writes as a TOP-LEVEL slot key,
+## reads back, and persists through Remember Between Runs. This is the Doctor's own
+## save-key-symmetry rule, exposed so a save browser, a migration tool or a pack's own check reads
+## the same keys the built-in check does instead of writing a second regex that disagrees with it.
+##
+## Deliberately conservative, in both directions: a WRITE counts loosely (any receiver, plus
+## every key a save_state() snapshot returns), a READ only from a real dotted call with a
+## literal key, and a computed key is reported by neither - there is nothing to compare.
+## "slot_keys" leaves out the save_state() members, which live inside their own node's dictionary
+## rather than in the slot's own namespace. Whole-line comments are stripped before matching.
+static func save_keys_used(source: String) -> Dictionary:
+	return EventSheetProjectDoctor.save_key_usage(source)
+
+
 # ── Localisation (the editor UI's language - game l10n is the Translation module) ──────
 
 
@@ -812,6 +884,19 @@ static func register_doctor_check(check_id: String, check: Callable) -> void:
 
 static func unregister_doctor_check(check_id: String) -> void:
 	EventSheetProjectDoctor.unregister_check(check_id)
+
+
+## Every GDScript in the project, excluding addons/ (the plugin's own code is not the user's
+## game) - the corpus most Doctor checks actually want.
+##
+## A registered check receives `sheet_paths`, and that list is a TRAP for anything that looks
+## at emitted code: it finds only `.tres` sheets while `.gd` is the default sheet format, so a
+## check built on it silently skips most real projects while looking like it works. A generated
+## sheet is deliberately indistinguishable from hand-written GDScript (the parity covenant), so
+## there is no marker to filter on and no need for one - a script doing the wrong thing is doing
+## the wrong thing whoever wrote it. Scan these when the failure lives in the emitted output.
+static func project_scripts() -> PackedStringArray:
+	return EventSheetProjectDoctor._project_scripts()
 
 
 # ── Extension seams (custom features plug in here) ─────────────────────────────────────

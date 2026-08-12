@@ -920,9 +920,23 @@ func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedString
 			break
 	if run_start >= pending.size() or pending[run_start].strip_edges() != "## @ace_trigger":
 		return  # no `## @ace_trigger` anchor → a plain signal; leave the pending block untouched
+	# Keep walking up over the plain `##` prose above the anchor: a doc comment over a member IS its
+	# description to the analyzer, so leaving it behind here strands the sentence in the block above
+	# and ships the trigger with an EMPTY picker description. Absorbed with the annotations, it
+	# travels on the row and re-emits in the same place (the byte-verify below is the proof).
+	var doc_lines: PackedStringArray = PackedStringArray()
+	var doc_cursor: int = run_start - 1
+	while doc_cursor >= 0:
+		var doc_text: String = pending[doc_cursor].strip_edges()
+		if not doc_text.begins_with("##") or doc_text.begins_with("## @ace_"):
+			break
+		doc_lines.insert(0, doc_text.trim_prefix("##").trim_prefix(" "))
+		doc_cursor -= 1
+	run_start = doc_cursor + 1
 	lifted.trigger = true
 	lifted.ace_name = ace_name
 	lifted.ace_category = ace_category
+	lifted.description = "\n".join(doc_lines)
 	var absorbed: PackedStringArray = PackedStringArray()
 	for index: int in range(run_start, pending.size()):
 		absorbed.append(pending[index])
@@ -935,6 +949,7 @@ func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedString
 		lifted.trigger = false
 		lifted.ace_name = ""
 		lifted.ace_category = ""
+		lifted.description = ""
 		return
 	for _removed: int in range(pending.size() - run_start):
 		pending.remove_at(pending.size() - 1)

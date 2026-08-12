@@ -690,6 +690,7 @@ static func _split_signal_declarations(raw: RawCodeRow) -> Dictionary:
 				signal_row.trigger = true
 				signal_row.ace_name = ace_name
 				signal_row.ace_category = ace_category
+				signal_row.description = _take_trailing_doc_prose(remainder)
 				signal_rows.append(signal_row)
 				count += 1
 				i = j + 1
@@ -706,6 +707,23 @@ static func _split_signal_declarations(raw: RawCodeRow) -> Dictionary:
 		remainder_row.code = "\n".join(remainder)
 		out.append(remainder_row)
 	return {"rows": out, "count": count}
+
+
+## Takes the plain `##` prose off the END of the remainder and hands it back newline-separated -
+## the doc comment that sat directly above a `## @ace_trigger` block. That prose IS the trigger's
+## picker description (a doc comment over a member is what the analyzer reads), so leaving it in
+## the remainder strands the sentence in a code block while the signal moves to the top of the
+## file and ships with an EMPTY description. Stops at the first line that is not `##` prose, so an
+## unrelated comment two lines up is never claimed.
+static func _take_trailing_doc_prose(remainder: PackedStringArray) -> String:
+	var doc_lines: PackedStringArray = PackedStringArray()
+	while not remainder.is_empty():
+		var tail: String = remainder[remainder.size() - 1].strip_edges()
+		if not tail.begins_with("##") or tail.begins_with("## @ace_"):
+			break
+		doc_lines.insert(0, tail.trim_prefix("##").trim_prefix(" "))
+		remainder.remove_at(remainder.size() - 1)
+	return "\n".join(doc_lines)
 
 
 ## Pulls the quoted argument out of an annotation line, e.g. `## @ace_name("On Jumped")` → `On Jumped`.

@@ -95,7 +95,86 @@ static func run() -> bool:
 	fn_sheet.external_source_path = "user://sr_typed_fn.gd"
 	ok = _check("typed-collection function round-trips byte-identically", str(SheetCompiler.compile(fn_sheet, "user://sr_typed_fn.gd").get("output", "")) == fn_src, true) and ok
 
+	ok = _test_trigger_prose_travels_with_the_signal() and ok
 	return ok
+
+
+## A trigger signal's PROSE is its picker description (the analyzer reads a doc comment over a member
+## as one), and it only reaches the picker if it travels ON the row. Both lifters used to absorb the
+## annotation run alone, leaving the sentence in whatever block preceded the signal - so the signal
+## moved to the top of the file, the prose stayed behind, and every documented trigger shipped with
+## an EMPTY description while a paragraph turned up as the doc comment of an unrelated const.
+static func _test_trigger_prose_travels_with_the_signal() -> bool:
+	var ok: bool = true
+	var source: String = "\n".join(PackedStringArray([
+		"## Fires when the autosave clock comes round, INSTEAD of saving.",
+		"## The conditions on this event decide whether now is a good moment.",
+		"## @ace_trigger",
+		"## @ace_name(\"On Autosave Due\")",
+		"## @ace_category(\"Save System\")",
+		"signal autosave_due(slot_index: int)",
+	]))
+
+	# 1. The PACK path (publish_pack's lifter): the prose comes off the block onto the row.
+	var pack_sheet: EventSheetResource = EventSheetResource.new()
+	pack_sheet.host_class = "Node"
+	pack_sheet.custom_class_name = "ProseBehaviour"
+	var block: RawCodeRow = RawCodeRow.new()
+	block.code = source
+	pack_sheet.events.append(block)
+	EventSheetACELifter.lift_signal_declarations(pack_sheet, false)
+	var lifted_row: SignalRow = null
+	for row: Variant in pack_sheet.events:
+		if row is SignalRow:
+			lifted_row = row as SignalRow
+	ok = _check("the pack lifter carries the prose onto the row", lifted_row != null and lifted_row.description ==
+		"Fires when the autosave clock comes round, INSTEAD of saving.\nThe conditions on this event decide whether now is a good moment.", true) and ok
+	ok = _check("and leaves no orphaned block behind it", _has_raw_code(pack_sheet), false) and ok
+	var emitted: String = str(SheetCompiler.compile(pack_sheet, "user://sr_prose_pack.gd").get("output", ""))
+	ok = _check("the emitted signal keeps its prose directly above the annotations",
+		emitted.contains("## Fires when the autosave clock comes round, INSTEAD of saving.\n## The conditions on this event decide whether now is a good moment.\n## @ace_trigger"), true) and ok
+
+	# 2. The ANALYZER really reads it as the trigger's description - the reason any of this matters.
+	# Written to a real file first: the analyzer reads annotations off DISK, so a script built from
+	# a source string in memory would pass for the wrong reason.
+	var probe_path: String = "user://sr_prose_probe.gd"
+	var handle: FileAccess = FileAccess.open(probe_path, FileAccess.WRITE)
+	handle.store_string("extends Node\n\n%s\n" % source)
+	handle.close()
+	var metadata: Dictionary = EventSheetSemanticAnalyzer.new().parse_source_metadata(load(probe_path))
+	var described: Dictionary = (metadata.get("signals", {}) as Dictionary).get("autosave_due", {})
+	ok = _check("the picker gets a real description for the trigger", str(described.get("description", "")),
+		"Fires when the autosave clock comes round, INSTEAD of saving. The conditions on this event decide whether now is a good moment.") and ok
+	DirAccess.remove_absolute(probe_path)
+
+	# 3. The OPEN-A-.gd path (the importer): same absorption, and the byte gate still holds - the
+	# prose re-emits exactly where it came from.
+	var file_source: String = "extends Node\n\n%s\n" % source
+	var opened: EventSheetResource = GDScriptImporter.new().import_external_source(file_source)
+	var opened_row: SignalRow = null
+	for row: Variant in opened.events:
+		if row is SignalRow:
+			opened_row = row as SignalRow
+	ok = _check("opening a .gd absorbs the prose too", opened_row != null and not opened_row.description.is_empty(), true) and ok
+	opened.external_source_path = "user://sr_prose_open.gd"
+	ok = _check("and the file round-trips byte-identically",
+		str(SheetCompiler.compile(opened, "user://sr_prose_open.gd").get("output", "")) == file_source, true) and ok
+
+	# 4. A plain signal with no prose emits exactly what it always did - no leading blank doc line.
+	var bare: SignalRow = SignalRow.new()
+	bare.signal_name = "jumped"
+	bare.trigger = true
+	bare.ace_name = "On Jumped"
+	ok = _check("a trigger with no prose emits the annotation block alone",
+		Array(SheetCompiler._emit_signal_annotations(bare)), ["## @ace_trigger", "## @ace_name(\"On Jumped\")"]) and ok
+	return ok
+
+
+static func _has_raw_code(sheet: EventSheetResource) -> bool:
+	for row: Variant in sheet.events:
+		if row is RawCodeRow and not (row as RawCodeRow).code.strip_edges().is_empty():
+			return true
+	return false
 
 
 static func _has_emit_signal(row: EventRow) -> bool:

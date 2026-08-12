@@ -2347,6 +2347,12 @@ static func _emit_signal_annotations(signal_row: SignalRow) -> PackedStringArray
 	var annotations: PackedStringArray = PackedStringArray()
 	if signal_row == null or not signal_row.enabled or not signal_row.trigger:
 		return annotations
+	# The prose leads, because a `##` doc comment above a member IS its description to the
+	# analyzer - so the picker shows a sentence under the trigger's name instead of nothing.
+	# Emitted one `##` line per stored line, which is exactly what the importer absorbed.
+	if not signal_row.description.is_empty():
+		for doc_line: String in signal_row.description.split("\n"):
+			annotations.append("##" if doc_line.is_empty() else "## %s" % doc_line)
 	annotations.append("## @ace_trigger")
 	if not signal_row.ace_name.strip_edges().is_empty():
 		annotations.append("## @ace_name(\"%s\")" % signal_row.ace_name.strip_edges())

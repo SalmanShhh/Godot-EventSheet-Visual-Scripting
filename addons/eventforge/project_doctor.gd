@@ -6,10 +6,12 @@
 #   error   - a broken contract: a committed generated script drifted from what its
 #             sheet compiles to today, or a sheet no longer compiles. CI fails on these.
 #   warning - a wiring gap with a one-step fix: sheet never compiled, autoload sheet
-#             not registered (or registered to a different script).
+#             not registered (or registered to a different script), a save key read back
+#             that nothing ever writes.
 #   info    - advisory vocabulary hygiene: private variable never referenced, pack
 #             published but unused, compiled sheet attached to no scene, a stateful
-#             behavior missing the save-state seam. Never fails CI.
+#             behavior missing the save-state seam, one name kept both by Remember
+#             Between Runs and by the Save System. Never fails CI.
 # The doctor NEVER writes inside res:// - verification recompiles go to a user://
 # scratch file and are compared as text (contrast tools/audit_addons.gd, which repairs
 # pack outputs in place while reporting drift).
@@ -66,6 +68,7 @@ static func run() -> Dictionary:
 	check_untranslated_project(sheet_paths, findings)
 	check_required_fields(sheet_paths, findings)
 	check_missing_save_support(sheet_paths, findings)
+	check_save_key_symmetry(sheet_paths, findings)
 	check_editor_tool_undo(sheet_paths, findings)
 	check_orphaned_provider_calls(sheet_paths, findings)
 	check_vocabulary_doc(findings)
@@ -308,6 +311,279 @@ static func check_missing_save_support(sheet_paths: PackedStringArray, findings:
 		var kind: String = "autoload" if sheet.autoload_mode else "behavior"
 		_add(findings, "info", "save-support", sheet_path,
 			"This %s holds %d State variable(s) but has no save_state/load_state seam, so its runtime state won't survive Save Game - Tools > Save Studio > Add Save Support generates the pair (ignore if the state is transient)." % [kind, state_vars])
+
+
+## Save-key symmetry: the commonest save bug is not a crash, it is a SILENCE. A sheet loads
+## "coins" on ready, nothing in the project ever saves "coins", and the game reads the default
+## forever while looking like it works - no error, no warning, no clue. The save-support check
+## above is adjacent but answers a different question (does this sheet have a save_state seam at
+## all); this one is about the KEYS, and it is decidable: collect every save key the project
+## WRITES, every key it READS BACK, and diff the two sets.
+##
+## It reads the EMITTED SCRIPTS, not the sheet resources, for the reason the orphaned-verb check
+## documents: `.gd` is the default sheet format but list_project_sheets() finds only `.tres`, so a
+## check driven by sheet_paths would skip most real projects while looking like it works. The save
+## call is in the emitted code either way, so that is where this is true - and a hand-written
+## script reading a key nobody writes is the same bug whoever typed it.
+##
+## NOT CRYING WOLF IS THE WHOLE FEATURE - a Doctor check that accuses a working game is worse than
+## no check, so the two sides are deliberately asymmetric. A WRITE is counted from every route a
+## key can really reach the file: a save verb with any receiver or none (a hand-rolled
+## `_saves.save_value("coins", …)` wrapper counts), a `save_state()` snapshot key, a Remember
+## Between Runs variable, and a subscript assignment into a save payload (`data["coins"] = …`,
+## which is how a migration rewrites a slot). A READ is matched strictly (a real
+## `something.load_number("coins")` call with a literal key): missing a write would produce a
+## false accusation, while missing a read only costs silence. Anything computed - a key built from
+## a variable, a concatenation, a loop over save_keys() - is never judged, because there is nothing
+## to compare, and the save backend's own "__" reserved keys are never blamed on anyone.
+##
+## Two findings come out. A key read with no writer anywhere is a `warning` (a wiring gap with a
+## one-step fix, named on the script that reads it). A name that is BOTH a Remember Between Runs
+## variable and a top-level Save System key is an `info`: one value, two files, two lifetimes, and
+## after a slot load the two copies can disagree - nobody spots that by eye. That second one is
+## deliberately narrower than the first: it needs a PROJECT script (never a pack) using the name as
+## a real slot key, because `save_state()` members live inside their own node's dictionary and a
+## pack returning `{"level": …}` from its snapshot has nothing to do with an author's `level`.
+##
+## The deliberate omission is the mirror case, "a key written and never read back". Its false
+## positives are everywhere a save is read in bulk (a `read_all()` loop, a slot browser listing
+## keys, a version stamp shown on the load screen, a migration that will read it next version),
+## and every one of those would be a wrong accusation about working code. The asymmetry is
+## honest: reading a key nobody writes is always a bug, writing a key nobody reads often is not.
+##
+## THE KNOWN LIMITATIONS, stated rather than implied. This reads TEXT, so: whole-line comments are
+## stripped first, but a call quoted inside a string literal can still read as a real one; a key
+## built at runtime is invisible by design; `_project_scripts()` skips every `addons` directory, so
+## a save written from a plugin under res://addons/ is not seen; and a `.tres` sheet that has never
+## been compiled contributes no emitted code to scan. Each of those costs silence, never a false
+## accusation, except the string-literal case - which is why the message ends by naming the way out.
+static func check_save_key_symmetry(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var usage_by_path: Dictionary = {}
+	for script_path: String in _project_scripts():
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if source.is_empty():
+			continue
+		var usage: Dictionary = save_key_usage(source)
+		if (usage["saved"] as PackedStringArray).is_empty() and (usage["loaded"] as PackedStringArray).is_empty() \
+				and (usage["remembered"] as PackedStringArray).is_empty():
+			continue
+		usage_by_path[script_path] = usage
+	findings.append_array(save_key_findings(usage_by_path))
+
+
+## The whole diff as a pure function: {script_path: save_key_usage(source)} in, findings out. The
+## corpus is PROJECT-WIDE on purpose - a key saved by one sheet and read by another is symmetric,
+## and judging a script alone would report every one of those as broken.
+static func save_key_findings(usage_by_path: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var saved: Dictionary = {}
+	# Top-level SLOT keys written by a project script - the only writes the double-storage advisory
+	# may compare against. A `save_state()` member is not one: it lives inside its own node's
+	# dictionary, so a pack snapshotting `{"level": …}` shares nothing but a common word.
+	var slot_saved: Dictionary = {}
+	# key -> the script to BLAME, or "" when only a pack uses it: a pack is shipped vocabulary the
+	# project author cannot edit, so its keys join the corpus but never get reported.
+	var loaded: Dictionary = {}
+	var remembered: Dictionary = {}
+	var paths: Array = usage_by_path.keys()
+	paths.sort()
+	for script_path: String in paths:
+		var usage: Dictionary = usage_by_path[script_path]
+		var blamable: bool = not script_path.begins_with("res://eventsheet_addons/")
+		for key: String in usage.get("saved", PackedStringArray()):
+			saved[key] = true
+		if blamable:
+			for key: String in usage.get("slot_keys", PackedStringArray()):
+				slot_saved[key] = true
+		for key: String in usage.get("loaded", PackedStringArray()):
+			_note_key_owner(loaded, key, script_path, blamable)
+		for key: String in usage.get("remembered", PackedStringArray()):
+			_note_key_owner(remembered, key, script_path, blamable)
+	var loaded_keys: Array = loaded.keys()
+	loaded_keys.sort()
+	for key: String in loaded_keys:
+		var reader_path: String = str(loaded[key])
+		if reader_path.is_empty() or saved.has(key) or remembered.has(key) or _is_reserved_save_key(key):
+			continue
+		_add(findings, "warning", "save-key-symmetry", reader_path,
+			"\"%s\" is read back here, but nothing in this project ever saves it - so it reads its default on every run and the game looks fine while quietly forgetting. Add the matching save action wherever the game saves (Save System > Save Number / Save Value / Save Node State), or tick Remember Between Runs on the variable instead (ignore this if something outside the project writes that file)." % key)
+	var remembered_keys: Array = remembered.keys()
+	remembered_keys.sort()
+	for key: String in remembered_keys:
+		var owner_path: String = str(remembered[key])
+		# A PROJECT script has to be treating the same name as a slot key - written or read back.
+		# Anything less is a word two unrelated values happen to share.
+		var read_by_project: bool = loaded.has(key) and not str(loaded[key]).is_empty()
+		if owner_path.is_empty() or _is_reserved_save_key(key) or not (slot_saved.has(key) or read_by_project):
+			continue
+		_add(findings, "info", "save-key-symmetry", owner_path,
+			"\"%s\" is kept in two places at once: Remember Between Runs stores it in user://remembered.cfg, and the Save System stores a \"%s\" key in the save slot. The two have different lifetimes, so after loading a slot the copies can disagree. Pick one home - untick Remember Between Runs on the variable, or drop the save/load rows for that key." % [key, key])
+	return findings
+
+
+## The save backend's OWN bookkeeping, never a value the author is responsible for saving. The
+## Save System reserves every "__" name for exactly that reason ("__persist" for the scene-tree
+## snapshot, "__version" for which build wrote the file, "__addons" for the autoload snapshot),
+## and it writes them from inside its own backends where no Save Value row exists to be found. A
+## game key is not spelled this way, so skipping them costs no coverage. Reported by
+## save_key_usage all the same - a tool asking what a script touches wants the truth; it is the
+## BLAME that is wrong here, not the fact.
+static func _is_reserved_save_key(key: String) -> bool:
+	return key.begins_with("__")
+
+
+## First writer wins, but a pack's placeholder is upgraded the moment a project script uses the
+## same key, so the finding always names a file the author can actually open and fix.
+static func _note_key_owner(owners: Dictionary, key: String, script_path: String, blamable: bool) -> void:
+	if not owners.has(key) or (blamable and str(owners[key]).is_empty()):
+		owners[key] = script_path if blamable else ""
+
+
+## Whether a source is doing save work at all - the gate on counting a subscript assignment as a
+## save write. Deliberately a marker list rather than "mentions save": a file that writes a save
+## payload calls one of these. `use_upgraded_save` is in the list because a MIGRATION written the
+## documented way - rewrite the record the On Save Needs Upgrade trigger handed you, then hand it
+## back - ends there and nowhere else, and without it the migrated key reads as never saved.
+const _SAVE_WORK_MARKERS: PackedStringArray = ["save_value", "save_number", "save_text", "save_game",
+	"save_state", "read_all", "save_node_state", "save_group_state", "save_singleton_state",
+	"use_upgraded_save"]
+
+
+static func _does_save_work(source: String) -> bool:
+	for marker: String in _SAVE_WORK_MARKERS:
+		if source.contains(marker):
+			return true
+	return false
+
+
+## Save System verbs whose FIRST argument is the save key.
+const _SAVE_KEY_WRITERS: PackedStringArray = ["save_value", "save_number", "save_text"]
+const _SAVE_KEY_READERS: PackedStringArray = ["load_value", "load_number", "load_text", "has_save_key", "load_group_state"]
+## Verbs whose key follows one plain argument - save_node_state($Player, "player").
+const _SAVE_SLOT_WRITERS: PackedStringArray = ["save_node_state", "save_group_state", "save_singleton_state"]
+const _SAVE_SLOT_READERS: PackedStringArray = ["load_node_state", "load_singleton_state"]
+
+
+## What one script's SOURCE says about save keys, as {"saved", "slot_keys", "loaded", "remembered"}
+## sorted PackedStringArrays. Pure (text in, keys out) so the rule is pinned without planting a
+## deliberately asymmetric fixture in the project - which would make the Doctor report a warning
+## on this repo forever, the exact noise the check exists to avoid. Also the API's save_keys_used.
+##
+## "saved" is every write of any kind; "slot_keys" is the subset that are TOP-LEVEL keys in the save
+## file (a verb call or a subscript write), leaving out `save_state()` members - those live inside
+## their own node's dictionary and share nothing with a slot key but a spelling.
+static func save_key_usage(source: String) -> Dictionary:
+	# Comments are prose, not code: a call written out in a `# reads it with load_number("coins")`
+	# note is documentation, and counting it as a real read is how a text scanner accuses a working
+	# game. Whole-line comments come off before anything is matched.
+	var scanned: String = _without_comment_lines(source)
+	var slot_keys: Dictionary = {}
+	var snapshot: Dictionary = {}
+	var loaded: Dictionary = {}
+	var remembered: Dictionary = {}
+	# Most scripts in a project touch no save at all; skipping them costs one substring scan.
+	if scanned.contains("save_") or scanned.contains("load_"):
+		_note_save_keys(scanned, _save_call_pattern(_SAVE_KEY_WRITERS, 1, false), slot_keys)
+		_note_save_keys(scanned, _save_call_pattern(_SAVE_SLOT_WRITERS, 2, false), slot_keys)
+		_note_save_keys(scanned, _save_call_pattern(_SAVE_KEY_READERS, 1, true), loaded)
+		_note_save_keys(scanned, _save_call_pattern(_SAVE_SLOT_READERS, 2, true), loaded)
+		_note_snapshot_keys(scanned, snapshot)
+		# A save payload is often written by SUBSCRIPT rather than by a verb: a migration handed the
+		# raw Dictionary rewrites it in place (`save_data["health"] = save_data["hp"]`), and the Save
+		# System's own format backends do the same. Counted as a write, but only inside a file that is
+		# demonstrably doing save work, so an unrelated dictionary elsewhere in the game cannot
+		# silence a real finding.
+		if _does_save_work(scanned):
+			_note_save_keys(scanned, _cached_regex("\\[\\s*\"([^\"]+)\"\\s*\\]\\s*=(?!=)"), slot_keys)
+	if scanned.contains("__remember_cfg.set_value("):
+		_note_save_keys(scanned, _cached_regex("__remember_cfg\\.set_value\\(\"[^\"]*\",\\s*\"([^\"]+)\""), remembered)
+	var saved: Dictionary = slot_keys.duplicate()
+	for key: String in snapshot.keys():
+		saved[key] = true
+	return {
+		"saved": _sorted_keys(saved),
+		"slot_keys": _sorted_keys(slot_keys),
+		"loaded": _sorted_keys(loaded),
+		"remembered": _sorted_keys(remembered)
+	}
+
+
+## The source with every whole-line comment removed (the line itself stays, so nothing shifts that
+## the caller might count on). A `#` mid-line is left alone: telling a real `#` from one inside a
+## string needs a parser, and dropping the rest of such a line could hide a genuine call.
+static func _without_comment_lines(source: String) -> String:
+	if not source.contains("#"):
+		return source
+	var kept: PackedStringArray = PackedStringArray()
+	for line: String in source.split("\n"):
+		kept.append("" if line.strip_edges().begins_with("#") else line)
+	return "\n".join(kept)
+
+
+## The regex that finds one family of Save System calls and captures its KEY literal.
+## `key_position` is 1 when the key is the first argument and 2 when it follows one plain argument.
+## `require_receiver` demands a `something.` in front (a real call, never a `func load_value(`
+## declaration); writes drop that demand so a wrapper of any shape still registers as a write.
+## An argument list containing a call of its own stops the match dead, which is intended: a
+## computed key is not decidable, and silence is the correct answer to what we cannot read.
+##
+## The leading argument may itself be a STRING - `save_group_state("enemies", "enemy_state")` is the
+## documented way to snapshot a group - so the alternation admits a quoted literal as well as a
+## plain token. Leaving it out made every documented Save Group State row invisible as a write while
+## its Load Group State partner still matched as a read: a false accusation about working code.
+static func _save_call_pattern(methods: PackedStringArray, key_position: int, require_receiver: bool) -> RegEx:
+	var lead: String = "\\." if require_receiver else "(?:^|[^A-Za-z0-9_])"
+	var before_key: String = "" if key_position <= 1 else "(?:\"[^\"]*\"|[^\"(),\\n]+),\\s*"
+	return _cached_regex("%s(?:%s)\\(\\s*%s\"([^\"]+)\"" % [lead, "|".join(methods), before_key])
+
+
+static func _note_save_keys(source: String, pattern: RegEx, into: Dictionary) -> void:
+	for found: RegExMatch in pattern.search_all(source):
+		into[found.get_string(1)] = true
+
+
+## The keys a `save_state()` returns. A value persisted through the save_state/load_state seam IS
+## written - counting it is what keeps the check quiet about a pack (or a hand-written node) that
+## saves through the seam rather than through a Save Value row.
+##
+## The seam is found at ANY indentation, because an inner `class Inner:` carrying its own save_state
+## is exactly the shape a pack author reaches for when several sub-objects each snapshot themselves;
+## the body then ends where the indentation returns to the declaration's own level or shallower.
+static func _note_snapshot_keys(source: String, into: Dictionary) -> void:
+	if not source.contains("func save_state("):
+		return
+	var key_pattern: RegEx = _cached_regex("\"([^\"]+)\"\\s*:")
+	var inside: bool = false
+	var declared_indent: int = 0
+	for line: String in source.split("\n"):
+		var stripped: String = line.strip_edges()
+		if stripped.begins_with("func save_state(") or stripped.begins_with("static func save_state("):
+			inside = true
+			declared_indent = line.length() - line.lstrip("\t ").length()
+			continue
+		if not inside:
+			continue
+		if not stripped.is_empty() and (line.length() - line.lstrip("\t ").length()) <= declared_indent:
+			inside = false
+			continue
+		_note_save_keys(line, key_pattern, into)
+
+
+static func _sorted_keys(keys: Dictionary) -> PackedStringArray:
+	var sorted: Array = keys.keys()
+	sorted.sort()
+	return PackedStringArray(sorted)
+
+
+## Compiled regexes reused across every scanned script - this check compiles five patterns and
+## would otherwise rebuild them once per file in the project.
+static var _regex_cache: Dictionary = {}
+
+
+static func _cached_regex(pattern: String) -> RegEx:
+	if not _regex_cache.has(pattern):
+		_regex_cache[pattern] = RegEx.create_from_string(pattern)
+	return _regex_cache[pattern]
 
 
 ## Scene-mutating verbs an editor tool typically reaches for. If a tool sheet's output edits

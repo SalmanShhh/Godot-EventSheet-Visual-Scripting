@@ -20,6 +20,11 @@ extends Resource
 @export var ace_name: String = ""
 ## Optional picker category for the trigger ACE (`## @ace_category`).
 @export var ace_category: String = ""
+## The trigger's picker description: the plain `##` prose that sits ABOVE the annotation block.
+## A doc comment over a member IS its description to the analyzer, so this is the text a user
+## reads under the trigger's name in the picker. Newline-separated, one emitted `##` line each;
+## empty means the block emits exactly as it always did.
+@export_multiline var description: String = ""
 
 
 ## Returns the stable row kind identifier.
