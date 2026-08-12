@@ -12,6 +12,15 @@ const HEADER := "[eventsheet-snippet v1]"
 const FOOTER := "[/eventsheet-snippet]"
 
 
+## The system clipboard's text, or "" where the display server has no clipboard at all (a headless
+## run). Menus and dialogs ask "is there a snippet to paste?" while being BUILT, and an unguarded
+## read makes the engine log an error every time the suite builds one.
+static func clipboard_text() -> String:
+	if not DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
+		return ""
+	return DisplayServer.clipboard_get()
+
+
 static func is_snippet_text(text: String) -> bool:
 	var stripped: String = text.strip_edges()
 	return stripped.begins_with(HEADER) and stripped.ends_with(FOOTER)

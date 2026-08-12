@@ -77,10 +77,17 @@ func build_all() -> void:
 	_dock._variable_context_menu = PopupMenu.new()
 	_dock._variable_context_menu.add_item("Edit Variable", _dock.VARIABLE_MENU_EDIT)
 	_dock._variable_context_menu.add_item("Rename Everywhere…", _dock.VARIABLE_MENU_RENAME)
+	# The type twin of Rename Everywhere: retyping a variable rewrites every row that sets or
+	# compares it, in the same undo step, after showing the list of what it will touch.
+	_dock._variable_context_menu.add_item("Change Type Everywhere…", _dock.VARIABLE_MENU_CHANGE_TYPE)
 	_dock._variable_context_menu.add_item("Convert Scope", _dock.VARIABLE_MENU_CONVERT_SCOPE)
 	_dock._variable_context_menu.add_item("Toggle Constant", _dock.VARIABLE_MENU_TOGGLE_CONST)
 	_dock._variable_context_menu.add_item("Remember Between Runs", _dock.VARIABLE_MENU_REMEMBER)
 	_dock._variable_context_menu.add_item("Group Under a Heading…", _dock.VARIABLE_MENU_GROUP)
+	# The spreadsheet round trip - enabled only on a GRID variable (one with the table drawer);
+	# _configure_context_menu disables them with the reason on every other variable.
+	_dock._variable_context_menu.add_item("Export Grid to CSV…", _dock.VARIABLE_MENU_GRID_EXPORT)
+	_dock._variable_context_menu.add_item("Import Grid from CSV…", _dock.VARIABLE_MENU_GRID_IMPORT)
 	_dock._variable_context_menu.id_pressed.connect(_dock._on_variable_context_menu_id_pressed)
 	_dock.add_child(_dock._variable_context_menu)
 
@@ -321,6 +328,14 @@ func _build_row_more_submenu(is_event: bool) -> void:
 	m.add_item("Insert Snippet…", _dock.ROW_MENU_INSERT_SNIPPET)
 	m.add_item("Create Code Region…", _dock.ROW_MENU_SURROUND_REGION)
 	m.add_item("Replace Object References…", _dock.ROW_MENU_REPLACE_OBJECT)
+	# Paste Special sits beside Replace Object References because it IS that remap, applied on the
+	# way in instead of as a second step. Disabled (with the reason) when the clipboard holds no
+	# snippet, so the gesture stays discoverable rather than silently absent.
+	m.add_item("Paste Special…", _dock.ROW_MENU_PASTE_SPECIAL)
+	var has_snippet: bool = EventSheetSnippet.is_snippet_text(EventSheetSnippet.clipboard_text())
+	m.set_item_disabled(m.item_count - 1, not has_snippet)
+	m.set_item_tooltip(m.item_count - 1, "Paste the copied rows pointed at another object or variable." if has_snippet
+		else "Copy some rows first - Paste Special retargets a copied snippet.")
 
 
 func _show_popup_menu(menu: PopupMenu, global_position: Vector2) -> void:
@@ -413,6 +428,13 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 					convert_index,
 					"Convert to Global" if scope_label == "local" else "Convert to Local"
 				)
+		var grid_variable: bool = has_variable and EventSheetGridCSVDialog.is_grid_variable(_dock._variables._context_variable)
+		for grid_id: int in [_dock.VARIABLE_MENU_GRID_EXPORT, _dock.VARIABLE_MENU_GRID_IMPORT]:
+			var grid_index: int = menu.get_item_index(grid_id)
+			if grid_index >= 0:
+				menu.set_item_disabled(grid_index, not grid_variable)
+				menu.set_item_tooltip(grid_index, "" if grid_variable
+					else "Only a grid variable (one shown as a table in the Inspector) has columns to line up in a spreadsheet.")
 		var const_index: int = menu.get_item_index(_dock.VARIABLE_MENU_TOGGLE_CONST)
 		if const_index >= 0:
 			var supports_const: bool = has_variable and bool(_dock._variables._context_variable.get("supports_const", false))

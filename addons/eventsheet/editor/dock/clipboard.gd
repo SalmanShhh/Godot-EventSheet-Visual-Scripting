@@ -216,15 +216,25 @@ func _paste_snippet_text(text: String) -> bool:
 		return false
 	if not _dock._ensure_sheet_for_editing():
 		return true
-	var snippet: Dictionary = EventSheetSnippet.deserialize(text)
+	paste_snippet(EventSheetSnippet.deserialize(text))
+	return true
+
+
+## Inserts an already-parsed snippet: fresh event UIDs, missing sheet variables created (never
+## overwritten), rows kept in their original order below the selection. THE one paste path - plain
+## Paste comes through _paste_snippet_text above, and Paste Special (dock/paste_special_dialog.gd)
+## hands it a REMAPPED snippet, so retargeting never grew a second insertion of its own.
+## `action_name` names the undo step; `extra_note` is appended to the status line (Paste Special
+## uses it to report what it retargeted). Returns true when rows landed.
+func paste_snippet(snippet: Dictionary, action_name: String = "Paste Snippet", extra_note: String = "") -> bool:
 	var rows: Array = snippet.get("rows", [])
 	if rows.is_empty():
 		_dock._set_status("Clipboard snippet is empty or invalid.", true)
-		return true
+		return false
 	# Dictionary so the undoable lambda can mutate it (GDScript lambdas capture by value).
 	var counters: Dictionary = {"variables_created": 0}
 	var required_variables: Dictionary = snippet.get("required_variables", {})
-	var changed: bool = _dock._perform_undoable_sheet_edit("Paste Snippet", func() -> bool:
+	var changed: bool = _dock._perform_undoable_sheet_edit(action_name, func() -> bool:
 		for variable_name in required_variables.keys():
 			if not _dock._current_sheet.variables.has(variable_name):
 				_dock._current_sheet.variables[variable_name] = required_variables[variable_name]
@@ -242,8 +252,9 @@ func _paste_snippet_text(text: String) -> bool:
 		for provider in snippet.get("providers", []):
 			provider_names.append(str(provider))
 		var provider_note: String = "" if provider_names.is_empty() else " Uses providers: %s." % ", ".join(provider_names)
-		_dock._mark_dirty("Pasted snippet: %d row(s), %d variable(s) created.%s" % [rows.size(), int(counters["variables_created"]), provider_note])
-	return true
+		var retarget_note: String = "" if extra_note.strip_edges().is_empty() else " %s" % extra_note.strip_edges()
+		_dock._mark_dirty("Pasted snippet: %d row(s), %d variable(s) created.%s%s" % [rows.size(), int(counters["variables_created"]), provider_note, retarget_note])
+	return changed
 
 
 ## Appends an in-flow GDScript block to the right-clicked event's actions (event-sheet-style inline

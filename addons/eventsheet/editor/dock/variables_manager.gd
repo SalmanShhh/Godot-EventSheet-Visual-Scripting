@@ -90,6 +90,8 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_edit_context_variable()
 		_dock.VARIABLE_MENU_RENAME:
 			_dock._open_rename_dialog(str(_context_variable.get("name", "")))
+		_dock.VARIABLE_MENU_CHANGE_TYPE:
+			_dock._variable_retype_dialog.open(_context_variable)
 		_dock.VARIABLE_MENU_CONVERT_SCOPE:
 			_convert_context_variable_scope()
 		_dock.VARIABLE_MENU_TOGGLE_CONST:
@@ -98,6 +100,10 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_toggle_context_variable_remember()
 		_dock.VARIABLE_MENU_GROUP:
 			_group_context_selection()
+		_dock.VARIABLE_MENU_GRID_EXPORT:
+			_dock._grid_csv_dialog.open("export", _context_variable)
+		_dock.VARIABLE_MENU_GRID_IMPORT:
+			_dock._grid_csv_dialog.open("import", _context_variable)
 
 
 ## "Group Under a Heading..." routes the multi-selection (or just the clicked row)
@@ -307,11 +313,15 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 			"default": tree_var.default_value,
 			"is_constant": tree_var.is_constant,
 			"exported": tree_var.exported,
+			# The Inspector attributes ride along so the menu can tell a GRID variable (the table
+			# drawer) from a plain one - the CSV round trip is offered only where there are columns.
+			"attributes": (tree_var.attributes as Dictionary).duplicate(true) if tree_var.attributes is Dictionary else {},
 			"resource": tree_var
 		}
 	var type_name: String = "Variant"
 	var default_value: Variant = null
 	var is_constant: bool = false
+	var attributes: Dictionary = {}
 	var index: int = int(metadata.get("variable_index", -1))
 	var owner_event: EventRow = null
 	if scope == "local":
@@ -337,6 +347,8 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 		type_name = str(descriptor.get("type", "Variant"))
 		default_value = descriptor.get("default", null)
 		is_constant = bool(descriptor.get("const", descriptor.get("is_constant", false)))
+		if descriptor.get("attributes") is Dictionary:
+			attributes = (descriptor.get("attributes") as Dictionary).duplicate(true)
 	return {
 		"scope": scope,
 		"name": var_name,
@@ -344,6 +356,7 @@ func _context_variable_entry_from_metadata(row_data: EventRowData, metadata: Dic
 		"default": default_value,
 		"is_constant": is_constant,
 		"supports_const": _variable_type_supports_const(type_name),
+		"attributes": attributes,
 		"event_row": owner_event,
 		"index": index
 	}
@@ -505,6 +518,46 @@ func _toggle_context_variable_remember() -> void:
 	)
 	if changed:
 		_dock._mark_dirty("%s %s between runs." % ["Now remembering" if new_remember else "No longer remembering", var_name])
+
+
+## "Change Type Everywhere...": retypes the declaration AND every value field that sets or compares
+## it, as ONE undo step (dock/variable_retype_dialog.gd previews it first). The scan runs INSIDE the
+## funnel against the live sheet - the commit replaces resources with snapshot duplicates, so a plan
+## captured before the edit could not be applied to it. Reports what it could not convert, because a
+## row left holding the old shape is the one thing a retype must never hide.
+##
+## `ordinal` is WHICH declaration of that name was clicked (EventSheetVariableRetype.ordinal_of):
+## two events may each declare their own `i`, and retyping by name alone would silently change the
+## first one in the sheet instead of the row under the cursor. It is a structural position, not a
+## resource, so it still points at the right declaration after the funnel duplicates everything.
+func retype_variable(variable_name: String, new_type: String, ordinal: int = -1) -> bool:
+	if _dock._current_sheet == null or variable_name.is_empty() or new_type.is_empty():
+		return false
+	var preview: Dictionary = EventSheetVariableRetype.plan(_dock._current_sheet, variable_name, new_type, ordinal)
+	if not bool(preview.get("found", false)):
+		_dock._set_status("\"%s\" is not declared in this sheet." % variable_name, true)
+		return false
+	if int(preview.get("edits", 0)) == 0 and (preview.get("reviews", []) as Array).is_empty():
+		_dock._set_status("%s is already %s." % [variable_name, new_type])
+		return false
+	# Dictionary so the undoable lambda can report back (GDScript lambdas capture by VALUE - a
+	# reassignment inside would be lost; writing KEYS on the captured Dictionary is how the count
+	# gets out, the same idiom the paste path uses).
+	var report: Dictionary = {"changes": [], "reviews": [], "edits": 0}
+	var changed: bool = _dock._perform_undoable_sheet_edit("Change Type of %s" % variable_name, func() -> bool:
+		var applied: Dictionary = EventSheetVariableRetype.apply(_dock._current_sheet, variable_name, new_type, ordinal)
+		report["changes"] = applied.get("changes", [])
+		report["reviews"] = applied.get("reviews", [])
+		report["edits"] = applied.get("edits", 0)
+		return int(applied.get("edits", 0)) > 0
+	)
+	if not changed:
+		_dock._set_status("Nothing to change - %s is already %s." % [variable_name, new_type])
+		return false
+	var reviews: int = (report.get("reviews", []) as Array).size()
+	var review_note: String = "" if reviews == 0 else " %d row(s) kept their own wording - check them." % reviews
+	_dock._mark_dirty("%s is now %s: %d row(s) rewritten.%s" % [variable_name, new_type, (report.get("changes", []) as Array).size(), review_note])
+	return true
 
 
 func _prompt_convert_global_variable_to_local(entry: Dictionary) -> void:

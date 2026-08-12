@@ -84,12 +84,19 @@ const ROW_MENU_BATCH_EDIT_PARAMS := 49
 const ROW_MENU_DATA_CLASS_ADD_FIELD := 50
 const ROW_MENU_DATA_CLASS_REMOVE_FIELD := 51
 const ROW_MENU_ADD_TIMELINE_BELOW := 52
+## Paste Special: paste the clipboard snippet retargeted (dock/paste_special_dialog.gd).
+const ROW_MENU_PASTE_SPECIAL := 53
 const VARIABLE_MENU_EDIT := 1
 const VARIABLE_MENU_CONVERT_SCOPE := 2
 const VARIABLE_MENU_TOGGLE_CONST := 3
 const VARIABLE_MENU_RENAME := 4
 const VARIABLE_MENU_GROUP := 5
 const VARIABLE_MENU_REMEMBER := 6
+## Change Type Everywhere / the grid CSV round trip (dock/variable_retype_dialog.gd,
+## dock/grid_csv_dialog.gd).
+const VARIABLE_MENU_CHANGE_TYPE := 7
+const VARIABLE_MENU_GRID_EXPORT := 8
+const VARIABLE_MENU_GRID_IMPORT := 9
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
@@ -237,6 +244,9 @@ var _clipboard_glue: EventSheetClipboard = EventSheetClipboard.new()  # copy/pas
 var _quick_prompts: EventSheetQuickPromptDialogs = EventSheetQuickPromptDialogs.new()  # one-field prompt popups: Extract-to-Function name + Conditional Breakpoint + Group editor (dock/quick_prompt_dialogs.gd)
 var _custom_block_dialog: EventSheetCustomBlockDialog = EventSheetCustomBlockDialog.new()  # Custom Block API: schema-driven add/edit dialog for registered kinds (dock/custom_block_dialog.gd)
 var _raw_call_namer: EventSheetRawCallNamer = EventSheetRawCallNamer.new()  # Sheet ▸ Name Raw Calls: binds raw one-call code rows to existing vocabulary, byte-gated (dock/raw_call_namer.gd)
+var _variable_retype_dialog: EventSheetVariableRetypeDialog = EventSheetVariableRetypeDialog.new()  # variable ▸ Change Type Everywhere…: preview + one-undo-step retype (dock/variable_retype_dialog.gd)
+var _grid_csv_dialog: EventSheetGridCSVDialog = EventSheetGridCSVDialog.new()  # variable ▸ Export/Import Grid …CSV: the data-asset grid round trip (dock/grid_csv_dialog.gd)
+var _paste_special_dialog: EventSheetPasteSpecialDialog = EventSheetPasteSpecialDialog.new()  # row ▸ More ▸ Paste Special…: snippet paste, retargeted (dock/paste_special_dialog.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -303,6 +313,11 @@ func _init() -> void:
 	# _theme_manager.build_theme_file_dialog() (via the dock delegate). init() only stores _dock.
 	_theme_manager.init(self)
 	_raw_call_namer.init(self)
+	# The three retarget/round-trip dialogs: init() only stores _dock (nothing tree-bound), and the
+	# suite drives them on a fresh .new() editor before _ready, so they are wired here with the rest.
+	_variable_retype_dialog.init(self)
+	_grid_csv_dialog.init(self)
+	_paste_special_dialog.init(self)
 	_build_ui()
 
 var _editor_dialogs_initialized: bool = false
