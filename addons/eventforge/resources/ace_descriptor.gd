@@ -44,6 +44,12 @@ var evaluate_last: bool = false
 ## Blank = never value-triggered rich (a bbcode_text param hint still counts as rich).
 var rich_when_param: String = ""
 var rich_when_value: String = ""
+## Looping condition (the Construct "is looping" idea, the builtin twin of `## @ace_looping`):
+## the template returns a COLLECTION instead of a bool, and applying the condition lands a pick
+## filter on the event, so its actions run once per item under this iterator name. Set via the
+## fluent `.looping("line")`.
+var is_looping: bool = false
+var looping_iterator: String = "item"
 @export var nodeType: String = "" # event-sheet-style alias for node_type.
 @export var params: Array[ACEParam] = []
 @export var signal_name: String = ""
@@ -147,6 +153,18 @@ func rich_text_when(param_id: String, value: String) -> ACEDescriptor:
 	return self
 
 
+## Declares this CONDITION a looping one and names the iterator its items arrive under: the template
+## returns the collection to walk, and applying the row lands a pick filter (the event's actions run
+## once per item) rather than an if-term. The builtin registrar's twin of a pack's
+## `## @ace_looping(iterator)` annotation - same two metadata keys, same pick machinery downstream.
+## An iterator that is not a valid identifier falls back to "item", matching the annotation route.
+## Chains like .described(): `F.make_descriptor(...).looping("line")`.
+func looping(iterator_name: String = "item") -> ACEDescriptor:
+	is_looping = true
+	looping_iterator = iterator_name if iterator_name.is_valid_identifier() else "item"
+	return self
+
+
 ## Marks this condition as an EDGE GATE the compiler evaluates LAST: the term is hoisted to the end
 ## of the emitted `and` chain no matter which condition cell it occupies (an OR row is parenthesized
 ## first), so short-circuiting guarantees it is reached exactly when the row's other conditions are
@@ -215,6 +233,9 @@ func format_display(params_dict: Dictionary) -> String:
 		if key.is_empty():
 			continue
 		var value: Variant = params_dict.get(key, param.get_initial_value())
-		output = output.replace("{%d}" % i, str(value))
-		output = output.replace("{%s}" % key, str(value))
+		# display_value is the identity for every ordinary param; a labeled dropdown that opted in
+		# (Part Of's named parts) shows "Y (up / down)" where the emitted code carries `"y"`.
+		var shown: String = param.display_value(value)
+		output = output.replace("{%d}" % i, shown)
+		output = output.replace("{%s}" % key, shown)
 	return output

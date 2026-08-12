@@ -44,6 +44,26 @@ extends Resource
 ## Use "variable_reference" to show a dropdown of available sheet variables.
 ## Use "expression" to show an expression picker button beside text input.
 @export var hint: String = ""
+## Display-only: substitute this param's OPTION LABEL into the row sentence instead of its raw value.
+## Only ever set it on a param whose emitted value is always exactly one of `options` - the label is
+## then a faithful reading of the value, not a guess. It exists because an option key is GDScript
+## (`"y"`, quotes and all) while the row is a sentence: without this, "set the up/down part of
+## velocity" renders as `set the "y" part of velocity`. Left false everywhere the key IS the natural
+## reading (a comparison operator shows as `>`, never as "> (greater than)").
+@export var display_option_labels: bool = false
+
+
+## The label a value should be SHOWN as in a row sentence: the matching option's label when this
+## param opted into label display, and the value itself otherwise (including a value that matches no
+## option, which can only mean the row was authored before an option was removed).
+func display_value(value: Variant) -> String:
+	var text: String = str(value)
+	if not display_option_labels:
+		return text
+	for option: Variant in options:
+		if option is Dictionary and str((option as Dictionary).get("key", "")) == text:
+			return str((option as Dictionary).get("label", text))
+	return text
 
 
 ## Returns the best available display name for picker/inspector UI.

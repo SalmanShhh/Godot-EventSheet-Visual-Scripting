@@ -9,6 +9,29 @@ extends RefCounted
 
 const F := preload("res://addons/eventforge/registration/ace_factory.gd")
 
+## The named parts a pair, a triple, a colour or a record can be read and written by, shared by
+## Part Of and Set Part Of so the two sides can never drift apart. The keys are QUOTED strings
+## because the emitted access is a subscript (`velocity["y"]`, `save["score"]`): Godot resolves a
+## string subscript as a COMPONENT on Vector2/Vector3/Color and as a FIELD on a Dictionary, which is
+## what lets one verb speak about all four. The labels carry the plain-English half ("the up/down
+## part" rather than ".y"). An option value can never contain a {param} placeholder - substitution
+## is a single left-to-right pass, so a placeholder arriving FROM an option would be emitted
+## literally into the user's GDScript.
+## The warning the type-guarded fallbacks all owe the author, in the ROW's own help rather than only
+## in a code comment: their guard re-reads the value expression, so a value that CHANGES something
+## each time it is read (a method that consumes, deals or advances) runs twice per row.
+const DOUBLE_READ_NOTE := "The value is read twice in the emitted line, so keep it a plain read and not something that changes the game."
+
+const PART_OPTIONS: Array = [
+	{"key": "\"x\"", "label": "X (left / right)"},
+	{"key": "\"y\"", "label": "Y (up / down)"},
+	{"key": "\"z\"", "label": "Z (forward / back)"},
+	{"key": "\"r\"", "label": "Red"},
+	{"key": "\"g\"", "label": "Green"},
+	{"key": "\"b\"", "label": "Blue"},
+	{"key": "\"a\"", "label": "Alpha (see-through)"}
+]
+
 
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
@@ -271,6 +294,38 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "PercentOf", "Percent Of", ACEDescriptor.ACEType.EXPRESSION, "(clampf(inverse_lerp({from}, {to}, {value}), 0.0, 1.0) * 100.0)", "", [F.make_param("value", "String", "5.0", "Value", "The current value.", "expression"), F.make_param("from", "String", "0.0", "From", "The value that counts as empty.", "expression"), F.make_param("to", "String", "10.0", "To", "The value that counts as full.", "expression")], "Math & Random", "percent of {value} from {from} to {to}")
 		.described("The same reading as Progress Of, but as 0 to 100 - the number you show in text, like \"73%\" health."))
 
+	# ── Type-guarded fallbacks: turn "whatever this is" into something a typed variable can take ──
+	# Everything LOADED rather than typed arrives as a value that might be the wrong shape, or missing
+	# outright: a JSON field, a save slot, a Dictionary read, a method that can return null, a value
+	# another sheet handed over. Each of these hands the value back only when it really is that kind of
+	# thing, and your own default otherwise, so ONE row replaces a guard row plus a conversion.
+	# Three deliberate details, each learned from what GDScript actually accepts:
+	#   - the guard is `typeof(x) == TYPE_*`, never `x is String`. The analyzer REFUSES to compile
+	#     `i is String` once it knows `i` is an int ("Expression is of type int so it can't be of type
+	#     String"), so an `is` guard would turn "pointed the row at the wrong variable" into a build
+	#     break. typeof compiles against any type and simply lands on the fallback at runtime.
+	#   - a trailing `and {value}` reads "and it is not empty": Godot treats an empty String, Array or
+	#     Dictionary as false. `.is_empty()` and a `!= ""` comparison are both unusable here for the
+	#     same analyzer reason - each is a parse error against a value of a known other type.
+	#   - a zero is NOT missing. Number Or keeps 0 and Value Or keeps 0 and "" alike; only the
+	#     emptiness of a text/list/record counts as nothing.
+	# The value expression is read two or three times in the emitted line, so keep it a READ (a
+	# variable, a .get()), never something that changes the game.
+	descriptors.append(F.make_descriptor("Core", "NumberOr", "Number Or", ACEDescriptor.ACEType.EXPRESSION, "({value} if typeof({value}) in [TYPE_INT, TYPE_FLOAT] else {fallback})", "", [F.make_param("value", "String", "0", "Value", "The untyped value to check - a save slot read, a JSON field, a Dictionary key.", "expression"), F.make_param("fallback", "String", "0", "Or", "What you get back when it is not a number.", "expression")], "Variables", "{value} as a number, or {fallback}")
+		.described("The value when it really is a number, or your own default when it is missing, null, text, or anything else. A zero counts as a real number and is kept. Use it to put a loaded value straight into a whole-number or decimal variable without a guard row first. " + DOUBLE_READ_NOTE))
+	descriptors.append(F.make_descriptor("Core", "TextOr", "Text Or", ACEDescriptor.ACEType.EXPRESSION, "({value} if (typeof({value}) == TYPE_STRING and {value}) else {fallback})", "", [F.make_param("value", "String", "\"\"", "Value", "The untyped value to check - a save slot read, a JSON field, a Dictionary key.", "expression"), F.make_param("fallback", "String", "\"Player\"", "Or", "What you get back when it is not text, or is blank.", "expression")], "Variables", "{value} as text, or {fallback}")
+		.described("The value when it really is text with something in it, or your own default when it is missing, null, blank, or another kind of value. The classic use is a saved player name that falls back to \"Player\". " + DOUBLE_READ_NOTE))
+	# TYPE_PACKED_BYTE_ARRAY is the FIRST of the packed families and TYPE_MAX sits past the last, so
+	# `typeof(x) >= TYPE_PACKED_BYTE_ARRAY` is "x is one of the packed arrays" without naming nine
+	# constants. It earns its place because Split Text hands back a PackedStringArray: without it the
+	# single most natural way to build a list here fell straight through to the fallback.
+	descriptors.append(F.make_descriptor("Core", "ListOr", "List Or", ACEDescriptor.ACEType.EXPRESSION, "({value} if ((typeof({value}) == TYPE_ARRAY or typeof({value}) >= TYPE_PACKED_BYTE_ARRAY) and {value}) else {fallback})", "", [F.make_param("value", "String", "[]", "Value", "The untyped value to check - a loaded inventory, a JSON array, a Split Text result, a Dictionary key.", "expression"), F.make_param("fallback", "String", "[]", "Or", "What you get back when it is not a list, or is empty.", "expression")], "Variables", "{value} as a list, or {fallback}")
+		.described("The value when it really is a list with items in it, or your own default when it is missing, null, empty, or another kind of value. A Split Text result counts as a list. Safe to feed straight into a For Each. " + DOUBLE_READ_NOTE))
+	descriptors.append(F.make_descriptor("Core", "RecordOr", "Record Or", ACEDescriptor.ACEType.EXPRESSION, "({value} if (typeof({value}) == TYPE_DICTIONARY and {value}) else {fallback})", "", [F.make_param("value", "String", "{}", "Value", "The untyped value to check - a loaded settings block, a JSON object, a Dictionary key.", "expression"), F.make_param("fallback", "String", "{}", "Or", "What you get back when it is not a record, or is empty.", "expression")], "Variables", "{value} as a record, or {fallback}")
+		.described("The value when it really is a record (a dictionary) with keys in it, or your own default when it is missing, null, empty, or another kind of value. Pair it with Get Key so a whole missing settings block reads as defaults. " + DOUBLE_READ_NOTE))
+	descriptors.append(F.make_descriptor("Core", "ValueOr", "Value Or", ACEDescriptor.ACEType.EXPRESSION, "({value} if {value} != null else {fallback})", "", [F.make_param("value", "String", "null", "Value", "Anything that might be null - a method result, a freed reference, a missing key.", "expression"), F.make_param("fallback", "String", "0", "Or", "What you get back when it is null.", "expression")], "Variables", "{value}, or {fallback} when it is nothing")
+		.described("The value unless it is null, in which case your own default. This one guards nothing else: a zero, a blank text and an empty list all count as real values here. Use it for a method that can hand back null. " + DOUBLE_READ_NOTE))
+
 	# Expressions
 	descriptors.append(F.make_descriptor("Core", "GetVar", "Get Variable", ACEDescriptor.ACEType.EXPRESSION, "{var_name}", "", [F.make_param("var_name", "String", "var", "Variable", "Variable to read.", "variable_reference")], "Variables", "{var_name}")
 		.described("Returns the current value stored in the named variable."))
@@ -352,6 +407,33 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 		.described("Returns a point blended between two vectors, great for smooth movement."))
 	descriptors.append(F.make_descriptor("Core", "VectorLimitLength", "Clamp Length", ACEDescriptor.ACEType.EXPRESSION, "{vector}.limit_length({max_length})", "", [F.make_param("vector", "String", "Vector2.ZERO", "Vector", "Vector expression.", "expression"), F.make_param("max_length", "String", "1.0", "Max length", "Maximum magnitude.", "expression")], "Variables: Vector", "{vector}.limit_length({max_length})")
 		.described("Returns the vector capped to a maximum length, e.g. a speed limit."))
+	# ── Named parts: ONE verb for a pair, a triple, a colour and a record alike ──
+	# Make Vector2/3 BUILD vectors and Length/Angle/Normalized/Direction To read DERIVED values; until
+	# now nothing named a single component, so it was Get/Set Property with a typed-in `position.x`.
+	# These read as a sentence instead: "the up/down part of velocity", "the see-through part of
+	# modulate". The emitted access is a subscript with a quoted key, which Godot resolves as a
+	# component on Vector2/Vector3/Color AND as a field on a Dictionary - so the same row also reads
+	# and writes a record's named field, and a saved {"x": …, "y": …} position needs no special case.
+	# A record key OUTSIDE the seven named parts stays with the shipped Get Key (with default) / Set
+	# Key, which is where an arbitrary key (and its own missing-value fallback) belongs.
+	# Why a subscript rather than the `.y` a hand would write: `{var_name}.{part} = {value}` is
+	# character-for-character the Set Property catch-all, and being authored in an earlier module it
+	# would out-rank it in the reverse-lift index and re-label EVERY hand-written `foo.bar = baz` as
+	# Set Part Of. The bracket form ties with Set Key instead, which is authored earlier here and so
+	# keeps winning; nothing that lifts today changes.
+	# THE PRICE of that choice, stated plainly because it is a real one: the emitted `velocity["y"] =
+	# 0.0` is character-for-character what Set Key emits, so REOPENING a .gd-backed sheet lifts the
+	# row back as Set Key, not as Set Part Of. The code is byte-identical either way (the lossless
+	# covenant is untouched) - what is lost on a reopen is the sentence, and that is the deliberate
+	# trade for never mis-labelling somebody else's `save["gold"] = 5`. Pinned in fallbacks_test.
+	# The target is a PROPERTY reference, not a sheet-variable dropdown: the headline targets are a
+	# node's own members (`velocity`, `modulate`), which a closed variables dropdown cannot name at
+	# all. The property field is an editable autocomplete over the host class, so a sheet variable is
+	# still typed in the same cell.
+	descriptors.append(F.make_descriptor("Core", "PartOf", "Part Of", ACEDescriptor.ACEType.EXPRESSION, "({value})[{part}]", "", [F.make_param("value", "String", "Vector2(1, 2)", "Of", "A Vector2, Vector3, Color or record to read one part of.", "expression"), _part_param("Which named part to read.")], "Variables: Vector", "the {part} part of {value}")
+		.described("One named piece of a pair, a triple, a colour or a record: the up/down part of a velocity (the jump-or-fall test), the see-through part of a tint, the forward/back part of a 3D direction. Reads as a sentence instead of a typed-in .y. Pick a part the value actually has - a record that might be missing the field is the shipped Get Key (with default)'s job, because that one takes a fallback and this one does not."))
+	descriptors.append(F.make_descriptor("Core", "SetPartOf", "Set Part Of", ACEDescriptor.ACEType.ACTION, "{var_name}[{part}] = {value}", "", [F.make_param("var_name", "String", "self.position", "Variable or property", "What to change one part of: a node's own member (velocity, modulate, position) picked from the list, or the name of a sheet variable holding a Vector, Color or record.", "property_reference"), _part_param("Which named part to write."), F.make_param("value", "String", "0.0", "To", "The new value for that one part.", "expression")], "Variables: Vector", "set the {part} part of {var_name} to {value}")
+		.described("Changes one named part and leaves the rest alone: zero the vertical speed on landing and keep the horizontal, flatten a 3D direction to the ground plane, fade only the see-through part of a tint. Writing a part a record does not have yet ADDS it."))
 
 	# ── String helpers (the common manipulations; the long tail stays one fx away) ──
 	descriptors.append(F.make_descriptor("Core", "StringContains", "Text Contains", ACEDescriptor.ACEType.CONDITION, "{text}.contains({needle})", "", [F.make_param("text", "String", "\"\"", "Text", "Text to search.", "expression"), F.make_param("needle", "String", "\"\"", "Needle", "Substring to find.", "expression")], "Variables: String", "{text} contains {needle}")
@@ -400,3 +482,12 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "TilesUnit", "Tiles", ACEDescriptor.ACEType.EXPRESSION, "({count} * float(ProjectSettings.get_setting(\"eventforge/tile_size\", 16.0)))", "", [F.make_param("count", "String", "3", "Tiles", "How many tiles.", "expression")], "Math & Random", "Tiles({count})")
 		.described("A distance in tiles: Tiles(3) is three tiles in pixels, sized by the eventforge/tile_size project setting (default 16). Set it once and every distance can speak in tiles."))
 	return descriptors
+
+
+## The named-part dropdown Part Of and Set Part Of share. `display_option_labels` is what keeps the
+## GDScript out of the sentence: the row emits `velocity["y"]` and READS "the Y (up / down) part of
+## velocity", because the emitted value here is always exactly one of the seven option keys.
+static func _part_param(description: String) -> ACEParam:
+	var parameter: ACEParam = F.make_param("part", "String", "\"y\"", "Part", description, "", PART_OPTIONS)
+	parameter.display_option_labels = true
+	return parameter

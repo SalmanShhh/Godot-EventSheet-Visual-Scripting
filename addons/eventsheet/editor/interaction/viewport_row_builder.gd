@@ -4591,8 +4591,13 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 				continue
 			var fallback: Variant = (parameter as Dictionary).get("default_value", (parameter as Dictionary).get("default", ""))
 			var value: Variant = params_dict.get(key, fallback)
-			replacements.append(["{%d}" % index, str(value)])
-			replacements.append(["{%s}" % key, str(value)])
+			# Identity for every ordinary param; a dropdown that declared display_option_labels shows
+			# the option's LABEL instead of the GDScript key it emits (`"y"` reads "Y (up / down)").
+			# A shown LABEL is prose, so it goes through the catalog like the template around it -
+			# the raw param value never does, because it is the author's own GDScript.
+			var shown: String = _translated_option_label(ACEDefinition.display_value_for(parameter as Dictionary, value), str(value))
+			replacements.append(["{%d}" % index, shown])
+			replacements.append(["{%s}" % key, shown])
 		var substituted: Dictionary = substitute_display_tracking(template, replacements)
 		_pending_param_ranges = substituted
 		return str(substituted.get("text", ""))
@@ -4610,8 +4615,9 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		if param_key.is_empty():
 			continue
 		var param_value: Variant = params_dict.get(param_key, param.get_initial_value())
-		descriptor_replacements.append(["{%d}" % i, str(param_value)])
-		descriptor_replacements.append(["{%s}" % param_key, str(param_value)])
+		var param_shown: String = _translated_option_label(param.display_value(param_value), str(param_value))
+		descriptor_replacements.append(["{%d}" % i, param_shown])
+		descriptor_replacements.append(["{%s}" % param_key, param_shown])
 	var descriptor_substituted: Dictionary = substitute_display_tracking(descriptor_template, descriptor_replacements)
 	_pending_param_ranges = descriptor_substituted
 	return str(descriptor_substituted.get("text", ""))
@@ -4623,6 +4629,14 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 ## still applies to it), so adding styling to a template never regresses a translation to
 ## English. Whatever resolves here also ARMS the styled branch when it carries markup - the
 ## one-shot rides to _make_span exactly like the rich-param arm in the descriptor formatters.
+## A param cell's shown text, translated ONLY when it is an option label rather than the author's own
+## value. `shown` differs from `raw` exactly when a dropdown declared display_option_labels and the
+## value matched one of its options, so that difference is the test: prose written by this plugin
+## goes through the catalog, a GDScript expression the author typed never does.
+func _translated_option_label(shown: String, raw: String) -> String:
+	return shown if shown == raw else EventSheetL10n.translate(shown)
+
+
 func _resolve_template(raw_template: String) -> String:
 	if raw_template.is_empty():
 		return raw_template

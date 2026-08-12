@@ -293,9 +293,20 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 					return true
 			"replace_condition":
 				if selected_resource is EventRow:
+					var replace_row: EventRow = selected_resource as EventRow
 					var condition_index: int = int(context.get("ace_index", -1))
-					if condition_index >= 0 and condition_index < (selected_resource as EventRow).conditions.size():
-						(selected_resource as EventRow).conditions[condition_index] = _create_condition_from_definition(definition, params)
+					if condition_index >= 0 and condition_index < replace_row.conditions.size():
+						# A LOOPING condition returns a collection, not a bool, so it can never stand
+						# in an if-term: replacing a condition cell with one drops the old condition
+						# and lands a pick filter instead, exactly as the append route does. Without
+						# this the collection compiled into the `if` and the sheet stopped parsing
+						# ("Identifier \"line\" not declared"), while the row still LOOKED right.
+						if _is_looping_condition(definition):
+							replace_row.conditions.remove_at(condition_index)
+							replace_row.pick_filters.append(_create_pick_filter_from_definition(definition, params))
+							message["text"] = "Replaced condition with a loop."
+							return true
+						replace_row.conditions[condition_index] = _create_condition_from_definition(definition, params)
 						message["text"] = "Updated condition."
 						return true
 			"replace_action":
@@ -312,6 +323,11 @@ func _apply_ace_definition(definition: ACEDefinition, params: Dictionary, contex
 				# slot: stateful conditions each bake their own {uid}. All inside THIS one funnel
 				# call, so the whole sweep is a single undo step.
 				var kind: String = str(context.get("batch_kind", "action"))
+				# A looping condition lives in the pick lane, never in `conditions`, so there is no
+				# matching slot to sweep - and building one here would put a collection where an
+				# if-term belongs. Refuse the whole batch rather than write a row that cannot compile.
+				if kind == "condition" and _is_looping_condition(definition):
+					return false
 				var applied: int = 0
 				for target: Variant in context.get("batch_targets", []):
 					if not (target is Dictionary):

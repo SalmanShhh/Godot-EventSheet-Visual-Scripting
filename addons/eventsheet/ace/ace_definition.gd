@@ -129,6 +129,22 @@ func format_display(params_dict: Dictionary = {}) -> String:
 			continue
 		var fallback: Variant = parameter_dict.get("default_value", parameter_dict.get("default", ""))
 		var value: Variant = params_dict.get(key, fallback)
-		output = output.replace("{%d}" % index, str(value))
-		output = output.replace("{%s}" % key, str(value))
+		var shown: String = display_value_for(parameter_dict, value)
+		output = output.replace("{%d}" % index, shown)
+		output = output.replace("{%s}" % key, shown)
 	return output
+
+
+## What a param's value should READ as in a row sentence. The identity for every ordinary param; a
+## dropdown that declared display_option_labels shows the matching option's LABEL instead of the raw
+## key it emits, so "the up/down part of velocity" never renders as `the "y" part of velocity`. A
+## value matching no option falls through unchanged (an option removed after the row was authored).
+## Static + pure so the viewport row builder, the picker preview and this method share ONE rule.
+static func display_value_for(parameter_dict: Dictionary, value: Variant) -> String:
+	var text: String = str(value)
+	if not bool(parameter_dict.get("display_option_labels", false)):
+		return text
+	for option: Variant in parameter_dict.get("options", []):
+		if option is Dictionary and str((option as Dictionary).get("key", "")) == text:
+			return str((option as Dictionary).get("label", text))
+	return text

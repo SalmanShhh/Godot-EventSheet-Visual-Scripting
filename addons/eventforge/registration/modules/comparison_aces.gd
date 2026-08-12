@@ -28,6 +28,10 @@ const CAT_NUMBERS := "Compare: Numbers"
 const CAT_VECTORS := "Compare: Vectors"
 const CAT_TYPES := "Compare: Types"
 const CAT_OBJECTS := "Compare: Objects"
+## The checked text-to-number pair is authored here, next to the condition that guards it, but it
+## SHIPS in "Variables: String" - beside Text To Int and Text To Float, the silent-zero conversions
+## it exists to replace. A picker section is where an author goes looking, not where a file lives.
+const CAT_STRING := "Variables: String"
 
 ## The Variant types a sheet author actually tests for, as their real constant names.
 const VALUE_TYPES: Array = [
@@ -48,6 +52,7 @@ const VALUE_TYPES: Array = [
 static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 	_add_text(descriptors)
+	_add_text_to_number(descriptors)
 	_add_numbers(descriptors)
 	_add_vectors(descriptors)
 	_add_types(descriptors)
@@ -73,6 +78,35 @@ static func _add_text(descriptors: Array[ACEDescriptor]) -> void:
 		.described("True when the first text comes before the second alphabetically, ignoring case - for ordering names or building a sorted list."))
 	descriptors.append(F.make_descriptor("Core", "TextNaturalOrder", "Text Natural Order", ACEDescriptor.ACEType.EXPRESSION, "{a}.naturalnocasecmp_to({b})", "", [F.make_param("a", "String", "\"\"", "First", "Left text.", "expression"), F.make_param("b", "String", "\"\"", "Second", "Right text.", "expression")], CAT_TEXT, "natural order of {a} vs {b}")
 		.described("Compares two pieces of text the way a person would read numbers in them, so \"item2\" comes before \"item10\". Negative if the first sorts earlier, 0 if equal, positive if later."))
+	# Ask-before-you-convert. Every silent-zero bug starts with text becoming a number without anyone
+	# checking first, so the question gets its own row and the conversion gets a fallback (below).
+	# str() wraps the value because the text a sheet tests is rarely typed as text: it arrives out of a
+	# save slot, a JSON field or a table cell as a Variant, and `.strip_edges()` on a raw int crashes.
+	descriptors.append(F.make_descriptor("Core", "TextIsANumber", "Text Is A Number", ACEDescriptor.ACEType.CONDITION, "str({text}).strip_edges().is_valid_float()", "", [F.make_param("text", "String", "\"12\"", "Text", "Text to test - a typed-in field, a value read back out of a save, a CSV or JSON cell.", "expression")], CAT_TEXT, "{text} is a number")
+		.described("True when this text would convert to a number cleanly. Ask it BEFORE converting, so a typo can never arrive as a silent 0 and the sheet bet nothing. Spaces around the number are ignored; empty text is not a number.").featured())
+	descriptors.append(F.make_descriptor("Core", "TextIsAWholeNumber", "Text Is A Whole Number", ACEDescriptor.ACEType.CONDITION, "str({text}).strip_edges().is_valid_int()", "", [F.make_param("text", "String", "\"12\"", "Text", "Text to test - a count, a level number, a save slot, a seed.", "expression")], CAT_TEXT, "{text} is a whole number")
+		.described("True when this text would convert to a WHOLE number cleanly - a count, a level, a slot index. \"12\" passes and \"12.5\" does not, which is the only difference from Text Is A Number."))
+	# One row instead of an Or block of Text Contains. Array(…) around the list is load-bearing: Split
+	# Text hands back a PackedStringArray, which has no any()/all(), so a bare {options}.any(…) would
+	# crash on the single most natural input.
+	descriptors.append(F.make_descriptor("Core", "ContainsAnyOf", "Contains Any Of", ACEDescriptor.ACEType.CONDITION, "Array({options}).any(func(__needle): return {text}.contains(__needle))", "", [F.make_param("text", "String", "\"\"", "Text", "Text to search.", "expression"), F.make_param("options", "String", "[\"fire\", \"ice\"]", "Any Of", "List of pieces to look for - written here, or a sheet variable someone can edit without touching this row.", "expression")], CAT_TEXT, "{text} contains any of {options}")
+		.described("True when the text contains at least ONE of the listed pieces - a chat filter, a keyword-triggered line, a tag-gated card. Unlike Text Is One Of, which needs the WHOLE text to equal an entry, this looks INSIDE the text. Matching is case-sensitive, and an empty list is never a match.").featured())
+	descriptors.append(F.make_descriptor("Core", "ContainsAllOf", "Contains All Of", ACEDescriptor.ACEType.CONDITION, "Array({options}).all(func(__needle): return {text}.contains(__needle))", "", [F.make_param("text", "String", "\"\"", "Text", "Text to search.", "expression"), F.make_param("options", "String", "[\"fire\", \"ice\"]", "All Of", "List of pieces that must ALL appear.", "expression")], CAT_TEXT, "{text} contains all of {options}")
+		.described("True only when the text contains EVERY listed piece - a combo whose rule text names two keywords, a search box where all the words must match. An empty list counts as true, because nothing is missing."))
+	descriptors.append(F.make_descriptor("Core", "ContainsNoneOf", "Contains None Of", ACEDescriptor.ACEType.CONDITION, "(not Array({options}).any(func(__needle): return {text}.contains(__needle)))", "", [F.make_param("text", "String", "\"\"", "Text", "Text to search.", "expression"), F.make_param("options", "String", "[\"fire\", \"ice\"]", "None Of", "List of pieces that must NOT appear.", "expression")], CAT_TEXT, "{text} contains none of {options}")
+		.described("True when the text contains none of the listed pieces - the accept-this-name branch, written as the thing you want to act on instead of an Else. An empty list always passes."))
+
+
+# ── Text to numbers, checked ──
+# The pair that reports failure. Text To Int and Text To Float both answer 0 for "abc", for "" and for
+# "0" alike, so a typo in an amount box arrives as a real-looking bet of nothing. These read the number
+# only when the text really holds one, and otherwise hand back a fallback the AUTHOR chose - which is
+# also what makes the failure visible, because a chosen fallback can be a value that means "no".
+static func _add_text_to_number(descriptors: Array[ACEDescriptor]) -> void:
+	descriptors.append(F.make_descriptor("Core", "NumberFromText", "Number From Text", ACEDescriptor.ACEType.EXPRESSION, "(str({text}).strip_edges().to_float() if str({text}).strip_edges().is_valid_float() else {fallback})", "", [F.make_param("text", "String", "\"12\"", "Text", "Text to read a number out of.", "expression"), F.make_param("fallback", "String", "0.0", "Or", "What you get back when the text is not a number.", "expression")], CAT_STRING, "number from {text} (or {fallback})")
+		.described("Reads a number out of text, or hands back the fallback YOU chose - never a surprise zero. Pair it with Text Is A Number when the two cases need different rows. The text is read twice in the emitted line, so keep it a plain read and not something that changes the game.").featured())
+	descriptors.append(F.make_descriptor("Core", "WholeNumberFromText", "Whole Number From Text", ACEDescriptor.ACEType.EXPRESSION, "(str({text}).strip_edges().to_int() if str({text}).strip_edges().is_valid_int() else {fallback})", "", [F.make_param("text", "String", "\"12\"", "Text", "Text to read a whole number out of.", "expression"), F.make_param("fallback", "String", "0", "Or", "What you get back when the text is not a whole number.", "expression")], CAT_STRING, "whole number from {text} (or {fallback})")
+		.described("Reads a whole number out of text, or hands back your fallback. \"12.5\" is not a whole number, so it lands on the fallback rather than quietly becoming 12 - when you want that rounding, use Number From Text and round the result yourself."))
 
 
 # ── Numbers ──
@@ -123,6 +157,29 @@ static func _add_types(descriptors: Array[ACEDescriptor]) -> void:
 		.described("The name of a value's type as readable text (\"int\", \"Vector2\", \"Dictionary\") - handy in a debug print when something is not what you expected."))
 	descriptors.append(F.make_descriptor("Core", "ObjectIsClass", "Object Is Class", ACEDescriptor.ACEType.CONDITION, "({object} != null and {object}.is_class({class_name}))", "", [F.make_param("object", "String", "self", "Object", "Object to test.", "expression"), F.make_param("class_name", "String", "\"CharacterBody2D\"", "Class", "Engine class name, e.g. \"CharacterBody2D\".", "expression")], CAT_TYPES, "{object} is a {class_name}")
 		.described("True when an object is of an engine class, or something derived from it - so a CharacterBody2D also counts as a Node2D. Checks for nothing-there first, so it is safe on an empty reference."))
+	# One question - "is there anything there" - that used to need four rows and prior knowledge of the
+	# value's type (Text Is Empty, Array Is Empty, Dictionary Is Empty, Is Null).
+	#
+	# Nothing is spelled as the four empty values a sheet actually meets: no value at all, empty text,
+	# an empty list, an empty record. NOT 0 and NOT false, deliberately - a score of zero and a switch
+	# that is off are real values, and a guard that swallowed them would be a bug factory.
+	#
+	# The `in` form is load-bearing, not a style choice: the obvious `{value} is Array and
+	# {value}.is_empty()` chain is a PARSE ERROR the moment the value is statically typed
+	# ("Expression is of type String so it can't be of type Array"), and so is a cross-type `==`.
+	# `in` against an untyped list compiles for every operand type and compares by value.
+	#
+	# The packed arrays need their own clause, and they are not optional: an empty PackedStringArray
+	# does NOT equal an empty Array, and Split Text - the most common way a sheet ever makes a list -
+	# returns exactly that, so without this an empty split read as "there is something". They are
+	# caught by RANGE rather than by naming nine constants: TYPE_PACKED_BYTE_ARRAY is the first of
+	# the packed families and TYPE_MAX sits past the last. `not {value}` is the emptiness test there
+	# (Godot booleanizes an empty packed array to false) and, unlike `.is_empty()`, it compiles
+	# against an operand of any static type - the same reason `in` was chosen above.
+	descriptors.append(F.make_descriptor("Core", "IsNothing", "Is Nothing", ACEDescriptor.ACEType.CONDITION, "({value} in [null, \"\", [], {}] or (typeof({value}) >= TYPE_PACKED_BYTE_ARRAY and not {value}))", "", [F.make_param("value", "String", "\"\"", "Value", "Anything - text, a list, a record, a reference.", "expression")], CAT_TYPES, "{value} is nothing")
+		.described("True when there is nothing there: no value at all, empty text, an empty list (including an empty Split Text result), or an empty record - one row whatever the value turns out to be. A 0 is NOT nothing, because a score of zero is a real value, and neither is text made only of spaces (that is Text Is Blank).").featured())
+	descriptors.append(F.make_descriptor("Core", "HasSomething", "Has Something", ACEDescriptor.ACEType.CONDITION, "(not ({value} in [null, \"\", [], {}] or (typeof({value}) >= TYPE_PACKED_BYTE_ARRAY and not {value})))", "", [F.make_param("value", "String", "\"\"", "Value", "Anything - text, a list, a record, a reference.", "expression")], CAT_TYPES, "{value} has something")
+		.described("True when there IS something there - a name was typed, the inventory has items, the save slot was written, the item slot is filled. The exact opposite of Is Nothing, for the times the filled case is the one you want to act on."))
 
 
 # ── Objects ──

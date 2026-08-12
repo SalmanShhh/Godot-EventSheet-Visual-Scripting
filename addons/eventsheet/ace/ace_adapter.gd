@@ -36,7 +36,13 @@ static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefiniti
 		# Rich-text capability (rich_text_when): the row builder styles BBCode in cells
 		# only for ACEs that DECLARE it - never by sniffing param values generically.
 		"rich_when_param": descriptor.rich_when_param,
-		"rich_when_value": descriptor.rich_when_value
+		"rich_when_value": descriptor.rich_when_value,
+		# Looping conditions (.looping(iterator)): the condition returns a COLLECTION and applies as a
+		# pick filter. These are the two keys ace_apply._is_looping_condition / the pick-filter build
+		# already read for annotation-declared pack verbs - a builtin descriptor now reaches the same
+		# channel instead of needing its own.
+		"looping": descriptor.is_looping,
+		"looping_iterator": descriptor.looping_iterator
 	}
 	return definition
 
@@ -92,6 +98,10 @@ static func _map_params(params: Array[ACEParam]) -> Array:
 			"default_value": param.get_initial_value(),
 			"hint": param.hint,
 			"options": normalized_options,
-			"autocomplete": autocomplete_values
+			"autocomplete": autocomplete_values,
+			# Display-only: the row sentence shows this param's option LABEL rather than the raw key
+			# it emits. Set only where the emitted value is always one of the options, so the label
+			# is a faithful reading (Part Of's named parts, never a comparison operator).
+			"display_option_labels": param.display_option_labels
 		})
 	return output
