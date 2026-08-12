@@ -58,7 +58,7 @@ sheet, refreshed live as you edit, so the code you are shipping is always one pa
 
 ## Quick start
 
-1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 82 behavior packs. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
+1. Copy `addons/eventforge/` and `addons/eventsheet/` into your Godot **4.5+** project (tested through **4.7 stable**). Optional: `eventsheet_addons/` for the 86 behavior packs. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
 2. **Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New… → Platformer Starter**, add events (live search understands C3 phrases like *"every tick"*), and Run.
@@ -113,13 +113,13 @@ Most visual scripting asks you to learn a model you'll throw away the day you wr
 
 **925+ native ACEs** - Tween, Scene flow, Audio, sprites & cameras, Nav, Math & Random, Color, **every kind of raycast in 2D and 3D** (RayCast and ShapeCast nodes, one-off ray/point/shape/motion queries, camera picking) & Collision queries, Nodes, Project/File utilities, runtime signal wiring, UI/menu, particles, AnimationTree, tilemaps, shaders, physics joints, input rebinding, seeded procedural generation, ECS-lite Systems queries over groups, and a **Helpers** escape hatch (Set/Get Property, Call Method, Run GDScript, Inline If) so unmapped code still stays an editable row.
 
-**82 behavior packs**, all authored as event sheets, each with its own icon, class description, and starred hero verbs. By family:
+**86 behavior packs**, all authored as event sheets, each with its own icon, class description, and starred hero verbs. By family:
 
 - **Movement & feel** - Platformer (+ jump-graph **Platformer Pathfinding**), 8-Direction, Tile/Slide Movement, Car + **Physics Car**, Sine/Orbit/Bullet/Move To/Follow (with 3D twins + **Nav Agent 3D**), Spring, Tween, Fade, Flash, Rotate, Bound To + Wrap, **FPS Controller** (crouch/slide/wall tech), **Juice** 2D + 3D (shake/recoil/bob/zoom/slowmo/hitstop/tints).
 - **AI** - State Machine, Line of Sight 2D/3D, **UtilityBrain** (response-curve scoring), HTN Agent, and **UHTN Planning** (Utility AI ranking HTN methods live, whole plans as **UHTNPlanResource** `.tres` grids).
 - **Combat & stats** - Health (shield pools), Weapon Kit, Simple Abilities (+ **AbilitySetResource** loadouts), **StatForge** buff-stack stats (+ **StatSheetResource**).
-- **Economy & idle** - Currency Ledger, **Loot Table** (+ `.tres` tables), SkinVault (+ catalog `.tres`), and the full idle kit: Big Numbers (+ a Decimal type), Idle Generator, Click Power, Boosts, Upgrades, Prestige, Milestones.
-- **Content & narrative** - Storylet Weaver, Dialogue Kit, ProcRoom (seeded room graphs), Advanced Random (one seed drives them all), Random Table `.tres`.
+- **Economy & idle** - Currency Ledger, **Loot Table** (+ `.tres` tables), **Priced Tables** (vendors, kiosks, toll gates and skill trees as one `.tres` of priced entries, spending through whatever wallet answers), SkinVault (+ catalog `.tres`), and the full idle kit: Big Numbers (+ a Decimal type), Idle Generator, Click Power, Boosts, Upgrades, Prestige, Milestones.
+- **Content & narrative** - Storylet Weaver, Dialogue Kit, **Encounter Timeline** (spawn beats on a schedule - waves, boss phases, tutorial pacing, ambient traffic - pooled when a pool is there), ProcRoom (seeded room graphs), Advanced Random (one seed drives them all), Random Table `.tres`.
 - **Drawing & UI** - Drawing Canvas (+ prefabs), Decal Painter, HUD Kit, Scene Flow, ComboBox, Virtual Cursor, Drag & Drop.
 - **System** - Save System, Timer, Time Slicer, Run In Background, ObjectPool, **Platform Info** (what is this running on - OS/screen/GPU/locale/safe areas).
 
@@ -137,6 +137,7 @@ The latest tagged release, **`v0.16.0` - "Open Anything, Publish Anything & Ask 
 
 - **The editor speaks 9 languages** (English plus eight shipped translations: French, Spanish, German, Italian, Korean, Japanese, Russian, Simplified Chinese), translations **hot-reload** when a CSV is dropped in, and Language sits in the View menu.
 - **Beginner creator journeys**: a **Custom Resource wizard** (three questions → a data asset whose Inspector is a fill-in table), **Sheet > New Editor Tool**, one-call validation (`attach_validator`), and any function as an **Inspector button**.
+- **Tool sheets that ship your project**: **Render Scene To Image** (thumbnails, marketing shots, doc figures, sprite baking), **Preview Table Rolls** (N seeded draws against any weighted table, rolled vs weight-implied percentages, so loot/gacha/crit/procgen odds are checked before release), and an **On Project Export** trigger whose bake steps - version stamps, debug-node stripping, final budget checks - run as rows when you export.
 - **C3 reflexes everywhere**: `loopindex` on every loop, the floating **Expressions dictionary** with typed autocomplete + signature hints, Alt+Enter tall expression boxes, per-pack icons on framed chips, double-height group bars with folder icons, a draggable object column in each lane, vector tempo badges, and Else as a proper condition chip.
 - **One pack pipeline**: `EventSheets.publish_pack` powers the bundled builders AND Sheet > Export Addon; pack sheets announce themselves with an **Addon Pack v1.0.0** chip (version/author/help identity); 43 packs star their hero verbs; multi-line enums are editable enum blocks now.
 - **Everything reads as an event row**: a pack's published verbs were a flat spec table and its triggers a
@@ -205,7 +206,7 @@ _Recent releases before this:_ **v0.15.0** (the save-state seam across 18 packs 
 |---|---|
 | `addons/eventforge/` | Data model, compiler, importer, builtin ACEs, runtime bridge |
 | `addons/eventsheet/` | The editor: dock, virtualized viewport, renderer, picker, themes, lint, MCP server |
-| `eventsheet_addons/` | Zero-config ACE addons + the 82 behavior packs |
+| `eventsheet_addons/` | Zero-config ACE addons + the 86 behavior packs |
 | `demo/` | 18 showcases (each a `.gd` that is BOTH the sheet and the compiled script, with a scene where it is playable) and the bundled themes |
 | `tests/` | Headless suite - `run_tests.gd` (full) and `run_perf.gd` (fast gate) |
 | `docs/` | Contract specs + guides (C3 migration, recipes, MCP, glossary, uninstall) |

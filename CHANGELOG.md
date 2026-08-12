@@ -2,6 +2,62 @@
 
 ## [Unreleased]
 
+### Added - Priced Tables and Encounter Timeline (two packs, four addons)
+
+**Priced Tables** is the general priced-interaction table - vendors, upgrade kiosks, toll
+gates, skill trees, unlock walls. A **PriceTableResource** `.tres` holds the grid (id,
+label, price, currency, stock where -1 means unlimited, a locked flag, a plain-language
+requirement note) and the behavior worn by the seller loads it. **Buy Entry** runs the
+whole transaction in one row - unknown id, locked, out of stock, too expensive - stopping
+at the first problem so a refusal always carries one honest reason, then charging, counting
+stock down, and firing **On Purchased** or **On Purchase Refused**. The wallet is decoupled
+by design: the pack asks a wallet node that answers `balance()` / `spend()` (the shipped
+Currency Ledger does) and falls back to its own exported number when nothing answers, so
+the pack works alone and pairs without a hard dependency.
+
+**Encounter Timeline** is the general spawn and beat timeline - combat waves, boss phases,
+tutorial pacing, ambient traffic. An **EncounterResource** holds beats (at-seconds, scene,
+count, group, note); **Start Encounter** plays them in time order with catch-up on long
+frames, firing **On Entry Spawned** per spawn and **On Encounter Finished** at the end.
+Spawning prefers an Object Pool node when one is present (asked by capability, not by
+class) and instantiates otherwise. **Write Encounter Report** emits a plain-text summary
+whose per-30-second density is derived from the beats themselves and which names the fields
+it could not read, rather than inventing difficulty numbers.
+
+Both ship an addon guide with 17 use cases, and both are driven treeless in tests (74 and
+81 checks) including their refusal branches, seam fallbacks and save round-trips.
+
+### Added - Editor Tools: render scenes, preview weighted tables, bake on export
+
+Three general tool-dev verbs in the Editor Tools vocabulary. **Render Scene To Image**
+photographs any scene into a PNG at a chosen size - thumbnails, marketing shots,
+documentation figures, sprite baking - and says so plainly when the editor is headless
+instead of writing a blank file. **Preview Table Rolls** runs N seeded draws against a
+weighted table (a table resource, a resource path, or a plain value-to-weight Dictionary)
+and reports rolled percentage against weight-implied percentage per entry, so loot, gacha,
+crit chances, encounter picks and procgen weights can all be checked before shipping; the
+same seed always produces the same report. **On Project Export** is a new trigger: an
+export plugin fans out to the Editor Tool sheets that declare it, so version stamps,
+debug-node stripping and final budget checks become rows that run at export time, with
+**Write Version Stamp**, **Export Is Debug** and **Export Has Feature** to build on.
+
+### Improved - the copy-an-ACE authoring stub covers the newer code patterns
+
+Right-clicking any ACE in the picker copies a ready-to-edit authoring stub. It used to drop
+everything the vocabulary has gained since: dropdown option LABELS (only the inserted keys
+survived), parameter defaults, descriptions, looping iterators, stateful member templates,
+multi-line codegen templates, and the fact that a node-scoped ACE ships a transformed
+template rather than the authored one. All of those now appear, with generated comments
+naming the rules that are easy to learn the hard way ({uid} in every stateful identifier,
+the standalone-compile gate, the automatic target prefix).
+
+### Fixed - a pack condition reads in words when the registry has not been built
+
+A condition whose ACE the registry cannot resolve right now printed its raw id
+("method:can_afford_entry") in the leftmost cell, while the action lane beside it had
+always fallen back to a readable sentence ("Buy ( slot_id )"). Both lanes now share one
+fallback, so reflected verbs read as words wherever they appear.
+
 ### Fixed - the object sub-column separator aligns across every cell (both lanes)
 
 Within a lane, every cell's object-column separator (the middle line between "System" and
