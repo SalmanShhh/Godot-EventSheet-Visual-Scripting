@@ -1091,14 +1091,32 @@ four-file scaffold - `EventSheets.open_docs` can then land in Phase 3 instead.
 - `doc_explain.gd`, `doc_page_view.gd`, `doc_browser.gd`, `doc_window.gd`.
 - Content from `ACEDefinition`, `ViewportTooltipHelper`, `EventSheetSectionInfo`, plus a Phase 1
   figure, plus a **newly built** read-more affordance for `addon_help_url`.
+- **The addon guides are wired in HERE, not deferred to Phase 5.** Every pack verb's explain panel
+  (and the Phase 1 picker info panel) carries an **"Open <Pack>'s guide"** button: Phase L's
+  version-pinned `OS.shell_open` aimed at `docs/Addons/<Guide>.md`. The verb -> guide mapping is
+  DERIVED, never hand-maintained (the standing preference): provider id -> the pack's directory ->
+  the Title-Case-Words guide name the existing guide-path test pins, with `addon_help_url`
+  (`resources/event_sheet.gd:83`) as the per-pack OVERRIDE for third parties hosting docs
+  elsewhere. This matters doubly because `docs/Addons/` ships in NEITHER release zip (section 1.3):
+  until Phase 3 bundles anything, the pinned browser link is the ONLY route an installed-plugin
+  user has to the 72 addon guides - and it gives them full fidelity (images, tables) on day one.
 - Entry points: **Tools > Documentation...** (`dock/menu_bar.gd:279-302`), **F1**, and a **"What does
   this do?"** row-menu item registered through `EventSheets.register_row_menu_item`.
 - `EventSheets.open_docs(doc_id, anchor)` lands here, initially serving only generated ids
-  (`"ace:Core/MoveAndSlide"`, `"section:Physics"`).
+  (`"ace:Core/MoveAndSlide"`, `"section:Physics"`) plus `"addon:<pack>"` resolving through the
+  derived mapping above (to the browser now, to the native page when Phase 3 exists - callers never
+  change).
 
-Out of scope: the corpus, the Markdown parser, search, per-pack guides, the dock.
+Out of scope: the corpus, the Markdown parser, search, per-pack guide DISCOVERY for third parties
+(Phase 5), the dock.
 
 ### Phase 3 - the corpus ships, and can be read
+
+The corpus is BOTH doc sets: the 39 top-level guides AND the 72 `docs/Addons/` guides - the
+addon guides are the most row-dense documents in the repo and the reader's Addons tree section
+is where a pack user lives. When Phase 3 lands, the Phase 2 `"addon:<pack>"` ids silently start
+resolving to native pages instead of browser tabs, and Phase 4's automatic figures light up the
+addon guides' worked examples (the 162-fence measurement already counted them).
 
 **Only build this if section 0.3's question is answered yes.**
 
