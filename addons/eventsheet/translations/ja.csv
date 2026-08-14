@@ -175,6 +175,8 @@ Extract All Actions to Function…,すべてのアクションを関数へ抽出
 Group Under a Heading…,見出しの下にグループ化…
 Export Grid to CSV…,表を CSV に書き出し…
 Import Grid from CSV…,表を CSV から読み込み…
+Export Text for Translation…,翻訳用のテキストを書き出し…
+Import Translations…,翻訳を読み込み…
 Detach Comment To Row,コメントを行として分離
 Convert Scope,スコープを変換
 Toggle Constant,定数を切り替え
@@ -221,7 +223,7 @@ End with a #rrggbb to tint it. Editor decor only - plain comment in the code.","
 "A quiet info panel drawn above this property in the Inspector.
 Editor decor only - plain comment in the code.","Inspector でこのプロパティの上に描画される控えめな情報パネルです。
 エディター上の装飾のみ - コード内では普通のコメントです。"
-"A shape over 0–1 (easing, falloff, ramps).",0–1 の範囲の形状 (イージング、減衰、ランプ)。
+"A shape over 0-1 (easing, falloff, ramps).",0-1 の範囲の形状 (イージング、減衰、ランプ)。
 A whole number (no decimals) - stored as an int. Unticked stores a float.,整数 (小数なし) - int として保存されます。チェックを外すと float で保存されます。
 Access,アクセス
 Advanced types,高度な型

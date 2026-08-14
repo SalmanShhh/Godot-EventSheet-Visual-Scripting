@@ -175,6 +175,8 @@ Extract All Actions to Function…,Извлечь все действия в ф�
 Group Under a Heading…,Сгруппировать под заголовком…
 Export Grid to CSV…,Экспортировать таблицу в CSV…
 Import Grid from CSV…,Импортировать таблицу из CSV…
+Export Text for Translation…,Экспортировать текст для перевода…
+Import Translations…,Импортировать переводы…
 Detach Comment To Row,Вынести комментарий в отдельную строку
 Convert Scope,Изменить область видимости
 Toggle Constant,Переключить константу
@@ -221,7 +223,7 @@ End with a #rrggbb to tint it. Editor decor only - plain comment in the code.","
 "A quiet info panel drawn above this property in the Inspector.
 Editor decor only - plain comment in the code.","Неброская информационная панель над этим свойством в Inspector.
 Только оформление редактора - в коде это обычный комментарий."
-"A shape over 0–1 (easing, falloff, ramps).","Кривая на отрезке 0-1 (плавность, затухание, рампы)."
+"A shape over 0-1 (easing, falloff, ramps).","Кривая на отрезке 0-1 (плавность, затухание, рампы)."
 A whole number (no decimals) - stored as an int. Unticked stores a float.,Целое число (без десятичных) - хранится как int. Без галочки хранится float.
 Access,Доступ
 Advanced types,Продвинутые типы

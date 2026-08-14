@@ -153,6 +153,28 @@ Context disambiguates strings that read the same but translate differently ("May
 month vs the verb). Plural picks the right form for a count per language, including
 languages with more than two plural forms.
 
+Everything AROUND the lookup has vocabulary of its own, grouped by the problem it solves:
+
+| Group | Verbs | The problem |
+|---|---|---|
+| The menu that builds itself | For Each Language, Language Name In Its Own Language, Language Is Available, Use Saved Language | A language list that rots one hand-written button at a time |
+| Matching, not comparing | Language Matches, Region Is, Value For Language, Current Language Name, Country Name | `Current Language == "en"` is wrong for every player on en_US |
+| Following a switch | Set Text (follows language), Refresh Text That Follows Language, Keep This Text Untranslated | Godot re-renders text a Control still HOLDS; text an event wrote stays in the old language |
+| Finishing a plural | Counted Text, Counted Text From Pattern, Set Text (counted) | The chosen form still carries its `%d` |
+| Surviving a missing key | Text Is Translated, Language Has Text For, Translated Text Or Fallback, Test With Fake Translation | `tr()` hands the key back, and the player reads `MENU_TITLE` |
+| Gendered and player-named lines | Translated Text From Pattern In Context, Translated Text With Words | One key holding a masculine, feminine and neutral translation |
+| Numbers the locale can read | Number In Local Digits, Number From Local Digits, Percent Sign, Date Parts | Arabic-Indic digits, a language's own percent sign, and a date order the translator owns |
+| Coverage, before release | Translation Coverage, Missing Translation Keys, Translation Is Complete | An export gate that fails loudly on a half-finished language |
+| Files, voice and data cells | Localized File, Load For Language, Say Line, Has Voice For Language, Voice Line Length, Reading Time Of, Translated Field Of, Translated Column Of Table | The parts of a localised game that are not strings |
+| The drawn side | Language Reads Right To Left, Mirror Layout For Language, Layout Is Mirrored, Add Font Fallback, Use Font, Font Of This Control, Font Can Show, Text Overflows, Fit Text To Label, Text Fits In Width, Wrapped Text Height | Right-to-left layout, missing glyphs, and German that does not fit the button |
+
+**A note on plurals and CSV catalogs.** Godot takes the plural RULE from the locale (Russian
+has three forms) but the FORMS from the catalog, and a CSV catalog stores `%d apple` and
+`%d apples` as two ordinary rows with one form each. Counted Text handles both: with a CSV
+catalog the count picks between the two translated rows, and with a gettext (.po) catalog it
+uses all the forms that catalog carries. If a language needs its third form to read
+correctly, ship that language as a `.po`.
+
 ## 8. Use cases
 
 ### 1. A jam game in two languages by Sunday

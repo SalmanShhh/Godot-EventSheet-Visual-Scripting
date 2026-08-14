@@ -175,6 +175,8 @@ Extract All Actions to Function…,Extraire toutes les actions vers une fonction
 Group Under a Heading…,Regrouper sous un titre…
 Export Grid to CSV…,Exporter la table en CSV…
 Import Grid from CSV…,Importer la table depuis un CSV…
+Export Text for Translation…,Exporter le texte à traduire…
+Import Translations…,Importer les traductions…
 Detach Comment To Row,Détacher le commentaire en ligne
 Convert Scope,Convertir la portée
 Toggle Constant,Basculer en constante
@@ -221,7 +223,7 @@ Terminez par un #rrggbb pour le teinter. Décor d'éditeur uniquement - simple c
 "A quiet info panel drawn above this property in the Inspector.
 Editor decor only - plain comment in the code.","Un panneau d'information discret affiché au-dessus de cette propriété dans l'Inspecteur.
 Décor d'éditeur uniquement - simple commentaire dans le code."
-"A shape over 0–1 (easing, falloff, ramps).","Une courbe sur 0–1 (easing, atténuation, rampes)."
+"A shape over 0-1 (easing, falloff, ramps).","Une courbe sur 0-1 (easing, atténuation, rampes)."
 A whole number (no decimals) - stored as an int. Unticked stores a float.,"Un nombre entier (sans décimales) - stocké comme int. Décoché, stocké comme float."
 Access,Accès
 Advanced types,Types avancés

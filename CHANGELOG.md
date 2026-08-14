@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+### Added - shipping in more than one language (the i18n wave, 21 suggestions)
+
+**The words at runtime.** A language menu that builds itself (**For Each Language**, each
+name written in its own language, with honest fallbacks when a catalog is missing),
+**Language Matches** and **Region Is** so `en_GB` never fails a hand-written `== "en"`
+comparison, **Use Saved Language** reading the same settings file Save Setting writes, and
+**Set Text (follows language)** which is honest about the engine: text a sheet assigns stops
+following the locale, so the verb remembers the KEY on the node and **Refresh Text That
+Follows Language** re-applies every remembered key in one row. Plurals ride the engine's own
+machinery (**Counted Text**, proven against Russian's three forms, not an if-chain), missing
+keys become visible (**Text Is Translated** / **Language Has Text For** / **Translated Text
+Or Fallback**), gendered lines and player-named heroes compose the shipped pattern verbs
+(**... In Context**, **... With Words**), and numbers read like the locale writes them
+(**Number In Local Digits** and kin).
+
+**Fonts and fit.** Right-to-left in rows, font fallback for scripts the chosen font lacks,
+and **Will It Fit** - overflow measured in pixels against the real font, so the German
+string that breaks the button is caught in the editor, not in a review.
+
+**Assets and content.** Language variants of an asset (riding Godot's own remap mechanism),
+a voice line and its subtitle that cannot drift apart, and data-asset text fields that can
+hold translation KEYS instead of literals - resolved at read time, without touching any
+shipped pack.
+
+**The authoring workflow.** **Translation Studio** (Tools menu): extraction, per-language
+coverage, and the translator's CSV round trip in one window, reusing the grid-CSV seam.
+**Language Variants...** reaches Godot's remap table from the editor. Pseudo-localization
+preview shows the game in accented, widened fake text before a translator exists - and never
+writes pseudo text into a real file. Rename-a-key-everywhere extends the existing refactor
+idiom, and two Doctor checks name player-facing text that was never marked translatable and
+text that stays in the old language after a switch - both pinned against the clean cases so
+they never cry wolf. **Translation coverage** is vocabulary too, pairing with On Project
+Export so a build can refuse to ship under a threshold.
+
 ### Added - save slots, runs and recovery (39 verbs on the Save System pack)
 
 The second half of the vocabulary wave, built ON the shipped Save System pack rather than
