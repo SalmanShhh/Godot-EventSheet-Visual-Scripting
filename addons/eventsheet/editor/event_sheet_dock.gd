@@ -97,6 +97,10 @@ const VARIABLE_MENU_REMEMBER := 6
 const VARIABLE_MENU_CHANGE_TYPE := 7
 const VARIABLE_MENU_GRID_EXPORT := 8
 const VARIABLE_MENU_GRID_IMPORT := 9
+## The TRANSLATOR's file on the same grid - a different shape from the designer's (Godot's own
+## keys,en catalog, one row per key) written by the same codec (dock/grid_csv_dialog.gd).
+const VARIABLE_MENU_TEXT_EXPORT := 10
+const VARIABLE_MENU_TEXT_IMPORT := 11
 const EMPTY_MENU_NEW_EVENT := 1
 const EMPTY_MENU_NEW_CONDITION := 2
 const EMPTY_MENU_ADD_VARIABLE := 3
@@ -237,6 +241,7 @@ var _ghost_row: EventSheetGhostRow = EventSheetGhostRow.new()  # zero-dialog add
 var _navigate: EventSheetNavigate = EventSheetNavigate.new()  # Ctrl+Click go-to-definition: addon verbs open their behaviour as a sheet (dock/navigate.gd)
 var _export_pack: EventSheetExportPack = EventSheetExportPack.new()  # Sheet ▸ Export Addon Pack: writes eventsheet_addons/<class>/ (.tres + .gd + README, bundles includes) (dock/export_pack.gd)
 var _save_studio: EventSheetSaveStudio = EventSheetSaveStudio.new()  # Tools ▸ Save Studio: format preview + slot browser/export + save_state generator (dock/save_studio.gd)
+var _translation_studio: EventSheetTranslationStudio = EventSheetTranslationStudio.new()  # Tools ▸ Translation Studio: extract / notes+orphans / import+register+coverage (dock/translation_studio.gd)
 var _function_dialog_glue: EventSheetFunctionDialogGlue = EventSheetFunctionDialogGlue.new()  # Add ▾ ▸ Function… dialog wiring + apply-to-sheet (dock/function_dialog.gd)
 var _theme_manager: EventSheetThemeManager = EventSheetThemeManager.new()  # editor theme: load/apply/pick style + theme file dialog + theme editor + live-reload binding to the active .tres (dock/theme_manager.gd)
 var _find_bar_glue: EventSheetFindBar = EventSheetFindBar.new()  # Ctrl+F find bar + Replace-All across the sheet + _replace_in_rows recursion (dock/find_bar.gd)
@@ -247,6 +252,8 @@ var _raw_call_namer: EventSheetRawCallNamer = EventSheetRawCallNamer.new()  # Sh
 var _variable_retype_dialog: EventSheetVariableRetypeDialog = EventSheetVariableRetypeDialog.new()  # variable ▸ Change Type Everywhere…: preview + one-undo-step retype (dock/variable_retype_dialog.gd)
 var _grid_csv_dialog: EventSheetGridCSVDialog = EventSheetGridCSVDialog.new()  # variable ▸ Export/Import Grid …CSV: the data-asset grid round trip (dock/grid_csv_dialog.gd)
 var _paste_special_dialog: EventSheetPasteSpecialDialog = EventSheetPasteSpecialDialog.new()  # row ▸ More ▸ Paste Special…: snippet paste, retargeted (dock/paste_special_dialog.gd)
+var _language_variants_dialog: EventSheetLanguageVariantsDialog = EventSheetLanguageVariantsDialog.new()  # row ▸ Language Variants…: writes Godot's own per-locale asset remap table, and names the preloads that would ignore it (dock/language_variants_dialog.gd)
+var _translation_key_dialog: EventSheetTranslationKeyDialog = EventSheetTranslationKeyDialog.new()  # the offer after editing a globe-marked value: rename the key in every catalog (dock/translation_key_dialog.gd)
 var _condition_context_menu: PopupMenu = null
 var _action_context_menu: PopupMenu = null
 var _row_context_menu: PopupMenu = null
@@ -271,6 +278,9 @@ var _add_menu_popup: PopupMenu = null
 # Fades informational status messages to muted after a few seconds (errors never fade).
 var _status_fade_tween: Tween = null
 var _view_popup: PopupMenu = null
+## View ▸ Preview In Language (the GAME's locales, never the editor's own) - rebuilt each open so a
+## language column a translator just added is pickable without reopening the workspace.
+var _preview_language_menu: PopupMenu = null
 # Command palette (Ctrl+P): keyboard-first access to every dock action - list + fuzzy filter +
 # popup shell live on _command_palette (dock/command_palette.gd); the action targets stay here.
 
@@ -302,6 +312,7 @@ func _init() -> void:
 	EventSheets.register_palette_command("Fold Everything (regions + groups)", func() -> void: _viewport.set_region_folds(true, true))
 	EventSheets.register_palette_command("Unfold Everything", func() -> void: _viewport.set_region_folds(false, true))
 	EventSheets.register_palette_command("Save Studio", func() -> void: _open_save_studio())
+	EventSheets.register_palette_command("Translation Studio", func() -> void: _open_translation_studio(), "Translation")
 	_ace_apply.init(self)
 	# Row/ACE edit-ops helper: same fresh-.new()-before-_ready reasoning - tests exercise ops like
 	# _bulk_set_enabled_on / _toggle_selected_enabled / _indent_selected_event before the tree init runs.
@@ -318,6 +329,18 @@ func _init() -> void:
 	_variable_retype_dialog.init(self)
 	_grid_csv_dialog.init(self)
 	_paste_special_dialog.init(self)
+	# The translation seams follow the same rule: init() only stores _dock, and the suite drives the
+	# Studio's buttons and the key-rename offer on a fresh .new() editor before _ready.
+	_translation_studio.init(self)
+	_translation_key_dialog.init(self)
+	_language_variants_dialog.init(self)
+	# The row item rides the shipped extension seam rather than a new menu const: the context-menu
+	# builder already appends every registered item whose filter accepts the clicked row.
+	EventSheets.register_row_menu_item("Language Variants…",
+		func(resource: Resource) -> bool:
+			return EventSheetLanguageVariantsDialog.names_an_asset(resource),
+		func(resource: Resource) -> void:
+			_language_variants_dialog.open(resource))
 	_build_ui()
 
 var _editor_dialogs_initialized: bool = false
@@ -2737,6 +2760,78 @@ func _generate_vocabulary_doc() -> void:
 ## load_state() generator for addon authors (dock/save_studio.gd).
 func _open_save_studio() -> void:
 	_save_studio.open()
+
+
+## Tools ▸ Translation Studio: the whole handoff to a translator - extract the strings, read the
+## notes each key travels with, merge a returned file and register the catalogs
+## (dock/translation_studio.gd).
+func _open_translation_studio() -> void:
+	_translation_studio.open()
+
+
+## View ▸ Preview In Language: renders every globe-marked value in the sheet in the chosen locale
+## (or in pseudo), and points Godot's own locale test setting at it so the next Play speaks it too.
+## A lens over the SHEET - the sheet on disk is untouched and clearing puts every row back. It is not
+## a lens over the PROJECT: `persist` really does write Godot's locale test setting into
+## project.godot, which is the point (the next Play speaks the previewed language), so the status
+## line says so and picking "As authored" removes the setting again rather than storing an empty one.
+## `persist` writes Godot's own locale test setting to project.godot, which is what makes the NEXT
+## Play speak the previewed language. The suite drives the same path with it off, so previewing in a
+## test can never leave a setting behind in the user's project file.
+func _preview_in_language(locale: String, persist: bool = true) -> void:
+	if locale.is_empty():
+		EventSheetGameCatalog.clear_preview()
+		EventSheetGameCatalog.set_test_locale("", persist)
+		_refresh_after_edit()
+		_set_status("Rows read as you wrote them again, and Godot's Locale > Test setting is cleared.")
+		return
+	var catalog_path: String = _translation_studio.catalog_path()
+	var messages: Dictionary = {}
+	if locale != EventSheetGameCatalog.PSEUDO_LOCALE:
+		var catalog: Dictionary = EventSheetTranslationScan.read_catalog(catalog_path)
+		for row: Variant in (catalog.get("rows", []) as Array):
+			var text: String = str((row as Dictionary).get(locale, "")).strip_edges()
+			if not text.is_empty():
+				messages[str((row as Dictionary).get(EventSheetTranslationScan.KEY_COLUMN, ""))] = text
+	EventSheetGameCatalog.set_preview(locale, messages, catalog_path)
+	EventSheetGameCatalog.set_test_locale(locale, persist)
+	_refresh_after_edit()
+	if locale == EventSheetGameCatalog.PSEUDO_LOCALE:
+		_set_status("Previewing pseudo - a label that clips here clips in German. The sheet is untouched; Godot's Locale > Test setting now points at pseudo, so the next Play speaks it too. Pick \"As authored\" to put both back.")
+		return
+	_set_status("Previewing %s - %d translated string(s) from %s. The sheet is untouched; Godot's Locale > Test setting now points at %s, so the next Play speaks it too. Pick \"As authored\" to put both back." % [
+		locale, messages.size(), catalog_path, locale])
+
+
+## Refills the View ▸ Preview In Language submenu from the catalog on disk, so a language column a
+## translator just added is pickable without reopening the workspace. Item 0 is always "as
+## authored" - the way back, which is what makes previewing safe to try.
+func _rebuild_preview_language_menu() -> void:
+	if _preview_language_menu == null:
+		return
+	_preview_language_menu.clear()
+	var active: String = EventSheetGameCatalog.preview_locale()
+	_preview_language_menu.add_radio_check_item("As authored (English)", 0)
+	_preview_language_menu.set_item_checked(0, active.is_empty())
+	var languages: PackedStringArray = _preview_languages()
+	for index: int in range(languages.size()):
+		var locale: String = languages[index]
+		var label: String = "Pseudo (finds clipped labels)" if locale == EventSheetGameCatalog.PSEUDO_LOCALE \
+			else "%s  (%s)" % [TranslationServer.get_locale_name(locale), locale]
+		_preview_language_menu.add_radio_check_item(label, index + 1)
+		_preview_language_menu.set_item_checked(index + 1, locale == active)
+
+
+## Every language the sheet can be previewed in: the catalog's own columns plus pseudo.
+func _preview_languages() -> PackedStringArray:
+	var languages: PackedStringArray = PackedStringArray()
+	var catalog: Dictionary = EventSheetTranslationScan.read_catalog(_translation_studio.catalog_path())
+	for locale: String in (catalog.get("locales", PackedStringArray()) as PackedStringArray):
+		if locale != EventSheetTranslationScan.SOURCE_COLUMN and not languages.has(locale):
+			languages.append(locale)
+	if not languages.has(EventSheetGameCatalog.PSEUDO_LOCALE):
+		languages.append(EventSheetGameCatalog.PSEUDO_LOCALE)
+	return languages
 
 
 # ── Sheet backups - the save-time ring (core in EventSheetBackups) ────────────────────

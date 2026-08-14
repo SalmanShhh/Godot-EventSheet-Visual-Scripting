@@ -214,7 +214,10 @@ static func parse_table_columns(spec: String) -> Array:
 		if not enum_options.is_empty():
 			columns.append({"name": column_name, "type": "enum", "options": enum_options})
 			continue
-		if not column_type in ["String", "int", "float", "bool", "color"]:
+		# "key" rides along with the plain types: it renders as text like a String column, and marks
+		# the cells as translation keys for the translator sweep. Flattening it here would make the
+		# declaration unreachable from a resource's own @export hint.
+		if not column_type in ["String", "key", "int", "float", "bool", "color"]:
 			column_type = "String"
 		columns.append({"name": column_name, "type": column_type})
 	return columns

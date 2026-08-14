@@ -4596,6 +4596,10 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 			# A shown LABEL is prose, so it goes through the catalog like the template around it -
 			# the raw param value never does, because it is the author's own GDScript.
 			var shown: String = _translated_option_label(ACEDefinition.display_value_for(parameter as Dictionary, value), str(value))
+			# View ▸ Preview In Language: a globe-marked value renders in the previewed GAME locale
+			# ("Jouer") instead of the literal tr("Play"). The identity when no preview is active, so
+			# this is byte-identical to the row you author until someone asks to see another language.
+			shown = EventSheetGameCatalog.preview_param(shown)
 			replacements.append(["{%d}" % index, shown])
 			replacements.append(["{%s}" % key, shown])
 		var substituted: Dictionary = substitute_display_tracking(template, replacements)
@@ -4615,7 +4619,8 @@ func _format_display_translated(definition: ACEDefinition, descriptor: ACEDescri
 		if param_key.is_empty():
 			continue
 		var param_value: Variant = params_dict.get(param_key, param.get_initial_value())
-		var param_shown: String = _translated_option_label(param.display_value(param_value), str(param_value))
+		var param_shown: String = EventSheetGameCatalog.preview_param(
+			_translated_option_label(param.display_value(param_value), str(param_value)))
 		descriptor_replacements.append(["{%d}" % i, param_shown])
 		descriptor_replacements.append(["{%s}" % param_key, param_shown])
 	var descriptor_substituted: Dictionary = substitute_display_tracking(descriptor_template, descriptor_replacements)

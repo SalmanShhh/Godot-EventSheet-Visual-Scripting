@@ -235,6 +235,20 @@ func build(root: Node) -> void:
 			_dock.get_viewport_control().queue_redraw()
 		_dock._set_status("Editor language: %s" % EventSheetL10n.locale_display_name(locales[locale_id]))
 	)
+	# Preview In Language is the GAME's languages, not the editor's - the sibling above switches the
+	# plugin's own interface. Kept strictly apart: a French editor must never start rewriting the
+	# user's rows. Picking one renders every globe-marked value in that locale AND points Godot's own
+	# locale test setting at it, so the next Play speaks it with no debug key to bind.
+	var preview_menu: PopupMenu = PopupMenu.new()
+	preview_menu.name = "EventSheetPreviewLanguageMenu"
+	_dock._preview_language_menu = preview_menu
+	view_popup.add_child(preview_menu)
+	view_popup.add_submenu_item("Preview In Language", "EventSheetPreviewLanguageMenu", 20)
+	view_popup.set_item_tooltip(view_popup.get_item_index(20), "Read the sheet in one of your GAME's languages while you author it - the rows show the translation instead of tr(\"…\"). Your sheet is not touched, but Godot's Locale > Test setting is set (that is what makes the next Play run in it); pick \"As authored\" to clear it again.")
+	view_popup.about_to_popup.connect(func() -> void: _dock._rebuild_preview_language_menu())
+	preview_menu.id_pressed.connect(func(preview_id: int) -> void:
+		var languages: PackedStringArray = _dock._preview_languages()
+		_dock._preview_in_language("" if preview_id <= 0 or preview_id > languages.size() else languages[preview_id - 1]))
 	view_popup.add_separator()
 	view_popup.add_check_item("MCP Server (AI tools)", 12)
 	view_popup.set_item_checked(view_popup.get_item_index(12), EventSheetMCPServer.is_enabled())
@@ -295,6 +309,9 @@ func build(root: Node) -> void:
 	tools_popup.add_item("Attach to Selected Node", 11)
 	tools_popup.add_item("Preview Behaviors on Selected Node", 18)
 	tools_popup.add_item("Save Studio…", 19)
+	# Translation Studio sits beside Save Studio because it is the same shape applied to text:
+	# everything about one handoff in one window.
+	tools_popup.add_item("Translation Studio…", 21)
 	tools_popup.add_item("Lift Report…", 12)
 	tools_popup.add_separator()
 	tools_popup.add_item("Welcome…", 13)
@@ -323,8 +340,10 @@ func build(root: Node) -> void:
 			17: _dock.start_tour()
 			16: _dock._open_shortcuts_help()
 			20: _dock._report_issue()
+			21: _dock._open_translation_studio()
 			14: _dock._run_diagnostics_action()
 	)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(21), "The whole handoff to a translator in one window: sweep the project for the text your game shows, read the note each key travels with, merge a returned file and register the catalogs.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(14), "Lint every ƒx expression + GDScript block; flag the offending rows and jump to the first.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(0), "Toggle breakpoint emission: debug-compiled sheets pause at rows with breakpoints.")
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(1), "Toggle Live Values: running sheets stream their variables here (editable).")

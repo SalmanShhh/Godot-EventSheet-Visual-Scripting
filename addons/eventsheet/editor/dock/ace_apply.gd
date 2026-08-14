@@ -124,6 +124,13 @@ func _on_viewport_ace_edit_requested(row_data: EventRowData, span_index: int, me
 
 func _on_ace_params_confirmed(definition: ACEDefinition, values: Dictionary, context: Dictionary) -> void:
 	_apply_ace_definition(definition, values, context)
+	# The source string IS the key: editing a globe-marked value orphans every translation of it
+	# silently, so offer to move the key in the catalogs the way Rename Everywhere… moves a variable.
+	# Nothing pops up in a project with no catalogs - the offer answers false and the edit is done.
+	var moved: Dictionary = EventSheetTranslationKeyDialog.renamed_key_in(
+		context.get("existing_params", {}) if context.get("existing_params") is Dictionary else {}, values)
+	if not moved.is_empty():
+		_dock._translation_key_dialog.offer(str(moved.get("old", "")), str(moved.get("new", "")))
 	# "Apply & Add Another": reopen the picker in the same append mode so the next
 	# condition/action can be added without re-summoning the picker by hand.
 	if bool(context.get("chain_add", false)):

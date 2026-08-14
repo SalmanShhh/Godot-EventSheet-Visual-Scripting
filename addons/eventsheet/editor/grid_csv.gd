@@ -38,8 +38,12 @@ const SEPARATOR_OPTIONS: Array[Dictionary] = [
 	{"key": ";", "label": "Semicolon"},
 	{"key": "\t", "label": "Tab  (.tsv)"}
 ]
-## Cell types the round trip understands; anything else is carried as text.
-const CELL_TYPES: Array[String] = ["String", "int", "float", "bool", "enum", "color"]
+## Cell types the round trip understands; anything else is carried as text. "key" is text as far as
+## every codec here is concerned - it exists so a column can DECLARE that its cells are translation
+## keys, which is what the translator sweep and "Export Text for Translation…" pick up; dropping it
+## to "String" on the way in (as this list did while it had no entry for it) makes that declaration
+## unreachable and silently turns the sweep's grid half off.
+const CELL_TYPES: Array[String] = ["String", "key", "int", "float", "bool", "enum", "color"]
 
 # ── Column schemas ───────────────────────────────────────────────────────────
 

@@ -127,7 +127,7 @@ const TYPE_HINTS: Dictionary = {
 	"Vector2": "An x/y pair: a direction, velocity, or position.",
 	"Color": "An RGBA colour.",
 	"Texture2D": "An image / sprite resource.",
-	"Curve": "A shape over 0–1 (easing, falloff, ramps). Edits in the Inspector's curve editor.",
+	"Curve": "A shape over 0-1 (easing, falloff, ramps). Edits in the Inspector's curve editor.",
 	"Gradient": "A smooth colour ramp (fire, sky, health bar). Edits in the Inspector's gradient editor.",
 	"Variant": "Any type - untyped (advanced; prefer a specific type when you can).",
 	"Array": "A list that can hold anything (mixed types allowed).",
@@ -1571,7 +1571,7 @@ func _dialog_table_columns() -> Array:
 		if not enum_options.is_empty():
 			columns.append({"name": column_name, "type": "enum", "options": enum_options})
 			continue
-		if not column_type in ["String", "int", "float", "bool", "color"]:
+		if not column_type in ["String", "key", "int", "float", "bool", "color"]:
 			column_type = "String"
 		columns.append({"name": column_name, "type": column_type})
 	return columns
@@ -1717,7 +1717,7 @@ func _refresh_drawer_preview() -> void:
 		"vector_dial":
 			caption.text = "Drawer preview · reach %s" % _format_bound(bounds["max"])
 		"progress_bar", "min_max":
-			caption.text = "Drawer preview · %s–%s" % [_format_bound(bounds["min"]), _format_bound(bounds["max"])]
+			caption.text = "Drawer preview · %s-%s" % [_format_bound(bounds["min"]), _format_bound(bounds["max"])]
 		_:
 			caption.text = "Drawer preview"
 	caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))

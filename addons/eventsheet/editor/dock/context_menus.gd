@@ -88,6 +88,11 @@ func build_all() -> void:
 	# _configure_context_menu disables them with the reason on every other variable.
 	_dock._variable_context_menu.add_item("Export Grid to CSV…", _dock.VARIABLE_MENU_GRID_EXPORT)
 	_dock._variable_context_menu.add_item("Import Grid from CSV…", _dock.VARIABLE_MENU_GRID_IMPORT)
+	# The translator's file beside the designer's: same grid, different shape (one row per key,
+	# one column per language - Godot's own catalog), so a balance pass and a translation pass
+	# can never overwrite each other.
+	_dock._variable_context_menu.add_item("Export Text for Translation…", _dock.VARIABLE_MENU_TEXT_EXPORT)
+	_dock._variable_context_menu.add_item("Import Translations…", _dock.VARIABLE_MENU_TEXT_IMPORT)
 	_dock._variable_context_menu.id_pressed.connect(_dock._on_variable_context_menu_id_pressed)
 	_dock.add_child(_dock._variable_context_menu)
 
@@ -429,7 +434,8 @@ func _configure_context_menu(menu: PopupMenu) -> void:
 					"Convert to Global" if scope_label == "local" else "Convert to Local"
 				)
 		var grid_variable: bool = has_variable and EventSheetGridCSVDialog.is_grid_variable(_dock._variables._context_variable)
-		for grid_id: int in [_dock.VARIABLE_MENU_GRID_EXPORT, _dock.VARIABLE_MENU_GRID_IMPORT]:
+		for grid_id: int in [_dock.VARIABLE_MENU_GRID_EXPORT, _dock.VARIABLE_MENU_GRID_IMPORT,
+				_dock.VARIABLE_MENU_TEXT_EXPORT, _dock.VARIABLE_MENU_TEXT_IMPORT]:
 			var grid_index: int = menu.get_item_index(grid_id)
 			if grid_index >= 0:
 				menu.set_item_disabled(grid_index, not grid_variable)

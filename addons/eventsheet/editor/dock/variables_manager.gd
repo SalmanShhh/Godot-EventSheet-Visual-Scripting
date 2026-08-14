@@ -104,6 +104,10 @@ func _on_variable_context_menu_id_pressed(id: int) -> void:
 			_dock._grid_csv_dialog.open("export", _context_variable)
 		_dock.VARIABLE_MENU_GRID_IMPORT:
 			_dock._grid_csv_dialog.open("import", _context_variable)
+		_dock.VARIABLE_MENU_TEXT_EXPORT:
+			_dock._grid_csv_dialog.open("translate_export", _context_variable)
+		_dock.VARIABLE_MENU_TEXT_IMPORT:
+			_dock._grid_csv_dialog.open("translate_import", _context_variable)
 
 
 ## "Group Under a Heading..." routes the multi-selection (or just the clicked row)
