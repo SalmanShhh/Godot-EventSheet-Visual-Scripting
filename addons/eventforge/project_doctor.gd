@@ -66,6 +66,8 @@ static func run() -> Dictionary:
 	check_param_type_mismatches(sheet_paths, findings)
 	check_shadowed_variables(sheet_paths, findings)
 	check_untranslated_project(sheet_paths, findings)
+	check_unmarked_player_text(sheet_paths, findings)
+	check_stale_translated_labels(sheet_paths, findings)
 	check_required_fields(sheet_paths, findings)
 	check_missing_save_support(sheet_paths, findings)
 	check_save_key_symmetry(sheet_paths, findings)
@@ -1162,6 +1164,485 @@ static func check_untranslated_project(sheet_paths: PackedStringArray, findings:
 			_add(findings, "info", "l10n", sheet_path,
 				"This sheet translates text (tr / Set Language) but the project has no translations registered - generate a POT (Project Settings > Localization > POT Generation, add the compiled .gd), translate it, and add the catalog under Localization > Translations.")
 			return
+
+
+## THE LOCALISATION GATE the two checks below share, and the reason they can never argue with the
+## check above. check_untranslated_project fires only while the project has NO catalog registered
+## ("you translate but nothing is installed"); these two fire only once one IS registered ("you have
+## begun localising, so here is what is still English"). The two halves are mutually exclusive, and a
+## project that never localises at all gets neither - which is the point, because most Godot games
+## ship in one language on purpose and every finding they would get is noise.
+static func _project_has_translation_catalogs() -> bool:
+	return not (ProjectSettings.get_setting("internationalization/locale/translations", PackedStringArray()) as PackedStringArray).is_empty()
+
+
+## Player-facing text that was never marked translatable. The globe on a string parameter defaults to
+## OFF, which is correct - most params are node paths, group names, animation names and amounts - and
+## the cost of that default is that "we will localise later" fails SILENTLY: the string ships as a
+## bare literal, Godot's POT generation (which reads tr() calls out of the compiled .gd) never sees
+## it, and the bug surfaces months later as one English line in an otherwise translated menu.
+##
+## NOT CRYING WOLF IS THE WHOLE FEATURE, so the accusation is narrow on every axis at once:
+##   - it fires ONLY once the project has a translation catalog registered (the gate above);
+##   - it reads the EMITTED SCRIPTS, for the reason check_save_key_symmetry documents - `.gd` is the
+##     default sheet format while list_project_sheets() finds only `.tres`, and the literal is in the
+##     emitted code either way;
+##   - a literal is judged ONLY where it reaches a TEXT SINK (an assignment into text / tooltip_text
+##     / placeholder_text / bbcode_text, a set_text-family call, a Dialogue Kit queued line). A node
+##     path, a group name, an animation name, an input action or a print / push_error message never
+##     reaches one, so translating an identifier - which breaks lookups, as the guide says - can
+##     never be suggested here;
+##   - a sink line that already mentions tr() or tr_n() is skipped whole, so a partly-marked line is
+##     never nagged about its remaining fragment;
+##   - a value that is not TEXT is skipped: empty, a number, anything holding a "/" (a path or a node
+##     path), and anything without two consecutive letters ("%d", ":", "00:00", "[b][/b]");
+##   - a receiver-less `text = "..."` in a script that declares its own `text` variable is an ordinary
+##     string being built, not a property write, and is never accused;
+##   - and a string the project ALREADY marks somewhere - it appears inside a tr() call in any script,
+##     or it is a key in a real translation catalog .csv (columns that name languages, checked against
+##     the engine's own locale table, never just any spreadsheet) - is never accused, because a Control
+##     auto-translates its own text at display time, so that string genuinely does translate.
+## Info tier: advisory, never fails CI. One finding per script, naming the strings, because a menu
+## script would otherwise produce twenty.
+static func check_unmarked_player_text(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	if not _project_has_translation_catalogs():
+		return
+	var known: Dictionary = _catalog_keys()
+	var candidates: Dictionary = {}
+	for script_path: String in _project_scripts():
+		# A pack is shipped vocabulary the project author did not write and cannot usefully edit.
+		if script_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if source.is_empty():
+			continue
+		for marked: String in marked_translation_literals(source):
+			known[marked] = true
+		var unmarked: PackedStringArray = unmarked_player_text(source)
+		if not unmarked.is_empty():
+			candidates[script_path] = unmarked
+	var paths: Array = candidates.keys()
+	paths.sort()
+	for script_path: String in paths:
+		var reportable: PackedStringArray = PackedStringArray()
+		for literal: String in candidates[script_path] as PackedStringArray:
+			if not known.has(literal):
+				reportable.append(literal)
+		if reportable.is_empty():
+			continue
+		_add(findings, "info", "l10n-unmarked", script_path,
+			"%s shown to the player %s not marked translatable (%s). Godot's POT generation only sees text inside tr(), so these never reach the translator and ship in one language. In a sheet, right-click the action > Edit Action and click the globe beside the field (it ships the value as tr(\"...\")); in hand-written code wrap the string in tr(). Ignore a string that is never read as words." % [
+				("%d strings" % reportable.size()) if reportable.size() > 1 else "1 string",
+				"are" if reportable.size() > 1 else "is",
+				_quoted_sample(reportable)])
+
+
+## Text that stays in the OLD language after Set Language - the most-reported localisation bug in any
+## engine, and a silent one. Godot re-translates an auto-translated Control for free, so a title typed
+## into the SCENE follows the switch; a label an EVENT filled from tr() holds the string tr() returned
+## at the time, and keeps the old language until the scene is loaded again. (Verified on 4.7: a
+## Label's text assigned from a tr() result does not change when the locale changes, while the same
+## Label's measured size DOES follow the locale when its text is a bare source string.)
+##
+## It is decidable from emitted code, which is what makes it worth shipping: a script assigns text
+## from a tr() value and the script has no translation-changed handler ANYWHERE. The clean patterns it
+## must never accuse, each one silenced deliberately:
+##   - a script that already reacts (it mentions NOTIFICATION_TRANSLATION_CHANGED, or a custom
+##     language_changed / locale_changed signal) - which includes the exact shape this finding
+##     recommends, so the check can never accuse its own fix;
+##   - an assignment inside _process / _physics_process / _draw / _notification, which re-runs on its
+##     own and therefore cannot go stale;
+##   - a script that never assigns text from tr() at all - a bare literal is the other check's
+##     business, because a Control auto-translates that one at display time.
+## Info tier, one finding per script, naming the functions that fill the text.
+static func check_stale_translated_labels(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	if not _project_has_translation_catalogs():
+		return
+	for script_path: String in _project_scripts():
+		if script_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var source: String = FileAccess.get_file_as_string(script_path)
+		if source.is_empty():
+			continue
+		var stale: PackedStringArray = stale_translated_text_functions(source)
+		if stale.is_empty():
+			continue
+		_add(findings, "info", "l10n-stale-label", script_path,
+			"This script fills text from tr() in %s, but nothing here runs again when the language changes - so those labels keep the OLD language until the scene is loaded again (text typed into the scene follows a switch by itself; text an event filled does not). Add an On Language Changed event that re-runs them: right-click the actions > Extract All Actions to Function…, then Add Event > Translation > On Language Changed > Call Function. Ignore this if the whole screen is rebuilt after a language switch." % _function_list(stale))
+
+
+## The property names an assignment must land on to count as player-facing TEXT. Deliberately short:
+## every one of them is a Control property the engine itself auto-translates, so a string arriving
+## here is being SHOWN, not used as an identifier. Longest first, so the alternation cannot match
+## `text` inside `bbcode_text`.
+const _TEXT_SINK_PROPERTIES: PackedStringArray = ["placeholder_text", "tooltip_text", "bbcode_text", "text"]
+
+## Setter calls that are the same sink written as a method.
+const _TEXT_SINK_METHODS: PackedStringArray = ["set_placeholder_text", "set_tooltip_text", "set_text", "append_text", "add_text"]
+
+## Functions that re-run on their own, so text they fill can never be stale.
+const _SELF_REFRESHING_FUNCTIONS: PackedStringArray = ["_process", "_physics_process", "_draw", "_notification"]
+
+## Evidence that a script already reacts to a language switch. The engine has no locale-changed
+## SIGNAL (which is why On Language Changed compiles to the _notification virtual), so a project that
+## routes its own signal instead is recognised by name rather than being accused of the bug it solved.
+const _REFRESH_MARKERS: PackedStringArray = ["NOTIFICATION_TRANSLATION_CHANGED", "language_changed", "locale_changed"]
+
+
+## The player-facing string literals one script SOURCE shows without marking translatable. Pure (text
+## in, strings out) so the whole rule is pinned without planting an unmarked fixture in this project -
+## which would make the Doctor report on this repo forever, the exact noise the check exists to avoid.
+static func unmarked_player_text(source: String) -> PackedStringArray:
+	var unmarked: PackedStringArray = PackedStringArray()
+	# Comments are stripped BEFORE the cheap substring gate too, so a script whose only "text" is the
+	# word inside a comment is not treated as a text sink at all.
+	var scanned: String = _without_comment_lines(source)
+	if not _has_text_sink(scanned):
+		return unmarked
+	var declared: Dictionary = _declared_text_locals(scanned)
+	var seen: Dictionary = {}
+	for line: String in scanned.split("\n"):
+		var stripped: String = line.strip_edges()
+		if stripped.is_empty():
+			continue
+		for literal: String in _sink_literals(stripped, declared):
+			if seen.has(literal) or not _is_player_text(literal):
+				continue
+			seen[literal] = true
+			unmarked.append(literal)
+	return unmarked
+
+
+## Every string one source ALREADY marks translatable - the literal inside a tr() / tr_n() call. This
+## is the corpus that keeps the check quiet about a key another sheet (or another line) translates:
+## the Control auto-translates its own text at display time, so a literal the catalog knows really
+## does reach the player in their language.
+static func marked_translation_literals(source: String) -> PackedStringArray:
+	var marked: PackedStringArray = PackedStringArray()
+	if not source.contains("tr("):
+		return marked
+	var scanned: String = _without_comment_lines(source)
+	for found: RegExMatch in _cached_regex("\\btr(?:_n)?\\(\\s*\"").search_all(scanned):
+		var literals: PackedStringArray = _string_literals_in(scanned.substr(found.get_end() - 1))
+		if not literals.is_empty():
+			marked.append(literals[0])
+	return marked
+
+
+## The functions in one source that fill text from tr() while nothing in the script reacts to a
+## language switch. Pure, and empty for every clean shape (see check_stale_translated_labels).
+static func stale_translated_text_functions(source: String) -> PackedStringArray:
+	var stale: PackedStringArray = PackedStringArray()
+	# EVERY rule here reads the comment-stripped source, the markers included. Testing the raw text
+	# for them let one comment ("handle language_changed one day") switch the whole check off for the
+	# script - and a project mid-localisation is exactly where that TODO gets written.
+	var scanned: String = _without_comment_lines(source)
+	if not scanned.contains("tr(") or not _has_text_sink(scanned):
+		return stale
+	for marker: String in _REFRESH_MARKERS:
+		if scanned.contains(marker):
+			return stale
+	var declared: Dictionary = _declared_text_locals(scanned)
+	var declaration: RegEx = _cached_regex("^(?:static\\s+)?func\\s+([A-Za-z_][A-Za-z0-9_]*)")
+	var current_function: String = ""
+	var seen: Dictionary = {}
+	for line: String in scanned.split("\n"):
+		var stripped: String = line.strip_edges()
+		if stripped.is_empty():
+			continue
+		var declaring: RegExMatch = declaration.search(stripped)
+		if declaring != null:
+			current_function = declaring.get_string(1)
+			continue
+		if current_function.is_empty() or _SELF_REFRESHING_FUNCTIONS.has(current_function):
+			continue
+		if seen.has(current_function) or not _translates_into_text_sink(stripped, declared):
+			continue
+		seen[current_function] = true
+		stale.append(current_function)
+	return stale
+
+
+## Whether a source touches a text sink at all - one substring scan that skips the great majority of
+## scripts before any regex runs.
+static func _has_text_sink(source: String) -> bool:
+	for property_name: String in _TEXT_SINK_PROPERTIES:
+		if source.contains(property_name):
+			return true
+	return source.contains("queue_line(")
+
+
+## The string literals ONE line hands to a text sink, or none. A line that already mentions tr() is
+## skipped whole: the author is translating there, and nagging about the remaining fragment of a
+## partly-marked line is exactly the alert fatigue that gets a check switched off.
+static func _sink_literals(stripped_line: String, declared: Dictionary = {}) -> PackedStringArray:
+	if _mentions_translation_call(stripped_line):
+		return PackedStringArray()
+	var assigned: String = _text_sink_assignment(stripped_line, declared)
+	if not assigned.is_empty():
+		return _string_literals_in(assigned)
+	var called: RegExMatch = _cached_regex("\\.(?:%s)\\(" % "|".join(_TEXT_SINK_METHODS)).search(stripped_line)
+	if called != null:
+		return _judged_arguments(_call_arguments(stripped_line.substr(called.get_end())))
+	# Dialogue Kit queues a SPEAKER and a LINE. The speaker is an id the game matches on, so the
+	# first argument is never judged - and the split is on real arguments, so a comma inside the
+	# speaker's own name cannot shift which one is which.
+	var queued: RegExMatch = _cached_regex("\\.queue_line\\(").search(stripped_line)
+	if queued == null:
+		return PackedStringArray()
+	var queued_arguments: PackedStringArray = _call_arguments(stripped_line.substr(queued.get_end()))
+	return _literals_in_all(queued_arguments.slice(1)) if queued_arguments.size() > 1 else PackedStringArray()
+
+
+## The literals a sink CALL is judged on. Control.set_text takes exactly ONE argument, so a call handed
+## two is somebody else's set_text - HUD Kit's set_text(label_name, text) is the shipped example - and
+## its leading argument is an identifier a translator must never be offered. Splitting real arguments
+## rather than quotes is what makes that safe: set_text("Score: %s" % [name]) is ONE argument, so the
+## format string is still judged, while set_text("StatusLabel", "Ready") is two and only "Ready" is.
+static func _judged_arguments(arguments: PackedStringArray) -> PackedStringArray:
+	return _literals_in_all(arguments.slice(1) if arguments.size() > 1 else arguments)
+
+
+static func _literals_in_all(arguments: PackedStringArray) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for argument: String in arguments:
+		found.append_array(_string_literals_in(argument))
+	return found
+
+
+## One call's argument list, split on the commas that are actually at the TOP level of it: a comma
+## inside a string, a nested call, an array or a dictionary does not separate arguments. Reading stops
+## at the call's own closing bracket, so a second call later on the same line cannot leak in.
+static func _call_arguments(after_open_bracket: String) -> PackedStringArray:
+	var arguments: PackedStringArray = PackedStringArray()
+	var current: String = ""
+	var depth: int = 0
+	var index: int = 0
+	while index < after_open_bracket.length():
+		var character: String = after_open_bracket[index]
+		if character == "\"":
+			var literal_end: int = _end_of_literal(after_open_bracket, index)
+			current += after_open_bracket.substr(index, literal_end - index)
+			index = literal_end
+			continue
+		if character == "(" or character == "[" or character == "{":
+			depth += 1
+		elif character == ")" and depth == 0:
+			break
+		elif character == ")" or character == "]" or character == "}":
+			depth -= 1
+		elif character == "," and depth == 0:
+			arguments.append(current)
+			current = ""
+			index += 1
+			continue
+		current += character
+		index += 1
+	if not current.strip_edges().is_empty():
+		arguments.append(current)
+	return arguments
+
+
+## The index one past the double-quoted literal starting at `start`, or the end of the text when the
+## quote is never closed (a multi-line literal), so the scan always makes progress.
+static func _end_of_literal(text: String, start: int) -> int:
+	var index: int = start + 1
+	while index < text.length():
+		if text[index] == "\\":
+			index += 2
+			continue
+		if text[index] == "\"":
+			return index + 1
+		index += 1
+	return text.length()
+
+
+## Whether one line assigns a tr() value into a text sink - the stale-label shape.
+static func _translates_into_text_sink(stripped_line: String, declared: Dictionary = {}) -> bool:
+	if not _mentions_translation_call(stripped_line):
+		return false
+	var assigned: String = _text_sink_assignment(stripped_line, declared)
+	if not assigned.is_empty():
+		return _mentions_translation_call(assigned)
+	return _cached_regex("\\.(?:%s)\\(" % "|".join(_TEXT_SINK_METHODS)).search(stripped_line) != null
+
+
+## Whether a fragment really calls tr() or tr_n(). It has to be a WORD boundary and not a substring
+## scan, because `str(` ends in `tr(` - and the plugin's own Set Text emits `text = str({value})`, so
+## a plain `contains("tr(")` reads EVERY Set Text row as already translated and silently switches both
+## checks off on exactly the sink they were built for. `.tr(` (String.tr on a variable) counts too.
+static func _mentions_translation_call(text: String) -> bool:
+	if not (text.contains("tr(") or text.contains("tr_n(")):
+		return false
+	return _cached_regex("(?:^|[^A-Za-z0-9_])tr(?:_n)?\\(").search(text) != null
+
+
+## The right-hand side of a `<node>.text = ...` assignment, or "" when the line is not one.
+##
+## The optional `<receiver>.` prefix is what tells a real property write from a DECLARATION:
+## `$Title.text = "x"` and a host-scoped `text = "x"` both match, while `var text = "x"` and
+## `var label_text = "x"` cannot, because with no dot in front the property name would have to start
+## the line. `+=` counts (appending to a label is still filling it); `==`, `!=`, `<=` and `>=` cannot,
+## so a comparison is never read as a write.
+##
+## THE RECEIVER MUST LOOK LIKE A NODE, and that narrowing is the difference between a check people
+## keep switched on and one they mute. `text` is an extremely common field name on ordinary data
+## objects - this plugin's own comment rows have one - and `row.text = "short note"` is not player
+## text at all. Nothing in a source file says which class `row` is, so only receivers that are
+## SYNTACTICALLY a node are judged: `$Path`, `%Unique`, a get_node()/find_child() call, `self`, or no
+## receiver at all (the host, which for a Set Text row is the Control the sheet is attached to). A
+## label reached through a plain variable is missed on purpose: missing one costs silence, accusing a
+## working game costs the whole check.
+static func _text_sink_assignment(stripped_line: String, declared: Dictionary = {}) -> String:
+	var found: RegExMatch = _cached_regex("^(?:([^=\\n]*)\\.)?(%s)\\s*\\+?=(?!=)\\s*(.+)$" % "|".join(_TEXT_SINK_PROPERTIES)).search(stripped_line)
+	if found == null or not _is_node_receiver(found.get_string(1)):
+		return ""
+	if found.get_string(1).strip_edges().is_empty() and declared.has(found.get_string(2)):
+		# A receiver-less `text = ...` is the HOST's property - unless this script declares its own
+		# `text` variable or parameter, in which case the very same line is an ordinary string being
+		# built (`var text := ""` further up, then `text = "Report for the day"`). The declaration is
+		# the only thing that tells the two apart, and accusing a working script is what gets a check
+		# muted for good.
+		return ""
+	return found.get_string(3)
+
+
+## The sink property names this source declares as ORDINARY variables - `var text`, `const text`, or
+## a parameter called `text`. Narrow on purpose: it only ever silences the receiver-less form above,
+## so `$Label.text = "..."` in the same script is judged exactly as it was.
+static func _declared_text_locals(source: String) -> Dictionary:
+	var declared: Dictionary = {}
+	for property_name: String in _TEXT_SINK_PROPERTIES:
+		if not source.contains(property_name):
+			continue
+		var pattern: String = "(?:^|[^A-Za-z0-9_])(?:var|const)\\s+%s(?![A-Za-z0-9_])|[(,]\\s*%s\\s*[:=]" % [property_name, property_name]
+		if _cached_regex(pattern).search(source) != null:
+			declared[property_name] = true
+	return declared
+
+
+## Whether what stands in front of `.text` is a node rather than some other object holding a field of
+## that name. Empty means the host itself.
+static func _is_node_receiver(receiver: String) -> bool:
+	var trimmed: String = receiver.strip_edges()
+	if trimmed.is_empty() or trimmed == "self":
+		return true
+	if trimmed.begins_with("$") or trimmed.begins_with("%"):
+		return true
+	return _cached_regex("(?:^|[^A-Za-z0-9_])(?:get_node|get_node_or_null|get_child|find_child|get_parent)\\(").search(trimmed) != null
+
+
+## Whether a literal reads as TEXT a player is meant to understand. Everything rejected here is
+## rejected because translating it would be WRONG, not merely unnecessary: a number, a path or node
+## path (a "/" anywhere), and anything without two consecutive letters - "%d", ":", "00:00",
+## "[b][/b]" - are scaffolding, and a translator handed them would break the game.
+##
+## BBCode tags are stripped BEFORE those rules run, so "[b]Boss defeated[/b]" is judged on the words
+## a player reads. Without that, the closing tag's own "/" makes every styled RichTextLabel line look
+## like a file path - and styled lines are the ones most likely to be real prose. Stripping cannot
+## rescue a path, because "res://save/slot1.tres" carries no brackets to strip.
+static func _is_player_text(literal: String) -> bool:
+	var trimmed: String = _cached_regex("\\[/?[^\\[\\]]*\\]").sub(literal.strip_edges(), "", true).strip_edges()
+	if trimmed.is_empty() or trimmed.is_valid_float() or trimmed.contains("/"):
+		return false
+	return _cached_regex("[A-Za-z]{2}").search(trimmed) != null
+
+
+## The double-quoted literals in a fragment of GDScript, unescaped only as far as the backslash pairs
+## (a `\"` stops the scan from closing early; `\n` stays spelled the way the author typed it, so the
+## finding quotes back what is really in the file). An UNTERMINATED quote yields nothing, which is how
+## a multi-line string literal is skipped rather than half-read.
+static func _string_literals_in(text: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	var index: int = 0
+	while index < text.length():
+		if text[index] != "\"":
+			index += 1
+			continue
+		index += 1
+		var literal: String = ""
+		var closed: bool = false
+		while index < text.length():
+			if text[index] == "\\" and index + 1 < text.length():
+				literal += text.substr(index, 2)
+				index += 2
+				continue
+			if text[index] == "\"":
+				closed = true
+				index += 1
+				break
+			literal += text[index]
+			index += 1
+		if closed:
+			found.append(literal)
+	return found
+
+
+## Every source string a catalog .csv in the project already keys - its FIRST column, which is what
+## Godot's CSV translation format keys by. A key the translator already holds is not missing text,
+## whichever way it reached the label.
+## A CATALOG, not merely a .csv. Godot's translation CSV names a language in every column after the
+## first, and a language is checkable rather than guessable: get_locale_name hands back the code
+## itself for something that is not one (checked on 4.7 - "de" reads "German", "price" reads
+## "price"). Without this gate the FIRST COLUMN OF EVERY SPREADSHEET IN THE PROJECT became an
+## allowlist: a designer's loot table keyed by item name, or a grid exported by this plugin's own
+## "Export Grid to CSV…", would silence a real unmarked-text finding for every title it holds.
+static func _is_catalog_header(header: PackedStringArray) -> bool:
+	if header.size() < 2:
+		return false
+	for index: int in range(1, header.size()):
+		var column: String = header[index].strip_edges()
+		if column.is_empty():
+			continue
+		if column == "qps" or TranslationServer.get_locale_name(column) != column:
+			return true
+	return false
+
+
+static func _catalog_keys() -> Dictionary:
+	var keys: Dictionary = {}
+	for csv_path: String in _list_files_with_extension("csv"):
+		# A shipped pack carries its own UI vocabulary in a translations.csv beside it. Those are the
+		# plugin's words, not the game's, and folding them in silences a genuine finding for every
+		# word the two happen to share ("Play", "Settings", "Back").
+		if csv_path.begins_with("res://eventsheet_addons/"):
+			continue
+		var file: FileAccess = FileAccess.open(csv_path, FileAccess.READ)
+		if file == null:
+			continue
+		var header: PackedStringArray = file.get_csv_line()
+		if not _is_catalog_header(header):
+			file.close()
+			continue
+		while not file.eof_reached():
+			var row: PackedStringArray = file.get_csv_line()
+			if not row.is_empty() and not row[0].strip_edges().is_empty():
+				keys[row[0]] = true
+		file.close()
+	return keys
+
+
+## Up to four strings quoted for a finding, with the rest counted rather than listed - a menu script
+## would otherwise produce a message nobody reads to the end. Long strings are cut so one paragraph
+## of dialogue cannot swallow the message.
+static func _quoted_sample(literals: PackedStringArray) -> String:
+	var shown: PackedStringArray = PackedStringArray()
+	for index: int in mini(literals.size(), 4):
+		var literal: String = literals[index]
+		shown.append("\"%s\"" % ((literal.left(40) + "...") if literal.length() > 40 else literal))
+	if literals.size() > shown.size():
+		shown.append("and %d more" % (literals.size() - shown.size()))
+	return ", ".join(shown)
+
+
+## Function names read as prose: "_ready()", "_ready() and refresh()", "a(), b() and c()".
+static func _function_list(names: PackedStringArray) -> String:
+	var called: PackedStringArray = PackedStringArray()
+	for function_name: String in names:
+		called.append("%s()" % function_name)
+	if called.size() == 1:
+		return called[0]
+	return "%s and %s" % [", ".join(called.slice(0, called.size() - 1)), called[called.size() - 1]]
 
 
 static func check_vocabulary_doc(findings: Array[Dictionary]) -> void:

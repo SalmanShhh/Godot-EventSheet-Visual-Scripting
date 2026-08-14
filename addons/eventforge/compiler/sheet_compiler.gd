@@ -2958,7 +2958,7 @@ static func _drawer_export_prefix(attributes: Dictionary, type_name: String) -> 
 					# Round-tripping it through the codec validates and canonicalises it instead.
 					var formed_token: String = table_enum_type(table_enum_options(column_type))
 					column_type = formed_token if not formed_token.is_empty() else "String"
-				elif not column_type in ["String", "int", "float", "bool", "color"]:
+				elif not column_type in ["String", "key", "int", "float", "bool", "color"]:
 					column_type = "String"
 				column_pairs.append("%s=%s" % [column_name, column_type])
 			if column_pairs.is_empty():
