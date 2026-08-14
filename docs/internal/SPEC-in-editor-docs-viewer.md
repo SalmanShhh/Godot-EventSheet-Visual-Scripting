@@ -1000,20 +1000,41 @@ evaluated, because the numbers favour the alternative.
 | Risk | authors must remember to opt in; adoption stalls | a fence meant to stay code renders as a figure |
 | Fits the standing "derived over hand-maintained" preference | no | yes |
 
-**Recommendation: B, with the same two-part gate as the oracle.** Any ` ```gdscript ` fence that
-passes `round_trips(body) == true` **and** lifts to at least one non-`RawCodeRow` row renders as a
-figure; anything else renders as a code card, exactly as today. A `<!-- no-figure -->` comment
-immediately above a fence opts it out. Captions come from the nearest preceding heading, or from a
-`<!-- caption: ... -->` comment.
+**Recommendation: BOTH, layered - automatic by default, authored as the override.** The two
+options are not rivals: they feed the same gate and the same renderer, so a hybrid costs barely
+more than B alone. One recognizer decides per fence, in precedence order:
 
-This removes the new frozen fence grammar from the freeze list entirely, and it changes Phase 4 from
-"hand-convert 20 fences" to "light up whatever already passes" - which materially raises Phase 4's
-value, and with it the case for Phase 3 (section 0.3).
+1. ` ```eventsheet ` - the AUTHORED fence. Always a figure (it still must pass the gate; a body
+   that fails the gate is a build error naming the fence, never a silent code card). Carries the
+   author's intent the detector cannot infer.
+2. `<!-- no-figure -->` immediately above a ` ```gdscript ` fence - authored opt-OUT; the fence
+   stays a code card forever.
+3. ` ```gdscript ` passing `round_trips(body) == true` **and** lifting to at least one
+   non-`RawCodeRow` row - AUTOMATIC figure. This is what lights up the existing corpus (up to 162
+   fences) and every future guide written in the normal house style, with zero authoring churn.
+4. Everything else - a code card, exactly as today.
 
-**Keep option A only if** the executor finds that a meaningful number of the 162 `gdscript` fences
-pass the gate but *should* stay code (for example API-usage examples that lift to a single
-`local_variable` row and read worse as a figure). Measure that before choosing; it is a 20-minute
-headless script over the corpus, and it should be **the first task of Phase 4**.
+Captions come from the nearest preceding heading, or from a `<!-- caption: ... -->` comment
+(which works above BOTH fence kinds - captioning must not require converting an automatic fence
+to an authored one).
+
+The authored grammar goes back on the freeze list, so it must stay SMALL to stay cheap to
+promise: the tag itself, `<!-- no-figure -->`, and `<!-- caption: ... -->`. Nothing else in v1.
+Any richer option (highlight a row, collapse the trigger, size hints) ships later as an
+additive comment marker, never as a change to these three.
+
+Why the layering is the right shape for this repo: the automatic layer preserves the standing
+derived-over-hand-maintained preference and the zero-churn expansion story (a guide written the
+normal way grows figures for free), while the authored layer answers the one real risk B carried
+alone - a fence that passes the gate but reads better as code, or a figure the author wants even
+though the body is all raw rows. Instead of measuring the corpus to pick a side, the measurement
+(still **the first task of Phase 4**, a 20-minute headless script) now only tunes the DEFAULT:
+if many gate-passing fences should stay code, flip the automatic layer to conservative (require
+2+ lifted rows) rather than abandoning it.
+
+This changes Phase 4 from "hand-convert 20 fences" to "light up whatever already passes, and
+hand-mark the exceptions" - which materially raises Phase 4's value, and with it the case for
+Phase 3 (section 0.3).
 
 ---
 
@@ -1218,8 +1239,11 @@ Out of scope: a second main screen (impossible without a second `plugin.cfg`).
   design reproduces the `res://docs/GUIDE-C3-MIGRATION.md` bug in a new form after any guide rename.
 - **Freezes.** `EventSheets.open_docs`, `EventSheets.insert_snippet`, `EventSheets.open_online_doc`,
   the doc id scheme, and the `[eventsheet-help v1]` manifest header become compatibility promises the
-  moment they ship. **The fence grammar is off this list** if section 4.7's recommendation (auto-detect
-  existing ` ```gdscript ` fences) is taken - which is one of its main advantages.
+  moment they ship. **The fence grammar on this list is deliberately three items** under section
+  4.7's hybrid recommendation: the ` ```eventsheet ` tag, `<!-- no-figure -->`, and
+  `<!-- caption: ... -->`. The automatic layer (auto-detected ` ```gdscript ` fences) freezes
+  nothing; anything richer than the three authored markers ships later as an additive comment
+  marker, never as a change to them.
 
 ### Could not verify - settle these before relying on them
 
