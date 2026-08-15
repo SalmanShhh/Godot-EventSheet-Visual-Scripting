@@ -194,6 +194,21 @@ func _symbol_matches(query: String) -> Array:
 	return matches
 
 
+## The `?` mode's palette entries: the documentation, searched. Each row is a page (and, when the
+## hit was a heading, that heading) as a {title, run} that opens the Documentation window right
+## there - so the fastest route to a guide is Ctrl+P, "?", the word you remember.
+func _doc_matches(query: String) -> Array:
+	var matches: Array = []
+	for result: Dictionary in EventSheets.search_docs(query, 30):
+		var doc_id: String = str(result.get("doc_id", ""))
+		var anchor: String = str(result.get("anchor", ""))
+		var heading: String = str(result.get("heading", ""))
+		var title: String = str(result.get("title", ""))
+		matches.append({"title": "? %s" % (title if heading.is_empty() else "%s - %s" % [title, heading]),
+			"run": func() -> void: EventSheets.open_docs(doc_id, anchor)})
+	return matches
+
+
 func _open_command_palette() -> void:
 	if not Engine.is_editor_hint() and DisplayServer.get_name() == "headless":
 		return
@@ -219,7 +234,7 @@ func _build_command_palette_window() -> void:
 	var box := VBoxContainer.new()
 	margin.add_child(box)
 	_command_palette_search = LineEdit.new()
-	_command_palette_search.placeholder_text = "Type a command…  (# sheet · @ symbol · paste an error line)"
+	_command_palette_search.placeholder_text = "Type a command…  (# sheet · @ symbol · ? docs · paste an error line)"
 	_command_palette_search.clear_button_enabled = true
 	_command_palette_search.text_changed.connect(_refresh_command_palette)
 	_command_palette_search.gui_input.connect(_on_command_palette_search_input)
@@ -257,8 +272,8 @@ func _error_jump_matches(location: Dictionary) -> Array:
 
 func _refresh_command_palette(query: String) -> void:
 	# Prefix modes: `#` opens any project sheet, `@` jumps to a symbol in the ACTIVE sheet
-	# (function / signal / variable), a pasted error/stack line jumps to the row that emitted it;
-	# anything else fuzzy-runs a command.
+	# (function / signal / variable), `?` searches the documentation, a pasted error/stack line
+	# jumps to the row that emitted it; anything else fuzzy-runs a command.
 	var error_location: Dictionary = parse_error_location(query)
 	if not error_location.is_empty():
 		_command_palette_matches = _error_jump_matches(error_location)
@@ -266,6 +281,8 @@ func _refresh_command_palette(query: String) -> void:
 		_command_palette_matches = _sheet_matches(query.substr(1))
 	elif query.begins_with("@"):
 		_command_palette_matches = _symbol_matches(query.substr(1))
+	elif query.begins_with("?"):
+		_command_palette_matches = _doc_matches(query.substr(1))
 	else:
 		_command_palette_matches = filter_commands(_command_palette_commands(), query)
 	if _command_palette_list == null:

@@ -1,0 +1,361 @@
+# EventSheet - EventSheetDocSearch: finding a page, and finding it ON the page.
+#
+# RichTextLabel has no find(): a reader who searches a guide gets whatever this file builds and
+# nothing else. So search is two halves that never share state:
+#
+#   1. THE INDEX. One entry per page - its title, every heading with its slug, and a blob of the
+#      page's unique words. The blob is the whole reason this is affordable: the corpus is about
+#      2 MB of Markdown, and keeping the prose would cost that for the life of the editor, while
+#      the unique words of a page are a fraction of it and answer the only question a body match
+#      asks ("does this page talk about that word").
+#   2. THE HIGHLIGHT. A hit is shown by RE-EMITTING the page's BBCode with [bgcolor] around the
+#      matches. There is no post-hoc highlight API, and there is no way to ask a label to find
+#      anything, so the search term is wrapped before the label ever sees the text.
+#
+# RANKING is the shape the command palette already established (prefix beats substring beats
+# subsequence), extended with the one rule a doc corpus needs: WHERE the hit landed outranks HOW
+# it matched. A page titled "Working with Lists" beats a page that merely mentions lists, and a
+# heading beats body prose, because a reader searching "lists" wants the guide about them.
+#
+# Everything here is static and pure over its inputs. rank_pages() takes the index as an argument
+# rather than reading it, so the suite pins the ORDER against a fixture of three pages instead of
+# against whatever the corpus happens to contain this week.
+@tool
+class_name EventSheetDocSearch
+extends RefCounted
+
+## The scores, best first. They are ordinals, never weights: a caller sorts by them and the suite
+## pins the resulting ORDER, so the gaps between them mean nothing and can be renumbered.
+const SCORE_TITLE_PREFIX := 0
+const SCORE_TITLE_SUBSTRING := 1
+const SCORE_HEADING_PREFIX := 2
+const SCORE_HEADING_SUBSTRING := 3
+const SCORE_BODY := 4
+const SCORE_TITLE_SUBSEQUENCE := 5
+const SCORE_HEADING_SUBSEQUENCE := 6
+
+## How many headings of one page a search may offer before the page starts crowding out the rest
+## of the corpus. A reader looking for a word that appears in nine headings of one guide wants the
+## guide, not nine rows of it.
+const MAX_HEADINGS_PER_PAGE := 3
+
+## The wrap a match gets in the page. Amber at 40% alpha on purpose: it is ALPHA, so it tints
+## whatever the reader's editor theme paints behind it instead of assuming a dark background and
+## turning light-theme prose into an unreadable block of colour.
+const HIGHLIGHT_BGCOLOR := "#c8a13a66"
+
+## Built on the first search of a session and dropped by reload(), the same discipline the library
+## uses for its manifest. Building it reads every page once.
+static var _index: Array[Dictionary] = []
+static var _index_built: bool = false
+## How many pages the library offered when the index was built. A corpus that grew or shrank since
+## - a pack guide dropped in, a rebuilt bundle - rebuilds rather than searching a stale list, and
+## the check itself is a walk over ids the library already has in hand.
+static var _indexed_page_count: int = 0
+
+
+## The whole corpus as search entries, built once per session:
+##   {id, title, title_lower, headings:[{text, slug, lower}], words}
+## `words` is a blob of the page's unique lowercase words, each surrounded by spaces, so a
+## word-prefix test is one native find() instead of a loop over a Dictionary.
+static func index() -> Array[Dictionary]:
+	var ids: PackedStringArray = EventSheetDocLibrary.page_ids()
+	if _index_built and _indexed_page_count == ids.size():
+		return _index
+	_index_built = true
+	_indexed_page_count = ids.size()
+	_index = []
+	for id: String in ids:
+		var source: String = EventSheetDocLibrary.page_source(id)
+		if source.is_empty():
+			continue
+		_index.append(entry_for(id, EventSheetDocLibrary.page_title(id), source))
+	return _index
+
+
+## Drops the index, so a rebuilt bundle (or a pack guide dropped into the project) is searchable
+## without an editor restart.
+static func reload() -> void:
+	_index_built = false
+	_indexed_page_count = 0
+	_index = []
+
+
+## One page's index entry. Public and pure so a test can build an entry from a fixture string
+## rather than from whatever ships.
+static func entry_for(id: String, title: String, source: String) -> Dictionary:
+	var headings: Array[Dictionary] = []
+	var used: Dictionary = {}
+	for line: String in source.replace("\r\n", "\n").split("\n"):
+		var stripped: String = line.strip_edges()
+		if not stripped.begins_with("##"):
+			continue
+		var level: int = 0
+		while level < stripped.length() and stripped[level] == "#":
+			level += 1
+		if level >= stripped.length() or stripped[level] != " ":
+			continue
+		var text: String = EventSheetDocMarkdown.plain_text(stripped.substr(level + 1).strip_edges())
+		var slug: String = EventSheetDocMarkdown.slug_in_page(stripped.substr(level + 1).strip_edges(), used)
+		if text.is_empty():
+			continue
+		headings.append({"text": text, "slug": slug, "lower": text.to_lower()})
+	return {
+		"id": id,
+		"title": title,
+		"title_lower": title.to_lower(),
+		"headings": headings,
+		"words": word_blob(source),
+	}
+
+
+## Everything that is not a letter, a digit or an underscore, compiled once. See word_blob.
+static var _word_splitter: RegEx = null
+
+
+## The unique lowercase words of a page, each padded with spaces (" list append "), so
+## `blob.find(" " + token)` answers "does any word here start with that". Everything that is not
+## a letter, a digit or an underscore separates words, which is what makes "arr.append(x)" index
+## as `arr`, `append` and `x`.
+##
+## The split is done by a RegEx rather than by a per-character loop, and that is not a style
+## choice: the corpus is megabytes of Markdown, and walking it one GDScript String index at a time
+## costs over a second of frozen editor on the reader's FIRST keystroke - the one moment the whole
+## index gets built. The engine's own scanner does the same work in a fraction of it.
+static func word_blob(text: String) -> String:
+	if _word_splitter == null:
+		_word_splitter = RegEx.create_from_string("[^a-z0-9_]+")
+	var seen: Dictionary = {}
+	for word: String in _word_splitter.sub(text.to_lower(), " ", true).split(" ", false):
+		seen[word] = true
+	var words: PackedStringArray = PackedStringArray()
+	for word: Variant in seen:
+		words.append(str(word))
+	words.sort()
+	return " %s " % " ".join(words)
+
+
+## The corpus, searched. Each result is a row a caller can act on without asking anything else:
+##   {doc_id, page_id, title, heading, anchor, score}
+## `doc_id` is the frozen public form ("guide:<page id>"), so a result feeds straight into
+## EventSheets.open_docs(doc_id, anchor).
+static func search(query: String, limit: int = 25) -> Array[Dictionary]:
+	return rank_pages(index(), query, limit)
+
+
+## The ranking, pure over a supplied index. A caller passes the live index; the suite passes three
+## fixture pages and pins the order they come back in.
+##
+## An EMPTY query is not a miss - it lists every page by title, which is what makes the palette's
+## "?" show the guide list the moment it is typed.
+static func rank_pages(pages: Array[Dictionary], query: String, limit: int = 25) -> Array[Dictionary]:
+	var wanted: String = query.strip_edges().to_lower()
+	var results: Array[Dictionary] = []
+	for order: int in range(pages.size()):
+		var page: Dictionary = pages[order]
+		if wanted.is_empty():
+			results.append(_result(page, {}, SCORE_TITLE_PREFIX, order))
+			continue
+		results.append_array(_results_for_page(page, wanted, order))
+	results.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["score"]) != int(b["score"]):
+			return int(a["score"]) < int(b["score"])
+		if int(a["order"]) != int(b["order"]):
+			return int(a["order"]) < int(b["order"])
+		return str(a["heading"]) < str(b["heading"]))
+	if limit > 0 and results.size() > limit:
+		results.resize(limit)
+	return results
+
+
+## Every way one page answers a query, best first: its title, then up to MAX_HEADINGS_PER_PAGE of
+## its headings, then its body words.
+##
+## The body hit is not simply "the fallback when nothing else matched", and getting that wrong is
+## subtle: a SUBSEQUENCE match on a title or a heading scores WORSE than a body hit (scattered
+## letters are the weakest evidence there is), and almost any short query subsequence-matches
+## almost any title. So a page that is genuinely about the word - it says it, spelled out, in its
+## prose - would be demoted below pages that merely contain its letters in order. When the only
+## thing a page offered was that scattered-letter match, the body hit REPLACES it.
+static func _results_for_page(page: Dictionary, wanted: String, order: int) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	var title_score: int = match_score(str(page.get("title_lower", "")), wanted)
+	if title_score >= 0:
+		found.append(_result(page, {}, _title_score(title_score), order))
+	var headings: Array = page.get("headings", []) as Array
+	var heading_hits: int = 0
+	for entry: Variant in headings:
+		if heading_hits >= MAX_HEADINGS_PER_PAGE:
+			break
+		var heading: Dictionary = entry as Dictionary
+		var score: int = match_score(str(heading.get("lower", "")), wanted)
+		if score < 0:
+			continue
+		heading_hits += 1
+		found.append(_result(page, heading, _heading_score(score), order))
+	if not matches_body(str(page.get("words", "")), wanted):
+		return found
+	if found.is_empty():
+		found.append(_result(page, {}, SCORE_BODY, order))
+		return found
+	if _best_score(found) > SCORE_BODY:
+		return [_result(page, {}, SCORE_BODY, order)] as Array[Dictionary]
+	return found
+
+
+## The best (numerically lowest) score among a page's results.
+static func _best_score(found: Array[Dictionary]) -> int:
+	var best: int = SCORE_HEADING_SUBSEQUENCE
+	for result: Dictionary in found:
+		best = mini(best, int(result.get("score", SCORE_HEADING_SUBSEQUENCE)))
+	return best
+
+
+## True when every word of the query starts a word somewhere on the page. Whole tokens rather than
+## a raw substring: "set var" must not match a page merely because it contains "offset variance".
+static func matches_body(words: String, wanted: String) -> bool:
+	if wanted.is_empty():
+		return true
+	for token: String in wanted.split(" ", false):
+		if words.find(" %s" % token) < 0:
+			return false
+	return true
+
+
+## Prefix (0), substring (1), subsequence (2) or miss (-1) - the palette's own scoring, so the two
+## surfaces agree about what "matching" means.
+static func match_score(haystack: String, wanted: String) -> int:
+	if wanted.is_empty():
+		return 0
+	if haystack.begins_with(wanted):
+		return 0
+	if haystack.contains(wanted):
+		return 1
+	var index: int = 0
+	for position: int in range(wanted.length()):
+		var found: bool = false
+		while index < haystack.length():
+			if haystack[index] == wanted[position]:
+				found = true
+				index += 1
+				break
+			index += 1
+		if not found:
+			return -1
+	return 2
+
+
+static func _title_score(kind: int) -> int:
+	match kind:
+		0:
+			return SCORE_TITLE_PREFIX
+		1:
+			return SCORE_TITLE_SUBSTRING
+	return SCORE_TITLE_SUBSEQUENCE
+
+
+static func _heading_score(kind: int) -> int:
+	match kind:
+		0:
+			return SCORE_HEADING_PREFIX
+		1:
+			return SCORE_HEADING_SUBSTRING
+	return SCORE_HEADING_SUBSEQUENCE
+
+
+static func _result(page: Dictionary, heading: Dictionary, score: int, order: int) -> Dictionary:
+	var id: String = str(page.get("id", ""))
+	return {
+		"doc_id": "guide:%s" % id,
+		"page_id": id,
+		"title": str(page.get("title", id)),
+		"heading": str(heading.get("text", "")),
+		"anchor": str(heading.get("slug", "")),
+		"score": score,
+		"order": order,
+	}
+
+
+# ── Highlighting ──────────────────────────────────────────────────────────────────────────────
+
+
+## A whole parsed page, re-emitted with every hit wrapped. Blocks are copied rather than edited:
+## the library hands out freshly parsed blocks, but a caller that cached a page would otherwise
+## find its cache permanently highlighted for a query nobody is searching any more.
+static func highlight_blocks(blocks: Array[Dictionary], query: String) -> Array[Dictionary]:
+	var wanted: String = query.strip_edges()
+	if wanted.is_empty():
+		return blocks
+	var out: Array[Dictionary] = []
+	for block: Dictionary in blocks:
+		var copy: Dictionary = block.duplicate(true)
+		match str(copy.get("kind", "")):
+			"paragraph", "quote":
+				copy["bbcode"] = highlight_bbcode(str(copy.get("bbcode", "")), wanted)
+			"list":
+				var items: Array = copy.get("items", []) as Array
+				for index: int in range(items.size()):
+					var item: Dictionary = items[index] as Dictionary
+					item["bbcode"] = highlight_bbcode(str(item.get("bbcode", "")), wanted)
+			"table":
+				copy["headers"] = _highlight_cells(copy.get("headers", []) as Array, wanted)
+				var rows: Array = copy.get("rows", []) as Array
+				for index: int in range(rows.size()):
+					rows[index] = _highlight_cells(rows[index] as Array, wanted)
+		out.append(copy)
+	return out
+
+
+static func _highlight_cells(cells: Array, wanted: String) -> Array:
+	var out: Array = []
+	for cell: Variant in cells:
+		out.append(highlight_bbcode(str(cell), wanted))
+	return out
+
+
+## One run of BBCode with `wanted` wrapped in [bgcolor], case-insensitively.
+##
+## The scan steps OVER tags: a bracketed run is copied verbatim and never searched, so a query
+## like "b" cannot land inside [b] and split it into nonsense, and the [lb] / [rb] escapes the
+## parser writes for literal brackets stay whole. That also means a match is never inserted
+## between a tag and the text it opens.
+static func highlight_bbcode(bbcode: String, query: String) -> String:
+	var wanted: String = query.strip_edges().to_lower()
+	if wanted.is_empty() or bbcode.is_empty():
+		return bbcode
+	var out: String = ""
+	var index: int = 0
+	while index < bbcode.length():
+		if bbcode[index] == "[":
+			var close: int = bbcode.find("]", index)
+			if close < 0:
+				out += bbcode.substr(index)
+				break
+			out += bbcode.substr(index, close - index + 1)
+			index = close + 1
+			continue
+		var next_tag: int = bbcode.find("[", index)
+		var run_end: int = bbcode.length() if next_tag < 0 else next_tag
+		out += _highlight_run(bbcode.substr(index, run_end - index), wanted)
+		index = run_end
+	return out
+
+
+## A plain (tag-free) run with every case-insensitive occurrence of `wanted` wrapped. The ORIGINAL
+## text is what gets wrapped, never the lowercased copy the search ran on, so highlighting a word
+## never changes how it is spelled.
+static func _highlight_run(run: String, wanted: String) -> String:
+	var lowered: String = run.to_lower()
+	if not lowered.contains(wanted):
+		return run
+	var out: String = ""
+	var index: int = 0
+	while index < run.length():
+		var hit: int = lowered.find(wanted, index)
+		if hit < 0:
+			out += run.substr(index)
+			break
+		out += run.substr(index, hit - index)
+		out += "[bgcolor=%s]%s[/bgcolor]" % [HIGHLIGHT_BGCOLOR, run.substr(hit, wanted.length())]
+		index = hit + wanted.length()
+	return out

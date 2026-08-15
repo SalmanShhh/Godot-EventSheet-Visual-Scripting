@@ -101,6 +101,7 @@ category is covenant-safe, because the category is display only).
 The fastest custom ACE is a plain script. Make a script with a `class_name`, then point a
 sheet at it.
 
+<!-- no-figure -->
 ```gdscript
 # res://scripts/score_keeper.gd
 @tool
@@ -377,6 +378,7 @@ build the pair lists on their own.
 
 ### A complete Path 1 example
 
+<!-- no-figure -->
 ```gdscript
 @tool
 extends Node
@@ -525,6 +527,7 @@ This is how every shipped ACE is authored, and the path to use if you are contri
 EventForge itself. A **module** is one file under `addons/eventforge/registration/modules/` that
 exposes `static func get_descriptors() -> Array[ACEDescriptor]`, built with the factory.
 
+<!-- no-figure -->
 ```gdscript
 # addons/eventforge/registration/modules/my_aces.gd
 @tool

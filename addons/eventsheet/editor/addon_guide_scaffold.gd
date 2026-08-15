@@ -24,39 +24,11 @@ static func generate(script_path: String) -> String:
 	var category: String = _annotation_value(source, "@ace_category")
 	var display: String = category if not category.is_empty() else pack_class.capitalize()
 	var summary: String = _class_summary(source)
-	var annotations: Dictionary = EventSheetSelfExpressions.method_annotations(script_path)
-	var expose_all: bool = bool(annotations.get("@expose_all", false))
-
-	var actions: Array = []
-	var conditions: Array = []
-	var expressions: Array = []
-	var triggers: Array = []
-	for method_info: Dictionary in script.get_script_method_list():
-		var method_name: String = str(method_info.get("name", ""))
-		if method_name.is_empty() or method_name.begins_with("_"):
-			continue
-		var marks: Array = annotations.get(method_name, [])
-		if marks.has("hidden") or marks.has("internal"):
-			continue
-		var row: String = _method_row(method_name, method_info)
-		if marks.has("trigger"):
-			triggers.append(row)
-		elif marks.has("action"):
-			actions.append(row)
-		elif marks.has("condition"):
-			conditions.append(row)
-		elif marks.has("expression"):
-			expressions.append(row)
-		elif expose_all:
-			var return_type: int = int((method_info.get("return", {}) as Dictionary).get("type", TYPE_NIL))
-			if return_type == TYPE_NIL:
-				actions.append(row)
-			elif return_type == TYPE_BOOL:
-				conditions.append(row)
-			else:
-				expressions.append(row)
-	for signal_info: Dictionary in script.get_script_signal_list():
-		triggers.append(_method_row(str(signal_info.get("name", "")), signal_info))
+	var members: Dictionary = member_rows_from(script, script_path)
+	var actions: Array = _markdown_rows(members.get("actions", []) as Array)
+	var conditions: Array = _markdown_rows(members.get("conditions", []) as Array)
+	var expressions: Array = _markdown_rows(members.get("expressions", []) as Array)
+	var triggers: Array = _markdown_rows(members.get("triggers", []) as Array)
 
 	var knobs: Array = []
 	for property_info: Dictionary in script.get_script_property_list():
@@ -140,6 +112,64 @@ static func generate(script_path: String) -> String:
 	return "\n".join(out)
 
 
+## Every verb a pack script publishes, grouped the way the guide's ACE reference groups them:
+##   {"actions": [{name, params}], "conditions": [...], "expressions": [...], "triggers": [...]}
+## SCRIPT-LEVEL, never instance reflection - the method list, plus the `## @ace_*` marks read from
+## the source on disk - because instance reflection is dead in the editor for non-@tool scripts.
+##
+## Public because the documentation viewer renders the same table live, and two derivations of
+## "what does this pack publish" would be two answers: this is the one.
+static func member_rows(script_path: String) -> Dictionary:
+	var script: Script = load(script_path) as Script if ResourceLoader.exists(script_path) else null
+	if script == null:
+		return {"actions": [], "conditions": [], "expressions": [], "triggers": []}
+	return member_rows_from(script, script_path)
+
+
+## The same derivation for a script already loaded, so the scaffolder does not read it twice.
+static func member_rows_from(script: Script, script_path: String) -> Dictionary:
+	var actions: Array = []
+	var conditions: Array = []
+	var expressions: Array = []
+	var triggers: Array = []
+	var annotations: Dictionary = EventSheetSelfExpressions.method_annotations(script_path)
+	var expose_all: bool = bool(annotations.get("@expose_all", false))
+	for method_info: Dictionary in script.get_script_method_list():
+		var method_name: String = str(method_info.get("name", ""))
+		if method_name.is_empty() or method_name.begins_with("_"):
+			continue
+		var marks: Array = annotations.get(method_name, [])
+		if marks.has("hidden") or marks.has("internal"):
+			continue
+		var row: Dictionary = _member_row(method_name, method_info)
+		if marks.has("trigger"):
+			triggers.append(row)
+		elif marks.has("action"):
+			actions.append(row)
+		elif marks.has("condition"):
+			conditions.append(row)
+		elif marks.has("expression"):
+			expressions.append(row)
+		elif expose_all:
+			var return_type: int = int((method_info.get("return", {}) as Dictionary).get("type", TYPE_NIL))
+			if return_type == TYPE_NIL:
+				actions.append(row)
+			elif return_type == TYPE_BOOL:
+				conditions.append(row)
+			else:
+				expressions.append(row)
+	for signal_info: Dictionary in script.get_script_signal_list():
+		triggers.append(_member_row(str(signal_info.get("name", "")), signal_info))
+	return {"actions": actions, "conditions": conditions, "expressions": expressions, "triggers": triggers}
+
+
+static func _markdown_rows(rows: Array) -> Array:
+	var out: Array = []
+	for entry: Variant in rows:
+		out.append(_method_row(str((entry as Dictionary).get("name", "")), str((entry as Dictionary).get("params", ""))))
+	return out
+
+
 static func _table(out: PackedStringArray, title: String, rows: Array) -> void:
 	out.append("### %s" % title)
 	out.append("")
@@ -168,14 +198,20 @@ static func _self_section(out: PackedStringArray, script: Script, pack_class: St
 	out.append("")
 
 
-static func _method_row(member_name: String, info: Dictionary) -> String:
+## One member as {name, params}: the parameter list is "name: Type" per argument, joined - the
+## same string the guide's table shows and the viewer's live table shows.
+static func _member_row(member_name: String, info: Dictionary) -> Dictionary:
 	var parameters: PackedStringArray = PackedStringArray()
 	for argument: Variant in info.get("args", []):
 		if argument is Dictionary:
 			parameters.append("%s: %s" % [str((argument as Dictionary).get("name", "")),
 				type_string(int((argument as Dictionary).get("type", TYPE_NIL)))])
+	return {"name": member_name, "params": ", ".join(parameters)}
+
+
+static func _method_row(member_name: String, parameters: String) -> String:
 	return "| `%s` | %s | (when to reach for it) |" % [
-		member_name, ", ".join(parameters) if not parameters.is_empty() else "-"]
+		member_name, parameters if not parameters.is_empty() else "-"]
 
 
 ## The pack's MARKED display sentences as markdown bullets, in source order: every

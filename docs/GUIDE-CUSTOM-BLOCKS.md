@@ -64,6 +64,7 @@ Before the API, every structural row kind (enums, signals, variables) was hand-w
 
 Drop this script anywhere under `res://eventsheet_addons/` and it registers automatically; no manifest, no plugin edits. It is the shipped `demo_note_block.gd`, the whole thing:
 
+<!-- no-figure -->
 ```gdscript
 @tool
 extends EventSheetBlockKind

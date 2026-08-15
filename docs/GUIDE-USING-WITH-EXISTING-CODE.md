@@ -251,6 +251,7 @@ Because this *becomes* the node's single script, it only fits a node that **does
 `extends Node` and binds to its parent, and you attach it as a **child node** ("behavior pack") under your
 existing-scripted node:
 
+<!-- no-figure -->
 ```gdscript
 extends Node
 

@@ -212,6 +212,7 @@ You get a `PickupBehavior` you attach as a *child* of each Coin's `Area2D` (the 
 behavior). It *reacts* to the host's `body_entered` signal - no per-frame overlap check - and *emits*
 `collected`; `value` is an exported knob you tune per coin in the Inspector. It compiles to:
 
+<!-- no-figure -->
 ```gdscript
 extends Node
 class_name PickupBehavior

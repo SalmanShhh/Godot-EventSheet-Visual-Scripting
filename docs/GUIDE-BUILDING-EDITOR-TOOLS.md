@@ -56,6 +56,7 @@ On Editor Run
 
 Save the sheet. It compiles to a tiny, plain GDScript file:
 
+<!-- no-figure -->
 ```gdscript
 @tool
 extends EditorScript
