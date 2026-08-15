@@ -155,9 +155,12 @@ func _build() -> void:
 	var migration_button: Button = Button.new()
 	migration_button.text = "Open the migration guide"
 	migration_button.flat = true
-	migration_button.tooltip_text = "docs/GUIDE-C3-MIGRATION.md - maps the vocabulary you already know onto this plugin's."
+	migration_button.tooltip_text = "Opens the migration guide in your browser - it maps the vocabulary you already know onto this plugin's."
+	# The guides live in the repo, not in the plugin zip (the release ships addons/ only), so a
+	# res:// path opened nothing in an installed project. The link is pinned to the installed
+	# version's tag, so the page matches the build in front of the reader.
 	migration_button.pressed.connect(func() -> void:
-		OS.shell_open(ProjectSettings.globalize_path("res://docs/GUIDE-C3-MIGRATION.md")))
+		EventSheets.open_online_doc("docs/GUIDE-C3-MIGRATION.md"))
 	migration_row.add_child(migration_button)
 	box.add_child(migration_row)
 	# Second footer row: somebody hitting a bug on day one should not have to work out where the

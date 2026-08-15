@@ -72,9 +72,20 @@ jobs:
           cp README.md LICENSE CHANGELOG.md stage/plugin/
           # Stamp the released version into plugin.cfg (staged copy only).
           sed -i "s/^version=.*/version=\"$VERSION\"/" stage/plugin/addons/eventforge/plugin.cfg
+          # docs/ ships in neither zip, so README's relative docs/ links are dead in an installed
+          # project. Rewrite them to absolute URLs pinned to this tag - staged copy only.
+          ~/godot/godot --headless --path . --script tools/stage_readme_links.gd -- \
+            "$VERSION" "$PWD/stage/plugin/README.md"
           cp -r eventsheet_addons stage/samples/eventsheet_addons
           cp -r demo stage/samples/demo
           cp README.md LICENSE stage/samples/
+          # The samples zip carries its own README copy and docs/ is absent there too, so it
+          # needs the same rewrite - not just the plugin zip.
+          ~/godot/godot --headless --path . --script tools/stage_readme_links.gd -- \
+            "$VERSION" "$PWD/stage/samples/README.md"
+          for staged in stage/plugin/README.md stage/samples/README.md; do
+            grep -q "](docs/" "$staged" && { echo "$staged still has relative docs/ links"; exit 1; } || true
+          done
           (cd stage/plugin  && zip -qr "../../godot-eventsheets-$VERSION.zip" .)
           (cd stage/samples && zip -qr "../../godot-eventsheets-samples-$VERSION.zip" .)
           ls -lh godot-eventsheets-*.zip
