@@ -27,6 +27,7 @@ const DRAWING_PREFAB_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawin
 const DRAWING_PREFAB_3D_GIZMO_PATH: String = "res://addons/eventsheet/editor/drawing_prefab_3d_gizmo.gd"
 const BEHAVIOR_GIZMOS_PATH: String = "res://addons/eventsheet/editor/behavior_gizmos.gd"
 const EXPORT_TOOLS_PLUGIN_PATH: String = "res://addons/eventforge/editor/export_tools_plugin.gd"
+const DOC_DOCK_PATH: String = "res://addons/eventsheet/editor/docs/doc_dock.gd"
 
 var _event_sheet_editor: Control = null
 var _export_integrity_plugin: EditorExportPlugin = null
@@ -52,6 +53,10 @@ var _sheet_edit_button_plugin: EventSheetEditButtonPlugin = null
 var _context_menus: Array[EventSheetContextMenu] = []
 var _new_sheet_dialog: RefCounted = null
 var _connect_signal_dialog: RefCounted = null
+# The docked documentation surface. add_dock takes an INSTANCE, so this node is constructed at every
+# boot - which is why it is loaded BY PATH (its class name must not appear here) and why it builds
+# nothing but itself until the reader first opens it.
+var _doc_dock: EditorDock = null
 
 
 ## Returns the display name of the plugin.
@@ -301,6 +306,13 @@ func _enter_tree() -> void:
 	# Selection-driven (never _handles), transient owner-less canvas - can't hijack the workspace.
 	_behavior_gizmos = load(BEHAVIOR_GIZMOS_PATH).new()
 	_behavior_gizmos.call("init", get_editor_interface())
+	# Documentation, docked: the guides and the "what does this do?" reference beside the sheet, in a
+	# dock that persists in the editor layout and can be floated onto a second monitor. Registered
+	# here because add_dock takes an instance, and deliberately EMPTY until the reader first opens it -
+	# the reading surface, the parser, the guide bundle and the viewport behind it all build on that
+	# first reveal, so a session that never opens the dock pays for one bare node.
+	_doc_dock = load(DOC_DOCK_PATH).new()
+	add_dock(_doc_dock)
 	# The workspace editor (the ~3400-line dock, its ~45 delegates, every dialog, and the addon-folder
 	# vocabulary scans) is built LAZILY on first use - see _ensure_editor. Enabling the plugin, or
 	# opening a project that never touches event sheets, pays none of it. The top-strip tab still
@@ -421,6 +433,10 @@ func _exit_tree() -> void:
 	if _new_sheet_dialog != null:
 		_new_sheet_dialog.free_dialog()
 		_new_sheet_dialog = null
+	if _doc_dock != null:
+		remove_dock(_doc_dock)
+		_doc_dock.queue_free()
+		_doc_dock = null
 	if _event_sheet_editor != null:
 		if _event_sheet_editor.get_parent() != null:
 			_event_sheet_editor.get_parent().remove_child(_event_sheet_editor)

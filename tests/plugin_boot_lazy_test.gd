@@ -20,6 +20,25 @@ const FORBIDDEN := {
 	"res://addons/eventforge/plugin.gd": [
 		"EventSheetWorkflow", "EventSheetProjectDoctor", "EventSheetStarterTemplates",
 		"EventSheetNewSheetDialog", "ACEParamInspectorPlugin", "SheetCompiler", "EditorParamStore",
+		# The documentation surface. Naming any of these at boot would pull the guide corpus, the
+		# Markdown parser and (through the browser) the whole viewport and registry subtree into
+		# every editor start, for a window most sessions never open.
+		"EventSheetDocBrowser", "EventSheetDocPageView", "EventSheetDocLibrary",
+		"EventSheetDocMarkdown", "EventSheetDocWindow", "EventSheetDocSearch",
+		"EventSheetDocAceReference", "EventSheetDocFigures", "EventSheetDocExplain",
+		"EventSheetDocPanel", "EventSheetDocFigure",
+		# The Help DOCK is the sharpest case: add_dock takes an INSTANCE, so this node really is
+		# constructed at every boot. It is loaded by path and stays an empty container until the
+		# reader opens it - naming the class here would undo that by compiling its subtree anyway.
+		"EventSheetDocDock",
+	],
+	# The dock itself is on the boot path (it is constructed there), so it obeys the same rule as
+	# plugin.gd: everything it shows is reached by path on first reveal, never named in code.
+	"res://addons/eventsheet/editor/docs/doc_dock.gd": [
+		"EventSheetDocBrowser", "EventSheetDocPageView", "EventSheetDocLibrary",
+		"EventSheetDocMarkdown", "EventSheetDocSearch", "EventSheetDocExplain",
+		"EventSheetDocPanel", "EventSheetDocFigure", "EventSheetPalette", "EventSheetPopupUI",
+		"EventSheetL10n", "EventSheetViewport", "EventSheetSnippet",
 	],
 	"res://addons/eventforge/editor/context_menu_plugin.gd": [
 		"EventSheetWorkflow", "EventSheetProjectDoctor",
@@ -37,9 +56,19 @@ const FORBIDDEN := {
 	],
 }
 
-## Every path the boot scripts lazily load - each must exist, or the deferred feature breaks
-## at runtime on the exact click that needs it.
+## Every path a deferred feature is reached through - each must exist, or the feature breaks at
+## runtime on the exact click that needs it, with the whole suite green.
 const LAZY_PATHS := [
+	# Built on first open by the dock, never at boot: the documentation browser reaches the guide
+	# bundle, the parser and a figure viewport, and a session that never opens it pays nothing.
+	# Registered with add_dock at boot and loaded BY PATH there, so a rename would break the Help
+	# dock's registration in the editor while the whole suite stayed green.
+	"res://addons/eventsheet/editor/docs/doc_dock.gd",
+	"res://addons/eventsheet/editor/docs/doc_browser.gd",
+	"res://addons/eventsheet/editor/docs/doc_library.gd",
+	"res://addons/eventsheet/editor/docs/doc_search.gd",
+	"res://addons/eventsheet/editor/docs/doc_ace_reference.gd",
+	"res://addons/eventsheet/editor/docs/doc_figures.gd",
 	"res://addons/eventforge/editor/workflow_entry_points.gd",
 	"res://addons/eventforge/project_doctor.gd",
 	"res://addons/eventsheet/editor/dock/starter_templates.gd",
