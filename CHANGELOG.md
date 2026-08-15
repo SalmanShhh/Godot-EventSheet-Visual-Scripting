@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+### Added - documentation you can reach from inside the editor (the recommended slice)
+
+**Every shipped doc link now goes somewhere.** The release zip ships `addons/` and
+`README.md` but never `docs/`, so the Welcome window's guide button and the README's 29
+relative links were all dead in an installed project. `EventSheets.open_online_doc(path,
+anchor)` builds a URL pinned to the released tag from the same version constant the release
+ritual bumps, the Welcome button goes through it, and the release workflow rewrites the
+staged README's links to absolute tag URLs (images to raw URLs so they still display) with a
+packaging grep that fails the build on a missed link. The committed README is untouched.
+
+**A live figure wherever a verb is explained.** `EventSheetViewport` gains a figure mode -
+fully inert (no hover, no drag, no editing, no scroll poll) and sized to its rows in BOTH
+axes, so a figure in a narrow panel is as wide as its content, not 640px. The ACE picker's
+info panel now shows "How this reads on the sheet": a real rendered row built from the
+verb's own defaults, in your theme, with Copy - and `EventSheets.insert_snippet` drops it
+into the open sheet as one undoable step. The Mockup Slate theme preset now ships with the
+plugin (moved into `addons/eventsheet/themes/`, gated against drift).
+
+**Explain This Row.** Right-click any row (or press F1, or Tools > Documentation...) and the
+panel explains the verb from the LIVE registry - what it does, what it ships as, the values
+you fill in, a worked figure you can insert, the pack's own About text - and every pack verb
+carries **Open <Pack>'s guide**, resolving through a DERIVED pack-to-guide mapping (proven
+against all 86 packs by a sweep that fails the suite if a guide file is ever renamed), with
+`addon_help_url` as the third-party override. `EventSheets.open_docs(doc_id)` serves
+`ace:` / `section:` / `addon:` ids - the addon ids open the browser today and will resolve
+to native pages if the in-editor reader ships, with callers unchanged.
+
 ### Added - shipping in more than one language (the i18n wave, 21 suggestions)
 
 **The words at runtime.** A language menu that builds itself (**For Each Language**, each
