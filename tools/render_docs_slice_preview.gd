@@ -1,7 +1,22 @@
 # EventForge - render harness (dev tool) for the documentation FIGURE slice. Produces two PNGs:
 #
 #   docs/images/doc-figure.png            a bare EventSheetDocFigure - caption, live rows, buttons
-#   docs/images/ace-picker-figure.png     the ACE picker's info panel with its live one-row figure
+#   docs/images/ace-picker-figure.png     the ACE picker's info panel (description + guide link; no figure)
+#   docs/images/doc-explain-panel.png     the generated "what does this row do?" page
+#   docs/images/doc-guide-page.png        a shipped guide, rendered natively, at a NARROW width
+#   docs/images/doc-guide-anchor.png      the same page after an in-page anchor jump
+#   docs/images/doc-guide-figure.png      a guide whose worked examples are LIVE, insertable rows
+#   docs/images/doc-dock-beside-sheet.png the reading surface in a dock-width column beside a sheet
+#
+# The last two are the Phase 3 proof, and the width is the point of them: a stack of autowrapping
+# fit_content RichTextLabels inside a scrolling column is exactly the configuration that either
+# collapses to zero-height rows or balloons its host, and neither failure is reachable headlessly.
+# The anchor jump is the other unreachable one - Control positions are all zero until layout has
+# run, so the suite can pin the slug and the registration but never the scroll.
+#
+# It also prints the one PERFORMANCE number no headless run can reach: the per-frame cost of a page
+# with N live figures on screen, beside the same measurement on a page of pure prose. Construction
+# cost was measured headlessly and is linear; DRAW cost needs a laid-out, painting tree.
 #
 # The second image is the one that settles the picker's panel-height question: the description
 # panel keeps its 110 px minimum and the figure lives in its own row below it, so a long
@@ -12,9 +27,30 @@
 @tool
 extends SceneTree
 
+## The guide the Phase 3 images are taken of: short enough to read in one screenshot, and carrying
+## every block kind the parser produces (headings, prose, lists, a table, code cards).
+const GUIDE_PAGE_ID := "GUIDE-BLOCK-STYLES"
+
+## The Phase 5 images: a search term that hits several guides in several ways, and a pack guide
+## whose ACE reference is drawn from the vocabulary rather than from its Markdown.
+const SEARCH_QUERY := "variable"
+const PACK_DOC_ID := "addon:quest"
+
+## The Phase 6 image: what a DOCK_SLOT_RIGHT_UL column is, before the reader drags it wider.
+const DOCK_WIDTH := 360.0
+
+## How many frames a timing sample runs for. Long enough that one slow frame cannot decide the
+## answer, short enough that the harness still finishes in seconds.
+const SAMPLE_FRAMES := 40
+
 var _frames: int = 0
 var _editor: EventSheetEditor = null
 var _stage: int = 0
+var _browser: EventSheetDocBrowser = null
+var _sampling: String = ""
+var _samples: Array[float] = []
+var _process_samples: Array[float] = []
+var _last_frame_usec: int = 0
 
 
 func _make_event(trigger_id: String, message: String) -> EventRow:
@@ -50,6 +86,7 @@ func _init() -> void:
 
 func _on_frame() -> void:
 	_frames += 1
+	_sample_frame()
 	if _stage == 0 and _frames == 2:
 		var margin: MarginContainer = EventSheetPopupUI.margined(_build_bare_figure())
 		# An explicit width: a figure is content-sized, so a host that hugs its child's minimum
@@ -113,6 +150,115 @@ func _on_frame() -> void:
 		var image: Image = root.get_texture().get_image()
 		image.save_png("res://docs/images/doc-explain-panel.png")
 		print("[preview] explain panel %dx%d" % [image.get_width(), image.get_height()])
+		for child in root.get_children():
+			if child is MarginContainer:
+				child.queue_free()
+		_stage = 9
+		return
+	if _stage == 9 and _frames == 66:
+		# NARROW on purpose: the sizing trap only shows at a width where the prose has to wrap.
+		root.size = Vector2i(720, 900)
+		root.add_child(_build_guide_page())
+		_stage = 10
+		return
+	if _stage == 10 and _frames == 78:
+		var image: Image = root.get_texture().get_image()
+		image.save_png("res://docs/images/doc-guide-page.png")
+		print("[preview] guide page %dx%d" % [image.get_width(), image.get_height()])
+		_report_page_geometry()
+		_stage = 11
+		return
+	if _stage == 11 and _frames == 82:
+		_jump_to_first_anchor()
+		_stage = 12
+		return
+	if _stage == 12 and _frames == 90:
+		# Read AFTER the jump's deferred frame: positions are only valid once layout has run, so
+		# the scroll it sets lands one frame after the call, never inside it.
+		print("[preview] scroll after the jump settled: %d" % _browser._scroll.scroll_vertical)
+		var image: Image = root.get_texture().get_image()
+		image.save_png("res://docs/images/doc-guide-anchor.png")
+		print("[preview] guide page after the anchor jump %dx%d" % [image.get_width(), image.get_height()])
+		_stage = 13
+		return
+	if _stage == 13 and _frames == 94:
+		# Phase 5, half one: the same browser, searched. The tree becomes ranked results grouped by
+		# page, and the page redraws with every hit wrapped - neither of which the suite can see.
+		# Wider than the Phase 3 shots, because what these images have to show is the page BESIDE
+		# the results rather than how narrow prose wraps.
+		_widen(1000, 900)
+		_browser.search(SEARCH_QUERY)
+		_open_first_result()
+		_stage = 14
+		return
+	if _stage == 14 and _frames == 104:
+		var image: Image = root.get_texture().get_image()
+		image.save_png("res://docs/images/doc-search-results.png")
+		print("[preview] search results %dx%d" % [image.get_width(), image.get_height()])
+		_report_search()
+		_stage = 15
+		return
+	if _stage == 15 and _frames == 108:
+		# Phase 5, half two: a pack guide, whose "ACE reference" section is drawn from the live
+		# vocabulary instead of from the Markdown - so the tables can never name a verb the picker
+		# does not offer.
+		_browser.search("")
+		_browser.show_doc(PACK_DOC_ID)
+		_browser.page().jump_to_anchor(EventSheetDocAceReference.SECTION_SLUG)
+		_stage = 16
+		return
+	if _stage == 16 and _frames == 120:
+		var image: Image = root.get_texture().get_image()
+		image.save_png("res://docs/images/doc-ace-reference.png")
+		print("[preview] live ACE reference %dx%d" % [image.get_width(), image.get_height()])
+		_stage = 17
+		return
+	if _stage == 17 and _frames == 124:
+		# Phase 4: a real guide page whose worked examples are drawn as LIVE ROWS. Wider than the
+		# prose shots on purpose - a figure is the real renderer, and rows that have to wrap into a
+		# 700 px column say nothing about how they look beside the reader's sheet.
+		root.size = Vector2i(1180, 900)
+		_browser.show_doc("guide:%s" % _first_page_with_a_figure())
+		_stage = 18
+		return
+	if _stage == 18 and _frames == 132:
+		_jump_to_first_figure()
+		_stage = 19
+		return
+	if _stage == 19 and _frames == 142:
+		var image: Image = root.get_texture().get_image()
+		image.save_png("res://docs/images/doc-guide-figure.png")
+		print("[preview] guide page with live figures %dx%d" % [image.get_width(), image.get_height()])
+		_report_figures()
+		_stage = 20
+		return
+	if _stage == 20 and _frames == 146:
+		# The open question the spec left for this phase: what N VISIBLE FIGURES cost per frame.
+		# Construction was measured headlessly and is linear; DRAW is not reachable there at all.
+		_begin_sampling(_page_with_most_figures())
+		_stage = 21
+		return
+	if _stage == 21 and _frames == 146 + SAMPLE_FRAMES + 4:
+		_report_sampling()
+		# The same measurement on a page of pure prose, as the control: a figure page is only
+		# expensive if it is expensive COMPARED to the page it replaced.
+		_begin_sampling(GUIDE_PAGE_ID)
+		_stage = 22
+		return
+	if _stage == 22 and _frames == 146 + 2 * SAMPLE_FRAMES + 8:
+		_report_sampling()
+		_build_dock_beside_sheet()
+		_stage = 23
+		return
+	if _stage == 23 and _frames == 146 + 2 * SAMPLE_FRAMES + 20:
+		_jump_to_first_figure()
+		_stage = 24
+		return
+	if _stage == 24 and _frames == 146 + 2 * SAMPLE_FRAMES + 30:
+		var image: Image = root.get_texture().get_image()
+		image.save_png("res://docs/images/doc-dock-beside-sheet.png")
+		print("[preview] docked documentation beside a sheet %dx%d" % [image.get_width(), image.get_height()])
+		_report_dock()
 		quit(0)
 
 
@@ -141,6 +287,230 @@ func _build_explain_page() -> Control:
 	return margin
 
 
+## The Phase 3 page: the whole documentation browser - the derived guide tree beside a shipped
+## guide rendered as native Controls. Screenshotted at a deliberately narrow width, because the
+## failure this image exists to catch (labels that collapse, or a column that balloons its host)
+## only appears where the prose has to wrap.
+func _build_guide_page() -> Control:
+	_browser = EventSheetDocBrowser.new()
+	_browser.show_doc("guide:%s" % GUIDE_PAGE_ID)
+	var margin: MarginContainer = EventSheetPopupUI.margined(_browser)
+	margin.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	margin.position = Vector2.ZERO
+	margin.size = Vector2(700.0, 880.0)
+	return margin
+
+
+## What the page actually measured, so the sizing trap is settled against numbers as well as an
+## image: a collapsed page reports a tiny height, a ballooning one reports a width past the host.
+func _report_page_geometry() -> void:
+	var page: EventSheetDocPageView = _browser.page()
+	print("[preview] page \"%s\": %d blocks, %d anchors, %.1f x %.1f" % [
+		page.current_title(), page.get_child_count(), page.anchors().size(), page.size.x, page.size.y])
+
+
+## The jump the headless suite cannot pin: a real anchor, on a real laid-out page, moving a real
+## scrollbar. Prints the scroll offset either side of the jump and the heading it landed on.
+func _jump_to_first_anchor() -> void:
+	var page: EventSheetDocPageView = _browser.page()
+	var anchors: Dictionary = page.anchors()
+	var slugs: Array = anchors.keys()
+	if slugs.size() < 4:
+		print("[preview] not enough anchors on this page to jump")
+		return
+	# Not the first: the first heading is the page title, and scrolling to the top proves nothing.
+	var slug: String = str(slugs[3])
+	var heading: Control = anchors[slug] as Control
+	var before: int = _browser._scroll.scroll_vertical
+	page.jump_to_anchor(slug)
+	print("[preview] jumped to \"%s\" (\"%s\"): scroll %d -> %d, heading y = %.1f" % [
+		slug, heading.text, before, _browser._scroll.scroll_vertical, heading.global_position.y])
+
+
+## Grows the window AND the fixed-size margin the page was parked in - the margin was sized for
+## the narrow Phase 3 shot, so resizing only the window would leave the page exactly as wide.
+func _widen(width: int, height: int) -> void:
+	root.size = Vector2i(width, height)
+	for child: Node in root.get_children():
+		if child is MarginContainer:
+			(child as MarginContainer).size = Vector2(float(width) - 20.0, float(height) - 20.0)
+
+
+## Opens the first ranked result, the way a reader clicks one - which is also what puts the
+## highlighted page beside the results tree in the image.
+func _open_first_result() -> void:
+	var results: Array[Dictionary] = EventSheetDocSearch.search(SEARCH_QUERY, 5)
+	if results.is_empty():
+		print("[preview] nothing matched \"%s\"" % SEARCH_QUERY)
+		return
+	var first: Dictionary = results[0]
+	_browser.show_doc(str(first.get("doc_id", "")), str(first.get("anchor", "")))
+
+
+## What the search actually found, so the ranking is settled against names as well as an image.
+func _report_search() -> void:
+	for result: Dictionary in EventSheetDocSearch.search(SEARCH_QUERY, 5):
+		print("[preview] hit: %s / %s (score %d)" % [
+			str(result.get("title", "")), str(result.get("heading", "-")), int(result.get("score", -1))])
+
+
+## PER-FRAME COST, which is the one performance question a headless suite cannot answer at all: it
+## never enters a tree, never lays anything out and never draws. Construction was measured headless
+## and scales linearly; what was left open is whether a page carrying a dozen live canvases stays
+## cheap once they are all on screen. The sampler opens a page, lets it settle, and then times the
+## frames themselves.
+func _begin_sampling(page_id: String) -> void:
+	_browser.show_doc("guide:%s" % page_id)
+	_sampling = page_id
+	_samples = []
+	_process_samples = []
+	_last_frame_usec = 0
+
+
+## Two numbers per frame, because they answer different halves of the question. The wall delta is
+## whatever this machine's whole frame costs (the renderer here is slow and CONSTANT, which is
+## exactly why the prose page is measured too, as a control). TIME_PROCESS is the engine's own
+## CPU-side figure, and it is the one that would move if a dozen live canvases were expensive.
+func _sample_frame() -> void:
+	var now: int = Time.get_ticks_usec()
+	var previous: int = _last_frame_usec
+	_last_frame_usec = now
+	# The first frame after show_doc is the build itself, not a steady frame.
+	if _sampling.is_empty() or previous == 0 or _samples.size() >= SAMPLE_FRAMES:
+		return
+	_samples.append(float(now - previous) / 1000.0)
+	_process_samples.append(float(Performance.get_monitor(Performance.TIME_PROCESS)) * 1000.0)
+
+
+func _report_sampling() -> void:
+	if _samples.is_empty():
+		print("[preview] no frames sampled for %s" % _sampling)
+		return
+	print("[preview] frame cost on \"%s\" (%d live figure(s), %d blocks): whole frame %s, engine process time %s" % [
+		_sampling, _figure_count(_sampling), EventSheetDocLibrary.page_blocks(_sampling).size(),
+		_summarise(_samples), _summarise(_process_samples)])
+	_sampling = ""
+
+
+static func _summarise(samples: Array[float]) -> String:
+	var total: float = 0.0
+	var worst: float = 0.0
+	for sample: float in samples:
+		total += sample
+		worst = maxf(worst, sample)
+	return "avg %.2f ms / worst %.2f ms over %d frames" % [total / float(samples.size()), worst, samples.size()]
+
+
+## The shipped page carrying the MOST figures - the worst case for the question above, and found
+## rather than named so it follows the corpus as guides are written.
+func _page_with_most_figures() -> String:
+	var best_id: String = GUIDE_PAGE_ID
+	var best: int = -1
+	for id: String in EventSheetDocLibrary.page_ids():
+		var count: int = _figure_count(id)
+		if count > best:
+			best = count
+			best_id = id
+	return best_id
+
+
+## The first shipped page carrying a recognized figure. DISCOVERED, never named: which guides grow
+## figures is the recognizer's answer and it changes as guides are written, so a hard-coded page id
+## here would rot into "the preview shows a page with no figures on it".
+func _first_page_with_a_figure() -> String:
+	for id: String in EventSheetDocLibrary.page_ids():
+		if _figure_count(id) > 0:
+			return id
+	print("[preview] no shipped page carries a figure")
+	return "GUIDE-RECIPES"
+
+
+func _figure_count(page_id: String) -> int:
+	var count: int = 0
+	for block: Dictionary in EventSheetDocLibrary.page_blocks(page_id):
+		if str(EventSheetDocFigures.recognize(block).get("mode", "")) == EventSheetDocFigures.MODE_FIGURE:
+			count += 1
+	return count
+
+
+## Scrolls to the first figure on the page, so the screenshot is of an illustration rather than of
+## the prose above it.
+func _jump_to_first_figure() -> void:
+	var page: EventSheetDocPageView = _browser.page()
+	for child: Node in page.get_children():
+		if child is EventSheetDocFigure:
+			_browser._scroll.scroll_vertical = int((child as Control).global_position.y - page.global_position.y)
+			return
+	print("[preview] the page drew no figure")
+
+
+## The numbers the suite cannot reach: how many figures a real page drew, and what one of their
+## canvases actually measures once laid out (the 640 px floor removed, the rows their own size).
+func _report_figures() -> void:
+	var page: EventSheetDocPageView = _browser.page()
+	var figures: int = 0
+	for child: Node in page.get_children():
+		if not (child is EventSheetDocFigure):
+			continue
+		figures += 1
+		if figures == 1:
+			var viewport: EventSheetViewport = (child as EventSheetDocFigure).figure_viewport()
+			print("[preview] first figure canvas = %.1f x %.1f (content %.1f x %.1f), processing = %s" % [
+				viewport.size.x, viewport.size.y, viewport.content_width(), viewport.content_height(),
+				viewport.is_processing()])
+	print("[preview] page \"%s\" drew %d live figure(s)" % [page.current_title(), figures])
+
+
+## Phase 6: the documentation where the reader keeps it - a sheet on the left, the reading surface
+## in a dock-width column on the right. The dock NODE cannot appear here (EditorDock "can only be
+## instantiated by editor", verified), so this stages what the dock hosts, at the width a
+## DOCK_SLOT_RIGHT_UL column actually gives it and in the same compact mode the dock sets. What the
+## image has to answer is the spec's 640 px problem: whether a guide's LIVE FIGURES survive a column
+## this narrow, or whether the page ends up scrolling sideways.
+func _build_dock_beside_sheet() -> void:
+	for child: Node in root.get_children():
+		if not (child is ColorRect):
+			child.queue_free()
+	root.size = Vector2i(1320, 840)
+	var row: HBoxContainer = HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.add_child(row)
+	_editor = EventSheetEditor.new()
+	_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(_editor)
+	_editor.setup(_demo_sheet())
+	# A fresh surface rather than the one the earlier stages parked in a margin: the dock builds its
+	# own on first reveal, and reusing a wide-mode instance would hide whatever compact mode has to
+	# undo. DOCK_WIDTH is what a right-hand slot gives a dock before anyone drags it.
+	_browser = EventSheetDocBrowser.new()
+	_browser.set_compact(true)
+	_browser.custom_minimum_size.x = DOCK_WIDTH
+	_browser.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var column: PanelContainer = EventSheetPopupUI.panel_section(_browser)
+	# The sheet takes the slack; the docked column keeps the width a dock slot gives it. Without
+	# this the card expands with the window and the image quietly stops being a NARROW one.
+	column.size_flags_horizontal = Control.SIZE_FILL
+	column.custom_minimum_size.x = DOCK_WIDTH
+	row.add_child(column)
+	_browser.show_doc("guide:%s" % _first_page_with_a_figure())
+
+
+## The numbers behind the image: the column the page actually got, and what a figure inside it
+## measured. A figure is content-sized with the host width as a CEILING, so its canvas must come in
+## at or under the column - a wider number would mean the page is scrolling sideways in the dock.
+func _report_dock() -> void:
+	var page: EventSheetDocPageView = _browser.page()
+	print("[preview] dock column = %.1f, page width = %.1f, compact = %s" % [
+		_browser.size.x, page.size.x, str(_browser.is_compact())])
+	for child: Node in page.get_children():
+		if child is EventSheetDocFigure:
+			var viewport: EventSheetViewport = (child as EventSheetDocFigure).figure_viewport()
+			print("[preview] figure in the dock = %.1f wide (content %.1f), rows %.1f tall" % [
+				viewport.size.x, viewport.content_width(), viewport.content_height()])
+			return
+	print("[preview] the docked page drew no figure")
+
+
 ## One verb, reflected from a shipped pack exactly as the editor builds its vocabulary.
 func _pack_definition(script_path: String, ace_id: String) -> ACEDefinition:
 	var script: GDScript = load(script_path) as GDScript
@@ -164,7 +534,7 @@ func _shrink_dialog_body(picker: ACEPickerDialog) -> void:
 		node = node.get_parent()
 
 
-## Searches the picker and highlights the first hit, so the info panel and its figure are
+## Searches the picker and highlights the first hit, so the info panel and its guide link are
 ## populated when the screenshot is taken - the same flow a reader uses.
 func _search_and_select(picker: ACEPickerDialog, query: String) -> void:
 	picker._search.text = query
@@ -178,10 +548,7 @@ func _report_geometry() -> void:
 	var picker: ACEPickerDialog = _editor._ace_picker
 	print("[preview] info panel min height = %.1f, actual height = %.1f" % [
 		picker._info_panel.custom_minimum_size.y, picker._info_panel.size.y])
-	if picker._figure != null and picker._figure.visible:
-		var viewport: EventSheetViewport = picker._figure.figure_viewport()
-		print("[preview] figure row canvas = %.1f x %.1f (content %.1f x %.1f)" % [
-			viewport.size.x, viewport.size.y, viewport.content_width(), viewport.content_height()])
-		print("[preview] whole figure widget height = %.1f" % picker._figure.size.y)
+	if picker._guide_button != null and picker._guide_button.visible:
+		print("[preview] guide link shown: %s" % picker._guide_button.text)
 	else:
-		print("[preview] figure not visible - nothing was selected")
+		print("[preview] guide link hidden (builtin verb, section, or nothing selected)")

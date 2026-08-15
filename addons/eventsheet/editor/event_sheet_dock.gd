@@ -2719,11 +2719,11 @@ func _open_shortcuts_help() -> void:
 ## Tools ▸ Documentation…, F1, and EventSheets.open_docs all land here. With no id, the row the
 ## reader is already looking at answers - which is what makes F1 feel like "explain THIS", not
 ## "open the manual". Returns false when the id names nothing, so the caller can say so.
-func open_documentation(doc_id: String = "") -> bool:
+func open_documentation(doc_id: String = "", anchor: String = "") -> bool:
 	var target: String = doc_id
 	if target.is_empty():
 		target = _selected_row_doc_id()
-	if _docs.open(target):
+	if _docs.open(target, anchor):
 		return true
 	if target.is_empty():
 		return false

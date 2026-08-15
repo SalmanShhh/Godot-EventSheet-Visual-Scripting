@@ -2,6 +2,40 @@
 
 ## [Unreleased]
 
+### Added - every guide, readable inside the editor, with live figures
+
+The in-editor reader over all three doc sets: the guides, the 72 addon guides, and the new
+module guides. Tools > Documentation... (or F1, or the ? prefix in the command palette) opens
+a tree derived from the docs index beside a natively rendered page - headings on a real
+typographic scale, tables, code cards, links that stay in the editor - or the Explain panel.
+Worked examples in guides render as LIVE figures you can insert into your sheet: an
+authored eventsheet fence always draws (and fails loud if it stops compiling), a plain
+gdscript fence lights up automatically when it round-trips to real rows, and a no-figure
+comment keeps one as code. Search ranks guides, verbs and addon pages together with in-page
+highlight; a third-party pack ships its guide as eventsheet_addons/<pack>/guide.md and is
+discovered like its translations; the ACE reference in every addon guide renders from the
+live registry so it can never drift; and a docs folder of your own joins the tree through a
+project setting. The reader also lives as a dock beside the sheet, boot-lazy so editor
+startup is untouched. The bundle is generated at build time and byte-checked in the suite.
+
+### Added - guides for the builtin vocabulary (36 guides over all 48 modules)
+
+The core vocabulary - about 700 builtin verbs - had no guides at all and did not appear in
+the generated catalog. It now has 36 guides under docs/Modules/, grouped by what a beginner
+would search for (Working With Files, Timers Waiting And Cooldowns, Making Things Move In
+2D, Comparing Values, ...), to the same standard as the addon guides: a verb reference table
+read from source, 15+ worked use cases, five Other use cases, the real traps. The catalog
+gains a Built-in vocabulary section, and a test sweep fails the suite if a guide names a
+verb that no longer exists.
+
+### Fixed - wrapped cells break on words, and the picker loses its figure
+
+A squeezed cell rendered "On Read / y"; cells now break only on word boundaries (a single
+word wider than the whole cell may still split rather than clip). The ACE picker's info
+panel no longer carries a one-row figure - it read as clutter under a description that
+already said everything; the illustration lives in Explain This Row. The picker keeps its
+Open <Pack>'s guide link.
+
 ### Added - documentation you can reach from inside the editor (the recommended slice)
 
 **Every shipped doc link now goes somewhere.** The release zip ships `addons/` and

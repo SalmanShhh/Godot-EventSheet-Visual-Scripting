@@ -1560,6 +1560,156 @@ const ADDON_GUIDE_OVERRIDES := {
 	"utility_ai": "UtilityBrain",
 }
 
+## Where a built-in vocabulary module's guide lives, relative to the repo root. The sibling of
+## ADDON_GUIDE_DIR: packs are documented per pack, the built-in verbs per module.
+const MODULE_GUIDE_DIR: String = "docs/Modules"
+
+## Where the built-in vocabulary modules live, so the sweep has one place to enumerate them.
+const MODULE_DIR: String = "res://addons/eventforge/registration/modules"
+
+## Vocabulary UNITS whose guide file is NOT the Title-Case-Words spelling of the unit. A unit is
+## either a module file (`system_aces.gd` -> `system`) or a picker CATEGORY ("Math & Random" ->
+## `math_random`), because the two ask the same question from different ends: the docs reader
+## arrives holding a module name, the Explain panel arrives holding the category the selected
+## verb sits in.
+##
+## Nearly every module is here, and that is not a mapping table by the back door: the guides are
+## written for the READER's question ("how do I move something in 2D?") rather than for the
+## file that happens to author the verbs, and several modules were merged into one guide
+## (audio + audio_server, physics + physics_server + collision) while two big modules - core and
+## system - spread across several. The derivation still runs for anything absent, so a module
+## added tomorrow resolves to `docs/Modules/<Title-Case>.md` and the suite's sweep fails on the
+## missing file instead of shipping a dead link.
+const MODULE_GUIDE_OVERRIDES := {
+	# ── module files ──
+	"animation_player": "Animation-And-Sprites",
+	"array_functional": "Working-With-Lists",
+	"audio": "Sound-And-Music",
+	"audio_server": "Sound-And-Music",
+	"camera_fov": "Cameras-Graphics-And-Screenshots",
+	"clipboard": "Copying-Sharing-And-Remembering-Values",
+	"collection": "Working-With-Lists",
+	"collision": "Collisions-Joints-And-World-Physics",
+	"comparison": "Comparing-Values",
+	"composition": "Groups-Tags-And-Systems",
+	"console": "Debugging-And-Printing",
+	"core": "Triggers-Signals-And-When-Rows-Run",
+	"dev": "Debugging-And-Printing",
+	"device": "Reading-Keyboard-Mouse-And-Gamepad",
+	"drawing": "Particles-And-Drawing-On-Screen",
+	"file": "Working-With-Files",
+	"gradient_curve": "Colors-Gradients-And-Curves",
+	"helper": "Calling-Your-Own-Code-From-Rows",
+	"host": "Calling-Your-Own-Code-From-Rows",
+	"input": "Setting-Up-And-Rebinding-Controls",
+	"json": "Working-With-Files",
+	"locale_asset": "Localising-Your-Game",
+	"loop": "Working-With-Lists",
+	"mesh": "Working-In-3D",
+	"native_3d": "Working-In-3D",
+	"node": "Finding-And-Rearranging-Nodes",
+	"node_activation": "Scenes-Pausing-And-Turning-Nodes-Off",
+	"options": "Game-Options-And-The-Window",
+	"particle": "Particles-And-Drawing-On-Screen",
+	"physics": "Collisions-Joints-And-World-Physics",
+	"physics_server": "Collisions-Joints-And-World-Physics",
+	"procedural": "Doing-Math-And-Randomness",
+	"raycast": "Raycasting-And-Overlaps-In-2D",
+	"regex": "Working-With-Text",
+	"rendering": "Cameras-Graphics-And-Screenshots",
+	"resource": "Reading-Spreadsheets-And-Data-Assets",
+	"system": "Timers-Waiting-And-Cooldowns",
+	"table": "Reading-Spreadsheets-And-Data-Assets",
+	"text_extract": "Working-With-Text",
+	"text_fit": "Making-Text-Readable-On-Screen",
+	"text_format": "Making-Text-Readable-On-Screen",
+	"tilemap": "Working-With-Tilemaps",
+	"tooling": "Automating-The-Editor",
+	"translation": "Localising-Your-Game",
+	"translation_quality": "Localising-Your-Game",
+	"ui": "Buttons-Sliders-Labels-And-Menus",
+	"vibration": "Reading-Keyboard-Mouse-And-Gamepad",
+	"window": "Game-Options-And-The-Window",
+	# ── picker categories ──
+	# The categories a module's file name cannot answer for: core and system each author several
+	# guides' worth of vocabulary, and raycast authors both casting guides, so a verb selected in
+	# the picker resolves through the category it is filed under instead.
+	"animation": "Animation-And-Sprites",
+	"behavior": "Calling-Your-Own-Code-From-Rows",
+	"camera": "Cameras-Graphics-And-Screenshots",
+	"collisions": "Collisions-Joints-And-World-Physics",
+	"color": "Colors-Gradients-And-Curves",
+	"compare_numbers": "Comparing-Values",
+	"compare_objects": "Comparing-Values",
+	"compare_text": "Comparing-Values",
+	"compare_types": "Comparing-Values",
+	"compare_vectors": "Comparing-Values",
+	"debug": "Debugging-And-Printing",
+	"display": "Game-Options-And-The-Window",
+	"editor_tools": "Automating-The-Editor",
+	"effects": "Particles-And-Drawing-On-Screen",
+	"files": "Working-With-Files",
+	"files_directories": "Working-With-Files",
+	"files_tables": "Reading-Spreadsheets-And-Data-Assets",
+	"functions": "Calling-Your-Own-Code-From-Rows",
+	"game_options": "Game-Options-And-The-Window",
+	"game_window": "Game-Options-And-The-Window",
+	# The three cross-cutting picker sections are not one guide's vocabulary: "General Actions"
+	# alone spans sound, sprites, cameras, text, movement, physics and 3D. They resolve to the
+	# module index, which is the honest answer to "where do I read about this section?" - every
+	# guide, grouped by task, one hop from the verb the reader had selected.
+	"general_actions": "README",
+	"general_conditions": "README",
+	"general_expressions": "README",
+	"gamepad": "Reading-Keyboard-Mouse-And-Gamepad",
+	"gradients_curves": "Colors-Gradients-And-Curves",
+	"groups": "Groups-Tags-And-Systems",
+	"helpers": "Calling-Your-Own-Code-From-Rows",
+	"inputmap": "Setting-Up-And-Rebinding-Controls",
+	"joints": "Collisions-Joints-And-World-Physics",
+	"keyboard": "Reading-Keyboard-Mouse-And-Gamepad",
+	"loops": "Working-With-Lists",
+	"math_random": "Doing-Math-And-Randomness",
+	"metadata": "Finding-And-Rearranging-Nodes",
+	"mouse": "Reading-Keyboard-Mouse-And-Gamepad",
+	"movement": "Making-Things-Move-In-2D",
+	"nodes": "Finding-And-Rearranging-Nodes",
+	"nodes_activation": "Scenes-Pausing-And-Turning-Nodes-Off",
+	"nodes_picking": "Finding-And-Rearranging-Nodes",
+	"overlap_2d": "Raycasting-And-Overlaps-In-2D",
+	"overlap_3d": "Raycasting-And-Overlaps-In-3D",
+	"particles": "Particles-And-Drawing-On-Screen",
+	"performance": "Timers-Waiting-And-Cooldowns",
+	"platform": "Game-Options-And-The-Window",
+	"raycast_2d": "Raycasting-And-Overlaps-In-2D",
+	"raycast_3d": "Raycasting-And-Overlaps-In-3D",
+	"run_context": "Debugging-And-Printing",
+	"scene": "Scenes-Pausing-And-Turning-Nodes-Off",
+	"signals_scene_input": "Triggers-Signals-And-When-Rows-Run",
+	"systems": "Groups-Tags-And-Systems",
+	"text": "Working-With-Text",
+	"text_regex": "Working-With-Text",
+	"time": "Timers-Waiting-And-Cooldowns",
+	"touch": "Reading-Keyboard-Mouse-And-Gamepad",
+	"translation_voice": "Localising-Your-Game",
+	"tween": "Timers-Waiting-And-Cooldowns",
+	"utility_debug": "Debugging-And-Printing",
+	"utility_nodes": "Finding-And-Rearranging-Nodes",
+	"utility_settings": "Game-Options-And-The-Window",
+	"utility_time": "Timers-Waiting-And-Cooldowns",
+	"utility_window": "Game-Options-And-The-Window",
+	"variables": "Setting-And-Changing-Variables",
+	"variables_array": "Working-With-Lists",
+	"variables_dictionary": "Working-With-Records",
+	"variables_string": "Working-With-Text",
+	"variables_vector": "Working-With-Vectors-And-Directions",
+}
+
+## What counts as part of a word when a vocabulary unit is folded into a lookup key. Everything
+## else - spaces, "&", ":", "/" - is a separator, so a picker category keys the same way a module
+## file name does.
+const _UNIT_WORD_CHARACTERS: String = "abcdefghijklmnopqrstuvwxyz0123456789"
+
 ## Words that are acronyms in a guide file name, so `fps_controller` derives FPS-Controller
 ## rather than Fps-Controller.
 const _GUIDE_ACRONYMS := {
@@ -1646,6 +1796,76 @@ static func addon_guide_target(pack_dir: String, help_url: String = "") -> Strin
 	return "%s/%s.md" % [ADDON_GUIDE_DIR, guide]
 
 
+## The docs/Modules guide file name (no extension) for a built-in vocabulary UNIT - a module file
+## (`system_aces.gd`, `res://.../system_aces.gd`, or plain `system`) or a picker category
+## ("Math & Random"). The override when the unit has one, otherwise the Title-Case-Words spelling.
+## "" for an empty name. The mirror of addon_guide_name, and frozen with it.
+static func module_guide_name(module_or_category: String) -> String:
+	var unit: String = module_guide_unit(module_or_category)
+	if unit.is_empty():
+		return ""
+	if MODULE_GUIDE_OVERRIDES.has(unit):
+		return str(MODULE_GUIDE_OVERRIDES[unit])
+	var words: PackedStringArray = PackedStringArray()
+	for word: String in unit.split("_", false):
+		if _GUIDE_ACRONYMS.has(word.to_lower()):
+			words.append(str(_GUIDE_ACRONYMS[word.to_lower()]))
+		else:
+			words.append(word.substr(0, 1).to_upper() + word.substr(1))
+	return "-".join(words)
+
+
+## Where a built-in vocabulary unit's documentation lives, as a repo-relative path. "" when the
+## unit resolves to nothing. Pure - it does not touch the disk - so the "module:<name>" doc ids,
+## the Explain panel's "read more" link and the suite's sweep share one resolution. The mirror of
+## addon_guide_target; there is no per-unit override URL because built-in vocabulary is only ever
+## documented in this repo.
+static func module_guide_target(module_or_category: String) -> String:
+	var guide: String = module_guide_name(module_or_category)
+	if guide.is_empty():
+		return ""
+	return "%s/%s.md" % [MODULE_GUIDE_DIR, guide]
+
+
+## The lookup key for a unit: file name and path decoration dropped, the `_aces` suffix dropped,
+## and everything else folded to lowercase words joined by "_" - so `res://.../text_fit_aces.gd`,
+## `text_fit_aces.gd` and `Text Fit` all key the same guide, and a category's punctuation
+## ("Math & Random", "Variables: Array", "Signals / Scene / Input") never reaches the dictionary.
+static func module_guide_unit(module_or_category: String) -> String:
+	var raw: String = module_or_category.strip_edges()
+	if raw.contains("/") or raw.contains("\\") or raw.ends_with(".gd"):
+		raw = raw.replace("\\", "/").get_file().get_basename()
+	raw = raw.trim_suffix("_aces")
+	var words: PackedStringArray = PackedStringArray()
+	var current: String = ""
+	for index: int in raw.length():
+		var character: String = raw[index].to_lower()
+		if _UNIT_WORD_CHARACTERS.contains(character):
+			current += character
+			continue
+		if not current.is_empty():
+			words.append(current)
+			current = ""
+	if not current.is_empty():
+		words.append(current)
+	return "_".join(words)
+
+
+## Every built-in vocabulary module on disk, as lookup units, sorted. THE sweep list: the suite
+## walks it and fails when a unit's guide is missing, which is what keeps a renamed guide or a
+## newly added module from shipping as a dead "module:<name>" link.
+static func module_guide_units() -> PackedStringArray:
+	var units: PackedStringArray = PackedStringArray()
+	for file_name: String in DirAccess.get_files_at(MODULE_DIR):
+		if not file_name.ends_with(".gd"):
+			continue  # skips the .gd.uid sidecars
+		var unit: String = module_guide_unit(file_name)
+		if not unit.is_empty() and not units.has(unit):
+			units.append(unit)
+	units.sort()
+	return units
+
+
 ## The pack directory a verb's provider id belongs to ("PricedTableBehavior" -> "priced_table"),
 ## found by locating the script that declares that class_name under the addon directories.
 ## "" for a builtin or project-local provider, which has no pack guide.
@@ -1700,14 +1920,59 @@ static func open_addon_guide(provider_id: String) -> bool:
 	return open_online_doc(addon_guide_for_provider(provider_id))
 
 
+## Every provider id declared inside a pack directory, sorted. The inverse of
+## addon_pack_directory, answered from the same one-pass map - so asking "what does this pack
+## publish?" costs a dictionary walk rather than a second scan of every addon script.
+static func pack_providers(pack_dir: String) -> PackedStringArray:
+	var wanted: String = pack_dir.strip_edges().trim_suffix("/").get_file()
+	var providers: PackedStringArray = PackedStringArray()
+	if wanted.is_empty():
+		return providers
+	_ensure_pack_directory_map()
+	for provider_id: Variant in _pack_dir_by_provider:
+		if str(_pack_dir_by_provider[provider_id]) == wanted:
+			providers.append(str(provider_id))
+	providers.sort()
+	return providers
+
+
+## Every verb the LIVE registry currently offers for a provider, as immutable ACEDefinitions.
+## Editor-only, like find_ace: an empty array when no dock is open, which is what lets a headless
+## caller fall back to a script-level derivation instead of reporting a pack with no verbs.
+##
+## Treat the definitions as read-only - they are statically cached and shared across every tab.
+static func provider_verbs(provider_id: String) -> Array[ACEDefinition]:
+	if not _dock_alive():
+		return []
+	return _dock._ace_registry.get_provider_definitions(provider_id)
+
+
+## Searches the documentation corpus - the shipped guides, plus every pack guide and project guide
+## discovered on disk. Each result is a row that can be acted on directly:
+##   {doc_id, page_id, title, heading, anchor, score}
+## `doc_id` and `anchor` feed straight back into open_docs. Results are ranked best-first (a title
+## hit outranks a heading hit outranks a body hit); an empty query lists every page.
+static func search_docs(query: String, limit: int = 25) -> Array[Dictionary]:
+	return EventSheetDocSearch.search(query, limit)
+
+
+## Where this project keeps its own Markdown guides - the `eventsheets/project/docs_dir` setting,
+## with its default. Every .md file there joins the Documentation window's tree under "This
+## project", so a team's own notes read beside the plugin's guides.
+static func user_docs_dir() -> String:
+	return EventSheetDocLibrary.user_docs_dir()
+
+
 ## Opens the documentation surface on `doc_id`. THE one entry point - Tools ▸ Documentation…,
 ## F1, the row menu's "What does this do?" and any third-party caller all come through here.
 ##
 ## The id scheme, frozen with this method:
-##   ""                             the index (guidance, plus the online guide list)
+##   ""                             the index (the shipped guide tree)
 ##   "ace:<provider_id>/<ace_id>"   one verb, drawn from the live registry
 ##   "section:<header text>"        a picker category and its blurb
 ##   "addon:<pack directory>"       a pack's guide
+##   "guide:<page id>"              a shipped guide page ("guide:GUIDE-RECIPES")
+##   "module:<module name>"         a vocabulary module's guide
 ##
 ## An id that names nothing real returns FALSE and warns - never a blank page, because a
 ## silently empty doc surface is exactly how a renamed guide ships unnoticed.
@@ -1716,15 +1981,18 @@ static func open_addon_guide(provider_id: String) -> bool:
 ## so a pack guide opens at its own heading); the generated verb and section pages are single
 ## cards with nothing to jump to, so they ignore it.
 ##
-## "addon:" deliberately opens the browser rather than a panel: the guide corpus does not ship
-## inside the plugin, and the repo page renders its images and tables at full fidelity. A caller
-## never has to know which route it got - that is the point of one entry point.
+## A GUIDE id is drawn natively when the plugin ships that page, and opens the version-pinned repo
+## page in the reader's browser when it does not - which is how a third-party pack hosting its
+## docs elsewhere, and a guide the bundle deliberately leaves out, both still answer. A caller
+## never has to know which route it got: that is the point of one entry point.
 static func open_docs(doc_id: String = "", anchor: String = "") -> bool:
 	var route: Dictionary = EventSheetDocExplain.resolve(doc_id)
 	if not bool(route.get("valid", false)):
 		push_warning("EventSheets.open_docs: nothing is documented under \"%s\"." % doc_id)
 		return false
-	if str(route.get("scheme", "")) == "addon":
+	# A guide page that did not ship inside the plugin has no surface to draw it, with or without
+	# an editor: the browser is the whole answer, so it runs before the dock check.
+	if not EventSheetDocLibrary.has_page(str(route.get("page_id", ""))) and not str(route.get("target", "")).is_empty():
 		return open_online_doc(str(route.get("target", "")), anchor)
 	if not _dock_alive():
 		return false
@@ -1736,7 +2004,7 @@ static func open_docs(doc_id: String = "", anchor: String = "") -> bool:
 		if find_ace(str(route.get("provider_id", "")), str(route.get("ace_id", ""))) == null:
 			push_warning("EventSheets.open_docs: nothing is documented under \"%s\"." % doc_id)
 			return false
-	return _dock.open_documentation(doc_id)
+	return _dock.open_documentation(doc_id, anchor)
 
 
 ## The `## @ace_help("...")` value declared anywhere in a pack directory, or "". Cached per
