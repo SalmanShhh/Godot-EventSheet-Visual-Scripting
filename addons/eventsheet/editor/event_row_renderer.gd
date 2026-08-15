@@ -298,13 +298,16 @@ func _draw_multiline_text(
 	if text.is_empty():
 		return
 	var zoom: float = control.get_zoom_factor() if control.has_method("get_zoom_factor") else 1.0
+	# The same word-first break rule the height metrics measured with, so a cell never paints a
+	# mid-word split its reserved height did not account for (and never splits "Ready" in two).
+	var flags: int = ViewportRowMetrics.break_flags_for(text, max_width, font, font_size)
 	if is_equal_approx(zoom, 1.0):
-		control.draw_multiline_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, -1, color, COMMENT_BREAK_FLAGS)
+		control.draw_multiline_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, -1, color, flags)
 		return
 	var physical_size: int = maxi(int(round(font_size * zoom)), 6)
 	var physical_width: float = max_width * zoom if max_width > 0.0 else max_width
 	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	control.draw_multiline_string(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width, physical_size, -1, color, COMMENT_BREAK_FLAGS)
+	control.draw_multiline_string(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width, physical_size, -1, color, flags)
 	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
 
 

@@ -323,9 +323,23 @@ static func wrapped_line_count(text: String, wrap_width: float, font: Font, font
 		return 1
 	var wrapped_height: float = font.get_multiline_string_size(
 		text, HORIZONTAL_ALIGNMENT_LEFT, wrap_width, font_size, -1,
-		TextServer.BREAK_WORD_BOUND | TextServer.BREAK_GRAPHEME_BOUND
+		break_flags_for(text, wrap_width, font, font_size)
 	).y
 	return maxi(1, int(round(wrapped_height / single_line)))
+
+
+## Cells break on WORDS, never inside one - "On Ready" wraps to "On / Ready", not "On Read / y".
+## The grapheme flag is added only when a single word is itself wider than the whole cell, where
+## breaking inside it is the one honest option left (a mid-word split beats text clipped past the
+## lane). Measured and drawn with the SAME flags (the renderer calls this too), so the reserved
+## height always matches what is painted.
+static func break_flags_for(text: String, wrap_width: float, font: Font, font_size: int) -> int:
+	if font == null or wrap_width <= 1.0:
+		return TextServer.BREAK_WORD_BOUND
+	for word: String in text.split(" ", false):
+		if font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x > wrap_width:
+			return TextServer.BREAK_WORD_BOUND | TextServer.BREAK_GRAPHEME_BOUND
+	return TextServer.BREAK_WORD_BOUND
 
 
 func row_top(index: int) -> float:

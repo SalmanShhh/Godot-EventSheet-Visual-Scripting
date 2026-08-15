@@ -73,6 +73,16 @@ static func run() -> bool:
 	ok = _check("break points: slices reassemble the text", rejoined, LONG_TEXT) and ok
 	ok = _check("break points: a giant word hard-splits instead of overflowing", ViewportRowMetrics.wrap_break_points("abcdefghijklmnopqrstuvwxyz_abcdefghijklmnopqrstuvwxyz", 60.0, font, font_size).size() > 1, true) and ok
 
+	# 3c. Cells break on WORDS, never inside one. "On Ready" at a width that fits "On" but not
+	# "On Ready" must wrap to two lines on the space - never render "On Read / y". The grapheme
+	# fallback is reserved for a single word wider than the whole cell.
+	var on_ready_width: float = font.get_string_size("On Ready", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	var ready_width: float = font.get_string_size("Ready", HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	var squeeze: float = (on_ready_width + ready_width) * 0.5
+	ok = _check("a squeezed two-word cell breaks on the word", ViewportRowMetrics.break_flags_for("On Ready", squeeze, font, font_size), TextServer.BREAK_WORD_BOUND) and ok
+	ok = _check("and wraps to exactly two lines", ViewportRowMetrics.wrapped_line_count("On Ready", squeeze, font, font_size), 2) and ok
+	ok = _check("a single word wider than the cell may hard-split", ViewportRowMetrics.break_flags_for("Supercalifragilistic", 40.0, font, font_size), TextServer.BREAK_WORD_BOUND | TextServer.BREAK_GRAPHEME_BOUND) and ok
+
 	# 4. The layout pass agrees with the metrics: the wrapped span carries comment_wrap and a
 	# rect spanning its visual lines. Feed the row through the REAL flat-row path at a narrow
 	# size so layout and metrics see the same width.
