@@ -36,7 +36,18 @@ func _over_color_swatch(hit: Dictionary, local_position: Vector2) -> bool:
 	return swatch_rect is Rect2 and (swatch_rect as Rect2).has_point(local_position)
 
 
+## True when the viewport is a documentation FIGURE. A figure is an illustration, not an editing
+## surface: it takes no pointer input at all. MOUSE_FILTER_IGNORE already stops most of it, but
+## the handlers below are also reachable through forwarded input, and two of them act BEFORE any
+## hit test runs (a right-press grabs focus; Ctrl+wheel zooms), so the refusal belongs at the top
+## of each handler rather than only at the places that read a hit.
+func _is_inert_figure() -> bool:
+	return bool(_viewport.figure_mode)
+
+
 func handle_mouse_motion(event: InputEventMouseMotion) -> void:
+	if _is_inert_figure():
+		return
 	# Ctrl-hover affordance: the hand cursor advertises the Ctrl+Click jump on resolvable cells.
 	if _viewport.navigation_probe.is_valid() and (event.ctrl_pressed or event.meta_pressed):
 		var nav_hit: Dictionary = _viewport._hit_test(_viewport._to_logical_position(event.position))
@@ -99,6 +110,8 @@ func handle_mouse_motion(event: InputEventMouseMotion) -> void:
 
 
 func handle_mouse_button(event: InputEventMouseButton) -> void:
+	if _is_inert_figure():
+		return
 	if event.pressed and (event.ctrl_pressed or event.meta_pressed):
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			_viewport.zoom_in(event.position)
@@ -408,6 +421,8 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 
 
 func handle_key(event: InputEventKey) -> void:
+	if _is_inert_figure():
+		return
 	if not event.pressed or event.echo:
 		return
 	if _viewport._editing_row_index >= 0:

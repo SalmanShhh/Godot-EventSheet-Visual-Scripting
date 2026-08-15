@@ -374,6 +374,141 @@ func is_empty() -> bool:
 	return _row_metrics.is_empty()
 
 
+## The logical width the widest row needs to show every cell at its NATURAL (unstretched) size.
+##
+## The sheet's normal layout is width-DRIVEN: condition/action cells fill their lane, so no
+## existing measurement answers "how wide does this content want to be". A figure has to know,
+## because it sizes to its rows instead of filling a host - and the canvas floor it would
+## otherwise inherit is 640 px, far wider than a picker panel or a side dock.
+##
+## Two lanes make this a solve rather than a sum. The divider sits at
+## `gutter + max(minimum_conditions_lane_width, (W - gutter) * condition_lane_ratio)`, so a
+## condition needing C px of lane and an action needing A px of lane each imply their own
+## minimum W; the answer is the largest. Rows that are not two-lane events (comments, group
+## bars, code blocks) contribute a flat right-edge requirement instead, and wrapping rows
+## contribute nothing at all - they are content-height, not content-width.
+func natural_content_width() -> float:
+	var font: Font = _viewport._get_font()
+	var font_size: int = _viewport._get_font_size()
+	if font == null:
+		return 0.0
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var probe_width: float = _viewport._get_logical_canvas_width()
+	var condition_right: float = 0.0
+	var action_width: float = 0.0
+	var flat_right: float = 0.0
+	for index in range(_viewport._flat_rows.size()):
+		var row_data: EventRowData = _viewport._row_at(index)
+		if row_data == null:
+			continue
+		# Comments and group bars wrap to whatever width they are given, so they never ask for one.
+		if row_data.row_type == EventRowData.RowType.COMMENT or row_data.row_type == EventRowData.RowType.GROUP:
+			continue
+		var needs: Dictionary = _natural_lane_extents(row_data, probe_width, font, font_size)
+		if row_data.row_type == EventRowData.RowType.EVENT:
+			condition_right = maxf(condition_right, float(needs.get("condition_right", 0.0)))
+			action_width = maxf(action_width, float(needs.get("action_width", 0.0)))
+		else:
+			flat_right = maxf(flat_right, maxf(float(needs.get("condition_right", 0.0)), float(needs.get("flat_right", 0.0))))
+	var gutter: float = EventSheetPalette.GUTTER_WIDTH
+	var ratio: float = clampf(event_style.condition_lane_ratio, 0.05, 0.95)
+	var minimum_lane: float = float(event_style.minimum_conditions_lane_width)
+	var required: float = flat_right
+	# The condition lane: below its own minimum width any canvas serves, so only a condition
+	# that overflows that minimum forces the canvas wider.
+	var condition_lane_need: float = condition_right + float(event_style.condition_lane_padding) - gutter
+	if condition_lane_need > minimum_lane:
+		required = maxf(required, gutter + condition_lane_need / ratio)
+	# The action lane: everything right of the divider, plus the divider itself.
+	var action_lane_need: float = action_width + float(event_style.lane_divider_width) + float(event_style.action_lane_padding)
+	if action_lane_need > 0.0:
+		var proportional: float = gutter + action_lane_need / maxf(1.0 - ratio, 0.05)
+		var clamped: float = gutter + minimum_lane + action_lane_need
+		# Which arm of the divider's max() applies depends on the answer, so pick the arm whose
+		# own precondition the answer satisfies.
+		required = maxf(required, proportional if (proportional - gutter) * ratio >= minimum_lane else clamped)
+	return maxf(required, 0.0)
+
+
+## One row's natural extents: how far right its condition cells reach (absolute logical x), how
+## wide its action cells are (lane-relative), and - for non-event rows, which are not lane-split -
+## the plain right edge of its span run. Mirrors the cursor walk in event_line_extents(), but
+## advances every cell by its MEASURED width instead of the lane share a fill cell would claim.
+func _natural_lane_extents(row_data: EventRowData, width: float, font: Font, font_size: int) -> Dictionary:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var x: float = EventSheetPalette.ROW_HORIZONTAL_PADDING + EventSheetPalette.GUTTER_WIDTH \
+		+ float(row_data.indent * _viewport.INDENT_WIDTH) + 18.0
+	var lane_divider_x: float = _viewport.get_lane_divider_x(width)
+	var condition_lane_rect := Rect2(x, 0.0, maxf(lane_divider_x - x, 1.0), 1.0)
+	var condition_x: float = _viewport._get_condition_track_start(row_data, x, condition_lane_rect)
+	var badge_column: float = maxf(float(event_style.condition_badge_column_width), 0.0)
+	var badge_gap: float = EventSheetPalette.SPAN_GAP if badge_column > 0.0 else 0.0
+	var condition_text_start_x: float = condition_x + badge_column + badge_gap
+	var condition_cursor: Dictionary = {}
+	var action_cursor: Dictionary = {}
+	var flat_cursor: Dictionary = {}
+	var condition_right: float = 0.0
+	var action_right: float = 0.0
+	var flat_right: float = 0.0
+	for span: SemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		# A right-aligned action chip rides the lane's right edge; it claims no run width.
+		if bool(metadata.get("align_right", false)):
+			continue
+		var line: int = int(metadata.get("line_index", 0))
+		var kind: String = str(metadata.get("kind", ""))
+		var measured: float = _viewport._measure_span_width(span, span.text, font, font_size)
+		var gap: float = _viewport._get_span_gap(span)
+		if row_data.row_type != EventRowData.RowType.EVENT:
+			var flat_start: float = float(flat_cursor.get(line, x))
+			flat_cursor[line] = flat_start + measured + 2.0 + gap
+			flat_right = maxf(flat_right, flat_cursor[line])
+			continue
+		if _viewport._resolve_span_lane(span) == "action":
+			var action_start: float = float(action_cursor.get(line, 0.0))
+			# A plain action cell FILLS its lane and wraps inside it, so its natural size is the
+			# width at which it needs exactly one line - not the width of its text.
+			var action_width_needed: float = measured
+			if kind == "action" and not bool(metadata.get("natural_width", false)):
+				action_width_needed = _fill_cell_natural_width(span, metadata, font, font_size, 0.0, action_start)
+			action_cursor[line] = action_start + action_width_needed + 2.0 + gap
+			action_right = maxf(action_right, action_cursor[line])
+			continue
+		if bool(metadata.get("badge", false)):
+			var natural_badge: bool = bool(metadata.get("badge_natural_width", false))
+			var badge_width: float = measured if natural_badge or badge_column <= 0.0 else badge_column
+			var badge_start: float = float(condition_cursor.get(line, condition_x))
+			condition_cursor[line] = badge_start + maxf(badge_width, _viewport.MIN_SPAN_WIDTH) + 2.0 + gap
+		else:
+			var text_start: float = float(condition_cursor.get(line, condition_text_start_x))
+			var condition_width_needed: float = measured
+			if kind in ["condition", "trigger"]:
+				condition_width_needed = _fill_cell_natural_width(span, metadata, font, font_size, condition_text_start_x, text_start)
+			condition_cursor[line] = text_start + maxf(condition_width_needed, _viewport.MIN_SPAN_WIDTH) + 2.0 + gap
+		condition_right = maxf(condition_right, condition_cursor[line])
+	return {"condition_right": condition_right, "action_width": action_right, "flat_right": flat_right}
+
+
+## The cell-rect width one FILL cell needs to draw its text on a single line.
+##
+## A fill cell's own text is only part of it: the renderer advances past chip padding, an object
+## icon and the aligned object-name column before the first character, and reserves a trailing
+## margin. Those are exactly what _fill_text_wrap_width() subtracts, so this asks that function
+## how much it subtracts (at an arbitrarily wide cell) rather than re-deriving the arithmetic -
+## a second copy of it would drift from the renderer, and a fill cell that is one pixel short
+## wraps to two lines, which is visible as a whole extra row of height.
+func _fill_cell_natural_width(span: SemanticSpan, metadata: Dictionary, font: Font, font_size: int, lane_origin_x: float, span_x: float) -> float:
+	const PROBE_CELL_WIDTH := 100000.0
+	var column: float = object_column_override(metadata, lane_origin_x, span_x)
+	var chrome: float = PROBE_CELL_WIDTH - _fill_text_wrap_width(metadata, PROBE_CELL_WIDTH, font, font_size, column)
+	var draw_font_size: int = EventSheetPalette.resolve_font_size(font_size, int(metadata.get("font_size_delta", 0)))
+	var text_width: float = font.get_string_size(span.text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, draw_font_size).x
+	# One pixel of slack: the wrap test is a strict comparison, so an exact fit can still break.
+	return text_width + chrome + 1.0
+
+
 ## The logical canvas width the metrics were last rebuilt at (the resize guard compares against this).
 func metrics_width() -> float:
 	return _metrics_canvas_width

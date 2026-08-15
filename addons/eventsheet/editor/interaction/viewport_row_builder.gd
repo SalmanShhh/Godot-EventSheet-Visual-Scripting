@@ -3637,21 +3637,24 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 	# the event has no real conditions yet); it always stays in the layout model, and
 	# _count_event_lines mirrors its line (maxi(...) keeps it below the Every Tick placeholder,
 	# which sits at line 0 without advancing condition_line_index).
+	# A FIGURE gets neither affordance: it is an illustration, so an "+ Add condition" line is a
+	# click target that does nothing, and it reserves a whole empty line of height under every row.
 	var add_condition_color: Color = condition_style_meta.get("text_color", EventSheetPalette.COLOR_CONDITION)
 	add_condition_color.a *= 0.55
-	spans.append(
-		_make_span(
-			EventSheetL10n.translate("+ Add condition"),
-			SemanticSpan.SpanType.CONDITION,
-			{
-				"lane": "condition",
-				"kind": "add_condition",
-				"line_index": maxi(condition_line_index, 1),
-				"text_color": add_condition_color,
-				"font_size_delta": condition_style_meta.get("font_size_delta", 0)
-			}
+	if not _viewport.figure_mode:
+		spans.append(
+			_make_span(
+				EventSheetL10n.translate("+ Add condition"),
+				SemanticSpan.SpanType.CONDITION,
+				{
+					"lane": "condition",
+					"kind": "add_condition",
+					"line_index": maxi(condition_line_index, 1),
+					"text_color": add_condition_color,
+					"font_size_delta": condition_style_meta.get("font_size_delta", 0)
+				}
+			)
 		)
-	)
 	if not event_row.actions.is_empty():
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
@@ -3902,19 +3905,20 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 	# Event-sheet-style faint "Add action" affordance on its own line below the actions.
 	var add_action_color: Color = action_style_meta.get("text_color", EventSheetPalette.COLOR_ACTION)
 	add_action_color.a *= 0.55
-	spans.append(
-		_make_span(
-			EventSheetL10n.translate("+ Add action"),
-			SemanticSpan.SpanType.ACTION,
-			{
-				"lane": "action",
-				"kind": "add_action",
-				"line_index": add_action_line_index,
-				"text_color": add_action_color,
-				"font_size_delta": action_style_meta.get("font_size_delta", 0)
-			}
+	if not _viewport.figure_mode:
+		spans.append(
+			_make_span(
+				EventSheetL10n.translate("+ Add action"),
+				SemanticSpan.SpanType.ACTION,
+				{
+					"lane": "action",
+					"kind": "add_action",
+					"line_index": add_action_line_index,
+					"text_color": add_action_color,
+					"font_size_delta": action_style_meta.get("font_size_delta", 0)
+				}
+			)
 		)
-	)
 	return spans
 
 
@@ -3953,7 +3957,11 @@ func _count_event_lines(event_row: EventRow) -> int:
 	# "+ Add condition" sits on its own line below the conditions, so the lane's last line index
 	# equals the condition line count - except an empty lane, where the Every Tick placeholder
 	# holds line 0 and the affordance takes line 1 (mirrors _build_event_spans exactly).
-	var max_condition_line: int = maxi(condition_lines, 1)
+	# A FIGURE gets no "+ Add" affordance in either lane (_build_event_spans drops both), so its
+	# last line is the last real one: condition_lines - 1, or 0 for the Every Tick placeholder.
+	# Mirroring that here is what keeps the invariant above true in figure mode - and it is what
+	# actually saves the empty line of height, since any lazy measure reads this and not the spans.
+	var max_condition_line: int = maxi(condition_lines - 1, 0) if _viewport.figure_mode else maxi(condition_lines, 1)
 	# Action lane: "+ Add" sits on its own line below the actions (and below the event comment
 	# when present), so the lane spans action_count (+ comment) + 1 lines. In-flow GDScript
 	# blocks occupy one line per code line.
@@ -3974,9 +3982,10 @@ func _count_event_lines(event_row: EventRow) -> int:
 				action_count += match_resource.branches_text.split("\n").size() + 1
 		elif action_resource is CommentRow:
 			action_count += maxi((action_resource as CommentRow).text.split("\n").size(), 1)
-	var max_action_line: int = action_count
+	var max_action_line: int = action_count if not _viewport.figure_mode else action_count - 1
 	if not event_row.comment.is_empty():
-		max_action_line = maxi(action_count, _viewport.COMMENT_DEFAULT_LINE_INDEX) + 1
+		var comment_line: int = maxi(action_count, _viewport.COMMENT_DEFAULT_LINE_INDEX)
+		max_action_line = comment_line if _viewport.figure_mode else comment_line + 1
 	return maxi(max_condition_line, max_action_line) + 1
 
 

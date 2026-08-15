@@ -210,6 +210,30 @@ var _shared_state: EventSheetViewState = null
 # Companion panes (split view) are read/navigate-only: inline editing is disabled and the
 # dock connects no edit signals to them. Selection, scroll, zoom, folds all work.
 var companion_mode: bool = false
+## FIGURE MODE: this viewport is a read-only documentation illustration, not an editing
+## surface. Set through set_figure_mode() - never assigned directly, because turning it on
+## also has to reconfigure focus, mouse filter and processing (see that method).
+var figure_mode: bool = false
+## The width a figure MEASURES at before it knows its own. Deliberately SMALL: the object-name
+## column is a fraction of its lane, so a measurement taken at a wide probe demands a wide column,
+## which demands a wider figure. Settling upward from a narrow start finds the smallest width at
+## which the rows fit; settling downward from a wide one finds the widest, which is not the answer.
+const FIGURE_PROBE_WIDTH := 240.0
+## How many measure-and-relayout passes a figure gets before it accepts the width it has. The
+## measurement depends on the width it is taken at, so one pass under-reports.
+const FIGURE_SETTLE_PASSES := 6
+## The logical width a figure lays its rows out at. Starts at the probe width and settles on
+## content_width() (or the host's override) the first time the canvas is sized.
+var _figure_logical_width: float = FIGURE_PROBE_WIDTH
+## An explicit width a figure host imposes instead of the measured content width; <= 0 = measure.
+var _figure_width_override: float = -1.0
+## A ceiling on the measured width: content wider than its host wraps inside the host instead of
+## overflowing it, exactly as it would in the reader's own sheet at that width. <= 0 = no ceiling.
+var _figure_max_width: float = -1.0
+## Cached content_width(), invalidated whenever the rows are rebuilt. The measurement reads the
+## current logical width (object columns scale with the lane), so caching it also stops the
+## width and the measurement chasing each other frame to frame.
+var _figure_content_width: float = -1.0
 var _focused_lane: String = "condition"
 var _selection_anchor_index: int = -1
 var _external_span_edit_handler_enabled: bool = false
@@ -269,7 +293,11 @@ func _init() -> void:
 
 func _ready() -> void:
 	_configure_viewport()
-	set_process(true)
+	# A figure has no scroll container to poll and no firing intensity to decay, so the
+	# per-frame poll would be pure cost. _ready runs AFTER set_figure_mode in every host that
+	# builds the figure before adding it, which is why the flag is honored here and not only
+	# in the setter - an unconditional set_process(true) silently re-enabled it.
+	set_process(not figure_mode)
 	_refresh_rows()
 
 
@@ -1509,12 +1537,16 @@ func _draw() -> void:
 	var background_color: Color = _get_event_style().sheet_background_color
 	_layout_cache.reset(width)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
+	# A figure is exactly as tall as its rows; the 240 px floor is the editing surface's.
+	var background_height: float = size.y / zoom if figure_mode else max(size.y / zoom, 240.0)
 	draw_rect(
-		Rect2(Vector2.ZERO, Vector2(width, max(size.y / zoom, 240.0))),
+		Rect2(Vector2.ZERO, Vector2(width, background_height)),
 		background_color,
 		true
 	)
-	if _empty_state_helper.is_sheet_visually_empty():
+	# The getting-started overlay registers real clickable CTA rects, so it must never appear in
+	# an illustration. EventSheetDocFigure refuses an empty sheet up front; this is the backstop.
+	if not figure_mode and _empty_state_helper.is_sheet_visually_empty():
 		_empty_state_helper.draw_empty_state(width)
 		return
 	# Populated sheet: drop any button rects from a previous empty frame so they can't eat clicks.
@@ -1790,6 +1822,12 @@ func _handle_editing_key(event: InputEventKey) -> void:
 func _refresh_rows() -> void:
 	# Spans are rebuilt below; a param cursor into the old spans would dangle.
 	_param_cursor = {}
+	# A figure's measured width is a property of its rows, so it dies with them - and the settle
+	# restarts from the narrow probe, or new rows would only ever be measured against the width
+	# the OLD rows happened to need.
+	_figure_content_width = -1.0
+	if figure_mode:
+		_figure_logical_width = FIGURE_PROBE_WIDTH
 	_root_rows = _build_rows_from_sheet(_sheet)
 	_update_layout_style_signature(_get_font_size())
 	_group_breadcrumb.invalidate()
@@ -2271,7 +2309,72 @@ func live_value_chip_for(row_data: EventRowData) -> String:
 	return _live_values_helper.chip_for(row_data)
 
 
+## Figure mode: this viewport is a read-only doc illustration, not an editing surface.
+## Suppresses the footer CTA, ALL pointer interaction, the per-frame scroll poll, and sizes the
+## canvas to its rows instead of filling the host - in BOTH axes.
+##
+## Turning it on is more than a flag: the shipped defaults actively fight a figure (focus is
+## FOCUS_ALL, the mouse filter is STOP, a right-press grabs focus before any hit test, Ctrl+wheel
+## zooms, and _ready re-enables processing). Every one of those is handled here or in the place
+## that would undo it, so a host only ever calls this one method.
+func set_figure_mode(enabled: bool) -> void:
+	if figure_mode == enabled:
+		return
+	figure_mode = enabled
+	if enabled:
+		# Inline editing off (the one thing companion_mode already gated), footers off - an
+		# illustration must never offer "+ Add event…".
+		companion_mode = true
+		show_add_event_footers = false
+		set_process(false)
+	else:
+		companion_mode = false
+		show_add_event_footers = true
+		_figure_logical_width = FIGURE_PROBE_WIDTH
+		if is_inside_tree():
+			set_process(true)
+	_figure_content_width = -1.0
+	_configure_viewport()
+	_refresh_rows()
+
+
+## An explicit logical width for a figure, instead of the measured content width. Pass a value
+## <= 0 to go back to measuring. Figure mode only; the editing surface always fills its host.
+func set_figure_width_override(width: float) -> void:
+	_figure_width_override = width
+	_figure_content_width = -1.0
+	if figure_mode:
+		_update_canvas_min_size()
+
+
+## A CEILING on a figure's measured width. Content that wants more room than its host has wraps
+## inside the host rather than overflowing it - which is what the same rows do in the reader's own
+## sheet at that width. Pass a value <= 0 to remove the ceiling. Figure mode only.
+func set_figure_max_width(width: float) -> void:
+	if is_equal_approx(_figure_max_width, width):
+		return
+	_figure_max_width = width
+	if figure_mode:
+		_update_canvas_min_size()
+
+
+## The measured height of the rows, ignoring the host-fill and the 240 px editor floor.
+func content_height() -> float:
+	return _row_metrics_helper.total_height()
+
+
+## The measured width of the widest row, ignoring the 640 px canvas floor. Figures in narrow
+## hosts (the ACE picker panel, a side dock) depend on this; without it every figure is >= 640 px.
+func content_width() -> float:
+	if _figure_content_width < 0.0:
+		_figure_content_width = _row_metrics_helper.natural_content_width()
+	return _figure_content_width
+
+
 func _update_canvas_min_size() -> void:
+	if figure_mode:
+		_update_figure_min_size()
+		return
 	var zoom: float = max(_zoom_factor, 0.001)
 	var canvas_width: float = max(_get_scroll_width(), 640.0 * zoom)
 	var total_height: float = _row_metrics_helper.total_height()
@@ -2279,6 +2382,43 @@ func _update_canvas_min_size() -> void:
 		canvas_width,
 		max(total_height * zoom, max(_get_viewport_height(), 240.0))
 	)
+	custom_minimum_size = target_size
+	update_minimum_size()
+	if size != target_size:
+		set_size(target_size)
+
+
+## A figure's canvas is its CONTENT in both axes: no host fill, no 240 px height floor, no
+## 640 px width floor. Row heights wrap to the canvas width, so the width has to settle before
+## the height is read - hence the rebuild when the settled width differs from the probe.
+func _update_figure_min_size() -> void:
+	var zoom: float = max(_zoom_factor, 0.001)
+	var width: float = maxf(_figure_width_override, 1.0)
+	if _figure_width_override <= 0.0:
+		# The measurement is taken at the current logical width (object columns scale with the
+		# lane), so measuring once at the probe width and settling there under-reports. Re-measure
+		# at the width just chosen until it stops moving - two passes in practice, bounded so a
+		# pathological row can never spin here.
+		width = 1.0
+		for _pass in range(FIGURE_SETTLE_PASSES):
+			# Widest measurement wins, so the settle can only grow. Taking the LAST measurement
+			# instead lets two widths trade places forever and leaves the figure at whichever the
+			# bound happened to stop on - which is how a cell ends up one pixel short and wraps.
+			width = maxf(width, content_width())
+			if is_equal_approx(width, _figure_logical_width):
+				break
+			_figure_logical_width = width
+			_figure_content_width = -1.0
+			_row_metrics_helper.rebuild()
+		# The settle's answer IS the content width, so content_width() reports what the figure
+		# settled on rather than whichever pass happened to be measured last.
+		_figure_content_width = width
+		if _figure_max_width > 0.0:
+			width = minf(width, _figure_max_width)
+	if not is_equal_approx(width, _figure_logical_width):
+		_figure_logical_width = width
+		_row_metrics_helper.rebuild()
+	var target_size: Vector2 = Vector2(width * zoom, maxf(_row_metrics_helper.total_height() * zoom, 1.0))
 	custom_minimum_size = target_size
 	update_minimum_size()
 	if size != target_size:
@@ -2304,6 +2444,10 @@ func _to_logical_position(position: Vector2) -> Vector2:
 
 
 func _get_logical_canvas_width() -> float:
+	# A figure lays out at its own settled width - the 640 px floor below is exactly what a
+	# narrow host (a picker panel, a side dock) cannot afford.
+	if figure_mode:
+		return maxf(_figure_logical_width, 1.0)
 	return max(max(size.x, _get_scroll_width()), 640.0) / max(_zoom_factor, 0.001)
 
 
@@ -3347,11 +3491,26 @@ func set_row_disabled(row_uid: String, disabled: bool) -> void:
 
 
 func _configure_viewport() -> void:
+	# Runs from _init AND from _ready, so a figure configured before it entered the tree would
+	# otherwise be handed the editing surface's focus and mouse settings back on tree entry.
+	if figure_mode:
+		_configure_figure_viewport()
+		return
 	focus_mode = Control.FOCUS_ALL
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+
+func _configure_figure_viewport() -> void:
+	focus_mode = Control.FOCUS_NONE
+	# Pointer events never reach a figure at all: the input handlers early-return as well, but
+	# an illustration that highlights rows under the cursor already reads as an editing surface.
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# A figure sizes to its rows, so it must not be stretched by its host in either axis.
+	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 
 
 func _find_definition(provider_id: String, ace_id: String) -> ACEDefinition:
