@@ -228,6 +228,13 @@ func unhandled_key_input(event: InputEvent) -> void:
 		_dock._ace_picker.close()
 		_dock.accept_event()
 		return
+	# F1 explains the selected row. Deliberately ABOVE the typing suppression and outside the
+	# rebindable table: help is the one key a reader expects to work mid-edit, and it is the
+	# universal help key rather than a preference. With nothing selected it opens the index.
+	if key_event.keycode == KEY_F1:
+		_dock.open_documentation()
+		_dock.accept_event()
+		return
 	# Esc clears the live filter lens (after the picker check - closing a popup wins).
 	if key_event.keycode == KEY_ESCAPE and _dock._viewport != null and _dock._viewport.lens_active():
 		_dock._apply_lens("")

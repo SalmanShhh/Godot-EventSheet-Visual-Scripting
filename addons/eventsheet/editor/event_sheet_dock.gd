@@ -215,6 +215,7 @@ var _ai: EventSheetAIGenerateWindow = EventSheetAIGenerateWindow.new()  # Edit �
 var _sheet_type: EventSheetSheetTypeDialog = EventSheetSheetTypeDialog.new()  # Sheet ▸ Sheet Type… dialog shell (dock/sheet_type_dialog.gd)
 var _session: EventSheetSessionStore = EventSheetSessionStore.new()  # open-tabs restore across restarts (event_sheet_session_store.gd)
 var _shortcuts: EventSheetShortcutsDialog = EventSheetShortcutsDialog.new()  # Tools ▸ Keyboard Shortcuts editor (event_sheet_shortcuts_dialog.gd)
+var _docs: EventSheetDocWindow = EventSheetDocWindow.new()  # Tools ▸ Documentation… / F1 / "What does this do?" (docs/doc_window.gd)
 var _rename: EventSheetRenameRefactor = EventSheetRenameRefactor.new()  # variable rename engine + "Rename Everywhere" dialog (event_sheet_rename_refactor.gd)
 var _variables: EventSheetVariablesManager = EventSheetVariablesManager.new()  # global/local/tree variable authoring + usage scan (dock/variables_manager.gd)
 var _multi_view: EventSheetMultiViewManager = EventSheetMultiViewManager.new()  # split-view subsystem: second pane over the same sheet (dock/multi_view_manager.gd)
@@ -341,6 +342,16 @@ func _init() -> void:
 			return EventSheetLanguageVariantsDialog.names_an_asset(resource),
 		func(resource: Resource) -> void:
 			_language_variants_dialog.open(resource))
+	# "What does this do?" rides the same seam: the reference panel is a caller of the public
+	# extension point, not a new hard-wired menu const, so the seam stays dogfooded. The filter
+	# keeps the entry off a comment or an empty group - a row that names no verb has nothing to
+	# explain, and an entry that opens a blank page is worse than no entry.
+	_docs.init(self)
+	EventSheets.register_row_menu_item("What does this do?",
+		func(resource: Resource) -> bool:
+			return EventSheetDocExplain.can_explain(resource),
+		func(resource: Resource) -> void:
+			explain_row(resource))
 	_build_ui()
 
 var _editor_dialogs_initialized: bool = false
@@ -1298,8 +1309,8 @@ func _on_paste_requested() -> void:  # menu_bar Edit menu + event_sheet_editor_t
 	_clipboard_glue._on_paste_requested()
 
 
-func _paste_snippet_text(text: String) -> bool:  # author_actions _insert_snippet_path + snippet_share_test
-	return _clipboard_glue._paste_snippet_text(text)
+func _paste_snippet_text(text: String, action_name: String = "Paste Snippet") -> bool:  # author_actions _insert_snippet_path + snippet_share_test + EventSheets.insert_snippet
+	return _clipboard_glue._paste_snippet_text(text, action_name)
 
 
 func _add_gdscript_action_to_context_row() -> void:  # row context menu + inflow_gdscript_test
@@ -2703,6 +2714,60 @@ const FIXED_KEYS: Array = [
 # ── Keyboard Shortcuts editor (Tools menu; FIXED_KEYS above stays here) → event_sheet_shortcuts_dialog.gd ──
 func _open_shortcuts_help() -> void:
 	_shortcuts.open()
+
+
+## Tools ▸ Documentation…, F1, and EventSheets.open_docs all land here. With no id, the row the
+## reader is already looking at answers - which is what makes F1 feel like "explain THIS", not
+## "open the manual". Returns false when the id names nothing, so the caller can say so.
+func open_documentation(doc_id: String = "") -> bool:
+	var target: String = doc_id
+	if target.is_empty():
+		target = _selected_row_doc_id()
+	if _docs.open(target):
+		return true
+	if target.is_empty():
+		return false
+	# A verb the live registry no longer offers (a pack removed since the sheet was written):
+	# say so and fall back to the index rather than leaving the reader on a stale page. The
+	# ANSWER is still false - the reader gets a page, but the caller asked whether THAT id is
+	# documented, and reporting the index as a hit is how a renamed guide ships unnoticed.
+	_set_status("No documentation for that row - its verb is not in this project's vocabulary.", true)
+	_docs.open("")
+	return false
+
+
+## The row menu's "What does this do?". The CLICKED SPAN decides: right-clicking the third
+## condition explains that condition, not the row's trigger. The span metadata is the same
+## context the row menu itself was built from, so the entry and the page can never disagree.
+func explain_row(resource: Resource) -> void:
+	open_documentation(EventSheetDocExplain.doc_id_for_row(resource, _context_hit.get("span_metadata", {})))
+
+
+## The doc id of the first selected row that names a verb, or "" when the selection explains
+## nothing (a comment, a blank group, or no selection at all).
+func _selected_row_doc_id() -> String:
+	if _viewport == null:
+		return ""
+	for row_data: EventRowData in _viewport.get_selected_rows():
+		if row_data == null:
+			continue
+		var doc_id: String = EventSheetDocExplain.doc_id_for_row(row_data.source_resource)
+		if not doc_id.is_empty():
+			return doc_id
+	return ""
+
+
+## The picker's "read more" affordance: the highlighted verb's pack guide. Routed through the
+## public "addon:<pack>" doc id rather than straight at a URL, so this caller needs no edit the
+## day that id starts resolving to something other than a browser tab. The picker emits and
+## never navigates itself.
+func _on_picker_guide_requested(definition: ACEDefinition) -> void:
+	if definition == null:
+		return
+	var pack_dir: String = EventSheets.addon_pack_directory(definition.provider_id)
+	if pack_dir.is_empty() or not EventSheets.open_docs("addon:%s" % pack_dir):
+		return
+	_set_status("Opened %s in your browser." % EventSheets.addon_guide_for_pack(pack_dir).get_file())
 
 
 ## The addon's issue tracker. A plain constant rather than a project setting: it is where THIS

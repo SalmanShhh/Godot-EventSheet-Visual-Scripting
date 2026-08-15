@@ -453,6 +453,12 @@ func ensure_editor_dialogs_initialized() -> void:
 	_dock._ace_picker.set_behavior_mode_provider(func() -> bool: return _dock._current_sheet != null and _dock._current_sheet.behavior_mode)
 	_dock._variable_dlg.simple_mode_provider = func() -> bool: return _dock._simple_mode
 	_dock._ace_picker.ace_selected.connect(_dock._on_ace_picker_selected)
+	# The figure's "read more" affordance, filled in: the label is DERIVED from the verb's pack
+	# (provider -> pack directory -> guide name), so a pack that ships tomorrow gets the button
+	# with no wiring, and a verb with no pack shows no button at all.
+	_dock._ace_picker.set_guide_label_provider(func(definition: ACEDefinition) -> String:
+		return EventSheetDocExplain.guide_label(definition.provider_id) if definition != null else "")
+	_dock._ace_picker.guide_requested.connect(_dock._on_picker_guide_requested)
 	_dock._ace_params.init_dialog(_dock, _dock._ace_registry, _dock._collect_sheet_variable_names)
 	_dock._ace_params.set_lint_context_provider(func() -> EventSheetResource: return _dock._current_sheet)
 	_dock._ace_params.set_variable_creator(_dock._create_variable_quickfix)

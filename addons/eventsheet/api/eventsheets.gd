@@ -1507,6 +1507,301 @@ static func collection_decl(variable_name: String, entries: Array, dictionary: b
 	return decl
 
 
+# ── Documentation links (the guides live in the repo, not in the plugin zip) ──────────
+#
+# The release zip ships `addons/` only, so `res://docs/...` does not exist in an installed
+# project - a button that opens a local guide path opens nothing. Every doc link therefore
+# resolves to the repo, PINNED TO THE RELEASED TAG, so the page a reader lands on describes
+# the exact build they installed rather than whatever `main` looks like today.
+
+
+## The repository the released plugin is published from. Doc links are built against it.
+const DOCS_REPO_URL: String = "https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting"
+
+## Where a pack's guide lives, relative to the repo root.
+const ADDON_GUIDE_DIR: String = "docs/Addons"
+
+## Pack directories whose guide file is NOT the Title-Case-Words spelling of the directory:
+## a plural ("priced_table" is documented as Priced-Tables), a different product name
+## ("utility_ai" ships as UtilityBrain), or a companion resource/loader pack documented
+## inside its partner's guide ("quest_resource" belongs to Quest). This is an OVERRIDE list,
+## not a mapping table: any pack the derivation already reaches stays out of it, and
+## the suite sweeps every pack directory against the shipped guides, so a renamed guide fails
+## a test instead of shipping a dead link.
+const ADDON_GUIDE_OVERRIDES := {
+	"abilities": "Simple-Abilities",
+	"ability_set_resource": "Simple-Abilities",
+	"background_runner": "Run-In-Background",
+	"big_number": "Big-Numbers",
+	"canvas_surface": "Drawing-Canvas",
+	"combo_box": "ComboBox",
+	"drag_drop": "Drag-And-Drop",
+	"drawing_prefab_resource": "Drawing-Canvas",
+	"drawing_prefab_stamp": "Drawing-Canvas",
+	"encounter_resource": "Encounter-Timeline",
+	"home_leash": "Home-And-Leash",
+	"loot_loader": "Loot-Table",
+	"loot_table_resource": "Loot-Table",
+	"object_pool": "ObjectPool",
+	"platformer_movement": "Platformer",
+	"price_table_resource": "Priced-Tables",
+	"priced_table": "Priced-Tables",
+	"proc_room": "ProcRoom",
+	"quest_resource": "Quest",
+	"random_table_resource": "Advanced-Random",
+	"skin_catalog_loader": "SkinVault",
+	"skin_catalog_resource": "SkinVault",
+	"skin_vault": "SkinVault",
+	"slide_move": "Slide-Movement",
+	"stat_forge": "StatForge",
+	"stat_sheet_resource": "StatForge",
+	"storylet_resource": "Storylet-Weaver",
+	"uhtn_plan_resource": "UHTN-Planning",
+	"utility_ai": "UtilityBrain",
+}
+
+## Words that are acronyms in a guide file name, so `fps_controller` derives FPS-Controller
+## rather than Fps-Controller.
+const _GUIDE_ACRONYMS := {
+	"2d": "2D", "3d": "3D", "ai": "AI", "fps": "FPS", "htn": "HTN", "hud": "HUD",
+	"npc": "NPC", "uhtn": "UHTN", "ui": "UI",
+}
+
+## provider id -> pack directory, built in ONE pass over the addon scripts and reused for the
+## whole session. Per-provider scanning was measured at ~63 ms per newly seen provider on a
+## corpus this size, and this map is read on the picker's selection-change path, so a
+## per-provider scan is a visible stall every time the reader arrows onto a new pack. Builtin
+## providers are not in the map at all - the miss must cost nothing, not a full corpus read.
+static var _pack_dir_by_provider: Dictionary = {}
+## Set ONLY by the function that fills the map completely (a flag pre-set by a partial scan is
+## how a lazy cache silently loses entries).
+static var _pack_dir_map_built: bool = false
+## pack directory -> its `@ace_help` URL ("" when it declares none), so the doc panel's per-page
+## read path also costs one directory read per pack per session rather than one per page.
+static var _pack_help_by_dir: Dictionary = {}
+
+
+## The version every doc link is pinned to - the same constant the release ritual bumps, so a
+## shipped build always points at its own tag.
+static func docs_version() -> String:
+	return SheetCompiler.VERSION
+
+
+## The absolute URL of a repo-relative documentation path, pinned to the released tag.
+## `relative_path` is repo-relative ("docs/GUIDE-C3-MIGRATION.md"); `anchor` is a
+## GitHub heading slug, with or without its leading "#". Returns "" for an empty path.
+## An already-absolute http(s) URL is returned unchanged, so a pack that hosts its guide
+## elsewhere flows through the same call.
+static func doc_url(relative_path: String, anchor: String = "") -> String:
+	var path: String = relative_path.strip_edges().trim_prefix("res://").trim_prefix("/")
+	if path.is_empty():
+		return ""
+	var url: String = path
+	if not (path.begins_with("http://") or path.begins_with("https://")):
+		url = "%s/blob/v%s/%s" % [DOCS_REPO_URL, docs_version(), path]
+	var slug: String = anchor.strip_edges().trim_prefix("#")
+	if not slug.is_empty():
+		url += "#" + slug
+	return url
+
+
+## Opens a repo guide in the reader's browser, pinned to the released tag so the page always
+## matches the installed plugin. Returns false when the path is empty (nothing is opened).
+static func open_online_doc(relative_path: String, anchor: String = "") -> bool:
+	var url: String = doc_url(relative_path, anchor)
+	if url.is_empty():
+		return false
+	OS.shell_open(url)
+	return true
+
+
+## The docs/Addons guide file name (no extension) for a pack directory: the override when the
+## pack has one, otherwise the Title-Case-Words spelling of the directory. "" for an empty name.
+static func addon_guide_name(pack_dir: String) -> String:
+	var directory: String = pack_dir.strip_edges().trim_suffix("/").get_file()
+	if directory.is_empty():
+		return ""
+	if ADDON_GUIDE_OVERRIDES.has(directory):
+		return str(ADDON_GUIDE_OVERRIDES[directory])
+	var words: PackedStringArray = PackedStringArray()
+	for word: String in directory.split("_", false):
+		if _GUIDE_ACRONYMS.has(word.to_lower()):
+			words.append(str(_GUIDE_ACRONYMS[word.to_lower()]))
+		else:
+			words.append(word.substr(0, 1).to_upper() + word.substr(1))
+	return "-".join(words)
+
+
+## Where a pack's documentation lives: the pack's own `@ace_help` value when it set one (a
+## third party hosting docs elsewhere always wins), otherwise the derived repo-relative guide
+## path. "" when neither resolves. Pure - the caller supplies the help value - so the Phase 2
+## "addon:<pack>" doc ids and the picker's "Open <Pack>'s guide" button share one resolution.
+static func addon_guide_target(pack_dir: String, help_url: String = "") -> String:
+	var override: String = help_url.strip_edges()
+	if not override.is_empty():
+		return override
+	var guide: String = addon_guide_name(pack_dir)
+	if guide.is_empty():
+		return ""
+	return "%s/%s.md" % [ADDON_GUIDE_DIR, guide]
+
+
+## The pack directory a verb's provider id belongs to ("PricedTableBehavior" -> "priced_table"),
+## found by locating the script that declares that class_name under the addon directories.
+## "" for a builtin or project-local provider, which has no pack guide.
+static func addon_pack_directory(provider_id: String) -> String:
+	var wanted: String = provider_id.strip_edges()
+	if wanted.is_empty():
+		return ""
+	_ensure_pack_directory_map()
+	return str(_pack_dir_by_provider.get(wanted, ""))
+
+
+## Reads every addon script ONCE and records every class_name it finds against the directory it
+## was declared in. The scan already had to open every file to answer one question, so answering
+## all of them in the same pass is free - and it makes a builtin provider's "no pack" answer a
+## dictionary miss instead of a full-corpus read.
+static func _ensure_pack_directory_map() -> void:
+	if _pack_dir_map_built:
+		return
+	var matcher: RegEx = RegEx.create_from_string("(?m)^class_name[ \\t]+([A-Za-z_][A-Za-z0-9_]*)")
+	for script_path: String in EventSheetAddonScanner.list_addon_scripts():
+		var source: String = _read_text_file(script_path)
+		if source.is_empty():
+			continue
+		var directory: String = script_path.get_base_dir().get_file()
+		for found: RegExMatch in matcher.search_all(source):
+			var declared: String = found.get_string(1)
+			if not _pack_dir_by_provider.has(declared):
+				_pack_dir_by_provider[declared] = directory
+	_pack_dir_map_built = true
+
+
+## The documentation target for a PACK DIRECTORY: its own `@ace_help` URL when it declares one,
+## otherwise the derived docs/Addons guide path. "" for a directory that resolves to no guide.
+## This is what an "addon:<pack>" doc id resolves through.
+static func addon_guide_for_pack(pack_dir: String) -> String:
+	var directory: String = pack_dir.strip_edges().trim_suffix("/").get_file()
+	if directory.is_empty():
+		return ""
+	return addon_guide_target(directory, _addon_help_annotation(directory))
+
+
+## The documentation target for a verb's provider: its pack's `@ace_help` URL when the pack
+## declares one, otherwise the derived docs/Addons guide path. "" when the provider is not a
+## pack (builtin vocabulary, or a project-local provider script).
+static func addon_guide_for_provider(provider_id: String) -> String:
+	return addon_guide_for_pack(addon_pack_directory(provider_id))
+
+
+## Opens a pack's guide in the browser - the pinned repo page, or the pack's own `@ace_help`
+## URL. False when the provider has no guide, so a caller can hide the button.
+static func open_addon_guide(provider_id: String) -> bool:
+	return open_online_doc(addon_guide_for_provider(provider_id))
+
+
+## Opens the documentation surface on `doc_id`. THE one entry point - Tools ▸ Documentation…,
+## F1, the row menu's "What does this do?" and any third-party caller all come through here.
+##
+## The id scheme, frozen with this method:
+##   ""                             the index (guidance, plus the online guide list)
+##   "ace:<provider_id>/<ace_id>"   one verb, drawn from the live registry
+##   "section:<header text>"        a picker category and its blurb
+##   "addon:<pack directory>"       a pack's guide
+##
+## An id that names nothing real returns FALSE and warns - never a blank page, because a
+## silently empty doc surface is exactly how a renamed guide ships unnoticed.
+##
+## `anchor` is a heading slug. It reaches the browser routes today (the guides live in the repo,
+## so a pack guide opens at its own heading); the generated verb and section pages are single
+## cards with nothing to jump to, so they ignore it.
+##
+## "addon:" deliberately opens the browser rather than a panel: the guide corpus does not ship
+## inside the plugin, and the repo page renders its images and tables at full fidelity. A caller
+## never has to know which route it got - that is the point of one entry point.
+static func open_docs(doc_id: String = "", anchor: String = "") -> bool:
+	var route: Dictionary = EventSheetDocExplain.resolve(doc_id)
+	if not bool(route.get("valid", false)):
+		push_warning("EventSheets.open_docs: nothing is documented under \"%s\"." % doc_id)
+		return false
+	if str(route.get("scheme", "")) == "addon":
+		return open_online_doc(str(route.get("target", "")), anchor)
+	if not _dock_alive():
+		return false
+	# resolve() can only check an "ace:" id's SHAPE - a verb's existence needs the running
+	# registry, which lives here. Without this, "ace:RemovedPack/Verb" (a verb whose pack was
+	# renamed or deleted) reads as a valid route and the host's index fallback turns the miss
+	# into a `true`, which is exactly the silently-blank-page failure this id scheme forbids.
+	if str(route.get("scheme", "")) == "ace":
+		if find_ace(str(route.get("provider_id", "")), str(route.get("ace_id", ""))) == null:
+			push_warning("EventSheets.open_docs: nothing is documented under \"%s\"." % doc_id)
+			return false
+	return _dock.open_documentation(doc_id)
+
+
+## The `## @ace_help("...")` value declared anywhere in a pack directory, or "". Cached per
+## directory: this sits on the doc panel's per-page path, and a pack's scripts do not move
+## while the editor is open.
+static func _addon_help_annotation(pack_dir: String) -> String:
+	if _pack_help_by_dir.has(pack_dir):
+		return str(_pack_help_by_dir[pack_dir])
+	var found: String = _help_annotation_in_dir("res://eventsheet_addons/".path_join(pack_dir))
+	_pack_help_by_dir[pack_dir] = found
+	return found
+
+
+## The `## @ace_help("...")` value declared by any .gd file directly inside `directory`, or "".
+## Takes an absolute directory rather than a pack name so the read path itself is testable
+## against a fixture rather than only through the pure caller-supplies-the-URL route.
+static func _help_annotation_in_dir(directory: String) -> String:
+	var dir: DirAccess = DirAccess.open(directory)
+	if dir == null:
+		return ""
+	var matcher: RegEx = RegEx.create_from_string("@ace_help\\(\\s*\"([^\"]+)\"\\s*\\)")
+	for entry: String in dir.get_files():
+		if entry.get_extension() != "gd":
+			continue
+		var found: RegExMatch = matcher.search(_read_text_file(directory.path_join(entry)))
+		if found != null:
+			return found.get_string(1).strip_edges()
+	return ""
+
+
+static func _read_text_file(path: String) -> String:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return ""
+	return file.get_as_text()
+
+
+# ── Inserting authored rows (doc figures, snippet libraries, generators) ──────────────
+
+
+## Inserts snippet TEXT (see EventSheetSnippet - the same versioned form the editor's Copy
+## produces) below the selection as ONE undo step, creating any sheet variables it needs.
+## Returns false when no sheet is open or the text is not a snippet.
+##
+## This is the ONLY public insertion route, and it is deliberately a thin front on the dock's
+## already-guarded paste path: that path assigns fresh event uids and creates missing sheet
+## variables without ever overwriting one. `label` names the undo step, so "Insert Figure" reads
+## as itself in the undo history.
+##
+## Never hold a row or resource reference across this call - the undo funnel commits by replacing
+## resources with snapshot duplicates, so re-fetch from current_sheet() afterwards.
+static func insert_snippet(text: String, label: String = "Insert Snippet") -> bool:
+	if not _dock_alive():
+		return false
+	if not EventSheetSnippet.is_snippet_text(text):
+		return false
+	# The sheet is checked HERE rather than inherited from the paste path's answer: that path
+	# returns true for "this text WAS a snippet, do not fall back to the internal clipboard",
+	# which is a different question and is true even when it inserted nothing. A docs window that
+	# outlived a tab close would otherwise report a successful insert into no sheet at all.
+	if current_sheet() == null:
+		return false
+	return _dock._paste_snippet_text(text, label)
+
+
 # ── Internal wiring (called by the plugin itself) ─────────────────────────────────────
 
 

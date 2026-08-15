@@ -210,13 +210,15 @@ func _on_paste_requested() -> void:
 ## Pastes a shareable snippet from text (see EventSheetSnippet). Returns false when the
 ## text is not a snippet so the caller falls back to the internal clipboard. Pasted events
 ## get fresh UIDs; sheet variables the snippet references are created when missing (never
-## overwritten), so the pasted rows compile immediately.
-func _paste_snippet_text(text: String) -> bool:
+## overwritten), so the pasted rows compile immediately. `action_name` names the undo step, so a
+## caller that is not the Paste command (EventSheets.insert_snippet, a doc figure's Insert) reads
+## as itself in the undo history without growing a second insertion path.
+func _paste_snippet_text(text: String, action_name: String = "Paste Snippet") -> bool:
 	if not EventSheetSnippet.is_snippet_text(text):
 		return false
 	if not _dock._ensure_sheet_for_editing():
 		return true
-	paste_snippet(EventSheetSnippet.deserialize(text))
+	paste_snippet(EventSheetSnippet.deserialize(text), action_name)
 	return true
 
 
