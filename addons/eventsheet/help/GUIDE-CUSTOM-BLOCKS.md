@@ -1,0 +1,622 @@
+# Custom Blocks Guide
+
+ACEs define what a row can *do* inside events. **Custom blocks** define new *kinds of rows* that live between events: preloads, region markers, notes, config tables, pack-defined data blocks, anything a sheet needs that is not an event. This guide covers the whole Custom Block API: how to register a kind in one small script, the contract every kind implements, the add/edit UX your kind gets for free, and how the byte-gated round-trip guarantees a kind can never corrupt a file. Two block kinds ship built in, and the plugin's own enum and signal rows run on the same API, so everything here is the exact path the built-ins take.
+
+![A sheet's custom blocks between events: two preload rows reading like variables (JumpSfx : AudioStream [preload] = res://sfx/jump.ogg), an enum, a two-lane signal row with its typed value on the left and an internal chip on the right, and a colored region wrapping an On Ready event - each a registered kind that compiles to plain GDScript](images/custom-blocks.png)
+
+## Table of Contents
+
+1. [Scenarios Where Custom Blocks Excel](#1-scenarios-where-custom-blocks-excel)
+2. [Core Concepts](#2-core-concepts)
+3. [Quick Start](#3-quick-start)
+3b. [The No-Code Path: simple_block_kind](#3b-the-no-code-path-simple_block_kind)
+4. [The Four Ways to Register a Kind](#4-the-four-ways-to-register-a-kind)
+5. [The Kind Contract Reference](#5-the-kind-contract-reference)
+6. [Schema Kinds vs Resource Kinds](#6-schema-kinds-vs-resource-kinds)
+7. [The UX Your Kind Gets for Free](#7-the-ux-your-kind-gets-for-free)
+8. [Round-Trip Safety: The Byte Gate](#8-round-trip-safety-the-byte-gate)
+9. [Built-in Kinds Reference](#9-built-in-kinds-reference)
+10. [Use Cases](#10-use-cases)
+11. [Testing Custom Blocks](#11-testing-custom-blocks)
+12. [Tips and Common Mistakes](#12-tips-and-common-mistakes)
+
+---
+
+## 1. Scenarios Where Custom Blocks Excel
+
+- **A pack that ships data, not just verbs.** Your loot pack's ACEs read a drop table. A `my_pack.drop_table` block puts that table IN the sheet as an editable row instead of a raw GDScript dictionary.
+- **Structure markers that survive the round-trip.** `#region Combat` fences from hand-written scripts open as first-class **Region** rows, stay editable, and write back byte-identically. Matched pairs FOLD like the script editor, draw a thin colored bubble around everything they cover (groups and every other block kind nest inside), glow while you drag a row into them, and carry an editable color + description.
+- **Resource shortcuts designers actually use.** A **Preload Resource** block (`const Sfx := preload("res://sfx/jump.ogg")`) is one dialog with two fields instead of a code block someone has to type correctly.
+- **Team conventions as rows.** A `## NOTE:` line is just a comment until a 30-line kind turns every one of them into a highlighted, searchable **Note** row (this exact kind ships as the living example).
+- **Config blocks with a form.** A `const TUNING := {...}` dictionary becomes a block whose fields designers edit in a dialog, with the GDScript emitted canonically underneath.
+- **Vocabulary from another plugin.** A separate editor plugin can register kinds in code through the bridge, no files dropped into this plugin's folders.
+
+---
+
+## 2. Core Concepts
+
+### The problem this API solves
+
+Before the API, every structural row kind (enums, signals, variables) was hand-wired through five separate files: a Resource class, a compiler emit branch, an importer lift probe, a viewport render branch, and a dock dialog. Adding a kind meant touching all five, so only the plugin itself could add kinds. The Custom Block API wires those seams **once, generically**: you write one small class, register it, and the compiler, importer, viewport, Add menu, command palette, and edit dialog all pick it up.
+
+### Key design decisions
+
+- **One generic instance class.** Blocks are stored as `CustomBlockRow` (a `kind_id` plus a `fields` Dictionary), never one Resource class per kind. Sheets stay loadable when a kind's pack is missing, the undo system needs no new cases, and the file formats never learn new class names.
+- **The byte gate.** A kind's `lift()` claim is kept only when re-emitting the recovered block reproduces the source lines **byte-for-byte**. A permissive or buggy lift cannot corrupt a file; it just fails to claim, and the lines stay a plain GDScript block.
+- **Graceful degradation.** Emitted lines are plain GDScript. If the sheet opens somewhere the kind is not registered, the lines simply do not lift: they render as a readable code block, compile fine, and are preserved verbatim on save.
+- **`kind_id` is public API.** Once a kind ships and sheets use it, its id and emitted shape are a compatibility promise, the same covenant `ace_id`s carry.
+- **A worked example ships in the plugin.** `CollectionDeclRow` (a multi-line `var x := { ... }` held as a head, a closer and per-entry values) is the same contract in miniature, if you want to read one end to end: its `parse()` IS the byte gate - it claims a literal only when `emit_lines()` reproduces the source exactly, and `emit_lines()` is the *same* function the compiler emits from, so the gate and the output can never disagree. Its mutations live on the resource (`set_entry`, `set_entry_text`), so the entry dialog, the inline row edit and the public `EventSheets.collection_decl()` builder all share one path. It is a built-in kind rather than a Custom Block - wired the five-file way this API exists to save you from - so read it for the *contract*, not the plumbing.
+
+### Key concepts at a glance
+
+| Term | What it means |
+|------|----------------|
+| **Kind** | One registered row type: an `EventSheetBlockKind` subclass (stateless, one instance per session). |
+| **`kind_id`** | The kind's stable public id (`"preload"`, `"my_pack.drop_table"`). Namespace pack kinds with `<pack>.`. |
+| **`CustomBlockRow`** | The stored instance: `kind_id` + a `fields` Dictionary per the kind's schema. |
+| **Schema kind** | A kind whose instances are `CustomBlockRow`s and whose dialog is auto-built from `fields()`. |
+| **Resource kind** | A kind that owns an existing Resource class instead (the built-in enum and signal rows). |
+| **The byte gate** | Lift claims survive only if canonical re-emission matches the source exactly. |
+
+---
+
+## 3. Quick Start
+
+Drop this script anywhere under `res://eventsheet_addons/` and it registers automatically; no manifest, no plugin edits. It is the shipped `demo_note_block.gd`, the whole thing:
+
+<!-- no-figure -->
+```gdscript
+@tool
+extends EventSheetBlockKind
+
+func _init() -> void:
+	kind_id = "demo.note"      # stable public id; namespace pack kinds "<pack>.<name>"
+	title = "Note"             # the row badge, the Add-menu entry, the dialog title
+
+func fields() -> Array[Dictionary]:
+	# The schema drives EVERYTHING: the auto-built add/edit dialog (a text field per
+	# String, a checkbox per bool, a spinner per int/float) and default values.
+	return [{"id": "text", "label": "Note", "type": TYPE_STRING, "default": ""}]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	# Pure: same fields, same bytes. This is the GDScript your block compiles to.
+	var text: String = str(block.fields.get("text", "")).strip_edges()
+	return PackedStringArray() if text.is_empty() else PackedStringArray(["## NOTE: %s" % text])
+
+func lift(lines: PackedStringArray, i: int) -> Dictionary:
+	# Claim source lines when a .gd opens as a sheet. verified_claim() re-emits your
+	# recovered fields and drops the claim unless the bytes match the source exactly.
+	if not lines[i].begins_with("## NOTE: "):
+		return {}
+	return verified_claim({"text": lines[i].substr(9)}, lines, i, 1)
+
+func summary(block: CustomBlockRow) -> String:
+	return str(block.fields.get("text", ""))  # the row's one-line display
+```
+
+That is the entire integration. Immediately:
+
+- **Add ▾ → Note…** and **Ctrl+P → "Add Note…"** create one through a dialog built from the schema.
+- Opening any `.gd` with a `## NOTE: tune this` line shows a highlighted **Note** row instead of prelude text.
+- Double-clicking the row edits it; saving writes the exact same line back.
+
+---
+
+## 3b. The No-Code Path: simple_block_kind
+
+You do not have to subclass anything. Hand `EventSheets.simple_block_kind()` a plain Dictionary and
+register what it hands back:
+
+```gdscript
+func _enter_tree() -> void:
+    EventSheets.register_block_kind(EventSheets.simple_block_kind({
+        "kind_id": "my_pack.todo",
+        "title": "TODO",
+        "fields": [
+            {"id": "text", "label": "What", "type": TYPE_STRING, "default": "fix this"},
+            {"id": "priority", "label": "Priority", "type": TYPE_INT, "default": 2},
+        ],
+        "emit": "# TODO(p{priority}): {text}",
+        "summary": "TODO p{priority}: {text}",
+    }))
+```
+
+That is a complete, shippable block kind: it appears in **Add ▾**, gets a dialog built from its
+fields, draws a row, and compiles to the `emit` line.
+
+| Key | Meaning |
+|-----|---------|
+| `kind_id` | On-disk identity. Frozen once shipped - sheets already saved reference it by this string. |
+| `title` | Add-menu label and the row's badge. Localised through the editor's translation table. |
+| `category` | Free-text label carried on the kind (default `"Blocks"`). Reserved: nothing groups by it yet. |
+| `fields` | Array of `{id, label, type, default}`. `type` is a Godot `TYPE_*` constant; the dialog picks the control from it. Every entry is normalised by `EventSheets.param_spec` on the way in, so `default` and `default_value` are interchangeable, and a String field's `options` may be a plain list, a `{value: label}` Dictionary, or ready-made `{key, label}` pairs. |
+| `emit` | The GDScript template. One output line per line of the string, with `{field_id}` placeholders. |
+| `summary` | The one-line row text, same `{field_id}` placeholders. |
+| `lift` | Optional `func(lines, index) -> Dictionary` for reading the block back out of a `.gd`. |
+
+Two things worth knowing before you reach for the subclass:
+
+**Omitting `lift` is safe.** Forward emission and the row are complete without it. What you lose is
+reverse recovery: reopening the generated `.gd` shows your line as a verbatim GDScript block rather
+than an editable form. The file still round-trips byte-for-byte either way, because a block that
+cannot be lifted is simply never claimed.
+
+**Graduate to a full `EventSheetBlockKind` subclass** the moment you need `style()`, `validate()`,
+`display_spans()`, `hover_text()` or `edit()`. None of those have config keys, and none of them can
+be expressed as a template - they are code by nature.
+
+---
+
+## 4. The Four Ways to Register a Kind
+
+| Path | Best for | What you do | Effort |
+|------|----------|-------------|--------|
+| **1. Public API** | Plugins, tool scripts, tests | `EventSheets.register_block_kind(my_kind)` | One call, no bridge instance |
+| **2. Folder scan** | Packs and projects | Drop a script extending `EventSheetBlockKind` into `res://eventsheet_addons/` (scanned recursively, in sorted order) | Lowest: zero registration code |
+| **3. Bridge (code)** | Other editor plugins/tools | `EventForgeBridgeRuntime.new().register_block_kind(my_kind)` | One call |
+| **4. Built-in** | Contributing kinds into the plugin | Register in `EventSheetBlockRegistry._ensure_built_ins()` | Plugin PR |
+
+The Add menu labels a kind with its `title`, run through the editor's translation table; `kind_id` is the on-disk identity and never localises.
+
+Rules shared by all four:
+
+- Duplicate `kind_id`s warn and keep the **first** registration; resolution is deterministic (the folder scan sorts paths).
+- A pack kind without a `.` in its id gets a warning nudging the `<pack>.<name>` namespace.
+- Kinds registered after startup (a freshly dropped pack, a bridge call) appear without a restart; the Add menu and palette re-read the registry on open.
+
+---
+
+## 5. The Kind Contract Reference
+
+Everything a kind can implement. Only `kind_id`, `title`, and the pieces your kind needs are required; every method has a working default.
+
+| Member | Kind type | What it does |
+|--------|-----------|--------------|
+| `kind_id: String` | both | The stable public id. Compatibility covenant once shipped. |
+| `title: String` | both | The row badge text, the Add-menu entry, and the dialog title. |
+| `category: String` | both | A free-text label carried on the kind (default "Blocks"). Reserved for grouping: the Add menu currently lists every addable kind flat, so setting this changes nothing you can see yet. |
+| `fields() -> Array[Dictionary]` | schema | The schema: `{id, label, type: Variant.Type, default}` per field. Drives the auto-built dialog and defaults. A String field may add `"options"` (renders a dropdown) or `"hint": "resource_path"` (adds a Browse button that opens the editor's resource picker beside the text field). Options are either plain strings - each is its own label and stores that text - or `{key, label}` pairs, where the dropdown READS the label and the field STORES the key. A `TYPE_COLOR` field renders a "Tint" checkbox plus a colour picker and stores `"#rrggbb"` as a String (empty String = no colour), which is how the built-in Region kind carries its bubble colour. |
+| `emit(block) -> PackedStringArray` | schema | The GDScript this block compiles to. **Must be pure**: same fields, same bytes. Empty array emits nothing. |
+| `lift(lines, i) -> Dictionary` | both | Claim source lines starting at `i`. Return `{}` (not yours), `{"fields": ..., "consumed": n}` (schema), or `{"resource": row, "consumed": n}` (resource kind). |
+| `verified_claim(fields, lines, i, consumed)` | schema | The one-line byte gate for `lift()`: builds the candidate, re-emits it, returns the claim only on an exact byte match. |
+| `summary(block) -> String` | schema | The row's one-line display next to the badge. |
+| `display_spans(entry) -> Array[Dictionary]` | both | Optional FIRST-CLASS display: return `{text, role}` descriptors (roles `name` / `operator` / `type` / `value` / `badge`, a badge may add `badge_style: "const"` or `"scope"`) and the row renders with the plugin's variable-row styling instead of badge + summary. The built-in preload kind renders through this, reading `Name : Type [preload] = res://path` - the resource type is inferred from the file extension. Display only - never affects emission. |
+| `hover_text(entry) -> String` | both | Optional hover tooltip: what the block *means*. BBCode renders styled; `""` keeps the default. |
+| `handles(entry) -> bool` | resource | Claims a dedicated Resource class (`entry is EnumRow`). |
+| `emit_lines(entry) -> PackedStringArray` | resource | Emission for a handled Resource instance. |
+| `summary_for(entry) -> String` | resource | Display for a handled Resource instance. |
+| `source_map_kind() -> String` | both | The tag line-to-row tooling sees (`"enum"`, default `"custom_block"`). |
+| `addable() -> bool` | both | Whether the generic Add surfaces offer this kind. Resource kinds return `false` (their classes have dedicated flows). |
+| `edit(dock, block) -> bool` | both | Open your own editor and return `true`, or return `false` for the generic schema dialog. |
+| `validate(block) -> String` | both | Optional live validation. Return a short problem description, or `""` when the block is fine. The message renders inline on the row as a red `⚠ <message>`, so a bad field is caught while authoring instead of at compile time. |
+
+`CustomBlockRow` itself has three stored properties: `kind_id`, `fields`, and `enabled`.
+
+---
+
+## 6. Schema Kinds vs Resource Kinds
+
+**Schema kinds** are the normal case: instances are `CustomBlockRow`s, the dialog is generated from `fields()`, and you implement `emit`/`lift`/`summary`. Everything in the Quick Start is a schema kind.
+
+**Resource kinds** exist so the plugin's own row classes run on the same registry, and they are available to you for the same reason: when a row type already has a dedicated Resource class and dialog, the kind wraps them instead of replacing them. The built-in **enum** and **signal** kinds work this way: `handles()` claims the class, `emit_lines()`/`summary_for()` produce the canonical line and display, `lift()` returns `{"resource": ...}`, `addable()` is `false` (the dedicated add flows stay), and `edit()` opens the dedicated dialog. The compiler, importer, viewport, and edit dispatch all resolve them through `EventSheetBlockRegistry.kind_for(entry)` exactly like schema kinds.
+
+Reach for a resource kind only when you genuinely need a dedicated Resource class (rich sub-structures, existing saved sheets). A `fields` Dictionary covers almost everything else with far less code.
+
+---
+
+## 7. The UX Your Kind Gets for Free
+
+- **Add ▾ menu**: every `addable()` kind is listed under its category; choosing it opens the schema dialog with defaults filled in.
+- **Command palette**: Ctrl+P lists "Add <Title>…" for every addable kind, including ones registered after startup.
+- **The schema dialog**: one field control per schema entry: a `LineEdit` per String (Enter applies), a `CheckBox` per bool, a `SpinBox` per int/float, an `OptionButton` for a String field carrying `options`, a Browse button beside a `resource_path` String, and a tint checkbox plus colour picker per `TYPE_COLOR`. Add mode inserts below the selection; edit mode (double-click the row) prefills and rewrites. Both apply through the undo system, so Ctrl+Z works.
+- **The row**: a kind badge (your `title`) plus your `summary()` text, rendered by the same virtualized viewport as everything else. Disabled state and selection behave like built-in rows.
+- **A custom editor when you outgrow the schema**: override `edit(dock, block)`, open anything you like, and return `true`. The registry dispatches every block edit, so your dialog is reached exactly the way the built-in enum dialog is.
+
+---
+
+## 8. Round-Trip Safety: The Byte Gate
+
+The plugin's core promise is that opening a `.gd` and saving it untouched reproduces the file **byte-identically**. Custom blocks inherit that promise mechanically:
+
+- `emit()` must be **deterministic**. No timestamps, no randomness, no environment reads. The importer and the compiler both rely on one canonical spelling per block state.
+- `lift()` claims are gated **by the importer**, not by your good behaviour: it re-emits the recovered fields and compares against the consumed source lines before accepting the claim. A mismatch drops the claim silently and the lines stay a verbatim GDScript block. **Degradation, never corruption.** Ending your `lift()` with `verified_claim()` is still worth doing - it tells you early that a claim will not stick - but forgetting it cannot cost a user their file, and a `lift` written as a plain Callable in a `simple_block_kind()` config has no instance to call it on anyway.
+- Blocks emit **in position** on `.gd` sheets (the row's place in the sheet is the line's place in the file), so a lifted block writes back exactly where it came from.
+- A hand-written variant your canon cannot reproduce (odd spacing, reordered arguments) is not an error: it round-trips verbatim as code, and your kind simply does not claim it.
+
+The practical consequence: you cannot break a user's file with a bad kind. The worst a bug can do is fail to lift.
+
+---
+
+## 9. Built-in Kinds Reference
+
+| Kind | `kind_id` | Emits | Notes |
+|------|-----------|-------|-------|
+| Preload Resource | `preload` | `const Name := preload("res://path")` in constant mode, or `var Name := load("res://path")` in dynamic mode | Schema kind; THREE fields (`name`, `path`, `mode`). It implements `display_spans()`, so the row reads `Name : Type ⟨preload⟩ = res://path` with no kind badge. |
+| Region | `region` | `#region Label` / `#endregion` (+ an optional `## @ace_region(#color, "description")` marker line above a styled opener) | Schema kind; fences are two independent single-line blocks. Matched pairs fold in the editor with a thin colored bubble around the range; the color and description edit in the fence's dialog. |
+| Enum row | `enum` | `enum Name { A, B }` | Resource kind over `EnumRow`; dedicated dialog; not in Add surfaces. |
+| Signal row | `signal` | `signal name(params)` | Resource kind over `SignalRow`; the trigger-annotation fold stays with the importer. |
+| Note (demo) | `demo.note` | `## NOTE: text` | The shipped pack-kind example (`eventsheet_addons/demo_note_block.gd`). |
+
+---
+
+## 10. Use Cases
+
+Brief sketches - each shows a kind's essence (fields in, GDScript out). The Quick Start above has the full class shape; every snippet here drops into it.
+
+### 1. A TODO marker with an owner
+
+**Scenario:** work items tagged `# TODO(sam): fix the jump arc` read as highlighted rows instead of buried comments.
+
+```gdscript
+func fields() -> Array[Dictionary]:
+	return [{"id": "owner", "type": TYPE_STRING, "default": ""}, {"id": "task", "type": TYPE_STRING, "default": ""}]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["# TODO(%s): %s" % [block.fields.get("owner"), block.fields.get("task")]])
+```
+
+Note: keep the lift probe strict (exact `# TODO(...)` shape) - looser comments correctly stay plain comments.
+
+### 2. A tuning-constant block
+
+**Scenario:** designers tweak one gameplay constant per block, with a dialog instead of code.
+
+```gdscript
+func fields() -> Array[Dictionary]:
+	return [
+		{"id": "name", "label": "Constant", "type": TYPE_STRING, "default": "TUNING_VALUE"},
+		{"id": "value", "label": "Value", "type": TYPE_FLOAT, "default": 1.0},
+	]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const %s: float = %s" % [str(block.fields.get("name", "")), str(float(block.fields.get("value", 0.0)))]])
+```
+
+Note: floats stringify canonically through `str(float(...))`, so the byte gate holds. If you need exact source spellings (like `0.5` vs `.5`), store the value as a String field instead.
+
+### 3. A multi-line config table
+
+**Scenario:** a pack needs a small dictionary in the sheet, editable as one block.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray([
+		"const SPAWN_TABLE := {",
+		"\t\"grunt\": %d," % int(block.fields.get("grunts", 3)),
+		"\t\"boss\": %d," % int(block.fields.get("bosses", 1)),
+		"}",
+	])
+
+func lift(lines: PackedStringArray, i: int) -> Dictionary:
+	if lines[i] != "const SPAWN_TABLE := {" or i + 3 >= lines.size():
+		return {}
+	var grunt_probe: RegEx = RegEx.new()
+	grunt_probe.compile("^\\t\"grunt\": (\\d+),$")
+	var boss_probe: RegEx = RegEx.new()
+	boss_probe.compile("^\\t\"boss\": (\\d+),$")
+	var grunts: RegExMatch = grunt_probe.search(lines[i + 1])
+	var bosses: RegExMatch = boss_probe.search(lines[i + 2])
+	if grunts == null or bosses == null or lines[i + 3] != "}":
+		return {}
+	return verified_claim({"grunts": int(grunts.get_string(1)), "bosses": int(bosses.get_string(1))}, lines, i, 4)
+```
+
+Note: `consumed` is 4; `verified_claim` compares all four lines. Multi-line kinds work exactly like single-line ones.
+
+### 4. Regions as chapter markers
+
+**Scenario:** a long sheet reads better with named fences around each system.
+
+```
+Add ▾ → Region…  → "Movement"
+  ... movement events ...
+Add ▾ → Region…  → tick "Closing fence (#endregion)"
+```
+
+Note: fences are independent blocks on purpose; an unbalanced pair is a readability wart, never a parse error.
+
+### 5. Preloads that designers manage
+
+**Scenario:** the sound designer swaps audio files without touching code.
+
+```
+Add ▾ → Preload Resource… → Constant name: "HitSfx", Resource path: "res://sfx/hit.ogg"
+Event: On Damaged
+  Action: Play Audio -> HitSfx
+```
+
+### 6. A kind from another plugin
+
+**Scenario:** your studio's dialogue plugin wants its cue table visible in event sheets.
+
+```gdscript
+# In the dialogue plugin's _enter_tree:
+var cue_kind := DialogueCueBlockKind.new()
+EventForgeBridgeRuntime.new().register_block_kind(cue_kind)
+```
+
+Note: bridge-registered kinds resolve exactly like folder-scanned ones; duplicate ids keep the first.
+
+### 7. Notes as review markers
+
+**Scenario:** a reviewer leaves `## NOTE:` lines while reading a teammate's compiled sheet in the script editor; the author sees them as highlighted rows in the sheet view and deletes them as they are addressed.
+
+### 8. A debug toggle designers flip in a dialog
+
+**Scenario:** `const DEBUG_DRAW := false` lives in the sheet as a checkbox block, not a line someone has to type correctly.
+
+```gdscript
+func fields() -> Array[Dictionary]:
+	return [{"id": "enabled", "type": TYPE_BOOL, "default": false}]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const DEBUG_DRAW := %s" % ("true" if bool(block.fields.get("enabled")) else "false")])
+```
+
+### 9. A scene requirement the Doctor enforces
+
+**Scenario:** a block states `## REQUIRES: Camera2D child` in the sheet, and a pack-registered Doctor check reads the emitted line to flag scenes missing it.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## REQUIRES: %s" % str(block.fields.get("requirement", ""))])
+
+# Elsewhere, the pack teaches the Doctor to enforce it (see GUIDE-BUILDING-ON-EVENTSHEETS.md):
+EventSheets.register_doctor_check("my_pack.requirements", _check_scene_requirements)
+```
+
+Note: the block and the health check ship together - the sheet documents the contract, the Doctor enforces it.
+
+### 10. A localization key registry for a jam build
+
+**Scenario:** the last night of a jam, a translator needs every user-facing string in one place. A `## L10N: title_screen.start = "Start"` block per key reads as a highlighted row, so the whole sheet's copy is scannable and swappable without hunting through events.
+
+```gdscript
+func fields() -> Array[Dictionary]:
+	return [{"id": "key", "type": TYPE_STRING, "default": ""}, {"id": "text", "type": TYPE_STRING, "default": ""}]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## L10N: %s = %s" % [str(block.fields.get("key", "")), var_to_str(str(block.fields.get("text", "")))]])
+```
+
+Note: `var_to_str` on the String gives one canonical quoted spelling, so the byte gate holds even when the copy contains quotes.
+
+### 11. A feature flag your team toggles per branch
+
+**Scenario:** a two-person team keeps an experimental boss on a `const FEATURE_NEW_BOSS := false` block. The gameplay programmer flips the checkbox on their branch to test, and the merge diff is one obvious line instead of a hand-typed constant buried mid-file.
+
+```gdscript
+func fields() -> Array[Dictionary]:
+	return [{"id": "flag", "label": "Flag", "type": TYPE_STRING, "default": "FEATURE_X"}, {"id": "on", "type": TYPE_BOOL, "default": false}]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const %s := %s" % [str(block.fields.get("flag", "")), "true" if bool(block.fields.get("on")) else "false"]])
+```
+
+### 12. A input-map contract for the whole level
+
+**Scenario:** a platformer sheet expects the actions `jump` and `dash` to exist in the project's input map. A `## INPUT: jump, dash` block names them as a row, so a new contributor opening the sheet sees the input contract before wiring any On Action events.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## INPUT: %s" % str(block.fields.get("actions", "")).strip_edges()])
+```
+
+Note: pair it with a pack-registered Doctor check that reads the emitted line to flag actions missing from the project settings, the same shape as the requirement block above.
+
+### 13. A boss-phase table a designer balances mid-playtest
+
+**Scenario:** during a live balancing session the designer bumps a boss's phase thresholds without leaving the sheet. One block emits the whole ordered table, and the spinners in its dialog are the only surface anyone touches.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray([
+		"const BOSS_PHASES := {",
+		"\t\"enrage_hp\": %d," % int(block.fields.get("enrage_hp", 30)),
+		"\t\"add_wave_hp\": %d," % int(block.fields.get("add_wave_hp", 60)),
+		"}",
+	])
+```
+
+Note: like the spawn table above, the lift probe matches all three lines and `verified_claim` re-checks them, so a designer's edits round-trip byte-for-byte.
+
+### 14. A credits attribution block that survives every regen
+
+**Scenario:** a released game's compiled scripts must keep an asset attribution line that legal signed off on. A `## CREDIT: music by Foo, CC-BY 4.0` block keeps that exact banner canonical, so no regeneration ever silently drops or reformats it.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## CREDIT: %s" % str(block.fields.get("attribution", "")).strip_edges()])
+```
+
+Note: because emission is deterministic and gated, the attribution reads back identically on every open - a shipping constraint the byte gate enforces for free.
+
+### 15. A level's asset manifest
+
+**Scenario:** an artist keeps swapping which textures a level uses, and the programmer keeps re-editing preload lines. One manifest block owns the whole list, so the artist edits a form and the constants regenerate.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for entry: String in str(block.fields.get("paths", "")).split(",", false):
+		var path: String = entry.strip_edges()
+		lines.append("const %s := preload(\"%s\")" % [path.get_file().get_basename().to_pascal_case(), path])
+	return lines
+```
+
+### 16. Shader parameters a technical artist owns
+
+**Scenario:** a screen effect has four uniforms nobody remembers the names of. A block names them once, and the artist tunes values in a dialog rather than hunting through `material.set_shader_parameter` calls.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const SHADER_DEFAULTS := {\"bloom\": %s, \"vignette\": %s}" % [
+		str(block.fields.get("bloom", 0.0)), str(block.fields.get("vignette", 0.0))]])
+```
+
+### 17. An RPC contract the whole team can see
+
+**Scenario:** a multiplayer project needs its `@rpc` declarations to agree across sheets. A block makes each one a row with a mode dropdown, so a mismatch is visible in review instead of at runtime.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray([
+		"@rpc(\"%s\", \"call_local\")" % str(block.fields.get("mode", "authority")),
+		"func %s() -> void:" % str(block.fields.get("name", "sync_state")),
+		"\tpass",
+	])
+```
+
+### 18. An analytics event registry
+
+**Scenario:** the data team needs the exact event names a build emits. A block per event keeps the canonical string in one place, so the sheet is the source of truth and the spreadsheet stops drifting.
+
+```gdscript
+func summary(block: CustomBlockRow) -> String:
+	return "analytics: %s" % str(block.fields.get("event", ""))
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const ANALYTICS_%s := \"%s\"" % [
+		str(block.fields.get("event", "")).to_upper(), str(block.fields.get("event", ""))]])
+```
+
+### 19. A build stamp CI rewrites
+
+**Scenario:** QA needs to know exactly which build a bug came from. CI edits one block's fields and regenerates; because emission is deterministic, the diff is one line and never reformats the rest of the file.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const BUILD := \"%s\"  # %s" % [
+		str(block.fields.get("number", "0")), str(block.fields.get("branch", "main"))]])
+```
+
+### 20. A performance budget the Doctor enforces
+
+**Scenario:** a level has a frame budget the team keeps quietly exceeding. The block declares it, and a registered Doctor check reads the block back out so the budget is audited in CI rather than remembered.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const FRAME_BUDGET_MS := %s" % str(block.fields.get("ms", 16))])
+```
+
+Pair it with `EventSheets.register_doctor_check(...)`, which walks the sheet paths and flags any budget above your ceiling. The block is the declaration; the check is the enforcement.
+
+### 21. Audio bus routing, declared not guessed
+
+**Scenario:** sound designers keep asking which bus a scene's audio lands on. A block states it, so the answer is in the sheet instead of in someone's memory.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const AUDIO_BUS := \"%s\"" % str(block.fields.get("bus", "Master"))])
+```
+
+### 22. A spawn table a designer balances mid-playtest
+
+**Scenario:** the designer wants to retune wave composition between runs without opening a script. A table block gives them a form, and the generated constant is what the spawner reads.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const WAVE := {\"grunts\": %s, \"elites\": %s, \"interval\": %s}" % [
+		str(block.fields.get("grunts", 6)), str(block.fields.get("elites", 1)),
+		str(block.fields.get("interval", 3.0))]])
+```
+
+### 23. Tutorial steps that stay in step order
+
+**Scenario:** a tutorial's copy lives in five places and one always goes stale. A step block keeps the text next to the logic that triggers it, in the order it happens.
+
+```gdscript
+func summary(block: CustomBlockRow) -> String:
+	return "step %s: %s" % [str(block.fields.get("index", 1)), str(block.fields.get("copy", ""))]
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## TUTORIAL %s: %s" % [
+		str(block.fields.get("index", 1)), str(block.fields.get("copy", ""))]])
+```
+
+### 24. An accessibility checklist that ships with the level
+
+**Scenario:** a studio commits to subtitles and a colour-blind-safe palette per level. A checklist block records what each level actually did, so the audit is a grep rather than a meeting.
+
+```gdscript
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## A11Y: subtitles=%s colourblind_safe=%s" % [
+		"yes" if bool(block.fields.get("subtitles")) else "no",
+		"yes" if bool(block.fields.get("cb_safe")) else "no"]])
+```
+
+### 25. A save-schema version marker
+
+**Scenario:** a live game's save format changes and old saves must migrate. A version block makes the current schema number a visible, reviewable row rather than a constant someone forgets to bump.
+
+```gdscript
+func validate(block: CustomBlockRow) -> String:
+	if int(block.fields.get("version", 0)) < 1:
+		return "Save schema version must be 1 or higher."
+	return ""
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["const SAVE_SCHEMA := %d" % int(block.fields.get("version", 1))])
+```
+
+`validate` returning a non-empty String paints the message on the row while authoring, so a zero is caught before it reaches a player's save file.
+
+### 26. A pack dependency stated on the sheet
+
+**Scenario:** a sheet only works when another pack is installed, and the failure a user sees today is a missing-verb error. A dependency block says so out loud, and reads back on open.
+
+```gdscript
+func summary(block: CustomBlockRow) -> String:
+	return "needs: %s" % str(block.fields.get("pack", ""))
+
+func emit(block: CustomBlockRow) -> PackedStringArray:
+	return PackedStringArray(["## REQUIRES: %s" % str(block.fields.get("pack", ""))])
+```
+
+### Other uses at a glance
+
+**License headers** as a one-field block that keeps the exact comment banner canonical across every generated file. **Signal-bus wiring notes** that document which autoload signals a sheet listens to. **Version stamps** for packs, one canonical `const PACK_VERSION := "1.2"` line each. **Spawn-point manifests** listing marker names a level script reads. **Asset checklists** that name the sounds and textures an event section expects.
+
+---
+
+## 11. Testing Custom Blocks
+
+The pattern the built-ins use, runnable headlessly:
+
+```gdscript
+# 1. Registration.
+assert(EventSheetBlockRegistry.get_kind("team.todo") != null)
+
+# 2. Round-trip: emit -> import -> byte-identical recompile.
+var source := "extends Node\n\n# TODO(sam): fix the jump arc\n"
+var sheet := GDScriptImporter.new().import_external_source(source)
+sheet.external_source_path = "user://todo_test.gd"
+var lifted_kinds: Array = []
+for entry in sheet.events:
+	if entry is CustomBlockRow:
+		lifted_kinds.append(entry.kind_id)
+assert(lifted_kinds == ["team.todo"])
+assert(str(SheetCompiler.compile(sheet, "user://todo_test.gd").get("output", "")) == source)
+
+# 3. The near-miss stays raw (the byte gate working).
+var hostile := GDScriptImporter.new().import_external_source("extends Node\n\n# todo: lowercase\n")
+for entry in hostile.events:
+	assert(not (entry is CustomBlockRow))
+```
+
+Run tests with `godot --headless --path . --script tests/run_tests.gd`; any script in `tests/` with a `static func run() -> bool` is auto-discovered.
+
+---
+
+## 12. Tips and Common Mistakes
+
+- **Emission must be deterministic.** A timestamp or random value in `emit()` breaks the byte gate and your kind will never lift. Same fields, same bytes, always.
+- **`kind_id` is frozen once shipped.** Sheets store it. Rename by shipping a new kind and keeping the old one registered.
+- **Namespace pack kinds** (`my_pack.thing`). Un-namespaced ids from the folder scan get a warning and risk collisions.
+- **Read fields with defaults**: `block.fields.get("id", default)`. Blocks saved before your kind gained a field must keep working. Removing a field is a compat break; deprecate the kind instead.
+- **Kinds are stateless singletons.** One instance serves every sheet for the whole session. Per-block data lives ONLY in `CustomBlockRow.fields`.
+- **Lift claims start at column 0, top level.** The importer probes unclaimed top-level lines; lines inside function bodies belong to their function's block and are never offered to kinds.
+- **Strict lifts are good lifts.** Claim exactly your canonical shape and nothing else. The byte gate protects files either way, but a tight probe keeps behavior predictable.
+- **Do not quote user text blindly.** Field values containing `"` would break emitted string literals; either reject them in `emit()` (return empty) or escape them consistently in both `emit` and `lift`.
+- **The dedicated probes run first.** Variables, enums, and signals are claimed by their own probes before generic kinds see a line, so your kind cannot accidentally shadow a built-in row type.
+- **Give a stateful runtime save support.** If your kind drives a node that holds runtime state worth persisting, add `save_state() -> Dictionary` and `load_state(state)` to that node's script - the Save System duck-types the pair and saves it with the rest of the game. **Tools > Save Studio > Add Save Support** generates the methods for you.

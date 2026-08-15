@@ -15,6 +15,8 @@
 #   "ace:<provider_id>/<ace_id>"        one verb ("ace:QuestPackAddon/method:advance_objective")
 #   "section:<header text>"             a picker category ("section:Physics")
 #   "addon:<pack directory>"            a pack's guide ("addon:quest")
+#   "guide:<page id>"                   a shipped guide page ("guide:GUIDE-RECIPES", "guide:Addons/Quest")
+#   "module:<module name>"              a vocabulary module's guide ("module:collection")
 # An id that parses but names nothing real is INVALID - callers get false and a warning, never a
 # blank page, because a silently empty doc surface is how a renamed guide ships unnoticed.
 #
@@ -34,6 +36,8 @@ extends RefCounted
 const SCHEME_ACE := "ace:"
 const SCHEME_SECTION := "section:"
 const SCHEME_ADDON := "addon:"
+const SCHEME_GUIDE := "guide:"
+const SCHEME_MODULE := "module:"
 
 ## Where zero-config packs live. A pack directory that is not here names nothing real, which is
 ## what makes "addon:<pack>" fail loudly instead of opening a 404 in the reader's browser.
@@ -42,16 +46,20 @@ const PACK_ROOT := "res://eventsheet_addons"
 
 ## Parses a doc id into what it names. Always returns the same shape, so a caller reads
 ## `valid` first and then the fields for its scheme:
-##   {valid, scheme, provider_id, ace_id, section, pack, target}
-## `target` is filled for the addon scheme only - the repo-relative guide path (or the pack's own
-## @ace_help URL), ready for EventSheets.open_online_doc.
+##   {valid, scheme, provider_id, ace_id, section, pack, target, page_id}
+## `target` is the repo-relative guide path (or an absolute @ace_help URL) for the guide schemes,
+## ready for EventSheets.open_online_doc. `page_id` is the SHIPPED page the same id resolves to
+## when the bundle carries it - which is how "addon:quest" silently became a native page without
+## a single caller changing: a host draws page_id when it is there, and falls back to target.
 ##
 ## Validation is as strict as it can be WITHOUT a live editor: a section must be registered, a
-## pack directory must exist on disk. A verb's existence needs the running registry, so an
-## "ace:" id is checked for shape here and resolved against the registry by the caller.
+## pack directory must exist on disk, a guide page must ship. A verb's existence needs the running
+## registry, so an "ace:" id is checked for shape here and resolved against the registry by the
+## caller.
 static func resolve(doc_id: String) -> Dictionary:
 	var route: Dictionary = {
-		"valid": false, "scheme": "", "provider_id": "", "ace_id": "", "section": "", "pack": "", "target": "",
+		"valid": false, "scheme": "", "provider_id": "", "ace_id": "", "section": "", "pack": "",
+		"target": "", "page_id": "",
 	}
 	var id: String = doc_id.strip_edges()
 	if id.is_empty():
@@ -83,9 +91,48 @@ static func resolve(doc_id: String) -> Dictionary:
 		if pack.is_empty() or not DirAccess.dir_exists_absolute(PACK_ROOT.path_join(pack)):
 			return route
 		route["target"] = EventSheets.addon_guide_for_pack(pack)
-		route["valid"] = not str(route["target"]).is_empty()
+		route["page_id"] = EventSheetDocLibrary.id_for_repo_path(str(route["target"]))
+		# A pack that ships its OWN guide.md answers with that page whenever the bundle carries no
+		# page for it - which is every third-party pack, since the derived docs/Addons path names a
+		# guide only this repo's packs have. Same id, same caller, a native page instead of a 404.
+		if not EventSheetDocLibrary.has_page(str(route["page_id"])):
+			var local: String = EventSheetDocLibrary.pack_page_id(pack)
+			if not local.is_empty():
+				route["page_id"] = local
+		route["valid"] = not str(route["target"]).is_empty() or not str(route["page_id"]).is_empty()
+		return route
+	if id.begins_with(SCHEME_GUIDE):
+		var page_id: String = id.substr(SCHEME_GUIDE.length()).strip_edges()
+		route["scheme"] = "guide"
+		route["page_id"] = page_id
+		# Asked of the library rather than spelled out here: a DISCOVERED page (a pack's own
+		# guide.md, one of the project's own notes) has a page id but no repo path, and inventing
+		# one would send "read this online" to a file that never existed.
+		route["target"] = EventSheetDocLibrary.repo_path_for_page(page_id)
+		route["valid"] = EventSheetDocLibrary.has_page(page_id)
+		return route
+	if id.begins_with(SCHEME_MODULE):
+		var module: String = id.substr(SCHEME_MODULE.length()).strip_edges()
+		route["scheme"] = "module"
+		if module.is_empty():
+			return route
+		route["target"] = module_guide_target(module)
+		route["page_id"] = EventSheetDocLibrary.id_for_repo_path(str(route["target"]))
+		route["valid"] = not str(route["page_id"]).is_empty() or not str(route["target"]).is_empty()
 		return route
 	return route
+
+
+## Where a builtin vocabulary module's guide lives, asked of the API rather than derived here.
+## The lookup is SOFT on purpose: the module mapping is authored beside the module guides
+## themselves, and this reader must keep working whether that mapping has landed yet or not - a
+## hard reference would turn "the guides are not written yet" into a parse error.
+static func module_guide_target(module_name: String) -> String:
+	var api: Script = EventSheets as Script
+	var lookup: Callable = Callable(api, "module_guide_target")
+	if not lookup.is_valid():
+		return ""
+	return str(lookup.call(module_name)).strip_edges()
 
 
 ## The doc id for a verb: "ace:<provider_id>/<ace_id>". "" for a null definition.
@@ -176,8 +223,23 @@ static func blocks_for_definition(definition: ACEDefinition) -> Array[Dictionary
 		})
 	var guide: String = EventSheets.addon_guide_for_provider(definition.provider_id)
 	if not guide.is_empty():
-		blocks.append({"kind": "link", "label": guide_label(definition.provider_id), "target": guide})
+		# The read-more affordance carries a DOC ID as well as a path. The id is what makes the
+		# button open the pack's guide inside the editor once the bundle ships it, while the same
+		# button still opens a browser tab for a pack that hosts its docs elsewhere - the caller
+		# never has to know which it got.
+		blocks.append({
+			"kind": "link",
+			"label": guide_label(definition.provider_id),
+			"target": guide,
+			"doc_id": doc_id_for_pack(EventSheets.addon_pack_directory(definition.provider_id)),
+		})
 	return blocks
+
+
+## The doc id for a pack directory ("quest" -> "addon:quest"), or "" for no pack.
+static func doc_id_for_pack(pack_dir: String) -> String:
+	var directory: String = pack_dir.strip_edges()
+	return "" if directory.is_empty() else "%s%s" % [SCHEME_ADDON, directory]
 
 
 ## A whole category: its blurb, and nothing invented around it. The picker shows this when a

@@ -21,7 +21,15 @@ godot --headless --path . --script tests/run_perf.gd    # headless-safe gate (CI
 godot --headless --path . --script tests/run_tests.gd   # full suite
 godot --editor --headless --quit-after 170 --path .     # editor smoke (then: git checkout -- project.godot)
 godot --headless --path . --script tools/project_doctor.gd  # repo health (CI gate; -- --strict fails on warnings)
+godot --headless --path . --script tools/build_help_bundle.gd  # ONLY after editing docs/*.md - see below
 ```
+
+**If you touched a guide, regenerate the shipped copy.** The release zip carries `addons/` and
+nothing else, so the guides are copied verbatim into `addons/eventsheet/help/` for the in-editor
+documentation viewer to read. `tests/doc_library_test.gd` compares the two byte for byte, so an
+edited guide whose copy was not regenerated fails the suite. Run the builder above (it prints
+`help: pages=N drifted=0`) and commit the regenerated files with your guide edit. Pass
+`-- --check` to report drift without writing anything.
 
 Quirks worth knowing:
 - The **full suite can segfault on exit AFTER printing its summary** - that's harmless;
@@ -100,6 +108,28 @@ Canonical forms live in `sheet_compiler.gd` (`_emit_enum_line`, `_emit_signal_li
 - **A theme preset**: add a palette to `tools/build_theme_presets.gd` and rerun it;
   presets are auto-discovered by the picker and Theme Editor.
 
+## Guides that draw live rows
+
+In the in-editor documentation viewer, a fenced ` ```gdscript ` block can be drawn as the real
+event rows its code lifts to, with an Insert button. It happens automatically when the fence is a
+whole little script (an `extends` / `class_name` / `@tool` line at the top), re-emits byte for byte,
+and lifts to at least one real row. Nothing to opt into: write the example the way the module
+guides already do and it becomes a figure.
+
+Three authored markers exist, and only three:
+
+````text
+```eventsheet          this fence IS a figure, even without a script header
+<!-- no-figure -->     the fence below stays a plain code card (use it for extension-API samples,
+                       where the reader copies GDScript into a file rather than authoring rows)
+<!-- caption: … -->    the line above the figure; otherwise the nearest heading captions the first
+                       figure under it
+````
+
+`tests/doc_figures_test.gd` sweeps `docs/`, `docs/Addons/` and `docs/Modules/`, so **breaking the
+GDScript inside a figure breaks the suite**, and a ` ```eventsheet ` fence that cannot be drawn is a
+named build error rather than a silent code card. Fix the fence, or mark it `<!-- no-figure -->`.
+
 ## GDScript gotchas that have bitten before
 
 - `"\b"` in a GDScript string is the **backspace** escape - word-boundary regexes need
@@ -147,3 +177,6 @@ Tagging `vX.Y.Z` (push the tag; CI publishes the zips) also means:
 3. **Refresh the demo showcase**: `demo/` must exercise the release's headline
    features - every release ships a playable example making full use of what's new
    (sheets + scene + a "what to look at" note in `demo/README.md`).
+4. **Regenerate the shipped guide bundle**:
+   `godot --headless --path . --script tools/build_help_bundle.gd` (must print `drifted=0`), so
+   the documentation the plugin ships is the documentation the tag ships.

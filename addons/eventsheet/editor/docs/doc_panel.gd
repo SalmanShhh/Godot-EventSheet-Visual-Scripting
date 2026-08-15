@@ -141,7 +141,8 @@ func _control_for(block: Dictionary) -> Control:
 		"figure":
 			return _figure_block(block.get("definition", null) as ACEDefinition)
 		"link":
-			return _link_block(str(block.get("label", "")), str(block.get("target", "")))
+			return _link_block(str(block.get("label", "")), str(block.get("target", "")),
+				str(block.get("doc_id", "")))
 	return null
 
 
@@ -188,13 +189,20 @@ func _figure_block(definition: ACEDefinition) -> Control:
 	return figure
 
 
-func _link_block(label: String, target: String) -> Control:
+## Read more. The button prefers the DOC ID: once the guide corpus ships inside the plugin, the
+## same click draws the pack's guide natively instead of opening a tab, and a pack whose guide
+## lives elsewhere still opens in the browser. The signal reports whichever route ran, so a host's
+## status line stays honest about where the reader was sent.
+func _link_block(label: String, target: String, doc_id: String = "") -> Control:
 	if label.strip_edges().is_empty() or target.strip_edges().is_empty():
 		return null
 	var button: Button = Button.new()
 	button.text = label
-	button.tooltip_text = "Opens the full guide in your browser, pinned to the version you installed."
+	button.tooltip_text = "Opens the full guide - here in the editor when it ships with the plugin, in your browser otherwise."
 	button.pressed.connect(func() -> void:
+		if not doc_id.strip_edges().is_empty() and EventSheets.open_docs(doc_id):
+			link_activated.emit(doc_id)
+			return
 		EventSheets.open_online_doc(target)
 		link_activated.emit(target))
 	var row: HBoxContainer = HBoxContainer.new()

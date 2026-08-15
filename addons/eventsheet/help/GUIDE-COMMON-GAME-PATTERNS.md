@@ -1,0 +1,228 @@
+# Common Game Patterns Without Code
+
+State machines, timers, cooldowns, saving, tweens, randomness - the patterns every game needs,
+written as event rows instead of GDScript. Each section below shows the code pattern being
+replaced, the rows that replace it, and where to find them in the picker. If you have never
+written the code versions, even better: you are skipping them entirely.
+
+![The patterns as rows: Every X Seconds, Has Changed, cooldowns, Wait, Tween](images/code-patterns-rows.png)
+
+## Run something every X seconds
+
+The code version keeps a scratch timer variable, adds `delta` every frame, and resets it when it
+overflows. The row version is one condition:
+
+- Add a **Run every tick** event, then the condition **Every X Seconds** (System, Time).
+- Everything in the actions column runs each time the interval elapses. No timer variable
+  exists anywhere on your sheet.
+
+## React only when a value changes
+
+Updating a HUD every frame works, but juice ("pop the score label when it changes") needs to
+know the exact tick a value became different. In code that is a `previous_value` variable and a
+comparison you have to order correctly. As a row:
+
+- Condition **Has Changed** (System, Run Context) watching `score` - true only on the tick the
+  value becomes different.
+- Pair it with a **Tween Property** action for one-row juice: score changes, label pops.
+
+**Trigger Once** is its close cousin: Has Changed fires per change of a value, Trigger Once
+fires once per time a whole condition set becomes true.
+
+## Cooldowns by name
+
+No `last_dash_time` variable, no clock math:
+
+- **Start Cooldown** (System, Time) - `Start Cooldown "dash" for 1.5s`.
+- **Cooldown Is Ready** (condition) - gate the dash event on it. A cooldown you never started
+  counts as ready, so the first press always works.
+- **Cooldown Time Left** (expression) - feed a progress bar or an ability icon sweep.
+
+Cooldowns are per-node and keyed by the name string, so `"dash"` and `"attack"` never collide,
+and two enemies' `"attack"` cooldowns are independent.
+
+## Wait, then continue
+
+**Wait** (System, Time) pauses the action list mid-flow: `Show message "Ready..."`, `Wait 1.0 s`,
+`Show message "GO!"`. Everything below the Wait runs after the delay - the sheet reads top to
+bottom exactly like the timeline it is. **Wait For Signal** does the same for "until something
+happens" instead of "until time passes", and **Single Flight** (Run Context) keeps a waiting
+event from stacking a second copy of itself while the first is still going.
+
+## Remember a variable between runs
+
+Right-click any sheet variable and choose **Remember Between Runs**. That is the whole feature:
+
+- The variable loads its last saved value when the node enters the scene.
+- Every remembered variable saves back automatically when the node leaves the tree (scene
+  change or quitting the game), to `user://remembered.cfg`.
+- A sheet with a class name saves under that name, so two sheets' variables never collide.
+
+The fifteen lines of ConfigFile ritual this replaces are generated into your file where you can
+read them - open the compiled script and look for `_ef_recall_remembered`. For whole save-game
+systems (slots, versioning, migration), the Save Studio is the bigger tool; Remember Between
+Runs is for "the high score should survive closing the game" and nothing heavier.
+
+## A state machine you can read
+
+Attach the **State Machine** behavior pack and the pattern that usually needs an enum, a match
+statement, and transition bookkeeping becomes vocabulary:
+
+- **Set State** switches state (and only fires on a real change).
+- **Is In State** is the condition each behavior event sits behind.
+- **On State Changed** triggers with `previous` and `next` - your enter/exit hook.
+- **Time In State** tells how long the current state has been running: "flee for two seconds,
+  then go back" is `Time In State > 2` then `Set State previous_state`.
+- **previous_state** always holds where you came from.
+
+The shape that reads best: one named group for the machine, ONE **Every Physics Tick** event,
+each STATE as a sub-event under it (its condition renders as the `◆ State:` header), and each
+transition nested one level deeper with its own condition lane - so piling on more guards later
+("and cooldown ready", "and player still visible") never means restructuring. The nesting is
+exactly the code's own indentation: the tick event is `_physics_process`, each state sub-event
+is a `match` branch one tab in, each transition the `if` one tab deeper.
+
+![A state machine as a consumer writes it: one tick event, states as sub-events, transitions nested deeper](images/code-patterns-state-machine.png)
+
+And the door swings both ways: a hand-written `enum` + `match` machine OPENS in this shape.
+The `match` lifts into structured cases (byte-exact, like every lift), and because the match
+subject is named `state`, the whole machine reads in plain words with zero conversion work:
+
+- The enum shows as the machine's identity bar ("State is one of PATROL, CHASE or FLEE" -
+  click it open for one row per value).
+- The tick event's lane says **decides by state - 3 states below** instead of `match state:`.
+- Each case is a `◆ State:` row; its plain statements read as sentences and verbs
+  (`Patrol Step ( delta )`).
+- Each transition is a NESTED CONDITION ROW - the guard in the condition cell, in plain words
+  (`Can See Player`, `Not Can See Player`, `hp < 20`), the state change as its action
+  (`Set state to State.CHASE`). A small ƒ badge marks a guard that is a computed check rather
+  than a variable. Branching never appears in the action lane - anywhere.
+- Hovering any of it shows the exact GDScript line; saving reproduces the file byte-for-byte.
+
+![A hand-written enum + match machine opened as a sheet](images/code-patterns-lifted-machine.png)
+
+## Pick one node out of a group
+
+The code version is a `for` loop with a `best` variable and a comparison - easy to get subtly
+wrong. The expression version (Nodes, Picking) is one pick:
+
+- **Nearest Node In Group** / **Furthest Node In Group** - by distance to this node.
+- **Random Node In Group (empty-safe)** - uniform pick that returns nothing instead of crashing
+  when the group is empty.
+- **Group Member With Smallest/Largest Property** - weakest enemy (`hp`), slowest racer
+  (`speed`), any property by name.
+
+Set the result into a variable, then drive the following actions with it.
+
+## Chance and randomness in plain words
+
+The **Advanced Random** pack speaks probability the way designers do:
+
+- **Chance** - a condition that is true 10% of the time when you write `Chance(10)`.
+- **One In** - `One In(6)` for dice logic.
+- **Pick From** - a random element of any list; **Shuffle Bag** draws every item once before
+  any repeats (loot that feels fair); **Pick From Table** rolls a weighted `.tres` table you
+  author as a data asset.
+
+Because the pack is seeded, a run can be replayed exactly - set the seed once and your daily
+challenge mode exists.
+
+## Animate a property without a tween chain
+
+**Tween Property** (System, Tween) is one action: the node, the property, the target value, the
+duration, and easing dropdowns. Two Tween Property actions under the same event run as separate
+one-shot tweens; **Tween Callback** runs something after a delay (the classic
+"fade out, then free it").
+
+## When a button is pressed
+
+Signals connect themselves. The **HUD Kit** pack ships **On Button Pressed** (any descendant
+button by name, no wiring), and **Connect Group Signal** (System, Signals) wires every current
+member of a group to a handler in one action. Declaring your own signal on a sheet publishes an
+**On <signal>** trigger for other sheets automatically.
+
+## The second wave - more patterns as verbs
+
+Ten more spellings of everyday game code, shipped the same way:
+
+![The second wave live: a Timeline with its beats as condition/action rows, Every 2 to 5 seconds, smooth damping, aiming, wrap, bob, toggle and a distance check](images/pattern-verbs.png)
+
+- **Move Toward (smooth)** (Variables) - the frame-rate-INDEPENDENT damping (`1 - exp(-k*dt)`)
+  compiled for you; works on numbers, vectors and colors. Drag the speed under Live Values to
+  feel it.
+- **Toggle** (Variables) - `paused = not paused` in one word.
+- **As Clock Time** (Text expression) - 90 seconds reads "01:30".
+- **Every X To Y Seconds** (Time) - spawner cadence that re-rolls each firing.
+- **Is Within Distance / Turn Toward / Wrap Inside The Screen / Bob Up And Down** (Movement,
+  2D) - prompts and aggro ranges, turret aiming with a real turn speed, the Asteroids rule,
+  floating pickups - all without transform math or sin().
+- **The Object Pool pack** - named pools with Create Pool / Spawn / Despawn / Prewarm, spawn
+  and despawn triggers, and a `reset()` seam: a pooled scene that defines `reset()` gets it
+  called on every spawn, so velocity and hp clear without the pool knowing them.
+- **The Timeline block** - "at 0.0s Show Ready, at 1.0s Show GO": Insert > Timeline, then
+  Add Step on the block; each beat is a condition/action row (the WHEN left, the WHAT right)
+  and the compiled form is the await-chain you would have written.
+
+![The Object Pool in use: Create Pool on ready, Spawn on a random cadence, Despawn on screen exited](images/pattern-pool.png)
+
+## The third wave - game feel and directors
+
+![The third wave: buffered coyote jumping, the wave director, knockback with i-frames and floating text, and the motion verbs](images/pattern-wave3.png)
+
+- **Coyote time + input buffering.** The Platformer pack already ships both as Inspector
+  feel-numbers (`coyote_time`, `jump_buffer_time`) - most users just tune. For custom
+  controllers the generic rows exist: **Buffer Press / Press Is Buffered / Clear Buffer**
+  (Time) and **Was Recently True** (Run Context) - `is_on_floor() was true within 0.1s` IS
+  coyote time, spelled as a condition.
+- **The wave director.** **On Group Emptied** fires the tick the last member leaves a group
+  (never on a still-empty group at startup); **On Group Gains First Member** covers the other
+  edge. `wave += 1`, `Start Wave ( wave )` - the whole rounds loop in one event.
+- **Knockback.** **Push Away From** sets the impulse; **Apply Pushes** under Every Frame moves
+  and decays it with the same honest exp form Move Toward uses.
+- **Springs.** Already a whole pack: the **Spring** behavior gives named springs with real
+  velocity, overshoot and settle - squash-and-stretch juice as single rows.
+- **Magnet, orbit, charge.** **Pull Group Toward** (the vacuum-pickup loop), **Orbit Around**
+  (the sin/cos pair, angle hidden in node metadata), **Charge Toward** (hold-to-charge that
+  clamps itself).
+- **I-frames.** The Health pack's **Grant Invincibility / Is Invincible** - and its own Take
+  Damage respects them, so an invincible hit never lands and never fires On Damaged. The Flash
+  pack is the flicker.
+- **Progress Of / Percent Of** (Math & Random) - the `inverse_lerp` nobody finds, clamped,
+  feeding bars directly.
+- **Repeat With Delay** (Time) - `5 times, 0.1s apart:` burst fire; suspends like Wait.
+- **Pop Floating Text** (HUD Kit) - the score popup's label, drift tween and cleanup as one
+  verb.
+
+## The fourth wave - goals, places, and firsts
+
+![The fourth wave: a quest advancing, checkpoints, interaction focus, a phase cycle, the metric distance and Only Once Ever](images/pattern-wave4.png)
+
+- **The Quest pack** - quests as `.tres` data assets (objectives, chains, reward notes,
+  authored in the Inspector): `Start Quest`, `Advance Objective "gems"`, triggers for
+  started/objective/completed, and `Objective Text` ("3/5") feeding the journal. Register a
+  chained quest first; Save/Load ride the Remember file.
+- **Checkpoint** - `Set Checkpoint Here`, `Respawn At Checkpoint` (restores position and calls
+  the host's `reset()` - the same seam the Object Pool wake uses), `On Respawned` for the
+  camera snap.
+- **Interaction** - `Focus Nearest Interactable` under Every Frame, `Interact With Focus` on
+  the press, `On Interacted` on the thing's own sheet - a chest, a door and an NPC differ only
+  in what their On Interacted does.
+- **Phase Cycle** - `Cycle Phases "day,night" every 60s`, `On Phase Changed`, and
+  `Phase Progress` (0-1) for sun dials.
+- **Home & Leash** - a home point, `Is Beyond Home` and `Distance From Home` with FIVE metric
+  geometries (straight line, horizontal/vertical only, grid steps, king moves), `Return Home`
+  with its arrival trigger.
+- **Is Within Distance (choose metric)** - the same five-geometry dropdown on the generic
+  condition, and `Tiles(3)` sizes any distance by the `eventforge/tile_size` project setting.
+- **Only Once Ever** - Trigger Once across RUNS (tutorial hints), stored in the Remember file;
+  `Forget First Time` re-arms it.
+- **Vanish, Respawn In** - the pickup that comes back, reset seam included.
+- **Ramped** - the difficulty curve as a value (`Every Ramped(2, -0.3, 0.5) seconds` is a
+  spawner that speeds up); `Start Ramp Clock` marks minute zero.
+
+## Where these live
+
+Everything above except the State Machine, Advanced Random, and HUD Kit sections is built into
+every sheet - open the picker and browse System's Time, Run Context, Tween, and Nodes: Picking
+sections. The three packs install from the addon browser like any other behavior, and each is
+itself an event sheet: open it, read it, extend it.
