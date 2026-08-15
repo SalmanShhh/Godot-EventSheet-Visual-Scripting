@@ -19,7 +19,7 @@ extends RefCounted
 ## Emitted when the user double-clicks or activates a definition in the picker.
 ## context is the same dictionary passed to open().
 signal ace_selected(definition: ACEDefinition, context: Dictionary)
-## The reader asked to read more about the highlighted verb (the figure's "Open <Pack>'s guide"
+## The reader asked to read more about the highlighted verb (the "Open <Pack>'s guide" link
 ## affordance). Emitted, never acted on here: where that reading happens is the docs surface's
 ## call, not the picker's.
 signal guide_requested(definition: ACEDefinition)
@@ -230,7 +230,7 @@ var _tree: Tree = null
 var _info_label: RichTextLabel = null
 var _info_panel: PanelContainer = null
 ## The live one-row illustration of the highlighted verb, built from its parameter defaults.
-var _figure: EventSheetDocFigure = null
+var _guide_button: Button = null
 ## Returns the label for the highlighted verb's "read more" affordance ("Open Quest's guide"), or
 ## "" for no affordance. Phase 2 of the docs work wires it to the derived pack -> guide mapping;
 ## unset, the button simply never appears.
@@ -412,18 +412,18 @@ func init_dialog(parent_node: Node, registry: EventSheetACERegistry) -> void:
 	_info_label.scroll_active = true
 	_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info_margin.add_child(_info_label)
-	# THE FIGURE. Below the description panel rather than inside it: the 110 px above is measured
-	# for name + description + the "ships as" line, and a live row plus its buttons needs about as
-	# much again. Growing the one panel to hold both squeezes long descriptions into a scrollbox
-	# for every verb, including the ones with no figure at all - so the figure gets its own row and
-	# hides itself when there is nothing to draw. Verified against the rendered preview.
-	_figure = EventSheetDocFigure.new()
-	_figure.visible = false
-	# The picker's Add button is the insert route here; a second one inside the dialog would be a
-	# rival path to the same act (and it would bypass the params dialog for a parameterized verb).
-	_figure.set_insert_enabled(false)
-	_figure.guide_requested.connect(_on_figure_guide_requested)
-	content.add_child(_figure)
+	# The read-more affordance for a pack verb ("Open Quest's guide"), a slim right-aligned link
+	# under the description. It is the only extra the picker carries: the description panel already
+	# says what the verb is, and a live figure here read as clutter, so the illustration lives in the
+	# Explain panel (F1 / right-click a row), where a reader has asked to be shown.
+	var guide_row: HBoxContainer = HBoxContainer.new()
+	guide_row.alignment = BoxContainer.ALIGNMENT_END
+	_guide_button = Button.new()
+	_guide_button.flat = true
+	_guide_button.visible = false
+	_guide_button.pressed.connect(_on_figure_guide_requested)
+	guide_row.add_child(_guide_button)
+	content.add_child(guide_row)
 	# Add / Cancel are the dialog's own themed buttons (wired in the window setup above);
 	# double-click and Enter-to-add still work alongside them.
 
@@ -1838,7 +1838,7 @@ func _is_favorite(definition: ACEDefinition) -> bool:
 
 ## Create-Node-style description panel: name, type + category, what it does, and its codegen.
 func _update_info_panel(definition: ACEDefinition) -> void:
-	_update_figure(definition)
+	_update_guide_button(definition)
 	if _info_label == null:
 		return
 	if definition == null:
@@ -1870,21 +1870,16 @@ func set_guide_label_provider(provider: Callable) -> void:
 	_guide_label_provider = provider
 
 
-## The live one-row illustration under the description: the highlighted verb exactly as dropping
-## it would render, drawn by the real viewport from the verb's own parameter defaults. Hidden for
-## a section, for an expression (a value inside a cell, not a row), and for no selection.
-func _update_figure(definition: ACEDefinition) -> void:
-	if _figure == null:
+## The "Open <Pack>'s guide" link under the description: shown only when the label provider
+## names a guide for this verb (a pack verb), hidden for builtin verbs, sections and no selection.
+func _update_guide_button(definition: ACEDefinition) -> void:
+	if _guide_button == null:
 		return
-	var figure_sheet: EventSheetResource = EventSheetDocFigure.sheet_for_definition(definition)
-	if figure_sheet == null or not _figure.show_sheet(figure_sheet):
-		_figure.visible = false
-		return
-	_figure.set_caption("How this reads on the sheet:")
 	var guide_label: String = ""
-	if _guide_label_provider.is_valid():
+	if definition != null and _guide_label_provider.is_valid():
 		guide_label = str(_guide_label_provider.call(definition))
-	_figure.set_guide_action(guide_label)
+	_guide_button.text = guide_label
+	_guide_button.visible = not guide_label.is_empty()
 
 
 func _on_figure_guide_requested() -> void:
@@ -1897,8 +1892,8 @@ func _on_figure_guide_requested() -> void:
 ## (the first provider_description among the group's rows), then to a generic line.
 func _show_section_info(item: TreeItem, section_name: String) -> void:
 	_selected_definition = null
-	# A section is a group of verbs, not a row - there is nothing to illustrate.
-	_update_figure(null)
+	# A section is a group of verbs, not a pack verb - no guide link.
+	_update_guide_button(null)
 	if _add_button != null:
 		_add_button.disabled = true
 	if _favorite_button != null:
