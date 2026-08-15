@@ -2,6 +2,22 @@
 
 ## [Unreleased]
 
+### Changed - the docs viewer reads like an editor tool (the Compact Developer chrome)
+
+The documentation chrome now follows one restrained visual language, without touching the
+sheet preview itself. The Explain panel: a large title with two metadata badges beside it
+(what the verb IS, where it comes from), the description, then SYNTAX as a monospace code
+card with a copy button and PARAMETERS as a compact Name / Type / Default / Description
+table side by side (stacked when narrow, and a column no parameter fills is dropped rather
+than left blank), the untouched live figure under HOW THIS READS ON THE SHEET with Insert
+and Copy beneath it, and ABOUT <PACK> as a card carrying the "Open the <Pack> guide"
+button. Section order is fixed and derived, not inherited. Guide pages share the same
+primitives: a sidebar grouped under small-caps labels with the active page as an accent
+pill, section labels as the only accent-coloured text, code cards and tables in the same
+style, long pages folding sections behind their headings past the first screen, and a
+sticky mini-nav of the page's sections pinned at the top. The dock inherits all of it and
+collapses its sidebar when narrow.
+
 ### Added - every guide, readable inside the editor, with live figures
 
 The in-editor reader over all three doc sets: the guides, the 72 addon guides, and the new

@@ -215,8 +215,11 @@ func _ensure_content() -> void:
 	if _browser == null:
 		return
 	# A dock slot is a column, not a window: one half of the surface at a time, and the width
-	# floor drops from "tree beside page" to "a readable line of prose".
+	# floor drops from "tree beside page" to "a readable line of prose". From there the surface
+	# follows its OWN width - a reader who drags this dock wide, or floats it onto a second
+	# monitor, gets the guide list back beside the page without touching a setting.
 	_browser.call("set_compact", true)
+	_browser.call("set_auto_compact", true)
 	_browser.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_browser.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_browser.connect("link_activated", _on_link_activated)
@@ -241,13 +244,32 @@ func _build_footer() -> HBoxContainer:
 	_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status.text = ""
+	_status.add_theme_font_size_override("font_size", _scaled(11))
 	footer.add_child(_status)
+	# A small flat icon button rather than a labelled one: the dock is a column, and the status
+	# line beside this needs every pixel it can get. The words live on the tooltip.
 	var online_button: Button = Button.new()
-	online_button.text = "Read online"
+	online_button.flat = true
 	online_button.tooltip_text = "Opens this page in your browser, pinned to the version you installed. The online pages carry the screenshots this one leaves out."
+	var icon: Texture2D = _editor_icon("ExternalLink")
+	if icon != null:
+		online_button.icon = icon
+	else:
+		online_button.text = "Read online"
 	online_button.pressed.connect(_open_current_online)
 	footer.add_child(online_button)
 	return footer
+
+
+## An editor theme icon by name, or null when this build carries none - which is why the caller
+## always has a wordy fallback. No plugin class is named here; see the boot contract.
+func _editor_icon(icon_name: String) -> Texture2D:
+	if not Engine.is_editor_hint():
+		return null
+	var theme: Theme = EditorInterface.get_editor_theme()
+	if theme == null or not theme.has_icon(icon_name, "EditorIcons"):
+		return null
+	return theme.get_icon(icon_name, "EditorIcons")
 
 
 ## Registers the public API scripts into the editor's built-in Help. Done HERE rather than at

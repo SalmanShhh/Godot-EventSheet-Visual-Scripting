@@ -18,7 +18,15 @@
 # COMPACT mode is what makes the dock viable: a side-by-side tree and page need about 560 px, and a
 # dock slot is nowhere near that. Compact keeps the same two halves and simply stops showing them at
 # once - the tree becomes a "Contents" toggle that folds away again the moment the reader picks a
-# page, so the whole width belongs to the prose while reading.
+# page, so the whole width belongs to the prose while reading. A host that says so (set_auto_compact)
+# gets that decision made for it from its own width, so a docked reader who drags the dock wide - or
+# floats it onto a second monitor - gets the tree back without touching a setting.
+#
+# THE SIDEBAR is grouped, dense and quiet: small-caps group labels, a tiny kind icon per row, and
+# the page on screen filled with the editor's accent so the reader's place is never in doubt. Under
+# it sits a row of small icon buttons - the way out to the online page and to the repository - and
+# under a long page a sticky mini-nav of its chapters, which is the other half of the folding the
+# page view does.
 @tool
 class_name EventSheetDocBrowser
 extends VBoxContainer
@@ -34,6 +42,25 @@ const WIDE_MIN_WIDTH := 560.0
 ## The floor in compact mode. Only one half is ever on screen, so this is what a readable line of
 ## prose needs, not what a tree plus a page needs.
 const COMPACT_MIN_WIDTH := 260.0
+
+## Where a self-sizing host (a dock) drops its sidebar to a collapsible strip. Below this a tree
+## beside a page leaves neither of them readable, so the tree folds behind its toggle instead.
+const AUTO_COMPACT_WIDTH := 420.0
+
+## The kind icons a sidebar row wears, best first per kind: the editor carries different icon sets
+## across builds, so each kind names alternatives and the first one this editor has wins.
+##
+## Every kind's FIRST choice is a different icon from every other kind's, which is the whole reason
+## the marks are here: a mark that two kinds share tells the reader nothing they could not already
+## see. (Later alternatives may repeat - by the time a build is missing three icons in a row, a
+## recognisable glyph beats a unique one.)
+const KIND_ICONS := {
+	"guide": ["TextFile", "File", "Help"],
+	"addon": ["PluginScript", "EditorPlugin", "Object"],
+	"module": ["Object", "Node", "TextFile"],
+	"pack": ["Script", "GDScript", "Object"],
+	"project": ["Folder", "File", "TextFile"],
+}
 
 ## Emitted when the browser opened something in the reader's browser instead of drawing it, so a
 ## host can say so in its status line.
@@ -53,6 +80,17 @@ var _page: EventSheetDocPageView = null
 var _panel: EventSheetDocPanel = null
 var _items_by_id: Dictionary = {}
 var _current_id: String = ""
+## The chapter strip above the page, and the buttons in it keyed by slug so the current one can be
+## filled without rebuilding the strip on every scroll tick.
+var _mini_nav: HBoxContainer = null
+var _mini_nav_strip: ScrollContainer = null
+var _nav_buttons: Dictionary = {}
+var _nav_current: String = ""
+## The tree row wearing the accent pill, so it can be given back its normal colours when the reader
+## moves on. Held rather than searched: a tree of a few hundred rows is walked otherwise, per click.
+var _active_item: TreeItem = null
+## Whether this host sizes the browser itself (a dock) rather than declaring a mode (a window).
+var _auto_compact: bool = false
 ## The live search term. It drives BOTH halves of a search - which pages the tree offers, and
 ## whether the page on screen is drawn with its hits wrapped - so navigating from a result keeps
 ## the highlight the reader searched for.
@@ -87,19 +125,28 @@ func _init() -> void:
 	_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(_split)
 	_side = VBoxContainer.new()
+	_side.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
 	_side.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(210.0), 0.0)
 	_tree = Tree.new()
 	_tree.hide_root = true
 	_tree.allow_reselect = true
 	_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# Dense rows: this is a list of names in a narrow column, not a form. The tighter separation and
+	# the smaller indent are what fit a whole corpus into a dock without a scroll on the tree too.
+	_tree.add_theme_constant_override("v_separation", int(EventSheetPalette.scaled_f(2.0)))
+	_tree.add_theme_constant_override("item_margin", int(EventSheetPalette.scaled_f(6.0)))
 	_tree.item_selected.connect(_on_tree_selected)
 	_side.add_child(_tree)
+	_side.add_child(_build_side_footer())
 	_split.add_child(_side)
 
 	_page = EventSheetDocPageView.new()
 	_page.doc_requested.connect(func(doc_id: String, anchor: String) -> void: show_doc(doc_id, anchor))
 	_page.link_activated.connect(func(target: String) -> void: link_activated.emit(target))
 	_page.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
+	# A page is BUILT before it is laid out, so the bearing taken while building it has no positions
+	# to read. Its own layout is what says there are some, and a fold opening or closing re-fires it.
+	_page.resized.connect(_refresh_nav_highlight)
 	_panel = EventSheetDocPanel.new()
 	_panel.link_activated.connect(func(target: String) -> void: link_activated.emit(target))
 	_panel.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
@@ -117,7 +164,26 @@ func _init() -> void:
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_scroll.add_child(column)
 	_page.set_scroll_container(_scroll)
-	_split.add_child(_scroll)
+	# The page host: the mini-nav pinned above the scroll rather than inside it, which is the whole
+	# point of it - a chapter list that scrolled away with the page would be a table of contents.
+	var host: VBoxContainer = VBoxContainer.new()
+	host.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	host.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_mini_nav = HBoxContainer.new()
+	_mini_nav.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(2.0)))
+	# ONE line, always. A wrapping strip of chapter names is four lines of a dock column on a long
+	# guide - a table of contents where a bearing was wanted - so it scrolls sideways instead.
+	_mini_nav_strip = ScrollContainer.new()
+	_mini_nav_strip.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_mini_nav_strip.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_mini_nav_strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_mini_nav_strip.visible = false
+	_mini_nav_strip.add_child(_mini_nav)
+	host.add_child(_mini_nav_strip)
+	host.add_child(_scroll)
+	_split.add_child(host)
+	_scroll.get_v_scroll_bar().value_changed.connect(_on_page_scrolled)
 	_build_tree()
 	# Reading the whole corpus into a search index is the one thing here that costs a tenth of a
 	# second or so, and the moment it would otherwise happen is the worst one available: mid
@@ -132,6 +198,128 @@ func _warm_search_index() -> void:
 	EventSheetDocSearch.index()
 
 
+## The strip under the guide list: the two ways OUT of this surface, as small flat icon buttons -
+## the page in a browser at full fidelity, and the repository itself. Icons rather than words
+## because the sidebar is a narrow column and its width belongs to the guide names.
+func _build_side_footer() -> HBoxContainer:
+	var footer: HBoxContainer = HBoxContainer.new()
+	footer.alignment = BoxContainer.ALIGNMENT_END
+	footer.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(2.0)))
+	footer.add_child(_icon_button(["ExternalLink", "Link", "Load"], "Open online",
+		"Opens the page you are reading in your browser, pinned to the version you installed.",
+		_open_current_online))
+	footer.add_child(_icon_button(["VcsBranches", "Script", "Object"], "Source",
+		"Opens the project's source repository in your browser.",
+		func() -> void:
+			OS.shell_open(EventSheets.DOCS_REPO_URL)
+			link_activated.emit(EventSheets.DOCS_REPO_URL)))
+	return footer
+
+
+## A small flat icon button. `icon_names` are alternatives, best first - editor builds carry
+## different icon sets - and a word is used wherever none of them exist (and headless, where there
+## is no editor theme at all), so the button always says something.
+func _icon_button(icon_names: Array, fallback_text: String, tooltip: String, action: Callable) -> Button:
+	var button: Button = Button.new()
+	button.flat = true
+	button.tooltip_text = tooltip
+	button.focus_mode = Control.FOCUS_NONE
+	var icon: Texture2D = _first_icon(icon_names)
+	if icon != null:
+		button.icon = icon
+	else:
+		button.text = fallback_text
+		button.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	button.pressed.connect(action)
+	return button
+
+
+## The first of `icon_names` this editor carries, or null for none of them.
+func _first_icon(icon_names: Array) -> Texture2D:
+	for icon_name: Variant in icon_names:
+		var icon: Texture2D = _editor_icon(str(icon_name))
+		if icon != null:
+			return icon
+	return null
+
+
+## The online escape hatch, following the reader: the page on screen when it came from a repo file,
+## and the guide index when the surface is showing generated reference instead.
+func _open_current_online() -> void:
+	var route: Dictionary = EventSheetDocExplain.resolve(_current_id)
+	var target: String = str(route.get("target", ""))
+	if target.is_empty():
+		target = EventSheetDocLibrary.repo_path_for_page(str(route.get("page_id", "")))
+	if target.is_empty():
+		target = "docs/README.md"
+	EventSheets.open_online_doc(target)
+	link_activated.emit(target)
+
+
+## An editor theme icon by name, or null outside the editor and for a name this build lacks.
+func _editor_icon(icon_name: String) -> Texture2D:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	var editor_interface: Object = Engine.get_singleton("EditorInterface")
+	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
+		return null
+	var theme: Theme = editor_interface.get_editor_theme()
+	if theme == null or not theme.has_icon(icon_name, "EditorIcons"):
+		return null
+	return theme.get_icon(icon_name, "EditorIcons")
+
+
+## The icon a page id's KIND wears in the sidebar, or null when this editor carries none of the
+## alternatives (and headless, where a row is simply a name).
+func _kind_icon(page_id: String) -> Texture2D:
+	for icon_name: Variant in KIND_ICONS.get(kind_for_page(page_id), []) as Array:
+		var icon: Texture2D = _editor_icon(str(icon_name))
+		if icon != null:
+			return icon
+	return null
+
+
+## What KIND of thing a page id names, from the id alone. Pure and static, so the suite pins the
+## mapping the sidebar icons are derived from rather than the icons themselves (which differ
+## between editor builds).
+static func kind_for_page(page_id: String) -> String:
+	var id: String = page_id.strip_edges()
+	if id.begins_with("%s/" % EventSheetDocLibrary.ADDONS_DIR):
+		return "addon"
+	if id.begins_with("%s/" % EventSheetDocLibrary.MODULES_DIR):
+		return "module"
+	if id.begins_with("%s/" % EventSheetDocLibrary.PACKS_SET):
+		return "pack"
+	if id.begins_with("%s/" % EventSheetDocLibrary.PROJECT_SET):
+		return "project"
+	return "guide"
+
+
+## Whether a host of this width should fold its sidebar away. Pure, so the breakpoint is pinned as
+## a decision rather than inferred from a screenshot.
+static func wants_compact(width: float) -> bool:
+	return width > 0.0 and width < EventSheetPalette.scaled_f(AUTO_COMPACT_WIDTH)
+
+
+## Lets the host stop declaring a mode and have it decided from the width it actually gets. The
+## dock turns this on: a docked column is narrow by nature, but a floated or widened one is not,
+## and a reader who drags the dock wide is asking for the tree back.
+func set_auto_compact(enabled: bool) -> void:
+	_auto_compact = enabled
+	_apply_auto_compact()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		_apply_auto_compact()
+
+
+func _apply_auto_compact() -> void:
+	if not _auto_compact or size.x <= 0.0:
+		return
+	set_compact(wants_compact(size.x))
+
+
 ## Compact mode: one half on screen at a time, for a host too narrow to show both (the Help dock).
 ## The tree folds behind the "Contents" toggle and the width floor drops to what prose needs.
 func set_compact(enabled: bool) -> void:
@@ -143,6 +331,10 @@ func set_compact(enabled: bool) -> void:
 	_contents_button.visible = enabled
 	_contents_button.set_pressed_no_signal(false)
 	_side.visible = not enabled
+	# The generated half has its own comfortable column width, and it is wider than a dock slot. It
+	# is invisible while a guide is on screen (so it costs the layout nothing), but the moment the
+	# reader asks what a verb does it becomes the widest thing in a host that cannot scroll sideways.
+	_panel.set_compact(enabled)
 
 
 ## True while the surface is folded to one half at a time.
@@ -209,6 +401,11 @@ func _show_page(page_id: String, anchor: String, doc_id: String) -> bool:
 	_current_id = doc_id
 	_panel.visible = false
 	_page.visible = true
+	# A search term outranks the fold: a hit inside a chapter the reader cannot see reads as a
+	# search that missed, so a live query opens the whole page.
+	if not _query.is_empty():
+		_page.expand_all()
+	_build_mini_nav()
 	_select_tree_item(page_id)
 	if not anchor.strip_edges().is_empty():
 		_page.jump_to_anchor(anchor)
@@ -223,7 +420,75 @@ func _show_generated(doc_id: String) -> bool:
 	_current_id = doc_id
 	_page.visible = false
 	_panel.visible = true
+	_clear_mini_nav()
+	_mark_active_item(null)
 	return true
+
+
+## The sticky chapter strip: one small-caps button per H2, shown only for a page long enough to
+## fold (a short page's own headings are already on screen, and a nav that repeated them would be
+## chrome answering a question nobody asked).
+func _build_mini_nav() -> void:
+	_clear_mini_nav()
+	if not _page.is_folding():
+		return
+	for entry: Dictionary in _page.outline():
+		var slug: String = str(entry.get("slug", ""))
+		if slug.is_empty():
+			continue
+		var button: Button = Button.new()
+		button.flat = true
+		button.text = str(entry.get("text", "")).to_upper()
+		button.tooltip_text = "Jump to \"%s\"." % str(entry.get("text", ""))
+		button.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+		button.pressed.connect(func() -> void:
+			_page.set_section_expanded(slug, true)
+			_page.jump_to_anchor(slug))
+		_mini_nav.add_child(button)
+		_nav_buttons[slug] = button
+	_mini_nav_strip.visible = _mini_nav.get_child_count() > 0
+	_refresh_nav_highlight()
+
+
+func _clear_mini_nav() -> void:
+	_nav_buttons.clear()
+	_nav_current = ""
+	if _mini_nav == null:
+		return
+	_mini_nav_strip.visible = false
+	for child: Node in _mini_nav.get_children():
+		_mini_nav.remove_child(child)
+		child.queue_free()
+
+
+## The chapter the reader is in wears the accent; the rest stay muted. Driven by the scroll rather
+## than by clicks, so scrolling past a heading updates it exactly as clicking one does.
+func _on_page_scrolled(value: float) -> void:
+	if _mini_nav_strip == null or not _mini_nav_strip.visible or not _page.visible:
+		return
+	_highlight_nav(_page.section_at(value))
+
+
+## Re-takes the bearing from wherever the page currently is. Called on the page's own layout as
+## well as on a scroll, because the strip is filled while the page is still positionless and the
+## answer it gets then is "nothing to highlight yet" - true at that instant, and stale a frame later.
+func _refresh_nav_highlight() -> void:
+	if _mini_nav_strip == null or not _mini_nav_strip.visible or _page == null or not _page.visible:
+		return
+	var offset: float = float(_scroll.scroll_vertical) if _scroll != null else 0.0
+	_highlight_nav(_page.section_at(offset))
+
+
+func _highlight_nav(slug: String) -> void:
+	_nav_current = slug
+	var accent: Color = EventSheetPopupUI.accent_color()
+	var muted: Color = Color(0.86, 0.88, 0.92, 0.62)
+	for key: Variant in _nav_buttons:
+		var button: Button = _nav_buttons[key] as Button
+		if button == null:
+			continue
+		button.add_theme_color_override("font_color", accent if str(key) == slug else muted)
+		button.add_theme_color_override("font_hover_color", accent)
 
 
 ## The landing page: the shipped documentation index when there is one, and the guidance line the
@@ -276,6 +541,8 @@ func search(query: String) -> void:
 ## Activating a row opens that page AT that heading, with the term still highlighted.
 func _build_results(query: String) -> void:
 	_items_by_id.clear()
+	# Every row is about to be freed, so the remembered active one must go with them.
+	_active_item = null
 	_tree.clear()
 	var root: TreeItem = _tree.create_item()
 	var branches: Dictionary = {}
@@ -288,6 +555,7 @@ func _build_results(query: String) -> void:
 			branch.set_text(0, str(result.get("title", page_id)))
 			branch.set_tooltip_text(0, str(result.get("title", page_id)))
 			branch.set_metadata(0, {"doc_id": str(result.get("doc_id", "")), "anchor": ""})
+			_style_page_row(branch, page_id)
 			branches[page_id] = branch
 			_items_by_id[page_id] = branch
 		var heading: String = str(result.get("heading", ""))
@@ -296,6 +564,9 @@ func _build_results(query: String) -> void:
 		var item: TreeItem = _tree.create_item(branch)
 		item.set_text(0, heading)
 		item.set_tooltip_text(0, heading)
+		# A heading hit is a place INSIDE a page, so it reads quieter than the page it belongs to.
+		item.set_custom_font_size(0, EventSheetPalette.scaled(11))
+		item.set_custom_color(0, Color(0.86, 0.88, 0.92, 0.78))
 		item.set_metadata(0, {"doc_id": str(result.get("doc_id", "")), "anchor": str(result.get("anchor", ""))})
 	if results.is_empty():
 		var empty: TreeItem = _tree.create_item(root)
@@ -307,12 +578,13 @@ func _build_results(query: String) -> void:
 ## An empty bundle leaves the tree empty rather than inventing rows for pages that do not ship.
 func _build_tree() -> void:
 	_items_by_id.clear()
+	# Every row is about to be freed, so the remembered active one must go with them.
+	_active_item = null
 	_tree.clear()
 	var root: TreeItem = _tree.create_item()
 	for group: Dictionary in EventSheetDocLibrary.groups():
 		var section: TreeItem = _tree.create_item(root)
-		section.set_text(0, str(group.get("title", "")))
-		section.set_selectable(0, false)
+		_style_group_row(section, str(group.get("title", "")))
 		var ids: PackedStringArray = group.get("ids", PackedStringArray())
 		for id: String in ids:
 			var item: TreeItem = _tree.create_item(section)
@@ -322,12 +594,63 @@ func _build_tree() -> void:
 			# otherwise half the corpus reads as "Working with Value...".
 			item.set_tooltip_text(0, title)
 			item.set_metadata(0, id)
+			_style_page_row(item, id)
 			_items_by_id[id] = item
 		section.collapsed = _items_by_id.size() > 12
 
 
+## A GROUP row: the small-caps label the whole surface names its sections with, and not selectable -
+## a group is a heading, not a destination.
+##
+## MUTED, never accent. There is exactly one accent thing in this column - the filled pill on the
+## page being read - and a heading in the same colour competes with it for the eye that is looking
+## for "where am I". The letter spacing comes from the shared small-caps font rather than from a
+## second recipe here, so a group row and a section label are the same typography.
+func _style_group_row(item: TreeItem, title: String) -> void:
+	item.set_text(0, group_label(title))
+	item.set_selectable(0, false)
+	item.set_custom_font_size(0, EventSheetPalette.scaled(EventSheetPopupUI.SMALL_CAPS_FONT_SIZE))
+	item.set_custom_color(0, EventSheetPalette.TEXT_MUTED)
+	var tracked: FontVariation = EventSheetPopupUI.small_caps_font(_tree.get_theme_font("font"))
+	if tracked != null:
+		item.set_custom_font(0, tracked)
+
+
+## A PAGE row: its kind icon, kept small so a row stays a line of text with a mark in front of it
+## rather than a button.
+func _style_page_row(item: TreeItem, page_id: String) -> void:
+	var icon: Texture2D = _kind_icon(page_id)
+	if icon == null:
+		return
+	item.set_icon(0, icon)
+	item.set_icon_max_width(0, int(EventSheetPalette.scaled_f(14.0)))
+
+
+## A group title as the sidebar draws it. Pure, so the suite pins the label rather than the pixels.
+static func group_label(title: String) -> String:
+	return title.strip_edges().to_upper()
+
+
+## The page on screen wears a filled accent pill, and the row that wore it last gives it back. The
+## tree's own selection highlight is not enough on its own: a search, a link inside a page or a
+## restored dock all change the page WITHOUT the reader clicking a row.
+func _mark_active_item(item: TreeItem) -> void:
+	if _active_item != null and is_instance_valid(_active_item) and _active_item != item:
+		_active_item.clear_custom_bg_color(0)
+		_active_item.clear_custom_color(0)
+	_active_item = item
+	if item == null:
+		return
+	var accent: Color = EventSheetPopupUI.accent_color()
+	item.set_custom_bg_color(0, accent, false)
+	# On a filled accent the row's own font colour can vanish. The editor's accent is a mid-to-light
+	# blue in both themes, so near-black reads on it either way.
+	item.set_custom_color(0, Color(0.08, 0.09, 0.11))
+
+
 func _select_tree_item(page_id: String) -> void:
 	var item: TreeItem = _items_by_id.get(page_id, null) as TreeItem
+	_mark_active_item(item)
 	if item == null:
 		return
 	var parent: TreeItem = item.get_parent()

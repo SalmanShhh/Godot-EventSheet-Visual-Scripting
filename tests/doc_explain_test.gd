@@ -36,6 +36,65 @@ static func run() -> bool:
 	all_passed = _test_pack_verb_page() and all_passed
 	all_passed = _test_row_to_doc_id() and all_passed
 	all_passed = _test_entry_points() and all_passed
+	all_passed = _test_page_shape() and all_passed
+	return all_passed
+
+
+## THE SHAPE OF A REFERENCE PAGE, which is what a reader learns once and then reuses on every verb:
+## the two metadata badges beside the title, the parameters split into real table columns, and a
+## section order that does not depend on the order the assembler happened to emit its blocks in.
+## All three are pure, so they pin here; how they LOOK is the render harness's job.
+static func _test_page_shape() -> bool:
+	var all_passed: bool = true
+	var definition: ACEDefinition = _quest_definition()
+	if definition == null:
+		return _check("Quest's Advance Objective is in the vocabulary", false, true)
+	var blocks: Array[Dictionary] = EventSheetDocExplain.blocks_for_definition(definition)
+
+	# Exactly two badges, in this order: what the verb IS, then where it comes from. A third badge
+	# turns metadata into decoration, so the count is pinned as hard as the text.
+	var badges: PackedStringArray = PackedStringArray(_block(blocks, "title").get("badges", []))
+	all_passed = _check("the title carries its two metadata badges", ", ".join(badges), "Action, Quest") and all_passed
+	all_passed = _check("a category page badges itself as one",
+		", ".join(PackedStringArray(_block(EventSheetDocExplain.blocks_for_section("Debug"), "title").get("badges", []))),
+		"Category") and all_passed
+
+	# The parameters TABLE reads its columns as columns. The one-string `detail` stays for the form
+	# row hosts that still use it, so both shapes are pinned off one real pack verb.
+	var items: Array = _block(blocks, "params").get("items", []) as Array
+	var first: Dictionary = items[0] as Dictionary
+	all_passed = _check("a parameter names its own type", str(first.get("type", "")), "String") and all_passed
+	all_passed = _check("a parameter with no declared default has an empty default cell",
+		str(first.get("default", "")), "") and all_passed
+	all_passed = _check("the one-string form still carries the type",
+		str(first.get("detail", "")), "String") and all_passed
+	all_passed = _check("the last parameter carries the default it declares",
+		str((items[items.size() - 1] as Dictionary).get("default", "")), "0") and all_passed
+
+	# A reflected pack method declares no blurbs, so the table drops the Description column rather
+	# than drawing three blank cells. The rows are pinned as VALUES through the same pure seam.
+	all_passed = _check("the table drops a column no parameter fills",
+		", ".join(EventSheetDocPanel.parameter_columns(items)), "Name, Type, Default") and all_passed
+	all_passed = _check("a parameter with a blurb keeps the Description column",
+		", ".join(EventSheetDocPanel.parameter_columns([{"name": "Slot", "type": "int", "default": "0",
+			"description": "Which save slot."}])), "Name, Type, Default, Description") and all_passed
+	all_passed = _check("a row carries one cell per chosen column",
+		", ".join(PackedStringArray(EventSheetDocPanel.parameter_rows(items)[0])), "Quest Id, String, ") and all_passed
+
+	# The reading order. Pinned by VALUE, and then pinned again against a REVERSED block list,
+	# because the whole point of the plan is that the page does not inherit the assembler's order.
+	all_passed = _check("a pack verb's page reads in the fixed order",
+		", ".join(EventSheetDocPanel.section_plan(blocks)),
+		"title, description, syntax, parameters, preview, about, link") and all_passed
+	var shuffled: Array[Dictionary] = []
+	for index: int in range(blocks.size()):
+		shuffled.append(blocks[blocks.size() - 1 - index])
+	all_passed = _check("the order does not follow the order the blocks arrived in",
+		", ".join(EventSheetDocPanel.section_plan(shuffled)),
+		", ".join(EventSheetDocPanel.section_plan(blocks))) and all_passed
+	all_passed = _check("a category page reads as the sections it actually has",
+		", ".join(EventSheetDocPanel.section_plan(EventSheetDocExplain.blocks_for_section("Debug"))),
+		"title, description") and all_passed
 	return all_passed
 
 

@@ -4,6 +4,14 @@
 # GDScript it ships as, its values, a LIVE figure of the verb with an Insert button, the blurb
 # for its whole category, and a read-more button aimed at its pack's guide.
 #
+# THE LOOK is a compact developer reference, not a docs website: a large title with two metadata
+# badges, small-caps accent section labels as the page's only accent-coloured text, syntax and
+# parameters as a side-by-side band (stacked in a narrow column), and the parameters as a table
+# rather than as prose. The one thing it does NOT restyle is the figure - see _figure_block.
+#
+# The reading order is FIXED (see SECTION_ORDER) and taken from the sections a page HAS rather than
+# from the order the assembler emitted them, so every reference page in the plugin reads the same.
+#
 # Deliberately HOST-AGNOSTIC. It is a plain VBoxContainer, so the same panel is parented by the
 # Phase 2 window today and could be parented by a side dock later without touching this file.
 # It knows nothing about tabs, menus or shortcuts - a host calls show_doc() and gets a page.
@@ -23,6 +31,42 @@ extends VBoxContainer
 ## and for a one-row figure to read as a row rather than as a wrapped fragment.
 const PAGE_WIDTH := 460.0
 
+## The page column in a COMPACT host, before display scaling. A docked column is narrower than this
+## panel's comfortable width, and a minimum it cannot satisfy is not a comfort - it either shoves the
+## dock wider than the dock's own floor or gets clipped inside a host whose horizontal scrolling is
+## switched off, which leaves the clipped edge unreachable. The same number the browser's compact
+## floor uses, so the two halves of the reading surface ask for the same room.
+const COMPACT_PAGE_WIDTH := 260.0
+
+## The page title's size, before display scaling. Large enough that the eye lands on it first, in
+## the editor's own documentation-title font when it is available.
+const TITLE_FONT_SIZE := 20
+
+## The wrap bound (before display scaling) for a control that lives in ONE COLUMN of the syntax /
+## parameters band. Half the page, minus the band's gap - a column that claimed the full page width
+## as its minimum would force the band to stack at every width.
+const COLUMN_WRAP_WIDTH := 200.0
+
+## The glyph that marks the about card, and the one on the read-more button. Text, not icons: this
+## panel is drawn outside the editor by the render harness and in headless tests, where an editor
+## icon is null.
+const INFO_GLYPH := "ⓘ"
+const EXTERNAL_LINK_GLYPH := "↗"
+
+## The section every block kind belongs to. The block vocabulary is the assembler's (it names what
+## the content IS); the sections are this panel's (they name what the reader READS), and the two
+## are mapped in one place so a new block kind lands in a deliberate slot instead of at the end.
+const SECTION_FOR_BLOCK := {
+	"title": "title", "note": "note", "prose": "description", "ships_as": "syntax",
+	"params": "parameters", "figure": "preview", "about": "about", "link": "link",
+}
+
+## THE READING ORDER, fixed for every reference page: what it is, what it does, what you type, what
+## you fill in, what it looks like on the sheet, and where it comes from.
+const SECTION_ORDER: Array[String] = [
+	"title", "note", "description", "syntax", "parameters", "preview", "about", "link",
+]
+
 ## Emitted when the reader activates a read-more link. The panel opens it as well (that is the
 ## whole point of a link); the signal is for a host that wants to say so in its status line.
 signal link_activated(target: String)
@@ -34,17 +78,40 @@ var _doc_id: String = ""
 var _doc_title: String = ""
 var _empty_label: Label = null
 var _page: VBoxContainer = null
+## The width every wrapping control on this page is bounded by, before display scaling. A VARIABLE
+## rather than the constant, because the same panel is hosted by a window and by a dock column.
+var _page_width: float = PAGE_WIDTH
+var _compact: bool = false
 
 
 func _init() -> void:
 	add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
-	custom_minimum_size = Vector2(EventSheetPalette.scaled_f(PAGE_WIDTH), 0.0)
-	_empty_label = EventSheetPopupUI.hint_label("", EventSheetPalette.scaled_f(PAGE_WIDTH))
+	custom_minimum_size = Vector2(EventSheetPalette.scaled_f(_page_width), 0.0)
+	_empty_label = EventSheetPopupUI.hint_label("", EventSheetPalette.scaled_f(_page_width))
 	_empty_label.visible = false
 	add_child(_empty_label)
 	_page = VBoxContainer.new()
 	_page.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
 	add_child(_page)
+
+
+## Narrows the page for a host that has no room for the comfortable column (the Help dock). The page
+## on screen is REDRAWN, because every wrapping label was built with the old bound baked into its
+## minimum size and a label already in the tree does not re-take it.
+func set_compact(enabled: bool) -> void:
+	if _compact == enabled:
+		return
+	_compact = enabled
+	_page_width = COMPACT_PAGE_WIDTH if enabled else PAGE_WIDTH
+	custom_minimum_size = Vector2(EventSheetPalette.scaled_f(_page_width), 0.0)
+	_empty_label.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(_page_width), 0.0)
+	if not _doc_id.is_empty():
+		show_doc(_doc_id)
+
+
+## True while the panel is drawn for a narrow host.
+func is_compact() -> bool:
+	return _compact
 
 
 ## The doc id currently on screen ("" when the panel is showing its empty state).
@@ -101,6 +168,25 @@ func show_message(text: String) -> void:
 	_empty_label.visible = not text.strip_edges().is_empty()
 
 
+## Which sections a set of blocks draws, in the order they are drawn. PURE and static, so the
+## reading order is pinned by a test rather than by a screenshot: a reader who learns the shape of
+## one reference page has learned every one, and that only holds if the order never depends on the
+## order the blocks happened to arrive in.
+##
+## "syntax" and "parameters" are two sections that share one BAND (side by side when there is room,
+## stacked when there is not), and "link" is drawn INSIDE the about card when both are present -
+## both still report as their own section, because both are still their own thing to read.
+static func section_plan(blocks: Array[Dictionary]) -> PackedStringArray:
+	var present: Dictionary = {}
+	for block: Dictionary in blocks:
+		present[SECTION_FOR_BLOCK.get(str(block.get("kind", "")), "")] = true
+	var plan: PackedStringArray = PackedStringArray()
+	for section: String in SECTION_ORDER:
+		if present.has(section):
+			plan.append(section)
+	return plan
+
+
 func _show_blocks(doc_id: String, blocks: Array[Dictionary]) -> bool:
 	if blocks.is_empty():
 		return false
@@ -108,10 +194,19 @@ func _show_blocks(doc_id: String, blocks: Array[Dictionary]) -> bool:
 	_empty_label.visible = false
 	_doc_id = doc_id
 	_doc_title = ""
+	var by_section: Dictionary = {}
 	for block: Dictionary in blocks:
 		if str(block.get("kind", "")) == "title":
 			_doc_title = str(block.get("text", ""))
-		var control: Control = _control_for(block)
+		by_section[SECTION_FOR_BLOCK.get(str(block.get("kind", "")), "")] = block
+	for section: String in section_plan(blocks):
+		# The band is emitted once, at the SYNTAX slot, carrying both columns.
+		if section == "parameters" and by_section.has("syntax"):
+			continue
+		# A link beside an about card rides inside it rather than trailing the page.
+		if section == "link" and by_section.has("about"):
+			continue
+		var control: Control = _section_control(section, by_section)
 		if control != null:
 			_page.add_child(control)
 	return true
@@ -123,35 +218,49 @@ func _clear_page() -> void:
 		child.queue_free()
 
 
-func _control_for(block: Dictionary) -> Control:
-	match str(block.get("kind", "")):
+func _section_control(section: String, by_section: Dictionary) -> Control:
+	var block: Dictionary = by_section.get(section, {}) as Dictionary
+	match section:
 		"title":
-			return _title_block(str(block.get("text", "")), str(block.get("subtitle", "")))
+			return _title_block(str(block.get("text", "")), block.get("badges", PackedStringArray()))
 		"note":
 			return _note_block(str(block.get("text", "")))
-		"prose":
+		"description":
 			return _wrapped_label(str(block.get("text", "")))
-		"ships_as":
-			return EventSheetPopupUI.titled_card("Ships as", _code_label(str(block.get("code", ""))))
-		"params":
-			return _params_block(block.get("items", []) as Array)
-		"about":
-			return EventSheetPopupUI.titled_card(str(block.get("title", "About")),
-				_wrapped_label(str(block.get("text", ""))))
-		"figure":
+		"syntax":
+			return _syntax_and_parameters(block, by_section.get("parameters", {}) as Dictionary)
+		"parameters":
+			return _parameters_column(block)
+		"preview":
 			return _figure_block(block.get("definition", null) as ACEDefinition)
+		"about":
+			return _about_block(block, by_section.get("link", {}) as Dictionary)
 		"link":
 			return _link_block(str(block.get("label", "")), str(block.get("target", "")),
 				str(block.get("doc_id", "")))
 	return null
 
 
-func _title_block(text: String, subtitle: String) -> Control:
-	var box: VBoxContainer = VBoxContainer.new()
-	box.add_child(EventSheetPopupUI.section_header(text))
-	if not subtitle.strip_edges().is_empty():
-		box.add_child(EventSheetPopupUI.hint_label(subtitle, EventSheetPalette.scaled_f(PAGE_WIDTH)))
-	return box
+## The page's masthead: a LARGE title with its metadata badges right beside it. The badges are the
+## two facts a reader needs before reading a word - what this verb is, and where it comes from -
+## and they flow onto a second line rather than squeezing the title when the panel is narrow.
+func _title_block(text: String, badges: Variant) -> Control:
+	var row: HFlowContainer = HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", int(EventSheetPalette.scaled_f(8.0)))
+	row.add_theme_constant_override("v_separation", int(EventSheetPalette.scaled_f(4.0)))
+	var title: Label = Label.new()
+	title.text = text
+	title.add_theme_font_size_override("font_size", EventSheetPalette.scaled(TITLE_FONT_SIZE))
+	var title_font: Font = EventSheetPopupUI.editor_font("doc_title")
+	if title_font != null:
+		title.add_theme_font_override("font", title_font)
+	row.add_child(title)
+	var labels: PackedStringArray = PackedStringArray(badges if badges != null else [])
+	for index: int in range(labels.size()):
+		# The first badge says what the verb IS (accent); the rest say where it comes from (purple).
+		var tone: Color = EventSheetPopupUI.accent_color() if index == 0 else EventSheetPopupUI.BADGE_PACK
+		row.add_child(EventSheetPopupUI.metadata_badge(labels[index], tone))
+	return row
 
 
 ## A deprecation steer, shown above the prose in the editor's warning colour so a verb that is on
@@ -162,20 +271,94 @@ func _note_block(text: String) -> Control:
 	return EventSheetPopupUI.panel_section(label)
 
 
-func _params_block(items: Array) -> Control:
-	var box: VBoxContainer = EventSheetPopupUI.form_box()
+## The two reference sections that answer "what do I type" and "what do I fill in". They read as a
+## pair, so they sit as a pair: side by side above the breakpoint, stacked below it, decided by the
+## band itself on every resize (this panel is hosted in a window AND in a dock column).
+func _syntax_and_parameters(syntax: Dictionary, parameters: Dictionary) -> Control:
+	var syntax_column: Control = _syntax_column(syntax)
+	if parameters.is_empty():
+		return syntax_column
+	return EventSheetPopupUI.responsive_band(syntax_column, _parameters_column(parameters))
+
+
+func _syntax_column(block: Dictionary) -> Control:
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	column.add_child(EventSheetPopupUI.small_caps_label("Syntax"))
+	column.add_child(EventSheetPopupUI.code_card(str(block.get("code", "")),
+		EventSheetPalette.scaled_f(COLUMN_WRAP_WIDTH)))
+	return column
+
+
+## The columns a set of parameters actually fills. Name and Type always; Default and Description
+## only when at least one parameter has one. A reflected pack method declares neither a default nor
+## a blurb for most of its arguments, and a column of blank cells reads as a broken table rather
+## than as an honest one. Pure, so which columns a real verb draws is pinned by a test.
+static func parameter_columns(items: Array) -> PackedStringArray:
+	var columns: PackedStringArray = PackedStringArray(["Name", "Type"])
+	var has_default: bool = false
+	var has_description: bool = false
 	for entry: Variant in items:
 		var item: Dictionary = entry as Dictionary
-		var detail: Label = _wrapped_label(str(item.get("detail", "")))
-		detail.modulate = Color(1.0, 1.0, 1.0, 0.82)
-		box.add_child(EventSheetPopupUI.form_row(str(item.get("name", "")), detail))
-	return EventSheetPopupUI.titled_card("Values you fill in", box)
+		has_default = has_default or not str(item.get("default", "")).strip_edges().is_empty()
+		has_description = has_description or not str(item.get("description", "")).strip_edges().is_empty()
+	if has_default:
+		columns.append("Default")
+	if has_description:
+		columns.append("Description")
+	return columns
+
+
+## The parameter rows, in the columns parameter_columns() chose - the table's whole content, as
+## plain strings, so the table is testable without a window.
+static func parameter_rows(items: Array) -> Array:
+	var columns: PackedStringArray = parameter_columns(items)
+	var rows: Array = []
+	for entry: Variant in items:
+		var item: Dictionary = entry as Dictionary
+		var cells: PackedStringArray = PackedStringArray()
+		for column: String in columns:
+			cells.append(str(item.get(column.to_lower(), "")))
+		rows.append(cells)
+	return rows
+
+
+## Parameters as a TABLE, never as prose: a reader looking for a default is looking for a cell.
+func _parameters_column(block: Dictionary) -> Control:
+	var items: Array = block.get("items", []) as Array
+	var columns: PackedStringArray = parameter_columns(items)
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	column.add_child(EventSheetPopupUI.small_caps_label("Parameters"))
+	# The LAST column takes the slack and wraps - the description when there is one, the defaults
+	# when there is not, so the table always fills its half of the band instead of hugging left.
+	column.add_child(EventSheetPopupUI.compact_table(columns, parameter_rows(items), columns.size() - 1))
+	return column
+
+
+## The category/pack blurb, and - when the pack has a guide - the way in to it. One card, because
+## "what is this family of verbs for" and "where do I read more about it" are one question.
+func _about_block(block: Dictionary, link: Dictionary) -> Control:
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+	body.add_child(_wrapped_label(str(block.get("text", "")), COLUMN_WRAP_WIDTH * 2.0))
+	if not link.is_empty():
+		var row: Control = _link_block(str(link.get("label", "")), str(link.get("target", "")),
+			str(link.get("doc_id", "")))
+		if row != null:
+			body.add_child(row)
+	return EventSheetPopupUI.labelled_card("%s  %s" % [INFO_GLYPH, str(block.get("title", "About"))], body)
 
 
 ## The live illustration - the one thing a row hover and a static page cannot carry. Insert stays
 ## ENABLED here (unlike the picker's copy, where the dialog's own Add button is the insert route):
 ## reading about a verb and then putting it in the sheet is the whole gesture this surface exists
 ## for, and it runs the guarded, one-undo-step public insert path.
+##
+## The figure itself is NOT restyled here and never should be: it is the real renderer drawing real
+## rows, and a page that "improved" their colours or spacing would be illustrating an editor that
+## does not exist. Only the label above it is this panel's, and it replaces the widget's own
+## sentence caption so the section reads like every other section on the page.
 func _figure_block(definition: ACEDefinition) -> Control:
 	var sheet: EventSheetResource = EventSheetDocFigure.sheet_for_definition(definition)
 	if sheet == null:
@@ -184,9 +367,12 @@ func _figure_block(definition: ACEDefinition) -> Control:
 	if not figure.show_sheet(sheet):
 		figure.free()
 		return null
-	figure.set_caption("How this reads on the sheet:")
 	figure.snippet_inserted.connect(func() -> void: snippet_inserted.emit())
-	return figure
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	column.add_child(EventSheetPopupUI.small_caps_label("How this reads on the sheet"))
+	column.add_child(figure)
+	return column
 
 
 ## Read more. The button prefers the DOC ID: once the guide corpus ships inside the plugin, the
@@ -197,7 +383,7 @@ func _link_block(label: String, target: String, doc_id: String = "") -> Control:
 	if label.strip_edges().is_empty() or target.strip_edges().is_empty():
 		return null
 	var button: Button = Button.new()
-	button.text = label
+	button.text = "%s  %s" % [label, EXTERNAL_LINK_GLYPH]
 	button.tooltip_text = "Opens the full guide - here in the editor when it ships with the plugin, in your browser otherwise."
 	button.pressed.connect(func() -> void:
 		if not doc_id.strip_edges().is_empty() and EventSheets.open_docs(doc_id):
@@ -211,34 +397,14 @@ func _link_block(label: String, target: String, doc_id: String = "") -> Control:
 	return row
 
 
-## Plain text, wrapping at the page column's width. See the file header for why this is never a
+## Plain text, wrapping at the given width - the page column's when none is named, and never wider
+## than it: a bound taken from a constant would keep a narrow host's labels at the comfortable
+## width and push the column past its own minimum. See the file header for why this is never a
 ## BBCode control.
-func _wrapped_label(text: String) -> Label:
+func _wrapped_label(text: String, wrap_width: float = -1.0) -> Label:
+	var bound: float = _page_width if wrap_width <= 0.0 else minf(wrap_width, _page_width)
 	var label: Label = Label.new()
 	label.text = text
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(PAGE_WIDTH), 0.0)
+	label.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(bound), 0.0)
 	return label
-
-
-## The emitted GDScript line, in the editor's source font so it reads as code rather than prose.
-func _code_label(code: String) -> Label:
-	var label: Label = _wrapped_label(code)
-	var source_font: Font = _editor_source_font()
-	if source_font != null:
-		label.add_theme_font_override("font", source_font)
-	return label
-
-
-## The editor's own monospace documentation font, or null outside the editor (headless tests, a
-## non-editor run) where the default font is the only one there is.
-func _editor_source_font() -> Font:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return null
-	var editor_interface: Object = Engine.get_singleton("EditorInterface")
-	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
-		return null
-	var theme: Theme = editor_interface.get_editor_theme()
-	if theme == null or not theme.has_font("doc_source", "EditorFonts"):
-		return null
-	return theme.get_font("doc_source", "EditorFonts")

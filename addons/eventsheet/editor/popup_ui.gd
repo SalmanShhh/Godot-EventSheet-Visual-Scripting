@@ -122,14 +122,7 @@ static func section_header(text: String) -> Label:
 	var label: Label = Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(13))
-	var accent: Color = Color(0.58, 0.74, 1.0)
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		var editor_interface: Object = Engine.get_singleton("EditorInterface")
-		if editor_interface != null and editor_interface.has_method("get_editor_theme"):
-			var theme: Theme = editor_interface.get_editor_theme()
-			if theme != null and theme.has_color("accent_color", "Editor"):
-				accent = theme.get_color("accent_color", "Editor")
-	label.add_theme_color_override("font_color", accent)
+	label.add_theme_color_override("font_color", accent_color())
 	return label
 
 
@@ -167,6 +160,270 @@ static func inset_panel_stylebox() -> StyleBoxFlat:
 	box.set_border_width_all(1)
 	box.set_corner_radius_all(4)
 	return box
+
+
+# ── The "Compact Developer" reference primitives ──────────────────────────────────────────────
+#
+# The documentation surfaces (the Explain panel, the guide pages, the browser chrome) all draw
+# from this handful of factories rather than hand-rolling their own controls, so the style is ONE
+# thing: small-caps accent section labels, metadata badges, a code card, a dense table, and a band
+# that stacks when it is narrow. Every one of them is a pure factory - it returns a Control the
+# caller parents, applies no logic and reads no global state beyond the editor theme.
+#
+# THE COLOUR RULE this set encodes: accent is for SECTION LABELS and the active nav item, and for
+# nothing else. Badges carry their own tone, table headers are neutral-muted, body prose is left
+# at the theme's own colour. Anything that shouts twice stops meaning anything.
+
+## The tone a "kind" badge wears (Action / Condition / Trigger) when the editor accent is not
+## available. The accent itself is preferred - see metadata_badge's default.
+const BADGE_NEUTRAL := Color(0.58, 0.74, 1.0)
+## The tone a pack/category badge wears. Deliberately the only purple on the page.
+const BADGE_PACK := Color(0.72, 0.55, 1.0)
+## Small-caps label size, before display scaling.
+const SMALL_CAPS_FONT_SIZE := 11
+## Glyph spacing (px, before scaling) that turns a plain uppercase label into a letter-spaced one.
+const SMALL_CAPS_TRACKING := 1
+## Cell padding inside a compact_table cell, before display scaling.
+const TABLE_CELL_PAD_H := 6.0
+const TABLE_CELL_PAD_V := 3.0
+## The rule under a table's header row. Neutral on purpose: accent belongs to the small-caps section
+## labels and to the active navigation row, and a table that spent it on its column names would put
+## three accents on one screen. Shared so the guide pages' BBCode tables (which cannot use
+## compact_table - their cells carry links) can be kept looking like the ones that can.
+const TABLE_HAIRLINE := Color(1.0, 1.0, 1.0, 0.16)
+## The width (px, before display scaling) at or above which a responsive_band draws its two
+## children side by side. Below it they stack. One number, so every band in the plugin agrees.
+const TWO_COLUMN_MIN_WIDTH := 560.0
+
+
+## The editor's accent colour, or a neutral blue outside the editor (headless tests, a non-editor
+## run). The one place the accent is read, so every surface tints from the same source.
+static func accent_color() -> Color:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var editor_interface: Object = Engine.get_singleton("EditorInterface")
+		if editor_interface != null and editor_interface.has_method("get_editor_theme"):
+			var theme: Theme = editor_interface.get_editor_theme()
+			if theme != null and theme.has_color("accent_color", "Editor"):
+				return theme.get_color("accent_color", "Editor")
+	return BADGE_NEUTRAL
+
+
+## One of the editor's own documentation fonts by name ("doc", "doc_bold", "doc_source"), or null
+## outside the editor where the default font is the only one there is. Callers fall back rather
+## than fail: a missing font must degrade to plain text, never to an error.
+static func editor_font(font_name: String) -> Font:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	var editor_interface: Object = Engine.get_singleton("EditorInterface")
+	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
+		return null
+	var theme: Theme = editor_interface.get_editor_theme()
+	if theme == null or not theme.has_font(font_name, "EditorFonts"):
+		return null
+	return theme.get_font(font_name, "EditorFonts")
+
+
+## A SMALL-CAPS SECTION LABEL - uppercase, letter-spaced, small, accent-tinted. The only
+## accent-coloured text a reference page carries, which is what makes the eye read these as the
+## page's skeleton instead of as decoration. Pass `color` to override the accent (a card that is
+## already tinted, a warning section).
+##
+## Letter spacing is a FontVariation over the label's own font: Godot's Label has no tracking
+## property, and faking it by interleaving spaces would break every translation.
+static func small_caps_label(text: String, color: Color = Color(0.0, 0.0, 0.0, 0.0)) -> Label:
+	var label: Label = Label.new()
+	label.text = text.to_upper()
+	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(SMALL_CAPS_FONT_SIZE))
+	label.add_theme_color_override("font_color", accent_color() if color.a <= 0.0 else color)
+	var tracked: FontVariation = small_caps_font(label.get_theme_font("font"))
+	if tracked != null:
+		label.add_theme_font_override("font", tracked)
+	return label
+
+
+## The letter-spaced font a small-caps label wears, over `fallback` when the editor's own bold
+## documentation font is not available. Split out of small_caps_label because not every small-caps
+## row in the plugin IS a Label - a Tree group heading is a TreeItem, which can be given a font but
+## cannot host a control - and two spellings of "small caps" side by side read as a mistake.
+## Returns null when there is no font to vary at all, which callers treat as "leave it alone".
+static func small_caps_font(fallback: Font = null) -> FontVariation:
+	var base: Font = editor_font("doc_bold")
+	if base == null:
+		base = fallback
+	if base == null:
+		return null
+	var tracked: FontVariation = FontVariation.new()
+	tracked.base_font = base
+	tracked.set_spacing(TextServer.SPACING_GLYPH, EventSheetPalette.scaled(SMALL_CAPS_TRACKING))
+	return tracked
+
+
+## A METADATA BADGE - the small filled pill that sits beside a page title ("Action", "Quest").
+## Badges are metadata, never decoration: one for what the verb IS, one for where it comes from,
+## and nothing else, or the row of pills stops carrying information.
+static func metadata_badge(text: String, tone: Color = Color(0.0, 0.0, 0.0, 0.0)) -> PanelContainer:
+	var color: Color = accent_color() if tone.a <= 0.0 else tone
+	var panel: PanelContainer = PanelContainer.new()
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(color.r, color.g, color.b, 0.18)
+	style.border_color = Color(color.r, color.g, color.b, 0.45)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(int(EventSheetPalette.scaled_f(3.0)))
+	style.content_margin_left = EventSheetPalette.scaled_f(6.0)
+	style.content_margin_right = EventSheetPalette.scaled_f(6.0)
+	style.content_margin_top = EventSheetPalette.scaled_f(1.0)
+	style.content_margin_bottom = EventSheetPalette.scaled_f(1.0)
+	panel.add_theme_stylebox_override("panel", style)
+	panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var label: Label = Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	label.add_theme_color_override("font_color", color.lightened(0.25))
+	panel.add_child(label)
+	return panel
+
+
+## A CODE CARD - monospace text in an inset panel with a copy button in its top-right corner.
+## The copy button is the card's whole reason to be a widget rather than a label: a reader who
+## wants the line wants it in their clipboard, and a hand-selected label loses the wrapping.
+## `wrap_width` bounds the autowrap (see hint_label for why an unbounded one balloons its host).
+static func code_card(code: String, wrap_width: float = HINT_WRAP_WIDTH) -> PanelContainer:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	var label: Label = Label.new()
+	label.text = code
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(wrap_width, 0.0)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var mono: Font = editor_font("doc_source")
+	if mono != null:
+		label.add_theme_font_override("font", mono)
+	row.add_child(label)
+	row.add_child(copy_button(code))
+	return panel_section(row)
+
+
+## The copy affordance a code card wears: an icon button that puts `text` on the clipboard. Split
+## out so any surface wanting "copy this exact string" gets the same button. Headless-safe - a
+## platform with no clipboard simply does nothing rather than erroring.
+static func copy_button(text: String) -> Button:
+	var button: Button = Button.new()
+	button.flat = true
+	button.focus_mode = Control.FOCUS_NONE
+	button.tooltip_text = "Copy to the clipboard"
+	button.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	var icon: Texture2D = _editor_icon("ActionCopy")
+	if icon != null:
+		button.icon = icon
+	else:
+		button.text = "⧉"
+	button.pressed.connect(func() -> void:
+		if DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
+			DisplayServer.clipboard_set(text))
+	return button
+
+
+## A COMPACT TABLE - a dense grid under a hairline header row (the parameters table's shape:
+## Name | Type | Default | Description). Facts belong in a table; a reference page that writes
+## them as prose makes the reader parse a sentence to find a default.
+##
+## `headers` names the columns, `rows` is an Array of PackedStringArray (one per row, short rows
+## padded with blanks), and `expand_column` is the index of the column that takes the slack and
+## wraps - the description, normally. Pass -1 for a table where every column hugs its text.
+static func compact_table(headers: PackedStringArray, rows: Array, expand_column: int = -1) -> GridContainer:
+	var grid: GridContainer = GridContainer.new()
+	grid.columns = maxi(headers.size(), 1)
+	grid.add_theme_constant_override("h_separation", 0)
+	grid.add_theme_constant_override("v_separation", 0)
+	for column: int in range(headers.size()):
+		grid.add_child(_table_cell(headers[column], true, column == expand_column))
+	for entry: Variant in rows:
+		var cells: PackedStringArray = PackedStringArray(entry)
+		for column: int in range(headers.size()):
+			var text: String = cells[column] if column < cells.size() else ""
+			grid.add_child(_table_cell(text, false, column == expand_column))
+	return grid
+
+
+## One cell. A header cell carries the hairline: a bottom border on every header cell reads as one
+## continuous rule across the row, which is why the grid runs at zero separation.
+static func _table_cell(text: String, is_header: bool, expands: bool) -> PanelContainer:
+	var panel: PanelContainer = PanelContainer.new()
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+	style.content_margin_left = EventSheetPalette.scaled_f(TABLE_CELL_PAD_H)
+	style.content_margin_right = EventSheetPalette.scaled_f(TABLE_CELL_PAD_H)
+	style.content_margin_top = EventSheetPalette.scaled_f(TABLE_CELL_PAD_V)
+	style.content_margin_bottom = EventSheetPalette.scaled_f(TABLE_CELL_PAD_V)
+	if is_header:
+		style.border_color = TABLE_HAIRLINE
+		style.border_width_bottom = 1
+	panel.add_theme_stylebox_override("panel", style)
+	if expands:
+		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var label: Label = Label.new()
+	label.text = text.to_upper() if is_header else text
+	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10 if is_header else 11))
+	label.add_theme_color_override("font_color",
+		EventSheetPalette.TEXT_MUTED if is_header else EventSheetPalette.TEXT_PRIMARY)
+	if expands:
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(120.0), 0.0)
+	panel.add_child(label)
+	return panel
+
+
+## Whether a band of `available_width` draws its two children SIDE BY SIDE. Pure, so the
+## breakpoint is pinned by a test instead of by a screenshot.
+static func prefers_two_columns(available_width: float, min_width: float = TWO_COLUMN_MIN_WIDTH) -> bool:
+	return available_width >= min_width
+
+
+## A RESPONSIVE BAND - `first` and `second` side by side when there is room, stacked when there is
+## not. The decision is re-taken on every resize, so the same page reads correctly in a wide window
+## and in a dock-width column without the caller knowing which it is in.
+##
+## It is a plain BoxContainer whose `vertical` flag is flipped, never a re-parenting of the
+## children: re-parenting would drop focus and rebuild a live figure on every splitter drag.
+static func responsive_band(first: Control, second: Control,
+		min_width: float = TWO_COLUMN_MIN_WIDTH) -> BoxContainer:
+	var band: BoxContainer = BoxContainer.new()
+	band.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(ROW_SEPARATION)))
+	first.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	second.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	band.add_child(first)
+	band.add_child(second)
+	band.vertical = true
+	var limit: float = EventSheetPalette.scaled_f(min_width)
+	band.resized.connect(func() -> void:
+		var stacked: bool = not prefers_two_columns(band.size.x, limit)
+		if band.vertical != stacked:
+			band.vertical = stacked)
+	return band
+
+
+## A LABELLED CARD - the Compact Developer counterpart to titled_card(): the same inset panel, but
+## headed by a small-caps section label instead of a sentence-case header. Use it for a reference
+## section ("ABOUT QUEST"); titled_card stays the dialog form.
+static func labelled_card(label_text: String, content: Control, pad: float = PANEL_SECTION_PAD) -> PanelContainer:
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", ROW_SEPARATION)
+	box.add_child(small_caps_label(label_text))
+	box.add_child(content)
+	return panel_section(box, pad)
+
+
+## An editor icon by name, or null outside the editor / when the theme has no such icon.
+static func _editor_icon(icon_name: String) -> Texture2D:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	var editor_interface: Object = Engine.get_singleton("EditorInterface")
+	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
+		return null
+	var theme: Theme = editor_interface.get_editor_theme()
+	if theme == null or not theme.has_icon(icon_name, "EditorIcons"):
+		return null
+	return theme.get_icon(icon_name, "EditorIcons")
 
 
 ## Fills `popup` with the suggestions whose text contains `filter_text` (case-insensitive;

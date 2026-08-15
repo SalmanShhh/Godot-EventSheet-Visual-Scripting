@@ -435,30 +435,51 @@ func _figure_count(page_id: String) -> int:
 
 ## Scrolls to the first figure on the page, so the screenshot is of an illustration rather than of
 ## the prose above it.
+##
+## It is a COROUTINE, and that is the whole correctness of it: expanding a chapter only flips a
+## container's `visible` flag, and Godot reflows on the next layout pass. Reading a figure's position
+## in the same frame reads the positions of a page that has not grown yet, sets a scroll offset for a
+## page that no longer exists, and photographs the header. Two frames of slack, then measure.
 func _jump_to_first_figure() -> void:
 	var page: EventSheetDocPageView = _browser.page()
-	for child: Node in page.get_children():
+	# A long page folds its chapters, and a figure inside a closed one is not on screen to
+	# photograph. Opening them all is what the reader's own search does, and it is what these
+	# images are of: the figures, not the fold.
+	page.expand_all()
+	await process_frame
+	await process_frame
+	var figures: Array[EventSheetDocFigure] = _figures_in(page)
+	if figures.is_empty():
+		print("[preview] the page drew no figure")
+		return
+	var offset: int = int(figures[0].global_position.y - page.global_position.y)
+	_browser._scroll.scroll_vertical = offset
+	print("[preview] scrolled to the first figure at y = %d" % offset)
+
+
+## Every figure on the page, at any depth: a folded page nests its blocks inside per-chapter
+## containers, so a walk over direct children finds nothing on exactly the pages that carry most.
+func _figures_in(node: Node) -> Array[EventSheetDocFigure]:
+	var found: Array[EventSheetDocFigure] = []
+	for child: Node in node.get_children():
 		if child is EventSheetDocFigure:
-			_browser._scroll.scroll_vertical = int((child as Control).global_position.y - page.global_position.y)
-			return
-	print("[preview] the page drew no figure")
+			found.append(child as EventSheetDocFigure)
+			continue
+		found.append_array(_figures_in(child))
+	return found
 
 
 ## The numbers the suite cannot reach: how many figures a real page drew, and what one of their
 ## canvases actually measures once laid out (the 640 px floor removed, the rows their own size).
 func _report_figures() -> void:
 	var page: EventSheetDocPageView = _browser.page()
-	var figures: int = 0
-	for child: Node in page.get_children():
-		if not (child is EventSheetDocFigure):
-			continue
-		figures += 1
-		if figures == 1:
-			var viewport: EventSheetViewport = (child as EventSheetDocFigure).figure_viewport()
-			print("[preview] first figure canvas = %.1f x %.1f (content %.1f x %.1f), processing = %s" % [
-				viewport.size.x, viewport.size.y, viewport.content_width(), viewport.content_height(),
-				viewport.is_processing()])
-	print("[preview] page \"%s\" drew %d live figure(s)" % [page.current_title(), figures])
+	var figures: Array[EventSheetDocFigure] = _figures_in(page)
+	if not figures.is_empty():
+		var viewport: EventSheetViewport = figures[0].figure_viewport()
+		print("[preview] first figure canvas = %.1f x %.1f (content %.1f x %.1f), processing = %s" % [
+			viewport.size.x, viewport.size.y, viewport.content_width(), viewport.content_height(),
+			viewport.is_processing()])
+	print("[preview] page \"%s\" drew %d live figure(s)" % [page.current_title(), figures.size()])
 
 
 ## Phase 6: the documentation where the reader keeps it - a sheet on the left, the reading surface
@@ -496,19 +517,25 @@ func _build_dock_beside_sheet() -> void:
 
 
 ## The numbers behind the image: the column the page actually got, and what a figure inside it
-## measured. A figure is content-sized with the host width as a CEILING, so its canvas must come in
-## at or under the column - a wider number would mean the page is scrolling sideways in the dock.
+## measured.
+##
+## A figure is content-sized with the host width as a CEILING - but only down to the width at which
+## rows stop being legible at all, below which the figure drops the ceiling and pans instead. At a
+## default dock slot the page IS below that line, so a canvas wider than the column here is the
+## shipped, deliberate behaviour rather than a fault. What the number is worth reading for is the
+## consequence: at this width the reader sees the first cells of a row and a horizontal scrollbar,
+## so the action lane needs a drag. Widening the dock is what makes a figure whole.
 func _report_dock() -> void:
 	var page: EventSheetDocPageView = _browser.page()
 	print("[preview] dock column = %.1f, page width = %.1f, compact = %s" % [
 		_browser.size.x, page.size.x, str(_browser.is_compact())])
-	for child: Node in page.get_children():
-		if child is EventSheetDocFigure:
-			var viewport: EventSheetViewport = (child as EventSheetDocFigure).figure_viewport()
-			print("[preview] figure in the dock = %.1f wide (content %.1f), rows %.1f tall" % [
-				viewport.size.x, viewport.content_width(), viewport.content_height()])
-			return
-	print("[preview] the docked page drew no figure")
+	var figures: Array[EventSheetDocFigure] = _figures_in(page)
+	if figures.is_empty():
+		print("[preview] the docked page drew no figure")
+		return
+	var viewport: EventSheetViewport = figures[0].figure_viewport()
+	print("[preview] figure in the dock = %.1f wide (content %.1f), rows %.1f tall" % [
+		viewport.size.x, viewport.content_width(), viewport.content_height()])
 
 
 ## One verb, reflected from a shipped pack exactly as the editor builds its vocabulary.

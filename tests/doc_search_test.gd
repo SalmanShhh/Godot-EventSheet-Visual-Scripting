@@ -235,6 +235,37 @@ static func _test_ace_reference() -> bool:
 	all_passed = _check("its conditions land in their own group", _has_verb(rows, "Conditions", "quest_is_active"), true) and all_passed
 	all_passed = _check("and a condition is not filed as an action", _has_verb(rows, "Actions", "quest_is_active"), false) and all_passed
 
+	# A COLUMN OF BLANK CELLS reads as a broken table. A pack whose reflected verbs declare no notes
+	# must therefore ship two columns, not three with an empty one, and the decision is taken for the
+	# whole page so the Actions, Conditions and Expressions tables stay the same shape as each other.
+	var silent: Dictionary = {"Actions": [{"name": "a", "params": "x", "note": ""}],
+		"Conditions": [{"name": "b", "params": "", "note": "   "}]}
+	all_passed = _check("a pack that documents nothing draws no description column",
+		", ".join(EventSheetDocAceReference.reference_columns(silent)), "Verb, Parameters") and all_passed
+	var spoken: Dictionary = {"Actions": [{"name": "a", "params": "x", "note": ""}],
+		"Expressions": [{"name": "c", "params": "", "note": "What it does."}]}
+	all_passed = _check("one documented verb anywhere on the page brings the column back",
+		", ".join(EventSheetDocAceReference.reference_columns(spoken)), "Verb, Parameters, What it does") and all_passed
+	all_passed = _check("an empty page asks for no description column",
+		", ".join(EventSheetDocAceReference.reference_columns({})), "Verb, Parameters") and all_passed
+	# Every derived table on a page carries the SAME headers, and every row fills every one of them.
+	var derived: Array[Dictionary] = EventSheetDocAceReference.blocks_for_page("Addons/Quest")
+	var wanted: int = EventSheetDocAceReference.reference_columns(
+		EventSheetDocAceReference.verb_rows_for_page("Addons/Quest")).size()
+	var ragged: int = 0
+	var tables: int = 0
+	for block: Dictionary in derived:
+		if str(block.get("kind", "")) != "table":
+			continue
+		tables += 1
+		if (block.get("headers", []) as Array).size() != wanted:
+			ragged += 1
+		for entry: Variant in (block.get("rows", []) as Array):
+			if (entry as Array).size() != wanted:
+				ragged += 1
+	all_passed = _check("a real pack draws its reference tables", tables > 0, true) and all_passed
+	all_passed = _check("with no ragged header or row anywhere in them", ragged, 0) and all_passed
+
 	var page: String = "# Quest\n\n## Setup\n\nAttach it.\n\n## ACE reference\n\n| Verb | Parameters | Notes |\n|---|---|---|\n| `advance_objective` | quest_id: String | (when) |\n\n## Use cases\n\nEarn a reward.\n"
 	var blocks: Array[Dictionary] = EventSheetDocMarkdown.parse(page, "Addons/Quest")
 	all_passed = _check("the guide's own tables name the verbs it wrote down",

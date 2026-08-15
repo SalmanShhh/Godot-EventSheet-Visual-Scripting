@@ -73,6 +73,10 @@ static func _test_dock_contract() -> bool:
 		init_body.contains("load("), false) and all_passed
 	all_passed = _check("nothing is added as a child while the dock is constructed",
 		init_body.contains("add_child("), false) and all_passed
+	# A dock is narrow by nature but not by rule: once built, the surface decides from its OWN
+	# width, so a floated or dragged-wide dock shows the guide list beside the page again.
+	all_passed = _check("the surface follows the dock's own width",
+		source.contains("set_auto_compact"), true) and all_passed
 	all_passed = _check("the content builds on a reveal",
 		source.contains("NOTIFICATION_VISIBILITY_CHANGED") and source.contains("func _ensure_content()"),
 		true) and all_passed
@@ -126,6 +130,16 @@ static func _test_compact_browser() -> bool:
 	all_passed = _check("a dock-hosted browser asks only for a readable column",
 		browser.custom_minimum_size.x, EventSheetPalette.scaled_f(EventSheetDocBrowser.COMPACT_MIN_WIDTH)) and all_passed
 	all_passed = _check("compact mode is reported", browser.is_compact(), true) and all_passed
+	# BOTH halves narrow, not just the guide page. The generated half is invisible while a guide is
+	# on screen and costs the layout nothing - and then the reader asks what a verb does, and a half
+	# that kept its comfortable 460 px is suddenly the widest thing in a host that has horizontal
+	# scrolling switched off: it either shoves the dock past its own floor or clips unreachably.
+	all_passed = _check("the generated half narrows with it", browser.panel().is_compact(), true) and all_passed
+	all_passed = _check("to a width a dock slot can actually give it",
+		browser.panel().custom_minimum_size.x <= browser.custom_minimum_size.x, true) and all_passed
+	all_passed = _check("and it is the shared compact width",
+		browser.panel().custom_minimum_size.x,
+		EventSheetPalette.scaled_f(EventSheetDocPanel.COMPACT_PAGE_WIDTH)) and all_passed
 	all_passed = _check("the guide list folds away", browser._side.visible, false) and all_passed
 	all_passed = _check("behind a toggle the reader can see", browser._contents_button.visible, true) and all_passed
 	browser._on_contents_toggled(true)
@@ -133,6 +147,9 @@ static func _test_compact_browser() -> bool:
 	browser._fold_contents()
 	all_passed = _check("picking a page gives the width back", browser._side.visible, false) and all_passed
 	browser.set_compact(false)
+	all_passed = _check("a wide host gives the generated half its column back",
+		browser.panel().custom_minimum_size.x,
+		EventSheetPalette.scaled_f(EventSheetDocPanel.PAGE_WIDTH)) and all_passed
 	all_passed = _check("a wide host shows both halves again", browser._side.visible, true) and all_passed
 	all_passed = _check("and its toggle disappears", browser._contents_button.visible, false) and all_passed
 	browser.free()

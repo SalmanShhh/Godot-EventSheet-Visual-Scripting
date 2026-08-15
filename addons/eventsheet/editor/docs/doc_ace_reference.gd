@@ -226,6 +226,21 @@ static func verb_rows_for_page(page_id: String) -> Dictionary:
 	return merged
 
 
+## The columns the derived tables draw. Verb and Parameters always; "What it does" only when at
+## least one verb ON THE PAGE declares a note - a reflected pack whose methods carry no doc comment
+## would otherwise ship three tables with a blank third column, which reads as a broken table rather
+## than as an honest one. Decided once for the WHOLE page rather than per group, so the Actions,
+## Conditions and Expressions tables stay the same shape as each other down the page.
+##
+## Pure over the grouped rows, so which columns a real pack draws is pinned by a test.
+static func reference_columns(grouped: Dictionary) -> PackedStringArray:
+	for group: String in GROUP_ORDER:
+		for entry: Variant in (grouped.get(group, []) as Array):
+			if not str((entry as Dictionary).get("note", "")).strip_edges().is_empty():
+				return PackedStringArray(["Verb", "Parameters", "What it does"])
+	return PackedStringArray(["Verb", "Parameters"])
+
+
 ## The section as page blocks: the heading the guide already had (so its anchor still resolves),
 ## a line saying where the tables come from, and one table per group.
 static func blocks_for_page(page_id: String) -> Array[Dictionary]:
@@ -236,6 +251,7 @@ static func blocks_for_page(page_id: String) -> Array[Dictionary]:
 		total += (grouped.get(group, []) as Array).size()
 	if total == 0:
 		return blocks
+	var headers: PackedStringArray = reference_columns(grouped)
 	blocks.append({"kind": "heading", "level": 2, "text": SECTION_TITLE,
 		"bbcode": SECTION_TITLE, "slug": SECTION_SLUG})
 	blocks.append({"kind": "paragraph", "bbcode":
@@ -249,12 +265,14 @@ static func blocks_for_page(page_id: String) -> Array[Dictionary]:
 		var table_rows: Array = []
 		for entry: Variant in rows:
 			var row: Dictionary = entry as Dictionary
-			table_rows.append([
+			var cells: Array = [
 				"[code]%s[/code]" % EventSheetDocMarkdown.escape_brackets(str(row.get("name", ""))),
 				EventSheetDocMarkdown.escape_brackets(str(row.get("params", ""))),
-				EventSheetDocMarkdown.escape_brackets(str(row.get("note", ""))),
-			])
-		blocks.append({"kind": "table", "headers": ["Verb", "Parameters", "What it does"], "rows": table_rows})
+			]
+			if headers.size() > 2:
+				cells.append(EventSheetDocMarkdown.escape_brackets(str(row.get("note", ""))))
+			table_rows.append(cells)
+		blocks.append({"kind": "table", "headers": Array(headers), "rows": table_rows})
 	return blocks
 
 

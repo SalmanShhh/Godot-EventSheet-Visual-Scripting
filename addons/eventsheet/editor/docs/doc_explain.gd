@@ -21,11 +21,13 @@
 # blank page, because a silently empty doc surface is how a renamed guide ships unnoticed.
 #
 # BLOCK KINDS the panel understands. Each is a Dictionary with a "kind" key:
-#   title      text, subtitle              the verb or section name, and its type + category
+#   title      text, subtitle, badges      the verb or section name, its type + category, and the
+#                                          same two facts as metadata badges
 #   note       text                        a deprecation steer (loud, above the prose)
 #   prose      text                        what it does, in the reader's language
 #   ships_as   code                        the GDScript line it compiles to
-#   params     items:[{name, detail}]      each parameter, its type, default and blurb
+#   params     items:[{name, detail,       each parameter, one string for a form row and the same
+#              type, default, description}] facts split into table columns
 #   about      title, text                 the category blurb - "what is this whole group for"
 #   figure     definition                  a live, insertable illustration (Phase 1's widget)
 #   link       label, target               read more: a pack guide path or an absolute URL
@@ -195,6 +197,10 @@ static func blocks_for_definition(definition: ACEDefinition) -> Array[Dictionary
 		"kind": "title",
 		"text": EventSheetL10n.translate(definition.display_name),
 		"subtitle": "%s  ·  %s" % [type_label(definition.ace_type), category_of(definition)],
+		# The same two facts as METADATA, for a host that draws them as badges beside the title
+		# rather than as a subtitle line. Exactly two, in this order - what the verb IS, and where
+		# it comes from. A third badge would turn metadata into decoration.
+		"badges": PackedStringArray([type_label(definition.ace_type), category_of(definition)]),
 	})
 	var deprecation: String = deprecation_note(definition)
 	if not deprecation.is_empty():
@@ -250,7 +256,10 @@ static func blocks_for_section(section_name: String) -> Array[Dictionary]:
 	var name: String = section_name.strip_edges()
 	if name.is_empty():
 		return blocks
-	blocks.append({"kind": "title", "text": name, "subtitle": "Category"})
+	blocks.append({
+		"kind": "title", "text": name, "subtitle": "Category",
+		"badges": PackedStringArray(["Category"]),
+	})
 	var blurb: String = EventSheetSectionInfo.description_for(name)
 	if not blurb.is_empty():
 		blocks.append({"kind": "prose", "text": EventSheetL10n.translate(blurb)})
@@ -314,12 +323,22 @@ static func parameter_items(definition: ACEDefinition) -> Array[Dictionary]:
 			blurb = str(entry.get("description", "")).strip_edges()
 		if name.strip_edges().is_empty():
 			continue
+		var description: String = "" if blurb.is_empty() else EventSheetL10n.translate(blurb)
 		var detail: String = type_name
 		if not default_value.is_empty():
 			detail += "  =  %s" % default_value
-		if not blurb.is_empty():
-			detail += "\n%s" % EventSheetL10n.translate(blurb)
-		items.append({"name": EventSheetL10n.translate(name), "detail": detail.strip_edges()})
+		if not description.is_empty():
+			detail += "\n%s" % description
+		# `detail` is the one-string form (a form row, a tooltip); the four separate fields are the
+		# TABLE form - Name | Type | Default | Description - because a host that has to split a
+		# prose line back into columns is one authored blurb away from splitting it wrongly.
+		items.append({
+			"name": EventSheetL10n.translate(name),
+			"detail": detail.strip_edges(),
+			"type": type_name,
+			"default": default_value,
+			"description": description,
+		})
 	return items
 
 

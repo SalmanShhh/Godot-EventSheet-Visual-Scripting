@@ -19,6 +19,12 @@
 #   4. There are no anchors in RichTextLabel, and scroll_to_paragraph drives a label's OWN
 #      scrollbar - which a fit_content label does not have. An in-page jump therefore resolves a
 #      heading CONTROL and scrolls the host, one frame after layout has run.
+#
+# THE CHROME AROUND THE PROSE is the "compact developer" look the whole reading surface shares:
+# small-caps accent labels name a card, code sits in a monospace card with a copy button in its
+# corner, and a table is a compact grid under a hairline header row. A LONG page also folds: every
+# chapter past the one the reader lands in collapses behind its own H2, with a chevron, and the
+# fold state is remembered per page for the session so scrolling back does not re-open everything.
 @tool
 class_name EventSheetDocPageView
 extends VBoxContainer
@@ -28,6 +34,17 @@ extends VBoxContainer
 ## reflows instead of clipping its right-hand side (which is what a fixed column does the moment
 ## the host is narrower than the column).
 const PAGE_MIN_WIDTH := 320.0
+
+## Where "long enough to fold" is drawn, in ESTIMATED lines of rendered text (see estimated_lines).
+## Roughly two screens of a docked column, which is the point the spec puts it at: a page a reader
+## can see the end of should never be folded, and a page they cannot should offer its chapters as a
+## list rather than as a scroll.
+const LONG_PAGE_LINES := 80
+
+## The chevrons a foldable chapter wears. Plain glyphs rather than icons: they sit inline with a
+## heading whose size follows the reader's help-font setting, and an icon would not scale with it.
+const CHEVRON_OPEN := "▾"
+const CHEVRON_CLOSED := "▸"
 
 ## Emitted when a link points at another shipped page. The host decides what to do with it (the
 ## browser navigates; a dock might open a second page), so this view never navigates itself.
@@ -44,6 +61,25 @@ var _doc_title: String = ""
 var _anchors: Dictionary = {}
 var _page_width: float = 0.0
 var _scroll: ScrollContainer = null
+## Whether this page draws its chapters as folds at all. Short pages never do: a fold is a cost
+## (one more click) that only pays for itself when the alternative is a scrollbar the size of a hair.
+var _folding: bool = false
+## slug -> {body, chevron}: the collapsible half of each H2 chapter and the glyph that reports it.
+var _sections: Dictionary = {}
+## The H2 chapters in page order, as {text, slug} - what the host's mini-nav is built from.
+var _outline: Array[Dictionary] = []
+## Where blocks are being added right now: the open chapter's body, or the page itself before the
+## first H2 (the title and the lead paragraph are never folded away).
+var _current_body: VBoxContainer = null
+## The chapter being filled, so a deeper heading inside it can be expanded to when an anchor jump
+## names it.
+var _section_slug: String = ""
+## slug -> the chapter slug that owns it, for exactly that jump.
+var _owner_section: Dictionary = {}
+## page id -> {slug: expanded}. Static, so a reader who folded a chapter, wandered off and came
+## back finds it as they left it - for the session, never on disk: this is a reading position, not
+## a preference.
+static var _fold_state: Dictionary = {}
 
 
 func _init() -> void:
@@ -82,15 +118,194 @@ func show_blocks(blocks: Array[Dictionary], doc_id: String) -> bool:
 	if blocks.is_empty():
 		return false
 	_doc_id = doc_id
+	_folding = is_long_page(blocks)
+	var chapters: int = 0
 	for block: Dictionary in blocks:
 		if str(block.get("kind", "")) == "heading" and int(block.get("level", 0)) == 1 and _doc_title.is_empty():
 			_doc_title = str(block.get("text", ""))
+		if str(block.get("kind", "")) == "heading" and int(block.get("level", 0)) == 2:
+			# The chapter the reader lands in is open; the ones below the fold start closed, which
+			# is what turns a fifteen-screen guide into a page whose shape can be seen at a glance.
+			_begin_section(block, chapters == 0)
+			chapters += 1
+			continue
 		var control: Control = _control_for(block)
 		if control != null:
-			add_child(control)
+			_add_block(control)
 	if _doc_title.is_empty():
 		_doc_title = EventSheetDocLibrary.page_title(doc_id)
 	return true
+
+
+## The H2 chapters of the page on screen, in order, as {text, slug}. The host builds its mini-nav
+## from this rather than walking the children, so the nav can never disagree with the page.
+func outline() -> Array[Dictionary]:
+	return _outline.duplicate(true)
+
+
+## True while the page draws its chapters as folds (and therefore while a mini-nav is worth
+## showing). A short page reports false and is drawn exactly as it always was.
+func is_folding() -> bool:
+	return _folding
+
+
+## Opens every folded chapter. The host calls it while a search term is live: a hit inside a
+## collapsed chapter is a hit the reader cannot see, which reads as the search having missed.
+func expand_all() -> void:
+	for slug: Variant in _sections:
+		set_section_expanded(str(slug), true)
+
+
+## Folds or unfolds one chapter, and remembers it for the session. Public because the fold is a
+## behaviour a test can pin without pixels, and because the mini-nav opens a chapter before it
+## scrolls to it.
+func set_section_expanded(slug: String, expanded: bool) -> void:
+	var section: Dictionary = _sections.get(slug, {}) as Dictionary
+	if section.is_empty():
+		return
+	var body: Control = section.get("body", null) as Control
+	if body != null:
+		body.visible = expanded
+	var chevron: Label = section.get("chevron", null) as Label
+	if chevron != null:
+		chevron.text = CHEVRON_OPEN if expanded else CHEVRON_CLOSED
+	var remembered: Dictionary = _fold_state.get(_doc_id, {}) as Dictionary
+	remembered[slug] = expanded
+	_fold_state[_doc_id] = remembered
+
+
+## True when the named chapter is open. False for a slug this page does not carry a chapter for.
+func is_section_expanded(slug: String) -> bool:
+	var section: Dictionary = _sections.get(slug, {}) as Dictionary
+	var body: Control = section.get("body", null) as Control
+	return body != null and body.visible
+
+
+## The chapter whose heading is at or above `offset` - what the mini-nav highlights as the reader
+## scrolls.
+##
+## Empty until this page has been LAID OUT, and that guard is the whole point of the function: before
+## layout every Control reports position zero, so a naive "is this heading at or above the offset?"
+## is true for every heading at once and the last one in the page wins. A freshly opened guide then
+## highlights its final chapter, which is worse than highlighting nothing. Height is the cheapest
+## honest proof that a layout pass has run - a built page always has one, an unlaid one never does.
+func section_at(offset: float) -> String:
+	if size.y <= 0.0:
+		return ""
+	var tops: Array = []
+	for entry: Dictionary in _outline:
+		var heading: Control = _anchors.get(str(entry.get("slug", "")), null) as Control
+		if heading == null or not is_instance_valid(heading):
+			continue
+		tops.append({"slug": str(entry.get("slug", "")), "top": heading.global_position.y - global_position.y})
+	return section_for_offset(tops, offset)
+
+
+## Which chapter an offset falls in, given `tops` as {slug, top} in page order. Pure and static, so
+## the bearing itself is pinned by the suite while the positions it is fed stay the layout's job.
+##
+## A reader ABOVE the first heading (in the page's title and lead paragraph) is given the first
+## chapter rather than nothing: they are reading their way into it, and a strip with no item lit is
+## a strip that looks broken.
+static func section_for_offset(tops: Array, offset: float) -> String:
+	if tops.is_empty():
+		return ""
+	var found: String = str((tops[0] as Dictionary).get("slug", ""))
+	for entry: Variant in tops:
+		var item: Dictionary = entry as Dictionary
+		if float(item.get("top", 0.0)) <= offset + 1.0:
+			found = str(item.get("slug", ""))
+	return found
+
+
+## Whether a page is long enough to be worth folding, measured in ESTIMATED lines rather than in
+## pixels: a page is built before it is laid out, so its real height does not exist at the moment
+## this decision has to be made. Pure over the blocks, so the suite pins the decision itself.
+static func is_long_page(blocks: Array[Dictionary]) -> bool:
+	return estimated_lines(blocks) > LONG_PAGE_LINES
+
+
+## A page's height in rendered lines, near enough to decide "longer than about two screens". Prose
+## is counted by its own length against a typical measure; a table, a list and a code fence are
+## counted by their rows; a figure is counted as the block of rows it draws.
+static func estimated_lines(blocks: Array[Dictionary]) -> int:
+	var lines: int = 0
+	for block: Dictionary in blocks:
+		match str(block.get("kind", "")):
+			"heading":
+				lines += 3 if int(block.get("level", 2)) <= 2 else 2
+			"paragraph", "quote":
+				lines += 1 + int(str(block.get("bbcode", "")).length() / 90)
+			"list":
+				lines += (block.get("items", []) as Array).size()
+			"table":
+				lines += 2 + (block.get("rows", []) as Array).size()
+			"code":
+				lines += 2 + (block.get("lines", []) as Array).size()
+			"image":
+				lines += 4
+			"rule":
+				lines += 1
+	return lines
+
+
+## Adds a block where the page is currently filling: inside the open chapter, or straight onto the
+## page before the first H2.
+func _add_block(control: Control) -> void:
+	if _current_body != null:
+		_current_body.add_child(control)
+		return
+	add_child(control)
+
+
+## Opens a chapter: the H2 bar becomes a clickable header with a chevron, and everything until the
+## next H2 goes into a body that the header shows and hides. A page that is not folding still comes
+## through here, so there is ONE code path that draws an H2 - it simply builds no fold.
+func _begin_section(block: Dictionary, first: bool) -> void:
+	var slug: String = str(block.get("slug", ""))
+	_section_slug = slug
+	var bar: Control = _heading(block)
+	if not _folding or slug.is_empty():
+		_current_body = null
+		add_child(bar)
+		_outline.append({"text": str(block.get("text", "")), "slug": slug})
+		return
+	var chevron: Label = Label.new()
+	chevron.text = CHEVRON_OPEN
+	chevron.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	chevron.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(16.0), 0.0)
+	chevron.add_theme_color_override("font_color", EventSheetPopupUI.accent_color())
+	var header: HBoxContainer = HBoxContainer.new()
+	header.mouse_filter = Control.MOUSE_FILTER_STOP
+	header.tooltip_text = "Show or hide this section."
+	header.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	header.add_child(chevron)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(bar)
+	var body: VBoxContainer = VBoxContainer.new()
+	body.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(8.0)))
+	var section: VBoxContainer = VBoxContainer.new()
+	section.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+	section.add_child(header)
+	section.add_child(body)
+	add_child(section)
+	_sections[slug] = {"body": body, "chevron": chevron}
+	_outline.append({"text": str(block.get("text", "")), "slug": slug})
+	_current_body = body
+	header.gui_input.connect(func(event: InputEvent) -> void:
+		var click: InputEventMouseButton = event as InputEventMouseButton
+		if click != null and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
+			set_section_expanded(slug, not is_section_expanded(slug)))
+	set_section_expanded(slug, _remembered_fold(slug, first))
+
+
+## What a chapter's fold should be: whatever the reader last left it as this session, and otherwise
+## open for the chapter they land in and closed for the rest.
+func _remembered_fold(slug: String, first: bool) -> bool:
+	var remembered: Dictionary = _fold_state.get(_doc_id, {}) as Dictionary
+	if remembered.has(slug):
+		return bool(remembered[slug])
+	return first
 
 
 ## Scrolls the host so `slug`'s heading is at the top of the view. The RESOLUTION is answered here
@@ -103,10 +318,17 @@ func show_blocks(blocks: Array[Dictionary], doc_id: String) -> bool:
 ## them - an anchor jump is fire-and-forget by nature).
 func jump_to_anchor(slug: String) -> bool:
 	var wanted: String = slug.strip_edges().trim_prefix("#")
-	if wanted.is_empty() or not _anchors.has(wanted) or _scroll == null:
+	if wanted.is_empty() or not _anchors.has(wanted):
 		return false
 	var heading: Control = _anchors[wanted] as Control
 	if heading == null or not is_instance_valid(heading):
+		return false
+	# A jump into a folded chapter opens it first, and it does so BEFORE the host is checked: the
+	# fold is what the reader would otherwise land on - a title with nothing under it - and that is
+	# true whether or not there is anything to scroll.
+	set_section_expanded(wanted, true)
+	set_section_expanded(str(_owner_section.get(wanted, "")), true)
+	if _scroll == null:
 		return false
 	_scroll_to_heading(heading)
 	return true
@@ -124,6 +346,12 @@ func _clear() -> void:
 	_doc_id = ""
 	_doc_title = ""
 	_anchors = {}
+	_sections = {}
+	_outline = []
+	_owner_section = {}
+	_current_body = null
+	_section_slug = ""
+	_folding = false
 	for child: Node in get_children():
 		remove_child(child)
 		child.queue_free()
@@ -184,6 +412,8 @@ func _heading(block: Dictionary) -> Control:
 	var slug: String = str(block.get("slug", ""))
 	if not slug.is_empty():
 		_anchors[slug] = label
+		if level > 2 and not _section_slug.is_empty():
+			_owner_section[slug] = _section_slug
 	if level == 2:
 		# A chapter bar: breathing room above and a hairline beneath, so the eye finds sections
 		# while scanning the way it does on the rendered web page.
@@ -291,8 +521,13 @@ func _list_bbcode(items: Array, ordered: bool) -> String:
 
 
 ## A table, built imperatively because the styling API is a push-stack operation (see the header).
-## The header row is bold and the body cells carry padding, so a table reads as a table without a
-## grid of Controls behind it.
+## It wears the compact look the reference pages use - muted uppercase headings over a hairline,
+## dense padded cells - but it is NOT the shared compact_table helper: a guide's cells carry BBCode
+## (links, code spans, and the search term wrapped in a highlight), and a plain-text grid would
+## render every one of those tags literally and kill the links with them. The two therefore have to
+## be kept looking alike BY HAND, and the header row is where they last drifted apart: accent text
+## over an accent band here, muted text under a white hairline there. Accent on this surface belongs
+## to the small-caps section labels and to the active sidebar row; a table heading is neither.
 func _table(block: Dictionary) -> Control:
 	var headers: Array = block.get("headers", []) as Array
 	var rows: Array = block.get("rows", []) as Array
@@ -306,19 +541,29 @@ func _table(block: Dictionary) -> Control:
 	label.custom_minimum_size = Vector2(_page_width - EventSheetPopupUI.PANEL_SECTION_PAD * 2.0, 0.0)
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.meta_clicked.connect(_on_meta_clicked)
+	var pad: Rect2 = Rect2(EventSheetPalette.scaled_f(6.0), EventSheetPalette.scaled_f(3.0),
+		EventSheetPalette.scaled_f(6.0), EventSheetPalette.scaled_f(3.0))
 	label.push_table(columns)
 	for column: int in range(columns):
 		label.set_table_column_expand(column, true, 1)
+	# The header row is a hairline UNDER muted uppercase text, exactly what the shared table cell
+	# draws: the rule is what says where the headings stop, and it does it without spending the
+	# page's one accent colour on a column name.
 	for column: int in range(columns):
 		label.push_cell()
+		label.set_cell_border_color(EventSheetPopupUI.TABLE_HAIRLINE)
+		label.set_cell_padding(pad)
+		label.push_color(EventSheetPalette.TEXT_MUTED)
 		label.push_bold()
-		label.append_text(str(headers[column]) if column < headers.size() else "")
+		label.append_text(str(headers[column]).to_upper() if column < headers.size() else "")
+		label.pop()
 		label.pop()
 		label.pop()
 	for entry: Variant in rows:
 		var cells: Array = entry as Array
 		for column: int in range(columns):
 			label.push_cell()
+			label.set_cell_padding(pad)
 			label.append_text(str(cells[column]) if column < cells.size() else "")
 			label.pop()
 	label.pop()
@@ -362,17 +607,27 @@ func _figure(body: String, caption: String) -> Control:
 ## The suite fails on the same verdict, so this card is the reader's copy of a build error.
 func _figure_error(block: Dictionary, message: String) -> Control:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
+	box.add_child(_card_label_row("This figure could not be drawn"))
 	box.add_child(EventSheetPopupUI.hint_label(message, _page_width))
 	box.add_child(_code_card(block.get("lines", []) as Array, ""))
-	return EventSheetPopupUI.titled_card("This figure could not be drawn", box)
+	return EventSheetPopupUI.panel_section(box)
 
 
-## A fenced block. BBCode is OFF here on purpose: code is full of brackets and tags, and a code
-## card that parsed them would rewrite the very thing the reader came to copy.
+## A fenced block, as the surface's code card: a small-caps label naming the language, the shared
+## copy button in its top-right corner, and the code itself in the editor's monospace font.
+##
+## It is built here rather than taken from the popup helpers because a GUIDE's fence must not
+## re-wrap: the helper's card autowraps (right for a one-line syntax string, wrong for a listing
+## whose indentation is the meaning), so the card shape is shared while the body scrolls sideways
+## inside itself - see _wide_content_scroll.
+##
+## BBCode is OFF here on purpose: code is full of brackets and tags, and a code card that parsed
+## them would rewrite the very thing the reader came to copy.
 func _code_card(lines: Array, language: String) -> Control:
 	var body: PackedStringArray = PackedStringArray()
 	for line: Variant in lines:
 		body.append(str(line))
+	var source: String = "\n".join(body)
 	var label: RichTextLabel = RichTextLabel.new()
 	label.bbcode_enabled = false
 	label.fit_content = true
@@ -380,15 +635,45 @@ func _code_card(lines: Array, language: String) -> Control:
 	label.context_menu_enabled = true
 	label.scroll_active = false
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	label.text = "\n".join(body)
+	label.text = source
 	label.custom_minimum_size = Vector2(_page_width - EventSheetPopupUI.PANEL_SECTION_PAD * 2.0, 0.0)
 	var mono_font: Font = _editor_font("doc_source")
 	if mono_font != null:
 		label.add_theme_font_override("normal_font", mono_font)
-	var body_control: Control = _wide_content_scroll(label)
-	if language.strip_edges().is_empty():
-		return EventSheetPopupUI.panel_section(body_control)
-	return EventSheetPopupUI.titled_card(language.strip_edges(), body_control)
+	var card: VBoxContainer = VBoxContainer.new()
+	card.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(4.0)))
+	card.add_child(_card_label_row(language.strip_edges() if not language.strip_edges().is_empty() else "Code",
+		EventSheetPopupUI.copy_button(source)))
+	card.add_child(_wide_content_scroll(label))
+	return EventSheetPopupUI.panel_section(card)
+
+
+## A card's header line: its small-caps label on the left, and whatever tool the card offers
+## (a copy button, a link) pushed to the right-hand corner.
+func _card_label_row(label_text: String, trailing: Control = null) -> HBoxContainer:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
+	var label: Label = EventSheetPopupUI.small_caps_label(label_text)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(label)
+	if trailing != null:
+		row.add_child(trailing)
+	return row
+
+
+## An editor theme icon by name, or null outside the editor (and for a name this build does not
+## carry, which is why every caller has a wordy fallback).
+func _editor_icon(icon_name: String) -> Texture2D:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return null
+	var editor_interface: Object = Engine.get_singleton("EditorInterface")
+	if editor_interface == null or not editor_interface.has_method("get_editor_theme"):
+		return null
+	var theme: Theme = editor_interface.get_editor_theme()
+	if theme == null or not theme.has_icon(icon_name, "EditorIcons"):
+		return null
+	return theme.get_icon(icon_name, "EditorIcons")
 
 
 ## Code is the one block that must neither re-wrap nor widen the page. A label with autowrap off
@@ -413,20 +698,21 @@ func _image_card(path: String, alt: String) -> Control:
 	if caption.is_empty():
 		caption = path.get_file()
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
-	box.add_child(EventSheetPopupUI.hint_label(caption, _page_width))
 	var repo_path: String = EventSheetDocLibrary.repo_path_for_link(path, _doc_id)
+	var button: Button = null
 	if not repo_path.is_empty():
-		var button: Button = Button.new()
+		button = Button.new()
 		button.text = "See this picture online"
 		button.tooltip_text = "Opens the image in your browser, pinned to the version you installed."
+		var link_icon: Texture2D = _editor_icon("ExternalLink")
+		if link_icon != null:
+			button.icon = link_icon
 		button.pressed.connect(func() -> void:
 			EventSheets.open_online_doc(repo_path)
 			link_activated.emit(repo_path))
-		var row: HBoxContainer = HBoxContainer.new()
-		row.alignment = BoxContainer.ALIGNMENT_END
-		row.add_child(button)
-		box.add_child(row)
-	return EventSheetPopupUI.titled_card("Picture", box)
+	box.add_child(_card_label_row("Picture", button))
+	box.add_child(EventSheetPopupUI.hint_label(caption, _page_width))
+	return EventSheetPopupUI.panel_section(box)
 
 
 ## Every link click in the page lands here. A link to another shipped guide stays inside the
