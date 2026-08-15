@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added - a guide to writing the docs
+
+`docs/GUIDE-WRITING-THE-DOCS.md`: how documentation works here and how to add to it - the
+three doc sets and where each shows up (GitHub, the editor reader, the version-pinned browser
+link), naming, the addon and module guide standard the tests enforce, the figure fences that
+draw themselves in the editor (the recognizer's precedence, the measured gate and why the
+script header is what separates a worked example from an API sample, the three frozen
+markers), the house rules, regenerate-before-commit, documenting a third-party pack, and the
+verification loop.
+
 ### Changed - the docs viewer reads like an editor tool (the Compact Developer chrome)
 
 The documentation chrome now follows one restrained visual language, without touching the

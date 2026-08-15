@@ -33,6 +33,7 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 - [Editor Tools](GUIDE-EDITOR-TOOLS.md) - one-click editor chores from Sheet > New Editor Tool: File > Run, Inspector buttons, undo done right.
 - [Custom Resources](GUIDE-CUSTOM-RESOURCES.md) - your own data assets from the three-question wizard: column language, validation, the .tres workflow.
 - [Making Editor Tools from Code](GUIDE-BUILDING-EDITOR-TOOLS.md) - the programmatic side: author tool sheets through the EventSheets API.
+- [Writing the Docs](GUIDE-WRITING-THE-DOCS.md) - how documentation works here and how to add to it: the three doc sets, the guide standard, the figure fences that draw themselves in the editor, and the regenerate-before-commit gate.
 
 ## Patterns
 
