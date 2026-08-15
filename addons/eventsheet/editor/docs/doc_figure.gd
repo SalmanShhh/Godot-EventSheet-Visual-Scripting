@@ -27,6 +27,10 @@ extends VBoxContainer
 ## apply time - a figure is not an apply).
 const FIGURE_UID := "figure"
 
+## The narrowest a figure will wrap its rows into, before display scaling. Rows keep wrapping down
+## to here (a doc page, a dock column); below it they pan instead - see _available_width.
+const MIN_LEGIBLE_WIDTH := 480.0
+
 ## Emitted when the reader activates the optional guide affordance (see set_guide_action).
 signal guide_requested()
 
@@ -35,10 +39,15 @@ signal snippet_inserted()
 
 var _caption: Label = null
 var _viewport: EventSheetViewport = null
+var _frame: ScrollContainer = null
 var _insert_button: Button = null
 var _copy_button: Button = null
 var _guide_button: Button = null
 var _sheet: EventSheetResource = null
+## The width ceiling actually handed to the viewport, so a resize that ends where it started - a
+## drag back and forth, a re-layout that changes nothing - costs no metrics rebuild at all.
+var _applied_width: float = -1.0
+var _width_pending: bool = false
 
 
 func _init() -> void:
@@ -51,8 +60,18 @@ func _init() -> void:
 	_viewport = EventSheetViewport.new()
 	# Before add_child, so _ready sees the flag and leaves the per-frame poll off.
 	_viewport.set_figure_mode(true)
+	# The rows hang in a horizontal scroller, not directly in the card, for two reasons. A CONTAINER
+	# adds its child's minimum width to its own, so a figure in a width-driven page would push the
+	# whole column out to the width of its widest row - and since the ceiling is read back off that
+	# column, the two would chase each other a few pixels per frame instead of settling. And below
+	# the legibility floor the rows PAN rather than shrink further (see _available_width).
+	_frame = ScrollContainer.new()
+	_frame.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_frame.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_frame.add_child(_viewport)
 	# The rows sit in their own card so the illustration reads as a figure, not as loose chrome.
-	add_child(EventSheetPopupUI.panel_section(_viewport))
+	add_child(EventSheetPopupUI.panel_section(_frame))
 
 	var buttons: HBoxContainer = HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(6.0)))
@@ -78,8 +97,38 @@ func _notification(what: int) -> void:
 	# A figure is its content, but never WIDER than the surface it sits on: rows that want more
 	# room than the host has wrap inside it, exactly as they would in the reader's own sheet at
 	# that width. Narrow content still draws narrow - that is the floor this whole seam removed.
-	if what == NOTIFICATION_RESIZED and _viewport != null and size.x > 1.0:
-		_viewport.set_figure_max_width(size.x - _card_horizontal_padding())
+	#
+	# COALESCED to one apply per frame. Handing the ceiling straight to the viewport rebuilds its
+	# row metrics (up to the settle-pass limit), and a resize is not one event: dragging the dock
+	# splitter delivers one per pixel, on every figure of the page at once.
+	if what == NOTIFICATION_RESIZED and _viewport != null and size.x > 1.0 and not _width_pending:
+		_width_pending = true
+		_apply_width_ceiling.call_deferred()
+
+
+func _apply_width_ceiling() -> void:
+	_width_pending = false
+	if _viewport == null or not is_instance_valid(_viewport):
+		return
+	var ceiling: float = _available_width()
+	if is_equal_approx(ceiling, _applied_width):
+		return
+	_applied_width = ceiling
+	_viewport.set_figure_max_width(ceiling)
+
+
+## The ceiling the rows wrap into, or 0 for "no ceiling - draw at your natural width".
+##
+## Down to the legibility floor, a figure re-wraps into its host exactly as the same rows would in
+## a sheet that narrow. BELOW the floor it stops shrinking and pans instead: an event row is five
+## columns wide by construction, and squeezing them into a dock strip wraps cell text one word -
+## and then one LETTER - per line, which illustrates nothing. A figure the reader can push sideways
+## still shows real rows; a figure ground into a column of single letters does not.
+func _available_width() -> float:
+	var available: float = size.x - _card_horizontal_padding()
+	if available < EventSheetPalette.scaled_f(MIN_LEGIBLE_WIDTH):
+		return 0.0
+	return available
 
 
 ## The chrome the rows' card takes out of the widget's own width, so the ceiling handed to the
