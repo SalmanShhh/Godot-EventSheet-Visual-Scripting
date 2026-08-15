@@ -1,20 +1,32 @@
 # Godot EventSheets - project vocabulary doc generator
 #
-# Renders ONE always-current markdown reference of everything this project's sheets
-# and packs publish: per-sheet classes, properties, triggers/conditions/actions/
-# expressions (via EventSheetAuthorLoop.collect_publish_surface - straight from the
-# model, no compile) plus hand-written script packs (parsed from their @ace_*
-# annotations). For teams and AI assistants alike: "what can I say in this project?"
-# answered by a committed file instead of clicking through pickers.
+# Renders ONE always-current markdown reference of everything a project can say: per-sheet
+# classes, properties, triggers/conditions/actions/expressions (via
+# EventSheetAuthorLoop.collect_publish_surface - straight from the model, no compile), the
+# hand-written script packs (parsed from their @ace_* annotations), and the BUILT-IN
+# vocabulary - the ~1,090 verbs the picker offers before a single pack is enabled, grouped by
+# the module file that authors them. For teams and AI assistants alike: "what can I say in
+# this project?" answered by a committed file instead of clicking through pickers.
+#
+# The built-in section is DERIVED, never typed: each module file is asked for its descriptors
+# (the module contract in ace_factory.gd), and each descriptor is then re-fetched from the LIVE
+# registry so the doc shows the shipped shape - including the optional "On node" target that
+# EventForgeBuiltinACEs adds to node-scoped verbs at registration time. Rename a verb and the
+# doc renames with it on the next run.
 #
 # Determinism is part of the contract (the doc is meant to be committed and diffed):
-# sheet paths are sorted, scanner order is sorted, no timestamps. The Project Doctor
-# keeps a generated doc honest with an advisory staleness note (opt-in: no doc, no note).
+# sheet paths are sorted, scanner order is sorted, module files are sorted, no timestamps.
+# The Project Doctor keeps a generated doc honest with an advisory staleness note (opt-in:
+# no doc, no note).
 @tool
 class_name EventSheetVocabularyDoc
 extends RefCounted
 
 const DEFAULT_PATH := "res://EVENTSHEETS-VOCABULARY.md"
+
+## Where the built-in vocabulary modules live. One file per vocabulary; each exposes
+## `static func get_descriptors() -> Array[ACEDescriptor]`.
+const MODULES_DIR := "res://addons/eventforge/registration/modules"
 
 
 ## Where the doc lives - override with the eventsheets/project/vocabulary_doc_path
@@ -53,6 +65,14 @@ static func generate() -> String:
 		lines.append("")
 		lines.append("## Script packs")
 		lines.append_array(pack_lines)
+	var builtin_lines: PackedStringArray = builtin_module_sections()
+	if not builtin_lines.is_empty():
+		lines.append("")
+		lines.append("## Built-in vocabulary")
+		lines.append("")
+		lines.append("Every verb the picker offers with no pack enabled, grouped by the module that")
+		lines.append("authors it. Deprecated verbs are marked - they still compile, but the picker hides them.")
+		lines.append_array(builtin_lines)
 	lines.append("")
 	return "\n".join(lines)
 
@@ -108,6 +128,121 @@ static func script_pack_section(script_path: String) -> PackedStringArray:
 		lines.append(_flatten_doc_comment(doc_match.get_string(1)))
 	lines.append_array(rendered)
 	return lines
+
+
+## Every built-in module's entry, in sorted file order. Empty when the modules directory is
+## missing (a stripped install), which is what keeps the section itself optional.
+static func builtin_module_sections() -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	for module_file: String in builtin_module_files():
+		lines.append_array(builtin_module_section(module_file))
+	return lines
+
+
+## The module .gd file names, sorted. Sorted rather than registration order on purpose: the doc
+## is committed and diffed, so a reader looks a module up alphabetically and a new module lands
+## in one place instead of shifting the tail.
+static func builtin_module_files() -> PackedStringArray:
+	var files: PackedStringArray = PackedStringArray()
+	for file_name: String in DirAccess.get_files_at(MODULES_DIR):
+		if file_name.ends_with(".gd"):  # skips the .gd.uid sidecars
+			files.append(file_name)
+	files.sort()
+	return files
+
+
+## One built-in module's entry: title line, the module's own one-line summary, and its verbs
+## rendered by the same surface renderer the sheets and script packs use.
+static func builtin_module_section(module_file: String) -> PackedStringArray:
+	var module_path: String = MODULES_DIR.path_join(module_file)
+	var surface: Dictionary = builtin_module_surface(module_file)
+	var rendered: PackedStringArray = EventSheetAuthorLoop.surface_markdown(surface, "####")
+	if rendered.is_empty():
+		return PackedStringArray()
+	var lines: PackedStringArray = PackedStringArray()
+	lines.append("")
+	lines.append("### %s (`%s`)" % [module_file.get_basename().trim_suffix("_aces").capitalize(), module_path])
+	var summary: String = _module_summary(module_path)
+	if not summary.is_empty():
+		lines.append(summary)
+	lines.append_array(rendered)
+	return lines
+
+
+## One module's verbs in the shared surface shape, so one renderer serves sheets, script packs
+## and built-ins alike. Each descriptor the module authors is re-fetched from the registry by
+## identity (provider + ace_id), so the doc shows the SHIPPED verb - registration adds the "On
+## node" target to node-scoped verbs, and a doc built from the raw module output would miss it.
+static func builtin_module_surface(module_file: String) -> Dictionary:
+	var surface: Dictionary = {"actions": [], "triggers": [], "conditions": [], "expressions": [], "properties": []}
+	var script: GDScript = load(MODULES_DIR.path_join(module_file)) as GDScript
+	if script == null or not _declares_get_descriptors(script):
+		return surface
+	var authored: Variant = script.call("get_descriptors")
+	if not (authored is Array):
+		return surface
+	for entry: Variant in (authored as Array):
+		if not (entry is ACEDescriptor):
+			continue
+		var descriptor: ACEDescriptor = entry as ACEDescriptor
+		var shipped: ACEDescriptor = ACERegistry.find_descriptor(descriptor.provider_id, descriptor.ace_id)
+		if shipped != null:
+			descriptor = shipped
+		var bucket: String = _descriptor_bucket(descriptor)
+		var description: String = str(descriptor.description).strip_edges()
+		if descriptor.is_deprecated:
+			description = ("Deprecated. " + description).strip_edges()
+		(surface[bucket] as Array).append({
+			"name": descriptor.display_name,
+			"params": _descriptor_params(descriptor),
+			"category": descriptor.category,
+			"description": _flatten_doc_comment(description),
+		})
+	return surface
+
+
+## The surface bucket a descriptor belongs in. A LOOPING verb IS a condition in the picker
+## (adding it to an event repeats the actions), which is how it is typed, so no special case.
+static func _descriptor_bucket(descriptor: ACEDescriptor) -> String:
+	match descriptor.ace_type:
+		ACEDescriptor.ACEType.TRIGGER:
+			return "triggers"
+		ACEDescriptor.ACEType.CONDITION:
+			return "conditions"
+		ACEDescriptor.ACEType.EXPRESSION:
+			return "expressions"
+		_:
+			return "actions"
+
+
+## A descriptor's parameters as one "id: Type" list, matching the signature a script pack shows.
+static func _descriptor_params(descriptor: ACEDescriptor) -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for param: ACEParam in descriptor.params:
+		parts.append("%s: %s" % [str(param.id), str(param.type_name)])
+	return ", ".join(parts)
+
+
+## A module's own one-line summary: the first line of its header comment, with the shared
+## "EventForge module - " lead-in dropped. "" when the file opens with no comment.
+static func _module_summary(module_path: String) -> String:
+	for line: String in FileAccess.get_file_as_string(module_path).split("\n"):
+		var stripped: String = line.strip_edges()
+		if stripped.is_empty():
+			continue
+		if not stripped.begins_with("#"):
+			return ""
+		return stripped.trim_prefix("#").strip_edges().trim_prefix("EventForge module - ").strip_edges()
+	return ""
+
+
+## True when the loaded script declares get_descriptors - the module contract. Checked rather
+## than assumed so a non-module helper dropped into the directory is skipped, not crashed on.
+static func _declares_get_descriptors(script: GDScript) -> bool:
+	for method_info: Dictionary in script.get_script_method_list():
+		if str(method_info.get("name", "")) == "get_descriptors":
+			return true
+	return false
 
 
 ## Parses a script's @ace_* annotated members into the same surface shape

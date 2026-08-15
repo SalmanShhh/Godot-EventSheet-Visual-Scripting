@@ -61,6 +61,23 @@ static func run() -> bool:
 	all_passed = _check("the document is deterministic",
 		EventSheetVocabularyDoc.generate(), document) and all_passed
 
+	# Built-in vocabulary: one section per module, derived from the module + the live registry.
+	# The registry lookup is what puts the shipped shape in the doc - a node-scoped verb gains its
+	# optional "On node" target at registration, and a doc built from the raw module output
+	# would show a signature the picker never offers.
+	var tilemap: String = "\n".join(EventSheetVocabularyDoc.builtin_module_section("tilemap_aces.gd"))
+	all_passed = _check("a module section carries its title, summary and verbs",
+		tilemap.contains("### Tilemap (`res://addons/eventforge/registration/modules/tilemap_aces.gd`)")
+		and tilemap.contains("Tilemaps (TileMapLayer, Godot 4.3+)")
+		and tilemap.contains("#### Actions") and tilemap.contains("- **Set Cell**"), true) and all_passed
+	all_passed = _check("verbs are listed with the SHIPPED parameters, not the authored ones",
+		tilemap.contains("target: String"), true) and all_passed
+	all_passed = _check("every module file is covered",
+		EventSheetVocabularyDoc.builtin_module_files().size() > 40, true) and all_passed
+	all_passed = _check("the document carries the built-in vocabulary section",
+		document.contains("## Built-in vocabulary")
+		and document.contains("### Tilemap (`res://addons/eventforge/registration/modules/tilemap_aces.gd`)"), true) and all_passed
+
 	# Doctor staleness note: opt-in (no doc, no note), clean right after writing,
 	# noted once the project's surface and the doc disagree.
 	ProjectSettings.set_setting("eventsheets/project/vocabulary_doc_path", "user://vocab_doc_test.md")

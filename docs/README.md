@@ -64,6 +64,14 @@ Every guide and reference for Godot EventSheets, grouped by what you are trying 
 - [Performance](REFERENCE-PERFORMANCE.md) - frame-spreading and time-budgeting.
 - [GDScript Basics Coverage](GDSCRIPT-BASICS-COVERAGE.md) - every fundamental on Godot's basics page, as sheet rows (the release-bar receipt).
 
+## Built-in vocabulary
+
+The per-verb reference for everything the picker already offers. The four "Working with…" and
+"Seeing What Is There" guides above stay the narrative, learn-by-doing versions of their subjects;
+open a Modules guide when you want the full verb list, its parameters, and what each row ships as.
+
+- [Built-in Module Guides Index](Modules/README.md) - deep-dive guides for the ~1,090 verbs that ship in the picker before you enable a single pack.
+
 ## Addon packs
 
 - [Addon Guides Index](Addons/README.md) - deep-dive guides for every bundled behavior pack in `eventsheet_addons/`.
