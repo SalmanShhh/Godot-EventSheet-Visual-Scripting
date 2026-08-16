@@ -10,13 +10,23 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 2. [The Concept Map](#2-the-concept-map)
 3. [Common System Vocabulary](#3-common-system-vocabulary)
 4. [Polling vs Reacting - The Biggest Shift from C3](#4-polling-vs-reacting---the-biggest-shift-from-c3)
-5. [Data Plugins (Dictionary, Array, JSON, XML)](#5-data-plugins-dictionary-array-json-xml)
-6. [Behaviors and Plugins - The Three Lanes](#6-behaviors-and-plugins---the-three-lanes)
-7. [Habits That Transfer Directly](#7-habits-that-transfer-directly)
-8. [Habits to Relearn (the Godot Way Is Better Here)](#8-habits-to-relearn-the-godot-way-is-better-here)
-9. [Importing C3 Projects Directly - A Permanent Non-Goal](#9-importing-c3-projects-directly---a-permanent-non-goal)
-10. [Use Cases](#10-use-cases)
-11. [Tips and Common Mistakes](#11-tips-and-common-mistakes)
+5. [When Does My Code Run? - Top-to-Bottom, and Where That Stops](#5-when-does-my-code-run---top-to-bottom-and-where-that-stops)
+6. [Data Plugins (Dictionary, Array, JSON, XML)](#6-data-plugins-dictionary-array-json-xml)
+7. [Behaviors and Plugins - The Three Lanes](#7-behaviors-and-plugins---the-three-lanes)
+8. [Habits That Transfer Directly](#8-habits-that-transfer-directly)
+9. [Habits to Relearn (the Godot Way Is Better Here)](#9-habits-to-relearn-the-godot-way-is-better-here)
+10. [Importing C3 Projects Directly - A Permanent Non-Goal](#10-importing-c3-projects-directly---a-permanent-non-goal)
+11. [Use Cases](#11-use-cases)
+12. [Tips and Common Mistakes](#12-tips-and-common-mistakes)
+
+---the-biggest-shift-from-c3)
+5. [Data Plugins (Dictionary, Array, JSON, XML)](#6-data-plugins-dictionary-array-json-xml)
+6. [Behaviors and Plugins - The Three Lanes](#7-behaviors-and-plugins---the-three-lanes)
+7. [Habits That Transfer Directly](#8-habits-that-transfer-directly)
+8. [Habits to Relearn (the Godot Way Is Better Here)](#9-habits-to-relearn-the-godot-way-is-better-here)
+9. [Importing C3 Projects Directly - A Permanent Non-Goal](#10-importing-c3-projects-directly---a-permanent-non-goal)
+10. [Use Cases](#11-use-cases)
+11. [Tips and Common Mistakes](#12-tips-and-common-mistakes)
 
 ---
 
@@ -24,10 +34,11 @@ A working map from C3 concepts and vocabulary to their Godot EventSheets equival
 
 - **You're porting a C3 game by hand.** Migration is a sheet-by-sheet rebuild (faster than it sounds, because the grammar is the same), and every table here is a lookup for "what is X called now?"
 - **You keep typing C3 words into the picker.** Good - keep doing that. The picker's search understands C3 phrasing ("every tick", "on created", "spawn") via synonym aliases, so type what you know and the Godot equivalent surfaces.
-- **You leaned on a C3 behavior and want its twin.** 76 packs are bundled, including faithful ports of custom C3 addons (Drag & Drop, Virtual Cursor, Health, Platform Info, the UHTN planner and more) - see [the three lanes](#6-behaviors-and-plugins---the-three-lanes).
+- **You leaned on a C3 behavior and want its twin.** 76 packs are bundled, including faithful ports of custom C3 addons (Drag & Drop, Virtual Cursor, Health, Platform Info, the UHTN planner and more) - see [the three lanes](#7-behaviors-and-plugins---the-three-lanes).
 - **Your events all start with "Every tick".** The single biggest mental shift from C3 is reacting to signals instead of polling; [section 4](#4-polling-vs-reacting---the-biggest-shift-from-c3) gives you the rule of thumb.
+- **You expect events to run top to bottom, and includes to run where the include line sits.** Inside a sheet you get exactly that; between triggers, between nodes, and for includes the answer changes - [section 5](#5-when-does-my-code-run---top-to-bottom-and-where-that-stops) draws the three boundaries.
 - **You relied on the Dictionary / Array / JSON data plugins.** They're first-class variable types here, with their own picker groups - no addon needed.
-- **You're waiting for a `.c3p` importer.** Don't - it's a deliberate, permanent non-goal, and [section 9](#9-importing-c3-projects-directly---a-permanent-non-goal) explains why and what the supported path is.
+- **You're waiting for a `.c3p` importer.** Don't - it's a deliberate, permanent non-goal, and [section 10](#10-importing-c3-projects-directly---a-permanent-non-goal) explains why and what the supported path is.
 
 ---
 
@@ -120,7 +131,65 @@ Process** (every rendered frame). When in doubt for *movement*, choose Physics P
 
 ---
 
-## 5. Data Plugins (Dictionary, Array, JSON, XML)
+## 5. When Does My Code Run? - Top-to-Bottom, and Where That Stops
+
+In Construct 3 you always know the order: an event sheet runs top to bottom every tick, and
+an included sheet is spliced in right where the include line sits. Keep that expectation
+INSIDE a sheet - it is guaranteed here, by the compiler rather than by convention - and adjust
+it at exactly three boundaries.
+
+**Inside one sheet: top to bottom, exactly as in C3.** Your rows compile to plain GDScript in
+the order you wrote them, into the handler their trigger names. Every **Every Frame** row lands
+in `_process` in row order, every **Every Physics Tick** row in `_physics_process`, every
+**On Ready** row in `_ready`; nested rows are nested blocks; a row's conditions run before its
+actions. This is the "structure mirrors code" contract and the lossless round-trip depends on
+it, so it cannot drift. Read the GDScript panel beside any sheet and the order you see is the
+order that runs.
+
+**Boundary 1 - between triggers, the clock decides, not the row position.** An Every Frame row
+and an Every Physics Tick row in the same sheet are not "above" and "below" each other at run
+time: one runs when the frame ticks, the other when the fixed physics clock ticks, and Godot
+never interleaves them by your row order. Put movement under **Every Physics Tick** and
+presentation under **Every Frame**; do not sequence between them.
+
+**Boundary 2 - between sheets on different nodes, the scene tree decides.** Godot calls
+`_process` on nodes in scene-tree order (depth first, parent before child), so two behavior
+sheets on two nodes run in that order every frame. It is deterministic, but it is decided by
+where the node sits in the tree, not by anything on either sheet - and someone reordering the
+tree changes it silently. If sheet A must run before sheet B, do not rely on the tree: have B
+react to a **trigger** A emits. That is the same rule as section 4, and it is the version of
+"A then B" that survives a reordered scene.
+
+**Boundary 3 - signals run NOW, at the emit site.** A signal handler runs immediately and
+synchronously where the signal is emitted: **On Health Changed** in sheet B interrupts the row
+in sheet A that emitted it, B's rows finish, and only then does A's next row run. Once you know
+this it is MORE predictable than a C3 trigger, but "top to bottom" is now about the emit site,
+not about the handler's position on its sheet.
+
+**Includes are the real difference.** There is no textual include here. The two things that
+play the role both run at a definite, visible point:
+
+| C3 habit | Here | When it runs |
+|---|---|---|
+| Include a sheet so its events run *at this point* | **Teach a Verb** - publish the shared logic and CALL it from a row | Exactly when the calling row runs - more explicit than an include, because the call is a row you can see |
+| Include a behaviour sheet for a whole family of objects | A **behavior pack** on the node | In scene-tree order each tick, as a separate node - NOT where any include line sits |
+
+So when you reach for an include meaning "run this shared logic here, now", the honest mapping
+is a called verb. When you reach for it meaning "give these objects this behavior", it is a
+pack, and its ordering is the tree's.
+
+Rules of thumb, in the sheet's own terms:
+
+- Order **within** a sheet: trust it completely.
+- Order **between** two sheets each frame: do not depend on it - make the second react to a
+  trigger the first emits.
+- Order that must span the whole game (spawn before physics, physics before camera): use the
+  tick that owns it, rather than trying to sequence inside one tick.
+- Reading the GDScript panel settles any doubt in one look: the emitted handler IS the order.
+
+---
+
+## 6. Data Plugins (Dictionary, Array, JSON, XML)
 
 | Construct 3 | Godot EventSheets |
 | --- | --- |
@@ -134,7 +203,7 @@ it), and anything not covered is one ƒx expression away.
 
 ---
 
-## 6. Behaviors and Plugins - The Three Lanes
+## 7. Behaviors and Plugins - The Three Lanes
 
 Every C3 behavior or plugin lands in one of three lanes: Godot already owns it, a portable pack ships it, or you use the Godot feature directly.
 
@@ -196,7 +265,7 @@ i18n (Godot translations).
 
 ---
 
-## 7. Habits That Transfer Directly
+## 8. Habits That Transfer Directly
 
 - **Typing `Self.` still answers "what does my object know about itself"**: type `self` in any
   ƒx field (or open the ƒx Expressions dictionary) and a pinned **Self** section lists your
@@ -291,7 +360,7 @@ i18n (Godot translations).
 
 ---
 
-## 8. Habits to Relearn (the Godot Way Is Better Here)
+## 9. Habits to Relearn (the Godot Way Is Better Here)
 
 - **There is no runtime**: your sheet *is* GDScript after compiling. Read the generated
   script in the GDScript panel - selection highlights both ways. Performance equals
@@ -310,7 +379,7 @@ i18n (Godot translations).
 
 ---
 
-## 9. Importing C3 Projects Directly - A Permanent Non-Goal
+## 10. Importing C3 Projects Directly - A Permanent Non-Goal
 
 There is deliberately **no `.c3p` / C3-clipboard importer**, and there won't be one:
 Construct's internal event JSON is proprietary and unversioned - it churns with C3
@@ -324,7 +393,7 @@ a sheet-by-sheet rebuild - faster than it sounds, because the grammar is the sam
 
 ---
 
-## 10. Use Cases
+## 11. Use Cases
 
 ### 1. Porting a weekend platformer
 
@@ -366,7 +435,7 @@ A C3 tower that "picked nearest enemy" each tick becomes a single Nearest Node I
 
 Mid-port you need a coworker to reuse the reload sequence you just rebuilt from the C3 Weapon addon. You copy the events, paste the snippet text into chat, and they paste it straight into their sheet - and because plain GDScript with trigger functions converts to events on paste, a raw script from a tutorial drops in the same way.
 
-## 11. Tips and Common Mistakes
+## 12. Tips and Common Mistakes
 
 - **The polling reflex is the #1 imported habit.** Reaching for **Every Frame** to check for something that *happens at a moment* (a collision, a timer ending, a key press) re-checks 60 times a second for an event Godot already signals. Use the signal trigger; the picker surfaces it first when a polling condition has a signal twin.
 - **But don't contort continuous values into signals.** Camera follow, per-frame smoothing, reading the movement axis, `is_on_floor()` (Godot deliberately has no "landed" signal) are genuinely per-frame work - **Every Frame** is their correct, idiomatic home.
