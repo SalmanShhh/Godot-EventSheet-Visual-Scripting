@@ -15,6 +15,80 @@ in someone else's project, later.
 
 ---
 
+## Step 0 - Decide WHAT KIND of thing the code is (the two models)
+
+Every mistake in wrapped code that the gates cannot catch is a KIND mistake: a check written
+as an action, an event written as a polled condition, an outcome hidden in a variable. Decide
+this before you write an annotation, because the annotation only records the decision.
+
+### The condition/action model (where it goes on the sheet)
+
+The event sheet is a two-lane grid and every feature maps onto it - this project treats that
+as a covenant, not a style:
+
+- **Branching is a CONDITION.** A question the row asks, in the left lane. An `if` is ALWAYS a
+  condition cell; it is never text inside an action ("do X, and if it failed then...").
+- **An effect is an ACTION.** Something the row does, in the right lane. An action does; it
+  does not decide.
+- **A value is an EXPRESSION.** It lives inside a cell, never as its own row.
+- **Iteration is a loop ROW** (a looping condition / pick filter), not a special block.
+- **Structure mirrors code.** Nesting on the canvas IS nesting in the emitted GDScript, so a
+  sub-event is a nested block; nothing is a text blob or a panel that hides logic.
+- **Outcomes are read back as conditions or triggers, never as side-channel flags** a
+  beginner must remember to check. `Cooldown Is Ready`, `Wait Timed Out`, `On Save Failed` -
+  not "sets `gave_up` to true".
+
+The test that catches you: can a beginner read the row as a sentence and tell, from the lane
+and the badge alone, whether it asks or does? If a single verb both checks and acts, split it.
+
+### The ACE model on Godot's primitives (which kind it is)
+
+The four Construct-style kinds sit directly on Godot's own primitives, which is why ordinary
+GDScript becomes vocabulary with so little ceremony:
+
+| Kind | Godot primitive | Annotation | Reads as |
+|---|---|---|---|
+| **Trigger** | a `signal` (the row's head connects to it) | `@ace_trigger` on the signal line | "On <something happened>" |
+| **Condition** | a method returning `bool` | `@ace_condition` (or inferred from `-> bool`) | a question |
+| **Action** | a method returning `void` | `@ace_action` (or inferred) | a verb |
+| **Expression** | a method or property returning a value | `@ace_expression` (or inferred) | a value in a cell |
+
+The rule that decides trigger vs condition, and that people get wrong most:
+
+> Something that **happens** is a trigger; something you **check** is a condition. If the code
+> would emit a signal, or you find yourself polling for a change every frame, it is a trigger.
+
+Triggers here are Godot signals, and they carry MORE than Construct's fixed trigger list:
+
+- **Payload.** The signal's arguments become the trigger row's captured context and read back
+  as values on that row (`signal load_failed(slot_index: int, reason: String)` gives the row
+  `slot_index` and `reason`). Never deliver an outcome as a variable the handler must fetch;
+  put it in the signal.
+- **Awaitable.** Any signal can be waited for (`Wait For Signal`), so a trigger doubles as a
+  join point in an async row.
+- **Fan-out.** Group signals (`Connect Group Signal`, `call_group`) deliver one trigger to a
+  whole family of nodes; the has_method seam packs use for decoupling is the same idea.
+- **The reactive alternative.** A polled condition that has a real signal twin should point
+  at it - the picker already shows a "reactive alternative" tip for shipped pairs
+  (`ACEDescriptor.reactive_alternative`). When wrapping code, prefer emitting a signal over
+  exposing a bool that callers must poll every frame.
+
+Construct's FAKE triggers (green arrows that are really per-tick polls) have shipped answers -
+`Trigger Once`, `Has Changed`, `Was Recently True`, the group-population edges - which turn a
+polled state into a rising edge. Do not mint a new one of those; compose the shipped gate.
+
+Where the shipped packs got it right, and you can copy the shape:
+
+- `On Purchase Refused` / `On Save Failed` / `On Load Failed` - an OUTCOME as a trigger with
+  the reason in the payload, so recovery can live in another event or another sheet.
+- `Cooldown Is Ready` + `Start Cooldown` - a state check as a condition beside its effect.
+- `On Save Needs Upgrade (save_data, from_version)` - a trigger firing at a precise moment,
+  between reading and applying, with everything the handler needs as payload.
+
+Only once you know the kind do the recipes below apply.
+
+---
+
 ## Step 1 - Survey before you mint anything
 
 Two names must be unique: the `ace_id` (hard requirement) and the display name (soft, but a

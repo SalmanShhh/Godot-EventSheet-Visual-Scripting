@@ -35,6 +35,30 @@ Tag every suggestion honestly: green "NEW VERBS" (pure vocabulary), blue "NEEDS 
 SEAM" (requires new plugin support), gray "EXTENDS EXISTING" (a seam exists - name the
 file/API it extends). Proposed-but-nonexistent menu items must read as proposals.
 
+## 1b. Every suggestion passes the two models BEFORE it is drawn
+
+Two audits of past mockups found the same defects over and over; state the rules up front and
+mark each suggestion against them, so the reader sees compliance instead of being told.
+
+**The condition/action model (the lane):** branching is a condition in the left lane; an
+effect is an action in the right; a value is an expression inside a cell; iteration is a loop
+row; nesting mirrors the emitted code; an `if` is never action-lane text; outcomes are read
+back as conditions or triggers, never as a side-channel variable. Never draw a loop or a
+run-once gate in the action lane over a filler "Always" condition - it goes on the left.
+
+**The ACE model on Godot (the kind):** a trigger IS a Godot signal and fires when something
+happens; a condition is a bool check; an action is an effect; an expression is a value. If a
+suggestion says "when X happens", it is a signal-backed trigger, and its payload rides the
+signal arguments as row context - not a polled condition and not a variable. If a real signal
+exists, prefer it over a polled check (the reactive-alternative rule). Per-key or per-verb
+variants are one signal with the key as payload/parameter, not N signals. Debugger and
+diagnostic information is never program text: it lives in the gutter, a panel, or the game
+overlay, and only when asked for.
+
+Tag every suggestion beside its tier: `MODEL: clean / reshaped` and `KIND: ok / signal-true /
+re-kinded`, and put a compact audit table after the intro. Reshape in place rather than cut
+where the idea is sound and only the shape is wrong.
+
 ## 2. Each suggestion shows THREE things
 
 1. **The rows**: how the pattern reads as event-sheet rows (condition lane | action lane).
