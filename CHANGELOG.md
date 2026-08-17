@@ -32,6 +32,35 @@ reproduce re-anchors instead of failing the file. Result: **79 of 79 packs that 
 open with them; 1,264 of 1,269 verbs fleet-wide** (five single functions remain raw, listed in
 the new test), zero byte drift. `tests/pack_open_lift_test.gd` opens every pack and pins it.
 
+### Changed - the head of an opened pack: one Include bar, the description once, settings in folders
+
+A pack opened as a preview spent two and a half screens before its first rule: a Class setup bar, a
+`host` variable, a Host binding bar, eleven trigger rows, forty-six variable rows in one flat list,
+and then - at the very END of the file - the pack's about text again, as a grey wall nobody scrolls
+to. Construct says all of that in four shapes, and the head now reads as them:
+
+- **The Include bar.** `⇥ Addon Pack` `FPSController` `v1.0.0` *behaves on a* `CharacterBody3D` - the
+  pack's identity as ONE bar, in the slot Construct uses for "Include: Sheet". The class-setup strip,
+  the `host` variable and the Host binding bar fold into it (an editable sheet keeps all three).
+- **The description, once.** The pack's about text reads as a comment bar directly under the identity
+  and is no longer repeated at the end of the file.
+- **Folders, closed.** `Triggers` *this pack fires - 11*, then one bar per `@export_group` in FILE
+  order (`Movement` *3 settings*, `Jump` *3 settings*, …), a `Settings` bar for knobs declared before
+  any group, and `Internal state` *values the pack keeps for itself - 21*. Godot's own grouping rule
+  is honoured - a group claims every knob declared under it, not just the one carrying the line.
+- **A knob reads as a sentence.** `number` `jump_velocity` `= 4.5` *Upward velocity applied on a jump*
+  - the friendly type word leads, and the knob's own `##` doc comment trails it muted, so you learn
+  what a setting does without opening the `.gd`. The `@export` and group chips are gone: everything in
+  a settings folder is exported, and the bar names the group.
+
+Pure view, like the Helpers bar: the rows are re-parented, no resource is touched and the pack still
+re-emits byte-identically. Also fixed: a Function block header whose right lane is empty now spans the
+WHOLE row, so its input chips stop being clipped at the lane divider (`y  number` drew as `y  numb` at
+a narrow split) and wrap onto a second line only if the row itself runs out.
+`tools/render_opened_pack_head_preview.gd` regenerates `docs/images/opened-pack-head.png` and
+`docs/images/opened-pack-head-open.png`; `tests/opened_pack_head_test.gd` pins the bars, their order,
+their fold state and the knob reading by value over the real FPS Controller pack.
+
 ### Changed - an opened pack reads like a Construct sheet: Function blocks, a Helpers group, Reading mode
 
 Now that every pack opens WITH its verbs, the next question is what those verbs SAY. A verb header
