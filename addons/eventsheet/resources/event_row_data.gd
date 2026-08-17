@@ -60,3 +60,8 @@ var attached_below: bool = false
 # condition-less event reads as "Every Tick" there - but a verb's body runs when the verb is CALLED, so
 # the same row must read "Always" instead. View-only, never serialized.
 var in_verb_body: bool = false
+# Which KIND of published verb this row's body belongs to (an EventSheetSentence.VerbKind). A `return`
+# inside a published condition reads "Answer yes", inside an expression "Give back", and inside an
+# action "Stop event" - and spans are built lazily, long after the walk that knew which verb this was,
+# so the answer is carried on the row. View-only, never serialized.
+var verb_kind: int = 0

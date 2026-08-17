@@ -36,6 +36,12 @@ extends RefCounted
 const VERB_KIND_TINT_ALPHA: float = 0.16
 
 var _viewport: Control = null
+# The published verb whose body is being walked right now, or null at sheet level. Rows inside a
+# CONDITION verb read their `return` as "Answer yes/no" and inside an EXPRESSION verb as "Give back",
+# and only the walk knows which verb owns the rows it is building.
+var _current_verb_function: EventFunction = null
+# The verb kind a lazily-built row carries with it, or -1 when the walk itself is the authority.
+var _verb_kind_override: int = -1
 # Per-build occurrence counters ("label" -> count) giving every paired region a STABLE
 # fold key ("label#n") that survives sessions - row uids are instance-based and cannot
 # (the persisted-folds layer keys on these instead). Reset by _pair_region_fences.
@@ -1088,16 +1094,22 @@ func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunctio
 	# unlocks that later. Default-collapsed (folded seeded from _fold_state) preserves the header look.
 	var body_editable: bool = _function_body_editable(event_function)
 	var body_entries: Array = event_function.events if not event_function.events.is_empty() else event_function.rows
+	# The body's rows read as the KIND of verb they belong to (a `return` inside a published condition
+	# answers yes or no), and only the walk below knows which verb that is - so it is recorded here and
+	# put back afterwards, leaving sheet-level rows on the plain action reading.
+	var outer_verb: EventFunction = _current_verb_function
+	_current_verb_function = event_function
 	for body_entry: Variant in body_entries:
 		if body_entry is Resource:
 			var child_row: EventRowData = _viewport._build_row_from_resource(body_entry as Resource, indent + 1)
 			if child_row != null:
 				# Mark the subtree BEFORE any span build: a condition-less row inside a verb body must
 				# read "Always" (it runs when the verb is called), not the sheet's "Every Tick".
-				_mark_verb_body(child_row)
+				_mark_verb_body(child_row, _current_verb_kind())
 				if not body_editable:
 					_make_row_inert(child_row)
 				row_data.children.append(child_row)
+	_current_verb_function = outer_verb
 	# The way IN to a verb's body, mirroring a group's own footer. A freshly created verb has an empty
 	# body, so without this there is nowhere to put its first event - and since a "run only when" guard
 	# is just a condition on an event inside the verb, that first event is exactly what a guard needs.
@@ -1132,10 +1144,11 @@ func _make_row_inert(row_data: EventRowData) -> void:
 ## Flags a row and its whole subtree as living inside a published verb's body, so a condition-less
 ## event reads "Always" (it runs when the verb is called) instead of the sheet-level "Every Tick"
 ## (which is only true of the sheet's own events, since a sheet compiles into _process).
-func _mark_verb_body(row_data: EventRowData) -> void:
+func _mark_verb_body(row_data: EventRowData, verb_kind: int = EventSheetSentence.VerbKind.ACTION) -> void:
 	row_data.in_verb_body = true
+	row_data.verb_kind = verb_kind
 	for child: EventRowData in row_data.children:
-		_mark_verb_body(child)
+		_mark_verb_body(child, verb_kind)
 
 
 ## True when a published verb's body should render as LIVE, editable event rows. On an AUTHORED sheet (one
@@ -1784,128 +1797,20 @@ static func function_body_info(code: String) -> Dictionary:
 
 
 ## The Construct-3 sentence a single GDScript statement reads as: `score += wave[1]` becomes
-## "Add wave[1] to score", `var label := wave[0]` becomes "Let label = wave[0]". Returns
-## {indent, segments} - each segment {text, tone} with tone "plain" | "name" | "value" - or {} when
-## the line is not one of the shapes below.
+## "Add wave[1] to score", `host.call_deferred("queue_free")` becomes "Destroy (at end of frame)"
+## under the object "host". Returns {indent, object, segments} - each segment {text, tone} with tone
+## "plain" | "name" | "value" - or {} when no shape is recognised.
 ##
 ## A person reading a sheet is reading STEPS, and an operator glyph is the one part of a step that
 ## has to be decoded rather than read. Naming the operation removes that decode without hiding
 ## anything: the row is the same RawCodeRow, so double-click still opens the real code and the byte
-## round-trip is untouched. The type annotation is deliberately dropped from the "Let" sentence -
-## it is one hover away and it is never the point of the step.
+## round-trip is untouched.
 ##
-## Strictness is the whole value here: a sentence that is ALMOST right is worse than the code it
-## replaced. Only single-line statements are claimed, operators must be found at the TOP level
-## (never inside a string or brackets) and in their SPACED form (so ` == `, ` != `, ` <= ` can not
-## be mistaken for an assignment), and a left side with a space or a `(` in it is a call rather
-## than a simple target and is refused. Static + pure, so it is unit-testable without a viewport.
-static func statement_sentence(code: String) -> Dictionary:
-	if code.contains("\n"):
-		return {}
-	var indent: int = code.length() - code.lstrip("\t").length()
-	var text: String = code.strip_edges()
-	if text.is_empty() or text.begins_with("#"):
-		return {}
-	var keyword: String = _leading_word(text)
-	# Control flow is a BRANCH, not a step, and it already renders as its own structure elsewhere.
-	# `await` hides a suspension point, which no sentence should ever paper over.
-	if keyword in ["if", "elif", "else", "for", "while", "match", "pass", "break", "continue", "await"]:
-		return {}
-	if keyword == "return":
-		if text == "return":
-			return {"indent": indent, "segments": [{"text": "Return", "tone": "plain"}]}
-		var returned: String = text.substr(7).strip_edges()
-		if returned.is_empty():
-			return {}
-		return {"indent": indent, "segments": [
-			{"text": "Return ", "tone": "plain"},
-			{"text": returned, "tone": "value"}
-		]}
-	if keyword == "var":
-		return _declaration_sentence(text, indent)
-	# Compound assignment reads as the arithmetic verb it IS. The spaced token is what keeps
-	# `x <= y` and friends out: none of them contain " += " and none of them contain " = ".
-	for operator: String in [" += ", " -= ", " *= ", " /= "]:
-		var operator_at: int = _top_level_operator(text, operator)
-		if operator_at < 0:
-			continue
-		var compound_target: String = text.substr(0, operator_at).strip_edges()
-		var amount: String = text.substr(operator_at + operator.length()).strip_edges()
-		if not _is_simple_target(compound_target) or amount.is_empty():
-			return {}
-		match operator:
-			" += ":
-				return {"indent": indent, "segments": [
-					{"text": "Add ", "tone": "plain"},
-					{"text": amount, "tone": "value"},
-					{"text": " to ", "tone": "plain"},
-					{"text": compound_target, "tone": "name"}
-				]}
-			" -= ":
-				return {"indent": indent, "segments": [
-					{"text": "Subtract ", "tone": "plain"},
-					{"text": amount, "tone": "value"},
-					{"text": " from ", "tone": "plain"},
-					{"text": compound_target, "tone": "name"}
-				]}
-			" *= ":
-				return {"indent": indent, "segments": [
-					{"text": "Multiply ", "tone": "plain"},
-					{"text": compound_target, "tone": "name"},
-					{"text": " by ", "tone": "plain"},
-					{"text": amount, "tone": "value"}
-				]}
-			_:
-				return {"indent": indent, "segments": [
-					{"text": "Divide ", "tone": "plain"},
-					{"text": compound_target, "tone": "name"},
-					{"text": " by ", "tone": "plain"},
-					{"text": amount, "tone": "value"}
-				]}
-	var assign_at: int = _top_level_operator(text, " = ")
-	if assign_at < 0:
-		return {}
-	var assign_target: String = text.substr(0, assign_at).strip_edges()
-	var assigned: String = text.substr(assign_at + 3).strip_edges()
-	if not _is_simple_target(assign_target) or assigned.is_empty():
-		return {}
-	return {"indent": indent, "segments": [
-		{"text": "Set ", "tone": "plain"},
-		{"text": assign_target, "tone": "name"},
-		{"text": " to ", "tone": "plain"},
-		{"text": assigned, "tone": "value"}
-	]}
-
-
-## The "Let name = value" sentence for a `var` declaration, shared by both spellings (`var x = 1`,
-## `var x := 1`, `var x: int = 1`). Split out so the shapes stay readable one beside the other.
-static func _declaration_sentence(text: String, indent: int) -> Dictionary:
-	var rest: String = text.substr(4)
-	var walrus_at: int = _top_level_operator(rest, " := ")
-	var equals_at: int = _top_level_operator(rest, " = ")
-	var name_text: String = ""
-	var value_text: String = ""
-	if walrus_at >= 0 and (equals_at < 0 or walrus_at < equals_at):
-		name_text = rest.substr(0, walrus_at).strip_edges()
-		value_text = rest.substr(walrus_at + 4).strip_edges()
-	elif equals_at >= 0:
-		name_text = rest.substr(0, equals_at).strip_edges()
-		value_text = rest.substr(equals_at + 3).strip_edges()
-	else:
-		return {}
-	# `var label: String = x` names the variable "label": the declared type is one hover away in the
-	# code, and showing it would put a compiler detail in the middle of an English sentence.
-	var colon_at: int = name_text.find(":")
-	if colon_at >= 0:
-		name_text = name_text.substr(0, colon_at).strip_edges()
-	if value_text.is_empty() or not _is_identifier(name_text):
-		return {}
-	return {"indent": indent, "segments": [
-		{"text": "Let ", "tone": "plain"},
-		{"text": name_text, "tone": "name"},
-		{"text": " = ", "tone": "plain"},
-		{"text": value_text, "tone": "value"}
-	]}
+## The grammar itself lives in EventSheetSentence, because the ACE rows in the lane beside these
+## read through the SAME producer - a shape must say one thing whether it was typed or picked.
+## Kept here as a thin forwarder so the classifiers around it keep one import surface.
+static func statement_sentence(code: String, context: Dictionary = {}) -> Dictionary:
+	return EventSheetSentence.statement(code, context)
 
 
 ## The Object / Verb / parameters split of a statement that is EXACTLY one call:
@@ -3787,7 +3692,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 						"ace_enabled": condition.enabled,
 						"chip": true,
 						"line_index": line_index,
-						"object_label": _object_label_for(condition.provider_id, condition.ace_id),
+						"object_label": _object_label_or_pending(condition.provider_id, condition.ace_id),
 						"object_icon": _object_icon_for(condition.provider_id, condition.ace_id),
 						"swatch_color": _first_color_in_params(condition)
 					}.merged(condition_style_meta, true)
@@ -3884,6 +3789,19 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 		for action_index in range(event_row.actions.size()):
 			var action_resource: Resource = event_row.actions[action_index]
 			if action_resource is ACEAction:
+				# A Local Variable row is a DECLARATION, not a step - the same row shape a hand-written
+				# `var` line gets, so a local reads alike whether it was picked or typed.
+				var local_declaration: Dictionary = grammar_action_declaration(action_resource as ACEAction)
+				if not local_declaration.is_empty():
+					append_local_declaration_spans(spans, local_declaration, {
+						"lane": "action",
+						"kind": "action",
+						"ace_index": action_index,
+						"ace_enabled": (action_resource as ACEAction).enabled,
+						"line_index": action_line_index
+					}, action_style_meta)
+					action_line_index += 1
+					continue
 				spans.append(
 					_make_span(
 						_format_action_descriptor(action_resource as ACEAction),
@@ -3895,7 +3813,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 							"ace_enabled": (action_resource as ACEAction).enabled,
 							"chip": true,
 							"line_index": action_line_index,
-							"object_label": _object_label_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
+							"object_label": _object_label_or_pending((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
 							"object_icon": _object_icon_for((action_resource as ACEAction).provider_id, (action_resource as ACEAction).ace_id),
 							"swatch_color": _first_color_in_params(action_resource),
 							"compiled_lines": compiled_line_count(action_resource as ACEAction)
@@ -4225,7 +4143,12 @@ func _ensure_event_spans(row_data: EventRowData) -> void:
 	if not row_data.spans.is_empty():
 		return
 	if row_data.source_resource is EventRow:
+		# Spans are built LAZILY, long after the walk that knew which published verb owns this row - so
+		# the row carries the answer and puts it back for the duration of the build.
+		var outer_kind: int = _verb_kind_override
+		_verb_kind_override = row_data.verb_kind
 		row_data.spans = _build_event_spans(row_data.source_resource as EventRow, row_data.in_verb_body)
+		_verb_kind_override = outer_kind
 
 
 func _append_condition_prefix_spans(
@@ -4411,6 +4334,12 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# on any one pack's name, so every state-machine-like behavior gets the reading for free.
 	# The value shows verbatim minus quotes (state strings are case-sensitive - no prettifying).
 	# Display-only: the stored row and the compiled call are untouched.
+	# Same shared grammar the action lane uses: a condition whose shape Construct already has a
+	# sentence for reads that sentence whether it was picked or typed.
+	var grammar: Dictionary = grammar_condition_sentence(condition)
+	if not grammar.is_empty():
+		_pending_object_label = str(grammar.get("object", ""))
+		return _joined_segments(grammar)
 	if _is_state_header_condition(condition):
 		var state_value: String = str(params_dict.get("state_name", "")).strip_edges()
 		if state_value.length() >= 2 and state_value.begins_with("\"") and state_value.ends_with("\""):
@@ -4524,6 +4453,12 @@ static func action_awaits(action: ACEAction) -> bool:
 
 
 func _format_action_descriptor_base(action: ACEAction) -> String:
+	# A row whose SHAPE has a settled Construct sentence reads through the shared grammar, so the
+	# picked row and the hand-written line beside it say the same words.
+	var grammar: Dictionary = grammar_action_sentence(action)
+	if not grammar.is_empty():
+		_pending_object_label = str(grammar.get("object", ""))
+		return _joined_segments(grammar)
 	# Function calls read as the named verb (under the "ƒ" chip), not the raw "Call name()" template.
 	if _is_function_call_action(action):
 		var verb: String = _function_call_label(action)
@@ -4704,9 +4639,24 @@ var _pending_param_ranges: Dictionary = {}
 func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, line_index: int, action_style_meta: Dictionary) -> bool:
 	var pieces: Array = []
 	var indent: int = 0
-	var sentence: Dictionary = statement_sentence(raw.code)
+	var object_label: String = ""
+	var sentence: Dictionary = statement_sentence(raw.code, sentence_context())
+	# A `var` line is a DECLARATION, not a step: it reads as Construct's own local-variable row - a type
+	# chip, the name, the starting value - rather than as an action wearing an object label.
+	if str(sentence.get("kind", "")) == "declaration":
+		append_local_declaration_spans(spans, sentence, {
+			"lane": "action",
+			"kind": "action",
+			"ace_index": action_index,
+			"ace_enabled": raw.enabled,
+			"raw_action": true,
+			"code_cell": false,
+			"line_index": line_index
+		}, action_style_meta)
+		return true
 	if not sentence.is_empty():
 		indent = int(sentence.get("indent", 0))
+		object_label = str(sentence.get("object", ""))
 		for segment: Variant in (sentence.get("segments", []) as Array):
 			var part: Dictionary = segment
 			pieces.append([str(part.get("text", "")), str(part.get("tone", "plain"))])
@@ -4763,9 +4713,237 @@ func _append_sentence_spans(spans: Array, raw: RawCodeRow, action_index: int, li
 		"raw_action": true,
 		"code_cell": false,
 		"line_index": line_index,
+		# The object column, exactly as an ACE row fills it: a variable belongs to System, a member
+		# assignment to the node it is on. A declaration row names no object at all.
+		"object_label": object_label,
 		"bbcode_segments": sentence_segments
 	}.merged(action_style_meta, false)))
 	return true
+
+
+## Construct's local-variable row: a type-word chip, the name, and the starting value. Shared by the
+## hand-written `var` line and by the Local Variable ACE, so a local reads the same however it got
+## there. `base_meta` carries the row identity (which lane, which action index) and `style_meta` the
+## cell chrome; the LAST span omits natural_width so the cell background closes the row.
+func append_local_declaration_spans(spans: Array, declaration: Dictionary, base_meta: Dictionary, style_meta: Dictionary) -> void:
+	var indent_text: String = "    ".repeat(int(declaration.get("indent", 0)))
+	var chip_word: String = "%s %s" % [
+		EventSheetL10n.translate("Local constant") if bool(declaration.get("is_constant", false)) else EventSheetL10n.translate("Local"),
+		str(declaration.get("type_word", ""))
+	]
+	var chip_meta: Dictionary = base_meta.duplicate()
+	chip_meta["chip"] = true
+	chip_meta["natural_width"] = true
+	chip_meta["text_color"] = _viewport._get_event_style().object_label_color
+	spans.append(_make_span(indent_text + chip_word, SemanticSpan.SpanType.VALUE, chip_meta.merged(style_meta, false)))
+	var name_meta: Dictionary = base_meta.duplicate()
+	name_meta["chip"] = true
+	name_meta["natural_width"] = true
+	name_meta["text_color"] = EventSheetPalette.TEXT_PRIMARY
+	spans.append(_make_span(str(declaration.get("name", "")), SemanticSpan.SpanType.VALUE, name_meta.merged(style_meta, false)))
+	var value_meta: Dictionary = base_meta.duplicate()
+	value_meta["chip"] = true
+	value_meta["text_color"] = _viewport._get_event_style().value_highlight_color
+	spans.append(_make_span("= %s" % str(declaration.get("value", "")), SemanticSpan.SpanType.VALUE, value_meta.merged(style_meta, false)))
+
+
+# One-shot object label recorded by a descriptor formatter when the row's shape names its own object
+# (`host` for a destroy, `Keyboard` for an input check). Same one-shot discipline as
+# _pending_display_bbcode: the formatter writes it, the span site consumes AND clears it, and the two
+# always run back to back (the descriptor is the first argument of the _make_span call whose metadata
+# reads the label).
+var _pending_object_label: String = ""
+# The sheet the cached sentence context was built for, so a tab switch rebuilds it.
+var _sentence_context_sheet: Resource = null
+var _sentence_context_cache: Dictionary = {}
+
+
+## The shared-grammar reading of an ACE ACTION whose shape a hand-written line can also have, or {}
+## when this row has no such twin. The point is symmetry: `Destroy`, `Signal On Jumped`, `Set hp to 0`
+## must be one sentence, whether the row came out of the picker or out of the user's own .gd file.
+func grammar_action_sentence(action: ACEAction) -> Dictionary:
+	if action == null or not (action.provider_id.is_empty() or action.provider_id == "Core"):
+		return {}
+	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	var context: Dictionary = sentence_context()
+	match action.ace_id:
+		"SetVar":
+			return EventSheetSentence.statement("%s = %s" % [
+				str(params_dict.get("var_name", "")), str(params_dict.get("value", ""))], context)
+		"EmitSignal":
+			return EventSheetSentence.signal_sentence(
+				str(params_dict.get("signal_name", "")), str(params_dict.get("args", "")), context)
+		"QueueFree":
+			return EventSheetSentence.statement("queue_free()", context)
+		"CallMethod":
+			# A generic call only reads as a sentence when its shape is one of the settled ones
+			# (`call_deferred("queue_free")` is a destroy); anything else keeps its own reading.
+			return EventSheetSentence.statement("%s.%s(%s)" % [
+				str(params_dict.get("target", "")), str(params_dict.get("method", "")),
+				str(params_dict.get("args", ""))], context)
+		"QueueFreeNode":
+			return EventSheetSentence.statement("%s.queue_free()" % str(params_dict.get("target", "self")), context)
+		"ChangeScene":
+			return EventSheetSentence.statement(
+				"get_tree().change_scene_to_file(%s)" % str(params_dict.get("path", "")), context)
+		"ReturnEarly":
+			return EventSheetSentence.return_sentence("", context)
+		"ReturnValue":
+			return EventSheetSentence.return_sentence(str(params_dict.get("value", "")), context)
+		"SetProperty":
+			return EventSheetSentence.statement("%s.%s = %s" % [
+				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
+				str(params_dict.get("value", ""))], context)
+		"AddToProperty":
+			return EventSheetSentence.statement("%s.%s += %s" % [
+				str(params_dict.get("target", "")), str(params_dict.get("property", "")),
+				str(params_dict.get("value", ""))], context)
+		"Wait":
+			# The hourglass belongs to the row's AWAIT chip, which _format_action_descriptor puts back on
+			# every awaiting action - so the sentence hands over the words only and never doubles it.
+			var wait: Dictionary = EventSheetSentence.statement(
+				"await get_tree().create_timer(%s).timeout" % str(params_dict.get("seconds", "")), context)
+			return _without_hourglass(wait)
+	return {}
+
+
+## The shared-grammar reading of an ACE CONDITION, or {} when the row has no hand-written twin.
+func grammar_condition_sentence(condition: ACECondition) -> Dictionary:
+	if condition == null or not (condition.provider_id.is_empty() or condition.provider_id == "Core"):
+		return {}
+	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	var context: Dictionary = sentence_context()
+	match condition.ace_id:
+		"ExpressionIsTrue":
+			return EventSheetSentence.condition(str(params_dict.get("expr", "")), context)
+		"IsSameObject":
+			return EventSheetSentence.condition("%s == %s" % [
+				str(params_dict.get("a", "")), str(params_dict.get("b", ""))], context)
+		"CompareVar":
+			# Only the null comparisons have a Construct sentence ("host does not exist"); every other
+			# operator already reads as the comparison it is, so the grammar hands those straight back.
+			return EventSheetSentence.condition("%s %s %s" % [
+				str(params_dict.get("var_name", "")), str(params_dict.get("op", "==")),
+				str(params_dict.get("value", ""))], context)
+		"IsActionPressed":
+			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), false)
+		"IsActionJustPressed":
+			return EventSheetSentence.input_action_sentence(str(params_dict.get("action", "")), true)
+	return {}
+
+
+## The local-variable DECLARATION an ACE row reads as, or {} when it is not one of the Local Variable
+## family. The family compiles to exactly the `var name: Type = value` line a user can also type, so
+## both spellings land on one row shape.
+func grammar_action_declaration(action: ACEAction) -> Dictionary:
+	if action == null or not (action.provider_id.is_empty() or action.provider_id == "Core"):
+		return {}
+	var params_dict: Dictionary = action.params if not action.params.is_empty() else action.parameters
+	var name_text: String = str(params_dict.get("name", ""))
+	var value_text: String = str(params_dict.get("value", ""))
+	match action.ace_id:
+		"SetLocalVar":
+			return EventSheetSentence.declaration("var %s = %s" % [name_text, value_text])
+		"SetLocalVarTyped":
+			return EventSheetSentence.declaration("var %s: %s = %s" % [
+				name_text, str(params_dict.get("var_type", "")), value_text])
+		"SetLocalVarInferred":
+			return EventSheetSentence.declaration("var %s := %s" % [name_text, value_text])
+		"SetLocalConst":
+			return EventSheetSentence.declaration("const %s = %s" % [name_text, value_text])
+		"SetLocalConstTyped":
+			return EventSheetSentence.declaration("const %s: %s = %s" % [
+				name_text, str(params_dict.get("const_type", "")), value_text])
+		"SetLocalConstInferred":
+			return EventSheetSentence.declaration("const %s := %s" % [name_text, value_text])
+	return {}
+
+
+## One flat string from a grammar reading's segments - what a descriptor formatter must hand back.
+func _joined_segments(sentence: Dictionary) -> String:
+	var text: String = ""
+	for segment: Variant in (sentence.get("segments", []) as Array):
+		text += str((segment as Dictionary).get("text", ""))
+	return text
+
+
+## The same reading minus a leading hourglass, for the one caller that adds its own.
+func _without_hourglass(sentence: Dictionary) -> Dictionary:
+	if sentence.is_empty():
+		return sentence
+	var segments: Array = (sentence.get("segments", []) as Array).duplicate()
+	if not segments.is_empty():
+		var first: Dictionary = (segments[0] as Dictionary).duplicate()
+		first["text"] = str(first.get("text", "")).trim_prefix("⏳ ")
+		segments[0] = first
+	var trimmed: Dictionary = sentence.duplicate()
+	trimmed["segments"] = segments
+	return trimmed
+
+
+## The label an ACE row shows in its object column - the pending one when the row's shape named its
+## own object, otherwise the ordinary provider/node reading.
+func _object_label_or_pending(provider_id: String, ace_id: String) -> String:
+	var pending: String = _pending_object_label
+	_pending_object_label = ""
+	return pending if not pending.is_empty() else _object_label_for(provider_id, ace_id)
+
+
+## What the grammar needs to know about THIS sheet: the class that owns its signals, and the
+## published trigger name behind each declared signal, so `jumped.emit()` can read "Signal On Jumped"
+## instead of naming the member. Cached per sheet - the signal declarations only change with an edit,
+## which rebuilds the rows anyway.
+func sentence_context() -> Dictionary:
+	var sheet: Resource = _viewport._sheet if _viewport != null else null
+	if sheet == _sentence_context_sheet and not _sentence_context_cache.is_empty():
+		var reused: Dictionary = _sentence_context_cache.duplicate()
+		reused["verb_kind"] = _current_verb_kind()
+		return reused
+	var context: Dictionary = {"self_object": EventSheetSentence.OBJECT_SYSTEM, "owner": "", "signals": {}}
+	if sheet != null:
+		var owner_name: String = str(sheet.get("custom_class_name")).strip_edges()
+		if owner_name.is_empty():
+			owner_name = str(sheet.get("host_class")).strip_edges()
+		context["owner"] = owner_name
+		var declared: Dictionary = {}
+		for entry: Variant in _sheet_signal_rows(sheet):
+			var signal_row: SignalRow = entry
+			var published: String = str(signal_row.ace_name).strip_edges()
+			declared[signal_row.signal_name] = published if not published.is_empty() else signal_row.signal_name.capitalize()
+		context["signals"] = declared
+	_sentence_context_sheet = sheet
+	_sentence_context_cache = context.duplicate()
+	context["verb_kind"] = _current_verb_kind()
+	return context
+
+
+## Every SignalRow the sheet declares, wherever it sits in the row tree.
+func _sheet_signal_rows(sheet: Resource) -> Array:
+	var found: Array = []
+	var events: Variant = sheet.get("events")
+	if not (events is Array):
+		return found
+	for entry: Variant in (events as Array):
+		if entry is SignalRow:
+			found.append(entry)
+	return found
+
+
+## Which kind of verb body the rows being built belong to, so a `return` inside a published condition
+## reads "Answer yes" rather than "Stop event". ACTION whenever no published verb is being walked.
+func _current_verb_kind() -> int:
+	if _verb_kind_override >= 0:
+		return _verb_kind_override
+	if _current_verb_function == null or not _current_verb_function.expose_as_ace:
+		return EventSheetSentence.VerbKind.ACTION
+	# The same split the vocabulary itself uses: a verb that gives back a yes/no IS a condition, a
+	# verb that gives back anything else is an expression, and a verb that gives back nothing acts.
+	var type_name: String = str(_current_verb_function.return_type_name).strip_edges()
+	if _current_verb_function.return_type == TYPE_BOOL or type_name == "bool":
+		return EventSheetSentence.VerbKind.CONDITION
+	if _current_verb_function.return_type != TYPE_NIL or (not type_name.is_empty() and type_name != "void"):
+		return EventSheetSentence.VerbKind.EXPRESSION
+	return EventSheetSentence.VerbKind.ACTION
 
 
 func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> SemanticSpan:
