@@ -171,6 +171,64 @@ while filling a Custom Resource, as well as at runtime.
 | Seeded Sign | A stable -1 or +1 for a seed and an index. | `(1 if (absi(hash(str({seed}) + "#" + str({index}))) % 2) == 0 else -1)` |
 | Seeded Chance | **Condition.** True for a stable share of seed and index pairs (0 to 100). | `((float(absi(hash(str({seed}) + "#" + str({index}))) % 1000000) / 1000000.0) * 100.0 < {percent})` |
 
+### Random points in a shape
+
+Scalar randomness answers "how much". These answer "where". Every one is AREA-correct: the obvious
+spelling (a random angle plus a random radius) crowds points at the centre, because the outer rings of a
+circle hold more area than the inner ones, and the weighting that undoes that is baked in here so nobody
+has to remember it.
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Random Point In Circle | An evenly spread random point inside a circle. | `({center} + Vector2.RIGHT.rotated(randf() * TAU) * (sqrt(randf()) * {radius}))` |
+| Random Point On Circle | A random point exactly on the rim, never inside it. | `({center} + Vector2.RIGHT.rotated(randf() * TAU) * {radius})` |
+| Random Point In Ring | A random point in the doughnut between two radii - the off-screen spawner. | `({center} + Vector2.RIGHT.rotated(randf() * TAU) * sqrt(lerpf({inner_radius} * {inner_radius}, {outer_radius} * {outer_radius}, randf())))` |
+| Random Point In Rectangle | A random point inside an axis-aligned rectangle. | `({top_left} + Vector2(randf() * {size}.x, randf() * {size}.y))` |
+| Random Point In Cone | A random point inside a wedge - shotgun spread, cone attacks. Degrees in. | `({center} + Vector2.RIGHT.rotated(deg_to_rad({facing_degrees}) + randf_range(...)) * (sqrt(randf()) * {radius}))` |
+| Random Point Around | Scatter around a node already in the scene, between two radii. | `({node}.global_position + Vector2.RIGHT.rotated(randf() * TAU) * sqrt(lerpf(...)))` |
+| Random Direction (2D) | A random unit direction. Always exactly one unit long. | `Vector2.RIGHT.rotated(randf() * TAU)` |
+| Random Direction (3D) | A random unit direction, evenly spread over the whole sphere. | `Vector3.UP.rotated(Vector3.RIGHT, acos(randf_range(-1.0, 1.0))).rotated(Vector3.UP, randf() * TAU)` |
+| Random Point In Sphere | An evenly spread random point inside a 3D sphere. | the direction above times `pow(randf(), 1.0 / 3.0) * {radius}` |
+| Random Point In Box | A random point inside an axis-aligned 3D box. Size is the FULL box. | `({center} + Vector3(randf_range(-1.0, 1.0) * {size}.x, ...) * 0.5)` |
+| Random Point On Screen Edge | A random WORLD position on the border of what the camera can see. | a perimeter roll over the visible world rect |
+| Jitter | Nudges a number, vector or colour by a random amount up to the size you give. | `({value} + {amount} * randf_range(-1.0, 1.0))` |
+
+### Grid maths (no TileMap required)
+
+Cell coordinates used to exist only if you owned a TileMapLayer, because **Local To Map** is its method.
+Build grids, inventory grids, puzzle boards, chunk keys and tower placement all reason in cells with no
+tilemap in sight. **Cell Distance** carries the same five-geometry dropdown as **Is Within Distance
+(choose metric)**, so there is one spelling of "how is distance counted" in the whole plugin.
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Cell Of Point | Which grid cell a world position falls in. Negatives land in negative cells. | `Vector2i(floori({point}.x / maxf({cell_size}, 0.001)), floori({point}.y / maxf({cell_size}, 0.001)))` |
+| Center Of Cell | The world position at the middle of a cell - the exact partner of Cell Of Point. | `(Vector2({cell}) * {cell_size} + Vector2({cell_size}, {cell_size}) * 0.5)` |
+| Snap Point To Grid | The nearest grid intersection to a loose position. | `{point}.snapped(Vector2({cell_size}, {cell_size}))` |
+| Snap Point To Grid (3D) | The same on a 3D grid - voxels, modular level pieces. | `{point}.snapped(Vector3({cell_size}, {cell_size}, {cell_size}))` |
+| Cell Distance | How far apart two cells are, with the five-geometry dropdown. | an indexed array of the five measures |
+| Neighbours Of Cell | The cells touching a cell: four sides, eight with diagonals, or six axial hex. | an indexed array of the three neighbourhoods |
+| Cells In Line | Every cell a straight line passes through, in order, both ends included. | a `range().map()` walk between the two cells |
+| Cells In Radius | Every cell within a step radius, as a list. | a row-reduce filtered by the shape |
+| Cells In Rectangle | Every cell in a rectangular block, row by row. | a row-reduce over the block |
+| Is Cell In Bounds | **Condition.** True while a cell is on the board. | `({cell}.x >= 0 and {cell}.y >= 0 and {cell}.x < {size}.x and {cell}.y < {size}.y)` |
+| For Each Cell In Radius | **Looping condition.** Runs the event's actions once per cell in range, under the name `cell`. | the same walk as Cells In Radius, as a pick filter |
+
+### Falloff and radial force
+
+Distance-weighted strength is the single most reused number in game code. The plugin could already
+COLLECT everything in a blast - **Query Bodies In Circle**, **In Sphere** - and then every body took
+identical damage, because nothing said "less the further away".
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Falloff At Distance | 1 at the centre, 0 at the edge, with a Linear / Sharp (squared) / Smooth profile. Past the radius it is 0. | an indexed array of the three profiles |
+| Strength Toward | The same falloff between THIS node and another one, without spelling out either position. | `(clampf(1.0 - global_position.distance_to({node}.global_position) / maxf({radius}, 0.001), 0.0, 1.0))` |
+| Apply Radial Impulse | **Action.** Throws this physics body away from a blast, weaker the further it was. | a uid-named blast local, then `apply_impulse(...)` |
+| Push Group Away From | **Action.** Shoves every member of a group away from a point - the mirror of Pull Group Toward. | a guarded walk over `get_nodes_in_group` |
+| Is Within Cone Of | **Condition.** True while a point sits inside a facing wedge - guard vision, melee arcs. | a range test and an `angle_difference` test |
+
+
 ## Use cases
 
 **1. Health that cannot go below zero or above full.**
@@ -483,6 +541,234 @@ if absf(rad_to_deg(angle_difference(deg_to_rad(rad_to_deg(rotation)), deg_to_rad
 **Is Clockwise From** answers which side of the reference the angle sits on, for a "turn left or right"
 decision.
 
+**22. A spawn ring that never drops an enemy in your lap.**
+
+The off-screen spawner in one expression. The inner radius keeps enemies from appearing on top of the
+player; the outer one keeps them from appearing so far away they never arrive.
+
+```gdscript
+extends Node2D
+
+
+func _on_spawn_timer() -> void:
+	$Enemy.global_position = ($Player.global_position + Vector2.RIGHT.rotated(randf() * TAU) * sqrt(lerpf(500.0 * 500.0, 800.0 * 800.0, randf())))
+```
+
+**23. Shotgun spread that does not bunch.**
+
+Repeat is a loop ROW, in the condition lane like every other loop, and the eight pellets are its actions.
+
+```
+On Shot Fired
+  Loops: Repeat  8  times
+    -> Object Pool: Spawn  "pellet"  at  Muzzle.global_position
+    -> Bullet: Set Angle Of Motion  Vector Angle ( Random Point In Cone ( Vector2.ZERO, Facing Degrees, 14, 1 ) )
+```
+
+**24. Blood splats scattered around a hit.**
+
+Random Point Around takes the NODE, not its position, so the scatter follows whatever it is anchored to
+as that thing moves.
+
+```gdscript
+extends Node2D
+
+
+func _on_damaged(amount: int) -> void:
+	$Splat.global_position = (global_position + Vector2.RIGHT.rotated(randf() * TAU) * sqrt(lerpf(0.0 * 0.0, 24.0 * 24.0, randf())))
+```
+
+**25. Loot scattered across a room.**
+
+```gdscript
+extends Node2D
+
+
+func _on_chest_opened() -> void:
+	$Coin.global_position = (Vector2(100, 100) + Vector2(randf() * Vector2(400, 240).x, randf() * Vector2(400, 240).y))
+```
+
+**26. Debris flying out of a 3D explosion.**
+
+The naive "three random numbers" version of a 3D direction crowds the corners of a cube, so shrapnel
+comes out in eight clumps. This one is even over the whole sphere.
+
+```gdscript
+extends Node3D
+
+
+func _on_exploded() -> void:
+	$Chunk.linear_velocity = Vector3.UP.rotated(Vector3.RIGHT, acos(randf_range(-1.0, 1.0))).rotated(Vector3.UP, randf() * TAU) * 12.0
+```
+
+**27. Wildlife wandering into the frame.**
+
+Random Point On Screen Edge answers in WORLD coordinates on the border of what the camera can see, so a
+bird enters from whichever side happens to be facing the player.
+
+```
+Every 4 to 9 seconds
+  -> Object Pool: Spawn  "bird"  at  Random Point On Screen Edge
+```
+
+**28. Footstep pitch variation.**
+
+One Jitter is the difference between a footstep loop that sounds like a machine and one that sounds like
+a person.
+
+```gdscript
+extends Node
+
+
+func _on_step() -> void:
+	$Footstep.pitch_scale = (1.0 + 0.08 * randf_range(-1.0, 1.0))
+```
+
+**29. A wander target around home.**
+
+```gdscript
+extends Node2D
+
+
+func _on_idle_timer() -> void:
+	$MoveTo.move_to_position((global_position + Vector2.RIGHT.rotated(randf() * TAU) * (sqrt(randf()) * 200.0)))
+```
+
+**30. Trees scattered over a 3D chunk.**
+
+```gdscript
+extends Node3D
+
+
+func _ready() -> void:
+	for index in 40:
+		var tree = $TreeScene.duplicate()
+		tree.position = (Vector3.ZERO + Vector3(randf_range(-1.0, 1.0) * Vector3(64, 0, 64).x, randf_range(-1.0, 1.0) * Vector3(64, 0, 64).y, randf_range(-1.0, 1.0) * Vector3(64, 0, 64).z) * 0.5)
+		add_child(tree)
+```
+
+**31. Which cell did the player click?**
+
+```
+On Mouse Button Pressed
+  -> Variables: Set Variable  hover_cell,  Cell Of Point ( Mouse Position (world), 64 )
+```
+
+**32. A build ghost that snaps to the grid.**
+
+Center Of Cell is the exact partner of Cell Of Point, so the pair round-trips: the cell you read back
+from a position always centres on a position in that same cell.
+
+```gdscript
+extends Node2D
+
+
+func _process(delta: float) -> void:
+	$BuildGhost.global_position = (Vector2(Vector2i(floori(get_global_mouse_position().x / maxf(64.0, 0.001)), floori(get_global_mouse_position().y / maxf(64.0, 0.001)))) * 64.0 + Vector2(64.0, 64.0) * 0.5)
+```
+
+**33. Refusing a build that falls off the board.**
+
+Counting starts at 0,0 in the top-left, so a 20 by 12 board's last cell is 19,11 - the mistake this
+condition exists to stop.
+
+```
+Math: Is Cell In Bounds  ( hover_cell, Vector2i ( 20, 12 ) )
+  Collections: Dictionary does not have key  ( occupied, hover_cell )
+    -> Nodes: Show  BuildGhost
+```
+
+**34. A tower's range preview.**
+
+For Each Cell In Radius is a real looping condition, so it lands in the loop lane with frame spreading
+and round-trip behaving exactly like the built-in For Each. Its items arrive under the name `cell`.
+
+```
+Loops: For Each Cell In Radius  ( hover_cell, 2 )
+  -> Drawing: Draw Rect  Center Of Cell ( cell, 64 ), 64, 64, Color ( 1, 0.4, 0.2, 0.25 )
+```
+
+**35. Flood fill on a puzzle board.**
+
+Neighbours Of Cell is the whole of a flood fill's geometry. Pick four sides for a match-three, eight for
+a minesweeper, six for a hex strategy board.
+
+```
+Loops: For Each  ( Neighbours Of Cell ( start_cell, 4 sides ) )
+  Math: Is Cell In Bounds  ( item, board_size )
+    -> Collections: Append  item  to  frontier
+```
+
+**36. A laser's tile path.**
+
+```
+On Fire Laser
+  Loops: For Each  ( Cells In Line ( turret_cell, target_cell ) )
+    -> Collections: Set Key  scorched,  item,  true
+```
+
+**37. Stamping a room into a dungeon.**
+
+```
+On Room Placed
+  Loops: For Each  ( Cells In Rectangle ( room_corner, room_size ) )
+    -> Tilemap: Set Cell  item,  floor_tile
+```
+
+**38. Explosion damage that respects distance.**
+
+Falloff At Distance reads 0 past the radius, so it is safe to multiply straight into damage - a body the
+query caught at the very edge takes nothing rather than a suspicious sliver.
+
+```
+On Exploded
+  -> Collisions: Query Bodies In Circle (2D)  into hits,  radius 240
+  Loops: For Each  ( hits )
+    -> Health: Take Damage  ( 60 * Falloff At Distance ( global_position, item.global_position, 240, Smooth ) )  on item
+```
+
+**39. Screen shake off the SAME number as the damage.**
+
+Reading one falloff for the damage, the shake and the sound is what makes an explosion feel like one
+event rather than four unrelated ones.
+
+```gdscript
+extends Node2D
+
+
+func _on_exploded() -> void:
+	$Juice.shake(0.8 * ([clampf(1.0 - global_position.distance_to($Camera.global_position) / maxf(900.0, 0.001), 0.0, 1.0), clampf(1.0 - global_position.distance_to($Camera.global_position) / maxf(900.0, 0.001), 0.0, 1.0) * clampf(1.0 - global_position.distance_to($Camera.global_position) / maxf(900.0, 0.001), 0.0, 1.0), smoothstep(0.0, 1.0, clampf(1.0 - global_position.distance_to($Camera.global_position) / maxf(900.0, 0.001), 0.0, 1.0))][1]))
+```
+
+**40. Barrels and crates flung by a blast.**
+
+Apply Radial Impulse goes on the BODY, so the blast only has to say where it happened.
+
+```
+On Blast Caught Me
+  -> Movement: Apply Radial Impulse  blast_point,  900,  240
+```
+
+**41. A shockwave that parts a crowd.**
+
+Push Group Away From is the mirror of the shipped Pull Group Toward: same walk, same radius guard,
+opposite direction and a falloff on the strength.
+
+```
+On Dash Started
+  -> Movement: Push Group Away From  "enemies",  global_position,  240,  60
+```
+
+**42. A guard who notices you faster the closer you are.**
+
+Is Within Cone Of is the cheap pre-check to put in front of an expensive raycast: if the player is not in
+the wedge at all, there is nothing to trace.
+
+```
+Math: Is Within Cone Of  ( Guard.global_position, Guard Facing, Player.global_position, 70, 600 )
+  -> Variables: Add  ( 2 * Strength Toward ( Player, 600 ) )  to  suspicion
+```
+
 ### Other use cases
 
 **Screen-shake decay.** Feed the shake amount through Move Toward with a per-second step so it always
@@ -501,6 +787,32 @@ the Index gives every villager a stable name that survives a reload without bein
 Ramp Clock resets the curve every time something actually drops.
 
 ## Tips and common mistakes
+
+- **Random angle plus random radius is a bug, not a shortcut.** It puts half the points inside the inner
+  half-radius, which holds a quarter of the area, so scatter visibly clumps at the centre. Every shape
+  verb here already does the sqrt (2D) or cube-root (3D) weighting that fixes it.
+- **Jitter's amount must be the same KIND of value as the thing it nudges.** A number for a number, a
+  Vector2 for a position, a Color for a tint. It also uses one random roll for the whole value, so a
+  jittered position moves along a line rather than into a disc - Random Point In Circle is the verb for a
+  disc.
+- **Cells count from 0,0 in the top-left.** A 20 by 12 board's last cell is 19,11, which is what Is Cell
+  In Bounds is checking and the off-by-one it is there to stop.
+- **Cell Of Point floors, Snap Point To Grid rounds.** The first answers "which cell is this in" and the
+  second "which intersection is nearest", and they disagree by half a cell on purpose.
+- **A negative position lands in a negative cell**, not in cell 0. That is what a grid extending left and
+  up needs, and it is why `int()` truncation is the wrong tool here.
+- **The cell-size slot is just a number.** Type `Tiles(1)` in it to read your project's own
+  `eventforge/tile_size` setting instead of repeating 64 in every row.
+- **Neighbours Of Cell's hex option is AXIAL**, the six neighbours of an axial hex coordinate. An offset
+  hex board (where every other row is shifted) needs its own row-parity handling, which is exactly why
+  axial is the coordinate system worth storing.
+- **Falloff At Distance is a 0-to-1 multiplier, not a damage number.** Multiply it into the damage, the
+  shake, the volume and the knockback - reading ONE falloff for all of them is what makes a blast feel
+  like a single event.
+- **For a hand-drawn blast profile, feed it into Sample Curve.** Falloff At Distance produces the 0-to-1
+  value; the curve shapes it, and a designer draws the shape in the Inspector.
+- **Push Group Away From moves positions, not velocities.** It is a shove, not an impulse - for physics
+  bodies that should tumble, Apply Radial Impulse on the body is the honest verb.
 
 - **Clamp and Wrap come in two flavours, and picking the wrong one is silent.** `clampf` and `wrapf`
   return decimals. Assigning one to a whole-number variable truncates it or trips the type checker. For

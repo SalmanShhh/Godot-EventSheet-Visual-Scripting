@@ -1,8 +1,11 @@
 # Working With Vectors And Directions
 
-**Working With Vectors And Directions** is the builtin **Variables: Vector** vocabulary: thirteen
-verbs that let a sheet build, measure, aim, turn, blend and cap positions and directions without
-typing a single `.x` or writing the distance formula out by hand.
+**Working With Vectors And Directions** is the builtin **Variables: Vector** vocabulary plus the spatial
+family that grew out of it: verbs that let a sheet build, measure, aim, turn, blend and cap positions and
+directions without typing a single `.x` or writing the distance formula out by hand, and then two
+families that put those directions to work - **screen and world** conversions in both directions, and the
+verbs that CONSUME a surface normal (bounce, slide, depenetrate, face along motion, safe Look At and
+lead-aim).
 
 A Vector2 is a pair (a position, a velocity, a direction, a size); a Vector3 is a triple. Godot's own
 methods already know how to measure and aim with them - this vocabulary just names those methods as
@@ -100,6 +103,43 @@ On the canvas these read as sentences with the values drawn in place: *the dista
 |------|--------------|----------|
 | Part Of | One named piece of a pair, a triple, a colour or a record - read as a sentence instead of a typed-in `.y`. | `({value})[{part}]` |
 | Set Part Of | ACTION: changes one named part and leaves the rest alone. Writing a part a record does not have yet ADDS it. | `{var_name}[{part}] = {value}` |
+
+### Screen and world (Math & Random)
+
+The camera's own transform, named as sentences. **World Point To Screen** and **Screen Point To World**
+are exact opposites, so the pair round-trips; everything else here is built on one of the two.
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| World Point To Screen | Where a world point sits on screen right now, camera zoom and scroll included. | `(get_viewport().get_canvas_transform() * {world_point})` |
+| Screen Point To World | The world position under a screen pixel - the exact opposite. | `(get_viewport().get_canvas_transform().affine_inverse() * {screen_point})` |
+| Project To Screen (3D) | Where a 3D world point lands on screen. Reads 0,0 while there is no camera. | `(get_viewport().get_camera_3d().unproject_position({world_point}) if get_viewport().get_camera_3d() != null else Vector2.ZERO)` |
+| Is Point On Screen | **Condition.** True while a world point is inside the visible view, plus a margin of slack. | `get_viewport().get_visible_rect().grow({margin}).has_point(get_viewport().get_canvas_transform() * {world_point})` |
+| Is Behind Camera (3D) | **Condition.** True when a 3D point sits behind the camera plane, where its screen position is a mirrored lie. | `(get_viewport().get_camera_3d() == null or get_viewport().get_camera_3d().is_position_behind({world_point}))` |
+| Screen Edge Position For | A screen position that follows a target while it is visible and sticks to the edge once it is not. | `((get_viewport().get_canvas_transform() * {world_point}).clamp(Vector2({margin}, {margin}), get_viewport().get_visible_rect().size - Vector2({margin}, {margin})))` |
+| Marker Angle Toward | The rotation in degrees an on-screen arrow needs to point from the middle of the view at a world thing. | `rad_to_deg(((get_viewport().get_canvas_transform() * {world_point}) - get_viewport().get_visible_rect().size * 0.5).angle())` |
+| Visible World Rect | The rectangle of the world the camera can currently see, in world coordinates. | `(get_viewport().get_canvas_transform().affine_inverse() * get_viewport().get_visible_rect())` |
+| Wrap Inside The View (3D) | **Action.** The Asteroids rule in 3D: off one side of the view, back on the other, at the same distance from the camera. | a camera-guarded `wrapf` of the projected position |
+
+### Bounce, slide and aim (Movement)
+
+The verbs that CONSUME a surface normal. Every hit trigger and every cast in the plugin hands one back -
+**Ray Result Normal**, **Wall Normal**, **Floor Normal**, the Bullet pack's **On Bullet Hit** - and these
+are the three lines a developer writes next.
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Bounce Off Surface | The velocity a moving thing has AFTER hitting a surface. 1 keeps all the speed, 0 is a dead stop. | `({velocity}.bounce({normal}.normalized()) * {bounciness})` |
+| Slide Along Surface | The velocity left once the part pushing INTO a surface is removed - the wall slide. | `({velocity}.slide({normal}.normalized()))` |
+| Angle Reflected | The heading in degrees a thing travels on after bouncing - feed it straight back to Set Angle Of Motion. | `rad_to_deg(Vector2.RIGHT.rotated(deg_to_rad({degrees})).bounce({normal}.normalized()).angle())` |
+| Push Out Of Surface | A position just clear of a surface instead of exactly on it. | `({point} + {normal}.normalized() * {distance})` |
+| Face Along Velocity | **Action.** Turns this node to point the way it is travelling, and leaves it alone while it is stopped. | `if {velocity}.length_squared() > 0.0001:` then `rotation = {velocity}.angle()` |
+| Look At (safe up) | **Action.** Faces a 3D point without the crash plain Look At has when the target is directly overhead. | a guarded `look_at` that swaps the up vector |
+| Look At (flat) | **Action.** Faces a 3D point around the up axis only, so a character never tips over to stare at feet. | a guarded `look_at` on a height-flattened target |
+| Aim At Moving Target | Where to aim so a shot MEETS a moving target instead of trailing it. | `({target_position} + {target_velocity} * ({target_position}.distance_to({shooter_position}) / maxf({projectile_speed}, 0.001)) if {projectile_speed} > {target_velocity}.length() else {target_position})` |
+| Launch Angle For Arc | The angle in degrees to fire something so it ARCS onto a target. Picks the flatter of the two arcs. | a discriminant-guarded `atan2` |
+| Time To Reach | How many seconds something moving at a steady speed needs to cover a distance. | `({from_position}.distance_to({to_position}) / maxf({speed}, 0.001))` |
+
 
 ## The named parts
 
@@ -313,6 +353,240 @@ On escape pressed
     -> route the player to ExitB
 ```
 
+**20. A nameplate that rides a moving boss.**
+
+The whole reason World Point To Screen exists: the label lives on a CanvasLayer (so it is not blurred by
+the camera's zoom) and is placed in screen coordinates every frame.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	$BossNameplate.position = (get_viewport().get_canvas_transform() * $Boss.global_position) + Vector2(0, -70)
+```
+
+**21. An off-screen objective arrow.**
+
+Three verbs and one condition: show the arrow only when the target is NOT visible, park it on the edge,
+and turn it to point outward.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	if not get_viewport().get_visible_rect().grow(0.0).has_point(get_viewport().get_canvas_transform() * $Enemy.global_position):
+		$OffscreenArrow.show()
+		$OffscreenArrow.position = ((get_viewport().get_canvas_transform() * $Enemy.global_position).clamp(Vector2(48.0, 48.0), get_viewport().get_visible_rect().size - Vector2(48.0, 48.0)))
+		$OffscreenArrow.rotation_degrees = rad_to_deg(((get_viewport().get_canvas_transform() * $Enemy.global_position) - get_viewport().get_visible_rect().size * 0.5).angle())
+```
+
+**22. A nameplate over a 3D character.**
+
+Check **Is Behind Camera (3D)** first. A point behind you still projects to a perfectly ordinary-looking
+screen position - a mirrored one - which is why a 3D marker without this guard drifts around the screen
+whenever you turn away from it.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	if (get_viewport().get_camera_3d() == null or get_viewport().get_camera_3d().is_position_behind($Objective.global_position)):
+		$WaypointPin.hide()
+	else:
+		$WaypointPin.show()
+		$WaypointPin.position = (get_viewport().get_camera_3d().unproject_position($Objective.global_position) if get_viewport().get_camera_3d() != null else Vector2.ZERO)
+```
+
+**23. Click to place a tower.**
+
+The mouse arrives in screen pixels and the world is somewhere else entirely once the camera has scrolled.
+Screen Point To World is the whole conversion.
+
+```gdscript
+extends Node2D
+
+
+func _on_click(at: Vector2) -> void:
+	$BuildGhost.global_position = (get_viewport().get_canvas_transform().affine_inverse() * at)
+```
+
+**24. Spawn only where the player cannot watch it happen.**
+
+```gdscript
+extends Node2D
+
+
+func _on_spawn_timer() -> void:
+	if not get_viewport().get_visible_rect().grow(0.0).has_point(get_viewport().get_canvas_transform() * global_position):
+		spawn_enemy()
+```
+
+**25. Cull decorations the camera has left behind.**
+
+Is Point On Screen with a generous margin is the cheap half of a culling pass: things well outside the
+view stop animating, and the margin keeps anything from popping at the edge.
+
+```gdscript
+extends Node2D
+
+
+func _process(delta: float) -> void:
+	set_process(get_viewport().get_visible_rect().grow(200.0).has_point(get_viewport().get_canvas_transform() * global_position))
+```
+
+**26. Sizing a minimap to what the camera can see.**
+
+Visible World Rect is the same rectangle **Bound To** clamps against and **Wrap** wraps inside, only
+readable - so a minimap viewport box, a spawn area or a fog-reveal circle can all be sized from it.
+
+```gdscript
+extends Node2D
+
+
+func _process(delta: float) -> void:
+	$MinimapBox.size = (get_viewport().get_canvas_transform().affine_inverse() * get_viewport().get_visible_rect()).size * 0.1
+```
+
+**27. A wrap-around 3D arena.**
+
+The 3D twin of **Wrap Inside The Screen**: leave the right of the view, come back on the left, at the
+same distance from the camera. One row under a per-frame trigger, with no bounds to maintain.
+
+```
+Every Frame
+  -> Movement: Wrap Inside The View (3D)
+```
+
+**28. A bullet that ricochets instead of dying.**
+
+The Bullet pack's **On Bullet Hit** already carries `collider`, `point` and `normal`. These two verbs are
+the missing middle: reflect the heading, and park the bullet clear of the wall so the next frame's cast
+does not start inside it.
+
+```
+On Bullet Hit  ( collider, point, normal )
+  -> Bullet: Set Angle Of Motion  Angle Reflected ( Angle Of Motion, normal )
+  -> Nodes: Set Position  Push Out Of Surface ( point, normal, 2 )
+```
+
+**29. A ball that loses energy on every bounce.**
+
+```gdscript
+extends CharacterBody2D
+
+
+func _on_hit_wall(normal: Vector2) -> void:
+	velocity = (velocity.bounce(normal.normalized()) * 0.65)
+```
+
+**30. Wall slide instead of sticking to the wall.**
+
+Slide Along Surface keeps the part of the velocity that runs ALONG the wall, which is the difference
+between a controller that grinds to a halt on a corner and one that skims past it.
+
+```gdscript
+extends CharacterBody2D
+
+
+func _physics_process(delta: float) -> void:
+	if is_on_wall():
+		velocity = (velocity.slide(get_wall_normal().normalized()))
+```
+
+**31. Spawning something clear of a wall.**
+
+A thing spawned exactly on a surface is a thing spawned INSIDE it as far as the next frame is concerned,
+because a ray that starts on a shape does not report that shape.
+
+```gdscript
+extends Node2D
+
+
+func _on_impact(point: Vector2, normal: Vector2) -> void:
+	$Decal.global_position = (point + normal.normalized() * 2.0)
+```
+
+**32. An arrow that points where it is flying.**
+
+Face Along Velocity leaves a stopped node alone, which is the whole reason to use it instead of assigning
+the angle yourself: an arrow that lands does not snap back to facing right.
+
+```
+Every Frame
+  -> Movement: Face Along Velocity  Get Velocity
+```
+
+**33. A turret that shoots where you WILL be.**
+
+```gdscript
+extends Node2D
+
+
+func _on_fire() -> void:
+	look_at(($Player.global_position + $Player.velocity * ($Player.global_position.distance_to(global_position) / maxf(900.0, 0.001)) if 900.0 > $Player.velocity.length() else $Player.global_position))
+```
+
+**34. A mortar that arcs onto a target.**
+
+Launch Angle For Arc solves the angle from the distance, the height difference, the shell speed and
+gravity - the four numbers you actually have. It picks the flatter of the two arcs; for the lobbed one,
+subtract the answer from 90.
+
+```gdscript
+extends Node2D
+
+
+func _on_fire() -> void:
+	var pitch: float = (rad_to_deg(atan2(600.0 * 600.0 - sqrt(maxf(600.0 * 600.0 * 600.0 * 600.0 - 980.0 * (980.0 * 300.0 * 300.0 + 2.0 * 0.0 * 600.0 * 600.0), 0.0)), 980.0 * 300.0)) if 300.0 != 0.0 and 980.0 != 0.0 else 45.0)
+	print("firing at %.1f degrees" % pitch)
+```
+
+**35. A warning that lands before the missile does.**
+
+```gdscript
+extends Node2D
+
+
+func _on_launched() -> void:
+	var seconds: float = (global_position.distance_to($Target.global_position) / maxf(300.0, 0.001))
+	print("impact in %.1f seconds" % seconds)
+```
+
+**36. A 3D camera that can look straight up without crashing.**
+
+This is a crash fix, not a nicety. Plain `look_at` throws the moment the target sits directly overhead or
+underfoot, because the direction and the up vector are then parallel and no rotation can be built from
+them. **Look At (safe up)** swaps the up vector at exactly that moment, and does nothing at all when the
+target is where the node already stands.
+
+```
+Every Frame
+  -> Movement: Look At (safe up)  Target.global_position
+```
+
+**37. An NPC that turns to face you without tipping over.**
+
+```
+On Player Nearby
+  -> Movement: Look At (flat)  Player.global_position
+```
+
+**38. A radar blip that never leaves the dial.**
+
+Screen Edge Position For with a large margin keeps every contact inside a ring rather than a rectangle's
+worth of screen, and Marker Angle Toward turns each blip to point outward.
+
+```gdscript
+extends Node
+
+
+func _process(delta: float) -> void:
+	$RadarBlip.position = ((get_viewport().get_canvas_transform() * $Contact.global_position).clamp(Vector2(120.0, 120.0), get_viewport().get_visible_rect().size - Vector2(120.0, 120.0)))
+```
+
 ### Other use cases
 
 **Orbiting satellite.** Rotate a fixed offset vector a little every tick with Rotated and add it to
@@ -359,5 +633,25 @@ add it back, so the correction can never exceed the assist budget you set.
   wearing the other verb's name.
 - **`position` and `global_position` are different vectors.** Aiming with one and moving with the
   other is a bug that looks like drift, and it is invisible until the node is nested.
+- **Screen space is not world space, and the difference is the camera.** A HUD node parented under the
+  camera moves with it for free; a HUD node on a CanvasLayer does not, and needs World Point To Screen.
+  Mixing the two is what makes a nameplate lag one frame behind its owner.
+- **A 3D point behind the camera still projects to a number.** Project To Screen (3D) has no way to say
+  "nowhere"; Is Behind Camera (3D) is how you ask. Every 3D marker needs that guard.
+- **The screen verbs read the CURRENT camera.** During a scene change there may be none, which is why the
+  3D pair read as zero and true rather than faulting - but it also means a marker placed on the first
+  frame of a new scene may be placed against nothing. Place it under a per-frame trigger, not On Ready.
+- **Angle Reflected is degrees in, degrees out**, to match Set Angle Of Motion and `rotation_degrees`.
+  Bounce Off Surface and Slide Along Surface work in vectors instead, to match `velocity`.
+- **A normal must point AWAY from the surface.** The ones the engine hands you always do; one you built
+  yourself by subtracting two positions may not, and a flipped normal bounces things into the wall.
+- **Bounce keeps the speed, Slide loses it.** Bounce Off Surface with bounciness 1 is a perfect
+  ricochet; Slide Along Surface deliberately discards the part heading into the wall, so a head-on slide
+  is a full stop. That is the correct answer for a wall slide and the wrong one for a pinball.
+- **Park things clear of surfaces.** Push Out Of Surface exists because a ray starting exactly on a shape
+  does not report that shape, so a bullet left touching a wall sails straight through it next frame.
+- **Aim At Moving Target assumes the target keeps going.** It is a straight-line lead, which is right for
+  a walking player and wrong for one who is about to jump. Re-evaluate it every frame rather than aiming
+  once and committing.
 - **These verbs hand back new values.** `Clamp Length(velocity, 400)` on its own line does nothing;
   the result has to be assigned back to `velocity`.
