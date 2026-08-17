@@ -1724,3 +1724,25 @@ Find Repeated Rows…,查找重复行…
 Row Hit Counts,行命中次数
 Reset Hit Counts,重置命中次数
 Run Tests…,运行测试…
+list,列表
+table,表
+node,节点
+functions this pack uses inside itself - %d,该扩展包内部使用的函数 - %d
+Kind,类型
+Category,分类
+Inputs,输入
+Gives back,返回
+In the picker,在选择器中
+Inserts,插入
+Notes,备注
+none,无
+nothing,无
+not featured,非精选
+not in the picker - this pack uses it inside itself,不在选择器中 - 该扩展包内部使用
+icon %s,图标 %s
+%s() in %s,%s()（位于 %s）
+ACE properties,ACE 属性
+Edit…,编辑…
+Open guide,打开指南
+Show in code,在代码中显示
+This verb is no longer on the sheet.,该动作已不在事件表中。

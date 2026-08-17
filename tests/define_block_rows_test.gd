@@ -86,7 +86,7 @@ static func run() -> bool:
 	ok = _check("String reads as text", ViewportRowBuilder.friendly_type_word("String"), "text") and ok
 	ok = _check("int/float read as number", ViewportRowBuilder.friendly_type_word("int"), "number") and ok
 	ok = _check("bool reads as true/false (the literal, not yes/no)", ViewportRowBuilder.friendly_type_word("bool"), "true/false") and ok
-	ok = _check("a node class passes through", ViewportRowBuilder.friendly_type_word("Sprite2D"), "Sprite2D") and ok
+	ok = _check("a node class reads as one word a reader knows", ViewportRowBuilder.friendly_type_word("Sprite2D"), "node") and ok
 	var templated: EventFunction = _make_function("draw_line", TYPE_NIL, true, "Draw Line", "")
 	templated.params[0].id = "from_x"
 	templated.display_template = "Line to {from_x}"
@@ -228,12 +228,18 @@ static func run() -> bool:
 	var opened: EventSheetResource = dock.get_current_sheet()
 	ok = _check("an opened pack lifts real functions", opened.functions.size() > 20, true) and ok
 	var pack_rows: Array[EventRowData] = _find_rows_by_uid_prefix(dock._active_view(), "define_fn_")
+	# Counted through the whole tree: an opened pack is read-only, so its unpublished helpers are
+	# re-parented under the closed "Helpers" bar and no longer appear in the flat (visible) row list.
 	ok = _check("the pack shows its verbs inline - one row per lifted function",
-		pack_rows.size(), opened.functions.size()) and ok
-	# A REAL pack's `## @ace_description(...)` blurbs reach the canvas. They already round-tripped through
-	# the compiler and the lifter; until the caption row they were simply never drawn.
-	ok = _check("an opened pack surfaces the descriptions its author wrote",
-		_find_rows_by_uid_prefix(dock._active_view(), "verb_note_").size() > 0, true) and ok
+		_count_define_rows_deep(dock._active_view()._root_rows), opened.functions.size()) and ok
+	# A REAL pack's `## @ace_description(...)` blurbs reach the reader - but an opened pack is a READING
+	# surface (read-only), where a verb draws as a Construct Function block and its description answers in
+	# the ACE properties panel instead of as a caption row welded above the row.
+	ok = _check("an opened pack draws no caption rows in Reading mode",
+		_find_rows_by_uid_prefix(dock._active_view(), "verb_note_").size(), 0) and ok
+	var described_verb: EventFunction = _first_described_function(opened)
+	ok = _check("an opened pack surfaces the descriptions its author wrote, in the properties panel",
+		described_verb != null and not _panel_description(described_verb, opened).is_empty(), true) and ok
 	var reemitted: String = str(SheetCompiler.compile(opened, pack_path).get("output", ""))
 	ok = _check("round-trip stays byte-identical with the view built (drift=0)", reemitted == source, true) and ok
 
@@ -380,6 +386,35 @@ static func run() -> bool:
 	guard_dock.free()
 
 	return ok
+
+
+## Define rows anywhere in the tree, including the ones folded away under the "Helpers" bar.
+static func _count_define_rows_deep(rows: Array) -> int:
+	var count: int = 0
+	for entry: Variant in rows:
+		var row_data: EventRowData = entry
+		if row_data == null:
+			continue
+		if row_data.row_uid.begins_with("define_fn_"):
+			count += 1
+		count += _count_define_rows_deep(row_data.children)
+	return count
+
+
+## The first verb of an opened pack that carries an authored `## @ace_description(...)`.
+static func _first_described_function(sheet: EventSheetResource) -> EventFunction:
+	for entry: Variant in sheet.functions:
+		if entry is EventFunction and not (entry as EventFunction).description.strip_edges().is_empty():
+			return entry as EventFunction
+	return null
+
+
+## The Description the ACE properties panel answers with for one verb.
+static func _panel_description(event_function: EventFunction, sheet: EventSheetResource) -> String:
+	for row: Dictionary in EventSheetVerbProperties.property_rows(event_function, sheet):
+		if str(row.get("label", "")) == "Description":
+			return str(row.get("value", ""))
+	return ""
 
 
 ## Finds an EventFunction by name in a live sheet - the re-fetch every body edit must do, since the undo

@@ -218,6 +218,15 @@ func handle_mouse_button(event: InputEventMouseButton) -> void:
 			_viewport._select_from_click(row_index, span_index, false)
 			_viewport._toggle_row_fold(row_index)
 			return
+		# A published verb's Function-block header: ONE click opens its ACE properties. The header
+		# carries only ƒ, the name and the input chips, so everything else the verb IS has to be one
+		# click away - and the fold arrow (handled just above) still folds, while a parameter cell keeps
+		# its own kind, and so its own double-click editor.
+		if not event.double_click and not event.ctrl_pressed and not event.meta_pressed and not event.shift_pressed 				and row_data != null and row_data.source_resource is EventFunction 				and row_data.row_type == EventRowData.RowType.EVENT 				and str(metadata.get("kind", "")) == "define_function":
+			_viewport._select_from_click(row_index, span_index, false)
+			_viewport.verb_properties_requested.emit(row_data.source_resource)
+			_viewport.accept_event()
+			return
 		# Ctrl+Click go-to-definition: when the clicked cell resolves to a jump target (the dock's
 		# probe decides), navigate instead of toggling multi-select - unresolvable cells keep
 		# Ctrl+Click's multi-select meaning, so both gestures coexist.

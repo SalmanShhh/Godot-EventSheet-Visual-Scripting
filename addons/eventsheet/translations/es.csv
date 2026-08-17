@@ -1724,3 +1724,25 @@ Find Repeated Rows…,Buscar filas repetidas…
 Row Hit Counts,Recuento de aciertos por fila
 Reset Hit Counts,Restablecer recuentos
 Run Tests…,Ejecutar pruebas…
+list,lista
+table,tabla
+node,nodo
+functions this pack uses inside itself - %d,funciones que este paquete usa internamente - %d
+Kind,Tipo
+Category,Categoría
+Inputs,Entradas
+Gives back,Devuelve
+In the picker,En el selector
+Inserts,Inserta
+Notes,Notas
+none,ninguno
+nothing,nada
+not featured,no destacado
+not in the picker - this pack uses it inside itself,no está en el selector - este paquete lo usa internamente
+icon %s,icono %s
+%s() in %s,%s() en %s
+ACE properties,Propiedades del ACE
+Edit…,Editar…
+Open guide,Abrir la guía
+Show in code,Ver en el código
+This verb is no longer on the sheet.,Este verbo ya no está en la hoja.

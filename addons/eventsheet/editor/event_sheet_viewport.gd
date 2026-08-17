@@ -58,6 +58,10 @@ signal custom_block_edit_requested(block_row: Resource)
 ## Emitted when a signal row is double-clicked.
 signal signal_edit_requested(signal_row: Resource)
 signal function_edit_requested(event_function: Resource)
+## A published verb's header was CLICKED: the row carries the Construct Function block (ƒ, name,
+## inputs) and everything else the verb is - kind, category, description, what it gives back, the
+## line it inserts - answers in the ACE properties popup this asks the dock to open.
+signal verb_properties_requested(event_function: Resource)
 ## Emitted when a match action cell is double-clicked.
 signal match_edit_requested(match_row: Resource)
 ## Emitted on Ctrl+/ - the dock toggles the selected rows' enabled state (undoable).
@@ -334,6 +338,13 @@ func adopt_shared_state(state: EventSheetViewState) -> void:
 	_breakpoint_rows = state.breakpoint_rows
 	_bookmark_rows = state.bookmark_rows
 	_row_disabled_state = state.row_disabled_state
+
+
+## True when this view is being READ rather than authored - the Simple pill's Reading lens, OR a
+## read-only preview, which is what a .gd opens as. A preview is a reading surface by definition, so
+## it wears the lens without the user asking and without the Simple pill being able to clear it.
+func is_reading_mode() -> bool:
+	return reading_mode or (_sheet != null and _sheet.read_only)
 
 
 func set_reading_mode(enabled: bool) -> void:
@@ -1971,11 +1982,15 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# so a behaviour pack reads events-then-vocabulary exactly like its .gd. After the fence pairing (an
 	# unclosed #region must not swallow the vocabulary) and before the footer.
 	root_rows.append_array(_row_builder.build_trailing_verb_rows(sheet))
+	# A read-only preview gathers the pack's unpublished helpers under one closed "Helpers" bar, after
+	# the last published verb - the vocabulary reads first, the plumbing folds away. Pure view.
+	root_rows = _row_builder.group_helper_verb_rows(root_rows, sheet)
 	# Verbs open by default; this re-folds only the ones the fence pairing just moved inside a #region
 	# (or that sit inside a group), where the enclosing block owns the fold.
 	_row_builder.fold_nested_verb_rows(root_rows)
-	# Event-sheet-style trailing "Add event…" footer at the end of the sheet.
-	if show_add_event_footers:
+	# Event-sheet-style trailing "Add event…" footer at the end of the sheet - not on a read-only
+	# preview, where it is an offer the view cannot honour.
+	if show_add_event_footers and not (sheet != null and sheet.read_only):
 		root_rows.append(_build_add_event_footer_row(sheet, 0, "+ Add event…"))
 	return root_rows
 

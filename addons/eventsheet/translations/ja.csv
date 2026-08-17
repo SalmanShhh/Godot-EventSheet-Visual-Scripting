@@ -1724,3 +1724,25 @@ Find Repeated Rows…,繰り返し行を探す…
 Row Hit Counts,行の実行回数
 Reset Hit Counts,実行回数をリセット
 Run Tests…,テストを実行…
+list,リスト
+table,テーブル
+node,ノード
+functions this pack uses inside itself - %d,このパックが内部で使う関数 - %d
+Kind,種類
+Category,カテゴリ
+Inputs,入力
+Gives back,返す値
+In the picker,ピッカーでの表示
+Inserts,挿入される行
+Notes,備考
+none,なし
+nothing,なし
+not featured,おすすめ表示なし
+not in the picker - this pack uses it inside itself,ピッカーには出ません - このパックが内部で使います
+icon %s,アイコン %s
+%s() in %s,%s()（%s 内）
+ACE properties,ACE のプロパティ
+Edit…,編集…
+Open guide,ガイドを開く
+Show in code,コードで表示
+This verb is no longer on the sheet.,この動詞はもうシートにありません。

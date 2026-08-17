@@ -29,6 +29,12 @@ extends RefCounted
 # `_value_ranges_for` + `_value_regex` are STATIC (pure text → ranges), so they stay unit-testable
 # without a live viewport; the viewport keeps a static forwarder for any class-name caller.
 
+## The alpha floor a published verb's header wash keeps in READING mode. Reading mode drops the
+## "Action" / "Condition" / "Expression" word badge from the header (a Construct Function block
+## carries its name and its inputs, nothing else), so the role tint becomes the ONLY kind cue and
+## has to be visible even when the theme ships verb_row_tint_strength at 0.0 for the authoring look.
+const VERB_KIND_TINT_ALPHA: float = 0.16
+
 var _viewport: Control = null
 # Per-build occurrence counters ("label" -> count) giving every paired region a STABLE
 # fold key ("label#n") that survives sessions - row uids are instance-based and cannot
@@ -308,9 +314,13 @@ func _build_add_event_footer_row(owner_resource: Resource, indent: int, label: S
 ## pack author's own `## @ace_description` reads as the sentence above the verb it describes.
 func build_verb_block_rows(event_function: EventFunction, indent: int) -> Array[EventRowData]:
 	var rows: Array[EventRowData] = []
-	var note_row: EventRowData = _build_verb_note_row(event_function, define_role_for(event_function), indent)
-	if note_row != null:
-		rows.append(note_row)
+	# In READING mode the caption is gone: a Construct Function block is its name and its inputs, and
+	# the description is one of the things the ACE properties popup answers. (An unpublished helper
+	# keeps its doc comment - in the header's right lane, where a Construct user reads it.)
+	if not _verb_reading_mode():
+		var note_row: EventRowData = _build_verb_note_row(event_function, define_role_for(event_function), indent)
+		if note_row != null:
+			rows.append(note_row)
 	rows.append(_build_define_function_row(event_function, indent))
 	return rows
 
@@ -330,6 +340,77 @@ func build_trailing_verb_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 		if entry is EventFunction and not anchored_names.has((entry as EventFunction).function_name):
 			rows.append_array(build_verb_block_rows(entry as EventFunction, 0))
 	return rows
+
+
+## Gathers a read-only preview's UNPUBLISHED helpers under one foldable "Helpers" bar, placed after the
+## last published verb and closed by default - the Construct reading, where a pack's vocabulary comes
+## first and the functions it uses on itself sit in a group you open when you care. PURE VIEW: the rows
+## are re-parented in the already-built list, so `sheet.functions`, `sheet.events` and the emitted file
+## are untouched (exactly like the "Class setup" strip). Only in a read-only preview: on a sheet you are
+## authoring, a helper is a row you may want to reach without opening a group first.
+## Returns the root list to use (the same array, rebuilt) so the caller can assign it back.
+func group_helper_verb_rows(rows: Array[EventRowData], sheet: EventSheetResource) -> Array[EventRowData]:
+	if sheet == null or not sheet.read_only:
+		return rows
+	var helpers: Array[EventRowData] = []
+	var kept: Array[EventRowData] = []
+	var last_published: int = -1
+	for row_data: EventRowData in rows:
+		var owner_function: EventFunction = row_data.source_resource as EventFunction
+		if owner_function != null and row_data.row_type == EventRowData.RowType.EVENT and not owner_function.expose_as_ace:
+			_shift_row_indent(row_data, 1)
+			helpers.append(row_data)
+			continue
+		kept.append(row_data)
+		if owner_function != null and owner_function.expose_as_ace:
+			last_published = kept.size() - 1
+	if helpers.is_empty():
+		return rows
+	var bar: EventRowData = _build_helpers_group_row(sheet, helpers)
+	var insert_at: int = last_published + 1 if last_published >= 0 else kept.size()
+	kept.insert(insert_at, bar)
+	return kept
+
+
+## The "Helpers" bar itself: a synthetic SECTION row owning the helper blocks as children. Null source
+## (nothing to select, drag or delete - it is a lens, not a resource) and closed by default, remembered
+## per session through the shared fold state like every other block.
+func _build_helpers_group_row(sheet: EventSheetResource, helpers: Array[EventRowData]) -> EventRowData:
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var row_data := EventRowData.new()
+	row_data.indent = 0
+	row_data.row_type = EventRowData.RowType.SECTION
+	row_data.source_resource = null
+	row_data.row_uid = "helpers_group_%d" % sheet.get_instance_id()
+	row_data.children = helpers
+	row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, true))
+	row_data.spans = [
+		_make_span(EventSheetL10n.translate("Helpers"), SemanticSpan.SpanType.OBJECT, {
+			"editable": false,
+			"kind": "helpers_group",
+			"line_index": 0,
+			"text_color": event_style.object_label_color
+		}),
+		_make_span(
+			EventSheetL10n.translate("functions this pack uses inside itself - %d") % helpers.size(),
+			SemanticSpan.SpanType.COMMENT,
+			{
+				"editable": false,
+				"kind": "helpers_group",
+				"line_index": 0,
+				"text_color": EventSheetPalette.TEXT_MUTED
+			}
+		)
+	]
+	return row_data
+
+
+## Moves a row and its whole subtree one level deeper (or shallower) - what re-parenting a built row
+## under a synthetic bar costs, since indent is baked into each row at build time.
+func _shift_row_indent(row_data: EventRowData, delta: int) -> void:
+	row_data.indent = maxi(row_data.indent + delta, 0)
+	for child: EventRowData in row_data.children:
+		_shift_row_indent(child, delta)
 
 
 ## Re-collapses the verbs that turn out to live INSIDE something - a group, or a #region range paired
@@ -501,6 +582,46 @@ func _verb_metadata_editable() -> bool:
 	return sheet != null and not sheet.read_only
 
 
+## True when the sheet is being READ rather than authored: an opened .gd preview (read_only, the safe
+## default when a pack opens as a sheet) or the Simple pill's Reading Mode lens. In that state a
+## published verb draws as a Construct Function block - ƒ, its name, its inputs, nothing else - and its
+## picker metadata lives one click away in the ACE properties popup instead of on the row. Pure view
+## state: no resource, no emission and no fold is touched by it.
+func _verb_reading_mode() -> bool:
+	return bool(_viewport.is_reading_mode())
+
+
+## True when this view must draw NO add-a-row scaffolding: a documentation figure (an illustration, so
+## a "+ Add condition" is a click target that does nothing) or a READ-ONLY preview - a pack opened just
+## to read, where every add affordance is an offer the view cannot honour. _count_event_lines mirrors
+## this exactly, so the measured height matches the spans that actually get built.
+func _scaffolding_suppressed() -> bool:
+	if bool(_viewport.figure_mode):
+		return true
+	var sheet: EventSheetResource = _viewport._sheet
+	return sheet != null and sheet.read_only
+
+
+## True when a `##` line is one of the plugin's own `@ace_*` annotations. Those lines are METADATA -
+## they already read as the verb's kind, name, category and description - so printing them as prose
+## next to the row they configure is noise a Construct user has no way to interpret. Every surface
+## that turns doc comments into captions filters through here.
+static func is_ace_annotation_line(line: String) -> bool:
+	return strip_comment_prefix(line).strip_edges().begins_with("@ace_")
+
+
+## The first real sentence of a function's doc comment - the caption a helper wears in its RIGHT lane,
+## because a doc comment is exactly how a Construct user reads a function they did not write. Empty
+## when the function is undocumented or documented only with `@ace_*` annotation lines.
+static func helper_doc_line(event_function: EventFunction) -> String:
+	for line: String in event_function.doc_comment.split("\n"):
+		var trimmed: String = line.strip_edges()
+		if trimmed.is_empty() or is_ace_annotation_line(trimmed):
+			continue
+		return strip_comment_prefix(trimmed).strip_edges()
+	return ""
+
+
 ## The [background, foreground] pair the ACTION-lane chips paint with, from the theme.
 func _verb_chip_colors() -> Array:
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
@@ -566,10 +687,20 @@ static func friendly_type_word(type_name: String) -> String:
 			return EventSheetL10n.translate("point")
 		"Color":
 			return EventSheetL10n.translate("color")
+		"Array":
+			return EventSheetL10n.translate("list")
+		"Dictionary":
+			return EventSheetL10n.translate("table")
 		"", "Variant":
 			return EventSheetL10n.translate("any")
 		_:
-			return type_name.strip_edges()
+			# Every Node class is one word to a reader: a node. The specific class is what the picker
+			# and the tooltip say; on a row it is the KIND of thing that matters. Derived from ClassDB
+			# rather than a list, so a class the engine adds tomorrow reads right with no edit here.
+			var bare_type: String = type_name.strip_edges()
+			if ClassDB.class_exists(bare_type) and ClassDB.is_parent_class(bare_type, "Node"):
+				return EventSheetL10n.translate("node")
+			return bare_type
 
 
 ## The return type read as plain words - the label the "gives back …" chip shows.
@@ -748,6 +879,19 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 	# The de-emphasised chips (static / internal) are the chip pair mixed toward its own background, so
 	# they read as quieter WITHOUT a second theme token.
 	var muted: Color = chip_fg.lerp(chip_bg, 0.45)
+	# READING MODE: the verb reads as a Construct Function block - ƒ, its name, one chip per input, and
+	# nothing else. Its kind survives as the header's wash (the role accent at VERB_KIND_TINT_ALPHA),
+	# and every other property it has - category, description, what it gives back, whether it is
+	# featured, the line it inserts - lives one click away in the ACE properties popup.
+	if _verb_reading_mode():
+		row_data.custom_color = Color(
+			role_accent.r, role_accent.g, role_accent.b,
+			maxf(_verb_tint_strength(), VERB_KIND_TINT_ALPHA)
+		)
+		row_data.spans = _build_verb_function_block_spans(event_function, role, display_name)
+		_append_verb_body_rows(row_data, event_function, indent, display_name)
+		row_data.line_count = 1
+		return row_data
 	var spans: Array[SemanticSpan] = [
 		_make_span(EventSheetL10n.translate(role.capitalize()), SemanticSpan.SpanType.KEYWORD, {
 			"editable": false,
@@ -857,6 +1001,83 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 			category if not category.is_empty() else EventSheetL10n.translate("+ category"),
 			SemanticSpan.SpanType.KEYWORD, category_meta))
 	row_data.spans = spans
+	_append_verb_body_rows(row_data, event_function, indent, display_name)
+	row_data.line_count = maxi(condition_lines, 1)
+	return row_data
+
+
+## ƒ + the verb's DISPLAY NAME + one chip per input, and nothing else - the Construct Function block
+## header a pack reads as in Reading mode. A display name written with the plugin's BBCode-lite
+## (`Take [b]amount[/b] damage`) draws STYLED: the span carries the stripped text plus the parsed
+## segments the renderer paints, so the tags themselves are never printed. An unpublished helper adds
+## the one caption a Construct user reads a function by - its doc comment - in the RIGHT lane, muted.
+func _build_verb_function_block_spans(event_function: EventFunction, role: String, display_name: String) -> Array[SemanticSpan]:
+	var badge_colors: Array = _define_role_colors(role)
+	var name_color: Color = _define_role_name_color(role)
+	var spans: Array[SemanticSpan] = [
+		_make_span("ƒ", SemanticSpan.SpanType.KEYWORD, {
+			"editable": false,
+			"badge": true,
+			"badge_style": "scope",
+			"badge_bg": badge_colors[0],
+			"badge_fg": badge_colors[1],
+			"kind": "define_function",
+			"lane": "condition",
+			"line_index": 0
+		})
+	]
+	var name_meta: Dictionary = {
+		"editable": false,
+		"kind": "define_function",
+		"lane": "condition",
+		"line_index": 0,
+		"text_color": name_color
+	}
+	var plain_name: String = display_name
+	if EventSheetBBCodeLite.has_markup(display_name):
+		plain_name = EventSheetBBCodeLite.strip(display_name)
+		name_meta["bbcode_segments"] = EventSheetBBCodeLite.parse(display_name, name_color)
+	spans.append(_make_span(plain_name, SemanticSpan.SpanType.OBJECT, name_meta))
+	# The inputs, as Construct's own input chips - `enabled  true/false` - INLINE on the header line,
+	# because the header is the whole block: a reader takes in the verb and what it needs in one look.
+	var chip_texts: PackedStringArray = PackedStringArray()
+	for param: Variant in event_function.params:
+		if param is ACEParam:
+			chip_texts.append("%s  %s" % [
+				friendly_param_label(param as ACEParam),
+				_define_param_type_word(param as ACEParam)
+			])
+	if chip_texts.is_empty():
+		for legacy: String in event_function.parameters:
+			chip_texts.append(str(legacy).replace("_", " ").strip_edges())
+	# A plain chip, not a field cell: an input chip belongs beside its verb, not in the row's shared
+	# object column (which is sized for object names and would elide "enabled" to an ellipsis).
+	var chip_style: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
+	for index in range(chip_texts.size()):
+		spans.append(_make_span(chip_texts[index], SemanticSpan.SpanType.CONDITION, {
+			"editable": false,
+			"lane": "condition",
+			"kind": "verb_param",
+			"param_index": index,
+			"chip": true,
+			"line_index": 0
+		}.merged(chip_style, true)))
+	if not event_function.expose_as_ace:
+		var doc_line: String = helper_doc_line(event_function)
+		if not doc_line.is_empty():
+			spans.append(_make_span(doc_line, SemanticSpan.SpanType.COMMENT, {
+				"editable": false,
+				"kind": "define_function",
+				"lane": "action",
+				"line_index": 0,
+				"text_color": EventSheetPalette.TEXT_MUTED
+			}))
+	return spans
+
+
+## The verb's BODY as foldable children, plus the fold seed and the "+ Add event" way in. Shared by
+## both header forms so a Reading-mode block opens exactly like an authoring one.
+func _append_verb_body_rows(row_data: EventRowData, event_function: EventFunction, indent: int, display_name: String) -> void:
 	# Construct-style expandable block: the function BODY renders as foldable children (its conditions,
 	# actions, and raw GDScript blocks), built by the SAME dispatcher as sheet events, folding like a group.
 	# On an AUTHORED sheet the body is LIVE - the child rows keep their source_resource so selection / drag /
@@ -891,8 +1112,6 @@ func _build_define_function_row(event_function: EventFunction, indent: int) -> E
 		# fold_nested_verb_rows re-collapses a verb that turns out to sit inside a group or a #region,
 		# where the enclosing block owns the fold.
 		row_data.folded = bool(_viewport._fold_state.get(row_data.row_uid, false))
-	row_data.line_count = maxi(condition_lines, 1)
-	return row_data
 
 
 ## Strips a row and its whole subtree of its editing identity so it renders but is inert - no selection,
@@ -1026,13 +1245,15 @@ func _build_enum_row(enum_row: EnumRow, indent: int) -> EventRowData:
 			row_data.children.append(entry)
 			next_value += 1
 			member_index += 1
-		var add_row := EventRowData.new()
-		add_row.indent = indent + 1
-		add_row.row_type = EventRowData.RowType.SECTION
-		add_row.source_resource = enum_row
-		add_row.row_uid = "enum_add_%s" % str(enum_row.get_instance_id())
-		add_row.spans = [_make_span(EventSheetL10n.translate("+ Add value…"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_add", "text_color": EventSheetPalette.TEXT_MUTED})]
-		row_data.children.append(add_row)
+		# No "add" affordance on a read-only preview or a figure: it edits nothing there.
+		if not _scaffolding_suppressed():
+			var add_row := EventRowData.new()
+			add_row.indent = indent + 1
+			add_row.row_type = EventRowData.RowType.SECTION
+			add_row.source_resource = enum_row
+			add_row.row_uid = "enum_add_%s" % str(enum_row.get_instance_id())
+			add_row.spans = [_make_span(EventSheetL10n.translate("+ Add value…"), SemanticSpan.SpanType.COMMENT, {"kind": "enum_add", "text_color": EventSheetPalette.TEXT_MUTED})]
+			row_data.children.append(add_row)
 	row_data.spans = spans
 	return row_data
 
@@ -2821,8 +3042,9 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 		var child_row: EventRowData = _viewport._build_row_from_resource(child, indent + 1)
 		if child_row != null:
 			row_data.children.append(child_row)
-	# Event-sheet-style per-group footer: always the group's last child, one level deeper.
-	if _viewport.show_add_event_footers:
+	# Event-sheet-style per-group footer: always the group's last child, one level deeper. A read-only
+	# preview grows none: nothing can be added to it.
+	if _viewport.show_add_event_footers and not _scaffolding_suppressed():
 		row_data.children.append(
 			_build_add_event_footer_row(group, indent + 1, "+ Add event to '%s'…" % _viewport._group_name(group))
 		)
@@ -3611,7 +3833,10 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 			)
 		)
 		condition_line_index += 1
-	if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE:
+	# In a READ-ONLY preview a body-only row leaves its left cell blank, exactly as Construct draws one:
+	# "Always" is a placeholder that invites a condition, and a view that accepts none must not invite.
+	var always_placeholder_suppressed: bool = in_verb_body and _scaffolding_suppressed()
+	if spans.is_empty() and event_row.else_mode != EventRow.ElseMode.ELSE and not always_placeholder_suppressed:
 		# An event with no conditions reads as "every tick"; render it as a real cell (not bare
 		# text) so the condition lane still shows a clear, clickable empty event block.
 		# INSIDE a published verb's body it reads "Always" instead: a sheet's own events run every
@@ -3641,7 +3866,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 	# click target that does nothing, and it reserves a whole empty line of height under every row.
 	var add_condition_color: Color = condition_style_meta.get("text_color", EventSheetPalette.COLOR_CONDITION)
 	add_condition_color.a *= 0.55
-	if not _viewport.figure_mode:
+	if not _scaffolding_suppressed():
 		spans.append(
 			_make_span(
 				EventSheetL10n.translate("+ Add condition"),
@@ -3858,7 +4083,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 				for comment_line_index in range(action_comment_lines.size()):
 					spans.append(
 						_make_span(
-						action_comment_lines[comment_line_index] if _viewport.reading_mode else "# " + action_comment_lines[comment_line_index],
+						action_comment_lines[comment_line_index] if _viewport.is_reading_mode() else "# " + action_comment_lines[comment_line_index],
 							SemanticSpan.SpanType.COMMENT,
 							{
 								"lane": "action",
@@ -3877,7 +4102,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 							"text_color": _viewport._get_event_style().comment_text_color,
 							# Reading Mode: the note reads as an italic CAPTION - intent first, mechanics under
 							# it - and drops its # marker (the row is already visibly a comment). View state only.
-							"bbcode_segments": EventSheetBBCodeLite.parse("[i]%s[/i]" % action_comment_lines[comment_line_index], _viewport._get_event_style().comment_text_color) if _viewport.reading_mode else []
+							"bbcode_segments": EventSheetBBCodeLite.parse("[i]%s[/i]" % action_comment_lines[comment_line_index], _viewport._get_event_style().comment_text_color) if _viewport.is_reading_mode() else []
 							}.merged(action_style_meta, false)
 						)
 					)
@@ -3905,7 +4130,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 	# Event-sheet-style faint "Add action" affordance on its own line below the actions.
 	var add_action_color: Color = action_style_meta.get("text_color", EventSheetPalette.COLOR_ACTION)
 	add_action_color.a *= 0.55
-	if not _viewport.figure_mode:
+	if not _scaffolding_suppressed():
 		spans.append(
 			_make_span(
 				EventSheetL10n.translate("+ Add action"),
@@ -3961,7 +4186,7 @@ func _count_event_lines(event_row: EventRow) -> int:
 	# last line is the last real one: condition_lines - 1, or 0 for the Every Tick placeholder.
 	# Mirroring that here is what keeps the invariant above true in figure mode - and it is what
 	# actually saves the empty line of height, since any lazy measure reads this and not the spans.
-	var max_condition_line: int = maxi(condition_lines - 1, 0) if _viewport.figure_mode else maxi(condition_lines, 1)
+	var max_condition_line: int = maxi(condition_lines - 1, 0) if _scaffolding_suppressed() else maxi(condition_lines, 1)
 	# Action lane: "+ Add" sits on its own line below the actions (and below the event comment
 	# when present), so the lane spans action_count (+ comment) + 1 lines. In-flow GDScript
 	# blocks occupy one line per code line.
@@ -3982,10 +4207,10 @@ func _count_event_lines(event_row: EventRow) -> int:
 				action_count += match_resource.branches_text.split("\n").size() + 1
 		elif action_resource is CommentRow:
 			action_count += maxi((action_resource as CommentRow).text.split("\n").size(), 1)
-	var max_action_line: int = action_count if not _viewport.figure_mode else action_count - 1
+	var max_action_line: int = action_count - 1 if _scaffolding_suppressed() else action_count
 	if not event_row.comment.is_empty():
 		var comment_line: int = maxi(action_count, _viewport.COMMENT_DEFAULT_LINE_INDEX)
-		max_action_line = comment_line if _viewport.figure_mode else comment_line + 1
+		max_action_line = comment_line if _scaffolding_suppressed() else comment_line + 1
 	return maxi(max_condition_line, max_action_line) + 1
 
 

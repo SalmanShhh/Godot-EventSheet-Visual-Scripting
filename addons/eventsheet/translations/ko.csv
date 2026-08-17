@@ -1724,3 +1724,25 @@ Find Repeated Rows…,반복되는 행 찾기…
 Row Hit Counts,행 실행 횟수
 Reset Hit Counts,실행 횟수 초기화
 Run Tests…,테스트 실행…
+list,목록
+table,표
+node,노드
+functions this pack uses inside itself - %d,이 팩이 내부에서 쓰는 함수 - %d
+Kind,종류
+Category,분류
+Inputs,입력
+Gives back,반환값
+In the picker,선택기에서
+Inserts,삽입되는 코드
+Notes,참고
+none,없음
+nothing,없음
+not featured,추천 아님
+not in the picker - this pack uses it inside itself,선택기에 없음 - 이 팩이 내부에서 사용합니다
+icon %s,아이콘 %s
+%s() in %s,%s() (%s 안)
+ACE properties,ACE 속성
+Edit…,편집…
+Open guide,가이드 열기
+Show in code,코드에서 보기
+This verb is no longer on the sheet.,이 동사는 더 이상 시트에 없습니다.

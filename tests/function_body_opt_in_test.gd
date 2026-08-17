@@ -77,6 +77,13 @@ static func run() -> bool:
 	pdock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	pdock.setup(preview)
 	var pview: EventSheetViewport = pdock._active_view()
+	# gamma is a lifted helper, and a read-only preview gathers its helpers under a CLOSED "Helpers"
+	# bar - so the header only reaches the flat (visible) row list once that bar is open.
+	for entry: Dictionary in pview.get_flat_rows():
+		var bar: EventRowData = entry.get("row")
+		if bar != null and bar.row_uid.begins_with("helpers_group_"):
+			pview._fold_state[bar.row_uid] = false
+	pview.set_sheet(preview)
 	var header_index: int = -1
 	var pflat: Array = pview.get_flat_rows()
 	for i in range(pflat.size()):

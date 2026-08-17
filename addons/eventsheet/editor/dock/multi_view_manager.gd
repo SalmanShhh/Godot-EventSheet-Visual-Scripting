@@ -97,6 +97,7 @@ func _connect_view_signals(view: EventSheetViewport) -> void:
 	view.with_node_edit_requested.connect(_dock._open_with_node_dialog)
 	view.enum_edit_requested.connect(_dock._open_enum_dialog)
 	view.signal_edit_requested.connect(_dock._open_signal_dialog)
+	view.verb_properties_requested.connect(_dock.open_verb_properties)
 	view.match_edit_requested.connect(_dock._open_match_dialog)
 	view.row_disable_toggle_requested.connect(_dock._toggle_selected_rows_enabled)
 	view.row_move_requested.connect(_dock._move_selected_row)

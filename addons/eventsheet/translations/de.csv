@@ -1724,3 +1724,25 @@ Find Repeated Rows…,Wiederholte Zeilen finden…
 Row Hit Counts,Trefferzähler pro Zeile
 Reset Hit Counts,Trefferzähler zurücksetzen
 Run Tests…,Tests ausführen…
+list,Liste
+table,Tabelle
+node,Node
+functions this pack uses inside itself - %d,"Funktionen, die dieses Paket intern nutzt - %d"
+Kind,Art
+Category,Kategorie
+Inputs,Eingaben
+Gives back,Gibt zurück
+In the picker,In der Auswahl
+Inserts,Fügt ein
+Notes,Hinweise
+none,keine
+nothing,nichts
+not featured,nicht hervorgehoben
+not in the picker - this pack uses it inside itself,nicht in der Auswahl - dieses Paket nutzt es intern
+icon %s,Symbol %s
+%s() in %s,%s() in %s
+ACE properties,ACE-Eigenschaften
+Edit…,Bearbeiten…
+Open guide,Anleitung öffnen
+Show in code,Im Code zeigen
+This verb is no longer on the sheet.,Dieses Verb steht nicht mehr auf dem Blatt.

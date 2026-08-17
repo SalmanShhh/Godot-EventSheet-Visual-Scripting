@@ -1724,3 +1724,25 @@ Find Repeated Rows…,Найти повторяющиеся строки…
 Row Hit Counts,Счётчик срабатываний
 Reset Hit Counts,Сбросить счётчики
 Run Tests…,Запустить тесты…
+list,список
+table,таблица
+node,узел
+functions this pack uses inside itself - %d,"функции, которые пакет использует внутри себя - %d"
+Kind,Вид
+Category,Категория
+Inputs,Входные значения
+Gives back,Возвращает
+In the picker,В списке выбора
+Inserts,Вставляет
+Notes,Примечания
+none,нет
+nothing,ничего
+not featured,не избранное
+not in the picker - this pack uses it inside itself,нет в списке выбора - пакет использует её внутри себя
+icon %s,значок %s
+%s() in %s,%s() в %s
+ACE properties,Свойства ACE
+Edit…,Изменить…
+Open guide,Открыть руководство
+Show in code,Показать в коде
+This verb is no longer on the sheet.,Этого глагола больше нет на листе.
