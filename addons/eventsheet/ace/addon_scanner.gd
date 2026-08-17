@@ -11,12 +11,50 @@ const ADDON_DIRS: Array[String] = ["res://eventsheet_addons/"]
 
 
 ## All .gd scripts under the addon directories (recursive), sorted for determinism.
+##
+## Cached on the addon directories' own modification times: a directory's mtime changes when
+## a file or folder is added, removed or renamed inside it (not when a file's CONTENTS change,
+## which is fine - the listing is paths, and every consumer that reads content keys on the
+## file's mtime itself). Without this, every consumer that refreshes per keystroke - the
+## expression picker's Self section, the registry, the Doctor - paid a full recursive walk of
+## ~90 pack folders (~160 ms) on each call. Pack directories are shallow, so stat-ing them for
+## the key costs a few milliseconds and the walk runs once per real change.
 static func list_addon_scripts() -> Array[String]:
+	var key: String = _listing_key()
+	if not key.is_empty() and _listing_cache_key == key:
+		return _listing_cache.duplicate()
 	var scripts: Array[String] = []
 	for root in ADDON_DIRS:
 		_collect_scripts(root, scripts)
 	scripts.sort()
-	return scripts
+	_listing_cache = scripts
+	_listing_cache_key = key
+	return scripts.duplicate()
+
+
+static var _listing_cache: Array[String] = []
+static var _listing_cache_key: String = ""
+
+
+## The mtimes of every addon root and its immediate subdirectories, joined - the shape of the
+## fleet. Empty when a root is missing, which disables caching rather than caching an absence.
+static func _listing_key() -> String:
+	var parts: PackedStringArray = PackedStringArray()
+	for root: String in ADDON_DIRS:
+		var dir: DirAccess = DirAccess.open(root)
+		if dir == null:
+			return ""
+		parts.append("%s|%d" % [root, FileAccess.get_modified_time(root)])
+		dir.list_dir_begin()
+		var entry: String = dir.get_next()
+		while not entry.is_empty():
+			if dir.current_is_dir() and not entry.begins_with("."):
+				var sub: String = root.path_join(entry)
+				parts.append("%s|%d" % [sub, FileAccess.get_modified_time(sub)])
+			entry = dir.get_next()
+		dir.list_dir_end()
+	return "
+".join(parts)
 
 
 static func _collect_scripts(dir_path: String, into: Array[String]) -> void:

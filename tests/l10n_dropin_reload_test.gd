@@ -16,6 +16,12 @@ static func run() -> bool:
 	var made_dir: bool = not DirAccess.dir_exists_absolute(DROP_DIR)
 
 	EventSheetL10n.ensure_loaded()
+	# Settle the stamp FIRST: an earlier test in the same run may have rewritten a translation
+	# CSV after ensure_loaded first stamped the folders (the l10n sweeps do exactly that), which
+	# makes the very first reload_if_changed a legitimate true - not the no-op this test is
+	# about. One reload absorbs any such change; the no-op assertion then measures what it means
+	# to measure: an unchanged folder between two consecutive checks.
+	EventSheetL10n.reload_if_changed()
 	var before_locale: String = EventSheetL10n.get_locale()
 	ok = _check(ok, not EventSheetL10n.available_locales().has("xx"), "throwaway locale absent before the drop")
 	ok = _check(ok, not EventSheetL10n.reload_if_changed(), "unchanged folders are a no-op (false)")

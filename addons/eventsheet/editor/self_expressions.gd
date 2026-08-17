@@ -94,23 +94,50 @@ static func behaviour_groups(sheet: EventSheetResource, robust: bool = false) ->
 				continue
 			for entry: Dictionary in organ.get("entries", []):
 				used[str(entry.get("provider", ""))] = true
+	# The FLEET walk - load every pack script and census it - is the same on every keystroke;
+	# only the sheet's `used` set changes. So the walk is cached per (fleet signature, robust)
+	# and re-stamped with `used` on each call. The signature is every pack path with its mtime,
+	# so saving a pack self-invalidates (the registry's own cache discipline). Without this a
+	# 90-pack fleet paid ~90 loads and ~90 stat calls per refresh, twenty refreshes per burst of
+	# typing - the cost that blew the scale budget once the fleet passed ~85 packs.
+	var script_paths: PackedStringArray = EventSheetAddonScanner.list_addon_scripts()
+	var signature_parts: PackedStringArray = PackedStringArray()
+	for script_path: String in script_paths:
+		signature_parts.append("%s|%d" % [script_path, FileAccess.get_modified_time(script_path)])
+	var fleet_key: String = "%s#%s" % ["robust" if robust else "plain", "
+".join(signature_parts)]
+	var fleet_groups: Array = []
+	if _fleet_groups_cache.has(fleet_key):
+		fleet_groups = _fleet_groups_cache[fleet_key]
+	else:
+		for script_path: String in script_paths:
+			var script: Script = load(script_path) as Script
+			if script == null:
+				continue
+			var provider_id: String = str(script.get_global_name())
+			if provider_id.is_empty():
+				continue
+			var entries: Array = pack_entries_from_script(script, provider_id, robust)
+			if entries.is_empty():
+				continue
+			fleet_groups.append({"provider": provider_id, "entries": entries})
+		_fleet_groups_cache.clear()  # one live fleet at a time; the key encodes it
+		_fleet_groups_cache[fleet_key] = fleet_groups
 	var groups: Array = []
-	for script_path: String in EventSheetAddonScanner.list_addon_scripts():
-		var script: Script = load(script_path) as Script
-		if script == null:
-			continue
-		var provider_id: String = str(script.get_global_name())
-		if provider_id.is_empty():
-			continue
-		var entries: Array = pack_entries_from_script(script, provider_id, robust)
-		if entries.is_empty():
-			continue
-		groups.append({"provider": provider_id, "node_name": provider_id, "used": bool(used.get(provider_id, false)), "grounded": false, "entries": entries})
+	for fleet_group: Dictionary in fleet_groups:
+		var provider_id: String = str(fleet_group.get("provider"))
+		groups.append({"provider": provider_id, "node_name": provider_id, "used": bool(used.get(provider_id, false)), "grounded": false, "entries": fleet_group.get("entries")})
 	groups.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if bool(a.get("used")) != bool(b.get("used")):
 			return bool(a.get("used"))
 		return str(a.get("provider")) < str(b.get("provider")))
 	return groups
+
+
+## The pack fleet's derived groups, keyed on the fleet's path|mtime signature plus the robust
+## flag - see behaviour_groups. Static and shared across every tab for the session, like the
+## registry cache; a saved pack changes its mtime and misses, so it can never go stale.
+static var _fleet_groups_cache: Dictionary = {}
 
 
 ## The GROUNDED tier (SPEC-self-expressions Phase 3): the sheet's actual instance is selected in
