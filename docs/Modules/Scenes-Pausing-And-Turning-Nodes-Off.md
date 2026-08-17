@@ -75,6 +75,10 @@ family stops being confusing.
 | Spawn Scene Instance | Loads a scene file and adds an instance as a child | `add_child(load({path}).instantiate())` |
 | Spawn Scene At | Loads a scene and drops a copy at a position | three lines, see below |
 | Spawn Scene (Full) | Spawn with position, rotation and an optional group | five lines, see below |
+| Spawn Scene As | Spawn under a NAME, with a record of values set on the way in and a chosen parent | eight lines, see below |
+| The Spawned | The node a Spawn Scene As row made under this name, or nothing when it was never spawned or has been freed | `get_meta(&"__ef_spawn_" + <name>)`, behind a `has_meta` and `is_instance_valid` guard |
+| Spawn Is Alive | True while the node spawned under this name still exists | the same guarded read, as a condition |
+| On Scene Spawned | Runs when a Spawn Scene As row spawns something, handing you the name and the node | connects to the sheet's own `scene_spawned(spawn_name, node)` signal |
 | Set Game Paused | Pauses or resumes the whole game | `get_tree().paused = {paused}` |
 | Is Game Paused | True when the game is currently paused | `get_tree().paused` |
 
@@ -82,6 +86,31 @@ family stops being confusing.
 (handle it myself)" inserts `false`, and "Allow (quit immediately)" inserts `true`. Set it to
 Intercept in a ready handler and the window's close button waits for your own close handler, which
 then calls Quit Game explicitly.
+
+**Spawn Scene As** is the one you can talk to afterwards. The other three build into a hidden local,
+so the row after them cannot reach what was just made; this one remembers the node in the host's
+metadata under the name you typed, which is why **The Spawned "boss"** works from any later row and
+any later event on the same sheet. It also emits `scene_spawned(spawn_name, node)` when the sheet
+declares that signal - add a **Signal** row reading `scene_spawned(spawn_name: String, node: Node)`
+and put the reaction under **On Scene Spawned**, where the name and the node arrive as the row's own
+payload. That is deliberately not a "last spawned" value: a loop spawning six things in one frame
+would overwrite one of those six times, while a signal fires six times with the right node each time.
+A reaction that only cares about one name puts a condition under the trigger comparing `spawn_name`,
+the same way every other payload-carrying trigger is narrowed. Reading a name that was never spawned
+is not an error and never crashes: **The Spawned** hands back nothing, and **Spawn Is Alive** is false.
+
+```gdscript
+var __spawn_figure = load("res://enemies/warden.tscn").instantiate()
+__spawn_figure.position = Vector2(0, 0)
+var __values_figure: Dictionary = {"max_health": 200, "tier": 3}
+for __field_figure: Variant in __values_figure:
+	__spawn_figure.set(__field_figure, __values_figure[__field_figure])
+var __parent_figure: Node = null
+(__parent_figure if __parent_figure != null else self).add_child(__spawn_figure)
+set_meta(&"__ef_spawn_" + str("boss").to_utf8_buffer().hex_encode(), __spawn_figure)
+if has_signal(&"scene_spawned"):
+	emit_signal(&"scene_spawned", "boss", __spawn_figure)
+```
 
 **Spawn Scene At** and **Spawn Scene (Full)** bake a per-row unique local so two spawn rows in the
 same handler cannot collide:
@@ -135,6 +164,27 @@ the game pause), Disabled (never runs).
 | Set Node Process Order | Where this node sits in the per-frame order among siblings | `process_priority = {priority}` |
 | Set Node Physics Order | The same ordering knob for the physics step | `process_physics_priority = {priority}` |
 | Node Is Ready | True once the node has entered the tree and _ready has run | `is_node_ready()` |
+
+### Later, once, and after this frame
+
+Godot's oldest beginner trap in three readable rows, none of which suspend. Adding, freeing or
+reparenting a node from inside a collision callback is the number one crash a new project hits, and
+switching a collision shape off mid-physics is the number one error message. Deferring is Godot's
+own answer to both, and these are that answer as vocabulary.
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Do After This Frame | Runs one action once the frame's work is finished - the only safe moment to add, free or reparent a node | `(func(): {do}).call_deferred()` |
+| Set Property (after this frame) | Sets a property at the end of the frame instead of right now | `{target}.set_deferred({property}, {value})` |
+| Call Later | Runs one action after a delay, with no Timer node and WITHOUT suspending | `get_tree().create_timer(maxf({seconds}, 0.0)).timeout.connect(func(): {do}, CONNECT_ONE_SHOT)` |
+| Only Once This Frame | True the FIRST time it is reached in a frame under this name, and false every other time that frame | a synthesized per-frame claim over `Engine.get_process_frames()` |
+
+Three things separate these from the shipped Wait family. **They do not suspend**: the rows below
+them keep running, which is what makes Call Later usable in the middle of a firing sequence.
+**Call Later's connection is one-shot**, so a delayed beat can neither leak nor fire twice. And
+**Only Once This Frame is a CONDITION** - "has this already run?" is a question, so it guards the
+actions to its right exactly like the shipped Trigger Once, and it is evaluated last so it only
+claims the frame once every other condition on the row has said yes.
 
 ## Use cases
 
@@ -331,6 +381,185 @@ func _on_confirm_quit_pressed() -> void:
 ```gdscript
 func _on_quit_pressed() -> void:
 	get_tree().quit()
+```
+
+**23. Spawn something and then configure it.** The name is the address, so every following row can
+talk about it.
+
+```
+On boss fight started
+  -> Spawn Scene As  "res://enemies/warden.tscn" as "boss" at Vector2(400, 200) with {"max_health": 200, "tier": 3}
+  -> Set Property  ( The Spawned "boss" ), "target", ( player )
+  -> Add To Group  ( The Spawned "boss" ), "bosses"
+```
+
+**24. Set values BEFORE the first frame.** The with-record is applied while the node is still out of
+the tree, which is the only way a projectile has its damage and its owner before its first physics
+step.
+
+```
+On weapon fired
+  -> Spawn Scene As  "res://weapons/bolt.tscn" as "bolt" with {"damage": 12, "owner_faction": "player"}
+```
+
+**25. Choose the parent.** Spawning into a container keeps the scene tree tidy and makes "delete
+every enemy" one row later.
+
+```
+On wave started
+  -> Spawn Scene As  "res://enemies/slime.tscn" as "slime" into ( Get Node "Enemies" )
+```
+
+**26. React to the spawn somewhere else.** Declare the signal once, and the HUD's own sheet can show
+a boss bar without the spawning sheet knowing the HUD exists.
+
+```
+On Scene Spawned  ( spawn_name, node )
+  Condition: Compare Values  spawn_name = "boss"
+    -> HUD Kit: Show Boss Bar  ( node )
+```
+
+```gdscript
+extends Node
+
+signal scene_spawned(spawn_name: String, node: Node)
+
+
+func _on_scene_spawned(spawn_name: String, node: Node) -> void:
+	if spawn_name == "boss":
+		print("boss bar for ", node.name)
+```
+
+**27. Guard a row that talks to a spawn.** Things die; Spawn Is Alive is how a row asks first.
+
+```
+On Every Frame
+  Condition: Spawn Is Alive  "boss"
+    -> Set Property  ( The Spawned "boss" ), "target", ( player )
+```
+
+**28. Spawn a whole catalogue in one loop.** Each entry names its own spawn, so the configure row
+right after it addresses the right node.
+
+```
+Condition: For Each  ( Resources In Folder "res://data/enemies" )
+  -> Spawn Scene As  ( item.scene ) as ( item.id )
+  -> Apply Preset To Node  ( item ), ( The Spawned ( item.id ) )
+```
+
+**29. Instance a UI row and fill it in.** The most common reason a UI sheet drops into GDScript is
+that it cannot reach the row it just created.
+
+```
+On inventory opened
+  Condition: For Each  ( inventory )
+    -> Spawn Scene As  "res://ui/item_row.tscn" as ( item.id ) into ( Get Node "List" )
+    -> Set Property  ( The Spawned ( item.id ) ), "text", ( item.name )
+```
+
+**30. Free a node from inside the collision that killed it.** Freeing during the physics step is the
+crash; deferring it to the end of the frame is the fix, and the rows below still run immediately.
+
+```gdscript
+extends Node
+
+
+func _on_body_entered(body: Node) -> void:
+	body.take_damage(10)
+	(func(): queue_free()).call_deferred()
+```
+
+**31. Switch a collision shape off at the only moment Godot permits.** Setting it directly mid-physics
+is the error message every new project meets.
+
+```gdscript
+extends Node
+
+
+func _ready() -> void:
+	$Hitbox/Shape.set_deferred("disabled", true)
+```
+
+**32. Turn Area monitoring off safely.** Exactly the same rule, on the property that most often
+carries a whole pickup's behaviour.
+
+```gdscript
+extends Node
+
+
+func _on_collected() -> void:
+	$Pickup.set_deferred("monitoring", false)
+```
+
+**33. Eject the shell a moment after the shot, without a Timer node.** Call Later does not suspend,
+so the rows under it still run this frame.
+
+```gdscript
+extends Node
+
+
+func _on_fire_pressed() -> void:
+	$Weapon.fire()
+	get_tree().create_timer(maxf(0.15, 0.0)).timeout.connect(func(): eject_shell(), CONNECT_ONE_SHOT)
+	can_fire = false
+```
+
+**34. Close a door a beat after the player walks through it.** The connection disposes of itself, so
+walking through twice cannot stack two closes.
+
+```gdscript
+extends Node
+
+
+func _on_player_passed() -> void:
+	get_tree().create_timer(maxf(0.8, 0.0)).timeout.connect(func(): $Door.close(), CONNECT_ONE_SHOT)
+```
+
+**35. Rebuild the inventory panel once, however many items changed.** Fifty adds in one frame become
+one redraw, because the gate claims the frame the first time it is reached.
+
+```gdscript
+extends Node
+
+
+func _on_item_added() -> void:
+	if _once_this_frame("rebuild_bag"):
+		$Bag.rebuild()
+```
+
+**36. Share one gate between several events.** Two different rows using the same name fold into a
+single run per frame, which is how a panel driven by adds AND removes still redraws once.
+
+```gdscript
+extends Node
+
+
+func _on_item_removed() -> void:
+	if _once_this_frame("rebuild_bag"):
+		$Bag.rebuild()
+```
+
+**37. Reparent a picked-up item safely.** Reparenting during a physics callback is the same family of
+crash as freeing, and the same fix applies.
+
+```gdscript
+extends Node
+
+
+func _on_pickup_touched(item: Node) -> void:
+	(func(): item.reparent($Hand)).call_deferred()
+```
+
+**38. Mutate a group while a loop is walking it.** Deferring the removal lets the loop finish over a
+stable list first.
+
+```gdscript
+extends Node
+
+
+func _on_wave_cleared() -> void:
+	for enemy: Node in get_tree().get_nodes_in_group("enemies"):
+		(func(): enemy.queue_free()).call_deferred()
 ```
 
 ### Other use cases

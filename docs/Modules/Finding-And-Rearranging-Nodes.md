@@ -146,6 +146,29 @@ this node's `global_position`. All four reduce-based picks return nothing on an 
 | Has Metadata | True when the object has metadata under that key | `{target}.has_meta({name})` |
 | Remove Metadata | Deletes a stored metadata value by key | `{target}.remove_meta({name})` |
 
+### Asking the tree by name
+
+The replacement for the fragile node path the Project Doctor already scolds you for. A node
+publishes itself under a **role** name once, and every other row asks for that name - no path, no
+`$../../`, and no crash after a scene reload. The shelf is metadata on the SceneTree itself, so
+there is no autoload to install and nothing survives between two runs of the game.
+
+Registering a name again REPLACES it, and a node that has been freed answers as nothing at all,
+because both readers test `is_instance_valid` first. That is deliberately all the bookkeeping there
+is: a registration that erased itself when its node left the tree would, in the ordinary
+scene-reload order, delete the entry belonging to the node that had already replaced it.
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Register As Service | Publishes this node under a short name anything can ask for | `get_tree().set_meta(&"__ef_services", …)`, and nothing else - both readers refuse a freed node |
+| Service Named | The node published under a name, or nothing when it is gone | `get_tree().get_meta(&"__ef_services", {}).get({service_name}, null)` guarded by `is_instance_valid` |
+| Has Service | True when a node is registered under this name and still alive | `is_instance_valid(…get({service_name}, null))` |
+| For Each Node That Can | Loops the event's actions once per node ANYWHERE in the tree that answers to a method name | the tree root plus `find_children("*", "", true, false)`, filtered by `has_method({method_name})` |
+
+**For Each Node That Can** is a loop ROW in the condition lane, not an action: its items arrive as
+`node`, and the per-item work is the event's actions. It walks the whole tree, so run it on an
+event - a save sweep, a pause sweep, a shutdown sweep - never every frame.
+
 ## Use cases
 
 **1. Spawn a bullet under the level, not under the gun.** Adding it to the gun would make it inherit
@@ -323,6 +346,93 @@ func _can_drop(node: Node) -> bool:
 ```gdscript
 func _process(delta: float) -> void:
 	$Debug.text = "%s  #%d  %s" % [name, get_index(), str(get_path())]
+```
+
+**22. Publish the player under a role name, once, on ready.** Every HUD, menu and ability afterwards
+asks for `"player"` instead of walking a path that a scene reorganise will quietly break.
+
+```gdscript
+extends Node
+
+
+func _ready() -> void:
+	var services: Dictionary = get_tree().get_meta(&"__ef_services", {})
+	services["player"] = self
+	get_tree().set_meta(&"__ef_services", services)
+```
+
+**23. Heal whoever is registered as the player.** The healing row never learns where the player node
+lives in the tree.
+
+```gdscript
+extends Node
+
+
+func _on_heal_pressed() -> void:
+	get_tree().get_meta(&"__ef_services", {}).get("player", null).heal(25)
+```
+
+**24. Make an optional system genuinely optional.** Has Service answers no when the audio director
+was never added to this build, and the row is simply skipped.
+
+```gdscript
+extends Node
+
+
+func _on_boss_started() -> void:
+	if is_instance_valid(get_tree().get_meta(&"__ef_services", {}).get("audio_director", null)):
+		play_music("boss")
+```
+
+**25. Split-screen without two divergent path sets.** Each player registers under its own role, and
+the same HUD sheet is instanced twice pointing at different names.
+
+```gdscript
+extends Node
+
+
+func _ready() -> void:
+	var services: Dictionary = get_tree().get_meta(&"__ef_services", {})
+	services["player_2"] = self
+	get_tree().set_meta(&"__ef_services", services)
+```
+
+**26. Sweep every system that can save itself.** The list of savers is a question you ask, not a list
+you maintain.
+
+```gdscript
+extends Node
+
+
+func _on_quit_requested() -> void:
+	for node: Node in get_tree().get_root().find_children("*", "", true, false):
+		if node.has_method("save_state"):
+			node.call("save_state")
+```
+
+**27. Pause everything that knows how to pause.** A node that does not implement the method is
+skipped, which is what makes the sweep safe to run in a half-built scene.
+
+```gdscript
+extends Node
+
+
+func _on_pause_pressed() -> void:
+	for node: Node in get_tree().get_root().find_children("*", "", true, false):
+		if node.has_method("on_game_paused"):
+			node.call("on_game_paused")
+```
+
+**28. Ask for a service that has been freed.** The guard is why this answers nothing instead of
+crashing, which is the entire difference from holding a node reference across a scene reload.
+
+```gdscript
+extends Node
+
+
+func _process(_delta: float) -> void:
+	var boss: Object = get_tree().get_meta(&"__ef_services", {}).get("boss", null)
+	$BossBar.visible = is_instance_valid(boss)
 ```
 
 ### Other use cases
