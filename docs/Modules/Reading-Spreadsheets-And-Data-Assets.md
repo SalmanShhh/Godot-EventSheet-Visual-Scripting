@@ -124,6 +124,23 @@ item and the loop index, frame-spreading and round-trip all come from the pick m
 | Load Resource Or Default | Loads a file, handing back your fallback when it is missing | `(load({path}) if ResourceLoader.exists({path}) else {fallback})` |
 | Count Of Resources In | How many data assets a folder holds, counted without loading any | A filtered `DirAccess.get_files_at({folder})` `.size()` |
 
+### Files: live data (a file that changed while the game is running)
+
+| Verb | What it does | Ships as |
+|------|--------------|----------|
+| Watch Data File | Checks whether a data file has been written since the last check, and fires the sheet's `data_file_changed(path)` signal when it has | A modification-time reading compared with the one remembered in node metadata under the path |
+| Reload Data Asset | Re-reads a data asset from disk into the copy every node is already holding | `ResourceLoader.load({path}, "", ResourceLoader.CACHE_MODE_REPLACE)`, guarded by `ResourceLoader.exists` |
+| Data Folder Problems | Every structural problem in a folder of data assets, one per line, `""` when it is clean | The folder walk above, mapping each asset to a problem line and joining the non-empty ones |
+| Data Folder Is Valid | True when every asset loads, has an id, and has an id no sibling shares | The same expression, `.is_empty()` |
+| Validate Data Folder | Writes those problems to the Output as one warning, and says nothing at all when the folder is clean | The same expression into a `push_warning` guarded by `is_empty()` |
+| On Data File Changed | Runs when a watched file has been written, handing you the path that changed | connects to the sheet's own `data_file_changed(path)` signal |
+
+The trigger half is a signal you declare on the sheet, because that is what makes the changed path
+the row's own payload rather than a "what changed last" value two files landing in the same check
+would corrupt. Add a **Signal** row reading `data_file_changed(path: String)` and put the reaction
+under **On Data File Changed**; a sheet that declares no such signal simply never fires (the action
+checks first), so the watch row is always safe to drop.
+
 ### Helpers: copying
 
 | Verb | What it does | Ships as |
@@ -360,6 +377,102 @@ On item loaded
     -> add tag part to the item's tag list
 ```
 
+**23. Tune a number without restarting.** The balance loop: watch the folder's file while a debug
+build runs, and reload it the moment it is written. Declare the signal once (a **Signal** row reading
+`data_file_changed(path: String)`), and the trigger hands you the path.
+
+```
+Condition: Is Debug Build
+  Condition: Every 0.5 seconds
+    -> Watch Data File  "res://data/enemies/warden.tres"
+
+On Data File Changed  ( path )
+  -> Reload Data Asset  ( path )
+```
+
+```gdscript
+extends Node
+
+signal data_file_changed(path: String)
+
+
+func _on_data_file_changed(path: String) -> void:
+	if ResourceLoader.exists(path):
+		ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_REPLACE)
+```
+
+**24. Tell everything that cares to re-read itself.** The reload updates the asset; the nodes holding
+it may need a nudge. That fan-out is a loop ROW, with the call as its action.
+
+```
+On Data File Changed  ( path )
+  -> Reload Data Asset  ( path )
+  Condition: For Each  ( Everything That Can "reload_data" )
+    -> Call Method  "reload_data" on ( Loop Item )
+```
+
+**25. Watch several files.** One row per file, all under the same beat - the metadata that remembers
+each file's stamp is keyed by path, so they never interfere.
+
+```
+Condition: Every 0.5 seconds
+  -> Watch Data File  "res://data/balance/player.tres"
+  -> Watch Data File  "res://data/balance/economy.tres"
+```
+
+**26. Only in a debug build.** Watching reads a timestamp off disk on every check, so leave it out of
+the shipped game.
+
+```
+Condition: Is Debug Build  (inverted)
+  -> stop running the watch event
+```
+
+**27. Refuse to load a broken content folder.** Data Folder Is Valid is the guard; the report is the
+reason.
+
+```
+On Ready
+  Condition: Data Folder Is Valid  "res://data/items"  (inverted)
+    -> Log Message  ( Data Folder Problems "res://data/items" )
+    -> show "Your item data could not be read" and stop
+```
+
+**28. Check a mod folder before trusting it.** The same check over a folder the player filled - which
+is what makes user content safe to load at all.
+
+```
+On mod folder chosen
+  -> Validate Data Folder  ( chosen_folder )
+  Condition: Data Folder Is Valid  ( chosen_folder )
+    -> set mod_items = Resources In Folder( chosen_folder )
+```
+
+**29. Fail a build on bad data.** The same verb in an Editor Tool sheet, so a designer's `.tres` edit
+is checked by the build server with no second implementation of the rules.
+
+```
+On Editor Run
+  Condition: Data Folder Is Valid  "res://data/items"  (inverted)
+    -> Log Error  ( Data Folder Problems "res://data/items" )
+```
+
+**30. Say WHY an item is being ignored.** The most common cause is the quietest one: two files with
+the same id, where the second silently wins every lookup.
+
+```
+On debug key pressed
+  -> Log Message  ( Data Folder Problems "res://data/items" )
+```
+
+```gdscript
+extends Node
+
+
+func _on_debug_key_pressed() -> void:
+	print("\n".join(PackedStringArray(Array(DirAccess.get_files_at("res://data/items")).map(func(__file): return "res://data/items".path_join(__file.trim_suffix(".remap"))).filter(func(__path): return __path.get_extension() in ["tres", "res"]).map(func(__path): return (__path.get_file() + ": cannot be loaded" if load(__path) == null else "")).filter(func(__message): return not __message.is_empty()))))
+```
+
 ### Other use cases
 
 **Localisation table.** One column per language and a key column, read once with Table From File and looked up with Row Where, so adding a language is a spreadsheet column rather than a code change.
@@ -415,3 +528,17 @@ On item loaded
   two together log an error with a blank reason. Branch on the report's own emptiness instead.
 - **Explain Table Problem counts rows from 1 over the RECORDS you hold.** Table From File has already
   consumed the header line, so its row 12 is line 13 of the file.
+- **Watch Data File needs a beat.** It checks once per run, so it belongs under Every X Seconds (or a
+  per-frame trigger). On its own in a startup event it takes one reading and never looks again.
+- **The first check never fires.** It only records where the file stood, which is what stops a
+  reload storm the moment the watch event starts running.
+- **A file's timestamp has one-second resolution.** Two writes inside the same second look like one,
+  so a script that rewrites a file twice quickly may produce a single change - or, if the second
+  write lands in the same second as the reading, none at all.
+- **Reloading a `.tres` re-reads DATA, not code.** A changed script still needs a restart; this is a
+  data hot-reload, and saying so up front saves an afternoon.
+- **Watching is a debug-build tool.** It reads a modification time off disk every check. Guard the
+  watch event with Is Debug Build so a shipped game never pays for it.
+- **The folder report reads an `id` field.** An asset with no `id` property at all is reported as
+  having no id, which is correct for a folder that is supposed to be addressable content - and is
+  why pointing the check at a folder of textures or materials reports every file.

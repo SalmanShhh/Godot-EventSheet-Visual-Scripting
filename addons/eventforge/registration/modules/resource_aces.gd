@@ -146,4 +146,49 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.make_descriptor("Core", "StampDataVersion", "Stamp Data Version", ACEDescriptor.ACEType.ACTION, "{record}[{field}] = {version}", "", [F.make_param("record", "String", "save", "Record", "The record to stamp.", "variable_reference:Dictionary"), F.make_param("field", "String", "\"version\"", "Field", "Which field holds the version number.", "expression"), F.make_param("version", "String", "2", "Version", "The version this build writes - a whole number.", "expression")], CAT_DICT, "stamp [i]{record}[/i] as version [b]{version}[/b]")
 		.described("Writes the current format number onto a record, so the next load knows it has already been migrated. Data Is Older Than Version reads it back, and reads it as 0 when it is missing or is not a number."))
 
+	# ── Live Data - data that changed on disk while the game is running, and a folder that is wrong ──
+	#
+	# Two halves of the balance-tuning loop, both plain GDScript:
+	#
+	#   Watch Data File compares the file's modification time with the one it saw last, remembered in
+	#   host metadata under the path (the stateless, name-keyed trick the cooldowns use - an ACTION
+	#   cannot declare a class member). The FIRST run only seeds the stamp, so nothing fires just
+	#   because the row started running. When the stamp moves, the change is handed on as a real
+	#   signal: declare `signal data_file_changed(path: String)` on the sheet (Add ▸ Signal) and the
+	#   On Signal trigger row receives the path as its own captured payload - never a "which file
+	#   changed" side expression, which is wrong the moment two files land in the same poll. A sheet
+	#   that declares no such signal skips the emit, so the row still stands alone.
+	#
+	#   The folder report is one expression by necessity (an expression lands in a value field), and
+	#   the SAME text backs the condition, the reading and the warning, so the three can never
+	#   disagree. It answers the three things that silently break a folder of data assets: a file
+	#   that no longer loads, one with no usable id, and two files claiming the same id - where the
+	#   second silently wins every lookup. An empty report means the folder is clean, the same
+	#   convention Explain Table Problem and Missing Fields use.
+	var data_rows: String = "Array(DirAccess.get_files_at({folder}) if DirAccess.dir_exists_absolute({folder}) else PackedStringArray()).map(func(__file): return {folder}.path_join(__file.trim_suffix(\".remap\"))).filter(func(__path): return __path.get_extension() in [\"tres\", \"res\"]).map(func(__path): return [__path.get_file(), load(__path)])"
+	# Each file is loaded ONCE, into a [file name, resource] pair, and the whole report is built from
+	# those pairs inside one immediately-called lambda. The obvious spelling - load(__path) wherever a
+	# question needs it, and the id list rebuilt per file for the duplicate check - re-read every asset
+	# several times per file, so a 200-asset folder cost tens of thousands of loads on every evaluation
+	# of what is, after all, a CONDITION a row may ask once a frame.
+	var folder_problems: String = "(func(__rows: Array) -> String: return \"\\n\".join(PackedStringArray(__rows.map(func(__row): return (str(__row[0]) + \": cannot be loaded\" if __row[1] == null else (str(__row[0]) + \": has no id\" if not (\"id\" in __row[1]) or str(__row[1].get(\"id\")).strip_edges().is_empty() else (str(__row[0]) + \": shares its id with another file\" if __rows.filter(func(__other): return __other[1] != null and \"id\" in __other[1] and str(__other[1].get(\"id\")) == str(__row[1].get(\"id\"))).size() > 1 else \"\")))).filter(func(__message): return not __message.is_empty())))).call(%s)" % data_rows
+
+	descriptors.append(F.make_descriptor("Core", "WatchDataFile", "Watch Data File", ACEDescriptor.ACEType.ACTION, "var __stamp_{uid}: int = FileAccess.get_modified_time({path}) if FileAccess.file_exists({path}) else 0\nif __stamp_{uid} != int(get_meta(&\"__ef_watch_\" + str({path}).to_utf8_buffer().hex_encode(), __stamp_{uid})):\n\tif has_signal(&\"data_file_changed\"):\n\t\temit_signal(&\"data_file_changed\", {path})\nset_meta(&\"__ef_watch_\" + str({path}).to_utf8_buffer().hex_encode(), __stamp_{uid})", "", [F.make_param("path", "String", "\"res://data/items/sword.tres\"", "File", "The data file to watch (a .tres, .json or .csv).", "expression")], CAT_FILES, "watch [b]{path}[/b] for edits")
+		.described("Checks whether a data file has been written since the last check, and fires the sheet's data_file_changed(path) signal when it has - so you edit an enemy's numbers in the Inspector and the running game picks them up. Put it under Every X Seconds; the first check only takes a reading, so nothing fires just because the row started. This is a debug-build tool: it reads the file's timestamp each time it runs."))
+	descriptors.append(F.make_descriptor("Core", "ReloadDataAsset", "Reload Data Asset", ACEDescriptor.ACEType.ACTION, "if ResourceLoader.exists({path}):\n\tResourceLoader.load({path}, \"\", ResourceLoader.CACHE_MODE_REPLACE)", "", [F.make_param("path", "String", "\"res://data/items/sword.tres\"", "File", "The data asset to re-read from disk.", "expression")], CAT_FILES, "reload data asset [b]{path}[/b]")
+		.described("Re-reads a data asset from disk into the copy every node is already holding, so the new numbers apply without restarting or re-assigning anything. It reloads DATA, not code: a changed script still needs a restart. Nothing happens when the path is not there."))
+	# The trigger half. "signal:<name>" is the id convention that binds a row to a real signal: the
+	# sheet declares `data_file_changed(path: String)` with a Signal row, and the compiler emits the
+	# handler plus its _ready connection. The path arrives as the row's OWN captured payload, which
+	# is the whole reason no "which file changed" expression exists - watching a folder is exactly
+	# the case where two files land in the same check, and a stored last-value would be wrong.
+	descriptors.append(F.make_descriptor("Core", "signal:data_file_changed", "On Data File Changed", ACEDescriptor.ACEType.TRIGGER, "", "data_file_changed", [F.make_param("path", "String", "", "File", "The file that was written, carried by the signal itself.")], CAT_FILES, "On data file changed ( {path} )")
+		.described("Runs when a Watch Data File row notices that a watched file has been written. The path arrives on the row as path, so the reaction reloads exactly the file that changed even when two land in the same check. Needs a Signal row for data_file_changed(path: String) - without one the sheet still compiles, but nothing connects this event, so it never runs. The Project Doctor flags that."))
+	descriptors.append(F.make_descriptor("Core", "DataFolderProblems", "Data Folder Problems", ACEDescriptor.ACEType.EXPRESSION, folder_problems, "", [F.make_param("folder", "String", "\"res://data/items\"", "Folder", "Folder of data assets to check (not recursive).", "expression")], CAT_FILES, "problems in [b]{folder}[/b]")
+		.described("Every structural problem in a folder of data assets, one per line, and \"\" when it is clean: a file that cannot be loaded, one with no usable id, and two files claiming the same id (where the second quietly wins every lookup). Show it, log it, or fail a build with it."))
+	descriptors.append(F.make_descriptor("Core", "DataFolderIsValid", "Data Folder Is Valid", ACEDescriptor.ACEType.CONDITION, "(%s).is_empty()" % folder_problems, "", [F.make_param("folder", "String", "\"res://data/items\"", "Folder", "Folder of data assets to check (not recursive).", "expression")], CAT_FILES, "[b]{folder}[/b] is valid data")
+		.described("True when every data asset in a folder loads, has an id, and has an id no sibling shares - the check to put in front of loading a mod folder or user content. Read the reasons with Data Folder Problems."))
+	descriptors.append(F.make_descriptor("Core", "ValidateDataFolder", "Validate Data Folder", ACEDescriptor.ACEType.ACTION, "var __report_{uid}: String = %s\nif not __report_{uid}.is_empty():\n\tpush_warning(\"Data folder \" + {folder} + \" has problems:\\n\" + __report_{uid})" % folder_problems, "", [F.make_param("folder", "String", "\"res://data/items\"", "Folder", "Folder of data assets to check (not recursive).", "expression")], CAT_FILES, "validate data folder [b]{folder}[/b]")
+		.described("Checks a folder of data assets and writes every problem it finds to the Output as one warning, saying which file and what is wrong. A clean folder says nothing at all, so it is safe to leave in a startup event."))
+
 	return descriptors
