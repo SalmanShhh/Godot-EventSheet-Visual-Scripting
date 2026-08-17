@@ -1746,3 +1746,11 @@ Edit…,編集…
 Open guide,ガイドを開く
 Show in code,コードで表示
 This verb is no longer on the sheet.,この動詞はもうシートにありません。
+behaves on a,対象ノード
+Triggers,トリガー
+this pack fires - %d,このパックが発火する - %d
+Settings,設定
+%d setting,設定 %d 件
+%d settings,設定 %d 件
+Internal state,内部状態
+values the pack keeps for itself - %d,パックが内部で保持する値 - %d

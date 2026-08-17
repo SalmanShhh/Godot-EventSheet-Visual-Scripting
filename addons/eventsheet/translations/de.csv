@@ -1746,3 +1746,11 @@ Edit…,Bearbeiten…
 Open guide,Anleitung öffnen
 Show in code,Im Code zeigen
 This verb is no longer on the sheet.,Dieses Verb steht nicht mehr auf dem Blatt.
+behaves on a,wirkt auf ein
+Triggers,Auslöser
+this pack fires - %d,die dieses Paket auslöst - %d
+Settings,Einstellungen
+%d setting,%d Einstellung
+%d settings,%d Einstellungen
+Internal state,Interner Zustand
+values the pack keeps for itself - %d,Werte nur für dieses Paket - %d

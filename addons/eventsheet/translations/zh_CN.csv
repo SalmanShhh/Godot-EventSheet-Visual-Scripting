@@ -1746,3 +1746,11 @@ Edit…,编辑…
 Open guide,打开指南
 Show in code,在代码中显示
 This verb is no longer on the sheet.,该动作已不在事件表中。
+behaves on a,作用于
+Triggers,触发器
+this pack fires - %d,此扩展包会触发 - %d
+Settings,设置
+%d setting,%d 项设置
+%d settings,%d 项设置
+Internal state,内部状态
+values the pack keeps for itself - %d,扩展包自用的值 - %d

@@ -1746,3 +1746,11 @@ Edit…,Изменить…
 Open guide,Открыть руководство
 Show in code,Показать в коде
 This verb is no longer on the sheet.,Этого глагола больше нет на листе.
+behaves on a,работает с
+Triggers,Триггеры
+this pack fires - %d,которые вызывает этот пакет - %d
+Settings,Настройки
+%d setting,%d настройка
+%d settings,%d настроек
+Internal state,Внутреннее состояние
+values the pack keeps for itself - %d,значения только для этого пакета - %d

@@ -1746,3 +1746,11 @@ Edit…,편집…
 Open guide,가이드 열기
 Show in code,코드에서 보기
 This verb is no longer on the sheet.,이 동사는 더 이상 시트에 없습니다.
+behaves on a,적용 대상
+Triggers,트리거
+this pack fires - %d,이 팩이 발생시키는 - %d
+Settings,설정
+%d setting,설정 %d개
+%d settings,설정 %d개
+Internal state,내부 상태
+values the pack keeps for itself - %d,팩이 내부에서만 쓰는 값 - %d

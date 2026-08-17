@@ -26,6 +26,10 @@ static func run() -> bool:
 		ViewportRowBuilder.host_binding_class("func _ready() -> void:\n\tpass"), "") and ok
 
 	# ── Rendering over a real opened pack ──
+	# The Host binding BAR is now the editable-sheet reading. A read-only preview folds it (with the
+	# class-setup strip and the `host` variable) into the one Include bar the pack head opens with, so
+	# this half of the test drives the same pack with the preview flag cleared - the bar itself, its
+	# chips and its byte round-trip are unchanged, and the preview's own reading is pinned below.
 	var pack_path: String = "res://eventsheet_addons/health/health_behavior.gd"
 	var source: String = (FileAccess.open(pack_path, FileAccess.READ)).get_as_text()
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
@@ -33,6 +37,19 @@ static func run() -> bool:
 	dock.setup(EventSheetResource.new())
 	dock._load_sheet_from_path(pack_path)
 	var view: EventSheetViewport = dock._active_view()
+	var preview_bar: EventRowData = null
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.row_uid.begins_with("pack_include_bar_"):
+			preview_bar = row_data
+	ok = _check("a read-only preview folds the binding into the Include bar", preview_bar != null, true) and ok
+	ok = _check("the Include bar still names the host class",
+		preview_bar != null and _span_texts(preview_bar).has("Node2D"), true) and ok
+	ok = _check("no Host binding bar is drawn twice on a preview",
+		_has_host_binding_row(view), false) and ok
+	var opened_sheet: EventSheetResource = dock.get_current_sheet()
+	opened_sheet.read_only = false
+	view.set_sheet(opened_sheet)
 	var host_row: EventRowData = null
 	for entry: Dictionary in view.get_flat_rows():
 		var row_data: EventRowData = entry.get("row")
@@ -58,6 +75,22 @@ static func run() -> bool:
 
 	dock.free()
 	return ok
+
+
+## Every span text of a row, so a claim can ask what a bar SAYS without indexing into its spans.
+static func _span_texts(row_data: EventRowData) -> PackedStringArray:
+	var texts: PackedStringArray = PackedStringArray()
+	for span: SemanticSpan in row_data.spans:
+		texts.append(str(span.text))
+	return texts
+
+
+static func _has_host_binding_row(view: EventSheetViewport) -> bool:
+	for entry: Dictionary in view.get_flat_rows():
+		var row_data: EventRowData = entry.get("row")
+		if row_data != null and row_data.spans.size() >= 2 and str(row_data.spans[1].text) == "Host binding":
+			return true
+	return false
 
 
 static func _has_enter_tree_block(view: EventSheetViewport) -> bool:
