@@ -140,7 +140,7 @@ static func behaviour_groups(sheet: EventSheetResource, robust: bool = false) ->
 static var _fleet_groups_cache: Dictionary = {}
 
 
-## The GROUNDED tier (SPEC-self-expressions Phase 3): the sheet's actual instance is selected in
+## The GROUNDED tier (Self section, Phase 3): the sheet's actual instance is selected in
 ## the Scene dock, so stop guessing node names - reflect its real behaviour children. A child
 ## counts when its script has a global class name AND publishes at least one entry; renamed
 ## children keep their REAL name in every fragment (that is the point of grounding), and two

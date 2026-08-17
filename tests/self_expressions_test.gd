@@ -1,4 +1,4 @@
-# EventSheet - the Self expression section census (SPEC-self-expressions Phase 1).
+# EventSheet - the Self expression section census (Self section, Phase 1).
 # Pins the derived model VALUES (never counts): the C3 alias table's fragments, the host gating,
 # the variables census, the expression-only function filter, and the query scoping. All static +
 # pure - no dialog, no editor.

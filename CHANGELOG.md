@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.17.0] - 2026-08-17 - Adopt Anything, Read Anything & Ask Why
 
 ### Added - the developer-experience wave, part two: the editor seams (9 suggestions)
 

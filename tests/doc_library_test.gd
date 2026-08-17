@@ -61,7 +61,7 @@ static func _test_manifest() -> bool:
 	all_passed = _check("a guide that does not exist is not a page",
 		EventSheetDocLibrary.has_page("GUIDE-NO-SUCH-THING"), false) and all_passed
 	all_passed = _check("an internal spec never ships",
-		EventSheetDocLibrary.has_page("internal/SPEC-in-editor-docs-viewer"), false) and all_passed
+		EventSheetDocLibrary.has_page("internal/SPEC-gdscript-pairing"), false) and all_passed
 	all_passed = _check("a page carries its own H1 as its title",
 		EventSheetDocLibrary.page_title("Addons/Quest").is_empty(), false) and all_passed
 	all_passed = _check("a page that does not ship reads as no source",
