@@ -1303,6 +1303,14 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 		var function_name: String = str(signature.get("function_name", ""))
 		if signal_name.is_empty() or function_name.is_empty():
 			continue
+		# A LIFTED handler carries the connect line that actually wired it in the source. Re-emit that
+		# verbatim: the canonical `get_node("X").sig.connect(fn)` spelling would rewrite a hand-written
+		# `$X.sig.connect(fn)` and fail the byte-verify, reverting the whole file to code blocks. Only
+		# ever set at lift time, so every authored sheet still gets the generated line below.
+		var lifted_connect: String = str((events[0] as EventRow).get_meta("__source_connect_line", "")) if events[0] is EventRow else ""
+		if not lifted_connect.is_empty():
+			ready_connections.append(lifted_connect)
+			continue
 		var source_path: String = str(signature.get("source_path", ""))
 		if source_path.is_empty():
 			# Self-connection: the signal must exist on the script's base class or be
@@ -1982,6 +1990,13 @@ static func _condition_base_expr(condition: ACECondition) -> String:
 		template = descriptor.codegen_template
 	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	return ActionCodegen._apply_template(template, params)
+
+
+## The GDScript a condition compiles to, negation aside - the editor's readers use it to recognize
+## shapes no single template names, like the input-event type test a handler branches on. Public
+## because reading a row must never have to guess at what the row will emit.
+static func condition_source_text(condition: ACECondition) -> String:
+	return _condition_base_expr(condition) if condition != null else ""
 
 
 ## True when a condition targets the implicit node (node_type set), so in a pick loop it

@@ -3638,6 +3638,241 @@ func _apply_trigger_tempo(meta: Dictionary, event_style: EventSheetEventStyle, t
 			return "➜"
 
 
+## The lifecycle handlers whose top-level branches read as the input triggers a player would name.
+const INPUT_HANDLER_TRIGGERS: Array[String] = ["OnInput", "OnUnhandledInput", "OnUnhandledKeyInput"]
+
+## The object a trigger row belongs to. A signal-backed trigger belongs to the NODE that emits it -
+## "Hurtbox > On Body Entered", the way Construct names the object before the verb - so a connected
+## handler reads as its source node rather than as the generic class the vocabulary filed it under.
+## Falls back to the ordinary vocabulary label when the trigger names no source (a self-connection,
+## a lifecycle handler).
+func _handler_object_label(event_row: EventRow) -> String:
+	var source_path: String = event_row.trigger_source_path.strip_edges()
+	if not source_path.is_empty() and not source_path.begins_with("@") and not source_path.begins_with("autoload:"):
+		return source_path.get_file() if source_path.contains("/") else source_path
+	return _object_label_for(event_row.trigger_provider_id, event_row.trigger_id)
+
+
+## The payload chips for a signal-backed trigger: one per handler parameter, named the way the
+## handler names it ("body: Node2D" -> "body"). Empty for every trigger that hands nothing over.
+func _handler_payload_chips(event_row: EventRow) -> PackedStringArray:
+	var chips: PackedStringArray = PackedStringArray()
+	var args: String = event_row.trigger_args.strip_edges()
+	if args.is_empty() or event_row.trigger_id.is_empty():
+		return chips
+	for argument: String in args.split(","):
+		var name_part: String = argument.strip_edges().split(":")[0].split("=")[0].strip_edges()
+		if not name_part.is_empty():
+			chips.append(name_part.replace("_", " "))
+	return chips
+
+
+## Builtin categories that are OBJECTS in Construct's grammar, not part of System - a row of theirs
+## wears the device name in its object cell (Mouse, Keyboard, Gamepad, Touch).
+const INPUT_DEVICE_OBJECTS: Array[String] = ["Mouse", "Keyboard", "Gamepad", "Touch"]
+
+## `event is <class>` -> the Construct module that owns the trigger the branch reads as.
+const INPUT_EVENT_MODULES: Dictionary = {
+	"InputEventMouseMotion": "Mouse",
+	"InputEventMouseButton": "Mouse",
+	"InputEventKey": "Keyboard",
+	"InputEventScreenTouch": "Touch",
+	"InputEventJoypadButton": "Gamepad",
+}
+
+
+## What an input handler's branch SAYS, as {"module", "sentence", "consumed"}, or {} when the branch
+## is not one of the shapes below (which keeps today's reading, never a guessed one).
+##
+## An `_input` / `_unhandled_input` / `_unhandled_key_input` body branches on the event's TYPE, and
+## that branch is exactly one Construct trigger: `event is InputEventMouseMotion` is Mouse > On
+## mouse moved, `event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE` is
+## Keyboard > On Escape pressed. Display only - the file still holds one handler with an if/elif chain.
+##
+## The reading matches ATOMS, not lines, which is what makes the two spellings of the same branch
+## converge: a sheet-authored Keyboard trigger compiles to ONE parenthesized conjunction, while a
+## hand-written handler splits the same test across separate conjuncts and casts each one
+## (`(event as InputEventKey).pressed`). Both flatten to the same atom set here, so a sheet saved
+## and reopened reads identically to the handler someone typed by hand.
+func _input_branch_reading(event_row: EventRow) -> Dictionary:
+	if event_row == null or not INPUT_HANDLER_TRIGGERS.has(event_row.trigger_id) or event_row.conditions.is_empty():
+		return {}
+	var atoms: Array = []
+	var atom_counts: Dictionary = {}
+	for condition_index in range(event_row.conditions.size()):
+		var condition: ACECondition = event_row.conditions[condition_index]
+		if condition == null:
+			continue
+		var pieces: PackedStringArray = _split_top_level_and(_strip_event_casts(SheetCompiler.condition_source_text(condition)))
+		atom_counts[condition_index] = pieces.size()
+		for piece: String in pieces:
+			atoms.append({"text": piece, "index": condition_index, "used": false})
+	var event_class: String = ""
+	for atom: Dictionary in atoms:
+		var tested: String = str(atom["text"]).trim_prefix("event is ")
+		if tested != str(atom["text"]) and INPUT_EVENT_MODULES.has(tested):
+			event_class = tested
+			atom["used"] = true
+			break
+	if event_class.is_empty():
+		return {}
+	# 1 = the press edge, -1 = the release edge, 0 = the branch never said (so most shapes below
+	# decline rather than guess which edge the reader is looking at).
+	var edge: int = 0
+	var button: String = ""
+	var key: String = ""
+	for atom: Dictionary in atoms:
+		if bool(atom["used"]):
+			continue
+		var text: String = str(atom["text"])
+		if text == "event.pressed":
+			edge = 1
+		elif text == "not event.pressed":
+			edge = -1
+		elif text == "not event.echo" or text == "event.echo":
+			pass  # the auto-repeat guard is plumbing, not part of the sentence
+		elif text.begins_with("event.button_index == "):
+			button = text.trim_prefix("event.button_index == ")
+		elif text.begins_with("event.keycode == "):
+			key = text.trim_prefix("event.keycode == ")
+		elif text.begins_with("event.physical_keycode == "):
+			key = text.trim_prefix("event.physical_keycode == ")
+		else:
+			continue
+		atom["used"] = true
+	var sentence: String = _input_branch_sentence(event_class, edge, button, key)
+	if sentence.is_empty():
+		return {}
+	# A condition drops off the lane only when the sentence absorbed ALL of its conjuncts; one that
+	# carried an extra test (a captured-cursor check, a game-state guard) still reads on its own row.
+	var used_per_condition: Dictionary = {}
+	for atom: Dictionary in atoms:
+		if bool(atom["used"]):
+			used_per_condition[int(atom["index"])] = int(used_per_condition.get(atom["index"], 0)) + 1
+	var consumed: Dictionary = {}
+	for condition_index: Variant in used_per_condition.keys():
+		if int(used_per_condition[condition_index]) == int(atom_counts.get(condition_index, -1)):
+			consumed[int(condition_index)] = true
+	return {"module": str(INPUT_EVENT_MODULES[event_class]), "sentence": sentence, "consumed": consumed}
+
+
+## The one-line trigger sentence for a recognized branch ("" = not a shape we name).
+func _input_branch_sentence(event_class: String, edge: int, button: String, key: String) -> String:
+	match event_class:
+		"InputEventMouseMotion":
+			return EventSheetL10n.translate("On mouse moved")
+		"InputEventMouseButton":
+			if button == "MOUSE_BUTTON_WHEEL_UP":
+				return EventSheetL10n.translate("On mouse wheel up")
+			if button == "MOUSE_BUTTON_WHEEL_DOWN":
+				return EventSheetL10n.translate("On mouse wheel down")
+			if edge == 0 or button.is_empty():
+				return ""
+			return EventSheetL10n.translate("On %s button pressed" if edge > 0 else "On %s button released") % _mouse_button_word(button)
+		"InputEventKey":
+			if edge == 0 or key.is_empty():
+				return ""
+			return EventSheetL10n.translate("On %s pressed" if edge > 0 else "On %s released") % _key_word(key)
+		"InputEventScreenTouch":
+			if edge == 0:
+				return ""
+			return EventSheetL10n.translate("On touch started" if edge > 0 else "On touch ended")
+		"InputEventJoypadButton":
+			if edge == 0 or button.is_empty():
+				return ""
+			return EventSheetL10n.translate("On button %s pressed" if edge > 0 else "On button %s released") % button.trim_prefix("JOY_BUTTON_").capitalize()
+	return ""
+
+
+## "MOUSE_BUTTON_LEFT" -> "left" (the word Construct puts in the sentence).
+func _mouse_button_word(button: String) -> String:
+	return button.trim_prefix("MOUSE_BUTTON_").to_lower().replace("_", " ")
+
+
+## "KEY_ESCAPE" -> "Escape". A bare expression (a variable holding a keycode) reads verbatim.
+func _key_word(key: String) -> String:
+	if not key.begins_with("KEY_"):
+		return key
+	return key.trim_prefix("KEY_").capitalize()
+
+
+## Construct's own words for the pieces of an input event a row reads out: the mouse delta is
+## `mouse's ΔX` / `ΔY`, and the static-typing casts around `event` are not part of any sentence.
+## Applied to every row's text - `event.relative` and an `as InputEvent…` cast only ever appear
+## inside an input handler, so there is nothing else for it to touch.
+func _humanized_input_event_text(text: String) -> String:
+	if not text.contains("event"):
+		return text
+	var humanized: String = _strip_event_casts(text)
+	humanized = humanized.replace("event.relative.x", EventSheetL10n.translate("mouse's ΔX"))
+	humanized = humanized.replace("event.relative.y", EventSheetL10n.translate("mouse's ΔY"))
+	return humanized.replace("event.relative", EventSheetL10n.translate("mouse's Δ"))
+
+
+## `(event as InputEventKey).pressed` -> `event.pressed`. A cast is how GDScript keeps its static
+## type checker happy; it says nothing a reader needs, so it never reaches a sentence.
+func _strip_event_casts(text: String) -> String:
+	var cast_regex: RegEx = RegEx.create_from_string("\\(\\s*([A-Za-z_][A-Za-z0-9_]*)\\s+as\\s+InputEvent[A-Za-z]*\\s*\\)")
+	return cast_regex.sub(text, "$1", true)
+
+
+## A boolean expression split on its TOP-LEVEL ` and ` conjuncts (outer parentheses peeled first),
+## so one parenthesized condition and a run of separate ones flatten to the same list.
+func _split_top_level_and(expression: String) -> PackedStringArray:
+	var text: String = expression.strip_edges()
+	while text.begins_with("(") and text.ends_with(")") and _wraps_whole_expression(text):
+		text = text.substr(1, text.length() - 2).strip_edges()
+	var pieces: PackedStringArray = PackedStringArray()
+	var depth: int = 0
+	var quote: String = ""
+	var start: int = 0
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+			index += 1
+			continue
+		if character == "\"" or character == "'":
+			quote = character
+		elif character == "(" or character == "[" or character == "{":
+			depth += 1
+		elif character == ")" or character == "]" or character == "}":
+			depth -= 1
+		elif depth == 0 and text.substr(index, 5) == " and ":
+			pieces.append(text.substr(start, index - start).strip_edges())
+			index += 5
+			start = index
+			continue
+		index += 1
+	pieces.append(text.substr(start).strip_edges())
+	var trimmed: PackedStringArray = PackedStringArray()
+	for piece: String in pieces:
+		var inner: String = piece
+		while inner.begins_with("(") and inner.ends_with(")") and _wraps_whole_expression(inner):
+			inner = inner.substr(1, inner.length() - 2).strip_edges()
+		trimmed.append(inner)
+	return trimmed
+
+
+## True when the text's leading "(" is the one its trailing ")" closes - so peeling them keeps the
+## expression whole (`(a) and (b)` is left alone, `(a and b)` is unwrapped).
+func _wraps_whole_expression(text: String) -> bool:
+	var depth: int = 0
+	for index in range(text.length()):
+		if text[index] == "(":
+			depth += 1
+		elif text[index] == ")":
+			depth -= 1
+			if depth == 0:
+				return index == text.length() - 1
+	return false
+
+
 func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Array[SemanticSpan]:
 	var spans: Array[SemanticSpan] = []
 	var condition_line_index: int = 0
@@ -3646,7 +3881,35 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 	var event_style: EventSheetEventStyle = _viewport._get_event_style()
 	var condition_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_condition_style())
 	var action_style_meta: Dictionary = _viewport._build_element_style_metadata(_viewport._get_action_style())
-	if event_row.else_mode != EventRow.ElseMode.NONE:
+	# An input handler's branch reads as the trigger it is - one Construct trigger row per branch,
+	# in place of both the Else chip (a branch is its own trigger, not a continuation) and the
+	# generic "On unhandled input event" cell. Pure lens; the emitted handler is untouched.
+	var input_reading: Dictionary = _input_branch_reading(event_row)
+	var input_consumed: Dictionary = input_reading.get("consumed", {})
+	if not input_reading.is_empty():
+		var input_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
+		var input_glyph: String = _apply_trigger_tempo(input_badge_meta, event_style, event_row.trigger_id)
+		input_badge_meta["badge_extra_width"] = condition_style_meta.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)
+		input_badge_meta["line_index"] = condition_line_index
+		input_badge_meta["badge_style"] = "trigger"
+		spans.append(_make_span(input_glyph, SemanticSpan.SpanType.KEYWORD, input_badge_meta))
+		spans.append(
+			_make_span(
+				str(input_reading.get("sentence", "")),
+				SemanticSpan.SpanType.CONDITION,
+				{
+					"lane": "condition",
+					"kind": "trigger",
+					"ace_index": 0,
+					"chip": true,
+					"hoverable": false,
+					"line_index": condition_line_index,
+					"object_label": str(input_reading.get("module", ""))
+				}.merged(condition_style_meta, true)
+			)
+		)
+		condition_line_index += 1
+	if input_reading.is_empty() and event_row.else_mode != EventRow.ElseMode.NONE:
 		# The event-sheet Else reads as a CONDITION, exactly like Construct's System Else: a "System | Else"
 		# chip heading the condition lane (an ELIF is the Else chip with its own conditions beneath). The
 		# row's trigger stays structural (it is what chains the block into the same handler) but is NOT
@@ -3667,7 +3930,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 			)
 		)
 		condition_line_index += 1
-	if event_row.else_mode == EventRow.ElseMode.NONE and event_row.trigger != null:
+	if input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and event_row.trigger != null:
 		var trigger_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		# Tempo badge: the glyph + hue say HOW OFTEN this event runs, from trigger_id.
 		var trigger_glyph: String = _apply_trigger_tempo(trigger_badge_meta, event_style, event_row.trigger_id)
@@ -3692,7 +3955,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 			)
 		)
 		condition_line_index += 1
-	elif event_row.else_mode == EventRow.ElseMode.NONE and not event_row.trigger_id.is_empty():
+	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and not event_row.trigger_id.is_empty():
 		var trigger_id_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		# Same tempo badge on the lifted / lifecycle path (trigger_id with no authored ACECondition) -
 		# this is where On Physics Process etc. render, so the ⟳ hot-path glyph lands here too.
@@ -3711,13 +3974,26 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 					"ace_index": 0,
 					"chip": true,
 					"line_index": condition_line_index,
-					"object_label": _object_label_for(event_row.trigger_provider_id, event_row.trigger_id),
+					"object_label": _handler_object_label(event_row),
 					"object_icon": _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
 				}.merged(condition_style_meta, true)
 			)
 		)
+		# A signal handler's PARAMETERS are the trigger's payload - the body that entered, the item
+		# that was picked up. Construct shows them as chips beside the trigger, so a reader knows
+		# what the event hands them without opening the code.
+		for payload_index in range(_handler_payload_chips(event_row).size()):
+			spans.append(_make_span(_handler_payload_chips(event_row)[payload_index], SemanticSpan.SpanType.CONDITION, {
+				"editable": false,
+				"lane": "condition",
+				"kind": "trigger_payload",
+				"param_index": payload_index,
+				"chip": true,
+				"hoverable": false,
+				"line_index": condition_line_index
+			}.merged(condition_style_meta, true)))
 		condition_line_index += 1
-	elif event_row.else_mode == EventRow.ElseMode.NONE and inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
+	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE and inline_trigger_condition_index >= 0 and inline_trigger_condition_index < event_row.conditions.size():
 		var inline_trigger: ACECondition = event_row.conditions[inline_trigger_condition_index]
 		var inline_trigger_badge_meta: Dictionary = _viewport.BADGE_TRIGGER_METADATA.duplicate(true)
 		inline_trigger_badge_meta["badge_bg"] = event_style.trigger_badge_background_color
@@ -3747,7 +4023,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false) -> Arra
 	if not event_row.conditions.is_empty():
 		var displayed_condition_indices: Array[int] = []
 		for condition_index in range(event_row.conditions.size()):
-			if condition_index == inline_trigger_condition_index:
+			if condition_index == inline_trigger_condition_index or input_consumed.has(condition_index):
 				continue
 			displayed_condition_indices.append(condition_index)
 		for display_index in range(displayed_condition_indices.size()):
@@ -4158,7 +4434,11 @@ func _count_event_lines(event_row: EventRow) -> int:
 	# (a C3 Else block never repeats its trigger) - the span pass renders exactly one of the two, so the
 	# count mirrors that with a plain either/or.
 	var condition_lines: int = 0
-	if event_row.else_mode == EventRow.ElseMode.ELSE or event_row.else_mode == EventRow.ElseMode.ELIF:
+	# Mirrors the span pass exactly: a recognized input branch draws ONE trigger line in place of
+	# both the Else chip and the generic trigger cell, and drops the conjuncts its sentence absorbed.
+	var input_reading: Dictionary = _input_branch_reading(event_row)
+	var input_consumed: Dictionary = input_reading.get("consumed", {})
+	if input_reading.is_empty() and (event_row.else_mode == EventRow.ElseMode.ELSE or event_row.else_mode == EventRow.ElseMode.ELIF):
 		condition_lines += 1
 	var inline_trigger_index: int = _find_inline_trigger_condition_index(event_row)
 	var has_trigger: bool = (
@@ -4166,10 +4446,12 @@ func _count_event_lines(event_row: EventRow) -> int:
 		or not event_row.trigger_id.is_empty()
 		or (inline_trigger_index >= 0 and inline_trigger_index < event_row.conditions.size())
 	)
-	if has_trigger and event_row.else_mode == EventRow.ElseMode.NONE:
+	if not input_reading.is_empty():
+		condition_lines += 1
+	elif has_trigger and event_row.else_mode == EventRow.ElseMode.NONE:
 		condition_lines += 1
 	for condition_index in range(event_row.conditions.size()):
-		if condition_index == inline_trigger_index:
+		if condition_index == inline_trigger_index or input_consumed.has(condition_index):
 			continue
 		if event_row.conditions[condition_index] == null:
 			continue
@@ -4351,6 +4633,13 @@ func _object_label_for(provider_id: String, ace_id: String) -> String:
 		if not node_type.is_empty():
 			return node_type
 	if provider_id.is_empty() or provider_id == "Core":
+		# Construct treats the input devices as OBJECTS, not as part of System: a captured-cursor
+		# check reads "Mouse > mouse is captured", a key test "Keyboard > Key Space is down". The
+		# builtin vocabulary already files these under exactly those categories, so the label is
+		# read off the descriptor rather than kept as a second list to maintain.
+		var input_descriptor: ACEDescriptor = ACERegistry.find_descriptor(provider_id, ace_id)
+		if input_descriptor != null and INPUT_DEVICE_OBJECTS.has(input_descriptor.category):
+			return input_descriptor.category
 		return "System"
 	return provider_id
 
@@ -4506,8 +4795,8 @@ func _format_action_descriptor(action: ACEAction) -> String:
 		base_text = "⏳ " + base_text
 	var ace_note: String = str(action.comment).strip_edges()
 	if not ace_note.is_empty():
-		return "%s   ⊳ %s" % [base_text, ace_note]
-	return base_text
+		return "%s   ⊳ %s" % [_humanized_input_event_text(base_text), ace_note]
+	return _humanized_input_event_text(base_text)
 
 
 ## Whether an action suspends the handler: the awaited-call flags, an `await` anywhere in
@@ -4555,6 +4844,7 @@ const _FRIENDLY_TRIGGER := {
 	"OnEditorRun": "run in the editor",
 	"OnInput": "input arrives",
 	"OnUnhandledInput": "unhandled input arrives",
+	"OnUnhandledKeyInput": "unhandled key input arrives",
 }
 
 

@@ -27,6 +27,7 @@ const LIFECYCLE_TRIGGERS: Dictionary = {
 	"func _physics_process(delta: float) -> void:": "OnPhysicsProcess",
 	"func _input(event: InputEvent) -> void:": "OnInput",
 	"func _unhandled_input(event: InputEvent) -> void:": "OnUnhandledInput",
+	"func _unhandled_key_input(event: InputEvent) -> void:": "OnUnhandledKeyInput",
 	"func _run() -> void:": "OnEditorRun",
 	"func _on_project_export(is_debug: bool, features: PackedStringArray) -> void:": "OnProjectExport"
 }
@@ -1326,51 +1327,64 @@ const CORE_SIGNAL_TRIGGERS: Dictionary = {
 }
 
 
-## Parses `_ready`'s leading connect lines into {handler_name: {signal, source}}.
-## Shapes (exactly what _emit_grouped_trigger_functions emits):
+## One `<something>.<signal>.connect(<handler>)` / `<something>.connect("<signal>", <handler>)` line
+## -> {handler, signal, source, line}, or {} when the line is not a connect. Covers the shape
+## _emit_grouped_trigger_functions writes AND the shapes people type by hand (`$Node`, `%Unique`,
+## a member variable, the string-name overload). The verbatim `line` rides along so emission can
+## reproduce the author's own spelling instead of the canonical one - the byte-verify is absolute,
+## and rewriting a hand-written `$Hurtbox` connect as `get_node("Hurtbox")` would fail it.
+static func _parse_connect_line(line: String) -> Dictionary:
+	var source_pattern: String = "(?:(get_node\\(\"[^\"]+\"\\)|\\$[A-Za-z0-9_/]+|%[A-Za-z0-9_]+|[A-Za-z_][A-Za-z0-9_]*)\\.)?"
+	var member_regex: RegEx = RegEx.create_from_string("^\\t+" + source_pattern + "([A-Za-z_][A-Za-z0-9_]*)\\.connect\\(([A-Za-z_][A-Za-z0-9_]*)\\)$")
+	var string_regex: RegEx = RegEx.create_from_string("^\\t+" + source_pattern + "connect\\(\"([A-Za-z_][A-Za-z0-9_]*)\", *([A-Za-z_][A-Za-z0-9_]*)\\)$")
+	var line_match: RegExMatch = member_regex.search(line)
+	if line_match == null:
+		line_match = string_regex.search(line)
+	if line_match == null:
+		return {}
+	var source: String = line_match.get_string(1)
+	if source.begins_with("get_node("):
+		source = source.trim_prefix("get_node(\"").trim_suffix("\")")
+	else:
+		source = source.trim_prefix("$").trim_prefix("%")
+	return {
+		"handler": line_match.get_string(3),
+		"signal": line_match.get_string(2),
+		"source": source,
+		"line": line,
+	}
+
+
+## Parses `_ready`'s leading connect lines into {handler_name: {signal, source, line}}.
+## Shapes (what _emit_grouped_trigger_functions emits, plus the hand-written spellings):
 ##   	body_entered.connect(_on_body_entered)
 ##   	get_node("Platform").landed.connect(_on_platform_landed)
+##   	$Hurtbox.body_entered.connect(_on_hurtbox_body_entered)
 static func _parse_connections(ready_lines: PackedStringArray) -> Dictionary:
 	var connections: Dictionary = {}
-	var regex: RegEx = RegEx.new()
-	if regex.compile("^\t(?:get_node\\(\"([^\"]+)\"\\)\\.)?([A-Za-z_][A-Za-z0-9_]*)\\.connect\\(([A-Za-z_][A-Za-z0-9_]*)\\)$") != OK:
-		return connections
 	for index in range(1, ready_lines.size()):
-		var regex_match: RegExMatch = regex.search(ready_lines[index])
-		if regex_match == null:
+		var parsed: Dictionary = _parse_connect_line(ready_lines[index])
+		if parsed.is_empty():
 			break  # connects are emitted first; the rest is OnReady body
-		connections[regex_match.get_string(3)] = {
-			"signal": regex_match.get_string(2),
-			"source": regex_match.get_string(1)
-		}
+		connections[str(parsed["handler"])] = parsed
 	return connections
 
 
-## Every `<signal>.connect(<handler>)` / `connect("<signal>", <handler>)` line ANYWHERE in the
-## imported file, as handler_name -> {signal, source}. The trailing-run map above only reads the
-## connects at the top of a `_ready` in the tail; a hand-written script puts `_ready` first and
-## often mixes connects with other setup, so the mid-file anchor pass reads this wider map instead.
-## Position-blind on purpose: the byte-verify is what decides whether a handler actually lifts.
+## Every connect line ANYWHERE in the imported file, as handler_name -> {signal, source, line}. The
+## trailing-run map above only reads the connects at the top of a `_ready` in the tail; a
+## hand-written script puts `_ready` first and often mixes connects with other setup, so the
+## mid-file anchor pass reads this wider map instead. Position-blind on purpose: the byte-verify is
+## what decides whether a handler actually lifts.
 static func _parse_all_connections(sheet: EventSheetResource) -> Dictionary:
 	var connections: Dictionary = {}
-	var member_regex: RegEx = RegEx.create_from_string("^\\s*(?:([A-Za-z_$%][A-Za-z0-9_/\"%$]*)\\.)?([A-Za-z_][A-Za-z0-9_]*)\\.connect\\(([A-Za-z_][A-Za-z0-9_]*)\\)$")
-	var string_regex: RegEx = RegEx.create_from_string("^\\s*(?:([A-Za-z_$%][A-Za-z0-9_/\"%$]*)\\.)?connect\\(\"([A-Za-z_][A-Za-z0-9_]*)\", *([A-Za-z_][A-Za-z0-9_]*)\\)$")
 	for entry: Variant in sheet.events:
 		var raw_row: RawCodeRow = entry as RawCodeRow
-		if raw_row == null or not raw_row.code.contains(".connect(") and not raw_row.code.contains("connect(\""):
+		if raw_row == null or not raw_row.code.contains(".connect("):
 			continue
 		for line: String in raw_row.code.split("\n"):
-			var line_match: RegExMatch = member_regex.search(line)
-			if line_match == null:
-				line_match = string_regex.search(line)
-			if line_match == null:
-				continue
-			var source: String = line_match.get_string(1)
-			connections[line_match.get_string(3)] = {
-				"signal": line_match.get_string(2),
-				# `get_node("Path")` reduces to the path; a `$Node` / `%Node` shorthand keeps its name.
-				"source": source.trim_prefix("$").trim_prefix("%").trim_prefix("\"").trim_suffix("\"")
-			}
+			var parsed: Dictionary = _parse_connect_line(line)
+			if not parsed.is_empty():
+				connections[str(parsed["handler"])] = parsed
 	return connections
 
 
@@ -1406,7 +1420,7 @@ static func _is_lifecycle_header(header: String) -> bool:
 
 
 static func _loose_lifecycle_match(header: String) -> RegExMatch:
-	var loose_regex: RegEx = RegEx.create_from_string("^func (_ready|_process|_physics_process|_input|_unhandled_input)\\((.*)\\)(?: -> void)?:$")
+	var loose_regex: RegEx = RegEx.create_from_string("^func (_ready|_process|_physics_process|_input|_unhandled_input|_unhandled_key_input)\\((.*)\\)(?: -> void)?:$")
 	return loose_regex.search(header)
 
 
@@ -1417,6 +1431,8 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	var trigger_provider: String = "Core"
 	var trigger_args: String = ""
 	var trigger_source: String = ""
+	# The connect line VERBATIM, so emission reproduces the author's own spelling of it.
+	var connect_line: String = ""
 	var index: int = 1
 	# A lifecycle header the canonical table missed but that still NAMES a lifecycle function is
 	# beginner spelling (`func _physics_process(delta):` - untyped param, no return arrow). It
@@ -1431,14 +1447,18 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			var loose_map: Dictionary = {
 				"_ready": "OnReady", "_process": "OnProcess", "_physics_process": "OnPhysicsProcess",
 				"_input": "OnInput", "_unhandled_input": "OnUnhandledInput",
+				"_unhandled_key_input": "OnUnhandledKeyInput",
 			}
 			trigger_id = str(loose_map[loose_lifecycle.get_string(1)])
 			source_header = function_lines[0]
 		else:
 			trigger_id = str(LIFECYCLE_TRIGGERS[function_lines[0]])
 		if function_lines[0].begins_with("func _ready()"):
-			# Skip the regenerated connect lines; what remains is the OnReady body.
-			while index < function_lines.size() and _is_connect_line(function_lines[index]):
+			# Skip the connect lines the map above CLAIMED; what remains is the OnReady body. Only
+			# claimed lines are skipped: a connect the map could not read would otherwise vanish from
+			# the file (emission regenerates only what a lifted trigger asked for), and the whole file
+			# would revert on the byte-verify rather than lift with that line kept as a statement.
+			while index < function_lines.size() and _is_known_connect_line(function_lines[index], connections):
 				index += 1
 			if index >= function_lines.size():
 				return {"ok": true, "events": []}  # connects-only _ready
@@ -1451,6 +1471,15 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		var connection: Dictionary = connections[header_match.get_string(1)]
 		var signal_name: String = str(connection.get("signal", ""))
 		trigger_source = str(connection.get("source", ""))
+		connect_line = str(connection.get("line", ""))
+		# A hand-written handler types the payload the way its scene needs it (`body: Node2D` where
+		# the canonical Core trigger says `body: Node`), so the source header rides along and
+		# emission reproduces it - otherwise the re-typed argument fails the byte-verify.
+		source_header = function_lines[0]
+		# The handler's own parameter list, kept for EVERY signal trigger (not just custom ones):
+		# it is the payload the editor draws as chips beside the trigger row. The resolver only
+		# consults it for a `signal:` id, so recording it on a Core trigger changes no emission.
+		trigger_args = header_match.get_string(2)
 		if CORE_SIGNAL_TRIGGERS.has(signal_name):
 			trigger_id = str(CORE_SIGNAL_TRIGGERS[signal_name])
 		else:
@@ -1472,6 +1501,11 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		# it off whichever event leads the group, so top-of-sheet reordering cannot lose it.
 		for event: Variant in events:
 			(event as EventRow).set_meta("__source_trigger_header", source_header)
+	if not connect_line.is_empty():
+		# The handler carries the exact connect line that wired it, so the regenerated ready
+		# handler reproduces the author's spelling rather than the canonical get_node() one.
+		for event: Variant in events:
+			(event as EventRow).set_meta("__source_connect_line", connect_line)
 	return {"ok": true, "events": events}
 
 
@@ -2007,6 +2041,16 @@ static func _is_connect_line(line: String) -> bool:
 	return line.begins_with("\t") and line.ends_with(")") and line.contains(".connect(")
 
 
+## True when this line is one of the connects the connection map already claimed - the only ones a
+## lifted `_ready` may drop, because only those come back when the handler they wire re-emits.
+static func _is_known_connect_line(line: String, connections: Dictionary) -> bool:
+	var parsed: Dictionary = _parse_connect_line(line)
+	if parsed.is_empty():
+		return false
+	var claimed: Variant = connections.get(str(parsed["handler"]))
+	return claimed is Dictionary and str((claimed as Dictionary).get("line", "")) == line
+
+
 static func _make_event(trigger_id: String, trigger_provider: String = "Core", trigger_args: String = "", trigger_source: String = "") -> EventRow:
 	var event: EventRow = EventRow.new()
 	event.trigger_provider_id = trigger_provider
@@ -2467,14 +2511,65 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 			if op_index != -1 and line.substr(0, op_index).contains(" = "):
 				continue
 		var params: Dictionary = {}
+		var lopsided: bool = false
 		for group_name: String in regex.get_names():
 			params[group_name] = regex_match.get_string(group_name)
+			# A captured param is always a WHOLE expression, so its brackets and quotes must balance.
+			# A lazy capture that stopped mid-expression produces a lopsided one - `add_look((event as
+			# InputEventMouseMotion).relative.x, …)` matched Call Method as target `add_look((event as
+			# InputEventMouseMotion)`, method `relative.x, `, which reads as nonsense on the row. Reject
+			# it here and the next candidate (Call Function, whose capture spans the whole argument
+			# list) claims the line instead.
+			if not _is_balanced_expression(str(params[group_name])):
+				lopsided = true
+				break
+		if lopsided:
+			continue
 		# A declaration template's `{name}` must be a bare identifier - otherwise the lazy capture carved a
 		# string/expression value at an internal `:` or `=` (see decl_name). Reject so the plain form wins.
 		if bool((entry as Dictionary).get("decl_name", false)) and not _is_bare_identifier(str(params.get("name", ""))):
 			continue
 		return {"provider": (entry as Dictionary).get("provider"), "ace_id": (entry as Dictionary).get("ace_id"), "params": params}
 	return {}
+
+
+## True when brackets and quotes balance across the text - the shape any complete GDScript expression
+## has. Quote-aware, so a bracket inside a string literal never counts. Empty text is balanced.
+static func _is_balanced_expression(text: String) -> bool:
+	var round_depth: int = 0
+	var square_depth: int = 0
+	var curly_depth: int = 0
+	var quote: String = ""
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if not quote.is_empty():
+			if character == "\\":
+				index += 2
+				continue
+			if character == quote:
+				quote = ""
+			index += 1
+			continue
+		match character:
+			"\"", "'":
+				quote = character
+			"(":
+				round_depth += 1
+			")":
+				round_depth -= 1
+			"[":
+				square_depth += 1
+			"]":
+				square_depth -= 1
+			"{":
+				curly_depth += 1
+			"}":
+				curly_depth -= 1
+		if round_depth < 0 or square_depth < 0 or curly_depth < 0:
+			return false
+		index += 1
+	return round_depth == 0 and square_depth == 0 and curly_depth == 0 and quote.is_empty()
 
 
 ## True when the text is a single GDScript identifier (no spaces, operators, or quotes) - used to reject a

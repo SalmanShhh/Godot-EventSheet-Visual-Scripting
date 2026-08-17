@@ -35,6 +35,8 @@ static func resolve_trigger(event: EventRow) -> Dictionary:
 			return _lifecycle("_input", "event: InputEvent")
 		"OnUnhandledInput":
 			return _lifecycle("_unhandled_input", "event: InputEvent")
+		"OnUnhandledKeyInput":
+			return _lifecycle("_unhandled_key_input", "event: InputEvent")
 		"OnEditorRun":
 			return _lifecycle("_run", "")
 		"OnProjectExport":
@@ -124,7 +126,7 @@ static func tempo_class_for(trigger_id: String) -> String:
 	match trigger_id:
 		"OnProcess", "OnPhysicsProcess", "OnPostTick", "OnPhysicsPostTick":
 			return TEMPO_EVERY_TICK
-		"OnInput", "OnUnhandledInput":
+		"OnInput", "OnUnhandledInput", "OnUnhandledKeyInput":
 			return TEMPO_INPUT
 		"OnReady", "OnEditorRun", "OnProjectExport":
 			return TEMPO_ONCE
